@@ -1,0 +1,2 @@
+pyparsing==1.5.7
+flask==0.9
