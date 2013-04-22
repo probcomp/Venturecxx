@@ -34,18 +34,3 @@ Exactly the same as above, except you don't need to install "virtualenv".
 
     sudo pip install -r requirements.txt
     sudo python setup.py install [--with-local-engine]
-
-
-No installation at all
-======================
-
-To speed up the development process, you can run the python
-files directly from the source tree without installing the
-venture module. All you need to do is set the global PYTHONPATH
-to the directory containing this README.md file. For example,
-to run one of the tests, you need to type:
-
-    PYTHONPATH=$PWD python ./tests/name_of_test_file.py
-
-Though, you will not be able to import the C++ Venture
-extention using this method.
