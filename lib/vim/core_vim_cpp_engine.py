@@ -15,15 +15,14 @@ class CoreVimCppEngine(object):
     def execute_instruction(self, instruction):
         implemented_instructions = ["assume","observe","predict",
                 "configure","forget","report","infer",
-                "clear","rollback","get_logscore",
-                "get_global_logscore"]
+                "clear","rollback","get_global_logscore"]
         try:
             instruction_type = instruction['instruction']
         except:
             raise VentureException('malformed_instruction',
                     'VIM instruction is missing the "instruction" key.')
         if instruction_type not in implemented_instructions:
-            raise VentureException('malformed_instruction',
+            raise VentureException('unrecognized_instruction',
                     'The "{}" instruction is not supported.'.format(instruction_type))
         f = getattr(self,'_do_'+instruction_type)
         return f(instruction)
@@ -39,6 +38,12 @@ class CoreVimCppEngine(object):
                         'VIM instruction "{}" is missing'
                         'the "{}" argument'.format(instruction['instruction'],arg),
                         argument=arg)
+
+    def _require_state(self,*args):
+        if self.state not in args:
+            raise VentureException('invalid_state',
+                    'Instruction cannot be executed in the current state, "{}".'.format(self.state),
+                    state=self.state)
 
     def _sanitize_expression_arg(self,expression):
         if isinstance(expression, basestring):
@@ -80,7 +85,7 @@ class CoreVimCppEngine(object):
             return "{}[{}]".format(t,v).encode('ascii')
         except Exception as e:
             raise VentureException('invalid_argument',
-                    'Invalid literal value. {}'.format(e.message),
+                    '"{}" is not a valid literal value. {}'.format(arg,e.message),
                     argument=arg)
 
     _symbol_map = { "add" : '+', "sub" : '-',
@@ -96,14 +101,48 @@ class CoreVimCppEngine(object):
             return s.encode('ascii')
         except:
             raise VentureException('invalid_argument',
-                    'Symbol may only contain letters, digits, and underscores. May not begin with digit.',
+                    '"{}" may only contain letters, digits, and underscores. May not begin with digit.'.format(arg),
                     argument=arg)
 
-    _reverse_literal_type_map = dict((y,x) for x,y in _literal_type_map.items())
-    def _parse_value(self, s):
-        t, v = re.match(r'(.*?)\[(.*)\]',s).groups()
-        return {"type":self._reverse_literal_type_map[t], "value":json.loads(v)}
+    def _sanitize_positive_integer_arg(self,num,arg):
+        if not isinstance(num,(float,int)) or num <= 0 or int(num) != num:
+            raise VentureException('invalid_argument',
+                    '"{}" should be a positive integer.'.format(arg),
+                    argument=arg)
+        return int(num)
 
+    def _sanitize_boolean_arg(self,b,arg):
+        if not isinstance(b,bool):
+            raise VentureException('invalid_argument',
+                    '"{}" should be a boolean.'.format(arg),
+                    argument=arg)
+        return b
+
+    _reverse_literal_type_map = dict((y,x) for x,y in _literal_type_map.items())
+    def _parse_value(self, val):
+        #NOTE: the current c++ implementation ignores the return type -- just gives number
+        if isinstance(val,(float,int)):
+            return {"type":"number", "value":val}
+        else:       #assumed to be string
+            t, v = re.match(r'(.*?)\[(.*)\]',val).groups()
+            return {"type":self._reverse_literal_type_map[t], "value":json.loads(v)}
+
+    ###############################
+    # Error catching
+    ###############################
+
+    def _catch_engine_error(vim):
+        class tmp(object):
+            def __enter__(self):
+                pass
+            def __exit__(self, type, value, traceback):
+                #for now, assume that all un-caught errors are evaluation exceptions
+                #with null addresses. in future, also catch breakpoint exceptions and
+                #parse exceptions (static value construction is part of parsing)
+                if value:
+                    vim.state='exception'
+                    raise VentureException('evaluation',value.message,address=None)
+        return tmp()
 
     ###############################
     # Instruction implementations
@@ -111,12 +150,100 @@ class CoreVimCppEngine(object):
 
     def _do_assume(self,instruction):
         self._require_args(instruction,'expression','symbol')
+        self._require_state('default')
         exp = self._sanitize_expression_arg(instruction['expression'])
         sym = self._sanitize_symbol_arg(instruction['symbol'])
-        did, val = self.engine.assume(sym,exp)
-        #NOTE: the current c++ implementation ignores the return type -- just gives number
-        if isinstance(val,(float,int)):
-            val = {"type":"number", "value":val}
-        else:       #assumed to be string
-            val = self._parse_value(val)
-        return {"directive_id":did, "value":val}
+        with self._catch_engine_error():
+            did, val = self.engine.assume(sym,exp)
+        return {"directive_id":did, "value":self._parse_value(val)}
+
+    def _do_observe(self,instruction):
+        self._require_args(instruction,'expression','value')
+        self._require_state('default')
+        exp = self._sanitize_expression_arg(instruction['expression'])
+        val = self._sanitize_value_arg(instruction['value'])
+        with self._catch_engine_error():
+            try:
+                did = self.engine.observe(exp,val)
+            except Exception as e:
+                m = re.match(r'Rejection sampling has not successfully found any suitable state within (\d+) second\(s\), made iterations: (\d+).',e.message)
+                if m:
+                    t = int(m.groups()[0])*1000
+                    i = int(m.groups()[1])
+                    #NOTE: the C++ core is not capable of rolling-back
+                    raise VentureException("constraint_timeout", e,
+                            runtime=t, iterations=i)
+                raise
+        return {"directive_id":did}
+
+    def _do_predict(self,instruction):
+        self._require_args(instruction,'expression')
+        self._require_state('default')
+        exp = self._sanitize_expression_arg(instruction['expression'])
+        with self._catch_engine_error():
+            did, val = self.engine.predict(exp)
+        return {"directive_id":did, "value":self._parse_value(val)}
+
+    def _do_configure(self,instruction):
+        self._require_state('default')
+        s = t = None
+        if 'seed' in instruction:
+            s = self._sanitize_positive_integer_arg(instruction['seed'],'seed')
+        if 'inference_timeout' in instruction:
+            t = self._sanitize_positive_integer_arg(instruction['inference_timeout'],'inference_timeout')
+        if s != None:
+            self.engine.set_seed(s)
+        if t != None:
+            #do something
+            pass
+        return {"seed":self.engine.get_seed(), "inference_timeout":5000}
+
+    def _do_forget(self,instruction):
+        self._require_args(instruction,'directive_id')
+        self._require_state('default')
+        did = self._sanitize_positive_integer_arg(instruction['directive_id'],'directive_id')
+        try:
+            self.engine.forget(did)
+        except Exception as e:
+            if e.message == 'There is no such directive.':
+                raise VentureException('directive_id_not_found',e.message)
+            raise
+        return {}
+
+    def _do_report(self,instruction):
+        self._require_args(instruction,'directive_id')
+        self._require_state('default')
+        did = self._sanitize_positive_integer_arg(instruction['directive_id'],'directive_id')
+        try:
+            val = self.engine.report_value(did)
+        except Exception as e:
+            if e.message == 'Attempt to report value for non-existent directive.':
+                raise VentureException('directive_id_not_found',e.message)
+            raise
+        return {"value":self._parse_value(val)}
+
+    def _do_infer(self,instruction):
+        self._require_args(instruction,'iterations','resample')
+        self._require_state('default')
+        iterations = self._sanitize_positive_integer_arg(instruction['iterations'],'iterations')
+        resample = self._sanitize_boolean_arg(instruction['resample'],'resample')
+        with self._catch_engine_error():
+            #NOTE: model resampling is not implemented in C++
+            val = self.engine.infer(iterations)
+        return {}
+
+    def _do_clear(self,instruction):
+        self._require_state('default')
+        self.engine.clear()
+        return {}
+
+    def _do_rollback(self,instruction):
+        self._require_state('exception','paused')
+        #rollback not implemented in C++
+        self.state = 'default'
+        return {}
+
+    def _do_get_global_logscore(self,instruction):
+        self._require_state('default')
+        l = self.engine.logscore()
+        return {"logscore":l}
