@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 from venture.exception import VentureException
+from venture.vim.utils import is_valid_symbol
 import json
 import re
 
@@ -91,10 +92,20 @@ class CoreVimCppEngine(object):
     _symbol_map = { "add" : '+', "sub" : '-',
             "mul" : '*', "div" : "/", "pow" : "power",
             "lt" : "<", "gt" : ">", "lte" : "<=", "gte":
-            ">=", "eq" : "=", "neq" : "!=" }
+            ">=", "eq" : "=", "neq" : "!=",
+            "CRP_make" : "CRP/make",
+            "dirichlet_multinomial_make" : "dirichlet-multinomial/make",
+            "beta_binomial_make" : "beta-binomial/make",
+            "symmetric_dirichlet_multinomial_make" : "symmetric-dirichlet-multinomial/make",
+            "symmetric_dirichlet" : "symmetric-dirichlet",
+            "noisy_negate" : "noisy-negate",
+            "uniform_discrete" : "uniform-discrete",
+            "uniform_continuous" : "uniform-continuous",
+            "inv_gamma" : "inv-gamma",
+            "inv_chisq" : "inv-chisq"}
     def _sanitize_symbol_arg(self,s,arg='symbol'):
         try:
-            if not re.match(r'[a-zA-Z_][a-zA-Z0-9_]*',s):
+            if not is_valid_symbol(s):
                 raise Exception
             if s in self._symbol_map:
                 s = self._symbol_map[s]
