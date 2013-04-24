@@ -3,12 +3,15 @@
 
 from venture.exception import VentureException
 import re
+import json
+
 
 def is_valid_symbol(s):
-    if re.match(r'[a-zA-Z_][a-zA-Z0-9_]*',s):
-        return True
-    #TODO: maybe enforce some more reserved words?
-    return False
+    if not isinstance(s,basestring):
+        return False
+    if not re.match(r'[a-zA-Z_][a-zA-Z0-9_]*',s):
+        return False
+    return True
 
 def desugar_expression(exp):
     """returns a de-sugared version of exp"""
@@ -101,7 +104,7 @@ def sugar_expression_index(exp, index):
             if len(tmp_index) >= 3:
                 if tmp_index[1] == 1 and tmp_index[2] == 0:
                     return [1,i,0] + sugar_expression_index(exp[1][i][0], tmp_index[3:])
-            if len(tmp_index) < 0:
+            if len(tmp_index) < 2:
                 return [0]
             tmp_index = tmp_index[2:]
         return [2] + sugar_expression_index(exp[2], tmp_index)
@@ -112,3 +115,96 @@ def sugar_expression_index(exp, index):
         return [0]
     else:
         return [index[0]] + sugar_expression_index(exp[index[0]], index[1:])
+
+
+
+#############################################
+# input sanitization
+#############################################
+
+def validate_instruction(instruction,implemented_instructions):
+    try:
+        instruction_type = instruction['instruction']
+    except:
+        raise VentureException('malformed_instruction',
+                'VIM instruction is missing the "instruction" key.')
+    if instruction_type not in implemented_instructions:
+        raise VentureException('unrecognized_instruction',
+                'The "{}" instruction is not supported.'.format(instruction_type))
+    return instruction
+
+def require_state(cur_state,*args):
+    if cur_state not in args:
+        raise VentureException('invalid_state',
+                'Instruction cannot be executed in the current state, "{}".'.format(cur_state),
+                state=cur_state)
+
+def validate_expression(expression):
+    if isinstance(expression, basestring):
+        validate_symbol(expression)
+        return expression
+    if isinstance(expression, (list,tuple)):
+        for i in range(len(expression)):
+            try:
+                validate_expression(expression[i])
+            except VentureException as e:
+                if e.exception == 'parse':
+                    e.data['expression_index'].insert(0,i)
+                    raise e
+                raise
+        return expression
+    if isinstance(expression, dict):
+        validate_value(expression)
+        return expression
+    raise VentureException('parse','Expression token must be a string, list, or dict.',expression_index=[])
+
+def validate_symbol(s):
+    if not is_valid_symbol(s):
+        raise VentureException('parse',
+                'Invalid symbol. May only contain letters, digits, and underscores. May not begin with digit.',
+                expression_index=[])
+    return s.encode('ascii')
+
+def validate_value(ob):
+    try:
+        validate_symbol(ob['type']) #validate the type
+        json.dumps(ob['value']) #validate the json
+    except Exception as e:
+        raise VentureException('parse',
+                'Invalid literal value. {}'.format(e.message),
+                expression_index=[])
+    return ob
+
+def validate_positive_integer(num):
+    if not isinstance(num,(float,int)) or num <= 0 or int(num) != num:
+        raise VentureException('parse',
+                'Invalid positive integer.',
+                expression_index=[])
+    return int(num)
+
+def validate_boolean(b):
+    if not isinstance(b,bool):
+        raise VentureException('parse',
+                'Invalid boolean.',
+                expression_index=[])
+    return b
+
+def validate_arg(instruction,arg,validator,modifier=lambda x: x,required=True,wrap_exception=True):
+    if not arg in instruction:
+        if required:
+            raise VentureException('missing_argument',
+                    'VIM instruction "{}" is missing'
+                    'the "{}" argument'.format(instruction['instruction'],arg),
+                    argument=arg)
+        return None
+    v = instruction[arg]
+    try:
+        v = validator(v)
+    except VentureException as e:
+        if e.exception == 'parse' and wrap_exception:
+            raise VentureException('invalid_argument',
+                    'Invalid argument {}. {}'.format(arg, str(e)),
+                    argument=arg)
+        raise
+    v = modifier(v)
+    return v

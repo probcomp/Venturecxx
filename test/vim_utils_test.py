@@ -180,5 +180,108 @@ class TestVimUtils(unittest.TestCase):
                     print msg_string.format(a,s,i)
                     raise
 
+    def test_validate_instruction_1(self):
+        try:
+            utils.validate_instruction({},[])
+        except VentureException as e:
+            self.assertEqual(e.exception,'malformed_instruction')
+    def test_validate_instruction_2(self):
+        try:
+            utils.validate_instruction({'instruction':"moo"},[])
+        except VentureException as e:
+            self.assertEqual(e.exception,'unrecognized_instruction')
+    def test_validate_instruction_3(self):
+        i = {'instruction':"moo"}
+        self.assertEqual(utils.validate_instruction(i,['moo']),i)
+
+    def test_require_state_1(self):
+        utils.require_state('default','red','default')
+    def test_require_state_2(self):
+        try:
+            utils.require_state('moo','default')
+        except VentureException as e:
+            self.assertEqual(e.exception,'invalid_state')
+            self.assertEqual(e.data['state'],'moo')
+
+    def test_validate_symbol_1(self):
+        self.assertEqual(utils.validate_symbol('add'),'add')
+    def test_validate_symbol_2(self):
+        try:
+            utils.validate_symbol('9ab')
+        except VentureException as e:
+            self.assertEqual(e.exception, 'parse')
+
+    def test_validate_value_1(self):
+        v = {
+            "type":"real",
+            "value":1,
+            }
+        self.assertEqual(utils.validate_value(v),v)
+    def test_validate_value_2(self):
+        v = {
+            "tawfepo":"real",
+            "value":1,
+            }
+        try:
+            utils.validate_value(v)
+        except VentureException as e:
+            self.assertEqual(e.exception, 'parse')
+
+    def test_validate_expression_1(self):
+        e = ['a',{'type':'atom','value':1},['b']]
+        self.assertEqual(utils.validate_expression(e),e)
+    def test_validate_expression_2(self):
+        try:
+            utils.validate_expression(['a','b',[2]])
+        except VentureException as e:
+            self.assertEqual(e.exception, 'parse')
+            self.assertEqual(e.data['expression_index'], [2,0])
+
+    def test_validate_positive_integer_1(self):
+        self.assertEqual(utils.validate_positive_integer(1.0),1)
+    def test_sanitize_positive_integer_2(self):
+        for i in [-1,0,1.3]:
+            try:
+                utils.validate_positive_integer(i)
+            except VentureException as e:
+                self.assertEqual(e.exception, 'parse')
+
+    def test_validate_boolean_1(self):
+        self.assertEqual(utils.validate_boolean(True),True)
+    def test_validate_boolean_2(self):
+        try:
+            utils.validate_boolean(1.2)
+        except VentureException as e:
+            self.assertEqual(e.exception, 'parse')
+
+    def test_validate_arg_1(self):
+        i = {"instruction":"moo","symbol":"moo"}
+        self.assertEqual(utils.validate_arg(i,"symbol",utils.validate_symbol),"moo")
+    def test_validate_arg_2(self):
+        i = {"instruction":"moo","symbol":2}
+        try:
+            utils.validate_arg(i,"symbol",utils.validate_symbol)
+        except VentureException as e:
+            self.assertEqual(e.exception,'invalid_argument')
+            self.assertEqual(e.data['argument'],'symbol')
+    def test_validate_arg_3(self):
+        i = {"instruction":"moo","symbol":2}
+        try:
+            utils.validate_arg(i,"red",utils.validate_symbol)
+        except VentureException as e:
+            self.assertEqual(e.exception,'missing_argument')
+            self.assertEqual(e.data['argument'],'red')
+    def test_validate_arg_4(self):
+        i = {"instruction":"moo"}
+        self.assertEqual(utils.validate_arg(i,"red",utils.validate_symbol,required=False),None)
+    def test_validate_arg_5(self):
+        i = {"instruction":"moo","symbol":"moo"}
+        self.assertEqual(utils.validate_arg(i,"symbol",utils.validate_symbol,
+            modifier=lambda x: "red"),"red")
+
+
+if __name__ == '__main__':
+    unittest.main()
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,6 @@
 import unittest
 from venture.vim import CoreVimCppEngine
+import venture.vim.core_vim_cpp_engine as module
 from venture.exception import VentureException
 
 #Note -- these tests only check for minimum functionality
@@ -18,7 +19,6 @@ class TestCoreVimCppEngine(unittest.TestCase):
             self.vim.execute_instruction({})
         except VentureException as e:
             self.assertEqual(e.exception,'malformed_instruction')
-
     def test_missing_argument(self):
         try:
             self.vim.execute_instruction({
@@ -28,7 +28,6 @@ class TestCoreVimCppEngine(unittest.TestCase):
         except VentureException as e:
             self.assertEqual(e.exception,'missing_argument')
             self.assertEqual(e.data['argument'],'expression')
-
     def test_invalid_argument(self):
         try:
             self.vim.execute_instruction({
@@ -40,68 +39,29 @@ class TestCoreVimCppEngine(unittest.TestCase):
             self.assertEqual(e.exception,'invalid_argument')
             self.assertEqual(e.data['argument'],'symbol')
 
-    def test_sanitize_symbol_arg_1(self):
-        self.assertEqual(self.vim._sanitize_symbol_arg('add'),'+')
-    def test_sanitize_symbol_arg_2(self):
-        try:
-            self.vim._sanitize_symbol_arg('9ab')
-        except VentureException as e:
-            self.assertEqual(e.exception, 'invalid_argument')
-            self.assertEqual(e.data['argument'], 'symbol')
+    def test_modify_value(self):
+        v = {"type":"smoothed_count", "value":0.5}
+        s = "sc[0.5]"
+        self.assertEqual(module._modify_value(v),s)
 
-    def test_sanitize_value_arg_1(self):
-        self.assertEqual(self.vim._sanitize_value_arg({
-            "type":"real",
-            "value":1,
-            }),'r[1]')
-    def test_sanitize_value_arg_2(self):
-        try:
-            self.assertEqual(self.vim._sanitize_value_arg({
-                "type":"red",
-                "value":1,
-                }),'red[1]')
-        except VentureException as e:
-            self.assertEqual(e.exception, 'invalid_argument')
-            self.assertEqual(e.data['argument'], 'value')
+    def test_modify_symbol(self):
+        v = 'add'
+        s = "+"
+        self.assertEqual(module._modify_symbol(v),s)
 
-    def test_sanitize_expression_arg_1(self):
-        e = ['a',{'type':'atom','value':1},['b']]
-        v = ['a','a[1]',['b']]
-        self.assertEqual(self.vim._sanitize_expression_arg(e),v)
-    def test_sanitize_expression_arg_2(self):
-        try:
-            self.vim._sanitize_expression_arg(['a','b',[2]])
-        except VentureException as e:
-            self.assertEqual(e.exception, 'parse')
-            self.assertEqual(e.data['expression_index'], [2,0])
-
-    def test_sanitize_positive_integer_arg_1(self):
-        self.assertEqual(self.vim._sanitize_positive_integer_arg(1.0,'moo'),1)
-    def test_sanitize_positive_integer_arg_2(self):
-        for i in [-1,0,1.3]:
-            try:
-                self.vim._sanitize_positive_integer_arg(i,'moo')
-            except VentureException as e:
-                self.assertEqual(e.exception, 'invalid_argument')
-                self.assertEqual(e.data['argument'], 'moo')
-
-    def test_sanitize_boolean_arg_1(self):
-        self.assertEqual(self.vim._sanitize_boolean_arg(True,'moo'),True)
-    def test_sanitize_boolean_arg_2(self):
-        try:
-            self.vim._sanitize_boolean_arg(1.2,'moo')
-        except VentureException as e:
-            self.assertEqual(e.exception, 'invalid_argument')
-            self.assertEqual(e.data['argument'], 'moo')
+    def test_modify_expression(self):
+        v = ['pow',{"type":"number","value":1},'a']
+        s = ['power','r[1]','a']
+        self.assertEqual(module._modify_expression(v),s)
 
     def test_parse_value_1(self):
         v = {"type":"smoothed_count", "value":0.5}
         s = "sc[0.5]"
-        self.assertEqual(self.vim._parse_value(s),v)
+        self.assertEqual(module._parse_value(s),v)
     def test_parse_value_2(self):
         v = {"type":"number", "value":1.23}
         s = 1.23
-        self.assertEqual(self.vim._parse_value(s),v)
+        self.assertEqual(module._parse_value(s),v)
 
     def test_assume(self):
         inst = {
