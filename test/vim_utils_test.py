@@ -180,6 +180,38 @@ class TestVimUtils(unittest.TestCase):
                     print msg_string.format(a,s,i)
                     raise
 
+    def test_desugar_expression_index_standard_cases(self):
+        """make sure that all sugared locations are properly translated"""
+        msg_string ="\n\nsym: {}\nsugared_exp: {}\ndesugared_exp: {}\n"\
+                    "sugared_index: {}\nexpected_index: {}\n"\
+                    "got_index: {}"
+        for a in self.fancy_expressions:
+            s = utils.desugar_expression(a)
+            for sym in ('a','b','c','d'):
+                i1 = self.find_sym(a,sym)
+                i2 = self.find_sym(s,sym)
+                try:
+                    i3 = utils.desugar_expression_index(a,i1)
+                except:
+                    print msg_string.format(sym,a,s,i1,i2,None)
+                    raise
+                self.assertEqual(i3,i2,msg=msg_string.format(sym,a,s,i1,i2,i3))
+    def test_desugar_expression_index_all_cases(self):
+        """make sure that none of the edge cases crash the thingy"""
+        msg_string ="\n\nsugared_exp: {}\ndesugared_exp: {}\n"\
+                    "sugared_index: {}"
+        for a in self.fancy_expressions:
+            s = utils.desugar_expression(a)
+            for i in self.iter_indices(a):
+                try:
+                    self.assertIsNotNone(utils.desugar_expression_index(a,i),
+                            msg=msg_string.format(a,s,i))
+                except VentureException as e:
+                    self.assertEquals(e.exception,'expression_index_desugaring')
+                except:
+                    print msg_string.format(a,s,i)
+                    raise
+
     def test_validate_instruction_1(self):
         try:
             utils.validate_instruction({},[])

@@ -117,6 +117,61 @@ def sugar_expression_index(exp, index):
         return [index[0]] + sugar_expression_index(exp[index[0]], index[1:])
 
 
+def _raise_eid():
+    """raise an expression index desugaring exception"""
+    raise VentureException('expression_index_desugaring',
+            'Expression index cannot be desugared')
+
+def desugar_expression_index(exp, index):
+    """returns a desugared version of index. exp
+    should be a syntatically-valid sugared expression.
+    index should be a sugared expression index."""
+    if (not isinstance(exp,(tuple,list))) or len(index) == 0:
+        return []
+    directive = exp[0]
+    if directive == 'if':
+        if index[0] == 0:
+            _raise_eid()
+        if index[0] == 1:
+            return [0,1] + desugar_expression_index(exp[1], index[1:])
+        if index[0] == 2:
+            return [0,2,2] + desugar_expression_index(exp[2], index[1:])
+        if index[0] == 3:
+            return [0,3,2] + desugar_expression_index(exp[3], index[1:])
+    if directive == 'and':
+        if index[0] == 0:
+            _raise_eid()
+        if index[0] == 1:
+            return [0,1] + desugar_expression_index(exp[1], index[1:])
+        if index[0] == 2:
+            return [0,2,2] + desugar_expression_index(exp[2], index[1:])
+    if directive == 'or':
+        if index[0] == 0:
+            _raise_eid()
+        if index[0] == 1:
+            return [0,1] + desugar_expression_index(exp[1], index[1:])
+        if index[0] == 2:
+            return [0,3,2] + desugar_expression_index(exp[2], index[1:])
+    if directive == 'let':
+        if index[0] == 0:
+            _raise_eid()
+        if index[0] == 1:
+            if len(index) <= 2:
+                _raise_eid()
+            e = exp[1][index[1]]
+            if index[2] == 0:
+                return [0,2]*(index[1]) + [0,1,0] + desugar_expression_index(e[0], index[3:])
+            if index[2] == 1:
+                return [0,2]*(index[1]) + [1] + desugar_expression_index(e[1], index[3:])
+        if index[0] == 2:
+            return [0,2]*(len(exp[1])) + desugar_expression_index(exp[2], index[1:])
+    if directive == 'identity':
+        if index[0] == 0:
+            _raise_eid()
+        if index[0] == 1:
+            return [0,2] + desugar_expression_index(exp[1], index[1:])
+    return [index[0]] + desugar_expression_index(exp[index[0]], index[1:])
+
 
 #############################################
 # input sanitization
