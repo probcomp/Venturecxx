@@ -5,6 +5,7 @@ from venture.exception import VentureException
 from venture.vim import utils
 import json
 import re
+import copy
 
 
 class CoreVimCppEngine(object):
@@ -16,10 +17,12 @@ class CoreVimCppEngine(object):
         from venture.vim import _cpp_engine_extension
         self.engine = _cpp_engine_extension
         self.state = 'default'
+        # the current cpp engine doesn't support reporting "observe" directives
+        self.observe_dict = {}
 
     _implemented_instructions = ["assume","observe","predict",
             "configure","forget","report","infer",
-            "clear","rollback","get_global_logscore"]
+            "clear","rollback","get_logscore","get_global_logscore"]
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._implemented_instructions)
         f = getattr(self,'_do_'+instruction['instruction'])
@@ -57,6 +60,7 @@ class CoreVimCppEngine(object):
                     raise VentureException("constraint_timeout", e,
                             runtime=t, iterations=i)
                 raise
+        self.observe_dict[did] = instruction
         return {"directive_id":did}
 
     def _do_predict(self,instruction):
@@ -86,9 +90,11 @@ class CoreVimCppEngine(object):
                 utils.validate_positive_integer)
         try:
             self.engine.forget(did)
+            if did in self.observe_dict:
+                del self.observe_dict[did]
         except Exception as e:
             if e.message == 'There is no such directive.':
-                raise VentureException('directive_id_not_found',e.message)
+                raise VentureException('invalid_argument',e.message,argument='directive_id')
             raise
         return {}
 
@@ -96,13 +102,16 @@ class CoreVimCppEngine(object):
         utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_positive_integer)
-        try:
-            val = self.engine.report_value(did)
-        except Exception as e:
-            if e.message == 'Attempt to report value for non-existent directive.':
-                raise VentureException('directive_id_not_found',e.message)
-            raise
-        return {"value":_parse_value(val)}
+        if did in self.observe_dict:
+            return {"value":copy.deepcopy(self.observe_dict[did]['value'])}
+        else:
+            try:
+                val = self.engine.report_value(did)
+            except Exception as e:
+                if e.message == 'Attempt to report value for non-existent directive.':
+                    raise VentureException('invalid_argument',e.message,argument='directive_id')
+                raise
+            return {"value":_parse_value(val)}
 
     def _do_infer(self,instruction):
         utils.require_state(self.state,'default')
@@ -118,6 +127,7 @@ class CoreVimCppEngine(object):
     def _do_clear(self,instruction):
         utils.require_state(self.state,'default')
         self.engine.clear()
+        self.observe_dict = {}
         return {}
 
     def _do_rollback(self,instruction):
@@ -125,6 +135,23 @@ class CoreVimCppEngine(object):
         #rollback not implemented in C++
         self.state = 'default'
         return {}
+
+    def _do_get_logscore(self,instruction):
+        #TODO: this implementation is a phony
+        # it has the same args + state requirements as report,
+        # so that code was copy/pasted here just to verify
+        # that the directive exists for testing purposes
+        utils.require_state(self.state,'default')
+        did = utils.validate_arg(instruction,'directive_id',
+                utils.validate_positive_integer)
+        if did not in self.observe_dict:
+            try:
+                val = self.engine.report_value(did)
+            except Exception as e:
+                if e.message == 'Attempt to report value for non-existent directive.':
+                    raise VentureException('invalid_argument',e.message,argument='directive_id')
+                raise
+        return {"logscore":0}
 
     def _do_get_global_logscore(self,instruction):
         utils.require_state(self.state,'default')

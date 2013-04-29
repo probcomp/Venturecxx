@@ -210,6 +210,20 @@ class TestCoreVimCppEngine(unittest.TestCase):
                 }
         o2 = self.vim.execute_instruction(inst2)
         self.assertEquals(o2['logscore'],-0.6931471805599453)
+    def test_get_logscore(self):
+        inst1 = {
+                'instruction':'observe',
+                'expression': ['flip'],
+                'value': {"type":"boolean","value":True}
+                }
+        o1 = self.vim.execute_instruction(inst1)
+        inst2 = {
+                'instruction':'get_logscore',
+                'directive_id':o1['directive_id'],
+                }
+        o2 = self.vim.execute_instruction(inst2)
+        #currently not implemented
+        #self.assertEquals(o2['logscore'],-0.6931471805599453)
 
 if __name__ == '__main__':
     unittest.main()
