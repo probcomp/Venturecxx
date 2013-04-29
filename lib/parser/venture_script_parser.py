@@ -5,7 +5,9 @@ from pyparsing import Literal,CaselessLiteral,Regex,Word,Combine,Group,Optional,
     ZeroOrMore,OneOrMore,Forward,nums,alphas,FollowedBy,Empty,ParseException,\
     Keyword, CaselessKeyword, MatchFirst
 import re
+from venture.parser import utils
 
+# TODO: port the tests to the utils module, ensure that all process function return a list
 
 def _collapse_identity(toks, operators):
     """
