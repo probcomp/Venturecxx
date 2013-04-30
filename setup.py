@@ -37,7 +37,8 @@ venture_sources = [os.path.abspath(os.path.join(os.path.dirname(__file__),'..','
 
 ext_modules = []
 packages=["venture","venture.vim","venture.ripl",
-    "venture.parser","venture.server","venture.shortcuts"]
+    "venture.parser","venture.server","venture.shortcuts",
+    "venture.test"]
 
 if '--without-cpp-engine' in sys.argv:
     sys.argv.remove('--without-cpp-engine')
@@ -58,6 +59,6 @@ setup (name = 'Venture engine',
        url = 'TBA',
        long_description = 'TBA.',
        packages = packages,
-       package_dir={"venture":"lib"},
+       package_dir={"venture":"lib", "venture.test":"test"},
        ext_modules = ext_modules
        )
