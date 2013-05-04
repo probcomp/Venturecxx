@@ -179,8 +179,12 @@ class TestParserUtilsAtoms(ParserTestCase):
                 [{"type": "real", "value":1.0}])
 
 
-
-
+    def test_location_wrapper(self):
+        # Literal
+        #
+        self.expression = utils.location_wrapper(utils.literal_token())
+        self.run_test( " 1",
+                [{"loc":1, "value":{"type":"number", "value":1.0}}])
 
 
 
@@ -192,9 +196,9 @@ class TestParserUtilsAtoms(ParserTestCase):
 
 class TestParserUtilsInstructions(ParserTestCase):
     def setUp(self):
-        symbol = utils.symbol_token()
-        value = utils.literal_token()
-        expression = utils.symbol_token()   #for simplicity
+        symbol = utils.location_wrapper(utils.symbol_token())
+        value = utils.location_wrapper(utils.literal_token())
+        expression = utils.location_wrapper(utils.symbol_token())   #for simplicity
         self.instruction, self.program = utils.init_instructions(value, symbol, expression)
         self.expression = self.instruction
 
@@ -202,204 +206,199 @@ class TestParserUtilsInstructions(ParserTestCase):
     def test_assume(self):
         # Assume
         #
-        self.run_test( "",
-                None)
         self.run_test( "assuMe blah = moo",
-                [{
-                    "instruction" : "assume",
-                    "symbol" : "blah",
-                    "expression" : "moo"
-                    }])
+                [{"loc": 0, "value":{
+                    "instruction" : {"loc": 0, "value":"assume"},
+                    "symbol" : {"loc": 7, "value":"blah"},
+                    "expression" : {"loc":14, "value":"moo"},
+                    }}])
     
     def test_labeled_assume(self):
         self.run_test( "name : assume a = b",
-                [{
-                    "instruction" : "labeled_assume",
-                    "symbol" : "a",
-                    "expression" : "b",
-                    "label" : 'name',
-                    }])
+                [{"loc":0, "value":{
+                    "instruction" : {"loc":7, "value":"labeled_assume"},
+                    "symbol" : {"loc": 14, "value":"a"},
+                    "expression" : {"loc":18, "value":"b"},
+                    "label" : {"loc":0, "value":'name'},
+                    }}])
 
     def test_predict(self):
         # Predict
         #
-        self.run_test( "",
-                None)
-        self.run_test( "prediCt blah",
-                [{
-                    "instruction" : "predict",
-                    "expression" : "blah",
-                    }])
+        self.run_test( "  prediCt blah",
+                [{"loc":2, "value":{
+                    "instruction" : {"loc":2, "value":"predict"},
+                    "expression" : {"loc":10, "value":"blah"},
+                    }}])
     def test_labeled_predict(self):
         self.run_test( "name : predict blah",
-                [{
-                    "instruction" : "labeled_predict",
-                    "expression" : "blah",
-                    "label" : 'name',
-                    }])
+                [{"loc":0, "value":{
+                    "instruction" : {"loc":7, "value":"labeled_predict"},
+                    "expression" : {"loc":15, "value":"blah"},
+                    "label" : {"loc":0, "value":'name'},
+                    }}])
 
     def test_observe(self):
         # Observe
         #
-        self.run_test( "",
-                None)
         self.run_test( "obServe blah = 1.3",
-                [{
-                    "instruction" : "observe",
-                    "expression" : "blah",
-                    "value" : {"type":"number", "value":1.3},
-                    }])
+                [{"loc":0, "value":{
+                    "instruction" : {"loc":0, "value":"observe"},
+                    "expression" : {"loc":8, "value":"blah"},
+                    "value" : {"loc": 15, "value":{"type":"number", "value":1.3}},
+                    }}])
     def test_labeled_observe(self):
         self.run_test( "name : observe a = count<32>",
-                [{
-                    "instruction" : "labeled_observe",
-                    "expression" : "a",
-                    "value" : {'type':'count', 'value':32.0},
-                    "label" : 'name',
-                    }])
+                [{"loc":0, "value":{
+                    "instruction" : {"loc":7, "value":"labeled_observe"},
+                    "expression" : {"loc":15, "value":"a"},
+                    "value" : {"loc":19, "value":{'type':'count', 'value':32.0}},
+                    "label" : {"loc":0, "value":'name'},
+                    }}])
 
     def test_forget(self):
         # Forget
         #
-        self.run_test( "",
-                None)
         self.run_test( "FORGET 34",
-                [{
-                    "instruction" : "forget",
-                    "directive_id" : 34,
-                    }])
+                [{"loc":0, "value":{
+                    "instruction" : {"loc":0, "value":"forget"},
+                    "directive_id" : {"loc":7, "value":34},
+                    }}])
 
     def test_labeled_forget(self):
         self.run_test( "forget blah",
-                [{
-                    "instruction" : "labeled_forget",
-                    "label" : "blah",
-                    }])
+                [{"loc":0, "value":{
+                    "instruction" : {"loc":0, "value":"labeled_forget"},
+                    "label" : {"loc":7, "value":"blah"},
+                    }}])
 
     def test_sample(self):
         # Sample
         #
-        self.run_test( "",
-                None)
         self.run_test( "saMple blah",
-                [{
-                    "instruction" : "sample",
-                    "expression" : "blah",
-                    }])
+                [{"loc":0, "value":{
+                    "instruction" : {"loc":0, "value":"sample"},
+                    "expression" : {"loc":7, "value":"blah"},
+                    }}])
 
     def test_force(self):
         # Force
         #
-        self.run_test( "",
-                None)
         self.run_test( "force blah = count<132>",
-                [{
-                    "instruction" : "force",
-                    "expression" : "blah",
-                    "value" : {'type':'count', 'value':132.0},
-                    }])
+                [{"loc":0, "value":{
+                    "instruction" : {"loc":0, "value":"force"},
+                    "expression" : {"loc":6, "value":"blah"},
+                    "value" : {"loc":13, "value":{'type':'count', 'value':132.0}},
+                    }}])
 
     def test_infer(self):
         # Infer
         #
-        self.run_test( "",
-                None)
-        self.run_test( "infer 132",
-                [{
-                    "instruction" : "infer",
-                    "iterations" : 132,
-                    "resample" : False,
-                    }])
+        self.run_test( " infer 132",
+                [{"loc":1, "value":{
+                    "instruction" : {"loc":1, "value":"infer"},
+                    "iterations" : {"loc":7, "value":132},
+                    "resample" : {"loc":1, "value":False},
+                    }}])
 
     def test_program(self):
         self.expression = self.program
         self.run_test( "force blah = count<132> infer 132",
-                [{
-                    "instruction" : "force",
-                    "expression" : "blah",
-                    "value" : {'type':'count', 'value':132.0},
-                    },{
-                    "instruction" : "infer",
-                    "iterations" : 132,
-                    "resample" : False,
-                    }])
+                [{"loc":0, "value":[
+                    {"loc":0, "value":{
+                        "instruction" : {"loc":0, "value":"force"},
+                        "expression" : {"loc":6, "value":"blah"},
+                        "value" : {"loc":13, "value":{'type':'count', 'value':132.0}},
+                        }},{"loc":24, "value":{
+                        "instruction" : {"loc":24, "value":"infer"},
+                        "iterations" : {"loc":30 , "value":132},
+                        "resample" : {"loc":24, "value":False},
+                    }}]}])
 
 
-class TestParserUtilsStack(ParserTestCase):
-    def test_push_stack(self):
-        stack = []
-        s = utils.literal_token(stack)
-        s.parseString(" int<1>")
-        expected = [{
-                "index" : 1,
-                "children" : [],
-                }]
-        self.assertEquals(stack, expected)
+                
 
-    def test_nest_stack(self):
-        stack = []
-        symbol = utils.symbol_token(stack)
-        value = utils.literal_token(stack)
-        expression = utils.symbol_token(stack)
-        instruction, program = utils.init_instructions(value, symbol, expression, stack)
-        instruction.parseString("    assume a = web")
-        expected = [{
-                "index" : 4,
-                "children" : [
-                    {
-                        "index": 11,
-                        "children": [],
-                    },{
-                        "index": 15,
-                        "children": [],
-                        }
-                    ],
-                }]
-        self.assertEquals(stack, expected)
+
+
+class TestParserUtilsStuff(ParserTestCase):
+    A = {"loc":14, "value":{
+            "instruction":{"loc":12, "value":"asume"},
+            "expression": {"loc":43, "value":[
+                {"loc": 44, "value":"moo"},
+                {"loc":90, "value":[
+                    {'loc':90, "value":"poo"},
+                    {'loc':100, "value":"foo"},
+                    ]},
+                ]},
+            "symbol" : {"loc":123, "value": "q"},
+            }}
+    B = {
+            "instruction":"asume",
+            "expression":['moo',['poo','foo']],
+            "symbol":"q",
+            }
+    C = {
+            "instruction":12,
+            "expression":43,
+            "symbol":123,
+            }
+    
+    def test_simplify_expression_parse_tree(self):
+        a = self.A['value']['expression']
+        b = self.B['expression']
+        output = utils.simplify_expression_parse_tree(a)
+        self.assertEqual(output, b)
+
+    def test_simplify_instruction_parse_tree(self):
+        a = self.A
+        b = self.B
+        output = utils.simplify_instruction_parse_tree(a)
+        self.assertEqual(output, b)
+
+    def test_simplify_program_parse_tree(self):
+        a = {"loc":0, "value":[self.A]*3}
+        b = [self.B]*3
+        output = utils.simplify_program_parse_tree(a)
+        self.assertEqual(output, b)
+    
+    def test_split_instruction_parse_tree(self):
+        a = self.A
+        b = self.C
+        output = utils.split_instruction_parse_tree(a)
+        self.assertEqual(output, b)
+
+    def test_split_program_parse_tree(self):
+        a = {"loc":0, "value":[self.A]*3}
+        b = [14]*3
+        output = utils.split_program_parse_tree(a)
+        self.assertEqual(output, b)
 
     def test_get_text_index(self):
-        stack = [{
-                "index" : 4,
-                "children" : [
-                    {
-                        "index": 11,
-                        "children": [],
-                    },{
-                        "index": 15,
-                        "children": [],
-                        }
-                    ],
-                }]
-        output1 = utils.get_text_index(stack,0)
-        expected1 = 4
-        self.assertEqual(output1, expected1)
-        output2 = utils.get_text_index(stack,0, 1)
-        expected2 = 15
-        self.assertEqual(output2, expected2)
+        a = self.A['value']['expression']
+        output = utils.get_text_index(a,[])
+        self.assertEqual(output, 43)
+        output = utils.get_text_index(a, [0])
+        self.assertEqual(output, 44)
+        output = utils.get_text_index(a, [1])
+        self.assertEqual(output, 90)
+        output = utils.get_text_index(a, [1,0])
+        self.assertEqual(output, 90)
+        output = utils.get_text_index(a, [1,1])
+        self.assertEqual(output, 100)
 
-    def test_get_parse_tree_index(self):
-        stack = [{
-                "index" : 4,
-                "children" : [
-                    {
-                        "index": 11,
-                        "children": [],
-                    },{
-                        "index": 15,
-                        "children": [],
-                        }
-                    ],
-                }]
-        output1 = utils.get_parse_tree_index(stack,16)
-        expected1 = [0,1]
-        self.assertEquals(output1, expected1)
-        output2 = utils.get_parse_tree_index(stack,15)
-        expected2 = [0,1]
-        self.assertEquals(output2, expected2)
-        try:
-            utils.get_parse_tree_index(stack,3)
-        except VentureException as e:
-            self.assertEqual(e.exception, 'fatal')
+    def test_expression_index(self):
+        a = self.A['value']['expression']
+        output = utils.get_expression_index(a, 42)
+        self.assertEqual(output, [])
+        output = utils.get_expression_index(a, 43)
+        self.assertEqual(output, [])
+        output = utils.get_expression_index(a, 44)
+        self.assertEqual(output, [0])
+        output = utils.get_expression_index(a, 45)
+        self.assertEqual(output, [0])
+        output = utils.get_expression_index(a, 90)
+        self.assertEqual(output, [1,0])
+
 
     def test_apply_parser(self):
         element = utils.symbol_token()
