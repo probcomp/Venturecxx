@@ -15,7 +15,8 @@ class VentureLispParser():
         m = {'+':'add', '-':'sub', '*':'mul', '/':'div', '<':'lt',
                 '>':'gt', '<=':'lte', '>=':'gte', '=':'eq', '!=':'neq'}
 
-        self.symbol = utils.location_wrapper(utils.symbol_token(whitelist_symbols = w, symbol_map = m))
+        self.symbol = utils.location_wrapper(
+                utils.symbol_token(whitelist_symbols = w, symbol_map = m))
 
         self.value = utils.location_wrapper(utils.literal_token())
 
@@ -51,29 +52,27 @@ class VentureLispParser():
         return utils.apply_parser(self.symbol, s)[0]['value']
 
     def parse_instruction(self, s):
-        return utils.apply_parser(self.instruction, s)[0]
+        return utils.simplify_instruction_parse_tree(
+                utils.apply_parser(self.instruction, s)[0])
 
     def parse_program(self, s):
-        return utils.apply_parser(self.instruction, s)[0]
-
-    def split_instruction(self, s):
-        o = utils.apply_parser(self.program, s)[0]
-        output = []
-        for i in range(len(o)):
-            output.append(utils.get_text_index(0, i))
-        return output
+        return utils.simplify_program_parse_tree(
+                utils.apply_parser(self.program, s)[0])
 
     def split_program(self, s):
-        o = utils.apply_parser(self.program, s)[0]
-        output = []
-        for i in range(len(o)):
-            output.append(utils.get_text_index(0, i))
-        return output
+        locs = utils.split_program_parse_tree(
+                utils.apply_parser(self.program, s)[0])
+        strings = utils.get_string_fragments(s, locs)
+        return (strings, locs)
 
-    def get_expression_index(self, s, text_index):
-        self.expression.parseString(s)
-        return utils._get_parse_tree_index(text_index)[1:]
+    def argument_locations(self, s):
+        return utils.split_instruction_parse_tree(
+                utils.apply_parser(self.instruction, s)[0])
 
-    def get_text_index(self, s, expression_index):
-        self.expression.parseString(s)
-        return utils.get_text_index(0, *expression_index)
+    def get_expression_index_from_expression(self, s, text_index):
+        return utils.get_expression_index(
+                utils.apply_parser(self.expression),text_index)
+
+    def get_text_index_from_expression(self, s, expression_index):
+        return utils.get_text_index(
+                utils.apply_parser(self.expression),expression_index)

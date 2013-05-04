@@ -234,6 +234,14 @@ def split_instruction_parse_tree(parse_tree):
 def split_program_parse_tree(parse_tree):
     return [x['loc'] for x in parse_tree['value']]
 
+def get_string_fragments(s,locs):
+    output = []
+    tmp = s
+    for loc in locs[::-1]:
+        output.insert(0, tmp[loc:])
+        tmp = tmp[:loc]
+    return output
+
 def get_text_index(parse_tree, expression_index):
     """parse-tree-index to text index"""
     if len(expression_index) == 0:
@@ -266,7 +274,7 @@ def get_expression_index(parse_tree, text_index):
         i += 1
     if len(s) == 0:
         raise VentureException("fatal", "No parse tree available")
-    # a click before the start of the expression defaults to the entire expression
+    # a click before the start of the expression corresponds to the entire expression
     if text_index < s[i][0]:
         return []
     #preference for the most specific (longest) expression index

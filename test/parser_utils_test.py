@@ -399,6 +399,12 @@ class TestParserUtilsStuff(ParserTestCase):
         output = utils.get_expression_index(a, 90)
         self.assertEqual(output, [1,0])
 
+    def test_get_string_fragments(self):
+        s = '0123456789'
+        f = [1, 5, 9]
+        output = utils.get_string_fragments(s, f)
+        self.assertEqual(output, ['1234','5678','9'])
+
 
     def test_apply_parser(self):
         element = utils.symbol_token()

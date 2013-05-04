@@ -17,7 +17,12 @@ class TestVentureLispParser(ParserTestCase):
         self.run_test( "()",
                 None)
         self.run_test( "(a b (c real<1>))",
-                [['a','b',['c',{"type":"real","value":1.0}]]])
+                [{'loc': 0, 'value':[
+                    {'loc': 1, 'value': 'a'},
+                    {'loc': 3, 'value': 'b'},
+                    {'loc': 5, 'value': [
+                        {'loc': 6, 'value': 'c'},
+                        {'loc': 8, 'value': {'type': 'real', 'value': 1.0}}]}]}])
 
     def test_parse_value(self):
         output = self.p.parse_value('1')
@@ -39,22 +44,19 @@ class TestVentureLispParser(ParserTestCase):
         expected = {'instruction':'assume', 'symbol':'a', 'expression':['b','c','d']}
         self.assertEqual(output,expected)
 
+    def test_argument_locations(self):
+        output = self.p.argument_locations(" force blah = count<132>")
+        indices = {
+                "instruction": 1,
+                "expression": 7,
+                "value": 14}
+        self.assertEqual(output,indices)
+
     def test_split_program(self):
         output = self.p.split_program(" force blah = count<132> infer 132")
-        instructions = [{
-                    "instruction" : "force",
-                    "expression" : "blah",
-                    "value" : {'type':'count', 'value':132.0},
-                    },{
-                    "instruction" : "infer",
-                    "iterations" : 132,
-                    "resample" : False,
-                    }]
+        instructions = ['force blah = count<132> ','infer 132']
         indices = [1,25]
         self.assertEqual(output,(instructions, indices))
-
-    def test_get_text_index(self):
-        pass
 
 
 
