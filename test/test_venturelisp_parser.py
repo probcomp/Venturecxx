@@ -58,6 +58,18 @@ class TestVentureLispParser(ParserTestCase):
         indices = [1,25]
         self.assertEqual(output,(instructions, indices))
 
+    def test_text_index_from_expression(self):
+        s = "(a b (c (d e) f ))"
+        f = self.p.get_text_index_from_expression
+        output = f(s, [0])
+        self.assertEqual(output, 1)
+        output = f(s, [2])
+        self.assertEqual(output, 5)
+        output = f(s, [2,0])
+        self.assertEqual(output, 6)
+        output = f(s, [2,1,1])
+        self.assertEqual(output, 11)
+
 
 
 

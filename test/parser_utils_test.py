@@ -388,8 +388,10 @@ class TestParserUtilsStuff(ParserTestCase):
 
     def test_expression_index(self):
         a = self.A['value']['expression']
-        output = utils.get_expression_index(a, 42)
-        self.assertEqual(output, [])
+        try:
+            output = utils.get_expression_index(a, 42)
+        except VentureException as e:
+            self.assertEqual(e.exception = 'no_expression_index')
         output = utils.get_expression_index(a, 43)
         self.assertEqual(output, [])
         output = utils.get_expression_index(a, 44)

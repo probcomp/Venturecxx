@@ -70,9 +70,27 @@ class VentureLispParser():
                 utils.apply_parser(self.instruction, s)[0])
 
     def get_expression_index_from_expression(self, s, text_index):
-        return utils.get_expression_index(
-                utils.apply_parser(self.expression),text_index)
+        parse_tree = utils.apply_parser(self.expression, s)[0]
+        if not (0 <= text_index < len(s)):
+            raise VentureException('no_expression_index', 'Text index is outside the'
+                'range of the string')
+        return utils.get_expression_index(parse_tree, text_index)
 
     def get_text_index_from_expression(self, s, expression_index):
-        return utils.get_text_index(
-                utils.apply_parser(self.expression),expression_index)
+        parse_tree = utils.apply_parser(self.expression, s)[0]
+        return utils.get_text_index(parse_tree, expression_index)
+
+    def get_expression_index_from_instruction(self, s, text_index):
+        parse_tree = utils.apply_parser(self.expression, s)[0]
+        if not 'expression' in parse_tree:
+            raise VentureException('no_expression_index', 'Instruction must be a directive')
+        if not (0 <= text_index < len(s)):
+            raise VentureException('no_expression_index', 'Text index is outside the'
+                'range of the string')
+        return utils.get_expression_index(parse_tree['expression'], text_index)
+
+    def get_text_index_from_instruction(self, s, expression_index):
+        parse_tree = utils.apply_parser(self.expression, s)[0]
+        if not 'expression' in parse_tree:
+            raise VentureException('fatal', 'Instruction must be a directive')
+        return utils.get_text_index(parse_tree['expression'], expression_index)

@@ -273,10 +273,11 @@ def get_expression_index(parse_tree, text_index):
     while i + 1 < len(s) and s[i+1][0] <= text_index:
         i += 1
     if len(s) == 0:
-        raise VentureException("fatal", "No parse tree available")
-    # a click before the start of the expression corresponds to the entire expression
+        raise VentureException("no_expression_index", "Provided string could not be parsed")
+    # a click before the start of the expression corresponds to nothing
     if text_index < s[i][0]:
-        return []
+        raise VentureException("no_expression_index", "Text index occurs"
+        "before the start of the expression.")
     #preference for the most specific (longest) expression index
     exps = s[i][1]
     output = None
