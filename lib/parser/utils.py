@@ -5,6 +5,7 @@ from pyparsing import Literal,CaselessLiteral,Regex,Word,Combine,Group,Optional,
     ZeroOrMore,OneOrMore,Forward,nums,alphas,FollowedBy,Empty,ParseException,\
     Keyword, CaselessKeyword, MatchFirst, ParseResults
 import re
+import json
 
 from venture.exception import VentureException
 
@@ -231,6 +232,41 @@ def apply_parser(element, string):
         raise VentureException('text_parse',
                 e.message, index=e.loc)
 
+def value_to_string(v):
+    if isinstance(v, dict):
+        if (not 'type' in v) or (not 'value' in v):
+            raise VentureException('fatal',
+                    'Value should take the form {"type":<type>, "value":<value>}.')
+        if v['type'] == "boolean":
+            if v['value'] == True:
+                return 'true'
+            if v['value'] == False:
+                return 'true'
+            raise VentureException('fatal',
+                    'Invalid boolean value')
+        if v['type'] == "number":
+            if not isinstance(v['value'], (int, float)):
+                raise VentureException('fatal',
+                        'Invalid number value')
+            return "{}".format(v['value'])
+        try:
+            return "{}<{}>".format(
+                    v['type'],
+                    json.dumps(v['value']))
+        except:
+            raise VentureException('fatal',
+                    'Invalid value -- could not convert to json string')
+    if isinstance(v, bool):
+        if v:
+            return "true"
+        return "false"
+    if isinstance(v, (int, float)):
+        return "{}".format(v)
+    if isinstance(v, basestring):
+        return v
+    raise VentureException('fatal',
+            'Value must be a dict, boolean, number, or pre-formatted string')
+
 def _unpack(l):
     if isinstance(l['value'], (list, tuple, ParseResults)):
         return [_unpack(x) for x in l['value']]
@@ -278,7 +314,7 @@ def get_text_index(parse_tree, expression_index):
         for i in expression_index[:-1]:
             tmp = tmp['value'][i]
         x = tmp['value'][expression_index[-1]]['loc']
-        if len(x) == 0:
+        if x == None:
             raise VentureException("no_text_index", "Expression index does"\
                 " not have a corresponding text index" + str(e.message))
         return x

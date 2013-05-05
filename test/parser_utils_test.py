@@ -11,7 +11,7 @@ import traceback
 import StringIO
 
 def r(a,b,c):
-    return [{"loc":(a,a+b-1), "value":c}]
+    return [{"loc":[a,a+b-1], "value":c}]
 
 def j(*args):
     mins = []
@@ -19,7 +19,7 @@ def j(*args):
     for a, b in zip(*(iter(args),)*2):
         mins.append(a)
         maxes.append(a+b-1)
-    return (min(mins), max(maxes))
+    return [min(mins), max(maxes)]
 
 class TestParserUtilsAtoms(ParserTestCase):
     def setUp(self):
@@ -440,6 +440,24 @@ class TestParserUtilsStuff(ParserTestCase):
             self.assertEqual(e.exception, 'fatal')
         output = utils.apply_parser(element,'awef')
         self.assertEqual(output,[{"loc":j(0,4), "value":'awef'}])
+
+    def test_value_to_string(self):
+        output = utils.value_to_string("real<1>")
+        self.assertEqual(output, "real<1>")
+        output = utils.value_to_string({"type":"real","value":1})
+        self.assertEqual(output, "real<1>")
+        output = utils.value_to_string({"type":"number","value":1})
+        self.assertEqual(output, "1")
+        output = utils.value_to_string({"type":"boolean","value":True})
+        self.assertEqual(output, 'true')
+        try:
+            utils.value_to_string({"type":"real","val":1})
+        except VentureException as e:
+            self.assertEqual(e.exception, "fatal")
+        output = utils.value_to_string(1)
+        self.assertEqual(output, "1")
+        output = utils.value_to_string(True)
+        self.assertEqual(output, "true")
 
 if __name__ == '__main__':
     unittest.main()

@@ -41,6 +41,9 @@ class VentureLispParser():
         #disable tab expansion
         self.program.parseWithTabs()
 
+    def value_to_string(self, v):
+        return utils.value_to_string(v)
+
     def parse_value(self, s):
         return utils.apply_parser(self.value, s)[0]['value']
 

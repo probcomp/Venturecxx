@@ -24,6 +24,10 @@ class TestVentureLispParser(ParserTestCase):
                         {'loc': [6,6], 'value': 'c'},
                         {'loc': [8,14], 'value': {'type': 'real', 'value': 1.0}}]}]}])
 
+    def test_value_to_string(self):
+        output = self.p.value_to_string(True)
+        self.assertEqual(output, "boolean<true>")
+
     def test_parse_value(self):
         output = self.p.parse_value('1')
         expected = {'type':'number','value':1.0}
