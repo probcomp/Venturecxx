@@ -19,7 +19,7 @@ def lw(thingy):
     x = chomp + MatchFirst([thingy]).leaveWhitespace()
     def process_x_token(s, loc, toks):
         if isinstance(toks[0], basestring):
-            return [{'loc':set(range(loc, loc+len(toks[0]))), "value":toks[0]}]
+            return [{'loc':[loc, loc+len(toks[0])-1], "value":toks[0]}]
         raise VentureException('fatal', 'The lw wrapper only accepts string-valued'
                 "tokens. Got: " + toks[0])
     x.setParseAction(process_x_token)
@@ -28,10 +28,9 @@ def lw(thingy):
 def combine_locs(l):
     # combines the text-index locations of the given parsed tokens
     # into a single set
-    s = set()
-    for a in l:
-        s = s.union(a['loc'])
-    return s
+    mins = (a['loc'][0] for a in l)
+    maxes = (a['loc'][1] for a in l)
+    return [min(mins), max(maxes)]
 
 # <symbol>
 #
@@ -261,13 +260,13 @@ def split_program_parse_tree(parse_tree):
 def get_program_string_fragments(s,locs):
     output = []
     for loc in locs:
-        output.append(s[min(loc):max(loc)+1])
+        output.append(s[loc[0]:loc[1]+1])
     return output
 
 def get_instruction_string_fragments(s,locs):
     output = {}
     for key, loc in locs.items():
-        output[key] = s[min(loc):max(loc)+1]
+        output[key] = s[loc[0]:loc[1]+1]
     return output
 
 def get_text_index(parse_tree, expression_index):
@@ -278,16 +277,20 @@ def get_text_index(parse_tree, expression_index):
     try:
         for i in expression_index[:-1]:
             tmp = tmp['value'][i]
-        return tmp['value'][expression_index[-1]]['loc']
+        x = tmp['value'][expression_index[-1]]['loc']
+        if len(x) == 0:
+            raise VentureException("no_text_index", "Expression index does"\
+                " not have a corresponding text index" + str(e.message))
+        return x
     except Exception as e:
-        raise VentureException("fatal", "Expression index not found: " + str(e.message))
+        raise VentureException("no_text_index", "Expression index is invalid: " + str(e.message))
 
 def get_expression_index(parse_tree, text_index):
     """text index to expression-index, the parse_tree
     is supposed to be the parse tree of an exception"""
     d = {}
     def unpack(l, prefix=[]):
-        for loc in l['loc']:
+        for loc in range(l['loc'][0], l['loc'][1]+1):
             if loc in d:
                 d[loc].append(prefix)
             else:
@@ -450,7 +453,7 @@ def init_instructions(value, symbol, expression):
         if len(toks) == 3:
             resample = toks[2]
         else:
-            resample = {'loc':set(), "value":False}
+            resample = {'loc':toks[0]['loc'], "value":False}
         v = {
                 'instruction': toks[0],
                 'iterations': toks[1],

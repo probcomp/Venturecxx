@@ -11,13 +11,15 @@ import traceback
 import StringIO
 
 def r(a,b,c):
-    return [{"loc":set(range(a,a+b)), "value":c}]
+    return [{"loc":(a,a+b-1), "value":c}]
 
 def j(*args):
-    l = []
+    mins = []
+    maxes = []
     for a, b in zip(*(iter(args),)*2):
-        l.extend(list(range(a,a+b)))
-    return set(l)
+        mins.append(a)
+        maxes.append(a+b-1)
+    return (min(mins), max(maxes))
 
 class TestParserUtilsAtoms(ParserTestCase):
     def setUp(self):
@@ -297,7 +299,7 @@ class TestParserUtilsInstructions(ParserTestCase):
                 [{"loc":j(1,5,7,3), "value":{
                     "instruction" : {"loc":j(1,5), "value":"infer"},
                     "iterations" : {"loc":j(7,3), "value":132},
-                    "resample" : {"loc":j(), "value":False},
+                    "resample" : {"loc":j(1,5), "value":False},
                     }}])
 
     def test_program(self):
@@ -311,7 +313,7 @@ class TestParserUtilsInstructions(ParserTestCase):
                         }},{"loc":j(24,5,30,3), "value":{
                         "instruction" : {"loc":j(24,5), "value":"infer"},
                         "iterations" : {"loc":j(30,3), "value":132},
-                        "resample" : {"loc":j(), "value":False},
+                        "resample" : {"loc":j(24,5), "value":False},
                     }}]}])
 
 
@@ -392,6 +394,8 @@ class TestParserUtilsStuff(ParserTestCase):
         except VentureException as e:
             self.assertEqual(e.exception, 'no_expression_index')
         output = utils.get_expression_index(a, 43)
+        self.assertEqual(output, [])
+        output = utils.get_expression_index(a, 50)
         self.assertEqual(output, [])
         output = utils.get_expression_index(a, 44)
         self.assertEqual(output, [0])

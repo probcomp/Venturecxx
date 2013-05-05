@@ -15,20 +15,20 @@ class VentureLispParser():
         m = {'+':'add', '-':'sub', '*':'mul', '/':'div', '<':'lt',
                 '>':'gt', '<=':'lte', '>=':'gte', '=':'eq', '!=':'neq'}
 
-        self.symbol = utils.location_wrapper(
-                utils.symbol_token(whitelist_symbols = w, symbol_map = m))
+        self.symbol = utils.symbol_token(whitelist_symbols = w, symbol_map = m)
 
-        self.value = utils.location_wrapper(utils.literal_token())
+        self.value = utils.literal_token()
 
         self.expression = Forward()
 
-        self.combination = ( Literal("(").suppress()
-                + OneOrMore(self.expression)
-                + Literal(")").suppress())
+        self.combination =  utils.lw(Literal("("))\
+                + OneOrMore(self.expression)\
+                + utils.lw(Literal(")"))
         def process_combination(s, loc, toks):
-            return [list(toks)]
+            v = toks[1:-1]
+            l = utils.combine_locs(toks)
+            return [{"loc":l, "value":v}]
         self.combination.setParseAction(process_combination)
-        self.combination = utils.location_wrapper(self.combination)
 
         self.expression << (self.combination | self.value | self.symbol)
         def process_expression(s, loc, toks):
@@ -62,35 +62,21 @@ class VentureLispParser():
     def split_program(self, s):
         locs = utils.split_program_parse_tree(
                 utils.apply_parser(self.program, s)[0])
-        strings = utils.get_string_fragments(s, locs)
-        return (strings, locs)
+        strings = utils.get_program_string_fragments(s, locs)
+        locs = [list(sorted(loc)) for loc in locs]
+        return [strings, locs]
 
-    def argument_locations(self, s):
-        return utils.split_instruction_parse_tree(
+    def split_instruction(self, s):
+        locs = utils.split_instruction_parse_tree(
                 utils.apply_parser(self.instruction, s)[0])
+        strings = utils.get_instruction_string_fragments(s, locs)
+        locs = {key: list(sorted(loc)) for key,loc in locs.items()}
+        return [strings, locs]
 
-    def get_expression_index_from_expression(self, s, text_index):
+    def character_index_to_expression_index(self, s, text_index):
         parse_tree = utils.apply_parser(self.expression, s)[0]
-        if not (0 <= text_index < len(s)):
-            raise VentureException('no_expression_index', 'Text index is outside the'
-                'range of the string')
         return utils.get_expression_index(parse_tree, text_index)
 
-    def get_text_index_from_expression(self, s, expression_index):
+    def expression_index_to_text_index(self, s, expression_index):
         parse_tree = utils.apply_parser(self.expression, s)[0]
         return utils.get_text_index(parse_tree, expression_index)
-
-    def get_expression_index_from_instruction(self, s, text_index):
-        parse_tree = utils.apply_parser(self.expression, s)[0]
-        if not 'expression' in parse_tree:
-            raise VentureException('no_expression_index', 'Instruction must be a directive')
-        if not (0 <= text_index < len(s)):
-            raise VentureException('no_expression_index', 'Text index is outside the'
-                'range of the string')
-        return utils.get_expression_index(parse_tree['expression'], text_index)
-
-    def get_text_index_from_instruction(self, s, expression_index):
-        parse_tree = utils.apply_parser(self.expression, s)[0]
-        if not 'expression' in parse_tree:
-            raise VentureException('fatal', 'Instruction must be a directive')
-        return utils.get_text_index(parse_tree['expression'], expression_index)
