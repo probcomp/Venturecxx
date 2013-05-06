@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 import unittest
 from venture.exception import VentureException
-from venture.parser import VentureLispParser
+from venture.parser import VentureScriptParser
 from venture.test.test_helpers import ParserTestCase
 
 
@@ -26,7 +26,7 @@ class TestVentureLispParser(ParserTestCase):
 
     def test_value_to_string(self):
         output = self.p.value_to_string(True)
-        self.assertEqual(output, "boolean<true>")
+        self.assertEqual(output, "true")
 
     def test_parse_value(self):
         output = self.p.parse_value('1')

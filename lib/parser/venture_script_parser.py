@@ -7,7 +7,10 @@ from pyparsing import Literal,CaselessLiteral,Regex,Word,Combine,Group,Optional,
 import re
 from venture.parser import utils
 
-# TODO: port the tests to the utils module, ensure that all process function return a list
+#shortcuts
+lw = utils.lw
+combine_locs = utils.combine_locs
+
 
 def _collapse_identity(toks, operators):
     """
@@ -23,17 +26,25 @@ def _collapse_identity(toks, operators):
 
     returns: ['identity',
                 ['+',a, b]]
+
+    Of course, this function operates on the 'full'
+    {"loc":[], "value":[]} representation the above
+    parse trees. When a layer of parentheses is
+    collapsed, the loc range of the inner expression
+    is expanded to include the collapsed parens.
     """
-    if not isinstance(toks, (list, tuple)):
+    if not isinstance(toks['value'], (list, tuple)):
         return toks
-    if not toks[0] == 'identity':
+    if not toks['value'][0]['value'] == 'identity':
         return toks
-    if not isinstance(toks[1], (list, tuple)):
+    if not isinstance(toks['value'][1]['value'], (list, tuple)):
         return toks
-    if toks[1][0] == 'identity':
-        return ['identity', _collapse_identity(toks[1], operators)]
-    if toks[1][0] in operators:
-        return toks[1]
+    if toks['value'][1]['value'][0]['value'] == 'identity':
+        return {"loc":toks['loc'], "value":[
+            toks['value'][0],
+            _collapse_identity(toks['value'][1], operators)]}
+    if toks['value'][1]['value'][0]['value'] in operators:
+        return {"loc":toks['loc'], "value":toks['value'][1]['value']}
     return toks
 
 def _make_infix_token(previous_token, operator_map, lower_precedence, left_to_right = True, swap_order = False):
@@ -49,7 +60,7 @@ def _make_infix_token(previous_token, operator_map, lower_precedence, left_to_ri
         the proper binary tree based on certain operator precedence rules
         """
         if len(toks) == 1:
-            return list(toks)
+            return [toks[0]]
         #reverse the toks if right-to-left chaining
         if not left_to_right:
             toks = toks[-1::-1]
@@ -59,206 +70,51 @@ def _make_infix_token(previous_token, operator_map, lower_precedence, left_to_ri
         #collapse all self-identities at index >= 2
         for i in range(2, len(toks), 2):
             toks[i] = _collapse_identity(toks[i], operator_value_list)
-        #construct the Lisp code
-        exp = [toks[0]]
+        #construct the parse tree
+        exp = toks[0]
         for operator, operand in zip(*(iter(toks[1:]),)*2):
+            l = combine_locs([operator, operand, exp])
+            operator['value'] = operator_dict[operator['value']]
             if swap_order:
-                exp = [[operator_dict[operator], operand, exp[0]]]
+                v = [operator, operand, exp]
             else:
-                exp = [[operator_dict[operator], exp[0], operand]]
-        return exp
+                v = [operator, exp, operand]
+            exp = {"loc":l, "value":v}
+        return [exp]
     token = previous_token + Optional(\
-            ZeroOrMore( MatchFirst((Literal(x) for x in operator_key_list)) + previous_token))
+            ZeroOrMore( lw(MatchFirst((Literal(x) for x in operator_key_list))) + previous_token))
     token.setParseAction(f)
     return token
 
-class ExperimentalParser():
+class VentureScriptParser():
     def __init__(self):
         # <expression>
         self.expression = Forward()
 
 
-        # <symbol>
-        #
-        # evaluates to itself as a string, with the escaped char unescaped
         self.reserved_symbols = set(['if','else','proc',
             'true','false','lambda','identity', 'let','add','sub','div',
             'mul','pow','neq','gte','lte', 'eq', 'gt', 'lt', 'and', 'or'])
-        def process_symbol(s, loc, toks):
-            tok = re.sub(r'\\(.)',r'\1', toks[0])
-            if tok in self.reserved_symbols:
-                raise ParseException(s, loc,
-                    "Reserved word cannot be symbol: " + tok, self)
-            return [tok]
-        self.symbol = Regex(r'[a-zA-Z_][a-zA-Z_0-9]*')
-        self.symbol.setParseAction(process_symbol)
+        self.symbol = utils.symbol_token(blacklist_symbols = self.reserved_symbols)
 
 
-        # <number>
-        #
-        # evaluates to a python float
-        def process_number(s, loc, toks):
-            return [float(toks[0])]
-        self.number = Regex(r'(-?\d+\.?\d*)|(-?\d*\.?\d+)')
-        self.number.setParseAction(process_number)
+        self.number = utils.number_token()
 
+        self.string = utils.string_token()
 
-        # <integer>
-        #
-        # evaluates to a python integer
-        def process_integer(s, loc, toks):
-            return [int(toks[0])]
-        self.integer = Regex(r'\d+')
-        self.integer.setParseAction(process_integer)
-
-
-        # <string>
-        #
-        # evaluates to a python string
-        def process_string(s, loc, toks):
-            s = toks[0]
-            s = s[1:-1]
-            s = s.replace(r'\n','\n')
-            s = s.replace(r'\t','\t')
-            s = s.replace(r'\f','\f')
-            s = s.replace(r'\b','\b')
-            s = s.replace(r'\r','\r')
-            s = s.replace("\\\\", "\\")
-            s = s.replace(r"\/", '/')
-            s = s.replace(r'\"','"')
-            octals = list(re.finditer(r'\\[0-7]{3}', s))
-            octals.reverse()
-            for match in octals:
-                st = match.group()
-                i = int(st[1])*64+int(st[2])*8+int(st[3])
-                if i > 127:
-                    raise ParseException(s, loc,
-                            "Octal too large for ASCII character: " + st, self.string)
-                c = chr(i)
-                start = match.start()
-                end = match.end()
-                s = s[:start] + c + s[end:]
-            return [s]
-        self.string = Regex(r'"(?:[^"\\]|\\"|\\\\|\\/|\\r|\\b|\\n|\\t|\\f|\\[0-7]{3})*"')
-        self.string.setParseAction(process_string)
-
-
-
-        # <null>
-        #
-        # evaluates to a python None
-        def process_null(s, loc, toks):
-            return [None]
-        self.null = Keyword('null')
-        self.null.setParseAction(process_null)
-
-
-        # <boolean>
-        #
-        # evaluates to a python boolean
-        def process_boolean(s, loc, toks):
-            if toks[0] == 'true':
-                return [True]
-            return False
-        self.boolean = Keyword('true') | Keyword('false')
-        self.boolean.setParseAction(process_boolean)
-
-
-
-        # <json_value>
-        #
-        # forward declaration
-        self.json_value = Forward()
-
-
-        # <json_list>
-        #
-        # evaluates to a python list
-        def process_json_list(s, loc, toks):
-            return [list(toks)]
-        self.json_list = Literal('[').suppress() + Optional(
-                    self.json_value + OneOrMore(
-                        Literal(',').suppress() + self.json_value
-                    )
-                ) + Literal(']').suppress()
-        self.json_list.setParseAction(process_json_list)
-
-
-
-        # <json_object>
-        #
-        # evaluates to a python dict
-        def process_json_object(s, loc, toks):
-            return dict(zip(*(iter(toks),)*2))
-        self.json_object = Literal('{').suppress() + Optional(
-                    self.string + Literal(':').suppress() + self.json_value + ZeroOrMore(
-                        Literal(',').suppress() + self.string +
-                        Literal(':').suppress() + self.json_value
-                    )
-                ) + Literal('}').suppress()
-        self.json_object.setParseAction(process_json_object)
-
-
-
-        # <json_value>
-        #
-        # evaluates to a native json value
-        def process_json_value(s, loc, toks):
-            return list(toks)
-        self.json_value << (self.string | self.number | self.boolean |
-                self.null | self.json_list | self.json_object)
-        self.json_value.setParseAction(process_json_value)
-
-
-        # <value>
-        #
-        # evalues to something of the form {"type": "type_name", "value":<json_value>}
-        #
-        # forbid type_name in ('boolean', 'number') to preserve bijection
-        def process_value(s, loc, toks):
-            if toks[0] in ('number', 'boolean'):
-                raise ParseException(s, loc,
-                    "Not allowed to construct a " + toks[0] + " value. " +
-                    "use a built-in primitive instead", self)
-            return {"type": toks[0], "value": toks[1]}
-        self.value = self.symbol + Literal('<').suppress() + self.json_value + Literal('>').suppress()
-        self.value.setParseAction(process_value)
-
-
-        # <number_literal>
-        #
-        # evalutes to a literal number value: {"type":"number", "value":s}
-        def process_number_literal(s, loc, toks):
-            return [{'type':'number', 'value':float(toks[0])}]
-        self.number_literal = MatchFirst([self.number])
-        self.number_literal.setParseAction(process_number_literal)
-
-
-
-        # <boolean_literal>
-        #
-        # evalutes to a literal boolean value: {"type":"boolean", "value":s}
-        def process_boolean_literal(s, loc, toks):
-            return [{'type':'boolean', 'value':toks[0]}]
-        self.boolean_literal = MatchFirst([self.boolean])
-        self.boolean_literal.setParseAction(process_boolean_literal)
-
-
-
-        # <literal>
-        #
-        # evaluates a json data type
-        self.literal = self.boolean_literal | self.number_literal | self.value
+        self.literal = utils.literal_token()
 
 
         # <symbol_args>
         #
         # evaluates to a list: [<expression>*]
         def process_symbol_args(s, loc, toks):
-            return [list(toks)]
-        self.symbol_args = Literal("(").suppress() + (
-                    Optional(self.symbol +  ZeroOrMore(Literal(",").suppress() + self.symbol))
-                ) + Literal(")").suppress()
+            v = toks[1:-1:2]
+            l = combine_locs(toks)
+            return [{"loc":l, "value":v}]
+        self.symbol_args = lw(Literal("(")) + (
+                    Optional(self.symbol +  ZeroOrMore(lw(Literal(",")) + self.symbol))
+                ) + lw(Literal(")"))
         self.symbol_args.setParseAction(process_symbol_args) 
 
 
@@ -266,10 +122,12 @@ class ExperimentalParser():
         #
         # evaluates to a list: [<expression>*]
         def process_expression_args(s, loc, toks):
-            return [list(toks)]
-        self.expression_args = Literal("(").suppress() + (
-                    Optional(self.expression +  ZeroOrMore(Literal(",").suppress() + self.expression))
-                ) + Literal(")").suppress()
+            v = toks[1:-1:2]
+            l = combine_locs(toks)
+            return [{"loc":l, "value":v}]
+        self.expression_args = lw(Literal("(")) + (
+                    Optional(self.expression +  ZeroOrMore(lw(Literal(",")) + self.expression))
+                ) + lw(Literal(")"))
         self.expression_args.setParseAction(process_expression_args) 
 
 
@@ -277,11 +135,12 @@ class ExperimentalParser():
         #
         # evaluates to a list of [[<expression>,<expression>]*]
         def process_assignments(s, loc, toks):
-            output = []
-            for i in range(len(toks)/2):
-                output.append(toks[2*i:2*(i+1)])
-            return [output]
-        self.assignments = OneOrMore(self.symbol + Literal("=").suppress() + self.expression)
+            symbols = toks[:-2:3]
+            expressions = toks[2::3]
+            v = [{"loc":combine_locs(x), "value":list(x)} for x in zip(symbols, expressions)]
+            l = combine_locs(toks)
+            return [{"loc":l, "value":v}]
+        self.assignments = OneOrMore(self.symbol + lw(Literal("=")) + self.expression)
         self.assignments.setParseAction(process_assignments)
 
 
@@ -292,11 +151,18 @@ class ExperimentalParser():
         # or just <expression>
         def process_optional_let(s, loc, toks):
             if len(toks) == 1:
-                if isinstance(toks[0], (list, tuple)) and toks[0][0] == 'let':
+                if isinstance(toks[0]['value'], (list, tuple))\
+                        and toks[0]['value'][0]['value'] == 'let':
                     raise ParseException(s, loc,
                         "New scope is not allowed here", self)
                 return list(toks)
-            return [['let',toks[0],toks[1]]]
+            l = combine_locs(toks)
+            v = [
+                    {"loc":l, 'value':'let'},
+                    toks[0],
+                    toks[1],
+                    ]
+            return [{"loc":l, "value":v}]
         self.optional_let = Optional(self.assignments) + self.expression
         self.optional_let.setParseAction(process_optional_let)
 
@@ -305,8 +171,13 @@ class ExperimentalParser():
         #
         # evaluates to ["identity", <expression>]
         def process_identity(s, loc, toks):
-            return [["identity", toks[0]]] 
-        self.identity = Literal("(").suppress() + self.expression + Literal(")")
+            l = combine_locs(toks)
+            v = [
+                    {"loc":l, 'value':'identity'},
+                    toks[1],
+                    ]
+            return [{"loc":l, "value":v}]
+        self.identity = lw(Literal("(")) + self.expression + lw(Literal(")"))
         self.identity.setParseAction(process_identity)
 
 
@@ -314,12 +185,19 @@ class ExperimentalParser():
         #
         # evaluates to ["if", <expression>, <expression>, <expression>]
         def process_if_else(s, loc, toks):
-            return [["if", toks[0], toks[1], toks[2]]]
-        self.if_else = Keyword("if").suppress() + Literal("(").suppress() +\
-                self.optional_let + Literal(")").suppress() + Literal("{").suppress() +\
-                self.optional_let + Literal("}").suppress() +\
-                Keyword("else").suppress() + Literal("{").suppress() +\
-                self.optional_let + Literal("}").suppress()
+            l = combine_locs(toks)
+            v = [
+                    {"loc":toks[0]['loc'], 'value':'if'},
+                    toks[2],
+                    toks[5],
+                    toks[9]
+                    ]
+            return [{"loc":l, "value":v}]
+        self.if_else = lw(Keyword("if")) + lw(Literal("(")) +\
+                self.optional_let + lw(Literal(")")) + lw(Literal("{")) +\
+                self.optional_let + lw(Literal("}")) +\
+                lw(Keyword("else")) + lw(Literal("{")) +\
+                self.optional_let + lw(Literal("}"))
         self.if_else.setParseAction(process_if_else)
 
 
@@ -327,10 +205,16 @@ class ExperimentalParser():
         #
         # evaluates to ['lambda', <symbol_args>, <expression>]
         def process_proc(s, loc, toks):
-            return [['lambda',toks[0], toks[1]]]
-        self.proc = Keyword("proc").suppress() + self.symbol_args +\
-                Literal("{").suppress() + self.optional_let +\
-                Literal("}").suppress()
+            l = combine_locs(toks)
+            v = [
+                    {"loc":toks[0]['loc'], 'value':'lambda'},
+                    toks[1],
+                    toks[3],
+                    ]
+            return [{"loc":l, "value":v}]
+        self.proc = lw(Keyword("proc")) + self.symbol_args +\
+                lw(Literal("{")) + self.optional_let +\
+                lw(Literal("}") )
         self.proc.setParseAction(process_proc)
 
 
@@ -338,8 +222,14 @@ class ExperimentalParser():
         #
         # evaluates to ['let', <assignments>, <expression>]
         def process_let(s, loc, toks):
-            return [['let',toks[0],toks[1]]]
-        self.let = Literal("{").suppress() + self.assignments + self.expression + Literal("}")
+            l = combine_locs(toks)
+            v = [
+                    {"loc":l, 'value':'let'},
+                    toks[1],
+                    toks[2],
+                    ]
+            return [{"loc":l, "value":v}]
+        self.let = lw(Literal("{")) + self.assignments + self.expression + lw(Literal("}"))
         self.let.setParseAction(process_let)
 
 
@@ -347,7 +237,7 @@ class ExperimentalParser():
         #
         # evaluates to itself
         def process_non_fn_expression(s, loc, toks):
-            return list(toks)
+            return [toks[0]]
         self.non_fn_expression = (
                 self.identity |
                 self.proc |
@@ -364,12 +254,14 @@ class ExperimentalParser():
         # or <non_fn_expression> if no args provided
         def process_fn_application(s, loc, toks):
             if len(toks) == 1:
-                return list(toks)
+                return [toks[0]]
             #collapse possible infix identities
             exp = [_collapse_identity(toks[0], ('pow', 'add', 'sub', 'mul', 'div',
                 'eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or'))]
             for args in toks[1:]:
-                exp = [exp+args]
+                v = exp+args['value']
+                l = combine_locs(exp + [args])
+                exp = [{"loc":l, "value":v}]
             return exp
         self.fn_application = self.non_fn_expression + ZeroOrMore(self.expression_args)
         self.fn_application.setParseAction(process_fn_application)
@@ -460,181 +352,60 @@ class ExperimentalParser():
         #
         # evaluates to itself
         def process_expression(s, loc, toks):
-            return list(toks)
+            return [toks[0]]
         self.expression << self.boolean_or
         self.expression.setParseAction(process_expression)
 
+        self.instruction, self.program = utils.init_instructions(
+                self.literal, self.symbol, self.expression)
 
-        # <directive_id>
-        #
-        # evaluates to itself
-        def process_directive_id(s, loc, toks):
-            return list(toks)
-        self.directive_id = self.symbol | self.number
-        self.directive_id.setParseAction(process_directive_id)
+        self.program.parseWithTabs()
 
 
-        # <assume>
-        #
-        # evaluates to a json instruction
-        def process_assume(s, loc, toks):
-            return [{
-                "instruction" : "assume",
-                "symbol" : toks[1],
-                "expression" : toks[2]
-                }]
-        self.assume =  CaselessKeyword("assume") + self.symbol +\
-                Literal("=").suppress() + self.expression
-        self.assume.setParseAction(process_assume)
+    # NOTE:
+    # the following is copy-pasted from the venture_lisp_parser
+    # the two code fragments should be manually kept in sync until 
+    # the directive syntax is finalized (then code refactor can happen)
 
+    def value_to_string(self, v):
+        return utils.value_to_string(v)
 
-        # <predict>
-        #
-        # evaluates to a json instruction
-        def process_predict(s, loc, toks):
-            return [{
-                "instruction" : "predict",
-                "expression" : toks[1],
-                }]
-        self.predict =  CaselessKeyword("predict") + self.expression
-        self.predict.setParseAction(process_predict)
+    def parse_value(self, s):
+        return utils.apply_parser(self.literal, s)[0]['value']
 
+    def parse_expression(self, s):
+        parse_tree = utils.apply_parser(self.expression, s)[0]
+        return utils.simplify_expression_parse_tree(parse_tree)
 
-        # <observe>
-        #
-        # evaluates to a json instruction
-        def process_observe(s, loc, toks):
-            return [{
-                "instruction" : "observe",
-                "expression" : toks[1],
-                "value" : toks[2],
-                }]
-        self.observe =  CaselessKeyword("observe") + self.expression +\
-                Literal("=").suppress() + self.literal
-        self.observe.setParseAction(process_observe)
+    def parse_symbol(self, s):
+        return utils.apply_parser(self.symbol, s)[0]['value']
 
+    def parse_instruction(self, s):
+        return utils.simplify_instruction_parse_tree(
+                utils.apply_parser(self.instruction, s)[0])
 
-        # <forget>
-        #
-        # evaluates to a json instruction
-        def process_forget(s, loc, toks):
-            try:
-                return [{
-                    "instruction" : "forget",
-                    "directive_id" : int(toks[1]),
-                    }]
-            except:
-                return [{
-                    "instruction" : "forget",
-                    "label" : toks[1],
-                    }]
-        self.forget =  CaselessKeyword("forget") + self.directive_id
-        self.forget.setParseAction(process_forget)
+    def parse_program(self, s):
+        return utils.simplify_program_parse_tree(
+                utils.apply_parser(self.program, s)[0])
 
+    def split_program(self, s):
+        locs = utils.split_program_parse_tree(
+                utils.apply_parser(self.program, s)[0])
+        strings = utils.get_program_string_fragments(s, locs)
+        locs = [list(sorted(loc)) for loc in locs]
+        return [strings, locs]
 
-        # <sample>
-        #
-        # evaluates to a json instruction
-        def process_sample(s, loc, toks):
-            return [{
-                "instruction" : "sample",
-                "expression" : toks[1]
-                }]
-        self.sample =  CaselessKeyword("sample") + self.expression
-        self.sample.setParseAction(process_sample)
+    def split_instruction(self, s):
+        locs = utils.split_instruction_parse_tree(
+                utils.apply_parser(self.instruction, s)[0])
+        strings = utils.get_instruction_string_fragments(s, locs)
+        locs = {key: list(sorted(loc)) for key,loc in locs.items()}
+        return [strings, locs]
 
+    def character_index_to_expression_index(self, s, text_index):
+        parse_tree = utils.apply_parser(self.expression, s)[0]
+        return utils.get_expression_index(parse_tree, text_index)
 
-        # <force>
-        #
-        # evaluates to a json instruction
-        def process_force(s, loc, toks):
-            return [{
-                "instruction" : "force",
-                "expression" : toks[1],
-                "value" : toks[2]
-                }]
-        self.force =  CaselessKeyword("force") + self.expression +\
-                Literal("=").suppress() + self.literal
-        self.force.setParseAction(process_force)
-
-
-        # <infer>
-        #
-        # evaluates to a json instruction
-        def process_infer(s, loc, toks):
-            return [{
-                "instruction" : "infer",
-                "iterations" : toks[1],
-                "resample" : False,
-                }]
-        self.infer =  CaselessKeyword("infer") + self.integer
-        self.infer.setParseAction(process_infer)
-
-
-        # <named_directive>
-        #
-        # adds a "label" to the original directive
-        def process_named_directive(s, loc, toks):
-            toks[1].update({"label":toks[0]})
-            return toks[1]
-        self.named_directive =  self.symbol + Literal(":").suppress() +\
-                (self.assume | self.predict | self.observe)
-        self.named_directive.setParseAction(process_named_directive)
-
-
-        # <unnamed_directive>
-        #
-        # evaluates to itself
-        def process_unnamed_directive(s, loc, toks):
-            return list(toks)
-        self.unnamed_directive = (
-                self.assume |
-                self.predict |
-                self.observe |
-                self.forget |
-                self.sample |
-                self.force |
-                self.infer
-                )
-        self.unnamed_directive.setParseAction(process_unnamed_directive)
-
-
-        # <directive> (actually, it's an instruction)
-        #
-        # evaluates to itself
-        def process_directive(s, loc, toks):
-            return list(toks)
-        self.directive = self.named_directive | self.unnamed_directive
-        self.directive.setParseAction(process_directive)
-
-
-        # <program>
-        #
-        # evaluates to itself
-        def process_program(s, loc, toks):
-            return list(toks)
-        self.program = ZeroOrMore(self.directive)
-        self.program.setParseAction(process_program)
-
-
-    def parse_value(self, value):
-        pass
-
-    def parse_expression(self, expression):
-        pass
-
-    def parse_symbol(self, symbol):
-        pass
-
-    def parse_instruction(self, instruction):
-        pass
-
-    def split_program(self, program):
-        pass
-
-    def get_expression_index(self, expression_string, character_index):
-        pass
-
-    def get_text_range(self, expression_string, expression_index):
-        pass
-
+    def expression_index_to_text_index(self, s, expression_index):
+        parse_tree = utils.apply_parser(self.expression, s)[0]
+        return utils.get_text_index(parse_tree, expression_index)

@@ -5,15 +5,18 @@ import sys
 import traceback
 import StringIO
 
-from pyparsing import ParseException
+from pyparsing import ParseException, ParseResults
 
+def _unpack(l):
+    if isinstance(l['value'], (list, tuple, ParseResults)):
+        return [_unpack(x) for x in l['value']]
+    return l['value']
 
 class ParserTestCase(unittest.TestCase):
     def setUp(self):
         pass
 
-    def run_test(self, code, expected_result):
-        expression = self.expression
+    def _run_test(self, code, expected_result, expression, legacy):
         validation_error = None
         result = None
         runtime_error = None
@@ -26,6 +29,8 @@ class ParserTestCase(unittest.TestCase):
             re_file = StringIO.StringIO()
             traceback.print_exception(*sys.exc_info(), file=re_file)
             runtime_error = re_file.getvalue().replace('\n','\n'+' '*18)
+        if legacy==True and result!=None:
+            result = [_unpack(x) for x in result]
         match = result == expected_result
         message = ['']
         message.append( "code:            " + code.replace('\n','\n'+' '*18))
@@ -42,3 +47,10 @@ class ParserTestCase(unittest.TestCase):
         if not match or validation_error or runtime_error:
             self.fail('\n'.join(message))
         return match
+
+    def run_test(self, code, expected_result):
+        self._run_test(code, expected_result, self.expression, legacy=False)
+
+    def run_legacy_test(self, code, expected_result, name):
+        e = getattr(self.p, name)
+        self._run_test(code, expected_result, e, legacy=True)
