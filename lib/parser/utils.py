@@ -43,8 +43,7 @@ def symbol_token(blacklist_symbols=[], whitelist_symbols=[], symbol_map={}):
     def process_symbol(s, loc, toks):
         tok = toks[0]['value']
         if tok in blacklist_symbols:
-            raise VentureException("text_parse",
-                    "Reserved word cannot be symbol: " + tok, text_index = toks[0]['loc'])
+            raise ParseException(s,loc,"Reserved word cannot be symbol: " + tok)
         if tok in symbol_map:
             tok = symbol_map[tok]
         return [{"loc":toks[0]['loc'], "value":tok}]
