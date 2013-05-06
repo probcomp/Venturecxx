@@ -43,8 +43,8 @@ def symbol_token(blacklist_symbols=[], whitelist_symbols=[], symbol_map={}):
     def process_symbol(s, loc, toks):
         tok = toks[0]['value']
         if tok in blacklist_symbols:
-            raise ParseException(s, loc,
-                "Reserved word cannot be symbol: " + tok, symbol)
+            raise VentureException("text_parse",
+                    "Reserved word cannot be symbol: " + tok, text_index = toks[0]['loc'])
         if tok in symbol_map:
             tok = symbol_map[tok]
         return [{"loc":toks[0]['loc'], "value":tok}]
@@ -75,7 +75,9 @@ def integer_token():
 #
 # evaluates to a python string
 def string_token():
-    string = lw(Regex(r'"(?:[^"\\]|\\"|\\\\|\\/|\\r|\\b|\\n|\\t|\\f|\\[0-7]{3})*"'))
+    # string = lw(Regex(r'"(?:[^"\\]|\\"|\\\\|\\/|\\r|\\b|\\n|\\t|\\f|\\[0-7]{3})*"'))
+    # match more strings to produce helpful error message
+    string = lw(Regex(r'"(?:[^"\\]|\\.)*"'))
     def process_string(s, loc, toks):
         s = toks[0]['value']
         s = s[1:-1]
@@ -84,7 +86,6 @@ def string_token():
         s = s.replace(r'\f','\f')
         s = s.replace(r'\b','\b')
         s = s.replace(r'\r','\r')
-        s = s.replace("\\\\", "\\")
         s = s.replace(r"\/", '/')
         s = s.replace(r'\"','"')
         octals = list(re.finditer(r'\\[0-7]{3}', s))
@@ -93,12 +94,25 @@ def string_token():
             st = match.group()
             i = int(st[1])*64+int(st[2])*8+int(st[3])
             if i > 127:
-                raise ParseException(s, loc,
-                        "Octal too large for ASCII character: " + st, string)
+                raise VentureException("text_parse",
+                        "Octal too large for ASCII character: " + st, text_index=toks[0]['loc'])
             c = chr(i)
             start = match.start()
             end = match.end()
             s = s[:start] + c + s[end:]
+        tmp = []
+        i = 0
+        while i < len(s):
+            if s[i] == '\\':
+                if i == len(s) or s[i+1] != '\\':
+                    raise VentureException("text_parse",
+                            "Invalid escape sequence within string.", text_index=toks[0]['loc'])
+                tmp.append('\\')
+                i += 2
+            else:
+                tmp.append(s[i])
+                i += 1
+        s = ''.join(tmp)
         return [{"loc":toks[0]['loc'], "value":s}]
     string.setParseAction(process_string)
     return string
@@ -178,9 +192,9 @@ def value_token():
     value = symbol_token() + lw(Literal('<')) + json_value_token() + lw(Literal('>'))
     def process_value(s, loc, toks):
         if toks[0]['value'] in ('number', 'boolean'):
-            raise ParseException(s, loc,
+            raise ParseException("text_parse",
                 "Not allowed to construct a " + toks[0]['value'] + " value. " +
-                "use a built-in primitive instead", value)
+                "use a built-in primitive instead", text_index=[loc,loc])
         v = {"type": toks[0]['value'], "value": toks[2]['value']}
         l = combine_locs(toks)
         return [{"loc":l, "value":v}]
@@ -227,10 +241,10 @@ def apply_parser(element, string):
         raise VentureException('fatal',
                 'Parser only accepts strings')
     try:
-        return list(element.parseString(string))
+        return list(element.parseString(string, parseAll=True))
     except ParseException as e:
         raise VentureException('text_parse',
-                e.message, index=e.loc)
+                str(e), text_index=[e.loc,e.loc])
 
 def value_to_string(v):
     if isinstance(v, dict):

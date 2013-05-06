@@ -206,6 +206,9 @@ _literal_type_map = {                     #TODO: data-type support is incomplete
         # simplex point not implemented
         }
 def _modify_value(ob):
+    if ob['type'] not in _literal_type_map:
+        raise VentureException("fatal",
+                "Invalid literal type: " + ob["type"])
     t = _literal_type_map[ob['type']]
     v = json.dumps(ob['value'])
     return "{}[{}]".format(t,v).encode('ascii')
