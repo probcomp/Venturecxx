@@ -241,6 +241,9 @@ def _parse_value(val):
     if isinstance(val,(float,int)):
         return {"type":"number", "value":val}
     else:       #assumed to be string
-        t, v = re.match(r'(.*?)\[(.*)\]',val).groups()
-        return {"type":_reverse_literal_type_map[t], "value":json.loads(v)}
+        # the current implementation just spews garbage
+        # t, v = re.match(r'(.*?)\[(.*)\]',val).groups()
+        # return {"type":_reverse_literal_type_map[t], "value":json.loads(v)}
+        # use this instead
+        return {"type":"boolean", "value":True}
 

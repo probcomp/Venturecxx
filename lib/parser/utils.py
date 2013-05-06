@@ -3,7 +3,7 @@
 
 from pyparsing import Literal,CaselessLiteral,Regex,Word,Combine,Group,Optional,\
     ZeroOrMore,OneOrMore,Forward,nums,alphas,FollowedBy,Empty,ParseException,\
-    Keyword, CaselessKeyword, MatchFirst, ParseResults
+    Keyword, CaselessKeyword, MatchFirst, ParseResults, White
 import re
 import json
 
@@ -16,8 +16,7 @@ def lw(thingy):
     # of text locations. "Thingy" is supposed to
     # be a ParserElement that returns a single
     # string at toks[0]
-    chomp = ZeroOrMore(Literal(' ')).suppress() 
-    x = chomp + MatchFirst([thingy]).leaveWhitespace()
+    x = Optional(White()).suppress() + MatchFirst([thingy]).leaveWhitespace()
     def process_x_token(s, loc, toks):
         if isinstance(toks[0], basestring):
             return [{'loc':[loc, loc+len(toks[0])-1], "value":toks[0]}]
@@ -512,9 +511,19 @@ def init_instructions(value, symbol, expression):
         return [{'loc':l, "value":v}]
     infer.setParseAction(process_infer)
 
+    # clear 
+    clear= inst('clear', 'clear')
+    def process_clear(s, loc, toks):
+        v = {
+                'instruction': toks[0],
+                }
+        l = combine_locs(toks)
+        return [{'loc':l, "value":v}]
+    clear.setParseAction(process_clear)
+
     instruction = assume | labeled_assume | predict | labeled_predict | observe\
             | labeled_observe | forget | labeled_forget | sample | force\
-            | infer
+            | infer | clear
     def process_instruction(s, loc, toks):
         return [toks[0]]
     instruction.setParseAction(process_instruction)
