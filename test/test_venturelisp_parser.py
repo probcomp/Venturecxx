@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 import unittest
 from venture.exception import VentureException
-from venture.parser import VentureScriptParser
+from venture.parser import VentureLispParser
 from venture.test.test_helpers import ParserTestCase
 
 

@@ -129,7 +129,7 @@ class TestCoreVimCppEngine(unittest.TestCase):
         try:
             self.vim.execute_instruction(inst2)
         except VentureException as e:
-            self.assertEquals(e.exception,'directive_id_not_found')
+            self.assertEquals(e.exception,'invalid_argument')
 
     def test_report(self):
         inst1 = {
@@ -151,7 +151,7 @@ class TestCoreVimCppEngine(unittest.TestCase):
         try:
             self.vim.execute_instruction(inst)
         except VentureException as e:
-            self.assertEquals(e.exception,'directive_id_not_found')
+            self.assertEquals(e.exception,'invalid_argument')
 
     def test_infer(self):
         inst = {
@@ -178,7 +178,7 @@ class TestCoreVimCppEngine(unittest.TestCase):
         try:
             self.vim.execute_instruction(inst)
         except VentureException as e:
-            self.assertEquals(e.exception,'directive_id_not_found')
+            self.assertEquals(e.exception,'invalid_argument')
 
     def test_rollback(self):
         inst1 = {
