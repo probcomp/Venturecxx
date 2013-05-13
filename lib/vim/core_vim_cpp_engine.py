@@ -209,9 +209,18 @@ def _modify_value(ob):
     if ob['type'] not in _literal_type_map:
         raise VentureException("fatal",
                 "Invalid literal type: " + ob["type"])
+    # cpp engine does not have robust number parsing
+    if int(ob['value']) == ob['value']:
+        ob['value'] = int(ob['value'])
+    if ob['type'] == 'number':
+        if isinstance(ob['value'],int):
+            ob['type'] = 'count'
+        else:
+            ob['type'] = 'real'
     t = _literal_type_map[ob['type']]
     v = json.dumps(ob['value'])
-    return "{}[{}]".format(t,v).encode('ascii')
+    s = "{}[{}]".format(t,v).encode('ascii')
+    return s
 
 
 _symbol_map = { "add" : '+', "sub" : '-',
