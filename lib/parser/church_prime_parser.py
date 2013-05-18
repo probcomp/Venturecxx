@@ -45,18 +45,18 @@ class ChurchPrimeParser():
                 }
 
         instruction_list = [
-            ['assume','<!assume> <symbol:sym> = <expression:exp>'],
-            ['labeled_assume','<label:sym> : <!assume> <symbol:sym> = <expression:exp>'],
-            ['observe','<!observe> <expression:exp> = <value:lit>'],
-            ['labeled_observe','<label:sym> : <!observe> <expression:exp> = <value:lit>'],
-            ['predict','<!predict> <expression:exp>'],
-            ['labeled_predict','<label:sym> : <!predict> <expression:exp>'],
-            ['forget','<!forget> <directive_id:int>'],
-            ['labeled_forget','<!forget> <label:sym>'],
-            ['force','<!force> <expression:exp> = <value:lit>'],
-            ['sample','<!sample> <expression:exp>'],
-            ['infer','<!infer> <iterations:int> <?resample:bool>',{"resample":False}],
-            ['clear','<!clear>'],
+            ['assume','[ <!assume> <symbol:sym> <expression:exp> ]'],
+            ['labeled_assume','<label:sym> : [ <!assume> <symbol:sym> <expression:exp> ]'],
+            ['observe','[ <!observe> <expression:exp> <value:lit> ]'],
+            ['labeled_observe','<label:sym> : [ <!observe> <expression:exp> <value:lit> ]'],
+            ['predict','[ <!predict> <expression:exp> ]'],
+            ['labeled_predict','<label:sym> : [ <!predict> <expression:exp> ]'],
+            ['forget','[ <!forget> <directive_id:int> ]'],
+            ['labeled_forget','[ <!forget> <label:sym> ]'],
+            ['force','[ <!force> <expression:exp> <value:lit> ]'],
+            ['sample','[ <!sample> <expression:exp> ]'],
+            ['infer','[ <!infer> <iterations:int> <?resample:bool> ]',{"resample":False}],
+            ['clear','[ <!clear> ]'],
             ]
 
         self.instruction = utils.make_instruction_parser(instruction_list,patterns)

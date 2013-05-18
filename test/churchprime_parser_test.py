@@ -44,22 +44,22 @@ class TestChurchPrimeParser(ParserTestCase):
         self.assertEqual(output,expected)
 
     def test_parse_instruction(self):
-        output = self.p.parse_instruction('assume a = (b c d)')
+        output = self.p.parse_instruction('[assume a (b c d)]')
         expected = {'instruction':'assume', 'symbol':'a', 'expression':['b','c','d']}
         self.assertEqual(output,expected)
 
     def test_split_program(self):
-        output = self.p.split_program(" force blah = count<132> infer 132")
-        instructions = ['force blah = count<132>','infer 132']
-        indices = [[1,23],[25,33]]
+        output = self.p.split_program(" [ force blah count<132>][ infer 132 ]")
+        instructions = ['[ force blah count<132>]','[ infer 132 ]']
+        indices = [[1,24],[25,37]]
         self.assertEqual(output,[instructions, indices])
 
     def test_split_instruction(self):
-        output = self.p.split_instruction(" force blah = count<132>")
+        output = self.p.split_instruction(" [force blah count<132> ]")
         indices = {
-                "instruction": [1,5],
-                "expression": [7,10],
-                "value": [14,23],
+                "instruction": [2,6],
+                "expression": [8,11],
+                "value": [13,22],
                 }
         strings = {
                 "instruction": "force",

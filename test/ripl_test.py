@@ -28,26 +28,26 @@ class TestRipl(unittest.TestCase):
 
     def test_execute_instruction(self):
         f = self.ripl.execute_instruction
-        f("assume a = 1")
-        f("assume b = (+ 1 2)")
-        f("assume c = (- b a)")
-        text_index, ret_value= f("predict c")
+        f("[assume a 1]")
+        f("[assume b (+ 1 2)]")
+        f("[assume c (- b a)]")
+        text_index, ret_value= f("[predict c]")
         self.assertEqual(ret_value['value'], {"type":"number","value":2})
 
     def test_parse_exception_sugaring(self):
         f = self.ripl.execute_instruction
         try:
-            f("assume a = (+ (if 1 2) 3)")
+            f("[assume a (+ (if 1 2) 3)]")
         except VentureException as e:
-            self.assertEqual(e.data['text_index'], [14,21])
+            self.assertEqual(e.data['text_index'], [13,20])
             self.assertEqual(e.exception, 'parse')
 
     def test_invalid_argument_exception_sugaring(self):
         f = self.ripl.execute_instruction
         try:
-            f("forget moo")
+            f("[forget moo]")
         except VentureException as e:
-            self.assertEqual(e.data['text_index'], [7,9])
+            self.assertEqual(e.data['text_index'], [8,10])
             self.assertEqual(e.exception, 'invalid_argument')
 
 
