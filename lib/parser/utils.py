@@ -3,9 +3,10 @@
 
 from pyparsing import Literal,CaselessLiteral,Regex,Word,Combine,Group,Optional,\
     ZeroOrMore,OneOrMore,Forward,nums,alphas,FollowedBy,Empty,ParseException,\
-    Keyword, CaselessKeyword, MatchFirst, ParseResults, White
+    Keyword, CaselessKeyword, MatchFirst, ParseResults, White, And
 import re
 import json
+import copy
 
 from venture.exception import VentureException
 
@@ -371,169 +372,98 @@ def inst(keyword, instruction):
     k.setParseAction(process_k)
     return k
 
+def make_instruction(instruction, syntax, patterns, defaults={}):
+    toks = syntax.split()
+    pattern = []
+    mapping = []
+    optional = []
+    for tok in toks:
+        m = re.match(r"<(\w*)>", tok)
+        if m:
+            w = m.groups()[0]
+            mapping.append(w)
+            pattern.append(patterns[w])
+            optional.append(False)
+            continue
+        m = re.match(r"<(\w*):(\w*)>", tok)
+        if m:
+            w = m.groups()
+            mapping.append(w[0])
+            pattern.append(patterns[w[1]])
+            optional.append(False)
+            continue
+        m = re.match(r"<!(\w*)>", tok)
+        if m:
+            w = m.groups()[0]
+            mapping.append('instruction')
+            pattern.append(inst(w,instruction))
+            optional.append(False)
+            continue
+        m = re.match(r"<\?(\w*)>", tok)
+        if m:
+            w = m.groups()[0]
+            mapping.append(w)
+            pattern.append(Optional(patterns[w],default=None))
+            optional.append(True)
+            if w not in defaults:
+                raise VentureException('fatal','Missing default argument value: ' + w)
+            continue
+        m = re.match(r"<\?(\w*):(\w*)>", tok)
+        if m:
+            w = m.groups()
+            mapping.append(w[0])
+            pattern.append(Optional(patterns[w[1]],default=None))
+            optional.append(True)
+            if w[0] not in defaults:
+                raise VentureException('fatal','Missing default argument value: ' + w[0])
+            continue
+        mapping.append(None)
+        pattern.append(lw(Literal(tok)))
+        optional.append(False)
+    pattern = And(pattern)
+    def process_pattern(s, loc, toks):
+        v = {}
+        l = combine_locs([x for x in toks if x != None])
+        for tok, m, o in zip(toks, mapping, optional):
+            if o==True:
+                if tok != None:
+                    v[m] = tok
+                else:
+                    v[m] = {'loc':l, 'value':defaults[m]}
+            elif m != None:
+                v[m] = tok
+        return [{'loc':l, "value":v}]
+    pattern.setParseAction(process_pattern)
+    return pattern
+
 
 def init_instructions(value, symbol, expression):
 
-    # assume
-    assume = inst('assume', 'assume') + symbol + lw(Literal("=")) + expression
-    def process_assume(s, loc, toks):
-        v = {
-                'instruction': toks[0],
-                'symbol': toks[1],
-                'expression': toks[3],
-                }
-        l = combine_locs(toks)
-        return [{'loc':l, "value":v}]
-    assume.setParseAction(process_assume)
+    patterns = {
+            "symbol":symbol,
+            "expression":expression,
+            "value":value,
+            "integer":integer_token(),
+            "boolean":boolean_token(),
+            }
+    f = make_instruction
 
-    # labeled assume
-    labeled_assume = symbol + lw(Literal(":")) + inst('assume', 'labeled_assume')\
-            + symbol + lw(Literal("=")) + expression
-    def process_labeled_assume(s, loc, toks):
-        v = {
-                'instruction': toks[2],
-                'symbol': toks[3],
-                'expression': toks[5],
-                'label': toks[0],
-                }
-        l = combine_locs(toks)
-        return [{'loc':l, "value":v}]
-    labeled_assume.setParseAction(process_labeled_assume)
+    instructions = [
+        f('assume','<!assume> <symbol> = <expression>',patterns),
+        f('labeled_assume','<label:symbol> : <!assume> <symbol> = <expression>',patterns),
+        f('observe','<!observe> <expression> = <value>',patterns),
+        f('labeled_observe','<label:symbol> : <!observe> <expression> = <value>',patterns),
+        f('predict','<!predict> <expression>',patterns),
+        f('labeled_predict','<label:symbol> : <!predict> <expression>',patterns),
+        f('forget','<!forget> <directive_id:integer>',patterns),
+        f('labeled_forget','<!forget> <label:symbol>',patterns),
+        f('force','<!force> <expression> = <value>',patterns),
+        f('sample','<!sample> <expression>',patterns),
+        f('infer','<!infer> <iterations:integer> <?resample:boolean>',patterns,defaults={"resample":False}),
+        f('clear','<!clear>',patterns),
+        ]
 
-    # observe
-    observe = inst('observe', 'observe') + expression\
-            + lw(Literal("=")) + value
-    def process_observe(s, loc, toks):
-        v = {
-                'instruction': toks[0],
-                'value': toks[3],
-                'expression': toks[1],
-                }
-        l = combine_locs(toks)
-        return [{'loc':l, "value":v}]
-    observe.setParseAction(process_observe)
-
-    # labeled observe
-    labeled_observe = symbol + lw(Literal(":"))\
-            + inst('observe','labeled_observe') + expression\
-            + lw(Literal("=")) + value
-    def process_labeled_observe(s, loc, toks):
-        v = {
-                'instruction': toks[2],
-                'value': toks[5],
-                'expression': toks[3],
-                'label': toks[0],
-                }
-        l = combine_locs(toks)
-        return [{'loc':l, "value":v}]
-    labeled_observe.setParseAction(process_labeled_observe)
-
-    # predict
-    predict = inst('predict', 'predict') + expression
-    def process_predict(s, loc, toks):
-        v = {
-                'instruction': toks[0],
-                'expression': toks[1],
-                }
-        l = combine_locs(toks)
-        return [{'loc':l, "value":v}]
-    predict.setParseAction(process_predict)
-
-    # labeled predict
-    labeled_predict = symbol + lw(Literal(":"))\
-            + inst('predict', 'labeled_predict') + expression
-    def process_labeled_predict(s, loc, toks):
-        v = {
-                'instruction': toks[2],
-                'expression': toks[3],
-                'label': toks[0],
-                }
-        l = combine_locs(toks)
-        return [{'loc':l, "value":v}]
-    labeled_predict.setParseAction(process_labeled_predict)
-
-
-    # forget
-    forget = inst('forget', 'forget') + integer_token()
-    def process_forget(s, loc, toks):
-        v = {
-                'instruction': toks[0],
-                'directive_id': toks[1],
-                }
-        l = combine_locs(toks)
-        return [{'loc':l, "value":v}]
-    forget.setParseAction(process_forget)
-
-    # labeled forget
-    labeled_forget = inst('forget', 'labeled_forget') + symbol
-    def process_labeled_forget(s, loc, toks):
-        v = {
-                'instruction': toks[0],
-                'label': toks[1],
-                }
-        l = combine_locs(toks)
-        return [{'loc':l, "value":v}]
-    labeled_forget.setParseAction(process_labeled_forget)
-
-
-    # force
-    force = inst('force','force') + expression\
-            + lw(Literal("=")) + value
-    def process_force(s, loc, toks):
-        v = {
-                'instruction': toks[0],
-                'value': toks[3],
-                'expression': toks[1],
-                }
-        l = combine_locs(toks)
-        return [{'loc':l, "value":v}]
-    force.setParseAction(process_force)
-
-    # sample
-    sample = inst('sample','sample') + expression
-    def process_sample(s, loc, toks):
-        v = {
-                'instruction': toks[0],
-                'expression': toks[1],
-                }
-        l = combine_locs(toks)
-        return [{'loc':l, "value":v}]
-    sample.setParseAction(process_sample)
-
-    # infer
-    infer = inst('infer', 'infer') + integer_token()\
-            + Optional(boolean_token())
-    def process_infer(s, loc, toks):
-        if len(toks) == 3:
-            resample = toks[2]
-        else:
-            resample = {'loc':toks[0]['loc'], "value":False}
-        v = {
-                'instruction': toks[0],
-                'iterations': toks[1],
-                "resample" : resample,
-                }
-        l = combine_locs(toks)
-        return [{'loc':l, "value":v}]
-    infer.setParseAction(process_infer)
-
-    # clear
-    clear= inst('clear', 'clear')
-    def process_clear(s, loc, toks):
-        v = {
-                'instruction': toks[0],
-                }
-        l = combine_locs(toks)
-        return [{'loc':l, "value":v}]
-    clear.setParseAction(process_clear)
-
-    instruction = assume | labeled_assume | predict | labeled_predict | observe\
-            | labeled_observe | forget | labeled_forget | sample | force\
-            | infer | clear
-    def process_instruction(s, loc, toks):
-        return [toks[0]]
-    instruction.setParseAction(process_instruction)
-    instruction = instruction
+    instruction = MatchFirst(instructions)
 
     program = OneOrMore(instruction)
     def process_program(s, loc, toks):

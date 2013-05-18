@@ -299,7 +299,7 @@ class TestParserUtilsInstructions(ParserTestCase):
                 [{"loc":j(1,5,7,3), "value":{
                     "instruction" : {"loc":j(1,5), "value":"infer"},
                     "iterations" : {"loc":j(7,3), "value":132},
-                    "resample" : {"loc":j(1,5), "value":False},
+                    "resample" : {"loc":j(1,9), "value":False},
                     }}])
 
     def test_program(self):
@@ -313,7 +313,7 @@ class TestParserUtilsInstructions(ParserTestCase):
                         }},{"loc":j(24,5,30,3), "value":{
                         "instruction" : {"loc":j(24,5), "value":"infer"},
                         "iterations" : {"loc":j(30,3), "value":132},
-                        "resample" : {"loc":j(24,5), "value":False},
+                        "resample" : {"loc":j(24,9), "value":False},
                     }}]}])
 
 
