@@ -431,12 +431,20 @@ def make_instruction_builder(instruction_list):
     for l in instruction_list:
         d[l[0]] = l[1]
     def f(instruction, args):
-        toks = d[instruction].split()
+        try:
+            toks = d[instruction].split()
+        except:
+            raise VentureException("The instruction builder does not accept the following instruction: " + str(instruction))
         newlist = []
         for tok in toks:
+            if not isinstance(tok, basestring):
+                raise VentureException("fatal", "Arguments for the instruction builder must be strings")
             m = re.match(r"<\??(\w*):(\w*)>", tok)
             if m:
-                newlist.append(args[m.groups()[0]])
+                s = m.groups()[0]
+                if not s in args:
+                    raise VentureException("fatal", "Missing argument for the instruction builder: " + s)
+                newlist.append(args[s])
                 continue
             m = re.match(r"<!(\w*)>", tok)
             if m:
