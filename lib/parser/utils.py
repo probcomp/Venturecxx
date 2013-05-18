@@ -16,14 +16,14 @@ def lw(thingy):
     # of text locations. "Thingy" is supposed to
     # be a ParserElement that returns a single
     # string at toks[0]
-    x = Optional(White()).suppress() + MatchFirst([thingy]).leaveWhitespace()
+    x = MatchFirst([thingy]).leaveWhitespace()
     def process_x_token(s, loc, toks):
         if isinstance(toks[0], basestring):
             return [{'loc':[loc, loc+len(toks[0])-1], "value":toks[0]}]
         raise VentureException('fatal', 'The lw wrapper only accepts string-valued'
                 "tokens. Got: " + toks[0])
     x.setParseAction(process_x_token)
-    return MatchFirst([x])
+    return Optional(White()).suppress() + x
 
 def combine_locs(l):
     # combines the text-index locations of the given parsed tokens
