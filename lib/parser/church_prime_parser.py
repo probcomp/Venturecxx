@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 from pyparsing import Literal,CaselessLiteral,Regex,Word,Combine,Group,Optional,\
     ZeroOrMore,OneOrMore,Forward,nums,alphas,FollowedBy,Empty,ParseException,\
@@ -8,7 +8,7 @@ import re
 from venture.parser import utils
 
 
-class VentureLispParser():
+class ChurchPrimeParser():
     def __init__(self):
 
         w = ('+', '-', '*', '/', '<', '>', '<=', '>=', '=', '!=')

@@ -1,30 +1,30 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
-from venture import parser, ripl, vim, server
+from venture import parser, ripl, sivm, server
 
 
-def make_core_vim():
-    return vim.CoreVimCppEngine()
+def make_core_sivm():
+    return sivm.CoreSIVMCppEngine()
 
-def make_venture_vim():
-    return vim.VentureVim(make_core_vim())
+def make_venture_sivm():
+    return sivm.VentureSIVM(make_core_sivm())
 
-def make_venture_lisp_ripl():
-    v = make_venture_vim()
-    parser1 = parser.VentureLispParser()
-    return ripl.Ripl(v,{"venture_lisp":parser1})
+def make_church_prime_ripl():
+    v = make_venture_sivm()
+    parser1 = parser.ChurchPrimeParser()
+    return ripl.Ripl(v,{"church_prime":parser1})
 
 def make_venture_script_ripl():
-    v = make_venture_vim()
+    v = make_venture_sivm()
     parser1 = parser.VentureScriptParser()
     return ripl.Ripl(v,{"venture_script":parser1})
 
 def make_combined_ripl():
-    v = make_venture_vim()
-    parser1 = parser.VentureLispParser()
+    v = make_venture_sivm()
+    parser1 = parser.ChurchPrimeParser()
     parser2 = parser.VentureScriptParser()
-    return ripl.Ripl(v,{"venture_lisp":parser1, "venture_script":parser2})
+    return ripl.Ripl(v,{"church_prime":parser1, "venture_script":parser2})
 
 
 # value shortcuts

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 import unittest
 from venture.exception import VentureException
 from venture.parser import utils
@@ -62,7 +62,7 @@ class TestParserUtilsAtoms(ParserTestCase):
         self.run_test( "moo",
                 None)
 
-    def test_integer(self): 
+    def test_integer(self):
         # Integer
         #
         self.expression = utils.integer_token()
@@ -94,7 +94,7 @@ class TestParserUtilsAtoms(ParserTestCase):
                 r(0,6,'2'))
         self.run_test( r'"\462"',
                 None)
-   
+
     def test_null(self):
         # Null
         #
@@ -213,7 +213,7 @@ class TestParserUtilsInstructions(ParserTestCase):
                     "symbol" : {"loc": j(7,4), "value":"blah"},
                     "expression" : {"loc": j(14,3), "value":"moo"},
                     }}])
-    
+
     def test_labeled_assume(self):
         self.run_test( "name : assume a = b",
                 [{"loc":j(0,4,5,1,7,6,14,1,16,1,18,1), "value":{
@@ -317,7 +317,7 @@ class TestParserUtilsInstructions(ParserTestCase):
                     }}]}])
 
 
-                
+
 
 
 
@@ -343,7 +343,7 @@ class TestParserUtilsStuff(ParserTestCase):
             "expression":j(43,4,90,3,100,5),
             "symbol":j(123,1),
             }
-    
+
     def test_simplify_expression_parse_tree(self):
         a = self.A['value']['expression']
         b = self.B['expression']
@@ -361,7 +361,7 @@ class TestParserUtilsStuff(ParserTestCase):
         b = [self.B]*3
         output = utils.simplify_program_parse_tree(a)
         self.assertEqual(output, b)
-    
+
     def test_split_instruction_parse_tree(self):
         a = self.A
         b = self.C

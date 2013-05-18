@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 from venture.exception import VentureException
 import re
@@ -183,7 +183,7 @@ def validate_instruction(instruction,implemented_instructions):
         instruction_type = instruction['instruction']
     except:
         raise VentureException('malformed_instruction',
-                'VIM instruction is missing the "instruction" key.')
+                'SIVM instruction is missing the "instruction" key.')
     if instruction_type not in implemented_instructions:
         raise VentureException('unrecognized_instruction',
                 'The "{}" instruction is not supported.'.format(instruction_type))
@@ -249,7 +249,7 @@ def validate_arg(instruction,arg,validator,modifier=lambda x: x,required=True,wr
     if not arg in instruction:
         if required:
             raise VentureException('missing_argument',
-                    'VIM instruction "{}" is missing'
+                    'SIVM instruction "{}" is missing'
                     'the "{}" argument'.format(instruction['instruction'],arg),
                     argument=arg)
         return None

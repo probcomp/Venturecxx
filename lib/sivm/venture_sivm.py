@@ -1,21 +1,21 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 from venture.exception import VentureException
-from venture.vim import utils
+from venture.sivm import utils
 import json
 import re
 import copy
 
 
-class VentureVim(object):
+class VentureSIVM(object):
 
-    def __init__(self, core_vim):
-        self.core_vim = core_vim
+    def __init__(self, core_sivm):
+        self.core_sivm = core_sivm
         self._clear()
         self._init_continuous_inference()
 
-    # list of all instructions supported by venture vim
+    # list of all instructions supported by venture sivm
     _extra_instructions = ['labeled_assume','labeled_observe',
             'labeled_predict','labeled_forget','labeled_report', 'labeled_get_logscore',
             'list_directives','get_directive','labeled_get_directive',
@@ -40,7 +40,7 @@ class VentureVim(object):
             if instruction_type in self._extra_instructions:
                 f = getattr(self,'_do_'+instruction_type)
                 return f(instruction)
-            return self._call_core_vim_instruction(instruction)
+            return self._call_core_sivm_instruction(instruction)
 
     ###############################
     # Reset stuffs
@@ -57,10 +57,10 @@ class VentureVim(object):
 
     ###############################
     # Sugars/desugars
-    # for the CoreVim instructions
+    # for the CoreSIVM instructions
     ###############################
 
-    def _call_core_vim_instruction(self,instruction):
+    def _call_core_sivm_instruction(self,instruction):
         desugared_instruction = copy.deepcopy(instruction)
         instruction_type = instruction['instruction']
         # desugar the expression
@@ -78,7 +78,7 @@ class VentureVim(object):
             new_index = utils.desugar_expression_index(exp, old_index)
             desugared_src_location['expression_index'] = new_index
         try:
-            response = self.core_vim.execute_instruction(desugared_instruction)
+            response = self.core_sivm.execute_instruction(desugared_instruction)
         except VentureException as e:
             if e.exception == "evaluation":
                 self.state='exception'
@@ -119,7 +119,7 @@ class VentureVim(object):
             tmp_instruction = copy.deepcopy(instruction)
             tmp_instruction['breakpoint_id'] = bid
             del tmp_instruction['instruction']
-            self.breakpoint_dict[bid] = tmp_instruction 
+            self.breakpoint_dict[bid] = tmp_instruction
         return response
 
 
@@ -127,7 +127,7 @@ class VentureVim(object):
     # Continuous Inference Pauser
     ###############################
 
-    def _pause_continuous_inference(vim):
+    def _pause_continuous_inference(sivm):
         class tmp(object):
             def __enter__(self):
                 pass
@@ -183,7 +183,7 @@ class VentureVim(object):
         tmp = instruction.copy()
         tmp['instruction'] = 'assume'
         del tmp['label']
-        response = self._call_core_vim_instruction(tmp)
+        response = self._call_core_sivm_instruction(tmp)
         self.label_dict[label] = response['directive_id']
         return response
     def _do_labeled_observe(self, instruction):
@@ -191,7 +191,7 @@ class VentureVim(object):
         tmp = instruction.copy()
         tmp['instruction'] = 'observe'
         del tmp['label']
-        response = self._call_core_vim_instruction(tmp)
+        response = self._call_core_sivm_instruction(tmp)
         self.label_dict[label] = response['directive_id']
         return response
     def _do_labeled_predict(self, instruction):
@@ -199,7 +199,7 @@ class VentureVim(object):
         tmp = instruction.copy()
         tmp['instruction'] = 'predict'
         del tmp['label']
-        response = self._call_core_vim_instruction(tmp)
+        response = self._call_core_sivm_instruction(tmp)
         self.label_dict[label] = response['directive_id']
         return response
     def _do_labeled_forget(self, instruction):
@@ -208,7 +208,7 @@ class VentureVim(object):
         tmp['instruction'] = 'forget'
         tmp['directive_id'] = self.label_dict[instruction['label']]
         del tmp['label']
-        r = self._call_core_vim_instruction(tmp)
+        r = self._call_core_sivm_instruction(tmp)
         return r
     def _do_labeled_report(self, instruction):
         label = self._validate_label(instruction, exists=True)
@@ -216,14 +216,14 @@ class VentureVim(object):
         tmp['instruction'] = 'report'
         tmp['directive_id'] = self.label_dict[instruction['label']]
         del tmp['label']
-        return self._call_core_vim_instruction(tmp)
+        return self._call_core_sivm_instruction(tmp)
     def _do_labeled_get_logscore(self, instruction):
         label = self._validate_label(instruction, exists=True)
         tmp = instruction.copy()
         tmp['instruction'] = 'get_logscore'
         tmp['directive_id'] = self.label_dict[instruction['label']]
         del tmp['label']
-        return self._call_core_vim_instruction(tmp)
+        return self._call_core_sivm_instruction(tmp)
 
     ###############################
     # new instructions
@@ -254,12 +254,12 @@ class VentureVim(object):
                 "expression" : exp,
                 "value" : val,
                 }
-        o1 = self._call_core_vim_instruction(inst1)
+        o1 = self._call_core_sivm_instruction(inst1)
         inst2 = {
                 "instruction" : "forget",
                 "directive_id" : o1['directive_id'],
                 }
-        o2 = self._call_core_vim_instruction(inst2)
+        o2 = self._call_core_sivm_instruction(inst2)
         return {}
     def _do_sample(self, instruction):
         exp = utils.validate_arg(instruction,'expression',
@@ -268,12 +268,12 @@ class VentureVim(object):
                 "instruction" : "predict",
                 "expression" : exp,
                 }
-        o1 = self._call_core_vim_instruction(inst1)
+        o1 = self._call_core_sivm_instruction(inst1)
         inst2 = {
                 "instruction" : "forget",
                 "directive_id" : o1['directive_id'],
                 }
-        o2 = self._call_core_vim_instruction(inst2)
+        o2 = self._call_core_sivm_instruction(inst2)
         return {"value":o1['value']}
     def _do_continuous_inference_config(self, instruction):
         enable_ci = utils.validate_arg(instruction,'enable_continuous_inference',

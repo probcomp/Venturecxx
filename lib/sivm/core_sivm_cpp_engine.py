@@ -1,20 +1,20 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 from venture.exception import VentureException
-from venture.vim import utils
+from venture.sivm import utils
 import json
 import re
 import copy
 
 
-class CoreVimCppEngine(object):
+class CoreSIVMCppEngine(object):
     ###############################
     # public methods
     ###############################
 
     def __init__(self):
-        from venture.vim import _cpp_engine_extension
+        from venture.sivm import _cpp_engine_extension
         self.engine = _cpp_engine_extension
         self.state = 'default'
         # the current cpp engine doesn't support reporting "observe" directives
@@ -162,7 +162,7 @@ class CoreVimCppEngine(object):
     # Error catching
     ###############################
 
-    def _catch_engine_error(vim):
+    def _catch_engine_error(sivm):
         class tmp(object):
             def __enter__(self):
                 pass
@@ -171,7 +171,7 @@ class CoreVimCppEngine(object):
                 #with null addresses. in future, also catch breakpoint exceptions and
                 #parse exceptions (static value construction is part of parsing)
                 if value:
-                    vim.state='exception'
+                    sivm.state='exception'
                     raise VentureException('evaluation',value.message,address=None)
         return tmp()
 
@@ -255,4 +255,3 @@ def _parse_value(val):
         # return {"type":_reverse_literal_type_map[t], "value":json.loads(v)}
         # use this instead
         return {"type":"boolean", "value":True}
-

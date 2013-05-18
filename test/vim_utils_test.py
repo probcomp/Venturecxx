@@ -1,10 +1,10 @@
 import unittest
 from venture.exception import VentureException
-from venture.vim import utils
+from venture.sivm import utils
 
 #Note -- these tests only check for minimum functionality
 
-class TestVimUtils(unittest.TestCase):
+class TestSIVMUtils(unittest.TestCase):
 
     def setUp(self):
         pass

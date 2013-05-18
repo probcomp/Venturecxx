@@ -36,14 +36,14 @@ venture_sources = [os.path.abspath(os.path.join(os.path.dirname(__file__),'..','
 
 
 ext_modules = []
-packages=["venture","venture.vim","venture.ripl",
+packages=["venture","venture.sivm","venture.ripl",
     "venture.parser","venture.server","venture.shortcuts",
     "venture.test"]
 
 if '--without-cpp-engine' in sys.argv:
     sys.argv.remove('--without-cpp-engine')
 else:
-    cpp_engine = Extension('venture.vim._cpp_engine_extension',
+    cpp_engine = Extension('venture.sivm._cpp_engine_extension',
                         define_macros = [('MAJOR_VERSION', '1'),
                                          ('MINOR_VERSION', '0')],
                         libraries = venture_libraries,

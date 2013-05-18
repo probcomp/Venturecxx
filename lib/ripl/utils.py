@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 from venture.exception import VentureException
 
@@ -36,7 +36,7 @@ def substitute_params(s, params, parser):
         i = 0
         while i<len(s):
             if s[i] == "%":
-                if i + 1 >= len(s) or s[i+1] not in ['%','(']: 
+                if i + 1 >= len(s) or s[i+1] not in ['%','(']:
                     raise VentureException('fatal', 'Param substitution failure. '
                         'Dangling "%" at index ' + str(i))
                 i += 1

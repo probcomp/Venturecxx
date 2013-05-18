@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 from pyparsing import Literal,CaselessLiteral,Regex,Word,Combine,Group,Optional,\
     ZeroOrMore,OneOrMore,Forward,nums,alphas,FollowedBy,Empty,ParseException,\
@@ -428,7 +428,7 @@ def init_instructions(value, symbol, expression):
         return [{'loc':l, "value":v}]
     labeled_observe.setParseAction(process_labeled_observe)
 
-    # predict 
+    # predict
     predict = inst('predict', 'predict') + expression
     def process_predict(s, loc, toks):
         v = {
@@ -439,7 +439,7 @@ def init_instructions(value, symbol, expression):
         return [{'loc':l, "value":v}]
     predict.setParseAction(process_predict)
 
-    # labeled predict 
+    # labeled predict
     labeled_predict = symbol + lw(Literal(":"))\
             + inst('predict', 'labeled_predict') + expression
     def process_labeled_predict(s, loc, toks):
@@ -453,7 +453,7 @@ def init_instructions(value, symbol, expression):
     labeled_predict.setParseAction(process_labeled_predict)
 
 
-    # forget 
+    # forget
     forget = inst('forget', 'forget') + integer_token()
     def process_forget(s, loc, toks):
         v = {
@@ -464,7 +464,7 @@ def init_instructions(value, symbol, expression):
         return [{'loc':l, "value":v}]
     forget.setParseAction(process_forget)
 
-    # labeled forget 
+    # labeled forget
     labeled_forget = inst('forget', 'labeled_forget') + symbol
     def process_labeled_forget(s, loc, toks):
         v = {
@@ -489,7 +489,7 @@ def init_instructions(value, symbol, expression):
         return [{'loc':l, "value":v}]
     force.setParseAction(process_force)
 
-    # sample 
+    # sample
     sample = inst('sample','sample') + expression
     def process_sample(s, loc, toks):
         v = {
@@ -500,7 +500,7 @@ def init_instructions(value, symbol, expression):
         return [{'loc':l, "value":v}]
     sample.setParseAction(process_sample)
 
-    # infer 
+    # infer
     infer = inst('infer', 'infer') + integer_token()\
             + Optional(boolean_token())
     def process_infer(s, loc, toks):
@@ -517,7 +517,7 @@ def init_instructions(value, symbol, expression):
         return [{'loc':l, "value":v}]
     infer.setParseAction(process_infer)
 
-    # clear 
+    # clear
     clear= inst('clear', 'clear')
     def process_clear(s, loc, toks):
         v = {

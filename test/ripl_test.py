@@ -1,28 +1,28 @@
 import unittest
 from venture.ripl import Ripl
 from venture.exception import VentureException
-from venture.vim import VentureVim, CoreVimCppEngine
-from venture.parser import VentureLispParser
+from venture.sivm import VentureSIVM, CoreSIVMCppEngine
+from venture.parser import ChurchPrimeParser
 
 class TestRipl(unittest.TestCase):
     def setUp(self):
-        self.core_vim = CoreVimCppEngine()
-        self.core_vim.execute_instruction({"instruction":"clear"})
-        self.venture_vim = VentureVim(self.core_vim)
-        self.parser = VentureLispParser()
-        self.ripl = Ripl(self.venture_vim,
-                {"venture_lisp":self.parser,
-                    "venture_lisp_2":self.parser})
+        self.core_sivm = CoreSIVMCppEngine()
+        self.core_sivm.execute_instruction({"instruction":"clear"})
+        self.venture_sivm = VentureSIVM(self.core_sivm)
+        self.parser = ChurchPrimeParser()
+        self.ripl = Ripl(self.venture_sivm,
+                {"church_prime":self.parser,
+                    "church_prime_2":self.parser})
 
     def test_modes(self):
         output = self.ripl.list_available_modes()
-        self.assertEqual(set(output),set(['venture_lisp','venture_lisp_2']))
-        self.ripl.set_mode('venture_lisp')
+        self.assertEqual(set(output),set(['church_prime','church_prime_2']))
+        self.ripl.set_mode('church_prime')
         output = self.ripl.get_mode()
-        self.assertEqual(output,'venture_lisp')
-        self.ripl.set_mode('venture_lisp_2')
+        self.assertEqual(output,'church_prime')
+        self.ripl.set_mode('church_prime_2')
         output = self.ripl.get_mode()
-        self.assertEqual(output,'venture_lisp_2')
+        self.assertEqual(output,'church_prime_2')
         with self.assertRaises(VentureException):
             self.ripl.set_mode("moo")
 

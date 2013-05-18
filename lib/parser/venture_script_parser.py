@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 from pyparsing import Literal,CaselessLiteral,Regex,Word,Combine,Group,Optional,\
     ZeroOrMore,OneOrMore,Forward,nums,alphas,FollowedBy,Empty,ParseException,\
@@ -115,7 +115,7 @@ class VentureScriptParser():
         self.symbol_args = lw(Literal("(")) + (
                     Optional(self.symbol +  ZeroOrMore(lw(Literal(",")) + self.symbol))
                 ) + lw(Literal(")"))
-        self.symbol_args.setParseAction(process_symbol_args) 
+        self.symbol_args.setParseAction(process_symbol_args)
 
 
         # <expression_args>
@@ -128,7 +128,7 @@ class VentureScriptParser():
         self.expression_args = lw(Literal("(")) + (
                     Optional(self.expression +  ZeroOrMore(lw(Literal(",")) + self.expression))
                 ) + lw(Literal(")"))
-        self.expression_args.setParseAction(process_expression_args) 
+        self.expression_args.setParseAction(process_expression_args)
 
 
         # <assignments>
@@ -297,7 +297,7 @@ class VentureScriptParser():
         # evaluates to [<op_n-1>, .. [<op_1>, <mul_div_1>, <mul_div_2>] ... , <mul_div_n>]
         # or <mul_div> if no operators provided
         self.add_sub = _make_infix_token(
-                previous_token = self.mul_div,    
+                previous_token = self.mul_div,
                 operator_map = (('+','add'),('-','sub')),
                 lower_precedence = ('eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or'),
                 )
@@ -363,8 +363,8 @@ class VentureScriptParser():
 
 
     # NOTE:
-    # the following is copy-pasted from the venture_lisp_parser
-    # the two code fragments should be manually kept in sync until 
+    # the following is copy-pasted from the church_prime_parser
+    # the two code fragments should be manually kept in sync until
     # the directive syntax is finalized (then code refactor can happen)
 
     def value_to_string(self, v):

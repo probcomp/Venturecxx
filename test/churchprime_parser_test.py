@@ -1,14 +1,14 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 import unittest
 from venture.exception import VentureException
-from venture.parser import VentureLispParser
+from venture.parser import ChurchPrimeParser
 from venture.test.test_helpers import ParserTestCase
 
 
-class TestVentureLispParser(ParserTestCase):
+class TestChurchPrimeParser(ParserTestCase):
     def setUp(self):
-        self.p = VentureLispParser()
+        self.p = ChurchPrimeParser()
 
     def test_expression(self):
         self.expression = self.p.expression

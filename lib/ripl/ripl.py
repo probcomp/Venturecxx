@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 from venture.ripl import utils
 from venture.exception import VentureException
 
 
 class Ripl():
-    def __init__(self,vim,parsers):
-        self.vim = vim
+    def __init__(self,sivm,parsers):
+        self.sivm = sivm
         self.parsers = parsers
         self.text_id_to_string = {}
         self.did_to_text_id = {}
@@ -57,7 +57,7 @@ class Ripl():
 
     def _exec(self, parsed_instruction):
         try:
-            return self.vim.execute_instruction(parsed_instruction)
+            return self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
             e.data['text_index'] = None
             e.data['text_id'] = self._cur_text_id
