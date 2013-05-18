@@ -163,7 +163,7 @@ class VentureScriptParser():
                     toks[1],
                     ]
             return [{"loc":l, "value":v}]
-        self.optional_let = Optional(self.assignments) + self.expression
+        self.optional_let = self.expression ^ (self.assignments + self.expression)
         self.optional_let.setParseAction(process_optional_let)
 
 

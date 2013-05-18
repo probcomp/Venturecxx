@@ -7,6 +7,8 @@ import StringIO
 
 from pyparsing import ParseException, ParseResults
 
+from venture.exception import VentureException
+
 def _unpack(l):
     if isinstance(l['value'], (list, tuple, ParseResults)):
         return [_unpack(x) for x in l['value']]
@@ -23,7 +25,7 @@ class ParserTestCase(unittest.TestCase):
         parse_error = None
         try:
             result = list(expression.parseString(code, parseAll=True))
-        except ParseException as e:
+        except (ParseException, VentureException) as e:
             parse_error = str(e)
         except Exception as e:
             re_file = StringIO.StringIO()

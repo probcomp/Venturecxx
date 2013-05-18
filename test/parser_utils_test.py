@@ -433,7 +433,7 @@ class TestParserUtilsStuff(ParserTestCase):
             utils.apply_parser(element,' 12398awefj')
         except VentureException as e:
             self.assertEqual(e.exception, 'text_parse')
-            self.assertEqual(e.data['index'], 1)
+            self.assertEqual(e.data['text_index'], j(1,1))
         try:
             utils.apply_parser(element,2)
         except VentureException as e:

@@ -9,6 +9,11 @@ import json
 
 from venture.exception import VentureException
 
+# NOTE: when a ParseException is raised -- it fails soft, and the parser
+# will continue to try to match the string with the next pattern in its list
+# when a VentureException is raised, it fails hard, and the parser will stop
+# parsing and will return an error
+
 def lw(thingy):
     # location_wrapper (or lw for short)
     # shortcut for chomping the leading whitespace
@@ -42,7 +47,8 @@ def symbol_token(blacklist_symbols=[], whitelist_symbols=[], symbol_map={}):
     def process_symbol(s, loc, toks):
         tok = toks[0]['value']
         if tok in blacklist_symbols:
-            raise ParseException(s,loc,"Reserved word cannot be symbol: " + tok)
+            #raise ParseException(s,loc,"Reserved word cannot be symbol: " + tok)
+            raise VentureException("text_parse","Reserved word cannot be symbol: " + tok,text_index=toks[0]['loc'])
         if tok in symbol_map:
             tok = symbol_map[tok]
         return [{"loc":toks[0]['loc'], "value":tok}]
@@ -190,7 +196,7 @@ def value_token():
     value = symbol_token() + lw(Literal('<')) + json_value_token() + lw(Literal('>'))
     def process_value(s, loc, toks):
         if toks[0]['value'] in ('number', 'boolean'):
-            raise ParseException("text_parse",
+            raise VentureException("text_parse",
                 "Not allowed to construct a " + toks[0]['value'] + " value. " +
                 "use a built-in primitive instead", text_index=[loc,loc])
         v = {"type": toks[0]['value'], "value": toks[2]['value']}
