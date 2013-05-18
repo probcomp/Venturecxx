@@ -426,6 +426,26 @@ def make_instruction_parser(instruction_list, patterns):
         instructions.append(make_instruction(patterns,*x))
     return MatchFirst(instructions)
 
+def make_instruction_builder(instruction_list):
+    d = {}
+    for l in instruction_list:
+        d[l[0]] = l[1]
+    def f(instruction, args):
+        toks = d[instruction].split()
+        newlist = []
+        for tok in toks:
+            m = re.match(r"<\??(\w*):(\w*)>", tok)
+            if m:
+                newlist.append(args[m.groups()[0]])
+                continue
+            m = re.match(r"<!(\w*)>", tok)
+            if m:
+                newlist.append(m.groups()[0])
+                continue
+            newlist.append(tok)
+        return ' '.join(newlist)
+    return f
+
 def make_program_parser(instruction):
     program = OneOrMore(instruction)
     def process_program(s, loc, toks):

@@ -95,6 +95,11 @@ class TestChurchPrimeParser(ParserTestCase):
         output = f(s, 6)
         self.assertEqual(output, [2,0])
 
+    def test_build_instruction(self):
+        f = self.p.build_instruction
+        output = f('assume',{'expression':'abc','symbol':'123'})
+        self.assertEqual(output,'[ assume 123 abc ]')
+
 
 
 if __name__ == '__main__':

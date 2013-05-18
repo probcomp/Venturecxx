@@ -331,6 +331,16 @@ class TestParserUtilsStuff(ParserTestCase):
         output = utils.value_to_string(True)
         self.assertEqual(output, "true")
 
+    def test_make_instruction_builder(self):
+        instruction_list = [
+            ['infer_moo','[ <!infer> <iterations:int> <?resample:bool> ]',{"resample":False}],
+            ]
+        f = utils.make_instruction_builder(instruction_list)
+        inst = 'infer_moo'
+        args = {'iterations':'13', 'resample':'true'}
+        output = '[ infer 13 true ]'
+        self.assertEqual(f(inst, args),output)
+
 
 
 if __name__ == '__main__':

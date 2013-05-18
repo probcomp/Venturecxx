@@ -60,6 +60,7 @@ class ChurchPrimeParser():
             ]
 
         self.instruction = utils.make_instruction_parser(instruction_list,patterns)
+        self.instruction_builder = utils.make_instruction_builder(instruction_list)
         self.program = utils.make_program_parser(self.instruction)
 
     def value_to_string(self, v):
@@ -104,3 +105,6 @@ class ChurchPrimeParser():
     def expression_index_to_text_index(self, s, expression_index):
         parse_tree = utils.apply_parser(self.expression, s)[0]
         return utils.get_text_index(parse_tree, expression_index)
+
+    def build_instruction(self,instruction,args):
+        return self.instruction_builder(instruction,args)
