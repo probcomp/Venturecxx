@@ -39,9 +39,17 @@ class TestCoreVimCppEngine(unittest.TestCase):
             self.assertEqual(e.exception,'invalid_argument')
             self.assertEqual(e.data['argument'],'symbol')
 
-    def test_modify_value(self):
+    def test_modify_value1(self):
         v = {"type":"smoothed_count", "value":0.5}
         s = "sc[0.5]"
+        self.assertEqual(module._modify_value(v),s)
+    def test_modify_value2(self):
+        v = {"type":"number", "value":0.5}
+        s = "r[0.5]"
+        self.assertEqual(module._modify_value(v),s)
+    def test_modify_value2(self):
+        v = {"type":"number", "value":1}
+        s = "c[1]"
         self.assertEqual(module._modify_value(v),s)
 
     def test_modify_symbol(self):
@@ -51,12 +59,12 @@ class TestCoreVimCppEngine(unittest.TestCase):
 
     def test_modify_expression(self):
         v = ['pow',{"type":"number","value":1},'a']
-        s = ['power','r[1]','a']
+        s = ['power','c[1]','a']
         self.assertEqual(module._modify_expression(v),s)
 
     def test_parse_value_1(self):
-        v = {"type":"smoothed_count", "value":0.5}
-        s = "sc[0.5]"
+        v = {"type":"boolean", "value":True}
+        s = "blah blah blah garbage text"
         self.assertEqual(module._parse_value(s),v)
     def test_parse_value_2(self):
         v = {"type":"number", "value":1.23}
