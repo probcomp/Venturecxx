@@ -193,134 +193,6 @@ class TestParserUtilsAtoms(ParserTestCase):
 
 
 
-
-
-class TestParserUtilsInstructions(ParserTestCase):
-    def setUp(self):
-        symbol = utils.symbol_token()
-        value = utils.literal_token()
-        expression = utils.symbol_token()   #for simplicity
-        self.instruction, self.program = utils.init_instructions(value, symbol, expression)
-        self.expression = self.instruction
-
-
-    def test_assume(self):
-        # Assume
-        #
-        self.run_test( "assuMe blah = moo",
-                [{"loc": j(0,6,7,4,12,1,14,3), "value":{
-                    "instruction" : {"loc": j(0,6), "value":"assume"},
-                    "symbol" : {"loc": j(7,4), "value":"blah"},
-                    "expression" : {"loc": j(14,3), "value":"moo"},
-                    }}])
-
-    def test_labeled_assume(self):
-        self.run_test( "name : assume a = b",
-                [{"loc":j(0,4,5,1,7,6,14,1,16,1,18,1), "value":{
-                    "instruction" : {"loc":j(7,6), "value":"labeled_assume"},
-                    "symbol" : {"loc": j(14,1), "value":"a"},
-                    "expression" : {"loc":j(18,1), "value":"b"},
-                    "label" : {"loc":j(0,4), "value":'name'},
-                    }}])
-
-    def test_predict(self):
-        # Predict
-        #
-        self.run_test( "  prediCt blah",
-                [{"loc":j(2,7,10,4), "value":{
-                    "instruction" : {"loc":j(2,7), "value":"predict"},
-                    "expression" : {"loc":j(10,4), "value":"blah"},
-                    }}])
-    def test_labeled_predict(self):
-        self.run_test( "name : predict blah",
-                [{"loc":j(0,4,5,1,7,7,15,4), "value":{
-                    "instruction" : {"loc":j(7,7), "value":"labeled_predict"},
-                    "expression" : {"loc":j(15,4), "value":"blah"},
-                    "label" : {"loc":j(0,4), "value":'name'},
-                    }}])
-
-    def test_observe(self):
-        # Observe
-        #
-        self.run_test( "obServe blah = 1.3",
-                [{"loc":j(0,7,8,4,13,1,15,3), "value":{
-                    "instruction" : {"loc":j(0,7), "value":"observe"},
-                    "expression" : {"loc":j(8,4), "value":"blah"},
-                    "value" : {"loc": j(15,3), "value":{"type":"number", "value":1.3}},
-                    }}])
-    def test_labeled_observe(self):
-        self.run_test( "name : observe a = count<32>",
-                [{"loc":j(0,4,5,1,7,7,15,1,17,1,19,9), "value":{
-                    "instruction" : {"loc":j(7,7), "value":"labeled_observe"},
-                    "expression" : {"loc":j(15,1), "value":"a"},
-                    "value" : {"loc":j(19,9), "value":{'type':'count', 'value':32.0}},
-                    "label" : {"loc":j(0,4), "value":'name'},
-                    }}])
-
-    def test_forget(self):
-        # Forget
-        #
-        self.run_test( "FORGET 34",
-                [{"loc":j(0,6,7,2), "value":{
-                    "instruction" : {"loc":j(0,6), "value":"forget"},
-                    "directive_id" : {"loc":j(7,2), "value":34},
-                    }}])
-
-    def test_labeled_forget(self):
-        self.run_test( "forget blah",
-                [{"loc":j(0,6,7,4), "value":{
-                    "instruction" : {"loc":j(0,6), "value":"labeled_forget"},
-                    "label" : {"loc":j(7,4), "value":"blah"},
-                    }}])
-
-    def test_sample(self):
-        # Sample
-        #
-        self.run_test( "saMple blah",
-                [{"loc":j(0,6,7,4), "value":{
-                    "instruction" : {"loc":j(0,6), "value":"sample"},
-                    "expression" : {"loc":j(7,4), "value":"blah"},
-                    }}])
-
-    def test_force(self):
-        # Force
-        #
-        self.run_test( "force blah = count<132>",
-                [{"loc":j(0,5,6,4,11,1,13,10), "value":{
-                    "instruction" : {"loc":j(0,5), "value":"force"},
-                    "expression" : {"loc":j(6,4), "value":"blah"},
-                    "value" : {"loc":j(13,10), "value":{'type':'count', 'value':132.0}},
-                    }}])
-
-    def test_infer(self):
-        # Infer
-        #
-        self.run_test( " infer 132",
-                [{"loc":j(1,5,7,3), "value":{
-                    "instruction" : {"loc":j(1,5), "value":"infer"},
-                    "iterations" : {"loc":j(7,3), "value":132},
-                    "resample" : {"loc":j(1,9), "value":False},
-                    }}])
-
-    def test_program(self):
-        self.expression = self.program
-        self.run_test( "force blah = count<132> infer 132",
-                [{"loc":j(0,5,6,4,11,1,13,10,24,5,30,3), "value":[
-                    {"loc":j(0,5,6,4,11,1,13,10), "value":{
-                        "instruction" : {"loc":j(0,5), "value":"force"},
-                        "expression" : {"loc":j(6,4), "value":"blah"},
-                        "value" : {"loc":j(13,10), "value":{'type':'count', 'value':132.0}},
-                        }},{"loc":j(24,5,30,3), "value":{
-                        "instruction" : {"loc":j(24,5), "value":"infer"},
-                        "iterations" : {"loc":j(30,3), "value":132},
-                        "resample" : {"loc":j(24,9), "value":False},
-                    }}]}])
-
-
-
-
-
-
 class TestParserUtilsStuff(ParserTestCase):
     A = {"loc":j(12,5,43,4,90,3,100,5,123,1), "value":{
             "instruction":{"loc":j(12,5), "value":"asume"},
@@ -458,6 +330,8 @@ class TestParserUtilsStuff(ParserTestCase):
         self.assertEqual(output, "1")
         output = utils.value_to_string(True)
         self.assertEqual(output, "true")
+
+
 
 if __name__ == '__main__':
     unittest.main()

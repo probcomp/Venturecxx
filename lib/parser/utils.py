@@ -372,19 +372,12 @@ def inst(keyword, instruction):
     k.setParseAction(process_k)
     return k
 
-def make_instruction(instruction, syntax, patterns, defaults={}):
+def make_instruction(patterns, instruction, syntax, defaults={}):
     toks = syntax.split()
     pattern = []
     mapping = []
     optional = []
     for tok in toks:
-        m = re.match(r"<(\w*)>", tok)
-        if m:
-            w = m.groups()[0]
-            mapping.append(w)
-            pattern.append(patterns[w])
-            optional.append(False)
-            continue
         m = re.match(r"<(\w*):(\w*)>", tok)
         if m:
             w = m.groups()
@@ -398,15 +391,6 @@ def make_instruction(instruction, syntax, patterns, defaults={}):
             mapping.append('instruction')
             pattern.append(inst(w,instruction))
             optional.append(False)
-            continue
-        m = re.match(r"<\?(\w*)>", tok)
-        if m:
-            w = m.groups()[0]
-            mapping.append(w)
-            pattern.append(Optional(patterns[w],default=None))
-            optional.append(True)
-            if w not in defaults:
-                raise VentureException('fatal','Missing default argument value: ' + w)
             continue
         m = re.match(r"<\?(\w*):(\w*)>", tok)
         if m:
@@ -436,41 +420,18 @@ def make_instruction(instruction, syntax, patterns, defaults={}):
     pattern.setParseAction(process_pattern)
     return pattern
 
+def make_instruction_parser(instruction_list, patterns):
+    instructions = []
+    for x in instruction_list:
+        instructions.append(make_instruction(patterns,*x))
+    return MatchFirst(instructions)
 
-def init_instructions(value, symbol, expression):
-
-    patterns = {
-            "symbol":symbol,
-            "expression":expression,
-            "value":value,
-            "integer":integer_token(),
-            "boolean":boolean_token(),
-            }
-    f = make_instruction
-
-    instructions = [
-        f('assume','<!assume> <symbol> = <expression>',patterns),
-        f('labeled_assume','<label:symbol> : <!assume> <symbol> = <expression>',patterns),
-        f('observe','<!observe> <expression> = <value>',patterns),
-        f('labeled_observe','<label:symbol> : <!observe> <expression> = <value>',patterns),
-        f('predict','<!predict> <expression>',patterns),
-        f('labeled_predict','<label:symbol> : <!predict> <expression>',patterns),
-        f('forget','<!forget> <directive_id:integer>',patterns),
-        f('labeled_forget','<!forget> <label:symbol>',patterns),
-        f('force','<!force> <expression> = <value>',patterns),
-        f('sample','<!sample> <expression>',patterns),
-        f('infer','<!infer> <iterations:integer> <?resample:boolean>',patterns,defaults={"resample":False}),
-        f('clear','<!clear>',patterns),
-        ]
-
-    instruction = MatchFirst(instructions)
-
+def make_program_parser(instruction):
     program = OneOrMore(instruction)
     def process_program(s, loc, toks):
         v = list(toks)
         l = combine_locs(toks)
         return [{'loc':l, "value":v}]
     program.setParseAction(process_program)
-    program = program
-
-    return instruction, program
+    program.parseWithTabs()
+    return program

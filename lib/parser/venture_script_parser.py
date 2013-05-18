@@ -356,10 +356,34 @@ class VentureScriptParser():
         self.expression << self.boolean_or
         self.expression.setParseAction(process_expression)
 
-        self.instruction, self.program = utils.init_instructions(
-                self.literal, self.symbol, self.expression)
 
-        self.program.parseWithTabs()
+        # Instruction syntax
+        patterns = {
+                "sym":self.symbol,
+                "exp":self.expression,
+                "lit":self.literal,
+                "int":utils.integer_token(),
+                "bool":utils.boolean_token(),
+                }
+
+        instruction_list = [
+            ['assume','<!assume> <symbol:sym> = <expression:exp>'],
+            ['labeled_assume','<label:sym> : <!assume> <symbol:sym> = <expression:exp>'],
+            ['observe','<!observe> <expression:exp> = <value:lit>'],
+            ['labeled_observe','<label:sym> : <!observe> <expression:exp> = <value:lit>'],
+            ['predict','<!predict> <expression:exp>'],
+            ['labeled_predict','<label:sym> : <!predict> <expression:exp>'],
+            ['forget','<!forget> <directive_id:int>'],
+            ['labeled_forget','<!forget> <label:sym>'],
+            ['force','<!force> <expression:exp> = <value:lit>'],
+            ['sample','<!sample> <expression:exp>'],
+            ['infer','<!infer> <iterations:int> <?resample:bool>',{"resample":False}],
+            ['clear','<!clear>'],
+            ]
+
+        self.instruction = utils.make_instruction_parser(instruction_list,patterns)
+        self.program = utils.make_program_parser(self.instruction)
+
 
 
     # NOTE:

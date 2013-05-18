@@ -17,7 +17,7 @@ class ChurchPrimeParser():
 
         self.symbol = utils.symbol_token(whitelist_symbols = w, symbol_map = m)
 
-        self.value = utils.literal_token()
+        self.literal = utils.literal_token()
 
         self.expression = Forward()
 
@@ -30,22 +30,43 @@ class ChurchPrimeParser():
             return [{"loc":l, "value":v}]
         self.combination.setParseAction(process_combination)
 
-        self.expression << (self.combination | self.value | self.symbol)
+        self.expression << (self.combination | self.literal | self.symbol)
         def process_expression(s, loc, toks):
             return list(toks)
         self.expression.setParseAction(process_expression)
 
-        self.instruction, self.program = utils.init_instructions(
-                self.value, self.symbol, self.expression)
+        # Instruction syntax
+        patterns = {
+                "sym":self.symbol,
+                "exp":self.expression,
+                "lit":self.literal,
+                "int":utils.integer_token(),
+                "bool":utils.boolean_token(),
+                }
 
-        #disable tab expansion
-        self.program.parseWithTabs()
+        instruction_list = [
+            ['assume','<!assume> <symbol:sym> = <expression:exp>'],
+            ['labeled_assume','<label:sym> : <!assume> <symbol:sym> = <expression:exp>'],
+            ['observe','<!observe> <expression:exp> = <value:lit>'],
+            ['labeled_observe','<label:sym> : <!observe> <expression:exp> = <value:lit>'],
+            ['predict','<!predict> <expression:exp>'],
+            ['labeled_predict','<label:sym> : <!predict> <expression:exp>'],
+            ['forget','<!forget> <directive_id:int>'],
+            ['labeled_forget','<!forget> <label:sym>'],
+            ['force','<!force> <expression:exp> = <value:lit>'],
+            ['sample','<!sample> <expression:exp>'],
+            ['infer','<!infer> <iterations:int> <?resample:bool>',{"resample":False}],
+            ['clear','<!clear>'],
+            ]
+
+        self.instruction = utils.make_instruction_parser(instruction_list,patterns)
+        self.program = utils.make_program_parser(self.instruction)
 
     def value_to_string(self, v):
         return utils.value_to_string(v)
 
     def parse_value(self, s):
-        return utils.apply_parser(self.value, s)[0]['value']
+        return utils.apply_parser(self.literal, s)[0]['value']
 
     def parse_expression(self, s):
         parse_tree = utils.apply_parser(self.expression, s)[0]
