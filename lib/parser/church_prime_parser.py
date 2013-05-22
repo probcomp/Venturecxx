@@ -6,6 +6,7 @@ from pyparsing import Literal,CaselessLiteral,Regex,Word,Combine,Group,Optional,
     Keyword, CaselessKeyword, MatchFirst
 import re
 from venture.parser import utils
+import json
 
 
 class ChurchPrimeParser():
@@ -35,13 +36,27 @@ class ChurchPrimeParser():
             return list(toks)
         self.expression.setParseAction(process_expression)
 
-        # Instruction syntax
+        # patterns for converting strings into parsed values
         patterns = {
                 "sym":self.symbol,
                 "exp":self.expression,
                 "lit":self.literal,
                 "int":utils.integer_token(),
                 "bool":utils.boolean_token(),
+                "json":utils.json_value_token(),
+                }
+
+        # commands for converting user input into strings
+        # which will be parsed in the future according
+        # to the 'patterns'. The 's','v','j' refer to the
+        # escape sequences used by 'substitute_params'
+        antipatterns = {
+                "sym":"s",
+                "exp":"s",
+                "lit":"v",
+                "int":"j",
+                "bool":"j",
+                "json":"j",
                 }
 
         instruction_list = [
@@ -60,29 +75,18 @@ class ChurchPrimeParser():
             ]
 
         self.instruction = utils.make_instruction_parser(instruction_list,patterns)
-        self.instruction_builder = utils.make_instruction_builder(instruction_list)
         self.program = utils.make_program_parser(self.instruction)
+        self.instruction_strings = utils.make_instruction_strings(instruction_list,antipatterns)
 
-    def value_to_string(self, v):
-        return utils.value_to_string(v)
+    def get_instruction_string(self,instruction_type):
+        return self.instruction_strings[instruction_type]
 
-    def parse_value(self, s):
-        return utils.apply_parser(self.literal, s)[0]['value']
+    def substitute_params(self,instruction_string,args):
+        return utils.substitute_params(instruction_string,args)
 
-    def parse_expression(self, s):
-        parse_tree = utils.apply_parser(self.expression, s)[0]
-        return utils.simplify_expression_parse_tree(parse_tree)
-
-    def parse_symbol(self, s):
-        return utils.apply_parser(self.symbol, s)[0]['value']
-
-    def parse_instruction(self, s):
+    def parse_instruction(self, instruction_string):
         return utils.simplify_instruction_parse_tree(
-                utils.apply_parser(self.instruction, s)[0])
-
-    def parse_program(self, s):
-        return utils.simplify_program_parse_tree(
-                utils.apply_parser(self.program, s)[0])
+                utils.apply_parser(self.instruction, instruction_string)[0])
 
     def split_program(self, s):
         locs = utils.split_program_parse_tree(
@@ -95,16 +99,13 @@ class ChurchPrimeParser():
         locs = utils.split_instruction_parse_tree(
                 utils.apply_parser(self.instruction, s)[0])
         strings = utils.get_instruction_string_fragments(s, locs)
-        locs = {key: list(sorted(loc)) for key,loc in locs.items()}
+        locs = {key:list(sorted(loc)) for key,loc in locs.items()}
         return [strings, locs]
 
-    def character_index_to_expression_index(self, s, text_index):
-        parse_tree = utils.apply_parser(self.expression, s)[0]
+    def text_index_to_expression_index(self, expression_string, text_index):
+        parse_tree = utils.apply_parser(self.expression, expression_string)[0]
         return utils.get_expression_index(parse_tree, text_index)
 
-    def expression_index_to_text_index(self, s, expression_index):
-        parse_tree = utils.apply_parser(self.expression, s)[0]
+    def expression_index_to_text_index(self, expression_string, expression_index):
+        parse_tree = utils.apply_parser(self.expression, expression_string)[0]
         return utils.get_text_index(parse_tree, expression_index)
-
-    def build_instruction(self,instruction,args):
-        return self.instruction_builder(instruction,args)

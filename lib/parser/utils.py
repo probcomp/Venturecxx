@@ -426,32 +426,24 @@ def make_instruction_parser(instruction_list, patterns):
         instructions.append(make_instruction(patterns,*x))
     return MatchFirst(instructions)
 
-def make_instruction_builder(instruction_list):
+def make_instruction_strings(instruction_list,antipatterns,escape='%'):
     d = {}
-    for l in instruction_list:
-        d[l[0]] = l[1]
-    def f(instruction, args):
-        try:
-            toks = d[instruction].split()
-        except:
-            raise VentureException("The instruction builder does not accept the following instruction: " + str(instruction))
+    for key,value in instruction_list:
+        toks = value.split()
         newlist = []
         for tok in toks:
-            if not isinstance(tok, basestring):
-                raise VentureException("fatal", "Arguments for the instruction builder must be strings")
             m = re.match(r"<\??(\w*):(\w*)>", tok)
             if m:
-                s = m.groups()[0]
-                if not s in args:
-                    raise VentureException("fatal", "Missing argument for the instruction builder: " + s)
-                newlist.append(args[s])
+                label,pattern = m.groups()
+                newlist.append(escape+"("+label+")"+pattern)
                 continue
             m = re.match(r"<!(\w*)>", tok)
             if m:
-                newlist.append(m.groups()[0])
+                newlist.append(m.groups()[0].gsub(escape,escape*2))
                 continue
+            toks = tok.gsub(escape,escape*2)
             newlist.append(tok)
-        return ' '.join(newlist)
+        d[key] = ' '.join(newlist)
     return f
 
 def make_program_parser(instruction):
@@ -463,3 +455,78 @@ def make_program_parser(instruction):
     program.setParseAction(process_program)
     program.parseWithTabs()
     return program
+
+def make_standard_substitution_patterns():
+    def s(x):
+        return str(x)
+    def v(x):
+        return value_to_string(x)
+    def j(x):
+        return json.dumps(x)
+    return {
+            "s":s,
+            "v":v,
+            "j":j,
+            }
+
+standard_substitution_patterns = make_standard_substitution_patterns
+
+def substitute_params(s, params, patterns=standard_substitution_patterns, escape='%'):
+    out = []
+    if isinstance(params, (tuple, list)):
+        i = 0
+        j = 0
+        while i < len(s):
+            if s[i] == escape:
+                if i + 1 >= len(s) or s[i+1] not in [escape] + patterns.keys():
+                    raise VentureException('fatal', 'Param substitution failure. '
+                        'Dangling "' + escape + '" at index ' + str(i))
+                i += 1
+                if s[i] == escape:
+                    out.append(escape)
+                if s[i] in patterns:
+                    if j >= len(params):
+                        raise VentureException('fatal', 'Param substitution failure. '
+                                'Not enough params provided.')
+                    out.append(patterns[s[i]](params[j]))
+                    j += 1
+            else:
+                out.append(s[i])
+            i += 1
+        if j < len(params):
+            raise VentureException('fatal', 'Param substitution failure. '
+                    'Too many params provided')
+    elif isinstance(params, dict):
+        i = 0
+        while i<len(s):
+            if s[i] == escape:
+                if i + 1 >= len(s) or s[i+1] not in [escape,'(']:
+                    raise VentureException('fatal', 'Param substitution failure. '
+                        'Dangling "'+escape+'" at index ' + str(i))
+                i += 1
+                if s[i] == escape:
+                    out.append(escape)
+                if s[i] == '(':
+                    j = i
+                    p = 1
+                    while p > 0:
+                        j += 1
+                        if j >= len(s):
+                            raise VentureException('fatal', 'Param substitution failure. '
+                                'Incomplete "'+escape+'" expression starting at index ' + str(i-1))
+                        if s[j] == ')':
+                            p -= 1
+                    if j+1 >= len(s) or s[j+1] not in patterns:
+                        raise VentureException('fatal', 'Param substitution failure. '
+                            'Expected ' + ', '.join(patterns.keys()) + ' after index ' + str(j))
+                    key = s[i+1:j]
+                    if not key in params:
+                        raise VentureException('fatal', 'Param substitution failure. '
+                                'Key not present in params dict: ' + key)
+                    c = s[j+1]
+                    out.append(patterns[c](params[key]))
+                    i = j+1
+            else:
+                out.append(s[i])
+            i += 1
+    return ''.join(out)
