@@ -19,7 +19,7 @@ class VentureSIVM(object):
     _extra_instructions = ['labeled_assume','labeled_observe',
             'labeled_predict','labeled_forget','labeled_report', 'labeled_get_logscore',
             'list_directives','get_directive','labeled_get_directive',
-            'force','sample','continuous_inference_config','get_current_exception',
+            'force','sample','continuous_inference_configure','get_current_exception',
             'get_state', 'reset', 'debugger_list_breakpoints','debugger_get_breakpoint']
     _core_instructions = ["assume","observe","predict",
             "configure","forget","report","infer",
@@ -275,17 +275,19 @@ class VentureSIVM(object):
                 }
         o2 = self._call_core_sivm_instruction(inst2)
         return {"value":o1['value']}
-    def _do_continuous_inference_config(self, instruction):
-        enable_ci = utils.validate_arg(instruction,'enable_continuous_inference',
+    def _do_continuous_inference_configure(self, instruction):
+        d = utils.validate_arg(instruction,'options',
+                utils.validate_dict, required=False)
+        enable_ci = utils.validate_arg(d,'enable_continuous_inference',
                 utils.validate_boolean, required=False)
         if enable_ci != None:
             if enable_ci == True and self._continuous_inference_enabled() == False:
                 self._enable_continuous_inference()
             if enable_ci == False and self._continuous_inference_enabled() == True:
                 self._disable_continuous_inference()
-        return {
+        return {"options":{
                 "enable_continuous_inference" : self._continuous_inference_enabled(),
-                }
+                }}
     def _do_get_current_exception(self, instruction):
         utils.require_state(self.state,'exception','paused')
         return {

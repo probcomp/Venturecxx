@@ -73,16 +73,18 @@ class CoreSIVMCppEngine(object):
 
     def _do_configure(self,instruction):
         utils.require_state(self.state,'default')
-        s = utils.validate_arg(instruction,'seed',
+        d = utils.validate_arg(instruction,'options',
+                utils.validate_dict)
+        s = utils.validate_arg(d,'seed',
                 utils.validate_positive_integer,required=False)
-        t = utils.validate_arg(instruction,'inference_timeout',
+        t = utils.validate_arg(d,'inference_timeout',
                 utils.validate_positive_integer,required=False)
         if s != None:
             self.engine.set_seed(s)
         if t != None:
             #do something
             pass
-        return {"seed":self.engine.get_seed(), "inference_timeout":5000}
+        return {"options":{"seed":self.engine.get_seed(), "inference_timeout":5000}}
 
     def _do_forget(self,instruction):
         utils.require_state(self.state,'default')

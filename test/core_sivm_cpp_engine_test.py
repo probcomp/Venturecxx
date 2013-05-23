@@ -116,12 +116,14 @@ class TestCoreSIVMCppEngine(unittest.TestCase):
     def test_configure(self):
         inst = {
                 'instruction':'configure',
-                'inference_timeout':5000,           # inference timeout hook is not implemented
-                'seed':2,
+                "options":{
+                    'inference_timeout':5000,           # inference timeout hook is not implemented
+                    'seed':2,
+                    },
                 }
         o = self.sivm.execute_instruction(inst)
-        self.assertEquals(o['inference_timeout'],5000)
-        self.assertEquals(o['seed'],2)
+        self.assertEquals(o['options']['inference_timeout'],5000)
+        self.assertEquals(o['options']['seed'],2)
 
     def test_forget(self):
         inst1 = {

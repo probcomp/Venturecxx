@@ -254,22 +254,27 @@ class TestVentureSIVM(unittest.TestCase):
                 }
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['directives'], [])
-    def test_continuous_inference_config(self):
+    def test_continuous_inference_configure(self):
         inst1 = {
-                'instruction':'continuous_inference_config',
+                'instruction':'continuous_inference_configure',
+                "options":{},
                 }
         o1 = self.sivm.execute_instruction(inst1)
-        e1 = {
+        e1 = {'options':{
                 'enable_continuous_inference': False,
-                }
+                }}
         self.assertEquals(o1, e1)
         inst2 = {
-                'instruction':'continuous_inference_config',
-                'enable_continuous_inference': True,
+                'instruction':'continuous_inference_configure',
+                "options":{
+                    'enable_continuous_inference': True,
+                    },
                 }
         o2 = self.sivm.execute_instruction(inst2)
         e2 = {
-                'enable_continuous_inference': True,
+                "options":{
+                    'enable_continuous_inference': True,
+                    }
                 }
         self.assertEquals(o2, e2)
     def test_get_current_exception(self):

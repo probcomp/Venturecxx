@@ -180,6 +180,17 @@ class Ripl():
 
 
     ############################################
+    # Core
+    ############################################
+
+    def configure(self, options):
+        p = self._cur_parser()
+        s = p.get_instruction_string('configure')
+        d = {'options':options}
+        return self.execute_instruction(s,d)[1]['options']
+
+
+    ############################################
     # Private methods
     ############################################
 

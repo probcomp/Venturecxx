@@ -141,5 +141,15 @@ class TestRipl(unittest.TestCase):
         #labeled observe
         self.ripl.observe('true','true','moo')
 
+
+    ############################################
+    # Core
+    ############################################
+
+    def test_configure(self):
+        ret_value = self.ripl.configure({"seed":123,"inference_timeout":5000})
+        self.assertEqual(ret_value, {"seed":123, "inference_timeout":5000})
+
+
 if __name__ == '__main__':
     unittest.main()

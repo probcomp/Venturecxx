@@ -221,6 +221,13 @@ def validate_symbol(s):
                 expression_index=[])
     return s.encode('ascii')
 
+def validate_dict(s):
+    if not isinstance(s,dict):
+        raise VentureException('parse',
+                'Invalid dictionary.',
+                expression_index=[])
+    return s
+
 def validate_value(ob):
     try:
         validate_symbol(ob['type']) #validate the type
@@ -249,7 +256,7 @@ def validate_arg(instruction,arg,validator,modifier=lambda x: x,required=True,wr
     if not arg in instruction:
         if required:
             raise VentureException('missing_argument',
-                    'SIVM instruction "{}" is missing'
+                    'SIVM instruction "{}" is missing '
                     'the "{}" argument'.format(instruction['instruction'],arg),
                     argument=arg)
         return None
