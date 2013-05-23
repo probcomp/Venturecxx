@@ -10,11 +10,17 @@ class Ripl():
         self.sivm = sivm
         self.parsers = parsers
         self.text_id_to_string = {}
+        self.text_id_to_mode = {}
+        self.text_id_to_did = {}
         self.did_to_text_id = {}
-        self.did_to_mode = {}
-        self.did_to_text_range = {}
         self.mode = parsers.keys()[0]
         self._cur_text_id = 0
+
+
+
+    ############################################
+    # Languages
+    ############################################
 
     def get_mode(self):
         return self.mode
@@ -29,13 +35,19 @@ class Ripl():
             raise VentureException('invalid_mode',
                     "Mode {} is not implemented by this RIPL".format(mode))
 
+
+    ############################################
+    # Execution
+    ############################################
+
     def execute_instruction(self, instruction_string, params=None):
         p = self._cur_parser()
         # perform parameter substitution if necessary
         if params != None:
-            instruction_string = utils.substitute_params(instruction_string,params)
+            instruction_string = self.substitute_params(instruction_string,params)
         # save the text
         self.text_id_to_string[self._next_text_id()] = instruction_string
+        self.text_id_to_mode[self._cur_text_id] = self.mode
         # parse instruction
         parsed_instruction = p.parse_instruction(instruction_string)
         # calculate the positions of the arguments
@@ -75,17 +87,117 @@ class Ripl():
         if parsed_instruction['instruction'] in ['assume','observe',
                 'predict','labeled_assume','labeled_observe','labeled_predict']:
             did = ret_value['directive_id']
-            self._save_did_mapping(did, arg_ranges['expression'])
+            self.did_to_text_id[did] = self._cur_text_id
+            self.text_id_to_did[self._cur_text_id] = did
         return (self._cur_text_id, ret_value)
+
+
+    def execute_program(self, program_string, params=None):
+        p = self._cur_parser()
+        # perform parameter substitution if necessary
+        if params != None:
+            program_string = self.substitute_params(program_string,params)
+        instructions, positions = p.split_program(program_string)
+        vals = []
+        for instruction in instructions:
+            vals.append(self.execute_instruction(instruction)[1])
+        return vals
+
+
+    ############################################
+    # Text manipulation
+    ############################################
+
+    def substitute_params(self,instruction_string,params):
+        p = self._cur_parser()
+        return p.substitute_params(instruction_string,params)
+
+    def split_program(self,program_string):
+        p = self._cur_parser()
+        return p.split_program(program_string)
+
+    def get_text(self,text_id):
+        if text_id in self.text_id_to_mode:
+            return [self.text_id_to_mode[text_id], self.text_id_to_string[text_id]]
+        return None
+
+    def directive_id_to_text_id(self, directive_id):
+        if directive_id in self.did_to_text_id:
+            return self.did_to_text_id[directive_id]
+        raise VentureException('fatal', 'Directive id {} has no corresponding text id'.format(directive_id))
+
+    def text_id_to_directive_id(self, text_id):
+        if text_id in self.text_id_to_did:
+            return self.text_id_to_did[text_id]
+        raise VentureException('fatal', 'Text id {} has no corresponding directive id'.format(text_id))
+
+    def character_index_to_expression_index(self, text_id, character_index):
+        p = self._cur_parser()
+        expression, offset = self._extract_expression(text_id)
+        return p.character_index_to_expression_index(expression, character_index-offset)
+
+    def expression_index_to_text_index(self, text_id, expression_index):
+        p = self._cur_parser()
+        expression, offset = self._extract_expression(text_id)
+        tmp = p.expression_index_to_text_index(expression, expression_index)
+        return [x+offset for x in tmp]
+
+
+    ############################################
+    # Directives
+    ############################################
+
+    def assume(self, name, expression, label=None):
+        p = self._cur_parser()
+        if label==None:
+            s = p.get_instruction_string('assume')
+            d = {'symbol':name, 'expression':expression}
+        else:
+            s = p.get_instruction_string('labeled_assume')
+            d = {'symbol':name, 'expression':expression, 'label':label}
+        return self.execute_instruction(s,d)[1]['value']['value']
+
+    def predict(self, expression, label=None):
+        p = self._cur_parser()
+        if label==None:
+            s = p.get_instruction_string('predict')
+            d = {'expression':expression}
+        else:
+            s = p.get_instruction_string('labeled_predict')
+            d = {'expression':expression, 'label':label}
+        return self.execute_instruction(s,d)[1]['value']['value']
+
+    def observe(self, expression, value, label=None):
+        p = self._cur_parser()
+        if label==None:
+            s = p.get_instruction_string('observe')
+            d = {'expression':expression, 'value':value}
+        else:
+            s = p.get_instruction_string('labeled_observe')
+            d = {'expression':expression, 'value':value, 'label':label}
+        self.execute_instruction(s,d)
+        return None
+
+
+    ############################################
+    # Private methods
+    ############################################
 
     def _cur_parser(self):
         return self.parsers[self.mode]
 
     def _save_did_mapping(self, did, text_range):
         self.did_to_text_id[did] = self._cur_text_id
-        self.did_to_mode[did] = self.mode
-        self.did_to_text_range[did] = text_range
 
     def _next_text_id(self):
         self._cur_text_id += 1
         return self._cur_text_id
+
+    def _extract_expression(self,text_id):
+        if not text_id in self.text_id_to_did:
+            raise VentureException('fatal', 'Text id {} is not a directive'.format(text_id))
+        text = self.text_id_to_string[text_id]
+        mode = self.text_id_to_mode[text_id]
+        p = self.parsers[mode]
+        args, arg_ranges = p.split_instruction(text)
+        return args['expression'], arg_ranges['expression'][0]

@@ -102,9 +102,9 @@ class ChurchPrimeParser():
         locs = {key:list(sorted(loc)) for key,loc in locs.items()}
         return [strings, locs]
 
-    def character_index_to_expression_index(self, expression_string, text_index):
+    def character_index_to_expression_index(self, expression_string, character_index):
         parse_tree = utils.apply_parser(self.expression, expression_string)[0]
-        return utils.get_expression_index(parse_tree, text_index)
+        return utils.get_expression_index(parse_tree, character_index)
 
     def expression_index_to_text_index(self, expression_string, expression_index):
         parse_tree = utils.apply_parser(self.expression, expression_string)[0]
