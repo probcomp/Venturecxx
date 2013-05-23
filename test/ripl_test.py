@@ -42,7 +42,7 @@ class TestRipl(unittest.TestCase):
         f("[assume a 1]")
         f("[assume b (+ 1 2)]")
         f("[assume c (- b a)]")
-        text_id, ret_value= f("[predict c]")
+        ret_value= f("[predict c]")
         self.assertEqual(ret_value['value'], {"type":"number","value":2})
 
     def test_execute_program(self):
@@ -86,28 +86,20 @@ class TestRipl(unittest.TestCase):
     def test_get_text(self):
         self.ripl.set_mode('church_prime')
         text = "[assume a (+ (if true 2 3) 4)]"
-        text_id, value = self.ripl.execute_instruction(text)
-        output = self.ripl.get_text(text_id)
+        value = self.ripl.execute_instruction(text)
+        output = self.ripl.get_text(value['directive_id'])
         self.assertEqual(output, ['church_prime',text])
-
-    def test_directive_id_to_text_id(self):
-        #TODO: write test when directive id functions implemented
-        pass
-
-    def test_text_id_to_directive_id(self):
-        #TODO: write test when directive id functions implemented
-        pass
 
     def test_character_index_to_expression_index(self):
         text = "[assume a (+ (if true 2 3) 4)]"
-        text_id, value = self.ripl.execute_instruction(text)
-        output = self.ripl.character_index_to_expression_index(text_id, 10)
+        value = self.ripl.execute_instruction(text)
+        output = self.ripl.character_index_to_expression_index(value['directive_id'], 10)
         self.assertEqual(output, [])
 
     def test_expression_index_to_text_index(self):
         text = "[assume a (+ (if true 2 3) 4)]"
-        text_id, value = self.ripl.execute_instruction(text)
-        output = self.ripl.expression_index_to_text_index(text_id, [])
+        value = self.ripl.execute_instruction(text)
+        output = self.ripl.expression_index_to_text_index(value['directive_id'], [])
         self.assertEqual(output, [10,28])
 
 
@@ -150,6 +142,15 @@ class TestRipl(unittest.TestCase):
         ret_value = self.ripl.configure({"seed":123,"inference_timeout":5000})
         self.assertEqual(ret_value, {"seed":123, "inference_timeout":5000})
 
+    def test_forget(self):
+        #normal forget
+        ret_value = self.ripl.execute_instruction('[ assume a (uniform_continuous 0 1) ]')
+        self.ripl.forget(ret_value['directive_id'])
+        #labeled forget
+        self.ripl.assume('a','(uniform_continuous 0 1)', 'moo')
+        self.ripl.forget('moo')
+        with self.assertRaises(VentureException):
+            self.ripl.forget('moo')
 
 if __name__ == '__main__':
     unittest.main()

@@ -9,12 +9,9 @@ class Ripl():
     def __init__(self,sivm,parsers):
         self.sivm = sivm
         self.parsers = parsers
-        self.text_id_to_string = {}
-        self.text_id_to_mode = {}
-        self.text_id_to_did = {}
-        self.did_to_text_id = {}
+        self.directive_id_to_string = {}
+        self.directive_id_to_mode = {}
         self.mode = parsers.keys()[0]
-        self._cur_text_id = 0
 
 
 
@@ -45,9 +42,6 @@ class Ripl():
         # perform parameter substitution if necessary
         if params != None:
             instruction_string = self.substitute_params(instruction_string,params)
-        # save the text
-        self.text_id_to_string[self._next_text_id()] = instruction_string
-        self.text_id_to_mode[self._cur_text_id] = self.mode
         # parse instruction
         parsed_instruction = p.parse_instruction(instruction_string)
         # calculate the positions of the arguments
@@ -83,13 +77,13 @@ class Ripl():
             b = e.data['text_index'][1]+1
             e.data['text_snippet'] = instruction_string[a:b]
             raise
-        # if directive, then map the directive id to the text
+        # if directive, then save the text string
         if parsed_instruction['instruction'] in ['assume','observe',
                 'predict','labeled_assume','labeled_observe','labeled_predict']:
             did = ret_value['directive_id']
-            self.did_to_text_id[did] = self._cur_text_id
-            self.text_id_to_did[self._cur_text_id] = did
-        return (self._cur_text_id, ret_value)
+            self.directive_id_to_string[did] = instruction_string
+            self.directive_id_to_mode[did] = self.mode
+        return ret_value
 
 
     def execute_program(self, program_string, params=None):
@@ -100,7 +94,7 @@ class Ripl():
         instructions, positions = p.split_program(program_string)
         vals = []
         for instruction in instructions:
-            vals.append(self.execute_instruction(instruction)[1])
+            vals.append(self.execute_instruction(instruction))
         return vals
 
 
@@ -116,29 +110,19 @@ class Ripl():
         p = self._cur_parser()
         return p.split_program(program_string)
 
-    def get_text(self,text_id):
-        if text_id in self.text_id_to_mode:
-            return [self.text_id_to_mode[text_id], self.text_id_to_string[text_id]]
+    def get_text(self,directive_id):
+        if directive_id in self.directive_id_to_mode:
+            return [self.directive_id_to_mode[directive_id], self.directive_id_to_string[directive_id]]
         return None
 
-    def directive_id_to_text_id(self, directive_id):
-        if directive_id in self.did_to_text_id:
-            return self.did_to_text_id[directive_id]
-        raise VentureException('fatal', 'Directive id {} has no corresponding text id'.format(directive_id))
-
-    def text_id_to_directive_id(self, text_id):
-        if text_id in self.text_id_to_did:
-            return self.text_id_to_did[text_id]
-        raise VentureException('fatal', 'Text id {} has no corresponding directive id'.format(text_id))
-
-    def character_index_to_expression_index(self, text_id, character_index):
+    def character_index_to_expression_index(self, directive_id, character_index):
         p = self._cur_parser()
-        expression, offset = self._extract_expression(text_id)
+        expression, offset = self._extract_expression(directive_id)
         return p.character_index_to_expression_index(expression, character_index-offset)
 
-    def expression_index_to_text_index(self, text_id, expression_index):
+    def expression_index_to_text_index(self, directive_id, expression_index):
         p = self._cur_parser()
-        expression, offset = self._extract_expression(text_id)
+        expression, offset = self._extract_expression(directive_id)
         tmp = p.expression_index_to_text_index(expression, expression_index)
         return [x+offset for x in tmp]
 
@@ -155,7 +139,7 @@ class Ripl():
         else:
             s = p.get_instruction_string('labeled_assume')
             d = {'symbol':name, 'expression':expression, 'label':label}
-        return self.execute_instruction(s,d)[1]['value']['value']
+        return self.execute_instruction(s,d)['value']['value']
 
     def predict(self, expression, label=None):
         p = self._cur_parser()
@@ -165,7 +149,7 @@ class Ripl():
         else:
             s = p.get_instruction_string('labeled_predict')
             d = {'expression':expression, 'label':label}
-        return self.execute_instruction(s,d)[1]['value']['value']
+        return self.execute_instruction(s,d)['value']['value']
 
     def observe(self, expression, value, label=None):
         p = self._cur_parser()
@@ -187,7 +171,18 @@ class Ripl():
         p = self._cur_parser()
         s = p.get_instruction_string('configure')
         d = {'options':options}
-        return self.execute_instruction(s,d)[1]['options']
+        return self.execute_instruction(s,d)['options']
+
+    def forget(self, label_or_did):
+        p = self._cur_parser()
+        if isinstance(label_or_did,int):
+            s = p.get_instruction_string('forget')
+            d = {'directive_id':label_or_did}
+        else:
+            s = p.get_instruction_string('labeled_forget')
+            d = {'label':label_or_did}
+        self.execute_instruction(s,d)
+        return None
 
 
     ############################################
@@ -197,18 +192,9 @@ class Ripl():
     def _cur_parser(self):
         return self.parsers[self.mode]
 
-    def _save_did_mapping(self, did, text_range):
-        self.did_to_text_id[did] = self._cur_text_id
-
-    def _next_text_id(self):
-        self._cur_text_id += 1
-        return self._cur_text_id
-
-    def _extract_expression(self,text_id):
-        if not text_id in self.text_id_to_did:
-            raise VentureException('fatal', 'Text id {} is not a directive'.format(text_id))
-        text = self.text_id_to_string[text_id]
-        mode = self.text_id_to_mode[text_id]
+    def _extract_expression(self,directive_id):
+        text = self.directive_id_to_string[directive_id]
+        mode = self.directive_id_to_mode[directive_id]
         p = self.parsers[mode]
         args, arg_ranges = p.split_instruction(text)
         return args['expression'], arg_ranges['expression'][0]
