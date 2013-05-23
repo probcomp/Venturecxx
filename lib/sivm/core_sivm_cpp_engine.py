@@ -57,7 +57,7 @@ class CoreSIVMCppEngine(object):
                     t = int(m.groups()[0])*1000
                     i = int(m.groups()[1])
                     #NOTE: the C++ core is not capable of rolling-back
-                    raise VentureException("constraint_timeout", e,
+                    raise VentureException("constraint_timeout", str(e),
                             runtime=t, iterations=i)
                 raise
         self.observe_dict[did] = instruction
@@ -169,12 +169,14 @@ class CoreSIVMCppEngine(object):
             def __enter__(self):
                 pass
             def __exit__(self, type, value, traceback):
-                #for now, assume that all un-caught errors are evaluation exceptions
-                #with null addresses. in future, also catch breakpoint exceptions and
-                #parse exceptions (static value construction is part of parsing)
+                #for now, assume that all un-caught non-venture-exception errors are
+                #evaluation exceptions with null addresses. in future, also catch breakpoint
+                #exceptions and parse exceptions (static value construction is part of parsing)
                 if value:
-                    sivm.state='exception'
-                    raise VentureException('evaluation',value.message,address=None)
+                    if not type == VentureException:
+                        sivm.state='exception'
+                        raise VentureException('evaluation',str(value),address=None)
+                    raise
         return tmp()
 
 
