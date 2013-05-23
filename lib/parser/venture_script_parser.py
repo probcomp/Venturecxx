@@ -12,6 +12,27 @@ lw = utils.lw
 combine_locs = utils.combine_locs
 
 
+
+# The instruction grammar for venturescript
+# The algorithm for parsing these strings and generating the
+# grammar is located in the utils.py file
+instruction_list = [
+    ['assume','<!assume> <symbol:sym> = <expression:exp>'],
+    ['labeled_assume','<label:sym> : <!assume> <symbol:sym> = <expression:exp>'],
+    ['observe','<!observe> <expression:exp> = <value:lit>'],
+    ['labeled_observe','<label:sym> : <!observe> <expression:exp> = <value:lit>'],
+    ['predict','<!predict> <expression:exp>'],
+    ['labeled_predict','<label:sym> : <!predict> <expression:exp>'],
+    ['forget','<!forget> <directive_id:int>'],
+    ['labeled_forget','<!forget> <label:sym>'],
+    ['force','<!force> <expression:exp> = <value:lit>'],
+    ['sample','<!sample> <expression:exp>'],
+    ['infer','<!infer> <iterations:int> <?resample:bool>',{"resample":False}],
+    ['clear','<!clear>'],
+    ]
+
+
+
 def _collapse_identity(toks, operators):
     """
     Removes one layer of nested identity functions if the
@@ -379,21 +400,6 @@ class VentureScriptParser():
                 "bool":"j",
                 "json":"j",
                 }
-
-        instruction_list = [
-            ['assume','<!assume> <symbol:sym> = <expression:exp>'],
-            ['labeled_assume','<label:sym> : <!assume> <symbol:sym> = <expression:exp>'],
-            ['observe','<!observe> <expression:exp> = <value:lit>'],
-            ['labeled_observe','<label:sym> : <!observe> <expression:exp> = <value:lit>'],
-            ['predict','<!predict> <expression:exp>'],
-            ['labeled_predict','<label:sym> : <!predict> <expression:exp>'],
-            ['forget','<!forget> <directive_id:int>'],
-            ['labeled_forget','<!forget> <label:sym>'],
-            ['force','<!force> <expression:exp> = <value:lit>'],
-            ['sample','<!sample> <expression:exp>'],
-            ['infer','<!infer> <iterations:int> <?resample:bool>',{"resample":False}],
-            ['clear','<!clear>'],
-            ]
 
         self.instruction = utils.make_instruction_parser(instruction_list,patterns)
         self.program = utils.make_program_parser(self.instruction)
