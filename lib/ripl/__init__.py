@@ -3,3 +3,4 @@
 
 
 from venture.ripl.ripl import Ripl
+from venture.ripl.ripl_rest_client import RiplRestClient
