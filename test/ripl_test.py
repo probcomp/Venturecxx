@@ -2,17 +2,20 @@ import unittest
 from venture.ripl import Ripl
 from venture.exception import VentureException
 from venture.sivm import VentureSIVM, CoreSIVMCppEngine
-from venture.parser import ChurchPrimeParser
+from venture.parser import ChurchPrimeParser, VentureScriptParser
 
 class TestRipl(unittest.TestCase):
     def setUp(self):
         self.core_sivm = CoreSIVMCppEngine()
         self.core_sivm.execute_instruction({"instruction":"clear"})
         self.venture_sivm = VentureSIVM(self.core_sivm)
-        self.parser = ChurchPrimeParser()
+        parser1 = ChurchPrimeParser()
+        parser2 = VentureScriptParser()
         self.ripl = Ripl(self.venture_sivm,
-                {"church_prime":self.parser,
-                    "church_prime_2":self.parser})
+                {"church_prime":parser1,
+                    "church_prime_2":parser1,
+                    "venture_script":parser2})
+        self.ripl.set_mode('church_prime')
 
     ############################################
     # Languages
@@ -20,7 +23,7 @@ class TestRipl(unittest.TestCase):
 
     def test_modes(self):
         output = self.ripl.list_available_modes()
-        self.assertEqual(set(output),set(['church_prime','church_prime_2']))
+        self.assertEqual(set(output),set(['church_prime','church_prime_2','venture_script']))
         self.ripl.set_mode('church_prime')
         output = self.ripl.get_mode()
         self.assertEqual(output,'church_prime')

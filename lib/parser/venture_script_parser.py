@@ -13,25 +13,6 @@ combine_locs = utils.combine_locs
 
 
 
-# The instruction grammar for venturescript
-# The algorithm for parsing these strings and generating the
-# grammar is located in the utils.py file
-instruction_list = [
-    ['assume','<!assume> <symbol:sym> = <expression:exp>'],
-    ['labeled_assume','<label:sym> : <!assume> <symbol:sym> = <expression:exp>'],
-    ['observe','<!observe> <expression:exp> = <value:lit>'],
-    ['labeled_observe','<label:sym> : <!observe> <expression:exp> = <value:lit>'],
-    ['predict','<!predict> <expression:exp>'],
-    ['labeled_predict','<label:sym> : <!predict> <expression:exp>'],
-    ['forget','<!forget> <directive_id:int>'],
-    ['labeled_forget','<!forget> <label:sym>'],
-    ['force','<!force> <expression:exp> = <value:lit>'],
-    ['sample','<!sample> <expression:exp>'],
-    ['infer','<!infer> <iterations:int> <?resample:bool>',{"resample":False}],
-    ['clear','<!clear>'],
-    ]
-
-
 
 def _collapse_identity(toks, operators):
     """
@@ -400,6 +381,38 @@ class VentureScriptParser():
                 "bool":"j",
                 "json":"j",
                 }
+
+        # The instruction grammar for venturescript
+        # The algorithm for parsing these strings and generating the
+        # grammar is located in the utils.py file
+        instruction_list = [
+            # Directives
+            ['assume','<!assume> <symbol:sym> = <expression:exp>'],
+            ['labeled_assume','<label:sym> : <!assume> <symbol:sym> = <expression:exp>'],
+            ['observe','<!observe> <expression:exp> = <value:lit>'],
+            ['labeled_observe','<label:sym> : <!observe> <expression:exp> = <value:lit>'],
+            ['predict','<!predict> <expression:exp>'],
+            ['labeled_predict','<label:sym> : <!predict> <expression:exp>'],
+            # Core
+            ['forget','<!forget> <directive_id:int>'],
+            ['labeled_forget','<!forget> <label:sym>'],
+            ['report','<!report> <directive_id:int>'],
+            ['labeled_report','<!report> <label:sym>'],
+            ['infer','<!infer> <iterations:int> <?resample:bool>',{"resample":False}],
+            ['clear','<!clear>'],
+            ['rollback','<!rollback>'],
+            ['list_directives','<!list> <!directives>'],
+            ['get_directive','<!get> <!directive> <directive_id:int>'],
+            ['labeled_get_directive','<!get> <!directive> <label:sym>'],
+            ['force','<!force> <expression:exp> = <value:lit>'],
+            ['sample','<!sample> <expression:exp>'],
+            ['continuous_inference_configure',
+                '<!continuous> <!inference> <!configure> <options:json>'],
+            ['get_current_exception', '<!get> <!current> <!exception>'],
+            ['get_logscore', '<!get> <!logscore> <directive_id:int>'],
+            ['labeled_get_logscore', '<!get> <!logscore> <label:sym>'],
+            ['get_global_logscore', '<!get> <!global> <!logscore>'],
+            ]
 
         self.instruction = utils.make_instruction_parser(instruction_list,patterns)
         self.program = utils.make_program_parser(self.instruction)
