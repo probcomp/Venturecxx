@@ -293,6 +293,12 @@ class TestVentureSIVM(unittest.TestCase):
                 }
         o1 = self.sivm.execute_instruction(inst1)
         self.assertEqual(o1['state'], 'default')
+    def test_reset(self):
+        #TODO: write an actual test for reset
+        inst1 = {
+                'instruction':'reset',
+                }
+        self.sivm.execute_instruction(inst1)
     def test_debugger_list_breakpoints_and_debugger_get_breakpoint(self):
         #stub the SIVM
         def f(expression):

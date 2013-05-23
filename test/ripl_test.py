@@ -31,7 +31,7 @@ class TestRipl(unittest.TestCase):
         f("[assume a 1]")
         f("[assume b (+ 1 2)]")
         f("[assume c (- b a)]")
-        text_index, ret_value= f("[predict c]")
+        text_id, ret_value= f("[predict c]")
         self.assertEqual(ret_value['value'], {"type":"number","value":2})
 
     def test_parse_exception_sugaring(self):

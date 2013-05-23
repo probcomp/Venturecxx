@@ -62,9 +62,9 @@ class TestChurchPrimeParser(ParserTestCase):
         self.assertEqual(output, [11,11])
 
 
-    def test_text_index_to_expression_index(self):
+    def test_character_index_to_expression_index(self):
         s = "(a b (c (d e) f ))"
-        f = self.p.text_index_to_expression_index
+        f = self.p.character_index_to_expression_index
         output = f(s, 0)
         self.assertEqual(output, [])
         output = f(s, 1)

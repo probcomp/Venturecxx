@@ -20,7 +20,7 @@ class VentureSIVM(object):
             'labeled_predict','labeled_forget','labeled_report', 'labeled_get_logscore',
             'list_directives','get_directive','labeled_get_directive',
             'force','sample','continuous_inference_config','get_current_exception',
-            'get_state', 'debugger_list_breakpoints','debugger_get_breakpoint']
+            'get_state', 'reset', 'debugger_list_breakpoints','debugger_get_breakpoint']
     _core_instructions = ["assume","observe","predict",
             "configure","forget","report","infer",
             "clear","rollback","get_directive_logscore","get_global_logscore",
@@ -295,6 +295,17 @@ class VentureSIVM(object):
         return {
                 'state': self.state,
                 }
+    def _do_reset(self, instruction):
+        if self.state != 'default':
+            instruction = {
+                    'instruction': 'rollback',
+                    }
+            self._call_core_sivm_instruction(instruction)
+        instruction = {
+                'instruction': 'clear',
+                }
+        self._call_core_sivm_instruction(instruction)
+        return {}
     def _do_debugger_list_breakpoints(self, instruction):
         return {
                 "breakpoints" : copy.deepcopy(self.breakpoint_dict.values()),
