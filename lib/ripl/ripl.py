@@ -132,32 +132,29 @@ class Ripl():
     ############################################
 
     def assume(self, name, expression, label=None):
-        p = self._cur_parser()
         if label==None:
-            s = p.get_instruction_string('assume')
+            s = self._cur_parser().get_instruction_string('assume')
             d = {'symbol':name, 'expression':expression}
         else:
-            s = p.get_instruction_string('labeled_assume')
+            s = self._cur_parser().get_instruction_string('labeled_assume')
             d = {'symbol':name, 'expression':expression, 'label':label}
         return self.execute_instruction(s,d)['value']['value']
 
     def predict(self, expression, label=None):
-        p = self._cur_parser()
         if label==None:
-            s = p.get_instruction_string('predict')
+            s = self._cur_parser().get_instruction_string('predict')
             d = {'expression':expression}
         else:
-            s = p.get_instruction_string('labeled_predict')
+            s = self._cur_parser().get_instruction_string('labeled_predict')
             d = {'expression':expression, 'label':label}
         return self.execute_instruction(s,d)['value']['value']
 
     def observe(self, expression, value, label=None):
-        p = self._cur_parser()
         if label==None:
-            s = p.get_instruction_string('observe')
+            s = self._cur_parser().get_instruction_string('observe')
             d = {'expression':expression, 'value':value}
         else:
-            s = p.get_instruction_string('labeled_observe')
+            s = self._cur_parser().get_instruction_string('labeled_observe')
             d = {'expression':expression, 'value':value, 'label':label}
         self.execute_instruction(s,d)
         return None
@@ -167,23 +164,107 @@ class Ripl():
     # Core
     ############################################
 
-    def configure(self, options):
+    def configure(self, options={}):
         p = self._cur_parser()
         s = p.get_instruction_string('configure')
         d = {'options':options}
         return self.execute_instruction(s,d)['options']
 
     def forget(self, label_or_did):
-        p = self._cur_parser()
         if isinstance(label_or_did,int):
-            s = p.get_instruction_string('forget')
+            s = self._cur_parser().get_instruction_string('forget')
             d = {'directive_id':label_or_did}
         else:
-            s = p.get_instruction_string('labeled_forget')
+            s = self._cur_parser().get_instruction_string('labeled_forget')
             d = {'label':label_or_did}
         self.execute_instruction(s,d)
         return None
 
+    def report(self, label_or_did):
+        if isinstance(label_or_did,int):
+            s = self._cur_parser().get_instruction_string('report')
+            d = {'directive_id':label_or_did}
+        else:
+            s = self._cur_parser().get_instruction_string('labeled_report')
+            d = {'label':label_or_did}
+        return self.execute_instruction(s,d)['value']['value']
+
+    def infer(self, iterations, resample=False):
+        s = self._cur_parser().get_instruction_string('infer')
+        d = {'iterations':iterations,'resample':resample}
+        self.execute_instruction(s,d)
+        return None
+
+    def clear(self):
+        s = self._cur_parser().get_instruction_string('clear')
+        d = {}
+        self.execute_instruction(s,{})
+        return None
+
+    def rollback(self):
+        s = self._cur_parser().get_instruction_string('rollback')
+        self.execute_instruction(s,{})
+        return None
+
+    def list_directives(self):
+        s = self._cur_parser().get_instruction_string('list_directives')
+        return self.execute_instruction(s,{})['directives']
+
+    def get_directive(self, label_or_did):
+        if isinstance(label_or_did,int):
+            s = self._cur_parser().get_instruction_string('get_directive')
+            d = {'directive_id':label_or_did}
+        else:
+            s = self._cur_parser().get_instruction_string('labeled_get_directive')
+            d = {'label':label_or_did}
+        return self.execute_instruction(s,d)['directive']
+
+    def force(self, expression, value):
+        s = self._cur_parser().get_instruction_string('force')
+        d = {'expression':expression, 'value':value}
+        self.execute_instruction(s,d)
+        return None
+
+    def sample(self, expression):
+        s = self._cur_parser().get_instruction_string('sample')
+        d = {'expression':expression}
+        return self.execute_instruction(s,d)['value']['value']
+
+    def continuous_inference_configure(self, options={}):
+        s = self._cur_parser().get_instruction_string('continuous_inference_configure')
+        d = {'options':options}
+        return self.execute_instruction(s,d)['options']
+
+    def continuous_inference_enable(self):
+        d = {'continuous_inference_enable':True}
+        self.continuous_inference_configure(d)
+        return None
+
+    def continuous_inference_disable(self):
+        d = {'continuous_inference_enable':False}
+        self.continuous_inference_configure(d)
+        return None
+
+    def get_current_exception(self):
+        s = self._cur_parser().get_instruction_string('get_current_exception')
+        return self.execute_instruction(s,{})['exception']
+
+    def get_state(self):
+        s = self._cur_parser().get_instruction_string('get_state')
+        return self.execute_instruction(s,{})['state']
+
+    def get_logscore(self, label_or_did):
+        if isinstance(label_or_did,int):
+            s = self._cur_parser().get_instruction_string('get_logscore')
+            d = {'directive_id':label_or_did}
+        else:
+            s = self._cur_parser().get_instruction_string('labeled_get_logscore')
+            d = {'label':label_or_did}
+        return self.execute_instruction(s,d)['logscore']
+
+    def get_global_logscore(self):
+        s = self._cur_parser().get_instruction_string('get_global_logscore')
+        return self.execute_instruction(s,{})['logscore']
 
     ############################################
     # Private methods

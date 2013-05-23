@@ -481,14 +481,14 @@ def substitute_params(s, params, patterns=standard_substitution_patterns, escape
             if s[i] == escape:
                 if i + 1 >= len(s) or s[i+1] not in [escape] + patterns.keys():
                     raise VentureException('fatal', 'Param substitution failure. '
-                        'Dangling "' + escape + '" at index ' + str(i))
+                        'Dangling "' + escape + '" at index ' + str(i), params=params, string=s)
                 i += 1
                 if s[i] == escape:
                     out.append(escape)
                 if s[i] in patterns:
                     if j >= len(params):
                         raise VentureException('fatal', 'Param substitution failure. '
-                                'Not enough params provided.')
+                                'Not enough params provided.', params=params, string=s)
                     out.append(patterns[s[i]](params[j]))
                     j += 1
             else:
@@ -496,14 +496,14 @@ def substitute_params(s, params, patterns=standard_substitution_patterns, escape
             i += 1
         if j < len(params):
             raise VentureException('fatal', 'Param substitution failure. '
-                    'Too many params provided')
+                    'Too many params provided', params=params, string=s)
     elif isinstance(params, dict):
         i = 0
         while i<len(s):
             if s[i] == escape:
                 if i + 1 >= len(s) or s[i+1] not in [escape,'(']:
                     raise VentureException('fatal', 'Param substitution failure. '
-                        'Dangling "'+escape+'" at index ' + str(i))
+                        'Dangling "'+escape+'" at index ' + str(i), params=params, string=s)
                 i += 1
                 if s[i] == escape:
                     out.append(escape)
@@ -514,16 +514,16 @@ def substitute_params(s, params, patterns=standard_substitution_patterns, escape
                         j += 1
                         if j >= len(s):
                             raise VentureException('fatal', 'Param substitution failure. '
-                                'Incomplete "'+escape+'" expression starting at index ' + str(i-1))
+                                'Incomplete "'+escape+'" expression starting at index ' + str(i-1), params=params, string=s)
                         if s[j] == ')':
                             p -= 1
                     if j+1 >= len(s) or s[j+1] not in patterns:
                         raise VentureException('fatal', 'Param substitution failure. '
-                            'Expected ' + ', '.join(patterns.keys()) + ' after index ' + str(j))
+                            'Expected ' + ', '.join(patterns.keys()) + ' after index ' + str(j), params=params, string=s)
                     key = s[i+1:j]
                     if not key in params:
                         raise VentureException('fatal', 'Param substitution failure. '
-                                'Key not present in params dict: ' + key)
+                                'Key not present in params dict: ' + key, params=params, string=s)
                     c = s[j+1]
                     out.append(patterns[c](params[key]))
                     i = j+1

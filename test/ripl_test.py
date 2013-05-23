@@ -152,5 +152,91 @@ class TestRipl(unittest.TestCase):
         with self.assertRaises(VentureException):
             self.ripl.forget('moo')
 
+    def test_report(self):
+        #normal report
+        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        output = self.ripl.report(ret_value['directive_id'])
+        self.assertEqual(output,1)
+        #labeled report
+        output = self.ripl.report('moo')
+        self.assertEqual(output,1)
+
+    def test_infer(self):
+        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        self.ripl.infer(1)
+        self.ripl.infer(1,True)
+
+    def test_clear(self):
+        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        self.ripl.report('moo')
+        self.ripl.clear()
+        with self.assertRaises(VentureException):
+            self.ripl.report('moo')
+
+    def test_rollback(self):
+        #TODO: write test after exception states are implemented
+        pass
+
+    def test_list_directives(self):
+        self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        output = self.ripl.list_directives()
+        self.assertEqual(len(output),1)
+
+    def test_get_directive(self):
+        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        output = self.ripl.get_directive(ret_value['directive_id'])
+        self.assertEqual(output['directive_id'],output['directive_id'])
+
+    def test_force(self):
+        #normal force
+        self.ripl.assume('a','(uniform_continuous 0 1)')
+        self.ripl.force('a',0.2)
+        self.ripl.force('a',0.5)
+        output = self.ripl.predict('a')
+        self.assertEqual(output, 0.5)
+
+    def test_sample(self):
+        #normal force
+        output = self.ripl.sample('(+ 1 1)')
+        self.assertEqual(output, 2)
+
+    def test_continuous_inference_configure(self):
+        #normal force
+        options = {
+                "continuous_inference_enable":True
+                }
+        output = self.ripl.continuous_inference_configure(options)
+        self.assertEqual(output, options)
+
+    def test_continuous_inference_enable_disable(self):
+        self.ripl.continuous_inference_enable()
+        output = self.ripl.continuous_inference_configure()['continuous_inference_enable']
+        self.assertEqual(output, True)
+        self.ripl.continuous_inference_disable()
+        output = self.ripl.continuous_inference_configure()['continuous_inference_enable']
+        self.assertEqual(output, False)
+
+    def test_get_current_exception(self):
+        #TODO: write test after exception states are implemented
+        pass
+
+    def test_get_state(self):
+        output = self.ripl.get_state()
+        self.assertEqual(output,'default')
+
+    def test_get_logscore(self):
+        #TODO: fix test after get_logscore is implemented
+        return
+        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        output = self.ripl.get_logscore(ret_value['directive_id'])
+        self.assertEqual(output,0)
+        output = self.ripl.get_logscore('moo')
+        self.assertEqual(output,0)
+
+    def test_get_global_logscore(self):
+        self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        output = self.ripl.get_global_logscore()
+        self.assertEqual(output,0)
+
 if __name__ == '__main__':
     unittest.main()

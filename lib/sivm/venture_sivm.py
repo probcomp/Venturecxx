@@ -278,7 +278,7 @@ class VentureSIVM(object):
     def _do_continuous_inference_configure(self, instruction):
         d = utils.validate_arg(instruction,'options',
                 utils.validate_dict, required=False)
-        enable_ci = utils.validate_arg(d,'enable_continuous_inference',
+        enable_ci = utils.validate_arg(d,'continuous_inference_enable',
                 utils.validate_boolean, required=False)
         if enable_ci != None:
             if enable_ci == True and self._continuous_inference_enabled() == False:
@@ -286,7 +286,7 @@ class VentureSIVM(object):
             if enable_ci == False and self._continuous_inference_enabled() == True:
                 self._disable_continuous_inference()
         return {"options":{
-                "enable_continuous_inference" : self._continuous_inference_enabled(),
+                "continuous_inference_enable" : self._continuous_inference_enabled(),
                 }}
     def _do_get_current_exception(self, instruction):
         utils.require_state(self.state,'exception','paused')

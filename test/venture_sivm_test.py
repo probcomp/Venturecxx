@@ -261,19 +261,19 @@ class TestVentureSIVM(unittest.TestCase):
                 }
         o1 = self.sivm.execute_instruction(inst1)
         e1 = {'options':{
-                'enable_continuous_inference': False,
+                'continuous_inference_enable': False,
                 }}
         self.assertEquals(o1, e1)
         inst2 = {
                 'instruction':'continuous_inference_configure',
                 "options":{
-                    'enable_continuous_inference': True,
+                    'continuous_inference_enable': True,
                     },
                 }
         o2 = self.sivm.execute_instruction(inst2)
         e2 = {
                 "options":{
-                    'enable_continuous_inference': True,
+                    'continuous_inference_enable': True,
                     }
                 }
         self.assertEquals(o2, e2)

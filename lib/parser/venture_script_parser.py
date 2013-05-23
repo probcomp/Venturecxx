@@ -409,6 +409,7 @@ class VentureScriptParser():
             ['continuous_inference_configure',
                 '<!continuous> <!inference> <!configure> <options:json>'],
             ['get_current_exception', '<!get> <!current> <!exception>'],
+            ['get_state', '<!get> <!state>'],
             ['get_logscore', '<!get> <!logscore> <directive_id:int>'],
             ['labeled_get_logscore', '<!get> <!logscore> <label:sym>'],
             ['get_global_logscore', '<!get> <!global> <!logscore>'],
