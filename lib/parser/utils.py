@@ -428,23 +428,24 @@ def make_instruction_parser(instruction_list, patterns):
 
 def make_instruction_strings(instruction_list,antipatterns,escape='%'):
     d = {}
-    for key,value in instruction_list:
+    for l in instruction_list:
+        key,value = l[:2]
         toks = value.split()
         newlist = []
         for tok in toks:
             m = re.match(r"<\??(\w*):(\w*)>", tok)
             if m:
                 label,pattern = m.groups()
-                newlist.append(escape+"("+label+")"+pattern)
+                newlist.append(escape+"("+label+")"+antipatterns[pattern])
                 continue
             m = re.match(r"<!(\w*)>", tok)
             if m:
-                newlist.append(m.groups()[0].gsub(escape,escape*2))
+                newlist.append(m.groups()[0].replace(escape,escape*2))
                 continue
-            toks = tok.gsub(escape,escape*2)
+            toks = tok.replace(escape,escape*2)
             newlist.append(tok)
         d[key] = ' '.join(newlist)
-    return f
+    return d
 
 def make_program_parser(instruction):
     program = OneOrMore(instruction)
@@ -469,7 +470,7 @@ def make_standard_substitution_patterns():
             "j":j,
             }
 
-standard_substitution_patterns = make_standard_substitution_patterns
+standard_substitution_patterns = make_standard_substitution_patterns()
 
 def substitute_params(s, params, patterns=standard_substitution_patterns, escape='%'):
     out = []

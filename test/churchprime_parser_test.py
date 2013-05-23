@@ -24,25 +24,6 @@ class TestChurchPrimeParser(ParserTestCase):
                         {'loc': [6,6], 'value': 'c'},
                         {'loc': [8,14], 'value': {'type': 'real', 'value': 1.0}}]}]}])
 
-    def test_value_to_string(self):
-        output = self.p.value_to_string(True)
-        self.assertEqual(output, "true")
-
-    def test_parse_value(self):
-        output = self.p.parse_value('1')
-        expected = {'type':'number','value':1.0}
-        self.assertEqual(output,expected)
-
-    def test_parse_expression(self):
-        output = self.p.parse_expression('(a b c)')
-        expected = ['a','b','c']
-        self.assertEqual(output,expected)
-
-    def test_parse_symbol(self):
-        output = self.p.parse_symbol('+')
-        expected = 'add'
-        self.assertEqual(output,expected)
-
     def test_parse_instruction(self):
         output = self.p.parse_instruction('[assume a (b c d)]')
         expected = {'instruction':'assume', 'symbol':'a', 'expression':['b','c','d']}
@@ -81,9 +62,9 @@ class TestChurchPrimeParser(ParserTestCase):
         self.assertEqual(output, [11,11])
 
 
-    def test_character_index_to_expression_index(self):
+    def test_text_index_to_expression_index(self):
         s = "(a b (c (d e) f ))"
-        f = self.p.character_index_to_expression_index
+        f = self.p.text_index_to_expression_index
         output = f(s, 0)
         self.assertEqual(output, [])
         output = f(s, 1)
@@ -95,11 +76,12 @@ class TestChurchPrimeParser(ParserTestCase):
         output = f(s, 6)
         self.assertEqual(output, [2,0])
 
-    def test_build_instruction(self):
-        f = self.p.build_instruction
-        output = f('assume',{'expression':'abc','symbol':'123'})
-        self.assertEqual(output,'[ assume 123 abc ]')
-
+    def test_get_instruction_string(self):
+        f = self.p.get_instruction_string
+        output = f('observe')
+        self.assertEqual(output,'[ observe %(expression)s %(value)v ]')
+        output = f('infer')
+        self.assertEqual(output,'[ infer %(iterations)j %(resample)j ]')
 
 
 if __name__ == '__main__':

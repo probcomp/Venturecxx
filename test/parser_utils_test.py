@@ -331,16 +331,37 @@ class TestParserUtilsStuff(ParserTestCase):
         output = utils.value_to_string(True)
         self.assertEqual(output, "true")
 
-    def test_make_instruction_builder(self):
-        instruction_list = [
-            ['infer_moo','[ <!infer> <iterations:int> <?resample:bool> ]',{"resample":False}],
-            ]
-        f = utils.make_instruction_builder(instruction_list)
-        inst = 'infer_moo'
-        args = {'iterations':'13', 'resample':'true'}
-        output = '[ infer 13 true ]'
-        self.assertEqual(f(inst, args),output)
+    def test_substitute_params_list(self):
+        output = utils.substitute_params('abc',[])
+        self.assertEquals(output, 'abc')
+        output = utils.substitute_params('abc%%',[])
+        self.assertEquals(output, 'abc%')
+        output = utils.substitute_params('abc%s',['d'])
+        self.assertEquals(output, 'abcd')
+        output = utils.substitute_params('abc%v',[True])
+        self.assertEquals(output, 'abctrue')
+        with self.assertRaises(VentureException):
+            utils.substitute_params('abc%s',[])
+        with self.assertRaises(VentureException):
+            utils.substitute_params('abc%',[])
+        with self.assertRaises(VentureException):
+            utils.substitute_params('abc',['d'])
 
+    def test_substitute_params_dict(self):
+        output = utils.substitute_params('abc',{})
+        self.assertEquals(output, 'abc')
+        output = utils.substitute_params('abc%%',{})
+        self.assertEquals(output, 'abc%')
+        output = utils.substitute_params('abc%(x)s',{'x':'d'})
+        self.assertEquals(output, 'abcd')
+        output = utils.substitute_params('abc%(%)j',{'%':{}})
+        self.assertEquals(output, 'abc{}')
+        with self.assertRaises(VentureException):
+            utils.substitute_params('abc%()s',{})
+        with self.assertRaises(VentureException):
+            utils.substitute_params('abc%(s)',{})
+        with self.assertRaises(VentureException):
+            utils.substitute_params('abc%s',{})
 
 
 if __name__ == '__main__':
