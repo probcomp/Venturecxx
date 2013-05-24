@@ -24,11 +24,11 @@ def desugar_expression(exp):
         if exp[0] == 'and':
             if len(exp) != 3:
                 raise VentureException('parse','"and" statement requires 2 arguments',expression_index=[])
-            return [['condition_erp',dsw(exp,1),['lambda',[],dsw(exp,2)],{"type":"boolean", "value":False}]]
+            return [['condition_erp',dsw(exp,1),['lambda',[],dsw(exp,2)],['lambda',[],{"type":"boolean", "value":False}]]]
         if exp[0] == 'or':
             if len(exp) != 3:
                 raise VentureException('parse','"or" statement requires 2 arguments',expression_index=[])
-            return [['condition_erp',dsw(exp,1),{"type":"boolean", "value":True},['lambda',[],dsw(exp,2)]]]
+            return [['condition_erp',dsw(exp,1),['lambda',[],{"type":"boolean", "value":True}],['lambda',[],dsw(exp,2)]]]
         if exp[0] == 'let':
             if len(exp) != 3:
                 raise VentureException('parse','"let" statement requires 2 arguments',expression_index=[])
