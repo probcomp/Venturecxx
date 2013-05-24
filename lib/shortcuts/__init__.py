@@ -26,6 +26,13 @@ def make_combined_ripl():
     parser2 = parser.VentureScriptParser()
     return ripl.Ripl(v,{"church_prime":parser1, "venture_script":parser2})
 
+def make_ripl_rest_server():
+    r = make_combined_ripl()
+    return server.RiplRestServer(r)
+
+def make_ripl_rest_client(base_url):
+    return ripl.RiplRestClient(base_url)
+
 
 # value shortcuts
 
