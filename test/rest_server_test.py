@@ -4,7 +4,8 @@
 import unittest
 import json
 from venture.exception import VentureException
-from venture.server import RestServer, RiplRestServer
+from venture.server import RiplRestServer
+from venture.server import utils
 from venture.shortcuts import make_venture_script_ripl, make_combined_ripl
 
 class ServerTestCase(unittest.TestCase):
@@ -27,7 +28,7 @@ class TestRestServer(ServerTestCase):
     def setUp(self):
         ripl = make_venture_script_ripl()
         args = ['assume']
-        self.server = RestServer(ripl,args)
+        self.server = utils.RestServer(ripl,args)
         self.client = self.server.test_client()
 
     def test_invalid_json(self):
