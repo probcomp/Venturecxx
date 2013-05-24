@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 
-from venture.server import app
+from venture.shortcuts import *
 
-app.run()
+
+server = make_ripl_rest_server()
+server.run()
