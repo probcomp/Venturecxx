@@ -1,17 +1,17 @@
 import unittest
-from venture.sivm import CoreSIVMCppEngine, VentureSIVM
+from venture.sivm import CoreSivmCppEngine, VentureSivm
 import venture.sivm.venture_sivm as module
 from venture.exception import VentureException
 
 #Note -- these tests only check for minimum functionality
-# these tests also depend on a functional CoreSIVMCppEngine
+# these tests also depend on a functional CoreSivmCppEngine
 
-class TestVentureSIVM(unittest.TestCase):
+class TestVentureSivm(unittest.TestCase):
 
     def setUp(self):
-        self.core_sivm = CoreSIVMCppEngine()
+        self.core_sivm = CoreSivmCppEngine()
         self.core_sivm.execute_instruction({"instruction":"clear"})
-        self.sivm = VentureSIVM(self.core_sivm)
+        self.sivm = VentureSivm(self.core_sivm)
 
     def tearDown(self):
         pass
@@ -70,7 +70,7 @@ class TestVentureSIVM(unittest.TestCase):
 
     # test expression desugaring and exception sugaring
     def test_sugaring_1(self):
-        #stub the SIVM
+        #stub the Sivm
         def f(expression):
             raise VentureException('parse', 'moo', expression_index=[0,3,2,0,1,0])
         self.core_sivm.execute_instruction = f
@@ -91,7 +91,7 @@ class TestVentureSIVM(unittest.TestCase):
             "symbol":"d",
             "expression":['if',num,num,['let',[['a',num]],num]]
             })['directive_id']
-        #stub the SIVM
+        #stub the Sivm
         def f(expression):
             got = expression['source_code_location']['expression_index']
             expected = [0,3,2,0,1,0]
@@ -305,7 +305,7 @@ class TestVentureSIVM(unittest.TestCase):
                 }
         self.sivm.execute_instruction(inst1)
     def test_debugger_list_breakpoints_and_debugger_get_breakpoint(self):
-        #stub the SIVM
+        #stub the Sivm
         def f(expression):
             return {"breakpoint_id":14}
         self.core_sivm.execute_instruction = f

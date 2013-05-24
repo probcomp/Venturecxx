@@ -8,7 +8,7 @@ import re
 import copy
 
 
-class CoreSIVMCppEngine(object):
+class CoreSivmCppEngine(object):
     ###############################
     # public methods
     ###############################

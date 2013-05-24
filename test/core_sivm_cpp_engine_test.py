@@ -1,14 +1,14 @@
 import unittest
-from venture.sivm import CoreSIVMCppEngine
+from venture.sivm import CoreSivmCppEngine
 import venture.sivm.core_sivm_cpp_engine as module
 from venture.exception import VentureException
 
 #Note -- these tests only check for minimum functionality
 
-class TestCoreSIVMCppEngine(unittest.TestCase):
+class TestCoreSivmCppEngine(unittest.TestCase):
 
     def setUp(self):
-        self.sivm = CoreSIVMCppEngine()
+        self.sivm = CoreSivmCppEngine()
         self.sivm.execute_instruction({"instruction":"clear"})
 
     def tearDown(self):

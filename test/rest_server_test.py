@@ -24,7 +24,7 @@ class ServerTestCase(unittest.TestCase):
 
 
 class TestRestServer(ServerTestCase):
-    
+
     def setUp(self):
         ripl = make_venture_script_ripl()
         args = ['assume']
@@ -47,7 +47,7 @@ class TestRestServer(ServerTestCase):
 
 
 class TestRiplRestServer(ServerTestCase):
-    
+
     def setUp(self):
         ripl = make_combined_ripl()
         self.server = RiplRestServer(ripl)

@@ -4,7 +4,7 @@ from venture.sivm import utils
 
 #Note -- these tests only check for minimum functionality
 
-class TestSIVMUtils(unittest.TestCase):
+class TestSivmUtils(unittest.TestCase):
 
     def setUp(self):
         pass

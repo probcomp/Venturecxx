@@ -5,10 +5,10 @@ from venture import parser, ripl, sivm, server
 
 
 def make_core_sivm():
-    return sivm.CoreSIVMCppEngine()
+    return sivm.CoreSivmCppEngine()
 
 def make_venture_sivm():
-    return sivm.VentureSIVM(make_core_sivm())
+    return sivm.VentureSivm(make_core_sivm())
 
 def make_church_prime_ripl():
     v = make_venture_sivm()

@@ -8,7 +8,7 @@ import re
 import copy
 
 
-class VentureSIVM(object):
+class VentureSivm(object):
 
     def __init__(self, core_sivm):
         self.core_sivm = core_sivm
@@ -57,7 +57,7 @@ class VentureSIVM(object):
 
     ###############################
     # Sugars/desugars
-    # for the CoreSIVM instructions
+    # for the CoreSivm instructions
     ###############################
 
     def _call_core_sivm_instruction(self,instruction):
