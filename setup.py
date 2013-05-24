@@ -16,22 +16,23 @@ import os
 venture_libraries = ['gsl', 'gslcblas', 'pthread', 'boost_system', 'boost_thread', 'profiler']
 venture_extra_compile_args = ['-O2']
 
-venture_sources =[
-    'Utilities.cpp',
-    'VentureValues.cpp',
-    'VentureParser.cpp',
-    'Primitives.cpp',
-    'Evaluator.cpp',
-    'Main.cpp',
-    'XRPCore.cpp',
-    'XRPmem.cpp',
-    'XRPs.cpp',
-    'RIPL.cpp',
-    'Analyzer.cpp',
-    'ERPs.cpp',
-    'MHProposal.cpp',
-    'PythonProxy.cpp'
-    ]
+venture_sources = [
+        'Utilities.cpp',
+        'VentureValues.cpp',
+        'VentureParser.cpp',
+        'Primitives.cpp',
+        'Evaluator.cpp',
+        'Main.cpp',
+        'XRPCore.cpp',
+        'XRPmem.cpp',
+        'XRPs.cpp',
+        'RIPL.cpp',
+        'Analyzer.cpp',
+        'ERPs.cpp',
+        'MHProposal.cpp',
+        'PythonProxy.cpp',
+        'Shell_PPPs.cpp'
+        ]
 venture_sources = [os.path.abspath(os.path.join(os.path.dirname(__file__),'..','src',x)) for x in venture_sources]
 
 
