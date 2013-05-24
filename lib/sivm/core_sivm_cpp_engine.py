@@ -32,6 +32,7 @@ class CoreSIVMCppEngine(object):
     # Instruction implementations
     ###############################
 
+    #FIXME: remove the modifier arguments in new implementation
     def _do_assume(self,instruction):
         utils.require_state(self.state,'default')
         exp = utils.validate_arg(instruction,'expression',
