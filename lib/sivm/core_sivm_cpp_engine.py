@@ -232,20 +232,21 @@ _symbol_map = { "add" : '+', "sub" : '-',
         "mul" : '*', "div" : "/", "pow" : "power",
         "lt" : "<", "gt" : ">", "lte" : "<=", "gte":
         ">=", "eq" : "=", "neq" : "!=",
-        "crp_make" : "CRP/make",
-        "dirichlet_multinomial_make" : "dirichlet-multinomial/make",
-        "beta_binomial_make" : "beta-binomial/make",
-        "symmetric_dirichlet_multinomial_make" : "symmetric-dirichlet-multinomial/make",
-        "symmetric_dirichlet" : "symmetric-dirichlet",
-        "noisy_negate" : "noisy-negate",
-        "uniform_discrete" : "uniform-discrete",
-        "uniform_continuous" : "uniform-continuous",
-        "inv_gamma" : "inv-gamma",
-        "inv_chisq" : "inv-chisq",
-        "condition_erp" : "condition-ERP"}
+        #"crp_make" : "CRP/make",
+        #"dirichlet_multinomial_make" : "dirichlet-multinomial/make",
+        #"beta_binomial_make" : "beta-binomial/make",
+        #"symmetric_dirichlet_multinomial_make" : "symmetric-dirichlet-multinomial/make",
+        #"symmetric_dirichlet" : "symmetric-dirichlet",
+        #"noisy_negate" : "noisy-negate",
+        #"uniform_discrete" : "uniform-discrete",
+        #"uniform_continuous" : "uniform-continuous",
+        #"inv_gamma" : "inv-gamma",
+        #"inv_chisq" : "inv-chisq",
+        #"condition_erp" : "condition-ERP"
+        }
 def _modify_symbol(s):
-    #if s in _symbol_map:
-    #    s = _symbol_map[s]
+    if s in _symbol_map:
+        s = _symbol_map[s]
     return s.encode('ascii')
 
 
