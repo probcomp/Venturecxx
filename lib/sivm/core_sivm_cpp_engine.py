@@ -227,7 +227,7 @@ def _modify_value(ob):
     s = "{}[{}]".format(t,v).encode('ascii')
     return s
 
-
+# the C++ engine now uses the correct symbol names
 _symbol_map = { "add" : '+', "sub" : '-',
         "mul" : '*', "div" : "/", "pow" : "power",
         "lt" : "<", "gt" : ">", "lte" : "<=", "gte":
@@ -244,8 +244,8 @@ _symbol_map = { "add" : '+', "sub" : '-',
         "inv_chisq" : "inv-chisq",
         "condition_erp" : "condition-ERP"}
 def _modify_symbol(s):
-    if s in _symbol_map:
-        s = _symbol_map[s]
+    #if s in _symbol_map:
+    #    s = _symbol_map[s]
     return s.encode('ascii')
 
 
