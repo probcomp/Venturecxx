@@ -28,7 +28,17 @@ class TestChurchPrimeParser(ParserTestCase):
         output = self.p.parse_instruction('[assume a (b c d)]')
         expected = {'instruction':'assume', 'symbol':'a', 'expression':['b','c','d']}
         self.assertEqual(output,expected)
-
+    
+    def test_double_symbol(self):
+        output = self.p.parse_instruction('[predict (>= 1 1)]')
+        expected = {
+            'expression':
+                ['gte',
+                    {'type': 'number', 'value': 1.0},
+                    {'type': 'number', 'value': 1.0}],
+            'instruction': 'predict'}
+        self.assertEqual(output, expected)
+    
     def test_split_program(self):
         output = self.p.split_program(" [ force blah count<132>][ infer 132 ]")
         instructions = ['[ force blah count<132>]','[ infer 132 ]']
