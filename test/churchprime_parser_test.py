@@ -14,8 +14,8 @@ class TestChurchPrimeParser(ParserTestCase):
         self.expression = self.p.expression
         self.run_test( "",
                 None)
-        self.run_test( "()",
-                None)
+        #self.run_test( "()",
+        #        None)
         self.run_test( "(a b (c real<1>))",
                 [{'loc': [0,16], 'value':[
                     {'loc': [1,1], 'value': 'a'},
@@ -29,6 +29,7 @@ class TestChurchPrimeParser(ParserTestCase):
         expected = {'instruction':'assume', 'symbol':'a', 'expression':['b','c','d']}
         self.assertEqual(output,expected)
     
+    # detects bug where '>=' is parsed as '> =' (because '>' is its own symbol)
     def test_double_symbol(self):
         output = self.p.parse_instruction('[predict (>= 1 1)]')
         expected = {
@@ -37,6 +38,13 @@ class TestChurchPrimeParser(ParserTestCase):
                     {'type': 'number', 'value': 1.0},
                     {'type': 'number', 'value': 1.0}],
             'instruction': 'predict'}
+        self.assertEqual(output, expected)
+    
+    # detects bug parsing lambda expressions with no arguments
+    def test_empty_lambda(self):
+        output = self.p.parse_instruction('[predict (lambda () 0)]')
+        expected = {'instruction': 'predict',
+            'expression': ['lambda', [], {'type': 'number', 'value': 0.0}]}
         self.assertEqual(output, expected)
     
     def test_split_program(self):

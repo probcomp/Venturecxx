@@ -24,7 +24,7 @@ class ChurchPrimeParser():
         self.expression = Forward()
 
         self.combination =  utils.lw(Literal("("))\
-                + OneOrMore(self.expression)\
+                + ZeroOrMore(self.expression)\
                 + utils.lw(Literal(")"))
         def process_combination(s, loc, toks):
             v = toks[1:-1]
