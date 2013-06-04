@@ -255,6 +255,10 @@ def _parse_value(val):
     #NOTE: the current c++ implementation ignores the return type -- just gives number
     if isinstance(val,(float,int)):
         return {"type":"number", "value":val}
+    elif isinstance(val, list):
+        return {"type":"list", "value":val}
+    elif isinstance(val, tuple):
+        return {"type":"simplex_point", "value":val}
     else:       #assumed to be string
         # the current implementation just spews garbage
         # t, v = re.match(r'(.*?)\[(.*)\]',val).groups()
