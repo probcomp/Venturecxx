@@ -52,12 +52,11 @@ class RestServer(Flask):
             self.add_url_rule('/'+name,name,f)
 
     def _get_json(self):
-        if request.headers['content-type'] == 'application/json':
-            return request.json
-        else:
-            raise RuntimeError("Invalid JSON request. Content type should be application/json.")
+        # cannot pass it as json for some reason,
+        # so need to force it here.
+        return request.get_json(force=True);
 
     def _json_response(self, j, status):
         s = json.dumps(j)
-        h = {'Content-Type':'application/json'}
+        h = {'Content-Type':'application/json', 'Access-Control-Allow-Origin':'*'}
         return s,status,h
