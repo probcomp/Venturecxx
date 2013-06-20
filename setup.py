@@ -13,7 +13,7 @@ import os
 # venture_extra_compile_args += ['-D_VENTURE_USE_GOOGLE_PROFILER']
 #-lpython2.6 -lgsl -lgslcblas
 
-venture_libraries = ['gsl', 'gslcblas', 'pthread', 'boost_system', 'boost_thread', 'profiler']
+venture_libraries = ['gsl', 'gslcblas', 'pthread', 'boost_system', 'boost_thread']
 venture_extra_compile_args = ['-O2']
 
 venture_sources = [
