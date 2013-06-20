@@ -138,7 +138,7 @@ class Ripl():
         else:
             s = self._cur_parser().get_instruction_string('labeled_assume')
             d = {'symbol':name, 'expression':expression, 'label':label}
-        return self.execute_instruction(s,d)['value']['value']
+        return self.execute_instruction(s,d)
 
     def predict(self, expression, label=None):
         if label==None:
@@ -147,7 +147,7 @@ class Ripl():
         else:
             s = self._cur_parser().get_instruction_string('labeled_predict')
             d = {'expression':expression, 'label':label}
-        return self.execute_instruction(s,d)['value']['value']
+        return self.execute_instruction(s,d)
 
     def observe(self, expression, value, label=None):
         if label==None:
@@ -156,9 +156,7 @@ class Ripl():
         else:
             s = self._cur_parser().get_instruction_string('labeled_observe')
             d = {'expression':expression, 'value':value, 'label':label}
-        self.execute_instruction(s,d)
-        return None
-
+        return self.execute_instruction(s,d)
 
     ############################################
     # Core
@@ -208,7 +206,12 @@ class Ripl():
 
     def list_directives(self):
         s = self._cur_parser().get_instruction_string('list_directives')
-        return self.execute_instruction(s,{})['directives']
+        directives = self.execute_instruction(s,{})['directives']
+        # modified to add value to each directive
+        for directive in directives:
+            value = self.report(directive['directive_id']);
+            directive['value'] = value;
+        return directives;
 
     def get_directive(self, label_or_did):
         if isinstance(label_or_did,int):
