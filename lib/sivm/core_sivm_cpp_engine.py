@@ -175,6 +175,12 @@ class CoreSivmCppEngine(object):
             self.engine.stop_continuous_inference()
         return {}
 
+    def _do_continuous_inference_status(self,instruction):
+        utils.require_state(self.state,'default')
+        with self._catch_engine_error():
+            self.engine.continuous_inference_status()
+        return {}
+
     ###############################
     # Error catching
     ###############################
