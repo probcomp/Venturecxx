@@ -130,9 +130,13 @@ class VentureSivm(object):
     def _pause_continuous_inference(sivm):
         class tmp(object):
             def __enter__(self):
-                pass
+                self.was_continuous_inference_on = \
+                      self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})
+                if self.was_continuous_inference_on:
+                    self._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
             def __exit__(self, type, value, traceback):
-                pass
+                if self.was_continuous_inference_on:
+                    self._call_core_sivm_instruction({"instruction" : "start_continuous_inference"})
         return tmp()
 
 
@@ -141,22 +145,16 @@ class VentureSivm(object):
     ###############################
 
     def _init_continuous_inference(self):
-        self.ci_enabled = False
+        pass
 
     def _continuous_inference_enabled(self):
-        return self.ci_enabled
+        self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})
 
     def _enable_continuous_inference(self):
-        if self.ci_enabled == True:         #TODO: maybe add debug mode for these "asserts"
-            raise VentureException('fatal',
-                    'CI should not be enabled when its already running')
-        self.ci_enabled = True
+        self._call_core_sivm_instruction({"instruction" : "start_continuous_inference"})
 
     def _disable_continuous_inference(self):
-        if self.ci_enabled == False:
-            raise VentureException('fatal',
-                    'CI should not be disabled when its already stopped')
-        self.ci_enabled = False
+        self._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
 
     ###############################
     # Shortcuts
