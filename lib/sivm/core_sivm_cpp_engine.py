@@ -22,7 +22,8 @@ class CoreSivmCppEngine(object):
 
     _implemented_instructions = ["assume","observe","predict",
             "configure","forget","report","infer",
-            "clear","rollback","get_logscore","get_global_logscore"]
+            "clear","rollback","get_logscore","get_global_logscore",
+            "start_continuous_inference","stop_continuous_inference"]
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._implemented_instructions)
         f = getattr(self,'_do_'+instruction['instruction'])
@@ -160,6 +161,18 @@ class CoreSivmCppEngine(object):
         utils.require_state(self.state,'default')
         l = self.engine.logscore()
         return {"logscore":l}
+        
+    def _do_start_continuous_inference(self,instruction):
+        utils.require_state(self.state,'default')
+        with self._catch_engine_error():
+            self.engine.start_continuous_inference()
+        return {}
+
+    def _do_stop_continuous_inference(self,instruction):
+        utils.require_state(self.state,'default')
+        with self._catch_engine_error():
+            self.engine.stop_continuous_inference()
+        return {}
 
     ###############################
     # Error catching
