@@ -130,13 +130,13 @@ class VentureSivm(object):
     def _pause_continuous_inference(sivm):
         class tmp(object):
             def __enter__(self):
-                self.was_continuous_inference_on = \
-                      self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})
+                self.was_continuous_inference_on = (
+                    sivm._call_core_sivm_instruction({"instruction" : "continuous_inference_status"}))
                 if self.was_continuous_inference_on:
-                    self._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
+                    sivm._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
             def __exit__(self, type, value, traceback):
                 if self.was_continuous_inference_on:
-                    self._call_core_sivm_instruction({"instruction" : "start_continuous_inference"})
+                    sivm._call_core_sivm_instruction({"instruction" : "start_continuous_inference"})
         return tmp()
 
 
