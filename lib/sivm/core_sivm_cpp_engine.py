@@ -23,7 +23,8 @@ class CoreSivmCppEngine(object):
     _implemented_instructions = ["assume","observe","predict",
             "configure","forget","report","infer",
             "clear","rollback","get_logscore","get_global_logscore",
-            "start_continuous_inference","stop_continuous_inference"]
+            "start_continuous_inference","stop_continuous_inference",
+            "continuous_inference_status"]
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._implemented_instructions)
         f = getattr(self,'_do_'+instruction['instruction'])
