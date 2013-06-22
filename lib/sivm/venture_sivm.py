@@ -37,16 +37,10 @@ class VentureSivm(object):
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._core_instructions + self._extra_instructions)
         instruction_type = instruction['instruction']
-        # If the instruction itself deals with the continuous inference status, then
-        # we should not pause the status before performing the instruction.
-        if instruction_type in ['start_continuous_inference','stop_continuous_inference',
-                                'continuous_inference_status']:
-            return self._call_core_sivm_instruction(instruction)
-        with self._pause_continuous_inference():
-            if instruction_type in self._extra_instructions:
-                f = getattr(self,'_do_'+instruction_type)
-                return f(instruction)
-            return self._call_core_sivm_instruction(instruction)
+        if instruction_type in self._extra_instructions:
+            f = getattr(self,'_do_'+instruction_type)
+            return f(instruction)
+        return self._call_core_sivm_instruction(instruction)
 
     ###############################
     # Reset stuffs
@@ -133,14 +127,16 @@ class VentureSivm(object):
     # Continuous Inference Pauser
     ###############################
 
+    # FIXME for Yura:
+    # When Venture-2 is ready, transfer pausing of continuous inference here.
     def _pause_continuous_inference(sivm):
         class tmp(object):
             def __enter__(self):
-                self.was_continuous_inference_on = self._continuous_inference_status()
-                if self.was_continuous_inference_on:
+                self.was_continuous_inference_running = self._continuous_inference_status()
+                if self.was_continuous_inference_running:
                     self._stop_continuous_inference()
             def __exit__(self, type, value, traceback):
-                if self.was_continuous_inference_on:
+                if self.was_continuous_inference_running:
                     self._start_continuous_inference()
         return tmp()
 
@@ -153,7 +149,7 @@ class VentureSivm(object):
         pass
     
     def _continuous_inference_status(self):
-        return self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})["continuous_inference_status"]
+        return self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})["running"]
 
     def _start_continuous_inference(self):
         self._call_core_sivm_instruction({"instruction" : "start_continuous_inference"})
@@ -323,3 +319,4 @@ class VentureSivm(object):
                     "Breakpoint with breakpoint_id = {} does not exist".format(bid),
                     argument='breakpoint_id')
         return {"breakpoint":copy.deepcopy(self.breakpoint_dict[bid])}
+
