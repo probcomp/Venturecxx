@@ -48,4 +48,4 @@ cache. Make sure that the additional python dependencies
 are installed in the global python environment.
 
     deactivate && rm -rf env.d build && virtualenv --system-site-packages env.d && \
-      . env.d/bin/activate && CC=\"ccache gcc\" python setup.py install
+      . env.d/bin/activate && CC="ccache gcc" python setup.py install
