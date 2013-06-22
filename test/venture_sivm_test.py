@@ -3,7 +3,7 @@ from venture.sivm import CoreSivmCppEngine, VentureSivm
 import venture.sivm.venture_sivm as module
 from venture.exception import VentureException
 
-#Note -- these tests only check for minimum functionality
+# Note -- these tests only check for minimum functionality
 # these tests also depend on a functional CoreSivmCppEngine
 
 class TestVentureSivm(unittest.TestCase):
@@ -255,28 +255,21 @@ class TestVentureSivm(unittest.TestCase):
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['directives'], [])
     def test_continuous_inference_configure(self):
-        inst1 = {
-                'instruction':'continuous_inference_configure',
-                "options":{},
-                }
-        o1 = self.sivm.execute_instruction(inst1)
-        e1 = {'options':{
-                'continuous_inference_enable': False,
-                }}
+        status = {'instruction':'continuous_inference_status'}
+        o1 = self.sivm.execute_instruction(status)
+        e1 = {'running': False}
         self.assertEquals(o1, e1)
-        inst2 = {
-                'instruction':'continuous_inference_configure',
-                "options":{
-                    'continuous_inference_enable': True,
-                    },
-                }
-        o2 = self.sivm.execute_instruction(inst2)
-        e2 = {
-                "options":{
-                    'continuous_inference_enable': True,
-                    }
-                }
+        
+        self.sivm.execute_instruction({'instruction':'start_continuous_inference'})
+        o2 = self.sivm.execute_instruction(status)
+        e2 = {'running': True}
         self.assertEquals(o2, e2)
+        
+        self.sivm.execute_instruction({'instruction':'stop_continuous_inference'})
+        o3 = self.sivm.execute_instruction(status)
+        e3 = {'running': False}
+        self.assertEquals(o3, e3)
+        
     def test_get_current_exception(self):
         inst1 = {
                 'instruction':'force',
@@ -332,3 +325,4 @@ class TestVentureSivm(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
