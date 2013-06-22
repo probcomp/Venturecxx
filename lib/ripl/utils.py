@@ -15,8 +15,8 @@ _RIPL_FUNCTIONS = [
         'expression_index_to_text_index','assume','predict',
         'observe','configure','forget','report','infer',
         'clear','rollback','list_directives','get_directive',
-        'force','sample','continuous_inference_configure',
-        'continuous_inference_enable','continuous_inference_disable',
+        'force','sample','continuous_inference_status',
+        'start_continuous_inference','stop_continuous_inference',
         'get_current_exception','get_state','get_logscore',
         'get_global_logscore'
         ]

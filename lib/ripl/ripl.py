@@ -233,19 +233,18 @@ class Ripl():
         d = {'expression':expression}
         return self.execute_instruction(s,d)['value']['value']
 
-    def continuous_inference_configure(self, options={}):
-        s = self._cur_parser().get_instruction_string('continuous_inference_configure')
-        d = {'options':options}
-        return self.execute_instruction(s,d)['options']
+    def continuous_inference_status(self, options={}):
+        s = self._cur_parser().get_instruction_string('continuous_inference_status')
+        return self.execute_instruction(s)['continuous_inference_status']
 
-    def continuous_inference_enable(self):
-        d = {'continuous_inference_enable':True}
-        self.continuous_inference_configure(d)
+    def start_continuous_inference(self):
+        s = self._cur_parser().get_instruction_string('start_continuous_inference')
+        self.execute_instruction(s)
         return None
 
-    def continuous_inference_disable(self):
-        d = {'continuous_inference_enable':False}
-        self.continuous_inference_configure(d)
+    def stop_continuous_inference(self):
+        s = self._cur_parser().get_instruction_string('stop_continuous_inference')
+        self.execute_instruction(s)
         return None
 
     def get_current_exception(self):
