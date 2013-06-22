@@ -134,16 +134,13 @@ class VentureSivm(object):
     ###############################
 
     def _pause_continuous_inference(sivm):
+        # FIXME for Yura:
+        # When Venture-2 is ready, transfer pausing of continuous inference here.
         class tmp(object):
             def __enter__(self):
-                self.was_continuous_inference_on = \
-                    sivm._call_core_sivm_instruction({"instruction" : \
-                         "continuous_inference_status"})['continuous_inference_status']
-                if self.was_continuous_inference_on:
-                    sivm._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
+                pass
             def __exit__(self, type, value, traceback):
-                if self.was_continuous_inference_on:
-                    sivm._call_core_sivm_instruction({"instruction" : "start_continuous_inference"})
+                pass
         return tmp()
 
 
