@@ -209,8 +209,8 @@ class Ripl():
         directives = self.execute_instruction(s,{})['directives']
         # modified to add value to each directive
         for directive in directives:
-            value = self.report(directive['directive_id']);
-            directive['value'] = value;
+            value = self.report(directive['directive_id'])
+            directive['value'] = value
         return directives;
 
     def get_directive(self, label_or_did):
@@ -235,7 +235,7 @@ class Ripl():
 
     def continuous_inference_status(self, options={}):
         s = self._cur_parser().get_instruction_string('continuous_inference_status')
-        return self.execute_instruction(s)['continuous_inference_status']
+        return self.execute_instruction(s)['running']
 
     def start_continuous_inference(self):
         s = self._cur_parser().get_instruction_string('start_continuous_inference')

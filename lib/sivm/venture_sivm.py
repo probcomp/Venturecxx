@@ -136,31 +136,29 @@ class VentureSivm(object):
     def _pause_continuous_inference(sivm):
         class tmp(object):
             def __enter__(self):
-                self.was_continuous_inference_on = \
-                    sivm._call_core_sivm_instruction({"instruction" : \
-                         "continuous_inference_status"})['continuous_inference_status']
+                self.was_continuous_inference_on = self._continuous_inference_status()
                 if self.was_continuous_inference_on:
-                    sivm._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
+                    self._stop_continuous_inference()
             def __exit__(self, type, value, traceback):
                 if self.was_continuous_inference_on:
-                    sivm._call_core_sivm_instruction({"instruction" : "start_continuous_inference"})
+                    self._start_continuous_inference()
         return tmp()
 
 
     ###############################
     # Continuous Inference on/off
     ###############################
-
+    
     def _init_continuous_inference(self):
         pass
+    
+    def _continuous_inference_status(self):
+        return self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})["continuous_inference_status"]
 
-    def _continuous_inference_enabled(self):
-        self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})
-
-    def _enable_continuous_inference(self):
+    def _start_continuous_inference(self):
         self._call_core_sivm_instruction({"instruction" : "start_continuous_inference"})
 
-    def _disable_continuous_inference(self):
+    def _stop_continuous_inference(self):
         self._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
 
     ###############################
