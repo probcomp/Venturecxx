@@ -19,10 +19,11 @@ class VentureSivm(object):
     _extra_instructions = ['labeled_assume','labeled_observe',
             'labeled_predict','labeled_forget','labeled_report', 'labeled_get_logscore',
             'list_directives','get_directive','labeled_get_directive',
-            'force','sample','continuous_inference_configure','get_current_exception',
+            'force','sample','get_current_exception',
             'get_state', 'reset', 'debugger_list_breakpoints','debugger_get_breakpoint']
     _core_instructions = ["assume","observe","predict",
-            "configure","forget","report","infer",
+            "configure","forget","report","infer","start_continuous_inference",
+            "stop_continuous_inference","continuous_inference_status",
             "clear","rollback","get_directive_logscore","get_global_logscore",
             "debugger_configure","debugger_list_random_choices", "debugger_clear",
             "debugger_force_random_choice","debugger_report_address",
@@ -36,6 +37,11 @@ class VentureSivm(object):
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._core_instructions + self._extra_instructions)
         instruction_type = instruction['instruction']
+        # If the instruction itself deals with the continuous inference status, then
+        # we should not pause the status before performing the instruction.
+        if instruction_type in ['start_continuous_inference','stop_continuous_inference',
+                                'continuous_inference_status']:
+            return self._call_core_sivm_instruction(instruction)
         with self._pause_continuous_inference():
             if instruction_type in self._extra_instructions:
                 f = getattr(self,'_do_'+instruction_type)
@@ -130,8 +136,9 @@ class VentureSivm(object):
     def _pause_continuous_inference(sivm):
         class tmp(object):
             def __enter__(self):
-                self.was_continuous_inference_on = (
-                    sivm._call_core_sivm_instruction({"instruction" : "continuous_inference_status"}))
+                self.was_continuous_inference_on = \
+                    sivm._call_core_sivm_instruction({"instruction" : \
+                         "continuous_inference_status"})['continuous_inference_status']
                 if self.was_continuous_inference_on:
                     sivm._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
             def __exit__(self, type, value, traceback):
