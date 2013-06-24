@@ -19,12 +19,14 @@ class CoreSivmCppEngine(object):
         self.state = 'default'
         # the current cpp engine doesn't support reporting "observe" directives
         self.observe_dict = {}
+        # cpp engine doesn't support profiling yet
+        self.profiler_enabled = False
 
     _implemented_instructions = ["assume","observe","predict",
             "configure","forget","report","infer",
             "clear","rollback","get_logscore","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
-            "continuous_inference_status"]
+            "continuous_inference_status", "profiler_configure"]
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._implemented_instructions)
         f = getattr(self,'_do_'+instruction['instruction'])
@@ -179,7 +181,19 @@ class CoreSivmCppEngine(object):
         utils.require_state(self.state,'default')
         with self._catch_engine_error():
             return {'running':self.engine.continuous_inference_status()}
-
+    
+    ##############################
+    # Profiler (stubs)
+    ##############################
+    
+    def _do_profiler_configure(self,instruction):
+        utils.require_state(self.state,'default')
+        d = utils.validate_arg(instruction, 'options', utils.validate_dict)
+        e = utils.validate_arg(d, 'profiler_enabled', utils.validate_boolean, required=False)
+        if e != None:
+            self.profiler_enabled = e
+        return {'options': {'profiler_enabled': self.profiler_enabled}}
+    
     ###############################
     # Error catching
     ###############################
@@ -268,7 +282,6 @@ def _modify_symbol(s):
         s = _symbol_map[s]
     return s.encode('ascii')
 
-
 _reverse_literal_type_map = dict((y,x) for x,y in _literal_type_map.items())
 def _parse_value(val):
     #NOTE: the current c++ implementation ignores the return type -- just gives number
@@ -284,3 +297,4 @@ def _parse_value(val):
         # return {"type":_reverse_literal_type_map[t], "value":json.loads(v)}
         # use this instead
         return {"type":"boolean", "value":True}
+

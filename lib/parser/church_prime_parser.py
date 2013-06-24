@@ -93,6 +93,8 @@ class ChurchPrimeParser():
             ['get_logscore', '[ <!get> <!logscore> <directive_id:int> ]'],
             ['labeled_get_logscore', '[ <!get> <!logscore> <label:sym> ]'],
             ['get_global_logscore', '[ <!get> <!global> <!logscore> ]'],
+            # Profiler
+            ['profiler_configure','[ <!profiler> <!configure> <options:json> ]']
             ]
 
         self.instruction = utils.make_instruction_parser(instruction_list,patterns)
