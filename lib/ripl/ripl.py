@@ -167,7 +167,13 @@ class Ripl():
         s = p.get_instruction_string('configure')
         d = {'options':options}
         return self.execute_instruction(s,d)['options']
-
+    
+    def get_seed(self):
+        return self.configure()['seed']
+        
+    def get_inference_timeout(self):
+        return self.configure()['inference_timeout']
+    
     def forget(self, label_or_did):
         if isinstance(label_or_did,int):
             s = self._cur_parser().get_instruction_string('forget')
