@@ -233,7 +233,7 @@ class Ripl():
         d = {'expression':expression}
         return self.execute_instruction(s,d)['value']['value']
 
-    def continuous_inference_status(self, options={}):
+    def continuous_inference_status(self):
         s = self._cur_parser().get_instruction_string('continuous_inference_status')
         return self.execute_instruction(s)['running']
 
@@ -269,6 +269,23 @@ class Ripl():
         return self.execute_instruction(s,{})['logscore']
 
     ############################################
+    # Profiler methods
+    ############################################
+    
+    def profiler_configure(self, options={}):
+        s = self._cur_parser().get_instruction_string('profiler_configure')
+        d = {'options': options}
+        return self.execute_instruction(s, d)['options']
+    
+    def profiler_enable(self):
+        self.profiler_configure({'profiler_enabled': True})
+        return None
+    
+    def profiler_disable(self):
+        self.profiler_configure({'profiler_enabled': False})
+        return None
+    
+    ############################################
     # Private methods
     ############################################
 
@@ -281,3 +298,4 @@ class Ripl():
         p = self.parsers[mode]
         args, arg_ranges = p.split_instruction(text)
         return args['expression'], arg_ranges['expression'][0]
+
