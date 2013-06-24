@@ -235,6 +235,22 @@ class TestCoreSivmCppEngine(unittest.TestCase):
         #currently not implemented
         #self.assertEquals(o2['logscore'],-0.6931471805599453)
     
+    def test_continuous_inference(self):
+        status = {'instruction':'continuous_inference_status'}
+        o1 = self.sivm.execute_instruction(status)
+        e1 = {'running': False}
+        self.assertEquals(o1, e1)
+        
+        self.sivm.execute_instruction({'instruction':'start_continuous_inference'})
+        o2 = self.sivm.execute_instruction(status)
+        e2 = {'running': True}
+        self.assertEquals(o2, e2)
+        
+        self.sivm.execute_instruction({'instruction':'stop_continuous_inference'})
+        o3 = self.sivm.execute_instruction(status)
+        e3 = {'running': False}
+        self.assertEquals(o3, e3)
+    
     def test_profiler_configure(self):
         i1 = {'instruction':'profiler_configure', 'options': {}}
         o1 = self.sivm.execute_instruction(i1)
