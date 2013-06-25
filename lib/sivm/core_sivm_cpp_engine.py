@@ -285,7 +285,11 @@ def _modify_symbol(s):
 _reverse_literal_type_map = dict((y,x) for x,y in _literal_type_map.items())
 def _parse_value(val):
     #NOTE: the current c++ implementation ignores the return type -- just gives number
-    if isinstance(val,(float,int)):
+    if isinstance(val, bool):
+        return {"type":"boolean", "value":val}
+    elif isinstance(val, int):
+        return {"type":"count", "value":val}
+    elif isinstance(val, float):
         return {"type":"number", "value":val}
     elif isinstance(val, list):
         return {"type":"list", "value":val}
@@ -293,8 +297,8 @@ def _parse_value(val):
         return {"type":"simplex_point", "value":val}
     else:       #assumed to be string
         # the current implementation just spews garbage
-        # t, v = re.match(r'(.*?)\[(.*)\]',val).groups()
-        # return {"type":_reverse_literal_type_map[t], "value":json.loads(v)}
+        t, v = re.match(r'(.*?)\[(.*)\]',val).groups()
+        return {"type":_reverse_literal_type_map[t], "value":json.loads(v)}
         # use this instead
-        return {"type":"boolean", "value":True}
+        # return {"type":"boolean", "value":True}
 

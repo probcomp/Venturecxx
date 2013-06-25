@@ -62,15 +62,6 @@ class TestCoreSivmCppEngine(unittest.TestCase):
         s = ['power','c[1]','a']
         self.assertEqual(module._modify_expression(v),s)
 
-    def test_parse_value_1(self):
-        v = {"type":"boolean", "value":True}
-        s = "blah blah blah garbage text"
-        self.assertEqual(module._parse_value(s),v)
-    def test_parse_value_2(self):
-        v = {"type":"number", "value":1.23}
-        s = 1.23
-        self.assertEqual(module._parse_value(s),v)
-
     def test_assume(self):
         inst = {
                 'instruction':'assume',
@@ -266,6 +257,42 @@ class TestCoreSivmCppEngine(unittest.TestCase):
         o3 = self.sivm.execute_instruction(i3)
         e3 = {'options': {'profiler_enabled': False}}
         self.assertEquals(o3, e3)
+    
+    def test_parse_bool(self):
+        v = False
+        o = module._parse_value(v)
+        e = {"type":"boolean", "value":v}
+        self.assertEquals(o, e)
+
+    def test_parse_count(self):        
+        v = 0
+        o = module._parse_value(v)
+        e = {"type":"count", "value":v}
+        self.assertEquals(o, e)
+        
+    def test_parse_number(self):
+        v = 0.5
+        o = module._parse_value(v)
+        e = {"type":"number", "value":v}
+        self.assertEquals(o, e)
+        
+    def test_parse_list(self):
+        v = ['l', 'i', 's', 't']
+        o = module._parse_value(v)
+        e = {"type":"list", "value":v}
+        self.assertEquals(o, e)
+        
+    def test_parse_simplex_point(self):
+        v = (0.1, 0.2, 0.3, 0.4)
+        o = module._parse_value(v)
+        e = {"type":"simplex_point", "value":v}
+        self.assertEquals(o, e)
+    
+    def test_parse_atom(self):
+        v = "a[1]"
+        o = module._parse_value(v)
+        e = {"type":"atom", "value":1}
+        self.assertEqual(o, e)
 
 if __name__ == '__main__':
     unittest.main()

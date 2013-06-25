@@ -170,14 +170,14 @@ class Ripl():
     
     def get_seed(self):
         return self.configure()['seed']
-        
+    
     def set_seed(self, seed):
         self.configure({'seed': seed})
         return None
-        
+    
     def get_inference_timeout(self):
         return self.configure()['inference_timeout']
-        
+    
     def set_inference_timeout(self, inference_timeout):
         self.configure({'inference_timeout': inference_timeout})
         return None
