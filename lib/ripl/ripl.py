@@ -222,14 +222,14 @@ class Ripl():
         self.execute_instruction(s,{})
         return None
 
-    def list_directives(self):
+    def list_directives(self, type=False):
         s = self._cur_parser().get_instruction_string('list_directives')
         directives = self.execute_instruction(s,{})['directives']
         # modified to add value to each directive
         for directive in directives:
-            value = self.report(directive['directive_id'])
+            value = self.report(directive['directive_id'], type)
             directive['value'] = value
-        return directives;
+        return directives
 
     def get_directive(self, label_or_did):
         if isinstance(label_or_did,int):
