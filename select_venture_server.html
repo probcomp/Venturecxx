@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>Venture demos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <link href="assets/css/bootstrap.css" rel="stylesheet">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script type="text/javascript" src="jquery.cookie.js"></script>
+    <script src="common-scripts.js"></script>
+    
+  <script type="text/javascript">
+  function getParameterByName(name)
+  {
+    name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+    var regexS = "[\\?&]" + name + "=([^&#]*)";
+    var regex = new RegExp(regexS);
+    var results = regex.exec(window.location.search);
+    if(results == null)
+      return "";
+    else
+      return decodeURIComponent(results[1].replace(/\+/g, " "));
+  }
+  
+  function SelectVentureServer(host, port) {
+    $.cookie("venture__ripl_host", host, { expires: 21 });
+    $.cookie("venture__ripl_port", port, { expires: 21 });
+    window.location = getParameterByName("url_referrer")
+  }
+  
+  function SelectMainDemoServer() {
+    SelectVentureServer(venture__venture_ec2_demo_instance_host, venture__venture_ec2_demo_instance_port);
+  }
+  function SelectMyOwnServer() {
+    SelectVentureServer($("#my_host").val(), $("#my_port").val());
+  }
+  function SelectMainVentureEC2InstanceAndMyPort() {
+    SelectVentureServer(venture__venture_ec2_demo_instance_host, $("#mainventureec2_port").val());
+  }
+  </script>
+  
+  </head>
+
+  <body>
+    <br><br>
+    <div class="vis-server-selector" style="margin-left:50px;">
+      <h1>What Venture server do you want to use?</h1>
+      <br>
+      <b>1. MIT.PCP Venture demo server</b><br>
+        <input type="button" value="Run" onClick="SelectMainDemoServer();"><br>
+      <br><br>
+      <b>2. The server I have started myself</b><br>
+        <a href="http://www.yuraperov.com/MIT.PCP/wiki/index.php5?title=Installation">(See docs on how to install Venture yourself)</a><br>
+        Host: <input id="my_host" type="text" value="127.0.0.1"> <i>(You can provide another IP/host.)</i><br>
+        Port: <input id="my_port" type="text" value="8082"> <i>(The port on which you start the Venture by "$ ./start_venture port".)</i><br>
+        <input type="button" value="Run" onClick="SelectMyOwnServer();"><br>
+      <br><br>
+      <b>3. "Venture demo" EC2 Instance (if you have access)</b><br>
+        Host: <i>54.235.201.199</i><br>
+        Port: <input type="text" id="mainventureec2_port" value=""> <i>(The port on which you start the Venture by "$ /usr/venture/start_venture port".)</i><br>
+        <input type="button" value="Run" onClick="SelectMainVentureEC2InstanceAndMyPort();"><br>
+      <br><br>
+      <i>If you have already been to this page, please, check that cookies are enabled in your browser.
+         <!-- http://stackoverflow.com/questions/6449063/javascript-fails-to-create-recognize-cookies-on-chrome -->
+         If this does not help, please, <a href="mailto:venture-dev@lists.csail.mit.edu">contact us</a>.</i>
+    </div>
+
+  </body>
+</html>
