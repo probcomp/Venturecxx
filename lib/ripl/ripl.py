@@ -131,23 +131,25 @@ class Ripl():
     # Directives
     ############################################
 
-    def assume(self, name, expression, label=None):
+    def assume(self, name, expression, label=None, type=False):
         if label==None:
             s = self._cur_parser().get_instruction_string('assume')
             d = {'symbol':name, 'expression':expression}
         else:
             s = self._cur_parser().get_instruction_string('labeled_assume')
             d = {'symbol':name, 'expression':expression, 'label':label}
-        return self.execute_instruction(s,d)['value']
+        value = self.execute_instruction(s,d)['value']
+        return value if type else value['value']
 
-    def predict(self, expression, label=None):
+    def predict(self, expression, label=None, type=False):
         if label==None:
             s = self._cur_parser().get_instruction_string('predict')
             d = {'expression':expression}
         else:
             s = self._cur_parser().get_instruction_string('labeled_predict')
             d = {'expression':expression, 'label':label}
-        return self.execute_instruction(s,d)['value']
+        value = self.execute_instruction(s,d)['value']
+        return value if type else value['value']
 
     def observe(self, expression, value, label=None):
         if label==None:
@@ -156,7 +158,8 @@ class Ripl():
         else:
             s = self._cur_parser().get_instruction_string('labeled_observe')
             d = {'expression':expression, 'value':value, 'label':label}
-        return self.execute_instruction(s,d)
+        self.execute_instruction(s,d)
+        return None
 
     ############################################
     # Core
