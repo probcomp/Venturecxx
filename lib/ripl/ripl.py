@@ -138,7 +138,7 @@ class Ripl():
         else:
             s = self._cur_parser().get_instruction_string('labeled_assume')
             d = {'symbol':name, 'expression':expression, 'label':label}
-        return self.execute_instruction(s,d)
+        return self.execute_instruction(s,d)['value']
 
     def predict(self, expression, label=None):
         if label==None:
@@ -147,7 +147,7 @@ class Ripl():
         else:
             s = self._cur_parser().get_instruction_string('labeled_predict')
             d = {'expression':expression, 'label':label}
-        return self.execute_instruction(s,d)
+        return self.execute_instruction(s,d)['value']
 
     def observe(self, expression, value, label=None):
         if label==None:
@@ -199,7 +199,7 @@ class Ripl():
         else:
             s = self._cur_parser().get_instruction_string('labeled_report')
             d = {'label':label_or_did}
-        return self.execute_instruction(s,d)['value']['value']
+        return self.execute_instruction(s,d)['value']
 
     def infer(self, iterations, resample=False):
         s = self._cur_parser().get_instruction_string('infer')
@@ -245,7 +245,7 @@ class Ripl():
     def sample(self, expression):
         s = self._cur_parser().get_instruction_string('sample')
         d = {'expression':expression}
-        return self.execute_instruction(s,d)['value']['value']
+        return self.execute_instruction(s,d)['value']
 
     def continuous_inference_status(self):
         s = self._cur_parser().get_instruction_string('continuous_inference_status')
