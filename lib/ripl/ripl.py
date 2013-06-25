@@ -195,14 +195,15 @@ class Ripl():
         self.execute_instruction(s,d)
         return None
 
-    def report(self, label_or_did):
+    def report(self, label_or_did, type=False):
         if isinstance(label_or_did,int):
             s = self._cur_parser().get_instruction_string('report')
             d = {'directive_id':label_or_did}
         else:
             s = self._cur_parser().get_instruction_string('labeled_report')
             d = {'label':label_or_did}
-        return self.execute_instruction(s,d)['value']
+        value = self.execute_instruction(s,d)['value']
+        return value if type else value['value']
 
     def infer(self, iterations, resample=False):
         s = self._cur_parser().get_instruction_string('infer')
