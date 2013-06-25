@@ -296,9 +296,12 @@ def _parse_value(val):
     elif isinstance(val, tuple):
         return {"type":"simplex_point", "value":val}
     else:       #assumed to be string
-        # the current implementation just spews garbage
-        t, v = re.match(r'(.*?)\[(.*)\]',val).groups()
-        return {"type":_reverse_literal_type_map[t], "value":json.loads(v)}
-        # use this instead
-        # return {"type":"boolean", "value":True}
+        # try to match one of the known types
+        m = re.match(r'(.*?)\[(.*)\]',val)
+        if m != None:
+            t, v = m.groups()
+            return {"type":_reverse_literal_type_map[t], "value":json.loads(v)}
+        
+        #probably an XRP or compound procedure
+        return {"type":"opaque", "value":val}
 
