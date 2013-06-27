@@ -110,29 +110,28 @@ class TestRipl(unittest.TestCase):
     def test_assume(self):
         #normal assume
         ret_value = self.ripl.assume('c', '(+ 1 1)')
-        self.assertEqual(ret_value['value']['value'], 2)
+        self.assertEqual(ret_value, 2)
         #labeled assume
         ret_value = self.ripl.assume('d', '(+ 1 1)', 'moo')
-        self.assertEqual(ret_value['value']['value'], 2)
+        self.assertEqual(ret_value, 2)
 
     def test_predict(self):
         #normal predict
         ret_value = self.ripl.predict('(+ 1 1)')
-        self.assertEqual(ret_value['value']['value'], 2)
+        self.assertEqual(ret_value, 2)
         #labeled predict
         ret_value = self.ripl.predict('(+ 1 1)','moo')
-        self.assertEqual(ret_value['value']['value'], 2)
+        self.assertEqual(ret_value, 2)
 
     def test_observe(self):
         #normal observe
         self.ripl.assume('a','(uniform_continuous 0 1)')
         self.ripl.observe('a',0.5)
         output = self.ripl.predict('a')
-        self.assertEqual(output['value']['value'], 0.5)
+        self.assertEqual(output, 0.5)
         #labeled observe
         self.ripl.observe('true','true','moo')
-
-
+    
     ############################################
     # Core
     ############################################
@@ -192,7 +191,7 @@ class TestRipl(unittest.TestCase):
         self.ripl.force('a',0.2)
         self.ripl.force('a',0.5)
         output = self.ripl.predict('a')
-        self.assertEqual(output['value']['value'], 0.5)
+        self.assertEqual(output, 0.5)
 
     def test_sample(self):
         #normal force

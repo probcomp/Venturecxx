@@ -246,11 +246,12 @@ class Ripl():
         self.execute_instruction(s,d)
         return None
 
-    def sample(self, expression):
+    def sample(self, expression, type=False):
         s = self._cur_parser().get_instruction_string('sample')
         d = {'expression':expression}
-        return self.execute_instruction(s,d)['value']
-
+        value = self.execute_instruction(s,d)['value']
+        return value if type else value['value']
+    
     def continuous_inference_status(self):
         s = self._cur_parser().get_instruction_string('continuous_inference_status')
         return self.execute_instruction(s)['running']
