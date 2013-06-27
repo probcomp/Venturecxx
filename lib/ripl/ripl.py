@@ -226,6 +226,7 @@ class Ripl():
         s = self._cur_parser().get_instruction_string('list_directives')
         directives = self.execute_instruction(s,{})['directives']
         # modified to add value to each directive
+        # FIXME: is this correct behavior?
         for directive in directives:
             value = self.report(directive['directive_id'], type)
             directive['value'] = value
