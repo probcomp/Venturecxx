@@ -48,6 +48,7 @@ class VentureSivm(object):
 
     def _clear(self):
         self.label_dict = {}
+        self.did_dict = {}
         self.directive_dict = {}
         self._debugger_clear()
         self.state = 'default'
@@ -100,9 +101,9 @@ class VentureSivm(object):
         if instruction_type == 'forget':
             did = instruction['directive_id']
             del self.directive_dict[did]
-            for key,value in self.label_dict.items():
-                if value == did:
-                    del self.label_dict[key]
+            if did in self.did_dict:
+                del self.label_dict[did_dict[did]]
+                del self.did_dict[did]
         # save the directive if the instruction is a directive
         if instruction_type in ['assume','observe','predict']:
             did = response['directive_id']
@@ -177,72 +178,62 @@ class VentureSivm(object):
     ###############################
     # labeled instruction wrappers
     ###############################
-    def _do_labeled_assume(self, instruction):
+    
+    def _do_labeled_directive(self, instruction):
         label = self._validate_label(instruction)
         tmp = instruction.copy()
-        tmp['instruction'] = 'assume'
+        tmp['instruction'] = instruction['instruction'][len('labeled_'):]
         del tmp['label']
         response = self._call_core_sivm_instruction(tmp)
-        self.label_dict[label] = response['directive_id']
-        return response
-    def _do_labeled_observe(self, instruction):
-        label = self._validate_label(instruction)
-        tmp = instruction.copy()
-        tmp['instruction'] = 'observe'
-        del tmp['label']
-        response = self._call_core_sivm_instruction(tmp)
-        self.label_dict[label] = response['directive_id']
-        return response
-    def _do_labeled_predict(self, instruction):
-        label = self._validate_label(instruction)
-        tmp = instruction.copy()
-        tmp['instruction'] = 'predict'
-        del tmp['label']
-        response = self._call_core_sivm_instruction(tmp)
-        self.label_dict[label] = response['directive_id']
-        return response
-    def _do_labeled_forget(self, instruction):
+        did = response['directive_id']
+        self.label_dict[label] = did
+        self.did_dict[did] = label
+        return response    
+    
+    _do_labeled_assume = _do_labeled_directive
+    _do_labeled_observe = _do_labeled_directive
+    _do_labeled_predict = _do_labeled_directive    
+    
+    def _do_labeled_operation(self, instruction):
         label = self._validate_label(instruction, exists=True)
         tmp = instruction.copy()
-        tmp['instruction'] = 'forget'
+        tmp['instruction'] = instruction['instruction'][len('labeled_'):]
         tmp['directive_id'] = self.label_dict[instruction['label']]
         del tmp['label']
-        r = self._call_core_sivm_instruction(tmp)
-        return r
-    def _do_labeled_report(self, instruction):
-        label = self._validate_label(instruction, exists=True)
-        tmp = instruction.copy()
-        tmp['instruction'] = 'report'
-        tmp['directive_id'] = self.label_dict[instruction['label']]
-        del tmp['label']
-        return self._call_core_sivm_instruction(tmp)
-    def _do_labeled_get_logscore(self, instruction):
-        label = self._validate_label(instruction, exists=True)
-        tmp = instruction.copy()
-        tmp['instruction'] = 'get_logscore'
-        tmp['directive_id'] = self.label_dict[instruction['label']]
-        del tmp['label']
-        return self._call_core_sivm_instruction(tmp)
+        return self._call_core_sivm_instruction(tmp)        
+    
+    _do_labeled_forget = _do_labeled_operation
+    _do_labeled_report = _do_labeled_operation
+    _do_labeled_get_logscore = _do_labeled_operation
 
     ###############################
     # new instructions
     ###############################
+    
+    # adds label back to directive
+    def get_directive(self, did):
+        tmp = copy.deepcopy(self.directive_dict[did])
+        if did in did_dict:
+            tmp['label'] = did_dict[did]
+            tmp['instruction'] = 'labeled_' + tmp['instruction']
+        return tmp
+    
     def _do_list_directives(self, instruction):
-        return {
-                "directives" : copy.deepcopy(self.directive_dict.values()),
-                }
+        return { "directives" : [self.get_directive(did) for did in directive_dict.keys()] }
+    
     def _do_get_directive(self, instruction):
-        did = utils.validate_arg(instruction,'directive_id',
-                utils.validate_positive_integer)
+        did = utils.validate_arg(instruction, 'directive_id', utils.validate_positive_integer)
         if not did in self.directive_dict:
             raise VentureException('invalid_argument',
                     "Directive with directive_id = {} does not exist".format(did),
                     argument='directive_id')
-        return {"directive":copy.deepcopy(self.directive_dict[did])}
+        return {"directive": self.get_directive(did)}
+    
     def _do_labeled_get_directive(self, instruction):
         label = self._validate_label(instruction, exists=True)
         did = self.label_dict[label]
-        return {"directive":copy.deepcopy(self.directive_dict[did])}
+        return {"directive":self.get_directive(did)}
+    
     def _do_force(self, instruction):
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression, wrap_exception=False)
@@ -260,6 +251,7 @@ class VentureSivm(object):
                 }
         o2 = self._call_core_sivm_instruction(inst2)
         return {}
+    
     def _do_sample(self, instruction):
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression, wrap_exception=False)
@@ -274,6 +266,8 @@ class VentureSivm(object):
                 }
         o2 = self._call_core_sivm_instruction(inst2)
         return {"value":o1['value']}
+    
+    # not used anymore?
     def _do_continuous_inference_configure(self, instruction):
         d = utils.validate_arg(instruction,'options',
                 utils.validate_dict, required=False)
@@ -287,15 +281,18 @@ class VentureSivm(object):
         return {"options":{
                 "continuous_inference_enable" : self._continuous_inference_enabled(),
                 }}
+    
     def _do_get_current_exception(self, instruction):
         utils.require_state(self.state,'exception','paused')
         return {
                 'exception': copy.deepcopy(self.current_exception),
                 }
+    
     def _do_get_state(self, instruction):
         return {
                 'state': self.state,
                 }
+    
     def _do_reset(self, instruction):
         if self.state != 'default':
             instruction = {
@@ -307,10 +304,12 @@ class VentureSivm(object):
                 }
         self._call_core_sivm_instruction(instruction)
         return {}
+    
     def _do_debugger_list_breakpoints(self, instruction):
         return {
                 "breakpoints" : copy.deepcopy(self.breakpoint_dict.values()),
                 }
+    
     def _do_debugger_get_breakpoint(self, instruction):
         bid = utils.validate_arg(instruction,'breakpoint_id',
                 utils.validate_positive_integer)
