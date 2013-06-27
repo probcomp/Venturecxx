@@ -5,6 +5,12 @@
  * Python-layer RIPL class, except everything is made asynchronous so that
  * no values are returned from functions. All interaction with Venture is 
  * done via callbacks.
+ *
+ * Extensions: There are other RIPL functions that return values, that we 
+ * may want to support via callbacks, such as GET_LOG_SCORE(). One option
+ * is to add <pripl_function>_once(f,args) and 
+ * <pripl_function>_continuously(time,f,args) for every function supported
+ * by PRIPL.
  * 
  * Author: Daniel Selsam
  */
