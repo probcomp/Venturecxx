@@ -102,7 +102,7 @@ class VentureSivm(object):
             did = instruction['directive_id']
             del self.directive_dict[did]
             if did in self.did_dict:
-                del self.label_dict[did_dict[did]]
+                del self.label_dict[self.did_dict[did]]
                 del self.did_dict[did]
         # save the directive if the instruction is a directive
         if instruction_type in ['assume','observe','predict']:
@@ -213,13 +213,13 @@ class VentureSivm(object):
     # adds label back to directive
     def get_directive(self, did):
         tmp = copy.deepcopy(self.directive_dict[did])
-        if did in did_dict:
-            tmp['label'] = did_dict[did]
-            tmp['instruction'] = 'labeled_' + tmp['instruction']
+        if did in self.did_dict:
+            tmp['label'] = self.did_dict[did]
+            #tmp['instruction'] = 'labeled_' + tmp['instruction']
         return tmp
     
     def _do_list_directives(self, instruction):
-        return { "directives" : [self.get_directive(did) for did in directive_dict.keys()] }
+        return { "directives" : [self.get_directive(did) for did in self.directive_dict.keys()] }
     
     def _do_get_directive(self, instruction):
         did = utils.validate_arg(instruction, 'directive_id', utils.validate_positive_integer)

@@ -227,6 +227,7 @@ class TestVentureSivm(unittest.TestCase):
                 'directive_id': o1['directive_id'],
                 'instruction': 'predict',
                 'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'label': 'moo',
                 }
         self.assertEquals(o2['directive'], output)
     def test_force(self):
