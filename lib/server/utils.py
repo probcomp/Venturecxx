@@ -54,7 +54,11 @@ class RestServer(Flask):
     def _get_json(self):
         # cannot pass it as json for some reason,
         # so need to force it here.
-        return request.get_json(force=True);
+        # import pdb; pdb.set_trace()
+        #print ("data: " + request.data)
+        #print ("json: " + request.json)
+        return request.get_json(force=True)
+        #return json.loads(request.data)
 
     def _json_response(self, j, status):
         s = json.dumps(j)
