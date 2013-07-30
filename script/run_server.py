@@ -6,4 +6,4 @@ from venture.shortcuts import *
 
 
 server = make_ripl_rest_server()
-server.run()
+server.run(host='0.0.0.0', port=8082)
