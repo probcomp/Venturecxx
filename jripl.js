@@ -80,18 +80,19 @@ function jripl() {
             type:'POST', 
             data: JSON.stringify(data_in),
             dataType: 'json',
+            contentType: 'application/json',
             crossDomain: true,
-            success:function(data) {
-                        a_request_processed_callback();
-                        on_success(data);
-                        ajax_continue_requests();
-                    },
-                    // TODO this error callback needs updating
-                    error: function(httpRequest, textStatus, errorThrown) { 
-                        console.log("ajax_execute_post status=" + textStatus + ",error=" + errorThrown + 'URL:' + URL);
-                },
-                    complete: function() {}
-            });
+            success: function(data) {
+                a_request_processed_callback();
+                on_success(data);
+                ajax_continue_requests();
+            },
+            // TODO this error callback needs updating
+            error: function(httpRequest, textStatus, errorThrown) { 
+                console.log("ajax_execute_post status=" + textStatus + ",error=" + errorThrown + 'URL:' + URL);
+            },
+            complete: function() {}
+        });
     };
 
     
