@@ -7,6 +7,7 @@ import requests
 import json
 
 from venture.exception import VentureException
+from crossdomain import crossdomain
 
 class RestClient(object):
     def __init__(self, base_url, function_list):
@@ -36,6 +37,7 @@ class RestServer(Flask):
         for name in args:
             def mk_closure(name):
                 obj_function = getattr(obj,name)
+                @crossdomain(origin='*', headers=['Content-Type'])
                 def f():
                     try:
                         args = self._get_json()
@@ -52,15 +54,7 @@ class RestServer(Flask):
             self.add_url_rule('/'+name,name,f)
 
     def _get_json(self):
-        # cannot pass it as json for some reason,
-        # so need to force it here.
-        print ("data: " + request.data)
-        print ("json: " + str(request.json))
-        #return request.get_json(force=True)
-        
-        j = json.loads(request.data)
-        import pdb; pdb.set_trace()
-        return j
+        return request.get_json()
 
     def _json_response(self, j, status):
         s = json.dumps(j)
