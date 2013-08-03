@@ -124,7 +124,7 @@ class ChurchPrimeParser():
         locs = utils.split_instruction_parse_tree(
                 utils.apply_parser(self.instruction, s)[0])
         strings = utils.get_instruction_string_fragments(s, locs)
-        locs = {key:list(sorted(loc)) for key,loc in locs.items()}
+        locs = dict([(key,list(sorted(loc))) for key,loc in locs.items()])
         return [strings, locs]
 
     def character_index_to_expression_index(self, expression_string, character_index):
