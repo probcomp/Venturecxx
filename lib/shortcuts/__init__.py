@@ -24,7 +24,9 @@ def make_combined_ripl():
     v = make_venture_sivm()
     parser1 = parser.ChurchPrimeParser()
     parser2 = parser.VentureScriptParser()
-    return ripl.Ripl(v,{"church_prime":parser1, "venture_script":parser2})
+    r = ripl.Ripl(v,{"church_prime":parser1, "venture_script":parser2})
+    r.set_mode("church_prime")
+    return r
 
 def make_ripl_rest_server():
     r = make_combined_ripl()
