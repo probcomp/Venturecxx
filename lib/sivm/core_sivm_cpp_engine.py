@@ -257,7 +257,7 @@ def _modify_value(ob):
             ob['type'] = 'real'
     t = _literal_type_map[ob['type']]
     v = json.dumps(ob['value'])
-    s = "{}[{}]".format(t,v).encode('ascii')
+    s = "{0}[{1}]".format(t,v).encode('ascii')
     return s
 
 # the C++ engine now uses the correct symbol names
