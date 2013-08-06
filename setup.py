@@ -1,4 +1,4 @@
-#!/usr/bin/python27
+#!/usr/bin/python
 
 # From here:
 # http://docs.python.org/2/extending/building.html#building
