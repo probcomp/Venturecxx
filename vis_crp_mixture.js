@@ -90,7 +90,9 @@ function InitializeDemo() {
      * arrived. Clicks on the canvas are to be added, clicks on points are
      * to be forgotten. */
     var clicks_to_add = new ClickList();
-    var clicks_to_forget = new ClickList();
+    
+    /* Stores the obs_id of points that the user has clicked on. */
+    var points_to_forget = {};
     
     var random_variables = ['alpha'];
     
@@ -98,9 +100,13 @@ function InitializeDemo() {
     var paper;
     var paper_rect;
     
-    /* Will be a map from OBS_ID -> POINT, where POINT contains the Raphael objects
+    /* Map from OBS_ID -> POINT, where POINT contains the Raphael objects
      * corresponding to a single point. */
-    var points = {};
+    var local_points = {};
+    
+    /* Map from CLUSTER_ID -> CLUSTER, where CLUSTER contains the Raphael object
+     * corresponding to a single cluster. */
+    var local_clusters = {};
     
     var DirectiveLoadedCallback = function() {
         num_directives_loaded++;
@@ -135,10 +141,6 @@ function InitializeDemo() {
         /* For observations */
         ripl.assume('noise','(mem (lambda (point dim) (inv_gamma 1.0 1.0)))');
         ripl.assume('obs_fn','(lambda (point dim) (normal (get_datapoint point dim) (noise point dim)))');
-        
-        /* One predict for every quantity of interest.
-        Ideally this would iterate over RANDOM_VARIABLES. */
-        //ripl.predict('(list poly_order a0_c0 c1 c2 c3 c4 noise alpha fourier_a1 fourier_omega fourier_theta1)','predict_model');
         
         ripl.register_all_requests_processed_callback(AllDirectivesLoadedCallback);
     };
@@ -177,74 +179,129 @@ function InitializeDemo() {
     }
     
     /* Gets the points that are in the ripl. */
-    var ExtractData = function(predicts, observes) {
-        var data = {};
-        var directives = predicts.concat(observes);
-        
+    var GetPoints = function(directives) {
+        var points = {};
+
         var extract = function(directive) {
             var path = directive.label.split('_').slice(1);
-            record(data, path, directive.value);
+            //console.log(path.join("."));
+            record(points, path, directive.value);
             
             var did = directive.directive_id;
-            var p = data[path[0]];
+            var point = points[path[0]];
             
-            if (!('dids' in p)) {
-                p.dids = [];
+            //console.log(point.toString());
+            
+            if (!('dids' in point)) {
+                point.dids = [];
             }
-            p.dids.push(did);
+            point.dids.push(parseInt(did));
         };
         
-        directives.forEach(extract);
+        var observesAndPredicts = directives.filter(function(dir)
+            {return dir.instruction in {"observe":true, "predict":true}});
+        observesAndPredicts.forEach(extract);
         
-        return data;
+        for (obs_id in points) {
+            points[obs_id].obs_id = obs_id;
+        }
+        
+        return points;
     };
     
+    /* Converts model coordinates to paper coordinates. */
+    function modelToPaper(z) {
+        return (z * 20) + 210;
+    }
+    
+    /* Scales radii of ellipses. */
+    var rScale = 5.0;
+    
     /* Adds a point to the GUI. */
-    var MakePoint = function(x,y) {
-        var point = new Object();
+    var MakePoint = function(p) {
+        var local_point = {};
         
-        point.x = x;
-        point.y = y;
+        local_point.obs_id = p.obs_id;
         
-        point.paint_x = (point.x * 20) + 210;
-        point.paint_y = (point.y * 20) + 210;
+        local_point.paint_x = modelToPaper(p.x);
+        local_point.paint_y = modelToPaper(p.y);
         
-        point.noise_circle = paper.ellipse(point.paint_x, point.paint_y, 5, 5);
-        point.noise_circle.attr("stroke", "red");
-        point.noise_circle.attr("fill", "white");
-        point.noise_circle.attr("opacity", "0.9");
+        local_point.noise_circle = paper.ellipse(local_point.paint_x, local_point.paint_y, 5, 5);
+        local_point.noise_circle.attr("fill", "white");
+        local_point.noise_circle.attr("opacity", "0.9");
         
-        point.circle = paper.circle(point.paint_x, point.paint_y, 2);
-        point.circle.attr("fill", "red");
-        point.circle.attr("stroke", "white");
-        point.circle.attr("opacity", "0.5");
+        local_point.circle = paper.circle(local_point.paint_x, local_point.paint_y, 2);
+        local_point.circle.attr("stroke", "white");
+        local_point.circle.attr("opacity", "0.5");
         
-        point.circle.click(
+        local_point.circle.click(
             function(e) { 
-                console.log("click circle: (" + point.x + ", " + point.y + ")");
-                clicks_to_forget.push([point.x,point.y]); 
+                //console.log("click circle: (" + local_point.x + ", " + local_point.y + ")");
+                points_to_forget[local_point.obs_id] = true;
             }
         );
         
-        point.noise_circle.click(
+        local_point.noise_circle.click(
             function(e) { 
-                console.log("click noise_circle: (" + point.x + ", " + point.y + ")");
-                clicks_to_forget.push([point.x,point.y]);
+                //console.log("click noise_circle: (" + local_point.x + ", " + local_point.y + ")");
+                points_to_forget[local_point.obs_id] = true;
             }
         );
         
-        return point;
+        return local_point;
     };
+    
+    var MakeCluster = function(cluster) {
+        var local_cluster = {};
+        local_cluster.id = cluster.id;
+        local_cluster.circle = paper.ellipse(0, 0, 0, 0);
+        local_cluster.circle.attr('stroke-dasharray', "-")
+        local_cluster.circle.attr('stroke-width', "3")
+        return local_cluster;
+    }
     
     var colors = ['aqua', 'black', 'blue', 'fuchsia', 'gray', 'green', 'lime', 'maroon', 'navy', 'olive', 'orange', 'purple', 'red', 'silver', 'teal', 'white', 'yellow'];
     
-    var DrawPoint = function(point, data) {
-        color = colors[data.cluster.id % colors.length];
+    var DrawPoint = function(local_point, point) {
+        color = colors[point.cluster.id % colors.length];
         
-        point.circle.attr("fill", color);
-        point.noise_circle.attr("stroke", color);
-        point.noise_circle.attr("rx", data.noise.x * 5.0);
-        point.noise_circle.attr("ry", data.noise.y * 5.0);
+        local_point.circle.attr("fill", color);
+        local_point.noise_circle.attr("stroke", color);
+        local_point.noise_circle.attr("rx", rScale * Math.sqrt(point.noise.x));
+        local_point.noise_circle.attr("ry", rScale * Math.sqrt(point.noise.y));
+    };
+    
+    var DrawCluster = function(local_cluster, cluster) {
+        color = colors[cluster.id % colors.length];
+        
+        local_cluster.circle.attr("stroke", color);
+        
+        /* Setting x and y attributes has no effect! */
+        //local_cluster.circle.translate(
+        //    -modelToPaper(local_cluster.x) + modelToPaper(cluster.mean.x)+1,
+        //    -modelToPaper(local_cluster.y) + modelToPaper(cluster.mean.y)+1);
+        //local_cluster.x = cluster.mean.x;
+        //local_cluster.y = cluster.mean.y;
+        local_cluster.circle.attr("cx", modelToPaper(cluster.mean.x));
+        local_cluster.circle.attr("cy", modelToPaper(cluster.mean.y));
+        
+        local_cluster.circle.attr("rx", 20.0 * Math.sqrt(cluster.variance.x));
+        local_cluster.circle.attr("ry", 20.0 * Math.sqrt(cluster.variance.y));
+    }
+    
+    var ObservePoint = function(obs_id, x, y) {
+        obs_str = 'points_' + obs_id;
+        
+        ripl.observe('(obs_fn ' + obs_id + ' 0)', x, obs_str + '_x');
+        ripl.observe('(obs_fn ' + obs_id + ' 1)', y, obs_str + '_y');
+        
+        ripl.predict('(noise ' + obs_id + ' 0)', obs_str + '_noise_x');
+        ripl.predict('(noise ' + obs_id + ' 1)', obs_str + '_noise_y');
+        ripl.predict('(get_cluster ' + obs_id + ')', obs_str + '_cluster_id');
+        ripl.predict('(get_cluster_mean (get_cluster ' + obs_id + ') 0)', obs_str + '_cluster_mean_x');
+        ripl.predict('(get_cluster_mean (get_cluster ' + obs_id + ') 1)', obs_str + '_cluster_mean_y');
+        ripl.predict('(get_cluster_variance (get_cluster ' + obs_id + ') 0)', obs_str + '_cluster_variance_x');
+        ripl.predict('(get_cluster_variance (get_cluster ' + obs_id + ') 1)', obs_str + '_cluster_variance_y');
     };
     
     /* This is the callback that we pass to GET_DIRECTIVES_CONTINUOUSLY. */
@@ -253,48 +310,58 @@ function InitializeDemo() {
         
         UpdateChurchCode(directives);
         
-        var observes = directives.filter(function(dir) { return dir.instruction === "observe" });
-        var predicts = directives.filter(function(dir) { return dir.instruction === "predict" });
+        /* Get the observed points from the model. */
+        var points = GetPoints(directives);
         
-        var data = ExtractData(predicts, observes);
+        /* The unique clusters. */
+        var clusters = {};
         
-        /* Bookkeeping so we can delete forgotten points from POINTS. */
-        var current_obs_ids = [];
-        
-        for (obs_id in data) {
-            p = data[obs_id];
+        for (obs_id in points) {
+            p = points[obs_id];
+            
+            /* Add the point's cluster to the set of clusters. */
+            cluster = p.cluster;
+            if (!(cluster.id in clusters)) {
+                clusters[cluster.id] = cluster;
+                if (!(cluster.id in local_clusters)) {
+                    local_clusters[cluster.id] = MakeCluster(cluster);
+                }
+            }
             
             /* If this user does not have a point object for it, make one. */
-            if (!(obs_id in points)) {
-                var point = MakePoint(p.x, p.y);
-                point.obs_id = obs_id;
-                points[obs_id] = point;
+            if (!(obs_id in local_points)) {
+                local_points[obs_id] = MakePoint(p);
             }
             
-            /* This user already CLICKED on the point, indicating that he
-            * wants to forget it. */
-            if (clicks_to_forget.indexOfClick([p.x, p.y]) != -1) {
+            /* Forget a point if it has been clicked on. */
+            if (obs_id in points_to_forget) {
                 for (var i = 0; i < p.dids.length; i++) {
-                    ripl.forget(parseInt(p.dids[i]));
+                    ripl.forget(p.dids[i]);
                 }
-                continue;
             }
-            
-            /* Otherwise, we register that the POINT is still active. */
-            current_obs_ids.push(obs_id);
-            
-            DrawPoint(points[obs_id], p);
         }
         
         /* Reset this after each round of directives has been processed. */
-        clicks_to_forget = new ClickList();
+        points_to_forget = {};
         
-        /* Delete points for which there is no observation. */
-        for (obs_id in points) {
-            if (!(obs_id in data)) {
-                points[obs_id].noise_circle.remove();
-                points[obs_id].circle.remove();
-                delete points[obs_id];
+        /* Remove nonexistent clusters and draw the rest. */
+        for (cluster_id in local_clusters) {
+            if(!(cluster_id in clusters)) {
+                local_clusters[cluster_id].circle.remove();
+                delete local_clusters[cluster_id];
+            } else {
+                DrawCluster(local_clusters[cluster_id], clusters[cluster_id]);
+            }
+        }
+        
+        /* Remove nonexistent points and draw the rest. */
+        for (obs_id in local_points) {
+            if (!(obs_id in points)) {
+                local_points[obs_id].noise_circle.remove();
+                local_points[obs_id].circle.remove();
+                delete local_points[obs_id];
+            } else {
+                DrawPoint(local_points[obs_id], points[obs_id]);
             }
         }
         
@@ -310,29 +377,7 @@ function InitializeDemo() {
             
             var obs_id = GetNextObsID();
             
-            // use labels here?
-            obs_str = 'points_' + obs_id.toString();
-            
-            ripl.observe('(obs_fn ' + obs_id + ' 0)', x, obs_str + '_x');
-            ripl.observe('(obs_fn ' + obs_id + ' 1)', y, obs_str + '_y');
-            
-            /*
-            ripl.predict('(list\
-                (obs_fn ' + obs_id + ' 0) (obs_fn ' + obs_id + ' 1)\
-                (noise ' + obs_id + ' 0) (noise ' + obs_id + ' 1) (get_cluster ' + obs_id + ')\
-                (get_cluster_mean (get_cluster ' + obs_id + ') 0) (get_cluster_mean (get_cluster ' + obs_id + ') 1)\
-                (get_cluster_variance (get_cluster ' + obs_id + ') 0) (get_cluster_variance (get_cluster ' + obs_id + ') 1)\
-                )',
-                obs_str)
-            */
-            
-            ripl.predict('(noise ' + obs_id + ' 0)', obs_str + '_noise_x');
-            ripl.predict('(noise ' + obs_id + ' 1)', obs_str + '_noise_y');
-            ripl.predict('(get_cluster ' + obs_id + ')', obs_str + '_cluster_id');
-            ripl.predict('(get_cluster_mean (get_cluster ' + obs_id + ') 0)', obs_str + '_cluster_mean_x');
-            ripl.predict('(get_cluster_mean (get_cluster ' + obs_id + ') 1)', obs_str + '_cluster_mean_y');
-            ripl.predict('(get_cluster_variance (get_cluster ' + obs_id + ') 0)', obs_str + '_cluster_variance_x');
-            ripl.predict('(get_cluster_variance (get_cluster ' + obs_id + ') 1)', obs_str + '_cluster_variance_y');
+            ObservePoint(obs_id, x, y);
         }
     };
     
