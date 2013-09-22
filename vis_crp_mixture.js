@@ -126,11 +126,11 @@ function InitializeDemo() {
         ripl.assume('cluster_crp', '(crp_make alpha)');
         //ripl.assume('scale', '(gamma 4.0 1.0)');
         
-        ripl.assume('get_cluster_mean', "(mem (lambda (cluster dim) (uniform -10.0 10.0)))");
+        ripl.assume('get_cluster_mean', "(mem (lambda (cluster dim) (uniform_continuous -10.0 10.0)))");
         ripl.assume('get_cluster_variance', "(mem (lambda (cluster dim) (inv_gamma 1.0 1.0)))");
         ripl.assume('get_cluster', "(mem (lambda (point) (cluster_crp)))");
-        ripl.assume('get_cluster_model', "(lambda (cluster dim) (normal (get_cluster_mean cluster dim) (get_cluster_variance cluster dim)))");
-        ripl.assume('get_datapoint', "(mem (lambda (point dim) (get_cluster_model (get_cluster id) dim)))");
+        ripl.assume('sample_cluster', "(lambda (cluster dim) (normal (get_cluster_mean cluster dim) (get_cluster_variance cluster dim)))");
+        ripl.assume('get_datapoint', "(mem (lambda (point dim) (sample_cluster (get_cluster point) dim)))");
         
         /* For observations */
         ripl.assume('noise','(mem (lambda (point dim) (inv_gamma 1.0 1.0)))');
@@ -164,31 +164,43 @@ function InitializeDemo() {
         $("#church_code").html(church_code_str);
     };
     
+    function record(dict, path, value) {
+        if (path.length > 1) {
+            var key = path[0];
+            if (!(key in dict)) {
+                dict[key] = {};
+            }
+            record(dict[key], path.slice(1), value);
+        } else {
+            dict[path[0]] = value;
+        }
+    }
+    
     /* Gets the points that are in the ripl. */
     var ExtractData = function(predicts, observes) {
         var data = {};
         
         for (var i = 0; i < predicts.length; i++) {
             var predict = predicts[i];
-            var obs_id = predict.expression[1].value;
-            var cluster = predict.value;
-            var did = predict['directive_id']
+            var path = predict.label.split('_').slice(1);
+            console.log(path);
+            record(data, path, predict.value);
             
-            data[obs_id] = {cluster:cluster, dids:[did]};
+            var did = predict.directive_id;
+            var p = data[path[0]];
+            
+            if (!('dids' in p)) {
+                p.dids = [];
+            }
+            p.dids.push(did);
         }
         
-        for (var i = 0; i < predicts.length; i++) {
+        for (var i = 0; i < observes.length; i++) {
             var observe = observes[i];
-            var obs_id = observe.expression[1].value;
-            var dim = observe.expression[2].value;
-            var did = predict['directive_id']
+            var obs_id = predict.label.split('_')[1];
+            var did = observe.directive_id;
             
-            if (dim === 0) {
-                data[obs_id].x = observe.value;
-            } else {
-                data[obs_id].y = observe.value;
-            }
-            data[obs_id].dids.push(did)
+            data[obs_id].dids.push(did);
         }
         
         return data;
@@ -202,9 +214,9 @@ function InitializeDemo() {
         point.y = y;
         
         point.paint_x = (point.x * 20) + 210;
-        point.paint_y = (point.y * -20) + 210;
+        point.paint_y = (point.y * 20) + 210;
         
-        point.noise_circle = paper.circle(point.paint_x, point.paint_y, 5);
+        point.noise_circle = paper.ellipse(point.paint_x, point.paint_y, 5, 5);
         point.noise_circle.attr("stroke", "red");
         point.noise_circle.attr("fill", "white");
         point.noise_circle.attr("opacity", "0.9");
@@ -233,12 +245,13 @@ function InitializeDemo() {
     
     var colors = ['aqua', 'black', 'blue', 'fuchsia', 'gray', 'green', 'lime', 'maroon', 'navy', 'olive', 'orange', 'purple', 'red', 'silver', 'teal', 'white', 'yellow'];
     
-    var DrawPoint = function(point) {
-        color = colors[point.cluster % colors.length];
+    var DrawPoint = function(point, data) {
+        color = colors[data.cluster.id % colors.length];
         
         point.circle.attr("fill", color);
         point.noise_circle.attr("stroke", color);
-        //point.noise_circle.attr("r", current_curve.noise * 10.0);
+        point.noise_circle.attr("rx", data.noise.x * 10.0);
+        point.noise_circle.attr("ry", data.noise.y * 10.0);
     };
     
     /* This is the callback that we pass to GET_DIRECTIVES_CONTINUOUSLY. */
@@ -247,8 +260,8 @@ function InitializeDemo() {
         
         UpdateChurchCode(directives);
         
-        var predicts = directives.filter(function(dir) { return dir.instruction === "predict" });
         var observes = directives.filter(function(dir) { return dir.instruction === "observe" });
+        var predicts = directives.filter(function(dir) { return dir.instruction === "predict" });
         
         var data = ExtractData(predicts, observes);
         
@@ -271,13 +284,13 @@ function InitializeDemo() {
                 for (var i = 0; i < p.dids.length; i++) {
                     ripl.forget(p.dids[i]);
                 }
-                return;
+                continue;
             }
             
             /* Otherwise, we register that the POINT is still active. */
             current_obs_ids.push(obs_id);
             
-            DrawPoint(p);
+            DrawPoint(points[obs_id], p);
         }
         
         /* Reset this after each round of directives has been processed. */
@@ -293,9 +306,9 @@ function InitializeDemo() {
         }
         
         /* Add points for every click on the canvas. */
-        console.log("before unique: " + JSON.stringify(clicks_to_add.getClicks()));
+        //console.log("before unique: " + JSON.stringify(clicks_to_add.getClicks()));
         clicks_to_add.uniqueF();
-        console.log("after unique: " + JSON.stringify(clicks_to_add.getClicks()));
+        //console.log("after unique: " + JSON.stringify(clicks_to_add.getClicks()));
         while (clicks_to_add.length() > 0) {
             console.log("adding new point!");
             var click = clicks_to_add.shift();
@@ -305,9 +318,30 @@ function InitializeDemo() {
             var obs_id = GetNextObsID();
             
             // use labels here?
-            //ripl.observe('(obs_fn ' + obs_id + ' 0)', x.toString());
-            //ripl.observe('(obs_fn ' + obs_id + ' 1)', y.toString());
-            //ripl.predict('(get_cluster ' + obs_id + ')');
+            obs_str = 'points_' + obs_id.toString();
+            
+            ripl.observe('(obs_fn ' + obs_id + ' 0)', x, obs_str + '_obs_x');
+            ripl.observe('(obs_fn ' + obs_id + ' 1)', y, obs_str + '_obs_y');
+            
+            /*
+            ripl.predict('(list\
+                (obs_fn ' + obs_id + ' 0) (obs_fn ' + obs_id + ' 1)\
+                (noise ' + obs_id + ' 0) (noise ' + obs_id + ' 1) (get_cluster ' + obs_id + ')\
+                (get_cluster_mean (get_cluster ' + obs_id + ') 0) (get_cluster_mean (get_cluster ' + obs_id + ') 1)\
+                (get_cluster_variance (get_cluster ' + obs_id + ') 0) (get_cluster_variance (get_cluster ' + obs_id + ') 1)\
+                )',
+                obs_str)
+            */
+            
+            ripl.predict('(obs_fn ' + obs_id + ' 0)', x, obs_str + '_x');
+            ripl.predict('(obs_fn ' + obs_id + ' 1)', y, obs_str + '_y');
+            ripl.predict('(noise ' + obs_id + ' 0)', obs_str + '_noise_x');
+            ripl.predict('(noise ' + obs_id + ' 1)', obs_str + '_noise_y');
+            ripl.predict('(get_cluster ' + obs_id + ')', obs_str + '_cluster_id');
+            ripl.predict('(get_cluster_mean (get_cluster ' + obs_id + ') 0)', obs_str + '_cluster_mean_x');
+            ripl.predict('(get_cluster_mean (get_cluster ' + obs_id + ') 1)', obs_str + '_cluster_mean_y');
+            ripl.predict('(get_cluster_variance (get_cluster ' + obs_id + ') 0)', obs_str + '_cluster_variance_x');
+            ripl.predict('(get_cluster_variance (get_cluster ' + obs_id + ') 1)', obs_str + '_cluster_variance_y');
         }
     };
     
