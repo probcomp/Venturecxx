@@ -145,25 +145,53 @@ function InitializeDemo() {
         ripl.register_all_requests_processed_callback(AllDirectivesLoadedCallback);
     };
     
-    var UpdateChurchCode = function(directives) {
-        var church_code_str = "<b>Venture code:</b><br>";
+    function exprToString(expr) {
+        //console.log(typeof expr);
+        if (expr instanceof Array) {
+            return "(" + expr.map(exprToString).join(" ") + ")";
+        } else if (typeof expr === "string") {
+            return expr;
+        } else {
+            return expr.value.toString();
+        }
+    }
+    
+    function directiveToString(directive) {
+        var directive_str = "[" + directive.instruction + " ";
         
-        for (i = 0; i < directives.length; i++) {
-            church_code_str += JSON.stringify(directives[i]["expression"]) + '<br>';
+        if (directive.instruction === "assume") {
+            directive_str += directive.symbol + " ";
         }
         
-        church_code_str = church_code_str.replace(/ /g, "&nbsp;");
-        church_code_str = church_code_str.replace(/\(if/g, "(<font color='#0000FF'>if</font>");
-        church_code_str = church_code_str.replace(/\(/g, "<font color='#0080D5'>(</font>");
-        church_code_str = church_code_str.replace(/\)/g, "<font color='#0080D5'>)</font>");
+        directive_str += exprToString(directive.expression);
         
-        church_code_str = church_code_str.replace(/lambda/g, "<font color='#0000FF'>lambda</font>");
-        church_code_str = church_code_str.replace(/list/g, "<font color='#0000FF'>list</font>");
-        church_code_str = church_code_str.replace(/\>=/g, "<font color='#0000FF'>>=</font>");
-        church_code_str = church_code_str.replace(/\+/g, "<font color='#0000FF'>+</font>");
-        church_code_str = church_code_str.replace(/\*/g, "<font color='#0000FF'>*</font>");
-        church_code_str = "<font face='Courier New' size='2'>" + church_code_str + "</font>";
-        $("#church_code").html(church_code_str);
+        if (directive.instruction === "observe") {
+            directive_str += " " + directive.value;
+        }
+        
+        directive_str += "]";
+        return directive_str;
+    }
+    
+    var UpdateVentureCode = function(directives) {
+        var venture_code_str = "<b>Venture code:</b><br>";
+        
+        for (i = 0; i < directives.length; i++) {
+            venture_code_str += directiveToString(directives[i]) + '<br>';
+        }
+        
+        venture_code_str = venture_code_str.replace(/ /g, "&nbsp;");
+        venture_code_str = venture_code_str.replace(/\(if/g, "(<font color='#0000FF'>if</font>");
+        venture_code_str = venture_code_str.replace(/\(/g, "<font color='#0080D5'>(</font>");
+        venture_code_str = venture_code_str.replace(/\)/g, "<font color='#0080D5'>)</font>");
+        
+        venture_code_str = venture_code_str.replace(/lambda/g, "<font color='#0000FF'>lambda</font>");
+        venture_code_str = venture_code_str.replace(/list/g, "<font color='#0000FF'>list</font>");
+        venture_code_str = venture_code_str.replace(/\>=/g, "<font color='#0000FF'>>=</font>");
+        venture_code_str = venture_code_str.replace(/\+/g, "<font color='#0000FF'>+</font>");
+        venture_code_str = venture_code_str.replace(/\*/g, "<font color='#0000FF'>*</font>");
+        venture_code_str = "<font face='Courier New' size='2'>" + venture_code_str + "</font>";
+        $("#venture_code").html(venture_code_str);
     };
     
     function record(dict, path, value) {
@@ -214,9 +242,6 @@ function InitializeDemo() {
         return (z * 20) + 210;
     }
     
-    /* Scales radii of ellipses. */
-    var rScale = 5.0;
-    
     /* Adds a point to the GUI. */
     var MakePoint = function(p) {
         var local_point = {};
@@ -228,11 +253,11 @@ function InitializeDemo() {
         
         local_point.noise_circle = paper.ellipse(local_point.paint_x, local_point.paint_y, 5, 5);
         local_point.noise_circle.attr("fill", "white");
-        local_point.noise_circle.attr("opacity", "0.9");
+        //local_point.noise_circle.attr("opacity", "0.9");
         
         local_point.circle = paper.circle(local_point.paint_x, local_point.paint_y, 2);
         local_point.circle.attr("stroke", "white");
-        local_point.circle.attr("opacity", "0.5");
+        //local_point.circle.attr("opacity", "0.5");
         
         local_point.circle.click(
             function(e) { 
@@ -267,21 +292,15 @@ function InitializeDemo() {
         
         local_point.circle.attr("fill", color);
         local_point.noise_circle.attr("stroke", color);
-        local_point.noise_circle.attr("rx", rScale * Math.sqrt(point.noise.x));
-        local_point.noise_circle.attr("ry", rScale * Math.sqrt(point.noise.y));
+        local_point.noise_circle.attr("rx", 5.0 * Math.sqrt(point.noise.x));
+        local_point.noise_circle.attr("ry", 5.0 * Math.sqrt(point.noise.y));
     };
     
     var DrawCluster = function(local_cluster, cluster) {
         color = colors[cluster.id % colors.length];
         
         local_cluster.circle.attr("stroke", color);
-        
-        /* Setting x and y attributes has no effect! */
-        //local_cluster.circle.translate(
-        //    -modelToPaper(local_cluster.x) + modelToPaper(cluster.mean.x)+1,
-        //    -modelToPaper(local_cluster.y) + modelToPaper(cluster.mean.y)+1);
-        //local_cluster.x = cluster.mean.x;
-        //local_cluster.y = cluster.mean.y;
+
         local_cluster.circle.attr("cx", modelToPaper(cluster.mean.x));
         local_cluster.circle.attr("cy", modelToPaper(cluster.mean.y));
         
@@ -308,7 +327,7 @@ function InitializeDemo() {
     var RenderAll = function(directives) {
         //console.log("CLICKS TO ADD: " + JSON.stringify(clicks_to_add));
         
-        UpdateChurchCode(directives);
+        UpdateVentureCode(directives);
         
         /* Get the observed points from the model. */
         var points = GetPoints(directives);
@@ -442,7 +461,7 @@ function InitializeDemo() {
                 Based on the Venture probabilistic programming language\
               </td><td>&nbsp;&nbsp;&nbsp;</td>\
               <td style="vertical-align: top;">\
-                <div id="church_code"></div>\
+                <div id="venture_code"></div>\
           <div style="display: none;"><div style="display: none;"><input type="text" id="iteration_info" style="border:0; background-color: white;" value="" disabled></div>\
                 <div id="slider" style="width: 500px; font-size: 10; display: none;"></div>\
                 <div id="function_formula"></div>\
