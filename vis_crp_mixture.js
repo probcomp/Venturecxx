@@ -179,29 +179,22 @@ function InitializeDemo() {
     /* Gets the points that are in the ripl. */
     var ExtractData = function(predicts, observes) {
         var data = {};
+        var directives = predicts.concat(observes);
         
-        for (var i = 0; i < predicts.length; i++) {
-            var predict = predicts[i];
-            var path = predict.label.split('_').slice(1);
-            console.log(path);
-            record(data, path, predict.value);
+        var extract = function(directive) {
+            var path = directive.label.split('_').slice(1);
+            record(data, path, directive.value);
             
-            var did = predict.directive_id;
+            var did = directive.directive_id;
             var p = data[path[0]];
             
             if (!('dids' in p)) {
                 p.dids = [];
             }
             p.dids.push(did);
-        }
+        };
         
-        for (var i = 0; i < observes.length; i++) {
-            var observe = observes[i];
-            var obs_id = predict.label.split('_')[1];
-            var did = observe.directive_id;
-            
-            data[obs_id].dids.push(did);
-        }
+        directives.forEach(extract);
         
         return data;
     };
@@ -250,8 +243,8 @@ function InitializeDemo() {
         
         point.circle.attr("fill", color);
         point.noise_circle.attr("stroke", color);
-        point.noise_circle.attr("rx", data.noise.x * 10.0);
-        point.noise_circle.attr("ry", data.noise.y * 10.0);
+        point.noise_circle.attr("rx", data.noise.x * 5.0);
+        point.noise_circle.attr("ry", data.noise.y * 5.0);
     };
     
     /* This is the callback that we pass to GET_DIRECTIVES_CONTINUOUSLY. */
@@ -282,7 +275,7 @@ function InitializeDemo() {
             * wants to forget it. */
             if (clicks_to_forget.indexOfClick([p.x, p.y]) != -1) {
                 for (var i = 0; i < p.dids.length; i++) {
-                    ripl.forget(p.dids[i]);
+                    ripl.forget(parseInt(p.dids[i]));
                 }
                 continue;
             }
@@ -320,8 +313,8 @@ function InitializeDemo() {
             // use labels here?
             obs_str = 'points_' + obs_id.toString();
             
-            ripl.observe('(obs_fn ' + obs_id + ' 0)', x, obs_str + '_obs_x');
-            ripl.observe('(obs_fn ' + obs_id + ' 1)', y, obs_str + '_obs_y');
+            ripl.observe('(obs_fn ' + obs_id + ' 0)', x, obs_str + '_x');
+            ripl.observe('(obs_fn ' + obs_id + ' 1)', y, obs_str + '_y');
             
             /*
             ripl.predict('(list\
@@ -333,8 +326,6 @@ function InitializeDemo() {
                 obs_str)
             */
             
-            ripl.predict('(obs_fn ' + obs_id + ' 0)', x, obs_str + '_x');
-            ripl.predict('(obs_fn ' + obs_id + ' 1)', y, obs_str + '_y');
             ripl.predict('(noise ' + obs_id + ' 0)', obs_str + '_noise_x');
             ripl.predict('(noise ' + obs_id + ' 1)', obs_str + '_noise_y');
             ripl.predict('(get_cluster ' + obs_id + ')', obs_str + '_cluster_id');
