@@ -233,7 +233,7 @@ function InitializeDemo() {
         var church_code_str = "<b>Venture code:</b><br>";
 
         for (i = 0; i < directives.length; i++) {
-            church_code_str += JSON.stringify(directives[i]["expression"]) + '<br>';
+            church_code_str += directiveToString(directives[i]) + '<br/>';
         }
 
         church_code_str = church_code_str.replace(/ /g, "&nbsp;");
