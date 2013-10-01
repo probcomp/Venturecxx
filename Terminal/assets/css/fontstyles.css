@@ -1,0 +1,43 @@
+@charset "utf-8";
+/* CSS Document */
+
+@font-face {
+    font-family: 'RobotoRegular';
+    src: url('../font/Roboto-Regular-webfont.eot');
+    src: url('../font/Roboto-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('../font/Roboto-Regular-webfont.woff') format('woff'),
+         url('../font/Roboto-Regular-webfont.ttf') format('truetype'),
+         url('../font/Roboto-Regular-webfont.svg#RobotoRegular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'RobotoBlack';
+    src: url('../font/Roboto-Black-webfont.eot');
+    src: url('../font/Roboto-Black-webfont.eot?#iefix') format('embedded-opentype'),
+         url('../font/Roboto-Black-webfont.woff') format('woff'),
+         url('../font/Roboto-Black-webfont.ttf') format('truetype'),
+         url('../font/Roboto-Black-webfont.svg#RobotoBold') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+saeefont
+{
+color:black;
+font-size:25pt;
+font-family:"Times New Roman",Georgia,Serif';
+}
+
+body 
+{                                                                                                                                                                               
+padding-top: 30px;                                                                                        
+padding-bottom: 40px;                                                                                                                                                              
+}
+
+.sidebar-nav
+{
+padding: 9px0;
+}
+	

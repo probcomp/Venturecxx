@@ -23,6 +23,7 @@ function jripl() {
     var server_url = 'http://' + $.cookie('venture__ripl_host') + ':';
     var port = $.cookie('venture__ripl_port');
 
+
 /* URL utilities */
     var full_url = function(url) {
         return server_url + port + "/" + url;
@@ -74,7 +75,6 @@ function jripl() {
 
     /* Perform the actual AJAX request. */
     var ajax_execute_post = function(URL,data_in,on_success) {
-        console.log(data_in);
         $.ajax({
             url: full_url(URL),
             type:'POST', 
@@ -83,13 +83,17 @@ function jripl() {
             contentType: 'application/json',
             crossDomain: true,
             success: function(data) {
-                a_request_processed_callback();
-                on_success(data);
+		a_request_processed_callback();
+		on_success(data);
                 ajax_continue_requests();
+		return data;
             },
             // TODO this error callback needs updating
-            error: function(httpRequest, textStatus, errorThrown) { 
-                console.log("ajax_execute_post status=" + textStatus + ",error=" + errorThrown + 'URL:' + URL);
+            error: function(data) { 
+		//var err = eval("Unable to access Venture engine.");
+                console.log("Unable to access Venture engine");
+		//console.log(textStatus);
+		//console.log(errorThrown);
             },
             complete: function() {}
         });
@@ -105,18 +109,25 @@ function jripl() {
 
     /* Creates a function corresponding to one of the supported pripl functions 
      * listed above. */
-    var create_closure = function(name) {
+    var create_closure = function(name, on_success) {
         return function() {
             ajax_post_in_sequence(name,
                                   Array.prototype.slice.call(arguments, 0), 
-                                  function() {});
+                                  on_success);
         };
     };
 
     /* Dynamically add supported pripl functions to JRIPL. */  
     for (i = 0; i < supported_pripl_functions.length; i++) {
         var name = supported_pripl_functions[i];
-        this[name] = create_closure(name);
+        this[name] = create_closure(name, function() {});
+    };
+
+    var pripl_functions_w_retval = ['assume_async','predict_async','observe_async'];
+
+    for (i = 0; i < pripl_functions_w_retval.length; i++) {
+	var name = pripl_functions_w_retval[i];
+	this[name] = create_closure(name.substr(0,name.length-6), function(data) { if(data != 'null') {term.echo(data)}});
     };
 
 /* Continuous directives */
@@ -174,6 +185,18 @@ function jripl() {
         ajax_post_in_sequence("list_directives", [], f);
     };
 
+    this.display_directives = function() {
+	var success_fun = function(data) {
+	    term.echo("venture> Directives:");
+	    for (i = 0; i < data.length; i++){
+		if(typeof(data[i].symbol) != "undefined"){
+		    term.echo(data[i].symbol + " | " + data[i].value);
+		}
+	    }
+	}
+	ajax_post_in_sequence("list_directives", [], success_fun);
+    };
+    
 /* Registering special callback functions */
     this.register_a_request_processed_callback = function(f) {
         a_request_processed_callback = f;
@@ -198,4 +221,9 @@ function jripl() {
     };
 
 
+};
+
+jripl.prototype.seed = function (seedval,cb)
+{
+    $.post(this.server_url,seedval,cb);
 };

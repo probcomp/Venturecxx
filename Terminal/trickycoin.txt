@@ -1,0 +1,4 @@
+assume isTricky (bernoulli 0.1)
+assume myCoinWeight (if isTricky (beta 1.0 1.0) 0.5)
+assume myCoin (lambda () (bernoulli myCoinWeight))
+observe myCoin true
