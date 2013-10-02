@@ -19,24 +19,33 @@ function term_ripl() {
 
 }
 
-term_ripl.prototype.sendCommandToRIPLServer = function (command, term)
+term_ripl.prototype.sendCommandToRIPLServer = function (command, example, term)
 {
     term.pause();
     var tempcommand = '(' + command + ')';
     var parseList = parse(tempcommand);
     var ret;
     if (parseList[0] == 'assume') {
-	this.ripl.assume_async(parseList[1],command.substr(command.indexOf("("),command.length-1));
+	if (example==true){
+	    this.ripl.assume(parseList[1],command.substr(command.indexOf("("),command.length-1));}
+	else{
+	    this.ripl.assume_async(parseList[1],command.substr(command.indexOf("("),command.length-1));}
     }
     if (parseList[0] == 'observe') {
-	this.ripl.observe_async('(' + parseList[1] + ')', parseList[2]);
+	if (example==true){
+	    this.ripl.observe('(' + parseList[1] + ')', parseList[2]);}
+	else{
+	    this.ripl.observe_async('(' + parseList[1] + ')', parseList[2]);}
     }
     if (parseList[0] == 'predict') {
-	ret = this.ripl.predict_async(parseList[1], 'predict_model');
-	    }
+	if (example==true){
+	    ret = this.ripl.predict(parseList[1], 'predict_model');}
+	else{
+	    ret = this.ripl.predict_async(parseList[1], 'predict_model');}
+    }
     if (parseList[0] == 'list_directives') {
 	this.ripl.display_directives();
-   }
+    }
     if (parseList[0] == 'clear') {
 	ret = this.ripl.clear();
 	term.echo("clear")
@@ -46,10 +55,12 @@ term_ripl.prototype.sendCommandToRIPLServer = function (command, term)
     }
     if (parseList[0] == 'start_continuous_inference') {
 	this.ripl.start_continuous_inference();
+	term.resume();
 	term.echo("Starting continuous inference...");
     }
     if (parseList[0] == 'stop_continuous_inference') {
 	this.ripl.stop_continuous_inference();
+	term.resume();
 	term.echo("Stopping continuous inference...");
     }
     if (parseList[0] == 'forget') {
@@ -58,8 +69,7 @@ term_ripl.prototype.sendCommandToRIPLServer = function (command, term)
     if (ret != undefined){
 	term.echo(JSON.stringify(ret).replace(/-NEWLINE-/g, "\n "));
     }
-    
-    term.resume(); 
+    term.resume();
 };
 
 term_ripl.prototype.loadExample = function (filename)
@@ -69,7 +79,8 @@ term_ripl.prototype.loadExample = function (filename)
 	var exampleCode = '<h3>    CODE: </h3><br>'
 	for(var i = 0, len = lines.length-1; i < len; i++){
 	    term.echo("venture>" + lines[i]);
-	    riplOBJ.sendCommandToRIPLServer(lines[i],term);
+	    example = true;
+	    riplOBJ.sendCommandToRIPLServer(lines[i],example,term);
 	    exampleCode = exampleCode.concat("<b>",lines[i].substr(0,lines[i].indexOf(' ')),"</b>");
 	    exampleCode = exampleCode.concat(lines[i].substr(lines[i].indexOf(' '),lines[i].length-1),"<br>");
 	}

@@ -78,10 +78,10 @@ return file;
       </tr></table><br>
       <table>
      	<tr>
-	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('start_continuous_inference', term);">Start Inference</button></td>
-	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('stop_continuous_inference', term);">Stop Inference</button></td>
-	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('clear', term);">Clear</button></td>
-	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('list_directives', term);">List Directives</button></td>
+	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('start_continuous_inference',false, term);">Start Inference</button></td>
+	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('stop_continuous_inference',false, term);">Stop Inference</button></td>
+	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('clear', false, term);">Clear</button></td>
+	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('list_directives', false, term);">List Directives</button></td>
 	</tr>
 	<table>
 	  
