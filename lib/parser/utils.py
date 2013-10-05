@@ -267,9 +267,9 @@ def value_to_string(v):
             if not isinstance(v['value'], (int, float)):
                 raise VentureException('fatal',
                         'Invalid number value')
-            return "{}".format(v['value'])
+            return "{0}".format(v['value'])
         try:
-            return "{}<{}>".format(
+            return "{0}<{1}>".format(
                     v['type'],
                     json.dumps(v['value']))
         except:
@@ -280,7 +280,7 @@ def value_to_string(v):
             return "true"
         return "false"
     if isinstance(v, (int, float)):
-        return "{}".format(v)
+        return "{0}".format(v)
     if isinstance(v, basestring):
         return v
     raise VentureException('fatal',
