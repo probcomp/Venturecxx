@@ -90,11 +90,8 @@ function jripl() {
             },
             // TODO this error callback needs updating
             error: function(data) { 
-		//var err = eval("Unable to access Venture engine.");
-                console.log("Unable to access Venture engine");
-		//console.log(textStatus);
-		//console.log(errorThrown);
-            },
+		    console.log("Connecting to the Venture engine");
+		},
             complete: function() {}
         });
     };

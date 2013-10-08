@@ -15,8 +15,6 @@ function term_ripl() {
     this.terminal_prompt = 'venture> ';
     this.ripl.set_mode("church_prime");
     this.ripl.clear()
-//    this.ripl.register_a_request_processed_callback(DirectiveLoadedCallback);
-
 }
 
 term_ripl.prototype.sendCommandToRIPLServer = function (command, example, term)
@@ -84,7 +82,9 @@ term_ripl.prototype.loadExample = function (filename)
 	    exampleCode = exampleCode.concat("<b>",lines[i].substr(0,lines[i].indexOf(' ')),"</b>");
 	    exampleCode = exampleCode.concat(lines[i].substr(lines[i].indexOf(' '),lines[i].length-1),"<br>");
 	}
-	document.getElementById('examplecode').innerHTML= exampleCode;
+	term.echo("venture> Executing code...");
+	riplOBJ.sendCommandToRIPLServer('list_directives',false,term);
+	document.getElementById('metaContainer').innerHTML= exampleCode;
     }, 'text');
     
 };
