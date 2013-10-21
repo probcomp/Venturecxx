@@ -75,7 +75,7 @@ function jripl() {
 
     /* Perform the actual AJAX request. */
     var ajax_execute_post = function(URL,data_in,on_success) {
-        $.ajax({
+	$.ajax({
             url: full_url(URL),
             type:'POST', 
             data: JSON.stringify(data_in),
@@ -84,13 +84,12 @@ function jripl() {
             crossDomain: true,
             success: function(data) {
 		a_request_processed_callback();
-		on_success(data);
+		on_success(data_in,data);
                 ajax_continue_requests();
-		return data;
-            },
+	    },
             // TODO this error callback needs updating
             error: function(data) { 
-		    console.log("Connecting to the Venture engine");
+		    console.log(data);
 		},
             complete: function() {}
         });
@@ -124,7 +123,7 @@ function jripl() {
 
     for (i = 0; i < pripl_functions_w_retval.length; i++) {
 	var name = pripl_functions_w_retval[i];
-	this[name] = create_closure(name.substr(0,name.length-6), function(data) { if(data != 'null') {term.echo(data)}});
+	this[name] = create_closure(name.substr(0,name.length-6), function(data_in, data) { console.log(data); if(data != 'null') {term.echo(data_in[0] + " | " + data)}});
     };
 
 /* Continuous directives */
@@ -183,11 +182,26 @@ function jripl() {
     };
 
     this.display_directives = function() {
-	var success_fun = function(data) {
-	    term.echo("venture> Directives:");
+	var success_fun = function(data_in, data) {
+	    term.echo("Directives:              | Values:");
 	    for (i = 0; i < data.length; i++){
 		if(typeof(data[i].symbol) != "undefined"){
-		    term.echo(data[i].symbol + " | " + data[i].value);
+		    sym = data[i].symbol;
+		    val = data[i].value;
+		    
+		    if (sym.length > 25){
+			sym = sym.substr(0, 24) + "..."
+			    }
+		    else {
+			extraspaces = 25-sym.length
+			for(j = 0; j < extraspaces; j++){
+			    sym = sym + " ";
+			}
+		    }
+		    if (val.length > 25){
+			val = val.substr(0,24) + "..."
+			    }
+		    term.echo(sym + "| " + val);
 		}
 	    }
 	}

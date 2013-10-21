@@ -27,7 +27,8 @@ term_ripl.prototype.sendCommandToRIPLServer = function (command, example, term)
 	if (example==true){
 	    this.ripl.assume(parseList[1],command.substr(command.indexOf("("),command.length-1));}
 	else{
-	    this.ripl.assume_async(parseList[1],command.substr(command.indexOf("("),command.length-1));}
+	    this.ripl.assume_async(parseList[1],command.substr(command.indexOf("("),command.length-1));
+	}	
     }
     if (parseList[0] == 'observe') {
 	if (example==true){
@@ -37,9 +38,9 @@ term_ripl.prototype.sendCommandToRIPLServer = function (command, example, term)
     }
     if (parseList[0] == 'predict') {
 	if (example==true){
-	    ret = this.ripl.predict(parseList[1], 'predict_model');}
+	    ret = this.ripl.predict(parseList[1]);}
 	else{
-	    ret = this.ripl.predict_async(parseList[1], 'predict_model');}
+	    ret = this.ripl.predict_async(parseList[1]);}
     }
     if (parseList[0] == 'list_directives') {
 	this.ripl.display_directives();
@@ -70,10 +71,15 @@ term_ripl.prototype.sendCommandToRIPLServer = function (command, example, term)
     term.resume();
 };
 
-term_ripl.prototype.loadExample = function (filename)
+term_ripl.prototype.loadExample = function ()
 {
-    $.get('./' + filename + '.txt', function(myContentFile) {
-	var lines = myContentFile.split("\n");
+    
+    // Read text file line-by-line and send into the engine
+    var f =  document.getElementById('examplefile').files[0];
+    var fr = new FileReader();
+    fr.onload = function(e) {
+	var content = e.target.result;
+	var lines = content.split(/[\r\n]+/g);
 	var exampleCode = '<h3>    CODE: </h3><br>'
 	for(var i = 0, len = lines.length-1; i < len; i++){
 	    term.echo("venture>" + lines[i]);
@@ -85,6 +91,6 @@ term_ripl.prototype.loadExample = function (filename)
 	term.echo("venture> Executing code...");
 	riplOBJ.sendCommandToRIPLServer('list_directives',false,term);
 	document.getElementById('metaContainer').innerHTML= exampleCode;
-    }, 'text');
-    
+    }
+    fr.readAsText(f);
 };

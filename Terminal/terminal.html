@@ -36,6 +36,7 @@
     <script src="jquery-terminal/js/jquery-1.7.1.min.js"></script>
     <script src="jquery-terminal/js/jquery.mousewheel-min.js"></script>
     <script src="jquery-terminal/js/jquery.terminal-min.js"></script>
+    <script src="jqwidgets/jquery.tinyscrollbar.min.js"></script>
     <script src="raphael-min.js"></script>
     <script src="common-scripts.js"></script>
     <script src="spin.min.js"></script>
@@ -47,14 +48,6 @@
     <script src="index-load.js"></script>
     <script type="text/javascript" src="jquery.cookie.js"></script>
    
-</script>
-<script type="text/javascript">
-function checkRadio(){
-var myRadio = $('input[name=exampleid]');
-var file = myRadio.filter(':checked').val();
-return file;
-}
-</script>
   </head>
   <body onLoad="omit_errors = true;$('#terminalWindow').attr('style','width: 650px; height:400px;');">
     <table width="100%"><tr><td align="right"><div id="ripl_address_info">... Loading ...</div></td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>
@@ -65,19 +58,10 @@ return file;
 	  <td>    <h3>Venture Terminal</h3><br></td>
 	</tr><br><br>
       </table>
-<!--      <table><tr><td><h4>Load example file:</h4><input type="file" id="examplefile" value=""><br></td>-->
-<h4> Which example would you like? </h4>
-<form action="javascript:void(0);" name="radioform">
-<table>
-<tr>
-<td><input type="radio" name="exampleid" value="trickycoin" checked><b> trickyCoin</td></tr>
-<td><input type="radio" name="exampleid" value="example2"><b> Example 2</td></tr>
-<td><input type="radio" name="exampleid" value="example3"><b> Example 3</td></tr>
-</form>
-<td><br><button onclick="filename = checkRadio(); riplOBJ.loadExample(filename);">Load Example</button></td><br>
-      </tr></table><br>
+     <h4>Load example file:</h4><input type="file" id="examplefile" /><br><br>
       <table>
      	<tr>
+	  <td><button onclick="riplOBJ.loadExample();">Load Example</button></td>
 	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('start_continuous_inference',false, term);">Start Inference</button></td>
 	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('stop_continuous_inference',false, term);">Stop Inference</button></td>
 	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('clear', false, term);">Clear</button></td>
@@ -89,6 +73,7 @@ return file;
 	  <table>
 	    <tr><td style="vertical-align: top;">
 		<div id="terminalWindow"></div>
+		
 	      </td><br><br>
 	      <td style="vertical-align: top;"><div id="metaContainer" style="padding-left:80px;"></td>
 	    </tr>

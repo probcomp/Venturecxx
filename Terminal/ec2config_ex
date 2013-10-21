@@ -1,0 +1,109 @@
+####################################
+## StarCluster Configuration File ##
+####################################
+[global]
+# Configure the default cluster template to use when starting a cluster
+# defaults to 'smallcluster' defined below. This template should be usable
+# out-of-the-box provided you've configured your keypair correctly
+DEFAULT_TEMPLATE = smallcluster
+
+#############################################
+## AWS Credentials and Connection Settings ##
+#############################################
+[aws info]
+# This is the AWS credentials section (required).
+# These settings apply to all clusters
+# replace these with your AWS keys
+AWS_ACCESS_KEY_ID = <VALUE>
+AWS_SECRET_ACCESS_KEY = <VALUE>
+AWS_USER_ID = <EMAIL>
+
+###########################
+## Defining EC2 Keypairs ##
+###########################
+# Sections starting with "key" define your keypairs. See "starcluster createkey
+# --help" for instructions on how to create a new keypair. Section name should
+# match your key name e.g.:
+[key <KEYNAME>]
+KEY_LOCATION = <LOCATION>
+
+############################################
+## Configuring Security Group Permissions ##
+############################################
+# Sections starting with "permission" define security group rules to
+# automatically apply to newly created clusters. PROTOCOL in the following
+# examples can be can be: tcp, udp, or icmp. CIDR_IP defaults to 0.0.0.0/0 or
+# "open to the # world"
+
+# open port 80 on the cluster to the world
+# [permission http]
+# PROTOCOL = tcp
+# FROM_PORT = 80
+# TO_PORT = 80
+
+# open https on the cluster to the world
+# [permission https]
+# PROTOCOL = tcp
+# FROM_PORT = 443
+# TO_PORT = 443
+
+# open port 80 on the cluster to an ip range using CIDR_IP
+# [permission http]
+# PROTOCOL = tcp
+# FROM_PORT = 80
+# TO_PORT = 80
+# CIDR_IP = 18.0.0.0/8
+
+# restrict ssh access to a single ip address (<your_ip>)
+# [permission ssh]
+# PROTOCOL = tcp
+# FROM_PORT = 22
+# TO_PORT = 22
+# CIDR_IP = <your_ip>/32
+
+[permission web]
+from_port = 8080
+to_port = 8080
+
+[permission venture]
+from_port = 1234
+to_port = 1237
+
+################################
+## Defining Cluster Templates ##
+################################
+# Sections starting with "cluster" represent a cluster template. These
+# "templates" are a collection of settings that define a single cluster
+# configuration and are used when creating and configuring a cluster. You can
+# change which template to use when creating your cluster using the -c option
+# to the start command:
+#
+#     $ starcluster start -c mediumcluster mycluster
+#
+# If a template is not specified then the template defined by DEFAULT_TEMPLATE
+# in the [global] section above is used. Below is the "default" template named
+# "smallcluster". You can rename it but dont forget to update the
+# DEFAULT_TEMPLATE setting in the [global] section above. See the next section
+# on defining multiple templates.
+
+[cluster smallcluster]
+# change this to the name of one of the keypair sections defined above
+KEYNAME = <KEYNAME>
+# number of ec2 instances to launch
+CLUSTER_SIZE = 1
+# create the following user on the cluster
+CLUSTER_USER = sgeadmin
+# optionally specify shell (defaults to bash)
+# (options: tcsh, zsh, csh, bash, ksh)
+CLUSTER_SHELL = bash
+# AMI to use for cluster nodes. These AMIs are for the us-east-1 region.
+# Use the 'listpublic' command to list StarCluster AMIs in other regions
+# The base i386 StarCluster AMI is ami-7c5c3915
+# The base x86_64 StarCluster AMI is ami-765b3e1f
+# The base HVM StarCluster AMI is ami-52a0c53b
+NODE_IMAGE_ID = ami-7c5c3915
+# instance type for all cluster nodes
+# (options: m1.medium, m3.2xlarge, cc2.8xlarge, m1.large, c1.xlarge, hs1.8xlarge, cr1.8xlarge, m1.small, c1.medium, cg1.4xlarge, m1.xlarge, m2.xlarge, hi1.4xlarge, t1.micro, m2.4xlarge, m2.2xlarge, m3.xlarge, cc1.4xlarge)
+NODE_INSTANCE_TYPE = m1.small
+#
+PERMISSIONS = web, venture
