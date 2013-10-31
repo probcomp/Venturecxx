@@ -40,7 +40,7 @@ venture_sources = [os.path.abspath(os.path.join(os.path.dirname(__file__),'..','
 ext_modules = []
 packages=["venture","venture.sivm","venture.ripl",
     "venture.parser","venture.server","venture.shortcuts",
-    "venture.test"]
+    "venture.test", "venture.cxx"]
 
 if '--without-cpp-engine' in sys.argv:
     sys.argv.remove('--without-cpp-engine')
@@ -53,14 +53,12 @@ else:
                         sources = venture_sources)
     ext_modules.append(cpp_engine)
 
-setup (name = 'Venture engine',
+setup (name = 'Venture CXX',
        version = '1.0',
-       description = 'Testing',
        author = 'MIT.PCP',
-       author_email = 'yura.perov@gmail.com',
        url = 'TBA',
        long_description = 'TBA.',
        packages = packages,
-       package_dir={"venture":"lib", "venture.test":"test"},
+       package_dir={"venture":"src/frontend/lib", "venture.test":"src/frontend/test", "venture.cxx":"src/backend/cxx"},
        ext_modules = ext_modules
        )
