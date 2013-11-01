@@ -1,6 +1,9 @@
 build/*
 env.d
 
+# python
+*.pyc
+
 # CMake files
 CMakeCache.txt
 CMakeFiles
