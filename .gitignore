@@ -1,4 +1,4 @@
-build/*
+build
 env.d
 
 # python
