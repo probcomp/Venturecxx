@@ -1,13 +1,19 @@
+#include "node.h"
+#include "value.h"
 #include "trace.h"
 #include "omegadb.h"
+#include "sp.h"
+#include "scaffold.h"
+#include "lkernel.h"
 
 #include <iostream>
 #include <boost/range/adaptor/reversed.hpp>
+#include <tuple>
 
 using boost::adaptors::reverse;
 
-std::pair<double, OmegaDB> Trace::detach(const std::vector<Node *> & border,
-					 Scaffold * scaffold)
+pair<double, OmegaDB> Trace::detach(const vector<Node *> & border,
+					 Scaffold & scaffold)
 {
 
   double weight = 0;
@@ -15,21 +21,26 @@ std::pair<double, OmegaDB> Trace::detach(const std::vector<Node *> & border,
 
   for (Node * node : reverse(border))
   {
-    if (scaffold->isAbsorbing(node))
-    { weight += unabsorb(node,scaffold,omegaDB); }
+    if (scaffold.isAbsorbing(node))
+    { 
+      weight += unabsorb(node,scaffold,omegaDB); 
+    }
     else
     {
-      assert(scaffold->isResampling(node));
-      if (node->isObservation()) { weight += unconstrain(node); }
+      assert(scaffold.isResampling(node));
+      if (node->isObservation()) 
+      { 
+	weight += unconstrain(node);
+      }
       weight += detachInternal(node,scaffold,omegaDB);
     }
   }
   
-  return std::make_pair(weight,omegaDB);
+  return make_pair(weight,omegaDB);
 }
 
 double Trace::detachParents(Node * node,
-			    Scaffold * scaffold,
+			    Scaffold & scaffold,
 			    OmegaDB & omegaDB)
 {
   double weight = 0;
@@ -41,8 +52,8 @@ double Trace::detachParents(Node * node,
 
   if (node->nodeType == NodeType::OUTPUT)
   {
-    for (Node * csrParent : reverse(node->csrParents))
-    { weight += detachInternal(csrParent,scaffold,omegaDB); }
+    for (Node * esrParent : reverse(node->esrParents))
+    { weight += detachInternal(esrParent,scaffold,omegaDB); }
     weight += detachInternal(node->requestNode,scaffold,omegaDB);
   }
   for (Node * operandNode : reverse(node->operandNodes))
@@ -52,12 +63,12 @@ double Trace::detachParents(Node * node,
 }
 
 double Trace::unabsorb(Node * node,
-		       Scaffold * scaffold,
+		       Scaffold & scaffold,
 		       OmegaDB & omegaDB)
 {
   double weight = 0;
-  node->sp->remove(node->getValue(),node);
-  weight += node->sp->logDensity(node->getValue(),node);
+  node->sp()->remove(node->getValue(),node);
+  weight += node->sp()->logDensity(node->getValue(),node);
   weight += detachParents(node,scaffold,omegaDB);
   return weight;
 }
@@ -69,148 +80,204 @@ double Trace::unconstrain(Node * node)
   { return unconstrain(node->sourceNode); }
   else
   {
-    if (node->sp->isRandomOutput) { registerRandomChoice(node); }
-    node->sp->removeOutput(node->getValue(),node);
-    double logDensity = node->sp->logDensityOutput(node->getValue(),node);
+    if (node->sp()->isRandomOutput) { registerRandomChoice(node); }
+    node->sp()->removeOutput(node->getValue(),node);
+    double logDensity = node->sp()->logDensityOutput(node->getValue(),node);
     node->isConstrained = false;
-    node->sp->incorporateOutput(node->getValue(),node);
+    node->sp()->incorporateOutput(node->getValue(),node);
     return logDensity;
   }
 }
 
 double Trace::detachInternal(Node * node,
-			     Scaffold * scaffold,
+			     Scaffold & scaffold,
 			     OmegaDB & omegaDB)
 {
   double weight = 0;
-  if (scaffold->isResampling(node))
+  if (scaffold.isResampling(node))
   {
-    Scaffold::DRGNode &drgNode = scaffold->drg[node];
+    Scaffold::DRGNode &drgNode = scaffold.drg[node];
     drgNode.regenCount--;
     assert(drgNode.regenCount >= 0);
     if (drgNode.regenCount == 0)
     {
+      node->isActive = false;
       if (node->isApplication())
       { 
 	weight += unapplyPSP(node,scaffold,omegaDB); 
       }
+
       weight += detachParents(node,scaffold,omegaDB);
     }
   }
-  else if (scaffold->hasAAANodes)
+  else if (scaffold.hasAAANodes)
   {
-    if (node->isReference() && scaffold->isAAA(node->sourceNode))
+    if (node->isReference() && scaffold.isAAA(node->sourceNode))
     { weight += detachInternal(node->sourceNode,scaffold,omegaDB); }
   }
   return weight;
 }
 
+void Trace::teardownMadeSP(Node * node)
+{
+
+
+  VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
+  SP * madeSP = vsp->sp;
+  if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
+
+  /* Subtle. If it is not AAA, then we actually destroy the SPAux entirely, and it
+     will be reconstructed and re-filled during restore. Thus we don't need a
+     node->madeSPAux pointer to own it, because it will always and only be destroyed
+     in this section of code. */
+  if (madeSP->hasAux()) 
+  { 
+    madeSP->destroySPAux(node->madeSPAux);
+    node->madeSPAux = nullptr;
+  }
+}
+
 double Trace::unapplyPSP(Node * node,
-			 Scaffold * scaffold,
+			 Scaffold & scaffold,
 			 OmegaDB & omegaDB)
 {
+  DPRINT("unapplyPSP: ", node->address.toString());
+
+
+  if (node->nodeType == NodeType::OUTPUT && node->sp()->isESRReference) { return 0; }
+  if (node->nodeType == NodeType::REQUEST && node->sp()->isNullRequest()) { return 0; }
+
+  if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,omegaDB); }
+  if (node->sp()->isRandom(node->nodeType)) { unregisterRandomChoice(node); }
+  
+  if (dynamic_cast<VentureSP*>(node->getValue()) && !node->isReference() && !scaffold.isAAA(node)) 
+  { teardownMadeSP(node); }
+
+  SP * sp = node->sp();
   double weight = 0;
 
-  if (node->nodeType == NodeType::REQUEST) 
-  { unevalRequests(node,scaffold,omegaDB); }
+  sp->remove(node->getValue(),node);
 
-  if (node->sp->isRandom(node->nodeType) && !node->isConstrained)
-  { unregisterRandomChoice(node); }
+  if (scaffold.hasKernelFor(node))
+  { weight += scaffold.lkernels[node]->reverseWeight(node->getValue(),node,nullptr); }
 
-  node->sp->remove(node->getValue(),node);
-      
-  /* This is where I need to setup a latentDB. */
-  if (scaffold->hasKernelFor(node))
-  { weight += scaffold->lkernels[node]->reverseWeight(node->getValue(),node,nullptr); }
+  if (sp->makesHSRs && scaffold.isAAA(node))
+  { 
+    pair<double, LatentDB *> p = node->sp()->detachAllLatents(node->spaux());
+    weight += p.first;
+    assert(!omegaDB.latentDBs.count(node));
+    omegaDB.latentDBs.insert({node,p.second});
+  }
 
-  /* TODO this is where we would call "unsample" to implement token-based
-     restore. */
-  omegaDB.rcs[node->address] = node->getValue();
-  node->isActive = false;
+  if (scaffold.isResampling(node))
+  { omegaDB.drgDB[node] = node->getValue(); }
+
+  /* If it is not in the DRG, then we do nothing. Elsewhere we store the value
+     of the root in the contingentFamilyDB */
+  if (node->ownsValue) { omegaDB.flushQueue.emplace(node->sp(),node->getValue(),node->nodeType); }
+
   return weight;
 }
 
 
 double Trace::unevalRequests(Node * node,
-			     Scaffold * scaffold,
+			     Scaffold & scaffold,
 			     OmegaDB & omegaDB)
 {
+  assert(node->nodeType == NodeType::REQUEST);
+  if (!node->getValue()) { return 0; }
+
   double weight = 0;
   VentureRequest * requests = dynamic_cast<VentureRequest *>(node->getValue());
 
-  if (!requests->esrs.empty() && !omegaDB.latentDBsbySP.count(node->sp))
-  { omegaDB.latentDBsbySP[node->sp] = node->sp->constructLatentDB(); }
+  if (!requests->hsrs.empty() && !omegaDB.latentDBs.count(node->vsp()->makerNode))
+  { omegaDB.latentDBs[node->vsp()->makerNode] = node->sp()->constructLatentDB(); }
 
-  for (ESR * esr : reverse(requests->esrs))
+  for (HSR * hsr : reverse(requests->hsrs))
   {
-    LatentDB * latentDB = omegaDB.latentDBsbySP[node->sp];
-    weight += node->sp->detachLatents(node->spAux,esr,latentDB);
+    LatentDB * latentDB = omegaDB.latentDBs[node->vsp()->makerNode];
+    weight += node->sp()->detachLatents(node->spaux(),hsr,latentDB);
   }
 
-  assert(node->nodeType == NodeType::REQUEST);
-
-  /* Subtle optimization, iterating over the csrParents instead of the
-     csrs themselves. */
-  for (Node * csrParent : reverse(node->outputNode->csrParents))
+  for (ESR esr : reverse(requests->esrs))
   {
-    Node::removeCSREdge1D(csrParent,node->outputNode);
-    if (csrParent->numRequests == 0) 
-    { weight += unevalFamily(csrParent,scaffold,omegaDB); }
+    assert(node->spaux());
+    Node * esrParent = node->outputNode->removeLastESREdge();
+    assert(esrParent);
+    if (esrParent->numRequests == 0) 
+    { weight += detachSPFamily(node->vsp(),esr.id,scaffold,omegaDB); }
   }
-  /* We only removed the edges in one direction so far. (Premature optimization) */
-  node->outputNode->csrParents.clear();
 
   return weight;
 }
 
-double Trace::unevalFamily(Node * node,
-			   Scaffold * scaffold,
+double Trace::detachSPFamily(VentureSP * vsp,
+			     size_t id,
+			     Scaffold & scaffold,
+			     OmegaDB & omegaDB)
+{
+  /* This SPAux is corrupted when called from Trace's destructor. */
+  assert(vsp);
+  assert(vsp->makerNode);
+  assert(vsp->makerNode->madeSPAux);
+  Node * root = vsp->sp->detachFamily(id,vsp->makerNode->madeSPAux);
+  assert(root);
+  Node * familyEnv = root->familyEnvNode;
+  assert(familyEnv);
+  omegaDB.spFamilyDBs[{vsp->makerNode,id}] = root;
+  double weight = detachFamily(root,scaffold,omegaDB);
+  SP * envOwner = nullptr;
+  omegaDB.flushQueue.emplace(envOwner,familyEnv->getValue(),NodeType::VALUE);
+  return weight;
+}
+
+/* Does not erase from ventureFamilies */
+double Trace::detachVentureFamily(Node * root,OmegaDB & omegaDB)
+{
+  assert(root);
+  Scaffold scaffold;
+  return detachFamily(root,scaffold,omegaDB);
+}
+
+double Trace::detachFamily(Node * node,
+			   Scaffold & scaffold,
 			   OmegaDB & omegaDB)
 {
-  double weight = uneval(node,scaffold,omegaDB);
-  Address familyEnvAddr = node->address.getFamilyEnvAddress();
-
-  if (containsAddr(familyEnvAddr))
-  { destroyNode(getNode(familyEnvAddr)); }
-  return weight;
-}
-
-double Trace::uneval(Node * node,
-		     Scaffold * scaffold,
-		     OmegaDB & omegaDB)
-{
+  assert(node);
+  DPRINT("uneval: ", node->address.toString());
   double weight = 0;
-  if (node->nodeType == NodeType::VALUE) { destroyNode(node); }
+
+  if (node->nodeType == NodeType::VALUE) 
+  { 
+    if (node->ownsValue) { omegaDB.flushQueue.emplace(nullptr, node->getValue(),NodeType::VALUE); }
+    /* lambda expression (could be separate nodetype */
+    if (dynamic_cast<VentureSP *>(node->getValue())) { teardownMadeSP(node); }
+  }
   else if (node->nodeType == NodeType::LOOKUP)
   {
     Node * lookedUpNode = node->lookedUpNode;
     node->disconnectLookup();
-    destroyNode(node);
     weight += detachInternal(lookedUpNode,scaffold,omegaDB);
   }
   else
   {
     weight += unapply(node,scaffold,omegaDB);
-    for (Node * operandNode : node->operandNodes)
-    { weight += uneval(operandNode,scaffold,omegaDB); }
-    weight += uneval(node->operatorNode,scaffold,omegaDB);
+    for (Node * operandNode : reverse(node->operandNodes))
+    { weight += detachFamily(operandNode,scaffold,omegaDB); }
+    weight += detachFamily(node->operatorNode,scaffold,omegaDB);
   }
-  destroyNode(node->requestNode);
-  destroyNode(node);
   return weight;
 }
 
 double Trace::unapply(Node * node,
-		      Scaffold * scaffold,
+		      Scaffold & scaffold,
 		      OmegaDB & omegaDB)
 {
   double weight = 0;
-  /* Copy */
-  std::vector<Node *> csrParents = node->csrParents;
 
   weight += unapplyPSP(node,scaffold,omegaDB);
-  for (Node * csrParent : reverse(csrParents))
-  { weight += detachInternal(csrParent,scaffold,omegaDB); }
+  for (Node * esrParent : reverse(node->esrParents))
+  { weight += detachInternal(esrParent,scaffold,omegaDB); }
   weight += unapplyPSP(node->requestNode,scaffold,omegaDB);
 
   return weight;

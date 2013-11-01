@@ -1,17 +1,22 @@
 #ifndef SP_H
 #define SP_H
 
-#include "address.h"
-#include "spaux.h"
-#include "srs.h"
-#include "value.h"
-#include "value_types.h"
-
 #include <iostream>
+#include <memory>
 #include <gsl/gsl_rng.h>
 
+using namespace std;
+
+#include <boost/python/object.hpp>
+
+struct SPAux;
+struct LKernel;
+struct VentureValue;
+struct VentureToken;
 struct Node;
 struct LatentDB;
+struct HSR;
+
 
 enum class NodeType;
 
@@ -20,63 +25,99 @@ enum class NodeType;
    so it should be considered an abstract class. */
 struct SP
 {
-  SP(std::string s): address(s) {}
-  SP(const Address &a): address(a) {}
+/* Simulate */
+  VentureValue * simulate(Node * node, gsl_rng * rng) const;
+  virtual VentureValue * simulateRequest(Node * node, gsl_rng * rng) const { return nullptr; }
+  virtual VentureValue * simulateOutput(Node * node, gsl_rng * rng) const { return nullptr; };
 
-  /* Simulate */
-  VentureValue * simulate(Node * node, gsl_rng * rng);
-  virtual VentureValue * simulateRequest(Node * node, gsl_rng * rng) { return new VentureRequest; }
-  virtual VentureValue * simulateOutput(Node * node, gsl_rng * rng) { return nullptr; };
+/* LogDensity */
+  double logDensity(VentureValue * value, Node * node) const;
+  virtual double logDensityRequest(VentureValue * value, Node * node) const { return 0; }
+  virtual double logDensityOutput(VentureValue * value, Node * node) const { return 0; }
 
-  /* LogDensity */
-  double logDensity(VentureValue * value, Node * node);
-  virtual double logDensityRequest(VentureValue * value, Node * node) { return 0; }
-  virtual double logDensityOutput(VentureValue * value, Node * node) { return 0; }
+/* Incorporate */
+  void incorporate(VentureValue * value, Node * node) const;
+  virtual void incorporateRequest(VentureValue * value, Node * node) const { }
+  virtual void incorporateOutput(VentureValue * value, Node * node) const { }
 
-  /* Incorporate */
-  void incorporate(VentureValue * value, Node * node);
-  virtual void incorporateRequest(VentureValue * value, Node * node) { }
-  virtual void incorporateOutput(VentureValue * value, Node * node) { }
+/* Remove */
+  void remove(VentureValue * value, Node * node) const;
+  virtual void removeRequest(VentureValue * value, Node * node) const {}
+  virtual void removeOutput(VentureValue * value, Node * node) const {}
 
-  /* Remove */
-  void remove(VentureValue * value, Node * node);
-  virtual void removeRequest(VentureValue * value, Node * node) {}
-  virtual void removeOutput(VentureValue * value, Node * node) {}
+/* Flush: may be called on both requests and outputs. */
+  void flushValue(VentureValue * value,NodeType nodeType) const;
+  virtual void flushRequest(VentureValue * value) const;
+  virtual void flushOutput(VentureValue * value) const;
 
-  /* Can Absorb */
-  bool canAbsorb(NodeType nodeType);
-  bool canAbsorbRequest{true};
-  bool canAbsorbOutput{false};
+/* Can Absorb */
+  bool canAbsorb(NodeType nodeType) const;
 
-  /* Is Random w MH proposal */
-  bool isRandom(NodeType nodeType);
-  bool isRandomRequest{false};
-  bool isRandomOutput{false};
+/* Is Random w MH proposal */
+  bool isRandom(NodeType nodeType) const;
 
-  /* LatentDBs */
+  /* SPAux */
+  virtual SPAux * constructSPAux() const;
+
+  virtual void destroySPAux(SPAux * spaux) const ;
+
+
+/* LatentDBs */
   virtual LatentDB * constructLatentDB() const { return nullptr; }
-  virtual void destroyLatentDB() const { }
+  virtual void destroyLatentDB(LatentDB * latentDB) const { }
 
-  /* ESRs */
-  virtual bool hasLatents() { return false; }
-  virtual double simulateLatents(SPAux * spAux,
-				 ESR * esr,
+/* ESRs */
+  virtual double simulateLatents(SPAux * spaux,
+				 HSR * hsr,
 				 bool shouldRestore,
 				 LatentDB * latentDB,
 				 gsl_rng * rng) const { return 0; }
 
-  virtual double detachLatents(SPAux * spAux,
-			       ESR * esr,
+  virtual double detachLatents(SPAux * spaux,
+			       HSR * hsr,
 			       LatentDB * latentDB) const { return 0; }
 
-  virtual LatentDB * detachAllLatents(SPAux * spaux) const { return nullptr; }
   virtual void restoreAllLatents(SPAux * spaux, LatentDB * latentDB) {};
 
-  Address address;
+  virtual pair<double, LatentDB *> detachAllLatents(SPAux * spaux) const { return {0,nullptr}; }
 
-  bool isCSRReference{false};
+
+  virtual double logDensityOfCounts(SPAux * spaux) const { assert(false); return 0; }
+
+  /* Right now this calls NEW, which I don't like. Either it is an attribute of
+     the SP class, or its methods are dumped into the bloat. */
+  virtual LKernel * getAAAKernel() const;
+
+  bool hasAux() { return makesESRs || makesHSRs || tracksSamples; }
+  bool isNullRequest() { return !makesESRs && !makesHSRs; }
+
+  bool tracksSamples{false};
+
+  bool canAbsorbRequest{true};
+  bool canAbsorbOutput{false};
+
+  bool isRandomRequest{false};
+  bool isRandomOutput{false};
+
+  bool isESRReference{false};
+
+  bool makesESRs{false};
+  bool makesHSRs{false};
+
   bool childrenCanAAA{false};
+
   bool hasAEKernel{false};
+
+  Node * findFamily(size_t id, SPAux * spaux);
+
+  void registerFamily(size_t id, Node * root, SPAux * spaux);
+
+  /* Does not flush. */
+  Node * detachFamily(size_t id, SPAux * spaux);
+
+  
+  boost::python::object toPython(VentureToken * token) 
+    { return boost::python::object("<sp object>"); }
 
   virtual ~SP() {};
 

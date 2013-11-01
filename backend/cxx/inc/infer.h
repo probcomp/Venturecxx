@@ -1,9 +1,10 @@
 #ifndef INFER_H
 #define INFER_H
 
+struct Trace;
+struct Scaffold;
+
 #include "gkernel.h"
-#include "trace.h"
-#include "scaffold.h"
 #include "omegadb.h"
 
 struct ScaffoldMHGKernel : GKernel
@@ -25,6 +26,7 @@ struct ScaffoldMHParam : MixMHParam
 { 
   ScaffoldMHParam(Scaffold * scaffold): scaffold(scaffold) {}
   Scaffold * scaffold; 
+  ~ScaffoldMHParam() override;
 };
 
 struct ScaffoldMHGKernelMaker : GKernelMaker
@@ -33,6 +35,7 @@ struct ScaffoldMHGKernelMaker : GKernelMaker
   GKernel * constructGKernel(MixMHParam * param) override
     {
       Scaffold * scaffold = dynamic_cast<ScaffoldMHParam *>(param)->scaffold;
+      /* GC freed in MixMHKernel.reset() */
       return new ScaffoldMHGKernel(trace,scaffold);
     }
 };

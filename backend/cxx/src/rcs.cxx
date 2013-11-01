@@ -3,6 +3,7 @@
 
 void Trace::registerRandomChoice(Node * node)
 {
+//  cout << "REG: " << node->address.toString() << endl;
   assert(!rcToIndex.count(node));
 
   rcToIndex[node] = randomChoices.size();
@@ -12,6 +13,7 @@ void Trace::registerRandomChoice(Node * node)
 
 void Trace::unregisterRandomChoice(Node * node)
 {
+//  cout << "UNREG: " << node->address.toString() << endl;
   assert(rcToIndex.count(node));
 
   uint32_t index = rcToIndex[node];
@@ -25,13 +27,15 @@ void Trace::unregisterRandomChoice(Node * node)
   assert(rcToIndex.size() == randomChoices.size());
 }
 
-void Trace::registerAEKernel(Node * node)
+void Trace::registerAEKernel(VentureSP * vsp)
 {
-  std::cout << "Warning -- Trace::registerAEKernel not yet implemented." << std::endl;
+  cout << "Warning -- Trace::registerAEKernel not yet implemented." << endl;
+  assert(false);
 }
 
-void Trace::unregisterAEKernel(Node * node)
+void Trace::unregisterAEKernel(VentureSP * vsp)
 {
-  std::cout << "Warning -- Trace::unregisterAEKernel yet implemented." << std::endl;
+  cout << "Warning -- Trace::unregisterAEKernel yet implemented." << endl;
+  assert(false);
 }
 

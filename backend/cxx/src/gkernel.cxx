@@ -4,6 +4,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#include "trace.h"
 #include <cmath>
 
 
@@ -21,9 +22,9 @@ void GKernel::infer(uint32_t N)
 
 double MixMHKernel::propose()
 {
-  MixMHIndex * index = sampleIndex();
+  index = sampleIndex();
   double ldRho = logDensityOfIndex(index);
-  MixMHParam * param = processIndex(index);
+  param = processIndex(index);
   childGKernel = gKernelMaker->constructGKernel(param);
   double alpha = childGKernel->propose();
   double ldXi = logDensityOfIndex(index);

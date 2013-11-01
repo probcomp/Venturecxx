@@ -1,10 +1,10 @@
 #include "exp.h"
 #include <cassert>
 
-std::vector<std::string> Expression::getIDs()
+vector<string> Expression::getIDs()
 {
   assert(expType == ExpType::LAMBDA);
-  std::vector<std::string> ids;
+  vector<string> ids;
   for (Expression exp : exps[1].exps)
   {
     assert(exp.expType == ExpType::VARIABLE);

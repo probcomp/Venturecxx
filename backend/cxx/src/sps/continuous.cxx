@@ -9,43 +9,54 @@
 #include <cmath>
 #include <vector>
 
+#include <cassert>
 #include <iostream>
 
 /* Normal */
-VentureValue * NormalSP::simulateOutput(Node * node, gsl_rng * rng) 
+VentureValue * NormalSP::simulateOutput(Node * node, gsl_rng * rng)  const
 {
-  std::vector<Node *> operands = node->operandNodes;
-  double mu = dynamic_cast<VentureDouble *>(operands[0]->getValue())->x;
-  double sigma = dynamic_cast<VentureDouble *>(operands[1]->getValue())->x;
-  double x = gsl_ran_gaussian(rng, sigma) + mu;
+  vector<Node *> & operands = node->operandNodes;
+  VentureDouble * mu = dynamic_cast<VentureDouble *>(operands[0]->getValue());
+  VentureDouble * sigma = dynamic_cast<VentureDouble *>(operands[1]->getValue());
+  assert(mu);
+  assert(sigma);
+  double x = gsl_ran_gaussian(rng, sigma->x) + mu->x;
   return new VentureDouble(x);
 }
 
-double NormalSP::logDensityOutput(VentureValue * value, Node * node) 
+double NormalSP::logDensityOutput(VentureValue * value, Node * node)  const
 {
-  std::vector<Node *> operands = node->operandNodes;
-  double mu = dynamic_cast<VentureDouble *>(operands[0]->getValue())->x;
-  double sigma = dynamic_cast<VentureDouble *>(operands[1]->getValue())->x;
-  double x = dynamic_cast<VentureDouble *>(value)->x;
-  return log(gsl_ran_gaussian_pdf(x - mu, sigma));
+  vector<Node *> & operands = node->operandNodes;
+  VentureDouble * mu = dynamic_cast<VentureDouble *>(operands[0]->getValue());
+  VentureDouble * sigma = dynamic_cast<VentureDouble *>(operands[1]->getValue());
+  VentureDouble * x = dynamic_cast<VentureDouble *>(value);
+  assert(mu);
+  assert(sigma);
+  assert(x);
+  return log(gsl_ran_gaussian_pdf(x->x - mu->x, sigma->x));
 }
 
 /* Gamma */
-VentureValue * GammaSP::simulateOutput(Node * node, gsl_rng * rng) 
+VentureValue * GammaSP::simulateOutput(Node * node, gsl_rng * rng)  const
 {
-  std::vector<Node *> operands = node->operandNodes;
-  double a = dynamic_cast<VentureDouble *>(operands[0]->getValue())->x;
-  double b = dynamic_cast<VentureDouble *>(operands[1]->getValue())->x;
-  double x = gsl_ran_gamma(rng, a, b);
+  vector<Node *> & operands = node->operandNodes;
+  VentureDouble * a = dynamic_cast<VentureDouble *>(operands[0]->getValue());
+  VentureDouble * b = dynamic_cast<VentureDouble *>(operands[1]->getValue());
+  assert(a);
+  assert(b);
+  double x = gsl_ran_gamma(rng, a->x, b->x);
   return new VentureDouble(x);
 }
 
-double GammaSP::logDensityOutput(VentureValue * value, Node * node) 
+double GammaSP::logDensityOutput(VentureValue * value, Node * node)  const
 {
-  std::vector<Node *> operands = node->operandNodes;
-  double a = dynamic_cast<VentureDouble *>(operands[0]->getValue())->x;
-  double b = dynamic_cast<VentureDouble *>(operands[1]->getValue())->x;
-  double x = dynamic_cast<VentureDouble *>(value)->x;
-  return gsl_ran_gamma_pdf(x, a, b);
+  vector<Node *> & operands = node->operandNodes;
+  VentureDouble * a = dynamic_cast<VentureDouble *>(operands[0]->getValue());
+  VentureDouble * b = dynamic_cast<VentureDouble *>(operands[1]->getValue());
+  VentureDouble * x = dynamic_cast<VentureDouble *>(value);
+  assert(a);
+  assert(b);
+  assert(x);
+  return log(gsl_ran_gamma_pdf(x->x, a->x, b->x));
 }
 

@@ -3,10 +3,29 @@
 
 #include "sp.h"
 
-struct FlipSP : SP
+struct BernoulliSP : SP
 { 
-  FlipSP(std::string s): SP(s) {}
-  VentureValue * simulateOutput(Node * node, SPAux * spAux) override; 
+  BernoulliSP()
+    { 
+      isRandomOutput = true; 
+      canAbsorbOutput = true;
+    }
+
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  double logDensityOutput(VentureValue * value, Node * node) const override; 
+
+};
+
+struct CategoricalSP : SP
+{ 
+  CategoricalSP()
+    { 
+      isRandomOutput = true; 
+      canAbsorbOutput = true;
+    }
+
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  double logDensityOutput(VentureValue * value, Node * node) const override; 
 };
 
 

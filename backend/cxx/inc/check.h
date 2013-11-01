@@ -1,9 +1,11 @@
 #ifndef CHECK_H
 #define CHECK_H
 
-#include "trace.h"
+struct Trace;
+struct Scaffold;
 
-void assertTorus(Trace * trace, Scaffold * scaffold);
-void assertWhole(Trace * trace, Scaffold * scaffold);
+void assertTorus(Trace & trace, Scaffold & scaffold);
+void assertWhole(Trace & trace, Scaffold & scaffold);
+
 
 #endif

@@ -1,30 +1,34 @@
+#include "node.h"
 #include "scaffold.h"
+#include "sp.h"
+#include "lkernel.h"
 
 #include <iostream>
 
-void Scaffold::addResamplingNode(std::queue<std::pair<Node *, bool> > & q, Node * node)
+void Scaffold::addResamplingNode(queue<pair<Node *, bool> > & q, Node * node)
 {
   absorbing.erase(node);
   drg.emplace(node,false);
   for (Node * child : node->children) { q.emplace(child,false); }
 }
 
-Scaffold::Scaffold(std::set<Node *> principalNodes)
+Scaffold::Scaffold(set<Node *> principalNodes)
 {
+  /* TODO extended SCAFFOLD */
   assembleERG(principalNodes);
   disableBrush();
   setRegenCounts();
+
 }
 
-
-void Scaffold::assembleERG(std::set<Node *> principalNodes)
+void Scaffold::assembleERG(set<Node *> principalNodes)
 {
-  std::queue<std::pair<Node *,bool> > q;
+  queue<pair<Node *,bool> > q;
   for (Node * pNode : principalNodes) { q.emplace(pNode,true); }
 
   while (!q.empty())
   {
-    std::pair<Node *, bool> p = q.front();
+    pair<Node *, bool> p = q.front();
     q.pop();
 
     Node * node = p.first;
@@ -34,10 +38,10 @@ void Scaffold::assembleERG(std::set<Node *> principalNodes)
     else if (node->isConstrained) { addResamplingNode(q,node); }
     else if (node->nodeType == NodeType::LOOKUP) { addResamplingNode(q,node); }
     else if (isResampling(node->operatorNode)) { addResamplingNode(q,node); }
-    else if (!isPrincipal && node->sp->canAbsorb(node->nodeType)) { addAbsorbingNode(node); }
-    /* Special case for CSRReference */
-    else if (csrReferenceCanAbsorb(node)) { addAbsorbingNode(node); }
-    else if (node->sp->childrenCanAAA) { addAAANode(node); }
+    else if (!isPrincipal && node->sp()->canAbsorb(node->nodeType)) { addAbsorbingNode(node); }
+    else if (node->sp()->childrenCanAAA) { addAAANode(node); }
+    /* Special case for ESRReference */
+    else if (esrReferenceCanAbsorb(node)) { addAbsorbingNode(node); }
     else { addResamplingNode(q,node); }
   }
 }
@@ -52,8 +56,8 @@ bool Scaffold::hasChildInAorD(Node * node)
 
 void Scaffold::disableBrush() 
 {
-  std::unordered_map<Node *,uint32_t> disableCounts;
-  for (std::pair<Node *,DRGNode> p : drg)
+  unordered_map<Node *,uint32_t> disableCounts;
+  for (pair<Node *,DRGNode> p : drg)
   {
     Node * node = p.first;
     if (node->nodeType == NodeType::REQUEST)
@@ -62,19 +66,19 @@ void Scaffold::disableBrush()
 }
 
 void Scaffold::disableRequests(Node * node, 
-			       std::unordered_map<Node *,uint32_t> & disableCounts)
+			       unordered_map<Node *,uint32_t> & disableCounts)
 {
-  for (Node * csrParent : node->outputNode->csrParents)
+  for (Node * esrParent : node->outputNode->esrParents)
   {
-    if (disableCounts.count(csrParent)) { disableCounts[csrParent]++; }
-    else { disableCounts[csrParent] = 1; }
-    if (disableCounts[csrParent] == csrParent->numRequests)
-    { disableEval(csrParent,disableCounts); }
+    if (disableCounts.count(esrParent)) { disableCounts[esrParent]++; }
+    else { disableCounts[esrParent] = 1; }
+    if (disableCounts[esrParent] == esrParent->numRequests)
+    { disableEval(esrParent,disableCounts); }
   }
 }
 
 void Scaffold::disableEval(Node * node,     
-			   std::unordered_map<Node *,uint32_t> & disableCounts)
+			   unordered_map<Node *,uint32_t> & disableCounts)
 {
   registerBrush(node);
   if (node->nodeType == NodeType::OUTPUT)
@@ -96,13 +100,24 @@ void Scaffold::processParentAAA(Node * parent)
 
 void Scaffold::processParentsAAA(Node * node)
 {
-  for (Node * parent : node->parents) { processParentAAA(parent); }
+  if (node->nodeType == NodeType::LOOKUP) { processParentAAA(node->lookedUpNode); }
+  else
+  {
+    processParentAAA(node->operatorNode);
+    for (Node * operandNode : node->operandNodes) { processParentAAA(operandNode); }
+  
+    if (node->nodeType == NodeType::OUTPUT)
+    {
+      processParentAAA(node->requestNode);
+      for (Node * esrParent : node->esrParents) { processParentAAA(esrParent); }
+    }
+  }
 }
 
 /* Note new feature: we only count a (->Request, ->Output) pair as one. */
 void Scaffold::setRegenCounts()
 {
-  for (std::pair<Node *,DRGNode> p : drg)
+  for (pair<Node *,DRGNode> p : drg)
   {
     Node * node = p.first;
     /* TODO is this necessary? It didn't seem to be a reference otherwise. */
@@ -111,6 +126,7 @@ void Scaffold::setRegenCounts()
     {
       drgNode.regenCount++;
       border.push_back(node);
+      lkernels.insert({node,node->sp()->getAAAKernel()});
     }
     else if (!hasChildInAorD(node))
     {
@@ -129,14 +145,16 @@ void Scaffold::setRegenCounts()
 
   /* Now add increment the regenCount for AAA nodes as 
      is appropriate. */
+  /* TODO Note that they may have been in the brush, in which case this is not necessary. */
+
   if (hasAAANodes)
   {
-    for (std::pair<Node *,DRGNode> p : drg) { processParentsAAA(p.first); }
+    for (pair<Node *,DRGNode> p : drg) { processParentsAAA(p.first); }
     for (Node * node : absorbing) { processParentsAAA(node); }
     for (Node * node : brush)
     {
-      for (Node * csrParent : node->csrParents)
-      { processParentAAA(csrParent); }
+      for (Node * esrParent : node->esrParents)
+      { processParentAAA(esrParent); }
       if (node->nodeType == NodeType::LOOKUP)
       { processParentAAA(node->lookedUpNode); }
     }
@@ -148,13 +166,18 @@ void Scaffold::loadDefaultKernels(bool deltaKernels) {}
 
 
 
-std::ostream& operator<<(std::ostream& os, Scaffold * scaffold) {
-  os << "---Scaffold---" << std::endl;
-  for (std::pair<Node *,Scaffold::DRGNode> p : scaffold->drg)
-  {
-    os << p.first->address.toString() << std::endl;
-  }
-  os << "---end---" << std::endl;
-  return os;
+
+
+bool Scaffold::esrReferenceCanAbsorb(Node * node)
+{
+  return 
+    node->nodeType == NodeType::OUTPUT &&
+    node->sp()->isESRReference &&
+    !isResampling(node->requestNode) &&
+    !isResampling(node->esrParents[0]);
 }
 
+Scaffold::~Scaffold()
+{
+  for (pair<Node*,LKernel*> p : lkernels) { delete p.second; }
+}

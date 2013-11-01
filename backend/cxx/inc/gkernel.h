@@ -2,7 +2,10 @@
 #define GKERNEL_H
 
 #include <stdint.h>
-#include "trace.h"
+
+using namespace std;
+
+struct Trace;
 
 struct MixMHParam {  virtual ~MixMHParam() {} };
 
@@ -14,9 +17,12 @@ struct GKernel
   virtual void accept() =0;
   virtual void reject() =0;
 
+  virtual ~GKernel() {}
+
   void infer(uint32_t N);
 
   Trace * trace;
+
 };
 
 struct GKernelMaker
@@ -24,7 +30,10 @@ struct GKernelMaker
   GKernelMaker(Trace * trace): trace(trace) {}
   virtual GKernel * constructGKernel(MixMHParam * param) =0;
   Trace * trace;
+
+  virtual ~GKernelMaker() { }
 };
+
 
 struct MixMHIndex { virtual ~MixMHIndex() {} };
 
@@ -37,13 +46,17 @@ struct MixMHKernel : GKernel
   virtual double logDensityOfIndex(MixMHIndex * index) =0;
   virtual MixMHParam * processIndex(MixMHIndex * index) =0;
   
-  double propose();
-  void accept()  { childGKernel->accept(); }
-  void reject()  { childGKernel->reject(); }
-
+  double propose() override;
+  void accept() override { childGKernel->accept(); reset(); }
+  void reject() override { childGKernel->reject(); reset(); }
+  
+  void reset() { delete index; delete param; delete childGKernel; }
+  
   GKernelMaker * gKernelMaker;
 
   /* constructed anew for each proposal */
+  MixMHIndex * index;
+  MixMHParam * param;
   GKernel * childGKernel; 
 };
 #endif

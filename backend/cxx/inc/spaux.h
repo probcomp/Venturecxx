@@ -1,6 +1,12 @@
 #ifndef SPAUX_H
 #define SPAUX_H
 
+#include <map>
+
+using namespace std;
+
+struct Node;
+
 /*
 SPAux class will store several things, which Venture can only access through opaque methods.
 1. Any data that is part of the SPs value
@@ -12,7 +18,17 @@ SPAux class will store several things, which Venture can only access through opa
    some way of reconstructing samples.
 */
    
-struct SPAux { virtual ~SPAux() =0; };
+
+/* evalFamily, restoreFamily, detachFamily */
+
+/* spAux more than before, used for exposed simulation requests */
+struct SPAux 
+{
+  /* TODO Exposed simulation requests, Latent simulation requests */
+  /* Want this to be unordered_map, but problem with hashing. */
+  map<size_t,Node*> families;
+  virtual ~SPAux() {}; 
+};
 
 
 #endif

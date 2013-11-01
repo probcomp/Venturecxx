@@ -3,17 +3,22 @@
 
 #include <string>
 #include <unordered_map>
-#include "address.h"
+
+using namespace std;
+
+struct Node;
 
 struct Environment
 {
-  /* For empty environment. */
-  Environment(const Address & outerEnvAddr): outerEnvAddr(outerEnvAddr) {}
+  Environment() {}
+  Environment(Node * outerEnvNode): outerEnvNode(outerEnvNode) {}
 
-  void addBinding(std::string s, Address address) { frame[s] = address; }
+  void addBinding(string s, Node * node) { frame.insert({s,node}); }
 
-  std::unordered_map<std::string, Address> frame;
-  Address outerEnvAddr;
+  unordered_map<string, Node *> frame;
+  Node * outerEnvNode{nullptr};
+
+  Node * findSymbol(const string & sym);
 };
 
 #endif

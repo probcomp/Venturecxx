@@ -6,16 +6,17 @@
 
 #include <string>
 
-struct CSR
+/* Exposed simulation request */
+struct ESR
 {
-  CSR(std::string name, Expression exp, Environment env):
-    name(name), exp(exp), env(env) {}
+  ESR(size_t id, Expression exp, Environment env): id(id), exp(exp), env(env) {}
 
-  std::string name;
+  size_t id;
   Expression exp;
   Environment env;
 };
 
-struct ESR {} ;
+/* Hidden simulation request */
+struct HSR { virtual ~HSR() {} } ;
 
 #endif

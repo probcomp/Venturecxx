@@ -1,7 +1,9 @@
 VentureCXX Integration Part I
 ================================
 
-One needs to install gsl, cmake, and boost, and maybe others. 
+Note on installation:
+
+One needs to install g++ >4.8, gsl, cmake, and boost, and maybe others. 
 
 To build, enter:
 
@@ -9,18 +11,8 @@ To build, enter:
 
 > make
 
-> ipython trace.py
+Note on status:
 
-This should print a message indicating that the C++ received the
-call from Python. 
+We are passing a very basic test in tests.py. Good start! I am sure there are sloppy mistakes in regen and detach--I will read through them more carefully, but first I think it is easier to find simple errors through asserts firing on some basic programs.
 
-The next step is to flesh out Trace::evalExpression in wrapper.cxx
-so that we parse the boost::python::object into an Expression object.
-
-Notes:
-
-1. The Expression class is not stable yet.
-2. Be careful parsing the different kinds of VentureValues.
-
-I will be able to get this working on Monday, and the rest of the integration
-should be straightforward.
+Also, we only have a tiny number of SPs. I need to implement flip, categorical, VentureAtom, dirichlet, MEM, and such before being able to run many important tests.

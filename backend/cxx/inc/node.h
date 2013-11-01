@@ -3,48 +3,38 @@
 
 #include <vector>
 #include <set>
-#include <cassert>
 #include <stdint.h>
 
-#include "value.h"
-#include "value_types.h"
-#include "address.h"
-#include "sp.h"
+using namespace std;
+
+struct VentureValue;
+struct VentureSP;
+struct SPAux;
+struct Environment;
+struct SP;
+struct Trace;
 
 
-#include <iostream>
-
-enum class NodeType { FAMILY_ENV, VALUE, LOOKUP, REQUEST, OUTPUT };
-
-inline std::string nodeTypeToString(NodeType nodeType)
-{
-  switch (nodeType)
-    {
-    case NodeType::VALUE: return "value";
-    case NodeType::LOOKUP: return "lookup";
-    case NodeType::FAMILY_ENV: return "familyEnv";
-    case NodeType::REQUEST: return "request";
-    case NodeType::OUTPUT: return "output";
-    }
-  return "<error>";
-}
+enum class NodeType { FAMILY_ENV, SP_AUX, VALUE, LOOKUP, REQUEST, OUTPUT };
 
 struct Node
 {
   static void addOperatorEdge(Node * operatorNode, Node * applicationNode);
-  static void addOperandEdges(std::vector<Node *> operandNodes, Node * applicationNode);
+  static void addOperandEdges(vector<Node *> operandNodes, Node * applicationNode);
   static void addRequestEdge(Node * requestNode, Node * outputNode);
-  static void addCSREdge(Node * node, Node * outputNode);
+  static void addESREdge(Node * node, Node * outputNode);
   static void addLookupEdge(Node * lookedUpNode, Node * lookupNode);
 
-  /* 1D for 1 direction. We just clear outputNode->csrParents afterwards. */
-  static void removeCSREdge1D(Node * csrNode,Node * outputNode);
+  /* 1D for 1 direction. We just clear outputNode->esrParents afterwards. */
+  Node * removeLastESREdge();
 
-  Node(const Address & addr, NodeType type): address(addr), nodeType(type) {}
+  Node(NodeType type): nodeType(type) {}
+  Node(NodeType type, VentureValue * value): nodeType(type), _value(value) {}
+  Node(NodeType type, VentureValue * value, Node * familyEnvNode): 
+    nodeType(type), _value(value), familyEnvNode(familyEnvNode) {}
 
-  VentureValue * getValue() const;
   void disconnectLookup();
-
+  void reconnectLookup();
 
   void registerReference(Node * lookedUpNode);
   bool isReference() const { return sourceNode != nullptr; }
@@ -53,39 +43,45 @@ struct Node
   bool isObservation() const { return observedValue != nullptr; }
 
   void setValue(VentureValue *value);
+  VentureValue * getValue() const;
 
   bool isApplication() { return nodeType == NodeType::REQUEST || nodeType == NodeType::OUTPUT; }
 
   /* Attributes */
-  const Address address{};
-  const NodeType nodeType{NodeType::VALUE};
-  bool isActive{false};
-  Node * sourceNode{nullptr};
-  Node * lookedUpNode{nullptr};
-  Address familyEnvAddr{};
+  const NodeType nodeType;
 
-  std::set<Node*> children{};
+  Node * lookedUpNode{nullptr};
+  Node * sourceNode{nullptr};
+
+  bool isActive{false};
+
+  set<Node*> children{};
   uint32_t numRequests{0};
 
   VentureValue * observedValue{nullptr};
   Node * operatorNode{nullptr};
-  std::vector<Node *> operandNodes{};
+  vector<Node *> operandNodes{};
 
-  VentureSPValue * ventureSPValue{nullptr};
-  SP * sp{nullptr};
-  SPAux * spAux{nullptr};
+  VentureSP * vsp();
+  SP * sp();
+  SPAux * spaux();
 
-  std::vector<Node *> csrParents{};
+  vector<Node *> esrParents{};
   Node * requestNode{nullptr};
   Node * outputNode{nullptr};
   bool isConstrained{false};
+  bool ownsValue{true};
 
-  /* Redundant, but computed as a way of caching.*/
-  std::vector<Node *> parents{};
-  bool isParentOfApp{false};
+  Environment * getEnvironment();
+  SPAux * madeSPAux{nullptr}; // owner
 
 private:
+  /* I like the constructor order, that's all. */
   VentureValue * _value{nullptr};
+
+public:
+  Node * familyEnvNode;
+
 
 };
 

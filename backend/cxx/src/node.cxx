@@ -1,5 +1,6 @@
 #include "node.h"
-#include <string>
+#include "value.h"
+#include <cassert>
 
 /* Static member functions */
 
@@ -7,21 +8,14 @@ void Node::addOperatorEdge(Node * operatorNode, Node * applicationNode)
 {
   operatorNode->children.insert(applicationNode);
 
-  operatorNode->isParentOfApp = true;
-
   applicationNode->operatorNode = operatorNode;
-  applicationNode->ventureSPValue = dynamic_cast<VentureSPValue *>(operatorNode->getValue());
-  applicationNode->sp = applicationNode->ventureSPValue->sp;
-  applicationNode->spAux = applicationNode->ventureSPValue->spAux;
 }
 
-void Node::addOperandEdges(std::vector<Node *> operandNodes, Node * applicationNode)
+void Node::addOperandEdges(vector<Node *> operandNodes, Node * applicationNode)
 {
   for (Node * operandNode : operandNodes)
     {
       operandNode->children.insert(applicationNode);
-
-      operandNode->isParentOfApp = true;
     }
   applicationNode->operandNodes = operandNodes;
 }
@@ -36,20 +30,23 @@ void Node::addRequestEdge(Node * requestNode, Node * outputNode)
   requestNode->outputNode = outputNode; 
 }
 
-void Node::addCSREdge(Node * csrNode, Node * outputNode)
+void Node::addESREdge(Node * esrNode, Node * outputNode)
 {  
-  csrNode->children.insert(outputNode);
+  esrNode->children.insert(outputNode);
 
-  outputNode->csrParents.push_back(csrNode);
-  csrNode->numRequests++;
+  outputNode->esrParents.push_back(esrNode);
+  esrNode->numRequests++;
 }
 
-void Node::removeCSREdge1D(Node * csrNode,Node * outputNode)
+Node * Node::removeLastESREdge()
 {
-  csrNode->children.erase(outputNode);
-  csrNode->numRequests--;
+  Node * esrParent = esrParents.back();
+  assert(esrParent);
+  esrParent->children.erase(this);
+  esrParent->numRequests--;
+  esrParents.pop_back();
+  return esrParent;
 }
-
  
 void Node::addLookupEdge(Node * lookedUpNode, Node * lookupNode)
 {
@@ -58,25 +55,9 @@ void Node::addLookupEdge(Node * lookedUpNode, Node * lookupNode)
   lookupNode->lookedUpNode = lookedUpNode;
 }
 
-/* If a node is a reference, we return the value of its
-   source node. Otherwise we just return this node's value. */
-VentureValue * Node::getValue() const
-{
-  if (this->isReference())
-    {
-      assert(this->sourceNode);
-      assert(!this->sourceNode->isReference());
-      return this->sourceNode->getValue();
-    }
-  else
-    {
-      return this->_value;
-    }
-}
-
 /* We only disconnect a node from the trace if it has no
    children, and we only do so when its entire family is
-   being destroyed. All CSRParents will be detached during
+   being destroyed. All ESRParents will be detached during
    unapplyPSP, so the only other non-family parents will
    be lookups. */
 void Node::disconnectLookup()
@@ -84,9 +65,15 @@ void Node::disconnectLookup()
   this->lookedUpNode->children.erase(this);
 }
 
+void Node::reconnectLookup()
+{
+  this->lookedUpNode->children.insert(this);
+}
+
 /* This is called after the appropriate "edges" are added. */
 void Node::registerReference(Node * lookedUpNode)
 {
+  assert(_value == nullptr);
   if (lookedUpNode->isReference())
     {
       this->sourceNode = lookedUpNode->sourceNode;
@@ -99,7 +86,42 @@ void Node::registerReference(Node * lookedUpNode)
 
 void Node::setValue(VentureValue *value)
 {
-  assert(!this->isReference());
-  this->_value = value;
+  assert(!isReference());
+  assert(value);
+  
+  _value = value;
 }
 
+/* If a node is a reference, we return the value of its
+   source node. Otherwise we just return this node's value. */
+VentureValue * Node::getValue() const
+{
+  if (this->isReference())
+  {
+    assert(this->sourceNode);
+    assert(!this->sourceNode->isReference());
+    return this->sourceNode->getValue();
+  }
+  else
+  {
+    if (!_value) { WPRINT("node.getValue(): ", _value); }
+    return _value;
+  }
+}
+
+Environment * Node::getEnvironment()
+{
+  VentureEnvironment * venv = dynamic_cast<VentureEnvironment *>(getValue());
+  assert(venv);
+  return &venv->env;
+}
+
+VentureSP * Node::vsp()
+{
+  VentureSP * _vsp = dynamic_cast<VentureSP*>(operatorNode->getValue());
+  assert(_vsp);
+  return _vsp;
+}
+
+SP * Node::sp() { return vsp()->sp; }
+SPAux * Node::spaux() { return vsp()->makerNode->madeSPAux; }

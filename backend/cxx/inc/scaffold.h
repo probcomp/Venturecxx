@@ -3,10 +3,15 @@
 
 #include <set>
 #include <map>
+#include <unordered_map>
 #include <queue>
 
-#include "node.h"
-#include "lkernel.h"
+#include <cassert>
+
+using namespace std;
+
+struct Node;
+struct LKernel;
 
 class Scaffold
 {
@@ -26,17 +31,18 @@ public:
   Scaffold() {}
 
 /* Constructs real scaffold. */
-  Scaffold(std::set<Node *> principalNodes);
+  Scaffold(set<Node *> principalNodes);
 
+  ~Scaffold();
 
 /* TODO Most of this should be private. */
-  std::map<Node *, DRGNode> drg{};
-  std::set<Node *> absorbing{};
+  map<Node *, DRGNode> drg{};
+  set<Node *> absorbing{};
 
-  std::map<Node *, LKernel *> lkernels{};
-  std::set<Node *> brush{};
+  map<Node *, LKernel*> lkernels{};
+  set<Node *> brush{};
 
-  std::vector<Node *> border;
+  vector<Node *> border;
 
   bool hasAAANodes{false};
 
@@ -45,38 +51,27 @@ public:
   bool isAbsorbing(Node * node) { return absorbing.count(node); }
   bool hasKernelFor(Node * node) { return lkernels.count(node); }
 
-  bool csrReferenceCanAbsorb(Node * node)
-    {
-      return 
-	node->nodeType == NodeType::OUTPUT &&
-	node->sp->isCSRReference &&
-	!isResampling(node->requestNode) &&
-	!isResampling(node->csrParents[0]);
-    }
-
+  inline bool esrReferenceCanAbsorb(Node * node);
 
 /* Removes from A or D if necessary, and adds to the brush. */
   void registerBrush(Node * node) 
     { absorbing.erase(node); drg.erase(node); brush.insert(node); }
 
-  void addResamplingNode(std::queue<std::pair<Node *,bool>> &q, Node * node);
+  void addResamplingNode(queue<pair<Node *,bool>> &q, Node * node);
   void addAAANode(Node * node) { drg.emplace(node,true); hasAAANodes = true; }
   void addAbsorbingNode(Node * node) { absorbing.insert(node); }
 
-  bool operatorCannotChange(Node * node) 
-    { return !isResampling(node->operatorNode); }
-   
   void loadDefaultKernels(bool deltaKernels);
 
 private:
 
-  void assembleERG(std::set<Node *> principalNodes);
+  void assembleERG(set<Node *> principalNodes);
 
   void disableBrush();
   void disableRequests(Node * node, 
-		       std::unordered_map<Node *,uint32_t> & disableCounts);
+		       unordered_map<Node *,uint32_t> & disableCounts);
   void disableEval(Node * node,     
-		   std::unordered_map<Node *,uint32_t> & disableCounts);
+		   unordered_map<Node *,uint32_t> & disableCounts);
 
 
   bool hasChildInAorD(Node * node);
@@ -84,10 +79,9 @@ private:
   void processParentAAA(Node * parent);
   void setRegenCounts();
 
-
   
 };
 
-std::ostream& operator<<(std::ostream& os, Scaffold * scaffold);
+ostream& operator<<(ostream& os, Scaffold * scaffold);
 
 #endif
