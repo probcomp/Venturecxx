@@ -5,7 +5,7 @@ from venture import parser, ripl, sivm, server
 
 
 def make_core_sivm():
-    return sivm.CoreSivmCppEngine()
+    return sivm.CoreSivmCxx()
 
 def make_venture_sivm():
     return sivm.VentureSivm(make_core_sivm())

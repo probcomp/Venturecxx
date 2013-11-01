@@ -1,5 +1,4 @@
 from libtrace import Trace
-from parse import parse
 
 # Our SIVM is not a fully conforming SIVM, for reasons I hope
 # the person reading this will understand better than I do.
@@ -31,8 +30,8 @@ class SIVM:
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
 
-    self.trace.eval(baseAddr,parse(datum));
-    self.trace.bindInGlobalEnv(id,baseAddr);
+    self.trace.eval(baseAddr,datum);
+    self.trace.bindInGlobalEnv(id,baseAddr)
 
     self.directives[self.directiveCounter] = ["assume",id,datum]
     self.directivesToIDs[str(["assume",id,datum])] = self.directiveCounter
@@ -41,7 +40,7 @@ class SIVM:
     
   def predict(self,datum):
     baseAddr = self.nextBaseAddr()
-    self.trace.eval(baseAddr,parse(datum));
+    self.trace.eval(baseAddr,datum)
 
     self.directives[self.directiveCounter] = ["predict",datum]
     self.directivesToIDs[str(["predict",datum])] = self.directiveCounter
@@ -50,8 +49,8 @@ class SIVM:
 
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
-    self.trace.eval(baseAddr,parse(datum));
-    logDensity = self.trace.observe(baseAddr,val);
+    self.trace.eval(baseAddr,datum)
+    logDensity = self.trace.observe(baseAddr,val)
 
     # TODO check for -infinity? Throw an exception?
     if logDensity == float("-inf"): raise Exception("Cannot constrain!")
@@ -66,7 +65,7 @@ class SIVM:
   def forget(self,directiveId):
     directive = self.directives[directiveId]
     if directive[0] == "assume": raise Exception("Cannot forget an ASSUME directive")
-    if directive[0] == "observe": self.trace.unobserve(str(directiveID));
+    if directive[0] == "observe": self.trace.unobserve(str(directiveID))
     self.trace.unevalFamily(str(directiveId))
     del self.directives[directiveId]
 
@@ -86,7 +85,7 @@ class SIVM:
 
   # This could be parameterized to call different inference programs.
   def infer(self,N=1):
-    self.trace.infer(N);
+    self.trace.infer(N)
 
   ### For Testing ###
   def loggingInfer(self,predictAddr,N=1,depth=1):
