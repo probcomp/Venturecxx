@@ -7,58 +7,33 @@
 # Build and install to the system: sudo python setup.py build install
 
 from distutils.core import setup, Extension
-import sys
 import os
+import itertools
 
-# venture_libraries += ['profiler']
-# venture_extra_compile_args += ['-D_VENTURE_USE_GOOGLE_PROFILER']
-#-lpython2.6 -lgsl -lgslcblas
-
-venture_libraries = ['gsl', 'gslcblas', 'pthread', 'boost_system', 'boost_thread-mt']
-venture_extra_compile_args = ['-O2']
-
-venture_sources = [
-        'Utilities.cpp',
-        'VentureValues.cpp',
-        'VentureParser.cpp',
-        'Primitives.cpp',
-        'Evaluator.cpp',
-        'Main.cpp',
-        'XRPCore.cpp',
-        'XRPmem.cpp',
-        'XRPs.cpp',
-        'RIPL.cpp',
-        'Analyzer.cpp',
-        'ERPs.cpp',
-        'MHProposal.cpp',
-        'PythonProxy.cpp',
-        'Shell_PPPs.cpp'
-        ]
-venture_sources = [os.path.abspath(os.path.join(os.path.dirname(__file__),'..','src',x)) for x in venture_sources]
-
+source_dirs = ["backend/cxx/src/", "backend/cxx/src/sps/"]
+source_files = list(itertools.chain(*[[d + f for f in os.listdir(d) if f.endswith(".cxx")] for d in source_dirs]))
+#print(source_files)
 
 ext_modules = []
 packages=["venture","venture.sivm","venture.ripl",
     "venture.parser","venture.server","venture.shortcuts",
-    "venture.test", "venture.cxx"]
+    "venture.test"]
 
-if '--without-cpp-engine' in sys.argv:
-    sys.argv.remove('--without-cpp-engine')
-else:
-    cpp_engine = Extension('venture.sivm._cpp_engine_extension',
-                        define_macros = [('MAJOR_VERSION', '1'),
-                                         ('MINOR_VERSION', '0')],
-                        libraries = venture_libraries,
-                        extra_compile_args = venture_extra_compile_args,
-                        sources = venture_sources)
-    ext_modules.append(cpp_engine)
+cxx = Extension('venture.cxx',
+    define_macros = [('MAJOR_VERSION', '1'),
+                     ('MINOR_VERSION', '0')],
+    libraries = ['gsl', 'boost_python'],
+    extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O2", "-fPIC"],
+    include_dirs = ["backend/cxx/inc"],
+    sources = source_files)
+ext_modules.append(cxx)
 
 setup (name = 'Venture CXX',
-       version = '1.0',
-       author = 'MIT.PCP',
-       url = 'TBA',
-       long_description = 'TBA.',
-       packages = packages,
-       package_dir={"venture":"src/frontend/lib", "venture.test":"src/frontend/test", "venture.cxx":"src/backend/cxx"},
-       ext_modules = ext_modules
-       )
+         version = '1.0',
+         author = 'MIT.PCP',
+         url = 'TBA',
+         long_description = 'TBA.',
+         packages = packages,
+         package_dir={"venture":"python/lib/", "venture.test":"python/test/", "venture.cxx":"backend/cxx/"},
+         ext_modules = ext_modules
+         )
