@@ -274,16 +274,10 @@ def _modify_symbol(s):
 
 _reverse_literal_type_map = dict((y,x) for x,y in _literal_type_map.items())
 
-# venturelite uses numpy data types
-import numpy as np
-
 _python_to_venture_type_map = {
     bool: "boolean",
-    np.bool_: "boolean",
     int: "count",
-    np.int_: "count",
     float: "number",
-    np.float_: "number",
     list: "list",
     str: "string"
 }
