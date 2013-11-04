@@ -102,3 +102,27 @@ double UniformContinuousSP::logDensityOutput(VentureValue * value, Node * node) 
   return log(gsl_ran_flat_pdf(x->x,a->x,b->x));
 }
 
+/* Beta */
+VentureValue * BetaSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureDouble * a = dynamic_cast<VentureDouble *>(operands[0]->getValue());
+  VentureDouble * b = dynamic_cast<VentureDouble *>(operands[1]->getValue());
+  assert(a);
+  assert(b);
+  double x = gsl_ran_beta(rng,a->x,b->x);
+  return new VentureDouble(x);
+}
+
+double BetaSP::logDensityOutput(VentureValue * value, Node * node)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureDouble * a = dynamic_cast<VentureDouble *>(operands[0]->getValue());
+  VentureDouble * b = dynamic_cast<VentureDouble *>(operands[1]->getValue());
+  VentureDouble * x = dynamic_cast<VentureDouble *>(value);
+  assert(a);
+  assert(b);
+  assert(x);
+  return log(gsl_ran_beta_pdf(x->x,a->x,b->x));
+}
+

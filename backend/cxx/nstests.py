@@ -107,6 +107,7 @@ def testMem0(N):
   sivm.predict("(f 0.5)")
   sivm.predict("(f 0.5)")
   sivm.infer(N)
+  print "Passed TestMem0"
 
 
 def testMem1(N):
@@ -696,20 +697,50 @@ def testList1():
 
   print "Passed TestList1()"
 
-# This test fails
-def testMem4():
+
+def testUCRP1(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (i) 0))")
+  sivm.assume("pickAStick","""
+(lambda (sticks i)
+  (branch (bernoulli (sticks i))
+      (lambda () i)
+      (lambda () (pickAStick sticks (uint_plus i 1)))))
+""")
+  sivm.assume("makeSticks","""
+(lambda (alpha)
+  ((lambda (sticks)
+     (lambda () (pickAStick sticks 1)))
+   (mem (lambda (x) (beta 1.0 alpha)))))
+""")
+  sivm.assume("dpmem","""
+(lambda (alpha baseDist)
+  ((lambda (augmentedProc DP)
+     (lambda () (augmentedProc (DP))))
+   (mem (lambda (stickIndex) (baseDist)))
+   (makeSticks alpha)))
+""")
+  sivm.assume("f","(dpmem (normal 5.0 0.5) (lambda () (categorical (make_vector .2 .2 .2 .2 .2))))")
 
-  sivm.predict("(f (bernoulli 0.5))")
-  sivm.predict("(f true)")
+  sivm.predict("(f)")
 
-  print "INFER"
-  sivm.infer(1000)
-  print "DESTRUCT"
-  del sivm
-  print "Passed TestMem4"
+  sivm.observe("(normal (f) 0.1)",0.0)
+  sivm.observe("(normal (f) 0.1)",0.0)
 
+  sivm.observe("(normal (f) 0.1)",1.0)
+  sivm.observe("(normal (f) 0.1)",1.0)
+
+  sivm.observe("(normal (f) 0.1)",2.0)
+  sivm.observe("(normal (f) 0.1)",2.0)
+  sivm.observe("(normal (f) 0.1)",2.0)
+  sivm.observe("(normal (f) 0.1)",2.0)
+  sivm.observe("(normal (f) 0.1)",2.0)
+
+  sivm.observe("(normal (f) 0.1)",3.0)
+
+  predictions = loggingInfer(sivm,5,N)
+  ps = normalizeList([3,3,6,2,1])
+  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4]))
+  printTest("TestUCRP1 (not exact)",ps,eps)
 
 def testCCRP1(N):
   sivm = SIVM()
