@@ -7,8 +7,6 @@
 #include "infer/gibbs.h"
 #include "value.h"
 
-#include <boost/python.hpp>
-#include <boost/python/object.hpp>
 
 #include <iostream>
 #include <list>
@@ -27,44 +25,33 @@ PyTrace::~PyTrace()
   delete mcmc;
 }
 
+VentureValue * PyTrace::parseValue(boost::python::dict d)
+{
+  if (d["type"] == "boolean") { return new VentureBool(extract<bool>(d["value"])); }
+  else if (d["type"] == "number") { return new VentureNumber(extract<double>(d["value"])); }
+  else if (d["type"] == "symbol") { return new VentureSymbol(extract<string>(d["value"])); }
+  else if (d["type"] == "atom") { return new VentureAtom(extract<uint32_t>(d["value"])); }
+  else { assert(false); }
+}
+
+
 VentureValue * PyTrace::parseExpression(boost::python::object o)
 {
- boost::python::object pyClassObject = o.attr("__class__").attr("__name__");
- extract<string> p(pyClassObject);
- assert(p.check());
- string pyClass = p();
-
- if (pyClass == "str")
- {
-   extract<string> s(o);
-   return new VentureSymbol(s());
- }
- else if (pyClass == "bool")
- {
-   extract<bool> b(o);
-   return new VentureBool(b());
- }
- else if (pyClass == "int")
- {
-   extract<int> n(o);
-   assert(n() >= 0);
-   return new VentureCount(n());
- }
-
- else if (pyClass ==  "float")
- {
-   extract<double> d(o);
-   return new VentureDouble(d());
- }
-
-
+  extract<boost::python::dict> getDict(o);
+  if (getDict.check()) { return parseValue(getDict()); }
+  
+  extract<boost::python::list> getList(o);
+  assert(getList.check());
+  
+  boost::python::list l = getList();
+  
  VentureList * exp = new VentureNil;
  
- boost::python::ssize_t L = boost::python::len(o);
+ boost::python::ssize_t L = boost::python::len(l);
 
  for(boost::python::ssize_t i=L;i > 0;i--) 
  {
-   exp = new VenturePair(parseExpression(o[i-1]),exp);
+   exp = new VenturePair(parseExpression(l[i-1]),exp);
  }
  return exp;
 }

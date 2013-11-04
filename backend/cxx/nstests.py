@@ -73,7 +73,7 @@ def testCategorical1(N):
   sivm = SIVM()
   sivm.assume("x", "(categorical (make_vector 0.1 0.2 0.3 0.4))")
   sivm.assume("y", "(categorical (make_vector 0.2 0.6 0.2))")
-  sivm.predict("(uint_plus x y)")
+  sivm.predict("(plus x y)")
 
   predictions = loggingInfer(sivm,3,N)
   ps = [0.1 * 0.2, 
@@ -93,9 +93,9 @@ def testMHNormal1(N):
   sivm.assume("b", "(normal a 1.0)")
   sivm.observe("((lambda () (normal b 1.0))))", 14.0)
   sivm.predict("""
-(branch (real_lt a 100.0) 
-        (lambda () (normal (real_plus a b) 1.0))
-        (lambda () (normal (real_times a b) 1.0)))
+(branch (lt a 100.0) 
+        (lambda () (normal (plus a b) 1.0))
+        (lambda () (normal (times a b) 1.0)))
 """)
 
   predictions = loggingInfer(sivm,4,N)
@@ -114,13 +114,13 @@ def testMem0(N):
 
 def testMem1(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (uint_plus 1 (categorical (make_vector 0.4 0.6)))))")
+  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical (make_vector 0.4 0.6)))))")
   sivm.assume("x","(f 1)")
   sivm.assume("y","(f 1)")
   sivm.assume("w","(f 2)")
   sivm.assume("z","(f 2)")
-  sivm.assume("q","(uint_plus 1 (categorical (make_vector 0.1 0.9)))")
-  sivm.predict('(uint_plus x y w z q)');
+  sivm.assume("q","(plus 1 (categorical (make_vector 0.1 0.9)))")
+  sivm.predict('(plus x y w z q)');
 
   predictions = loggingInfer(sivm,7,N)
   ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
@@ -129,14 +129,14 @@ def testMem1(N):
 
 def testMem2(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (uint_plus 1 (categorical (make_vector 0.4 0.6)))))")
-  sivm.assume("g","((lambda () (mem (lambda (y) (f (uint_plus y 1))))))")
+  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical (make_vector 0.4 0.6)))))")
+  sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   sivm.assume("x","(f ((branch (bernoulli 0.5) (lambda () (lambda () 1)) (lambda () (lambda () 1)))))")
   sivm.assume("y","(g ((lambda () 0)))")
   sivm.assume("w","((lambda () (f 2)))")
   sivm.assume("z","(g 1)")
-  sivm.assume("q","(uint_plus 1 (categorical (make_vector 0.1 0.9)))")
-  sivm.predict('(uint_plus x y w z q)');
+  sivm.assume("q","(plus 1 (categorical (make_vector 0.1 0.9)))")
+  sivm.predict('(plus x y w z q)');
 
   predictions = loggingInfer(sivm,8,N)
   ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
@@ -145,14 +145,14 @@ def testMem2(N):
 
 def testMem3(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (uint_plus 1 (categorical (make_vector 0.4 0.6)))))")
-  sivm.assume("g","((lambda () (mem (lambda (y) (f (uint_plus y 1))))))")
+  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical (make_vector 0.4 0.6)))))")
+  sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   sivm.assume("x","(f ((lambda () 1)))")
   sivm.assume("y","(g ((lambda () (branch (bernoulli 1.0) (lambda () 0) (lambda () 100)))))")
   sivm.assume("w","((lambda () (f 2)))")
   sivm.assume("z","(g 1)")
-  sivm.assume("q","(uint_plus 1 (categorical (make_vector 0.1 0.9)))")
-  sivm.predict('(uint_plus x y w z q)');
+  sivm.assume("q","(plus 1 (categorical (make_vector 0.1 0.9)))")
+  sivm.predict('(plus x y w z q)');
 
   predictions = loggingInfer(sivm,8,N)
   ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
@@ -238,7 +238,7 @@ def testBLOGCSI(N):
 def testMHHMM1(N):
   sivm = SIVM()
   sivm.assume("f","""
-(mem (lambda (i) (branch (uint_eq i 0) (lambda () (normal 0.0 1.0)) (lambda () (normal (f (uint_minus i 1)) 1.0)))))
+(mem (lambda (i) (branch (eq i 0) (lambda () (normal 0.0 1.0)) (lambda () (normal (f (minus i 1)) 1.0)))))
 """)
   sivm.assume("g","""
 (mem (lambda (i) (normal (f i) 1.0)))
@@ -453,9 +453,9 @@ def testLazyHMM1(N):
   sivm.assume("f","""
 (mem 
 (lambda (i) 
-  (branch (uint_eq i 0) 
+  (branch (eq i 0) 
      (lambda () (bernoulli 0.5))
-     (lambda () (branch (f (uint_minus i 1))
+     (lambda () (branch (f (minus i 1))
                  (lambda () (bernoulli 0.7))
                  (lambda () (bernoulli 0.3)))))))
 """)
@@ -569,7 +569,7 @@ def testMap1(N):
   sivm.assume("x","(bernoulli 1.0)")
   sivm.assume("m","""(make_map (list (quote x) (quote y))
                                (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
-  sivm.predict("""(normal (real_plus 
+  sivm.predict("""(normal (plus 
                            (map_lookup m (quote x))
                            (map_lookup m (quote y))
                            (map_lookup m (quote y)))
@@ -631,7 +631,7 @@ def testEval3(N):
 def testApply1(N):
   sivm = SIVM()
   sivm.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
-  sivm.predict("(apply real_times (list (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
+  sivm.predict("(apply times (list (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
 
   predictions = loggingInfer(sivm,2,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
@@ -698,7 +698,7 @@ def testList1():
   sivm.assume("x2","(pair 1.0 x1)")
   sivm.assume("x3","(pair 2.0 x2)")
   sivm.assume("x4","(pair 3.0 x3)")
-  sivm.assume("f","(lambda (x) (real_times x x x))")
+  sivm.assume("f","(lambda (x) (times x x x))")
   sivm.assume("y4","(map_list f x4)")
 
   y4 = sivm.predict("(first y4)")
@@ -723,13 +723,13 @@ def loadPYMem(sivm):
 (lambda (sticks k)
   (branch (bernoulli (sticks k))
           (lambda () k)
-          (lambda () (pick_a_stick sticks (real_plus k 1.0)))))
+          (lambda () (pick_a_stick sticks (plus k 1)))))
 """)
   
   sivm.assume("make_sticks","""
 (lambda (alpha d)
-  ((lambda (sticks) (lambda () (pick_a_stick sticks 1.0)))
-   (mem (lambda (k) (beta (real_minus 1.0 d) (real_plus alpha (real_times k d)))))))
+  ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
+   (mem (lambda (k) (beta (minus 1 d) (plus alpha (times k d)))))))
 """)
 
   sivm.assume("u_pymem","""
@@ -798,7 +798,7 @@ def testGeometric1(N):
   sivm.assume("alpha1","(gamma 5.0 2.0)")
   sivm.assume("alpha2","(gamma 5.0 2.0)")
   sivm.assume("p", "(beta alpha1 alpha2)")
-  sivm.assume("geo","(lambda (p) (branch (bernoulli p) (lambda () 1) (lambda () (uint_plus 1 (geo p)))))")
+  sivm.assume("geo","(lambda (p) (branch (bernoulli p) (lambda () 1) (lambda () (plus 1 (geo p)))))")
   pID = sivm.predict("(geo p)")[0]
   
   predictions = loggingInfer(sivm,5,N)

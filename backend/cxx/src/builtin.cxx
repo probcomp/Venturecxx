@@ -1,7 +1,6 @@
 #include "builtin.h"
 
-#include "sps/real.h"
-#include "sps/count.h"
+#include "sps/number.h"
 #include "sps/bool.h"
 #include "sps/continuous.h"
 #include "sps/discrete.h"
@@ -35,21 +34,13 @@ map<string,SP *> initBuiltInSPs()
 {
   return
   {
-    {"real_plus", new RealPlusSP},
-    {"real_minus", new RealMinusSP},
-    {"real_times", new RealTimesSP},
-    {"real_div", new RealDivideSP},
-    {"real_eq", new RealEqualSP},
-    {"real_gt", new RealGreaterThanSP},
-    {"real_lt", new RealLessThanSP},
-
-    {"uint_plus", new CountPlusSP},
-    {"uint_minus", new CountMinusSP},
-    {"uint_times", new CountTimesSP},
-    {"uint_div", new CountDivideSP},
-    {"uint_eq", new CountEqualSP},
-    {"uint_gt", new CountGreaterThanSP},
-    {"uint_lt", new CountLessThanSP},
+    {"plus", new PlusSP},
+    {"minus", new MinusSP},
+    {"times", new TimesSP},
+    {"div", new DivideSP},
+    {"eq", new EqualSP},
+    {"gt", new GreaterThanSP},
+    {"lt", new LessThanSP},
 
     {"pair", new PairSP},
     {"first", new FirstSP},

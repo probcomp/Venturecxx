@@ -11,8 +11,8 @@
 VentureValue * MakeSymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<Node *> & operands = node->operandNodes;
-  VentureDouble * alpha = dynamic_cast<VentureDouble *>(operands[0]->getValue());
-  VentureCount * n = dynamic_cast<VentureCount *>(operands[1]->getValue());
+  VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureAtom * n = dynamic_cast<VentureAtom *>(operands[1]->getValue());
   assert(alpha);
   assert(n);
   return new VentureSP(new SymDirMultSP(alpha->x,n->n));
@@ -45,7 +45,7 @@ VentureValue * SymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
     xs.push_back(x + alpha);
   }
   normalizeVector(xs);
-  return new VentureCount(sampleCategorical(xs,rng));
+  return new VentureAtom(sampleCategorical(xs,rng));
 }
 
 double SymDirMultSP::logDensityOutput(VentureValue * value, Node * node) const
@@ -53,7 +53,7 @@ double SymDirMultSP::logDensityOutput(VentureValue * value, Node * node) const
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
 
-  VentureCount * vint = dynamic_cast<VentureCount*>(value);
+  VentureAtom * vint = dynamic_cast<VentureAtom*>(value);
   assert(vint);
   uint32_t observedIndex = vint->n;
 
@@ -71,7 +71,7 @@ void SymDirMultSP::incorporateOutput(VentureValue * value, Node * node) const
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
 
-  VentureCount * vint = dynamic_cast<VentureCount*>(value);
+  VentureAtom * vint = dynamic_cast<VentureAtom*>(value);
   assert(vint);
   uint32_t observedIndex = vint->n;
   spaux->counts[observedIndex]++;
@@ -82,7 +82,7 @@ void SymDirMultSP::removeOutput(VentureValue * value, Node * node) const
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
 
-  VentureCount * vint = dynamic_cast<VentureCount*>(value);
+  VentureAtom * vint = dynamic_cast<VentureAtom*>(value);
   assert(vint);
   uint32_t observedIndex = vint->n;
   spaux->counts[observedIndex]--;

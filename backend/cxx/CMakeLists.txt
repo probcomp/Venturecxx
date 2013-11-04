@@ -68,8 +68,7 @@ ADD_LIBRARY(trace SHARED
   src/sps/stathelpers.cxx
   src/sps/csp.cxx
   src/sps/mem.cxx
-  src/sps/real.cxx
-  src/sps/count.cxx
+  src/sps/number.cxx
   src/sps/bool.cxx
   src/sps/continuous.cxx
   src/sps/discrete.cxx
