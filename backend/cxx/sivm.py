@@ -1,4 +1,5 @@
 from libtrace import Trace
+import gc
 
 # Our SIVM is not a fully conforming SIVM, for reasons I hope
 # the person reading this will understand better than I do.
