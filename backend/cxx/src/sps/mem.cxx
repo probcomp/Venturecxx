@@ -35,7 +35,7 @@ VentureValue * MSP::simulateRequest(Node * node, gsl_rng * rng) const
 
   VentureList * exp = new VentureNil;
 
-  node->spaux()->familyValues.insert({id,{}});
+  node->spaux()->familyValues.insert({id, vector<VentureValue*> {}});
 
   /* TODO URGENT the creator is priviledged! Massive error. */
   for (Node * operand : reverse(operands))
