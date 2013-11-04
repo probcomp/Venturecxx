@@ -1,12 +1,12 @@
 import unittest
 from venture.ripl import Ripl
 from venture.exception import VentureException
-from venture.sivm import VentureSivm, CoreSivmCppEngine
+from venture.sivm import VentureSivm, CoreSivmCxx
 from venture.parser import ChurchPrimeParser, VentureScriptParser
 
 class TestRipl(unittest.TestCase):
     def setUp(self):
-        self.core_sivm = CoreSivmCppEngine()
+        self.core_sivm = CoreSivmCxx()
         self.core_sivm.execute_instruction({"instruction":"clear"})
         self.venture_sivm = VentureSivm(self.core_sivm)
         parser1 = ChurchPrimeParser()
