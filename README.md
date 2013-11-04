@@ -1,3 +1,15 @@
+Venture
+=======
+
+The primary implementation of the Venture system lives here.
+
+Interesting parts:
+- The stack (including RIPL, SIVM, server, and Python client) in `python/`
+- The C++11 engine (plus a thin Python driver) in `backend/cxx/`
+- The Javascript client and web demos are actually in the
+  [VentureJSRIPL](https://github.com/mit-probabilistic-computing-project/VentureJSRIPL)
+  repository.
+
 Requirements
 ============
 
@@ -58,3 +70,10 @@ are installed in the global python environment.
 
     deactivate && rm -rf env.d build && virtualenv --system-site-packages env.d && \
       . env.d/bin/activate && CC="ccache gcc" python setup.py install
+
+Just the Engine
+===============
+
+    cd backend/cxx
+    cmake . && make
+    ipython -c 'import nstests; nstests.runTests(50)'
