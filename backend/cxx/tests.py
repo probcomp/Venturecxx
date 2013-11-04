@@ -1,6 +1,9 @@
-from sivm import SIVM
+from venture.shortcuts import *
 import math
 import pdb
+
+def SIVM():
+    return make_church_prime_ripl()
 
 def normalizeList(seq): 
   denom = sum(seq)
