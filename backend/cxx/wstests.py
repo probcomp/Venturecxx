@@ -25,7 +25,7 @@ def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
     sivm.infer(10)
-    predictions.append(sivm.trace.extractValue(address))
+    predictions.append(sivm.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
 
