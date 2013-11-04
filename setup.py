@@ -7,12 +7,62 @@
 # Build and install to the system: sudo python setup.py build install
 
 from distutils.core import setup, Extension
-import os
+from os import path
 import itertools
 
-source_dirs = ["backend/cxx/src/", "backend/cxx/src/sps/"]
-source_files = list(itertools.chain(*[[d + f for f in os.listdir(d) if f.endswith(".cxx")] for d in source_dirs]))
-#print(source_files)
+#src_dir = "backend/cxx/src"
+#src_files = []
+
+#def find_cxx(agg, dirname, fnames):
+#    for f in fnames:
+#        if f.endswith(".cxx"):
+#            agg.append(path.join(dirname, f))
+#
+#path.walk(src_dir, find_cxx, src_files)
+#print(src_files)
+
+src_files = [
+    "src/value.cxx",
+    "src/node.cxx",
+    "src/env.cxx",
+    "src/builtin.cxx",
+    "src/trace.cxx",
+    "src/rcs.cxx",
+    "src/regen.cxx",
+    "src/detach.cxx",
+    "src/flush.cxx",
+    "src/lkernel.cxx",
+    "src/infer/gkernel.cxx",
+    "src/infer/mh.cxx",
+    "src/infer/gibbs.cxx",
+    "src/utils.cxx",
+    "src/check.cxx",
+    "src/sp.cxx",
+    "src/scaffold.cxx",
+    "src/sps/stathelpers.cxx",
+    "src/sps/csp.cxx",
+    "src/sps/mem.cxx",
+    "src/sps/real.cxx",
+    "src/sps/count.cxx",
+    "src/sps/bool.cxx",
+    "src/sps/continuous.cxx",
+    "src/sps/discrete.cxx",
+    "src/sps/cond.cxx",
+    "src/sps/vector.cxx",
+    "src/sps/list.cxx",
+    "src/sps/map.cxx",
+    "src/sps/envs.cxx",
+    "src/sps/eval.cxx",
+    "src/sps/pycrp.cxx",
+    "src/sps/makesymdirmult.cxx",
+    "src/sps/makeucsymdirmult.cxx",
+    "src/sps/makelazyhmm.cxx",
+    "src/pytrace.cxx",
+]
+src_files = ["backend/cxx/" + f for f in src_files]
+
+inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/']
+inc_dirs = ["backend/cxx/" + d for d in inc_dirs]
 
 ext_modules = []
 packages=["venture","venture.sivm","venture.ripl",
@@ -23,9 +73,9 @@ cxx = Extension("venture.cxx.libtrace",
     define_macros = [('MAJOR_VERSION', '1'),
                      ('MINOR_VERSION', '0')],
     libraries = ['gsl', 'gslcblas', 'boost_python'],
-    extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O2", "-fPIC"],
-    include_dirs = ["backend/cxx/inc/", "backend/cxx/inc/sps/"],
-    sources = source_files)
+    extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O0", "-fPIC"],
+    include_dirs = inc_dirs,
+    sources = src_files)
 ext_modules.append(cxx)
 
 setup (
