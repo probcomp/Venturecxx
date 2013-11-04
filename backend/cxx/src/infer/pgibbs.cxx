@@ -1,66 +1,93 @@
-#include "pgibbs.h"
+#include "infer/mh.h"
+#include "infer/pgibbs.h"
+#include "flush.h"
+#include "utils.h"
+#include "trace.h"
+#include "scaffold.h"
+#include "node.h"
+#include "lkernel.h"
+#include "value.h"
+#include "sp.h"
+#include "omegadb.h"
+#include "check.h"
+
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
+#include <vector>
+
+#include <cmath>
+
+
+////////////////////////////////
+///// PGibbsSelectGKernel //////
+////////////////////////////////
+
 
 /////////////////////////
 /////// Helpers /////////
 /////////////////////////
 
-vector<uint32_t> constructAncestorPath(const vector<vector<uint32_t> > & ancestorIndices,
-				       uint32_t t,
-				       uint32_t p);
+vector<uint32_t> PGibbsSelectGKernel::constructAncestorPath(uint32_t t, uint32_t p)
+{
+  assert(false);
+  return {};
+}
 
-/* Weak flushes the redundant OmegaDBs as it detaches. */
-void discardAncestorPath(Trace * trace,
-			 Scaffold *scaffold, 
-			 uint32_t t);
+void PGibbsSelectGKernel::restoreAncestorPath(vector<uint32_t> path)
+{
+  assert(false);
+}
 
-void restoreAncestorPath(Trace * trace,
-			 Scaffold * scaffold,
-			 const vector<vector<OmegaDB> > & omegaDBs,
-			 uint32_t t,
-			 vector<uint32_t> path);
+void PGibbsSelectGKernel::discardAncestorPath(uint32_t t)
+{
+  assert(false);
+}
 
 
-/////////////////////////
-// PGibbsSelectGKernel //
-/////////////////////////
+///////////////////////////////////
+/////// Setup . Teardown //////////
+///////////////////////////////////
 
 void PGibbsSelectGKernel::loadParameters(MixMHParam * param)
 {
   PGibbsParam * pparam = dynamic_cast<PGibbsParam*>(param);
   assert(pparam);
   scaffold = pparam->scaffold;
-  ancestorIndices = move(pparam->ancestorIndices);
-  omegaDBs =  move(pparam->omegaDBs);
-  weights = move(pparam->weights);
+  ancestorIndices = pparam->ancestorIndices;
+  omegaDBs = pparam->omegaDBs;
+  weights = pparam->weights;
   P = pparam->P;
   T = pparam->T;
-
   delete pparam;
 }
 
 void PGibbsSelectGKernel::destroyParameters()
 {
   delete scaffold;
-  ancestorIndices.clear();
   omegaDBs.clear();
+  ancestorIndices.clear();
   weights.clear();
-  P = -1;
-  T = -1;
+  P = UINT32_MAX;
+  T = UINT32_MAX;
 }
+
+//////////////////////////////
+///////// Propose ////////////
+//////////////////////////////
 
 double PGibbsSelectGKernel::propose()
 {
-  assert(chosenIndex == -1);
+  assert(chosenIndex == UINT32_MAX);
   double rhoExpWeight = exp(weights[P]);
 
-  double totalXiExpWeights = 0;
+  double totalXiExpWeight = 0;
   vector<double> xiExpWeights;
-  for (int p = 0; i < P; ++i) 
+  for (size_t i = 0; i < weights.size() - 1; ++i)
   { 
-    xiExpWeights.push_back(exp(weights[p]));
-    totalXiExpWeights += xiExpWeights.back(); 
+    xiExpWeights.push_back(exp(weights[i]));
+    totalXiExpWeight += xiExpWeights.back();
   }
-
   normalizeVector(xiExpWeights);
 
   double u = gsl_ran_flat(trace->rng,0.0,1.0);
@@ -73,12 +100,15 @@ double PGibbsSelectGKernel::propose()
   
   double weightMinusRho = log(totalXiExpWeight);
   double weightMinusXi = log(rhoExpWeight + totalXiExpWeight - exp(weights[chosenIndex]));
-
-  vector<uint32_t> path = constructAncestorPath(ancestorIndices,T,chosenIndex);
-  restoreAncestorPath(trace,scaffold,omegaDBs,T,path);
-
+  assertTorus(trace,scaffold);
+  restoreAncestorPath(chosenIndex);
   return weightMinusRho - weightMinusXi;
 }
+
+
+/////////////////////////
+//// Accept . Reject ////
+/////////////////////////
 
 void PGibbsSelectGKernel::accept()
 {
@@ -117,15 +147,12 @@ void PGibbsSelectGKernel::reject()
 }
 
 
-/////////////////
-
 /////////////////////////
 ///// PGibbsGKernel /////
 /////////////////////////
 
 void PGibbsGKernel::destroyParameters()
 {
-  delete scaffold;
   scaffold = nullptr;
   pNode = nullptr;
 }
@@ -205,43 +232,11 @@ double PGibbsGKernel::logDensityOfIndex(MixMHIndex * index)
   return 0;
 }
 
-
 MixMHParam * PGibbsGKernel::processIndex(MixMHIndex * index)
 {
-  ParticleIndex * pindex = dynamic_cast<ParticleIndex*>(index);
-  assert(pindex);
-  return new ParticleParam(pindex);
+  PGibbsParam * pparam = dynamic_cast<PGibbsParam*>(index);
+  assert(pparam);
+  return pparam;
 }
 
 
-
-//////////////////////////////
-/// Helper Implementations ///
-//////////////////////////////
-
-/////////////////////////
-/////// Helpers /////////
-/////////////////////////
-
-vector<uint32_t> constructAncestorPath(const vector<vector<uint32_t> > & ancestorIndices,
-				       uint32_t t,
-				       uint32_t p)
-{
-  assert(false);
-  return {};
-}
-void discardAncestorPath(Trace * trace,
-			Scaffold *scaffold, 
-			uint32_t t)
-{
-  assert(false);
-}
-
-void restoreAncestorPath(Trace * trace,
-			 Scaffold * scaffold,
-			 const vector<vector<OmegaDB> > & omegaDBs,
-			 uint32_t t,
-			 vector<uint32_t> path)
-{
-  assert(false);
-}
