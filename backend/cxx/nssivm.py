@@ -1,3 +1,6 @@
+import sys
+sys.path.append('build/')
+
 from libtrace import Trace
 from parse import parse
 
