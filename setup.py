@@ -73,7 +73,7 @@ cxx = Extension("venture.cxx.libtrace",
     define_macros = [('MAJOR_VERSION', '1'),
                      ('MINOR_VERSION', '0')],
     libraries = ['gsl', 'gslcblas', 'boost_python'],
-    extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O0", "-fPIC"],
+    extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O1", "-fPIC"],
     include_dirs = inc_dirs,
     sources = src_files)
 ext_modules.append(cxx)
