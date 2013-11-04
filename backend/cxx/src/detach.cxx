@@ -243,7 +243,7 @@ double Trace::detachSPFamily(VentureSP * vsp,
     spaux->familyValues.erase(id);
   }
   
-  double weight = detachFamily(root,scaffold,omegaDB);
+  double weight = detachFamily(root,scaffold,omegaDB,vsp->sp->esrsOwnValues);
   return weight;
 }
 
@@ -251,12 +251,13 @@ double Trace::detachSPFamily(VentureSP * vsp,
 double Trace::detachVentureFamily(Node * root,OmegaDB * omegaDB)
 {
   assert(root);
-  return detachFamily(root,nullptr,omegaDB);
+  return detachFamily(root,nullptr,omegaDB,false);
 }
 
 double Trace::detachFamily(Node * node,
 			   Scaffold * scaffold,
-			   OmegaDB * omegaDB)
+			   OmegaDB * omegaDB,
+			   bool familyOwnsValues)
 {
   assert(node);
   DPRINT("uneval: ", node->address.toString());
@@ -266,8 +267,7 @@ double Trace::detachFamily(Node * node,
   { 
     assert(node->getValue());
 
-    if (!dynamic_cast<VentureValue*>(node->getValue())) { assert(false); }
-
+    // will go away once we desugar to quote
     if (dynamic_cast<VentureSP *>(node->getValue())) 
     { 
       VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
@@ -277,6 +277,10 @@ double Trace::detachFamily(Node * node,
 	teardownMadeSP(node);
 	omegaDB->flushQueue.emplace(nullptr,node->getValue(),FlushType::CONSTANT);
       }
+    }
+    else if (familyOwnsValues)
+    {
+      omegaDB->flushQueue.emplace(nullptr,node->getValue(),FlushType::CONSTANT);
     }
   }
   else if (node->nodeType == NodeType::LOOKUP)
@@ -289,8 +293,8 @@ double Trace::detachFamily(Node * node,
   {
     weight += unapply(node,scaffold,omegaDB);
     for (Node * operandNode : reverse(node->operandNodes))
-    { weight += detachFamily(operandNode,scaffold,omegaDB); }
-    weight += detachFamily(node->operatorNode,scaffold,omegaDB);
+    { weight += detachFamily(operandNode,scaffold,omegaDB,familyOwnsValues); }
+    weight += detachFamily(node->operatorNode,scaffold,omegaDB,familyOwnsValues);
   }
   return weight;
 }

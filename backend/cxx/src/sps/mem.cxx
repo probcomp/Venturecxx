@@ -30,19 +30,20 @@ VentureValue * MSP::simulateRequest(Node * node, gsl_rng * rng) const
   vector<Node *> & operands = node->operandNodes;
   uint32_t id = hashValues(operands);
 
+  if (node->spaux()->families.count(id)) 
+  { 
+    return new VentureRequest({ESR(id,nullptr,nullptr)});
+  }
+
   VentureEnvironment * env = new VentureEnvironment;
   env->addBinding(new VentureSymbol("memoizedSP"), sharedOperatorNode);
 
   VentureList * exp = new VentureNil;
 
-  node->spaux()->familyValues.insert({id,{}});
-
   /* TODO URGENT the creator is priviledged! Massive error. */
   for (Node * operand : reverse(operands))
   {
     VentureValue * val = operand->getValue()->clone();
-    /* Give ownership over the cloned value to the family */
-    node->spaux()->familyValues[id].push_back(val);
     exp = new VenturePair(val,exp);
   }
   exp = new VenturePair(new VentureSymbol("memoizedSP"),exp);
@@ -55,12 +56,17 @@ void MSP::flushRequest(VentureValue * value) const
   assert(requests);
   assert(requests->esrs.size() == 1);
   ESR esr = requests->esrs[0];
-  VenturePair * exp = dynamic_cast<VenturePair*>(esr.exp);
-  delete exp->first;
-  listShallowDestroy(exp);
-
-  esr.env->destroySymbols();
-  delete esr.env;
+  if (esr.exp)
+  {
+    VenturePair * exp = dynamic_cast<VenturePair*>(esr.exp);
+    delete exp->first;
+    listShallowDestroy(exp);
+  }
+  if (esr.env)
+  {
+    esr.env->destroySymbols();
+    delete esr.env;
+  }
 
   delete value;
 }
