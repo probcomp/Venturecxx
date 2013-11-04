@@ -30,6 +30,7 @@ def runTests(N):
   testBernoulli1(N)
   testCategorical1(N)
   testMHNormal1(N)
+  testMem0(N)
   testMem1(N)
   testMem2(N)
   testMem3(N)
@@ -49,6 +50,7 @@ def runTests(N):
   testExtendEnv1(N)
   testApply1(N)
   testList1()
+  testCCRP1(N)
 # testGeometric1(N)
 
 def testBernoulli1(N):

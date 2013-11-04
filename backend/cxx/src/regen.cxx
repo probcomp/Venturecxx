@@ -48,7 +48,6 @@ double Trace::regenParents(Node * node,
   assert(scaffold);
 
   assert(node->nodeType != NodeType::VALUE);
-  assert(node->nodeType != NodeType::FAMILY_ENV);
 
   if (node->nodeType == NodeType::LOOKUP)
   { return regenInternal(node->lookedUpNode,scaffold,shouldRestore,omegaDB); }

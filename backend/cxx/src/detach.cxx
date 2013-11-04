@@ -3,6 +3,8 @@
 #include "trace.h"
 #include "omegadb.h"
 #include "sp.h"
+#include "spaux.h"
+#include "flush.h"
 #include "scaffold.h"
 #include "lkernel.h"
 #include "sps/csp.h"
@@ -50,7 +52,6 @@ double Trace::detachParents(Node * node,
   assert(scaffold);
   double weight = 0;
   assert(node->nodeType != NodeType::VALUE);
-  assert(node->nodeType != NodeType::FAMILY_ENV);
 
   if (node->nodeType == NodeType::LOOKUP)
   { return detachInternal(node->lookedUpNode,scaffold,omegaDB); }
@@ -181,7 +182,7 @@ double Trace::unapplyPSP(Node * node,
 
   /* If it is not in the DRG, then we do nothing. Elsewhere we store the value
      of the root in the contingentFamilyDB */
-  if (node->ownsValue) { omegaDB->flushQueue.emplace(node->sp(),node->getValue(),node->nodeType); }
+  if (node->ownsValue) { omegaDB->flushQueue.emplace(node->sp(),node->getValue(),nodeTypeToFlushType(node->nodeType)); }
 
   return weight;
 }
@@ -228,9 +229,20 @@ double Trace::detachSPFamily(VentureSP * vsp,
   assert(vsp);
   assert(vsp->makerNode);
   assert(vsp->makerNode->madeSPAux);
-  Node * root = vsp->sp->detachFamily(id,vsp->makerNode->madeSPAux);
+  SPAux * spaux = vsp->makerNode->madeSPAux;
+  Node * root = spaux->families[id];
   assert(root);
+  spaux->families.erase(id);
   omegaDB->spFamilyDBs[{vsp->makerNode,id}] = root;
+  if (spaux->familyValues.count(id))
+  {
+    for (VentureValue * val : spaux->familyValues[id])
+    {
+      omegaDB->flushQueue.emplace(vsp->sp,val,FlushType::FAMILY_VALUE); 
+    }
+    spaux->familyValues.erase(id);
+  }
+  
   double weight = detachFamily(root,scaffold,omegaDB);
   return weight;
 }
@@ -263,7 +275,7 @@ double Trace::detachFamily(Node * node,
       {
 	assert(dynamic_cast<CSP*>(vsp->sp));
 	teardownMadeSP(node);
-	omegaDB->flushQueue.emplace(nullptr,node->getValue(),NodeType::VALUE);
+	omegaDB->flushQueue.emplace(nullptr,node->getValue(),FlushType::CONSTANT);
       }
     }
   }

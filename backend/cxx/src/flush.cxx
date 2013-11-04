@@ -5,6 +5,18 @@
 #include "omegadb.h"
 #include "debug.h"
 
+#include <iostream>
+
+FlushType nodeTypeToFlushType(NodeType nodeType)
+{
+  switch (nodeType)
+  {
+  case NodeType::REQUEST: { return FlushType::REQUEST; }
+  case NodeType::OUTPUT: { return FlushType::OUTPUT; }
+  default: { assert(false); }
+  }
+}
+
 void flushDB(OmegaDB * omegaDB, bool isActive)
 {
   for (pair<Node *,LatentDB *> p : omegaDB->latentDBs)
@@ -19,7 +31,7 @@ void flushDB(OmegaDB * omegaDB, bool isActive)
     while (!omegaDB->flushQueue.empty())
     {
       FlushEntry f = omegaDB->flushQueue.front();
-      if (f.owner) { f.owner->flushValue(f.value,f.nodeType); }
+      if (f.owner) { f.owner->flushValue(f.value,f.flushType); }
       else { delete f.value; }
       omegaDB->flushQueue.pop();
     }

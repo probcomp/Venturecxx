@@ -1,6 +1,7 @@
 #include "value.h"
 #include "node.h"
 #include "sp.h"
+#include "spaux.h"
 #include "env.h"
 #include "sps/mem.h"
 #include "utils.h"
@@ -34,10 +35,15 @@ VentureValue * MSP::simulateRequest(Node * node, gsl_rng * rng) const
 
   VentureList * exp = new VentureNil;
 
+  node->spaux()->familyValues.insert({id,{}});
+
   /* TODO URGENT the creator is priviledged! Massive error. */
   for (Node * operand : reverse(operands))
   {
-    exp = new VenturePair(operand->getValue(),exp);
+    VentureValue * val = operand->getValue()->clone();
+    /* Give ownership over the cloned value to the family */
+    node->spaux()->familyValues[id].push_back(val);
+    exp = new VenturePair(val,exp);
   }
   exp = new VenturePair(new VentureSymbol("memoizedSP"),exp);
   return new VentureRequest({ESR(id,exp,env)});

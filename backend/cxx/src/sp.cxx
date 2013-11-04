@@ -1,9 +1,12 @@
 #include "sp.h"
+#include "flush.h"
 #include "node.h"
 #include "lkernel.h"
 #include "spaux.h"
 #include "value.h"
 #include "utils.h"
+
+#include <iostream>
 
 /* All of these methods simply check the node type, and dispatch
    to REQUEST or OUTPUT as appropriate. */
@@ -98,11 +101,15 @@ bool SP::canEnumerate(NodeType nodeType) const
   }
 }
 
-void SP::flushValue(VentureValue * value, NodeType nodeType) const
+void SP::flushValue(VentureValue * value, FlushType flushType) const
 {
-  /* Just to avoid passing the node type. May be better to pass it though.*/
-  if (nodeType == NodeType::REQUEST) { flushRequest(value); }
-  else { assert(nodeType == NodeType::OUTPUT); flushOutput(value); }
+  switch (flushType)
+  {
+  case FlushType::REQUEST: { flushRequest(value); return; }
+  case FlushType::OUTPUT: { flushOutput(value); return; }
+  case FlushType::FAMILY_VALUE: { flushFamilyValue(value); return; }
+  default: { assert(false); }
+  }
 }
 
 LKernel * SP::getAAAKernel() const { return new DefaultAAAKernel(this); }
@@ -145,6 +152,10 @@ void SP::destroySPAux(SPAux * spaux) const
 
 void SP::flushRequest(VentureValue * value) const { delete value; }
 void SP::flushOutput(VentureValue * value) const { delete value; };
+void SP::flushFamilyValue(VentureValue * value) const 
+{
+  delete value; 
+}
 
 vector<VentureValue*> SP::enumerateRequest(Node * node) const
 {

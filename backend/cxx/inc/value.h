@@ -21,7 +21,10 @@ struct SPAux;
 /* Should be abstract. */
 struct VentureValue { 
   virtual boost::python::object toPython() const { return boost::python::object("toPython() not implemented."); }
+
   virtual size_t toHash() const { assert(false); return 0; }
+  virtual VentureValue * clone() const { assert(false); return nullptr; }
+
   virtual ~VentureValue() {}; 
 
   /* TODO this needs to be implemented for other types besides symbols. */
@@ -49,6 +52,7 @@ struct VentureSymbol : VentureValue
   VentureSymbol(const string & sym): sym(sym) {}
   string sym;
   size_t toHash() const override;
+  VentureValue * clone() const override { return new VentureSymbol(sym); }
   bool equals(const VentureValue * & other) const override;
 };
 
@@ -73,6 +77,7 @@ struct VentureBool : VentureValue
 { 
   VentureBool(bool pred): pred(pred) {}; 
   boost::python::object toPython() const override { return boost::python::object(pred); }
+  VentureValue * clone() const override { return new VentureBool(pred); }
   size_t toHash() const override { return hash<bool>()(pred); }
   bool pred;
 };
@@ -82,6 +87,7 @@ struct VentureDouble : VentureValue
   VentureDouble(double x): x(x) {}
   boost::python::object toPython() const override { return boost::python::object(x); }
   size_t toHash() const override { return hash<double>()(x); }
+  VentureValue * clone() const override { return new VentureDouble(x); }
   double x;
 };
 
@@ -90,6 +96,7 @@ struct VentureCount : VentureValue
   VentureCount(uint32_t n): n(n) {}
   boost::python::object toPython() const override { return boost::python::object(n); }
   size_t toHash() const override { return n; }
+  VentureValue * clone() const override { return new VentureCount(n); }
   uint32_t n;
 };
 

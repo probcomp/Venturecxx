@@ -19,6 +19,7 @@ struct HSR;
 
 
 enum class NodeType;
+enum class FlushType;
 
 /* Although this is not technically an abstract class, 
    one cannot have both simulate defaults at the same time,
@@ -46,9 +47,10 @@ struct SP
   virtual void removeOutput(VentureValue * value, Node * node) const {}
 
 /* Flush: may be called on both requests and outputs. */
-  void flushValue(VentureValue * value,NodeType nodeType) const;
+  void flushValue(VentureValue * value,FlushType flushType) const;
   virtual void flushRequest(VentureValue * value) const;
   virtual void flushOutput(VentureValue * value) const;
+  virtual void flushFamilyValue(VentureValue * value) const;
 
 /* Can Absorb */
   bool canAbsorb(NodeType nodeType) const;

@@ -16,7 +16,7 @@ struct SP;
 struct Trace;
 
 
-enum class NodeType { FAMILY_ENV, SP_AUX, VALUE, LOOKUP, REQUEST, OUTPUT };
+enum class NodeType { VALUE, LOOKUP, REQUEST, OUTPUT };
 
 struct Node
 {

@@ -8,21 +8,9 @@
 
 using namespace std;
 
-struct SP;
 struct VentureValue;
-enum class NodeType;
 struct Node;
-struct LatentDB;
-
-struct FlushEntry
-{
-  FlushEntry(SP * owner, VentureValue * value, NodeType nodeType):
-    owner(owner), value(value), nodeType(nodeType) { }
-  SP * owner;
-  VentureValue * value;
-  NodeType nodeType;
-};
-
+struct FlushEntry;
 
 struct LatentDB 
 {
