@@ -18,3 +18,14 @@ double DefaultAAAKernel::weight(VentureValue * newVal, VentureValue * oldVal, No
   return weight;
 }
 
+VentureValue * DeterministicLKernel::simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB,gsl_rng * rng)
+{
+  return value;
+}
+
+double DeterministicLKernel::weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB)
+{
+  assert(newVal == value);
+  return sp->logDensity(value,appNode);
+}
+

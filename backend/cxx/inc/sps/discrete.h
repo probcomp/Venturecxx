@@ -9,10 +9,13 @@ struct BernoulliSP : SP
     { 
       isRandomOutput = true; 
       canAbsorbOutput = true;
+      canEnumerateOutput = true;
     }
 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
   double logDensityOutput(VentureValue * value, Node * node) const override; 
+  vector<VentureValue*> enumerateOutput(Node * node) const override;
+
 
 };
 
@@ -22,10 +25,12 @@ struct CategoricalSP : SP
     { 
       isRandomOutput = true; 
       canAbsorbOutput = true;
+      canEnumerateOutput = true;
     }
 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
   double logDensityOutput(VentureValue * value, Node * node) const override; 
+  vector<VentureValue*> enumerateOutput(Node * node) const override;
 };
 
 

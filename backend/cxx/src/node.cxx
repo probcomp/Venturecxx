@@ -109,12 +109,6 @@ VentureValue * Node::getValue() const
   }
 }
 
-Environment * Node::getEnvironment()
-{
-  VentureEnvironment * venv = dynamic_cast<VentureEnvironment *>(getValue());
-  assert(venv);
-  return &venv->env;
-}
 
 VentureSP * Node::vsp()
 {

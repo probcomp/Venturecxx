@@ -32,7 +32,7 @@ VentureValue * MakeUCSymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) co
   gsl_ran_dirichlet(rng,n->n,alphaVector,theta);
 
   delete[] alphaVector;
-  return new VentureSP(node, new UCSymDirMultSP(theta,n->n));
+  return new VentureSP(new UCSymDirMultSP(theta,n->n));
 }
 
 double MakeUCSymDirMultSP::logDensityOutput(VentureValue * value, Node * node) const
@@ -80,7 +80,7 @@ VentureValue * MakeUCSymDirMultAAAKernel::simulate(VentureValue * oldVal, Node *
   gsl_ran_dirichlet(rng,n->n,conjAlphaVector,theta);
 
   delete[] conjAlphaVector;
-  return new VentureSP(appNode,new UCSymDirMultSP(theta,n->n));
+  return new VentureSP(new UCSymDirMultSP(theta,n->n));
 }
 
 double MakeUCSymDirMultAAAKernel::weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB)

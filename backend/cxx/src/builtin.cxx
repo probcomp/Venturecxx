@@ -8,12 +8,17 @@
 #include "sps/csp.h"
 #include "sps/mem.h"
 #include "sps/cond.h"
+#include "sps/eval.h"
+#include "sps/envs.h"
+#include "sps/pycrp.h"
 
 #include "sps/makesymdirmult.h"
 #include "sps/makeucsymdirmult.h"
 #include "sps/makelazyhmm.h"
 
 #include "sps/vector.h"
+#include "sps/list.h"
+#include "sps/map.h"
 
 /* GC All new calls in both of these functions will be freed
    by Trace's destructor. */
@@ -38,15 +43,27 @@ map<string,SP *> initBuiltInSPs()
     {"real_gt", new RealGreaterThanSP},
     {"real_lt", new RealLessThanSP},
 
-    {"int_plus", new CountPlusSP},
-    {"int_times", new CountTimesSP},
-    {"int_div", new CountDivideSP},
-    {"int_eq", new CountEqualSP},
-    {"int_gt", new CountGreaterThanSP},
-    {"int_lt", new CountLessThanSP},
+    {"uint_plus", new CountPlusSP},
+    {"uint_minus", new CountMinusSP},
+    {"uint_times", new CountTimesSP},
+    {"uint_div", new CountDivideSP},
+    {"uint_eq", new CountEqualSP},
+    {"uint_gt", new CountGreaterThanSP},
+    {"uint_lt", new CountLessThanSP},
+
+    {"pair", new PairSP},
+    {"first", new FirstSP},
+    {"rest", new RestSP},
+    {"list", new ListSP},
+    {"pair?", new IsPairSP},
+    {"list_ref", new ListRefSP},
+    {"map_list", new MapListSP},
 
     {"make_vector", new MakeVectorSP},
     {"vector_lookup", new VectorLookupSP},
+
+    {"make_map", new MakeMapSP},
+    {"map_lookup", new MapLookupSP},
     
     {"and", new BoolAndSP},
     {"or", new BoolOrSP},
@@ -58,10 +75,18 @@ map<string,SP *> initBuiltInSPs()
 
     {"normal", new NormalSP},
     {"gamma", new GammaSP},
+    {"uniform_continuous", new UniformContinuousSP},
+
+    {"make_crp", new MakePitmanYorCRPSP},
 
     {"branch", new BranchSP},
 
     {"mem", new MSPMakerSP},
+
+    {"get_current_environment", new GetCurrentEnvSP},
+    {"get_empty_environment", new GetEmptyEnvSP},
+    {"extend_environment", new ExtendEnvSP},
+    {"eval", new EvalSP},
 
     {"make_sym_dir_mult", new MakeSymDirMultSP},
     {"make_uc_sym_dir_mult", new MakeUCSymDirMultSP},

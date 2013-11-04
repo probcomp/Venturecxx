@@ -3,6 +3,7 @@
 
 #include "trace.h"
 struct GKernel;
+struct VentureValue;
 
 /* Is a friend of Trace. Probably better to extend trace instead. */
 struct PyTrace : Trace
@@ -10,7 +11,7 @@ struct PyTrace : Trace
   PyTrace();
   ~PyTrace();
 
-  Expression parseExpression(boost::python::object o);
+  VentureValue * parseExpression(boost::python::object o);
   void evalExpression(size_t did, boost::python::object object);
   void bindInGlobalEnv(string sym, size_t did);
   boost::python::object extractPythonValue(size_t did);

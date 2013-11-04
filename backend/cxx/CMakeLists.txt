@@ -1,8 +1,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT (Venture)
 
-include_directories("inc" "inc/sps" "inc/Eigen")
-add_subdirectory("src" "src/sps")
+include_directories("inc")
+add_subdirectory("src")
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules) 
 FIND_PACKAGE(GSL REQUIRED)
@@ -29,10 +29,10 @@ message(STATUS ${LIBS})
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
   message("Found g++ version " ${CMAKE_CXX_COMPILER_VERSION})
-  IF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
-    MESSAGE(FATAL_ERROR "g++ version 4.8 is required!")
-  ENDIF()
-  ADD_DEFINITIONS("-std=c++11" "-Wall" "-g" "-O2" "-fPIC")
+#  IF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
+#    MESSAGE(FATAL_ERROR "g++ version 4.8 is required!")
+#  ENDIF()
+  ADD_DEFINITIONS("-std=c++11" "-Wall" "-g" "-O0" "-fPIC")
 ELSE()
   MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")
 ENDIF()
@@ -41,7 +41,6 @@ ADD_LIBRARY(trace SHARED
   src/value.cxx
   src/node.cxx   
 
-  src/exp.cxx
   src/env.cxx
 
   src/builtin.cxx
@@ -55,8 +54,9 @@ ADD_LIBRARY(trace SHARED
 
   src/lkernel.cxx
 
-  src/gkernel.cxx
-  src/infer.cxx
+  src/infer/gkernel.cxx
+  src/infer/mh.cxx
+  src/infer/gibbs.cxx
 
   src/utils.cxx
   src/check.cxx
@@ -75,6 +75,11 @@ ADD_LIBRARY(trace SHARED
   src/sps/discrete.cxx
   src/sps/cond.cxx
   src/sps/vector.cxx
+  src/sps/list.cxx
+  src/sps/map.cxx
+  src/sps/envs.cxx
+  src/sps/eval.cxx
+  src/sps/pycrp.cxx
 
   src/sps/makesymdirmult.cxx
   src/sps/makeucsymdirmult.cxx

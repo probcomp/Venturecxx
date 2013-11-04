@@ -3,7 +3,6 @@
 
 
 
-#include "exp.h"
 #include "sp.h"
 #include "spaux.h"
 #include <vector>

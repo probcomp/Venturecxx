@@ -52,9 +52,9 @@ Node * from brush, (SP *, Value *) from DRG }
 struct OmegaDB
 {
   /* Node * is always the makerNode for the SP, which coincides with the AAA node. */
-  unordered_map<Node *,LatentDB *> latentDBs;
+  map<Node *,LatentDB *> latentDBs;
 
-  unordered_map<Node *, VentureValue *> drgDB;  
+  map<Node *, VentureValue *> drgDB;  
 
   /* (Node *, size_t): Node * represents the SP's maker node, size_t the family name. */
   map<pair<Node *,size_t>, Node *> spFamilyDBs;

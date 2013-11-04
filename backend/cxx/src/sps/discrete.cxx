@@ -14,11 +14,12 @@
 VentureValue * BernoulliSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<Node *> & operands = node->operandNodes;
-  double p = dynamic_cast<VentureDouble *>(operands[0]->getValue())->x;
-  assert(p >= 0 && p <= 1);
-  uint32_t n = gsl_ran_bernoulli(rng,p);
+  VentureDouble * p = dynamic_cast<VentureDouble *>(operands[0]->getValue());
+  assert(p);
+  assert(p->x >= 0 && p->x <= 1);
+  uint32_t n = gsl_ran_bernoulli(rng,p->x);
   assert(n == 0 || n == 1);
-  DPRINT("Bernoulli(", p);
+  DPRINT("Bernoulli(", p->x);
   return new VentureBool(n);
 } 
 
@@ -26,12 +27,22 @@ double BernoulliSP::logDensityOutput(VentureValue * value, Node * node) const
 {
 
   vector<Node *> & operands = node->operandNodes;
-  double p = dynamic_cast<VentureDouble *>(operands[0]->getValue())->x;
-  assert(p >= 0 && p <= 1);
-  bool b = dynamic_cast<VentureBool *>(value)->pred;
+  VentureDouble * p = dynamic_cast<VentureDouble *>(operands[0]->getValue());
+  assert(p);
+  assert(p->x >= 0 && p->x <= 1);
+  VentureBool * b = dynamic_cast<VentureBool *>(value);
+  assert(b);
 
-  if (b) { return log(p); }
-  else { return log(1 - p); }
+  if (b->pred) { return log(p->x); }
+  else { return log(1 - p->x); }
+}
+
+vector<VentureValue*> BernoulliSP::enumerateOutput(Node * node) const
+{
+  VentureBool * vold = dynamic_cast<VentureBool*>(node->getValue());
+  assert(vold);
+  if (vold->pred) { return {new VentureBool(false)}; }
+  else { return {new VentureBool(true)}; }
 }
 
 /* Categorical */
@@ -68,4 +79,25 @@ double CategoricalSP::logDensityOutput(VentureValue * value, Node * node) const
   VentureCount * i = dynamic_cast<VentureCount *>(value);
   VentureDouble * p = dynamic_cast<VentureDouble *>(xs[i->n]);
   return log(p->x);
+}
+
+vector<VentureValue*> CategoricalSP::enumerateOutput(Node * node) const
+{
+  VentureCount * vold = dynamic_cast<VentureCount*>(node->getValue());
+  assert(vold);
+
+  vector<Node *> & operands = node->operandNodes;
+  VentureVector * vec = dynamic_cast<VentureVector *>(operands[0]->getValue());
+  assert(vec);
+
+  vector<VentureValue*> values;
+
+  for (size_t i = 0; i < vec->xs.size(); ++i)
+  {
+    if (i == vold->n) { continue; }
+    else { 
+      values.push_back(new VentureCount(i));
+    }
+  }
+  return values;
 }

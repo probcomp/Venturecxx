@@ -1,29 +1,33 @@
 #include "value.h"
-#include "env.h"
 #include "node.h"
+#include "env.h"
 #include "pytrace.h"
-#include "gkernel.h"
-#include "infer.h"
-#include "exp.h"
+#include "infer/gkernel.h"
+#include "infer/mh.h"
+#include "infer/gibbs.h"
+#include "value.h"
 
 #include <boost/python.hpp>
 #include <boost/python/object.hpp>
 
 #include <iostream>
+#include <list>
 
 using boost::python::extract;
 
-PyTrace::PyTrace(): Trace(), mcmc(new OutermostMixMH(this,new ScaffoldMHGKernelMaker(this))) {}
+PyTrace::PyTrace(): 
+  Trace(), 
+  mcmc(new OutermostMixMH(this, new ScaffoldMHGKernel(this))) {}
 
 PyTrace::~PyTrace()
 {
-  OutermostMixMH * mkernel = dynamic_cast<OutermostMixMH*>(mcmc);
-  ScaffoldMHGKernelMaker * gmaker = dynamic_cast<ScaffoldMHGKernelMaker*>(mkernel->gKernelMaker);
-  delete gmaker;
-  delete mkernel;
+  OutermostMixMH * mKernel = dynamic_cast<OutermostMixMH*>(mcmc);
+  ScaffoldMHGKernel * gKernel = dynamic_cast<ScaffoldMHGKernel*>(mKernel->gKernel);
+  delete gKernel;
+  delete mKernel;
 }
 
-Expression PyTrace::parseExpression(boost::python::object o)
+VentureValue * PyTrace::parseExpression(boost::python::object o)
 {
  boost::python::object pyClassObject = o.attr("__class__").attr("__name__");
  extract<string> p(pyClassObject);
@@ -33,45 +37,50 @@ Expression PyTrace::parseExpression(boost::python::object o)
  if (pyClass == "str")
  {
    extract<string> s(o);
-   return Expression(s());
+   return new VentureSymbol(s());
  }
  else if (pyClass == "bool")
  {
    extract<bool> b(o);
-   return Expression(new VentureBool(b()));
+   return new VentureBool(b());
  }
  else if (pyClass == "int")
  {
    extract<int> n(o);
-//   assert(n() >= 0); // may not fly
-   return Expression(new VentureCount(n()));
+   assert(n() >= 0);
+   return new VentureCount(n());
  }
 
  else if (pyClass ==  "float")
  {
    extract<double> d(o);
-   return Expression(new VentureDouble(d()));
+   return new VentureDouble(d());
  }
 
- vector<Expression> exps;
+
+ VentureList * exp = new VentureNil;
+ 
  boost::python::ssize_t L = boost::python::len(o);
- for(boost::python::ssize_t i=0;i<L;i++) {
-   exps.push_back(parseExpression(o[i]));
+
+ for(boost::python::ssize_t i=L;i > 0;i--) 
+ {
+   exp = new VenturePair(parseExpression(o[i-1]),exp);
  }
- return Expression(exps);
+ return exp;
 }
 
 void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
 {
-  Expression exp = parseExpression(o);
+  VentureValue * exp = parseExpression(o);
 
-  pair<double,Node*> p = evalVentureFamily(directiveID,exp);
-  ventureFamilies.insert({directiveID,p.second});
+  pair<double,Node*> p = evalVentureFamily(directiveID,static_cast<VentureList*>(exp));
+  ventureFamilies.insert({directiveID,{p.second,exp}});
 }
 
 boost::python::object PyTrace::extractPythonValue(size_t directiveID)
 {
-  Node * node = ventureFamilies[directiveID];
+  Node * node;
+  tie(node,ignore) = ventureFamilies[directiveID];
   assert(node);
   VentureValue * value = node->getValue();
   assert(value);
@@ -80,15 +89,17 @@ boost::python::object PyTrace::extractPythonValue(size_t directiveID)
 
 void PyTrace::bindInGlobalEnv(string sym, size_t directiveID)
 {
-  globalEnvNode->getEnvironment()->addBinding(sym,ventureFamilies[directiveID]);
+  globalEnv->addBinding(new VentureSymbol(sym),ventureFamilies[directiveID].first);
 }
 
 void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
 {
-  Node * node = ventureFamilies[directiveID];
-  Expression exp = parseExpression(valueExp);
-  assert(exp.expType == ExpType::VALUE);
-  node->observedValue = exp.value;
+  Node * node;
+  tie(node,ignore) = ventureFamilies[directiveID];
+  VentureValue * val = parseExpression(valueExp);
+  assert(!dynamic_cast<VenturePair*>(val));
+  assert(!dynamic_cast<VentureSymbol*>(val));
+  node->observedValue = val;
   constrain(node,true);
 }
 

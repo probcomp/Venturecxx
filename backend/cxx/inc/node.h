@@ -9,8 +9,9 @@ using namespace std;
 
 struct VentureValue;
 struct VentureSP;
+struct VentureEnvironment;
 struct SPAux;
-struct Environment;
+
 struct SP;
 struct Trace;
 
@@ -30,8 +31,8 @@ struct Node
 
   Node(NodeType type): nodeType(type) {}
   Node(NodeType type, VentureValue * value): nodeType(type), _value(value) {}
-  Node(NodeType type, VentureValue * value, Node * familyEnvNode): 
-    nodeType(type), _value(value), familyEnvNode(familyEnvNode) {}
+  Node(NodeType type, VentureValue * value, VentureEnvironment * familyEnv): 
+    nodeType(type), _value(value), familyEnv(familyEnv) {}
 
   void disconnectLookup();
   void reconnectLookup();
@@ -72,7 +73,6 @@ struct Node
   bool isConstrained{false};
   bool ownsValue{true};
 
-  Environment * getEnvironment();
   SPAux * madeSPAux{nullptr}; // owner
 
 private:
@@ -80,7 +80,7 @@ private:
   VentureValue * _value{nullptr};
 
 public:
-  Node * familyEnvNode;
+  VentureEnvironment * familyEnv;
 
 
 };

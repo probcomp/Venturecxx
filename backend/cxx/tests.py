@@ -13,23 +13,25 @@ def normalizeList(seq):
 def countPredictions(predictions, seq):
   return [predictions.count(x) for x in seq]
 
-def totalDifference(eps,ops): return sum([ math.pow(x - y,2) for (x,y) in zip(eps,ops)])
+def rmsDifference(eps,ops): return math.sqrt(sum([ math.pow(x - y,2) for (x,y) in zip(eps,ops)]))
     
 def printTest(testName,eps,ops):
   print "---Test: " + testName + "---"
   print "Expected: " + str(eps)
   print "Observed: " + str(ops)
-  print "Total Difference: " + str(totalDifference(eps,ops))
+  print "Root Mean Square Difference: " + str(rmsDifference(eps,ops))
 
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer(1)
+    sivm.infer(10)
     predictions.append(sivm.trace.extractValue(address))
+#    print predictions[len(predictions)-1]
   return predictions
 
 def runTests(N):
   testBernoulli1(N)
+  testCategorical1(N)
   testMHNormal1(N)
   testMem1(N)
   testMem2(N)
@@ -42,8 +44,14 @@ def runTests(N):
   testMakeSymDirMult2(N)
   testMakeUCSymDirMult1(N)
   testLazyHMM1(N)
+  testLazyHMMSP1(N)
   testStaleAAA1(N)
   testStaleAAA2(N)
+  testEval1(N)
+  testEval2(N)
+  testExtendEnv1(N)
+  testApply1(N)
+  testList1()
 # testGeometric1(N)
 
 def testBernoulli1(N):
@@ -59,6 +67,22 @@ def testBernoulli1(N):
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestBernoulli1---"
   print "(3.0," + str(mean) + ")"
+
+def testCategorical1(N):
+  sivm = SIVM()
+  sivm.assume("x", "(categorical (make_vector 0.1 0.2 0.3 0.4))")
+  sivm.assume("y", "(categorical (make_vector 0.2 0.6 0.2))")
+  sivm.predict("(uint_plus x y)")
+
+  predictions = loggingInfer(sivm,3,N)
+  ps = [0.1 * 0.2, 
+        0.1 * 0.6 + 0.2 * 0.2,
+        0.1 * 0.2 + 0.2 * 0.6 + 0.3 * 0.2,
+        0.2 * 0.2 + 0.3 * 0.6 + 0.4 * 0.2,
+        0.3 * 0.2 + 0.4 * 0.6,
+        0.4 * 0.2]
+  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4,5])) if N > 0 else [0 for x in range(6)]
+  printTest("testCategorical1",ps,eps)
 
   
 
@@ -88,13 +112,13 @@ def testMem0(N):
 
 def testMem1(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (int_plus 1 (categorical (make_vector 0.4 0.6)))))")
+  sivm.assume("f","(mem (lambda (arg) (uint_plus 1 (categorical (make_vector 0.4 0.6)))))")
   sivm.assume("x","(f 1)")
   sivm.assume("y","(f 1)")
   sivm.assume("w","(f 2)")
   sivm.assume("z","(f 2)")
-  sivm.assume("q","(int_plus 1 (categorical (make_vector 0.1 0.9)))")
-  sivm.predict('(int_plus x (int_plus y (int_plus w (int_plus z q))))');
+  sivm.assume("q","(uint_plus 1 (categorical (make_vector 0.1 0.9)))")
+  sivm.predict('(uint_plus x y w z q)');
 
   predictions = loggingInfer(sivm,7,N)
   ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
@@ -103,14 +127,14 @@ def testMem1(N):
 
 def testMem2(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (int_plus 1 (categorical (make_vector 0.4 0.6)))))")
-  sivm.assume("g","((lambda () (mem (lambda (y) (f (int_plus y 1))))))")
+  sivm.assume("f","(mem (lambda (arg) (uint_plus 1 (categorical (make_vector 0.4 0.6)))))")
+  sivm.assume("g","((lambda () (mem (lambda (y) (f (uint_plus y 1))))))")
   sivm.assume("x","(f ((branch (bernoulli 0.5) (lambda () (lambda () 1)) (lambda () (lambda () 1)))))")
   sivm.assume("y","(g ((lambda () 0)))")
   sivm.assume("w","((lambda () (f 2)))")
   sivm.assume("z","(g 1)")
-  sivm.assume("q","(int_plus 1 (categorical (make_vector 0.1 0.9)))")
-  sivm.predict('(int_plus x (int_plus y (int_plus w (int_plus z q))))');
+  sivm.assume("q","(uint_plus 1 (categorical (make_vector 0.1 0.9)))")
+  sivm.predict('(uint_plus x y w z q)');
 
   predictions = loggingInfer(sivm,8,N)
   ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
@@ -119,14 +143,14 @@ def testMem2(N):
 
 def testMem3(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (int_plus 1 (categorical (make_vector 0.4 0.6)))))")
-  sivm.assume("g","((lambda () (mem (lambda (y) (f (int_plus y 1))))))")
+  sivm.assume("f","(mem (lambda (arg) (uint_plus 1 (categorical (make_vector 0.4 0.6)))))")
+  sivm.assume("g","((lambda () (mem (lambda (y) (f (uint_plus y 1))))))")
   sivm.assume("x","(f ((lambda () 1)))")
   sivm.assume("y","(g ((lambda () (branch (bernoulli 1.0) (lambda () 0) (lambda () 100)))))")
   sivm.assume("w","((lambda () (f 2)))")
   sivm.assume("z","(g 1)")
-  sivm.assume("q","(int_plus 1 (categorical (make_vector 0.1 0.9)))")
-  sivm.predict('(int_plus x (int_plus y (int_plus w (int_plus z q))))');
+  sivm.assume("q","(uint_plus 1 (categorical (make_vector 0.1 0.9)))")
+  sivm.predict('(uint_plus x y w z q)');
 
   predictions = loggingInfer(sivm,8,N)
   ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
@@ -151,7 +175,7 @@ def testSprinkler1(N):
 
 def testSprinkler2(N):
   # this test needs more iterations than most others, because it mixes badly
-  N = N * 4
+  N = N
 
   sivm = SIVM()
   sivm.assume("rain","(bernoulli 0.2)")
@@ -212,7 +236,7 @@ def testBLOGCSI(N):
 def testMHHMM1(N):
   sivm = SIVM()
   sivm.assume("f","""
-(mem (lambda (i) (branch (int_eq i 0) (lambda () (normal 0.0 1.0)) (lambda () (normal (f (int_minus i 1)) 1.0)))))
+(mem (lambda (i) (branch (uint_eq i 0) (lambda () (normal 0.0 1.0)) (lambda () (normal (f (uint_minus i 1)) 1.0)))))
 """)
   sivm.assume("g","""
 (mem (lambda (i) (normal (f i) 1.0)))
@@ -427,9 +451,9 @@ def testLazyHMM1(N):
   sivm.assume("f","""
 (mem 
 (lambda (i) 
-  (branch (int_eq i 0) 
+  (branch (uint_eq i 0) 
      (lambda () (bernoulli 0.5))
-     (lambda () (branch (f (int_minus i 1))
+     (lambda () (branch (f (uint_minus i 1))
                  (lambda () (bernoulli 0.7))
                  (lambda () (bernoulli 0.3)))))))
 """)
@@ -538,25 +562,189 @@ def testStaleAAA2(N):
   eps = normalizeList(countPredictions(predictions, [1, 0]))
   printTest("TestStaleAAA2",ps,eps)
 
+def testMap1(N):
+  sivm = SIVM()
+  sivm.assume("x","(bernoulli 1.0)")
+  sivm.assume("m","""(make_map (list (quote x) (quote y))
+                               (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
+  sivm.predict("""(normal (real_plus 
+                           (map_lookup m (quote x))
+                           (map_lookup m (quote y))
+                           (map_lookup m (quote y)))
+                         1.0)""")
+
+  predictions = loggingInfer(sivm,3,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestMap1---"
+  print "(20.0," + str(mean) + ")"
+
+
+def testEval1(N):
+  sivm = SIVM()
+  sivm.assume("globalEnv","(get_current_environment)")
+  sivm.assume("exp","(quote (bernoulli 0.7))")
+  sivm.predict("(eval exp globalEnv)")
+
+  predictions = loggingInfer(sivm,3,N)
+  ps = [.7, .3]
+  eps = normalizeList(countPredictions(predictions, [1, 0]))
+  printTest("TestEval1",ps,eps)
+
+def testEval2(N):
+  sivm = SIVM()
+  sivm.assume("p","(uniform_continuous 0.0 1.0)")
+  sivm.assume("globalEnv","(get_current_environment)")
+  sivm.assume("exp","""(quote 
+  (branch (bernoulli p) 
+        (lambda () (normal 10.0 1.0))
+        (lambda () (normal 0.0 1.0)))
+)""")
+  
+  sivm.assume("x","(eval exp globalEnv)")
+  sivm.observe("x",11.0)
+
+  predictions = loggingInfer(sivm,1,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestEval2---"
+  print "(0.667," + str(mean) + ")"
+
+def testApply1(N):
+  sivm = SIVM()
+  sivm.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
+  sivm.predict("(apply real_times (list (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
+
+  predictions = loggingInfer(sivm,2,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestApply1---"
+  print "(1000ish," + str(mean) + ")"
+
+def testExtendEnv1(N):
+  sivm = SIVM()
+  sivm.assume("env1","(get_current_environment)")
+  
+  sivm.assume("env2","(extend_environment env1 (quote x) (normal 0.0 1.0))")
+  sivm.assume("env3","(extend_environment env2 (quote x) (normal 10.0 1.0))")
+  sivm.assume("exp","(quote (normal x 1.0))")
+  sivm.predict("(normal (eval exp env3) 1.0)")
+
+  predictions = loggingInfer(sivm,5,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestExtendEnv1---"
+  print "(10," + str(mean) + ")"
 
 
 
+# TODO need extend_env, symbol?
+def sivmWithSTDLIB(sivm):
+  sivm.assume("make_ref","(lambda (x) (lambda () x))")
+  sivm.assume("deref","(lambda (x) (x))")
+  sivm.assume("venture_apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
+  sivm.assume("incremental_apply","""
+(lambda (operator operands)
+  (incremental_eval (deref (list_ref operator 3))
+
+                    (extend_env env
+				(deref (list_ref operator 2))
+                                operands)))
+""")
+  sivm.assume("incremental_eval","""
+(lambda (exp env)
+  (branch 
+    (is_symbol exp)
+    (quote (eval exp env))
+    (quote 
+      (branch
+        (not (pair? exp))
+        (quote exp)
+        (branch 
+          (sym_eq (deref (list_ref exp 0)) (quote lambda))
+	  (quote (pair env (rest exp)))
+          (quote 
+            ((lambda (operator operands)
+               (branch 
+                 (pair? operator)
+                 (quote (incremental_apply operator operands))
+                 (quote (venture_apply operator operands))))
+             (incremental_eval (deref (first exp)) env)
+             (map_list (lambda (x) (make_ref (incremental_eval (deref x) env))) (rest exp))))
+)))))
+""")
+  return sivm
+
+def testList1():
+  sivm = SIVM()
+  sivm.assume("x1","(list)")
+  sivm.assume("x2","(pair 1.0 x1)")
+  sivm.assume("x3","(pair 2.0 x2)")
+  sivm.assume("x4","(pair 3.0 x3)")
+  sivm.assume("f","(lambda (x) (real_times x x x))")
+  sivm.assume("y4","(map_list f x4)")
+
+  y4 = sivm.predict("(first y4)")
+  y3 = sivm.predict("(list_ref y4 1)")
+  y2 = sivm.predict("(list_ref (rest y4) 1)")
+  px1 = sivm.predict("(pair? x1)")
+  px4 = sivm.predict("(pair? x4)")
+  py4 = sivm.predict("(pair? y4)")
+
+  assert(sivm.trace.extractValue(7) == 27.0);
+  assert(sivm.trace.extractValue(8) == 8.0);
+  assert(sivm.trace.extractValue(9) == 1.0);
+
+  assert(not sivm.trace.extractValue(10));
+  assert(sivm.trace.extractValue(11));
+  assert(sivm.trace.extractValue(11));
+
+  print "Passed TestList1()"
+
+# This test fails
+def testMem4():
+  sivm = SIVM()
+  sivm.assume("f","(mem (lambda (i) 0))")
+
+  sivm.predict("(f (bernoulli 0.5))")
+  sivm.predict("(f true)")
+
+  print "INFER"
+  sivm.infer(1000)
+  print "DESTRUCT"
+  del sivm
+  print "Passed TestMem4"
 
 
+def testCCRP1(N):
+  sivm = SIVM()
+  sivm.assume("alpha","(normal 5.0 0.5)")
+  sivm.assume("crp","(make_crp alpha 0.0)")
+  sivm.assume("fBase","(mem (lambda (i) (categorical (make_vector .2 .2 .2 .2 .2))))")
+  sivm.assume("f","(lambda () (fBase (crp)))")
+  sivm.predict("(f)")
 
+  sivm.observe("(normal (f) 0.1)",0.0)
+  sivm.observe("(normal (f) 0.1)",0.0)
 
+  sivm.observe("(normal (f) 0.1)",1.0)
+  sivm.observe("(normal (f) 0.1)",1.0)
 
+  sivm.observe("(normal (f) 0.1)",2.0)
+  sivm.observe("(normal (f) 0.1)",2.0)
+  sivm.observe("(normal (f) 0.1)",2.0)
+  sivm.observe("(normal (f) 0.1)",2.0)
+  sivm.observe("(normal (f) 0.1)",2.0)
 
+  sivm.observe("(normal (f) 0.1)",3.0)
 
-
-
+  predictions = loggingInfer(sivm,5,N)
+  ps = normalizeList([3,3,6,2,1])
+  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4]))
+  printTest("TestCCRP1 (not exact)",ps,eps)
 
 def testGeometric1(N):
   sivm = SIVM()
   sivm.assume("alpha1","(gamma 5.0 2.0)")
   sivm.assume("alpha2","(gamma 5.0 2.0)")
   sivm.assume("p", "(beta alpha1 alpha2)")
-  sivm.assume("geo","(lambda (p) (branch (bernoulli p) (lambda () 1) (lambda () (int_plus 1 (geo p)))))")
+  sivm.assume("geo","(lambda (p) (branch (bernoulli p) (lambda () 1) (lambda () (uint_plus 1 (geo p)))))")
   pID = sivm.predict("(geo p)")[0]
   
   predictions = loggingInfer(sivm,"5",N)

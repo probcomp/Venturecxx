@@ -1,19 +1,39 @@
-#include "env.h"
 #include "node.h"
+#include "env.h"
 #include <iostream>
 #include <cassert>
 
-Node * Environment::findSymbol(const string & sym)
+void VentureEnvironment::addBinding(VentureSymbol * vsym, Node * node) 
+{ 
+  frame.insert({vsym->sym,node}); 
+  vsyms.push_back(vsym);
+}
+
+void VentureEnvironment::destroySymbols()
+{
+  for (VentureSymbol * vsym : vsyms) { delete vsym; }
+}
+
+
+Node * VentureEnvironment::findSymbol(VentureSymbol * vsym)
+{
+  return findSymbol(vsym->sym);
+}
+
+Node * VentureEnvironment::findSymbol(const string & sym)
 {
   if (frame.count(sym)) 
   { 
     return frame[sym]; 
   }
-  else if (outerEnvNode == nullptr) 
+  else if (outerEnv == nullptr) 
   { 
     cout << "Cannot find symbol: " << sym << endl;
-    assert(outerEnvNode);
+    assert(outerEnv);
     return nullptr;
   }
-  else return outerEnvNode->getEnvironment()->findSymbol(sym);
+  else 
+  {
+    return outerEnv->findSymbol(sym);
+  }
 }

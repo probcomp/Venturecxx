@@ -28,5 +28,16 @@ struct DefaultAAAKernel : LKernel
 
 };
 
+struct DeterministicLKernel : LKernel
+{
+  DeterministicLKernel(VentureValue * value, SP * sp): value(value), sp(sp) {}
+
+  VentureValue * simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB,gsl_rng * rng) override;
+  double weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB) override;
+
+  VentureValue * value;
+  SP * sp;
+  
+};
 
 #endif

@@ -1,4 +1,5 @@
-#include "gkernel.h"
+#include "infer/gkernel.h"
+#include "node.h"
 #include <iostream>
 
 #include <gsl/gsl_rng.h>
@@ -6,7 +7,6 @@
 
 #include "trace.h"
 #include <cmath>
-
 
 void GKernel::infer(uint32_t N)
 {
@@ -24,11 +24,12 @@ double MixMHKernel::propose()
 {
   index = sampleIndex();
   double ldRho = logDensityOfIndex(index);
-  param = processIndex(index);
-  childGKernel = gKernelMaker->constructGKernel(param);
-  double alpha = childGKernel->propose();
+  /* ProcessIndex is responsible for freeing the index. */
+  /* LoadParameters is responsible for freeing the param. */
+  gKernel->loadParameters(processIndex(index));
+  double alpha = gKernel->propose();
   double ldXi = logDensityOfIndex(index);
-  /* TODO GC delete index and param */
+
   return alpha + ldXi - ldRho;
 }
  

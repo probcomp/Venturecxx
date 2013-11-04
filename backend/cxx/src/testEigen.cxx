@@ -4,6 +4,8 @@
 #include <string>
 #include <typeinfo>
 
+#include <cmath>
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using namespace std;
@@ -26,4 +28,10 @@ int main()
   size_t r = m.rows();
   size_t c = m.cols();
   cout << "m.rows(), m.cols() = " << r << ", " << c << endl;
+
+  double lzero = log(0);
+  cout << "log(0): " << lzero << endl;
+  double bzero = exp(lzero);
+  cout << "exp(log(0)): " << bzero << endl;
+  
 }

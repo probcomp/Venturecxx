@@ -3,6 +3,7 @@
 #include "lkernel.h"
 #include "spaux.h"
 #include "value.h"
+#include "utils.h"
 
 /* All of these methods simply check the node type, and dispatch
    to REQUEST or OUTPUT as appropriate. */
@@ -52,6 +53,17 @@ void SP::remove(VentureValue * value, Node * node) const
   }
 }
 
+vector<VentureValue*> SP::enumerate(Node * node) const
+{
+  if (node->nodeType == NodeType::REQUEST)
+  { return this->enumerateRequest(node); }
+  else 
+  { 
+    assert(node->nodeType == NodeType::OUTPUT);
+    return this->enumerateOutput(node); 
+  }
+}
+
 
 bool SP::canAbsorb(NodeType nodeType) const
 {
@@ -72,6 +84,17 @@ bool SP::isRandom(NodeType nodeType) const
   { 
     assert(nodeType == NodeType::OUTPUT);
     return isRandomOutput; 
+  }
+}
+
+bool SP::canEnumerate(NodeType nodeType) const
+{
+  if (nodeType == NodeType::REQUEST)
+  { return canEnumerateRequest; }
+  else 
+  { 
+    assert(nodeType == NodeType::OUTPUT);
+    return canEnumerateOutput; 
   }
 }
 
@@ -120,5 +143,17 @@ void SP::destroySPAux(SPAux * spaux) const
       delete spaux; 
     }
 
-void SP::flushRequest(VentureValue * value) const { delete value; };
+void SP::flushRequest(VentureValue * value) const { delete value; }
 void SP::flushOutput(VentureValue * value) const { delete value; };
+
+vector<VentureValue*> SP::enumerateRequest(Node * node) const
+{
+  vector<VentureValue*> v;
+  return v;
+}
+
+vector<VentureValue*> SP::enumerateOutput(Node * node) const
+{
+  vector<VentureValue*> v;
+  return v;
+}

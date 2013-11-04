@@ -1,6 +1,6 @@
 #include "node.h"
 #include "value.h"
-
+#include "env.h"
 #include "sp.h"
 #include "trace.h"
 #include "sps/csp.h"
@@ -9,20 +9,22 @@
 #include "srs.h"
 #include "flush.h"
 #include "lkernel.h"
+#include "utils.h"
 
 #include <iostream>
 #include <typeinfo>
-
+#include "sps/mem.h"
 
 double Trace::regen(const vector<Node *> & border,
-		    Scaffold & scaffold,
+		    Scaffold * scaffold,
 		    bool shouldRestore,
-		    OmegaDB & omegaDB)
+		    OmegaDB * omegaDB)
 {
+  assert(scaffold);
   double weight = 0;
   for (Node * node : border)
   {
-    if (scaffold.isAbsorbing(node)) { weight += absorb(node,scaffold,shouldRestore,omegaDB); }
+    if (scaffold->isAbsorbing(node)) { weight += absorb(node,scaffold,shouldRestore,omegaDB); }
     else /* Terminal resampling */
     {
       weight += regenInternal(node,scaffold,shouldRestore,omegaDB);
@@ -39,10 +41,12 @@ double Trace::regen(const vector<Node *> & border,
    to be able to only regen the operator and operands once. 
    (This may yield a substantial performance improvement.) */
 double Trace::regenParents(Node * node,
-			   Scaffold & scaffold,
+			   Scaffold * scaffold,
 			   bool shouldRestore,
-			   OmegaDB & omegaDB)
+			   OmegaDB * omegaDB)
 {
+  assert(scaffold);
+
   assert(node->nodeType != NodeType::VALUE);
   assert(node->nodeType != NodeType::FAMILY_ENV);
 
@@ -67,10 +71,11 @@ double Trace::regenParents(Node * node,
 
 
 double Trace::absorb(Node * node,
-		     Scaffold & scaffold,
+		     Scaffold * scaffold,
 		     bool shouldRestore,
-		     OmegaDB & omegaDB)
+		     OmegaDB * omegaDB)
 {
+  assert(scaffold);
   double weight = 0;
   weight += regenParents(node,scaffold,shouldRestore,omegaDB);
   weight += node->sp()->logDensity(node->getValue(),node);
@@ -113,15 +118,16 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
 
 /* Note: no longer calls regen parents on REQUEST nodes. */
 double Trace::regenInternal(Node * node,
-			    Scaffold & scaffold,
+			    Scaffold * scaffold,
 			    bool shouldRestore,
-			    OmegaDB & omegaDB)
+			    OmegaDB * omegaDB)
 {
+  if (!scaffold) { return 0; }
   double weight = 0;
 
-  if (scaffold.isResampling(node))
+  if (scaffold->isResampling(node))
   {
-    Scaffold::DRGNode &drgNode = scaffold.drg[node];
+    Scaffold::DRGNode &drgNode = scaffold->drg[node];
     if (drgNode.regenCount == 0)
     {
       weight += regenParents(node,scaffold,shouldRestore,omegaDB);
@@ -133,31 +139,33 @@ double Trace::regenInternal(Node * node,
     }
     drgNode.regenCount++;
   }
-  else if (scaffold.hasAAANodes)
+  else if (scaffold->hasAAANodes)
   {
-    if (node->isReference() && scaffold.isAAA(node->sourceNode))
+    if (node->isReference() && scaffold->isAAA(node->sourceNode))
     { weight += regenInternal(node->sourceNode,scaffold,shouldRestore,omegaDB); }
   }
   return weight;
 }
 
-void Trace::processMadeSP(Node * node)
+/* TODO should load makerNode as well */
+void Trace::processMadeSP(Node * node, bool isAAA)
 {
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
   assert(vsp);
   SP * madeSP = vsp->sp;
-  if (madeSP->hasAux()) 
-  { 
-    node->madeSPAux = madeSP->constructSPAux(); 
+  vsp->makerNode = node;
+  if (!isAAA)
+  {
+    if (madeSP->hasAux()) { node->madeSPAux = madeSP->constructSPAux(); }
+    if (madeSP->hasAEKernel) { registerAEKernel(vsp); }
   }
-  if (madeSP->hasAEKernel) { registerAEKernel(vsp); }
 }
 
 
 double Trace::applyPSP(Node * node,
-		       Scaffold & scaffold,
+		       Scaffold * scaffold,
 		       bool shouldRestore,
-		       OmegaDB & omegaDB)
+		       OmegaDB * omegaDB)
 {
   DPRINT("applyPSP: ", node->address.toString());
 
@@ -183,7 +191,8 @@ double Trace::applyPSP(Node * node,
 
   if (shouldRestore)
   {
-    if (scaffold.isResampling(node)) { newValue = omegaDB.drgDB[node]; }
+    assert(omegaDB);
+    if (scaffold && scaffold->isResampling(node)) { newValue = omegaDB->drgDB[node]; }
     else 
     { 
       newValue = node->getValue(); 
@@ -195,21 +204,22 @@ double Trace::applyPSP(Node * node,
       
     /* If the kernel was an HSR kernel, then we restore all latents.
        TODO this could be made clearer. */
-    if (sp->makesHSRs && scaffold.isAAA(node))
+    if (sp->makesHSRs && scaffold && scaffold->isAAA(node))
     {
-      sp->restoreAllLatents(node->spaux(),omegaDB.latentDBs[node]);
+      sp->restoreAllLatents(node->spaux(),omegaDB->latentDBs[node]);
     }
   }
-  else if (scaffold.hasKernelFor(node))
+  else if (scaffold && scaffold->hasKernelFor(node))
   {
-    VentureValue * oldValue = omegaDB.drgDB[node];
-    LKernel * k = scaffold.lkernels[node];
+    VentureValue * oldValue = nullptr;
+    if (omegaDB && omegaDB->drgDB.count(node)) { oldValue = omegaDB->drgDB[node]; }
+    LKernel * k = scaffold->lkernels[node];
 
     /* Awkward. We are not letting the language know about the difference between
        regular LKernels and HSRKernels. We pass a latentDB no matter what, nullptr
        for the former. */
     LatentDB * latentDB = nullptr;
-    if (omegaDB.latentDBs.count(node)) { latentDB = omegaDB.latentDBs[node]; }
+    if (omegaDB && omegaDB->latentDBs.count(node)) { latentDB = omegaDB->latentDBs[node]; }
 
     newValue = k->simulate(oldValue,node,latentDB,rng);
     weight += k->weight(newValue,oldValue,node,latentDB);
@@ -223,8 +233,8 @@ double Trace::applyPSP(Node * node,
 
   sp->incorporate(newValue,node);
 
-  if (dynamic_cast<VentureSP *>(node->getValue()) && !node->isReference() && !scaffold.isAAA(node)) 
-  { processMadeSP(node); }
+  if (dynamic_cast<VentureSP *>(node->getValue()) && !node->isReference())
+  { processMadeSP(node,scaffold && scaffold->isAAA(node)); }
   if (node->sp()->isRandom(node->nodeType)) { registerRandomChoice(node); }
   if (node->nodeType == NodeType::REQUEST) { evalRequests(node,scaffold,shouldRestore,omegaDB); }
 
@@ -233,9 +243,9 @@ double Trace::applyPSP(Node * node,
 }
 
 double Trace::evalRequests(Node * node,
-			   Scaffold & scaffold,
+			   Scaffold * scaffold,
 			   bool shouldRestore,
-			   OmegaDB & omegaDB)
+			   OmegaDB * omegaDB)
 {
   /* Null request does not bother malloc-ing */
   if (!node->getValue()) { return 0; }
@@ -249,15 +259,15 @@ double Trace::evalRequests(Node * node,
     Node * esrParent = node->sp()->findFamily(esr.id, node->spaux());
     if (!esrParent)
     {
-      if (shouldRestore && omegaDB.spFamilyDBs.count({node->vsp()->makerNode, esr.id}))
+      if (shouldRestore && omegaDB && omegaDB->spFamilyDBs.count({node->vsp()->makerNode, esr.id}))
       {
-	esrParent = omegaDB.spFamilyDBs[{node->vsp()->makerNode, esr.id}];
+	esrParent = omegaDB->spFamilyDBs[{node->vsp()->makerNode, esr.id}];
 	assert(esrParent);
 	restoreSPFamily(esrParent,scaffold,omegaDB);
       }
       else
       {
-	pair<double,Node*> p = evalSPFamily(esr.exp,esr.env,scaffold,omegaDB);      
+	pair<double,Node*> p = evalFamily(esr.exp,esr.env,scaffold,omegaDB,false);      
 	weight += p.first;
 	esrParent = p.second;
       }
@@ -270,8 +280,8 @@ double Trace::evalRequests(Node * node,
   for (HSR * hsr : requests->hsrs)
   {
     LatentDB * latentDB = nullptr;
-    if (omegaDB.latentDBs.count(node->vsp()->makerNode)) 
-    { latentDB = omegaDB.latentDBs[node->vsp()->makerNode]; }
+    if (omegaDB && omegaDB->latentDBs.count(node->vsp()->makerNode)) 
+    { latentDB = omegaDB->latentDBs[node->vsp()->makerNode]; }
     assert(!shouldRestore || latentDB);
     weight += node->sp()->simulateLatents(node->spaux(),hsr,shouldRestore,latentDB,rng);
   }
@@ -279,48 +289,37 @@ double Trace::evalRequests(Node * node,
   return weight;
 }
 
-pair<double,Node*> Trace::evalSPFamily(Expression & exp,
-				       Environment & env,
-				       Scaffold & scaffold,
-				       OmegaDB & omegaDB)
-{
-  Node * familyEnvNode = new Node(NodeType::FAMILY_ENV, new VentureEnvironment(env));
-  return evalFamily(exp,familyEnvNode,scaffold,omegaDB,false);
-}
-
-
 double Trace::restoreSPFamily(Node * root,
-			      Scaffold & scaffold,
-			      OmegaDB & omegaDB)
+			      Scaffold * scaffold,
+			      OmegaDB * omegaDB)
 {
-  restoreFamily(root,scaffold,omegaDB);
+  restoreFamily(root,nullptr,omegaDB);
   return 0;
 }
 
-pair<double, Node*> Trace::evalVentureFamily(size_t directiveID, Expression & exp)
+pair<double, Node*> Trace::evalVentureFamily(size_t directiveID, VentureValue * exp)
 {
-  Scaffold scaffold;
-  OmegaDB omegaDB;
-  return evalFamily(exp,globalEnvNode,scaffold,omegaDB,true);
+  return evalFamily(exp,globalEnv,nullptr,nullptr,true);
 }
 
 double Trace::restoreVentureFamily(Node * root)
 {
-  Scaffold scaffold;
-  OmegaDB omegaDB;
-  restoreFamily(root,scaffold,omegaDB);
+  restoreFamily(root,nullptr,nullptr);
   return 0;
 }
 
 double Trace::restoreFamily(Node * node,
-			    Scaffold & scaffold,
-			    OmegaDB & omegaDB)
+			    Scaffold * scaffold,
+			    OmegaDB * omegaDB)
 {
   assert(node);
   if (node->nodeType == NodeType::VALUE)
   {
+    assert(node->getValue());
+    if (!dynamic_cast<VentureValue*>(node->getValue())) { assert(false); }
+
     if (dynamic_cast<VentureSP *>(node->getValue()))
-    { processMadeSP(node); }
+    { processMadeSP(node,false); }
   }
   else if (node->nodeType == NodeType::LOOKUP)
   {
@@ -339,81 +338,92 @@ double Trace::restoreFamily(Node * node,
 }
 
 
-pair<double,Node*> Trace::evalFamily(Expression & exp, 
-				     Node * familyEnvNode,
-				     Scaffold & scaffold,
-				     OmegaDB & omegaDB,
+pair<double,Node*> Trace::evalFamily(VentureValue * exp, 
+				     VentureEnvironment * env,
+				     Scaffold * scaffold,
+				     OmegaDB * omegaDB,
 				     bool isDefinite)
 {
   DPRINT("eval: ", addr.toString());
   double weight = 0;
-  Node * node;
-  switch (exp.expType)
+  Node * node = nullptr;
+  assert(exp);
+  if (dynamic_cast<VenturePair*>(exp))
   {
-  case ExpType::VALUE:
-  {
-    node = new Node(NodeType::VALUE,exp.value,familyEnvNode);
-    node->isActive = true;
-    node->ownsValue = isDefinite;
-    break;
+    VentureList * list = dynamic_cast<VentureList*>(exp);
+    VentureSymbol * car = dynamic_cast<VentureSymbol*>(listRef(list,0));
+ 
+    /* Lambda */
+    if (car && car->sym == "lambda")
+    {
+      node = new Node(NodeType::VALUE, nullptr);
+      /* The CSP owns the expression iff it is in a VentureFamily */
+      node->setValue(new VentureSP(new CSP(listRef(list,1),listRef(list,2),env)));
+      processMadeSP(node,false);
+      node->isActive = true;
+    }
+    /* Quote */
+    else if (car && car->sym == "quote")
+    {
+      node = new Node(NodeType::VALUE, nullptr);
+      node->setValue(listRef(list,1));
+      node->isActive = true;
+    }
+    /* Application */
+    else
+    {
+      Node * requestNode = new Node(NodeType::REQUEST,nullptr,env);
+      Node * outputNode = new Node(NodeType::OUTPUT,nullptr,env);
+      node = outputNode;
+
+      Node * operatorNode;
+      vector<Node *> operandNodes;
+    
+      pair<double,Node*> p = evalFamily(listRef(list,0),env,scaffold,omegaDB,isDefinite);
+      weight += p.first;
+      operatorNode = p.second;
+      
+      for (uint8_t i = 1; i < listLength(list); ++i)
+      {
+	pair<double,Node*> p = evalFamily(listRef(list,i),env,scaffold,omegaDB,isDefinite);
+	weight += p.first;
+	operandNodes.push_back(p.second);
+      }
+
+      addApplicationEdges(operatorNode,operandNodes,requestNode,outputNode);
+      weight += apply(requestNode,outputNode,scaffold,false,omegaDB);
+    }
+    // needs to be cleaned up
+//    listShallowDestroy(list);
   }
-  case ExpType::VARIABLE:
+  /* Variable lookup */
+  else if (dynamic_cast<VentureSymbol*>(exp))
   {
-    Node * lookedUpNode = familyEnvNode->getEnvironment()->findSymbol(exp.sym);
+    VentureSymbol * vsym = dynamic_cast<VentureSymbol*>(exp);
+    Node * lookedUpNode = env->findSymbol(vsym);
     assert(lookedUpNode);
-    /* What is the right flag? (1) Value defined? and (2) connected to trace?
-       Or nodeStatus = IN_TRACE, UNDEFINED, IN_DB */
-//    assert(lookedUpNode->isActive);
     weight += regenInternal(lookedUpNode,scaffold,false,omegaDB);
 
-    node = new Node(NodeType::LOOKUP,nullptr,familyEnvNode);
+    node = new Node(NodeType::LOOKUP,nullptr);
     Node::addLookupEdge(lookedUpNode,node);
     node->registerReference(lookedUpNode);
     node->isActive = true;
-    break;
   }
-  case ExpType::LAMBDA:
+  /* Self-evaluating */
+  else
   {
-    node = new Node(NodeType::VALUE, nullptr, familyEnvNode);
-    /* The CSP owns the expression iff it is in a VentureFamily */
-    node->setValue(new VentureSP(node,new CSP(exp.getIDs(),exp.exps[2],familyEnvNode,isDefinite)));
-    processMadeSP(node);
+    node = new Node(NodeType::VALUE,exp);
     node->isActive = true;
-    break;
   }
-  case ExpType::APPLICATION:
-  {
-    Node * requestNode = new Node(NodeType::REQUEST,nullptr,familyEnvNode);
-    Node * outputNode = new Node(NodeType::OUTPUT,nullptr,familyEnvNode);
-    node = outputNode;
-
-    Node * operatorNode;
-    vector<Node *> operandNodes;
-    
-    pair<double,Node*> p = evalFamily(exp.exps[0],familyEnvNode,scaffold,omegaDB,isDefinite);
-    weight += p.first;
-    operatorNode = p.second;
-      
-    for (uint8_t i = 1; i < exp.exps.size(); ++i)
-    {
-      pair<double,Node*> p = evalFamily(exp.exps[i],familyEnvNode,scaffold,omegaDB,isDefinite);
-      weight += p.first;
-      operandNodes.push_back(p.second);
-    }
-
-    addApplicationEdges(operatorNode,operandNodes,requestNode,outputNode);
-    weight += apply(requestNode,outputNode,scaffold,false,omegaDB);
-    break;
-  }
-  }
+  assert(node);
   return {weight,node};
 }
 
 double Trace::apply(Node * requestNode,
 		    Node * outputNode,
-		    Scaffold & scaffold,
+		    Scaffold * scaffold,
 		    bool shouldRestore,
-		    OmegaDB & omegaDB)
+		    OmegaDB * omegaDB)
 {
   double weight = 0;
 

@@ -28,7 +28,7 @@ struct SP
 /* Simulate */
   VentureValue * simulate(Node * node, gsl_rng * rng) const;
   virtual VentureValue * simulateRequest(Node * node, gsl_rng * rng) const { return nullptr; }
-  virtual VentureValue * simulateOutput(Node * node, gsl_rng * rng) const { return nullptr; };
+  virtual VentureValue * simulateOutput(Node * node, gsl_rng * rng) const { return nullptr; }
 
 /* LogDensity */
   double logDensity(VentureValue * value, Node * node) const;
@@ -59,14 +59,14 @@ struct SP
   /* SPAux */
   virtual SPAux * constructSPAux() const;
 
-  virtual void destroySPAux(SPAux * spaux) const ;
+  virtual void destroySPAux(SPAux * spaux) const;
 
 
 /* LatentDBs */
   virtual LatentDB * constructLatentDB() const { return nullptr; }
   virtual void destroyLatentDB(LatentDB * latentDB) const { }
 
-/* ESRs */
+/* LSRs */
   virtual double simulateLatents(SPAux * spaux,
 				 HSR * hsr,
 				 bool shouldRestore,
@@ -108,9 +108,22 @@ struct SP
 
   bool hasAEKernel{false};
 
+  bool canEnumerate(NodeType nodeType) const;
+  bool canEnumerateRequest{false};
+  bool canEnumerateOutput{false};
+
+  vector<VentureValue*> enumerate(Node * node) const;
+  /* TODO for expediency, these only return the OTHER values, but we would want
+     them to return all values and then we loop through and compare for equality
+     later in the pipeline. */
+  virtual vector<VentureValue*> enumerateOutput(Node * node) const;
+  virtual vector<VentureValue*> enumerateRequest(Node * node) const;
+
   Node * findFamily(size_t id, SPAux * spaux);
 
   void registerFamily(size_t id, Node * root, SPAux * spaux);
+
+
 
   /* Does not flush. */
   Node * detachFamily(size_t id, SPAux * spaux);

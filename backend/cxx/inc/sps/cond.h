@@ -3,7 +3,6 @@
 
 
 
-#include "exp.h"
 #include "sp.h"
 
 #include <vector>
@@ -18,6 +17,7 @@ struct BranchSP : SP
       canAbsorbRequest = false;
     }
   VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
+  void flushRequest(VentureValue * value) const override;
 
 };
 

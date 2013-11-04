@@ -15,7 +15,7 @@ VentureValue * MakeSymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) cons
   VentureCount * n = dynamic_cast<VentureCount *>(operands[1]->getValue());
   assert(alpha);
   assert(n);
-  return new VentureSP(node,new SymDirMultSP(alpha->x,n->n));
+  return new VentureSP(new SymDirMultSP(alpha->x,n->n));
 }
 
 double SymDirMultSP::logDensityOfCounts(SPAux * generic_spaux) const

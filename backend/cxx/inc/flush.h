@@ -5,7 +5,7 @@ struct Node;
 struct OmegaDB;
 
 void destroyFamilyNodes(Node * root);
-void flushDB(OmegaDB & omegaDB);
+void flushDB(OmegaDB * omegaDB, bool isActive);
 
 
 #endif

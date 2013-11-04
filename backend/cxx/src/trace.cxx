@@ -9,6 +9,9 @@
 #include "sp.h"
 #include "omegadb.h"
 #include "flush.h"
+#include "value.h"
+#include "utils.h"
+#include "env.h"
 
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -18,51 +21,47 @@ Trace::Trace()
 {
   gsl_rng_set (rng,time(NULL));
   
-  Environment primitivesEnv;
+  primitivesEnv = new VentureEnvironment;
   for (pair<string,VentureValue *> p : initBuiltInValues()) 
-  { primitivesEnv.addBinding(p.first,new Node(NodeType::VALUE,p.second)); }
+  { primitivesEnv->addBinding(new VentureSymbol(p.first),new Node(NodeType::VALUE,p.second)); }
 
   for (pair<string,SP *> p : initBuiltInSPs())
   { 
     Node * spNode = new Node(NodeType::VALUE);
-    spNode->setValue(new VentureSP(spNode,p.second));
-    processMadeSP(spNode);
-    primitivesEnv.addBinding(p.first,spNode);
+    spNode->setValue(new VentureSP(p.second));
+    processMadeSP(spNode,false);
+    primitivesEnv->addBinding(new VentureSymbol(p.first),spNode);
   }
 
-  Node * primitivesEnvNode = new Node(NodeType::VALUE,new VentureEnvironment(primitivesEnv));
-
-  Environment globalEnv(primitivesEnvNode);
-  globalEnvNode = new Node(NodeType::VALUE,new VentureEnvironment(globalEnv));
+  globalEnv = new VentureEnvironment(primitivesEnv);
 }
 
 Trace::~Trace()
 {
   vector<VentureValue *> observedValues;
-  for (map<size_t, Node *>::reverse_iterator iter = ventureFamilies.rbegin(); 
+  for (map<size_t, pair<Node *,VentureValue*> >::reverse_iterator iter = ventureFamilies.rbegin(); 
        iter != ventureFamilies.rend();
        ++iter)
   { 
-    OmegaDB omegaDB;
-    Node * root = ventureFamilies[iter->first];
+    Node * root = iter->second.first;
     if (root->isObservation()) 
     { 
       observedValues.push_back(root->getValue());
       unconstrain(root); 
     }
-    detachVentureFamily(ventureFamilies[iter->first],omegaDB); 
-    flushDB(omegaDB);
+    OmegaDB * omegaDB = new OmegaDB;
+    detachVentureFamily(root,omegaDB); 
+    flushDB(omegaDB,false);
+    destroyExpression(iter->second.second);
     destroyFamilyNodes(root);
   }
 
   for (VentureValue * obs : observedValues) { delete obs; }
 
-  /* Now use the global environment to destroy all of the primitives. */
-  Node * primitivesEnvNode = globalEnvNode->getEnvironment()->outerEnvNode;
-  delete globalEnvNode->getValue();
-  delete globalEnvNode;
+  globalEnv->destroySymbols();
+  delete globalEnv;
 
-  for (pair<string,Node*> p : primitivesEnvNode->getEnvironment()->frame)
+  for (pair<string,Node*> p : primitivesEnv->frame)
   {
     Node * node = p.second;
     if (node->madeSPAux) 
@@ -74,8 +73,10 @@ Trace::~Trace()
     delete node->getValue();
     delete node;
   }
-  delete primitivesEnvNode->getValue();
-  delete primitivesEnvNode;
+  primitivesEnv->destroySymbols();
+  delete primitivesEnv;
+
+  gsl_rng_free(rng);
 
 }
 

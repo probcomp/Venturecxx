@@ -21,7 +21,7 @@ struct MSP : SP
     }
 
   VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
-
+  void flushRequest(VentureValue * value) const override;
   size_t hashValues(vector<Node *> operands) const;
   Node * sharedOperatorNode;
 };

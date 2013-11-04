@@ -7,6 +7,9 @@ using namespace std;
 
 struct Trace;
 
+struct MixMHIndex { virtual ~MixMHIndex() {} };
+
+/* processIndex(index) => param may be non-injective */
 struct MixMHParam {  virtual ~MixMHParam() {} };
 
 struct GKernel
@@ -17,6 +20,9 @@ struct GKernel
   virtual void accept() =0;
   virtual void reject() =0;
 
+  virtual void destroyParameters() {};
+  virtual void loadParameters(MixMHParam * param) {};
+
   virtual ~GKernel() {}
 
   void infer(uint32_t N);
@@ -25,38 +31,22 @@ struct GKernel
 
 };
 
-struct GKernelMaker
-{
-  GKernelMaker(Trace * trace): trace(trace) {}
-  virtual GKernel * constructGKernel(MixMHParam * param) =0;
-  Trace * trace;
-
-  virtual ~GKernelMaker() { }
-};
-
-
-struct MixMHIndex { virtual ~MixMHIndex() {} };
-
 struct MixMHKernel : GKernel
 {
-  MixMHKernel(Trace * trace, GKernelMaker * gKernelMaker):
-    GKernel(trace), gKernelMaker(gKernelMaker) {}
+  MixMHKernel(Trace * trace, GKernel * gKernel):
+    GKernel(trace), gKernel(gKernel) {}
 
   virtual MixMHIndex * sampleIndex() =0;
   virtual double logDensityOfIndex(MixMHIndex * index) =0;
   virtual MixMHParam * processIndex(MixMHIndex * index) =0;
   
   double propose() override;
-  void accept() override { childGKernel->accept(); reset(); }
-  void reject() override { childGKernel->reject(); reset(); }
+  void accept() override { gKernel->accept(); gKernel->destroyParameters(); }
+  void reject() override { gKernel->reject(); gKernel->destroyParameters(); }
   
-  void reset() { delete index; delete param; delete childGKernel; }
-  
-  GKernelMaker * gKernelMaker;
+  GKernel* gKernel;
 
   /* constructed anew for each proposal */
   MixMHIndex * index;
-  MixMHParam * param;
-  GKernel * childGKernel; 
 };
 #endif

@@ -9,6 +9,11 @@ struct CountPlusSP : SP
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
 };
 
+struct CountMinusSP : SP
+{ 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+};
+
 struct CountTimesSP : SP
 { 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 

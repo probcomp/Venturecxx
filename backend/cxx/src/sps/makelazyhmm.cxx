@@ -27,7 +27,7 @@ VentureValue * MakeLazyHMMAAAKernel::simulate(VentureValue * oldVal, Node * appN
 
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(appNode->madeSPAux);
 
-  if (aux->os.empty()) { return new VentureSP(appNode,new LazyHMMSP(p0,T,O)); }
+  if (aux->os.empty()) { return new VentureSP(new LazyHMMSP(p0,T,O)); }
 
   uint32_t maxObservation = (*(max_element(aux->os.begin(),aux->os.end()))).first;
   vector<VectorXd> fs{p0};
@@ -59,7 +59,7 @@ VentureValue * MakeLazyHMMAAAKernel::simulate(VentureValue * oldVal, Node * appN
     aux->xs[i] = sampleVectorXd(normalizedVectorXd(gamma),rng);
   }
 
-  return new VentureSP(appNode,new LazyHMMSP(p0,T,O));
+  return new VentureSP(new LazyHMMSP(p0,T,O));
 }
 
 /* MakeLazyHMMSP */
@@ -67,10 +67,9 @@ VentureValue * MakeLazyHMMAAAKernel::simulate(VentureValue * oldVal, Node * appN
 VentureValue * MakeLazyHMMSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   return 
-    new VentureSP(node,
-      new LazyHMMSP(vvToEigenVector(node->operandNodes[0]->getValue()),
-		    vvToEigenMatrix(node->operandNodes[1]->getValue()),
-		    vvToEigenMatrix(node->operandNodes[2]->getValue())));
+    new VentureSP(new LazyHMMSP(vvToEigenVector(node->operandNodes[0]->getValue()),
+				vvToEigenMatrix(node->operandNodes[1]->getValue()),
+				vvToEigenMatrix(node->operandNodes[2]->getValue())));
 }
 
 pair<double,LatentDB *> MakeLazyHMMSP::detachAllLatents(SPAux * spaux) const

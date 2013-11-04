@@ -2,14 +2,10 @@
 #define MAKE_SYM_DIR_MULT_H
 
 
-
-#include "exp.h"
 #include "sp.h"
 #include "spaux.h"
 #include <vector>
 #include <string>
-
-
 
 /* TODO this does not yet handle n changing in AAA */
 struct SymDirMultSPAux : SPAux
