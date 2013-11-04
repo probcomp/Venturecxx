@@ -38,12 +38,12 @@ map<string,SP *> initBuiltInSPs()
     {"real_gt", new RealGreaterThanSP},
     {"real_lt", new RealLessThanSP},
 
-    {"uint_plus", new CountPlusSP},
-    {"uint_times", new CountTimesSP},
-    {"uint_div", new CountDivideSP},
-    {"uint_eq", new CountEqualSP},
-    {"uint_gt", new CountGreaterThanSP},
-    {"uint_lt", new CountLessThanSP},
+    {"int_plus", new CountPlusSP},
+    {"int_times", new CountTimesSP},
+    {"int_div", new CountDivideSP},
+    {"int_eq", new CountEqualSP},
+    {"int_gt", new CountGreaterThanSP},
+    {"int_lt", new CountLessThanSP},
 
     {"make_vector", new MakeVectorSP},
     {"vector_lookup", new VectorLookupSP},
