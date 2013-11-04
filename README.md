@@ -12,6 +12,7 @@ Interesting parts:
 - There are language-level benchmarks (and correctness tests) in the
   [VentureBenchmarksAndTests](https://github.com/mit-probabilistic-computing-project/VentureBenchmarksAndTests)
   repository.
+- There is an inference visualization tool in the [VentureUnit](https://github.com/mit-probabilistic-computing-project/VentureUnit) repository.
 
 Requirements
 ============
