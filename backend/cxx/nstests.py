@@ -729,7 +729,10 @@ def loadPYMem(sivm):
   sivm.assume("make_sticks","""
 (lambda (alpha d)
   ((lambda (sticks) (lambda () (pick_a_stick sticks 1.0)))
-   (mem (lambda (k) (beta (real_minus 1.0 d) (real_plus alpha (real_times k d)))))))
+   (mem
+    (lambda (k)
+      (beta (real_minus 1.0 d)
+            (real_plus alpha (real_times k d)))))))
 """)
 
   sivm.assume("u_pymem","""
@@ -742,7 +745,8 @@ def loadPYMem(sivm):
 
   sivm.assume("pymem","""
 (lambda (alpha d base_dist)
-  ((lambda (augmented_proc crp) (lambda () (augmented_proc (crp))))
+  ((lambda (augmented_proc crp)
+     (lambda () (augmented_proc (crp))))
    (mem (lambda (table) (base_dist)))
    (make_crp alpha d)))
 """)
