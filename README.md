@@ -1,3 +1,12 @@
+Requirements
+============
+
+On Ubuntu:
+
+    sudo apt-get install python-dev libboost-python-dev libgsl0-dev
+    
+GCC 4.8 is also required for c++11 support.
+
 Installation to local environment
 =================================
 
