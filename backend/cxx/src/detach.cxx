@@ -271,7 +271,7 @@ double Trace::detachFamily(Node * node,
     if (dynamic_cast<VentureSP *>(node->getValue())) 
     { 
       VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
-      if (vsp->makerNode == node) 
+      if (vsp->makerNode == node && dynamic_cast<CSP*>(vsp->sp))
       {
 	assert(dynamic_cast<CSP*>(vsp->sp));
 	teardownMadeSP(node);

@@ -262,7 +262,7 @@ double Trace::evalRequests(Node * node,
       {
 	esrParent = omegaDB->spFamilyDBs[{node->vsp()->makerNode, esr.id}];
 	assert(esrParent);
-	restoreSPFamily(esrParent,scaffold,omegaDB);
+	restoreFamily(esrParent,scaffold,omegaDB);
       }
       else
       {
@@ -286,14 +286,6 @@ double Trace::evalRequests(Node * node,
   }
 
   return weight;
-}
-
-double Trace::restoreSPFamily(Node * root,
-			      Scaffold * scaffold,
-			      OmegaDB * omegaDB)
-{
-  restoreFamily(root,nullptr,omegaDB);
-  return 0;
 }
 
 pair<double, Node*> Trace::evalVentureFamily(size_t directiveID, VentureValue * exp)

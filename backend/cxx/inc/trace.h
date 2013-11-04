@@ -102,10 +102,6 @@ protected:
 				     bool isDefinite);
 
 
-  double restoreSPFamily(Node * root,
-			Scaffold * scaffold,
-			OmegaDB * omegaDB);
-
   double restoreFamily(Node * root,
 		       Scaffold * scaffold,
 		       OmegaDB * omegaDB);

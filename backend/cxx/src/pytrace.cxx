@@ -17,14 +17,14 @@ using boost::python::extract;
 
 PyTrace::PyTrace(): 
   Trace(), 
-  mcmc(new OutermostMixMH(this, new ScaffoldMHGKernel(this))) {}
+//  mcmc(new OutermostMixMH(this, new ScaffoldMHGKernel(this))) {}
+  mcmc(new OutermostMixMH(this,new GibbsGKernel(this))) {}
 
 PyTrace::~PyTrace()
 {
   OutermostMixMH * mKernel = dynamic_cast<OutermostMixMH*>(mcmc);
-  ScaffoldMHGKernel * gKernel = dynamic_cast<ScaffoldMHGKernel*>(mKernel->gKernel);
-  delete gKernel;
-  delete mKernel;
+  delete mKernel->gKernel;
+  delete mcmc;
 }
 
 VentureValue * PyTrace::parseExpression(boost::python::object o)

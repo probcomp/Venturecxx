@@ -47,11 +47,13 @@ def runTests(N):
   testStaleAAA2(N)
   testEval1(N)
   testEval2(N)
+  testEval3(N)
   testExtendEnv1(N)
   testApply1(N)
   testList1()
-  testCCRP1(N)
-# testGeometric1(N)
+  testCRP1(N,True)
+  testCRP1(N,False)
+  testGeometric1(N)
 
 def testBernoulli1(N):
   sivm = SIVM()
@@ -103,9 +105,9 @@ def testMHNormal1(N):
 
 def testMem0(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (x) (bernoulli x)))")
-  sivm.predict("(f 0.5)")
-  sivm.predict("(f 0.5)")
+  sivm.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
+  sivm.predict("(f (bernoulli 0.5))")
+  sivm.predict("(f (bernoulli 0.5))")
   sivm.infer(N)
   print "Passed TestMem0"
 
@@ -608,6 +610,24 @@ def testEval2(N):
   print "---TestEval2---"
   print "(0.667," + str(mean) + ")"
 
+def testEval3(N):
+  sivm = SIVM()
+  sivm.assume("p","(uniform_continuous 0.0 1.0)")
+  sivm.assume("globalEnv","(get_current_environment)")
+  sivm.assume("exp","""(quote 
+  (branch ((lambda () (bernoulli p)))
+        (lambda () ((lambda () (normal 10.0 1.0))))
+        (lambda () (normal 0.0 1.0)))
+)""")
+  
+  sivm.assume("x","(eval exp globalEnv)")
+  sivm.observe("x",11.0)
+
+  predictions = loggingInfer(sivm,1,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestEval3---"
+  print "(0.667," + str(mean) + ")"
+
 def testApply1(N):
   sivm = SIVM()
   sivm.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
@@ -617,6 +637,7 @@ def testApply1(N):
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestApply1---"
   print "(1000ish," + str(mean) + ")"
+
 
 def testExtendEnv1(N):
   sivm = SIVM()
@@ -697,58 +718,60 @@ def testList1():
 
   print "Passed TestList1()"
 
+def loadPYMem(sivm):
+  sivm.assume("pick_a_stick","""
+(lambda (sticks k)
+  (branch (bernoulli (sticks k))
+          (lambda () k)
+          (lambda () (pick_a_stick sticks (real_plus k 1.0)))))
+""")
+  
+  sivm.assume("make_sticks","""
+(lambda (alpha d)
+  ((lambda (sticks) (lambda () (pick_a_stick sticks 1.0)))
+   (mem (lambda (k) (beta (real_minus 1.0 d) (real_plus alpha (real_times k d)))))))
+""")
+
+  sivm.assume("u_pymem","""
+(lambda (alpha d base_dist)
+  ((lambda (augmented_proc py)
+     (lambda () (augmented_proc (py))))
+   (mem (lambda (stick_index) (base_dist)))
+   (make_sticks alpha d)))
+""")
+
+  sivm.assume("pymem","""
+(lambda (alpha d base_dist)
+  ((lambda (augmented_proc crp) (lambda () (augmented_proc (crp))))
+   (mem (lambda (table) (base_dist)))
+   (make_crp alpha d)))
+""")
 
 def testUCRP1(N):
   sivm = SIVM()
-  sivm.assume("pickAStick","""
-(lambda (sticks i)
-  (branch (bernoulli (sticks i))
-      (lambda () i)
-      (lambda () (pickAStick sticks (uint_plus i 1)))))
-""")
-  sivm.assume("makeSticks","""
-(lambda (alpha)
-  ((lambda (sticks)
-     (lambda () (pickAStick sticks 1)))
-   (mem (lambda (x) (beta 1.0 alpha)))))
-""")
-  sivm.assume("dpmem","""
-(lambda (alpha baseDist)
-  ((lambda (augmentedProc DP)
-     (lambda () (augmentedProc (DP))))
-   (mem (lambda (stickIndex) (baseDist)))
-   (makeSticks alpha)))
-""")
-  sivm.assume("f","(dpmem (normal 5.0 0.5) (lambda () (categorical (make_vector .2 .2 .2 .2 .2))))")
-
+  loadPYMem(sivm)
+  sivm.assume("alpha","(uniform_continuous 0.1 20.0)")
+  sivm.assume("d","(uniform_continuous 0.0 0.1)")
+  sivm.assume("base_dist","(lambda () (categorical (make_vector 0.5 0.5)))")
+  sivm.assume("f","(u_pymem alpha d base_dist)")
   sivm.predict("(f)")
+  sivm.predict("(f)")
+  sivm.observe("(normal (f) 1.0)",1.0)
+  sivm.observe("(normal (f) 1.0)",1.0)
+  sivm.observe("(normal (f) 1.0)",0.0)
+  sivm.observe("(normal (f) 1.0)",0.0)
+  sivm.infer(N)
 
-  sivm.observe("(normal (f) 0.1)",0.0)
-  sivm.observe("(normal (f) 0.1)",0.0)
-
-  sivm.observe("(normal (f) 0.1)",1.0)
-  sivm.observe("(normal (f) 0.1)",1.0)
-
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-
-  sivm.observe("(normal (f) 0.1)",3.0)
-
-  predictions = loggingInfer(sivm,5,N)
-  ps = normalizeList([3,3,6,2,1])
-  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4]))
-  printTest("TestUCRP1 (not exact)",ps,eps)
-
-def testCCRP1(N):
+def testCRP1(N,isCollapsed):
   sivm = SIVM()
-  sivm.assume("alpha","(normal 5.0 0.5)")
-  sivm.assume("crp","(make_crp alpha 0.0)")
-  sivm.assume("fBase","(mem (lambda (i) (categorical (make_vector .2 .2 .2 .2 .2))))")
-  sivm.assume("f","(lambda () (fBase (crp)))")
-  sivm.predict("(f)")
+  loadPYMem(sivm)
+  sivm.assume("alpha","(gamma 1.0 1.0)")
+  sivm.assume("d","(uniform_continuous 0.0 0.1)")
+  sivm.assume("base_dist","(lambda () (categorical (make_vector 0.2 0.2 0.2 0.2 0.2)))")
+  if isCollapsed: sivm.assume("f","(pymem alpha d base_dist)")
+  else: sivm.assume("f","(u_pymem alpha d base_dist)")
+    
+  pid = sivm.predict("(f)")[0]
 
   sivm.observe("(normal (f) 0.1)",0.0)
   sivm.observe("(normal (f) 0.1)",0.0)
@@ -764,10 +787,11 @@ def testCCRP1(N):
 
   sivm.observe("(normal (f) 0.1)",3.0)
 
-  predictions = loggingInfer(sivm,5,N)
+  predictions = loggingInfer(sivm,pid,N)
   ps = normalizeList([3,3,6,2,1])
   eps = normalizeList(countPredictions(predictions, [0,1,2,3,4]))
-  printTest("TestCCRP1 (not exact)",ps,eps)
+  printTest("TestCRP1 (not exact)",ps,eps)
+
 
 def testGeometric1(N):
   sivm = SIVM()
@@ -777,7 +801,7 @@ def testGeometric1(N):
   sivm.assume("geo","(lambda (p) (branch (bernoulli p) (lambda () 1) (lambda () (uint_plus 1 (geo p)))))")
   pID = sivm.predict("(geo p)")[0]
   
-  predictions = loggingInfer(sivm,"5",N)
+  predictions = loggingInfer(sivm,5,N)
 
   k = 7
   ps = [math.pow(2,-n) for n in range(1,k)]
