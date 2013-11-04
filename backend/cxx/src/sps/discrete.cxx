@@ -2,6 +2,7 @@
 #include "sp.h"
 #include "sps/discrete.h"
 #include "value.h"
+#include "utils.h"
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -45,39 +46,33 @@ vector<VentureValue*> BernoulliSP::enumerateOutput(Node * node) const
   else { return {new VentureBool(true)}; }
 }
 
-/* Categorical */
-/* (categorical ps) */
 VentureValue * CategoricalSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureVector * vec = dynamic_cast<VentureVector *>(operands[0]->getValue());
-  assert(vec);
+  vector<double> ps;
+  for (Node * operandNode : node->operandNodes)
+  {
+    VentureNumber * d = dynamic_cast<VentureNumber *>(operandNode->getValue());
+    assert(d);
+    ps.push_back(d->x);
+  }
+  normalizeVector(ps);
 
-  vector<VentureValue*> & xs = vec->xs;
   double u = gsl_ran_flat(rng,0.0,1.0);
   double sum = 0.0;
-  for (size_t i = 0; i < xs.size(); ++i)
+  for (size_t i = 0; i < ps.size(); ++i)
   {
-    VentureNumber * d = dynamic_cast<VentureNumber *>(xs[i]);
-    assert(d);
-    double p = d->x;
-    sum += p;
+    sum += ps[i];
     if (u < sum) { return new VentureAtom(i); }
   }
   assert(false);
-  /* TODO normalize as a courtesy */
 } 
 
 double CategoricalSP::logDensityOutput(VentureValue * value, Node * node) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureVector * vec = dynamic_cast<VentureVector *>(operands[0]->getValue());
-  assert(vec);
-
-  vector<VentureValue*> & xs = vec->xs;
-
   VentureAtom * i = dynamic_cast<VentureAtom *>(value);
-  VentureNumber * p = dynamic_cast<VentureNumber *>(xs[i->n]);
+  assert(i);
+  VentureNumber * p = dynamic_cast<VentureNumber *>(node->operandNodes[i->n]->getValue());
+  assert(p);
   return log(p->x);
 }
 
@@ -86,13 +81,9 @@ vector<VentureValue*> CategoricalSP::enumerateOutput(Node * node) const
   VentureAtom * vold = dynamic_cast<VentureAtom*>(node->getValue());
   assert(vold);
 
-  vector<Node *> & operands = node->operandNodes;
-  VentureVector * vec = dynamic_cast<VentureVector *>(operands[0]->getValue());
-  assert(vec);
-
   vector<VentureValue*> values;
 
-  for (size_t i = 0; i < vec->xs.size(); ++i)
+  for (size_t i = 0; i < node->operandNodes.size(); ++i)
   {
     if (i == vold->n) { continue; }
     else { 
