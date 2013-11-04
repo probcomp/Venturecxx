@@ -9,6 +9,9 @@ Interesting parts:
 - The Javascript client and web demos are actually in the
   [VentureJSRIPL](https://github.com/mit-probabilistic-computing-project/VentureJSRIPL)
   repository.
+- There are language-level benchmarks (and correctness tests) in the
+  [VentureBenchmarksAndTests](https://github.com/mit-probabilistic-computing-project/VentureBenchmarksAndTests)
+  repository.
 
 Requirements
 ============
