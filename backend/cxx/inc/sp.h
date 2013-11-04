@@ -106,6 +106,8 @@ struct SP
   bool makesESRs{false};
   bool makesHSRs{false};
 
+  bool esrsOwnValues{false};
+
   bool childrenCanAAA{false};
 
   bool hasAEKernel{false};

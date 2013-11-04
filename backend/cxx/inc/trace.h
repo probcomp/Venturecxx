@@ -157,7 +157,8 @@ protected:
 
   double detachFamily(Node * node,
 		      Scaffold * scaffold,
-		      OmegaDB * omegaDB);
+		      OmegaDB * omegaDB,
+		      bool familyOwnsValue);
 
   double unapply(Node * node,
 		 Scaffold * scaffold,
