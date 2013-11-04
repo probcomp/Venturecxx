@@ -42,16 +42,17 @@ class TestSivmUtils(unittest.TestCase):
 
     def test_desugar_expression_and(self):
         a = ['and','a','b']
-        b = [['condition_erp','a',['lambda',[],'b'],{"type":"boolean","value":False}]]
+        b = [['condition_erp','a',['lambda',[],'b'],['lambda', [], {"type":"boolean","value":False}]]]
         self.assertEqual(utils.desugar_expression(a),b)
+    
     def test_desugar_expression_nested(self):
         a = [['and','a','b']]
-        b = [[['condition_erp','a',['lambda',[],'b'],{"type":"boolean","value":False}]]]
+        b = [[['condition_erp','a',['lambda',[],'b'],['lambda', [], {"type":"boolean","value":False}]]]]
         self.assertEqual(utils.desugar_expression(a),b)
 
     def test_desugar_expression_or(self):
         a = ['or','a','b']
-        b = [['condition_erp','a',{"type":"boolean","value":True},['lambda',[],'b']]]
+        b = [['condition_erp','a',['lambda', [], {"type":"boolean","value":True}],['lambda',[],'b']]]
         self.assertEqual(utils.desugar_expression(a),b)
 
     def test_desugar_expression_let_1(self):
