@@ -224,9 +224,8 @@ def _modify_value(ob):
     if ob['type'] not in _literal_type_map:
         raise VentureException("fatal",
                 "Invalid literal type: " + ob["type"])
-    # cpp engine does not have robust number parsing
-    if int(ob['value']) == ob['value']:
-        ob['value'] = int(ob['value'])
+    #if int(ob['value']) == ob['value']:
+    #    ob['value'] = int(ob['value'])
     if ob['type'] == 'number':
         if isinstance(ob['value'],int):
             ob['type'] = 'count'
