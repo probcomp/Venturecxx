@@ -32,6 +32,7 @@ BOOST_PYTHON_MODULE(libsp)
 //  class_<PySP>("SP",init<>()[return_value_policy<reference_existing_object>()])
 //  class_<PySP>("SP",init<>(),return_value_policy<reference_existing_object>())
   class_<PySP>("SP",init<>())
+
     .def("simulate", &PySP::simulateOutputPython)
     ;
 };
