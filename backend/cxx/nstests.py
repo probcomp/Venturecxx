@@ -91,7 +91,7 @@ def testMHNormal1(N):
   sivm = SIVM()
   sivm.assume("a", "(normal 10.0 1.0)")
   sivm.assume("b", "(normal a 1.0)")
-  sivm.observe("((lambda () (normal b 1.0))))", 14.0)
+  sivm.observe("((lambda () (normal b 1.0)))", 14.0)
   sivm.predict("""
 (branch (lt a 100.0) 
         (lambda () (normal (plus a b) 1.0))

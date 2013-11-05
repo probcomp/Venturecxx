@@ -1,6 +1,6 @@
 #include "value.h"
 #include "node.h"
-#include "makelazyhmm.h"
+#include "sps/makelazyhmm.h"
 #include "omegadb.h"
 #include "value.h"
 

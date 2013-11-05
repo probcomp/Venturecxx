@@ -2,6 +2,7 @@
 
 import sys
 sys.path.append(".")
+sys.path.append("inc/pysps") 
 
 from libtrace import Trace
 
