@@ -20,6 +20,7 @@ struct MeanFieldGKernel : GKernel
 
   Scaffold * scaffold{nullptr};
   OmegaDB * rhoDB{nullptr};
+  double weightRho{0};
 
   void registerVariationalLKernels();
   

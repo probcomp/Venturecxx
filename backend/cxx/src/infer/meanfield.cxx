@@ -10,18 +10,26 @@
 
 double MeanFieldGKernel::propose()
 {
-  assert(false);
-  return 0.0;
+  /* Sample from the variational distribution. */
+  double weightXi = trace->regen(scaffold->border,scaffold,false,nullptr,nullptr);
+  return weightXi - weightRho;
 }
  
 void MeanFieldGKernel::accept()
 {
-  assert(false);
+  flushDB(rhoDB,false);
+  rhoDB = nullptr;
 }
 
 void MeanFieldGKernel::reject()
 {
-  assert(false);
+  pair<double, OmegaDB *> xiInfo = trace->detach(scaffold->border,scaffold);
+  OmegaDB * xiDB = xiInfo.second;
+  assertTorus(trace,scaffold);
+  trace->regen(scaffold->border,scaffold,true,rhoDB,nullptr);
+  flushDB(rhoDB,true);
+  flushDB(xiDB,false);
+  rhoDB = nullptr;
 }
 
 void MeanFieldGKernel::destroyParameters()
@@ -55,6 +63,7 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
   double stepSize = 0.05;
   size_t numIters = 50;
   registerVariationalLKernels();
+  if (scaffold->lkernels.empty()) { numIters = 0; }
   double rhoWeight;
 
   tie(rhoWeight,rhoDB) = trace->detach(scaffold->border,scaffold);
@@ -75,8 +84,13 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
     for (pair<Node *, LKernel*> p : scaffold->lkernels)
     {
       VariationalLKernel * vk = dynamic_cast<VariationalLKernel*>(p.second);
-      vk->updateParameters(gradients[p.first],gain,stepSize);
+      if (vk) { vk->updateParameters(gradients[p.first],gain,stepSize); }
     }
   }
+  trace->regen(scaffold->border,scaffold,true,rhoDB,nullptr);
+  OmegaDB * rhoDB2;
+  tie(weightRho,rhoDB2) = trace->detach(scaffold->border,scaffold);
+  flushDB(rhoDB2,true);
+  assertTorus(trace,scaffold);
 }
  
