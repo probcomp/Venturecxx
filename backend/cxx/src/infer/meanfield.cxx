@@ -1,0 +1,73 @@
+#include "infer/meanfield.h"
+
+
+double MeanFieldGKernel::propose()
+{
+  assert(false);
+  return 0.0;
+}
+ 
+void MeanFieldGKernel::accept()
+{
+  assert(false);
+}
+
+void MeanFieldGKernel::reject()
+{
+  assert(false);
+}
+
+void MeanFieldGKernel::destroyParameters()
+{
+  delete scaffold;
+}
+
+void MeanFieldGKernel::registerVariationialLKernels()
+{
+  for (Node * node : scaffold->drg)
+  {
+    if (node->isApplicationNode() && 
+	!scaffold->isResampling(node->operatorNode()) &&
+	node->sp()->hasVariationalLKernel())
+    {
+      variationialLKernels.insert({node,node->sp()->getVariationalLKernel(node)});
+    }
+  }
+}
+
+
+void MeanFieldGKernel::loadParameters(MixMHParam * param)
+{
+  ScaffoldMHParam * sparam = dynamic_cast<ScaffoldMHParam*>(param);
+  assert(sparam);
+  scaffold = sparam->scaffold;
+  delete sparam;
+
+  /* Now, compute variational kernels through stochastic gradient descent. */
+  double stepSize = 0.05;
+  size_t numIters = 50;
+  registerVariationalLKernels();
+  double rhoWeight;
+
+  tie(rhoWeight,rhoDB) = trace->detach(scaffold->border,scaffold);
+  assertTorus(trace,scaffold);
+
+  for (size_t i = 0; i < numIters; ++i)
+  {
+    map<Node *, vector<double> > gradients;
+
+    // Regen populates the gradients
+    double gain = trace->regen(scaffold->border,scaffold,false,nullptr,&gradients);
+
+    OmegaDB * detachedDB;
+    tie(ignore,detachedDB) = trace->detach(scaffold->border,scaffold);
+    assertTorus(trace,scaffold);
+    flushDB(detachedDB,false);
+
+    for (pair<Node *, VariationalLKernel* > p : variationalLKernels)
+    {
+      p.second.updateParameters(gradients[p.first],gain,stepSize);
+    }
+  }
+}
+ 

@@ -168,3 +168,8 @@ vector<VentureValue*> SP::enumerateOutput(Node * node) const
   vector<VentureValue*> v;
   return v;
 }
+
+VariationalLKernel * SP::getVariationalLKernel(Node * node) const
+{
+  return new DefaultVariationalLKernel(this,node);
+}

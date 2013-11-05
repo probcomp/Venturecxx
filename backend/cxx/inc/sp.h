@@ -93,7 +93,11 @@ struct SP
 
   virtual VariationalLKernel * getVariationalLKernel(Node * node) const;
   virtual vector<ParameterScope> getParameterScopes() const { assert(false); return {}; }
-  virtual vector<double> gradientOfLogDensity() const { assert(false); return {}; }
+
+  vector<double> gradientOfLogDensity(double output,
+				      const vector<double> & arguments) const 
+    { assert(false); return {}; }
+
 
 
   bool hasAux() { return makesESRs || makesHSRs || tracksSamples; }

@@ -1,5 +1,6 @@
 #include "node.h"
 #include "sp.h"
+#include "lkernel.h"
 #include "sps/continuous.h"
 #include "value.h"
 
@@ -51,6 +52,23 @@ double NormalSP::logDensityOutput(VentureValue * value, Node * node)  const
   assert(sigma);
   assert(x);
   return log(gsl_ran_gaussian_pdf(x->x - mu, sigma->x));
+}
+
+vector<ParameterScope> NormalSP::getParameterScopes() const
+{
+  return {ParameterScope::REAL, ParameterScope::POSITIVE_REAL};
+}
+ 
+vector<double> gradientOfLogDensity(double output,
+				      const vector<double> & arguments) const
+{
+  double mu = arguments[0];
+  double sigma = arguments[1];
+  double x = output;
+
+  double gradMu = (x - mu) / (sigma * sigma);
+  double gradSigma = (((x - mu) * (x - mu)) - (sigma * sigma)) / (sigma * sigma * sigma);
+  return { gradMu, gradSigma };
 }
 
 /* Gamma */
