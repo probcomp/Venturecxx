@@ -71,9 +71,9 @@ double CategoricalSP::logDensityOutput(VentureValue * value, Node * node) const
 {
   VentureAtom * i = dynamic_cast<VentureAtom *>(value);
   assert(i);
-  VentureNumber * p = dynamic_cast<VentureNumber *>(node->operandNodes[i->n]->getValue());
+  VentureAtom * p = dynamic_cast<VentureAtom *>(node->operandNodes[i->n]->getValue());
   assert(p);
-  return log(p->x);
+  return log(p->n);
 }
 
 vector<VentureValue*> CategoricalSP::enumerateOutput(Node * node) const
