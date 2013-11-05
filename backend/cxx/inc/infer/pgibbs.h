@@ -31,8 +31,8 @@ struct PGibbsSelectGKernel : GKernel
   void reject() override;
 
 private:
-  vector<uint32_t> constructAncestorPath(uint32_t t, uint32_t p);
-  void restoreAncestorPath(vector<uint32_t> path);
+  list<uint32_t> constructAncestorPath(uint32_t t, uint32_t p);
+  void restoreAncestorPath(list<uint32_t> path);
   void discardAncestorPath(uint32_t t);
 
   /* the Pth index indicates RHO */
