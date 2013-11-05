@@ -766,6 +766,11 @@ def testUCRP1(N):
   sivm.observe("(normal (f) 1.0)",0.0)
   sivm.infer(N)
 
+def observe_categories(sivm,counts):
+  for i in range(len(counts)):
+    for ct in range(counts[i]):
+      sivm.observe("(normal (f) 0.1)",float(i))
+
 def testCRP1(N,isCollapsed):
   sivm = SIVM()
   loadPYMem(sivm)
@@ -777,19 +782,7 @@ def testCRP1(N,isCollapsed):
     
   pid = sivm.predict("(f)")[0]
 
-  sivm.observe("(normal (f) 0.1)",0.0)
-  sivm.observe("(normal (f) 0.1)",0.0)
-
-  sivm.observe("(normal (f) 0.1)",1.0)
-  sivm.observe("(normal (f) 0.1)",1.0)
-
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-
-  sivm.observe("(normal (f) 0.1)",3.0)
+  observe_categories(sivm,[2,2,5,1,0])
 
   predictions = loggingInfer(sivm,pid,N)
   ps = normalizeList([3,3,6,2,1])
