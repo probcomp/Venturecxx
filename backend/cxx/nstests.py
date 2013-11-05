@@ -729,7 +729,10 @@ def loadPYMem(sivm):
   sivm.assume("make_sticks","""
 (lambda (alpha d)
   ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
-   (mem (lambda (k) (beta (minus 1 d) (plus alpha (times k d)))))))
+   (mem
+    (lambda (k)
+      (beta (minus 1 d)
+            (plus alpha (times k d)))))))
 """)
 
   sivm.assume("u_pymem","""
@@ -742,7 +745,8 @@ def loadPYMem(sivm):
 
   sivm.assume("pymem","""
 (lambda (alpha d base_dist)
-  ((lambda (augmented_proc crp) (lambda () (augmented_proc (crp))))
+  ((lambda (augmented_proc crp)
+     (lambda () (augmented_proc (crp))))
    (mem (lambda (table) (base_dist)))
    (make_crp alpha d)))
 """)
@@ -762,6 +766,11 @@ def testUCRP1(N):
   sivm.observe("(normal (f) 1.0)",0.0)
   sivm.infer(N)
 
+def observe_categories(sivm,counts):
+  for i in range(len(counts)):
+    for ct in range(counts[i]):
+      sivm.observe("(normal (f) 0.1)",float(i))
+
 def testCRP1(N,isCollapsed):
   sivm = SIVM()
   loadPYMem(sivm)
@@ -773,25 +782,36 @@ def testCRP1(N,isCollapsed):
     
   pid = sivm.predict("(f)")[0]
 
-  sivm.observe("(normal (f) 0.1)",0.0)
-  sivm.observe("(normal (f) 0.1)",0.0)
-
-  sivm.observe("(normal (f) 0.1)",1.0)
-  sivm.observe("(normal (f) 0.1)",1.0)
-
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-
-  sivm.observe("(normal (f) 0.1)",3.0)
+  observe_categories(sivm,[2,2,5,1,0])
 
   predictions = loggingInfer(sivm,pid,N)
   ps = normalizeList([3,3,6,2,1])
   eps = normalizeList(countPredictions(predictions, [0,1,2,3,4]))
   printTest("TestCRP1 (not exact)",ps,eps)
 
+def load_hierarchical_Pittman_Yor(sivm,topCollapsed,botCollapsed):
+  loadPYMem(sivm)
+  sivm.assume("alpha","(gamma 1.0 1.0)")
+  sivm.assume("d","(uniform_continuous 0.0 0.1)")
+  sivm.assume("base_dist","(lambda () (categorical (make_vector 0.2 0.2 0.2 0.2 0.2)))")
+  if topCollapsed: sivm.assume("intermediate_dist","(pymem alpha d base_dist)")
+  else: sivm.assume("intermediate_dist","(u_pymem alpha d base_dist)")
+  if botCollapsed: sivm.assume("f","(pymem alpha d intermediate_dist)")
+  else: sivm.assume("f","(u_pymem alpha d intermediate_dist)")
+
+def predict_hierarchical_Pittman_Yor(N,topCollapsed,botCollapsed):
+  sivm = SIVM()
+  load_hierarchical_Pittman_Yor(sivm,topCollapsed,botCollapsed)
+  pid = sivm.predict("(f)")[0]
+  observe_categories(sivm,[2,2,5,1,0])
+  return loggingInfer(sivm,pid,N)
+
+def test_CRP_with_hierarchical_Pittman_Yor(N):
+  print "---Test: Test hierarchical Pittman-Yor---"
+  for top in [False,True]:
+    for bot in [False,True]:
+      attempt = normalizeList(countPredictions(predict_hierarchical_Pittman_Yor(N,top,bot), [0,1,2,3,4]))
+      print("(%s,%s): %s" % (top,bot,attempt))
 
 def testGeometric1(N):
   sivm = SIVM()
