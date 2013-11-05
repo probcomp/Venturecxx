@@ -71,8 +71,8 @@ def testBernoulli1(N):
 
 def testCategorical1(N):
   sivm = SIVM()
-  sivm.assume("x", "(categorical (make_vector 0.1 0.2 0.3 0.4))")
-  sivm.assume("y", "(categorical (make_vector 0.2 0.6 0.2))")
+  sivm.assume("x", "(categorical 0.1 0.2 0.3 0.4)")
+  sivm.assume("y", "(categorical 0.2 0.6 0.2)")
   sivm.predict("(plus x y)")
 
   predictions = loggingInfer(sivm,3,N)
@@ -114,12 +114,12 @@ def testMem0(N):
 
 def testMem1(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical (make_vector 0.4 0.6)))))")
+  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical 0.4 0.6))))")
   sivm.assume("x","(f 1)")
   sivm.assume("y","(f 1)")
   sivm.assume("w","(f 2)")
   sivm.assume("z","(f 2)")
-  sivm.assume("q","(plus 1 (categorical (make_vector 0.1 0.9)))")
+  sivm.assume("q","(plus 1 (categorical 0.1 0.9))")
   sivm.predict('(plus x y w z q)');
 
   predictions = loggingInfer(sivm,7,N)
@@ -129,13 +129,13 @@ def testMem1(N):
 
 def testMem2(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical (make_vector 0.4 0.6)))))")
+  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical 0.4 0.6))))")
   sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   sivm.assume("x","(f ((branch (bernoulli 0.5) (lambda () (lambda () 1)) (lambda () (lambda () 1)))))")
   sivm.assume("y","(g ((lambda () 0)))")
   sivm.assume("w","((lambda () (f 2)))")
   sivm.assume("z","(g 1)")
-  sivm.assume("q","(plus 1 (categorical (make_vector 0.1 0.9)))")
+  sivm.assume("q","(plus 1 (categorical 0.1 0.9))")
   sivm.predict('(plus x y w z q)');
 
   predictions = loggingInfer(sivm,8,N)
@@ -145,13 +145,13 @@ def testMem2(N):
 
 def testMem3(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical (make_vector 0.4 0.6)))))")
+  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical 0.4 0.6))))")
   sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   sivm.assume("x","(f ((lambda () 1)))")
   sivm.assume("y","(g ((lambda () (branch (bernoulli 1.0) (lambda () 0) (lambda () 100)))))")
   sivm.assume("w","((lambda () (f 2)))")
   sivm.assume("z","(g 1)")
-  sivm.assume("q","(plus 1 (categorical (make_vector 0.1 0.9)))")
+  sivm.assume("q","(plus 1 (categorical 0.1 0.9))")
   sivm.predict('(plus x y w z q)');
 
   predictions = loggingInfer(sivm,8,N)
@@ -752,7 +752,7 @@ def testUCRP1(N):
   loadPYMem(sivm)
   sivm.assume("alpha","(uniform_continuous 0.1 20.0)")
   sivm.assume("d","(uniform_continuous 0.0 0.1)")
-  sivm.assume("base_dist","(lambda () (categorical (make_vector 0.5 0.5)))")
+  sivm.assume("base_dist","(lambda () (categorical 0.5 0.5))")
   sivm.assume("f","(u_pymem alpha d base_dist)")
   sivm.predict("(f)")
   sivm.predict("(f)")
@@ -767,7 +767,7 @@ def testCRP1(N,isCollapsed):
   loadPYMem(sivm)
   sivm.assume("alpha","(gamma 1.0 1.0)")
   sivm.assume("d","(uniform_continuous 0.0 0.1)")
-  sivm.assume("base_dist","(lambda () (categorical (make_vector 0.2 0.2 0.2 0.2 0.2)))")
+  sivm.assume("base_dist","(lambda () (categorical 0.2 0.2 0.2 0.2 0.2))")
   if isCollapsed: sivm.assume("f","(pymem alpha d base_dist)")
   else: sivm.assume("f","(u_pymem alpha d base_dist)")
     
