@@ -13,8 +13,8 @@
 VentureValue * MakeUCSymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<Node *> & operands = node->operandNodes;
-  VentureDouble * alpha = dynamic_cast<VentureDouble *>(operands[0]->getValue());
-  VentureCount * n = dynamic_cast<VentureCount *>(operands[1]->getValue());
+  VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureAtom * n = dynamic_cast<VentureAtom *>(operands[1]->getValue());
 
   assert(alpha);
   assert(n);
@@ -38,8 +38,8 @@ VentureValue * MakeUCSymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) co
 double MakeUCSymDirMultSP::logDensityOutput(VentureValue * value, Node * node) const
 {
   vector<Node *> & operands = node->operandNodes;
-  VentureDouble * alpha = dynamic_cast<VentureDouble *>(operands[0]->getValue());
-  VentureCount * n = dynamic_cast<VentureCount *>(operands[1]->getValue());
+  VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureAtom * n = dynamic_cast<VentureAtom *>(operands[1]->getValue());
   VentureSP * vsp = dynamic_cast<VentureSP *>(value);
   assert(alpha);
   assert(n);
@@ -59,8 +59,8 @@ VentureValue * MakeUCSymDirMultAAAKernel::simulate(VentureValue * oldVal, Node *
 {
 
   vector<Node *> & operands = appNode->operandNodes;
-  VentureDouble * alpha = dynamic_cast<VentureDouble *>(operands[0]->getValue());
-  VentureCount * n = dynamic_cast<VentureCount *>(operands[1]->getValue());
+  VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureAtom * n = dynamic_cast<VentureAtom *>(operands[1]->getValue());
 
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(appNode->madeSPAux);
 
@@ -106,7 +106,7 @@ VentureValue * UCSymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
   for (size_t i = 0; i < n; ++i)
   {
     sum += theta[i];
-    if (u < sum) { return new VentureCount(i); }
+    if (u < sum) { return new VentureAtom(i); }
   }
   assert(false);
   return nullptr;
@@ -118,7 +118,7 @@ double UCSymDirMultSP::logDensityOutput(VentureValue * value, Node * node) const
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
 
-  VentureCount * vint = dynamic_cast<VentureCount*>(value);
+  VentureAtom * vint = dynamic_cast<VentureAtom*>(value);
   assert(vint);
   uint32_t observedIndex = vint->n;
 
@@ -130,7 +130,7 @@ void UCSymDirMultSP::incorporateOutput(VentureValue * value, Node * node) const
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
 
-  VentureCount * vint = dynamic_cast<VentureCount*>(value);
+  VentureAtom * vint = dynamic_cast<VentureAtom*>(value);
   assert(vint);
   uint32_t observedIndex = vint->n;
   spaux->counts[observedIndex]++;
@@ -141,7 +141,7 @@ void UCSymDirMultSP::removeOutput(VentureValue * value, Node * node) const
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
 
-  VentureCount * vint = dynamic_cast<VentureCount*>(value);
+  VentureAtom * vint = dynamic_cast<VentureAtom*>(value);
   assert(vint);
   uint32_t observedIndex = vint->n;
   spaux->counts[observedIndex]--;

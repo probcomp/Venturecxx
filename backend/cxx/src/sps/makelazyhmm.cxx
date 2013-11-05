@@ -95,8 +95,8 @@ void LazyHMMSP::destroySPAux(SPAux * spaux) { delete spaux; }
 void LazyHMMSP::incorporateOutput(VentureValue * value, Node * node) const
 {
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(node->spaux());
-  VentureCount * vout = dynamic_cast<VentureCount *>(value);
-  VentureCount * vin = dynamic_cast<VentureCount *>(node->operandNodes[0]->getValue());
+  VentureAtom * vout = dynamic_cast<VentureAtom *>(value);
+  VentureAtom * vin = dynamic_cast<VentureAtom *>(node->operandNodes[0]->getValue());
 
   assert(aux);
   assert(vout);
@@ -111,8 +111,8 @@ void LazyHMMSP::incorporateOutput(VentureValue * value, Node * node) const
 void LazyHMMSP::removeOutput(VentureValue * value, Node * node) const
 {
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(node->spaux());
-  VentureCount * vout = dynamic_cast<VentureCount *>(value);
-  VentureCount * vin = dynamic_cast<VentureCount *>(node->operandNodes[0]->getValue());
+  VentureAtom * vout = dynamic_cast<VentureAtom *>(value);
+  VentureAtom * vin = dynamic_cast<VentureAtom *>(node->operandNodes[0]->getValue());
 
   assert(aux);
   assert(vout);
@@ -204,17 +204,17 @@ double LazyHMMSP::detachLatents(SPAux * spaux,
 VentureValue * LazyHMMSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(node->spaux());
-  VentureCount * vint = dynamic_cast<VentureCount*>(node->operandNodes[0]->getValue());
+  VentureAtom * vint = dynamic_cast<VentureAtom*>(node->operandNodes[0]->getValue());
   assert(aux);
   assert(vint);
 
-  return new VentureCount(sampleVector(O * aux->xs[vint->n],rng));
+  return new VentureAtom(sampleVector(O * aux->xs[vint->n],rng));
 }
 
 double LazyHMMSP::logDensityOutput(VentureValue * value, Node * node) const
 {
-  VentureCount * vout = dynamic_cast<VentureCount*>(value);
-  VentureCount * vin = dynamic_cast<VentureCount*>(node->operandNodes[0]->getValue());
+  VentureAtom * vout = dynamic_cast<VentureAtom*>(value);
+  VentureAtom * vin = dynamic_cast<VentureAtom*>(node->operandNodes[0]->getValue());
   assert(vout);
   assert(vin);
 
@@ -227,7 +227,7 @@ double LazyHMMSP::logDensityOutput(VentureValue * value, Node * node) const
 
 VentureValue * LazyHMMSP::simulateRequest(Node * node, gsl_rng * rng) const
 {
-  VentureCount * vin = dynamic_cast<VentureCount*>(node->operandNodes[0]->getValue());
+  VentureAtom * vin = dynamic_cast<VentureAtom*>(node->operandNodes[0]->getValue());
   assert(vin);
   vector<HSR *> hsrs;
   return new VentureRequest({new HMM_HSR(vin->n)});
@@ -245,7 +245,7 @@ VectorXd vvToEigenVector(VentureValue * value)
 
   for (size_t i = 0; i < len; ++i)
   {
-    VentureDouble * vdouble = dynamic_cast<VentureDouble*>(vvec->xs[i]);
+    VentureNumber * vdouble = dynamic_cast<VentureNumber*>(vvec->xs[i]);
     assert(vdouble);
     v(i) = vdouble->x;
   }
@@ -276,7 +276,7 @@ MatrixXd vvToEigenMatrix(VentureValue * value)
     
     for (size_t j = 0; j < cols; ++j)
     {
-      VentureDouble * vdouble = dynamic_cast<VentureDouble*>(vrow->xs[j]);
+      VentureNumber * vdouble = dynamic_cast<VentureNumber*>(vrow->xs[j]);
       assert(vdouble);
       M(i,j) = vdouble->x;
     }

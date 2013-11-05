@@ -82,21 +82,21 @@ struct VentureBool : VentureValue
   bool pred;
 };
 
-struct VentureDouble : VentureValue 
+struct VentureNumber : VentureValue 
 { 
-  VentureDouble(double x): x(x) {}
+  VentureNumber(double x): x(x) {}
   boost::python::object toPython() const override { return boost::python::object(x); }
   size_t toHash() const override { return hash<double>()(x); }
-  VentureValue * clone() const override { return new VentureDouble(x); }
+  VentureValue * clone() const override { return new VentureNumber(x); }
   double x;
 };
 
-struct VentureCount : VentureValue
+struct VentureAtom : VentureValue
 {
-  VentureCount(uint32_t n): n(n) {}
+  VentureAtom(uint32_t n): n(n) {}
   boost::python::object toPython() const override { return boost::python::object(n); }
   size_t toHash() const override { return n; }
-  VentureValue * clone() const override { return new VentureCount(n); }
+  VentureValue * clone() const override { return new VentureAtom(n); }
   uint32_t n;
 };
 

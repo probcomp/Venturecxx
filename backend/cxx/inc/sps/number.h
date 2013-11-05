@@ -4,37 +4,37 @@
 #include "sp.h"
 
 /* Deterministic Real SPs. */
-struct RealPlusSP : SP
+struct PlusSP : SP
 { 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
 };
 
-struct RealMinusSP : SP
+struct MinusSP : SP
 { 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
 };
 
-struct RealTimesSP : SP
+struct TimesSP : SP
 { 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
 };
 
-struct RealDivideSP : SP
+struct DivideSP : SP
 { 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
 };
 
-struct RealEqualSP : SP
+struct EqualSP : SP
 { 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
 };
 
-struct RealGreaterThanSP : SP
+struct GreaterThanSP : SP
 {
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
 };
 
-struct RealLessThanSP : SP
+struct LessThanSP : SP
 { 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
 };

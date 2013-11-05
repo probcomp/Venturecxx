@@ -26,7 +26,7 @@ VentureValue * VectorLookupSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<Node *> & operands = node->operandNodes;
   VentureVector * vec = dynamic_cast<VentureVector *>(operands[0]->getValue());
-  VentureCount * i = dynamic_cast<VentureCount *>(operands[1]->getValue());
+  VentureAtom * i = dynamic_cast<VentureAtom *>(operands[1]->getValue());
   assert(vec);
   assert(i);
 

@@ -2,6 +2,7 @@
 #include "sp.h"
 #include "sps/discrete.h"
 #include "value.h"
+#include "utils.h"
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -14,7 +15,7 @@
 VentureValue * BernoulliSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<Node *> & operands = node->operandNodes;
-  VentureDouble * p = dynamic_cast<VentureDouble *>(operands[0]->getValue());
+  VentureNumber * p = dynamic_cast<VentureNumber *>(operands[0]->getValue());
   assert(p);
   assert(p->x >= 0 && p->x <= 1);
   uint32_t n = gsl_ran_bernoulli(rng,p->x);
@@ -27,7 +28,7 @@ double BernoulliSP::logDensityOutput(VentureValue * value, Node * node) const
 {
 
   vector<Node *> & operands = node->operandNodes;
-  VentureDouble * p = dynamic_cast<VentureDouble *>(operands[0]->getValue());
+  VentureNumber * p = dynamic_cast<VentureNumber *>(operands[0]->getValue());
   assert(p);
   assert(p->x >= 0 && p->x <= 1);
   VentureBool * b = dynamic_cast<VentureBool *>(value);
@@ -45,58 +46,48 @@ vector<VentureValue*> BernoulliSP::enumerateOutput(Node * node) const
   else { return {new VentureBool(true)}; }
 }
 
-/* Categorical */
-/* (categorical ps) */
 VentureValue * CategoricalSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureVector * vec = dynamic_cast<VentureVector *>(operands[0]->getValue());
-  assert(vec);
+  vector<double> ps;
+  for (Node * operandNode : node->operandNodes)
+  {
+    VentureNumber * d = dynamic_cast<VentureNumber *>(operandNode->getValue());
+    assert(d);
+    ps.push_back(d->x);
+  }
+  normalizeVector(ps);
 
-  vector<VentureValue*> & xs = vec->xs;
   double u = gsl_ran_flat(rng,0.0,1.0);
   double sum = 0.0;
-  for (size_t i = 0; i < xs.size(); ++i)
+  for (size_t i = 0; i < ps.size(); ++i)
   {
-    VentureDouble * d = dynamic_cast<VentureDouble *>(xs[i]);
-    assert(d);
-    double p = d->x;
-    sum += p;
-    if (u < sum) { return new VentureCount(i); }
+    sum += ps[i];
+    if (u < sum) { return new VentureAtom(i); }
   }
   assert(false);
-  /* TODO normalize as a courtesy */
 } 
 
 double CategoricalSP::logDensityOutput(VentureValue * value, Node * node) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureVector * vec = dynamic_cast<VentureVector *>(operands[0]->getValue());
-  assert(vec);
-
-  vector<VentureValue*> & xs = vec->xs;
-
-  VentureCount * i = dynamic_cast<VentureCount *>(value);
-  VentureDouble * p = dynamic_cast<VentureDouble *>(xs[i->n]);
+  VentureAtom * i = dynamic_cast<VentureAtom *>(value);
+  assert(i);
+  VentureNumber * p = dynamic_cast<VentureNumber *>(node->operandNodes[i->n]->getValue());
+  assert(p);
   return log(p->x);
 }
 
 vector<VentureValue*> CategoricalSP::enumerateOutput(Node * node) const
 {
-  VentureCount * vold = dynamic_cast<VentureCount*>(node->getValue());
+  VentureAtom * vold = dynamic_cast<VentureAtom*>(node->getValue());
   assert(vold);
-
-  vector<Node *> & operands = node->operandNodes;
-  VentureVector * vec = dynamic_cast<VentureVector *>(operands[0]->getValue());
-  assert(vec);
 
   vector<VentureValue*> values;
 
-  for (size_t i = 0; i < vec->xs.size(); ++i)
+  for (size_t i = 0; i < node->operandNodes.size(); ++i)
   {
     if (i == vold->n) { continue; }
     else { 
-      values.push_back(new VentureCount(i));
+      values.push_back(new VentureAtom(i));
     }
   }
   return values;

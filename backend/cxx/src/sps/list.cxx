@@ -55,7 +55,7 @@ VentureValue * IsPairSP::simulateOutput(Node * node, gsl_rng * rng) const
 VentureValue * ListRefSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   VentureList * list = dynamic_cast<VentureList*>(node->operandNodes[0]->getValue());
-  VentureCount * index = dynamic_cast<VentureCount*>(node->operandNodes[1]->getValue());
+  VentureAtom * index = dynamic_cast<VentureAtom*>(node->operandNodes[1]->getValue());
   assert(list);
   assert(index);
   return listRef(list,index->n);

@@ -12,8 +12,8 @@
 VentureValue * MakePitmanYorCRPSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<Node *> & operands = node->operandNodes;
-  VentureDouble * alpha = dynamic_cast<VentureDouble *>(operands[0]->getValue());
-  VentureDouble * d = dynamic_cast<VentureDouble *>(operands[1]->getValue());
+  VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * d = dynamic_cast<VentureNumber *>(operands[1]->getValue());
   assert(alpha);
   assert(d);
   return new VentureSP(new PitmanYorCRPSP(alpha->x,d->x));
@@ -42,7 +42,7 @@ VentureValue * PitmanYorCRPSP::simulateOutput(Node * node, gsl_rng * rng) const
   for (size_t i = 0; i < counts.size(); ++i)
   {
     sum += counts[i];
-    if (u < sum) { return new VentureCount(tables[i]); }
+    if (u < sum) { return new VentureAtom(tables[i]); }
   }
   assert(false);
   return nullptr;
@@ -51,7 +51,7 @@ VentureValue * PitmanYorCRPSP::simulateOutput(Node * node, gsl_rng * rng) const
 double PitmanYorCRPSP::logDensityOutput(VentureValue * value, Node * node) const
 {
   PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(node->spaux());
-  VentureCount * table = dynamic_cast<VentureCount*>(value);
+  VentureAtom * table = dynamic_cast<VentureAtom*>(value);
   assert(aux);
   assert(table);
 
@@ -64,7 +64,7 @@ double PitmanYorCRPSP::logDensityOutput(VentureValue * value, Node * node) const
 void PitmanYorCRPSP::incorporateOutput(VentureValue * value, Node * node) const
 {
   PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(node->spaux());
-  VentureCount * table = dynamic_cast<VentureCount*>(value);
+  VentureAtom * table = dynamic_cast<VentureAtom*>(value);
   assert(aux);
   assert(table);
 
@@ -84,7 +84,7 @@ void PitmanYorCRPSP::incorporateOutput(VentureValue * value, Node * node) const
 void PitmanYorCRPSP::removeOutput(VentureValue * value, Node * node) const
 {
   PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(node->spaux());
-  VentureCount * table = dynamic_cast<VentureCount*>(value);
+  VentureAtom * table = dynamic_cast<VentureAtom*>(value);
   assert(aux);
   assert(table);
 
