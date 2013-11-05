@@ -86,6 +86,7 @@ ADD_LIBRARY(trace SHARED
   src/sps/makelazyhmm.cxx
   
   src/pytrace.cxx
+  src/pyutils.cxx
 )
 
 target_link_libraries(trace

@@ -6,12 +6,10 @@
 #include "infer/mh.h"
 #include "infer/gibbs.h"
 #include "value.h"
-
+#include "pyutils.h"
 
 #include <iostream>
 #include <list>
-
-using boost::python::extract;
 
 PyTrace::PyTrace(): 
   Trace(), 
@@ -25,36 +23,6 @@ PyTrace::~PyTrace()
   delete mcmc;
 }
 
-VentureValue * PyTrace::parseValue(boost::python::dict d)
-{
-  if (d["type"] == "boolean") { return new VentureBool(extract<bool>(d["value"])); }
-  else if (d["type"] == "number") { return new VentureNumber(extract<double>(d["value"])); }
-  else if (d["type"] == "symbol") { return new VentureSymbol(extract<string>(d["value"])); }
-  else if (d["type"] == "atom") { return new VentureAtom(extract<uint32_t>(d["value"])); }
-  else { assert(false); }
-}
-
-
-VentureValue * PyTrace::parseExpression(boost::python::object o)
-{
-  extract<boost::python::dict> getDict(o);
-  if (getDict.check()) { return parseValue(getDict()); }
-  
-  extract<boost::python::list> getList(o);
-  assert(getList.check());
-  
-  boost::python::list l = getList();
-  
- VentureList * exp = new VentureNil;
- 
- boost::python::ssize_t L = boost::python::len(l);
-
- for(boost::python::ssize_t i=L;i > 0;i--) 
- {
-   exp = new VenturePair(parseExpression(l[i-1]),exp);
- }
- return exp;
-}
 
 void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
 {
