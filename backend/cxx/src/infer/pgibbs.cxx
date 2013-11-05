@@ -28,39 +28,48 @@
 /////// Helpers /////////
 /////////////////////////
 
-stack<uint32_t> PGibbsSelectGKernel::constructAncestorPath(uint32_t t, uint32_t p)
+vector<uint32_t> constructAncestorPath(const vector<vector<uint32_t> > & ancestorIndices,
+				       uint32_t t, 
+				       uint32_t p)
 {
-  stack<uint32_t> path;
-  if (t > 0) { path.push_back(ancestorIndices[t][n]); }
-  for (int i = t - 1; i >= 0; i--)
+  vector<uint32_t> path;
+  if (t > 0) 
+  { 
+    path.push_back(ancestorIndices[t][p]);
+  for (int i = t - 1; i >= 1; i--)
   {
     uint32_t ancestor = path.back();
     path.push_back(ancestorIndices[i][ancestor]);
   }
   assert(path.size() == t);
+  reverse(path.begin(),path.end());
+  }
   return path;
+
 }
 
-void PGibbsSelectGKernel::restoreAncestorPath(stack<uint32_t> path)
+void restoreAncestorPath(Trace * trace,
+			 Scaffold * scaffold,
+			 vector<vector<OmegaDB *> > omegaDBs,
+			 vector<uint32_t> path)
 {
-  int t = 0;
-  while (!path.empty())
+  for (size_t t = 0; t < path.size(); ++t)
   {
-    uint32_t nextParticle = path.back;
+    uint32_t nextParticle = path[t];
     /* TODO We need to divide the border into sub-vectors */
-    trace->regen({scafold->border[t]},scaffold,true,omegaDBs[t][nextParticle]);
-    path.pop_back();
-    t++;
+    trace->regen({scaffold->border[t]},scaffold,true,omegaDBs[t][nextParticle]);
   }
 }
 
-void PGibbsSelectGKernel::discardAncestorPath(uint32_t t)
+void discardAncestorPath(Trace * trace,
+			 Scaffold * scaffold,
+			 uint32_t t)
 {
   for (int i = t - 1; i >= 0; i--)
   {
     double weight;
     OmegaDB * detachedDB;
-    tie(weight,detachedDB) = detach({scaffold->border[i]},scaffold);
+    tie(weight,detachedDB) = trace->detach({scaffold->border[i]},scaffold);
     flushDB(detachedDB,true);
   }
 }
@@ -123,7 +132,10 @@ double PGibbsSelectGKernel::propose()
   double weightMinusRho = log(totalXiExpWeight);
   double weightMinusXi = log(rhoExpWeight + totalXiExpWeight - exp(weights[chosenIndex]));
   assertTorus(trace,scaffold);
-  restoreAncestorPath(constructAncestorPath(T, chosenIndex));
+  vector<uint32_t> path = constructAncestorPath(ancestorIndices,T-1,chosenIndex);
+  path.push_back(chosenIndex);
+  assert(path.size() == T);
+  restoreAncestorPath(trace,scaffold,omegaDBs,path);
   return weightMinusRho - weightMinusXi;
 }
 
@@ -134,9 +146,10 @@ double PGibbsSelectGKernel::propose()
 
 void PGibbsSelectGKernel::accept()
 {
-  assert(chosenIndex != -1);
-  vector<uint32_t> path = constructAncestorPath(T,chosenIndex);
-
+  assert(chosenIndex != UINT32_MAX);
+  vector<uint32_t> path = constructAncestorPath(ancestorIndices,T-1,chosenIndex);
+  path.push_back(chosenIndex);
+  assert(path.size() == T);
   for (size_t t = 0; t < T; ++t)
   { for (size_t p = 0; p < P + 1; ++p)
     { 
@@ -146,22 +159,24 @@ void PGibbsSelectGKernel::accept()
     }
   }
 
-  chosenIndex = -1;
+  chosenIndex = UINT32_MAX;
 }
 
 void PGibbsSelectGKernel::reject()
 {
-  assert(chosenIndex != -1);
-  discardAncestorPath(T);
+  assert(chosenIndex != UINT32_MAX);
+  discardAncestorPath(trace,scaffold,T);
   assertTorus(trace,scaffold);
-  vector<uint32_t> path = constructAncestorPath(ancestorIndices,T,P);
-  restoreAncestorPath(path);
+  vector<uint32_t> path = constructAncestorPath(ancestorIndices,T-1,P);
+  path.push_back(P);
+  assert(path.size() == T);
+  restoreAncestorPath(trace,scaffold,omegaDBs,path);
 
   for (size_t t = 0; t < T; ++t)
   { 
     for (size_t p = 0; p < P + 1; ++p)
     { 
-      isActive = (path[t] == p);
+      bool isActive = (path[t] == p);
       flushDB(omegaDBs[t][p],isActive);
     }
   }
@@ -186,28 +201,30 @@ void PGibbsGKernel::loadParameters(MixMHParam * param)
   scaffold = sparam->scaffold;
   pNode = sparam->pNode;
   delete sparam;
+}
 
+MixMHIndex * PGibbsGKernel::sampleIndex()
+{
   /* TODO allow T to be customized by splitting the border into segments. */
-  T = scaffold->border.size();
-  ancestorIndices.resize(T);
-  omegaDBs.resize(T);
+  uint32_t T = scaffold->border.size();
+  
+  vector<vector<uint32_t> > ancestorIndices(T);
+  vector<vector<OmegaDB*> > omegaDBs(T);
   for (size_t t = 0; t < T; t++) 
   { 
     ancestorIndices[t].resize(P+1); 
     omegaDBs[t].resize(P+1);
   }
-  weightsRho.resize(T);
-  weights.resize(P+1);
-}
+  vector<double> weightsRho(T);
+  vector<double> weights(P+1);
 
-MixMHIndex * PGibbsGKernel::sampleIndex()
-{
-  ParticleIndex * pindex = new ParticleIndex;
+  PGibbsIndex * pindex = new PGibbsIndex;
   pindex->P = P;
   pindex->T = T;
 
   pindex->scaffold = scaffold;
-  for (int t = T-1; t >= 0; ++t)
+
+  for (int t = T-1; t >= 0; --t)
   {
     tie(weightsRho[t],omegaDBs[t][P]) = trace->detach({scaffold->border[t]},scaffold);
   }
@@ -229,21 +246,23 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
     for (size_t p = 0; p < P; ++p)
     {
       weights[P] = weightsRho[t-1];
-      ancestorIndices[t][n] = sampleCategorical(weights,trace->rng);
-      vector<uint32_t> path = constructAncestorPath(t,p);
-      restoreAncestorPath(path);
-      trace->regen(scaffold->border[t],scaffold,false,nullptr);
+      vector<double> expWeights;
+      for (size_t i = 0; i < weights.size(); ++i) { expWeights.push_back(exp(weights[i])); }
+      ancestorIndices[t][p] = sampleCategorical(expWeights,trace->rng);
+      vector<uint32_t> path = constructAncestorPath(ancestorIndices,t,p);
+      restoreAncestorPath(trace,scaffold,omegaDBs,path);
+      trace->regen({scaffold->border[t]},scaffold,false,nullptr);
       tie(newWeights[p],omegaDBs[t][p]) = trace->detach({scaffold->border[t]},scaffold);
-      discardAncestorPath(t);
+      discardAncestorPath(trace,scaffold,t);
       assertTorus(trace,scaffold);
     }
     weights = newWeights;
   }
 
   /* Really? */
-  pindex->ancestorIndices = move(ancestorIndices);
-  pindex->omegaDBs = move(omegaDBs);
-  pindex->weights = move(weights);
+  pindex->ancestorIndices = ancestorIndices;
+  pindex->omegaDBs = omegaDBs;
+  pindex->weights = weights;
   
   return pindex;
 }

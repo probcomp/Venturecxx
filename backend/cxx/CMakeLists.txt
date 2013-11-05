@@ -57,6 +57,7 @@ ADD_LIBRARY(trace SHARED
   src/infer/gkernel.cxx
   src/infer/mh.cxx
   src/infer/gibbs.cxx
+  src/infer/pgibbs.cxx
 
   src/utils.cxx
   src/check.cxx
@@ -65,7 +66,6 @@ ADD_LIBRARY(trace SHARED
 
   src/scaffold.cxx
 
-  src/sps/stathelpers.cxx
   src/sps/csp.cxx
   src/sps/mem.cxx
   src/sps/number.cxx

@@ -5,8 +5,8 @@
 #include "infer/gkernel.h"
 #include "infer/mh.h"
 #include "infer/gibbs.h"
+#include "infer/pgibbs.h"
 #include "value.h"
-
 
 #include <iostream>
 #include <list>
@@ -16,7 +16,8 @@ using boost::python::extract;
 PyTrace::PyTrace(): 
   Trace(), 
 //  mcmc(new OutermostMixMH(this, new ScaffoldMHGKernel(this))) {}
-  mcmc(new OutermostMixMH(this,new GibbsGKernel(this))) {}
+//  mcmc(new OutermostMixMH(this,new GibbsGKernel(this))) {}
+  mcmc(new OutermostMixMH(this,new PGibbsGKernel(this))) {}
 
 PyTrace::~PyTrace()
 {

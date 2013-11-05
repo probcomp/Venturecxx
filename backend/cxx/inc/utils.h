@@ -4,9 +4,12 @@
 #include "all.h"
 
 #include <vector>
+#include <cstdint>
+#include <gsl/gsl_rng.h>
 
 struct VentureList;
 struct VentureValue;
+
 
 VentureValue * listRef(VentureList * pair,size_t n);
 
@@ -18,5 +21,7 @@ double sumVector(const vector<double> & xs);
 void normalizeVector(vector<double> & xs);
 
 void destroyExpression(VentureValue * exp);
+
+uint32_t sampleCategorical(vector<double> xs, gsl_rng * rng);
 
 #endif

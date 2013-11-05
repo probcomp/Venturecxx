@@ -3,6 +3,7 @@
 
 #include "infer/gkernel.h"
 
+
 struct PGibbsParam : MixMHParam 
 { 
   Scaffold * scaffold{nullptr};
@@ -31,9 +32,6 @@ struct PGibbsSelectGKernel : GKernel
   void reject() override;
 
 private:
-  list<uint32_t> constructAncestorPath(uint32_t t, uint32_t p);
-  void restoreAncestorPath(list<uint32_t> path);
-  void discardAncestorPath(uint32_t t);
 
   /* the Pth index indicates RHO */
   Scaffold * scaffold{nullptr};
@@ -63,7 +61,7 @@ struct PGibbsGKernel : MixMHKernel
 
   Scaffold * scaffold{nullptr};
   Node * pNode{nullptr};
-  size_t P = 3;
+  size_t P = 2;
 
 };
 
