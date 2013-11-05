@@ -62,6 +62,11 @@ void normalizeVector(vector<double> & xs)
     else { xs[i] /= sum; }
     newSum += xs[i];
   }
+  if (fabs(newSum - 1) > 0.01) 
+  { 
+    cout << "sum: " << sum << endl;
+    cout << "newSum: " << newSum << endl;
+  }
   assert(fabs(newSum - 1) < 0.01);
 }
 
