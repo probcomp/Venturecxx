@@ -16,7 +16,7 @@ struct VentureToken;
 struct Node;
 struct LatentDB;
 struct HSR;
-
+struct VariationalLKernel;
 
 enum class NodeType;
 enum class FlushType;
@@ -94,7 +94,7 @@ struct SP
   virtual VariationalLKernel * getVariationalLKernel(Node * node) const;
   virtual vector<ParameterScope> getParameterScopes() const { assert(false); return {}; }
 
-  vector<double> gradientOfLogDensity(double output,
+  virtual vector<double> gradientOfLogDensity(double output,
 				      const vector<double> & arguments) const 
     { assert(false); return {}; }
 

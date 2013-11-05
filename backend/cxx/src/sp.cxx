@@ -2,6 +2,7 @@
 #include "flush.h"
 #include "node.h"
 #include "lkernel.h"
+#include "infer/meanfield.h"
 #include "spaux.h"
 #include "value.h"
 #include "utils.h"

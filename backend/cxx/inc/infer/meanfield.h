@@ -6,7 +6,7 @@
 
 struct MeanFieldGKernel : GKernel
 {
-  MeanFieldIProjectorGKernel(Trace * trace): GKernel(trace) {}
+  MeanFieldGKernel(Trace * trace): GKernel(trace) {}
 
   double propose() override;
   void accept() override;
@@ -21,10 +21,7 @@ struct MeanFieldGKernel : GKernel
   Scaffold * scaffold{nullptr};
   OmegaDB * rhoDB{nullptr};
 
-  void registerVariationialLKernels();
-  
-  /* Computed during loadParameters */
-  map<Node *, VariationalLKernel *> variationalLKernels;
+  void registerVariationalLKernels();
   
 };
 

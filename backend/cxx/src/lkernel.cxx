@@ -42,18 +42,16 @@ DefaultVariationalLKernel::DefaultVariationalLKernel(SP * sp,Node * node):
   parameterScopes = sp->getParameterScopes();
 }
 
-vector<double> DefaultVariationalLKernel::gradientOfLogDensity(VentureValue * output,
+vector<double> DefaultVariationalLKernel::gradientOfLogDensity(double output,
 							       const vector<double> & arguments) const
 {
-  VentureNumber * vnum = dynamic_cast<VentureNumber*>(output);
-  assert(vnum);
-  return sp->gradientOfLogDensity(vnum->x, arguments);
+  return sp->gradientOfLogDensity(output, arguments);
 }
 
 
 void DefaultVariationalLKernel::updateParameters(const vector<double> & gradient, double gain, double stepSize)
 {
-  for (int i = 0; i < parameters.size(); ++i)
+  for (size_t i = 0; i < parameters.size(); ++i)
   {
     parameters[i] += gradient[i] *  gain * stepSize;
     if (parameterScopes[i] == ParameterScope::POSITIVE_REAL && 

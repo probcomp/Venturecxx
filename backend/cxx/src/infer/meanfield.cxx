@@ -1,5 +1,12 @@
+#include "lkernel.h"
 #include "infer/meanfield.h"
-
+#include "trace.h"
+#include "flush.h"
+#include "check.h"
+#include "node.h"
+#include "value.h"
+#include "scaffold.h"
+#include "sp.h"
 
 double MeanFieldGKernel::propose()
 {
@@ -22,15 +29,16 @@ void MeanFieldGKernel::destroyParameters()
   delete scaffold;
 }
 
-void MeanFieldGKernel::registerVariationialLKernels()
+void MeanFieldGKernel::registerVariationalLKernels()
 {
-  for (Node * node : scaffold->drg)
+  for (pair<Node *, Scaffold::DRGNode> p : scaffold->drg)
   {
-    if (node->isApplicationNode() && 
-	!scaffold->isResampling(node->operatorNode()) &&
-	node->sp()->hasVariationalLKernel())
+    Node * node = p.first;
+    if (node->isApplication() && 
+	!scaffold->isResampling(node->operatorNode) &&
+	node->sp()->hasVariationalLKernel)
     {
-      variationialLKernels.insert({node,node->sp()->getVariationalLKernel(node)});
+      scaffold->lkernels.insert({node,node->sp()->getVariationalLKernel(node)});
     }
   }
 }
@@ -64,9 +72,10 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
     assertTorus(trace,scaffold);
     flushDB(detachedDB,false);
 
-    for (pair<Node *, VariationalLKernel* > p : variationalLKernels)
+    for (pair<Node *, LKernel*> p : scaffold->lkernels)
     {
-      p.second.updateParameters(gradients[p.first],gain,stepSize);
+      VariationalLKernel * vk = dynamic_cast<VariationalLKernel*>(p.second);
+      vk->updateParameters(gradients[p.first],gain,stepSize);
     }
   }
 }
