@@ -13,3 +13,6 @@ class SquareSP(SP):
 
 def makeSP():
   return SquareSP()
+
+def getSymbol():
+  return "square"
