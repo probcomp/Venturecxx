@@ -63,6 +63,7 @@ map<string,SP *> initBuiltInSPs()
     {"not", new BoolNotSP},
     {"xor", new BoolXorSP},
 
+    {"flip", new BernoulliSP},
     {"bernoulli", new BernoulliSP},
     {"categorical", new CategoricalSP},
     {"uniform_discrete", new UniformDiscreteSP},
