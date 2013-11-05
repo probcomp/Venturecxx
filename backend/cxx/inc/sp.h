@@ -20,6 +20,7 @@ struct HSR;
 
 enum class NodeType;
 enum class FlushType;
+enum class ParameterScope;
 
 /* Although this is not technically an abstract class, 
    one cannot have both simulate defaults at the same time,
@@ -90,6 +91,11 @@ struct SP
      the SP class, or its methods are dumped into the bloat. */
   virtual LKernel * getAAAKernel() const;
 
+  virtual VariationalLKernel * getVariationalLKernel(Node * node) const;
+  virtual vector<ParameterScope> getParameterScopes() const { assert(false); return {}; }
+  virtual vector<double> gradientOfLogDensity() const { assert(false); return {}; }
+
+
   bool hasAux() { return makesESRs || makesHSRs || tracksSamples; }
   bool isNullRequest() { return !makesESRs && !makesHSRs; }
 
@@ -109,6 +115,8 @@ struct SP
   bool esrsOwnValues{false};
 
   bool childrenCanAAA{false};
+
+  bool hasVariationalLKernel{false};
 
   bool hasAEKernel{false};
 

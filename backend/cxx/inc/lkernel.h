@@ -6,6 +6,8 @@
 
 struct SP;
 
+enum class ParameterScope { REAL, POSITIVE_REAL };
+
 struct LKernel
 {
   virtual VentureValue * simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB,gsl_rng * rng) =0;
@@ -41,10 +43,24 @@ struct DeterministicLKernel : LKernel
   
 };
 
-struct VariationalKernel : LKernel
+struct VariationalLKernel : LKernel
 {
-  virtual double gradientOfLogDensity(VentureValue * output) { return 0; }
+  virtual double gradientOfLogDensity(VentureValue * output) const =0;
   virtual void updateParameters(double gradient) { }
+};
+
+struct DefaultVariationalLKernel : LKernel
+{
+  DefaultVariationalLKernel(SP * sp,Node * node);
+  double gradientOfLogDensity(VentureValue * output,
+			      const vector<double> & arguments) const override;
+
+  void updateParameters(const vector<double> & gradient, 
+			double gain, 
+			double stepSize) override;
+  SP * sp;
+  vector<double> parameters;
+  vector<ParameterScope> parameterScopes;
 };
 
 #endif
