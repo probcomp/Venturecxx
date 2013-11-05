@@ -36,6 +36,7 @@ struct SP
   double logDensity(VentureValue * value, Node * node) const;
   virtual double logDensityRequest(VentureValue * value, Node * node) const { return 0; }
   virtual double logDensityOutput(VentureValue * value, Node * node) const { return 0; }
+  virtual double logDensityOutputNumeric(double output, const vector<double> & args) const { return 0; }
 
 /* Incorporate */
   void incorporate(VentureValue * value, Node * node) const;

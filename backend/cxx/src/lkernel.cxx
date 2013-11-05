@@ -30,7 +30,7 @@ double DeterministicLKernel::weight(VentureValue * newVal, VentureValue * oldVal
 }
 
 
-DefaultVariationalLKernel::DefaultVariationalLKernel(SP * sp,Node * node):
+DefaultVariationalLKernel::DefaultVariationalLKernel(const SP * sp,Node * node):
   sp(sp)
 {
   for (Node * operandNode : node->operandNodes)
@@ -42,10 +42,24 @@ DefaultVariationalLKernel::DefaultVariationalLKernel(SP * sp,Node * node):
   parameterScopes = sp->getParameterScopes();
 }
 
-vector<double> DefaultVariationalLKernel::gradientOfLogDensity(double output,
-							       const vector<double> & arguments) const
+vector<double> DefaultVariationalLKernel::gradientOfLogDensity(VentureValue * output,
+							       Node * node) const
 {
-  return sp->gradientOfLogDensity(output, arguments);
+
+  VentureNumber * voutput = dynamic_cast<VentureNumber*>(output);
+  assert(voutput);
+
+  vector<double> arguments;
+
+  for (Node * operandNode : node->operandNodes)
+  {
+    VentureNumber * vparam = dynamic_cast<VentureNumber*>(operandNode->getValue());
+    assert(vparam);
+    arguments.push_back(vparam->x);
+  }
+
+
+  return sp->gradientOfLogDensity(voutput->x, arguments);
 }
 
 
@@ -60,4 +74,21 @@ void DefaultVariationalLKernel::updateParameters(const vector<double> & gradient
       parameters[i] = 0.01;
     }
   }
+}
+
+VentureValue * DefaultVariationalLKernel::simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB,gsl_rng * rng)
+{
+  return sp->simulateOutput(appNode,rng);
+}
+
+double DefaultVariationalLKernel::weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB) 
+{
+  VentureNumber * vmu = dynamic_cast<VentureNumber*>(appNode->operandNodes[0]->getValue());
+  VentureNumber * vsigma = dynamic_cast<VentureNumber*>(appNode->operandNodes[1]->getValue());
+  VentureNumber * voutput = dynamic_cast<VentureNumber*>(newVal);
+  assert(vmu);
+  assert(vsigma);
+  assert(voutput);
+  
+  return sp->logDensityOutputNumeric(voutput->x,{vmu->x,vsigma->x}) / sp->logDensityOutputNumeric(voutput->x,parameters);
 }

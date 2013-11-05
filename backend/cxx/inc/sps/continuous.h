@@ -16,6 +16,8 @@ struct NormalSP : SP
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
   double logDensityOutput(VentureValue * value, Node * node) const override; 
 
+  double logDensityOutputNumeric(double output, const vector<double> & args) const override;
+
   vector<ParameterScope> getParameterScopes() const override;
   vector<double> gradientOfLogDensity(double output,
 				      const vector<double> & arguments) const override;

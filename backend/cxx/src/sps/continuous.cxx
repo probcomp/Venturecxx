@@ -54,13 +54,18 @@ double NormalSP::logDensityOutput(VentureValue * value, Node * node)  const
   return log(gsl_ran_gaussian_pdf(x->x - mu, sigma->x));
 }
 
+double NormalSP::logDensityOutputNumeric(double output, const vector<double> & args) const
+{
+  return log(gsl_ran_gaussian_pdf(output - args[0], args[1]));
+}
+
 vector<ParameterScope> NormalSP::getParameterScopes() const
 {
   return {ParameterScope::REAL, ParameterScope::POSITIVE_REAL};
 }
  
-vector<double> gradientOfLogDensity(double output,
-				      const vector<double> & arguments) const
+vector<double> NormalSP::gradientOfLogDensity(double output,
+					      const vector<double> & arguments) const
 {
   double mu = arguments[0];
   double sigma = arguments[1];

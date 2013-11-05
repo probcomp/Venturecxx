@@ -34,7 +34,7 @@ void MeanFieldGKernel::registerVariationalLKernels()
   for (pair<Node *, Scaffold::DRGNode> p : scaffold->drg)
   {
     Node * node = p.first;
-    if (node->isApplication() && 
+    if (node->nodeType == NodeType::OUTPUT && 
 	!scaffold->isResampling(node->operatorNode) &&
 	node->sp()->hasVariationalLKernel)
     {

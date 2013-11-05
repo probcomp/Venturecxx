@@ -61,7 +61,7 @@ void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
 {
   VentureValue * exp = parseExpression(o);
 
-  pair<double,Node*> p = evalVentureFamily(directiveID,static_cast<VentureList*>(exp));
+  pair<double,Node*> p = evalVentureFamily(directiveID,static_cast<VentureList*>(exp),nullptr);
   ventureFamilies.insert({directiveID,{p.second,exp}});
 }
 

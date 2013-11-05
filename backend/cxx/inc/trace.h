@@ -37,13 +37,16 @@ class Trace
   double regen(const vector<Node *> & border,
 	       Scaffold * scaffold,
 	       bool shouldRestore,
-	       OmegaDB * omegaDB);
+	       OmegaDB * omegaDB,
+	       map<Node *,vector<double> > *gradients);
 
   pair<double, OmegaDB*> detach(const vector<Node *> & border,
 				Scaffold * scaffold);
 
 
-  pair<double, Node*> evalVentureFamily(size_t directiveID, VentureValue * expression);
+  pair<double, Node*> evalVentureFamily(size_t directiveID, VentureValue * expression,
+					map<Node *,vector<double> > *gradients);
+
 
   /* Note: does not remove from ventureFamilies, so that destruction is easy.
      If I learn c++, there is probably a way to use a safe iterator. */
@@ -66,20 +69,24 @@ protected:
   double regenParents(Node * node,
 		      Scaffold * scaffold,
 		      bool shouldRestore,
-		      OmegaDB * omegaDB);
+		      OmegaDB * omegaDB,
+		      map<Node *,vector<double> > *gradients);
 
   double absorb(Node * node,
 		Scaffold * scaffold,
 		bool shouldRestore,
-		OmegaDB * omegaDB);
+		OmegaDB * omegaDB,
+		map<Node *,vector<double> > *gradients);
 
 
+  // Eh, could pass gradients but don't need to
   double constrain(Node * node, VentureValue * value,bool reclaimValue);
 
   double regenInternal(Node * node,
 		       Scaffold * scaffold,
 		       bool shouldRestore,
-		       OmegaDB * omegaDB);
+		       OmegaDB * omegaDB,
+		       map<Node *,vector<double> > *gradients);
 
   void processMadeSP(Node * node,bool isAAA);
 
@@ -87,37 +94,40 @@ protected:
   double applyPSP(Node * node,
 		  Scaffold * scaffold,
 		  bool shouldRestore,
-		  OmegaDB * omegaDB);
+		  OmegaDB * omegaDB,
+		  map<Node *,vector<double> > *gradients);
 
   double evalRequests(Node * node,
 		      Scaffold * scaffold,
 		      bool shouldRestore,
-		      OmegaDB * omegaDB);
+		      OmegaDB * omegaDB,
+		      map<Node *,vector<double> > *gradients);
 
 
   pair<double,Node*> evalFamily(VentureValue * exp, 
-				     VentureEnvironment * familyEnv,
-				     Scaffold * scaffold,
-				     OmegaDB * omegaDB,
-				     bool isDefinite);
+				VentureEnvironment * familyEnv,
+				Scaffold * scaffold,
+				OmegaDB * omegaDB,
+				bool isDefinite,
+				map<Node *,vector<double> > *gradients);
 
 
+  // Meh, don't need to pass gradients
   double restoreFamily(Node * root,
 		       Scaffold * scaffold,
 		       OmegaDB * omegaDB);
 
+
   double restoreVentureFamily(Node * root);
   
-
-
-
 
 
   double apply(Node * requestNode,
 	       Node * outputNode,
 	       Scaffold * scaffold,
 	       bool shouldRestore,
-	       OmegaDB * omegaDB);
+	       OmegaDB * omegaDB,
+	       map<Node *,vector<double> > *gradients);
 
   /* detach helpers */
 

@@ -45,8 +45,8 @@ struct DeterministicLKernel : LKernel
 
 struct VariationalLKernel : LKernel
 {
-  virtual vector<double> gradientOfLogDensity(double output,
-				      const vector<double> & arguments) const =0;
+  virtual vector<double> gradientOfLogDensity(VentureValue * value,
+					      Node * node) const =0;
   virtual void updateParameters(const vector<double> & gradient,
 				double gain, 
 				double stepSize) { }
@@ -54,14 +54,18 @@ struct VariationalLKernel : LKernel
 
 struct DefaultVariationalLKernel : VariationalLKernel
 {
-  DefaultVariationalLKernel(SP * sp,Node * node);
-  vector<double> gradientOfLogDensity(double output,
-				      const vector<double> & arguments) const override;
+  DefaultVariationalLKernel(const SP * sp, Node * node);
+
+  VentureValue * simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB,gsl_rng * rng) override;
+  double weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB) override;
+
+  vector<double> gradientOfLogDensity(VentureValue * value,
+				      Node * node) const override;
 
   void updateParameters(const vector<double> & gradient, 
 			double gain, 
 			double stepSize) override;
-  SP * sp;
+  const SP * sp;
   vector<double> parameters;
   vector<ParameterScope> parameterScopes;
 };
