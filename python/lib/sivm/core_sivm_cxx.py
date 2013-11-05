@@ -47,7 +47,7 @@ class CoreSivmCxx(object):
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         sym = utils.validate_arg(instruction,'symbol',
-                utils.validate_symbol,modifier=_modify_symbol)
+                utils.validate_symbol)
         did, val = self.engine.assume(sym,exp)
         return {"directive_id":did, "value":_parse_value(val)}
 
@@ -210,41 +210,34 @@ def _modify_expression(expression):
     if isinstance(expression, dict):
             return _modify_value(expression)
 
-_literal_type_map = {                     #TODO: data-type support is incomplete in the core
-        "smoothed_count" : 'sc',          #so only these types are permitted
+_literal_type_map = {
         "real" : "r",
         "count" : "c",
         "number" : "r",
         "boolean" : "b",
-        "probability" : "p",
         "atom" : "a",
+        "symbol" : "s",
         # simplex point not implemented
         }
 def _modify_value(ob):
     if ob['type'] not in _literal_type_map:
         raise VentureException("fatal",
                 "Invalid literal type: " + ob["type"])
-    #if int(ob['value']) == ob['value']:
-    #    ob['value'] = int(ob['value'])
-    if ob['type'] == 'number':
-        if isinstance(ob['value'],int):
-            ob['type'] = 'count'
-        else:
-            ob['type'] = 'real'
-    return ob['value']
+    if ob['type'] in {'count', 'real'}:
+        ob['type'] = 'number'
+    elif ob['type'] == 'atom':
+        ob['value'] = int(ob['value'])
+    return ob
 
-_symbol_map = { "add" : 'real_plus', "sub" : 'real_minus',
-        "mul" : 'real_times', "div" : "real_div",
-        "lt" : "real_lt", "gt" : "real_gt", "lte" : "real_lte",
-        "gte": "real_gte", "eq" : "real_eq", "neq" : "real_neq",
+_symbol_map = { "add" : 'plus', "sub" : 'minus', "mul" : 'times',
         "symmetric_dirichlet_multinomial_make" : "make_sym_dir_mult",
         "condition_erp" : "branch",
         }
 def _modify_symbol(s):
     if s in _symbol_map:
         s = _symbol_map[s]
-    return s.encode('ascii')
-
+    return {"type": "symbol", "value": s}
+    
 _reverse_literal_type_map = dict((y,x) for x,y in _literal_type_map.items())
 
 _python_to_venture_type_map = {
@@ -252,7 +245,7 @@ _python_to_venture_type_map = {
     int: "count",
     float: "number",
     list: "list",
-    str: "string"
+    str: "string",
 }
 
 def _parse_value(val):
