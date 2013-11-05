@@ -789,6 +789,29 @@ def testCRP1(N,isCollapsed):
   eps = normalizeList(countPredictions(predictions, [0,1,2,3,4]))
   printTest("TestCRP1 (not exact)",ps,eps)
 
+def load_hierarchical_Pittman_Yor(sivm,topCollapsed,botCollapsed):
+  loadPYMem(sivm)
+  sivm.assume("alpha","(gamma 1.0 1.0)")
+  sivm.assume("d","(uniform_continuous 0.0 0.1)")
+  sivm.assume("base_dist","(lambda () (categorical (make_vector 0.2 0.2 0.2 0.2 0.2)))")
+  if topCollapsed: sivm.assume("intermediate_dist","(pymem alpha d base_dist)")
+  else: sivm.assume("intermediate_dist","(u_pymem alpha d base_dist)")
+  if botCollapsed: sivm.assume("f","(pymem alpha d intermediate_dist)")
+  else: sivm.assume("f","(u_pymem alpha d intermediate_dist)")
+
+def predict_hierarchical_Pittman_Yor(N,topCollapsed,botCollapsed):
+  sivm = SIVM()
+  load_hierarchical_Pittman_Yor(sivm,topCollapsed,botCollapsed)
+  pid = sivm.predict("(f)")[0]
+  observe_categories(sivm,[2,2,5,1,0])
+  return loggingInfer(sivm,pid,N)
+
+def test_CRP_with_hierarchical_Pittman_Yor(N):
+  print "---Test: Test hierarchical Pittman-Yor---"
+  for top in [False,True]:
+    for bot in [False,True]:
+      attempt = normalizeList(countPredictions(predict_hierarchical_Pittman_Yor(N,top,bot), [0,1,2,3,4]))
+      print("(%s,%s): %s" % (top,bot,attempt))
 
 def testGeometric1(N):
   sivm = SIVM()
