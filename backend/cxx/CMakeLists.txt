@@ -18,8 +18,6 @@ message("Include dirs of Python: " ${PYTHON_INCLUDE_DIRS} )
 message("Libs of Python: " ${PYTHON_LIBRARIES} )
 
 include_directories(
-  "inc"
-  "inc/sps"
   ${Boost_INCLUDE_DIRS}
   ${PYTHON_INCLUDE_DIRS}
 )
@@ -87,9 +85,68 @@ ADD_LIBRARY(trace SHARED
   
   src/pytrace.cxx
   src/pyutils.cxx
+  src/pysp.cxx
 )
 
 target_link_libraries(trace
+  ${LIBS}
+  ${Boost_LIBRARIES}
+  ${PYTHON_LIBRARIES}
+)
+
+ADD_LIBRARY(sp SHARED
+  src/value.cxx
+  src/node.cxx   
+
+  src/env.cxx
+
+  src/builtin.cxx
+
+  src/trace.cxx 
+  src/rcs.cxx
+  src/regen.cxx
+  src/detach.cxx
+  
+  src/flush.cxx
+
+  src/lkernel.cxx
+
+  src/infer/gkernel.cxx
+  src/infer/mh.cxx
+  src/infer/gibbs.cxx
+
+  src/utils.cxx
+  src/check.cxx
+
+  src/sp.cxx
+
+  src/scaffold.cxx
+
+  src/sps/stathelpers.cxx
+  src/sps/csp.cxx
+  src/sps/mem.cxx
+  src/sps/number.cxx
+  src/sps/bool.cxx
+  src/sps/continuous.cxx
+  src/sps/discrete.cxx
+  src/sps/cond.cxx
+  src/sps/vector.cxx
+  src/sps/list.cxx
+  src/sps/map.cxx
+  src/sps/envs.cxx
+  src/sps/eval.cxx
+  src/sps/pycrp.cxx
+
+  src/sps/makesymdirmult.cxx
+  src/sps/makeucsymdirmult.cxx
+
+  src/sps/makelazyhmm.cxx
+  
+  src/pytrace.cxx
+  src/pyutils.cxx
+)
+
+target_link_libraries(sp
   ${LIBS}
   ${Boost_LIBRARIES}
   ${PYTHON_LIBRARIES}
