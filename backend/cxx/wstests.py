@@ -56,6 +56,7 @@ def runTests(N):
   testList1()
   testCRP1(N,True)
   testCRP1(N,False)
+  test_CRP_with_hierarchical_Pittman_Yor(N)
   testGeometric1(N)
 
 def testBernoulli1(N):
@@ -370,12 +371,12 @@ def testLazyHMMSP1(N):
     (make_vector 0.9 0.2)
     (make_vector 0.1 0.8)))
 """);
-  sivm.observe("(f atom<1>)","atom<0>")
-  sivm.observe("(f atom<2>)","atom<0>")
-  sivm.observe("(f atom<3>)","atom<1>")
-  sivm.observe("(f atom<4>)","atom<0>")
-  sivm.observe("(f atom<5>)","atom<0>")
-  sivm.predict("(f atom<6>)")
+  sivm.observe("(f 1)","atom<0>")
+  sivm.observe("(f 2)","atom<0>")
+  sivm.observe("(f 3)","atom<1>")
+  sivm.observe("(f 4)","atom<0>")
+  sivm.observe("(f 5)","atom<0>")
+  sivm.predict("(f 6)")
 
   predictions = loggingInfer(sivm,7,N)
   ps = [0.6528, 0.3472]
@@ -525,7 +526,7 @@ def sivmWithSTDLIB(sivm):
     (quote (eval exp env))
     (quote 
       (branch
-        (not (pair? exp))
+        (not (is_pair exp))
         (quote exp)
         (branch 
           (sym_eq (deref (list_ref exp 0)) (quote lambda))
@@ -533,7 +534,7 @@ def sivmWithSTDLIB(sivm):
           (quote 
             ((lambda (operator operands)
                (branch 
-                 (pair? operator)
+                 (is_pair operator)
                  (quote (incremental_apply operator operands))
                  (quote (venture_apply operator operands))))
              (incremental_eval (deref (first exp)) env)
@@ -554,17 +555,17 @@ def testList1():
   y4 = sivm.predict("(first y4)")
   y3 = sivm.predict("(list_ref y4 1)")
   y2 = sivm.predict("(list_ref (rest y4) 1)")
-  px1 = sivm.predict("(pair? x1)")
-  px4 = sivm.predict("(pair? x4)")
-  py4 = sivm.predict("(pair? y4)")
+  px1 = sivm.predict("(is_pair x1)")
+  px4 = sivm.predict("(is_pair x4)")
+  py4 = sivm.predict("(is_pair y4)")
 
-  assert(sivm.trace.extractValue(7) == 27.0);
-  assert(sivm.trace.extractValue(8) == 8.0);
-  assert(sivm.trace.extractValue(9) == 1.0);
+  assert(sivm.report(7) == 27.0);
+  assert(sivm.report(8) == 8.0);
+  assert(sivm.report(9) == 1.0);
 
-  assert(not sivm.trace.extractValue(10));
-  assert(sivm.trace.extractValue(11));
-  assert(sivm.trace.extractValue(11));
+  assert(not sivm.report(10));
+  assert(sivm.report(11));
+  assert(sivm.report(11));
 
   print "Passed TestList1()"
 
@@ -579,7 +580,10 @@ def loadPYMem(sivm):
   sivm.assume("make_sticks","""
 (lambda (alpha d)
   ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
-   (mem (lambda (k) (beta (minus 1 d) (plus alpha (times k d)))))))
+   (mem
+    (lambda (k)
+      (beta (minus 1 d)
+            (plus alpha (times k d)))))))
 """)
 
   sivm.assume("u_pymem","""
@@ -592,7 +596,8 @@ def loadPYMem(sivm):
 
   sivm.assume("pymem","""
 (lambda (alpha d base_dist)
-  ((lambda (augmented_proc crp) (lambda () (augmented_proc (crp))))
+  ((lambda (augmented_proc crp)
+     (lambda () (augmented_proc (crp))))
    (mem (lambda (table) (base_dist)))
    (make_crp alpha d)))
 """)
@@ -612,6 +617,11 @@ def testUCRP1(N):
   sivm.observe("(normal (f) 1.0)",0.0)
   sivm.infer(N)
 
+def observe_categories(sivm,counts):
+  for i in range(len(counts)):
+    for ct in range(counts[i]):
+      sivm.observe("(normal (f) 0.1)",float(i))
+
 def testCRP1(N,isCollapsed):
   sivm = SIVM()
   loadPYMem(sivm)
@@ -623,25 +633,36 @@ def testCRP1(N,isCollapsed):
     
   pid = sivm.predict("(f)")[0]
 
-  sivm.observe("(normal (f) 0.1)",0.0)
-  sivm.observe("(normal (f) 0.1)",0.0)
-
-  sivm.observe("(normal (f) 0.1)",1.0)
-  sivm.observe("(normal (f) 0.1)",1.0)
-
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-  sivm.observe("(normal (f) 0.1)",2.0)
-
-  sivm.observe("(normal (f) 0.1)",3.0)
+  observe_categories(sivm,[2,2,5,1,0])
 
   predictions = loggingInfer(sivm,pid,N)
   ps = normalizeList([3,3,6,2,1])
   eps = normalizeList(countPredictions(predictions, [0,1,2,3,4]))
   printTest("TestCRP1 (not exact)",ps,eps)
 
+def load_hierarchical_Pittman_Yor(sivm,topCollapsed,botCollapsed):
+  loadPYMem(sivm)
+  sivm.assume("alpha","(gamma 1.0 1.0)")
+  sivm.assume("d","(uniform_continuous 0.0 0.1)")
+  sivm.assume("base_dist","(lambda () (categorical (make_vector 0.2 0.2 0.2 0.2 0.2)))")
+  if topCollapsed: sivm.assume("intermediate_dist","(pymem alpha d base_dist)")
+  else: sivm.assume("intermediate_dist","(u_pymem alpha d base_dist)")
+  if botCollapsed: sivm.assume("f","(pymem alpha d intermediate_dist)")
+  else: sivm.assume("f","(u_pymem alpha d intermediate_dist)")
+
+def predict_hierarchical_Pittman_Yor(N,topCollapsed,botCollapsed):
+  sivm = SIVM()
+  load_hierarchical_Pittman_Yor(sivm,topCollapsed,botCollapsed)
+  pid = sivm.predict("(f)")[0]
+  observe_categories(sivm,[2,2,5,1,0])
+  return loggingInfer(sivm,pid,N)
+
+def test_CRP_with_hierarchical_Pittman_Yor(N):
+  print "---Test: Test hierarchical Pittman-Yor---"
+  for top in [False,True]:
+    for bot in [False,True]:
+      attempt = normalizeList(countPredictions(predict_hierarchical_Pittman_Yor(N,top,bot), [0,1,2,3,4]))
+      print("(%s,%s): %s" % (top,bot,attempt))
 
 def testGeometric1(N):
   sivm = SIVM()
@@ -649,9 +670,9 @@ def testGeometric1(N):
   sivm.assume("alpha2","(gamma 5.0 2.0)")
   sivm.assume("p", "(beta alpha1 alpha2)")
   sivm.assume("geo","(lambda (p) (branch (bernoulli p) (lambda () 1) (lambda () (plus 1 (geo p)))))")
-  pID = sivm.predict("(geo p)")[0]
+  sivm.predict("(geo p)",label="pid")
   
-  predictions = loggingInfer(sivm,5,N)
+  predictions = loggingInfer(sivm,"pid",N)
 
   k = 7
   ps = [math.pow(2,-n) for n in range(1,k)]

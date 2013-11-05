@@ -46,7 +46,7 @@ map<string,SP *> initBuiltInSPs()
     {"first", new FirstSP},
     {"rest", new RestSP},
     {"list", new ListSP},
-    {"pair?", new IsPairSP},
+    {"is_pair", new IsPairSP},
     {"list_ref", new ListRefSP},
     {"map_list", new MapListSP},
 

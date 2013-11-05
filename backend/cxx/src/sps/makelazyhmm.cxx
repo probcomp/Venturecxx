@@ -96,7 +96,7 @@ void LazyHMMSP::incorporateOutput(VentureValue * value, Node * node) const
 {
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(node->spaux());
   VentureAtom * vout = dynamic_cast<VentureAtom *>(value);
-  VentureAtom * vin = dynamic_cast<VentureAtom *>(node->operandNodes[0]->getValue());
+  VentureNumber * vin = dynamic_cast<VentureNumber *>(node->operandNodes[0]->getValue());
 
   assert(aux);
   assert(vout);
@@ -105,26 +105,26 @@ void LazyHMMSP::incorporateOutput(VentureValue * value, Node * node) const
   assert(vout->n < 100); // TODO DEBUG
 
   /* Register observation */
-  aux->os[vin->n].push_back(vout->n);
+  aux->os[vin->getInt()].push_back(vout->n);
 }
 
 void LazyHMMSP::removeOutput(VentureValue * value, Node * node) const
 {
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(node->spaux());
   VentureAtom * vout = dynamic_cast<VentureAtom *>(value);
-  VentureAtom * vin = dynamic_cast<VentureAtom *>(node->operandNodes[0]->getValue());
+  VentureNumber * vin = dynamic_cast<VentureNumber *>(node->operandNodes[0]->getValue());
 
   assert(aux);
   assert(vout);
   assert(vin);
 
-  vector<uint32_t> & iObs = aux->os[vin->n];
+  vector<uint32_t> & iObs = aux->os[vin->getInt()];
   size_t oldSize = iObs.size();
 
   /* Remove observation. */
   iObs.erase(find(iObs.begin(),iObs.end(),vout->n));
   assert(oldSize == iObs.size() + 1);
-  if (iObs.empty()) { aux->os.erase(vin->n); }
+  if (iObs.empty()) { aux->os.erase(vin->getInt()); }
 }
 
 
@@ -204,33 +204,33 @@ double LazyHMMSP::detachLatents(SPAux * spaux,
 VentureValue * LazyHMMSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(node->spaux());
-  VentureAtom * vint = dynamic_cast<VentureAtom*>(node->operandNodes[0]->getValue());
+  VentureNumber * vint = dynamic_cast<VentureNumber*>(node->operandNodes[0]->getValue());
   assert(aux);
   assert(vint);
 
-  return new VentureAtom(sampleVector(O * aux->xs[vint->n],rng));
+  return new VentureAtom(sampleVector(O * aux->xs[vint->getInt()],rng));
 }
 
 double LazyHMMSP::logDensityOutput(VentureValue * value, Node * node) const
 {
   VentureAtom * vout = dynamic_cast<VentureAtom*>(value);
-  VentureAtom * vin = dynamic_cast<VentureAtom*>(node->operandNodes[0]->getValue());
+  VentureNumber * vin = dynamic_cast<VentureNumber*>(node->operandNodes[0]->getValue());
   assert(vout);
   assert(vin);
 
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(node->spaux());
 
-  assert(aux->xs.size() > vin->n);
-  VectorXd dist = O * aux->xs[vin->n];
+  assert(aux->xs.size() > vin->getInt());
+  VectorXd dist = O * aux->xs[vin->getInt()];
   return log(dist[vout->n]);
 }
 
 VentureValue * LazyHMMSP::simulateRequest(Node * node, gsl_rng * rng) const
 {
-  VentureAtom * vin = dynamic_cast<VentureAtom*>(node->operandNodes[0]->getValue());
+  VentureNumber * vin = dynamic_cast<VentureNumber*>(node->operandNodes[0]->getValue());
   assert(vin);
   vector<HSR *> hsrs;
-  return new VentureRequest({new HMM_HSR(vin->n)});
+  return new VentureRequest({new HMM_HSR(vin->getInt())});
 }
 
 /* Helpers */
