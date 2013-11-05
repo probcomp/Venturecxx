@@ -14,6 +14,7 @@ struct LKernel
     { return weight(oldVal,nullptr,appNode,latentDB); }
 
   bool isIndependent{true};
+
   virtual ~LKernel() {}
 };
 
@@ -38,6 +39,12 @@ struct DeterministicLKernel : LKernel
   VentureValue * value;
   SP * sp;
   
+};
+
+struct VariationalKernel : LKernel
+{
+  virtual double gradientOfLogDensity(VentureValue * output) { return 0; }
+  virtual void updateParameters(double gradient) { }
 };
 
 #endif

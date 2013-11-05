@@ -32,6 +32,7 @@ def loggingInfer(sivm,address,T):
 def runTests(N):
   testBernoulli1(N)
   #testCategorical1(N)
+  testMHNormal0(N)
   testMHNormal1(N)
   testMem0(N)
   #testMem1(N)
@@ -96,6 +97,16 @@ def testCategorical1(N):
   eps = normalizeList(countPredictions(predictions, [0,1,2,3,4,5])) if N > 0 else [0 for x in range(6)]
   printTest("testCategorical1",ps,eps)
 
+def testMHNormal0(N):
+  sivm = SIVM()
+  sivm.assume("a", "(normal 10.0 1.0)")
+  sivm.observe("(normal a 1.0)", 14.0)
+  sivm.predict("(normal a 1.0)")
+
+  predictions = loggingInfer(sivm,3,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestMHNormal0---"
+  print "(12.0," + str(mean) + ")"
   
 
 def testMHNormal1(N):

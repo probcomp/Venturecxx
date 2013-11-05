@@ -15,9 +15,9 @@ using boost::python::extract;
 
 PyTrace::PyTrace(): 
   Trace(), 
-//  mcmc(new OutermostMixMH(this, new ScaffoldMHGKernel(this))) {}
+  mcmc(new OutermostMixMH(this, new ScaffoldMHGKernel(this))) {}
 //  mcmc(new OutermostMixMH(this,new GibbsGKernel(this))) {}
-  mcmc(new OutermostMixMH(this,new PGibbsGKernel(this))) {}
+//  mcmc(new OutermostMixMH(this,new PGibbsGKernel(this))) {}
 
 PyTrace::~PyTrace()
 {

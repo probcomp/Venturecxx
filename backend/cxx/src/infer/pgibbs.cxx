@@ -227,6 +227,7 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
   for (int t = T-1; t >= 0; --t)
   {
     tie(weightsRho[t],omegaDBs[t][P]) = trace->detach({scaffold->border[t]},scaffold);
+    if (t >= 1) { ancestorIndices[t][P] = P; }
   }
   assertTorus(trace,scaffold);
 
