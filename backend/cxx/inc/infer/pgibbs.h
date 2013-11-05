@@ -3,34 +3,18 @@
 
 #include "infer/gkernel.h"
 
-struct PGibbsIndex : MixMHIndex
-{ 
-  Scaffold * scaffold{nullptr}; 
-  vector<vector<uint32_t> > ancestorIndices;
-  vector<vector<OmegaDB*> > omegaDBs;
-  vector<double> weights;
-  uint32_t P;
-  uint32_t T;
-};
-
 struct PGibbsParam : MixMHParam 
 { 
-  PGibbsParam(const GibbsIndex * pindex):
-    scaffold(pindex->scaffold),
-    ancestorIndices(move(ancestorIndices)),
-    omegaDBs(omegaDBs),
-    weights(move(weights)),
-    P(P),
-    T(T) {}
-
   Scaffold * scaffold{nullptr};
   vector<vector<uint32_t> > ancestorIndices;
   vector<vector<OmegaDB*> > omegaDBs;
   vector<double> weights;
   uint32_t P;
   uint32_t T;
-
 };
+
+struct PGibbsIndex : PGibbsParam,MixMHIndex { };
+
 
 /* This kernel picks a target in proportion to exp(weight),
    accepts by restoring the chosen particle, rejects by
@@ -46,22 +30,28 @@ struct PGibbsSelectGKernel : GKernel
   void accept() override;
   void reject() override;
 
-  Scaffold * scaffold{nullptr};
+private:
+  list<uint32_t> constructAncestorPath(uint32_t t, uint32_t p);
+  void restoreAncestorPath(list<uint32_t> path);
+  void discardAncestorPath(uint32_t t);
 
+  /* the Pth index indicates RHO */
+  Scaffold * scaffold{nullptr};
   vector<vector<uint32_t> > ancestorIndices;
   vector<vector<OmegaDB*> > omegaDBs;
   vector<double> weights;
-  uint32_t P;
-  uint32_t T;
+  uint32_t P = UINT32_MAX;
+  uint32_t T = UINT32_MAX;
 
-  uint32_t chosenIndex = -1;
+
+  uint32_t chosenIndex = UINT32_MAX;
 };
 
 
 struct PGibbsGKernel : MixMHKernel
 {
   PGibbsGKernel(Trace * trace): 
-    MixMHKernel(trace, new ParticleGKernel(trace)) {}
+    MixMHKernel(trace, new PGibbsSelectGKernel(trace)) {}
 
   ~PGibbsGKernel() { delete gKernel; }
   void destroyParameters();
@@ -73,13 +63,7 @@ struct PGibbsGKernel : MixMHKernel
 
   Scaffold * scaffold{nullptr};
   Node * pNode{nullptr};
-  size_t P = 2;
-
-  size_t T; // for now, just the number of border nodes
-  vector<vector<uint32_t> > ancestorIndices;
-  vector<vector<OmegaDB*> > omegaDBs;
-  vector<double> weightsRho;
-  vector<double> weights;
+  size_t P = 3;
 
 };
 

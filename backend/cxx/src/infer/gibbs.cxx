@@ -94,8 +94,6 @@ void GibbsSelectGKernel::reject()
 /* GibbsGKernel */
 void GibbsGKernel::destroyParameters()
 {
-  /* TODO GC be careful about when te delete scaffold since many layers make
-     use of it. */
   scaffold = nullptr;
   pNode = nullptr;
 }
