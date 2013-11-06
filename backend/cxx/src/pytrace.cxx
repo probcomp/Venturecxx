@@ -46,15 +46,15 @@ VentureValue * PyTrace::parseExpression(boost::python::object o)
   
   boost::python::list l = getList();
   
- VentureList * exp = new VentureNil;
- 
- boost::python::ssize_t L = boost::python::len(l);
-
- for(boost::python::ssize_t i=L;i > 0;i--) 
- {
-   exp = new VenturePair(parseExpression(l[i-1]),exp);
- }
- return exp;
+  VentureList * exp = new VentureNil;
+  
+  boost::python::ssize_t L = boost::python::len(l);
+  
+  for(boost::python::ssize_t i=L;i > 0;i--) 
+  {
+    exp = new VenturePair(parseExpression(l[i-1]),exp);
+  }
+  return exp;
 }
 
 void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
