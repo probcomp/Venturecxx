@@ -158,7 +158,6 @@ vector<double> BetaSP::gradientOfLogDensity(double output,
 {
   double a = arguments[0];
   double b = arguments[1];
-  double x = output;
 
   double alpha0 = a + b;
 

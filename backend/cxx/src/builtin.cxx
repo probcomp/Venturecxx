@@ -41,6 +41,8 @@ map<string,SP *> initBuiltInSPs()
     {"eq", new EqualSP},
     {"gt", new GreaterThanSP},
     {"lt", new LessThanSP},
+    {"gte", new GreaterThanOrEqualToSP},
+    {"lte", new LessThanOrEqualToSP},
     {"real", new RealSP},
 
     {"pair", new PairSP},
@@ -62,8 +64,10 @@ map<string,SP *> initBuiltInSPs()
     {"not", new BoolNotSP},
     {"xor", new BoolXorSP},
 
+    {"flip", new BernoulliSP},
     {"bernoulli", new BernoulliSP},
     {"categorical", new CategoricalSP},
+    {"uniform_discrete", new UniformDiscreteSP},
 
     {"normal", new NormalSP},
     {"gamma", new GammaSP},

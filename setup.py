@@ -1,14 +1,7 @@
 #!/usr/bin/python
 
-# From here:
-# http://docs.python.org/2/extending/building.html#building
-
-# Just build as a Python library: python setup.py build
-# Build and install to the system: sudo python setup.py build install
-
 from distutils.core import setup, Extension
 from os import path
-import itertools
 
 #src_dir = "backend/cxx/src"
 #src_files = []

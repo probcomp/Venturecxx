@@ -46,6 +46,7 @@ vector<VentureValue*> BernoulliSP::enumerateOutput(Node * node) const
   else { return {new VentureBool(true)}; }
 }
 
+/* Categorical */
 VentureValue * CategoricalSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<double> ps;
@@ -89,6 +90,53 @@ vector<VentureValue*> CategoricalSP::enumerateOutput(Node * node) const
     if (i == vold->n) { continue; }
     else { 
       values.push_back(new VentureAtom(i));
+    }
+  }
+  return values;
+}
+
+/* UniformDiscrete */
+VentureValue * UniformDiscreteSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  assert(a);
+  assert(b);
+  int n = gsl_rng_uniform_int(rng, b->getInt() - a->getInt());
+  return new VentureNumber(a->getInt() + n);
+}
+
+double UniformDiscreteSP::logDensityOutput(VentureValue * value, Node * node)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * x = dynamic_cast<VentureNumber *>(value);
+  assert(a);
+  assert(b);
+  assert(x);
+  return log(gsl_ran_flat_pdf(x->getInt(),a->getInt(),b->getInt()));
+}
+
+vector<VentureValue*> UniformDiscreteSP::enumerateOutput(Node * node) const
+{
+  VentureNumber * vold = dynamic_cast<VentureNumber*>(node->getValue());
+  assert(vold);
+
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  assert(a);
+  assert(b);
+  
+  vector<VentureValue*> values;
+
+  for (int i = a->getInt(); i < b->getInt(); ++i)
+  {
+    if (i == vold->getInt()) { continue; }
+    else { 
+      values.push_back(new VentureNumber(i));
     }
   }
   return values;
