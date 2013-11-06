@@ -57,7 +57,7 @@ void restoreAncestorPath(Trace * trace,
   {
     uint32_t nextParticle = path[t];
     /* TODO We need to divide the border into sub-vectors */
-    trace->regen({scaffold->border[t]},scaffold,true,omegaDBs[t][nextParticle]);
+    trace->regen({scaffold->border[t]},scaffold,true,omegaDBs[t][nextParticle],nullptr);
   }
 }
 
@@ -234,7 +234,7 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
   /* Simulate and calculate initial weights */
   for (size_t p = 0; p < P; ++p)
   {
-    trace->regen({scaffold->border[0]},scaffold,false,nullptr);
+    trace->regen({scaffold->border[0]},scaffold,false,nullptr,nullptr);
     tie(weights[p],omegaDBs[0][p]) = trace->detach({scaffold->border[0]},scaffold);
     assertTorus(trace,scaffold);
   }
@@ -252,7 +252,7 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
       ancestorIndices[t][p] = sampleCategorical(expWeights,trace->rng);
       vector<uint32_t> path = constructAncestorPath(ancestorIndices,t,p);
       restoreAncestorPath(trace,scaffold,omegaDBs,path);
-      trace->regen({scaffold->border[t]},scaffold,false,nullptr);
+      trace->regen({scaffold->border[t]},scaffold,false,nullptr,nullptr);
       tie(newWeights[p],omegaDBs[t][p]) = trace->detach({scaffold->border[t]},scaffold);
       discardAncestorPath(trace,scaffold,t);
       assertTorus(trace,scaffold);

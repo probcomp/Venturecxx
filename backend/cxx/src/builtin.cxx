@@ -43,6 +43,7 @@ map<string,SP *> initBuiltInSPs()
     {"lt", new LessThanSP},
     {"gte", new GreaterThanOrEqualToSP},
     {"lte", new LessThanOrEqualToSP},
+    {"real", new RealSP},
 
     {"pair", new PairSP},
     {"first", new FirstSP},

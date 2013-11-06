@@ -49,4 +49,10 @@ struct LessThanOrEqualToSP : SP
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
 };
 
+struct RealSP : SP
+{ 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+};
+
+
 #endif

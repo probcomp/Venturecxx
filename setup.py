@@ -29,6 +29,7 @@ src_files = [
     "src/infer/mh.cxx",
     "src/infer/gibbs.cxx",
     "src/infer/pgibbs.cxx",
+    "src/infer/meanfield.cxx",
     "src/utils.cxx",
     "src/check.cxx",
     "src/sp.cxx",

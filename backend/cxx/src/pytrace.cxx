@@ -6,6 +6,7 @@
 #include "infer/mh.h"
 #include "infer/gibbs.h"
 #include "infer/pgibbs.h"
+#include "infer/meanfield.h"
 #include "value.h"
 
 #include <iostream>
@@ -15,9 +16,10 @@ using boost::python::extract;
 
 PyTrace::PyTrace(): 
   Trace(), 
-  mcmc(new OutermostMixMH(this, new ScaffoldMHGKernel(this))) {}
+//  mcmc(new OutermostMixMH(this, new ScaffoldMHGKernel(this))) {}
 //  mcmc(new OutermostMixMH(this,new GibbsGKernel(this))) {}
 //  mcmc(new OutermostMixMH(this,new PGibbsGKernel(this))) {}
+  mcmc(new OutermostMixMH(this,new MeanFieldGKernel(this))) {}
 
 PyTrace::~PyTrace()
 {
@@ -61,7 +63,7 @@ void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
 {
   VentureValue * exp = parseExpression(o);
 
-  pair<double,Node*> p = evalVentureFamily(directiveID,static_cast<VentureList*>(exp));
+  pair<double,Node*> p = evalVentureFamily(directiveID,static_cast<VentureList*>(exp),nullptr);
   ventureFamilies.insert({directiveID,{p.second,exp}});
 }
 

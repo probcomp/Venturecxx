@@ -16,10 +16,11 @@ struct VentureToken;
 struct Node;
 struct LatentDB;
 struct HSR;
-
+struct VariationalLKernel;
 
 enum class NodeType;
 enum class FlushType;
+enum class ParameterScope;
 
 /* Although this is not technically an abstract class, 
    one cannot have both simulate defaults at the same time,
@@ -35,6 +36,7 @@ struct SP
   double logDensity(VentureValue * value, Node * node) const;
   virtual double logDensityRequest(VentureValue * value, Node * node) const { return 0; }
   virtual double logDensityOutput(VentureValue * value, Node * node) const { return 0; }
+  virtual double logDensityOutputNumeric(double output, const vector<double> & args) const { return 0; }
 
 /* Incorporate */
   void incorporate(VentureValue * value, Node * node) const;
@@ -90,6 +92,15 @@ struct SP
      the SP class, or its methods are dumped into the bloat. */
   virtual LKernel * getAAAKernel() const;
 
+  virtual VariationalLKernel * getVariationalLKernel(Node * node) const;
+  virtual vector<ParameterScope> getParameterScopes() const { assert(false); return {}; }
+
+  virtual vector<double> gradientOfLogDensity(double output,
+				      const vector<double> & arguments) const 
+    { assert(false); return {}; }
+
+
+
   bool hasAux() { return makesESRs || makesHSRs || tracksSamples; }
   bool isNullRequest() { return !makesESRs && !makesHSRs; }
 
@@ -109,6 +120,8 @@ struct SP
   bool esrsOwnValues{false};
 
   bool childrenCanAAA{false};
+
+  bool hasVariationalLKernel{false};
 
   bool hasAEKernel{false};
 
