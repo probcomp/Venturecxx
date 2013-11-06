@@ -21,7 +21,7 @@ PyTrace::PyTrace():
   mcmc(new OutermostMixMH(this,new GibbsGKernel(this)))
 {
 
-  std::vector<std::string> dir_contents = lsdir("/opt/Venturecxx/backend/cxx/inc/pysps/");
+  std::vector<std::string> dir_contents = lsdir("./pysps/");
   std::vector<std::string> pysp_files = filter_for_suffix(dir_contents, ".py");
   // print_string_v(pysp_files);
 
@@ -29,46 +29,45 @@ PyTrace::PyTrace():
   for(std::vector<std::string>::const_iterator it=pysp_files.begin();
 		  it!=pysp_files.end();
 		  it++) {
+
 	  std::string pysp_file = *it;
 	  if(pysp_file == "__init__") continue;
-	  string_to_pysp_namespace[pysp_file] = boost::python::import(boost::python::str(pysp_file));
-	  // std::cout << "boost::python::import'ed " << pysp_file << std::endl;
-  }
 
-  std::string which_pysp = "square";
-  boost::python::object pysp_namespace = string_to_pysp_namespace[which_pysp];
+	  boost::python::object pysp_namespace = boost::python::import(boost::python::str(pysp_file));
+	  std::cout << "boost::python::import'ed " << pysp_file << std::endl;
 
-  // get the function called "makeSP", and the funcion called "getSymbol" in the model
-  boost::python::object pysp = boost::python::getattr(pysp_namespace, "makeSP");
-  boost::python::object pysym = boost::python::getattr(pysp_namespace, "getSymbol");
+	  // get the function called "makeSP", and the funcion called "getSymbol" in the model
+	  boost::python::object pysp = boost::python::getattr(pysp_namespace, "makeSP");
+	  boost::python::object pysym = boost::python::getattr(pysp_namespace, "getSymbol");
 
+	  // extract them
+	  assert(!pysp.is_none());
+	  my_sp = pysp();
+	  boost::python::extract<SP*> spex(my_sp);
+	  
+	  assert(!pysym.is_none());
+	  boost::python::extract<string> symex(pysym());
 
-  // extract them
-  assert(!pysp.is_none());
-  my_sp = pysp();
-  boost::python::extract<SP*> spex(my_sp);
+	  assert(spex.check());
+	  assert(symex.check());
 
-  assert(!pysym.is_none());
-  boost::python::extract<string> symex(pysym());
-
-  assert(spex.check());
-  assert(symex.check());
-
-  SP * sp = spex();
-  string sym = symex();
-
-  assert(!sp->makesESRs);
-  assert(!sp->makesHSRs);
+	  SP * sp = spex();
+	  string sym = symex();
+	  
+	  assert(!sp->makesESRs);
+	  assert(!sp->makesHSRs);
   
-  // create a node for the sp value
-  Node * spNode = new Node(NodeType::VALUE);
-  // set the value
-  spNode->setValue(new VentureSP(sp));
-  // do some crucial bookkeeping
-  processMadeSP(spNode,false);
-  // add the binding
-  primitivesEnv->addBinding(new VentureSymbol(sym),spNode);
+	  // create a node for the sp value
+	  Node * spNode = new Node(NodeType::VALUE);
+	  // set the value
+	  spNode->setValue(new VentureSP(sp));
+	  // do some crucial bookkeeping
+	  processMadeSP(spNode,false);
+	  // add the binding
+	  primitivesEnv->addBinding(new VentureSymbol(sym),spNode);
 
+	  std::cout << "added binding for new SP: " << sym << std::endl;
+  }
 // END for loop
 
 }

@@ -14,6 +14,11 @@ bool str_ends_with(const std::string str, const std::string target_suffix) {
 std::vector<std::string> lsdir(std::string path_str) {
 	std::vector<std::string> ret_vec;
 	boost::filesystem::path path(path_str);
+
+	if (!boost::filesystem::exists(path)) {
+		return ret_vec;
+	}
+
 	// default construction yields past-the-end
 	boost::filesystem::directory_iterator end_itr; 
 	for (boost::filesystem::directory_iterator itr(path);
