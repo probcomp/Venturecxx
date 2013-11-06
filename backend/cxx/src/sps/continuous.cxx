@@ -19,7 +19,7 @@ VentureValue * NormalSP::simulateOutput(Node * node, gsl_rng * rng)  const
   double mu;
   VentureNumber * vmu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
   if (vmu) { mu = vmu->x; }
-  else 
+  else
   {
     VentureAtom * vcmu = dynamic_cast<VentureAtom*>(operands[0]->getValue());
     assert(vcmu);
@@ -39,7 +39,7 @@ double NormalSP::logDensityOutput(VentureValue * value, Node * node)  const
   double mu;
   VentureNumber * vmu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
   if (vmu) { mu = vmu->x; }
-  else 
+  else
   {
     VentureAtom * vcmu = dynamic_cast<VentureAtom*>(operands[0]->getValue());
     assert(vcmu);

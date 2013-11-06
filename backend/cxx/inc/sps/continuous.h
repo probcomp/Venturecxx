@@ -5,62 +5,62 @@
 
 /* Continuous scalar random SPs. */
 struct NormalSP : SP
-{ 
+{
   NormalSP()
-    { 
+    {
       isRandomOutput = true;
       canAbsorbOutput = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
-  double logDensityOutput(VentureValue * value, Node * node) const override; 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, Node * node) const override;
 };
 
 struct GammaSP : SP
-{ 
+{
   GammaSP()
-    { 
+    {
       isRandomOutput = true;
       canAbsorbOutput = true;
     }
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
-  double logDensityOutput(VentureValue * value, Node * node) const override; 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, Node * node) const override;
 };
 
 struct UniformContinuousSP : SP
-{ 
+{
   UniformContinuousSP()
-    { 
+    {
       isRandomOutput = true;
       canAbsorbOutput = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
-  double logDensityOutput(VentureValue * value, Node * node) const override; 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, Node * node) const override;
 };
 
 struct BetaSP : SP
-{ 
+{
   BetaSP()
-    { 
+    {
       isRandomOutput = true;
       canAbsorbOutput = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
-  double logDensityOutput(VentureValue * value, Node * node) const override; 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, Node * node) const override;
 };
 
 struct StudentTSP : SP
-{ 
+{
   StudentTSP()
-    { 
+    {
       isRandomOutput = true;
       canAbsorbOutput = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
-  double logDensityOutput(VentureValue * value, Node * node) const override; 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, Node * node) const override;
 };
 
 #endif
