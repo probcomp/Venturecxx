@@ -8,10 +8,11 @@
 #include "infer/gibbs.h"
 #include "value.h"
 #include "pyutils.h"
+#include "file_utils.h"
 
 #include <iostream>
 #include <list>
-
+#include <map>
 
 
 PyTrace::PyTrace(): 
@@ -20,16 +21,22 @@ PyTrace::PyTrace():
   mcmc(new OutermostMixMH(this,new GibbsGKernel(this)))
 {
 
-  // TODO LOVELL 
-  // get a list of all files 
-  // iterate over the FILES in inc/pysps, and for each file
-  // do the following, as in the code below:
+  std::vector<std::string> dir_contents = lsdir("/opt/Venturecxx/backend/cxx/inc/pysps/");
+  std::vector<std::string> pysp_files = filter_for_suffix(dir_contents, ".py");
+  // print_string_v(pysp_files);
 
+  map<std::string, boost::python::object> string_to_pysp_namespace;
+  for(std::vector<std::string>::const_iterator it=pysp_files.begin();
+		  it!=pysp_files.end();
+		  it++) {
+	  std::string pysp_file = *it;
+	  if(pysp_file == "__init__") continue;
+	  string_to_pysp_namespace[pysp_file] = boost::python::import(boost::python::str(pysp_file));
+	  // std::cout << "boost::python::import'ed " << pysp_file << std::endl;
+  }
 
-// FOR each file in inc/pysps, import the module in the file
-
-  // "square" will become "whatever-the-filename-is"
-  boost::python::object pysp_namespace = boost::python::import("square");
+  std::string which_pysp = "square";
+  boost::python::object pysp_namespace = string_to_pysp_namespace[which_pysp];
 
   // get the function called "makeSP", and the funcion called "getSymbol" in the model
   boost::python::object pysp = boost::python::getattr(pysp_namespace, "makeSP");

@@ -57,6 +57,7 @@ ADD_LIBRARY(trace SHARED
   src/infer/gibbs.cxx
 
   src/utils.cxx
+  src/file_utils.cxx
   src/check.cxx
 
   src/sp.cxx
@@ -116,6 +117,7 @@ ADD_LIBRARY(sp SHARED
   src/infer/gibbs.cxx
 
   src/utils.cxx
+  src/file_utils.cxx
   src/check.cxx
 
   src/sp.cxx
