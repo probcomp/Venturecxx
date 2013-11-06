@@ -126,3 +126,22 @@ double BetaSP::logDensityOutput(VentureValue * value, Node * node)  const
   return log(gsl_ran_beta_pdf(x->x,a->x,b->x));
 }
 
+/* Student-t */
+VentureValue * StudentTSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  assert(nu);
+  double x = gsl_ran_tdist(rng,nu->x);
+  return new VentureNumber(x);
+}
+
+double StudentTSP::logDensityOutput(VentureValue * value, Node * node)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * x = dynamic_cast<VentureNumber *>(value);
+  assert(nu);
+  assert(x);
+  return log(gsl_ran_tdist_pdf(x->x,nu->x));
+}
