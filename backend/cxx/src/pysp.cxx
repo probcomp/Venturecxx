@@ -10,7 +10,7 @@ VentureValue * PySP::simulateOutput(Node * node, gsl_rng * rng) const
   boost::python::list args;
   for (Node * operandNode : node->operandNodes)
   {
-    args.extend(operandNode->getValue()->toPython());
+    args.append(operandNode->getValue()->toPython());
   }
   boost::python::object val = simulateOutputPython(args);
   boost::python::extract<boost::python::dict> getDict(val);
@@ -22,17 +22,13 @@ VentureValue * PySP::simulateOutput(Node * node, gsl_rng * rng) const
 
 boost::python::object PySP::simulateOutputPython(boost::python::list args) const
 {
-  return this->get_override("__call__")(args);
+  return this->get_override("simulate")(args);
 }
 
 BOOST_PYTHON_MODULE(libsp)
 {
   using namespace boost::python;
-  // TODO LOVELL this won't compile, is it a syntax issue?
-//  class_<PySP>("SP",init<>()[return_value_policy<reference_existing_object>()])
-//  class_<PySP>("SP",init<>(),return_value_policy<reference_existing_object>())
-  class_<PySP>("SP",init<>())
-
+  class_<PySP, boost::noncopyable>("SP",init<>())
     .def("simulate", &PySP::simulateOutputPython)
     ;
 };
