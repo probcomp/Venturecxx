@@ -22,6 +22,7 @@ struct PyTrace : Trace
 //  void unobserve(size_t did);
   void infer(size_t n);
   
+  boost::python::object my_sp;
   GKernel * mcmc{nullptr};
 };
 
