@@ -1,14 +1,7 @@
 #!/usr/bin/python
 
-# From here:
-# http://docs.python.org/2/extending/building.html#building
-
-# Just build as a Python library: python setup.py build
-# Build and install to the system: sudo python setup.py build install
-
 from distutils.core import setup, Extension
 from os import path
-import itertools
 
 #src_dir = "backend/cxx/src"
 #src_files = []
@@ -35,15 +28,17 @@ src_files = [
     "src/infer/gkernel.cxx",
     "src/infer/mh.cxx",
     "src/infer/gibbs.cxx",
+#    "src/infer/pgibbs.cxx",
+#    "src/infer/meanfield.cxx",
     "src/utils.cxx",
     "src/check.cxx",
     "src/sp.cxx",
     "src/scaffold.cxx",
-    "src/sps/stathelpers.cxx",
     "src/sps/csp.cxx",
     "src/sps/mem.cxx",
-    "src/sps/real.cxx",
-    "src/sps/count.cxx",
+    "src/sps/number.cxx",
+    #"src/sps/real.cxx",
+    #"src/sps/count.cxx",
     "src/sps/bool.cxx",
     "src/sps/continuous.cxx",
     "src/sps/discrete.cxx",
@@ -57,7 +52,10 @@ src_files = [
     "src/sps/makesymdirmult.cxx",
     "src/sps/makeucsymdirmult.cxx",
     "src/sps/makelazyhmm.cxx",
+    "src/sps/stathelpers.cxx",
     "src/pytrace.cxx",
+    "src/pyutils.cxx",
+    "src/file_utils.cxx"
 ]
 src_files = ["backend/cxx/" + f for f in src_files]
 
@@ -72,8 +70,9 @@ packages=["venture","venture.sivm","venture.ripl",
 cxx = Extension("venture.cxx.libtrace",
     define_macros = [('MAJOR_VERSION', '1'),
                      ('MINOR_VERSION', '0')],
-    libraries = ['gsl', 'gslcblas', 'boost_python'],
+    libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_filesystem'],
     extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O0", "-fPIC"],
+    undef_macros = ['NDEBUG'],
     include_dirs = inc_dirs,
     sources = src_files)
 ext_modules.append(cxx)
