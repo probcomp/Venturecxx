@@ -3,7 +3,7 @@ import math
 import pdb
 
 def SIVM():
-    return make_church_prime_ripl()
+  return make_church_prime_ripl()
 
 def normalizeList(seq): 
   denom = sum(seq)
@@ -24,7 +24,7 @@ def printTest(testName,eps,ops):
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer({"kernel":"mh","transitions":10,"use_global_scaffold":False})
+    sivm.infer({"kernel":"mh","transitions":1,"use_global_scaffold":False})
     predictions.append(sivm.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
@@ -57,25 +57,28 @@ def runTests(N):
   testApply1(N)
   testExtendEnv1(N)
   testList1()
+  testDPMem1(N)
   testHPYMem1(N)
   testGeometric1(N)
+  print "---End Tests---"
 
 def runTests2(N):
-  testGeometric1(N)
+  testBernoulli0(N)
+  testBernoulli1(N)
+
 
 def testBernoulli0(N):
   sivm = SIVM()
-  sivm.assume("b", "((lambda () (bernoulli)))")
   sivm.predict("""
 ((biplex
-  b
+  true
   (lambda () (normal 0.0 1.0))
-  (lambda () ((lambda () (normal 10.0 1.0))))))
+  (lambda () (normal 10.0 1.0))))
 """);
-  predictions = loggingInfer(sivm,2,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestBernoulli0---"
-  print "(5.0," + str(mean) + ")"
+  # predictions = loggingInfer(sivm,2,N)
+  # mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  # print "---TestBernoulli0---"
+  # print "(5.0," + str(mean) + ")"
 
 
 def testBernoulli1(N):
@@ -665,30 +668,12 @@ def testDPMem1(N):
   sivm.observe("(normal (f) 1.0)",1.0)
   sivm.observe("(normal (f) 1.0)",0.0)
   sivm.observe("(normal (f) 1.0)",0.0)
-  sivm.infer(N)
+  loggingInfer(sivm,5,N)
 
 def observeCategories(sivm,counts):
   for i in range(len(counts)):
     for ct in range(counts[i]):
       sivm.observe("(normal (f) 1.0)",i)
-
-def testCRP1(N,isCollapsed):
-  sivm = SIVM()
-  loadPYMem(sivm)
-  sivm.assume("alpha","(gamma 1.0 1.0)")
-  sivm.assume("d","(uniform_continuous 0.0 0.1)")
-  sivm.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
-  if isCollapsed: sivm.assume("f","(pymem alpha d base_dist)")
-  else: sivm.assume("f","(u_pymem alpha d base_dist)")
-    
-  sivm.predict("(f)",label="pid")
-
-  observeCategories(sivm,[2,2,5,1,0])
-
-  predictions = loggingInfer(sivm,"pid",N)
-  ps = normalizeList([3,3,6,2,1])
-  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4]))
-  printTest("TestCRP1 (not exact)",ps,eps)
 
 def loadHPY(sivm,topCollapsed,botCollapsed):
   loadPYMem(sivm)
