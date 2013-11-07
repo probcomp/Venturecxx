@@ -26,6 +26,10 @@ struct PyTrace : Trace
 
   void infer(boost::python::dict options);
 
+  void bindPySP(string module_str, string pysp_name);
+  std::vector<boost::python::object> my_sp_v;
+  std::vector<boost::python::object> my_sp_sym_v;
+
   map<string,GKernel *> gkernels;
 };
 
