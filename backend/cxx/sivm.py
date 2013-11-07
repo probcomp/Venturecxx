@@ -69,6 +69,7 @@ class SIVM:
         self.trace.infer(N)
 
     def get_seed(self):
+        print("WARNING: get_seed() always returns 0!")
         return self.trace.get_seed()
 
     def set_seed(self, seed):
