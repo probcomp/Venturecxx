@@ -13,10 +13,15 @@ VentureValue * MakePitmanYorCRPSP::simulateOutput(Node * node, gsl_rng * rng) co
 {
   vector<Node *> & operands = node->operandNodes;
   VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * d = dynamic_cast<VentureNumber *>(operands[1]->getValue());
   assert(alpha);
-  assert(d);
-  return new VentureSP(new PitmanYorCRPSP(alpha->x,d->x));
+  double d = 0.0;
+  if (operands.size() > 1)
+  {
+    VentureNumber * vd = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+    assert(vd);
+    d = vd->x;
+  }
+  return new VentureSP(new PitmanYorCRPSP(alpha->x,d));
 }
 
 VentureValue * PitmanYorCRPSP::simulateOutput(Node * node, gsl_rng * rng) const

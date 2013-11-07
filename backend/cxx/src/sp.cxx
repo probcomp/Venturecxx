@@ -104,6 +104,8 @@ bool SP::canEnumerate(NodeType nodeType) const
 
 void SP::flushValue(VentureValue * value, FlushType flushType) const
 {
+  assert(this);
+  assert(value);
   switch (flushType)
   {
   case FlushType::REQUEST: { flushRequest(value); return; }

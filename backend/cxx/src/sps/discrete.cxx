@@ -15,27 +15,36 @@
 VentureValue * BernoulliSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<Node *> & operands = node->operandNodes;
-  VentureNumber * p = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  assert(p);
-  assert(p->x >= 0 && p->x <= 1);
-  uint32_t n = gsl_ran_bernoulli(rng,p->x);
+  double p = 0.5;
+  if (!operands.empty())
+  {
+    VentureNumber * vp = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+    assert(vp);
+    assert(vp->x >= 0 && vp->x <= 1);
+    p = vp->x;
+  }
+  uint32_t n = gsl_ran_bernoulli(rng,p);
   assert(n == 0 || n == 1);
-  DPRINT("Bernoulli(", p->x);
   return new VentureBool(n);
 } 
 
 double BernoulliSP::logDensityOutput(VentureValue * value, Node * node) const
 {
-
   vector<Node *> & operands = node->operandNodes;
-  VentureNumber * p = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  assert(p);
-  assert(p->x >= 0 && p->x <= 1);
   VentureBool * b = dynamic_cast<VentureBool *>(value);
   assert(b);
 
-  if (b->pred) { return log(p->x); }
-  else { return log(1 - p->x); }
+  double p = 0.5;
+  if (!operands.empty())
+  {
+    VentureNumber * vp = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+    assert(vp);
+    assert(vp->x >= 0 && vp->x <= 1);
+    p = vp->x;
+  }
+
+  if (b->pred) { return log(p); }
+  else { return log(1 - p); }
 }
 
 vector<VentureValue*> BernoulliSP::enumerateOutput(Node * node) const

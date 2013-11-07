@@ -150,7 +150,11 @@ double LazyHMMSP::simulateLatents(SPAux * spaux,
 
   /* No matter what the request is, we must sample the first latent if
      we have not already done so. */
-  if (aux->xs.empty()) { aux->xs.push_back(sampleVectorXd(p0,rng)); }
+  if (aux->xs.empty()) 
+  { 
+    if (shouldRestore) { aux->xs.push_back(latents->xs[0]); }
+    else { aux->xs.push_back(sampleVectorXd(p0,rng)); }
+  }
 
   if (aux->xs.size() <= request->index)
   {
@@ -162,6 +166,7 @@ double LazyHMMSP::simulateLatents(SPAux * spaux,
       aux->xs.push_back(sample);
     }
   }
+  assert(aux->xs.size() > request->index);
   return 0;
 }
 
@@ -208,6 +213,7 @@ VentureValue * LazyHMMSP::simulateOutput(Node * node, gsl_rng * rng) const
   assert(aux);
   assert(vint);
 
+  assert(aux->xs.size() > vint->getInt());
   return new VentureAtom(sampleVector(O * aux->xs[vint->getInt()],rng));
 }
 
@@ -307,7 +313,7 @@ VectorXd sampleVectorXd(const VectorXd & v,gsl_rng * rng)
   for (size_t i = 0; i < len; ++i)
   {
     sum += v[i];
-    if (u < sum) 
+    if (u <= sum) 
     { 
       sample[i] = 1;
       return sample;
@@ -320,13 +326,15 @@ VectorXd sampleVectorXd(const VectorXd & v,gsl_rng * rng)
 uint32_t sampleVector(const VectorXd & v,gsl_rng * rng)
 {
   double u = gsl_ran_flat(rng,0.0,1.0);
+
   double sum = 0.0;
   size_t len = v.size();
   for (size_t i = 0; i < len; ++i)
   {
     sum += v[i];
-    if (u < sum) { return i; }
+    if (u <= sum) { return i; }
   }
+  cout << "sum should be 1: " << sum << endl;
   assert(false);
   return -1;
 }

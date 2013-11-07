@@ -9,6 +9,7 @@
 #include "infer/pgibbs.h"
 #include "infer/meanfield.h"
 #include "value.h"
+#include "scaffold.h"
 
 #include <gsl/gsl_rng.h>
 
@@ -107,12 +108,14 @@ void PyTrace::infer(boost::python::dict options)
 
   if (useGlobalScaffold)
   {
-    // TODO temporary -- gibbs checks the principal node for enumeration
-
-    assert(kernel == "pgibbs");
-    set<Node *> allNodes(randomChoices.begin(),randomChoices.end());
-    gkernel->loadParameters(new ScaffoldMHParam(new Scaffold(allNodes),nullptr));
-    gkernel->infer(numTransitions);
+    assert(kernel != "gibbs");
+    for (size_t i = 0; i < numTransitions; i++)
+    {
+      set<Node *> allNodes(randomChoices.begin(),randomChoices.end());
+      gkernel->loadParameters(new ScaffoldMHParam(new Scaffold(allNodes),nullptr));
+      gkernel->infer(1); 
+      gkernel->destroyParameters();
+    }
   }
   else
   {
@@ -121,6 +124,7 @@ void PyTrace::infer(boost::python::dict options)
     delete outermostKernel;
   }
 }
+
 
 void PyTrace::set_seed(size_t n) {
   gsl_rng_set(rng, n);
