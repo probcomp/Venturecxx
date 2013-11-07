@@ -18,12 +18,21 @@ Scaffold::Scaffold(set<Node *> principalNodes)
   assembleERG(principalNodes);
   disableBrush();
   setRegenCounts();
+  show();
 }
 
 void Scaffold::assembleERG(set<Node *> principalNodes)
 {
   queue<pair<Node *,bool> > q;
-  for (Node * pNode : principalNodes) { q.emplace(pNode,true); }
+  for (Node * pNode : principalNodes) 
+  { 
+    /* This condition is overly cautious. We only need to include the 
+       request node if the operator is AAA. */
+    if (pNode->sp()->makesHSRs && pNode->nodeType == NodeType::OUTPUT)
+    { q.emplace(pNode->requestNode,true); }
+
+    q.emplace(pNode,true); 
+  }
 
   while (!q.empty())
   {
@@ -121,7 +130,6 @@ void Scaffold::setRegenCounts()
   for (pair<Node *,DRGNode> p : drg)
   {
     Node * node = p.first;
-    /* TODO is this necessary? It didn't seem to be a reference otherwise. */
     DRGNode &drgNode = drg[node];
     if (drgNode.isAAA)
     {
@@ -134,7 +142,8 @@ void Scaffold::setRegenCounts()
       drgNode.regenCount = node->children.size() + 1;
       border.push_back(node);
     }
-    else { 
+    else 
+    { 
       drgNode.regenCount = node->children.size();
     }
   }
@@ -156,8 +165,11 @@ void Scaffold::setRegenCounts()
     {
       for (Node * esrParent : node->esrParents)
       { processParentAAA(esrParent); }
-      if (node->nodeType == NodeType::LOOKUP)
-      { processParentAAA(node->lookedUpNode); }
+      if (node->isReference())
+      { processParentAAA(node->sourceNode); }
+
+      // if (node->nodeType == NodeType::LOOKUP)
+      // { processParentAAA(node->lookedUpNode); }
     }
   }
 }
@@ -181,7 +193,7 @@ void Scaffold::show()
   for (pair<Node*,DRGNode> p : drg)
   {
     assert(p.first->isValid());
-    cout << p.first << " (" << p.second.regenCount << ", " << strNodeType(p.first->nodeType) <<")" << endl;
+    cout << p.first << " (" << p.second.regenCount << ", " << strNodeType(p.first->nodeType) <<", " << p.second.isAAA << ")" << endl;
   }
 
   cout << "Absorbing" << endl;

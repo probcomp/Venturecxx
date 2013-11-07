@@ -107,6 +107,12 @@ double Trace::detachInternal(Node * node,
   {
     Scaffold::DRGNode &drgNode = scaffold->drg[node];
     drgNode.regenCount--;
+    if (drgNode.regenCount < 0)
+    {
+      cout << "\n\n\n\n\n---RegenCount < 0! (" << node << ")---\n\n\n" << endl;
+      scaffold->show();
+    }
+
     assert(drgNode.regenCount >= 0);
     if (drgNode.regenCount == 0)
     {

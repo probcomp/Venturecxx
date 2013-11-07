@@ -55,15 +55,10 @@ def runTests(N):
   testApply1(N)
   testExtendEnv1(N)
   testList1()
-  testCRP1(N,True)
-  testCRP1(N,False)
-  test_CRP_with_hierarchical_Pittman_Yor(N)
+  testHPYMem1(N)
   testGeometric1(N)
 
 def runTests2(N):
-  testCRP1(N,True)
-  testCRP1(N,False)
-  test_CRP_with_hierarchical_Pittman_Yor(N)
   testGeometric1(N)
 
 
@@ -635,10 +630,10 @@ def testUCRP1(N):
   sivm.observe("(normal (f) 1.0)",0.0)
   sivm.infer(N)
 
-def observe_categories(sivm,counts):
+def observeCategories(sivm,counts):
   for i in range(len(counts)):
     for ct in range(counts[i]):
-      sivm.observe("(normal (f) 0.1)",i)
+      sivm.observe("(normal (f) 1.0)",i)
 
 def testCRP1(N,isCollapsed):
   sivm = SIVM()
@@ -651,14 +646,14 @@ def testCRP1(N,isCollapsed):
     
   sivm.predict("(f)",label="pid")
 
-  observe_categories(sivm,[2,2,5,1,0])
+  observeCategories(sivm,[2,2,5,1,0])
 
   predictions = loggingInfer(sivm,"pid",N)
   ps = normalizeList([3,3,6,2,1])
   eps = normalizeList(countPredictions(predictions, [0,1,2,3,4]))
   printTest("TestCRP1 (not exact)",ps,eps)
 
-def load_hierarchical_Pittman_Yor(sivm,topCollapsed,botCollapsed):
+def loadHPY(sivm,topCollapsed,botCollapsed):
   loadPYMem(sivm)
   sivm.assume("alpha","(gamma 1.0 1.0)")
   sivm.assume("d","(uniform_continuous 0.0 0.1)")
@@ -668,18 +663,18 @@ def load_hierarchical_Pittman_Yor(sivm,topCollapsed,botCollapsed):
   if botCollapsed: sivm.assume("f","(pymem alpha d intermediate_dist)")
   else: sivm.assume("f","(u_pymem alpha d intermediate_dist)")
 
-def predict_hierarchical_Pittman_Yor(N,topCollapsed,botCollapsed):
+def predictHPY(N,topCollapsed,botCollapsed):
   sivm = SIVM()
-  load_hierarchical_Pittman_Yor(sivm,topCollapsed,botCollapsed)
+  loadHPY(sivm,topCollapsed,botCollapsed)
   sivm.predict("(f)",label="pid")
-  observe_categories(sivm,[2,2,5,1,0])
+  observeCategories(sivm,[2,2,5,1,0])
   return loggingInfer(sivm,"pid",N)
 
-def test_CRP_with_hierarchical_Pittman_Yor(N):
+def testHPYMem1(N):
   print "---Test: Test hierarchical Pittman-Yor---"
   for top in [False,True]:
     for bot in [False,True]:
-      attempt = normalizeList(countPredictions(predict_hierarchical_Pittman_Yor(N,top,bot), [0,1,2,3,4]))
+      attempt = normalizeList(countPredictions(predictHPY(N,top,bot), [0,1,2,3,4]))
       print("(%s,%s): %s" % (top,bot,attempt))
 
 def testGeometric1(N):
