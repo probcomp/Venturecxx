@@ -75,7 +75,7 @@ class TestCoreSivmCxx(unittest.TestCase):
         o = self.sivm.execute_instruction(inst)
         self.assertIsInstance(o['directive_id'],(int,float))
     def test_observe_fail(self):
-        # engine can only constrain random choices
+        # FIXME: engine can only constrain random choices
         return
         inst = {
                 'instruction':'observe',
@@ -112,6 +112,8 @@ class TestCoreSivmCxx(unittest.TestCase):
         self.assertEquals(o['options']['seed'],0)
 
     def test_forget(self):
+        # FIXME: forget is not implemented
+        return
         inst1 = {
                 'instruction':'predict',
                 'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
@@ -121,8 +123,6 @@ class TestCoreSivmCxx(unittest.TestCase):
                 'instruction':'forget',
                 'directive_id':o1['directive_id'],
                 }
-        # forget is not implemented
-        return
         
         self.sivm.execute_instruction(inst2)
 
@@ -181,7 +181,7 @@ class TestCoreSivmCxx(unittest.TestCase):
             self.assertEquals(e.exception,'invalid_argument')
 
     def test_rollback(self):
-        # engine just segfaults :(
+        # FIXME: cxx asserts cause segfaults instead of python exceptions
         return
         inst1 = {
                 'instruction':'observe',
@@ -200,7 +200,7 @@ class TestCoreSivmCxx(unittest.TestCase):
         self.assertEquals(self.sivm.state,'default')
 
     def test_get_global_logscore(self):
-        # FIXME: not implemented in cxx
+        # FIXME: logscore not implemented in cxx
         return
         inst1 = {
                 'instruction':'observe',
@@ -214,7 +214,7 @@ class TestCoreSivmCxx(unittest.TestCase):
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['logscore'],-0.6931471805599453)
     def test_get_logscore(self):
-        # FIXME: not implemented in cxx
+        # FIXME: logscore not implemented in cxx
         return
         inst1 = {
                 'instruction':'observe',
