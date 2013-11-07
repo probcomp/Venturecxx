@@ -5,7 +5,6 @@
 
 VentureSP::~VentureSP() 
 { 
-  cout << "Deleting SP(" << sp << ")" << endl;
   delete sp; 
 }
 
