@@ -24,12 +24,13 @@ def printTest(testName,eps,ops):
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer(10)
+    sivm.infer(1)
     predictions.append(sivm.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
 
 def runTests(N):
+  testBernoulli0(N)
   testBernoulli1(N)
   #testCategorical1(N)
   testMHNormal0(N)
@@ -60,6 +61,20 @@ def runTests(N):
 
 def runTests2(N):
   testGeometric1(N)
+
+def testBernoulli0(N):
+  sivm = SIVM()
+  sivm.assume("b", "((lambda () (bernoulli)))")
+  sivm.predict("""
+(branch
+  b
+  (lambda () (normal 0.0 1.0))
+  (lambda () ((lambda () (normal 10.0 1.0)))))
+""");
+  predictions = loggingInfer(sivm,2,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestBernoulli0---"
+  print "(5.0," + str(mean) + ")"
 
 
 def testBernoulli1(N):
@@ -616,13 +631,21 @@ def loadPYMem(sivm):
    (make_crp alpha d)))
 """)
 
-def testUCRP1(N):
+def testDPMem1(N):
   sivm = SIVM()
   loadPYMem(sivm)
+  sivm.assume("dpmem","""
+(lambda (alpha base_dist)
+  ((lambda (augmented_proc crp)
+     (lambda () (augmented_proc (crp))))
+   (mem (lambda (table) (base_dist)))
+   (make_crp alpha)))
+""")
+
   sivm.assume("alpha","(uniform_continuous 0.1 20.0)")
-  sivm.assume("d","(uniform_continuous 0.0 0.1)")
   sivm.assume("base_dist","(lambda () (real (categorical 0.5 0.5)))")
-  sivm.assume("f","(u_pymem alpha d base_dist)")
+  sivm.assume("f","(dpmem alpha base_dist)")
+
   sivm.predict("(f)")
   sivm.predict("(f)")
   sivm.observe("(normal (f) 1.0)",1.0)
@@ -672,7 +695,7 @@ def predictHPY(N,topCollapsed,botCollapsed):
   return loggingInfer(sivm,"pid",N)
 
 def testHPYMem1(N):
-  print "---Test: Test hierarchical Pittman-Yor---"
+  print "---TestHPYMem1---"
   for top in [False,True]:
     for bot in [False,True]:
       attempt = normalizeList(countPredictions(predictHPY(N,top,bot), [0,1,2,3,4]))
