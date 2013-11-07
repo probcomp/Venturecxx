@@ -89,6 +89,6 @@ map<string,SP *> initBuiltInSPs()
     {"make_uc_sym_dir_mult", new MakeUCSymDirMultSP},
 
     {"make_lazy_hmm", new MakeLazyHMMSP},
-      };
+  };
 }
-   
+
