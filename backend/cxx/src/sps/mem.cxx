@@ -21,16 +21,15 @@ VentureValue * MSPMakerSP::simulateOutput(Node * node, gsl_rng * rng) const
 size_t MSP::hashValues(vector<Node *> operands) const
 {
   size_t seed = 0;
-  size_t prime = 50331653;
-  size_t i = 0;
+  size_t littlePrime = 37;
+  size_t bigPrime = 12582917;
+
   for (Node * operand : operands) 
   { 
-    size_t primePower = pow(prime,i);
-    seed += primePower * operand->getValue()->toHash();
-    cout << "primePower: " << primePower << ", new seed: " << seed << endl;
-    i++;
+    seed *= littlePrime;
+    seed += operand->getValue()->toHash();
+    seed %= bigPrime;
   }
-  cout << "final seed: " << seed << endl;
   return seed;
 }
 
