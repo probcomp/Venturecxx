@@ -25,12 +25,13 @@ def printTest(testName,eps,ops):
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer({"kernel":"meanfield","transitions":10,"use_global_scaffold":False})
+    sivm.infer({"kernel":"mh","transitions":1,"use_global_scaffold":False})
     predictions.append(sivm.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
 
 def runTests(N):
+  testBernoulli0(N)
   testBernoulli1(N)
   #testCategorical1(N)
   testMHNormal0(N)
@@ -57,16 +58,25 @@ def runTests(N):
   testApply1(N)
   testExtendEnv1(N)
   testList1()
-#  testCRP1(N,True)
-#  testCRP1(N,False)
-  test_CRP_with_hierarchical_Pittman_Yor(N)
+  testHPYMem1(N)
   testGeometric1(N)
 
 def runTests2(N):
-  testCRP1(N,True)
-  testCRP1(N,False)
-  test_CRP_with_hierarchical_Pittman_Yor(N)
   testGeometric1(N)
+
+def testBernoulli0(N):
+  sivm = SIVM()
+  sivm.assume("b", "((lambda () (bernoulli)))")
+  sivm.predict("""
+(branch
+  b
+  (lambda () (normal 0.0 1.0))
+  (lambda () ((lambda () (normal 10.0 1.0)))))
+""");
+  predictions = loggingInfer(sivm,2,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestBernoulli0---"
+  print "(5.0," + str(mean) + ")"
 
 
 def testBernoulli1(N):
@@ -109,6 +119,7 @@ def testMHNormal0(N):
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestMHNormal0---"
   print "(12.0," + str(mean) + ")"
+  pdb.set_trace()
   
 
 def testMHNormal1(N):
@@ -330,6 +341,7 @@ def testMakeSymDirMult2(N):
   ps = [.1,.3,.3,.3]
   eps = normalizeList(countPredictions(predictions, [0,1,2,3]))
   printTest("TestMakeSymDirMult2",ps,eps)
+
 
 def testMakeUCSymDirMult1(N):
   sivm = SIVM()
@@ -635,22 +647,29 @@ def loadPYMem(sivm):
    (make_crp alpha d)))
 """)
 
-def testUCRP1(N):
+def testDPMem1(N):
   sivm = SIVM()
   loadPYMem(sivm)
-  sivm.assume("alpha","(gamma 1.0 1.0)")
-  sivm.assume("d","(uniform_continuous 0.0 0.1)")
+  sivm.assume("dpmem","""
+(lambda (alpha base_dist)
+  ((lambda (augmented_proc crp)
+     (lambda () (augmented_proc (crp))))
+   (mem (lambda (table) (base_dist)))
+   (make_crp alpha)))
+""")
+  sivm.assume("alpha","(uniform_continuous 0.1 20.0)")
   sivm.assume("base_dist","(lambda () (real (categorical 0.5 0.5)))")
-  sivm.assume("f","(u_pymem alpha d base_dist)")
-  sivm.predict("(f)")
-  sivm.predict("(f)")
-  sivm.observe("(normal (f) 1.0)",1.0)
-  sivm.observe("(normal (f) 1.0)",1.0)
-  sivm.observe("(normal (f) 1.0)",0.0)
-  sivm.observe("(normal (f) 1.0)",0.0)
-#  sivm.infer(N)
+  sivm.assume("f","(dpmem alpha base_dist)")
 
-def observe_categories(sivm,counts):
+  sivm.predict("(f)")
+  sivm.predict("(f)")
+  sivm.observe("(normal (f) 1.0)",1.0)
+  sivm.observe("(normal (f) 1.0)",1.0)
+  sivm.observe("(normal (f) 1.0)",0.0)
+  sivm.observe("(normal (f) 1.0)",0.0)
+  sivm.infer(N)
+
+def observeCategories(sivm,counts):
   for i in range(len(counts)):
     for ct in range(counts[i]):
       sivm.observe("(normal (f) 1.0)",i)
@@ -666,14 +685,14 @@ def testCRP1(N,isCollapsed):
     
   sivm.predict("(f)",label="pid")
 
-  observe_categories(sivm,[2,2,5,1,0])
+  observeCategories(sivm,[2,2,5,1,0])
 
   predictions = loggingInfer(sivm,"pid",N)
   ps = normalizeList([3,3,6,2,1])
   eps = normalizeList(countPredictions(predictions, [0,1,2,3,4]))
   printTest("TestCRP1 (not exact)",ps,eps)
 
-def load_hierarchical_Pittman_Yor(sivm,topCollapsed,botCollapsed):
+def loadHPY(sivm,topCollapsed,botCollapsed):
   loadPYMem(sivm)
   sivm.assume("alpha","(gamma 1.0 1.0)")
   sivm.assume("d","(uniform_continuous 0.0 0.1)")
@@ -683,18 +702,18 @@ def load_hierarchical_Pittman_Yor(sivm,topCollapsed,botCollapsed):
   if botCollapsed: sivm.assume("f","(pymem alpha d intermediate_dist)")
   else: sivm.assume("f","(u_pymem alpha d intermediate_dist)")
 
-def predict_hierarchical_Pittman_Yor(N,topCollapsed,botCollapsed):
+def predictHPY(N,topCollapsed,botCollapsed):
   sivm = SIVM()
-  load_hierarchical_Pittman_Yor(sivm,topCollapsed,botCollapsed)
+  loadHPY(sivm,topCollapsed,botCollapsed)
   sivm.predict("(f)",label="pid")
-  observe_categories(sivm,[2,2,5,1,0])
+  observeCategories(sivm,[2,2,5,1,0])
   return loggingInfer(sivm,"pid",N)
 
-def test_CRP_with_hierarchical_Pittman_Yor(N):
-  print "---Test: Test hierarchical Pittman-Yor---"
+def testHPYMem1(N):
+  print "---TestHPYMem1---"
   for top in [False,True]:
     for bot in [False,True]:
-      attempt = normalizeList(countPredictions(predict_hierarchical_Pittman_Yor(N,top,bot), [0,1,2,3,4]))
+      attempt = normalizeList(countPredictions(predictHPY(N,top,bot), [0,1,2,3,4]))
       print("(%s,%s): %s" % (top,bot,attempt))
 
 def testGeometric1(N):

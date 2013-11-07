@@ -3,7 +3,7 @@
 
 void Trace::registerRandomChoice(Node * node)
 {
-//  cout << "REG: " << node->address.toString() << endl;
+  cout << "REG: " << node << endl;
   assert(!rcToIndex.count(node));
 
   rcToIndex[node] = randomChoices.size();
@@ -13,7 +13,7 @@ void Trace::registerRandomChoice(Node * node)
 
 void Trace::unregisterRandomChoice(Node * node)
 {
-//  cout << "UNREG: " << node->address.toString() << endl;
+  cout << "UNREG: " << node << endl;
   assert(rcToIndex.count(node));
 
   uint32_t index = rcToIndex[node];

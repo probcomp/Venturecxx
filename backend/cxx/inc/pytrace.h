@@ -32,6 +32,9 @@ struct PyTrace : Trace
   void infer(boost::python::dict options);
 
   map<string,GKernel *> gkernels;
+
+  
+
 };
 
 

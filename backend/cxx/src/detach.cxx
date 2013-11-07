@@ -107,6 +107,12 @@ double Trace::detachInternal(Node * node,
   {
     Scaffold::DRGNode &drgNode = scaffold->drg[node];
     drgNode.regenCount--;
+    if (drgNode.regenCount < 0)
+    {
+      cout << "\n\n\n\n\n---RegenCount < 0! (" << node << ")---\n\n\n" << endl;
+      scaffold->show();
+    }
+
     assert(drgNode.regenCount >= 0);
     if (drgNode.regenCount == 0)
     {
@@ -211,6 +217,7 @@ double Trace::unevalRequests(Node * node,
   for (ESR esr : reverse(requests->esrs))
   {
     assert(node->spaux());
+//    assert(!node->outputNode->esrParents.empty());
     Node * esrParent = node->outputNode->removeLastESREdge();
     assert(esrParent);
     if (esrParent->numRequests == 0)
