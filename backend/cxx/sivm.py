@@ -70,17 +70,26 @@ class SIVM:
     def infer(self,params=None):
         if params is None:
             params = {}
+
         if 'transitions' not in params:
             params['transitions'] = 1
+        else:
+            # FIXME: Kludge. If removed, test_infer (in python/test/ripl_test.py) fails, and if params are printed, you'll see a float for the number of transitions
+            params['transitions'] = int(params['transitions'])
+
         if 'kernel' not in params:
             params['kernel'] = 'mh'
         if 'use_global_scaffold' not in params:
             params['use_global_scaffold'] = False
 
+        if len(params.keys()) > 3:
+            raise Exception("Invalid parameter dictionary passed to infer: " + str(params))
+
+        #print "params: " + str(params)
+
         self.trace.infer(params)
 
     def get_seed(self):
-        print("WARNING: get_seed() always returns 0!")
         return self.trace.get_seed()
 
     def set_seed(self, seed):
