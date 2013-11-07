@@ -66,12 +66,12 @@ void PyTrace::bindPySP(std::string module_str, std::string pysp_name)
 
 	  // extract them
 	  assert(!pysp.is_none());
-	  my_sp = pysp();
-	  boost::python::extract<SP*> spex(my_sp);
+	  my_sp_v.push_back(pysp());
+	  boost::python::extract<SP*> spex(*my_sp_v.back());
 	  
 	  assert(!pysym.is_none());
-	  my_sp_sym = pysym();
-	  boost::python::extract<string> symex(my_sp_sym);
+	  my_sp_sym_v.push_back(pysym());
+	  boost::python::extract<string> symex(*my_sp_sym_v.back());
 
 	  assert(spex.check());
 	  assert(symex.check());
