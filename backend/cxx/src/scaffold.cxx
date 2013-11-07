@@ -28,7 +28,7 @@ void Scaffold::assembleERG(set<Node *> principalNodes)
   { 
     /* This condition is overly cautious. We only need to include the 
        request node if the operator is AAA. */
-    if (pNode->sp()->makesHSRs && pNode->nodeType == NodeType::OUTPUT)
+    if (!pNode->sp()->isNullRequest() && pNode->nodeType == NodeType::OUTPUT)
     { q.emplace(pNode->requestNode,true); }
 
     q.emplace(pNode,true); 
@@ -154,7 +154,6 @@ void Scaffold::setRegenCounts()
       drgNode.regenCount = node->children.size();
     }
   }
-
 
   // (costly) ~optimization, especially for particle methods
   set<Node *> nullAbsorbing;

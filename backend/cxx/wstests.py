@@ -25,7 +25,7 @@ def printTest(testName,eps,ops):
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer({"kernel":"mh","transitions":1,"use_global_scaffold":False})
+    sivm.infer({"kernel":"mh","transitions":10,"use_global_scaffold":False})
     predictions.append(sivm.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
@@ -68,10 +68,10 @@ def testBernoulli0(N):
   sivm = SIVM()
   sivm.assume("b", "((lambda () (bernoulli)))")
   sivm.predict("""
-(branch
+((biplex
   b
   (lambda () (normal 0.0 1.0))
-  (lambda () ((lambda () (normal 10.0 1.0)))))
+  (lambda () ((lambda () (normal 10.0 1.0))))))
 """);
   predictions = loggingInfer(sivm,2,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0

@@ -21,6 +21,14 @@ struct BranchSP : SP
 
 };
 
+struct BiplexSP : SP
+{
+
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  void flushOutput(VentureValue * value) const override;
+
+};
+
 
 
 

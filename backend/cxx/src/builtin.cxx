@@ -78,6 +78,7 @@ map<string,SP *> initBuiltInSPs()
     {"make_crp", new MakePitmanYorCRPSP},
 
     {"branch", new BranchSP},
+    {"biplex", new BiplexSP},
 
     {"mem", new MSPMakerSP},
 

@@ -43,3 +43,16 @@ void BranchSP::flushRequest(VentureValue * value) const
   delete esr.env;
   delete value;
 }
+
+////////////
+
+VentureValue * BiplexSP::simulateOutput(Node * node, gsl_rng * rng) const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureBool * b = dynamic_cast<VentureBool *>(operands[0]->getValue());
+  assert(b);
+  if (b->pred) { return operands[1]->getValue(); }
+  else { return operands[2]->getValue(); }
+}
+
+void BiplexSP::flushOutput(VentureValue * value) const {}
