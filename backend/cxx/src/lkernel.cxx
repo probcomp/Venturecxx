@@ -3,6 +3,8 @@
 #include "node.h"
 #include "sp.h"
 
+#include <iostream>
+
 VentureValue * DefaultAAAKernel::simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB,gsl_rng * rng) 
 {
   return makerSP->simulateOutput(appNode,rng);
@@ -69,26 +71,32 @@ void DefaultVariationalLKernel::updateParameters(const vector<double> & gradient
   {
     parameters[i] += gradient[i] *  gain * stepSize;
     if (parameterScopes[i] == ParameterScope::POSITIVE_REAL && 
-        parameters[i] < 0.01)
+        parameters[i] < 0.1)
     {
-      parameters[i] = 0.01;
+      parameters[i] = 0.1;
     }
   }
 }
 
 VentureValue * DefaultVariationalLKernel::simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB,gsl_rng * rng)
 {
-  return sp->simulateOutput(appNode,rng);
+  double output = sp->simulateOutputNumeric(parameters,rng);
+  assert(isfinite(output));
+  return new VentureNumber(output);
 }
 
 double DefaultVariationalLKernel::weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB) 
 {
-  VentureNumber * vmu = dynamic_cast<VentureNumber*>(appNode->operandNodes[0]->getValue());
-  VentureNumber * vsigma = dynamic_cast<VentureNumber*>(appNode->operandNodes[1]->getValue());
+  VentureNumber * varg1 = dynamic_cast<VentureNumber*>(appNode->operandNodes[0]->getValue());
+  VentureNumber * varg2 = dynamic_cast<VentureNumber*>(appNode->operandNodes[1]->getValue());
   VentureNumber * voutput = dynamic_cast<VentureNumber*>(newVal);
-  assert(vmu);
-  assert(vsigma);
+  assert(varg1);
+  assert(varg2);
   assert(voutput);
-  
-  return sp->logDensityOutputNumeric(voutput->x,{vmu->x,vsigma->x}) / sp->logDensityOutputNumeric(voutput->x,parameters);
+
+  double ld = sp->logDensityOutputNumeric(voutput->x,{varg1->x,varg2->x});
+  assert(isfinite(ld));
+  double proposalLd = sp->logDensityOutputNumeric(voutput->x,parameters);
+  assert(isfinite(proposalLd));
+  return ld - proposalLd;
 }

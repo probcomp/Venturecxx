@@ -87,7 +87,10 @@ class SIVM:
 
     def get_entropy_info(self):
        raise VentureException("not_implemented", "get_entropy_info() is not implemented")
-    
+
+    def get_seed(self):
+        return self.trace.get_seed()
+
     def set_seed(self, seed):
-       raise VentureException("not_implemented", "set_seed() is not implemented")
-    
+        self.trace.set_seed(seed)
+

@@ -9,6 +9,8 @@
 #include "infer/meanfield.h"
 #include "value.h"
 
+#include <gsl/gsl_rng.h>
+
 #include <iostream>
 #include <list>
 
@@ -95,6 +97,15 @@ void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
 
 void PyTrace::infer(size_t n) { mcmc->infer(n); }
 
+void PyTrace::set_seed(size_t n) {
+  gsl_rng_set(rng, n);
+}
+
+size_t PyTrace::get_seed() {
+  // TODO FIXME warn users that seeds of 0 are returned incorrectly by the engine
+  return 0;
+}
+
 BOOST_PYTHON_MODULE(libtrace)
 {
   using namespace boost::python;
@@ -104,6 +115,8 @@ BOOST_PYTHON_MODULE(libtrace)
     .def("bindInGlobalEnv", &PyTrace::bindInGlobalEnv)
     .def("observe", &PyTrace::observe)
     .def("infer", &PyTrace::infer)
+    .def("set_seed", &PyTrace::set_seed)
+    .def("get_seed", &PyTrace::get_seed)
     ;
 };
 

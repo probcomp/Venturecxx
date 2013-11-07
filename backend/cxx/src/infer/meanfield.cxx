@@ -37,8 +37,9 @@ void MeanFieldGKernel::destroyParameters()
   delete scaffold;
 }
 
-void MeanFieldGKernel::registerVariationalLKernels()
+bool MeanFieldGKernel::registerVariationalLKernels()
 {
+  bool hasVariational = false;
   for (pair<Node *, Scaffold::DRGNode> p : scaffold->drg)
   {
     Node * node = p.first;
@@ -47,8 +48,10 @@ void MeanFieldGKernel::registerVariationalLKernels()
 	node->sp()->hasVariationalLKernel)
     {
       scaffold->lkernels.insert({node,node->sp()->getVariationalLKernel(node)});
+      hasVariational = true;
     }
   }
+  return hasVariational;
 }
 
 
@@ -60,10 +63,9 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
   delete sparam;
 
   /* Now, compute variational kernels through stochastic gradient descent. */
-  double stepSize = 0.05;
-  size_t numIters = 50;
-  registerVariationalLKernels();
-  if (scaffold->lkernels.empty()) { numIters = 0; }
+  double stepSize = 0.001;
+  size_t numIters = 40;
+  if (!registerVariationalLKernels()) { numIters = 0; }
   double rhoWeight;
 
   tie(rhoWeight,rhoDB) = trace->detach(scaffold->border,scaffold);
@@ -84,7 +86,11 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
     for (pair<Node *, LKernel*> p : scaffold->lkernels)
     {
       VariationalLKernel * vk = dynamic_cast<VariationalLKernel*>(p.second);
-      if (vk) { vk->updateParameters(gradients[p.first],gain,stepSize); }
+      if (vk) 
+      { 
+	assert(gradients.count(p.first));
+	vk->updateParameters(gradients[p.first],gain,stepSize); 
+      }
     }
   }
   trace->regen(scaffold->border,scaffold,true,rhoDB,nullptr);

@@ -31,6 +31,7 @@ struct SP
   VentureValue * simulate(Node * node, gsl_rng * rng) const;
   virtual VentureValue * simulateRequest(Node * node, gsl_rng * rng) const { return nullptr; }
   virtual VentureValue * simulateOutput(Node * node, gsl_rng * rng) const { return nullptr; }
+  virtual double simulateOutputNumeric(const vector<double> & args, gsl_rng * rng) const { return 0; }
 
 /* LogDensity */
   double logDensity(VentureValue * value, Node * node) const;
@@ -128,6 +129,8 @@ struct SP
   bool canEnumerate(NodeType nodeType) const;
   bool canEnumerateRequest{false};
   bool canEnumerateOutput{false};
+
+  string name{"sp_no_name"};
 
   vector<VentureValue*> enumerate(Node * node) const;
   /* TODO for expediency, these only return the OTHER values, but we would want
