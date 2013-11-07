@@ -1,7 +1,7 @@
 import sys
 sys.path.append("../..")
 
-from libsp import SP
+from venture.cxx.libsp import SP
 
 class SquareSP(SP):
 
