@@ -93,7 +93,7 @@ uint32_t sampleCategorical(vector<double> xs, gsl_rng * rng)
   for (size_t i = 0; i < xs.size(); ++i)
   {
     sum += xs[i];
-    if (u < sum) { return i; }
+    if (u <= sum) { return i; }
   }
   assert(false);
   return -1;

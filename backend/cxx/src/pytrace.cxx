@@ -8,6 +8,7 @@
 #include "infer/pgibbs.h"
 #include "infer/meanfield.h"
 #include "value.h"
+#include "scaffold.h"
 
 #include <iostream>
 #include <list>
@@ -15,16 +16,17 @@
 using boost::python::extract;
 
 PyTrace::PyTrace(): 
-  Trace(), 
+  Trace(),
 //  mcmc(new OutermostMixMH(this, new ScaffoldMHGKernel(this))) {}
 //  mcmc(new OutermostMixMH(this,new GibbsGKernel(this))) {}
 //  mcmc(new OutermostMixMH(this,new PGibbsGKernel(this))) {}
   mcmc(new OutermostMixMH(this,new MeanFieldGKernel(this))) {}
 
+
 PyTrace::~PyTrace()
 {
-  OutermostMixMH * mKernel = dynamic_cast<OutermostMixMH*>(mcmc);
-  delete mKernel->gKernel;
+//  OutermostMixMH * mKernel = dynamic_cast<OutermostMixMH*>(mcmc);
+//  delete mKernel->gKernel;
   delete mcmc;
 }
 
@@ -93,7 +95,24 @@ void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
   constrain(node,true);
 }
 
-void PyTrace::infer(size_t n) { mcmc->infer(n); }
+void PyTrace::infer(size_t n) 
+{ 
+  if (pgibbsWithGlobalScaffold)
+  {
+    for (size_t i = 0; i < n; i++)
+    {
+      set<Node *> allNodes(randomChoices.begin(),randomChoices.end());
+      ScaffoldMHGKernel * p = new ScaffoldMHGKernel(this);
+      p->loadParameters(new ScaffoldMHParam(new Scaffold(allNodes),nullptr));
+      p->infer(1); 
+      delete p;
+    }
+  }
+  else 
+  {
+    mcmc->infer(n);
+  }
+}
 
 BOOST_PYTHON_MODULE(libtrace)
 {

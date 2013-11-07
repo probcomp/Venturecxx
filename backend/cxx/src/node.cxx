@@ -2,6 +2,18 @@
 #include "value.h"
 #include <cassert>
 
+string strNodeType(NodeType nt)
+{
+  switch (nt)
+  {
+  case NodeType::VALUE: return "value";
+  case NodeType::LOOKUP: return "lookup";
+  case NodeType::REQUEST: return "request";
+  case NodeType::OUTPUT: return "output";
+  default: { return "<none>"; }
+  }
+}
+
 /* Static member functions */
 
 void Node::addOperatorEdge(Node * operatorNode, Node * applicationNode)
@@ -119,3 +131,12 @@ VentureSP * Node::vsp()
 
 SP * Node::sp() { return vsp()->sp; }
 SPAux * Node::spaux() { return vsp()->makerNode->madeSPAux; }
+
+bool Node::isValid() 
+{ 
+  return (magic == 65314235) &&
+    (nodeType == NodeType::VALUE || 
+     nodeType == NodeType::LOOKUP ||
+     nodeType == NodeType::REQUEST ||
+     nodeType == NodeType::OUTPUT);
+}

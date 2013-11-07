@@ -129,6 +129,8 @@ struct VentureSP : VentureValue
   SP * sp;
   Node * makerNode; // set in processMadeSP()
 
+  // TODO return the toPython of the Aux
+
   ~VentureSP();
 
 };

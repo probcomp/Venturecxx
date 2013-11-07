@@ -18,7 +18,6 @@ Scaffold::Scaffold(set<Node *> principalNodes)
   assembleERG(principalNodes);
   disableBrush();
   setRegenCounts();
-
 }
 
 void Scaffold::assembleERG(set<Node *> principalNodes)
@@ -33,6 +32,7 @@ void Scaffold::assembleERG(set<Node *> principalNodes)
 
     Node * node = p.first;
     bool isPrincipal = p.second;
+    assert(node->isValid());
 
     if (isResampling(node)) { continue; }
     // subtle, double check when under 100 degrees
@@ -51,7 +51,7 @@ bool Scaffold::hasChildInAorD(Node * node)
 {
   /* TODO confirm that OR works with int return values. */
   for (Node * child : node->children)
-  { if (absorbing.count(child) || drg.count(child)) { return true; } }
+  { if ((absorbing.count(child) > 0) || (drg.count(child) > 0)) { return true; } }
   return false;
 }
 
@@ -180,20 +180,23 @@ void Scaffold::show()
   cout << "DRG" << endl;
   for (pair<Node*,DRGNode> p : drg)
   {
-    if (p.first->nodeType == NodeType::OUTPUT)
-    {
-      cout << p.first << endl;
-    }
+    assert(p.first->isValid());
+    cout << p.first << " (" << p.second.regenCount << ", " << strNodeType(p.first->nodeType) <<")" << endl;
   }
 
   cout << "Absorbing" << endl;
   for (Node * node : absorbing)
   {
-    if (node->nodeType == NodeType::OUTPUT)
-    {
-      cout << node << endl;
-    }
+    assert(node->isValid());
+    cout << node <<  " (" << strNodeType(node->nodeType) << ")" << endl;
   }
+  
+  cout << "Border" << endl;
+  for (Node * node : border)
+  {
+    cout << node << endl;
+  }
+
   cout << "--End Scaffold--" << endl;
 }
 
