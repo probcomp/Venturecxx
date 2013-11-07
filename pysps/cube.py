@@ -12,6 +12,9 @@ class CubeSP(SP):
     value = args[0] * args[0] * args[0]
     return {'type': 'number', 'value': value}
 
+  def logDensity(self,args):
+    return {'type': 'number', 'value': 1}
+
 def makeSP():
   return CubeSP()
 
