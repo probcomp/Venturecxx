@@ -45,13 +45,20 @@ PyTrace::PyTrace():
 		  it!=pysp_files.end();
 		  it++) {
     
-	  std::string pysp_file = *it;
-	  if(pysp_file == "__init__") continue;
+	  std::string pysp_name = *it;
+	  if(pysp_name == "__init__") continue;
 
-	  std::cout << "trying to import " << pysp_file << std::endl;
-	  std::string pysp_import_str = module_str + "." + pysp_file;
+	  bindPySP(module_str, pysp_name);
+  }
+
+}
+
+void PyTrace::bindPySP(std::string module_str, std::string pysp_name)
+{
+	  std::cout << "trying to import " << pysp_name << std::endl;
+	  std::string pysp_import_str = module_str + "." + pysp_name;
 	  boost::python::object pysp_namespace = boost::python::import(boost::python::str(pysp_import_str));
-	  std::cout << "boost::python::import'ed " << pysp_file << std::endl;
+	  std::cout << "boost::python::import'ed " << pysp_name << std::endl;
 
 	  // get the function called "makeSP", and the funcion called "getSymbol" in the model
 	  boost::python::object pysp = boost::python::getattr(pysp_namespace, "makeSP");
@@ -85,8 +92,6 @@ PyTrace::PyTrace():
 	  primitivesEnv->addBinding(new VentureSymbol(sym),spNode);
 
 	  std::cout << "added binding for new SP: " << sym << std::endl;
-  }
-
 }
 
 PyTrace::~PyTrace()

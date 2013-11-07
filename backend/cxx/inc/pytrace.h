@@ -26,6 +26,7 @@ struct PyTrace : Trace
 
   void infer(boost::python::dict options);
 
+  void bindPySP(string module_str, string pysp_name);
   boost::python::object my_sp;
   boost::python::object my_sp_sym;
 
