@@ -4,7 +4,6 @@
 from venture.exception import VentureException
 from venture.sivm import utils
 import json
-#import re
 import copy
 from threading import Thread
 
@@ -26,15 +25,22 @@ class CoreSivmCxx(object):
         self.continuous_inference_running = False
         self.continuous_inference_thread = None
 
-    _implemented_instructions = ["assume","observe","predict",
+    _implemented_instructions = {"assume","observe","predict",
             "configure","forget","report","infer",
             "clear","rollback","get_logscore","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
-            "continuous_inference_status", "profiler_configure"]
+            "continuous_inference_status", "profiler_configure"}
+    
+    _dont_pause_continuous_inference = {"start_continuous_inference",
+            "stop_continuous_inference", "continuous_inference_status"}
+    
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._implemented_instructions)
         f = getattr(self,'_do_'+instruction['instruction'])
-        return f(instruction)
+        if instruction['instruction'] in self._dont_pause_continuous_inference:
+            return f(instruction)
+        with self._pause_continuous_inference():
+            return f(instruction)
 
     ###############################
     # Instruction implementations
@@ -150,6 +156,21 @@ class CoreSivmCxx(object):
         l = self.engine.logscore()
         return {"logscore":l}
     
+    ###########################
+    # Continuous Inference
+    ###########################
+    
+    def _pause_continuous_inference(sivm):
+        class tmp(object):
+            def __enter__(temp):
+                temp.was_continuous_inference_running = sivm.continuous_inference_running
+                if temp.was_continuous_inference_running:
+                    sivm._do_stop_continuous_inference(None)
+            def __exit__(temp, type, value, traceback):
+                if temp.was_continuous_inference_running:
+                    sivm._do_start_continuous_inference(None)
+        return tmp()
+    
     def _run_continuous_inference(self, step):
         while self.continuous_inference_running:
             self.engine.infer(step)
@@ -161,7 +182,7 @@ class CoreSivmCxx(object):
             self.continuous_inference_thread = Thread(target=CoreSivmCxx._run_continuous_inference, args=(self, 10))
             self.continuous_inference_thread.start()
         return {}
-
+    
     def _do_stop_continuous_inference(self,instruction):
         utils.require_state(self.state,'default')
         self.continuous_inference_running = False
@@ -169,7 +190,7 @@ class CoreSivmCxx(object):
             self.continuous_inference_thread.join()
             self.continuous_inference_thread = None
         return {}
-
+    
     def _do_continuous_inference_status(self,instruction):
         utils.require_state(self.state,'default')
         return {'running':self.continuous_inference_running}

@@ -13,7 +13,6 @@ class VentureSivm(object):
     def __init__(self, core_sivm):
         self.core_sivm = core_sivm
         self._clear()
-        self._init_continuous_inference()
 
     # list of all instructions supported by venture sivm
     _extra_instructions = ['labeled_assume','labeled_observe',
@@ -39,8 +38,7 @@ class VentureSivm(object):
         instruction_type = instruction['instruction']
         if instruction_type in self._extra_instructions:
             f = getattr(self,'_do_'+instruction_type)
-            with self._pause_continuous_inference():
-                return f(instruction)
+            return f(instruction)
         return self._call_core_sivm_instruction(instruction)
 
     ###############################
@@ -123,41 +121,6 @@ class VentureSivm(object):
             del tmp_instruction['instruction']
             self.breakpoint_dict[bid] = tmp_instruction
         return response
-
-
-    ###############################
-    # Continuous Inference Pauser
-    ###############################
-
-    # FIXME for Yura:
-    # When Venture-2 is ready, transfer pausing of continuous inference here.
-    def _pause_continuous_inference(sivm):
-        class tmp(object):
-            def __enter__(self):
-                self.was_continuous_inference_running = sivm._continuous_inference_status()
-                if self.was_continuous_inference_running:
-                    sivm._stop_continuous_inference()
-            def __exit__(self, type, value, traceback):
-                if self.was_continuous_inference_running:
-                    sivm._start_continuous_inference()
-        return tmp()
-
-
-    ###############################
-    # Continuous Inference on/off
-    ###############################
-    
-    def _init_continuous_inference(self):
-        pass
-    
-    def _continuous_inference_status(self):
-        return self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})["running"]
-
-    def _start_continuous_inference(self):
-        self._call_core_sivm_instruction({"instruction" : "start_continuous_inference"})
-
-    def _stop_continuous_inference(self):
-        self._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
 
     ###############################
     # Shortcuts
