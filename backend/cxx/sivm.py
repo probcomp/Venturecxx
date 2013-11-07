@@ -1,5 +1,5 @@
 from libtrace import Trace
-import gc
+from venture.exception import VentureException
 
 # Our SIVM is not a fully conforming SIVM, for reasons I hope
 # the person reading this will understand better than I do.
@@ -51,35 +51,43 @@ class SIVM:
         logDensity = self.trace.observe(baseAddr,val)
 
         # TODO check for -infinity? Throw an exception?
-        if logDensity == float("-inf"): raise Exception("Cannot constrain!")
+        if logDensity == float("-inf"): raise VentureException("invalid_constraint", "Observe failed to constrain", expression=datum, value=val)
         self.directives[self.directiveCounter] = ["observe",datum,val]
 
         return self.directiveCounter
 
     def forget(self,directiveId):
+        if directiveId not in self.directives:
+            raise VentureException("invalid_argument", "Cannot forget a non-existent directive id", argument=directiveId)
         directive = self.directives[directiveId]
-        if directive[0] == "assume": raise Exception("Cannot forget an ASSUME directive")
+        if directive[0] == "assume": raise VentureException("invalid_argument", "Cannot forget an ASSUME directive", argument=directiveId)
         if directive[0] == "observe": self.trace.unobserve(str(directiveID))
         self.trace.unevalFamily(str(directiveId))
         del self.directives[directiveId]
     
     def report_value(self,directiveId):
+        if directiveId not in self.directives:
+            raise VentureException("invalid_argument", "Cannot report a non-existent directive id", argument=directiveId)
         return self.trace.extractValue(directiveId)
 
     def clear(self):
         del self.trace
-        gc.collect()
         self.directiveCounter = 0
+        self.directives = {}
         self.trace = Trace()
 
     # This could be parameterized to call different inference programs.
     def infer(self,N=1):
         self.trace.infer(N)
-
-    # FIXME: These are from the old venturelite sivm and should be fixed
     
-    def logscore(self): return self.trace.globalLogScore
+    # FIXME: These are not properly implemented
+    
+    def logscore(self):
+        raise VentureException("not_implemented", "logscore() is not implemented")
 
     def get_entropy_info(self):
-        return { 'unconstrained_random_choices' : self.trace.numRandomChoices }
-
+       raise VentureException("not_implemented", "get_entropy_info() is not implemented")
+    
+    def set_seed(self, seed):
+       raise VentureException("not_implemented", "set_seed() is not implemented")
+    
