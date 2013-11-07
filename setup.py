@@ -74,6 +74,18 @@ cxx = Extension("venture.cxx.libtrace",
     sources = src_files)
 ext_modules.append(cxx)
 
+src_files.append("backend/cxx/src/pysp.cxx")
+
+cxx_splib = Extension("venture.cxx.libsp",
+    define_macros = [('MAJOR_VERSION', '1'),
+                     ('MINOR_VERSION', '0')],
+    libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_filesystem'],
+    extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O0", "-fPIC"],
+    undef_macros = ['NDEBUG'],
+    include_dirs = inc_dirs,
+    sources = src_files)
+ext_modules.append(cxx_splib)                    
+
 setup (
     name = 'Venture CXX',
     version = '1.0',

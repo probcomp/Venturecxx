@@ -44,6 +44,7 @@ PyTrace::PyTrace():
 	  std::string pysp_file = *it;
 	  if(pysp_file == "__init__") continue;
 
+	  std::cout << "trying to import " << pysp_file << std::endl;
 	  boost::python::object pysp_namespace = boost::python::import(boost::python::str(pysp_file));
 	  std::cout << "boost::python::import'ed " << pysp_file << std::endl;
 
