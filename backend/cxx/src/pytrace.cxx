@@ -98,7 +98,7 @@ void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
 void PyTrace::infer(boost::python::dict options) 
 { 
   string kernel = boost::python::extract<string>(options["kernel"]);
-  size_t numTransitions = boost::python::extract<size_t>(options["num_transitions"]);
+  size_t numTransitions = boost::python::extract<size_t>(options["transitions"]);
   bool useGlobalScaffold = boost::python::extract<bool>(options["use_global_scaffold"]);
 
   GKernel * gkernel = gkernels[kernel];

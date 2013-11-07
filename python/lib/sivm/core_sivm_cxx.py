@@ -114,12 +114,10 @@ class CoreSivmCxx(object):
 
     def _do_infer(self,instruction):
         utils.require_state(self.state,'default')
-        iterations = utils.validate_arg(instruction,'iterations',
-                utils.validate_positive_integer)
-        resample = utils.validate_arg(instruction,'resample',
-                utils.validate_boolean)
-        #NOTE: model resampling is not implemented in C++
-        val = self.engine.infer(iterations)
+        d = utils.validate_arg(instruction,'params',
+                utils.validate_dict)
+        # TODO FIXME figure out how to validate the arguments
+        val = self.engine.infer(d)
         return {}
 
     def _do_clear(self,instruction):

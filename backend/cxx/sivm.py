@@ -73,8 +73,17 @@ class SIVM:
         self.trace = Trace()
 
     # This could be parameterized to call different inference programs.
-    def infer(self,N=1):
-        self.trace.infer(N)
+    def infer(self,params=None):
+        if params is None:
+            params = {}
+        if 'transitions' not in params:
+            params['transitions'] = 1
+        if 'kernel' not in params:
+            params['kernel'] = 'mh'
+        if 'use_global_scaffold' not in params:
+            params['use_global_scaffold'] = False
+
+        self.trace.infer(params)
 
     # FIXME: These are from the old venturelite sivm and should be fixed
     
