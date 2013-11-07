@@ -151,12 +151,12 @@ void PGibbsSelectGKernel::accept()
   vector<uint32_t> path = constructAncestorPath(ancestorIndices,T-1,chosenIndex);
   path.push_back(chosenIndex);
   assert(path.size() == T);
-  for (size_t t = 0; t < T; ++t)
+  for (size_t t = T; t > 0; --t)
   { for (size_t p = 0; p < P + 1; ++p)
     { 
       /* Be careful with off-by-one-bugs here */
-      bool isActive = (path[t] == p);
-      flushDB(omegaDBs[t][p],isActive);
+      bool isActive = (path[t-1] == p);
+      flushDB(omegaDBs[t-1][p],isActive);
     }
   }
 
@@ -173,14 +173,15 @@ void PGibbsSelectGKernel::reject()
   assert(path.size() == T);
   restoreAncestorPath(trace,scaffold,omegaDBs,path);
 
-  for (size_t t = 0; t < T; ++t)
-  { 
-    for (size_t p = 0; p < P + 1; ++p)
+  for (size_t t = T; t > 0; --t)
+  { for (size_t p = 0; p < P + 1; ++p)
     { 
-      bool isActive = (path[t] == p);
-      flushDB(omegaDBs[t][p],isActive);
+      /* Be careful with off-by-one-bugs here */
+      bool isActive = (path[t-1] == p);
+      flushDB(omegaDBs[t-1][p],isActive);
     }
   }
+
   chosenIndex = -1;
 }
 

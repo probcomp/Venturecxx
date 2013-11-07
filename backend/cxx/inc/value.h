@@ -22,6 +22,8 @@ struct SPAux;
 struct VentureValue { 
   virtual boost::python::object toPython() const { return boost::python::object("toPython() not implemented."); }
 
+  virtual string toString() const { return "no_name"; }
+
   virtual size_t toHash() const { assert(false); return 0; }
   virtual VentureValue * clone() const { assert(false); return nullptr; }
 
@@ -128,6 +130,7 @@ struct VentureSP : VentureValue
   VentureSP(SP * sp): sp(sp) {}
   SP * sp;
   Node * makerNode; // set in processMadeSP()
+  string toString() const override;
 
   // TODO return the toPython of the Aux
 

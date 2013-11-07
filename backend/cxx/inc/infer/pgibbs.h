@@ -61,7 +61,7 @@ struct PGibbsGKernel : MixMHKernel
 
   Scaffold * scaffold{nullptr};
   Node * pNode{nullptr};
-  size_t P = 10;
+  size_t P = 2;
 
 };
 

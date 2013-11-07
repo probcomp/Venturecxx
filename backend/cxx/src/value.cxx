@@ -20,3 +20,8 @@ bool VentureSymbol::equals(const VentureValue * & other) const
   const VentureSymbol * vsym = dynamic_cast<const VentureSymbol*>(other);
   return vsym && vsym->sym == sym;
 }
+
+string VentureSP::toString() const
+{
+  return sp->name;
+}
