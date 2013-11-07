@@ -1,9 +1,10 @@
 from venture.shortcuts import *
 import math
 import pdb
-from nssivm import SIVM
-#def SIVM():
-#    return make_church_prime_ripl()
+#from nssivm import SIVM
+
+def SIVM():
+    return make_church_prime_ripl()
 
 def normalizeList(seq): 
   denom = sum(seq)
@@ -294,7 +295,7 @@ def testOuterMix1(N):
 
 def testMakeSymDirMult1(N):
   sivm = SIVM()
-  sivm.assume("f", "(make_sym_dir_mult 1.0 atom<2>)")
+  sivm.assume("f", "(make_sym_dir_mult 1.0 2)")
   sivm.predict("(f)")
   predictions = loggingInfer(sivm,2,N)
   ps = [.5, .5]
@@ -305,7 +306,7 @@ def testMakeSymDirMult1(N):
 def testMakeSymDirMult2(N):
   sivm = SIVM()
   sivm.assume("a", "(normal 10.0 1.0)")
-  sivm.assume("f", "(make_sym_dir_mult a atom<4>)")
+  sivm.assume("f", "(make_sym_dir_mult a 4)")
   sivm.predict("(f)")
   
   for i in range(1,4):
@@ -320,7 +321,7 @@ def testMakeSymDirMult2(N):
 def testMakeUCSymDirMult1(N):
   sivm = SIVM()
   sivm.assume("a", "(normal 10.0 1.0)")
-  sivm.assume("f", "(make_uc_sym_dir_mult a atom<4>)")
+  sivm.assume("f", "(make_uc_sym_dir_mult a 4)")
   sivm.predict("(f)")
 
   for i in range(1,4):
@@ -405,7 +406,7 @@ def testLazyHMMSP1(N):
 def testStaleAAA1(N):
   sivm = SIVM()
   sivm.assume("a", "1.0")
-  sivm.assume("f", "(make_uc_sym_dir_mult a atom<2>)")
+  sivm.assume("f", "(make_uc_sym_dir_mult a 2)")
   sivm.assume("g", "(mem f)")
   sivm.assume("h", "g")
   sivm.predict("(h)")
@@ -421,7 +422,7 @@ def testStaleAAA1(N):
 def testStaleAAA2(N):
   sivm = SIVM()
   sivm.assume("a", "1.0")
-  sivm.assume("f", "(make_uc_sym_dir_mult a atom<2>)")
+  sivm.assume("f", "(make_uc_sym_dir_mult a 2)")
   sivm.assume("g", "(lambda () f)")
   sivm.assume("h", "(g)")
   sivm.predict("(h)")
