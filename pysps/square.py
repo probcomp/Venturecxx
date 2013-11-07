@@ -9,7 +9,8 @@ class SquareSP(SP):
         super(SquareSP, self).__init__()
 
   def simulate(self,args):
-    return args[0] * args[0]
+    value = args[0] * args[0]
+    return {'type': 'number', 'value': value}
 
 def makeSP():
   return SquareSP()
