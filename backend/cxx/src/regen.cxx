@@ -154,9 +154,7 @@ double Trace::regenInternal(Node * node,
 /* TODO should load makerNode as well */
 void Trace::processMadeSP(Node * node, bool isAAA)
 {
-  cout << "process(" << node << ")" << endl;
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
-  if (vsp->makerNode) { return; }
   assert(vsp);
   SP * madeSP = vsp->sp;
   vsp->makerNode = node;
@@ -367,6 +365,7 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
     if (car && car->sym == "lambda")
     {
       node = new Node(NodeType::VALUE, nullptr);
+      /* The CSP owns the expression iff it is in a VentureFamily */
       node->setValue(new VentureSP(new CSP(listRef(list,1),listRef(list,2),env)));
       processMadeSP(node,false);
       node->isActive = true;

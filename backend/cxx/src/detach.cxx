@@ -135,11 +135,9 @@ double Trace::detachInternal(Node * node,
 
 void Trace::teardownMadeSP(Node * node)
 {
-  cout << "teardown(" << node << ")" << endl;
+
 
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
-  if (vsp->makerNode != node) { return; }
-
   SP * madeSP = vsp->sp;
   if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
 
@@ -281,8 +279,9 @@ double Trace::detachFamily(Node * node,
     if (dynamic_cast<VentureSP *>(node->getValue())) 
     { 
       VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
-      if (dynamic_cast<CSP*>(vsp->sp))
+      if (vsp->makerNode == node && dynamic_cast<CSP*>(vsp->sp))
       {
+	assert(dynamic_cast<CSP*>(vsp->sp));
 	teardownMadeSP(node);
 	omegaDB->flushQueue.emplace(nullptr,node->getValue(),FlushType::CONSTANT);
       }
