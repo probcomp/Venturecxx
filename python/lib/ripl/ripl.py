@@ -205,11 +205,15 @@ class Ripl():
         value = self.execute_instruction(s,d)['value']
         return value if type else value['value']
 
-    def infer(self, iterations, resample=False):
+    def infer(self, config={}):
         s = self._cur_parser().get_instruction_string('infer')
-        d = {'iterations':iterations,'resample':resample}
-        self.execute_instruction(s,d)
-        return None
+        self.execute_instruction(s, {'params': config})
+
+#    def infer(self, iterations, resample=False):
+#        s = self._cur_parser().get_instruction_string('infer')
+#        d = {'iterations':iterations,'resample':resample}
+#        self.execute_instruction(s,d)
+#        return None
 
     def clear(self):
         s = self._cur_parser().get_instruction_string('clear')

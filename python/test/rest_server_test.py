@@ -60,7 +60,7 @@ class TestRiplRestServer(ServerTestCase):
         self._request('/assume',['b','1 + 2'])
         self._request('/assume',['c','a + b'])
         self._request('/set_mode',['church_prime'])
-        r = self._request('/sample',['(+ c 24)'])
+        r = self._request('/predict',['(+ c 24)'])
         self.assertEqual(json.loads(r.data), 30)
 
 

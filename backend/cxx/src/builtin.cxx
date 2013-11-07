@@ -73,6 +73,7 @@ map<string,SP *> initBuiltInSPs()
     {"gamma", new GammaSP},
     {"uniform_continuous", new UniformContinuousSP},
     {"beta", new BetaSP},
+    {"student_t", new StudentTSP},
 
     {"make_crp", new MakePitmanYorCRPSP},
 
@@ -89,6 +90,6 @@ map<string,SP *> initBuiltInSPs()
     {"make_uc_sym_dir_mult", new MakeUCSymDirMultSP},
 
     {"make_lazy_hmm", new MakeLazyHMMSP},
-      };
+  };
 }
-   
+

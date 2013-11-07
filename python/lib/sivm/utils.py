@@ -245,6 +245,13 @@ def validate_positive_integer(num):
                 expression_index=[])
     return int(num)
 
+def validate_nonnegative_integer(num):
+    if not isinstance(num,(float,int)) or num < 0 or int(num) != num:
+        raise VentureException('parse',
+                'Invalid positive integer.',
+                expression_index=[])
+    return int(num)
+
 def validate_boolean(b):
     if not isinstance(b,bool):
         raise VentureException('parse',

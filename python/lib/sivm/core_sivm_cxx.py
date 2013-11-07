@@ -4,9 +4,8 @@
 from venture.exception import VentureException
 from venture.sivm import utils
 import json
-import re
 import copy
-import thread, threading
+from threading import Thread
 
 class CoreSivmCxx(object):
     ###############################
@@ -24,17 +23,23 @@ class CoreSivmCxx(object):
         self.profiler_enabled = False
         
         self.continuous_inference_running = False
-        self.continuous_inference_lock = threading.Lock()
+        self.continuous_inference_thread = None
 
-    _implemented_instructions = ["assume","observe","predict",
+    _implemented_instructions = {"assume","observe","predict",
             "configure","forget","report","infer",
             "clear","rollback","get_logscore","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
-            "continuous_inference_status", "profiler_configure"]
+            "continuous_inference_status", "profiler_configure"}
+    
+    _dont_pause_continuous_inference = {"start_continuous_inference",
+            "stop_continuous_inference", "continuous_inference_status"}
+    
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._implemented_instructions)
         f = getattr(self,'_do_'+instruction['instruction'])
-        with self.continuous_inference_lock:
+        if instruction['instruction'] in self._dont_pause_continuous_inference:
+            return f(instruction)
+        with self._pause_continuous_inference():
             return f(instruction)
 
     ###############################
@@ -73,7 +78,7 @@ class CoreSivmCxx(object):
         d = utils.validate_arg(instruction,'options',
                 utils.validate_dict)
         s = utils.validate_arg(d,'seed',
-                utils.validate_positive_integer,required=False)
+                utils.validate_nonnegative_integer,required=False)
         t = utils.validate_arg(d,'inference_timeout',
                 utils.validate_positive_integer,required=False)
         if s != None:
@@ -86,7 +91,7 @@ class CoreSivmCxx(object):
     def _do_forget(self,instruction):
         utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
-                utils.validate_positive_integer)
+                utils.validate_nonnegative_integer)
         try:
             self.engine.forget(did)
             if did in self.observe_dict:
@@ -100,26 +105,20 @@ class CoreSivmCxx(object):
     def _do_report(self,instruction):
         utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
-                utils.validate_positive_integer)
+                utils.validate_nonnegative_integer)
         if did in self.observe_dict:
             return {"value":copy.deepcopy(self.observe_dict[did]['value'])}
         else:
-            try:
-                val = self.engine.report_value(did)
-            except Exception as e:
-                if e.message == 'Attempt to report value for non-existent directive.':
-                    raise VentureException('invalid_argument',e.message,argument='directive_id')
-                raise
+            val = self.engine.report_value(did)
             return {"value":_parse_value(val)}
 
     def _do_infer(self,instruction):
         utils.require_state(self.state,'default')
-        iterations = utils.validate_arg(instruction,'iterations',
-                utils.validate_positive_integer)
-        resample = utils.validate_arg(instruction,'resample',
-                utils.validate_boolean)
-        #NOTE: model resampling is not implemented in C++
-        val = self.engine.infer(iterations)
+
+        d = utils.validate_arg(instruction,'params',
+                utils.validate_dict)
+        # TODO FIXME figure out how to validate the arguments
+        val = self.engine.infer(d)
         return {}
 
     def _do_clear(self,instruction):
@@ -141,7 +140,7 @@ class CoreSivmCxx(object):
         # that the directive exists for testing purposes
         utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
-                utils.validate_positive_integer)
+                utils.validate_nonnegative_integer)
         if did not in self.observe_dict:
             try:
                 val = self.engine.report_value(did)
@@ -156,28 +155,44 @@ class CoreSivmCxx(object):
         l = self.engine.logscore()
         return {"logscore":l}
     
+    ###########################
+    # Continuous Inference
+    ###########################
+    
+    def _pause_continuous_inference(sivm):
+        class tmp(object):
+            def __enter__(temp):
+                temp.was_continuous_inference_running = sivm.continuous_inference_running
+                if temp.was_continuous_inference_running:
+                    sivm._do_stop_continuous_inference(None)
+            def __exit__(temp, type, value, traceback):
+                if temp.was_continuous_inference_running:
+                    sivm._do_start_continuous_inference(None)
+        return tmp()
+    
     def _run_continuous_inference(self, step):
-        while True:
-            with self.continuous_inference_lock:
-                if self.continuous_inference_running:
-                    self.engine.infer(step)
-                else: return
+        while self.continuous_inference_running:
+            self.engine.infer(step)
     
     def _do_start_continuous_inference(self,instruction):
         utils.require_state(self.state,'default')
         if not self.continuous_inference_running:
             self.continuous_inference_running = True
-            thread.start_new_thread(CoreSivmLite._run_continuous_inference, (self, 1))
+            self.continuous_inference_thread = Thread(target=CoreSivmCxx._run_continuous_inference, args=(self, 10))
+            self.continuous_inference_thread.start()
         return {}
-
+    
     def _do_stop_continuous_inference(self,instruction):
         utils.require_state(self.state,'default')
         self.continuous_inference_running = False
+        if self.continuous_inference_thread != None:
+            self.continuous_inference_thread.join()
+            self.continuous_inference_thread = None
         return {}
-
+    
     def _do_continuous_inference_status(self,instruction):
         utils.require_state(self.state,'default')
-        return {'running':self.engine.continuous_inference_running}
+        return {'running':self.continuous_inference_running}
     
     ##############################
     # Profiler (stubs)
@@ -194,35 +209,19 @@ class CoreSivmCxx(object):
 ###############################
 # Input modification functions
 # ----------------------------
-# for translating the sanitized
-# instructions to and from the
-# old C++ instruction format
+# These exist to bridge the gap
+# between the cxx and the stack
 ###############################
 
 def _modify_expression(expression):
     if isinstance(expression, basestring):
         return _modify_symbol(expression)
     if isinstance(expression, (list,tuple)):
-        temp = []
-        for i in range(len(expression)):
-            temp.append(_modify_expression(expression[i]))
-        return temp
+        return map(_modify_expression, expression)
     if isinstance(expression, dict):
-            return _modify_value(expression)
+        return _modify_value(expression)
 
-_literal_type_map = {
-        "real" : "r",
-        "count" : "c",
-        "number" : "r",
-        "boolean" : "b",
-        "atom" : "a",
-        "symbol" : "s",
-        # simplex point not implemented
-        }
 def _modify_value(ob):
-    if ob['type'] not in _literal_type_map:
-        raise VentureException("fatal",
-                "Invalid literal type: " + ob["type"])
     if ob['type'] in {'count', 'real'}:
         ob['type'] = 'number'
     elif ob['type'] == 'atom':
@@ -236,16 +235,16 @@ _symbol_map = { "add" : 'plus', "sub" : 'minus', "mul" : 'times',
 def _modify_symbol(s):
     if s in _symbol_map:
         s = _symbol_map[s]
-    return {"type": "symbol", "value": s}
-    
-_reverse_literal_type_map = dict((y,x) for x,y in _literal_type_map.items())
+    # NOTE: need to str() b/c unicode might come via REST,
+    #       which the boost python wrappings can't convert
+    return {"type": "symbol", "value": str(s)}
 
 _python_to_venture_type_map = {
     bool: "boolean",
     int: "count",
     float: "number",
     list: "list",
-    str: "string",
+    str: "symbol",
 }
 
 def _parse_value(val):

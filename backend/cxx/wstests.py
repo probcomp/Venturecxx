@@ -1,6 +1,7 @@
 from venture.shortcuts import *
 import math
 import pdb
+#from nssivm import SIVM
 
 def SIVM():
     return make_church_prime_ripl()
@@ -24,7 +25,7 @@ def printTest(testName,eps,ops):
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer(10)
+    sivm.infer({"kernel":"meanfield","num_iterations":10,"use_global_drg":False})
     predictions.append(sivm.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
@@ -34,6 +35,7 @@ def runTests(N):
   #testCategorical1(N)
   testMHNormal0(N)
   testMHNormal1(N)
+  testStudentT0(N)
   testMem0(N)
   #testMem1(N)
   #testMem2(N)
@@ -55,8 +57,8 @@ def runTests(N):
   testApply1(N)
   testExtendEnv1(N)
   testList1()
-  testCRP1(N,True)
-  testCRP1(N,False)
+#  testCRP1(N,True)
+#  testCRP1(N,False)
   test_CRP_with_hierarchical_Pittman_Yor(N)
   testGeometric1(N)
 
@@ -125,12 +127,24 @@ def testMHNormal1(N):
   print "---TestMHNormal1---"
   print "(23.9," + str(mean) + ")"
 
+def testStudentT0(N):
+  # Modeled on testMHNormal0, but I do not know what the answer is
+  # supposed to be.  However, the run not crashing says something.
+  sivm = SIVM()
+  sivm.assume("a", "(student_t 1.0)")
+  sivm.observe("(normal a 1.0)", 3.0)
+  sivm.predict("(normal a 1.0)")
+  predictions = loggingInfer(sivm,3,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestStudentT0---"
+  print "(???," + str(mean) + ")"
+
 def testMem0(N):
   sivm = SIVM()
   sivm.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   sivm.predict("(f (bernoulli 0.5))")
   sivm.predict("(f (bernoulli 0.5))")
-  sivm.infer(N)
+  sivm.infer({"kernel":"mh","num_iterations":N,"use_global_drg":False})
   print "Passed TestMem0"
 
 
@@ -232,7 +246,7 @@ def testIf1():
   sivm.assume('IF', '(lambda () branch)')
   sivm.assume('IF?', '(branch (bernoulli 0.5) IF IF)')
   sivm.predict('(IF? (bernoulli 0.5) IF IF)')
-  sivm.infer(N/10)
+  sivm.infer({"kernel":"mh","num_iterations":N/10,"use_global_drg":False})
 
 def testIf2(N):
   sivm = SIVM()
@@ -240,7 +254,7 @@ def testIf2(N):
   sivm.assume('if2', '(branch (bernoulli 0.5) (lambda () if1) (lambda () if1))')
   sivm.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
   sivm.assume('if4', '(branch (bernoulli 0.5) (lambda () if3) (lambda () if3))')
-  sivm.infer(N/10)
+  sivm.infer({"kernel":"mh","num_iterations":N/10,"use_global_drg":False})
 
 
 def testBLOGCSI(N):
@@ -294,7 +308,7 @@ def testOuterMix1(N):
 
 def testMakeSymDirMult1(N):
   sivm = SIVM()
-  sivm.assume("f", "(make_sym_dir_mult 1.0 atom<2>)")
+  sivm.assume("f", "(make_sym_dir_mult 1.0 2)")
   sivm.predict("(f)")
   predictions = loggingInfer(sivm,2,N)
   ps = [.5, .5]
@@ -305,7 +319,7 @@ def testMakeSymDirMult1(N):
 def testMakeSymDirMult2(N):
   sivm = SIVM()
   sivm.assume("a", "(normal 10.0 1.0)")
-  sivm.assume("f", "(make_sym_dir_mult a atom<4>)")
+  sivm.assume("f", "(make_sym_dir_mult a 4)")
   sivm.predict("(f)")
   
   for i in range(1,4):
@@ -320,7 +334,7 @@ def testMakeSymDirMult2(N):
 def testMakeUCSymDirMult1(N):
   sivm = SIVM()
   sivm.assume("a", "(normal 10.0 1.0)")
-  sivm.assume("f", "(make_uc_sym_dir_mult a atom<4>)")
+  sivm.assume("f", "(make_uc_sym_dir_mult a 4)")
   sivm.predict("(f)")
 
   for i in range(1,4):
@@ -334,7 +348,7 @@ def testMakeUCSymDirMult1(N):
 
 
 def testLazyHMM1(N):
-  N = N * 2
+  N = N
   sivm = SIVM()
   sivm.assume("f","""
 (mem 
@@ -369,7 +383,8 @@ def testLazyHMM1(N):
   sums = [0 for i in range(n)]
 
   for t in range(N):
-    sivm.infer(1)
+      # TODO make this pgibbs with global drg
+    sivm.infer({"kernel":"mh","num_iterations":10,"use_global_drg":False})
     for i in range(n):
       sums[i] += sivm.report(8 + i)
 
@@ -404,7 +419,7 @@ def testLazyHMMSP1(N):
 def testStaleAAA1(N):
   sivm = SIVM()
   sivm.assume("a", "1.0")
-  sivm.assume("f", "(make_uc_sym_dir_mult a atom<2>)")
+  sivm.assume("f", "(make_uc_sym_dir_mult a 2)")
   sivm.assume("g", "(mem f)")
   sivm.assume("h", "g")
   sivm.predict("(h)")
@@ -420,7 +435,7 @@ def testStaleAAA1(N):
 def testStaleAAA2(N):
   sivm = SIVM()
   sivm.assume("a", "1.0")
-  sivm.assume("f", "(make_uc_sym_dir_mult a atom<2>)")
+  sivm.assume("f", "(make_uc_sym_dir_mult a 2)")
   sivm.assume("g", "(lambda () f)")
   sivm.assume("h", "(g)")
   sivm.predict("(h)")
@@ -623,7 +638,7 @@ def loadPYMem(sivm):
 def testUCRP1(N):
   sivm = SIVM()
   loadPYMem(sivm)
-  sivm.assume("alpha","(uniform_continuous 0.1 20.0)")
+  sivm.assume("alpha","(gamma 1.0 1.0)")
   sivm.assume("d","(uniform_continuous 0.0 0.1)")
   sivm.assume("base_dist","(lambda () (real (categorical 0.5 0.5)))")
   sivm.assume("f","(u_pymem alpha d base_dist)")
@@ -633,12 +648,12 @@ def testUCRP1(N):
   sivm.observe("(normal (f) 1.0)",1.0)
   sivm.observe("(normal (f) 1.0)",0.0)
   sivm.observe("(normal (f) 1.0)",0.0)
-  sivm.infer(N)
+#  sivm.infer(N)
 
 def observe_categories(sivm,counts):
   for i in range(len(counts)):
     for ct in range(counts[i]):
-      sivm.observe("(normal (f) 0.1)",i)
+      sivm.observe("(normal (f) 1.0)",i)
 
 def testCRP1(N,isCollapsed):
   sivm = SIVM()

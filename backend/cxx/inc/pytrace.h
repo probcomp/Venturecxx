@@ -7,8 +7,8 @@
 #include <boost/python/object.hpp>
 
 
-struct GKernel;
 struct VentureValue;
+struct GKernel;
 
 struct PyTrace : Trace
 {
@@ -20,13 +20,13 @@ struct PyTrace : Trace
   boost::python::object extractPythonValue(size_t did);
   void observe(size_t did,boost::python::object valueExp);
 //  void unobserve(size_t did);
-  void infer(size_t n);
 
   void set_seed(size_t seed);
   size_t get_seed();
-  
-  boost::python::object my_sp;
-  GKernel * mcmc{nullptr};
+
+  void infer(boost::python::dict options);
+
+  map<string,GKernel *> gkernels;
 };
 
 

@@ -1,6 +1,7 @@
 #include "value.h"
 #include "node.h"
 #include "sp.h"
+#include "scaffold.h"
 #include "env.h"
 #include "pytrace.h"
 #include "infer/gkernel.h"
@@ -18,15 +19,22 @@
 #include <list>
 #include <map>
 
-
 PyTrace::PyTrace(): 
   Trace(), 
-  mcmc(new OutermostMixMH(this, new ScaffoldMHGKernel(this))) {}
+  gkernels{
+    {"mh", new ScaffoldMHGKernel(this)},
+    {"gibbs", new GibbsGKernel(this)},
+    {"pgibbs", new PGibbsGKernel(this)},
+    {"meanfield",new MeanFieldGKernel(this)}}
 {
 
   std::vector<std::string> dir_contents = lsdir("./pysps/");
   std::vector<std::string> pysp_files = filter_for_suffix(dir_contents, ".py");
   // print_string_v(pysp_files);
+
+  if (pysp_files.begin() == pysp_files.end()) {
+    std::cout << "No python sps to load" << std::endl;
+  }
 
   map<std::string, boost::python::object> string_to_pysp_namespace;
   for(std::vector<std::string>::const_iterator it=pysp_files.begin();
@@ -45,8 +53,7 @@ PyTrace::PyTrace():
 
 	  // extract them
 	  assert(!pysp.is_none());
-	  my_sp = pysp();
-	  boost::python::extract<SP*> spex(my_sp);
+	  boost::python::extract<SP*> spex(pysp());
 	  
 	  assert(!pysym.is_none());
 	  boost::python::extract<string> symex(pysym());
@@ -71,17 +78,16 @@ PyTrace::PyTrace():
 
 	  std::cout << "added binding for new SP: " << sym << std::endl;
   }
-// END for loop
 
 }
 
 PyTrace::~PyTrace()
 {
-  OutermostMixMH * mKernel = dynamic_cast<OutermostMixMH*>(mcmc);
-  delete mKernel->gKernel;
-  delete mcmc;
+  for (pair<string,GKernel *> p : gkernels)
+  {
+    delete p.second;
+  }
 }
-
 
 void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
 {
@@ -117,7 +123,30 @@ void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
   constrain(node,true);
 }
 
-void PyTrace::infer(size_t n) { mcmc->infer(n); }
+void PyTrace::infer(boost::python::dict options) 
+{ 
+  string kernel = boost::python::extract<string>(options["kernel"]);
+  size_t numTransitions = boost::python::extract<size_t>(options["transitions"]);
+  bool useGlobalScaffold = boost::python::extract<bool>(options["use_global_scaffold"]);
+
+  GKernel * gkernel = gkernels[kernel];
+
+  if (useGlobalScaffold)
+  {
+    // TODO temporary -- gibbs checks the principal node for enumeration
+
+    assert(kernel == "pgibbs");
+    set<Node *> allNodes(randomChoices.begin(),randomChoices.end());
+    gkernel->loadParameters(new ScaffoldMHParam(new Scaffold(allNodes),nullptr));
+    gkernel->infer(numTransitions);
+  }
+  else
+  {
+    OutermostMixMH * outermostKernel = new OutermostMixMH(this,gkernel);
+    outermostKernel->infer(numTransitions);
+    delete outermostKernel;
+  }
+}
 
 void PyTrace::set_seed(size_t n) {
   gsl_rng_set(rng, n);
