@@ -10,6 +10,7 @@
 #include "flush.h"
 #include "lkernel.h"
 #include "utils.h"
+#include <cmath>
 
 #include <iostream>
 #include <typeinfo>
@@ -227,6 +228,7 @@ double Trace::applyPSP(Node * node,
 
     newValue = k->simulate(oldValue,node,latentDB,rng);
     weight += k->weight(newValue,oldValue,node,latentDB);
+    assert(isfinite(weight));
 
     VariationalLKernel * vlk = dynamic_cast<VariationalLKernel*>(k);
     if (vlk && gradients)

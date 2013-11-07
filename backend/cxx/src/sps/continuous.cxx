@@ -27,6 +27,13 @@ VentureValue * NormalSP::simulateOutput(Node * node, gsl_rng * rng)  const
   return new VentureNumber(x);
 }
 
+double NormalSP::simulateOutputNumeric(const vector<double> & args, gsl_rng * rng)  const
+{
+  double x = gsl_ran_gaussian(rng, args[1]) + args[0];
+  assert(isfinite(x));
+  return x;
+}
+
 double NormalSP::logDensityOutput(VentureValue * value, Node * node)  const
 {
   vector<Node *> & operands = node->operandNodes;
@@ -49,7 +56,17 @@ double NormalSP::logDensityOutput(VentureValue * value, Node * node)  const
 
 double NormalSP::logDensityOutputNumeric(double output, const vector<double> & args) const
 {
-  return log(gsl_ran_gaussian_pdf(output - args[0], args[1]));
+  assert(isfinite(args[0]));
+  assert(isfinite(args[1]));
+  assert(isfinite(output));
+  assert(args[1] > 0);
+  double ld = log(gsl_ran_gaussian_pdf(output - args[0], args[1]));
+  if (!isfinite(ld))
+  {
+    cout << "Normal(" << args[0] << ", " << args[1] << ") = " << output << " <" << ld << ">" << endl;
+  }
+  assert(isfinite(ld));
+  return ld;
 }
 
 vector<ParameterScope> NormalSP::getParameterScopes() const
@@ -127,7 +144,19 @@ VentureValue * BetaSP::simulateOutput(Node * node, gsl_rng * rng)  const
   assert(a);
   assert(b);
   double x = gsl_ran_beta(rng,a->x,b->x);
+  if (x == 1.0) { x = 0.99; }
   return new VentureNumber(x);
+}
+
+double BetaSP::simulateOutputNumeric(const vector<double> & args, gsl_rng * rng) const
+{
+  assert(args[0] > 0);
+  assert(args[1] > 0);
+  double x = gsl_ran_beta(rng,args[0],args[1]);
+  assert(isfinite(x));
+  // TODO FIXME GSL NUMERIC
+  if (x == 1.0) { return 0.99; }
+  else { return x; }
 }
 
 double BetaSP::logDensityOutput(VentureValue * value, Node * node)  const
@@ -145,8 +174,20 @@ double BetaSP::logDensityOutput(VentureValue * value, Node * node)  const
 
 double BetaSP::logDensityOutputNumeric(double output, const vector<double> & args) const
 {
-  return log(gsl_ran_beta_pdf(output,args[0],args[1]));
+  assert(args[0] > 0);
+  assert(args[1] > 0);
+  assert(0 <= output);
+  assert(output <= 1);
+  double ld = log(gsl_ran_beta_pdf(output,args[0],args[1]));
+  if (!isfinite(ld))
+  {
+    cout << "Beta(" << args[0] << ", " << args[1] << ") = " << output << " <" << ld << ">" << endl;
+  }
+
+  assert(isfinite(ld));
+  return ld;
 }
+
 
 vector<ParameterScope> BetaSP::getParameterScopes() const
 {
@@ -161,8 +202,8 @@ vector<double> BetaSP::gradientOfLogDensity(double output,
 
   double alpha0 = a + b;
 
-  double gradA = log(output) + gsl_sf_psi(a) - gsl_sf_psi(alpha0);
-  double gradB = log(output) + gsl_sf_psi(b) - gsl_sf_psi(alpha0);
+  double gradA = log(output) + gsl_sf_psi(alpha0) - gsl_sf_psi(a);
+  double gradB = log(output) + gsl_sf_psi(alpha0) - gsl_sf_psi(b);
 
   return { gradA, gradB };
 }
