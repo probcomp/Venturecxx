@@ -39,7 +39,8 @@ class VentureSivm(object):
         instruction_type = instruction['instruction']
         if instruction_type in self._extra_instructions:
             f = getattr(self,'_do_'+instruction_type)
-            return f(instruction)
+            with self._pause_continuous_inference():
+                return f(instruction)
         return self._call_core_sivm_instruction(instruction)
 
     ###############################
@@ -133,12 +134,12 @@ class VentureSivm(object):
     def _pause_continuous_inference(sivm):
         class tmp(object):
             def __enter__(self):
-                self.was_continuous_inference_running = self._continuous_inference_status()
+                self.was_continuous_inference_running = sivm._continuous_inference_status()
                 if self.was_continuous_inference_running:
-                    self._stop_continuous_inference()
+                    sivm._stop_continuous_inference()
             def __exit__(self, type, value, traceback):
                 if self.was_continuous_inference_running:
-                    self._start_continuous_inference()
+                    sivm._start_continuous_inference()
         return tmp()
 
 

@@ -4,9 +4,9 @@
 from venture.exception import VentureException
 from venture.sivm import utils
 import json
-import re
+#import re
 import copy
-import thread, threading
+from threading import Thread
 
 class CoreSivmCxx(object):
     ###############################
@@ -24,7 +24,7 @@ class CoreSivmCxx(object):
         self.profiler_enabled = False
         
         self.continuous_inference_running = False
-        self.continuous_inference_lock = threading.Lock()
+        self.continuous_inference_thread = None
 
     _implemented_instructions = ["assume","observe","predict",
             "configure","forget","report","infer",
@@ -34,8 +34,7 @@ class CoreSivmCxx(object):
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._implemented_instructions)
         f = getattr(self,'_do_'+instruction['instruction'])
-        with self.continuous_inference_lock:
-            return f(instruction)
+        return f(instruction)
 
     ###############################
     # Instruction implementations
@@ -104,12 +103,7 @@ class CoreSivmCxx(object):
         if did in self.observe_dict:
             return {"value":copy.deepcopy(self.observe_dict[did]['value'])}
         else:
-            try:
-                val = self.engine.report_value(did)
-            except Exception as e:
-                if e.message == 'Attempt to report value for non-existent directive.':
-                    raise VentureException('invalid_argument',e.message,argument='directive_id')
-                raise
+            val = self.engine.report_value(did)
             return {"value":_parse_value(val)}
 
     def _do_infer(self,instruction):
@@ -157,27 +151,28 @@ class CoreSivmCxx(object):
         return {"logscore":l}
     
     def _run_continuous_inference(self, step):
-        while True:
-            with self.continuous_inference_lock:
-                if self.continuous_inference_running:
-                    self.engine.infer(step)
-                else: return
+        while self.continuous_inference_running:
+            self.engine.infer(step)
     
     def _do_start_continuous_inference(self,instruction):
         utils.require_state(self.state,'default')
         if not self.continuous_inference_running:
             self.continuous_inference_running = True
-            thread.start_new_thread(CoreSivmLite._run_continuous_inference, (self, 1))
+            self.continuous_inference_thread = Thread(target=CoreSivmCxx._run_continuous_inference, args=(self, 10))
+            self.continuous_inference_thread.start()
         return {}
 
     def _do_stop_continuous_inference(self,instruction):
         utils.require_state(self.state,'default')
         self.continuous_inference_running = False
+        if self.continuous_inference_thread != None:
+            self.continuous_inference_thread.join()
+            self.continuous_inference_thread = None
         return {}
 
     def _do_continuous_inference_status(self,instruction):
         utils.require_state(self.state,'default')
-        return {'running':self.engine.continuous_inference_running}
+        return {'running':self.continuous_inference_running}
     
     ##############################
     # Profiler (stubs)
