@@ -40,12 +40,12 @@ PyTrace::PyTrace():
   for(std::vector<std::string>::const_iterator it=pysp_files.begin();
 		  it!=pysp_files.end();
 		  it++) {
-
+    
 	  std::string pysp_file = *it;
 	  if(pysp_file == "__init__") continue;
 
 	  std::cout << "trying to import " << pysp_file << std::endl;
-	  boost::python::object pysp_namespace = boost::python::import(boost::python::str(pysp_file));
+	  boost::python::object pysp_namespace = boost::python::import(boost::python::str("./pysps/" + pysp_file + ".py"));
 	  std::cout << "boost::python::import'ed " << pysp_file << std::endl;
 
 	  // get the function called "makeSP", and the funcion called "getSymbol" in the model
