@@ -1,20 +1,8 @@
 from libtrace import Trace
 from venture.exception import VentureException
 
-# Our SIVM is not a fully conforming SIVM, for reasons I hope
-# the person reading this will understand better than I do.
-# For one, the directives take strings and does the parsing,
-# which can easily be changed. Venture also has some kind of
-# type system which this does not support explicitly.
-
-# A note on addresses: addresses are lists (though they are 
-# also converted to strings before hashing), and the definite
-# families begin with [<directiveId>]. 
-
-# Suppose the SP created at address SP-ADDR requests an LIA
-# with local address LIA-ADDR. Then the full address of that LIA 
-# would be SP-ADDR + [<sp>] + LIA-NAME (where + is append).
-
+# Thin wrapper around cxx Trace
+# TODO: merge with CoreSivmCxx?
 
 class SIVM:
 
@@ -79,18 +67,16 @@ class SIVM:
     # This could be parameterized to call different inference programs.
     def infer(self,N=1):
         self.trace.infer(N)
-    
-    # FIXME: These are not properly implemented
-    
-    def logscore(self):
-        raise VentureException("not_implemented", "logscore() is not implemented")
-
-    def get_entropy_info(self):
-       raise VentureException("not_implemented", "get_entropy_info() is not implemented")
 
     def get_seed(self):
         return self.trace.get_seed()
 
     def set_seed(self, seed):
         self.trace.set_seed(seed)
+    
+    # FIXME: These are not properly implemented
+    # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
+    
+    def logscore(self):
+        raise VentureException("not_implemented", "logscore() is not implemented")
 
