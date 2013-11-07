@@ -30,7 +30,7 @@ def loggingInfer(sivm,address,T):
   return predictions
 
 def runTests(N):
-  testBernoulli0(N)
+#  testBernoulli0(N)
   testBernoulli1(N)
   #testCategorical1(N)
   testMHNormal0(N)

@@ -135,12 +135,13 @@ double Trace::detachInternal(Node * node,
 
 void Trace::teardownMadeSP(Node * node)
 {
-  cout << "teardown(" << node << ")" << endl;
 
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
   if (vsp->makerNode != node) { return; }
 
+  vsp->makerNode = nullptr;
   SP * madeSP = vsp->sp;
+
   if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
 
   /* Subtle. If it is not AAA, then we actually destroy the SPAux entirely, and it

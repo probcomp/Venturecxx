@@ -154,10 +154,11 @@ double Trace::regenInternal(Node * node,
 /* TODO should load makerNode as well */
 void Trace::processMadeSP(Node * node, bool isAAA)
 {
-  cout << "process(" << node << ")" << endl;
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
   if (vsp->makerNode) { return; }
+
   assert(vsp);
+
   SP * madeSP = vsp->sp;
   vsp->makerNode = node;
   if (!isAAA)
@@ -247,7 +248,7 @@ double Trace::applyPSP(Node * node,
 
   sp->incorporate(newValue,node);
 
-  if (dynamic_cast<VentureSP *>(node->getValue()) && !node->isReference())
+  if (dynamic_cast<VentureSP *>(node->getValue()))
   { processMadeSP(node,scaffold && scaffold->isAAA(node)); }
   if (node->sp()->isRandom(node->nodeType)) { registerRandomChoice(node); }
   if (node->nodeType == NodeType::REQUEST) { evalRequests(node,scaffold,shouldRestore,omegaDB,gradients); }
@@ -328,7 +329,9 @@ double Trace::restoreFamily(Node * node,
     if (!dynamic_cast<VentureValue*>(node->getValue())) { assert(false); }
 
     if (dynamic_cast<VentureSP *>(node->getValue()))
-    { processMadeSP(node,false); }
+    { 
+      processMadeSP(node,false); 
+    }
   }
   else if (node->nodeType == NodeType::LOOKUP)
   {
