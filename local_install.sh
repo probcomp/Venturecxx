@@ -1,2 +1,2 @@
 #!/bin/sh
-CC="ccache gcc" python setup.py install
+OPT="" CC="ccache gcc" python setup.py install

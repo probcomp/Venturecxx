@@ -22,6 +22,7 @@ pair<double, OmegaDB*> Trace::detach(const vector<Node *> & border,
 					 Scaffold * scaffold)
 {
   assert(scaffold);
+
   double weight = 0;
   OmegaDB * omegaDB = new OmegaDB;
 

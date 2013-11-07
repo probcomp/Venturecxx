@@ -88,7 +88,9 @@ struct VentureNumber : VentureValue
   boost::python::object toPython() const override { return boost::python::object(x); }
   size_t toHash() const override { return hash<double>()(x); }
   VentureValue * clone() const override { return new VentureNumber(x); }
+  int getInt() const { return static_cast<int>(x); }
   double x;
+  
 };
 
 struct VentureAtom : VentureValue

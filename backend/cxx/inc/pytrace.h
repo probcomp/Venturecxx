@@ -21,6 +21,9 @@ struct PyTrace : Trace
   void observe(size_t did,boost::python::object valueExp);
 //  void unobserve(size_t did);
   void infer(size_t n);
+
+  void set_seed(size_t seed);
+  size_t get_seed();
   
   boost::python::object my_sp;
   GKernel * mcmc{nullptr};

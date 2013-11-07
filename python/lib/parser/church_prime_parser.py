@@ -13,9 +13,9 @@ import json
 class ChurchPrimeParser():
     def __init__(self):
 
-        w = ('+', '-', '*', '/', '<=', '>=', '<', '>', '=', '!=')
         m = {'+':'add', '-':'sub', '*':'mul', '/':'div', '<':'lt',
                 '>':'gt', '<=':'lte', '>=':'gte', '=':'eq', '!=':'neq'}
+        w = m.keys()
 
         self.symbol = utils.symbol_token(whitelist_symbols = w, symbol_map = m)
 

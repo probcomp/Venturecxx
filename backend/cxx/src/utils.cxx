@@ -6,7 +6,9 @@
 #include "value.h"
 #include "all.h"
 
-
+#include <vector>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 
 void listShallowDestroy(VentureList * list)
 {
@@ -62,6 +64,11 @@ void normalizeVector(vector<double> & xs)
     else { xs[i] /= sum; }
     newSum += xs[i];
   }
+  if (!(fabs(newSum - 1) < 0.01))
+  { 
+    cout << "sum: " << sum << endl;
+    cout << "newSum: " << newSum << endl;
+  }
   assert(fabs(newSum - 1) < 0.01);
 }
 
@@ -74,4 +81,20 @@ void destroyExpression(VentureValue * exp)
     destroyExpression(pair->rest);
   }
   delete exp;
+}
+
+
+
+uint32_t sampleCategorical(vector<double> xs, gsl_rng * rng)
+{
+  normalizeVector(xs);
+  double u = gsl_ran_flat(rng,0.0,1.0);
+  double sum = 0.0;
+  for (size_t i = 0; i < xs.size(); ++i)
+  {
+    sum += xs[i];
+    if (u < sum) { return i; }
+  }
+  assert(false);
+  return -1;
 }

@@ -1,6 +1,5 @@
 #include "value.h"
 #include "utils.h"
-#include "sps/stathelpers.h"
 #include "node.h"
 #include "sp.h"
 #include "sps/makesymdirmult.h"
