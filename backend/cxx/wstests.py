@@ -25,7 +25,7 @@ def printTest(testName,eps,ops):
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer({"kernel":"meanfield","num_iterations":10,"use_global_drg":False})
+    sivm.infer({"kernel":"meanfield","transitions":10,"use_global_scaffold":False})
     predictions.append(sivm.report(address))
 #    print predictions[len(predictions)-1]
   return predictions

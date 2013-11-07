@@ -172,7 +172,7 @@ class CoreSivmCxx(object):
     
     def _run_continuous_inference(self, step):
         while self.continuous_inference_running:
-            self.engine.infer(step)
+            self.engine.infer({'transitions':step})
     
     def _do_start_continuous_inference(self,instruction):
         utils.require_state(self.state,'default')
