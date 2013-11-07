@@ -13,43 +13,46 @@ VentureValue * MakeUCSymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) co
 {
   vector<Node *> & operands = node->operandNodes;
   VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureAtom * n = dynamic_cast<VentureAtom *>(operands[1]->getValue());
+  VentureNumber * n = dynamic_cast<VentureNumber *>(operands[1]->getValue());
 
   assert(alpha);
   assert(n);
 
+  uint32_t d = static_cast<uint32_t>(n->x);
 
-  double *alphaVector = new double[n->n];
-  for (size_t i = 0; i < n->n; ++i) 
+  double *alphaVector = new double[d];
+  for (size_t i = 0; i < d; ++i) 
   { 
     alphaVector[i] = alpha->x;
   }
 
   /* TODO GC watch the NEW */
-  double *theta = new double[n->n];
+  double *theta = new double[d];
 
-  gsl_ran_dirichlet(rng,n->n,alphaVector,theta);
+  gsl_ran_dirichlet(rng,d,alphaVector,theta);
 
   delete[] alphaVector;
-  return new VentureSP(new UCSymDirMultSP(theta,n->n));
+  return new VentureSP(new UCSymDirMultSP(theta,d));
 }
 
 double MakeUCSymDirMultSP::logDensityOutput(VentureValue * value, Node * node) const
 {
   vector<Node *> & operands = node->operandNodes;
   VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureAtom * n = dynamic_cast<VentureAtom *>(operands[1]->getValue());
+  VentureNumber * n = dynamic_cast<VentureNumber *>(operands[1]->getValue());
   VentureSP * vsp = dynamic_cast<VentureSP *>(value);
   assert(alpha);
   assert(n);
   assert(vsp);
 
-  double *alphaVector = new double[n->n];
-  for (size_t i = 0; i < n->n; ++i) { alphaVector[i] = alpha->x; }
+  uint32_t d = static_cast<uint32_t>(n->x);
+
+  double *alphaVector = new double[d];
+  for (size_t i = 0; i < d; ++i) { alphaVector[i] = alpha->x; }
 
   UCSymDirMultSP * sp = dynamic_cast<UCSymDirMultSP *>(vsp->sp);
 
-  double ld = gsl_ran_dirichlet_lnpdf(n->n,alphaVector,sp->theta);
+  double ld = gsl_ran_dirichlet_lnpdf(d,alphaVector,sp->theta);
   delete[] alphaVector;
   return ld;
 }
@@ -59,7 +62,7 @@ VentureValue * MakeUCSymDirMultAAAKernel::simulate(VentureValue * oldVal, Node *
 
   vector<Node *> & operands = appNode->operandNodes;
   VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureAtom * n = dynamic_cast<VentureAtom *>(operands[1]->getValue());
+  VentureNumber * n = dynamic_cast<VentureNumber *>(operands[1]->getValue());
 
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(appNode->madeSPAux);
 
@@ -67,19 +70,21 @@ VentureValue * MakeUCSymDirMultAAAKernel::simulate(VentureValue * oldVal, Node *
   assert(n);
   assert(spaux);
 
-  double *conjAlphaVector = new double[n->n];
-  for (size_t i = 0; i < n->n; ++i) 
+  uint32_t d = static_cast<uint32_t>(n->x);
+
+  double *conjAlphaVector = new double[d];
+  for (size_t i = 0; i < d; ++i) 
   { 
     conjAlphaVector[i] = alpha->x + spaux->counts[i];
   }
 
   /* TODO GC watch the NEW */
-  double *theta = new double[n->n];
+  double *theta = new double[d];
 
-  gsl_ran_dirichlet(rng,n->n,conjAlphaVector,theta);
+  gsl_ran_dirichlet(rng,d,conjAlphaVector,theta);
 
   delete[] conjAlphaVector;
-  return new VentureSP(new UCSymDirMultSP(theta,n->n));
+  return new VentureSP(new UCSymDirMultSP(theta,d));
 }
 
 double MakeUCSymDirMultAAAKernel::weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB)

@@ -34,6 +34,9 @@ class SIVM:
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
 
+    print "assume: "
+    print parse(datum)
+
     self.trace.eval(baseAddr,parse(datum));
     self.trace.bindInGlobalEnv(id,baseAddr);
 

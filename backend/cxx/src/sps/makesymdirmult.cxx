@@ -11,10 +11,10 @@ VentureValue * MakeSymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) cons
 {
   vector<Node *> & operands = node->operandNodes;
   VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureAtom * n = dynamic_cast<VentureAtom *>(operands[1]->getValue());
+  VentureNumber * n = dynamic_cast<VentureNumber *>(operands[1]->getValue());
   assert(alpha);
   assert(n);
-  return new VentureSP(new SymDirMultSP(alpha->x,n->n));
+  return new VentureSP(new SymDirMultSP(alpha->x,static_cast<uint32_t>(n->x)));
 }
 
 double SymDirMultSP::logDensityOfCounts(SPAux * generic_spaux) const
