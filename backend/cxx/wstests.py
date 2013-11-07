@@ -312,6 +312,7 @@ def testMakeSymDirMult2(N):
   eps = normalizeList(countPredictions(predictions, [0,1,2,3]))
   printTest("TestMakeSymDirMult2",ps,eps)
 
+
 def testMakeUCSymDirMult1(N):
   sivm = SIVM()
   sivm.assume("a", "(normal 10.0 1.0)")

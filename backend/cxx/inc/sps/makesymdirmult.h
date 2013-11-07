@@ -21,6 +21,7 @@ struct MakeSymDirMultSP : SP
   MakeSymDirMultSP()
     {
       childrenCanAAA = true;
+      name = "make_sym_dir_mult";
     }
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
 
@@ -33,6 +34,7 @@ struct SymDirMultSP : SP
       isRandomOutput = true;
       canAbsorbOutput = true;
       tracksSamples = true;
+      name = "sym_dir_mult";
     }
 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;

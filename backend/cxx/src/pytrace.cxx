@@ -102,6 +102,7 @@ void PyTrace::infer(size_t n)
     for (size_t i = 0; i < n; i++)
     {
       set<Node *> allNodes(randomChoices.begin(),randomChoices.end());
+//      ScaffoldMHGKernel * p = new ScaffoldMHGKernel(this);
       PGibbsGKernel * p = new PGibbsGKernel(this);
       p->loadParameters(new ScaffoldMHParam(new Scaffold(allNodes),nullptr));
       p->infer(1); 

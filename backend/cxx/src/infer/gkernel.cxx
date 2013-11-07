@@ -10,13 +10,12 @@
 
 void GKernel::infer(uint32_t N)
 {
-  cout << "infer" << endl;
   for (uint32_t i = 0; i < N; ++i)
   {
     double alpha = propose();
     double logU = log(gsl_ran_flat(trace->rng,0.0,1.0));
-    if (logU < alpha) { cout << "accept" << endl; accept(); }
-    else { cout << "reject" << endl; reject(); }
+    if (logU < alpha) { accept(); }
+    else { reject(); }
   }
 }
 
