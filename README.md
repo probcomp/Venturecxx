@@ -39,26 +39,25 @@ Installation into your virtual environment:
 
     python setup.py install
 
-By default, the setup script install a local C++ engine. If you
-do not want to install the local module, then run:
+We recommend using ipython for Venture development; you can obtain it via
 
-    python setup.py install --without-local-engine
+    pip install ipython
 
-The compiler may complain about missing C++ libraries, in which case
-you should install them on your machine before running the setup script.
+Checking that your installation was successful
+===============================================
 
+./sanity_tests.sh
 
-Installation to global environment
+If you are interested in improving Venture, you can also run
+
+./list_known_issues.sh
+
+Notes for Ubuntu
 ==================================
 
-Exactly the same as above, except you don't need to install "virtualenv".
-
-    # Make sure you are not in an active virtualenv
-    deactivate
-
-    sudo pip install -r requirements.txt
-    sudo python setup.py install [--with-local-engine]
-
+- Start with an Ubuntu 12.04 VM
+- Follow steps in:
+  https://github.com/mit-probabilistic-computing-project/vm-install-venture/blob/master/provision_venture.sh
 
 Rapid Python Development
 ==================================
@@ -74,10 +73,3 @@ are installed in the global python environment.
 
     deactivate && rm -rf env.d build && virtualenv --system-site-packages env.d && \
       . env.d/bin/activate && CC="ccache gcc" python setup.py install
-
-Just the Engine
-===============
-
-    cd backend/cxx
-    cmake . && make
-    ipython -c 'import nstests; nstests.runTests(50)'
