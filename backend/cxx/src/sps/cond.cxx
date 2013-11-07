@@ -50,8 +50,15 @@ VentureValue * BiplexSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<Node *> & operands = node->operandNodes;
   VentureBool * b = dynamic_cast<VentureBool *>(operands[0]->getValue());
-  assert(b);
-  if (b->pred) { return operands[1]->getValue(); }
+  bool pred;
+  if (b) { pred = b->pred; }
+  else
+  {
+    VentureNumber * n = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+    assert(n);
+    pred = (n->x != 0);
+  }
+  if (pred) { return operands[1]->getValue(); }
   else { return operands[2]->getValue(); }
 }
 
