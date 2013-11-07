@@ -10,6 +10,8 @@
 
 void GKernel::infer(uint32_t N)
 {
+  if (trace->numRandomChoices() == 0) {return;}
+  
   for (uint32_t i = 0; i < N; ++i)
   {
     double alpha = propose();
