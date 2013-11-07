@@ -59,10 +59,12 @@ PyTrace::PyTrace():
 
 	  // extract them
 	  assert(!pysp.is_none());
-	  boost::python::extract<SP*> spex(pysp());
+	  my_sp = pysp();
+	  boost::python::extract<SP*> spex(my_sp);
 	  
 	  assert(!pysym.is_none());
-	  boost::python::extract<string> symex(pysym());
+	  my_sp_sym = pysym();
+	  boost::python::extract<string> symex(my_sp_sym);
 
 	  assert(spex.check());
 	  assert(symex.check());

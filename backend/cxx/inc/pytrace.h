@@ -26,6 +26,9 @@ struct PyTrace : Trace
 
   void infer(boost::python::dict options);
 
+  boost::python::object my_sp;
+  boost::python::object my_sp_sym;
+
   map<string,GKernel *> gkernels;
 };
 
