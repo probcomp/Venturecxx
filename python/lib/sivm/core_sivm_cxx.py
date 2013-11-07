@@ -236,7 +236,9 @@ _symbol_map = { "add" : 'plus', "sub" : 'minus', "mul" : 'times',
 def _modify_symbol(s):
     if s in _symbol_map:
         s = _symbol_map[s]
-    return {"type": "symbol", "value": s}
+    # NOTE: need to str() b/c unicode might come via REST,
+    #       which the boost python wrappings can't convert
+    return {"type": "symbol", "value": str(s)}
 
 _python_to_venture_type_map = {
     bool: "boolean",
