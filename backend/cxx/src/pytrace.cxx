@@ -1,5 +1,6 @@
 #include "value.h"
 #include "node.h"
+#include "scaffold.h"
 #include "env.h"
 #include "pytrace.h"
 #include "infer/gkernel.h"
@@ -12,38 +13,39 @@
 #include <iostream>
 #include <list>
 
-using boost::python::extract;
-
 PyTrace::PyTrace(): 
   Trace(), 
-//  mcmc(new OutermostMixMH(this, new ScaffoldMHGKernel(this))) {}
-//  mcmc(new OutermostMixMH(this,new GibbsGKernel(this))) {}
-//  mcmc(new OutermostMixMH(this,new PGibbsGKernel(this))) {}
-  mcmc(new OutermostMixMH(this,new MeanFieldGKernel(this))) {}
+  gkernels{
+    {"mh", new ScaffoldMHGKernel(this)},
+    {"gibbs", new GibbsGKernel(this)},
+    {"pgibbs", new PGibbsGKernel(this)},
+    {"meanfield",new MeanFieldGKernel(this)}}
+ {}
 
 PyTrace::~PyTrace()
 {
-  OutermostMixMH * mKernel = dynamic_cast<OutermostMixMH*>(mcmc);
-  delete mKernel->gKernel;
-  delete mcmc;
+  for (pair<string,GKernel *> p : gkernels)
+  {
+    delete p.second;
+  }
 }
 
 VentureValue * PyTrace::parseValue(boost::python::dict d)
 {
-  if (d["type"] == "boolean") { return new VentureBool(extract<bool>(d["value"])); }
-  else if (d["type"] == "number") { return new VentureNumber(extract<double>(d["value"])); }
-  else if (d["type"] == "symbol") { return new VentureSymbol(extract<string>(d["value"])); }
-  else if (d["type"] == "atom") { return new VentureAtom(extract<uint32_t>(d["value"])); }
+  if (d["type"] == "boolean") { return new VentureBool(boost::python::extract<bool>(d["value"])); }
+  else if (d["type"] == "number") { return new VentureNumber(boost::python::extract<double>(d["value"])); }
+  else if (d["type"] == "symbol") { return new VentureSymbol(boost::python::extract<string>(d["value"])); }
+  else if (d["type"] == "atom") { return new VentureAtom(boost::python::extract<uint32_t>(d["value"])); }
   else { assert(false); }
 }
 
 
 VentureValue * PyTrace::parseExpression(boost::python::object o)
 {
-  extract<boost::python::dict> getDict(o);
+  boost::python::extract<boost::python::dict> getDict(o);
   if (getDict.check()) { return parseValue(getDict()); }
   
-  extract<boost::python::list> getList(o);
+  boost::python::extract<boost::python::list> getList(o);
   assert(getList.check());
   
   boost::python::list l = getList();
@@ -93,7 +95,30 @@ void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
   constrain(node,true);
 }
 
-void PyTrace::infer(size_t n) { mcmc->infer(n); }
+void PyTrace::infer(boost::python::dict options) 
+{ 
+  string kernel = boost::python::extract<string>(options["kernel"]);
+  size_t numTransitions = boost::python::extract<size_t>(options["num_transitions"]);
+  bool useGlobalScaffold = boost::python::extract<bool>(options["use_global_scaffold"]);
+
+  GKernel * gkernel = gkernels[kernel];
+
+  if (useGlobalScaffold)
+  {
+    // TODO temporary -- gibbs checks the principal node for enumeration
+
+    assert(kernel == "pgibbs");
+    set<Node *> allNodes(randomChoices.begin(),randomChoices.end());
+    gkernel->loadParameters(new ScaffoldMHParam(new Scaffold(allNodes),nullptr));
+    gkernel->infer(numTransitions);
+  }
+  else
+  {
+    OutermostMixMH * outermostKernel = new OutermostMixMH(this,gkernel);
+    outermostKernel->infer(numTransitions);
+    delete outermostKernel;
+  }
+}
 
 BOOST_PYTHON_MODULE(libtrace)
 {
