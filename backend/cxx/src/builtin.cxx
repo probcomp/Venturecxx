@@ -44,6 +44,7 @@ map<string,SP *> initBuiltInSPs()
     {"gte", new GreaterThanOrEqualToSP},
     {"lte", new LessThanOrEqualToSP},
     {"real", new RealSP},
+    {"atom_eq", new AtomEqualSP},
 
     {"pair", new PairSP},
     {"first", new FirstSP},

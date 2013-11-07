@@ -109,3 +109,13 @@ VentureValue * RealSP::simulateOutput(Node * node, gsl_rng * rng)  const
   assert(a);
   return new VentureNumber(a->n);
 }
+
+VentureValue * AtomEqualSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureAtom * d1 = dynamic_cast<VentureAtom *>(operands[0]->getValue());
+  VentureAtom * d2 = dynamic_cast<VentureAtom *>(operands[1]->getValue());
+  assert(d1);
+  assert(d2);
+  return new VentureBool(d1->n == d2->n);
+}
