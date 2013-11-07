@@ -82,6 +82,6 @@ setup (
     long_description = 'TBA.',
     packages = packages,
     package_dir={"venture":"python/lib/", "venture.test":"python/test/",
-        "venture.cxx":"backend/cxx/", "venture.examples":"examples/"},
+        "venture.cxx":"backend/cxx/", "venture.examples":"python/examples/"},
     ext_modules = ext_modules
 )
