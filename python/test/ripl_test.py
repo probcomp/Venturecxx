@@ -85,9 +85,6 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output,[instructions, indices])
 
     def test_get_text(self):
-        # FIXME: if not desugared correctly for cxx
-        return
-
         self.ripl.set_mode('church_prime')
         text = "[assume a (+ (if true 2 3) 4)]"
         value = self.ripl.execute_instruction(text)
@@ -95,16 +92,12 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output, ['church_prime',text])
 
     def test_character_index_to_expression_index(self):
-        # FIXME: if not desugared correctly for cxx
-        return
         text = "[assume a (+ (if true 2 3) 4)]"
         value = self.ripl.execute_instruction(text)
         output = self.ripl.character_index_to_expression_index(value['directive_id'], 10)
         self.assertEqual(output, [])
 
     def test_expression_index_to_text_index(self):
-        # FIXME: if not desugared correctly for cxx
-        return
         text = "[assume a (+ (if true 2 3) 4)]"
         value = self.ripl.execute_instruction(text)
         output = self.ripl.expression_index_to_text_index(value['directive_id'], [])

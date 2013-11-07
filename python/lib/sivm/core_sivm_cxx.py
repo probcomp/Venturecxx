@@ -230,7 +230,7 @@ def _modify_value(ob):
 
 _symbol_map = { "add" : 'plus', "sub" : 'minus', "mul" : 'times',
         "symmetric_dirichlet_multinomial_make" : "make_sym_dir_mult",
-        "condition_erp" : "branch",
+        "condition_erp" : "biplex", "crp_make" : "make_crp",
         }
 def _modify_symbol(s):
     if s in _symbol_map:
