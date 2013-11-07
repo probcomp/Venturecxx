@@ -35,7 +35,8 @@ void Scaffold::assembleERG(set<Node *> principalNodes)
     bool isPrincipal = p.second;
 
     if (isResampling(node)) { continue; }
-    else if (node->isConstrained) { addResamplingNode(q,node); }
+    // subtle, double check when under 100 degrees
+//    else if (!node->isObservation() && node->isConstrained) { addResamplingNode(q,node); }
     else if (node->nodeType == NodeType::LOOKUP) { addResamplingNode(q,node); }
     else if (isResampling(node->operatorNode)) { addResamplingNode(q,node); }
     else if (!isPrincipal && node->sp()->canAbsorb(node->nodeType)) { addAbsorbingNode(node); }
@@ -164,10 +165,6 @@ void Scaffold::setRegenCounts()
 void Scaffold::loadDefaultKernels(bool deltaKernels) {}
 
 
-
-
-
-
 bool Scaffold::esrReferenceCanAbsorb(Node * node)
 {
   return 
@@ -177,7 +174,31 @@ bool Scaffold::esrReferenceCanAbsorb(Node * node)
     !isResampling(node->esrParents[0]);
 }
 
+void Scaffold::show()
+{
+  cout << "--Scaffold--" << endl;
+  cout << "DRG" << endl;
+  for (pair<Node*,DRGNode> p : drg)
+  {
+    if (p.first->nodeType == NodeType::OUTPUT)
+    {
+      cout << p.first << endl;
+    }
+  }
+
+  cout << "Absorbing" << endl;
+  for (Node * node : absorbing)
+  {
+    if (node->nodeType == NodeType::OUTPUT)
+    {
+      cout << node << endl;
+    }
+  }
+  cout << "--End Scaffold--" << endl;
+}
+
 Scaffold::~Scaffold()
 {
   for (pair<Node*,LKernel*> p : lkernels) { delete p.second; }
 }
+

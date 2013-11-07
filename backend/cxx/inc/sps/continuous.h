@@ -11,9 +11,11 @@ struct NormalSP : SP
       isRandomOutput = true;
       canAbsorbOutput = true;
       hasVariationalLKernel = true;
+      name = "normal";
     }
 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  double simulateOutputNumeric(const vector<double> & args, gsl_rng * rng) const override;
   double logDensityOutput(VentureValue * value, Node * node) const override; 
 
   double logDensityOutputNumeric(double output, const vector<double> & args) const override;
@@ -54,9 +56,11 @@ struct BetaSP : SP
       isRandomOutput = true;
       canAbsorbOutput = true;
       hasVariationalLKernel = true;
+      name = "beta";
     }
 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  double simulateOutputNumeric(const vector<double> & args, gsl_rng * rng) const override;
   double logDensityOutput(VentureValue * value, Node * node) const override; 
 
   double logDensityOutputNumeric(double output, const vector<double> & args) const override;

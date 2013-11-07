@@ -63,6 +63,8 @@ public:
 
   void loadDefaultKernels(bool deltaKernels);
 
+  void show();
+
 private:
 
   void assembleERG(set<Node *> principalNodes);
