@@ -55,10 +55,10 @@ PyTrace::PyTrace():
 
 void PyTrace::bindPySP(std::string module_str, std::string pysp_name)
 {
-	  std::cout << "trying to import " << pysp_name << std::endl;
+	  // std::cout << "trying to import " << pysp_name << std::endl;
 	  std::string pysp_import_str = module_str + "." + pysp_name;
 	  boost::python::object pysp_namespace = boost::python::import(boost::python::str(pysp_import_str));
-	  std::cout << "boost::python::import'ed " << pysp_name << std::endl;
+	  // std::cout << "boost::python::import'ed " << pysp_name << std::endl;
 
 	  // get the function called "makeSP", and the funcion called "getSymbol" in the model
 	  boost::python::object pysp = boost::python::getattr(pysp_namespace, "makeSP");
