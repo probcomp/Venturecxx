@@ -73,6 +73,7 @@ map<string,SP *> initBuiltInSPs()
     {"gamma", new GammaSP},
     {"uniform_continuous", new UniformContinuousSP},
     {"beta", new BetaSP},
+    {"student_t", new StudentTSP},
 
     {"make_crp", new MakePitmanYorCRPSP},
 

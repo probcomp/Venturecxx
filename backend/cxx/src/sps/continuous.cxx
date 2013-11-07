@@ -40,7 +40,7 @@ double NormalSP::logDensityOutput(VentureValue * value, Node * node)  const
   double mu;
   VentureNumber * vmu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
   if (vmu) { mu = vmu->x; }
-  else 
+  else
   {
     VentureAtom * vcmu = dynamic_cast<VentureAtom*>(operands[0]->getValue());
     assert(vcmu);
@@ -73,7 +73,7 @@ vector<ParameterScope> NormalSP::getParameterScopes() const
 {
   return {ParameterScope::REAL, ParameterScope::POSITIVE_REAL};
 }
- 
+
 vector<double> NormalSP::gradientOfLogDensity(double output,
 					      const vector<double> & arguments) const
 {
@@ -171,7 +171,6 @@ double BetaSP::logDensityOutput(VentureValue * value, Node * node)  const
   return log(gsl_ran_beta_pdf(x->x,a->x,b->x));
 }
 
-
 double BetaSP::logDensityOutputNumeric(double output, const vector<double> & args) const
 {
   assert(args[0] > 0);
@@ -193,7 +192,7 @@ vector<ParameterScope> BetaSP::getParameterScopes() const
 {
   return {ParameterScope::POSITIVE_REAL, ParameterScope::POSITIVE_REAL};
 }
- 
+
 vector<double> BetaSP::gradientOfLogDensity(double output,
 					      const vector<double> & arguments) const
 {
@@ -206,4 +205,24 @@ vector<double> BetaSP::gradientOfLogDensity(double output,
   double gradB = log(output) + gsl_sf_psi(alpha0) - gsl_sf_psi(b);
 
   return { gradA, gradB };
+}
+
+/* Student-t */
+VentureValue * StudentTSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  assert(nu);
+  double x = gsl_ran_tdist(rng,nu->x);
+  return new VentureNumber(x);
+}
+
+double StudentTSP::logDensityOutput(VentureValue * value, Node * node)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * x = dynamic_cast<VentureNumber *>(value);
+  assert(nu);
+  assert(x);
+  return log(gsl_ran_tdist_pdf(x->x,nu->x));
 }

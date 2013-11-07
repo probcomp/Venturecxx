@@ -34,6 +34,7 @@ def runTests(N):
   #testCategorical1(N)
   testMHNormal0(N)
   testMHNormal1(N)
+  testStudentT0(N)
   testMem0(N)
   #testMem1(N)
   #testMem2(N)
@@ -124,6 +125,18 @@ def testMHNormal1(N):
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestMHNormal1---"
   print "(23.9," + str(mean) + ")"
+
+def testStudentT0(N):
+  # Modeled on testMHNormal0, but I do not know what the answer is
+  # supposed to be.  However, the run not crashing says something.
+  sivm = SIVM()
+  sivm.assume("a", "(student_t 1.0)")
+  sivm.observe("(normal a 1.0)", 3.0)
+  sivm.predict("(normal a 1.0)")
+  predictions = loggingInfer(sivm,3,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestStudentT0---"
+  print "(???," + str(mean) + ")"
 
 def testMem0(N):
   sivm = SIVM()
