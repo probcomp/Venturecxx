@@ -8,8 +8,8 @@
 #include <boost/python/list.hpp>
 #include <boost/python/dict.hpp>
 
-struct GKernel;
 struct VentureValue;
+struct GKernel;
 
 /* Is a friend of Trace. Probably better to extend trace instead. */
 struct PyTrace : Trace
@@ -25,12 +25,13 @@ struct PyTrace : Trace
   boost::python::object extractPythonValue(size_t did);
   void observe(size_t did,boost::python::object valueExp);
 //  void unobserve(size_t did);
-  void infer(size_t n);
 
   void set_seed(size_t seed);
   size_t get_seed();
-  
-  GKernel * mcmc{nullptr};
+
+  void infer(boost::python::dict options);
+
+  map<string,GKernel *> gkernels;
 };
 
 
