@@ -18,7 +18,6 @@ Scaffold::Scaffold(set<Node *> principalNodes)
   assembleERG(principalNodes);
   disableBrush();
   setRegenCounts();
-  show();
 }
 
 void Scaffold::assembleERG(set<Node *> principalNodes)
