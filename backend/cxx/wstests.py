@@ -731,29 +731,3 @@ def testGeometric1(N):
   printTest("TestGeometric1",ps,eps)
 
 
-def testLovell0(N):
-  sivm = SIVM()
-  parameters = {'n_die': 5, 'n_sides': 10, 'n_rolls': 10}
-  sivm.assume("get_die", "(lambda (die_id) (make_sym_dir_mult 1.0 %d))" % parameters["n_sides"])
-  sivm.assume("get_die_roll", "(lambda (die_id roll_id) ((get_die die_id)))")
-
-  for die_id in range(parameters['n_die']):
-    for roll_id in range(parameters['n_rolls']):
-      sivm.observe("(get_die_roll %d %d)" % (die_id, roll_id), "atom<%d>" % 0)
-
-  sivm.infer({"kernel":"mh","transitions":1,"use_global_scaffold":False})
-
-
-def testLovell1(N):
-  sivm = SIVM()
-  parameters = {'n_die': 2, 'n_sides': 2, 'n_rolls': 2}
-  sivm.assume("get_die", "(mem (lambda (die_id) (make_sym_dir_mult 1.0 %d)))" % parameters["n_sides"])
-  sivm.assume("get_die_roll", "(mem (lambda (die_id roll_id) ((get_die die_id))))")
-
-  for die_id in range(parameters['n_die']):
-    for roll_id in range(parameters['n_rolls']):
-      sivm.observe("(get_die_roll %d %d)" % (die_id, roll_id), "atom<%d>" % 0)
-
-  sivm.infer({"kernel":"mh","transitions":1,"use_global_scaffold":False})
-
-
