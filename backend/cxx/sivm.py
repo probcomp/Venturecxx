@@ -84,9 +84,11 @@ class SIVM:
         return { 'unconstrained_random_choices' : self.trace.numRandomChoices }
 
     def get_seed(self):
+	#print "getting seed"
         return self.trace.get_seed()
 
     def set_seed(self, seed):
+	#print "setting seed to seed in python: " + str(seed)
         self.trace.set_seed(seed)
 
 

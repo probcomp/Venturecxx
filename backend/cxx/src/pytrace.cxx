@@ -102,7 +102,7 @@ void PyTrace::set_seed(size_t n) {
 }
 
 size_t PyTrace::get_seed() {
-  cout << "WARNING: returning default random seed of 0, regardless of PRNG state, due to use of MT";
+  // TODO FIXME warn users that seeds of 0 are returned incorrectly by the engine
   return 0;
 }
 
