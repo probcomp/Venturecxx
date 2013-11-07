@@ -45,6 +45,8 @@ class SIVM:
         return self.directiveCounter
 
     def forget(self,directiveId):
+        raise VentureException("not_implemented", "forget is not implemented")
+    
         if directiveId not in self.directives:
             raise VentureException("invalid_argument", "Cannot forget a non-existent directive id", argument=directiveId)
         directive = self.directives[directiveId]
@@ -75,7 +77,6 @@ class SIVM:
     def set_seed(self, seed):
         self.trace.set_seed(seed)
     
-    # FIXME: These are not properly implemented
     # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
     
     def logscore(self):
