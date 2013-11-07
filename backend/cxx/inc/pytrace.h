@@ -27,7 +27,7 @@ struct PyTrace : Trace
 //  void unobserve(size_t did);
   void infer(size_t n);
 
-  bool pgibbsWithGlobalScaffold = true;
+  bool pgibbsWithGlobalScaffold = false;
   
   GKernel * mcmc{nullptr};
 };
