@@ -24,23 +24,20 @@ class CoreSivmCxx(object):
         
         self.continuous_inference_running = False
         self.continuous_inference_thread = None
-
+    
+    def __del__(self):
+        self._do_stop_continuous_inference(None)
+    
     _implemented_instructions = {"assume","observe","predict",
             "configure","forget","report","infer",
             "clear","rollback","get_logscore","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
             "continuous_inference_status", "profiler_configure"}
     
-    _dont_pause_continuous_inference = {"start_continuous_inference",
-            "stop_continuous_inference", "continuous_inference_status"}
-    
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._implemented_instructions)
         f = getattr(self,'_do_'+instruction['instruction'])
-        if instruction['instruction'] in self._dont_pause_continuous_inference:
-            return f(instruction)
-        with self._pause_continuous_inference():
-            return f(instruction)
+        return f(instruction)
 
     ###############################
     # Instruction implementations
@@ -126,6 +123,8 @@ class CoreSivmCxx(object):
         utils.require_state(self.state,'default')
         self.engine.clear()
         self.observe_dict = {}
+        self.continuous_inference_running = False
+        self.continuous_inference_thread = None
         return {}
 
     def _do_rollback(self,instruction):
@@ -160,6 +159,7 @@ class CoreSivmCxx(object):
     # Continuous Inference
     ###########################
     
+    # no longer used; implemented in venture_sivm
     def _pause_continuous_inference(sivm):
         class tmp(object):
             def __enter__(temp):
