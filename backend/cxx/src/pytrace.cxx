@@ -36,7 +36,6 @@ PyTrace::PyTrace():
     std::cout << "No python sps to load" << std::endl;
   }
 
-  map<std::string, boost::python::object> string_to_pysp_namespace;
   for(std::vector<std::string>::const_iterator it=pysp_files.begin();
 		  it!=pysp_files.end();
 		  it++) {
@@ -45,7 +44,8 @@ PyTrace::PyTrace():
 	  if(pysp_file == "__init__") continue;
 
 	  std::cout << "trying to import " << pysp_file << std::endl;
-	  boost::python::object pysp_namespace = boost::python::import(boost::python::str("pysps." + pysp_file));
+	  std::string pysp_import_str = "venture.pysps." + pysp_file;
+	  boost::python::object pysp_namespace = boost::python::import(boost::python::str(pysp_import_str));
 	  std::cout << "boost::python::import'ed " << pysp_file << std::endl;
 
 	  // get the function called "makeSP", and the funcion called "getSymbol" in the model
