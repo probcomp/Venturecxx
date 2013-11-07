@@ -154,7 +154,7 @@ void PyTrace::set_seed(size_t n) {
 }
 
 size_t PyTrace::get_seed() {
-  // TODO FIXME warn users that seeds of 0 are returned incorrectly by the engine
+  // TODO FIXME get_seed can't be implemented as spec'd (need a generic RNG state); current impl always returns 0, which may not interact well with VentureUnit
   return 0;
 }
 

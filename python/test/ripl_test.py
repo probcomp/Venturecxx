@@ -173,9 +173,11 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output,1)
 
     def test_infer(self):
+        #print "***test_infer"
+        # FIXME: Should test multiple kernels and other infer parameters here
         ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
-        self.ripl.infer(1)
-        self.ripl.infer(1,True)
+        self.ripl.infer({'transitions':1})
+        
 
     def test_clear(self):
         ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
