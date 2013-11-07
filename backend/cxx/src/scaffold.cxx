@@ -18,7 +18,7 @@ Scaffold::Scaffold(set<Node *> principalNodes)
   assembleERG(principalNodes);
   disableBrush();
   setRegenCounts();
-  show();
+
 }
 
 void Scaffold::assembleERG(set<Node *> principalNodes)
@@ -104,8 +104,16 @@ void Scaffold::disableEval(Node * node,
 
 void Scaffold::processParentAAA(Node * parent)
 {
-  if (!isResampling(parent) && isAAA(parent->sourceNode))
-  { drg[parent->sourceNode].regenCount++; }
+  if (parent->isReference())
+  {
+    if (!isResampling(parent) && isAAA(parent->sourceNode))
+    { drg[parent->sourceNode].regenCount++; }
+  }
+  else
+  {
+    if (isAAA(parent))
+    { drg[parent].regenCount++; }
+  }
 }
 
 void Scaffold::processParentsAAA(Node * node)
@@ -124,7 +132,6 @@ void Scaffold::processParentsAAA(Node * node)
   }
 }
 
-/* Note new feature: we only count a (->Request, ->Output) pair as one. */
 void Scaffold::setRegenCounts()
 {
   for (pair<Node *,DRGNode> p : drg)
@@ -165,11 +172,8 @@ void Scaffold::setRegenCounts()
     {
       for (Node * esrParent : node->esrParents)
       { processParentAAA(esrParent); }
-      if (node->isReference())
-      { processParentAAA(node->sourceNode); }
-
-      // if (node->nodeType == NodeType::LOOKUP)
-      // { processParentAAA(node->lookedUpNode); }
+      if (node->nodeType == NodeType::LOOKUP)
+      { processParentAAA(node->lookedUpNode); }
     }
   }
 }

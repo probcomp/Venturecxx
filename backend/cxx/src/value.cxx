@@ -1,8 +1,11 @@
 #include "value.h"
 #include "sp.h"
 
+#include <iostream>
+
 VentureSP::~VentureSP() 
 { 
+  cout << "Deleting SP(" << sp << ")" << endl;
   delete sp; 
 }
 

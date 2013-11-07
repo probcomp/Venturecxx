@@ -19,15 +19,15 @@ PyTrace::PyTrace():
   Trace(),
 //  mcmc(new OutermostMixMH(this, new ScaffoldMHGKernel(this))) {}
 //  mcmc(new OutermostMixMH(this,new GibbsGKernel(this))) {}
-//  mcmc(new OutermostMixMH(this,new PGibbsGKernel(this))) {}
-  mcmc(new OutermostMixMH(this,new MeanFieldGKernel(this))) {}
+  mcmc(new OutermostMixMH(this,new PGibbsGKernel(this))) {}
+//  mcmc(new OutermostMixMH(this,new MeanFieldGKernel(this))) {}
 
 
 PyTrace::~PyTrace()
 {
-//  OutermostMixMH * mKernel = dynamic_cast<OutermostMixMH*>(mcmc);
-//  delete mKernel->gKernel;
-  delete mcmc;
+  OutermostMixMH * mKernel = dynamic_cast<OutermostMixMH*>(mcmc);
+  delete mKernel->gKernel;
+  delete mKernel;
 }
 
 VentureValue * PyTrace::parseValue(boost::python::dict d)
@@ -102,9 +102,10 @@ void PyTrace::infer(size_t n)
     for (size_t i = 0; i < n; i++)
     {
       set<Node *> allNodes(randomChoices.begin(),randomChoices.end());
-      ScaffoldMHGKernel * p = new ScaffoldMHGKernel(this);
+      PGibbsGKernel * p = new PGibbsGKernel(this);
       p->loadParameters(new ScaffoldMHParam(new Scaffold(allNodes),nullptr));
       p->infer(1); 
+      p->destroyParameters();
       delete p;
     }
   }

@@ -15,6 +15,7 @@
 #include <gsl/gsl_randist.h>
 
 #include <vector>
+#include <iostream>
 
 #include <cmath>
 
