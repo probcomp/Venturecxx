@@ -13,14 +13,15 @@ class VentureSivm(object):
     def __init__(self, core_sivm):
         self.core_sivm = core_sivm
         self._clear()
+        self._init_continuous_inference()
 
     # list of all instructions supported by venture sivm
-    _extra_instructions = ['labeled_assume','labeled_observe',
+    _extra_instructions = {'labeled_assume','labeled_observe',
             'labeled_predict','labeled_forget','labeled_report', 'labeled_get_logscore',
             'list_directives','get_directive','labeled_get_directive',
             'force','sample','get_current_exception',
-            'get_state', 'reset', 'debugger_list_breakpoints','debugger_get_breakpoint']
-    _core_instructions = ["assume","observe","predict",
+            'get_state', 'reset', 'debugger_list_breakpoints','debugger_get_breakpoint'}
+    _core_instructions = {"assume","observe","predict",
             "configure","forget","report","infer","start_continuous_inference",
             "stop_continuous_inference","continuous_inference_status",
             "clear","rollback","get_directive_logscore","get_global_logscore",
@@ -32,14 +33,21 @@ class VentureSivm(object):
             "profiler_clear","profiler_list_random_choices",
             "profiler_address_to_source_code_location","profiler_get_random_choice_acceptance_rate",
             "profiler_get_global_acceptance_rate","profiler_get_random_choice_proposal_time",
-            "profiler_get_global_proposal_time"]
+            "profiler_get_global_proposal_time"}
+    
+    _dont_pause_continuous_inference = {"start_continuous_inference",
+            "stop_continuous_inference", "continuous_inference_status"}
+    
     def execute_instruction(self, instruction):
-        utils.validate_instruction(instruction,self._core_instructions + self._extra_instructions)
+        utils.validate_instruction(instruction,self._core_instructions | self._extra_instructions)
         instruction_type = instruction['instruction']
-        if instruction_type in self._extra_instructions:
-            f = getattr(self,'_do_'+instruction_type)
-            return f(instruction)
-        return self._call_core_sivm_instruction(instruction)
+        
+        pause = instruction_type not in self._dont_pause_continuous_inference
+        with self._pause_continuous_inference(pause=pause):
+            if instruction_type in self._extra_instructions:
+                f = getattr(self,'_do_'+instruction_type)
+                return f(instruction)
+            return self._call_core_sivm_instruction(instruction)
 
     ###############################
     # Reset stuffs
@@ -121,6 +129,39 @@ class VentureSivm(object):
             del tmp_instruction['instruction']
             self.breakpoint_dict[bid] = tmp_instruction
         return response
+
+
+    ###############################
+    # Continuous Inference Pauser
+    ###############################
+
+    def _pause_continuous_inference(sivm, pause=True):
+        class tmp(object):
+            def __enter__(self):
+                self.was_continuous_inference_running = pause and sivm._continuous_inference_status()
+                if self.was_continuous_inference_running:
+                    sivm._stop_continuous_inference()
+            def __exit__(self, type, value, traceback):
+                if self.was_continuous_inference_running:
+                    sivm._start_continuous_inference()
+        return tmp()
+
+
+    ###############################
+    # Continuous Inference on/off
+    ###############################
+    
+    def _init_continuous_inference(self):
+        pass
+    
+    def _continuous_inference_status(self):
+        return self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})['running']
+
+    def _start_continuous_inference(self):
+        self._call_core_sivm_instruction({"instruction" : "start_continuous_inference"})
+
+    def _stop_continuous_inference(self):
+        self._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
 
     ###############################
     # Shortcuts
