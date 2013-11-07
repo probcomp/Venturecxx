@@ -72,7 +72,7 @@ class CoreSivmCxx(object):
         d = utils.validate_arg(instruction,'options',
                 utils.validate_dict)
         s = utils.validate_arg(d,'seed',
-                utils.validate_positive_integer,required=False)
+                utils.validate_nonnegative_integer,required=False)
         t = utils.validate_arg(d,'inference_timeout',
                 utils.validate_positive_integer,required=False)
         if s != None:
@@ -85,7 +85,7 @@ class CoreSivmCxx(object):
     def _do_forget(self,instruction):
         utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
-                utils.validate_positive_integer)
+                utils.validate_nonnegative_integer)
         try:
             self.engine.forget(did)
             if did in self.observe_dict:
@@ -99,7 +99,7 @@ class CoreSivmCxx(object):
     def _do_report(self,instruction):
         utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
-                utils.validate_positive_integer)
+                utils.validate_nonnegative_integer)
         if did in self.observe_dict:
             return {"value":copy.deepcopy(self.observe_dict[did]['value'])}
         else:
@@ -109,7 +109,7 @@ class CoreSivmCxx(object):
     def _do_infer(self,instruction):
         utils.require_state(self.state,'default')
         iterations = utils.validate_arg(instruction,'iterations',
-                utils.validate_positive_integer)
+                utils.validate_nonnegative_integer)
         resample = utils.validate_arg(instruction,'resample',
                 utils.validate_boolean)
         #NOTE: model resampling is not implemented in C++
@@ -135,7 +135,7 @@ class CoreSivmCxx(object):
         # that the directive exists for testing purposes
         utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
-                utils.validate_positive_integer)
+                utils.validate_nonnegative_integer)
         if did not in self.observe_dict:
             try:
                 val = self.engine.report_value(did)
@@ -189,35 +189,19 @@ class CoreSivmCxx(object):
 ###############################
 # Input modification functions
 # ----------------------------
-# for translating the sanitized
-# instructions to and from the
-# old C++ instruction format
+# These exist to bridge the gap
+# between the cxx and the stack
 ###############################
 
 def _modify_expression(expression):
     if isinstance(expression, basestring):
         return _modify_symbol(expression)
     if isinstance(expression, (list,tuple)):
-        temp = []
-        for i in range(len(expression)):
-            temp.append(_modify_expression(expression[i]))
-        return temp
+        return map(_modify_expression, expression)
     if isinstance(expression, dict):
-            return _modify_value(expression)
+        return _modify_value(expression)
 
-_literal_type_map = {
-        "real" : "r",
-        "count" : "c",
-        "number" : "r",
-        "boolean" : "b",
-        "atom" : "a",
-        "symbol" : "s",
-        # simplex point not implemented
-        }
 def _modify_value(ob):
-    if ob['type'] not in _literal_type_map:
-        raise VentureException("fatal",
-                "Invalid literal type: " + ob["type"])
     if ob['type'] in {'count', 'real'}:
         ob['type'] = 'number'
     elif ob['type'] == 'atom':
@@ -232,15 +216,13 @@ def _modify_symbol(s):
     if s in _symbol_map:
         s = _symbol_map[s]
     return {"type": "symbol", "value": s}
-    
-_reverse_literal_type_map = dict((y,x) for x,y in _literal_type_map.items())
 
 _python_to_venture_type_map = {
     bool: "boolean",
     int: "count",
     float: "number",
     list: "list",
-    str: "string",
+    str: "symbol",
 }
 
 def _parse_value(val):
