@@ -44,7 +44,7 @@ void Node::addRequestEdge(Node * requestNode, Node * outputNode)
 
 void Node::addESREdge(Node * esrNode, Node * outputNode)
 {  
-  cout << "ADD " << esrNode << outputNode << endl;
+//  cout << "ADD " << esrNode << outputNode << endl;
   esrNode->children.insert(outputNode);
 
   outputNode->esrParents.push_back(esrNode);
@@ -53,7 +53,7 @@ void Node::addESREdge(Node * esrNode, Node * outputNode)
 
 Node * Node::removeLastESREdge()
 {
-  cout << "REMOVE " << this << endl;
+//  cout << "REMOVE " << this << endl;
   assert(!esrParents.empty());
   Node * esrParent = esrParents.back();
   assert(esrParent);
