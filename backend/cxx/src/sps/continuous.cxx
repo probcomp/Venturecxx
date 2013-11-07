@@ -28,7 +28,6 @@ VentureValue * NormalSP::simulateOutput(Node * node, gsl_rng * rng)  const
     mu = vcmu->n;
   }
 
-  VentureNumber * vmu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
   VentureNumber * vsigma = dynamic_cast<VentureNumber *>(operands[1]->getValue());
   assert(vmu);
   assert(vsigma);
