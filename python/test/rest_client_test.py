@@ -56,7 +56,7 @@ class TestRiplRestClient(ClientTestCase):
         self.ripl.assume('b',' 3 + 4')
         self.ripl.set_mode('church_prime')
         self.ripl.execute_instruction('[ assume c (+ a b) ]')
-        output = self.ripl.sample('c')
+        output = self.ripl.predict('c')
         self.assertEqual(output,10)
 
 

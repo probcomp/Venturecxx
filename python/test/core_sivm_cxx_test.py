@@ -10,7 +10,7 @@ class TestCoreSivmCxx(unittest.TestCase):
     def setUp(self):
         self.sivm = CoreSivmCxx()
         self.sivm.execute_instruction({"instruction":"clear"})
-        print "\nIn method", self._testMethodName
+        print "\nIn method " + self._testMethodName
 
     def tearDown(self):
         pass
