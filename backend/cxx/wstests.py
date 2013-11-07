@@ -1,7 +1,6 @@
 from venture.shortcuts import *
 import math
 import pdb
-#from nssivm import SIVM
 
 def SIVM():
     return make_church_prime_ripl()
