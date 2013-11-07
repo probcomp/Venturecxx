@@ -54,5 +54,9 @@ struct RealSP : SP
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
 };
 
+struct AtomEqualSP : SP
+{ 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+};
 
 #endif
