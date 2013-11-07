@@ -27,7 +27,8 @@ struct PyTrace : Trace
 //  void unobserve(size_t did);
   void infer(size_t n);
 
-
+  void set_seed(size_t seed);
+  size_t get_seed();
   
   GKernel * mcmc{nullptr};
 };
