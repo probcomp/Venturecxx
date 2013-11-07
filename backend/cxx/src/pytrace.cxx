@@ -28,7 +28,12 @@ PyTrace::PyTrace():
     {"meanfield",new MeanFieldGKernel(this)}}
 {
 
-  std::vector<std::string> dir_contents = lsdir("./pysps/");
+  std::string module_str = "venture.pysps";
+  boost::python::object module_namespace = boost::python::import(boost::python::str(module_str));
+  boost::python::object module_path = module_namespace.attr("__path__")[0];
+  std::string module_path_str = boost::python::extract<std::string>(module_path);
+  // std::vector<std::string> dir_contents = lsdir("./pysps/");
+  std::vector<std::string> dir_contents = lsdir(module_path_str);
   std::vector<std::string> pysp_files = filter_for_suffix(dir_contents, ".py");
   // print_string_v(pysp_files);
 
@@ -44,7 +49,7 @@ PyTrace::PyTrace():
 	  if(pysp_file == "__init__") continue;
 
 	  std::cout << "trying to import " << pysp_file << std::endl;
-	  std::string pysp_import_str = "venture.pysps." + pysp_file;
+	  std::string pysp_import_str = module_str + "." + pysp_file;
 	  boost::python::object pysp_namespace = boost::python::import(boost::python::str(pysp_import_str));
 	  std::cout << "boost::python::import'ed " << pysp_file << std::endl;
 
