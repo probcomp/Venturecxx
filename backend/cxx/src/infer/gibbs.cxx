@@ -59,7 +59,7 @@ double GibbsSelectGKernel::propose()
   double weightMinusRho = log(totalXiExpWeight);
   double weightMinusXi = log(rhoExpWeight + totalXiExpWeight - exp(targets[chosenIndex].first));
   assertTorus(trace,scaffold);
-  trace->regen(scaffold->border,scaffold,true,targets[chosenIndex].second);
+  trace->regen(scaffold->border,scaffold,true,targets[chosenIndex].second,nullptr);
   return weightMinusRho - weightMinusXi;
 }
 
@@ -80,7 +80,7 @@ void GibbsSelectGKernel::reject()
   assert(chosenIndex != UINT32_MAX);
   pair<double,OmegaDB *> xiInfo = trace->detach(scaffold->border,scaffold);
   assertTorus(trace,scaffold);
-  trace->regen(scaffold->border,scaffold,true,source.second);
+  trace->regen(scaffold->border,scaffold,true,source.second,nullptr);
   flushDB(source.second,true);
   flushDB(xiInfo.second,true); // subtle! only flush the latents twice (TODO discuss)
   for (size_t i = 0; i < targets.size(); ++i)
@@ -129,7 +129,7 @@ MixMHIndex * GibbsGKernel::sampleIndex()
     {
       LKernel * lk = new DeterministicLKernel(values[i],pNode->sp());
       scaffold->lkernels[pNode] = lk;
-      trace->regen(scaffold->border,scaffold,false,nullptr);
+      trace->regen(scaffold->border,scaffold,false,nullptr,nullptr);
       pindex->targets.push_back(trace->detach(scaffold->border,scaffold));
       assertTorus(trace,scaffold);
       scaffold->lkernels.erase(pNode);
@@ -144,7 +144,7 @@ MixMHIndex * GibbsGKernel::sampleIndex()
 
     for (size_t p = 0; p < P; ++p)
     {
-      trace->regen(scaffold->border,scaffold,false,nullptr);
+      trace->regen(scaffold->border,scaffold,false,nullptr,nullptr);
       pindex->targets.push_back(trace->detach(scaffold->border,scaffold));
       assertTorus(trace,scaffold);
     }

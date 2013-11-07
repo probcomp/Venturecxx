@@ -82,3 +82,30 @@ VentureValue * GreaterThanSP::simulateOutput(Node * node, gsl_rng * rng)  const
   return new VentureBool(d1->x > d2->x);
 }
 
+VentureValue * LessThanOrEqualToSP::simulateOutput(Node * node, gsl_rng * rng) const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * d1 = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * d2 = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  assert(d1);
+  assert(d2);
+  return new VentureBool(d1->x <= d2->x);
+}
+
+VentureValue * GreaterThanOrEqualToSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * d1 = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * d2 = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  assert(d1);
+  assert(d2);
+  return new VentureBool(d1->x >= d2->x);
+}
+
+VentureValue * RealSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureAtom * a = dynamic_cast<VentureAtom *>(operands[0]->getValue());
+  assert(a);
+  return new VentureNumber(a->n);
+}

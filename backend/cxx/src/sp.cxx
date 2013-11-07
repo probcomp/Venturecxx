@@ -2,6 +2,7 @@
 #include "flush.h"
 #include "node.h"
 #include "lkernel.h"
+#include "infer/meanfield.h"
 #include "spaux.h"
 #include "value.h"
 #include "utils.h"
@@ -167,4 +168,9 @@ vector<VentureValue*> SP::enumerateOutput(Node * node) const
 {
   vector<VentureValue*> v;
   return v;
+}
+
+VariationalLKernel * SP::getVariationalLKernel(Node * node) const
+{
+  return new DefaultVariationalLKernel(this,node);
 }
