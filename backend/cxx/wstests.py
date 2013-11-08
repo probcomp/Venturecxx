@@ -462,6 +462,8 @@ def testLazyHMMSP1(N):
   sivm.observe("(f 4)","atom<0>")
   sivm.observe("(f 5)","atom<0>")
   sivm.predict("(f 6)")
+  sivm.predict("(f 7)")
+  sivm.predict("(f 8)")
 
   predictions = loggingInfer(sivm,7,N)
   ps = [0.6528, 0.3472]

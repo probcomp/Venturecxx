@@ -19,12 +19,9 @@ FlushType nodeTypeToFlushType(NodeType nodeType)
 
 void flushDB(OmegaDB * omegaDB, bool isActive)
 {
-  for (pair<Node *,LatentDB *> p : omegaDB->latentDBs)
+  for (pair<SP *,LatentDB *> p : omegaDB->latentDBs)
   { 
-    VentureSP * vsp = dynamic_cast<VentureSP *>(p.first->getValue());
-    assert(vsp);
-    assert(vsp->sp);
-    vsp->sp->destroyLatentDB(p.second);
+    p.first->destroyLatentDB(p.second);
   }
 
   if (!isActive)

@@ -191,8 +191,8 @@ double Trace::unapplyPSP(Node * node,
   { 
     pair<double, LatentDB *> p = node->sp()->detachAllLatents(node->spaux());
     weight += p.first;
-    assert(!omegaDB->latentDBs.count(node));
-    omegaDB->latentDBs.insert({node,p.second});
+    assert(!omegaDB->latentDBs.count(node->sp()));
+    omegaDB->latentDBs.insert({node->sp(),p.second});
   }
 
 
@@ -216,12 +216,12 @@ double Trace::unevalRequests(Node * node,
   double weight = 0;
   VentureRequest * requests = dynamic_cast<VentureRequest *>(node->getValue());
 
-  if (!requests->hsrs.empty() && !omegaDB->latentDBs.count(node->vsp()->makerNode))
-  { omegaDB->latentDBs[node->vsp()->makerNode] = node->sp()->constructLatentDB(); }
+  if (!requests->hsrs.empty() && !omegaDB->latentDBs.count(node->sp()))
+  { omegaDB->latentDBs[node->sp()] = node->sp()->constructLatentDB(); }
 
   for (HSR * hsr : reverse(requests->hsrs))
   {
-    LatentDB * latentDB = omegaDB->latentDBs[node->vsp()->makerNode];
+    LatentDB * latentDB = omegaDB->latentDBs[node->sp()];
     weight += node->sp()->detachLatents(node->spaux(),hsr,latentDB);
   }
 
