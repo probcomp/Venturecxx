@@ -186,7 +186,7 @@ class TestVentureSivm(unittest.TestCase):
                 'label' : 'moo',
                 }
         o2 = self.sivm.execute_instruction(inst2)
-        self.assertEquals(o2['logscore'],-0.6931471805599453)
+        self.assertEquals(o2['logscore'],0.0)
     def test_list_directives(self):
         inst1 = {
                 'instruction':'predict',
