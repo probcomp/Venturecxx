@@ -42,11 +42,16 @@ def runTests(N):
   #testMem3(N)
   testSprinkler1(N)
   testSprinkler2(N)
+  testGamma1(N)
+  testIf1(N)
+  testIf2(N)
+  testBLOGCSI(N)
   testMHHMM1(N)
   testOuterMix1(N)
   testMakeSymDirMult1(N)
   testMakeSymDirMult2(N)
   testMakeUCSymDirMult1(N)
+  testMap1(N)
   testLazyHMM1(N)
   testLazyHMMSP1(N)
   testStaleAAA1(N)
@@ -59,6 +64,7 @@ def runTests(N):
   testList1()
   testHPYMem1(N)
   testGeometric1(N)
+  testTrig1()
 
 def runTests2(N):
   testGeometric1(N)
@@ -250,12 +256,13 @@ def testGamma1(N):
   print "---TestMHGamma1---"
   print "(10000," + str(mean) + ")"
 
-def testIf1():
+def testIf1(N):
   sivm = SIVM()
   sivm.assume('IF', '(lambda () branch)')
-  sivm.assume('IF?', '(branch (bernoulli 0.5) IF IF)')
-  sivm.predict('(IF? (bernoulli 0.5) IF IF)')
+  sivm.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
+  sivm.predict('(IF2 (bernoulli 0.5) IF IF)')
   sivm.infer({"kernel":"mh","transitions":N/10,"use_global_scaffold":False})
+  print "Passed TestIf1()"
 
 def testIf2(N):
   sivm = SIVM()
@@ -264,7 +271,7 @@ def testIf2(N):
   sivm.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
   sivm.assume('if4', '(branch (bernoulli 0.5) (lambda () if3) (lambda () if3))')
   sivm.infer({"kernel":"mh","transitions":N/10,"use_global_scaffold":False})
-
+  print "Passed TestIf2()"
 
 def testBLOGCSI(N):
   sivm = SIVM()
@@ -730,3 +737,12 @@ def testGeometric1(N):
   printTest("TestGeometric1",ps,eps)
 
 
+def testTrig1(N):
+  sivm = SIVM()
+  sivm.assume("sq","(lambda (x) (* x x))")
+  sivm.assume("x","(normal 0.0 1.0)")
+  sivm.assume("a","(sq (sin x))")
+  sivm.assume("b","(sq (cos x))")
+  sivm.predict("(+ a b)")
+  assert abs(sivm.report(5) - 1) < .001
+  print "Passed TestTrig1()"

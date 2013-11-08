@@ -1,6 +1,7 @@
 #include "builtin.h"
 
 #include "sps/number.h"
+#include "sps/trig.h"
 #include "sps/bool.h"
 #include "sps/continuous.h"
 #include "sps/discrete.h"
@@ -45,6 +46,9 @@ map<string,SP *> initBuiltInSPs()
     {"lte", new LessThanOrEqualToSP},
     {"real", new RealSP},
     {"atom_eq", new AtomEqualSP},
+
+    {"sin", new SinSP},
+    {"cos", new CosSP},
 
     {"pair", new PairSP},
     {"first", new FirstSP},
