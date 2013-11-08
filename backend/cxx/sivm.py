@@ -87,6 +87,12 @@ class SIVM:
 
         self.trace.infer(params)
 
+#    def logscore(self): return self.trace.getGlobalLogScore()
+
+    def get_entropy_info(self):
+      return { 'unconstrained_random_choices' : self.trace.numRandomChoices() }
+
+
     def get_seed(self):
         return self.trace.get_seed()
 

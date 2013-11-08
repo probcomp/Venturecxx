@@ -747,7 +747,7 @@ def testTrig1(N):
   sivm.assume("b","(sq (cos x))")
   sivm.predict("(+ a b)")
   for i in range(N/10):
-    sivm.infer({"kernel":"mh","transitions":10,"use_global_scaffold":False})
+    sivm.infer(10,kernel="mh",use_global_scaffold=False)
     assert abs(sivm.report(5) - 1) < .001
   print "Passed TestTrig1()"
 
@@ -780,3 +780,6 @@ def testForget2():
   sivm.forget("id1")
   sivm.forget("id2")
   sivm.forget("id3")
+
+  real_sivm = sivm.sivm.core_sivm.engine
+  assert real_sivm.get_entropy_info()["unconstrained_random_choices"] == 1

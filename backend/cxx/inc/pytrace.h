@@ -32,6 +32,7 @@ struct PyTrace : Trace
   void unevalDirectiveID(size_t directiveID);
   void unobserve(size_t directiveID);
 
+//  double getGlobalLogScore();
 
 
   void infer(boost::python::dict options);

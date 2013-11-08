@@ -148,6 +148,7 @@ void PyTrace::infer(boost::python::dict options)
 }
 
 
+
 void PyTrace::set_seed(size_t n) {
   gsl_rng_set(rng, n);
 }
@@ -165,6 +166,7 @@ BOOST_PYTHON_MODULE(libtrace)
     .def("uneval", &PyTrace::unevalDirectiveID)
     .def("extractValue", &PyTrace::extractPythonValue)
     .def("bindInGlobalEnv", &PyTrace::bindInGlobalEnv)
+    .def("numRandomChoices", &PyTrace::numRandomChoices)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
     .def("infer", &PyTrace::infer)
