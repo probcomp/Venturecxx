@@ -146,7 +146,7 @@ protected:
 			Scaffold * scaffold,
 			OmegaDB * omegaDB);
 
-  void teardownMadeSP(Node * node);
+  void teardownMadeSP(Node * node,bool isAAA);
 
   double unapplyPSP(Node * node,
 		    Scaffold * scaffold,

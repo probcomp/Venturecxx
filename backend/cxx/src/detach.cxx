@@ -133,24 +133,26 @@ double Trace::detachInternal(Node * node,
   return weight;
 }
 
-void Trace::teardownMadeSP(Node * node)
+void Trace::teardownMadeSP(Node * node, bool isAAA)
 {
-
-
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
-  SP * madeSP = vsp->sp;
-  if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
 
-  /* Subtle. If it is not AAA, then we actually destroy the SPAux entirely, and it
-     will be reconstructed and re-filled during restore. Thus we don't need a
-     node->madeSPAux pointer to own it, because it will always and only be destroyed
-     in this section of code. */
-  if (madeSP->hasAux()) 
-  { 
-    madeSP->destroySPAux(node->madeSPAux);
-    node->madeSPAux = nullptr;
+  if (vsp->makerNode != node) { return; }
+  vsp->makerNode = nullptr;
+
+  SP * madeSP = vsp->sp;
+
+  if (!isAAA)
+  {
+    if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
+    if (madeSP->hasAux()) 
+    { 
+      madeSP->destroySPAux(node->madeSPAux);
+      node->madeSPAux = nullptr;
+    }
   }
 }
+
 
 double Trace::unapplyPSP(Node * node,
 			 Scaffold * scaffold,
@@ -165,8 +167,8 @@ double Trace::unapplyPSP(Node * node,
   if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,omegaDB); }
   if (node->sp()->isRandom(node->nodeType)) { unregisterRandomChoice(node); }
   
-  if (dynamic_cast<VentureSP*>(node->getValue()) && !node->isReference() && (!scaffold || !scaffold->isAAA(node))) 
-  { teardownMadeSP(node); }
+  if (dynamic_cast<VentureSP*>(node->getValue()))
+  { teardownMadeSP(node,scaffold && scaffold->isAAA(node)); }
 
   SP * sp = node->sp();
   double weight = 0;
@@ -279,10 +281,10 @@ double Trace::detachFamily(Node * node,
     if (dynamic_cast<VentureSP *>(node->getValue())) 
     { 
       VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
-      if (vsp->makerNode == node && dynamic_cast<CSP*>(vsp->sp))
+      if (vsp->makerNode == node)
       {
 	assert(dynamic_cast<CSP*>(vsp->sp));
-	teardownMadeSP(node);
+	teardownMadeSP(node,false);
 	omegaDB->flushQueue.emplace(nullptr,node->getValue(),FlushType::CONSTANT);
       }
     }
