@@ -9,7 +9,7 @@
 #include <boost/python/dict.hpp>
 
 struct VentureValue;
-struct GKernel;
+struct MixMHKernel;
 
 /* Is a friend of Trace. Probably better to extend trace instead. */
 struct PyTrace : Trace
@@ -37,8 +37,7 @@ struct PyTrace : Trace
 
   void infer(boost::python::dict options);
 
-  map<string,GKernel *> gkernels;
-
+  map<pair<string,bool> ,MixMHKernel *> gkernels;
   
 
 };

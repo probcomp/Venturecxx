@@ -53,6 +53,8 @@ void Trace::unregisterConstrainedChoice(Node * node)
   assert(ccToIndex.size() == constrainedChoices.size());
 }
 
+vector<Node *> Trace::getRandomChoices() { return randomChoices; }
+
 void Trace::registerAEKernel(VentureSP * vsp)
 {
   cout << "Warning -- Trace::registerAEKernel not yet implemented." << endl;

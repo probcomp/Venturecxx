@@ -49,5 +49,17 @@ struct OutermostMixMH : MixMHKernel
   MixMHParam * processIndex(MixMHIndex * index) override;
 };
 
+/* TODO FIXME this recomputes the global scaffold at every step.
+   To fix it, have the outer layers delete the parameters instead
+   of the inner layers, or use shared pointers. */
+struct GlobalScaffoldMixMH : MixMHKernel
+{
+  GlobalScaffoldMixMH(Trace * trace, GKernel * gKernel): MixMHKernel(trace,gKernel) {}
+  
+  MixMHIndex * sampleIndex() override;
+  double logDensityOfIndex(MixMHIndex * index) override;
+  MixMHParam * processIndex(MixMHIndex * index) override;
+};
+
 
 #endif
