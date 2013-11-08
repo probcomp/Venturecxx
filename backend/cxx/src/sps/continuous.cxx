@@ -20,7 +20,7 @@ double NormalDistributionLogLikelihood(double sampled_value, double average, dou
   loglikelihood -= log(sigma);
   loglikelihood -= 0.5 * log(2.0 * 3.14159265358979323846264338327950);
   double deviation = sampled_value - average;
-  loglikelihood -= deviation * deviation / (2.0 * sigma * sigma);
+  loglikelihood -= 0.5 * deviation * deviation / (sigma * sigma);
   return loglikelihood;
 }
 
@@ -109,7 +109,7 @@ double NormalSP::logDensityOutput(VentureValue * value, Node * node)  const
   VentureNumber * x = dynamic_cast<VentureNumber *>(value);
   assert(sigma);
   assert(x);
-  return NormalDistributionLogLikelihood(x->x, sigma->x, mu);
+  return NormalDistributionLogLikelihood(x->x, mu, sigma->x);
 }
 
 double NormalSP::logDensityOutputNumeric(double output, const vector<double> & args) const
