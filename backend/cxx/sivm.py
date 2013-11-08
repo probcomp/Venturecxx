@@ -87,7 +87,7 @@ class SIVM:
 
         self.trace.infer(params)
 
-#    def logscore(self): return self.trace.getGlobalLogScore()
+    def logscore(self): return self.trace.getGlobalLogScore()
 
     def get_entropy_info(self):
       return { 'unconstrained_random_choices' : self.trace.numRandomChoices() }
@@ -101,6 +101,3 @@ class SIVM:
     
     # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
     
-    def logscore(self):
-        raise VentureException("not_implemented", "FIXME logscore() is not implemented")
-

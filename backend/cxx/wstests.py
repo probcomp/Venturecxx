@@ -783,3 +783,4 @@ def testForget2():
 
   real_sivm = sivm.sivm.core_sivm.engine
   assert real_sivm.get_entropy_info()["unconstrained_random_choices"] == 1
+  assert real_sivm.logscore() < 0

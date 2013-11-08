@@ -1,5 +1,6 @@
 #include "value.h"
 #include "node.h"
+#include "sp.h"
 #include "scaffold.h"
 #include "flush.h"
 #include "env.h"
@@ -108,6 +109,16 @@ void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
   constrain(node,true);
 }
 
+double PyTrace::getGlobalLogScore()
+{
+  double ls = 0.0;
+  for (Node * node : randomChoices)
+  {
+    ls += node->sp()->logDensity(node->getValue(),node);
+  }
+  return ls;
+}
+
 void PyTrace::unobserve(size_t directiveID)
 {
   Node * root = ventureFamilies[directiveID].first;
@@ -167,6 +178,7 @@ BOOST_PYTHON_MODULE(libtrace)
     .def("extractValue", &PyTrace::extractPythonValue)
     .def("bindInGlobalEnv", &PyTrace::bindInGlobalEnv)
     .def("numRandomChoices", &PyTrace::numRandomChoices)
+    .def("getGlobalLogScore", &PyTrace::getGlobalLogScore)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
     .def("infer", &PyTrace::infer)

@@ -62,7 +62,7 @@ class Trace
 
 protected:
 
-  unordered_map<size_t,Node*> definiteFamilies;
+//  unordered_map<size_t,Node*> definiteFamilies;
 
   /* Regen helpers */
 
