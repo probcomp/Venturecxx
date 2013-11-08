@@ -87,6 +87,7 @@ map<string,SP *> initBuiltInSPs()
     // continuous distributions
     {"normal", new NormalSP},
     {"gamma", new GammaSP},
+    {"inv_gamma", new InvGammaSP},
     {"uniform_continuous", new UniformContinuousSP},
     {"beta", new BetaSP},
     {"student_t", new StudentTSP},

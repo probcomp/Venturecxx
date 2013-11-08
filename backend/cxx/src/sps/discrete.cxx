@@ -6,9 +6,20 @@
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <gsl/gsl_sf.h>
 
 #include <iostream>
 #include <vector>
+
+//LogLikelihoods, from Yura's Utilities.cpp
+double PoissonDistributionLogLikelihood(int sampled_value_count, double lambda) {
+  //l^k * e^{-l} / k!
+  double loglikelihood = sampled_value_count * log(lambda);
+  loglikelihood -= gsl_sf_lnfact(sampled_value_count);
+  loglikelihood -= lambda;
+  return loglikelihood;
+}
+
 
 /* Bernoulli */
 

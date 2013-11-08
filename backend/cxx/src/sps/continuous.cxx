@@ -14,6 +14,64 @@
 #include <cassert>
 #include <iostream>
 
+// LogLikelihoods, from Yura's Utilities.cpp
+double NormalDistributionLogLikelihood(double sampled_value, double average, double sigma) {
+  double loglikelihood = 0.0;
+  loglikelihood -= log(sigma);
+  loglikelihood -= 0.5 * log(2.0 * 3.14159265358979323846264338327950);
+  double deviation = sampled_value - average;
+  loglikelihood -= deviation * deviation / (2.0 * sigma * sigma);
+  return loglikelihood;
+}
+
+double GammaDistributionLogLikelihood(double sampled_value, double alpha, double beta) {
+  //b^a * x^{a-1} * e^{-b * x} / Gamma(a)
+  if (sampled_value <= 0.0) {
+    return log(0.0);
+  }
+  double loglikelihood = alpha * log(beta);
+  loglikelihood += (alpha - 1.0) * log(sampled_value);
+  loglikelihood -= beta * sampled_value;
+  loglikelihood -= gsl_sf_lngamma(alpha);
+  return loglikelihood;
+}
+
+double InverseGammaDistributionLogLikelihood(double sampled_value, double alpha, double beta) {
+  //b^a * x^{-a-1} * e^{-b / x} / Gamma(a)
+  double loglikelihood = alpha * log(beta);
+  loglikelihood -= (alpha + 1.0) * log(sampled_value);
+  loglikelihood -= beta / sampled_value;
+  loglikelihood -= gsl_sf_lngamma(alpha);
+  return loglikelihood;
+}
+
+double BetaDistributionLogLikelihood(double sampled_value, double alpha, double beta) {
+  //x^{a-1} * (1-x)^{b-1} / Beta(a, b)
+  double loglikelihood = 0.0;
+  loglikelihood += (alpha - 1.0) * log(sampled_value);
+  loglikelihood += (beta - 1.0) * log(1.0 - sampled_value);
+  loglikelihood -= gsl_sf_lnbeta(alpha, beta);
+  return loglikelihood;
+}
+
+double ChiSquaredDistributionLogLikelihood(double sampled_value, double nu) {
+  //(x / 2)^{nu/2 - 1} * e^{-x/2} / (2 * Gamma(nu / 2))
+  double loglikelihood = (0.5 * nu - 1.0) * log(0.5 * sampled_value);
+  loglikelihood -= 0.5 * sampled_value;
+  loglikelihood -= log(2.0);
+  loglikelihood -= gsl_sf_lngamma(0.5 * nu);
+  return loglikelihood;
+}
+
+double InverseChiSquaredDistributionLogLikelihood(double sampled_value, double nu) {
+  //(2x)^{-nu/2 - 1} * e^{-1/2x} / (2 * Gamma(nu / 2))
+  double loglikelihood = (-0.5 * nu  - 1.0) * log(2.0 * sampled_value);
+  loglikelihood -= 0.5 / sampled_value;
+  loglikelihood -= log(2.0);
+  loglikelihood -= gsl_sf_lngamma(0.5 * nu);
+  return loglikelihood;
+}
+
 /* Normal */
 VentureValue * NormalSP::simulateOutput(Node * node, gsl_rng * rng)  const
 {
@@ -51,7 +109,7 @@ double NormalSP::logDensityOutput(VentureValue * value, Node * node)  const
   VentureNumber * x = dynamic_cast<VentureNumber *>(value);
   assert(sigma);
   assert(x);
-  return log(gsl_ran_gaussian_pdf(x->x - mu, sigma->x));
+  return NormalDistributionLogLikelihood(x->x, sigma->x, mu);
 }
 
 double NormalSP::logDensityOutputNumeric(double output, const vector<double> & args) const
@@ -60,7 +118,7 @@ double NormalSP::logDensityOutputNumeric(double output, const vector<double> & a
   assert(isfinite(args[1]));
   assert(isfinite(output));
   assert(args[1] > 0);
-  double ld = log(gsl_ran_gaussian_pdf(output - args[0], args[1]));
+  double ld = NormalDistributionLogLikelihood(output, args[0], args[1]);
   if (!isfinite(ld))
   {
     cout << "Normal(" << args[0] << ", " << args[1] << ") = " << output << " <" << ld << ">" << endl;
@@ -94,7 +152,7 @@ VentureValue * GammaSP::simulateOutput(Node * node, gsl_rng * rng)  const
   VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
   assert(a);
   assert(b);
-  double x = gsl_ran_gamma(rng, a->x, b->x);
+  double x = gsl_ran_gamma(rng, a->x, 1.0 / b->x);
   return new VentureNumber(x);
 }
 
@@ -107,9 +165,32 @@ double GammaSP::logDensityOutput(VentureValue * value, Node * node)  const
   assert(a);
   assert(b);
   assert(x);
-  return log(gsl_ran_gamma_pdf(x->x, a->x, b->x));
+  return GammaDistributionLogLikelihood(x->x, a->x, b->x);
 }
 
+/* Inverse Gamma */
+VentureValue * InvGammaSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  assert(a);
+  assert(b);
+  double x = 1.0 / gsl_ran_gamma(rng, a->x, 1.0 / b->x);
+  return new VentureNumber(x);
+}
+
+double InvGammaSP::logDensityOutput(VentureValue * value, Node * node)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * x = dynamic_cast<VentureNumber *>(value);
+  assert(a);
+  assert(b);
+  assert(x);
+  return InverseGammaDistributionLogLikelihood(x->x, a->x, b->x);
+}
 
 /* UniformContinuous */
 VentureValue * UniformContinuousSP::simulateOutput(Node * node, gsl_rng * rng)  const
@@ -168,7 +249,7 @@ double BetaSP::logDensityOutput(VentureValue * value, Node * node)  const
   assert(a);
   assert(b);
   assert(x);
-  return log(gsl_ran_beta_pdf(x->x,a->x,b->x));
+  return BetaDistributionLogLikelihood(x->x, a->x, b->x);
 }
 
 double BetaSP::logDensityOutputNumeric(double output, const vector<double> & args) const
@@ -177,7 +258,7 @@ double BetaSP::logDensityOutputNumeric(double output, const vector<double> & arg
   assert(args[1] > 0);
   assert(0 <= output);
   assert(output <= 1);
-  double ld = log(gsl_ran_beta_pdf(output,args[0],args[1]));
+  double ld = BetaDistributionLogLikelihood(output, args[0], args[1]);
   if (!isfinite(ld))
   {
     cout << "Beta(" << args[0] << ", " << args[1] << ") = " << output << " <" << ld << ">" << endl;
