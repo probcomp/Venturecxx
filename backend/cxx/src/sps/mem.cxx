@@ -48,7 +48,7 @@ VentureValue * MSP::simulateRequest(Node * node, gsl_rng * rng) const
 
   VentureList * exp = new VentureNil;
 
-  /* TODO URGENT the creator is priviledged! Massive error. */
+  /* TODO the creator is priviledged! */
   for (Node * operand : reverse(operands))
   {
     VentureValue * val = operand->getValue()->clone();

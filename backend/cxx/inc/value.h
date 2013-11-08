@@ -63,14 +63,24 @@ struct VentureSymbol : VentureValue
 };
 
 struct VentureList : VentureValue 
-{ };
+{ 
 
-struct VentureNil : VentureList { };
+
+};
+
+struct VentureNil : VentureList 
+{ 
+  size_t toHash() const override;
+  VentureValue * clone() const override;
+
+};
 
 struct VenturePair : VentureList
 {
   VenturePair(VentureValue * first, VentureList * rest): 
     first(first), rest(rest) {}
+  size_t toHash() const override;
+  VentureValue * clone() const override;
   VentureValue * first;
   VentureList * rest;
 };

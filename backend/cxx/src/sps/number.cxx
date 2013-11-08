@@ -68,9 +68,15 @@ VentureValue * EqualSP::simulateOutput(Node * node, gsl_rng * rng)  const
   vector<Node *> & operands = node->operandNodes;
   VentureNumber * d1 = dynamic_cast<VentureNumber *>(operands[0]->getValue());
   VentureNumber * d2 = dynamic_cast<VentureNumber *>(operands[1]->getValue());
-  assert(d1);
-  assert(d2);
-  return new VentureBool(d1->x == d2->x);
+
+  if (d1 && d2) { return new VentureBool(d1->x == d2->x); }
+
+  VentureBool * b1 = dynamic_cast<VentureBool *>(operands[0]->getValue());
+  VentureBool * b2 = dynamic_cast<VentureBool *>(operands[1]->getValue());
+
+  if (b1 && b2) { return new VentureBool(b1->pred == b2->pred); }
+
+  return new VentureBool(false);
 }
 
 VentureValue * LessThanSP::simulateOutput(Node * node, gsl_rng * rng) const

@@ -66,3 +66,28 @@ boost::python::dict VentureBool::toPython() const
   value["value"] = boost::python::object(pred);
   return value;
 }
+
+size_t VentureNil::toHash() const
+{
+  size_t mediumPrime = 24593;
+  return mediumPrime;
+}
+
+/* TODO FIXME Alexey can you sanity check this? It is massively rushed. */
+size_t VenturePair::toHash() const
+{
+  size_t littlePrime = 37;
+  size_t bigPrime = 12582917;
+
+  return ((littlePrime * rest->toHash()) + first->toHash()) % bigPrime;
+
+}
+
+VentureValue * VentureNil::clone() const { return new VentureNil; }
+VentureValue * VenturePair::clone() const 
+{ 
+  VentureValue * f = first->clone();
+  VentureList * r = dynamic_cast<VentureList*>(rest->clone());
+  assert(r);
+  return new VenturePair(f,r);
+}
