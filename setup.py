@@ -51,6 +51,8 @@ src_files = [
     "src/sps/eval.cxx",
     "src/sps/pycrp.cxx",
     "src/sps/makesymdirmult.cxx",
+    "src/sps/makedirmult.cxx",
+    "src/sps/makebetabernoulli.cxx",
     "src/sps/makeucsymdirmult.cxx",
     "src/sps/makelazyhmm.cxx",
     "src/pytrace.cxx",

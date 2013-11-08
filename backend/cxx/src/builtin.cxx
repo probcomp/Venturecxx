@@ -14,6 +14,8 @@
 
 #include "sps/makesymdirmult.h"
 #include "sps/makeucsymdirmult.h"
+#include "sps/makedirmult.h"
+#include "sps/makebetabernoulli.h"
 #include "sps/makelazyhmm.h"
 
 #include "sps/vector.h"
@@ -105,6 +107,8 @@ map<string,SP *> initBuiltInSPs()
     // exchangeable random procedures
     {"make_sym_dir_mult", new MakeSymDirMultSP},
     {"make_uc_sym_dir_mult", new MakeUCSymDirMultSP},
+    {"make_dir_mult", new MakeDirMultSP},
+    {"make_beta_bernoulli", new MakeBetaBernoulliSP},
 
     {"make_crp", new MakePitmanYorCRPSP},
 

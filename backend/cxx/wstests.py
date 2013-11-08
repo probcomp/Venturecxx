@@ -349,6 +349,34 @@ def testMakeSymDirMult2(N):
   eps = normalizeList(countPredictions(predictions, [0,1,2,3]))
   printTest("TestMakeSymDirMult2",ps,eps)
 
+def testMakeDirMult1(N):
+  sivm = SIVM()
+  sivm.assume("a", "(normal 10.0 1.0)")
+  sivm.assume("f", "(make_dir_mult a a a a)")
+  sivm.predict("(f)")
+  
+  for i in range(1,4):
+    for j in range(20):
+      sivm.observe("(f)", "atom<%d>" % i)
+
+  predictions = loggingInfer(sivm,3,N)
+  ps = [.1,.3,.3,.3]
+  eps = normalizeList(countPredictions(predictions, [0,1,2,3]))
+  printTest("TestMakeDirMult2",ps,eps)
+
+def testMakeBetaBernoulli1(N):
+  sivm = SIVM()
+  sivm.assume("a", "(normal 10.0 1.0)")
+  sivm.assume("f", "(make_beta_bernoulli a a)")
+  sivm.predict("(f)")
+  
+  for j in range(20): sivm.observe("(f)", "true")
+
+  predictions = loggingInfer(sivm,3,N)
+  ps = [.25,.75]
+  eps = normalizeList(countPredictions(predictions, [False,True]));
+  printTest("TestMakeBetaBernoulli1",ps,eps)
+
 
 def testMakeUCSymDirMult1(N):
   sivm = SIVM()
