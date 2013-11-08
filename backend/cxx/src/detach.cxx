@@ -88,7 +88,10 @@ double Trace::unconstrain(Node * node)
   { return unconstrain(node->sourceNode); }
   else
   {
-    if (node->sp()->isRandomOutput) { registerRandomChoice(node); }
+    if (node->sp()->isRandomOutput) { 
+      unregisterConstrainedChoice(node);
+      registerRandomChoice(node);
+    }
     node->sp()->removeOutput(node->getValue(),node);
     double logDensity = node->sp()->logDensityOutput(node->getValue(),node);
     node->isConstrained = false;
@@ -165,7 +168,9 @@ double Trace::unapplyPSP(Node * node,
   if (node->nodeType == NodeType::REQUEST && node->sp()->isNullRequest()) { return 0; }
 
   if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,omegaDB); }
-  if (node->sp()->isRandom(node->nodeType)) { unregisterRandomChoice(node); }
+  if (node->sp()->isRandom(node->nodeType)) { 
+    unregisterRandomChoice(node); 
+  }
   
   if (dynamic_cast<VentureSP*>(node->getValue()))
   { teardownMadeSP(node,scaffold && scaffold->isAAA(node)); }

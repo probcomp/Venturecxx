@@ -176,6 +176,9 @@ protected:
   void registerRandomChoice(Node * node);
   void unregisterRandomChoice(Node * node);
 
+  void registerConstrainedChoice(Node *node);
+  void unregisterConstrainedChoice(Node *node);
+
   /* (Arbitrary ergodic, for latents)  */
   void registerAEKernel(VentureSP * vsp);
   void unregisterAEKernel(VentureSP * vsp);
@@ -194,6 +197,9 @@ protected:
   
   unordered_map<Node *, uint32_t> rcToIndex;
   vector<Node *> randomChoices;
+
+  unordered_map<Node *, uint32_t> ccToIndex;
+  vector<Node *> constrainedChoices;
 
   map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
 };
