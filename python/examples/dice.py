@@ -22,4 +22,4 @@ def main():
 
 
 if __name__ == '__main__':
-    return my_ripl, parameters
+    my_ripl, parameters = main()
