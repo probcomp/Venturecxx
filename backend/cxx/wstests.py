@@ -259,16 +259,10 @@ def testGamma1(N):
 def testIf1(N):
   sivm = SIVM()
   sivm.assume('IF', '(lambda () branch)')
-<<<<<<< HEAD
-  sivm.assume('IF?', '(branch (bernoulli 0.5) IF IF)')
-  sivm.predict('(IF? (bernoulli 0.5) IF IF)')
-  sivm.infer(N/10, kernel="mh", use_global_scaffold=False)
-=======
   sivm.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
   sivm.predict('(IF2 (bernoulli 0.5) IF IF)')
-  sivm.infer({"kernel":"mh","transitions":N/10,"use_global_scaffold":False})
+  sivm.infer(N/10, kernel="mh", use_global_scaffold=False)
   print "Passed TestIf1()"
->>>>>>> 9ff81715c7d0ef7030708f205eb15084a848b8a0
 
 def testIf2(N):
   sivm = SIVM()
@@ -276,13 +270,8 @@ def testIf2(N):
   sivm.assume('if2', '(branch (bernoulli 0.5) (lambda () if1) (lambda () if1))')
   sivm.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
   sivm.assume('if4', '(branch (bernoulli 0.5) (lambda () if3) (lambda () if3))')
-<<<<<<< HEAD
   sivm.infer(N/10, kernel="mh", use_global_scaffold=False)
-
-=======
-  sivm.infer({"kernel":"mh","transitions":N/10,"use_global_scaffold":False})
   print "Passed TestIf2()"
->>>>>>> 9ff81715c7d0ef7030708f205eb15084a848b8a0
 
 def testBLOGCSI(N):
   sivm = SIVM()
