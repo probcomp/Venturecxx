@@ -129,7 +129,7 @@ struct VentureSP : VentureValue
 {
   VentureSP(SP * sp): sp(sp) {}
   SP * sp;
-  Node * makerNode; // set in processMadeSP()
+  Node * makerNode{nullptr}; // set in processMadeSP()
   string toString() const override;
 
   // TODO return the toPython of the Aux
