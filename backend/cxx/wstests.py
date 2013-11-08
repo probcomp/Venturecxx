@@ -64,7 +64,7 @@ def runTests(N):
   testList1()
   testHPYMem1(N)
   testGeometric1(N)
-  testTrig1()
+  testTrig1(N)
 
 def runTests2(N):
   testGeometric1(N)
@@ -744,5 +744,8 @@ def testTrig1(N):
   sivm.assume("a","(sq (sin x))")
   sivm.assume("b","(sq (cos x))")
   sivm.predict("(+ a b)")
-  assert abs(sivm.report(5) - 1) < .001
+  for i in range(N/10):
+    sivm.infer({"kernel":"mh","transitions":10,"use_global_scaffold":False})
+    assert abs(sivm.report(5) - 1) < .001
+
   print "Passed TestTrig1()"
