@@ -260,37 +260,6 @@ class TestCoreSivmCxx(unittest.TestCase):
         o3 = self.sivm.execute_instruction(i3)
         e3 = {'options': {'profiler_enabled': False}}
         self.assertEquals(o3, e3)
-    
-    def test_parse_bool(self):
-        v = False
-        o = module._parse_value(v)
-        e = {"type":"boolean", "value":v}
-        self.assertEquals(o, e)
-
-    def test_parse_count(self):        
-        v = 0
-        o = module._parse_value(v)
-        e = {"type":"count", "value":v}
-        self.assertEquals(o, e)
-        
-    def test_parse_number(self):
-        v = 0.5
-        o = module._parse_value(v)
-        e = {"type":"number", "value":v}
-        self.assertEquals(o, e)
-        
-    def test_parse_list(self):
-        v = ['l', 'i', 's', 't']
-        o = module._parse_value(v)
-        e = {"type":"list", "value":v}
-        self.assertEquals(o, e)
-    
-    def test_parse_atom(self):
-        v = "a[1]"
-        o = module._parse_value(v)
-        e = {"type":"atom", "value":1}
-        # FIXME: no way parse atoms
-        #self.assertEqual(o, e)
 
 if __name__ == '__main__':
     unittest.main()
