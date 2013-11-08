@@ -4,6 +4,7 @@
 #include "value.h"
 #include <cassert>
 #include <vector>
+#include <math.h>
 
 VentureValue * PlusSP::simulateOutput(Node * node, gsl_rng * rng)  const
 {
@@ -50,6 +51,16 @@ VentureValue * DivideSP::simulateOutput(Node * node, gsl_rng * rng)  const
     assert(d1);
     assert(d2);
     return new VentureNumber(d1->x / d2->x);
+}
+
+VentureValue * PowerSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+    vector<Node *> & operands = node->operandNodes;
+    VentureNumber * d1 = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+    VentureNumber * d2 = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+    assert(d1);
+    assert(d2);
+    return new VentureNumber(pow(d1->x, d2->x));
 }
 
 VentureValue * EqualSP::simulateOutput(Node * node, gsl_rng * rng)  const

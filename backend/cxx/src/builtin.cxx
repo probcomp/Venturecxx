@@ -34,10 +34,12 @@ map<string,SP *> initBuiltInSPs()
 {
   return
   {
+    // numbers
     {"plus", new PlusSP},
     {"minus", new MinusSP},
     {"times", new TimesSP},
     {"div", new DivideSP},
+    {"power", new PowerSP},
     {"eq", new EqualSP},
     {"gt", new GreaterThanSP},
     {"lt", new LessThanSP},
@@ -46,6 +48,7 @@ map<string,SP *> initBuiltInSPs()
     {"real", new RealSP},
     {"atom_eq", new AtomEqualSP},
 
+    // lists
     {"pair", new PairSP},
     {"first", new FirstSP},
     {"rest", new RestSP},
@@ -54,44 +57,53 @@ map<string,SP *> initBuiltInSPs()
     {"list_ref", new ListRefSP},
     {"map_list", new MapListSP},
 
+    // vectors
     {"make_vector", new MakeVectorSP},
     {"vector_lookup", new VectorLookupSP},
 
+    // maps
     {"make_map", new MakeMapSP},
     {"map_lookup", new MapLookupSP},
     
+    // booleans
     {"and", new BoolAndSP},
     {"or", new BoolOrSP},
     {"not", new BoolNotSP},
     {"xor", new BoolXorSP},
 
+    // discrete distributions
     {"flip", new BernoulliSP},
     {"bernoulli", new BernoulliSP},
     {"categorical", new CategoricalSP},
     {"uniform_discrete", new UniformDiscreteSP},
 
+    // continuous distributions
     {"normal", new NormalSP},
     {"gamma", new GammaSP},
     {"uniform_continuous", new UniformContinuousSP},
     {"beta", new BetaSP},
     {"student_t", new StudentTSP},
 
-    {"make_crp", new MakePitmanYorCRPSP},
-
+    // control flow
     {"branch", new BranchSP},
     {"biplex", new BiplexSP},
 
-    {"mem", new MSPMakerSP},
-
+    // environments
     {"get_current_environment", new GetCurrentEnvSP},
     {"get_empty_environment", new GetEmptyEnvSP},
     {"extend_environment", new ExtendEnvSP},
     {"eval", new EvalSP},
 
+    // exchangeable random procedures
     {"make_sym_dir_mult", new MakeSymDirMultSP},
     {"make_uc_sym_dir_mult", new MakeUCSymDirMultSP},
 
+    {"make_crp", new MakePitmanYorCRPSP},
+
+    // miscellaneous?
     {"make_lazy_hmm", new MakeLazyHMMSP},
+
+    {"mem", new MSPMakerSP},
   };
 }
 

@@ -24,6 +24,11 @@ struct DivideSP : SP
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
 };
 
+struct PowerSP : SP
+{ 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+};
+
 struct EqualSP : SP
 { 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
