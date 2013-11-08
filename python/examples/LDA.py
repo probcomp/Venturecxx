@@ -25,6 +25,7 @@ def main():
     parameters = {'topics' : 4, 'vocab' : 10, 'documents' : 8, 'words_per_document': 8}
     makeAssumes(my_ripl, parameters)
     makeObserves(my_ripl, parameters)
+    my_ripl.infer({'transitions': 10})
     return my_ripl, parameters
 
 

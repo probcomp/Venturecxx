@@ -18,8 +18,9 @@ def main():
     parameters = {'n_die': 5, 'n_sides': 10, 'n_rolls': 10}
     makeAssumes(my_ripl, parameters)
     makeObserves(my_ripl, parameters)
+    my_ripl.infer({'transitions': 10})
     return my_ripl, parameters
 
 
 if __name__ == '__main__':
-    return my_ripl, parameters
+    my_ripl, parameters = main()
