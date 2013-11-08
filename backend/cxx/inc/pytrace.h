@@ -10,7 +10,7 @@
 #include <thread>
 
 struct VentureValue;
-struct GKernel;
+struct MixMHKernel;
 
 struct PyTrace : Trace
 {
@@ -40,7 +40,7 @@ struct PyTrace : Trace
   void stop_continuous_inference();
   void run_continuous_inference();
 
-  map<string,GKernel *> gkernels;
+  map<pair<string,bool> ,MixMHKernel *> gkernels;
   
   bool continuous_inference_running = false;
   boost::python::dict continuous_inference_params;

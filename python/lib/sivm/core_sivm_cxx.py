@@ -199,10 +199,17 @@ def _modify_value(ob):
         ob['value'] = int(ob['value'])
     return ob
 
-_symbol_map = { "add" : 'plus', "sub" : 'minus', "mul" : 'times',
-        "symmetric_dirichlet_multinomial_make" : "make_sym_dir_mult",
-        "condition_erp" : "biplex", "crp_make" : "make_crp",
-        }
+_symbol_map = { 
+    "add" : 'plus', 
+    "sub" : 'minus', 
+    "mul" : 'times',
+    "symmetric_dirichlet_multinomial_make" : "make_sym_dir_mult",
+    "condition_erp" : "biplex", 
+    "crp_make" : "make_crp",
+    "dirichlet_multinomial_make" : "make_dir_mult",
+    "beta_bernoulli_make" : "make_beta_bernoulli",
+}
+
 def _modify_symbol(s):
     if s in _symbol_map:
         s = _symbol_map[s]

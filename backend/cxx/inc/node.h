@@ -48,6 +48,7 @@ struct Node
   bool isObservation() const { return observedValue != nullptr; }
 
   void setValue(VentureValue *value);
+  void clearValue();
   VentureValue * getValue() const;
 
   bool isApplication() { return nodeType == NodeType::REQUEST || nodeType == NodeType::OUTPUT; }

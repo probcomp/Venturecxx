@@ -195,6 +195,8 @@ double Trace::applyPSP(Node * node,
     return 0;
   }
 
+  assert(!node->isReference());
+
   /* Otherwise we need to actually do things. */
 
   double weight = 0;
@@ -218,7 +220,7 @@ double Trace::applyPSP(Node * node,
        TODO this could be made clearer. */
     if (sp->makesHSRs && scaffold && scaffold->isAAA(node))
     {
-      sp->restoreAllLatents(node->spaux(),omegaDB->latentDBs[node]);
+      sp->restoreAllLatents(node->spaux(),omegaDB->latentDBs[node->sp()]);
     }
   }
   else if (scaffold && scaffold->hasKernelFor(node))
@@ -231,7 +233,7 @@ double Trace::applyPSP(Node * node,
        regular LKernels and HSRKernels. We pass a latentDB no matter what, nullptr
        for the former. */
     LatentDB * latentDB = nullptr;
-    if (omegaDB && omegaDB->latentDBs.count(node)) { latentDB = omegaDB->latentDBs[node]; }
+    if (omegaDB && omegaDB->latentDBs.count(node->sp())) { latentDB = omegaDB->latentDBs[node->sp()]; }
 
     newValue = k->simulate(oldValue,node,latentDB,rng);
     weight += k->weight(newValue,oldValue,node,latentDB);
@@ -300,8 +302,8 @@ double Trace::evalRequests(Node * node,
   for (HSR * hsr : requests->hsrs)
   {
     LatentDB * latentDB = nullptr;
-    if (omegaDB && omegaDB->latentDBs.count(node->vsp()->makerNode)) 
-    { latentDB = omegaDB->latentDBs[node->vsp()->makerNode]; }
+    if (omegaDB && omegaDB->latentDBs.count(node->sp())) 
+    { latentDB = omegaDB->latentDBs[node->sp()]; }
     assert(!shouldRestore || latentDB);
     weight += node->sp()->simulateLatents(node->spaux(),hsr,shouldRestore,latentDB,rng);
   }

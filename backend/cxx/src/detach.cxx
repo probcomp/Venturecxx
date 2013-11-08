@@ -164,7 +164,11 @@ double Trace::unapplyPSP(Node * node,
   DPRINT("unapplyPSP: ", node->address.toString());
 
 
-  if (node->nodeType == NodeType::OUTPUT && node->sp()->isESRReference) { return 0; }
+  if (node->nodeType == NodeType::OUTPUT && node->sp()->isESRReference) 
+  { 
+    node->sourceNode = nullptr;
+    return 0; 
+  }
   if (node->nodeType == NodeType::REQUEST && node->sp()->isNullRequest()) { return 0; }
 
   if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,omegaDB); }
@@ -187,16 +191,16 @@ double Trace::unapplyPSP(Node * node,
   { 
     pair<double, LatentDB *> p = node->sp()->detachAllLatents(node->spaux());
     weight += p.first;
-    assert(!omegaDB->latentDBs.count(node));
-    omegaDB->latentDBs.insert({node,p.second});
+    assert(!omegaDB->latentDBs.count(node->sp()));
+    omegaDB->latentDBs.insert({node->sp(),p.second});
   }
 
-  if (scaffold && scaffold->isResampling(node))
-  { omegaDB->drgDB[node] = node->getValue(); }
 
-  /* If it is not in the DRG, then we do nothing. Elsewhere we store the value
-     of the root in the contingentFamilyDB */
   if (node->ownsValue) { omegaDB->flushQueue.emplace(node->sp(),node->getValue(),nodeTypeToFlushType(node->nodeType)); }
+
+  if (scaffold && scaffold->isResampling(node))
+  { omegaDB->drgDB[node] = node->getValue();  node->clearValue(); }
+
 
   return weight;
 }
@@ -212,12 +216,12 @@ double Trace::unevalRequests(Node * node,
   double weight = 0;
   VentureRequest * requests = dynamic_cast<VentureRequest *>(node->getValue());
 
-  if (!requests->hsrs.empty() && !omegaDB->latentDBs.count(node->vsp()->makerNode))
-  { omegaDB->latentDBs[node->vsp()->makerNode] = node->sp()->constructLatentDB(); }
+  if (!requests->hsrs.empty() && !omegaDB->latentDBs.count(node->sp()))
+  { omegaDB->latentDBs[node->sp()] = node->sp()->constructLatentDB(); }
 
   for (HSR * hsr : reverse(requests->hsrs))
   {
-    LatentDB * latentDB = omegaDB->latentDBs[node->vsp()->makerNode];
+    LatentDB * latentDB = omegaDB->latentDBs[node->sp()];
     weight += node->sp()->detachLatents(node->spaux(),hsr,latentDB);
   }
 

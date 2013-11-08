@@ -21,16 +21,23 @@
 PyTrace::PyTrace(): 
   Trace(), 
   gkernels{
-    {"mh", new ScaffoldMHGKernel(this)},
-    {"gibbs", new GibbsGKernel(this)},
-    {"pgibbs", new PGibbsGKernel(this)},
-    {"meanfield",new MeanFieldGKernel(this)}}
+    {{"mh",false}, new OutermostMixMH(this,new ScaffoldMHGKernel(this))},
+    {{"mh",true}, new GlobalScaffoldMixMH(this,new ScaffoldMHGKernel(this))},
+
+    {{"pgibbs",false}, new OutermostMixMH(this,new PGibbsGKernel(this))},
+    {{"pgibbs",true}, new GlobalScaffoldMixMH(this,new PGibbsGKernel(this))},
+
+    {{"gibbs",false}, new OutermostMixMH(this,new GibbsGKernel(this))},
+
+    {{"meanfield",false}, new OutermostMixMH(this,new MeanFieldGKernel(this))},
+    {{"meanfield",true}, new GlobalScaffoldMixMH(this,new MeanFieldGKernel(this))}}
  {}
 
 PyTrace::~PyTrace()
 {
-  for (pair<string,GKernel *> p : gkernels)
+  for (pair< pair<string,bool>,MixMHKernel *> p : gkernels)
   {
+    p.second->destroyChildGKernel();
     delete p.second;
   }
 }
@@ -150,25 +157,9 @@ void PyTrace::infer(boost::python::dict params)
   string kernel = boost::python::extract<string>(params["kernel"]);
   bool useGlobalScaffold = boost::python::extract<bool>(params["use_global_scaffold"]);
 
-  GKernel * gkernel = gkernels[kernel];
-
-  if (useGlobalScaffold)
-  {
-    assert(kernel != "gibbs");
-    for (size_t i = 0; i < numTransitions; i++)
-    {
-      set<Node *> allNodes(randomChoices.begin(),randomChoices.end());
-      gkernel->loadParameters(new ScaffoldMHParam(new Scaffold(allNodes),nullptr));
-      gkernel->infer(1); 
-      gkernel->destroyParameters();
-    }
-  }
-  else
-  {
-    OutermostMixMH * outermostKernel = new OutermostMixMH(this,gkernel);
-    outermostKernel->infer(numTransitions);
-    delete outermostKernel;
-  }
+  assert(!(useGlobalScaffold && kernel == "gibbs"));
+  MixMHKernel * gkernel = gkernels[make_pair(kernel,useGlobalScaffold)];
+  gkernel->infer(numTransitions);
 }
 
 boost::python::dict PyTrace::continuous_inference_status() {

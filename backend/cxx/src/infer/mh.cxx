@@ -85,3 +85,11 @@ MixMHParam * OutermostMixMH::processIndex(MixMHIndex * index)
 }
 
 
+MixMHIndex * GlobalScaffoldMixMH::sampleIndex() { return nullptr; }
+double GlobalScaffoldMixMH::logDensityOfIndex(MixMHIndex * index) { return 0; }
+MixMHParam * GlobalScaffoldMixMH::processIndex(MixMHIndex * index) 
+{ 
+  vector<Node *> rcs = trace->getRandomChoices();
+  set<Node *> allNodes(rcs.begin(),rcs.end());
+  return new ScaffoldMHParam(new Scaffold(allNodes),nullptr);
+};

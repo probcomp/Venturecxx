@@ -60,6 +60,8 @@ class Trace
 			     unsigned int depth,
 			     bool useDeltaKernels) const;
 
+  vector<Node *> getRandomChoices(); // used by kernels
+
 protected:
 
 //  unordered_map<size_t,Node*> definiteFamilies;
