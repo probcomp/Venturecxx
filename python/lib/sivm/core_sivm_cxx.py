@@ -239,15 +239,5 @@ def _modify_symbol(s):
     #       which the boost python wrappings can't convert
     return {"type": "symbol", "value": str(s)}
 
-_python_to_venture_type_map = {
-    bool: "boolean",
-    int: "count",
-    float: "number",
-    list: "list",
-    str: "symbol",
-}
-
 def _parse_value(val):
-    if type(val) in _python_to_venture_type_map:
-        return {"type": _python_to_venture_type_map[type(val)], "value": val}
-    return {"type": "SP", "value": str(type(val))}
+    return val

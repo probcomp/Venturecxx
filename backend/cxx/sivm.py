@@ -39,20 +39,20 @@ class SIVM:
         logDensity = self.trace.observe(baseAddr,val)
 
         # TODO check for -infinity? Throw an exception?
-        if logDensity == float("-inf"): raise VentureException("invalid_constraint", "Observe failed to constrain", expression=datum, value=val)
+        if logDensity == float("-inf"):
+            raise VentureException("invalid_constraint", "Observe failed to constrain", expression=datum, value=val)
         self.directives[self.directiveCounter] = ["observe",datum,val]
 
         return self.directiveCounter
 
     def forget(self,directiveId):
-        raise VentureException("not_implemented", "FIXME forget is not implemented")
-    
         if directiveId not in self.directives:
-            raise VentureException("invalid_argument", "Cannot forget a non-existent directive id", argument=directiveId)
+            raise VentureException("invalid_argument", "Cannot forget a non-existent directive id", argument="directive_id", directive_id=directiveId)
         directive = self.directives[directiveId]
-        if directive[0] == "assume": raise VentureException("invalid_argument", "Cannot forget an ASSUME directive", argument=directiveId)
-        if directive[0] == "observe": self.trace.unobserve(str(directiveID))
-        self.trace.unevalFamily(str(directiveId))
+        if directive[0] == "assume":
+            raise VentureException("invalid_argument", "Cannot forget an ASSUME directive", argument="directive_id", directive_id=directiveId)
+        if directive[0] == "observe": self.trace.unobserve(directiveId)
+        self.trace.uneval(directiveId)
         del self.directives[directiveId]
     
     def report_value(self,directiveId):
@@ -89,6 +89,12 @@ class SIVM:
 
         self.trace.infer(params)
 
+    def logscore(self): return self.trace.getGlobalLogScore()
+
+    def get_entropy_info(self):
+      return { 'unconstrained_random_choices' : self.trace.numRandomChoices() }
+
+
     def get_seed(self):
         return self.trace.get_seed()
 
@@ -97,6 +103,3 @@ class SIVM:
     
     # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
     
-    def logscore(self):
-        raise VentureException("not_implemented", "FIXME logscore() is not implemented")
-

@@ -112,8 +112,6 @@ class TestCoreSivmCxx(unittest.TestCase):
         self.assertEquals(o['options']['seed'],0)
 
     def test_forget(self):
-        # FIXME: forget is not implemented
-        return
         inst1 = {
                 'instruction':'predict',
                 'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
@@ -200,8 +198,6 @@ class TestCoreSivmCxx(unittest.TestCase):
         self.assertEquals(self.sivm.state,'default')
 
     def test_get_global_logscore(self):
-        # FIXME: logscore not implemented in cxx
-        return
         inst1 = {
                 'instruction':'observe',
                 'expression': ['flip'],
@@ -214,7 +210,7 @@ class TestCoreSivmCxx(unittest.TestCase):
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['logscore'],-0.6931471805599453)
     def test_get_logscore(self):
-        # FIXME: logscore not implemented in cxx
+        # FIXME: per-directive logscore not implemented in cxx
         return
         inst1 = {
                 'instruction':'observe',
@@ -260,37 +256,6 @@ class TestCoreSivmCxx(unittest.TestCase):
         o3 = self.sivm.execute_instruction(i3)
         e3 = {'options': {'profiler_enabled': False}}
         self.assertEquals(o3, e3)
-    
-    def test_parse_bool(self):
-        v = False
-        o = module._parse_value(v)
-        e = {"type":"boolean", "value":v}
-        self.assertEquals(o, e)
-
-    def test_parse_count(self):        
-        v = 0
-        o = module._parse_value(v)
-        e = {"type":"count", "value":v}
-        self.assertEquals(o, e)
-        
-    def test_parse_number(self):
-        v = 0.5
-        o = module._parse_value(v)
-        e = {"type":"number", "value":v}
-        self.assertEquals(o, e)
-        
-    def test_parse_list(self):
-        v = ['l', 'i', 's', 't']
-        o = module._parse_value(v)
-        e = {"type":"list", "value":v}
-        self.assertEquals(o, e)
-    
-    def test_parse_atom(self):
-        v = "a[1]"
-        o = module._parse_value(v)
-        e = {"type":"atom", "value":1}
-        # FIXME: no way parse atoms
-        #self.assertEqual(o, e)
 
 if __name__ == '__main__':
     unittest.main()

@@ -37,6 +37,7 @@ src_files = [
     "src/sps/csp.cxx",
     "src/sps/mem.cxx",
     "src/sps/number.cxx",
+    "src/sps/trig.cxx",
     #"src/sps/real.cxx",
     #"src/sps/count.cxx",
     "src/sps/bool.cxx",
@@ -69,7 +70,7 @@ cxx = Extension("venture.cxx.libtrace",
                      ('MINOR_VERSION', '0')],
     libraries = ['gsl', 'gslcblas', 'boost_python'],
     extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O0", "-fPIC"],
-    undef_macros = ['NDEBUG'],
+    undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
     include_dirs = inc_dirs,
     sources = src_files)
 ext_modules.append(cxx)

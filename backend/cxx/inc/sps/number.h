@@ -1,5 +1,5 @@
-#ifndef FLOAT_SPS_H
-#define FLOAT_SPS_H
+#ifndef NUMBER_SPS_H
+#define NUMBER_SPS_H
 
 #include "sp.h"
 
@@ -20,6 +20,11 @@ struct TimesSP : SP
 };
 
 struct DivideSP : SP
+{ 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+};
+
+struct PowerSP : SP
 { 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
 };

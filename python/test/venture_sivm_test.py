@@ -141,8 +141,6 @@ class TestVentureSivm(unittest.TestCase):
         self.assertIsInstance(o['directive_id'],(int,float))
         self.assertEquals(o['value'],val)
     def test_labeled_forget(self):
-        # FIXME: forget not implemented
-        return
         inst1 = {
                 'instruction':'labeled_predict',
                 'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
@@ -177,8 +175,6 @@ class TestVentureSivm(unittest.TestCase):
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['value'], {'type':'number','value':3})
     def test_labeled_get_logscore(self):
-        # FIXME: logscore not implemented
-        return
         inst1 = {
                 'instruction':'labeled_predict',
                 'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
@@ -190,7 +186,7 @@ class TestVentureSivm(unittest.TestCase):
                 'label' : 'moo',
                 }
         o2 = self.sivm.execute_instruction(inst2)
-        self.assertEquals(o2['logscore'],-0.6931471805599453)
+        self.assertEquals(o2['logscore'],0.0)
     def test_list_directives(self):
         inst1 = {
                 'instruction':'predict',
@@ -237,25 +233,18 @@ class TestVentureSivm(unittest.TestCase):
                 }
         self.assertEquals(o2['directive'], output)
     def test_force(self):
-        # FIXME: forget is not implemented
-        return
         inst = {
                 'instruction':'force',
                 'expression': ['normal',{'type':'number','value':1},{'type':'number','value':2}],
                 'value': {"type":"real","value":3}
                 }
-        import pdb; pdb.set_trace()
         o = self.sivm.execute_instruction(inst)
         inst2 = {
                 'instruction':'list_directives',
                 }
-        import pdb; pdb.set_trace()
         o2 = self.sivm.execute_instruction(inst2)
-        import pdb; pdb.set_trace()
         self.assertEquals(o2['directives'], [])
     def test_sample(self):
-        # FIXME: forget is not implemented
-        return
         inst = {
                 'instruction':'sample',
                 'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],

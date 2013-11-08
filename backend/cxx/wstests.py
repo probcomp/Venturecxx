@@ -3,7 +3,7 @@ import math
 import pdb
 
 def SIVM():
-    return make_church_prime_ripl()
+  return make_church_prime_ripl()
 
 def normalizeList(seq): 
   denom = sum(seq)
@@ -24,13 +24,13 @@ def printTest(testName,eps,ops):
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer({"kernel":"mh","transitions":10,"use_global_scaffold":False})
+    sivm.infer(10, kernel="mh", use_global_scaffold=False)
     predictions.append(sivm.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
 
 def runTests(N):
-  testBernoulli0(N)
+#  testBernoulli0(N)
   testBernoulli1(N)
   #testCategorical1(N)
   testMHNormal0(N)
@@ -42,11 +42,16 @@ def runTests(N):
   #testMem3(N)
   testSprinkler1(N)
   testSprinkler2(N)
+  testGamma1(N)
+  testIf1(N)
+  testIf2(N)
+  testBLOGCSI(N)
   testMHHMM1(N)
   testOuterMix1(N)
   testMakeSymDirMult1(N)
   testMakeSymDirMult2(N)
   testMakeUCSymDirMult1(N)
+  testMap1(N)
   testLazyHMM1(N)
   testLazyHMMSP1(N)
   testStaleAAA1(N)
@@ -59,6 +64,9 @@ def runTests(N):
   testList1()
   testHPYMem1(N)
   testGeometric1(N)
+  testTrig1(N)
+  testForget1()
+  testForget2()
 
 def runTests2(N):
   testGeometric1(N)
@@ -153,7 +161,7 @@ def testMem0(N):
   sivm.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   sivm.predict("(f (bernoulli 0.5))")
   sivm.predict("(f (bernoulli 0.5))")
-  sivm.infer({"kernel":"mh","transitions":N, "use_global_scaffold": False})
+  sivm.infer(N, kernel="mh", use_global_scaffold=False)
   print "Passed TestMem0"
 
 
@@ -250,12 +258,13 @@ def testGamma1(N):
   print "---TestMHGamma1---"
   print "(10000," + str(mean) + ")"
 
-def testIf1():
+def testIf1(N):
   sivm = SIVM()
   sivm.assume('IF', '(lambda () branch)')
-  sivm.assume('IF?', '(branch (bernoulli 0.5) IF IF)')
-  sivm.predict('(IF? (bernoulli 0.5) IF IF)')
-  sivm.infer({"kernel":"mh","transitions":N/10,"use_global_scaffold":False})
+  sivm.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
+  sivm.predict('(IF2 (bernoulli 0.5) IF IF)')
+  sivm.infer(N/10, kernel="mh", use_global_scaffold=False)
+  print "Passed TestIf1()"
 
 def testIf2(N):
   sivm = SIVM()
@@ -263,8 +272,8 @@ def testIf2(N):
   sivm.assume('if2', '(branch (bernoulli 0.5) (lambda () if1) (lambda () if1))')
   sivm.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
   sivm.assume('if4', '(branch (bernoulli 0.5) (lambda () if3) (lambda () if3))')
-  sivm.infer({"kernel":"mh","transitions":N/10,"use_global_scaffold":False})
-
+  sivm.infer(N/10, kernel="mh", use_global_scaffold=False)
+  print "Passed TestIf2()"
 
 def testBLOGCSI(N):
   sivm = SIVM()
@@ -394,7 +403,7 @@ def testLazyHMM1(N):
 
   for t in range(N):
       # TODO make this pgibbs with global drg
-    sivm.infer({"kernel":"mh","transitions":10,"use_global_scaffold":False})
+    sivm.infer(10, kernel="mh", use_global_scaffold=False)
     for i in range(n):
       sums[i] += sivm.report(8 + i)
 
@@ -730,3 +739,48 @@ def testGeometric1(N):
   printTest("TestGeometric1",ps,eps)
 
 
+def testTrig1(N):
+  sivm = SIVM()
+  sivm.assume("sq","(lambda (x) (* x x))")
+  sivm.assume("x","(normal 0.0 1.0)")
+  sivm.assume("a","(sq (sin x))")
+  sivm.assume("b","(sq (cos x))")
+  sivm.predict("(+ a b)")
+  for i in range(N/10):
+    sivm.infer(10,kernel="mh",use_global_scaffold=False)
+    assert abs(sivm.report(5) - 1) < .001
+  print "Passed TestTrig1()"
+
+def testForget1():
+  sivm = SIVM()
+
+  sivm.assume("x","(normal 0.0 1.0)")
+  sivm.assume("f","(lambda (y) (normal y 1.0))")
+  sivm.assume("g","(lambda (z) (normal z 2.0))")
+
+  sivm.predict("(f 1.0)",label="id1")
+  sivm.observe("(g 2.0)",3.0,label="id2")
+  sivm.observe("(g 3.0)",3.0,label="id3")
+  
+  sivm.forget("id3")
+  sivm.forget("id2")
+  sivm.forget("id1")
+
+def testForget2():
+  sivm = SIVM()
+
+  sivm.assume("x","(normal 0.0 1.0)")
+  sivm.assume("f","(lambda (y) (normal y 1.0))")
+  sivm.assume("g","(lambda (z) (normal z 2.0))")
+
+  sivm.predict("(f 1.0)",label="id1")
+  sivm.observe("(g 2.0)",3.0,label="id2")
+  sivm.observe("(g 3.0)",3.0,label="id3")
+  
+  sivm.forget("id1")
+  sivm.forget("id2")
+  sivm.forget("id3")
+
+  real_sivm = sivm.sivm.core_sivm.engine
+  assert real_sivm.get_entropy_info()["unconstrained_random_choices"] == 1
+  assert real_sivm.logscore() < 0
