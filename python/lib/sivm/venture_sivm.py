@@ -100,6 +100,14 @@ class VentureSivm(object):
                 exp = instruction['expression']
                 i = utils.sugar_expression_index(exp,i)
                 e.data['expression_index'] = i
+            # turn directive_id into label
+            if e.exception == 'invalid_argument':
+                if e.data['argument'] == 'directive_id':
+                    did = e.data['directive_id']
+                    if did in self.did_dict:
+                        e.data['label'] = self.did_dict[did]
+                        e.data['argument'] = 'label'
+                        del e.data['directive_id']
             raise
         # clear the dicts on the "clear" command
         if instruction_type == 'clear':

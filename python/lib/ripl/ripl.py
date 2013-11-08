@@ -71,6 +71,7 @@ class Ripl():
             # refers to the argument's location in the string
             if e.exception == 'invalid_argument':
                 arg = e.data['argument']
+                import pdb; pdb.set_trace()
                 text_index = arg_ranges[arg]
                 e.data['text_index'] = text_index
             a = e.data['text_index'][0]

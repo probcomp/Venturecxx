@@ -145,14 +145,14 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(ret_value, {"seed":0, "inference_timeout":5000})
 
     def test_forget(self):
-        # FIXME: forget not implemented in cxx
-        return
         #normal forget
-        ret_value = self.ripl.execute_instruction('[ assume a (uniform_continuous 0 1) ]')
+        ret_value = self.ripl.execute_instruction('[ predict (uniform_continuous 0 1) ]')
         self.ripl.forget(ret_value['directive_id'])
+        with self.assertRaises(VentureException):
+            self.ripl.forget(ret_value['directive_id'])
         #labeled forget
         self.ripl.assume('a','(uniform_continuous 0 1)', 'moo')
-        self.ripl.forget('moo')
+        # assumes can't be forgotten
         with self.assertRaises(VentureException):
             self.ripl.forget('moo')
 
@@ -193,9 +193,6 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output['directive_id'],output['directive_id'])
 
     def test_force(self):
-        # FIXME: forget not implemented in cxx
-        return
-
         #normal force
         self.ripl.assume('a','(uniform_continuous 0 1)')
         self.ripl.force('a',0.2)
@@ -204,9 +201,6 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output, 0.5)
 
     def test_sample(self):
-        # FIXME: forget not implemented in cxx
-        return
-        
         #normal force
         output = self.ripl.sample('(+ 1 1)')
         self.assertEqual(output, 2)
@@ -220,7 +214,7 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output, False)
 
     def test_get_current_exception(self):
-        #TODO: write test after exception states are implemented
+        # TODO: write test after exception states are implemented
         pass
 
     def test_get_state(self):
@@ -228,7 +222,7 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output,'default')
 
     def test_get_logscore(self):
-        #TODO: fix test after get_logscore is implemented
+        # TODO: fix test after per-directive logscore is implemented
         return
         ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
         output = self.ripl.get_logscore(ret_value['directive_id'])
@@ -237,8 +231,6 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output,0)
 
     def test_get_global_logscore(self):
-        # FIXME: logscore not implemented in cxx
-        return
         self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
         output = self.ripl.get_global_logscore()
         self.assertEqual(output,0)

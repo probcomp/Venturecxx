@@ -39,16 +39,18 @@ class SIVM:
         logDensity = self.trace.observe(baseAddr,val)
 
         # TODO check for -infinity? Throw an exception?
-        if logDensity == float("-inf"): raise VentureException("invalid_constraint", "Observe failed to constrain", expression=datum, value=val)
+        if logDensity == float("-inf"):
+            raise VentureException("invalid_constraint", "Observe failed to constrain", expression=datum, value=val)
         self.directives[self.directiveCounter] = ["observe",datum,val]
 
         return self.directiveCounter
 
     def forget(self,directiveId):
         if directiveId not in self.directives:
-            raise VentureException("invalid_argument", "Cannot forget a non-existent directive id", argument=directiveId)
+            raise VentureException("invalid_argument", "Cannot forget a non-existent directive id", argument="directive_id", directive_id=directiveId)
         directive = self.directives[directiveId]
-        if directive[0] == "assume": raise VentureException("invalid_argument", "Cannot forget an ASSUME directive", argument=directiveId)
+        if directive[0] == "assume":
+            raise VentureException("invalid_argument", "Cannot forget an ASSUME directive", argument="directive_id", directive_id=directiveId)
         if directive[0] == "observe": self.trace.unobserve(directiveId)
         self.trace.uneval(directiveId)
         del self.directives[directiveId]

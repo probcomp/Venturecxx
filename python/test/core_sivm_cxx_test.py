@@ -112,8 +112,6 @@ class TestCoreSivmCxx(unittest.TestCase):
         self.assertEquals(o['options']['seed'],0)
 
     def test_forget(self):
-        # FIXME: forget is not implemented
-        return
         inst1 = {
                 'instruction':'predict',
                 'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
@@ -200,8 +198,6 @@ class TestCoreSivmCxx(unittest.TestCase):
         self.assertEquals(self.sivm.state,'default')
 
     def test_get_global_logscore(self):
-        # FIXME: logscore not implemented in cxx
-        return
         inst1 = {
                 'instruction':'observe',
                 'expression': ['flip'],
@@ -214,7 +210,7 @@ class TestCoreSivmCxx(unittest.TestCase):
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['logscore'],-0.6931471805599453)
     def test_get_logscore(self):
-        # FIXME: logscore not implemented in cxx
+        # FIXME: per-directive logscore not implemented in cxx
         return
         inst1 = {
                 'instruction':'observe',
