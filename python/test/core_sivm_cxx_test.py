@@ -228,18 +228,15 @@ class TestCoreSivmCxx(unittest.TestCase):
     def test_continuous_inference(self):
         status = {'instruction':'continuous_inference_status'}
         o1 = self.sivm.execute_instruction(status)
-        e1 = {'running': False}
-        self.assertEquals(o1, e1)
+        self.assertEquals(o1['running'], False)
         
-        self.sivm.execute_instruction({'instruction':'start_continuous_inference'})
+        self.sivm.execute_instruction({'instruction':'start_continuous_inference', 'params' : {}})
         o2 = self.sivm.execute_instruction(status)
-        e2 = {'running': True}
-        self.assertEquals(o2, e2)
+        self.assertEquals(o2['running'], True)
         
         self.sivm.execute_instruction({'instruction':'stop_continuous_inference'})
         o3 = self.sivm.execute_instruction(status)
-        e3 = {'running': False}
-        self.assertEquals(o3, e3)
+        self.assertEquals(o3['running'], False)
     
     def test_profiler_configure(self):
         i1 = {'instruction':'profiler_configure', 'options': {}}

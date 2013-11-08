@@ -135,11 +135,20 @@ void PyTrace::unobserve(size_t directiveID)
 
 }
 
-void PyTrace::infer(boost::python::dict options) 
+void PyTrace::set_seed(size_t n) {
+  gsl_rng_set(rng, n);
+}
+
+size_t PyTrace::get_seed() {
+  // TODO FIXME get_seed can't be implemented as spec'd (need a generic RNG state); current impl always returns 0, which may not interact well with VentureUnit
+  return 0;
+}
+
+void PyTrace::infer(boost::python::dict params) 
 { 
-  string kernel = boost::python::extract<string>(options["kernel"]);
-  size_t numTransitions = boost::python::extract<size_t>(options["transitions"]);
-  bool useGlobalScaffold = boost::python::extract<bool>(options["use_global_scaffold"]);
+  size_t numTransitions = boost::python::extract<size_t>(params["transitions"]);
+  string kernel = boost::python::extract<string>(params["kernel"]);
+  bool useGlobalScaffold = boost::python::extract<bool>(params["use_global_scaffold"]);
 
   GKernel * gkernel = gkernels[kernel];
 
@@ -162,15 +171,37 @@ void PyTrace::infer(boost::python::dict options)
   }
 }
 
-
-
-void PyTrace::set_seed(size_t n) {
-  gsl_rng_set(rng, n);
+boost::python::dict PyTrace::continuous_inference_status() {
+  boost::python::dict status;
+  status["running"] = continuous_inference_running;
+  if(continuous_inference_running) {
+    status["params"] = continuous_inference_params;
+  }
+  return status;
 }
 
-size_t PyTrace::get_seed() {
-  // TODO FIXME get_seed can't be implemented as spec'd (need a generic RNG state); current impl always returns 0, which may not interact well with VentureUnit
-  return 0;
+void PyTrace::run_continuous_inference() {
+  boost::python::dict params = continuous_inference_params.copy();
+  params["transitions"] = 1;
+  while(continuous_inference_running) {
+    infer(params);
+  }
+}
+
+void PyTrace::start_continuous_inference(boost::python::dict params) {
+  stop_continuous_inference();
+
+  continuous_inference_params = params;
+  continuous_inference_running = true;
+  //continuous_inference_thread = new std::thread(&PyTrace::run_continuous_inference, this);
+}
+
+void PyTrace::stop_continuous_inference() {
+  if(continuous_inference_running) {
+    continuous_inference_running = false;
+    //continuous_inference_thread->join();
+    //delete continuous_inference_thread;
+  }
 }
 
 BOOST_PYTHON_MODULE(libtrace)
@@ -188,6 +219,9 @@ BOOST_PYTHON_MODULE(libtrace)
     .def("infer", &PyTrace::infer)
     .def("set_seed", &PyTrace::set_seed)
     .def("get_seed", &PyTrace::get_seed)
+    .def("continuous_inference_status", &PyTrace::continuous_inference_status)
+    .def("start_continuous_inference", &PyTrace::start_continuous_inference)
+    .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)
     ;
 };
 

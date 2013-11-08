@@ -211,12 +211,6 @@ class Ripl():
         self.execute_instruction(s, {'params': {"transitions": transitions,
             "kernel": kernel, "use_global_scaffold": use_global_scaffold}})
 
-#    def infer(self, iterations, resample=False):
-#        s = self._cur_parser().get_instruction_string('infer')
-#        d = {'iterations':iterations,'resample':resample}
-#        self.execute_instruction(s,d)
-#        return None
-
     def clear(self):
         s = self._cur_parser().get_instruction_string('clear')
         d = {}
@@ -262,11 +256,12 @@ class Ripl():
     
     def continuous_inference_status(self):
         s = self._cur_parser().get_instruction_string('continuous_inference_status')
-        return self.execute_instruction(s)['running']
+        return self.execute_instruction(s)
 
-    def start_continuous_inference(self):
+    def start_continuous_inference(self, kernel="mh", use_global_scaffold=False):
         s = self._cur_parser().get_instruction_string('start_continuous_inference')
-        self.execute_instruction(s)
+        self.execute_instruction(s, {'params':
+            {"kernel": kernel, "use_global_scaffold": use_global_scaffold}})
         return None
 
     def stop_continuous_inference(self):
