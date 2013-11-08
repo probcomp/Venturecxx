@@ -45,14 +45,12 @@ class SIVM:
         return self.directiveCounter
 
     def forget(self,directiveId):
-        raise VentureException("not_implemented", "FIXME forget is not implemented")
-    
         if directiveId not in self.directives:
             raise VentureException("invalid_argument", "Cannot forget a non-existent directive id", argument=directiveId)
         directive = self.directives[directiveId]
         if directive[0] == "assume": raise VentureException("invalid_argument", "Cannot forget an ASSUME directive", argument=directiveId)
-        if directive[0] == "observe": self.trace.unobserve(str(directiveID))
-        self.trace.unevalFamily(str(directiveId))
+        if directive[0] == "observe": self.trace.unobserve(directiveId)
+        self.trace.uneval(directiveId)
         del self.directives[directiveId]
     
     def report_value(self,directiveId):

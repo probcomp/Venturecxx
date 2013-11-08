@@ -1,6 +1,7 @@
 #include "value.h"
 #include "node.h"
 #include "scaffold.h"
+#include "flush.h"
 #include "env.h"
 #include "pytrace.h"
 #include "infer/gkernel.h"
@@ -72,12 +73,13 @@ void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
   ventureFamilies.insert({directiveID,{p.second,exp}});
 }
 
-// void PyTrace::unevalDirectiveID(size_t directiveID)
-// {
-//   VentureValue * exp = parseExpression(o);
-//   pair<double,Node*> p = evalVentureFamily(directiveID,static_cast<VentureList*>(exp),nullptr);
-//   ventureFamilies.insert({directiveID,{p.second,exp}});
-// }
+void PyTrace::unevalDirectiveID(size_t directiveID)
+{
+  OmegaDB * omegaDB = new OmegaDB;
+  detachVentureFamily(ventureFamilies[directiveID].first,omegaDB);
+  flushDB(omegaDB,false);
+  ventureFamilies.erase(directiveID);
+}
 
 
 boost::python::object PyTrace::extractPythonValue(size_t directiveID)
@@ -104,6 +106,18 @@ void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
   assert(!dynamic_cast<VentureSymbol*>(val));
   node->observedValue = val;
   constrain(node,true);
+}
+
+void PyTrace::unobserve(size_t directiveID)
+{
+  Node * root = ventureFamilies[directiveID].first;
+  unconstrain(root);
+
+  if (root->isReference())
+  { root->sourceNode->ownsValue = true; }
+  else
+  { root->ownsValue = true; }
+
 }
 
 void PyTrace::infer(boost::python::dict options) 
@@ -148,9 +162,11 @@ BOOST_PYTHON_MODULE(libtrace)
   using namespace boost::python;
   class_<PyTrace>("Trace",init<>())
     .def("eval", &PyTrace::evalExpression)
+    .def("uneval", &PyTrace::unevalDirectiveID)
     .def("extractValue", &PyTrace::extractPythonValue)
     .def("bindInGlobalEnv", &PyTrace::bindInGlobalEnv)
     .def("observe", &PyTrace::observe)
+    .def("unobserve", &PyTrace::unobserve)
     .def("infer", &PyTrace::infer)
     .def("set_seed", &PyTrace::set_seed)
     .def("get_seed", &PyTrace::get_seed)

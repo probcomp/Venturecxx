@@ -3,7 +3,7 @@ import math
 import pdb
 
 def SIVM():
-    return make_church_prime_ripl()
+  return make_church_prime_ripl()
 
 def normalizeList(seq): 
   denom = sum(seq)
@@ -65,6 +65,8 @@ def runTests(N):
   testHPYMem1(N)
   testGeometric1(N)
   testTrig1(N)
+  testForget1()
+  testForget2()
 
 def runTests2(N):
   testGeometric1(N)
@@ -747,5 +749,34 @@ def testTrig1(N):
   for i in range(N/10):
     sivm.infer({"kernel":"mh","transitions":10,"use_global_scaffold":False})
     assert abs(sivm.report(5) - 1) < .001
-
   print "Passed TestTrig1()"
+
+def testForget1():
+  sivm = SIVM()
+
+  sivm.assume("x","(normal 0.0 1.0)")
+  sivm.assume("f","(lambda (y) (normal y 1.0))")
+  sivm.assume("g","(lambda (z) (normal z 2.0))")
+
+  sivm.predict("(f 1.0)",label="id1")
+  sivm.observe("(g 2.0)",3.0,label="id2")
+  sivm.observe("(g 3.0)",3.0,label="id3")
+  
+  sivm.forget("id3")
+  sivm.forget("id2")
+  sivm.forget("id1")
+
+def testForget2():
+  sivm = SIVM()
+
+  sivm.assume("x","(normal 0.0 1.0)")
+  sivm.assume("f","(lambda (y) (normal y 1.0))")
+  sivm.assume("g","(lambda (z) (normal z 2.0))")
+
+  sivm.predict("(f 1.0)",label="id1")
+  sivm.observe("(g 2.0)",3.0,label="id2")
+  sivm.observe("(g 3.0)",3.0,label="id3")
+  
+  sivm.forget("id1")
+  sivm.forget("id2")
+  sivm.forget("id3")

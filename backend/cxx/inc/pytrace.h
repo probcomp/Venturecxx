@@ -29,6 +29,11 @@ struct PyTrace : Trace
   void set_seed(size_t seed);
   size_t get_seed();
 
+  void unevalDirectiveID(size_t directiveID);
+  void unobserve(size_t directiveID);
+
+
+
   void infer(boost::python::dict options);
 
   map<string,GKernel *> gkernels;
