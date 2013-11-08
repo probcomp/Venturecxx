@@ -91,3 +91,13 @@ VentureValue * VenturePair::clone() const
   assert(r);
   return new VenturePair(f,r);
 }
+
+VentureValue * VentureSymbol::clone() const { return new VentureSymbol(sym); }
+VentureValue * VentureBool::clone() const { return new VentureBool(pred); }
+VentureValue * VentureNumber::clone() const { return new VentureNumber(x); }
+VentureValue * VentureAtom::clone() const { return new VentureAtom(n); }
+
+VentureValue * VenturePair::inverseEvaluate() 
+{ 
+  return new VenturePair(new VentureSymbol("quote"), this);
+}

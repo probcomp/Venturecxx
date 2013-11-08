@@ -24,6 +24,7 @@ struct VentureValue {
   virtual boost::python::dict toPython() const;
 
   virtual string toString() const { return "no_name"; }
+  virtual VentureValue * inverseEvaluate() { return this; }
 
   virtual size_t toHash() const { assert(false); return 0; }
   virtual VentureValue * clone() const { assert(false); return nullptr; }
@@ -55,7 +56,7 @@ struct VentureSymbol : VentureValue
   VentureSymbol(const string & sym): sym(sym) {}
   string sym;
   size_t toHash() const override;
-  VentureValue * clone() const override { return new VentureSymbol(sym); }
+  VentureValue * clone() const override;
   bool equals(const VentureValue * & other) const override;
 
   boost::python::dict toPython() const override;
@@ -81,6 +82,7 @@ struct VenturePair : VentureList
     first(first), rest(rest) {}
   size_t toHash() const override;
   VentureValue * clone() const override;
+  VentureValue * inverseEvaluate() override;
   VentureValue * first;
   VentureList * rest;
 };
@@ -93,7 +95,7 @@ struct VentureMap : VentureValue
 struct VentureBool : VentureValue 
 { 
   VentureBool(bool pred): pred(pred) {}; 
-  VentureValue * clone() const override { return new VentureBool(pred); }
+  VentureValue * clone() const override; 
   size_t toHash() const override { return hash<bool>()(pred); }
   bool pred;
   boost::python::dict toPython() const override;
@@ -103,7 +105,7 @@ struct VentureNumber : VentureValue
 { 
   VentureNumber(double x): x(x) {}
   size_t toHash() const override { return hash<double>()(x); }
-  VentureValue * clone() const override { return new VentureNumber(x); }
+  VentureValue * clone() const override;
   int getInt() const { return static_cast<int>(x); }
   double x;
   boost::python::dict toPython() const override;
@@ -114,7 +116,7 @@ struct VentureAtom : VentureValue
 {
   VentureAtom(uint32_t n): n(n) {}
   size_t toHash() const override { return n; }
-  VentureValue * clone() const override { return new VentureAtom(n); }
+  VentureValue * clone() const override;
   uint32_t n;
   boost::python::dict toPython() const override;
 };

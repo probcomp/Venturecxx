@@ -51,7 +51,7 @@ VentureValue * MSP::simulateRequest(Node * node, gsl_rng * rng) const
   /* TODO the creator is priviledged! */
   for (Node * operand : reverse(operands))
   {
-    VentureValue * val = operand->getValue()->clone();
+    VentureValue * val = operand->getValue()->clone()->inverseEvaluate();
     exp = new VenturePair(val,exp);
   }
   exp = new VenturePair(new VentureSymbol("memoizedSP"),exp);

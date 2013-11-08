@@ -85,6 +85,7 @@ map<string,SP *> initBuiltInSPs()
     {"bernoulli", new BernoulliSP},
     {"categorical", new CategoricalSP},
     {"uniform_discrete", new UniformDiscreteSP},
+    {"poisson", new PoissonSP},
 
     // continuous distributions
     {"normal", new NormalSP},
@@ -93,6 +94,8 @@ map<string,SP *> initBuiltInSPs()
     {"uniform_continuous", new UniformContinuousSP},
     {"beta", new BetaSP},
     {"student_t", new StudentTSP},
+    {"chisq", new ChiSquareSP},
+    {"inv_chisq", new InverseChiSquareSP},
 
     // control flow
     {"branch", new BranchSP},
