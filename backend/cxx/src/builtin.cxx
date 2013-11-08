@@ -1,6 +1,7 @@
 #include "builtin.h"
 
 #include "sps/number.h"
+#include "sps/trig.h"
 #include "sps/bool.h"
 #include "sps/continuous.h"
 #include "sps/discrete.h"
@@ -46,7 +47,13 @@ map<string,SP *> initBuiltInSPs()
     {"gte", new GreaterThanOrEqualToSP},
     {"lte", new LessThanOrEqualToSP},
     {"real", new RealSP},
+
+    // atoms
     {"atom_eq", new AtomEqualSP},
+
+    // trig
+    {"sin", new SinSP},
+    {"cos", new CosSP},
 
     // lists
     {"pair", new PairSP},
@@ -100,9 +107,10 @@ map<string,SP *> initBuiltInSPs()
 
     {"make_crp", new MakePitmanYorCRPSP},
 
-    // miscellaneous?
+    // with LSRs
     {"make_lazy_hmm", new MakeLazyHMMSP},
 
+    // with shared ESRs
     {"mem", new MSPMakerSP},
   };
 }

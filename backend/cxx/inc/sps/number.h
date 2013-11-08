@@ -1,5 +1,5 @@
-#ifndef FLOAT_SPS_H
-#define FLOAT_SPS_H
+#ifndef NUMBER_SPS_H
+#define NUMBER_SPS_H
 
 #include "sp.h"
 
