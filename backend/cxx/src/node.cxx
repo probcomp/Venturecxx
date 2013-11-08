@@ -107,6 +107,13 @@ void Node::setValue(VentureValue *value)
   _value = value;
 }
 
+void Node::clearValue()
+{
+  assert(_value);
+  assert(!sourceNode);
+  _value = nullptr;
+}
+
 /* If a node is a reference, we return the value of its
    source node. Otherwise we just return this node's value. */
 VentureValue * Node::getValue() const

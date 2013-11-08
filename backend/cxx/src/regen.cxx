@@ -195,6 +195,8 @@ double Trace::applyPSP(Node * node,
     return 0;
   }
 
+  assert(!node->isReference());
+
   /* Otherwise we need to actually do things. */
 
   double weight = 0;

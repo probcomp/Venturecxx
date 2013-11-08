@@ -51,6 +51,8 @@ def runTests(N):
   testMakeSymDirMult1(N)
   testMakeSymDirMult2(N)
   testMakeUCSymDirMult1(N)
+  testMakeDirMult1(N)
+  testMakeBetaBernoulli1(N)
   testMap1(N)
   testLazyHMM1(N)
   testLazyHMMSP1(N)
@@ -67,6 +69,9 @@ def runTests(N):
   testTrig1(N)
   testForget1()
   testForget2()
+  testReferences1(N)
+  testReferences2(N)
+
 
 def runTests2(N):
   testGeometric1(N)
@@ -812,3 +817,30 @@ def testForget2():
   real_sivm = sivm.sivm.core_sivm.engine
   assert real_sivm.get_entropy_info()["unconstrained_random_choices"] == 1
   assert real_sivm.logscore() < 0
+
+# This is the original one that fires an assert, when the (flip) has 0.0 or 1.0 it doesn't fail
+def testReferences1(N):
+  ripl = SIVM()
+  ripl.assume("draw_type1", "(make_crp 1.0)")
+  ripl.assume("draw_type0", "(if (flip) draw_type1 (lambda () 1))")
+  ripl.assume("draw_type2", "(make_dir_mult 1 1)")
+  ripl.assume("class", "(if (flip) (lambda (name) (draw_type0)) (lambda (name) (draw_type2)))")
+  ripl.predict("(class 1)")
+  ripl.predict("(flip)")
+  predictions = loggingInfer(ripl,6,N)
+  ps = normalizeList([0.5,0.5])
+  eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
+  printTest("TestReferences1()",ps,eps)
+
+# 
+def testReferences2(N):
+  ripl = SIVM()
+  ripl.assume("f", "(if (flip 0.5) (make_dir_mult 1 1) (lambda () 1))")
+  ripl.predict("(f)")
+#  ripl.predict("(flip)",label="pid")
+
+  predictions = loggingInfer(ripl,2,N)
+  ps = normalizeList([0.75,0.25])
+  eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
+  printTest("TestReferences2()",ps,eps)
+

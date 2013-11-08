@@ -164,7 +164,11 @@ double Trace::unapplyPSP(Node * node,
   DPRINT("unapplyPSP: ", node->address.toString());
 
 
-  if (node->nodeType == NodeType::OUTPUT && node->sp()->isESRReference) { return 0; }
+  if (node->nodeType == NodeType::OUTPUT && node->sp()->isESRReference) 
+  { 
+    node->sourceNode = nullptr;
+    return 0; 
+  }
   if (node->nodeType == NodeType::REQUEST && node->sp()->isNullRequest()) { return 0; }
 
   if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,omegaDB); }
@@ -191,12 +195,12 @@ double Trace::unapplyPSP(Node * node,
     omegaDB->latentDBs.insert({node,p.second});
   }
 
-  if (scaffold && scaffold->isResampling(node))
-  { omegaDB->drgDB[node] = node->getValue(); }
 
-  /* If it is not in the DRG, then we do nothing. Elsewhere we store the value
-     of the root in the contingentFamilyDB */
   if (node->ownsValue) { omegaDB->flushQueue.emplace(node->sp(),node->getValue(),nodeTypeToFlushType(node->nodeType)); }
+
+  if (scaffold && scaffold->isResampling(node))
+  { omegaDB->drgDB[node] = node->getValue();  node->clearValue(); }
+
 
   return weight;
 }
