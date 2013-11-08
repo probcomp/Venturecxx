@@ -24,7 +24,7 @@ def printTest(testName,eps,ops):
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer({"kernel":"mh","transitions":10,"use_global_scaffold":False})
+    sivm.infer(10, kernel="mh", use_global_scaffold=False)
     predictions.append(sivm.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
@@ -161,7 +161,7 @@ def testMem0(N):
   sivm.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   sivm.predict("(f (bernoulli 0.5))")
   sivm.predict("(f (bernoulli 0.5))")
-  sivm.infer({"kernel":"mh","transitions":N, "use_global_scaffold": False})
+  sivm.infer(N, kernel="mh", use_global_scaffold=False)
   print "Passed TestMem0"
 
 
@@ -263,7 +263,7 @@ def testIf1(N):
   sivm.assume('IF', '(lambda () branch)')
   sivm.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
   sivm.predict('(IF2 (bernoulli 0.5) IF IF)')
-  sivm.infer({"kernel":"mh","transitions":N/10,"use_global_scaffold":False})
+  sivm.infer(N/10, kernel="mh", use_global_scaffold=False)
   print "Passed TestIf1()"
 
 def testIf2(N):
@@ -272,7 +272,7 @@ def testIf2(N):
   sivm.assume('if2', '(branch (bernoulli 0.5) (lambda () if1) (lambda () if1))')
   sivm.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
   sivm.assume('if4', '(branch (bernoulli 0.5) (lambda () if3) (lambda () if3))')
-  sivm.infer({"kernel":"mh","transitions":N/10,"use_global_scaffold":False})
+  sivm.infer(N/10, kernel="mh", use_global_scaffold=False)
   print "Passed TestIf2()"
 
 def testBLOGCSI(N):
@@ -403,7 +403,7 @@ def testLazyHMM1(N):
 
   for t in range(N):
       # TODO make this pgibbs with global drg
-    sivm.infer({"kernel":"mh","transitions":10,"use_global_scaffold":False})
+    sivm.infer(10, kernel="mh", use_global_scaffold=False)
     for i in range(n):
       sums[i] += sivm.report(8 + i)
 
