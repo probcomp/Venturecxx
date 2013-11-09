@@ -99,16 +99,18 @@ void MapListSP::flushRequest(VentureValue * value) const
   VentureRequest * requests = dynamic_cast<VentureRequest*>(value);
   assert(requests);
   vector<ESR> esrs = requests->esrs;
-  assert(!esrs.empty());
-  esrs[0].env->destroySymbols();
-  delete esrs[0].env;
-
-  for (ESR esr : esrs)
+  if (!esrs.empty())
   {
-    VenturePair * exp = dynamic_cast<VenturePair*>(esr.exp);
-    assert(exp);
-    delete exp->first;
-    listShallowDestroy(exp);
+    esrs[0].env->destroySymbols();
+    delete esrs[0].env;
+
+    for (ESR esr : esrs)
+    {
+      VenturePair * exp = dynamic_cast<VenturePair*>(esr.exp);
+      assert(exp);
+      delete exp->first;
+      listShallowDestroy(exp);
+    }
   }
   delete value;
 }

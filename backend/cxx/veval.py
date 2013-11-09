@@ -25,8 +25,11 @@ def loadReferences(ripl):
 ## { sym => ref }
 def loadEnvironments(ripl):
   ripl.assume("initial_environment","""
-  (lambda () (list (make_map (list (quote bernoulli) (quote normal) (quote +) (quote *))
-	                     (list (make_ref bernoulli) (make_ref normal) (make_ref plus) (make_ref times)))))
+(lambda () 
+  (list 
+    (make_map 
+      (list (quote bernoulli) (quote normal) (quote +) (quote *))
+      (list (make_ref bernoulli) (make_ref normal) (make_ref plus) (make_ref times)))))
 """)
 
   ripl.assume("extend_environment","""
@@ -93,8 +96,7 @@ def loadSampleExpressions(ripl):
 
   ripl.assume("exp7","(list (make_ref exp7a) (make_ref 5) (make_ref 8))")
 
-def loadAll():
-  ripl = RIPL()
+def loadAll(ripl):
   loadReferences(ripl)
   loadEnvironments(ripl)
   loadEvaluator(ripl)
@@ -109,3 +111,57 @@ def evalExp(ripl):
   print ripl.predict("(incremental_eval exp5 (initial_environment))")
   print ripl.predict("(incremental_eval exp6 (initial_environment))")
   print ripl.predict("(incremental_eval exp7 (initial_environment))")
+
+
+def computeF(x): return x * 5 + 5
+
+def testIncrementalEvaluator(N):
+  ripl = RIPL()
+  loadAll(ripl)
+
+  ripl.assume("genBinaryOp","(lambda () (if (flip) (quote +) (quote *)))")
+  ripl.assume("genLeaf","(lambda () (normal 5 3))")
+  ripl.assume("genVar","(lambda (x) x)")
+
+  ripl.assume("genExp","""
+(lambda (x)
+  (if (flip) 
+      (genLeaf)
+      (if (flip)
+          (genVar x)
+          (list (make_ref (genBinaryOp)) (make_ref (genExp x)) (make_ref (genExp x))))))
+""")
+
+  ripl.assume("noise","(gamma 2 2)")
+  ripl.assume("exp","(genExp (quote x))")
+  ripl.assume("f","""
+(mem 
+  (lambda (y) 
+    (incremental_eval exp 
+                      (extend_environment (initial_environment) 
+                                          (list (quote x)) 
+                                          (list (make_ref y))))))
+""")
+  ripl.assume("g","(lambda (z) (normal (f z) noise))")
+
+  ripl.assume("square","(lambda (x) (* x x))")
+  X = 10
+  predictStr = "(+ "
+  for x in range(X): predictStr += "(square (- (f %d) %d))" % (x,computeF(x))
+  predictStr += ")"
+  ripl.predict(predictStr,label="pid")
+  for x in range(X): ripl.observe("(g %d)" % x,computeF(x))
+
+  vals = []
+  for t in range(N):
+    ripl.infer(50)
+    print ripl.report("pid")
+#    printExpression(ripl.trace,ripl.trace.getNode(expAddr).getValue())
+#    val = ripl.trace.getNode(valAddr).getValue()
+#    noise = ripl.trace.getNode(noiseAddr).getValue()
+#    print "--> " + str(val) + " (" + str(noise) + ")"
+#    vals.append(val)
+
+#  mean = float(sum(vals))/len(vals)
+#  print "---DemoChurchEval4---"
+#  print "(5," + str(mean) + ")"
