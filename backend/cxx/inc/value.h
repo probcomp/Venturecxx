@@ -72,6 +72,7 @@ struct VentureList : VentureValue
 struct VentureNil : VentureList 
 { 
   size_t toHash() const override;
+  virtual boost::python::dict toPython() const;
   VentureValue * clone() const override;
 
 };
@@ -83,6 +84,8 @@ struct VenturePair : VentureList
   size_t toHash() const override;
   VentureValue * clone() const override;
   VentureValue * inverseEvaluate() override;
+  virtual boost::python::dict toPython() const;
+
   VentureValue * first;
   VentureList * rest;
 };
@@ -125,6 +128,8 @@ struct VentureVector : VentureValue
 {
   VentureVector(const vector<VentureValue *> xs): xs(xs) {}
   vector<VentureValue *> xs;
+  boost::python::dict toPython() const override;
+
 };
 
 /* RequestPSPs must return VentureRequests. */
@@ -146,6 +151,7 @@ struct VentureSP : VentureValue
   SP * sp;
   Node * makerNode{nullptr}; // set in processMadeSP()
   string toString() const override;
+  boost::python::dict toPython() const override;
 
   // TODO return the toPython of the Aux
 

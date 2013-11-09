@@ -70,7 +70,7 @@ VentureValue * MapListSP::simulateRequest(Node * node, gsl_rng * rng) const
   vector<ESR> esrs;
   VentureList * list = dynamic_cast<VentureList*>(node->operandNodes[1]->getValue());
   assert(list);
-  assert(dynamic_cast<VenturePair*>(list));
+//  assert(dynamic_cast<VenturePair*>(list));
 
   VentureEnvironment * env = new VentureEnvironment;
   env->addBinding(new VentureSymbol("mappedSP"),fNode);

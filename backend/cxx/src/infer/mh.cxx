@@ -6,6 +6,11 @@
 #include "trace.h"
 #include "scaffold.h"
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
+
+#include <algorithm>
 #include <iostream>
 
 /* ScaffoldMHGKernel */
@@ -78,6 +83,9 @@ MixMHParam * OutermostMixMH::processIndex(MixMHIndex * index)
 
   /* Deleted by deepest gkernel's destroyParameters() */
   Scaffold * scaffold = new Scaffold({pNode});
+
+  /* May expose latent bugs */
+  if (gsl_ran_flat(trace->rng,0.0,1.0) < 0.5) { reverse(scaffold->border.begin(),scaffold->border.end()); }
 
   delete index;
 

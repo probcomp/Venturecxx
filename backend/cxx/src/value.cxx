@@ -4,7 +4,6 @@
 #include <iostream>
 #include <boost/python/dict.hpp>
 
-
 VentureSP::~VentureSP() 
 { 
   delete sp; 
@@ -64,6 +63,44 @@ boost::python::dict VentureBool::toPython() const
   boost::python::dict value;
   value["type"] = "boolean";
   value["value"] = boost::python::object(pred);
+  return value;
+}
+
+boost::python::dict VentureNil::toPython() const
+{ 
+  boost::python::dict value;
+  value["type"] = "list";
+  value["value"] = boost::python::list();
+  return value;
+}
+
+boost::python::dict VenturePair::toPython() const
+{ 
+  boost::python::dict value;
+  value["type"] = "list";
+  boost::python::list l;
+  l.append(first->toPython());
+  l.extend(rest->toPython());
+  value["value"] = l;
+  return value;
+}
+
+boost::python::dict VentureVector::toPython() const
+{
+  boost::python::dict value;
+  value["type"] = "vector";
+  boost::python::list l;
+  for (VentureValue * x : xs) { l.append(x->toPython()); }
+  value["value"] = l;
+  return value;
+}
+
+
+boost::python::dict VentureSP::toPython() const
+{ 
+  boost::python::dict value;
+  value["type"] = "sp";
+  value["value"] = boost::python::object("sp");
   return value;
 }
 

@@ -24,9 +24,9 @@ def printTest(testName,eps,ops):
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer(10, kernel="pgibbs", use_global_scaffold=True)
+    sivm.infer(10, kernel="mh", use_global_scaffold=False)
     predictions.append(sivm.report(address))
-#    print predictions[len(predictions)-1]
+    print predictions[len(predictions)-1]
   return predictions
 
 def runTests(N):
@@ -74,6 +74,9 @@ def runTests(N):
   testReferences2(N)
   testMemoizingOnAList()
   testOperatorChanging(N)
+  testObserveAPredict1(N)
+  testObserveAPredict2(N)
+
 
 
 def runTests2(N):
@@ -427,25 +430,14 @@ def testLazyHMM1(N):
   sivm.observe("(g 3)",True)
   sivm.observe("(g 4)",False)
   sivm.observe("(g 5)",False)
-  sivm.predict("(f 0)")
-  sivm.predict("(f 1)")
-  sivm.predict("(f 2)")
-  sivm.predict("(f 3)")
-  sivm.predict("(f 4)")
-  sivm.predict("(f 5)")
+  sivm.predict("(make_vector (f 0) (f 1) (f 2) (f 3) (f 4) (f 5))")
 
-  n = 6
-  sums = [0 for i in range(n)]
-
-  for t in range(N):
-      # TODO make this pgibbs with global drg
-    sivm.infer(10, kernel="mh", use_global_scaffold=False)
-    for i in range(n):
-      sums[i] += sivm.report(8 + i)
-
-  ps = [.3531,.1327,.1796,.6925,.1796,.1327]
-  eps = [float(x) / N for x in sums] if N > 0 else [0 for x in sums]
-  printTest("testLazyHMM1 (mixes terribly)",ps,eps)
+  # predictions = loggingInfer(sivm,8,N)
+  # sums = [0 for i in range(6)]
+  # for p in predictions: sums = [sums[i] + p[i] for i in range(6)]
+  # ps = [.3531,.1327,.1796,.6925,.1796,.1327]
+  # eps = [float(x) / N for x in sums] if N > 0 else [0 for x in sums]
+  # printTest("testLazyHMM1 (mixes terribly)",ps,eps)
 
 def testLazyHMMSP1(N):
   sivm = SIVM()
@@ -878,3 +870,26 @@ def testOperatorChanging(N):
   ripl.observe("(op4)",True)
   ripl.infer(N)
   print "Passed TestOperatorChanging()"
+
+def testObserveAPredict1(N):
+  ripl = SIVM()
+  ripl.assume("f","(if (flip) (lambda () (flip)) (mem (lambda () (flip))))")
+  ripl.predict("(f)")
+  ripl.observe("(f)","true")
+  ripl.predict("(f)")
+  predictions = loggingInfer(ripl,2,N)
+  ps = normalizeList([0.75,0.25])
+  eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
+  printTest("TestObserveAPredict1()",ps,eps)
+
+
+def testObserveAPredict2(N):
+  ripl = SIVM()
+  ripl.assume("f","(if (flip) (lambda () (normal 0.0 1.0)) (mem (lambda () (normal 0.0 1.0))))")
+  ripl.observe("(f)","1.0")
+  ripl.predict("(* (f) 100)")
+  predictions = loggingInfer(ripl,3,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestObserveAPredict2---"
+  print "(25," + str(mean) + ")"
+  print "(note: true answer is 50, but program is illegal and staleness is correct behavior)"
