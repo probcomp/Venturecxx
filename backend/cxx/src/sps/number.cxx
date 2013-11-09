@@ -76,6 +76,11 @@ VentureValue * EqualSP::simulateOutput(Node * node, gsl_rng * rng)  const
 
   if (b1 && b2) { return new VentureBool(b1->pred == b2->pred); }
 
+  VentureAtom * a1 = dynamic_cast<VentureAtom *>(operands[0]->getValue());
+  VentureAtom * a2 = dynamic_cast<VentureAtom *>(operands[1]->getValue());
+
+  if (a1 && a2) { return new VentureBool(a1->n == a2->n); }
+
   return new VentureBool(false);
 }
 
