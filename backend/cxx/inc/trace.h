@@ -62,7 +62,10 @@ class Trace
 
   vector<Node *> getRandomChoices(); // used by kernels
 
-protected:
+  map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
+
+//refactor
+public:
 
 //  unordered_map<size_t,Node*> definiteFamilies;
 
@@ -202,8 +205,6 @@ protected:
 
   unordered_map<Node *, uint32_t> ccToIndex;
   vector<Node *> constrainedChoices;
-
-  map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
 };
 
 

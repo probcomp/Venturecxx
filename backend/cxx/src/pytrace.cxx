@@ -18,8 +18,8 @@
 #include <iostream>
 #include <list>
 
-PyTrace::PyTrace(): 
-  Trace(), 
+PyTrace::PyTrace() :
+  trace(new Trace()),
   gkernels{
     {{"mh",false}, new OutermostMixMH(this,new ScaffoldMHGKernel(this))},
     {{"mh",true}, new GlobalScaffoldMixMH(this,new ScaffoldMHGKernel(this))},
@@ -35,6 +35,7 @@ PyTrace::PyTrace():
 
 PyTrace::~PyTrace()
 {
+  delete trace;
   for (pair< pair<string,bool>,MixMHKernel *> p : gkernels)
   {
     p.second->destroyChildGKernel();
@@ -77,23 +78,22 @@ void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
 {
   VentureValue * exp = parseExpression(o);
 
-  pair<double,Node*> p = evalVentureFamily(directiveID,static_cast<VentureList*>(exp),nullptr);
-  ventureFamilies.insert({directiveID,{p.second,exp}});
+  pair<double,Node*> p = trace->evalVentureFamily(directiveID,static_cast<VentureList*>(exp),nullptr);
+  trace->ventureFamilies.insert({directiveID,{p.second,exp}});
 }
 
 void PyTrace::unevalDirectiveID(size_t directiveID)
 {
   OmegaDB * omegaDB = new OmegaDB;
-  detachVentureFamily(ventureFamilies[directiveID].first,omegaDB);
+  trace->detachVentureFamily(trace->ventureFamilies[directiveID].first,omegaDB);
   flushDB(omegaDB,false);
-  ventureFamilies.erase(directiveID);
+  trace->ventureFamilies.erase(directiveID);
 }
-
 
 boost::python::object PyTrace::extractPythonValue(size_t directiveID)
 {
   Node * node;
-  tie(node,ignore) = ventureFamilies[directiveID];
+  tie(node,ignore) = trace->ventureFamilies[directiveID];
   assert(node);
   VentureValue * value = node->getValue();
   assert(value);
@@ -102,24 +102,24 @@ boost::python::object PyTrace::extractPythonValue(size_t directiveID)
 
 void PyTrace::bindInGlobalEnv(string sym, size_t directiveID)
 {
-  globalEnv->addBinding(new VentureSymbol(sym),ventureFamilies[directiveID].first);
+  trace->globalEnv->addBinding(new VentureSymbol(sym),trace->ventureFamilies[directiveID].first);
 }
 
 void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
 {
   Node * node;
-  tie(node,ignore) = ventureFamilies[directiveID];
+  tie(node,ignore) = trace->ventureFamilies[directiveID];
   VentureValue * val = parseExpression(valueExp);
   assert(!dynamic_cast<VenturePair*>(val));
   assert(!dynamic_cast<VentureSymbol*>(val));
   node->observedValue = val;
-  constrain(node,true);
+  trace->constrain(node,true);
 }
 
 double PyTrace::getGlobalLogScore()
 {
   double ls = 0.0;
-  for (Node * node : randomChoices)
+  for (Node * node : trace->randomChoices)
   {
     ls += node->sp()->logDensity(node->getValue(),node);
   }
@@ -130,10 +130,15 @@ double PyTrace::getGlobalLogScore()
   return ls;
 }
 
+uint32_t numRandomChoices()
+{
+  return trace->numRandomChoices();
+}
+
 void PyTrace::unobserve(size_t directiveID)
 {
-  Node * root = ventureFamilies[directiveID].first;
-  unconstrain(root);
+  Node * root = trace->ventureFamilies[directiveID].first;
+  trace->unconstrain(root);
 
   if (root->isReference())
   { root->sourceNode->ownsValue = true; }
@@ -143,7 +148,7 @@ void PyTrace::unobserve(size_t directiveID)
 }
 
 void PyTrace::set_seed(size_t n) {
-  gsl_rng_set(rng, n);
+  gsl_rng_set(trace->rng, n);
 }
 
 size_t PyTrace::get_seed() {
@@ -151,15 +156,21 @@ size_t PyTrace::get_seed() {
   return 0;
 }
 
+void infer(Trace * trace, size_t numTransitions, string kernel, bool useGlobalScaffold) 
+{ 
+  assert(!(useGlobalScaffold && kernel == "gibbs"));
+  MixMHKernel * gkernel = trace->gkernels[make_pair(kernel,useGlobalScaffold)];
+  gkernel->infer(numTransitions);
+}
+
+
 void PyTrace::infer(boost::python::dict params) 
 { 
   size_t numTransitions = boost::python::extract<size_t>(params["transitions"]);
   string kernel = boost::python::extract<string>(params["kernel"]);
   bool useGlobalScaffold = boost::python::extract<bool>(params["use_global_scaffold"]);
-
-  assert(!(useGlobalScaffold && kernel == "gibbs"));
-  MixMHKernel * gkernel = gkernels[make_pair(kernel,useGlobalScaffold)];
-  gkernel->infer(numTransitions);
+  
+  infer(trace, numTransitions, kernel, useGlobalScaffold);
 }
 
 boost::python::dict PyTrace::continuous_inference_status() {
@@ -171,27 +182,29 @@ boost::python::dict PyTrace::continuous_inference_status() {
   return status;
 }
 
-void PyTrace::run_continuous_inference() {
-  boost::python::dict params = continuous_inference_params.copy();
-  params["transitions"] = 1;
+void run_continuous_inference(Trace * trace, string kernel, bool useGlobalScaffold) {
+  size_t numTransitions = 1;
   while(continuous_inference_running) {
-    infer(params);
+    infer(trace, numTransitions, kernel, useGlobalScaffold);
   }
 }
 
 void PyTrace::start_continuous_inference(boost::python::dict params) {
   stop_continuous_inference();
 
+  string kernel = boost::python::extract<string>(params["kernel"]);
+  bool useGlobalScaffold = boost::python::extract<bool>(params["use_global_scaffold"]);
+
   continuous_inference_params = params;
   continuous_inference_running = true;
-  //continuous_inference_thread = new std::thread(&PyTrace::run_continuous_inference, this);
+  continuous_inference_thread = new std::thread(run_continuous_inference, trace, kernel, useGlobalScaffold);
 }
 
 void PyTrace::stop_continuous_inference() {
   if(continuous_inference_running) {
     continuous_inference_running = false;
-    //continuous_inference_thread->join();
-    //delete continuous_inference_thread;
+    continuous_inference_thread->join();
+    delete continuous_inference_thread;
   }
 }
 

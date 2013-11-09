@@ -38,54 +38,47 @@ ELSE()
 ENDIF()
 
 ADD_LIBRARY(trace SHARED
-  src/value.cxx
-  src/node.cxx   
-
-  src/env.cxx
-
-  src/builtin.cxx
-
-  src/trace.cxx 
-  src/rcs.cxx
-  src/regen.cxx
-  src/detach.cxx
-  
-  src/flush.cxx
-
-  src/lkernel.cxx
-
-  src/infer/gkernel.cxx
-  src/infer/mh.cxx
-  src/infer/gibbs.cxx
-  src/infer/pgibbs.cxx
-
-  src/utils.cxx
-  src/check.cxx
-
-  src/sp.cxx
-
-  src/scaffold.cxx
-
-  src/sps/csp.cxx
-  src/sps/mem.cxx
-  src/sps/number.cxx
-  src/sps/bool.cxx
-  src/sps/continuous.cxx
-  src/sps/discrete.cxx
-  src/sps/cond.cxx
-  src/sps/vector.cxx
-  src/sps/list.cxx
-  src/sps/map.cxx
-  src/sps/envs.cxx
-  src/sps/eval.cxx
-  src/sps/pycrp.cxx
-
-  src/sps/makesymdirmult.cxx
-  src/sps/makeucsymdirmult.cxx
-
-  src/sps/makelazyhmm.cxx
-  
-  src/pytrace.cxx
+    src/value.cxx
+    src/node.cxx
+    src/env.cxx
+    src/builtin.cxx
+    src/trace.cxx
+    src/rcs.cxx
+    src/regen.cxx
+    src/detach.cxx
+    src/flush.cxx
+    src/lkernel.cxx
+    src/infer/gkernel.cxx
+    src/infer/mh.cxx
+    src/infer/gibbs.cxx
+    src/infer/pgibbs.cxx
+    src/infer/meanfield.cxx
+    src/utils.cxx
+    src/check.cxx
+    src/sp.cxx
+    src/scaffold.cxx
+    src/sps/csp.cxx
+    src/sps/mem.cxx
+    src/sps/number.cxx
+    src/sps/trig.cxx
+    #src/sps/real.cxx
+    #src/sps/count.cxx
+    src/sps/bool.cxx
+    src/sps/continuous.cxx
+    src/sps/discrete.cxx
+    src/sps/cond.cxx
+    src/sps/vector.cxx
+    src/sps/list.cxx
+    src/sps/map.cxx
+    src/sps/envs.cxx
+    src/sps/eval.cxx
+    src/sps/pycrp.cxx
+    src/sps/makesymdirmult.cxx
+    src/sps/makedirmult.cxx
+    src/sps/makebetabernoulli.cxx
+    src/sps/makeucsymdirmult.cxx
+    src/sps/makelazyhmm.cxx
+    src/pytrace.cxx
 )
 
 target_link_libraries(trace
