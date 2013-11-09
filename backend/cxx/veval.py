@@ -54,7 +54,7 @@ def loadEvaluator(ripl):
   (lambda (operator operands)
     (incremental_eval (deref (list_ref operator 2))
 		      (extend_environment (deref (list_ref operator 0))
-					  (deref (list_ref operator 1))
+					  (map_list deref (deref (list_ref operator 1)))
 					  operands)))
 """)
 
@@ -82,7 +82,7 @@ def loadSampleExpressions(ripl):
   ripl.assume("exp5","(list (make_ref (quote normal)) (make_ref 0.0) (make_ref 1.0))")
   ripl.assume("exp6a","""
   (list (make_ref (quote lambda) )
-        (make_ref (list (quote x)))
+        (make_ref (list (make_ref (quote x))))
         (make_ref (list (make_ref (quote +)) (make_ref (quote x)) (make_ref (quote x)))))
 """)
 
@@ -90,16 +90,25 @@ def loadSampleExpressions(ripl):
 
   ripl.assume("exp7a","""
   (list (make_ref (quote lambda) )
-        (make_ref (list (quote x) (quote y)))
+        (make_ref (list (make_ref (quote x)) (make_ref (quote y))))
         (make_ref (list (make_ref (quote +)) (make_ref (quote x)) (make_ref (quote y)))))
 """)
 
   ripl.assume("exp7","(list (make_ref exp7a) (make_ref 5) (make_ref 8))")
 
+def loadConcretize(ripl):
+  ripl.assume("concretizeExp","""
+(lambda (exp)
+  (if (not (is_pair exp))
+      exp
+      (map_list (lambda (ref) (concretizeExp (deref ref))) exp)))
+""")
+
 def loadAll(ripl):
   loadReferences(ripl)
   loadEnvironments(ripl)
   loadEvaluator(ripl)
+  loadConcretize(ripl)
   loadSampleExpressions(ripl)
   return ripl
 
@@ -112,12 +121,22 @@ def evalExp(ripl):
   print ripl.predict("(incremental_eval exp6 (initial_environment))")
   print ripl.predict("(incremental_eval exp7 (initial_environment))")
 
+def concretizeExp(ripl):
+  print ripl.predict("(concretizeExp exp1)")
+  print ripl.predict("(concretizeExp exp2)")
+  print ripl.predict("(concretizeExp exp3)")
+  print ripl.predict("(concretizeExp exp4)")
+  print ripl.predict("(concretizeExp exp5)")
+  print ripl.predict("(concretizeExp exp6)")
+  print ripl.predict("(concretizeExp exp7)")
+
 
 def computeF(x): return x * 5 + 5
 
 def testIncrementalEvaluator(N):
   ripl = RIPL()
   loadAll(ripl)
+  
 
   ripl.assume("genBinaryOp","(lambda () (if (flip) (quote +) (quote *)))")
   ripl.assume("genLeaf","(lambda () (normal 5 3))")

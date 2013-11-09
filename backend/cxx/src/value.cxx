@@ -80,7 +80,7 @@ boost::python::dict VenturePair::toPython() const
   value["type"] = "list";
   boost::python::list l;
   l.append(first->toPython());
-  l.extend(rest->toPython());
+  l.extend(rest->toPython()["value"]);
   value["value"] = l;
   return value;
 }
@@ -133,6 +133,22 @@ VentureValue * VentureSymbol::clone() const { return new VentureSymbol(sym); }
 VentureValue * VentureBool::clone() const { return new VentureBool(pred); }
 VentureValue * VentureNumber::clone() const { return new VentureNumber(x); }
 VentureValue * VentureAtom::clone() const { return new VentureAtom(n); }
+VentureValue * VentureSP::clone() const 
+{ 
+  VentureSP * vsp = new VentureSP(sp);
+  vsp->makerNode = makerNode;
+  return vsp;
+}
+
+// TODO FIXME MEMORY LEAK
+// Right now this causes a minor memory leak--who cleans this up?
+// Actually, cloning may always cause a memory leak, because generally only the outermost
+// Value will be actually deleted. Unless values have a DEEP_DESTROY method.
+VentureValue * VentureSymbol::inverseEvaluate() 
+{ 
+  return new VenturePair(new VentureSymbol("quote"), new VenturePair(this, new VentureNil));
+}
+
 
 VentureValue * VenturePair::inverseEvaluate() 
 { 
