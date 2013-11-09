@@ -94,12 +94,20 @@ class SIVM:
     def get_entropy_info(self):
       return { 'unconstrained_random_choices' : self.trace.numRandomChoices() }
 
-
     def get_seed(self):
         return self.trace.get_seed()
 
     def set_seed(self, seed):
         self.trace.set_seed(seed)
+    
+    def continuous_inference_status(self):
+        return self.trace.continuous_inference_status()
+    
+    def start_continuous_inference(self, params):
+        self.trace.start_continuous_inference(params)
+    
+    def stop_continuous_inference(self):
+        self.trace.stop_continuous_inference()
     
     # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
     

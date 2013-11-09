@@ -7,11 +7,11 @@
 #include <boost/python/object.hpp>
 #include <boost/python/list.hpp>
 #include <boost/python/dict.hpp>
+#include <thread>
 
 struct VentureValue;
 struct MixMHKernel;
 
-/* Is a friend of Trace. Probably better to extend trace instead. */
 struct PyTrace : Trace
 {
   PyTrace();
@@ -24,23 +24,27 @@ struct PyTrace : Trace
   void bindInGlobalEnv(string sym, size_t did);
   boost::python::object extractPythonValue(size_t did);
   void observe(size_t did,boost::python::object valueExp);
-//  void unobserve(size_t did);
-
-  void set_seed(size_t seed);
-  size_t get_seed();
 
   void unevalDirectiveID(size_t directiveID);
   void unobserve(size_t directiveID);
 
+  void set_seed(size_t seed);
+  size_t get_seed();
+
   double getGlobalLogScore();
 
-
-  void infer(boost::python::dict options);
+  void infer(boost::python::dict params);
+  
+  boost::python::dict continuous_inference_status();
+  void start_continuous_inference(boost::python::dict params);
+  void stop_continuous_inference();
+  void run_continuous_inference();
 
   map<pair<string,bool> ,MixMHKernel *> gkernels;
   
-
+  bool continuous_inference_running = false;
+  boost::python::dict continuous_inference_params;
+  std::thread * continuous_inference_thread;
 };
-
 
 #endif

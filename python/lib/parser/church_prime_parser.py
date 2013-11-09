@@ -86,7 +86,7 @@ class ChurchPrimeParser():
             ['force','[ <!force> <expression:exp> <value:lit> ]'],
             ['sample','[ <!sample> <expression:exp> ]'],
             ['continuous_inference_status','[ <!continuous> <!inference> <!status> ]'],
-            ['start_continuous_inference','[ <!start> <!continuous> <!inference> ]'],
+            ['start_continuous_inference','[ <!start> <!continuous> <!inference> <params:json> ]'],
             ['stop_continuous_inference','[ <!stop> <!continuous> <!inference> ]'],
             ['get_current_exception', '[ <!get> <!current> <!exception> ]'],
             ['get_state', '[ <!get> <!state> ]'],
