@@ -182,7 +182,7 @@ function jripl() {
     };
 
     this.display_directives = function() {
-	var success_fun = function(data_in, data) {
+	var success_fun = function(data) {
 	    term.echo("Directives:              | Values:");
 	    for (i = 0; i < data.length; i++){
 		if(typeof(data[i].symbol) != "undefined"){

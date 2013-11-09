@@ -128,19 +128,21 @@ function InitializeDemo() {
         /* Model metadata */
         ripl.assume('demo_id', demo_id, 'demo_id');
         
-        ripl.assume('alpha', '(gamma 1.0 1.0)');
-        ripl.assume('cluster_crp', '(crp_make alpha)');
-        //ripl.assume('scale', '(gamma 4.0 1.0)');
+        ripl.assume('crp_alpha', '(gamma 1.0 1.0)');
+        ripl.assume('cluster_crp', '(make_crp crp_alpha)');
+        
+        ripl.assume('cv_shape', 4.0)
+        ripl.assume('cv_scale', "(inv_gamma 1.0 1.0)")
         
         ripl.assume('get_cluster_mean', "(mem (lambda (cluster dim) (uniform_continuous -10.0 10.0)))");
-        ripl.assume('get_cluster_variance', "(mem (lambda (cluster dim) (inv_gamma 1.0 1.0)))");
+        ripl.assume('get_cluster_variance', "(mem (lambda (cluster dim) (inv_gamma cv_shape cv_scale)))");
         ripl.assume('get_cluster', "(mem (lambda (point) (cluster_crp)))");
         ripl.assume('sample_cluster', "(lambda (cluster dim) (normal (get_cluster_mean cluster dim) (get_cluster_variance cluster dim)))");
-        ripl.assume('get_datapoint', "(mem (lambda (point dim) (sample_cluster (get_cluster point) dim)))");
+        ripl.assume('get_point', "(mem (lambda (point dim) (sample_cluster (get_cluster point) dim)))");
         
         /* For observations */
-        ripl.assume('noise','(mem (lambda (point dim) (inv_gamma 1.0 1.0)))');
-        ripl.assume('obs_fn','(lambda (point dim) (normal (get_datapoint point dim) (noise point dim)))');
+        //ripl.assume('noise','(mem (lambda (point dim) (inv_gamma 1.0 1.0)))');
+        //ripl.assume('obs_fn','(lambda (point dim) (normal (get_datapoint point dim) (noise point dim)))');
         
         ripl.register_all_requests_processed_callback(AllDirectivesLoadedCallback);
     };
@@ -152,16 +154,17 @@ function InitializeDemo() {
             venture_code_str += directiveToString(directives[i]) + '<br/>';
         }
         
-        venture_code_str = venture_code_str.replace(/ /g, "&nbsp;");
-        venture_code_str = venture_code_str.replace(/\(if/g, "(<font color='#0000FF'>if</font>");
-        venture_code_str = venture_code_str.replace(/\(/g, "<font color='#0080D5'>(</font>");
-        venture_code_str = venture_code_str.replace(/\)/g, "<font color='#0080D5'>)</font>");
+        //venture_code_str = venture_code_str.replace(/ /g, "&nbsp;");
+        //venture_code_str = venture_code_str.replace(/\(if/g, "(<font color='#0000FF'>if</font>");
+        //venture_code_str = venture_code_str.replace(/\(/g, "<font color='#0080D5'>(</font>");
+        //venture_code_str = venture_code_str.replace(/\)/g, "<font color='#0080D5'>)</font>");
         
-        venture_code_str = venture_code_str.replace(/lambda/g, "<font color='#0000FF'>lambda</font>");
-        venture_code_str = venture_code_str.replace(/list/g, "<font color='#0000FF'>list</font>");
-        venture_code_str = venture_code_str.replace(/\>=/g, "<font color='#0000FF'>>=</font>");
-        venture_code_str = venture_code_str.replace(/\+/g, "<font color='#0000FF'>+</font>");
-        venture_code_str = venture_code_str.replace(/\*/g, "<font color='#0000FF'>*</font>");
+        //venture_code_str = venture_code_str.replace(/lambda/g, "<font color='#0000FF'>lambda</font>");
+        //venture_code_str = venture_code_str.replace(/list/g, "<font color='#0000FF'>list</font>");
+        //venture_code_str = venture_code_str.replace(/\>=/g, "<font color='#0000FF'>>=</font>");
+        //venture_code_str = venture_code_str.replace(/\+/g, "<font color='#0000FF'>+</font>");
+        //venture_code_str = venture_code_str.replace(/\*/g, "<font color='#0000FF'>*</font>");
+        
         venture_code_str = "<font face='Courier New' size='2'>" + venture_code_str + "</font>";
         $("#venture_code").html(venture_code_str);
     };
@@ -248,28 +251,27 @@ function InitializeDemo() {
         return local_point;
     };
     
+    var colors = ['aqua', 'black', 'blue', 'fuchsia', 'gray', 'green', 'lime', 'maroon', 'navy', 'olive', 'orange', 'purple', 'red', 'silver', 'teal'];
+    
     var MakeCluster = function(cluster) {
         var local_cluster = {};
         local_cluster.id = cluster.id;
+        local_cluster.color = colors.pop();
         local_cluster.circle = paper.ellipse(0, 0, 0, 0);
         local_cluster.circle.attr('stroke-dasharray', "-")
         local_cluster.circle.attr('stroke-width', "3")
         return local_cluster;
-    }
+    };
     
-    var colors = ['aqua', 'black', 'blue', 'fuchsia', 'gray', 'green', 'lime', 'maroon', 'navy', 'olive', 'orange', 'purple', 'red', 'silver', 'teal', 'white', 'yellow'];
-    
-    var DrawPoint = function(local_point, point) {
-        color = colors[point.cluster.id % colors.length];
-        
-        local_point.circle.attr("fill", color);
-        local_point.noise_circle.attr("stroke", color);
-        local_point.noise_circle.attr("rx", 5.0 * Math.sqrt(point.noise.x));
-        local_point.noise_circle.attr("ry", 5.0 * Math.sqrt(point.noise.y));
+    var DeleteCluster = function(cluster_id) {
+        local_cluster = local_clusters[cluster_id]
+        local_cluster.circle.remove();
+        colors.push(local_cluster.color);
+        delete local_clusters[cluster_id];
     };
     
     var DrawCluster = function(local_cluster, cluster) {
-        color = colors[cluster.id % colors.length];
+        color = local_cluster.color;
         
         local_cluster.circle.attr("stroke", color);
 
@@ -278,21 +280,36 @@ function InitializeDemo() {
         
         local_cluster.circle.attr("rx", 20.0 * Math.sqrt(cluster.variance.x));
         local_cluster.circle.attr("ry", 20.0 * Math.sqrt(cluster.variance.y));
-    }
+    };
     
     var ObservePoint = function(obs_id, x, y) {
         obs_str = 'points_' + obs_id;
         
-        ripl.observe('(obs_fn ' + obs_id + ' 0)', x, obs_str + '_x');
-        ripl.observe('(obs_fn ' + obs_id + ' 1)', y, obs_str + '_y');
+        ripl.observe('(get_point ' + obs_id + ' 0)', x, obs_str + '_x');
+        ripl.observe('(get_point ' + obs_id + ' 1)', y, obs_str + '_y');
         
-        ripl.predict('(noise ' + obs_id + ' 0)', obs_str + '_noise_x');
-        ripl.predict('(noise ' + obs_id + ' 1)', obs_str + '_noise_y');
+        //ripl.predict('(noise ' + obs_id + ' 0)', obs_str + '_noise_x');
+        //ripl.predict('(noise ' + obs_id + ' 1)', obs_str + '_noise_y');
         ripl.predict('(get_cluster ' + obs_id + ')', obs_str + '_cluster_id');
         ripl.predict('(get_cluster_mean (get_cluster ' + obs_id + ') 0)', obs_str + '_cluster_mean_x');
         ripl.predict('(get_cluster_mean (get_cluster ' + obs_id + ') 1)', obs_str + '_cluster_mean_y');
         ripl.predict('(get_cluster_variance (get_cluster ' + obs_id + ') 0)', obs_str + '_cluster_variance_x');
         ripl.predict('(get_cluster_variance (get_cluster ' + obs_id + ') 1)', obs_str + '_cluster_variance_y');
+    };
+    
+    var DeletePoint = function(obs_id) {
+        local_points[obs_id].noise_circle.remove();
+        local_points[obs_id].circle.remove();
+        delete local_points[obs_id];
+    };
+    
+    var DrawPoint = function(local_point, point) {
+        color = local_clusters[point.cluster.id].color;
+        
+        local_point.circle.attr("fill", color);
+        local_point.noise_circle.attr("stroke", color);
+        local_point.noise_circle.attr("rx", 5.0);// * Math.sqrt(point.noise.x));
+        local_point.noise_circle.attr("ry", 5.0);// * Math.sqrt(point.noise.y));
     };
     
     /* This is the callback that we pass to GET_DIRECTIVES_CONTINUOUSLY. */
@@ -338,8 +355,7 @@ function InitializeDemo() {
         /* Remove nonexistent clusters and draw the rest. */
         for (cluster_id in local_clusters) {
             if(!(cluster_id in clusters)) {
-                local_clusters[cluster_id].circle.remove();
-                delete local_clusters[cluster_id];
+                DeleteCluster(cluster_id);
             } else {
                 DrawCluster(local_clusters[cluster_id], clusters[cluster_id]);
             }
@@ -348,9 +364,7 @@ function InitializeDemo() {
         /* Remove nonexistent points and draw the rest. */
         for (obs_id in local_points) {
             if (!(obs_id in points)) {
-                local_points[obs_id].noise_circle.remove();
-                local_points[obs_id].circle.remove();
-                delete local_points[obs_id];
+                DeletePoint(obs_id);
             } else {
                 DrawPoint(local_points[obs_id], points[obs_id]);
             }
