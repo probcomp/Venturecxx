@@ -180,7 +180,6 @@ double Trace::applyPSP(Node * node,
 		       map<Node *,vector<double> > *gradients)
 {
   DPRINT("applyPSP: ", node->address.toString());
-
   SP * sp = node->sp();
 
   /* Almost nothing needs to be done if this node is a ESRReference.*/

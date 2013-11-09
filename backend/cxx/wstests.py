@@ -54,6 +54,7 @@ def runTests(N):
   testMakeDirMult1(N)
   testMakeBetaBernoulli1(N)
   testMap1(N)
+  testMap2()
   testLazyHMM1(N)
   testLazyHMMSP1(N)
   testStaleAAA1(N)
@@ -71,6 +72,8 @@ def runTests(N):
   testForget2()
   testReferences1(N)
   testReferences2(N)
+  testMemoizingOnAList()
+  testOperatorChanging(N)
 
 
 def runTests2(N):
@@ -518,6 +521,18 @@ def testMap1(N):
   print "---TestMap1---"
   print "(20.0," + str(mean) + ")"
 
+def testMap2():
+  sivm = SIVM()
+  sivm.assume("m","""(make_map (list (quote x) (quote y))
+                               (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
+  sivm.predict("(map_contains m (quote x))",label="p1")
+  sivm.predict("(map_contains m (quote y))",label="p2")
+  sivm.predict("(map_contains m (quote z))",label="p3")
+
+  assert sivm.report("p1")
+  assert sivm.report("p2")
+  assert not sivm.report("p3")
+
 
 def testEval1(N):
   sivm = SIVM()
@@ -846,3 +861,20 @@ def testReferences2(N):
   eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
   printTest("TestReferences2()",ps,eps)
 
+def testMemoizingOnAList():
+  ripl = SIVM()
+  ripl.assume("G","(mem (lambda (x) 1))")
+  ripl.predict("(G (list 0))")
+  print "Passed TestMemoizingOnAList()"
+
+def testOperatorChanging(N):
+  ripl = SIVM()
+  ripl.assume("f","(mem (lambda () (flip)))")
+  ripl.assume("op1","(if (flip) flip (lambda () (f)))")
+  ripl.assume("op2","(if (op1) op1 (lambda () (op1)))")
+  ripl.assume("op3","(if (op2) op2 (lambda () (op2)))")
+  ripl.assume("op4","(if (op3) op2 op1)")
+  ripl.predict("(op4)")
+  ripl.observe("(op4)",True)
+  ripl.infer(N)
+  print "Passed TestOperatorChanging()"

@@ -161,3 +161,22 @@ vector<VentureValue*> UniformDiscreteSP::enumerateOutput(Node * node) const
   }
   return values;
 }
+
+/* Poisson */
+VentureValue * PoissonSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * mu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  assert(mu);
+  return new VentureNumber(gsl_ran_poisson(rng,mu->x));
+}
+
+double PoissonSP::logDensityOutput(VentureValue * value, Node * node)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * mu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * x = dynamic_cast<VentureNumber *>(value);
+  assert(mu);
+  assert(x);
+  return log(gsl_ran_poisson_pdf(x->getInt(),mu->x));
+}

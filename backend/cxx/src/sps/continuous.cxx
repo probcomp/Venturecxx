@@ -307,3 +307,39 @@ double StudentTSP::logDensityOutput(VentureValue * value, Node * node)  const
   assert(x);
   return log(gsl_ran_tdist_pdf(x->x,nu->x));
 }
+
+VentureValue * ChiSquareSP::simulateOutput(Node * node, gsl_rng * rng) const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  assert(nu);
+  return new VentureNumber(gsl_ran_chisq(rng,nu->x));
+}
+ 
+double ChiSquareSP::logDensityOutput(VentureValue * value, Node * node) const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * x = dynamic_cast<VentureNumber *>(value);
+  assert(nu);
+  assert(x);
+  return ChiSquaredDistributionLogLikelihood(x->x,nu->x);
+}
+
+VentureValue * InverseChiSquareSP::simulateOutput(Node * node, gsl_rng * rng) const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  assert(nu);
+  return new VentureNumber(1.0 / gsl_ran_chisq(rng,nu->x));
+}
+ 
+double InverseChiSquareSP::logDensityOutput(VentureValue * value, Node * node) const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * x = dynamic_cast<VentureNumber *>(value);
+  assert(nu);
+  assert(x);
+  return InverseChiSquaredDistributionLogLikelihood(x->x,nu->x);
+}
