@@ -230,7 +230,8 @@ class TestCoreSivmCxx(unittest.TestCase):
         o1 = self.sivm.execute_instruction(status)
         self.assertEquals(o1['running'], False)
         
-        self.sivm.execute_instruction({'instruction':'start_continuous_inference', 'params' : {}})
+        params = {'kernel': 'mh', 'use_global_scaffold': False}
+        self.sivm.execute_instruction({'instruction':'start_continuous_inference', 'params' : params})
         o2 = self.sivm.execute_instruction(status)
         self.assertEquals(o2['running'], True)
         

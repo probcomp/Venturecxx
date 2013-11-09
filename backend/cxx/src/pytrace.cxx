@@ -18,8 +18,6 @@
 #include <iostream>
 #include <list>
 
-
-
 PyTrace::PyTrace() :
   trace(new Trace()),
   gkernels{
@@ -159,14 +157,15 @@ size_t PyTrace::get_seed() {
 }
 
 
-
-void PyTrace::pt_infer(boost::python::dict params) 
+void PyTrace::infer(boost::python::dict params) 
 { 
   size_t numTransitions = boost::python::extract<size_t>(params["transitions"]);
   string kernel = boost::python::extract<string>(params["kernel"]);
   bool useGlobalScaffold = boost::python::extract<bool>(params["use_global_scaffold"]);
   
-  infer(this, numTransitions, kernel, useGlobalScaffold);
+  assert(!(useGlobalScaffold && kernel == "gibbs"));
+  MixMHKernel * gkernel = gkernels[make_pair(kernel,useGlobalScaffold)];
+  gkernel->infer(numTransitions);
 }
 
 boost::python::dict PyTrace::continuous_inference_status() {
@@ -178,10 +177,9 @@ boost::python::dict PyTrace::continuous_inference_status() {
   return status;
 }
 
-void PyTrace::run_continuous_inference(Trace * trace, string kernel, bool useGlobalScaffold) {
-  size_t numTransitions = 1;
-  while(continuous_inference_running) {
-    infer(trace, numTransitions, kernel, useGlobalScaffold);
+void run_continuous_inference(MixMHKernel * gkernel, bool * flag) {
+  while(*flag) {
+    gkernel->infer(1);
   }
 }
 
@@ -190,10 +188,12 @@ void PyTrace::start_continuous_inference(boost::python::dict params) {
 
   string kernel = boost::python::extract<string>(params["kernel"]);
   bool useGlobalScaffold = boost::python::extract<bool>(params["use_global_scaffold"]);
+  assert(!(useGlobalScaffold && kernel == "gibbs"));
+  MixMHKernel * gkernel = gkernels[make_pair(kernel,useGlobalScaffold)];
 
   continuous_inference_params = params;
   continuous_inference_running = true;
-  continuous_inference_thread = new std::thread(PyTrace::run_continuous_inference, trace, kernel, useGlobalScaffold);
+  continuous_inference_thread = new std::thread(run_continuous_inference, gkernel, &continuous_inference_running);
 }
 
 void PyTrace::stop_continuous_inference() {
@@ -203,15 +203,6 @@ void PyTrace::stop_continuous_inference() {
     delete continuous_inference_thread;
   }
 }
-
-void PyTrace::infer(size_t numTransitions, string kernel, bool useGlobalScaffold)
-{ 
-  assert(!(useGlobalScaffold && kernel == "gibbs"));
-  MixMHKernel * gkernel = gkernels[make_pair(kernel,useGlobalScaffold)];
-  gkernel->infer(numTransitions);
-}
-
-
 
 BOOST_PYTHON_MODULE(libtrace)
 {
@@ -225,7 +216,7 @@ BOOST_PYTHON_MODULE(libtrace)
     .def("getGlobalLogScore", &PyTrace::getGlobalLogScore)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
-    .def("infer", &PyTrace::pt_infer)
+    .def("infer", &PyTrace::infer)
     .def("set_seed", &PyTrace::set_seed)
     .def("get_seed", &PyTrace::get_seed)
     .def("continuous_inference_status", &PyTrace::continuous_inference_status)
