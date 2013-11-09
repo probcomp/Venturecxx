@@ -54,6 +54,7 @@ def runTests(N):
   testMakeDirMult1(N)
   testMakeBetaBernoulli1(N)
   testMap1(N)
+  testMap2()
   testLazyHMM1(N)
   testLazyHMMSP1(N)
   testStaleAAA1(N)
@@ -519,6 +520,18 @@ def testMap1(N):
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestMap1---"
   print "(20.0," + str(mean) + ")"
+
+def testMap2():
+  sivm = SIVM()
+  sivm.assume("m","""(make_map (list (quote x) (quote y))
+                               (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
+  sivm.predict("(map_contains m (quote x))",label="p1")
+  sivm.predict("(map_contains m (quote y))",label="p2")
+  sivm.predict("(map_contains m (quote z))",label="p3")
+
+  assert sivm.report("p1")
+  assert sivm.report("p2")
+  assert not sivm.report("p3")
 
 
 def testEval1(N):

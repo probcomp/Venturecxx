@@ -72,6 +72,7 @@ map<string,SP *> initBuiltInSPs()
 
     // maps
     {"make_map", new MakeMapSP},
+    {"map_contains", new MapContainsSP},
     {"map_lookup", new MapLookupSP},
     
     // booleans
