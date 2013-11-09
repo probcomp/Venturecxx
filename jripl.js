@@ -75,7 +75,7 @@ function jripl() {
 
     /* Perform the actual AJAX request. */
     var ajax_execute_post = function(URL,data_in,on_success) {
-	$.ajax({
+    	$.ajax({
             url: full_url(URL),
             type:'POST', 
             data: JSON.stringify(data_in),
@@ -83,14 +83,14 @@ function jripl() {
             contentType: 'application/json',
             crossDomain: true,
             success: function(data) {
-		a_request_processed_callback();
-		on_success(data_in,data);
+		        a_request_processed_callback();
+		        on_success(data);
                 ajax_continue_requests();
-	    },
+    	    },
             // TODO this error callback needs updating
             error: function(data) { 
-		    console.log(data);
-		},
+    		    console.log(data);
+		    },
             complete: function() {}
         });
     };
