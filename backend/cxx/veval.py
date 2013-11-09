@@ -132,6 +132,10 @@ def concretizeExp(ripl):
 
 
 def computeF(x): return x * 5 + 5
+def extractValue(d): 
+  if type(d) is dict: return extractValue(d["value"])
+  elif type(d) is list: return [extractValue(e) for e in d]
+  else: return d
 
 def testIncrementalEvaluator(N):
   ripl = RIPL()
@@ -139,20 +143,21 @@ def testIncrementalEvaluator(N):
   
 
   ripl.assume("genBinaryOp","(lambda () (if (flip) (quote +) (quote *)))")
-  ripl.assume("genLeaf","(lambda () (normal 5 3))")
+  ripl.assume("genLeaf","(lambda () (normal 3 2))")
   ripl.assume("genVar","(lambda (x) x)")
 
   ripl.assume("genExp","""
 (lambda (x)
-  (if (flip) 
+  (if (flip 0.7) 
       (genLeaf)
-      (if (flip)
+      (if (flip 0.9)
           (genVar x)
           (list (make_ref (genBinaryOp)) (make_ref (genExp x)) (make_ref (genExp x))))))
 """)
 
   ripl.assume("noise","(gamma 2 2)")
   ripl.assume("exp","(genExp (quote x))")
+  ripl.assume("concrete_exp","(concretizeExp exp)",label="exp")
   ripl.assume("f","""
 (mem 
   (lambda (y) 
@@ -175,6 +180,7 @@ def testIncrementalEvaluator(N):
   for t in range(N):
     ripl.infer(50)
     print ripl.report("pid")
+    print extractValue(ripl.report("exp"))
 #    printExpression(ripl.trace,ripl.trace.getNode(expAddr).getValue())
 #    val = ripl.trace.getNode(valAddr).getValue()
 #    noise = ripl.trace.getNode(noiseAddr).getValue()

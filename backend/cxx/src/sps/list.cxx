@@ -81,7 +81,7 @@ VentureValue * MapListSP::simulateRequest(Node * node, gsl_rng * rng) const
     assert(pair);
  
     VenturePair * exp = new VenturePair(new VentureSymbol("mappedSP"),
-					new VenturePair(pair->first->clone()->inverseEvaluate(),
+					new VenturePair(pair->first->inverseEvaluate(),
 							new VentureNil));
     /* TODO this may be problematic */
     size_t id = reinterpret_cast<size_t>(node) + i;
@@ -107,14 +107,15 @@ void MapListSP::flushRequest(VentureValue * value) const
     {
       VenturePair * exp = dynamic_cast<VenturePair*>(esr.exp);
       assert(exp);
-      VentureList * list = exp;
-      while (!dynamic_cast<VentureNil*>(list))
-      {
-	VenturePair * pair = dynamic_cast<VenturePair*>(list);
-	assert(pair);
-	delete pair->first;
-	list = pair->rest;
-      }
+      delete exp->first;
+      // VentureList * list = exp->rest;
+      // while (!dynamic_cast<VentureNil*>(list))
+      // {
+      // 	VenturePair * pair = dynamic_cast<VenturePair*>(list);
+      // 	assert(pair);
+      // 	delete pair->first;
+      // 	list = pair->rest;
+      // }
       listShallowDestroy(exp);
     }
   }
