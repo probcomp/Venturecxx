@@ -63,11 +63,17 @@ vector<VentureValue*> BernoulliSP::enumerateOutput(Node * node) const
   VentureBool * vold = dynamic_cast<VentureBool*>(node->getValue());
   assert(vold);
 
-  VentureNumber * vp = dynamic_cast<VentureNumber *>(node->operandNodes[0]->getValue());
-  assert(vp);
+  double p = 0.5;
+  if (!node->operandNodes.empty())
+  {
+    VentureNumber * vp = dynamic_cast<VentureNumber *>(node->operandNodes[0]->getValue());
+    assert(vp);
+    assert(vp->x >= 0 && vp->x <= 1);
+    p = vp->x;
+  }
 
-  if (vold->pred) { if (vp->x < 1) { return {new VentureBool(false)}; } }
-  else if (vp->x > 0) { return {new VentureBool(true)}; }
+  if (vold->pred) { if (p < 1) { return {new VentureBool(false)}; } }
+  else if (p > 0) { return {new VentureBool(true)}; }
   else { return {}; }
 }
 

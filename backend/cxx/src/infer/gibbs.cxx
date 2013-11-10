@@ -118,22 +118,25 @@ MixMHIndex * GibbsGKernel::sampleIndex()
   if (pNode->sp()->canEnumerate(pNode->nodeType))
   {
     vector<VentureValue *> values = pNode->sp()->enumerate(pNode);
-    LKernel * lk = new DeterministicLKernel(pNode->getValue(),pNode->sp());
-    scaffold->lkernels[pNode] = lk;
-    pindex->source = trace->detach(scaffold->border,scaffold);
-    assertTorus(trace,scaffold);
-    scaffold->lkernels.erase(pNode);
-    delete lk;
-
-    for (size_t i = 0; i < values.size(); ++i)
+    if (!values.empty()) 
     {
-      LKernel * lk = new DeterministicLKernel(values[i],pNode->sp());
+      LKernel * lk = new DeterministicLKernel(pNode->getValue(),pNode->sp());
       scaffold->lkernels[pNode] = lk;
-      trace->regen(scaffold->border,scaffold,false,nullptr,nullptr);
-      pindex->targets.push_back(trace->detach(scaffold->border,scaffold));
+      pindex->source = trace->detach(scaffold->border,scaffold);
       assertTorus(trace,scaffold);
       scaffold->lkernels.erase(pNode);
       delete lk;
+
+      for (size_t i = 0; i < values.size(); ++i)
+      {
+	LKernel * lk = new DeterministicLKernel(values[i],pNode->sp());
+	scaffold->lkernels[pNode] = lk;
+	trace->regen(scaffold->border,scaffold,false,nullptr,nullptr);
+	pindex->targets.push_back(trace->detach(scaffold->border,scaffold));
+	assertTorus(trace,scaffold);
+	scaffold->lkernels.erase(pNode);
+	delete lk;
+      }
     }
   }
   /* Otherwise sample particles */
