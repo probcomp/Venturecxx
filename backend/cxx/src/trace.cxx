@@ -46,8 +46,7 @@ Trace::~Trace()
     Node * root = iter->second.first;
     if (root->isObservation()) 
     { 
-      observedValues.push_back(root->getValue());
-      unconstrain(root); 
+      unconstrain(root,true); 
     }
     OmegaDB * omegaDB = new OmegaDB;
     detachVentureFamily(root,omegaDB); 
@@ -55,8 +54,6 @@ Trace::~Trace()
     destroyExpression(iter->second.second);
     destroyFamilyNodes(root);
   }
-
-  for (VentureValue * obs : observedValues) { delete obs; }
 
   globalEnv->destroySymbols();
   delete globalEnv;

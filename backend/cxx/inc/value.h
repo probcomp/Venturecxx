@@ -15,6 +15,8 @@
 #include <boost/python/dict.hpp>
 #include <boost/functional/hash.hpp>
 
+
+
 struct SP;
 struct Node;
 struct SPAux;
@@ -29,7 +31,11 @@ struct VentureValue {
   virtual size_t toHash() const { assert(false); return 0; }
   virtual VentureValue * clone() const { assert(false); return nullptr; }
 
-  virtual ~VentureValue() {}; 
+  virtual ~VentureValue() {};
+
+  // TODO FIXME destroyParts need to destroy parts and then destroy
+  // all elements (vector and pair)
+  virtual void destroyParts() {};
 
   /* TODO this needs to be implemented for other types besides symbols. */
   virtual bool equals(const VentureValue * & other) const

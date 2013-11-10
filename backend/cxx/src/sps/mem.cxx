@@ -6,6 +6,8 @@
 #include "sps/mem.h"
 #include "utils.h"
 
+#include <iostream>
+
 #include <boost/functional/hash.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -43,15 +45,18 @@ VentureValue * MSP::simulateRequest(Node * node, gsl_rng * rng) const
     return new VentureRequest({ESR(id,nullptr,nullptr)});
   }
 
+  MSPAux * mspaux = dynamic_cast<MSPAux *>(node->spaux());
+  assert(mspaux);
+
   VentureEnvironment * env = new VentureEnvironment;
   env->addBinding(new VentureSymbol("memoizedSP"), sharedOperatorNode);
 
   VentureList * exp = new VentureNil;
 
-  /* TODO the creator is priviledged! */
   for (Node * operand : reverse(operands))
   {
     VentureValue * val = operand->getValue()->clone()->inverseEvaluate();
+    mspaux->ownedValues[id].push_back(val);
     exp = new VenturePair(val,exp);
   }
   exp = new VenturePair(new VentureSymbol("memoizedSP"),exp);
@@ -77,4 +82,24 @@ void MSP::flushRequest(VentureValue * value) const
   }
 
   delete value;
+}
+
+void MSP::flushFamily(SPAux * spaux, size_t id) const 
+{
+  MSPAux * mspaux = dynamic_cast<MSPAux *>(spaux);
+  assert(mspaux);
+  for (VentureValue * val : mspaux->ownedValues[id]) 
+  { 
+    // temporary
+    VentureNumber * vnum = dynamic_cast<VentureNumber*>(val);
+    cout << "flushFamily: (" << val << ", " << vnum->x << ")" << endl;
+    val->destroyParts(); 
+    delete val; 
+  }
+  mspaux->ownedValues.erase(id);
+}
+
+void MSP::destroySPAux(SPAux * spaux) const
+{ 
+  delete spaux; 
 }

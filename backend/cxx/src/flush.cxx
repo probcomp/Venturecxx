@@ -7,31 +7,19 @@
 
 #include <iostream>
 
-FlushType nodeTypeToFlushType(NodeType nodeType)
-{
-  switch (nodeType)
-  {
-  case NodeType::REQUEST: { return FlushType::REQUEST; }
-  case NodeType::OUTPUT: { return FlushType::OUTPUT; }
-  default: { assert(false); }
-  }
-}
 
-void flushDB(OmegaDB * omegaDB, bool isActive)
+void flushDBComplete(OmegaDB * omegaDB)
 {
-  for (pair<SP *,LatentDB *> p : omegaDB->latentDBs)
-  { 
-    p.first->destroyLatentDB(p.second);
-  }
-
-  if (!isActive)
-  { 
 
     while (!omegaDB->flushQueue.empty())
     {
       FlushEntry f = omegaDB->flushQueue.front();
-      if (f.owner) { f.owner->flushValue(f.value,f.flushType); }
-      else { delete f.value; }
+      if (f.flushAux) { f.owner->destroySPAux(f.spaux); }
+      else if (f.spaux) { f.owner->flushFamily(f.spaux,f.id); }
+      else 
+      {
+	f.owner->flushValue(f.value,f.nodeType); 
+      }
       omegaDB->flushQueue.pop();
     }
 
@@ -39,7 +27,7 @@ void flushDB(OmegaDB * omegaDB, bool isActive)
     {
       destroyFamilyNodes(p.second);
     }
-  }
+  
   delete omegaDB;
 }
 
@@ -58,3 +46,14 @@ void destroyFamilyNodes(Node * node)
   }
 }
 
+
+void flushDB(OmegaDB * omegaDB, bool isActive)
+{
+  for (pair<SP *,LatentDB *> p : omegaDB->latentDBs)
+  { 
+    p.first->destroyLatentDB(p.second);
+  }
+  // this could be in another thread
+  if (!isActive) { flushDBComplete(omegaDB); }
+  else { delete omegaDB; }
+}

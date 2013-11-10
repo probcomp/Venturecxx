@@ -54,7 +54,7 @@ class Trace
 
   double constrain(Node * node,bool reclaimValue);
 
-  double unconstrain(Node * node);
+  double unconstrain(Node * node,bool giveOwnershipToSP);
   
   Scaffold constructScaffold(vector<Node *> principalNodes,
 			     unsigned int depth,
@@ -148,7 +148,7 @@ protected:
 			Scaffold * scaffold,
 			OmegaDB * omegaDB);
 
-  void teardownMadeSP(Node * node,bool isAAA);
+  void teardownMadeSP(Node * node,bool isAAA,OmegaDB * omegaDB);
 
   double unapplyPSP(Node * node,
 		    Scaffold * scaffold,
@@ -165,8 +165,8 @@ protected:
 
   double detachFamily(Node * node,
 		      Scaffold * scaffold,
-		      OmegaDB * omegaDB,
-		      bool familyOwnsValue);
+		      OmegaDB * omegaDB);
+
 
   double unapply(Node * node,
 		 Scaffold * scaffold,

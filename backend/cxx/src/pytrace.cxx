@@ -133,13 +133,7 @@ double PyTrace::getGlobalLogScore()
 void PyTrace::unobserve(size_t directiveID)
 {
   Node * root = ventureFamilies[directiveID].first;
-  unconstrain(root);
-
-  if (root->isReference())
-  { root->sourceNode->ownsValue = true; }
-  else
-  { root->ownsValue = true; }
-
+  unconstrain(root,true);
 }
 
 void PyTrace::set_seed(size_t n) {

@@ -111,7 +111,7 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
     double weight = node->sp()->logDensityOutput(value,node);
     node->setValue(value);
     node->isConstrained = true;
-    node->ownsValue = false;
+    node->spOwnsValue = false;
     node->sp()->incorporateOutput(value,node);
     if (node->sp()->isRandomOutput) { 
       unregisterRandomChoice(node); 
@@ -294,6 +294,10 @@ double Trace::evalRequests(Node * node,
       }
       node->sp()->registerFamily(esr.id, esrParent, node->spaux());
     }
+    else
+    {
+      assert(!dynamic_cast<CSP*>(node->sp()));
+    }
     Node::addESREdge(esrParent,node->outputNode);
   }
 
@@ -330,13 +334,7 @@ double Trace::restoreFamily(Node * node,
   assert(node);
   if (node->nodeType == NodeType::VALUE)
   {
-    assert(node->getValue());
-    if (!dynamic_cast<VentureValue*>(node->getValue())) { assert(false); }
-
-    if (dynamic_cast<VentureSP *>(node->getValue()))
-    { 
-      processMadeSP(node,false); 
-    }
+    // do nothing
   }
   else if (node->nodeType == NodeType::LOOKUP)
   {
@@ -371,17 +369,7 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
     VentureList * list = dynamic_cast<VentureList*>(exp);
     VentureSymbol * car = dynamic_cast<VentureSymbol*>(listRef(list,0));
  
-    /* Lambda */
-    if (car && car->sym == "lambda")
-    {
-      node = new Node(NodeType::VALUE, nullptr);
-      /* The CSP owns the expression iff it is in a VentureFamily */
-      node->setValue(new VentureSP(new CSP(listRef(list,1),listRef(list,2),env)));
-      processMadeSP(node,false);
-      node->isActive = true;
-    }
-    /* Quote */
-    else if (car && car->sym == "quote")
+    if (car && car->sym == "quote")
     {
       node = new Node(NodeType::VALUE, nullptr);
       node->setValue(listRef(list,1));
@@ -411,8 +399,6 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
       addApplicationEdges(operatorNode,operandNodes,requestNode,outputNode);
       weight += apply(requestNode,outputNode,scaffold,false,omegaDB,gradients);
     }
-    // needs to be cleaned up
-//    listShallowDestroy(list);
   }
   /* Variable lookup */
   else if (dynamic_cast<VentureSymbol*>(exp))

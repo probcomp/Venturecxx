@@ -76,7 +76,7 @@ struct Node
   Node * requestNode{nullptr};
   Node * outputNode{nullptr};
   bool isConstrained{false};
-  bool ownsValue{true};
+  bool spOwnsValue{true};
 
   SPAux * madeSPAux{nullptr}; // owner
 

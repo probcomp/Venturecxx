@@ -9,11 +9,22 @@
 
 #include <boost/functional/hash.hpp>
 
+VentureValue * MakeCSP::simulateOutput(Node * node, gsl_rng * rng) const
+{
+  VentureList * ids = dynamic_cast<VentureList*>(node->operandNodes[0]->getValue());
+  VentureValue * body = dynamic_cast<VentureValue*>(node->operandNodes[1]->getValue());
+  assert(ids);
+  assert(body);
+  return new VentureSP(new CSP(ids,body,node->familyEnv));
+}
+
+
 VentureValue * CSP::simulateRequest(Node * node, gsl_rng * rng) const
 {
   /* TODO awkward, maybe buggy */
   size_t id = reinterpret_cast<size_t>(node);
   VentureEnvironment * extendedEnv = new VentureEnvironment(env);
+
   assert(node->operandNodes.size() >= listLength(ids));
   for (size_t i = 0; i < listLength(ids); ++i)
     {

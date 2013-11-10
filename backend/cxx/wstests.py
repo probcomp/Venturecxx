@@ -37,9 +37,9 @@ def runTests(N):
   testMHNormal1(N)
   testStudentT0(N)
   testMem0(N)
-  #testMem1(N)
-  #testMem2(N)
-  #testMem3(N)
+  testMem1(N)
+  testMem2(N)
+  testMem3(N)
   testSprinkler1(N)
   testSprinkler2(N)
   testGamma1(N)
@@ -81,6 +81,24 @@ def runTests(N):
 
 def runTests2(N):
   testGeometric1(N)
+
+
+
+def testMakeCSP():
+  sivm = SIVM()
+  sivm.assume("f", "(lambda (x) (* x x))")
+  sivm.predict("(f 1)")
+  
+  sivm.assume("g", "(lambda (x y) (* x y))")
+  sivm.predict("(g 2 3)")
+
+  sivm.assume("h", "(lambda () 5)")
+  sivm.predict("(h)")
+
+  print sivm.report(2)
+  print sivm.report(4)
+  print sivm.report(6)
+
 
 def testBernoulli0(N):
   sivm = SIVM()
@@ -178,12 +196,12 @@ def testMem0(N):
 
 def testMem1(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical 0.4 0.6))))")
+  sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
   sivm.assume("x","(f 1)")
   sivm.assume("y","(f 1)")
   sivm.assume("w","(f 2)")
   sivm.assume("z","(f 2)")
-  sivm.assume("q","(plus 1 (categorical 0.1 0.9))")
+  sivm.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
   sivm.predict('(plus x y w z q)');
 
   predictions = loggingInfer(sivm,7,N)
@@ -193,13 +211,13 @@ def testMem1(N):
 
 def testMem2(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical 0.4 0.6))))")
+  sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
   sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   sivm.assume("x","(f ((branch (bernoulli 0.5) (lambda () (lambda () 1)) (lambda () (lambda () 1)))))")
   sivm.assume("y","(g ((lambda () 0)))")
   sivm.assume("w","((lambda () (f 2)))")
   sivm.assume("z","(g 1)")
-  sivm.assume("q","(plus 1 (categorical 0.1 0.9))")
+  sivm.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
   sivm.predict('(plus x y w z q)');
 
   predictions = loggingInfer(sivm,8,N)
@@ -209,13 +227,13 @@ def testMem2(N):
 
 def testMem3(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical 0.4 0.6))))")
+  sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
   sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   sivm.assume("x","(f ((lambda () 1)))")
   sivm.assume("y","(g ((lambda () (branch (bernoulli 1.0) (lambda () 0) (lambda () 100)))))")
   sivm.assume("w","((lambda () (f 2)))")
   sivm.assume("z","(g 1)")
-  sivm.assume("q","(plus 1 (categorical 0.1 0.9))")
+  sivm.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
   sivm.predict('(plus x y w z q)');
 
   predictions = loggingInfer(sivm,8,N)
@@ -696,19 +714,38 @@ def loadPYMem(sivm):
    (make_crp alpha d)))
 """)
 
+def loadDPMem(sivm):
+  sivm.assume("pick_a_stick","""
+(lambda (sticks k)
+  (branch (bernoulli (sticks k))
+          (lambda () k)
+          (lambda () (pick_a_stick sticks (plus k 1)))))
+""")
+  
+  sivm.assume("make_sticks","""
+(lambda (alpha)
+  ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
+   (mem
+    (lambda (k)
+      (beta 1 (plus alpha (times k k)))))))
+""")
+
+  sivm.assume("u_dpmem","""
+(lambda (alpha base_dist)
+  ((lambda (augmented_proc py)
+     (lambda () (augmented_proc (py))))
+   (mem (lambda (stick_index) (base_dist)))
+   (make_sticks alpha)))
+""")
+
+
 def testDPMem1(N):
   sivm = SIVM()
-  loadPYMem(sivm)
-  sivm.assume("dpmem","""
-(lambda (alpha base_dist)
-  ((lambda (augmented_proc crp)
-     (lambda () (augmented_proc (crp))))
-   (mem (lambda (table) (base_dist)))
-   (make_crp alpha)))
-""")
+  loadDPMem(sivm)
+
   sivm.assume("alpha","(uniform_continuous 0.1 20.0)")
   sivm.assume("base_dist","(lambda () (real (categorical 0.5 0.5)))")
-  sivm.assume("f","(dpmem alpha base_dist)")
+  sivm.assume("f","(u_dpmem alpha base_dist)")
 
   sivm.predict("(f)")
   sivm.predict("(f)")
@@ -750,6 +787,20 @@ def loadHPY(sivm,topCollapsed,botCollapsed):
   else: sivm.assume("intermediate_dist","(u_pymem alpha d base_dist)")
   if botCollapsed: sivm.assume("f","(pymem alpha d intermediate_dist)")
   else: sivm.assume("f","(u_pymem alpha d intermediate_dist)")
+
+def loadPY(sivm):
+  loadPYMem(sivm)
+  sivm.assume("alpha","(gamma 1.0 1.0)")
+  sivm.assume("d","(uniform_continuous 0 0.0001)")
+  sivm.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
+  sivm.assume("f","(u_pymem alpha d base_dist)")
+
+def predictPY(N):
+  sivm = SIVM()
+  loadPY(sivm)
+  sivm.predict("(f)",label="pid")
+  observeCategories(sivm,[2,2,5,1,0])
+  return loggingInfer(sivm,"pid",N)
 
 def predictHPY(N,topCollapsed,botCollapsed):
   sivm = SIVM()

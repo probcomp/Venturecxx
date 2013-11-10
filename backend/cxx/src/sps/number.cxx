@@ -34,10 +34,13 @@ VentureValue * TimesSP::simulateOutput(Node * node, gsl_rng * rng)  const
 {
   vector<Node *> & operands = node->operandNodes;
   double prod = 1;
+  cout << "times.output: " << operands.size() << " args" << endl;
   for (size_t i = 0; i < operands.size(); ++i)
   {
+    cout << "(i," << i << ") <" << operands[i]->getValue() << ">: " << flush;
     VentureNumber * vdouble = dynamic_cast<VentureNumber *>(operands[i]->getValue());
     assert(vdouble);
+    cout << vdouble->x << endl;
     prod *= vdouble->x;
   }
   return new VentureNumber(prod);

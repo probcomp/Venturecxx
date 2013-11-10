@@ -37,7 +37,7 @@ pair<double, OmegaDB*> Trace::detach(const vector<Node *> & border,
       assert(scaffold->isResampling(node));
       if (node->isObservation()) 
       { 
-	weight += unconstrain(node);
+	weight += unconstrain(node,false);
       }
       weight += detachInternal(node,scaffold,omegaDB);
     }
@@ -81,11 +81,11 @@ double Trace::unabsorb(Node * node,
   return weight;
 }
 
-double Trace::unconstrain(Node * node)
+double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
 {
   assert(node->isActive);
   if (node->isReference())
-  { return unconstrain(node->sourceNode); }
+  { return unconstrain(node->sourceNode,giveOwnershipToSP); }
   else
   {
     if (node->sp()->isRandomOutput) { 
@@ -95,6 +95,7 @@ double Trace::unconstrain(Node * node)
     node->sp()->removeOutput(node->getValue(),node);
     double logDensity = node->sp()->logDensityOutput(node->getValue(),node);
     node->isConstrained = false;
+    node->spOwnsValue = giveOwnershipToSP;
     node->sp()->incorporateOutput(node->getValue(),node);
     return logDensity;
   }
@@ -136,7 +137,7 @@ double Trace::detachInternal(Node * node,
   return weight;
 }
 
-void Trace::teardownMadeSP(Node * node, bool isAAA)
+void Trace::teardownMadeSP(Node * node, bool isAAA,OmegaDB * omegaDB)
 {
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
 
@@ -150,7 +151,7 @@ void Trace::teardownMadeSP(Node * node, bool isAAA)
     if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
     if (madeSP->hasAux()) 
     { 
-      madeSP->destroySPAux(node->madeSPAux);
+      omegaDB->flushQueue.emplace(madeSP,node->madeSPAux); 
       node->madeSPAux = nullptr;
     }
   }
@@ -177,7 +178,7 @@ double Trace::unapplyPSP(Node * node,
   }
   
   if (dynamic_cast<VentureSP*>(node->getValue()))
-  { teardownMadeSP(node,scaffold && scaffold->isAAA(node)); }
+  { teardownMadeSP(node,scaffold && scaffold->isAAA(node),omegaDB); }
 
   SP * sp = node->sp();
   double weight = 0;
@@ -196,7 +197,11 @@ double Trace::unapplyPSP(Node * node,
   }
 
 
-  if (node->ownsValue) { omegaDB->flushQueue.emplace(node->sp(),node->getValue(),nodeTypeToFlushType(node->nodeType)); }
+  if (node->spOwnsValue) 
+  { 
+
+    omegaDB->flushQueue.emplace(node->sp(),node->getValue(),node->nodeType); 
+  }
 
   if (scaffold && scaffold->isResampling(node))
   { omegaDB->drgDB[node] = node->getValue();  node->clearValue(); }
@@ -252,17 +257,14 @@ double Trace::detachSPFamily(VentureSP * vsp,
   Node * root = spaux->families[id];
   assert(root);
   spaux->families.erase(id);
+
+  omegaDB->flushQueue.emplace(vsp->sp,spaux,id);
+
   omegaDB->spFamilyDBs[{vsp->makerNode,id}] = root;
-  if (spaux->familyValues.count(id))
-  {
-    for (VentureValue * val : spaux->familyValues[id])
-    {
-      omegaDB->flushQueue.emplace(vsp->sp,val,FlushType::FAMILY_VALUE); 
-    }
-    spaux->familyValues.erase(id);
-  }
   
-  double weight = detachFamily(root,scaffold,omegaDB,vsp->sp->esrsOwnValues);
+
+  
+  double weight = detachFamily(root,scaffold,omegaDB);
   return weight;
 }
 
@@ -270,13 +272,12 @@ double Trace::detachSPFamily(VentureSP * vsp,
 double Trace::detachVentureFamily(Node * root,OmegaDB * omegaDB)
 {
   assert(root);
-  return detachFamily(root,nullptr,omegaDB,false);
+  return detachFamily(root,nullptr,omegaDB);
 }
 
 double Trace::detachFamily(Node * node,
 			   Scaffold * scaffold,
-			   OmegaDB * omegaDB,
-			   bool familyOwnsValues)
+			   OmegaDB * omegaDB)
 {
   assert(node);
   DPRINT("uneval: ", node->address.toString());
@@ -284,23 +285,7 @@ double Trace::detachFamily(Node * node,
   
   if (node->nodeType == NodeType::VALUE) 
   { 
-    assert(node->getValue());
-
-    // will go away once we desugar to quote
-    if (dynamic_cast<VentureSP *>(node->getValue())) 
-    { 
-      VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
-      if (vsp->makerNode == node)
-      {
-	assert(dynamic_cast<CSP*>(vsp->sp));
-	teardownMadeSP(node,false);
-	omegaDB->flushQueue.emplace(nullptr,node->getValue(),FlushType::CONSTANT);
-      }
-    }
-    else if (familyOwnsValues)
-    {
-      omegaDB->flushQueue.emplace(nullptr,node->getValue(),FlushType::CONSTANT);
-    }
+    // do nothing! (finally!)
   }
   else if (node->nodeType == NodeType::LOOKUP)
   {
@@ -312,8 +297,8 @@ double Trace::detachFamily(Node * node,
   {
     weight += unapply(node,scaffold,omegaDB);
     for (Node * operandNode : reverse(node->operandNodes))
-    { weight += detachFamily(operandNode,scaffold,omegaDB,familyOwnsValues); }
-    weight += detachFamily(node->operatorNode,scaffold,omegaDB,familyOwnsValues);
+    { weight += detachFamily(operandNode,scaffold,omegaDB); }
+    weight += detachFamily(node->operatorNode,scaffold,omegaDB);
   }
   return weight;
 }

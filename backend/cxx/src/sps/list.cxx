@@ -74,23 +74,70 @@ VentureValue * MapListSP::simulateRequest(Node * node, gsl_rng * rng) const
   VentureEnvironment * env = new VentureEnvironment;
   env->addBinding(new VentureSymbol("mappedSP"),fNode);
 
+  MapListSPAux * aux = dynamic_cast<MapListSPAux *>(node->spaux());
+  assert(aux);
+
   size_t i = 0;
   while (!dynamic_cast<VentureNil*>(list))
   {
     VenturePair * pair = dynamic_cast<VenturePair*>(list);
     assert(pair);
+
+    VentureValue * val = pair->first->inverseEvaluate();
+    assert(val);
+
  
-    VenturePair * exp = new VenturePair(new VentureSymbol("mappedSP"),
-					new VenturePair(pair->first->inverseEvaluate(),
-							new VentureNil));
     /* TODO this may be problematic */
     size_t id = reinterpret_cast<size_t>(node) + i;
+
+    if (dynamic_cast<VentureSymbol*>(pair->first))
+    { 
+      VenturePair * p = dynamic_cast<VenturePair*>(val);
+      assert(p);
+      aux->ownedSymbols[id] = p; 
+    }
+    else if (dynamic_cast<VenturePair*>(pair->first))
+    { 
+      VenturePair * p = dynamic_cast<VenturePair*>(val);
+      assert(p);
+      aux->ownedPairs[id] = p; 
+    }
+
+    VenturePair * exp = new VenturePair(new VentureSymbol("mappedSP"),
+					new VenturePair(val,
+							new VentureNil));
+
 
     esrs.push_back(ESR(id,exp,env));
     i++;
     list = pair->rest;
   }
   return new VentureRequest(esrs);
+}
+
+void MapListSP::flushFamily(SPAux * spaux, size_t id) const
+{
+
+  MapListSPAux * aux = dynamic_cast<MapListSPAux *>(spaux);
+  assert(aux);
+
+
+  // VentureSymbol
+  if (aux->ownedSymbols.count(id))
+  {
+    VenturePair * pair = aux->ownedSymbols[id];
+    assert(pair);
+    delete pair->first;
+    listShallowDestroy(pair);
+  }
+  else if (aux->ownedPairs.count(id))
+  {
+    VenturePair * pair = aux->ownedPairs[id];
+    assert(pair);
+    delete pair->first;
+    delete pair;
+  }
+  
 }
 
 void MapListSP::flushRequest(VentureValue * value) const
@@ -108,17 +155,10 @@ void MapListSP::flushRequest(VentureValue * value) const
       VenturePair * exp = dynamic_cast<VenturePair*>(esr.exp);
       assert(exp);
       delete exp->first;
-      // VentureList * list = exp->rest;
-      // while (!dynamic_cast<VentureNil*>(list))
-      // {
-      // 	VenturePair * pair = dynamic_cast<VenturePair*>(list);
-      // 	assert(pair);
-      // 	delete pair->first;
-      // 	list = pair->rest;
-      // }
       listShallowDestroy(exp);
     }
   }
+  
   delete value;
 }
 

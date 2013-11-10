@@ -124,6 +124,9 @@ map<string,SP *> initBuiltInSPs()
     // with LSRs
     {"make_lazy_hmm", new MakeLazyHMMSP},
 
+    // Lambda replacement
+    {"make_csp", new MakeCSP},
+
     // with shared ESRs
     {"mem", new MSPMakerSP},
   };

@@ -27,7 +27,7 @@ void ScaffoldMHGKernel::loadParameters(MixMHParam * param)
 
 double ScaffoldMHGKernel::propose()
 {
-  LPRINT("propose","!");
+  cout << "propose" << endl;
   assert(scaffold);
   assert(!rhoDB);
 
@@ -43,7 +43,7 @@ double ScaffoldMHGKernel::propose()
 
 void ScaffoldMHGKernel::accept()
 {
-  LPRINT("accept","!");
+  cout << "accept" << endl;
   flushDB(rhoDB,false);
   rhoDB = nullptr;
 }
@@ -51,7 +51,7 @@ void ScaffoldMHGKernel::accept()
 
 void ScaffoldMHGKernel::reject()
 {
-  LPRINT("reject","!"); 
+  cout << "reject" << endl;
   pair<double, OmegaDB *> xiInfo = trace->detach(scaffold->border,scaffold);
   OmegaDB * xiDB = xiInfo.second;
   assertTorus(trace,scaffold);
