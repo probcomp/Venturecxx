@@ -1,6 +1,5 @@
-#ifndef MAKE_SYM_DIR_MULT_H
-#define MAKE_SYM_DIR_MULT_H
-
+#ifndef MAKE_DIR_MULT_H
+#define MAKE_DIR_MULT_H
 
 #include "sp.h"
 #include "spaux.h"
@@ -8,33 +7,31 @@
 #include <string>
 
 /* TODO this does not yet handle n changing in AAA */
-struct SymDirMultSPAux : SPAux
+struct DirMultSPAux : SPAux
 {
-  /* TODO confirm vector initializes doubles to 0 */
-  SymDirMultSPAux(uint32_t n): counts(n,0) {}
-  // counts could be uints, but then we need to keep converting to add alpha
+  DirMultSPAux(uint32_t n): counts(n,0) {}
   vector<uint32_t> counts;
 };
 
-struct MakeSymDirMultSP : SP
+struct MakeDirMultSP : SP
 {
-  MakeSymDirMultSP()
+  MakeDirMultSP()
     {
       childrenCanAAA = true;
-      name = "make_sym_dir_mult";
+      name = "make_dir_mult";
     }
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
 
 };
 
-struct SymDirMultSP : SP
+struct DirMultSP : SP
 {
-  SymDirMultSP(double alpha,uint32_t n): alpha(alpha), n(n)
+  DirMultSP(vector<double> alphaVector): alphaVector(alphaVector)
     {
       isRandomOutput = true;
       canAbsorbOutput = true;
       tracksSamples = true;
-      name = "sym_dir_mult";
+      name = "dir_mult";
     }
 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
@@ -47,8 +44,8 @@ struct SymDirMultSP : SP
   SPAux * constructSPAux() const override;
   void destroySPAux(SPAux * spaux) const override;
 
-  double alpha;
-  uint32_t n;
+  vector<double> alphaVector;
+
 };
 
 

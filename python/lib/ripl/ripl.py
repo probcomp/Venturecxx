@@ -71,6 +71,7 @@ class Ripl():
             # refers to the argument's location in the string
             if e.exception == 'invalid_argument':
                 arg = e.data['argument']
+                #import pdb; pdb.set_trace()
                 text_index = arg_ranges[arg]
                 e.data['text_index'] = text_index
             a = e.data['text_index'][0]
@@ -205,15 +206,10 @@ class Ripl():
         value = self.execute_instruction(s,d)['value']
         return value if type else value['value']
 
-    def infer(self, config={}):
+    def infer(self, transitions, kernel="mh", use_global_scaffold=False):
         s = self._cur_parser().get_instruction_string('infer')
-        self.execute_instruction(s, {'params': config})
-
-#    def infer(self, iterations, resample=False):
-#        s = self._cur_parser().get_instruction_string('infer')
-#        d = {'iterations':iterations,'resample':resample}
-#        self.execute_instruction(s,d)
-#        return None
+        self.execute_instruction(s, {'params': {"transitions": transitions,
+            "kernel": kernel, "use_global_scaffold": use_global_scaffold}})
 
     def clear(self):
         s = self._cur_parser().get_instruction_string('clear')
@@ -227,14 +223,15 @@ class Ripl():
         return None
 
     def list_directives(self, type=False):
-        s = self._cur_parser().get_instruction_string('list_directives')
-        directives = self.execute_instruction(s,{})['directives']
-        # modified to add value to each directive
-        # FIXME: is this correct behavior?
-        for directive in directives:
-            value = self.report(directive['directive_id'], type)
-            directive['value'] = value
-        return directives
+        with self.sivm._pause_continuous_inference():
+            s = self._cur_parser().get_instruction_string('list_directives')
+            directives = self.execute_instruction(s,{})['directives']
+            # modified to add value to each directive
+            # FIXME: is this correct behavior?
+            for directive in directives:
+                value = self.report(directive['directive_id'], type)
+                directive['value'] = value
+            return directives
 
     def get_directive(self, label_or_did):
         if isinstance(label_or_did,int):
@@ -259,11 +256,12 @@ class Ripl():
     
     def continuous_inference_status(self):
         s = self._cur_parser().get_instruction_string('continuous_inference_status')
-        return self.execute_instruction(s)['running']
+        return self.execute_instruction(s)
 
-    def start_continuous_inference(self):
+    def start_continuous_inference(self, kernel="mh", use_global_scaffold=False):
         s = self._cur_parser().get_instruction_string('start_continuous_inference')
-        self.execute_instruction(s)
+        self.execute_instruction(s, {'params':
+            {"kernel": kernel, "use_global_scaffold": use_global_scaffold}})
         return None
 
     def stop_continuous_inference(self):

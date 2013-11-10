@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <boost/python/object.hpp>
+#include <boost/python/dict.hpp>
 #include <boost/functional/hash.hpp>
 
 struct SP;
@@ -20,7 +21,10 @@ struct SPAux;
 
 /* Should be abstract. */
 struct VentureValue { 
-  virtual boost::python::object toPython() const { return boost::python::object("toPython() not implemented."); }
+  virtual boost::python::dict toPython() const;
+
+  virtual string toString() const { return "no_name"; }
+  virtual VentureValue * inverseEvaluate() { return this; }
 
   virtual size_t toHash() const { assert(false); return 0; }
   virtual VentureValue * clone() const { assert(false); return nullptr; }
@@ -52,18 +56,33 @@ struct VentureSymbol : VentureValue
   VentureSymbol(const string & sym): sym(sym) {}
   string sym;
   size_t toHash() const override;
-  VentureValue * clone() const override { return new VentureSymbol(sym); }
+  VentureValue * clone() const override;
   bool equals(const VentureValue * & other) const override;
+
+  boost::python::dict toPython() const override;
+
 };
 
-struct VentureList : VentureValue { };
+struct VentureList : VentureValue 
+{ 
 
-struct VentureNil : VentureList { };
+
+};
+
+struct VentureNil : VentureList 
+{ 
+  size_t toHash() const override;
+  VentureValue * clone() const override;
+
+};
 
 struct VenturePair : VentureList
 {
   VenturePair(VentureValue * first, VentureList * rest): 
     first(first), rest(rest) {}
+  size_t toHash() const override;
+  VentureValue * clone() const override;
+  VentureValue * inverseEvaluate() override;
   VentureValue * first;
   VentureList * rest;
 };
@@ -76,36 +95,35 @@ struct VentureMap : VentureValue
 struct VentureBool : VentureValue 
 { 
   VentureBool(bool pred): pred(pred) {}; 
-  boost::python::object toPython() const override { return boost::python::object(pred); }
-  VentureValue * clone() const override { return new VentureBool(pred); }
+  VentureValue * clone() const override; 
   size_t toHash() const override { return hash<bool>()(pred); }
   bool pred;
+  boost::python::dict toPython() const override;
 };
 
 struct VentureNumber : VentureValue 
 { 
   VentureNumber(double x): x(x) {}
-  boost::python::object toPython() const override { return boost::python::object(x); }
   size_t toHash() const override { return hash<double>()(x); }
-  VentureValue * clone() const override { return new VentureNumber(x); }
+  VentureValue * clone() const override;
   int getInt() const { return static_cast<int>(x); }
   double x;
+  boost::python::dict toPython() const override;
   
 };
 
 struct VentureAtom : VentureValue
 {
   VentureAtom(uint32_t n): n(n) {}
-  boost::python::object toPython() const override { return boost::python::object(n); }
   size_t toHash() const override { return n; }
-  VentureValue * clone() const override { return new VentureAtom(n); }
+  VentureValue * clone() const override;
   uint32_t n;
+  boost::python::dict toPython() const override;
 };
 
 struct VentureVector : VentureValue
 {
   VentureVector(const vector<VentureValue *> xs): xs(xs) {}
-  boost::python::object toPython() const override { return boost::python::object("<vector>"); }
   vector<VentureValue *> xs;
 };
 
@@ -116,7 +134,6 @@ struct VentureRequest : VentureValue
   VentureRequest(vector<ESR> esrs): esrs(esrs) {}
   VentureRequest(vector<HSR *> hsrs): hsrs(hsrs) {}
   
-  boost::python::object toPython() const override { return boost::python::object("<requests>"); }
   vector<ESR> esrs;
   vector<HSR *> hsrs;
 
@@ -127,7 +144,10 @@ struct VentureSP : VentureValue
 {
   VentureSP(SP * sp): sp(sp) {}
   SP * sp;
-  Node * makerNode; // set in processMadeSP()
+  Node * makerNode{nullptr}; // set in processMadeSP()
+  string toString() const override;
+
+  // TODO return the toPython of the Aux
 
   ~VentureSP();
 

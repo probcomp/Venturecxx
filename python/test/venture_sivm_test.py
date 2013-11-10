@@ -73,7 +73,7 @@ class TestVentureSivm(unittest.TestCase):
         return
         #stub the Sivm
         def f(expression):
-            raise VentureException('parse', 'moo', expression_index=[0,3,2,0,1,0])
+            raise VentureException('parse', 'moo', expression_index=[3,2,0,1,0])
         self.core_sivm.execute_instruction = f
         try:
             self.sivm.execute_instruction({
@@ -86,8 +86,6 @@ class TestVentureSivm(unittest.TestCase):
             self.assertEqual(e.data['expression_index'],[3,1,0,0])
     # test exception_index desugaring
     def test_sugaring_2(self):
-        # FIXME: if is not properly desugared for cxx
-        return
         num = {'type':'number','value':1}
         did = self.sivm.execute_instruction({
             "instruction":"assume",
@@ -95,6 +93,8 @@ class TestVentureSivm(unittest.TestCase):
             "expression":['if',num,num,['let',[['a',num]],num]]
             })['directive_id']
         #stub the Sivm
+        # FIXME: stubbing the sivm breaks pausing continuous inference
+        return
         def f(expression):
             got = expression['source_code_location']['expression_index']
             expected = [0,3,2,0,1,0]
@@ -141,8 +141,6 @@ class TestVentureSivm(unittest.TestCase):
         self.assertIsInstance(o['directive_id'],(int,float))
         self.assertEquals(o['value'],val)
     def test_labeled_forget(self):
-        # FIXME: not implemented
-        return
         inst1 = {
                 'instruction':'labeled_predict',
                 'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
@@ -188,8 +186,7 @@ class TestVentureSivm(unittest.TestCase):
                 'label' : 'moo',
                 }
         o2 = self.sivm.execute_instruction(inst2)
-        # not implemented in current implementation
-        # self.assertEquals(o2['logscore'],-0.6931471805599453)
+        self.assertEquals(o2['logscore'],0.0)
     def test_list_directives(self):
         inst1 = {
                 'instruction':'predict',
@@ -236,25 +233,18 @@ class TestVentureSivm(unittest.TestCase):
                 }
         self.assertEquals(o2['directive'], output)
     def test_force(self):
-        # FIXME: forget is not implemented
-        return
         inst = {
                 'instruction':'force',
                 'expression': ['normal',{'type':'number','value':1},{'type':'number','value':2}],
                 'value': {"type":"real","value":3}
                 }
-        import pdb; pdb.set_trace()
         o = self.sivm.execute_instruction(inst)
         inst2 = {
                 'instruction':'list_directives',
                 }
-        import pdb; pdb.set_trace()
         o2 = self.sivm.execute_instruction(inst2)
-        import pdb; pdb.set_trace()
         self.assertEquals(o2['directives'], [])
     def test_sample(self):
-        # FIXME: forget is not implemented
-        return
         inst = {
                 'instruction':'sample',
                 'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
@@ -269,7 +259,7 @@ class TestVentureSivm(unittest.TestCase):
         self.assertEquals(o2['directives'], [])
         
     def test_get_current_exception(self):
-        # FIXME: cxx doesn't throw exceptions, just crashes
+        # FIXME: cxx -> python exceptions not implemented
         return
         inst1 = {
                 'instruction':'force',

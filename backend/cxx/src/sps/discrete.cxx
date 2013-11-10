@@ -6,36 +6,56 @@
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <gsl/gsl_sf.h>
 
 #include <iostream>
 #include <vector>
+
+//LogLikelihoods, from Yura's Utilities.cpp
+double PoissonDistributionLogLikelihood(int sampled_value_count, double lambda) {
+  //l^k * e^{-l} / k!
+  double loglikelihood = sampled_value_count * log(lambda);
+  loglikelihood -= gsl_sf_lnfact(sampled_value_count);
+  loglikelihood -= lambda;
+  return loglikelihood;
+}
+
 
 /* Bernoulli */
 
 VentureValue * BernoulliSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<Node *> & operands = node->operandNodes;
-  VentureNumber * p = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  assert(p);
-  assert(p->x >= 0 && p->x <= 1);
-  uint32_t n = gsl_ran_bernoulli(rng,p->x);
+  double p = 0.5;
+  if (!operands.empty())
+  {
+    VentureNumber * vp = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+    assert(vp);
+    assert(vp->x >= 0 && vp->x <= 1);
+    p = vp->x;
+  }
+  uint32_t n = gsl_ran_bernoulli(rng,p);
   assert(n == 0 || n == 1);
-  DPRINT("Bernoulli(", p->x);
   return new VentureBool(n);
 } 
 
 double BernoulliSP::logDensityOutput(VentureValue * value, Node * node) const
 {
-
   vector<Node *> & operands = node->operandNodes;
-  VentureNumber * p = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  assert(p);
-  assert(p->x >= 0 && p->x <= 1);
   VentureBool * b = dynamic_cast<VentureBool *>(value);
   assert(b);
 
-  if (b->pred) { return log(p->x); }
-  else { return log(1 - p->x); }
+  double p = 0.5;
+  if (!operands.empty())
+  {
+    VentureNumber * vp = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+    assert(vp);
+    assert(vp->x >= 0 && vp->x <= 1);
+    p = vp->x;
+  }
+
+  if (b->pred) { return log(p); }
+  else { return log(1 - p); }
 }
 
 vector<VentureValue*> BernoulliSP::enumerateOutput(Node * node) const
@@ -140,4 +160,23 @@ vector<VentureValue*> UniformDiscreteSP::enumerateOutput(Node * node) const
     }
   }
   return values;
+}
+
+/* Poisson */
+VentureValue * PoissonSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * mu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  assert(mu);
+  return new VentureNumber(gsl_ran_poisson(rng,mu->x));
+}
+
+double PoissonSP::logDensityOutput(VentureValue * value, Node * node)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * mu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * x = dynamic_cast<VentureNumber *>(value);
+  assert(mu);
+  assert(x);
+  return log(gsl_ran_poisson_pdf(x->getInt(),mu->x));
 }

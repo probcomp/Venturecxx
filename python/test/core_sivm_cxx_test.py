@@ -75,7 +75,7 @@ class TestCoreSivmCxx(unittest.TestCase):
         o = self.sivm.execute_instruction(inst)
         self.assertIsInstance(o['directive_id'],(int,float))
     def test_observe_fail(self):
-        # engine can only constrain random choices
+        # FIXME: engine can only constrain random choices
         return
         inst = {
                 'instruction':'observe',
@@ -121,8 +121,6 @@ class TestCoreSivmCxx(unittest.TestCase):
                 'instruction':'forget',
                 'directive_id':o1['directive_id'],
                 }
-        # forget is not implemented
-        return
         
         self.sivm.execute_instruction(inst2)
 
@@ -181,7 +179,7 @@ class TestCoreSivmCxx(unittest.TestCase):
             self.assertEquals(e.exception,'invalid_argument')
 
     def test_rollback(self):
-        # engine just segfaults :(
+        # FIXME: cxx asserts cause segfaults instead of python exceptions
         return
         inst1 = {
                 'instruction':'observe',
@@ -200,8 +198,6 @@ class TestCoreSivmCxx(unittest.TestCase):
         self.assertEquals(self.sivm.state,'default')
 
     def test_get_global_logscore(self):
-        # FIXME: not implemented in cxx
-        return
         inst1 = {
                 'instruction':'observe',
                 'expression': ['flip'],
@@ -214,7 +210,7 @@ class TestCoreSivmCxx(unittest.TestCase):
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['logscore'],-0.6931471805599453)
     def test_get_logscore(self):
-        # FIXME: not implemented in cxx
+        # FIXME: per-directive logscore not implemented in cxx
         return
         inst1 = {
                 'instruction':'observe',
@@ -232,18 +228,16 @@ class TestCoreSivmCxx(unittest.TestCase):
     def test_continuous_inference(self):
         status = {'instruction':'continuous_inference_status'}
         o1 = self.sivm.execute_instruction(status)
-        e1 = {'running': False}
-        self.assertEquals(o1, e1)
+        self.assertEquals(o1['running'], False)
         
-        self.sivm.execute_instruction({'instruction':'start_continuous_inference'})
+        params = {'kernel': 'mh', 'use_global_scaffold': False}
+        self.sivm.execute_instruction({'instruction':'start_continuous_inference', 'params' : params})
         o2 = self.sivm.execute_instruction(status)
-        e2 = {'running': True}
-        self.assertEquals(o2, e2)
+        self.assertEquals(o2['running'], True)
         
         self.sivm.execute_instruction({'instruction':'stop_continuous_inference'})
         o3 = self.sivm.execute_instruction(status)
-        e3 = {'running': False}
-        self.assertEquals(o3, e3)
+        self.assertEquals(o3['running'], False)
     
     def test_profiler_configure(self):
         i1 = {'instruction':'profiler_configure', 'options': {}}
@@ -260,37 +254,6 @@ class TestCoreSivmCxx(unittest.TestCase):
         o3 = self.sivm.execute_instruction(i3)
         e3 = {'options': {'profiler_enabled': False}}
         self.assertEquals(o3, e3)
-    
-    def test_parse_bool(self):
-        v = False
-        o = module._parse_value(v)
-        e = {"type":"boolean", "value":v}
-        self.assertEquals(o, e)
-
-    def test_parse_count(self):        
-        v = 0
-        o = module._parse_value(v)
-        e = {"type":"count", "value":v}
-        self.assertEquals(o, e)
-        
-    def test_parse_number(self):
-        v = 0.5
-        o = module._parse_value(v)
-        e = {"type":"number", "value":v}
-        self.assertEquals(o, e)
-        
-    def test_parse_list(self):
-        v = ['l', 'i', 's', 't']
-        o = module._parse_value(v)
-        e = {"type":"list", "value":v}
-        self.assertEquals(o, e)
-    
-    def test_parse_atom(self):
-        v = "a[1]"
-        o = module._parse_value(v)
-        e = {"type":"atom", "value":1}
-        # FIXME: no way parse atoms
-        #self.assertEqual(o, e)
 
 if __name__ == '__main__':
     unittest.main()

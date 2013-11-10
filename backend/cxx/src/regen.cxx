@@ -113,7 +113,10 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
     node->isConstrained = true;
     node->ownsValue = false;
     node->sp()->incorporateOutput(value,node);
-    if (node->sp()->isRandomOutput) { unregisterRandomChoice(node); }
+    if (node->sp()->isRandomOutput) { 
+      unregisterRandomChoice(node); 
+      registerConstrainedChoice(node);
+    }
     return weight;
   }
 }
@@ -155,7 +158,11 @@ double Trace::regenInternal(Node * node,
 void Trace::processMadeSP(Node * node, bool isAAA)
 {
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
+
+  if (vsp->makerNode) { return; }
+
   assert(vsp);
+
   SP * madeSP = vsp->sp;
   vsp->makerNode = node;
   if (!isAAA)
@@ -173,7 +180,6 @@ double Trace::applyPSP(Node * node,
 		       map<Node *,vector<double> > *gradients)
 {
   DPRINT("applyPSP: ", node->address.toString());
-
   SP * sp = node->sp();
 
   /* Almost nothing needs to be done if this node is a ESRReference.*/
@@ -187,6 +193,8 @@ double Trace::applyPSP(Node * node,
   {
     return 0;
   }
+
+  assert(!node->isReference());
 
   /* Otherwise we need to actually do things. */
 
@@ -211,7 +219,7 @@ double Trace::applyPSP(Node * node,
        TODO this could be made clearer. */
     if (sp->makesHSRs && scaffold && scaffold->isAAA(node))
     {
-      sp->restoreAllLatents(node->spaux(),omegaDB->latentDBs[node]);
+      sp->restoreAllLatents(node->spaux(),omegaDB->latentDBs[node->sp()]);
     }
   }
   else if (scaffold && scaffold->hasKernelFor(node))
@@ -224,7 +232,7 @@ double Trace::applyPSP(Node * node,
        regular LKernels and HSRKernels. We pass a latentDB no matter what, nullptr
        for the former. */
     LatentDB * latentDB = nullptr;
-    if (omegaDB && omegaDB->latentDBs.count(node)) { latentDB = omegaDB->latentDBs[node]; }
+    if (omegaDB && omegaDB->latentDBs.count(node->sp())) { latentDB = omegaDB->latentDBs[node->sp()]; }
 
     newValue = k->simulate(oldValue,node,latentDB,rng);
     weight += k->weight(newValue,oldValue,node,latentDB);
@@ -245,7 +253,7 @@ double Trace::applyPSP(Node * node,
 
   sp->incorporate(newValue,node);
 
-  if (dynamic_cast<VentureSP *>(node->getValue()) && !node->isReference())
+  if (dynamic_cast<VentureSP *>(node->getValue()))
   { processMadeSP(node,scaffold && scaffold->isAAA(node)); }
   if (node->sp()->isRandom(node->nodeType)) { registerRandomChoice(node); }
   if (node->nodeType == NodeType::REQUEST) { evalRequests(node,scaffold,shouldRestore,omegaDB,gradients); }
@@ -293,8 +301,8 @@ double Trace::evalRequests(Node * node,
   for (HSR * hsr : requests->hsrs)
   {
     LatentDB * latentDB = nullptr;
-    if (omegaDB && omegaDB->latentDBs.count(node->vsp()->makerNode)) 
-    { latentDB = omegaDB->latentDBs[node->vsp()->makerNode]; }
+    if (omegaDB && omegaDB->latentDBs.count(node->sp())) 
+    { latentDB = omegaDB->latentDBs[node->sp()]; }
     assert(!shouldRestore || latentDB);
     weight += node->sp()->simulateLatents(node->spaux(),hsr,shouldRestore,latentDB,rng);
   }
@@ -326,7 +334,9 @@ double Trace::restoreFamily(Node * node,
     if (!dynamic_cast<VentureValue*>(node->getValue())) { assert(false); }
 
     if (dynamic_cast<VentureSP *>(node->getValue()))
-    { processMadeSP(node,false); }
+    { 
+      processMadeSP(node,false); 
+    }
   }
   else if (node->nodeType == NodeType::LOOKUP)
   {

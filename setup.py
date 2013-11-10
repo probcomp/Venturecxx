@@ -37,6 +37,7 @@ src_files = [
     "src/sps/csp.cxx",
     "src/sps/mem.cxx",
     "src/sps/number.cxx",
+    "src/sps/trig.cxx",
     "src/sps/bool.cxx",
     "src/sps/continuous.cxx",
     "src/sps/discrete.cxx",
@@ -48,6 +49,8 @@ src_files = [
     "src/sps/eval.cxx",
     "src/sps/pycrp.cxx",
     "src/sps/makesymdirmult.cxx",
+    "src/sps/makedirmult.cxx",
+    "src/sps/makebetabernoulli.cxx",
     "src/sps/makeucsymdirmult.cxx",
     "src/sps/makelazyhmm.cxx",
     "src/pytrace.cxx",
@@ -60,16 +63,24 @@ inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/']
 inc_dirs = ["backend/cxx/" + d for d in inc_dirs]
 
 ext_modules = []
-packages=["venture","venture.sivm","venture.ripl",
-    "venture.parser","venture.server","venture.shortcuts",
-    "venture.test", "venture.cxx", "venture.pysps"]
+packages=["venture",
+          "venture.sivm",
+          "venture.ripl",
+          "venture.parser",
+          "venture.server",
+          "venture.shortcuts",
+          "venture.test", 
+          "venture.cxx", 
+          "venture.pysps",
+          "venture.examples",
+          "venture.vmodule"]
 
 cxx = Extension("venture.cxx.libtrace",
     define_macros = [('MAJOR_VERSION', '1'),
                      ('MINOR_VERSION', '0')],
     libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_filesystem'],
     extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O0", "-fPIC"],
-    undef_macros = ['NDEBUG'],
+    undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
     include_dirs = inc_dirs,
     sources = src_files)
 ext_modules.append(cxx)
@@ -93,8 +104,13 @@ setup (
     url = 'TBA',
     long_description = 'TBA.',
     packages = packages,
-    package_dir={"venture":"python/lib/", "venture.test":"python/test/", "venture.cxx":"backend/cxx/",
-        "venture.pysps":"pysps/",
-        },
+
+    package_dir={"venture":"python/lib/",
+                 "venture.test":"python/test/",
+                 "venture.cxx":"backend/cxx/",
+                 "venture.examples":"python/examples/",
+                 "venture.vmodule":"python/vmodule",
+                 "venture.pysps":"pysps/"},
+
     ext_modules = ext_modules
 )

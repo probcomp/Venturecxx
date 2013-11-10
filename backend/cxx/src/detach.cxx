@@ -88,7 +88,10 @@ double Trace::unconstrain(Node * node)
   { return unconstrain(node->sourceNode); }
   else
   {
-    if (node->sp()->isRandomOutput) { registerRandomChoice(node); }
+    if (node->sp()->isRandomOutput) { 
+      unregisterConstrainedChoice(node);
+      registerRandomChoice(node);
+    }
     node->sp()->removeOutput(node->getValue(),node);
     double logDensity = node->sp()->logDensityOutput(node->getValue(),node);
     node->isConstrained = false;
@@ -107,6 +110,12 @@ double Trace::detachInternal(Node * node,
   {
     Scaffold::DRGNode &drgNode = scaffold->drg[node];
     drgNode.regenCount--;
+    if (drgNode.regenCount < 0)
+    {
+      cout << "\n\n\n\n\n---RegenCount < 0! (" << node << ")---\n\n\n" << endl;
+      scaffold->show();
+    }
+
     assert(drgNode.regenCount >= 0);
     if (drgNode.regenCount == 0)
     {
@@ -127,24 +136,26 @@ double Trace::detachInternal(Node * node,
   return weight;
 }
 
-void Trace::teardownMadeSP(Node * node)
+void Trace::teardownMadeSP(Node * node, bool isAAA)
 {
-
-
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
-  SP * madeSP = vsp->sp;
-  if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
 
-  /* Subtle. If it is not AAA, then we actually destroy the SPAux entirely, and it
-     will be reconstructed and re-filled during restore. Thus we don't need a
-     node->madeSPAux pointer to own it, because it will always and only be destroyed
-     in this section of code. */
-  if (madeSP->hasAux()) 
-  { 
-    madeSP->destroySPAux(node->madeSPAux);
-    node->madeSPAux = nullptr;
+  if (vsp->makerNode != node) { return; }
+  vsp->makerNode = nullptr;
+
+  SP * madeSP = vsp->sp;
+
+  if (!isAAA)
+  {
+    if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
+    if (madeSP->hasAux()) 
+    { 
+      madeSP->destroySPAux(node->madeSPAux);
+      node->madeSPAux = nullptr;
+    }
   }
 }
+
 
 double Trace::unapplyPSP(Node * node,
 			 Scaffold * scaffold,
@@ -153,14 +164,20 @@ double Trace::unapplyPSP(Node * node,
   DPRINT("unapplyPSP: ", node->address.toString());
 
 
-  if (node->nodeType == NodeType::OUTPUT && node->sp()->isESRReference) { return 0; }
+  if (node->nodeType == NodeType::OUTPUT && node->sp()->isESRReference) 
+  { 
+    node->sourceNode = nullptr;
+    return 0; 
+  }
   if (node->nodeType == NodeType::REQUEST && node->sp()->isNullRequest()) { return 0; }
 
   if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,omegaDB); }
-  if (node->sp()->isRandom(node->nodeType)) { unregisterRandomChoice(node); }
+  if (node->sp()->isRandom(node->nodeType)) { 
+    unregisterRandomChoice(node); 
+  }
   
-  if (dynamic_cast<VentureSP*>(node->getValue()) && !node->isReference() && (!scaffold || !scaffold->isAAA(node))) 
-  { teardownMadeSP(node); }
+  if (dynamic_cast<VentureSP*>(node->getValue()))
+  { teardownMadeSP(node,scaffold && scaffold->isAAA(node)); }
 
   SP * sp = node->sp();
   double weight = 0;
@@ -174,16 +191,16 @@ double Trace::unapplyPSP(Node * node,
   { 
     pair<double, LatentDB *> p = node->sp()->detachAllLatents(node->spaux());
     weight += p.first;
-    assert(!omegaDB->latentDBs.count(node));
-    omegaDB->latentDBs.insert({node,p.second});
+    assert(!omegaDB->latentDBs.count(node->sp()));
+    omegaDB->latentDBs.insert({node->sp(),p.second});
   }
 
-  if (scaffold && scaffold->isResampling(node))
-  { omegaDB->drgDB[node] = node->getValue(); }
 
-  /* If it is not in the DRG, then we do nothing. Elsewhere we store the value
-     of the root in the contingentFamilyDB */
   if (node->ownsValue) { omegaDB->flushQueue.emplace(node->sp(),node->getValue(),nodeTypeToFlushType(node->nodeType)); }
+
+  if (scaffold && scaffold->isResampling(node))
+  { omegaDB->drgDB[node] = node->getValue();  node->clearValue(); }
+
 
   return weight;
 }
@@ -199,18 +216,19 @@ double Trace::unevalRequests(Node * node,
   double weight = 0;
   VentureRequest * requests = dynamic_cast<VentureRequest *>(node->getValue());
 
-  if (!requests->hsrs.empty() && !omegaDB->latentDBs.count(node->vsp()->makerNode))
-  { omegaDB->latentDBs[node->vsp()->makerNode] = node->sp()->constructLatentDB(); }
+  if (!requests->hsrs.empty() && !omegaDB->latentDBs.count(node->sp()))
+  { omegaDB->latentDBs[node->sp()] = node->sp()->constructLatentDB(); }
 
   for (HSR * hsr : reverse(requests->hsrs))
   {
-    LatentDB * latentDB = omegaDB->latentDBs[node->vsp()->makerNode];
+    LatentDB * latentDB = omegaDB->latentDBs[node->sp()];
     weight += node->sp()->detachLatents(node->spaux(),hsr,latentDB);
   }
 
   for (ESR esr : reverse(requests->esrs))
   {
     assert(node->spaux());
+//    assert(!node->outputNode->esrParents.empty());
     Node * esrParent = node->outputNode->removeLastESREdge();
     assert(esrParent);
     if (esrParent->numRequests == 0)
@@ -272,10 +290,10 @@ double Trace::detachFamily(Node * node,
     if (dynamic_cast<VentureSP *>(node->getValue())) 
     { 
       VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
-      if (vsp->makerNode == node && dynamic_cast<CSP*>(vsp->sp))
+      if (vsp->makerNode == node)
       {
 	assert(dynamic_cast<CSP*>(vsp->sp));
-	teardownMadeSP(node);
+	teardownMadeSP(node,false);
 	omegaDB->flushQueue.emplace(nullptr,node->getValue(),FlushType::CONSTANT);
       }
     }

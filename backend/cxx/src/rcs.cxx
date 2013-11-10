@@ -3,7 +3,7 @@
 
 void Trace::registerRandomChoice(Node * node)
 {
-//  cout << "REG: " << node->address.toString() << endl;
+//  cout << "REG: " << node << endl;
   assert(!rcToIndex.count(node));
 
   rcToIndex[node] = randomChoices.size();
@@ -13,7 +13,7 @@ void Trace::registerRandomChoice(Node * node)
 
 void Trace::unregisterRandomChoice(Node * node)
 {
-//  cout << "UNREG: " << node->address.toString() << endl;
+//  cout << "UNREG: " << node << endl;
   assert(rcToIndex.count(node));
 
   uint32_t index = rcToIndex[node];
@@ -26,6 +26,34 @@ void Trace::unregisterRandomChoice(Node * node)
   rcToIndex.erase(node);
   assert(rcToIndex.size() == randomChoices.size());
 }
+
+void Trace::registerConstrainedChoice(Node * node)
+{
+//  cout << "REG-CON: " << node << endl;
+  assert(!ccToIndex.count(node));
+
+  ccToIndex[node] = constrainedChoices.size();
+  constrainedChoices.push_back(node);
+}
+
+
+void Trace::unregisterConstrainedChoice(Node * node)
+{
+//  cout << "UNREG-CON: " << node << endl;
+  assert(ccToIndex.count(node));
+
+  uint32_t index = ccToIndex[node];
+  uint32_t lastIndex = constrainedChoices.size()-1;
+
+  Node * lastNode = constrainedChoices[lastIndex];
+  ccToIndex[lastNode] = index;
+  constrainedChoices[index] = lastNode;
+  constrainedChoices.pop_back();
+  ccToIndex.erase(node);
+  assert(ccToIndex.size() == constrainedChoices.size());
+}
+
+vector<Node *> Trace::getRandomChoices() { return randomChoices; }
 
 void Trace::registerAEKernel(VentureSP * vsp)
 {

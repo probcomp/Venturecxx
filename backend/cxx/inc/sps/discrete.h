@@ -45,4 +45,17 @@ struct UniformDiscreteSP : SP
   vector<VentureValue*> enumerateOutput(Node * node) const override;
 };
 
+struct PoissonSP : SP
+{ 
+  PoissonSP()
+    { 
+      isRandomOutput = true;
+      canAbsorbOutput = true;
+    }
+
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  double logDensityOutput(VentureValue * value, Node * node) const override; 
+
+};
+
 #endif

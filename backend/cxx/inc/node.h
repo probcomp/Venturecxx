@@ -1,11 +1,13 @@
 #ifndef NODE_H
 #define NODE_H
 
+#include "all.h"
+#include <string>
 #include <vector>
 #include <set>
 #include <stdint.h>
 
-using namespace std;
+
 
 struct VentureValue;
 struct VentureSP;
@@ -17,6 +19,8 @@ struct Trace;
 
 
 enum class NodeType { VALUE, LOOKUP, REQUEST, OUTPUT };
+string strNodeType(NodeType nt);
+
 
 struct Node
 {
@@ -44,6 +48,7 @@ struct Node
   bool isObservation() const { return observedValue != nullptr; }
 
   void setValue(VentureValue *value);
+  void clearValue();
   VentureValue * getValue() const;
 
   bool isApplication() { return nodeType == NodeType::REQUEST || nodeType == NodeType::OUTPUT; }
@@ -74,6 +79,9 @@ struct Node
   bool ownsValue{true};
 
   SPAux * madeSPAux{nullptr}; // owner
+
+  bool isValid();
+  uint32_t magic = 65314235;
 
 private:
   /* I like the constructor order, that's all. */

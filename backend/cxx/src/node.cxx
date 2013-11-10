@@ -2,6 +2,18 @@
 #include "value.h"
 #include <cassert>
 
+string strNodeType(NodeType nt)
+{
+  switch (nt)
+  {
+  case NodeType::VALUE: return "value";
+  case NodeType::LOOKUP: return "lookup";
+  case NodeType::REQUEST: return "request";
+  case NodeType::OUTPUT: return "output";
+  default: { return "<none>"; }
+  }
+}
+
 /* Static member functions */
 
 void Node::addOperatorEdge(Node * operatorNode, Node * applicationNode)
@@ -32,6 +44,7 @@ void Node::addRequestEdge(Node * requestNode, Node * outputNode)
 
 void Node::addESREdge(Node * esrNode, Node * outputNode)
 {  
+//  cout << "ADD " << esrNode << outputNode << endl;
   esrNode->children.insert(outputNode);
 
   outputNode->esrParents.push_back(esrNode);
@@ -40,6 +53,8 @@ void Node::addESREdge(Node * esrNode, Node * outputNode)
 
 Node * Node::removeLastESREdge()
 {
+//  cout << "REMOVE " << this << endl;
+  assert(!esrParents.empty());
   Node * esrParent = esrParents.back();
   assert(esrParent);
   esrParent->children.erase(this);
@@ -92,6 +107,13 @@ void Node::setValue(VentureValue *value)
   _value = value;
 }
 
+void Node::clearValue()
+{
+  assert(_value);
+  assert(!sourceNode);
+  _value = nullptr;
+}
+
 /* If a node is a reference, we return the value of its
    source node. Otherwise we just return this node's value. */
 VentureValue * Node::getValue() const
@@ -119,3 +141,12 @@ VentureSP * Node::vsp()
 
 SP * Node::sp() { return vsp()->sp; }
 SPAux * Node::spaux() { return vsp()->makerNode->madeSPAux; }
+
+bool Node::isValid() 
+{ 
+  return (magic == 65314235) &&
+    (nodeType == NodeType::VALUE || 
+     nodeType == NodeType::LOOKUP ||
+     nodeType == NodeType::REQUEST ||
+     nodeType == NodeType::OUTPUT);
+}

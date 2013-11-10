@@ -60,9 +60,14 @@ class Trace
 			     unsigned int depth,
 			     bool useDeltaKernels) const;
 
-protected:
+  vector<Node *> getRandomChoices(); // used by kernels
 
-  unordered_map<size_t,Node*> definiteFamilies;
+  map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
+
+//refactor
+public:
+
+//  unordered_map<size_t,Node*> definiteFamilies;
 
   /* Regen helpers */
 
@@ -146,7 +151,7 @@ protected:
 			Scaffold * scaffold,
 			OmegaDB * omegaDB);
 
-  void teardownMadeSP(Node * node);
+  void teardownMadeSP(Node * node,bool isAAA);
 
   double unapplyPSP(Node * node,
 		    Scaffold * scaffold,
@@ -176,6 +181,9 @@ protected:
   void registerRandomChoice(Node * node);
   void unregisterRandomChoice(Node * node);
 
+  void registerConstrainedChoice(Node *node);
+  void unregisterConstrainedChoice(Node *node);
+
   /* (Arbitrary ergodic, for latents)  */
   void registerAEKernel(VentureSP * vsp);
   void unregisterAEKernel(VentureSP * vsp);
@@ -195,7 +203,8 @@ protected:
   unordered_map<Node *, uint32_t> rcToIndex;
   vector<Node *> randomChoices;
 
-  map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
+  unordered_map<Node *, uint32_t> ccToIndex;
+  vector<Node *> constrainedChoices;
 };
 
 

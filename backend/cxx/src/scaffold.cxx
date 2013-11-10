@@ -24,7 +24,15 @@ Scaffold::Scaffold(set<Node *> principalNodes)
 void Scaffold::assembleERG(set<Node *> principalNodes)
 {
   queue<pair<Node *,bool> > q;
-  for (Node * pNode : principalNodes) { q.emplace(pNode,true); }
+  for (Node * pNode : principalNodes) 
+  { 
+    /* This condition is overly cautious. We only need to include the 
+       request node if the operator is AAA. */
+    if (!pNode->sp()->isNullRequest() && pNode->nodeType == NodeType::OUTPUT)
+    { q.emplace(pNode->requestNode,true); }
+
+    q.emplace(pNode,true); 
+  }
 
   while (!q.empty())
   {
@@ -33,6 +41,7 @@ void Scaffold::assembleERG(set<Node *> principalNodes)
 
     Node * node = p.first;
     bool isPrincipal = p.second;
+    assert(node->isValid());
 
     if (isResampling(node)) { continue; }
     // subtle, double check when under 100 degrees
@@ -51,7 +60,7 @@ bool Scaffold::hasChildInAorD(Node * node)
 {
   /* TODO confirm that OR works with int return values. */
   for (Node * child : node->children)
-  { if (absorbing.count(child) || drg.count(child)) { return true; } }
+  { if ((absorbing.count(child) > 0) || (drg.count(child) > 0)) { return true; } }
   return false;
 }
 
@@ -95,8 +104,16 @@ void Scaffold::disableEval(Node * node,
 
 void Scaffold::processParentAAA(Node * parent)
 {
-  if (!isResampling(parent) && isAAA(parent->sourceNode))
-  { drg[parent->sourceNode].regenCount++; }
+  if (parent->isReference())
+  {
+    if (!isResampling(parent) && isAAA(parent->sourceNode))
+    { drg[parent->sourceNode].regenCount++; }
+  }
+  else
+  {
+    if (isAAA(parent))
+    { drg[parent].regenCount++; }
+  }
 }
 
 void Scaffold::processParentsAAA(Node * node)
@@ -115,13 +132,11 @@ void Scaffold::processParentsAAA(Node * node)
   }
 }
 
-/* Note new feature: we only count a (->Request, ->Output) pair as one. */
 void Scaffold::setRegenCounts()
 {
   for (pair<Node *,DRGNode> p : drg)
   {
     Node * node = p.first;
-    /* TODO is this necessary? It didn't seem to be a reference otherwise. */
     DRGNode &drgNode = drg[node];
     if (drgNode.isAAA)
     {
@@ -134,20 +149,42 @@ void Scaffold::setRegenCounts()
       drgNode.regenCount = node->children.size() + 1;
       border.push_back(node);
     }
-    else { 
+    else 
+    { 
       drgNode.regenCount = node->children.size();
     }
   }
+
+  // (costly) ~optimization, especially for particle methods
+  set<Node *> nullAbsorbing;
+  for (Node * node : absorbing)
+  { 
+    if (node->nodeType == NodeType::REQUEST &&
+	!isResampling(node->operatorNode) && 
+	node->sp()->isNullRequest())
+    {
+      for (Node * operandNode : node->operandNodes)
+      {
+	if (drg.count(operandNode) && !drg[operandNode].isAAA)
+	{
+	  drg[operandNode].regenCount--;
+	  assert(drg[operandNode].regenCount > 0);
+	}
+      }
+      nullAbsorbing.insert(node);
+    }
+  }
+  for (Node * node : nullAbsorbing) { absorbing.erase(node); }
 
   /* TODO OPT fill the border with the absorbing nodes. Not sure if I need the absorbing
      nodes at all anymore, so may just rename absorbing to border and then push back
      the terminal nodes. */
   border.insert(border.end(),absorbing.begin(),absorbing.end());
 
+
   /* Now add increment the regenCount for AAA nodes as 
      is appropriate. */
   /* TODO Note that they may have been in the brush, in which case this is not necessary. */
-
   if (hasAAANodes)
   {
     for (pair<Node *,DRGNode> p : drg) { processParentsAAA(p.first); }
@@ -180,20 +217,23 @@ void Scaffold::show()
   cout << "DRG" << endl;
   for (pair<Node*,DRGNode> p : drg)
   {
-    if (p.first->nodeType == NodeType::OUTPUT)
-    {
-      cout << p.first << endl;
-    }
+    assert(p.first->isValid());
+    cout << p.first << " (" << p.second.regenCount << ", " << strNodeType(p.first->nodeType) <<", " << p.second.isAAA << ")" << endl;
   }
 
   cout << "Absorbing" << endl;
   for (Node * node : absorbing)
   {
-    if (node->nodeType == NodeType::OUTPUT)
-    {
-      cout << node << endl;
-    }
+    assert(node->isValid());
+    cout << node <<  " (" << strNodeType(node->nodeType) << ")" << endl;
   }
+  
+  cout << "Border" << endl;
+  for (Node * node : border)
+  {
+    cout << node << endl;
+  }
+
   cout << "--End Scaffold--" << endl;
 }
 

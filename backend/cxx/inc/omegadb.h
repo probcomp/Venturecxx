@@ -8,6 +8,7 @@
 
 using namespace std;
 
+struct SP;
 struct VentureValue;
 struct Node;
 struct FlushEntry;
@@ -39,8 +40,7 @@ Node * from brush, (SP *, Value *) from DRG }
 
 struct OmegaDB
 {
-  /* Node * is always the makerNode for the SP, which coincides with the AAA node. */
-  map<Node *,LatentDB *> latentDBs;
+  map<SP *,LatentDB *> latentDBs;
 
   map<Node *, VentureValue *> drgDB;  
 

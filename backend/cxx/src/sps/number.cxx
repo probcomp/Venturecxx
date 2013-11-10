@@ -4,6 +4,7 @@
 #include "value.h"
 #include <cassert>
 #include <vector>
+#include <math.h>
 
 VentureValue * PlusSP::simulateOutput(Node * node, gsl_rng * rng)  const
 {
@@ -52,14 +53,35 @@ VentureValue * DivideSP::simulateOutput(Node * node, gsl_rng * rng)  const
     return new VentureNumber(d1->x / d2->x);
 }
 
+VentureValue * PowerSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+    vector<Node *> & operands = node->operandNodes;
+    VentureNumber * d1 = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+    VentureNumber * d2 = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+    assert(d1);
+    assert(d2);
+    return new VentureNumber(pow(d1->x, d2->x));
+}
+
 VentureValue * EqualSP::simulateOutput(Node * node, gsl_rng * rng)  const
 {
   vector<Node *> & operands = node->operandNodes;
   VentureNumber * d1 = dynamic_cast<VentureNumber *>(operands[0]->getValue());
   VentureNumber * d2 = dynamic_cast<VentureNumber *>(operands[1]->getValue());
-  assert(d1);
-  assert(d2);
-  return new VentureBool(d1->x == d2->x);
+
+  if (d1 && d2) { return new VentureBool(d1->x == d2->x); }
+
+  VentureBool * b1 = dynamic_cast<VentureBool *>(operands[0]->getValue());
+  VentureBool * b2 = dynamic_cast<VentureBool *>(operands[1]->getValue());
+
+  if (b1 && b2) { return new VentureBool(b1->pred == b2->pred); }
+
+  VentureAtom * a1 = dynamic_cast<VentureAtom *>(operands[0]->getValue());
+  VentureAtom * a2 = dynamic_cast<VentureAtom *>(operands[1]->getValue());
+
+  if (a1 && a2) { return new VentureBool(a1->n == a2->n); }
+
+  return new VentureBool(false);
 }
 
 VentureValue * LessThanSP::simulateOutput(Node * node, gsl_rng * rng) const
@@ -108,4 +130,14 @@ VentureValue * RealSP::simulateOutput(Node * node, gsl_rng * rng)  const
   VentureAtom * a = dynamic_cast<VentureAtom *>(operands[0]->getValue());
   assert(a);
   return new VentureNumber(a->n);
+}
+
+VentureValue * AtomEqualSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureAtom * d1 = dynamic_cast<VentureAtom *>(operands[0]->getValue());
+  VentureAtom * d2 = dynamic_cast<VentureAtom *>(operands[1]->getValue());
+  assert(d1);
+  assert(d2);
+  return new VentureBool(d1->n == d2->n);
 }

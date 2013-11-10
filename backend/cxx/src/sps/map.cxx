@@ -28,6 +28,15 @@ VentureValue * MakeMapSP::simulateOutput(Node * node, gsl_rng * rng) const
   return vmap;
 }
 
+VentureValue * MapContainsSP::simulateOutput(Node * node, gsl_rng * rng) const
+{
+  VentureMap * vmap = dynamic_cast<VentureMap*>(node->operandNodes[0]->getValue());
+  assert(vmap);
+
+  return new VentureBool(vmap->map.count(node->operandNodes[1]->getValue()));
+}
+
+
 VentureValue * MapLookupSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   VentureMap * vmap = dynamic_cast<VentureMap*>(node->operandNodes[0]->getValue());

@@ -46,6 +46,8 @@ struct MixMHKernel : GKernel
   
   GKernel* gKernel;
 
+  void destroyChildGKernel() { delete gKernel; }
+
   /* constructed anew for each proposal */
   MixMHIndex * index;
 };

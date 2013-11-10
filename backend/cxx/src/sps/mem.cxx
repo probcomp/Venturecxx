@@ -21,7 +21,15 @@ VentureValue * MSPMakerSP::simulateOutput(Node * node, gsl_rng * rng) const
 size_t MSP::hashValues(vector<Node *> operands) const
 {
   size_t seed = 0;
-  for (Node * operand : operands) { seed += operand->getValue()->toHash(); }
+  size_t littlePrime = 37;
+  size_t bigPrime = 12582917;
+
+  for (Node * operand : operands) 
+  { 
+    seed *= littlePrime;
+    seed += operand->getValue()->toHash();
+    seed %= bigPrime;
+  }
   return seed;
 }
 
@@ -40,10 +48,10 @@ VentureValue * MSP::simulateRequest(Node * node, gsl_rng * rng) const
 
   VentureList * exp = new VentureNil;
 
-  /* TODO URGENT the creator is priviledged! Massive error. */
+  /* TODO the creator is priviledged! */
   for (Node * operand : reverse(operands))
   {
-    VentureValue * val = operand->getValue()->clone();
+    VentureValue * val = operand->getValue()->clone()->inverseEvaluate();
     exp = new VenturePair(val,exp);
   }
   exp = new VenturePair(new VentureSymbol("memoizedSP"),exp);
