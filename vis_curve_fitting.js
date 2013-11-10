@@ -2,6 +2,8 @@
 
 function InitializeDemo() {
 
+    var demo_id = 2;
+
     var Curve = function(model_values) {
         this.poly_order = model_values[0];
 
@@ -77,13 +79,7 @@ function InitializeDemo() {
         };
 
     }
-
-    var ArrayOfKeys = function(obj) {
-        a = [];
-        for (key in obj) { a.push(key); };
-        return a;
-    };
-
+    
     //TODO this number is arbritrary, not sure how to get browser dependent
     //max int
     var LargeRandomInt = function() {
@@ -108,16 +104,24 @@ function InitializeDemo() {
      * arrived. Clicks on the canvas are to be added, clicks on points are
      * to be forgotten. */
     var clicks_to_add = new ClickList();
-    var clicks_to_forget = new ClickList();
 
-    /* TODO ideally we iterate over this for the final PREDICT statement
-     * in our generative model, but not worth the effort. */
-    var random_variables = ['poly_order','a0_c0','c1','c2','c3','c4',
-                            'noise','alpha','fourier_a1','fourier_omega',
-                            'fourier_theta1'];
-    /* We use this to go from the name of a random variable to its position 
-     * in the predicted value. */
-    var name_to_index = function(name) { random_variables.indexOf(name); };
+    /* Stores the obs_id of points that the user has clicked on. */
+    var points_to_forget = {};
+
+    /* Latent variables in the model. */
+    var model_variables = {
+        'poly_order': 0,
+        'a0_c0': 0.0,
+        'c1': 0.0,
+        'c2': 0.0,
+        'c3': 0.0,
+        'c4': 0.0,
+        'noise': 0.1,
+        'alpha': 0.5,
+        'fourier_a1': 0.0,
+        'fourier_omega': 1.0,
+        'fourier_theta1': 0.0,
+    };
 
     /* Polynomial orders (displayed upper-right) */
     var poly_orders = [];
@@ -154,14 +158,14 @@ function InitializeDemo() {
         num_previous_curve_objects_stored++;
         previous_curve_objects.unshift(curve_object);
     };
-
+    
     /* Raphael Objects */
     var paper;
     var paper_rect;
 
     /* Will be a map from OBS_ID -> POINT, where POINT contains the Raphael objects
      * corresponding to a single point. */
-    var points = {};
+    var local_points = {};
 
     var DirectiveLoadedCallback = function() {
         num_directives_loaded++;
@@ -175,163 +179,305 @@ function InitializeDemo() {
     };
 
     var LoadModel = function() {
-        ripl.set_mode("church_prime");
         ripl.clear();
-
+        ripl.set_mode("church_prime");
+        
         ripl.register_a_request_processed_callback(DirectiveLoadedCallback);
-
+        
         /* Model metadata */
-        ripl.assume('test_name','0');
-
+        ripl.assume('demo_id', demo_id, 'demo_id');
+        
         /* Outliers */
-        ripl.assume('outlier_prob','(uniform_continuous 0.001 0.3)');
-        ripl.assume('outlier_sigma','(uniform_continuous 0.001 100)');
-        ripl.assume('is_outlierQ','(mem (lambda (obs_id) (flip outlier_prob)))');
-
+        ripl.assume('outlier_prob','(uniform_continuous 0.001 0.3)'); //(beta 1 3)?
+        ripl.assume('outlier_sigma','(uniform_continuous 0.001 100)'); //why random?
+        ripl.assume('is_outlier','(mem (lambda (obs_id) (flip outlier_prob)))');
+        
         /* Shared */
         ripl.assume('a0_c0','(normal 0.0 10.0)');
-
+        
         /* Polynomial */
-        ripl.assume('poly_order','(uniform_discrete 0 4)');
+        ripl.assume('poly_order','(uniform_discrete 0 5)');
         ripl.assume('make_coefficient','(lambda (degree value) (if (>= poly_order degree) (normal 0.0 value) 0))');
         ripl.assume('c1','(make_coefficient 1 1.0)');
         ripl.assume('c2','(make_coefficient 2 0.1)');
         ripl.assume('c3','(make_coefficient 3 0.01)');
         ripl.assume('c4','(make_coefficient 4 0.001)');
-
+        
         ripl.assume('clean_func_poly','(lambda (x) (+ (* c1 (power x 1.0)) (* c2 (power x 2.0)) (* c3 (power x 3.0)) (* c4 (power x 4.0))))');
         
         /* Fourier */
-        ripl.assume('pi','3.14');
+        ripl.assume('pi','3.14159');
         ripl.assume('fourier_a1','(normal 0.0 5.0)');
-        ripl.assume('fourier_omega','(uniform_continuous (/ pi 50) pi)');
-        ripl.assume('fourier_theta1','(uniform_continuous (* -1 pi) pi)');
+        ripl.assume('fourier_omega','(uniform_continuous 0 pi)');
+        ripl.assume('fourier_theta1','(uniform_continuous (- 0 pi) pi)');
 
         ripl.assume('clean_func_fourier','(lambda (x) (* fourier_a1 (sin (+ (* fourier_omega x) fourier_theta1))))');
 
         /* For combination polynomial and Fourier */
-        ripl.assume('model_type','(uniform_discrete 0 2)');
+        ripl.assume('model_type','(uniform_discrete 0 3)');
         ripl.assume('alpha','(if (= model_type 0) 1 (if (= model_type 1) 0 (beta 1 1)))');
         ripl.assume('clean_func','(lambda (x) (+ a0_c0 (* alpha (clean_func_poly x)) (* (- 1 alpha) (clean_func_fourier x))))');
 
         /* For observations */
-        ripl.assume('noise','(uniform_continuous 0.1 1.0)');
-        ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlierQ obs_id) 0 (clean_func (normal x noise))) (if (is_outlierQ obs_id) outlier_sigma noise)))');
-
-        /* One predict for every quantity of interest.
-        Ideally this would iterate over RANDOM_VARIABLES. */
-        ripl.predict('(list poly_order a0_c0 c1 c2 c3 c4 noise alpha fourier_a1 fourier_omega fourier_theta1)','predict_model');
+        ripl.assume('noise','(inv_gamma 1.0 1.0)');
+        ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (clean_func (normal x noise))) (if (is_outlier obs_id) outlier_sigma noise)))');
 
         ripl.register_all_requests_processed_callback(AllDirectivesLoadedCallback);
     };
-
-    var ShowCurvesQ = function() {
-        return document.getElementById('IfShowCurves').checked == true;
-    };
-
-    var UpdateChurchCode = function(directives) {
-        var church_code_str = "<b>Venture code:</b><br>";
+    
+    var UpdateVentureCode = function(directives) {
+        var venture_code_str = "<b>Venture code:</b><br>";
 
         for (i = 0; i < directives.length; i++) {
-            church_code_str += directiveToString(directives[i]) + '<br/>';
+            venture_code_str += directiveToString(directives[i]) + '<br/>';
         }
 
-        church_code_str = church_code_str.replace(/ /g, "&nbsp;");
-        church_code_str = church_code_str.replace(/\(if/g, "(<font color='#0000FF'>if</font>");
-        church_code_str = church_code_str.replace(/\(/g, "<font color='#0080D5'>(</font>");
-        church_code_str = church_code_str.replace(/\)/g, "<font color='#0080D5'>)</font>");
+        //venture_code_str = venture_code_str.replace(/ /g, "&nbsp;");
+        //venture_code_str = venture_code_str.replace(/\(if/g, "(<font color='#0000FF'>if</font>");
+        //venture_code_str = venture_code_str.replace(/\(/g, "<font color='#0080D5'>(</font>");
+        //venture_code_str = venture_code_str.replace(/\)/g, "<font color='#0080D5'>)</font>");
 
-        church_code_str = church_code_str.replace(/lambda/g, "<font color='#0000FF'>lambda</font>");
-        church_code_str = church_code_str.replace(/list/g, "<font color='#0000FF'>list</font>");
-        church_code_str = church_code_str.replace(/\>=/g, "<font color='#0000FF'>>=</font>");
-        church_code_str = church_code_str.replace(/\+/g, "<font color='#0000FF'>+</font>");
-        church_code_str = church_code_str.replace(/\*/g, "<font color='#0000FF'>*</font>");
-        church_code_str = "<font face='Courier New' size='2'>" + church_code_str + "</font>";
-        $("#church_code").html(church_code_str);
+        //venture_code_str = venture_code_str.replace(/lambda/g, "<font color='#0000FF'>lambda</font>");
+        //venture_code_str = venture_code_str.replace(/list/g, "<font color='#0000FF'>list</font>");
+        //venture_code_str = venture_code_str.replace(/\>=/g, "<font color='#0000FF'>>=</font>");
+        //venture_code_str = venture_code_str.replace(/\+/g, "<font color='#0000FF'>+</font>");
+        //venture_code_str = venture_code_str.replace(/\*/g, "<font color='#0000FF'>*</font>");
+        venture_code_str = "<font face='Courier New' size='2'>" + venture_code_str + "</font>";
+        $("#venture_code").html(venture_code_str);
     };
+    
+    var UpdateModelVariables = function(directives) {
+        for(var i = 0; i < directives.length; i++) {
+            var dir = directives[i];
+            if(dir.instruction === "assume") {
+                if(dir.symbol in model_variables) {
+                    model_variables[dir.symbol] = dir.value;
+                }
+            }
+        }
+    }
+    
+    var xScale = 20;
+    var yScale = -20;
+    var xOffset = 210;
+    var yOffset = 210;
+    
+    function modelToPaperX(x) {
+        return (x * xScale) + xOffset;
+    }
+    function modelToPaperY(y) {
+        return (y * yScale) + yOffset;
+    }
+    function paperToModelX(x) {
+        return (x - xOffset) / xScale;
+    }
+    function paperToModelY(y) {
+        return (y - yOffset) / yScale;
+    }
+    
+    /* Adds a point to the GUI. */
+    var MakePoint = function(p) {
+        var local_point = {};
+        
+        local_point.obs_id = p.obs_id;
+        
+        local_point.paint_x = modelToPaperX(p.x);
+        local_point.paint_y = modelToPaperY(p.y);
+        
+        local_point.noise_circle = paper.circle(local_point.paint_x, local_point.paint_y, 5);
+        local_point.noise_circle.attr("fill", "white");
+        //local_point.noise_circle.attr("opacity", "0.9");
+        
+        local_point.circle = paper.circle(local_point.paint_x, local_point.paint_y, 2);
+        local_point.circle.attr("stroke", "white");
+        //local_point.circle.attr("opacity", "0.5");
+        
+        local_point.circle.click(
+            function(e) { 
+                //console.log("click circle: (" + local_point.x + ", " + local_point.y + ")");
+                points_to_forget[local_point.obs_id] = true;
+            }
+        );
+        
+        local_point.noise_circle.click(
+            function(e) { 
+                //console.log("click noise_circle: (" + local_point.x + ", " + local_point.y + ")");
+                points_to_forget[local_point.obs_id] = true;
+            }
+        );
+        
+        return local_point;
+    };
+    
+    var record = function(dict, path, value) {
+        if (path.length > 1) {
+            var key = path[0];
+            if (!(key in dict)) {
+                dict[key] = {};
+            }
+            record(dict[key], path.slice(1), value);
+        } else {
+            dict[path[0]] = value;
+        }
+    };
+    
+    /* Gets the points that are in the ripl. */
+    var GetPoints = function(directives) {
+        var points = {};
 
+        var extract = function(directive) {
+            var path = directive.label.split('_').slice(1);
+            //console.log(path.join("."));
+            record(points, path, directive.value);
+            
+            var did = directive.directive_id;
+            var point = points[path[0]];
+            
+            //console.log(point.toString());
+            
+            if (!('dids' in point)) {
+                point.dids = [];
+            }
+            point.dids.push(parseInt(did));
+        };
+        
+        var observesAndPredicts =
+            directives.filter(function(dir) {return dir.instruction in {"observe":true, "predict":true}});
+        observesAndPredicts.forEach(extract);
+        
+        for (obs_id in points) {
+            points[obs_id].obs_id = obs_id;
+        }
+        
+        return points;
+    };
+        
+    var ObservePoint = function(obs_id, x, y) {
+        obs_str = 'points_' + obs_id;
+        
+        ripl.predict(x, obs_str + '_x');
+        ripl.observe('(obs_fn ' + obs_id + ' ' + x + ')', y, obs_str + '_y');
+        ripl.predict('(is_outlier ' + obs_id + ')', obs_str + '_outlier')
+    };
+    
+    var DeletePoint = function(obs_id) {
+        local_points[obs_id].noise_circle.remove();
+        local_points[obs_id].circle.remove();
+        delete local_points[obs_id];
+    };
+    
+    var record = function(dict, path, value) {
+        if (path.length > 1) {
+            var key = path[0];
+            if (!(key in dict)) {
+                dict[key] = {};
+            }
+            record(dict[key], path.slice(1), value);
+        } else {
+            dict[path[0]] = value;
+        }
+    };
+    
+    /* Gets the points that are in the ripl. */
+    var GetPoints = function(directives) {
+        var points = {};
+
+        var extract = function(directive) {
+            var path = directive.label.split('_').slice(1);
+            //console.log(path.join("."));
+            record(points, path, directive.value);
+            
+            var did = directive.directive_id;
+            var point = points[path[0]];
+            
+            //console.log(point.toString());
+            
+            if (!('dids' in point)) {
+                point.dids = [];
+            }
+            point.dids.push(parseInt(did));
+        };
+        
+        var observesAndPredicts =
+            directives.filter(function(dir) {return dir.instruction in {"observe":true, "predict":true}});
+        observesAndPredicts.forEach(extract);
+        
+        for (obs_id in points) {
+            points[obs_id].obs_id = obs_id;
+        }
+        
+        return points;
+    };
+    
+    var DrawPoint = function(local_point, point) {
+        color = point.outlier ? "gray" : "red";
+        
+        local_point.circle.attr("fill", color);
+        local_point.noise_circle.attr("stroke", color);
+        
+        local_point.noise_circle.attr("r", 5.0);// * Math.sqrt(point.noise.x));
+    };
+    
     /* This is the callback that we pass to GET_DIRECTIVES_CONTINUOUSLY. */
     var RenderAll = function(directives) {
         //console.log("CLICKS TO ADD: " + JSON.stringify(clicks_to_add));
+                
+        UpdateVentureCode(directives);
+        UpdateModelVariables(directives);
         
-        UpdateChurchCode(directives);
-
-        var observations = directives.filter(function(dir) { return dir.instruction === "observe" });
-
-        /* [model_predictions, outlier_pred1, ..., outlier_predN] */
-        var predictions = directives.filter(function(dir) { return dir.instruction === "predict" });
-
-        var model_prediction = predictions.shift();
-        var model_predicted_value = model_prediction.value;
-
-        var current_curve = new Curve(model_predicted_value);
-
-        /* Bookkeeping so we can delete forgotten points from POINTS. */
-        var current_obs_ids = [];
-
-        /* Process every observation. */
-        observations.map(
-            function(observation) {
-                values = ParseObservation(predictions,observation);
-                
-                /* This user already CLICKED on the point, indicating that he
-                * wants to forget it. */
-                var click_index = clicks_to_forget.indexOfClick([values.x,values.y]);
-                if (click_index != -1) {
-                    ripl.forget(values.directive_id_pred.toString());
-                    ripl.forget(values.directive_id_obs.toString());
-                    return;
-                };
-                
-                /* Otherwise, we register that the POINT is still active. */
-                current_obs_ids.push(values.obs_id.toString());
-
-                /* If this user does not have a point object for it,
-                * make one. */
-                if (!(values.obs_id in points)) {
-                    var point = MakePoint(values.x,values.y);
-
-                    point.obs_id = values.obs_id;
-                    point.directive_id_pred = values.directive_id_pred;
-                    point.directive_id_obs = values.directive_id_obs;
-                    points[point.obs_id] = point;
-                }
-
-                /* Color it depending on whether it is an outlier. */
-                if (values.isOutlierQ) {
-                    points[values.obs_id].circle.attr("fill", "#888888");
-                    points[values.obs_id].noise_circle.attr("stroke", "#888888");
-                    points[values.obs_id].noise_circle.attr("r", 5.0);
-                } else {
-                    points[values.obs_id].circle.attr("fill", "red");
-                    points[values.obs_id].noise_circle.attr("stroke", "red");
-                    points[values.obs_id].noise_circle.attr("r", current_curve.noise * 10.0);
-                }
-            }
-        );
-
-        /* Reset this after each round of directives has been processed. */
-        clicks_to_forget = new ClickList();
-
-        /* Delete points for which there is no observation. */
+        /* Get the observed points from the model. */
+        var points = GetPoints(directives);
+        
+        var current_curve = jQuery.extend({}, model_variables);
+        current_curve.polynomial_coefficients = [
+            current_curve.a0_c0,
+            current_curve.c1,
+            current_curve.c2,
+            current_curve.c3,
+            current_curve.c4,
+        ];
+        
         for (obs_id in points) {
-            if ($.inArray(obs_id, current_obs_ids) == -1) {
-                points[obs_id].noise_circle.remove();
-                points[obs_id].circle.remove();
-                delete points[obs_id];
+            p = points[obs_id];
+
+            /* If this user does not have a point object for it, make one. */
+            if (!(obs_id in local_points)) {
+                local_points[obs_id] = MakePoint(p);
+            }
+            
+            /* Forget a point if it has been clicked on. */
+            if (obs_id in points_to_forget) {
+                for (var i = 0; i < p.dids.length; i++) {
+                    ripl.forget(p.dids[i]);
+                }
             }
         }
-
+        
+        /* Reset this after each round of directives has been processed. */
+        points_to_forget = {};
+        
+        /* Remove nonexistent points and draw the rest. */
+        for (obs_id in local_points) {
+            if (!(obs_id in points)) {
+                DeletePoint(obs_id);
+            } else {
+                DrawPoint(local_points[obs_id], points[obs_id]);
+            }
+        }
+        
         /* Add points for every click on the canvas. */
-        console.log("before unique: " + JSON.stringify(clicks_to_add.getClicks()));
+        //console.log("before unique: " + JSON.stringify(clicks_to_add.getClicks()));
         clicks_to_add.uniqueF();
-        console.log("after unique: " + JSON.stringify(clicks_to_add.getClicks()));
+        //console.log("after unique: " + JSON.stringify(clicks_to_add.getClicks()));
         while (clicks_to_add.length() > 0) {
-            console.log("adding new point!");
+            //console.log("adding new point!");
             var click = clicks_to_add.shift();
+            var x = paperToModelX(click[0]);
+            var y = paperToModelY(click[1]);
+            
             var obs_id = GetNextObsID();
-            ripl.predict('(is_outlierQ ' + obs_id + ')');
-            ripl.observe('(obs_fn ' + obs_id + ' ' + ((click[0] - 210)/20) + ')',((click[1] - 210)/-20).toString());
+            
+            ObservePoint(obs_id, x, y);
         }
 
         /* Process polynomial orders and display results. */
@@ -357,6 +503,10 @@ function InitializeDemo() {
                 }
             );
         }
+    };
+    
+    var ShowCurvesQ = function() {
+        return document.getElementById('IfShowCurves').checked == true;
     };
 
     var CalculateCurve = function(x,curve) {
@@ -411,80 +561,6 @@ function InitializeDemo() {
         currentObject.attr("fill", "#aaaaaa");
     };
 
-
-    var MakePoint = function(x,y) {
-        var point = new Object();
-
-        point.x = x;
-        point.y = y;
-
-        point.paint_x = (point.x * 20) + 210;
-        point.paint_y = (point.y * -20) + 210;
-
-        point.noise_circle = paper.circle(point.paint_x, point.paint_y, 5);
-        point.noise_circle.attr("stroke", "red");
-        point.noise_circle.attr("fill", "white");
-        point.noise_circle.attr("opacity", "0.9");
-
-        point.circle = paper.circle(point.paint_x, point.paint_y, 2);
-        point.circle.attr("fill", "red");
-        point.circle.attr("stroke", "white");
-        point.circle.attr("opacity", "0.5");
-
-        point.circle.click(
-            function(e) { 
-                console.log("click circle: (" + point.x + ", " + point.y + ")");
-                clicks_to_forget.push([point.x,point.y]); 
-            }
-        );
-
-        point.noise_circle.click(
-            function(e) { 
-                console.log("click noise_circle: (" + point.x + ", " + point.y + ")");
-                clicks_to_forget.push([point.x,point.y]); 
-            }
-        );
-
-        return point;
-
-    };
-
-    var GetPredictionForObsID = function(predictions,obs_id) {
-        for (i = 0; i < predictions.length; i++) {
-            if (predictions[i].expression[1].value === obs_id) {
-                return predictions[i];
-            }
-        }
-        throw "PREDICTION NOT FOUND! -- " + JSON.stringify(predictions) + ", (obs_id): " + obs_id;
-    };
-
-    var ParseObservation = function(predictions,observation) {
-        var values = new Object();
-        values.obs_id = observation.expression[1].value;
-        values.directive_id_obs = observation.directive_id;
-
-        var prediction = GetPredictionForObsID(predictions,values.obs_id);
-
-        values.directive_id_pred = prediction.directive_id;
-        values.isOutlierQ = prediction.value;
-
-        values.x = observation.expression[2].value;
-        values.y = observation.value;
-
-        return values;
-    }
-
-    var DeletePoint = function(point) {
-        point.noise_circle.remove();
-
-        ripl.forget(point.directive_id_pred.toString());
-        ripl.forget(point.directive_id_obs.toString());
-
-        point.circle.remove();
-        delete points[point.obs_id];
-    };
-
-
     // Initialize the canvas, and necessary variables.
     var RenderInit = function() {
         paper = Raphael('div_for_plots', 420, 420);
@@ -537,7 +613,7 @@ function InitializeDemo() {
         </tr>\
         </table>\
         <br>\
-        <div id="church_code"></div>\
+        <div id="venture_code"></div>\
         <div style="display: none;"><div style="display: none;"><input type="text" id="iteration_info" style="border:0; background-color: white;" value="" disabled></div>\
         <div id="slider" style="width: 500px; font-size: 10; display: none;"></div>\
         <div id="function_formula"></div>\
@@ -600,7 +676,7 @@ function InitializeDemo() {
             LoadModel();
             ripl.start_continuous_inference();
             RunDemo();
-        } else if (directives[0].symbol === "test_name" && directives[0].value === 0) {
+        } else if (directives[0].symbol === "demo_id" && directives[0].value === demo_id) {
             RunDemo();
         } else {
             throw "Error: Something other than curve-fitting demo running in Venture."

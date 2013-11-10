@@ -94,7 +94,8 @@ function InitializeDemo() {
     /* Stores the obs_id of points that the user has clicked on. */
     var points_to_forget = {};
     
-    var random_variables = ['alpha'];
+    /* Latent variables in the model. */
+    var model_variables = {'crp_alpha' : 1.0, 'cv_scale': 1.0};
     
     /* Raphael Objects */
     var paper;
@@ -128,8 +129,8 @@ function InitializeDemo() {
         /* Model metadata */
         ripl.assume('demo_id', demo_id, 'demo_id');
         
-        ripl.assume('crp_alpha', '(gamma 1.0 1.0)');
-        ripl.assume('cluster_crp', '(make_crp crp_alpha)');
+        ripl.assume('crp_alpha', "(gamma 1.0 1.0)");
+        ripl.assume('cluster_crp', "(make_crp crp_alpha)");
         
         ripl.assume('cv_shape', 4.0)
         ripl.assume('cv_scale', "(inv_gamma 1.0 1.0)")
@@ -169,52 +170,34 @@ function InitializeDemo() {
         $("#venture_code").html(venture_code_str);
     };
     
-    function record(dict, path, value) {
-        if (path.length > 1) {
-            var key = path[0];
-            if (!(key in dict)) {
-                dict[key] = {};
+    var UpdateModelVariables = function(directives) {
+        for(var i = 0; i < directives.length; i++) {
+            var dir = directives[i];
+            if(dir.instruction === "assume") {
+                if(dir.symbol in model_variables) {
+                    model_variables[dir.symbol] = dir.value;
+                }
             }
-            record(dict[key], path.slice(1), value);
-        } else {
-            dict[path[0]] = value;
         }
     }
     
-    /* Gets the points that are in the ripl. */
-    var GetPoints = function(directives) {
-        var points = {};
-
-        var extract = function(directive) {
-            var path = directive.label.split('_').slice(1);
-            //console.log(path.join("."));
-            record(points, path, directive.value);
-            
-            var did = directive.directive_id;
-            var point = points[path[0]];
-            
-            //console.log(point.toString());
-            
-            if (!('dids' in point)) {
-                point.dids = [];
-            }
-            point.dids.push(parseInt(did));
-        };
-        
-        var observesAndPredicts = directives.filter(function(dir)
-            {return dir.instruction in {"observe":true, "predict":true}});
-        observesAndPredicts.forEach(extract);
-        
-        for (obs_id in points) {
-            points[obs_id].obs_id = obs_id;
-        }
-        
-        return points;
-    };
-    
     /* Converts model coordinates to paper coordinates. */
-    function modelToPaper(z) {
-        return (z * 20) + 210;
+    var xScale = 20;
+    var yScale = -20;
+    var xOffset = 210;
+    var yOffset = 210;
+    
+    function modelToPaperX(x) {
+        return (x * xScale) + xOffset;
+    }
+    function modelToPaperY(y) {
+        return (y * yScale) + yOffset;
+    }
+    function paperToModelX(x) {
+        return (x - xOffset) / xScale;
+    }
+    function paperToModelY(y) {
+        return (y - yOffset) / yScale;
     }
     
     /* Adds a point to the GUI. */
@@ -223,8 +206,8 @@ function InitializeDemo() {
         
         local_point.obs_id = p.obs_id;
         
-        local_point.paint_x = modelToPaper(p.x);
-        local_point.paint_y = modelToPaper(p.y);
+        local_point.paint_x = modelToPaperX(p.x);
+        local_point.paint_y = modelToPaperY(p.y);
         
         local_point.noise_circle = paper.ellipse(local_point.paint_x, local_point.paint_y, 5, 5);
         local_point.noise_circle.attr("fill", "white");
@@ -275,11 +258,11 @@ function InitializeDemo() {
         
         local_cluster.circle.attr("stroke", color);
 
-        local_cluster.circle.attr("cx", modelToPaper(cluster.mean.x));
-        local_cluster.circle.attr("cy", modelToPaper(cluster.mean.y));
+        local_cluster.circle.attr("cx", modelToPaperX(cluster.mean.x));
+        local_cluster.circle.attr("cy", modelToPaperY(cluster.mean.y));
         
-        local_cluster.circle.attr("rx", 20.0 * Math.sqrt(cluster.variance.x));
-        local_cluster.circle.attr("ry", 20.0 * Math.sqrt(cluster.variance.y));
+        local_cluster.circle.attr("rx", Math.abs(xScale) * Math.sqrt(cluster.variance.x));
+        local_cluster.circle.attr("ry", Math.abs(yScale) * Math.sqrt(cluster.variance.y));
     };
     
     var ObservePoint = function(obs_id, x, y) {
@@ -303,6 +286,49 @@ function InitializeDemo() {
         delete local_points[obs_id];
     };
     
+    var record = function(dict, path, value) {
+        if (path.length > 1) {
+            var key = path[0];
+            if (!(key in dict)) {
+                dict[key] = {};
+            }
+            record(dict[key], path.slice(1), value);
+        } else {
+            dict[path[0]] = value;
+        }
+    };
+    
+    /* Gets the points that are in the ripl. */
+    var GetPoints = function(directives) {
+        var points = {};
+
+        var extract = function(directive) {
+            var path = directive.label.split('_').slice(1);
+            //console.log(path.join("."));
+            record(points, path, directive.value);
+            
+            var did = directive.directive_id;
+            var point = points[path[0]];
+            
+            //console.log(point.toString());
+            
+            if (!('dids' in point)) {
+                point.dids = [];
+            }
+            point.dids.push(parseInt(did));
+        };
+        
+        var observesAndPredicts = directives.filter(function(dir)
+            {return dir.instruction in {"observe":true, "predict":true}});
+        observesAndPredicts.forEach(extract);
+        
+        for (obs_id in points) {
+            points[obs_id].obs_id = obs_id;
+        }
+        
+        return points;
+    };
+    
     var DrawPoint = function(local_point, point) {
         color = local_clusters[point.cluster.id].color;
         
@@ -314,9 +340,9 @@ function InitializeDemo() {
     
     /* This is the callback that we pass to GET_DIRECTIVES_CONTINUOUSLY. */
     var RenderAll = function(directives) {
-        //console.log("CLICKS TO ADD: " + JSON.stringify(clicks_to_add));
         
         UpdateVentureCode(directives);
+        UpdateModelVariables(directives);
         
         /* Get the observed points from the model. */
         var points = GetPoints(directives);
@@ -377,8 +403,8 @@ function InitializeDemo() {
         while (clicks_to_add.length() > 0) {
             console.log("adding new point!");
             var click = clicks_to_add.shift();
-            var x = (click[0] - 210)/20;
-            var y = (click[1] - 210)/20;
+            var x = paperToModelX(click[0]);
+            var y = paperToModelY(click[1]);
             
             var obs_id = GetNextObsID();
             
