@@ -284,7 +284,9 @@ function InitializeDemo() {
         local_point.paint_x = modelToPaperX(p.x);
         local_point.paint_y = modelToPaperY(p.y);
         
-        local_point.noise_circle = paper.circle(local_point.paint_x, local_point.paint_y, 5);
+        local_point.noise_circle = paper.ellipse(
+            local_point.paint_x, local_point.paint_y,
+            0.25 * xScale, 0.25 * yScale);
         local_point.noise_circle.attr("fill", "white");
         //local_point.noise_circle.attr("opacity", "0.9");
         
@@ -415,7 +417,9 @@ function InitializeDemo() {
         local_point.circle.attr("fill", color);
         local_point.noise_circle.attr("stroke", color);
         
-        local_point.noise_circle.attr("r", 5.0);// * Math.sqrt(point.noise.x));
+        var factor = point.outlier ? 1.0 : Math.sqrt(model_variables.noise);
+        local_point.noise_circle.attr("rx", 0.25 * Math.abs(xScale) * factor);
+        local_point.noise_circle.attr("ry", 0.25 * Math.abs(yScale) * factor);
     };
     
     /* This is the callback that we pass to GET_DIRECTIVES_CONTINUOUSLY. */
