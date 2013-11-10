@@ -29,9 +29,7 @@ struct SPAux
 
   map<size_t,Node*> families;
 
-  /* The vector is a collection of VentureValues that this family
-     "owns", e.g. values cloned during msp.simulateRequest(val) */
-  map<size_t,vector<VentureValue*> > familyValues;
+  map<size_t, vector<VentureValue*> > ownedValues;
 
   virtual ~SPAux() {}; 
 };

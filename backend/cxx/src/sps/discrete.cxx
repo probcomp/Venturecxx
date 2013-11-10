@@ -62,8 +62,13 @@ vector<VentureValue*> BernoulliSP::enumerateOutput(Node * node) const
 {
   VentureBool * vold = dynamic_cast<VentureBool*>(node->getValue());
   assert(vold);
-  if (vold->pred) { return {new VentureBool(false)}; }
-  else { return {new VentureBool(true)}; }
+
+  VentureNumber * vp = dynamic_cast<VentureNumber *>(node->operandNodes[0]->getValue());
+  assert(vp);
+
+  if (vold->pred) { if (vp->x < 1) { return {new VentureBool(false)}; } }
+  else if (vp->x > 0) { return {new VentureBool(true)}; }
+  else { return {}; }
 }
 
 /* Categorical */
@@ -108,8 +113,10 @@ vector<VentureValue*> CategoricalSP::enumerateOutput(Node * node) const
   for (size_t i = 0; i < node->operandNodes.size(); ++i)
   {
     if (i == vold->n) { continue; }
-    else { 
-      values.push_back(new VentureAtom(i));
+    else {
+      VentureNumber * d = dynamic_cast<VentureNumber *>(node->operandNodes[i]->getValue());
+      assert(d);
+      if (d->x > 0) { values.push_back(new VentureAtom(i)); }
     }
   }
   return values;

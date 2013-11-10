@@ -10,16 +10,12 @@
 
 void flushDBComplete(OmegaDB * omegaDB)
 {
-
     while (!omegaDB->flushQueue.empty())
     {
       FlushEntry f = omegaDB->flushQueue.front();
-      if (f.flushAux) { f.owner->destroySPAux(f.spaux); }
-      else if (f.spaux) { f.owner->flushFamily(f.spaux,f.id); }
-      else 
-      {
-	f.owner->flushValue(f.value,f.nodeType); 
-      }
+      if (f.spaux) { f.owner->destroySPAux(f.spaux); }
+      else if (f.owner) { f.owner->flushValue(f.value,f.nodeType); }
+      else { delete f.value; } // TODO deep-delete
       omegaDB->flushQueue.pop();
     }
 

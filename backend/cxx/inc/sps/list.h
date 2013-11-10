@@ -43,14 +43,7 @@ struct ListRefSP : SP
 
 
 
-struct MapListSPAux : SPAux
-{
-  // TRUE indicates VentureSymbol
-  // FALSE indicates VenturePair
-  map<size_t, VenturePair *> ownedSymbols;
-  map<size_t, VenturePair *> ownedPairs;
-};
-
+// TODO wrap everything in quote
 struct MapListSP : SP
 {
   MapListSP()
@@ -60,10 +53,8 @@ struct MapListSP : SP
     }
   VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
   void flushRequest(VentureValue * value) const override;
-  void flushFamily(SPAux * spaux, size_t id) const override;
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
   void flushOutput(VentureValue * value) const override;
-  SPAux * constructSPAux() const override { return new MapListSPAux; }
 
 };
 

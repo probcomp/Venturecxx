@@ -24,7 +24,7 @@ def printTest(testName,eps,ops):
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer(10, kernel="mh", use_global_scaffold=False)
+    sivm.infer(10, kernel="gibbs", use_global_scaffold=False)
     predictions.append(sivm.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
@@ -76,7 +76,7 @@ def runTests(N):
   testOperatorChanging(N)
   testObserveAPredict1(N)
   testObserveAPredict2(N)
-
+  testBreakMem(N)
 
 
 def runTests2(N):
@@ -944,3 +944,21 @@ def testObserveAPredict2(N):
   print "---TestObserveAPredict2---"
   print "(25," + str(mean) + ")"
   print "(note: true answer is 50, but program is illegal and staleness is correct behavior)"
+
+
+def testBreakMem(N):
+  sivm = SIVM()
+  sivm.assume("pick_a_stick","""
+(lambda (sticks k)
+  (if (bernoulli (sticks k))
+      k
+      (pick_a_stick sticks (plus k 1))))
+""")
+#  sivm.assume("d","(uniform_continuous 0.0 0.2)")
+  sivm.assume("d","(uniform_continuous 0.4 0.41)")
+
+  sivm.assume("f","(mem (lambda (k) (beta 1.0 (times k d))))")
+#  sivm.assume("f","(lambda (k) (beta 1.0 (times k d)))")
+  sivm.assume("g","(lambda () (pick_a_stick f 1))")
+  sivm.predict("(g)")
+  sivm.infer(N)

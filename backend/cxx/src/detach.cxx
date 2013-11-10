@@ -258,11 +258,16 @@ double Trace::detachSPFamily(VentureSP * vsp,
   assert(root);
   spaux->families.erase(id);
 
-  omegaDB->flushQueue.emplace(vsp->sp,spaux,id);
+  // TODO URGENT 
+  // the SP needs to be able to register
+
+  for (VentureValue * value : spaux->ownedValues[id])
+  {
+    omegaDB->flushQueue.emplace(value);
+  }
+  spaux->ownedValues.erase(id);
 
   omegaDB->spFamilyDBs[{vsp->makerNode,id}] = root;
-  
-
   
   double weight = detachFamily(root,scaffold,omegaDB);
   return weight;
