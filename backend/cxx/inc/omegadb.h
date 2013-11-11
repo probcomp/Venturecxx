@@ -1,6 +1,8 @@
 #ifndef OMEGA_DB_H
 #define OMEGA_DB_H
 
+#include "flush.h"
+
 #include <map>
 #include <unordered_map>
 #include <vector>
@@ -11,7 +13,7 @@ using namespace std;
 struct SP;
 struct VentureValue;
 struct Node;
-struct FlushEntry;
+
 
 struct LatentDB 
 {
@@ -51,6 +53,12 @@ struct OmegaDB
      in the detach order. Some of these SP's will be null, indicating that Venture created the value
      and should just delete it. */
   queue<FlushEntry> flushQueue;
+
+  bool isValid() { return magic == 5619197; }
+  uint32_t magic = 5619197;
+
+  virtual ~OmegaDB();
+
 };
 
 

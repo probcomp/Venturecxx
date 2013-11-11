@@ -139,9 +139,12 @@ double Trace::detachInternal(Node * node,
 
 void Trace::teardownMadeSP(Node * node, bool isAAA,OmegaDB * omegaDB)
 {
+  callCounts[{"processMadeSP",true}]++;
+
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
 
   if (vsp->makerNode != node) { return; }
+
   vsp->makerNode = nullptr;
 
   SP * madeSP = vsp->sp;
@@ -163,6 +166,8 @@ double Trace::unapplyPSP(Node * node,
 			 OmegaDB * omegaDB)
 {
   DPRINT("unapplyPSP: ", node->address.toString());
+  callCounts[{"applyPSP",true}]++;
+
   assert(node->isValid());
   assert(node->sp()->isValid());
 

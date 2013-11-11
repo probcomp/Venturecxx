@@ -203,6 +203,9 @@ struct Trace
 
   unordered_map<Node *, uint32_t> ccToIndex;
   vector<Node *> constrainedChoices;
+
+  // Bool is TRUE for detach
+  map<pair<string,bool>,uint32_t> callCounts;
 };
 
 

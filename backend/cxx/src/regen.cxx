@@ -157,8 +157,9 @@ double Trace::regenInternal(Node * node,
 /* TODO should load makerNode as well */
 void Trace::processMadeSP(Node * node, bool isAAA)
 {
-  VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
+  callCounts[{"processMadeSP",false}]++;
 
+  VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
   if (vsp->makerNode) { return; }
 
   assert(vsp);
@@ -180,6 +181,7 @@ double Trace::applyPSP(Node * node,
 		       map<Node *,vector<double> > *gradients)
 {
   DPRINT("applyPSP: ", node->address.toString());
+  callCounts[{"applyPSP",false}]++;
   SP * sp = node->sp();
 
   assert(node->isValid());

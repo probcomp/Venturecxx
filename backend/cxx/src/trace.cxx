@@ -34,11 +34,13 @@ Trace::Trace()
   }
 
   globalEnv = new VentureEnvironment(primitivesEnv);
+
 }
 
 Trace::~Trace()
 {
-  vector<VentureValue *> observedValues;
+
+  OmegaDB * omegaDB = new OmegaDB;
   for (map<size_t, pair<Node *,VentureValue*> >::reverse_iterator iter = ventureFamilies.rbegin(); 
        iter != ventureFamilies.rend();
        ++iter)
@@ -48,9 +50,7 @@ Trace::~Trace()
     { 
       unconstrain(root,true); 
     }
-    OmegaDB * omegaDB = new OmegaDB;
     detachVentureFamily(root,omegaDB); 
-    flushDB(omegaDB,false);
     destroyExpression(iter->second.second);
     destroyFamilyNodes(root);
   }
@@ -61,17 +61,22 @@ Trace::~Trace()
   for (pair<string,Node*> p : primitivesEnv->frame)
   {
     Node * node = p.second;
-    if (node->madeSPAux) 
-    { 
-      VentureSP * vvsp = dynamic_cast<VentureSP*>(node->getValue());
-      assert(vvsp);
-      vvsp->sp->destroySPAux(node->madeSPAux);
-    }
-    delete node->getValue();
+
+    if (dynamic_cast<VentureSP*>(node->getValue()))
+    { teardownMadeSP(node,false,omegaDB); }
+
+    omegaDB->flushQueue.emplace(node->getValue());
     delete node;
   }
   primitivesEnv->destroySymbols();
   delete primitivesEnv;
+
+  for (pair< pair<string,bool >, uint32_t> pp : callCounts)
+  {
+    assert(callCounts[make_pair(pp.first.first,false)] == callCounts[make_pair(pp.first.first,true)]);
+  }
+
+  flushDB(omegaDB,false);
 
   gsl_rng_free(rng);
 

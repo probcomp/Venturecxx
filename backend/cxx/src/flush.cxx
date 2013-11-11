@@ -11,34 +11,34 @@
 
 void flushDBComplete(OmegaDB * omegaDB)
 {
-    while (!omegaDB->flushQueue.empty())
-    {
-      FlushEntry f = omegaDB->flushQueue.front();
-      if (f.spaux) 
-      { 
-	assert(f.owner);
-	assert(f.owner->isValid());
-	assert(f.spaux->isValid());
-	f.owner->destroySPAux(f.spaux);
-      }
-      else if (f.owner) 
-      { 
-	// value may not be valid here, but then the owner must know not to flush it
-	f.owner->flushValue(f.value,f.nodeType); 
-      }
-      else 
-      { 
-	assert(f.value->isValid());
-	f.value->destroyParts();
-	delete f.value;
-      }
-      omegaDB->flushQueue.pop();
+  while (!omegaDB->flushQueue.empty())
+  {
+    FlushEntry f = omegaDB->flushQueue.front();
+    if (f.spaux) 
+    { 
+      assert(f.owner);
+      assert(f.owner->isValid());
+      assert(f.spaux->isValid());
+      f.owner->destroySPAux(f.spaux);
     }
+    else if (f.owner) 
+    { 
+      // value may not be valid here, but then the owner must know not to flush it
+      f.owner->flushValue(f.value,f.nodeType); 
+    }
+    else 
+    { 
+      assert(f.value->isValid());
+      f.value->destroyParts();
+      delete f.value;
+    }
+    omegaDB->flushQueue.pop();
+  }
 
-    for (pair<pair<Node *,size_t>, Node*> p : omegaDB->spFamilyDBs)
-    {
-      destroyFamilyNodes(p.second);
-    }
+  for (pair<pair<Node *,size_t>, Node*> p : omegaDB->spFamilyDBs)
+  {
+    destroyFamilyNodes(p.second);
+  }
   
   delete omegaDB;
 }
