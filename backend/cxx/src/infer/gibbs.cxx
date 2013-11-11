@@ -116,12 +116,15 @@ MixMHIndex * GibbsGKernel::sampleIndex()
 
   pindex->scaffold = scaffold;
 
+  bool canEnumerate = false;
+
   /* Enumerate */
   if (pNode->sp()->canEnumerate(pNode->nodeType))
   {
     vector<VentureValue *> values = pNode->sp()->enumerate(pNode);
-    if (!values.empty()) 
+    if (!values.empty())
     {
+      canEnumerate = true;
       LKernel * lk = new DeterministicLKernel(pNode->getValue(),pNode->sp());
       scaffold->lkernels[pNode] = lk;
       pindex->source = trace->detach(scaffold->border,scaffold);
@@ -141,8 +144,9 @@ MixMHIndex * GibbsGKernel::sampleIndex()
       }
     }
   }
+
   /* Otherwise sample particles */
-  else 
+  if (!canEnumerate)
   {
     pindex->source = trace->detach(scaffold->border,scaffold);
     check.checkTorus(scaffold);

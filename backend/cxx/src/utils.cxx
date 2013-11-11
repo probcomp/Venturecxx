@@ -60,7 +60,7 @@ void normalizeVector(vector<double> & xs)
   double newSum = 0;
   for (size_t i = 0; i < xs.size(); ++i)
   {
-    if (sum == 0) { xs[i] = 1.0/xs.size(); }
+    if (sum < 0.000001) { xs[i] = 1.0/xs.size(); }
     else { xs[i] /= sum; }
     newSum += xs[i];
   }

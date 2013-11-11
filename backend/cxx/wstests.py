@@ -2,7 +2,7 @@ from venture.shortcuts import *
 import math
 import pdb
 
-globalKernel = "mh";
+globalKernel = "gibbs";
 globalUseGlobalScaffold = False;
 
 def SIVM():
@@ -31,7 +31,9 @@ def runAllTests(N):
              ("pgibbs",False),
              ("pgibbs",True),
              ("meanfield",False),
-             ("meanfield",True)]
+             ("meanfield",True),
+             ("gibbs",False),
+             ("gibbs",True)]
 
   for i in range(len(options)):
     print "\n\n\n\n\n\n\n========= %d. (%s,%d) ========" % (i+1,options[i][0],options[i][1])
