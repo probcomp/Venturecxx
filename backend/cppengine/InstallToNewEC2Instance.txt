@@ -1,0 +1,51 @@
+# Packages
+sudo apt-get install python-setuptools
+sudo easy_install flask requests
+sudo apt-get install gcc g++ make git
+sudo apt-get install python-dev
+sudo apt-get install libgsl0-dev
+sudo apt-get install libboost-thread-dev libboost-system-dev
+
+sudo yum install python-setuptools
+sudo easy_install flask requests
+sudo yum install gcc gcc-c++ make git
+sudo yum install python-devel
+sudo yum install gsl-devel
+sudo yum install boost-system boost-thread
+sudo yum install boost boost-devel
+
+# Try boost_system and boost_thread without "-mt"
+
+ImportError: No module named engine
+
+Check with Jonathan Malmaud error (that it is not just "7 smth.")
+
+# Boost
+wget http://downloads.sourceforge.net/project/boost/boost/1.52.0/boost_1_52_0.tar.bz2
+tar --bzip2 -xf boost_1_52_0.tar.bz2
+cd boost_1_52_0
+sudo ./bootstrap.sh --with-libraries=thread,system
+sudo ./b2 install
+sudo ln -s /usr/local/lib/libboost_system.so /usr/local/lib/libboost_system-mt.so
+sudo ln -s /usr/local/lib/libboost_system.a /usr/local/lib/libboost_system-mt.a
+sudo ln -s /usr/local/lib/libboost_thread.so /usr/local/lib/libboost_thread-mt.so
+sudo ln -s /usr/local/lib/libboost_thread.a /usr/local/lib/libboost_thread-mt.a
+cd ..
+
+# GSL
+wget ftp://ftp.gnu.org/gnu/gsl/gsl-1.15.tar.gz
+tar --gz -xf gsl-1.15.tar.gz
+cd gsl-1.15
+./configure
+make
+sudo make install
+cd ..
+
+# Boost and GSL
+sudo sh -c 'echo "/usr/local/lib" >> /etc/ld.so.conf'
+sudo ldconfig
+
+git clone --depth=1 https://probcomp-reserve:metropolis1953@github.com/perov/Venture.git
+cd Venture/src
+sudo make
+cd ../..

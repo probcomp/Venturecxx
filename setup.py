@@ -77,6 +77,35 @@ cxx = Extension("venture.cxx.libtrace",
     sources = src_files)
 ext_modules.append(cxx)
 
+import sys
+if "--cppengine" in sys.argv:
+    sys.argv.remove("--cppengine")
+    venture1_source_files = [
+        'Utilities.cpp',
+        'VentureValues.cpp',
+        'VentureParser.cpp',
+        'Primitives.cpp',
+        'Evaluator.cpp',
+        'Main.cpp',
+        'XRPCore.cpp',
+        'XRPmem.cpp',
+        'XRPs.cpp',
+        'RIPL.cpp',
+        'Analyzer.cpp',
+        'ERPs.cpp',
+        'MHProposal.cpp',
+        'PythonProxy.cpp',
+        'Shell_PPPs.cpp'
+    ]
+    venture1_source_files = ["backend/cppengine/" + f for f in venture1_source_files]
+    venture1_libraries = ['gsl', 'gslcblas', 'pthread', 'boost_system', 'boost_thread-mt']
+    venture1_ext = Extension('venture.sivm._cpp_engine_extension',
+                             define_macros = [('MAJOR_VERSION', '1'),
+                                              ('MINOR_VERSION', '0')],
+                             libraries = venture1_libraries,
+                             sources = venture1_source_files)
+    ext_modules.append(venture1_ext)
+
 setup (
     name = 'Venture CXX',
     version = '1.0',

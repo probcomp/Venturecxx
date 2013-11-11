@@ -1,0 +1,14 @@
+
+Warning! This script is out-of-date! Use Python scripts from this directory instead!
+
+#!/bin/bash
+PORT=8080
+ADDRESSEE=probcomp-sys@lists.csail.mit.edu
+if curl -s --head -m 5 http://127.0.0.1:$PORT/ | grep "200 OK" > /dev/null
+  then 
+    echo "The Venture server is up." > /dev/null
+  else
+    echo -e "To: $ADDRESSEE\nFrom: $ADDRESSEE\nSubject: WARNING: The Venture server for IME does not response correctly, and because of this it has been restarted." | /usr/sbin/sendmail -f $ADDRESSEE $ADDRESSEE
+    pkill -f "/usr/venture/venture $PORT"
+    /usr/venture/venture $PORT >/dev/null 2>&1 &
+fi

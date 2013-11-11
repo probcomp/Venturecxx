@@ -3,33 +3,39 @@
 
 from venture import parser, ripl, sivm, server
 
+default_backend = "cxx"
 
-def make_core_sivm():
-    return sivm.CoreSivmCxx()
+def make_core_sivm(backend = default_backend):
+    if backend == "cppengine":
+        return sivm.CoreSivmCppEngine()
+    elif backend == "cxx":
+        return sivm.CoreSivmCxx()
+    else:
+        raise Exception("Undefined backend.")
 
-def make_venture_sivm():
-    return sivm.VentureSivm(make_core_sivm())
+def make_venture_sivm(backend = default_backend):
+    return sivm.VentureSivm(make_core_sivm(backend))
 
-def make_church_prime_ripl():
-    v = make_venture_sivm()
+def make_church_prime_ripl(backend = default_backend):
+    v = make_venture_sivm(backend)
     parser1 = parser.ChurchPrimeParser()
     return ripl.Ripl(v,{"church_prime":parser1})
 
-def make_venture_script_ripl():
-    v = make_venture_sivm()
+def make_venture_script_ripl(backend = default_backend):
+    v = make_venture_sivm(backend)
     parser1 = parser.VentureScriptParser()
     return ripl.Ripl(v,{"venture_script":parser1})
 
-def make_combined_ripl():
-    v = make_venture_sivm()
+def make_combined_ripl(backend = default_backend):
+    v = make_venture_sivm(backend)
     parser1 = parser.ChurchPrimeParser()
     parser2 = parser.VentureScriptParser()
     r = ripl.Ripl(v,{"church_prime":parser1, "venture_script":parser2})
     r.set_mode("church_prime")
     return r
 
-def make_ripl_rest_server():
-    r = make_combined_ripl()
+def make_ripl_rest_server(backend = default_backend):
+    r = make_combined_ripl(backend)
     return server.RiplRestServer(r)
 
 def make_ripl_rest_client(base_url):

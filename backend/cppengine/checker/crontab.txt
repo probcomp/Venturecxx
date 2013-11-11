@@ -1,0 +1,2 @@
+* * * * * python ~/for_IME/checker.py >/dev/null 2>&1
+* * * * */5 python ~/for_IME/rerunner.py >/dev/null 2>&1

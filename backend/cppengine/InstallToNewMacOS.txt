@@ -1,0 +1,21 @@
+# Follow instructions in the "InstallToNewEC2Instance.txt"
+
+# Special way to install Boost and GSL:
+
+brew install boost
+brew install gsl
+
+# Or using Macports:
+
+sudo port install gsl
+sudo port install boost
+
+# In this case it could be necessary to add g++ argument
+# -L/opt/local/lib
+# and change "-lboost_thread" to "-lboost_thread-mt"
+
+# Something below can be required:
+1) sudo ln -s /usr/llvm-gcc-4.2/bin/llvm-gcc-4.2 /usr/bin/gcc-4.2
+2) Copy flask (after "$ sudo easy_install flask") from
+   /Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages
+   to /Library/Python/2.7/site-packages ?

@@ -7,7 +7,7 @@ cd "$my_dirname"
 
 # Actually run the tests
 cd backend/cxx
-python -c "import wstests; wstests.runTests(10)"
+python -c "import wstests; wstests.runTests(10, '$1')"
 cd ../..
 echo FIXME test reporting causes some runtime errors to be missed, so watch output carefully
 python -m unittest discover python/test/ "*.py"

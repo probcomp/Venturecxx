@@ -1,9 +1,14 @@
 from venture.shortcuts import *
+import venture.shortcuts
 import math
 import pdb
 
+using_backend = ""
+
 def SIVM():
-  return make_church_prime_ripl()
+  if using_backend == "":
+    raise Exception("Undefined backend.")
+  return make_church_prime_ripl(using_backend)
 
 def normalizeList(seq): 
   denom = sum(seq)
@@ -29,7 +34,9 @@ def loggingInfer(sivm,address,T):
 #    print predictions[len(predictions)-1]
   return predictions
 
-def runTests(N):
+def runTests(N, backend):
+  global using_backend
+  using_backend = backend
 #  testBernoulli0(N)
   testBernoulli1(N)
   #testCategorical1(N)

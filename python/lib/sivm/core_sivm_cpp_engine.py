@@ -122,10 +122,21 @@ class CoreSivmCppEngine(object):
 
     def _do_infer(self,instruction):
         utils.require_state(self.state,'default')
-        iterations = utils.validate_arg(instruction,'iterations',
-                utils.validate_positive_integer)
-        resample = utils.validate_arg(instruction,'resample',
-                utils.validate_boolean)
+               
+        d = utils.validate_arg(instruction, 'params',
+                utils.validate_dict)
+        print "#####"
+        print "d is "
+        print d
+        print "#####"
+        iterations = int(d["transitions"])
+        if d["kernel"] != "mh":
+            raise Exception("Only MH kernel could be enabled in CPPEngine using Python interface. To use Gibbs or Slice sampling define a global variable.")
+      
+        #iterations = utils.validate_arg(instruction,'iterations',
+        #        utils.validate_positive_integer)
+        #resample = utils.validate_arg(instruction,'resample',
+        #        utils.validate_boolean)
         with self._catch_engine_error():
             #NOTE: model resampling is not implemented in C++
             val = self.engine.infer(iterations)
@@ -261,7 +272,7 @@ def _modify_value(ob):
     return s
 
 # the C++ engine now uses the correct symbol names
-_symbol_map = { "add" : '+', "sub" : '-',
+_symbol_map = { "add" : '+', "plus": "+", "sub" : '-',
         "mul" : '*', "div" : "/", "pow" : "power",
         "lt" : "<", "gt" : ">", "lte" : "<=", "gte":
         ">=", "eq" : "=", "neq" : "!=",

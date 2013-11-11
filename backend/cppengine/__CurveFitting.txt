@@ -1,0 +1,11 @@
+
+execute_directive("(ASSUME order (uniform-discrete c[0] c[4]))");
+execute_directive("(ASSUME noise (uniform-continuous r[0.1] r[1.0]))");
+execute_directive("(ASSUME c0 (if (count>= order c[0]) (normal r[0.0] r[10.0]) r[0.0]))");
+execute_directive("(ASSUME c1 (if (count>= order c[1]) (normal r[0.0] r[1]) r[0.0]))");
+execute_directive("(ASSUME c2 (if (count>= order c[2]) (normal r[0.0] r[0.1]) r[0.0]))");
+execute_directive("(ASSUME c3 (if (count>= order c[3]) (normal r[0.0] r[0.01]) r[0.0]))");
+execute_directive("(ASSUME c4 (if (count>= order c[4]) (normal r[0.0] r[0.001]) r[0.0]))");
+execute_directive("(ASSUME clean-func (lambda (x) (real+ c0 (real* c1 (real-power x r[1.0])) (real* c2 (real-power x r[2.0])) (real* c3 (real-power x r[3.0])) (real* c4 (real-power x r[4.0])))))");
+execute_directive("(PREDICT (list order c0 c1 c2 c3 c4 noise))");
+execute_directive("(OBSERVE (normal (clean-func (normal r[5.6] noise)) noise) r[1.8])");
