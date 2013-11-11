@@ -62,6 +62,8 @@ struct Trace
 
   vector<Node *> getRandomChoices(); // used by kernels
 
+  map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
+
 
 //  unordered_map<size_t,Node*> definiteFamilies;
 
@@ -201,8 +203,6 @@ struct Trace
 
   unordered_map<Node *, uint32_t> ccToIndex;
   vector<Node *> constrainedChoices;
-
-  map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
 };
 
 

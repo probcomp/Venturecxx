@@ -18,23 +18,24 @@
 #include <iostream>
 #include <list>
 
-PyTrace::PyTrace(): 
-  Trace(), 
+PyTrace::PyTrace() :
+  trace(new Trace()),
   gkernels{
-    {{"mh",false}, new OutermostMixMH(this,new ScaffoldMHGKernel(this))},
-    {{"mh",true}, new GlobalScaffoldMixMH(this,new ScaffoldMHGKernel(this))},
+    {{"mh",false}, new OutermostMixMH(trace,new ScaffoldMHGKernel(trace))},
+    {{"mh",true}, new GlobalScaffoldMixMH(trace,new ScaffoldMHGKernel(trace))},
 
-    {{"pgibbs",false}, new OutermostMixMH(this,new PGibbsGKernel(this))},
-    {{"pgibbs",true}, new GlobalScaffoldMixMH(this,new PGibbsGKernel(this))},
+    {{"pgibbs",false}, new OutermostMixMH(trace,new PGibbsGKernel(trace))},
+    {{"pgibbs",true}, new GlobalScaffoldMixMH(trace,new PGibbsGKernel(trace))},
 
-    {{"gibbs",false}, new OutermostMixMH(this,new GibbsGKernel(this))},
+    {{"gibbs",false}, new OutermostMixMH(trace,new GibbsGKernel(trace))},
 
-    {{"meanfield",false}, new OutermostMixMH(this,new MeanFieldGKernel(this))},
-    {{"meanfield",true}, new GlobalScaffoldMixMH(this,new MeanFieldGKernel(this))}}
+    {{"meanfield",false}, new OutermostMixMH(trace,new MeanFieldGKernel(trace))},
+    {{"meanfield",true}, new GlobalScaffoldMixMH(trace,new MeanFieldGKernel(trace))}}
  {}
 
 PyTrace::~PyTrace()
 {
+  delete trace;
   for (pair< pair<string,bool>,MixMHKernel *> p : gkernels)
   {
     p.second->destroyChildGKernel();
@@ -76,25 +77,24 @@ VentureValue * PyTrace::parseExpression(boost::python::object o)
 void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
 {
   VentureValue * exp = parseExpression(o);
+  pair<double,Node*> p = trace->evalVentureFamily(directiveID,static_cast<VentureList*>(exp),nullptr);
+  assert(!trace->ventureFamilies.count(directiveID));
+  trace->ventureFamilies.insert({directiveID,{p.second,exp}});
 
-  pair<double,Node*> p = evalVentureFamily(directiveID,static_cast<VentureList*>(exp),nullptr);
-  assert(!ventureFamilies.count(directiveID));
-  ventureFamilies.insert({directiveID,{p.second,exp}});
 }
 
 void PyTrace::unevalDirectiveID(size_t directiveID)
 {
   OmegaDB * omegaDB = new OmegaDB;
-  detachVentureFamily(ventureFamilies[directiveID].first,omegaDB);
+  trace->detachVentureFamily(trace->ventureFamilies[directiveID].first,omegaDB);
   flushDB(omegaDB,false);
-  ventureFamilies.erase(directiveID);
+  trace->ventureFamilies.erase(directiveID);
 }
-
 
 boost::python::object PyTrace::extractPythonValue(size_t directiveID)
 {
   Node * node;
-  tie(node,ignore) = ventureFamilies[directiveID];
+  tie(node,ignore) = trace->ventureFamilies[directiveID];
   assert(node);
   VentureValue * value = node->getValue();
   assert(value);
@@ -103,42 +103,48 @@ boost::python::object PyTrace::extractPythonValue(size_t directiveID)
 
 void PyTrace::bindInGlobalEnv(string sym, size_t directiveID)
 {
-  globalEnv->addBinding(new VentureSymbol(sym),ventureFamilies[directiveID].first);
+  trace->globalEnv->addBinding(new VentureSymbol(sym),trace->ventureFamilies[directiveID].first);
 }
 
 void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
 {
   Node * node;
-  tie(node,ignore) = ventureFamilies[directiveID];
+  tie(node,ignore) = trace->ventureFamilies[directiveID];
   VentureValue * val = parseExpression(valueExp);
   assert(!dynamic_cast<VenturePair*>(val));
   assert(!dynamic_cast<VentureSymbol*>(val));
   node->observedValue = val;
-  constrain(node,true);
+  trace->constrain(node,true);
 }
 
 double PyTrace::getGlobalLogScore()
 {
   double ls = 0.0;
-  for (Node * node : randomChoices)
+  for (Node * node : trace->randomChoices)
   {
     ls += node->sp()->logDensity(node->getValue(),node);
   }
-  for (Node * node : constrainedChoices)
+  for (Node * node : trace->constrainedChoices)
   {
     ls += node->sp()->logDensity(node->getValue(), node);
   }
   return ls;
 }
 
+uint32_t PyTrace::numRandomChoices()
+{
+  return trace->numRandomChoices();
+}
+
 void PyTrace::unobserve(size_t directiveID)
 {
-  Node * root = ventureFamilies[directiveID].first;
-  unconstrain(root,true);
+  Node * root = trace->ventureFamilies[directiveID].first;
+  trace->unconstrain(root,true);
+
 }
 
 void PyTrace::set_seed(size_t n) {
-  gsl_rng_set(rng, n);
+  gsl_rng_set(trace->rng, n);
 }
 
 size_t PyTrace::get_seed() {
@@ -146,12 +152,13 @@ size_t PyTrace::get_seed() {
   return 0;
 }
 
+
 void PyTrace::infer(boost::python::dict params) 
 { 
   size_t numTransitions = boost::python::extract<size_t>(params["transitions"]);
   string kernel = boost::python::extract<string>(params["kernel"]);
   bool useGlobalScaffold = boost::python::extract<bool>(params["use_global_scaffold"]);
-
+  
   assert(!(useGlobalScaffold && kernel == "gibbs"));
   MixMHKernel * gkernel = gkernels[make_pair(kernel,useGlobalScaffold)];
   gkernel->infer(numTransitions);
@@ -166,27 +173,30 @@ boost::python::dict PyTrace::continuous_inference_status() {
   return status;
 }
 
-void PyTrace::run_continuous_inference() {
-  boost::python::dict params = continuous_inference_params.copy();
-  params["transitions"] = 1;
-  while(continuous_inference_running) {
-    infer(params);
+void run_continuous_inference(MixMHKernel * gkernel, bool * flag) {
+  while(*flag) {
+    gkernel->infer(1);
   }
 }
 
 void PyTrace::start_continuous_inference(boost::python::dict params) {
   stop_continuous_inference();
 
+  string kernel = boost::python::extract<string>(params["kernel"]);
+  bool useGlobalScaffold = boost::python::extract<bool>(params["use_global_scaffold"]);
+  assert(!(useGlobalScaffold && kernel == "gibbs"));
+  MixMHKernel * gkernel = gkernels[make_pair(kernel,useGlobalScaffold)];
+
   continuous_inference_params = params;
   continuous_inference_running = true;
-  //continuous_inference_thread = new std::thread(&PyTrace::run_continuous_inference, this);
+  continuous_inference_thread = new std::thread(run_continuous_inference, gkernel, &continuous_inference_running);
 }
 
 void PyTrace::stop_continuous_inference() {
   if(continuous_inference_running) {
     continuous_inference_running = false;
-    //continuous_inference_thread->join();
-    //delete continuous_inference_thread;
+    continuous_inference_thread->join();
+    delete continuous_inference_thread;
   }
 }
 

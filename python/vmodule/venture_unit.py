@@ -514,13 +514,14 @@ def cartesianProduct(keyToValues):
 # Runner should take a given parameter setting and produce a history.
 # For example, runner = lambda params : Model(ripl, params).runConditionedFromPrior(sweeps, runs, track=0)
 # Returned is a dictionary mapping each parameter setting (as a namedtuple) to the history.
-def produceHistories(parameters, runner, verbose=False):
-    def _runner(params):
-        if verbose:
-            print(params)
-        return runner(params._asdict())
-    
-    return {params : _runner(params) for params in cartesianProduct(parameters)}
+def produceHistories(parameters, runner, verbose=False, mapper=map):
+    # verbose only included for backwards compatibility
+    # introduce verbosity by passing in appropriate runner
+    parameters_product = cartesianProduct(parameters)
+    dictify = lambda x: x._asdict()
+    to_map = map(dictify, parameters_product)
+    map_results = mapper(runner, to_map)
+    return dict(zip(parameters_product, map_results))
 
 # Sets key to value and returns the updated dictionary.
 def addToDict(dictionary, key, value):

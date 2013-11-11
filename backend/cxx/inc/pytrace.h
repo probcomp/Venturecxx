@@ -12,11 +12,13 @@
 struct VentureValue;
 struct MixMHKernel;
 
-struct PyTrace : Trace
+void run_continuous_inference(MixMHKernel * gkernel, bool * flag);  
+
+struct PyTrace
 {
   PyTrace();
   ~PyTrace();
-
+  
   VentureValue * parseValue(boost::python::dict d);
   VentureValue * parseExpression(boost::python::object o);
 
@@ -32,14 +34,15 @@ struct PyTrace : Trace
   size_t get_seed();
 
   double getGlobalLogScore();
+  uint32_t numRandomChoices();
 
   void infer(boost::python::dict params);
   
   boost::python::dict continuous_inference_status();
   void start_continuous_inference(boost::python::dict params);
   void stop_continuous_inference();
-  void run_continuous_inference();
 
+  Trace * trace;
   map<pair<string,bool> ,MixMHKernel *> gkernels;
   
   bool continuous_inference_running = false;
