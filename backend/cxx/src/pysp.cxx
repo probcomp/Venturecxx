@@ -5,8 +5,14 @@
 
 #include <boost/python.hpp>
 
+PySP::~PySP()
+{
+}
+
 VentureValue * PySP::simulateOutput(Node * node, gsl_rng * rng) const
 { 
+  //  std::cout << "pysp calling simulateoutput" << std::endl;
+
   boost::python::list args;
   for (Node * operandNode : node->operandNodes)
   {
@@ -22,6 +28,7 @@ VentureValue * PySP::simulateOutput(Node * node, gsl_rng * rng) const
 
 double PySP::logDensityOutput(VentureValue *val, Node *node) const
 {
+  //  std::cout << "calling logdensity" << std::endl;
   boost::python::list args;
   for (Node * operandNode : node->operandNodes)
     {
@@ -35,19 +42,21 @@ double PySP::logDensityOutput(VentureValue *val, Node *node) const
 
 boost::python::object PySP::simulateOutputPython(boost::python::list args) const
 {
-  return this->get_override("simulate")(args);
+  return this->get_override("pysp_output_simulate")(args);
 }
 
 double PySP::logDensityOutputPython(boost::python::list args, boost::python::object value) const
 {
-  return this->get_override("logDensity")(args, value);
+  return this->get_override("pysp_output_logdensity")(args, value);
 }
 
+//FIXME: Remove the extra layer of classes here, and fix the exports to be more sensible
+//FIXME: right now the name is coming from string constants in this source file
 BOOST_PYTHON_MODULE(libsp)
 {
   using namespace boost::python;
   class_<PySP, boost::noncopyable>("SP",init<>())
-    .def("simulate", &PySP::simulateOutputPython)
-    .def("logDensity", &PySP::logDensityOutputPython)
+    //    .def("simulate", &PySP::simulateOutputPython)
+    //    .def("logDensity", &PySP::logDensityOutputPython)
     ;
 };

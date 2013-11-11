@@ -149,6 +149,7 @@ struct VentureSP : VentureValue
 
   // TODO return the toPython of the Aux
 
+  bool sp_automatically_deleted{false};
   ~VentureSP();
 
 };

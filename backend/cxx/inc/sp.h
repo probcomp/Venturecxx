@@ -154,7 +154,7 @@ struct SP
 
   virtual ~SP() {};
 
-
+  // FIXME clean up memory management for pysps
 };
 
 

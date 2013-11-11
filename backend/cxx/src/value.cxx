@@ -1,9 +1,11 @@
 #include "value.h"
 #include "sp.h"
+#include "pysp.h"
+
 #include <typeinfo>
 
 
-std::string ignore_typeid_name = "2SP";
+//std::string ignore_typeid_name = "2SP";
 
 
 #include <iostream>
@@ -12,13 +14,19 @@ std::string ignore_typeid_name = "2SP";
 
 VentureSP::~VentureSP() 
 { 
+  /*
   std::string this_typeid_name = (std::string) typeid(*sp).name();
   if(this_typeid_name == ignore_typeid_name) {
     // std::cout << "VentureSP::~VentureSP : NOT deleting sp named " << this_typeid_name << std::endl;
   } else {
     // std::cout << "VentureSP::~VentureSP : DELETING sp named " << this_typeid_name << std::endl;
     delete sp;
-  }
+    }*/
+
+  if (!sp_automatically_deleted)
+    {
+      delete sp;
+    }
 }
 
 

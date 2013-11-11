@@ -45,10 +45,6 @@ PyTrace::PyTrace() :
   std::vector<std::string> pysp_files = filter_for_suffix(dir_contents, ".py");
   // print_string_v(pysp_files);
 
-  if (pysp_files.begin() == pysp_files.end()) {
-    std::cout << "No python sps to load" << std::endl;
-  }
-
   for(std::vector<std::string>::const_iterator it=pysp_files.begin();
       it!=pysp_files.end();
       it++) {
@@ -58,11 +54,23 @@ PyTrace::PyTrace() :
 
     bindPySP(module_str, pysp_name);
   }
+
+#  if (pysp_files.begin() == pysp_files.end()) {
+#    std::cout << "No python sps to load" << std::endl;
+#  } else {
+#    std::cout << "Done loading python SPs" << std::endl;
+#  }
 }
 
 PyTrace::~PyTrace()
 {
+  // Destroy the references we own to Python SPs, so that the
+  // automatic machinery in python and boost handles the rest
+  // correctly
+  pysp_objects_vec.clear();
+    
   delete trace;
+
   for (pair< pair<string,bool>,MixMHKernel *> p : gkernels)
   {
     p.second->destroyChildGKernel();
@@ -72,43 +80,62 @@ PyTrace::~PyTrace()
 
 void PyTrace::bindPySP(std::string module_str, std::string pysp_name)
 {
-  // std::cout << "trying to import " << pysp_name << std::endl;
   std::string pysp_import_str = module_str + "." + pysp_name;
+  
   boost::python::object pysp_namespace = boost::python::import(boost::python::str(pysp_import_str));
-  // std::cout << "boost::python::import'ed " << pysp_name << std::endl;
-  
-  // get the function called "makeSP", and the funcion called "getSymbol" in the model
+
+  pysp_objects_vec.push_back(pysp_namespace);
+
+  //  std::cout << "imported " << pysp_import_str << std::endl;
+
+  //FIXME Error check this better
+
+  //Get and apply the makeSP procedure
   boost::python::object pysp = boost::python::getattr(pysp_namespace, "makeSP");
-  boost::python::object pysym = boost::python::getattr(pysp_namespace, "getSymbol");
-  
-  // extract them
   assert(!pysp.is_none());
-  my_sp_v.push_back(pysp());
-  boost::python::extract<SP*> spex(*my_sp_v.back());
-  
-  assert(!pysym.is_none());
-  my_sp_sym_v.push_back(pysym());
-  boost::python::extract<string> symex(*my_sp_sym_v.back());
-  
+  pysp_objects_vec.push_back(pysp());
+  boost::python::extract<SP*> spex(*pysp_objects_vec.back());
   assert(spex.check());
-  assert(symex.check());
-  
   SP * sp = spex();
-  string sym = symex();
-  
-  assert(!sp->makesESRs);
-  assert(!sp->makesHSRs);
-  
+
+  //Get and apply the getSymbol procedure
+  boost::python::object pysym = boost::python::getattr(pysp_namespace, "getSymbol");
+  assert(!pysym.is_none());
+  pysp_objects_vec.push_back(pysym());
+  boost::python::extract<string> symex(*pysp_objects_vec.back());
+  assert(symex.check());
+  string sym = symex();  
+  //  std::cout << "symbol: " << sym << std::endl;
+  sp->name = sym;
+
+  // get the value canAbsorb
+  boost::python::object pycanabsorb = boost::python::getattr(pysp_namespace, "canAbsorb");
+  pysp_objects_vec.push_back(pycanabsorb);
+  boost::python::extract<bool> ex_canabsorb(pycanabsorb);
+  bool canAbsorb = ex_canabsorb();
+  sp->canAbsorbOutput = canAbsorb;
+  //  std::cout << "can absorb: " << canAbsorb << std::endl;
+
+  // get the value isRandom
+  boost::python::object pyisrandom = boost::python::getattr(pysp_namespace, "isRandom");
+  pysp_objects_vec.push_back(pyisrandom);
+  boost::python::extract<bool> ex_israndom(pyisrandom);
+  bool isRandom = ex_israndom();
+  sp->isRandomOutput = isRandom;
+  //  std::cout << "is random: " << isRandom << std::endl;
+
   // create a node for the sp value
   Node * spNode = new Node(NodeType::VALUE);
+  VentureSP * vsp = new VentureSP(sp);
+  vsp->sp_automatically_deleted = true;
   // set the value
-  spNode->setValue(new VentureSP(sp));
+  spNode->setValue(vsp);
   // do some crucial bookkeeping
-  processMadeSP(spNode,false);
+  trace->processMadeSP(spNode,false);
   // add the binding
-  primitivesEnv->addBinding(new VentureSymbol(sym),spNode);
+  trace->primitivesEnv->addBinding(new VentureSymbol(sym),spNode);
   
-  std::cout << "added binding for new SP: " << sym << std::endl;
+  //  std::cout << "added binding for new SP: " << sym << std::endl;
 }
 
 void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
@@ -155,6 +182,8 @@ void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
 
 double PyTrace::getGlobalLogScore()
 {
+  std::cout << "pytrace getgloballogscore" << std::endl;
+
   double ls = 0.0;
   for (Node * node : trace->randomChoices)
   {
@@ -194,11 +223,11 @@ size_t PyTrace::get_seed() {
 }
 
 
-void PyTrace::infer(boost::python::dict params) 
+void PyTrace::infer(boost::python::dict options) 
 { 
-  size_t numTransitions = boost::python::extract<size_t>(params["transitions"]);
-  string kernel = boost::python::extract<string>(params["kernel"]);
-  bool useGlobalScaffold = boost::python::extract<bool>(params["use_global_scaffold"]);
+  size_t numTransitions = boost::python::extract<size_t>(options["transitions"]);
+  string kernel = boost::python::extract<string>(options["kernel"]);
+  bool useGlobalScaffold = boost::python::extract<bool>(options["use_global_scaffold"]);
   
   assert(!(useGlobalScaffold && kernel == "gibbs"));
   MixMHKernel * gkernel = gkernels[make_pair(kernel,useGlobalScaffold)];
