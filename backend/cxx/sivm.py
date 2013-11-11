@@ -1,4 +1,5 @@
 from libtrace import Trace
+import pdb
 from venture.exception import VentureException
 
 # Thin wrapper around cxx Trace
@@ -15,10 +16,20 @@ class SIVM:
         self.directiveCounter += 1
         return self.directiveCounter
 
+    def desugarLambda(self,datum):
+      if type(datum) is list and type(datum[0]) is dict and datum[0]["value"] == "lambda":
+        ids = [{"type" : "symbol","value" : "quote"}] + [datum[1]]
+        body = [{"type" : "symbol","value" : "quote"}] + [self.desugarLambda(datum[2])]
+        return [{"type" : "symbol", "value" : "make_csp"},ids,body]
+      elif type(datum) is list: return [self.desugarLambda(d) for d in datum]
+      else: return datum
+
     def assume(self,id,datum):
         baseAddr = self.nextBaseAddr()
 
-        self.trace.eval(baseAddr,datum);
+        exp = self.desugarLambda(datum)
+#        print exp
+        self.trace.eval(baseAddr,exp);
         self.trace.bindInGlobalEnv(id,baseAddr)
 
         self.directives[self.directiveCounter] = ["assume",id,datum]
@@ -27,7 +38,7 @@ class SIVM:
         
     def predict(self,datum):
         baseAddr = self.nextBaseAddr()
-        self.trace.eval(baseAddr,datum)
+        self.trace.eval(baseAddr,self.desugarLambda(datum))
 
         self.directives[self.directiveCounter] = ["predict",datum]
 
@@ -35,7 +46,7 @@ class SIVM:
 
     def observe(self,datum,val):
         baseAddr = self.nextBaseAddr()
-        self.trace.eval(baseAddr,datum)
+        self.trace.eval(baseAddr,self.desugarLambda(datum))
         logDensity = self.trace.observe(baseAddr,val)
 
         # TODO check for -infinity? Throw an exception?

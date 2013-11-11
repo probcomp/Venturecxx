@@ -2,6 +2,9 @@
 #define LIST_SPS_H
 
 #include "sp.h"
+#include "spaux.h"
+
+struct VenturePair;
 
 struct PairSP : SP
 {
@@ -38,6 +41,9 @@ struct ListRefSP : SP
   void flushOutput(VentureValue * value) const override { }
 };
 
+
+
+// TODO wrap everything in quote
 struct MapListSP : SP
 {
   MapListSP()
@@ -47,7 +53,6 @@ struct MapListSP : SP
     }
   VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
   void flushRequest(VentureValue * value) const override;
-
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
   void flushOutput(VentureValue * value) const override;
 

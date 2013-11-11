@@ -8,6 +8,7 @@
 #include "sps/csp.h"
 #include "sps/mem.h"
 #include "sps/cond.h"
+#include "sps/sym.h"
 #include "sps/eval.h"
 #include "sps/envs.h"
 #include "sps/pycrp.h"
@@ -52,6 +53,10 @@ map<string,SP *> initBuiltInSPs()
 
     // atoms
     {"atom_eq", new AtomEqualSP},
+
+    // symbols
+    {"is_symbol", new IsSymbolSP},
+
 
     // trig
     {"sin", new SinSP},
@@ -118,6 +123,9 @@ map<string,SP *> initBuiltInSPs()
 
     // with LSRs
     {"make_lazy_hmm", new MakeLazyHMMSP},
+
+    // Lambda replacement
+    {"make_csp", new MakeCSP},
 
     // with shared ESRs
     {"mem", new MSPMakerSP},

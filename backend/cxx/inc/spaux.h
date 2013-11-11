@@ -29,11 +29,12 @@ struct SPAux
 
   map<size_t,Node*> families;
 
-  /* The vector is a collection of VentureValues that this family
-     "owns", e.g. values cloned during msp.simulateRequest(val) */
-  map<size_t,vector<VentureValue*> > familyValues;
+  map<size_t, vector<VentureValue*> > ownedValues;
 
-  virtual ~SPAux() {}; 
+  
+  bool isValid() { return magic == 844142; }
+  uint32_t magic = 844142;
+  virtual ~SPAux() { assert(isValid()); magic = 0; }; 
 };
 
 

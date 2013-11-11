@@ -37,6 +37,7 @@ src_files = [
     "src/sps/csp.cxx",
     "src/sps/mem.cxx",
     "src/sps/number.cxx",
+    "src/sps/sym.cxx",
     "src/sps/trig.cxx",
     #"src/sps/real.cxx",
     #"src/sps/count.cxx",

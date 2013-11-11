@@ -5,6 +5,11 @@
 #include <vector>
 #include <string>
 
+struct MakeCSP : SP
+{
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+};
+
 struct CSP : SP
 {
   /* TODO GC major GC issue with values. Right now the values in the expression

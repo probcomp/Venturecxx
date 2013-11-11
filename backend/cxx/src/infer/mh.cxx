@@ -6,9 +6,17 @@
 #include "trace.h"
 #include "scaffold.h"
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
+
+#include <algorithm>
 #include <iostream>
 
 /* ScaffoldMHGKernel */
+
+ScaffoldMHGKernel::ScaffoldMHGKernel(Trace * trace): 
+  GKernel(trace), check(trace) {}
 
 void ScaffoldMHGKernel::destroyParameters() { delete scaffold; }
 void ScaffoldMHGKernel::loadParameters(MixMHParam * param)
@@ -22,7 +30,6 @@ void ScaffoldMHGKernel::loadParameters(MixMHParam * param)
 
 double ScaffoldMHGKernel::propose()
 {
-  LPRINT("propose","!");
   assert(scaffold);
   assert(!rhoDB);
 
@@ -31,14 +38,13 @@ double ScaffoldMHGKernel::propose()
   double detachWeight = rhoInfo.first;
   rhoDB = rhoInfo.second;
 
-  assertTorus(trace,scaffold);
+  check.checkTorus(scaffold);
   double regenWeight = trace->regen(scaffold->border,scaffold,false,rhoDB,nullptr);
   return regenWeight - detachWeight;
 }
 
 void ScaffoldMHGKernel::accept()
 {
-  LPRINT("accept","!");
   flushDB(rhoDB,false);
   rhoDB = nullptr;
 }
@@ -46,10 +52,9 @@ void ScaffoldMHGKernel::accept()
 
 void ScaffoldMHGKernel::reject()
 {
-  LPRINT("reject","!"); 
   pair<double, OmegaDB *> xiInfo = trace->detach(scaffold->border,scaffold);
   OmegaDB * xiDB = xiInfo.second;
-  assertTorus(trace,scaffold);
+  check.checkTorus(scaffold);
   trace->regen(scaffold->border,scaffold,true,rhoDB,nullptr);
   flushDB(rhoDB,true);
   flushDB(xiDB,false);
@@ -78,6 +83,9 @@ MixMHParam * OutermostMixMH::processIndex(MixMHIndex * index)
 
   /* Deleted by deepest gkernel's destroyParameters() */
   Scaffold * scaffold = new Scaffold({pNode});
+
+  /* May expose latent bugs */
+  if (gsl_ran_flat(trace->rng,0.0,1.0) < 0.5) { reverse(scaffold->border.begin(),scaffold->border.end()); }
 
   delete index;
 

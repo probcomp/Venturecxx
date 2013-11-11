@@ -3,6 +3,7 @@
 #include "sp.h"
 #include "lkernel.h"
 
+
 #include <iostream>
 
 void Scaffold::addResamplingNode(queue<pair<Node *, bool> > & q, Node * node)
@@ -180,8 +181,7 @@ void Scaffold::setRegenCounts()
      nodes at all anymore, so may just rename absorbing to border and then push back
      the terminal nodes. */
   border.insert(border.end(),absorbing.begin(),absorbing.end());
-
-
+  
   /* Now add increment the regenCount for AAA nodes as 
      is appropriate. */
   /* TODO Note that they may have been in the brush, in which case this is not necessary. */

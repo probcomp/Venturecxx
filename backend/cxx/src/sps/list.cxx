@@ -70,7 +70,6 @@ VentureValue * MapListSP::simulateRequest(Node * node, gsl_rng * rng) const
   vector<ESR> esrs;
   VentureList * list = dynamic_cast<VentureList*>(node->operandNodes[1]->getValue());
   assert(list);
-  assert(dynamic_cast<VenturePair*>(list));
 
   VentureEnvironment * env = new VentureEnvironment;
   env->addBinding(new VentureSymbol("mappedSP"),fNode);
@@ -80,12 +79,19 @@ VentureValue * MapListSP::simulateRequest(Node * node, gsl_rng * rng) const
   {
     VenturePair * pair = dynamic_cast<VenturePair*>(list);
     assert(pair);
+
+    VentureValue * val = new VenturePair(new VentureSymbol("quote"),
+					 new VenturePair(pair->first,
+							 new VentureNil));
+    assert(val);
  
-    VenturePair * exp = new VenturePair(new VentureSymbol("mappedSP"),
-					new VenturePair(pair->first,
-							new VentureNil));
     /* TODO this may be problematic */
     size_t id = reinterpret_cast<size_t>(node) + i;
+
+    VenturePair * exp = new VenturePair(new VentureSymbol("mappedSP"),
+					new VenturePair(val,
+							new VentureNil));
+
 
     esrs.push_back(ESR(id,exp,env));
     i++;
@@ -94,22 +100,29 @@ VentureValue * MapListSP::simulateRequest(Node * node, gsl_rng * rng) const
   return new VentureRequest(esrs);
 }
 
+
 void MapListSP::flushRequest(VentureValue * value) const
 {
   VentureRequest * requests = dynamic_cast<VentureRequest*>(value);
   assert(requests);
   vector<ESR> esrs = requests->esrs;
-  assert(!esrs.empty());
-  esrs[0].env->destroySymbols();
-  delete esrs[0].env;
-
-  for (ESR esr : esrs)
+  if (!esrs.empty())
   {
-    VenturePair * exp = dynamic_cast<VenturePair*>(esr.exp);
-    assert(exp);
-    delete exp->first;
-    listShallowDestroy(exp);
+    esrs[0].env->destroySymbols();
+    delete esrs[0].env;
+
+    for (ESR esr : esrs)
+    {
+      VenturePair * exp = dynamic_cast<VenturePair*>(esr.exp);
+      assert(exp);
+      delete exp->first;
+      VenturePair * quote = dynamic_cast<VenturePair*>(exp->rest);
+      assert(quote);
+      delete quote->first;
+      listShallowDestroy(exp);
+    }
   }
+  
   delete value;
 }
 

@@ -8,6 +8,7 @@
 #include "scaffold.h"
 #include "sp.h"
 
+
 double MeanFieldGKernel::propose()
 {
   /* Sample from the variational distribution. */
@@ -25,7 +26,7 @@ void MeanFieldGKernel::reject()
 {
   pair<double, OmegaDB *> xiInfo = trace->detach(scaffold->border,scaffold);
   OmegaDB * xiDB = xiInfo.second;
-  assertTorus(trace,scaffold);
+  check.checkTorus(scaffold);
   trace->regen(scaffold->border,scaffold,true,rhoDB,nullptr);
   flushDB(rhoDB,true);
   flushDB(xiDB,false);
@@ -69,7 +70,7 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
   double rhoWeight;
 
   tie(rhoWeight,rhoDB) = trace->detach(scaffold->border,scaffold);
-  assertTorus(trace,scaffold);
+  check.checkTorus(scaffold);
 
   for (size_t i = 0; i < numIters; ++i)
   {
@@ -80,7 +81,7 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
 
     OmegaDB * detachedDB;
     tie(ignore,detachedDB) = trace->detach(scaffold->border,scaffold);
-    assertTorus(trace,scaffold);
+    check.checkTorus(scaffold);
     flushDB(detachedDB,false);
 
     for (pair<Node *, LKernel*> p : scaffold->lkernels)
@@ -97,6 +98,6 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
   OmegaDB * rhoDB2;
   tie(weightRho,rhoDB2) = trace->detach(scaffold->border,scaffold);
   flushDB(rhoDB2,true);
-  assertTorus(trace,scaffold);
+  check.checkTorus(scaffold);
 }
  

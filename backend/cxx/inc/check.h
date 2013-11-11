@@ -4,8 +4,19 @@
 struct Trace;
 struct Scaffold;
 
-void assertTorus(Trace * trace, Scaffold * scaffold);
-void assertWhole(Trace * trace, Scaffold * scaffold);
+struct TraceConsistencyChecker
+{
+  TraceConsistencyChecker(Trace * trace): trace(trace) {}
+  Trace * trace;
+  
+  void checkConsistency();
+
+
+  void checkTorus(Scaffold * scaffold);
+  void checkWhole(Scaffold * scaffold);
+
+};
+
 
 
 #endif

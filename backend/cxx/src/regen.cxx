@@ -111,7 +111,7 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
     double weight = node->sp()->logDensityOutput(value,node);
     node->setValue(value);
     node->isConstrained = true;
-    node->ownsValue = false;
+    node->spOwnsValue = false;
     node->sp()->incorporateOutput(value,node);
     if (node->sp()->isRandomOutput) { 
       unregisterRandomChoice(node); 
@@ -182,6 +182,9 @@ double Trace::applyPSP(Node * node,
   DPRINT("applyPSP: ", node->address.toString());
   SP * sp = node->sp();
 
+  assert(node->isValid());
+  assert(sp->isValid());
+
   /* Almost nothing needs to be done if this node is a ESRReference.*/
   if (node->nodeType == NodeType::OUTPUT && sp->isESRReference)
   {
@@ -249,6 +252,7 @@ double Trace::applyPSP(Node * node,
     newValue = sp->simulate(node,rng);
   }
   assert(newValue);
+  assert(newValue->isValid());
   node->setValue(newValue);
 
   sp->incorporate(newValue,node);
@@ -277,8 +281,9 @@ double Trace::evalRequests(Node * node,
   /* First evaluate ESRs. */
   for (ESR esr : requests->esrs)
   {
-    Node * esrParent = node->sp()->findFamily(esr.id, node->spaux());
-    if (!esrParent)
+    assert(node->spaux()->isValid());
+    Node * esrParent;
+    if (!node->spaux()->families.count(esr.id))
     {
       if (shouldRestore && omegaDB && omegaDB->spFamilyDBs.count({node->vsp()->makerNode, esr.id}))
       {
@@ -293,6 +298,16 @@ double Trace::evalRequests(Node * node,
 	esrParent = p.second;
       }
       node->sp()->registerFamily(esr.id, esrParent, node->spaux());
+    }
+    else
+    {
+      esrParent = node->spaux()->families[esr.id];
+      assert(esrParent->isValid());
+
+      // right now only MSP's share
+      // (guard against hash collisions)
+      assert(dynamic_cast<MSP*>(node->sp()));
+      
     }
     Node::addESREdge(esrParent,node->outputNode);
   }
@@ -330,13 +345,7 @@ double Trace::restoreFamily(Node * node,
   assert(node);
   if (node->nodeType == NodeType::VALUE)
   {
-    assert(node->getValue());
-    if (!dynamic_cast<VentureValue*>(node->getValue())) { assert(false); }
-
-    if (dynamic_cast<VentureSP *>(node->getValue()))
-    { 
-      processMadeSP(node,false); 
-    }
+    // do nothing
   }
   else if (node->nodeType == NodeType::LOOKUP)
   {
@@ -371,17 +380,7 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
     VentureList * list = dynamic_cast<VentureList*>(exp);
     VentureSymbol * car = dynamic_cast<VentureSymbol*>(listRef(list,0));
  
-    /* Lambda */
-    if (car && car->sym == "lambda")
-    {
-      node = new Node(NodeType::VALUE, nullptr);
-      /* The CSP owns the expression iff it is in a VentureFamily */
-      node->setValue(new VentureSP(new CSP(listRef(list,1),listRef(list,2),env)));
-      processMadeSP(node,false);
-      node->isActive = true;
-    }
-    /* Quote */
-    else if (car && car->sym == "quote")
+    if (car && car->sym == "quote")
     {
       node = new Node(NodeType::VALUE, nullptr);
       node->setValue(listRef(list,1));
@@ -411,8 +410,6 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
       addApplicationEdges(operatorNode,operandNodes,requestNode,outputNode);
       weight += apply(requestNode,outputNode,scaffold,false,omegaDB,gradients);
     }
-    // needs to be cleaned up
-//    listShallowDestroy(list);
   }
   /* Variable lookup */
   else if (dynamic_cast<VentureSymbol*>(exp))

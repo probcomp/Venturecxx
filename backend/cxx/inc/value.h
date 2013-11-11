@@ -15,6 +15,8 @@
 #include <boost/python/dict.hpp>
 #include <boost/functional/hash.hpp>
 
+
+
 struct SP;
 struct Node;
 struct SPAux;
@@ -29,11 +31,19 @@ struct VentureValue {
   virtual size_t toHash() const { assert(false); return 0; }
   virtual VentureValue * clone() const { assert(false); return nullptr; }
 
-  virtual ~VentureValue() {}; 
+
+
+  // TODO FIXME destroyParts need to destroy parts and then destroy
+  // all elements (vector and pair)
+  virtual void destroyParts() {};
 
   /* TODO this needs to be implemented for other types besides symbols. */
   virtual bool equals(const VentureValue * & other) const
     { assert(false); return false; } 
+
+  bool isValid() { return magic == 534253; }
+  uint32_t magic = 534253;
+  virtual ~VentureValue() { assert(isValid()); magic = 0; };
 };
 
 namespace std {
@@ -57,6 +67,8 @@ struct VentureSymbol : VentureValue
   string sym;
   size_t toHash() const override;
   VentureValue * clone() const override;
+  VentureValue * inverseEvaluate() override;
+
   bool equals(const VentureValue * & other) const override;
 
   boost::python::dict toPython() const override;
@@ -72,6 +84,7 @@ struct VentureList : VentureValue
 struct VentureNil : VentureList 
 { 
   size_t toHash() const override;
+  virtual boost::python::dict toPython() const;
   VentureValue * clone() const override;
 
 };
@@ -80,9 +93,13 @@ struct VenturePair : VentureList
 {
   VenturePair(VentureValue * first, VentureList * rest): 
     first(first), rest(rest) {}
+
   size_t toHash() const override;
   VentureValue * clone() const override;
   VentureValue * inverseEvaluate() override;
+
+  virtual boost::python::dict toPython() const;
+
   VentureValue * first;
   VentureList * rest;
 };
@@ -125,6 +142,8 @@ struct VentureVector : VentureValue
 {
   VentureVector(const vector<VentureValue *> xs): xs(xs) {}
   vector<VentureValue *> xs;
+  boost::python::dict toPython() const override;
+
 };
 
 /* RequestPSPs must return VentureRequests. */
@@ -146,7 +165,8 @@ struct VentureSP : VentureValue
   SP * sp;
   Node * makerNode{nullptr}; // set in processMadeSP()
   string toString() const override;
-
+  boost::python::dict toPython() const override;
+  VentureValue * clone() const override;
   // TODO return the toPython of the Aux
 
   ~VentureSP();

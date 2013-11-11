@@ -21,7 +21,8 @@ struct GibbsIndex : GibbsParam,MixMHIndex { };
    restoring the source particle. */
 struct GibbsSelectGKernel : GKernel
 {
-  GibbsSelectGKernel(Trace * trace): GKernel(trace) {}
+  GibbsSelectGKernel(Trace * trace): GKernel(trace), check(trace) {}
+
 
   void loadParameters(MixMHParam * param) override;
   void destroyParameters() override;
@@ -29,6 +30,8 @@ struct GibbsSelectGKernel : GKernel
   double propose() override;
   void accept() override;
   void reject() override;
+
+  TraceConsistencyChecker check;
 
   Scaffold * scaffold;
   pair<double,OmegaDB*> source;
@@ -40,7 +43,8 @@ struct GibbsSelectGKernel : GKernel
 struct GibbsGKernel : MixMHKernel
 {
   GibbsGKernel(Trace * trace): 
-    MixMHKernel(trace, new GibbsSelectGKernel(trace)) {}
+    MixMHKernel(trace, new GibbsSelectGKernel(trace)),
+    check(trace) {}
 
   ~GibbsGKernel() { delete gKernel; }
   void destroyParameters();
@@ -49,6 +53,8 @@ struct GibbsGKernel : MixMHKernel
   MixMHIndex * sampleIndex();
   double logDensityOfIndex(MixMHIndex * index);
   MixMHParam * processIndex(MixMHIndex * index);
+
+  TraceConsistencyChecker check;
 
   Scaffold * scaffold{nullptr};
   Node * pNode{nullptr};

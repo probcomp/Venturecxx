@@ -9,7 +9,7 @@ struct Scaffold;
 
 struct ScaffoldMHGKernel : GKernel
 {
-  ScaffoldMHGKernel(Trace * trace): GKernel(trace) {}
+  ScaffoldMHGKernel(Trace * trace);
 
   double propose() override;
   void accept() override;
@@ -18,6 +18,7 @@ struct ScaffoldMHGKernel : GKernel
   void destroyParameters() override;
   void loadParameters(MixMHParam * param) override;
 
+  TraceConsistencyChecker check;
   Scaffold * scaffold{nullptr};
   OmegaDB * rhoDB{nullptr};
 };

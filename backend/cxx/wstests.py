@@ -2,6 +2,9 @@ from venture.shortcuts import *
 import math
 import pdb
 
+globalKernel = "mh";
+globalUseGlobalScaffold = False;
+
 def SIVM():
   return make_church_prime_ripl()
 
@@ -21,25 +24,40 @@ def printTest(testName,eps,ops):
   print "Observed: " + str(ops)
   print "Root Mean Square Difference: " + str(rmsDifference(eps,ops))
 
+def runAllTests(N):
+  print "========= RunAllTests(N) ========"
+  options = [("mh",False),
+             ("mh",True),
+             ("pgibbs",False),
+             ("pgibbs",True),
+             ("meanfield",False),
+             ("meanfield",True)]
+
+  for i in range(len(options)):
+    print "\n\n\n\n\n\n\n========= %d. (%s,%d) ========" % (i+1,options[i][0],options[i][1])
+    globalKernel = options[i][0]
+    globalUseGlobalScaffold = options[i][1]
+    runTests(N)
+
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer(10, kernel="pgibbs", use_global_scaffold=True)
+    sivm.infer(10,kernel=globalKernel, use_global_scaffold=globalUseGlobalScaffold)
     predictions.append(sivm.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
 
 def runTests(N):
-#  testBernoulli0(N)
+  testBernoulli0(N)
   testBernoulli1(N)
-  #testCategorical1(N)
+  testCategorical1(N)
   testMHNormal0(N)
   testMHNormal1(N)
   testStudentT0(N)
   testMem0(N)
-  #testMem1(N)
-  #testMem2(N)
-  #testMem3(N)
+  testMem1(N)
+  testMem2(N)
+  testMem3(N)
   testSprinkler1(N)
   testSprinkler2(N)
   testGamma1(N)
@@ -74,10 +92,32 @@ def runTests(N):
   testReferences2(N)
   testMemoizingOnAList()
   testOperatorChanging(N)
+  testObserveAPredict1(N)
+  testObserveAPredict2(N)
+  testBreakMem(N)
+  testHPYLanguageModel1(N)
 
 
 def runTests2(N):
   testGeometric1(N)
+
+
+
+def testMakeCSP():
+  sivm = SIVM()
+  sivm.assume("f", "(lambda (x) (* x x))")
+  sivm.predict("(f 1)")
+  
+  sivm.assume("g", "(lambda (x y) (* x y))")
+  sivm.predict("(g 2 3)")
+
+  sivm.assume("h", "(lambda () 5)")
+  sivm.predict("(h)")
+
+  print sivm.report(2)
+  print sivm.report(4)
+  print sivm.report(6)
+
 
 def testBernoulli0(N):
   sivm = SIVM()
@@ -110,8 +150,8 @@ def testBernoulli1(N):
 
 def testCategorical1(N):
   sivm = SIVM()
-  sivm.assume("x", "(categorical 0.1 0.2 0.3 0.4)")
-  sivm.assume("y", "(categorical 0.2 0.6 0.2)")
+  sivm.assume("x", "(real (categorical 0.1 0.2 0.3 0.4))")
+  sivm.assume("y", "(real (categorical 0.2 0.6 0.2))")
   sivm.predict("(plus x y)")
 
   predictions = loggingInfer(sivm,3,N)
@@ -175,12 +215,12 @@ def testMem0(N):
 
 def testMem1(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical 0.4 0.6))))")
+  sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
   sivm.assume("x","(f 1)")
   sivm.assume("y","(f 1)")
   sivm.assume("w","(f 2)")
   sivm.assume("z","(f 2)")
-  sivm.assume("q","(plus 1 (categorical 0.1 0.9))")
+  sivm.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
   sivm.predict('(plus x y w z q)');
 
   predictions = loggingInfer(sivm,7,N)
@@ -190,13 +230,13 @@ def testMem1(N):
 
 def testMem2(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical 0.4 0.6))))")
+  sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
   sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   sivm.assume("x","(f ((branch (bernoulli 0.5) (lambda () (lambda () 1)) (lambda () (lambda () 1)))))")
   sivm.assume("y","(g ((lambda () 0)))")
   sivm.assume("w","((lambda () (f 2)))")
   sivm.assume("z","(g 1)")
-  sivm.assume("q","(plus 1 (categorical 0.1 0.9))")
+  sivm.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
   sivm.predict('(plus x y w z q)');
 
   predictions = loggingInfer(sivm,8,N)
@@ -206,13 +246,13 @@ def testMem2(N):
 
 def testMem3(N):
   sivm = SIVM()
-  sivm.assume("f","(mem (lambda (arg) (plus 1 (categorical 0.4 0.6))))")
+  sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
   sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   sivm.assume("x","(f ((lambda () 1)))")
   sivm.assume("y","(g ((lambda () (branch (bernoulli 1.0) (lambda () 0) (lambda () 100)))))")
   sivm.assume("w","((lambda () (f 2)))")
   sivm.assume("z","(g 1)")
-  sivm.assume("q","(plus 1 (categorical 0.1 0.9))")
+  sivm.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
   sivm.predict('(plus x y w z q)');
 
   predictions = loggingInfer(sivm,8,N)
@@ -264,7 +304,7 @@ def testGamma1(N):
   predictions = loggingInfer(sivm,3,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestMHGamma1---"
-  print "(10000," + str(mean) + ")"
+  print "(1," + str(mean) + ")"
 
 def testIf1(N):
   sivm = SIVM()
@@ -427,25 +467,14 @@ def testLazyHMM1(N):
   sivm.observe("(g 3)",True)
   sivm.observe("(g 4)",False)
   sivm.observe("(g 5)",False)
-  sivm.predict("(f 0)")
-  sivm.predict("(f 1)")
-  sivm.predict("(f 2)")
-  sivm.predict("(f 3)")
-  sivm.predict("(f 4)")
-  sivm.predict("(f 5)")
+  sivm.predict("(make_vector (f 0) (f 1) (f 2) (f 3) (f 4) (f 5))")
 
-  n = 6
-  sums = [0 for i in range(n)]
-
-  for t in range(N):
-      # TODO make this pgibbs with global drg
-    sivm.infer(10, kernel="mh", use_global_scaffold=False)
-    for i in range(n):
-      sums[i] += sivm.report(8 + i)
-
-  ps = [.3531,.1327,.1796,.6925,.1796,.1327]
-  eps = [float(x) / N for x in sums] if N > 0 else [0 for x in sums]
-  printTest("testLazyHMM1 (mixes terribly)",ps,eps)
+  # predictions = loggingInfer(sivm,8,N)
+  # sums = [0 for i in range(6)]
+  # for p in predictions: sums = [sums[i] + p[i] for i in range(6)]
+  # ps = [.3531,.1327,.1796,.6925,.1796,.1327]
+  # eps = [float(x) / N for x in sums] if N > 0 else [0 for x in sums]
+  # printTest("testLazyHMM1 (mixes terribly)",ps,eps)
 
 def testLazyHMMSP1(N):
   sivm = SIVM()
@@ -704,19 +733,38 @@ def loadPYMem(sivm):
    (make_crp alpha d)))
 """)
 
+def loadDPMem(sivm):
+  sivm.assume("pick_a_stick","""
+(lambda (sticks k)
+  (branch (bernoulli (sticks k))
+          (lambda () k)
+          (lambda () (pick_a_stick sticks (plus k 1)))))
+""")
+  
+  sivm.assume("make_sticks","""
+(lambda (alpha)
+  ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
+   (mem
+    (lambda (k)
+      (beta 1 (plus alpha (times k k)))))))
+""")
+
+  sivm.assume("u_dpmem","""
+(lambda (alpha base_dist)
+  ((lambda (augmented_proc py)
+     (lambda () (augmented_proc (py))))
+   (mem (lambda (stick_index) (base_dist)))
+   (make_sticks alpha)))
+""")
+
+
 def testDPMem1(N):
   sivm = SIVM()
-  loadPYMem(sivm)
-  sivm.assume("dpmem","""
-(lambda (alpha base_dist)
-  ((lambda (augmented_proc crp)
-     (lambda () (augmented_proc (crp))))
-   (mem (lambda (table) (base_dist)))
-   (make_crp alpha)))
-""")
+  loadDPMem(sivm)
+
   sivm.assume("alpha","(uniform_continuous 0.1 20.0)")
   sivm.assume("base_dist","(lambda () (real (categorical 0.5 0.5)))")
-  sivm.assume("f","(dpmem alpha base_dist)")
+  sivm.assume("f","(u_dpmem alpha base_dist)")
 
   sivm.predict("(f)")
   sivm.predict("(f)")
@@ -758,6 +806,20 @@ def loadHPY(sivm,topCollapsed,botCollapsed):
   else: sivm.assume("intermediate_dist","(u_pymem alpha d base_dist)")
   if botCollapsed: sivm.assume("f","(pymem alpha d intermediate_dist)")
   else: sivm.assume("f","(u_pymem alpha d intermediate_dist)")
+
+def loadPY(sivm):
+  loadPYMem(sivm)
+  sivm.assume("alpha","(gamma 1.0 1.0)")
+  sivm.assume("d","(uniform_continuous 0 0.0001)")
+  sivm.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
+  sivm.assume("f","(u_pymem alpha d base_dist)")
+
+def predictPY(N):
+  sivm = SIVM()
+  loadPY(sivm)
+  sivm.predict("(f)",label="pid")
+  observeCategories(sivm,[2,2,5,1,0])
+  return loggingInfer(sivm,"pid",N)
 
 def predictHPY(N,topCollapsed,botCollapsed):
   sivm = SIVM()
@@ -878,3 +940,83 @@ def testOperatorChanging(N):
   ripl.observe("(op4)",True)
   ripl.infer(N)
   print "Passed TestOperatorChanging()"
+
+def testObserveAPredict1(N):
+  ripl = SIVM()
+  ripl.assume("f","(if (flip) (lambda () (flip)) (mem (lambda () (flip))))")
+  ripl.predict("(f)")
+  ripl.observe("(f)","true")
+  ripl.predict("(f)")
+  predictions = loggingInfer(ripl,2,N)
+  ps = normalizeList([0.75,0.25])
+  eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
+  printTest("TestObserveAPredict1()",ps,eps)
+
+
+def testObserveAPredict2(N):
+  ripl = SIVM()
+  ripl.assume("f","(if (flip) (lambda () (normal 0.0 1.0)) (mem (lambda () (normal 0.0 1.0))))")
+  ripl.observe("(f)","1.0")
+  ripl.predict("(* (f) 100)")
+  predictions = loggingInfer(ripl,3,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestObserveAPredict2---"
+  print "(25," + str(mean) + ")"
+  print "(note: true answer is 50, but program is illegal and staleness is correct behavior)"
+
+
+def testBreakMem(N):
+  sivm = SIVM()
+  sivm.assume("pick_a_stick","""
+(lambda (sticks k)
+  (if (bernoulli (sticks k))
+      k
+      (pick_a_stick sticks (plus k 1))))
+""")
+  sivm.assume("d","(uniform_continuous 0.4 0.41)")
+
+  sivm.assume("f","(mem (lambda (k) (beta 1.0 (times k d))))")
+  sivm.assume("g","(lambda () (pick_a_stick f 1))")
+  sivm.predict("(g)")
+  sivm.infer(N)
+
+def testHPYLanguageModel1(N):
+  ripl = SIVM()
+  loadPYMem(ripl)
+
+  # 5 letters for now
+  ripl.assume("G_init","(make_sym_dir_mult 0.1 5)")
+
+  # globally shared parameters for now
+  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("d","(uniform_continuous 0.0 0.1)")
+
+  # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
+  ripl.assume("G","""
+(mem 
+  (lambda (context)
+    (if (is_pair context)
+        (pymem alpha d (G (rest context)))
+        (pymem alpha d G_init))))
+""")
+
+  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+
+  atoms = [0, 1, 2, 3, 4] * 4;
+  
+  for i in range(1,len(atoms)):
+    ripl.observe("""
+(noisy_true 
+  (atom_eq 
+    ((G (list %d)))
+    atom<%d>)
+  0.001)
+""" % (atoms[i-1],atoms[i]), "true")
+
+  ripl.predict("((G (list atom<0>)))",label="pid")
+
+  predictions = loggingInfer(ripl,"pid",N)
+  ps = [0.01, 0.96, 0.01, 0.01, 0.01]
+  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
+  printTest("testHPYLanguageModel1 (approximate)",ps,eps)
+

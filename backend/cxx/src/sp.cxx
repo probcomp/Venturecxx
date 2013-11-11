@@ -102,15 +102,14 @@ bool SP::canEnumerate(NodeType nodeType) const
   }
 }
 
-void SP::flushValue(VentureValue * value, FlushType flushType) const
+void SP::flushValue(VentureValue * value, NodeType nodeType) const
 {
   assert(this);
   assert(value);
-  switch (flushType)
+  switch (nodeType)
   {
-  case FlushType::REQUEST: { flushRequest(value); return; }
-  case FlushType::OUTPUT: { flushOutput(value); return; }
-  case FlushType::FAMILY_VALUE: { flushFamilyValue(value); return; }
+  case NodeType::REQUEST: { flushRequest(value); return; }
+  case NodeType::OUTPUT: { flushOutput(value); return; }
   default: { assert(false); }
   }
 }
@@ -155,10 +154,7 @@ void SP::destroySPAux(SPAux * spaux) const
 
 void SP::flushRequest(VentureValue * value) const { delete value; }
 void SP::flushOutput(VentureValue * value) const { delete value; };
-void SP::flushFamilyValue(VentureValue * value) const 
-{
-  delete value; 
-}
+void SP::flushFamily(SPAux * spaux, size_t id) const { } 
 
 vector<VentureValue*> SP::enumerateRequest(Node * node) const
 {

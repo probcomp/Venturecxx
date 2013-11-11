@@ -6,7 +6,7 @@
 #include <vector>
 #include <set>
 #include <stdint.h>
-
+#include <cassert>
 
 
 struct VentureValue;
@@ -37,6 +37,8 @@ struct Node
   Node(NodeType type, VentureValue * value): nodeType(type), _value(value) {}
   Node(NodeType type, VentureValue * value, VentureEnvironment * familyEnv): 
     nodeType(type), _value(value), familyEnv(familyEnv) {}
+
+
 
   void disconnectLookup();
   void reconnectLookup();
@@ -76,13 +78,13 @@ struct Node
   Node * requestNode{nullptr};
   Node * outputNode{nullptr};
   bool isConstrained{false};
-  bool ownsValue{true};
+  bool spOwnsValue{true};
 
   SPAux * madeSPAux{nullptr}; // owner
 
-  bool isValid();
-  uint32_t magic = 65314235;
-
+  bool isValid() { return magic == 653135; }
+  uint32_t magic = 653135;
+  ~Node() { assert(isValid()); magic = 0; }
 private:
   /* I like the constructor order, that's all. */
   VentureValue * _value{nullptr};

@@ -77,9 +77,10 @@ VentureValue * PyTrace::parseExpression(boost::python::object o)
 void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
 {
   VentureValue * exp = parseExpression(o);
-
   pair<double,Node*> p = trace->evalVentureFamily(directiveID,static_cast<VentureList*>(exp),nullptr);
+  assert(!trace->ventureFamilies.count(directiveID));
   trace->ventureFamilies.insert({directiveID,{p.second,exp}});
+
 }
 
 void PyTrace::unevalDirectiveID(size_t directiveID)
@@ -138,12 +139,7 @@ uint32_t PyTrace::numRandomChoices()
 void PyTrace::unobserve(size_t directiveID)
 {
   Node * root = trace->ventureFamilies[directiveID].first;
-  trace->unconstrain(root);
-
-  if (root->isReference())
-  { root->sourceNode->ownsValue = true; }
-  else
-  { root->ownsValue = true; }
+  trace->unconstrain(root,true);
 
 }
 

@@ -19,11 +19,11 @@ struct Scaffold;
 struct SP;
 struct VentureSP;
 
-class Trace
+
+struct Trace
 {
   /* Constructor will add nodes for primitives and environments. */
 
- public:
   Trace();
   ~Trace();
 
@@ -54,7 +54,7 @@ class Trace
 
   double constrain(Node * node,bool reclaimValue);
 
-  double unconstrain(Node * node);
+  double unconstrain(Node * node,bool giveOwnershipToSP);
   
   Scaffold constructScaffold(vector<Node *> principalNodes,
 			     unsigned int depth,
@@ -64,8 +64,6 @@ class Trace
 
   map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
 
-//refactor
-public:
 
 //  unordered_map<size_t,Node*> definiteFamilies;
 
@@ -151,7 +149,7 @@ public:
 			Scaffold * scaffold,
 			OmegaDB * omegaDB);
 
-  void teardownMadeSP(Node * node,bool isAAA);
+  void teardownMadeSP(Node * node,bool isAAA,OmegaDB * omegaDB);
 
   double unapplyPSP(Node * node,
 		    Scaffold * scaffold,
@@ -168,8 +166,8 @@ public:
 
   double detachFamily(Node * node,
 		      Scaffold * scaffold,
-		      OmegaDB * omegaDB,
-		      bool familyOwnsValue);
+		      OmegaDB * omegaDB);
+
 
   double unapply(Node * node,
 		 Scaffold * scaffold,

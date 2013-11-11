@@ -2,6 +2,7 @@
 #define MEM_H
 
 #include "sp.h"
+#include "spaux.h"
 #include <vector>
 #include <string>
 
@@ -18,11 +19,11 @@ struct MSP : SP
       makesESRs = true;
       isESRReference = true;
       canAbsorbRequest = false;
-      esrsOwnValues = true;
     }
 
   VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
   void flushRequest(VentureValue * value) const override;
+
   size_t hashValues(vector<Node *> operands) const;
   Node * sharedOperatorNode;
 };

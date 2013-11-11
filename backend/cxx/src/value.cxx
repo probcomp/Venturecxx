@@ -4,7 +4,6 @@
 #include <iostream>
 #include <boost/python/dict.hpp>
 
-
 VentureSP::~VentureSP() 
 { 
   delete sp; 
@@ -67,20 +66,56 @@ boost::python::dict VentureBool::toPython() const
   return value;
 }
 
+boost::python::dict VentureNil::toPython() const
+{ 
+  boost::python::dict value;
+  value["type"] = "list";
+  value["value"] = boost::python::list();
+  return value;
+}
+
+boost::python::dict VenturePair::toPython() const
+{ 
+  boost::python::dict value;
+  value["type"] = "list";
+  boost::python::list l;
+  l.append(first->toPython());
+  l.extend(rest->toPython()["value"]);
+  value["value"] = l;
+  return value;
+}
+
+boost::python::dict VentureVector::toPython() const
+{
+  boost::python::dict value;
+  value["type"] = "vector";
+  boost::python::list l;
+  for (VentureValue * x : xs) { l.append(x->toPython()); }
+  value["value"] = l;
+  return value;
+}
+
+
+boost::python::dict VentureSP::toPython() const
+{ 
+  boost::python::dict value;
+  value["type"] = "sp";
+  value["value"] = boost::python::object("sp");
+  return value;
+}
+
 size_t VentureNil::toHash() const
 {
   size_t mediumPrime = 24593;
   return mediumPrime;
 }
 
-/* TODO FIXME Alexey can you sanity check this? It is massively rushed. */
+/* TODO FIXME Alexey can you sanity check this? It is rushed. */
 size_t VenturePair::toHash() const
 {
-  size_t littlePrime = 37;
-  size_t bigPrime = 12582917;
-
-  return ((littlePrime * rest->toHash()) + first->toHash()) % bigPrime;
-
+  size_t seed = rest->toHash();
+  boost::hash_combine(seed, first->toHash());
+  return seed;
 }
 
 VentureValue * VentureNil::clone() const { return new VentureNil; }
@@ -96,6 +131,22 @@ VentureValue * VentureSymbol::clone() const { return new VentureSymbol(sym); }
 VentureValue * VentureBool::clone() const { return new VentureBool(pred); }
 VentureValue * VentureNumber::clone() const { return new VentureNumber(x); }
 VentureValue * VentureAtom::clone() const { return new VentureAtom(n); }
+VentureValue * VentureSP::clone() const 
+{ 
+  VentureSP * vsp = new VentureSP(sp);
+  vsp->makerNode = makerNode;
+  return vsp;
+}
+
+// TODO FIXME MEMORY LEAK
+// Right now this causes a minor memory leak--who cleans this up?
+// Actually, cloning may always cause a memory leak, because generally only the outermost
+// Value will be actually deleted. Unless values have a DEEP_DESTROY method.
+VentureValue * VentureSymbol::inverseEvaluate() 
+{ 
+  return new VenturePair(new VentureSymbol("quote"), new VenturePair(this, new VentureNil));
+}
+
 
 VentureValue * VenturePair::inverseEvaluate() 
 { 
