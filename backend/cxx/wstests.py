@@ -1022,3 +1022,13 @@ def testHPYLanguageModel1(N):
   eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
   printTest("testHPYLanguageModel1 (approximate)",ps,eps)
 
+def testMemHashFunction1(A,B):
+  ripl = SIVM()  
+  ripl.assume("f","(mem (lambda (a b) 0))")
+  for a in range(A):
+    for b in range(B):
+      ripl.predict("(f %d %d)" % (a,b))
+
+  print "Passed TestMemHashFunction(%d,%d)" % (A,B)
+
+
