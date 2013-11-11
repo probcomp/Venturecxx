@@ -32,9 +32,9 @@ struct SPAux
   map<size_t, vector<VentureValue*> > ownedValues;
 
   
-  bool isValid() { return magic == 844141412; }
-  uint32_t magic = 844141412;
-  virtual ~SPAux() { magic = 0; }; 
+  bool isValid() { return magic == 844142; }
+  uint32_t magic = 844142;
+  virtual ~SPAux() { assert(isValid()); magic = 0; }; 
 };
 
 

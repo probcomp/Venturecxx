@@ -285,7 +285,7 @@ def testGamma1(N):
   predictions = loggingInfer(sivm,3,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestMHGamma1---"
-  print "(10000," + str(mean) + ")"
+  print "(1," + str(mean) + ")"
 
 def testIf1(N):
   sivm = SIVM()

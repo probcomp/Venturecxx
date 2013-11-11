@@ -182,6 +182,9 @@ double Trace::applyPSP(Node * node,
   DPRINT("applyPSP: ", node->address.toString());
   SP * sp = node->sp();
 
+  assert(node->isValid());
+  assert(sp->isValid());
+
   /* Almost nothing needs to be done if this node is a ESRReference.*/
   if (node->nodeType == NodeType::OUTPUT && sp->isESRReference)
   {
@@ -249,6 +252,7 @@ double Trace::applyPSP(Node * node,
     newValue = sp->simulate(node,rng);
   }
   assert(newValue);
+  assert(newValue->isValid());
   node->setValue(newValue);
 
   sp->incorporate(newValue,node);
@@ -277,8 +281,9 @@ double Trace::evalRequests(Node * node,
   /* First evaluate ESRs. */
   for (ESR esr : requests->esrs)
   {
-    Node * esrParent = node->sp()->findFamily(esr.id, node->spaux());
-    if (!esrParent)
+    assert(node->spaux()->isValid());
+    Node * esrParent;
+    if (!node->spaux()->families.count(esr.id))
     {
       if (shouldRestore && omegaDB && omegaDB->spFamilyDBs.count({node->vsp()->makerNode, esr.id}))
       {
@@ -296,11 +301,12 @@ double Trace::evalRequests(Node * node,
     }
     else
     {
+      esrParent = node->spaux()->families[esr.id];
+      assert(esrParent->isValid());
+
       // right now only MSP's share
       // (guard against hash collisions)
       assert(dynamic_cast<MSP*>(node->sp()));
-      assert(!esr.exp);
-      assert(!esr.env);
       
     }
     Node::addESREdge(esrParent,node->outputNode);

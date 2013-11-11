@@ -74,7 +74,7 @@ vector<VentureValue*> BernoulliSP::enumerateOutput(Node * node) const
 
   if (vold->pred) { if (p < 1) { return {new VentureBool(false)}; } }
   else if (p > 0) { return {new VentureBool(true)}; }
-  else { return {}; }
+  else { vector<VentureValue*> nil; return nil; }
 }
 
 /* Categorical */

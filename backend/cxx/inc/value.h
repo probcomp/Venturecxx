@@ -41,9 +41,9 @@ struct VentureValue {
   virtual bool equals(const VentureValue * & other) const
     { assert(false); return false; } 
 
-  bool isValid() { return magic == 534256363; }
-  uint32_t magic = 534256363;
-  virtual ~VentureValue() { magic = 0; };
+  bool isValid() { return magic == 534253; }
+  uint32_t magic = 534253;
+  virtual ~VentureValue() { assert(isValid()); magic = 0; };
 };
 
 namespace std {

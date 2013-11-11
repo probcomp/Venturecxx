@@ -163,6 +163,9 @@ double Trace::unapplyPSP(Node * node,
 			 OmegaDB * omegaDB)
 {
   DPRINT("unapplyPSP: ", node->address.toString());
+  assert(node->isValid());
+  assert(node->sp()->isValid());
+
 
 
   if (node->nodeType == NodeType::OUTPUT && node->sp()->isESRReference) 
@@ -171,6 +174,9 @@ double Trace::unapplyPSP(Node * node,
     return 0; 
   }
   if (node->nodeType == NodeType::REQUEST && node->sp()->isNullRequest()) { return 0; }
+
+  
+  assert(node->getValue()->isValid());
 
   if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,omegaDB); }
   if (node->sp()->isRandom(node->nodeType)) { 
@@ -195,6 +201,7 @@ double Trace::unapplyPSP(Node * node,
     assert(!omegaDB->latentDBs.count(node->sp()));
     omegaDB->latentDBs.insert({node->sp(),p.second});
   }
+
 
 
   if (node->spOwnsValue) 
@@ -233,9 +240,12 @@ double Trace::unevalRequests(Node * node,
   for (ESR esr : reverse(requests->esrs))
   {
     assert(node->spaux());
-//    assert(!node->outputNode->esrParents.empty());
+    assert(node->spaux()->isValid());
+    assert(!node->outputNode->esrParents.empty());
     Node * esrParent = node->outputNode->removeLastESREdge();
     assert(esrParent);
+    assert(esrParent->isValid());
+
     if (esrParent->numRequests == 0)
     { 
       weight += detachSPFamily(node->vsp(),esr.id,scaffold,omegaDB); 

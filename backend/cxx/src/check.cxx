@@ -6,22 +6,23 @@
 
 void TraceConsistencyChecker::checkConsistency()
 {
-  uint32_t numUCRCs = 0;  // unconstrained random choices
-  uint32_t numCRCs = 0;   // constrained random choices
+//  uint32_t numUCRCs = 0;  // unconstrained random choices
+//  uint32_t numCRCs = 0;   // constrained random choices
 
-  map<pair<Node *,size_t>, Node *> spFamilies;
+//  map<pair<Node *,size_t>, Node *> spFamilies;
   
 //  map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
 
   // Iterate over each Venture family, 
-  for (pair<size_t,pair<Node*,VentureValue*> > pp : ventureFamilies)
-  {
-    Node * root = pp.second.first;
+//  for (pair<size_t,pair<Node*,VentureValue*> > pp : ventureFamilies)
+//  {
+//    Node * root = pp.second.first;
+    
     
 
 
 
-  }
+//  }
 
   assert(false);
 }

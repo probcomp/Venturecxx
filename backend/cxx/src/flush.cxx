@@ -2,6 +2,7 @@
 #include "value.h"
 #include "node.h"
 #include "sp.h"
+#include "spaux.h"
 #include "omegadb.h"
 #include "debug.h"
 
@@ -13,9 +14,23 @@ void flushDBComplete(OmegaDB * omegaDB)
     while (!omegaDB->flushQueue.empty())
     {
       FlushEntry f = omegaDB->flushQueue.front();
-      if (f.spaux) { f.owner->destroySPAux(f.spaux); }
-      else if (f.owner) { f.owner->flushValue(f.value,f.nodeType); }
-      else { delete f.value; } // TODO deep-delete
+      if (f.spaux) 
+      { 
+	assert(f.owner);
+	assert(f.owner->isValid());
+	assert(f.spaux->isValid());
+	f.owner->destroySPAux(f.spaux);
+      }
+      else if (f.owner) 
+      { 
+	assert(f.value->isValid());
+	f.owner->flushValue(f.value,f.nodeType); 
+      }
+      else 
+      { 
+	assert(f.value->isValid());
+	delete f.value;
+      } // TODO deep-delete
       omegaDB->flushQueue.pop();
     }
 
@@ -30,6 +45,7 @@ void flushDBComplete(OmegaDB * omegaDB)
 
 void destroyFamilyNodes(Node * node)
 {
+  assert(node->isValid());
   if (node->nodeType == NodeType::VALUE || node->nodeType == NodeType::LOOKUP)
   { delete node; }
   else
@@ -37,6 +53,7 @@ void destroyFamilyNodes(Node * node)
     destroyFamilyNodes(node->operatorNode);
     for (Node * operandNode : node->operandNodes)
     { destroyFamilyNodes(operandNode); }
+    assert(node->requestNode->isValid());
     delete node->requestNode;
     delete node;
   }

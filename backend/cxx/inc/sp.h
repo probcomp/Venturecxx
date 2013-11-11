@@ -151,9 +151,9 @@ struct SP
     { return boost::python::object("<sp object>"); }
 
 
-  bool isValid() { return magic == 5390901412; }
-  uint32_t magic = 5390901412;
-  virtual ~SP() { magic = 0; }; 
+  bool isValid() { return magic == 5390912; }
+  uint32_t magic = 5390912;
+  virtual ~SP() { assert(isValid()); magic = 0; }; 
 
 
 };

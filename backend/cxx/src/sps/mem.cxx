@@ -23,14 +23,10 @@ VentureValue * MSPMakerSP::simulateOutput(Node * node, gsl_rng * rng) const
 size_t MSP::hashValues(vector<Node *> operands) const
 {
   size_t seed = 0;
-  size_t littlePrime = 37;
-  size_t bigPrime = 12582917;
 
   for (Node * operand : operands) 
   { 
-    seed *= littlePrime;
-    seed += operand->getValue()->toHash();
-    seed %= bigPrime;
+    boost::hash_combine(seed, operand->getValue()->toHash());
   }
   return seed;
 }
@@ -44,6 +40,7 @@ VentureValue * MSP::simulateRequest(Node * node, gsl_rng * rng) const
   { 
     return new VentureRequest({ESR(id,nullptr,nullptr)});
   }
+
 
   VentureEnvironment * env = new VentureEnvironment;
   env->addBinding(new VentureSymbol("memoizedSP"), sharedOperatorNode);
