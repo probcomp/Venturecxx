@@ -1,7 +1,6 @@
 from venture import shortcuts
-ripl = shortcuts.make_church_prime_ripl()
-
 from venture.vmodule.venture_unit import *
+
 
 class CrossCat(VentureUnit):
     def makeAssumes(self):
@@ -24,12 +23,20 @@ class CrossCat(VentureUnit):
                 self.observe("(get_cell %d %d)" % (r, c), "atom<%d>" % cell_value)
         return
     
-parameters = {'n_values': 2, 'n_rows': 6, 'n_columns': 6}
-model = CrossCat(ripl, parameters)
 
-#history = model.runConditionedFromPrior(50, verbose=True)
-#history = model.runFromJoint(50, verbose=True)
-#history = model.sampleFromJoint(20, verbose=True)
-#history = model.computeJointKL(200, 200, verbose=True)[2]
-history = model.runFromConditional(50)
-history.plot(fmt='png')
+if __name__ == '__main__':
+    ripl = shortcuts.make_church_prime_ripl()
+    parameters = {'n_values': 2, 'n_rows': 64, 'n_columns': 64}
+    model = CrossCat(ripl, parameters)
+    # 
+    #history = model.runConditionedFromPrior(50, verbose=True)
+    #history = model.runFromJoint(50, verbose=True)
+    #history = model.sampleFromJoint(20, verbose=True)
+    #history = model.runFromConditional(50)
+    #
+    #history.plot(fmt='png')
+
+    # sampledHistory, inferredHistory, klHistory
+    history_types = model.computeJointKL(200, 200, runs=4)
+    for history_type in history_types:
+        history_type.plot(fmt='png')
