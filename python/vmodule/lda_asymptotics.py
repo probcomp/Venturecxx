@@ -2,7 +2,7 @@ import multiprocessing
 #
 from venture import shortcuts
 from venture.vmodule.synthetic_LDA_unit import LDA
-from venture.vmodule.venture_unit import *
+from venture.vmodule.venture_unit import produceHistories, plotAsymptotics
 
 
 parameters = {'topics' : [4, 8], 'vocab' : 10, 'documents' : [8, 16, 32],
