@@ -42,7 +42,7 @@ struct VentureValue {
 
   bool isValid() { return magic == 534253; }
   uint32_t magic = 534253;
-  virtual ~VentureValue() { assert(isValid()); magic = 0; };
+  virtual ~VentureValue();
 };
 
 namespace std {

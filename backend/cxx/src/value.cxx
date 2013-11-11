@@ -4,6 +4,12 @@
 #include <iostream>
 #include <boost/python/dict.hpp>
 
+VentureValue::~VentureValue()
+{
+  assert(isValid()); 
+  magic = 0;
+}
+
 VentureSP::~VentureSP() 
 { 
   delete sp; 

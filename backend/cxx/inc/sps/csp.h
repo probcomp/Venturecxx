@@ -20,6 +20,7 @@ struct CSP : SP
       assert(ids);
       isESRReference = true;
       makesESRs = true;
+      name = "csp";
     }
 
   VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;

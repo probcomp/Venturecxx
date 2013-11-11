@@ -23,7 +23,7 @@ void flushDBComplete(OmegaDB * omegaDB)
       }
       else if (f.owner) 
       { 
-	assert(f.value->isValid());
+	// value may not be valid here, but then the owner must know not to flush it
 	f.owner->flushValue(f.value,f.nodeType); 
       }
       else 

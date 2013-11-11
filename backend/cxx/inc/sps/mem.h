@@ -19,6 +19,7 @@ struct MSP : SP
       makesESRs = true;
       isESRReference = true;
       canAbsorbRequest = false;
+      name = "msp";
     }
 
   VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;

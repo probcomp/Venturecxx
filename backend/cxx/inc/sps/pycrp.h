@@ -35,6 +35,7 @@ struct PitmanYorCRPSP : SP
       tracksSamples = true;
       isRandomOutput = true;
       canAbsorbOutput = true;
+      name = "pycrp";
     }
 
   SPAux * constructSPAux() const override { return new PitmanYorCRPSPAux; }
