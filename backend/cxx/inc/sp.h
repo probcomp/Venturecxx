@@ -150,7 +150,10 @@ struct SP
   boost::python::object toPython(VentureToken * token) 
     { return boost::python::object("<sp object>"); }
 
-  virtual ~SP() {};
+
+  bool isValid() { return magic == 5390901412; }
+  uint32_t magic = 5390901412;
+  virtual ~SP() { magic = 0; }; 
 
 
 };

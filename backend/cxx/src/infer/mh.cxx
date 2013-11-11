@@ -15,6 +15,9 @@
 
 /* ScaffoldMHGKernel */
 
+ScaffoldMHGKernel::ScaffoldMHGKernel(Trace * trace): 
+  GKernel(trace), check(trace) {}
+
 void ScaffoldMHGKernel::destroyParameters() { delete scaffold; }
 void ScaffoldMHGKernel::loadParameters(MixMHParam * param)
 {
@@ -35,7 +38,7 @@ double ScaffoldMHGKernel::propose()
   double detachWeight = rhoInfo.first;
   rhoDB = rhoInfo.second;
 
-  assertTorus(trace,scaffold);
+  check.checkTorus(scaffold);
   double regenWeight = trace->regen(scaffold->border,scaffold,false,rhoDB,nullptr);
   return regenWeight - detachWeight;
 }
@@ -51,7 +54,7 @@ void ScaffoldMHGKernel::reject()
 {
   pair<double, OmegaDB *> xiInfo = trace->detach(scaffold->border,scaffold);
   OmegaDB * xiDB = xiInfo.second;
-  assertTorus(trace,scaffold);
+  check.checkTorus(scaffold);
   trace->regen(scaffold->border,scaffold,true,rhoDB,nullptr);
   flushDB(rhoDB,true);
   flushDB(xiDB,false);

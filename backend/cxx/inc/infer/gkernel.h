@@ -1,6 +1,7 @@
 #ifndef GKERNEL_H
 #define GKERNEL_H
 
+#include "check.h"
 #include <stdint.h>
 
 using namespace std;

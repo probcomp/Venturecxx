@@ -4,7 +4,31 @@
 #include "scaffold.h"
 #include "node.h"
 
-void assertTorus(Trace * trace, Scaffold * scaffold)
+void TraceConsistencyChecker::checkConsistency()
+{
+  uint32_t numUCRCs = 0;  // unconstrained random choices
+  uint32_t numCRCs = 0;   // constrained random choices
+
+  map<pair<Node *,size_t>, Node *> spFamilies;
+  
+//  map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
+
+  // Iterate over each Venture family, 
+  for (pair<size_t,pair<Node*,VentureValue*> > pp : ventureFamilies)
+  {
+    Node * root = pp.second.first;
+    
+
+
+
+  }
+
+  assert(false);
+}
+
+
+
+void TraceConsistencyChecker::checkTorus(Scaffold * scaffold)
 {
   bool fail = false;
   for (pair<Node *,Scaffold::DRGNode> p : scaffold->drg)
@@ -15,7 +39,7 @@ void assertTorus(Trace * trace, Scaffold * scaffold)
   assert(!fail);
 }
 
-void assertWhole(Trace * trace, Scaffold * scaffold)
+void TraceConsistencyChecker::checkWhole(Scaffold * scaffold)
 {
   for (pair<Node *,Scaffold::DRGNode> p : scaffold->drg)
   {

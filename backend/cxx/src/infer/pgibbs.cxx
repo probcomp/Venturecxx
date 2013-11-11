@@ -132,7 +132,7 @@ double PGibbsSelectGKernel::propose()
   
   double weightMinusRho = log(totalXiExpWeight);
   double weightMinusXi = log(rhoExpWeight + totalXiExpWeight - exp(weights[chosenIndex]));
-  assertTorus(trace,scaffold);
+  check.checkTorus(scaffold);
   vector<uint32_t> path = constructAncestorPath(ancestorIndices,T-1,chosenIndex);
   path.push_back(chosenIndex);
   assert(path.size() == T);
@@ -167,7 +167,7 @@ void PGibbsSelectGKernel::reject()
 {
   assert(chosenIndex != UINT32_MAX);
   discardAncestorPath(trace,scaffold,T);
-  assertTorus(trace,scaffold);
+  check.checkTorus(scaffold);
   vector<uint32_t> path = constructAncestorPath(ancestorIndices,T-1,P);
   path.push_back(P);
   assert(path.size() == T);
@@ -231,14 +231,14 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
     tie(weightsRho[t],omegaDBs[t][P]) = trace->detach({scaffold->border[t]},scaffold);
     if (t >= 1) { ancestorIndices[t][P] = P; }
   }
-  assertTorus(trace,scaffold);
+  check.checkTorus(scaffold);
 
   /* Simulate and calculate initial weights */
   for (size_t p = 0; p < P; ++p)
   {
     trace->regen({scaffold->border[0]},scaffold,false,nullptr,nullptr);
     tie(weights[p],omegaDBs[0][p]) = trace->detach({scaffold->border[0]},scaffold);
-    assertTorus(trace,scaffold);
+    check.checkTorus(scaffold);
   }
 
   /* For every time step, */
@@ -257,7 +257,7 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
       trace->regen({scaffold->border[t]},scaffold,false,nullptr,nullptr);
       tie(newWeights[p],omegaDBs[t][p]) = trace->detach({scaffold->border[t]},scaffold);
       discardAncestorPath(trace,scaffold,t);
-      assertTorus(trace,scaffold);
+      check.checkTorus(scaffold);
     }
     weights = newWeights;
   }

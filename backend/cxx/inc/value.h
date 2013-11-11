@@ -31,7 +31,7 @@ struct VentureValue {
   virtual size_t toHash() const { assert(false); return 0; }
   virtual VentureValue * clone() const { assert(false); return nullptr; }
 
-  virtual ~VentureValue() {};
+
 
   // TODO FIXME destroyParts need to destroy parts and then destroy
   // all elements (vector and pair)
@@ -40,6 +40,10 @@ struct VentureValue {
   /* TODO this needs to be implemented for other types besides symbols. */
   virtual bool equals(const VentureValue * & other) const
     { assert(false); return false; } 
+
+  bool isValid() { return magic == 534256363; }
+  uint32_t magic = 534256363;
+  virtual ~VentureValue() { magic = 0; };
 };
 
 namespace std {

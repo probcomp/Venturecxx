@@ -18,6 +18,7 @@
 
 #include <cmath>
 
+
 void GibbsSelectGKernel::loadParameters(MixMHParam * param)
 {
   GibbsParam * pparam = dynamic_cast<GibbsParam*>(param);
@@ -58,7 +59,8 @@ double GibbsSelectGKernel::propose()
   
   double weightMinusRho = log(totalXiExpWeight);
   double weightMinusXi = log(rhoExpWeight + totalXiExpWeight - exp(targets[chosenIndex].first));
-  assertTorus(trace,scaffold);
+  check.checkTorus(scaffold);
+
   trace->regen(scaffold->border,scaffold,true,targets[chosenIndex].second,nullptr);
   return weightMinusRho - weightMinusXi;
 }
@@ -79,7 +81,7 @@ void GibbsSelectGKernel::reject()
 {
   assert(chosenIndex != UINT32_MAX);
   pair<double,OmegaDB *> xiInfo = trace->detach(scaffold->border,scaffold);
-  assertTorus(trace,scaffold);
+  check.checkTorus(scaffold);
   trace->regen(scaffold->border,scaffold,true,source.second,nullptr);
   flushDB(source.second,true);
   flushDB(xiInfo.second,true); // subtle! only flush the latents twice (TODO discuss)
@@ -123,7 +125,7 @@ MixMHIndex * GibbsGKernel::sampleIndex()
       LKernel * lk = new DeterministicLKernel(pNode->getValue(),pNode->sp());
       scaffold->lkernels[pNode] = lk;
       pindex->source = trace->detach(scaffold->border,scaffold);
-      assertTorus(trace,scaffold);
+      check.checkTorus(scaffold);
       scaffold->lkernels.erase(pNode);
       delete lk;
 
@@ -133,7 +135,7 @@ MixMHIndex * GibbsGKernel::sampleIndex()
 	scaffold->lkernels[pNode] = lk;
 	trace->regen(scaffold->border,scaffold,false,nullptr,nullptr);
 	pindex->targets.push_back(trace->detach(scaffold->border,scaffold));
-	assertTorus(trace,scaffold);
+	check.checkTorus(scaffold);
 	scaffold->lkernels.erase(pNode);
 	delete lk;
       }
@@ -143,13 +145,13 @@ MixMHIndex * GibbsGKernel::sampleIndex()
   else 
   {
     pindex->source = trace->detach(scaffold->border,scaffold);
-    assertTorus(trace,scaffold);
+    check.checkTorus(scaffold);
 
     for (size_t p = 0; p < P; ++p)
     {
       trace->regen(scaffold->border,scaffold,false,nullptr,nullptr);
       pindex->targets.push_back(trace->detach(scaffold->border,scaffold));
-      assertTorus(trace,scaffold);
+      check.checkTorus(scaffold);
     }
   }
   return pindex;

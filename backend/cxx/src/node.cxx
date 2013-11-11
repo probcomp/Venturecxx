@@ -142,11 +142,3 @@ VentureSP * Node::vsp()
 SP * Node::sp() { return vsp()->sp; }
 SPAux * Node::spaux() { return vsp()->makerNode->madeSPAux; }
 
-bool Node::isValid() 
-{ 
-  return (magic == 65314235) &&
-    (nodeType == NodeType::VALUE || 
-     nodeType == NodeType::LOOKUP ||
-     nodeType == NodeType::REQUEST ||
-     nodeType == NodeType::OUTPUT);
-}

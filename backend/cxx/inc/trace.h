@@ -19,11 +19,11 @@ struct Scaffold;
 struct SP;
 struct VentureSP;
 
-class Trace
+
+struct Trace
 {
   /* Constructor will add nodes for primitives and environments. */
 
- public:
   Trace();
   ~Trace();
 
@@ -62,7 +62,6 @@ class Trace
 
   vector<Node *> getRandomChoices(); // used by kernels
 
-protected:
 
 //  unordered_map<size_t,Node*> definiteFamilies;
 

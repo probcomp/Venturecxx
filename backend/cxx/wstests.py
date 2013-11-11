@@ -24,7 +24,7 @@ def printTest(testName,eps,ops):
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer(10, kernel="gibbs", use_global_scaffold=False)
+    sivm.infer(10, kernel="mh", use_global_scaffold=False)
     predictions.append(sivm.report(address))
 #    print predictions[len(predictions)-1]
   return predictions

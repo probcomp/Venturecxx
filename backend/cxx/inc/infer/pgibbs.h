@@ -3,7 +3,6 @@
 
 #include "infer/gkernel.h"
 
-
 struct PGibbsParam : MixMHParam 
 { 
   Scaffold * scaffold{nullptr};
@@ -22,7 +21,7 @@ struct PGibbsIndex : PGibbsParam,MixMHIndex { };
    restoring the source particle. */
 struct PGibbsSelectGKernel : GKernel
 {
-  PGibbsSelectGKernel(Trace * trace): GKernel(trace) {}
+  PGibbsSelectGKernel(Trace * trace): GKernel(trace), check(trace) {}
 
   void loadParameters(MixMHParam * param) override;
   void destroyParameters() override;
@@ -32,6 +31,8 @@ struct PGibbsSelectGKernel : GKernel
   void reject() override;
 
 private:
+
+  TraceConsistencyChecker check;
 
   /* the Pth index indicates RHO */
   Scaffold * scaffold{nullptr};
@@ -49,7 +50,8 @@ private:
 struct PGibbsGKernel : MixMHKernel
 {
   PGibbsGKernel(Trace * trace): 
-    MixMHKernel(trace, new PGibbsSelectGKernel(trace)) {}
+    MixMHKernel(trace, new PGibbsSelectGKernel(trace)),
+    check(trace) {}
 
   ~PGibbsGKernel() { delete gKernel; }
   void destroyParameters();
@@ -59,6 +61,7 @@ struct PGibbsGKernel : MixMHKernel
   double logDensityOfIndex(MixMHIndex * index);
   MixMHParam * processIndex(MixMHIndex * index);
 
+  TraceConsistencyChecker check;
   Scaffold * scaffold{nullptr};
   Node * pNode{nullptr};
   size_t P = 2;

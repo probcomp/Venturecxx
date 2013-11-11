@@ -6,7 +6,7 @@
 
 struct MeanFieldGKernel : GKernel
 {
-  MeanFieldGKernel(Trace * trace): GKernel(trace) {}
+  MeanFieldGKernel(Trace * trace): GKernel(trace), check(trace) {}
 
   double propose() override;
   void accept() override;
@@ -23,6 +23,10 @@ struct MeanFieldGKernel : GKernel
   double weightRho{0};
 
   bool registerVariationalLKernels();
+
+  TraceConsistencyChecker check;
+
+
   
 };
 
