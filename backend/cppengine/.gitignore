@@ -1,8 +1,0 @@
-# object files
-*.o
-
-# dependency files
-*.d
-
-# temp files
-*~
