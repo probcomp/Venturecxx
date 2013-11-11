@@ -2,6 +2,7 @@ import time
 import random
 import pdb
 import numpy
+import pylab
 
 # whether to record a value returned from the ripl
 def record(value):
@@ -434,9 +435,10 @@ def plotSeries(name, subtitle, seriesList, parameters, fmt, directory):
     plt.ylabel(name)
     showParameters(parameters)
     
-    plots = [plt.plot(series.values)[0] for series in seriesList]
+    plots = [plt.plot(series.values, label=series.label)[0] for series in seriesList]
     
-    plt.legend(plots, [series.label for series in seriesList])
+    #plt.legend(plots, [series.label for series in seriesList])
+    legend_outside()
 
     ymin = min([min(series.values) for series in seriesList])
     ymax = max([max(series.values) for series in seriesList])
@@ -447,7 +449,9 @@ def plotSeries(name, subtitle, seriesList, parameters, fmt, directory):
         plt.ylim([ymin - offset, ymax + offset])
     
     #plt.tight_layout()
-    fig.savefig(directory + name.replace(' ', '_') + '_series.' + fmt, format=fmt)
+    #fig.savefig(directory + name.replace(' ', '_') + '_series.' + fmt, format=fmt)
+    filename = directory + name.replace(' ', '_') + '_series.' + fmt
+    savefig_legend_outside(filename)
 
 # Plots histograms for a set of series.
 def plotHistogram(name, subtitle, seriesList, parameters, fmt, directory):
@@ -460,10 +464,13 @@ def plotHistogram(name, subtitle, seriesList, parameters, fmt, directory):
     
     # FIXME: choose a better bin size
     plt.hist([series.values for series in seriesList], bins=20, label=[series.label for series in seriesList])
-    plt.legend()
+    legend_outside()
+    # plt.legend()
     
     #plt.tight_layout()
-    fig.savefig(directory + name.replace(' ', '_') + '_hist.' + fmt, format=fmt)
+    #fig.savefig(directory + name.replace(' ', '_') + '_hist.' + fmt, format=fmt)
+    filename = directory + name.replace(' ', '_') + '_hist.' + fmt
+    savefig_legend_outside(filename)
 
 # smooths out a probability distribution function
 def smooth(pdf, amt=0.1):
@@ -581,14 +588,17 @@ def plotAsymptotics(parameters, histories, seriesName, fmt='pdf', directory=None
                         plt.scatter(values, [paramsToValue[Key(**addToDict(p, key, value))] for value in values],
                             label=other+'='+str(otherValue), color=c)
                     
-                    plt.legend()
+                    #plt.legend()
+                    legend_outside()
                     
                     filename = key
                     for (param, value) in params._asdict().items():
                         filename += '_' + param + '=' + str(value)
                     
                     #plt.tight_layout()
-                    fig.savefig(directory + filename.replace(' ', '_') + '_asymptotics.' + fmt, format=fmt)
+                    #fig.savefig(directory + filename.replace(' ', '_') + '_asymptotics.' + fmt, format=fmt)
+                    filename = directory + filename.replace(' ', '_') + '_asymptotics.' + fmt
+                    savefig_legend_outside(filename)
         else:
             for params in cartesianProduct(others):
                 fig = plt.figure()
@@ -607,3 +617,30 @@ def plotAsymptotics(parameters, histories, seriesName, fmt='pdf', directory=None
                 #plt.tight_layout()
                 fig.savefig(directory + filename.replace(' ', '_') + '_asymptotics.' + fmt, format=fmt)
 
+
+def legend_outside(ax=None, bbox_to_anchor=(0.5, -.10), loc='upper center',
+                   ncol=None, label_cmp=None):
+    # labels must be set in original plot call: plot(..., label=label)
+    if ax is None:
+        ax = pylab.gca()
+    handles, labels = ax.get_legend_handles_labels()
+    label_to_handle = dict(zip(labels, handles))
+    labels = label_to_handle.keys()
+    if label_cmp is not None:
+        labels = sorted(labels, cmp=label_cmp)
+    handles = [label_to_handle[label] for label in labels]
+    if ncol is None:
+        ncol = min(len(labels), 3)
+    lgd = ax.legend(handles, labels, loc=loc, ncol=ncol,
+                    bbox_to_anchor=bbox_to_anchor, prop={"size":14})
+    return
+
+def savefig_legend_outside(filename, ax=None, bbox_inches='tight'):
+    if ax is None:
+        ax = pylab.gca()
+    lgd = ax.get_legend()
+    pylab.savefig(filename,
+                  bbox_extra_artists=(lgd,),
+                  bbox_inches=bbox_inches,
+                  )
+    return
