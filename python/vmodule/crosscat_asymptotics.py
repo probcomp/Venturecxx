@@ -12,5 +12,7 @@ cpu_count = multiprocessing.cpu_count()
 ripl = shortcuts.make_church_prime_ripl()
 def runner(params):
     return CrossCat(ripl, params).runConditionedFromPrior(sweeps=20, runs=2)
-histories = produceHistories(parameters, runner, cpu_count=cpu_count)
+# multiprocessing Pool MUST be created AFTER runner is defined
+mapper = multiprocessing.Pool(cpu_count).map
+histories = produceHistories(parameters, runner, verbose=False, mapper=mapper)
 plotAsymptotics(parameters, histories, 'sweep_time', fmt='png', aggregate=True)
