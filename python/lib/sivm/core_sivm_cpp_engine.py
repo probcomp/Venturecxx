@@ -272,7 +272,7 @@ def _modify_value(ob):
     return s
 
 # the C++ engine now uses the correct symbol names
-_symbol_map = { "add" : '+', "plus": "+", "sub" : '-',
+_symbol_map = { "make_crp": "crp_make", "add" : '+', "plus": "+", "sub" : '-',
         "mul" : '*', "div" : "/", "pow" : "power",
         "lt" : "<", "gt" : ">", "lte" : "<=", "gte":
         ">=", "eq" : "=", "neq" : "!=",
