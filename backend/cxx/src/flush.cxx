@@ -29,8 +29,9 @@ void flushDBComplete(OmegaDB * omegaDB)
       else 
       { 
 	assert(f.value->isValid());
+	f.value->destroyParts();
 	delete f.value;
-      } // TODO deep-delete
+      }
       omegaDB->flushQueue.pop();
     }
 

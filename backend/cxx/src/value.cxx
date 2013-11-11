@@ -131,6 +131,9 @@ VentureValue * VentureSymbol::clone() const { return new VentureSymbol(sym); }
 VentureValue * VentureBool::clone() const { return new VentureBool(pred); }
 VentureValue * VentureNumber::clone() const { return new VentureNumber(x); }
 VentureValue * VentureAtom::clone() const { return new VentureAtom(n); }
+
+// I forget if this breaks something or not
+// TODO check the incremental_evaluator again
 VentureValue * VentureSP::clone() const 
 { 
   VentureSP * vsp = new VentureSP(sp);
@@ -138,17 +141,20 @@ VentureValue * VentureSP::clone() const
   return vsp;
 }
 
-// TODO FIXME MEMORY LEAK
-// Right now this causes a minor memory leak--who cleans this up?
-// Actually, cloning may always cause a memory leak, because generally only the outermost
-// Value will be actually deleted. Unless values have a DEEP_DESTROY method.
-VentureValue * VentureSymbol::inverseEvaluate() 
-{ 
-  return new VenturePair(new VentureSymbol("quote"), new VenturePair(this, new VentureNil));
+void VenturePair::destroyParts()
+{
+  first->destroyParts();
+  delete first;
+  rest->destroyParts();
+  delete rest;
 }
 
-
-VentureValue * VenturePair::inverseEvaluate() 
-{ 
-  return new VenturePair(new VentureSymbol("quote"), this);
+void VentureVector::destroyParts()
+{
+  for (VentureValue * x : xs)
+  {
+    x->destroyParts();
+    delete x;
+  }
 }
+

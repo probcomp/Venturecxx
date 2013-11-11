@@ -26,7 +26,6 @@ struct VentureValue {
   virtual boost::python::dict toPython() const;
 
   virtual string toString() const { return "no_name"; }
-  virtual VentureValue * inverseEvaluate() { return this; }
 
   virtual size_t toHash() const { assert(false); return 0; }
   virtual VentureValue * clone() const { assert(false); return nullptr; }
@@ -35,7 +34,7 @@ struct VentureValue {
 
   // TODO FIXME destroyParts need to destroy parts and then destroy
   // all elements (vector and pair)
-  virtual void destroyParts() {};
+  virtual void destroyParts() {}
 
   /* TODO this needs to be implemented for other types besides symbols. */
   virtual bool equals(const VentureValue * & other) const
@@ -67,7 +66,6 @@ struct VentureSymbol : VentureValue
   string sym;
   size_t toHash() const override;
   VentureValue * clone() const override;
-  VentureValue * inverseEvaluate() override;
 
   bool equals(const VentureValue * & other) const override;
 
@@ -94,9 +92,10 @@ struct VenturePair : VentureList
   VenturePair(VentureValue * first, VentureList * rest): 
     first(first), rest(rest) {}
 
+  void destroyParts() override;
+
   size_t toHash() const override;
   VentureValue * clone() const override;
-  VentureValue * inverseEvaluate() override;
 
   virtual boost::python::dict toPython() const;
 
@@ -107,6 +106,8 @@ struct VenturePair : VentureList
 struct VentureMap : VentureValue
 { 
   unordered_map<VentureValue*,VentureValue*> map;
+// this needs to be implemented once clone is implemented
+//  void destroyParts() override {};
 };
 
 struct VentureBool : VentureValue 
@@ -143,7 +144,7 @@ struct VentureVector : VentureValue
   VentureVector(const vector<VentureValue *> xs): xs(xs) {}
   vector<VentureValue *> xs;
   boost::python::dict toPython() const override;
-
+  void destroyParts() override;
 };
 
 /* RequestPSPs must return VentureRequests. */

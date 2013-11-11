@@ -41,6 +41,7 @@ VentureValue * MSP::simulateRequest(Node * node, gsl_rng * rng) const
     return new VentureRequest({ESR(id,nullptr,nullptr)});
   }
 
+  assert(!node->spaux()->ownedValues.count(id));
 
   VentureEnvironment * env = new VentureEnvironment;
   env->addBinding(new VentureSymbol("memoizedSP"), sharedOperatorNode);
@@ -49,7 +50,10 @@ VentureValue * MSP::simulateRequest(Node * node, gsl_rng * rng) const
 
   for (Node * operand : reverse(operands))
   {
-    VentureValue * val = operand->getValue()->clone()->inverseEvaluate();
+    VentureValue * val = new VenturePair(new VentureSymbol("quote"),
+					 new VenturePair(operand->getValue()->clone(),
+							 new VentureNil));
+
     node->spaux()->ownedValues[id].push_back(val);
     exp = new VenturePair(val,exp);
   }
