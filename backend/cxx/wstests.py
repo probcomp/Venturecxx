@@ -2,6 +2,9 @@ from venture.shortcuts import *
 import math
 import pdb
 
+globalKernel = "mh";
+globalUseGlobalScaffold = False;
+
 def SIVM():
   return make_church_prime_ripl()
 
@@ -21,18 +24,33 @@ def printTest(testName,eps,ops):
   print "Observed: " + str(ops)
   print "Root Mean Square Difference: " + str(rmsDifference(eps,ops))
 
+def runAllTests(N):
+  print "========= RunAllTests(N) ========"
+  options = [("mh",False),
+             ("mh",True),
+             ("pgibbs",False),
+             ("pgibbs",True),
+             ("meanfield",False),
+             ("meanfield",True)]
+
+  for i in range(len(options)):
+    print "\n\n\n\n\n\n\n========= %d. (%s,%d) ========" % (i+1,options[i][0],options[i][1])
+    globalKernel = options[i][0]
+    globalUseGlobalScaffold = options[i][1]
+    runTests(N)
+
 def loggingInfer(sivm,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer(10, kernel="mh", use_global_scaffold=False)
+    sivm.infer(10,kernel=globalKernel, use_global_scaffold=globalUseGlobalScaffold)
     predictions.append(sivm.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
 
 def runTests(N):
-#  testBernoulli0(N)
+  testBernoulli0(N)
   testBernoulli1(N)
-  #testCategorical1(N)
+  testCategorical1(N)
   testMHNormal0(N)
   testMHNormal1(N)
   testStudentT0(N)
@@ -77,6 +95,7 @@ def runTests(N):
   testObserveAPredict1(N)
   testObserveAPredict2(N)
   testBreakMem(N)
+  testHPYLanguageModel1(N)
 
 
 def runTests2(N):
@@ -131,8 +150,8 @@ def testBernoulli1(N):
 
 def testCategorical1(N):
   sivm = SIVM()
-  sivm.assume("x", "(categorical 0.1 0.2 0.3 0.4)")
-  sivm.assume("y", "(categorical 0.2 0.6 0.2)")
+  sivm.assume("x", "(real (categorical 0.1 0.2 0.3 0.4))")
+  sivm.assume("y", "(real (categorical 0.2 0.6 0.2))")
   sivm.predict("(plus x y)")
 
   predictions = loggingInfer(sivm,3,N)
@@ -954,11 +973,50 @@ def testBreakMem(N):
       k
       (pick_a_stick sticks (plus k 1))))
 """)
-#  sivm.assume("d","(uniform_continuous 0.0 0.2)")
   sivm.assume("d","(uniform_continuous 0.4 0.41)")
 
   sivm.assume("f","(mem (lambda (k) (beta 1.0 (times k d))))")
-#  sivm.assume("f","(lambda (k) (beta 1.0 (times k d)))")
   sivm.assume("g","(lambda () (pick_a_stick f 1))")
   sivm.predict("(g)")
   sivm.infer(N)
+
+def testHPYLanguageModel1(N):
+  ripl = SIVM()
+  loadPYMem(ripl)
+
+  # 5 letters for now
+  ripl.assume("G_init","(make_sym_dir_mult 0.1 5)")
+
+  # globally shared parameters for now
+  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("d","(uniform_continuous 0.0 0.1)")
+
+  # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
+  ripl.assume("G","""
+(mem 
+  (lambda (context)
+    (if (is_pair context)
+        (pymem alpha d (G (rest context)))
+        (pymem alpha d G_init))))
+""")
+
+  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+
+  atoms = [0, 1, 2, 3, 4] * 4;
+  
+  for i in range(1,len(atoms)):
+    ripl.observe("""
+(noisy_true 
+  (atom_eq 
+    ((G (list %d)))
+    atom<%d>)
+  0.001)
+""" % (atoms[i-1],atoms[i]), "true")
+
+  ripl.predict("((G (list atom<0>)))",label="pid")
+
+  predictions = loggingInfer(ripl,"pid",N)
+  ps = [0.01, 0.96, 0.01, 0.01, 0.01]
+  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
+  printTest("testHPYLanguageModel1 (approximate)",ps,eps)
+

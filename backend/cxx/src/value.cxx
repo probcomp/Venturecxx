@@ -110,14 +110,12 @@ size_t VentureNil::toHash() const
   return mediumPrime;
 }
 
-/* TODO FIXME Alexey can you sanity check this? It is massively rushed. */
+/* TODO FIXME Alexey can you sanity check this? It is rushed. */
 size_t VenturePair::toHash() const
 {
-  size_t littlePrime = 37;
-  size_t bigPrime = 12582917;
-
-  return ((littlePrime * rest->toHash()) + first->toHash()) % bigPrime;
-
+  size_t seed = rest->toHash();
+  boost::hash_combine(seed, first->toHash());
+  return seed;
 }
 
 VentureValue * VentureNil::clone() const { return new VentureNil; }
