@@ -35,9 +35,17 @@ undefined_to_empty_str = function(str) {
 	return str
 }
 
+zip = function(arrays) {
+	return arrays[0].map(function(_,i){
+		return arrays.map(function(array){return array[i]})
+	});
+}
+
 join_for_console = function(str_arr) {
-	str_arr = str_arr.map(function(str) {return make_length_N(str, 15)});
-	joined = str_arr.join("| ");
+	header_lengths = [15, 15, 15, 5];
+	str_N_tuples = zip([str_arr, header_lengths]);
+	strs = str_N_tuples.map(function([str, N]) { return make_length_N(str, N) })
+	joined = strs.join("| ");
 	return joined
 }
 
