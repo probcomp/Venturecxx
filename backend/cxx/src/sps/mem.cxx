@@ -20,13 +20,23 @@ VentureValue * MSPMakerSP::simulateOutput(Node * node, gsl_rng * rng) const
   return new VentureSP(new MSP(operands[0]));
 }
 
+size_t MSP::preprocessHashValue(size_t h) const
+{
+  h += ~(h << 9);
+  h ^=  (h >> 14);
+  h +=  (h << 4);
+  h ^=  (h >> 10);
+  return h;
+}
+
+
 size_t MSP::hashValues(vector<Node *> operands) const
 {
   size_t seed = 0;
 
   for (Node * operand : operands) 
   { 
-    boost::hash_combine(seed, operand->getValue()->toHash());
+    boost::hash_combine(seed, preprocessHashValue(operand->getValue()->toHash()));
   }
   return seed;
 }

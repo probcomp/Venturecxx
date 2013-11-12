@@ -26,6 +26,7 @@ struct MSP : SP
   void flushRequest(VentureValue * value) const override;
 
   size_t hashValues(vector<Node *> operands) const;
+  size_t preprocessHashValue(size_t h) const;
   Node * sharedOperatorNode;
 };
 

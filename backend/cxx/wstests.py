@@ -1024,11 +1024,10 @@ def testHPYLanguageModel1(N):
 
 def testMemHashFunction1(A,B):
   ripl = SIVM()  
-  ripl.assume("f","(mem (lambda (a b) 0))")
+  ripl.assume("f","(mem (lambda (a b) (normal 0.0 1.0)))")
   for a in range(A):
     for b in range(B):
-      ripl.predict("(f %d %d)" % (a,b))
-
+      ripl.observe("(f %d %d)" % (a,b),"0.5")
   print "Passed TestMemHashFunction(%d,%d)" % (A,B)
 
 

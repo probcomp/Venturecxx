@@ -5,14 +5,17 @@ from venture.vmodule.synthetic_LDA_unit import LDA
 from venture.vmodule.venture_unit import produceHistories, plotAsymptotics
 
 
-parameters = {'topics' : [4, 8], 'vocab' : 10, 'documents' : [8, 16, 32],
-    'words_per_document' : [8, 16, 32]}
+parameters = {'topics' : 40, 
+              'vocab' : 10, 
+              'documents' : 80,
+              'words_per_document' : 800 }
+
 cpu_count = multiprocessing.cpu_count()
 
 
 def runner(params):
     ripl = shortcuts.make_church_prime_ripl()
-    return LDA(ripl, params).runConditionedFromPrior(sweeps=20, runs=2)
+    return LDA(ripl, params).runConditionedFromPrior(sweeps=1, runs=1)
 
 # multiprocessing Pool MUST be created AFTER runner is defined
 def multiprocessing_mapper(func, *args, **kwargs):
