@@ -44,7 +44,7 @@ zip = function(arrays) {
 join_for_console = function(str_arr) {
 	header_lengths = [15, 15, 15, 5];
 	str_N_tuples = zip([str_arr, header_lengths]);
-	strs = str_N_tuples.map(function([str, N]) { return make_length_N(str, N) })
+	strs = str_N_tuples.map(function(inarray) { return make_length_N(inarray[0], inarray[1] ) });
 	joined = strs.join("| ");
 	return joined
 }
