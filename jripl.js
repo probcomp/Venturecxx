@@ -163,25 +163,25 @@ function jripl() {
 
     this['real_infer'] = function (num_iters) {
 	    ajax_post_in_sequence("infer", [num_iters], function () {
-		    /* FIXME echo that forgetting happened to the terminal */
 		    echo_str = "real_infer(" + num_iters + ")";
-		    term.echo(echo_str);
+		    console.log(echo_str);
+		    // term.echo(echo_str);
 	    });
     }
 
     this['real_forget'] = function (directive_id) {
 	    ajax_post_in_sequence("forget", [directive_id], function () {
-		    /* FIXME echo that forgetting happened to the terminal */
 		    echo_str = "real_forget(" + directive_id + ")";
-		    term.echo(echo_str);
+		    console.log(echo_str);
+		    // term.echo(echo_str);
 	    });
     }
 
     this['real_observe'] = function (expression, literal) {
     	    ajax_post_in_sequence("observe", [expression, literal], function () {
-		    /* FIXME echo that forgetting happened to the terminal */
 		    echo_str = "real_observe(" + expression + ", " + literal + ")";
-		    term.echo(echo_str);
+		    console.log(echo_str);
+		    // term.echo(echo_str);
 	    });
     }
 
@@ -239,8 +239,6 @@ function jripl() {
     this.get_directives_once = function(f) {
         ajax_post_in_sequence("list_directives", [], f);
     };
-
-    /* FIXME: This needs to display the directive ID so I know what to forget */
 
     this.display_directives = function() {
 	var success_fun = function(data) {
