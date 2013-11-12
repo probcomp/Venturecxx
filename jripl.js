@@ -123,7 +123,14 @@ function jripl() {
 
     for (i = 0; i < pripl_functions_w_retval.length; i++) {
 	var name = pripl_functions_w_retval[i];
-	this[name] = create_closure(name.substr(0,name.length-6), function(data_in, data) { console.log(data); if(data != 'null') {term.echo(data_in[0] + " | " + data)}});
+	var closure_name = name.substr(0,name.length-6);
+	var on_success = function(data_in, data) {
+	       console.log(data);
+	       if(data != 'null') {
+		       term.echo(data_in[0] + " | " + data)
+	       }
+	}
+	this[name] = create_closure(closure_name, on_success);
     };
 
 /* Continuous directives */
