@@ -88,3 +88,10 @@ target_link_libraries(trace
 )
 
 add_executable(testEigen src/testEigen.cxx)
+
+add_executable(testMemHash src/testMemHash.cxx)
+target_link_libraries(testMemHash
+  ${LIBS}
+  ${Boost_LIBRARIES}
+  ${PYTHON_LIBRARIES}
+)
