@@ -16,6 +16,31 @@
  */
 
 
+make_length_N = function(str, N) {
+	continuation = '...';
+	if (str.length > N){
+	    str = str.substr(0, N-continuation.length) + continuation;
+	}
+	else {
+	    extraspaces = N-str.length;
+	    str = str + Array(extraspaces + 1).join(" ");
+	}
+	return str
+}
+
+undefined_to_empty_str = function(str) {
+	if(str == 'undefined') {
+		str = '';
+	}
+	return str
+}
+
+join_for_console = function(str_arr) {
+	str_arr = str_arr.map(function(str) {return make_length_N(str, 15)});
+	joined = str_arr.join("| ");
+	return joined
+}
+
 function jripl() {
 
 /* Connect to Venture (vestigial hack) */
@@ -123,8 +148,42 @@ function jripl() {
 
     for (i = 0; i < pripl_functions_w_retval.length; i++) {
 	var name = pripl_functions_w_retval[i];
-	this[name] = create_closure(name.substr(0,name.length-6), function(data_in, data) { console.log(data); if(data != 'null') {term.echo(data_in[0] + " | " + data)}});
+	var closure_name = name.substr(0,name.length-6);
+	var on_success = function(data_in, data) {
+	       console.log(data);
+	       if(data != null) {
+		       term.echo(data_in[0] + " | " + data)
+	       }
+	}
+	this[name] = create_closure(closure_name, on_success);
     };
+
+    /* FIXME: write these, adding logs to term-mang.js to show that the procs are geting called with the
+     * right arguments, returning the right values, and calling these versions for non-"example" mode */
+
+    this['real_infer'] = function (num_iters) {
+	    ajax_post_in_sequence("infer", [num_iters], function () {
+		    /* FIXME echo that forgetting happened to the terminal */
+		    echo_str = "real_infer(" + num_iters + ")";
+		    term.echo(echo_str);
+	    });
+    }
+
+    this['real_forget'] = function (directive_id) {
+	    ajax_post_in_sequence("forget", [directive_id], function () {
+		    /* FIXME echo that forgetting happened to the terminal */
+		    echo_str = "real_forget(" + directive_id + ")";
+		    term.echo(echo_str);
+	    });
+    }
+
+    this['real_observe'] = function (expression, literal) {
+    	    ajax_post_in_sequence("observe", [expression, literal], function () {
+		    /* FIXME echo that forgetting happened to the terminal */
+		    echo_str = "real_observe(" + expression + ", " + literal + ")";
+		    term.echo(echo_str);
+	    });
+    }
 
 /* Continuous directives */
 
@@ -181,28 +240,21 @@ function jripl() {
         ajax_post_in_sequence("list_directives", [], f);
     };
 
+    /* FIXME: This needs to display the directive ID so I know what to forget */
+
     this.display_directives = function() {
 	var success_fun = function(data) {
-	    term.echo("Directives:              | Values:");
+	    console.log(data);
+	    column_names = ["Directives", "Instruction", "Values", "Ids"];
+	    header = join_for_console(column_names);
+	    term.echo(header);
 	    for (i = 0; i < data.length; i++){
-		if(typeof(data[i].symbol) != "undefined"){
-		    sym = data[i].symbol;
-		    val = data[i].value;
-		    
-		    if (sym.length > 25){
-			sym = sym.substr(0, 24) + "..."
-			    }
-		    else {
-			extraspaces = 25-sym.length
-			for(j = 0; j < extraspaces; j++){
-			    sym = sym + " ";
-			}
-		    }
-		    if (val.length > 25){
-			val = val.substr(0,24) + "..."
-			    }
-		    term.echo(sym + "| " + val);
-		}
+		sym = undefined_to_empty_str(data[i].symbol + "");
+		exp = undefined_to_empty_str(data[i].expression + "");
+		val = undefined_to_empty_str(data[i].value + "");
+		directive_id = undefined_to_empty_str(data[i].directive_id + "");
+		joined = join_for_console([sym, exp, val, directive_id]);
+		term.echo(joined);
 	    }
 	}
 	ajax_post_in_sequence("list_directives", [], success_fun);
