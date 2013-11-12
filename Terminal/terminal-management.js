@@ -34,7 +34,7 @@ term_ripl.prototype.sendCommandToRIPLServer = function (command, example, term)
 	if (example==true){
 	    this.ripl.observe('(' + parseList[1] + ')', parseList[2]);}
 	else{
-	    this.ripl.observe_async('(' + parseList[1] + ')', parseList[2]);}
+	    this.ripl.real_observe('(' + parseList[1] + ')', parseList[2]);}
     }
     if (parseList[0] == 'predict') {
 	if (example==true){
@@ -50,7 +50,11 @@ term_ripl.prototype.sendCommandToRIPLServer = function (command, example, term)
 	term.echo("clear")
     }
     if (parseList[0] == 'infer') {
-	this.ripl.infer(parseList[1]);
+	if (example==true){
+		this.ripl.infer(parseList[1]);
+	} else {
+		this.ripl.real_infer(parseList[1]);
+	}
     }
     if (parseList[0] == 'start_continuous_inference') {
 	this.ripl.start_continuous_inference();
@@ -63,7 +67,11 @@ term_ripl.prototype.sendCommandToRIPLServer = function (command, example, term)
 	term.echo("Stopping continuous inference...");
     }
     if (parseList[0] == 'forget') {
-	this.ripl.forget(parseList[1]);
+	if (example==true){
+		this.ripl.forget(parseList[1]);
+	} else {
+		this.ripl.real_forget(parseList[1]);
+	}
     }
     if (ret != undefined){
 	term.echo(JSON.stringify(ret).replace(/-NEWLINE-/g, "\n "));
