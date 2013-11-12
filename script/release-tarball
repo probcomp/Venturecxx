@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Reset the working directory to the directory above the script's path
+my_abs_path=$(readlink -f "$0")
+root_dirname=$(dirname $(dirname $my_abs_path))
+echo "$root_dirname"
+cd $root_dirname
+
+tar --create --verbose --gzip --file ../venture-0.1.tgz --directory .. \
+    --exclude=.git \
+    --exclude=.gitignore \
+    --exclude=*.pyc \
+    --exclude=build \
+    --exclude=CMakeCache.txt \
+    --exclude=CMakeFiles \
+    --exclude=cmake_install.cmake \
+    --exclude=env.d \
+    --exclude=*~ \
+    --exclude=valgrind-python.supp \
+    --exclude=Makefile \
+    --exclude=CMakeLists.txt \
+    --exclude=*.so \
+    --exclude=testEigen \
+    --exclude=cmake
+    Venturecxx/
