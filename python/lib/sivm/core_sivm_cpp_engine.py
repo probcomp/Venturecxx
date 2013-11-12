@@ -272,10 +272,13 @@ def _modify_value(ob):
     return s
 
 # the C++ engine now uses the correct symbol names
-_symbol_map = { "make_crp": "crp_make", "add" : '+', "plus": "+", "sub" : '-',
+_symbol_map = { "biplex": "condition_erp",
+        "make_crp": "crp_make", "add" : '+', "plus": "+", "sub" : '-',
         "mul" : '*', "div" : "/", "pow" : "power",
         "lt" : "<", "gt" : ">", "lte" : "<=", "gte":
         ">=", "eq" : "=", "neq" : "!=",
+        "make_sym_dir_mult": "symmetric_dirichlet_multinomial_make",
+        "make_beta_bernoulli": "beta_binomial_make",
         #"crp_make" : "CRP/make",
         #"dirichlet_multinomial_make" : "dirichlet-multinomial/make",
         #"beta_binomial_make" : "beta-binomial/make",
