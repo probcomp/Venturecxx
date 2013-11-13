@@ -156,7 +156,8 @@ void Trace::teardownMadeSP(Node * node, bool isAAA,OmegaDB * omegaDB)
     if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
     if (madeSP->hasAux()) 
     { 
-      omegaDB->flushQueue.emplace(madeSP,node->madeSPAux); 
+//      omegaDB->flushQueue.emplace(madeSP,node->madeSPAux); 
+      delete node->madeSPAux; 
       node->madeSPAux = nullptr;
     }
   }

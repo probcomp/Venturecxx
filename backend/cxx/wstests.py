@@ -2,7 +2,7 @@ from venture.shortcuts import *
 import math
 import pdb
 
-globalKernel = "meanfield";
+globalKernel = "mh";
 globalUseGlobalScaffold = False;
 
 def SIVM():
