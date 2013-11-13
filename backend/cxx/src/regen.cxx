@@ -162,6 +162,10 @@ void Trace::processMadeSP(Node * node, bool isAAA)
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
   if (vsp->makerNode) { return; }
 
+  callCounts[{"processMadeSPfull",false}]++;
+
+
+
   assert(vsp);
 
   SP * madeSP = vsp->sp;
@@ -291,7 +295,7 @@ double Trace::evalRequests(Node * node,
       {
 	esrParent = omegaDB->spFamilyDBs[{node->vsp()->makerNode, esr.id}];
 	assert(esrParent);
-	restoreFamily(esrParent,scaffold,omegaDB);
+	restoreSPFamily(node->vsp(),esr.id,esrParent,scaffold,omegaDB);
       }
       else
       {
@@ -333,6 +337,21 @@ pair<double, Node*> Trace::evalVentureFamily(size_t directiveID,
 {
   return evalFamily(exp,globalEnv,nullptr,nullptr,true,gradients);
 }
+
+double Trace::restoreSPFamily(VentureSP * vsp,
+			      size_t id,
+			      Node * root,
+			      Scaffold * scaffold,
+			      OmegaDB * omegaDB)
+{
+  Node * makerNode = vsp->makerNode;
+  if (omegaDB->spOwnedValues.count(make_pair(makerNode,id)))
+  {
+    makerNode->madeSPAux->ownedValues[id] = omegaDB->spOwnedValues[make_pair(makerNode,id)];
+  }
+  restoreFamily(root,scaffold,omegaDB);
+}
+
 
 double Trace::restoreVentureFamily(Node * root)
 {

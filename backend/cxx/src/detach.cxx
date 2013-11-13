@@ -145,6 +145,8 @@ void Trace::teardownMadeSP(Node * node, bool isAAA,OmegaDB * omegaDB)
 
   if (vsp->makerNode != node) { return; }
 
+  callCounts[{"processMadeSPfull",true}]++;
+
   vsp->makerNode = nullptr;
 
   SP * madeSP = vsp->sp;
@@ -154,7 +156,8 @@ void Trace::teardownMadeSP(Node * node, bool isAAA,OmegaDB * omegaDB)
     if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
     if (madeSP->hasAux()) 
     { 
-      omegaDB->flushQueue.emplace(madeSP,node->madeSPAux); 
+//      omegaDB->flushQueue.emplace(madeSP,node->madeSPAux); 
+      delete node->madeSPAux; 
       node->madeSPAux = nullptr;
     }
   }
@@ -273,13 +276,11 @@ double Trace::detachSPFamily(VentureSP * vsp,
   assert(root);
   spaux->families.erase(id);
 
-  // TODO URGENT 
-  // the SP needs to be able to register
-
-  for (VentureValue * value : spaux->ownedValues[id])
+  if (!spaux->ownedValues.empty())
   {
-    omegaDB->flushQueue.emplace(value);
+    omegaDB->spOwnedValues[make_pair(vsp->makerNode,id)] = spaux->ownedValues[id];
   }
+
   spaux->ownedValues.erase(id);
 
   omegaDB->spFamilyDBs[{vsp->makerNode,id}] = root;

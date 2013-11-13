@@ -21,17 +21,10 @@ struct FlushEntry
   FlushEntry(SP * owner, VentureValue * value, NodeType nodeType):
     owner(owner), value(value), nodeType(nodeType) { }
 
-  FlushEntry(VentureValue * value): value(value) {}
-
-  FlushEntry(SP * owner, SPAux * spaux): 
-    owner(owner), spaux(spaux) { }
-
   SP * owner{nullptr};
   
   VentureValue * value{nullptr};
   NodeType nodeType;
-
-  SPAux * spaux{nullptr};
 
 };
 

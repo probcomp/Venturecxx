@@ -1,8 +1,9 @@
 from venture.shortcuts import *
 import math
 import pdb
+import itertools
 
-globalKernel = "gibbs";
+globalKernel = "pgibbs";
 globalUseGlobalScaffold = False;
 
 def SIVM():
@@ -75,6 +76,8 @@ def runTests(N):
   testMakeBetaBernoulli1(N)
   testMap1(N)
   testMap2()
+  testMap3()
+  testMap4()
   testLazyHMM1(N)
   testLazyHMMSP1(N)
   testStaleAAA1(N)
@@ -94,11 +97,14 @@ def runTests(N):
   testReferences2(N)
   testMemoizingOnAList()
   testOperatorChanging(N)
-  testObserveAPredict1(N)
-  testObserveAPredict2(N)
+#  testObserveAPredict1(N)
+#  testObserveAPredict2(N)
   testBreakMem(N)
-  testHPYLanguageModel1(N)
-
+  testHPYLanguageModel1(N) # fails
+  testHPYLanguageModel2(N)
+  testHPYLanguageModel3(N)
+  testHPYLanguageModel4(N)
+  testGoldwater1(N)
 
 def runTests2(N):
   testGeometric1(N)
@@ -563,7 +569,33 @@ def testMap2():
   assert sivm.report("p1")
   assert sivm.report("p2")
   assert not sivm.report("p3")
+  print "---Passed TestMap2---"
 
+def testMap3():
+  sivm = SIVM()
+  sivm.assume("m","""(make_map (list atom<1> atom<2>)
+                               (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
+  sivm.predict("(map_contains m atom<1>)",label="p1")
+  sivm.predict("(map_contains m atom<2>)",label="p2")
+  sivm.predict("(map_contains m atom<3>)",label="p3")
+
+  assert sivm.report("p1")
+  assert sivm.report("p2")
+  assert not sivm.report("p3")
+  print "---Passed TestMap3---"
+
+def testMap4():
+  sivm = SIVM()
+  sivm.assume("m","""(make_map (list (make_vector atom<1> atom<2>))
+                               (list (normal 0.0 1.0)))""")
+  sivm.predict("(map_contains m (make_vector atom<1> atom<2>))",label="p1")
+  sivm.predict("(map_contains m atom<1>)",label="p2")
+  sivm.predict("(map_contains m (make_vector atom<1>))",label="p3")
+
+  assert sivm.report("p1")
+  assert not sivm.report("p2")
+  assert not sivm.report("p3")
+  print "---Passed TestMap4---"
 
 def testEval1(N):
   sivm = SIVM()
@@ -943,28 +975,45 @@ def testOperatorChanging(N):
   ripl.infer(N)
   print "Passed TestOperatorChanging()"
 
-def testObserveAPredict1(N):
+def testObserveAPredict0(N):
   ripl = SIVM()
-  ripl.assume("f","(if (flip) (lambda () (flip)) (mem (lambda () (flip))))")
+  ripl.assume("f","(if (flip) (lambda () (flip)) (lambda () (flip)))")
   ripl.predict("(f)")
   ripl.observe("(f)","true")
   ripl.predict("(f)")
   predictions = loggingInfer(ripl,2,N)
   ps = normalizeList([0.75,0.25])
   eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
-  printTest("TestObserveAPredict1()",ps,eps)
+  printTest("TestObserveAPredict0()",ps,eps)
 
 
-def testObserveAPredict2(N):
-  ripl = SIVM()
-  ripl.assume("f","(if (flip) (lambda () (normal 0.0 1.0)) (mem (lambda () (normal 0.0 1.0))))")
-  ripl.observe("(f)","1.0")
-  ripl.predict("(* (f) 100)")
-  predictions = loggingInfer(ripl,3,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestObserveAPredict2---"
-  print "(25," + str(mean) + ")"
-  print "(note: true answer is 50, but program is illegal and staleness is correct behavior)"
+### These tests are illegal Venture programs, and cause PGibbs to fail because
+# when we detach for one slice, a node may think it owns its value, but then
+# when we constrain we reclaim it and delete it, so it ends up getting deleted
+# twice.
+
+# def testObserveAPredict1(N):
+#   ripl = SIVM()
+#   ripl.assume("f","(if (flip 0.0) (lambda () (flip)) (mem (lambda () (flip))))")
+#   ripl.predict("(f)")
+#   ripl.observe("(f)","true")
+#   ripl.predict("(f)")
+#   predictions = loggingInfer(ripl,2,N)
+#   ps = normalizeList([0.75,0.25])
+#   eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
+#   printTest("TestObserveAPredict1()",ps,eps)
+
+
+# def testObserveAPredict2(N):
+#   ripl = SIVM()
+#   ripl.assume("f","(if (flip) (lambda () (normal 0.0 1.0)) (mem (lambda () (normal 0.0 1.0))))")
+#   ripl.observe("(f)","1.0")
+#   ripl.predict("(* (f) 100)")
+#   predictions = loggingInfer(ripl,3,N)
+#   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+#   print "---TestObserveAPredict2---"
+#   print "(25," + str(mean) + ")"
+#   print "(note: true answer is 50, but program is illegal and staleness is correct behavior)"
 
 
 def testBreakMem(N):
@@ -987,11 +1036,11 @@ def testHPYLanguageModel1(N):
   loadPYMem(ripl)
 
   # 5 letters for now
-  ripl.assume("G_init","(make_sym_dir_mult 0.1 5)")
+  ripl.assume("G_init","(make_sym_dir_mult 0.5 5)")
 
   # globally shared parameters for now
   ripl.assume("alpha","(gamma 1.0 1.0)")
-  ripl.assume("d","(uniform_continuous 0.0 0.1)")
+  ripl.assume("d","(uniform_continuous 0.0 0.01)")
 
   # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
   ripl.assume("G","""
@@ -1015,12 +1064,200 @@ def testHPYLanguageModel1(N):
   0.001)
 """ % (atoms[i-1],atoms[i]), "true")
 
+  ripl.predict("((G (list 0)))",label="pid")
+
+  predictions = loggingInfer(ripl,"pid",N)
+  ps = [0.03, 0.88, 0.03, 0.03, 0.03]
+  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
+  printTest("testHPYLanguageModel1 (approximate)",ps,eps)
+
+def testHPYLanguageModel2(N):
+  ripl = SIVM()
+  loadPYMem(ripl)
+
+  # 5 letters for now
+  ripl.assume("G_init","(make_sym_dir_mult 0.5 5)")
+
+  # globally shared parameters for now
+  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("d","(uniform_continuous 0.0 0.01)")
+
+  # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
+  ripl.assume("H","(mem (lambda (a) (pymem alpha d G_init)))")
+
+  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+
+  atoms = [0, 1, 2, 3, 4] * 4;
+  
+  for i in range(1,len(atoms)):
+    ripl.observe("""
+(noisy_true 
+  (atom_eq 
+    ((H %d))
+    atom<%d>)
+  0.001)
+""" % (atoms[i-1],atoms[i]), "true")
+
+  ripl.predict("((H 0))",label="pid")
+
+  predictions = loggingInfer(ripl,"pid",N)
+  ps = [0.03, 0.88, 0.03, 0.03, 0.03]
+  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
+  printTest("testHPYLanguageModel2 (approximate)",ps,eps)
+
+def testHPYLanguageModel3(N):
+  ripl = SIVM()
+  loadPYMem(ripl)
+
+  # 5 letters for now
+  ripl.assume("G_init","(make_sym_dir_mult 0.5 5)")
+
+  # globally shared parameters for now
+  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("d","(uniform_continuous 0.0 0.01)")
+
+  # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
+  ripl.assume("H","(mem (lambda (a) (pymem alpha d G_init)))")
+
+  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+
+  atoms = [0, 1, 2, 3, 4] * 4;
+  
+  for i in range(1,len(atoms)):
+    ripl.observe("""
+(noisy_true 
+  (atom_eq 
+    ((H atom<%d>))
+    atom<%d>)
+  0.001)
+""" % (atoms[i-1],atoms[i]), "true")
+
+  ripl.predict("((H atom<0>))",label="pid")
+
+  predictions = loggingInfer(ripl,"pid",N)
+  ps = [0.03, 0.88, 0.03, 0.03, 0.03]
+  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
+  printTest("testHPYLanguageModel3 (approximate)",ps,eps)
+
+def testHPYLanguageModel4(N):
+  ripl = SIVM()
+  loadPYMem(ripl)
+
+  # 5 letters for now
+  ripl.assume("G_init","(make_sym_dir_mult 0.5 5)")
+
+  # globally shared parameters for now
+  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("d","(uniform_continuous 0.0 0.01)")
+
+  # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
+  ripl.assume("G","""
+(mem 
+  (lambda (context)
+    (if (is_pair context)
+        (pymem alpha d (G (rest context)))
+        (pymem alpha d G_init))))
+""")
+
+  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+
+  atoms = [0, 1, 2, 3, 4] * 4;
+  
+  for i in range(1,len(atoms)):
+    ripl.observe("""
+(noisy_true 
+  (atom_eq 
+    ((G (list atom<%d>)))
+    atom<%d>)
+  0.001)
+""" % (atoms[i-1],atoms[i]), "true")
+
   ripl.predict("((G (list atom<0>)))",label="pid")
 
   predictions = loggingInfer(ripl,"pid",N)
-  ps = [0.01, 0.96, 0.01, 0.01, 0.01]
+  ps = [0.03, 0.88, 0.03, 0.03, 0.03]
   eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
-  printTest("testHPYLanguageModel1 (approximate)",ps,eps)
+  printTest("testHPYLanguageModel4 (approximate)",ps,eps)
+
+
+def testGoldwater1(N):
+  v = SIVM()
+
+  #brent = open("brent_ratner/br-phono.txt", "r").readlines()
+  #brent = [b.strip().split() for b in brent]
+  #brent = ["".join(i) for i in brent]
+  #brent = ["aaa", "bbb", "aaa", "bbb"]
+  #brent = brent[:2]
+  #brent = "".join(brent)
+#  brent = ["catanddog", "dogandcat", "birdandcat","dogandbird","birdcatdog"]
+  brent = ["aba","ab"]
+
+  iterations = 100
+  parameter_for_dirichlet = 1
+#  n = 2 #eventually implement option to set n
+  alphabet = "".join(set("".join(list(itertools.chain.from_iterable(brent)))))
+  d = {}
+  for i in xrange(len(alphabet)): d[alphabet[i]] = i
+
+  v.assume("parameter_for_dirichlet", str(parameter_for_dirichlet))
+  v.assume("alphabet_length", str(len(alphabet)))
+
+  v.assume("sample_phone", "(make_sym_dir_mult parameter_for_dirichlet alphabet_length)")
+  v.assume("sample_word_id", "(make_crp 1.0)")
+
+  v.assume("sample_letter_in_word", """
+(mem 
+  (lambda (word_id pos) 
+    (sample_phone)))
+""")
+#7
+  v.assume("is_end", """
+(mem 
+  (lambda (word_id pos) 
+    (flip .3)))
+""")
+
+  v.assume("get_word_id","""
+(mem 
+  (lambda (sentence sentence_pos) 
+    (branch (= sentence_pos 0)
+        (lambda () (sample_word_id))
+        (lambda () 
+          (branch (is_end (get_word_id sentence (- sentence_pos 1)) (get_pos sentence (- sentence_pos 1)))
+            (lambda () (sample_word_id))
+            (lambda () (get_word_id sentence (- sentence_pos 1))))))))
+""")
+
+  v.assume("get_pos","""
+(mem 
+  (lambda (sentence sentence_pos) 
+    (branch (= sentence_pos 0)
+        (lambda () 0)
+        (lambda () 
+          (branch (is_end (get_word_id sentence (- sentence_pos 1)) (get_pos sentence (- sentence_pos 1)))
+            (lambda () 0)
+            (lambda () (+ (get_pos sentence (- sentence_pos 1)) 1)))))))
+""")
+
+  v.assume("sample_symbol","""
+(mem 
+  (lambda (sentence sentence_pos) 
+    (sample_letter_in_word (get_word_id sentence sentence_pos) (get_pos sentence sentence_pos))))
+""")
+
+#  v.assume("noise","(gamma 1 1)")
+  v.assume("noise",".01")
+  v.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+
+
+  for i in range(len(brent)): #for each sentence
+    for j in range(len(brent[i])): #for each letter
+      v.predict("(sample_symbol %d %d)" %(i, j))
+      v.observe("(noisy_true (atom_eq (sample_symbol %d %d) atom<%d>) noise)" %(i, j,d[str(brent[i][j])]), "true")
+
+  v.infer(N)
+  print "Passed TestGoldwater1()"
+
 
 def testMemHashFunction1(A,B):
   ripl = SIVM()  

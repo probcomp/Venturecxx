@@ -1,10 +1,22 @@
 #ifndef MEM_H
 #define MEM_H
 
+#include "all.h"
 #include "sp.h"
 #include "spaux.h"
 #include <vector>
 #include <string>
+#include <unordered_map>
+
+struct MSPAux : SPAux
+{
+// VentureValue *: a vector of the arguments
+// size_t: id
+// uint32_t: count
+  unordered_map<VentureValue*,pair<size_t,uint32_t> > ids;
+  size_t nextID = 0;
+  ~MSPAux();
+};
 
 struct MSPMakerSP : SP
 {
@@ -25,9 +37,16 @@ struct MSP : SP
   VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
   void flushRequest(VentureValue * value) const override;
 
-  size_t hashValues(vector<Node *> operands) const;
-  size_t preprocessHashValue(size_t h) const;
   Node * sharedOperatorNode;
+
+  VentureValue* makeVectorOfArgs(const vector<Node *> & operandNodes) const;
+  
+  void incorporateRequest(VentureValue * value, Node * node) const override;
+  void removeRequest(VentureValue * value, Node * node) const override;
+
+  SPAux * constructSPAux() const override;
+  void destroySPAux(SPAux * spaux) const override;
+
 };
 
 
