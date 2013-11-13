@@ -2,7 +2,7 @@ from venture.shortcuts import *
 import math
 import pdb
 
-globalKernel = "gibbs";
+globalKernel = "meanfield";
 globalUseGlobalScaffold = False;
 
 def SIVM():
@@ -75,6 +75,8 @@ def runTests(N):
   testMakeBetaBernoulli1(N)
   testMap1(N)
   testMap2()
+  testMap3()
+  testMap4()
   testLazyHMM1(N)
   testLazyHMMSP1(N)
   testStaleAAA1(N)
@@ -97,8 +99,10 @@ def runTests(N):
   testObserveAPredict1(N)
   testObserveAPredict2(N)
   testBreakMem(N)
-  testHPYLanguageModel1(N)
-
+  testHPYLanguageModel1(N) # fails
+  testHPYLanguageModel2(N)
+  testHPYLanguageModel3(N)
+  testHPYLanguageModel4(N)
 
 def runTests2(N):
   testGeometric1(N)
@@ -563,7 +567,33 @@ def testMap2():
   assert sivm.report("p1")
   assert sivm.report("p2")
   assert not sivm.report("p3")
+  print "---Passed TestMap2---"
 
+def testMap3():
+  sivm = SIVM()
+  sivm.assume("m","""(make_map (list atom<1> atom<2>)
+                               (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
+  sivm.predict("(map_contains m atom<1>)",label="p1")
+  sivm.predict("(map_contains m atom<2>)",label="p2")
+  sivm.predict("(map_contains m atom<3>)",label="p3")
+
+  assert sivm.report("p1")
+  assert sivm.report("p2")
+  assert not sivm.report("p3")
+  print "---Passed TestMap3---"
+
+def testMap4():
+  sivm = SIVM()
+  sivm.assume("m","""(make_map (list (make_vector atom<1> atom<2>))
+                               (list (normal 0.0 1.0)))""")
+  sivm.predict("(map_contains m (make_vector atom<1> atom<2>))",label="p1")
+  sivm.predict("(map_contains m atom<1>)",label="p2")
+  sivm.predict("(map_contains m (make_vector atom<1>))",label="p3")
+
+  assert sivm.report("p1")
+  assert not sivm.report("p2")
+  assert not sivm.report("p3")
+  print "---Passed TestMap4---"
 
 def testEval1(N):
   sivm = SIVM()
@@ -987,11 +1017,11 @@ def testHPYLanguageModel1(N):
   loadPYMem(ripl)
 
   # 5 letters for now
-  ripl.assume("G_init","(make_sym_dir_mult 0.1 5)")
+  ripl.assume("G_init","(make_sym_dir_mult 0.5 5)")
 
   # globally shared parameters for now
   ripl.assume("alpha","(gamma 1.0 1.0)")
-  ripl.assume("d","(uniform_continuous 0.0 0.1)")
+  ripl.assume("d","(uniform_continuous 0.0 0.01)")
 
   # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
   ripl.assume("G","""
@@ -1015,12 +1045,124 @@ def testHPYLanguageModel1(N):
   0.001)
 """ % (atoms[i-1],atoms[i]), "true")
 
+  ripl.predict("((G (list 0)))",label="pid")
+
+  predictions = loggingInfer(ripl,"pid",N)
+  ps = [0.03, 0.88, 0.03, 0.03, 0.03]
+  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
+  printTest("testHPYLanguageModel1 (approximate)",ps,eps)
+
+def testHPYLanguageModel2(N):
+  ripl = SIVM()
+  loadPYMem(ripl)
+
+  # 5 letters for now
+  ripl.assume("G_init","(make_sym_dir_mult 0.5 5)")
+
+  # globally shared parameters for now
+  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("d","(uniform_continuous 0.0 0.01)")
+
+  # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
+  ripl.assume("H","(mem (lambda (a) (pymem alpha d G_init)))")
+
+  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+
+  atoms = [0, 1, 2, 3, 4] * 4;
+  
+  for i in range(1,len(atoms)):
+    ripl.observe("""
+(noisy_true 
+  (atom_eq 
+    ((H %d))
+    atom<%d>)
+  0.001)
+""" % (atoms[i-1],atoms[i]), "true")
+
+  ripl.predict("((H 0))",label="pid")
+
+  predictions = loggingInfer(ripl,"pid",N)
+  ps = [0.03, 0.88, 0.03, 0.03, 0.03]
+  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
+  printTest("testHPYLanguageModel2 (approximate)",ps,eps)
+
+def testHPYLanguageModel3(N):
+  ripl = SIVM()
+  loadPYMem(ripl)
+
+  # 5 letters for now
+  ripl.assume("G_init","(make_sym_dir_mult 0.5 5)")
+
+  # globally shared parameters for now
+  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("d","(uniform_continuous 0.0 0.01)")
+
+  # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
+  ripl.assume("H","(mem (lambda (a) (pymem alpha d G_init)))")
+
+  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+
+  atoms = [0, 1, 2, 3, 4] * 4;
+  
+  for i in range(1,len(atoms)):
+    ripl.observe("""
+(noisy_true 
+  (atom_eq 
+    ((H atom<%d>))
+    atom<%d>)
+  0.001)
+""" % (atoms[i-1],atoms[i]), "true")
+
+  ripl.predict("((H atom<0>))",label="pid")
+
+  predictions = loggingInfer(ripl,"pid",N)
+  ps = [0.03, 0.88, 0.03, 0.03, 0.03]
+  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
+  printTest("testHPYLanguageModel3 (approximate)",ps,eps)
+
+def testHPYLanguageModel4(N):
+  ripl = SIVM()
+  loadPYMem(ripl)
+
+  # 5 letters for now
+  ripl.assume("G_init","(make_sym_dir_mult 0.5 5)")
+
+  # globally shared parameters for now
+  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("d","(uniform_continuous 0.0 0.01)")
+
+  # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
+  ripl.assume("G","""
+(mem 
+  (lambda (context)
+    (if (is_pair context)
+        (pymem alpha d (G (rest context)))
+        (pymem alpha d G_init))))
+""")
+
+  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+
+  atoms = [0, 1, 2, 3, 4] * 4;
+  
+  for i in range(1,len(atoms)):
+    ripl.observe("""
+(noisy_true 
+  (atom_eq 
+    ((G (list atom<%d>)))
+    atom<%d>)
+  0.001)
+""" % (atoms[i-1],atoms[i]), "true")
+
   ripl.predict("((G (list atom<0>)))",label="pid")
 
   predictions = loggingInfer(ripl,"pid",N)
-  ps = [0.01, 0.96, 0.01, 0.01, 0.01]
+  ps = [0.03, 0.88, 0.03, 0.03, 0.03]
   eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
-  printTest("testHPYLanguageModel1 (approximate)",ps,eps)
+  printTest("testHPYLanguageModel4 (approximate)",ps,eps)
+
+
+
+
 
 def testMemHashFunction1(A,B):
   ripl = SIVM()  

@@ -148,7 +148,7 @@ struct VentureNumber : VentureValue
 struct VentureAtom : VentureValue
 {
   VentureAtom(uint32_t n): n(n) {}
-  size_t toHash() const override { return hash<unsigned int>()(n); }
+  size_t toHash() const override { return n; }
   VentureValue * clone() const override;
 
   bool equals(const VentureValue * & other) const override;

@@ -187,10 +187,14 @@ bool VentureNil::equals(const VentureValue * & other) const
 bool VenturePair::equals(const VentureValue * & other) const
 {
   const VenturePair * vp = dynamic_cast<const VenturePair*>(other);
+  if (!vp) { return false; }
+
   const VentureValue * vfirst = dynamic_cast<const VentureValue*>(vp->first);
+//  const VentureList * vrest = dynamic_cast<const VentureList*>(vp->rest);
   const VentureValue * vrest = dynamic_cast<const VentureValue*>(vp->rest);
-  
-  return vp && first->equals(vfirst) && rest->equals(vrest);
+  assert(vfirst);
+  assert(vrest);
+  return first->equals(vfirst) && rest->equals(vrest);
 }
 
 bool VentureNumber::equals(const VentureValue * & other) const
