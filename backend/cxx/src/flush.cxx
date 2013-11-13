@@ -29,8 +29,7 @@ void flushDBComplete(OmegaDB * omegaDB)
     else 
     { 
       assert(f.value->isValid());
-      f.value->destroyParts();
-      delete f.value;
+      deepDelete(f.value);
     }
     omegaDB->flushQueue.pop();
   }
@@ -71,3 +70,4 @@ void flushDB(OmegaDB * omegaDB, bool isActive)
   if (!isActive) { flushDBComplete(omegaDB); }
   else { delete omegaDB; }
 }
+

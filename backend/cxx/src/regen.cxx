@@ -162,6 +162,10 @@ void Trace::processMadeSP(Node * node, bool isAAA)
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
   if (vsp->makerNode) { return; }
 
+  callCounts[{"processMadeSPfull",false}]++;
+
+
+
   assert(vsp);
 
   SP * madeSP = vsp->sp;

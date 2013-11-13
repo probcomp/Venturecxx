@@ -40,10 +40,16 @@ struct VentureValue {
   virtual bool equals(const VentureValue * & other) const
     { assert(false); return false; } 
 
+
+
   bool isValid() { return magic == 534253; }
   uint32_t magic = 534253;
   virtual ~VentureValue();
 };
+
+void deepDelete(VentureValue * value);
+
+
 
 namespace std {
   template<>
@@ -76,7 +82,6 @@ struct VentureSymbol : VentureValue
 struct VentureList : VentureValue 
 { 
 
-
 };
 
 struct VentureNil : VentureList 
@@ -84,6 +89,7 @@ struct VentureNil : VentureList
   size_t toHash() const override;
   virtual boost::python::dict toPython() const;
   VentureValue * clone() const override;
+  bool equals(const VentureValue * & other) const override;
 
 };
 
@@ -98,6 +104,8 @@ struct VenturePair : VentureList
   VentureValue * clone() const override;
 
   virtual boost::python::dict toPython() const;
+
+  bool equals(const VentureValue * & other) const override;
 
   VentureValue * first;
   VentureList * rest;
@@ -115,6 +123,10 @@ struct VentureBool : VentureValue
   VentureBool(bool pred): pred(pred) {}; 
   VentureValue * clone() const override; 
   size_t toHash() const override { return hash<bool>()(pred); }
+
+  bool equals(const VentureValue * & other) const override;
+
+
   bool pred;
   boost::python::dict toPython() const override;
 };
@@ -125,6 +137,9 @@ struct VentureNumber : VentureValue
   size_t toHash() const override { return hash<double>()(x); }
   VentureValue * clone() const override;
   int getInt() const { return static_cast<int>(x); }
+
+  bool equals(const VentureValue * & other) const override;
+
   double x;
   boost::python::dict toPython() const override;
   
@@ -133,17 +148,24 @@ struct VentureNumber : VentureValue
 struct VentureAtom : VentureValue
 {
   VentureAtom(uint32_t n): n(n) {}
-  size_t toHash() const override { return n; }
+  size_t toHash() const override { return hash<unsigned int>()(n); }
   VentureValue * clone() const override;
+
+  bool equals(const VentureValue * & other) const override;
+
   uint32_t n;
   boost::python::dict toPython() const override;
 };
 
 struct VentureVector : VentureValue
 {
-  VentureVector(const vector<VentureValue *> xs): xs(xs) {}
+  VentureVector(const vector<VentureValue *> & xs): xs(xs) {}
   vector<VentureValue *> xs;
+  size_t toHash() const override;
   boost::python::dict toPython() const override;
+
+  bool equals(const VentureValue * & other) const override;
+
   void destroyParts() override;
 };
 

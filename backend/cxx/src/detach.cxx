@@ -145,6 +145,8 @@ void Trace::teardownMadeSP(Node * node, bool isAAA,OmegaDB * omegaDB)
 
   if (vsp->makerNode != node) { return; }
 
+  callCounts[{"processMadeSPfull",true}]++;
+
   vsp->makerNode = nullptr;
 
   SP * madeSP = vsp->sp;

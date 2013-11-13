@@ -37,6 +37,6 @@ struct FlushEntry
 
 void destroyFamilyNodes(Node * root);
 void flushDB(OmegaDB * omegaDB, bool isActive);
-
+void deepDelete(VentureValue * value);
 
 #endif
