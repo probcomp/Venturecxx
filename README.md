@@ -23,6 +23,19 @@ On Ubuntu:
     
 GCC 4.8 is also required for c++11 support.
 
+One approach to installing GCC 4.8 on Ubuntu is to do all of the following:
+
+# get non C++11 system dependencies (boost1.48-all may be redundant)
+sudo apt-get install -y libboost1.48-all-dev libgsl0-dev cmake make git
+
+# get C++11 and install it as the default gcc and g++
+sudo apt-get install -y python-software-properties
+sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+sudo apt-get update
+sudo apt-get install -y gcc-4.8 g++-4.8
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 50
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 50
+
 Installation to local environment
 =================================
 
