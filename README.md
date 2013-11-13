@@ -19,7 +19,7 @@ Requirements
 
 The primary system requirements are g++4.8, pip and the development libraries for python, libboost-python and libgsl.
 
-We provide a script that installs the system requirements to an Ubuntu 12.04 in https://github.com/mit-probabilistic-computing-project/vm-install-venture/blob/master/provision\_venture.sh
+We provide a script that installs the system requirements to an Ubuntu 12.04 in https://github.com/mit-probabilistic-computing-project/vm-install-venture/blob/master/provision_venture.sh
     
 Installation to local environment
 =================================
