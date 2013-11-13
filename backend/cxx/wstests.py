@@ -2,7 +2,7 @@ from venture.shortcuts import *
 import math
 import pdb
 
-globalKernel = "mh";
+globalKernel = "pgibbs";
 globalUseGlobalScaffold = False;
 
 def SIVM():
@@ -972,6 +972,17 @@ def testOperatorChanging(N):
   ripl.observe("(op4)",True)
   ripl.infer(N)
   print "Passed TestOperatorChanging()"
+
+def testObserveAPredict0(N):
+  ripl = SIVM()
+  ripl.assume("f","(if (flip) (lambda () (flip)) (lambda () (flip)))")
+  ripl.predict("(f)")
+  ripl.observe("(f)","true")
+  ripl.predict("(f)")
+  predictions = loggingInfer(ripl,2,N)
+  ps = normalizeList([0.75,0.25])
+  eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
+  printTest("TestObserveAPredict0()",ps,eps)
 
 def testObserveAPredict1(N):
   ripl = SIVM()

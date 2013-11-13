@@ -116,6 +116,12 @@ struct Trace
 
 
   // Meh, don't need to pass gradients
+  double restoreSPFamily(VentureSP * vsp,
+			 size_t id,
+			 Node * root,
+			 Scaffold * scaffold,
+			 OmegaDB * omegaDB);
+
   double restoreFamily(Node * root,
 		       Scaffold * scaffold,
 		       OmegaDB * omegaDB);

@@ -55,6 +55,8 @@ Trace::~Trace()
     destroyFamilyNodes(root);
   }
 
+  flushDB(omegaDB,false);
+
   globalEnv->destroySymbols();
   delete globalEnv;
 
@@ -65,7 +67,7 @@ Trace::~Trace()
     if (dynamic_cast<VentureSP*>(node->getValue()))
     { teardownMadeSP(node,false,omegaDB); }
 
-    omegaDB->flushQueue.emplace(node->getValue());
+    delete node->getValue();
     delete node;
   }
   primitivesEnv->destroySymbols();
@@ -76,7 +78,7 @@ Trace::~Trace()
     assert(callCounts[make_pair(pp.first.first,false)] == callCounts[make_pair(pp.first.first,true)]);
   }
 
-  flushDB(omegaDB,false);
+
 
   gsl_rng_free(rng);
 

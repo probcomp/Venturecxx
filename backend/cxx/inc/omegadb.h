@@ -52,6 +52,8 @@ struct OmegaDB
   /* This will contain all values that need to be flushed (not owned by nodes visited during detach),
      in the detach order. Some of these SP's will be null, indicating that Venture created the value
      and should just delete it. */
+  map<pair<Node *,size_t>,vector<VentureValue*> > spOwnedValues;
+
   queue<FlushEntry> flushQueue;
 
   bool isValid() { return magic == 5619197; }
