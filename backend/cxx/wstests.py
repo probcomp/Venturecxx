@@ -984,28 +984,34 @@ def testObserveAPredict0(N):
   eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
   printTest("TestObserveAPredict0()",ps,eps)
 
-def testObserveAPredict1(N):
-  ripl = SIVM()
-  ripl.assume("f","(if (flip) (lambda () (flip)) (mem (lambda () (flip))))")
-  ripl.predict("(f)")
-  ripl.observe("(f)","true")
-  ripl.predict("(f)")
-  predictions = loggingInfer(ripl,2,N)
-  ps = normalizeList([0.75,0.25])
-  eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
-  printTest("TestObserveAPredict1()",ps,eps)
+
+### These tests are illegal Venture programs, and cause PGibbs to fail because
+# when we detach for one slice, a node may think it owns its value, but then
+# when we constrain we reclaim it and delete it, so it ends up getting deleted
+# twice.
+
+# def testObserveAPredict1(N):
+#   ripl = SIVM()
+#   ripl.assume("f","(if (flip 0.0) (lambda () (flip)) (mem (lambda () (flip))))")
+#   ripl.predict("(f)")
+#   ripl.observe("(f)","true")
+#   ripl.predict("(f)")
+#   predictions = loggingInfer(ripl,2,N)
+#   ps = normalizeList([0.75,0.25])
+#   eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
+#   printTest("TestObserveAPredict1()",ps,eps)
 
 
-def testObserveAPredict2(N):
-  ripl = SIVM()
-  ripl.assume("f","(if (flip) (lambda () (normal 0.0 1.0)) (mem (lambda () (normal 0.0 1.0))))")
-  ripl.observe("(f)","1.0")
-  ripl.predict("(* (f) 100)")
-  predictions = loggingInfer(ripl,3,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestObserveAPredict2---"
-  print "(25," + str(mean) + ")"
-  print "(note: true answer is 50, but program is illegal and staleness is correct behavior)"
+# def testObserveAPredict2(N):
+#   ripl = SIVM()
+#   ripl.assume("f","(if (flip) (lambda () (normal 0.0 1.0)) (mem (lambda () (normal 0.0 1.0))))")
+#   ripl.observe("(f)","1.0")
+#   ripl.predict("(* (f) 100)")
+#   predictions = loggingInfer(ripl,3,N)
+#   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+#   print "---TestObserveAPredict2---"
+#   print "(25," + str(mean) + ")"
+#   print "(note: true answer is 50, but program is illegal and staleness is correct behavior)"
 
 
 def testBreakMem(N):
