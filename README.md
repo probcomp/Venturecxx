@@ -17,12 +17,10 @@ Interesting parts:
 Requirements
 ============
 
-On Ubuntu:
+The primary system requirements are g++4.8, pip and the development libraries for python, libboost-python and libgsl.
 
-    sudo apt-get install python-dev libboost-python-dev libgsl0-dev
+We provide a script that installs the system requirements to an Ubuntu 12.04 in https://github.com/mit-probabilistic-computing-project/vm-install-venture/blob/master/provision\_venture.sh
     
-GCC 4.8 is also required for c++11 support.
-
 Installation to local environment
 =================================
 
@@ -51,13 +49,6 @@ Checking that your installation was successful
 If you are interested in improving Venture, you can also run
 
 ./list_known_issues.sh
-
-Notes for Ubuntu
-==================================
-
-- Start with an Ubuntu 12.04 VM
-- Follow steps in:
-  https://github.com/mit-probabilistic-computing-project/vm-install-venture/blob/master/provision_venture.sh
 
 Rapid Python Development
 ==================================
