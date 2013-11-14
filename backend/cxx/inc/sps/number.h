@@ -59,6 +59,31 @@ struct RealSP : SP
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
 };
 
+struct IntPlusSP : SP
+{ 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+};
+
+struct IntMinusSP : SP
+{ 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+};
+
+struct IntTimesSP : SP
+{ 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+};
+
+struct IntDivideSP : SP
+{ 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+};
+
+struct IntEqualSP : SP
+{ 
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+};
+
 struct AtomEqualSP : SP
 { 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 

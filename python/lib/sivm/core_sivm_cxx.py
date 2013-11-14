@@ -210,6 +210,9 @@ _symbol_map = {
     "beta_bernoulli_make" : "make_beta_bernoulli",
 }
 
+for s in ["lt", "gt", "lte", "gte"]:
+    _symbol_map["int_" + s] = s
+
 def _modify_symbol(s):
     if s in _symbol_map:
         s = _symbol_map[s]

@@ -50,6 +50,13 @@ map<string,SP *> initBuiltInSPs()
     {"gte", new GreaterThanOrEqualToSP},
     {"lte", new LessThanOrEqualToSP},
     {"real", new RealSP},
+    
+    // integers
+    {"int_plus", new IntPlusSP},
+    {"int_minus", new IntMinusSP},
+    {"int_times", new IntTimesSP},
+    {"int_div", new IntDivideSP},
+    {"int_eq", new IntEqualSP},
 
     // atoms
     {"atom_eq", new AtomEqualSP},

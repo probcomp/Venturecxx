@@ -137,6 +137,62 @@ VentureValue * RealSP::simulateOutput(Node * node, gsl_rng * rng)  const
   return new VentureNumber(a->n);
 }
 
+VentureValue * IntPlusSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  int sum = 0;
+  for (size_t i = 0; i < operands.size(); ++i)
+  {
+    VentureNumber * vnum = dynamic_cast<VentureNumber *>(operands[i]->getValue());
+    assert(vnum);
+    sum += vnum->getInt();
+  }
+  return new VentureNumber(sum);
+}
+
+VentureValue * IntMinusSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * d1 = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * d2 = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  assert(d1);
+  assert(d2);
+  return new VentureNumber(d1->getInt() - d2->getInt());
+}
+
+VentureValue * IntTimesSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  int prod = 1;
+  for (size_t i = 0; i < operands.size(); ++i)
+  {
+    VentureNumber * vnum = dynamic_cast<VentureNumber *>(operands[i]->getValue());
+    assert(vnum);
+    prod *= vnum->getInt();
+  }
+  return new VentureNumber(prod);
+}
+
+VentureValue * IntDivideSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+    vector<Node *> & operands = node->operandNodes;
+    VentureNumber * d1 = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+    VentureNumber * d2 = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+    assert(d1);
+    assert(d2);
+    return new VentureNumber(d1->getInt() / d2->getInt());
+}
+
+VentureValue * IntEqualSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureNumber * d1 = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * d2 = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  assert(d1);
+  assert(d2);
+  return new VentureBool(d1->getInt() == d2->getInt());
+}
+
 VentureValue * AtomEqualSP::simulateOutput(Node * node, gsl_rng * rng)  const
 {
   vector<Node *> & operands = node->operandNodes;
