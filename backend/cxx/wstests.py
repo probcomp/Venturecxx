@@ -3,7 +3,7 @@ import math
 import pdb
 import itertools
 
-globalKernel = "pgibbs";
+globalKernel = "mh";
 globalUseGlobalScaffold = False;
 
 def SIVM():
@@ -210,7 +210,7 @@ def testStudentT0(N):
   predictions = loggingInfer(sivm,3,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestStudentT0---"
-  print "(???," + str(mean) + ")"
+  print "(2.3ish (regression)," + str(mean) + ")"
 
 def testMem0(N):
   sivm = SIVM()

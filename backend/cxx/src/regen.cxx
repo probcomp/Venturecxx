@@ -82,6 +82,7 @@ double Trace::absorb(Node * node,
   double weight = 0;
   weight += regenParents(node,scaffold,shouldRestore,omegaDB,gradients);
   weight += node->sp()->logDensity(node->getValue(),node);
+  node->sp()->incorporate(node->getValue(),node);
   return weight;
 }
 
