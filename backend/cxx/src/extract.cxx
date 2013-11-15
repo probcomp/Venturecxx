@@ -214,7 +214,7 @@ double Trace::unapplyPSP(Node * node,
   }
 
   // otherwise we are just unevaling
-  if (rho) { rho->values[node] = node->value; node->clearValue(); }
+  if (rho) { rho->setValue(node,node->value); node->clearValue(); }
 
   return weight;
 }
@@ -264,7 +264,7 @@ double Trace::extractSPFamily(VentureSP * vsp,
   assert(vsp->makerNode);
   assert(vsp->makerNode->madeSPAux);
 
-  if (rho) { assert(rho->spauxs.count(vsp->makerNode)); }
+  assert(rho->getMadeSPAux(vsp->makerNode));
 
   SPAux * spaux = vsp->makerNode->madeSPAux;
   Node * root = spaux->families[id];
@@ -277,13 +277,6 @@ double Trace::extractSPFamily(VentureSP * vsp,
   return weight;
 }
 
-/* Does not erase from ventureFamilies */
-double Trace::extractVentureFamily(Node * root,Particle * rho)
-{
-  assert(root);
-  return extractFamily(root,nullptr,rho);
-}
-
 double Trace::extractFamily(Node * node,
 			   Scaffold * scaffold,
 			   Particle * rho)
@@ -293,11 +286,12 @@ double Trace::extractFamily(Node * node,
   
   if (node->nodeType == NodeType::VALUE) 
   { 
-    // do nothing! (finally!)
+    rho->setValue(node,node->getValue());
   }
   else if (node->nodeType == NodeType::LOOKUP)
   {
     Node * lookedUpNode = node->lookedUpNode;
+    rho->registerReference(node,lookedUpNode);
     node->disconnectLookup();
     weight += extractInternal(lookedUpNode,scaffold,rho);
   }

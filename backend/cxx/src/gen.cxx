@@ -3,9 +3,7 @@
 #include "env.h"
 #include "sp.h"
 #include "trace.h"
-#include "sps/csp.h"
 #include "scaffold.h"
-#include "omegadb.h"
 #include "srs.h"
 #include "flush.h"
 #include "lkernel.h"
@@ -28,7 +26,7 @@ double Trace::generate(const vector<Node *> & border,
     else
     {
       weight += generateInternal(node,scaffold,xi);
-      if (node->isObservation()) { weight += constrain(node,node->observedValue,!shouldRestore,xi); }
+      if (node->isObservation()) { weight += constrain(node,node->observedValue,xi); }
     }
   }
   return weight;
@@ -42,6 +40,7 @@ double Trace::generateParents(Node * node,
   assert(node->nodeType != NodeType::VALUE);
 
   if (node->nodeType == NodeType::LOOKUP)
+  // looked up node will be accurate, source node will not be
   { return generateInternal(node->lookedUpNode,scaffold,xi); }
 
   double weight = 0;
@@ -53,7 +52,8 @@ double Trace::generateParents(Node * node,
   if (node->nodeType == NodeType::OUTPUT)
   {
     weight += generateInternal(node->requestNode,scaffold,xi);
-    for (Node * esrParent : node->esrParents)
+    // ESR parents are owned by XI
+    for (Node * esrParent : xi->ersParents[node])
     { weight += generateInternal(esrParent,scaffold,xi); }
   }
    
@@ -68,29 +68,39 @@ double Trace::absorb(Node * node,
   assert(scaffold);
   double weight = 0;
   weight += generateParents(node,scaffold,xi);
+  xi->maybeCloneSPAux(node);
   Args args = xi->makeArgs(node);
   weight += xi->sp(node)->logDensity(node->value,args);
   xi->sp(node)->incorporate(node->value,args);
   return weight;
 }
 
-double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue, Particle * xi)
+double Trace::constrain(Node * node, VentureValue * value, Particle * xi)
 {
-  if (node->isReference()) { return constrain(node->sourceNode,value,reclaimValue,xi); }
+  if (xi->isReference(node)) { return constrain(xi->getSourceNode(node),value,xi); }
   else
   {
     assert(xi->sp(node)->isRandomOutput);
     assert(xi->sp(node)->canAbsorbOutput);
-    assert(!scaffold || !scaffold->isResampling(node->operatorNode)); // TODO temporary
 
+    xi->maybeCloneSPAux(node);
     Args args = xi->makeArgs(node);
-    xi->sp(node)->removeOutput(xi->values[node],args);
-    if (xi) { assert(xi->values.count(node)); xi->values[node] = value; }
+    xi->sp(node)->removeOutput(xi->getValue(node),args);
+    assert(xi->hasValueFor(node)); 
 
-    if (reclaimValue) { xi->sp(node)->flushValue(xi->values[node],node->nodeType); }
+    if (reclaimValue) { xi->sp(node)->flushValue(xi->getValue(node),node->nodeType); }
 
     double weight = xi->sp(node)->logDensityOutput(value,args);
     xi->sp(node)->incorporateOutput(value,args);
+
+    if (xi->sp(node)->isRandomOutput) 
+    { 
+      xi->unregisterRandomChoice(node); 
+      xi->registerConstrainedChoice(node);
+    }
+
+    xi->setValue(node,value);
+
     return weight;
   }
 }
@@ -100,26 +110,26 @@ double Trace::generateInternal(Node * node,
 			       Scaffold * scaffold,
 			       Particle * xi)
 {
-  if (!scaffold) { return 0; }
   double weight = 0;
 
   if (scaffold->isResampling(node))
   {
-    Scaffold::DRGNode &drgNode = scaffold->drg[node];
-    if (drgNode.generateCount == 0)
+    if (!xi->hasValueFor(node))
     {
       weight += generateParents(node,scaffold,xi);
       if (node->nodeType == NodeType::LOOKUP)
-      { xi->values[node] = xi->values[node->lookedUpNode]->value; }
+      { 
+	// copies the value in, why not
+	xi->registerReference(node,node->lookedUpNode);
+      }
       else /* Application node */
       { weight += applyPSP(node,scaffold,xi); }
     }
-    drgNode.generateCount++;
   }
   else if (scaffold->hasAAANodes)
   {
-    if (node->isReference() && scaffold->isAAA(node->sourceNode))
-    { weight += generateInternal(node->sourceNode,scaffold,xi); }
+    if (xi->isReference(node) && scaffold->isAAA(xi->getSourceNode(node)))
+    { weight += generateInternal(xi->getSourceNode(node),scaffold,xi); }
   }
   return weight;
 }
@@ -128,8 +138,10 @@ void Trace::processMadeSP(Node * node, bool isAAA, Particle * xi)
 {
   callCounts[{"processMadeSP",false}]++;
 
-  VentureSP * vsp = dynamic_cast<VentureSP *>(xi->values[node]);
+  VentureSP * vsp = dynamic_cast<VentureSP *>(xi->getValue(node));
   if (vsp->makerNode) { return; }
+
+  xi->maybeCloneMadeSPAux(node);
 
   callCounts[{"processMadeSPfull",false}]++;
 
@@ -139,8 +151,7 @@ void Trace::processMadeSP(Node * node, bool isAAA, Particle * xi)
   vsp->makerNode = node;
   if (!isAAA && madeSP->hasAux())
   {
-    // Note we do not set this in the actual node, only in the particle */
-    xi->spauxs[node] = madeSP->constructSPAux();
+    xi->registerSPAux(node,madeSP->constructSPAux());
   }
 }
 
@@ -158,25 +169,21 @@ double Trace::applyPSP(Node * node,
   if (node->nodeType == NodeType::OUTPUT && sp->isESRReference)
   {
     assert(!node->esrParents.empty());
-    node->registerReference(node->esrParents[0]);
-    
-
-
-    }
+    xi->registerReference(node,xi->esrParents[node][0]);
     return 0;
   }
-  if (node->nodeType == NodeType::REQUEST && sp->isNullRequest())
+  if (node->nodeType == NodeType::REQUEST && xi->sp(node)->isNullRequest())
   {
     return 0;
   }
 
-  assert(!node->isReference());
+  assert(!xi->isReference(node));
 
   /* Otherwise we need to actually do things. */
-
   double weight = 0;
 
   VentureValue * newValue;
+  xi->maybeCloneSPAux(node);
   Args args = xi->makeArgs(node);
 
   if (scaffold->hasKernelFor(node))
@@ -194,12 +201,12 @@ double Trace::applyPSP(Node * node,
   }
   assert(newValue);
   assert(newValue->isValid());
-  xi->values[node] = newValue;
 
+  xi->setValue(node,newValue);
   sp->incorporate(newValue,args);
 
-  if (dynamic_cast<VentureSP *>(newValue))
-  { processMadeSP(node,scaffold->isAAA(node),xi); }
+  if (dynamic_cast<VentureSP *>(newValue)) { processMadeSP(node,scaffold->isAAA(node),xi); }
+  if (node->sp()->isRandom(node->nodeType)) { xi->registerRandomChoice(node); }
   if (node->nodeType == NodeType::REQUEST) { evalRequests(node,scaffold,xi); }
 
   return weight;
@@ -210,11 +217,12 @@ double Trace::evalRequests(Node * node,
 			   Particle * xi)
 {
   /* Null request does not bother malloc-ing */
-  if (!xi->values[node]) { return 0; }
+  if (!xi->getValue(node)) { return 0; }
   double weight = 0;
 
-  VentureRequest * requests = dynamic_cast<VentureRequest *>(xi->values[node]);
-  SPAux * spaux = xi->getSPAuxForNode(node);
+  VentureRequest * requests = dynamic_cast<VentureRequest *>(xi->getValue(node));
+  assert(xi->getSPAux(node));
+  SPAux * spaux = xi->getSPAux(node);
 
   /* First evaluate ESRs. */
   for (ESR esr : requests->esrs)
@@ -231,6 +239,7 @@ double Trace::evalRequests(Node * node,
       assert(spaux->families[esr.id]->isValid());
       assert(dynamic_cast<MSP*>(xi->sp(node))); 
     }
+    xi->esrParents[node->outputNode].push_back(spaux->families[esr.id]);
   }
 
   for (HSR * hsr : requests->hsrs)
@@ -257,7 +266,7 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
     if (car && car->sym == "quote")
     {
       node = new Node(NodeType::VALUE);
-      xi->values[node] = listRef(list,1);
+      xi->setValue(node,listRef(list,1));
     }
     /* Application */
     else
@@ -289,18 +298,17 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
   {
     VentureSymbol * vsym = dynamic_cast<VentureSymbol*>(exp);
     Node * lookedUpNode = env->findSymbol(vsym);
-    node->registerReference(lookedUpNode);
     assert(lookedUpNode);
     weight += generateInternal(lookedUpNode,scaffold,xi);
-    // Note: does not actually add the edges
     node = new Node(NodeType::LOOKUP);
-    xi->values[node] = lookedUpNode->value;
+    node->lookedUpNode = lookedUpNode;
+    xi->registerReference(node,lookedUpNode);
   }
   /* Self-evaluating */
   else
   {
     node = new Node(NodeType::VALUE);
-    xi->values[node] = exp;
+    xi->setValue(node, exp);
   }
   assert(node);
   return {weight,node};
@@ -316,12 +324,12 @@ double Trace::apply(Node * requestNode,
   /* Call the requester PSP. */
   weight += applyPSP(requestNode,scaffold,xi);
   
-  SPAux * spaux = xi->getSPAuxForNode(requestNode);
+  SPAux * spaux = xi->getSPAux(requestNode);
 
-  if (xi->values[requestNode])
+  if (xi->getValue(requestNode))
   {
     /* Generate any ESR nodes requested. */
-    VentureRequest * requests = dynamic_cast<VentureRequest *>(xi->values[requestNode]);
+    VentureRequest * requests = dynamic_cast<VentureRequest *>(xi->getValue(requestNode));
     for (ESR esr : requests->esrs)
     {
       Node * esrParent = spaux->families[esr.id];
