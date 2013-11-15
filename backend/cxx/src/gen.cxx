@@ -37,10 +37,6 @@ double Trace::generate(const vector<Node *> & border,
   return weight;
 }
 
-/* Note: could be simplified by storing (or quickly computing) the direct parents. */
-/* OPT: Since we never have a requestNode in a DRG without its outputNode, we ought
-   to be able to only generate the operator and operands once. 
-   (This may yield a substantial performance improvement.) */
 double Trace::generateParents(Node * node,
 			      Scaffold * scaffold,
 			      Particle * xi,
@@ -78,6 +74,8 @@ double Trace::absorb(Node * node,
   assert(scaffold);
   double weight = 0;
   weight += generateParents(node,scaffold,xi,gradients);
+
+  
   weight += node->sp()->logDensity(node->getValue(),node);
   node->sp()->incorporate(node->getValue(),node);
   return weight;

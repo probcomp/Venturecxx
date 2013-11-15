@@ -76,8 +76,9 @@ double Trace::unabsorb(Node * node,
   assert(scaffold);
   double weight = 0;
   rho->maybeCloneSPAux(node);
-  node->sp()->remove(node->getValue(),node);
-  weight += node->sp()->logDensity(node->getValue(),node);
+  Args args(node);
+  node->sp()->remove(node->getValue(),args,node);
+  weight += node->sp()->logDensity(node->getValue(),args,node);
   weight += extractParents(node,scaffold,rho);
   return weight;
 }
@@ -94,11 +95,12 @@ double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
       registerRandomChoice(node);
     }
     rho->maybeCloneSPAux(node);
-    node->sp()->removeOutput(node->getValue(),node);
-    double logDensity = node->sp()->logDensityOutput(node->getValue(),node);
+    Args args(node);
+    node->sp()->removeOutput(node->getValue(),args,node);
+    double logDensity = node->sp()->logDensityOutput(node->getValue(),args,node);
     node->isConstrained = false;
     node->spOwnsValue = giveOwnershipToSP;
-    node->sp()->incorporateOutput(node->getValue(),node);
+    node->sp()->incorporateOutput(node->getValue(),args,node);
     return logDensity;
   }
 }
@@ -184,9 +186,7 @@ double Trace::unapplyPSP(Node * node,
   assert(node->getValue()->isValid());
 
   if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,rho); }
-  if (node->sp()->isRandom(node->nodeType)) { 
-    unregisterRandomChoice(node); 
-  }
+  if (node->sp()->isRandom(node->nodeType)) { unregisterRandomChoice(node); }
   
   if (dynamic_cast<VentureSP*>(node->getValue()))
   { teardownMadeSP(node,scaffold && scaffold->isAAA(node),rho); }
@@ -195,11 +195,11 @@ double Trace::unapplyPSP(Node * node,
   double weight = 0;
 
   rho->maybeCloneSPAux(node);
-
-  sp->remove(node->getValue(),node);
+  Args args(node);
+  sp->remove(node->getValue(),args,node);
 
   if (scaffold && scaffold->hasKernelFor(node))
-  { weight += scaffold->lkernels[node]->reverseWeight(node->getValue(),node,nullptr); }
+  { weight += scaffold->lkernels[node]->reverseWeight(node->getValue(),args,node,nullptr); }
 
   if (sp->makesHSRs && scaffold && scaffold->isAAA(node))
   { 
