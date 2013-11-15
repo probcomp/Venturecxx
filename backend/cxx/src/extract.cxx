@@ -18,9 +18,9 @@
 
 using boost::adaptors::reverse;
 
-pair<double, OmegaDB*> Trace::detach(const vector<Node *> & border,
-				     Scaffold * scaffold,
-				     Particle * rho)
+double Trace::extract(const vector<Node *> & border,
+		      Scaffold * scaffold,
+		      Particle * rho)
 {
   assert(scaffold);
 
@@ -39,14 +39,14 @@ pair<double, OmegaDB*> Trace::detach(const vector<Node *> & border,
       { 
 	weight += unconstrain(node,false);
       }
-      weight += detachInternal(node,scaffold,rho);
+      weight += extractInternal(node,scaffold,rho);
     }
   }
   
   return make_pair(weight,rho);
 }
 
-double Trace::detachParents(Node * node,
+double Trace::extractParents(Node * node,
 			    Scaffold * scaffold,
 			    Particle * rho)
 {
@@ -55,17 +55,17 @@ double Trace::detachParents(Node * node,
   assert(node->nodeType != NodeType::VALUE);
 
   if (node->nodeType == NodeType::LOOKUP)
-  { return detachInternal(node->lookedUpNode,scaffold,rho); }
+  { return extractInternal(node->lookedUpNode,scaffold,rho); }
 
   if (node->nodeType == NodeType::OUTPUT)
   {
     for (Node * esrParent : reverse(node->esrParents))
-    { weight += detachInternal(esrParent,scaffold,rho); }
-    weight += detachInternal(node->requestNode,scaffold,rho);
+    { weight += extractInternal(esrParent,scaffold,rho); }
+    weight += extractInternal(node->requestNode,scaffold,rho);
   }
   for (Node * operandNode : reverse(node->operandNodes))
-  { weight += detachInternal(operandNode,scaffold,rho); }
-  weight += detachInternal(node->operatorNode,scaffold,rho);
+  { weight += extractInternal(operandNode,scaffold,rho); }
+  weight += extractInternal(node->operatorNode,scaffold,rho);
   return weight;
 }
 
@@ -78,7 +78,7 @@ double Trace::unabsorb(Node * node,
   rho->maybeCloneSPAux(node);
   node->sp()->remove(node->getValue(),node);
   weight += node->sp()->logDensity(node->getValue(),node);
-  weight += detachParents(node,scaffold,rho);
+  weight += extractParents(node,scaffold,rho);
   return weight;
 }
 
@@ -103,7 +103,7 @@ double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
   }
 }
 
-double Trace::detachInternal(Node * node,
+double Trace::extractInternal(Node * node,
 			     Scaffold * scaffold,
 			     Particle * rho)
 {
@@ -113,12 +113,6 @@ double Trace::detachInternal(Node * node,
   {
     Scaffold::DRGNode &drgNode = scaffold->drg[node];
     drgNode.regenCount--;
-    if (drgNode.regenCount < 0)
-    {
-      cout << "\n\n\n\n\n---RegenCount < 0! (" << node << ")---\n\n\n" << endl;
-      scaffold->show();
-    }
-
     assert(drgNode.regenCount >= 0);
     if (drgNode.regenCount == 0)
     {
@@ -128,13 +122,13 @@ double Trace::detachInternal(Node * node,
 	weight += unapplyPSP(node,scaffold,rho); 
       }
 
-      weight += detachParents(node,scaffold,rho);
+      weight += extractParents(node,scaffold,rho);
     }
   }
   else if (scaffold->hasAAANodes)
   {
     if (node->isReference() && scaffold->isAAA(node->sourceNode))
-    { weight += detachInternal(node->sourceNode,scaffold,rho); }
+    { weight += extractInternal(node->sourceNode,scaffold,rho); }
   }
   return weight;
 }
@@ -173,12 +167,10 @@ double Trace::unapplyPSP(Node * node,
 			 Scaffold * scaffold,
 			 Particle * rho)
 {
-  DPRINT("unapplyPSP: ", node->address.toString());
   callCounts[{"applyPSP",true}]++;
 
   assert(node->isValid());
   assert(node->sp()->isValid());
-
 
 
   if (node->nodeType == NodeType::OUTPUT && node->sp()->isESRReference) 
@@ -216,15 +208,13 @@ double Trace::unapplyPSP(Node * node,
   }
 
 
-
   if (node->spOwnsValue) 
   { 
     rho->flushQueue.emplace(node->sp(),node->getValue(),node->nodeType); 
   }
 
-  if (scaffold && scaffold->isResampling(node))
-  { rho->drgDB[node] = node->getValue();  node->clearValue(); }
-
+  // otherwise we are just unevaling
+  if (rho) { rho->values[node] = node->getValue(); node->clearValue(); }
 
   return weight;
 }
@@ -258,14 +248,14 @@ double Trace::unevalRequests(Node * node,
 
     if (esrParent->numRequests == 0)
     { 
-      weight += detachSPFamily(node->vsp(),esr.id,scaffold,rho); 
+      weight += extractSPFamily(node->vsp(),esr.id,scaffold,rho); 
     }
   }
 
   return weight;
 }
 
-double Trace::detachSPFamily(VentureSP * vsp,
+double Trace::extractSPFamily(VentureSP * vsp,
 			     size_t id,
 			     Scaffold * scaffold,
 			     Particle * rho)
@@ -273,6 +263,9 @@ double Trace::detachSPFamily(VentureSP * vsp,
   assert(vsp);
   assert(vsp->makerNode);
   assert(vsp->makerNode->madeSPAux);
+
+  if (rho) { assert(rho->spauxs.count(vsp->makerNode)); }
+
   SPAux * spaux = vsp->makerNode->madeSPAux;
   Node * root = spaux->families[id];
   assert(root);
@@ -280,23 +273,22 @@ double Trace::detachSPFamily(VentureSP * vsp,
 
   spaux->ownedValues.erase(id);
   
-  double weight = detachFamily(root,scaffold,rho);
+  double weight = extractFamily(root,scaffold,rho);
   return weight;
 }
 
 /* Does not erase from ventureFamilies */
-double Trace::detachVentureFamily(Node * root,Particle * rho)
+double Trace::extractVentureFamily(Node * root,Particle * rho)
 {
   assert(root);
-  return detachFamily(root,nullptr,rho);
+  return extractFamily(root,nullptr,rho);
 }
 
-double Trace::detachFamily(Node * node,
+double Trace::extractFamily(Node * node,
 			   Scaffold * scaffold,
 			   Particle * rho)
 {
   assert(node);
-  DPRINT("uneval: ", node->address.toString());
   double weight = 0;
   
   if (node->nodeType == NodeType::VALUE) 
@@ -307,14 +299,14 @@ double Trace::detachFamily(Node * node,
   {
     Node * lookedUpNode = node->lookedUpNode;
     node->disconnectLookup();
-    weight += detachInternal(lookedUpNode,scaffold,rho);
+    weight += extractInternal(lookedUpNode,scaffold,rho);
   }
   else
   {
     weight += unapply(node,scaffold,rho);
     for (Node * operandNode : reverse(node->operandNodes))
-    { weight += detachFamily(operandNode,scaffold,rho); }
-    weight += detachFamily(node->operatorNode,scaffold,rho);
+    { weight += extractFamily(operandNode,scaffold,rho); }
+    weight += extractFamily(node->operatorNode,scaffold,rho);
   }
   return weight;
 }
@@ -327,7 +319,7 @@ double Trace::unapply(Node * node,
 
   weight += unapplyPSP(node,scaffold,rho);
   for (Node * esrParent : reverse(node->esrParents))
-  { weight += detachInternal(esrParent,scaffold,rho); }
+  { weight += extractInternal(esrParent,scaffold,rho); }
   weight += unapplyPSP(node->requestNode,scaffold,rho);
 
   return weight;
