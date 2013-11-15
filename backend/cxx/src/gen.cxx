@@ -3,6 +3,7 @@
 #include "env.h"
 #include "sp.h"
 #include "trace.h"
+#include "particle.h"
 #include "scaffold.h"
 #include "srs.h"
 #include "flush.h"
@@ -247,6 +248,16 @@ double Trace::evalRequests(Node * node,
   }
 
   return weight;
+}
+
+pair<double, Node*> Trace::evalVentureFamily(size_t directiveID, 
+                                             VentureValue * exp)
+{
+  Particle v = new Particle;
+  pair<double,Node *> p = evalFamily(exp,globalEnv,nullptr,v);
+  commit(v);
+  delete v;
+  return p;
 }
 
 pair<double,Node*> Trace::evalFamily(VentureValue * exp, 

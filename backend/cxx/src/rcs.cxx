@@ -55,15 +55,3 @@ void Trace::unregisterConstrainedChoice(Node * node)
 
 vector<Node *> Trace::getRandomChoices() { return randomChoices; }
 
-void Trace::registerAEKernel(VentureSP * vsp)
-{
-  cout << "Warning -- Trace::registerAEKernel not yet implemented." << endl;
-  assert(false);
-}
-
-void Trace::unregisterAEKernel(VentureSP * vsp)
-{
-  cout << "Warning -- Trace::unregisterAEKernel yet implemented." << endl;
-  assert(false);
-}
-

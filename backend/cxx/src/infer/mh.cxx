@@ -33,33 +33,32 @@ double ScaffoldMHGKernel::propose()
   assert(scaffold);
   assert(!rhoDB);
 
-  pair<double, OmegaDB*> rhoInfo = trace->detach(scaffold->border,scaffold);
-
-  double detachWeight = rhoInfo.first;
-  rhoDB = rhoInfo.second;
+  rho = new Particle;
+  double rhoWeight = trace->extract(scaffold->border,scaffold,rho);
 
   check.checkTorus(scaffold);
-  double regenWeight = trace->regen(scaffold->border,scaffold,false,rhoDB,nullptr);
-  return regenWeight - detachWeight;
+
+  xi = new Particle;
+  double xiWeight = trace->generate(scaffold->border,scaffold,xi);
+  return xiWeight - rhoWeight;
 }
 
 void ScaffoldMHGKernel::accept()
 {
-  flushDB(rhoDB,false);
-  rhoDB = nullptr;
+//  flushDB(rhoDB,false);
+  trace->commit(xi);
+  delete rho;
+  delete xi;
 }
 
 
 void ScaffoldMHGKernel::reject()
 {
-  pair<double, OmegaDB *> xiInfo = trace->detach(scaffold->border,scaffold);
-  OmegaDB * xiDB = xiInfo.second;
-  check.checkTorus(scaffold);
-  trace->regen(scaffold->border,scaffold,true,rhoDB,nullptr);
-  flushDB(rhoDB,true);
-  flushDB(xiDB,false);
-  rhoDB = nullptr;
-
+  trace->commit(rho);
+//  flushDB(rhoDB,true);
+//  flushDB(xiDB,false);
+  delete rho;
+  delete xi;
 }
 
 

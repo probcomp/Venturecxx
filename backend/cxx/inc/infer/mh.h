@@ -20,7 +20,8 @@ struct ScaffoldMHGKernel : GKernel
 
   TraceConsistencyChecker check;
   Scaffold * scaffold{nullptr};
-  OmegaDB * rhoDB{nullptr};
+  Particle * rho{nullptr};
+  Particle * xi{nullptr};
 };
 
 /* TODO ScaffoldParam */

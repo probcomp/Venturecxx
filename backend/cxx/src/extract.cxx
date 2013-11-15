@@ -1,7 +1,7 @@
 #include "node.h"
 #include "value.h"
 #include "trace.h"
-#include "omegadb.h"
+#include "particle.h"
 #include "sp.h"
 #include "spaux.h"
 #include "flush.h"

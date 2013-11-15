@@ -5,7 +5,7 @@
 #include "trace.h"
 #include "sps/csp.h"
 #include "scaffold.h"
-#include "omegadb.h"
+#include "particle.h"
 #include "srs.h"
 #include "flush.h"
 #include "lkernel.h"

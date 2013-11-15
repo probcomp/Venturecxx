@@ -14,7 +14,7 @@ using namespace std;
 struct VentureValue;
 struct Node;
 struct VentureEnvironment;
-struct OmegaDB;
+struct Particle;
 struct Scaffold;
 struct SP;
 struct VentureSP;
@@ -34,23 +34,19 @@ struct Trace
   Node * getRandomChoiceByIndex(uint32_t index) { return randomChoices[index]; }
   uint32_t numRandomChoices() { return randomChoices.size(); }
 
-  double regen(const vector<Node *> & border,
+  double generate(const vector<Node *> & border,
 	       Scaffold * scaffold,
-	       bool shouldRestore,
-	       OmegaDB * omegaDB,
-	       map<Node *,vector<double> > *gradients);
+		  Particle * xi);
 
-  pair<double, OmegaDB*> detach(const vector<Node *> & border,
-				Scaffold * scaffold);
+  void commit(Particle * omega);
 
+  pair<double, OmegaDB*> extract(const vector<Node *> & border,
+				 Scaffold * scaffold,
+				 Particle * rho);
 
-  pair<double, Node*> evalVentureFamily(size_t directiveID, VentureValue * expression,
-					map<Node *,vector<double> > *gradients);
+  pair<double, Node*> evalVentureFamily(size_t directiveID, 
+					VentureValue * expression);
 
-
-  /* Note: does not remove from ventureFamilies, so that destruction is easy.
-     If I learn c++, there is probably a way to use a safe iterator. */
-  double detachVentureFamily(Node * root, OmegaDB * omegaDB);
 
   double constrain(Node * node,bool reclaimValue);
 
@@ -65,119 +61,83 @@ struct Trace
   map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
 
 
-//  unordered_map<size_t,Node*> definiteFamilies;
+  /* Generate helpers */
 
-  /* Regen helpers */
-
-  double regenParents(Node * node,
+  double generateParents(Node * node,
 		      Scaffold * scaffold,
-		      bool shouldRestore,
-		      OmegaDB * omegaDB,
-		      map<Node *,vector<double> > *gradients);
+			 Particle * xi);
 
   double absorb(Node * node,
 		Scaffold * scaffold,
-		bool shouldRestore,
-		OmegaDB * omegaDB,
-		map<Node *,vector<double> > *gradients);
+		Particle * xi);
 
 
-  // Eh, could pass gradients but don't need to
-  double constrain(Node * node, VentureValue * value,bool reclaimValue);
+  double constrain(Node * node, VentureValue * value,bool reclaimValue,Particle * xi);
 
-  double regenInternal(Node * node,
+  double generateInternal(Node * node,
 		       Scaffold * scaffold,
-		       bool shouldRestore,
-		       OmegaDB * omegaDB,
-		       map<Node *,vector<double> > *gradients);
+			  Particle * xi);
 
-  void processMadeSP(Node * node,bool isAAA);
+  void processMadeSP(Node * node,bool isAAA,Particle * xi);
 
 
   double applyPSP(Node * node,
 		  Scaffold * scaffold,
-		  bool shouldRestore,
-		  OmegaDB * omegaDB,
-		  map<Node *,vector<double> > *gradients);
+		  Particle * xi);
 
   double evalRequests(Node * node,
 		      Scaffold * scaffold,
-		      bool shouldRestore,
-		      OmegaDB * omegaDB,
-		      map<Node *,vector<double> > *gradients);
-
+		      Particle * xi);
 
   pair<double,Node*> evalFamily(VentureValue * exp, 
 				VentureEnvironment * familyEnv,
 				Scaffold * scaffold,
-				OmegaDB * omegaDB,
-				bool isDefinite,
-				map<Node *,vector<double> > *gradients);
-
-
-  // Meh, don't need to pass gradients
-  double restoreSPFamily(VentureSP * vsp,
-			 size_t id,
-			 Node * root,
-			 Scaffold * scaffold,
-			 OmegaDB * omegaDB);
-
-  double restoreFamily(Node * root,
-		       Scaffold * scaffold,
-		       OmegaDB * omegaDB);
-
-
-  double restoreVentureFamily(Node * root);
-  
-
+				Particle * xi);
 
   double apply(Node * requestNode,
 	       Node * outputNode,
 	       Scaffold * scaffold,
-	       bool shouldRestore,
-	       OmegaDB * omegaDB,
-	       map<Node *,vector<double> > *gradients);
+	       Particle * xi);
 
-  /* detach helpers */
+  /* extract helpers */
 
 
-  double detachParents(Node * node,
-		       Scaffold * scaffold,
-		       OmegaDB * omegaDB);
+  double extractParents(Node * node,
+			Scaffold * scaffold,
+			Particle * rho);
 
 
   double unabsorb(Node * node,
 		  Scaffold * scaffold,
-		  OmegaDB * omegaDB);
+		  Particle * rho);
 
 
-  double detachInternal(Node * node,
-			Scaffold * scaffold,
-			OmegaDB * omegaDB);
+  double extractInternal(Node * node,
+			 Scaffold * scaffold,
+			 Particle * rho);
 
-  void teardownMadeSP(Node * node,bool isAAA,OmegaDB * omegaDB);
+  void teardownMadeSP(Node * node,bool isAAA,Particle * rho);
 
   double unapplyPSP(Node * node,
 		    Scaffold * scaffold,
-		    OmegaDB * omegaDB);
+		    Particle * rho);
 
   double unevalRequests(Node * node,
 			Scaffold * scaffold,
-			OmegaDB * omegaDB);
+			Particle * rho);
 
-  double detachSPFamily(VentureSP * vsp,
+  double extractSPFamily(VentureSP * vsp,
 			size_t id,
 			Scaffold * scaffold,
-			OmegaDB * omegaDB);
+			Particle * rho);
 
-  double detachFamily(Node * node,
-		      Scaffold * scaffold,
-		      OmegaDB * omegaDB);
-
+  double extractFamily(Node * node,
+		       Scaffold * scaffold,
+		       Particle * rho);
 
   double unapply(Node * node,
 		 Scaffold * scaffold,
-		 OmegaDB * omegaDB);
+		 Particle * rho);
 
   /* Misc */
   void addApplicationEdges(Node * operatorNode,const vector<Node *> & operandNodes, Node * requestNode, Node * outputNode);
@@ -188,9 +148,6 @@ struct Trace
   void registerConstrainedChoice(Node *node);
   void unregisterConstrainedChoice(Node *node);
 
-  /* (Arbitrary ergodic, for latents)  */
-  void registerAEKernel(VentureSP * vsp);
-  void unregisterAEKernel(VentureSP * vsp);
 
   /* Part of initialization. */
   void addPrimitives(const map<string,VentureValue *> & builtInValues,
@@ -210,7 +167,7 @@ struct Trace
   unordered_map<Node *, uint32_t> ccToIndex;
   vector<Node *> constrainedChoices;
 
-  // Bool is TRUE for detach
+  // Bool is TRUE for extract
   map<pair<string,bool>,uint32_t> callCounts;
 };
 
