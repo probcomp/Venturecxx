@@ -81,6 +81,7 @@ struct Node
   bool spOwnsValue{true};
 
   SPAux * madeSPAux{nullptr}; // owner
+  SPAux * spauxOverride{nullptr}; // owner
 
   bool isValid() { return magic == 653135; }
   uint32_t magic = 653135;

@@ -140,5 +140,9 @@ VentureSP * Node::vsp()
 }
 
 SP * Node::sp() { return vsp()->sp; }
-SPAux * Node::spaux() { return vsp()->makerNode->madeSPAux; }
+SPAux * Node::spaux() 
+{ 
+  if (spauxOverride) { return spauxOverride; }
+  return vsp()->makerNode->madeSPAux; 
+}
 

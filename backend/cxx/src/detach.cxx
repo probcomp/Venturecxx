@@ -77,7 +77,8 @@ double Trace::unabsorb(Node * node,
   double weight = 0;
 
   //clones if it hasn't been used yet this time slice
-  rho->maybeCloneSPAux(node->vsp()->makerNode); 
+  rho->maybeCloneSPAux(node);
+  rho->setSPAuxOverride(node); 
   node->sp()->remove(node->getValue(),node);
   weight += node->sp()->logDensity(node->getValue(),node);
   weight += detachParents(node,scaffold,rho);
@@ -215,21 +216,10 @@ double Trace::unapplyPSP(Node * node,
   { 
     pair<double, LatentDB *> p = node->sp()->detachAllLatents(node->spaux());
     weight += p.first;
-    assert(!rho->latentDBs.count(node->sp()));
-    rho->latentDBs.insert({node->sp(),p.second});
-  }
-
-
-
-  if (node->spOwnsValue) 
-  { 
-
-    rho->flushQueue.emplace(node->sp(),node->getValue(),node->nodeType); 
   }
 
   if (scaffold && scaffold->isResampling(node))
-  { rho->drgDB[node] = node->getValue();  node->clearValue(); }
-
+  { rho->drgDB[node] = node->getValue(); }
 
   return weight;
 }
@@ -247,13 +237,9 @@ double Trace::unevalRequests(Node * node,
 
   rho->maybeCloneSPAux(node->vsp()->makerNode);
 
-  if (!requests->hsrs.empty() && !rho->latentDBs.count(node->sp()))
-  { rho->latentDBs[node->sp()] = node->sp()->constructLatentDB(); }
-
   for (HSR * hsr : reverse(requests->hsrs))
   {
-    LatentDB * latentDB = rho->latentDBs[node->sp()];
-    weight += node->sp()->detachLatents(node->spaux(),hsr,latentDB);
+    weight += node->sp()->detachLatents(node->spaux(),hsr);
   }
 
   for (ESR esr : reverse(requests->esrs))
@@ -286,15 +272,7 @@ double Trace::detachSPFamily(VentureSP * vsp,
   Node * root = spaux->families[id];
   assert(root);
   spaux->families.erase(id);
-
-  if (!spaux->ownedValues.empty())
-  {
-    rho->spOwnedValues[make_pair(vsp->makerNode,id)] = spaux->ownedValues[id];
-  }
-
   spaux->ownedValues.erase(id);
-
-  rho->spFamilyDBs[{vsp->makerNode,id}] = root;
   
   double weight = detachFamily(root,scaffold,rho);
   return weight;

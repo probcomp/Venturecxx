@@ -38,10 +38,6 @@ double Trace::regen(const vector<Node *> & border,
   return weight;
 }
 
-/* Note: could be simplified by storing (or quickly computing) the direct parents. */
-/* OPT: Since we never have a requestNode in a DRG without its outputNode, we ought
-   to be able to only regen the operator and operands once. 
-   (This may yield a substantial performance improvement.) */
 double Trace::regenParents(Node * node,
 			   Scaffold * scaffold,
 			   Particle * omega,
@@ -81,8 +77,11 @@ double Trace::absorb(Node * node,
   assert(scaffold);
   double weight = 0;
   weight += regenParents(node,scaffold,omega,shouldRestore,gradients);
+  omega->maybeCloneSPAux(node);
+  omega->setSPAuxOverride(node);
   weight += node->sp()->logDensity(node->getValue(),node);
   node->sp()->incorporate(node->getValue(),node);
+  omega->clearSPAuxOverride(node);
   return weight;
 }
 
@@ -106,6 +105,10 @@ double Trace::constrain(Node * node,
        this in loadDefaultKernels instead. */
     assert(node->sp()->isRandomOutput);
     assert(node->sp()->canAbsorbOutput); // TODO temporary
+
+    omega->maybeCloneSPAux(node);
+    omega->setSPAuxOverride(node);
+
     node->sp()->removeOutput(node->getValue(),node);
 
     if (reclaimValue) { delete node->getValue(); }
@@ -117,6 +120,7 @@ double Trace::constrain(Node * node,
     node->isConstrained = true;
     node->spOwnsValue = false;
     node->sp()->incorporateOutput(value,node);
+    omega->clearSPAuxOverride(node);
     if (node->sp()->isRandomOutput) { 
       unregisterRandomChoice(node); 
       registerConstrainedChoice(node);
@@ -176,9 +180,13 @@ void Trace::processMadeSP(Node * node, bool isAAA, Particle * omega)
   vsp->makerNode = node;
   if (!isAAA)
   {
-    if (madeSP->hasAux()) { node->madeSPAux = madeSP->constructSPAux(); }
+    /* right now nothing sitting in the makerNode->madeSPAux slot.
+       we add that during commit.
+    */
+    if (madeSP->hasAux()) { omega->spauxs[vsp->makerNode] = madeSP->constructSPAux(); }
     if (madeSP->hasAEKernel) { registerAEKernel(vsp); }
   }
+  else {   omega->maybeCloneSPAux(node); }
 }
 
 
