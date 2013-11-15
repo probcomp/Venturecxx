@@ -119,7 +119,6 @@ double Trace::generateInternal(Node * node,
       weight += generateParents(node,scaffold,xi);
       if (node->nodeType == NodeType::LOOKUP)
       { 
-	// copies the value in, why not
 	xi->registerReference(node,node->lookedUpNode);
       }
       else /* Application node */
@@ -168,7 +167,7 @@ double Trace::applyPSP(Node * node,
   /* Almost nothing needs to be done if this node is a ESRReference.*/
   if (node->nodeType == NodeType::OUTPUT && sp->isESRReference)
   {
-    assert(!node->esrParents.empty());
+    assert(!xi->esrParents[node].empty());
     xi->registerReference(node,xi->esrParents[node][0]);
     return 0;
   }
@@ -221,8 +220,8 @@ double Trace::evalRequests(Node * node,
   double weight = 0;
 
   VentureRequest * requests = dynamic_cast<VentureRequest *>(xi->getValue(node));
-  assert(xi->getSPAux(node));
   SPAux * spaux = xi->getSPAux(node);
+  assert(spaux);
 
   /* First evaluate ESRs. */
   for (ESR esr : requests->esrs)

@@ -16,16 +16,15 @@ struct SPAux;
 
 struct Particle
 {
-
   void maybeCloneSPAux(Node * node);
   void maybeCloneMadeSPAux(Node * makerNode);
-  void registerSPAux(Node * node,SPAux * freshSPAux);
+  void registerSPAux(Node * makerNode,SPAux * freshSPAux);
 
   SPAux * getSPAux(Node * node);
   SPAux * getMadeSPAux(Node * makerNode);
 
-
   SP * sp(Node * node);
+
   bool isReference(Node * node);
   Node * getSourceNode(Node * node);
 
@@ -36,16 +35,13 @@ struct Particle
   void unregisterRandomChoice(Node * node); 
   void registerConstrainedChoice(Node * node);
 
-  
-
   Args makeArgs(Node * node);
 
   set<Node *> randomChoices;
   set<Node *> constrainedRandomChoices;
 
-  map<Node*,vector<Node*> > esrParents;
+  map<Node*,vector<Node*> > esrParents; // not actually necessary, but may be convenient
   map<Node *, Node *> sourceNodes;
-
 
   /* This is new for this particle, 
      and lookup is environment-lookup semantics. 
@@ -58,7 +54,10 @@ struct Particle
 
   queue<FlushEntry> flushQueue;
 
-  Particle * parentParticle;
+  /* TODO once we extend to multiple particles, we will need the following two attributes.
+     We are not yet doing the associated bookkeeping for either. */
+//  set<Node *> * allNodesOwned;
+//  Particle * parentParticle;
 };
 
 

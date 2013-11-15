@@ -90,9 +90,15 @@ double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
   { return unconstrain(node->sourceNode,giveOwnershipToSP); }
   else
   {
-    if (node->sp()->isRandomOutput) { 
+    /* Subtle and looks a little crazy. We modify the trace, but we leave the RHO particle in
+       a state so that we can copy things in to commit. */
+    if (node->sp()->isRandomOutput) 
+    { 
       unregisterConstrainedChoice(node);
       registerRandomChoice(node);
+
+      rho->unregisterRandomChoice(node);
+      rho->registerConstrainedChoice(node);
     }
     rho->maybeCloneSPAux(node);
     Args args(node);
@@ -122,6 +128,10 @@ double Trace::extractInternal(Node * node,
       if (node->isApplication())
       { 
 	weight += unapplyPSP(node,scaffold,rho); 
+      }
+      else
+      {
+	rho->registerReference(node,node->lookedUpNode);
       }
 
       weight += extractParents(node,scaffold,rho);
@@ -153,7 +163,6 @@ void Trace::teardownMadeSP(Node * node, bool isAAA,Particle * rho)
 
   if (!isAAA)
   {
-    if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
     if (madeSP->hasAux()) 
     { 
       delete node->madeSPAux; 
@@ -177,6 +186,7 @@ double Trace::unapplyPSP(Node * node,
 
   if (node->nodeType == NodeType::OUTPUT && node->sp()->isESRReference) 
   { 
+    rho->registerReference(node,node->esrParents[0]);
     node->sourceNode = nullptr;
     return 0; 
   }
@@ -186,7 +196,11 @@ double Trace::unapplyPSP(Node * node,
   assert(node->value->isValid());
 
   if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,rho); }
-  if (node->sp()->isRandom(node->nodeType)) { unregisterRandomChoice(node); }
+  if (node->sp()->isRandom(node->nodeType)) 
+  { 
+    unregisterRandomChoice(node); 
+    rho->registerRandomChoice(node);
+  }
   
   if (dynamic_cast<VentureSP*>(node->value))
   { teardownMadeSP(node,scaffold && scaffold->isAAA(node),rho); }
@@ -207,14 +221,13 @@ double Trace::unapplyPSP(Node * node,
     weight += p.first;
   }
 
-
   if (node->spOwnsValue) 
   { 
     rho->flushQueue.emplace(node->sp(),node->value,node->nodeType); 
   }
 
-  // otherwise we are just unevaling
-  if (rho) { rho->setValue(node,node->value); node->clearValue(); }
+  rho->setValue(node,node->value); 
+  node->clearValue();
 
   return weight;
 }
@@ -243,6 +256,8 @@ double Trace::unevalRequests(Node * node,
     assert(node->spaux()->isValid());
     assert(!node->outputNode->esrParents.empty());
     Node * esrParent = node->outputNode->removeLastESREdge();
+    rho->esrParents[node->outputNode].insert(0,spaux->families[esr.id]);
+
     assert(esrParent);
     assert(esrParent->isValid());
 

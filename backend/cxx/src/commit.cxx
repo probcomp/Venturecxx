@@ -18,4 +18,16 @@
 
 void Trace::commit(Particle * omega)
 {
-  
+  for (Node * rcNode : omega->randomChoices) { registerRandomChoice(rcNode); }
+  for (Node * crcNode : omega->constrainedRandomChoices) { registerConstrainedRandomChoice(crcNode); }
+  for (pair<Node *, vector<Node *> > p : omega->esrParentns)
+  {
+    assert(p.first->esrParents.empty());
+    p.first->esrParents = p.second;
+  }
+
+  for (pair<Node *, Node*> p : omega->sourceNodes) { p.first->sourceNode = p.second; }
+
+  for (pair<Node *, VentureValue *> p : omega->values) { p.first->setValue(p.second); }
+  for (pair<Node *, SPAux *> p : omega->spauxs) { p.first->madeSPAux = p.second; }
+}
