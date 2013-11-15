@@ -11,8 +11,21 @@ vector<VentureValue *> Args::makeVectorOfValues(const vector<Node*> & nodes)
 Args::Args(Node * node)
 {
   Args args;
+
   args.operands = makeVectorOfValues(node->operandNodes);
-  args.request = node->requestNode->getValue();
+  args.operandNodes = node->operandNodes;
+
+  if (node->requestNode)
+  {
+    args.request = node->requestNode->getValue();
+    args.requestNode = node->requestNode;
+  }
+
   args.esrs = makeVectorOfValues(node->esrParents);
+  args.esrNodes = node->esrParents;
+
   args.spaux = node->spaux();
+  args.familyEnv = node->familyEnv;
+  
+  return args;
 }

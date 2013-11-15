@@ -18,19 +18,16 @@
 
 double Trace::generate(const vector<Node *> & border,
 		       Scaffold * scaffold,
-		       Particle * xi,
-		       map<Node *,vector<double> > *gradients)
+		       Particle * xi)
 {
   assert(scaffold);
   double weight = 0;
   for (Node * node : border)
   {
-    if (scaffold->isAbsorbing(node)) { weight += absorb(node,scaffold,xi,gradients); }
-    else /* Terminal resampling */
+    if (scaffold->isAbsorbing(node)) { weight += absorb(node,scaffold,xi); }
+    else
     {
-      weight += generateInternal(node,scaffold,xi,gradients);
-      /* Will no longer need this because we keep the node along with the info
-	 that it does not own its value */
+      weight += generateInternal(node,scaffold,xi);
       if (node->isObservation()) { weight += constrain(node,node->observedValue,!shouldRestore,xi); }
     }
   }
@@ -39,27 +36,25 @@ double Trace::generate(const vector<Node *> & border,
 
 double Trace::generateParents(Node * node,
 			      Scaffold * scaffold,
-			      Particle * xi,
-			      map<Node *,vector<double> > *gradients)
+			      Particle * xi)
 {
   assert(scaffold);
-
   assert(node->nodeType != NodeType::VALUE);
 
   if (node->nodeType == NodeType::LOOKUP)
-  { return generateInternal(node->lookedUpNode,scaffold,xi,gradients); }
+  { return generateInternal(node->lookedUpNode,scaffold,xi); }
 
   double weight = 0;
 
-  weight += generateInternal(node->operatorNode,scaffold,xi,gradients);
+  weight += generateInternal(node->operatorNode,scaffold,xi);
   for (Node * operandNode : node->operandNodes)
-  { weight += generateInternal(operandNode,scaffold,xi,gradients); }
+  { weight += generateInternal(operandNode,scaffold,xi); }
   
   if (node->nodeType == NodeType::OUTPUT)
   {
-    weight += generateInternal(node->requestNode,scaffold,xi,gradients);
+    weight += generateInternal(node->requestNode,scaffold,xi);
     for (Node * esrParent : node->esrParents)
-    { weight += generateInternal(esrParent,scaffold,xi,gradients); }
+    { weight += generateInternal(esrParent,scaffold,xi); }
   }
    
   return weight;
@@ -68,55 +63,42 @@ double Trace::generateParents(Node * node,
 
 double Trace::absorb(Node * node,
 		     Scaffold * scaffold,
-		     Particle * xi,
-		     map<Node *,vector<double> > *gradients)
+		     Particle * xi)
 {
   assert(scaffold);
   double weight = 0;
-  weight += generateParents(node,scaffold,xi,gradients);
-
-  
-  weight += node->sp()->logDensity(node->getValue(),node);
-  node->sp()->incorporate(node->getValue(),node);
+  weight += generateParents(node,scaffold,xi);
+  Args args = xi->makeArgs(node);
+  weight += xi->sp(node)->logDensity(node->value,args);
+  xi->sp(node)->incorporate(node->value,args);
   return weight;
 }
 
 double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue, Particle * xi)
 {
-  assert(node->isActive);
   if (node->isReference()) { return constrain(node->sourceNode,value,reclaimValue,xi); }
   else
   {
-    /* New restriction, to ensure that we did not propose to an
-       observation node with a non-trivial kernel. TODO handle
-       this in loadDefaultKernels instead. */
-    assert(node->sp()->isRandomOutput);
-    assert(node->sp()->canAbsorbOutput); // TODO temporary
-    node->sp()->removeOutput(node->getValue(),node);
+    assert(xi->sp(node)->isRandomOutput);
+    assert(xi->sp(node)->canAbsorbOutput);
+    assert(!scaffold || !scaffold->isResampling(node->operatorNode)); // TODO temporary
 
-    if (reclaimValue) { delete node->getValue(); }
+    Args args = xi->makeArgs(node);
+    xi->sp(node)->removeOutput(xi->values[node],args);
+    if (xi) { assert(xi->values.count(node)); xi->values[node] = value; }
 
-    /* TODO need to set this on restore, based on the FlushQueue */
+    if (reclaimValue) { xi->sp(node)->flushValue(xi->values[node],node->nodeType); }
 
-    double weight = node->sp()->logDensityOutput(value,node);
-    node->setValue(value);
-    node->isConstrained = true;
-    node->spOwnsValue = false;
-    node->sp()->incorporateOutput(value,node);
-    if (node->sp()->isRandomOutput) { 
-      unregisterRandomChoice(node); 
-      registerConstrainedChoice(node);
-    }
+    double weight = xi->sp(node)->logDensityOutput(value,args);
+    xi->sp(node)->incorporateOutput(value,args);
     return weight;
   }
 }
 
 
-/* Note: no longer calls generate parents on REQUEST nodes. */
 double Trace::generateInternal(Node * node,
 			       Scaffold * scaffold,
-			       Particle * xi,
-			       map<Node *,vector<double> > *gradients)
+			       Particle * xi)
 {
   if (!scaffold) { return 0; }
   double weight = 0;
@@ -126,55 +108,49 @@ double Trace::generateInternal(Node * node,
     Scaffold::DRGNode &drgNode = scaffold->drg[node];
     if (drgNode.generateCount == 0)
     {
-      weight += generateParents(node,scaffold,xi,gradients);
+      weight += generateParents(node,scaffold,xi);
       if (node->nodeType == NodeType::LOOKUP)
-      { node->registerReference(node->lookedUpNode); }
+      { xi->values[node] = xi->values[node->lookedUpNode]->value; }
       else /* Application node */
-      { weight += applyPSP(node,scaffold,xi,gradients); }
-      node->isActive = true;
+      { weight += applyPSP(node,scaffold,xi); }
     }
     drgNode.generateCount++;
   }
   else if (scaffold->hasAAANodes)
   {
     if (node->isReference() && scaffold->isAAA(node->sourceNode))
-    { weight += generateInternal(node->sourceNode,scaffold,xi,gradients); }
+    { weight += generateInternal(node->sourceNode,scaffold,xi); }
   }
   return weight;
 }
 
-/* TODO should load makerNode as well */
 void Trace::processMadeSP(Node * node, bool isAAA, Particle * xi)
 {
   callCounts[{"processMadeSP",false}]++;
 
-  VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
+  VentureSP * vsp = dynamic_cast<VentureSP *>(xi->values[node]);
   if (vsp->makerNode) { return; }
 
   callCounts[{"processMadeSPfull",false}]++;
-
-
 
   assert(vsp);
 
   SP * madeSP = vsp->sp;
   vsp->makerNode = node;
-  if (!isAAA)
+  if (!isAAA && madeSP->hasAux())
   {
-    if (madeSP->hasAux()) { node->madeSPAux = madeSP->constructSPAux(); }
-    if (madeSP->hasAEKernel) { registerAEKernel(vsp); }
+    // Note we do not set this in the actual node, only in the particle */
+    xi->spauxs[node] = madeSP->constructSPAux();
   }
 }
 
 
 double Trace::applyPSP(Node * node,
 		       Scaffold * scaffold,
-		       Particle * xi,
-		       map<Node *,vector<double> > *gradients)
+		       Particle * xi)
 {
   callCounts[{"applyPSP",false}]++;
-  SP * sp = node->sp();
-
+  SP * sp = xi->sp(node);
   assert(node->isValid());
   assert(sp->isValid());
 
@@ -183,6 +159,10 @@ double Trace::applyPSP(Node * node,
   {
     assert(!node->esrParents.empty());
     node->registerReference(node->esrParents[0]);
+    
+
+
+    }
     return 0;
   }
   if (node->nodeType == NodeType::REQUEST && sp->isNullRequest())
@@ -197,138 +177,74 @@ double Trace::applyPSP(Node * node,
   double weight = 0;
 
   VentureValue * newValue;
+  Args args = xi->makeArgs(node);
 
-  if (shouldRestore)
-  {
-    assert(omegaDB);
-    if (scaffold && scaffold->isResampling(node)) { newValue = omegaDB->drgDB[node]; }
-    else 
-    { 
-      newValue = node->getValue(); 
-      if (!newValue)
-      {
-	assert(newValue);
-      }
-    }
-      
-    /* If the kernel was an HSR kernel, then we restore all latents.
-       TODO this could be made clearer. */
-    if (sp->makesHSRs && scaffold && scaffold->isAAA(node))
-    {
-      sp->restoreAllLatents(node->spaux(),omegaDB->latentDBs[node->sp()]);
-    }
-  }
-  else if (scaffold && scaffold->hasKernelFor(node))
+  if (scaffold->hasKernelFor(node))
   {
     VentureValue * oldValue = nullptr;
-    if (omegaDB && omegaDB->drgDB.count(node)) { oldValue = omegaDB->drgDB[node]; }
     LKernel * k = scaffold->lkernels[node];
 
-    /* Awkward. We are not letting the language know about the difference between
-       regular LKernels and HSRKernels. We pass a latentDB no matter what, nullptr
-       for the former. */
-    LatentDB * latentDB = nullptr;
-    if (omegaDB && omegaDB->latentDBs.count(node->sp())) { latentDB = omegaDB->latentDBs[node->sp()]; }
-
-    newValue = k->simulate(oldValue,node,latentDB,rng);
-    weight += k->weight(newValue,oldValue,node,latentDB);
+    newValue = k->simulate(oldValue,args,rng);
+    weight += k->weight(newValue,args);
     assert(isfinite(weight));
-
-    VariationalLKernel * vlk = dynamic_cast<VariationalLKernel*>(k);
-    if (vlk && gradients)
-    {
-      gradients->insert({node,vlk->gradientOfLogDensity(newValue,node)});
-    }
   }
   else
   {
-    newValue = sp->simulate(node,rng);
+    newValue = sp->simulate(args,rng);
   }
   assert(newValue);
   assert(newValue->isValid());
-  node->setValue(newValue);
+  xi->values[node] = newValue;
 
-  sp->incorporate(newValue,node);
+  sp->incorporate(newValue,args);
 
-  if (dynamic_cast<VentureSP *>(node->getValue()))
-  { processMadeSP(node,scaffold && scaffold->isAAA(node),xi); }
-  if (node->sp()->isRandom(node->nodeType)) { registerRandomChoice(node); }
-  if (node->nodeType == NodeType::REQUEST) { evalRequests(node,scaffold,xi,gradients); }
-
+  if (dynamic_cast<VentureSP *>(newValue))
+  { processMadeSP(node,scaffold->isAAA(node),xi); }
+  if (node->nodeType == NodeType::REQUEST) { evalRequests(node,scaffold,xi); }
 
   return weight;
 }
 
 double Trace::evalRequests(Node * node,
 			   Scaffold * scaffold,
-			   Particle * xi,
-			   map<Node *,vector<double> > *gradients)
+			   Particle * xi)
 {
   /* Null request does not bother malloc-ing */
-  if (!node->getValue()) { return 0; }
+  if (!xi->values[node]) { return 0; }
   double weight = 0;
 
-  VentureRequest * requests = dynamic_cast<VentureRequest *>(node->getValue());
+  VentureRequest * requests = dynamic_cast<VentureRequest *>(xi->values[node]);
+  SPAux * spaux = xi->getSPAuxForNode(node);
 
   /* First evaluate ESRs. */
   for (ESR esr : requests->esrs)
   {
-    assert(node->spaux()->isValid());
-    Node * esrParent;
-    if (!node->spaux()->families.count(esr.id))
+    assert(spaux->isValid());
+    if (!spaux->families.count(esr.id))
     {
-      if (shouldRestore && omegaDB && omegaDB->spFamilyDBs.count({node->vsp()->makerNode, esr.id}))
-      {
-	esrParent = omegaDB->spFamilyDBs[{node->vsp()->makerNode, esr.id}];
-	assert(esrParent);
-	restoreSPFamily(node->vsp(),esr.id,esrParent,scaffold,omegaDB);
-      }
-      else
-      {
-	pair<double,Node*> p = evalFamily(esr.exp,esr.env,scaffold,omegaDB,false,gradients);      
-	weight += p.first;
-	esrParent = p.second;
-      }
-      node->sp()->registerFamily(esr.id, esrParent, node->spaux());
+      pair<double,Node*> p = evalFamily(esr.exp,esr.env,scaffold,xi);      
+      weight += p.first;
+      spaux->families[esr.id] = p.second;
     }
-    else
-    {
-      esrParent = node->spaux()->families[esr.id];
-      assert(esrParent->isValid());
-
-      // right now only MSP's share
-      // (guard against hash collisions)
-      assert(dynamic_cast<MSP*>(node->sp()));
-      
+    else 
+    { 
+      assert(spaux->families[esr.id]->isValid());
+      assert(dynamic_cast<MSP*>(xi->sp(node))); 
     }
-    Node::addESREdge(esrParent,node->outputNode);
   }
 
-  /* Next evaluate HSRs. */
   for (HSR * hsr : requests->hsrs)
   {
-    LatentDB * latentDB = nullptr;
-    if (omegaDB && omegaDB->latentDBs.count(node->sp())) 
-    { latentDB = omegaDB->latentDBs[node->sp()]; }
-    assert(!shouldRestore || latentDB);
-    weight += node->sp()->simulateLatents(node->spaux(),hsr,shouldRestore,latentDB,rng);
+    weight += xi->sp(node)->simulateLatents(spaux,hsr,rng);
   }
 
   return weight;
 }
 
-pair<double, Node*> Trace::evalVentureFamily(size_t directiveID, 
-					     VentureValue * exp,		     
-					     map<Node *,vector<double> > *gradients)
-{
-  return evalFamily(exp,globalEnv,nullptr,nullptr,true,gradients);
-}
-
 pair<double,Node*> Trace::evalFamily(VentureValue * exp, 
 				     VentureEnvironment * env,
 				     Scaffold * scaffold,
-				     Particle * xi,
-				     map<Node *,vector<double> > *gradients)
+				     Particle * xi)
 {
   double weight = 0;
   Node * node = nullptr;
@@ -340,33 +256,32 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
  
     if (car && car->sym == "quote")
     {
-      node = new Node(NodeType::VALUE, nullptr);
-      node->setValue(listRef(list,1));
-      node->isActive = true;
+      node = new Node(NodeType::VALUE);
+      xi->values[node] = listRef(list,1);
     }
     /* Application */
     else
     {
-      Node * requestNode = new Node(NodeType::REQUEST,nullptr,env);
-      Node * outputNode = new Node(NodeType::OUTPUT,nullptr,env);
+      Node * requestNode = new Node(NodeType::REQUEST);
+      Node * outputNode = new Node(NodeType::OUTPUT);
       node = outputNode;
 
       Node * operatorNode;
       vector<Node *> operandNodes;
     
-      pair<double,Node*> p = evalFamily(listRef(list,0),env,scaffold,omegaDB,isDefinite,gradients);
+      pair<double,Node*> p = evalFamily(listRef(list,0),env,scaffold,xi);
       weight += p.first;
       operatorNode = p.second;
       
       for (uint8_t i = 1; i < listLength(list); ++i)
       {
-	pair<double,Node*> p = evalFamily(listRef(list,i),env,scaffold,omegaDB,isDefinite,gradients);
+	pair<double,Node*> p = evalFamily(listRef(list,i),env,scaffold,xi);
 	weight += p.first;
 	operandNodes.push_back(p.second);
       }
 
       addApplicationEdges(operatorNode,operandNodes,requestNode,outputNode);
-      weight += apply(requestNode,outputNode,scaffold,false,omegaDB,gradients);
+      weight += apply(requestNode,outputNode,scaffold,xi);
     }
   }
   /* Variable lookup */
@@ -374,19 +289,18 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
   {
     VentureSymbol * vsym = dynamic_cast<VentureSymbol*>(exp);
     Node * lookedUpNode = env->findSymbol(vsym);
-    assert(lookedUpNode);
-    weight += generateInternal(lookedUpNode,scaffold,false,omegaDB,gradients);
-
-    node = new Node(NodeType::LOOKUP,nullptr);
-    Node::addLookupEdge(lookedUpNode,node);
     node->registerReference(lookedUpNode);
-    node->isActive = true;
+    assert(lookedUpNode);
+    weight += generateInternal(lookedUpNode,scaffold,xi);
+    // Note: does not actually add the edges
+    node = new Node(NodeType::LOOKUP);
+    xi->values[node] = lookedUpNode->value;
   }
   /* Self-evaluating */
   else
   {
-    node = new Node(NodeType::VALUE,exp);
-    node->isActive = true;
+    node = new Node(NodeType::VALUE);
+    xi->values[node] = exp;
   }
   assert(node);
   return {weight,node};
@@ -395,30 +309,28 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
 double Trace::apply(Node * requestNode,
 		    Node * outputNode,
 		    Scaffold * scaffold,
-		    Particle * xi,
-		    map<Node *,vector<double> > *gradients)
+		    Particle * xi)
 {
   double weight = 0;
 
   /* Call the requester PSP. */
-  weight += applyPSP(requestNode,scaffold,xi,gradients);
+  weight += applyPSP(requestNode,scaffold,xi);
   
-  if (requestNode->getValue())
+  SPAux * spaux = xi->getSPAuxForNode(requestNode);
+
+  if (xi->values[requestNode])
   {
-    /* Generateerate any ESR nodes requested. */
-    VentureRequest * requests = dynamic_cast<VentureRequest *>(requestNode->getValue());
+    /* Generate any ESR nodes requested. */
+    VentureRequest * requests = dynamic_cast<VentureRequest *>(xi->values[requestNode]);
     for (ESR esr : requests->esrs)
     {
-      Node * esrParent = requestNode->sp()->findFamily(esr.id,requestNode->spaux());
+      Node * esrParent = spaux->families[esr.id];
       assert(esrParent);
-      weight += generateInternal(esrParent,scaffold,xi,gradients);
+      weight += generateInternal(esrParent,scaffold,xi);
     }
   }
 
-  requestNode->isActive = true;
-  
   /* Call the output PSP. */
-  weight += applyPSP(outputNode,scaffold,xi,gradients);
-  outputNode->isActive = true;
+  weight += applyPSP(outputNode,scaffold,xi);
   return weight;
 }

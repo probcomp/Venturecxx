@@ -77,8 +77,8 @@ double Trace::unabsorb(Node * node,
   double weight = 0;
   rho->maybeCloneSPAux(node);
   Args args(node);
-  node->sp()->remove(node->getValue(),args,node);
-  weight += node->sp()->logDensity(node->getValue(),args,node);
+  node->sp()->remove(node->value,args);
+  weight += node->sp()->logDensity(node->value,args);
   weight += extractParents(node,scaffold,rho);
   return weight;
 }
@@ -96,11 +96,11 @@ double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
     }
     rho->maybeCloneSPAux(node);
     Args args(node);
-    node->sp()->removeOutput(node->getValue(),args,node);
-    double logDensity = node->sp()->logDensityOutput(node->getValue(),args,node);
+    node->sp()->removeOutput(node->value,args);
+    double logDensity = node->sp()->logDensityOutput(node->value,args);
     node->isConstrained = false;
     node->spOwnsValue = giveOwnershipToSP;
-    node->sp()->incorporateOutput(node->getValue(),args,node);
+    node->sp()->incorporateOutput(node->value,args);
     return logDensity;
   }
 }
@@ -139,7 +139,7 @@ void Trace::teardownMadeSP(Node * node, bool isAAA,Particle * rho)
 {
   callCounts[{"processMadeSP",true}]++;
 
-  VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
+  VentureSP * vsp = dynamic_cast<VentureSP *>(node->value);
 
   if (vsp->makerNode != node) { return; }
 
@@ -183,12 +183,12 @@ double Trace::unapplyPSP(Node * node,
   if (node->nodeType == NodeType::REQUEST && node->sp()->isNullRequest()) { return 0; }
 
   
-  assert(node->getValue()->isValid());
+  assert(node->value->isValid());
 
   if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,rho); }
   if (node->sp()->isRandom(node->nodeType)) { unregisterRandomChoice(node); }
   
-  if (dynamic_cast<VentureSP*>(node->getValue()))
+  if (dynamic_cast<VentureSP*>(node->value))
   { teardownMadeSP(node,scaffold && scaffold->isAAA(node),rho); }
 
   SP * sp = node->sp();
@@ -196,10 +196,10 @@ double Trace::unapplyPSP(Node * node,
 
   rho->maybeCloneSPAux(node);
   Args args(node);
-  sp->remove(node->getValue(),args,node);
+  sp->remove(node->value,args);
 
   if (scaffold && scaffold->hasKernelFor(node))
-  { weight += scaffold->lkernels[node]->reverseWeight(node->getValue(),args,node,nullptr); }
+  { weight += scaffold->lkernels[node]->reverseWeight(node->value,args); }
 
   if (sp->makesHSRs && scaffold && scaffold->isAAA(node))
   { 
@@ -210,11 +210,11 @@ double Trace::unapplyPSP(Node * node,
 
   if (node->spOwnsValue) 
   { 
-    rho->flushQueue.emplace(node->sp(),node->getValue(),node->nodeType); 
+    rho->flushQueue.emplace(node->sp(),node->value,node->nodeType); 
   }
 
   // otherwise we are just unevaling
-  if (rho) { rho->values[node] = node->getValue(); node->clearValue(); }
+  if (rho) { rho->values[node] = node->value; node->clearValue(); }
 
   return weight;
 }
@@ -225,10 +225,10 @@ double Trace::unevalRequests(Node * node,
 			     Particle * rho)
 {
   assert(node->nodeType == NodeType::REQUEST);
-  if (!node->getValue()) { return 0; }
+  if (!node->value) { return 0; }
 
   double weight = 0;
-  VentureRequest * requests = dynamic_cast<VentureRequest *>(node->getValue());
+  VentureRequest * requests = dynamic_cast<VentureRequest *>(node->value);
 
   rho->maybeCloneSPAux(node);
 

@@ -19,9 +19,16 @@ struct Args
   vector<VentureValue *> makeVectorOfValues(const vector<Node*> & nodes)
 
   vector<VentureValue *> operands;
-  VentureValue * request;
+  vector<Node *> operandNodes;
+
+  VentureValue * request{nullptr};
+  Node * requestNode{nullptr};
+
   vector<VentureValue *> esrs;
-  SPAux * spaux;
+  vector<Node *> esrNodes;
+
+  SPAux * spaux{nullptr};
+  VentureEnvironment * familyEnv{nullptr};
 
 };
 
