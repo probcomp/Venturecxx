@@ -16,23 +16,22 @@
 #include <typeinfo>
 #include "sps/mem.h"
 
-double Trace::regen(const vector<Node *> & border,
-		    Scaffold * scaffold,
-		    bool shouldRestore,
-		    OmegaDB * omegaDB,
-		    map<Node *,vector<double> > *gradients)
+double Trace::generate(const vector<Node *> & border,
+		       Scaffold * scaffold,
+		       Particle * xi,
+		       map<Node *,vector<double> > *gradients)
 {
   assert(scaffold);
   double weight = 0;
   for (Node * node : border)
   {
-    if (scaffold->isAbsorbing(node)) { weight += absorb(node,scaffold,shouldRestore,omegaDB,gradients); }
+    if (scaffold->isAbsorbing(node)) { weight += absorb(node,scaffold,xi,gradients); }
     else /* Terminal resampling */
     {
-      weight += regenInternal(node,scaffold,shouldRestore,omegaDB,gradients);
+      weight += generateInternal(node,scaffold,xi,gradients);
       /* Will no longer need this because we keep the node along with the info
 	 that it does not own its value */
-      if (node->isObservation()) { weight += constrain(node,!shouldRestore); }
+      if (node->isObservation()) { weight += constrain(node,node->observedValue,!shouldRestore,xi); }
     }
   }
   return weight;
@@ -40,32 +39,31 @@ double Trace::regen(const vector<Node *> & border,
 
 /* Note: could be simplified by storing (or quickly computing) the direct parents. */
 /* OPT: Since we never have a requestNode in a DRG without its outputNode, we ought
-   to be able to only regen the operator and operands once. 
+   to be able to only generate the operator and operands once. 
    (This may yield a substantial performance improvement.) */
-double Trace::regenParents(Node * node,
-			   Scaffold * scaffold,
-			   bool shouldRestore,
-			   OmegaDB * omegaDB,
-			   map<Node *,vector<double> > *gradients)
+double Trace::generateParents(Node * node,
+			      Scaffold * scaffold,
+			      Particle * xi,
+			      map<Node *,vector<double> > *gradients)
 {
   assert(scaffold);
 
   assert(node->nodeType != NodeType::VALUE);
 
   if (node->nodeType == NodeType::LOOKUP)
-  { return regenInternal(node->lookedUpNode,scaffold,shouldRestore,omegaDB,gradients); }
+  { return generateInternal(node->lookedUpNode,scaffold,xi,gradients); }
 
   double weight = 0;
 
-  weight += regenInternal(node->operatorNode,scaffold,shouldRestore,omegaDB,gradients);
+  weight += generateInternal(node->operatorNode,scaffold,xi,gradients);
   for (Node * operandNode : node->operandNodes)
-  { weight += regenInternal(operandNode,scaffold,shouldRestore,omegaDB,gradients); }
+  { weight += generateInternal(operandNode,scaffold,xi,gradients); }
   
   if (node->nodeType == NodeType::OUTPUT)
   {
-    weight += regenInternal(node->requestNode,scaffold,shouldRestore,omegaDB,gradients);
+    weight += generateInternal(node->requestNode,scaffold,xi,gradients);
     for (Node * esrParent : node->esrParents)
-    { weight += regenInternal(esrParent,scaffold,shouldRestore,omegaDB,gradients); }
+    { weight += generateInternal(esrParent,scaffold,xi,gradients); }
   }
    
   return weight;
@@ -74,27 +72,21 @@ double Trace::regenParents(Node * node,
 
 double Trace::absorb(Node * node,
 		     Scaffold * scaffold,
-		     bool shouldRestore,
-		     OmegaDB * omegaDB,
+		     Particle * xi,
 		     map<Node *,vector<double> > *gradients)
 {
   assert(scaffold);
   double weight = 0;
-  weight += regenParents(node,scaffold,shouldRestore,omegaDB,gradients);
+  weight += generateParents(node,scaffold,xi,gradients);
   weight += node->sp()->logDensity(node->getValue(),node);
+  node->sp()->incorporate(node->getValue(),node);
   return weight;
 }
 
-double Trace::constrain(Node * node,bool reclaimValue)
-{
-  assert(node->isObservation());
-  return constrain(node,node->observedValue,reclaimValue);
-}
-
-double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
+double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue, Particle * xi)
 {
   assert(node->isActive);
-  if (node->isReference()) { return constrain(node->sourceNode,value,reclaimValue); }
+  if (node->isReference()) { return constrain(node->sourceNode,value,reclaimValue,xi); }
   else
   {
     /* New restriction, to ensure that we did not propose to an
@@ -122,12 +114,11 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
 }
 
 
-/* Note: no longer calls regen parents on REQUEST nodes. */
-double Trace::regenInternal(Node * node,
-			    Scaffold * scaffold,
-			    bool shouldRestore,
-			    OmegaDB * omegaDB,
-			    map<Node *,vector<double> > *gradients)
+/* Note: no longer calls generate parents on REQUEST nodes. */
+double Trace::generateInternal(Node * node,
+			       Scaffold * scaffold,
+			       Particle * xi,
+			       map<Node *,vector<double> > *gradients)
 {
   if (!scaffold) { return 0; }
   double weight = 0;
@@ -135,27 +126,27 @@ double Trace::regenInternal(Node * node,
   if (scaffold->isResampling(node))
   {
     Scaffold::DRGNode &drgNode = scaffold->drg[node];
-    if (drgNode.regenCount == 0)
+    if (drgNode.generateCount == 0)
     {
-      weight += regenParents(node,scaffold,shouldRestore,omegaDB,gradients);
+      weight += generateParents(node,scaffold,xi,gradients);
       if (node->nodeType == NodeType::LOOKUP)
       { node->registerReference(node->lookedUpNode); }
       else /* Application node */
-      { weight += applyPSP(node,scaffold,shouldRestore,omegaDB,gradients); }
+      { weight += applyPSP(node,scaffold,xi,gradients); }
       node->isActive = true;
     }
-    drgNode.regenCount++;
+    drgNode.generateCount++;
   }
   else if (scaffold->hasAAANodes)
   {
     if (node->isReference() && scaffold->isAAA(node->sourceNode))
-    { weight += regenInternal(node->sourceNode,scaffold,shouldRestore,omegaDB,gradients); }
+    { weight += generateInternal(node->sourceNode,scaffold,xi,gradients); }
   }
   return weight;
 }
 
 /* TODO should load makerNode as well */
-void Trace::processMadeSP(Node * node, bool isAAA)
+void Trace::processMadeSP(Node * node, bool isAAA, Particle * xi)
 {
   callCounts[{"processMadeSP",false}]++;
 
@@ -180,11 +171,9 @@ void Trace::processMadeSP(Node * node, bool isAAA)
 
 double Trace::applyPSP(Node * node,
 		       Scaffold * scaffold,
-		       bool shouldRestore,
-		       OmegaDB * omegaDB,
+		       Particle * xi,
 		       map<Node *,vector<double> > *gradients)
 {
-  DPRINT("applyPSP: ", node->address.toString());
   callCounts[{"applyPSP",false}]++;
   SP * sp = node->sp();
 
@@ -264,9 +253,9 @@ double Trace::applyPSP(Node * node,
   sp->incorporate(newValue,node);
 
   if (dynamic_cast<VentureSP *>(node->getValue()))
-  { processMadeSP(node,scaffold && scaffold->isAAA(node)); }
+  { processMadeSP(node,scaffold && scaffold->isAAA(node),xi); }
   if (node->sp()->isRandom(node->nodeType)) { registerRandomChoice(node); }
-  if (node->nodeType == NodeType::REQUEST) { evalRequests(node,scaffold,shouldRestore,omegaDB,gradients); }
+  if (node->nodeType == NodeType::REQUEST) { evalRequests(node,scaffold,xi,gradients); }
 
 
   return weight;
@@ -274,8 +263,7 @@ double Trace::applyPSP(Node * node,
 
 double Trace::evalRequests(Node * node,
 			   Scaffold * scaffold,
-			   bool shouldRestore,
-			   OmegaDB * omegaDB,
+			   Particle * xi,
 			   map<Node *,vector<double> > *gradients)
 {
   /* Null request does not bother malloc-ing */
@@ -338,61 +326,12 @@ pair<double, Node*> Trace::evalVentureFamily(size_t directiveID,
   return evalFamily(exp,globalEnv,nullptr,nullptr,true,gradients);
 }
 
-double Trace::restoreSPFamily(VentureSP * vsp,
-			      size_t id,
-			      Node * root,
-			      Scaffold * scaffold,
-			      OmegaDB * omegaDB)
-{
-  Node * makerNode = vsp->makerNode;
-  if (omegaDB->spOwnedValues.count(make_pair(makerNode,id)))
-  {
-    makerNode->madeSPAux->ownedValues[id] = omegaDB->spOwnedValues[make_pair(makerNode,id)];
-  }
-  restoreFamily(root,scaffold,omegaDB);
-}
-
-
-double Trace::restoreVentureFamily(Node * root)
-{
-  restoreFamily(root,nullptr,nullptr);
-  return 0;
-}
-
-double Trace::restoreFamily(Node * node,
-			    Scaffold * scaffold,
-			    OmegaDB * omegaDB)
-{
-  assert(node);
-  if (node->nodeType == NodeType::VALUE)
-  {
-    // do nothing
-  }
-  else if (node->nodeType == NodeType::LOOKUP)
-  {
-    regenInternal(node->lookedUpNode,scaffold,true,omegaDB,nullptr);
-    node->reconnectLookup();
-  }
-  else
-  {
-    assert(node->operatorNode);
-    restoreFamily(node->operatorNode,scaffold,omegaDB);
-    for (Node * operandNode : node->operandNodes)
-    { restoreFamily(operandNode,scaffold,omegaDB); }
-    apply(node->requestNode,node,scaffold,true,omegaDB,nullptr);
-  }
-  return 0;
-}
-
-
 pair<double,Node*> Trace::evalFamily(VentureValue * exp, 
 				     VentureEnvironment * env,
 				     Scaffold * scaffold,
-				     OmegaDB * omegaDB,
-				     bool isDefinite,
+				     Particle * xi,
 				     map<Node *,vector<double> > *gradients)
 {
-  DPRINT("eval: ", addr.toString());
   double weight = 0;
   Node * node = nullptr;
   assert(exp);
@@ -438,7 +377,7 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
     VentureSymbol * vsym = dynamic_cast<VentureSymbol*>(exp);
     Node * lookedUpNode = env->findSymbol(vsym);
     assert(lookedUpNode);
-    weight += regenInternal(lookedUpNode,scaffold,false,omegaDB,gradients);
+    weight += generateInternal(lookedUpNode,scaffold,false,omegaDB,gradients);
 
     node = new Node(NodeType::LOOKUP,nullptr);
     Node::addLookupEdge(lookedUpNode,node);
@@ -458,31 +397,30 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
 double Trace::apply(Node * requestNode,
 		    Node * outputNode,
 		    Scaffold * scaffold,
-		    bool shouldRestore,
-		    OmegaDB * omegaDB,
+		    Particle * xi,
 		    map<Node *,vector<double> > *gradients)
 {
   double weight = 0;
 
   /* Call the requester PSP. */
-  weight += applyPSP(requestNode,scaffold,shouldRestore,omegaDB,gradients);
+  weight += applyPSP(requestNode,scaffold,xi,gradients);
   
   if (requestNode->getValue())
   {
-    /* Regenerate any ESR nodes requested. */
+    /* Generateerate any ESR nodes requested. */
     VentureRequest * requests = dynamic_cast<VentureRequest *>(requestNode->getValue());
     for (ESR esr : requests->esrs)
     {
       Node * esrParent = requestNode->sp()->findFamily(esr.id,requestNode->spaux());
       assert(esrParent);
-      weight += regenInternal(esrParent,scaffold,shouldRestore,omegaDB,gradients);
+      weight += generateInternal(esrParent,scaffold,xi,gradients);
     }
   }
 
   requestNode->isActive = true;
   
   /* Call the output PSP. */
-  weight += applyPSP(outputNode,scaffold,shouldRestore,omegaDB,gradients);
+  weight += applyPSP(outputNode,scaffold,xi,gradients);
   outputNode->isActive = true;
   return weight;
 }
