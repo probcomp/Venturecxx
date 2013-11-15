@@ -2,16 +2,23 @@
 #define PARTICLE_H
 
 #include <map>
+#include <unordered_map>
+#include <vector>
+#include <queue>
+
+using namespace std;
+
+#include "flush.h"
 
 struct Node;
+struct VentureValue;
 struct SPAux;
 
 struct Particle
 {
 
   void maybeCloneSPAux(Node * node);
-  void setSPAuxOverride(Node * node);
-  void clearSPAuxOverride(Node * node);
+  void maybeCloneMadeSPAux(Node * makerNode);
 
   /* This is new for this particle, 
      and lookup is environment-lookup semantics. 
@@ -21,6 +28,8 @@ struct Particle
   /* { makerNode => newSPAux } 
      Cloned from parent particle */
   map<Node*,SPAux*> spauxs;
+
+  queue<FlushEntry> flushQueue;
 
   Particle * parentParticle;
 };
