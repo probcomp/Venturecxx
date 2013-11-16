@@ -70,9 +70,13 @@ VentureValue * getValue(Node * node)
   return node->getValue();
 }
  
-void setValue(Node * node, VentureValue * value)
+void setValue(Node * node, VentureValue * value, bool override)
 {
-  values[node] = value;
+  if (values.count(node))
+  {
+    if (override) { values[node] = value; }
+  }
+  else { values[node] = value; }
 }
 
 bool hasValueFor(Node * node)

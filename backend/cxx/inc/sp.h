@@ -5,10 +5,12 @@
 #include <memory>
 #include <gsl/gsl_rng.h>
 
+
 using namespace std;
 
 #include <boost/python/object.hpp>
 
+struct Args;
 struct SPAux;
 struct LKernel;
 struct VentureValue;
@@ -28,26 +30,26 @@ enum class ParameterScope;
 struct SP
 {
 /* Simulate */
-  VentureValue * simulate(Node * node, gsl_rng * rng) const;
-  virtual VentureValue * simulateRequest(Node * node, gsl_rng * rng) const { return nullptr; }
-  virtual VentureValue * simulateOutput(Node * node, gsl_rng * rng) const { return nullptr; }
+  VentureValue * simulate(const Args & args , gsl_rng * rng) const;
+  virtual VentureValue * simulateRequest(const Args & args, gsl_rng * rng) const { return nullptr; }
+  virtual VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const { return nullptr; }
   virtual double simulateOutputNumeric(const vector<double> & args, gsl_rng * rng) const { return 0; }
 
 /* LogDensity */
-  double logDensity(VentureValue * value, Node * node) const;
-  virtual double logDensityRequest(VentureValue * value, Node * node) const { return 0; }
-  virtual double logDensityOutput(VentureValue * value, Node * node) const { return 0; }
+  double logDensity(VentureValue * value, const Args & args) const;
+  virtual double logDensityRequest(VentureValue * value, const Args & args) const { return 0; }
+  virtual double logDensityOutput(VentureValue * value, const Args & args) const { return 0; }
   virtual double logDensityOutputNumeric(double output, const vector<double> & args) const { return 0; }
 
 /* Incorporate */
-  void incorporate(VentureValue * value, Node * node) const;
-  virtual void incorporateRequest(VentureValue * value, Node * node) const { }
-  virtual void incorporateOutput(VentureValue * value, Node * node) const { }
+  void incorporate(VentureValue * value, const Args & args) const;
+  virtual void incorporateRequest(VentureValue * value, const Args & args) const { }
+  virtual void incorporateOutput(VentureValue * value, const Args & args) const { }
 
 /* Remove */
-  void remove(VentureValue * value, Node * node) const;
-  virtual void removeRequest(VentureValue * value, Node * node) const {}
-  virtual void removeOutput(VentureValue * value, Node * node) const {}
+  void remove(VentureValue * value, const Args & args) const;
+  virtual void removeRequest(VentureValue * value, const Args & args) const {}
+  virtual void removeOutput(VentureValue * value, const Args & args) {}
 
 /* Flush: may be called on both requests and outputs. */
   void flushValue(VentureValue * value, NodeType nodeType) const;
@@ -67,25 +69,15 @@ struct SP
   virtual void destroySPAux(SPAux * spaux) const;
 
 
-/* LatentDBs */
-  virtual LatentDB * constructLatentDB() const { return nullptr; }
-  virtual void destroyLatentDB(LatentDB * latentDB) const { }
-
 /* LSRs */
   virtual double simulateLatents(SPAux * spaux,
 				 HSR * hsr,
-				 bool shouldRestore,
-				 LatentDB * latentDB,
 				 gsl_rng * rng) const { return 0; }
 
   virtual double detachLatents(SPAux * spaux,
-			       HSR * hsr,
-			       LatentDB * latentDB) const { return 0; }
-
-  virtual void restoreAllLatents(SPAux * spaux, LatentDB * latentDB) {};
+			       HSR * hsr) const { return 0; }
 
   virtual pair<double, LatentDB *> detachAllLatents(SPAux * spaux) const { return {0,nullptr}; }
-
 
   virtual double logDensityOfCounts(SPAux * spaux) const { assert(false); return 0; }
 
@@ -130,6 +122,7 @@ struct SP
 
   string name{"sp_no_name"};
 
+  // These will need to change to take args
   vector<VentureValue*> enumerate(Node * node) const;
   /* TODO for expediency, these only return the OTHER values, but we would want
      them to return all values and then we loop through and compare for equality

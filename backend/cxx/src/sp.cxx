@@ -12,7 +12,7 @@
 /* All of these methods simply check the node type, and dispatch
    to REQUEST or OUTPUT as appropriate. */
 
-VentureValue * SP::simulate(Node * node, gsl_rng * rng) const
+VentureValue * SP::simulate(const Args & args, gsl_rng * rng) const
 {
   if (node->nodeType == NodeType::REQUEST)
   { return this->simulateRequest(node,rng); }
@@ -23,7 +23,7 @@ VentureValue * SP::simulate(Node * node, gsl_rng * rng) const
   }
 }
 
-double SP::logDensity(VentureValue * value, Node * node) const
+double SP::logDensity(VentureValue * value, const Args & args) const
 {
   if (node->nodeType == NodeType::REQUEST)
   { return this->logDensityRequest(value,node); }
@@ -34,7 +34,7 @@ double SP::logDensity(VentureValue * value, Node * node) const
   }
 }
 
-void SP::incorporate(VentureValue * value, Node * node) const
+void SP::incorporate(VentureValue * value, const Args & args) const
 {
   if (node->nodeType == NodeType::REQUEST)
   { return this->incorporateRequest(value,node); }
@@ -46,7 +46,7 @@ void SP::incorporate(VentureValue * value, Node * node) const
 }
 
 
-void SP::remove(VentureValue * value, Node * node) const
+void SP::remove(VentureValue * value, const Args & args) const
 {
   if (node->nodeType == NodeType::REQUEST)
   { return this->removeRequest(value,node); }

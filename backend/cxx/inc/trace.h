@@ -40,7 +40,7 @@ struct Trace
 
   void commit(Particle * omega);
 
-  pair<double, OmegaDB*> extract(const vector<Node *> & border,
+  double extract(const vector<Node *> & border,
 				 Scaffold * scaffold,
 				 Particle * rho);
 
@@ -48,9 +48,9 @@ struct Trace
 					VentureValue * expression);
 
 
-  double constrain(Node * node,bool reclaimValue);
+  double constrain(Node * node,bool reclaimValue,Particle * xi);
 
-  double unconstrain(Node * node,bool giveOwnershipToSP);
+  double unconstrain(Node * node,bool giveOwnershipToSP,Particle * rho);
   
   Scaffold constructScaffold(vector<Node *> principalNodes,
 			     unsigned int depth,
@@ -79,6 +79,8 @@ struct Trace
 			  Particle * xi);
 
   void processMadeSP(Node * node,bool isAAA,Particle * xi);
+
+  void processMadeSP(Node * node);
 
 
   double applyPSP(Node * node,

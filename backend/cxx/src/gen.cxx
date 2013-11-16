@@ -2,6 +2,7 @@
 #include "value.h"
 #include "env.h"
 #include "sp.h"
+#include "args.h"
 #include "trace.h"
 #include "particle.h"
 #include "scaffold.h"
@@ -71,8 +72,8 @@ double Trace::absorb(Node * node,
   weight += generateParents(node,scaffold,xi);
   xi->maybeCloneSPAux(node);
   Args args = xi->makeArgs(node);
-  weight += xi->sp(node)->logDensity(node->value,args);
-  xi->sp(node)->incorporate(node->value,args);
+  weight += xi->sp(node)->logDensity(node->getValue(),args);
+  xi->sp(node)->incorporate(node->getValue(),args);
   return weight;
 }
 
@@ -100,7 +101,7 @@ double Trace::constrain(Node * node, VentureValue * value, Particle * xi)
       xi->registerConstrainedChoice(node);
     }
 
-    xi->setValue(node,value);
+    xi->setValue(node,value,true);
 
     return weight;
   }
@@ -155,6 +156,22 @@ void Trace::processMadeSP(Node * node, bool isAAA, Particle * xi)
   }
 }
 
+void Trace::processMadeSP(Node * node)
+{
+  callCounts[{"processMadeSP",false}]++;
+  VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
+  callCounts[{"processMadeSPfull",false}]++;
+
+  assert(vsp);
+
+  SP * madeSP = vsp->sp;
+  vsp->makerNode = node;
+  if (madeSP->hasAux())
+  {
+    node->madeSPAux = madeSP->constructSPAux();
+  }
+}
+
 
 double Trace::applyPSP(Node * node,
 		       Scaffold * scaffold,
@@ -202,7 +219,7 @@ double Trace::applyPSP(Node * node,
   assert(newValue);
   assert(newValue->isValid());
 
-  xi->setValue(node,newValue);
+  xi->setValue(node,newValue,true);
   sp->incorporate(newValue,args);
 
   if (dynamic_cast<VentureSP *>(newValue)) { processMadeSP(node,scaffold->isAAA(node),xi); }
@@ -276,7 +293,7 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
     if (car && car->sym == "quote")
     {
       node = new Node(NodeType::VALUE);
-      xi->setValue(node,listRef(list,1));
+      xi->setValue(node,listRef(list,1),true);
     }
     /* Application */
     else
@@ -318,7 +335,7 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
   else
   {
     node = new Node(NodeType::VALUE);
-    xi->setValue(node, exp);
+    xi->setValue(node, exp,true);
   }
   assert(node);
   return {weight,node};

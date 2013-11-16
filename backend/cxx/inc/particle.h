@@ -29,7 +29,7 @@ struct Particle
   Node * getSourceNode(Node * node);
 
   VentureValue * getValue(Node * node);
-  void setValue(Node * node, VentureValue * value);
+  void setValue(Node * node, VentureValue * value, bool override);
   bool hasValueFor(Node * node);
 
   void unregisterRandomChoice(Node * node); 

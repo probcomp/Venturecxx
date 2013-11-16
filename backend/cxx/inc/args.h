@@ -10,13 +10,11 @@ struct SPAux;
 struct VentureEnvironment;
 
 
-
-
 struct Args
 {
   Args(Node * node);
 
-  vector<VentureValue *> makeVectorOfValues(const vector<Node*> & nodes)
+  vector<VentureValue *> makeVectorOfValues(const vector<Node*> & nodes);
 
   vector<VentureValue *> operands;
   vector<Node *> operandNodes;

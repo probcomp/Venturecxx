@@ -9,7 +9,7 @@
 
 #include <boost/functional/hash.hpp>
 
-VentureValue * MakeCSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * MakeCSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   VentureList * ids = dynamic_cast<VentureList*>(node->operandNodes[0]->getValue());
   VentureValue * body = dynamic_cast<VentureValue*>(node->operandNodes[1]->getValue());
@@ -19,7 +19,7 @@ VentureValue * MakeCSP::simulateOutput(Node * node, gsl_rng * rng) const
 }
 
 
-VentureValue * CSP::simulateRequest(Node * node, gsl_rng * rng) const
+VentureValue * CSP::simulateRequest(const Args & args, gsl_rng * rng) const
 {
   /* TODO awkward, maybe buggy */
   size_t id = reinterpret_cast<size_t>(node);
