@@ -8,7 +8,6 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-
 VentureValue * MakeUCSymDirMultSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   VentureNumber * alpha = dynamic_cast<VentureNumber *>(args.operands[0]);
@@ -55,13 +54,13 @@ double MakeUCSymDirMultSP::logDensityOutput(VentureValue * value, const Args & a
   return ld;
 }
 
-VentureValue * MakeUCSymDirMultAAAKernel::simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB, gsl_rng * rng)
+VentureValue * MakeUCSymDirMultAAAKernel::simulate(VentureValue * oldVal, const Args & args, gsl_rng * rng)
 {
 
   VentureNumber * alpha = dynamic_cast<VentureNumber *>(args.operands[0]);
   VentureNumber * n = dynamic_cast<VentureNumber *>(args.operands[1]);
 
-  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(appNode->madeSPAux);
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(args.madeSPAux);
 
   assert(alpha);
   assert(n);
@@ -84,7 +83,7 @@ VentureValue * MakeUCSymDirMultAAAKernel::simulate(VentureValue * oldVal, Node *
   return new VentureSP(new UCSymDirMultSP(theta,d));
 }
 
-double MakeUCSymDirMultAAAKernel::weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB)
+double MakeUCSymDirMultAAAKernel::weight(VentureValue * newVal, VentureValue * oldVal, const Args & args)
 {
   return 0;
 }

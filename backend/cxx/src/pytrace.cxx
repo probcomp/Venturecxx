@@ -5,6 +5,7 @@
 #include "flush.h"
 #include "env.h"
 #include "pytrace.h"
+#include "particle.h"
 #include "infer/gkernel.h"
 #include "infer/mh.h"
 #include "infer/gibbs.h"
@@ -114,7 +115,10 @@ void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
   assert(!dynamic_cast<VenturePair*>(val));
   assert(!dynamic_cast<VentureSymbol*>(val));
   node->observedValue = val;
-  trace->constrain(node,true);
+  Particle * rho = new Particle;
+  trace->constrain(node,val,rho);
+  trace->commit(rho);
+  delete rho;
 }
 
 double PyTrace::getGlobalLogScore()
@@ -139,8 +143,9 @@ uint32_t PyTrace::numRandomChoices()
 void PyTrace::unobserve(size_t directiveID)
 {
   Node * root = trace->ventureFamilies[directiveID].first;
-  trace->unconstrain(root,true);
-
+  Particle * rho = new Particle;
+  trace->unconstrain(root,true,rho);
+  delete rho;
 }
 
 void PyTrace::set_seed(size_t n) {

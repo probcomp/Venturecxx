@@ -23,7 +23,7 @@ VentureValue * MakeBetaBernoulliSP::simulateOutput(const Args & args, gsl_rng * 
 
 double BetaBernoulliSP::logDensityOfCounts(SPAux * generic_spaux) const
 {
-  BetaBernoulliSPAux * spaux = dynamic_cast<BetaBernoulliSPAux *>(generic_spaux);
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(generic_spaux);
   assert(spaux);
 
   auto N = boost::accumulate(spaux->counts, 0);
@@ -39,7 +39,7 @@ double BetaBernoulliSP::logDensityOfCounts(SPAux * generic_spaux) const
 
 VentureValue * BetaBernoulliSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  BetaBernoulliSPAux * spaux = dynamic_cast<BetaBernoulliSPAux *>(node->spaux());
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
 
   vector<double> xs;
@@ -55,7 +55,7 @@ VentureValue * BetaBernoulliSP::simulateOutput(const Args & args, gsl_rng * rng)
 
 double BetaBernoulliSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
-  BetaBernoulliSPAux * spaux = dynamic_cast<BetaBernoulliSPAux *>(node->spaux());
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
 
   VentureBool * vb = dynamic_cast<VentureBool*>(value);
@@ -73,7 +73,7 @@ double BetaBernoulliSP::logDensityOutput(VentureValue * value, const Args & args
 
 void BetaBernoulliSP::incorporateOutput(VentureValue * value, const Args & args) const
 {
-  BetaBernoulliSPAux * spaux = dynamic_cast<BetaBernoulliSPAux *>(node->spaux());
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
 
   VentureBool * vb = dynamic_cast<VentureBool*>(value);
@@ -85,7 +85,7 @@ void BetaBernoulliSP::incorporateOutput(VentureValue * value, const Args & args)
 
 void BetaBernoulliSP::removeOutput(VentureValue * value, const Args & args) const
 {
-  BetaBernoulliSPAux * spaux = dynamic_cast<BetaBernoulliSPAux *>(node->spaux());
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
 
   VentureBool * vb = dynamic_cast<VentureBool*>(value);
@@ -97,7 +97,7 @@ void BetaBernoulliSP::removeOutput(VentureValue * value, const Args & args) cons
 
 SPAux * BetaBernoulliSP::constructSPAux() const
 {
-  return new BetaBernoulliSPAux(alphaVector.size());
+  return new SymDirMultSPAux(alphaVector.size());
 }
 
 void BetaBernoulliSP::destroySPAux(SPAux *spaux) const

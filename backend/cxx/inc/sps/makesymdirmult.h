@@ -12,6 +12,8 @@ struct SymDirMultSPAux : SPAux
 {
   /* TODO confirm vector initializes doubles to 0 */
   SymDirMultSPAux(uint32_t n): counts(n,0) {}
+  SymDirMultSPAux * clone();
+
   // counts could be uints, but then we need to keep converting to add alpha
   vector<uint32_t> counts;
 };

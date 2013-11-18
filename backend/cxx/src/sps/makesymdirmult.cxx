@@ -7,6 +7,16 @@
 
 #include<boost/range/numeric.hpp>
 
+SymDirMultSPAux * SymDirMultSPAux::clone()
+{
+  SymDirMultSPAux * aux = new SymDirMultSPAux(counts.size());
+  aux->families = families;
+  aux->ownedValues = ownedValues;
+  aux->counts = counts;
+  return aux
+}
+
+
 VentureValue * MakeSymDirMultSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   VentureNumber * alpha = dynamic_cast<VentureNumber *>(args.operands[0]);
@@ -15,6 +25,8 @@ VentureValue * MakeSymDirMultSP::simulateOutput(const Args & args, gsl_rng * rng
   assert(n);
   return new VentureSP(new SymDirMultSP(alpha->x,static_cast<uint32_t>(n->x)));
 }
+
+
 
 double SymDirMultSP::logDensityOfCounts(SPAux * generic_spaux) const
 {

@@ -27,7 +27,7 @@ SPAux class will store several things, which Venture can only access through opa
 struct SPAux 
 {
   SPAux();
-
+  SPAux * clone();
   /* TODO Exposed simulation requests, Latent simulation requests */
   /* Want this to be unordered_map, but problem with hashing. */
 

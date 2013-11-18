@@ -38,13 +38,13 @@ double Trace::extract(const vector<Node *> & border,
       assert(scaffold->isResampling(node));
       if (node->isObservation()) 
       { 
-	weight += unconstrain(node,false);
+	weight += unconstrain(node,false,rho);
       }
       weight += extractInternal(node,scaffold,rho);
     }
   }
   
-  return make_pair(weight,rho);
+  return weight;
 }
 
 double Trace::extractParents(Node * node,
@@ -84,11 +84,11 @@ double Trace::unabsorb(Node * node,
   return weight;
 }
 
-double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
+double Trace::unconstrain(Node * node, bool giveOwnershipToSP,Particle * rho)
 {
   assert(node->isActive);
   if (node->isReference())
-  { return unconstrain(node->sourceNode,giveOwnershipToSP); }
+  { return unconstrain(node->sourceNode,giveOwnershipToSP,rho); }
   else
   {
     /* Subtle and looks a little crazy. We modify the trace, but we leave the RHO particle in
@@ -219,8 +219,7 @@ double Trace::unapplyPSP(Node * node,
 
   if (sp->makesHSRs && scaffold && scaffold->isAAA(node))
   { 
-    pair<double, LatentDB *> p = node->sp()->detachAllLatents(node->spaux());
-    weight += p.first;
+    weight += node->sp()->detachAllLatents(node->spaux());
   }
 
   if (node->spOwnsValue) 
@@ -258,7 +257,7 @@ double Trace::unevalRequests(Node * node,
     assert(node->spaux()->isValid());
     assert(!node->outputNode->esrParents.empty());
     Node * esrParent = node->outputNode->removeLastESREdge();
-    rho->esrParents[node->outputNode].insert(0,spaux->families[esr.id]);
+    rho->esrParents[node->outputNode].insert(rho->esrParents[node->outputNode].begin(),node->spaux()->families[esr.id]);
 
     assert(esrParent);
     assert(esrParent->isValid());

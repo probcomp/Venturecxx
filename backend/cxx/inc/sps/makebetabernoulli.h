@@ -6,12 +6,6 @@
 #include <vector>
 #include <string>
 
-struct BetaBernoulliSPAux : SPAux
-{
-  BetaBernoulliSPAux(uint32_t n): counts(n,0) {}
-  vector<uint32_t> counts;
-};
-
 struct MakeBetaBernoulliSP : SP
 {
   MakeBetaBernoulliSP()

@@ -1,6 +1,8 @@
 #include "particle.h"
 #include "node.h"
+#include "sp.h"
 #include "spaux.h"
+#include "value.h"
 
 void Particle::maybeCloneSPAux(Node * node)
 {
@@ -11,7 +13,7 @@ void Particle::maybeCloneSPAux(Node * node)
   }
 }
 
-void Particle::maybeCloneSPAux(Node * makerNode)
+void Particle::maybeCloneMadeSPAux(Node * makerNode)
 {
   if (makerNode->madeSPAux && !spauxs.count(makerNode))
   {
@@ -19,26 +21,26 @@ void Particle::maybeCloneSPAux(Node * makerNode)
   }
 }
 
-void registerSPAux(Node * makerNode,SPAux * freshSPAux)
+void Particle::registerSPAux(Node * makerNode,SPAux * freshSPAux)
 {
   assert(!spauxs.count(makerNode));
   spauxs[makerNode] = freshSPAux;
 }
 
-SPAux * getSPAux(Node * node)
+SPAux * Particle::getSPAux(Node * node)
 {
   if (!sp(node)->hasAux()) { return nullptr; }
   assert(spauxs.count(node->vsp()->makerNode));
   return spauxs[node->vsp()->makerNode];
 }
 
-SPAux * getMadeSPAux(Node * makerNode)
+SPAux * Particle::getMadeSPAux(Node * makerNode)
 {
   assert(spauxs.count(makerNode));
   return spauxs[makerNode];
 }
 
-SP * sp(Node * node)
+SP * Particle::sp(Node * node)
 {
   VentureValue * op = getValue(node->operatorNode);
   VentureSP * vsp = dynamic_cast<VentureSP*>(op);
@@ -46,12 +48,12 @@ SP * sp(Node * node)
   return vsp->sp;
 }
 
-bool isReference(Node * node)
+bool Particle::isReference(Node * node)
 {
   return sourceNodes.count(node);
 }
 
-Node * getSourceNode(Node * node)
+Node * Particle::getSourceNode(Node * node)
 {
   assert(sourceNodes.count(node));
   return sourceNodes[node];
@@ -63,14 +65,14 @@ Node * getSourceNode(Node * node)
    TODO URGENT: in order to handle multiple levels, this is the one place where we need
    to implement environment-lookup semantics. In order to only do so when actually necessary,
    we need to have a global collection of all nodes in ancestor maps.*/
-VentureValue * getValue(Node * node)
+VentureValue * Particle::getValue(Node * node)
 {
   if (isReference(node)) { return getValue(getSourceNode(node)); }
   if (values.count(node)) { return values[node]; }
   return node->getValue();
 }
  
-void setValue(Node * node, VentureValue * value, bool override)
+void Particle::setValue(Node * node, VentureValue * value, bool override)
 {
   if (values.count(node))
   {
@@ -79,23 +81,34 @@ void setValue(Node * node, VentureValue * value, bool override)
   else { values[node] = value; }
 }
 
-bool hasValueFor(Node * node)
+bool Particle::hasValueFor(Node * node)
 {
   return values.count(node);
 }
 
-void unregisterRandomChoice(Node * node)
+void Particle::unregisterRandomChoice(Node * node)
 {
   assert(randomChoices.count(node));
   randomChoices.erase(node);
 }
 
-void registerConstrainedChoice(Node * node)
+void Particle::registerConstrainedChoice(Node * node)
 {
   constrainedChoices.insert(node);
 }
 
-Args makeArgs(Node * node)
+void Particle::registerRandomChoice(Node * node)
+{
+  assert(randomChoices.count(node));
+  randomChoices.insert(node);
+}
+
+void Particle::unregisterConstrainedChoice(Node * node)
+{
+  constrainedChoices.erase(node);
+}
+
+Args Particle::makeArgs(Node * node)
 {
   Args args(node);
   for (Node * operandNode : node->operandNodes)

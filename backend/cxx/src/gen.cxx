@@ -90,7 +90,7 @@ double Trace::constrain(Node * node, VentureValue * value, Particle * xi)
     xi->sp(node)->removeOutput(xi->getValue(node),args);
     assert(xi->hasValueFor(node)); 
 
-    if (reclaimValue) { xi->sp(node)->flushValue(xi->getValue(node),node->nodeType); }
+    xi->sp(node)->flushValue(xi->getValue(node),node->nodeType);
 
     double weight = xi->sp(node)->logDensityOutput(value,args);
     xi->sp(node)->incorporateOutput(value,args);
@@ -209,7 +209,7 @@ double Trace::applyPSP(Node * node,
     LKernel * k = scaffold->lkernels[node];
 
     newValue = k->simulate(oldValue,args,rng);
-    weight += k->weight(newValue,args);
+    weight += k->weight(newValue,nullptr,args); // TODO delta kernels
     assert(isfinite(weight));
   }
   else
@@ -270,7 +270,7 @@ double Trace::evalRequests(Node * node,
 pair<double, Node*> Trace::evalVentureFamily(size_t directiveID, 
                                              VentureValue * exp)
 {
-  Particle v = new Particle;
+  Particle * v = new Particle;
   pair<double,Node *> p = evalFamily(exp,globalEnv,nullptr,v);
   commit(v);
   delete v;

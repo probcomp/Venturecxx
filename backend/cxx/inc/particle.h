@@ -2,6 +2,7 @@
 #define PARTICLE_H
 
 #include <map>
+#include <set>
 #include <unordered_map>
 #include <vector>
 #include <queue>
@@ -9,6 +10,7 @@
 using namespace std;
 
 #include "flush.h"
+#include "args.h"
 
 struct Node;
 struct VentureValue;
@@ -33,13 +35,16 @@ struct Particle
   void setValue(Node * node, VentureValue * value, bool override);
   bool hasValueFor(Node * node);
 
-  void unregisterRandomChoice(Node * node); 
+
   void registerConstrainedChoice(Node * node);
+  void registerRandomChoice(Node * node);
+  void unregisterRandomChoice(Node * node); 
+  void unregisterConstrainedChoice(Node * node); 
 
   Args makeArgs(Node * node);
 
   set<Node *> randomChoices;
-  set<Node *> constrainedRandomChoices;
+  set<Node *> constrainedChoices;
 
   map<Node*,vector<Node*> > esrParents; // not actually necessary, but may be convenient
   map<Node *, Node *> sourceNodes;

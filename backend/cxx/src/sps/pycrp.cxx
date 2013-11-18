@@ -9,6 +9,17 @@
 #include <gsl/gsl_sf_gamma.h>
 
 
+PitmanYorCRPSPAux * PitmanYorCRPSPAux::clone()
+{
+  PitmanYorCRPSPAux * aux = new PitmanYorCRPSPAux;
+  aux->families = families;
+  aux->ownedValues = ownedValues;
+  aux->nextIndex = nextIndex;
+  aux->numCustomers = numCustomers;
+  aux->tableCounts = tableCounts;
+  return aux;
+}
+
 VentureValue * MakePitmanYorCRPSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   VentureNumber * alpha = dynamic_cast<VentureNumber *>(args.operands[0]);

@@ -21,6 +21,7 @@ struct HMM_HSR : HSR
 
 struct LazyHMMSPAux : SPAux
 {
+  LazyHMMSPAux * clone() const override; // TODO implement
   /* Latents */
   vector<VectorXd> xs; 
   
@@ -46,7 +47,7 @@ struct MakeLazyHMMAAAKernel : LKernel
 {
   /* Generates a LazyHMMSP, and then proposes to all of the latents by 
      forwards-filtering/backwards-sampling. */
-  VentureValue * simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB, gsl_rng * rng) override;
+  VentureValue * simulate(VentureValue * oldVal, const Args & args, gsl_rng * rng) override;
 };
 
 

@@ -8,6 +8,7 @@
 
 struct PitmanYorCRPSPAux : SPAux
 {
+  PitmanYorCRPSPAux * clone();
   uint32_t nextIndex{0};
   uint32_t numCustomers{0};
   uint32_t numTables{0};

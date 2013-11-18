@@ -13,8 +13,8 @@
 
 struct MakeUCSymDirMultAAAKernel : LKernel
 {
-  VentureValue * simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB, gsl_rng * rng) override;
-  double weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB) override;
+  VentureValue * simulate(VentureValue * oldVal, const Args & args, gsl_rng * rng) override;
+  double weight(VentureValue * newVal, VentureValue * oldVal, const Args & args) override;
 
 };
 
