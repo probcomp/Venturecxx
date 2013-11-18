@@ -51,19 +51,10 @@ VentureValue * MSP::simulateRequest(const Args & args, gsl_rng * rng) const
   for (Node * operand : reverse(args.operands))
   {
     VentureValue * clone = operand->clone();
-
-
     VentureSymbol * quote = new VentureSymbol("quote");
-
-
     VentureNil * nil = new VentureNil;
-
-
     VenturePair * innerPair = new VenturePair(clone,nil);
-
-
     VentureValue * val = new VenturePair(quote,innerPair);
-
     node->spaux()->ownedValues[id].push_back(val);
     exp = new VenturePair(val,exp);
   }

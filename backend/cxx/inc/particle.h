@@ -46,12 +46,14 @@ struct Particle
 
   /* This is new for this particle, 
      and lookup is environment-lookup semantics. 
-     For RHO, this is the identity on D and A. */
+     For RHO, this is the identity on D and Brush. 
+     TODO only store values for D here, and store values for the
+     brush in the nodes themselves. */
   map<Node*,VentureValue*> values;
 
   /* { makerNode => newSPAux } 
      Cloned from parent particle */
-  map<Node*,SPAux*> spauxs;
+  map<Node*,SPAux*> spauxs; // the only thing being copied when cloning a particle
 
   queue<FlushEntry> flushQueue;
 

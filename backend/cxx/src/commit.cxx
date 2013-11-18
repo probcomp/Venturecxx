@@ -20,7 +20,7 @@ void Trace::commit(Particle * omega)
 {
   for (Node * rcNode : omega->randomChoices) { registerRandomChoice(rcNode); }
   for (Node * crcNode : omega->constrainedRandomChoices) { registerConstrainedRandomChoice(crcNode); }
-  for (pair<Node *, vector<Node *> > p : omega->esrParentns)
+  for (pair<Node *, vector<Node *> > p : omega->esrParents)
   {
     assert(p.first->esrParents.empty());
     p.first->esrParents = p.second;
