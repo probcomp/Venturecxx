@@ -23,6 +23,8 @@ Args::Args(Node * node)
   esrNodes = node->esrParents;
 
   spaux = node->spaux();
+  madeSPAux = node->madeSPAux;
+
   familyEnv = node->familyEnv;
   
 }

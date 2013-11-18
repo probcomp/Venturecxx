@@ -7,12 +7,12 @@
 
 #include<boost/range/numeric.hpp>
 
-VentureValue * MakeBetaBernoulliSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * MakeBetaBernoulliSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   vector<double> alphaVector;
-  for (Node * operandNode : node->operandNodes)
+  for (Node * operandNode : args.operands)
   {
-    VentureNumber * alpha_i = dynamic_cast<VentureNumber *>(operandNode->getValue());
+    VentureNumber * alpha_i = dynamic_cast<VentureNumber *>(operandNode);
     assert(alpha_i);
     alphaVector.push_back(alpha_i->x);
   }
@@ -37,7 +37,7 @@ double BetaBernoulliSP::logDensityOfCounts(SPAux * generic_spaux) const
   return x;
 }
 
-VentureValue * BetaBernoulliSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * BetaBernoulliSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   BetaBernoulliSPAux * spaux = dynamic_cast<BetaBernoulliSPAux *>(node->spaux());
   assert(spaux);
@@ -53,7 +53,7 @@ VentureValue * BetaBernoulliSP::simulateOutput(Node * node, gsl_rng * rng) const
   return new VentureBool(n == 1);
 }
 
-double BetaBernoulliSP::logDensityOutput(VentureValue * value, Node * node) const
+double BetaBernoulliSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
   BetaBernoulliSPAux * spaux = dynamic_cast<BetaBernoulliSPAux *>(node->spaux());
   assert(spaux);
@@ -71,7 +71,7 @@ double BetaBernoulliSP::logDensityOutput(VentureValue * value, Node * node) cons
   return log(xs[observedIndex]);
 }
 
-void BetaBernoulliSP::incorporateOutput(VentureValue * value, Node * node) const
+void BetaBernoulliSP::incorporateOutput(VentureValue * value, const Args & args) const
 {
   BetaBernoulliSPAux * spaux = dynamic_cast<BetaBernoulliSPAux *>(node->spaux());
   assert(spaux);
@@ -83,7 +83,7 @@ void BetaBernoulliSP::incorporateOutput(VentureValue * value, Node * node) const
   spaux->counts[observedIndex]++;
 }
 
-void BetaBernoulliSP::removeOutput(VentureValue * value, Node * node) const
+void BetaBernoulliSP::removeOutput(VentureValue * value, const Args & args) const
 {
   BetaBernoulliSPAux * spaux = dynamic_cast<BetaBernoulliSPAux *>(node->spaux());
   assert(spaux);

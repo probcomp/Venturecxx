@@ -8,35 +8,34 @@
 using boost::adaptors::reverse;
 
 
-VentureValue * PairSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * PairSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureValue * first = operands[0]->getValue();
-  VentureList * rest = dynamic_cast<VentureList *>(operands[1]->getValue());
+  VentureValue * first = args.operands[0];
+  VentureList * rest = dynamic_cast<VentureList *>(args.operands[1]);
   assert(rest);
   return new VenturePair(first,rest);
 }
 
-VentureValue * FirstSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * FirstSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  VenturePair * pair = dynamic_cast<VenturePair*>(node->operandNodes[0]->getValue());
+  VenturePair * pair = dynamic_cast<VenturePair*>(args.operands[0]);
   assert(pair);
   return pair->first;
 }
 
-VentureValue * RestSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * RestSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  VenturePair * pair = dynamic_cast<VenturePair*>(node->operandNodes[0]->getValue());
+  VenturePair * pair = dynamic_cast<VenturePair*>(args.operands[0]);
   assert(pair);
   return pair->rest;
 }
 
-VentureValue * ListSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * ListSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   VentureList * list = new VentureNil;
-  for (Node * operandNode : reverse(node->operandNodes))
+  for (Node * operandNode : reverse(args.operands))
   {
-    list = new VenturePair(operandNode->getValue(),list);
+    list = new VenturePair(operandNode,list);
   }
   return list;
 }
@@ -47,28 +46,28 @@ void ListSP::flushOutput(VentureValue * value) const
   listShallowDestroy(list);
 }
 
-VentureValue * IsPairSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * IsPairSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  return new VentureBool(dynamic_cast<VenturePair*>(node->operandNodes[0]->getValue()));
+  return new VentureBool(dynamic_cast<VenturePair*>(args.operands[0]));
 }
 
-VentureValue * ListRefSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * ListRefSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  VentureList * list = dynamic_cast<VentureList*>(node->operandNodes[0]->getValue());
-  VentureNumber * index = dynamic_cast<VentureNumber*>(node->operandNodes[1]->getValue());
+  VentureList * list = dynamic_cast<VentureList*>(args.operands[0]);
+  VentureNumber * index = dynamic_cast<VentureNumber*>(args.operands[1]);
   assert(list);
   assert(index);
   return listRef(list,index->getInt());
 }
 
 
-VentureValue * MapListSP::simulateRequest(Node * node, gsl_rng * rng) const
+VentureValue * MapListSP::simulateRequest(const Args & args, gsl_rng * rng) const
 {
-  Node * fNode = node->operandNodes[0];
-  assert(dynamic_cast<VentureSP*>(fNode->getValue()));
+  Node * fNode = args.operands[0];
+  assert(dynamic_cast<VentureSP*>(fNode));
 
   vector<ESR> esrs;
-  VentureList * list = dynamic_cast<VentureList*>(node->operandNodes[1]->getValue());
+  VentureList * list = dynamic_cast<VentureList*>(args.operands[1]);
   assert(list);
 
   VentureEnvironment * env = new VentureEnvironment;
@@ -126,12 +125,12 @@ void MapListSP::flushRequest(VentureValue * value) const
   delete value;
 }
 
-VentureValue * MapListSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * MapListSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   VentureList * list = new VentureNil;
   for (Node * esrParent : reverse(node->esrParents))
   {
-     list = new VenturePair(esrParent->getValue(),list);
+     list = new VenturePair(esrParent,list);
   }
   return list;
 }

@@ -6,22 +6,22 @@
 /* Deterministic Bool SPs. */
 struct BoolAndSP : SP
 { 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
 };
 
 struct BoolOrSP : SP
 { 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
 };
 
 struct BoolNotSP : SP
 { 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
 };
 
 struct BoolXorSP : SP
 { 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
 };
 
 #endif

@@ -59,11 +59,10 @@ struct MakeLazyHMMSP : SP
     }
 
   /* Generaters a LazyHMMSP */
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
 
   /* For the child. */
-  pair<double,LatentDB *> detachAllLatents(SPAux * spaux) const;
-  void restoreAllLatents(SPAux * spaux, LatentDB * latentDB);
+  double detachAllLatents(SPAux * spaux) const;
 
   LKernel * getAAAKernel() const override { return new MakeLazyHMMAAAKernel; }
 };
@@ -81,10 +80,10 @@ struct LazyHMMSP : SP
     }
 
   /* Simply applies O to appropriate latent and then samples from it.*/
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
-  double logDensityOutput(VentureValue * value, Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, const Args & args) const override;
 
-  VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateRequest(const Args & args, gsl_rng * rng) const override;
 
 
   /* SPAux */
@@ -92,26 +91,19 @@ struct LazyHMMSP : SP
   void destroySPAux(SPAux * spaux);
 
   /* Incorporate / Remove */
-  void incorporateOutput(VentureValue * value, Node * node) const override;
-  void removeOutput(VentureValue * value, Node * node) const override;
-
-  /* LatentDBs */
-  LatentDB * constructLatentDB() const override { return new LazyHMMLatentDBSome; }
-  void destroyLatentDB(LatentDB * latentDB) const override { delete latentDB; }
+  void incorporateOutput(VentureValue * value, const Args & args) const override;
+  void removeOutput(VentureValue * value, const Args & args) const override;
 
   /* (hmm n) will make the request "n", which may cause latents to be
      evaluated from the prior. */
   double simulateLatents(SPAux * spaux,
 				 HSR * hsr,
-				 bool shouldRestore,
-				 LatentDB * latentDB,
 				 gsl_rng * rng) const override;
 
   /* Some latents may be detached and put in the LatentDB if they are no
      longer required. */
   double detachLatents(SPAux * spaux,
-		       HSR * hsr,
-		       LatentDB * latentDB) const;
+		       HSR * hsr) const;
 
   
 

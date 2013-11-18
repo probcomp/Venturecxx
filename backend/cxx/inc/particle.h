@@ -25,6 +25,7 @@ struct Particle
 
   SP * sp(Node * node);
 
+  void registerReference(Node * node,Node * lookedUpNode);
   bool isReference(Node * node);
   Node * getSourceNode(Node * node);
 

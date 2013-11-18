@@ -7,12 +7,12 @@
 
 #include<boost/range/numeric.hpp>
 
-VentureValue * MakeDirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * MakeDirMultSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   vector<double> alphaVector;
-  for (Node * operandNode : node->operandNodes)
+  for (Node * operandNode : args.operands)
   {
-    VentureNumber * alpha_i = dynamic_cast<VentureNumber *>(operandNode->getValue());
+    VentureNumber * alpha_i = dynamic_cast<VentureNumber *>(operandNode);
     assert(alpha_i);
     alphaVector.push_back(alpha_i->x);
   }
@@ -36,7 +36,7 @@ double DirMultSP::logDensityOfCounts(SPAux * generic_spaux) const
   return x;
 }
 
-VentureValue * DirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * DirMultSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   DirMultSPAux * spaux = dynamic_cast<DirMultSPAux *>(node->spaux());
   assert(spaux);
@@ -50,7 +50,7 @@ VentureValue * DirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
   return new VentureAtom(sampleCategorical(xs,rng));
 }
 
-double DirMultSP::logDensityOutput(VentureValue * value, Node * node) const
+double DirMultSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
   DirMultSPAux * spaux = dynamic_cast<DirMultSPAux *>(node->spaux());
   assert(spaux);
@@ -68,7 +68,7 @@ double DirMultSP::logDensityOutput(VentureValue * value, Node * node) const
   return log(xs[observedIndex]);
 }
 
-void DirMultSP::incorporateOutput(VentureValue * value, Node * node) const
+void DirMultSP::incorporateOutput(VentureValue * value, const Args & args) const
 {
   DirMultSPAux * spaux = dynamic_cast<DirMultSPAux *>(node->spaux());
   assert(spaux);
@@ -79,7 +79,7 @@ void DirMultSP::incorporateOutput(VentureValue * value, Node * node) const
   spaux->counts[observedIndex]++;
 }
 
-void DirMultSP::removeOutput(VentureValue * value, Node * node) const
+void DirMultSP::removeOutput(VentureValue * value, const Args & args) const
 {
   DirMultSPAux * spaux = dynamic_cast<DirMultSPAux *>(node->spaux());
   assert(spaux);

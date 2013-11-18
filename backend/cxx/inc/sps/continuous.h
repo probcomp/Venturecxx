@@ -14,9 +14,9 @@ struct NormalSP : SP
       name = "normal";
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
   double simulateOutputNumeric(const vector<double> & args, gsl_rng * rng) const override;
-  double logDensityOutput(VentureValue * value, Node * node) const override;
+  double logDensityOutput(VentureValue * value, const Args & args) const override;
 
   double logDensityOutputNumeric(double output, const vector<double> & args) const override;
 
@@ -33,8 +33,8 @@ struct GammaSP : SP
       isRandomOutput = true;
       canAbsorbOutput = true;
     }
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
-  double logDensityOutput(VentureValue * value, Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, const Args & args) const override;
 };
 
 struct InvGammaSP : SP
@@ -44,8 +44,8 @@ struct InvGammaSP : SP
       isRandomOutput = true;
       canAbsorbOutput = true;
     }
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
-  double logDensityOutput(VentureValue * value, Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, const Args & args) const override;
 };
 
 struct UniformContinuousSP : SP
@@ -56,8 +56,8 @@ struct UniformContinuousSP : SP
       canAbsorbOutput = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
-  double logDensityOutput(VentureValue * value, Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, const Args & args) const override;
 };
 
 struct BetaSP : SP
@@ -70,9 +70,9 @@ struct BetaSP : SP
       name = "beta";
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
   double simulateOutputNumeric(const vector<double> & args, gsl_rng * rng) const override;
-  double logDensityOutput(VentureValue * value, Node * node) const override;
+  double logDensityOutput(VentureValue * value, const Args & args) const override;
 
   double logDensityOutputNumeric(double output, const vector<double> & args) const override;
 
@@ -89,8 +89,8 @@ struct StudentTSP : SP
       canAbsorbOutput = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
-  double logDensityOutput(VentureValue * value, Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, const Args & args) const override;
 };
 
 
@@ -102,8 +102,8 @@ struct ChiSquareSP : SP
       canAbsorbOutput = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
-  double logDensityOutput(VentureValue * value, Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, const Args & args) const override;
 };
 
 struct InverseChiSquareSP : SP
@@ -114,8 +114,8 @@ struct InverseChiSquareSP : SP
       canAbsorbOutput = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
-  double logDensityOutput(VentureValue * value, Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, const Args & args) const override;
 };
 
 

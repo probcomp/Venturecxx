@@ -16,7 +16,7 @@ struct BranchSP : SP
       isESRReference = true;
       canAbsorbRequest = false;
     }
-  VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateRequest(const Args & args, gsl_rng * rng) const override;
   void flushRequest(VentureValue * value) const override;
 
 };
@@ -24,7 +24,7 @@ struct BranchSP : SP
 struct BiplexSP : SP
 {
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
   void flushOutput(VentureValue * value) const override;
 
 };

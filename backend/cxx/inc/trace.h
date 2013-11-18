@@ -49,6 +49,7 @@ struct Trace
 
 
   double constrain(Node * node,bool reclaimValue,Particle * xi);
+  double constrain(Node * node,VentureValue * value, bool reclaimValue,Particle * xi);
 
   double unconstrain(Node * node,bool giveOwnershipToSP,Particle * rho);
   

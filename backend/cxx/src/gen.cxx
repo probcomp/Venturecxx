@@ -55,7 +55,7 @@ double Trace::generateParents(Node * node,
   {
     weight += generateInternal(node->requestNode,scaffold,xi);
     // ESR parents are owned by XI
-    for (Node * esrParent : xi->ersParents[node])
+    for (Node * esrParent : xi->esrParents[node])
     { weight += generateInternal(esrParent,scaffold,xi); }
   }
    

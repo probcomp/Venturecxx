@@ -49,7 +49,7 @@ struct SP
 /* Remove */
   void remove(VentureValue * value, const Args & args) const;
   virtual void removeRequest(VentureValue * value, const Args & args) const {}
-  virtual void removeOutput(VentureValue * value, const Args & args) {}
+  virtual void removeOutput(VentureValue * value, const Args & args) const {}
 
 /* Flush: may be called on both requests and outputs. */
   void flushValue(VentureValue * value, NodeType nodeType) const;
@@ -77,7 +77,7 @@ struct SP
   virtual double detachLatents(SPAux * spaux,
 			       HSR * hsr) const { return 0; }
 
-  virtual pair<double, LatentDB *> detachAllLatents(SPAux * spaux) const { return {0,nullptr}; }
+  virtual double detachAllLatents(SPAux * spaux) const { return 0; }
 
   virtual double logDensityOfCounts(SPAux * spaux) const { assert(false); return 0; }
 
@@ -123,12 +123,12 @@ struct SP
   string name{"sp_no_name"};
 
   // These will need to change to take args
-  vector<VentureValue*> enumerate(Node * node) const;
+  vector<VentureValue*> enumerate(const Args & args) const;
   /* TODO for expediency, these only return the OTHER values, but we would want
      them to return all values and then we loop through and compare for equality
      later in the pipeline. */
-  virtual vector<VentureValue*> enumerateOutput(Node * node) const;
-  virtual vector<VentureValue*> enumerateRequest(Node * node) const;
+  virtual vector<VentureValue*> enumerateOutput(const Args & args) const;
+  virtual vector<VentureValue*> enumerateRequest(const Args & args) const;
 
   Node * findFamily(size_t id, SPAux * spaux);
 

@@ -19,13 +19,13 @@ VectorXd normalizedVectorXd(VectorXd & v);
 
 /* AAA LKernel */
 
-VentureValue * MakeLazyHMMAAAKernel::simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB, gsl_rng * rng)
+VentureValue * MakeLazyHMMAAAKernel::simulate(VentureValue * oldVal, const Args & args, gsl_rng * rng)
 {
-  VectorXd p0 = vvToEigenVector(appNode->operandNodes[0]->getValue());
-  MatrixXd T =  vvToEigenMatrix(appNode->operandNodes[1]->getValue());
-  MatrixXd O =  vvToEigenMatrix(appNode->operandNodes[2]->getValue());
+  VectorXd p0 = vvToEigenVector(args.operands[0]);
+  MatrixXd T =  vvToEigenMatrix(args.operands[1]);
+  MatrixXd O =  vvToEigenMatrix(args.operands[2]);
 
-  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(appNode->madeSPAux);
+  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(args.madeSPAux);
 
   if (aux->os.empty()) { return new VentureSP(new LazyHMMSP(p0,T,O)); }
 
@@ -64,39 +64,31 @@ VentureValue * MakeLazyHMMAAAKernel::simulate(VentureValue * oldVal, Node * appN
 
 /* MakeLazyHMMSP */
 
-VentureValue * MakeLazyHMMSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * MakeLazyHMMSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   return 
-    new VentureSP(new LazyHMMSP(vvToEigenVector(node->operandNodes[0]->getValue()),
-				vvToEigenMatrix(node->operandNodes[1]->getValue()),
-				vvToEigenMatrix(node->operandNodes[2]->getValue())));
+    new VentureSP(new LazyHMMSP(vvToEigenVector(args.operands[0]),
+				vvToEigenMatrix(args.operands[1]),
+				vvToEigenMatrix(args.operands[2])));
 }
 
-pair<double,LatentDB *> MakeLazyHMMSP::detachAllLatents(SPAux * spaux) const
+double MakeLazyHMMSP::detachAllLatents(SPAux * spaux) const
 {
-  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(spaux);
-  LazyHMMLatentDBAll * latents = new LazyHMMLatentDBAll;
-  latents->xs.swap(aux->xs);
-  return {0,latents};
+  latents->xs.clear();
+  return 0;
 }
  
-void MakeLazyHMMSP::restoreAllLatents(SPAux * spaux, LatentDB * latentDB)
-{
-  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(spaux);
-  LazyHMMLatentDBAll * latents = new LazyHMMLatentDBAll;
-  latents->xs.swap(aux->xs);
-}
 
 /* LazyHMMSP */
 
 SPAux * LazyHMMSP::constructSPAux() const { return new LazyHMMSPAux; }
 void LazyHMMSP::destroySPAux(SPAux * spaux) { delete spaux; }
 
-void LazyHMMSP::incorporateOutput(VentureValue * value, Node * node) const
+void LazyHMMSP::incorporateOutput(VentureValue * value, const Args & args) const
 {
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(node->spaux());
   VentureAtom * vout = dynamic_cast<VentureAtom *>(value);
-  VentureNumber * vin = dynamic_cast<VentureNumber *>(node->operandNodes[0]->getValue());
+  VentureNumber * vin = dynamic_cast<VentureNumber *>(args.operands[0]);
 
   assert(aux);
   assert(vout);
@@ -108,11 +100,11 @@ void LazyHMMSP::incorporateOutput(VentureValue * value, Node * node) const
   aux->os[vin->getInt()].push_back(vout->n);
 }
 
-void LazyHMMSP::removeOutput(VentureValue * value, Node * node) const
+void LazyHMMSP::removeOutput(VentureValue * value, const Args & args) const
 {
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(node->spaux());
   VentureAtom * vout = dynamic_cast<VentureAtom *>(value);
-  VentureNumber * vin = dynamic_cast<VentureNumber *>(node->operandNodes[0]->getValue());
+  VentureNumber * vin = dynamic_cast<VentureNumber *>(args.operands[0]);
 
   assert(aux);
   assert(vout);
@@ -130,21 +122,12 @@ void LazyHMMSP::removeOutput(VentureValue * value, Node * node) const
 
 double LazyHMMSP::simulateLatents(SPAux * spaux,
 				  HSR * hsr,
-				  bool shouldRestore,
-				  LatentDB * latentDB,
 				  gsl_rng * rng) const
 {
   /* TODO CURRENT SPOT */
   /* if should restore, restore, otherwise do not assert latentDB */
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(spaux);
   HMM_HSR * request = dynamic_cast<HMM_HSR *>(hsr);
-  LazyHMMLatentDBSome * latents = nullptr;
-  if (latentDB)
-  { 
-    latents = dynamic_cast<LazyHMMLatentDBSome *>(latentDB);
-    assert(latents);
-  }
-  
   assert(aux);
   assert(request);
 
@@ -152,8 +135,7 @@ double LazyHMMSP::simulateLatents(SPAux * spaux,
      we have not already done so. */
   if (aux->xs.empty()) 
   { 
-    if (shouldRestore) { aux->xs.push_back(latents->xs[0]); }
-    else { aux->xs.push_back(sampleVectorXd(p0,rng)); }
+    aux->xs.push_back(sampleVectorXd(p0,rng));
   }
 
   if (aux->xs.size() <= request->index)
@@ -161,8 +143,7 @@ double LazyHMMSP::simulateLatents(SPAux * spaux,
     for (size_t i = aux->xs.size(); i <= request->index; ++i)
     {
       VectorXd sample;
-      if (shouldRestore) { sample = latents->xs[i]; }
-      else { sample = sampleVectorXd(T * aux->xs.back(),rng); }
+      sample = sampleVectorXd(T * aux->xs.back(),rng);
       aux->xs.push_back(sample);
     }
   }
@@ -171,24 +152,19 @@ double LazyHMMSP::simulateLatents(SPAux * spaux,
 }
 
 double LazyHMMSP::detachLatents(SPAux * spaux,
-				HSR * hsr,
-				LatentDB * latentDB) const
+				HSR * hsr) const
 {
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(spaux);
   HMM_HSR * request = dynamic_cast<HMM_HSR *>(hsr);
-  LazyHMMLatentDBSome * latents = dynamic_cast<LazyHMMLatentDBSome *>(latentDB);
 
   assert(aux);
   assert(request);
-  assert(latents);
 
   if (aux->xs.size() == request->index + 1 && 
       !aux->os.count(request->index))
   {
     if (aux->os.empty()) 
     { 
-      for (size_t i = 0; i < aux->xs.size(); ++i)
-      { latents->xs[i] = aux->xs[i]; }
       aux->xs.clear();
     }
     else
@@ -196,7 +172,6 @@ double LazyHMMSP::detachLatents(SPAux * spaux,
       uint32_t maxObservation = (*(max_element(aux->os.begin(),aux->os.end()))).first;
       for (size_t i = aux->xs.size()-1; i > maxObservation; --i)
       {
-	latents->xs[i] = aux->xs.back();
 	aux->xs.pop_back();
       }
       assert(aux->xs.size() == maxObservation + 1);
@@ -206,10 +181,10 @@ double LazyHMMSP::detachLatents(SPAux * spaux,
 }
 
 
-VentureValue * LazyHMMSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * LazyHMMSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(node->spaux());
-  VentureNumber * vint = dynamic_cast<VentureNumber*>(node->operandNodes[0]->getValue());
+  VentureNumber * vint = dynamic_cast<VentureNumber*>(args.operands[0]);
   assert(aux);
   assert(vint);
 
@@ -217,10 +192,10 @@ VentureValue * LazyHMMSP::simulateOutput(Node * node, gsl_rng * rng) const
   return new VentureAtom(sampleVector(O * aux->xs[vint->getInt()],rng));
 }
 
-double LazyHMMSP::logDensityOutput(VentureValue * value, Node * node) const
+double LazyHMMSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
   VentureAtom * vout = dynamic_cast<VentureAtom*>(value);
-  VentureNumber * vin = dynamic_cast<VentureNumber*>(node->operandNodes[0]->getValue());
+  VentureNumber * vin = dynamic_cast<VentureNumber*>(args.operands[0]);
   assert(vout);
   assert(vin);
 
@@ -231,9 +206,9 @@ double LazyHMMSP::logDensityOutput(VentureValue * value, Node * node) const
   return log(dist[vout->n]);
 }
 
-VentureValue * LazyHMMSP::simulateRequest(Node * node, gsl_rng * rng) const
+VentureValue * LazyHMMSP::simulateRequest(const Args & args, gsl_rng * rng) const
 {
-  VentureNumber * vin = dynamic_cast<VentureNumber*>(node->operandNodes[0]->getValue());
+  VentureNumber * vin = dynamic_cast<VentureNumber*>(args.operands[0]);
   assert(vin);
   vector<HSR *> hsrs;
   return new VentureRequest({new HMM_HSR(vin->getInt())});

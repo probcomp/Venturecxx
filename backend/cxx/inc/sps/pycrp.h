@@ -21,7 +21,7 @@ struct MakePitmanYorCRPSP : SP
       childrenCanAAA = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
 
 };
 
@@ -41,11 +41,11 @@ struct PitmanYorCRPSP : SP
   SPAux * constructSPAux() const override { return new PitmanYorCRPSPAux; }
   void destroySPAux(SPAux *spaux) const { delete spaux; }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
-  double logDensityOutput(VentureValue * value, Node * node) const override; 
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
+  double logDensityOutput(VentureValue * value, const Args & args) const override; 
 
-  void incorporateOutput(VentureValue * value, Node * node) const override; 
-  void removeOutput(VentureValue * value, Node * node) const override; 
+  void incorporateOutput(VentureValue * value, const Args & args) const override; 
+  void removeOutput(VentureValue * value, const Args & args) const override; 
 
   double logDensityOfCounts(SPAux * spaux) const;
 

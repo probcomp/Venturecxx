@@ -5,39 +5,35 @@
 #include <cassert>
 #include <vector>
 
-VentureValue * BoolAndSP::simulateOutput(Node * node, gsl_rng * rng)  const
+VentureValue * BoolAndSP::simulateOutput(const Args & args, gsl_rng * rng)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureBool * b1 = dynamic_cast<VentureBool *>(operands[0]->getValue());
-  VentureBool * b2 = dynamic_cast<VentureBool *>(operands[1]->getValue());
+  VentureBool * b1 = dynamic_cast<VentureBool *>(args.operands[0]);
+  VentureBool * b2 = dynamic_cast<VentureBool *>(args.operands[1]);
   assert(b1);
   assert(b2);
   return new VentureBool(b1->pred && b2->pred);
 }
 
-VentureValue * BoolOrSP::simulateOutput(Node * node, gsl_rng * rng)  const
+VentureValue * BoolOrSP::simulateOutput(const Args & args, gsl_rng * rng)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureBool * b1 = dynamic_cast<VentureBool *>(operands[0]->getValue());
-  VentureBool * b2 = dynamic_cast<VentureBool *>(operands[1]->getValue());
+  VentureBool * b1 = dynamic_cast<VentureBool *>(args.operands[0]);
+  VentureBool * b2 = dynamic_cast<VentureBool *>(args.operands[1]);
   assert(b1);
   assert(b2);
   return new VentureBool(b1->pred || b2->pred);
 }
 
-VentureValue * BoolNotSP::simulateOutput(Node * node, gsl_rng * rng)  const
+VentureValue * BoolNotSP::simulateOutput(const Args & args, gsl_rng * rng)  const
 {
-    vector<Node *> & operands = node->operandNodes;
-    VentureBool * b = dynamic_cast<VentureBool *>(operands[0]->getValue());
+    VentureBool * b = dynamic_cast<VentureBool *>(args.operands[0]);
     assert(b);
     return new VentureBool(!b->pred);
 }
 
-VentureValue * BoolXorSP::simulateOutput(Node * node, gsl_rng * rng)  const
+VentureValue * BoolXorSP::simulateOutput(const Args & args, gsl_rng * rng)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureBool * b1 = dynamic_cast<VentureBool *>(operands[0]->getValue());
-  VentureBool * b2 = dynamic_cast<VentureBool *>(operands[1]->getValue());
+  VentureBool * b1 = dynamic_cast<VentureBool *>(args.operands[0]);
+  VentureBool * b2 = dynamic_cast<VentureBool *>(args.operands[1]);
   assert(b1);
   assert(b2);
   return new VentureBool((b1->pred && !b2->pred) || (b2->pred && !b1->pred));

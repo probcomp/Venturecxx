@@ -7,11 +7,10 @@
 
 #include<boost/range/numeric.hpp>
 
-VentureValue * MakeSymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * MakeSymDirMultSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * n = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * alpha = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * n = dynamic_cast<VentureNumber *>(args.operands[1]);
   assert(alpha);
   assert(n);
   return new VentureSP(new SymDirMultSP(alpha->x,static_cast<uint32_t>(n->x)));
@@ -33,7 +32,7 @@ double SymDirMultSP::logDensityOfCounts(SPAux * generic_spaux) const
   return x;
 }
 
-VentureValue * SymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * SymDirMultSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
@@ -47,7 +46,7 @@ VentureValue * SymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
   return new VentureAtom(sampleCategorical(xs,rng));
 }
 
-double SymDirMultSP::logDensityOutput(VentureValue * value, Node * node) const
+double SymDirMultSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
@@ -65,7 +64,7 @@ double SymDirMultSP::logDensityOutput(VentureValue * value, Node * node) const
   return log(xs[observedIndex]);
 }
 
-void SymDirMultSP::incorporateOutput(VentureValue * value, Node * node) const
+void SymDirMultSP::incorporateOutput(VentureValue * value, const Args & args) const
 {
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
@@ -76,7 +75,7 @@ void SymDirMultSP::incorporateOutput(VentureValue * value, Node * node) const
   spaux->counts[observedIndex]++;
 }
 
-void SymDirMultSP::removeOutput(VentureValue * value, Node * node) const
+void SymDirMultSP::removeOutput(VentureValue * value, const Args & args) const
 {
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);

@@ -12,21 +12,20 @@
 #include <iostream>
 #include <typeinfo>
 
-VentureValue * MakeVectorSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * MakeVectorSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   vector<VentureValue *> vec;
-  for (Node * operand : node->operandNodes)
+  for (Node * operand : args.operands)
   {
-    vec.push_back(operand->getValue());
+    vec.push_back(operand);
   }
   return new VentureVector(vec);
 }
 
-VentureValue * VectorLookupSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * VectorLookupSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureVector * vec = dynamic_cast<VentureVector *>(operands[0]->getValue());
-  VentureNumber * i = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureVector * vec = dynamic_cast<VentureVector *>(args.operands[0]);
+  VentureNumber * i = dynamic_cast<VentureNumber *>(args.operands[1]);
   assert(vec);
   assert(i);
 

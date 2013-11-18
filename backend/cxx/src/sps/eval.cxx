@@ -6,13 +6,12 @@
 #include "all.h"
 #include <vector>
 
-VentureValue * EvalSP::simulateRequest(Node * node, gsl_rng * rng) const
+VentureValue * EvalSP::simulateRequest(const Args & args, gsl_rng * rng) const
 {
   size_t id = reinterpret_cast<size_t>(node);
 
 
-  vector<Node *> & operands = node->operandNodes;
-  VentureEnvironment * env = dynamic_cast<VentureEnvironment*>(operands[1]->getValue());
+  VentureEnvironment * env = dynamic_cast<VentureEnvironment*>(args.operands[1]);
   assert(env);
-  return new VentureRequest({ESR(id,operands[0]->getValue(),env)});
+  return new VentureRequest({ESR(id,args.operands[0],env)});
 }

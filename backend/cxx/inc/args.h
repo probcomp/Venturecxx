@@ -26,6 +26,8 @@ struct Args
   vector<Node *> esrNodes;
 
   SPAux * spaux{nullptr};
+  SPAux * madeSPAux{nullptr};
+
   VentureEnvironment * familyEnv{nullptr};
 
 };

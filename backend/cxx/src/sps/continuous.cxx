@@ -73,12 +73,11 @@ double InverseChiSquaredDistributionLogLikelihood(double sampled_value, double n
 }
 
 /* Normal */
-VentureValue * NormalSP::simulateOutput(Node * node, gsl_rng * rng)  const
+VentureValue * NormalSP::simulateOutput(const Args & args, gsl_rng * rng)  const
 {
-  vector<Node *> & operands = node->operandNodes;
 
-  VentureNumber * vmu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * vsigma = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * vmu = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * vsigma = dynamic_cast<VentureNumber *>(args.operands[1]);
   assert(vmu);
   assert(vsigma);
   double x = gsl_ran_gaussian(rng, vsigma->x) + vmu->x;
@@ -92,20 +91,19 @@ double NormalSP::simulateOutputNumeric(const vector<double> & args, gsl_rng * rn
   return x;
 }
 
-double NormalSP::logDensityOutput(VentureValue * value, Node * node)  const
+double NormalSP::logDensityOutput(VentureValue * value, const Args & args)  const
 {
-  vector<Node *> & operands = node->operandNodes;
   double mu;
-  VentureNumber * vmu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * vmu = dynamic_cast<VentureNumber *>(args.operands[0]);
   if (vmu) { mu = vmu->x; }
   else
   {
-    VentureAtom * vcmu = dynamic_cast<VentureAtom*>(operands[0]->getValue());
+    VentureAtom * vcmu = dynamic_cast<VentureAtom*>(args.operands[0]);
     assert(vcmu);
     mu = vcmu->n;
   }
 
-  VentureNumber * sigma = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * sigma = dynamic_cast<VentureNumber *>(args.operands[1]);
   VentureNumber * x = dynamic_cast<VentureNumber *>(value);
   assert(sigma);
   assert(x);
@@ -145,22 +143,20 @@ vector<double> NormalSP::gradientOfLogDensity(double output,
 }
 
 /* Gamma */
-VentureValue * GammaSP::simulateOutput(Node * node, gsl_rng * rng)  const
+VentureValue * GammaSP::simulateOutput(const Args & args, gsl_rng * rng)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * a = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * b = dynamic_cast<VentureNumber *>(args.operands[1]);
   assert(a);
   assert(b);
   double x = gsl_ran_gamma(rng, a->x, 1.0 / b->x);
   return new VentureNumber(x);
 }
 
-double GammaSP::logDensityOutput(VentureValue * value, Node * node)  const
+double GammaSP::logDensityOutput(VentureValue * value, const Args & args)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * a = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * b = dynamic_cast<VentureNumber *>(args.operands[1]);
   VentureNumber * x = dynamic_cast<VentureNumber *>(value);
   assert(a);
   assert(b);
@@ -169,22 +165,20 @@ double GammaSP::logDensityOutput(VentureValue * value, Node * node)  const
 }
 
 /* Inverse Gamma */
-VentureValue * InvGammaSP::simulateOutput(Node * node, gsl_rng * rng)  const
+VentureValue * InvGammaSP::simulateOutput(const Args & args, gsl_rng * rng)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * a = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * b = dynamic_cast<VentureNumber *>(args.operands[1]);
   assert(a);
   assert(b);
   double x = 1.0 / gsl_ran_gamma(rng, a->x, 1.0 / b->x);
   return new VentureNumber(x);
 }
 
-double InvGammaSP::logDensityOutput(VentureValue * value, Node * node)  const
+double InvGammaSP::logDensityOutput(VentureValue * value, const Args & args)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * a = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * b = dynamic_cast<VentureNumber *>(args.operands[1]);
   VentureNumber * x = dynamic_cast<VentureNumber *>(value);
   assert(a);
   assert(b);
@@ -193,22 +187,20 @@ double InvGammaSP::logDensityOutput(VentureValue * value, Node * node)  const
 }
 
 /* UniformContinuous */
-VentureValue * UniformContinuousSP::simulateOutput(Node * node, gsl_rng * rng)  const
+VentureValue * UniformContinuousSP::simulateOutput(const Args & args, gsl_rng * rng)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * a = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * b = dynamic_cast<VentureNumber *>(args.operands[1]);
   assert(a);
   assert(b);
   double x = gsl_ran_flat(rng,a->x,b->x);
   return new VentureNumber(x);
 }
 
-double UniformContinuousSP::logDensityOutput(VentureValue * value, Node * node)  const
+double UniformContinuousSP::logDensityOutput(VentureValue * value, const Args & args)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * a = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * b = dynamic_cast<VentureNumber *>(args.operands[1]);
   VentureNumber * x = dynamic_cast<VentureNumber *>(value);
   assert(a);
   assert(b);
@@ -217,11 +209,10 @@ double UniformContinuousSP::logDensityOutput(VentureValue * value, Node * node) 
 }
 
 /* Beta */
-VentureValue * BetaSP::simulateOutput(Node * node, gsl_rng * rng)  const
+VentureValue * BetaSP::simulateOutput(const Args & args, gsl_rng * rng)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * a = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * b = dynamic_cast<VentureNumber *>(args.operands[1]);
   assert(a);
   assert(b);
   double x = gsl_ran_beta(rng,a->x,b->x);
@@ -240,11 +231,10 @@ double BetaSP::simulateOutputNumeric(const vector<double> & args, gsl_rng * rng)
   else { return x; }
 }
 
-double BetaSP::logDensityOutput(VentureValue * value, Node * node)  const
+double BetaSP::logDensityOutput(VentureValue * value, const Args & args)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * a = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * b = dynamic_cast<VentureNumber *>(args.operands[1]);
   VentureNumber * x = dynamic_cast<VentureNumber *>(value);
   assert(a);
   assert(b);
@@ -289,55 +279,49 @@ vector<double> BetaSP::gradientOfLogDensity(double output,
 }
 
 /* Student-t */
-VentureValue * StudentTSP::simulateOutput(Node * node, gsl_rng * rng)  const
+VentureValue * StudentTSP::simulateOutput(const Args & args, gsl_rng * rng)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(args.operands[0]);
   assert(nu);
   double x = gsl_ran_tdist(rng,nu->x);
   return new VentureNumber(x);
 }
 
-double StudentTSP::logDensityOutput(VentureValue * value, Node * node)  const
+double StudentTSP::logDensityOutput(VentureValue * value, const Args & args)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(args.operands[0]);
   VentureNumber * x = dynamic_cast<VentureNumber *>(value);
   assert(nu);
   assert(x);
   return log(gsl_ran_tdist_pdf(x->x,nu->x));
 }
 
-VentureValue * ChiSquareSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * ChiSquareSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(args.operands[0]);
   assert(nu);
   return new VentureNumber(gsl_ran_chisq(rng,nu->x));
 }
  
-double ChiSquareSP::logDensityOutput(VentureValue * value, Node * node) const
+double ChiSquareSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(args.operands[0]);
   VentureNumber * x = dynamic_cast<VentureNumber *>(value);
   assert(nu);
   assert(x);
   return ChiSquaredDistributionLogLikelihood(x->x,nu->x);
 }
 
-VentureValue * InverseChiSquareSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * InverseChiSquareSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(args.operands[0]);
   assert(nu);
   return new VentureNumber(1.0 / gsl_ran_chisq(rng,nu->x));
 }
  
-double InverseChiSquareSP::logDensityOutput(VentureValue * value, Node * node) const
+double InverseChiSquareSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * nu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * nu = dynamic_cast<VentureNumber *>(args.operands[0]);
   VentureNumber * x = dynamic_cast<VentureNumber *>(value);
   assert(nu);
   assert(x);

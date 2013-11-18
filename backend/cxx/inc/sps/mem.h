@@ -20,7 +20,7 @@ struct MSPAux : SPAux
 
 struct MSPMakerSP : SP
 {
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
 };
 
 struct MSP : SP
@@ -34,15 +34,13 @@ struct MSP : SP
       name = "msp";
     }
 
-  VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateRequest(const Args & args, gsl_rng * rng) const override;
   void flushRequest(VentureValue * value) const override;
 
   Node * sharedOperatorNode;
-
-  VentureValue* makeVectorOfArgs(const vector<Node *> & operandNodes) const;
   
-  void incorporateRequest(VentureValue * value, Node * node) const override;
-  void removeRequest(VentureValue * value, Node * node) const override;
+  void incorporateRequest(VentureValue * value, const Args & args) const override;
+  void removeRequest(VentureValue * value, const Args & args) const override;
 
   SPAux * constructSPAux() const override;
   void destroySPAux(SPAux * spaux) const override;

@@ -23,13 +23,12 @@ double PoissonDistributionLogLikelihood(int sampled_value_count, double lambda) 
 
 /* Bernoulli */
 
-VentureValue * BernoulliSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * BernoulliSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  vector<Node *> & operands = node->operandNodes;
   double p = 0.5;
-  if (!operands.empty())
+  if (!args.operands.empty())
   {
-    VentureNumber * vp = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+    VentureNumber * vp = dynamic_cast<VentureNumber *>(args.operands[0]);
     assert(vp);
     assert(vp->x >= 0 && vp->x <= 1);
     p = vp->x;
@@ -39,16 +38,15 @@ VentureValue * BernoulliSP::simulateOutput(Node * node, gsl_rng * rng) const
   return new VentureBool(n);
 } 
 
-double BernoulliSP::logDensityOutput(VentureValue * value, Node * node) const
+double BernoulliSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
-  vector<Node *> & operands = node->operandNodes;
   VentureBool * b = dynamic_cast<VentureBool *>(value);
   assert(b);
 
   double p = 0.5;
-  if (!operands.empty())
+  if (!args.operands.empty())
   {
-    VentureNumber * vp = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+    VentureNumber * vp = dynamic_cast<VentureNumber *>(args.operands[0]);
     assert(vp);
     assert(vp->x >= 0 && vp->x <= 1);
     p = vp->x;
@@ -58,15 +56,15 @@ double BernoulliSP::logDensityOutput(VentureValue * value, Node * node) const
   else { return log(1 - p); }
 }
 
-vector<VentureValue*> BernoulliSP::enumerateOutput(Node * node) const
+vector<VentureValue*> BernoulliSP::enumerateOutput(const Args & args) const
 {
-  VentureBool * vold = dynamic_cast<VentureBool*>(node->getValue());
+  VentureBool * vold = dynamic_cast<VentureBool*>(node);
   assert(vold);
 
   double p = 0.5;
-  if (!node->operandNodes.empty())
+  if (!args.operands.empty())
   {
-    VentureNumber * vp = dynamic_cast<VentureNumber *>(node->operandNodes[0]->getValue());
+    VentureNumber * vp = dynamic_cast<VentureNumber *>(args.operands[0]);
     assert(vp);
     assert(vp->x >= 0 && vp->x <= 1);
     p = vp->x;
@@ -80,12 +78,12 @@ vector<VentureValue*> BernoulliSP::enumerateOutput(Node * node) const
 }
 
 /* Categorical */
-VentureValue * CategoricalSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * CategoricalSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   vector<double> ps;
-  for (Node * operandNode : node->operandNodes)
+  for (Node * operandNode : args.operands)
   {
-    VentureNumber * d = dynamic_cast<VentureNumber *>(operandNode->getValue());
+    VentureNumber * d = dynamic_cast<VentureNumber *>(operandNode);
     assert(d);
     ps.push_back(d->x);
   }
@@ -101,28 +99,28 @@ VentureValue * CategoricalSP::simulateOutput(Node * node, gsl_rng * rng) const
   assert(false);
 } 
 
-double CategoricalSP::logDensityOutput(VentureValue * value, Node * node) const
+double CategoricalSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
   VentureAtom * i = dynamic_cast<VentureAtom *>(value);
   assert(i);
-  VentureNumber * d = dynamic_cast<VentureNumber *>(node->operandNodes[i->n]->getValue());
+  VentureNumber * d = dynamic_cast<VentureNumber *>(args.operands[i->n]);
   assert(d);
 
   return log(d->x);
 }
 
-vector<VentureValue*> CategoricalSP::enumerateOutput(Node * node) const
+vector<VentureValue*> CategoricalSP::enumerateOutput(const Args & args) const
 {
-  VentureAtom * vold = dynamic_cast<VentureAtom*>(node->getValue());
+  VentureAtom * vold = dynamic_cast<VentureAtom*>(node);
   assert(vold);
 
   vector<VentureValue*> values;
 
-  for (size_t i = 0; i < node->operandNodes.size(); ++i)
+  for (size_t i = 0; i < args.operands.size(); ++i)
   {
     if (i == vold->n) { continue; }
     else {
-      VentureNumber * d = dynamic_cast<VentureNumber *>(node->operandNodes[i]->getValue());
+      VentureNumber * d = dynamic_cast<VentureNumber *>(args.operands[i]);
       assert(d);
       if (d->x > 0) { values.push_back(new VentureAtom(i)); }
     }
@@ -131,22 +129,20 @@ vector<VentureValue*> CategoricalSP::enumerateOutput(Node * node) const
 }
 
 /* UniformDiscrete */
-VentureValue * UniformDiscreteSP::simulateOutput(Node * node, gsl_rng * rng)  const
+VentureValue * UniformDiscreteSP::simulateOutput(const Args & args, gsl_rng * rng)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * a = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * b = dynamic_cast<VentureNumber *>(args.operands[1]);
   assert(a);
   assert(b);
   int n = gsl_rng_uniform_int(rng, b->getInt() - a->getInt());
   return new VentureNumber(a->getInt() + n);
 }
 
-double UniformDiscreteSP::logDensityOutput(VentureValue * value, Node * node)  const
+double UniformDiscreteSP::logDensityOutput(VentureValue * value, const Args & args)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * a = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * b = dynamic_cast<VentureNumber *>(args.operands[1]);
   VentureNumber * x = dynamic_cast<VentureNumber *>(value);
   assert(a);
   assert(b);
@@ -154,14 +150,13 @@ double UniformDiscreteSP::logDensityOutput(VentureValue * value, Node * node)  c
   return log(gsl_ran_flat_pdf(x->getInt(),a->getInt(),b->getInt()));
 }
 
-vector<VentureValue*> UniformDiscreteSP::enumerateOutput(Node * node) const
+vector<VentureValue*> UniformDiscreteSP::enumerateOutput(const Args & args) const
 {
-  VentureNumber * vold = dynamic_cast<VentureNumber*>(node->getValue());
+  VentureNumber * vold = dynamic_cast<VentureNumber*>(node);
   assert(vold);
 
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * a = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * b = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * a = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * b = dynamic_cast<VentureNumber *>(args.operands[1]);
   assert(a);
   assert(b);
   
@@ -178,18 +173,16 @@ vector<VentureValue*> UniformDiscreteSP::enumerateOutput(Node * node) const
 }
 
 /* Poisson */
-VentureValue * PoissonSP::simulateOutput(Node * node, gsl_rng * rng)  const
+VentureValue * PoissonSP::simulateOutput(const Args & args, gsl_rng * rng)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * mu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * mu = dynamic_cast<VentureNumber *>(args.operands[0]);
   assert(mu);
   return new VentureNumber(gsl_ran_poisson(rng,mu->x));
 }
 
-double PoissonSP::logDensityOutput(VentureValue * value, Node * node)  const
+double PoissonSP::logDensityOutput(VentureValue * value, const Args & args)  const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * mu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * mu = dynamic_cast<VentureNumber *>(args.operands[0]);
   VentureNumber * x = dynamic_cast<VentureNumber *>(value);
   assert(mu);
   assert(x);

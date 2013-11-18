@@ -11,8 +11,8 @@
 
 VentureValue * MakeCSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  VentureList * ids = dynamic_cast<VentureList*>(node->operandNodes[0]->getValue());
-  VentureValue * body = dynamic_cast<VentureValue*>(node->operandNodes[1]->getValue());
+  VentureList * ids = dynamic_cast<VentureList*>(args.operands[0]);
+  VentureValue * body = dynamic_cast<VentureValue*>(args.operands[1]);
   assert(ids);
   assert(body);
   return new VentureSP(new CSP(ids,body,node->familyEnv));
@@ -25,10 +25,10 @@ VentureValue * CSP::simulateRequest(const Args & args, gsl_rng * rng) const
   size_t id = reinterpret_cast<size_t>(node);
   VentureEnvironment * extendedEnv = new VentureEnvironment(env);
 
-  assert(node->operandNodes.size() >= listLength(ids));
+  assert(args.operands.size() >= listLength(ids));
   for (size_t i = 0; i < listLength(ids); ++i)
     {
-      extendedEnv->addBinding(dynamic_cast<VentureSymbol*>(listRef(ids,i)),node->operandNodes[i]);
+      extendedEnv->addBinding(dynamic_cast<VentureSymbol*>(listRef(ids,i)),args.operands[i]);
     }
   return new VentureRequest({ESR(id,body,extendedEnv)});
 }

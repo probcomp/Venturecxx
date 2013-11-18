@@ -23,7 +23,7 @@ struct MakeSymDirMultSP : SP
       childrenCanAAA = true;
       name = "make_sym_dir_mult";
     }
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
 
 };
 
@@ -37,10 +37,10 @@ struct SymDirMultSP : SP
       name = "sym_dir_mult";
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
-  double logDensityOutput(VentureValue * value, Node * node) const override;
-  void incorporateOutput(VentureValue * value, Node * node) const override;
-  void removeOutput(VentureValue * value, Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, const Args & args) const override;
+  void incorporateOutput(VentureValue * value, const Args & args) const override;
+  void removeOutput(VentureValue * value, const Args & args) const override;
 
   double logDensityOfCounts(SPAux * spaux) const;
 

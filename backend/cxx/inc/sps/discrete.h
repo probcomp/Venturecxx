@@ -12,9 +12,9 @@ struct BernoulliSP : SP
       canEnumerateOutput = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
-  double logDensityOutput(VentureValue * value, Node * node) const override; 
-  vector<VentureValue*> enumerateOutput(Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
+  double logDensityOutput(VentureValue * value, const Args & args) const override; 
+  vector<VentureValue*> enumerateOutput(const Args & args) const override;
 };
 
 struct CategoricalSP : SP
@@ -26,9 +26,9 @@ struct CategoricalSP : SP
       canEnumerateOutput = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
-  double logDensityOutput(VentureValue * value, Node * node) const override; 
-  vector<VentureValue*> enumerateOutput(Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
+  double logDensityOutput(VentureValue * value, const Args & args) const override; 
+  vector<VentureValue*> enumerateOutput(const Args & args) const override;
 };
 
 struct UniformDiscreteSP : SP
@@ -40,9 +40,9 @@ struct UniformDiscreteSP : SP
       canEnumerateOutput = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
-  double logDensityOutput(VentureValue * value, Node * node) const override; 
-  vector<VentureValue*> enumerateOutput(Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
+  double logDensityOutput(VentureValue * value, const Args & args) const override; 
+  vector<VentureValue*> enumerateOutput(const Args & args) const override;
 };
 
 struct PoissonSP : SP
@@ -53,8 +53,8 @@ struct PoissonSP : SP
       canAbsorbOutput = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
-  double logDensityOutput(VentureValue * value, Node * node) const override; 
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
+  double logDensityOutput(VentureValue * value, const Args & args) const override; 
 
 };
 

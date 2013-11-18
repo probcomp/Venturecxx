@@ -10,10 +10,10 @@ enum class ParameterScope { REAL, POSITIVE_REAL };
 
 struct LKernel
 {
-  virtual VentureValue * simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB,gsl_rng * rng) =0;
-  virtual double weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB) { return 0; };
-  virtual double reverseWeight(VentureValue * oldVal, Node * appNode, LatentDB * latentDB)
-    { return weight(oldVal,nullptr,appNode,latentDB); }
+  virtual VentureValue * simulate(VentureValue * oldVal, const Args & args,gsl_rng * rng) =0;
+  virtual double weight(VentureValue * newVal, VentureValue * oldVal, const Args & args) { return 0; };
+  virtual double reverseWeight(VentureValue * oldVal, const Args & args)
+    { return weight(oldVal,nullptr,args); }
 
   bool isIndependent{true};
 
@@ -24,8 +24,8 @@ struct DefaultAAAKernel : LKernel
 {
   DefaultAAAKernel(const SP * makerSP): makerSP(makerSP) {}
 
-  VentureValue * simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB, gsl_rng * rng) override;
-  double weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB) override;
+  VentureValue * simulate(VentureValue * oldVal, const Args & args, gsl_rng * rng) override;
+  double weight(VentureValue * newVal, VentureValue * oldVal, const Args & args) override;
 
   const SP * makerSP;
 
@@ -35,8 +35,8 @@ struct DeterministicLKernel : LKernel
 {
   DeterministicLKernel(VentureValue * value, SP * sp): value(value), sp(sp) {}
 
-  VentureValue * simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB,gsl_rng * rng) override;
-  double weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB) override;
+  VentureValue * simulate(VentureValue * oldVal, const Args & args,gsl_rng * rng) override;
+  double weight(VentureValue * newVal, VentureValue * oldVal, const Args & args) override;
 
   VentureValue * value;
   SP * sp;
@@ -46,7 +46,7 @@ struct DeterministicLKernel : LKernel
 struct VariationalLKernel : LKernel
 {
   virtual vector<double> gradientOfLogDensity(VentureValue * value,
-					      Node * node) const =0;
+					      const Args & args) const =0;
   virtual void updateParameters(const vector<double> & gradient,
 				double gain, 
 				double stepSize) { }
@@ -54,13 +54,13 @@ struct VariationalLKernel : LKernel
 
 struct DefaultVariationalLKernel : VariationalLKernel
 {
-  DefaultVariationalLKernel(const SP * sp, Node * node);
+  DefaultVariationalLKernel(const SP * sp, const Args & args);
 
-  VentureValue * simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB,gsl_rng * rng) override;
-  double weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB) override;
+  VentureValue * simulate(VentureValue * oldVal, const Args & args,gsl_rng * rng) override;
+  double weight(VentureValue * newVal, VentureValue * oldVal, const Args & args) override;
 
   vector<double> gradientOfLogDensity(VentureValue * value,
-				      Node * node) const override;
+				      const Args & args) const override;
 
   void updateParameters(const vector<double> & gradient, 
 			double gain, 

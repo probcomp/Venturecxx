@@ -4,7 +4,7 @@
 #include "node.h"
 #include "utils.h"
 
-VentureValue * GetCurrentEnvSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * GetCurrentEnvSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   return node->familyEnv;
 }
@@ -12,19 +12,19 @@ VentureValue * GetCurrentEnvSP::simulateOutput(Node * node, gsl_rng * rng) const
 void GetCurrentEnvSP::flushOutput(VentureValue * value) const { }
 
 
-VentureValue * GetEmptyEnvSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * GetEmptyEnvSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   return new VentureEnvironment;
 }
 
-VentureValue * ExtendEnvSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * ExtendEnvSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  VentureEnvironment * env = dynamic_cast<VentureEnvironment*>(node->operandNodes[0]->getValue());
+  VentureEnvironment * env = dynamic_cast<VentureEnvironment*>(args.operands[0]);
   
   VentureEnvironment * extendedEnv = new VentureEnvironment(env);
-  VentureSymbol * vsym = dynamic_cast<VentureSymbol*>(node->operandNodes[1]->getValue());
+  VentureSymbol * vsym = dynamic_cast<VentureSymbol*>(args.operands[1]);
   assert(vsym);
-  extendedEnv->addBinding(vsym,node->operandNodes[2]);
+  extendedEnv->addBinding(vsym,args.operands[2]);
   return extendedEnv;
 }
 

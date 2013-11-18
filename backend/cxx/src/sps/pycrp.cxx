@@ -9,22 +9,21 @@
 #include <gsl/gsl_sf_gamma.h>
 
 
-VentureValue * MakePitmanYorCRPSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * MakePitmanYorCRPSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  VentureNumber * alpha = dynamic_cast<VentureNumber *>(args.operands[0]);
   assert(alpha);
   double d = 0.0;
-  if (operands.size() > 1)
+  if (args.operands.size() > 1)
   {
-    VentureNumber * vd = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+    VentureNumber * vd = dynamic_cast<VentureNumber *>(args.operands[1]);
     assert(vd);
     d = vd->x;
   }
   return new VentureSP(new PitmanYorCRPSP(alpha->x,d));
 }
 
-VentureValue * PitmanYorCRPSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * PitmanYorCRPSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(node->spaux());
   assert(aux);
@@ -53,7 +52,7 @@ VentureValue * PitmanYorCRPSP::simulateOutput(Node * node, gsl_rng * rng) const
   return nullptr;
 }
 
-double PitmanYorCRPSP::logDensityOutput(VentureValue * value, Node * node) const
+double PitmanYorCRPSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
   PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(node->spaux());
   VentureAtom * table = dynamic_cast<VentureAtom*>(value);
@@ -66,7 +65,7 @@ double PitmanYorCRPSP::logDensityOutput(VentureValue * value, Node * node) const
   { return log(alpha + aux->numTables * d) - log(aux->numCustomers + alpha); }
 }
 
-void PitmanYorCRPSP::incorporateOutput(VentureValue * value, Node * node) const
+void PitmanYorCRPSP::incorporateOutput(VentureValue * value, const Args & args) const
 {
   PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(node->spaux());
   VentureAtom * table = dynamic_cast<VentureAtom*>(value);
@@ -86,7 +85,7 @@ void PitmanYorCRPSP::incorporateOutput(VentureValue * value, Node * node) const
   }
 }
 
-void PitmanYorCRPSP::removeOutput(VentureValue * value, Node * node) const
+void PitmanYorCRPSP::removeOutput(VentureValue * value, const Args & args) const
 {
   PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(node->spaux());
   VentureAtom * table = dynamic_cast<VentureAtom*>(value);

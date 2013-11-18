@@ -9,11 +9,10 @@
 #include <gsl/gsl_randist.h>
 
 
-VentureValue * MakeUCSymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * MakeUCSymDirMultSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * n = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * alpha = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * n = dynamic_cast<VentureNumber *>(args.operands[1]);
 
   assert(alpha);
   assert(n);
@@ -35,11 +34,10 @@ VentureValue * MakeUCSymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) co
   return new VentureSP(new UCSymDirMultSP(theta,d));
 }
 
-double MakeUCSymDirMultSP::logDensityOutput(VentureValue * value, Node * node) const
+double MakeUCSymDirMultSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
-  vector<Node *> & operands = node->operandNodes;
-  VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * n = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * alpha = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * n = dynamic_cast<VentureNumber *>(args.operands[1]);
   VentureSP * vsp = dynamic_cast<VentureSP *>(value);
   assert(alpha);
   assert(n);
@@ -60,9 +58,8 @@ double MakeUCSymDirMultSP::logDensityOutput(VentureValue * value, Node * node) c
 VentureValue * MakeUCSymDirMultAAAKernel::simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB, gsl_rng * rng)
 {
 
-  vector<Node *> & operands = appNode->operandNodes;
-  VentureNumber * alpha = dynamic_cast<VentureNumber *>(operands[0]->getValue());
-  VentureNumber * n = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+  VentureNumber * alpha = dynamic_cast<VentureNumber *>(args.operands[0]);
+  VentureNumber * n = dynamic_cast<VentureNumber *>(args.operands[1]);
 
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(appNode->madeSPAux);
 
@@ -100,7 +97,7 @@ double UCSymDirMultSP::logDensityOfCounts(SPAux * generic_spaux) const
   return gsl_ran_multinomial_lnpdf(n,theta,&(spaux->counts[0]));
 }
 
-VentureValue * UCSymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * UCSymDirMultSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
@@ -117,7 +114,7 @@ VentureValue * UCSymDirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
 }  
 
 
-double UCSymDirMultSP::logDensityOutput(VentureValue * value, Node * node) const
+double UCSymDirMultSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
@@ -129,7 +126,7 @@ double UCSymDirMultSP::logDensityOutput(VentureValue * value, Node * node) const
   return theta[observedIndex];
 }
 
-void UCSymDirMultSP::incorporateOutput(VentureValue * value, Node * node) const
+void UCSymDirMultSP::incorporateOutput(VentureValue * value, const Args & args) const
 {
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
@@ -140,7 +137,7 @@ void UCSymDirMultSP::incorporateOutput(VentureValue * value, Node * node) const
   spaux->counts[observedIndex]++;
 }
 
-void UCSymDirMultSP::removeOutput(VentureValue * value, Node * node) const
+void UCSymDirMultSP::removeOutput(VentureValue * value, const Args & args) const
 {
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);

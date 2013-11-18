@@ -6,10 +6,10 @@
 
 #include <iostream>
 
-VentureValue * MakeMapSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * MakeMapSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  VentureList * keys = dynamic_cast<VentureList*>(node->operandNodes[0]->getValue());
-  VentureList * values = dynamic_cast<VentureList*>(node->operandNodes[1]->getValue());
+  VentureList * keys = dynamic_cast<VentureList*>(args.operands[0]);
+  VentureList * values = dynamic_cast<VentureList*>(args.operands[1]);
   assert(keys);
   assert(values);
 
@@ -28,22 +28,22 @@ VentureValue * MakeMapSP::simulateOutput(Node * node, gsl_rng * rng) const
   return vmap;
 }
 
-VentureValue * MapContainsSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * MapContainsSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  VentureMap * vmap = dynamic_cast<VentureMap*>(node->operandNodes[0]->getValue());
+  VentureMap * vmap = dynamic_cast<VentureMap*>(args.operands[0]);
   assert(vmap);
 
-  return new VentureBool(vmap->map.count(node->operandNodes[1]->getValue()));
+  return new VentureBool(vmap->map.count(args.operands[1]));
 }
 
 
-VentureValue * MapLookupSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * MapLookupSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  VentureMap * vmap = dynamic_cast<VentureMap*>(node->operandNodes[0]->getValue());
+  VentureMap * vmap = dynamic_cast<VentureMap*>(args.operands[0]);
   assert(vmap);
 
-  assert(vmap->map.count(node->operandNodes[1]->getValue()));
-  return vmap->map[node->operandNodes[1]->getValue()];
+  assert(vmap->map.count(args.operands[1]));
+  return vmap->map[args.operands[1]];
 }
 
 
