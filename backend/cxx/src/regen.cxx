@@ -30,18 +30,12 @@ double Trace::regen(const vector<Node *> & border,
     else /* Terminal resampling */
     {
       weight += regenInternal(node,scaffold,shouldRestore,omegaDB,gradients);
-      /* Will no longer need this because we keep the node along with the info
-	 that it does not own its value */
       if (node->isObservation()) { weight += constrain(node,!shouldRestore); }
     }
   }
   return weight;
 }
 
-/* Note: could be simplified by storing (or quickly computing) the direct parents. */
-/* OPT: Since we never have a requestNode in a DRG without its outputNode, we ought
-   to be able to only regen the operator and operands once. 
-   (This may yield a substantial performance improvement.) */
 double Trace::regenParents(Node * node,
 			   Scaffold * scaffold,
 			   bool shouldRestore,
@@ -123,7 +117,6 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
 }
 
 
-/* Note: no longer calls regen parents on REQUEST nodes. */
 double Trace::regenInternal(Node * node,
 			    Scaffold * scaffold,
 			    bool shouldRestore,
