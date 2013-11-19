@@ -13,7 +13,7 @@ struct MSPAux : SPAux
 // VentureValue *: a vector of the arguments
 // size_t: id
 // uint32_t: count
-  MSPAux * clone() const override; // TODO implement
+  SPAux * clone() const override; // TODO implement
   unordered_map<VentureValue*,pair<size_t,uint32_t> > ids;
   size_t nextID = 0;
   ~MSPAux();

@@ -1,7 +1,6 @@
 #include "value.h"
 #include "node.h"
 #include "makelazyhmm.h"
-#include "omegadb.h"
 #include "value.h"
 
 #include <cmath>
@@ -17,8 +16,9 @@ VectorXd sampleVectorXd(const VectorXd & v,gsl_rng * rng);
 uint32_t sampleVector(const VectorXd & v,gsl_rng * rng);
 VectorXd normalizedVectorXd(VectorXd & v);
 
-/* AAA LKernel */
+SPAux * LazyHMMSPAux::clone() const { return new LazyHMMSPAux(*this); }
 
+/* AAA LKernel */
 VentureValue * MakeLazyHMMAAAKernel::simulate(VentureValue * oldVal, const Args & args, gsl_rng * rng)
 {
   VectorXd p0 = vvToEigenVector(args.operands[0]);

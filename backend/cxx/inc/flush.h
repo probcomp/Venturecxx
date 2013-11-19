@@ -8,7 +8,7 @@ struct SPAux;
 struct VentureValue;
 struct SP;
 struct Node;
-struct OmegaDB;
+struct Particle;
 
 enum class NodeType;
 
@@ -29,7 +29,7 @@ struct FlushEntry
 };
 
 void destroyFamilyNodes(Node * root);
-void flushDB(OmegaDB * omegaDB, bool isActive);
+void flushDB(Particle * omega, bool isActive);
 
 
 #endif

@@ -86,9 +86,10 @@ void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
 
 void PyTrace::unevalDirectiveID(size_t directiveID)
 {
-  OmegaDB * omegaDB = new OmegaDB;
-  trace->detachVentureFamily(trace->ventureFamilies[directiveID].first,omegaDB);
-  flushDB(omegaDB,false);
+  Particle * rho = new Particle;
+  trace->detachVentureFamily(trace->ventureFamilies[directiveID].first,rho);
+//  flushDB(omegaDB,false);
+  delete rho;
   trace->ventureFamilies.erase(directiveID);
 }
 

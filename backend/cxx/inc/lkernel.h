@@ -1,8 +1,9 @@
 #ifndef LKERNEL_H
 #define LKERNEL_H
 
-#include "omegadb.h"
+
 #include "gsl/gsl_rng.h"
+#include "args.h"
 
 struct SP;
 

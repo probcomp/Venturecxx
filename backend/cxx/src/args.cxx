@@ -13,10 +13,12 @@ Args::Args(Node * node)
   operands = makeVectorOfValues(node->operandNodes);
   operandNodes = node->operandNodes;
 
+  outputNode = node->outputNode;
+  requestNode = node->requestNode;
+
   if (node->requestNode)
   {
     request = node->requestNode->getValue();
-    requestNode = node->requestNode;
   }
 
   esrs = makeVectorOfValues(node->esrParents);
@@ -25,6 +27,7 @@ Args::Args(Node * node)
   spaux = node->spaux();
   madeSPAux = node->madeSPAux;
 
+  nodeType = node->nodeType;
   familyEnv = node->familyEnv;
   
 }

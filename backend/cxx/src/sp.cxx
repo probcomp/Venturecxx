@@ -2,7 +2,6 @@
 #include "flush.h"
 #include "node.h"
 #include "lkernel.h"
-#include "infer/meanfield.h"
 #include "spaux.h"
 #include "value.h"
 #include "utils.h"
@@ -14,57 +13,57 @@
 
 VentureValue * SP::simulate(const Args & args, gsl_rng * rng) const
 {
-  if (node->nodeType == NodeType::REQUEST)
-  { return this->simulateRequest(node,rng); }
+  if (args.nodeType == NodeType::REQUEST)
+  { return this->simulateRequest(args,rng); }
   else 
   { 
-    assert(node->nodeType == NodeType::OUTPUT);
-    return this->simulateOutput(node,rng); 
+    assert(args.nodeType == NodeType::OUTPUT);
+    return this->simulateOutput(args,rng); 
   }
 }
 
 double SP::logDensity(VentureValue * value, const Args & args) const
 {
-  if (node->nodeType == NodeType::REQUEST)
-  { return this->logDensityRequest(value,node); }
+  if (args.nodeType == NodeType::REQUEST)
+  { return this->logDensityRequest(value,args); }
   else 
   { 
-    assert(node->nodeType == NodeType::OUTPUT);
-    return this->logDensityOutput(value,node); 
+    assert(args.nodeType == NodeType::OUTPUT);
+    return this->logDensityOutput(value,args); 
   }
 }
 
 void SP::incorporate(VentureValue * value, const Args & args) const
 {
-  if (node->nodeType == NodeType::REQUEST)
-  { return this->incorporateRequest(value,node); }
+  if (args.nodeType == NodeType::REQUEST)
+  { return this->incorporateRequest(value,args); }
   else 
   { 
-    assert(node->nodeType == NodeType::OUTPUT);
-    return this->incorporateOutput(value,node); 
+    assert(args.nodeType == NodeType::OUTPUT);
+    return this->incorporateOutput(value,args); 
   }
 }
 
 
 void SP::remove(VentureValue * value, const Args & args) const
 {
-  if (node->nodeType == NodeType::REQUEST)
-  { return this->removeRequest(value,node); }
+  if (args.nodeType == NodeType::REQUEST)
+  { return this->removeRequest(value,args); }
   else 
   { 
-    assert(node->nodeType == NodeType::OUTPUT);
-    return this->removeOutput(value,node); 
+    assert(args.nodeType == NodeType::OUTPUT);
+    return this->removeOutput(value,args); 
   }
 }
 
-vector<VentureValue*> SP::enumerate(Node * node) const
+vector<VentureValue*> SP::enumerate(const Args & args) const
 {
-  if (node->nodeType == NodeType::REQUEST)
-  { return this->enumerateRequest(node); }
+  if (args.nodeType == NodeType::REQUEST)
+  { return this->enumerateRequest(args); }
   else 
   { 
-    assert(node->nodeType == NodeType::OUTPUT);
-    return this->enumerateOutput(node); 
+    assert(args.nodeType == NodeType::OUTPUT);
+    return this->enumerateOutput(args); 
   }
 }
 
@@ -156,19 +155,19 @@ void SP::flushRequest(VentureValue * value) const { delete value; }
 void SP::flushOutput(VentureValue * value) const { delete value; };
 void SP::flushFamily(SPAux * spaux, size_t id) const { } 
 
-vector<VentureValue*> SP::enumerateRequest(Node * node) const
+vector<VentureValue*> SP::enumerateRequest(const Args & args) const
 {
   vector<VentureValue*> v;
   return v;
 }
 
-vector<VentureValue*> SP::enumerateOutput(Node * node) const
+vector<VentureValue*> SP::enumerateOutput(const Args & args) const
 {
   vector<VentureValue*> v;
   return v;
 }
 
-VariationalLKernel * SP::getVariationalLKernel(Node * node) const
+VariationalLKernel * SP::getVariationalLKernel(const Args & args) const
 {
-  return new DefaultVariationalLKernel(this,node);
+  return new DefaultVariationalLKernel(this,args);
 }

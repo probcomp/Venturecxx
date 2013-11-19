@@ -3,35 +3,36 @@
 #include "node.h"
 #include "sp.h"
 #include "spaux.h"
-#include "omegadb.h"
+#include "particle.h"
+
 #include "debug.h"
 
 #include <iostream>
 
 
-void flushDBComplete(OmegaDB * omegaDB)
+void flushDBComplete(Particle * omega)
 {
-  while (!omegaDB->flushQueue.empty())
-  {
-    FlushEntry f = omegaDB->flushQueue.front();
-    assert(f.owner);
-    // value may not be valid here, but then the owner must know not to flush it
-    f.owner->flushValue(f.value,f.nodeType); 
-    omegaDB->flushQueue.pop();
-  }
+  // while (!omegaDB->flushQueue.empty())
+  // {
+  //   FlushEntry f = omegaDB->flushQueue.front();
+  //   assert(f.owner);
+  //   // value may not be valid here, but then the owner must know not to flush it
+  //   f.owner->flushValue(f.value,f.nodeType); 
+  //   omegaDB->flushQueue.pop();
+  // }
 
-  for (pair<pair<Node *,size_t>, vector<VentureValue*> > pp : omegaDB->spOwnedValues)
-  {
-    for (VentureValue * v : pp.second)
-    { deepDelete(v); }
-  }
+  // for (pair<pair<Node *,size_t>, vector<VentureValue*> > pp : omegaDB->spOwnedValues)
+  // {
+  //   for (VentureValue * v : pp.second)
+  //   { deepDelete(v); }
+  // }
 
-  for (pair<pair<Node *,size_t>, Node*> p : omegaDB->spFamilyDBs)
-  {
-    destroyFamilyNodes(p.second);
-  }
+  // for (pair<pair<Node *,size_t>, Node*> p : omegaDB->spFamilyDBs)
+  // {
+  //   destroyFamilyNodes(p.second);
+  // }
   
-  delete omegaDB;
+  // delete omegaDB;
 }
 
 
@@ -52,14 +53,10 @@ void destroyFamilyNodes(Node * node)
 }
 
 
-void flushDB(OmegaDB * omegaDB, bool isActive)
+void flushDB(Particle * omega, bool isActive)
 {
-  for (pair<SP *,LatentDB *> p : omegaDB->latentDBs)
-  { 
-    p.first->destroyLatentDB(p.second);
-  }
   // this could be in another thread
-  if (!isActive) { flushDBComplete(omegaDB); }
-  else { delete omegaDB; }
+  if (!isActive) { flushDBComplete(omega); }
+  else { delete omega; }
 }
 

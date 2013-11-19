@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "trace.h"
 #include "scaffold.h"
+#include "particle.h"
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -31,7 +32,7 @@ void ScaffoldMHGKernel::loadParameters(MixMHParam * param)
 double ScaffoldMHGKernel::propose()
 {
   assert(scaffold);
-  assert(!rhoDB);
+  assert(!rho);
 
   rho = new Particle;
   double rhoWeight = trace->extract(scaffold->border,scaffold,rho);
@@ -49,6 +50,8 @@ void ScaffoldMHGKernel::accept()
   trace->commit(xi);
   delete rho;
   delete xi;
+  rho = nullptr;
+  xi = nullptr;
 }
 
 
@@ -59,6 +62,9 @@ void ScaffoldMHGKernel::reject()
 //  flushDB(xiDB,false);
   delete rho;
   delete xi;
+  rho = nullptr;
+  xi = nullptr;
+
 }
 
 

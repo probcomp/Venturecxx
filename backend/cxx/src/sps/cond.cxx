@@ -15,7 +15,7 @@
 
 VentureValue * BranchSP::simulateRequest(const Args & args, gsl_rng * rng) const
 {
-  size_t id = reinterpret_cast<size_t>(node);
+  size_t id = reinterpret_cast<size_t>(args.outputNode);
 
   VentureEnvironment * extendedEnv = new VentureEnvironment(node->familyEnv);
 
@@ -25,7 +25,7 @@ VentureValue * BranchSP::simulateRequest(const Args & args, gsl_rng * rng) const
 
   size_t index = 2;
   if (b->pred) { index = 1; }
-  extendedEnv->addBinding(new VentureSymbol("f"),args.operands[index]);
+  extendedEnv->addBinding(new VentureSymbol("f"),args.operandNodes[index]);
   VenturePair * exp = new VenturePair(new VentureSymbol("f"),new VentureNil);
   return new VentureRequest({ESR(id,exp,extendedEnv)});
 }

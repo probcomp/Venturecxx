@@ -13,7 +13,7 @@ SPAux::~SPAux()
   magic = 0;
 }
 
-SPAux * SPAux::clone()
+SPAux * SPAux::clone() const
 {
-  return new SPAux(this);
+  return new SPAux(*this);
 }

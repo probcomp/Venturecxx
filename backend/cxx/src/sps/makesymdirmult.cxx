@@ -7,13 +7,9 @@
 
 #include<boost/range/numeric.hpp>
 
-SymDirMultSPAux * SymDirMultSPAux::clone()
+SPAux * SymDirMultSPAux::clone() const
 {
-  SymDirMultSPAux * aux = new SymDirMultSPAux(counts.size());
-  aux->families = families;
-  aux->ownedValues = ownedValues;
-  aux->counts = counts;
-  return aux
+  return new SymDirMultSPAux(*this);
 }
 
 

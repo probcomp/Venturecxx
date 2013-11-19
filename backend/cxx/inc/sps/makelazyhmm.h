@@ -5,7 +5,6 @@
 
 #include "sp.h"
 #include "spaux.h"
-#include "omegadb.h"
 #include "lkernel.h"
 #include "srs.h"
 #include <vector>
@@ -21,7 +20,7 @@ struct HMM_HSR : HSR
 
 struct LazyHMMSPAux : SPAux
 {
-  LazyHMMSPAux * clone() const override; // TODO implement
+  SPAux * clone() const override; // TODO implement
   /* Latents */
   vector<VectorXd> xs; 
   
@@ -29,19 +28,6 @@ struct LazyHMMSPAux : SPAux
   /* We expect very few, otherwise we would use a set */
   map<size_t,vector<uint32_t> > os;
 };
-
-/* Used for detachAll/simulateAll */
-struct LazyHMMLatentDBAll : LatentDB
-{
-  vector<VectorXd> xs; 
-};
-
-/* Used for detach/simulate */
-struct LazyHMMLatentDBSome : LatentDB
-{
-  map<size_t,VectorXd> xs; 
-};
-
 
 struct MakeLazyHMMAAAKernel : LKernel
 {

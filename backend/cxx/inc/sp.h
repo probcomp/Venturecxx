@@ -9,8 +9,9 @@
 using namespace std;
 
 #include <boost/python/object.hpp>
+#include "args.h"
 
-struct Args;
+
 struct SPAux;
 struct LKernel;
 struct VentureValue;
@@ -85,7 +86,7 @@ struct SP
      the SP class, or its methods are dumped into the bloat. */
   virtual LKernel * getAAAKernel() const;
 
-  virtual VariationalLKernel * getVariationalLKernel(Node * node) const;
+  virtual VariationalLKernel * getVariationalLKernel(const Args & args) const;
   virtual vector<ParameterScope> getParameterScopes() const { assert(false); return vector<ParameterScope> {}; }
 
   virtual vector<double> gradientOfLogDensity(double output,

@@ -9,15 +9,9 @@
 #include <gsl/gsl_sf_gamma.h>
 
 
-PitmanYorCRPSPAux * PitmanYorCRPSPAux::clone()
+SPAux * PitmanYorCRPSPAux::clone() const
 {
-  PitmanYorCRPSPAux * aux = new PitmanYorCRPSPAux;
-  aux->families = families;
-  aux->ownedValues = ownedValues;
-  aux->nextIndex = nextIndex;
-  aux->numCustomers = numCustomers;
-  aux->tableCounts = tableCounts;
-  return aux;
+  return new PitmanYorCRPSPAux(*this);
 }
 
 VentureValue * MakePitmanYorCRPSP::simulateOutput(const Args & args, gsl_rng * rng) const

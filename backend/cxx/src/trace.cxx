@@ -7,7 +7,7 @@
 #include "trace.h"
 #include "builtin.h"
 #include "sp.h"
-#include "omegadb.h"
+
 #include "flush.h"
 #include "value.h"
 #include "utils.h"

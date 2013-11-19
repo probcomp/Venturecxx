@@ -32,12 +32,12 @@ double DeterministicLKernel::weight(VentureValue * newVal, VentureValue * oldVal
 }
 
 
-DefaultVariationalLKernel::DefaultVariationalLKernel(const SP * sp,Node * node):
+DefaultVariationalLKernel::DefaultVariationalLKernel(const SP * sp,const Args & args):
   sp(sp)
 {
-  for (Node * operandNode : node->operandNodes)
+  for (VentureValue * val : args.operands)
   {
-    VentureNumber * vnum = dynamic_cast<VentureNumber*>(operandNode->getValue());
+    VentureNumber * vnum = dynamic_cast<VentureNumber*>(val);
     assert(vnum);
     parameters.push_back(vnum->x);
   }
@@ -45,7 +45,7 @@ DefaultVariationalLKernel::DefaultVariationalLKernel(const SP * sp,Node * node):
 }
 
 vector<double> DefaultVariationalLKernel::gradientOfLogDensity(VentureValue * output,
-							       Node * node) const
+							       const Args & args) const
 {
 
   VentureNumber * voutput = dynamic_cast<VentureNumber*>(output);
@@ -53,9 +53,9 @@ vector<double> DefaultVariationalLKernel::gradientOfLogDensity(VentureValue * ou
 
   vector<double> arguments;
 
-  for (Node * operandNode : node->operandNodes)
+  for (VentureValue * val : args.operands)
   {
-    VentureNumber * vparam = dynamic_cast<VentureNumber*>(operandNode->getValue());
+    VentureNumber * vparam = dynamic_cast<VentureNumber*>(val);
     assert(vparam);
     arguments.push_back(vparam->x);
   }

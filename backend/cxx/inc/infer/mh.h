@@ -1,11 +1,15 @@
 #ifndef INFER_H
 #define INFER_H
 
+#include "infer/gkernel.h"
+
+struct Node;
 struct Trace;
 struct Scaffold;
+struct Particle;
 
-#include "infer/gkernel.h"
-#include "omegadb.h"
+
+
 
 struct ScaffoldMHGKernel : GKernel
 {

@@ -13,19 +13,24 @@
 
 using boost::adaptors::reverse;
 
+SPAux * MSPAux::clone() const
+{
+  return new MSPAux(*this);
+}
+
 VentureValue * MSPMakerSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
 /* TODO GC share somewhere here? */
-  return new VentureSP(new MSP(args.operands[0]));
+  return new VentureSP(new MSP(args.operandNodes[0]));
 }
 
 
 VentureValue * MSP::simulateRequest(const Args & args, gsl_rng * rng) const
 {
-  MSPAux * aux = dynamic_cast<MSPAux*>(node->spaux());
+  MSPAux * aux = dynamic_cast<MSPAux*>(args.spaux);
   assert(aux);
 
-  VentureValue * args = new VentureVector(args.operands);
+  VentureValue * vargs = new VentureVector(args.operands);
 
   if (aux->ids.count(args))
   {
@@ -41,7 +46,7 @@ VentureValue * MSP::simulateRequest(const Args & args, gsl_rng * rng) const
   // support.
   size_t id = aux->nextID;
 
-  assert(!node->spaux()->ownedValues.count(id));
+  assert(!args.spaux->ownedValues.count(id));
 
   VentureEnvironment * env = new VentureEnvironment;
   env->addBinding(new VentureSymbol("memoizedSP"), sharedOperatorNode);
@@ -55,7 +60,7 @@ VentureValue * MSP::simulateRequest(const Args & args, gsl_rng * rng) const
     VentureNil * nil = new VentureNil;
     VenturePair * innerPair = new VenturePair(clone,nil);
     VentureValue * val = new VenturePair(quote,innerPair);
-    node->spaux()->ownedValues[id].push_back(val);
+    args.spaux->ownedValues[id].push_back(val);
     exp = new VenturePair(val,exp);
   }
   exp = new VenturePair(new VentureSymbol("memoizedSP"),exp);
@@ -85,7 +90,7 @@ void MSP::flushRequest(VentureValue * value) const
 
 void MSP::incorporateRequest(VentureValue * value, const Args & args) const
 {
-  MSPAux * aux = dynamic_cast<MSPAux*>(node->spaux());
+  MSPAux * aux = dynamic_cast<MSPAux*>(args.spaux);
   assert(aux);
 
   VentureRequest * requests = dynamic_cast<VentureRequest*>(value);
@@ -94,26 +99,26 @@ void MSP::incorporateRequest(VentureValue * value, const Args & args) const
   assert(requests->esrs.size() == 1);
   ESR esr = requests->esrs[0];
 
-  VentureValue * args = new VentureVector(args.operands);
+  VentureValue * vargs = new VentureVector(args.operands);
 
-  if (aux->ids.count(args))
+  if (aux->ids.count(vargs))
   {
-    assert(aux->ids[args].first == esr.id);
-    assert(aux->ids[args].second > 0);
-    aux->ids[args].second++;
-    deepDelete(args);
+    assert(aux->ids[vargs].first == esr.id);
+    assert(aux->ids[vargs].second > 0);
+    aux->ids[vargs].second++;
+    deepDelete(vargs);
   }
   else
   {
     aux->nextID++;
-    aux->ids.insert(make_pair(args, make_pair(esr.id,1)));
+    aux->ids.insert(make_pair(vargs, make_pair(esr.id,1)));
   }
 }
 
 
 void MSP::removeRequest(VentureValue * value, const Args & args) const
 {
-  MSPAux * aux = dynamic_cast<MSPAux*>(node->spaux());
+  MSPAux * aux = dynamic_cast<MSPAux*>(args.spaux);
   assert(aux);
 
   VentureRequest * requests = dynamic_cast<VentureRequest*>(value);
@@ -122,22 +127,22 @@ void MSP::removeRequest(VentureValue * value, const Args & args) const
   assert(requests->esrs.size() == 1);
   ESR esr = requests->esrs[0];
 
-  VentureValue * args = new VentureVector(args.operands);
+  VentureValue * vargs = new VentureVector(args.operands);
 
-  assert(aux->ids.count(args));
-  assert(aux->ids[args].first == esr.id);
-  assert(aux->ids[args].second > 0);
-  aux->ids[args].second--;
+  assert(aux->ids.count(vargs));
+  assert(aux->ids[vargs].first == esr.id);
+  assert(aux->ids[vargs].second > 0);
+  aux->ids[vargs].second--;
 
-  if (aux->ids[args].second == 0)
+  if (aux->ids[vargs].second == 0)
   {
-    auto originalArgs = aux->ids.find(args);
+    auto originalArgs = aux->ids.find(vargs);
     assert(originalArgs != aux->ids.end());
     VentureValue * oldArgs = originalArgs->first;
-    aux->ids.erase(args);
+    aux->ids.erase(vargs);
     deepDelete(oldArgs);
   }
-  deepDelete(args);
+  deepDelete(vargs);
 }
 
 
