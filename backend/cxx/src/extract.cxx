@@ -264,6 +264,7 @@ double Trace::unevalRequests(Node * node,
 
     if (esrParent->numRequests == 0)
     { 
+      node->spaux()->families.erase(esr.id);
       weight += extractSPFamily(node->vsp(),esr.id,scaffold,rho); 
     }
   }

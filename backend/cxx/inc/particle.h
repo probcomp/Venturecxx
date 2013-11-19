@@ -52,7 +52,9 @@ struct Particle
 
 
   map<Node*,vector<Node*> > esrParents; // not actually necessary, but may be convenient
+
   map<Node *, Node *> sourceNodes;
+  map<Node *, Node *> lookedUpNodes;
 
   /* This is new for this particle, 
      and lookup is environment-lookup semantics. 

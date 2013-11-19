@@ -34,10 +34,14 @@ double ScaffoldMHGKernel::propose()
   assert(scaffold);
   assert(!rho);
 
+  scaffold->show();
+
   rho = new Particle;
   double rhoWeight = trace->extract(scaffold->border,scaffold,rho);
 
   check.checkTorus(scaffold);
+
+  scaffold->show();
 
   xi = new Particle;
   double xiWeight = trace->generate(scaffold->border,scaffold,xi);

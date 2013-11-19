@@ -58,9 +58,10 @@ SP * Particle::sp(Node * node)
 void Particle::registerReference(Node * node,Node * lookedUpNode)
 {
   children.insert({lookedUpNode,node});
+  lookedUpNodes[node] = lookedUpNode;
   if (isReference(lookedUpNode))
   {
-    sourceNodes[node] = lookedUpNode->sourceNode; 
+    sourceNodes[node] = getSourceNode(lookedUpNode);
   }
   else
   {
@@ -73,10 +74,24 @@ bool Particle::isReference(Node * node)
   return sourceNodes.count(node);
 }
 
+
+// TODO URGENT this is so freaking subtle
+// what if the lookedUpNode is already in the trace in
+// registerReference?
+// (I think this works correctly)
 Node * Particle::getSourceNode(Node * node)
 {
-  assert(sourceNodes.count(node));
-  return sourceNodes[node];
+  assert(node);
+  if (sourceNodes.count(node))
+  { 
+    assert(sourceNodes.count(node));
+    return sourceNodes[node];
+  }
+  else 
+  { 
+    assert(node->sourceNode);
+    return node->sourceNode; 
+  }
 }
 
 /* Depends on subtle invariants. We only query values that are owned by the particle,

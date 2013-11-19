@@ -33,7 +33,12 @@ void Trace::commit(Particle * omega)
     p.first->children.insert(p.second);
   }
 
-  for (pair<Node *, Node*> p : omega->sourceNodes) { p.first->sourceNode = p.second; }
+  for (pair<Node *, Node*> p : omega->sourceNodes) 
+  {
+    cout << "CommitSourceNode(" << p.first << ") => " << p.second << endl;
+    p.first->sourceNode = p.second; 
+  }
+  for (pair<Node *, Node*> p : omega->lookedUpNodes) { p.first->lookedUpNode = p.second; }
 
   for (pair<Node *, VentureValue *> p : omega->values) { p.first->setValue(p.second); }
   for (pair<Node *, SPAux *> p : omega->spauxs) { p.first->madeSPAux = p.second; }

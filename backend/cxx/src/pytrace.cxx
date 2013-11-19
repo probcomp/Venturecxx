@@ -100,6 +100,8 @@ boost::python::object PyTrace::extractPythonValue(size_t directiveID)
   tie(node,ignore) = trace->ventureFamilies[directiveID];
   assert(node);
   assert(node->isValid());
+  cout << "Extracting value from node(" << node << ") ..." << endl;
+  if (node->isReference()) { cout << "(reference)" << endl; }
   VentureValue * value = node->getValue();
   assert(value);
   return value->toPython();

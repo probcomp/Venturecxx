@@ -41,6 +41,8 @@ double Trace::generateParents(Node * node,
   assert(scaffold);
   assert(node->nodeType != NodeType::VALUE);
 
+  cout << "generateParents(" << node << ")" << endl;
+
   if (node->nodeType == NodeType::LOOKUP)
   // looked up node will be accurate, source node will not be
   { return generateInternal(node->lookedUpNode,scaffold,xi); }
@@ -115,6 +117,9 @@ double Trace::generateInternal(Node * node,
   assert(node);
   assert(node->isValid());
   if (!scaffold) { return 0; }
+
+  cout << "generateInternal(" << node << ")" << endl;
+
   double weight = 0;
   
 
@@ -181,6 +186,7 @@ double Trace::applyPSP(Node * node,
 		       Scaffold * scaffold,
 		       Particle * xi)
 {
+  cout << "applyPSP(" << node << ")" << endl;
   callCounts[{"applyPSP",false}]++;
   SP * sp = xi->sp(node);
   assert(node->isValid());
@@ -189,6 +195,7 @@ double Trace::applyPSP(Node * node,
   /* Almost nothing needs to be done if this node is a ESRReference.*/
   if (node->nodeType == NodeType::OUTPUT && sp->isESRReference)
   {
+    cout << "ESRReference(" << node << ")" << endl;
     assert(!xi->esrParents[node].empty());
     xi->registerReference(node,xi->esrParents[node][0]);
     return 0;
