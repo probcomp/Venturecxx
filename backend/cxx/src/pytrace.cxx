@@ -8,9 +8,9 @@
 #include "particle.h"
 #include "infer/gkernel.h"
 #include "infer/mh.h"
-#include "infer/gibbs.h"
-#include "infer/pgibbs.h"
-#include "infer/meanfield.h"
+//#include "infer/gibbs.h"
+//#include "infer/pgibbs.h"
+//#include "infer/meanfield.h"
 #include "value.h"
 #include "scaffold.h"
 
@@ -25,13 +25,14 @@ PyTrace::PyTrace() :
     {{"mh",false}, new OutermostMixMH(trace,new ScaffoldMHGKernel(trace))},
     {{"mh",true}, new GlobalScaffoldMixMH(trace,new ScaffoldMHGKernel(trace))},
 
-    {{"pgibbs",false}, new OutermostMixMH(trace,new PGibbsGKernel(trace))},
-    {{"pgibbs",true}, new GlobalScaffoldMixMH(trace,new PGibbsGKernel(trace))},
+    // {{"pgibbs",false}, new OutermostMixMH(trace,new PGibbsGKernel(trace))},
+    // {{"pgibbs",true}, new GlobalScaffoldMixMH(trace,new PGibbsGKernel(trace))},
 
-    {{"gibbs",false}, new OutermostMixMH(trace,new GibbsGKernel(trace))},
+    // {{"gibbs",false}, new OutermostMixMH(trace,new GibbsGKernel(trace))},
 
-    {{"meanfield",false}, new OutermostMixMH(trace,new MeanFieldGKernel(trace))},
-    {{"meanfield",true}, new GlobalScaffoldMixMH(trace,new MeanFieldGKernel(trace))}}
+    // {{"meanfield",false}, new OutermostMixMH(trace,new MeanFieldGKernel(trace))},
+    // {{"meanfield",true}, new GlobalScaffoldMixMH(trace,new MeanFieldGKernel(trace))}
+      }
  {}
 
 PyTrace::~PyTrace()
@@ -78,7 +79,7 @@ VentureValue * PyTrace::parseExpression(boost::python::object o)
 void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
 {
   VentureValue * exp = parseExpression(o);
-  pair<double,Node*> p = trace->evalVentureFamily(directiveID,static_cast<VentureList*>(exp),nullptr);
+  pair<double,Node*> p = trace->evalVentureFamily(directiveID,static_cast<VentureList*>(exp));
   assert(!trace->ventureFamilies.count(directiveID));
   trace->ventureFamilies.insert({directiveID,{p.second,exp}});
 
@@ -87,7 +88,7 @@ void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
 void PyTrace::unevalDirectiveID(size_t directiveID)
 {
   Particle * rho = new Particle;
-  trace->detachVentureFamily(trace->ventureFamilies[directiveID].first,rho);
+  trace->extractFamily(trace->ventureFamilies[directiveID].first,nullptr,rho);
 //  flushDB(omegaDB,false);
   delete rho;
   trace->ventureFamilies.erase(directiveID);
@@ -98,6 +99,7 @@ boost::python::object PyTrace::extractPythonValue(size_t directiveID)
   Node * node;
   tie(node,ignore) = trace->ventureFamilies[directiveID];
   assert(node);
+  assert(node->isValid());
   VentureValue * value = node->getValue();
   assert(value);
   return value->toPython();

@@ -126,6 +126,20 @@ def testMakeCSP():
   print sivm.report(4)
   print sivm.report(6)
 
+def testBernoulliP1(N):
+  sivm = SIVM()
+  sivm.assume("b", "(bernoulli)")
+  sivm.predict("""
+((biplex
+  b
+  (lambda () (normal 0.0 1.0))
+  (lambda () (normal 10.0 1.0))))
+""");
+
+  predictions = loggingInfer(sivm,2,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestBernoulliP1---"
+  print "(0.5," + str(mean) + ")"
 
 def testBernoulli0(N):
   sivm = SIVM()

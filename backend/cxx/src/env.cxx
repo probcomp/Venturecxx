@@ -22,11 +22,13 @@ Node * VentureEnvironment::findSymbol(VentureSymbol * vsym)
 
 Node * VentureEnvironment::findSymbol(const string & sym)
 {
-  if (frame.count(sym)) 
+  if (frame.count(sym))
   { 
+    assert(frame[sym]);
+    assert(frame[sym]->isValid());
     return frame[sym]; 
   }
-  else if (outerEnv == nullptr) 
+  else if (outerEnv == nullptr)
   { 
     cout << "Cannot find symbol: " << sym << endl;
     assert(outerEnv);

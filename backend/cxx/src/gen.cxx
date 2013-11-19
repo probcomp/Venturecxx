@@ -112,7 +112,11 @@ double Trace::generateInternal(Node * node,
 			       Scaffold * scaffold,
 			       Particle * xi)
 {
+  assert(node);
+  assert(node->isValid());
+  if (!scaffold) { return 0; }
   double weight = 0;
+  
 
   if (scaffold->isResampling(node))
   {
@@ -203,7 +207,7 @@ double Trace::applyPSP(Node * node,
   xi->maybeCloneSPAux(node);
   Args args = xi->makeArgs(node);
 
-  if (scaffold->hasKernelFor(node))
+  if (scaffold && scaffold->hasKernelFor(node))
   {
     VentureValue * oldValue = nullptr;
     LKernel * k = scaffold->lkernels[node];
@@ -222,8 +226,8 @@ double Trace::applyPSP(Node * node,
   xi->setValue(node,newValue,true);
   sp->incorporate(newValue,args);
 
-  if (dynamic_cast<VentureSP *>(newValue)) { processMadeSP(node,scaffold->isAAA(node),xi); }
-  if (node->sp()->isRandom(node->nodeType)) { xi->registerRandomChoice(node); }
+  if (dynamic_cast<VentureSP *>(newValue)) { processMadeSP(node,scaffold && scaffold->isAAA(node),xi); }
+  if (xi->sp(node)->isRandom(node->nodeType)) { xi->registerRandomChoice(node); }
   if (node->nodeType == NodeType::REQUEST) { evalRequests(node,scaffold,xi); }
 
   return weight;
@@ -256,7 +260,15 @@ double Trace::evalRequests(Node * node,
       assert(spaux->families[esr.id]->isValid());
       assert(dynamic_cast<MSP*>(xi->sp(node))); 
     }
+    cout << "xi->esrParents[" 
+	 << node->outputNode
+	 << "].push_back(" 
+	 << spaux->families[esr.id]
+         << ")" 
+         << endl;
+
     xi->esrParents[node->outputNode].push_back(spaux->families[esr.id]);
+    xi->children.insert({spaux->families[esr.id], node->outputNode});
   }
 
   for (HSR * hsr : requests->hsrs)
@@ -300,6 +312,9 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
     {
       Node * requestNode = new Node(NodeType::REQUEST);
       Node * outputNode = new Node(NodeType::OUTPUT);
+      requestNode->familyEnv = env;
+      outputNode->familyEnv = env;
+
       node = outputNode;
 
       Node * operatorNode;

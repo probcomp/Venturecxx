@@ -1,6 +1,6 @@
 #include "value.h"
 #include "utils.h"
-#include "node.h"
+
 #include "sp.h"
 #include "sps/makedirmult.h"
 #include "gsl/gsl_sf_gamma.h"
@@ -10,9 +10,9 @@
 VentureValue * MakeDirMultSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   vector<double> alphaVector;
-  for (Node * operandNode : args.operands)
+  for (VentureValue * operand : args.operands)
   {
-    VentureNumber * alpha_i = dynamic_cast<VentureNumber *>(operandNode);
+    VentureNumber * alpha_i = dynamic_cast<VentureNumber *>(operand);
     assert(alpha_i);
     alphaVector.push_back(alpha_i->x);
   }
@@ -38,7 +38,7 @@ double DirMultSP::logDensityOfCounts(SPAux * generic_spaux) const
 
 VentureValue * DirMultSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  DirMultSPAux * spaux = dynamic_cast<DirMultSPAux *>(node->spaux());
+  DirMultSPAux * spaux = dynamic_cast<DirMultSPAux *>(args.spaux);
   assert(spaux);
 
   vector<double> xs;
@@ -52,7 +52,7 @@ VentureValue * DirMultSP::simulateOutput(const Args & args, gsl_rng * rng) const
 
 double DirMultSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
-  DirMultSPAux * spaux = dynamic_cast<DirMultSPAux *>(node->spaux());
+  DirMultSPAux * spaux = dynamic_cast<DirMultSPAux *>(args.spaux);
   assert(spaux);
 
   VentureAtom * vint = dynamic_cast<VentureAtom*>(value);
@@ -70,7 +70,7 @@ double DirMultSP::logDensityOutput(VentureValue * value, const Args & args) cons
 
 void DirMultSP::incorporateOutput(VentureValue * value, const Args & args) const
 {
-  DirMultSPAux * spaux = dynamic_cast<DirMultSPAux *>(node->spaux());
+  DirMultSPAux * spaux = dynamic_cast<DirMultSPAux *>(args.spaux);
   assert(spaux);
 
   VentureAtom * vint = dynamic_cast<VentureAtom*>(value);
@@ -81,7 +81,7 @@ void DirMultSP::incorporateOutput(VentureValue * value, const Args & args) const
 
 void DirMultSP::removeOutput(VentureValue * value, const Args & args) const
 {
-  DirMultSPAux * spaux = dynamic_cast<DirMultSPAux *>(node->spaux());
+  DirMultSPAux * spaux = dynamic_cast<DirMultSPAux *>(args.spaux);
   assert(spaux);
 
   VentureAtom * vint = dynamic_cast<VentureAtom*>(value);

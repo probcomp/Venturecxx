@@ -1,6 +1,6 @@
 #include "sps/list.h"
 #include "value.h"
-#include "node.h"
+
 #include "utils.h"
 #include "env.h"
 #include <boost/range/adaptor/reversed.hpp>
@@ -33,9 +33,9 @@ VentureValue * RestSP::simulateOutput(const Args & args, gsl_rng * rng) const
 VentureValue * ListSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   VentureList * list = new VentureNil;
-  for (Node * operandNode : reverse(args.operands))
+  for (VentureValue * operand : reverse(args.operands))
   {
-    list = new VenturePair(operandNode,list);
+    list = new VenturePair(operand,list);
   }
   return list;
 }
@@ -63,15 +63,15 @@ VentureValue * ListRefSP::simulateOutput(const Args & args, gsl_rng * rng) const
 
 VentureValue * MapListSP::simulateRequest(const Args & args, gsl_rng * rng) const
 {
-  Node * fNode = args.operands[0];
-  assert(dynamic_cast<VentureSP*>(fNode));
+  VentureValue * fVal = args.operands[0];
+  assert(dynamic_cast<VentureSP*>(fVal));
 
   vector<ESR> esrs;
   VentureList * list = dynamic_cast<VentureList*>(args.operands[1]);
   assert(list);
 
   VentureEnvironment * env = new VentureEnvironment;
-  env->addBinding(new VentureSymbol("mappedSP"),fNode);
+  env->addBinding(new VentureSymbol("mappedSP"),args.operandNodes[0]);
 
   size_t i = 0;
   while (!dynamic_cast<VentureNil*>(list))
@@ -85,7 +85,7 @@ VentureValue * MapListSP::simulateRequest(const Args & args, gsl_rng * rng) cons
     assert(val);
  
     /* TODO this may be problematic */
-    size_t id = reinterpret_cast<size_t>(node) + i;
+    size_t id = reinterpret_cast<size_t>(args.outputNode) + i;
 
     VenturePair * exp = new VenturePair(new VentureSymbol("mappedSP"),
 					new VenturePair(val,
@@ -128,9 +128,9 @@ void MapListSP::flushRequest(VentureValue * value) const
 VentureValue * MapListSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   VentureList * list = new VentureNil;
-  for (Node * esrParent : reverse(node->esrParents))
+  for (VentureValue * esr : reverse(args.esrs))
   {
-     list = new VenturePair(esrParent,list);
+     list = new VenturePair(esr,list);
   }
   return list;
 }

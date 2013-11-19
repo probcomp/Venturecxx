@@ -1,4 +1,4 @@
-#include "node.h"
+
 #include "value.h"
 
 
@@ -15,7 +15,7 @@
 VentureValue * MakeVectorSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   vector<VentureValue *> vec;
-  for (Node * operand : args.operands)
+  for (VentureValue * operand : args.operands)
   {
     vec.push_back(operand);
   }

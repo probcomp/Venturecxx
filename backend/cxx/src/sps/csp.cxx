@@ -1,4 +1,4 @@
-#include "node.h"
+
 #include "spaux.h"
 #include "value.h"
 #include "env.h"
@@ -15,6 +15,8 @@ VentureValue * MakeCSP::simulateOutput(const Args & args, gsl_rng * rng) const
   VentureValue * body = dynamic_cast<VentureValue*>(args.operands[1]);
   assert(ids);
   assert(body);
+  assert(args.familyEnv);
+  assert(dynamic_cast<VentureEnvironment*>(args.familyEnv));
   return new VentureSP(new CSP(ids,body,args.familyEnv));
 }
 

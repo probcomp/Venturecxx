@@ -12,6 +12,7 @@ enum class NodeType;
 
 struct Args
 {
+  Args();
   Args(Node * node);
   
   vector<VentureValue *> makeVectorOfValues(const vector<Node*> & nodes);

@@ -1,6 +1,6 @@
 #include "sps/pycrp.h"
 #include "value.h"
-#include "node.h"
+
 #include "utils.h"
 #include <cassert>
 
@@ -30,7 +30,7 @@ VentureValue * MakePitmanYorCRPSP::simulateOutput(const Args & args, gsl_rng * r
 
 VentureValue * PitmanYorCRPSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(node->spaux());
+  PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(args.spaux);
   assert(aux);
 
   vector<uint32_t> tables;  
@@ -59,7 +59,7 @@ VentureValue * PitmanYorCRPSP::simulateOutput(const Args & args, gsl_rng * rng) 
 
 double PitmanYorCRPSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
-  PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(node->spaux());
+  PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(args.spaux);
   VentureAtom * table = dynamic_cast<VentureAtom*>(value);
   assert(aux);
   assert(table);
@@ -72,7 +72,7 @@ double PitmanYorCRPSP::logDensityOutput(VentureValue * value, const Args & args)
 
 void PitmanYorCRPSP::incorporateOutput(VentureValue * value, const Args & args) const
 {
-  PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(node->spaux());
+  PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(args.spaux);
   VentureAtom * table = dynamic_cast<VentureAtom*>(value);
   assert(aux);
   assert(table);
@@ -92,7 +92,7 @@ void PitmanYorCRPSP::incorporateOutput(VentureValue * value, const Args & args) 
 
 void PitmanYorCRPSP::removeOutput(VentureValue * value, const Args & args) const
 {
-  PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(node->spaux());
+  PitmanYorCRPSPAux * aux = dynamic_cast<PitmanYorCRPSPAux*>(args.spaux);
   VentureAtom * table = dynamic_cast<VentureAtom*>(value);
   assert(aux);
   assert(table);

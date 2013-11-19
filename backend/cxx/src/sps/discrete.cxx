@@ -1,4 +1,4 @@
-#include "node.h"
+
 #include "sp.h"
 #include "sps/discrete.h"
 #include "value.h"
@@ -56,34 +56,19 @@ double BernoulliSP::logDensityOutput(VentureValue * value, const Args & args) co
   else { return log(1 - p); }
 }
 
+/* TODO Gibbs only expects the other values, but we should fix that. */
 vector<VentureValue*> BernoulliSP::enumerateOutput(const Args & args) const
 {
-  VentureBool * vold = dynamic_cast<VentureBool*>(node);
-  assert(vold);
-
-  double p = 0.5;
-  if (!args.operands.empty())
-  {
-    VentureNumber * vp = dynamic_cast<VentureNumber *>(args.operands[0]);
-    assert(vp);
-    assert(vp->x >= 0 && vp->x <= 1);
-    p = vp->x;
-  }
-
-  vector<VentureValue *> vals;
-  if (vold->pred && p < 1) { vals.push_back(new VentureBool(false)); }
-  else if (!vold->pred && p > 0) { vals.push_back(new VentureBool(true)); }
-
-  return vals;
+  return { new VentureBool(false), new VentureBool(true) };
 }
 
 /* Categorical */
 VentureValue * CategoricalSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   vector<double> ps;
-  for (Node * operandNode : args.operands)
+  for (VentureValue * operand : args.operands)
   {
-    VentureNumber * d = dynamic_cast<VentureNumber *>(operandNode);
+    VentureNumber * d = dynamic_cast<VentureNumber *>(operand);
     assert(d);
     ps.push_back(d->x);
   }
@@ -111,19 +96,12 @@ double CategoricalSP::logDensityOutput(VentureValue * value, const Args & args) 
 
 vector<VentureValue*> CategoricalSP::enumerateOutput(const Args & args) const
 {
-  VentureAtom * vold = dynamic_cast<VentureAtom*>(node);
-  assert(vold);
-
   vector<VentureValue*> values;
-
   for (size_t i = 0; i < args.operands.size(); ++i)
   {
-    if (i == vold->n) { continue; }
-    else {
       VentureNumber * d = dynamic_cast<VentureNumber *>(args.operands[i]);
       assert(d);
       if (d->x > 0) { values.push_back(new VentureAtom(i)); }
-    }
   }
   return values;
 }
@@ -152,22 +130,14 @@ double UniformDiscreteSP::logDensityOutput(VentureValue * value, const Args & ar
 
 vector<VentureValue*> UniformDiscreteSP::enumerateOutput(const Args & args) const
 {
-  VentureNumber * vold = dynamic_cast<VentureNumber*>(node);
-  assert(vold);
-
   VentureNumber * a = dynamic_cast<VentureNumber *>(args.operands[0]);
   VentureNumber * b = dynamic_cast<VentureNumber *>(args.operands[1]);
   assert(a);
   assert(b);
-  
   vector<VentureValue*> values;
-
   for (int i = a->getInt(); i < b->getInt(); ++i)
   {
-    if (i == vold->getInt()) { continue; }
-    else { 
-      values.push_back(new VentureNumber(i));
-    }
+    values.push_back(new VentureNumber(i));
   }
   return values;
 }

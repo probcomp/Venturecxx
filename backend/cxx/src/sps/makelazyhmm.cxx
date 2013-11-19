@@ -1,5 +1,5 @@
 #include "value.h"
-#include "node.h"
+
 #include "makelazyhmm.h"
 #include "value.h"
 
@@ -74,7 +74,10 @@ VentureValue * MakeLazyHMMSP::simulateOutput(const Args & args, gsl_rng * rng) c
 
 double MakeLazyHMMSP::detachAllLatents(SPAux * spaux) const
 {
-  latents->xs.clear();
+  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(spaux);
+  assert(aux);
+
+  aux->xs.clear();
   return 0;
 }
  
@@ -86,7 +89,7 @@ void LazyHMMSP::destroySPAux(SPAux * spaux) { delete spaux; }
 
 void LazyHMMSP::incorporateOutput(VentureValue * value, const Args & args) const
 {
-  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(node->spaux());
+  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(args.spaux);
   VentureAtom * vout = dynamic_cast<VentureAtom *>(value);
   VentureNumber * vin = dynamic_cast<VentureNumber *>(args.operands[0]);
 
@@ -102,7 +105,7 @@ void LazyHMMSP::incorporateOutput(VentureValue * value, const Args & args) const
 
 void LazyHMMSP::removeOutput(VentureValue * value, const Args & args) const
 {
-  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(node->spaux());
+  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(args.spaux);
   VentureAtom * vout = dynamic_cast<VentureAtom *>(value);
   VentureNumber * vin = dynamic_cast<VentureNumber *>(args.operands[0]);
 
@@ -183,7 +186,7 @@ double LazyHMMSP::detachLatents(SPAux * spaux,
 
 VentureValue * LazyHMMSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(node->spaux());
+  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(args.spaux);
   VentureNumber * vint = dynamic_cast<VentureNumber*>(args.operands[0]);
   assert(aux);
   assert(vint);
@@ -199,7 +202,7 @@ double LazyHMMSP::logDensityOutput(VentureValue * value, const Args & args) cons
   assert(vout);
   assert(vin);
 
-  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(node->spaux());
+  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(args.spaux);
 
   assert(aux->xs.size() > vin->getInt());
   VectorXd dist = O * aux->xs[vin->getInt()];

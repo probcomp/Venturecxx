@@ -1,5 +1,5 @@
 #include "value.h"
-#include "node.h"
+
 #include "sp.h"
 #include "spaux.h"
 #include "env.h"
@@ -32,14 +32,14 @@ VentureValue * MSP::simulateRequest(const Args & args, gsl_rng * rng) const
 
   VentureValue * vargs = new VentureVector(args.operands);
 
-  if (aux->ids.count(args))
+  if (aux->ids.count(vargs))
   {
-    ESR esr(aux->ids[args].first,nullptr,nullptr);
-    deepDelete(args);
+    ESR esr(aux->ids[vargs].first,nullptr,nullptr);
+    deepDelete(vargs);
     return new VentureRequest({esr});
   }
 
-  deepDelete(args);
+  deepDelete(vargs);
 
   // Note: right now this isn't incremented until incorporateRequest,
   // so races may be possible in some contexts that we do not currently
@@ -53,15 +53,15 @@ VentureValue * MSP::simulateRequest(const Args & args, gsl_rng * rng) const
 
   VentureList * exp = new VentureNil;
 
-  for (Node * operand : reverse(args.operands))
+  for (VentureValue * val : reverse(args.operands))
   {
-    VentureValue * clone = operand->clone();
+    VentureValue * clone = val->clone();
     VentureSymbol * quote = new VentureSymbol("quote");
     VentureNil * nil = new VentureNil;
     VenturePair * innerPair = new VenturePair(clone,nil);
-    VentureValue * val = new VenturePair(quote,innerPair);
-    args.spaux->ownedValues[id].push_back(val);
-    exp = new VenturePair(val,exp);
+    VentureValue * v = new VenturePair(quote,innerPair);
+    args.spaux->ownedValues[id].push_back(v);
+    exp = new VenturePair(v,exp);
   }
   exp = new VenturePair(new VentureSymbol("memoizedSP"),exp);
   return new VentureRequest({ESR(id,exp,env)});

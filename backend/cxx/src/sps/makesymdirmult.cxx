@@ -1,6 +1,6 @@
 #include "value.h"
 #include "utils.h"
-#include "node.h"
+
 #include "sp.h"
 #include "sps/makesymdirmult.h"
 #include "gsl/gsl_sf_gamma.h"
@@ -42,7 +42,7 @@ double SymDirMultSP::logDensityOfCounts(SPAux * generic_spaux) const
 
 VentureValue * SymDirMultSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(args.spaux);
   assert(spaux);
 
   vector<double> xs;
@@ -56,7 +56,7 @@ VentureValue * SymDirMultSP::simulateOutput(const Args & args, gsl_rng * rng) co
 
 double SymDirMultSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
-  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(args.spaux);
   assert(spaux);
 
   VentureAtom * vint = dynamic_cast<VentureAtom*>(value);
@@ -74,7 +74,7 @@ double SymDirMultSP::logDensityOutput(VentureValue * value, const Args & args) c
 
 void SymDirMultSP::incorporateOutput(VentureValue * value, const Args & args) const
 {
-  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(args.spaux);
   assert(spaux);
 
   VentureAtom * vint = dynamic_cast<VentureAtom*>(value);
@@ -85,7 +85,7 @@ void SymDirMultSP::incorporateOutput(VentureValue * value, const Args & args) co
 
 void SymDirMultSP::removeOutput(VentureValue * value, const Args & args) const
 {
-  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(args.spaux);
   assert(spaux);
 
   VentureAtom * vint = dynamic_cast<VentureAtom*>(value);

@@ -8,6 +8,8 @@ vector<VentureValue *> Args::makeVectorOfValues(const vector<Node*> & nodes)
   return values;
 }
 
+Args::Args() {}
+
 Args::Args(Node * node)
 {
   operands = makeVectorOfValues(node->operandNodes);

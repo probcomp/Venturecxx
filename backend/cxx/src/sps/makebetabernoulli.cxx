@@ -1,8 +1,8 @@
 #include "value.h"
 #include "utils.h"
-#include "node.h"
 #include "sp.h"
 #include "sps/makebetabernoulli.h"
+#include "sps/makesymdirmult.h"
 #include "gsl/gsl_sf_gamma.h"
 
 #include<boost/range/numeric.hpp>
@@ -10,9 +10,9 @@
 VentureValue * MakeBetaBernoulliSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
   vector<double> alphaVector;
-  for (Node * operandNode : args.operands)
+  for (VentureValue * operand : args.operands)
   {
-    VentureNumber * alpha_i = dynamic_cast<VentureNumber *>(operandNode);
+    VentureNumber * alpha_i = dynamic_cast<VentureNumber *>(operand);
     assert(alpha_i);
     alphaVector.push_back(alpha_i->x);
   }
@@ -39,7 +39,7 @@ double BetaBernoulliSP::logDensityOfCounts(SPAux * generic_spaux) const
 
 VentureValue * BetaBernoulliSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(args.spaux);
   assert(spaux);
 
   vector<double> xs;
@@ -55,7 +55,7 @@ VentureValue * BetaBernoulliSP::simulateOutput(const Args & args, gsl_rng * rng)
 
 double BetaBernoulliSP::logDensityOutput(VentureValue * value, const Args & args) const
 {
-  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(args.spaux);
   assert(spaux);
 
   VentureBool * vb = dynamic_cast<VentureBool*>(value);
@@ -73,7 +73,7 @@ double BetaBernoulliSP::logDensityOutput(VentureValue * value, const Args & args
 
 void BetaBernoulliSP::incorporateOutput(VentureValue * value, const Args & args) const
 {
-  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(args.spaux);
   assert(spaux);
 
   VentureBool * vb = dynamic_cast<VentureBool*>(value);
@@ -85,7 +85,7 @@ void BetaBernoulliSP::incorporateOutput(VentureValue * value, const Args & args)
 
 void BetaBernoulliSP::removeOutput(VentureValue * value, const Args & args) const
 {
-  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
+  SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(args.spaux);
   assert(spaux);
 
   VentureBool * vb = dynamic_cast<VentureBool*>(value);

@@ -1,6 +1,6 @@
 #include "sps/sym.h"
 #include "value.h"
-#include "node.h"
+
 
 VentureValue * IsSymbolSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {

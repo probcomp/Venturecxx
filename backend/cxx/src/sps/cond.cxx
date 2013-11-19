@@ -1,4 +1,4 @@
-#include "node.h"
+
 #include "spaux.h"
 #include "value.h"
 #include "utils.h"
@@ -17,7 +17,7 @@ VentureValue * BranchSP::simulateRequest(const Args & args, gsl_rng * rng) const
 {
   size_t id = reinterpret_cast<size_t>(args.outputNode);
 
-  VentureEnvironment * extendedEnv = new VentureEnvironment(node->familyEnv);
+  VentureEnvironment * extendedEnv = new VentureEnvironment(args.familyEnv);
 
 
   VentureBool * b = dynamic_cast<VentureBool *>(args.operands[0]);

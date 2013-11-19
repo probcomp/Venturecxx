@@ -4,9 +4,16 @@
 #include "spaux.h"
 #include "value.h"
 
+VentureSP * Particle::vsp(Node * node)
+{
+  VentureSP * _vsp = dynamic_cast<VentureSP*>(getValue(node->operatorNode));
+  assert(_vsp);
+  return _vsp;
+}
+
 void Particle::maybeCloneSPAux(Node * node)
 {
-  Node * makerNode = node->vsp()->makerNode;
+  Node * makerNode = vsp(node)->makerNode;
   if (makerNode->madeSPAux && !spauxs.count(makerNode))
   {
     spauxs[makerNode] = makerNode->madeSPAux->clone();
@@ -30,8 +37,8 @@ void Particle::registerSPAux(Node * makerNode,SPAux * freshSPAux)
 SPAux * Particle::getSPAux(Node * node)
 {
   if (!sp(node)->hasAux()) { return nullptr; }
-  assert(spauxs.count(node->vsp()->makerNode));
-  return spauxs[node->vsp()->makerNode];
+  assert(spauxs.count(vsp(node)->makerNode));
+  return spauxs[vsp(node)->makerNode];
 }
 
 SPAux * Particle::getMadeSPAux(Node * makerNode)
@@ -46,6 +53,19 @@ SP * Particle::sp(Node * node)
   VentureSP * vsp = dynamic_cast<VentureSP*>(op);
   assert(vsp);
   return vsp->sp;
+}
+
+void Particle::registerReference(Node * node,Node * lookedUpNode)
+{
+  children.insert({lookedUpNode,node});
+  if (isReference(lookedUpNode))
+  {
+    sourceNodes[node] = lookedUpNode->sourceNode; 
+  }
+  else
+  {
+    sourceNodes[node] = lookedUpNode;
+  }
 }
 
 bool Particle::isReference(Node * node)
@@ -99,22 +119,26 @@ void Particle::registerConstrainedChoice(Node * node)
 
 void Particle::registerRandomChoice(Node * node)
 {
-  assert(randomChoices.count(node));
   randomChoices.insert(node);
 }
 
 void Particle::unregisterConstrainedChoice(Node * node)
 {
+  assert(constrainedChoices.count(node));
   constrainedChoices.erase(node);
 }
 
 Args Particle::makeArgs(Node * node)
 {
-  Args args(node);
+  Args args;
+  
   for (Node * operandNode : node->operandNodes)
   { args.operands.push_back(getValue(operandNode)); }
+  args.operandNodes = node->operandNodes;
 
   if (node->requestNode) { args.request = getValue(node->requestNode); }
+  args.requestNode = node->requestNode;
+  args.outputNode = node->outputNode;
 
   for (Node * esrNode : esrParents[node])
   {
@@ -123,5 +147,10 @@ Args Particle::makeArgs(Node * node)
   args.esrNodes = esrParents[node];
 
   args.spaux = getSPAux(node);
+
+//  args.madeSPAux = getMadeSPAux(node);
+  args.familyEnv = node->familyEnv;
+  args.nodeType = node->nodeType;
+
   return args;
 }

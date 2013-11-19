@@ -18,12 +18,19 @@
 
 void Trace::commit(Particle * omega)
 {
+  cout << "Commit!" << endl;
+
   for (Node * rcNode : omega->randomChoices) { registerRandomChoice(rcNode); }
   for (Node * crcNode : omega->constrainedChoices) { registerConstrainedChoice(crcNode); }
   for (pair<Node *, vector<Node *> > p : omega->esrParents)
   {
     assert(p.first->esrParents.empty());
     p.first->esrParents = p.second;
+  }
+  
+  for (pair<Node *, Node*> p : omega->children)
+  {
+    p.first->children.insert(p.second);
   }
 
   for (pair<Node *, Node*> p : omega->sourceNodes) { p.first->sourceNode = p.second; }

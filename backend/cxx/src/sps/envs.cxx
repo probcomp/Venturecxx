@@ -1,12 +1,12 @@
 #include "sps/envs.h"
 #include "value.h"
 #include "env.h"
-#include "node.h"
+
 #include "utils.h"
 
 VentureValue * GetCurrentEnvSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
-  return node->familyEnv;
+  return args.familyEnv;
 }
 
 void GetCurrentEnvSP::flushOutput(VentureValue * value) const { }
@@ -24,7 +24,7 @@ VentureValue * ExtendEnvSP::simulateOutput(const Args & args, gsl_rng * rng) con
   VentureEnvironment * extendedEnv = new VentureEnvironment(env);
   VentureSymbol * vsym = dynamic_cast<VentureSymbol*>(args.operands[1]);
   assert(vsym);
-  extendedEnv->addBinding(vsym,args.operands[2]);
+  extendedEnv->addBinding(vsym,args.operandNodes[2]);
   return extendedEnv;
 }
 

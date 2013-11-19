@@ -3,7 +3,6 @@
 
 #include <map>
 #include <set>
-#include <unordered_map>
 #include <vector>
 #include <queue>
 
@@ -14,6 +13,7 @@ using namespace std;
 
 struct Node;
 struct VentureValue;
+struct VentureSP;
 struct SPAux;
 
 struct Particle
@@ -26,6 +26,7 @@ struct Particle
   SPAux * getMadeSPAux(Node * makerNode);
 
   SP * sp(Node * node);
+  VentureSP * vsp(Node * node);
 
   void registerReference(Node * node,Node * lookedUpNode);
   bool isReference(Node * node);
@@ -45,6 +46,10 @@ struct Particle
 
   set<Node *> randomChoices;
   set<Node *> constrainedChoices;
+
+  // TODO urgent: needs to track this during detach
+  multimap<Node *, Node *> children;
+
 
   map<Node*,vector<Node*> > esrParents; // not actually necessary, but may be convenient
   map<Node *, Node *> sourceNodes;
