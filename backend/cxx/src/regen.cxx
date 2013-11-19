@@ -148,19 +148,15 @@ double Trace::regenInternal(Node * node,
   return weight;
 }
 
-/* TODO should load makerNode as well */
 void Trace::processMadeSP(Node * node, bool isAAA)
 {
   callCounts[{"processMadeSP",false}]++;
 
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
+  assert(vsp);
   if (vsp->makerNode) { return; }
 
   callCounts[{"processMadeSPfull",false}]++;
-
-
-
-  assert(vsp);
 
   SP * madeSP = vsp->sp;
   vsp->makerNode = node;
@@ -178,7 +174,6 @@ double Trace::applyPSP(Node * node,
 		       OmegaDB * omegaDB,
 		       map<Node *,vector<double> > *gradients)
 {
-  DPRINT("applyPSP: ", node->address.toString());
   callCounts[{"applyPSP",false}]++;
   SP * sp = node->sp();
 
@@ -259,7 +254,7 @@ double Trace::applyPSP(Node * node,
 
   if (dynamic_cast<VentureSP *>(node->getValue()))
   { processMadeSP(node,scaffold && scaffold->isAAA(node)); }
-  if (node->sp()->isRandom(node->nodeType)) { registerRandomChoice(node); }
+  if (sp->isRandom(node->nodeType)) { registerRandomChoice(node); }
   if (node->nodeType == NodeType::REQUEST) { evalRequests(node,scaffold,shouldRestore,omegaDB,gradients); }
 
 
@@ -277,6 +272,7 @@ double Trace::evalRequests(Node * node,
   double weight = 0;
 
   VentureRequest * requests = dynamic_cast<VentureRequest *>(node->getValue());
+  assert(requests);
 
   /* First evaluate ESRs. */
   for (ESR esr : requests->esrs)
