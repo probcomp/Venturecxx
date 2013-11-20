@@ -182,6 +182,14 @@ void Trace::constrainChoice(Node * node)
 void Trace::setConstrained(Node * node,bool isConstrained) { node->isConstrained = isConstrained; }
 void Trace::setNodeOwnsValue(Node * node,bool giveOwnershipToSP) { node->spOwnsValue = giveOwnershipToSP; }
 
-// OmegaDB will override this
-void Trace::extractValue(Node * node, VentureValue * value) { }
-
+Node * Trace::removeLastESREdge(Node * outputNode)
+{
+  vector<Node *> & esrParents = outputNode->esrParents;
+  assert(!esrParents.empty());
+  Node * esrParent = esrParents.back();
+  assert(esrParent);
+  esrParent->children.erase(outputNode);
+  esrParent->numRequests--;
+  esrParents.pop_back();
+  return esrParent;
+}

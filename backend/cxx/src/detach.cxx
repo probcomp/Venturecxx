@@ -208,7 +208,6 @@ double Trace::unapplyPSP(Node * node,
 
   if (scaffold && scaffold->isResampling(node))
   { 
-//    extractValue(node);
     omegaDB->drgDB[node] = getValue(node);  
     clearValue(node); 
   }
@@ -243,7 +242,7 @@ double Trace::unevalRequests(Node * node,
     assert(!getESRParents(node->outputNode).empty());
 
     // TODO URGENT give trace responsibility
-    Node * esrParent = node->outputNode->removeLastESREdge();
+    Node * esrParent = removeLastESREdge(node->outputNode);
     assert(esrParent);
     assert(esrParent->isValid());
 

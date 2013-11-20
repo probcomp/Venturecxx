@@ -240,7 +240,8 @@ struct Trace
   void setConstrained(Node * node,bool isConstrained);
   void setNodeOwnsValue(Node * node,bool giveOwnershipToSP);
 
-  void extractValue(Node * node, VentureValue * value);
+  Node * removeLastESREdge(Node * outputNode);
+
 
 };
 
