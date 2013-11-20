@@ -104,7 +104,21 @@ bool Trace::isReference(Node * node)
   return node->sourceNode != nullptr;
 }
 
+void Trace::registerReference(Node * node, Node * lookedUpNode) 
+{ 
+  assert(node->_value == nullptr);
+  if (isReference(lookedUpNode))
+    {
+      setSourceNode(node, getSourceNode(lookedUpNode));
+    }
+  else
+    {
+      setSourceNode(node,lookedUpNode);
+    }
+}
+
 Node * Trace::getSourceNode(Node * node) { return node->sourceNode; }
+void Trace::setSourceNode(Node * node, Node * sourceNode) { node->sourceNode = sourceNode; }
 
 VentureValue * Trace::getValue(Node * node)
 {

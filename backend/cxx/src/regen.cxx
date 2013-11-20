@@ -133,7 +133,7 @@ double Trace::regenInternal(Node * node,
     {
       weight += regenParents(node,scaffold,shouldRestore,omegaDB,gradients);
       if (node->nodeType == NodeType::LOOKUP)
-      { node->registerReference(node->lookedUpNode); }
+      { registerReference(node,node->lookedUpNode); }
       else /* Application node */
       { weight += applyPSP(node,scaffold,shouldRestore,omegaDB,gradients); }
       node->isActive = true;
@@ -184,7 +184,7 @@ double Trace::applyPSP(Node * node,
   if (node->nodeType == NodeType::OUTPUT && sp->isESRReference)
   {
     assert(!node->esrParents.empty());
-    node->registerReference(node->esrParents[0]);
+    registerReference(node,getESRParents(node)[0]);
     return 0;
   }
   if (node->nodeType == NodeType::REQUEST && sp->isNullRequest())
@@ -432,7 +432,7 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
 
     node = new Node(NodeType::LOOKUP,nullptr);
     Node::addLookupEdge(lookedUpNode,node);
-    node->registerReference(lookedUpNode);
+    registerReference(node,lookedUpNode);
     node->isActive = true;
   }
   /* Self-evaluating */
