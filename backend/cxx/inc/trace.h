@@ -216,13 +216,13 @@ struct Trace
 
 
 //////////////////////////////////////////////
-
+  
+  bool isReference(Node * node);
   VentureValue * getValue(Node * node);
   SP * getSP(Node * node);
   VentureSP * getVSP(Node * node);
   SPAux * getSPAux(Node * node);
   SPAux * getMadeSPAux(Node * makerNode);
-
 
 };
 

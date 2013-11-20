@@ -99,13 +99,19 @@ void Trace::addApplicationEdges(Node * operatorNode,const vector<Node *> & opera
 
 ////////////////////////////////
 
+bool Trace::isReference(Node * node)
+{
+  return node->sourceNode != nullptr;
+}
+
+
 VentureValue * Trace::getValue(Node * node)
 {
   // TODO trace should control isReference
-  if (node->isReference())
+  if (isReference(node))
   {
     assert(node->sourceNode);
-    assert(!node->sourceNode->isReference());
+    assert(!isReference(node->sourceNode));
     return getValue(node->sourceNode);
   }
   else
