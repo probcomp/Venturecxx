@@ -18,13 +18,13 @@
 
 using boost::adaptors::reverse;
 
-pair<double, OmegaDB*> Trace::detach(const vector<Node *> & border,
-					 Scaffold * scaffold)
+double Trace::detach(const vector<Node *> & border,
+				     Scaffold * scaffold,
+				     OmegaDB * omegaDB)
 {
   assert(scaffold);
 
   double weight = 0;
-  OmegaDB * omegaDB = new OmegaDB;
 
   for (Node * node : reverse(border))
   {
@@ -43,7 +43,7 @@ pair<double, OmegaDB*> Trace::detach(const vector<Node *> & border,
     }
   }
   
-  return make_pair(weight,omegaDB);
+  return weight;
 }
 
 double Trace::detachParents(Node * node,
@@ -75,6 +75,7 @@ double Trace::unabsorb(Node * node,
 		       OmegaDB * omegaDB)
 {
   assert(scaffold);
+  preUnabsorb(node);
   double weight = 0;
   getSP(node)->remove(getValue(node),getArgs(node));
   weight += getSP(node)->logDensity(getValue(node),getArgs(node));
@@ -89,6 +90,7 @@ double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
   else
   {
     assert(getSP(node)->isRandomOutput);
+    preUnconstrain(node);
     if (getSP(node)->isRandomOutput) { unconstrainChoice(node); }
     getSP(node)->removeOutput(getValue(node),getArgs(node));
     double logDensity = getSP(node)->logDensityOutput(getValue(node),getArgs(node));
@@ -168,6 +170,7 @@ double Trace::unapplyPSP(Node * node,
 
   assert(node->isValid());
   assert(getSP(node)->isValid());
+  preUnapplyPSP(node);
 
   if (node->nodeType == NodeType::OUTPUT && getSP(node)->isESRReference) 
   { 
@@ -223,6 +226,7 @@ double Trace::unevalRequests(Node * node,
   assert(node->nodeType == NodeType::REQUEST);
   if (!getValue(node)) { return 0; }
 
+  preUnevalRequests(node);
   double weight = 0;
   VentureRequest * requests = dynamic_cast<VentureRequest *>(getValue(node));
 
@@ -268,10 +272,7 @@ double Trace::detachSPFamily(VentureSP * vsp,
   assert(root);
   spaux->families.erase(id);
 
-  if (!spaux->ownedValues.empty())
-  {
-    omegaDB->spOwnedValues[make_pair(vsp->makerNode,id)] = spaux->ownedValues[id];
-  }
+  if (!spaux->ownedValues.empty()) { omegaDB->spOwnedValues[make_pair(vsp->makerNode,id)] = spaux->ownedValues[id]; }
 
   spaux->ownedValues.erase(id);
 

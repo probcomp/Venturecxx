@@ -42,8 +42,9 @@ struct Trace
 	       OmegaDB * omegaDB,
 	       map<Node *,vector<double> > *gradients);
 
-  pair<double, OmegaDB*> detach(const vector<Node *> & border,
-				Scaffold * scaffold);
+  double detach(const vector<Node *> & border,
+		Scaffold * scaffold,
+		OmegaDB * omegaDB);
 
 
   pair<double, Node*> evalVentureFamily(size_t directiveID, VentureValue * expression,
@@ -242,6 +243,17 @@ struct Trace
 
   Node * removeLastESREdge(Node * outputNode);
   void addESREdge(Node * esrParent,Node * outputNode);
+
+  void disconnectLookup(Node * node);
+
+  void preUnabsorb(Node * node) {}
+  void preAbsorb(Node * node) {}
+  void preUnapplyPSP(Node * node) {}
+  void preApplyPSP(Node * node) {}
+  void preUnevalRequests(Node * requestNode) {}
+  void preEvalRequests(Node * requestNode) {}
+  void preUnconstrain(Node * node) {}
+  void preConstrain(Node * node) {}
 
 };
 

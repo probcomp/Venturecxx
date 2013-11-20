@@ -68,9 +68,8 @@ void discardAncestorPath(Trace * trace,
 {
   for (int i = t - 1; i >= 0; i--)
   {
-    double weight;
-    OmegaDB * detachedDB;
-    tie(weight,detachedDB) = trace->detach({scaffold->border[i]},scaffold);
+    OmegaDB * detachedDB = new OmegaDB;
+    trace->detach({scaffold->border[i]},scaffold,detachedDB);
     flushDB(detachedDB,true);
   }
 }
@@ -216,6 +215,7 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
   { 
     ancestorIndices[t].resize(P+1); 
     omegaDBs[t].resize(P+1);
+    for (size_t p = 0 ; p < P+1; ++p) { omegaDBs[t][p] = new OmegaDB; }
   }
   vector<double> weightsRho(T);
   vector<double> weights(P+1);
@@ -228,7 +228,7 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
 
   for (int t = T-1; t >= 0; --t)
   {
-    tie(weightsRho[t],omegaDBs[t][P]) = trace->detach({scaffold->border[t]},scaffold);
+    weightsRho[t] = trace->detach({scaffold->border[t]},scaffold,omegaDBs[t][P]);
     if (t >= 1) { ancestorIndices[t][P] = P; }
   }
   check.checkTorus(scaffold);
@@ -237,7 +237,7 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
   for (size_t p = 0; p < P; ++p)
   {
     trace->regen({scaffold->border[0]},scaffold,false,nullptr,nullptr);
-    tie(weights[p],omegaDBs[0][p]) = trace->detach({scaffold->border[0]},scaffold);
+    weights[p] = trace->detach({scaffold->border[0]},scaffold,omegaDBs[0][p]);
     check.checkTorus(scaffold);
   }
 
@@ -255,7 +255,7 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
       vector<uint32_t> path = constructAncestorPath(ancestorIndices,t,p);
       restoreAncestorPath(trace,scaffold,omegaDBs,path);
       trace->regen({scaffold->border[t]},scaffold,false,nullptr,nullptr);
-      tie(newWeights[p],omegaDBs[t][p]) = trace->detach({scaffold->border[t]},scaffold);
+      newWeights[p] = trace->detach({scaffold->border[t]},scaffold,omegaDBs[t][p]);
       discardAncestorPath(trace,scaffold,t);
       check.checkTorus(scaffold);
     }

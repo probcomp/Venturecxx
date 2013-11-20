@@ -201,3 +201,4 @@ void Trace::addESREdge(Node * esrParent,Node * outputNode)
   outputNode->esrParents.push_back(esrParent);
   esrParent->numRequests++;
 }
+

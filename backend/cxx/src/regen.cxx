@@ -72,6 +72,7 @@ double Trace::absorb(Node * node,
 		     OmegaDB * omegaDB,
 		     map<Node *,vector<double> > *gradients)
 {
+  preAbsorb(node);
   assert(scaffold);
   double weight = 0;
   weight += regenParents(node,scaffold,shouldRestore,omegaDB,gradients);
@@ -90,6 +91,7 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
        this in loadDefaultKernels instead. */
     assert(getSP(node)->isRandomOutput);
     assert(getSP(node)->canAbsorbOutput); // TODO temporary
+    preConstrain(node);
     getSP(node)->removeOutput(getValue(node),getArgs(node));
 
     if (reclaimValue) { getSP(node)->flushOutput(getValue(node)); }
@@ -165,7 +167,7 @@ double Trace::applyPSP(Node * node,
 {
   callCounts[{"applyPSP",false}]++;
   SP * sp = getSP(node);
-
+  preApplyPSP(node);
   assert(node->isValid());
   assert(sp->isValid());
 
@@ -258,6 +260,7 @@ double Trace::evalRequests(Node * node,
 {
   /* Null request does not bother malloc-ing */
   if (!getValue(node)) { return 0; }
+  preEvalRequests(node);
   double weight = 0;
 
   VentureRequest * requests = dynamic_cast<VentureRequest *>(getValue(node));

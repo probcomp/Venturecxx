@@ -80,11 +80,12 @@ void GibbsSelectGKernel::accept()
 void GibbsSelectGKernel::reject()
 {
   assert(chosenIndex != UINT32_MAX);
-  pair<double,OmegaDB *> xiInfo = trace->detach(scaffold->border,scaffold);
+  OmegaDB * xiDB = new OmegaDB;
+  trace->detach(scaffold->border,scaffold,xiDB);
   check.checkTorus(scaffold);
   trace->regen(scaffold->border,scaffold,true,source.second,nullptr);
   flushDB(source.second,true);
-  flushDB(xiInfo.second,true); // subtle! only flush the latents twice (TODO discuss)
+  flushDB(xiDB,true); // subtle! only flush the latents twice (TODO discuss)
   for (size_t i = 0; i < targets.size(); ++i)
   {
     flushDB(targets[i].second,false);
@@ -128,7 +129,8 @@ MixMHIndex * GibbsGKernel::sampleIndex()
       canEnumerate = true;
       LKernel * lk = new DeterministicLKernel(oldValue,trace->getSP(pNode));
       scaffold->lkernels[pNode] = lk;
-      pindex->source = trace->detach(scaffold->border,scaffold);
+      OmegaDB * sourceDB = new OmegaDB;
+      pindex->source = make_pair(trace->detach(scaffold->border,scaffold,sourceDB),sourceDB);
       check.checkTorus(scaffold);
       scaffold->lkernels.erase(pNode);
       delete lk;
@@ -140,7 +142,8 @@ MixMHIndex * GibbsGKernel::sampleIndex()
 	LKernel * lk = new DeterministicLKernel(values[i],pNode->sp());
 	scaffold->lkernels[pNode] = lk;
 	trace->regen(scaffold->border,scaffold,false,nullptr,nullptr);
-	pindex->targets.push_back(trace->detach(scaffold->border,scaffold));
+	OmegaDB * targetDB = new OmegaDB;
+	pindex->targets.push_back({trace->detach(scaffold->border,scaffold,targetDB),targetDB});
 	check.checkTorus(scaffold);
 	scaffold->lkernels.erase(pNode);
 	delete lk;
@@ -151,13 +154,15 @@ MixMHIndex * GibbsGKernel::sampleIndex()
   /* Otherwise sample particles */
   if (!canEnumerate)
   {
-    pindex->source = trace->detach(scaffold->border,scaffold);
+    OmegaDB * sourceDB = new OmegaDB;
+    pindex->source = make_pair(trace->detach(scaffold->border,scaffold,sourceDB),sourceDB);
     check.checkTorus(scaffold);
 
     for (size_t p = 0; p < P; ++p)
     {
       trace->regen(scaffold->border,scaffold,false,nullptr,nullptr);
-      pindex->targets.push_back(trace->detach(scaffold->border,scaffold));
+      OmegaDB * targetDB = new OmegaDB;
+      pindex->targets.push_back({trace->detach(scaffold->border,scaffold,targetDB),targetDB});
       check.checkTorus(scaffold);
     }
   }

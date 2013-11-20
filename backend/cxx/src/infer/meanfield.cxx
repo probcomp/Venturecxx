@@ -24,8 +24,8 @@ void MeanFieldGKernel::accept()
 
 void MeanFieldGKernel::reject()
 {
-  pair<double, OmegaDB *> xiInfo = trace->detach(scaffold->border,scaffold);
-  OmegaDB * xiDB = xiInfo.second;
+  OmegaDB * xiDB = new OmegaDB;
+  trace->detach(scaffold->border,scaffold,xiDB);
   check.checkTorus(scaffold);
   trace->regen(scaffold->border,scaffold,true,rhoDB,nullptr);
   flushDB(rhoDB,true);
@@ -69,7 +69,8 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
   if (!registerVariationalLKernels()) { numIters = 0; }
   double rhoWeight;
 
-  tie(rhoWeight,rhoDB) = trace->detach(scaffold->border,scaffold);
+  rhoDB = new OmegaDB;
+  rhoWeight = trace->detach(scaffold->border,scaffold,rhoDB);
   check.checkTorus(scaffold);
 
   for (size_t i = 0; i < numIters; ++i)
@@ -79,8 +80,8 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
     // Regen populates the gradients
     double gain = trace->regen(scaffold->border,scaffold,false,nullptr,&gradients);
 
-    OmegaDB * detachedDB;
-    tie(ignore,detachedDB) = trace->detach(scaffold->border,scaffold);
+    OmegaDB * detachedDB = new OmegaDB;
+    trace->detach(scaffold->border,scaffold,detachedDB);
     check.checkTorus(scaffold);
     flushDB(detachedDB,false);
 
@@ -95,8 +96,8 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
     }
   }
   trace->regen(scaffold->border,scaffold,true,rhoDB,nullptr);
-  OmegaDB * rhoDB2;
-  tie(weightRho,rhoDB2) = trace->detach(scaffold->border,scaffold);
+  OmegaDB * rhoDB2 = new OmegaDB;
+  weightRho = trace->detach(scaffold->border,scaffold,rhoDB2);
   flushDB(rhoDB2,true);
   check.checkTorus(scaffold);
 }
