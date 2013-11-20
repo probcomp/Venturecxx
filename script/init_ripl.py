@@ -1,3 +1,5 @@
+#!/usr/bin/python -i
+
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
 # 
 # This file is part of Venture.
@@ -13,6 +15,6 @@
 # GNU General Public License for more details.
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-# run with (i)python -i
+
 from venture import shortcuts
 ripl = shortcuts.make_church_prime_ripl()
