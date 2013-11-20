@@ -241,7 +241,7 @@ struct Trace
   void setNodeOwnsValue(Node * node,bool giveOwnershipToSP);
 
   Node * removeLastESREdge(Node * outputNode);
-
+  void addESREdge(Node * esrParent,Node * outputNode);
 
 };
 

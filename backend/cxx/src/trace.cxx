@@ -193,3 +193,11 @@ Node * Trace::removeLastESREdge(Node * outputNode)
   esrParents.pop_back();
   return esrParent;
 }
+
+void Trace::addESREdge(Node * esrParent,Node * outputNode)
+{
+  esrParent->children.insert(outputNode);
+
+  outputNode->esrParents.push_back(esrParent);
+  esrParent->numRequests++;
+}

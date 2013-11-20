@@ -294,7 +294,7 @@ double Trace::evalRequests(Node * node,
       assert(dynamic_cast<MSP*>(getSP(node)));
       
     }
-    Node::addESREdge(esrParent,node->outputNode);
+    addESREdge(esrParent,node->outputNode);
   }
 
   /* Next evaluate HSRs. */
