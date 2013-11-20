@@ -59,7 +59,8 @@ double Trace::detachParents(Node * node,
 
   if (node->nodeType == NodeType::OUTPUT)
   {
-    for (Node * esrParent : reverse(getESRParents(node)))
+    vector<Node *> esrParents = getESRParents(node);
+    for (Node * esrParent : reverse(esrParents))
     { weight += detachInternal(esrParent,scaffold,omegaDB); }
     weight += detachInternal(node->requestNode,scaffold,omegaDB);
   }
@@ -330,7 +331,8 @@ double Trace::unapply(Node * node,
   double weight = 0;
 
   weight += unapplyPSP(node,scaffold,omegaDB);
-  for (Node * esrParent : reverse(getESRParents(node)))
+  vector<Node *> esrParents = getESRParents(node);
+  for (Node * esrParent : reverse(esrParents))
   { weight += detachInternal(esrParent,scaffold,omegaDB); }
   weight += unapplyPSP(node->requestNode,scaffold,omegaDB);
 
