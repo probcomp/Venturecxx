@@ -89,7 +89,7 @@ double Trace::constrain(Node * node,bool reclaimValue)
 double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
 {
   assert(node->isActive);
-  if (node->isReference()) { return constrain(node->sourceNode,value,reclaimValue); }
+  if (isReference(node)) { return constrain(node->sourceNode,value,reclaimValue); }
   else
   {
     /* New restriction, to ensure that we did not propose to an
@@ -142,7 +142,7 @@ double Trace::regenInternal(Node * node,
   }
   else if (scaffold->hasAAANodes)
   {
-    if (node->isReference() && scaffold->isAAA(node->sourceNode))
+    if (isReference(node) && scaffold->isAAA(node->sourceNode))
     { weight += regenInternal(node->sourceNode,scaffold,shouldRestore,omegaDB,gradients); }
   }
   return weight;
@@ -192,7 +192,7 @@ double Trace::applyPSP(Node * node,
     return 0;
   }
 
-  assert(!node->isReference());
+  assert(!isReference(node));
 
   /* Otherwise we need to actually do things. */
 

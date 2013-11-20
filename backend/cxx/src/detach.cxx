@@ -59,7 +59,7 @@ double Trace::detachParents(Node * node,
 
   if (node->nodeType == NodeType::OUTPUT)
   {
-    for (Node * esrParent : reverse(node->esrParents))
+    for (Node * esrParent : reverse(getESRParents(node)))
     { weight += detachInternal(esrParent,scaffold,omegaDB); }
     weight += detachInternal(node->requestNode,scaffold,omegaDB);
   }
@@ -84,7 +84,7 @@ double Trace::unabsorb(Node * node,
 double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
 {
   assert(node->isActive);
-  if (node->isReference())
+  if (isReference(node))
   { return unconstrain(node->sourceNode,giveOwnershipToSP); }
   else
   {
@@ -131,7 +131,7 @@ double Trace::detachInternal(Node * node,
   }
   else if (scaffold->hasAAANodes)
   {
-    if (node->isReference() && scaffold->isAAA(node->sourceNode))
+    if (isReference(node) && scaffold->isAAA(node->sourceNode))
     { weight += detachInternal(node->sourceNode,scaffold,omegaDB); }
   }
   return weight;
@@ -168,7 +168,6 @@ double Trace::unapplyPSP(Node * node,
 			 Scaffold * scaffold,
 			 OmegaDB * omegaDB)
 {
-  DPRINT("unapplyPSP: ", node->address.toString());
   callCounts[{"applyPSP",true}]++;
 
   assert(node->isValid());
@@ -249,7 +248,8 @@ double Trace::unevalRequests(Node * node,
   {
     assert(getSPAux(node));
     assert(getSPAux(node)->isValid());
-    assert(!node->outputNode->esrParents.empty());
+    assert(!getESRParents(node->outputNode).empty());
+    // TODO give trace responsibility
     Node * esrParent = node->outputNode->removeLastESREdge();
     assert(esrParent);
     assert(esrParent->isValid());
@@ -301,7 +301,6 @@ double Trace::detachFamily(Node * node,
 			   OmegaDB * omegaDB)
 {
   assert(node);
-  DPRINT("uneval: ", node->address.toString());
   double weight = 0;
   
   if (node->nodeType == NodeType::VALUE) 
@@ -331,7 +330,7 @@ double Trace::unapply(Node * node,
   double weight = 0;
 
   weight += unapplyPSP(node,scaffold,omegaDB);
-  for (Node * esrParent : reverse(node->esrParents))
+  for (Node * esrParent : reverse(getESRParents(node)))
   { weight += detachInternal(esrParent,scaffold,omegaDB); }
   weight += unapplyPSP(node->requestNode,scaffold,omegaDB);
 
