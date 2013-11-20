@@ -19,8 +19,8 @@
 using boost::adaptors::reverse;
 
 double Trace::detach(const vector<Node *> & border,
-				     Scaffold * scaffold,
-				     OmegaDB * omegaDB)
+		     Scaffold * scaffold)
+
 {
   assert(scaffold);
 
@@ -30,7 +30,7 @@ double Trace::detach(const vector<Node *> & border,
   {
     if (scaffold->isAbsorbing(node))
     { 
-      weight += unabsorb(node,scaffold,omegaDB); 
+      weight += unabsorb(node,scaffold); 
     }
     else
     {
@@ -39,7 +39,7 @@ double Trace::detach(const vector<Node *> & border,
       { 
 	weight += unconstrain(node,false);
       }
-      weight += detachInternal(node,scaffold,omegaDB);
+      weight += detachInternal(node,scaffold);
     }
   }
   
@@ -47,39 +47,37 @@ double Trace::detach(const vector<Node *> & border,
 }
 
 double Trace::detachParents(Node * node,
-			    Scaffold * scaffold,
-			    OmegaDB * omegaDB)
+			    Scaffold * scaffold)
 {
   assert(scaffold);
   double weight = 0;
   assert(node->nodeType != NodeType::VALUE);
 
   if (node->nodeType == NodeType::LOOKUP)
-  { return detachInternal(node->lookedUpNode,scaffold,omegaDB); }
+  { return detachInternal(node->lookedUpNode,scaffold); }
 
   if (node->nodeType == NodeType::OUTPUT)
   {
     vector<Node *> esrParents = getESRParents(node);
     for (Node * esrParent : reverse(esrParents))
-    { weight += detachInternal(esrParent,scaffold,omegaDB); }
-    weight += detachInternal(node->requestNode,scaffold,omegaDB);
+    { weight += detachInternal(esrParent,scaffold); }
+    weight += detachInternal(node->requestNode,scaffold);
   }
   for (Node * operandNode : reverse(node->operandNodes))
-  { weight += detachInternal(operandNode,scaffold,omegaDB); }
-  weight += detachInternal(node->operatorNode,scaffold,omegaDB);
+  { weight += detachInternal(operandNode,scaffold); }
+  weight += detachInternal(node->operatorNode,scaffold);
   return weight;
 }
 
 double Trace::unabsorb(Node * node,
-		       Scaffold * scaffold,
-		       OmegaDB * omegaDB)
+		       Scaffold * scaffold)
 {
   assert(scaffold);
   preUnabsorb(node);
   double weight = 0;
   getSP(node)->remove(getValue(node),getArgs(node));
   weight += getSP(node)->logDensity(getValue(node),getArgs(node));
-  weight += detachParents(node,scaffold,omegaDB);
+  weight += detachParents(node,scaffold);
   return weight;
 }
 
@@ -102,8 +100,7 @@ double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
 }
 
 double Trace::detachInternal(Node * node,
-			     Scaffold * scaffold,
-			     OmegaDB * omegaDB)
+			     Scaffold * scaffold)
 {
   if (!scaffold) { return 0; }
   double weight = 0;
@@ -122,21 +119,22 @@ double Trace::detachInternal(Node * node,
     {
       if (node->isApplication())
       { 
-	weight += unapplyPSP(node,scaffold,omegaDB); 
+	weight += unapplyPSP(node,scaffold); 
       }
 
-      weight += detachParents(node,scaffold,omegaDB);
+      weight += detachParents(node,scaffold);
     }
   }
   else if (scaffold->hasAAANodes)
   {
     if (isReference(node) && scaffold->isAAA(getSourceNode(node)))
-    { weight += detachInternal(getSourceNode(node),scaffold,omegaDB); }
+    { weight += detachInternal(getSourceNode(node),scaffold); }
   }
   return weight;
 }
 
-void Trace::teardownMadeSP(Node * node, bool isAAA,OmegaDB * omegaDB)
+void Trace::teardownMadeSP(Node * node, 
+			   bool isAAA)
 {
   callCounts[{"processMadeSP",true}]++;
 
@@ -163,8 +161,7 @@ void Trace::teardownMadeSP(Node * node, bool isAAA,OmegaDB * omegaDB)
 
 
 double Trace::unapplyPSP(Node * node,
-			 Scaffold * scaffold,
-			 OmegaDB * omegaDB)
+			 Scaffold * scaffold)
 {
   callCounts[{"applyPSP",true}]++;
 
@@ -181,11 +178,11 @@ double Trace::unapplyPSP(Node * node,
   
   assert(getValue(node)->isValid());
 
-  if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,omegaDB); }
+  if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold); }
   if (getSP(node)->isRandom(node->nodeType)) { unregisterRandomChoice(node); }
   
   if (dynamic_cast<VentureSP*>(getValue(node)))
-  { teardownMadeSP(node,scaffold && scaffold->isAAA(node),omegaDB); }
+  { teardownMadeSP(node,scaffold && scaffold->isAAA(node)); }
 
   SP * sp = getSP(node);
   double weight = 0;
@@ -199,19 +196,18 @@ double Trace::unapplyPSP(Node * node,
   { 
     pair<double, LatentDB *> p = getSP(node)->detachAllLatents(getSPAux(node));
     weight += p.first;
-    assert(!omegaDB->latentDBs.count(getSP(node)));
-    omegaDB->latentDBs.insert({getSP(node),p.second});
+    extractLatentDB(getSP(node),p.second);
   }
 
 
   if (node->spOwnsValue) 
   { 
-    omegaDB->flushQueue.emplace(getSP(node),getValue(node),node->nodeType); 
+    registerGarbage(getSP(node),getValue(node),node->nodeType);
   }
 
   if (scaffold && scaffold->isResampling(node))
   { 
-    omegaDB->drgDB[node] = getValue(node);  
+    extractValue(node,getValue(node));
     clearValue(node); 
   }
 
@@ -220,8 +216,7 @@ double Trace::unapplyPSP(Node * node,
 
 
 double Trace::unevalRequests(Node * node,
-			     Scaffold * scaffold,
-			     OmegaDB * omegaDB)
+			     Scaffold * scaffold)
 {
   assert(node->nodeType == NodeType::REQUEST);
   if (!getValue(node)) { return 0; }
@@ -230,13 +225,16 @@ double Trace::unevalRequests(Node * node,
   double weight = 0;
   VentureRequest * requests = dynamic_cast<VentureRequest *>(getValue(node));
 
-  if (!requests->hsrs.empty() && !omegaDB->latentDBs.count(getSP(node)))
-  { omegaDB->latentDBs[getSP(node)] = getSP(node)->constructLatentDB(); }
+  if (!requests->hsrs.empty()) 
+  { 
+    prepareLatentDB(getSP(node));
+  }
 
   for (HSR * hsr : reverse(requests->hsrs))
   {
-    LatentDB * latentDB = omegaDB->latentDBs[getSP(node)];
+    LatentDB * latentDB = getLatentDB(getSP(node)); 
     weight += getSP(node)->detachLatents(getSPAux(node),hsr,latentDB);
+    processDetachedLatentDB(getSP(node),latentDB); 
   }
 
   for (ESR esr : reverse(requests->esrs))
@@ -245,14 +243,13 @@ double Trace::unevalRequests(Node * node,
     assert(getSPAux(node)->isValid());
     assert(!getESRParents(node->outputNode).empty());
 
-    // TODO URGENT give trace responsibility
     Node * esrParent = removeLastESREdge(node->outputNode);
     assert(esrParent);
     assert(esrParent->isValid());
 
     if (esrParent->numRequests == 0)
     { 
-      weight += detachSPFamily(getVSP(node),esr.id,scaffold,omegaDB); 
+      weight += detachSPFamily(getVSP(node),esr.id,scaffold); 
     }
   }
 
@@ -261,8 +258,7 @@ double Trace::unevalRequests(Node * node,
 
 double Trace::detachSPFamily(VentureSP * vsp,
 			     size_t id,
-			     Scaffold * scaffold,
-			     OmegaDB * omegaDB)
+			     Scaffold * scaffold)
 {
   assert(vsp);
   assert(vsp->makerNode);
@@ -272,26 +268,28 @@ double Trace::detachSPFamily(VentureSP * vsp,
   assert(root);
   spaux->families.erase(id);
 
-  if (!spaux->ownedValues.empty()) { omegaDB->spOwnedValues[make_pair(vsp->makerNode,id)] = spaux->ownedValues[id]; }
+  if (!spaux->ownedValues.empty()) 
+  { 
+    registerSPOwnedValues(vsp->makerNode,id,spaux->ownedValues[id]);
+  }
 
   spaux->ownedValues.erase(id);
 
-  omegaDB->spFamilyDBs[{vsp->makerNode,id}] = root;
+  registerSPFamily(vsp->makerNode,id,root);
+
   
-  double weight = detachFamily(root,scaffold,omegaDB);
-  return weight;
+  return detachFamily(root,scaffold);
 }
 
 /* Does not erase from ventureFamilies */
-double Trace::detachVentureFamily(Node * root,OmegaDB * omegaDB)
+double Trace::detachVentureFamily(Node * root)
 {
   assert(root);
-  return detachFamily(root,nullptr,omegaDB);
+  return detachFamily(root,nullptr);
 }
 
 double Trace::detachFamily(Node * node,
-			   Scaffold * scaffold,
-			   OmegaDB * omegaDB)
+			   Scaffold * scaffold)
 {
   assert(node);
   double weight = 0;
@@ -304,29 +302,28 @@ double Trace::detachFamily(Node * node,
   {
     Node * lookedUpNode = node->lookedUpNode;
     node->disconnectLookup();
-    weight += detachInternal(lookedUpNode,scaffold,omegaDB);
+    weight += detachInternal(lookedUpNode,scaffold);
   }
   else
   {
-    weight += unapply(node,scaffold,omegaDB);
+    weight += unapply(node,scaffold);
     for (Node * operandNode : reverse(node->operandNodes))
-    { weight += detachFamily(operandNode,scaffold,omegaDB); }
-    weight += detachFamily(node->operatorNode,scaffold,omegaDB);
+    { weight += detachFamily(operandNode,scaffold); }
+    weight += detachFamily(node->operatorNode,scaffold);
   }
   return weight;
 }
 
 double Trace::unapply(Node * node,
-		      Scaffold * scaffold,
-		      OmegaDB * omegaDB)
+		      Scaffold * scaffold)
 {
   double weight = 0;
 
-  weight += unapplyPSP(node,scaffold,omegaDB);
+  weight += unapplyPSP(node,scaffold);
   vector<Node *> esrParents = getESRParents(node);
   for (Node * esrParent : reverse(esrParents))
-  { weight += detachInternal(esrParent,scaffold,omegaDB); }
-  weight += unapplyPSP(node->requestNode,scaffold,omegaDB);
+  { weight += detachInternal(esrParent,scaffold); }
+  weight += unapplyPSP(node->requestNode,scaffold);
 
   return weight;
 }

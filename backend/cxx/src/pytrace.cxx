@@ -24,13 +24,14 @@ PyTrace::PyTrace() :
     {{"mh",false}, new OutermostMixMH(trace,new ScaffoldMHGKernel(trace))},
     {{"mh",true}, new GlobalScaffoldMixMH(trace,new ScaffoldMHGKernel(trace))},
 
-    {{"pgibbs",false}, new OutermostMixMH(trace,new PGibbsGKernel(trace))},
-    {{"pgibbs",true}, new GlobalScaffoldMixMH(trace,new PGibbsGKernel(trace))},
+    // {{"pgibbs",false}, new OutermostMixMH(trace,new PGibbsGKernel(trace))},
+    // {{"pgibbs",true}, new GlobalScaffoldMixMH(trace,new PGibbsGKernel(trace))},
 
-    {{"gibbs",false}, new OutermostMixMH(trace,new GibbsGKernel(trace))},
+    // {{"gibbs",false}, new OutermostMixMH(trace,new GibbsGKernel(trace))},
 
-    {{"meanfield",false}, new OutermostMixMH(trace,new MeanFieldGKernel(trace))},
-    {{"meanfield",true}, new GlobalScaffoldMixMH(trace,new MeanFieldGKernel(trace))}}
+    // {{"meanfield",false}, new OutermostMixMH(trace,new MeanFieldGKernel(trace))},
+    // {{"meanfield",true}, new GlobalScaffoldMixMH(trace,new MeanFieldGKernel(trace))}
+      }
  {}
 
 PyTrace::~PyTrace()
@@ -85,9 +86,9 @@ void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
 
 void PyTrace::unevalDirectiveID(size_t directiveID)
 {
-  OmegaDB * omegaDB = new OmegaDB;
-  trace->detachVentureFamily(trace->ventureFamilies[directiveID].first,omegaDB);
-  flushDB(omegaDB,false);
+  trace->setOptions(false,new OmegaDB);
+  trace->detachVentureFamily(trace->ventureFamilies[directiveID].first);
+  flushDB(trace->omegaDB,false);
   trace->ventureFamilies.erase(directiveID);
 }
 
@@ -159,7 +160,10 @@ void PyTrace::infer(boost::python::dict params)
   string kernel = boost::python::extract<string>(params["kernel"]);
   bool useGlobalScaffold = boost::python::extract<bool>(params["use_global_scaffold"]);
   
+  cout << "INFER(" << kernel << ")" << endl;
+
   assert(!(useGlobalScaffold && kernel == "gibbs"));
+  assert(gkernels.count(make_pair(kernel,useGlobalScaffold)));
   MixMHKernel * gkernel = gkernels[make_pair(kernel,useGlobalScaffold)];
   gkernel->infer(numTransitions);
 }

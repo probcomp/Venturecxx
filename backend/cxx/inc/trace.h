@@ -20,7 +20,7 @@ struct Scaffold;
 struct SP;
 struct SPAux;
 struct VentureSP;
-
+struct LatentDB;
 
 struct Trace
 {
@@ -38,13 +38,10 @@ struct Trace
 
   double regen(const vector<Node *> & border,
 	       Scaffold * scaffold,
-	       bool shouldRestore,
-	       OmegaDB * omegaDB,
 	       map<Node *,vector<double> > *gradients);
 
   double detach(const vector<Node *> & border,
-		Scaffold * scaffold,
-		OmegaDB * omegaDB);
+		Scaffold * scaffold);
 
 
   pair<double, Node*> evalVentureFamily(size_t directiveID, VentureValue * expression,
@@ -53,7 +50,7 @@ struct Trace
 
   /* Note: does not remove from ventureFamilies, so that destruction is easy.
      If I learn c++, there is probably a way to use a safe iterator. */
-  double detachVentureFamily(Node * root, OmegaDB * omegaDB);
+  double detachVentureFamily(Node * root);
 
 
   double unconstrain(Node * node,bool giveOwnershipToSP);
@@ -73,14 +70,10 @@ struct Trace
 
   double regenParents(Node * node,
 		      Scaffold * scaffold,
-		      bool shouldRestore,
-		      OmegaDB * omegaDB,
 		      map<Node *,vector<double> > *gradients);
 
   double absorb(Node * node,
 		Scaffold * scaffold,
-		bool shouldRestore,
-		OmegaDB * omegaDB,
 		map<Node *,vector<double> > *gradients);
 
 
@@ -89,8 +82,6 @@ struct Trace
 
   double regenInternal(Node * node,
 		       Scaffold * scaffold,
-		       bool shouldRestore,
-		       OmegaDB * omegaDB,
 		       map<Node *,vector<double> > *gradients);
 
   void processMadeSP(Node * node,bool isAAA);
@@ -98,21 +89,16 @@ struct Trace
 
   double applyPSP(Node * node,
 		  Scaffold * scaffold,
-		  bool shouldRestore,
-		  OmegaDB * omegaDB,
 		  map<Node *,vector<double> > *gradients);
 
   double evalRequests(Node * node,
 		      Scaffold * scaffold,
-		      bool shouldRestore,
-		      OmegaDB * omegaDB,
 		      map<Node *,vector<double> > *gradients);
 
 
   pair<double,Node*> evalFamily(VentureValue * exp, 
 				VentureEnvironment * familyEnv,
 				Scaffold * scaffold,
-				OmegaDB * omegaDB,
 				bool isDefinite,
 				map<Node *,vector<double> > *gradients);
 
@@ -121,12 +107,10 @@ struct Trace
   double restoreSPFamily(VentureSP * vsp,
 			 size_t id,
 			 Node * root,
-			 Scaffold * scaffold,
-			 OmegaDB * omegaDB);
+			 Scaffold * scaffold);
 
   double restoreFamily(Node * root,
-		       Scaffold * scaffold,
-		       OmegaDB * omegaDB);
+		       Scaffold * scaffold);
 
 
   double restoreVentureFamily(Node * root);
@@ -136,50 +120,46 @@ struct Trace
   double apply(Node * requestNode,
 	       Node * outputNode,
 	       Scaffold * scaffold,
-	       bool shouldRestore,
-	       OmegaDB * omegaDB,
 	       map<Node *,vector<double> > *gradients);
 
   /* detach helpers */
 
 
   double detachParents(Node * node,
-		       Scaffold * scaffold,
-		       OmegaDB * omegaDB);
-
+		       Scaffold * scaffold);
+	
 
   double unabsorb(Node * node,
-		  Scaffold * scaffold,
-		  OmegaDB * omegaDB);
-
+		  Scaffold * scaffold);
+	
 
   double detachInternal(Node * node,
-			Scaffold * scaffold,
-			OmegaDB * omegaDB);
+			Scaffold * scaffold);
 
-  void teardownMadeSP(Node * node,bool isAAA,OmegaDB * omegaDB);
+
+  void teardownMadeSP(Node * node,bool isAAA);
 
   double unapplyPSP(Node * node,
-		    Scaffold * scaffold,
-		    OmegaDB * omegaDB);
+		    Scaffold * scaffold);
+
 
   double unevalRequests(Node * node,
-			Scaffold * scaffold,
-			OmegaDB * omegaDB);
+			Scaffold * scaffold);
+
 
   double detachSPFamily(VentureSP * vsp,
 			size_t id,
-			Scaffold * scaffold,
-			OmegaDB * omegaDB);
+			Scaffold * scaffold);
+	
 
   double detachFamily(Node * node,
-		      Scaffold * scaffold,
-		      OmegaDB * omegaDB);
+		      Scaffold * scaffold);
+
 
 
   double unapply(Node * node,
-		 Scaffold * scaffold,
-		 OmegaDB * omegaDB);
+		 Scaffold * scaffold);
+
 
   /* Misc */
   void addApplicationEdges(Node * operatorNode,const vector<Node *> & operandNodes, Node * requestNode, Node * outputNode);
@@ -254,6 +234,27 @@ struct Trace
   void preEvalRequests(Node * requestNode) {}
   void preUnconstrain(Node * node) {}
   void preConstrain(Node * node) {}
+
+  void extractLatentDB(SP * sp,LatentDB * latentDB);
+  void registerGarbage(SP * sp,VentureValue * value,NodeType nodeType);
+  void extractValue(Node * node, VentureValue * value);
+  void prepareLatentDB(SP * sp);
+  LatentDB * getLatentDB(SP * sp);
+  void processDetachedLatentDB(SP * sp, LatentDB * latentDB);
+
+  void registerSPOwnedValues(Node * makerNode, size_t id, const vector<VentureValue*> & values);
+  void registerSPFamily(Node * makerNode,size_t id,Node * root);
+
+
+
+  
+
+  // Since calling regen or detach with an omegaDB mutates the trace, we can only do so for one omegaDB at a time,
+  // so we can make it a (temporary) variable for the trace.
+  // Then we can call methods like extractValue() or extractLatents() that particles can override.
+  void setOptions(bool shouldRestore, OmegaDB * omegaDB);
+  bool shouldRestore{false};
+  OmegaDB * omegaDB{nullptr};
 
 };
 

@@ -41,7 +41,7 @@ Trace::Trace()
 Trace::~Trace()
 {
 
-  OmegaDB * omegaDB = new OmegaDB;
+  setOptions(false,new OmegaDB);
   for (map<size_t, pair<Node *,VentureValue*> >::reverse_iterator iter = ventureFamilies.rbegin(); 
        iter != ventureFamilies.rend();
        ++iter)
@@ -51,12 +51,13 @@ Trace::~Trace()
     { 
       unconstrain(root,true); 
     }
-    detachVentureFamily(root,omegaDB); 
+    detachVentureFamily(root); 
     destroyExpression(iter->second.second);
     destroyFamilyNodes(root);
   }
 
   flushDB(omegaDB,false);
+  omegaDB = nullptr;
 
   globalEnv->destroySymbols();
   delete globalEnv;
@@ -66,7 +67,7 @@ Trace::~Trace()
     Node * node = p.second;
 
     if (dynamic_cast<VentureSP*>(node->getValue()))
-    { teardownMadeSP(node,false,omegaDB); }
+    { teardownMadeSP(node,false); }
 
     delete node->getValue();
     delete node;
@@ -202,3 +203,54 @@ void Trace::addESREdge(Node * esrParent,Node * outputNode)
   esrParent->numRequests++;
 }
 
+
+void Trace::extractLatentDB(SP * sp,LatentDB * latentDB)
+{
+  assert(!omegaDB->latentDBs.count(sp));
+  omegaDB->latentDBs.insert({sp,latentDB});
+}
+ 
+void Trace::registerGarbage(SP * sp,VentureValue * value,NodeType nodeType)
+{
+  omegaDB->flushQueue.emplace(sp,value,nodeType); 
+}
+
+void Trace::extractValue(Node * node, VentureValue * value)
+{
+  omegaDB->drgDB[node] = value;  
+}
+
+void Trace::prepareLatentDB(SP * sp)
+{
+  if (!omegaDB->latentDBs.count(sp))
+  {
+    omegaDB->latentDBs[sp] = sp->constructLatentDB(); 
+  }
+}
+ 
+LatentDB * Trace::getLatentDB(SP * sp)
+{
+  return omegaDB->latentDBs[sp];
+}
+ 
+void Trace::processDetachedLatentDB(SP * sp, LatentDB * latentDB)
+{
+  // do nothing for omegaDB, maybe destroy it for particles
+}
+
+void Trace::registerSPOwnedValues(Node * makerNode, size_t id, const vector<VentureValue*> & values)
+{
+  omegaDB->spOwnedValues[make_pair(makerNode,id)] = values; 
+}
+
+
+void Trace::registerSPFamily(Node * makerNode,size_t id,Node * root)
+{
+  omegaDB->spFamilyDBs[{makerNode,id}] = root;
+}
+
+void Trace::setOptions(bool shouldRestore, OmegaDB * omegaDB)
+{
+  this->shouldRestore = shouldRestore;
+  this->omegaDB = omegaDB;
+}

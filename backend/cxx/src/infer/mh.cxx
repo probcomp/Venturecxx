@@ -34,10 +34,11 @@ double ScaffoldMHGKernel::propose()
   assert(!rhoDB);
 
   rhoDB = new OmegaDB;
-  double detachWeight = trace->detach(scaffold->border,scaffold,rhoDB);
+  trace->setOptions(false,rhoDB);
+  double detachWeight = trace->detach(scaffold->border,scaffold);
 
   check.checkTorus(scaffold);
-  double regenWeight = trace->regen(scaffold->border,scaffold,false,rhoDB,nullptr);
+  double regenWeight = trace->regen(scaffold->border,scaffold,nullptr);
   return regenWeight - detachWeight;
 }
 
@@ -50,12 +51,12 @@ void ScaffoldMHGKernel::accept()
 
 void ScaffoldMHGKernel::reject()
 {
-  OmegaDB * xiDB = new OmegaDB;
-  trace->detach(scaffold->border,scaffold,xiDB);
+  trace->setOptions(false,new OmegaDB);
+  trace->detach(scaffold->border,scaffold);
   check.checkTorus(scaffold);
-  trace->regen(scaffold->border,scaffold,true,rhoDB,nullptr);
+  trace->regen(scaffold->border,scaffold,nullptr);
   flushDB(rhoDB,true);
-  flushDB(xiDB,false);
+  flushDB(trace->omegaDB,false);
   rhoDB = nullptr;
 
 }

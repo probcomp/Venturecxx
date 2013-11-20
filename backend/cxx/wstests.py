@@ -38,6 +38,8 @@ def runAllTests(N):
 
   for i in range(len(options)):
     print "\n\n\n\n\n\n\n========= %d. (%s,%d) ========" % (i+1,options[i][0],options[i][1])
+    global globalKernel
+    global globalUseGlobalScaffold
     globalKernel = options[i][0]
     globalUseGlobalScaffold = options[i][1]
     runTests(N)
@@ -51,6 +53,7 @@ def loggingInfer(sivm,address,T):
   return predictions
 
 def runTests(N):
+  print "Running tests with kernel = " + globalKernel + " and globalScaffold = " + str(globalUseGlobalScaffold)
   testBernoulli0(N)
   testBernoulli1(N)
   testCategorical1(N)
