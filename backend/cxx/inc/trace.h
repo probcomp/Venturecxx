@@ -221,6 +221,7 @@ struct Trace
   void registerReference(Node * node, Node * lookedUpNode);
   Node * getSourceNode(Node * node);
   void setSourceNode(Node * node, Node * sourceNode);
+  void clearSourceNode(Node * node);
 
   void setValue(Node * node, VentureValue * value);
   void clearValue(Node * node);
@@ -238,6 +239,8 @@ struct Trace
 
   void setConstrained(Node * node,bool isConstrained);
   void setNodeOwnsValue(Node * node,bool giveOwnershipToSP);
+
+  void extractValue(Node * node, VentureValue * value);
 
 };
 

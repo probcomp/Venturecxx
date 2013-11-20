@@ -119,6 +119,7 @@ void Trace::registerReference(Node * node, Node * lookedUpNode)
 
 Node * Trace::getSourceNode(Node * node) { return node->sourceNode; }
 void Trace::setSourceNode(Node * node, Node * sourceNode) { node->sourceNode = sourceNode; }
+void Trace::clearSourceNode(Node * node) { node->sourceNode = nullptr; }
 
 void Trace::setValue(Node * node, VentureValue * value) { node->_value = value; }
 void Trace::clearValue(Node * node) { node->_value = nullptr; }
@@ -180,3 +181,7 @@ void Trace::constrainChoice(Node * node)
 
 void Trace::setConstrained(Node * node,bool isConstrained) { node->isConstrained = isConstrained; }
 void Trace::setNodeOwnsValue(Node * node,bool giveOwnershipToSP) { node->spOwnsValue = giveOwnershipToSP; }
+
+// OmegaDB will override this
+void Trace::extractValue(Node * node, VentureValue * value) { }
+

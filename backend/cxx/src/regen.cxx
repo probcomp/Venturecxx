@@ -82,7 +82,6 @@ double Trace::absorb(Node * node,
 
 double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
 {
-  assert(node->isActive);
   if (isReference(node)) { return constrain(getSourceNode(node),value,reclaimValue); }
   else
   {
@@ -127,7 +126,6 @@ double Trace::regenInternal(Node * node,
       { registerReference(node,node->lookedUpNode); }
       else /* Application node */
       { weight += applyPSP(node,scaffold,shouldRestore,omegaDB,gradients); }
-      node->isActive = true;
     }
     drgNode.regenCount++;
   }
@@ -386,7 +384,6 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
     {
       node = new Node(NodeType::VALUE, nullptr);
       setValue(node,listRef(list,1));
-      node->isActive = true;
     }
     /* Application */
     else
@@ -424,13 +421,11 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
     node = new Node(NodeType::LOOKUP,nullptr);
     Node::addLookupEdge(lookedUpNode,node);
     registerReference(node,lookedUpNode);
-    node->isActive = true;
   }
   /* Self-evaluating */
   else
   {
     node = new Node(NodeType::VALUE,exp);
-    node->isActive = true;
   }
   assert(node);
   return {weight,node};
@@ -460,10 +455,8 @@ double Trace::apply(Node * requestNode,
     }
   }
 
-  requestNode->isActive = true;
   
   /* Call the output PSP. */
   weight += applyPSP(outputNode,scaffold,shouldRestore,omegaDB,gradients);
-  outputNode->isActive = true;
   return weight;
 }

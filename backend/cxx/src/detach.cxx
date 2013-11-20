@@ -84,7 +84,6 @@ double Trace::unabsorb(Node * node,
 
 double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
 {
-  assert(node->isActive);
   if (isReference(node))
   { return unconstrain(getSourceNode(node),giveOwnershipToSP); }
   else
@@ -119,7 +118,6 @@ double Trace::detachInternal(Node * node,
     assert(drgNode.regenCount >= 0);
     if (drgNode.regenCount == 0)
     {
-      node->isActive = false;
       if (node->isApplication())
       { 
 	weight += unapplyPSP(node,scaffold,omegaDB); 
@@ -155,7 +153,6 @@ void Trace::teardownMadeSP(Node * node, bool isAAA,OmegaDB * omegaDB)
     if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
     if (madeSP->hasAux()) 
     { 
-//      omegaDB->flushQueue.emplace(madeSP,node->madeSPAux); 
       delete node->madeSPAux; 
       node->madeSPAux = nullptr;
     }
@@ -172,22 +169,17 @@ double Trace::unapplyPSP(Node * node,
   assert(node->isValid());
   assert(getSP(node)->isValid());
 
-
-
   if (node->nodeType == NodeType::OUTPUT && getSP(node)->isESRReference) 
   { 
-    node->sourceNode = nullptr;
+    clearSourceNode(node);
     return 0; 
   }
   if (node->nodeType == NodeType::REQUEST && getSP(node)->isNullRequest()) { return 0; }
-
   
   assert(getValue(node)->isValid());
 
   if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,omegaDB); }
-  if (getSP(node)->isRandom(node->nodeType)) { 
-    unregisterRandomChoice(node); 
-  }
+  if (getSP(node)->isRandom(node->nodeType)) { unregisterRandomChoice(node); }
   
   if (dynamic_cast<VentureSP*>(getValue(node)))
   { teardownMadeSP(node,scaffold && scaffold->isAAA(node),omegaDB); }
@@ -209,16 +201,17 @@ double Trace::unapplyPSP(Node * node,
   }
 
 
-
   if (node->spOwnsValue) 
   { 
-
     omegaDB->flushQueue.emplace(getSP(node),getValue(node),node->nodeType); 
   }
 
   if (scaffold && scaffold->isResampling(node))
-  { omegaDB->drgDB[node] = getValue(node);  clearValue(node); }
-
+  { 
+//    extractValue(node);
+    omegaDB->drgDB[node] = getValue(node);  
+    clearValue(node); 
+  }
 
   return weight;
 }
@@ -248,7 +241,8 @@ double Trace::unevalRequests(Node * node,
     assert(getSPAux(node));
     assert(getSPAux(node)->isValid());
     assert(!getESRParents(node->outputNode).empty());
-    // TODO give trace responsibility
+
+    // TODO URGENT give trace responsibility
     Node * esrParent = node->outputNode->removeLastESREdge();
     assert(esrParent);
     assert(esrParent->isValid());
