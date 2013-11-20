@@ -219,6 +219,7 @@ struct Trace
 //////////////////////////////////////////////
   
   bool isReference(Node * node);
+  Node * getSourceNode(Node * node);
   VentureValue * getValue(Node * node);
   SP * getSP(Node * node);
   VentureSP * getVSP(Node * node);

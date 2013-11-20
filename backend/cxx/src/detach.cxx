@@ -86,7 +86,7 @@ double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
 {
   assert(node->isActive);
   if (isReference(node))
-  { return unconstrain(node->sourceNode,giveOwnershipToSP); }
+  { return unconstrain(getSourceNode(node),giveOwnershipToSP); }
   else
   {
     if (getSP(node)->isRandomOutput) { 
@@ -132,8 +132,8 @@ double Trace::detachInternal(Node * node,
   }
   else if (scaffold->hasAAANodes)
   {
-    if (isReference(node) && scaffold->isAAA(node->sourceNode))
-    { weight += detachInternal(node->sourceNode,scaffold,omegaDB); }
+    if (isReference(node) && scaffold->isAAA(getSourceNode(node)))
+    { weight += detachInternal(getSourceNode(node),scaffold,omegaDB); }
   }
   return weight;
 }

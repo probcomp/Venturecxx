@@ -89,7 +89,7 @@ double Trace::constrain(Node * node,bool reclaimValue)
 double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
 {
   assert(node->isActive);
-  if (isReference(node)) { return constrain(node->sourceNode,value,reclaimValue); }
+  if (isReference(node)) { return constrain(getSourceNode(node),value,reclaimValue); }
   else
   {
     /* New restriction, to ensure that we did not propose to an
@@ -142,8 +142,8 @@ double Trace::regenInternal(Node * node,
   }
   else if (scaffold->hasAAANodes)
   {
-    if (isReference(node) && scaffold->isAAA(node->sourceNode))
-    { weight += regenInternal(node->sourceNode,scaffold,shouldRestore,omegaDB,gradients); }
+    if (isReference(node) && scaffold->isAAA(getSourceNode(node)))
+    { weight += regenInternal(getSourceNode(node),scaffold,shouldRestore,omegaDB,gradients); }
   }
   return weight;
 }

@@ -104,6 +104,7 @@ bool Trace::isReference(Node * node)
   return node->sourceNode != nullptr;
 }
 
+Node * Trace::getSourceNode(Node * node) { return node->sourceNode; }
 
 VentureValue * Trace::getValue(Node * node)
 {
