@@ -93,7 +93,7 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
     assert(getSP(node)->canAbsorbOutput); // TODO temporary
     getSP(node)->removeOutput(getValue(node),getArgs(node));
 
-    if (reclaimValue) { delete getValue(node); }
+    if (reclaimValue) { getSP(node)->flushOutput(getValue(node)); }
 
     /* TODO need to set this on restore, based on the FlushQueue */
 
