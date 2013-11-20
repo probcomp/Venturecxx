@@ -102,10 +102,7 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
     node->isConstrained = true;
     node->spOwnsValue = false;
     getSP(node)->incorporateOutput(value,getArgs(node));
-    if (getSP(node)->isRandomOutput) { 
-      unregisterRandomChoice(node); 
-      registerConstrainedChoice(node);
-    }
+    if (getSP(node)->isRandomOutput) { constrainChoice(node); }
     return weight;
   }
 }

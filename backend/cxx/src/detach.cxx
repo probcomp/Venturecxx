@@ -89,9 +89,10 @@ double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
   { return unconstrain(getSourceNode(node),giveOwnershipToSP); }
   else
   {
-    if (getSP(node)->isRandomOutput) { 
-      unregisterConstrainedChoice(node);
-      registerRandomChoice(node);
+    assert(getSP(node)->isRandomOutput);
+    if (getSP(node)->isRandomOutput) 
+    { 
+      unconstrainChoice(node);
     }
     getSP(node)->removeOutput(getValue(node),getArgs(node));
     double logDensity = getSP(node)->logDensityOutput(getValue(node),getArgs(node));

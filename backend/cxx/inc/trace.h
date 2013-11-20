@@ -232,6 +232,9 @@ struct Trace
   SPAux * getMadeSPAux(Node * makerNode);
   Args getArgs(Node * node);
   vector<Node *> getESRParents(Node * node);
+  
+  void constrainChoice(Node * node);
+  void unconstrainChoice(Node * node);
 };
 
 

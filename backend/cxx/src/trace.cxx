@@ -165,3 +165,15 @@ vector<Node *> Trace::getESRParents(Node * node)
 {
   return node->esrParents;
 }
+
+void Trace::unconstrainChoice(Node * node)
+{
+  unregisterConstrainedChoice(node);
+  registerRandomChoice(node);
+}
+
+void Trace::constrainChoice(Node * node)
+{
+  unregisterRandomChoice(node);
+  registerConstrainedChoice(node);
+}
