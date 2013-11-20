@@ -75,8 +75,8 @@ double Trace::absorb(Node * node,
   assert(scaffold);
   double weight = 0;
   weight += regenParents(node,scaffold,shouldRestore,omegaDB,gradients);
-  weight += node->sp()->logDensity(node->getValue(),node);
-  node->sp()->incorporate(node->getValue(),node);
+  weight += getSP(node)->logDensity(getValue(node),node);
+  getSP(node)->incorporate(getValue(node),node);
   return weight;
 }
 
@@ -95,20 +95,20 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
     /* New restriction, to ensure that we did not propose to an
        observation node with a non-trivial kernel. TODO handle
        this in loadDefaultKernels instead. */
-    assert(node->sp()->isRandomOutput);
-    assert(node->sp()->canAbsorbOutput); // TODO temporary
-    node->sp()->removeOutput(node->getValue(),node);
+    assert(getSP(node)->isRandomOutput);
+    assert(getSP(node)->canAbsorbOutput); // TODO temporary
+    getSP(node)->removeOutput(getValue(node),node);
 
-    if (reclaimValue) { delete node->getValue(); }
+    if (reclaimValue) { delete getValue(node); }
 
     /* TODO need to set this on restore, based on the FlushQueue */
 
-    double weight = node->sp()->logDensityOutput(value,node);
+    double weight = getSP(node)->logDensityOutput(value,node);
     node->setValue(value);
     node->isConstrained = true;
     node->spOwnsValue = false;
-    node->sp()->incorporateOutput(value,node);
-    if (node->sp()->isRandomOutput) { 
+    getSP(node)->incorporateOutput(value,node);
+    if (getSP(node)->isRandomOutput) { 
       unregisterRandomChoice(node); 
       registerConstrainedChoice(node);
     }
@@ -152,7 +152,7 @@ void Trace::processMadeSP(Node * node, bool isAAA)
 {
   callCounts[{"processMadeSP",false}]++;
 
-  VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
+  VentureSP * vsp = dynamic_cast<VentureSP *>(getValue(node));
   assert(vsp);
   if (vsp->makerNode) { return; }
 
@@ -175,7 +175,7 @@ double Trace::applyPSP(Node * node,
 		       map<Node *,vector<double> > *gradients)
 {
   callCounts[{"applyPSP",false}]++;
-  SP * sp = node->sp();
+  SP * sp = getSP(node);
 
   assert(node->isValid());
   assert(sp->isValid());
@@ -206,7 +206,7 @@ double Trace::applyPSP(Node * node,
     if (scaffold && scaffold->isResampling(node)) { newValue = omegaDB->drgDB[node]; }
     else 
     { 
-      newValue = node->getValue(); 
+      newValue = getValue(node); 
       if (!newValue)
       {
 	assert(newValue);
@@ -217,7 +217,7 @@ double Trace::applyPSP(Node * node,
        TODO this could be made clearer. */
     if (sp->makesHSRs && scaffold && scaffold->isAAA(node))
     {
-      sp->restoreAllLatents(node->spaux(),omegaDB->latentDBs[node->sp()]);
+      sp->restoreAllLatents(getSPAux(node),omegaDB->latentDBs[getSP(node)]);
     }
   }
   else if (scaffold && scaffold->hasKernelFor(node))
@@ -230,7 +230,7 @@ double Trace::applyPSP(Node * node,
        regular LKernels and HSRKernels. We pass a latentDB no matter what, nullptr
        for the former. */
     LatentDB * latentDB = nullptr;
-    if (omegaDB && omegaDB->latentDBs.count(node->sp())) { latentDB = omegaDB->latentDBs[node->sp()]; }
+    if (omegaDB && omegaDB->latentDBs.count(getSP(node))) { latentDB = omegaDB->latentDBs[getSP(node)]; }
 
     newValue = k->simulate(oldValue,node,latentDB,rng);
     weight += k->weight(newValue,oldValue,node,latentDB);
@@ -252,7 +252,7 @@ double Trace::applyPSP(Node * node,
 
   sp->incorporate(newValue,node);
 
-  if (dynamic_cast<VentureSP *>(node->getValue()))
+  if (dynamic_cast<VentureSP *>(getValue(node)))
   { processMadeSP(node,scaffold && scaffold->isAAA(node)); }
   if (sp->isRandom(node->nodeType)) { registerRandomChoice(node); }
   if (node->nodeType == NodeType::REQUEST) { evalRequests(node,scaffold,shouldRestore,omegaDB,gradients); }
@@ -268,24 +268,24 @@ double Trace::evalRequests(Node * node,
 			   map<Node *,vector<double> > *gradients)
 {
   /* Null request does not bother malloc-ing */
-  if (!node->getValue()) { return 0; }
+  if (!getValue(node)) { return 0; }
   double weight = 0;
 
-  VentureRequest * requests = dynamic_cast<VentureRequest *>(node->getValue());
+  VentureRequest * requests = dynamic_cast<VentureRequest *>(getValue(node));
   assert(requests);
 
   /* First evaluate ESRs. */
   for (ESR esr : requests->esrs)
   {
-    assert(node->spaux()->isValid());
+    assert(getSPAux(node)->isValid());
     Node * esrParent;
-    if (!node->spaux()->families.count(esr.id))
+    if (!getSPAux(node)->families.count(esr.id))
     {
-      if (shouldRestore && omegaDB && omegaDB->spFamilyDBs.count({node->vsp()->makerNode, esr.id}))
+      if (shouldRestore && omegaDB && omegaDB->spFamilyDBs.count({getVSP(node)->makerNode, esr.id}))
       {
-	esrParent = omegaDB->spFamilyDBs[{node->vsp()->makerNode, esr.id}];
+	esrParent = omegaDB->spFamilyDBs[{getVSP(node)->makerNode, esr.id}];
 	assert(esrParent);
-	restoreSPFamily(node->vsp(),esr.id,esrParent,scaffold,omegaDB);
+	restoreSPFamily(getVSP(node),esr.id,esrParent,scaffold,omegaDB);
       }
       else
       {
@@ -293,16 +293,16 @@ double Trace::evalRequests(Node * node,
 	weight += p.first;
 	esrParent = p.second;
       }
-      node->sp()->registerFamily(esr.id, esrParent, node->spaux());
+      getSP(node)->registerFamily(esr.id, esrParent, getSPAux(node));
     }
     else
     {
-      esrParent = node->spaux()->families[esr.id];
+      esrParent = getSPAux(node)->families[esr.id];
       assert(esrParent->isValid());
 
       // right now only MSP's share
       // (guard against hash collisions)
-      assert(dynamic_cast<MSP*>(node->sp()));
+      assert(dynamic_cast<MSP*>(getSP(node)));
       
     }
     Node::addESREdge(esrParent,node->outputNode);
@@ -312,10 +312,10 @@ double Trace::evalRequests(Node * node,
   for (HSR * hsr : requests->hsrs)
   {
     LatentDB * latentDB = nullptr;
-    if (omegaDB && omegaDB->latentDBs.count(node->sp())) 
-    { latentDB = omegaDB->latentDBs[node->sp()]; }
+    if (omegaDB && omegaDB->latentDBs.count(getSP(node))) 
+    { latentDB = omegaDB->latentDBs[getSP(node)]; }
     assert(!shouldRestore || latentDB);
-    weight += node->sp()->simulateLatents(node->spaux(),hsr,shouldRestore,latentDB,rng);
+    weight += getSP(node)->simulateLatents(getSPAux(node),hsr,shouldRestore,latentDB,rng);
   }
 
   return weight;
@@ -457,13 +457,13 @@ double Trace::apply(Node * requestNode,
   /* Call the requester PSP. */
   weight += applyPSP(requestNode,scaffold,shouldRestore,omegaDB,gradients);
   
-  if (requestNode->getValue())
+  if (getValue(requestNode))
   {
     /* Regenerate any ESR nodes requested. */
-    VentureRequest * requests = dynamic_cast<VentureRequest *>(requestNode->getValue());
+    VentureRequest * requests = dynamic_cast<VentureRequest *>(getValue(requestNode));
     for (ESR esr : requests->esrs)
     {
-      Node * esrParent = requestNode->sp()->findFamily(esr.id,requestNode->spaux());
+      Node * esrParent = getSP(requestNode)->findFamily(esr.id,getSPAux(requestNode));
       assert(esrParent);
       weight += regenInternal(esrParent,scaffold,shouldRestore,omegaDB,gradients);
     }

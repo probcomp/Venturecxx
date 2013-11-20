@@ -75,8 +75,8 @@ double Trace::unabsorb(Node * node,
 {
   assert(scaffold);
   double weight = 0;
-  node->sp()->remove(node->getValue(),node);
-  weight += node->sp()->logDensity(node->getValue(),node);
+  getSP(node)->remove(getValue(node),node);
+  weight += getSP(node)->logDensity(getValue(node),node);
   weight += detachParents(node,scaffold,omegaDB);
   return weight;
 }
@@ -88,15 +88,15 @@ double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
   { return unconstrain(node->sourceNode,giveOwnershipToSP); }
   else
   {
-    if (node->sp()->isRandomOutput) { 
+    if (getSP(node)->isRandomOutput) { 
       unregisterConstrainedChoice(node);
       registerRandomChoice(node);
     }
-    node->sp()->removeOutput(node->getValue(),node);
-    double logDensity = node->sp()->logDensityOutput(node->getValue(),node);
+    getSP(node)->removeOutput(getValue(node),node);
+    double logDensity = getSP(node)->logDensityOutput(getValue(node),node);
     node->isConstrained = false;
     node->spOwnsValue = giveOwnershipToSP;
-    node->sp()->incorporateOutput(node->getValue(),node);
+    getSP(node)->incorporateOutput(getValue(node),node);
     return logDensity;
   }
 }
@@ -141,7 +141,7 @@ void Trace::teardownMadeSP(Node * node, bool isAAA,OmegaDB * omegaDB)
 {
   callCounts[{"processMadeSP",true}]++;
 
-  VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
+  VentureSP * vsp = dynamic_cast<VentureSP *>(getValue(node));
 
   if (vsp->makerNode != node) { return; }
 
@@ -172,42 +172,42 @@ double Trace::unapplyPSP(Node * node,
   callCounts[{"applyPSP",true}]++;
 
   assert(node->isValid());
-  assert(node->sp()->isValid());
+  assert(getSP(node)->isValid());
 
 
 
-  if (node->nodeType == NodeType::OUTPUT && node->sp()->isESRReference) 
+  if (node->nodeType == NodeType::OUTPUT && getSP(node)->isESRReference) 
   { 
     node->sourceNode = nullptr;
     return 0; 
   }
-  if (node->nodeType == NodeType::REQUEST && node->sp()->isNullRequest()) { return 0; }
+  if (node->nodeType == NodeType::REQUEST && getSP(node)->isNullRequest()) { return 0; }
 
   
-  assert(node->getValue()->isValid());
+  assert(getValue(node)->isValid());
 
   if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,omegaDB); }
-  if (node->sp()->isRandom(node->nodeType)) { 
+  if (getSP(node)->isRandom(node->nodeType)) { 
     unregisterRandomChoice(node); 
   }
   
-  if (dynamic_cast<VentureSP*>(node->getValue()))
+  if (dynamic_cast<VentureSP*>(getValue(node)))
   { teardownMadeSP(node,scaffold && scaffold->isAAA(node),omegaDB); }
 
-  SP * sp = node->sp();
+  SP * sp = getSP(node);
   double weight = 0;
 
-  sp->remove(node->getValue(),node);
+  sp->remove(getValue(node),node);
 
   if (scaffold && scaffold->hasKernelFor(node))
-  { weight += scaffold->lkernels[node]->reverseWeight(node->getValue(),node,nullptr); }
+  { weight += scaffold->lkernels[node]->reverseWeight(getValue(node),node,nullptr); }
 
   if (sp->makesHSRs && scaffold && scaffold->isAAA(node))
   { 
-    pair<double, LatentDB *> p = node->sp()->detachAllLatents(node->spaux());
+    pair<double, LatentDB *> p = getSP(node)->detachAllLatents(getSPAux(node));
     weight += p.first;
-    assert(!omegaDB->latentDBs.count(node->sp()));
-    omegaDB->latentDBs.insert({node->sp(),p.second});
+    assert(!omegaDB->latentDBs.count(getSP(node)));
+    omegaDB->latentDBs.insert({getSP(node),p.second});
   }
 
 
@@ -215,11 +215,11 @@ double Trace::unapplyPSP(Node * node,
   if (node->spOwnsValue) 
   { 
 
-    omegaDB->flushQueue.emplace(node->sp(),node->getValue(),node->nodeType); 
+    omegaDB->flushQueue.emplace(getSP(node),getValue(node),node->nodeType); 
   }
 
   if (scaffold && scaffold->isResampling(node))
-  { omegaDB->drgDB[node] = node->getValue();  node->clearValue(); }
+  { omegaDB->drgDB[node] = getValue(node);  node->clearValue(); }
 
 
   return weight;
@@ -231,24 +231,24 @@ double Trace::unevalRequests(Node * node,
 			     OmegaDB * omegaDB)
 {
   assert(node->nodeType == NodeType::REQUEST);
-  if (!node->getValue()) { return 0; }
+  if (!getValue(node)) { return 0; }
 
   double weight = 0;
-  VentureRequest * requests = dynamic_cast<VentureRequest *>(node->getValue());
+  VentureRequest * requests = dynamic_cast<VentureRequest *>(getValue(node));
 
-  if (!requests->hsrs.empty() && !omegaDB->latentDBs.count(node->sp()))
-  { omegaDB->latentDBs[node->sp()] = node->sp()->constructLatentDB(); }
+  if (!requests->hsrs.empty() && !omegaDB->latentDBs.count(getSP(node)))
+  { omegaDB->latentDBs[getSP(node)] = getSP(node)->constructLatentDB(); }
 
   for (HSR * hsr : reverse(requests->hsrs))
   {
-    LatentDB * latentDB = omegaDB->latentDBs[node->sp()];
-    weight += node->sp()->detachLatents(node->spaux(),hsr,latentDB);
+    LatentDB * latentDB = omegaDB->latentDBs[getSP(node)];
+    weight += getSP(node)->detachLatents(getSPAux(node),hsr,latentDB);
   }
 
   for (ESR esr : reverse(requests->esrs))
   {
-    assert(node->spaux());
-    assert(node->spaux()->isValid());
+    assert(getSPAux(node));
+    assert(getSPAux(node)->isValid());
     assert(!node->outputNode->esrParents.empty());
     Node * esrParent = node->outputNode->removeLastESREdge();
     assert(esrParent);
@@ -256,7 +256,7 @@ double Trace::unevalRequests(Node * node,
 
     if (esrParent->numRequests == 0)
     { 
-      weight += detachSPFamily(node->vsp(),esr.id,scaffold,omegaDB); 
+      weight += detachSPFamily(getVSP(node),esr.id,scaffold,omegaDB); 
     }
   }
 

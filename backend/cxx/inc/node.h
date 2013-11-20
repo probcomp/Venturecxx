@@ -85,11 +85,11 @@ struct Node
   bool isValid() { return magic == 653135; }
   uint32_t magic = 653135;
   ~Node() { assert(isValid()); magic = 0; }
-private:
+
   /* I like the constructor order, that's all. */
   VentureValue * _value{nullptr};
 
-public:
+
   VentureEnvironment * familyEnv;
 
 

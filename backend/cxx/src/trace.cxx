@@ -7,6 +7,7 @@
 #include "trace.h"
 #include "builtin.h"
 #include "sp.h"
+#include "spaux.h"
 #include "omegadb.h"
 #include "flush.h"
 #include "value.h"
@@ -94,3 +95,44 @@ void Trace::addApplicationEdges(Node * operatorNode,const vector<Node *> & opera
 
   Node::addRequestEdge(requestNode, outputNode);
 }
+
+
+////////////////////////////////
+
+VentureValue * Trace::getValue(Node * node)
+{
+  // TODO trace should control isReference
+  if (node->isReference())
+  {
+    assert(node->sourceNode);
+    assert(!node->sourceNode->isReference());
+    return getValue(node->sourceNode);
+  }
+  else
+  {
+    return node->_value;
+  }
+}
+
+VentureSP * Trace::getVSP(Node * node)
+{
+  VentureSP * _vsp = dynamic_cast<VentureSP*>(getValue(node->operatorNode));
+  assert(_vsp);
+  return _vsp;
+}
+
+SP * Trace::getSP(Node * node)
+{
+  return getVSP(node)->sp;
+}
+ 
+SPAux * Trace::getSPAux(Node * node)
+{
+  return getVSP(node)->makerNode->madeSPAux;
+}
+
+SPAux * Trace::getMadeSPAux(Node * makerNode)
+{
+  return makerNode->madeSPAux;
+}
+

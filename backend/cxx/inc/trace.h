@@ -17,6 +17,7 @@ struct VentureEnvironment;
 struct OmegaDB;
 struct Scaffold;
 struct SP;
+struct SPAux;
 struct VentureSP;
 
 
@@ -212,6 +213,17 @@ struct Trace
 
   // Bool is TRUE for detach
   map<pair<string,bool>,uint32_t> callCounts;
+
+
+//////////////////////////////////////////////
+
+  VentureValue * getValue(Node * node);
+  SP * getSP(Node * node);
+  VentureSP * getVSP(Node * node);
+  SPAux * getSPAux(Node * node);
+  SPAux * getMadeSPAux(Node * makerNode);
+
+
 };
 
 
