@@ -2,16 +2,16 @@
 #include "node.h"
 #include "trace.h"
 
-vector<VentureValue *> Args::makeVectorOfValues(const vector<Node*> & nodes)
+vector<VentureValue *> makeVectorOfValues(Trace * trace, const vector<Node*> & nodes)
 {
   vector<VentureValue *> values;
-  for (Node * node : nodes) { values.push_back(node->getValue()); }
+  for (Node * node : nodes) { values.push_back(trace->getValue(node)); }
   return values;
 }
 
 Args::Args(Trace * trace, Node * node)
 {
-  operands = makeVectorOfValues(node->operandNodes);
+  operands = makeVectorOfValues(trace,node->operandNodes);
   operandNodes = node->operandNodes;
 
   outputNode = node->outputNode;
@@ -22,9 +22,8 @@ Args::Args(Trace * trace, Node * node)
     request = trace->getValue(node->requestNode);
   }
 
-  // TODO will become trace->esrParents(node)
-  esrs = makeVectorOfValues(node->esrParents);
-  esrNodes = node->esrParents;
+  esrs = makeVectorOfValues(trace,trace->getESRParents(node));
+  esrNodes = trace->getESRParents(node);
 
   spaux = trace->getSPAux(node);
   madeSPAux = trace->getMadeSPAux(node);
