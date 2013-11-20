@@ -6,7 +6,12 @@ root_dirname=$(dirname $(dirname $my_abs_path))
 echo "$root_dirname"
 cd $root_dirname
 
-tar --create --verbose --gzip --file ../venture-0.1.tgz --directory .. \
+release=0.1
+if [[ ! -z $1 ]]; then
+    release=$1
+fi
+
+tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=.git \
     --exclude=.gitignore \
     --exclude=*.pyc \
@@ -21,5 +26,5 @@ tar --create --verbose --gzip --file ../venture-0.1.tgz --directory .. \
     --exclude=CMakeLists.txt \
     --exclude=*.so \
     --exclude=testEigen \
-    --exclude=cmake
+    --exclude=cmake \
     Venturecxx/
