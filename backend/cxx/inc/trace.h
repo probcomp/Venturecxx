@@ -235,6 +235,10 @@ struct Trace
   
   void constrainChoice(Node * node);
   void unconstrainChoice(Node * node);
+
+  void setConstrained(Node * node,bool isConstrained);
+  void setNodeOwnsValue(Node * node,bool giveOwnershipToSP);
+
 };
 
 

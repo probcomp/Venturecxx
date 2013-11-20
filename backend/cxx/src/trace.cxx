@@ -177,3 +177,6 @@ void Trace::constrainChoice(Node * node)
   unregisterRandomChoice(node);
   registerConstrainedChoice(node);
 }
+
+void Trace::setConstrained(Node * node,bool isConstrained) { node->isConstrained = isConstrained; }
+void Trace::setNodeOwnsValue(Node * node,bool giveOwnershipToSP) { node->spOwnsValue = giveOwnershipToSP; }

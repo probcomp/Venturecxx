@@ -99,8 +99,8 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
 
     double weight = getSP(node)->logDensityOutput(value,getArgs(node));
     setValue(node,value);
-    node->isConstrained = true;
-    node->spOwnsValue = false;
+    setConstrained(node,true);
+    setNodeOwnsValue(node,false);
     getSP(node)->incorporateOutput(value,getArgs(node));
     if (getSP(node)->isRandomOutput) { constrainChoice(node); }
     return weight;
