@@ -104,7 +104,7 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
     /* TODO need to set this on restore, based on the FlushQueue */
 
     double weight = getSP(node)->logDensityOutput(value,getArgs(node));
-    node->setValue(value);
+    setValue(node,value);
     node->isConstrained = true;
     node->spOwnsValue = false;
     getSP(node)->incorporateOutput(value,getArgs(node));
@@ -248,7 +248,7 @@ double Trace::applyPSP(Node * node,
   }
   assert(newValue);
   assert(newValue->isValid());
-  node->setValue(newValue);
+  setValue(node,newValue);
 
   sp->incorporate(newValue,getArgs(node));
 
@@ -394,7 +394,7 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
     if (car && car->sym == "quote")
     {
       node = new Node(NodeType::VALUE, nullptr);
-      node->setValue(listRef(list,1));
+      setValue(node,listRef(list,1));
       node->isActive = true;
     }
     /* Application */

@@ -120,9 +120,11 @@ void Trace::registerReference(Node * node, Node * lookedUpNode)
 Node * Trace::getSourceNode(Node * node) { return node->sourceNode; }
 void Trace::setSourceNode(Node * node, Node * sourceNode) { node->sourceNode = sourceNode; }
 
+void Trace::setValue(Node * node, VentureValue * value) { node->_value = value; }
+void Trace::clearValue(Node * node) { node->_value = nullptr; }
+
 VentureValue * Trace::getValue(Node * node)
 {
-  // TODO trace should control isReference
   if (isReference(node))
   {
     assert(node->sourceNode);

@@ -219,7 +219,7 @@ double Trace::unapplyPSP(Node * node,
   }
 
   if (scaffold && scaffold->isResampling(node))
-  { omegaDB->drgDB[node] = getValue(node);  node->clearValue(); }
+  { omegaDB->drgDB[node] = getValue(node);  clearValue(node); }
 
 
   return weight;
