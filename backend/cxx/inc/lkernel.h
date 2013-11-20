@@ -11,9 +11,9 @@ enum class ParameterScope { REAL, POSITIVE_REAL };
 
 struct LKernel
 {
-  virtual VentureValue * simulate(const VentureValue * oldVal, const Args & args, LatentDB * latentDB,gsl_rng * rng) =0;
-  virtual double weight(const VentureValue * newVal, const VentureValue * oldVal, const Args & args, LatentDB * latentDB) { return 0; };
-  virtual double reverseWeight(const VentureValue * oldVal, const Args & args, LatentDB * latentDB)
+  virtual VentureValue * simulate(VentureValue * oldVal, const Args & args, LatentDB * latentDB,gsl_rng * rng) =0;
+  virtual double weight(VentureValue * newVal, VentureValue * oldVal, const Args & args, LatentDB * latentDB) { return 0; };
+  virtual double reverseWeight(VentureValue * oldVal, const Args & args, LatentDB * latentDB)
     { return weight(oldVal,nullptr,args,latentDB); }
 
   bool isIndependent{true};
@@ -25,8 +25,8 @@ struct DefaultAAAKernel : LKernel
 {
   DefaultAAAKernel(const SP * makerSP): makerSP(makerSP) {}
 
-  VentureValue * simulate(const VentureValue * oldVal, const Args & args, LatentDB * latentDB, gsl_rng * rng) override;
-  double weight(const VentureValue * newVal, const VentureValue * oldVal, const Args & args, LatentDB * latentDB) override;
+  VentureValue * simulate(VentureValue * oldVal, const Args & args, LatentDB * latentDB, gsl_rng * rng) override;
+  double weight(VentureValue * newVal, VentureValue * oldVal, const Args & args, LatentDB * latentDB) override;
 
   const SP * makerSP;
 
@@ -34,12 +34,12 @@ struct DefaultAAAKernel : LKernel
 
 struct DeterministicLKernel : LKernel
 {
-  DeterministicLKernel(const VentureValue * value, SP * sp): value(value), sp(sp) {}
+  DeterministicLKernel(VentureValue * value, SP * sp): value(value), sp(sp) {}
 
-  VentureValue * simulate(const VentureValue * oldVal, const Args & args, LatentDB * latentDB,gsl_rng * rng) override;
-  double weight(const VentureValue * newVal, const VentureValue * oldVal, const Args & args, LatentDB * latentDB) override;
+  VentureValue * simulate(VentureValue * oldVal, const Args & args, LatentDB * latentDB,gsl_rng * rng) override;
+  double weight(VentureValue * newVal, VentureValue * oldVal, const Args & args, LatentDB * latentDB) override;
 
-  const VentureValue * value;
+  VentureValue * value;
   SP * sp;
   
 };
@@ -47,7 +47,7 @@ struct DeterministicLKernel : LKernel
 struct VariationalLKernel : LKernel
 {
   virtual vector<double> gradientOfLogDensity(VentureValue * value,
-					      Node * node) const =0;
+					      const Args & args) const =0;
   virtual void updateParameters(const vector<double> & gradient,
 				double gain, 
 				double stepSize) { }
@@ -55,13 +55,13 @@ struct VariationalLKernel : LKernel
 
 struct DefaultVariationalLKernel : VariationalLKernel
 {
-  DefaultVariationalLKernel(const SP * sp, Node * node);
+  DefaultVariationalLKernel(const SP * sp, const Args & args);
 
-  VentureValue * simulate(const VentureValue * oldVal, const Args & args, LatentDB * latentDB,gsl_rng * rng) override;
-  double weight(const VentureValue * newVal, const VentureValue * oldVal, const Args & args, LatentDB * latentDB) override;
+  VentureValue * simulate(VentureValue * oldVal, const Args & args, LatentDB * latentDB,gsl_rng * rng) override;
+  double weight(VentureValue * newVal, VentureValue * oldVal, const Args & args, LatentDB * latentDB) override;
 
   vector<double> gradientOfLogDensity(VentureValue * value,
-				      Node * node) const override;
+				      const Args & args) const override;
 
   void updateParameters(const vector<double> & gradient, 
 			double gain, 

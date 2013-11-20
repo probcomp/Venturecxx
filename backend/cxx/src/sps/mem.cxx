@@ -25,12 +25,19 @@ VentureValue * MSPMakerSP::simulateOutput(const Args & args, gsl_rng * rng) cons
 }
 
 
+VentureVector * newDeepVector(const vector<VentureValue *> & operands)
+{
+  vector<VentureValue *> values;
+  for (VentureValue * operand : operands) { values.push_back(operand->clone()); }
+  return new VentureVector(values);
+}
+
 VentureValue * MSP::simulateRequest(const Args & args, gsl_rng * rng) const
 {
   MSPAux * aux = dynamic_cast<MSPAux*>(args.spaux);
   assert(aux);
 
-  VentureValue * vargs = new VentureVector(args.operands);
+  VentureValue * vargs = newDeepVector(args.operands);
 
   if (aux->ids.count(vargs))
   {
@@ -55,6 +62,7 @@ VentureValue * MSP::simulateRequest(const Args & args, gsl_rng * rng) const
 
   for (VentureValue * val : reverse(args.operands))
   {
+    assert(val->isValid());
     VentureValue * clone = val->clone();
     VentureSymbol * quote = new VentureSymbol("quote");
     VentureNil * nil = new VentureNil;
@@ -99,7 +107,7 @@ void MSP::incorporateRequest(VentureValue * value, const Args & args) const
   assert(requests->esrs.size() == 1);
   ESR esr = requests->esrs[0];
 
-  VentureValue * vargs = new VentureVector(args.operands);
+  VentureValue * vargs = newDeepVector(args.operands);
 
   if (aux->ids.count(vargs))
   {
@@ -127,7 +135,7 @@ void MSP::removeRequest(VentureValue * value, const Args & args) const
   assert(requests->esrs.size() == 1);
   ESR esr = requests->esrs[0];
 
-  VentureValue * vargs = new VentureVector(args.operands);
+  VentureValue * vargs = newDeepVector(args.operands);
 
   assert(aux->ids.count(vargs));
   assert(aux->ids[vargs].first == esr.id);

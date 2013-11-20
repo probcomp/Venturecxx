@@ -46,7 +46,7 @@ struct MakeLazyHMMAAAKernel : LKernel
 {
   /* Generates a LazyHMMSP, and then proposes to all of the latents by 
      forwards-filtering/backwards-sampling. */
-  VentureValue * simulate(const VentureValue * oldVal, const Args & args, LatentDB * latentDB, gsl_rng * rng) override;
+  VentureValue * simulate(VentureValue * oldVal, const Args & args, LatentDB * latentDB, gsl_rng * rng) override;
 };
 
 

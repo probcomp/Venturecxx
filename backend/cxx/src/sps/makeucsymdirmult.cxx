@@ -54,7 +54,7 @@ double MakeUCSymDirMultSP::logDensityOutput(VentureValue * value, const Args & a
   return ld;
 }
 
-VentureValue * MakeUCSymDirMultAAAKernel::simulate(const VentureValue * oldVal, const Args & args, LatentDB * latentDB, gsl_rng * rng)
+VentureValue * MakeUCSymDirMultAAAKernel::simulate(VentureValue * oldVal, const Args & args, LatentDB * latentDB, gsl_rng * rng)
 {
 
   VentureNumber * alpha = dynamic_cast<VentureNumber *>(args.operands[0]);
@@ -83,7 +83,7 @@ VentureValue * MakeUCSymDirMultAAAKernel::simulate(const VentureValue * oldVal, 
   return new VentureSP(new UCSymDirMultSP(theta,d));
 }
 
-double MakeUCSymDirMultAAAKernel::weight(const VentureValue * newVal, const VentureValue * oldVal, const Args & args, LatentDB * latentDB)
+double MakeUCSymDirMultAAAKernel::weight(VentureValue * newVal, VentureValue * oldVal, const Args & args, LatentDB * latentDB)
 {
   return 0;
 }

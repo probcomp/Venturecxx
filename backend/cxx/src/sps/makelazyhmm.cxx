@@ -17,9 +17,17 @@ VectorXd sampleVectorXd(const VectorXd & v,gsl_rng * rng);
 uint32_t sampleVector(const VectorXd & v,gsl_rng * rng);
 VectorXd normalizedVectorXd(VectorXd & v);
 
+
+
+SPAux * LazyHMMSPAux::clone() const
+{
+  return new LazyHMMSPAux(*this);
+}
+
+
 /* AAA LKernel */
 
-VentureValue * MakeLazyHMMAAAKernel::simulate(const VentureValue * oldVal, const Args & args, LatentDB * latentDB, gsl_rng * rng)
+VentureValue * MakeLazyHMMAAAKernel::simulate(VentureValue * oldVal, const Args & args, LatentDB * latentDB, gsl_rng * rng)
 {
   VectorXd p0 = vvToEigenVector(args.operands[0]);
   MatrixXd T =  vvToEigenMatrix(args.operands[1]);

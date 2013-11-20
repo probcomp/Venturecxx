@@ -12,59 +12,54 @@
 /* All of these methods simply check the node type, and dispatch
    to REQUEST or OUTPUT as appropriate. */
 
-VentureValue * SP::simulate(Node * node, gsl_rng * rng) const
+VentureValue * SP::simulate(const Args & args, gsl_rng * rng) const
 {
-  if (node->nodeType == NodeType::REQUEST)
-  { return this->simulateRequest(node,rng); }
+  if (args.isRequest)
+  { return this->simulateRequest(args,rng); }
   else 
   { 
-    assert(node->nodeType == NodeType::OUTPUT);
-    return this->simulateOutput(node,rng); 
+    return this->simulateOutput(args,rng); 
   }
 }
 
-double SP::logDensity(VentureValue * value, Node * node) const
+double SP::logDensity(VentureValue * value, const Args & args) const
 {
-  if (node->nodeType == NodeType::REQUEST)
-  { return this->logDensityRequest(value,node); }
+  if (args.isRequest)
+  { return this->logDensityRequest(value,args); }
   else 
   { 
-    assert(node->nodeType == NodeType::OUTPUT);
-    return this->logDensityOutput(value,node); 
+    return this->logDensityOutput(value,args); 
   }
 }
 
-void SP::incorporate(VentureValue * value, Node * node) const
+void SP::incorporate(VentureValue * value, const Args & args) const
 {
-  if (node->nodeType == NodeType::REQUEST)
-  { return this->incorporateRequest(value,node); }
+  if (args.isRequest)
+  { return this->incorporateRequest(value,args); }
   else 
   { 
-    assert(node->nodeType == NodeType::OUTPUT);
-    return this->incorporateOutput(value,node); 
+    return this->incorporateOutput(value,args); 
   }
 }
 
 
-void SP::remove(VentureValue * value, Node * node) const
+void SP::remove(VentureValue * value, const Args & args) const
 {
-  if (node->nodeType == NodeType::REQUEST)
-  { return this->removeRequest(value,node); }
+  if (args.isRequest)
+  { return this->removeRequest(value,args); }
   else 
   { 
-    assert(node->nodeType == NodeType::OUTPUT);
-    return this->removeOutput(value,node); 
+    return this->removeOutput(value,args); 
   }
 }
 
-vector<VentureValue*> SP::enumerate(Node * node) const
+vector<VentureValue*> SP::enumerate(const Args & args) const
 {
-  if (node->nodeType == NodeType::REQUEST)
-  { return this->enumerateRequest(node); }
+  if (args.isRequest)
+  { return this->enumerateRequest(args); }
   else 
   { 
-    assert(node->nodeType == NodeType::OUTPUT);
-    return this->enumerateOutput(node); 
+    return this->enumerateOutput(args); 
   }
 }
 
@@ -156,19 +151,19 @@ void SP::flushRequest(VentureValue * value) const { delete value; }
 void SP::flushOutput(VentureValue * value) const { delete value; };
 void SP::flushFamily(SPAux * spaux, size_t id) const { } 
 
-vector<VentureValue*> SP::enumerateRequest(Node * node) const
+vector<VentureValue*> SP::enumerateRequest(const Args & args) const
 {
   vector<VentureValue*> v;
   return v;
 }
 
-vector<VentureValue*> SP::enumerateOutput(Node * node) const
+vector<VentureValue*> SP::enumerateOutput(const Args & args) const
 {
   vector<VentureValue*> v;
   return v;
 }
 
-VariationalLKernel * SP::getVariationalLKernel(Node * node) const
+VariationalLKernel * SP::getVariationalLKernel(const Args & args) const
 {
-  return new DefaultVariationalLKernel(this,node);
+  return new DefaultVariationalLKernel(this,args);
 }

@@ -122,11 +122,11 @@ double PyTrace::getGlobalLogScore()
   double ls = 0.0;
   for (Node * node : trace->randomChoices)
   {
-    ls += node->sp()->logDensity(node->getValue(),node);
+    ls += node->sp()->logDensity(node->getValue(),trace->getArgs(node));
   }
   for (Node * node : trace->constrainedChoices)
   {
-    ls += node->sp()->logDensity(node->getValue(), node);
+    ls += node->sp()->logDensity(node->getValue(), trace->getArgs(node));
   }
   return ls;
 }

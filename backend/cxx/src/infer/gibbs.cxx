@@ -122,7 +122,7 @@ MixMHIndex * GibbsGKernel::sampleIndex()
   if (pNode->sp()->canEnumerate(pNode->nodeType))
   {
     vector<VentureValue *> values = pNode->sp()->enumerate(trace->getArgs(pNode));
-    const VentureValue * oldValue = trace->getValue(pNode);
+    VentureValue * oldValue = trace->getValue(pNode);
     if (values.size() > 1)
     {
       canEnumerate = true;
@@ -136,7 +136,7 @@ MixMHIndex * GibbsGKernel::sampleIndex()
       for (size_t i = 0; i < values.size(); ++i)
       {
 	const VentureValue * newValue = values[i];
-	if (newValue->equals(oldValue)) { continue; }
+	if (oldValue->equals(newValue)) { continue; }
 	LKernel * lk = new DeterministicLKernel(values[i],pNode->sp());
 	scaffold->lkernels[pNode] = lk;
 	trace->regen(scaffold->border,scaffold,false,nullptr,nullptr);

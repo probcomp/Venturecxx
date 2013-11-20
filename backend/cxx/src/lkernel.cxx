@@ -5,12 +5,12 @@
 
 #include <iostream>
 
-VentureValue * DefaultAAAKernel::simulate(const VentureValue * oldVal, const Args & args, LatentDB * latentDB,gsl_rng * rng) 
+VentureValue * DefaultAAAKernel::simulate(VentureValue * oldVal, const Args & args, LatentDB * latentDB,gsl_rng * rng) 
 {
   return makerSP->simulateOutput(args,rng);
 }
 
-double DefaultAAAKernel::weight(const VentureValue * newVal, const VentureValue * oldVal, const Args & args, LatentDB * latentDB)
+double DefaultAAAKernel::weight(VentureValue * newVal, VentureValue * oldVal, const Args & args, LatentDB * latentDB)
 {
   VentureSP * vsp = dynamic_cast<VentureSP *>(newVal);
   assert(vsp);
@@ -20,32 +20,32 @@ double DefaultAAAKernel::weight(const VentureValue * newVal, const VentureValue 
   return weight;
 }
 
-VentureValue * DeterministicLKernel::simulate(const VentureValue * oldVal, const Args & args, LatentDB * latentDB,gsl_rng * rng)
+VentureValue * DeterministicLKernel::simulate(VentureValue * oldVal, const Args & args, LatentDB * latentDB,gsl_rng * rng)
 {
   return value;
 }
 
-double DeterministicLKernel::weight(const VentureValue * newVal, const VentureValue * oldVal, const Args & args, LatentDB * latentDB)
+double DeterministicLKernel::weight(VentureValue * newVal, VentureValue * oldVal, const Args & args, LatentDB * latentDB)
 {
   assert(newVal == value);
   return sp->logDensity(value,args);
 }
 
 
-DefaultVariationalLKernel::DefaultVariationalLKernel(const SP * sp,Node * node):
+DefaultVariationalLKernel::DefaultVariationalLKernel(const SP * sp,const Args & args):
   sp(sp)
 {
-  for (Node * operandNode : node->operandNodes)
+  for (VentureValue * operand : args.operands)
   {
-    VentureNumber * vnum = dynamic_cast<VentureNumber*>(operandNode->getValue());
+    VentureNumber * vnum = dynamic_cast<VentureNumber*>(operand);
     assert(vnum);
     parameters.push_back(vnum->x);
   }
   parameterScopes = sp->getParameterScopes();
 }
 
-vector<double> DefaultVariationalLKernel::gradientOfLogDensity(const VentureValue * output,
-							       Node * node) const
+vector<double> DefaultVariationalLKernel::gradientOfLogDensity(VentureValue * output,
+							       const Args & args) const
 {
 
   VentureNumber * voutput = dynamic_cast<VentureNumber*>(output);
@@ -53,13 +53,12 @@ vector<double> DefaultVariationalLKernel::gradientOfLogDensity(const VentureValu
 
   vector<double> arguments;
 
-  for (Node * operandNode : node->operandNodes)
+  for (VentureValue * operand : args.operands)
   {
-    VentureNumber * vparam = dynamic_cast<VentureNumber*>(operandNode->getValue());
+    VentureNumber * vparam = dynamic_cast<VentureNumber*>(operand);
     assert(vparam);
     arguments.push_back(vparam->x);
   }
-
 
   return sp->gradientOfLogDensity(voutput->x, arguments);
 }
@@ -78,14 +77,14 @@ void DefaultVariationalLKernel::updateParameters(const vector<double> & gradient
   }
 }
 
-VentureValue * DefaultVariationalLKernel::simulate(const VentureValue * oldVal, const Args & args, LatentDB * latentDB,gsl_rng * rng)
+VentureValue * DefaultVariationalLKernel::simulate(VentureValue * oldVal, const Args & args, LatentDB * latentDB,gsl_rng * rng)
 {
   double output = sp->simulateOutputNumeric(parameters,rng);
   assert(isfinite(output));
   return new VentureNumber(output);
 }
 
-double DefaultVariationalLKernel::weight(const VentureValue * newVal, const VentureValue * oldVal, const Args & args, LatentDB * latentDB) 
+double DefaultVariationalLKernel::weight(VentureValue * newVal, VentureValue * oldVal, const Args & args, LatentDB * latentDB) 
 {
   VentureNumber * varg1 = dynamic_cast<VentureNumber*>(args.operands[0]);
   VentureNumber * varg2 = dynamic_cast<VentureNumber*>(args.operands[1]);

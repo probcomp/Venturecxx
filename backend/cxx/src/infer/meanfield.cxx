@@ -48,7 +48,7 @@ bool MeanFieldGKernel::registerVariationalLKernels()
 	!scaffold->isResampling(node->operatorNode) &&
 	node->sp()->hasVariationalLKernel)
     {
-      scaffold->lkernels.insert({node,node->sp()->getVariationalLKernel(node)});
+      scaffold->lkernels.insert({node,node->sp()->getVariationalLKernel(trace->getArgs(node))});
       hasVariational = true;
     }
   }

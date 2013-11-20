@@ -239,7 +239,7 @@ double Trace::applyPSP(Node * node,
     VariationalLKernel * vlk = dynamic_cast<VariationalLKernel*>(k);
     if (vlk && gradients)
     {
-      gradients->insert({node,vlk->gradientOfLogDensity(newValue,node)});
+      gradients->insert({node,vlk->gradientOfLogDensity(newValue,getArgs(node))});
     }
   }
   else
