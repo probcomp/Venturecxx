@@ -64,7 +64,7 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
   delete sparam;
 
   /* Now, compute variational kernels through stochastic gradient descent. */
-  double stepSize = 0.001;
+  double stepSize = 0.00001;
   size_t numIters = 40;
   if (!registerVariationalLKernels()) { numIters = 0; }
   double rhoWeight;

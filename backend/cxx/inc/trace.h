@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <map>
-#include <unordered_map>
+#include <map>
 #include <string>
 
 #include <gsl/gsl_rng.h>
@@ -65,7 +65,7 @@ struct Trace
   map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
 
 
-//  unordered_map<size_t,Node*> definiteFamilies;
+//  map<size_t,Node*> definiteFamilies;
 
   /* Regen helpers */
 
@@ -204,10 +204,10 @@ struct Trace
   VentureEnvironment * primitivesEnv;
   VentureEnvironment * globalEnv;
   
-  unordered_map<Node *, uint32_t> rcToIndex;
+  map<Node *, uint32_t> rcToIndex;
   vector<Node *> randomChoices;
 
-  unordered_map<Node *, uint32_t> ccToIndex;
+  map<Node *, uint32_t> ccToIndex;
   vector<Node *> constrainedChoices;
 
   // Bool is TRUE for detach

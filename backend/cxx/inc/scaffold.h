@@ -3,7 +3,7 @@
 
 #include <set>
 #include <map>
-#include <unordered_map>
+#include <map>
 #include <queue>
 
 #include <cassert>
@@ -71,9 +71,9 @@ private:
 
   void disableBrush();
   void disableRequests(Node * node, 
-		       unordered_map<Node *,uint32_t> & disableCounts);
+		       map<Node *,uint32_t> & disableCounts);
   void disableEval(Node * node,     
-		   unordered_map<Node *,uint32_t> & disableCounts);
+		   map<Node *,uint32_t> & disableCounts);
 
 
   bool hasChildInAorD(Node * node);
