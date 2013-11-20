@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
 # 
 # This file is part of Venture.
@@ -13,8 +15,9 @@
 # GNU General Public License for more details.
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env python
+
 # -*- coding: utf-8 -*-
+
 import sys
 from venture.shortcuts import *
 
@@ -23,4 +26,5 @@ if len(sys.argv) > 1:
     port = int(sys.argv[1])
 
 server = make_ripl_rest_server()
+print "Launching RIPL Server"
 server.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
