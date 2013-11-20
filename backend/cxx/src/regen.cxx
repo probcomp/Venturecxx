@@ -58,7 +58,7 @@ double Trace::regenParents(Node * node,
   if (node->nodeType == NodeType::OUTPUT)
   {
     weight += regenInternal(node->requestNode,scaffold,shouldRestore,omegaDB,gradients);
-    for (Node * esrParent : node->esrParents)
+    for (Node * esrParent : getESRParents(node))
     { weight += regenInternal(esrParent,scaffold,shouldRestore,omegaDB,gradients); }
   }
    

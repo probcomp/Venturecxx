@@ -143,3 +143,8 @@ SPAux * Trace::getMadeSPAux(Node * makerNode)
 }
 
 Args Trace::getArgs(Node * node) { return Args(this,node); }
+
+vector<Node *> Trace::getESRParents(Node * node)
+{
+  return node->esrParents;
+}

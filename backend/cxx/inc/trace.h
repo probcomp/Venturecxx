@@ -225,6 +225,7 @@ struct Trace
   SPAux * getSPAux(Node * node);
   SPAux * getMadeSPAux(Node * makerNode);
   Args getArgs(Node * node);
+  vector<Node *> getESRParents(Node * node);
 };
 
 
