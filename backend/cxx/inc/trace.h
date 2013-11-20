@@ -54,7 +54,6 @@ struct Trace
      If I learn c++, there is probably a way to use a safe iterator. */
   double detachVentureFamily(Node * root, OmegaDB * omegaDB);
 
-  double constrain(Node * node,bool reclaimValue);
 
   double unconstrain(Node * node,bool giveOwnershipToSP);
   

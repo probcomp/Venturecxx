@@ -30,7 +30,7 @@ double Trace::regen(const vector<Node *> & border,
     else /* Terminal resampling */
     {
       weight += regenInternal(node,scaffold,shouldRestore,omegaDB,gradients);
-      if (node->isObservation()) { weight += constrain(node,!shouldRestore); }
+      if (node->isObservation()) { weight += constrain(node,node->observedValue, !shouldRestore); }
     }
   }
   return weight;
@@ -78,12 +78,6 @@ double Trace::absorb(Node * node,
   weight += getSP(node)->logDensity(getValue(node),getArgs(node));
   getSP(node)->incorporate(getValue(node),getArgs(node));
   return weight;
-}
-
-double Trace::constrain(Node * node,bool reclaimValue)
-{
-  assert(node->isObservation());
-  return constrain(node,node->observedValue,reclaimValue);
 }
 
 double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)

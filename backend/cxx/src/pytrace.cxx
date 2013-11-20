@@ -114,7 +114,7 @@ void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
   assert(!dynamic_cast<VenturePair*>(val));
   assert(!dynamic_cast<VentureSymbol*>(val));
   node->observedValue = val;
-  trace->constrain(node,true);
+  trace->constrain(node,val,true);
 }
 
 double PyTrace::getGlobalLogScore()
