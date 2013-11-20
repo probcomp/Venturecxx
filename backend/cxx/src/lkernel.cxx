@@ -19,7 +19,8 @@
 #include "lkernel.h"
 #include "node.h"
 #include "sp.h"
-
+#include <cfloat>
+#include <cmath>
 #include <iostream>
 
 VentureValue * DefaultAAAKernel::simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB,gsl_rng * rng) 
@@ -87,11 +88,14 @@ void DefaultVariationalLKernel::updateParameters(const vector<double> & gradient
   for (size_t i = 0; i < parameters.size(); ++i)
   {
     parameters[i] += gradient[i] *  gain * stepSize;
+    if (parameters[i] > DBL_MAX) { parameters[i] = DBL_MAX; }
+    if (parameters[i] < -DBL_MAX) { parameters[i] = -DBL_MAX; }
     if (parameterScopes[i] == ParameterScope::POSITIVE_REAL && 
         parameters[i] < 0.1)
     {
       parameters[i] = 0.1;
     }
+    assert(isfinite(parameters[i]));
   }
 }
 

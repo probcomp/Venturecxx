@@ -84,7 +84,7 @@ bool Scaffold::hasChildInAorD(Node * node)
 
 void Scaffold::disableBrush() 
 {
-  unordered_map<Node *,uint32_t> disableCounts;
+  map<Node *,uint32_t> disableCounts;
   for (pair<Node *,DRGNode> p : drg)
   {
     Node * node = p.first;
@@ -94,7 +94,7 @@ void Scaffold::disableBrush()
 }
 
 void Scaffold::disableRequests(Node * node, 
-			       unordered_map<Node *,uint32_t> & disableCounts)
+			       map<Node *,uint32_t> & disableCounts)
 {
   for (Node * esrParent : node->outputNode->esrParents)
   {
@@ -106,7 +106,7 @@ void Scaffold::disableRequests(Node * node,
 }
 
 void Scaffold::disableEval(Node * node,     
-			   unordered_map<Node *,uint32_t> & disableCounts)
+			   map<Node *,uint32_t> & disableCounts)
 {
   registerBrush(node);
   if (node->nodeType == NodeType::OUTPUT)

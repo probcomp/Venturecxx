@@ -47,18 +47,12 @@ double Trace::regen(const vector<Node *> & border,
     else /* Terminal resampling */
     {
       weight += regenInternal(node,scaffold,shouldRestore,omegaDB,gradients);
-      /* Will no longer need this because we keep the node along with the info
-	 that it does not own its value */
       if (node->isObservation()) { weight += constrain(node,!shouldRestore); }
     }
   }
   return weight;
 }
 
-/* Note: could be simplified by storing (or quickly computing) the direct parents. */
-/* OPT: Since we never have a requestNode in a DRG without its outputNode, we ought
-   to be able to only regen the operator and operands once. 
-   (This may yield a substantial performance improvement.) */
 double Trace::regenParents(Node * node,
 			   Scaffold * scaffold,
 			   bool shouldRestore,
@@ -140,7 +134,6 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
 }
 
 
-/* Note: no longer calls regen parents on REQUEST nodes. */
 double Trace::regenInternal(Node * node,
 			    Scaffold * scaffold,
 			    bool shouldRestore,
@@ -172,19 +165,15 @@ double Trace::regenInternal(Node * node,
   return weight;
 }
 
-/* TODO should load makerNode as well */
 void Trace::processMadeSP(Node * node, bool isAAA)
 {
   callCounts[{"processMadeSP",false}]++;
 
   VentureSP * vsp = dynamic_cast<VentureSP *>(node->getValue());
+  assert(vsp);
   if (vsp->makerNode) { return; }
 
   callCounts[{"processMadeSPfull",false}]++;
-
-
-
-  assert(vsp);
 
   SP * madeSP = vsp->sp;
   vsp->makerNode = node;
@@ -202,7 +191,6 @@ double Trace::applyPSP(Node * node,
 		       OmegaDB * omegaDB,
 		       map<Node *,vector<double> > *gradients)
 {
-  DPRINT("applyPSP: ", node->address.toString());
   callCounts[{"applyPSP",false}]++;
   SP * sp = node->sp();
 
@@ -283,7 +271,7 @@ double Trace::applyPSP(Node * node,
 
   if (dynamic_cast<VentureSP *>(node->getValue()))
   { processMadeSP(node,scaffold && scaffold->isAAA(node)); }
-  if (node->sp()->isRandom(node->nodeType)) { registerRandomChoice(node); }
+  if (sp->isRandom(node->nodeType)) { registerRandomChoice(node); }
   if (node->nodeType == NodeType::REQUEST) { evalRequests(node,scaffold,shouldRestore,omegaDB,gradients); }
 
 
@@ -301,6 +289,7 @@ double Trace::evalRequests(Node * node,
   double weight = 0;
 
   VentureRequest * requests = dynamic_cast<VentureRequest *>(node->getValue());
+  assert(requests);
 
   /* First evaluate ESRs. */
   for (ESR esr : requests->esrs)

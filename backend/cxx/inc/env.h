@@ -4,7 +4,7 @@
 #include "value.h"
 #include "all.h"
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 using namespace std;
@@ -18,7 +18,7 @@ struct VentureEnvironment : VentureValue
 
   void addBinding(VentureSymbol * vsym, Node * node);
 
-  unordered_map<string, Node *> frame;
+  map<string, Node *> frame;
   vector<VentureSymbol*> vsyms;
 
   void destroySymbols();
