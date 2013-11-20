@@ -5,18 +5,18 @@
 
 struct GetCurrentEnvSP : SP
 {
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
   void flushOutput(VentureValue * value) const override; 
 };
 
 struct GetEmptyEnvSP : SP
 {
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
 };
 
 struct ExtendEnvSP : SP
 {
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
 };
 
 

@@ -7,7 +7,7 @@
 
 struct MakeCSP : SP
 {
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
 };
 
 struct CSP : SP
@@ -23,7 +23,7 @@ struct CSP : SP
       name = "csp";
     }
 
-  VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateRequest(const Args & args, gsl_rng * rng) const override;
   void flushRequest(VentureValue * value) const override;
 
   VentureList * ids;

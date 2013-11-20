@@ -142,3 +142,4 @@ SPAux * Trace::getMadeSPAux(Node * makerNode)
   return makerNode->madeSPAux;
 }
 
+Args Trace::getArgs(Node * node) { return Args(this,node); }

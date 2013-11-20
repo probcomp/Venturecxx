@@ -35,6 +35,7 @@ struct SPAux
 
   map<size_t, vector<VentureValue*> > ownedValues;
 
+  virtual SPAux * clone() const;
   
   bool isValid() { return magic == 844142; }
   uint32_t magic = 844142;

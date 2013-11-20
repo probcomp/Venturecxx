@@ -1,7 +1,6 @@
 #include "value.h"
-#include "node.h"
+
 #include "makelazyhmm.h"
-#include "omegadb.h"
 #include "value.h"
 
 #include <cmath>
@@ -17,9 +16,10 @@ VectorXd sampleVectorXd(const VectorXd & v,gsl_rng * rng);
 uint32_t sampleVector(const VectorXd & v,gsl_rng * rng);
 VectorXd normalizedVectorXd(VectorXd & v);
 
-/* AAA LKernel */
+SPAux * LazyHMMSPAux::clone() const { return new LazyHMMSPAux(*this); }
 
-VentureValue * MakeLazyHMMAAAKernel::simulate(const VentureValue * oldVal, const Args & args, LatentDB * latentDB, gsl_rng * rng)
+/* AAA LKernel */
+VentureValue * MakeLazyHMMAAAKernel::simulate(VentureValue * oldVal, const Args & args, gsl_rng * rng)
 {
   VectorXd p0 = vvToEigenVector(args.operands[0]);
   MatrixXd T =  vvToEigenMatrix(args.operands[1]);
@@ -72,20 +72,15 @@ VentureValue * MakeLazyHMMSP::simulateOutput(const Args & args, gsl_rng * rng) c
 				vvToEigenMatrix(args.operands[2])));
 }
 
-pair<double,LatentDB *> MakeLazyHMMSP::detachAllLatents(SPAux * spaux) const
+double MakeLazyHMMSP::detachAllLatents(SPAux * spaux) const
 {
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(spaux);
-  LazyHMMLatentDBAll * latents = new LazyHMMLatentDBAll;
-  latents->xs.swap(aux->xs);
-  return {0,latents};
+  assert(aux);
+
+  aux->xs.clear();
+  return 0;
 }
  
-void MakeLazyHMMSP::restoreAllLatents(SPAux * spaux, LatentDB * latentDB)
-{
-  LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(spaux);
-  LazyHMMLatentDBAll * latents = new LazyHMMLatentDBAll;
-  latents->xs.swap(aux->xs);
-}
 
 /* LazyHMMSP */
 
@@ -130,21 +125,12 @@ void LazyHMMSP::removeOutput(VentureValue * value, const Args & args) const
 
 double LazyHMMSP::simulateLatents(SPAux * spaux,
 				  HSR * hsr,
-				  bool shouldRestore,
-				  LatentDB * latentDB,
 				  gsl_rng * rng) const
 {
   /* TODO CURRENT SPOT */
   /* if should restore, restore, otherwise do not assert latentDB */
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(spaux);
   HMM_HSR * request = dynamic_cast<HMM_HSR *>(hsr);
-  LazyHMMLatentDBSome * latents = nullptr;
-  if (latentDB)
-  { 
-    latents = dynamic_cast<LazyHMMLatentDBSome *>(latentDB);
-    assert(latents);
-  }
-  
   assert(aux);
   assert(request);
 
@@ -152,8 +138,7 @@ double LazyHMMSP::simulateLatents(SPAux * spaux,
      we have not already done so. */
   if (aux->xs.empty()) 
   { 
-    if (shouldRestore) { aux->xs.push_back(latents->xs[0]); }
-    else { aux->xs.push_back(sampleVectorXd(p0,rng)); }
+    aux->xs.push_back(sampleVectorXd(p0,rng));
   }
 
   if (aux->xs.size() <= request->index)
@@ -161,8 +146,7 @@ double LazyHMMSP::simulateLatents(SPAux * spaux,
     for (size_t i = aux->xs.size(); i <= request->index; ++i)
     {
       VectorXd sample;
-      if (shouldRestore) { sample = latents->xs[i]; }
-      else { sample = sampleVectorXd(T * aux->xs.back(),rng); }
+      sample = sampleVectorXd(T * aux->xs.back(),rng);
       aux->xs.push_back(sample);
     }
   }
@@ -171,24 +155,19 @@ double LazyHMMSP::simulateLatents(SPAux * spaux,
 }
 
 double LazyHMMSP::detachLatents(SPAux * spaux,
-				HSR * hsr,
-				LatentDB * latentDB) const
+				HSR * hsr) const
 {
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux *>(spaux);
   HMM_HSR * request = dynamic_cast<HMM_HSR *>(hsr);
-  LazyHMMLatentDBSome * latents = dynamic_cast<LazyHMMLatentDBSome *>(latentDB);
 
   assert(aux);
   assert(request);
-  assert(latents);
 
   if (aux->xs.size() == request->index + 1 && 
       !aux->os.count(request->index))
   {
     if (aux->os.empty()) 
     { 
-      for (size_t i = 0; i < aux->xs.size(); ++i)
-      { latents->xs[i] = aux->xs[i]; }
       aux->xs.clear();
     }
     else
@@ -196,7 +175,6 @@ double LazyHMMSP::detachLatents(SPAux * spaux,
       uint32_t maxObservation = (*(max_element(aux->os.begin(),aux->os.end()))).first;
       for (size_t i = aux->xs.size()-1; i > maxObservation; --i)
       {
-	latents->xs[i] = aux->xs.back();
 	aux->xs.pop_back();
       }
       assert(aux->xs.size() == maxObservation + 1);

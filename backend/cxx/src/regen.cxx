@@ -75,8 +75,8 @@ double Trace::absorb(Node * node,
   assert(scaffold);
   double weight = 0;
   weight += regenParents(node,scaffold,shouldRestore,omegaDB,gradients);
-  weight += getSP(node)->logDensity(getValue(node),node);
-  getSP(node)->incorporate(getValue(node),node);
+  weight += getSP(node)->logDensity(getValue(node),getArgs(node));
+  getSP(node)->incorporate(getValue(node),getArgs(node));
   return weight;
 }
 
@@ -97,17 +97,17 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
        this in loadDefaultKernels instead. */
     assert(getSP(node)->isRandomOutput);
     assert(getSP(node)->canAbsorbOutput); // TODO temporary
-    getSP(node)->removeOutput(getValue(node),node);
+    getSP(node)->removeOutput(getValue(node),getArgs(node));
 
     if (reclaimValue) { delete getValue(node); }
 
     /* TODO need to set this on restore, based on the FlushQueue */
 
-    double weight = getSP(node)->logDensityOutput(value,node);
+    double weight = getSP(node)->logDensityOutput(value,getArgs(node));
     node->setValue(value);
     node->isConstrained = true;
     node->spOwnsValue = false;
-    getSP(node)->incorporateOutput(value,node);
+    getSP(node)->incorporateOutput(value,getArgs(node));
     if (getSP(node)->isRandomOutput) { 
       unregisterRandomChoice(node); 
       registerConstrainedChoice(node);
@@ -232,8 +232,8 @@ double Trace::applyPSP(Node * node,
     LatentDB * latentDB = nullptr;
     if (omegaDB && omegaDB->latentDBs.count(getSP(node))) { latentDB = omegaDB->latentDBs[getSP(node)]; }
 
-    newValue = k->simulate(oldValue,node,latentDB,rng);
-    weight += k->weight(newValue,oldValue,node,latentDB);
+    newValue = k->simulate(oldValue,getArgs(node),latentDB,rng);
+    weight += k->weight(newValue,oldValue,getArgs(node),latentDB);
     assert(isfinite(weight));
 
     VariationalLKernel * vlk = dynamic_cast<VariationalLKernel*>(k);
@@ -244,13 +244,13 @@ double Trace::applyPSP(Node * node,
   }
   else
   {
-    newValue = sp->simulate(node,rng);
+    newValue = sp->simulate(getArgs(node),rng);
   }
   assert(newValue);
   assert(newValue->isValid());
   node->setValue(newValue);
 
-  sp->incorporate(newValue,node);
+  sp->incorporate(newValue,getArgs(node));
 
   if (dynamic_cast<VentureSP *>(getValue(node)))
   { processMadeSP(node,scaffold && scaffold->isAAA(node)); }

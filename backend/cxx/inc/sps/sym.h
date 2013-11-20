@@ -5,7 +5,7 @@
 
 struct IsSymbolSP : SP
 { 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
 };
 
 #endif

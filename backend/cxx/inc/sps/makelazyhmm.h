@@ -5,7 +5,6 @@
 
 #include "sp.h"
 #include "spaux.h"
-#include "omegadb.h"
 #include "lkernel.h"
 #include "srs.h"
 #include <vector>
@@ -21,6 +20,7 @@ struct HMM_HSR : HSR
 
 struct LazyHMMSPAux : SPAux
 {
+  SPAux * clone() const override; // TODO implement
   /* Latents */
   vector<VectorXd> xs; 
   
@@ -46,7 +46,7 @@ struct MakeLazyHMMAAAKernel : LKernel
 {
   /* Generates a LazyHMMSP, and then proposes to all of the latents by 
      forwards-filtering/backwards-sampling. */
-  VentureValue * simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB, gsl_rng * rng) override;
+  VentureValue * simulate(const VentureValue * oldVal, const Args & args, LatentDB * latentDB, gsl_rng * rng) override;
 };
 
 
@@ -59,11 +59,11 @@ struct MakeLazyHMMSP : SP
     }
 
   /* Generaters a LazyHMMSP */
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
 
-  /* For the child. */
-  pair<double,LatentDB *> detachAllLatents(SPAux * spaux) const;
-  void restoreAllLatents(SPAux * spaux, LatentDB * latentDB);
+ void restoreAllLatents(SPAux * spaux, LatentDB * latentDB) override;
+
+  pair<double, LatentDB *> detachAllLatents(SPAux * spaux) const override;
 
   LKernel * getAAAKernel() const override { return new MakeLazyHMMAAAKernel; }
 };
@@ -81,10 +81,10 @@ struct LazyHMMSP : SP
     }
 
   /* Simply applies O to appropriate latent and then samples from it.*/
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
-  double logDensityOutput(VentureValue * value, Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, const Args & args) const override;
 
-  VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateRequest(const Args & args, gsl_rng * rng) const override;
 
 
   /* SPAux */
@@ -92,28 +92,25 @@ struct LazyHMMSP : SP
   void destroySPAux(SPAux * spaux);
 
   /* Incorporate / Remove */
-  void incorporateOutput(VentureValue * value, Node * node) const override;
-  void removeOutput(VentureValue * value, Node * node) const override;
+  void incorporateOutput(VentureValue * value, const Args & args) const override;
+  void removeOutput(VentureValue * value, const Args & args) const override;
 
-  /* LatentDBs */
+  /* LSRs */
   LatentDB * constructLatentDB() const override { return new LazyHMMLatentDBSome; }
   void destroyLatentDB(LatentDB * latentDB) const override { delete latentDB; }
 
-  /* (hmm n) will make the request "n", which may cause latents to be
-     evaluated from the prior. */
-  double simulateLatents(SPAux * spaux,
+/* LSRs */
+ double simulateLatents(SPAux * spaux,
 				 HSR * hsr,
 				 bool shouldRestore,
 				 LatentDB * latentDB,
-				 gsl_rng * rng) const override;
+			gsl_rng * rng) const override;
 
-  /* Some latents may be detached and put in the LatentDB if they are no
-     longer required. */
-  double detachLatents(SPAux * spaux,
-		       HSR * hsr,
-		       LatentDB * latentDB) const;
+ double detachLatents(SPAux * spaux,
+			       HSR * hsr,
+		      LatentDB * latentDB) const override;
 
-  
+
 
   VectorXd p0;
   MatrixXd T;

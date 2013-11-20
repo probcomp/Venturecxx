@@ -13,7 +13,7 @@ struct EvalSP : SP
 
     }
 
-  VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
+  VentureValue * simulateRequest(const Args & args, gsl_rng * rng) const override;
 
 };
 

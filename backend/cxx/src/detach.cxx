@@ -75,8 +75,8 @@ double Trace::unabsorb(Node * node,
 {
   assert(scaffold);
   double weight = 0;
-  getSP(node)->remove(getValue(node),node);
-  weight += getSP(node)->logDensity(getValue(node),node);
+  getSP(node)->remove(getValue(node),getArgs(node));
+  weight += getSP(node)->logDensity(getValue(node),getArgs(node));
   weight += detachParents(node,scaffold,omegaDB);
   return weight;
 }
@@ -92,11 +92,11 @@ double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
       unregisterConstrainedChoice(node);
       registerRandomChoice(node);
     }
-    getSP(node)->removeOutput(getValue(node),node);
-    double logDensity = getSP(node)->logDensityOutput(getValue(node),node);
+    getSP(node)->removeOutput(getValue(node),getArgs(node));
+    double logDensity = getSP(node)->logDensityOutput(getValue(node),getArgs(node));
     node->isConstrained = false;
     node->spOwnsValue = giveOwnershipToSP;
-    getSP(node)->incorporateOutput(getValue(node),node);
+    getSP(node)->incorporateOutput(getValue(node),getArgs(node));
     return logDensity;
   }
 }
@@ -197,10 +197,10 @@ double Trace::unapplyPSP(Node * node,
   SP * sp = getSP(node);
   double weight = 0;
 
-  sp->remove(getValue(node),node);
+  sp->remove(getValue(node),getArgs(node));
 
   if (scaffold && scaffold->hasKernelFor(node))
-  { weight += scaffold->lkernels[node]->reverseWeight(getValue(node),node,nullptr); }
+  { weight += scaffold->lkernels[node]->reverseWeight(getValue(node),getArgs(node),nullptr); }
 
   if (sp->makesHSRs && scaffold && scaffold->isAAA(node))
   { 

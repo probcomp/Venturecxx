@@ -6,12 +6,12 @@
 
 struct SinSP : SP
 { 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
 };
 
 struct CosSP : SP
 { 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override; 
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override; 
 };
 
 #endif

@@ -1,11 +1,12 @@
 #ifndef TRACE_H
 #define TRACE_H
 
+#include "args.h"
+
 #include <vector>
 #include <map>
 #include <unordered_map>
 #include <string>
-
 #include <gsl/gsl_rng.h>
 #include <boost/python/object.hpp>
 
@@ -223,7 +224,7 @@ struct Trace
   VentureSP * getVSP(Node * node);
   SPAux * getSPAux(Node * node);
   SPAux * getMadeSPAux(Node * makerNode);
-
+  Args getArgs(Node * node);
 };
 
 

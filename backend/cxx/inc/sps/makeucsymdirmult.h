@@ -13,8 +13,8 @@
 
 struct MakeUCSymDirMultAAAKernel : LKernel
 {
-  VentureValue * simulate(VentureValue * oldVal, Node * appNode, LatentDB * latentDB, gsl_rng * rng) override;
-  double weight(VentureValue * newVal, VentureValue * oldVal, Node * appNode, LatentDB * latentDB) override;
+  VentureValue * simulate(const VentureValue * oldVal, const Args & args, LatentDB * latentDB, gsl_rng * rng) override;
+  double weight(const VentureValue * newVal, const VentureValue * oldVal, const Args & args, LatentDB * latentDB) override;
 
 };
 
@@ -26,8 +26,8 @@ struct MakeUCSymDirMultSP : SP
       isRandomOutput = true;
       canAbsorbOutput = true;
     }
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
-  double logDensityOutput(VentureValue * value, Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, const Args & args) const override;
   LKernel * getAAAKernel() const override { return new MakeUCSymDirMultAAAKernel; }
 
 };
@@ -41,10 +41,10 @@ struct UCSymDirMultSP : SP
       tracksSamples = true;
     }
 
-  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
-  double logDensityOutput(VentureValue * value, Node * node) const override;
-  void incorporateOutput(VentureValue * value, Node * node) const override;
-  void removeOutput(VentureValue * value, Node * node) const override;
+  VentureValue * simulateOutput(const Args & args, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, const Args & args) const override;
+  void incorporateOutput(VentureValue * value, const Args & args) const override;
+  void removeOutput(VentureValue * value, const Args & args) const override;
 
   double logDensityOfCounts(SPAux * spaux) const;
 

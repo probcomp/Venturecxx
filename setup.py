@@ -20,6 +20,7 @@ src_files = [
     "src/env.cxx",
     "src/builtin.cxx",
     "src/trace.cxx",
+    "src/args.cxx",
     "src/rcs.cxx",
     "src/omegadb.cxx",
     "src/regen.cxx",
