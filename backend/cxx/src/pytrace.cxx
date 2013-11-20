@@ -160,8 +160,6 @@ void PyTrace::infer(boost::python::dict params)
   string kernel = boost::python::extract<string>(params["kernel"]);
   bool useGlobalScaffold = boost::python::extract<bool>(params["use_global_scaffold"]);
   
-  cout << "INFER(" << kernel << ")" << endl;
-
   assert(!(useGlobalScaffold && kernel == "gibbs"));
   assert(gkernels.count(make_pair(kernel,useGlobalScaffold)));
   MixMHKernel * gkernel = gkernels[make_pair(kernel,useGlobalScaffold)];

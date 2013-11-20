@@ -1,10 +1,25 @@
+# Copyright (c) 2013, MIT Probabilistic Computing Project.
+# 
+# This file is part of Venture.
+# 	
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 	
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 	
+# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from venture.shortcuts import *
 import math
 import pdb
 import itertools
 
-globalKernel = "mh";
-globalUseGlobalScaffold = False;
+globalKernel = "meanfield";
+globalUseGlobalScaffold = True;
 
 def SIVM():
   return make_church_prime_ripl()
@@ -27,14 +42,14 @@ def printTest(testName,eps,ops):
 
 def runAllTests(N):
   print "========= RunAllTests(N) ========"
-  options = [("mh",False),
-             ("mh",True),
-             ("pgibbs",False),
-             ("pgibbs",True),
-             ("meanfield",False),
-             ("meanfield",True),
-             ("gibbs",False),
-             ("gibbs",True)]
+  options = [ ("mh",False),
+              ("mh",True),
+              ("pgibbs",False),
+              ("pgibbs",True),
+              ("meanfield",False),
+              ("meanfield",True),
+              ("gibbs",False)]
+
 
   for i in range(len(options)):
     print "\n\n\n\n\n\n\n========= %d. (%s,%d) ========" % (i+1,options[i][0],options[i][1])
@@ -53,7 +68,6 @@ def loggingInfer(sivm,address,T):
   return predictions
 
 def runTests(N):
-  print "Running tests with kernel = " + globalKernel + " and globalScaffold = " + str(globalUseGlobalScaffold)
   testBernoulli0(N)
   testBernoulli1(N)
   testCategorical1(N)
