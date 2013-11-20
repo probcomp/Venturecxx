@@ -55,11 +55,11 @@ PyTrace::PyTrace() :
     bindPySP(module_str, pysp_name);
   }
 
-#  if (pysp_files.begin() == pysp_files.end()) {
-#    std::cout << "No python sps to load" << std::endl;
-#  } else {
-#    std::cout << "Done loading python SPs" << std::endl;
-#  }
+//  if (pysp_files.begin() == pysp_files.end()) {
+//    std::cout << "No python sps to load" << std::endl;
+//  } else {
+//    std::cout << "Done loading python SPs" << std::endl;
+//  }
 }
 
 PyTrace::~PyTrace()
