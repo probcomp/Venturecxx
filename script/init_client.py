@@ -1,3 +1,5 @@
+#!/usr/bin/python -i
+
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
 # 
 # This file is part of Venture.
@@ -13,6 +15,14 @@
 # GNU General Public License for more details.
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-# run with (i)python -i
+
+import sys
 from venture.shortcuts import *
-ripl = make_ripl_rest_client("http://127.0.0.1:8082")
+
+port = 8082
+if len(sys.argv) > 1:
+    port = int(sys.argv[1])
+
+url = "http://127.0.0.1:{0}".format(port)
+print "Connecting to RIPL Server at {0}".format(url)
+ripl = make_ripl_rest_client(url)
