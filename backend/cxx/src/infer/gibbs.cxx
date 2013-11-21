@@ -145,6 +145,7 @@ MixMHIndex * GibbsGKernel::sampleIndex()
 	if (oldValue->equals(newValue)) { continue; }
 	LKernel * lk = new DeterministicLKernel(values[i],pNode->sp());
 	scaffold->lkernels[pNode] = lk;
+	trace->setOptions(false,nullptr);
 	trace->regen(scaffold->border,scaffold,nullptr);
 	OmegaDB * targetDB = new OmegaDB;
 	trace->setOptions(false,targetDB);
@@ -166,6 +167,7 @@ MixMHIndex * GibbsGKernel::sampleIndex()
 
     for (size_t p = 0; p < P; ++p)
     {
+      trace->setOptions(false,nullptr);
       trace->regen(scaffold->border,scaffold,nullptr);
       OmegaDB * targetDB = new OmegaDB;
       trace->setOptions(false,targetDB);

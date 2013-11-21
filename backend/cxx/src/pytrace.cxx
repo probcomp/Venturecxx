@@ -29,8 +29,8 @@ PyTrace::PyTrace() :
 
     {{"gibbs",false}, new OutermostMixMH(trace,new GibbsGKernel(trace))},
 
-    // {{"meanfield",false}, new OutermostMixMH(trace,new MeanFieldGKernel(trace))},
-    // {{"meanfield",true}, new GlobalScaffoldMixMH(trace,new MeanFieldGKernel(trace))}
+    {{"meanfield",false}, new OutermostMixMH(trace,new MeanFieldGKernel(trace))},
+    {{"meanfield",true}, new GlobalScaffoldMixMH(trace,new MeanFieldGKernel(trace))}
       }
  {}
 

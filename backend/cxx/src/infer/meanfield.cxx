@@ -12,7 +12,8 @@
 double MeanFieldGKernel::propose()
 {
   /* Sample from the variational distribution. */
-  double weightXi = trace->regen(scaffold->border,scaffold,false,nullptr,nullptr);
+  trace->setOptions(false,nullptr);
+  double weightXi = trace->regen(scaffold->border,scaffold,nullptr);
   return weightXi - weightRho;
 }
  
@@ -25,9 +26,11 @@ void MeanFieldGKernel::accept()
 void MeanFieldGKernel::reject()
 {
   OmegaDB * xiDB = new OmegaDB;
-  trace->detach(scaffold->border,scaffold,xiDB);
+  trace->setOptions(false,xiDB);
+  trace->detach(scaffold->border,scaffold);
   check.checkTorus(scaffold);
-  trace->regen(scaffold->border,scaffold,true,rhoDB,nullptr);
+  trace->setOptions(true,rhoDB);
+  trace->regen(scaffold->border,scaffold,nullptr);
   flushDB(rhoDB,true);
   flushDB(xiDB,false);
   rhoDB = nullptr;
@@ -70,7 +73,8 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
   double rhoWeight;
 
   rhoDB = new OmegaDB;
-  rhoWeight = trace->detach(scaffold->border,scaffold,rhoDB);
+  trace->setOptions(false,rhoDB);
+  rhoWeight = trace->detach(scaffold->border,scaffold);
   check.checkTorus(scaffold);
 
   for (size_t i = 0; i < numIters; ++i)
@@ -78,10 +82,12 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
     map<Node *, vector<double> > gradients;
 
     // Regen populates the gradients
-    double gain = trace->regen(scaffold->border,scaffold,false,nullptr,&gradients);
+    trace->setOptions(false,nullptr);
+    double gain = trace->regen(scaffold->border,scaffold,&gradients);
 
     OmegaDB * detachedDB = new OmegaDB;
-    trace->detach(scaffold->border,scaffold,detachedDB);
+    trace->setOptions(false,detachedDB);
+    trace->detach(scaffold->border,scaffold);
     check.checkTorus(scaffold);
     flushDB(detachedDB,false);
 
@@ -95,9 +101,11 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
       }
     }
   }
-  trace->regen(scaffold->border,scaffold,true,rhoDB,nullptr);
+  trace->setOptions(false,nullptr);
+  trace->regen(scaffold->border,scaffold,nullptr);
   OmegaDB * rhoDB2 = new OmegaDB;
-  weightRho = trace->detach(scaffold->border,scaffold,rhoDB2);
+  trace->setOptions(false,rhoDB2);
+  weightRho = trace->detach(scaffold->border,scaffold);
   flushDB(rhoDB2,true);
   check.checkTorus(scaffold);
 }

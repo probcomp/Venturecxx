@@ -9,6 +9,7 @@
 #include <gsl/gsl_sf.h>
 
 #include <cmath>
+#include <cfloat>
 #include <vector>
 
 #include <cassert>
@@ -21,6 +22,7 @@ double NormalDistributionLogLikelihood(double sampled_value, double average, dou
   loglikelihood -= 0.5 * log(2.0 * 3.14159265358979323846264338327950);
   double deviation = sampled_value - average;
   loglikelihood -= 0.5 * deviation * deviation / (sigma * sigma);
+  if (loglikelihood < -DBL_MAX) { loglikelihood = -DBL_MAX; }
   return loglikelihood;
 }
 
@@ -33,6 +35,8 @@ double GammaDistributionLogLikelihood(double sampled_value, double alpha, double
   loglikelihood += (alpha - 1.0) * log(sampled_value);
   loglikelihood -= beta * sampled_value;
   loglikelihood -= gsl_sf_lngamma(alpha);
+  if (loglikelihood < -DBL_MAX) { loglikelihood = -DBL_MAX; }
+
   return loglikelihood;
 }
 
@@ -42,6 +46,8 @@ double InverseGammaDistributionLogLikelihood(double sampled_value, double alpha,
   loglikelihood -= (alpha + 1.0) * log(sampled_value);
   loglikelihood -= beta / sampled_value;
   loglikelihood -= gsl_sf_lngamma(alpha);
+  if (loglikelihood < -DBL_MAX) { loglikelihood = -DBL_MAX; }
+
   return loglikelihood;
 }
 
@@ -51,6 +57,8 @@ double BetaDistributionLogLikelihood(double sampled_value, double alpha, double 
   loglikelihood += (alpha - 1.0) * log(sampled_value);
   loglikelihood += (beta - 1.0) * log(1.0 - sampled_value);
   loglikelihood -= gsl_sf_lnbeta(alpha, beta);
+  if (loglikelihood < -DBL_MAX) { loglikelihood = -DBL_MAX; }
+
   return loglikelihood;
 }
 
@@ -60,6 +68,8 @@ double ChiSquaredDistributionLogLikelihood(double sampled_value, double nu) {
   loglikelihood -= 0.5 * sampled_value;
   loglikelihood -= log(2.0);
   loglikelihood -= gsl_sf_lngamma(0.5 * nu);
+  if (loglikelihood < -DBL_MAX) { loglikelihood = -DBL_MAX; }
+
   return loglikelihood;
 }
 
@@ -69,6 +79,8 @@ double InverseChiSquaredDistributionLogLikelihood(double sampled_value, double n
   loglikelihood -= 0.5 / sampled_value;
   loglikelihood -= log(2.0);
   loglikelihood -= gsl_sf_lngamma(0.5 * nu);
+  if (loglikelihood < -DBL_MAX) { loglikelihood = -DBL_MAX; }
+
   return loglikelihood;
 }
 
@@ -216,7 +228,8 @@ VentureValue * BetaSP::simulateOutput(const Args & args, gsl_rng * rng)  const
   assert(a);
   assert(b);
   double x = gsl_ran_beta(rng,a->x,b->x);
-  if (x == 1.0) { x = 0.99; }
+  if (x > 0.99) { x = 0.99; }
+  if (x < 0.01) { x = 0.01; }
   return new VentureNumber(x);
 }
 
@@ -227,7 +240,8 @@ double BetaSP::simulateOutputNumeric(const vector<double> & args, gsl_rng * rng)
   double x = gsl_ran_beta(rng,args[0],args[1]);
   assert(isfinite(x));
   // TODO FIXME GSL NUMERIC
-  if (x == 1.0) { return 0.99; }
+  if (x > 0.99) { x = 0.99; }
+  if (x < 0.01) { x = 0.01; }
   else { return x; }
 }
 

@@ -38,6 +38,7 @@ double ScaffoldMHGKernel::propose()
   double detachWeight = trace->detach(scaffold->border,scaffold);
 
   check.checkTorus(scaffold);
+  trace->setOptions(false,nullptr);
   double regenWeight = trace->regen(scaffold->border,scaffold,nullptr);
   return regenWeight - detachWeight;
 }

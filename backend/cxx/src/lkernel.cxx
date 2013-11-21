@@ -2,7 +2,8 @@
 #include "lkernel.h"
 #include "node.h"
 #include "sp.h"
-
+#include <cmath>
+#include <cfloat>
 #include <iostream>
 
 VentureValue * DefaultAAAKernel::simulate(VentureValue * oldVal, const Args & args, LatentDB * latentDB,gsl_rng * rng) 
@@ -74,6 +75,9 @@ void DefaultVariationalLKernel::updateParameters(const vector<double> & gradient
     {
       parameters[i] = 0.1;
     }
+    if (parameters[i] < -DBL_MAX) { parameters[i] = -DBL_MAX; }
+    if (parameters[i] > DBL_MAX) { parameters[i] = DBL_MAX; }
+
   }
 }
 

@@ -239,6 +239,7 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
   /* Simulate and calculate initial weights */
   for (size_t p = 0; p < P; ++p)
   {
+    trace->setOptions(false,nullptr);
     trace->regen({scaffold->border[0]},scaffold,nullptr);
     trace->setOptions(false,omegaDBs[0][p]);    
     weights[p] = trace->detach({scaffold->border[0]},scaffold);

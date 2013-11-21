@@ -18,8 +18,8 @@ import math
 import pdb
 import itertools
 
-globalKernel = "pgibbs";
-globalUseGlobalScaffold = False;
+globalKernel = "meanfield";
+globalUseGlobalScaffold = True;
 
 def SIVM():
   return make_church_prime_ripl()
@@ -42,13 +42,14 @@ def printTest(testName,eps,ops):
 
 def runAllTests(N):
   print "========= RunAllTests(N) ========"
-  options = [ ("mh",False),
-              ("mh",True),
-              ("pgibbs",False),
-              ("pgibbs",True),
-#              ("meanfield",False),
-#              ("meanfield",True),
-              ("gibbs",False)]
+  options = [ #("mh",False),
+              #("mh",True),
+              #("pgibbs",False),
+              #("pgibbs",True),
+              ("meanfield",False),
+              ("meanfield",True),
+              #("gibbs",False)
+  ]
 
 
   for i in range(len(options)):
