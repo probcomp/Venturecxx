@@ -51,12 +51,14 @@ void ScaffoldMHGKernel::accept()
 
 void ScaffoldMHGKernel::reject()
 {
-  trace->setOptions(false,new OmegaDB);
+  OmegaDB * xiDB = new OmegaDB;
+  trace->setOptions(false,xiDB);
   trace->detach(scaffold->border,scaffold);
   check.checkTorus(scaffold);
+  trace->setOptions(true,rhoDB);
   trace->regen(scaffold->border,scaffold,nullptr);
   flushDB(rhoDB,true);
-  flushDB(trace->omegaDB,false);
+  flushDB(xiDB,false);
   rhoDB = nullptr;
 
 }

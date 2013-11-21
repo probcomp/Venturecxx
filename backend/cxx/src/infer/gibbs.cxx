@@ -80,10 +80,11 @@ void GibbsSelectGKernel::accept()
 void GibbsSelectGKernel::reject()
 {
   assert(chosenIndex != UINT32_MAX);
-  OmegaDB * xiDB = new OmegaDB;
-  trace->detach(scaffold->border,scaffold,xiDB);
+  trace->setOptions(false,new OmegaDB);
+  trace->detach(scaffold->border,scaffold);
   check.checkTorus(scaffold);
-  trace->regen(scaffold->border,scaffold,true,source.second,nullptr);
+  trace->setOptions(true,source.second);
+  trace->regen(scaffold->border,scaffold,nullptr);
   flushDB(source.second,true);
   flushDB(xiDB,true); // subtle! only flush the latents twice (TODO discuss)
   for (size_t i = 0; i < targets.size(); ++i)
