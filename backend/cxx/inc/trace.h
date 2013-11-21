@@ -3,8 +3,9 @@
 
 #include <vector>
 #include <map>
-#include <map>
+#include <set>
 #include <string>
+#include <functional>
 
 #include <gsl/gsl_rng.h>
 #include <boost/python/object.hpp>
@@ -212,6 +213,13 @@ struct Trace
 
   // Bool is TRUE for detach
   map<pair<string,bool>,uint32_t> callCounts;
+
+  //////////////////////////////////////////
+//  void forEachNode(function<void(Node *)> f);
+//  void forEachEdge(function<void(Edge *)> f);
+  set<Node *> findSPFamilyRoots();
+
+
 };
 
 

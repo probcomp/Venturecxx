@@ -34,6 +34,7 @@ src_files = [
     "src/node.cxx",
     "src/env.cxx",
     "src/builtin.cxx",
+    "src/findsproots.cxx",
     "src/trace.cxx",
     "src/rcs.cxx",
     "src/omegadb.cxx",
