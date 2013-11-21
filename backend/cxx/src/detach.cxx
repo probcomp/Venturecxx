@@ -291,6 +291,7 @@ double Trace::detachVentureFamily(Node * root)
 double Trace::detachFamily(Node * node,
 			   Scaffold * scaffold)
 {
+  cout << "uneval: " << node->address << endl;
   assert(node);
   double weight = 0;
   
