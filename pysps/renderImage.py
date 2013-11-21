@@ -6,6 +6,7 @@ from venture.cxx.libsp import SP
 class renderImage(SP):
 
   def __init__(self):
+    sys.path.append("../../NIPS2013Vision")
     import _vision_things
     self.vt = _vision_things
     super(renderImage, self).__init__()
