@@ -61,7 +61,8 @@ double GibbsSelectGKernel::propose()
   double weightMinusXi = log(rhoExpWeight + totalXiExpWeight - exp(targets[chosenIndex].first));
   check.checkTorus(scaffold);
 
-  trace->regen(scaffold->border,scaffold,true,targets[chosenIndex].second,nullptr);
+  trace->setOptions(true,targets[chosenIndex].second);
+  trace->regen(scaffold->border,scaffold,nullptr);
   return weightMinusRho - weightMinusXi;
 }
 
@@ -80,7 +81,8 @@ void GibbsSelectGKernel::accept()
 void GibbsSelectGKernel::reject()
 {
   assert(chosenIndex != UINT32_MAX);
-  trace->setOptions(false,new OmegaDB);
+  OmegaDB * xiDB = new OmegaDB;
+  trace->setOptions(false,xiDB);
   trace->detach(scaffold->border,scaffold);
   check.checkTorus(scaffold);
   trace->setOptions(true,source.second);
@@ -131,7 +133,8 @@ MixMHIndex * GibbsGKernel::sampleIndex()
       LKernel * lk = new DeterministicLKernel(oldValue,trace->getSP(pNode));
       scaffold->lkernels[pNode] = lk;
       OmegaDB * sourceDB = new OmegaDB;
-      pindex->source = make_pair(trace->detach(scaffold->border,scaffold,sourceDB),sourceDB);
+      trace->setOptions(false,sourceDB);
+      pindex->source = make_pair(trace->detach(scaffold->border,scaffold),sourceDB);
       check.checkTorus(scaffold);
       scaffold->lkernels.erase(pNode);
       delete lk;
@@ -142,9 +145,10 @@ MixMHIndex * GibbsGKernel::sampleIndex()
 	if (oldValue->equals(newValue)) { continue; }
 	LKernel * lk = new DeterministicLKernel(values[i],pNode->sp());
 	scaffold->lkernels[pNode] = lk;
-	trace->regen(scaffold->border,scaffold,false,nullptr,nullptr);
+	trace->regen(scaffold->border,scaffold,nullptr);
 	OmegaDB * targetDB = new OmegaDB;
-	pindex->targets.push_back({trace->detach(scaffold->border,scaffold,targetDB),targetDB});
+	trace->setOptions(false,targetDB);
+	pindex->targets.push_back({trace->detach(scaffold->border,scaffold),targetDB});
 	check.checkTorus(scaffold);
 	scaffold->lkernels.erase(pNode);
 	delete lk;
@@ -156,14 +160,16 @@ MixMHIndex * GibbsGKernel::sampleIndex()
   if (!canEnumerate)
   {
     OmegaDB * sourceDB = new OmegaDB;
-    pindex->source = make_pair(trace->detach(scaffold->border,scaffold,sourceDB),sourceDB);
+    trace->setOptions(false,sourceDB);
+    pindex->source = make_pair(trace->detach(scaffold->border,scaffold),sourceDB);
     check.checkTorus(scaffold);
 
     for (size_t p = 0; p < P; ++p)
     {
-      trace->regen(scaffold->border,scaffold,false,nullptr,nullptr);
+      trace->regen(scaffold->border,scaffold,nullptr);
       OmegaDB * targetDB = new OmegaDB;
-      pindex->targets.push_back({trace->detach(scaffold->border,scaffold,targetDB),targetDB});
+      trace->setOptions(false,targetDB);
+      pindex->targets.push_back({trace->detach(scaffold->border,scaffold),targetDB});
       check.checkTorus(scaffold);
     }
   }

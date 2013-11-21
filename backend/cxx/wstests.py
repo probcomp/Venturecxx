@@ -18,7 +18,7 @@ import math
 import pdb
 import itertools
 
-globalKernel = "mh";
+globalKernel = "pgibbs";
 globalUseGlobalScaffold = False;
 
 def SIVM():
@@ -46,8 +46,8 @@ def runAllTests(N):
               ("mh",True),
               ("pgibbs",False),
               ("pgibbs",True),
-              ("meanfield",False),
-              ("meanfield",True),
+#              ("meanfield",False),
+#              ("meanfield",True),
               ("gibbs",False)]
 
 
@@ -274,7 +274,7 @@ def testMem3(N):
   sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
   sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   sivm.assume("x","(f ((lambda () 1)))")
-  sivm.assume("y","(g ((lambda () (branch (bernoulli 1.0) (lambda () 0) (lambda () 100)))))")
+  sivm.assume("y","(g ((lambda () (branch (bernoulli 0.99) (lambda () 0) (lambda () 100)))))")
   sivm.assume("w","((lambda () (f 2)))")
   sivm.assume("z","(g 1)")
   sivm.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
@@ -561,7 +561,7 @@ def testStaleAAA2(N):
 
 def testMap1(N):
   sivm = SIVM()
-  sivm.assume("x","(bernoulli 1.0)")
+  sivm.assume("x","(bernoulli .99)")
   sivm.assume("m","""(make_map (list (quote x) (quote y))
                                (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
   sivm.predict("""(normal (plus 

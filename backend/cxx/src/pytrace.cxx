@@ -24,10 +24,10 @@ PyTrace::PyTrace() :
     {{"mh",false}, new OutermostMixMH(trace,new ScaffoldMHGKernel(trace))},
     {{"mh",true}, new GlobalScaffoldMixMH(trace,new ScaffoldMHGKernel(trace))},
 
-    // {{"pgibbs",false}, new OutermostMixMH(trace,new PGibbsGKernel(trace))},
-    // {{"pgibbs",true}, new GlobalScaffoldMixMH(trace,new PGibbsGKernel(trace))},
+    {{"pgibbs",false}, new OutermostMixMH(trace,new PGibbsGKernel(trace))},
+    {{"pgibbs",true}, new GlobalScaffoldMixMH(trace,new PGibbsGKernel(trace))},
 
-    // {{"gibbs",false}, new OutermostMixMH(trace,new GibbsGKernel(trace))},
+    {{"gibbs",false}, new OutermostMixMH(trace,new GibbsGKernel(trace))},
 
     // {{"meanfield",false}, new OutermostMixMH(trace,new MeanFieldGKernel(trace))},
     // {{"meanfield",true}, new GlobalScaffoldMixMH(trace,new MeanFieldGKernel(trace))}

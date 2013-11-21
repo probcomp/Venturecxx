@@ -58,7 +58,8 @@ void restoreAncestorPath(Trace * trace,
   {
     uint32_t nextParticle = path[t];
     /* TODO We need to divide the border into sub-vectors */
-    trace->regen({scaffold->border[t]},scaffold,true,omegaDBs[t][nextParticle],nullptr);
+    trace->setOptions(true,omegaDBs[t][nextParticle]);
+    trace->regen({scaffold->border[t]},scaffold,nullptr);
   }
 }
 
@@ -69,7 +70,8 @@ void discardAncestorPath(Trace * trace,
   for (int i = t - 1; i >= 0; i--)
   {
     OmegaDB * detachedDB = new OmegaDB;
-    trace->detach({scaffold->border[i]},scaffold,detachedDB);
+    trace->setOptions(false,detachedDB);
+    trace->detach({scaffold->border[i]},scaffold);
     flushDB(detachedDB,true);
   }
 }
@@ -228,7 +230,8 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
 
   for (int t = T-1; t >= 0; --t)
   {
-    weightsRho[t] = trace->detach({scaffold->border[t]},scaffold,omegaDBs[t][P]);
+    trace->setOptions(false,omegaDBs[t][P]);
+    weightsRho[t] = trace->detach({scaffold->border[t]},scaffold);
     if (t >= 1) { ancestorIndices[t][P] = P; }
   }
   check.checkTorus(scaffold);
@@ -236,8 +239,9 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
   /* Simulate and calculate initial weights */
   for (size_t p = 0; p < P; ++p)
   {
-    trace->regen({scaffold->border[0]},scaffold,false,nullptr,nullptr);
-    weights[p] = trace->detach({scaffold->border[0]},scaffold,omegaDBs[0][p]);
+    trace->regen({scaffold->border[0]},scaffold,nullptr);
+    trace->setOptions(false,omegaDBs[0][p]);    
+    weights[p] = trace->detach({scaffold->border[0]},scaffold);
     check.checkTorus(scaffold);
   }
 
@@ -254,8 +258,10 @@ MixMHIndex * PGibbsGKernel::sampleIndex()
       ancestorIndices[t][p] = sampleCategorical(expWeights,trace->rng);
       vector<uint32_t> path = constructAncestorPath(ancestorIndices,t,p);
       restoreAncestorPath(trace,scaffold,omegaDBs,path);
-      trace->regen({scaffold->border[t]},scaffold,false,nullptr,nullptr);
-      newWeights[p] = trace->detach({scaffold->border[t]},scaffold,omegaDBs[t][p]);
+      trace->setOptions(false,nullptr);
+      trace->regen({scaffold->border[t]},scaffold,nullptr);
+      trace->setOptions(false,omegaDBs[t][p]);
+      newWeights[p] = trace->detach({scaffold->border[t]},scaffold);
       discardAncestorPath(trace,scaffold,t);
       check.checkTorus(scaffold);
     }

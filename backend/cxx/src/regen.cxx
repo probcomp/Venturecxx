@@ -227,6 +227,11 @@ double Trace::applyPSP(Node * node,
   {
     newValue = sp->simulate(getArgs(node),rng);
   }
+  if (!newValue)
+  {
+    cout << "applyPSP: newValue = null" << endl;
+    cout << "shouldRestore: " << shouldRestore << endl;
+  }
   assert(newValue);
   assert(newValue->isValid());
   setValue(node,newValue);
