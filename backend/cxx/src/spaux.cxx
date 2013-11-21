@@ -15,6 +15,5 @@ SPAux::~SPAux()
 
 SPAux * SPAux::clone() const
 {
-  assert(false);
-  return nullptr;
+  return new SPAux(*this);
 }

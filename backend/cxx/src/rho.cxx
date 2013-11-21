@@ -136,7 +136,6 @@ void DetachParticle::registerSPFamily(Node * makerNode,size_t id,Node * root) {}
 void DetachParticle::registerRandomChoice(Node * node) { assert(false); }
 void DetachParticle::unregisterRandomChoice(Node * node) 
 { 
-  cout << "DetachParticle::unregisterRandomChoice(" << node << ")" << endl;
-  assert(rcs.count(node)); 
+  rcs.insert(node);
   trace->unregisterRandomChoice(node);
 }
