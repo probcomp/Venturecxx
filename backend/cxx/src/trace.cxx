@@ -180,8 +180,11 @@ void Trace::constrainChoice(Node * node)
   registerConstrainedChoice(node);
 }
 
-void Trace::setConstrained(Node * node,bool isConstrained) { node->isConstrained = isConstrained; }
-void Trace::setNodeOwnsValue(Node * node,bool giveOwnershipToSP) { node->spOwnsValue = giveOwnershipToSP; }
+void Trace::setConstrained(Node * node) { node->isConstrained = true; }
+void Trace::clearConstrained(Node * node) { node->isConstrained = false; }
+
+void Trace::setNodeOwnsValue(Node * node) { node->spOwnsValue = true; }
+void Trace::clearNodeOwnsValue(Node * node) { node->spOwnsValue = false; }
 
 Node * Trace::removeLastESREdge(Node * outputNode)
 {
@@ -253,4 +256,10 @@ void Trace::setOptions(bool shouldRestore, OmegaDB * omegaDB)
 {
   this->shouldRestore = shouldRestore;
   this->omegaDB = omegaDB;
+}
+
+void Trace::detachMadeSPAux(Node * makerNode)
+{
+  delete makerNode->madeSPAux; 
+  makerNode->madeSPAux = nullptr;
 }

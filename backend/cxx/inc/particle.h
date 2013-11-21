@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <deque>
 #include "all.h"
 #include "flush.h"
 
@@ -46,13 +47,15 @@ struct DetachParticle : Trace
   void constrainChoice(Node * node);
   void unconstrainChoice(Node * node);
 
-  void setConstrained(Node * node,bool isConstrained);
+  void setConstrained(Node * node);
+  void clearConstrained(Node * node);
   void setNodeOwnsValue(Node * node,bool giveOwnershipToSP);
 
   Node * removeLastESREdge(Node * outputNode);
   void addESREdge(Node * esrParent,Node * outputNode);
 
-  void disconnectLookup(Node * node);
+  void detachMadeSPAux(Node * makerNode);
+
 
   void preUnabsorb(Node * node) {}
   void preAbsorb(Node * node) {}
@@ -82,7 +85,7 @@ struct DetachParticle : Trace
   set<Node *> randomChoices;
   set<Node *> constrainedChoices;
 
-  queue<FlushEntry> flushQueue;
+  deque<FlushEntry> flushDeque; // detach uses queue, regen uses stack
   set<Node *> random
 
   Trace * trace{nullptr};

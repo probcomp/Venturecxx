@@ -20,6 +20,8 @@ void flushDBComplete(OmegaDB * omegaDB)
     omegaDB->flushQueue.pop();
   }
 
+  // Don't stick it on flush queue directly because we need to have it to repopulate the spaux with
+  // anyway (in the current hacked design). TODO have the ESR include the vector directly.
   for (pair<pair<Node *,size_t>, vector<VentureValue*> > pp : omegaDB->spOwnedValues)
   {
     for (VentureValue * v : pp.second)

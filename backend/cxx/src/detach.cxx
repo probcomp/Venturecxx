@@ -92,8 +92,8 @@ double Trace::unconstrain(Node * node, bool giveOwnershipToSP)
     if (getSP(node)->isRandomOutput) { unconstrainChoice(node); }
     getSP(node)->removeOutput(getValue(node),getArgs(node));
     double logDensity = getSP(node)->logDensityOutput(getValue(node),getArgs(node));
-    setConstrained(node,false);
-    setNodeOwnsValue(node,giveOwnershipToSP);
+    clearConstrained(node);
+    if (giveOwnershipToSP) { setNodeOwnsValue(node); }
     getSP(node)->incorporateOutput(getValue(node),getArgs(node));
     return logDensity;
   }
@@ -153,8 +153,7 @@ void Trace::teardownMadeSP(Node * node,
     if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
     if (madeSP->hasAux()) 
     { 
-      delete node->madeSPAux; 
-      node->madeSPAux = nullptr;
+      detachMadeSPAux(node);
     }
   }
 }
@@ -291,7 +290,7 @@ double Trace::detachVentureFamily(Node * root)
 double Trace::detachFamily(Node * node,
 			   Scaffold * scaffold)
 {
-  cout << "uneval: " << node->address << endl;
+//  cout << "uneval: " << node->address << endl;
   assert(node);
   double weight = 0;
   

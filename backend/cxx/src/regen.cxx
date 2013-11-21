@@ -96,8 +96,8 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
 
     double weight = getSP(node)->logDensityOutput(value,getArgs(node));
     setValue(node,value);
-    setConstrained(node,true);
-    setNodeOwnsValue(node,false);
+    setConstrained(node);
+    clearNodeOwnsValue(node);
     getSP(node)->incorporateOutput(value,getArgs(node));
     if (getSP(node)->isRandomOutput) { constrainChoice(node); }
     return weight;
@@ -367,7 +367,7 @@ pair<double,Node*> Trace::evalFamily(Address addr,
 				     bool isDefinite,
 				     map<Node *,vector<double> > *gradients)
 {
-  cout << "eval: " << addr << endl;
+//  cout << "eval: " << addr << endl;
   double weight = 0;
   Node * node = nullptr;
   assert(exp);

@@ -219,13 +219,16 @@ struct Trace
   void constrainChoice(Node * node);
   void unconstrainChoice(Node * node);
 
-  void setConstrained(Node * node,bool isConstrained);
-  void setNodeOwnsValue(Node * node,bool giveOwnershipToSP);
+  void clearConstrained(Node * node);
+  void setConstrained(Node * node);
+
+  void setNodeOwnsValue(Node * node);
+  void clearNodeOwnsValue(Node * node);
 
   Node * removeLastESREdge(Node * outputNode);
   void addESREdge(Node * esrParent,Node * outputNode);
 
-  void disconnectLookup(Node * node);
+  void detachMadeSPAux(Node * makerNode);
 
   void preUnabsorb(Node * node) {}
   void preAbsorb(Node * node) {}

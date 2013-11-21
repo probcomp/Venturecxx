@@ -42,13 +42,13 @@ def printTest(testName,eps,ops):
 
 def runAllTests(N):
   print "========= RunAllTests(N) ========"
-  options = [ #("mh",False),
-              #("mh",True),
-              #("pgibbs",False),
-              #("pgibbs",True),
-              ("meanfield",False),
-              ("meanfield",True),
-              #("gibbs",False)
+  options = [ ("mh",False),
+              ("mh",True),
+              ("pgibbs",False),
+              ("pgibbs",True),
+              #("meanfield",False),
+              #("meanfield",True),
+              ("gibbs",False)
   ]
 
 
