@@ -66,7 +66,7 @@ void DetachParticle::constrainChoice(Node * node) { assert(false); }
 void DetachParticle::unconstrainChoice(Node * node)
 {
   // happens before we register choice, so no need to undo that
-  registerConstrainedChoice(node);
+  crcs.insert(node);
   trace->unconstrainChoice(node);
 }
 
@@ -116,12 +116,8 @@ void DetachParticle::registerGarbage(SP * sp,VentureValue * value,NodeType nodeT
 
 void DetachParticle::extractValue(Node * node, VentureValue * value)
 {
-  if (!pnodes.count(node))
-  {
-    assert(!pnodes.count(node));
-    pnodes[node] = ParticleNode(node,trace->getValue(node));
-  }
-  else { assert(constrainedChoices.count(node)); }
+  assert(!pnodes.count(node));
+  pnodes[node] = ParticleNode(node,trace->getValue(node));
 }
 
 void DetachParticle::prepareLatentDB(SP * sp) { }
@@ -135,3 +131,12 @@ void DetachParticle::registerSPOwnedValues(Node * makerNode, size_t id, const ve
 }
 
 void DetachParticle::registerSPFamily(Node * makerNode,size_t id,Node * root) {}
+
+
+void DetachParticle::registerRandomChoice(Node * node) { assert(false); }
+void DetachParticle::unregisterRandomChoice(Node * node) 
+{ 
+  cout << "DetachParticle::unregisterRandomChoice(" << node << ")" << endl;
+  assert(rcs.count(node)); 
+  trace->unregisterRandomChoice(node);
+}

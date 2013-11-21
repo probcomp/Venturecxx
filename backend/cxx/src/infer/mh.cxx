@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "trace.h"
 #include "scaffold.h"
+#include "particle.h"
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -33,6 +34,12 @@ double ScaffoldMHGKernel::propose()
   assert(scaffold);
   assert(!rhoDB);
 
+  ////////////////////////////////////////// Testing madness
+  DetachParticle rho(trace);
+  cout << "Detaching..." << endl;
+  rho.detach(scaffold->border,scaffold);
+  cout << "done! (about to crash)" << endl;
+  //////////////////////////////////////
   rhoDB = new OmegaDB;
   trace->setOptions(false,rhoDB);
   double detachWeight = trace->detach(scaffold->border,scaffold);

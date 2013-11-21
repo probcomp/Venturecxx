@@ -165,8 +165,6 @@ struct Trace
   /* Misc */
   void addApplicationEdges(Node * operatorNode,const vector<Node *> & operandNodes, Node * requestNode, Node * outputNode);
 
-  void registerRandomChoice(Node * node);
-  void unregisterRandomChoice(Node * node);
 
   void registerConstrainedChoice(Node *node);
   void unregisterConstrainedChoice(Node *node);
@@ -199,55 +197,58 @@ struct Trace
 
 //////////////////////////////////////////////
   
-  bool isReference(Node * node);
-  void registerReference(Node * node, Node * lookedUpNode);
-  Node * getSourceNode(Node * node);
-  void setSourceNode(Node * node, Node * sourceNode);
-  void clearSourceNode(Node * node);
+  virtual bool isReference(Node * node);
+  virtual void registerReference(Node * node, Node * lookedUpNode);
+  virtual Node * getSourceNode(Node * node);
+  virtual void setSourceNode(Node * node, Node * sourceNode);
+  virtual void clearSourceNode(Node * node);
 
-  void setValue(Node * node, VentureValue * value);
-  void clearValue(Node * node);
-  VentureValue * getValue(Node * node);
+  virtual void setValue(Node * node, VentureValue * value);
+  virtual void clearValue(Node * node);
+  virtual VentureValue * getValue(Node * node);
 
-  SP * getSP(Node * node);
-  VentureSP * getVSP(Node * node);
-  SPAux * getSPAux(Node * node);
-  SPAux * getMadeSPAux(Node * makerNode);
-  Args getArgs(Node * node);
-  vector<Node *> getESRParents(Node * node);
+  virtual SP * getSP(Node * node);
+  virtual VentureSP * getVSP(Node * node);
+  virtual SPAux * getSPAux(Node * node);
+  virtual SPAux * getMadeSPAux(Node * makerNode);
+  virtual Args getArgs(Node * node);
+  virtual vector<Node *> getESRParents(Node * node);
   
-  void constrainChoice(Node * node);
-  void unconstrainChoice(Node * node);
+  virtual void constrainChoice(Node * node);
+  virtual void unconstrainChoice(Node * node);
 
-  void clearConstrained(Node * node);
-  void setConstrained(Node * node);
+  virtual void registerRandomChoice(Node * node);
+  virtual void unregisterRandomChoice(Node * node);
 
-  void setNodeOwnsValue(Node * node);
-  void clearNodeOwnsValue(Node * node);
+  virtual void clearConstrained(Node * node);
+  virtual void setConstrained(Node * node);
 
-  Node * removeLastESREdge(Node * outputNode);
-  void addESREdge(Node * esrParent,Node * outputNode);
+  virtual void setNodeOwnsValue(Node * node);
+  virtual void clearNodeOwnsValue(Node * node);
 
-  void detachMadeSPAux(Node * makerNode);
+  virtual Node * removeLastESREdge(Node * outputNode);
+  virtual void addESREdge(Node * esrParent,Node * outputNode);
 
-  void preUnabsorb(Node * node) {}
-  void preAbsorb(Node * node) {}
-  void preUnapplyPSP(Node * node) {}
-  void preApplyPSP(Node * node) {}
-  void preUnevalRequests(Node * requestNode) {}
-  void preEvalRequests(Node * requestNode) {}
-  void preUnconstrain(Node * node) {}
-  void preConstrain(Node * node) {}
+  virtual void detachMadeSPAux(Node * makerNode);
 
-  void extractLatentDB(SP * sp,LatentDB * latentDB);
-  void registerGarbage(SP * sp,VentureValue * value,NodeType nodeType);
-  void extractValue(Node * node, VentureValue * value);
-  void prepareLatentDB(SP * sp);
-  LatentDB * getLatentDB(SP * sp);
-  void processDetachedLatentDB(SP * sp, LatentDB * latentDB);
+  virtual void preUnabsorb(Node * node) {}
+  virtual void preAbsorb(Node * node) {}
+  virtual void preUnapplyPSP(Node * node) {}
+  virtual void preApplyPSP(Node * node) {}
+  virtual void preUnevalRequests(Node * requestNode) {}
+  virtual void preEvalRequests(Node * requestNode) {}
+  virtual void preUnconstrain(Node * node) {}
+  virtual void preConstrain(Node * node) {}
 
-  void registerSPOwnedValues(Node * makerNode, size_t id, const vector<VentureValue*> & values);
-  void registerSPFamily(Node * makerNode,size_t id,Node * root);
+  virtual void extractLatentDB(SP * sp,LatentDB * latentDB);
+  virtual void registerGarbage(SP * sp,VentureValue * value,NodeType nodeType);
+  virtual void extractValue(Node * node, VentureValue * value);
+  virtual void prepareLatentDB(SP * sp);
+  virtual LatentDB * getLatentDB(SP * sp);
+  virtual void processDetachedLatentDB(SP * sp, LatentDB * latentDB);
+
+  virtual void registerSPOwnedValues(Node * makerNode, size_t id, const vector<VentureValue*> & values);
+  virtual void registerSPFamily(Node * makerNode,size_t id,Node * root);
 
 
 

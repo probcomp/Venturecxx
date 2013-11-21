@@ -18,8 +18,8 @@ import math
 import pdb
 import itertools
 
-globalKernel = "meanfield";
-globalUseGlobalScaffold = True;
+globalKernel = "mh";
+globalUseGlobalScaffold = False;
 
 def SIVM():
   return make_church_prime_ripl()

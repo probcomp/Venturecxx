@@ -70,11 +70,10 @@ void MeanFieldGKernel::loadParameters(MixMHParam * param)
   double stepSize = 0.001;
   size_t numIters = 40;
   if (!registerVariationalLKernels()) { numIters = 0; }
-  double rhoWeight;
 
   rhoDB = new OmegaDB;
   trace->setOptions(false,rhoDB);
-  rhoWeight = trace->detach(scaffold->border,scaffold);
+  trace->detach(scaffold->border,scaffold);
   check.checkTorus(scaffold);
 
   for (size_t i = 0; i < numIters; ++i)

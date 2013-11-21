@@ -31,59 +31,64 @@ struct ParticleNode
 
 struct DetachParticle : Trace
 {
+  DetachParticle(Trace * trace): trace(trace) {}
 
   void maybeCloneSPAux(Node * node);
   void maybeCloneMadeSPAux(Node * makerNode);
 
-  bool isReference(Node * node);
-  void registerReference(Node * node, Node * lookedUpNode);
-  Node * getSourceNode(Node * node);
-  void setSourceNode(Node * node, Node * sourceNode);
-  void clearSourceNode(Node * node);
+  bool isReference(Node * node) override;
+  void registerReference(Node * node, Node * lookedUpNode) override;
+  Node * getSourceNode(Node * node) override;
+  void setSourceNode(Node * node, Node * sourceNode) override;
+  void clearSourceNode(Node * node) override;
 
-  void setValue(Node * node, VentureValue * value);
-  void clearValue(Node * node);
-  VentureValue * getValue(Node * node);
+  void setValue(Node * node, VentureValue * value) override;
+  void clearValue(Node * node) override;
+  VentureValue * getValue(Node * node) override;
 
-  SP * getSP(Node * node);
-  VentureSP * getVSP(Node * node);
-  SPAux * getSPAux(Node * node);
-  SPAux * getMadeSPAux(Node * makerNode);
-  Args getArgs(Node * node);
-  vector<Node *> getESRParents(Node * node);
+  SP * getSP(Node * node) override;
+  VentureSP * getVSP(Node * node) override;
+  SPAux * getSPAux(Node * node) override;
+  SPAux * getMadeSPAux(Node * makerNode) override;
+  Args getArgs(Node * node) override;
+  vector<Node *> getESRParents(Node * node) override;
   
-  void constrainChoice(Node * node);
-  void unconstrainChoice(Node * node);
+  void constrainChoice(Node * node) override;
+  void unconstrainChoice(Node * node) override;
 
-  void setConstrained(Node * node);
-  void clearConstrained(Node * node);
-  void setNodeOwnsValue(Node * node);
-  void clearNodeOwnsValue(Node * node);
-
-  Node * removeLastESREdge(Node * outputNode);
-  void addESREdge(Node * esrParent,Node * outputNode);
-
-  void detachMadeSPAux(Node * makerNode);
+  void registerRandomChoice(Node * node) override;
+  void unregisterRandomChoice(Node * node) override;
 
 
-  void preUnabsorb(Node * node);
-  void preAbsorb(Node * node);
-  void preUnapplyPSP(Node * node);
-  void preApplyPSP(Node * node);
-  void preUnevalRequests(Node * requestNode);
-  void preEvalRequests(Node * requestNode);
-  void preUnconstrain(Node * node);
-  void preConstrain(Node * node);
+  void setConstrained(Node * node) override;
+  void clearConstrained(Node * node) override;
+  void setNodeOwnsValue(Node * node) override;
+  void clearNodeOwnsValue(Node * node) override;
 
-  void extractLatentDB(SP * sp,LatentDB * latentDB);
-  void registerGarbage(SP * sp,VentureValue * value,NodeType nodeType);
-  void extractValue(Node * node, VentureValue * value);
-  void prepareLatentDB(SP * sp);
-  LatentDB * getLatentDB(SP * sp);
-  void processDetachedLatentDB(SP * sp, LatentDB * latentDB);
+  Node * removeLastESREdge(Node * outputNode) override;
+  void addESREdge(Node * esrParent,Node * outputNode) override;
 
-  void registerSPOwnedValues(Node * makerNode, size_t id, const vector<VentureValue*> & values);
-  void registerSPFamily(Node * makerNode,size_t id,Node * root);
+  void detachMadeSPAux(Node * makerNode) override;
+
+
+  void preUnabsorb(Node * node) override;
+  void preAbsorb(Node * node) override;
+  void preUnapplyPSP(Node * node) override;
+  void preApplyPSP(Node * node) override;
+  void preUnevalRequests(Node * requestNode) override;
+  void preEvalRequests(Node * requestNode) override;
+  void preUnconstrain(Node * node) override;
+  void preConstrain(Node * node) override;
+
+  void extractLatentDB(SP * sp,LatentDB * latentDB) override;
+  void registerGarbage(SP * sp,VentureValue * value,NodeType nodeType) override;
+  void extractValue(Node * node, VentureValue * value) override;
+  void prepareLatentDB(SP * sp) override;
+  LatentDB * getLatentDB(SP * sp) override;
+  void processDetachedLatentDB(SP * sp, LatentDB * latentDB) override;
+
+  void registerSPOwnedValues(Node * makerNode, size_t id, const vector<VentureValue*> & values) override;
+  void registerSPFamily(Node * makerNode,size_t id,Node * root) override;
 
 ////////////////////////
 
@@ -91,10 +96,10 @@ struct DetachParticle : Trace
   map<Node *, vector<Node *> > children;
   map<Node*,SPAux*> spauxs;
 
-  set<Node *> randomChoices;
-  set<Node *> constrainedChoices;
-
   vector<VentureValue*> spOwnedValues;
+
+  set<Node *> crcs;
+  set<Node *> rcs;
 
   deque<FlushEntry> flushDeque; // detach uses queue, regen uses stack
 
