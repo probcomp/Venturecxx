@@ -10,6 +10,8 @@
 #include "flush.h"
 #include "lkernel.h"
 #include "utils.h"
+#include "address.h"
+
 #include <cmath>
 
 #include <iostream>
@@ -274,7 +276,7 @@ double Trace::evalRequests(Node * node,
       }
       else
       {
-	pair<double,Node*> p = evalFamily(esr.exp,esr.env,scaffold,false,gradients);      
+	pair<double,Node*> p = evalFamily(Address(getSP(node),esr.id,"root"),esr.exp,esr.env,scaffold,false,gradients);      
 	weight += p.first;
 	esrParent = p.second;
       }
@@ -310,7 +312,7 @@ pair<double, Node*> Trace::evalVentureFamily(size_t directiveID,
 					     VentureValue * exp,		     
 					     map<Node *,vector<double> > *gradients)
 {
-  return evalFamily(exp,globalEnv,nullptr,true,gradients);
+  return evalFamily(Address(nullptr,directiveID,"root"),exp,globalEnv,nullptr,true,gradients);
 }
 
 double Trace::restoreSPFamily(VentureSP * vsp,
@@ -323,7 +325,7 @@ double Trace::restoreSPFamily(VentureSP * vsp,
   {
     makerNode->madeSPAux->ownedValues[id] = omegaDB->spOwnedValues[make_pair(makerNode,id)];
   }
-  restoreFamily(root,scaffold);
+  return restoreFamily(root,scaffold);
 }
 
 
@@ -358,13 +360,14 @@ double Trace::restoreFamily(Node * node,
 }
 
 
-pair<double,Node*> Trace::evalFamily(VentureValue * exp, 
+pair<double,Node*> Trace::evalFamily(Address addr,
+				     VentureValue * exp, 
 				     VentureEnvironment * env,
 				     Scaffold * scaffold,
 				     bool isDefinite,
 				     map<Node *,vector<double> > *gradients)
 {
-  DPRINT("eval: ", addr.toString());
+  cout << "eval: " << addr << endl;
   double weight = 0;
   Node * node = nullptr;
   assert(exp);
@@ -375,26 +378,26 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
  
     if (car && car->sym == "quote")
     {
-      node = new Node(NodeType::VALUE, nullptr);
+      node = new Node(addr,NodeType::VALUE, nullptr);
       setValue(node,listRef(list,1));
     }
     /* Application */
     else
     {
-      Node * requestNode = new Node(NodeType::REQUEST,nullptr,env);
-      Node * outputNode = new Node(NodeType::OUTPUT,nullptr,env);
+      Node * requestNode = new Node(addr.add("#req"),NodeType::REQUEST,nullptr,env);
+      Node * outputNode = new Node(addr,NodeType::OUTPUT,nullptr,env);
       node = outputNode;
 
       Node * operatorNode;
       vector<Node *> operandNodes;
     
-      pair<double,Node*> p = evalFamily(listRef(list,0),env,scaffold,isDefinite,gradients);
+      pair<double,Node*> p = evalFamily(addr.add("#op"),listRef(list,0),env,scaffold,isDefinite,gradients);
       weight += p.first;
       operatorNode = p.second;
       
       for (uint8_t i = 1; i < listLength(list); ++i)
       {
-	pair<double,Node*> p = evalFamily(listRef(list,i),env,scaffold,isDefinite,gradients);
+	pair<double,Node*> p = evalFamily(addr.add("#arg" + to_string(i)),listRef(list,i),env,scaffold,isDefinite,gradients);
 	weight += p.first;
 	operandNodes.push_back(p.second);
       }
@@ -411,14 +414,14 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
     assert(lookedUpNode);
     weight += regenInternal(lookedUpNode,scaffold,gradients);
 
-    node = new Node(NodeType::LOOKUP,nullptr);
+    node = new Node(addr,NodeType::LOOKUP,nullptr);
     Node::addLookupEdge(lookedUpNode,node);
     registerReference(node,lookedUpNode);
   }
   /* Self-evaluating */
   else
   {
-    node = new Node(NodeType::VALUE,exp);
+    node = new Node(addr,NodeType::VALUE,exp);
   }
   assert(node);
   return {weight,node};

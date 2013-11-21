@@ -16,6 +16,7 @@ from os import path
 
 src_files = [
     "src/value.cxx",
+    "src/address.cxx",
     "src/node.cxx",
     "src/env.cxx",
     "src/builtin.cxx",

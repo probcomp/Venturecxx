@@ -24,11 +24,11 @@ Trace::Trace()
   
   primitivesEnv = new VentureEnvironment;
   for (pair<string,VentureValue *> p : initBuiltInValues()) 
-  { primitivesEnv->addBinding(new VentureSymbol(p.first),new Node(NodeType::VALUE,p.second)); }
+  { primitivesEnv->addBinding(new VentureSymbol(p.first),new Node(Address(nullptr,0,p.first),NodeType::VALUE,p.second)); }
 
   for (pair<string,SP *> p : initBuiltInSPs())
   { 
-    Node * spNode = new Node(NodeType::VALUE);
+    Node * spNode = new Node(Address(nullptr,0,p.first),NodeType::VALUE);
     spNode->setValue(new VentureSP(p.second));
     processMadeSP(spNode,false);
     primitivesEnv->addBinding(new VentureSymbol(p.first),spNode);

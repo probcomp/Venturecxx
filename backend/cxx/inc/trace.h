@@ -2,7 +2,7 @@
 #define TRACE_H
 
 #include "args.h"
-
+#include "address.h"
 #include <vector>
 #include <map>
 #include <unordered_map>
@@ -96,7 +96,8 @@ struct Trace
 		      map<Node *,vector<double> > *gradients);
 
 
-  pair<double,Node*> evalFamily(VentureValue * exp, 
+  pair<double,Node*> evalFamily(Address addr,
+				VentureValue * exp, 
 				VentureEnvironment * familyEnv,
 				Scaffold * scaffold,
 				bool isDefinite,

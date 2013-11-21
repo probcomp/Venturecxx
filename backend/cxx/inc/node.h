@@ -2,6 +2,7 @@
 #define NODE_H
 
 #include "all.h"
+#include "address.h"
 #include <string>
 #include <vector>
 #include <set>
@@ -33,10 +34,10 @@ struct Node
   /* 1D for 1 direction. We just clear outputNode->esrParents afterwards. */
   Node * removeLastESREdge();
 
-  Node(NodeType type): nodeType(type) {}
-  Node(NodeType type, VentureValue * value): nodeType(type), _value(value) {}
-  Node(NodeType type, VentureValue * value, VentureEnvironment * familyEnv): 
-    nodeType(type), _value(value), familyEnv(familyEnv) {}
+  Node(Address addr, NodeType type): address(addr), nodeType(type) {}
+  Node(Address addr, NodeType type, VentureValue * value): address(addr), nodeType(type), _value(value) {}
+  Node(Address addr, NodeType type, VentureValue * value, VentureEnvironment * familyEnv): 
+    address(addr), nodeType(type), _value(value), familyEnv(familyEnv) {}
 
 
 
@@ -55,7 +56,10 @@ struct Node
 
   bool isApplication() { return nodeType == NodeType::REQUEST || nodeType == NodeType::OUTPUT; }
 
+
+
   /* Attributes */
+  const Address address;
   const NodeType nodeType;
 
   Node * lookedUpNode{nullptr};
