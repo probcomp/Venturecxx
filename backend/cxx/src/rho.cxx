@@ -2,6 +2,9 @@
 #include "trace.h"
 #include "node.h"
 #include "value.h"
+#include "sp.h"
+#include "spaux.h"
+#include "flush.h"
 
 // map<Node *, ParticleNode> pnodes;
 // map<Node *, vector<Node *> > children;
@@ -15,6 +18,24 @@
 
 // Trace * trace{nullptr};
 
+void DetachParticle::maybeCloneSPAux(Node * node)
+{
+  Node * makerNode = getVSP(node)->makerNode;
+  if (makerNode->madeSPAux && !spauxs.count(makerNode))
+  {
+    spauxs[makerNode] = makerNode->madeSPAux->clone();
+  }
+}
+
+void DetachParticle::maybeCloneMadeSPAux(Node * makerNode)
+{
+  if (makerNode->madeSPAux && !spauxs.count(makerNode))
+  {
+    spauxs[makerNode] = makerNode->madeSPAux->clone();
+  }
+}
+
+
 bool DetachParticle::isReference(Node * node) { return trace->isReference(node); }
 void DetachParticle::registerReference(Node * node, Node * lookedUpNode) { assert(false); }
 Node * DetachParticle::getSourceNode(Node * node) { assert(false); }
@@ -22,7 +43,7 @@ void DetachParticle::setSourceNode(Node * node, Node * sourceNode) { assert(fals
 void DetachParticle::clearSourceNode(Node * node) 
 { 
   assert(!pnodes.count(node));
-  pnodes[node] = ParticleNode(trace->getSourceNode(node));
+  pnodes[node] = ParticleNode(node,trace->getSourceNode(node));
   trace->clearSourceNode(node); 
 }
 
@@ -36,7 +57,7 @@ VentureValue * DetachParticle::getValue(Node * node) { return trace->getValue(no
 SP * DetachParticle::getSP(Node * node) { return trace->getSP(node); }
 VentureSP * DetachParticle::getVSP(Node * node) { return trace->getVSP(node); }
 SPAux * DetachParticle::getSPAux(Node * node) { return trace->getSPAux(node); }
-SPAux * DetachParticle::getMadeSPAux(Node * makerNode){ return trace->getMadeSPAux(node); }
+SPAux * DetachParticle::getMadeSPAux(Node * makerNode){ return trace->getMadeSPAux(makerNode); }
 Args DetachParticle::getArgs(Node * node) { return trace->getArgs(node); }
 vector<Node *> DetachParticle::getESRParents(Node * node) { return trace->getESRParents(node); }
   
@@ -51,7 +72,7 @@ void DetachParticle::unconstrainChoice(Node * node)
 
 // During commit, we will iterate over constrained choices, so there we can set
 // node->isConstrained = true and node->spOwnsValue = false
-void DetachParticle::clearConstrained(Node * node) { trace->clearConstrain(node); }
+void DetachParticle::clearConstrained(Node * node) { trace->clearConstrained(node); }
 void DetachParticle::setConstrained(Node * node) { assert(false); }
 
 void DetachParticle::setNodeOwnsValue(Node * node) { trace->setNodeOwnsValue(node); }
@@ -60,7 +81,8 @@ void DetachParticle::clearNodeOwnsValue(Node * node) { assert(false); }
 Node * DetachParticle::removeLastESREdge(Node * outputNode)
 {
   Node * esrParent = trace->removeLastESREdge(outputNode);
-  esrParents[outputNode].insert(esrParents[outputNode].begin(),esrParent);
+  ParticleNode & pnode = pnodes[outputNode];
+  pnode.esrParents.insert(pnode.esrParents.begin(),esrParent);
   return esrParent;
 }
 
@@ -97,7 +119,7 @@ void DetachParticle::extractValue(Node * node, VentureValue * value)
   if (!pnodes.count(node))
   {
     assert(!pnodes.count(node));
-    pnodes[node] = ParticleNode(trace->getValue(node));
+    pnodes[node] = ParticleNode(node,trace->getValue(node));
   }
   else { assert(constrainedChoices.count(node)); }
 }
@@ -109,10 +131,7 @@ void DetachParticle::processDetachedLatentDB(SP * sp, LatentDB * latentDB) { sp-
 
 void DetachParticle::registerSPOwnedValues(Node * makerNode, size_t id, const vector<VentureValue*> & values)
 {
-  for (VentureValue * value : values)
-  {
-    flushDeque.push_front(value);
-  }
+  spOwnedValues.insert(spOwnedValues.end(),values.begin(),values.end());
 }
 
 void DetachParticle::registerSPFamily(Node * makerNode,size_t id,Node * root) {}

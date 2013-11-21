@@ -7,26 +7,34 @@
 #include <deque>
 #include "all.h"
 #include "flush.h"
+#include "trace.h"
 
-struct Trace;
+
 struct Node;
 struct LatentDB;
 struct VentureValue;
+
 enum class NodeType;
 
 // TODO may need more fields, e.g. for constrain, owns value, etc
 struct ParticleNode
 {
+  ParticleNode() {}
   ParticleNode(Node * node,VentureValue * value): node(node), _value(value) {}
   ParticleNode(Node * node,Node * sourceNode): node(node), sourceNode(sourceNode) {}
 
   Node * node{nullptr};
   VentureValue * _value{nullptr};
+  vector<Node *> esrParents{};
   Node * sourceNode{nullptr};
 };
 
 struct DetachParticle : Trace
 {
+
+  void maybeCloneSPAux(Node * node);
+  void maybeCloneMadeSPAux(Node * makerNode);
+
   bool isReference(Node * node);
   void registerReference(Node * node, Node * lookedUpNode);
   Node * getSourceNode(Node * node);
@@ -49,7 +57,8 @@ struct DetachParticle : Trace
 
   void setConstrained(Node * node);
   void clearConstrained(Node * node);
-  void setNodeOwnsValue(Node * node,bool giveOwnershipToSP);
+  void setNodeOwnsValue(Node * node);
+  void clearNodeOwnsValue(Node * node);
 
   Node * removeLastESREdge(Node * outputNode);
   void addESREdge(Node * esrParent,Node * outputNode);
@@ -57,14 +66,14 @@ struct DetachParticle : Trace
   void detachMadeSPAux(Node * makerNode);
 
 
-  void preUnabsorb(Node * node) {}
-  void preAbsorb(Node * node) {}
-  void preUnapplyPSP(Node * node) {}
-  void preApplyPSP(Node * node) {}
-  void preUnevalRequests(Node * requestNode) {}
-  void preEvalRequests(Node * requestNode) {}
-  void preUnconstrain(Node * node) {}
-  void preConstrain(Node * node) {}
+  void preUnabsorb(Node * node);
+  void preAbsorb(Node * node);
+  void preUnapplyPSP(Node * node);
+  void preApplyPSP(Node * node);
+  void preUnevalRequests(Node * requestNode);
+  void preEvalRequests(Node * requestNode);
+  void preUnconstrain(Node * node);
+  void preConstrain(Node * node);
 
   void extractLatentDB(SP * sp,LatentDB * latentDB);
   void registerGarbage(SP * sp,VentureValue * value,NodeType nodeType);
@@ -85,8 +94,10 @@ struct DetachParticle : Trace
   set<Node *> randomChoices;
   set<Node *> constrainedChoices;
 
+  vector<VentureValue*> spOwnedValues;
+
   deque<FlushEntry> flushDeque; // detach uses queue, regen uses stack
-  set<Node *> random
+
 
   Trace * trace{nullptr};
 };
