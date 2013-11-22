@@ -217,8 +217,8 @@ void Scaffold::show()
   cout << "DRG" << endl;
   for (pair<Node*,DRGNode> p : drg)
   {
-    assert(p.first->isValid());
-    cout << p.first << " (" << p.second.regenCount << ", " << strNodeType(p.first->nodeType) <<", " << p.second.isAAA << ")" << endl;
+//    assert(p.first->isValid());
+    cout << p.first->address << " (" << p.second.regenCount << ", " << p.second.isAAA << ")" << endl;
   }
 
   cout << "Absorbing" << endl;

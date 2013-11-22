@@ -35,10 +35,20 @@ double ScaffoldMHGKernel::propose()
   assert(!rhoDB);
 
   ////////////////////////////////////////// Testing madness
-  DetachParticle rho(trace);
-  cout << "Detaching..." << endl;
-  rho.detach(scaffold->border,scaffold);
-  cout << "done! (about to crash)" << endl;
+  for (size_t index = 0; index < trace->numRandomChoices(); ++index)
+  {
+    cout << "Testing index #" << index << "..." << endl;
+    Node * pNode = trace->getRandomChoiceByIndex(index);
+    Scaffold s({pNode});
+    DetachParticle rho(trace);
+    cout << "Detaching...";
+    rho.detach(s.border,&s);
+    cout << "done" << endl;
+    cout << "Committing...";
+    rho.commit();
+    cout << "done" << endl;
+  }
+
   //////////////////////////////////////
   rhoDB = new OmegaDB;
   trace->setOptions(false,rhoDB);

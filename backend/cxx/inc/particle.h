@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include <deque>
+#include <stack>
 #include "all.h"
 #include "flush.h"
 #include "trace.h"
@@ -24,12 +25,14 @@ struct ParticleNode
   ParticleNode(Node * sourceNode): sourceNode(sourceNode) {}
 
   VentureValue * _value{nullptr};
-  vector<Node *> esrParents{};
   Node * sourceNode{nullptr};
 };
 
 struct Particle : Trace
 {
+
+  Particle(Trace * trace): trace(trace) {}
+
   void commit();
 
   map<Node *, ParticleNode> pnodes;
@@ -41,12 +44,18 @@ struct Particle : Trace
   set<Node *> crcs;
   set<Node *> rcs;
 
+  map<Node*,stack<Node *> > esrParents;
+
   deque<FlushEntry> flushDeque; // detach uses queue, regen uses stack
+
+  Trace * trace;
+
+  virtual ~Particle() {}
 };
 
 struct DetachParticle : Particle
 {
-  DetachParticle(Trace * trace): trace(trace) {}
+  DetachParticle(Trace * trace): Particle(trace) {}
 
   void maybeCloneSPAux(Node * node);
   void maybeCloneMadeSPAux(Node * makerNode);
@@ -111,7 +120,7 @@ struct DetachParticle : Particle
 
 ////////////////////////
 
-  Trace * trace{nullptr};
+
 };
 
 

@@ -18,6 +18,7 @@ src_files = [
     "src/value.cxx",
     "src/address.cxx",
     "src/rho.cxx",
+    "src/particle.cxx",
     "src/node.cxx",
     "src/env.cxx",
     "src/builtin.cxx",

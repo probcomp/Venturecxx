@@ -238,6 +238,8 @@ double Trace::unevalRequests(Node * node,
 
   for (ESR esr : reverse(requests->esrs))
   {
+    cout << "unevalRequest: " << node->address << "==>(" << esr.id << ")" << endl;
+
     assert(getSPAux(node));
     assert(getSPAux(node)->isValid());
     assert(!getESRParents(node->outputNode).empty());
@@ -262,7 +264,7 @@ double Trace::detachSPFamily(VentureSP * vsp,
   assert(vsp);
   assert(vsp->makerNode);
   assert(vsp->makerNode->madeSPAux);
-  SPAux * spaux = vsp->makerNode->madeSPAux;
+  SPAux * spaux = getMadeSPAux(vsp->makerNode);
   Node * root = spaux->families[id];
   assert(root);
   spaux->families.erase(id);
@@ -290,7 +292,7 @@ double Trace::detachVentureFamily(Node * root)
 double Trace::detachFamily(Node * node,
 			   Scaffold * scaffold)
 {
-//  cout << "uneval: " << node->address << endl;
+  cout << "uneval: " << node->address << endl;
   assert(node);
   double weight = 0;
   

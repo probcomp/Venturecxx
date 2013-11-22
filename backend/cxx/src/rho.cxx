@@ -80,9 +80,9 @@ void DetachParticle::clearNodeOwnsValue(Node * node) { assert(false); }
 
 Node * DetachParticle::removeLastESREdge(Node * outputNode)
 {
+  assert(pnodes.count(outputNode));
   Node * esrParent = trace->removeLastESREdge(outputNode);
-  ParticleNode & pnode = pnodes[outputNode];
-  pnode.esrParents.insert(pnode.esrParents.begin(),esrParent);
+  esrParents[outputNode].push(esrParent);
   children.insert({esrParent,outputNode});
   return esrParent;
 }

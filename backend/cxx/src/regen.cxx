@@ -261,9 +261,11 @@ double Trace::evalRequests(Node * node,
   VentureRequest * requests = dynamic_cast<VentureRequest *>(getValue(node));
   assert(requests);
 
+  
   /* First evaluate ESRs. */
   for (ESR esr : requests->esrs)
   {
+    cout << "evalRequests: " << node->address << "==>(" << esr.id << ")" << endl;
     assert(getSPAux(node)->isValid());
     Node * esrParent;
     if (!getSPAux(node)->families.count(esr.id))
@@ -367,7 +369,7 @@ pair<double,Node*> Trace::evalFamily(Address addr,
 				     bool isDefinite,
 				     map<Node *,vector<double> > *gradients)
 {
-//  cout << "eval: " << addr << endl;
+  cout << "eval: " << addr << endl;
   double weight = 0;
   Node * node = nullptr;
   assert(exp);

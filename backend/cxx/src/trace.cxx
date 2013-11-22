@@ -75,10 +75,11 @@ Trace::~Trace()
   primitivesEnv->destroySymbols();
   delete primitivesEnv;
 
-  for (pair< pair<string,bool >, uint32_t> pp : callCounts)
-  {
-    assert(callCounts[make_pair(pp.first.first,false)] == callCounts[make_pair(pp.first.first,true)]);
-  }
+// Should not be true with particles
+  // for (pair< pair<string,bool >, uint32_t> pp : callCounts)
+  // {
+  //   assert(callCounts[make_pair(pp.first.first,false)] == callCounts[make_pair(pp.first.first,true)]);
+  // }
 
 
 
