@@ -5,6 +5,7 @@ module Venture where
 import qualified Data.Map as M
 import Data.Maybe
 import Data.Monoid
+import Control.Monad
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.Class
 
@@ -13,11 +14,13 @@ import Control.Monad.Random -- From cabal install MonadRandom
 data Value = Number Double
            | Symbol String
            | List [Value]
-           | Procedure SP
+           | forall m . (MonadRandom m) => Procedure (SP m)
+           | Boolean Bool
 
-spValue :: Value -> Maybe SP
-spValue (Procedure s) = Just s
-spValue _ = Nothing
+-- spValue :: Value -> Maybe (forall m. (MonadRandom m) => (SP m))
+-- spValue (Procedure s) = Just s
+-- spValue _ = Nothing
+spValue = undefined
 
 newtype Address = Address Int
     deriving (Eq, Ord)
@@ -31,12 +34,24 @@ newtype SimulationRequest = SimulationRequest () -- TODO
 -- http://www.haskell.org/haskellwiki/Heterogenous_collections#Existential_types
 
 -- m is presumably an instance of RandomMonad
-data SP = forall m .
-          SP { requester :: [Node] -> m [SimulationRequest]
-             , log_d_req :: Maybe ([Node] -> [SimulationRequest] -> Double)
-             , outputter :: [Node] -> [Node] -> m Value
-             , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
-             }
+data SP m = SP { requester :: [Node] -> m [SimulationRequest]
+               , log_d_req :: Maybe ([Node] -> [SimulationRequest] -> Double)
+               , outputter :: [Node] -> [Node] -> m Value
+               , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
+               }
+
+nullReq :: (MonadRandom m) => [Node] -> m [SimulationRequest]
+nullReq _ = return []
+
+bernoulliFlip :: (MonadRandom m) => [Node] -> [Node] -> m Value
+bernoulliFlip _ _ = liftM Boolean $ getRandomR (False,True)
+
+bernoulli :: (MonadRandom m) => SP m
+bernoulli = SP { requester = nullReq
+               , log_d_req = Just $ const $ const 0.0 -- Only right for requests it actually made
+               , outputter = bernoulliFlip
+               , log_d_out = Just $ const $ const $ const $ -log 2.0
+               }
 
 data Node = Constant Value
           | Reference Address
@@ -73,7 +88,7 @@ parentAddrs (Output _ as as') = as ++ as'
 parents :: Trace -> Node -> [Node]
 parents (Trace nodes _) node = map (fromJust . flip M.lookup nodes) $ parentAddrs node
 
-operator :: Trace -> Node -> Maybe SP
+operator :: (MonadRandom m) => Trace -> Node -> Maybe (SP m)
 operator t n = do a <- op_addr n
                   source <- chaseReferences t a
                   valueOf source >>= spValue
