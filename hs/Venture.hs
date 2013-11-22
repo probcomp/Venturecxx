@@ -85,8 +85,7 @@ regenNode trace node =
     if isRegenerated node then
         return trace
     else do
-        let ps = parents trace node
-        sequence_ $ map (regenNode trace) ps
+        sequence_ $ map (regenNode trace) $ parents trace node
         regenValue trace node
 
 regenValue :: (MonadRandom m) => Trace -> Node -> WriterT LogDensity m Trace
