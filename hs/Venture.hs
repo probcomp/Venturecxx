@@ -8,6 +8,7 @@ import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Language
 import Trace
 import Recursions
+import SP
 
 type Kernel m a = a -> WriterT LogDensity m a
 

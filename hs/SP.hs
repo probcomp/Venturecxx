@@ -1,11 +1,15 @@
 module SP where
 
+import Control.Monad
+import Control.Monad.Random -- From cabal install MonadRandom
+
+import Language hiding (Value)
 import Trace
 
-nullReq :: (MonadRandom m) => [Node (SP m)] -> m [SimulationRequest]
+nullReq :: (MonadRandom m) => [Node] -> m [SimulationRequest]
 nullReq _ = return []
 
-bernoulliFlip :: (MonadRandom m) => [Node (SP m)] -> [Node (SP m)] -> m (Value (SP m))
+bernoulliFlip :: (MonadRandom m) => [Node] -> [Node] -> m Value
 bernoulliFlip _ _ = liftM Boolean $ getRandomR (False,True)
 
 bernoulli :: (MonadRandom m) => SP m
