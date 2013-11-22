@@ -37,7 +37,7 @@ struct Particle : Trace
   set<Node *> crcs;
   set<Node *> rcs;
 
-  map<VentureSP *,Node*> vspMakerNodes;
+//  map<VentureSP *,Node*> vspMakerNodes;
 
   map<Node*,vector<Node *> > esrParents;
 
@@ -77,7 +77,7 @@ struct DetachParticle : Particle
 
   void preUnconstrain(Node * node) override;
 
-  void clearVSPMakerNode(Node * node) override;
+  void clearVSPMakerNode(VentureSP * vsp, Node * makerNode) override;
 
   void extractLatentDB(SP * sp,LatentDB * latentDB) override;
   void registerGarbage(SP * sp,VentureValue * value,NodeType nodeType) override;
@@ -122,7 +122,7 @@ struct RegenParticle : Particle
 
 
 
-  void setVSPMakerNode(Node * node) override;
+  void setVSPMakerNode(VentureSP * vsp, Node * makerNode) override;
   void regenMadeSPAux(Node * makerNode, SP * sp);
 
   // TODO URGENT not sure when this should be called in regen

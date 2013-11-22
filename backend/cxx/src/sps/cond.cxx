@@ -48,6 +48,7 @@ void BranchSP::flushRequest(VentureValue * value) const
 
 VentureValue * BiplexSP::simulateOutput(const Args & args, gsl_rng * rng) const
 {
+  assert(args.operands[0]);
   VentureBool * b = dynamic_cast<VentureBool *>(args.operands[0]);
   bool pred;
   if (b) { pred = b->pred; }

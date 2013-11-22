@@ -37,23 +37,23 @@ double ScaffoldMHGKernel::propose()
   ////////////////////////////////////////// Testing madness
   for (size_t index = 0; index < trace->numRandomChoices(); ++index)
   {
-//    cout << "Testing index #" << index << "..." << endl;
+    cout << "Testing index #" << index << "..." << endl;
     Node * pNode = trace->getRandomChoiceByIndex(index);
     Scaffold s({pNode});
     DetachParticle rho(trace);
-//    cout << "Detaching...";
+    cout << "Detaching...";
     rho.detach(s.border,&s);
-//    cout << "done" << endl;
-//    cout << "Committing...";
+    cout << "done" << endl;
+    for (size_t xi_index = 0; xi_index < 10; xi_index++)
+    {
+      RegenParticle xi(trace);
+      cout << "Regenerating(" << xi_index << ")...";
+      xi.regen(s.border, &s, nullptr);
+      cout << "done" << endl;
+    }
+    cout << "Committing rho...";
     rho.commit();
-//    cout << "done" << endl;
-
-    // RegenParticle xi(trace);
-    // regenweight = xi.regen(s.border, &s);
-    // if (..) { xi.commit(); rho.discard(); }
-    // else { xi.discard(); rho.commit(); }
-
-    // xi.commit();
+    cout << "done" << endl;
   }
 
   //////////////////////////////////////

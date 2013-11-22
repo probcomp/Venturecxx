@@ -83,11 +83,8 @@ void DetachParticle::disconnectLookup(Node * node)
   trace->disconnectLookup(node);
 }
 
-void DetachParticle::clearVSPMakerNode(Node * node)
+void DetachParticle::clearVSPMakerNode(VentureSP * vsp, Node * makerNode)
 {
-  VentureSP * vsp = dynamic_cast<VentureSP *>(getValue(node));
-  assert(vsp);
-  vspMakerNodes[vsp] = vsp->makerNode;
-  trace->clearVSPMakerNode(node);
+  trace->clearVSPMakerNode(vsp,makerNode);
 }
 

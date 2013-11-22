@@ -145,7 +145,7 @@ void Trace::processMadeSP(Node * node, bool isAAA)
   callCounts[{"processMadeSPfull",false}]++;
 
   SP * madeSP = vsp->sp;
-  setVSPMakerNode(node);
+  setVSPMakerNode(vsp,node);
   if (!isAAA)
   {
     if (madeSP->hasAux()) { regenMadeSPAux(node,madeSP); }
@@ -167,7 +167,8 @@ double Trace::applyPSP(Node * node,
   /* Almost nothing needs to be done if this node is a ESRReference.*/
   if (node->nodeType == NodeType::OUTPUT && sp->isESRReference)
   {
-    assert(!node->esrParents.empty());
+    if (getESRParents(node).empty()) { cout << "EMPTY: " << node << endl; }
+    assert(!getESRParents(node).empty());
     registerReference(node,getESRParents(node)[0]);
     return 0;
   }

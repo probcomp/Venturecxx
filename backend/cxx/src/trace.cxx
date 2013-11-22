@@ -201,6 +201,8 @@ Node * Trace::removeLastESREdge(Node * outputNode)
 
 void Trace::addESREdge(Node * esrParent,Node * outputNode)
 {
+  cout << "Trace::addESREdge(" << esrParent << ", " << outputNode << ")" << endl;
+
   esrParent->children.insert(outputNode);
 
   outputNode->esrParents.push_back(esrParent);
@@ -282,21 +284,20 @@ void Trace::connectLookup(Node * node, Node * lookedUpNode)
   node->lookedUpNode = lookedUpNode;
 }
 
-void Trace::clearVSPMakerNode(Node * node)
+void Trace::clearVSPMakerNode(VentureSP * vsp, Node * makerNode)
 {
-  VentureSP * vsp = dynamic_cast<VentureSP *>(getValue(node));
-  assert(vsp);
   assert(vsp);
   assert(vsp->makerNode);
+  assert(makerNode);
   vsp->makerNode = nullptr;
 }
 
-void Trace::setVSPMakerNode(Node * node)
+void Trace::setVSPMakerNode(VentureSP * vsp, Node * makerNode)
 {
-  VentureSP * vsp = dynamic_cast<VentureSP *>(getValue(node));
   assert(vsp);
   assert(!vsp->makerNode);
-  vsp->makerNode = node;
+  assert(makerNode);
+  vsp->makerNode = makerNode;
 }
 
 void Trace::regenMadeSPAux(Node * makerNode, SP * madeSP)
