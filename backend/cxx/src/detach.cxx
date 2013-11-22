@@ -301,7 +301,7 @@ double Trace::detachFamily(Node * node,
   else if (node->nodeType == NodeType::LOOKUP)
   {
     Node * lookedUpNode = node->lookedUpNode;
-    node->disconnectLookup();
+    disconnectLookup(node);
     weight += detachInternal(lookedUpNode,scaffold);
   }
   else

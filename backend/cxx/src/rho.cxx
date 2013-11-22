@@ -43,7 +43,7 @@ void DetachParticle::setSourceNode(Node * node, Node * sourceNode) { assert(fals
 void DetachParticle::clearSourceNode(Node * node) 
 { 
   assert(!pnodes.count(node));
-  pnodes[node] = ParticleNode(node,trace->getSourceNode(node));
+  pnodes[node] = ParticleNode(trace->getSourceNode(node));
   trace->clearSourceNode(node); 
 }
 
@@ -83,6 +83,7 @@ Node * DetachParticle::removeLastESREdge(Node * outputNode)
   Node * esrParent = trace->removeLastESREdge(outputNode);
   ParticleNode & pnode = pnodes[outputNode];
   pnode.esrParents.insert(pnode.esrParents.begin(),esrParent);
+  children.insert({esrParent,outputNode});
   return esrParent;
 }
 
@@ -117,7 +118,7 @@ void DetachParticle::registerGarbage(SP * sp,VentureValue * value,NodeType nodeT
 void DetachParticle::extractValue(Node * node, VentureValue * value)
 {
   assert(!pnodes.count(node));
-  pnodes[node] = ParticleNode(node,trace->getValue(node));
+  pnodes[node] = ParticleNode(trace->getValue(node));
 }
 
 void DetachParticle::prepareLatentDB(SP * sp) { }
@@ -139,3 +140,11 @@ void DetachParticle::unregisterRandomChoice(Node * node)
   rcs.insert(node);
   trace->unregisterRandomChoice(node);
 }
+
+void DetachParticle::disconnectLookup(Node * node)
+{
+  children.insert({node->lookedUpNode,node});
+}
+
+void DetachParticle::reconnectLookup(Node * node) { assert(false); }
+void DetachParticle::connectLookup(Node * node, Node * lookedUpNode) { assert(false); }

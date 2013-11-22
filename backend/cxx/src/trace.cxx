@@ -263,3 +263,19 @@ void Trace::detachMadeSPAux(Node * makerNode)
   delete makerNode->madeSPAux; 
   makerNode->madeSPAux = nullptr;
 }
+
+void Trace::disconnectLookup(Node * node)
+{
+  node->lookedUpNode->children.erase(node);
+}
+
+void Trace::reconnectLookup(Node * node)
+{
+  node->lookedUpNode->children.insert(node);
+}
+
+void Trace::connectLookup(Node * node, Node * lookedUpNode)
+{
+  lookedUpNode->children.insert(node);
+  node->lookedUpNode = lookedUpNode;
+}

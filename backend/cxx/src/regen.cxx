@@ -346,7 +346,7 @@ double Trace::restoreFamily(Node * node,
   else if (node->nodeType == NodeType::LOOKUP)
   {
     regenInternal(node->lookedUpNode,scaffold,nullptr);
-    node->reconnectLookup();
+    reconnectLookup(node);
   }
   else
   {
@@ -415,7 +415,7 @@ pair<double,Node*> Trace::evalFamily(Address addr,
     weight += regenInternal(lookedUpNode,scaffold,gradients);
 
     node = new Node(addr,NodeType::LOOKUP,nullptr);
-    Node::addLookupEdge(lookedUpNode,node);
+    connectLookup(node,lookedUpNode);
     registerReference(node,lookedUpNode);
   }
   /* Self-evaluating */

@@ -20,16 +20,31 @@ enum class NodeType;
 struct ParticleNode
 {
   ParticleNode() {}
-  ParticleNode(Node * node,VentureValue * value): node(node), _value(value) {}
-  ParticleNode(Node * node,Node * sourceNode): node(node), sourceNode(sourceNode) {}
+  ParticleNode(VentureValue * value): _value(value) {}
+  ParticleNode(Node * sourceNode): sourceNode(sourceNode) {}
 
-  Node * node{nullptr};
   VentureValue * _value{nullptr};
   vector<Node *> esrParents{};
   Node * sourceNode{nullptr};
 };
 
-struct DetachParticle : Trace
+struct Particle : Trace
+{
+  void commit();
+
+  map<Node *, ParticleNode> pnodes;
+  multimap<Node *, Node *> children; // TODO URGENT do the bookkeeping for rho
+  map<Node*,SPAux*> spauxs;
+
+  vector<VentureValue*> spOwnedValues;
+
+  set<Node *> crcs;
+  set<Node *> rcs;
+
+  deque<FlushEntry> flushDeque; // detach uses queue, regen uses stack
+};
+
+struct DetachParticle : Particle
 {
   DetachParticle(Trace * trace): trace(trace) {}
 
@@ -41,6 +56,10 @@ struct DetachParticle : Trace
   Node * getSourceNode(Node * node) override;
   void setSourceNode(Node * node, Node * sourceNode) override;
   void clearSourceNode(Node * node) override;
+
+  void disconnectLookup(Node * node) override;
+  void reconnectLookup(Node * node) override;
+  void connectLookup(Node * node, Node * lookedUpNode) override;
 
   void setValue(Node * node, VentureValue * value) override;
   void clearValue(Node * node) override;
@@ -91,18 +110,6 @@ struct DetachParticle : Trace
   void registerSPFamily(Node * makerNode,size_t id,Node * root) override;
 
 ////////////////////////
-
-  map<Node *, ParticleNode> pnodes;
-  map<Node *, vector<Node *> > children;
-  map<Node*,SPAux*> spauxs;
-
-  vector<VentureValue*> spOwnedValues;
-
-  set<Node *> crcs;
-  set<Node *> rcs;
-
-  deque<FlushEntry> flushDeque; // detach uses queue, regen uses stack
-
 
   Trace * trace{nullptr};
 };

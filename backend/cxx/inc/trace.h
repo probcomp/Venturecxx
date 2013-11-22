@@ -226,6 +226,10 @@ struct Trace
   virtual void setNodeOwnsValue(Node * node);
   virtual void clearNodeOwnsValue(Node * node);
 
+  virtual void disconnectLookup(Node * node);
+  virtual void reconnectLookup(Node * node);
+  virtual void connectLookup(Node * node, Node * lookedUpNode);
+
   virtual Node * removeLastESREdge(Node * outputNode);
   virtual void addESREdge(Node * esrParent,Node * outputNode);
 
