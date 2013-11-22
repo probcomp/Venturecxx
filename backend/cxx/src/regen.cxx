@@ -145,7 +145,7 @@ void Trace::processMadeSP(Node * node, bool isAAA)
   callCounts[{"processMadeSPfull",false}]++;
 
   SP * madeSP = vsp->sp;
-  preProcessMadeSP(node);
+  setVSPMakerNode(node);
   if (!isAAA)
   {
     if (madeSP->hasAux()) { node->madeSPAux = madeSP->constructSPAux(); }

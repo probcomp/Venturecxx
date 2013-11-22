@@ -145,7 +145,7 @@ void Trace::teardownMadeSP(Node * node,
 
   callCounts[{"processMadeSPfull",true}]++;
 
-  preTeardownMadeSP(node);
+  clearVSPMakerNode(node);
 
   SP * madeSP = vsp->sp;
 

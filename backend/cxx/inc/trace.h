@@ -254,8 +254,8 @@ struct Trace
   virtual void registerSPOwnedValues(Node * makerNode, size_t id, const vector<VentureValue*> & values);
   virtual void registerSPFamily(Node * makerNode,size_t id,Node * root);
 
-  virtual void preTeardownMadeSP(Node * node);
-  virtual void preProcessMadeSP(Node * node);  // TODO will probably need to call
+  virtual void clearVSPMakerNode(Node * node);
+  virtual void setVSPMakerNode(Node * node);
 
   // Since calling regen or detach with an omegaDB mutates the trace, we can only do so for one omegaDB at a time,
   // so we can make it a (temporary) variable for the trace.

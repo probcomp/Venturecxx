@@ -43,8 +43,8 @@ Node * DetachParticle::getSourceNode(Node * node) { return trace->getSourceNode(
 void DetachParticle::setSourceNode(Node * node, Node * sourceNode) { assert(false); }
 void DetachParticle::clearSourceNode(Node * node) 
 { 
-  assert(!pnodes.count(node));
-  pnodes[node] = ParticleNode(trace->getSourceNode(node));
+  assert(!sourceNodes.count(node));
+  sourceNodes[node] = trace->getSourceNode(node);
   trace->clearSourceNode(node); 
 }
 
@@ -81,7 +81,7 @@ void DetachParticle::clearNodeOwnsValue(Node * node) { assert(false); }
 
 Node * DetachParticle::removeLastESREdge(Node * outputNode)
 {
-  assert(pnodes.count(outputNode));
+  assert(sourceNodes.count(outputNode));
   Node * esrParent = trace->removeLastESREdge(outputNode);
   esrParents[outputNode].push(esrParent);
   children.insert({esrParent,outputNode});
@@ -118,8 +118,8 @@ void DetachParticle::registerGarbage(SP * sp,VentureValue * value,NodeType nodeT
 
 void DetachParticle::extractValue(Node * node, VentureValue * value)
 {
-  assert(!pnodes.count(node));
-  pnodes[node] = ParticleNode(trace->getValue(node));
+  assert(!values.count(node));
+  values[node] = trace->getValue(node);
 }
 
 void DetachParticle::prepareLatentDB(SP * sp) { }
@@ -150,12 +150,12 @@ void DetachParticle::disconnectLookup(Node * node)
 void DetachParticle::reconnectLookup(Node * node) { assert(false); }
 void DetachParticle::connectLookup(Node * node, Node * lookedUpNode) { assert(false); }
 
-void DetachParticle::preTeardownMadeSP(Node * node)
+void DetachParticle::clearVSPMakerNode(Node * node)
 {
   VentureSP * vsp = dynamic_cast<VentureSP *>(getValue(node));
   assert(vsp);
   vspMakerNodes[vsp] = vsp->makerNode;
-  trace->preTeardownMadeSP(node);
+  trace->clearVSPMakerNode(node);
 }
 
-void DetachParticle::preProcessMadeSP(Node * node) { assert(false); }
+void DetachParticle::setVSPMakerNode(Node * node) { assert(false); }

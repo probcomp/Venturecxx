@@ -31,7 +31,6 @@ void TraceConsistencyChecker::checkConsistency()
 
 void TraceConsistencyChecker::checkTorus(Scaffold * scaffold)
 {
-  bool fail = false;
   for (pair<Node *,Scaffold::DRGNode> p : scaffold->drg)
   {
     if (p.second.regenCount != 0) { scaffold->show(); assert(false); }

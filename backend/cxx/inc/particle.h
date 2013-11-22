@@ -18,17 +18,6 @@ struct VentureSP;
 
 enum class NodeType;
 
-// TODO may need more fields, e.g. for constrain, owns value, etc
-struct ParticleNode
-{
-  ParticleNode() {}
-  ParticleNode(VentureValue * value): _value(value) {}
-  ParticleNode(Node * sourceNode): sourceNode(sourceNode) {}
-
-  VentureValue * _value{nullptr};
-  Node * sourceNode{nullptr};
-};
-
 struct Particle : Trace
 {
 
@@ -36,9 +25,10 @@ struct Particle : Trace
 
   void commit();
 
-  map<Node *, ParticleNode> pnodes;
-  multimap<Node *, Node *> children; // TODO URGENT do the bookkeeping for rho
+  multimap<Node *, Node *> children;
   map<Node*,SPAux*> spauxs;
+  map<Node *,VentureValue*> values;
+  map<Node *, Node *> sourceNodes;
 
   vector<VentureValue*> spOwnedValues;
 
@@ -110,8 +100,8 @@ struct DetachParticle : Particle
   void preEvalRequests(Node * requestNode) override;
   void preUnconstrain(Node * node) override;
   void preConstrain(Node * node) override;
-  void preTeardownMadeSP(Node * node) override;
-  void preProcessMadeSP(Node * node) override;
+  void clearVSPMakerNode(Node * node) override;
+  void setVSPMakerNode(Node * node) override;
 
   void extractLatentDB(SP * sp,LatentDB * latentDB) override;
   void registerGarbage(SP * sp,VentureValue * value,NodeType nodeType) override;

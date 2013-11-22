@@ -281,7 +281,7 @@ void Trace::connectLookup(Node * node, Node * lookedUpNode)
   node->lookedUpNode = lookedUpNode;
 }
 
-void Trace::preTeardownMadeSP(Node * node)
+void Trace::clearVSPMakerNode(Node * node)
 {
   VentureSP * vsp = dynamic_cast<VentureSP *>(getValue(node));
   assert(vsp);
@@ -290,7 +290,7 @@ void Trace::preTeardownMadeSP(Node * node)
   vsp->makerNode = nullptr;
 }
 
-void Trace::preProcessMadeSP(Node * node)
+void Trace::setVSPMakerNode(Node * node)
 {
   VentureSP * vsp = dynamic_cast<VentureSP *>(getValue(node));
   assert(vsp);
