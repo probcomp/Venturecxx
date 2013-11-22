@@ -49,10 +49,20 @@ regenValue t@Trace{ nodes = nodes } a = go $ fromJust $ lookup t a where
 
 evalRequests :: (Monad m) => Trace m -> SPAddress -> [SimulationRequest] -> m (Trace m)
 evalRequests t a srs = foldM evalRequest t srs where
-    evalRequest :: Trace m -> SimulationRequest -> m (Trace m)
-    evalRequest = undefined
--- eval :: Address -> Exp -> Trace -> Trace
--- eval = undefined
+    -- evalRequest :: Trace m -> SimulationRequest -> m (Trace m) but it's the same m
+    evalRequest t (SimulationRequest id exp env) =
+        if (cached t a id) then
+            return t
+        else do
+          (t', addr) <- eval exp env t
+          return $ cache t a id addr
+    cached :: Trace m -> SPAddress -> SRId -> Bool
+    cached = undefined
+    cache :: Trace m -> SPAddress -> SRId -> Address -> Trace m
+    cache = undefined
+
+eval :: Exp -> Env -> Trace m -> m ((Trace m), Address)
+eval = undefined
 
 -- uneval :: Address -> Trace -> Trace
 -- uneval = undefined
