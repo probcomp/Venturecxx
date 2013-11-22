@@ -9,13 +9,13 @@ data Value = Number Double
 
 newtype Address = Address Int
 
+newtype SimulationRequest = SimulationRequest () -- TODO
+
 -- TODO An SP needing state of type a takes the a in appropriate
 -- places, and offers incorporate and unincorporate functions that
 -- transform states.  The Trace needs to contain a heterogeneous
 -- collection of all the SP states, perhaps per
 -- http://www.haskell.org/haskellwiki/Heterogenous_collections#Existential_types
-
-newtype SimulationRequest = SimulationRequest () -- TODO
 
 -- m is presumably an instance of RandomMonad
 data SP m = SP { requester :: [Node] -> m [SimulationRequest]
