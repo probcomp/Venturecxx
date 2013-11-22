@@ -6,13 +6,6 @@
 #include <vector>
 #include <string>
 
-/* TODO this does not yet handle n changing in AAA */
-struct DirMultSPAux : SPAux
-{
-  DirMultSPAux(uint32_t n): counts(n,0) {}
-  vector<uint32_t> counts;
-};
-
 struct MakeDirMultSP : SP
 {
   MakeDirMultSP()

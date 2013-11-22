@@ -28,15 +28,30 @@ VentureValue * MSPMakerSP::simulateOutput(const Args & args, gsl_rng * rng) cons
 VentureVector * newDeepVector(const vector<VentureValue *> & operands)
 {
   vector<VentureValue *> values;
-  for (VentureValue * operand : operands) { values.push_back(operand->clone()); }
+  for (VentureValue * operand : operands) 
+  { 
+    assert(operand);
+    assert(operand->isValid());
+    values.push_back(operand->clone()); 
+  }
   return new VentureVector(values);
+}
+
+bool idsAreValid(const unordered_map<VentureValue*,pair<size_t,uint32_t> > & ids)
+{
+  for (pair<VentureValue*,pair<size_t,uint32_t> > pp : ids)
+  {
+    assert(pp.first);
+    assert(pp.first->isValid());
+  }
+  return true;
 }
 
 VentureValue * MSP::simulateRequest(const Args & args, gsl_rng * rng) const
 {
   MSPAux * aux = dynamic_cast<MSPAux*>(args.spaux);
   assert(aux);
-
+  assert(idsAreValid(aux->ids));
   VentureValue * vargs = newDeepVector(args.operands);
 
   if (aux->ids.count(vargs))
@@ -100,6 +115,8 @@ void MSP::incorporateRequest(VentureValue * value, const Args & args) const
 {
   MSPAux * aux = dynamic_cast<MSPAux*>(args.spaux);
   assert(aux);
+  assert(idsAreValid(aux->ids));
+
 
   VentureRequest * requests = dynamic_cast<VentureRequest*>(value);
   assert(requests);
@@ -128,6 +145,8 @@ void MSP::removeRequest(VentureValue * value, const Args & args) const
 {
   MSPAux * aux = dynamic_cast<MSPAux*>(args.spaux);
   assert(aux);
+  assert(idsAreValid(aux->ids));
+
 
   VentureRequest * requests = dynamic_cast<VentureRequest*>(value);
   assert(requests);
@@ -148,7 +167,7 @@ void MSP::removeRequest(VentureValue * value, const Args & args) const
     assert(originalArgs != aux->ids.end());
     VentureValue * oldArgs = originalArgs->first;
     aux->ids.erase(vargs);
-    deepDelete(oldArgs);
+//    deepDelete(oldArgs); // TODO MEMORY LEAK
   }
   deepDelete(vargs);
 }
@@ -166,7 +185,9 @@ MSPAux::~MSPAux()
   }
   for (VentureValue * val : args)
   {
-    deepDelete(val);
+    // TODO URGENT GC with spaux copying this no longer works
+    // can restore this once spaux->clone makes deep copies
+//    deepDelete(val);
   }
 }
 

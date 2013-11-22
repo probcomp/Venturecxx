@@ -14,6 +14,7 @@
 struct Node;
 struct LatentDB;
 struct VentureValue;
+struct VentureSP;
 
 enum class NodeType;
 
@@ -43,6 +44,8 @@ struct Particle : Trace
 
   set<Node *> crcs;
   set<Node *> rcs;
+
+  map<VentureSP *,Node*> vspMakerNodes;
 
   map<Node*,stack<Node *> > esrParents;
 
@@ -107,6 +110,8 @@ struct DetachParticle : Particle
   void preEvalRequests(Node * requestNode) override;
   void preUnconstrain(Node * node) override;
   void preConstrain(Node * node) override;
+  void preTeardownMadeSP(Node * node) override;
+  void preProcessMadeSP(Node * node) override;
 
   void extractLatentDB(SP * sp,LatentDB * latentDB) override;
   void registerGarbage(SP * sp,VentureValue * value,NodeType nodeType) override;

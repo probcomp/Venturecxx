@@ -21,6 +21,7 @@
 void DetachParticle::maybeCloneSPAux(Node * node)
 {
   Node * makerNode = getVSP(node)->makerNode;
+  assert(makerNode);
   if (makerNode->madeSPAux && !spauxs.count(makerNode))
   {
     spauxs[makerNode] = makerNode->madeSPAux->clone();
@@ -38,7 +39,7 @@ void DetachParticle::maybeCloneMadeSPAux(Node * makerNode)
 
 bool DetachParticle::isReference(Node * node) { return trace->isReference(node); }
 void DetachParticle::registerReference(Node * node, Node * lookedUpNode) { assert(false); }
-Node * DetachParticle::getSourceNode(Node * node) { assert(false); }
+Node * DetachParticle::getSourceNode(Node * node) { return trace->getSourceNode(node); }
 void DetachParticle::setSourceNode(Node * node, Node * sourceNode) { assert(false); }
 void DetachParticle::clearSourceNode(Node * node) 
 { 
@@ -137,7 +138,7 @@ void DetachParticle::registerSPFamily(Node * makerNode,size_t id,Node * root) {}
 void DetachParticle::registerRandomChoice(Node * node) { assert(false); }
 void DetachParticle::unregisterRandomChoice(Node * node) 
 { 
-  rcs.insert(node);
+  if (!crcs.count(node)) { rcs.insert(node); }
   trace->unregisterRandomChoice(node);
 }
 
@@ -148,3 +149,13 @@ void DetachParticle::disconnectLookup(Node * node)
 
 void DetachParticle::reconnectLookup(Node * node) { assert(false); }
 void DetachParticle::connectLookup(Node * node, Node * lookedUpNode) { assert(false); }
+
+void DetachParticle::preTeardownMadeSP(Node * node)
+{
+  VentureSP * vsp = dynamic_cast<VentureSP *>(getValue(node));
+  assert(vsp);
+  vspMakerNodes[vsp] = vsp->makerNode;
+  trace->preTeardownMadeSP(node);
+}
+
+void DetachParticle::preProcessMadeSP(Node * node) { assert(false); }

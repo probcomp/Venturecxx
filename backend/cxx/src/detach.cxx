@@ -22,6 +22,7 @@ double Trace::detach(const vector<Node *> & border,
 		     Scaffold * scaffold)
 
 {
+//  cout << "DETACH" << endl;
   assert(scaffold);
 
   double weight = 0;
@@ -144,7 +145,7 @@ void Trace::teardownMadeSP(Node * node,
 
   callCounts[{"processMadeSPfull",true}]++;
 
-  vsp->makerNode = nullptr;
+  preTeardownMadeSP(node);
 
   SP * madeSP = vsp->sp;
 
@@ -238,7 +239,7 @@ double Trace::unevalRequests(Node * node,
 
   for (ESR esr : reverse(requests->esrs))
   {
-    cout << "unevalRequest: " << node->address << "==>(" << esr.id << ")" << endl;
+//    cout << "unevalRequest: " << node->address << "==>(" << esr.id << "):(" << getSPAux(node) << ")" << endl;
 
     assert(getSPAux(node));
     assert(getSPAux(node)->isValid());
@@ -265,6 +266,7 @@ double Trace::detachSPFamily(VentureSP * vsp,
   assert(vsp->makerNode);
   assert(vsp->makerNode->madeSPAux);
   SPAux * spaux = getMadeSPAux(vsp->makerNode);
+//  cout << "detachFamily(" << spaux << endl;
   Node * root = spaux->families[id];
   assert(root);
   spaux->families.erase(id);
@@ -292,7 +294,7 @@ double Trace::detachVentureFamily(Node * root)
 double Trace::detachFamily(Node * node,
 			   Scaffold * scaffold)
 {
-  cout << "uneval: " << node->address << endl;
+//  cout << "uneval: " << node->address << endl;
   assert(node);
   double weight = 0;
   

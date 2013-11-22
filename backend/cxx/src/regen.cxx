@@ -22,6 +22,7 @@ double Trace::regen(const vector<Node *> & border,
 		    Scaffold * scaffold,
 		    map<Node *,vector<double> > *gradients)
 {
+//  cout << "REGEN" << endl;
   assert(scaffold);
   double weight = 0;
   for (Node * node : border)
@@ -144,7 +145,7 @@ void Trace::processMadeSP(Node * node, bool isAAA)
   callCounts[{"processMadeSPfull",false}]++;
 
   SP * madeSP = vsp->sp;
-  vsp->makerNode = node;
+  preProcessMadeSP(node);
   if (!isAAA)
   {
     if (madeSP->hasAux()) { node->madeSPAux = madeSP->constructSPAux(); }
@@ -261,11 +262,10 @@ double Trace::evalRequests(Node * node,
   VentureRequest * requests = dynamic_cast<VentureRequest *>(getValue(node));
   assert(requests);
 
-  
-  /* First evaluate ESRs. */
+    /* First evaluate ESRs. */
   for (ESR esr : requests->esrs)
   {
-    cout << "evalRequests: " << node->address << "==>(" << esr.id << ")" << endl;
+//    cout << "evalRequests: " << node->address << "==>(" << esr.id << "):(" << getSPAux(node) << ")" << endl;
     assert(getSPAux(node)->isValid());
     Node * esrParent;
     if (!getSPAux(node)->families.count(esr.id))
@@ -369,7 +369,7 @@ pair<double,Node*> Trace::evalFamily(Address addr,
 				     bool isDefinite,
 				     map<Node *,vector<double> > *gradients)
 {
-  cout << "eval: " << addr << endl;
+//  cout << "eval: " << addr << endl;
   double weight = 0;
   Node * node = nullptr;
   assert(exp);

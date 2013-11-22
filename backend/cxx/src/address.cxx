@@ -5,18 +5,18 @@
 ostream &operator<<(ostream & os, const Address & addr)
 { 
   if (addr.sp) {
-    os << "(" << addr.sp->name 
+    os << "<" << addr.sp->name 
        << ", " << addr.sp 
        << ", " << addr.id 
        << ", " << addr.path
-       << ")";
+       << ">";
   }
   else 
   {
-    os << "(" << "venture"
+    os << "<" << "venture"
        << ", " << addr.id 
        << ", " << addr.path
-       << ")";
+       << ">";
   }
 
   return os;            

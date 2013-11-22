@@ -89,7 +89,7 @@ def runTests(N):
   testOuterMix1(N)
   testMakeSymDirMult1(N)
   testMakeSymDirMult2(N)
-  testMakeUCSymDirMult1(N)
+  testMakeUCSymDirMult1(N) # this is where it fails currently
   testMakeDirMult1(N)
   testMakeBetaBernoulli1(N)
   testMap1(N)
@@ -144,6 +144,16 @@ def testMakeCSP():
   print sivm.report(4)
   print sivm.report(6)
 
+
+def tt(N):
+  sivm = SIVM()
+  sivm.assume("b", "(bernoulli)")
+  sivm.predict("(if b (normal 0.0 1.0) (normal 10.0 1.0))")
+
+  predictions = loggingInfer(sivm,2,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestBernoulli0---"
+  print "(5.0," + str(mean) + ")"
 
 def testBernoulli0(N):
   sivm = SIVM()
