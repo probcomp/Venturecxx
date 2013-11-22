@@ -1,6 +1,7 @@
 module Venture where
 
-import Data.Map as M
+import qualified Data.Map as M
+import Data.Maybe
 import Control.Monad.Random hiding (Random) -- From cabal install MonadRandom
 
 data Value = Number Double
@@ -8,6 +9,7 @@ data Value = Number Double
            | List [Value]
 
 newtype Address = Address Int
+    deriving (Eq, Ord)
 
 newtype SimulationRequest = SimulationRequest () -- TODO
 
@@ -29,6 +31,23 @@ data Node = Constant Value
           | Request (Maybe [SimulationRequest]) [Address]
           | Output (Maybe Value) [Address] [Address]
 
+isRegenerated :: Node -> Bool
+isRegenerated (Constant _) = True
+isRegenerated (Reference addr) = undefined -- TODO
+isRegenerated (Request Nothing _) = False
+isRegenerated (Request (Just _) _) = True
+isRegenerated (Output Nothing _ _) = False
+isRegenerated (Output (Just _) _ _) = True
+
+parentAddrs :: Node -> [Address]
+parentAddrs (Constant _) = []
+parentAddrs (Reference addr) = [addr]
+parentAddrs (Request _ as) = as
+parentAddrs (Output _ as as') = as ++ as'
+
+parents :: Trace -> Node -> [Node]
+parents (Trace nodes _) node = map (fromJust . flip M.lookup nodes) $ parentAddrs node
+
 -- A "torus" is a trace some of whose nodes have Nothing values, and
 -- some of whose Request nodes may have outstanding SimulationRequests
 -- that have not yet been met.
@@ -45,8 +64,12 @@ detach = undefined
 regen :: (MonadRandom m) => Trace -> m (Double, Trace)
 regen = undefined
 
-regenAddress :: (MonadRandom m) => Address -> Trace -> m (Double, Trace)
-regenAddress = undefined
+regenNode :: (MonadRandom m) => Node -> Trace -> m (Double, Trace)
+regenNode node trace =
+    if isRegenerated node then
+        return (0, trace)
+    else
+        undefined
 
 -- eval :: Address -> Exp -> Trace -> Trace
 -- eval = undefined
