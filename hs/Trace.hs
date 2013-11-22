@@ -84,5 +84,8 @@ operator t@Trace{ sps = ss } n = do
           op_addr (Output _ (a:_) _) = Just a
           op_addr _ = Nothing
 
+lookup :: Trace rand -> Address -> Maybe Node
+lookup Trace{ nodes = m } a = M.lookup a m
+
 insert :: Trace rand -> Address -> Node -> Trace rand
 insert t@Trace{nodes = ns} a n = t{ nodes = (M.insert a n ns) } -- TODO update random choices
