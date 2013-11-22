@@ -105,6 +105,8 @@ double NormalSP::simulateOutputNumeric(const vector<double> & args, gsl_rng * rn
 
 double NormalSP::logDensityOutput(VentureValue * value, const Args & args)  const
 {
+  assert(args.operands[0]);
+  assert(args.operands[1]);
   double mu;
   VentureNumber * vmu = dynamic_cast<VentureNumber *>(args.operands[0]);
   if (vmu) { mu = vmu->x; }
