@@ -234,6 +234,7 @@ struct Trace
   virtual void addESREdge(Node * esrParent,Node * outputNode);
 
   virtual void detachMadeSPAux(Node * makerNode);
+  virtual void regenMadeSPAux(Node * makerNode, SP * sp);
 
   virtual void preUnabsorb(Node * node) {}
   virtual void preAbsorb(Node * node) {}

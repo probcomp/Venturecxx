@@ -6,23 +6,6 @@
 #include "spaux.h"
 #include "flush.h"
 
-void DetachParticle::maybeCloneSPAux(Node * node)
-{
-  Node * makerNode = getVSP(node)->makerNode;
-  assert(makerNode);
-  if (makerNode->madeSPAux && !spauxs.count(makerNode))
-  {
-    spauxs[makerNode] = makerNode->madeSPAux->clone();
-  }
-}
-
-void DetachParticle::maybeCloneMadeSPAux(Node * makerNode)
-{
-  if (makerNode->madeSPAux && !spauxs.count(makerNode))
-  {
-    spauxs[makerNode] = makerNode->madeSPAux->clone();
-  }
-}
 
 
 void DetachParticle::clearSourceNode(Node * node) 
@@ -46,7 +29,7 @@ Node * DetachParticle::removeLastESREdge(Node * outputNode)
 {
   assert(sourceNodes.count(outputNode));
   Node * esrParent = trace->removeLastESREdge(outputNode);
-  esrParents[outputNode].push(esrParent);
+  esrParents[outputNode].insert(esrParents[outputNode].begin(),esrParent);
   children.insert({esrParent,outputNode});
   return esrParent;
 }

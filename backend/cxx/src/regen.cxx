@@ -148,7 +148,7 @@ void Trace::processMadeSP(Node * node, bool isAAA)
   setVSPMakerNode(node);
   if (!isAAA)
   {
-    if (madeSP->hasAux()) { node->madeSPAux = madeSP->constructSPAux(); }
+    if (madeSP->hasAux()) { regenMadeSPAux(node,madeSP); }
     if (madeSP->hasAEKernel) { registerAEKernel(vsp); }
   }
 }

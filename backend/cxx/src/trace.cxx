@@ -299,3 +299,7 @@ void Trace::setVSPMakerNode(Node * node)
   vsp->makerNode = node;
 }
 
+void Trace::regenMadeSPAux(Node * makerNode, SP * madeSP)
+{
+  makerNode->madeSPAux = madeSP->constructSPAux();
+}

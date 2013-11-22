@@ -23,6 +23,8 @@ struct Particle : Trace
 
   Particle(Trace * trace): trace(trace) {}
 
+  void maybeCloneSPAux(Node * node);
+  void maybeCloneMadeSPAux(Node * makerNode);
   void commit();
 
   multimap<Node *, Node *> children;
@@ -37,7 +39,7 @@ struct Particle : Trace
 
   map<VentureSP *,Node*> vspMakerNodes;
 
-  map<Node*,stack<Node *> > esrParents;
+  map<Node*,vector<Node *> > esrParents;
 
   deque<FlushEntry> flushDeque; // detach uses queue, regen uses stack
 
@@ -51,8 +53,7 @@ struct DetachParticle : Particle
 {
   DetachParticle(Trace * trace): Particle(trace) {}
 
-  void maybeCloneSPAux(Node * node);
-  void maybeCloneMadeSPAux(Node * makerNode);
+//  RegenParticle cloneAsRegenParticle() { }
 
 ////
 
@@ -67,6 +68,8 @@ struct DetachParticle : Particle
   Node * removeLastESREdge(Node * outputNode) override;
 
   void detachMadeSPAux(Node * makerNode) override;
+
+
 
 
   void preUnabsorb(Node * node) override;
@@ -93,43 +96,41 @@ struct RegenParticle : Particle
 {
   RegenParticle(Trace * trace): Particle(trace) {}
 
-  bool isReference(Node * node) override;
-  void registerReference(Node * node, Node * lookedUpNode) override;
   Node * getSourceNode(Node * node) override;
   void setSourceNode(Node * node, Node * sourceNode) override;
 
-  void reconnectLookup(Node * node) override;
   void connectLookup(Node * node, Node * lookedUpNode) override;
 
   void setValue(Node * node, VentureValue * value) override;
   VentureValue * getValue(Node * node) override;
 
-  SP * getSP(Node * node) override;
-  VentureSP * getVSP(Node * node) override;
   SPAux * getSPAux(Node * node) override;
   SPAux * getMadeSPAux(Node * makerNode) override;
-  Args getArgs(Node * node) override;
   vector<Node *> getESRParents(Node * node) override;
   
   void constrainChoice(Node * node) override;
 
   void registerRandomChoice(Node * node) override;
 
-
-  void setConstrained(Node * node) override;
-  void clearNodeOwnsValue(Node * node) override;
+  void setConstrained(Node * node);
+  void clearNodeOwnsValue(Node * node);
 
   void addESREdge(Node * esrParent,Node * outputNode) override;
 
   void preAbsorb(Node * node) override;
   void preApplyPSP(Node * node) override;
-  void preEvalRequests(Node * requestNode) override;
-  void preConstrain(Node * node) override;
+
+
 
   void setVSPMakerNode(Node * node) override;
+  void regenMadeSPAux(Node * makerNode, SP * sp);
 
+  // TODO URGENT not sure when this should be called in regen
+  // probably needs to be a different method
+  // for now: memory leak
   void registerGarbage(SP * sp,VentureValue * value,NodeType nodeType) override;
 
+  
   void registerSPOwnedValues(Node * makerNode, size_t id, const vector<VentureValue*> & values) override;
   void registerSPFamily(Node * makerNode,size_t id,Node * root) override;
 

@@ -47,6 +47,13 @@ double ScaffoldMHGKernel::propose()
 //    cout << "Committing...";
     rho.commit();
 //    cout << "done" << endl;
+
+    // RegenParticle xi(trace);
+    // regenweight = xi.regen(s.border, &s);
+    // if (..) { xi.commit(); rho.discard(); }
+    // else { xi.discard(); rho.commit(); }
+
+    // xi.commit();
   }
 
   //////////////////////////////////////
