@@ -20,7 +20,7 @@ detach = undefined
 regen :: (MonadRandom m) => Trace m -> WriterT LogDensity m (Trace m)
 regen = undefined
 
-regenNode :: (MonadRandom m) => Trace m -> Node (SP m) -> WriterT LogDensity m (Trace m)
+regenNode :: (MonadRandom m) => Trace m -> Node -> WriterT LogDensity m (Trace m)
 regenNode trace node =
     if isRegenerated node then
         return trace
@@ -28,7 +28,7 @@ regenNode trace node =
         sequence_ $ map (regenNode trace) $ parents trace node
         regenValue trace node
 
-regenValue :: (MonadRandom m) => Trace m -> Node (SP m) -> WriterT LogDensity m (Trace m)
+regenValue :: (MonadRandom m) => Trace m -> Node -> WriterT LogDensity m (Trace m)
 regenValue t (Constant _) = return t
 regenValue t (Reference _) = return t
 -- These two clauses look an awful lot like applyPSP
@@ -48,7 +48,7 @@ regenValue t@Trace{ nodes = nodes } node@(Output _ ps rs) = do
           where address :: Address
                 address = undefined
 
-evalRequests :: Trace m -> Node (SP m) -> [SimulationRequest] -> m (Trace m)
+evalRequests :: Trace m -> Node -> [SimulationRequest] -> m (Trace m)
 evalRequests = undefined
 -- eval :: Address -> Exp -> Trace -> Trace
 -- eval = undefined

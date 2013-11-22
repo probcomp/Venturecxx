@@ -22,29 +22,29 @@ data SimulationRequest = SimulationRequest SRId Exp Env
 -- http://www.haskell.org/haskellwiki/Heterogenous_collections#Existential_types
 
 -- m is presumably an instance of MonadRandom
-data SP m = SP { requester :: [Node (SP m)] -> m [SimulationRequest]
-               , log_d_req :: Maybe ([Node (SP m)] -> [SimulationRequest] -> Double)
-               , outputter :: [Node (SP m)] -> [Node (SP m)] -> m (Value (SP m))
-               , log_d_out :: Maybe ([Node (SP m)] -> [Node (SP m)] -> (Value (SP m)) -> Double)
+data SP m = SP { requester :: [Node] -> m [SimulationRequest]
+               , log_d_req :: Maybe ([Node] -> [SimulationRequest] -> Double)
+               , outputter :: [Node] -> [Node] -> m (Value SPAddress)
+               , log_d_out :: Maybe ([Node] -> [Node] -> (Value SPAddress) -> Double)
                }
 
-data Node proc = Constant (Value proc)
-               | Reference Address
-               | Request (Maybe [SimulationRequest]) [Address]
-               | Output (Maybe (Value proc)) [Address] [Address]
+data Node = Constant (Value SPAddress)
+          | Reference Address
+          | Request (Maybe [SimulationRequest]) [Address]
+          | Output (Maybe (Value SPAddress)) [Address] [Address]
 
-valueOf :: Node proc -> Maybe (Value proc)
+valueOf :: Node -> Maybe (Value SPAddress)
 valueOf (Constant v) = Just v
 valueOf (Output v _ _) = v
 valueOf _ = Nothing
 
-parentAddrs :: Node proc -> [Address]
+parentAddrs :: Node -> [Address]
 parentAddrs (Constant _) = []
 parentAddrs (Reference addr) = [addr]
 parentAddrs (Request _ as) = as
 parentAddrs (Output _ as as') = as ++ as'
 
-isRegenerated :: Node proc -> Bool
+isRegenerated :: Node -> Bool
 isRegenerated (Constant _) = True
 isRegenerated (Reference addr) = undefined -- TODO: apparently a function of the addressee
 isRegenerated (Request Nothing _) = False
@@ -60,28 +60,29 @@ isRegenerated (Output (Just _) _ _) = True
 -- some of whose Request nodes may have outstanding SimulationRequests
 -- that have not yet been met.
 data Trace rand = 
-    Trace { nodes :: (M.Map Address (Node (SP rand)))
+    Trace { nodes :: (M.Map Address Node)
           , randoms :: [Address]
           , sps :: (M.Map SPAddress (SP rand))
           }
 
-chaseReferences :: Trace rand -> Address -> Maybe (Node (SP rand))
+chaseReferences :: Trace rand -> Address -> Maybe Node
 chaseReferences t@Trace{ nodes = m } a = do
   n <- M.lookup a m
   chase n
     where chase (Reference a) = chaseReferences t a
           chase n = Just n
 
-parents :: Trace rand -> Node (SP rand) -> [Node (SP rand)]
+parents :: Trace rand -> Node -> [Node]
 parents Trace{ nodes = n } node = map (fromJust . flip M.lookup n) $ parentAddrs node
 
-operator :: Trace rand -> Node (SP rand) -> Maybe (SP rand)
-operator t n = do a <- op_addr n
-                  source <- chaseReferences t a
-                  valueOf source >>= spValue
+operator :: Trace rand -> Node -> Maybe (SP rand)
+operator t@Trace{ sps = ss } n = do
+  a <- op_addr n
+  source <- chaseReferences t a
+  valueOf source >>= spValue >>= (flip M.lookup ss)
     where op_addr (Request _ (a:_)) = Just a
           op_addr (Output _ (a:_) _) = Just a
           op_addr _ = Nothing
 
-insert :: Trace rand -> Address -> Node (SP rand) -> Trace rand
+insert :: Trace rand -> Address -> Node -> Trace rand
 insert t@Trace{nodes = ns} a n = t{ nodes = (M.insert a n ns) } -- TODO update random choices
