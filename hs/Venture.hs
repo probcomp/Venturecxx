@@ -39,7 +39,7 @@ data Node = Constant Value
 
 isRegenerated :: Node -> Bool
 isRegenerated (Constant _) = True
-isRegenerated (Reference addr) = undefined -- TODO
+isRegenerated (Reference addr) = undefined -- TODO: apparently a function of the addressee
 isRegenerated (Request Nothing _) = False
 isRegenerated (Request (Just _) _) = True
 isRegenerated (Output Nothing _ _) = False
@@ -80,13 +80,21 @@ detach = undefined
 regen :: (MonadRandom m) => Trace -> WriterT LogDensity m Trace
 regen = undefined
 
-regenNode :: (MonadRandom m) => Node -> Trace -> WriterT LogDensity m Trace
-regenNode node trace =
+regenNode :: (MonadRandom m) => Trace -> Node -> WriterT LogDensity m Trace
+regenNode trace node =
     if isRegenerated node then
         return trace
     else do
         let ps = parents trace node
-        undefined
+        sequence_ $ map (regenNode trace) ps
+        regenValue trace node
+
+regenValue :: (MonadRandom m) => Trace -> Node -> WriterT LogDensity m Trace
+regenValue t (Constant _) = return t
+regenValue t (Reference _) = return t
+regenValue t node = applyPSP t node
+
+applyPSP = undefined
 
 -- eval :: Address -> Exp -> Trace -> Trace
 -- eval = undefined
