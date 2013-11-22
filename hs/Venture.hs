@@ -45,6 +45,14 @@ isRegenerated (Request (Just _) _) = True
 isRegenerated (Output Nothing _ _) = False
 isRegenerated (Output (Just _) _ _) = True
 
+chaseReferences :: Trace -> Address -> Maybe Node
+chaseReferences t@(Trace m _) a = do
+  n <- M.lookup a m
+  chase n
+    where chase :: Node -> Maybe Node
+          chase (Reference a) = chaseReferences t a
+          chase n = Just n
+
 parentAddrs :: Node -> [Address]
 parentAddrs (Constant _) = []
 parentAddrs (Reference addr) = [addr]
