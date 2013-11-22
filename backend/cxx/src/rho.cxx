@@ -38,9 +38,7 @@ void DetachParticle::maybeCloneMadeSPAux(Node * makerNode)
 
 
 bool DetachParticle::isReference(Node * node) { return trace->isReference(node); }
-void DetachParticle::registerReference(Node * node, Node * lookedUpNode) { assert(false); }
 Node * DetachParticle::getSourceNode(Node * node) { return trace->getSourceNode(node); }
-void DetachParticle::setSourceNode(Node * node, Node * sourceNode) { assert(false); }
 void DetachParticle::clearSourceNode(Node * node) 
 { 
   assert(!sourceNodes.count(node));
@@ -48,9 +46,9 @@ void DetachParticle::clearSourceNode(Node * node)
   trace->clearSourceNode(node); 
 }
 
-void DetachParticle::setValue(Node * node, VentureValue * value) { assert(false); }
 void DetachParticle::clearValue(Node * node)
 {
+  trace->clearValue(node);
 }
 
 VentureValue * DetachParticle::getValue(Node * node) { return trace->getValue(node); }
@@ -62,8 +60,6 @@ SPAux * DetachParticle::getMadeSPAux(Node * makerNode){ return trace->getMadeSPA
 Args DetachParticle::getArgs(Node * node) { return trace->getArgs(node); }
 vector<Node *> DetachParticle::getESRParents(Node * node) { return trace->getESRParents(node); }
   
-void DetachParticle::constrainChoice(Node * node) { assert(false); }
-
 void DetachParticle::unconstrainChoice(Node * node)
 {
   // happens before we register choice, so no need to undo that
@@ -74,10 +70,8 @@ void DetachParticle::unconstrainChoice(Node * node)
 // During commit, we will iterate over constrained choices, so there we can set
 // node->isConstrained = true and node->spOwnsValue = false
 void DetachParticle::clearConstrained(Node * node) { trace->clearConstrained(node); }
-void DetachParticle::setConstrained(Node * node) { assert(false); }
 
 void DetachParticle::setNodeOwnsValue(Node * node) { trace->setNodeOwnsValue(node); }
-void DetachParticle::clearNodeOwnsValue(Node * node) { assert(false); }
 
 Node * DetachParticle::removeLastESREdge(Node * outputNode)
 {
@@ -88,19 +82,11 @@ Node * DetachParticle::removeLastESREdge(Node * outputNode)
   return esrParent;
 }
 
-void DetachParticle::addESREdge(Node * esrParent,Node * outputNode) { assert(false); }
-
 void DetachParticle::detachMadeSPAux(Node * makerNode)
 {
   maybeCloneMadeSPAux(makerNode);
   trace->detachMadeSPAux(makerNode);
 }
-
-void DetachParticle::preAbsorb(Node * node) { assert(false); }
-void DetachParticle::preApplyPSP(Node * node) { assert(false); }
-void DetachParticle::preEvalRequests(Node * requestNode) { assert(false); }
-void DetachParticle::preConstrain(Node * node) { assert(false); }
-
 
 void DetachParticle::preUnabsorb(Node * node) { maybeCloneSPAux(node); }
 
@@ -135,7 +121,6 @@ void DetachParticle::registerSPOwnedValues(Node * makerNode, size_t id, const ve
 void DetachParticle::registerSPFamily(Node * makerNode,size_t id,Node * root) {}
 
 
-void DetachParticle::registerRandomChoice(Node * node) { assert(false); }
 void DetachParticle::unregisterRandomChoice(Node * node) 
 { 
   if (!crcs.count(node)) { rcs.insert(node); }
@@ -147,9 +132,6 @@ void DetachParticle::disconnectLookup(Node * node)
   children.insert({node->lookedUpNode,node});
 }
 
-void DetachParticle::reconnectLookup(Node * node) { assert(false); }
-void DetachParticle::connectLookup(Node * node, Node * lookedUpNode) { assert(false); }
-
 void DetachParticle::clearVSPMakerNode(Node * node)
 {
   VentureSP * vsp = dynamic_cast<VentureSP *>(getValue(node));
@@ -158,4 +140,3 @@ void DetachParticle::clearVSPMakerNode(Node * node)
   trace->clearVSPMakerNode(node);
 }
 
-void DetachParticle::setVSPMakerNode(Node * node) { assert(false); }
