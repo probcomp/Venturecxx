@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, ExistentialQuantification #-}
 
 module Venture where
 
@@ -13,6 +13,11 @@ import Control.Monad.Random -- From cabal install MonadRandom
 data Value = Number Double
            | Symbol String
            | List [Value]
+           | Procedure SP
+
+spValue :: Value -> Maybe SP
+spValue (Procedure s) = Just s
+spValue _ = Nothing
 
 newtype Address = Address Int
     deriving (Eq, Ord)
@@ -26,11 +31,12 @@ newtype SimulationRequest = SimulationRequest () -- TODO
 -- http://www.haskell.org/haskellwiki/Heterogenous_collections#Existential_types
 
 -- m is presumably an instance of RandomMonad
-data SP m = SP { requester :: [Node] -> m [SimulationRequest]
-               , log_d_req :: Maybe ([Node] -> [SimulationRequest] -> Double)
-               , outputter :: [Node] -> [Node] -> m Value
-               , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
-               }
+data SP = forall m .
+          SP { requester :: [Node] -> m [SimulationRequest]
+             , log_d_req :: Maybe ([Node] -> [SimulationRequest] -> Double)
+             , outputter :: [Node] -> [Node] -> m Value
+             , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
+             }
 
 data Node = Constant Value
           | Reference Address
@@ -53,6 +59,11 @@ chaseReferences t@(Trace m _) a = do
           chase (Reference a) = chaseReferences t a
           chase n = Just n
 
+valueOf :: Node -> Maybe Value
+valueOf (Constant v) = Just v
+valueOf (Output v _ _) = v
+valueOf _ = Nothing
+
 parentAddrs :: Node -> [Address]
 parentAddrs (Constant _) = []
 parentAddrs (Reference addr) = [addr]
@@ -61,6 +72,15 @@ parentAddrs (Output _ as as') = as ++ as'
 
 parents :: Trace -> Node -> [Node]
 parents (Trace nodes _) node = map (fromJust . flip M.lookup nodes) $ parentAddrs node
+
+operator :: Trace -> Node -> Maybe SP
+operator t n = do a <- op_addr n
+                  source <- chaseReferences t a
+                  valueOf source >>= spValue
+    where op_addr :: Node -> Maybe Address
+          op_addr (Request _ (a:_)) = Just a
+          op_addr (Output _ (a:_) _) = Just a
+          op_addr _ = Nothing
 
 -- A "torus" is a trace some of whose nodes have Nothing values, and
 -- some of whose Request nodes may have outstanding SimulationRequests
