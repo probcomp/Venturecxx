@@ -87,7 +87,7 @@ double InverseChiSquaredDistributionLogLikelihood(double sampled_value, double n
 /* Normal */
 VentureValue * NormalSP::simulateOutput(const Args & args, gsl_rng * rng)  const
 {
-
+  assert(args.operands.size() == 2);
   VentureNumber * vmu = dynamic_cast<VentureNumber *>(args.operands[0]);
   VentureNumber * vsigma = dynamic_cast<VentureNumber *>(args.operands[1]);
   assert(vmu);
@@ -105,6 +105,7 @@ double NormalSP::simulateOutputNumeric(const vector<double> & args, gsl_rng * rn
 
 double NormalSP::logDensityOutput(VentureValue * value, const Args & args)  const
 {
+  assert(args.operands.size() == 2);
   assert(args.operands[0]);
   assert(args.operands[1]);
   double mu;
@@ -244,7 +245,7 @@ double BetaSP::simulateOutputNumeric(const vector<double> & args, gsl_rng * rng)
   // TODO FIXME GSL NUMERIC
   if (x > 0.99) { x = 0.99; }
   if (x < 0.01) { x = 0.01; }
-  else { return x; }
+  return x;
 }
 
 double BetaSP::logDensityOutput(VentureValue * value, const Args & args)  const

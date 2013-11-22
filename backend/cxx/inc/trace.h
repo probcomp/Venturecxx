@@ -196,7 +196,11 @@ struct Trace
 
 
 //////////////////////////////////////////////
-  
+
+  virtual void decrementRegenCount(Node * node, Scaffold * scaffold);
+  virtual void incrementRegenCount(Node * node, Scaffold * scaffold);
+  virtual int getRegenCount(Node * node, Scaffold * scaffold);
+
   virtual bool isReference(Node * node);
   virtual void registerReference(Node * node, Node * lookedUpNode);
   virtual Node * getSourceNode(Node * node);

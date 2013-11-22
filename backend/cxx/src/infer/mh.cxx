@@ -39,12 +39,13 @@ double ScaffoldMHGKernel::propose()
   {
     cout << "Testing index #" << index << "..." << endl;
     Node * pNode = trace->getRandomChoiceByIndex(index);
+    cout << pNode->address << endl;
     Scaffold s({pNode});
     DetachParticle rho(trace);
     cout << "Detaching...";
     rho.detach(s.border,&s);
     cout << "done" << endl;
-    for (size_t xi_index = 0; xi_index < 10; xi_index++)
+    for (size_t xi_index = 0; xi_index < 3; xi_index++)
     {
       RegenParticle xi(trace);
       cout << "Regenerating(" << xi_index << ")...";

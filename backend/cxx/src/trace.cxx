@@ -8,6 +8,7 @@
 #include "builtin.h"
 #include "sp.h"
 #include "spaux.h"
+#include "scaffold.h"
 #include "omegadb.h"
 #include "flush.h"
 #include "value.h"
@@ -201,8 +202,6 @@ Node * Trace::removeLastESREdge(Node * outputNode)
 
 void Trace::addESREdge(Node * esrParent,Node * outputNode)
 {
-  cout << "Trace::addESREdge(" << esrParent << ", " << outputNode << ")" << endl;
-
   esrParent->children.insert(outputNode);
 
   outputNode->esrParents.push_back(esrParent);
@@ -304,3 +303,7 @@ void Trace::regenMadeSPAux(Node * makerNode, SP * madeSP)
 {
   makerNode->madeSPAux = madeSP->constructSPAux();
 }
+
+void Trace::decrementRegenCount(Node * node, Scaffold * scaffold) { scaffold->drg[node].regenCount--; }
+void Trace::incrementRegenCount(Node * node, Scaffold * scaffold) { scaffold->drg[node].regenCount++; }
+int Trace::getRegenCount(Node * node, Scaffold * scaffold) { return scaffold->drg[node].regenCount; }

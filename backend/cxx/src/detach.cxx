@@ -107,16 +107,15 @@ double Trace::detachInternal(Node * node,
   double weight = 0;
   if (scaffold->isResampling(node))
   {
-    Scaffold::DRGNode &drgNode = scaffold->drg[node];
-    drgNode.regenCount--;
-    if (drgNode.regenCount < 0)
+    decrementRegenCount(node,scaffold);
+    if (getRegenCount(node,scaffold) < 0)
     {
       cout << "\n\n\n\n\n---RegenCount < 0! (" << node << ")---\n\n\n" << endl;
       scaffold->show();
     }
 
-    assert(drgNode.regenCount >= 0);
-    if (drgNode.regenCount == 0)
+    assert(getRegenCount(node,scaffold) >= 0);
+    if (getRegenCount(node,scaffold) == 0)
     {
       if (node->isApplication())
       { 
@@ -145,8 +144,6 @@ void Trace::teardownMadeSP(Node * node,
 
   callCounts[{"processMadeSPfull",true}]++;
 
-  clearVSPMakerNode(vsp,node);
-
   SP * madeSP = vsp->sp;
 
   if (!isAAA)
@@ -154,6 +151,7 @@ void Trace::teardownMadeSP(Node * node,
     if (madeSP->hasAEKernel) { unregisterAEKernel(vsp); }
     if (madeSP->hasAux()) 
     { 
+      clearVSPMakerNode(vsp,node);
       detachMadeSPAux(node);
     }
   }

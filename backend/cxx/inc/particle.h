@@ -37,6 +37,8 @@ struct Particle : Trace
   set<Node *> crcs;
   set<Node *> rcs;
 
+
+
 //  map<VentureSP *,Node*> vspMakerNodes;
 
   map<Node*,vector<Node *> > esrParents;
@@ -95,6 +97,13 @@ struct DetachParticle : Particle
 struct RegenParticle : Particle
 {
   RegenParticle(Trace * trace): Particle(trace) {}
+  
+
+  void incrementRegenCount(Node * node, Scaffold * scaffold) override;
+  void decrementRegenCount(Node * node, Scaffold * scaffold) override;
+  int getRegenCount(Node * node, Scaffold * scaffold) override;
+
+  map<Node *, int> regenCounts;
 
   Node * getSourceNode(Node * node) override;
   void setSourceNode(Node * node, Node * sourceNode) override;

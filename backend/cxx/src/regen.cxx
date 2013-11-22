@@ -115,8 +115,7 @@ double Trace::regenInternal(Node * node,
 
   if (scaffold->isResampling(node))
   {
-    Scaffold::DRGNode &drgNode = scaffold->drg[node];
-    if (drgNode.regenCount == 0)
+    if (getRegenCount(node,scaffold) == 0)
     {
       weight += regenParents(node,scaffold,gradients);
       if (node->nodeType == NodeType::LOOKUP)
@@ -124,7 +123,7 @@ double Trace::regenInternal(Node * node,
       else /* Application node */
       { weight += applyPSP(node,scaffold,gradients); }
     }
-    drgNode.regenCount++;
+    incrementRegenCount(node,scaffold);
   }
   else if (scaffold->hasAAANodes)
   {
@@ -148,7 +147,11 @@ void Trace::processMadeSP(Node * node, bool isAAA)
   setVSPMakerNode(vsp,node);
   if (!isAAA)
   {
-    if (madeSP->hasAux()) { regenMadeSPAux(node,madeSP); }
+    if (madeSP->hasAux()) 
+    { 
+
+      regenMadeSPAux(node,madeSP); 
+    }
     if (madeSP->hasAEKernel) { registerAEKernel(vsp); }
   }
 }

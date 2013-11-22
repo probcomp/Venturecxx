@@ -871,7 +871,7 @@ def loadHPY(sivm,topCollapsed,botCollapsed):
 
 def loadPY(sivm):
   loadPYMem(sivm)
-  sivm.assume("alpha","(gamma 1.0 1.0)")
+  sivm.assume("alpha","(gamma 0.5 0.5)")
   sivm.assume("d","(uniform_continuous 0 0.0001)")
   sivm.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
   sivm.assume("f","(u_pymem alpha d base_dist)")
