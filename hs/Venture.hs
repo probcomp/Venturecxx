@@ -141,6 +141,12 @@ regenValue t@(Trace nodes _) node@(Request _ ps) = do
   lift $ evalRequests t node reqs
           where address :: Address
                 address = undefined
+regenValue t@(Trace nodes _) node@(Output _ ps rs) = do
+  let sp@SP{ outputter = out } = fromJust $ operator t node
+  let args = map (fromJust . flip M.lookup nodes) ps
+  let results = map (fromJust . flip M.lookup nodes) rs
+  v <- lift $ out args results
+  return $ insert t address (Output (Just v) ps rs)
 
 evalRequests :: Trace m -> Node m -> [SimulationRequest] -> m (Trace m)
 evalRequests = undefined
