@@ -8,7 +8,7 @@ import qualified Language as L
 
 type Value = L.Value SPAddress
 type Exp = L.Exp Value
-type Env = L.Env Address
+type Env = L.Env String Address
 
 newtype Address = Address Int
     deriving (Eq, Ord)

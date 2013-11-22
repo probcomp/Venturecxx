@@ -32,10 +32,10 @@ data Exp v = Datum v
            | App (Exp v) [Exp v]
            | Lam String (Exp v)
 
-data Env v = Toplevel
-           | Frame (M.Map String v) (Env v)
+data Env k v = Toplevel
+             | Frame (M.Map k v) (Env k v)
 
-lookup :: String -> (Env v) -> Maybe v
+lookup :: (Ord k) => k -> (Env k v) -> Maybe v
 lookup _ Toplevel = Nothing
 lookup s (Frame m env') = frob (M.lookup s m) $ lookup s env' where
     frob :: Maybe a -> Maybe a -> Maybe a
