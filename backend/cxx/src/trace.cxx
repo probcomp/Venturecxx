@@ -103,7 +103,7 @@ void Trace::addApplicationEdges(Node * operatorNode,const vector<Node *> & opera
 
 bool Trace::isReference(Node * node)
 {
-  return node->sourceNode != nullptr;
+  return getSourceNode(node) != nullptr;
 }
 
 void Trace::registerReference(Node * node, Node * lookedUpNode) 
@@ -130,9 +130,9 @@ VentureValue * Trace::getValue(Node * node)
 {
   if (isReference(node))
   {
-    assert(node->sourceNode);
-    assert(!isReference(node->sourceNode));
-    return getValue(node->sourceNode);
+    assert(getSourceNode(node));
+    assert(!isReference(getSourceNode(node)));
+    return getValue(getSourceNode(node));
   }
   else
   {
@@ -226,6 +226,7 @@ void Trace::extractValue(Node * node, VentureValue * value)
 
 void Trace::prepareLatentDB(SP * sp)
 {
+  assert(omegaDB);
   if (!omegaDB->latentDBs.count(sp))
   {
     omegaDB->latentDBs[sp] = sp->constructLatentDB(); 
