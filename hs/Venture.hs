@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, ExistentialQuantification #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Venture where
 
