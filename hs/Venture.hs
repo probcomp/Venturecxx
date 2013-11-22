@@ -5,7 +5,6 @@ import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.Class
 import Control.Monad.Random -- From cabal install MonadRandom
 
-
 import Language
 import Trace
 import Recursions

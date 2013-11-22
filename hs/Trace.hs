@@ -8,7 +8,9 @@ import Language
 newtype Address = Address Int
     deriving (Eq, Ord)
 
-newtype SimulationRequest = SimulationRequest () -- TODO
+newtype SRId = SRId Int
+
+data SimulationRequest = SimulationRequest SRId Exp Env
 
 -- TODO An SP needing state of type a takes the a in appropriate
 -- places, and offers incorporate and unincorporate functions that

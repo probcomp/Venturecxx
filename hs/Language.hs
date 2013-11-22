@@ -24,3 +24,6 @@ instance Monoid LogDensity where
 
 log_density_nedate :: LogDensity -> LogDensity
 log_density_nedate (LogDensity x) = LogDensity $ -x
+
+data Exp = Exp
+data Env = Env
