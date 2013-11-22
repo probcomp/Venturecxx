@@ -8,7 +8,7 @@ import Control.Monad.Trans.Class
 import Control.Monad.Random -- From cabal install MonadRandom
 import Prelude hiding (lookup)
 
-import Language hiding (Value, Exp, Env)
+import Language hiding (Value, Exp, Env, lookup)
 import Trace
 
 newtype Scaffold = Scaffold () -- TODO

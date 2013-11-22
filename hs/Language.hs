@@ -2,6 +2,7 @@
 
 module Language where
 
+import Prelude hiding (lookup)
 import qualified Data.Map as M
 import Data.Monoid
 import Control.Monad.Random -- From cabal install MonadRandom
@@ -33,3 +34,10 @@ data Exp v = Datum v
 
 data Env v = Toplevel
            | Frame (M.Map String v) (Env v)
+
+lookup :: String -> (Env v) -> Maybe v
+lookup _ Toplevel = Nothing
+lookup s (Frame m env') = frob (M.lookup s m) $ lookup s env' where
+    frob :: Maybe a -> Maybe a -> Maybe a
+    frob (Just x) _ = Just x
+    frob Nothing y = y
