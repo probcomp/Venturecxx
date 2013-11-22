@@ -87,6 +87,9 @@ operator t n = do a <- op_addr n
 -- that have not yet been met.
 data Trace = Trace (M.Map Address Node) [Address] -- random choices
 
+insert :: Trace -> Address -> Node -> Trace
+insert (Trace nodes randoms) a n = Trace (M.insert a n nodes) randoms -- TODO update random choices
+
 newtype Scaffold = Scaffold () -- TODO
 
 newtype LogDensity = LogDensity Double
@@ -119,10 +122,16 @@ regenNode trace node =
 regenValue :: (MonadRandom m) => Trace -> Node -> WriterT LogDensity m Trace
 regenValue t (Constant _) = return t
 regenValue t (Reference _) = return t
-regenValue t node = applyPSP t node
+-- regenValue t@(Trace nodes _) node@(Request _ ps) = do
+--   let sp@SP{ requester = req } = fromJust $ operator t node
+--   reqs <- lift $ req $ map (fromJust . flip M.lookup nodes) ps
+--   let trace' = insert t address (Request reqs ps)
+--   lift $ evalRequests t node reqs
+--           where address :: Address
+--                 address = undefined
 
-applyPSP = undefined
-
+evalRequests :: Trace -> Node -> [SimulationRequest] -> m Trace
+evalRequests = undefined
 -- eval :: Address -> Exp -> Trace -> Trace
 -- eval = undefined
 
