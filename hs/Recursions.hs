@@ -2,6 +2,7 @@ module Recursions where
 
 import qualified Data.Map as M
 import Data.Maybe
+import Control.Monad
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.Class
 import Control.Monad.Random -- From cabal install MonadRandom
@@ -46,8 +47,10 @@ regenValue t@Trace{ nodes = nodes } a = go $ fromJust $ lookup t a where
        v <- lift $ out args results
        return $ insert t a (Output (Just v) ps rs)
 
-evalRequests :: Trace m -> SPAddress -> [SimulationRequest] -> m (Trace m)
-evalRequests = undefined
+evalRequests :: (Monad m) => Trace m -> SPAddress -> [SimulationRequest] -> m (Trace m)
+evalRequests t a srs = foldM evalRequest t srs where
+    evalRequest :: Trace m -> SimulationRequest -> m (Trace m)
+    evalRequest = undefined
 -- eval :: Address -> Exp -> Trace -> Trace
 -- eval = undefined
 
