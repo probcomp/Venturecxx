@@ -300,15 +300,15 @@ double Trace::evalRequests(Node * node,
     {
       if (shouldRestore && omegaDB && omegaDB->spFamilyDBs.count({node->vsp()->makerNode, esr.id}))
       {
-	esrParent = omegaDB->spFamilyDBs[{node->vsp()->makerNode, esr.id}];
-	assert(esrParent);
-	restoreSPFamily(node->vsp(),esr.id,esrParent,scaffold,omegaDB);
+        esrParent = omegaDB->spFamilyDBs[{node->vsp()->makerNode, esr.id}];
+        assert(esrParent);
+        restoreSPFamily(node->vsp(),esr.id,esrParent,scaffold,omegaDB);
       }
       else
       {
-	pair<double,Node*> p = evalFamily(esr.exp,esr.env,scaffold,omegaDB,false,gradients);      
-	weight += p.first;
-	esrParent = p.second;
+        pair<double,Node*> p = evalFamily(esr.exp,esr.env,scaffold,omegaDB,false,gradients);      
+        weight += p.first;
+        esrParent = p.second;
       }
       node->sp()->registerFamily(esr.id, esrParent, node->spaux());
     }
