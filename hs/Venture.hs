@@ -1,8 +1,14 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Venture where
 
 import qualified Data.Map as M
 import Data.Maybe
-import Control.Monad.Random hiding (Random) -- From cabal install MonadRandom
+import Data.Monoid
+import Control.Monad.Trans.Writer.Strict
+import Control.Monad.Trans.Class
+
+import Control.Monad.Random -- From cabal install MonadRandom
 
 data Value = Number Double
            | Symbol String
@@ -55,20 +61,31 @@ data Trace = Trace (M.Map Address Node) [Address] -- random choices
 
 newtype Scaffold = Scaffold () -- TODO
 
+newtype LogDensity = LogDensity Double
+    deriving Random
+
+instance Monoid LogDensity where
+    mempty = LogDensity 0.0
+    (LogDensity x) `mappend` (LogDensity y) = LogDensity $ x + y
+
+log_density_nedate :: LogDensity -> LogDensity
+log_density_nedate (LogDensity x) = LogDensity $ -x
+
 scaffold_from_principal_node :: Address -> Trace -> Scaffold
 scaffold_from_principal_node = undefined
 
-detach :: Scaffold -> Trace -> (Double, Trace)
+detach :: Scaffold -> Trace -> Writer LogDensity Trace
 detach = undefined
 
-regen :: (MonadRandom m) => Trace -> m (Double, Trace)
+regen :: (MonadRandom m) => Trace -> WriterT LogDensity m Trace
 regen = undefined
 
-regenNode :: (MonadRandom m) => Node -> Trace -> m (Double, Trace)
+regenNode :: (MonadRandom m) => Node -> Trace -> WriterT LogDensity m Trace
 regenNode node trace =
     if isRegenerated node then
-        return (0, trace)
-    else
+        return trace
+    else do
+        let ps = parents trace node
         undefined
 
 -- eval :: Address -> Exp -> Trace -> Trace
@@ -77,20 +94,22 @@ regenNode node trace =
 -- uneval :: Address -> Trace -> Trace
 -- uneval = undefined
 
-type Kernel m a = a -> m (Double, a) -- What standard thing is this?
+type Kernel m a = a -> WriterT LogDensity m a
 
-mix_mh_kernels :: (Monad m) => (a -> m ind) -> (a -> ind -> Double) ->
+mix_mh_kernels :: (Monad m) => (a -> m ind) -> (a -> ind -> LogDensity) ->
                   (ind -> Kernel m a) -> (Kernel m a)
 mix_mh_kernels sampleIndex measureIndex paramK x = do
-  ind <- sampleIndex x
+  ind <- lift $ sampleIndex x
   let ldRho = measureIndex x ind
-  (alpha, x') <- paramK ind x
+  tell ldRho
+  x' <- paramK ind x
   let ldXi = measureIndex x' ind
-  return (alpha + ldXi - ldRho, x')
+  tell $ log_density_nedate ldXi
+  return x'
 
 metropolis_hastings :: (MonadRandom m) => Kernel m a -> a -> m a
 metropolis_hastings propose x = do
-  (alpha, x') <- propose x
+  (x', (LogDensity alpha)) <- runWriterT $ propose x
   u <- getRandomR (0.0,1.0)
   if (log u < alpha) then
       return x'
@@ -101,9 +120,10 @@ metropolis_hastings propose x = do
 
 scaffold_mh_kernel :: (MonadRandom m) => Scaffold -> Kernel m Trace
 scaffold_mh_kernel scaffold trace = do
-  let (detachWeight, torus) = detach scaffold trace
-  (regenWeight, trace') <- regen torus
-  return (regenWeight - detachWeight, trace')
+  torus <- censor log_density_nedate $ stupid $ detach scaffold trace
+  regen torus
+        where stupid :: (Monad m) => Writer w a -> WriterT w m a
+              stupid = WriterT . return . runWriter
 
 principal_node_mh :: (MonadRandom m) => Kernel m Trace
 principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
@@ -112,6 +132,6 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
       index <- getRandomR (0, length choices - 1)
       return $ scaffold_from_principal_node (choices !! index) trace
 
-    log_density :: Trace -> a -> Double
-    log_density (Trace _ choices) _ = -log(fromIntegral $ length choices)
+    log_density :: Trace -> a -> LogDensity
+    log_density (Trace _ choices) _ = LogDensity $ -log(fromIntegral $ length choices)
     
