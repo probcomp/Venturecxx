@@ -63,8 +63,9 @@ evalRequests t a srs = foldM evalRequest t srs where
 
 -- Returns the updated trace and the address of the new node for the
 -- result of the evaluation.
-eval :: Exp -> Env -> Trace m -> m ((Trace m), Address)
-eval = undefined
+eval :: (Monad m) => Exp -> Env -> Trace m -> m ((Trace m), Address)
+eval (Datum v) _ t = return $ addFreshNode t answer where
+    answer = Constant v
 
 -- uneval :: Address -> Trace -> Trace
 -- uneval = undefined
