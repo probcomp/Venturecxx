@@ -11,13 +11,13 @@ import Control.Monad.Trans.Class
 
 import Control.Monad.Random -- From cabal install MonadRandom
 
-data Value rand = Number Double
+data Value proc = Number Double
                 | Symbol String
-                | List [Value rand]
-                | Procedure (SP rand)
+                | List [Value proc]
+                | Procedure proc
                 | Boolean Bool
 
-spValue :: Value rand -> Maybe (SP rand)
+spValue :: Value proc -> Maybe proc
 spValue (Procedure s) = Just s
 spValue _ = Nothing
 
@@ -33,16 +33,16 @@ newtype SimulationRequest = SimulationRequest () -- TODO
 -- http://www.haskell.org/haskellwiki/Heterogenous_collections#Existential_types
 
 -- m is presumably an instance of MonadRandom
-data SP m = SP { requester :: [Node m] -> m [SimulationRequest]
-               , log_d_req :: Maybe ([Node m] -> [SimulationRequest] -> Double)
-               , outputter :: [Node m] -> [Node m] -> m (Value m)
-               , log_d_out :: Maybe ([Node m] -> [Node m] -> (Value m) -> Double)
+data SP m = SP { requester :: [Node (SP m)] -> m [SimulationRequest]
+               , log_d_req :: Maybe ([Node (SP m)] -> [SimulationRequest] -> Double)
+               , outputter :: [Node (SP m)] -> [Node (SP m)] -> m (Value (SP m))
+               , log_d_out :: Maybe ([Node (SP m)] -> [Node (SP m)] -> (Value (SP m)) -> Double)
                }
 
-nullReq :: (MonadRandom m) => [Node m] -> m [SimulationRequest]
+nullReq :: (MonadRandom m) => [Node (SP m)] -> m [SimulationRequest]
 nullReq _ = return []
 
-bernoulliFlip :: (MonadRandom m) => [Node m] -> [Node m] -> m (Value m)
+bernoulliFlip :: (MonadRandom m) => [Node (SP m)] -> [Node (SP m)] -> m (Value (SP m))
 bernoulliFlip _ _ = liftM Boolean $ getRandomR (False,True)
 
 bernoulli :: (MonadRandom m) => SP m
@@ -52,12 +52,12 @@ bernoulli = SP { requester = nullReq
                , log_d_out = Just $ const $ const $ const $ -log 2.0
                }
 
-data Node rand = Constant (Value rand)
+data Node proc = Constant (Value proc)
                | Reference Address
                | Request (Maybe [SimulationRequest]) [Address]
-               | Output (Maybe (Value rand)) [Address] [Address]
+               | Output (Maybe (Value proc)) [Address] [Address]
 
-isRegenerated :: Node rand -> Bool
+isRegenerated :: Node proc -> Bool
 isRegenerated (Constant _) = True
 isRegenerated (Reference addr) = undefined -- TODO: apparently a function of the addressee
 isRegenerated (Request Nothing _) = False
@@ -65,28 +65,28 @@ isRegenerated (Request (Just _) _) = True
 isRegenerated (Output Nothing _ _) = False
 isRegenerated (Output (Just _) _ _) = True
 
-chaseReferences :: Trace rand -> Address -> Maybe (Node rand)
+chaseReferences :: Trace rand -> Address -> Maybe (Node (SP rand))
 chaseReferences t@(Trace m _) a = do
   n <- M.lookup a m
   chase n
     where chase (Reference a) = chaseReferences t a
           chase n = Just n
 
-valueOf :: Node rand -> Maybe (Value rand)
+valueOf :: Node proc -> Maybe (Value proc)
 valueOf (Constant v) = Just v
 valueOf (Output v _ _) = v
 valueOf _ = Nothing
 
-parentAddrs :: Node rand -> [Address]
+parentAddrs :: Node proc -> [Address]
 parentAddrs (Constant _) = []
 parentAddrs (Reference addr) = [addr]
 parentAddrs (Request _ as) = as
 parentAddrs (Output _ as as') = as ++ as'
 
-parents :: Trace rand -> Node rand -> [Node rand]
+parents :: Trace rand -> Node (SP rand) -> [Node (SP rand)]
 parents (Trace nodes _) node = map (fromJust . flip M.lookup nodes) $ parentAddrs node
 
-operator :: Trace rand -> Node rand -> Maybe (SP rand)
+operator :: Trace rand -> Node (SP rand) -> Maybe (SP rand)
 operator t n = do a <- op_addr n
                   source <- chaseReferences t a
                   valueOf source >>= spValue
@@ -97,9 +97,9 @@ operator t n = do a <- op_addr n
 -- A "torus" is a trace some of whose nodes have Nothing values, and
 -- some of whose Request nodes may have outstanding SimulationRequests
 -- that have not yet been met.
-data Trace rand = Trace (M.Map Address (Node rand)) [Address] -- random choices
+data Trace rand = Trace (M.Map Address (Node (SP rand))) [Address] -- random choices
 
-insert :: Trace rand -> Address -> Node rand -> Trace rand
+insert :: Trace rand -> Address -> Node (SP rand) -> Trace rand
 insert (Trace nodes randoms) a n = Trace (M.insert a n nodes) randoms -- TODO update random choices
 
 newtype Scaffold = Scaffold () -- TODO
@@ -123,7 +123,7 @@ detach = undefined
 regen :: (MonadRandom m) => Trace m -> WriterT LogDensity m (Trace m)
 regen = undefined
 
-regenNode :: (MonadRandom m) => Trace m -> Node m -> WriterT LogDensity m (Trace m)
+regenNode :: (MonadRandom m) => Trace m -> Node (SP m) -> WriterT LogDensity m (Trace m)
 regenNode trace node =
     if isRegenerated node then
         return trace
@@ -131,7 +131,7 @@ regenNode trace node =
         sequence_ $ map (regenNode trace) $ parents trace node
         regenValue trace node
 
-regenValue :: (MonadRandom m) => Trace m -> Node m -> WriterT LogDensity m (Trace m)
+regenValue :: (MonadRandom m) => Trace m -> Node (SP m) -> WriterT LogDensity m (Trace m)
 regenValue t (Constant _) = return t
 regenValue t (Reference _) = return t
 -- These two clauses look an awful lot like applyPSP
@@ -148,8 +148,10 @@ regenValue t@(Trace nodes _) node@(Output _ ps rs) = do
   let results = map (fromJust . flip M.lookup nodes) rs
   v <- lift $ out args results
   return $ insert t address (Output (Just v) ps rs)
+          where address :: Address
+                address = undefined
 
-evalRequests :: Trace m -> Node m -> [SimulationRequest] -> m (Trace m)
+evalRequests :: Trace m -> Node (SP m) -> [SimulationRequest] -> m (Trace m)
 evalRequests = undefined
 -- eval :: Address -> Exp -> Trace -> Trace
 -- eval = undefined
