@@ -75,14 +75,17 @@ chaseReferences t@Trace{ nodes = m } a = do
 parents :: Trace rand -> Node -> [Node]
 parents Trace{ nodes = n } node = map (fromJust . flip M.lookup n) $ parentAddrs node
 
-operator :: Trace rand -> Node -> Maybe (SP rand)
-operator t@Trace{ sps = ss } n = do
+operatorAddr :: Trace rand -> Node -> Maybe SPAddress
+operatorAddr t@Trace{ sps = ss } n = do
   a <- op_addr n
   source <- chaseReferences t a
-  valueOf source >>= spValue >>= (flip M.lookup ss)
+  valueOf source >>= spValue
     where op_addr (Request _ (a:_)) = Just a
           op_addr (Output _ (a:_) _) = Just a
           op_addr _ = Nothing
+
+operator :: Trace rand -> Node -> Maybe (SP rand)
+operator t@Trace{ sps = ss } n = operatorAddr t n >>= (flip M.lookup ss)
 
 lookup :: Trace rand -> Address -> Maybe Node
 lookup Trace{ nodes = m } a = M.lookup a m
