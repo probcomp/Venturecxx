@@ -38,7 +38,7 @@ regenValue t@Trace{ nodes = nodes } a = go $ fromJust $ lookup t a where
        let sp@SP{ requester = req } = fromJust $ operator t node
        reqs <- lift $ req $ map (fromJust . flip M.lookup nodes) ps
        let trace' = insert t a (Request (Just reqs) ps)
-       lift $ evalRequests t node reqs
+       lift $ evalRequests t (fromJust $ operatorAddr t node) reqs
     go node@(Output _ ps rs) = do
        let sp@SP{ outputter = out } = fromJust $ operator t node
        let args = map (fromJust . flip M.lookup nodes) ps
@@ -46,7 +46,7 @@ regenValue t@Trace{ nodes = nodes } a = go $ fromJust $ lookup t a where
        v <- lift $ out args results
        return $ insert t a (Output (Just v) ps rs)
 
-evalRequests :: Trace m -> Node -> [SimulationRequest] -> m (Trace m)
+evalRequests :: Trace m -> SPAddress -> [SimulationRequest] -> m (Trace m)
 evalRequests = undefined
 -- eval :: Address -> Exp -> Trace -> Trace
 -- eval = undefined
