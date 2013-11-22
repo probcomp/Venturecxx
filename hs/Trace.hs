@@ -8,6 +8,9 @@ import Language
 newtype Address = Address Int
     deriving (Eq, Ord)
 
+newtype SPAddress = SPAddress Int
+    deriving (Eq, Ord)
+
 newtype SRId = SRId Int
 
 data SimulationRequest = SimulationRequest SRId Exp Env
@@ -56,17 +59,21 @@ isRegenerated (Output (Just _) _ _) = True
 -- A "torus" is a trace some of whose nodes have Nothing values, and
 -- some of whose Request nodes may have outstanding SimulationRequests
 -- that have not yet been met.
-data Trace rand = Trace (M.Map Address (Node (SP rand))) [Address] -- random choices
+data Trace rand = 
+    Trace { nodes :: (M.Map Address (Node (SP rand)))
+          , randoms :: [Address]
+          , sps :: (M.Map SPAddress (SP rand))
+          }
 
 chaseReferences :: Trace rand -> Address -> Maybe (Node (SP rand))
-chaseReferences t@(Trace m _) a = do
+chaseReferences t@Trace{ nodes = m } a = do
   n <- M.lookup a m
   chase n
     where chase (Reference a) = chaseReferences t a
           chase n = Just n
 
 parents :: Trace rand -> Node (SP rand) -> [Node (SP rand)]
-parents (Trace nodes _) node = map (fromJust . flip M.lookup nodes) $ parentAddrs node
+parents Trace{ nodes = n } node = map (fromJust . flip M.lookup n) $ parentAddrs node
 
 operator :: Trace rand -> Node (SP rand) -> Maybe (SP rand)
 operator t n = do a <- op_addr n
@@ -77,4 +84,4 @@ operator t n = do a <- op_addr n
           op_addr _ = Nothing
 
 insert :: Trace rand -> Address -> Node (SP rand) -> Trace rand
-insert (Trace nodes randoms) a n = Trace (M.insert a n nodes) randoms -- TODO update random choices
+insert t@Trace{nodes = ns} a n = t{ nodes = (M.insert a n ns) } -- TODO update random choices

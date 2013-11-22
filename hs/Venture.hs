@@ -3,7 +3,7 @@ module Venture where
 
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.Class
-import Control.Monad.Random -- From cabal install MonadRandom
+import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 
 import Language
 import Trace
@@ -43,10 +43,10 @@ scaffold_mh_kernel scaffold trace = do
 principal_node_mh :: (MonadRandom m) => Kernel m (Trace m)
 principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
     sample :: (MonadRandom m) => Trace m -> m Scaffold
-    sample trace@(Trace _ choices) = do
+    sample trace@Trace{ randoms = choices } = do
       index <- getRandomR (0, length choices - 1)
       return $ scaffold_from_principal_node (choices !! index) trace
 
     log_density :: Trace m -> a -> LogDensity
-    log_density (Trace _ choices) _ = LogDensity $ -log(fromIntegral $ length choices)
+    log_density Trace{ randoms = choices } _ = LogDensity $ -log(fromIntegral $ length choices)
     

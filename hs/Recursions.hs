@@ -32,14 +32,14 @@ regenValue :: (MonadRandom m) => Trace m -> Node (SP m) -> WriterT LogDensity m 
 regenValue t (Constant _) = return t
 regenValue t (Reference _) = return t
 -- These two clauses look an awful lot like applyPSP
-regenValue t@(Trace nodes _) node@(Request _ ps) = do
+regenValue t@Trace{ nodes = nodes } node@(Request _ ps) = do
   let sp@SP{ requester = req } = fromJust $ operator t node
   reqs <- lift $ req $ map (fromJust . flip M.lookup nodes) ps
   let trace' = insert t address (Request (Just reqs) ps)
   lift $ evalRequests t node reqs
           where address :: Address
                 address = undefined
-regenValue t@(Trace nodes _) node@(Output _ ps rs) = do
+regenValue t@Trace{ nodes = nodes } node@(Output _ ps rs) = do
   let sp@SP{ outputter = out } = fromJust $ operator t node
   let args = map (fromJust . flip M.lookup nodes) ps
   let results = map (fromJust . flip M.lookup nodes) rs
