@@ -3,7 +3,12 @@ module Trace where
 import qualified Data.Map as M
 import Data.Maybe
 
-import Language
+import Language hiding (Value, Exp, Env)
+import qualified Language as L
+
+type Value = L.Value SPAddress
+type Exp = L.Exp Value
+type Env = L.Env Address
 
 newtype Address = Address Int
     deriving (Eq, Ord)
@@ -24,16 +29,16 @@ data SimulationRequest = SimulationRequest SRId Exp Env
 -- m is presumably an instance of MonadRandom
 data SP m = SP { requester :: [Node] -> m [SimulationRequest]
                , log_d_req :: Maybe ([Node] -> [SimulationRequest] -> Double)
-               , outputter :: [Node] -> [Node] -> m (Value SPAddress)
-               , log_d_out :: Maybe ([Node] -> [Node] -> (Value SPAddress) -> Double)
+               , outputter :: [Node] -> [Node] -> m Value
+               , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
                }
 
-data Node = Constant (Value SPAddress)
+data Node = Constant Value
           | Reference Address
           | Request (Maybe [SimulationRequest]) [Address]
-          | Output (Maybe (Value SPAddress)) [Address] [Address]
+          | Output (Maybe Value) [Address] [Address]
 
-valueOf :: Node -> Maybe (Value SPAddress)
+valueOf :: Node -> Maybe Value
 valueOf (Constant v) = Just v
 valueOf (Output v _ _) = v
 valueOf _ = Nothing

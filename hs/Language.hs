@@ -2,6 +2,7 @@
 
 module Language where
 
+import qualified Data.Map as M
 import Data.Monoid
 import Control.Monad.Random -- From cabal install MonadRandom
 
@@ -25,5 +26,10 @@ instance Monoid LogDensity where
 log_density_nedate :: LogDensity -> LogDensity
 log_density_nedate (LogDensity x) = LogDensity $ -x
 
-data Exp = Exp
-data Env = Env
+data Exp v = Datum v
+           | Variable String
+           | App (Exp v) [Exp v]
+           | Lam String (Exp v)
+
+data Env v = Toplevel
+           | Frame (M.Map String v) (Env v)

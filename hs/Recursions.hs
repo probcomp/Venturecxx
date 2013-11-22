@@ -8,7 +8,7 @@ import Control.Monad.Trans.Class
 import Control.Monad.Random -- From cabal install MonadRandom
 import Prelude hiding (lookup)
 
-import Language
+import Language hiding (Value, Exp, Env)
 import Trace
 
 newtype Scaffold = Scaffold () -- TODO
@@ -61,6 +61,8 @@ evalRequests t a srs = foldM evalRequest t srs where
     cache :: Trace m -> SPAddress -> SRId -> Address -> Trace m
     cache = undefined
 
+-- Returns the updated trace and the address of the new node for the
+-- result of the evaluation.
 eval :: Exp -> Env -> Trace m -> m ((Trace m), Address)
 eval = undefined
 
