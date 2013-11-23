@@ -75,8 +75,7 @@ evalRequests t a srs = foldM evalRequest t srs where
 -- Returns the updated trace and the address of the new node for the
 -- result of the evaluation.
 eval :: (MonadRandom m) => Exp -> Env -> StateT (Trace m) m Address
-eval (Datum v) _ = addFreshNode' answer where
-    answer = Constant v
+eval (Datum v) _ = addFreshNode' $ Constant v
 eval (Variable n) e = addFreshNode' answer where
     answer = case L.lookup n e of
                Nothing -> error $ "Unbound variable " ++ show n
