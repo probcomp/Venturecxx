@@ -2,8 +2,10 @@ module Recursions where
 
 import qualified Data.Map as M
 import Data.Maybe
+import qualified Data.Tuple as Tuple
 import Control.Monad
 import Control.Monad.Trans.Writer.Strict
+import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Class
 import Control.Monad.Random -- From cabal install MonadRandom
 import Prelude hiding (lookup)
@@ -48,6 +50,14 @@ regenValue t@Trace{ nodes = nodes } a = go $ fromJust $ lookup t a where
        v <- lift $ out args results
        return $ insert t a (Output (Just v) ps rs)
 
+regenValue' :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
+regenValue' a = do
+  t <- lift get
+  (t',d) <- lift $ lift $ runWriterT $ regenValue t a -- TODO Elegance, please
+  tell d
+  lift $ put t'
+  return ()
+
 evalRequests :: (MonadRandom m) => Trace m -> SPAddress -> [SimulationRequest] -> m (Trace m)
 evalRequests t a srs = foldM evalRequest t srs where
     -- evalRequest :: Trace m -> SimulationRequest -> m (Trace m) but it's the same m
@@ -75,16 +85,19 @@ eval (Lam vs exp) e t = return $ addFreshNode t' answer where
     (t',spaddr) = addFreshSP t sp
     sp = compoundSP vs exp e
     answer = Constant $ Procedure spaddr
-eval (App op args) env t = do
-  let op' = undefined -- eval the operator
-  let args' = undefined -- eval the arguments
-  let (t', addr) = addFreshNode t (Request Nothing (op':args'))
-  -- Is there a good reason why I don't care about the log density of this regenValue?
-  (t'', _) <- runWriterT $ regenValue t' addr
-  let reqAddrs = fulfilments t'' addr
-  let (t''', addr') = addFreshNode t'' (Output Nothing (op':args') reqAddrs)
-  (t'''', _) <- runWriterT $ regenValue t''' addr'
-  return (t'''', addr')
+eval (App op args) env t = liftM Tuple.swap $ runStateT eval' t where
+--    eval' :: StateT (Trace m) m Address
+    eval' = do
+      let op' = undefined -- eval the operator
+      let args' = undefined -- eval the arguments
+      addr <- addFreshNode' (Request Nothing (op':args'))
+      -- Is there a good reason why I don't care about the log density of this regenValue?
+      _ <- runWriterT $ regenValue' addr
+      reqAddrs <- fulfilments' addr
+      addr' <- addFreshNode' (Output Nothing (op':args') reqAddrs)
+      -- Is there a good reason why I don't care about the log density of this regenValue?
+      _ <- runWriterT $ regenValue' addr'
+      return addr'
 
 -- uneval :: Address -> Trace -> Trace
 -- uneval = undefined

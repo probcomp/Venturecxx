@@ -1,7 +1,10 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Trace where
 
 import qualified Data.Map as M
 import Data.Maybe
+import Control.Monad.State
 
 import Language hiding (Value, Exp, Env)
 import qualified Language as L
@@ -125,6 +128,14 @@ insert t@Trace{nodes = ns} a n = t{ nodes = (M.insert a n ns) } -- TODO update r
 addFreshNode :: Trace m -> Node -> (Trace m, Address)
 addFreshNode = undefined
 
+-- TODO Decide whether I'm doing the state monad thing for real
+addFreshNode' :: (MonadState (Trace m) m') => Node -> m' Address
+addFreshNode' node = do
+  t <- get
+  let (t', a) = addFreshNode t node
+  put t'
+  return a
+
 addFreshSP :: Trace m -> SP m -> (Trace m, SPAddress)
 addFreshSP = undefined
 
@@ -132,3 +143,8 @@ fulfilments :: Trace m -> Address -> [Address]
 -- The addresses of the responses to the requests made by the Request
 -- node at Address.
 fulfilments = undefined
+
+fulfilments' :: (MonadState (Trace m0) m) => Address -> m [Address]
+fulfilments' a = do
+  t <- get 
+  return $ fulfilments t a
