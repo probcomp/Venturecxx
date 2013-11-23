@@ -31,10 +31,10 @@ regenNode trace a = go $ fromJust $ lookup trace a
                         return trace
                     else do
                       sequence_ $ map (regenNode trace) $ parentAddrs node
-                      regenValue trace a
+                      regenValue a trace
 
-regenValue :: (MonadRandom m) => Trace m -> Address -> WriterT LogDensity m (Trace m)
-regenValue t@Trace{ nodes = nodes } a = go $ fromJust $ lookup t a where
+regenValue :: (MonadRandom m) => Address -> Trace m -> WriterT LogDensity m (Trace m)
+regenValue a t@Trace{ nodes = nodes } = go $ fromJust $ lookup t a where
     go (Constant _) = return t
     go (Reference _) = return t
     -- These two clauses look an awful lot like applyPSP
@@ -53,7 +53,7 @@ regenValue t@Trace{ nodes = nodes } a = go $ fromJust $ lookup t a where
 regenValue' :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
 regenValue' a = do
   t <- lift get
-  (t',d) <- lift $ lift $ runWriterT $ regenValue t a -- TODO Elegance, please
+  (t',d) <- lift $ lift $ runWriterT $ regenValue a t -- TODO Elegance, please
   tell d
   lift $ put t'
   return ()
