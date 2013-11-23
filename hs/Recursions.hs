@@ -33,6 +33,29 @@ regenNode trace a = go $ fromJust $ lookup trace a
                       sequence_ $ map (regenNode trace) $ parentAddrs node
                       regenValue a trace
 
+regenValue'' :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
+regenValue'' a = lift (do
+  node <- gets $ fromJust . (flip lookup a)
+  case node of
+    (Constant _) -> return ()
+    (Reference _) -> return ()
+    (Request _ ps) -> do
+      SP{ requester = req } <- gets $ fromJust . (flip operator node)
+      reqs <- lift $ req ps -- TODO Here, ps is the full list of parent addresses, including the operator node
+      insert' a (Request (Just reqs) ps)
+      addr <- gets $ fromJust . (flip operatorAddr node)
+      evalRequests' addr reqs
+    (Output _ ps rs) -> do
+      SP{ outputter = out } <- gets $ fromJust . (flip operator node)
+      ns <- gets nodes
+      let args = map (fromJust . flip M.lookup ns) ps
+      let results = map (fromJust . flip M.lookup ns) rs
+      v <- lift $ out args results
+      insert' a (Output (Just v) ps rs))
+
+evalRequests' :: SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()
+evalRequests' = undefined
+
 regenValue :: (MonadRandom m) => Address -> Trace m -> WriterT LogDensity m (Trace m)
 regenValue a t@Trace{ nodes = nodes } = go $ fromJust $ lookup t a where
     go (Constant _) = return t
