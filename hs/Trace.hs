@@ -162,3 +162,9 @@ fulfilments' :: (MonadState (Trace m0) m) => Address -> m [Address]
 fulfilments' a = do
   t <- get 
   return $ fulfilments t a
+
+insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
+insertResponse = undefined
+
+lookupResponse :: SPAddress -> SRId -> Trace m -> Maybe Address
+lookupResponse = undefined

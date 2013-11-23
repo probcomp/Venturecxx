@@ -82,28 +82,20 @@ evalRequests :: (MonadRandom m) => Trace m -> SPAddress -> [SimulationRequest] -
 evalRequests t a srs = foldM evalRequest t srs where
     -- evalRequest :: Trace m -> SimulationRequest -> m (Trace m) but it's the same m
     evalRequest t (SimulationRequest id exp env) =
-        if (cached t a id) then
+        if (isJust $ lookupResponse a id t) then
             return t
         else do
           (addr, t') <- runStateT (eval exp env) t
-          return $ cache t a id addr
-    cached :: Trace m -> SPAddress -> SRId -> Bool
-    cached = undefined
-    cache :: Trace m -> SPAddress -> SRId -> Address -> Trace m
-    cache = undefined
+          return $ insertResponse a id addr t
 
 evalRequests' :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()
 evalRequests' a srs = sequence_ $ map evalRequest srs where
     evalRequest (SimulationRequest id exp env) = do
-      isCached <- state $ runState $ cached' a id
+      isCached <- gets $ isJust . (lookupResponse a id)
       if isCached then return ()
       else do
         addr <- eval exp env
-        state $ runState $ cache' a id addr
-    cached' :: SPAddress -> SRId -> State (Trace m) Bool
-    cached' = undefined
-    cache' :: SPAddress -> SRId -> Address -> State (Trace m) ()
-    cache' = undefined
+        modify $ insertResponse a id addr
 
 -- Returns the updated trace and the address of the new node for the
 -- result of the evaluation.
