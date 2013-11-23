@@ -1,5 +1,5 @@
-#ifndef INFER_H
-#define INFER_H
+#ifndef MH_H
+#define MH_H
 
 struct Trace;
 struct Scaffold;

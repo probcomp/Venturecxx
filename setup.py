@@ -33,6 +33,7 @@ src_files = [
     "src/lkernel.cxx",
     "src/infer/gkernel.cxx",
     "src/infer/mh.cxx",
+    "src/infer/particle_mh.cxx",
     "src/infer/gibbs.cxx",
     "src/infer/pgibbs.cxx",
     "src/infer/meanfield.cxx",

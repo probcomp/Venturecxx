@@ -34,30 +34,6 @@ double ScaffoldMHGKernel::propose()
   assert(scaffold);
   assert(!rhoDB);
 
-  ////////////////////////////////////////// Testing madness
-  for (size_t index = 0; index < trace->numRandomChoices(); ++index)
-  {
-    cout << "Testing index #" << index << "..." << endl;
-    Node * pNode = trace->getRandomChoiceByIndex(index);
-    cout << pNode->address << endl;
-    Scaffold s({pNode});
-    DetachParticle rho(trace);
-    cout << "Detaching...";
-    rho.detach(s.border,&s);
-    cout << "done" << endl;
-    for (size_t xi_index = 0; xi_index < 3; xi_index++)
-    {
-      RegenParticle xi(trace);
-      cout << "Regenerating(" << xi_index << ")...";
-      xi.regen(s.border, &s, nullptr);
-      cout << "done" << endl;
-    }
-    cout << "Committing rho...";
-    rho.commit();
-    cout << "done" << endl;
-  }
-
-  //////////////////////////////////////
   rhoDB = new OmegaDB;
   trace->setOptions(false,rhoDB);
   double detachWeight = trace->detach(scaffold->border,scaffold);

@@ -27,7 +27,7 @@ struct Trace
   /* Constructor will add nodes for primitives and environments. */
 
   Trace();
-  ~Trace();
+  virtual ~Trace();
 
   /* Global RNG for GSL */
   gsl_rng * rng = gsl_rng_alloc(gsl_rng_mt19937);
