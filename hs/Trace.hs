@@ -33,6 +33,10 @@ data SP m = SP { requester :: [Node] -> m [SimulationRequest]
                , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
                }
 
+compoundSP :: [String] -> Exp -> Env -> SP m
+compoundSP formals exp env = undefined
+--    SP { requester = 
+
 data Node = Constant Value
           | Reference Address
           | Request (Maybe [SimulationRequest]) [Address]
@@ -100,3 +104,6 @@ insert t@Trace{nodes = ns} a n = t{ nodes = (M.insert a n ns) } -- TODO update r
 
 addFreshNode :: Trace m -> Node -> (Trace m, Address)
 addFreshNode = undefined
+
+addFreshSP :: Trace m -> SP m -> (Trace m, SPAddress)
+addFreshSP = undefined

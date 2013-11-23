@@ -30,7 +30,7 @@ log_density_nedate (LogDensity x) = LogDensity $ -x
 data Exp v = Datum v
            | Variable String
            | App (Exp v) [Exp v]
-           | Lam String (Exp v)
+           | Lam [String] (Exp v)
 
 data Env k v = Toplevel
              | Frame (M.Map k v) (Env k v)

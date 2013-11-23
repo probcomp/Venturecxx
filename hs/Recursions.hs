@@ -71,6 +71,10 @@ eval (Variable n) e t = return $ addFreshNode t answer where
     answer = case L.lookup n e of
                Nothing -> error $ "Unbound variable " ++ show n
                (Just a) -> Reference a
+eval (Lam vs exp) e t = return $ addFreshNode t' answer where
+    (t',spaddr) = addFreshSP t sp
+    sp = compoundSP vs exp e
+    answer = Constant $ Procedure spaddr
 
 -- uneval :: Address -> Trace -> Trace
 -- uneval = undefined
