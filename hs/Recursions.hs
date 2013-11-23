@@ -9,6 +9,7 @@ import Control.Monad.Random -- From cabal install MonadRandom
 import Prelude hiding (lookup)
 
 import Language hiding (Value, Exp, Env, lookup)
+import qualified Language as L
 import Trace
 
 newtype Scaffold = Scaffold () -- TODO
@@ -66,6 +67,10 @@ evalRequests t a srs = foldM evalRequest t srs where
 eval :: (Monad m) => Exp -> Env -> Trace m -> m ((Trace m), Address)
 eval (Datum v) _ t = return $ addFreshNode t answer where
     answer = Constant v
+eval (Variable n) e t = return $ addFreshNode t answer where
+    answer = case L.lookup n e of
+               Nothing -> error $ "Unbound variable " ++ show n
+               (Just a) -> Reference a
 
 -- uneval :: Address -> Trace -> Trace
 -- uneval = undefined
