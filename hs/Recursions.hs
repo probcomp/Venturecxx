@@ -5,7 +5,7 @@ import Data.Maybe
 import qualified Data.Tuple as Tuple
 import Control.Monad
 import Control.Monad.Trans.Writer.Strict
-import Control.Monad.Trans.State.Lazy
+import Control.Monad.Trans.State.Lazy hiding (state)
 import Control.Monad.Trans.Class
 import Control.Monad.Random -- From cabal install MonadRandom
 import Prelude hiding (lookup)
@@ -53,9 +53,6 @@ regenValue'' a = lift (do
       v <- lift $ out args results
       insert' a (Output (Just v) ps rs))
 
-evalRequests' :: SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()
-evalRequests' = undefined
-
 regenValue :: (MonadRandom m) => Address -> Trace m -> WriterT LogDensity m (Trace m)
 regenValue a t@Trace{ nodes = nodes } = go $ fromJust $ lookup t a where
     go (Constant _) = return t
@@ -94,6 +91,19 @@ evalRequests t a srs = foldM evalRequest t srs where
     cached = undefined
     cache :: Trace m -> SPAddress -> SRId -> Address -> Trace m
     cache = undefined
+
+evalRequests' :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()
+evalRequests' a srs = sequence_ $ map evalRequest srs where
+    evalRequest (SimulationRequest id exp env) = do
+      isCached <- state $ runState $ cached' a id
+      if isCached then return ()
+      else do
+        addr <- eval exp env
+        state $ runState $ cache' a id addr
+    cached' :: SPAddress -> SRId -> State (Trace m) Bool
+    cached' = undefined
+    cache' :: SPAddress -> SRId -> Address -> State (Trace m) ()
+    cache' = undefined
 
 -- Returns the updated trace and the address of the new node for the
 -- result of the evaluation.
