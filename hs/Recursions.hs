@@ -25,17 +25,17 @@ detach = undefined
 regen :: (MonadRandom m) => Trace m -> WriterT LogDensity m (Trace m)
 regen = undefined
 
-regenNode' :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
-regenNode' a = do
+regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
+regenNode a = do
   node <- lift $ gets $ fromJust . (flip lookup a)
   let isReg = isRegenerated node
   if isReg then return ()
   else do
-    mapM_ regenNode' (parentAddrs node)
-    regenValue'' a
+    mapM_ regenNode (parentAddrs node)
+    regenValue a
 
-regenValue'' :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
-regenValue'' a = lift (do
+regenValue :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
+regenValue a = lift (do
   node <- gets $ fromJust . (flip lookup a)
   case node of
     (Constant _) -> return ()
@@ -45,7 +45,7 @@ regenValue'' a = lift (do
       reqs <- lift $ req ps -- TODO Here, ps is the full list of parent addresses, including the operator node
       insert' a (Request (Just reqs) ps)
       addr <- gets $ fromJust . (flip operatorAddr node)
-      evalRequests' addr reqs
+      evalRequests addr reqs
     (Output _ ps rs) -> do
       SP{ outputter = out } <- gets $ fromJust . (flip operator node)
       ns <- gets nodes
@@ -54,8 +54,8 @@ regenValue'' a = lift (do
       v <- lift $ out args results
       insert' a (Output (Just v) ps rs))
 
-evalRequests' :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()
-evalRequests' a srs = mapM_ evalRequest srs where
+evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()
+evalRequests a srs = mapM_ evalRequest srs where
     evalRequest (SimulationRequest id exp env) = do
       isCached <- gets $ isJust . (lookupResponse a id)
       if isCached then return ()
@@ -79,11 +79,11 @@ eval (App op args) env = do
   args' <- sequence $ map (flip eval env) args
   addr <- addFreshNode' (Request Nothing (op':args'))
   -- Is there a good reason why I don't care about the log density of this regenValue?
-  _ <- runWriterT $ regenNode' addr
+  _ <- runWriterT $ regenNode addr
   reqAddrs <- fulfilments' addr
   addr' <- addFreshNode' (Output Nothing (op':args') reqAddrs)
   -- Is there a good reason why I don't care about the log density of this regenValue?
-  _ <- runWriterT $ regenNode' addr'
+  _ <- runWriterT $ regenNode addr'
   return addr'
 
 -- uneval :: Address -> Trace -> Trace
