@@ -63,8 +63,8 @@ evalRequests a srs = mapM_ evalRequest srs where
         addr <- eval exp env
         modify $ insertResponse a id addr
 
--- Returns the updated trace and the address of the new node for the
--- result of the evaluation.
+-- Returns the address of the fresh node holding the result of the
+-- evaluation.
 eval :: (MonadRandom m) => Exp -> Env -> StateT (Trace m) m Address
 eval (Datum v) _ = addFreshNode' $ Constant v
 eval (Variable n) e = addFreshNode' answer where
@@ -78,11 +78,11 @@ eval (App op args) env = do
   op' <- eval op env
   args' <- sequence $ map (flip eval env) args
   addr <- addFreshNode' (Request Nothing (op':args'))
-  -- Is there a good reason why I don't care about the log density of this regenValue?
+  -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr
   reqAddrs <- fulfilments' addr
   addr' <- addFreshNode' (Output Nothing (op':args') reqAddrs)
-  -- Is there a good reason why I don't care about the log density of this regenValue?
+  -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr'
   return addr'
 
