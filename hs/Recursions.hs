@@ -122,11 +122,11 @@ eval (App op args) env = do
   args' <- sequence $ map (flip eval env) args
   addr <- addFreshNode' (Request Nothing (op':args'))
   -- Is there a good reason why I don't care about the log density of this regenValue?
-  _ <- runWriterT $ regenValue' addr
+  _ <- runWriterT $ regenNode' addr
   reqAddrs <- fulfilments' addr
   addr' <- addFreshNode' (Output Nothing (op':args') reqAddrs)
   -- Is there a good reason why I don't care about the log density of this regenValue?
-  _ <- runWriterT $ regenValue' addr'
+  _ <- runWriterT $ regenNode' addr'
   return addr'
 
 -- uneval :: Address -> Trace -> Trace
