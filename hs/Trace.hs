@@ -125,14 +125,14 @@ lookup Trace{ nodes = m } a = M.lookup a m
 insert :: Trace rand -> Address -> Node -> Trace rand
 insert t@Trace{nodes = ns} a n = t{ nodes = (M.insert a n ns) } -- TODO update random choices
 
-addFreshNode :: Trace m -> Node -> (Trace m, Address)
+addFreshNode :: Node -> Trace m -> (Address, Trace m)
 addFreshNode = undefined
 
 -- TODO Decide whether I'm doing the state monad thing for real
 addFreshNode' :: (MonadState (Trace m) m') => Node -> m' Address
 addFreshNode' node = do
   t <- get
-  let (t', a) = addFreshNode t node
+  let (a, t') = addFreshNode node t
   put t'
   return a
 
