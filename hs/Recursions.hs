@@ -33,6 +33,15 @@ regenNode trace a = go $ fromJust $ lookup trace a
                       sequence_ $ map (regenNode trace) $ parentAddrs node
                       regenValue a trace
 
+regenNode' :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
+regenNode' a = do
+  node <- lift $ gets $ fromJust . (flip lookup a)
+  let isReg = isRegenerated node
+  if isReg then return ()
+  else do
+    mapM_ regenNode' (parentAddrs node)
+    regenValue'' a
+
 regenValue'' :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
 regenValue'' a = lift (do
   node <- gets $ fromJust . (flip lookup a)
