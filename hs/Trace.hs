@@ -141,15 +141,11 @@ addFreshNode = undefined
 addFreshNode' :: (MonadState (Trace m) m') => Node -> m' Address
 addFreshNode' node = state $ addFreshNode node
 
-addFreshSP :: Trace m -> SP m -> (Trace m, SPAddress)
+addFreshSP :: SP m -> Trace m -> (SPAddress, Trace m)
 addFreshSP = undefined
 
 addFreshSP' :: MonadState (Trace m) m' => SP m -> m' SPAddress
-addFreshSP' sp = do
-  t <- get
-  let (t', a) = addFreshSP t sp
-  put t'
-  return a
+addFreshSP' sp = state $ addFreshSP sp
 
 fulfilments :: Trace m -> Address -> [Address]
 -- The addresses of the responses to the requests made by the Request
