@@ -162,7 +162,7 @@ double Trace::unapplyPSP(Node * node,
 			 Scaffold * scaffold)
 {
   callCounts[{"applyPSP",true}]++;
-//  cout << "unapplyPSP @ " << node->address << endl;
+  cout << "unapplyPSP @ " << node->address << endl;
   assert(node->isValid());
   assert(getSP(node)->isValid());
   preUnapplyPSP(node);

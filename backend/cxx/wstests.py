@@ -19,7 +19,7 @@ import pdb
 import itertools
 
 globalKernel = "mh";
-globalUseGlobalScaffold = False;
+globalUseGlobalScaffold = True;
 
 def SIVM():
   return make_church_prime_ripl()

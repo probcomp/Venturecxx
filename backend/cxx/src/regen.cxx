@@ -138,7 +138,7 @@ double Trace::regenInternal(Node * node,
 void Trace::processMadeSP(Node * node, bool isAAA)
 {
   callCounts[{"processMadeSP",false}]++;
-
+  cout << "processMadeSP @ " << node->address << endl;
   VentureSP * vsp = dynamic_cast<VentureSP *>(getValue(node));
   assert(vsp);
   if (vsp->makerNode) { return; }
@@ -151,7 +151,6 @@ void Trace::processMadeSP(Node * node, bool isAAA)
   {
     if (madeSP->hasAux()) 
     { 
-
       regenMadeSPAux(node,madeSP); 
     }
     if (madeSP->hasAEKernel) { registerAEKernel(vsp); }
@@ -164,7 +163,7 @@ double Trace::applyPSP(Node * node,
 		       map<Node *,vector<double> > *gradients)
 {
   callCounts[{"applyPSP",false}]++;
-//  cout << "applyPSP @ " << node->address << endl;
+  cout << "applyPSP @ " << node->address << endl;
 
   SP * sp = getSP(node);
   preApplyPSP(node);

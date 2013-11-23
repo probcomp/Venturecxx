@@ -138,13 +138,18 @@ VentureValue * Trace::getValue(Node * node)
   }
   else
   {
+    if (node->_value) { assert(node->_value->isValid()); }
     return node->_value;
   }
 }
 
 VentureSP * Trace::getVSP(Node * node)
 {
-  VentureSP * _vsp = dynamic_cast<VentureSP*>(getValue(node->operatorNode));
+  VentureValue * val = getValue(node->operatorNode);
+  assert(val);
+  assert(val->isValid());
+  VentureSP * _vsp = dynamic_cast<VentureSP*>(val);
+  if (!_vsp) { cout << "noVSP @ " << getSourceNode(node->operatorNode)->address << endl; }
   assert(_vsp);
   return _vsp;
 }

@@ -28,6 +28,7 @@ void GKernel::infer(uint32_t N)
 
 double MixMHKernel::propose()
 {
+  cout << "propose()" << endl;
   index = sampleIndex();
   double ldRho = logDensityOfIndex(index);
   /* ProcessIndex is responsible for freeing the index. */
