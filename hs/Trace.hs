@@ -27,6 +27,8 @@ data SimulationRequest = SimulationRequest SRId Exp Env
 -- http://www.haskell.org/haskellwiki/Heterogenous_collections#Existential_types
 
 -- m is presumably an instance of MonadRandom
+-- TODO This type signature makes it unclear whether the relevant
+-- lists include the operator itself, or just the arguments.
 data SP m = SP { requester :: [Address] -> m [SimulationRequest]
                , log_d_req :: Maybe ([Address] -> [SimulationRequest] -> Double)
                , outputter :: [Node] -> [Node] -> m Value
@@ -39,8 +41,9 @@ nullReq _ = return []
 trivial_log_d_req :: a -> b -> Double
 trivial_log_d_req = const $ const $ 0.0
 
-trivialOut :: [Node] -> [Node] -> m Value
-trivialOut = undefined
+trivialOut :: (Monad m) => a -> [Node] -> m Value
+trivialOut _ (n:_) = return $ fromJust $ valueOf n -- Probably wrong if n is a Reference node
+trivialOut _ _ = error "trivialOut expects at least one request result"
 
 compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
 compoundSP formals exp env =
