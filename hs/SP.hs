@@ -16,3 +16,8 @@ bernoulli = SP { requester = nullReq
                , log_d_out = Just $ const $ const $ const $ -log 2.0
                }
 
+-- Critical examples:
+-- bernoulli
+-- beta bernoulli in Venture
+-- collapsed beta bernoulli
+-- normal
