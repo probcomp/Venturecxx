@@ -4,10 +4,19 @@ module Trace where
 
 import qualified Data.Map as M
 import Data.Maybe
-import Control.Monad.State
+import Control.Monad.State hiding (state)
 
 import Language hiding (Value, Exp, Env)
 import qualified Language as L
+
+-- TODO The version of state that comes from Control.Monad.State on
+-- moria appears to have too restrictive a type.
+state :: MonadState s m => (s -> (a, s)) -> m a
+state action = do
+  s <- get
+  let (a, s') = action s
+  put s'
+  return a
 
 type Value = L.Value SPAddress
 type Exp = L.Exp Value
@@ -130,11 +139,7 @@ addFreshNode = undefined
 
 -- TODO Decide whether I'm doing the state monad thing for real
 addFreshNode' :: (MonadState (Trace m) m') => Node -> m' Address
-addFreshNode' node = do
-  t <- get
-  let (a, t') = addFreshNode node t
-  put t'
-  return a
+addFreshNode' node = state $ addFreshNode node
 
 addFreshSP :: Trace m -> SP m -> (Trace m, SPAddress)
 addFreshSP = undefined
