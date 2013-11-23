@@ -89,7 +89,7 @@ evalRequests t a srs = foldM evalRequest t srs where
           return $ insertResponse a id addr t
 
 evalRequests' :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()
-evalRequests' a srs = sequence_ $ map evalRequest srs where
+evalRequests' a srs = mapM_ evalRequest srs where
     evalRequest (SimulationRequest id exp env) = do
       isCached <- gets $ isJust . (lookupResponse a id)
       if isCached then return ()
