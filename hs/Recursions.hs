@@ -25,14 +25,6 @@ detach = undefined
 regen :: (MonadRandom m) => Trace m -> WriterT LogDensity m (Trace m)
 regen = undefined
 
-regenNode :: (MonadRandom m) => Trace m -> Address -> WriterT LogDensity m (Trace m)
-regenNode trace a = go $ fromJust $ lookup trace a
-    where go node = if isRegenerated node then
-                        return trace
-                    else do
-                      sequence_ $ map (regenNode trace) $ parentAddrs node
-                      regenValue a trace
-
 regenNode' :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
 regenNode' a = do
   node <- lift $ gets $ fromJust . (flip lookup a)
@@ -61,41 +53,6 @@ regenValue'' a = lift (do
       let results = map (fromJust . flip M.lookup ns) rs
       v <- lift $ out args results
       insert' a (Output (Just v) ps rs))
-
-regenValue :: (MonadRandom m) => Address -> Trace m -> WriterT LogDensity m (Trace m)
-regenValue a t@Trace{ nodes = nodes } = go $ fromJust $ lookup t a where
-    go (Constant _) = return t
-    go (Reference _) = return t
-    -- These two clauses look an awful lot like applyPSP
-    go node@(Request _ ps) = do
-       let sp@SP{ requester = req } = fromJust $ operator t node
-       reqs <- lift $ req ps -- TODO Here, ps is the full list of parent addresses, including the operator node
-       let trace' = insert t a (Request (Just reqs) ps)
-       lift $ evalRequests t (fromJust $ operatorAddr t node) reqs
-    go node@(Output _ ps rs) = do
-       let sp@SP{ outputter = out } = fromJust $ operator t node
-       let args = map (fromJust . flip M.lookup nodes) ps
-       let results = map (fromJust . flip M.lookup nodes) rs
-       v <- lift $ out args results
-       return $ insert t a (Output (Just v) ps rs)
-
-regenValue' :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
-regenValue' a = do
-  t <- lift get
-  (t',d) <- lift $ lift $ runWriterT $ regenValue a t -- TODO Elegance, please
-  tell d
-  lift $ put t'
-  return ()
-
-evalRequests :: (MonadRandom m) => Trace m -> SPAddress -> [SimulationRequest] -> m (Trace m)
-evalRequests t a srs = foldM evalRequest t srs where
-    -- evalRequest :: Trace m -> SimulationRequest -> m (Trace m) but it's the same m
-    evalRequest t (SimulationRequest id exp env) =
-        if (isJust $ lookupResponse a id t) then
-            return t
-        else do
-          (addr, t') <- runStateT (eval exp env) t
-          return $ insertResponse a id addr t
 
 evalRequests' :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()
 evalRequests' a srs = mapM_ evalRequest srs where
