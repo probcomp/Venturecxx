@@ -51,8 +51,7 @@ compoundSP formals exp env =
        } where
         req args = return [r] where
             r :: SimulationRequest
-            r = undefined
---            r = SimulationRequest undefined exp $ Frame (M.fromList $ zip formals args) env
+            r = SimulationRequest undefined exp $ Frame (M.fromList $ zip formals args) env
 
 data Node = Constant Value
           | Reference Address
