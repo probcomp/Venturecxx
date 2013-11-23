@@ -143,15 +143,8 @@ insert' a n = do
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
 addFreshNode = undefined
 
--- TODO Decide whether I'm doing the state monad thing for real
-addFreshNode' :: (MonadState (Trace m) m') => Node -> m' Address
-addFreshNode' node = state $ addFreshNode node
-
 addFreshSP :: SP m -> Trace m -> (SPAddress, Trace m)
 addFreshSP = undefined
-
-addFreshSP' :: MonadState (Trace m) m' => SP m -> m' SPAddress
-addFreshSP' sp = state $ addFreshSP sp
 
 fulfilments :: Trace m -> Address -> [Address]
 -- The addresses of the responses to the requests made by the Request

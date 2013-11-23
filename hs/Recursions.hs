@@ -66,22 +66,22 @@ evalRequests a srs = mapM_ evalRequest srs where
 -- Returns the address of the fresh node holding the result of the
 -- evaluation.
 eval :: (MonadRandom m) => Exp -> Env -> StateT (Trace m) m Address
-eval (Datum v) _ = addFreshNode' $ Constant v
-eval (Variable n) e = addFreshNode' answer where
+eval (Datum v) _ = state $ addFreshNode $ Constant v
+eval (Variable n) e = state $ addFreshNode answer where
     answer = case L.lookup n e of
                Nothing -> error $ "Unbound variable " ++ show n
                (Just a) -> Reference a
 eval (Lam vs exp) e = do
-  spAddr <- addFreshSP' $ compoundSP vs exp e
-  addFreshNode' $ Constant $ Procedure spAddr
+  spAddr <- state $ addFreshSP $ compoundSP vs exp e
+  state $ addFreshNode $ Constant $ Procedure spAddr
 eval (App op args) env = do
   op' <- eval op env
   args' <- sequence $ map (flip eval env) args
-  addr <- addFreshNode' (Request Nothing (op':args'))
+  addr <- state $ addFreshNode (Request Nothing (op':args'))
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr
   reqAddrs <- fulfilments' addr
-  addr' <- addFreshNode' (Output Nothing (op':args') reqAddrs)
+  addr' <- state $ addFreshNode (Output Nothing (op':args') reqAddrs)
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr'
   return addr'
