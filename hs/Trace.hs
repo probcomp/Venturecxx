@@ -42,7 +42,7 @@ trivial_log_d_req :: a -> b -> Double
 trivial_log_d_req = const $ const $ 0.0
 
 trivialOut :: (Monad m) => a -> [Node] -> m Value
-trivialOut _ (n:_) = return $ fromJust $ valueOf n -- Probably wrong if n is a Reference node
+trivialOut _ (n:_) = return $ fromJust $ valueOf n -- TODO Probably wrong if n is a Reference node
 trivialOut _ _ = error "trivialOut expects at least one request result"
 
 compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
@@ -52,6 +52,7 @@ compoundSP formals exp env =
        , outputter = trivialOut
        , log_d_out = Nothing
        } where
+        -- TODO This requester assumes the operator node is stripped out of the arguments
         req args = return [r] where
             r :: SimulationRequest
             r = SimulationRequest undefined exp $ Frame (M.fromList $ zip formals args) env
@@ -126,3 +127,8 @@ addFreshNode = undefined
 
 addFreshSP :: Trace m -> SP m -> (Trace m, SPAddress)
 addFreshSP = undefined
+
+fulfilments :: Trace m -> Address -> [Address]
+-- The addresses of the responses to the requests made by the Request
+-- node at Address.
+fulfilments = undefined

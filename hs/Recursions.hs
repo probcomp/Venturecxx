@@ -38,7 +38,7 @@ regenValue t@Trace{ nodes = nodes } a = go $ fromJust $ lookup t a where
     -- These two clauses look an awful lot like applyPSP
     go node@(Request _ ps) = do
        let sp@SP{ requester = req } = fromJust $ operator t node
-       reqs <- lift $ req ps
+       reqs <- lift $ req ps -- TODO Here, ps is the full list of parent addresses, including the operator node
        let trace' = insert t a (Request (Just reqs) ps)
        lift $ evalRequests t (fromJust $ operatorAddr t node) reqs
     go node@(Output _ ps rs) = do
@@ -48,7 +48,7 @@ regenValue t@Trace{ nodes = nodes } a = go $ fromJust $ lookup t a where
        v <- lift $ out args results
        return $ insert t a (Output (Just v) ps rs)
 
-evalRequests :: (Monad m) => Trace m -> SPAddress -> [SimulationRequest] -> m (Trace m)
+evalRequests :: (MonadRandom m) => Trace m -> SPAddress -> [SimulationRequest] -> m (Trace m)
 evalRequests t a srs = foldM evalRequest t srs where
     -- evalRequest :: Trace m -> SimulationRequest -> m (Trace m) but it's the same m
     evalRequest t (SimulationRequest id exp env) =
@@ -64,7 +64,7 @@ evalRequests t a srs = foldM evalRequest t srs where
 
 -- Returns the updated trace and the address of the new node for the
 -- result of the evaluation.
-eval :: (Monad m) => Exp -> Env -> Trace m -> m ((Trace m), Address)
+eval :: (MonadRandom m) => Exp -> Env -> Trace m -> m ((Trace m), Address)
 eval (Datum v) _ t = return $ addFreshNode t answer where
     answer = Constant v
 eval (Variable n) e t = return $ addFreshNode t answer where
@@ -75,6 +75,16 @@ eval (Lam vs exp) e t = return $ addFreshNode t' answer where
     (t',spaddr) = addFreshSP t sp
     sp = compoundSP vs exp e
     answer = Constant $ Procedure spaddr
+eval (App op args) env t = do
+  let op' = undefined -- eval the operator
+  let args' = undefined -- eval the arguments
+  let (t', addr) = addFreshNode t (Request Nothing (op':args'))
+  -- Is there a good reason why I don't care about the log density of this regenValue?
+  (t'', _) <- runWriterT $ regenValue t' addr
+  let reqAddrs = fulfilments t'' addr
+  let (t''', addr') = addFreshNode t'' (Output Nothing (op':args') reqAddrs)
+  (t'''', _) <- runWriterT $ regenValue t''' addr'
+  return (t'''', addr')
 
 -- uneval :: Address -> Trace -> Trace
 -- uneval = undefined
