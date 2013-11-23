@@ -84,16 +84,16 @@ eval (Lam vs exp) e = do
   spAddr <- addFreshSP' $ compoundSP vs exp e
   addFreshNode' $ Constant $ Procedure spAddr
 eval (App op args) env = do
-      let op' = undefined -- eval the operator
-      let args' = undefined -- eval the arguments
-      addr <- addFreshNode' (Request Nothing (op':args'))
-      -- Is there a good reason why I don't care about the log density of this regenValue?
-      _ <- runWriterT $ regenValue' addr
-      reqAddrs <- fulfilments' addr
-      addr' <- addFreshNode' (Output Nothing (op':args') reqAddrs)
-      -- Is there a good reason why I don't care about the log density of this regenValue?
-      _ <- runWriterT $ regenValue' addr'
-      return addr'
+  let op' = undefined -- eval the operator
+  let args' = undefined -- eval the arguments
+  addr <- addFreshNode' (Request Nothing (op':args'))
+  -- Is there a good reason why I don't care about the log density of this regenValue?
+  _ <- runWriterT $ regenValue' addr
+  reqAddrs <- fulfilments' addr
+  addr' <- addFreshNode' (Output Nothing (op':args') reqAddrs)
+  -- Is there a good reason why I don't care about the log density of this regenValue?
+  _ <- runWriterT $ regenValue' addr'
+  return addr'
 
 -- uneval :: Address -> Trace -> Trace
 -- uneval = undefined
