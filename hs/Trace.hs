@@ -33,9 +33,23 @@ data SP m = SP { requester :: [Node] -> m [SimulationRequest]
                , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
                }
 
+nullReq :: (Monad m) => [Node] -> m [SimulationRequest]
+nullReq _ = return []
+
+trivial_log_d_req :: [Node] -> [SimulationRequest] -> Double
+trivial_log_d_req = const $ const $ 0.0
+
+trivialOut :: [Node] -> [Node] -> m Value
+trivialOut = undefined
+
 compoundSP :: [String] -> Exp -> Env -> SP m
-compoundSP formals exp env = undefined
---    SP { requester = 
+compoundSP formals exp env =
+    SP { requester = req
+       , log_d_req = Just $ trivial_log_d_req
+       , outputter = trivialOut
+       , log_d_out = Nothing
+       } where
+        req = undefined
 
 data Node = Constant Value
           | Reference Address
