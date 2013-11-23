@@ -34,7 +34,7 @@ struct Trace
 
   /* Outer mix-mh */
   Node * getRandomChoiceByIndex(uint32_t index) { return randomChoices[index]; }
-  uint32_t numRandomChoices() { return randomChoices.size(); }
+  virtual uint32_t numRandomChoices() { return randomChoices.size(); }
 
   double regen(const vector<Node *> & border,
 	       Scaffold * scaffold,

@@ -72,6 +72,7 @@ MixMHIndex * OutermostMixMH::sampleIndex()
 {
   uint32_t index = gsl_rng_uniform_int(trace->rng, trace->numRandomChoices());
   Node * pNode = trace->getRandomChoiceByIndex(index);
+//  cout << "pNode: " << pNode->address << endl;
   return new RCIndex(pNode);
 }
 

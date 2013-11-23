@@ -44,11 +44,11 @@ def runAllTests(N):
   print "========= RunAllTests(N) ========"
   options = [ ("mh",False),
               ("mh",True),
-              ("pgibbs",False),
-              ("pgibbs",True),
+              #("pgibbs",False),
+              #("pgibbs",True),
               #("meanfield",False),
               #("meanfield",True),
-              ("gibbs",False)
+              #("gibbs",False)
   ]
 
 
@@ -252,14 +252,17 @@ def testMem0(N):
 def testMem1(N):
   sivm = SIVM()
   sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
-  sivm.assume("x","(f 1)")
+  sivm.assume("x","(f (branch (bernoulli 0.5) (lambda () 1) (lambda () 1)))")
+#  sivm.assume("x","(f 1)")
   sivm.assume("y","(f 1)")
-  sivm.assume("w","(f 2)")
-  sivm.assume("z","(f 2)")
-  sivm.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
-  sivm.predict('(plus x y w z q)');
+#  sivm.assume("w","(f 2)")
+#  sivm.assume("z","(f 2)")
+#  sivm.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
+#  sivm.predict('(plus x y w z q)');
+  sivm.predict("(plus x y)",label = "pid")
 
-  predictions = loggingInfer(sivm,7,N)
+  predictions = loggingInfer(sivm,"pid",N)
+  print sivm.report("pid")
   ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
   eps = [ float(x) / N for x in countPredictions(predictions, [5,10])] if N > 0 else [0,0]
   printTest("TestMem1",ps,eps)

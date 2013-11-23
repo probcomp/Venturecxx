@@ -83,8 +83,9 @@ Trace::~Trace()
   // }
 
 
-
-  gsl_rng_free(rng);
+// TODO memory leak: we comment for now since we copy the rng
+// for particles, and don't want to double free
+//  gsl_rng_free(rng);
 
 }
 

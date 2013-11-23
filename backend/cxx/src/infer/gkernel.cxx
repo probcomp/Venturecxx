@@ -16,7 +16,11 @@ void GKernel::infer(uint32_t N)
   {
     double alpha = propose();
     double logU = log(gsl_ran_flat(trace->rng,0.0,1.0));
-    if (logU < alpha) { accept(); }
+//    cout << "(" << logU << ", " << alpha << "): " << endl;
+    if (logU < alpha) 
+    { 
+      accept(); 
+    }
     else { reject(); }
   }
 }

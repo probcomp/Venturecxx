@@ -7,6 +7,7 @@
 #include "pytrace.h"
 #include "infer/gkernel.h"
 #include "infer/mh.h"
+#include "infer/particle_mh.h"
 #include "infer/gibbs.h"
 #include "infer/pgibbs.h"
 #include "infer/meanfield.h"
@@ -21,8 +22,8 @@
 PyTrace::PyTrace() :
   trace(new Trace()),
   gkernels{
-    {{"mh",false}, new OutermostMixMH(trace,new ScaffoldMHGKernel(trace))},
-    {{"mh",true}, new GlobalScaffoldMixMH(trace,new ScaffoldMHGKernel(trace))},
+    {{"mh",false}, new OutermostMixMH(trace,new PScaffoldMHGKernel(trace))},
+    {{"mh",true}, new GlobalScaffoldMixMH(trace,new PScaffoldMHGKernel(trace))},
 
     {{"pgibbs",false}, new OutermostMixMH(trace,new PGibbsGKernel(trace))},
     {{"pgibbs",true}, new GlobalScaffoldMixMH(trace,new PGibbsGKernel(trace))},

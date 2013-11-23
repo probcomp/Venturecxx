@@ -162,7 +162,7 @@ double Trace::unapplyPSP(Node * node,
 			 Scaffold * scaffold)
 {
   callCounts[{"applyPSP",true}]++;
-
+//  cout << "unapplyPSP @ " << node->address << endl;
   assert(node->isValid());
   assert(getSP(node)->isValid());
   preUnapplyPSP(node);
@@ -237,18 +237,20 @@ double Trace::unevalRequests(Node * node,
 
   for (ESR esr : reverse(requests->esrs))
   {
-//    cout << "unevalRequest: " << node->address << "==>(" << esr.id << "):(" << getSPAux(node) << ")" << endl;
+//    cout << "unevalRequest @ " << node->address;
 
     assert(getSPAux(node));
     assert(getSPAux(node)->isValid());
     assert(!getESRParents(node->outputNode).empty());
 
     Node * esrParent = removeLastESREdge(node->outputNode);
+//    cout << " found @ " << esrParent->address << endl;
     assert(esrParent);
     assert(esrParent->isValid());
 
     if (esrParent->numRequests == 0)
     { 
+//      cout << "--detached--" << endl;
       weight += detachSPFamily(getVSP(node),esr.id,scaffold); 
     }
   }

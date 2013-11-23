@@ -31,7 +31,8 @@ double Trace::regen(const vector<Node *> & border,
     else /* Terminal resampling */
     {
       weight += regenInternal(node,scaffold,gradients);
-      if (node->isObservation()) { weight += constrain(node,node->observedValue, !shouldRestore); }
+      if (node->isObservation()) 
+      { weight += constrain(node,node->observedValue, !shouldRestore); }
     }
   }
   return weight;
@@ -83,6 +84,7 @@ double Trace::constrain(Node * node, VentureValue * value, bool reclaimValue)
   if (isReference(node)) { return constrain(getSourceNode(node),value,reclaimValue); }
   else
   {
+//    cout << "constrain @ " << node->address << endl;
     /* New restriction, to ensure that we did not propose to an
        observation node with a non-trivial kernel. TODO handle
        this in loadDefaultKernels instead. */
@@ -162,6 +164,8 @@ double Trace::applyPSP(Node * node,
 		       map<Node *,vector<double> > *gradients)
 {
   callCounts[{"applyPSP",false}]++;
+//  cout << "applyPSP @ " << node->address << endl;
+
   SP * sp = getSP(node);
   preApplyPSP(node);
   assert(node->isValid());
@@ -269,11 +273,12 @@ double Trace::evalRequests(Node * node,
     /* First evaluate ESRs. */
   for (ESR esr : requests->esrs)
   {
-//    cout << "evalRequests: " << node->address << "==>(" << esr.id << "):(" << getSPAux(node) << ")" << endl;
+//    cout << "evalRequest @ " << node->address << "..." ;
     assert(getSPAux(node)->isValid());
     Node * esrParent;
     if (!getSPAux(node)->families.count(esr.id))
     {
+//      cout << "not found @ ";
       if (shouldRestore && omegaDB && omegaDB->spFamilyDBs.count({getVSP(node)->makerNode, esr.id}))
       {
 	esrParent = omegaDB->spFamilyDBs[{getVSP(node)->makerNode, esr.id}];
@@ -290,6 +295,7 @@ double Trace::evalRequests(Node * node,
     }
     else
     {
+//      cout << "found @ ";
       esrParent = getSPAux(node)->families[esr.id];
       assert(esrParent->isValid());
 
@@ -298,6 +304,7 @@ double Trace::evalRequests(Node * node,
       assert(dynamic_cast<MSP*>(getSP(node)));
       
     }
+//    cout << esrParent->address << endl;
     addESREdge(esrParent,node->outputNode);
   }
 
@@ -451,6 +458,7 @@ double Trace::apply(Node * requestNode,
     {
       Node * esrParent = getSP(requestNode)->findFamily(esr.id,getSPAux(requestNode));
       assert(esrParent);
+      assert(esrParent->isValid());
       weight += regenInternal(esrParent,scaffold,gradients);
     }
   }

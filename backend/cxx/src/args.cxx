@@ -1,11 +1,22 @@
 #include "args.h"
 #include "node.h"
 #include "trace.h"
+#include "value.h"
 
 vector<VentureValue *> makeVectorOfValues(Trace * trace, const vector<Node*> & nodes)
 {
   vector<VentureValue *> values;
-  for (Node * node : nodes) { values.push_back(trace->getValue(node)); }
+  for (Node * node : nodes) 
+  { 
+    VentureValue * value = trace->getValue(node);
+    if (!value)
+    {
+      cout << "NULL Argument @ " << node->address << endl;
+    }
+    assert(value);
+    assert(value->isValid());
+    values.push_back(value);
+  }
   return values;
 }
 

@@ -21,7 +21,12 @@ enum class NodeType;
 struct Particle : Trace
 {
 
-  Particle(Trace * trace): trace(trace) {}
+  Particle(Trace * trace): trace(trace) { rng = trace->rng; }
+
+  uint32_t numRandomChoices() override 
+    { 
+      return trace->randomChoices.size() + rcs.size(); 
+    }
 
   void maybeCloneSPAux(Node * node);
   void maybeCloneMadeSPAux(Node * makerNode);
@@ -37,25 +42,19 @@ struct Particle : Trace
   set<Node *> crcs;
   set<Node *> rcs;
 
-
-
 //  map<VentureSP *,Node*> vspMakerNodes;
 
   map<Node*,vector<Node *> > esrParents;
 
   deque<FlushEntry> flushDeque; // detach uses queue, regen uses stack
 
-
   Trace * trace;
 
-  virtual ~Particle() {}
 };
 
 struct DetachParticle : Particle
 {
   DetachParticle(Trace * trace): Particle(trace) {}
-
-//  RegenParticle cloneAsRegenParticle() { }
 
 ////
 
