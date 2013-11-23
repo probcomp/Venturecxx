@@ -42,14 +42,17 @@ trivial_log_d_req = const $ const $ 0.0
 trivialOut :: [Node] -> [Node] -> m Value
 trivialOut = undefined
 
-compoundSP :: [String] -> Exp -> Env -> SP m
+compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
 compoundSP formals exp env =
     SP { requester = req
        , log_d_req = Just $ trivial_log_d_req
        , outputter = trivialOut
        , log_d_out = Nothing
        } where
-        req = undefined
+        req args = return [r] where
+            r :: SimulationRequest
+            r = undefined
+--            r = SimulationRequest undefined exp $ Frame (M.fromList $ zip formals args) env
 
 data Node = Constant Value
           | Reference Address
