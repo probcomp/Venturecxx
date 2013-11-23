@@ -65,7 +65,7 @@ evalRequests t a srs = foldM evalRequest t srs where
         if (cached t a id) then
             return t
         else do
-          (addr, t') <- eval exp env t
+          (addr, t') <- runStateT (eval exp env) t
           return $ cache t a id addr
     cached :: Trace m -> SPAddress -> SRId -> Bool
     cached = undefined
@@ -74,20 +74,17 @@ evalRequests t a srs = foldM evalRequest t srs where
 
 -- Returns the updated trace and the address of the new node for the
 -- result of the evaluation.
-eval :: (MonadRandom m) => Exp -> Env -> Trace m -> m (Address, (Trace m))
-eval (Datum v) _ t = return $ addFreshNode answer t where
+eval :: (MonadRandom m) => Exp -> Env -> StateT (Trace m) m Address
+eval (Datum v) _ = addFreshNode' answer where
     answer = Constant v
-eval (Variable n) e t = return $ addFreshNode answer t where
+eval (Variable n) e = addFreshNode' answer where
     answer = case L.lookup n e of
                Nothing -> error $ "Unbound variable " ++ show n
                (Just a) -> Reference a
-eval (Lam vs exp) e t = return $ addFreshNode answer t' where
-    (t',spaddr) = addFreshSP t sp
-    sp = compoundSP vs exp e
-    answer = Constant $ Procedure spaddr
-eval (App op args) env t = runStateT eval' t where
---    eval' :: StateT (Trace m) m Address
-    eval' = do
+eval (Lam vs exp) e = do
+  spAddr <- addFreshSP' $ compoundSP vs exp e
+  addFreshNode' $ Constant $ Procedure spAddr
+eval (App op args) env = do
       let op' = undefined -- eval the operator
       let args' = undefined -- eval the arguments
       addr <- addFreshNode' (Request Nothing (op':args'))
