@@ -127,11 +127,6 @@ double Trace::regenInternal(Node * node,
     }
     incrementRegenCount(node,scaffold);
   }
-  else if (scaffold->hasAAANodes)
-  {
-    if (isReference(node) && scaffold->isAAA(getSourceNode(node)))
-    { weight += regenInternal(getSourceNode(node),scaffold,gradients); }
-  }
   return weight;
 }
 

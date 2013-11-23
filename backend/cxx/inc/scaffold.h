@@ -51,6 +51,9 @@ public:
   bool isAbsorbing(Node * node) { return absorbing.count(node); }
   bool hasKernelFor(Node * node) { return lkernels.count(node); }
 
+  void addPathToDRG(Node * node, Node * sourceNode);
+
+
   inline bool esrReferenceCanAbsorb(Node * node);
 
 /* Removes from A or D if necessary, and adds to the brush. */

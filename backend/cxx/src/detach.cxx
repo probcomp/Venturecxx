@@ -125,11 +125,6 @@ double Trace::detachInternal(Node * node,
       weight += detachParents(node,scaffold);
     }
   }
-  else if (scaffold->hasAAANodes)
-  {
-    if (isReference(node) && scaffold->isAAA(getSourceNode(node)))
-    { weight += detachInternal(getSourceNode(node),scaffold); }
-  }
   return weight;
 }
 

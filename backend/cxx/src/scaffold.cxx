@@ -102,18 +102,25 @@ void Scaffold::disableEval(Node * node,
   }
 }
 
+void Scaffold::addPathToDRG(Node * node, Node * sourceNode)
+{
+  Node * cur = node;
+  while (cur != sourceNode)
+  {
+    if (!isResampling(cur)) 
+    { 
+      drg.emplace(cur,false); 
+    }
+    cur = cur->lookedUpNode;
+  }
+}
 
 void Scaffold::processParentAAA(Node * parent)
 {
   if (parent->isReference())
   {
-    if (!isResampling(parent) && isAAA(parent->sourceNode))
-    { drg[parent->sourceNode].regenCount++; }
-  }
-  else
-  {
-    if (isAAA(parent))
-    { drg[parent].regenCount++; }
+    if (isAAA(parent->sourceNode))
+    { addPathToDRG(parent,parent->sourceNode); }
   }
 }
 
@@ -135,56 +142,6 @@ void Scaffold::processParentsAAA(Node * node)
 
 void Scaffold::setRegenCounts()
 {
-  for (pair<Node *,DRGNode> p : drg)
-  {
-    Node * node = p.first;
-    DRGNode &drgNode = drg[node];
-    if (drgNode.isAAA)
-    {
-      drgNode.regenCount++;
-      border.push_back(node);
-      lkernels.insert({node,node->sp()->getAAAKernel()});
-    }
-    else if (!hasChildInAorD(node))
-    {
-      drgNode.regenCount = node->children.size() + 1;
-      border.push_back(node);
-    }
-    else 
-    { 
-      drgNode.regenCount = node->children.size();
-    }
-  }
-
-  // (costly) ~optimization, especially for particle methods
-  set<Node *> nullAbsorbing;
-  for (Node * node : absorbing)
-  { 
-    if (node->nodeType == NodeType::REQUEST &&
-	!isResampling(node->operatorNode) && 
-	node->sp()->isNullRequest())
-    {
-      for (Node * operandNode : node->operandNodes)
-      {
-	if (drg.count(operandNode) && !drg[operandNode].isAAA)
-	{
-	  drg[operandNode].regenCount--;
-	  assert(drg[operandNode].regenCount > 0);
-	}
-      }
-      nullAbsorbing.insert(node);
-    }
-  }
-  for (Node * node : nullAbsorbing) { absorbing.erase(node); }
-
-  /* TODO OPT fill the border with the absorbing nodes. Not sure if I need the absorbing
-     nodes at all anymore, so may just rename absorbing to border and then push back
-     the terminal nodes. */
-  border.insert(border.end(),absorbing.begin(),absorbing.end());
-  
-  /* Now add increment the regenCount for AAA nodes as 
-     is appropriate. */
-  /* TODO Note that they may have been in the brush, in which case this is not necessary. */
   if (hasAAANodes)
   {
     for (pair<Node *,DRGNode> p : drg) { processParentsAAA(p.first); }
@@ -197,6 +154,67 @@ void Scaffold::setRegenCounts()
       { processParentAAA(node->lookedUpNode); }
     }
   }
+
+  for (pair<Node *,DRGNode> p : drg)
+  {
+    Node * node = p.first;
+    DRGNode &drgNode = drg[node];
+    if (drgNode.isAAA)
+    {
+      drgNode.regenCount++;
+      border.push_back(node);
+      lkernels.insert({node,node->sp()->getAAAKernel()});
+    }
+    else if (!hasChildInAorD(node))
+    {
+      // TODO URGENT this part is broken now
+      // (it may have been easier to just fix the particle-bookkeeping)
+      // but I'll slog it out a bit more
+      // can I track the regenCounts as I go?
+      drgNode.regenCount = node->children.size() + 1;
+      border.push_back(node);
+    }
+    else 
+    { 
+      drgNode.regenCount = node->children.size();
+    }
+  }
+
+  // (costly) ~optimization, especially for particle methods
+  set<Node *> nullAbsorbing;
+  // for (Node * node : absorbing)
+  // { 
+  //   if (node->nodeType == NodeType::REQUEST &&
+  // 	!isResampling(node->operatorNode) && 
+  // 	node->sp()->isNullRequest())
+  //   {
+  //     if (drg.count(node->operatorNode))
+  //     {
+  // 	drg[node->operatorNode].regenCount--;
+  // 	assert(drg[node->operatorNode].regenCount > 0);
+  //     }
+
+  //     for (Node * operandNode : node->operandNodes)
+  //     {
+  // 	if (drg.count(operandNode))
+  // 	{
+  // 	  drg[operandNode].regenCount--;
+  // 	  assert(drg[operandNode].regenCount > 0);
+  // 	}
+  //     }
+  //     nullAbsorbing.insert(node);
+  //   }
+  // }
+  // for (Node * node : nullAbsorbing) { absorbing.erase(node); }
+
+  /* TODO OPT fill the border with the absorbing nodes. Not sure if I need the absorbing
+     nodes at all anymore, so may just rename absorbing to border and then push back
+     the terminal nodes. */
+  border.insert(border.end(),absorbing.begin(),absorbing.end());
+  
+  /* Now add increment the regenCount for AAA nodes as 
+     is appropriate. */
+  /* TODO Note that they may have been in the brush, in which case this is not necessary. */
 }
 
 void Scaffold::loadDefaultKernels(bool deltaKernels) {}

@@ -103,5 +103,7 @@ MixMHParam * GlobalScaffoldMixMH::processIndex(MixMHIndex * index)
 { 
   vector<Node *> rcs = trace->getRandomChoices();
   set<Node *> allNodes(rcs.begin(),rcs.end());
-  return new ScaffoldMHParam(new Scaffold(allNodes),nullptr);
+  Scaffold * s = new Scaffold(allNodes);
+  s->show();
+  return new ScaffoldMHParam(s,nullptr);
 };
