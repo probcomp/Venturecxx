@@ -38,7 +38,7 @@ regenValue t@Trace{ nodes = nodes } a = go $ fromJust $ lookup t a where
     -- These two clauses look an awful lot like applyPSP
     go node@(Request _ ps) = do
        let sp@SP{ requester = req } = fromJust $ operator t node
-       reqs <- lift $ req $ map (fromJust . flip M.lookup nodes) ps
+       reqs <- lift $ req ps
        let trace' = insert t a (Request (Just reqs) ps)
        lift $ evalRequests t (fromJust $ operatorAddr t node) reqs
     go node@(Output _ ps rs) = do

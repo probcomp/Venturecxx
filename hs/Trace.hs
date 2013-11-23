@@ -27,16 +27,16 @@ data SimulationRequest = SimulationRequest SRId Exp Env
 -- http://www.haskell.org/haskellwiki/Heterogenous_collections#Existential_types
 
 -- m is presumably an instance of MonadRandom
-data SP m = SP { requester :: [Node] -> m [SimulationRequest]
-               , log_d_req :: Maybe ([Node] -> [SimulationRequest] -> Double)
+data SP m = SP { requester :: [Address] -> m [SimulationRequest]
+               , log_d_req :: Maybe ([Address] -> [SimulationRequest] -> Double)
                , outputter :: [Node] -> [Node] -> m Value
                , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
                }
 
-nullReq :: (Monad m) => [Node] -> m [SimulationRequest]
+nullReq :: (Monad m) => a -> m [SimulationRequest]
 nullReq _ = return []
 
-trivial_log_d_req :: [Node] -> [SimulationRequest] -> Double
+trivial_log_d_req :: a -> b -> Double
 trivial_log_d_req = const $ const $ 0.0
 
 trivialOut :: [Node] -> [Node] -> m Value

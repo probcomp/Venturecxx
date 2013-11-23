@@ -6,7 +6,7 @@ import Control.Monad.Random -- From cabal install MonadRandom
 import Language hiding (Value)
 import Trace
 
-bernoulliFlip :: (MonadRandom m) => [Node] -> [Node] -> m Value
+bernoulliFlip :: (MonadRandom m) => a -> b -> m Value
 bernoulliFlip _ _ = liftM Boolean $ getRandomR (False,True)
 
 bernoulli :: (MonadRandom m) => SP m
