@@ -6,6 +6,7 @@ import qualified Data.Map as M
 import Data.Maybe
 import Control.Monad.State hiding (state)
 
+import Utils
 import Language hiding (Value, Exp, Env)
 import qualified Language as L
 
@@ -28,7 +29,8 @@ newtype Address = Address Int
 newtype SPAddress = SPAddress Int
     deriving (Eq, Ord)
 
-newtype SRId = SRId Int
+newtype SRId = SRId Unique
+    deriving (Eq, Ord)
 
 data SimulationRequest = SimulationRequest SRId Exp Env
 
@@ -41,10 +43,11 @@ data SimulationRequest = SimulationRequest SRId Exp Env
 -- m is presumably an instance of MonadRandom
 -- TODO This type signature makes it unclear whether the relevant
 -- lists include the operator itself, or just the arguments.
-data SP m = SP { requester :: [Address] -> m [SimulationRequest]
+data SP m = SP { requester :: [Address] -> UniqueSourceT m [SimulationRequest]
                , log_d_req :: Maybe ([Address] -> [SimulationRequest] -> Double)
                , outputter :: [Node] -> [Node] -> m Value
                , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
+               , srid_seed :: UniqueSeed
                }
 
 nullReq :: (Monad m) => a -> m [SimulationRequest]
@@ -63,6 +66,7 @@ compoundSP formals exp env =
        , log_d_req = Just $ trivial_log_d_req
        , outputter = trivialOut
        , log_d_out = Nothing
+       , srid_seed = uniqueSeed
        } where
         -- TODO This requester assumes the operator node is stripped out of the arguments
         req args = return [r] where
@@ -134,6 +138,9 @@ insertNode a n t@Trace{nodes = ns} = t{ nodes = (M.insert a n ns) } -- TODO upda
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
 addFreshNode = undefined
 
+insertSP :: SPAddress -> (SP m) -> Trace m -> Trace m
+insertSP = undefined
+
 addFreshSP :: SP m -> Trace m -> (SPAddress, Trace m)
 addFreshSP = undefined
 
@@ -147,3 +154,10 @@ insertResponse = undefined
 
 lookupResponse :: SPAddress -> SRId -> Trace m -> Maybe Address
 lookupResponse = undefined
+
+xxx :: (Monad m) => SPAddress -> [Address] -> Trace m -> m ([SimulationRequest], Trace m)
+xxx spaddr args t@Trace { sps = ss } = do
+  let sp@SP{ requester = req, srid_seed = seed } = fromJust $ M.lookup spaddr ss
+  (reqs, seed') <- runUniqueSourceT (req args) seed
+  let trace' = insertSP spaddr sp{ srid_seed = seed' } t
+  return (reqs, trace')
