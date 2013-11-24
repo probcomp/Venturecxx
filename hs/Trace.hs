@@ -106,17 +106,17 @@ data Trace rand =
           , sps :: (M.Map SPAddress (SP rand))
           }
 
-chaseReferences :: Trace rand -> Address -> Maybe Node
-chaseReferences t@Trace{ nodes = m } a = do
+chaseReferences :: Address -> Trace m -> Maybe Node
+chaseReferences a t@Trace{ nodes = m } = do
   n <- M.lookup a m
   chase n
-    where chase (Reference a) = chaseReferences t a
+    where chase (Reference a) = chaseReferences a t
           chase n = Just n
 
 operatorAddr :: Node -> Trace m -> Maybe SPAddress
 operatorAddr n t@Trace{ sps = ss } = do
   a <- op_addr n
-  source <- chaseReferences t a
+  source <- chaseReferences a t
   valueOf source >>= spValue
     where op_addr (Request _ (a:_)) = Just a
           op_addr (Output _ (a:_) _) = Just a
