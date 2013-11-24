@@ -3,6 +3,7 @@
 module Trace where
 
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Data.List (foldl)
 import Control.Monad.State hiding (state)
 
@@ -131,14 +132,14 @@ requestIds _ = error "Asking for request IDs of a non-request node"
 -- that have not yet been met.
 data Trace rand =
     Trace { nodes :: (M.Map Address Node)
-          , randoms :: [Address]
+          , randoms :: S.Set Address
           , sprs :: (M.Map SPAddress (SPRecord rand))
           , addr_seed :: UniqueSeed
           , spaddr_seed :: UniqueSeed
           }
 
 empty :: Trace m
-empty = Trace M.empty [] M.empty uniqueSeed uniqueSeed
+empty = Trace M.empty S.empty M.empty uniqueSeed uniqueSeed
 
 chaseReferences :: Address -> Trace m -> Maybe Node
 chaseReferences a t@Trace{ nodes = m } = do
@@ -179,13 +180,17 @@ lookupNode :: Address -> Trace m -> Maybe Node
 lookupNode a Trace{ nodes = m } = M.lookup a m
 
 insertNode :: Address -> Node -> Trace m -> Trace m
-insertNode a n t@Trace{nodes = ns} = t{ nodes = (M.insert a n ns) } -- TODO update random choices
+insertNode a n t@Trace{nodes = ns, randoms = rs} = t{ nodes = ns', randoms = rs' } where
+    ns' = M.insert a n ns
+    rs' = S.insert a rs
 
 adjustNode :: (Node -> Node) -> Address -> Trace m -> Trace m
 adjustNode f a t@Trace{nodes = ns} = t{ nodes = (M.adjust f a ns) }
 
 deleteNode :: Address -> Trace m -> Trace m
-deleteNode a t@Trace{nodes = ns} = t{ nodes = (M.delete a ns) } -- TODO update random choices
+deleteNode a t@Trace{nodes = ns, randoms = rs} = t{ nodes = ns', randoms = rs' } where
+    ns' = M.delete a ns
+    rs' = S.delete a rs
 
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
 addFreshNode node t@Trace{ nodes = ns, addr_seed = seed } = (a, t{ nodes = ns', addr_seed = seed'}) where

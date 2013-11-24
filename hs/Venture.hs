@@ -2,6 +2,7 @@
 module Venture where
 
 import Data.Maybe
+import qualified Data.Set as S
 import Control.Monad.Reader
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Writer.Strict
@@ -49,11 +50,11 @@ principal_node_mh :: (MonadRandom m) => Kernel m (Trace m)
 principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
     sample :: (MonadRandom m) => Trace m -> m Scaffold
     sample trace@Trace{ randoms = choices } = do
-      index <- getRandomR (0, length choices - 1)
-      return $ runReader (scaffold_from_principal_node (choices !! index)) trace
+      index <- getRandomR (0, S.size choices - 1)
+      return $ runReader (scaffold_from_principal_node (S.toList choices !! index)) trace
 
     log_density :: Trace m -> a -> LogDensity
-    log_density Trace{ randoms = choices } _ = LogDensity $ -log(fromIntegral $ length choices)
+    log_density Trace{ randoms = choices } _ = LogDensity $ -log(fromIntegral $ S.size choices)
     
 simulate_soup :: (MonadRandom m) => Exp -> m Value
 simulate_soup exp = evalStateT act empty
