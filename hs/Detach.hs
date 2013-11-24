@@ -117,7 +117,7 @@ detach' Scaffold { drg = d, absorbers = abs, dead_reqs = reqs, brush = bru } = d
         eraseValue :: Address -> State (Trace m) ()
         eraseValue a = modify $ adjustNode devalue a
         forgetRequest :: (SPAddress, [SRId]) -> State (Trace m) ()
-        forgetRequest = undefined
+        forgetRequest x = modify $ forgetResponses x
         forgetNode :: Address -> State (Trace m) ()
         forgetNode a = modify $ deleteNode a
         stupid :: (Monad m) => State s a -> StateT s m a

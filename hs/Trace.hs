@@ -3,6 +3,7 @@
 module Trace where
 
 import qualified Data.Map as M
+import Data.List (foldl)
 import Control.Monad.State hiding (state)
 
 import Utils
@@ -211,6 +212,11 @@ lookupResponse :: SPAddress -> SRId -> Trace m -> Maybe Address
 lookupResponse spa srid t = do
   SPRecord { requests = reqs } <- lookupSPR spa t
   M.lookup srid reqs
+
+forgetResponses :: (SPAddress, [SRId]) -> Trace m -> Trace m
+forgetResponses (spaddr, srids) t@Trace{ sprs = ss } = t{ sprs = M.insert spaddr spr' ss } where
+    spr' = spr{ requests = foldl (flip M.delete) reqs srids }
+    spr@SPRecord { requests = reqs } = fromJust "Forgetting responses to non-SP" $ lookupSPR spaddr t
 
 runRequester :: (Monad m) => SPAddress -> [Address] -> Trace m -> m ([SimulationRequest], Trace m)
 runRequester spaddr args t = do
