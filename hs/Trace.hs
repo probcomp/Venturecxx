@@ -176,6 +176,9 @@ insertNode a n t@Trace{nodes = ns} = t{ nodes = (M.insert a n ns) } -- TODO upda
 adjustNode :: (Node -> Node) -> Address -> Trace m -> Trace m
 adjustNode f a t@Trace{nodes = ns} = t{ nodes = (M.adjust f a ns) }
 
+deleteNode :: Address -> Trace m -> Trace m
+deleteNode a t@Trace{nodes = ns} = t{ nodes = (M.delete a ns) } -- TODO update random choices
+
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
 addFreshNode node t@Trace{ nodes = ns, addr_seed = seed } = (a, t{ nodes = ns', addr_seed = seed'}) where
     (a, seed') = runUniqueSource (liftM Address fresh) seed
