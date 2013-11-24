@@ -1,7 +1,8 @@
+{-# LANGUAGE FlexibleContexts #-}
 module SP where
 
 import qualified Data.Map as M
-import Control.Monad
+import Control.Monad.State.Lazy hiding (state)
 import Control.Monad.Random -- From cabal install MonadRandom
 
 import Language hiding (Value, Env)
@@ -24,5 +25,13 @@ bernoulli = SP { requester = nullReq
 -- normal
 
 -- Actually, need to initialize the env with a trace to allocate nodes and addresses
--- initialEnv :: Env
--- initialEnv = Frame (M.fromList [("bernoulli", bernoulli)]) Toplevel
+
+-- initializeBuiltins :: Env -> State (Trace m) Env
+initializeBuiltins :: (MonadState (Trace m1) m, MonadRandom m1) => Env -> m Env
+initializeBuiltins env = do
+  spaddrs <- mapM (state . addFreshSP) sps
+  addrs <- mapM (state . addFreshNode . Constant . Procedure) spaddrs
+  return $ Frame (M.fromList $ zip names addrs) env
+      where namedSps = [("bernoulli", bernoulli)]
+            names = map fst namedSps
+            sps = map snd namedSps
