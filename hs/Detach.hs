@@ -35,11 +35,13 @@ collectERG ((a,principal):as) = do
          opMember <- gets $ O.member opa -- N.B. This can change as more graph structure is traversed
          if opMember then resampling a
          else do
-           opCanAbsorb <- undefined
+           opCanAbsorb <- lift $ asks $ (canAbsorb node) . fromJust . operator node
            if (not principal && opCanAbsorb) then absorbing a
            else resampling a -- TODO check esrReferenceCanAbsorb
-  where absorbing = undefined
+  where resampling :: Address -> StateT (O.Set Address) (Reader (Trace m)) ()
         resampling = undefined
+        absorbing :: Address -> StateT (O.Set Address) (Reader (Trace m)) ()
+        absorbing = undefined
 
 collectBrush = undefined
 

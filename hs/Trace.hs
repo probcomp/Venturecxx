@@ -46,6 +46,11 @@ data SP m = SP { requester :: [Address] -> UniqueSourceT m [SimulationRequest]
                , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
                }
 
+canAbsorb :: Node -> SP m -> Bool
+canAbsorb (Request _ _ _)  SP { log_d_req = (Just _) } = True
+canAbsorb (Output _ _ _ _) SP { log_d_out = (Just _) } = True
+canAbsorb _ _ = False
+
 nullReq :: (Monad m) => a -> m [SimulationRequest]
 nullReq _ = return []
 
