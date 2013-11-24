@@ -51,7 +51,7 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
     log_density :: Trace m -> a -> LogDensity
     log_density Trace{ randoms = choices } _ = LogDensity $ -log(fromIntegral $ length choices)
     
--- Next subgoal: Forward-simulate some trivial programs
+-- Next subgoal: Forward-simulate some trivial programs (e.g. flipping one coin)
 -- - grep for undefined
 -- - ask for incomplete clauses
 -- - replace fromJusts with things that signal error messages (forceLookup)
