@@ -19,7 +19,6 @@ data Scaffold = Scaffold { drg :: O.Set Address
                          , brush :: S.Set Address
                          }
 
-
 scaffold_from_principal_node :: Address -> Trace rand -> Scaffold
 scaffold_from_principal_node = undefined
 
