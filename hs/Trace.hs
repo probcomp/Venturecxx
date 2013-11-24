@@ -90,14 +90,6 @@ parentAddrs (Reference addr) = [addr]
 parentAddrs (Request _ as) = as
 parentAddrs (Output _ as as') = as ++ as'
 
-isRegenerated :: Node -> Bool
-isRegenerated (Constant _) = True
-isRegenerated (Reference addr) = undefined -- TODO: apparently a function of the addressee
-isRegenerated (Request Nothing _) = False
-isRegenerated (Request (Just _) _) = True
-isRegenerated (Output Nothing _ _) = False
-isRegenerated (Output (Just _) _ _) = True
-
 ----------------------------------------------------------------------
 -- Traces
 ----------------------------------------------------------------------
@@ -117,6 +109,14 @@ chaseReferences a t@Trace{ nodes = m } = do
   chase n
     where chase (Reference a) = chaseReferences a t
           chase n = Just n
+
+isRegenerated :: Node -> Trace m -> Bool
+isRegenerated (Constant _) _ = True
+isRegenerated (Reference addr) t = isRegenerated (fromJust $ chaseReferences addr t) t
+isRegenerated (Request Nothing _) _ = False
+isRegenerated (Request (Just _) _) _ = True
+isRegenerated (Output Nothing _ _) _ = False
+isRegenerated (Output (Just _) _ _) _ = True
 
 operatorAddr :: Node -> Trace m -> Maybe SPAddress
 operatorAddr n t@Trace{ sps = ss } = do
