@@ -140,7 +140,7 @@ addFreshNode :: Node -> Trace m -> (Address, Trace m)
 addFreshNode = undefined
 
 insertSP :: SPAddress -> (SP m) -> Trace m -> Trace m
-insertSP = undefined
+insertSP addr sp t@Trace{ sps = ss } = t{ sps = M.insert addr sp ss }
 
 addFreshSP :: SP m -> Trace m -> (SPAddress, Trace m)
 addFreshSP = undefined
