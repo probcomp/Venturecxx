@@ -80,18 +80,19 @@ compoundSP formals exp env =
           return [r]
 
 data Node = Constant Value
-          | Reference Address
+          | Reference (Maybe Value) Address
           | Request (Maybe [SimulationRequest]) [Address]
           | Output (Maybe Value) [Address] [Address]
 
 valueOf :: Node -> Maybe Value
 valueOf (Constant v) = Just v
+valueOf (Reference v _) = v
 valueOf (Output v _ _) = v
 valueOf _ = Nothing
 
 parentAddrs :: Node -> [Address]
 parentAddrs (Constant _) = []
-parentAddrs (Reference addr) = [addr]
+parentAddrs (Reference _ addr) = [addr]
 parentAddrs (Request _ as) = as
 parentAddrs (Output _ as as') = as ++ as'
 
@@ -117,12 +118,13 @@ chaseReferences :: Address -> Trace m -> Maybe Node
 chaseReferences a t@Trace{ nodes = m } = do
   n <- M.lookup a m
   chase n
-    where chase (Reference a) = chaseReferences a t
+    where chase (Reference _ a) = chaseReferences a t
           chase n = Just n
 
 isRegenerated :: Node -> Trace m -> Bool
 isRegenerated (Constant _) _ = True
-isRegenerated (Reference addr) t = isRegenerated (fromJust "Dangling reference" $ chaseReferences addr t) t
+isRegenerated (Reference Nothing _) _ = False
+isRegenerated (Reference (Just _) _) _ = True
 isRegenerated (Request Nothing _) _ = False
 isRegenerated (Request (Just _) _) _ = True
 isRegenerated (Output Nothing _ _) _ = False

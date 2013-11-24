@@ -38,7 +38,10 @@ regenValue a = lift (do
   node <- gets $ fromJust . (lookupNode a)
   case node of
     (Constant _) -> return ()
-    (Reference _) -> return ()
+    (Reference _ a') -> do
+      t <- get
+      let v = fromJust ( (lookupNode a' t) >>= valueOf )
+      modify $ insertNode a (Reference (Just v) a')
     (Request _ ps) -> do
       addr <- gets $ fromJust . (operatorAddr node)
       reqs <- StateT $ runRequester addr ps -- TODO Here, ps is the full list of parent addresses, including the operator node
@@ -66,10 +69,14 @@ evalRequests a srs = mapM_ evalRequest srs where
 -- evaluation.
 eval :: (MonadRandom m) => Exp -> Env -> StateT (Trace m) m Address
 eval (Datum v) _ = state $ addFreshNode $ Constant v
-eval (Variable n) e = state $ addFreshNode answer where
-    answer = case L.lookup n e of
-               Nothing -> error $ "Unbound variable " ++ show n
-               (Just a) -> Reference a
+eval (Variable n) e = do
+  let answer = case L.lookup n e of
+                 Nothing -> error $ "Unbound variable " ++ show n
+                 (Just a) -> Reference Nothing a
+  addr <- state $ addFreshNode answer
+  -- Is there a good reason why I don't care about the log density of this regenNode?
+  _ <- runWriterT $ regenNode addr
+  return addr
 eval (Lam vs exp) e = do
   spAddr <- state $ addFreshSP $ compoundSP vs exp e
   state $ addFreshNode $ Constant $ Procedure spAddr
