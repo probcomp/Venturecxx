@@ -51,10 +51,11 @@ data SP m = SP { requester :: [Address] -> UniqueSourceT m [SimulationRequest]
 
 data SPRecord m = SPRecord { sp :: (SP m)
                            , srid_seed :: UniqueSeed
+                           , requests :: M.Map SRId Address
                            }
 
 spRecord :: SP m -> SPRecord m
-spRecord sp = SPRecord sp uniqueSeed
+spRecord sp = SPRecord sp uniqueSeed M.empty
 
 nullReq :: (Monad m) => a -> m [SimulationRequest]
 nullReq _ = return []
@@ -156,7 +157,9 @@ fulfilments :: Address -> Trace m -> [Address]
 fulfilments = undefined
 
 insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
-insertResponse = undefined
+insertResponse spa id a t@Trace{ sprs = ss } = t{ sprs = M.insert spa spr' ss } where
+    spr' = spr{ requests = M.insert id a reqs }
+    spr@SPRecord { requests = reqs } = fromJust $ M.lookup spa ss
 
 lookupResponse :: SPAddress -> SRId -> Trace m -> Maybe Address
 lookupResponse = undefined
