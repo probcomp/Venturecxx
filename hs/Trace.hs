@@ -111,7 +111,7 @@ parentAddrs :: Node -> [Address]
 parentAddrs (Constant _) = []
 parentAddrs (Reference _ addr) = [addr]
 parentAddrs (Request _ a as) = a:as
-parentAddrs (Output _ _ a as as') = a:(as ++ as')
+parentAddrs (Output _ reqA a as as') = reqA:a:(as ++ as')
 
 opAddr :: Node -> Maybe Address
 opAddr (Request _ a _) = Just a
@@ -133,13 +133,14 @@ requestIds _ = error "Asking for request IDs of a non-request node"
 data Trace rand =
     Trace { nodes :: (M.Map Address Node)
           , randoms :: S.Set Address
+          , nodeChildren :: M.Map Address (S.Set Address)
           , sprs :: (M.Map SPAddress (SPRecord rand))
           , addr_seed :: UniqueSeed
           , spaddr_seed :: UniqueSeed
           }
 
 empty :: Trace m
-empty = Trace M.empty S.empty M.empty uniqueSeed uniqueSeed
+empty = Trace M.empty S.empty M.empty M.empty uniqueSeed uniqueSeed
 
 chaseReferences :: Address -> Trace m -> Maybe Node
 chaseReferences a t@Trace{ nodes = m } = do
@@ -179,23 +180,34 @@ operator n t@Trace{ sprs = ss } = operatorAddr n t >>= (liftM sp . flip M.lookup
 lookupNode :: Address -> Trace m -> Maybe Node
 lookupNode a Trace{ nodes = m } = M.lookup a m
 
+-- TODO This is only used to add values to nodes.  Enforce; maybe collapse with adjustNode?
 insertNode :: Address -> Node -> Trace m -> Trace m
-insertNode a n t@Trace{nodes = ns, randoms = rs} = t{ nodes = ns', randoms = rs' } where
+insertNode a n t@Trace{nodes = ns} = t{ nodes = ns'} where
     ns' = M.insert a n ns
-    rs' = S.insert a rs
 
+-- TODO This is only used to remove values from nodes.  Enforce or collapse?
 adjustNode :: (Node -> Node) -> Address -> Trace m -> Trace m
 adjustNode f a t@Trace{nodes = ns} = t{ nodes = (M.adjust f a ns) }
 
 deleteNode :: Address -> Trace m -> Trace m
-deleteNode a t@Trace{nodes = ns, randoms = rs} = t{ nodes = ns', randoms = rs' } where
-    ns' = M.delete a ns
-    rs' = S.delete a rs
+deleteNode a t@Trace{nodes = ns, randoms = rs, nodeChildren = cs} =
+    t{ nodes = ns', randoms = rs', nodeChildren = cs'' } where
+        node = fromJust "Deleting a non-existent node" $ M.lookup a ns
+        ns' = M.delete a ns
+        rs' = S.delete a rs
+        cs' = foldl foo cs $ parentAddrs node
+        cs'' = M.delete a cs'
+        foo cs pa = M.adjust (S.delete a) pa cs
 
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
-addFreshNode node t@Trace{ nodes = ns, addr_seed = seed } = (a, t{ nodes = ns', addr_seed = seed'}) where
-    (a, seed') = runUniqueSource (liftM Address fresh) seed
-    ns' = M.insert a node ns
+addFreshNode node t@Trace{ nodes = ns, addr_seed = seed, randoms = rs, nodeChildren = cs } =
+    (a, t{ nodes = ns', addr_seed = seed', randoms = rs', nodeChildren = cs''}) where
+        (a, seed') = runUniqueSource (liftM Address fresh) seed
+        ns' = M.insert a node ns
+        rs' = S.insert a rs -- TODO only insert if it's actually random, duh
+        cs' = foldl foo cs $ parentAddrs node
+        cs'' = M.insert a S.empty cs'
+        foo cs pa = M.adjust (S.insert a) pa cs
 
 lookupSPR :: SPAddress -> Trace m -> Maybe (SPRecord m)
 lookupSPR spa Trace{ sprs = m } = M.lookup spa m
