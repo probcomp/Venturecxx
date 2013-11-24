@@ -41,13 +41,13 @@ regenValue a = lift (do
     (Constant _) -> return ()
     (Reference _) -> return ()
     (Request _ ps) -> do
-      SP{ requester = req } <- gets $ fromJust . (flip operator node)
+      SP{ requester = req } <- gets $ fromJust . (operator node)
       reqs <- lift $ req ps -- TODO Here, ps is the full list of parent addresses, including the operator node
       modify $ insertNode a (Request (Just reqs) ps)
-      addr <- gets $ fromJust . (flip operatorAddr node)
+      addr <- gets $ fromJust . (operatorAddr node)
       evalRequests addr reqs
     (Output _ ps rs) -> do
-      SP{ outputter = out } <- gets $ fromJust . (flip operator node)
+      SP{ outputter = out } <- gets $ fromJust . (operator node)
       ns <- gets nodes
       let args = map (fromJust . flip M.lookup ns) ps
       let results = map (fromJust . flip M.lookup ns) rs
