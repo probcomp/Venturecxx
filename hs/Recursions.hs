@@ -1,6 +1,7 @@
 module Recursions where
 
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Data.Maybe
 import Control.Monad
 import Control.Monad.Trans.Writer.Strict
@@ -12,8 +13,12 @@ import Prelude hiding (lookup)
 import Language hiding (Value, Exp, Env, lookup)
 import qualified Language as L
 import Trace
+import qualified InsertionOrderedSet as O
 
-newtype Scaffold = Scaffold () -- TODO
+data Scaffold = Scaffold { drg :: O.Set Address
+                         , brush :: S.Set Address
+                         }
+
 
 scaffold_from_principal_node :: Address -> Trace rand -> Scaffold
 scaffold_from_principal_node = undefined

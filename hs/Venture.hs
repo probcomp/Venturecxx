@@ -71,6 +71,9 @@ simulate_soup exp = evalStateT act empty
 
 -- Next subgoal: Do MH inference (without observations) and see bernoulli change value
 
+-- Next subgoal: Do MH inference (without observations) on an example that has a brush
+-- - requires implementing IF
+
 -- Next subgoal: Do MH inference with observations on some trivial
 --   programs (e.g. normal with normally distributed mean?)
 -- - replace fromJusts with things that signal error messages (forceLookup)
