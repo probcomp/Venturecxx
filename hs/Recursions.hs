@@ -80,7 +80,7 @@ eval (App op args) env = do
   addr <- state $ addFreshNode (Request Nothing (op':args'))
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr
-  reqAddrs <- fulfilments' addr
+  reqAddrs <- gets $ fulfilments addr
   addr' <- state $ addFreshNode (Output Nothing (op':args') reqAddrs)
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr'

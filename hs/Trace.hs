@@ -146,15 +146,10 @@ addFreshNode = undefined
 addFreshSP :: SP m -> Trace m -> (SPAddress, Trace m)
 addFreshSP = undefined
 
-fulfilments :: Trace m -> Address -> [Address]
+fulfilments :: Address -> Trace m -> [Address]
 -- The addresses of the responses to the requests made by the Request
 -- node at Address.
 fulfilments = undefined
-
-fulfilments' :: (MonadState (Trace m0) m) => Address -> m [Address]
-fulfilments' a = do
-  t <- get 
-  return $ fulfilments t a
 
 insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
 insertResponse = undefined
