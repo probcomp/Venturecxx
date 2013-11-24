@@ -1,9 +1,10 @@
 module SP where
 
+import qualified Data.Map as M
 import Control.Monad
 import Control.Monad.Random -- From cabal install MonadRandom
 
-import Language hiding (Value)
+import Language hiding (Value, Env)
 import Trace
 
 bernoulliFlip :: (MonadRandom m) => a -> b -> m Value
@@ -21,3 +22,7 @@ bernoulli = SP { requester = nullReq
 -- beta bernoulli in Venture
 -- collapsed beta bernoulli
 -- normal
+
+-- Actually, need to initialize the env with a trace to allocate nodes and addresses
+-- initialEnv :: Env
+-- initialEnv = Frame (M.fromList [("bernoulli", bernoulli)]) Toplevel
