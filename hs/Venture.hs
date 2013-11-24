@@ -64,3 +64,4 @@ simulate_soup exp = do
     return $ fromJust $ valueOf $ fromJust $ lookupNode address trace
 
 -- simulate_soup $ Datum $ Number 1.0
+-- simulate_soup $ App (Lam ["x"] (Variable "x")) [(Datum $ Number 1.0)]
