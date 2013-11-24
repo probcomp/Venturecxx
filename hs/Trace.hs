@@ -128,8 +128,8 @@ operatorAddr t@Trace{ sps = ss } n = do
 operator :: Trace rand -> Node -> Maybe (SP rand)
 operator t@Trace{ sps = ss } n = operatorAddr t n >>= (flip M.lookup ss)
 
-lookupNode :: Trace rand -> Address -> Maybe Node
-lookupNode Trace{ nodes = m } a = M.lookup a m
+lookupNode :: Address -> Trace m -> Maybe Node
+lookupNode a Trace{ nodes = m } = M.lookup a m
 
 insertNode :: Address -> Node -> Trace m -> Trace m
 insertNode a n t@Trace{nodes = ns} = t{ nodes = (M.insert a n ns) } -- TODO update random choices

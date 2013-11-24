@@ -27,7 +27,7 @@ regen = undefined
 
 regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
 regenNode a = do
-  node <- lift $ gets $ fromJust . (flip lookupNode a)
+  node <- lift $ gets $ fromJust . (lookupNode a)
   let isReg = isRegenerated node
   if isReg then return ()
   else do
@@ -36,7 +36,7 @@ regenNode a = do
 
 regenValue :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
 regenValue a = lift (do
-  node <- gets $ fromJust . (flip lookupNode a)
+  node <- gets $ fromJust . (lookupNode a)
   case node of
     (Constant _) -> return ()
     (Reference _) -> return ()
