@@ -145,6 +145,9 @@ insertNode a n t@Trace{nodes = ns} = t{ nodes = (M.insert a n ns) } -- TODO upda
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
 addFreshNode = undefined
 
+lookupSPR :: SPAddress -> Trace m -> Maybe (SPRecord m)
+lookupSPR spa Trace{ sprs = m } = M.lookup spa m
+
 insertSPR :: SPAddress -> (SPRecord m) -> Trace m -> Trace m
 insertSPR addr spr t@Trace{ sprs = ss } = t{ sprs = M.insert addr spr ss }
 
@@ -159,16 +162,16 @@ fulfilments = undefined
 insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
 insertResponse spa id a t@Trace{ sprs = ss } = t{ sprs = M.insert spa spr' ss } where
     spr' = spr{ requests = M.insert id a reqs }
-    spr@SPRecord { requests = reqs } = fromJust $ M.lookup spa ss
+    spr@SPRecord { requests = reqs } = fromJust $ lookupSPR spa t
 
 lookupResponse :: SPAddress -> SRId -> Trace m -> Maybe Address
-lookupResponse spa srid Trace{ sprs = ss } = do
-  SPRecord { requests = reqs } <- M.lookup spa ss
+lookupResponse spa srid t = do
+  SPRecord { requests = reqs } <- lookupSPR spa t
   M.lookup srid reqs
 
 runRequester :: (Monad m) => SPAddress -> [Address] -> Trace m -> m ([SimulationRequest], Trace m)
-runRequester spaddr args t@Trace { sprs = ss } = do
-  let spr@SPRecord { sp = SP{ requester = req }, srid_seed = seed } = fromJust $ M.lookup spaddr ss
+runRequester spaddr args t = do
+  let spr@SPRecord { sp = SP{ requester = req }, srid_seed = seed } = fromJust $ lookupSPR spaddr t
   (reqs, seed') <- runUniqueSourceT (req args) seed
   let trace' = insertSPR spaddr spr{ srid_seed = seed' } t
   return (reqs, trace')
