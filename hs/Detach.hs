@@ -115,7 +115,7 @@ detach' Scaffold { drg = d, absorbers = abs, dead_reqs = reqs, brush = bru } = d
   where unabsorbValue :: Address -> StateT (Trace m) (Writer LogDensity) ()
         unabsorbValue = undefined
         eraseValue :: Address -> State (Trace m) ()
-        eraseValue = undefined
+        eraseValue a = modify $ adjustNode devalue a
         forgetRequest :: (SPAddress, [SRId]) -> State (Trace m) ()
         forgetRequest = undefined
         forgetNode :: Address -> State (Trace m) ()

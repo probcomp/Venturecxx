@@ -92,6 +92,12 @@ valueOf (Reference v _) = v
 valueOf (Output v _ _ _ _) = v
 valueOf _ = Nothing
 
+devalue :: Node -> Node
+devalue (Constant _) = error "Cannot devalue a constant"
+devalue (Reference _ a) = Reference Nothing a
+devalue (Request _ a as) = Request Nothing a as
+devalue (Output _ reqA opa args reqs) = Output Nothing reqA opa args reqs
+
 parentAddrs :: Node -> [Address]
 parentAddrs (Constant _) = []
 parentAddrs (Reference _ addr) = [addr]
@@ -166,6 +172,9 @@ lookupNode a Trace{ nodes = m } = M.lookup a m
 
 insertNode :: Address -> Node -> Trace m -> Trace m
 insertNode a n t@Trace{nodes = ns} = t{ nodes = (M.insert a n ns) } -- TODO update random choices
+
+adjustNode :: (Node -> Node) -> Address -> Trace m -> Trace m
+adjustNode f a t@Trace{nodes = ns} = t{ nodes = (M.adjust f a ns) }
 
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
 addFreshNode node t@Trace{ nodes = ns, addr_seed = seed } = (a, t{ nodes = ns', addr_seed = seed'}) where
