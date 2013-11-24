@@ -12,10 +12,10 @@ import Control.Monad.Trans.State.Strict
 -- calls to uniqueSeed will be intercomparable.  Perhaps some branding
 -- hack might be used to prevent this.
 
-data UniqueSeed = UniqueSeed Integer
+newtype UniqueSeed = UniqueSeed Integer
 
-data Unique = Unique Integer
-  deriving (Eq, Ord)
+newtype Unique = Unique Integer
+  deriving (Eq, Ord, Show)
 
 newtype UniqueSourceT m a = UniqueSourceT { unwrap :: (StateT UniqueSeed m a) }
 

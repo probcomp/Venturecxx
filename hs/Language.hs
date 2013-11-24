@@ -12,6 +12,7 @@ data Value proc = Number Double
                 | List [Value proc]
                 | Procedure proc
                 | Boolean Bool
+  deriving Show
 
 spValue :: Value proc -> Maybe proc
 spValue (Procedure s) = Just s

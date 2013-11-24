@@ -27,7 +27,7 @@ newtype Address = Address Unique
     deriving (Eq, Ord)
 
 newtype SPAddress = SPAddress Unique
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Show)
 
 newtype SRId = SRId Unique
     deriving (Eq, Ord)
