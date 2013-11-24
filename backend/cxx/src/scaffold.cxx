@@ -178,16 +178,16 @@ void Scaffold::setRegenCounts()
   for (Node * node : absorbing)
   { 
     if (node->nodeType == NodeType::REQUEST &&
-	!isResampling(node->operatorNode) && 
-	node->sp()->isNullRequest())
+        !isResampling(node->operatorNode) &&
+        node->sp()->isNullRequest())
     {
       for (Node * operandNode : node->operandNodes)
       {
-	if (drg.count(operandNode) && !drg[operandNode].isAAA)
-	{
-	  drg[operandNode].regenCount--;
-	  assert(drg[operandNode].regenCount > 0);
-	}
+        if (drg.count(operandNode) && !drg[operandNode].isAAA)
+        {
+          drg[operandNode].regenCount--;
+          assert(drg[operandNode].regenCount > 0);
+        }
       }
       nullAbsorbing.insert(node);
     }
