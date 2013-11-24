@@ -12,11 +12,8 @@ import Language
 import qualified InsertionOrderedSet as O
 import Trace hiding (empty)
 
-type DRG = O.Set Address
-type Absorbers = O.Set Address
-
-data Scaffold = Scaffold { drg :: DRG
-                         , absorbers :: Absorbers
+data Scaffold = Scaffold { drg :: O.Set Address
+                         , absorbers :: O.Set Address
                          , brush :: S.Set Address
                          }
 
