@@ -85,8 +85,7 @@ collectBrush = mapM_ disableRequests where
       brush a
       node <- asks $ fromJust . lookupNode a
       case node of
-        (Output _ opa operands _) -> do
-                        reqA <- undefined
+        (Output _ reqA opa operands _) -> do
                         brush reqA
                         disableRequests reqA
                         disableFamily opa

@@ -48,7 +48,7 @@ data SP m = SP { requester :: [Address] -> UniqueSourceT m [SimulationRequest]
 
 canAbsorb :: Node -> SP m -> Bool
 canAbsorb (Request _ _ _)  SP { log_d_req = (Just _) } = True
-canAbsorb (Output _ _ _ _) SP { log_d_out = (Just _) } = True
+canAbsorb (Output _ _ _ _ _) SP { log_d_out = (Just _) } = True
 canAbsorb _ _ = False
 
 nullReq :: (Monad m) => a -> m [SimulationRequest]
@@ -84,23 +84,23 @@ spRecord sp = SPRecord sp uniqueSeed M.empty
 data Node = Constant Value
           | Reference (Maybe Value) Address
           | Request (Maybe [SimulationRequest]) Address [Address]
-          | Output (Maybe Value) Address [Address] [Address]
+          | Output (Maybe Value) Address Address [Address] [Address]
 
 valueOf :: Node -> Maybe Value
 valueOf (Constant v) = Just v
 valueOf (Reference v _) = v
-valueOf (Output v _ _ _) = v
+valueOf (Output v _ _ _ _) = v
 valueOf _ = Nothing
 
 parentAddrs :: Node -> [Address]
 parentAddrs (Constant _) = []
 parentAddrs (Reference _ addr) = [addr]
 parentAddrs (Request _ a as) = a:as
-parentAddrs (Output _ a as as') = a:(as ++ as')
+parentAddrs (Output _ _ a as as') = a:(as ++ as')
 
 opAddr :: Node -> Maybe Address
 opAddr (Request _ a _) = Just a
-opAddr (Output _ a _ _) = Just a
+opAddr (Output _ _ a _ _) = Just a
 opAddr _ = Nothing
 
 ----------------------------------------------------------------------
@@ -134,8 +134,8 @@ isRegenerated (Reference Nothing _) = False
 isRegenerated (Reference (Just _) _) = True
 isRegenerated (Request Nothing _ _) = False
 isRegenerated (Request (Just _) _ _) = True
-isRegenerated (Output Nothing _ _ _) = False
-isRegenerated (Output (Just _) _ _ _) = True
+isRegenerated (Output Nothing _ _ _ _) = False
+isRegenerated (Output (Just _) _ _ _ _) = True
 
 operatorAddr :: Node -> Trace m -> Maybe SPAddress
 operatorAddr n t = do

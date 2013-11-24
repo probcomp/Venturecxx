@@ -39,13 +39,13 @@ regenValue a = lift (do
       modify $ insertNode a (Request (Just reqs) opa ps)
       addr <- gets $ fromJust . (operatorAddr node)
       evalRequests addr reqs
-    (Output _ opa ps rs) -> do
+    (Output _ reqA opa ps rs) -> do
       SP{ outputter = out } <- gets $ fromJust . (operator node)
       ns <- gets nodes
       let args = map (fromJust . flip M.lookup ns) ps
       let results = map (fromJust . flip M.lookup ns) rs
       v <- lift $ out args results
-      modify $ insertNode a (Output (Just v) opa ps rs))
+      modify $ insertNode a (Output (Just v) reqA opa ps rs))
 
 evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()
 evalRequests a srs = mapM_ evalRequest srs where
@@ -78,7 +78,7 @@ eval (App op args) env = do
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr
   reqAddrs <- gets $ fulfilments addr
-  addr' <- state $ addFreshNode (Output Nothing op' args' reqAddrs)
+  addr' <- state $ addFreshNode (Output Nothing addr op' args' reqAddrs)
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr'
   return addr'
