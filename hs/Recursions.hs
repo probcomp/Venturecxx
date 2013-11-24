@@ -27,7 +27,7 @@ regen = undefined
 
 regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
 regenNode a = do
-  node <- lift $ gets $ fromJust . (flip lookup a)
+  node <- lift $ gets $ fromJust . (flip lookupNode a)
   let isReg = isRegenerated node
   if isReg then return ()
   else do
@@ -36,14 +36,14 @@ regenNode a = do
 
 regenValue :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
 regenValue a = lift (do
-  node <- gets $ fromJust . (flip lookup a)
+  node <- gets $ fromJust . (flip lookupNode a)
   case node of
     (Constant _) -> return ()
     (Reference _) -> return ()
     (Request _ ps) -> do
       SP{ requester = req } <- gets $ fromJust . (flip operator node)
       reqs <- lift $ req ps -- TODO Here, ps is the full list of parent addresses, including the operator node
-      insert' a (Request (Just reqs) ps)
+      insertNode' a (Request (Just reqs) ps)
       addr <- gets $ fromJust . (flip operatorAddr node)
       evalRequests addr reqs
     (Output _ ps rs) -> do
@@ -52,7 +52,7 @@ regenValue a = lift (do
       let args = map (fromJust . flip M.lookup ns) ps
       let results = map (fromJust . flip M.lookup ns) rs
       v <- lift $ out args results
-      insert' a (Output (Just v) ps rs))
+      insertNode' a (Output (Just v) ps rs))
 
 evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()
 evalRequests a srs = mapM_ evalRequest srs where

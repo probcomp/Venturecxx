@@ -128,16 +128,16 @@ operatorAddr t@Trace{ sps = ss } n = do
 operator :: Trace rand -> Node -> Maybe (SP rand)
 operator t@Trace{ sps = ss } n = operatorAddr t n >>= (flip M.lookup ss)
 
-lookup :: Trace rand -> Address -> Maybe Node
-lookup Trace{ nodes = m } a = M.lookup a m
+lookupNode :: Trace rand -> Address -> Maybe Node
+lookupNode Trace{ nodes = m } a = M.lookup a m
 
-insert :: Trace rand -> Address -> Node -> Trace rand
-insert t@Trace{nodes = ns} a n = t{ nodes = (M.insert a n ns) } -- TODO update random choices
+insertNode :: Trace rand -> Address -> Node -> Trace rand
+insertNode t@Trace{nodes = ns} a n = t{ nodes = (M.insert a n ns) } -- TODO update random choices
 
-insert' :: (MonadState (Trace m) m') => Address -> Node -> m' ()
-insert' a n = do
+insertNode' :: (MonadState (Trace m) m') => Address -> Node -> m' ()
+insertNode' a n = do
   t <- get
-  put $ insert t a n
+  put $ insertNode t a n
   return ()
 
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
