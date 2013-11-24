@@ -24,9 +24,6 @@ bernoulli = SP { requester = nullReq
 -- collapsed beta bernoulli
 -- normal
 
--- Actually, need to initialize the env with a trace to allocate nodes and addresses
-
--- initializeBuiltins :: Env -> State (Trace m) Env
 initializeBuiltins :: (MonadState (Trace m1) m, MonadRandom m1) => Env -> m Env
 initializeBuiltins env = do
   spaddrs <- mapM (state . addFreshSP) sps
