@@ -1,5 +1,7 @@
-module Utils (Unique, UniqueSeed, UniqueSourceT, runUniqueSourceT, uniqueSeed, fresh) where
+module Utils (Unique, UniqueSeed, UniqueSourceT
+             , runUniqueSourceT, uniqueSeed, fresh, runUniqueSource) where
 
+import Data.Functor.Identity
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Strict
 
@@ -41,3 +43,7 @@ succU (UniqueSeed s) = UniqueSeed $ succ s
 
 runUniqueSourceT :: UniqueSourceT m a -> UniqueSeed -> m (a, UniqueSeed)
 runUniqueSourceT (UniqueSourceT action) = runStateT action
+
+type UniqueSource = UniqueSourceT Identity
+
+runUniqueSource a s = runIdentity $ runUniqueSourceT a s
