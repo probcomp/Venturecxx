@@ -47,8 +47,14 @@ data SP m = SP { requester :: [Address] -> UniqueSourceT m [SimulationRequest]
                , log_d_req :: Maybe ([Address] -> [SimulationRequest] -> Double)
                , outputter :: [Node] -> [Node] -> m Value
                , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
-               , srid_seed :: UniqueSeed
                }
+
+data SPRecord m = SPRecord { sp :: (SP m)
+                           , srid_seed :: UniqueSeed
+                           }
+
+spRecord :: SP m -> SPRecord m
+spRecord sp = SPRecord sp uniqueSeed
 
 nullReq :: (Monad m) => a -> m [SimulationRequest]
 nullReq _ = return []
@@ -66,7 +72,6 @@ compoundSP formals exp env =
        , log_d_req = Just $ trivial_log_d_req
        , outputter = trivialOut
        , log_d_out = Nothing
-       , srid_seed = uniqueSeed
        } where
         -- TODO This requester assumes the operator node is stripped out of the arguments
         req args = do
@@ -100,7 +105,7 @@ parentAddrs (Output _ as as') = as ++ as'
 data Trace rand =
     Trace { nodes :: (M.Map Address Node)
           , randoms :: [Address]
-          , sps :: (M.Map SPAddress (SP rand))
+          , sps :: (M.Map SPAddress (SPRecord rand))
           }
 
 chaseReferences :: Address -> Trace m -> Maybe Node
@@ -128,7 +133,7 @@ operatorAddr n t@Trace{ sps = ss } = do
           op_addr _ = Nothing
 
 operator :: Node -> Trace m -> Maybe (SP m)
-operator n t@Trace{ sps = ss } = operatorAddr n t >>= (flip M.lookup ss)
+operator n t@Trace{ sps = ss } = operatorAddr n t >>= (liftM sp . flip M.lookup ss)
 
 lookupNode :: Address -> Trace m -> Maybe Node
 lookupNode a Trace{ nodes = m } = M.lookup a m
@@ -139,8 +144,8 @@ insertNode a n t@Trace{nodes = ns} = t{ nodes = (M.insert a n ns) } -- TODO upda
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
 addFreshNode = undefined
 
-insertSP :: SPAddress -> (SP m) -> Trace m -> Trace m
-insertSP addr sp t@Trace{ sps = ss } = t{ sps = M.insert addr sp ss }
+insertSPR :: SPAddress -> (SPRecord m) -> Trace m -> Trace m
+insertSPR addr spr t@Trace{ sps = ss } = t{ sps = M.insert addr spr ss }
 
 addFreshSP :: SP m -> Trace m -> (SPAddress, Trace m)
 addFreshSP = undefined
@@ -158,7 +163,7 @@ lookupResponse = undefined
 
 runRequester :: (Monad m) => SPAddress -> [Address] -> Trace m -> m ([SimulationRequest], Trace m)
 runRequester spaddr args t@Trace { sps = ss } = do
-  let sp@SP{ requester = req, srid_seed = seed } = fromJust $ M.lookup spaddr ss
+  let spr@SPRecord { sp = SP{ requester = req }, srid_seed = seed } = fromJust $ M.lookup spaddr ss
   (reqs, seed') <- runUniqueSourceT (req args) seed
-  let trace' = insertSP spaddr sp{ srid_seed = seed' } t
+  let trace' = insertSPR spaddr spr{ srid_seed = seed' } t
   return (reqs, trace')

@@ -15,7 +15,6 @@ bernoulli = SP { requester = nullReq
                , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
                , outputter = bernoulliFlip
                , log_d_out = Just $ const $ const $ const $ -log 2.0
-               , srid_seed = uniqueSeed
                }
 
 -- Critical examples:
