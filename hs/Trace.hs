@@ -255,4 +255,5 @@ numRequests = undefined
 
 -- Nodes in the trace that depend upon the node at the given address.
 children :: Address -> Trace m -> [Address]
-children = undefined
+children a Trace{nodeChildren = cs} =
+    S.toList $ fromJust "Loooking up the children of a nonexistent node" $ M.lookup a cs
