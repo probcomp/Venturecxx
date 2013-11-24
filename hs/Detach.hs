@@ -1,6 +1,7 @@
 module Detach where
 
 import qualified Data.Set as S
+import qualified Data.Map as M
 import Data.Maybe
 import Control.Monad.Reader
 import Control.Monad.Trans.Writer.Strict
@@ -29,7 +30,7 @@ empty = Scaffold O.empty O.empty S.empty
 scaffold_from_principal_node :: Address -> Reader (Trace m) Scaffold
 scaffold_from_principal_node a = do
   scaffold <- execStateT (collectERG [(a,True)]) empty
-  scaffold' <- execStateT collectBrush scaffold
+  (_, scaffold') <- execStateT (collectBrush $ O.toList $ drg scaffold) (M.empty, scaffold)
   return $ scaffold'
 
 collectERG :: [(Address,Bool)] -> StateT Scaffold (Reader (Trace m)) ()
@@ -64,6 +65,7 @@ collectERG ((a,principal):as) = do
           modify $ mapAbs $ O.insert a
           collectERG as
 
+collectBrush :: [Address] -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
 collectBrush = undefined
 
 detach :: Scaffold -> Trace rand -> Writer LogDensity (Trace rand)
