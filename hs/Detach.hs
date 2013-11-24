@@ -78,9 +78,24 @@ collectBrush = mapM_ disableRequests where
       modify $ mapFst $ M.alter maybeSucc a
       disabled <- gets $ fromJust . M.lookup a . fst
       requested <- asks $ numRequests a
-      if disabled == requested then uneval a
+      if disabled == requested then disableFamily a
       else return ()
-    uneval = undefined
+    disableFamily :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
+    disableFamily a = do
+      brush a
+      node <- asks $ fromJust . lookupNode a
+      case node of
+        (Output _ opa operands _) -> do
+                        reqA <- undefined
+                        brush reqA
+                        disableRequests reqA
+                        disableFamily opa
+                        mapM_ disableFamily operands
+        _ -> return ()
+    brush a = do
+      modify $ mapSnd $ mapDrg $ O.delete a
+      modify $ mapSnd $ mapAbs $ O.delete a
+      modify $ mapSnd $ mapBru $ S.insert a
 
     maybeSucc Nothing = Just 1
     maybeSucc (Just x) = Just $ x+1
