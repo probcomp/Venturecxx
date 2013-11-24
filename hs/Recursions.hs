@@ -41,19 +41,19 @@ regenValue a = lift (do
       t <- get
       let v = fromJust ( (lookupNode a' t) >>= valueOf )
       modify $ insertNode a (Reference (Just v) a')
-    (Request _ ps) -> do
-      addr <- gets $ fromJust . (operatorAddr node)
-      reqs <- StateT $ runRequester addr ps -- TODO Here, ps is the full list of parent addresses, including the operator node
-      modify $ insertNode a (Request (Just reqs) ps)
+    (Request _ opa ps) -> do
+      addr <- gets $ fromJust . (chaseOperator opa)
+      reqs <- StateT $ runRequester addr ps
+      modify $ insertNode a (Request (Just reqs) opa ps)
       addr <- gets $ fromJust . (operatorAddr node)
       evalRequests addr reqs
-    (Output _ ps rs) -> do
+    (Output _ opa ps rs) -> do
       SP{ outputter = out } <- gets $ fromJust . (operator node)
       ns <- gets nodes
       let args = map (fromJust . flip M.lookup ns) ps
       let results = map (fromJust . flip M.lookup ns) rs
       v <- lift $ out args results
-      modify $ insertNode a (Output (Just v) ps rs))
+      modify $ insertNode a (Output (Just v) opa ps rs))
 
 evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()
 evalRequests a srs = mapM_ evalRequest srs where
@@ -82,11 +82,11 @@ eval (Lam vs exp) e = do
 eval (App op args) env = do
   op' <- eval op env
   args' <- sequence $ map (flip eval env) args
-  addr <- state $ addFreshNode (Request Nothing (op':args'))
+  addr <- state $ addFreshNode (Request Nothing op' args')
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr
   reqAddrs <- gets $ fulfilments addr
-  addr' <- state $ addFreshNode (Output Nothing (op':args') reqAddrs)
+  addr' <- state $ addFreshNode (Output Nothing op' args' reqAddrs)
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr'
   return addr'

@@ -40,8 +40,6 @@ data SimulationRequest = SimulationRequest SRId Exp Env
 -- http://www.haskell.org/haskellwiki/Heterogenous_collections#Existential_types
 
 -- m is presumably an instance of MonadRandom
--- TODO This type signature makes it unclear whether the relevant
--- lists include the operator itself, or just the arguments.
 data SP m = SP { requester :: [Address] -> UniqueSourceT m [SimulationRequest]
                , log_d_req :: Maybe ([Address] -> [SimulationRequest] -> Double)
                , outputter :: [Node] -> [Node] -> m Value
@@ -63,7 +61,7 @@ trivial_log_d_req :: a -> b -> Double
 trivial_log_d_req = const $ const $ 0.0
 
 trivialOut :: (Monad m) => a -> [Node] -> m Value
-trivialOut _ (n:_) = return $ fromJust "trivialOut node had no value" $ valueOf n -- TODO Probably wrong if n is a Reference node, e.g., (lambda (x) x)
+trivialOut _ (n:_) = return $ fromJust "trivialOut node had no value" $ valueOf n
 trivialOut _ _ = error "trivialOut expects at least one request result"
 
 compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
@@ -73,7 +71,6 @@ compoundSP formals exp env =
        , outputter = trivialOut
        , log_d_out = Nothing
        } where
-        -- TODO This requester assumes the operator node is stripped out of the arguments
         req args = do
           freshId <- liftM SRId fresh
           let r = SimulationRequest freshId exp $ Frame (M.fromList $ zip formals args) env
@@ -81,20 +78,20 @@ compoundSP formals exp env =
 
 data Node = Constant Value
           | Reference (Maybe Value) Address
-          | Request (Maybe [SimulationRequest]) [Address]
-          | Output (Maybe Value) [Address] [Address]
+          | Request (Maybe [SimulationRequest]) Address [Address]
+          | Output (Maybe Value) Address [Address] [Address]
 
 valueOf :: Node -> Maybe Value
 valueOf (Constant v) = Just v
 valueOf (Reference v _) = v
-valueOf (Output v _ _) = v
+valueOf (Output v _ _ _) = v
 valueOf _ = Nothing
 
 parentAddrs :: Node -> [Address]
 parentAddrs (Constant _) = []
 parentAddrs (Reference _ addr) = [addr]
-parentAddrs (Request _ as) = as
-parentAddrs (Output _ as as') = as ++ as'
+parentAddrs (Request _ a as) = a:as
+parentAddrs (Output _ a as as') = a:(as ++ as')
 
 ----------------------------------------------------------------------
 -- Traces
@@ -125,19 +122,26 @@ isRegenerated :: Node -> Bool
 isRegenerated (Constant _) = True
 isRegenerated (Reference Nothing _) = False
 isRegenerated (Reference (Just _) _) = True
-isRegenerated (Request Nothing _) = False
-isRegenerated (Request (Just _) _) = True
-isRegenerated (Output Nothing _ _) = False
-isRegenerated (Output (Just _) _ _) = True
+isRegenerated (Request Nothing _ _) = False
+isRegenerated (Request (Just _) _ _) = True
+isRegenerated (Output Nothing _ _ _) = False
+isRegenerated (Output (Just _) _ _ _) = True
 
 operatorAddr :: Node -> Trace m -> Maybe SPAddress
 operatorAddr n t = do
   a <- op_addr n
+  chaseOperator a t
+    where op_addr (Request _ a _) = Just a
+          op_addr (Output _ a _ _) = Just a
+          op_addr _ = Nothing
+
+chaseOperator :: Address -> Trace m -> Maybe SPAddress
+chaseOperator a t = do
+  -- TODO This chase may be superfluous now that Reference nodes hold
+  -- their values, which would mean operatorAddr doesn't need the
+  -- Trace either.
   source <- chaseReferences a t
   valueOf source >>= spValue
-    where op_addr (Request _ (a:_)) = Just a
-          op_addr (Output _ (a:_) _) = Just a
-          op_addr _ = Nothing
 
 operatorRecord :: Node -> Trace m -> Maybe (SPRecord m)
 operatorRecord n t@Trace{ sprs = ss } = operatorAddr n t >>= (flip M.lookup ss)
@@ -173,7 +177,7 @@ fulfilments :: Address -> Trace m -> [Address]
 fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ srids node where
     node = fromJust "Asking for fulfilments of a missing node" $ lookupNode a t
     SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
-    srids (Request (Just srs) _) = map srid srs
+    srids (Request (Just srs) _ _) = map srid srs
     srids _ = error "Asking for fulfilments of a non-request node"
     srid (SimulationRequest id _ _) = id
 
