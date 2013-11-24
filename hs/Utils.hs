@@ -53,5 +53,5 @@ runUniqueSource a s = runIdentity $ runUniqueSourceT a s
 ----------------------------------------------------------------------
 
 fromJust :: String -> Maybe a -> a
-fromJust msg (Just a) = a
+fromJust _ (Just a) = a
 fromJust msg Nothing = error msg
