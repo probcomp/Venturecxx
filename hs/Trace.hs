@@ -205,10 +205,8 @@ runRequester spaddr args t = do
   let trace' = insertSPR spaddr spr{ srid_seed = seed' } t
   return (reqs, trace')
 
--- How many times has the given address been requested by the SP at
--- the given address.  Presumably, only one SP ever requests any given
--- address, because their caches are independent.
-numRequests :: Address -> SPAddress -> Trace m -> Int
+-- How many times has the given address been requested.
+numRequests :: Address -> Trace m -> Int
 numRequests = undefined
 
 -- Nodes in the trace that depend upon the node at the given address.

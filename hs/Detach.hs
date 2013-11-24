@@ -66,7 +66,24 @@ collectERG ((a,principal):as) = do
           collectERG as
 
 collectBrush :: [Address] -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
-collectBrush = undefined
+collectBrush = mapM_ disableRequests where
+    disableRequests :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
+    disableRequests a = do
+      node <- asks $ fromJust . lookupNode a
+      case node of
+        (Request (Just reqs) _ _) -> (asks $ fulfilments a) >>= (mapM_ disableRequestFor)
+        _ -> return ()
+    disableRequestFor :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
+    disableRequestFor a = do
+      modify $ mapFst $ M.alter maybeSucc a
+      disabled <- gets $ fromJust . M.lookup a . fst
+      requested <- asks $ numRequests a
+      if disabled == requested then uneval a
+      else return ()
+    uneval = undefined
+
+    maybeSucc Nothing = Just 1
+    maybeSucc (Just x) = Just $ x+1
 
 detach :: Scaffold -> Trace rand -> Writer LogDensity (Trace rand)
 detach = undefined
