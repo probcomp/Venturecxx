@@ -197,3 +197,13 @@ runRequester spaddr args t = do
   (reqs, seed') <- runUniqueSourceT (req args) seed
   let trace' = insertSPR spaddr spr{ srid_seed = seed' } t
   return (reqs, trace')
+
+-- How many times has the given address been requested by the SP at
+-- the given address.  Presumably, only one SP ever requests any given
+-- address, because their caches are independent.
+numRequests :: Address -> SPAddress -> Trace m -> Int
+numRequests = undefined
+
+-- Nodes in the trace that depend upon the node at the given address.
+children :: Address -> Trace m -> [Address]
+children = undefined
