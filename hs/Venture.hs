@@ -70,3 +70,4 @@ simulate_soup exp = do
 -- simulate_soup $ App (Lam ["id"] (App (Variable "id") [(Datum $ Number 1.0)])) [(Lam ["x"] (Variable "x"))]
 -- K combinator
 -- simulate_soup $ App (App (Lam ["x"] (Lam ["y"] (Variable "x"))) [(Datum $ Number 1.0)]) [(Datum $ Number 2.0)]
+-- simulate_soup $ App (Variable "bernoulli") []
