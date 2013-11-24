@@ -111,6 +111,9 @@ data Trace rand =
           , spaddr_seed :: UniqueSeed
           }
 
+empty :: Trace m
+empty = Trace M.empty [] M.empty uniqueSeed uniqueSeed
+
 chaseReferences :: Address -> Trace m -> Maybe Node
 chaseReferences a t@Trace{ nodes = m } = do
   n <- M.lookup a m
