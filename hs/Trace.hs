@@ -54,7 +54,7 @@ trivial_log_d_req :: a -> b -> Double
 trivial_log_d_req = const $ const $ 0.0
 
 trivialOut :: (Monad m) => a -> [Node] -> m Value
-trivialOut _ (n:_) = return $ fromJust $ valueOf n -- TODO Probably wrong if n is a Reference node
+trivialOut _ (n:_) = return $ fromJust $ valueOf n -- TODO Probably wrong if n is a Reference node, e.g., (lambda (x) x)
 trivialOut _ _ = error "trivialOut expects at least one request result"
 
 compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
