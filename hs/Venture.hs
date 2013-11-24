@@ -2,6 +2,7 @@
 module Venture where
 
 import Data.Maybe
+import Control.Monad.Reader
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.Class
@@ -49,7 +50,7 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
     sample :: (MonadRandom m) => Trace m -> m Scaffold
     sample trace@Trace{ randoms = choices } = do
       index <- getRandomR (0, length choices - 1)
-      return $ scaffold_from_principal_node (choices !! index) trace
+      return $ runReader (scaffold_from_principal_node (choices !! index)) trace
 
     log_density :: Trace m -> a -> LogDensity
     log_density Trace{ randoms = choices } _ = LogDensity $ -log(fromIntegral $ length choices)
