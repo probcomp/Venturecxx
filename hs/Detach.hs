@@ -106,5 +106,22 @@ collectBrush = mapM_ disableRequests where
     maybeSucc Nothing = Just 1
     maybeSucc (Just x) = Just $ x+1
 
-detach :: Scaffold -> Trace m -> Writer LogDensity (Trace m)
-detach = undefined
+detach' :: Scaffold -> StateT (Trace m) (Writer LogDensity) ()
+detach' Scaffold { drg = d, absorbers = abs, dead_reqs = reqs, brush = bru } = do
+  mapM_ unabsorbValue $ reverse $ O.toList abs
+  mapM_ (stupid . eraseValue) $ O.toList d
+  mapM_ (stupid . forgetRequest) reqs
+  mapM_ (stupid . forgetNode) $ S.toList bru
+  where unabsorbValue :: Address -> StateT (Trace m) (Writer LogDensity) ()
+        unabsorbValue = undefined
+        eraseValue :: Address -> State (Trace m) ()
+        eraseValue = undefined
+        forgetRequest :: (SPAddress, [SRId]) -> State (Trace m) ()
+        forgetRequest = undefined
+        forgetNode :: Address -> State (Trace m) ()
+        forgetNode = undefined
+        stupid :: (Monad m) => State s a -> StateT s m a
+        stupid = StateT . (return .) . runState
+
+detach :: Scaffold -> (Trace m) -> Writer LogDensity (Trace m)
+detach s t = liftM snd $ runStateT (detach' s) t
