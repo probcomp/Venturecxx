@@ -65,3 +65,5 @@ simulate_soup exp = do
 
 -- simulate_soup $ Datum $ Number 1.0
 -- simulate_soup $ App (Lam ["x"] (Variable "x")) [(Datum $ Number 1.0)]
+-- (let (id ...) (id 1))
+-- simulate_soup $ App (Lam ["id"] (App (Variable "id") [(Datum $ Number 1.0)])) [(Lam ["x"] (Variable "x"))]
