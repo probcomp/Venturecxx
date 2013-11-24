@@ -1,5 +1,6 @@
 module Utils (Unique, UniqueSeed, UniqueSourceT, UniqueSource
-             , runUniqueSourceT, uniqueSeed, fresh, runUniqueSource) where
+             , runUniqueSourceT, uniqueSeed, fresh, runUniqueSource
+             , fromJust) where
 
 import Data.Functor.Identity
 import Control.Monad.Trans.Class
@@ -48,3 +49,9 @@ type UniqueSource = UniqueSourceT Identity
 
 runUniqueSource :: UniqueSource a -> UniqueSeed -> (a, UniqueSeed)
 runUniqueSource a s = runIdentity $ runUniqueSourceT a s
+
+----------------------------------------------------------------------
+
+fromJust :: String -> Maybe a -> a
+fromJust msg (Just a) = a
+fromJust msg Nothing = error msg

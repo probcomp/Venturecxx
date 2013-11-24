@@ -3,7 +3,6 @@
 module Trace where
 
 import qualified Data.Map as M
-import Data.Maybe
 import Control.Monad.State hiding (state)
 
 import Utils
@@ -64,7 +63,7 @@ trivial_log_d_req :: a -> b -> Double
 trivial_log_d_req = const $ const $ 0.0
 
 trivialOut :: (Monad m) => a -> [Node] -> m Value
-trivialOut _ (n:_) = return $ fromJust $ valueOf n -- TODO Probably wrong if n is a Reference node, e.g., (lambda (x) x)
+trivialOut _ (n:_) = return $ fromJust "trivialOut node had no value" $ valueOf n -- TODO Probably wrong if n is a Reference node, e.g., (lambda (x) x)
 trivialOut _ _ = error "trivialOut expects at least one request result"
 
 compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
@@ -123,7 +122,7 @@ chaseReferences a t@Trace{ nodes = m } = do
 
 isRegenerated :: Node -> Trace m -> Bool
 isRegenerated (Constant _) _ = True
-isRegenerated (Reference addr) t = isRegenerated (fromJust $ chaseReferences addr t) t
+isRegenerated (Reference addr) t = isRegenerated (fromJust "Dangling reference" $ chaseReferences addr t) t
 isRegenerated (Request Nothing _) _ = False
 isRegenerated (Request (Just _) _) _ = True
 isRegenerated (Output Nothing _ _) _ = False
@@ -169,17 +168,17 @@ addFreshSP sp t@Trace{ sprs = ss, spaddr_seed = seed } = (a, t{ sprs = ss', spad
 fulfilments :: Address -> Trace m -> [Address]
 -- The addresses of the responses to the requests made by the Request
 -- node at Address.
-fulfilments a t = map (fromJust . flip M.lookup reqs) $ srids node where
-    node = fromJust $ lookupNode a t
-    SPRecord { requests = reqs } = fromJust $ operatorRecord node t
+fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ srids node where
+    node = fromJust "Asking for fulfilments of a missing node" $ lookupNode a t
+    SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
     srids (Request (Just srs) _) = map srid srs
-    srids _ = []
+    srids _ = error "Asking for fulfilments of a non-request node"
     srid (SimulationRequest id _ _) = id
 
 insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
 insertResponse spa id a t@Trace{ sprs = ss } = t{ sprs = M.insert spa spr' ss } where
     spr' = spr{ requests = M.insert id a reqs }
-    spr@SPRecord { requests = reqs } = fromJust $ lookupSPR spa t
+    spr@SPRecord { requests = reqs } = fromJust "Inserting response to non-SP" $ lookupSPR spa t
 
 lookupResponse :: SPAddress -> SRId -> Trace m -> Maybe Address
 lookupResponse spa srid t = do
@@ -188,7 +187,7 @@ lookupResponse spa srid t = do
 
 runRequester :: (Monad m) => SPAddress -> [Address] -> Trace m -> m ([SimulationRequest], Trace m)
 runRequester spaddr args t = do
-  let spr@SPRecord { sp = SP{ requester = req }, srid_seed = seed } = fromJust $ lookupSPR spaddr t
+  let spr@SPRecord { sp = SP{ requester = req }, srid_seed = seed } = fromJust "Running the requester of a non-SP" $ lookupSPR spaddr t
   (reqs, seed') <- runUniqueSourceT (req args) seed
   let trace' = insertSPR spaddr spr{ srid_seed = seed' } t
   return (reqs, trace')
