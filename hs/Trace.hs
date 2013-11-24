@@ -23,7 +23,7 @@ type Value = L.Value SPAddress
 type Exp = L.Exp Value
 type Env = L.Env String Address
 
-newtype Address = Address Int
+newtype Address = Address Unique
     deriving (Eq, Ord)
 
 newtype SPAddress = SPAddress Int
@@ -107,6 +107,7 @@ data Trace rand =
     Trace { nodes :: (M.Map Address Node)
           , randoms :: [Address]
           , sprs :: (M.Map SPAddress (SPRecord rand))
+          , addr_seed :: UniqueSeed
           }
 
 chaseReferences :: Address -> Trace m -> Maybe Node
@@ -143,7 +144,9 @@ insertNode :: Address -> Node -> Trace m -> Trace m
 insertNode a n t@Trace{nodes = ns} = t{ nodes = (M.insert a n ns) } -- TODO update random choices
 
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
-addFreshNode = undefined
+addFreshNode node t@Trace{ nodes = ns, addr_seed = seed } = (a, t{ nodes = ns', addr_seed = seed'}) where
+    (a, seed') = runUniqueSource (liftM Address fresh) seed
+    ns' = M.insert a node ns
 
 lookupSPR :: SPAddress -> Trace m -> Maybe (SPRecord m)
 lookupSPR spa Trace{ sprs = m } = M.lookup spa m
