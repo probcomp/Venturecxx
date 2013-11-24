@@ -3,6 +3,13 @@ module Utils (Unique, UniqueSeed, UniqueSourceT, runUniqueSourceT, uniqueSeed) w
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Strict
 
+-- A deterministic source of unique objects that, unlike Data.Unique,
+-- does not involve the IO monad.
+
+-- Limitation: streams of uniques that are started from different
+-- calls to uniqueSeed will be intercomparable.  Perhaps some branding
+-- hack might be used to prevent this.
+
 data UniqueSeed = UniqueSeed Integer
 
 data Unique = Unique Integer
