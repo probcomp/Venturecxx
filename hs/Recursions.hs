@@ -43,7 +43,7 @@ regenValue a = lift (do
     (Request _ ps) -> do
       SP{ requester = req } <- gets $ fromJust . (flip operator node)
       reqs <- lift $ req ps -- TODO Here, ps is the full list of parent addresses, including the operator node
-      insertNode' a (Request (Just reqs) ps)
+      modify $ insertNode a (Request (Just reqs) ps)
       addr <- gets $ fromJust . (flip operatorAddr node)
       evalRequests addr reqs
     (Output _ ps rs) -> do
@@ -52,7 +52,7 @@ regenValue a = lift (do
       let args = map (fromJust . flip M.lookup ns) ps
       let results = map (fromJust . flip M.lookup ns) rs
       v <- lift $ out args results
-      insertNode' a (Output (Just v) ps rs))
+      modify $ insertNode a (Output (Just v) ps rs))
 
 evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()
 evalRequests a srs = mapM_ evalRequest srs where
