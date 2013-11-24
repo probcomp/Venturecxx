@@ -1,4 +1,4 @@
-module Recursions where
+module Regen where
 
 import qualified Data.Map as M
 import Data.Maybe

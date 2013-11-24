@@ -9,7 +9,7 @@ import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 
 import Language hiding (Exp, Value)
 import Trace
-import Recursions
+import Regen
 import Detach
 import SP
 
