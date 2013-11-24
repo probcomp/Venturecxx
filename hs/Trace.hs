@@ -113,9 +113,6 @@ chaseReferences t@Trace{ nodes = m } a = do
     where chase (Reference a) = chaseReferences t a
           chase n = Just n
 
-parents :: Trace rand -> Node -> [Node]
-parents Trace{ nodes = n } node = map (fromJust . flip M.lookup n) $ parentAddrs node
-
 operatorAddr :: Node -> Trace m -> Maybe SPAddress
 operatorAddr n t@Trace{ sps = ss } = do
   a <- op_addr n
