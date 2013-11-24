@@ -14,15 +14,21 @@ import Trace hiding (empty)
 
 data Scaffold = Scaffold { drg :: O.Set Address
                          , absorbers :: O.Set Address
+                         , dead_reqs :: [(SPAddress, [SRId])]
                          , brush :: S.Set Address
+                         -- TODO If I don't keep track somewhere, I
+                         -- will leak SPRecords under detach and
+                         -- regen.
                          }
 
 mapDrg f s@Scaffold{ drg = d } = s{ drg = f d}
 mapAbs f s@Scaffold{ absorbers = a } = s{ absorbers = f a}
+mapReq f s@Scaffold{ dead_reqs = d } = s{ dead_reqs = f d}
 mapBru f s@Scaffold{ brush = b } = s{ brush = f b}
 
 empty :: Scaffold
-empty = Scaffold O.empty O.empty S.empty
+empty = Scaffold O.empty O.empty [] S.empty
+
 
 scaffold_from_principal_node :: Address -> Reader (Trace m) Scaffold
 scaffold_from_principal_node a = do
@@ -68,7 +74,11 @@ collectBrush = mapM_ disableRequests where
     disableRequests a = do
       node <- asks $ fromJust . lookupNode a
       case node of
-        (Request (Just reqs) _ _) -> (asks $ fulfilments a) >>= (mapM_ disableRequestFor)
+        (Request (Just reqs) _ _) -> do
+          spaddr <- asks $ fromJust . operatorAddr node
+          let reqIds = requestIds node
+          modify $ mapSnd $ mapReq ((spaddr,reqIds):)
+          (asks $ fulfilments a) >>= (mapM_ disableRequestFor)
         _ -> return ()
     disableRequestFor :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
     disableRequestFor a = do
@@ -96,5 +106,5 @@ collectBrush = mapM_ disableRequests where
     maybeSucc Nothing = Just 1
     maybeSucc (Just x) = Just $ x+1
 
-detach :: Scaffold -> Trace rand -> Writer LogDensity (Trace rand)
+detach :: Scaffold -> Trace m -> Writer LogDensity (Trace m)
 detach = undefined
