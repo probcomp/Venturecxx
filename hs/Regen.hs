@@ -16,7 +16,10 @@ import Detach (Scaffold(..))
 import qualified InsertionOrderedSet as O
 
 regen :: (MonadRandom m) => Scaffold -> Trace m -> WriterT LogDensity m (Trace m)
-regen = undefined
+regen s t = do
+  ((_, w), t') <- lift $ runStateT (runWriterT (regen' s)) t
+  tell w
+  return t'
 
 regen' :: (MonadRandom m) => Scaffold -> WriterT LogDensity (StateT (Trace m) m) ()
 regen' Scaffold { drg = d, absorbers = abs } = do
