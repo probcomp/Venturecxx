@@ -29,8 +29,8 @@ instance Monoid LogDensity where
     mempty = LogDensity 0.0
     (LogDensity x) `mappend` (LogDensity y) = LogDensity $ x + y
 
-log_density_nedate :: LogDensity -> LogDensity
-log_density_nedate (LogDensity x) = LogDensity $ -x
+log_density_negate :: LogDensity -> LogDensity
+log_density_negate (LogDensity x) = LogDensity $ -x
 
 data Exp v = Datum v
            | Variable String

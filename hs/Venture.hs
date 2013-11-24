@@ -22,7 +22,7 @@ mix_mh_kernels sampleIndex measureIndex paramK x = do
   tell ldRho
   x' <- paramK ind x
   let ldXi = measureIndex x' ind
-  tell $ log_density_nedate ldXi
+  tell $ log_density_negate ldXi
   return x'
 
 metropolis_hastings :: (MonadRandom m) => Kernel m a -> a -> m a
@@ -38,7 +38,7 @@ metropolis_hastings propose x = do
 
 scaffold_mh_kernel :: (MonadRandom m) => Scaffold -> Kernel m (Trace m)
 scaffold_mh_kernel scaffold trace = do
-  torus <- censor log_density_nedate $ stupid $ detach scaffold trace
+  torus <- censor log_density_negate $ stupid $ detach scaffold trace
   regen torus
         where stupid :: (Monad m) => Writer w a -> WriterT w m a
               stupid = WriterT . return . runWriter
