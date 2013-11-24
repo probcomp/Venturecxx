@@ -121,14 +121,14 @@ chaseReferences a t@Trace{ nodes = m } = do
     where chase (Reference _ a) = chaseReferences a t
           chase n = Just n
 
-isRegenerated :: Node -> Trace m -> Bool
-isRegenerated (Constant _) _ = True
-isRegenerated (Reference Nothing _) _ = False
-isRegenerated (Reference (Just _) _) _ = True
-isRegenerated (Request Nothing _) _ = False
-isRegenerated (Request (Just _) _) _ = True
-isRegenerated (Output Nothing _ _) _ = False
-isRegenerated (Output (Just _) _ _) _ = True
+isRegenerated :: Node -> Bool
+isRegenerated (Constant _) = True
+isRegenerated (Reference Nothing _) = False
+isRegenerated (Reference (Just _) _) = True
+isRegenerated (Request Nothing _) = False
+isRegenerated (Request (Just _) _) = True
+isRegenerated (Output Nothing _ _) = False
+isRegenerated (Output (Just _) _ _) = True
 
 operatorAddr :: Node -> Trace m -> Maybe SPAddress
 operatorAddr n t = do
