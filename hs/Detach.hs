@@ -9,7 +9,7 @@ import Control.Monad.Trans.State.Lazy hiding (state)
 import Utils hiding (fromJust)
 import Language
 import qualified InsertionOrderedSet as O
-import Trace
+import Trace hiding (empty)
 
 type DRG = O.Set Address
 type Absorbers = O.Set Address
@@ -19,16 +19,23 @@ data Scaffold = Scaffold { drg :: DRG
                          , brush :: S.Set Address
                          }
 
+mapDrg f s@Scaffold{ drg = d } = s{ drg = f d}
+mapAbs f s@Scaffold{ absorbers = a } = s{ absorbers = f a}
+mapBru f s@Scaffold{ brush = b } = s{ brush = f b}
+
+empty :: Scaffold
+empty = Scaffold O.empty O.empty S.empty
+
 scaffold_from_principal_node :: Address -> Reader (Trace m) Scaffold
 scaffold_from_principal_node a = do
-  (erg, absorbers) <- execStateT (collectERG [(a,True)]) (O.empty, O.empty)
-  (brush, (drg, absorbers')) <- runStateT collectBrush (erg, absorbers)
-  return $ Scaffold drg absorbers brush
+  scaffold <- execStateT (collectERG [(a,True)]) empty
+  scaffold' <- execStateT collectBrush scaffold
+  return $ scaffold'
 
-collectERG :: [(Address,Bool)] -> StateT (DRG, Absorbers) (Reader (Trace m)) ()
+collectERG :: [(Address,Bool)] -> StateT Scaffold (Reader (Trace m)) ()
 collectERG [] = return ()
 collectERG ((a,principal):as) = do
-  member <- gets $ O.member a . fst
+  member <- gets $ O.member a . drg
   -- Not stopping on nodes that are already absorbers because they can become DRG nodes
   -- (if I discover that their operator is in the DRG after all)
   if member then collectERG as
@@ -40,21 +47,21 @@ collectERG ((a,principal):as) = do
       _ -> do
          let opa = fromJust $ opAddr node
          -- N.B. This can change as more graph structure is traversed
-         opMember <- gets $ O.member opa . fst
+         opMember <- gets $ O.member opa . drg
          if opMember then resampling a
          else do
            opCanAbsorb <- lift $ asks $ (canAbsorb node) . fromJust . operator node
            if (not principal && opCanAbsorb) then absorbing a
            else resampling a -- TODO check esrReferenceCanAbsorb
-  where resampling :: Address -> StateT (DRG, Absorbers) (Reader (Trace m)) ()
+  where resampling :: Address -> StateT Scaffold (Reader (Trace m)) ()
         resampling a = do
-          modify $ mapSnd $ O.delete a
-          modify $ mapFst $ O.insert a
+          modify $ mapAbs $ O.delete a
+          modify $ mapDrg $ O.insert a
           as' <- lift $ asks $ children a
           collectERG $ (zip as' $ repeat False) ++ as
-        absorbing :: Address -> StateT (DRG, Absorbers) (Reader (Trace m)) ()
+        absorbing :: Address -> StateT Scaffold (Reader (Trace m)) ()
         absorbing a = do
-          modify $ mapSnd $ O.insert a
+          modify $ mapAbs $ O.insert a
           collectERG as
 
 collectBrush = undefined

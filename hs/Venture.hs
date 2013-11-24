@@ -11,7 +11,7 @@ import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Language hiding (Exp, Value)
 import Trace
 import Regen
-import Detach
+import Detach hiding (empty)
 import SP
 
 type Kernel m a = a -> WriterT LogDensity m a
