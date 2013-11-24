@@ -26,7 +26,7 @@ type Env = L.Env String Address
 newtype Address = Address Unique
     deriving (Eq, Ord)
 
-newtype SPAddress = SPAddress Int
+newtype SPAddress = SPAddress Unique
     deriving (Eq, Ord)
 
 newtype SRId = SRId Unique
@@ -108,6 +108,7 @@ data Trace rand =
           , randoms :: [Address]
           , sprs :: (M.Map SPAddress (SPRecord rand))
           , addr_seed :: UniqueSeed
+          , spaddr_seed :: UniqueSeed
           }
 
 chaseReferences :: Address -> Trace m -> Maybe Node
@@ -155,7 +156,9 @@ insertSPR :: SPAddress -> (SPRecord m) -> Trace m -> Trace m
 insertSPR addr spr t@Trace{ sprs = ss } = t{ sprs = M.insert addr spr ss }
 
 addFreshSP :: SP m -> Trace m -> (SPAddress, Trace m)
-addFreshSP = undefined
+addFreshSP sp t@Trace{ sprs = ss, spaddr_seed = seed } = (a, t{ sprs = ss', spaddr_seed = seed'}) where
+    (a, seed') = runUniqueSource (liftM SPAddress fresh) seed
+    ss' = M.insert a (spRecord sp) ss
 
 fulfilments :: Address -> Trace m -> [Address]
 -- The addresses of the responses to the requests made by the Request
