@@ -10,20 +10,26 @@ import Language
 import qualified InsertionOrderedSet as O
 import Trace
 
-data Scaffold = Scaffold { drg :: O.Set Address
+type DRG = O.Set Address
+type Absorbers = O.Set Address
+
+data Scaffold = Scaffold { drg :: DRG
+                         , absorbers :: Absorbers
                          , brush :: S.Set Address
                          }
 
 scaffold_from_principal_node :: Address -> Reader (Trace m) Scaffold
 scaffold_from_principal_node a = do
-  erg <- execStateT (collectERG [(a,True)]) O.empty
-  (brush, drg) <- runStateT collectBrush erg
-  return $ Scaffold drg brush
+  (erg, absorbers) <- execStateT (collectERG [(a,True)]) (O.empty, O.empty)
+  (brush, (drg, absorbers')) <- runStateT collectBrush (erg, absorbers)
+  return $ Scaffold drg absorbers brush
 
-collectERG :: [(Address,Bool)] -> StateT (O.Set Address) (Reader (Trace m)) ()
+collectERG :: [(Address,Bool)] -> StateT (DRG, Absorbers) (Reader (Trace m)) ()
 collectERG [] = return ()
 collectERG ((a,principal):as) = do
-  member <- gets $ O.member a
+  member <- gets $ O.member a . fst
+  -- Not stopping on nodes that are already absorbers because they can become DRG nodes
+  -- (if I discover that their operator is in the DRG after all)
   if member then collectERG as
   else do
     node <- lift $ asks $ fromJust . lookupNode a
@@ -32,15 +38,16 @@ collectERG ((a,principal):as) = do
       (Reference _ _) -> resampling a
       _ -> do
          let opa = fromJust $ opAddr node
-         opMember <- gets $ O.member opa -- N.B. This can change as more graph structure is traversed
+         -- N.B. This can change as more graph structure is traversed
+         opMember <- gets $ O.member opa . fst
          if opMember then resampling a
          else do
            opCanAbsorb <- lift $ asks $ (canAbsorb node) . fromJust . operator node
            if (not principal && opCanAbsorb) then absorbing a
            else resampling a -- TODO check esrReferenceCanAbsorb
-  where resampling :: Address -> StateT (O.Set Address) (Reader (Trace m)) ()
+  where resampling :: Address -> StateT (DRG, Absorbers) (Reader (Trace m)) ()
         resampling = undefined
-        absorbing :: Address -> StateT (O.Set Address) (Reader (Trace m)) ()
+        absorbing :: Address -> StateT (DRG, Absorbers) (Reader (Trace m)) ()
         absorbing = undefined
 
 collectBrush = undefined
