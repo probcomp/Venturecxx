@@ -54,7 +54,7 @@ pair<double, OmegaDB*> Trace::detach(const vector<Node *> & border,
       assert(scaffold->isResampling(node));
       if (node->isObservation()) 
       { 
-	weight += unconstrain(node,false);
+        weight += unconstrain(node,false);
       }
       weight += detachInternal(node,scaffold,omegaDB);
     }
