@@ -52,6 +52,13 @@ canAbsorb (Request _ _ _)  SP { log_d_req = (Just _) } = True
 canAbsorb (Output _ _ _ _ _) SP { log_d_out = (Just _) } = True
 canAbsorb _ _ = False
 
+absorb :: Node -> SP m -> Trace m -> Double
+absorb (Request (Just reqs) _ args) SP { log_d_req = (Just f) } _ = f args reqs
+absorb (Output (Just v) _ _ args reqs) SP { log_d_out = (Just f) } t = f args' reqs' v where
+    args' = map (fromJust "absorb" . flip lookupNode t) args
+    reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
+absorb _ _ _ = error "Inappropriate absorb attempt"
+
 nullReq :: (Monad m) => a -> m [SimulationRequest]
 nullReq _ = return []
 

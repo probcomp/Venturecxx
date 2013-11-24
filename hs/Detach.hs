@@ -113,7 +113,11 @@ detach' Scaffold { drg = d, absorbers = abs, dead_reqs = reqs, brush = bru } = d
   mapM_ (stupid . forgetRequest) reqs
   mapM_ (stupid . forgetNode) $ S.toList bru
   where unabsorbValue :: Address -> StateT (Trace m) (Writer LogDensity) ()
-        unabsorbValue = undefined
+        unabsorbValue a = do
+          node <- gets $ fromJust . lookupNode a
+          sp <- gets $ fromJust . operator node
+          wt <- gets $ absorb node sp
+          lift $ tell $ LogDensity wt
         eraseValue :: Address -> State (Trace m) ()
         eraseValue a = modify $ adjustNode devalue a
         forgetRequest :: (SPAddress, [SRId]) -> State (Trace m) ()
