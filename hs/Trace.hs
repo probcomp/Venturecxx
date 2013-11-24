@@ -93,6 +93,11 @@ parentAddrs (Reference _ addr) = [addr]
 parentAddrs (Request _ a as) = a:as
 parentAddrs (Output _ a as as') = a:(as ++ as')
 
+opAddr :: Node -> Maybe Address
+opAddr (Request _ a _) = Just a
+opAddr (Output _ a _ _) = Just a
+opAddr _ = Nothing
+
 ----------------------------------------------------------------------
 -- Traces
 ----------------------------------------------------------------------
@@ -129,11 +134,8 @@ isRegenerated (Output (Just _) _ _ _) = True
 
 operatorAddr :: Node -> Trace m -> Maybe SPAddress
 operatorAddr n t = do
-  a <- op_addr n
+  a <- opAddr n
   chaseOperator a t
-    where op_addr (Request _ a _) = Just a
-          op_addr (Output _ a _ _) = Just a
-          op_addr _ = Nothing
 
 chaseOperator :: Address -> Trace m -> Maybe SPAddress
 chaseOperator a t = do

@@ -27,7 +27,19 @@ collectERG ((a,principal):as) = do
   if member then collectERG as
   else do
     node <- lift $ asks $ fromJust . lookupNode a
-    undefined
+    case node of
+      (Constant _) -> error "Constant node should never appear in the DRG"
+      (Reference _ _) -> resampling a
+      _ -> do
+         let opa = fromJust $ opAddr node
+         opMember <- gets $ O.member opa -- N.B. This can change as more graph structure is traversed
+         if opMember then resampling a
+         else do
+           opCanAbsorb <- undefined
+           if (not principal && opCanAbsorb) then absorbing a
+           else resampling a -- TODO check esrReferenceCanAbsorb
+  where absorbing = undefined
+        resampling = undefined
 
 collectBrush = undefined
 
