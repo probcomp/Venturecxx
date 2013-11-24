@@ -42,7 +42,7 @@ regenValue a = lift (do
     (Reference _) -> return ()
     (Request _ ps) -> do
       addr <- gets $ fromJust . (operatorAddr node)
-      reqs <- StateT $ xxx addr ps -- TODO Here, ps is the full list of parent addresses, including the operator node
+      reqs <- StateT $ runRequester addr ps -- TODO Here, ps is the full list of parent addresses, including the operator node
       modify $ insertNode a (Request (Just reqs) ps)
       addr <- gets $ fromJust . (operatorAddr node)
       evalRequests addr reqs

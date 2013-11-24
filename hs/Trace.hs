@@ -155,8 +155,8 @@ insertResponse = undefined
 lookupResponse :: SPAddress -> SRId -> Trace m -> Maybe Address
 lookupResponse = undefined
 
-xxx :: (Monad m) => SPAddress -> [Address] -> Trace m -> m ([SimulationRequest], Trace m)
-xxx spaddr args t@Trace { sps = ss } = do
+runRequester :: (Monad m) => SPAddress -> [Address] -> Trace m -> m ([SimulationRequest], Trace m)
+runRequester spaddr args t@Trace { sps = ss } = do
   let sp@SP{ requester = req, srid_seed = seed } = fromJust $ M.lookup spaddr ss
   (reqs, seed') <- runUniqueSourceT (req args) seed
   let trace' = insertSP spaddr sp{ srid_seed = seed' } t
