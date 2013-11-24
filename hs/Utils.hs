@@ -1,6 +1,6 @@
 module Utils (Unique, UniqueSeed, UniqueSourceT, UniqueSource
              , runUniqueSourceT, uniqueSeed, fresh, runUniqueSource
-             , fromJust) where
+             , fromJust, mapFst, mapSnd) where
 
 import Data.Functor.Identity
 import Control.Monad.Trans.Class
@@ -55,3 +55,9 @@ runUniqueSource a s = runIdentity $ runUniqueSourceT a s
 fromJust :: String -> Maybe a -> a
 fromJust _ (Just a) = a
 fromJust msg Nothing = error msg
+
+mapFst :: (a -> b) -> (a,c) -> (b,c)
+mapFst f (a,c) = (f a, c)
+
+mapSnd :: (a -> b) -> (c,a) -> (c,b)
+mapSnd f (c,a) = (c, f a)

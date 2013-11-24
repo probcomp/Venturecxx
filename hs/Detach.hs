@@ -6,6 +6,7 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.State.Lazy hiding (state)
 
+import Utils hiding (fromJust)
 import Language
 import qualified InsertionOrderedSet as O
 import Trace
@@ -46,9 +47,15 @@ collectERG ((a,principal):as) = do
            if (not principal && opCanAbsorb) then absorbing a
            else resampling a -- TODO check esrReferenceCanAbsorb
   where resampling :: Address -> StateT (DRG, Absorbers) (Reader (Trace m)) ()
-        resampling = undefined
+        resampling a = do
+          modify $ mapSnd $ O.delete a
+          modify $ mapFst $ O.insert a
+          as' <- lift $ asks $ children a
+          collectERG $ (zip as' $ repeat False) ++ as
         absorbing :: Address -> StateT (DRG, Absorbers) (Reader (Trace m)) ()
-        absorbing = undefined
+        absorbing a = do
+          modify $ mapSnd $ O.insert a
+          collectERG as
 
 collectBrush = undefined
 
