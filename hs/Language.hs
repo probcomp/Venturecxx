@@ -14,6 +14,10 @@ data Value proc = Number Double
                 | Boolean Bool
   deriving Show
 
+numberOf :: Value p -> Maybe Double
+numberOf (Number d) = Just d
+numberOf _ = Nothing
+
 spValue :: Value proc -> Maybe proc
 spValue (Procedure s) = Just s
 spValue _ = Nothing

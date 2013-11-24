@@ -67,6 +67,7 @@ simulate_soup exp = evalStateT act empty
 -- K combinator
 -- simulate_soup $ App (App (Lam ["x"] (Lam ["y"] (Variable "x"))) [(Datum $ Number 1.0)]) [(Datum $ Number 2.0)]
 -- simulate_soup $ App (Variable "bernoulli") []
+-- simulate_soup $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
 
 -- Next subgoal: Reverse-simulate some trivial programs (e.g. flipping
 --   one coin and observing the result?)
