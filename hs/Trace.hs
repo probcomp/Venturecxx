@@ -135,6 +135,9 @@ operatorAddr n t@Trace{ sprs = ss } = do
           op_addr (Output _ (a:_) _) = Just a
           op_addr _ = Nothing
 
+operatorRecord :: Node -> Trace m -> Maybe (SPRecord m)
+operatorRecord n t@Trace{ sprs = ss } = operatorAddr n t >>= (flip M.lookup ss)
+
 operator :: Node -> Trace m -> Maybe (SP m)
 operator n t@Trace{ sprs = ss } = operatorAddr n t >>= (liftM sp . flip M.lookup ss)
 
@@ -163,7 +166,12 @@ addFreshSP sp t@Trace{ sprs = ss, spaddr_seed = seed } = (a, t{ sprs = ss', spad
 fulfilments :: Address -> Trace m -> [Address]
 -- The addresses of the responses to the requests made by the Request
 -- node at Address.
-fulfilments = undefined
+fulfilments a t = map (fromJust . flip M.lookup reqs) $ srids node where
+    node = fromJust $ lookupNode a t
+    SPRecord { requests = reqs } = fromJust $ operatorRecord node t
+    srids (Request (Just srs) _) = map srid srs
+    srids _ = []
+    srid (SimulationRequest id _ _) = id
 
 insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
 insertResponse spa id a t@Trace{ sprs = ss } = t{ sprs = M.insert spa spr' ss } where
