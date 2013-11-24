@@ -62,3 +62,5 @@ simulate_soup :: (MonadRandom m) => Exp -> m Value
 simulate_soup exp = do
     (address, trace) <- runStateT (eval exp Toplevel) empty
     return $ fromJust $ valueOf $ fromJust $ lookupNode address trace
+
+-- simulate_soup $ Datum $ Number 1.0
