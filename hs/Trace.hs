@@ -103,6 +103,11 @@ opAddr (Request _ a _) = Just a
 opAddr (Output _ _ a _ _) = Just a
 opAddr _ = Nothing
 
+requestIds :: Node -> [SRId]
+requestIds (Request (Just srs) _ _) = map srid srs
+    where srid (SimulationRequest id _ _) = id
+requestIds _ = error "Asking for request IDs of a non-request node"
+
 ----------------------------------------------------------------------
 -- Traces
 ----------------------------------------------------------------------
@@ -181,12 +186,9 @@ addFreshSP sp t@Trace{ sprs = ss, spaddr_seed = seed } = (a, t{ sprs = ss', spad
 fulfilments :: Address -> Trace m -> [Address]
 -- The addresses of the responses to the requests made by the Request
 -- node at Address.
-fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ srids node where
+fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ requestIds node where
     node = fromJust "Asking for fulfilments of a missing node" $ lookupNode a t
     SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
-    srids (Request (Just srs) _ _) = map srid srs
-    srids _ = error "Asking for fulfilments of a non-request node"
-    srid (SimulationRequest id _ _) = id
 
 insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
 insertResponse spa id a t@Trace{ sprs = ss } = t{ sprs = M.insert spa spr' ss } where
