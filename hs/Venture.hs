@@ -41,7 +41,7 @@ metropolis_hastings propose x = do
 scaffold_mh_kernel :: (MonadRandom m) => Scaffold -> Kernel m (Trace m)
 scaffold_mh_kernel scaffold trace = do
   torus <- censor log_density_negate $ stupid $ detach scaffold trace
-  regen torus
+  regen scaffold torus
         where stupid :: (Monad m) => Writer w a -> WriterT w m a
               stupid = WriterT . return . runWriter
 
