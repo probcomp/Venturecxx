@@ -69,6 +69,19 @@ simulate_soup exp = evalStateT act empty
 -- simulate_soup $ App (Variable "bernoulli") []
 -- simulate_soup $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
 
--- Next subgoal: Reverse-simulate some trivial programs (e.g. flipping
---   one coin and observing the result?)
+-- Next subgoal: Do MH inference (without observations) and see bernoulli change value
+
+-- Next subgoal: Do MH inference with observations on some trivial
+--   programs (e.g. normal with normally distributed mean?)
 -- - replace fromJusts with things that signal error messages (forceLookup)
+
+-- Eventual goals
+-- - Built-in SPs with collapsed exchangeably coupled state
+--   - This imposes the ordering requirement on regen and detach
+--   - This is where incorporate and unincorporate (remove) come from
+
+-- Non-goals
+-- - Latent simulation kernels for SPs
+--   - This seems to be the only source of nonzero weights in {regen,detach}Internal
+--     (also eval and uneval (detachFamily?))
+-- - Absorbing At Applications (I don't even understand the machinery this requires)
