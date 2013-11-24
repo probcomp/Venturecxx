@@ -140,7 +140,7 @@ double Trace::detachInternal(Node * node,
       node->isActive = false;
       if (node->isApplication())
       { 
-	weight += unapplyPSP(node,scaffold,omegaDB); 
+        weight += unapplyPSP(node,scaffold,omegaDB);
       }
 
       weight += detachParents(node,scaffold,omegaDB);
