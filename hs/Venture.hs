@@ -1,11 +1,13 @@
 
 module Venture where
 
+import Data.Maybe
+import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.Class
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 
-import Language
+import Language hiding (Exp, Value)
 import Trace
 import Recursions
 import SP
@@ -55,3 +57,8 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
 -- - grep for undefined
 -- - ask for incomplete clauses
 -- - replace fromJusts with things that signal error messages (forceLookup)
+
+simulate_soup :: (MonadRandom m) => Exp -> m Value
+simulate_soup exp = do
+    (address, trace) <- runStateT (eval exp Toplevel) empty
+    return $ fromJust $ valueOf $ fromJust $ lookupNode address trace
