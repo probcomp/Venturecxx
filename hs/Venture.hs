@@ -53,11 +53,6 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
     log_density :: Trace m -> a -> LogDensity
     log_density Trace{ randoms = choices } _ = LogDensity $ -log(fromIntegral $ length choices)
     
--- Next subgoal: Forward-simulate some trivial programs (e.g. flipping one coin)
--- - grep for undefined
--- - ask for incomplete clauses
--- - replace fromJusts with things that signal error messages (forceLookup)
-
 simulate_soup :: (MonadRandom m) => Exp -> m Value
 simulate_soup exp = evalStateT act empty
     where act = do
@@ -72,3 +67,7 @@ simulate_soup exp = evalStateT act empty
 -- K combinator
 -- simulate_soup $ App (App (Lam ["x"] (Lam ["y"] (Variable "x"))) [(Datum $ Number 1.0)]) [(Datum $ Number 2.0)]
 -- simulate_soup $ App (Variable "bernoulli") []
+
+-- Next subgoal: Reverse-simulate some trivial programs (e.g. flipping
+--   one coin and observing the result?)
+-- - replace fromJusts with things that signal error messages (forceLookup)
