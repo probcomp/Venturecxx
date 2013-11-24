@@ -4,7 +4,6 @@ import Control.Monad
 import Control.Monad.Random -- From cabal install MonadRandom
 
 import Language hiding (Value)
-import Utils
 import Trace
 
 bernoulliFlip :: (MonadRandom m) => a -> b -> m Value

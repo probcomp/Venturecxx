@@ -2,7 +2,6 @@ module Recursions where
 
 import qualified Data.Map as M
 import Data.Maybe
-import qualified Data.Tuple as Tuple
 import Control.Monad
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.State.Lazy hiding (state)

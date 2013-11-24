@@ -127,7 +127,7 @@ isRegenerated (Output Nothing _ _) _ = False
 isRegenerated (Output (Just _) _ _) _ = True
 
 operatorAddr :: Node -> Trace m -> Maybe SPAddress
-operatorAddr n t@Trace{ sprs = ss } = do
+operatorAddr n t = do
   a <- op_addr n
   source <- chaseReferences a t
   valueOf source >>= spValue

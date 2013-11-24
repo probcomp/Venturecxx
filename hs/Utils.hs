@@ -1,4 +1,4 @@
-module Utils (Unique, UniqueSeed, UniqueSourceT
+module Utils (Unique, UniqueSeed, UniqueSourceT, UniqueSource
              , runUniqueSourceT, uniqueSeed, fresh, runUniqueSource) where
 
 import Data.Functor.Identity
@@ -46,4 +46,5 @@ runUniqueSourceT (UniqueSourceT action) = runStateT action
 
 type UniqueSource = UniqueSourceT Identity
 
+runUniqueSource :: UniqueSource a -> UniqueSeed -> (a, UniqueSeed)
 runUniqueSource a s = runIdentity $ runUniqueSourceT a s
