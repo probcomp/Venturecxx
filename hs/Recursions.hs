@@ -1,7 +1,6 @@
 module Recursions where
 
 import qualified Data.Map as M
-import qualified Data.Set as S
 import Data.Maybe
 import Control.Monad
 import Control.Monad.Trans.Writer.Strict
@@ -13,17 +12,6 @@ import Prelude hiding (lookup)
 import Language hiding (Value, Exp, Env, lookup)
 import qualified Language as L
 import Trace
-import qualified InsertionOrderedSet as O
-
-data Scaffold = Scaffold { drg :: O.Set Address
-                         , brush :: S.Set Address
-                         }
-
-scaffold_from_principal_node :: Address -> Trace rand -> Scaffold
-scaffold_from_principal_node = undefined
-
-detach :: Scaffold -> Trace rand -> Writer LogDensity (Trace rand)
-detach = undefined
 
 regen :: (MonadRandom m) => Trace m -> WriterT LogDensity m (Trace m)
 regen = undefined
@@ -94,6 +82,3 @@ eval (App op args) env = do
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr'
   return addr'
-
--- uneval :: Address -> Trace -> Trace
--- uneval = undefined
