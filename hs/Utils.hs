@@ -1,4 +1,4 @@
-module Utils (Unique, UniqueSeed, UniqueSourceT, runUniqueSourceT, uniqueSeed) where
+module Utils (Unique, UniqueSeed, UniqueSourceT, runUniqueSourceT, uniqueSeed, fresh) where
 
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Strict

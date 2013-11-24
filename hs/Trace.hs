@@ -69,9 +69,10 @@ compoundSP formals exp env =
        , srid_seed = uniqueSeed
        } where
         -- TODO This requester assumes the operator node is stripped out of the arguments
-        req args = return [r] where
-            r :: SimulationRequest
-            r = SimulationRequest undefined exp $ Frame (M.fromList $ zip formals args) env
+        req args = do
+          freshId <- liftM SRId fresh
+          let r = SimulationRequest freshId exp $ Frame (M.fromList $ zip formals args) env
+          return [r]
 
 data Node = Constant Value
           | Reference Address
@@ -104,7 +105,7 @@ isRegenerated (Output (Just _) _ _) = True
 -- A "torus" is a trace some of whose nodes have Nothing values, and
 -- some of whose Request nodes may have outstanding SimulationRequests
 -- that have not yet been met.
-data Trace rand = 
+data Trace rand =
     Trace { nodes :: (M.Map Address Node)
           , randoms :: [Address]
           , sps :: (M.Map SPAddress (SP rand))
