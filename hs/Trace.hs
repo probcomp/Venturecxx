@@ -162,7 +162,9 @@ insertResponse spa id a t@Trace{ sprs = ss } = t{ sprs = M.insert spa spr' ss } 
     spr@SPRecord { requests = reqs } = fromJust $ M.lookup spa ss
 
 lookupResponse :: SPAddress -> SRId -> Trace m -> Maybe Address
-lookupResponse = undefined
+lookupResponse spa srid Trace{ sprs = ss } = do
+  SPRecord { requests = reqs } <- M.lookup spa ss
+  M.lookup srid reqs
 
 runRequester :: (Monad m) => SPAddress -> [Address] -> Trace m -> m ([SimulationRequest], Trace m)
 runRequester spaddr args t@Trace { sprs = ss } = do
