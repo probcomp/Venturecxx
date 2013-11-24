@@ -60,8 +60,9 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
 
 simulate_soup :: (MonadRandom m) => Exp -> m Value
 simulate_soup exp = do
-    (address, trace) <- runStateT (eval exp Toplevel) empty
-    return $ fromJust $ valueOf $ fromJust $ lookupNode address trace
+  let (env, trace) = runState (initializeBuiltins Toplevel) empty
+  (address, trace') <- runStateT (eval exp env) trace
+  return $ fromJust $ valueOf $ fromJust $ lookupNode address trace'
 
 -- simulate_soup $ Datum $ Number 1.0
 -- simulate_soup $ App (Lam ["x"] (Variable "x")) [(Datum $ Number 1.0)]
