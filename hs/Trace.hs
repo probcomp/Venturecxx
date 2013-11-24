@@ -46,14 +46,6 @@ data SP m = SP { requester :: [Address] -> UniqueSourceT m [SimulationRequest]
                , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
                }
 
-data SPRecord m = SPRecord { sp :: (SP m)
-                           , srid_seed :: UniqueSeed
-                           , requests :: M.Map SRId Address
-                           }
-
-spRecord :: SP m -> SPRecord m
-spRecord sp = SPRecord sp uniqueSeed M.empty
-
 nullReq :: (Monad m) => a -> m [SimulationRequest]
 nullReq _ = return []
 
@@ -75,6 +67,14 @@ compoundSP formals exp env =
           freshId <- liftM SRId fresh
           let r = SimulationRequest freshId exp $ Frame (M.fromList $ zip formals args) env
           return [r]
+
+data SPRecord m = SPRecord { sp :: (SP m)
+                           , srid_seed :: UniqueSeed
+                           , requests :: M.Map SRId Address
+                           }
+
+spRecord :: SP m -> SPRecord m
+spRecord sp = SPRecord sp uniqueSeed M.empty
 
 data Node = Constant Value
           | Reference (Maybe Value) Address
