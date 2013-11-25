@@ -6,12 +6,11 @@
 /* Continuous scalar random SPs. */
 struct NormalSP : SP
 {
-  NormalSP()
+  NormalSP(): SP("normal")
     {
       isRandomOutput = true;
       canAbsorbOutput = true;
       hasVariationalLKernel = true;
-      name = "normal";
     }
 
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
@@ -28,7 +27,7 @@ struct NormalSP : SP
 
 struct GammaSP : SP
 {
-  GammaSP()
+  GammaSP(): SP("gamma")
     {
       isRandomOutput = true;
       canAbsorbOutput = true;
@@ -39,7 +38,7 @@ struct GammaSP : SP
 
 struct InvGammaSP : SP
 {
-  InvGammaSP()
+  InvGammaSP(): SP("inv_gamma")
     {
       isRandomOutput = true;
       canAbsorbOutput = true;
@@ -50,7 +49,7 @@ struct InvGammaSP : SP
 
 struct UniformContinuousSP : SP
 {
-  UniformContinuousSP()
+  UniformContinuousSP(): SP("uniform_continuous")
     {
       isRandomOutput = true;
       canAbsorbOutput = true;
@@ -62,7 +61,7 @@ struct UniformContinuousSP : SP
 
 struct BetaSP : SP
 {
-  BetaSP()
+  BetaSP(): SP("beta")
     {
       isRandomOutput = true;
       canAbsorbOutput = true;
@@ -83,7 +82,7 @@ struct BetaSP : SP
 
 struct StudentTSP : SP
 {
-  StudentTSP()
+  StudentTSP(): SP("student_t")
     {
       isRandomOutput = true;
       canAbsorbOutput = true;
@@ -96,7 +95,7 @@ struct StudentTSP : SP
 
 struct ChiSquareSP : SP
 {
-  ChiSquareSP()
+  ChiSquareSP(): SP("chi_sq")
     {
       isRandomOutput = true;
       canAbsorbOutput = true;
@@ -108,7 +107,7 @@ struct ChiSquareSP : SP
 
 struct InverseChiSquareSP : SP
 {
-  InverseChiSquareSP()
+  InverseChiSquareSP(): SP("inv_chi_sq")
     {
       isRandomOutput = true;
       canAbsorbOutput = true;

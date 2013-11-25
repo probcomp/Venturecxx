@@ -2,6 +2,7 @@
 #define PY_TRACE_H
 
 #include "trace.h"
+#include "render.h"
 
 #include <boost/python.hpp>
 #include <boost/python/object.hpp>
@@ -48,6 +49,9 @@ struct PyTrace
   bool continuous_inference_running = false;
   boost::python::dict continuous_inference_params;
   std::thread * continuous_inference_thread;
+
+  // TODO skipping scaffold for now
+  boost::python::list dotTrace();
 };
 
 #endif

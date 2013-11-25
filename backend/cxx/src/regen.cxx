@@ -459,6 +459,7 @@ pair<double,Node*> Trace::evalFamily(VentureValue * exp,
     node->isActive = true;
   }
   assert(node);
+  node->expression = exp;
   return {weight,node};
 }
 
@@ -485,7 +486,7 @@ double Trace::apply(Node * requestNode,
       weight += regenInternal(esrParent,scaffold,shouldRestore,omegaDB,gradients);
     }
   }
-
+  
   requestNode->isActive = true;
   
   /* Call the output PSP. */

@@ -46,7 +46,7 @@ bool VentureSymbol::equals(const VentureValue * & other) const
 
 string VentureSP::toString() const
 {
-  return sp->name;
+  return "sp:" + sp->name;
 }
 
 boost::python::dict VentureValue::toPython() const
@@ -243,4 +243,60 @@ void deepDelete(VentureValue * value)
 {
   value->destroyParts();
   delete value;
+}
+
+string VentureBool::toString() const
+{
+  if (pred) { return "#t"; }
+  else { return "#f"; }
+}
+
+string VentureNumber::toString() const
+{
+  return to_string(x);
+}
+
+string VentureAtom::toString() const
+{
+  return to_string(n);
+}
+
+string VentureRequest::toString() const
+{
+  string s = "[";
+  bool first = true;
+  for (ESR esr : esrs)
+  {
+    if (!first) { s += ", "; }
+    s += "(" + to_string(esr.id) + ", " + esr.exp->toString() + ", <env>)";
+    first = false;
+  }
+  s += "]";
+  return s;
+}
+
+string VentureSymbol::toString() const { return sym; }
+
+string VentureNil::toString()  const
+{ 
+  return "()"; 
+}
+
+string VenturePair::toString()  const
+{ 
+  assert(first);
+  string s = "(" + first->toString();
+  VentureList * l = rest;
+  assert(l);
+  while (!dynamic_cast<VentureNil*>(l))
+  {
+    VenturePair * pair = dynamic_cast<VenturePair*>(l);
+    assert(pair);
+    assert(pair->first);
+    // TODO except for rendering, would probably want a comma here
+    s += " " + pair->first->toString();
+    l = pair->rest;
+  }
+  s += ")";
+  return s; 
 }
