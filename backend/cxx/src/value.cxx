@@ -46,7 +46,7 @@ bool VentureSymbol::equals(const VentureValue * & other) const
 
 string VentureSP::toString() const
 {
-  return sp->name;
+  return "sp:" + sp->name;
 }
 
 boost::python::dict VentureValue::toPython() const

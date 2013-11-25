@@ -217,11 +217,21 @@ void PyTrace::stop_continuous_inference() {
   }
 }
 
-string PyTrace::dotTrace()
+boost::python::list PyTrace::dotTrace()
 {
+  boost::python::list dots;
   Renderer r;
+
   r.dotTrace(trace,nullptr);
-  return r.dot;
+  dots.append(r.dot);
+
+  for (Node * pNode : trace->randomChoices)
+  {
+    Scaffold s({pNode});
+    r.dotTrace(trace,&s);
+    dots.append(r.dot);
+  }
+  return dots;
 }
 
 

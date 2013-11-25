@@ -152,8 +152,13 @@ string Renderer::getNodeFillColor(Node * node)
 {
   if (scaffold)
   {
-    assert(false);
-    return "black";
+    if (scaffold->principalNodes.count(node)) { return "firebrick"; }
+    else if (scaffold->isAAA(node)) { return "lightpink1"; }
+//    else if (scaffold->isResampling(node) && node->isObservation()) { return "magenta4"; }
+    else if (scaffold->isResampling(node)) { return "gold"; }
+    else if (scaffold->isAbsorbing(node)) { return "steelblue1"; }
+    else if (scaffold->brush.count(node)) { return "darkseagreen"; }
+    else { return "grey56"; }
   }
   else
   {
@@ -183,12 +188,7 @@ string Renderer::getNodeLabel(Node * node)
   if (node->nodeType == NodeType::REQUEST) { s += "request: "; }
   else { s += "value: "; }
 
-  if (value) 
-  {
-    VentureSP * vsp = dynamic_cast<VentureSP *>(value);
-    if (vsp) { s += "sp:" + value->toString(); }
-    else { s += value->toString(); }
-  }
+  if (value) { s += value->toString(); }
   else { s += "[]"; }
   return s;
 }
