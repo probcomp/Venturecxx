@@ -20,8 +20,7 @@
 import sys
 from venture import shortcuts
 
-def run_venture_console():
-  ripl = shortcuts.make_church_prime_ripl()
+def run_venture_console(ripl):
   while True:
     sys.stdout.write('>>> ')
     current_line = sys.stdin.readline()
@@ -61,4 +60,4 @@ def run_venture_console():
     except Exception, err:
       print "Your query has generated an error: " + str(err)
 
-run_venture_console()
+run_venture_console(shortcuts.make_church_prime_ripl())
