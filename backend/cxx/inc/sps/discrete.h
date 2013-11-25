@@ -5,7 +5,7 @@
 
 struct BernoulliSP : SP
 { 
-  BernoulliSP()
+  BernoulliSP(): SP("bernoulli")
     { 
       isRandomOutput = true; 
       canAbsorbOutput = true;
@@ -19,7 +19,7 @@ struct BernoulliSP : SP
 
 struct CategoricalSP : SP
 { 
-  CategoricalSP()
+  CategoricalSP(): SP("categorical")
     { 
       isRandomOutput = true; 
       canAbsorbOutput = true;
@@ -33,7 +33,7 @@ struct CategoricalSP : SP
 
 struct UniformDiscreteSP : SP
 { 
-  UniformDiscreteSP()
+  UniformDiscreteSP(): SP("uniform_discrete")
     { 
       isRandomOutput = true;
       canAbsorbOutput = true;
@@ -47,7 +47,7 @@ struct UniformDiscreteSP : SP
 
 struct PoissonSP : SP
 { 
-  PoissonSP()
+  PoissonSP(): SP("poission")
     { 
       isRandomOutput = true;
       canAbsorbOutput = true;

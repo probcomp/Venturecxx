@@ -3,6 +3,7 @@
 
 #include "render.h"
 #include "trace.h"
+#include "value.h"
 #include "node.h"
 #include "scaffold.h"
 
@@ -32,7 +33,7 @@ void Renderer::dotTrace(Trace * trace, Scaffold * scaffold)
   this->trace = trace;
   this->scaffold = scaffold;
   dotHeader();
-  dotStatements();
+//  dotStatements();
   dotNodes();
   dotEdges();
   dotFooter();
@@ -50,8 +51,12 @@ void Renderer::dotFooter()
 
 void Renderer::dotStatements()
 {
-  dot += "label="; 
-  dot += quote("(directives not shown)");
+  dot += "label=\""; 
+  for (pair<size_t,pair<Node*,VentureValue*> > pp : trace->ventureFamilies)
+  {
+    dot += pp.second.second->toString() + "\\n";
+  }
+  dot += "\"\n";
 }
 
 void Renderer::dotNodes()
@@ -143,9 +148,50 @@ void Renderer::dotAttributes(const map<string,string> & attributes)
 }
 
 string Renderer::getNodeShape(Node * node) { return "ellipse"; }
-string Renderer::getNodeFillColor(Node * node) { return "steelblue1"; }
+string Renderer::getNodeFillColor(Node * node) 
+{
+  if (scaffold)
+  {
+    assert(false);
+    return "black";
+  }
+  else
+  {
+    if (node->nodeType == NodeType::VALUE) { return "darkgoldenrod2"; }
+    else if (node->nodeType == NodeType::LOOKUP) { return "khaki"; }
+    else if (node->nodeType == NodeType::REQUEST) { return "darkolivegreen4"; }
+    else
+    {
+      assert(node->nodeType == NodeType::OUTPUT);
+      if (node->isObservation()) { return "magenta4"; }
+      else if (node->isConstrained) { return "saddlebrown"; }
+      else { return "dodgerblue"; }
+    }
+  }
+}
+
 string Renderer::getNodeStyle(Node * node) { return "filled"; }
-string Renderer::getNodeLabel(Node * node) { return strNodeType(node->nodeType); }
+string Renderer::getNodeLabel(Node * node) 
+{
+  // expression
+  // value
+  assert(node);
+  string s = "";
+  if (node->expression) { s += "exp: " + node->expression->toString() + "\\n"; }
+
+  VentureValue * value = node->getValue();
+  if (node->nodeType == NodeType::REQUEST) { s += "request: "; }
+  else { s += "value: "; }
+
+  if (value) 
+  {
+    VentureSP * vsp = dynamic_cast<VentureSP *>(value);
+    if (vsp) { s += "sp:" + value->toString(); }
+    else { s += value->toString(); }
+  }
+  else { s += "[]"; }
+  return s;
+}
 
 
 // Edges

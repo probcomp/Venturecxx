@@ -30,11 +30,11 @@
 
 using boost::adaptors::reverse;
 
-VentureValue * MSPMakerSP::simulateOutput(Node * node, gsl_rng * rng) const
+VentureValue * MakeMSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<Node *> & operands = node->operandNodes;
 /* TODO GC share somewhere here? */
-  return new VentureSP(new MSP(operands[0]));
+  return new VentureSP(new MSP(to_string(reinterpret_cast<size_t>(node)),operands[0]));
 }
 
 
