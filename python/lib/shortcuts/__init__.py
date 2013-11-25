@@ -17,7 +17,7 @@
 # -*- coding: utf-8 -*-
 
 from venture import parser, ripl, sivm, server
-
+from venture.ripl.utils import run_venture_console
 
 def make_core_sivm():
     return sivm.CoreSivmCxx()
