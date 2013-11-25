@@ -33,6 +33,7 @@ src_files = [
     "src/value.cxx",
     "src/node.cxx",
     "src/env.cxx",
+    "src/render.cxx",
     "src/builtin.cxx",
     "src/findsproots.cxx",
     "src/trace.cxx",

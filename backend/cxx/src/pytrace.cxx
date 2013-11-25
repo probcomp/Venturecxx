@@ -217,6 +217,14 @@ void PyTrace::stop_continuous_inference() {
   }
 }
 
+string PyTrace::dotTrace()
+{
+  Renderer r;
+  r.dotTrace(trace,nullptr);
+  return r.dot;
+}
+
+
 BOOST_PYTHON_MODULE(libtrace)
 {
   using namespace boost::python;
@@ -235,6 +243,7 @@ BOOST_PYTHON_MODULE(libtrace)
     .def("continuous_inference_status", &PyTrace::continuous_inference_status)
     .def("start_continuous_inference", &PyTrace::start_continuous_inference)
     .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)
+    .def("dot_trace", &PyTrace::dotTrace)
     ;
 };
 
