@@ -18,14 +18,16 @@ struct MSPAux : SPAux
   ~MSPAux();
 };
 
-struct MSPMakerSP : SP
+struct MakeMSP : SP
 {
+  MakeMSP(): SP("make_msp") {}
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
 };
 
 struct MSP : SP
 {
-  MSP(Node * sharedOperatorNode): 
+  MSP(string address, Node * sharedOperatorNode): 
+    SP("msp @ " + address),
     sharedOperatorNode(sharedOperatorNode)
     {
       makesESRs = true;

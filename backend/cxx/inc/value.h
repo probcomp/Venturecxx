@@ -71,6 +71,8 @@ struct VentureSymbol : VentureValue
   VentureSymbol(const string & sym): sym(sym) {}
   string sym;
   size_t toHash() const override;
+  string toString() const override;
+
   VentureValue * clone() const override;
 
   bool equals(const VentureValue * & other) const override;
@@ -90,6 +92,7 @@ struct VentureNil : VentureList
   virtual boost::python::dict toPython() const;
   VentureValue * clone() const override;
   bool equals(const VentureValue * & other) const override;
+  string toString() const override;
 
 };
 
@@ -104,6 +107,7 @@ struct VenturePair : VentureList
   VentureValue * clone() const override;
 
   virtual boost::python::dict toPython() const;
+  string toString() const override;
 
   bool equals(const VentureValue * & other) const override;
 
@@ -122,6 +126,8 @@ struct VentureBool : VentureValue
 { 
   VentureBool(bool pred): pred(pred) {}; 
   VentureValue * clone() const override; 
+  string toString() const override;
+
   size_t toHash() const override { return hash<bool>()(pred); }
 
   bool equals(const VentureValue * & other) const override;
@@ -134,6 +140,8 @@ struct VentureBool : VentureValue
 struct VentureNumber : VentureValue 
 { 
   VentureNumber(double x): x(x) {}
+  string toString() const override;
+
   size_t toHash() const override { return hash<double>()(x); }
   VentureValue * clone() const override;
   int getInt() const { return static_cast<int>(x); }
@@ -148,6 +156,8 @@ struct VentureNumber : VentureValue
 struct VentureAtom : VentureValue
 {
   VentureAtom(uint32_t n): n(n) {}
+  string toString() const override;
+
   size_t toHash() const override { return hash<unsigned int>()(n); }
   VentureValue * clone() const override;
 
@@ -175,6 +185,8 @@ struct VentureRequest : VentureValue
   VentureRequest() {}
   VentureRequest(vector<ESR> esrs): esrs(esrs) {}
   VentureRequest(vector<HSR *> hsrs): hsrs(hsrs) {}
+
+  string toString() const override;
   
   vector<ESR> esrs;
   vector<HSR *> hsrs;

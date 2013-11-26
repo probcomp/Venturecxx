@@ -197,11 +197,11 @@ class VentureSivm(object):
                 utils.validate_symbol)
         if exists==False and label in self.label_dict:
             raise VentureException('invalid_argument',
-                    'Label "{}" is already assigned to a different directive.',
+                    'Label "{}" is already assigned to a different directive.'.format(label),
                     argument='label')
         if exists==True and label not in self.label_dict:
             raise VentureException('invalid_argument',
-                    'Label "{}" does not exist.',
+                    'Label "{}" does not exist.'.format(label),
                     argument='label')
         return label
 

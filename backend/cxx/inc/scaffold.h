@@ -36,6 +36,8 @@ public:
   ~Scaffold();
 
 /* TODO Most of this should be private. */
+  set<Node *> principalNodes;
+
   map<Node *, DRGNode> drg{};
   set<Node *> absorbing{};
 

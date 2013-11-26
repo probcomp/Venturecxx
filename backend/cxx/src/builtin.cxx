@@ -152,7 +152,7 @@ map<string,SP *> initBuiltInSPs()
     {"make_csp", new MakeCSP},
 
     // with shared ESRs
-    {"mem", new MSPMakerSP},
+    {"mem", new MakeMSP},
   };
 }
 

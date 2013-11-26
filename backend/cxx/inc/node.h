@@ -80,6 +80,8 @@ struct Node
   bool isConstrained{false};
   bool spOwnsValue{true};
 
+  VentureValue * expression{nullptr};
+
   SPAux * madeSPAux{nullptr}; // owner
 
   bool isValid() { return magic == 653135; }
