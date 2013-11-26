@@ -32,7 +32,7 @@ VentureValue * MakeCSP::simulateOutput(Node * node, gsl_rng * rng) const
   VentureValue * body = dynamic_cast<VentureValue*>(node->operandNodes[1]->getValue());
   assert(ids);
   assert(body);
-  return new VentureSP(new CSP(ids,body,node->familyEnv));
+  return new VentureSP(new CSP(to_string(reinterpret_cast<size_t>(node)),ids,body,node->familyEnv));
 }
 
 

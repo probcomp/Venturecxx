@@ -33,7 +33,9 @@ src_files = [
     "src/value.cxx",
     "src/node.cxx",
     "src/env.cxx",
+    "src/render.cxx",
     "src/builtin.cxx",
+    "src/findsproots.cxx",
     "src/trace.cxx",
     "src/rcs.cxx",
     "src/omegadb.cxx",
@@ -86,8 +88,9 @@ packages=["venture","venture.sivm","venture.ripl",
     "venture.test", "venture.cxx", "venture.examples", "venture.vmodule"]
 
 cxx = Extension("venture.cxx.libtrace",
-    define_macros = [('MAJOR_VERSION', '1'),
-                     ('MINOR_VERSION', '0')],
+    define_macros = [('MAJOR_VERSION', '0'),
+                     ('MINOR_VERSION', '1'),
+                     ('REVISION', '1')],
     libraries = ['gsl', 'gslcblas', 'boost_python'],
     extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O0", "-fPIC"],
     undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
@@ -97,7 +100,7 @@ ext_modules.append(cxx)
 
 setup (
     name = 'Venture CXX',
-    version = '1.0',
+    version = '0.1.1',
     author = 'MIT.PCP',
     url = 'TBA',
     long_description = 'TBA.',

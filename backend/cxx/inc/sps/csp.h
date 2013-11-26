@@ -7,6 +7,7 @@
 
 struct MakeCSP : SP
 {
+  MakeCSP(): SP("make_csp") {}
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
 };
 
@@ -14,13 +15,13 @@ struct CSP : SP
 {
   /* TODO GC major GC issue with values. Right now the values in the expression
      will be shared by all applications of the csp! */
-  CSP(VentureValue * ids, VentureValue * body, VentureEnvironment * env): 
+  CSP(string address, VentureValue * ids, VentureValue * body, VentureEnvironment * env): 
+    SP("csp @ " + address),
     ids(dynamic_cast<VentureList*>(ids)), body(body), env(env)
     { 
       assert(ids);
       isESRReference = true;
       makesESRs = true;
-      name = "csp";
     }
 
   VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
