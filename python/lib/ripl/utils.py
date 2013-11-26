@@ -84,7 +84,8 @@ def run_venture_console(ripl):
       print "Moriturus te saluto."
       break
     current_line = current_line.strip()
-    # TODO Exit on C-d, eat blank lines
+    if (current_line == ""):
+      continue
     if current_line[0] == "(":
       current_line = current_line[1:-1]
     if current_line[0] == "[":
