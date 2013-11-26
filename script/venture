@@ -35,6 +35,7 @@ def local(args):
     run_venture_console(make_church_prime_ripl())
 
 parser = argparse.ArgumentParser(description='An interpreter for probabilistic programs.')
+parser.add_argument('--version', action='version', version='Venture, version 0.1.1')
 subparsers = parser.add_subparsers(title="optional mode")
 
 parser_local = subparsers.add_parser("run", help="[default] Start a local Venture session",
