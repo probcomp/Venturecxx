@@ -21,20 +21,28 @@ import sys
 import argparse
 from venture.shortcuts import *
 
+def banner():
+    print '''
+Venture, version 0.1.1  http://probcomp.csail.mit.edu/venture/
+'''.strip()
+
 def server(args):
+    banner()
     server = make_ripl_rest_server()
     print "Launching RIPL Server"
     server.run(host='0.0.0.0', port=args.port, debug=True, use_reloader=False)
 
 def client(args):
+    banner()
     url = "http://{0}:{1}".format(args.host, args.port)
     print "Connecting to RIPL Server at {0}".format(url)
     run_venture_console(make_ripl_rest_client(url))
 
 def local(args):
+    banner()
     run_venture_console(make_church_prime_ripl())
 
-parser = argparse.ArgumentParser(description='An interpreter for probabilistic programs.')
+parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform')
 parser.add_argument('--version', action='version', version='Venture, version 0.1.1')
 subparsers = parser.add_subparsers(title="optional mode")
 
