@@ -19,26 +19,31 @@
 
 import sys
 import argparse
-from venture import shortcuts
+from venture.shortcuts import *
 
 def server(args):
-    print "Server: " + str(args)
+    server = make_ripl_rest_server()
+    print "Launching RIPL Server"
+    server.run(host='0.0.0.0', port=args.port, debug=True, use_reloader=False)
 
 def client(args):
-    print "Client: " + str(args)
+    url = "http://{0}:{1}".format(args.host, args.port)
+    print "Connecting to RIPL Server at {0}".format(url)
+    run_venture_console(make_ripl_rest_client(url))
 
 def local(args):
-    print "Local: " + str(args)
-    shortcuts.run_venture_console(shortcuts.make_church_prime_ripl())
+    run_venture_console(make_church_prime_ripl())
 
 parser = argparse.ArgumentParser()
-parser.set_defaults(func=local)
 subparsers = parser.add_subparsers()
 
 parser_server = subparsers.add_parser("server")
+parser_server.add_argument("-p", "--port", help="the port to listen on", type=int, default=8082)
 parser_server.set_defaults(func=server)
 
 parser_client = subparsers.add_parser("remote")
+parser_client.add_argument("--host", help="the host to connect to", default='127.0.0.1')
+parser_client.add_argument("-p", "--port", help="the port to connect on", type=int, default=8082)
 parser_client.set_defaults(func=client)
 
 if len(sys.argv) == 1:
