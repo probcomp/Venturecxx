@@ -21,13 +21,16 @@ import sys
 import argparse
 from venture.shortcuts import *
 
-def banner():
+def banner(help=True):
+    help_ad = "  `help' for help"
+    if not(help):
+        help_ad = ""
     print '''
-Venture, version 0.1.1  http://probcomp.csail.mit.edu/venture/  `help' for help
-'''.strip()
+Venture, version 0.1.1  http://probcomp.csail.mit.edu/venture/{0}
+'''.format(help_ad).strip()
 
 def server(args):
-    banner()
+    banner(False)
     server = make_ripl_rest_server()
     print "Launching RIPL Server"
     server.run(host='0.0.0.0', port=args.port, debug=True, use_reloader=False)
