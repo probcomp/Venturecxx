@@ -23,7 +23,7 @@ from venture.shortcuts import *
 
 def banner():
     print '''
-Venture, version 0.1.1  http://probcomp.csail.mit.edu/venture/
+Venture, version 0.1.1  http://probcomp.csail.mit.edu/venture/  `help' for help
 '''.strip()
 
 def server(args):
