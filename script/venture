@@ -18,6 +18,32 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+import argparse
 from venture import shortcuts
 
-shortcuts.run_venture_console(shortcuts.make_church_prime_ripl())
+def server(args):
+    print "Server: " + str(args)
+
+def client(args):
+    print "Client: " + str(args)
+
+def local(args):
+    print "Local: " + str(args)
+    shortcuts.run_venture_console(shortcuts.make_church_prime_ripl())
+
+parser = argparse.ArgumentParser()
+parser.set_defaults(func=local)
+subparsers = parser.add_subparsers()
+
+parser_server = subparsers.add_parser("server")
+parser_server.set_defaults(func=server)
+
+parser_client = subparsers.add_parser("remote")
+parser_client.set_defaults(func=client)
+
+if len(sys.argv) == 1:
+    # Work around what appears to be a limitation of argparse
+    local("foo")
+else:
+    args = parser.parse_args()
+    args.func(args)
