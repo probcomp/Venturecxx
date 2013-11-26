@@ -37,16 +37,26 @@ def local(args):
 parser = argparse.ArgumentParser(description='An interpreter for probabilistic programs.')
 subparsers = parser.add_subparsers(title="optional mode")
 
-parser_local = subparsers.add_parser("run", help="[default] Start a local Venture session")
+parser_local = subparsers.add_parser("run", help="[default] Start a local Venture session",
+                                     description="Start a local Venture session")
 parser_local.set_defaults(func=local)
 
-parser_server = subparsers.add_parser("server", help="Start a Venture server session")
-parser_server.add_argument("-p", "--port", help="the port to listen on", type=int, default=8082)
+default_port = 8082
+
+parser_server = subparsers.add_parser("server", help="Start a Venture server session",
+                                      description="Start a Venture server session")
+parser_server.add_argument("-p", "--port", type=int, default=default_port,
+                           help="the port to listen on (default {0})".format(default_port))
 parser_server.set_defaults(func=server)
 
-parser_client = subparsers.add_parser("remote", help="Connect to a running Venture server session")
-parser_client.add_argument("--host", help="the host to connect to", default='127.0.0.1')
-parser_client.add_argument("-p", "--port", help="the port to connect on", type=int, default=8082)
+default_host = '127.0.0.1'
+
+parser_client = subparsers.add_parser("remote", help="Connect to a running Venture server session",
+                                      description="Connect to a running Venture server session")
+parser_client.add_argument("--host", default=default_host,
+                           help="the host to connect to (default {0})".format(default_host))
+parser_client.add_argument("-p", "--port", type=int, default=default_port,
+                           help="the port to connect on (default {0})".format(default_port))
 parser_client.set_defaults(func=client)
 
 if len(sys.argv) == 1:
