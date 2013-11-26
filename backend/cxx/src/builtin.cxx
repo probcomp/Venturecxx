@@ -129,6 +129,7 @@ map<string,SP *> initBuiltInSPs()
 
     // control flow
     {"branch", new BranchSP},
+    {"branch_exp", new ExpBranchSP},
     {"biplex", new BiplexSP},
 
     // environments

@@ -21,6 +21,17 @@ struct BranchSP : SP
 
 };
 
+struct ExpBranchSP : SP
+{
+  ExpBranchSP(): SP("branch")
+    {
+      makesESRs = true;
+      isESRReference = true;
+      canAbsorbRequest = false;
+    }
+  VentureValue * simulateRequest(Node * node, gsl_rng * rng) const override;
+};
+
 struct BiplexSP : SP
 {
   BiplexSP(): SP("biplex") {}
