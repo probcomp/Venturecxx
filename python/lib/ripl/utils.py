@@ -38,26 +38,39 @@ _RIPL_FUNCTIONS = [
         ]
 
 help_string = '''
-The available commands are
+Commands available from the prompt:
 
-help                           Show this help
-quit                           Exit Venture
-list-directives                List active directives
-global-log-score               Report current global log score
-continuous-inference-status    Report status of continuous inference
-start-continuous-inference [kernel] [global?]  Start continuous inference
-  the kernel must be one of mh (default), pgibbs, gibbs, or meanfield
-  the presence of the second parameter requests use of the global scaffold (not available for the gibbs kernel)
-stop-continuous-inference
-assume symbol expression   Add the named variable to the model
-predict expression         Register the expression as a model prediction of interest
-observe expression value   Condition on the expression being the value
-forget number              Forget the directive numbered number
-sample expression          Sample the given expression from the current state, without registering it as a prediction
-force expression value     Set the given expression to the given value in the current state, without conditioning on it
-infer count [kernel] [global?]   Run inference synchronously for count steps
-report number              Report the value of the directive numbered number
-clear                      Clear the entire current state
+ help                         Show this help
+ quit                         Exit Venture
+
+Commands for modeling:
+
+ assume symbol expression     Add the named variable to the model
+ predict expression           Register the expression as a model prediction
+ observe expression value     Condition on the expression being the value
+ list-directives              List active directives and their current values
+ forget number                Forget the given prediction or observation
+
+Commands for inference:
+
+ infer ct [kernel] [global?]  Run inference synchronously for ct steps
+   `kernel' must be one of mh (default), pgibbs, gibbs, or meanfield
+   `global?', if present, requests use of global scaffolds
+     (not available for the gibbs kernel)
+ start-ci [kernel] [global?]  Start continuous inference
+ stop-ci                      Stop continuous inference
+ ci-status                    Report status of continuous inference
+
+Commands for interaction:
+
+ sample expression            Sample the given expression immediately,
+                                without registering it as a prediction
+ force expression value       Set the given expression to the given value,
+                                without conditioning on it
+ list-directives              List active directives and their current values
+ report number                Report the current value of the given directive
+ global-log-score             Report current global log score
+ clear                        Clear the entire current state
 '''.strip()
 
 def run_venture_console(ripl):
@@ -78,21 +91,23 @@ def run_venture_console(ripl):
       if (directive_name == "quit"):
         print "Moriturus te saluto."
         done = True
+      elif (directive_name == "help"):
+        print help_string
       elif (directive_name == "list-directives"):
         for d in ripl.list_directives():
           print d
       elif (directive_name == "global-log-score"):
         print ripl.get_global_logscore()
-      elif (directive_name == "continuous-inference-status"):
+      elif (directive_name == "ci-status"):
         print ripl.continuous_inference_status()
-      elif (directive_name == "start-continuous-inference"):
+      elif (directive_name == "start-ci"):
         args = current_line.split(" ")[1:]
         if len(args) == 2:
           ripl.start_continuous_inference(args[0], True)
         else:
           ripl.start_continuous_inference(args[0])
         print ripl.continuous_inference_status()
-      elif (directive_name == "stop-continuous-inference"):
+      elif (directive_name == "stop-ci"):
         ripl.stop_continuous_inference()
         print ripl.continuous_inference_status()
       elif (directive_name == "clear"):
