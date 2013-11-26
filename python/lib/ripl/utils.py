@@ -78,6 +78,11 @@ def run_venture_console(ripl):
   while not(done):
     sys.stdout.write('>>> ')
     current_line = sys.stdin.readline()
+    if (not current_line):
+      print ''
+      print "End of input reached."
+      print "Moriturus te saluto."
+      break
     current_line = current_line.strip()
     # TODO Exit on C-d, eat blank lines
     if current_line[0] == "(":
