@@ -57,11 +57,16 @@ Installation into your virtual environment:
 Checking that your installation was successful
 ----------------------------------------------
 
-./sanity_tests.sh
+    ./sanity_tests.sh
 
 If you are interested in improving Venture, you can also run
 
-./list_known_issues.sh
+    ./list_known_issues.sh
+
+Getting Started
+---------------
+
+    venture
 
 Developing Venture
 ==================
