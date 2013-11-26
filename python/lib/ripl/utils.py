@@ -56,7 +56,8 @@ def run_venture_console(ripl):
         print "Moriturus te saluto."
         done = True
       elif (directive_name == "list-directives"):
-        print ripl.list_directives()
+        for d in ripl.list_directives():
+          print d
       elif (directive_name == "get-global-log-score"):
         print ripl.get_global_logscore()
       elif (directive_name == "continuous-inference-status"):
@@ -73,22 +74,26 @@ def run_venture_console(ripl):
           name_and_expression = content.split(" ", 1)
           print ripl.assume(name_and_expression[0], name_and_expression[1])
         elif (directive_name == "predict"):
-          name_and_expression = content.split(" ", 1)
           print ripl.predict(content)
         elif (directive_name == "observe"):
           expression_and_literal_value = content.rsplit(" ", 1)
-          print ripl.observe(expression_and_literal_value[0], expression_and_literal_value[1])
-        elif (directive_name == "infer"):
-          ripl.infer(int(content))
-          print "The engine has made number of inference iterations: " + content
+          ripl.observe(expression_and_literal_value[0], expression_and_literal_value[1])
         elif (directive_name == "forget"):
           ripl.forget(int(content))
-          print "You have forgotten the directive #" + content
+          print "Forgotten directive # {0}.".format(content)
+        elif (directive_name == "sample"):
+          print ripl.sample(content)
+        elif (directive_name == "force"):
+          expression_and_literal_value = content.rsplit(" ", 1)
+          ripl.force(expression_and_literal_value[0], expression_and_literal_value[1])
+        elif (directive_name == "infer"):
+          ripl.infer(int(content))
+          print "Made {0} inference iterations.".format(content)
         elif (directive_name == "report"):
-          print ripl.report_value(int(content))
+          print ripl.report(int(content))
         elif (directive_name == "clear"):
           ripl.clear()
-          print "The trace has been cleared."
+          print "Cleared trace."
         else:
           print "Sorry, unknown directive."
     except Exception, err:
