@@ -43,13 +43,13 @@ def run_venture_console(ripl):
     sys.stdout.write('>>> ')
     current_line = sys.stdin.readline()
     current_line = current_line.strip()
-    # TODO Provide for graceful exit
+    # TODO Exit on C-d, eat blank lines
     if current_line[0] == "(":
       current_line = current_line[1:-1]
     if current_line[0] == "[":
       current_line = current_line[1:-1]
-    current_line = current_line.split(" ", 1)
-    directive_name = current_line[0].lower()
+    directive_and_content = current_line.split(" ", 1)
+    directive_name = directive_and_content[0].lower()
     sys.stdout.write('')
     try:
       if (directive_name == "quit"):
@@ -63,13 +63,17 @@ def run_venture_console(ripl):
       elif (directive_name == "continuous-inference-status"):
         print ripl.continuous_inference_status()
       elif (directive_name == "start-continuous-inference"):
-        ripl.start_continuous_inference()
+        args = current_line.split(" ")[1:]
+        if len(args) == 2:
+          ripl.start_continuous_inference(args[0], True)
+        else:
+          ripl.start_continuous_inference(args[0])
         print ripl.continuous_inference_status()
       elif (directive_name == "stop-continuous-inference"):
         ripl.stop_continuous_inference()
         print ripl.continuous_inference_status()
       else:
-        content = current_line[1]
+        content = directive_and_content[1]
         if (directive_name == "assume"):
           name_and_expression = content.split(" ", 1)
           print ripl.assume(name_and_expression[0], name_and_expression[1])
@@ -87,8 +91,19 @@ def run_venture_console(ripl):
           expression_and_literal_value = content.rsplit(" ", 1)
           ripl.force(expression_and_literal_value[0], expression_and_literal_value[1])
         elif (directive_name == "infer"):
-          ripl.infer(int(content))
-          print "Made {0} inference iterations.".format(content)
+          args = content.split(" ")
+          kernel = "mh"
+          scaffold = "local"
+          if len(args) == 3:
+            ripl.infer(int(args[0]), args[1], True)
+            kernel = args[1]
+            scaffold = "global"
+          elif len(args) == 2:
+            ripl.infer(int(args[0]), args[1])
+            kernel = args[1]
+          else:
+            ripl.infer(int(args[0]))
+          print "Made {0} inference iterations of {1} kernel with {2} scaffold.".format(args[0], kernel, scaffold)
         elif (directive_name == "report"):
           print ripl.report(int(content))
         elif (directive_name == "clear"):
