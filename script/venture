@@ -34,14 +34,17 @@ def client(args):
 def local(args):
     run_venture_console(make_church_prime_ripl())
 
-parser = argparse.ArgumentParser()
-subparsers = parser.add_subparsers()
+parser = argparse.ArgumentParser(description='An interpreter for probabilistic programs.')
+subparsers = parser.add_subparsers(title="optional mode")
 
-parser_server = subparsers.add_parser("server")
+parser_local = subparsers.add_parser("run", help="[default] Start a local Venture session")
+parser_local.set_defaults(func=local)
+
+parser_server = subparsers.add_parser("server", help="Start a Venture server session")
 parser_server.add_argument("-p", "--port", help="the port to listen on", type=int, default=8082)
 parser_server.set_defaults(func=server)
 
-parser_client = subparsers.add_parser("remote")
+parser_client = subparsers.add_parser("remote", help="Connect to a running Venture server session")
 parser_client.add_argument("--host", help="the host to connect to", default='127.0.0.1')
 parser_client.add_argument("-p", "--port", help="the port to connect on", type=int, default=8082)
 parser_client.set_defaults(func=client)
