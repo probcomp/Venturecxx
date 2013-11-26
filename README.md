@@ -1,7 +1,11 @@
 Venture
 =======
 
-The primary implementation of the Venture system.
+Venture is an interactive, Turing-complete probabilistic programming
+platform that aims to be sufficiently expressive, extensible, and
+efficient for general-purpose use.
+
+http://probcomp.csail.mit.edu/venture/
 
 Installing Venture from Source
 ==============================
