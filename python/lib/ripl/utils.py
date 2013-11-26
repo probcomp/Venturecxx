@@ -37,6 +37,29 @@ _RIPL_FUNCTIONS = [
         'get_global_logscore'
         ]
 
+help_string = '''
+The available commands are
+
+help                           Show this help
+quit                           Exit Venture
+list-directives                List active directives
+global-log-score               Report current global log score
+continuous-inference-status    Report status of continuous inference
+start-continuous-inference [kernel] [global?]  Start continuous inference
+  the kernel must be one of mh (default), pgibbs, gibbs, or meanfield
+  the presence of the second parameter requests use of the global scaffold (not available for the gibbs kernel)
+stop-continuous-inference
+assume symbol expression   Add the named variable to the model
+predict expression         Register the expression as a model prediction of interest
+observe expression value   Condition on the expression being the value
+forget number              Forget the directive numbered number
+sample expression          Sample the given expression from the current state, without registering it as a prediction
+force expression value     Set the given expression to the given value in the current state, without conditioning on it
+infer count [kernel] [global?]   Run inference synchronously for count steps
+report number              Report the value of the directive numbered number
+clear                      Clear the entire current state
+'''.strip()
+
 def run_venture_console(ripl):
   done = False
   while not(done):
@@ -58,7 +81,7 @@ def run_venture_console(ripl):
       elif (directive_name == "list-directives"):
         for d in ripl.list_directives():
           print d
-      elif (directive_name == "get-global-log-score"):
+      elif (directive_name == "global-log-score"):
         print ripl.get_global_logscore()
       elif (directive_name == "continuous-inference-status"):
         print ripl.continuous_inference_status()
@@ -72,6 +95,9 @@ def run_venture_console(ripl):
       elif (directive_name == "stop-continuous-inference"):
         ripl.stop_continuous_inference()
         print ripl.continuous_inference_status()
+      elif (directive_name == "clear"):
+        ripl.clear()
+        print "Cleared trace."
       else:
         content = directive_and_content[1]
         if (directive_name == "assume"):
@@ -106,9 +132,6 @@ def run_venture_console(ripl):
           print "Made {0} inference iterations of {1} kernel with {2} scaffold.".format(args[0], kernel, scaffold)
         elif (directive_name == "report"):
           print ripl.report(int(content))
-        elif (directive_name == "clear"):
-          ripl.clear()
-          print "Cleared trace."
         else:
           print "Sorry, unknown directive."
     except Exception, err:
