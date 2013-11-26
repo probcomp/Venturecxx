@@ -70,7 +70,7 @@ parser_client.set_defaults(func=client)
 
 if len(sys.argv) == 1:
     # Work around what appears to be a limitation of argparse
-    local("foo")
+    local(None)
 else:
     args = parser.parse_args()
     args.func(args)
