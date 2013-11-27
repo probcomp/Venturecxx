@@ -51,7 +51,10 @@ if __name__ == '__main__':
     #history.plot(fmt='png')
     
     parameters = {'topics' : [4, 8], 'vocab' : 10, 'documents' : [8, 12], 'words_per_document' : [10, 100]}
+    run_count = 1
     def runner(params):
+        print "Running setting " + str(run_count) + " of 8"
+        print params
         return LDA(ripl, params).computeJointKL(20, 20, verbose=True)
     histories = produceHistories(parameters, runner)
     separate_histories = lambda (key, value): [(key, value_i) for value_i in value]

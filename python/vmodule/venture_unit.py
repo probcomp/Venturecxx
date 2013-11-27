@@ -136,7 +136,7 @@ class VentureUnit:
         
         for i in range(samples):
             if verbose:
-                print "Generating sample " + str(i)
+                print "Generating sample " + str(i) + " of " + str(samples)
             
             (assumeToDirective, predictToDirective) = self.loadModelWithPredicts(track)
             
@@ -180,7 +180,7 @@ class VentureUnit:
         
         for run in range(runs):
             if verbose:
-                print "Starting run " + str(run)
+                print "Starting run " + str(run) + " of " + str(runs)
             
             (assumeToDirective, predictToDirective) = self.loadModelWithPredicts(track)
             
@@ -193,7 +193,7 @@ class VentureUnit:
             
             for sweep in range(sweeps):
                 if verbose:
-                    print "Running sweep " + str(sweep)
+                    print "Running sweep " + str(sweep) + " of " + str(sweeps)
                 
                 # FIXME: use timeit module for better precision
                 start = time.time()
@@ -249,7 +249,7 @@ class VentureUnit:
         
         for run in range(runs):
             if verbose:
-                print "Starting run " + str(run)
+                print "Starting run " + str(run) + " of " + str(runs)
             
             self.ripl.clear()
         
@@ -272,7 +272,7 @@ class VentureUnit:
               
             for sweep in range(sweeps):
                 if verbose:
-                    print "Running sweep " + str(sweep)
+                    print "Running sweep " + str(sweep) + " of " + str(sweeps)
                 
                 # FIXME: use timeit module for better precision
                 start = time.time()
