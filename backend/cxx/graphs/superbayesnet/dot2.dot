@@ -1,0 +1,34 @@
+digraph {
+rankdir=BT
+fontsize=24
+
+subgraph p0 {
+
+nd ["fillcolor"="grey36" "fontsize"="24" "label"="prefix" "style"="filled"]
+
+}
+
+subgraph cluster1 {
+parents ["fillcolor"="plum" "fontsize"="24" "label"="parents" "style"="filled"]
+drg ["fillcolor"="gold" "fontsize"="24" "label"="definite regeneration graph" "style"="filled"]
+brush ["fillcolor"="darkseagreen" "fontsize"="24" "label"="brush" "style"="filled"]
+absorbing ["fillcolor"="saddlebrown" "fontsize"="24" "label"="absorbing border" "style"="filled"]
+
+}
+
+subgraph p1 {
+insulated ["fillcolor"="grey36" "fontsize"="24" "label"="insulated" "style"="filled"]
+}
+
+nd -> parents
+parents -> drg
+parents -> brush
+parents -> absorbing
+drg -> brush [constraint=false]
+brush -> drg
+drg -> absorbing
+absorbing -> insulated
+nd -> insulated [constraint=false]
+parents -> insulated [constraint=false]
+
+}
