@@ -83,7 +83,7 @@ Getting Started
         venture
 
     You might like to type in the [trick coin
-    example](http://probcomp.csail.mit.edu/venture/console-tutorial.html)
+    example](http://probcomp.csail.mit.edu/venture/console-examples.html)
     to start getting a feel for Venture.
 
 -   Venture as a library in Python:
@@ -92,7 +92,7 @@ Getting Started
 
     Using Venture as a library allows you to drive it
     programmatically.  You might like to peruse the
-    [examples](http://probcomp.csail.mit.edu/venture/library-tutorial.html)
+    [examples](http://probcomp.csail.mit.edu/venture/library-examples.html)
     for inspiration.
 
 -   You can find two advanced examples in the `examples/` directory.
