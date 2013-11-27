@@ -25,3 +25,15 @@ abort_on_error "periphery self-checking"
 set -o pipefail # Preserve exit status of venture, per http://stackoverflow.com/questions/6871859/piping-command-output-to-tee-but-also-save-exit-code-of-command
 echo "assume x (uniform_continuous 0.0 0.9)" | venture | grep '>>> 0.'
 abort_on_error "executing the venture command"
+
+timeout 1.5s python examples/lda.py
+if [[ $? -ne "124" ]]; then
+    echo FAILED: running python examples/lda.py
+    exit 1
+fi
+
+timeout 1.5s python examples/crosscat.py
+if [[ $? -ne "124" ]]; then
+    echo FAILED: running python examples/crosscat.py
+    exit 1
+fi
