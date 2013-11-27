@@ -230,6 +230,10 @@ boost::python::list PyTrace::dotTrace()
     Scaffold s({pNode});
     r.dotTrace(trace,&s);
     dots.append(r.dot);
+    pair<double, OmegaDB *> rhoInfo = trace->detach(s.border,&s);
+    r.dotTrace(trace,&s);
+    dots.append(r.dot);
+    trace->regen(s.border,&s,true,rhoInfo.second,nullptr);
   }
   return dots;
 }

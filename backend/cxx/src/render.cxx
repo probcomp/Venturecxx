@@ -189,7 +189,8 @@ string Renderer::getNodeLabel(Node * node)
   else { s += "value: "; }
 
   if (value) { s += value->toString(); }
-  else { s += "[]"; }
+  else if (!(scaffold && scaffold->isResampling(node))) { s += "[]"; }
+
   return s;
 }
 
