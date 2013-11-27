@@ -52,6 +52,6 @@ if __name__ == '__main__':
     #history.plot(fmt='png')
 
     # sampledHistory, inferredHistory, klHistory
-    history_types = model.computeJointKL(200, 200, runs=4)
+    history_types = model.computeJointKL(200, 200, runs=4, verbose=True)
     for history_type in history_types:
         history_type.plot(fmt='png')

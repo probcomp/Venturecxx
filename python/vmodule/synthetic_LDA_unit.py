@@ -51,7 +51,7 @@ if __name__ == '__main__':
     #history.plot(fmt='png')
     
     parameters = {'topics' : [4, 8], 'vocab' : 10, 'documents' : [8, 12], 'words_per_document' : [10, 100]}
-    run_count = 1
+    run_count = 0
     def runner(params):
         print "Running setting " + str(run_count) + " of 8"
         print params
