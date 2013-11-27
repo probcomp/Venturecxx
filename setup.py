@@ -70,6 +70,7 @@ src_files = [
     "src/sps/envs.cxx",
     "src/sps/eval.cxx",
     "src/sps/pycrp.cxx",
+    "src/sps/pymem.cxx",
     "src/sps/makesymdirmult.cxx",
     "src/sps/makedirmult.cxx",
     "src/sps/makebetabernoulli.cxx",

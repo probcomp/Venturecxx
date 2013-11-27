@@ -29,6 +29,7 @@
 #include "sps/eval.h"
 #include "sps/envs.h"
 #include "sps/pycrp.h"
+#include "sps/pymem.h"
 
 #include "sps/makesymdirmult.h"
 #include "sps/makeucsymdirmult.h"
@@ -154,6 +155,8 @@ map<string,SP *> initBuiltInSPs()
 
     // with shared ESRs
     {"mem", new MakeMSP},
+
+    {"pymem", new MakePYMemSP},
   };
 }
 

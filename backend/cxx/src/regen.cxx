@@ -319,7 +319,7 @@ double Trace::evalRequests(Node * node,
 
       // right now only MSP's share
       // (guard against hash collisions)
-      assert(dynamic_cast<MSP*>(node->sp()));
+//      assert(dynamic_cast<MSP*>(node->sp()));
       
     }
     Node::addESREdge(esrParent,node->outputNode);

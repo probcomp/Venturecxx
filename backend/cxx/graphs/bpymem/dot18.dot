@@ -1,0 +1,96 @@
+digraph {
+rankdir=BT
+fontsize=24
+subgraph cluster1 {
+label="Venture Families"
+subgraph cluster2 {
+label="1"
+"33849760"["fillcolor"="grey56" "fontsize"="24" "label"="exp: (dpmem bernoulli 1.000000)\nvalue: sp:pymem" "shape"="ellipse" "style"="filled" ]
+"33712752"["fillcolor"="grey56" "fontsize"="24" "label"="request: []" "shape"="ellipse" "style"="filled" ]
+"33887504"["fillcolor"="grey56" "fontsize"="24" "label"="exp: dpmem\nvalue: sp:sp_no_name" "shape"="ellipse" "style"="filled" ]
+"34338352"["fillcolor"="grey56" "fontsize"="24" "label"="exp: bernoulli\nvalue: sp:bernoulli" "shape"="ellipse" "style"="filled" ]
+"35036032"["fillcolor"="grey56" "fontsize"="24" "label"="exp: 1.000000\nvalue: 1.000000" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph cluster3 {
+label="2"
+"33169600"["fillcolor"="grey56" "fontsize"="24" "label"="exp: (f)\nvalue: #f" "shape"="ellipse" "style"="filled" ]
+"32993616"["fillcolor"="grey56" "fontsize"="24" "label"="request: [(0, (pymemoizedSP), <env>)]" "shape"="ellipse" "style"="filled" ]
+"33301776"["fillcolor"="grey56" "fontsize"="24" "label"="exp: f\nvalue: sp:pymem" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph cluster4 {
+label="3"
+"33105296"["fillcolor"="gold" "fontsize"="24" "label"="exp: (f)\nvalue: " "shape"="ellipse" "style"="filled" ]
+"32904512"["fillcolor"="grey56" "fontsize"="24" "label"="request: [(1, (pymemoizedSP), <env>)]" "shape"="ellipse" "style"="filled" ]
+"32988640"["fillcolor"="grey56" "fontsize"="24" "label"="exp: f\nvalue: sp:pymem" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph cluster5 {
+label="4"
+"35345968"["fillcolor"="grey56" "fontsize"="24" "label"="exp: (f)\nvalue: #f" "shape"="ellipse" "style"="filled" ]
+"35335216"["fillcolor"="grey56" "fontsize"="24" "label"="request: [(2, (pymemoizedSP), <env>)]" "shape"="ellipse" "style"="filled" ]
+"33152160"["fillcolor"="grey56" "fontsize"="24" "label"="exp: f\nvalue: sp:pymem" "shape"="ellipse" "style"="filled" ]
+}
+
+}
+
+subgraph cluster6 {
+label=""
+"32876512"["fillcolor"="grey56" "fontsize"="24" "label"="exp: (pymemoizedSP)\nvalue: #f" "shape"="ellipse" "style"="filled" ]
+"33342704"["fillcolor"="grey56" "fontsize"="24" "label"="request: []" "shape"="ellipse" "style"="filled" ]
+"33662288"["fillcolor"="grey56" "fontsize"="24" "label"="exp: pymemoizedSP\nvalue: sp:bernoulli" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph cluster7 {
+label=""
+"33033712"["fillcolor"="firebrick" "fontsize"="24" "label"="exp: (pymemoizedSP)\nvalue: " "shape"="ellipse" "style"="filled" ]
+"33176464"["fillcolor"="grey56" "fontsize"="24" "label"="request: []" "shape"="ellipse" "style"="filled" ]
+"35338048"["fillcolor"="grey56" "fontsize"="24" "label"="exp: pymemoizedSP\nvalue: sp:bernoulli" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph cluster8 {
+label=""
+"35319152"["fillcolor"="grey56" "fontsize"="24" "label"="exp: (pymemoizedSP)\nvalue: #f" "shape"="ellipse" "style"="filled" ]
+"33070784"["fillcolor"="grey56" "fontsize"="24" "label"="request: []" "shape"="ellipse" "style"="filled" ]
+"33061376"["fillcolor"="grey56" "fontsize"="24" "label"="exp: pymemoizedSP\nvalue: sp:bernoulli" "shape"="ellipse" "style"="filled" ]
+}
+
+"33662288" -> "32876512"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33662288" -> "33342704"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"34338352" -> "33662288"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33342704" -> "32876512"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"35338048" -> "33033712"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"35338048" -> "33176464"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"34338352" -> "35338048"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33176464" -> "33033712"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"32988640" -> "33105296"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"32988640" -> "32904512"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33849760" -> "32988640"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"32904512" -> "33105296"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33033712" -> "33105296"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33301776" -> "33169600"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33301776" -> "32993616"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33849760" -> "33301776"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"32993616" -> "33169600"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"35319152" -> "33169600"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33887504" -> "33849760"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33887504" -> "33712752"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"27546624" -> "33887504"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"34338352" -> "33849760"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"34338352" -> "33712752"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"30676000" -> "34338352"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"35036032" -> "33849760"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"35036032" -> "33712752"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33712752" -> "33849760"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33061376" -> "35319152"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33061376" -> "33070784"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"34338352" -> "33061376"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33070784" -> "35319152"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33152160" -> "35345968"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33152160" -> "35335216"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"33849760" -> "33152160"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"35335216" -> "35345968"["arrowhead"="normal" "color"="black" "style"="solid" ]
+"32876512" -> "35345968"["arrowhead"="normal" "color"="black" "style"="solid" ]
+
+}

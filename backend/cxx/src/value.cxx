@@ -268,7 +268,12 @@ string VentureRequest::toString() const
   for (ESR esr : esrs)
   {
     if (!first) { s += ", "; }
-    s += "(" + to_string(esr.id) + ", " + esr.exp->toString() + ", <env>)";
+    if (esr.exp) { 
+      s += "(" + to_string(esr.id) + ", " + esr.exp->toString() + ", <env>)";
+    }
+    else {
+      s += "(" + to_string(esr.id) + ", <exp>, <env>)";
+    }
     first = false;
   }
   s += "]";

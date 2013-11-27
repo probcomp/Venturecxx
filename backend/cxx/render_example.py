@@ -70,7 +70,7 @@ def renderSprinkler2():
   ripl.observe("grassWet", "true")
   renderRIPL(ripl,"graphs/sprinkler")
 
-def renderPYMem():
+def renderCPYMem():
   ripl = RIPL()
   ripl.assume("pymem","""
 (lambda (alpha d base_dist)
@@ -80,13 +80,20 @@ def renderPYMem():
    (make_crp alpha d)))
 """)
 
-  ripl.assume("base_dist","(lambda () (normal 0.0 1.0))")
-
-  ripl.assume("f","(pymem 1.0 0.0 base_dist)")
+  ripl.assume("f","(pymem 1.0 0.0 bernoulli)")
   ripl.predict("(f)")
   ripl.predict("(f)")
 #  ripl.predict("(f)")
-  renderRIPL(ripl,"graphs/pymem")
+  renderRIPL(ripl,"graphs/cpymem")
+
+def renderBPYMem():
+  ripl = RIPL()
+  ripl.assume("f","(pymem bernoulli 1.0 0.1)")
+  ripl.predict("(f)")
+  ripl.predict("(f)")
+  ripl.predict("(f)")
+
+  renderRIPL(ripl,"graphs/bpymem")
 
 
 def renderERG1():

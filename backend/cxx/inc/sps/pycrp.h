@@ -25,6 +25,7 @@ struct MakePitmanYorCRPSP : SP
 
 };
 
+
 /* Two parameter generalization of the CRP */
 struct PitmanYorCRPSP : SP
 { 
@@ -52,6 +53,10 @@ struct PitmanYorCRPSP : SP
   double alpha;
   double d;
 };
+
+
+
+
 
 
 
