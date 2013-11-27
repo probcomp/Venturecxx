@@ -13,12 +13,12 @@ function abort_on_error () {
 }
 
 # Actually run the tests
+echo "This may take several minutes"
 cd backend/cxx
-python -c "import wstests; wstests.runAllTests(10)"
+python -c "import wstests; wstests.runAllTests(1)" > /dev/null
 abort_on_error "engine self-checking"
 
 cd ../..
-echo FIXME test reporting causes some runtime errors to be missed, so watch output carefully
 python -m unittest discover python/test/ "*.py"
 abort_on_error "periphery self-checking"
 
