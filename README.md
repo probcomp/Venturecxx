@@ -7,7 +7,7 @@ efficient for general-purpose use.
 
 http://probcomp.csail.mit.edu/venture/
 
-Venture is *alpha quality* software.  We are proud of the underlying
+Venture is **alpha quality** software.  We are proud of the underlying
 engine and the ideas it embodies, but we have not sanded off its many
 rough edges.
 
