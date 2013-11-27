@@ -92,7 +92,7 @@ Getting Started
 
     Using Venture as a library allows you to drive it
     programmatically.  You might like to peruse the
-    [tutorial](http://probcomp.csail.mit.edu/venture/library-tutorial.html)
+    [examples](http://probcomp.csail.mit.edu/venture/library-tutorial.html)
     for inspiration.
 
 -   You can find two advanced examples in the `examples/` directory.
