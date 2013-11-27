@@ -14,7 +14,7 @@
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from venture import shortcuts
-from venture.unit.venture_unit import *
+from venture.unit import *
 
 
 class LDA(VentureUnit):
