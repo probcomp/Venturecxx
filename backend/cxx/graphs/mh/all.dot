@@ -1,0 +1,95 @@
+digraph {
+rankdir=BT
+fontsize=24
+compound=true
+
+subgraph clusterRHO {
+
+label = "We start with a full trace, rho"
+
+rho_nd ["fillcolor"="grey36" "fontsize"="24" "label"="prefix" "style"="filled"]
+
+subgraph clusterRHO1 {
+label=""
+rho_parents ["fillcolor"="plum" "fontsize"="24" "label"="parents" "style"="filled"]
+rho_drg ["fillcolor"="gold" "fontsize"="24" "label"="old values in drg" "style"="filled"]
+rho_brush ["fillcolor"="darkseagreen" "fontsize"="24" "label"="old brush" "style"="filled"]
+rho_absorbing ["fillcolor"="saddlebrown" "fontsize"="24" "label"="absorbing border" "style"="filled"]
+
+}
+
+rho_insulated ["fillcolor"="grey36" "fontsize"="24" "label"="insulated" "style"="filled"]
+
+rho_nd -> rho_parents
+rho_parents -> rho_drg
+rho_parents -> rho_brush
+rho_parents -> rho_absorbing
+rho_drg -> rho_brush
+rho_brush -> rho_drg
+rho_drg -> rho_absorbing
+rho_absorbing -> rho_insulated
+rho_nd -> rho_insulated [constraint=false]
+rho_parents -> rho_insulated [constraint=false]
+
+}
+
+subgraph clusterTORUS {
+label="We detach rho to yield a torus"
+nd ["fillcolor"="grey36" "fontsize"="24" "label"="prefix" "style"="filled"]
+
+subgraph clusterTORUS1 {
+label=""
+parents ["fillcolor"="plum" "fontsize"="24" "label"="parents" "style"="filled"]
+drg ["fillcolor"="gold" "fontsize"="24" "label"="(empty)" "style"="filled"]
+absorbing ["fillcolor"="saddlebrown" "fontsize"="24" "label"="absorbing border" "style"="filled"]
+
+}
+
+insulated ["fillcolor"="grey36" "fontsize"="24" "label"="insulated" "style"="filled"]
+
+nd -> parents
+parents -> drg
+parents -> absorbing
+drg -> absorbing
+absorbing -> insulated
+nd -> insulated [constraint=false]
+parents -> insulated [constraint=false]
+
+}
+
+
+subgraph clusterXI {
+
+label = "We regenerate along the scaffold to yield a new trace xi"
+
+xi_nd ["fillcolor"="grey36" "fontsize"="24" "label"="prefix" "style"="filled"]
+
+subgraph clusterXI1 {
+label=""
+xi_parents ["fillcolor"="plum" "fontsize"="24" "label"="parents" "style"="filled"]
+xi_drg ["fillcolor"="gold" "fontsize"="24" "label"="new values in drg" "style"="filled"]
+xi_brush ["fillcolor"="darkseagreen" "fontsize"="24" "label"="new brush" "style"="filled"]
+xi_absorbing ["fillcolor"="saddlebrown" "fontsize"="24" "label"="absorbing border" "style"="filled"]
+
+}
+
+xi_insulated ["fillcolor"="grey36" "fontsize"="24" "label"="insulated" "style"="filled"]
+
+xi_nd -> xi_parents
+xi_parents -> xi_drg
+xi_parents -> xi_brush
+xi_parents -> xi_absorbing
+xi_drg -> xi_brush
+xi_brush -> xi_drg
+xi_drg -> xi_absorbing
+xi_absorbing -> xi_insulated
+xi_nd -> xi_insulated [constraint=false]
+xi_parents -> xi_insulated [constraint=false]
+
+}
+
+
+//rho_drg -> drg [ltail=clusterRHO,lhead=clusterTORUS,label = "detach rho" fontsize="24" constraint=false];
+//drg -> xi_drg [ltail=clusterTORUS,lhead=clusterXI,label = "regen xi" fontsize="24" constrain=false];
+
+}

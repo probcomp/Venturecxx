@@ -1,0 +1,32 @@
+digraph {
+rankdir=BT
+fontsize=24
+label = "Torus"
+
+subgraph p0 {
+
+nd ["fillcolor"="grey36" "fontsize"="24" "label"="prefix" "style"="filled"]
+
+}
+
+subgraph cluster1 {
+label=""
+parents ["fillcolor"="plum" "fontsize"="24" "label"="parents" "style"="filled"]
+drg ["fillcolor"="gold" "fontsize"="24" "label"="(empty)" "style"="filled"]
+absorbing ["fillcolor"="saddlebrown" "fontsize"="24" "label"="absorbing border" "style"="filled"]
+
+}
+
+subgraph p1 {
+insulated ["fillcolor"="grey36" "fontsize"="24" "label"="insulated" "style"="filled"]
+}
+
+nd -> parents
+parents -> drg
+parents -> absorbing
+drg -> absorbing
+absorbing -> insulated
+nd -> insulated [constraint=false]
+parents -> insulated [constraint=false]
+
+}
