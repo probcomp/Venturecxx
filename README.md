@@ -93,7 +93,7 @@ Getting Started
 
 -   You can find two advanced examples in the `examples/` directory.
     These rely on VentureUnit (included), an experimental inference
-    visualization wrapper around Venture as a library.
+    visualization wrapper using Venture as a library.
 
 
 Developing Venture
