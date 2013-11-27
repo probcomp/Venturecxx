@@ -222,16 +222,18 @@ boost::python::list PyTrace::dotTrace()
   boost::python::list dots;
   Renderer r;
 
-  r.dotTrace(trace,nullptr);
+  r.dotTrace(trace,nullptr,false);
   dots.append(r.dot);
 
   for (Node * pNode : trace->randomChoices)
   {
     Scaffold s({pNode});
-    r.dotTrace(trace,&s);
+    r.dotTrace(trace,&s,false);
+    dots.append(r.dot);
+    r.dotTrace(trace,&s,true);
     dots.append(r.dot);
     pair<double, OmegaDB *> rhoInfo = trace->detach(s.border,&s);
-    r.dotTrace(trace,&s);
+    r.dotTrace(trace,&s,false);
     dots.append(r.dot);
     trace->regen(s.border,&s,true,rhoInfo.second,nullptr);
   }

@@ -38,6 +38,10 @@ public:
 /* TODO Most of this should be private. */
   set<Node *> principalNodes;
 
+  set<Node *> eDRG{}; // just for rendering
+  set<Node *> eAbsorbing{}; // just for rendering
+  
+
   map<Node *, DRGNode> drg{};
   set<Node *> absorbing{};
 
@@ -60,8 +64,8 @@ public:
     { absorbing.erase(node); drg.erase(node); brush.insert(node); }
 
   void addResamplingNode(queue<pair<Node *,bool>> &q, Node * node);
-  void addAAANode(Node * node) { drg.emplace(node,true); hasAAANodes = true; }
-  void addAbsorbingNode(Node * node) { absorbing.insert(node); }
+  void addAAANode(Node * node) { drg.emplace(node,true); eDRG.insert(node); hasAAANodes = true; }
+  void addAbsorbingNode(Node * node) { absorbing.insert(node); eAbsorbing.insert(node); }
 
   void loadDefaultKernels(bool deltaKernels);
 

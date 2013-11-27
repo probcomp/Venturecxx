@@ -27,7 +27,7 @@ struct Edge
 struct Renderer
 {
   Renderer();
-  void dotTrace(Trace * trace, Scaffold * scaffold);
+  void dotTrace(Trace * trace, Scaffold * scaffold,bool erg);
 
   void reset();
   string getNextClusterIndex();
@@ -69,6 +69,7 @@ struct Renderer
   Scaffold * scaffold;
   string dot{""};
   uint32_t numClusters{0};
+  bool erg{false};
 
 };
 

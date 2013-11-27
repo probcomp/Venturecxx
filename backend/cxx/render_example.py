@@ -87,3 +87,12 @@ def renderPYMem():
   ripl.predict("(f)")
 #  ripl.predict("(f)")
   renderRIPL(ripl,"graphs/pymem")
+
+
+def renderERG1():
+  ripl = RIPL()
+  ripl.assume("x","(gamma 1.0 1.0)")
+  ripl.assume("y","(branch_exp (< x 1) (quote (gamma x 2.0)) (quote (normal x 2.0)))")
+  ripl.observe("(normal y 5.0)","10.0")
+
+  renderRIPL(ripl,"graphs/erg1")

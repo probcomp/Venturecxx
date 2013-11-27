@@ -27,11 +27,12 @@ string Renderer::getNextClusterIndex()
 }
 
 
-void Renderer::dotTrace(Trace * trace, Scaffold * scaffold)
+void Renderer::dotTrace(Trace * trace, Scaffold * scaffold, bool erg)
 {
   reset();
   this->trace = trace;
   this->scaffold = scaffold;
+  this->erg = erg;
   dotHeader();
 //  dotStatements();
   dotNodes();
@@ -150,7 +151,7 @@ void Renderer::dotAttributes(const map<string,string> & attributes)
 string Renderer::getNodeShape(Node * node) { return "ellipse"; }
 string Renderer::getNodeFillColor(Node * node) 
 {
-  if (scaffold)
+  if (scaffold && !erg)
   {
     if (scaffold->principalNodes.count(node)) { return "firebrick"; }
     else if (scaffold->isAAA(node)) { return "lightpink1"; }
@@ -158,6 +159,14 @@ string Renderer::getNodeFillColor(Node * node)
     else if (scaffold->isResampling(node)) { return "gold"; }
     else if (scaffold->isAbsorbing(node)) { return "steelblue1"; }
     else if (scaffold->brush.count(node)) { return "darkseagreen"; }
+    else { return "grey56"; }
+  }
+  else if (scaffold && erg)
+  {
+    if (scaffold->principalNodes.count(node)) { return "firebrick"; }
+//    else if (scaffold->isAAA(node)) { return "lightpink1"; }
+    else if (scaffold->eDRG.count(node)) { return "gold"; }
+    else if (scaffold->eAbsorbing.count(node)) { return "steelblue1"; }
     else { return "grey56"; }
   }
   else

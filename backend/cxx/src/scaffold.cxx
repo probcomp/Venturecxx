@@ -27,6 +27,7 @@ void Scaffold::addResamplingNode(queue<pair<Node *, bool> > & q, Node * node)
 {
   absorbing.erase(node);
   drg.emplace(node,false);
+  eDRG.insert(node);
   for (Node * child : node->children) { q.emplace(child,false); }
 }
 
