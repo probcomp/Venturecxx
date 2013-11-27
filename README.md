@@ -82,7 +82,7 @@ Developing Venture
 ==================
 
 The interesting parts of the code are:
-- The stack (including RIPL, SIVM, server, and Python client) in `python/`
+- The stack (including SIVM, RIPL, VentureUnit, server, and Python client) in `python/`
 - The C++11 engine (plus a thin Python driver) in `backend/cxx/`
 - The actual entry points are in `script/`
 - The Javascript client and web demos are actually in the
@@ -91,7 +91,6 @@ The interesting parts of the code are:
 - There are language-level benchmarks (and correctness tests) in the
   [VentureBenchmarksAndTests](https://github.com/mit-probabilistic-computing-project/VentureBenchmarksAndTests)
   repository.
-- There is an inference visualization tool in the [VentureUnit](https://github.com/mit-probabilistic-computing-project/VentureUnit) repository.
 
 Python Development
 ------------------
