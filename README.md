@@ -103,6 +103,7 @@ The interesting parts of the code are:
 - The stack (including SIVM, RIPL, VentureUnit, server, and Python client) in `python/`
 - The C++11 engine (plus a thin Python driver) in `backend/cxx/`
 - The actual entry points are in `script/`
+- Advanced example programs live in `examples/`
 - The Javascript client and web demos are actually in the
   [VentureJSRIPL](https://github.com/mit-probabilistic-computing-project/VentureJSRIPL)
   repository.
