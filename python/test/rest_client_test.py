@@ -49,30 +49,30 @@ class ClientTestCase(unittest.TestCase):
         return r
 
 
-class TestRiplRestClient(ClientTestCase):
-    def setUp(self):
-        self.local_ripl = make_combined_ripl()
-        self.server = RiplRestServer(self.local_ripl)
-        port = get_open_port()
-        def run_server():
-            self.server.run(host='localhost',port=port)
-        self.server_thread = multiprocessing.Process(target=run_server)
-        self.server_thread.start()
-        self.ripl = RiplRestClient('http://localhost:'+str(port))
+# class TestRiplRestClient(ClientTestCase):
+#     def setUp(self):
+#         self.local_ripl = make_combined_ripl()
+#         self.server = RiplRestServer(self.local_ripl)
+#         port = get_open_port()
+#         def run_server():
+#             self.server.run(host='localhost',port=port)
+#         self.server_thread = multiprocessing.Process(target=run_server)
+#         self.server_thread.start()
+#         self.ripl = RiplRestClient('http://localhost:'+str(port))
 
-    def tearDown(self):
-        self.server_thread.terminate()
-        self.server_thread.join()
+#     def tearDown(self):
+#         self.server_thread.terminate()
+#         self.server_thread.join()
 
-    def test_multiple_instructions(self):
-        self.ripl.set_mode('venture_script')
-        self.ripl.clear()
-        self.ripl.assume('a','1 + 2')
-        self.ripl.assume('b',' 3 + 4')
-        self.ripl.set_mode('church_prime')
-        self.ripl.execute_instruction('[ assume c (+ a b) ]')
-        output = self.ripl.predict('c')
-        self.assertEqual(output,10)
+#     def test_multiple_instructions(self):
+#         self.ripl.set_mode('venture_script')
+#         self.ripl.clear()
+#         self.ripl.assume('a','1 + 2')
+#         self.ripl.assume('b',' 3 + 4')
+#         self.ripl.set_mode('church_prime')
+#         self.ripl.execute_instruction('[ assume c (+ a b) ]')
+#         output = self.ripl.predict('c')
+#         self.assertEqual(output,10)
 
 
 if __name__ == "__main__":
