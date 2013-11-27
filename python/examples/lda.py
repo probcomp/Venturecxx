@@ -42,25 +42,20 @@ if __name__ == '__main__':
     ripl = shortcuts.make_church_prime_ripl()
     parameters = {'topics' : 4, 'vocab' : 10, 'documents' : 8, 'words_per_document' : 12}
 
-    #model = LDA(ripl, parameters)
+    model = LDA(ripl, parameters)
     #history = model.runConditionedFromPrior(50, verbose=True)
     #history = model.runFromJoint(50, verbose=True)
     #history = model.sampleFromJoint(20, verbose=True)
-    #history = model.computeJointKL(200, 200, verbose=True)[2]
+    sample_hist, infer_hist, klHistory = model.computeJointKL(200, 200, verbose=True)[2]
     #history = model.runFromConditional(50)
-    #history.plot(fmt='png')
+    klHistory.plot(fmt='png')
     
-    parameters = {'topics' : [4, 8], 'vocab' : 10, 'documents' : [8, 12], 'words_per_document' : [10, 100]}
-    run_count = 0
-    def runner(params):
-        print "Running setting " + str(run_count) + " of 8"
-        print params
-        return LDA(ripl, params).computeJointKL(20, 20, verbose=True)
-    histories = produceHistories(parameters, runner)
-    separate_histories = lambda (key, value): [(key, value_i) for value_i in value]
-    sampledHistory, inferredHistory, klHistory = map(dict, zip(*map(separate_histories, histories.iteritems())))
-    for history_type in [sampledHistory, inferredHistory, klHistory]:
-        for key, history in history_type.iteritems():
-            history.plot(fmt='png')
-    
-    # plotAsymptotics(parameters, histories, 'sweep_time', fmt='png', aggregate=True)
+    #parameters = {'topics' : [4, 8], 'vocab' : 10, 'documents' : [8, 12], 'words_per_document' : [10, 100]}
+    #run_count = 0
+    #def runner(params):
+    #    print "Running setting " + str(run_count) + " of 8"
+    #    print params
+    #    return LDA(ripl, params).computeJointKL(20, 20, verbose=True)
+    #histories = produceHistories(parameters, runner)
+    #
+    #plotAsymptotics(parameters, histories, 'sweep_time', fmt='png', aggregate=True)
