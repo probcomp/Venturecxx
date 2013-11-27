@@ -5,7 +5,7 @@ compound=true
 
 subgraph clusterRHO {
 
-label = "We start with a full trace, rho"
+label = "1. We start with a full trace, rho"
 
 rho_nd ["fillcolor"="grey36" "fontsize"="24" "label"="prefix" "style"="filled"]
 
@@ -34,7 +34,7 @@ rho_parents -> rho_insulated [constraint=false]
 }
 
 subgraph clusterTORUS {
-label="We detach rho to yield a torus"
+label="2. We detach rho to yield a torus"
 nd ["fillcolor"="grey36" "fontsize"="24" "label"="prefix" "style"="filled"]
 
 subgraph clusterTORUS1 {
@@ -60,7 +60,7 @@ parents -> insulated [constraint=false]
 
 subgraph clusterXI {
 
-label = "We regenerate along the scaffold to yield a new trace xi"
+label = "3. We regenerate along the scaffold to yield a new trace xi"
 
 xi_nd ["fillcolor"="grey36" "fontsize"="24" "label"="prefix" "style"="filled"]
 
