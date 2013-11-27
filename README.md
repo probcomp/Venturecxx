@@ -7,8 +7,18 @@ efficient for general-purpose use.
 
 http://probcomp.csail.mit.edu/venture/
 
+Venture is *alpha quality* software.  We are proud of the underlying
+engine and the ideas it embodies, but we have not sanded off its many
+rough edges.
+
 Installing Venture from Source
 ==============================
+
+Be advised that this release is for early adopter types who are
+willing to put up with much of the pain that a more mature software
+package would not impose.  In particular, documentation is sparse and
+the user interface is unforgiving.  Often, the only way to learn
+what's going on will be to ask us or to read the source code.
 
 Dependencies
 ------------
