@@ -7,14 +7,16 @@ efficient for general-purpose use.
 
 http://probcomp.csail.mit.edu/venture/
 
-Venture is **alpha quality** software.  We are proud of the underlying
-engine and the ideas it embodies, but we have not sanded off its many
-rough edges.
+Venture is rapidly-evolving, **alpha quality** research software. The
+key ideas behind its design and implementation have yet to be
+published. We are making Venture available at this early stage
+primarily to facilitate collaboration and support the emerging
+probabilistic programming community.
 
 Installing Venture from Source
 ==============================
 
-Be advised that this release is for early adopter types who are
+This release is for early adopter types who are
 willing to put up with much of the pain that a more mature software
 package would not impose.  In particular, documentation is sparse and
 the user interface is unforgiving.  Often, the only way to learn
@@ -23,24 +25,26 @@ what's going on will be to ask us or to read the source code.
 Dependencies
 ------------
 
-On Ubuntu:
+Here is what we install on a clean Ubuntu 12.04 VM to make sure that
+Venture builds and runs.  The only tricky thing is GCC 4.8, which is
+not packaged for Ubuntu yet but required for its c++11 support.
 
-    sudo apt-get install python-dev libboost-python-dev libgsl0-dev
-    
-GCC 4.8 is also required for c++11 support.
+    # Get non C++11 system dependencies
+    # MUST install these BEFORE gcc/g++ 4.8 install
+    sudo apt-get install -y libboost1.48-all-dev libgsl0-dev cmake make git python-pip python-virtualenv ccache
+    # Must update distribute before requirements.txt install
+    sudo pip install -U distribute
 
-One approach to installing GCC 4.8 on Ubuntu is to do all of the following:
-
-    # get non C++11 system dependencies (boost1.48-all may be redundant)
-    sudo apt-get install -y libboost1.48-all-dev libgsl0-dev cmake make git
-
-    # get C++11 and install it as the default gcc and g++
+    # Get C++11 and install it as the default gcc and g++
     sudo apt-get install -y python-software-properties
     sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     sudo apt-get update
     sudo apt-get install -y gcc-4.8 g++-4.8
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 50
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 50
+
+    # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
+    sudo apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib
 
 Installation to global environment
 ----------------------------------
@@ -80,16 +84,18 @@ Getting Started
 
         venture
 
-    You might like to type in the trick coin example to start getting
-    a feel for Venture.
+    You might like to type in the [trick coin
+    example](http://probcomp.csail.mit.edu/venture/console-examples.html)
+    to start getting a feel for Venture.
 
 -   Venture as a library in Python:
 
         python -i -c 'from venture import shortcuts; ripl = shortcuts.make_church_prime_ripl()'
 
     Using Venture as a library allows you to drive it
-    programmatically.  You might like to peruse the brief tutorial for
-    inspiration.
+    programmatically.  You might like to peruse the
+    [examples](http://probcomp.csail.mit.edu/venture/library-examples.html)
+    for inspiration.
 
 -   You can find two advanced examples in the `examples/` directory.
     These rely on VentureUnit (included), an experimental inference
