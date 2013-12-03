@@ -1,5 +1,5 @@
 module Utils (Unique, UniqueSeed, UniqueSourceT, UniqueSource
-             , runUniqueSourceT, uniqueSeed, fresh, runUniqueSource
+             , runUniqueSourceT, uniqueSeed, fresh, runUniqueSource, returnT
              , fromJust, mapFst, mapSnd) where
 
 import Data.Functor.Identity
@@ -49,6 +49,9 @@ type UniqueSource = UniqueSourceT Identity
 
 runUniqueSource :: UniqueSource a -> UniqueSeed -> (a, UniqueSeed)
 runUniqueSource a s = runIdentity $ runUniqueSourceT a s
+
+returnT :: (Monad m) => UniqueSource a -> UniqueSourceT m a
+returnT act = UniqueSourceT $ StateT $ return . runUniqueSource act
 
 ----------------------------------------------------------------------
 

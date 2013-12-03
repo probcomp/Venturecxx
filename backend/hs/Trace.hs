@@ -43,11 +43,18 @@ data SimulationRequest = SimulationRequest SRId Exp Env
 -- http://www.haskell.org/haskellwiki/Heterogenous_collections#Existential_types
 
 -- m is presumably an instance of MonadRandom
-data SP m = SP { requester :: [Address] -> UniqueSourceT m [SimulationRequest]
+data SP m = SP { requester :: SPRequester m
                , log_d_req :: Maybe ([Address] -> [SimulationRequest] -> Double)
                , outputter :: [Node] -> [Node] -> m Value
                , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
                }
+
+data SPRequester m = Deterministic ([Address] -> UniqueSource [SimulationRequest])
+                   | Random ([Address] -> UniqueSourceT m [SimulationRequest])
+
+asRandom :: (Monad m) => SPRequester m -> [Address] -> UniqueSourceT m [SimulationRequest]
+asRandom (Random f) as = f as
+asRandom (Deterministic f) as = returnT $ f as
 
 canAbsorb :: Node -> SP m -> Bool
 canAbsorb (Request _ _ _)  SP { log_d_req = (Just _) } = True
@@ -61,8 +68,8 @@ absorb (Output (Just v) _ _ args reqs) SP { log_d_out = (Just f) } t = f args' r
     reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
 absorb _ _ _ = error "Inappropriate absorb attempt"
 
-nullReq :: (Monad m) => a -> m [SimulationRequest]
-nullReq _ = return []
+nullReq :: SPRequester m
+nullReq = Deterministic $ \_ -> return []
 
 trivial_log_d_req :: a -> b -> Double
 trivial_log_d_req = const $ const $ 0.0
@@ -73,7 +80,7 @@ trivialOut _ _ = error "trivialOut expects at least one request result"
 
 compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
 compoundSP formals exp env =
-    SP { requester = req
+    SP { requester = Deterministic req
        , log_d_req = Just $ trivial_log_d_req
        , outputter = trivialOut
        , log_d_out = Nothing
@@ -256,7 +263,7 @@ forgetResponses (spaddr, srids) t@Trace{ sprs = ss, request_counts = r } =
 runRequester :: (Monad m) => SPAddress -> [Address] -> Trace m -> m ([SimulationRequest], Trace m)
 runRequester spaddr args t = do
   let spr@SPRecord { sp = SP{ requester = req }, srid_seed = seed } = fromJust "Running the requester of a non-SP" $ lookupSPR spaddr t
-  (reqs, seed') <- runUniqueSourceT (req args) seed
+  (reqs, seed') <- runUniqueSourceT (asRandom req args) seed
   let trace' = insertSPR spaddr spr{ srid_seed = seed' } t
   return (reqs, trace')
 
