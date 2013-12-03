@@ -3,7 +3,7 @@
 
 #include "all.h"
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 using namespace std;
 
@@ -31,9 +31,9 @@ struct SPAux
   /* TODO Exposed simulation requests, Latent simulation requests */
   /* Want this to be unordered_map, but problem with hashing. */
 
-  map<size_t,Node*> families;
+  unordered_map<size_t,Node*> families;
 
-  map<size_t, vector<VentureValue*> > ownedValues;
+  unordered_map<size_t, vector<VentureValue*> > ownedValues;
 
   
   bool isValid() { return magic == 844142; }
