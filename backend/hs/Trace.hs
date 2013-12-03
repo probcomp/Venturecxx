@@ -2,6 +2,7 @@
 
 module Trace where
 
+import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.List (foldl)
@@ -135,12 +136,13 @@ data Trace rand =
           , randoms :: S.Set Address
           , nodeChildren :: M.Map Address (S.Set Address)
           , sprs :: (M.Map SPAddress (SPRecord rand))
+          , request_counts :: M.Map Address Int
           , addr_seed :: UniqueSeed
           , spaddr_seed :: UniqueSeed
           }
 
 empty :: Trace m
-empty = Trace M.empty S.empty M.empty M.empty uniqueSeed uniqueSeed
+empty = Trace M.empty S.empty M.empty M.empty M.empty uniqueSeed uniqueSeed
 
 chaseReferences :: Address -> Trace m -> Maybe Node
 chaseReferences a t@Trace{ nodes = m } = do
@@ -228,9 +230,13 @@ fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ re
     SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
 
 insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
-insertResponse spa id a t@Trace{ sprs = ss } = t{ sprs = M.insert spa spr' ss } where
-    spr' = spr{ requests = M.insert id a reqs }
-    spr@SPRecord { requests = reqs } = fromJust "Inserting response to non-SP" $ lookupSPR spa t
+insertResponse spa id a t@Trace{ sprs = ss, request_counts = r } =
+    t{ sprs = M.insert spa spr' ss, request_counts = r' } where
+        spr' = spr{ requests = M.insert id a reqs }
+        spr@SPRecord { requests = reqs } = fromJust "Inserting response to non-SP" $ lookupSPR spa t
+        r' = M.alter succ a r
+        succ Nothing = Just 1
+        succ (Just n) = Just (n+1)
 
 lookupResponse :: SPAddress -> SRId -> Trace m -> Maybe Address
 lookupResponse spa srid t = do
@@ -238,9 +244,14 @@ lookupResponse spa srid t = do
   M.lookup srid reqs
 
 forgetResponses :: (SPAddress, [SRId]) -> Trace m -> Trace m
-forgetResponses (spaddr, srids) t@Trace{ sprs = ss } = t{ sprs = M.insert spaddr spr' ss } where
-    spr' = spr{ requests = foldl (flip M.delete) reqs srids }
-    spr@SPRecord { requests = reqs } = fromJust "Forgetting responses to non-SP" $ lookupSPR spaddr t
+forgetResponses (spaddr, srids) t@Trace{ sprs = ss, request_counts = r } =
+    t{ sprs = M.insert spaddr spr' ss, request_counts = r' } where
+        spr' = spr{ requests = foldl (flip M.delete) reqs srids }
+        spr@SPRecord { requests = reqs } = fromJust "Forgetting responses to non-SP" $ lookupSPR spaddr t
+        r' = foldl decrement r srids
+        decrement :: (M.Map Address Int) -> SRId -> (M.Map Address Int)
+        decrement m srid = M.adjust (subtract 1) k m where
+            k = fromJust "Forgetting response that isn't there" $ M.lookup srid reqs
 
 runRequester :: (Monad m) => SPAddress -> [Address] -> Trace m -> m ([SimulationRequest], Trace m)
 runRequester spaddr args t = do
@@ -251,7 +262,7 @@ runRequester spaddr args t = do
 
 -- How many times has the given address been requested.
 numRequests :: Address -> Trace m -> Int
-numRequests = undefined
+numRequests a Trace { request_counts = r } = fromMaybe 0 $ M.lookup a r
 
 -- Nodes in the trace that depend upon the node at the given address.
 children :: Address -> Trace m -> [Address]
