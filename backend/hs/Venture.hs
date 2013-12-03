@@ -37,7 +37,9 @@ metropolis_hastings propose x = do
   else
       return x
 
-
+-- TODO Is this a standard combinator too?
+modifyM :: Monad m => (s -> m s) -> StateT s m ()
+modifyM act = get >>= (lift . act) >>= put
 
 scaffold_mh_kernel :: (MonadRandom m) => Scaffold -> Kernel m (Trace m)
 scaffold_mh_kernel scaffold trace = do
