@@ -196,7 +196,7 @@ deleteNode a t@Trace{nodes = ns, randoms = rs, nodeChildren = cs} =
     t{ nodes = ns', randoms = rs', nodeChildren = cs'' } where
         node = fromJust "Deleting a non-existent node" $ M.lookup a ns
         ns' = M.delete a ns
-        rs' = S.delete a rs
+        rs' = S.delete a rs -- OK even if it wasn't random
         cs' = foldl foo cs $ parentAddrs node
         cs'' = M.delete a cs'
         foo cs pa = M.adjust (S.delete a) pa cs

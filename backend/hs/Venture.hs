@@ -63,6 +63,8 @@ simulate_soup exp = evalStateT act empty
     where act = do
             env <- initializeBuiltins Toplevel
             address <- eval exp env
+            -- TODO This line breaks all the examples right now.
+            replicateM_ 10 $ modifyM $ metropolis_hastings principal_node_mh
             gets $ fromJust . valueOf . fromJust . (lookupNode address)
 
 -- simulate_soup $ Datum $ Number 1.0
