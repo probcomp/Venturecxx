@@ -58,10 +58,18 @@ Trace::~Trace()
 {
 
   OmegaDB * omegaDB = new OmegaDB;
-  for (map<size_t, pair<Node *,VentureValue*> >::reverse_iterator iter = ventureFamilies.rbegin(); 
-       iter != ventureFamilies.rend();
+  map<size_t,pair<Node *,VentureValue*> > orderedFamilies;
+  for (unordered_map<size_t, pair<Node *,VentureValue*> >::iterator iter = ventureFamilies.begin(); 
+       iter != ventureFamilies.end();
        ++iter)
   { 
+    orderedFamilies[iter->first] = iter->second;
+  }
+
+  for (map<size_t,pair<Node *,VentureValue*> >::reverse_iterator iter = orderedFamilies.rbegin(); 
+       iter != orderedFamilies.rend();
+       ++iter)
+  {
     Node * root = iter->second.first;
     if (root->isObservation()) 
     { 

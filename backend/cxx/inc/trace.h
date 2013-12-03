@@ -64,7 +64,7 @@ struct Trace
 
   vector<Node *> getRandomChoices(); // used by kernels
 
-  map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
+  unordered_map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
 
 
 //  map<size_t,Node*> definiteFamilies;
