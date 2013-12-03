@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <set>
 #include <string>
 #include <functional>
@@ -205,10 +206,10 @@ struct Trace
   VentureEnvironment * primitivesEnv;
   VentureEnvironment * globalEnv;
   
-  map<Node *, uint32_t> rcToIndex;
+  unordered_map<Node *, uint32_t> rcToIndex;
   vector<Node *> randomChoices;
 
-  map<Node *, uint32_t> ccToIndex;
+  unordered_map<Node *, uint32_t> ccToIndex;
   vector<Node *> constrainedChoices;
 
   // Bool is TRUE for detach
