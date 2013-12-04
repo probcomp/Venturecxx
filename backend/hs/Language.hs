@@ -36,9 +36,11 @@ data Exp v = Datum v
            | Variable String
            | App (Exp v) [Exp v]
            | Lam [String] (Exp v)
+    deriving Show
 
 data Env k v = Toplevel
              | Frame (M.Map k v) (Env k v)
+    deriving Show
 
 lookup :: (Ord k) => k -> (Env k v) -> Maybe v
 lookup _ Toplevel = Nothing

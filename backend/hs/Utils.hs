@@ -14,6 +14,7 @@ import Control.Monad.Trans.State.Strict
 -- hack might be used to prevent this.
 
 newtype UniqueSeed = UniqueSeed Integer
+  deriving Show
 
 newtype Unique = Unique Integer
   deriving (Eq, Ord, Show)

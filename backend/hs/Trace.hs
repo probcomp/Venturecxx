@@ -26,15 +26,16 @@ type Exp = L.Exp Value
 type Env = L.Env String Address
 
 newtype Address = Address Unique
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Show)
 
 newtype SPAddress = SPAddress Unique
     deriving (Eq, Ord, Show)
 
 newtype SRId = SRId Unique
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Show)
 
 data SimulationRequest = SimulationRequest SRId Exp Env
+    deriving Show
 
 -- TODO An SP needing state of type a takes the a in appropriate
 -- places, and offers incorporate and unincorporate functions that
@@ -48,6 +49,9 @@ data SP m = SP { requester :: SPRequester m
                , outputter :: SPOutputter m
                , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
                }
+
+instance Show (SP m) where
+    show _ = "A stochastic procedure"
 
 data SPRequester m = DeterministicR ([Address] -> UniqueSource [SimulationRequest])
                    | RandomR ([Address] -> UniqueSourceT m [SimulationRequest])
@@ -110,6 +114,7 @@ data SPRecord m = SPRecord { sp :: (SP m)
                            , srid_seed :: UniqueSeed
                            , requests :: M.Map SRId Address
                            }
+    deriving Show
 
 spRecord :: SP m -> SPRecord m
 spRecord sp = SPRecord sp uniqueSeed M.empty
@@ -118,6 +123,7 @@ data Node = Constant Value
           | Reference (Maybe Value) Address
           | Request (Maybe [SimulationRequest]) Address [Address]
           | Output (Maybe Value) Address Address [Address] [Address]
+    deriving Show
 
 valueOf :: Node -> Maybe Value
 valueOf (Constant v) = Just v
@@ -163,6 +169,7 @@ data Trace rand =
           , addr_seed :: UniqueSeed
           , spaddr_seed :: UniqueSeed
           }
+    deriving Show
 
 empty :: Trace m
 empty = Trace M.empty S.empty M.empty M.empty M.empty uniqueSeed uniqueSeed
