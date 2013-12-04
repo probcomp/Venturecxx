@@ -8,7 +8,7 @@ import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.Class
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 
-import Language hiding (Exp, Value)
+import Language hiding (Exp, Value, Env)
 import Trace
 import Regen
 import Detach hiding (empty)
@@ -60,6 +60,34 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
 
     log_density :: Trace m -> a -> LogDensity
     log_density Trace{ randoms = choices } _ = LogDensity $ -log(fromIntegral $ S.size choices)
+
+data Directive = Assume String Exp
+               | Observe Exp Value
+
+assume :: (MonadRandom m) => String -> Exp -> StateT Env (StateT (Trace m) m) ()
+assume = undefined
+
+-- Evaluate the expression in the environment (building appropriate
+-- structure in the trace), and then constrain its value to the given
+-- value (up to chasing down references until a random choice is
+-- found).  The constraining appears to consist only in removing that
+-- node from the list of random choices.
+observe :: (MonadRandom m) => Exp -> Value -> ReaderT Env (StateT (Trace m) m) ()
+observe = undefined
+
+execute :: (MonadRandom m) => [Directive] -> StateT (Trace m) m ()
+execute ds = runStateT_ Toplevel (do
+  modify $ lift $ initializeBuiltins
+  mapM_ exectuteOne ds) where
+    exectuteOne (Assume s e) = assume s e
+    exectuteOne (Observe e v) = do env <- get
+                                   put $ lift $ runReaderT env $ observe e v
+    runStateT_ s = do
+      runStateT s
+      return ()
+
+infer :: (MonadRandom m) => Int -> StateT (Trace m) m [Value]
+infer = undefined
 
 simulation :: (MonadRandom m) => Int -> Exp -> StateT (Trace m) m [Value]
 simulation ct exp = do
