@@ -69,8 +69,18 @@ collectERG ((a,principal):as) = do
           modify $ mapAbs $ O.insert a
           collectERG as
 
+-- Given the list of addresses in the DRG, produce an updated scaffold
+-- that includes the brush.  TODO Do I need to read the existing
+-- scaffold to do this, or can I get away with returning the brush
+-- and the dead_reqs?
+-- The brush is those nodes that become no longer requested by anything
+-- after the requests made by requester nodes in the DRG are retracted.
+-- I compute them using a reference-counting scheme.
 collectBrush :: [Address] -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
 collectBrush = mapM_ disableRequests where
+    -- Given the address of a DRG node, account for the fact that it
+    -- ceases making any requests it may have been making (only
+    -- relevant to Requester nodes).
     disableRequests :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
     disableRequests a = do
       node <- asks $ fromJust "Disabling requests of non-existent node" . lookupNode a
@@ -81,6 +91,8 @@ collectBrush = mapM_ disableRequests where
           modify $ mapSnd $ mapReq ((spaddr,reqIds):)
           (asks $ fulfilments a) >>= (mapM_ disableRequestFor)
         _ -> return ()
+    -- Given the address of a requested node, account for the fact
+    -- that it is now requested one time less.
     disableRequestFor :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
     disableRequestFor a = do
       modify $ mapFst $ M.alter maybeSucc a
@@ -88,6 +100,8 @@ collectBrush = mapM_ disableRequests where
       requested <- asks $ numRequests a
       if disabled == requested then disableFamily a
       else return ()
+    -- Given the address of a node that is no longer requested, put it
+    -- and its entire family in the brush.
     disableFamily :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
     disableFamily a = do
       brush a
