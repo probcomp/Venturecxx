@@ -298,8 +298,10 @@ forgetResponses (spaddr, srids) t@Trace{ sprs = ss, request_counts = r } =
         spr@SPRecord { requests = reqs } = fromJust "Forgetting responses to non-SP" $ lookupSPR spaddr t
         r' = foldl decrement r srids
         decrement :: (M.Map Address Int) -> SRId -> (M.Map Address Int)
-        decrement m srid = M.adjust (subtract 1) k m where
+        decrement m srid = M.update maybePred k m where
             k = fromJust "Forgetting response that isn't there" $ M.lookup srid reqs
+            maybePred 1 = Nothing
+            maybePred n = Just $ n-1
 
 runRequester :: (Monad m) => SPAddress -> [Address] -> Trace m -> m ([SimulationRequest], Trace m)
 runRequester spaddr args t = do
