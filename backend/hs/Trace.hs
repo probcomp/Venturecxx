@@ -317,16 +317,22 @@ children a Trace{nodeChildren = cs} =
     S.toList $ fromJust "Loooking up the children of a nonexistent node" $ M.lookup a cs
 
 ----------------------------------------------------------------------
+-- Invariants that traces ought to obey
 
 referencedInvalidAddresses :: Trace m -> [Address]
 referencedInvalidAddresses t = invalidParentAddresses t
-                               -- ++ invalidRandomChoices t
-                               -- ++ invalidNodeChildrenKeys t
-                               -- ++ invalidNodeChildren t
-                               -- ++ invalidRequestedAddresses t
-                               -- ++ invalidRequestCountKeys t
+                               ++ invalidRandomChoices t
+                               ++ invalidNodeChildrenKeys t
+                               ++ invalidNodeChildren t
+                               ++ invalidRequestedAddresses t
+                               ++ invalidRequestCountKeys t
 
 invalidParentAddresses t@Trace{ nodes = ns } = filter (invalidAddress t) $ concat $ map parentAddrs $ M.elems ns
+invalidRandomChoices t@Trace{ randoms = rs } = filter (invalidAddress t) $ S.toList rs
+invalidNodeChildrenKeys t@Trace{ nodeChildren = cs } = filter (invalidAddress t) $ M.keys cs
+invalidNodeChildren t@Trace{ nodeChildren = cs } = filter (invalidAddress t) $ concat $ map S.toList $ M.elems cs
+invalidRequestedAddresses t@Trace{ sprs = sps } = filter (invalidAddress t) $ concat $ map (M.elems . requests) $ M.elems sps
+invalidRequestCountKeys t@Trace{ request_counts = rcs } = filter (invalidAddress t) $ M.keys rcs
 
 invalidAddress :: Trace m -> Address -> Bool
 invalidAddress t a = not $ isJust $ lookupNode a t
