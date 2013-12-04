@@ -40,6 +40,21 @@ normal = SP { requester = nullReq
             , log_d_out = Nothing -- Just normalMeasure
             }
 
+selectO :: [Node] -> [Node] -> Value
+selectO [p,c,a] _ = if fromJust "Argument node had no value" $ (valueOf p >>= booleanOf) then
+                        fromJust "Argument node had no value" $ valueOf c
+                    else
+                        fromJust "Argument node had no value" $ valueOf a
+selectO _ _ = error "Wrong number of arguments to SELECT"
+
+select :: SP m
+select = SP { requester = nullReq
+            , log_d_req = Just $ trivial_log_d_req
+            , outputter = DeterministicO selectO
+            , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
+            }
+
+
 -- Critical examples:
 -- bernoulli
 -- beta bernoulli in Venture
@@ -52,6 +67,7 @@ initializeBuiltins env = do
   addrs <- mapM (state . addFreshNode . Constant . Procedure) spaddrs
   return $ Frame (M.fromList $ zip names addrs) env
       where namedSps = [ ("bernoulli", bernoulli)
-                       , ("normal", normal)]
+                       , ("normal", normal)
+                       , ("select", select)]
             names = map fst namedSps
             sps = map snd namedSps

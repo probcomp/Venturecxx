@@ -14,6 +14,10 @@ data Value proc = Number Double
                 | Boolean Bool
   deriving (Eq, Ord, Show)
 
+booleanOf :: Value p -> Maybe Bool
+booleanOf (Boolean b) = Just b
+booleanOf _ = Nothing
+
 numberOf :: Value p -> Maybe Double
 numberOf (Number d) = Just d
 numberOf _ = Nothing
