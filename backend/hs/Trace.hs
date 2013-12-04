@@ -2,6 +2,7 @@
 
 module Trace where
 
+import Debug.Trace
 import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -336,3 +337,6 @@ invalidRequestCountKeys t@Trace{ request_counts = rcs } = filter (invalidAddress
 
 invalidAddress :: Trace m -> Address -> Bool
 invalidAddress t a = not $ isJust $ lookupNode a t
+
+traceShowTrace :: (Trace m) -> a -> a
+traceShowTrace t = traceShow (referencedInvalidAddresses t) . traceShow t
