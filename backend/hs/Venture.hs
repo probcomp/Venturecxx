@@ -1,6 +1,7 @@
 
 module Venture where
 
+import Debug.Trace
 import qualified Data.Set as S
 import Control.Monad.Reader
 import Control.Monad.Trans.State.Lazy
@@ -67,7 +68,8 @@ simulation ct exp = do
   address <- eval exp env
   -- TODO This line breaks all the examples right now.
   replicateM ct (do
-    modifyM $ metropolis_hastings principal_node_mh
+    t <- get
+    modifyM $ liftM (traceShow $ referencedInvalidAddresses t) $ liftM (traceShow t) $ metropolis_hastings principal_node_mh
     gets $ fromJust "Value was not restored by inference" . valueOf
            . fromJust "Address became invalid after inference" . (lookupNode address))
 

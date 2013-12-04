@@ -315,3 +315,18 @@ numRequests a Trace { request_counts = r } = fromMaybe 0 $ M.lookup a r
 children :: Address -> Trace m -> [Address]
 children a Trace{nodeChildren = cs} =
     S.toList $ fromJust "Loooking up the children of a nonexistent node" $ M.lookup a cs
+
+----------------------------------------------------------------------
+
+referencedInvalidAddresses :: Trace m -> [Address]
+referencedInvalidAddresses t = invalidParentAddresses t
+                               -- ++ invalidRandomChoices t
+                               -- ++ invalidNodeChildrenKeys t
+                               -- ++ invalidNodeChildren t
+                               -- ++ invalidRequestedAddresses t
+                               -- ++ invalidRequestCountKeys t
+
+invalidParentAddresses t@Trace{ nodes = ns } = filter (invalidAddress t) $ concat $ map parentAddrs $ M.elems ns
+
+invalidAddress :: Trace m -> Address -> Bool
+invalidAddress t a = not $ isJust $ lookupNode a t
