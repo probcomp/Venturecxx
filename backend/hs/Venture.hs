@@ -1,7 +1,6 @@
 
 module Venture where
 
-import Data.Maybe
 import qualified Data.Set as S
 import Control.Monad.Reader
 import Control.Monad.Trans.State.Lazy
@@ -15,6 +14,7 @@ import Regen
 import Detach hiding (empty)
 import qualified Detach as D (empty)
 import SP
+import Utils (fromJust)
 
 type Kernel m a = a -> WriterT LogDensity m a
 
@@ -68,7 +68,8 @@ simulation ct exp = do
   -- TODO This line breaks all the examples right now.
   replicateM ct (do
     modifyM $ metropolis_hastings principal_node_mh
-    gets $ fromJust . valueOf . fromJust . (lookupNode address))
+    gets $ fromJust "Value was not restored by inference" . valueOf
+           . fromJust "Address became invalid after inference" . (lookupNode address))
 
 simulate_soup :: (MonadRandom m) => Int -> Exp -> m [Value]
 simulate_soup ct exp = evalStateT (simulation ct exp) empty
