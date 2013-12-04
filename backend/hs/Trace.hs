@@ -238,6 +238,9 @@ addFreshNode node t@Trace{ nodes = ns, addr_seed = seed, randoms = rs, nodeChild
     (a, t{ nodes = ns', addr_seed = seed', randoms = rs', nodeChildren = cs''}) where
         (a, seed') = runUniqueSource (liftM Address fresh) seed
         ns' = M.insert a node ns
+        -- TODO Argh! Need to maintain the randomness of nodes under
+        -- inference-caused updates to the SPs that are their
+        -- operators.
         rs' = if isRandomNode node t then
                   S.insert a rs
               else
