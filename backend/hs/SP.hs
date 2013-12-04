@@ -15,7 +15,7 @@ bernoulliFlip _ _ = liftM Boolean $ getRandomR (False,True)
 bernoulli :: (MonadRandom m) => SP m
 bernoulli = SP { requester = nullReq
                , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-               , outputter = bernoulliFlip
+               , outputter = RandomO bernoulliFlip
                , log_d_out = Just $ const $ const $ const $ -log 2.0
                }
 
@@ -36,7 +36,7 @@ normalFlip [meanN, sigmaN] _ = do
 normal :: (MonadRandom m) => SP m
 normal = SP { requester = nullReq
             , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-            , outputter = normalFlip
+            , outputter = RandomO normalFlip
             , log_d_out = Nothing -- Just normalMeasure
             }
 

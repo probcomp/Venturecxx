@@ -60,7 +60,7 @@ regenValue a = lift (do
       ns <- gets nodes
       let args = map (fromJust . flip M.lookup ns) ps
       let results = map (fromJust . flip M.lookup ns) rs
-      v <- lift $ out args results
+      v <- lift $ asRandomO out args results
       modify $ insertNode a (Output (Just v) reqA opa ps rs))
 
 evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()

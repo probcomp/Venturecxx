@@ -45,16 +45,23 @@ data SimulationRequest = SimulationRequest SRId Exp Env
 -- m is presumably an instance of MonadRandom
 data SP m = SP { requester :: SPRequester m
                , log_d_req :: Maybe ([Address] -> [SimulationRequest] -> Double)
-               , outputter :: [Node] -> [Node] -> m Value
+               , outputter :: SPOutputter m
                , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
                }
 
-data SPRequester m = Deterministic ([Address] -> UniqueSource [SimulationRequest])
-                   | Random ([Address] -> UniqueSourceT m [SimulationRequest])
+data SPRequester m = DeterministicR ([Address] -> UniqueSource [SimulationRequest])
+                   | RandomR ([Address] -> UniqueSourceT m [SimulationRequest])
 
-asRandom :: (Monad m) => SPRequester m -> [Address] -> UniqueSourceT m [SimulationRequest]
-asRandom (Random f) as = f as
-asRandom (Deterministic f) as = returnT $ f as
+data SPOutputter m = DeterministicO ([Node] -> [Node] -> Value)
+                   | RandomO ([Node] -> [Node] -> m Value)
+
+asRandomR :: (Monad m) => SPRequester m -> [Address] -> UniqueSourceT m [SimulationRequest]
+asRandomR (RandomR f) as = f as
+asRandomR (DeterministicR f) as = returnT $ f as
+
+asRandomO :: (Monad m) => SPOutputter m -> [Node] -> [Node] -> m Value
+asRandomO (RandomO f) args reqs = f args reqs
+asRandomO (DeterministicO f) args reqs = return $ f args reqs
 
 canAbsorb :: Node -> SP m -> Bool
 canAbsorb (Request _ _ _)  SP { log_d_req = (Just _) } = True
@@ -69,18 +76,19 @@ absorb (Output (Just v) _ _ args reqs) SP { log_d_out = (Just f) } t = f args' r
 absorb _ _ _ = error "Inappropriate absorb attempt"
 
 nullReq :: SPRequester m
-nullReq = Deterministic $ \_ -> return []
+nullReq = DeterministicR $ \_ -> return []
 
 trivial_log_d_req :: a -> b -> Double
 trivial_log_d_req = const $ const $ 0.0
 
-trivialOut :: (Monad m) => a -> [Node] -> m Value
-trivialOut _ (n:_) = return $ fromJust "trivialOut node had no value" $ valueOf n
-trivialOut _ _ = error "trivialOut expects at least one request result"
+trivialOut :: (Monad m) => SPOutputter m
+trivialOut = DeterministicO self where
+    self _ (n:_) = fromJust "trivialOut node had no value" $ valueOf n
+    self _ _ = error "trivialOut expects at least one request result"
 
 compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
 compoundSP formals exp env =
-    SP { requester = Deterministic req
+    SP { requester = DeterministicR req
        , log_d_req = Just $ trivial_log_d_req
        , outputter = trivialOut
        , log_d_out = Nothing
@@ -263,7 +271,7 @@ forgetResponses (spaddr, srids) t@Trace{ sprs = ss, request_counts = r } =
 runRequester :: (Monad m) => SPAddress -> [Address] -> Trace m -> m ([SimulationRequest], Trace m)
 runRequester spaddr args t = do
   let spr@SPRecord { sp = SP{ requester = req }, srid_seed = seed } = fromJust "Running the requester of a non-SP" $ lookupSPR spaddr t
-  (reqs, seed') <- runUniqueSourceT (asRandom req args) seed
+  (reqs, seed') <- runUniqueSourceT (asRandomR req args) seed
   let trace' = insertSPR spaddr spr{ srid_seed = seed' } t
   return (reqs, trace')
 
