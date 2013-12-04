@@ -12,7 +12,7 @@ data Value proc = Number Double
                 | List [Value proc]
                 | Procedure proc
                 | Boolean Bool
-  deriving Show
+  deriving (Eq, Ord, Show)
 
 numberOf :: Value p -> Maybe Double
 numberOf (Number d) = Just d
