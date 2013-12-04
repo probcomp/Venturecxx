@@ -59,9 +59,20 @@ asRandomR :: (Monad m) => SPRequester m -> [Address] -> UniqueSourceT m [Simulat
 asRandomR (RandomR f) as = f as
 asRandomR (DeterministicR f) as = returnT $ f as
 
+isRandomR :: SPRequester m -> Bool
+isRandomR (RandomR _) = True
+isRandomR (DeterministicR _) = False
+
 asRandomO :: (Monad m) => SPOutputter m -> [Node] -> [Node] -> m Value
 asRandomO (RandomO f) args reqs = f args reqs
 asRandomO (DeterministicO f) args reqs = return $ f args reqs
+
+isRandomO :: SPOutputter m -> Bool
+isRandomO (RandomO _) = True
+isRandomO (DeterministicO _) = False
+
+isRandom :: SP m -> Bool
+isRandom SP { requester = r, outputter = o } = isRandomR r || isRandomO o
 
 canAbsorb :: Node -> SP m -> Bool
 canAbsorb (Request _ _ _)  SP { log_d_req = (Just _) } = True
