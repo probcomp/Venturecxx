@@ -50,11 +50,14 @@ regenValue a = lift (do
       t <- get
       let v = fromJust "Regenerating value for a reference with non-regenerated referent" ( (lookupNode a' t) >>= valueOf )
       modify $ insertNode a (Reference (Just v) a')
-    (Request _ opa ps) -> do
+    (Request _ outA opa ps) -> do
       addr <- gets $ fromJust "Regenerating value for a request with no operator" . (chaseOperator opa)
       reqs <- StateT $ runRequester addr ps
-      modify $ insertNode a (Request (Just reqs) opa ps)
+      modify $ insertNode a (Request (Just reqs) outA opa ps)
       evalRequests addr reqs
+      case outA of
+        Nothing -> return ()
+        (Just outA') -> return () -- TODO update the output node with the fulfilments
     (Output _ reqA opa ps rs) -> do
       SP{ outputter = out } <- gets $ fromJust "Regenerating value for an output with no operator" . (operator node)
       ns <- gets nodes
@@ -90,11 +93,12 @@ eval (Lam vs exp) e = do
 eval (App op args) env = do
   op' <- eval op env
   args' <- sequence $ map (flip eval env) args
-  addr <- state $ addFreshNode (Request Nothing op' args')
+  addr <- state $ addFreshNode (Request Nothing Nothing op' args')
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr
   reqAddrs <- gets $ fulfilments addr
   addr' <- state $ addFreshNode (Output Nothing addr op' args' reqAddrs)
   -- Is there a good reason why I don't care about the log density of this regenNode?
+  modify $ adjustNode (addOutput addr') addr
   _ <- runWriterT $ regenNode addr'
   return addr'

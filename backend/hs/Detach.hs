@@ -85,7 +85,7 @@ collectBrush = mapM_ disableRequests where
     disableRequests a = do
       node <- asks $ fromJust "Disabling requests of non-existent node" . lookupNode a
       case node of
-        (Request (Just reqs) _ _) -> do
+        (Request (Just reqs) _ _ _) -> do
           spaddr <- asks $ fromJust "Disabling requests of operator-less request node" . operatorAddr node
           let reqIds = requestIds node
           modify $ mapSnd $ mapReq ((spaddr,reqIds):)

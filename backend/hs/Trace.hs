@@ -79,12 +79,12 @@ isRandomO (RandomO _) = True
 isRandomO (DeterministicO _) = False
 
 canAbsorb :: Node -> SP m -> Bool
-canAbsorb (Request _ _ _)  SP { log_d_req = (Just _) } = True
+canAbsorb (Request _ _ _ _)  SP { log_d_req = (Just _) } = True
 canAbsorb (Output _ _ _ _ _) SP { log_d_out = (Just _) } = True
 canAbsorb _ _ = False
 
 absorb :: Node -> SP m -> Trace m -> Double
-absorb (Request (Just reqs) _ args) SP { log_d_req = (Just f) } _ = f args reqs
+absorb (Request (Just reqs) _ _ args) SP { log_d_req = (Just f) } _ = f args reqs
 absorb (Output (Just v) _ _ args reqs) SP { log_d_out = (Just f) } t = f args' reqs' v where
     args' = map (fromJust "absorb" . flip lookupNode t) args
     reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
@@ -124,7 +124,7 @@ spRecord sp = SPRecord sp uniqueSeed M.empty
 
 data Node = Constant Value
           | Reference (Maybe Value) Address
-          | Request (Maybe [SimulationRequest]) Address [Address]
+          | Request (Maybe [SimulationRequest]) (Maybe Address) Address [Address]
           | Output (Maybe Value) Address Address [Address] [Address]
     deriving Show
 
@@ -137,24 +137,28 @@ valueOf _ = Nothing
 devalue :: Node -> Node
 devalue (Constant _) = error "Cannot devalue a constant"
 devalue (Reference _ a) = Reference Nothing a
-devalue (Request _ a as) = Request Nothing a as
+devalue (Request _ outA a as) = Request Nothing outA a as
 devalue (Output _ reqA opa args reqs) = Output Nothing reqA opa args reqs
 
 parentAddrs :: Node -> [Address]
 parentAddrs (Constant _) = []
 parentAddrs (Reference _ addr) = [addr]
-parentAddrs (Request _ a as) = a:as
+parentAddrs (Request _ _ a as) = a:as
 parentAddrs (Output _ reqA a as as') = reqA:a:(as ++ as')
 
 opAddr :: Node -> Maybe Address
-opAddr (Request _ a _) = Just a
+opAddr (Request _ _ a _) = Just a
 opAddr (Output _ _ a _ _) = Just a
 opAddr _ = Nothing
 
 requestIds :: Node -> [SRId]
-requestIds (Request (Just srs) _ _) = map srid srs
+requestIds (Request (Just srs) _ _ _) = map srid srs
     where srid (SimulationRequest id _ _) = id
 requestIds _ = error "Asking for request IDs of a non-request node"
+
+addOutput :: Address -> Node -> Node
+addOutput outA (Request v _ a as) = Request v (Just outA) a as
+addOutput _ n = n
 
 ----------------------------------------------------------------------
 -- Traces
@@ -188,8 +192,8 @@ isRegenerated :: Node -> Bool
 isRegenerated (Constant _) = True
 isRegenerated (Reference Nothing _) = False
 isRegenerated (Reference (Just _) _) = True
-isRegenerated (Request Nothing _ _) = False
-isRegenerated (Request (Just _) _ _) = True
+isRegenerated (Request Nothing _ _ _) = False
+isRegenerated (Request (Just _) _ _ _) = True
 isRegenerated (Output Nothing _ _ _ _) = False
 isRegenerated (Output (Just _) _ _ _ _) = True
 
@@ -213,9 +217,9 @@ operator :: Node -> Trace m -> Maybe (SP m)
 operator n t@Trace{ sprs = ss } = operatorAddr n t >>= (liftM sp . flip M.lookup ss)
 
 isRandomNode :: Node -> Trace m -> Bool
-isRandomNode n@(Request _ _ _) t = case operator n t of
-                                     Nothing -> False
-                                     (Just sp) -> isRandomR $ requester sp
+isRandomNode n@(Request _ _ _ _) t = case operator n t of
+                                       Nothing -> False
+                                       (Just sp) -> isRandomR $ requester sp
 isRandomNode n@(Output _ _ _ _ _) t = case operator n t of
                                         Nothing -> False
                                         (Just sp) -> isRandomO $ outputter sp
@@ -230,6 +234,7 @@ insertNode a n t@Trace{nodes = ns} = t{ nodes = ns'} where
     ns' = M.insert a n ns
 
 -- TODO This is only used to remove values from nodes.  Enforce or collapse?
+-- Also to post-add output addresses to Request nodes
 adjustNode :: (Node -> Node) -> Address -> Trace m -> Trace m
 adjustNode f a t@Trace{nodes = ns} = t{ nodes = (M.adjust f a ns) }
 
