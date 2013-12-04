@@ -1,7 +1,7 @@
 module Regen where
 
 import qualified Data.Map as M
-import Data.Maybe
+import Data.Maybe hiding (fromJust)
 import Control.Monad
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.State.Lazy hiding (state)
@@ -14,6 +14,7 @@ import qualified Language as L
 import Trace
 import Detach (Scaffold(..))
 import qualified InsertionOrderedSet as O
+import Utils (fromJust)
 
 regen :: (MonadRandom m) => Scaffold -> Trace m -> WriterT LogDensity m (Trace m)
 regen s t = do
@@ -27,14 +28,14 @@ regen' Scaffold { drg = d, absorbers = abs } = do
   mapM_ absorbValue $ O.toList abs
   where absorbValue :: (Monad m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
         absorbValue a = do
-          node <- lift $ gets $ fromJust . lookupNode a
-          sp <- lift $ gets $ fromJust . operator node
+          node <- lift $ gets $ fromJust "Absorbing at a nonexistent node" . lookupNode a
+          sp <- lift $ gets $ fromJust "Absorbing at a node with no operator" . operator node
           wt <- lift $ gets $ absorb node sp
           tell $ LogDensity wt
 
 regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
 regenNode a = do
-  node <- lift $ gets $ fromJust . (lookupNode a)
+  node <- lift $ gets $ fromJust "Regenerating a nonexistent node" . (lookupNode a)
   if isRegenerated node then return ()
   else do
     mapM_ regenNode (parentAddrs node)
@@ -42,24 +43,24 @@ regenNode a = do
 
 regenValue :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
 regenValue a = lift (do
-  node <- gets $ fromJust . (lookupNode a)
+  node <- gets $ fromJust "Regenerating value for nonexistent node" . (lookupNode a)
   case node of
     (Constant _) -> return ()
     (Reference _ a') -> do
       t <- get
-      let v = fromJust ( (lookupNode a' t) >>= valueOf )
+      let v = fromJust "Regenerating value for a reference with non-regenerated referent" ( (lookupNode a' t) >>= valueOf )
       modify $ insertNode a (Reference (Just v) a')
     (Request _ opa ps) -> do
-      addr <- gets $ fromJust . (chaseOperator opa)
+      addr <- gets $ fromJust "Regenerating value for a request with no operator" . (chaseOperator opa)
       reqs <- StateT $ runRequester addr ps
       modify $ insertNode a (Request (Just reqs) opa ps)
-      addr <- gets $ fromJust . (operatorAddr node)
+      addr <- gets $ fromJust "Regenerating value for a request with no operator address" . (operatorAddr node)
       evalRequests addr reqs
     (Output _ reqA opa ps rs) -> do
-      SP{ outputter = out } <- gets $ fromJust . (operator node)
+      SP{ outputter = out } <- gets $ fromJust "Regenerating value for an output with no operator" . (operator node)
       ns <- gets nodes
-      let args = map (fromJust . flip M.lookup ns) ps
-      let results = map (fromJust . flip M.lookup ns) rs
+      let args = map (fromJust "Regenerating value for an output with a missing parent" . flip M.lookup ns) ps
+      let results = map (fromJust "Regenerating value for an output with a missing request result" . flip M.lookup ns) rs
       v <- lift $ asRandomO out args results
       modify $ insertNode a (Output (Just v) reqA opa ps rs))
 
