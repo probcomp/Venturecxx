@@ -54,7 +54,6 @@ regenValue a = lift (do
       addr <- gets $ fromJust "Regenerating value for a request with no operator" . (chaseOperator opa)
       reqs <- StateT $ runRequester addr ps
       modify $ insertNode a (Request (Just reqs) opa ps)
-      addr <- gets $ fromJust "Regenerating value for a request with no operator address" . (operatorAddr node)
       evalRequests addr reqs
     (Output _ reqA opa ps rs) -> do
       SP{ outputter = out } <- gets $ fromJust "Regenerating value for an output with no operator" . (operator node)
