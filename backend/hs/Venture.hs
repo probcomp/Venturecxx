@@ -60,16 +60,18 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
 
     log_density :: Trace m -> a -> LogDensity
     log_density Trace{ randoms = choices } _ = LogDensity $ -log(fromIntegral $ S.size choices)
-    
+
+simulation :: (MonadRandom m) => Int -> Exp -> StateT (Trace m) m [Value]
+simulation ct exp = do
+  env <- initializeBuiltins Toplevel
+  address <- eval exp env
+  -- TODO This line breaks all the examples right now.
+  replicateM ct (do
+    modifyM $ metropolis_hastings principal_node_mh
+    gets $ fromJust . valueOf . fromJust . (lookupNode address))
+
 simulate_soup :: (MonadRandom m) => Int -> Exp -> m [Value]
-simulate_soup ct exp = evalStateT act empty
-    where act = do
-            env <- initializeBuiltins Toplevel
-            address <- eval exp env
-            -- TODO This line breaks all the examples right now.
-            replicateM ct (do
-                  modifyM $ metropolis_hastings principal_node_mh
-                  gets $ fromJust . valueOf . fromJust . (lookupNode address))
+simulate_soup ct exp = evalStateT (simulation ct exp) empty
 
 -- simulate_soup 1 $ Datum $ Number 1.0
 -- simulate_soup 1 $ App (Lam ["x"] (Variable "x")) [(Datum $ Number 1.0)]
