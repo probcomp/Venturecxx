@@ -272,7 +272,7 @@ double Trace::applyPSP(Node * node,
   if (dynamic_cast<VentureSP *>(node->getValue()))
   { processMadeSP(node,scaffold && scaffold->isAAA(node)); }
   if (sp->isRandom(node->nodeType)) { registerRandomChoice(node); }
-  if (node->nodeType == NodeType::REQUEST) { evalRequests(node,scaffold,shouldRestore,omegaDB,gradients); }
+  if (node->nodeType == NodeType::REQUEST) { weight += evalRequests(node,scaffold,shouldRestore,omegaDB,gradients); }
 
 
   return weight;
