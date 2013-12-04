@@ -80,8 +80,6 @@ simulate_soup ct exp = evalStateT act empty
 -- simulate_soup 10 $ App (Variable "bernoulli") []
 -- simulate_soup 10 $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
 
--- Next subgoal: Do MH inference (without observations) and see bernoulli change value
-
 -- Next subgoal: Do MH inference (without observations) on an example that has a brush
 -- - requires implementing IF
 
