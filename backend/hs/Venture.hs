@@ -85,12 +85,9 @@ simulate_soup ct exp = evalStateT (simulation ct exp) empty
 -- simulate_soup 10 $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
 -- simulate_soup 10 $ App (App (Variable "select") [(App (Variable "bernoulli") []), (Lam [] (Datum $ Number 1.0)), (Lam [] (Datum $ Number 2.0))]) []
 
--- Next subgoal: Do MH inference (without observations) on an example that has a brush
--- - requires implementing IF or SELECT
-
 -- Next subgoal: Do MH inference with observations on some trivial
 --   programs (e.g. normal with normally distributed mean?)
--- - replace fromJusts with things that signal error messages (forceLookup)
+--   - also involving brush
 
 -- Eventual goals
 -- - Built-in SPs with collapsed exchangeably coupled state
