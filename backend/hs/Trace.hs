@@ -53,6 +53,8 @@ data SP m = SP { requester :: SPRequester m
 instance Show (SP m) where
     show _ = "A stochastic procedure"
 
+-- TODO Is there a nice way to unify these two data types and their
+-- methods?
 data SPRequester m = DeterministicR ([Address] -> UniqueSource [SimulationRequest])
                    | RandomR ([Address] -> UniqueSourceT m [SimulationRequest])
 
