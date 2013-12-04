@@ -2,12 +2,12 @@ module Detach where
 
 import qualified Data.Set as S
 import qualified Data.Map as M
-import Data.Maybe
+import Data.Maybe hiding (fromJust)
 import Control.Monad.Reader
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.State.Lazy hiding (state)
 
-import Utils hiding (fromJust)
+import Utils
 import Language
 import qualified InsertionOrderedSet as O
 import Trace hiding (empty)
@@ -44,17 +44,18 @@ collectERG ((a,principal):as) = do
   -- (if I discover that their operator is in the DRG after all)
   if member then collectERG as
   else do
-    node <- lift $ asks $ fromJust . lookupNode a
+    node <- lift $ asks $ fromJust "Collecting a nonexistent node into the DRG" . lookupNode a
     case node of
       (Constant _) -> error "Constant node should never appear in the DRG"
       (Reference _ _) -> resampling a
       _ -> do
-         let opa = fromJust $ opAddr node
+         let opa = fromJust "DRGing application node with no operator" $ opAddr node
          -- N.B. This can change as more graph structure is traversed
          opMember <- gets $ O.member opa . drg
          if opMember then resampling a
          else do
-           opCanAbsorb <- lift $ asks $ (canAbsorb node) . fromJust . operator node
+           opCanAbsorb <- lift $ asks $ (canAbsorb node)
+                          . fromJust "DRGing application node with no operator" . operator node
            if (not principal && opCanAbsorb) then absorbing a
            else resampling a -- TODO check esrReferenceCanAbsorb
   where resampling :: Address -> StateT Scaffold (Reader (Trace m)) ()
@@ -72,10 +73,10 @@ collectBrush :: [Address] -> StateT ((M.Map Address Int), Scaffold) (Reader (Tra
 collectBrush = mapM_ disableRequests where
     disableRequests :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
     disableRequests a = do
-      node <- asks $ fromJust . lookupNode a
+      node <- asks $ fromJust "Disabling requests of non-existent node" . lookupNode a
       case node of
         (Request (Just reqs) _ _) -> do
-          spaddr <- asks $ fromJust . operatorAddr node
+          spaddr <- asks $ fromJust "Disabling requests of operator-less request node" . operatorAddr node
           let reqIds = requestIds node
           modify $ mapSnd $ mapReq ((spaddr,reqIds):)
           (asks $ fulfilments a) >>= (mapM_ disableRequestFor)
@@ -83,14 +84,14 @@ collectBrush = mapM_ disableRequests where
     disableRequestFor :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
     disableRequestFor a = do
       modify $ mapFst $ M.alter maybeSucc a
-      disabled <- gets $ fromJust . M.lookup a . fst
+      disabled <- gets $ fromJust "Disabling request for a node that has never been disabled" . M.lookup a . fst
       requested <- asks $ numRequests a
       if disabled == requested then disableFamily a
       else return ()
     disableFamily :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
     disableFamily a = do
       brush a
-      node <- asks $ fromJust . lookupNode a
+      node <- asks $ fromJust "Disabling nonexistent family" . lookupNode a
       case node of
         (Output _ reqA opa operands _) -> do
                         brush reqA
@@ -114,8 +115,8 @@ detach' Scaffold { drg = d, absorbers = abs, dead_reqs = reqs, brush = bru } = d
   mapM_ (stupid . forgetNode) $ S.toList bru
   where unabsorbValue :: Address -> StateT (Trace m) (Writer LogDensity) ()
         unabsorbValue a = do
-          node <- gets $ fromJust . lookupNode a
-          sp <- gets $ fromJust . operator node
+          node <- gets $ fromJust "Unabsorbing non-existent node" . lookupNode a
+          sp <- gets $ fromJust "Unabsorbing node with no operator" . operator node
           wt <- gets $ absorb node sp
           lift $ tell $ LogDensity wt
         eraseValue :: Address -> State (Trace m) ()
