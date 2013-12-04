@@ -61,24 +61,24 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
     log_density :: Trace m -> a -> LogDensity
     log_density Trace{ randoms = choices } _ = LogDensity $ -log(fromIntegral $ S.size choices)
     
-simulate_soup :: (MonadRandom m) => Exp -> m [Value]
-simulate_soup exp = evalStateT act empty
+simulate_soup :: (MonadRandom m) => Int -> Exp -> m [Value]
+simulate_soup ct exp = evalStateT act empty
     where act = do
             env <- initializeBuiltins Toplevel
             address <- eval exp env
             -- TODO This line breaks all the examples right now.
-            replicateM 5 (do
+            replicateM ct (do
                   modifyM $ metropolis_hastings principal_node_mh
                   gets $ fromJust . valueOf . fromJust . (lookupNode address))
 
--- simulate_soup $ Datum $ Number 1.0
--- simulate_soup $ App (Lam ["x"] (Variable "x")) [(Datum $ Number 1.0)]
+-- simulate_soup 1 $ Datum $ Number 1.0
+-- simulate_soup 1 $ App (Lam ["x"] (Variable "x")) [(Datum $ Number 1.0)]
 -- (let (id ...) (id 1))
--- simulate_soup $ App (Lam ["id"] (App (Variable "id") [(Datum $ Number 1.0)])) [(Lam ["x"] (Variable "x"))]
+-- simulate_soup 1 $ App (Lam ["id"] (App (Variable "id") [(Datum $ Number 1.0)])) [(Lam ["x"] (Variable "x"))]
 -- K combinator
--- simulate_soup $ App (App (Lam ["x"] (Lam ["y"] (Variable "x"))) [(Datum $ Number 1.0)]) [(Datum $ Number 2.0)]
--- simulate_soup $ App (Variable "bernoulli") []
--- simulate_soup $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
+-- simulate_soup 1 $ App (App (Lam ["x"] (Lam ["y"] (Variable "x"))) [(Datum $ Number 1.0)]) [(Datum $ Number 2.0)]
+-- simulate_soup 10 $ App (Variable "bernoulli") []
+-- simulate_soup 10 $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
 
 -- Next subgoal: Do MH inference (without observations) and see bernoulli change value
 
