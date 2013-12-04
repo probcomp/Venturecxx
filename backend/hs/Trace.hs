@@ -71,9 +71,6 @@ isRandomO :: SPOutputter m -> Bool
 isRandomO (RandomO _) = True
 isRandomO (DeterministicO _) = False
 
-isRandom :: SP m -> Bool
-isRandom SP { requester = r, outputter = o } = isRandomR r || isRandomO o
-
 canAbsorb :: Node -> SP m -> Bool
 canAbsorb (Request _ _ _)  SP { log_d_req = (Just _) } = True
 canAbsorb (Output _ _ _ _ _) SP { log_d_out = (Just _) } = True
@@ -205,6 +202,15 @@ operatorRecord n t@Trace{ sprs = ss } = operatorAddr n t >>= (flip M.lookup ss)
 operator :: Node -> Trace m -> Maybe (SP m)
 operator n t@Trace{ sprs = ss } = operatorAddr n t >>= (liftM sp . flip M.lookup ss)
 
+isRandomNode :: Node -> Trace m -> Bool
+isRandomNode n@(Request _ _ _) t = case operator n t of
+                                     Nothing -> False
+                                     (Just sp) -> isRandomR $ requester sp
+isRandomNode n@(Output _ _ _ _ _) t = case operator n t of
+                                        Nothing -> False
+                                        (Just sp) -> isRandomO $ outputter sp
+isRandomNode _ _ = False
+
 lookupNode :: Address -> Trace m -> Maybe Node
 lookupNode a Trace{ nodes = m } = M.lookup a m
 
@@ -232,7 +238,10 @@ addFreshNode node t@Trace{ nodes = ns, addr_seed = seed, randoms = rs, nodeChild
     (a, t{ nodes = ns', addr_seed = seed', randoms = rs', nodeChildren = cs''}) where
         (a, seed') = runUniqueSource (liftM Address fresh) seed
         ns' = M.insert a node ns
-        rs' = S.insert a rs -- TODO only insert if it's actually random, duh
+        rs' = if isRandomNode node t then
+                  S.insert a rs
+              else
+                  rs
         cs' = foldl foo cs $ parentAddrs node
         cs'' = M.insert a S.empty cs'
         foo cs pa = M.adjust (S.insert a) pa cs
