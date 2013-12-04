@@ -105,7 +105,7 @@ compoundSP formals exp env =
     SP { requester = DeterministicR req
        , log_d_req = Just $ trivial_log_d_req
        , outputter = trivialOut
-       , log_d_out = Nothing
+       , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
        } where
         req args = do
           freshId <- liftM SRId fresh
