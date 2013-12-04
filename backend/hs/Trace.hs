@@ -164,6 +164,10 @@ addResponses :: [Address] -> Node -> Node
 addResponses resps (Output v reqA a as _) = Output v reqA a as resps
 addResponses _ n = n
 
+deleteResponses :: Node -> Node
+deleteResponses (Output v reqA a as _) = Output v reqA a as []
+deleteResponses n = n
+
 ----------------------------------------------------------------------
 -- Traces
 ----------------------------------------------------------------------

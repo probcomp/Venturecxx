@@ -134,7 +134,12 @@ detach' Scaffold { drg = d, absorbers = abs, dead_reqs = reqs, brush = bru } = d
           wt <- gets $ absorb node sp
           lift $ tell $ LogDensity wt
         eraseValue :: Address -> State (Trace m) ()
-        eraseValue a = modify $ adjustNode devalue a
+        eraseValue a = do
+          modify $ adjustNode devalue a
+          node <- gets $ fromJust "Erasing the value of a nonexistent node" . lookupNode a
+          case node of
+            (Request _ (Just outA) _ _) -> modify $ adjustNode deleteResponses outA
+            _ -> return ()
         forgetRequest :: (SPAddress, [SRId]) -> State (Trace m) ()
         forgetRequest x = modify $ forgetResponses x
         forgetNode :: Address -> State (Trace m) ()
