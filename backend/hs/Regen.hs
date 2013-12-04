@@ -38,7 +38,7 @@ regenNode a = do
   node <- lift $ gets $ fromJust "Regenerating a nonexistent node" . (lookupNode a)
   if isRegenerated node then return ()
   else do
-    mapM_ regenNode (parentAddrs node)
+    mapM_ regenNode (parentAddrs node) -- Note that this may change the node at address a
     regenValue a
 
 regenValue :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
@@ -54,10 +54,10 @@ regenValue a = lift (do
       addr <- gets $ fromJust "Regenerating value for a request with no operator" . (chaseOperator opa)
       reqs <- StateT $ runRequester addr ps
       modify $ insertNode a (Request (Just reqs) outA opa ps)
-      evalRequests addr reqs
+      resps <- evalRequests addr reqs
       case outA of
         Nothing -> return ()
-        (Just outA') -> return () -- TODO update the output node with the fulfilments
+        (Just outA') -> modify $ adjustNode (addResponses resps) outA'
     (Output _ reqA opa ps rs) -> do
       SP{ outputter = out } <- gets $ fromJust "Regenerating value for an output with no operator" . (operator node)
       ns <- gets nodes
@@ -66,14 +66,16 @@ regenValue a = lift (do
       v <- lift $ asRandomO out args results
       modify $ insertNode a (Output (Just v) reqA opa ps rs))
 
-evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m ()
-evalRequests a srs = mapM_ evalRequest srs where
+evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m [Address]
+evalRequests a srs = mapM evalRequest srs where
     evalRequest (SimulationRequest id exp env) = do
-      isCached <- gets $ isJust . (lookupResponse a id)
-      if isCached then return ()
-      else do
-        addr <- eval exp env
-        modify $ insertResponse a id addr
+      cached <- gets $ lookupResponse a id
+      case cached of
+        (Just addr) -> return addr
+        Nothing -> do
+          addr <- eval exp env
+          modify $ insertResponse a id addr
+          return addr
 
 -- Returns the address of the fresh node holding the result of the
 -- evaluation.

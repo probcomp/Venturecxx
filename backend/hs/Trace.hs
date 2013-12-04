@@ -160,6 +160,10 @@ addOutput :: Address -> Node -> Node
 addOutput outA (Request v _ a as) = Request v (Just outA) a as
 addOutput _ n = n
 
+addResponses :: [Address] -> Node -> Node
+addResponses resps (Output v reqA a as _) = Output v reqA a as resps
+addResponses _ n = n
+
 ----------------------------------------------------------------------
 -- Traces
 ----------------------------------------------------------------------
