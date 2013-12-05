@@ -135,3 +135,12 @@ def renderAAA():
   ripl.predict("(branch_exp alpha (quote (g)) (quote (g)))")
 
   renderRIPL(ripl,"graphs/aaa")
+
+def renderPartition():
+  ripl = RIPL()
+  ripl.assume("x","0")
+  ripl.assume("y","(normal x 1.0)")
+  ripl.assume("w","(normal (branch_exp y (quote (normal 0.0 1.0)) (quote 5)) 1.0)")
+  ripl.predict("(normal w 1.0)")
+              
+  renderRIPL(ripl,"graphs/partition")
