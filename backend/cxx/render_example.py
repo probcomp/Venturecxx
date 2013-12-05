@@ -6,21 +6,24 @@ def RIPL():
 
 def renderDot(dot,dirpath,i):
   name = "dot%d" % i
+  mkdir_cmd = "mkdir -p " + dirpath
+  print mkdir_cmd
+  call(mkdir_cmd,shell=True)
   dname = dirpath + "/" + name + ".dot"
   oname = dirpath + "/" + name + ".svg"
   f = open(dname,"w")
   f.write(dot)
   f.close()
   cmd = ["dot", "-Tsvg", dname, "-o", oname]
+  print cmd
   call(cmd)
-  print "written to file: " + oname
+#  print "written to file: " + oname
 
 def renderRIPL(ripl,dirpath):
   dots = ripl.sivm.core_sivm.engine.trace.dot_trace()
   i = 0
   for dot in dots:
     print "---dot---"
-    print dot
     renderDot(dot,dirpath,i)
     i += 1
   
@@ -103,3 +106,13 @@ def renderERG1():
   ripl.observe("(normal y 5.0)","10.0")
 
   renderRIPL(ripl,"graphs/erg1")
+
+
+####################### Schematics
+def renderERGtoDRG():
+  ripl = RIPL()
+
+  ripl.assume("x","(gamma 1.0 1.0)")
+  ripl.observe("(normal (branch_exp x (quote (gamma x 2.0)) (quote (normal x 2.0))) 5.0)", "10")
+
+  renderRIPL(ripl,"graphs/ergTOdrg")

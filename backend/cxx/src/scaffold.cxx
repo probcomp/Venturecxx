@@ -175,25 +175,25 @@ void Scaffold::setRegenCounts()
   }
 
   // (costly) ~optimization, especially for particle methods
-  set<Node *> nullAbsorbing;
-  for (Node * node : absorbing)
-  { 
-    if (node->nodeType == NodeType::REQUEST &&
-	!isResampling(node->operatorNode) && 
-	node->sp()->isNullRequest())
-    {
-      for (Node * operandNode : node->operandNodes)
-      {
-	if (drg.count(operandNode) && !drg[operandNode].isAAA)
-	{
-	  drg[operandNode].regenCount--;
-	  assert(drg[operandNode].regenCount > 0);
-	}
-      }
-      nullAbsorbing.insert(node);
-    }
-  }
-  for (Node * node : nullAbsorbing) { absorbing.erase(node); }
+  // set<Node *> nullAbsorbing;
+  // for (Node * node : absorbing)
+  // { 
+  //   if (node->nodeType == NodeType::REQUEST &&
+  // 	!isResampling(node->operatorNode) && 
+  // 	node->sp()->isNullRequest())
+  //   {
+  //     for (Node * operandNode : node->operandNodes)
+  //     {
+  // 	if (drg.count(operandNode) && !drg[operandNode].isAAA)
+  // 	{
+  // 	  drg[operandNode].regenCount--;
+  // 	  assert(drg[operandNode].regenCount > 0);
+  // 	}
+  //     }
+  //     nullAbsorbing.insert(node);
+  //   }
+  // }
+  // for (Node * node : nullAbsorbing) { absorbing.erase(node); }
 
   /* TODO OPT fill the border with the absorbing nodes. Not sure if I need the absorbing
      nodes at all anymore, so may just rename absorbing to border and then push back

@@ -27,12 +27,14 @@ string Renderer::getNextClusterIndex()
 }
 
 
-void Renderer::dotTrace(Trace * trace, Scaffold * scaffold, bool erg)
+void Renderer::dotTrace(Trace * trace, Scaffold * scaffold, bool erg, bool labels)
 {
   reset();
   this->trace = trace;
   this->scaffold = scaffold;
   this->erg = erg;
+  this->labels = labels;
+  if (labels) { clusterPrefix = "clster"; }
   dotHeader();
 //  dotStatements();
   dotNodes();
@@ -71,7 +73,7 @@ void Renderer::dotSPFamilies()
   set<Node *> roots = trace->findSPFamilyRoots();
   for (Node * root : roots)
   {
-    dotSubgraphStart("cluster" + getNextClusterIndex(),"");
+    dotSubgraphStart(clusterPrefix + getNextClusterIndex(),"");
     dotNodesInFamily(root);
     dotSubgraphEnd();
   }
@@ -79,11 +81,11 @@ void Renderer::dotSPFamilies()
 
 void Renderer::dotVentureFamilies()
 {
-  dotSubgraphStart("cluster" + getNextClusterIndex(),"Venture Families");
+  dotSubgraphStart(clusterPrefix + getNextClusterIndex(),"Venture Families");
   for (pair<size_t,pair<Node*,VentureValue*> > pp : trace->ventureFamilies)
   {
     // the expressions could live here
-    dotSubgraphStart("cluster" + getNextClusterIndex(),to_string(pp.first));
+    dotSubgraphStart(clusterPrefix + getNextClusterIndex(),to_string(pp.first));
     dotNodesInFamily(pp.second.first);
     dotSubgraphEnd();
   }
@@ -94,7 +96,7 @@ void Renderer::dotVentureFamilies()
 void Renderer::dotSubgraphStart(string name,string label)
 {
   dot += "subgraph " + name + " {\n";
-  dot += "label="  + quote(label) + "\n";
+  if (labels) { dot += "label="  + quote(label) + "\n"; }
 }
 
 void Renderer::dotSubgraphEnd()
@@ -120,7 +122,7 @@ void Renderer::dotNodesInFamily(Node * node)
 
 void Renderer::dotNode(Node * node) 
 {
-  // TODO may not work
+  nodes.insert(node);
   dot += quote(to_string(reinterpret_cast<size_t>(node)));
   dotAttributes(getNodeAttributes(node));
   dot += "\n";
@@ -187,6 +189,7 @@ string Renderer::getNodeFillColor(Node * node)
 string Renderer::getNodeStyle(Node * node) { return "filled"; }
 string Renderer::getNodeLabel(Node * node) 
 {
+  if (!labels) { return ""; }
   // expression
   // value
   assert(node);
@@ -244,17 +247,19 @@ void Renderer::dotFamilyIncomingEdges(Node * node)
       dotFamilyIncomingEdges(operandNode);
     }
 
-    dotEdge(Edge(node->requestNode,node,EdgeType::REQUEST));
+    dotEdge(Edge(node->requestNode,node,EdgeType::REQUEST_TO_OUTPUT));
 
     for (Node * esrParent : node->esrParents)
     {
-      dotEdge(Edge(esrParent,node,EdgeType::ESR));
+      dotEdge(Edge(esrParent,node,EdgeType::ESR_PARENT));
+      dotEdge(Edge(node->requestNode,esrParent,EdgeType::REQUEST));
     }
   }
 }
 
 void Renderer::dotEdge(Edge e) 
 {
+  if (!labels && (!nodes.count(e.start) || !nodes.count(e.end))) { return; }
   dot += quote(nameOfNode(e.start));
   dot += " -> ";
   dot += quote(nameOfNode(e.end));
@@ -268,10 +273,20 @@ map<string,string> Renderer::getEdgeAttributes(Edge e)
     {"arrowhead", getEdgeArrowhead(e)},
     {"style", getEdgeStyle(e)},
     {"color", getEdgeColor(e)},
+    {"constraint", getEdgeConstraint(e)},
   };
 }
 
 
 string Renderer::getEdgeArrowhead(Edge e) { return "normal"; }
-string Renderer::getEdgeStyle(Edge e) { return "solid"; }
+string Renderer::getEdgeStyle(Edge e) 
+{ 
+  if (e.edgeType == EdgeType::REQUEST) { return "dotted"; }
+  return "solid"; 
+}
 string Renderer::getEdgeColor(Edge e) { return "black"; }
+string Renderer::getEdgeConstraint(Edge e) 
+{   
+  if (e.edgeType == EdgeType::REQUEST) { return "false"; }
+  return "true"; 
+}

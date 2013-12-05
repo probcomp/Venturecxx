@@ -69,10 +69,9 @@ VentureValue * ExpBranchSP::simulateRequest(Node * node, gsl_rng * rng) const
 
   vector<Node *> & operands = node->operandNodes;
   VentureBool * b = dynamic_cast<VentureBool *>(operands[0]->getValue());
-  assert(b);
 
   size_t index = 2;
-  if (b->pred) { index = 1; }
+  if (!b || b->pred) { index = 1; }
   VentureValue * exp = operands[index]->getValue();
   return new VentureRequest({ESR(id,exp,node->familyEnv)});
 }

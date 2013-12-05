@@ -12,7 +12,7 @@ struct Scaffold;
 
 using namespace std;
 
-enum class EdgeType { OP, ARG, LOOKUP, ESR, REQUEST };
+enum class EdgeType { OP, ARG, LOOKUP, ESR_PARENT, REQUEST_TO_OUTPUT, REQUEST };
 
 struct Edge
 {
@@ -27,7 +27,7 @@ struct Edge
 struct Renderer
 {
   Renderer();
-  void dotTrace(Trace * trace, Scaffold * scaffold,bool erg);
+  void dotTrace(Trace * trace, Scaffold * scaffold,bool erg,bool labels);
 
   void reset();
   string getNextClusterIndex();
@@ -64,12 +64,17 @@ struct Renderer
   string getEdgeArrowhead(Edge e);
   string getEdgeStyle(Edge e);
   string getEdgeColor(Edge e);
+  string getEdgeConstraint(Edge e);
+
+  set<Node *> nodes;
 
   Trace * trace;
   Scaffold * scaffold;
   string dot{""};
   uint32_t numClusters{0};
   bool erg{false};
+  bool labels{true};
+  string clusterPrefix{"cluster"};
 
 };
 
