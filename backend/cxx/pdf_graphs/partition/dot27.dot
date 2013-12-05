@@ -1,0 +1,99 @@
+digraph {
+rankdir=BT
+fontsize=24
+subgraph cluster1 {
+label="Venture Families"
+subgraph cluster2 {
+label="1"
+"21616208"["fillcolor"="grey90" "fontsize"="24" "label"="exp: (snormal 0.000000)\nvalue: 1.032905" "shape"="ellipse" "style"="filled" ]
+"20391696"["fillcolor"="grey90" "fontsize"="24" "label"="request: []" "shape"="ellipse" "style"="filled" ]
+"19076864"["fillcolor"="grey90" "fontsize"="24" "label"="exp: snormal\nvalue: sp:normal" "shape"="ellipse" "style"="filled" ]
+"28719440"["fillcolor"="grey90" "fontsize"="24" "label"="exp: 0.000000\nvalue: 0.000000" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph cluster3 {
+label="2"
+"23610064"["fillcolor"="grey90" "fontsize"="24" "label"="exp: (snormal x)\nvalue: 0.310250" "shape"="ellipse" "style"="filled" ]
+"24940288"["fillcolor"="grey90" "fontsize"="24" "label"="request: []" "shape"="ellipse" "style"="filled" ]
+"25014224"["fillcolor"="grey90" "fontsize"="24" "label"="exp: snormal\nvalue: sp:normal" "shape"="ellipse" "style"="filled" ]
+"24988336"["fillcolor"="grey90" "fontsize"="24" "label"="exp: x\nvalue: 1.032905" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph cluster4 {
+label="3"
+"23304768"["fillcolor"="steelblue1" "fontsize"="24" "label"="exp: (snormal (branch_exp y (quote (snormal 0.000000)) (quote 5.000000)))\nvalue: 1.773910" "shape"="ellipse" "style"="filled" ]
+"24625888"["fillcolor"="steelblue1" "fontsize"="24" "label"="request: []" "shape"="ellipse" "style"="filled" ]
+"23710592"["fillcolor"="grey60" "fontsize"="24" "label"="exp: snormal\nvalue: sp:normal" "shape"="ellipse" "style"="filled" ]
+"24939776"["fillcolor"="gold" "fontsize"="24" "label"="exp: (branch_exp y (quote (snormal 0.000000)) (quote 5.000000))\nvalue: 0.233948" "shape"="ellipse" "style"="filled" ]
+"22582864"["fillcolor"="grey60" "fontsize"="24" "label"="request: [(22582864, (snormal 0.000000), <env>)]" "shape"="ellipse" "style"="filled" ]
+"21801008"["fillcolor"="grey60" "fontsize"="24" "label"="exp: branch_exp\nvalue: sp:branch" "shape"="ellipse" "style"="filled" ]
+"21571136"["fillcolor"="grey60" "fontsize"="24" "label"="exp: y\nvalue: 0.310250" "shape"="ellipse" "style"="filled" ]
+"22579328"["fillcolor"="grey60" "fontsize"="24" "label"="exp: (quote (snormal 0.000000))\nvalue: (snormal 0.000000)" "shape"="ellipse" "style"="filled" ]
+"22672608"["fillcolor"="grey60" "fontsize"="24" "label"="exp: (quote 5.000000)\nvalue: 5.000000" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph cluster5 {
+label="4"
+"26590768"["fillcolor"="grey90" "fontsize"="24" "label"="exp: (snormal w)\nvalue: 2.262583" "shape"="ellipse" "style"="filled" ]
+"21600256"["fillcolor"="grey90" "fontsize"="24" "label"="request: []" "shape"="ellipse" "style"="filled" ]
+"24603856"["fillcolor"="grey90" "fontsize"="24" "label"="exp: snormal\nvalue: sp:normal" "shape"="ellipse" "style"="filled" ]
+"21586576"["fillcolor"="grey90" "fontsize"="24" "label"="exp: w\nvalue: 1.773910" "shape"="ellipse" "style"="filled" ]
+}
+
+}
+
+subgraph cluster6 {
+label=""
+"21574256"["fillcolor"="firebrick" "fontsize"="24" "label"="exp: (snormal 0.000000)\nvalue: 0.233948" "shape"="ellipse" "style"="filled" ]
+"21608528"["fillcolor"="grey60" "fontsize"="24" "label"="request: []" "shape"="ellipse" "style"="filled" ]
+"21564608"["fillcolor"="grey60" "fontsize"="24" "label"="exp: snormal\nvalue: sp:normal" "shape"="ellipse" "style"="filled" ]
+"27074384"["fillcolor"="grey60" "fontsize"="24" "label"="exp: 0.000000\nvalue: 0.000000" "shape"="ellipse" "style"="filled" ]
+}
+
+"21564608" -> "21574256"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"21564608" -> "21608528"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"26990448" -> "21564608"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27074384" -> "21574256"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27074384" -> "21608528"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"21608528" -> "21574256"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"19076864" -> "21616208"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"19076864" -> "20391696"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"26990448" -> "19076864"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28719440" -> "21616208"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28719440" -> "20391696"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"20391696" -> "21616208"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"23710592" -> "23304768"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"23710592" -> "24625888"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"26990448" -> "23710592"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"24939776" -> "23304768"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"24939776" -> "24625888"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"21801008" -> "24939776"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"21801008" -> "22582864"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"26586752" -> "21801008"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"21571136" -> "24939776"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"21571136" -> "22582864"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"23610064" -> "21571136"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"22579328" -> "24939776"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"22579328" -> "22582864"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"22672608" -> "24939776"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"22672608" -> "22582864"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"22582864" -> "24939776"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"21574256" -> "24939776"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"22582864" -> "21574256"["arrowhead"="normal" "color"="black" "constraint"="false" "style"="dotted" ]
+"24625888" -> "23304768"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"25014224" -> "23610064"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"25014224" -> "24940288"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"26990448" -> "25014224"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"24988336" -> "23610064"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"24988336" -> "24940288"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"21616208" -> "24988336"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"24940288" -> "23610064"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"24603856" -> "26590768"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"24603856" -> "21600256"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"26990448" -> "24603856"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"21586576" -> "26590768"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"21586576" -> "21600256"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"23304768" -> "21586576"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"21600256" -> "26590768"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+
+}

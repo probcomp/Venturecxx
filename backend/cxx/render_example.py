@@ -176,22 +176,19 @@ def renderPartition():
   ripl = RIPL()
   ripl.assume("x","(snormal 0)")
   ripl.assume("y","(snormal x)")
-  ripl.assume("w","(snormal (branch_exp y (quote (snormal 0.0)) (quote 5)) 1.0)")
+  ripl.assume("w","(snormal (branch_exp y (quote (snormal 0.0)) (quote 5)))")
   ripl.predict("(snormal w)")
               
   renderRIPL(ripl,"pdf_graphs/partition","pdf",colorIgnored=True)
   renderRIPL(ripl,"graphs/partition",colorIgnored=True)
 
-def render():
+def renderPrior():
   ripl = RIPL()
-  ripl.assume("x","0")
-  ripl.assume("y","(snormal x)")
-  ripl.assume("w","(snormal (branch_exp y (quote (snormal 0.0)) (quote 5)) 1.0)")
-  ripl.predict("(snormal w)")
+  ripl.assume("f","(make_sym_dir_mult 1.0 2")
+  ripl.predict("(branch_exp (f) (quote (f)) true)")
               
-  renderRIPL(ripl,"pdf_graphs/partition","pdf",colorIgnored=True)
-  renderRIPL(ripl,"graphs/partition",colorIgnored=True)
-
+  renderRIPL(ripl,"pdf_graphs/prior","pdf")
+  renderRIPL(ripl,"graphs/prior")
 
 #####################
 def renderAllSchematics():
@@ -202,3 +199,4 @@ def renderAllSchematics():
   renderAAAChallengeNoAAA()
   renderAAAChallenge()
   renderPartition()
+  renderPrior()

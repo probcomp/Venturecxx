@@ -1,0 +1,185 @@
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2013.10.10)  5 DEC 2013 18:28
+entering extended mode
+ %&-line parsing enabled.
+**test.tex
+(./test.tex
+LaTeX2e <2009/09/24>
+Babel <v3.8l> and hyphenation patterns for english, usenglishmax, dumylang, noh
+yphenation, loaded.
+(/usr/share/texmf-texlive/tex/latex/base/article.cls
+Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
+(/usr/share/texmf-texlive/tex/latex/base/size12.clo
+File: size12.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@section=\count80
+\c@subsection=\count81
+\c@subsubsection=\count82
+\c@paragraph=\count83
+\c@subparagraph=\count84
+\c@figure=\count85
+\c@table=\count86
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+)
+(/usr/share/texmf-texlive/tex/latex/graphics/graphicx.sty
+Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
+
+(/usr/share/texmf-texlive/tex/latex/graphics/keyval.sty
+Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
+\KV@toks@=\toks14
+)
+(/usr/share/texmf-texlive/tex/latex/graphics/graphics.sty
+Package: graphics 2009/02/05 v1.0o Standard LaTeX Graphics (DPC,SPQR)
+
+(/usr/share/texmf-texlive/tex/latex/graphics/trig.sty
+Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
+)
+(/etc/texmf/tex/latex/config/graphics.cfg
+File: graphics.cfg 2009/08/28 v1.8 graphics configuration of TeX Live
+)
+Package graphics Info: Driver file: pdftex.def on input line 91.
+
+(/usr/share/texmf-texlive/tex/latex/pdftex-def/pdftex.def
+File: pdftex.def 2010/03/12 v0.04p Graphics/color for pdfTeX
+\Gread@gobject=\count87
+))
+\Gin@req@height=\dimen103
+\Gin@req@width=\dimen104
+)
+(/usr/share/texmf-texlive/tex/latex/caption/caption.sty
+Package: caption 2009/10/09 v3.1k Customizing captions (AR)
+
+(/usr/share/texmf-texlive/tex/latex/caption/caption3.sty
+Package: caption3 2009/10/09 v3.1k caption3 kernel (AR)
+\captionmargin=\dimen105
+\captionmargin@=\dimen106
+\captionwidth=\dimen107
+\caption@indent=\dimen108
+\caption@parindent=\dimen109
+\caption@hangindent=\dimen110
+)
+\c@ContinuedFloat=\count88
+)
+(/usr/share/texmf-texlive/tex/latex/caption/subcaption.sty
+Package: subcaption 2008/08/31 v1.0b Adding subcaptions (AR)
+\c@subfigure=\count89
+\c@subtable=\count90
+) (./test.aux)
+\openout1 = `test.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 6.
+LaTeX Font Info:    ... okay on input line 6.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 6.
+LaTeX Font Info:    ... okay on input line 6.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 6.
+LaTeX Font Info:    ... okay on input line 6.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 6.
+LaTeX Font Info:    ... okay on input line 6.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 6.
+LaTeX Font Info:    ... okay on input line 6.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 6.
+LaTeX Font Info:    ... okay on input line 6.
+
+(/usr/share/texmf-texlive/tex/context/base/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count91
+\scratchdimen=\dimen111
+\scratchbox=\box26
+\nofMPsegments=\count92
+\nofMParguments=\count93
+\everyMPshowfont=\toks15
+\MPscratchCnt=\count94
+\MPscratchDim=\dimen112
+\MPnumerator=\count95
+\everyMPtoPDFconversion=\toks16
+)
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: End \AtBeginDocument code.
+
+
+pdfTeX warning: pdflatex (file ./prior/dot3.pdf): PDF inclusion: found PDF vers
+ion <1.5>, but at most version <1.4> allowed
+<prior/dot3.pdf, id=1, 1860.9525pt x 1231.60126pt>
+File: prior/dot3.pdf Graphic file (type pdf)
+ <use prior/dot3.pdf>
+Underfull \hbox (badness 10000) in paragraph at lines 14--14
+[]\OT1/cmr/m/n/10.95 (a) |The re-sult of
+ []
+
+
+Underfull \hbox (badness 2229) in paragraph at lines 14--14
+\OT1/cmr/m/n/10.95 SP whose ap-pli-ca-tions
+ []
+
+
+Underfull \hbox (badness 3058) in paragraph at lines 14--14
+\OT1/cmr/m/n/10.95 are ex-change-ably cou-
+ []
+
+
+Underfull \hbox (badness 3849) in paragraph at lines 14--14
+\OT1/cmr/m/n/10.95 one ap-pli-ca-tion de-ter-
+ []
+
+
+Underfull \hbox (badness 1924) in paragraph at lines 14--14
+\OT1/cmr/m/n/10.95 mines whether or not
+ []
+
+
+Underfull \hbox (badness 4391) in paragraph at lines 14--14
+\OT1/cmr/m/n/10.95 an-other ap-pli-ca-tion is
+ []
+
+
+Underfull \hbox (badness 5985) in paragraph at lines 14--14
+\OT1/cmr/m/n/10.95 ap-pli-ca-tion is in the
+ []
+
+
+Underfull \hbox (badness 4518) in paragraph at lines 14--14
+\OT1/cmr/m/n/10.95 brush of the scaf-fold
+ []
+
+
+Underfull \hbox (badness 1694) in paragraph at lines 14--14
+\OT1/cmr/m/n/10.95 gen-er-ated by the first
+ []
+
+
+Underfull \hbox (badness 1314) in paragraph at lines 14--14
+\OT1/cmr/m/n/10.95 first ap-pli-ca-tion con-di-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 20--20
+[]\OT1/cmr/m/n/10.95 (b) |AS-SUME f
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 20--20
+\OT1/cmr/m/n/10.95 (makeSymDir-Mult
+ []
+
+File: prior/dot3.pdf Graphic file (type pdf)
+<use prior/dot3.pdf> [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./p
+rior/dot3.pdf>] (./test.aux) ) 
+Here is how much of TeX's memory you used:
+ 1898 strings out of 495061
+ 28868 string characters out of 1182620
+ 90021 words of memory out of 3000000
+ 5124 multiletter control sequences out of 15000+50000
+ 4238 words of font info for 16 fonts, out of 3000000 for 9000
+ 28 hyphenation exceptions out of 8191
+ 36i,7n,38p,425b,418s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/share/texmf-texlive/fonts/type1/public/amsf
+onts/cm/cmr10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr1
+2.pfb>
+Output written on test.pdf (1 page, 45312 bytes).
+PDF statistics:
+ 24 PDF objects out of 1000 (max. 8388607)
+ 0 named destinations out of 1000 (max. 500000)
+ 6 words of extra memory for PDF output out of 10000 (max. 10000000)
+
