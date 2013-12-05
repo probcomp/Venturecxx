@@ -76,15 +76,16 @@ observe :: (MonadRandom m) => Exp -> Value -> ReaderT Env (StateT (Trace m) m) (
 observe = undefined
 
 execute :: (MonadRandom m) => [Directive] -> StateT (Trace m) m ()
-execute ds = runStateT_ Toplevel (do
-  modify $ lift $ initializeBuiltins
-  mapM_ exectuteOne ds) where
+execute ds = runStateT_ (do
+  modifyM initializeBuiltins
+  mapM_ exectuteOne ds) Toplevel where
+    -- exectuteOne :: Directive -> StateT Env (StateT (Trace m) m) ()
     exectuteOne (Assume s e) = assume s e
-    exectuteOne (Observe e v) = do env <- get
-                                   put $ lift $ runReaderT env $ observe e v
-    runStateT_ s = do
-      runStateT s
+    exectuteOne (Observe e v) = get >>= lift . runReaderT (observe e v)
+    runStateT_ act s = do
+      runStateT act s
       return ()
+
 
 infer :: (MonadRandom m) => Int -> StateT (Trace m) m [Value]
 infer = undefined
