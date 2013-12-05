@@ -27,6 +27,17 @@ struct MakeSymDirMultSP : SP
 
 };
 
+struct MakeSymDirMultRegSP : SP
+{
+  MakeSymDirMultRegSP()
+    {
+      name = "make_sym_dir_mult";
+    }
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+
+};
+
+
 struct SymDirMultSP : SP
 {
   SymDirMultSP(double alpha,uint32_t n): alpha(alpha), n(n)

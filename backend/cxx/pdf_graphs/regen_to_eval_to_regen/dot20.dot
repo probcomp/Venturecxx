@@ -1,0 +1,87 @@
+digraph {
+rankdir=BT
+fontsize=24
+subgraph clster1 {
+subgraph clster2 {
+"27835824"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"29828032"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"28691968"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"28729712"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"28993920"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph clster3 {
+"29405088"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"29046352"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"29466608"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"30171712"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"28011808"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph clster4 {
+"27912992"["fillcolor"="steelblue1" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"28143984"["fillcolor"="steelblue1" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"27746720"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"27947504"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"27994368"["fillcolor"="gold" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"27830848"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"28447072"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"27718720"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"28504496"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"28540672"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+}
+
+}
+
+subgraph clster5 {
+"28628048"["fillcolor"="firebrick" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"28591872"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"28679248"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"28715424"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"28753168"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+}
+
+"28691968" -> "27835824"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28691968" -> "29828032"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28729712" -> "27835824"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28729712" -> "29828032"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28993920" -> "27835824"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28993920" -> "29828032"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"29828032" -> "27835824"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27746720" -> "27912992"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27746720" -> "28143984"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27947504" -> "27912992"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27947504" -> "28143984"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27994368" -> "27912992"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27994368" -> "28143984"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28447072" -> "27994368"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28447072" -> "27830848"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27718720" -> "27994368"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27718720" -> "27830848"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27835824" -> "27718720"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28504496" -> "27994368"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28504496" -> "27830848"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28540672" -> "27994368"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28540672" -> "27830848"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27830848" -> "27994368"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28628048" -> "27994368"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27830848" -> "28628048"["arrowhead"="normal" "color"="black" "constraint"="false" "style"="dotted" ]
+"28143984" -> "27912992"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28679248" -> "28628048"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28679248" -> "28591872"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28715424" -> "28628048"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28715424" -> "28591872"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"29405088" -> "28715424"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28753168" -> "28628048"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28753168" -> "28591872"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28591872" -> "28628048"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"29466608" -> "29405088"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"29466608" -> "29046352"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"30171712" -> "29405088"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"30171712" -> "29046352"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"27835824" -> "30171712"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28011808" -> "29405088"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"28011808" -> "29046352"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"29046352" -> "29405088"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+
+}

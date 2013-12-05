@@ -125,16 +125,49 @@ def renderRegenToEvalToRegen():
 
   renderRIPL(ripl,"pdf_graphs/regen_to_eval_to_regen","pdf")
 
-def renderAAA():
+def renderAAABasicNoAAA():
+  ripl = RIPL()
+
+  ripl.assume("alpha","(snormal 100.0)")
+  ripl.assume("f","(make_sym_dir_mult_reg alpha 2)")
+  for i in range(8): ripl.observe("(f)","atom<1>")
+
+  renderRIPL(ripl,"pdf_graphs/aaa_basic_no_aaa","pdf")
+  renderRIPL(ripl,"graphs/aaa_basic_no_aaa")
+
+def renderAAABasic():
+  ripl = RIPL()
+
+  ripl.assume("alpha","(snormal 100.0)")
+  ripl.assume("f","(make_sym_dir_mult alpha 2)")
+  for i in range(8): ripl.observe("(f)","atom<1>")
+
+  renderRIPL(ripl,"pdf_graphs/aaa_basic_with_aaa","pdf")
+  renderRIPL(ripl,"graphs/aaa_basic_with_aaa")
+
+def renderAAAChallengeNoAAA():
+  ripl = RIPL()
+
+  ripl.assume("alpha","(snormal 100.0)")
+  ripl.assume("f","(make_sym_dir_mult_reg alpha 2)")
+  ripl.assume("g","f")
+  for i in range(3): ripl.observe("(g)","atom<1>")
+  ripl.predict("(branch_exp alpha (quote g) (quote g))")
+
+  renderRIPL(ripl,"pdf_graphs/aaa_challenge_no_aaa","pdf")
+  renderRIPL(ripl,"graphs/aaa_challenge_no_aaa")
+
+def renderAAAChallenge():
   ripl = RIPL()
 
   ripl.assume("alpha","(snormal 100.0)")
   ripl.assume("f","(make_sym_dir_mult alpha 2)")
   ripl.assume("g","f")
+  for i in range(3): ripl.observe("(g)","atom<1>")
   ripl.predict("(branch_exp alpha (quote g) (quote g))")
 
-  renderRIPL(ripl,"pdf_graphs/aaa","pdf")
-  renderRIPL(ripl,"graphs/aaa")
+  renderRIPL(ripl,"pdf_graphs/aaa_challenge_with_aaa","pdf")
+  renderRIPL(ripl,"graphs/aaa_challenge_with_aaa")
 
 def renderPartition():
   ripl = RIPL()

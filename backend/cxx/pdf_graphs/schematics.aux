@@ -1,0 +1,33 @@
+\relax 
+\newlabel{fig:scaffold_extended}{{1(a)}{1}}
+\newlabel{sub@fig:scaffold_extended}{{(a)}{1}}
+\newlabel{fig:scaffold_disabled}{{1(b)}{1}}
+\newlabel{sub@fig:scaffold_disabled}{{(b)}{1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The two stages of constructing a scaffold}}{1}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces { First we walk downstream from the principal node, and color gold every node whose value may change, and blue every node at which we can absorb. }}}{1}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces { Next, we color green every node that may no longer exist once the gold nodes are resampled. At this point, the red and gold nodes constitute the definite regeneration graph, the blue nodes constitute the absorbing border, and the green nodes constitute the brush. }}}{1}}
+\newlabel{fig:scaffold}{{1}{1}}
+\newlabel{fig:rer_torus}{{2(a)}{2}}
+\newlabel{sub@fig:rer_torus}{{(a)}{2}}
+\newlabel{fig:rer_full}{{2(b)}{2}}
+\newlabel{sub@fig:rer_full}{{(b)}{2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Interlacing calls to regen with calls to eval}}{2}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces { A torus with two border nodes. Suppose we regenerate the higher one first, and one of the nodes regenerated makes a simulation request. Regen then hands over control to eval in order to evaluate the expression. (TODO mark the three nodes that have values, and space-permitting have an extra figure to start that just shows the scaffold.) }}}{2}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces { Evaluating the expression might involve referencing other nodes in the trace, for example to resolve a variable lookup. Those nodes may be in the drg and may not have been regenerated yet, so eval must hand over control to regen to guarantee that all values have been regenerated before they are used. }}}{2}}
+\newlabel{fig:rer}{{2}{2}}
+\newlabel{fig:aaa_basic_no_aaa}{{3(a)}{3}}
+\newlabel{sub@fig:aaa_basic_no_aaa}{{(a)}{3}}
+\newlabel{fig:aaa_basic_with_aaa}{{3(b)}{3}}
+\newlabel{sub@fig:aaa_basic_with_aaa}{{(b)}{3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Absorbing at applications (AAA)}}{3}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces { A large scaffold for sampling a hyperparameter. }}}{3}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces { The application of the maker SP computes the log density of all of its applications for us. We say that the maker SP ``absorbs at applications''. }}}{3}}
+\newlabel{fig:aaa_basic}{{3}{3}}
+\newlabel{fig:aaa_challenge_torus}{{4(a)}{4}}
+\newlabel{sub@fig:aaa_challenge_torus}{{(a)}{4}}
+\newlabel{fig:aaa_challenge_sub}{{4(b)}{4}}
+\newlabel{sub@fig:aaa_challenge_sub}{{(b)}{4}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Challenges with absorbing at applications}}{4}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces { A scaffold with three border nodes, one of which is absorbing at applications. }}}{4}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces { A simulation request may lookup a node that is itself a reference to the aaa node. Even though regen will be called on a node that is not in the drg, the aaa node it refers to must be regenerated nonetheless. }}}{4}}
+\newlabel{fig:aaa_challenge}{{4}{4}}

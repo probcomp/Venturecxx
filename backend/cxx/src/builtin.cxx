@@ -142,6 +142,8 @@ map<string,SP *> initBuiltInSPs()
 
     // exchangeable random procedures
     {"make_sym_dir_mult", new MakeSymDirMultSP},
+    {"make_sym_dir_mult_reg", new MakeSymDirMultRegSP},
+
     {"make_uc_sym_dir_mult", new MakeUCSymDirMultSP},
     {"make_dir_mult", new MakeDirMultSP},
     {"make_beta_bernoulli", new MakeBetaBernoulliSP},

@@ -1,0 +1,59 @@
+digraph {
+rankdir=BT
+fontsize=24
+subgraph cluster1 {
+subgraph cluster2 {
+"51894320"["fillcolor"="dodgerblue" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"53886816"["fillcolor"="darkolivegreen4" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"52750464"["fillcolor"="khaki" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"52788208"["fillcolor"="darkgoldenrod2" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph cluster3 {
+"53204112"["fillcolor"="khaki" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph cluster4 {
+"53525392"["fillcolor"="dodgerblue" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"53463872"["fillcolor"="darkolivegreen4" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"52077520"["fillcolor"="khaki" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"53239056"["fillcolor"="khaki" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"51776016"["fillcolor"="darkgoldenrod2" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"52070304"["fillcolor"="darkgoldenrod2" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+}
+
+}
+
+subgraph cluster5 {
+"52202480"["fillcolor"="dodgerblue" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"52238304"["fillcolor"="darkolivegreen4" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"51971520"["fillcolor"="khaki" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"52240192"["fillcolor"="khaki" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+}
+
+"52750464" -> "51894320"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"52750464" -> "53886816"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"52788208" -> "51894320"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"52788208" -> "53886816"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"53886816" -> "51894320"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"51971520" -> "52202480"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"51971520" -> "52238304"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"52240192" -> "52202480"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"52240192" -> "52238304"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"53204112" -> "52240192"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"52238304" -> "52202480"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"51894320" -> "53204112"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"52077520" -> "53525392"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"52077520" -> "53463872"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"53239056" -> "53525392"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"53239056" -> "53463872"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"51894320" -> "53239056"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"51776016" -> "53525392"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"51776016" -> "53463872"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"52070304" -> "53525392"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"52070304" -> "53463872"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"53463872" -> "53525392"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"52202480" -> "53525392"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"53463872" -> "52202480"["arrowhead"="normal" "color"="black" "constraint"="false" "style"="dotted" ]
+
+}
