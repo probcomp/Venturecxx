@@ -27,14 +27,17 @@ string Renderer::getNextClusterIndex()
 }
 
 
-void Renderer::dotTrace(Trace * trace, Scaffold * scaffold, bool erg, bool labels)
+void Renderer::dotTrace(Trace * trace, Scaffold * scaffold, bool erg, bool labels, bool colorIgnored)
 {
   reset();
   this->trace = trace;
   this->scaffold = scaffold;
   this->erg = erg;
   this->labels = labels;
-  if (labels) { clusterPrefix = "clster"; }
+  this->colorIgnored = colorIgnored;
+  if (!labels) { clusterPrefix = "clster"; }
+  else { clusterPrefix = "cluster"; }
+
   dotHeader();
 //  dotStatements();
   dotNodes();
@@ -81,6 +84,7 @@ void Renderer::dotSPFamilies()
 
 void Renderer::dotVentureFamilies()
 {
+  if (!labels) { assert(clusterPrefix != "cluster"); }
   dotSubgraphStart(clusterPrefix + getNextClusterIndex(),"Venture Families");
   for (pair<size_t,pair<Node*,VentureValue*> > pp : trace->ventureFamilies)
   {
@@ -165,8 +169,8 @@ string Renderer::getNodeFillColor(Node * node)
     else if (scaffold->isResampling(node)) { return "gold"; }
     else if (scaffold->isAbsorbing(node)) { return "steelblue1"; }
     else if (scaffold->brush.count(node)) { return "darkseagreen"; }
-    else if (scaffold->parents.count(node)) { return "tan3"; }
-    else { return "grey56"; }
+    else if (colorIgnored && !scaffold->parents.count(node)) { return "grey90"; }
+    else { return "grey60"; }
   }
   else if (scaffold && erg)
   {
@@ -174,7 +178,7 @@ string Renderer::getNodeFillColor(Node * node)
     else if (scaffold->isAAA(node)) { return "lightpink1"; }
     else if (scaffold->eDRG.count(node)) { return "gold"; }
     else if (scaffold->eAbsorbing.count(node)) { return "steelblue1"; }
-    else { return "grey56"; }
+    else { return "grey60"; }
   }
   else
   {

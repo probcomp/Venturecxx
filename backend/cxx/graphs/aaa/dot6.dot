@@ -1,0 +1,60 @@
+digraph {
+rankdir=BT
+fontsize=24
+subgraph clster1 {
+subgraph clster2 {
+"36427312"["fillcolor"="firebrick" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"36065888"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"34434816"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"34317760"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph clster3 {
+"35328704"["fillcolor"="lightpink1" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"35290960"["fillcolor"="steelblue1" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"35744608"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"35779552"["fillcolor"="gold" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"36004368"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph clster4 {
+"34618016"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+}
+
+subgraph clster5 {
+"34316512"["fillcolor"="gold" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"36780592"["fillcolor"="gold" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"34610800"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"34778800"["fillcolor"="gold" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"34742976"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+"34511968"["fillcolor"="grey56" "fontsize"="24" "label"="" "shape"="ellipse" "style"="filled" ]
+}
+
+}
+
+"34610800" -> "34316512"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"34610800" -> "36780592"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"34778800" -> "34316512"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"34778800" -> "36780592"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"36427312" -> "34778800"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"34742976" -> "34316512"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"34742976" -> "36780592"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"34511968" -> "34316512"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"34511968" -> "36780592"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"36780592" -> "34316512"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"35328704" -> "34618016"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"35744608" -> "35328704"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"35744608" -> "35290960"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"35779552" -> "35328704"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"35779552" -> "35290960"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"36427312" -> "35779552"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"36004368" -> "35328704"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"36004368" -> "35290960"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"35290960" -> "35328704"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"34434816" -> "36427312"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"34434816" -> "36065888"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"34317760" -> "36427312"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"34317760" -> "36065888"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+"36065888" -> "36427312"["arrowhead"="normal" "color"="black" "constraint"="true" "style"="solid" ]
+
+}

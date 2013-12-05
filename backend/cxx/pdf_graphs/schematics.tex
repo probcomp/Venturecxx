@@ -23,17 +23,17 @@ A trace.
 
 \subfigure
 [
-The scaffold partitions the trace into five groups: 
+The scaffold partitions the trace into five groups: the nodes that will definitely still exist in the proposal trace but whose values may change (drg), the nodes that we will definitely compute likelihoods at (absorbing), the nodes that may no longer exist (the brush), the parents of nodes in these three groups (parents), and all other nodes which need never be visited at all (ignored). Note that future graphs will not distinguish between these last two groups.
 ]
 {
-\includegraphics[width=200pt,height=200pt]{erg_to_drg/dot2.pdf}
-\label{fig:scaffold_disabled}
+\includegraphics[width=200pt,height=200pt]{partition/dot2.pdf}
+\label{fig:partition_scaffold}
 
 }
 
 %
 
-\caption{The two stages of constructing a scaffold}
+\caption{Partitioning the trace along a scaffold}
 
 \label{fig:partition}
 \end{figure}
@@ -49,7 +49,7 @@ The scaffold partitions the trace into five groups:
 %
 \subfigure
 [
-First we walk downstream from the principal node, and color gold every node
+To construct a scaffold, we first walk downstream from the principal node, and color gold every node
 whose value may change, and blue every node at which we can
 absorb.
 ]

@@ -4,7 +4,7 @@ from venture.shortcuts import *
 def RIPL():
   return make_church_prime_ripl()
 
-def renderDot(dot,dirpath,i,fmt):
+def renderDot(dot,dirpath,i,fmt,colorIgnored):
   name = "dot%d" % i
   mkdir_cmd = "mkdir -p " + dirpath
   print mkdir_cmd
@@ -18,12 +18,12 @@ def renderDot(dot,dirpath,i,fmt):
   print cmd
   call(cmd)
 
-def renderRIPL(ripl,dirpath,fmt="svg"):
-  dots = ripl.sivm.core_sivm.engine.trace.dot_trace()
+def renderRIPL(ripl,dirpath,fmt="svg",colorIgnored = False):
+  dots = ripl.sivm.core_sivm.engine.trace.dot_trace(colorIgnored)
   i = 0
   for dot in dots:
     print "---dot---"
-    renderDot(dot,dirpath,i,fmt)
+    renderDot(dot,dirpath,i,fmt,colorIgnored)
     i += 1
   
 def renderTrickCoin():
@@ -108,6 +108,7 @@ def renderERG1():
 
 
 ####################### Schematics
+
 def renderERGtoDRG():
   ripl = RIPL()
 
@@ -115,6 +116,7 @@ def renderERGtoDRG():
   ripl.observe("(snormal (branch_exp x (quote (snormal x)) (quote (snormal x))))", "10")
 
   renderRIPL(ripl,"pdf_graphs/erg_to_drg","pdf")
+  renderRIPL(ripl,"graphs/erg_to_drg")
 
 def renderRegenToEvalToRegen():
   ripl = RIPL()
@@ -124,6 +126,7 @@ def renderRegenToEvalToRegen():
   ripl.predict("(branch_exp x (quote (snormal y)) (quote 1))")
 
   renderRIPL(ripl,"pdf_graphs/regen_to_eval_to_regen","pdf")
+  renderRIPL(ripl,"graphs/regen_to_eval_to_regen")
 
 def renderAAABasicNoAAA():
   ripl = RIPL()
@@ -176,4 +179,15 @@ def renderPartition():
   ripl.assume("w","(snormal (branch_exp y (quote (snormal 0.0)) (quote 5)) 1.0)")
   ripl.predict("(snormal w)")
               
-  renderRIPL(ripl,"graphs/partition")
+  renderRIPL(ripl,"pdf_graphs/partition","pdf",colorIgnored=True)
+  renderRIPL(ripl,"graphs/partition",colorIgnored=True)
+
+#####################
+def renderAllSchematics():
+  renderERGtoDRG()
+  renderRegenToEvalToRegen()
+  renderAAABasicNoAAA()
+  renderAAABasic()
+  renderAAAChallengeNoAAA()
+  renderAAAChallenge()
+  renderPartition()

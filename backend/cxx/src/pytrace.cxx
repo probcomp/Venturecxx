@@ -217,31 +217,31 @@ void PyTrace::stop_continuous_inference() {
   }
 }
 
-boost::python::list PyTrace::dotTrace()
+boost::python::list PyTrace::dotTrace(bool colorIgnored)
 {
   boost::python::list dots;
   Renderer r;
 
-  r.dotTrace(trace,nullptr,false,false);
+  r.dotTrace(trace,nullptr,false,false,colorIgnored);
   dots.append(r.dot);
-  r.dotTrace(trace,nullptr,false,true);
+  r.dotTrace(trace,nullptr,false,true,colorIgnored);
   dots.append(r.dot);
 
   for (Node * pNode : trace->randomChoices)
   {
     Scaffold s({pNode});
-    r.dotTrace(trace,&s,false,false);
+    r.dotTrace(trace,&s,false,false,colorIgnored);
     dots.append(r.dot);
-    r.dotTrace(trace,&s,false,true);
+    r.dotTrace(trace,&s,false,true,colorIgnored);
     dots.append(r.dot);
-    r.dotTrace(trace,&s,true,false);
+    r.dotTrace(trace,&s,true,false,colorIgnored);
     dots.append(r.dot);
-    r.dotTrace(trace,&s,true,true);
+    r.dotTrace(trace,&s,true,true,colorIgnored);
     dots.append(r.dot);
     pair<double, OmegaDB *> rhoInfo = trace->detach(s.border,&s);
-    r.dotTrace(trace,&s,false,false);
+    r.dotTrace(trace,&s,false,false,colorIgnored);
     dots.append(r.dot);
-    r.dotTrace(trace,&s,false,true);
+    r.dotTrace(trace,&s,false,true,colorIgnored);
     dots.append(r.dot);
     trace->regen(s.border,&s,true,rhoInfo.second,nullptr);
   }

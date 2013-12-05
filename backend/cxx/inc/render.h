@@ -27,7 +27,7 @@ struct Edge
 struct Renderer
 {
   Renderer();
-  void dotTrace(Trace * trace, Scaffold * scaffold,bool erg,bool labels);
+  void dotTrace(Trace * trace, Scaffold * scaffold,bool erg,bool labels,bool colorIgnored);
 
   void reset();
   string getNextClusterIndex();
@@ -74,6 +74,7 @@ struct Renderer
   uint32_t numClusters{0};
   bool erg{false};
   bool labels{true};
+  bool colorIgnored{false};
   string clusterPrefix{"cluster"};
 
 };

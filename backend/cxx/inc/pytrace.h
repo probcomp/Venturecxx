@@ -51,7 +51,7 @@ struct PyTrace
   std::thread * continuous_inference_thread;
 
   // TODO skipping scaffold for now
-  boost::python::list dotTrace();
+  boost::python::list dotTrace(bool colorIgnored);
 };
 
 #endif
