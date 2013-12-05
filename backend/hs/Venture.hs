@@ -82,9 +82,7 @@ execute ds = runStateT_ (do
     -- executeOne :: Directive -> StateT Env (StateT (Trace m) m) ()
     executeOne (Assume s e) = assume s e
     executeOne (Observe e v) = get >>= lift . runReaderT (observe e v)
-    runStateT_ act s = do
-      runStateT act s
-      return ()
+    runStateT_ act s = (runStateT act s) >> return ()
 
 
 infer :: (MonadRandom m) => Int -> StateT (Trace m) m [Value]
