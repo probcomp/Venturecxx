@@ -4,27 +4,26 @@ from venture.shortcuts import *
 def RIPL():
   return make_church_prime_ripl()
 
-def renderDot(dot,dirpath,i):
+def renderDot(dot,dirpath,i,fmt):
   name = "dot%d" % i
   mkdir_cmd = "mkdir -p " + dirpath
   print mkdir_cmd
   call(mkdir_cmd,shell=True)
   dname = dirpath + "/" + name + ".dot"
-  oname = dirpath + "/" + name + ".svg"
+  oname = dirpath + "/" + name + "." + fmt
   f = open(dname,"w")
   f.write(dot)
   f.close()
-  cmd = ["dot", "-Tsvg", dname, "-o", oname]
+  cmd = ["dot", "-T" + fmt, dname, "-o", oname]
   print cmd
   call(cmd)
-#  print "written to file: " + oname
 
-def renderRIPL(ripl,dirpath):
+def renderRIPL(ripl,dirpath,fmt="svg"):
   dots = ripl.sivm.core_sivm.engine.trace.dot_trace()
   i = 0
   for dot in dots:
     print "---dot---"
-    renderDot(dot,dirpath,i)
+    renderDot(dot,dirpath,i,fmt)
     i += 1
   
 def renderTrickCoin():
@@ -112,35 +111,36 @@ def renderERG1():
 def renderERGtoDRG():
   ripl = RIPL()
 
-  ripl.assume("x","(gamma 1.0 1.0)")
-  ripl.observe("(normal (branch_exp x (quote (gamma x 2.0)) (quote (normal x 2.0))) 5.0)", "10")
+  ripl.assume("x","(snormal 1.0)")
+  ripl.observe("(snormal (branch_exp x (quote (snormal x)) (quote (snormal x))))", "10")
 
-  renderRIPL(ripl,"graphs/ergTOdrg")
+  renderRIPL(ripl,"pdf_graphs/erg_to_drg","pdf")
 
 def renderRegenToEvalToRegen():
   ripl = RIPL()
 
-  ripl.assume("x","(normal 0.0 1.0)")
-  ripl.assume("y","(normal x 1.0)")
-  ripl.predict("(branch_exp x (quote (normal y 1.0)) (quote 1))")
+  ripl.assume("x","(snormal 0.0)")
+  ripl.assume("y","x")
+  ripl.predict("(branch_exp x (quote (snormal y)) (quote 1))")
 
-  renderRIPL(ripl,"graphs/regenToEvalToRegen")
+  renderRIPL(ripl,"pdf_graphs/regen_to_eval_to_regen","pdf")
 
 def renderAAA():
   ripl = RIPL()
 
-  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("alpha","(snormal 100.0)")
   ripl.assume("f","(make_sym_dir_mult alpha 2)")
   ripl.assume("g","f")
-  ripl.predict("(branch_exp alpha (quote (g)) (quote (g)))")
+  ripl.predict("(branch_exp alpha (quote g) (quote g))")
 
+  renderRIPL(ripl,"pdf_graphs/aaa","pdf")
   renderRIPL(ripl,"graphs/aaa")
 
 def renderPartition():
   ripl = RIPL()
   ripl.assume("x","0")
-  ripl.assume("y","(normal x 1.0)")
-  ripl.assume("w","(normal (branch_exp y (quote (normal 0.0 1.0)) (quote 5)) 1.0)")
-  ripl.predict("(normal w 1.0)")
+  ripl.assume("y","(snormal x)")
+  ripl.assume("w","(snormal (branch_exp y (quote (snormal 0.0)) (quote 5)) 1.0)")
+  ripl.predict("(snormal w)")
               
   renderRIPL(ripl,"graphs/partition")

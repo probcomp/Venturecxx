@@ -25,6 +25,19 @@ struct NormalSP : SP
 
 };
 
+struct SNormalSP : SP
+{
+  SNormalSP(): SP("normal")
+    {
+      isRandomOutput = true;
+      canAbsorbOutput = true;
+    }
+
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+  double logDensityOutput(VentureValue * value, Node * node) const override;
+
+};
+
 struct GammaSP : SP
 {
   GammaSP(): SP("gamma")

@@ -121,6 +121,17 @@ double NormalSP::simulateOutputNumeric(const vector<double> & args, gsl_rng * rn
   return x;
 }
 
+VentureValue * SNormalSP::simulateOutput(Node * node, gsl_rng * rng)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+
+  VentureNumber * vmu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  assert(vmu);
+  double x = gsl_ran_gaussian(rng, 1) + vmu->x;
+  return new VentureNumber(x);
+}
+
+
 double NormalSP::logDensityOutput(VentureValue * value, Node * node)  const
 {
   vector<Node *> & operands = node->operandNodes;
@@ -139,6 +150,24 @@ double NormalSP::logDensityOutput(VentureValue * value, Node * node)  const
   assert(sigma);
   assert(x);
   return NormalDistributionLogLikelihood(x->x, mu, sigma->x);
+}
+
+double SNormalSP::logDensityOutput(VentureValue * value, Node * node)  const
+{
+  vector<Node *> & operands = node->operandNodes;
+  double mu;
+  VentureNumber * vmu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+  if (vmu) { mu = vmu->x; }
+  else
+  {
+    VentureAtom * vcmu = dynamic_cast<VentureAtom*>(operands[0]->getValue());
+    assert(vcmu);
+    mu = vcmu->n;
+  }
+
+  VentureNumber * x = dynamic_cast<VentureNumber *>(value);
+  assert(x);
+  return NormalDistributionLogLikelihood(x->x, mu, 1);
 }
 
 double NormalSP::logDensityOutputNumeric(double output, const vector<double> & args) const
