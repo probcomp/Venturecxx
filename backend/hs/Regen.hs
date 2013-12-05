@@ -8,6 +8,7 @@ import Control.Monad.Trans.State.Lazy hiding (state)
 import Control.Monad.Trans.Class
 import Control.Monad.Random -- From cabal install MonadRandom
 import Prelude hiding (lookup)
+import Control.Lens -- From cabal install lens
 
 import Language hiding (Value, Exp, Env, lookup)
 import qualified Language as L
@@ -60,7 +61,7 @@ regenValue a = lift (do
         (Just outA') -> modify $ adjustNode (addResponses resps) outA'
     (Output _ reqA opa ps rs) -> do
       SP{ outputter = out } <- gets $ fromJust "Regenerating value for an output with no operator" . (operator node)
-      ns <- gets nodes
+      ns <- use nodes
       let args = map (fromJust "Regenerating value for an output with a missing parent" . flip M.lookup ns) ps
       let results = map (fromJust "Regenerating value for an output with a missing request result" . flip M.lookup ns) rs
       v <- lift $ asRandomO out args results

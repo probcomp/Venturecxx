@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, TemplateHaskell #-}
 
 module Trace where
 
@@ -7,7 +7,10 @@ import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.List (foldl)
-import Control.Monad.State hiding (state)
+import Control.Lens.TH  -- from cabal install lens
+import Control.Lens.At  -- from cabal install lens
+import Control.Lens.Operators
+import Control.Monad.State hiding (state) -- :set -hide-package monads-tf-0.1.0.1
 
 import Utils
 import Language hiding (Value, Exp, Env)
@@ -82,13 +85,6 @@ canAbsorb :: Node -> SP m -> Bool
 canAbsorb (Request _ _ _ _)  SP { log_d_req = (Just _) } = True
 canAbsorb (Output _ _ _ _ _) SP { log_d_out = (Just _) } = True
 canAbsorb _ _ = False
-
-absorb :: Node -> SP m -> Trace m -> Double
-absorb (Request (Just reqs) _ _ args) SP { log_d_req = (Just f) } _ = f args reqs
-absorb (Output (Just v) _ _ args reqs) SP { log_d_out = (Just f) } t = f args' reqs' v where
-    args' = map (fromJust "absorb" . flip lookupNode t) args
-    reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
-absorb _ _ _ = error "Inappropriate absorb attempt"
 
 nullReq :: SPRequester m
 nullReq = DeterministicR $ \_ -> return []
@@ -176,7 +172,7 @@ deleteResponses n = n
 -- some of whose Request nodes may have outstanding SimulationRequests
 -- that have not yet been met.
 data Trace rand =
-    Trace { nodes :: (M.Map Address Node)
+    Trace { _nodes :: (M.Map Address Node)
           , randoms :: S.Set Address
           , nodeChildren :: M.Map Address (S.Set Address)
           , sprs :: (M.Map SPAddress (SPRecord rand))
@@ -186,12 +182,16 @@ data Trace rand =
           }
     deriving Show
 
+-- This needs to be late in the file because of circular type
+-- dependencies?
+makeLenses ''Trace
+
 empty :: Trace m
 empty = Trace M.empty S.empty M.empty M.empty M.empty uniqueSeed uniqueSeed
 
 chaseReferences :: Address -> Trace m -> Maybe Node
-chaseReferences a t@Trace{ nodes = m } = do
-  n <- M.lookup a m
+chaseReferences a t = do
+  n <- t^.nodes.(at a)
   chase n
     where chase (Reference _ a) = chaseReferences a t
           chase n = Just n
@@ -233,22 +233,22 @@ isRandomNode n@(Output _ _ _ _ _) t = case operator n t of
                                         (Just sp) -> isRandomO $ outputter sp
 isRandomNode _ _ = False
 
+-- TODO Can I turn these five into an appropriate lens?
 lookupNode :: Address -> Trace m -> Maybe Node
-lookupNode a Trace{ nodes = m } = M.lookup a m
+lookupNode a t = t ^. nodes . at a
 
 -- TODO This is only used to add values to nodes.  Enforce; maybe collapse with adjustNode?
 insertNode :: Address -> Node -> Trace m -> Trace m
-insertNode a n t@Trace{nodes = ns} = t{ nodes = ns'} where
-    ns' = M.insert a n ns
+insertNode a n t = t & nodes . at a .~ Just n
 
 -- TODO This is only used to remove values from nodes.  Enforce or collapse?
 -- Also to post-add output addresses to Request nodes
 adjustNode :: (Node -> Node) -> Address -> Trace m -> Trace m
-adjustNode f a t@Trace{nodes = ns} = t{ nodes = (M.adjust f a ns) }
+adjustNode f a t = t & nodes . ix a %~ f
 
 deleteNode :: Address -> Trace m -> Trace m
-deleteNode a t@Trace{nodes = ns, randoms = rs, nodeChildren = cs} =
-    t{ nodes = ns', randoms = rs', nodeChildren = cs'' } where
+deleteNode a t@Trace{_nodes = ns, randoms = rs, nodeChildren = cs} =
+    t{ _nodes = ns', randoms = rs', nodeChildren = cs'' } where
         node = fromJust "Deleting a non-existent node" $ M.lookup a ns
         ns' = M.delete a ns
         rs' = S.delete a rs -- OK even if it wasn't random
@@ -257,8 +257,8 @@ deleteNode a t@Trace{nodes = ns, randoms = rs, nodeChildren = cs} =
         foo cs pa = M.adjust (S.delete a) pa cs
 
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
-addFreshNode node t@Trace{ nodes = ns, addr_seed = seed, randoms = rs, nodeChildren = cs } =
-    (a, t{ nodes = ns', addr_seed = seed', randoms = rs', nodeChildren = cs''}) where
+addFreshNode node t@Trace{ _nodes = ns, addr_seed = seed, randoms = rs, nodeChildren = cs } =
+    (a, t{ _nodes = ns', addr_seed = seed', randoms = rs', nodeChildren = cs''}) where
         (a, seed') = runUniqueSource (liftM Address fresh) seed
         ns' = M.insert a node ns
         -- TODO Argh! Need to maintain the randomness of nodes under
@@ -332,6 +332,15 @@ children :: Address -> Trace m -> [Address]
 children a Trace{nodeChildren = cs} =
     S.toList $ fromJust "Loooking up the children of a nonexistent node" $ M.lookup a cs
 
+-- TODO Use of Template Haskell seems to force this to be in the same
+-- block of code as lookupNode.
+absorb :: Node -> SP m -> Trace m -> Double
+absorb (Request (Just reqs) _ _ args) SP { log_d_req = (Just f) } _ = f args reqs
+absorb (Output (Just v) _ _ args reqs) SP { log_d_out = (Just f) } t = f args' reqs' v where
+    args' = map (fromJust "absorb" . flip lookupNode t) args
+    reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
+absorb _ _ _ = error "Inappropriate absorb attempt"
+
 ----------------------------------------------------------------------
 -- Invariants that traces ought to obey
 
@@ -343,7 +352,7 @@ referencedInvalidAddresses t = invalidParentAddresses t
                                ++ invalidRequestedAddresses t
                                ++ invalidRequestCountKeys t
 
-invalidParentAddresses t@Trace{ nodes = ns } = filter (invalidAddress t) $ concat $ map parentAddrs $ M.elems ns
+invalidParentAddresses t = filter (invalidAddress t) $ concat $ map parentAddrs $ M.elems $ t ^. nodes
 invalidRandomChoices t@Trace{ randoms = rs } = filter (invalidAddress t) $ S.toList rs
 invalidNodeChildrenKeys t@Trace{ nodeChildren = cs } = filter (invalidAddress t) $ M.keys cs
 invalidNodeChildren t@Trace{ nodeChildren = cs } = filter (invalidAddress t) $ concat $ map S.toList $ M.elems cs
