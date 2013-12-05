@@ -116,3 +116,22 @@ def renderERGtoDRG():
   ripl.observe("(normal (branch_exp x (quote (gamma x 2.0)) (quote (normal x 2.0))) 5.0)", "10")
 
   renderRIPL(ripl,"graphs/ergTOdrg")
+
+def renderRegenToEvalToRegen():
+  ripl = RIPL()
+
+  ripl.assume("x","(normal 0.0 1.0)")
+  ripl.assume("y","(normal x 1.0)")
+  ripl.predict("(branch_exp x (quote (normal y 1.0)) (quote 1))")
+
+  renderRIPL(ripl,"graphs/regenToEvalToRegen")
+
+def renderAAA():
+  ripl = RIPL()
+
+  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("f","(make_sym_dir_mult alpha 2)")
+  ripl.assume("g","f")
+  ripl.predict("(branch_exp alpha (quote (g)) (quote (g)))")
+
+  renderRIPL(ripl,"graphs/aaa")
