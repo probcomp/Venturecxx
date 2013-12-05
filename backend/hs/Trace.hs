@@ -175,7 +175,7 @@ data Trace rand =
     Trace { _nodes :: (M.Map Address Node)
           , _randoms :: S.Set Address
           , _nodeChildren :: M.Map Address (S.Set Address)
-          , sprs :: (M.Map SPAddress (SPRecord rand))
+          , _sprs :: (M.Map SPAddress (SPRecord rand))
           , request_counts :: M.Map Address Int
           , addr_seed :: UniqueSeed
           , spaddr_seed :: UniqueSeed
@@ -219,10 +219,10 @@ chaseOperator a t = do
   valueOf source >>= spValue
 
 operatorRecord :: Node -> Trace m -> Maybe (SPRecord m)
-operatorRecord n t@Trace{ sprs = ss } = operatorAddr n t >>= (flip M.lookup ss)
+operatorRecord n t@Trace{ _sprs = ss } = operatorAddr n t >>= (flip M.lookup ss)
 
 operator :: Node -> Trace m -> Maybe (SP m)
-operator n t@Trace{ sprs = ss } = operatorAddr n t >>= (liftM sp . flip M.lookup ss)
+operator n t@Trace{ _sprs = ss } = operatorAddr n t >>= (liftM sp . flip M.lookup ss)
 
 isRandomNode :: Node -> Trace m -> Bool
 isRandomNode n@(Request _ _ _ _) t = case operator n t of
@@ -273,13 +273,13 @@ addFreshNode node t@Trace{ _nodes = ns, addr_seed = seed, _randoms = rs, _nodeCh
         foo cs pa = M.adjust (S.insert a) pa cs
 
 lookupSPR :: SPAddress -> Trace m -> Maybe (SPRecord m)
-lookupSPR spa Trace{ sprs = m } = M.lookup spa m
+lookupSPR spa t = t ^. sprs . at spa
 
 insertSPR :: SPAddress -> (SPRecord m) -> Trace m -> Trace m
-insertSPR addr spr t@Trace{ sprs = ss } = t{ sprs = M.insert addr spr ss }
+insertSPR addr spr t = t & sprs . at addr .~ Just spr
 
 addFreshSP :: SP m -> Trace m -> (SPAddress, Trace m)
-addFreshSP sp t@Trace{ sprs = ss, spaddr_seed = seed } = (a, t{ sprs = ss', spaddr_seed = seed'}) where
+addFreshSP sp t@Trace{ _sprs = ss, spaddr_seed = seed } = (a, t{ _sprs = ss', spaddr_seed = seed'}) where
     (a, seed') = runUniqueSource (liftM SPAddress fresh) seed
     ss' = M.insert a (spRecord sp) ss
 
@@ -291,8 +291,8 @@ fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ re
     SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
 
 insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
-insertResponse spa id a t@Trace{ sprs = ss, request_counts = r } =
-    t{ sprs = M.insert spa spr' ss, request_counts = r' } where
+insertResponse spa id a t@Trace{ _sprs = ss, request_counts = r } =
+    t{ _sprs = M.insert spa spr' ss, request_counts = r' } where
         spr' = spr{ requests = M.insert id a reqs }
         spr@SPRecord { requests = reqs } = fromJust "Inserting response to non-SP" $ lookupSPR spa t
         r' = M.alter succ a r
@@ -305,8 +305,8 @@ lookupResponse spa srid t = do
   M.lookup srid reqs
 
 forgetResponses :: (SPAddress, [SRId]) -> Trace m -> Trace m
-forgetResponses (spaddr, srids) t@Trace{ sprs = ss, request_counts = r } =
-    t{ sprs = M.insert spaddr spr' ss, request_counts = r' } where
+forgetResponses (spaddr, srids) t@Trace{ _sprs = ss, request_counts = r } =
+    t{ _sprs = M.insert spaddr spr' ss, request_counts = r' } where
         spr' = spr{ requests = foldl (flip M.delete) reqs srids }
         spr@SPRecord { requests = reqs } = fromJust "Forgetting responses to non-SP" $ lookupSPR spaddr t
         r' = foldl decrement r srids
@@ -355,7 +355,7 @@ invalidParentAddresses t = filter (invalidAddress t) $ concat $ map parentAddrs 
 invalidRandomChoices t = filter (invalidAddress t) $ S.toList $ t ^. randoms
 invalidNodeChildrenKeys t = filter (invalidAddress t) $ M.keys $ t ^. nodeChildren
 invalidNodeChildren t = filter (invalidAddress t) $ concat $ map S.toList $ M.elems $ t ^. nodeChildren
-invalidRequestedAddresses t@Trace{ sprs = sps } = filter (invalidAddress t) $ concat $ map (M.elems . requests) $ M.elems sps
+invalidRequestedAddresses t = filter (invalidAddress t) $ concat $ map (M.elems . requests) $ M.elems $ t ^. sprs
 invalidRequestCountKeys t@Trace{ request_counts = rcs } = filter (invalidAddress t) $ M.keys rcs
 
 invalidAddress :: Trace m -> Address -> Bool
