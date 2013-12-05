@@ -174,6 +174,16 @@ def renderAAAChallenge():
 
 def renderPartition():
   ripl = RIPL()
+  ripl.assume("x","(snormal 0)")
+  ripl.assume("y","(snormal x)")
+  ripl.assume("w","(snormal (branch_exp y (quote (snormal 0.0)) (quote 5)) 1.0)")
+  ripl.predict("(snormal w)")
+              
+  renderRIPL(ripl,"pdf_graphs/partition","pdf",colorIgnored=True)
+  renderRIPL(ripl,"graphs/partition",colorIgnored=True)
+
+def render():
+  ripl = RIPL()
   ripl.assume("x","0")
   ripl.assume("y","(snormal x)")
   ripl.assume("w","(snormal (branch_exp y (quote (snormal 0.0)) (quote 5)) 1.0)")
@@ -181,6 +191,7 @@ def renderPartition():
               
   renderRIPL(ripl,"pdf_graphs/partition","pdf",colorIgnored=True)
   renderRIPL(ripl,"graphs/partition",colorIgnored=True)
+
 
 #####################
 def renderAllSchematics():

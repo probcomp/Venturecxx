@@ -26,7 +26,7 @@ A trace.
 The scaffold partitions the trace into five groups: the nodes that will definitely still exist in the proposal trace but whose values may change (drg), the nodes that we will definitely compute likelihoods at (absorbing), the nodes that may no longer exist (the brush), the parents of nodes in these three groups (parents), and all other nodes which need never be visited at all (ignored). Note that future graphs will not distinguish between these last two groups.
 ]
 {
-\includegraphics[width=200pt,height=200pt]{partition/dot2.pdf}
+\includegraphics[width=200pt,height=200pt]{partition/dot20.pdf}
 \label{fig:partition_scaffold}
 
 }
@@ -165,7 +165,7 @@ The application of the maker SP computes the log density of all of its applicati
 
 \subfigure
 [
-A scaffold with three border nodes, one of which is absorbing at applications.
+A scaffold with three border nodes, one of which is absorbing at applications. The child of the aaa node is a reference to it, and would normally be in the drg. (TODO the extended drg and the extended scaffold should refer to the semantic drg/scaffold, before the aaa shortcut, even though it is never constructed. We should abandon the old use of that term)
 ]
 {
 \includegraphics[width=200pt,height=200pt]{aaa_challenge_with_aaa/dot6.pdf}
@@ -177,7 +177,7 @@ A scaffold with three border nodes, one of which is absorbing at applications.
 
 \subfigure
 [
-A simulation request may lookup a node that is itself a reference to the aaa node. Even though regen will be called on a node that is not in the drg, the aaa node it refers to must be regenerated nonetheless.
+A simulation request may lookup that child before the aaa node has been regenerated, and call regen on it. Regen is normally a no-op for nodes that are not in the drg, but even though the child is not in the drg, it and its parent must be regenerated nonetheless. Thus we need to add the child to the drg dynamically.
 ]
 {
 \includegraphics[width=200pt,height=200pt]{aaa_challenge_with_aaa/dot2.pdf}

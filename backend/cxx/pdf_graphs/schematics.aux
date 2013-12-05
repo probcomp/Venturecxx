@@ -36,6 +36,6 @@
 \newlabel{fig:aaa_challenge_sub}{{5(b)}{5}}
 \newlabel{sub@fig:aaa_challenge_sub}{{(b)}{5}}
 \@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Challenges with absorbing at applications}}{5}}
-\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces { A scaffold with three border nodes, one of which is absorbing at applications. }}}{5}}
-\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces { A simulation request may lookup a node that is itself a reference to the aaa node. Even though regen will be called on a node that is not in the drg, the aaa node it refers to must be regenerated nonetheless. }}}{5}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces { A scaffold with three border nodes, one of which is absorbing at applications. The child of the aaa node is a reference to it, and would normally be in the drg. (TODO the extended drg and the extended scaffold should refer to the semantic drg/scaffold, before the aaa shortcut, even though it is never constructed. We should abandon the old use of that term) }}}{5}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces { A simulation request may lookup that child before the aaa node has been regenerated, and call regen on it. Regen is normally a no-op for nodes that are not in the drg, but even though the child is not in the drg, it and its parent must be regenerated nonetheless. Thus we need to add the child to the drg dynamically. }}}{5}}
 \newlabel{fig:aaa_challenge}{{5}{5}}
