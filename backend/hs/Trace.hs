@@ -174,7 +174,7 @@ deleteResponses n = n
 data Trace rand =
     Trace { _nodes :: (M.Map Address Node)
           , _randoms :: S.Set Address
-          , nodeChildren :: M.Map Address (S.Set Address)
+          , _nodeChildren :: M.Map Address (S.Set Address)
           , sprs :: (M.Map SPAddress (SPRecord rand))
           , request_counts :: M.Map Address Int
           , addr_seed :: UniqueSeed
@@ -247,8 +247,8 @@ adjustNode :: (Node -> Node) -> Address -> Trace m -> Trace m
 adjustNode f a t = t & nodes . ix a %~ f
 
 deleteNode :: Address -> Trace m -> Trace m
-deleteNode a t@Trace{_nodes = ns, _randoms = rs, nodeChildren = cs} =
-    t{ _nodes = ns', _randoms = rs', nodeChildren = cs'' } where
+deleteNode a t@Trace{_nodes = ns, _randoms = rs, _nodeChildren = cs} =
+    t{ _nodes = ns', _randoms = rs', _nodeChildren = cs'' } where
         node = fromJust "Deleting a non-existent node" $ M.lookup a ns
         ns' = M.delete a ns
         rs' = S.delete a rs -- OK even if it wasn't random
@@ -257,8 +257,8 @@ deleteNode a t@Trace{_nodes = ns, _randoms = rs, nodeChildren = cs} =
         foo cs pa = M.adjust (S.delete a) pa cs
 
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
-addFreshNode node t@Trace{ _nodes = ns, addr_seed = seed, _randoms = rs, nodeChildren = cs } =
-    (a, t{ _nodes = ns', addr_seed = seed', _randoms = rs', nodeChildren = cs''}) where
+addFreshNode node t@Trace{ _nodes = ns, addr_seed = seed, _randoms = rs, _nodeChildren = cs } =
+    (a, t{ _nodes = ns', addr_seed = seed', _randoms = rs', _nodeChildren = cs''}) where
         (a, seed') = runUniqueSource (liftM Address fresh) seed
         ns' = M.insert a node ns
         -- TODO Argh! Need to maintain the randomness of nodes under
@@ -329,8 +329,7 @@ numRequests a Trace { request_counts = r } = fromMaybe 0 $ M.lookup a r
 
 -- Nodes in the trace that depend upon the node at the given address.
 children :: Address -> Trace m -> [Address]
-children a Trace{nodeChildren = cs} =
-    S.toList $ fromJust "Loooking up the children of a nonexistent node" $ M.lookup a cs
+children a t = t ^. nodeChildren . at a & fromJust "Loooking up the children of a nonexistent node" & S.toList
 
 -- TODO Use of Template Haskell seems to force this to be in the same
 -- block of code as lookupNode.
@@ -354,8 +353,8 @@ referencedInvalidAddresses t = invalidParentAddresses t
 
 invalidParentAddresses t = filter (invalidAddress t) $ concat $ map parentAddrs $ M.elems $ t ^. nodes
 invalidRandomChoices t = filter (invalidAddress t) $ S.toList $ t ^. randoms
-invalidNodeChildrenKeys t@Trace{ nodeChildren = cs } = filter (invalidAddress t) $ M.keys cs
-invalidNodeChildren t@Trace{ nodeChildren = cs } = filter (invalidAddress t) $ concat $ map S.toList $ M.elems cs
+invalidNodeChildrenKeys t = filter (invalidAddress t) $ M.keys $ t ^. nodeChildren
+invalidNodeChildren t = filter (invalidAddress t) $ concat $ map S.toList $ M.elems $ t ^. nodeChildren
 invalidRequestedAddresses t@Trace{ sprs = sps } = filter (invalidAddress t) $ concat $ map (M.elems . requests) $ M.elems sps
 invalidRequestCountKeys t@Trace{ request_counts = rcs } = filter (invalidAddress t) $ M.keys rcs
 
