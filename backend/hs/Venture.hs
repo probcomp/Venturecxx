@@ -92,7 +92,6 @@ simulation :: (MonadRandom m) => Int -> Exp -> StateT (Trace m) m [Value]
 simulation ct exp = do
   env <- initializeBuiltins Toplevel
   address <- eval exp env
-  -- TODO This line breaks all the examples right now.
   replicateM ct (do
     t <- get
     modifyM $ liftM (traceShowTrace t) $ metropolis_hastings principal_node_mh
