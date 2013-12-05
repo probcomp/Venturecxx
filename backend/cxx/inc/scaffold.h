@@ -40,7 +40,8 @@ public:
 
   set<Node *> eDRG{}; // just for rendering
   set<Node *> eAbsorbing{}; // just for rendering
-  
+
+  set<Node *> parents{};
 
   map<Node *, DRGNode> drg{};
   set<Node *> absorbing{};

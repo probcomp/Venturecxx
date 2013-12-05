@@ -150,7 +150,11 @@ void Renderer::dotAttributes(const map<string,string> & attributes)
   dot += "]";
 }
 
-string Renderer::getNodeShape(Node * node) { return "ellipse"; }
+string Renderer::getNodeShape(Node * node) 
+{
+  return "ellipse"; 
+}
+
 string Renderer::getNodeFillColor(Node * node) 
 {
   if (scaffold && !erg)
@@ -161,12 +165,13 @@ string Renderer::getNodeFillColor(Node * node)
     else if (scaffold->isResampling(node)) { return "gold"; }
     else if (scaffold->isAbsorbing(node)) { return "steelblue1"; }
     else if (scaffold->brush.count(node)) { return "darkseagreen"; }
+    else if (scaffold->parents.count(node)) { return "tan3"; }
     else { return "grey56"; }
   }
   else if (scaffold && erg)
   {
     if (scaffold->principalNodes.count(node)) { return "firebrick"; }
-//    else if (scaffold->isAAA(node)) { return "lightpink1"; }
+    else if (scaffold->isAAA(node)) { return "lightpink1"; }
     else if (scaffold->eDRG.count(node)) { return "gold"; }
     else if (scaffold->eAbsorbing.count(node)) { return "steelblue1"; }
     else { return "grey56"; }
@@ -189,7 +194,11 @@ string Renderer::getNodeFillColor(Node * node)
 string Renderer::getNodeStyle(Node * node) { return "filled"; }
 string Renderer::getNodeLabel(Node * node) 
 {
-  if (!labels) { return ""; }
+  if (!labels) 
+  { 
+    return "";
+  }
+
   // expression
   // value
   assert(node);

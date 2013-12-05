@@ -123,6 +123,7 @@ void Scaffold::disableEval(Node * node,
 
 void Scaffold::processParentAAA(Node * parent)
 {
+  parents.insert(parent);
   if (parent->isReference())
   {
     if (!isResampling(parent) && isAAA(parent->sourceNode))
@@ -203,8 +204,8 @@ void Scaffold::setRegenCounts()
   /* Now add increment the regenCount for AAA nodes as 
      is appropriate. */
   /* TODO Note that they may have been in the brush, in which case this is not necessary. */
-  if (hasAAANodes)
-  {
+//  if (hasAAANodes)
+//  {
     for (pair<Node *,DRGNode> p : drg) { processParentsAAA(p.first); }
     for (Node * node : absorbing) { processParentsAAA(node); }
     for (Node * node : brush)
@@ -214,7 +215,7 @@ void Scaffold::setRegenCounts()
       if (node->nodeType == NodeType::LOOKUP)
       { processParentAAA(node->lookedUpNode); }
     }
-  }
+//  }
 }
 
 void Scaffold::loadDefaultKernels(bool deltaKernels) {}
