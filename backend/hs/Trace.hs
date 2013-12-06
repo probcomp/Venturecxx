@@ -140,6 +140,14 @@ revalue (Output _ reqA opa args reqs) v = Output v reqA opa args reqs
 value :: Simple Lens Node (Maybe Value)
 value = lens valueOf revalue
 
+sim_reqs :: Simple Lens Node (Maybe [SimulationRequest])
+sim_reqs = lens _requests re_requests where
+    _requests (Request r _ _ _) = r
+    _requests _ = Nothing
+    re_requests (Request _ outA a args) r = (Request r outA a args)
+    re_requests n Nothing = n
+    re_requests n _ = error "Trying to set requests for a non-request node."
+
 parentAddrs :: Node -> [Address]
 parentAddrs (Constant _) = []
 parentAddrs (Reference _ addr) = [addr]

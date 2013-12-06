@@ -48,7 +48,7 @@ regenValue a = lift (do
     (Request _ outA opa ps) -> do
       addr <- gets $ fromJust "Regenerating value for a request with no operator" . (chaseOperator opa)
       reqs <- StateT $ runRequester addr ps
-      modify $ insertNode a (Request (Just reqs) outA opa ps)
+      nodes . ix a . sim_reqs .= Just reqs
       resps <- evalRequests addr reqs
       case outA of
         Nothing -> return ()
