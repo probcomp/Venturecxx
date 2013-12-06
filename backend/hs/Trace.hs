@@ -286,7 +286,7 @@ fulfilments :: Address -> Trace m -> [Address]
 -- The addresses of the responses to the requests made by the Request
 -- node at Address.
 fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ requestIds node where
-    node = fromJust "Asking for fulfilments of a missing node" $ lookupNode a t
+    node = t ^. nodes . hardix "Asking for fulfilments of a missing node" a
     SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
 
 insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
