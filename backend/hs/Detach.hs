@@ -24,11 +24,6 @@ data Scaffold = Scaffold { _drg :: O.Set Address
                          -- regen.
                          }
 
-mapDrg f s@Scaffold{ _drg = d } = s{ _drg = f d}
-mapAbs f s@Scaffold{ _absorbers = a } = s{ _absorbers = f a}
-mapReq f s@Scaffold{ _dead_reqs = d } = s{ _dead_reqs = f d}
-mapBru f s@Scaffold{ _brush = b } = s{ _brush = f b}
-
 makeLenses ''Scaffold
 
 empty :: Scaffold
@@ -65,13 +60,13 @@ collectERG ((a,principal):as) = do
            else resampling a -- TODO check esrReferenceCanAbsorb
   where resampling :: Address -> StateT Scaffold (Reader (Trace m)) ()
         resampling a = do
-          modify $ mapAbs $ O.delete a
-          modify $ mapDrg $ O.insert a
-          as' <- lift $ asks $ children a
+          absorbers %= O.delete a
+          drg %= O.insert a
+          as' <- asks $ children a
           collectERG $ (zip as' $ repeat False) ++ as
         absorbing :: Address -> StateT Scaffold (Reader (Trace m)) ()
         absorbing a = do
-          modify $ mapAbs $ O.insert a
+          absorbers %= O.insert a
           collectERG as
 
 -- Given the list of addresses in the DRG, produce an updated scaffold
