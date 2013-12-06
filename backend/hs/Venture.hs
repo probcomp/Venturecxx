@@ -83,6 +83,15 @@ observe :: (MonadRandom m) => Exp -> Value -> ReaderT Env (StateT (Trace m) m) (
 observe exp v = do
   env <- ask
   address <- lift $ eval exp env
+  -- TODO What should happen if one observes a value that had
+  -- (deterministic) consequences, e.g.
+  -- (assume x (normal 1 1))
+  -- (assume y (+ x 1))
+  -- (observe x 1)
+  -- After this, the trace is presumably in an inconsistent state,
+  -- from which it in fact has no way to recover.  As of the present
+  -- writing, Venturecxx has this limitation as well, so I will not
+  -- address it here.
   lift $ modify $ constrain address v
 
 execute :: (MonadRandom m) => [Directive] -> StateT (Trace m) m ()
