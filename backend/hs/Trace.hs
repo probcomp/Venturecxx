@@ -130,11 +130,15 @@ valueOf (Reference v _) = v
 valueOf (Output v _ _ _ _) = v
 valueOf _ = Nothing
 
+revalue :: Node -> Maybe Value -> Node
+revalue (Constant _) _ = error "Cannot revalue a constant"
+revalue (Reference _ a) v = Reference v a
+revalue r@(Request _ _ _ _) _ = r
+revalue (Output _ reqA opa args reqs) v = Output v reqA opa args reqs
+
 devalue :: Node -> Node
-devalue (Constant _) = error "Cannot devalue a constant"
-devalue (Reference _ a) = Reference Nothing a
 devalue (Request _ outA a as) = Request Nothing outA a as
-devalue (Output _ reqA opa args reqs) = Output Nothing reqA opa args reqs
+devalue n = revalue n Nothing
 
 parentAddrs :: Node -> [Address]
 parentAddrs (Constant _) = []
