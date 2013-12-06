@@ -6,6 +6,7 @@ import Data.Maybe hiding (fromJust)
 import Control.Monad.Reader
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.State.Lazy hiding (state)
+import Control.Lens hiding (children)
 
 import Utils
 import Language
@@ -135,7 +136,7 @@ detach' Scaffold { drg = d, absorbers = abs, dead_reqs = reqs, brush = bru } = d
           lift $ tell $ LogDensity wt
         eraseValue :: Address -> State (Trace m) ()
         eraseValue a = do
-          modify $ adjustNode devalue a
+          nodes . ix a . value .= Nothing
           node <- gets $ fromJust "Erasing the value of a nonexistent node" . lookupNode a
           case node of
             (Request _ (Just outA) _ _) -> modify $ adjustNode deleteResponses outA
