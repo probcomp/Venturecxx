@@ -80,7 +80,10 @@ assume var exp = do
 -- found).  The constraining appears to consist only in removing that
 -- node from the list of random choices.
 observe :: (MonadRandom m) => Exp -> Value -> ReaderT Env (StateT (Trace m) m) ()
-observe = undefined
+observe exp v = do
+  env <- ask
+  address <- lift $ eval exp env
+  lift $ modify $ constrain address v
 
 execute :: (MonadRandom m) => [Directive] -> StateT (Trace m) m ()
 execute ds = runStateT_ (do

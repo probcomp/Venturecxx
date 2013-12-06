@@ -338,6 +338,9 @@ absorbAt a = do
   wt <- gets $ absorb node sp
   tell $ LogDensity wt
 
+constrain :: Address -> Value -> Trace m -> Trace m
+constrain = undefined
+
 ----------------------------------------------------------------------
 -- Invariants that traces ought to obey
 
