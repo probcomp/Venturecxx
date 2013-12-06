@@ -219,7 +219,7 @@ chaseOperator a t = do
   valueOf source >>= spValue
 
 operatorRecord :: Node -> Trace m -> Maybe (SPRecord m)
-operatorRecord n t@Trace{ _sprs = ss } = operatorAddr n t >>= (flip M.lookup ss)
+operatorRecord n t = operatorAddr n t >>= (\addr -> t ^. sprs . at addr)
 
 operator :: Node -> Trace m -> Maybe (SP m)
 operator n = liftM sp . operatorRecord n
