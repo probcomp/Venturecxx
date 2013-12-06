@@ -168,6 +168,11 @@ addOutput :: Address -> Node -> Node
 addOutput outA (Request v _ a as) = Request v (Just outA) a as
 addOutput _ n = n
 
+out_node :: Simple Setter Node (Maybe Address)
+out_node = sets _out_node where
+    _out_node f (Request v outA a as) = Request v (f outA) a as
+    _out_node _ _ = error "Non-Request nodes do not have corresponding output nodes"
+
 responses :: Simple Lens Node [Address]
 responses = lens _responses addResponses where
     _responses (Output _ _ _ _ rs) = rs
