@@ -184,8 +184,8 @@ def renderPartition():
 
 def renderPrior():
   ripl = RIPL()
-  ripl.assume("f","(make_sym_dir_mult 1.0 2")
-  ripl.predict("(branch_exp (f) (quote (f)) true)")
+  ripl.assume("f","(make_sym_dir_mult 1.0 2)")
+  ripl.predict("(branch_exp (f) (quote (f)) (quote (f)))")
               
   renderRIPL(ripl,"pdf_graphs/prior","pdf")
   renderRIPL(ripl,"graphs/prior")

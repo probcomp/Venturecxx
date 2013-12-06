@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2013.10.10)  5 DEC 2013 20:06
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2013.10.10)  5 DEC 2013 20:59
 entering extended mode
  %&-line parsing enabled.
 **schematics.tex
@@ -125,22 +125,27 @@ Package: subfigure 2002/03/15 v2.1.5 subfigure package
 (/usr/share/texmf-texlive/tex/latex/subfigure/subfigure.cfg)
 \subfig@top=\skip50
 \subfig@bottom=\skip51
+)
+(/usr/share/texmf-texlive/tex/latex/preprint/fullpage.sty
+Package: fullpage 1999/02/23 1.1 (PWD)
+\FP@margin=\skip52
 ) (./schematics.aux)
 \openout1 = `schematics.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 6.
-LaTeX Font Info:    ... okay on input line 6.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 6.
-LaTeX Font Info:    ... okay on input line 6.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 6.
-LaTeX Font Info:    ... okay on input line 6.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 6.
-LaTeX Font Info:    ... okay on input line 6.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 6.
-LaTeX Font Info:    ... okay on input line 6.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 6.
-LaTeX Font Info:    ... okay on input line 6.
- (/usr/share/texmf-texlive/tex/context/base/supp-pdf.mkii
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 7.
+LaTeX Font Info:    ... okay on input line 7.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 7.
+LaTeX Font Info:    ... okay on input line 7.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 7.
+LaTeX Font Info:    ... okay on input line 7.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 7.
+LaTeX Font Info:    ... okay on input line 7.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 7.
+LaTeX Font Info:    ... okay on input line 7.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 7.
+LaTeX Font Info:    ... okay on input line 7.
+
+(/usr/share/texmf-texlive/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count104
 \scratchdimen=\dimen116
@@ -159,27 +164,27 @@ ion <1.5>, but at most version <1.4> allowed
 <prior/dot3.pdf, id=1, 1860.9525pt x 1231.60126pt>
 File: prior/dot3.pdf Graphic file (type pdf)
  <use prior/dot3.pdf>
-Overfull \hbox (6.66666pt too wide) in paragraph at lines 19--20
+Overfull \hbox (6.66666pt too wide) in paragraph at lines 20--21
  [][] 
  []
 
 
-Overfull \hbox (8.00017pt too wide) in paragraph at lines 27--27
+Overfull \hbox (8.00017pt too wide) in paragraph at lines 28--28
 []\OT1/cmr/m/n/8 (b)
  []
 
 
-Overfull \hbox (22.51704pt too wide) in paragraph at lines 27--27
+Overfull \hbox (22.51704pt too wide) in paragraph at lines 28--28
 \OT1/cmr/m/n/8 TODO
  []
 
 
-Overfull \hbox (14.89471pt too wide) in paragraph at lines 27--27
+Overfull \hbox (14.89471pt too wide) in paragraph at lines 28--28
 \OT1/cmr/m/n/8 show
  []
 
 
-Overfull \hbox (13.4308pt too wide) in paragraph at lines 27--27
+Overfull \hbox (13.4308pt too wide) in paragraph at lines 28--28
 \OT1/cmr/m/n/8 code 
  []
 
@@ -197,10 +202,6 @@ pdfTeX warning: pdflatex (file ./partition/dot20.pdf): PDF inclusion: found PDF
 File: partition/dot20.pdf Graphic file (type pdf)
 
 <use partition/dot20.pdf>
-
-LaTeX Warning: Float too large for page by 202.36717pt on input line 71.
-
-
 
 pdfTeX warning: pdflatex (file ./erg_to_drg/dot4.pdf): PDF inclusion: found PDF
  version <1.5>, but at most version <1.4> allowed
@@ -266,17 +267,13 @@ File: aaa_challenge_with_aaa/dot2.pdf Graphic file (type pdf)
 
 <use aaa_challenge_with_aaa/dot2.pdf>
 
-LaTeX Warning: Float too large for page by 17.94518pt on input line 239.
-
-
-
 pdfTeX warning: pdflatex (file ./order_duality/dot3.pdf): PDF inclusion: found 
 PDF version <1.5>, but at most version <1.4> allowed
 <order_duality/dot3.pdf, id=25, 3412.75pt x 1231.60126pt>
 File: order_duality/dot3.pdf Graphic file (type pdf)
 
 <use order_duality/dot3.pdf>
-Overfull \hbox (61.6494pt too wide) in paragraph at lines 257--259
+Overfull \hbox (6.66666pt too wide) in paragraph at lines 258--260
  [][] 
  []
 
@@ -290,17 +287,17 @@ _to_regen/dot2.pdf>] [5 <./regen_to_eval_to_regen/handmade_tracking_full.pdf>]
 llenge_with_aaa/dot6.pdf> <./aaa_challenge_with_aaa/dot2.pdf>] [8 <./order_dual
 ity/dot3.pdf>] (./schematics.aux) ) 
 Here is how much of TeX's memory you used:
- 1740 strings out of 495061
- 22425 string characters out of 1182620
- 85590 words of memory out of 3000000
- 4939 multiletter control sequences out of 15000+50000
+ 1760 strings out of 495061
+ 22767 string characters out of 1182620
+ 85298 words of memory out of 3000000
+ 4955 multiletter control sequences out of 15000+50000
  3939 words of font info for 15 fonts, out of 3000000 for 9000
  28 hyphenation exceptions out of 8191
  27i,6n,24p,778b,248s stack positions out of 5000i,500n,10000p,200000b,50000s
 </usr/share/texmf-texlive/fonts/type1/public
 /amsfonts/cm/cmr10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm
 /cmr8.pfb>
-Output written on schematics.pdf (8 pages, 124922 bytes).
+Output written on schematics.pdf (8 pages, 124676 bytes).
 PDF statistics:
  97 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)

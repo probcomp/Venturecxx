@@ -2,6 +2,7 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{subfigure}
+\usepackage[cm]{fullpage}
 
 \begin{document}
 
@@ -46,7 +47,7 @@ TODO show code
 A trace.
 ]
 {
-\includegraphics[width=.4\textwidth]{partition/dot0.pdf}
+\includegraphics[width=200pt,height=200pt]{partition/dot0.pdf}
 
 \label{fig:partition_rho}
 }
@@ -58,7 +59,7 @@ A trace.
 The scaffold partitions the trace into five groups: the nodes that will definitely still exist in the proposal trace but whose values may change (drg), the nodes that we will definitely compute likelihoods at (absorbing), the nodes that may no longer exist (the brush), the parents of nodes in these three groups (parents), and all other nodes which need never be visited at all (ignored). Note that future graphs will not distinguish between these last two groups.
 ]
 {
-\includegraphics[width=.4\textwidth]{partition/dot20.pdf}
+\includegraphics[width=200pt,height=200pt]{partition/dot20.pdf}
 \label{fig:partition_scaffold}
 
 }
@@ -251,7 +252,7 @@ A simulation request may lookup that child before the aaa node has been regenera
 A procedure with partial-exchangeable coupling is applied in both the absorbing border and the brush. The probability of the absorbing nodes depends on the order in which we regenerate. As we are detaching, we need to compute the probability of the absorbing nodes that we would have calculated if we had proposed this trace by regenerating along the scaffold. In particular, if we would have visited the absorbing application first during regen, then we must visit it last during detach. We solve this problem by having detach always detach all nodes in the opposite order from how regen would have generated them. (TODO make this a finite collapsed hmm)
 ]
 {
-\includegraphics[width=400pt, height=200pt]{order_duality/dot3.pdf}
+\includegraphics[width=\textwidth]{order_duality/dot3.pdf}
 \label{fig:order_duality_trace}
 
 }
