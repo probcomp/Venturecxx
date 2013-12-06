@@ -119,21 +119,12 @@ watching_infer address ct = replicateM ct (do
   gets $ fromJust "Value was not restored by inference" . valueOf
          . fromJust "Address became invalid after inference" . (lookupNode address))
 
-simulation :: (MonadRandom m) => Int -> Exp -> StateT (Trace m) m [Value]
-simulation ct exp = do
-  env <- initializeBuiltins Toplevel
-  address <- eval exp env
-  watching_infer address ct
-
 -- Expects the directives to contain exactly one Predict
-simulation' :: (MonadRandom m) => Int -> [Directive] -> StateT (Trace m) m [Value]
-simulation' ct ds = liftM head (execute ds) >>= (flip watching_infer ct)
-
-simulate_soup :: (MonadRandom m) => Int -> Exp -> m [Value]
-simulate_soup ct exp = evalStateT (simulation ct exp) empty
+simulation :: (MonadRandom m) => Int -> [Directive] -> StateT (Trace m) m [Value]
+simulation ct ds = liftM head (execute ds) >>= (flip watching_infer ct)
 
 venture_main :: (MonadRandom m) => Int -> [Directive] -> m [Value]
-venture_main ct ds = evalStateT (simulation' ct ds) empty
+venture_main ct ds = evalStateT (simulation ct ds) empty
 
 -- venture_main 1 $ [Predict $ Datum $ Number 1.0]
 -- venture_main 1 $ [Predict $ App (Lam ["x"] (Variable "x")) [(Datum $ Number 1.0)]]
