@@ -9,6 +9,7 @@ import qualified Data.Set as S
 import Data.List (foldl)
 import Control.Lens  -- from cabal install lens
 import Control.Monad.State hiding (state) -- :set -hide-package monads-tf-0.1.0.1
+import Control.Monad.Writer.Class
 
 import Utils
 import Language hiding (Value, Exp, Env)
@@ -339,6 +340,13 @@ absorb (Output (Just v) _ _ args reqs) SP { log_d_out = (Just f) } t = f args' r
     args' = map (fromJust "absorb" . flip lookupNode t) args
     reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
 absorb _ _ _ = error "Inappropriate absorb attempt"
+
+absorbAt :: (MonadState (Trace m1) m, MonadWriter LogDensity m) => Address -> m ()
+absorbAt a = do
+  node <- gets $ fromJust "Absorbing at a nonexistent node" . lookupNode a
+  sp <- gets $ fromJust "Absorbing at a node with no operator" . operator node
+  wt <- gets $ absorb node sp
+  tell $ LogDensity wt
 
 ----------------------------------------------------------------------
 -- Invariants that traces ought to obey

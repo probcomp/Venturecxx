@@ -124,17 +124,11 @@ collectBrush = mapM_ disableRequests where
 
 detach' :: Scaffold -> StateT (Trace m) (Writer LogDensity) ()
 detach' Scaffold { drg = d, absorbers = abs, dead_reqs = reqs, brush = bru } = do
-  mapM_ unabsorbValue $ reverse $ O.toList abs
+  mapM_ absorbAt $ reverse $ O.toList abs
   mapM_ (stupid . eraseValue) $ O.toList d
   mapM_ (stupid . forgetRequest) reqs
   mapM_ (stupid . forgetNode) $ S.toList bru
-  where unabsorbValue :: Address -> StateT (Trace m) (Writer LogDensity) ()
-        unabsorbValue a = do
-          node <- use $ nodes . hardix "Erasing the value of a nonexistent node" a
-          sp <- gets $ fromJust "Unabsorbing node with no operator" . operator node
-          wt <- gets $ absorb node sp
-          lift $ tell $ LogDensity wt
-        eraseValue :: Address -> State (Trace m) ()
+  where eraseValue :: Address -> State (Trace m) ()
         eraseValue a = do
           node <- use $ nodes . hardix "Erasing the value of a nonexistent node" a
           nodes . ix a . value .= Nothing

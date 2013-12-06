@@ -26,13 +26,7 @@ regen s t = do
 regen' :: (MonadRandom m) => Scaffold -> WriterT LogDensity (StateT (Trace m) m) ()
 regen' Scaffold { drg = d, absorbers = abs } = do
   mapM_ regenNode $ O.toList d
-  mapM_ absorbValue $ O.toList abs
-  where absorbValue :: (Monad m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
-        absorbValue a = do
-          node <- lift $ gets $ fromJust "Absorbing at a nonexistent node" . lookupNode a
-          sp <- lift $ gets $ fromJust "Absorbing at a node with no operator" . operator node
-          wt <- lift $ gets $ absorb node sp
-          tell $ LogDensity wt
+  mapM_ absorbAt $ O.toList abs
 
 regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
 regenNode a = do
