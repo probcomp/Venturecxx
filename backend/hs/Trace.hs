@@ -159,15 +159,11 @@ addOutput :: Address -> Node -> Node
 addOutput outA (Request v _ a as) = Request v (Just outA) a as
 addOutput _ n = n
 
-_responses :: Node -> [Address]
-_responses (Output _ _ _ _ rs) = rs
-
-addResponses :: [Address] -> Node -> Node
-addResponses resps (Output v reqA a as _) = Output v reqA a as resps
-addResponses _ n = n
-
 responses :: Simple Lens Node [Address]
-responses = lens _responses (flip addResponses)
+responses = lens _responses addResponses where
+    _responses (Output _ _ _ _ rs) = rs
+    addResponses (Output v reqA a as _) resps = Output v reqA a as resps
+    addResponses n _ = n
 
 ----------------------------------------------------------------------
 -- Traces

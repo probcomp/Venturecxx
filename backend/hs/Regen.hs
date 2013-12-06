@@ -58,7 +58,7 @@ regenValue a = lift (do
       resps <- evalRequests addr reqs
       case outA of
         Nothing -> return ()
-        (Just outA') -> modify $ adjustNode (addResponses resps) outA'
+        (Just outA') -> nodes . ix outA' . responses .= resps
     (Output _ reqA opa ps rs) -> do
       SP{ outputter = out } <- gets $ fromJust "Regenerating value for an output with no operator" . (operator node)
       ns <- use nodes
