@@ -320,7 +320,8 @@ forgetResponses (spaddr, srids) t@Trace{ _sprs = ss, _request_counts = r } =
 
 runRequester :: (Monad m) => SPAddress -> [Address] -> StateT (Trace m) m [SimulationRequest]
 runRequester spaddr args = do
-  spr@SPRecord { sp = SP{ requester = req }, srid_seed = seed } <- gets $ fromJust "Running the requester of a non-SP" . lookupSPR spaddr
+  spr@SPRecord { sp = SP{ requester = req }, srid_seed = seed } <-
+      use $ sprs . hardix "Running the requester of a non-SP" spaddr
   (reqs, seed') <- lift $ runUniqueSourceT (asRandomR req args) seed
   sprs . ix spaddr .= spr{ srid_seed = seed' }
   return reqs
