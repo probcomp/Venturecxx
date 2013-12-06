@@ -222,7 +222,7 @@ operatorRecord :: Node -> Trace m -> Maybe (SPRecord m)
 operatorRecord n t@Trace{ _sprs = ss } = operatorAddr n t >>= (flip M.lookup ss)
 
 operator :: Node -> Trace m -> Maybe (SP m)
-operator n t@Trace{ _sprs = ss } = operatorAddr n t >>= (liftM sp . flip M.lookup ss)
+operator n = liftM sp . operatorRecord n
 
 isRandomNode :: Node -> Trace m -> Bool
 isRandomNode n@(Request _ _ _ _) t = case operator n t of
