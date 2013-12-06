@@ -343,7 +343,7 @@ absorb _ _ _ = error "Inappropriate absorb attempt"
 
 absorbAt :: (MonadState (Trace m1) m, MonadWriter LogDensity m) => Address -> m ()
 absorbAt a = do
-  node <- gets $ fromJust "Absorbing at a nonexistent node" . lookupNode a
+  node <- use $ nodes . hardix "Absorbing at a nonexistent node" a
   sp <- gets $ fromJust "Absorbing at a node with no operator" . operator node
   wt <- gets $ absorb node sp
   tell $ LogDensity wt
