@@ -96,8 +96,8 @@ collectBrush = mapM_ disableRequests where
     -- that it is now requested one time less.
     disableRequestFor :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
     disableRequestFor a = do
-      modify $ mapFst $ M.alter maybeSucc a
-      disabled <- gets $ fromJust "Disabling request for a node that has never been disabled" . M.lookup a . fst
+      _1 . at a %= maybeSucc
+      disabled <- use $ _1 . hardix "Disabling request for a node that has never been disabled" a
       requested <- asks $ numRequests a
       if disabled == requested then disableFamily a
       else return ()
