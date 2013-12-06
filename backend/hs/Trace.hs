@@ -339,7 +339,15 @@ absorbAt a = do
   tell $ LogDensity wt
 
 constrain :: Address -> Value -> Trace m -> Trace m
-constrain = undefined
+constrain a v = execState (do
+  nodes . ix a . value .= Just v
+  -- TODO What will cause the node to be re-added to the set of random
+  -- choices if the constraint is lifted in the future?
+  randoms %= S.delete a
+  node <- use $ nodes . hardix "Trying to constrain a non-existent node" a
+  case node of
+    (Reference _ a') -> modify $ constrain a' v
+    _ -> return ())
 
 ----------------------------------------------------------------------
 -- Invariants that traces ought to obey
