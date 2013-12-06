@@ -130,14 +130,14 @@ detach' Scaffold { drg = d, absorbers = abs, dead_reqs = reqs, brush = bru } = d
   mapM_ (stupid . forgetNode) $ S.toList bru
   where unabsorbValue :: Address -> StateT (Trace m) (Writer LogDensity) ()
         unabsorbValue a = do
-          node <- gets $ fromJust "Unabsorbing non-existent node" . lookupNode a
+          node <- use $ nodes . hardix "Erasing the value of a nonexistent node" a
           sp <- gets $ fromJust "Unabsorbing node with no operator" . operator node
           wt <- gets $ absorb node sp
           lift $ tell $ LogDensity wt
         eraseValue :: Address -> State (Trace m) ()
         eraseValue a = do
+          node <- use $ nodes . hardix "Erasing the value of a nonexistent node" a
           nodes . ix a . value .= Nothing
-          node <- gets $ fromJust "Erasing the value of a nonexistent node" . lookupNode a
           case node of
             (Request _ (Just outA) _ _) -> nodes . ix outA . responses .= []
             _ -> return ()
