@@ -45,7 +45,7 @@ collectERG ((a,principal):as) = do
   -- (if I discover that their operator is in the DRG after all)
   if member then collectERG as
   else do
-    node <- lift $ asks $ fromJust "Collecting a nonexistent node into the DRG" . lookupNode a
+    node <- view $ nodes . hardix "Collecting a nonexistent node into the DRG" a
     case node of
       (Constant _) -> error "Constant node should never appear in the DRG"
       (Reference _ _) -> resampling a
@@ -84,7 +84,7 @@ collectBrush = mapM_ disableRequests where
     -- relevant to Requester nodes).
     disableRequests :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
     disableRequests a = do
-      node <- asks $ fromJust "Disabling requests of non-existent node" . lookupNode a
+      node <- view $ nodes . hardix "Disabling requests of non-existent node" a
       case node of
         (Request (Just reqs) _ _ _) -> do
           spaddr <- asks $ fromJust "Disabling requests of operator-less request node" . operatorAddr node
@@ -106,7 +106,7 @@ collectBrush = mapM_ disableRequests where
     disableFamily :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
     disableFamily a = do
       brush a
-      node <- asks $ fromJust "Disabling nonexistent family" . lookupNode a
+      node <- view $ nodes . hardix "Disabling nonexistent family" a
       case node of
         (Output _ reqA opa operands _) -> do
                         brush reqA
