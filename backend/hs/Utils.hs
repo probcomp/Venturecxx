@@ -9,9 +9,6 @@ fromJust :: String -> Maybe a -> a
 fromJust _ (Just a) = a
 fromJust msg Nothing = error msg
 
-mapSnd :: (a -> b) -> (c,a) -> (c,b)
-mapSnd f (c,a) = (c, f a)
-
 -- A version of the ix lens that errors out if the value is not there
 hardix :: (Ord k) => String -> k -> Simple Lens (M.Map k a) a
 hardix msg k = lens find replace where

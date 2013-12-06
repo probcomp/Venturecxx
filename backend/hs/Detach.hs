@@ -93,7 +93,7 @@ collectBrush = mapM_ disableRequests where
         (Request (Just reqs) _ _ _) -> do
           spaddr <- asks $ fromJust "Disabling requests of operator-less request node" . operatorAddr node
           let reqIds = requestIds node
-          modify $ mapSnd $ mapReq ((spaddr,reqIds):)
+          _2 . dead_reqs %= ((spaddr,reqIds):)
           (asks $ fulfilments a) >>= (mapM_ disableRequestFor)
         _ -> return ()
     -- Given the address of a requested node, account for the fact
@@ -109,19 +109,19 @@ collectBrush = mapM_ disableRequests where
     -- and its entire family in the brush.
     disableFamily :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
     disableFamily a = do
-      brush a
+      markBrush a
       node <- view $ nodes . hardix "Disabling nonexistent family" a
       case node of
         (Output _ reqA opa operands _) -> do
-                        brush reqA
+                        markBrush reqA
                         disableRequests reqA
                         disableFamily opa
                         mapM_ disableFamily operands
         _ -> return ()
-    brush a = do
-      modify $ mapSnd $ mapDrg $ O.delete a
-      modify $ mapSnd $ mapAbs $ O.delete a
-      modify $ mapSnd $ mapBru $ S.insert a
+    markBrush a = do
+      _2 . drg %= O.delete a
+      _2 . absorbers %= O.delete a
+      _2 . brush %= S.insert a
 
     maybeSucc Nothing = Just 1
     maybeSucc (Just x) = Just $ x+1
