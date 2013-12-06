@@ -7,9 +7,7 @@ import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.List (foldl)
-import Control.Lens.TH  -- from cabal install lens
-import Control.Lens.At  -- from cabal install lens
-import Control.Lens.Operators
+import Control.Lens  -- from cabal install lens
 import Control.Monad.State hiding (state) -- :set -hide-package monads-tf-0.1.0.1
 
 import Utils
@@ -135,6 +133,9 @@ revalue (Constant _) _ = error "Cannot revalue a constant"
 revalue (Reference _ a) v = Reference v a
 revalue r@(Request _ _ _ _) _ = r
 revalue (Output _ reqA opa args reqs) v = Output v reqA opa args reqs
+
+value :: Simple Lens Node (Maybe Value)
+value = lens valueOf revalue
 
 devalue :: Node -> Node
 devalue (Request _ outA a as) = Request Nothing outA a as
