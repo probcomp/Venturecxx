@@ -104,18 +104,18 @@ execute ds = runStateT_ (do
     runStateT_ act s = (runStateT act s) >> return ()
 
 
-infer :: (MonadRandom m) => Int -> StateT (Trace m) m [Value]
-infer = undefined
+watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Trace m) m [Value]
+watching_infer address ct = replicateM ct (do
+  t <- get
+  modifyM $ liftM (traceShowTrace t) $ metropolis_hastings principal_node_mh
+  gets $ fromJust "Value was not restored by inference" . valueOf
+         . fromJust "Address became invalid after inference" . (lookupNode address))
 
 simulation :: (MonadRandom m) => Int -> Exp -> StateT (Trace m) m [Value]
 simulation ct exp = do
   env <- initializeBuiltins Toplevel
   address <- eval exp env
-  replicateM ct (do
-    t <- get
-    modifyM $ liftM (traceShowTrace t) $ metropolis_hastings principal_node_mh
-    gets $ fromJust "Value was not restored by inference" . valueOf
-           . fromJust "Address became invalid after inference" . (lookupNode address))
+  watching_infer address ct
 
 simulate_soup :: (MonadRandom m) => Int -> Exp -> m [Value]
 simulate_soup ct exp = evalStateT (simulation ct exp) empty
