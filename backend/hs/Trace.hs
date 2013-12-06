@@ -176,7 +176,7 @@ data Trace rand =
           , _randoms :: S.Set Address
           , _nodeChildren :: M.Map Address (S.Set Address)
           , _sprs :: (M.Map SPAddress (SPRecord rand))
-          , request_counts :: M.Map Address Int
+          , _request_counts :: M.Map Address Int
           , addr_seed :: UniqueSeed
           , spaddr_seed :: UniqueSeed
           }
@@ -290,8 +290,8 @@ fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ re
     SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
 
 insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
-insertResponse spa id a t@Trace{ _sprs = ss, request_counts = r } =
-    t{ _sprs = M.insert spa spr' ss, request_counts = r' } where
+insertResponse spa id a t@Trace{ _sprs = ss, _request_counts = r } =
+    t{ _sprs = M.insert spa spr' ss, _request_counts = r' } where
         spr' = spr{ requests = M.insert id a reqs }
         spr@SPRecord { requests = reqs } = fromJust "Inserting response to non-SP" $ lookupSPR spa t
         r' = M.alter succ a r
@@ -304,8 +304,8 @@ lookupResponse spa srid t = do
   M.lookup srid reqs
 
 forgetResponses :: (SPAddress, [SRId]) -> Trace m -> Trace m
-forgetResponses (spaddr, srids) t@Trace{ _sprs = ss, request_counts = r } =
-    t{ _sprs = M.insert spaddr spr' ss, request_counts = r' } where
+forgetResponses (spaddr, srids) t@Trace{ _sprs = ss, _request_counts = r } =
+    t{ _sprs = M.insert spaddr spr' ss, _request_counts = r' } where
         spr' = spr{ requests = foldl (flip M.delete) reqs srids }
         spr@SPRecord { requests = reqs } = fromJust "Forgetting responses to non-SP" $ lookupSPR spaddr t
         r' = foldl decrement r srids
@@ -324,7 +324,7 @@ runRequester spaddr args t = do
 
 -- How many times has the given address been requested.
 numRequests :: Address -> Trace m -> Int
-numRequests a Trace { request_counts = r } = fromMaybe 0 $ M.lookup a r
+numRequests a t = fromMaybe 0 $ t^.request_counts.at a
 
 -- Nodes in the trace that depend upon the node at the given address.
 children :: Address -> Trace m -> [Address]
@@ -355,7 +355,7 @@ invalidRandomChoices t = filter (invalidAddress t) $ S.toList $ t ^. randoms
 invalidNodeChildrenKeys t = filter (invalidAddress t) $ M.keys $ t ^. nodeChildren
 invalidNodeChildren t = filter (invalidAddress t) $ concat $ map S.toList $ M.elems $ t ^. nodeChildren
 invalidRequestedAddresses t = filter (invalidAddress t) $ concat $ map (M.elems . requests) $ M.elems $ t ^. sprs
-invalidRequestCountKeys t@Trace{ request_counts = rcs } = filter (invalidAddress t) $ M.keys rcs
+invalidRequestCountKeys t = filter (invalidAddress t) $ M.keys $ t ^. request_counts
 
 invalidAddress :: Trace m -> Address -> Bool
 invalidAddress t a = not $ isJust $ lookupNode a t
