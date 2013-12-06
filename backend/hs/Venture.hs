@@ -95,13 +95,12 @@ observe exp v = do
   lift $ modify $ constrain address v
 
 execute :: (MonadRandom m) => [Directive] -> StateT (Trace m) m ()
-execute ds = runStateT_ (do
+execute ds = evalStateT (do
   modifyM initializeBuiltins
   mapM_ executeOne ds) Toplevel where
     -- executeOne :: Directive -> StateT Env (StateT (Trace m) m) ()
     executeOne (Assume s e) = assume s e
     executeOne (Observe e v) = get >>= lift . runReaderT (observe e v)
-    runStateT_ act s = (runStateT act s) >> return ()
 
 
 watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Trace m) m [Value]
