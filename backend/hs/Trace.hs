@@ -247,14 +247,9 @@ isRandomNode n@(Output _ _ _ _ _) t = case operator n t of
                                         (Just sp) -> isRandomO $ outputter sp
 isRandomNode _ _ = False
 
--- TODO Can I turn these four into an appropriate lens?
+-- TODO Can I turn these three into an appropriate lens?
 lookupNode :: Address -> Trace m -> Maybe Node
 lookupNode a t = t ^. nodes . at a
-
--- TODO This is only used to remove values from nodes.  Enforce or collapse?
--- Also to post-add output addresses to Request nodes
-adjustNode :: (Node -> Node) -> Address -> Trace m -> Trace m
-adjustNode f a t = t & nodes . ix a %~ f
 
 deleteNode :: Address -> Trace m -> Trace m
 deleteNode a t@Trace{_nodes = ns, _randoms = rs, _nodeChildren = cs} =
