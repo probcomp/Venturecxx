@@ -277,9 +277,6 @@ addFreshNode node t@Trace{ _nodes = ns, _addr_seed = seed, _randoms = rs, _nodeC
         cs'' = M.insert a S.empty cs'
         foo cs pa = M.adjust (S.insert a) pa cs
 
-lookupSPR :: SPAddress -> Trace m -> Maybe (SPRecord m)
-lookupSPR spa t = t ^. sprs . at spa
-
 addFreshSP :: SP m -> Trace m -> (SPAddress, Trace m)
 addFreshSP sp t@Trace{ _sprs = ss, _spaddr_seed = seed } = (a, t{ _sprs = ss', _spaddr_seed = seed'}) where
     (a, seed') = runUniqueSource (liftM SPAddress fresh) seed
@@ -296,21 +293,21 @@ insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
 insertResponse spa id a t@Trace{ _sprs = ss, _request_counts = r } =
     t{ _sprs = M.insert spa spr' ss, _request_counts = r' } where
         spr' = spr{ requests = M.insert id a reqs }
-        spr@SPRecord { requests = reqs } = fromJust "Inserting response to non-SP" $ lookupSPR spa t
+        spr@SPRecord { requests = reqs } = t ^. sprs . hardix "Inserting response to non-SP" spa
         r' = M.alter succ a r
         succ Nothing = Just 1
         succ (Just n) = Just (n+1)
 
 lookupResponse :: SPAddress -> SRId -> Trace m -> Maybe Address
 lookupResponse spa srid t = do
-  SPRecord { requests = reqs } <- lookupSPR spa t
+  SPRecord { requests = reqs } <- t ^. sprs . at spa
   M.lookup srid reqs
 
 forgetResponses :: (SPAddress, [SRId]) -> Trace m -> Trace m
 forgetResponses (spaddr, srids) t@Trace{ _sprs = ss, _request_counts = r } =
     t{ _sprs = M.insert spaddr spr' ss, _request_counts = r' } where
         spr' = spr{ requests = foldl (flip M.delete) reqs srids }
-        spr@SPRecord { requests = reqs } = fromJust "Forgetting responses to non-SP" $ lookupSPR spaddr t
+        spr@SPRecord { requests = reqs } = t ^. sprs . hardix "Forgetting responses to non-SP" spaddr
         r' = foldl decrement r srids
         decrement :: (M.Map Address Int) -> SRId -> (M.Map Address Int)
         decrement m srid = M.update maybePred k m where
