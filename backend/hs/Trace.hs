@@ -321,12 +321,12 @@ forgetResponses (spaddr, srids) t@Trace{ _sprs = ss, _request_counts = r } =
             maybePred 1 = Nothing
             maybePred n = Just $ n-1
 
-runRequester :: (Monad m) => SPAddress -> [Address] -> Trace m -> m ([SimulationRequest], Trace m)
-runRequester spaddr args t = do
+runRequester :: (Monad m) => SPAddress -> [Address] -> StateT (Trace m) m [SimulationRequest]
+runRequester spaddr args = StateT (\t -> do
   let spr@SPRecord { sp = SP{ requester = req }, srid_seed = seed } = fromJust "Running the requester of a non-SP" $ lookupSPR spaddr t
   (reqs, seed') <- runUniqueSourceT (asRandomR req args) seed
   let trace' = insertSPR spaddr spr{ srid_seed = seed' } t
-  return (reqs, trace')
+  return (reqs, trace'))
 
 -- How many times has the given address been requested.
 numRequests :: Address -> Trace m -> Int
