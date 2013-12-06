@@ -1,6 +1,6 @@
-
 module Venture where
 
+import qualified Data.Map as M
 import qualified Data.Set as S
 import Control.Monad.Reader
 import Control.Monad.Trans.State.Lazy
@@ -66,7 +66,13 @@ data Directive = Assume String Exp
                | Observe Exp Value
 
 assume :: (MonadRandom m) => String -> Exp -> StateT Env (StateT (Trace m) m) ()
-assume = undefined
+assume var exp = do
+  -- TODO This implementation of assume does not permit recursive
+  -- functions, because of insufficient indirection to the
+  -- environment.
+  env <- get
+  address <- lift $ eval exp env
+  modify $ Frame (M.fromList [(var, address)])
 
 -- Evaluate the expression in the environment (building appropriate
 -- structure in the trace), and then constrain its value to the given
