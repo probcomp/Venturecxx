@@ -242,13 +242,9 @@ isRandomNode n@(Output _ _ _ _ _) t = case operator n t of
                                         (Just sp) -> isRandomO $ outputter sp
 isRandomNode _ _ = False
 
--- TODO Can I turn these five into an appropriate lens?
+-- TODO Can I turn these four into an appropriate lens?
 lookupNode :: Address -> Trace m -> Maybe Node
 lookupNode a t = t ^. nodes . at a
-
--- TODO This is only used to add values to nodes.  Enforce; maybe collapse with adjustNode?
-insertNode :: Address -> Node -> Trace m -> Trace m
-insertNode a n t = t & nodes . at a .~ Just n
 
 -- TODO This is only used to remove values from nodes.  Enforce or collapse?
 -- Also to post-add output addresses to Request nodes
