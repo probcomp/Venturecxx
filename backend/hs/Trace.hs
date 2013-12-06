@@ -280,9 +280,6 @@ addFreshNode node t@Trace{ _nodes = ns, _addr_seed = seed, _randoms = rs, _nodeC
 lookupSPR :: SPAddress -> Trace m -> Maybe (SPRecord m)
 lookupSPR spa t = t ^. sprs . at spa
 
-insertSPR :: SPAddress -> (SPRecord m) -> Trace m -> Trace m
-insertSPR addr spr t = t & sprs . at addr .~ Just spr
-
 addFreshSP :: SP m -> Trace m -> (SPAddress, Trace m)
 addFreshSP sp t@Trace{ _sprs = ss, _spaddr_seed = seed } = (a, t{ _sprs = ss', _spaddr_seed = seed'}) where
     (a, seed') = runUniqueSource (liftM SPAddress fresh) seed
@@ -325,7 +322,7 @@ runRequester :: (Monad m) => SPAddress -> [Address] -> StateT (Trace m) m [Simul
 runRequester spaddr args = do
   spr@SPRecord { sp = SP{ requester = req }, srid_seed = seed } <- gets $ fromJust "Running the requester of a non-SP" . lookupSPR spaddr
   (reqs, seed') <- lift $ runUniqueSourceT (asRandomR req args) seed
-  modify $ insertSPR spaddr spr{ srid_seed = seed' }
+  sprs . ix spaddr .= spr{ srid_seed = seed' }
   return reqs
 
 -- How many times has the given address been requested.
