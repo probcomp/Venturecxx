@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2013.10.10)  5 DEC 2013 20:04
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2013.10.10)  5 DEC 2013 20:06
 entering extended mode
  %&-line parsing enabled.
 **schematics.tex
@@ -198,6 +198,10 @@ File: partition/dot20.pdf Graphic file (type pdf)
 
 <use partition/dot20.pdf>
 
+LaTeX Warning: Float too large for page by 202.36717pt on input line 71.
+
+
+
 pdfTeX warning: pdflatex (file ./erg_to_drg/dot4.pdf): PDF inclusion: found PDF
  version <1.5>, but at most version <1.4> allowed
 <erg_to_drg/dot4.pdf, id=7, 478.78876pt x 694.595pt>
@@ -262,7 +266,7 @@ File: aaa_challenge_with_aaa/dot2.pdf Graphic file (type pdf)
 
 <use aaa_challenge_with_aaa/dot2.pdf>
 
-LaTeX Warning: Float too large for page by 18.94518pt on input line 239.
+LaTeX Warning: Float too large for page by 17.94518pt on input line 239.
 
 
 
@@ -288,7 +292,7 @@ ity/dot3.pdf>] (./schematics.aux) )
 Here is how much of TeX's memory you used:
  1740 strings out of 495061
  22425 string characters out of 1182620
- 86562 words of memory out of 3000000
+ 85590 words of memory out of 3000000
  4939 multiletter control sequences out of 15000+50000
  3939 words of font info for 15 fonts, out of 3000000 for 9000
  28 hyphenation exceptions out of 8191
@@ -296,7 +300,7 @@ Here is how much of TeX's memory you used:
 </usr/share/texmf-texlive/fonts/type1/public
 /amsfonts/cm/cmr10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm
 /cmr8.pfb>
-Output written on schematics.pdf (8 pages, 124906 bytes).
+Output written on schematics.pdf (8 pages, 124922 bytes).
 PDF statistics:
  97 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
