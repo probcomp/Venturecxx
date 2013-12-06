@@ -177,8 +177,8 @@ data Trace rand =
           , _nodeChildren :: M.Map Address (S.Set Address)
           , _sprs :: (M.Map SPAddress (SPRecord rand))
           , _request_counts :: M.Map Address Int
-          , addr_seed :: UniqueSeed
-          , spaddr_seed :: UniqueSeed
+          , _addr_seed :: UniqueSeed
+          , _spaddr_seed :: UniqueSeed
           }
     deriving Show
 
@@ -256,8 +256,8 @@ deleteNode a t@Trace{_nodes = ns, _randoms = rs, _nodeChildren = cs} =
         foo cs pa = M.adjust (S.delete a) pa cs
 
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
-addFreshNode node t@Trace{ _nodes = ns, addr_seed = seed, _randoms = rs, _nodeChildren = cs } =
-    (a, t{ _nodes = ns', addr_seed = seed', _randoms = rs', _nodeChildren = cs''}) where
+addFreshNode node t@Trace{ _nodes = ns, _addr_seed = seed, _randoms = rs, _nodeChildren = cs } =
+    (a, t{ _nodes = ns', _addr_seed = seed', _randoms = rs', _nodeChildren = cs''}) where
         (a, seed') = runUniqueSource (liftM Address fresh) seed
         ns' = M.insert a node ns
         -- TODO Argh! Need to maintain the randomness of nodes under
@@ -278,7 +278,7 @@ insertSPR :: SPAddress -> (SPRecord m) -> Trace m -> Trace m
 insertSPR addr spr t = t & sprs . at addr .~ Just spr
 
 addFreshSP :: SP m -> Trace m -> (SPAddress, Trace m)
-addFreshSP sp t@Trace{ _sprs = ss, spaddr_seed = seed } = (a, t{ _sprs = ss', spaddr_seed = seed'}) where
+addFreshSP sp t@Trace{ _sprs = ss, _spaddr_seed = seed } = (a, t{ _sprs = ss', _spaddr_seed = seed'}) where
     (a, seed') = runUniqueSource (liftM SPAddress fresh) seed
     ss' = M.insert a (spRecord sp) ss
 
