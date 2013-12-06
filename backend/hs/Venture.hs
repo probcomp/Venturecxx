@@ -136,6 +136,15 @@ venture_main ct ds = evalStateT (simulation ct ds) empty
 -- venture_main 10 $ [Predict $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]]
 -- venture_main 10 $ [Predict $ App (App (Variable "select") [(App (Variable "bernoulli") []), (Lam [] (Datum $ Number 1.0)), (Lam [] (Datum $ Number 2.0))]) []]
 
+ex1 = [ Assume "x" $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
+      , Assume "y" $ App (Variable "normal") [(Variable "x"), (Datum $ Number 2.0)]
+      , Observe (Variable "y") (Number 4.0)
+      , Predict $ Variable "x" -- TODO make sure this works with Predict "y" too.
+      ]
+
+-- venture_main 10 $ ex1
+
+
 -- Next subgoal: Do MH inference with observations on some trivial
 --   programs (e.g. normal with normally distributed mean?)
 --   - also involving brush
