@@ -24,7 +24,7 @@ regen s t = do
   return t'
 
 regen' :: (MonadRandom m) => Scaffold -> WriterT LogDensity (StateT (Trace m) m) ()
-regen' Scaffold { drg = d, absorbers = abs } = do
+regen' Scaffold { _drg = d, _absorbers = abs } = do
   mapM_ regenNode $ O.toList d
   mapM_ absorbAt $ O.toList abs
 

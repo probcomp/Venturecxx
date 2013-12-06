@@ -1,3 +1,5 @@
+{-# Language TemplateHaskell #-}
+
 module Detach where
 
 import qualified Data.Set as S
@@ -13,19 +15,21 @@ import Language
 import qualified InsertionOrderedSet as O
 import Trace hiding (empty)
 
-data Scaffold = Scaffold { drg :: O.Set Address
-                         , absorbers :: O.Set Address
-                         , dead_reqs :: [(SPAddress, [SRId])]
-                         , brush :: S.Set Address
+data Scaffold = Scaffold { _drg :: O.Set Address
+                         , _absorbers :: O.Set Address
+                         , _dead_reqs :: [(SPAddress, [SRId])]
+                         , _brush :: S.Set Address
                          -- TODO If I don't keep track somewhere, I
                          -- will leak SPRecords under detach and
                          -- regen.
                          }
 
-mapDrg f s@Scaffold{ drg = d } = s{ drg = f d}
-mapAbs f s@Scaffold{ absorbers = a } = s{ absorbers = f a}
-mapReq f s@Scaffold{ dead_reqs = d } = s{ dead_reqs = f d}
-mapBru f s@Scaffold{ brush = b } = s{ brush = f b}
+mapDrg f s@Scaffold{ _drg = d } = s{ _drg = f d}
+mapAbs f s@Scaffold{ _absorbers = a } = s{ _absorbers = f a}
+mapReq f s@Scaffold{ _dead_reqs = d } = s{ _dead_reqs = f d}
+mapBru f s@Scaffold{ _brush = b } = s{ _brush = f b}
+
+makeLenses ''Scaffold
 
 empty :: Scaffold
 empty = Scaffold O.empty O.empty [] S.empty
@@ -34,13 +38,13 @@ empty = Scaffold O.empty O.empty [] S.empty
 scaffold_from_principal_node :: Address -> Reader (Trace m) Scaffold
 scaffold_from_principal_node a = do
   scaffold <- execStateT (collectERG [(a,True)]) empty
-  (_, scaffold') <- execStateT (collectBrush $ O.toList $ drg scaffold) (M.empty, scaffold)
+  (_, scaffold') <- execStateT (collectBrush $ O.toList $ scaffold ^. drg) (M.empty, scaffold)
   return $ scaffold'
 
 collectERG :: [(Address,Bool)] -> StateT Scaffold (Reader (Trace m)) ()
 collectERG [] = return ()
 collectERG ((a,principal):as) = do
-  member <- gets $ O.member a . drg
+  member <- uses drg $ O.member a
   -- Not stopping on nodes that are already absorbers because they can become DRG nodes
   -- (if I discover that their operator is in the DRG after all)
   if member then collectERG as
@@ -52,7 +56,7 @@ collectERG ((a,principal):as) = do
       _ -> do
          let opa = fromJust "DRGing application node with no operator" $ opAddr node
          -- N.B. This can change as more graph structure is traversed
-         opMember <- gets $ O.member opa . drg
+         opMember <- uses drg $ O.member opa
          if opMember then resampling a
          else do
            opCanAbsorb <- lift $ asks $ (canAbsorb node)
@@ -123,7 +127,7 @@ collectBrush = mapM_ disableRequests where
     maybeSucc (Just x) = Just $ x+1
 
 detach' :: Scaffold -> StateT (Trace m) (Writer LogDensity) ()
-detach' Scaffold { drg = d, absorbers = abs, dead_reqs = reqs, brush = bru } = do
+detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru } = do
   mapM_ absorbAt $ reverse $ O.toList abs
   mapM_ (stupid . eraseValue) $ O.toList d
   mapM_ (stupid . forgetRequest) reqs
