@@ -15,15 +15,6 @@ import Utils
 import Language hiding (Value, Exp, Env)
 import qualified Language as L
 
--- TODO The version of state that comes from Control.Monad.State on
--- moria appears to have too restrictive a type.
-state :: MonadState s m => (s -> (a, s)) -> m a
-state action = do
-  s <- get
-  let (a, s') = action s
-  put s'
-  return a
-
 type Value = L.Value SPAddress
 type Exp = L.Exp Value
 type Env = L.Env String Address
@@ -315,7 +306,7 @@ forgetResponses (spaddr, srids) t@Trace{ _sprs = ss, _request_counts = r } =
             maybePred 1 = Nothing
             maybePred n = Just $ n-1
 
-runRequester :: (Monad m) => SPAddress -> [Address] -> StateT (Trace m) m [SimulationRequest]
+runRequester :: (Monad m, MonadTrans t, MonadState (Trace m) (t m)) => SPAddress -> [Address] -> t m [SimulationRequest]
 runRequester spaddr args = do
   spr@SPRecord { sp = SP{ requester = req }, srid_seed = seed } <-
       use $ sprs . hardix "Running the requester of a non-SP" spaddr

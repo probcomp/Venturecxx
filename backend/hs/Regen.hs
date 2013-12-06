@@ -1,11 +1,14 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Regen where
 
 import qualified Data.Map as M
 import Data.Maybe hiding (fromJust)
 import Control.Monad
 import Control.Monad.Trans.Writer.Strict
-import Control.Monad.Trans.State.Lazy hiding (state)
+import Control.Monad.Trans.State.Lazy hiding (state, gets, modify)
 import Control.Monad.Trans.Class
+import Control.Monad.State.Class
 import Control.Monad.Random -- From cabal install MonadRandom
 import Prelude hiding (lookup)
 import Control.Lens -- From cabal install lens
@@ -28,7 +31,7 @@ regen' Scaffold { _drg = d, _absorbers = abs } = do
   mapM_ regenNode $ O.toList d
   mapM_ absorbAt $ O.toList abs
 
-regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
+regenNode :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) => Address -> WriterT LogDensity (t m) ()
 regenNode a = do
   node <- use $ nodes . hardix "Regenerating a nonexistent node" a
   if isRegenerated node then return ()
@@ -36,7 +39,7 @@ regenNode a = do
     mapM_ regenNode (parentAddrs node) -- Note that this may change the node at address a
     regenValue a
 
-regenValue :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
+regenValue :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) => Address -> WriterT LogDensity (t m) ()
 regenValue a = lift (do
   node <- use $ nodes . hardix "Regenerating value for nonexistent node" a
   case node of
@@ -61,7 +64,7 @@ regenValue a = lift (do
       v <- lift $ asRandomO out args results
       nodes . ix a . value .= Just v)
 
-evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m [Address]
+evalRequests :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) => SPAddress -> [SimulationRequest] -> t m [Address]
 evalRequests a srs = mapM evalRequest srs where
     evalRequest (SimulationRequest id exp env) = do
       cached <- gets $ lookupResponse a id
@@ -74,7 +77,7 @@ evalRequests a srs = mapM evalRequest srs where
 
 -- Returns the address of the fresh node holding the result of the
 -- evaluation.
-eval :: (MonadRandom m) => Exp -> Env -> StateT (Trace m) m Address
+eval :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) => Exp -> Env -> t m Address
 eval (Datum v) _ = state $ addFreshNode $ Constant v
 eval (Variable n) e = do
   let answer = case L.lookup n e of

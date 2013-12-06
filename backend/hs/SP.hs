@@ -3,6 +3,7 @@ module SP where
 
 import qualified Data.Map as M
 import Control.Monad.State.Lazy hiding (state)
+import Control.Monad.State.Class
 import Control.Monad.Random -- From cabal install MonadRandom
 
 import Utils
