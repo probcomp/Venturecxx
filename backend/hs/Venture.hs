@@ -125,18 +125,25 @@ simulation ct exp = do
   address <- eval exp env
   watching_infer address ct
 
+-- Expects the directives to contain exactly one Predict
+simulation' :: (MonadRandom m) => Int -> [Directive] -> StateT (Trace m) m [Value]
+simulation' ct ds = liftM head (execute ds) >>= (flip watching_infer ct)
+
 simulate_soup :: (MonadRandom m) => Int -> Exp -> m [Value]
 simulate_soup ct exp = evalStateT (simulation ct exp) empty
 
--- simulate_soup 1 $ Datum $ Number 1.0
--- simulate_soup 1 $ App (Lam ["x"] (Variable "x")) [(Datum $ Number 1.0)]
+venture_main :: (MonadRandom m) => Int -> [Directive] -> m [Value]
+venture_main ct ds = evalStateT (simulation' ct ds) empty
+
+-- venture_main 1 $ [Predict $ Datum $ Number 1.0]
+-- venture_main 1 $ [Predict $ App (Lam ["x"] (Variable "x")) [(Datum $ Number 1.0)]]
 -- (let (id ...) (id 1))
--- simulate_soup 1 $ App (Lam ["id"] (App (Variable "id") [(Datum $ Number 1.0)])) [(Lam ["x"] (Variable "x"))]
+-- venture_main 1 $ [Predict $ App (Lam ["id"] (App (Variable "id") [(Datum $ Number 1.0)])) [(Lam ["x"] (Variable "x"))]]
 -- K combinator
--- simulate_soup 1 $ App (App (Lam ["x"] (Lam ["y"] (Variable "x"))) [(Datum $ Number 1.0)]) [(Datum $ Number 2.0)]
--- simulate_soup 10 $ App (Variable "bernoulli") []
--- simulate_soup 10 $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
--- simulate_soup 10 $ App (App (Variable "select") [(App (Variable "bernoulli") []), (Lam [] (Datum $ Number 1.0)), (Lam [] (Datum $ Number 2.0))]) []
+-- venture_main 1 $ [Predict $ App (App (Lam ["x"] (Lam ["y"] (Variable "x"))) [(Datum $ Number 1.0)]) [(Datum $ Number 2.0)]]
+-- venture_main 10 $ [Predict $ App (Variable "bernoulli") []]
+-- venture_main 10 $ [Predict $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]]
+-- venture_main 10 $ [Predict $ App (App (Variable "select") [(App (Variable "bernoulli") []), (Lam [] (Datum $ Number 1.0)), (Lam [] (Datum $ Number 2.0))]) []]
 
 -- Next subgoal: Do MH inference with observations on some trivial
 --   programs (e.g. normal with normally distributed mean?)
