@@ -44,7 +44,7 @@ regenValue a = lift (do
     (Reference _ a') -> do
       node' <- use $ nodes . hardix "Dangling reference found in regenValue" a'
       let v = fromJust "Regenerating value for a reference with non-regenerated referent" $ node' ^. value
-      modify $ insertNode a (Reference (Just v) a')
+      nodes . ix a . value .= (Just v)
     (Request _ outA opa ps) -> do
       addr <- gets $ fromJust "Regenerating value for a request with no operator" . (chaseOperator opa)
       reqs <- StateT $ runRequester addr ps
@@ -59,7 +59,7 @@ regenValue a = lift (do
       let args = map (fromJust "Regenerating value for an output with a missing parent" . flip M.lookup ns) ps
       let results = map (fromJust "Regenerating value for an output with a missing request result" . flip M.lookup ns) rs
       v <- lift $ asRandomO out args results
-      modify $ insertNode a (Output (Just v) reqA opa ps rs))
+      nodes . ix a . value .= (Just v))
 
 evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest] -> StateT (Trace m) m [Address]
 evalRequests a srs = mapM evalRequest srs where
