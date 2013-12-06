@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2013.10.10)  5 DEC 2013 19:16
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2013.10.10)  5 DEC 2013 20:04
 entering extended mode
  %&-line parsing enabled.
 **schematics.tex
@@ -159,7 +159,7 @@ ion <1.5>, but at most version <1.4> allowed
 <prior/dot3.pdf, id=1, 1860.9525pt x 1231.60126pt>
 File: prior/dot3.pdf Graphic file (type pdf)
  <use prior/dot3.pdf>
-Overfull \hbox (61.65007pt too wide) in paragraph at lines 19--20
+Overfull \hbox (6.66666pt too wide) in paragraph at lines 19--20
  [][] 
  []
 
@@ -224,75 +224,81 @@ File: regen_to_eval_to_regen/dot2.pdf Graphic file (type pdf)
 
 <use regen_to_eval_to_regen/dot2.pdf>
 
-LaTeX Warning: Float too large for page by 18.94473pt on input line 153.
+pdfTeX warning: pdflatex (file ./regen_to_eval_to_regen/handmade_tracking_full.
+pdf): PDF inclusion: found PDF version <1.5>, but at most version <1.4> allowed
 
 
+<regen_to_eval_to_regen/handmade_tracking_full.pdf, id=15, 519.9425pt x 702.625
+pt>
+File: regen_to_eval_to_regen/handmade_tracking_full.pdf Graphic file (type pdf)
+
+ <use regen_to_eval_to_regen/handmade_tracking_full.pdf>
 
 pdfTeX warning: pdflatex (file ./aaa_basic_no_aaa/dot2.pdf): PDF inclusion: fou
 nd PDF version <1.5>, but at most version <1.4> allowed
-<aaa_basic_no_aaa/dot2.pdf, id=15, 934.49126pt x 694.595pt>
+<aaa_basic_no_aaa/dot2.pdf, id=17, 934.49126pt x 694.595pt>
 File: aaa_basic_no_aaa/dot2.pdf Graphic file (type pdf)
 
 <use aaa_basic_no_aaa/dot2.pdf>
 
 pdfTeX warning: pdflatex (file ./aaa_basic_with_aaa/dot2.pdf): PDF inclusion: f
 ound PDF version <1.5>, but at most version <1.4> allowed
-<aaa_basic_with_aaa/dot2.pdf, id=17, 934.49126pt x 694.595pt>
+<aaa_basic_with_aaa/dot2.pdf, id=19, 934.49126pt x 694.595pt>
 File: aaa_basic_with_aaa/dot2.pdf Graphic file (type pdf)
 
 <use aaa_basic_with_aaa/dot2.pdf>
 
 pdfTeX warning: pdflatex (file ./aaa_challenge_with_aaa/dot6.pdf): PDF inclusio
 n: found PDF version <1.5>, but at most version <1.4> allowed
-<aaa_challenge_with_aaa/dot6.pdf, id=19, 627.34375pt x 766.865pt>
+<aaa_challenge_with_aaa/dot6.pdf, id=21, 627.34375pt x 766.865pt>
 File: aaa_challenge_with_aaa/dot6.pdf Graphic file (type pdf)
 
 <use aaa_challenge_with_aaa/dot6.pdf>
 
 pdfTeX warning: pdflatex (file ./aaa_challenge_with_aaa/dot2.pdf): PDF inclusio
 n: found PDF version <1.5>, but at most version <1.4> allowed
-<aaa_challenge_with_aaa/dot2.pdf, id=21, 669.50125pt x 766.865pt>
+<aaa_challenge_with_aaa/dot2.pdf, id=23, 669.50125pt x 766.865pt>
 File: aaa_challenge_with_aaa/dot2.pdf Graphic file (type pdf)
 
 <use aaa_challenge_with_aaa/dot2.pdf>
 
-LaTeX Warning: Float too large for page by 18.94518pt on input line 224.
+LaTeX Warning: Float too large for page by 18.94518pt on input line 239.
 
 
 
 pdfTeX warning: pdflatex (file ./order_duality/dot3.pdf): PDF inclusion: found 
 PDF version <1.5>, but at most version <1.4> allowed
-<order_duality/dot3.pdf, id=23, 3412.75pt x 1231.60126pt>
+<order_duality/dot3.pdf, id=25, 3412.75pt x 1231.60126pt>
 File: order_duality/dot3.pdf Graphic file (type pdf)
 
 <use order_duality/dot3.pdf>
-Overfull \hbox (61.6494pt too wide) in paragraph at lines 242--244
+Overfull \hbox (61.6494pt too wide) in paragraph at lines 257--259
  [][] 
  []
 
-[1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./prior/dot3.pdf>]
+[1
+
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./prior/dot3.pdf>]
 [2 <./partition/dot0.pdf> <./partition/dot20.pdf>] [3 <./erg_to_drg/dot4.pdf> <
 ./erg_to_drg/dot2.pdf>] [4 <./regen_to_eval_to_regen/dot6.pdf> <./regen_to_eval
-_to_regen/dot2.pdf>] [5 <./aaa_basic_no_aaa/dot2.pdf> <./aaa_basic_with_aaa/dot
-2.pdf>] [6 <./aaa_challenge_with_aaa/dot6.pdf> <./aaa_challenge_with_aaa/dot2.p
-df>] [7 <./order_duality/dot3.pdf>] (./schematics.aux)
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
- ) 
+_to_regen/dot2.pdf>] [5 <./regen_to_eval_to_regen/handmade_tracking_full.pdf>]
+[6 <./aaa_basic_no_aaa/dot2.pdf> <./aaa_basic_with_aaa/dot2.pdf>] [7 <./aaa_cha
+llenge_with_aaa/dot6.pdf> <./aaa_challenge_with_aaa/dot2.pdf>] [8 <./order_dual
+ity/dot3.pdf>] (./schematics.aux) ) 
 Here is how much of TeX's memory you used:
- 1732 strings out of 495061
- 22115 string characters out of 1182620
- 84808 words of memory out of 3000000
- 4932 multiletter control sequences out of 15000+50000
+ 1740 strings out of 495061
+ 22425 string characters out of 1182620
+ 86562 words of memory out of 3000000
+ 4939 multiletter control sequences out of 15000+50000
  3939 words of font info for 15 fonts, out of 3000000 for 9000
  28 hyphenation exceptions out of 8191
  27i,6n,24p,778b,248s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/shar
-e/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr8.pfb>
-Output written on schematics.pdf (7 pages, 116640 bytes).
+</usr/share/texmf-texlive/fonts/type1/public
+/amsfonts/cm/cmr10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm
+/cmr8.pfb>
+Output written on schematics.pdf (8 pages, 124906 bytes).
 PDF statistics:
- 84 PDF objects out of 1000 (max. 8388607)
+ 97 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 61 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 66 words of extra memory for PDF output out of 10000 (max. 10000000)
 

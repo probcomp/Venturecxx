@@ -27,28 +27,32 @@
 \newlabel{sub@fig:rer_torus}{{(a)}{4}}
 \newlabel{fig:rer_full}{{4(b)}{4}}
 \newlabel{sub@fig:rer_full}{{(b)}{4}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Interlacing calls to regen with calls to eval}}{4}}
+\newlabel{fig:rer}{{}{4}}
 \@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces { A torus with two border nodes. Suppose we regenerate the higher one first, and one of the nodes regenerated makes a simulation request. Regen then hands over control to eval in order to evaluate the expression. (TODO mark the three nodes that have values, and space-permitting have an extra figure to start that just shows the scaffold.) }}}{4}}
 \@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces { Evaluating the expression might involve referencing other nodes in the trace, for example to resolve a variable lookup. Those nodes may be in the drg and may not have been regenerated yet, so eval must hand over control to regen to guarantee that all values have been regenerated before they are used. }}}{4}}
-\newlabel{fig:rer}{{4}{4}}
-\newlabel{fig:aaa_basic_no_aaa}{{5(a)}{5}}
-\newlabel{sub@fig:aaa_basic_no_aaa}{{(a)}{5}}
-\newlabel{fig:aaa_basic_with_aaa}{{5(b)}{5}}
-\newlabel{sub@fig:aaa_basic_with_aaa}{{(b)}{5}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Absorbing at applications (AAA)}}{5}}
-\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces { A large scaffold for sampling a hyperparameter. }}}{5}}
-\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces { The application of the maker SP computes the log density of all of its applications for us. We say that the maker SP ``absorbs at applications''. }}}{5}}
-\newlabel{fig:aaa_basic}{{5}{5}}
-\newlabel{fig:aaa_challenge_torus}{{6(a)}{6}}
-\newlabel{sub@fig:aaa_challenge_torus}{{(a)}{6}}
-\newlabel{fig:aaa_challenge_sub}{{6(b)}{6}}
-\newlabel{sub@fig:aaa_challenge_sub}{{(b)}{6}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Challenges with absorbing at applications}}{6}}
-\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces { A scaffold with three border nodes, one of which is absorbing at applications. The child of the aaa node is a reference to it, and would normally be in the drg. (TODO the extended drg and the extended scaffold should refer to the semantic drg/scaffold, before the aaa shortcut, even though it is never constructed. We should abandon the old use of that term) }}}{6}}
-\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces { A simulation request may lookup that child before the aaa node has been regenerated, and call regen on it. Regen is normally a no-op for nodes that are not in the drg, but even though the child is not in the drg, it and its parent must be regenerated nonetheless. Thus we need to add the child to the drg dynamically. }}}{6}}
-\newlabel{fig:aaa_challenge}{{6}{6}}
-\newlabel{fig:order_duality_trace}{{7(a)}{7}}
-\newlabel{sub@fig:order_duality_trace}{{(a)}{7}}
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces The need to detach in the opposite order from how we would have regenerated}}{7}}
-\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces { A procedure with partial-exchangeable coupling is applied in both the absorbing border and the brush. The probability of the absorbing nodes depends on the order in which we regenerate. As we are detaching, we need to compute the probability of the absorbing nodes that we would have calculated if we had proposed this trace by regenerating along the scaffold. In particular, if we would have visited the absorbing application first during regen, then we must visit it last during detach. We solve this problem by having detach always detach all nodes in the opposite order from how regen would have generated them. (TODO make this a finite collapsed hmm) }}}{7}}
-\newlabel{fig:order_duality}{{7}{7}}
+\newlabel{fig:rer_annotated_pdf}{{4(c)}{5}}
+\newlabel{sub@fig:rer_annotated_pdf}{{(c)}{5}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Tracking the regen recursions}}{5}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(c)}{\ignorespaces { The same trace as figure \hbox {} with the first-visit order and regeneration order displayed. }}}{5}}
+\newlabel{fig:rer_annotated}{{4}{5}}
+\newlabel{fig:aaa_basic_no_aaa}{{5(a)}{6}}
+\newlabel{sub@fig:aaa_basic_no_aaa}{{(a)}{6}}
+\newlabel{fig:aaa_basic_with_aaa}{{5(b)}{6}}
+\newlabel{sub@fig:aaa_basic_with_aaa}{{(b)}{6}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Absorbing at applications (AAA)}}{6}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces { A large scaffold for sampling a hyperparameter. }}}{6}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces { The application of the maker SP computes the log density of all of its applications for us. We say that the maker SP ``absorbs at applications''. }}}{6}}
+\newlabel{fig:aaa_basic}{{5}{6}}
+\newlabel{fig:aaa_challenge_torus}{{6(a)}{7}}
+\newlabel{sub@fig:aaa_challenge_torus}{{(a)}{7}}
+\newlabel{fig:aaa_challenge_sub}{{6(b)}{7}}
+\newlabel{sub@fig:aaa_challenge_sub}{{(b)}{7}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Challenges with absorbing at applications}}{7}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces { A scaffold with three border nodes, one of which is absorbing at applications. The child of the aaa node is a reference to it, and would normally be in the drg. (TODO the extended drg and the extended scaffold should refer to the semantic drg/scaffold, before the aaa shortcut, even though it is never constructed. We should abandon the old use of that term) }}}{7}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces { A simulation request may lookup that child before the aaa node has been regenerated, and call regen on it. Regen is normally a no-op for nodes that are not in the drg, but even though the child is not in the drg, it and its parent must be regenerated nonetheless. Thus we need to add the child to the drg dynamically. }}}{7}}
+\newlabel{fig:aaa_challenge}{{6}{7}}
+\newlabel{fig:order_duality_trace}{{7(a)}{8}}
+\newlabel{sub@fig:order_duality_trace}{{(a)}{8}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces The need to detach in the opposite order from how we would have regenerated}}{8}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces { A procedure with partial-exchangeable coupling is applied in both the absorbing border and the brush. The probability of the absorbing nodes depends on the order in which we regenerate. As we are detaching, we need to compute the probability of the absorbing nodes that we would have calculated if we had proposed this trace by regenerating along the scaffold. In particular, if we would have visited the absorbing application first during regen, then we must visit it last during detach. We solve this problem by having detach always detach all nodes in the opposite order from how regen would have generated them. (TODO make this a finite collapsed hmm) }}}{8}}
+\newlabel{fig:order_duality}{{7}{8}}
