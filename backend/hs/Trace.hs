@@ -213,8 +213,7 @@ operatorAddr n t = do
 chaseOperator :: Address -> Trace m -> Maybe SPAddress
 chaseOperator a t = do
   -- TODO This chase may be superfluous now that Reference nodes hold
-  -- their values, which would mean operatorAddr doesn't need the
-  -- Trace either.
+  -- their values.
   source <- chaseReferences a t
   valueOf source >>= spValue
 
