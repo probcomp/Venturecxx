@@ -131,6 +131,8 @@ valueOf _ = Nothing
 revalue :: Node -> Maybe Value -> Node
 revalue (Constant _) _ = error "Cannot revalue a constant"
 revalue (Reference _ a) v = Reference v a
+-- This is a slight violation of the lens laws
+revalue (Request _ outA a as) Nothing = Request Nothing outA a as
 revalue r@(Request _ _ _ _) _ = r
 revalue (Output _ reqA opa args reqs) v = Output v reqA opa args reqs
 
@@ -138,7 +140,6 @@ value :: Simple Lens Node (Maybe Value)
 value = lens valueOf revalue
 
 devalue :: Node -> Node
-devalue (Request _ outA a as) = Request Nothing outA a as
 devalue n = revalue n Nothing
 
 parentAddrs :: Node -> [Address]
