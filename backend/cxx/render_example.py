@@ -190,6 +190,18 @@ def renderPrior():
   renderRIPL(ripl,"pdf_graphs/prior","pdf")
   renderRIPL(ripl,"graphs/prior")
 
+def renderOrderDuality():
+  ripl = RIPL()
+  ripl.assume("f","(make_sym_dir_mult 1 2)")
+
+  ripl.assume("n","(uniform_discrete 0 2)")
+  ripl.predict("(branch_exp (= n 1) (quote (f 0)) (quote (f 0)))")
+  ripl.predict("(f n)")
+              
+  renderRIPL(ripl,"pdf_graphs/order_duality","pdf")
+  renderRIPL(ripl,"graphs/order_duality")
+
+
 #####################
 def renderAllSchematics():
   renderERGtoDRG()
@@ -200,3 +212,4 @@ def renderAllSchematics():
   renderAAAChallenge()
   renderPartition()
   renderPrior()
+  renderOrderDuality()

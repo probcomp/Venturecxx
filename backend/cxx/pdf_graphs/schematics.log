@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2013.10.10)  5 DEC 2013 18:37
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2013.10.10)  5 DEC 2013 19:16
 entering extended mode
  %&-line parsing enabled.
 **schematics.tex
@@ -258,26 +258,41 @@ File: aaa_challenge_with_aaa/dot2.pdf Graphic file (type pdf)
 
 LaTeX Warning: Float too large for page by 18.94518pt on input line 224.
 
+
+
+pdfTeX warning: pdflatex (file ./order_duality/dot3.pdf): PDF inclusion: found 
+PDF version <1.5>, but at most version <1.4> allowed
+<order_duality/dot3.pdf, id=23, 3412.75pt x 1231.60126pt>
+File: order_duality/dot3.pdf Graphic file (type pdf)
+
+<use order_duality/dot3.pdf>
+Overfull \hbox (61.6494pt too wide) in paragraph at lines 242--244
+ [][] 
+ []
+
 [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./prior/dot3.pdf>]
 [2 <./partition/dot0.pdf> <./partition/dot20.pdf>] [3 <./erg_to_drg/dot4.pdf> <
 ./erg_to_drg/dot2.pdf>] [4 <./regen_to_eval_to_regen/dot6.pdf> <./regen_to_eval
 _to_regen/dot2.pdf>] [5 <./aaa_basic_no_aaa/dot2.pdf> <./aaa_basic_with_aaa/dot
 2.pdf>] [6 <./aaa_challenge_with_aaa/dot6.pdf> <./aaa_challenge_with_aaa/dot2.p
-df>] (./schematics.aux) ) 
+df>] [7 <./order_duality/dot3.pdf>] (./schematics.aux)
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+ ) 
 Here is how much of TeX's memory you used:
- 1724 strings out of 495061
- 21917 string characters out of 1182620
- 79407 words of memory out of 3000000
- 4925 multiletter control sequences out of 15000+50000
+ 1732 strings out of 495061
+ 22115 string characters out of 1182620
+ 84808 words of memory out of 3000000
+ 4932 multiletter control sequences out of 15000+50000
  3939 words of font info for 15 fonts, out of 3000000 for 9000
  28 hyphenation exceptions out of 8191
- 27i,6n,24p,588b,248s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/share/texmf-texlive/fonts/type1/public/amsfonts/
-cm/cmr10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr8.pfb>
-
-Output written on schematics.pdf (6 pages, 97018 bytes).
+ 27i,6n,24p,778b,248s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/shar
+e/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr8.pfb>
+Output written on schematics.pdf (7 pages, 116640 bytes).
 PDF statistics:
- 69 PDF objects out of 1000 (max. 8388607)
+ 84 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 56 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 61 words of extra memory for PDF output out of 10000 (max. 10000000)
 

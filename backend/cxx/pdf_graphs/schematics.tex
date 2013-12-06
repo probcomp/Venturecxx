@@ -223,5 +223,29 @@ A simulation request may lookup that child before the aaa node has been regenera
 \label{fig:aaa_challenge}
 \end{figure}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{figure}[ht]
+\centering
+
+\subfigure
+[
+A procedure with partial-exchangeable coupling is applied in both the absorbing border and the brush. The probability of the absorbing nodes depends on the order in which we regenerate. As we are detaching, we need to compute the probability of the absorbing nodes that we would have calculated if we had proposed this trace by regenerating along the scaffold. In particular, if we would have visited the absorbing application first during regen, then we must visit it last during detach. We solve this problem by having detach always detach all nodes in the opposite order from how regen would have generated them. (TODO make this a finite collapsed hmm)
+]
+{
+\includegraphics[width=400pt, height=200pt]{order_duality/dot3.pdf}
+\label{fig:order_duality_trace}
+
+}
+%
+
+\caption{The need to detach in the opposite order from how we would have regenerated}
+
+\label{fig:order_duality}
+\end{figure}
+
 
 \end{document}
