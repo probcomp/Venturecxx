@@ -139,9 +139,6 @@ revalue (Output _ reqA opa args reqs) v = Output v reqA opa args reqs
 value :: Simple Lens Node (Maybe Value)
 value = lens valueOf revalue
 
-devalue :: Node -> Node
-devalue n = revalue n Nothing
-
 parentAddrs :: Node -> [Address]
 parentAddrs (Constant _) = []
 parentAddrs (Reference _ addr) = [addr]
