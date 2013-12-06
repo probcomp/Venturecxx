@@ -1,5 +1,6 @@
 module Venture where
 
+import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Control.Monad.Reader
@@ -64,6 +65,7 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
 
 data Directive = Assume String Exp
                | Observe Exp Value
+               | Predict Exp
 
 assume :: (MonadRandom m) => String -> Exp -> StateT Env (StateT (Trace m) m) ()
 assume var exp = do
@@ -94,13 +96,20 @@ observe exp v = do
   -- address it here.
   lift $ modify $ constrain address v
 
-execute :: (MonadRandom m) => [Directive] -> StateT (Trace m) m ()
+predict :: (MonadRandom m) => Exp -> ReaderT Env (StateT (Trace m) m) Address
+predict exp = do
+  env <- ask
+  lift $ eval exp env
+
+-- Returns the list of addresses the model wants watched
+execute :: (MonadRandom m) => [Directive] -> StateT (Trace m) m [Address]
 execute ds = evalStateT (do
   modifyM initializeBuiltins
-  mapM_ executeOne ds) Toplevel where
-    -- executeOne :: Directive -> StateT Env (StateT (Trace m) m) ()
-    executeOne (Assume s e) = assume s e
-    executeOne (Observe e v) = get >>= lift . runReaderT (observe e v)
+  liftM catMaybes $ mapM executeOne ds) Toplevel where
+    -- executeOne :: Directive -> StateT Env (StateT (Trace m) m) (Maybe Address)
+    executeOne (Assume s e) = assume s e >> return Nothing
+    executeOne (Observe e v) = get >>= lift . runReaderT (observe e v) >> return Nothing
+    executeOne (Predict e) = get >>= lift . runReaderT (predict e) >>= return . Just
 
 
 watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Trace m) m [Value]
