@@ -15,7 +15,7 @@ import qualified Language as L
 import Trace
 import Detach (Scaffold(..))
 import qualified InsertionOrderedSet as O
-import Utils (fromJust)
+import Utils
 
 regen :: (MonadRandom m) => Scaffold -> Trace m -> WriterT LogDensity m (Trace m)
 regen s t = do
@@ -30,7 +30,7 @@ regen' Scaffold { drg = d, absorbers = abs } = do
 
 regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
 regenNode a = do
-  node <- lift $ gets $ fromJust "Regenerating a nonexistent node" . (lookupNode a)
+  node <- use $ nodes . hardix "Regenerating a nonexistent node" a
   if isRegenerated node then return ()
   else do
     mapM_ regenNode (parentAddrs node) -- Note that this may change the node at address a
@@ -38,12 +38,12 @@ regenNode a = do
 
 regenValue :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (Trace m) m) ()
 regenValue a = lift (do
-  node <- gets $ fromJust "Regenerating value for nonexistent node" . (lookupNode a)
+  node <- use $ nodes . hardix "Regenerating value for nonexistent node" a
   case node of
     (Constant _) -> return ()
     (Reference _ a') -> do
-      t <- get
-      let v = fromJust "Regenerating value for a reference with non-regenerated referent" ( (lookupNode a' t) >>= valueOf )
+      node' <- use $ nodes . hardix "Dangling reference found in regenValue" a'
+      let v = fromJust "Regenerating value for a reference with non-regenerated referent" $ node' ^. value
       modify $ insertNode a (Reference (Just v) a')
     (Request _ outA opa ps) -> do
       addr <- gets $ fromJust "Regenerating value for a request with no operator" . (chaseOperator opa)
