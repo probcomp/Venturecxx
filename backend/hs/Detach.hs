@@ -139,7 +139,7 @@ detach' Scaffold { drg = d, absorbers = abs, dead_reqs = reqs, brush = bru } = d
           nodes . ix a . value .= Nothing
           node <- gets $ fromJust "Erasing the value of a nonexistent node" . lookupNode a
           case node of
-            (Request _ (Just outA) _ _) -> modify $ adjustNode deleteResponses outA
+            (Request _ (Just outA) _ _) -> nodes . ix outA . responses .= []
             _ -> return ()
         forgetRequest :: (SPAddress, [SRId]) -> State (Trace m) ()
         forgetRequest x = modify $ forgetResponses x
