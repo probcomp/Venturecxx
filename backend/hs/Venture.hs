@@ -100,7 +100,7 @@ observed_chained_normals =
     [ Assume "x" $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
     , Assume "y" $ App (Variable "normal") [(Variable "x"), (Datum $ Number 2.0)]
     , Observe (Variable "y") (Number 4.0)
-    , Predict $ Variable "x" -- TODO make sure this works with Predict "y" too.
+    , Predict $ Variable "x"
     ]
 
 -- venture_main 10 $ observed_chained_normals
