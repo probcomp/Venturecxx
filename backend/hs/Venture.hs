@@ -135,13 +135,22 @@ venture_main ct ds = evalStateT (simulation ct ds) empty
 -- venture_main 10 $ [Predict $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]]
 -- venture_main 10 $ [Predict $ App (App (Variable "select") [(App (Variable "bernoulli") []), (Lam [] (Datum $ Number 1.0)), (Lam [] (Datum $ Number 2.0))]) []]
 
-ex1 = [ Assume "x" $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
-      , Assume "y" $ App (Variable "normal") [(Variable "x"), (Datum $ Number 2.0)]
-      , Observe (Variable "y") (Number 4.0)
-      , Predict $ Variable "x" -- TODO make sure this works with Predict "y" too.
-      ]
+chained_normals =
+    [ Assume "x" $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
+    , Assume "y" $ App (Variable "normal") [(Variable "x"), (Datum $ Number 2.0)]
+    , Predict $ Variable "y"
+    ]
 
--- venture_main 10 $ ex1
+-- venture_main 10 $ chained_normals
+
+observed_chained_normals =
+    [ Assume "x" $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
+    , Assume "y" $ App (Variable "normal") [(Variable "x"), (Datum $ Number 2.0)]
+    , Observe (Variable "y") (Number 4.0)
+    , Predict $ Variable "x" -- TODO make sure this works with Predict "y" too.
+    ]
+
+-- venture_main 10 $ observed_chained_normals
 
 
 -- Next subgoal: Do MH inference with observations on some trivial
