@@ -23,7 +23,7 @@ maybeSucc :: Maybe Int -> Maybe Int
 maybeSucc Nothing = Just 1
 maybeSucc (Just x) = Just $ x+1
 
-embucket :: [(Double,Double)] -> [Double] -> M.Map (Double,Double) Int
+embucket :: Ord b => [(b, b)] -> [b] -> M.Map (b, b) Int
 embucket buckets values = foldl insert M.empty values where
     insert m v = case find (v `isInside`) buckets of
                    (Just b) -> M.alter maybeSucc b m
