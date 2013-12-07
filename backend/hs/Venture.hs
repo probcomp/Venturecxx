@@ -10,7 +10,7 @@ import Language hiding (Exp, Value, Env)
 import Trace
 import Regen
 import SP
-import Utils (fromJust)
+import Utils
 import Inference
 
 data Directive = Assume String Exp
@@ -93,6 +93,7 @@ chained_normals =
     ]
 
 -- venture_main 10 $ chained_normals
+-- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . numberOf) $ venture_main 500 $ chained_normals) >>= printHistogram
 
 observed_chained_normals :: [Directive]
 observed_chained_normals =
@@ -103,7 +104,7 @@ observed_chained_normals =
     ]
 
 -- venture_main 10 $ observed_chained_normals
-
+-- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . numberOf) $ venture_main 500 $ observed_chained_normals) >>= printHistogram
 
 -- Next subgoal: Do MH inference with observations on some trivial
 --   programs involving brush

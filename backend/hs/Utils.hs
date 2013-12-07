@@ -28,10 +28,10 @@ embucket buckets values = foldl insert M.empty values where
     insert m v = case find (v `isInside`) buckets of
                    (Just b) -> M.alter maybeSucc b m
                    Nothing -> m
-    isInside v (low,high) = low <= v && v < high
+    isInside v (low,high) = low <= v && v <= high
 
 buckets :: Int -> [Double] -> [(Double,Double)]
-buckets ct values = zip lows (tail lows ++ [high+0.01]) where
+buckets ct values = zip lows (tail lows ++ [high]) where
     low = minimum values
     high = maximum values
     step = (high - low) / fromIntegral ct
@@ -39,6 +39,9 @@ buckets ct values = zip lows (tail lows ++ [high+0.01]) where
 
 histogram :: Int -> [Double] -> M.Map (Double,Double) Int
 histogram ct values = embucket (buckets ct values) values where
+
+printHistogram :: (Show k, Show a) => M.Map k a -> IO ()
+printHistogram = mapM_ (putStrLn . show) . M.toList
 
 -- TODO Check this with quickcheck (constraining ct to be positive)
 -- See, e.g. http://stackoverflow.com/questions/3120796/haskell-testing-workflow
