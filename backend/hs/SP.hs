@@ -34,11 +34,19 @@ normalFlip [meanN, sigmaN] _ = do
       sigma = fromJust "Argument node had no value" $ (valueOf sigmaN >>= numberOf)
   return $ Number $ sigma * normal + mu
 
+log_d_normal' :: Double -> Double -> Double -> Double
+log_d_normal' mean sigma x = - (x - mean)^^2 / (2 * sigma ^^ 2) - scale where
+    scale = log sigma + (log pi)/2
+
+log_d_normal :: [Node] -> [Node] -> Value -> Double
+log_d_normal args _ (Number x) = log_d_normal' mu sigma x where
+    [mu, sigma] = map (fromJust "Argument node had no value" . (\n -> valueOf n >>= numberOf)) args
+
 normal :: (MonadRandom m) => SP m
 normal = SP { requester = nullReq
             , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
             , outputter = RandomO normalFlip
-            , log_d_out = Nothing -- Just normalMeasure
+            , log_d_out = Just log_d_normal
             }
 
 selectO :: [Node] -> [Node] -> Value
