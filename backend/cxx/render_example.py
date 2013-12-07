@@ -169,6 +169,8 @@ def renderAAAChallenge():
   for i in range(3): ripl.observe("(g)","atom<1>")
   ripl.predict("(branch_exp alpha (quote g) (quote g))")
 
+  #
+
   renderRIPL(ripl,"pdf_graphs/aaa_challenge_with_aaa","pdf")
   renderRIPL(ripl,"graphs/aaa_challenge_with_aaa")
 
@@ -200,6 +202,18 @@ def renderOrderDuality():
               
   renderRIPL(ripl,"pdf_graphs/order_duality","pdf")
   renderRIPL(ripl,"graphs/order_duality")
+
+def renderConstrainRestriction1():
+  ripl = RIPL()
+  ripl.assume("x","(snormal 0.0)")
+  ripl.assume("y","(snormal 0.0)")
+  ripl.assume("z","(branch_exp (< x y) (quote x) (quote y))")
+  ripl.observe("z","0.0")
+
+  # weight for x could be non-zero with a drift kernel
+              
+  renderRIPL(ripl,"pdf_graphs/constrain_restriction_1","pdf")
+  renderRIPL(ripl,"graphs/constrain_restriction_1")
 
 
 #####################
