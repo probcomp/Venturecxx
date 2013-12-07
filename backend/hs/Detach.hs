@@ -116,9 +116,6 @@ collectBrush = mapM_ disableRequests where
       _2 . absorbers %= O.delete a
       _2 . brush %= S.insert a
 
-    maybeSucc Nothing = Just 1
-    maybeSucc (Just x) = Just $ x+1
-
 detach' :: Scaffold -> StateT (Trace m) (Writer LogDensity) ()
 detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru } = do
   mapM_ absorbAt $ reverse $ O.toList abs
