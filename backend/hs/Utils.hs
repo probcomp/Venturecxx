@@ -19,11 +19,11 @@ hardix msg k = lens find replace where
                     Nothing -> error msg
 
 -- Suitable for counting with Data.Map.alter
-maybeSucc :: Maybe Int -> Maybe Int
+maybeSucc :: Num a => Maybe a -> Maybe a
 maybeSucc Nothing = Just 1
 maybeSucc (Just x) = Just $ x+1
 
-embucket :: Ord b => [(b, b)] -> [b] -> M.Map (b, b) Int
+embucket :: (Num a, Ord b) => [(b, b)] -> [b] -> M.Map (b, b) a
 embucket buckets values = foldl insert M.empty values where
     insert m v = case find (v `isInside`) buckets of
                    (Just b) -> M.alter maybeSucc b m
