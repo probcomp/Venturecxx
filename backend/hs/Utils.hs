@@ -29,3 +29,18 @@ embucket buckets values = foldl insert M.empty values where
                    (Just b) -> M.alter maybeSucc b m
                    Nothing -> m
     isInside v (low,high) = low <= v && v < high
+
+buckets :: Int -> [Double] -> [(Double,Double)]
+buckets ct values = zip lows (tail lows ++ [high+0.01]) where
+    low = minimum values
+    high = maximum values
+    step = (high - low) / fromIntegral ct
+    lows = [low,low+step..high]
+
+histogram :: Int -> [Double] -> M.Map (Double,Double) Int
+histogram ct values = embucket (buckets ct values) values where
+
+-- TODO Check this with quickcheck (constraining ct to be positive)
+-- See, e.g. http://stackoverflow.com/questions/3120796/haskell-testing-workflow
+property_histogram_conserves_data :: Int -> [Double] -> Bool
+property_histogram_conserves_data ct values = length values == (sum $ M.elems $ histogram ct values)
