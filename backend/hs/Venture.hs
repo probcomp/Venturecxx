@@ -154,8 +154,10 @@ observed_chained_normals =
 
 
 -- Next subgoal: Do MH inference with observations on some trivial
---   programs (e.g. normal with normally distributed mean?)
---   - also involving brush
+--   programs involving brush
+
+-- Next subgoal: Figure out how to assess whether inference is
+--   producing sensible results.
 
 -- Eventual goals
 -- - Built-in SPs with collapsed exchangeably coupled state
