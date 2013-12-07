@@ -6,7 +6,6 @@ import Debug.Trace
 import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import qualified Data.Set as S
-import Data.List (foldl)
 import Control.Lens  -- from cabal install lens
 import Control.Monad.State hiding (state) -- :set -hide-package monads-tf-0.1.0.1
 import Control.Monad.Writer.Class
@@ -140,7 +139,7 @@ sim_reqs = lens _requests re_requests where
     _requests _ = Nothing
     re_requests (Request _ outA a args) r = (Request r outA a args)
     re_requests n Nothing = n
-    re_requests n _ = error "Trying to set requests for a non-request node."
+    re_requests _ _ = error "Trying to set requests for a non-request node."
 
 parentAddrs :: Node -> [Address]
 parentAddrs (Constant _) = []
@@ -169,6 +168,7 @@ out_node = sets _out_node where
 responses :: Simple Lens Node [Address]
 responses = lens _responses addResponses where
     _responses (Output _ _ _ _ rs) = rs
+    _responses _ = []
     addResponses (Output v reqA a as _) resps = Output v reqA a as resps
     addResponses n _ = n
 
@@ -362,11 +362,17 @@ referencedInvalidAddresses t = invalidParentAddresses t
                                ++ invalidRequestedAddresses t
                                ++ invalidRequestCountKeys t
 
+invalidParentAddresses :: Trace m -> [Address]
 invalidParentAddresses t = filter (invalidAddress t) $ concat $ map parentAddrs $ M.elems $ t ^. nodes
+invalidRandomChoices :: Trace m -> [Address]
 invalidRandomChoices t = filter (invalidAddress t) $ S.toList $ t ^. randoms
+invalidNodeChildrenKeys :: Trace m -> [Address]
 invalidNodeChildrenKeys t = filter (invalidAddress t) $ M.keys $ t ^. nodeChildren
+invalidNodeChildren :: Trace m -> [Address]
 invalidNodeChildren t = filter (invalidAddress t) $ concat $ map S.toList $ M.elems $ t ^. nodeChildren
+invalidRequestedAddresses :: Trace m -> [Address]
 invalidRequestedAddresses t = filter (invalidAddress t) $ concat $ map (M.elems . requests) $ M.elems $ t ^. sprs
+invalidRequestCountKeys :: Trace m -> [Address]
 invalidRequestCountKeys t = filter (invalidAddress t) $ M.keys $ t ^. request_counts
 
 invalidAddress :: Trace m -> Address -> Bool

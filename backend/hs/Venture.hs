@@ -85,6 +85,7 @@ venture_main ct ds = evalStateT (simulation ct ds) empty
 -- venture_main 10 $ [Predict $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]]
 -- venture_main 10 $ [Predict $ App (App (Variable "select") [(App (Variable "bernoulli") []), (Lam [] (Datum $ Number 1.0)), (Lam [] (Datum $ Number 2.0))]) []]
 
+chained_normals :: [Directive]
 chained_normals =
     [ Assume "x" $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
     , Assume "y" $ App (Variable "normal") [(Variable "x"), (Datum $ Number 2.0)]
@@ -93,6 +94,7 @@ chained_normals =
 
 -- venture_main 10 $ chained_normals
 
+observed_chained_normals :: [Directive]
 observed_chained_normals =
     [ Assume "x" $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
     , Assume "y" $ App (Variable "normal") [(Variable "x"), (Datum $ Number 2.0)]

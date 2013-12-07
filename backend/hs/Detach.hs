@@ -4,7 +4,6 @@ module Detach where
 
 import qualified Data.Set as S
 import qualified Data.Map as M
-import Data.Maybe hiding (fromJust)
 import Control.Monad.Reader
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.State.Lazy hiding (state)
