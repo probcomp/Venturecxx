@@ -26,21 +26,24 @@ box_muller_cos u1 u2 = r * cos theta where
     theta = 2 * pi * u2
 
 normalFlip :: (MonadRandom m) => [Node] -> [Node] -> m Value
-normalFlip [meanN, sigmaN] _ = do
+normalFlip [meanN, sigmaN] [] = do
   u1 <- getRandomR (0.0, 1.0)
   u2 <- getRandomR (0.0, 1.0)
   let normal = box_muller_cos u1 u2
       mu = fromJust "Argument node had no value" $ (valueOf meanN >>= numberOf)
       sigma = fromJust "Argument node had no value" $ (valueOf sigmaN >>= numberOf)
   return $ Number $ sigma * normal + mu
+normalFlip _ _ = error "Incorrect arity for normal"
 
 log_d_normal' :: Double -> Double -> Double -> Double
 log_d_normal' mean sigma x = - (x - mean)^^2 / (2 * sigma ^^ 2) - scale where
     scale = log sigma + (log pi)/2
 
 log_d_normal :: [Node] -> [Node] -> Value -> Double
-log_d_normal args _ (Number x) = log_d_normal' mu sigma x where
+log_d_normal args@[_,_] [] (Number x) = log_d_normal' mu sigma x where
     [mu, sigma] = map (fromJust "Argument node had no value" . (\n -> valueOf n >>= numberOf)) args
+log_d_normal [_,_] [] _ = error "Given Value must be a number"
+log_d_normal _ _ _ = error "Incorrect arity for log_d_normal"
 
 normal :: (MonadRandom m) => SP m
 normal = SP { requester = nullReq
