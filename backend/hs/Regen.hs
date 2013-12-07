@@ -56,7 +56,7 @@ regenValue a = lift (do
       case outA of
         Nothing -> return ()
         (Just outA') -> nodes . ix outA' . responses .= resps
-    (Output _ reqA opa ps rs) -> do
+    (Output _ _ _ ps rs) -> do
       SP{ outputter = out } <- gets $ fromJust "Regenerating value for an output with no operator" . (operator node)
       ns <- use nodes
       let args = map (fromJust "Regenerating value for an output with a missing parent" . flip M.lookup ns) ps
