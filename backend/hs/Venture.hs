@@ -47,7 +47,7 @@ modifyM act = get >>= (lift . act) >>= put
 scaffold_mh_kernel :: (MonadRandom m) => Scaffold -> Kernel m (Trace m)
 scaffold_mh_kernel scaffold trace = do
   torus <- censor log_density_negate $ stupid $ detach scaffold trace
-  regen scaffold (traceShowTrace torus torus)
+  regen scaffold torus
         where stupid :: (Monad m) => Writer w a -> WriterT w m a
               stupid = WriterT . return . runWriter
 
@@ -114,8 +114,7 @@ execute ds = evalStateT (do
 
 watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Trace m) m [Value]
 watching_infer address ct = replicateM ct (do
-  t <- get
-  modifyM $ liftM (traceShowTrace t) $ metropolis_hastings principal_node_mh
+  modifyM $ metropolis_hastings principal_node_mh
   gets $ fromJust "Value was not restored by inference" . valueOf
          . fromJust "Address became invalid after inference" . (lookupNode address))
 
