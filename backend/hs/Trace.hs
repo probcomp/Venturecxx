@@ -31,6 +31,9 @@ newtype SRId = SRId Unique
 data SimulationRequest = SimulationRequest SRId Exp Env
     deriving Show
 
+srid :: SimulationRequest -> SRId
+srid (SimulationRequest id _ _) = id
+
 -- TODO An SP needing state of type a takes the a in appropriate
 -- places, and offers incorporate and unincorporate functions that
 -- transform states.  The Trace needs to contain a heterogeneous
@@ -152,7 +155,6 @@ opAddr _ = Nothing
 
 requestIds :: Node -> [SRId]
 requestIds (Request (Just srs) _ _ _) = map srid srs
-    where srid (SimulationRequest id _ _) = id
 requestIds _ = error "Asking for request IDs of a non-request node"
 
 addOutput :: Address -> Node -> Node

@@ -87,8 +87,7 @@ collectBrush = mapM_ disableRequests where
       case node of
         (Request (Just reqs) _ _ _) -> do
           spaddr <- asks $ fromJust "Disabling requests of operator-less request node" . operatorAddr node
-          let reqIds = requestIds node
-          _2 . dead_reqs %= ((spaddr,reqIds):)
+          _2 . dead_reqs %= ((spaddr,map srid reqs):)
           (asks $ fulfilments a) >>= (mapM_ disableRequestFor)
         _ -> return ()
     -- Given the address of a requested node, account for the fact
