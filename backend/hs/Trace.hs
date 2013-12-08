@@ -348,6 +348,18 @@ constrain a v = execState (do
   node <- use $ nodes . hardix "Trying to constrain a non-existent node" a
   case node of
     (Reference _ a') -> modify $ constrain a' v
+    (Output _ _ _ _ reqs) -> do
+      op <- gets $ operator node
+      case op of
+        Nothing -> error "Trying to constrain an output node with no operator"
+        (Just SP{outputter = Trivial}) ->
+           case reqs of
+             -- TODO Make sure this constraint gets lifted if the
+             -- requester is regenerated, even if r0 is ultimately a
+             -- reference to some non-brush node.
+             (r0:_) -> modify $ constrain r0 v
+             _ -> error "Trying to constrain a trivial output node with no fulfilments"
+        _ -> return ()
     _ -> return ())
 
 ----------------------------------------------------------------------

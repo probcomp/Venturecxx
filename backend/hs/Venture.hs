@@ -107,15 +107,15 @@ observed_chained_normals =
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . numberOf) $ venture_main 500 $ observed_chained_normals) >>= printHistogram
 
 -- This example forces propagation of constraints backwards through
--- forwarding outputs.
--- TOOD Make it work.
+-- forwarding outputs.  Predicting "y" should yield 4, and predicting
+-- "x" should look like observed_chained_normals.
 observed_chained_normals_lam :: [Directive]
 observed_chained_normals_lam =
     [ Assume "x" $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
     , Assume "y" $ App (Variable "normal") [(Variable "x"), (Datum $ Number 2.0)]
     , Assume "z" $ App (Lam ["q"] (Variable "q")) [(Variable "y")]
     , Observe (Variable "z") (Number 4.0)
-    , Predict $ Variable "z"
+    , Predict $ Variable "x"
     ]
 
 -- venture_main 10 $ observed_chained_normals_lam
