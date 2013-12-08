@@ -54,7 +54,8 @@ instance Show (SP m) where
 data SPRequester m = DeterministicR ([Address] -> UniqueSource [SimulationRequest])
                    | RandomR ([Address] -> UniqueSourceT m [SimulationRequest])
 
-data SPOutputter m = DeterministicO ([Node] -> [Node] -> Value)
+data SPOutputter m = Trivial
+                   | DeterministicO ([Node] -> [Node] -> Value)
                    | RandomO ([Node] -> [Node] -> m Value)
 
 asRandomR :: (Monad m) => SPRequester m -> [Address] -> UniqueSourceT m [SimulationRequest]
@@ -66,10 +67,13 @@ isRandomR (RandomR _) = True
 isRandomR (DeterministicR _) = False
 
 asRandomO :: (Monad m) => SPOutputter m -> [Node] -> [Node] -> m Value
+asRandomO Trivial _ (r0:_) = return $ fromJust "Trivial outputter node had no value" $ valueOf r0
+asRandomO Trivial _ _ = error "Trivial outputter requires one response"
 asRandomO (RandomO f) args reqs = f args reqs
 asRandomO (DeterministicO f) args reqs = return $ f args reqs
 
 isRandomO :: SPOutputter m -> Bool
+isRandomO Trivial = False
 isRandomO (RandomO _) = True
 isRandomO (DeterministicO _) = False
 
@@ -84,16 +88,11 @@ nullReq = DeterministicR $ \_ -> return []
 trivial_log_d_req :: a -> b -> Double
 trivial_log_d_req = const $ const $ 0.0
 
-trivialOut :: (Monad m) => SPOutputter m
-trivialOut = DeterministicO self where
-    self _ (n:_) = fromJust "trivialOut node had no value" $ valueOf n
-    self _ _ = error "trivialOut expects at least one request result"
-
 compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
 compoundSP formals exp env =
     SP { requester = DeterministicR req
        , log_d_req = Just $ trivial_log_d_req
-       , outputter = trivialOut
+       , outputter = Trivial
        , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
        } where
         req args = do
