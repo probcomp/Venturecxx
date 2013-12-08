@@ -39,6 +39,10 @@ srid (SimulationRequest id _ _) = id
 -- collection of all the SP states, perhaps per
 -- http://www.haskell.org/haskellwiki/Heterogenous_collections#Existential_types
 
+-- TODO Can I refactor this data type to capture the fact that
+-- deterministic requesters and outputters never have meaningful log_d
+-- components, whereas stochastic ones may or may not?
+
 -- m is presumably an instance of MonadRandom
 data SP m = SP { requester :: SPRequester m
                , log_d_req :: Maybe ([Address] -> [SimulationRequest] -> Double)

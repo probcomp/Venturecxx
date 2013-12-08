@@ -28,6 +28,17 @@ compoundSP formals exp env =
           let r = SimulationRequest freshId exp $ Frame (M.fromList $ zip formals args) env
           return [r]
 
+execList :: [Node] -> [Node] -> Value
+execList ns [] = List $ map (fromJust "Argument node had no value" . valueOf) ns
+execList _ _ = error "List SP given fulfilments"
+
+list :: (Monad m) => SP m
+list = SP { requester = nullReq
+          , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+          , outputter = DeterministicO execList
+          , log_d_out = Nothing
+          }
+
 bernoulliFlip :: (MonadRandom m) => a -> b -> m Value
 bernoulliFlip _ _ = liftM Boolean $ getRandomR (False,True)
 
@@ -98,6 +109,7 @@ initializeBuiltins env = do
   return $ Frame (M.fromList $ zip names addrs) env
       where namedSps = [ ("bernoulli", bernoulli)
                        , ("normal", normal)
-                       , ("select", select)]
+                       , ("select", select)
+                       , ("list", list)]
             names = map fst namedSps
             sps = map snd namedSps
