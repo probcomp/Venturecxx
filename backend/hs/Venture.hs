@@ -124,13 +124,12 @@ observed_chained_normals_lam =
 -- Next subgoal: Do MH inference with observations on some trivial
 --   programs involving brush
 
--- Next subgoal: Figure out how to assess whether inference is
---   producing sensible results.
-
 -- Eventual goals
 -- - Built-in SPs with collapsed exchangeably coupled state
 --   - This imposes the ordering requirement on regen and detach
 --   - This is where incorporate and unincorporate (remove) come from
+-- - Figure out better ways to assess whether inference is producing
+--   sensible results.
 
 -- Non-goals
 -- - Latent simulation kernels for SPs
