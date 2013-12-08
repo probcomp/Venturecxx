@@ -7,8 +7,26 @@ import Control.Monad.State.Class
 import Control.Monad.Random -- From cabal install MonadRandom
 
 import Utils
-import Language hiding (Value, Env)
+import Language hiding (Value, Env, Exp)
 import Trace
+
+nullReq :: SPRequester m
+nullReq = DeterministicR $ \_ -> return []
+
+trivial_log_d_req :: a -> b -> Double
+trivial_log_d_req = const $ const $ 0.0
+
+compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
+compoundSP formals exp env =
+    SP { requester = DeterministicR req
+       , log_d_req = Just $ trivial_log_d_req
+       , outputter = Trivial
+       , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
+       } where
+        req args = do
+          freshId <- liftM SRId fresh
+          let r = SimulationRequest freshId exp $ Frame (M.fromList $ zip formals args) env
+          return [r]
 
 bernoulliFlip :: (MonadRandom m) => a -> b -> m Value
 bernoulliFlip _ _ = liftM Boolean $ getRandomR (False,True)

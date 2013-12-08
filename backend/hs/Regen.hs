@@ -19,6 +19,7 @@ import Trace
 import Detach (Scaffold(..))
 import qualified InsertionOrderedSet as O
 import Utils
+import SP (compoundSP)
 
 regen :: (MonadRandom m) => Scaffold -> Trace m -> WriterT LogDensity m (Trace m)
 regen s t = do

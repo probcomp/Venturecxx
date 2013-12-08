@@ -82,24 +82,6 @@ canAbsorb (Request _ _ _ _)  SP { log_d_req = (Just _) } = True
 canAbsorb (Output _ _ _ _ _) SP { log_d_out = (Just _) } = True
 canAbsorb _ _ = False
 
-nullReq :: SPRequester m
-nullReq = DeterministicR $ \_ -> return []
-
-trivial_log_d_req :: a -> b -> Double
-trivial_log_d_req = const $ const $ 0.0
-
-compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
-compoundSP formals exp env =
-    SP { requester = DeterministicR req
-       , log_d_req = Just $ trivial_log_d_req
-       , outputter = Trivial
-       , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
-       } where
-        req args = do
-          freshId <- liftM SRId fresh
-          let r = SimulationRequest freshId exp $ Frame (M.fromList $ zip formals args) env
-          return [r]
-
 data SPRecord m = SPRecord { sp :: (SP m)
                            , srid_seed :: UniqueSeed
                            , requests :: M.Map SRId Address
