@@ -67,7 +67,7 @@ collectERG ((a,drg_parent):as) = do
                  opCanAbsorb <- lift $ asks $ (canAbsorb node p_addr)
                                 . fromJust "DRGing application node with no operator" . operator node
                  if opCanAbsorb then absorbing a
-                 else resampling a -- TODO check esrReferenceCanAbsorb?
+                 else resampling a
   where resampling :: Address -> StateT Scaffold (Reader (Trace m)) ()
         resampling a = do
           absorbers %= O.delete a
