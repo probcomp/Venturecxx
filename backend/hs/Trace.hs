@@ -415,6 +415,13 @@ constrain a v = execState (do
 --     global environment, or the Addresses of predictions or
 --     observations (that have not been retracted).
 
+-- TODO Define checkers for structural invariants of traces.
+-- TODO confirm (quickcheck?) that no sequence of trace operations at
+-- the appropriate level of abstraction can produce a trace that
+-- violates the structural invariants.  (Is rejection sampling a
+-- sensible way to generate conforming traces, or do I need to test
+-- long instruction sequences?)
+
 referencedInvalidAddresses :: Trace m -> [Address]
 referencedInvalidAddresses t = invalidParentAddresses t
                                ++ invalidRandomChoices t
