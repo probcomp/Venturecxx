@@ -22,6 +22,7 @@ data Scaffold = Scaffold { _drg :: O.Set Address
                          -- will leak SPRecords under detach and
                          -- regen.
                          }
+  deriving Show
 
 makeLenses ''Scaffold
 

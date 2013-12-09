@@ -50,3 +50,6 @@ delete v s@Set{insertions = ins, indexes = ind} =
     
 member :: (Ord v) => v -> Set v -> Bool
 member v Set{indexes = ind} = isJust $ M.lookup v ind
+
+instance (Show v) => Show (Set v) where
+    show Set{ insertions = is } = show $ S.fromList $ catMaybes $ F.toList is

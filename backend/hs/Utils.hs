@@ -1,5 +1,6 @@
 module Utils (module Utils, module Unique) where
 
+import Debug.Trace
 import Data.List (find)
 import qualified Data.Map as M
 import Control.Lens
@@ -51,3 +52,6 @@ printHistogram = mapM_ (putStrLn . show) . M.toList
 -- See, e.g. http://stackoverflow.com/questions/3120796/haskell-testing-workflow
 property_histogram_conserves_data :: Int -> [Double] -> Bool
 property_histogram_conserves_data ct values = length values == (sum $ M.elems $ histogram ct values)
+
+traceShowIt :: (Show a) => a -> a
+traceShowIt it = traceShow it it
