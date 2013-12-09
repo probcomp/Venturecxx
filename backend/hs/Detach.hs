@@ -31,9 +31,10 @@ empty :: Scaffold
 empty = Scaffold O.empty O.empty [] S.empty
 
 instance Pretty Scaffold where
-    pp s = hang (text "DRG") 1 (pp $ s^.drg) $$
-           hang (text "Absorbers") 1 (pp $ s^.absorbers) $$
-           hang (text "Brush") 1 (pp $ s^.brush)
+    pp s = hang (text "Scaffold") 1 $
+             hang (text "DRG") 1 (pp $ s^.drg) $$
+             hang (text "Absorbers") 1 (pp $ s^.absorbers) $$
+             hang (text "Brush") 1 (pp $ s^.brush)
 
 scaffold_from_principal_node :: Address -> Reader (Trace m) Scaffold
 scaffold_from_principal_node a = do

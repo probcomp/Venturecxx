@@ -442,9 +442,10 @@ instance Pretty SRId where
     pp (SRId u) = text "SR" <> integer (asInteger u)
 
 instance Pretty (Trace m) where
-    pp t = hang (text "Problems") 1 problems $$
-           hang (text "Content") 1 contents $$
-           hang (text "SPs") 1 sps where
+    pp t = hang (text "Trace") 1 $
+             hang (text "Problems") 1 problems $$
+             hang (text "Content") 1 contents $$
+             hang (text "SPs") 1 sps where
       problems = pp $ referencedInvalidAddresses t -- Add other structural faults as I start detecting them
       contents = sep $ map entry $ M.toList $ t^.nodes
       sps = sep $ map entryS $ M.toList $ t^.sprs
