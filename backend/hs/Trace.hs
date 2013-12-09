@@ -448,9 +448,9 @@ instance Pretty (Trace m) where
       problems = pp $ referencedInvalidAddresses t -- Add other structural faults as I start detecting them
       contents = sep $ map entry $ M.toList $ t^.nodes
       sps = sep $ map entryS $ M.toList $ t^.sprs
-      entry (k,v) = pp k <> colon <+> rmark <> pp v
-          where rmark = if S.member k $ t^.randoms then text "(R) "
-                        else Text.PrettyPrint.empty
+      entry (k,v) = pp k <> colon <> rmark <> pp v
+          where rmark = if S.member k $ t^.randoms then text " (R) "
+                        else space
       entryS (k,v) = pp k <> colon <+> pp v
 
 instance Pretty Node where
