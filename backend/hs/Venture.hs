@@ -130,15 +130,27 @@ ex_list_1 = [Predict $ App (Variable "list") [flip, flip, flip]] where
 -- Weighted coins
 -- venture_main 20 [Predict $ App (Variable "weighted") [Datum $ Number 0.8]]
 
--- Next subgoal: Do MH inference with observations on some trivial
---   programs involving brush
+-- TODO Add an uncollapsed beta binomial example
+-- - Then use it to force SPs with state via the collapsed beta binomial
+-- - Block: I would want to use Statistics.Distribution.Beta from the
+--   statistics package, but that seems to require MonadPrim to
+--   generate its random numbers rather than MonadRandom.  Can that be
+--   fixed or circumvented?  Can I escape by virtue of IO being an
+--   instance of both typeclasses?
 
 -- Eventual goals
 -- - Built-in SPs with collapsed exchangeably coupled state
 --   - This imposes the ordering requirement on regen and detach
 --   - This is where incorporate and unincorporate (remove) come from
+
+-- Potential goals
 -- - Figure out better ways to assess whether inference is producing
---   sensible results.
+--   sensible results (graphical histograms, convergence metrics,
+--   comparisons against allegedly equivalent models, etc).
+-- - Do MH inference with observations on some trivial programs
+--   involving brush.  Is there anything here besides the
+--   (observe (max (normal .) (normal .)) 0) can of bugs?
+-- - Massage the code until I can tutor Daniel in it
 
 -- Non-goals
 -- - Latent simulation kernels for SPs
