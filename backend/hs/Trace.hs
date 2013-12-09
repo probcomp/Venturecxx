@@ -442,11 +442,16 @@ instance Pretty SRId where
     pp (SRId u) = text "SR" <> integer (asInteger u)
 
 instance Pretty (Trace m) where
-    pp t = problems $$ nest 1 contents $$ nest 1 sps where
+    pp t = hang (text "Problems") 1 problems $$
+           hang (text "Content") 1 contents $$
+           hang (text "SPs") 1 sps where
       problems = pp $ referencedInvalidAddresses t -- Add other structural faults as I start detecting them
       contents = sep $ map entry $ M.toList $ t^.nodes
-      sps = sep $ map entry $ M.toList $ t^.sprs
-      entry (k,v) = pp k <> colon <> space <> pp v
+      sps = sep $ map entryS $ M.toList $ t^.sprs
+      entry (k,v) = pp k <> colon <+> rmark <> pp v
+          where rmark = if S.member k $ t^.randoms then text "(R) "
+                        else Text.PrettyPrint.empty
+      entryS (k,v) = pp k <> colon <+> pp v
 
 instance Pretty Node where
     pp (Constant v) = text "Constant" <+> (parens $ pp v)
