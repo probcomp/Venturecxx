@@ -5,6 +5,7 @@ import qualified Data.Map as M
 import Control.Monad.State.Lazy hiding (state)
 import Control.Monad.State.Class
 import Control.Monad.Random -- From cabal install MonadRandom
+import Numeric.SpecFunctions -- From cabal install spec-functions
 
 import Utils
 import Language hiding (Value, Env, Exp)
@@ -100,6 +101,35 @@ normal = SP { requester = nullReq
             , outputter = RandomO normalFlip
             , log_d_out = Just log_d_normal
             }
+
+betaO :: (MonadRandom m) => [Node] -> [b] -> m Value
+betaO [alphaN, betaN] [] = do
+  -- Adapted from Statistics.Distribution.Beta; not reused because of
+  -- funny randomness management convention.
+  x <- getRandomR (0.0,1.0)
+  return $ Number $ quantile x
+    where
+      alpha = fromJust "Argument node had no value" $ (valueOf alphaN >>= numberOf)
+      beta = fromJust "Argument node had no value" $ (valueOf betaN >>= numberOf)
+      quantile x | x == 0 = 0
+                 | x == 1 = 1
+                 | 0 < x && x < 1 = invIncompleteBeta alpha beta x
+                 | otherwise = error $ "x must be in the range [0,1], got: " ++ show x
+betaO _ _ = error "Incorrect arity for beta"
+
+log_denisty_beta :: [Node] -> [b] -> Value -> Double
+log_denisty_beta [alphaN, betaN] [] (Number x) = (a-1)*log x + (b-1)*log (1-x) - logBeta a b where
+    a = fromJust "Argument node had no value" $ (valueOf alphaN >>= numberOf)
+    b = fromJust "Argument node had no value" $ (valueOf betaN >>= numberOf)
+log_denisty_beta [_,_] [] _ = error "Given Value must be a number"
+log_denisty_beta _ _ _ = error "Incorrect arity for log_density_beta"
+
+beta :: (MonadRandom m) => SP m
+beta = SP { requester = nullReq
+          , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+          , outputter = RandomO betaO
+          , log_d_out = Just log_denisty_beta
+          }
 
 selectO :: [Node] -> [Node] -> Value
 selectO [p,c,a] _ = if fromJust "Argument node had no value" $ (valueOf p >>= booleanOf) then
