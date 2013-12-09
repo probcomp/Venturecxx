@@ -459,7 +459,7 @@ instance Pretty Node where
     pp (Reference v a) = text "Reference" <+> (parens $ ppDefault "No value" v) <+> pp a
     pp (Request srs outA opA args) =
         text "Request" <+> ppDefault "(No requests)" srs
-                 <+> text "out:" <+> ppDefault "none" outA
+                 $$ text "out:" <+> ppDefault "none" outA
                  <+> text "oper:" <+> pp opA
                  <+> text "args:" <+> pp args
     pp (Output v reqA opA args reqs) =
@@ -486,4 +486,11 @@ instance Pretty Value where
     pp (Boolean False) = text "false"
 
 instance Pretty SimulationRequest where
-    pp (SimulationRequest id _ _) = pp id -- Do I want more information?  Where do I want to show it?
+    pp (SimulationRequest id exp env) = pp id <+> pp exp $$ pp env
+
+instance Pretty Exp where
+    pp = text . show
+
+instance Pretty Env where
+    pp e = brackets $ sep $ map entry $ M.toList $ effectiveEnv e where
+      entry (k,v) = text k <> colon <> space <> pp v

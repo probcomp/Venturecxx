@@ -52,3 +52,7 @@ lookup s (Frame m env') = frob (M.lookup s m) $ lookup s env' where
     frob :: Maybe a -> Maybe a -> Maybe a
     frob (Just x) _ = Just x
     frob Nothing y = y
+
+effectiveEnv :: (Ord k) => Env k v -> M.Map k v
+effectiveEnv Toplevel = M.empty
+effectiveEnv (Frame m env') = M.union m $ effectiveEnv env'
