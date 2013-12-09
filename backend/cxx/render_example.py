@@ -227,3 +227,17 @@ def renderAllSchematics():
   renderPartition()
   renderPrior()
   renderOrderDuality()
+
+
+###################
+
+def renderAlexeyBug1():
+  ripl = RIPL()
+  ripl.assume("make_coin","(lambda (p) (lambda () (bernoulli p)))")
+  ripl.assume("coin","(make_coin (beta 1 1))")
+  ripl.observe("(coin)","true")
+  ripl.observe("(coin)","true")
+  ripl.observe("(coin)","true")
+  ripl.predict("(coin)")
+
+  renderRIPL(ripl,"graphs/alexey_bug_1")
