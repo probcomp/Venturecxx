@@ -58,6 +58,7 @@ collectERG ((a,drg_parent):as) = do
       _ -> case drg_parent of
              Nothing -> resampling a -- principal node
              (Just p_addr) -> do
+               -- TODO Is this operator-drg check redundant with canAbsorb knowing the parent address?
                let opa = fromJust "DRGing application node with no operator" $ opAddr node
                -- N.B. This can change as more graph structure is traversed
                opMember <- uses drg $ O.member opa

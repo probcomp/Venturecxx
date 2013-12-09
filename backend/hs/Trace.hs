@@ -82,9 +82,17 @@ isRandomO Trivial = False
 isRandomO (RandomO _) = True
 isRandomO (DeterministicO _) = False
 
+-- Can the given node, which is an application of the given SP, absorb
+-- a change to the given address (which is expected to be one of its
+-- parents).
 canAbsorb :: Node -> Address -> SP m -> Bool
-canAbsorb (Request _ _ _ _)  _ SP { log_d_req = (Just _) } = True
-canAbsorb (Output _ _ _ _ _) _ SP { log_d_out = (Just _) } = True
+canAbsorb (Request _ _ opA _)      a _                        | opA  == a = False
+canAbsorb (Request _ _ _ _)        _ SP{log_d_req = (Just _)}             = True
+canAbsorb (Output _ reqA _ _ _)    a _                        | reqA == a = False
+canAbsorb (Output _ _ opA _ _)     a _                        | opA  == a = False
+canAbsorb (Output _ _ _ _ (fst:_)) a SP{outputter = Trivial}  | fst  == a = False
+canAbsorb (Output _ _ _ _ _)       _ SP{outputter = Trivial}              = True
+canAbsorb (Output _ _ _ _ _)       _ SP{log_d_out = (Just _)}             = True
 canAbsorb _ _ _ = False
 
 data SPRecord m = SPRecord { sp :: (SP m)
@@ -314,6 +322,8 @@ children a t = t ^. nodeChildren . at a & fromJust "Loooking up the children of 
 -- block of code as lookupNode.
 absorb :: Node -> SP m -> Trace m -> Double
 absorb (Request (Just reqs) _ _ args) SP { log_d_req = (Just f) } _ = f args reqs
+-- This clause is only right if canAbsorb returned True on all changed parents
+absorb (Output _ _ _ _ _) SP { outputter = Trivial } _ = 0
 absorb (Output (Just v) _ _ args reqs) SP { log_d_out = (Just f) } t = f args' reqs' v where
     args' = map (fromJust "absorb" . flip lookupNode t) args
     reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
