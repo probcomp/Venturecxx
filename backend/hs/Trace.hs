@@ -351,6 +351,59 @@ constrain a v = execState (do
 ----------------------------------------------------------------------
 -- Invariants that traces ought to obey
 
+-- 1. Every Address should point to a Node, except in the middle of
+--    relevant operations (which are what? node insertion and node
+--    deletion only?)
+
+-- 2. Every SPAddress should point to an SPRecord, except in the
+--    middle of relevant operations (which are what? SP insertion and
+--    SP deletion only?)
+
+-- 3. The node children maps should be right, to wit A should be
+--    recorded as a child of B iff the address of B appears in the
+--    list of parentAddrs of A (except in the middle of node insertion
+--    and deletion only?).
+
+-- 4. All Request and Output nodes should come in pairs, determined by
+--    the reqA address of the Output node.  Their operator and
+--    argument lists should be equal.
+
+-- 5. After any regen, all Request nodes should have pointers to their
+--    output nodes (not necessarily during a regen, because the output
+--    nodes wish to be created with their fulfilments).
+
+-- 6. The request counts should be right, to wit M.lookup a
+--    request_counts should always be Just the number of times a
+--    appears as a value in any requests maps of any SPRecords (except
+--    when?)
+
+-- 7. The seeds should be right, to wit the _addr_seed should exceed
+--    every Address that appears in the trace, the _spaddr_seed should
+--    exceed every extant SPAddress that appears in the trace, and the
+--    _srid_seed of each SPRecord should exceed every SRId that
+--    appears in that SPRecord's requests map.
+
+-- 8. After any detach-regen cycle, all nodes should have values.
+
+-- 9. After any regen, the request parents of any Output node should
+--    agree with the requests made by its Request node (through the
+--    requests map of the SPRecord of their mutual operator).
+
+-- 10. The _randoms should be the set of modifiable random choices.  A
+--     node is a random choice iff it is a Request or Output node, and
+--     the corresponding part of the SP that is the operator is
+--     actually stochastic.  A random choice is modifiable iff it is
+--     not constrained by observations, but the latter is currently
+--     not detectable from the trace itself (but modifiable choices
+--     are a subset of all choices).
+
+-- 11. A trace constructed during the course of executing directives,
+--     or by inference on such a trace, should have no garbage.  To
+--     wit, all Addresses and SPAddresses should be reachable via
+--     Nodes, SRIds, and SPRecords from the Addresses contained in the
+--     global environment, or the Addresses of predictions or
+--     observations (that have not been retracted).
+
 referencedInvalidAddresses :: Trace m -> [Address]
 referencedInvalidAddresses t = invalidParentAddresses t
                                ++ invalidRandomChoices t
