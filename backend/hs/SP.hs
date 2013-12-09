@@ -49,6 +49,26 @@ bernoulli = SP { requester = nullReq
                , log_d_out = Just $ const $ const $ const $ -log 2.0
                }
 
+weightedFlip :: (MonadRandom m) => [Node] -> b -> m Value
+weightedFlip [wt] _ = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0) where
+    weight = fromJust "No number supplied for weighted" $ (valueOf wt >>= numberOf)
+weightedFlip _ _ = error "Wrong number of arguments to weight"
+
+log_d_weight :: [Node] -> b -> Value -> Double
+log_d_weight [wt] _ (Boolean True) = log weight where
+    weight = fromJust "No number supplied for weighted" $ (valueOf wt >>= numberOf)
+log_d_weight [wt] _ (Boolean False) = log (1 - weight) where
+    weight = fromJust "No number supplied for weighted" $ (valueOf wt >>= numberOf)
+log_d_weight [_] _ _ = error "Value supplied to log_d_weight is not a boolean"
+log_d_weight _ _ _ = error "Incorrect number of arguments to log_d_weight"
+
+weighted :: (MonadRandom m) => SP m
+weighted = SP { requester = nullReq
+               , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+               , outputter = RandomO weightedFlip
+               , log_d_out = Just log_d_weight
+               }
+
 box_muller_cos :: Double -> Double -> Double
 box_muller_cos u1 u2 = r * cos theta where
     r = sqrt (-2 * log u1)
@@ -110,6 +130,7 @@ initializeBuiltins env = do
       where namedSps = [ ("bernoulli", bernoulli)
                        , ("normal", normal)
                        , ("select", select)
-                       , ("list", list)]
+                       , ("list", list)
+                       , ("weighted", weighted)]
             names = map fst namedSps
             sps = map snd namedSps

@@ -121,6 +121,15 @@ observed_chained_normals_lam =
 -- venture_main 10 $ observed_chained_normals_lam
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . numberOf) $ venture_main 500 $ observed_chained_normals_lam) >>= printHistogram
 
+ex_list_1 :: [Directive]
+ex_list_1 = [Predict $ App (Variable "list") [flip, flip, flip]] where
+    flip = App (Variable "bernoulli") []
+
+-- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 ex_list_1
+
+-- Weighted coins
+-- venture_main 20 [Predict $ App (Variable "weighted") [Datum $ Number 0.8]]
+
 -- Next subgoal: Do MH inference with observations on some trivial
 --   programs involving brush
 
