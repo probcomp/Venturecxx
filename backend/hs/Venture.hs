@@ -150,13 +150,8 @@ beta_binomial =
 
 -- liftM discreteHistogram $ venture_main 100 beta_binomial
 
--- TODO Add an uncollapsed beta binomial example
--- - Then use it to force SPs with state via the collapsed beta binomial
--- - Block: I would want to use Statistics.Distribution.Beta from the
---   statistics package, but that seems to require MonadPrim to
---   generate its random numbers rather than MonadRandom.  Can that be
---   fixed or circumvented?  Can I escape by virtue of IO being an
---   instance of both typeclasses?
+-- Next subgoal: Implement collapsed beta bernoulli and compare correct answers against uncollapsed.
+-- - This forces SPs with state
 
 -- Eventual goals
 -- - Built-in SPs with collapsed exchangeably coupled state
