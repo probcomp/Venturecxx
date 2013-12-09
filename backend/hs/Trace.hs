@@ -375,5 +375,5 @@ invalidRequestCountKeys t = filter (invalidAddress t) $ M.keys $ t ^. request_co
 invalidAddress :: Trace m -> Address -> Bool
 invalidAddress t a = not $ isJust $ lookupNode a t
 
-traceShowTrace :: (Trace m) -> a -> a
-traceShowTrace t = traceShow (referencedInvalidAddresses t) . traceShow t
+traceShowTrace :: (Trace m) -> (Trace m)
+traceShowTrace t = traceShow (referencedInvalidAddresses t) $ traceShow t t
