@@ -12,6 +12,7 @@ import Trace
 import Regen
 import Detach hiding (empty)
 import qualified Detach as D (empty)
+import Utils
 
 type Kernel m a = a -> WriterT LogDensity m a
 
@@ -53,7 +54,8 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
         if trace^.randoms.to S.size == 0 then return D.empty
         else do
           index <- getRandomR (0, trace^.randoms.to S.size - 1)
-          return $ runReader (scaffold_from_principal_node ((trace^.randoms.to S.toList) !! index)) trace
+          let addr = (trace^.randoms.to S.toList) !! index
+          return $ runReader (scaffold_from_principal_node addr) trace
 
     log_density :: Trace m -> a -> LogDensity
     log_density t _ = LogDensity $ -log(fromIntegral $ t^.randoms.to S.size)

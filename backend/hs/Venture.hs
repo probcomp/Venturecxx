@@ -70,7 +70,9 @@ watching_infer address ct = replicateM ct (do
 
 -- Expects the directives to contain exactly one Predict
 simulation :: (MonadRandom m) => Int -> [Directive] -> StateT (Trace m) m [Value]
-simulation ct ds = liftM head (execute ds) >>= (flip watching_infer ct)
+simulation ct ds = do
+  target <- liftM head (execute ds)
+  watching_infer target ct
 
 venture_main :: (MonadRandom m) => Int -> [Directive] -> m [Value]
 venture_main ct ds = evalStateT (simulation ct ds) empty
@@ -130,6 +132,12 @@ ex_list_1 = [Predict $ App (Var "list") [flip, flip, flip]] where
 -- Weighted coins
 -- venture_main 20 [Predict $ App (Var "weighted") [Datum $ Number 0.8]]
 
+-- (assume make_coin (lambda (weight) (lambda () (weighted weight))))
+-- (assume coin (make_coin (beta 1 1)))
+-- (observe (coin) true)
+-- (observe (coin) true)
+-- (observe (coin) true)
+-- (predict (coin))
 beta_binomial :: [Directive]
 beta_binomial =
     [ Assume "make-coin" $ Lam ["weight"] $ Lam [] $ App (Var "weighted") [Var "weight"]
