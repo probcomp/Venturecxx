@@ -130,6 +130,18 @@ ex_list_1 = [Predict $ App (Variable "list") [flip, flip, flip]] where
 -- Weighted coins
 -- venture_main 20 [Predict $ App (Variable "weighted") [Datum $ Number 0.8]]
 
+beta_binomial :: [Directive]
+beta_binomial =
+    [ Assume "make-coin" $ Lam ["weight"] $ Lam [] $ App (Variable "weighted") [Variable "weight"]
+    , Assume "coin" $ App (Variable "make-coin") [App (Variable "beta") [Datum $ Number 1, Datum $ Number 1]]
+    , Observe (App (Variable "coin") []) (Boolean True)
+    , Observe (App (Variable "coin") []) (Boolean True)
+    , Observe (App (Variable "coin") []) (Boolean True)
+    , Predict (App (Variable "coin") [])
+    ]
+
+-- liftM discreteHistogram $ venture_main 100 beta_binomial
+
 -- TODO Add an uncollapsed beta binomial example
 -- - Then use it to force SPs with state via the collapsed beta binomial
 -- - Block: I would want to use Statistics.Distribution.Beta from the
@@ -140,8 +152,8 @@ ex_list_1 = [Predict $ App (Variable "list") [flip, flip, flip]] where
 
 -- Eventual goals
 -- - Built-in SPs with collapsed exchangeably coupled state
---   - This imposes the ordering requirement on regen and detach
 --   - This is where incorporate and unincorporate (remove) come from
+--   - In the presence of conditionals, this imposes the ordering requirement on regen and detach
 
 -- Potential goals
 -- - Figure out better ways to assess whether inference is producing

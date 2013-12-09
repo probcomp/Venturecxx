@@ -159,6 +159,7 @@ initializeBuiltins env = do
   return $ Frame (M.fromList $ zip names addrs) env
       where namedSps = [ ("bernoulli", bernoulli)
                        , ("normal", normal)
+                       , ("beta", beta)
                        , ("select", select)
                        , ("list", list)
                        , ("weighted", weighted)]

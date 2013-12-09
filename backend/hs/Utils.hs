@@ -40,6 +40,10 @@ buckets ct values = zip lows (tail lows ++ [high]) where
 histogram :: Int -> [Double] -> M.Map (Double,Double) Int
 histogram ct values = embucket (buckets ct values) values where
 
+discreteHistogram :: (Eq k, Ord k) => [k] -> M.Map k Int
+discreteHistogram ks = foldl insert M.empty ks where
+    insert m k = M.alter maybeSucc k m
+
 printHistogram :: (Show k, Show a) => M.Map k a -> IO ()
 printHistogram = mapM_ (putStrLn . show) . M.toList
 
