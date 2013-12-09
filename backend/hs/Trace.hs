@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts, TemplateHaskell, TypeSynonymInstances, FlexibleInstances #-}
 
 module Trace where
 
@@ -9,6 +9,7 @@ import qualified Data.Set as S
 import Control.Lens  -- from cabal install lens
 import Control.Monad.State hiding (state) -- :set -hide-package monads-tf-0.1.0.1
 import Control.Monad.Writer.Class
+import Text.PrettyPrint -- presumably from cabal install pretty
 
 import Utils
 import Language hiding (Value, Exp, Env)
@@ -429,4 +430,54 @@ invalidAddress :: Trace m -> Address -> Bool
 invalidAddress t a = not $ isJust $ lookupNode a t
 
 traceShowTrace :: (Trace m) -> (Trace m)
-traceShowTrace t = traceShow (referencedInvalidAddresses t) $ traceShow t t
+traceShowTrace t = traceShow (pp t) t
+
+instance Pretty Address where
+    pp (Address u) = text "A" <> integer (asInteger u)
+
+instance Pretty SPAddress where
+    pp (SPAddress u) = text "SPA" <> integer (asInteger u)
+
+instance Pretty SRId where
+    pp (SRId u) = text "SR" <> integer (asInteger u)
+
+instance Pretty (Trace m) where
+    pp t = problems $$ nest 1 contents $$ nest 1 sps where
+      problems = pp $ referencedInvalidAddresses t -- Add other structural faults as I start detecting them
+      contents = sep $ map entry $ M.toList $ t^.nodes
+      sps = sep $ map entry $ M.toList $ t^.sprs
+      entry (k,v) = pp k <> colon <> space <> pp v
+
+instance Pretty Node where
+    pp (Constant v) = text "Constant" <+> (parens $ pp v)
+    pp (Reference v a) = text "Reference" <+> (parens $ ppDefault "No value" v) <+> pp a
+    pp (Request srs outA opA args) =
+        text "Request" <+> ppDefault "(No requests)" srs
+                 <+> text "out:" <+> ppDefault "none" outA
+                 <+> text "oper:" <+> pp opA
+                 <+> text "args:" <+> pp args
+    pp (Output v reqA opA args reqs) =
+        text "Output" <+> parens (ppDefault "No value" v)
+                 <+> text "req:" <+> pp reqA
+                 <+> text "oper:" <+> pp opA
+                 <+> text "args:" <+> pp args
+                 <+> text "esrs:" <+> pp reqs
+
+ppDefault :: Pretty a => String -> Maybe a -> Doc
+ppDefault _ (Just a) = pp a
+ppDefault d Nothing = text d
+
+instance Pretty (SPRecord m) where
+    pp SPRecord { requests = rs } = brackets $ sep $ map entry $ M.toList rs where
+      entry (k,v) = pp k <> colon <> space <> pp v
+
+instance Pretty Value where
+    pp (Number d) = double d
+    pp (Symbol s) = text s
+    pp (List l) = pp l
+    pp (Procedure a) = text "Procedure" <+> pp a
+    pp (Boolean True) = text "true"
+    pp (Boolean False) = text "false"
+
+instance Pretty SimulationRequest where
+    pp (SimulationRequest id _ _) = pp id -- Do I want more information?  Where do I want to show it?

@@ -4,6 +4,7 @@ import Debug.Trace
 import Data.List (find)
 import qualified Data.Map as M
 import Control.Lens
+import Text.PrettyPrint -- presumably from cabal install pretty
 
 import Unique
 
@@ -55,3 +56,12 @@ property_histogram_conserves_data ct values = length values == (sum $ M.elems $ 
 
 traceShowIt :: (Show a) => a -> a
 traceShowIt it = traceShow it it
+
+class Pretty a where
+    pp :: a -> Doc
+
+instance (Pretty a) => Pretty [a] where
+    pp as = brackets $ sep $ map pp as
+
+instance Pretty Doc where
+    pp = id

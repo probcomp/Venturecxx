@@ -1,4 +1,4 @@
-module Unique (Unique, UniqueSeed, UniqueSourceT, UniqueSource
+module Unique (Unique, UniqueSeed, UniqueSourceT, UniqueSource, asInteger
               , runUniqueSourceT, uniqueSeed, fresh, runUniqueSource, returnT) where
 
 import Data.Functor.Identity
@@ -15,7 +15,7 @@ import Control.Monad.Trans.State.Strict
 newtype UniqueSeed = UniqueSeed Integer
   deriving Show
 
-newtype Unique = Unique Integer
+newtype Unique = Unique { asInteger :: Integer }
   deriving (Eq, Ord, Show)
 
 newtype UniqueSourceT m a = UniqueSourceT { unwrap :: (StateT UniqueSeed m a) }
