@@ -38,13 +38,14 @@ instance Pretty Scaffold where
 
 scaffold_from_principal_node :: Address -> Reader (Trace m) Scaffold
 scaffold_from_principal_node a = do
-  scaffold <- execStateT (collectERG [(a,True)]) empty
+  scaffold <- execStateT (collectERG [(a,Nothing)]) empty
   (_, scaffold') <- execStateT (collectBrush $ O.toList $ scaffold ^. drg) (M.empty, scaffold)
   return $ scaffold'
 
-collectERG :: [(Address,Bool)] -> StateT Scaffold (Reader (Trace m)) ()
+collectERG :: [(Address,Maybe Address)] -> StateT Scaffold (Reader (Trace m)) ()
 collectERG [] = return ()
-collectERG ((a,principal):as) = do
+collectERG ((a,drg_parent):as) = do
+  -- drg_parent == Nothing means this is a principal node
   member <- uses drg $ O.member a
   -- Not stopping on nodes that are already absorbers because they can become DRG nodes
   -- (if I discover that their operator is in the DRG after all)
@@ -54,22 +55,24 @@ collectERG ((a,principal):as) = do
     case node of
       (Constant _) -> error "Constant node should never appear in the DRG"
       (Reference _ _) -> resampling a
-      _ -> do
-         let opa = fromJust "DRGing application node with no operator" $ opAddr node
-         -- N.B. This can change as more graph structure is traversed
-         opMember <- uses drg $ O.member opa
-         if opMember then resampling a
-         else do
-           opCanAbsorb <- lift $ asks $ (canAbsorb node)
-                          . fromJust "DRGing application node with no operator" . operator node
-           if (not principal && opCanAbsorb) then absorbing a
-           else resampling a -- TODO check esrReferenceCanAbsorb
+      _ -> case drg_parent of
+             Nothing -> resampling a -- principal node
+             (Just p_addr) -> do
+               let opa = fromJust "DRGing application node with no operator" $ opAddr node
+               -- N.B. This can change as more graph structure is traversed
+               opMember <- uses drg $ O.member opa
+               if opMember then resampling a
+               else do
+                 opCanAbsorb <- lift $ asks $ (canAbsorb node p_addr)
+                                . fromJust "DRGing application node with no operator" . operator node
+                 if opCanAbsorb then absorbing a
+                 else resampling a -- TODO check esrReferenceCanAbsorb?
   where resampling :: Address -> StateT Scaffold (Reader (Trace m)) ()
         resampling a = do
           absorbers %= O.delete a
           drg %= O.insert a
           as' <- asks $ children a
-          collectERG $ (zip as' $ repeat False) ++ as
+          collectERG $ (zip as' $ repeat $ Just a) ++ as
         absorbing :: Address -> StateT Scaffold (Reader (Trace m)) ()
         absorbing a = do
           absorbers %= O.insert a

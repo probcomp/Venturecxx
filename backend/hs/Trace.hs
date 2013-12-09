@@ -82,10 +82,10 @@ isRandomO Trivial = False
 isRandomO (RandomO _) = True
 isRandomO (DeterministicO _) = False
 
-canAbsorb :: Node -> SP m -> Bool
-canAbsorb (Request _ _ _ _)  SP { log_d_req = (Just _) } = True
-canAbsorb (Output _ _ _ _ _) SP { log_d_out = (Just _) } = True
-canAbsorb _ _ = False
+canAbsorb :: Node -> Address -> SP m -> Bool
+canAbsorb (Request _ _ _ _)  _ SP { log_d_req = (Just _) } = True
+canAbsorb (Output _ _ _ _ _) _ SP { log_d_out = (Just _) } = True
+canAbsorb _ _ _ = False
 
 data SPRecord m = SPRecord { sp :: (SP m)
                            , srid_seed :: UniqueSeed
