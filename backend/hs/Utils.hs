@@ -3,10 +3,12 @@ module Utils (module Utils, module Unique) where
 import Debug.Trace
 import Data.List (find)
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Control.Lens
 import Text.PrettyPrint -- presumably from cabal install pretty
 
 import Unique
+import qualified InsertionOrderedSet as O
 
 fromJust :: String -> Maybe a -> a
 fromJust _ (Just a) = a
@@ -57,6 +59,9 @@ property_histogram_conserves_data ct values = length values == (sum $ M.elems $ 
 traceShowIt :: (Show a) => a -> a
 traceShowIt it = traceShow it it
 
+tracePrettyIt :: (Pretty a) => a -> a
+tracePrettyIt it = traceShow (pp it) it
+
 class Pretty a where
     pp :: a -> Doc
 
@@ -65,3 +70,9 @@ instance (Pretty a) => Pretty [a] where
 
 instance Pretty Doc where
     pp = id
+
+instance (Pretty a) => Pretty (O.Set a) where
+    pp as = brackets $ sep $ map pp $ O.toList as
+
+instance (Pretty a) => Pretty (S.Set a) where
+    pp as = brackets $ sep $ map pp $ S.toList as

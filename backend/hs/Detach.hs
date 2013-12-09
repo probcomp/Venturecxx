@@ -8,6 +8,7 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.State.Lazy hiding (state)
 import Control.Lens hiding (children)
+import Text.PrettyPrint hiding (empty) -- presumably from cabal install pretty
 
 import Utils
 import Language
@@ -29,6 +30,10 @@ makeLenses ''Scaffold
 empty :: Scaffold
 empty = Scaffold O.empty O.empty [] S.empty
 
+instance Pretty Scaffold where
+    pp s = hang (text "DRG") 1 (pp $ s^.drg) $$
+           hang (text "Absorbers") 1 (pp $ s^.absorbers) $$
+           hang (text "Brush") 1 (pp $ s^.brush)
 
 scaffold_from_principal_node :: Address -> Reader (Trace m) Scaffold
 scaffold_from_principal_node a = do
