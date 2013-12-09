@@ -76,20 +76,20 @@ venture_main :: (MonadRandom m) => Int -> [Directive] -> m [Value]
 venture_main ct ds = evalStateT (simulation ct ds) empty
 
 -- venture_main 1 $ [Predict $ Datum $ Number 1.0]
--- venture_main 1 $ [Predict $ App (Lam ["x"] (Variable "x")) [(Datum $ Number 1.0)]]
+-- venture_main 1 $ [Predict $ App (Lam ["x"] (Var "x")) [(Datum $ Number 1.0)]]
 -- (let (id ...) (id 1))
--- venture_main 1 $ [Predict $ App (Lam ["id"] (App (Variable "id") [(Datum $ Number 1.0)])) [(Lam ["x"] (Variable "x"))]]
+-- venture_main 1 $ [Predict $ App (Lam ["id"] (App (Var "id") [(Datum $ Number 1.0)])) [(Lam ["x"] (Var "x"))]]
 -- K combinator
--- venture_main 1 $ [Predict $ App (App (Lam ["x"] (Lam ["y"] (Variable "x"))) [(Datum $ Number 1.0)]) [(Datum $ Number 2.0)]]
--- venture_main 10 $ [Predict $ App (Variable "bernoulli") []]
--- venture_main 10 $ [Predict $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]]
--- venture_main 10 $ [Predict $ App (App (Variable "select") [(App (Variable "bernoulli") []), (Lam [] (Datum $ Number 1.0)), (Lam [] (Datum $ Number 2.0))]) []]
+-- venture_main 1 $ [Predict $ App (App (Lam ["x"] (Lam ["y"] (Var "x"))) [(Datum $ Number 1.0)]) [(Datum $ Number 2.0)]]
+-- venture_main 10 $ [Predict $ App (Var "bernoulli") []]
+-- venture_main 10 $ [Predict $ App (Var "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]]
+-- venture_main 10 $ [Predict $ App (App (Var "select") [(App (Var "bernoulli") []), (Lam [] (Datum $ Number 1.0)), (Lam [] (Datum $ Number 2.0))]) []]
 
 chained_normals :: [Directive]
 chained_normals =
-    [ Assume "x" $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
-    , Assume "y" $ App (Variable "normal") [(Variable "x"), (Datum $ Number 2.0)]
-    , Predict $ Variable "y"
+    [ Assume "x" $ App (Var "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
+    , Assume "y" $ App (Var "normal") [(Var "x"), (Datum $ Number 2.0)]
+    , Predict $ Var "y"
     ]
 
 -- venture_main 10 $ chained_normals
@@ -97,10 +97,10 @@ chained_normals =
 
 observed_chained_normals :: [Directive]
 observed_chained_normals =
-    [ Assume "x" $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
-    , Assume "y" $ App (Variable "normal") [(Variable "x"), (Datum $ Number 2.0)]
-    , Observe (Variable "y") (Number 4.0)
-    , Predict $ Variable "x"
+    [ Assume "x" $ App (Var "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
+    , Assume "y" $ App (Var "normal") [(Var "x"), (Datum $ Number 2.0)]
+    , Observe (Var "y") (Number 4.0)
+    , Predict $ Var "x"
     ]
 
 -- venture_main 10 $ observed_chained_normals
@@ -111,33 +111,33 @@ observed_chained_normals =
 -- "x" should look like observed_chained_normals.
 observed_chained_normals_lam :: [Directive]
 observed_chained_normals_lam =
-    [ Assume "x" $ App (Variable "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
-    , Assume "y" $ App (Variable "normal") [(Variable "x"), (Datum $ Number 2.0)]
-    , Assume "z" $ App (Lam ["q"] (Variable "q")) [(Variable "y")]
-    , Observe (Variable "z") (Number 4.0)
-    , Predict $ Variable "x"
+    [ Assume "x" $ App (Var "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]
+    , Assume "y" $ App (Var "normal") [(Var "x"), (Datum $ Number 2.0)]
+    , Assume "z" $ App (Lam ["q"] (Var "q")) [(Var "y")]
+    , Observe (Var "z") (Number 4.0)
+    , Predict $ Var "x"
     ]
 
 -- venture_main 10 $ observed_chained_normals_lam
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . numberOf) $ venture_main 500 $ observed_chained_normals_lam) >>= printHistogram
 
 ex_list_1 :: [Directive]
-ex_list_1 = [Predict $ App (Variable "list") [flip, flip, flip]] where
-    flip = App (Variable "bernoulli") []
+ex_list_1 = [Predict $ App (Var "list") [flip, flip, flip]] where
+    flip = App (Var "bernoulli") []
 
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 ex_list_1
 
 -- Weighted coins
--- venture_main 20 [Predict $ App (Variable "weighted") [Datum $ Number 0.8]]
+-- venture_main 20 [Predict $ App (Var "weighted") [Datum $ Number 0.8]]
 
 beta_binomial :: [Directive]
 beta_binomial =
-    [ Assume "make-coin" $ Lam ["weight"] $ Lam [] $ App (Variable "weighted") [Variable "weight"]
-    , Assume "coin" $ App (Variable "make-coin") [App (Variable "beta") [Datum $ Number 1, Datum $ Number 1]]
-    , Observe (App (Variable "coin") []) (Boolean True)
-    , Observe (App (Variable "coin") []) (Boolean True)
-    , Observe (App (Variable "coin") []) (Boolean True)
-    , Predict (App (Variable "coin") [])
+    [ Assume "make-coin" $ Lam ["weight"] $ Lam [] $ App (Var "weighted") [Var "weight"]
+    , Assume "coin" $ App (Var "make-coin") [App (Var "beta") [Datum $ Number 1, Datum $ Number 1]]
+    , Observe (App (Var "coin") []) (Boolean True)
+    , Observe (App (Var "coin") []) (Boolean True)
+    , Observe (App (Var "coin") []) (Boolean True)
+    , Predict (App (Var "coin") [])
     ]
 
 -- liftM discreteHistogram $ venture_main 100 beta_binomial

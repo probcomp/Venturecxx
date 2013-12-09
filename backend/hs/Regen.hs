@@ -80,7 +80,7 @@ evalRequests a srs = mapM evalRequest srs where
 -- evaluation.
 eval :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) => Exp -> Env -> t m Address
 eval (Datum v) _ = state $ addFreshNode $ Constant v
-eval (Variable n) e = do
+eval (Var n) e = do
   let answer = case L.lookup n e of
                  Nothing -> error $ "Unbound variable " ++ show n
                  (Just a) -> Reference Nothing a

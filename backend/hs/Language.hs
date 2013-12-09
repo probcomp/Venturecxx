@@ -37,7 +37,7 @@ log_density_negate :: LogDensity -> LogDensity
 log_density_negate (LogDensity x) = LogDensity $ -x
 
 data Exp v = Datum v
-           | Variable String
+           | Var String
            | App (Exp v) [Exp v]
            | Lam [String] (Exp v)
     deriving Show
