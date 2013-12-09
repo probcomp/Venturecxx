@@ -80,6 +80,12 @@ collectERG ((a,drg_parent):as) = do
 -- The brush is those nodes that become no longer requested by anything
 -- after the requests made by requester nodes in the DRG are retracted.
 -- I compute them using a reference-counting scheme.
+
+-- TODO Might this have a double-counting bug, where a node slated for
+-- the DRG ends up in the brush, and has its outdoing requests
+-- accidentally disabled twice?  The latter would cause trouble only
+-- if one of that node's requestees were also requested by some other
+-- node, which is not in the DRG.
 collectBrush :: [Address] -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
 collectBrush = mapM_ disableRequests where
     -- Given the address of a DRG node, account for the fact that it
