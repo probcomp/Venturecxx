@@ -83,9 +83,21 @@ venture_main ct ds = evalStateT (simulation ct ds) empty
 -- venture_main 1 $ [Predict $ App (Lam ["id"] (App (Var "id") [(Datum $ Number 1.0)])) [(Lam ["x"] (Var "x"))]]
 -- K combinator
 -- venture_main 1 $ [Predict $ App (App (Lam ["x"] (Lam ["y"] (Var "x"))) [(Datum $ Number 1.0)]) [(Datum $ Number 2.0)]]
--- venture_main 10 $ [Predict $ App (Var "bernoulli") []]
--- venture_main 10 $ [Predict $ App (Var "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]]
--- venture_main 10 $ [Predict $ App (App (Var "select") [(App (Var "bernoulli") []), (Lam [] (Datum $ Number 1.0)), (Lam [] (Datum $ Number 2.0))]) []]
+
+flip_one_coin :: [Directive]
+flip_one_coin = [Predict $ App (Var "bernoulli") []]
+-- venture_main 10 flip_one_coin
+-- liftM discreteHistogram $ venture_main 100 flip_one_coin
+
+single_normal :: [Directive]
+single_normal = [Predict $ App (Var "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]]
+-- venture_main 10 single_normal
+-- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . numberOf) $ venture_main 500 $ single_normal) >>= printHistogram
+
+condition_on_flip :: [Directive]
+condition_on_flip = [Predict $ App (App (Var "select") [(App (Var "bernoulli") []), (Lam [] (Datum $ Number 1.0)), (Lam [] (Datum $ Number 2.0))]) []]
+-- venture_main 10 $ condition_on_flip
+-- liftM discreteHistogram $ venture_main 100 condition_on_flip
 
 chained_normals :: [Directive]
 chained_normals =
@@ -93,7 +105,6 @@ chained_normals =
     , Assume "y" $ App (Var "normal") [(Var "x"), (Datum $ Number 2.0)]
     , Predict $ Var "y"
     ]
-
 -- venture_main 10 $ chained_normals
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . numberOf) $ venture_main 500 $ chained_normals) >>= printHistogram
 
@@ -104,7 +115,6 @@ observed_chained_normals =
     , Observe (Var "y") (Number 4.0)
     , Predict $ Var "x"
     ]
-
 -- venture_main 10 $ observed_chained_normals
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . numberOf) $ venture_main 500 $ observed_chained_normals) >>= printHistogram
 
@@ -119,25 +129,24 @@ observed_chained_normals_lam =
     , Observe (Var "z") (Number 4.0)
     , Predict $ Var "x"
     ]
-
 -- venture_main 10 $ observed_chained_normals_lam
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . numberOf) $ venture_main 500 $ observed_chained_normals_lam) >>= printHistogram
 
-ex_list_1 :: [Directive]
-ex_list_1 = [Predict $ App (Var "list") [flip, flip, flip]] where
+list_of_coins :: [Directive]
+list_of_coins = [Predict $ App (Var "list") [flip, flip, flip]] where
     flip = App (Var "bernoulli") []
-
--- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 ex_list_1
+-- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 list_of_coins
 
 -- Weighted coins
--- venture_main 20 [Predict $ App (Var "weighted") [Datum $ Number 0.8]]
+-- liftM discreteHistogram $ venture_main 100 [Predict $ App (Var "weighted") [Datum $ Number 0.8]]
 
--- (assume make_coin (lambda (weight) (lambda () (weighted weight))))
--- (assume coin (make_coin (beta 1 1)))
--- (observe (coin) true)
--- (observe (coin) true)
--- (observe (coin) true)
--- (predict (coin))
+-- Beta Bernoulli (uncollapsed).  In Lisp syntax:
+--  (assume make_coin (lambda (weight) (lambda () (weighted weight))))
+--  (assume coin (make_coin (beta 1 1)))
+--  (observe (coin) true)
+--  (observe (coin) true)
+--  (observe (coin) true)
+--  (predict (coin))
 beta_binomial :: [Directive]
 beta_binomial =
     [ Assume "make-coin" $ Lam ["weight"] $ Lam [] $ App (Var "weighted") [Var "weight"]
