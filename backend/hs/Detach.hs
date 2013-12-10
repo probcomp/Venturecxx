@@ -87,7 +87,7 @@ collectERG ((a,erg_parent):as) = do
 -- not in the scaffold at all.
 collectBrush :: [Address] -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
 collectBrush = mapM_ disableRequests where
-    -- Given the address of a DRG node, account for the fact that it
+    -- Given the address of an ERG node, account for the fact that it
     -- ceases making any requests it may have been making (only
     -- relevant to Requester nodes).
     disableRequests :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
