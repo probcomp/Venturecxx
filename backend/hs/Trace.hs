@@ -384,6 +384,10 @@ constrain a v = do
   -- TODO What will cause the node to be re-added to the set of random
   -- choices if the constraint is lifted in the future?
   randoms %= S.delete a
+  maybe_constrain_parents a v
+
+maybe_constrain_parents :: (MonadState (Trace m) m1) => Address -> Value -> m1 ()
+maybe_constrain_parents a v = do
   node <- use $ nodes . hardix "Trying to constrain a non-existent node" a
   case node of
     (Reference _ a') -> constrain a' v
