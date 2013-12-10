@@ -16,7 +16,7 @@ import Trace
 -- bernoulli                 just a basic stochasitc function
 -- normal                    a basic continuous stochastic function
 -- compoundSP                Venture's lambda; forces selective absorbing
--- collapsed beta bernoulli  a higher-order SP with state
+-- collapsed beta bernoulli  a higher-order SP, emitting SPs with state
 -- mem                       exercises memoization of requests
 -- make-hmm                  ?? forces latent simulation requests; anything else?
 -- something                 forces AAA
