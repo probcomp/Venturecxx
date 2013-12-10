@@ -360,21 +360,21 @@ absorbAt a = do
 -- (Un)Incorporate the value currently at the given address (from)into
 -- its operator using the supplied function (which is expected to be
 -- either do_inc or do_uninc).  Only applies to Output nodes.
-corporate :: (Value -> SP m -> SP m) -> Address -> Trace m -> Trace m
-corporate f a = execState (do
-  node <- use $ nodes . hardix "Unincorporating the value of a nonexistent node" a
+corporate :: String -> (Value -> SP m -> SP m) -> Address -> Trace m -> Trace m
+corporate name f a = execState (do
+  node <- use $ nodes . hardix (name ++ "ncorporating the value of a nonexistent node") a
   case node of
     (Output _ _ _ _ _) -> do
-      let v = fromJust "Unincorporating value that isn't there" $ valueOf node
-      spaddr <- gets $ fromJust "Unincorporating value for an output with no operator address" . (operatorAddr node)
-      sp <- gets $ fromJust "Unincorporating value for an output with no operator" . (operator node)
+      let v = fromJust (name ++ "ncorporating value that isn't there") $ valueOf node
+      spaddr <- gets $ fromJust (name ++ "ncorporating value for an output with no operator address") . (operatorAddr node)
+      sp <- gets $ fromJust (name ++ "ncorporating value for an output with no operator") . (operator node)
       sprs . ix spaddr %= \r -> r{sp = f v sp}
     _ -> return ())
 
 do_unincorporate :: Address -> Trace m -> Trace m
-do_unincorporate = corporate do_uninc
+do_unincorporate = corporate "Uni" do_uninc
 do_incorporate :: Address -> Trace m -> Trace m
-do_incorporate = corporate do_inc
+do_incorporate = corporate "I" do_inc
 
 constrain :: Address -> Value -> Trace m -> Trace m
 constrain a v = execState (do
