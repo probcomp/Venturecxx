@@ -169,6 +169,16 @@ self_select_1 =
     [ Assume "x" $ App (Var "bernoulli") []
     , Predict $ venture_if (Var "x") (Var "x") (Datum $ Number 0.0)
     ]
+-- liftM discreteHistogram $ venture_main 100 self_select_1
+
+-- (assume x (flip))
+-- (predict (if x (if x x 1.0) 0.0))
+self_select_2 :: [Directive]
+self_select_2 =
+    [ Assume "x" $ App (Var "bernoulli") []
+    , Predict $ venture_if (Var "x") (venture_if (Var "x") (Var "x") (Datum $ Number 1.0)) (Datum $ Number 0.0)
+    ]
+-- liftM discreteHistogram $ venture_main 100 self_select_2
 
 -- Next subgoal: Implement collapsed beta bernoulli and compare correct answers against uncollapsed.
 -- - This forces SPs with state
