@@ -44,22 +44,22 @@ scaffold_from_principal_node a = do
 
 collectERG :: [(Address,Maybe Address)] -> StateT Scaffold (Reader (Trace m)) ()
 collectERG [] = return ()
-collectERG ((a,drg_parent):as) = do
-  -- drg_parent == Nothing means this is a principal node
+collectERG ((a,erg_parent):as) = do
+  -- erg_parent == Nothing means this is a principal node
   member <- uses drg $ O.member a
-  -- Not stopping on nodes that are already absorbers because they can become DRG nodes
-  -- (if I discover that their operator is in the DRG after all)
+  -- Not stopping on nodes that are already absorbers because they can become ERG nodes
+  -- (if I discover that their operator is in the ERG after all)
   if member then collectERG as
   else do
-    node <- view $ nodes . hardix "Collecting a nonexistent node into the DRG" a
+    node <- view $ nodes . hardix "Collecting a nonexistent node into the ERG" a
     case node of
-      (Constant _) -> error "Constant node should never appear in the DRG"
+      (Constant _) -> error "Constant node should never appear in the ERG"
       (Reference _ _) -> resampling a
-      _ -> case drg_parent of
+      _ -> case erg_parent of
              Nothing -> resampling a -- principal node
              (Just p_addr) -> do
                opCanAbsorb <- lift $ asks $ (canAbsorb node p_addr)
-                              . fromJust "DRGing application node with no operator" . operator node
+                              . fromJust "ERGing application node with no operator" . operator node
                if opCanAbsorb then absorbing a
                else resampling a
   where resampling :: Address -> StateT Scaffold (Reader (Trace m)) ()
@@ -73,19 +73,18 @@ collectERG ((a,drg_parent):as) = do
           absorbers %= O.insert a
           collectERG as
 
--- Given the list of addresses in the DRG, produce an updated scaffold
--- that includes the brush.  TODO Do I need to read the existing
--- scaffold to do this, or can I get away with returning the brush
--- and the dead_reqs?
+-- Given the list of addresses in the ERG, produce an updated scaffold
+-- that includes the brush (and whose drg field is the actual DRG, not
+-- the ERG).
 -- The brush is those nodes that become no longer requested by anything
 -- after the requests made by requester nodes in the DRG are retracted.
 -- I compute them using a reference-counting scheme.
 
--- TODO Might this have a double-counting bug, where a node slated for
--- the DRG ends up in the brush, and has its outdoing requests
--- accidentally disabled twice?  The latter would cause trouble only
--- if one of that node's requestees were also requested by some other
--- node, which is not in the DRG.
+-- TODO Might this have a double-counting bug, where a node in the ERG
+-- ends up in the brush, and has its outdoing requests accidentally
+-- disabled twice?  The latter would cause trouble only if one of that
+-- node's requestees were also requested by some other node, which is
+-- not in the scaffold at all.
 collectBrush :: [Address] -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
 collectBrush = mapM_ disableRequests where
     -- Given the address of a DRG node, account for the fact that it
