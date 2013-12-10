@@ -11,6 +11,17 @@ import Utils
 import Language hiding (Value, Env, Exp)
 import Trace
 
+-- Critical example SPs forcing aspects of the interface:
+-- +                         just a basic deterministic function as an SP
+-- bernoulli                 just a basic stochasitc function
+-- normal                    a basic continuous stochastic function
+-- compoundSP                Venture's lambda; forces selective absorbing
+-- collapsed beta bernoulli  a higher-order SP with state
+-- mem                       exercises memoization of requests
+-- make-hmm                  ?? forces latent simulation requests; anything else?
+-- something                 forces AAA
+-- others?
+
 nullReq :: SPRequester m
 nullReq = DeterministicR $ \_ -> return []
 
@@ -144,13 +155,6 @@ select = SP { requester = nullReq
             , outputter = DeterministicO selectO
             , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
             }
-
-
--- Critical examples:
--- bernoulli
--- beta bernoulli in Venture
--- collapsed beta bernoulli
--- normal
 
 initializeBuiltins :: (MonadState (Trace m1) m, MonadRandom m1) => Env -> m Env
 initializeBuiltins env = do
