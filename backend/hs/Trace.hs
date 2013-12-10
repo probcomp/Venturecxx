@@ -15,6 +15,10 @@ import Utils
 import Language hiding (Value, Exp, Env)
 import qualified Language as L
 
+----------------------------------------------------------------------
+-- Small objects                                                    --
+----------------------------------------------------------------------
+
 type Value = L.Value SPAddress
 type Exp = L.Exp Value
 type Env = L.Env String Address
@@ -34,9 +38,9 @@ data SimulationRequest = SimulationRequest SRId Exp Env
 srid :: SimulationRequest -> SRId
 srid (SimulationRequest id _ _) = id
 
--- TODO Can I refactor this data type to capture the fact that
--- deterministic requesters and outputters never have meaningful log_d
--- components, whereas stochastic ones may or may not?
+----------------------------------------------------------------------
+-- Stochastic Procedure Interface                                   --
+----------------------------------------------------------------------
 
 -- m is the type of randomness source that this SP uses, presumably an
 -- instance of MonadRandom.
@@ -59,6 +63,9 @@ data SP m = forall a. SP
     , incorporate :: Value -> a -> a
     , unincorporate :: Value -> a -> a
     }
+-- TODO Can I refactor this data type to capture the fact that
+-- deterministic requesters and outputters never have meaningful log_d
+-- components, whereas stochastic ones may or may not?
 
 -- These functions appear to be necessary to avoid a bizarre compile
 -- error in GHC, per
@@ -103,27 +110,9 @@ isRandomO (RandomO _) = True
 isRandomO (DeterministicO _) = False
 isRandomO (SPMaker _) = False
 
--- Can the given node, which is an application of the given SP, absorb
--- a change to the given address (which is expected to be one of its
--- parents).
-canAbsorb :: Node -> Address -> SP m -> Bool
-canAbsorb (Request _ _ opA _)      a _                        | opA  == a = False
-canAbsorb (Request _ _ _ _)        _ SP{log_d_req = (Just _)}             = True
-canAbsorb (Output _ reqA _ _ _)    a _                        | reqA == a = False
-canAbsorb (Output _ _ opA _ _)     a _                        | opA  == a = False
-canAbsorb (Output _ _ _ _ (fst:_)) a SP{outputter = Trivial}  | fst  == a = False
-canAbsorb (Output _ _ _ _ _)       _ SP{outputter = Trivial}              = True
-canAbsorb (Output _ _ _ _ _)       _ SP{log_d_out = (Just _)}             = True
-canAbsorb _ _ _ = False
-
-data SPRecord m = SPRecord { sp :: (SP m)
-                           , srid_seed :: UniqueSeed
-                           , requests :: M.Map SRId Address
-                           }
-    deriving Show
-
-spRecord :: SP m -> SPRecord m
-spRecord sp = SPRecord sp uniqueSeed M.empty
+----------------------------------------------------------------------
+-- Nodes                                                            --
+----------------------------------------------------------------------
 
 data Node = Constant Value
           | Reference (Maybe Value) Address
@@ -147,6 +136,15 @@ revalue (Output _ reqA opa args reqs) v = Output v reqA opa args reqs
 
 value :: Simple Lens Node (Maybe Value)
 value = lens valueOf revalue
+
+isRegenerated :: Node -> Bool
+isRegenerated (Constant _) = True
+isRegenerated (Reference Nothing _) = False
+isRegenerated (Reference (Just _) _) = True
+isRegenerated (Request Nothing _ _ _) = False
+isRegenerated (Request (Just _) _ _ _) = True
+isRegenerated (Output Nothing _ _ _ _) = False
+isRegenerated (Output (Just _) _ _ _ _) = True
 
 sim_reqs :: Simple Lens Node (Maybe [SimulationRequest])
 sim_reqs = lens _requests re_requests where
@@ -187,8 +185,21 @@ responses = lens _responses addResponses where
     addResponses (Output v reqA a as _) resps = Output v reqA a as resps
     addResponses n _ = n
 
+-- Can the given node, which is an application of the given SP, absorb
+-- a change to the given address (which is expected to be one of its
+-- parents).
+canAbsorb :: Node -> Address -> SP m -> Bool
+canAbsorb (Request _ _ opA _)      a _                        | opA  == a = False
+canAbsorb (Request _ _ _ _)        _ SP{log_d_req = (Just _)}             = True
+canAbsorb (Output _ reqA _ _ _)    a _                        | reqA == a = False
+canAbsorb (Output _ _ opA _ _)     a _                        | opA  == a = False
+canAbsorb (Output _ _ _ _ (fst:_)) a SP{outputter = Trivial}  | fst  == a = False
+canAbsorb (Output _ _ _ _ _)       _ SP{outputter = Trivial}              = True
+canAbsorb (Output _ _ _ _ _)       _ SP{log_d_out = (Just _)}             = True
+canAbsorb _ _ _ = False
+
 ----------------------------------------------------------------------
--- Traces
+-- Traces                                                           --
 ----------------------------------------------------------------------
 
 -- A "torus" is a trace some of whose nodes have Nothing values, and
@@ -205,8 +216,22 @@ data Trace rand =
           }
     deriving Show
 
--- This needs to be late in the file because of circular type
--- dependencies?
+data SPRecord m = SPRecord { sp :: (SP m)
+                           , srid_seed :: UniqueSeed
+                           , requests :: M.Map SRId Address
+                           }
+    deriving Show
+
+spRecord :: SP m -> SPRecord m
+spRecord sp = SPRecord sp uniqueSeed M.empty
+
+----------------------------------------------------------------------
+-- Basic Trace Manipulations                                        --
+----------------------------------------------------------------------
+
+-- TODO Ideally, the operations in this group neither expect nor
+-- conserve any invariants not enforced by the type system.
+
 makeLenses ''Trace
 
 empty :: Trace m
@@ -218,15 +243,6 @@ chaseReferences a t = do
   chase n
     where chase (Reference _ a) = chaseReferences a t
           chase n = Just n
-
-isRegenerated :: Node -> Bool
-isRegenerated (Constant _) = True
-isRegenerated (Reference Nothing _) = False
-isRegenerated (Reference (Just _) _) = True
-isRegenerated (Request Nothing _ _ _) = False
-isRegenerated (Request (Just _) _ _ _) = True
-isRegenerated (Output Nothing _ _ _ _) = False
-isRegenerated (Output (Just _) _ _ _ _) = True
 
 operatorAddr :: Node -> Trace m -> Maybe SPAddress
 operatorAddr n t = do
@@ -254,6 +270,13 @@ isRandomNode n@(Output _ _ _ _ _) t = case operator n t of
                                         Nothing -> False
                                         (Just SP{outputter = out}) -> isRandomO out
 isRandomNode _ _ = False
+
+----------------------------------------------------------------------
+-- Intermediate Trace Manipulations                                 --
+----------------------------------------------------------------------
+
+-- TODO What invariants do these manipulations depend upon and enforce
+-- (if one does not circumvent them with basic trace manipulations)?
 
 -- TODO Can I turn these three into an appropriate lens?
 lookupNode :: Address -> Trace m -> Maybe Node
@@ -339,8 +362,16 @@ numRequests a t = fromMaybe 0 $ t^.request_counts.at a
 children :: Address -> Trace m -> [Address]
 children a t = t ^. nodeChildren . at a & fromJust "Loooking up the children of a nonexistent node" & S.toList
 
--- TODO Use of Template Haskell seems to force this to be in the same
--- block of code as lookupNode.
+----------------------------------------------------------------------
+-- Advanced Trace Manipulations                                     --
+----------------------------------------------------------------------
+
+-- TODO Is there actually a coherent sense in which these are a higher
+-- layer of abstraction than the intermediate trace manipulations?
+-- What invariants do these operations expect and enforce (if one does
+-- not circumvent them)?  What, if anything, needs to be added to make
+-- this set complete?
+
 absorb :: Node -> SP m -> Trace m -> Double
 absorb (Request (Just reqs) _ _ args) SP{log_d_req = (Just f), current = a} _ = f a args reqs
 -- This clause is only right if canAbsorb returned True on all changed parents
@@ -406,7 +437,8 @@ maybe_constrain_parents a v = do
     _ -> return ()
 
 ----------------------------------------------------------------------
--- Invariants that traces ought to obey
+-- Invariants that traces ought to obey                             --
+----------------------------------------------------------------------
 
 -- 1. Every Address should point to a Node, except in the middle of
 --    relevant operations (which are what? node insertion and node
@@ -491,6 +523,10 @@ invalidRequestCountKeys t = filter (invalidAddress t) $ M.keys $ t ^. request_co
 
 invalidAddress :: Trace m -> Address -> Bool
 invalidAddress t a = not $ isJust $ lookupNode a t
+
+----------------------------------------------------------------------
+-- Displaying traces for debugging                                  --
+----------------------------------------------------------------------
 
 traceShowTrace :: (Trace m) -> (Trace m)
 traceShowTrace t = traceShow (pp t) t
