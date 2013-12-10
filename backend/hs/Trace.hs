@@ -229,8 +229,8 @@ spRecord sp = SPRecord sp uniqueSeed M.empty
 -- Basic Trace Manipulations                                        --
 ----------------------------------------------------------------------
 
--- TODO Ideally, the operations in this group neither expect nor
--- conserve any invariants not enforced by the type system.
+-- The operations in this group neither expect nor conserve any
+-- invariants not enforced by the type system.
 
 makeLenses ''Trace
 
