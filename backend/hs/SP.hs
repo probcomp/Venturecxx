@@ -6,6 +6,7 @@ import Control.Monad.State.Lazy hiding (state)
 import Control.Monad.State.Class
 import Control.Monad.Random -- From cabal install MonadRandom
 import Numeric.SpecFunctions -- From cabal install spec-functions
+import Control.Lens  -- from cabal install lens
 
 import Utils
 import Language hiding (Value, Env, Exp)
@@ -199,6 +200,11 @@ cbeta_bernoulli_log_d (ctYes, ctNo) [] [] (Boolean False) = log (1-weight) where
 cbeta_bernoulli_log_d _ [] [] _ = error "Value supplied to collapsed beta bernoulli log_d is not a boolean"
 cbeta_bernoulli_log_d _ _ _ _ = error "Incorrect arity for collapsed beta bernoulli"
 
+cbeta_bernoulli_frob :: (Double -> Double) -> Value -> (Double,Double) -> (Double,Double)
+cbeta_bernoulli_frob f (Boolean True)  s = s & _1 %~ f
+cbeta_bernoulli_frob f (Boolean False) s = s & _2 %~ f
+cbeta_bernoulli_frob _ _ _ = error "Trying to incorporate a non-boolean into collapsed beta bernoulli"
+
 cbeta_bernoulli :: (MonadRandom m) => Double -> Double -> SP m
 cbeta_bernoulli ctYes ctNo = T.SP
   { T.requester = no_state_r nullReq
@@ -206,8 +212,8 @@ cbeta_bernoulli ctYes ctNo = T.SP
   , T.outputter = T.RandomO $ cbeta_bernoulli_flip
   , T.log_d_out = Just $ cbeta_bernoulli_log_d
   , T.current = (ctYes, ctNo)
-  , T.incorporate = undefined
-  , T.unincorporate = undefined
+  , T.incorporate = cbeta_bernoulli_frob succ
+  , T.unincorporate = cbeta_bernoulli_frob pred
   }
 
 do_make_cbeta_bernoulli :: (MonadRandom m) => [Node] -> [Node] -> SP m
