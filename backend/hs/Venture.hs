@@ -159,6 +159,17 @@ beta_binomial =
 
 -- liftM discreteHistogram $ venture_main 100 beta_binomial
 
+venture_if :: Exp -> Exp -> Exp -> Exp
+venture_if p c a = App (App (Var "select") [p, (Lam [] c), (Lam [] a)]) []
+
+-- (assume x (flip))
+-- (predict (if x x 0.0))
+self_select_1 :: [Directive]
+self_select_1 =
+    [ Assume "x" $ App (Var "bernoulli") []
+    , Predict $ venture_if (Var "x") (Var "x") (Datum $ Number 0.0)
+    ]
+
 -- Next subgoal: Implement collapsed beta bernoulli and compare correct answers against uncollapsed.
 -- - This forces SPs with state
 
