@@ -62,6 +62,7 @@ data SPRequester m = DeterministicR ([Address] -> UniqueSource [SimulationReques
 data SPOutputter m = Trivial
                    | DeterministicO ([Node] -> [Node] -> Value)
                    | RandomO ([Node] -> [Node] -> m Value)
+                   | SPMaker ([Node] -> [Node] -> SP m) -- Are these ever random?
 
 asRandomR :: (Monad m) => SPRequester m -> [Address] -> UniqueSourceT m [SimulationRequest]
 asRandomR (RandomR f) as = f as
@@ -71,16 +72,18 @@ isRandomR :: SPRequester m -> Bool
 isRandomR (RandomR _) = True
 isRandomR (DeterministicR _) = False
 
-asRandomO :: (Monad m) => SPOutputter m -> [Node] -> [Node] -> m Value
-asRandomO Trivial _ (r0:_) = return $ fromJust "Trivial outputter node had no value" $ valueOf r0
+asRandomO :: (Monad m) => SPOutputter m -> [Node] -> [Node] -> Either (m Value) (SP m)
+asRandomO Trivial _ (r0:_) = Left $ return $ fromJust "Trivial outputter node had no value" $ valueOf r0
 asRandomO Trivial _ _ = error "Trivial outputter requires one response"
-asRandomO (RandomO f) args reqs = f args reqs
-asRandomO (DeterministicO f) args reqs = return $ f args reqs
+asRandomO (RandomO f) args reqs = Left $ f args reqs
+asRandomO (DeterministicO f) args reqs = Left $ return $ f args reqs
+asRandomO (SPMaker f) args reqs = Right $ f args reqs
 
 isRandomO :: SPOutputter m -> Bool
 isRandomO Trivial = False
 isRandomO (RandomO _) = True
 isRandomO (DeterministicO _) = False
+isRandomO (SPMaker _) = False
 
 -- Can the given node, which is an application of the given SP, absorb
 -- a change to the given address (which is expected to be one of its

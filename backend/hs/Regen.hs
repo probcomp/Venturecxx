@@ -62,7 +62,11 @@ regenValue a = lift (do
       ns <- use nodes
       let args = map (fromJust "Regenerating value for an output with a missing parent" . flip M.lookup ns) ps
       let results = map (fromJust "Regenerating value for an output with a missing request result" . flip M.lookup ns) rs
-      v <- lift $ asRandomO out args results
+      let result = asRandomO out args results
+      v <- case result of
+             (Left vact) -> lift vact
+             (Right sp) -> do spAddr <- state $ addFreshSP sp
+                              return $ Procedure spAddr
       nodes . ix a . value .= Just v)
 
 evalRequests :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) => SPAddress -> [SimulationRequest] -> t m [Address]
