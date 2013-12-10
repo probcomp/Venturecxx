@@ -196,6 +196,11 @@ self_select_2 =
 --   involving brush.  Is there anything here besides the
 --   (observe (max (normal .) (normal .)) 0) can of bugs?
 -- - Massage the code until I can tutor Daniel in it
+-- - Understand the set of layers of abstraction of trace operations:
+--   - what invariants does each layer preserve?
+--   - quickcheck and/or prove preservation of those invariants
+--   - enforce by module export lists that clients do not circumvent
+--     those abstraction boundaries.
 
 -- Non-goals
 -- - Latent simulation kernels for SPs
