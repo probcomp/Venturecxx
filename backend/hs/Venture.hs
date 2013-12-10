@@ -196,15 +196,19 @@ self_select_2 =
     ]
 -- liftM discreteHistogram $ venture_main 100 self_select_2
 
--- Next subgoal: Implement collapsed beta bernoulli and compare correct answers against uncollapsed.
--- - This forces SPs with state
+-- Next subgoal: Daniel says that collapsed exchangeably coupled state
+-- does not force regen/detach order symmetry, only detach before
+-- regen.  Confirm.
 
 -- Eventual goals
 -- - Built-in SPs with collapsed exchangeably coupled state
 --   - This is where incorporate and unincorporate (remove) come from
---   - In the presence of conditionals, this imposes the ordering requirement on regen and detach
+--   - In the presence of conditionals, does this impose the ordering
+--     requirement on regen and detach or merely force detach to
+--     precede regen?
 
 -- Potential goals
+-- - Implement and test mem
 -- - Figure out better ways to assess whether inference is producing
 --   sensible results (graphical histograms, convergence metrics,
 --   comparisons against allegedly equivalent models, etc).
