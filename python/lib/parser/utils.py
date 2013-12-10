@@ -18,7 +18,7 @@
 
 from pyparsing import Literal,CaselessLiteral,Regex,Word,Combine,Group,Optional,\
     ZeroOrMore,OneOrMore,Forward,nums,alphas,FollowedBy,Empty,ParseException,\
-    Keyword, CaselessKeyword, MatchFirst, ParseResults, White, And
+    Keyword, CaselessKeyword, MatchFirst, ParseResults, White, And, NotAny
 import re
 import json
 import copy
@@ -57,14 +57,15 @@ def combine_locs(l):
 #
 # evaluates to itself as a string
 def symbol_token(blacklist_symbols=[], whitelist_symbols=[], symbol_map={}):
-    regex = Regex(r'[a-zA-Z_][a-zA-Z_0-9]*')
+    regex = Regex(r'\b[a-zA-Z_][a-zA-Z_0-9]*\b')
     whitelist_toks = [Keyword(x) for x in whitelist_symbols]
-    symbol = lw(MatchFirst([regex] + whitelist_toks))
+    if blacklist_symbols:
+        blacklist_toks = [NotAny(Keyword(x)).suppress() for x in blacklist_symbols]
+        symbol = lw(And(blacklist_toks).suppress() + MatchFirst([regex] + whitelist_toks))
+    else:
+        symbol = lw(MatchFirst([regex] + whitelist_toks))
     def process_symbol(s, loc, toks):
         tok = toks[0]['value']
-        if tok in blacklist_symbols:
-            #raise ParseException(s,loc,"Reserved word cannot be symbol: " + tok)
-            raise VentureException("text_parse","Reserved word cannot be symbol: " + tok,text_index=toks[0]['loc'])
         if tok in symbol_map:
             tok = symbol_map[tok]
         return [{"loc":toks[0]['loc'], "value":tok}]
@@ -75,7 +76,7 @@ def symbol_token(blacklist_symbols=[], whitelist_symbols=[], symbol_map={}):
 #
 # evaluates to a python float
 def number_token():
-    number = lw(Regex(r'(-?\d+\.?\d*)|(-?\d*\.?\d+)'))
+    number = lw(Regex(r'\b(-?\d+\.?\d*)|(-?\d*\.?\d+)\b'))
     def process_number(s, loc, toks):
         return [{"loc":toks[0]['loc'], "value":float(toks[0]['value'])}]
     number.setParseAction(process_number)
@@ -85,7 +86,7 @@ def number_token():
 #
 # evaluates to a python integer
 def integer_token():
-    integer = lw(Regex(r'\d+'))
+    integer = lw(Regex(r'\b\d+\b'))
     def process_integer(s, loc, toks):
         return [{"loc":toks[0]['loc'], "value":int(toks[0]['value'])}]
     integer.setParseAction(process_integer)
@@ -97,7 +98,7 @@ def integer_token():
 def string_token():
     # string = lw(Regex(r'"(?:[^"\\]|\\"|\\\\|\\/|\\r|\\b|\\n|\\t|\\f|\\[0-7]{3})*"'))
     # match more strings to produce helpful error message
-    string = lw(Regex(r'"(?:[^"\\]|\\.)*"'))
+    string = lw(Regex(r'(?<!\w>)"(?:[^"\\]|\\.)*"(?!\w)'))
     def process_string(s, loc, toks):
         s = toks[0]['value']
         s = s[1:-1]
