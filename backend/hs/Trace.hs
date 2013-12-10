@@ -360,8 +360,8 @@ absorbAt a = do
 -- (Un)Incorporate the value currently at the given address (from)into
 -- its operator using the supplied function (which is expected to be
 -- either do_inc or do_uninc).  Only applies to Output nodes.
-corporate :: String -> (Value -> SP m -> SP m) -> Address -> Trace m -> Trace m
-corporate name f a = execState (do
+corporate :: (MonadState (Trace m) m1) => String -> (Value -> SP m -> SP m) -> Address -> m1 ()
+corporate name f a = do
   node <- use $ nodes . hardix (name ++ "ncorporating the value of a nonexistent node") a
   case node of
     (Output _ _ _ _ _) -> do
@@ -369,18 +369,18 @@ corporate name f a = execState (do
       spaddr <- gets $ fromJust (name ++ "ncorporating value for an output with no operator address") . (operatorAddr node)
       sp <- gets $ fromJust (name ++ "ncorporating value for an output with no operator") . (operator node)
       sprs . ix spaddr %= \r -> r{sp = f v sp}
-    _ -> return ())
+    _ -> return ()
 
-do_unincorporate :: Address -> Trace m -> Trace m
+do_unincorporate :: (MonadState (Trace m) m1) => Address -> m1 ()
 do_unincorporate = corporate "Uni" do_uninc
-do_incorporate :: Address -> Trace m -> Trace m
+do_incorporate :: (MonadState (Trace m) m1) => Address -> m1 ()
 do_incorporate = corporate "I" do_inc
 
 constrain :: Address -> Value -> Trace m -> Trace m
 constrain a v = execState (do
-  modify $ do_unincorporate a
+  do_unincorporate a
   nodes . ix a . value .= Just v
-  modify $ do_incorporate a
+  do_incorporate a
   -- TODO What will cause the node to be re-added to the set of random
   -- choices if the constraint is lifted in the future?
   randoms %= S.delete a

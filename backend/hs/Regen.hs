@@ -69,7 +69,7 @@ regenValue a = lift (do
              (Right sp) -> do spAddr <- state $ addFreshSP sp
                               return $ Procedure spAddr
       nodes . ix a . value .= Just v
-      modify $ do_incorporate a)
+      do_incorporate a)
 
 evalRequests :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) => SPAddress -> [SimulationRequest] -> t m [Address]
 evalRequests a srs = mapM evalRequest srs where

@@ -138,7 +138,7 @@ detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru }
   where eraseValue :: Address -> State (Trace m) ()
         eraseValue a = do
           node <- use $ nodes . hardix "Erasing the value of a nonexistent node" a
-          modify $ do_unincorporate a
+          do_unincorporate a
           nodes . ix a . value .= Nothing
           case node of
             (Request _ (Just outA) _ _) -> nodes . ix outA . responses .= []
