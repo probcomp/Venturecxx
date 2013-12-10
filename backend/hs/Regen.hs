@@ -58,7 +58,9 @@ regenValue a = lift (do
         Nothing -> return ()
         (Just outA') -> nodes . ix outA' . responses .= resps
     (Output _ _ _ ps rs) -> do
-      SP{ outputter = out, current = st } <- gets $ fromJust "Regenerating value for an output with no operator" . (operator node)
+      spaddr <- gets $ fromJust "Regenerating value for an output with no operator address" . (operatorAddr node)
+      sp@SP{ outputter = out, current = st }
+          <- gets $ fromJust "Regenerating value for an output with no operator" . (operator node)
       ns <- use nodes
       let args = map (fromJust "Regenerating value for an output with a missing parent" . flip M.lookup ns) ps
       let results = map (fromJust "Regenerating value for an output with a missing request result" . flip M.lookup ns) rs
@@ -67,6 +69,7 @@ regenValue a = lift (do
              (Left vact) -> lift vact
              (Right sp) -> do spAddr <- state $ addFreshSP sp
                               return $ Procedure spAddr
+      sprs . ix spaddr %= \r -> r{sp = do_inc v sp}
       nodes . ix a . value .= Just v)
 
 evalRequests :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) => SPAddress -> [SimulationRequest] -> t m [Address]

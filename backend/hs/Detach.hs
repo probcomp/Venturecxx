@@ -6,7 +6,7 @@ import qualified Data.Set as S
 import qualified Data.Map as M
 import Control.Monad.Reader
 import Control.Monad.Trans.Writer.Strict
-import Control.Monad.Trans.State.Lazy hiding (state)
+import Control.Monad.Trans.State.Lazy
 import Control.Lens hiding (children)
 import Text.PrettyPrint hiding (empty) -- presumably from cabal install pretty
 
@@ -141,6 +141,11 @@ detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru }
           nodes . ix a . value .= Nothing
           case node of
             (Request _ (Just outA) _ _) -> nodes . ix outA . responses .= []
+            (Output _ _ _ _ _) -> do
+              spaddr <- gets $ fromJust "Detaching value for an output with no operator address" . (operatorAddr node)
+              sp <- gets $ fromJust "Detaching value for an output with no operator" . (operator node)
+              let v = fromJust "Detaching value that isn't there" $ valueOf node
+              sprs . ix spaddr %= \r -> r{sp = do_uninc v sp}
             _ -> return ()
         forgetRequest :: (SPAddress, [SRId]) -> State (Trace m) ()
         forgetRequest x = modify $ forgetResponses x

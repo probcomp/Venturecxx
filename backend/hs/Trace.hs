@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, TemplateHaskell, TypeSynonymInstances, FlexibleInstances, ExistentialQuantification #-}
+{-# LANGUAGE FlexibleContexts, TemplateHaskell, TypeSynonymInstances, FlexibleInstances, ExistentialQuantification, RecordWildCards #-}
 
 module Trace where
 
@@ -59,6 +59,15 @@ data SP m = forall a. SP
     , incorporate :: Value -> a -> a
     , unincorporate :: Value -> a -> a
     }
+
+-- These functions appear to be necessary to avoid a bizarre compile
+-- error in GHC, per
+-- http://breaks.for.alienz.org/blog/2011/10/21/record-update-for-insufficiently-polymorphic-field/
+do_inc :: Value -> SP m -> SP m
+do_inc v SP{..} = SP{ current = incorporate v current, ..}
+
+do_uninc :: Value -> SP m -> SP m
+do_uninc v SP{..} = SP{ current = unincorporate v current, ..}
 
 instance Show (SP m) where
     show _ = "A stochastic procedure"
