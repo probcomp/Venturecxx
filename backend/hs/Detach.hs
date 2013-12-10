@@ -132,7 +132,7 @@ collectBrush = mapM_ disableRequests where
 detach' :: Scaffold -> StateT (Trace m) (Writer LogDensity) ()
 detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru } = do
   mapM_ absorbAt $ reverse $ O.toList abs
-  mapM_ (stupid . eraseValue) $ O.toList d
+  mapM_ (stupid . eraseValue) $ reverse $ O.toList d
   mapM_ (stupid . forgetRequest) reqs
   mapM_ (stupid . forgetNode) $ S.toList bru
   where eraseValue :: Address -> State (Trace m) ()
