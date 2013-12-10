@@ -376,8 +376,8 @@ do_unincorporate = corporate "Uni" do_uninc
 do_incorporate :: (MonadState (Trace m) m1) => Address -> m1 ()
 do_incorporate = corporate "I" do_inc
 
-constrain :: Address -> Value -> Trace m -> Trace m
-constrain a v = execState (do
+constrain :: (MonadState (Trace m) m1) => Address -> Value -> m1 ()
+constrain a v = do
   do_unincorporate a
   nodes . ix a . value .= Just v
   do_incorporate a
@@ -386,7 +386,7 @@ constrain a v = execState (do
   randoms %= S.delete a
   node <- use $ nodes . hardix "Trying to constrain a non-existent node" a
   case node of
-    (Reference _ a') -> modify $ constrain a' v
+    (Reference _ a') -> constrain a' v
     (Output _ _ _ _ reqs) -> do
       op <- gets $ operator node
       case op of
@@ -396,10 +396,10 @@ constrain a v = execState (do
              -- TODO Make sure this constraint gets lifted if the
              -- requester is regenerated, even if r0 is ultimately a
              -- reference to some non-brush node.
-             (r0:_) -> modify $ constrain r0 v
+             (r0:_) -> constrain r0 v
              _ -> error "Trying to constrain a trivial output node with no fulfilments"
         _ -> return ()
-    _ -> return ())
+    _ -> return ()
 
 ----------------------------------------------------------------------
 -- Invariants that traces ought to obey

@@ -44,7 +44,7 @@ observe exp v = do
   -- from which it in fact has no way to recover.  As of the present
   -- writing, Venturecxx has this limitation as well, so I will not
   -- address it here.
-  lift $ modify $ constrain address v
+  lift $ constrain address v
 
 predict :: (MonadRandom m) => Exp -> ReaderT Env (StateT (Trace m) m) Address
 predict exp = do
