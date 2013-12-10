@@ -200,11 +200,14 @@ cbeta_bernoulli_log_d _ [] [] _ = error "Value supplied to collapsed beta bernou
 cbeta_bernoulli_log_d _ _ _ _ = error "Incorrect arity for collapsed beta bernoulli"
 
 cbeta_bernoulli :: (MonadRandom m) => Double -> Double -> SP m
-cbeta_bernoulli ctYes ctNo = no_state_sp NoStateSP
-  { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ cbeta_bernoulli_flip (ctYes, ctNo)
-  , log_d_out = Just $ cbeta_bernoulli_log_d (ctYes, ctNo)
+cbeta_bernoulli ctYes ctNo = T.SP
+  { T.requester = no_state_r nullReq
+  , T.log_d_req = Just $ const trivial_log_d_req -- Only right for requests it actually made
+  , T.outputter = T.RandomO $ cbeta_bernoulli_flip
+  , T.log_d_out = Just $ cbeta_bernoulli_log_d
+  , T.current = (ctYes, ctNo)
+  , T.incorporate = undefined
+  , T.unincorporate = undefined
   }
 
 do_make_cbeta_bernoulli :: (MonadRandom m) => [Node] -> [Node] -> SP m
