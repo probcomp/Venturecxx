@@ -34,12 +34,6 @@ data SimulationRequest = SimulationRequest SRId Exp Env
 srid :: SimulationRequest -> SRId
 srid (SimulationRequest id _ _) = id
 
--- TODO An SP needing state of type a takes the a in appropriate
--- places, and offers incorporate and unincorporate functions that
--- transform states.  The Trace needs to contain a heterogeneous
--- collection of all the SP states, perhaps per
--- http://www.haskell.org/haskellwiki/Heterogenous_collections#Existential_types
-
 -- TODO Can I refactor this data type to capture the fact that
 -- deterministic requesters and outputters never have meaningful log_d
 -- components, whereas stochastic ones may or may not?
@@ -47,8 +41,14 @@ srid (SimulationRequest id _ _) = id
 -- m is the type of randomness source that this SP uses, presumably an
 -- instance of MonadRandom.
 -- a is the type of the state that mediates any exchangeable coupling
--- between this SP's outputs.  For most SPs, a = ().  a is existential
+-- between this SP's outputs.  For most SPs, a = ().  a is existential, per
+-- http://www.haskell.org/haskellwiki/Heterogenous_collections#Existential_types
 -- because I wish to be able to store SPs in homogeneous data structures.
+
+-- The collection of objects (incorporate v) U (unincorporate v) is
+-- expected to form an _Abelian_ group acting on a (except for v on
+-- which they error out).  Further, for any given v, (unincorporate v)
+-- and (incorporate v) are expected to be inverses.
 data SP m = forall a. SP
     { requester :: SPRequester m a
     , log_d_req :: Maybe (a -> [Address] -> [SimulationRequest] -> Double)
