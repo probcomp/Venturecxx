@@ -156,8 +156,24 @@ beta_binomial =
     , Observe (App (Var "coin") []) (Boolean True)
     , Predict (App (Var "coin") [])
     ]
-
 -- liftM discreteHistogram $ venture_main 100 beta_binomial
+
+-- Beta Bernoulli (collapsed).  In Lisp syntax:
+--  (assume coin (make-cbeta-bernoulli 1 1))
+--  (observe (coin) true)
+--  (observe (coin) true)
+--  (observe (coin) true)
+--  (predict (coin))
+cbeta_binomial :: [Directive]
+cbeta_binomial =
+    [ Assume "coin" $ App (Var "make-cbeta-bernoulli") [Datum $ Number 1, Datum $ Number 1]
+    , Observe (App (Var "coin") []) (Boolean True)
+    , Observe (App (Var "coin") []) (Boolean True)
+    , Observe (App (Var "coin") []) (Boolean True)
+    , Predict (App (Var "coin") [])
+    ]
+
+-- liftM discreteHistogram $ venture_main 100 cbeta_binomial
 
 venture_if :: Exp -> Exp -> Exp -> Exp
 venture_if p c a = App (App (Var "select") [p, (Lam [] c), (Lam [] a)]) []

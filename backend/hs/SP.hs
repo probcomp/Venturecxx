@@ -201,6 +201,6 @@ initializeBuiltins env = do
                        , ("select", select)
                        , ("list", list)
                        , ("weighted", weighted)
-                       , ("make_cbeta_bernoulli", make_cbeta_bernoulli)]
+                       , ("make-cbeta-bernoulli", make_cbeta_bernoulli)]
             names = map fst namedSps
             sps = map snd namedSps
