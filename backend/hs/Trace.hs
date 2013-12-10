@@ -386,7 +386,9 @@ do_incorporate a = execState (do
 
 constrain :: Address -> Value -> Trace m -> Trace m
 constrain a v = execState (do
+  modify $ do_unincorporate a
   nodes . ix a . value .= Just v
+  modify $ do_incorporate a
   -- TODO What will cause the node to be re-added to the set of random
   -- choices if the constraint is lifted in the future?
   randoms %= S.delete a
