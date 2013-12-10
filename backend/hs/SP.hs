@@ -67,37 +67,39 @@ no_state_o (RandomO f) = T.RandomO $ const f
 no_state_o (SPMaker f) = T.SPMaker $ const f
 
 compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
-compoundSP formals exp env = no_state_sp
-    NoStateSP { requester = DeterministicR req
-       , log_d_req = Just $ trivial_log_d_req
-       , outputter = Trivial
-       , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
-       } where
-        req args = do
-          freshId <- liftM SRId fresh
-          let r = SimulationRequest freshId exp $ Frame (M.fromList $ zip formals args) env
-          return [r]
+compoundSP formals exp env = no_state_sp NoStateSP
+  { requester = DeterministicR req
+  , log_d_req = Just $ trivial_log_d_req
+  , outputter = Trivial
+  , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
+  } where
+    req args = do
+      freshId <- liftM SRId fresh
+      let r = SimulationRequest freshId exp $ Frame (M.fromList $ zip formals args) env
+      return [r]
 
 execList :: [Node] -> [Node] -> Value
 execList ns [] = List $ map (fromJust "Argument node had no value" . valueOf) ns
 execList _ _ = error "List SP given fulfilments"
 
 list :: (Monad m) => SP m
-list = no_state_sp NoStateSP { requester = nullReq
-          , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-          , outputter = DeterministicO execList
-          , log_d_out = Nothing
-          }
+list = no_state_sp NoStateSP
+  { requester = nullReq
+  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , outputter = DeterministicO execList
+  , log_d_out = Nothing
+  }
 
 bernoulliFlip :: (MonadRandom m) => a -> b -> m Value
 bernoulliFlip _ _ = liftM Boolean $ getRandomR (False,True)
 
 bernoulli :: (MonadRandom m) => SP m
-bernoulli = no_state_sp NoStateSP { requester = nullReq
-               , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-               , outputter = RandomO bernoulliFlip
-               , log_d_out = Just $ const $ const $ const $ -log 2.0
-               }
+bernoulli = no_state_sp NoStateSP
+  { requester = nullReq
+  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , outputter = RandomO bernoulliFlip
+  , log_d_out = Just $ const $ const $ const $ -log 2.0
+  }
 
 weightedFlip :: (MonadRandom m) => [Node] -> b -> m Value
 weightedFlip [wt] _ = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0) where
@@ -113,11 +115,12 @@ log_d_weight [_] _ _ = error "Value supplied to log_d_weight is not a boolean"
 log_d_weight _ _ _ = error "Incorrect number of arguments to log_d_weight"
 
 weighted :: (MonadRandom m) => SP m
-weighted = no_state_sp NoStateSP { requester = nullReq
-               , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-               , outputter = RandomO weightedFlip
-               , log_d_out = Just log_d_weight
-               }
+weighted = no_state_sp NoStateSP
+  { requester = nullReq
+  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , outputter = RandomO weightedFlip
+  , log_d_out = Just log_d_weight
+  }
 
 box_muller_cos :: Double -> Double -> Double
 box_muller_cos u1 u2 = r * cos theta where
@@ -145,11 +148,12 @@ log_d_normal [_,_] [] _ = error "Given Value must be a number"
 log_d_normal _ _ _ = error "Incorrect arity for log_d_normal"
 
 normal :: (MonadRandom m) => SP m
-normal = no_state_sp NoStateSP { requester = nullReq
-            , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-            , outputter = RandomO normalFlip
-            , log_d_out = Just log_d_normal
-            }
+normal = no_state_sp NoStateSP
+  { requester = nullReq
+  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , outputter = RandomO normalFlip
+  , log_d_out = Just log_d_normal
+  }
 
 betaO :: (MonadRandom m) => [Node] -> [b] -> m Value
 betaO [alphaN, betaN] [] = do
@@ -174,11 +178,12 @@ log_denisty_beta [_,_] [] _ = error "Given Value must be a number"
 log_denisty_beta _ _ _ = error "Incorrect arity for log_density_beta"
 
 beta :: (MonadRandom m) => SP m
-beta = no_state_sp NoStateSP { requester = nullReq
-          , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-          , outputter = RandomO betaO
-          , log_d_out = Just log_denisty_beta
-          }
+beta = no_state_sp NoStateSP
+  { requester = nullReq
+  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , outputter = RandomO betaO
+  , log_d_out = Just log_denisty_beta
+  }
 
 -- TODO abstract the actual coin flipping between collapsed beta bernoulli and weighted
 cbeta_bernoulli_flip :: (MonadRandom m) => (Double,Double) -> [Node] -> [Node] -> m Value
@@ -195,11 +200,12 @@ cbeta_bernoulli_log_d _ [] [] _ = error "Value supplied to collapsed beta bernou
 cbeta_bernoulli_log_d _ _ _ _ = error "Incorrect arity for collapsed beta bernoulli"
 
 cbeta_bernoulli :: (MonadRandom m) => Double -> Double -> SP m
-cbeta_bernoulli ctYes ctNo = no_state_sp NoStateSP { requester = nullReq
-                                , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-                                , outputter = RandomO $ cbeta_bernoulli_flip (ctYes, ctNo)
-                                , log_d_out = Just $ cbeta_bernoulli_log_d (ctYes, ctNo)
-                                }
+cbeta_bernoulli ctYes ctNo = no_state_sp NoStateSP
+  { requester = nullReq
+  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , outputter = RandomO $ cbeta_bernoulli_flip (ctYes, ctNo)
+  , log_d_out = Just $ cbeta_bernoulli_log_d (ctYes, ctNo)
+  }
 
 do_make_cbeta_bernoulli :: (MonadRandom m) => [Node] -> [Node] -> SP m
 do_make_cbeta_bernoulli [yesN, noN] [] = cbeta_bernoulli yes no where
@@ -208,11 +214,12 @@ do_make_cbeta_bernoulli [yesN, noN] [] = cbeta_bernoulli yes no where
 do_make_cbeta_bernoulli _ _ = error "Incorrect arity for make collapsed beta bernoulli"
 
 make_cbeta_bernoulli :: (MonadRandom m) => SP m
-make_cbeta_bernoulli = no_state_sp NoStateSP { requester = nullReq
-                          , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-                          , outputter = SPMaker do_make_cbeta_bernoulli
-                          , log_d_out = Nothing
-                          }
+make_cbeta_bernoulli = no_state_sp NoStateSP
+  { requester = nullReq
+  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , outputter = SPMaker do_make_cbeta_bernoulli
+  , log_d_out = Nothing
+  }
 
 selectO :: [Node] -> [Node] -> Value
 selectO [p,c,a] _ = if fromJust "Argument node had no value" $ (valueOf p >>= booleanOf) then
@@ -222,11 +229,12 @@ selectO [p,c,a] _ = if fromJust "Argument node had no value" $ (valueOf p >>= bo
 selectO _ _ = error "Wrong number of arguments to SELECT"
 
 select :: SP m
-select = no_state_sp NoStateSP { requester = nullReq
-            , log_d_req = Just $ trivial_log_d_req
-            , outputter = DeterministicO selectO
-            , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
-            }
+select = no_state_sp NoStateSP
+  { requester = nullReq
+  , log_d_req = Just $ trivial_log_d_req
+  , outputter = DeterministicO selectO
+  , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
+  }
 
 initializeBuiltins :: (MonadState (Trace m1) m, MonadRandom m1) => Env -> m Env
 initializeBuiltins env = do
