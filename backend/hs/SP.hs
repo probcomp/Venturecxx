@@ -9,7 +9,9 @@ import Numeric.SpecFunctions -- From cabal install spec-functions
 
 import Utils
 import Language hiding (Value, Env, Exp)
-import Trace
+import Trace hiding (SP(..), SPRequester(..), SPOutputter(..))
+import qualified Trace as T
+import Trace (SP)
 
 -- Critical example SPs forcing aspects of the interface:
 -- +                         just a basic deterministic function as an SP
@@ -22,15 +24,51 @@ import Trace
 -- something                 forces AAA
 -- others?
 
-nullReq :: SPRequester m
+nullReq :: SPRequesterNS m
 nullReq = DeterministicR $ \_ -> return []
 
 trivial_log_d_req :: a -> b -> Double
 trivial_log_d_req = const $ const $ 0.0
 
+data NoStateSP m = NoStateSP
+    { requester :: SPRequesterNS m
+    , log_d_req :: Maybe ([Address] -> [SimulationRequest] -> Double)
+    , outputter :: SPOutputterNS m
+    , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
+    }
+
+data SPRequesterNS m = DeterministicR ([Address] -> UniqueSource [SimulationRequest])
+                     | RandomR ([Address] -> UniqueSourceT m [SimulationRequest])
+
+data SPOutputterNS m = Trivial
+                     | DeterministicO ([Node] -> [Node] -> Value)
+                     | RandomO ([Node] -> [Node] -> m Value)
+                     | SPMaker ([Node] -> [Node] -> T.SP m) -- Are these ever random?
+
+no_state_sp :: NoStateSP m -> T.SP m
+no_state_sp NoStateSP { requester = req, log_d_req = ldr, outputter = out, log_d_out = ldo } =
+    T.SP { T.requester = no_state_r req
+         , T.log_d_req = liftM const ldr
+         , T.outputter = no_state_o out
+         , T.log_d_out = liftM const ldo
+         , T.current = ()
+         , T.incorporate = const id
+         , T.unincorporate = const id
+         }
+
+no_state_r :: SPRequesterNS m -> T.SPRequester m a
+no_state_r (DeterministicR f) = T.DeterministicR $ const f
+no_state_r (RandomR f) = T.RandomR $ const f
+
+no_state_o :: SPOutputterNS m -> T.SPOutputter m a
+no_state_o Trivial = T.Trivial
+no_state_o (DeterministicO f) = T.DeterministicO $ const f
+no_state_o (RandomO f) = T.RandomO $ const f
+no_state_o (SPMaker f) = T.SPMaker $ const f
+
 compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
-compoundSP formals exp env =
-    SP { requester = DeterministicR req
+compoundSP formals exp env = no_state_sp
+    NoStateSP { requester = DeterministicR req
        , log_d_req = Just $ trivial_log_d_req
        , outputter = Trivial
        , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
@@ -45,7 +83,7 @@ execList ns [] = List $ map (fromJust "Argument node had no value" . valueOf) ns
 execList _ _ = error "List SP given fulfilments"
 
 list :: (Monad m) => SP m
-list = SP { requester = nullReq
+list = no_state_sp NoStateSP { requester = nullReq
           , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
           , outputter = DeterministicO execList
           , log_d_out = Nothing
@@ -55,7 +93,7 @@ bernoulliFlip :: (MonadRandom m) => a -> b -> m Value
 bernoulliFlip _ _ = liftM Boolean $ getRandomR (False,True)
 
 bernoulli :: (MonadRandom m) => SP m
-bernoulli = SP { requester = nullReq
+bernoulli = no_state_sp NoStateSP { requester = nullReq
                , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
                , outputter = RandomO bernoulliFlip
                , log_d_out = Just $ const $ const $ const $ -log 2.0
@@ -75,7 +113,7 @@ log_d_weight [_] _ _ = error "Value supplied to log_d_weight is not a boolean"
 log_d_weight _ _ _ = error "Incorrect number of arguments to log_d_weight"
 
 weighted :: (MonadRandom m) => SP m
-weighted = SP { requester = nullReq
+weighted = no_state_sp NoStateSP { requester = nullReq
                , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
                , outputter = RandomO weightedFlip
                , log_d_out = Just log_d_weight
@@ -107,7 +145,7 @@ log_d_normal [_,_] [] _ = error "Given Value must be a number"
 log_d_normal _ _ _ = error "Incorrect arity for log_d_normal"
 
 normal :: (MonadRandom m) => SP m
-normal = SP { requester = nullReq
+normal = no_state_sp NoStateSP { requester = nullReq
             , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
             , outputter = RandomO normalFlip
             , log_d_out = Just log_d_normal
@@ -136,7 +174,7 @@ log_denisty_beta [_,_] [] _ = error "Given Value must be a number"
 log_denisty_beta _ _ _ = error "Incorrect arity for log_density_beta"
 
 beta :: (MonadRandom m) => SP m
-beta = SP { requester = nullReq
+beta = no_state_sp NoStateSP { requester = nullReq
           , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
           , outputter = RandomO betaO
           , log_d_out = Just log_denisty_beta
@@ -157,7 +195,7 @@ cbeta_bernoulli_log_d _ [] [] _ = error "Value supplied to collapsed beta bernou
 cbeta_bernoulli_log_d _ _ _ _ = error "Incorrect arity for collapsed beta bernoulli"
 
 cbeta_bernoulli :: (MonadRandom m) => Double -> Double -> SP m
-cbeta_bernoulli ctYes ctNo = SP { requester = nullReq
+cbeta_bernoulli ctYes ctNo = no_state_sp NoStateSP { requester = nullReq
                                 , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
                                 , outputter = RandomO $ cbeta_bernoulli_flip (ctYes, ctNo)
                                 , log_d_out = Just $ cbeta_bernoulli_log_d (ctYes, ctNo)
@@ -170,7 +208,7 @@ do_make_cbeta_bernoulli [yesN, noN] [] = cbeta_bernoulli yes no where
 do_make_cbeta_bernoulli _ _ = error "Incorrect arity for make collapsed beta bernoulli"
 
 make_cbeta_bernoulli :: (MonadRandom m) => SP m
-make_cbeta_bernoulli = SP { requester = nullReq
+make_cbeta_bernoulli = no_state_sp NoStateSP { requester = nullReq
                           , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
                           , outputter = SPMaker do_make_cbeta_bernoulli
                           , log_d_out = Nothing
@@ -184,7 +222,7 @@ selectO [p,c,a] _ = if fromJust "Argument node had no value" $ (valueOf p >>= bo
 selectO _ _ = error "Wrong number of arguments to SELECT"
 
 select :: SP m
-select = SP { requester = nullReq
+select = no_state_sp NoStateSP { requester = nullReq
             , log_d_req = Just $ trivial_log_d_req
             , outputter = DeterministicO selectO
             , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)

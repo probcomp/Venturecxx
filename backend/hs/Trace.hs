@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, TemplateHaskell, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts, TemplateHaskell, TypeSynonymInstances, FlexibleInstances, ExistentialQuantification #-}
 
 module Trace where
 
@@ -44,42 +44,51 @@ srid (SimulationRequest id _ _) = id
 -- deterministic requesters and outputters never have meaningful log_d
 -- components, whereas stochastic ones may or may not?
 
--- m is presumably an instance of MonadRandom
-data SP m = SP { requester :: SPRequester m
-               , log_d_req :: Maybe ([Address] -> [SimulationRequest] -> Double)
-               , outputter :: SPOutputter m
-               , log_d_out :: Maybe ([Node] -> [Node] -> Value -> Double)
-               }
+-- m is the type of randomness source that this SP uses, presumably an
+-- instance of MonadRandom.
+-- a is the type of the state that mediates any exchangeable coupling
+-- between this SP's outputs.  For most SPs, a = ().  a is existential
+-- because I wish to be able to store SPs in homogeneous data structures.
+data SP m = forall a. SP
+    { requester :: SPRequester m a
+    , log_d_req :: Maybe (a -> [Address] -> [SimulationRequest] -> Double)
+    , outputter :: SPOutputter m a
+    , log_d_out :: Maybe (a -> [Node] -> [Node] -> Value -> Double)
+    , current :: a
+    -- TODO Do these guys need to accept the argument lists?
+    , incorporate :: Value -> a -> a
+    , unincorporate :: Value -> a -> a
+    }
 
 instance Show (SP m) where
     show _ = "A stochastic procedure"
 
 -- TODO Is there a nice way to unify these two data types and their
 -- methods?
-data SPRequester m = DeterministicR ([Address] -> UniqueSource [SimulationRequest])
-                   | RandomR ([Address] -> UniqueSourceT m [SimulationRequest])
+data SPRequester m a = DeterministicR (a -> [Address] -> UniqueSource [SimulationRequest])
+                     | RandomR (a -> [Address] -> UniqueSourceT m [SimulationRequest])
 
-data SPOutputter m = Trivial
-                   | DeterministicO ([Node] -> [Node] -> Value)
-                   | RandomO ([Node] -> [Node] -> m Value)
-                   | SPMaker ([Node] -> [Node] -> SP m) -- Are these ever random?
+data SPOutputter m a = Trivial
+                     | DeterministicO (a -> [Node] -> [Node] -> Value)
+                     | RandomO (a -> [Node] -> [Node] -> m Value)
+                     | SPMaker (a -> [Node] -> [Node] -> SP m) -- Are these ever random?
 
-asRandomR :: (Monad m) => SPRequester m -> [Address] -> UniqueSourceT m [SimulationRequest]
-asRandomR (RandomR f) as = f as
-asRandomR (DeterministicR f) as = returnT $ f as
+asRandomR :: (Monad m) => SPRequester m a -> a -> [Address] -> UniqueSourceT m [SimulationRequest]
+asRandomR (RandomR f) st as = f st as
+asRandomR (DeterministicR f) st as = returnT $ f st as
 
-isRandomR :: SPRequester m -> Bool
+isRandomR :: SPRequester m a -> Bool
 isRandomR (RandomR _) = True
 isRandomR (DeterministicR _) = False
 
-asRandomO :: (Monad m) => SPOutputter m -> [Node] -> [Node] -> Either (m Value) (SP m)
-asRandomO Trivial _ (r0:_) = Left $ return $ fromJust "Trivial outputter node had no value" $ valueOf r0
-asRandomO Trivial _ _ = error "Trivial outputter requires one response"
-asRandomO (RandomO f) args reqs = Left $ f args reqs
-asRandomO (DeterministicO f) args reqs = Left $ return $ f args reqs
-asRandomO (SPMaker f) args reqs = Right $ f args reqs
+asRandomO :: (Monad m) => SPOutputter m a -> a -> [Node] -> [Node] -> Either (m Value) (SP m)
+asRandomO Trivial _ _ (r0:_) = Left $ return $ fromJust "Trivial outputter node had no value" $ valueOf r0
+asRandomO Trivial _ _ _ = error "Trivial outputter requires one response"
+asRandomO (RandomO f) st args reqs = Left $ f st args reqs
+asRandomO (DeterministicO f) st args reqs = Left $ return $ f st args reqs
+asRandomO (SPMaker f) st args reqs = Right $ f st args reqs
 
-isRandomO :: SPOutputter m -> Bool
+isRandomO :: SPOutputter m a -> Bool
 isRandomO Trivial = False
 isRandomO (RandomO _) = True
 isRandomO (DeterministicO _) = False
@@ -231,10 +240,10 @@ operator n = liftM sp . operatorRecord n
 isRandomNode :: Node -> Trace m -> Bool
 isRandomNode n@(Request _ _ _ _) t = case operator n t of
                                        Nothing -> False
-                                       (Just sp) -> isRandomR $ requester sp
+                                       (Just SP{requester = req}) -> isRandomR req
 isRandomNode n@(Output _ _ _ _ _) t = case operator n t of
                                         Nothing -> False
-                                        (Just sp) -> isRandomO $ outputter sp
+                                        (Just SP{outputter = out}) -> isRandomO out
 isRandomNode _ _ = False
 
 -- TODO Can I turn these three into an appropriate lens?
@@ -307,9 +316,9 @@ forgetResponses (spaddr, srids) t@Trace{ _sprs = ss, _request_counts = r } =
 
 runRequester :: (Monad m, MonadTrans t, MonadState (Trace m) (t m)) => SPAddress -> [Address] -> t m [SimulationRequest]
 runRequester spaddr args = do
-  spr@SPRecord { sp = SP{ requester = req }, srid_seed = seed } <-
+  spr@SPRecord { sp = SP{ requester = req, current = a }, srid_seed = seed } <-
       use $ sprs . hardix "Running the requester of a non-SP" spaddr
-  (reqs, seed') <- lift $ runUniqueSourceT (asRandomR req args) seed
+  (reqs, seed') <- lift $ runUniqueSourceT (asRandomR req a args) seed
   sprs . ix spaddr .= spr{ srid_seed = seed' }
   return reqs
 
@@ -324,10 +333,10 @@ children a t = t ^. nodeChildren . at a & fromJust "Loooking up the children of 
 -- TODO Use of Template Haskell seems to force this to be in the same
 -- block of code as lookupNode.
 absorb :: Node -> SP m -> Trace m -> Double
-absorb (Request (Just reqs) _ _ args) SP { log_d_req = (Just f) } _ = f args reqs
+absorb (Request (Just reqs) _ _ args) SP{log_d_req = (Just f), current = a} _ = f a args reqs
 -- This clause is only right if canAbsorb returned True on all changed parents
 absorb (Output _ _ _ _ _) SP { outputter = Trivial } _ = 0
-absorb (Output (Just v) _ _ args reqs) SP { log_d_out = (Just f) } t = f args' reqs' v where
+absorb (Output (Just v) _ _ args reqs) SP{log_d_out = (Just f), current = a} t = f a args' reqs' v where
     args' = map (fromJust "absorb" . flip lookupNode t) args
     reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
 absorb _ _ _ = error "Inappropriate absorb attempt"

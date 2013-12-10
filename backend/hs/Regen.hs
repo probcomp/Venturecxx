@@ -58,11 +58,11 @@ regenValue a = lift (do
         Nothing -> return ()
         (Just outA') -> nodes . ix outA' . responses .= resps
     (Output _ _ _ ps rs) -> do
-      SP{ outputter = out } <- gets $ fromJust "Regenerating value for an output with no operator" . (operator node)
+      SP{ outputter = out, current = st } <- gets $ fromJust "Regenerating value for an output with no operator" . (operator node)
       ns <- use nodes
       let args = map (fromJust "Regenerating value for an output with a missing parent" . flip M.lookup ns) ps
       let results = map (fromJust "Regenerating value for an output with a missing request result" . flip M.lookup ns) rs
-      let result = asRandomO out args results
+      let result = asRandomO out st args results
       v <- case result of
              (Left vact) -> lift vact
              (Right sp) -> do spAddr <- state $ addFreshSP sp
