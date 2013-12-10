@@ -39,7 +39,7 @@ instance Pretty Scaffold where
 scaffold_from_principal_node :: Address -> Reader (Trace m) Scaffold
 scaffold_from_principal_node a = do
   scaffold <- execStateT (collectERG [(a,Nothing)]) empty
-  (_, scaffold') <- execStateT (collectBrush $ O.toList $ scaffold ^. drg) (M.empty, scaffold)
+  (_, scaffold', _) <- execStateT (collectBrush $ O.toList $ scaffold ^. drg) (M.empty, scaffold, S.empty)
   return $ scaffold'
 
 collectERG :: [(Address,Maybe Address)] -> StateT Scaffold (Reader (Trace m)) ()
@@ -76,32 +76,34 @@ collectERG ((a,erg_parent):as) = do
 -- Given the list of addresses in the ERG, produce an updated scaffold
 -- that includes the brush (and whose drg field is the actual DRG, not
 -- the ERG).
--- The brush is those nodes that become no longer requested by anything
--- after the requests made by requester nodes in the DRG are retracted.
--- I compute them using a reference-counting scheme.
-
--- TODO Might this have a double-counting bug, where a node in the ERG
--- ends up in the brush, and has its outdoing requests accidentally
--- disabled twice?  The latter would cause trouble only if one of that
--- node's requestees were also requested by some other node, which is
--- not in the scaffold at all.
-collectBrush :: [Address] -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
+-- The brush is those nodes that become no longer requested by
+-- anything after the requests made by requester nodes in the DRG are
+-- retracted.  I compute them using a reference-counting scheme: The
+-- first field of the state is the number of requests for any given
+-- address that have been disabled, and the third field of the state
+-- is the set addresses the disablement of whose outgoing requests is
+-- already under way.
+collectBrush :: [Address] -> StateT ((M.Map Address Int), Scaffold, S.Set Address) (Reader (Trace m)) ()
 collectBrush = mapM_ disableRequests where
     -- Given the address of an ERG node, account for the fact that it
     -- ceases making any requests it may have been making (only
     -- relevant to Requester nodes).
-    disableRequests :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
+    disableRequests :: Address -> StateT ((M.Map Address Int), Scaffold, S.Set Address) (Reader (Trace m)) ()
     disableRequests a = do
-      node <- view $ nodes . hardix "Disabling requests of non-existent node" a
-      case node of
-        (Request (Just reqs) _ _ _) -> do
-          spaddr <- asks $ fromJust "Disabling requests of operator-less request node" . operatorAddr node
-          _2 . dead_reqs %= ((spaddr,map srid reqs):)
-          (asks $ fulfilments a) >>= (mapM_ disableRequestFor)
-        _ -> return ()
+      member <- use $ _3 . contains a
+      if member then return ()
+      else do
+        _3 . contains a .= True
+        node <- view $ nodes . hardix "Disabling requests of non-existent node" a
+        case node of
+          (Request (Just reqs) _ _ _) -> do
+            spaddr <- asks $ fromJust "Disabling requests of operator-less request node" . operatorAddr node
+            _2 . dead_reqs %= ((spaddr,map srid reqs):)
+            (asks $ fulfilments a) >>= (mapM_ disableRequestFor)
+          _ -> return ()
     -- Given the address of a requested node, account for the fact
     -- that it is now requested one time less.
-    disableRequestFor :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
+    disableRequestFor :: Address -> StateT ((M.Map Address Int), Scaffold, S.Set Address) (Reader (Trace m)) ()
     disableRequestFor a = do
       _1 . at a %= maybeSucc
       disabled <- use $ _1 . hardix "Disabling request for a node that has never been disabled" a
@@ -111,7 +113,7 @@ collectBrush = mapM_ disableRequests where
       else return ()
     -- Given the address of a node that is no longer requested, put it
     -- and its entire family in the brush.
-    disableFamily :: Address -> StateT ((M.Map Address Int), Scaffold) (Reader (Trace m)) ()
+    disableFamily :: Address -> StateT ((M.Map Address Int), Scaffold, S.Set Address) (Reader (Trace m)) ()
     disableFamily a = do
       markBrush a
       node <- view $ nodes . hardix "Disabling nonexistent family" a
