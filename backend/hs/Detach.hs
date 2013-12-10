@@ -138,14 +138,10 @@ detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru }
   where eraseValue :: Address -> State (Trace m) ()
         eraseValue a = do
           node <- use $ nodes . hardix "Erasing the value of a nonexistent node" a
+          modify $ do_unincorporate a
           nodes . ix a . value .= Nothing
           case node of
             (Request _ (Just outA) _ _) -> nodes . ix outA . responses .= []
-            (Output _ _ _ _ _) -> do
-              spaddr <- gets $ fromJust "Detaching value for an output with no operator address" . (operatorAddr node)
-              sp <- gets $ fromJust "Detaching value for an output with no operator" . (operator node)
-              let v = fromJust "Detaching value that isn't there" $ valueOf node
-              sprs . ix spaddr %= \r -> r{sp = do_uninc v sp}
             _ -> return ()
         forgetRequest :: (SPAddress, [SRId]) -> State (Trace m) ()
         forgetRequest x = modify $ forgetResponses x
