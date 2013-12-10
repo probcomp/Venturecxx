@@ -196,9 +196,9 @@ self_select_2 =
     ]
 -- liftM discreteHistogram $ venture_main 100 self_select_2
 
--- Next subgoal: Daniel says that collapsed exchangeably coupled state
--- does not force regen/detach order symmetry, only detach before
--- regen.  Confirm.
+-- Next subgoal: Daniel says that collapsed exchangeably coupled
+-- state, even in the presence of conditionals, does not force
+-- regen/detach order symmetry, only detach before regen.  Confirm.
 
 -- Eventual goals
 -- - Built-in SPs with collapsed exchangeably coupled state
@@ -221,6 +221,13 @@ self_select_2 =
 --   - quickcheck and/or prove preservation of those invariants
 --   - enforce by module export lists that clients do not circumvent
 --     those abstraction boundaries.
+-- - Implement more inference strategies
+--   - Particle methods should be easy because traces are persistent
+
+-- Potential uses for this code
+-- - Quasi-independent Venture implemetation for sanity checking
+-- - Testbed for clearly stating and checking implementation invariants?
+-- - Expository implementation or step in expository implementation path?
 
 -- Non-goals
 -- - Latent simulation kernels for SPs
