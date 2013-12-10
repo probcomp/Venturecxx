@@ -142,6 +142,40 @@ beta = SP { requester = nullReq
           , log_d_out = Just log_denisty_beta
           }
 
+-- TODO abstract the actual coin flipping between collapsed beta bernoulli and weighted
+cbeta_bernoulli_flip :: (MonadRandom m) => (Double,Double) -> [Node] -> [Node] -> m Value
+cbeta_bernoulli_flip (ctYes, ctNo) [] [] = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0) where
+    weight = ctYes / (ctYes + ctNo)
+cbeta_bernoulli_flip _ _ _ = error "Incorrect arity for collapsed beta bernoulli"
+
+cbeta_bernoulli_log_d :: (Double,Double) -> [Node] -> [Node] -> Value -> Double
+cbeta_bernoulli_log_d (ctYes, ctNo) [] [] (Boolean True) = log weight where
+    weight = ctYes / (ctYes + ctNo)
+cbeta_bernoulli_log_d (ctYes, ctNo) [] [] (Boolean False) = log (1-weight) where
+    weight = ctYes / (ctYes + ctNo)
+cbeta_bernoulli_log_d _ [] [] _ = error "Value supplied to collapsed beta bernoulli log_d is not a boolean"
+cbeta_bernoulli_log_d _ _ _ _ = error "Incorrect arity for collapsed beta bernoulli"
+
+cbeta_bernoulli :: (MonadRandom m) => Double -> Double -> SP m
+cbeta_bernoulli ctYes ctNo = SP { requester = nullReq
+                                , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+                                , outputter = RandomO $ cbeta_bernoulli_flip (ctYes, ctNo)
+                                , log_d_out = Just $ cbeta_bernoulli_log_d (ctYes, ctNo)
+                                }
+
+do_make_cbeta_bernoulli :: (MonadRandom m) => [Node] -> [Node] -> SP m
+do_make_cbeta_bernoulli [yesN, noN] [] = cbeta_bernoulli yes no where
+    yes = fromJust "Argument node had no value" $ (valueOf yesN >>= numberOf)
+    no  = fromJust "Argument node had no value" $ (valueOf noN  >>= numberOf)
+do_make_cbeta_bernoulli _ _ = error "Incorrect arity for make collapsed beta bernoulli"
+
+make_cbeta_bernoulli :: (MonadRandom m) => SP m
+make_cbeta_bernoulli = SP { requester = nullReq
+                          , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+                          , outputter = SPMaker do_make_cbeta_bernoulli
+                          , log_d_out = Nothing
+                          }
+
 selectO :: [Node] -> [Node] -> Value
 selectO [p,c,a] _ = if fromJust "Argument node had no value" $ (valueOf p >>= booleanOf) then
                         fromJust "Argument node had no value" $ valueOf c
@@ -166,6 +200,7 @@ initializeBuiltins env = do
                        , ("beta", beta)
                        , ("select", select)
                        , ("list", list)
-                       , ("weighted", weighted)]
+                       , ("weighted", weighted)
+                       , ("make_cbeta_bernoulli", make_cbeta_bernoulli)]
             names = map fst namedSps
             sps = map snd namedSps
