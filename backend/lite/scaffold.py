@@ -2,7 +2,7 @@
 # skipping some helpers
 class Scaffold():
 
-  def __init__(self,principalNodes,useDeltaKernels=False):
+  def __init__(self,principalNodes=[],useDeltaKernels=False):
     self.drg = {} 
     self.absorbing = set()
     self.disableCounts = {}
