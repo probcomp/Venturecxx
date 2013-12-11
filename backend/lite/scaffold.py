@@ -3,11 +3,15 @@
 class Scaffold():
 
   def __init__(self,principalNodes=[],useDeltaKernels=False):
-    self.drg = {} 
+    self.drg = set() # later becomes a map { node => regenCount }
     self.absorbing = set()
-    self.disableCounts = {}
     self.aaa = set()
     self.border = []
+
+    self.disableCounts = {}
+    self.brush = set()
+    self.disabledRequests = set()
+
     self.kernels = {}
 
     self.findPreliminaryBorder(principalNodes)
@@ -21,11 +25,11 @@ class Scaffold():
 
   def addResamplingNode(self,q,node):
     if self.isAbsorbing(node): self.unregisterAbsorbing(node)
-    self.drg[node] = 0 # regenCounts
+    self.drg.add(node)
     q.extend(node.children)
 
   def addAAANode(self,node):
-    self.drg[node] = {"regenCount" : 0 }
+    self.drg.add(node)
     self.aaa.add(node)
 
   def addAbsorbingNode(self,node): self.absorbing.add(node)
@@ -50,18 +54,19 @@ class Scaffold():
       else: self.addResamplingNode(q,node)
 
   def disableBrush(self):
-    for node in self.drg:
-      if isinstance(node,RequestNode): self.disableRequests(node)
+    for node in self.drg: if isinstance(node,RequestNode): self.disableRequests(node)
+    self.drg = { node : 0 for node in in self.drg if not node in self.brush }
+    self.absorbing = set([node for node in self.absorbing if not node in self.brush])
 
   def disableRequests(self,node):
+    if node in self.disabledRequests: return
+    self.disabledRequests.add(node)
     for esrParent in node.outputNode.esrParents:
       self.disableCounts[esrParent] += 1
       if self.disableCounts[esrParent] == esrParent.numRequests:
         self.disableEval(esrParent)
 
-  def registerBrush(self,node):
-    if self.isAbsorbing(node): self.unregisterAbsorbing(node)
-    if self.isResampling(node): self.unregisterResampling(node)
+  def registerBrush(self,node): self.brush.add(node)
 
   def registerBorder(self,node): self.border.append(node)
   def registerKernel(self,node,kernel): 
@@ -71,6 +76,7 @@ class Scaffold():
   def hasAAANodes(self): return self.aaa
 
   def disableEval(self,node):
+    if node in self.brush: return
     self.registerBrush(node)
     if isinstance(node,OutputNode):
       self.registerBrush(node.requestNode)
