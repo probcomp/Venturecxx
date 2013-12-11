@@ -17,6 +17,8 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import traceback
+
 from venture.exception import VentureException
 
 # This list of functions defines the public REST API
@@ -156,5 +158,6 @@ def run_venture_console(ripl):
         else:
           print "Sorry, unknown directive."
     except Exception, err:
-      print "Your query has generated an error: " + str(err)
+      print "Your query has generated an error:"
+      traceback.print_exc()
 
