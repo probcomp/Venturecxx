@@ -40,7 +40,7 @@ def unevalRequests(trace,node,scaffold,omegaDB):
   weight = 0
   (esrs,lsrs) = node.value
   if lsrs and not omegaDB.hasLatentDB(node.sp()):
-    omegaDB.registerLatentDB(node.sp().constructLatentDB())
+    omegaDB.registerLatentDB(node.sp(),node.sp().constructLatentDB())
 
   for lsr in reversed(lsrs):
     weight += node.sp().detachLatents(node.spaux(),lsr,omegaDB.latentDB(node.sp()))
