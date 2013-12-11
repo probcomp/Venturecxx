@@ -58,28 +58,28 @@ def applyPSP(node,scaffold,shouldRestore,omegaDB,gradients):
   if node.psp().isRandom(): trace.registerRandomChoice(node)
   return weight
 
-def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
+def evalRequests(trace,requestNode,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0;
-  (esrs,lsrs) = node.getValue()
+  (esrs,lsrs) = requestNode.getValue()
 
   # first evaluate exposed simulation requests (ESRs)
   for (id,exp,env,block,subblock) in esrs:
-    if not node.spaux().containsFamily(id):
-      if shouldRestore: weight += restore(omegaDB.getESRParent(node.sp(),id),scaffold,omegaDB)
+    if not requestNode.spaux().containsFamily(id):
+      if shouldRestore: weight += restore(omegaDB.getESRParent(requestNode.sp(),id),scaffold,omegaDB)
       else:
         (w,esrParent) = evalFamily(trace,exp,env,scaffold,omegaDB)
         weight += w
-        node.spaux().registerFamily(id,esrParent)
+        requestNode.spaux().registerFamily(id,esrParent)
     else: 
-      esrParent = node.spaux().getFamily(id)
+      esrParent = requestNode.spaux().getFamily(id)
       weight += regen(trace,esrParent,scaffold,shouldRestore,omegaDB)
-    esrParent = node.spaux().getFamily(id)
+    esrParent = requestNode.spaux().getFamily(id)
     if block: trace.registerBlock(block,subblock,esrParent)
-    trace.addESREdge(esrParent,node.outputNode())
+    trace.addESREdge(esrParent,requestNode.outputNode())
 
   # next evaluate latent simulation requests (LSRs)
   for lsr in lsrs:
-    weight += node.sp().simulateLatents(node.spaux(),lsr,shouldRestore,omegaDB.getLatentDB(node.sp().makerNode()))
+    weight += requestNode.sp().simulateLatents(requestNode.spaux(),lsr,shouldRestore,omegaDB.getLatentDB(requestNode.sp().makerNode()))
   
   return weight;
 
