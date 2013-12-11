@@ -84,6 +84,20 @@ on_values f ns1 ns2 = f vs1 vs2 where
     vs1 = map (fromJust "Argument node had no value" . valueOf) ns1
     vs2 = map (fromJust "Fulfilment node had no value" . valueOf) ns2
 
+-- TODO Is there a clean way to pass down the name of the procedure
+-- here, so it can be included in the error message?
+binary :: (a -> a -> r) -> [a] -> r
+binary f [a1,a2] = f a1 a2
+binary _ l = error $ "Two arguments expected " ++ (show $ length l) ++ " given."
+
+unary :: (a -> r) -> [a] -> r
+unary f [a] = f a
+unary _ l = error $ "One argument expected " ++ (show $ length l) ++ " given."
+
+nullary :: r -> [a] -> r
+nullary f [] = f
+nullary _ l = error $ "No arguments expected " ++ (show $ length l) ++ " given."
+
 execList :: [Value] -> [b] -> Value
 execList vs [] = List vs
 execList _ _ = error "List SP given fulfilments"
