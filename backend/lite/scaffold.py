@@ -31,8 +31,8 @@ class Scaffold():
   def addAbsorbingNode(self,node): self.absorbing.add(node)
 
   def esrReferenceCanAbsorb(node):
-    return isinstance(node.psp(),ESRReferenceOutputPSP) and
-           not self.isResampling(node.requestNode) and
+    return isinstance(node.psp(),ESRRefOutputPSP) and \
+           not self.isResampling(node.requestNode) and \
            not self.isResampling(node.esrParents[0])
 
   def findPreliminaryBorder(self,principalNodes):
@@ -107,7 +107,7 @@ class Scaffold():
         if useDeltaKernels and node.psp().hasDeltaKernel(): 
           self.registerKernel(node,node.psp().deltaKernel())
         elif node.psp().hasSimulationKernel():
-        self.registerKernel(node,node.psp().simulationKernel()) # todo this should never happen
+          self.registerKernel(node,node.psp().simulationKernel()) # todo this should never happen
 
   def decrementRegenCount(self,node):
     assert node in self.drg

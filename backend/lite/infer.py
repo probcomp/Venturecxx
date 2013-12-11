@@ -1,18 +1,32 @@
+from abc import ABCMeta, abstractmethod
+
 class GKernel():
+  __metaclass__ = ABCMeta
   def __init__(self,trace): self.trace = trace
-  def propose(self): @abstract
-  def accept(self): @abstract
-  def reject(self): @abstract
-  def loadParameters(self): @abstract
+
+  @abstractmethod
+  def propose(self): pass
+
+  def accept(self): pass
+  def reject(self): pass
+
+  def loadParameters(self): pass
 
 class MixMHGKernel(GKernel):
+  __metaclass__ = ABCMeta
+
   def __init__(self,trace,childGKernel):
     super(self,GKernel).__init__(trace)
     self.childGKernel = childGKernel
 
-  def sampleIndex(self): @abstract
-  def logDensityOfIndex(self,index): @abstract
-  def processIndex(self,index): @abstract
+  @abstractmethod
+  def sampleIndex(self): pass
+
+  @abstractmethod
+  def logDensityOfIndex(self,index): pass
+
+  @abstractmethod
+  def processIndex(self,index): pass
 
   def propose(self):
     index = self.sampleIndex()
@@ -58,4 +72,3 @@ class meanfieldGKernel(DetachAndRegenGKernel):
     xiWeight = regen(trace,scaffold,border(),scaffold,False,None)
     return rhoWeight - xiWeight
 
-class enumerationGKernel(

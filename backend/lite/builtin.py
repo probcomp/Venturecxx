@@ -1,5 +1,5 @@
 from sp import SP
-from psp import NullRequestPSP
+from psp import NullRequestPSP, ESRRefOutputPSP
 
 import discrete
 import continuous
@@ -14,7 +14,7 @@ def builtInSPs():
            "-" : SP(NullRequestPSP,number.MinusOutputPSP),
            "bernoulli" : SP(NullRequestPSP,discrete.BernoulliOutputPSP),
            "normal" : SP(NullRequestPSP,continuous.NormalOutputPSP),
-           "branch" : SP(conditionals.BranchRequestPSP,ESRReferencePSP),
+           "branch" : SP(conditionals.BranchRequestPSP,ESRRefOutputPSP),
            "make_csp" : SP(NullRequestPSP,csp.MakeCSPOutputPSP),
   }
 

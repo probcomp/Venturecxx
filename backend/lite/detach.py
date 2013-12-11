@@ -1,6 +1,6 @@
 def unconstrain(node):
   if node.isLookupNode(): return unconstrain(node.sourceNode())
-  if isinstance(node.psp(),ESRReferencePSP): return unconstrain(node.esrParents[0])
+  if isinstance(node.psp(),ESRRefOutputPSP): return unconstrain(node.esrParents[0])
 
   if node.psp().isRandom(): trace.registerRandomChoice(node)
   node.psp().unincorporate(node.value,node.args())

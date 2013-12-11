@@ -1,6 +1,6 @@
 def constrain(node,value):
   if node.isLookupNode(): return constrain(node.sourceNode(),value)
-  if isinstance(node.psp(),ESRReferencePSP): return constrain(node.esrParents[0],value)
+  if isinstance(node.psp(),ESRRefOutputPSP): return constrain(node.esrParents[0],value)
   node.psp().unincorporate(value,node.args())
   weight = node.psp().logDensity(value,node.args())
   node.setValue(value)

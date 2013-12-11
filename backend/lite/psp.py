@@ -21,7 +21,7 @@ class NullRequestPSP(PSP):
   def simulate(self,args): return ([],[])
   def canAbsorb(self): return True
 
-class ESRReferencePSP(PSP):
+class ESRRefOutputPSP(PSP):
   def simulate(self,args):
     assert len(args.esrParents) ==  1
     return args.esrParents[0]
