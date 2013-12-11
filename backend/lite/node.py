@@ -76,7 +76,7 @@ class Args():
     self.operandNodes = node.operandNodes
 
     if isinstance(node,OutputNode):
-      self.requestValue = node.request.value
+      self.requestValue = node.requestNode.value
       self.esrValues = [esrParent.value for esrParent in node.esrParents]
       self.esrParents = node.esrParents
       self.madeSPAux = node.madeSPAux
