@@ -41,6 +41,7 @@ class RequestNode(ApplicationNode):
     self.operandNodes = operandNodes
     self.numRequests = 0
     self.env = env
+    self.children = set()
  
   def parents(self): return [self.operatorNode] + self.operandNodes
 
