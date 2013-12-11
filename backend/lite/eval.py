@@ -13,7 +13,7 @@ def eval(trace,exp,env,scaffold,omegaDB,gradients):
       weight += w
       operandNodes.append(operandNode)
 
-    (requestNode,outputNode) = trace.createApplicationNodes(operatorNode,operandNodes)
+    (requestNode,outputNode) = trace.createApplicationNodes(operatorNode,operandNodes,env)
     weight += apply(requestNode,outputNode,scaffold,False,omegaDB,gradients)
     return weight,outputNode
 
@@ -40,7 +40,8 @@ def applyPSP(node,scaffold,shouldRestore,omegaDB,gradients):
     k = scaffold.getKernel(node)
     newValue = k.simulate(trace,oldValue,node.args())
     weight += k.weight(trace,newValue,oldValue,node.args())
-    if gradients and k.isVariationalKernel(): gradients[node] = k.gradientOfLogDensity(newValue,node.args()) 
+    if gradients and k.isVariationalKernel(): 
+      gradients[node] = k.gradientOfLogDensity(newValue,node.args()) 
   else: 
     # if we simulate from the prior, the weight is 0
     newValue = node.psp().simulate(node.args())

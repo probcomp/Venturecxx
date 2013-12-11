@@ -8,8 +8,12 @@ class ConstantNode(Node):
     self.value = value
     self.numRequests = 0
     self.children = set()
-  
-  def parents(): return []
+
+  def groundValue(self):
+    if isinstance(self.value,SPRef): return self.value.makerNode.madeSP
+    else: return self.value
+    
+  def parents(self): return []
 
 class LookupNode(Node):
   def __init__(self,sourceNode):
@@ -19,30 +23,33 @@ class LookupNode(Node):
     self.numRequests = 0
     self.children = set()
 
-  def parents(): return [self.sourceNode]
+  def parents(self): return [self.sourceNode]
 
 class ApplicationNode(Node):
   __metaclass__ = ABCMeta
   
-  def spRef(): return self.operandNode.value
-  def sp(): return self.spRef().madeSP
-  def spaux(): return self.spRef().madeSPAux
+  def args(self): return Args(self)
+  def spRef(self): return self.operandNode.value
+  def sp(self): return self.spRef().madeSP
+  def spaux(self): return self.spRef().madeSPAux
 
 class RequestNode(ApplicationNode):
-  def __init__(self,operatorNode,operandNodes):
+  def __init__(self,operatorNode,operandNodes,env):
     self.operatorNode = operatorNode
     self.operandNodes = operandNodes
     self.numRequests = 0
+    self.env = env
  
-  def parents(): return [self.operatorNode] + self.operandNodes
+  def parents(self): return [self.operatorNode] + self.operandNodes
 
 class OutputNode(ApplicationNode):
-  def __init__(self,operatorNode,operandNodes,requestNode):
+  def __init__(self,operatorNode,operandNodes,requestNode,env):
     self.operatorNode = operatorNode
     self.operandNodes = operandNodes
     self.requestNode = requestNode
     self.numRequests = 0
     self.esrParents = []
+    self.env = env
     self.children = set()
     
-  def parents(): return [self.operatorNode] + self.operandNodes + [self.requestNode] + self.esrParents
+  def parents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode] + self.esrParents
