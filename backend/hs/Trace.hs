@@ -383,9 +383,7 @@ insertResponse spa id a t@Trace{ _sprs = ss, _request_counts = r } =
     t{ _sprs = M.insert spa spr' ss, _request_counts = r' } where
         spr' = spr{ requests = M.insert id a reqs }
         spr@SPRecord { requests = reqs } = t ^. sprs . hardix "Inserting response to non-SP" spa
-        r' = M.alter succ a r
-        succ Nothing = Just 1
-        succ (Just n) = Just (n+1)
+        r' = M.alter maybeSucc a r
 
 -- Given a valid Trace, an SPAddress in it, and a list of SRIds
 -- identifying SimulationRequests made by applications of the SP at
