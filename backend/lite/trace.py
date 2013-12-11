@@ -1,7 +1,7 @@
 from builtin import builtInValues, builtInSPs
 from env import Env
 from node import *
-from eval import processMadeSP
+from eval import processMadeSP, evalFamily
 from spref import SPRef
 
 class Trace():
