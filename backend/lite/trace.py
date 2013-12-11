@@ -4,9 +4,11 @@ from node import *
 from eval import processMadeSP, evalFamily
 from spref import SPRef
 from scaffold import Scaffold
+import infer
 
 class Trace():
   def __init__(self):
+    self.gkernels = { ("mh",False) : infer.OutermostMixMHGKernel(infer.DetachAndRegenGKernel()) }
     self.globalEnv = Env()
     for name,val in builtInValues().iteritems():
       self.globalEnv.addBinding(name,ConstantNode(val))
@@ -77,4 +79,9 @@ class Trace():
 
   def continuous_inference_status(self): return {"running" : False}
 
-  def infer(self,params): raise Exception("INFER not implemented yet")
+  def infer(self,params): 
+    if not params["kernel"] == "mh": raise Exception("INFER (%s) MH is implemented" % params["kernel"])
+    if params["use_global_scaffold"]: raise Exception("INFER global scaffold not yet implemented")
+    assert (params["kernel"],params["use_global_scaffold"]) in self.gkernels
+    gkernel = self.gkernels[(params["kernel"],params["use_global_scaffold"])]
+    gkernel.infer(params["transitions"])
