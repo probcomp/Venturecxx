@@ -1,4 +1,6 @@
 from exp import isVariable, isSelfEvaluating, isQuotation, textOfQuotation, getOperator, getOperands
+from sp import SP
+from spref import SPRef
 
 def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
   weight = 0
@@ -8,7 +10,7 @@ def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
   else:
     (weight,operatorNode) = evalFamily(trace,getOperator(exp),env,scaffold,omegaDB,gradients)
     operandNodes = []
-    for operand in getOperands(exp)
+    for operand in getOperands(exp):
       (w,operandNode) = evalFamily(trace,operand,env,scaffold,omegaDB,gradients)
       weight += w
       operandNodes.append(operandNode)
@@ -30,7 +32,7 @@ def processMadeSP(trace,node,isAAA):
   node.value = SPRef(node)
   if not isAAA:
     node.madeSPAux = sp.constructSPAux()
-    if sp.hasAEKernel: trace.registerAEKernel(node)
+    if sp.hasAEKernel(): trace.registerAEKernel(node)
 
 def applyPSP(node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0;
@@ -52,7 +54,6 @@ def applyPSP(node,scaffold,shouldRestore,omegaDB,gradients):
   if isinstance(node.value,SP): processMadeSP(trace,node,scaffold.isAAA(node))
   if node.psp().isRandom(): trace.registerRandomChoice(node)
   return weight
-}
 
 def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0;

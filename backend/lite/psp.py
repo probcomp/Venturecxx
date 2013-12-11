@@ -16,7 +16,6 @@ class PSP():
   def hasVariationalKernel(self): return False
   def hasSimulationKernel(self): return False
   def hasDeltaKernel(self): return False
-  def hasAEKernel(self): return False
 
 class NullRequestPSP(PSP):
   def simulate(self,args): return ([],[])

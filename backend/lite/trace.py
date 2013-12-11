@@ -1,15 +1,17 @@
 from builtin import builtInValues, builtInSPs
-
 from env import Env
+from node import *
+from eval import processMadeSP
 
 class Trace():
   def __init__(self):
     self.globalEnv = Env()
-    for name,val in builtInValues():  globalEnv.addBinding(name,ConstantNode(val))
-    for name,sp in builtInSPs():
+    for name,val in builtInValues().iteritems():
+      self.globalEnv.addBinding(name,ConstantNode(val))
+    for name,sp in builtInSPs().iteritems():
       spNode = ConstantNode(sp)
-      self.processMadeSP(spNode,False)
-      assert spNode.value == spNode
+      processMadeSP(self,spNode,False)
+      assert isinstance(spNode, SPRef)
       self.globalEnv.addBinding(name,spNode)
 
     self.rcs = [] # TODO make this an EasyEraseVector
