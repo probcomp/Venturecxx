@@ -306,16 +306,15 @@ isRandomNode _ _ = False
 -- its Nodes or SPRecords (but the nodeChildren and request_counts
 -- maps don't count).
 
--- TODO What can I say about the randoms here?
--- TODO Modulo randoms, I should be able to construct a valid trace
--- from a valid pair of nodes and sprs maps.
+-- I should be able to construct a valid trace from a valid pair of
+-- nodes and sprs maps.
 
--- -> 1 and 2 together imply that the operatorRecord of any Request or
---    Output Node in the trace is not Nothing (but only if the trace
---    is well-typed, to wit spValue works when expected).
-
--- TODO What invariants do these manipulations depend upon and enforce
--- (if one does not circumvent them with basic trace manipulations)?
+-- The "randoms" field can really only be defined in the presence of
+-- stricter conditions, such as well-typedness (e.g., nodes that occur
+-- in operator position contain values that are procedures)
+-- - given a suitable notion of well-typedness (and presence of
+--   values), 1 and 2 together imply that the operatorRecord of any
+--   Request or Output Node in the trace is not Nothing.
 
 -- TODO Can I turn these three into an appropriate lens?
 lookupNode :: Address -> Trace m -> Maybe Node
