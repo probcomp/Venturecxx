@@ -31,7 +31,7 @@ class ApplicationNode(Node):
   __metaclass__ = ABCMeta
   
   def args(self): return Args(self)
-  def spRef(self): return self.operandNode.value
+  def spRef(self): return self.operatorNode.value
   def sp(self): return self.spRef().madeSP
   def spaux(self): return self.spRef().madeSPAux
 
