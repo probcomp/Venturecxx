@@ -1,5 +1,7 @@
 from builtin import builtInValues, builtInSPs
 
+from env import Env
+
 class Trace():
   def __init__(self):
     self.globalEnv = Env()

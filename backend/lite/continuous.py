@@ -1,9 +1,6 @@
-import scipy.special
 import scipy.stats
-from numerical import *
-from utilities import structToArrays
-import numpy as np
-import random
+
+from psp import PSP
 
 class NormalOutputPSP(PSP):
   def normalSample(mu,sigma): return scipy.stats.norm.rvs(mu,sigma)

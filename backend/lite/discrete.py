@@ -1,4 +1,5 @@
 import random
+from psp import PSP
 
 class BernoulliOutputPSP(PSP):
   def simulate(self,args): return random.random() < args.operandValues[0]

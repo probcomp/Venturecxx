@@ -22,11 +22,22 @@ from venture.ripl.utils import run_venture_console
 def make_core_sivm():
     return sivm.CoreSivmCxx()
 
+def make_core_lite_sivm():
+    return sivm.CoreSivmLite()
+
 def make_venture_sivm():
     return sivm.VentureSivm(make_core_sivm())
 
+def make_venture_lite_sivm():
+    return sivm.VentureSivm(make_core_lite_sivm())
+
 def make_church_prime_ripl():
     v = make_venture_sivm()
+    parser1 = parser.ChurchPrimeParser()
+    return ripl.Ripl(v,{"church_prime":parser1})
+
+def make_lite_church_prime_ripl():
+    v = make_venture_lite_sivm()
     parser1 = parser.ChurchPrimeParser()
     return ripl.Ripl(v,{"church_prime":parser1})
 
