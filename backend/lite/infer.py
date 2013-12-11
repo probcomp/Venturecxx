@@ -16,7 +16,7 @@ class MixMHGKernel(GKernel):
   __metaclass__ = ABCMeta
 
   def __init__(self,trace,childGKernel):
-    super(self,GKernel).__init__(trace)
+    super(MixMHGKernel,self).__init__(trace)
     self.childGKernel = childGKernel
 
   @abstractmethod
