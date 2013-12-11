@@ -23,8 +23,6 @@ class Trace():
     self.families = {}
 
   
-    
-
   def registerAEKernel(self,node): pass
   def unregisterAEKernel(self,node): pass
   def registerRandomChoice(self,node):
@@ -62,7 +60,7 @@ class Trace():
   #### External interface to engine.py
   def eval(self,id,exp):
     assert not id in self.families
-    (_,self.families[id]) = evalFamily(self,exp,self.globalEnv,Scaffold(),OmegaDB(),{})
+    (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),OmegaDB(),{})
     
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
 
@@ -70,7 +68,7 @@ class Trace():
 
   def observe(self,id,val):
     node = self.families[id]
-    node.observe(val)
+    node.observe(self.unboxValue(val))
     constrain(self,node)
 
   def unobserve(self,id): unconstrain(self,self.families[id])
@@ -88,3 +86,10 @@ class Trace():
     assert (params["kernel"],params["use_global_scaffold"]) in self.gkernels
     gkernel = self.gkernels[(params["kernel"],params["use_global_scaffold"])]
     gkernel.infer(params["transitions"])
+
+  #### Helpers (shouldn't be class methods)
+  def unboxValue(self,val): return val["value"]
+
+  def unboxExpression(self,exp):
+    if type(exp) == list: return [self.unboxExpression(subexp) for subexp in exp]
+    else: return self.unboxValue(exp)
