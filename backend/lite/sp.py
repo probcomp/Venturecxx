@@ -11,3 +11,4 @@ class SP():
   def constructLatentDB(self): return None
   def simulateLatents(self,spaux,lsr,shouldRestore,latentDB): pass
   def detachLatents(self,spaux,lsr,latentDB): pass
+  def hasAEKernel(self): return False
