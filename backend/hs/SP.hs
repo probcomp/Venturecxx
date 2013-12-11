@@ -84,7 +84,7 @@ on_values f ns1 ns2 = f vs1 vs2 where
     vs1 = map (fromJust "Argument node had no value" . valueOf) ns1
     vs2 = map (fromJust "Fulfilment node had no value" . valueOf) ns2
 
-execList :: [Value] -> [Value] -> Value
+execList :: [Value] -> [b] -> Value
 execList vs [] = List vs
 execList _ _ = error "List SP given fulfilments"
 
@@ -96,8 +96,9 @@ list = no_state_sp NoStateSP
   , log_d_out = Nothing
   }
 
-bernoulliFlip :: (MonadRandom m) => a -> b -> m Value
-bernoulliFlip _ _ = liftM Boolean $ getRandomR (False,True)
+bernoulliFlip :: (MonadRandom m) => [a] -> [b] -> m Value
+bernoulliFlip [] [] = liftM Boolean $ getRandomR (False,True)
+bernoulliFlip _ _ = error "Incorrect arity for bernoulli"
 
 bernoulli :: (MonadRandom m) => SP m
 bernoulli = no_state_sp NoStateSP
@@ -107,18 +108,18 @@ bernoulli = no_state_sp NoStateSP
   , log_d_out = Just $ const $ const $ const $ -log 2.0
   }
 
-weightedFlip :: (MonadRandom m) => [Value] -> b -> m Value
-weightedFlip [wt] _ = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0) where
+weightedFlip :: (MonadRandom m) => [Value] -> [b] -> m Value
+weightedFlip [wt] [] = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0) where
     weight = fromJust "No number supplied for weighted" $ numberOf wt
-weightedFlip _ _ = error "Wrong number of arguments to weight"
+weightedFlip _ _ = error "Incorrect arity for weighted"
 
-log_d_weight :: [Value] -> b -> Value -> Double
-log_d_weight [wt] _ (Boolean True) = log weight where
+log_d_weight :: [Value] -> [b] -> Value -> Double
+log_d_weight [wt] [] (Boolean True) = log weight where
     weight = fromJust "No number supplied for weighted" $ numberOf wt
-log_d_weight [wt] _ (Boolean False) = log (1 - weight) where
+log_d_weight [wt] [] (Boolean False) = log (1 - weight) where
     weight = fromJust "No number supplied for weighted" $ numberOf wt
-log_d_weight [_] _ _ = error "Value supplied to log_d_weight is not a boolean"
-log_d_weight _ _ _ = error "Incorrect number of arguments to log_d_weight"
+log_d_weight [_] [] _ = error "Value supplied to log_d_weight is not a boolean"
+log_d_weight _ _ _ = error "Incorrect arity for log_d_weight"
 
 weighted :: (MonadRandom m) => SP m
 weighted = no_state_sp NoStateSP
@@ -133,13 +134,13 @@ box_muller_cos u1 u2 = r * cos theta where
     r = sqrt (-2 * log u1)
     theta = 2 * pi * u2
 
-normalFlip :: (MonadRandom m) => [Value] -> [Value] -> m Value
-normalFlip [meanN, sigmaN] [] = do
+normalFlip :: (MonadRandom m) => [Value] -> [b] -> m Value
+normalFlip [meanV, sigmaV] [] = do
   u1 <- getRandomR (0.0, 1.0)
   u2 <- getRandomR (0.0, 1.0)
   let normal = box_muller_cos u1 u2
-      mu = fromJust "Argument node had no value" $ numberOf meanN
-      sigma = fromJust "Argument node had no value" $ numberOf sigmaN
+      mu = fromJust "Argument value was not a number" $ numberOf meanV
+      sigma = fromJust "Argument value was not a number" $ numberOf sigmaV
   return $ Number $ sigma * normal + mu
 normalFlip _ _ = error "Incorrect arity for normal"
 
@@ -147,9 +148,9 @@ log_d_normal' :: Double -> Double -> Double -> Double
 log_d_normal' mean sigma x = - (x - mean)^^2 / (2 * sigma ^^ 2) - scale where
     scale = log sigma + (log pi)/2
 
-log_d_normal :: [Value] -> [Value] -> Value -> Double
+log_d_normal :: [Value] -> [b] -> Value -> Double
 log_d_normal args@[_,_] [] (Number x) = log_d_normal' mu sigma x where
-    [mu, sigma] = map (fromJust "Argument node had no value" . numberOf) args
+    [mu, sigma] = map (fromJust "Argument value was not a number" . numberOf) args
 log_d_normal [_,_] [] _ = error "Given Value must be a number"
 log_d_normal _ _ _ = error "Incorrect arity for log_d_normal"
 
@@ -162,14 +163,14 @@ normal = no_state_sp NoStateSP
   }
 
 betaO :: (MonadRandom m) => [Value] -> [b] -> m Value
-betaO [alphaN, betaN] [] = do
+betaO [alphaV, betaV] [] = do
   -- Adapted from Statistics.Distribution.Beta; not reused because of
   -- funny randomness management convention.
   x <- getRandomR (0.0,1.0)
   return $ Number $ quantile x
     where
-      alpha = fromJust "Argument node had no value" $ numberOf alphaN
-      beta = fromJust "Argument node had no value" $ numberOf betaN
+      alpha = fromJust "Argument value was not a number" $ numberOf alphaV
+      beta = fromJust "Argument value was not a number" $ numberOf betaV
       quantile x | x == 0 = 0
                  | x == 1 = 1
                  | 0 < x && x < 1 = invIncompleteBeta alpha beta x
@@ -177,9 +178,9 @@ betaO [alphaN, betaN] [] = do
 betaO _ _ = error "Incorrect arity for beta"
 
 log_denisty_beta :: [Value] -> [b] -> Value -> Double
-log_denisty_beta [alphaN, betaN] [] (Number x) = (a-1)*log x + (b-1)*log (1-x) - logBeta a b where
-    a = fromJust "Argument node had no value" $ numberOf alphaN
-    b = fromJust "Argument node had no value" $ numberOf betaN
+log_denisty_beta [alphaV, betaV] [] (Number x) = (a-1)*log x + (b-1)*log (1-x) - logBeta a b where
+    a = fromJust "Argument value was not a number" $ numberOf alphaV
+    b = fromJust "Argument value was not a number" $ numberOf betaV
 log_denisty_beta [_,_] [] _ = error "Given Value must be a number"
 log_denisty_beta _ _ _ = error "Incorrect arity for log_density_beta"
 
@@ -192,12 +193,12 @@ beta = no_state_sp NoStateSP
   }
 
 -- TODO abstract the actual coin flipping between collapsed beta bernoulli and weighted
-cbeta_bernoulli_flip :: (MonadRandom m) => (Double,Double) -> [Node] -> [Node] -> m Value
+cbeta_bernoulli_flip :: (MonadRandom m) => (Double,Double) -> [a] -> [b] -> m Value
 cbeta_bernoulli_flip (ctYes, ctNo) [] [] = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0) where
     weight = ctYes / (ctYes + ctNo)
 cbeta_bernoulli_flip _ _ _ = error "Incorrect arity for collapsed beta bernoulli"
 
-cbeta_bernoulli_log_d :: (Double,Double) -> [Node] -> [Node] -> Value -> Double
+cbeta_bernoulli_log_d :: (Double,Double) -> [a] -> [b] -> Value -> Double
 cbeta_bernoulli_log_d (ctYes, ctNo) [] [] (Boolean True) = log weight where
     weight = ctYes / (ctYes + ctNo)
 cbeta_bernoulli_log_d (ctYes, ctNo) [] [] (Boolean False) = log (1-weight) where
@@ -221,32 +222,30 @@ cbeta_bernoulli ctYes ctNo = T.SP
   , T.unincorporate = cbeta_bernoulli_frob pred
   }
 
-do_make_cbeta_bernoulli :: (MonadRandom m) => [Node] -> [Node] -> SP m
-do_make_cbeta_bernoulli [yesN, noN] [] = cbeta_bernoulli yes no where
-    yes = fromJust "Argument node had no value" $ (valueOf yesN >>= numberOf)
-    no  = fromJust "Argument node had no value" $ (valueOf noN  >>= numberOf)
+do_make_cbeta_bernoulli :: (MonadRandom m) => [Value] -> [b] -> SP m
+do_make_cbeta_bernoulli [yesV, noV] [] = cbeta_bernoulli yes no where
+    yes = fromJust "Argument value was not a number" $ numberOf yesV
+    no  = fromJust "Argument value was not a number" $ numberOf noV
 do_make_cbeta_bernoulli _ _ = error "Incorrect arity for make collapsed beta bernoulli"
 
 make_cbeta_bernoulli :: (MonadRandom m) => SP m
 make_cbeta_bernoulli = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = SPMaker do_make_cbeta_bernoulli
+  , outputter = SPMaker $ on_values do_make_cbeta_bernoulli
   , log_d_out = Nothing
   }
 
-selectO :: [Node] -> [Node] -> Value
-selectO [p,c,a] _ = if fromJust "Argument node had no value" $ (valueOf p >>= booleanOf) then
-                        fromJust "Argument node had no value" $ valueOf c
-                    else
-                        fromJust "Argument node had no value" $ valueOf a
+selectO :: [Value] -> [b] -> Value
+selectO [p,c,a] [] = if fromJust "Predicate was not a boolean" $ booleanOf p then c
+                     else a
 selectO _ _ = error "Wrong number of arguments to SELECT"
 
 select :: SP m
 select = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req
-  , outputter = DeterministicO selectO
+  , outputter = DeterministicO $ on_values selectO
   , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
   }
 
