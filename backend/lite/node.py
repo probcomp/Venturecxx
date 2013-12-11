@@ -42,6 +42,8 @@ class RequestNode(ApplicationNode):
     self.numRequests = 0
     self.env = env
     self.children = set()
+  
+  def psp(self): return self.sp().requestPSP
  
   def parents(self): return [self.operatorNode] + self.operandNodes
 
@@ -62,5 +64,7 @@ class OutputNode(ApplicationNode):
   def observe(self,val):
     self.observedValue = val
     self.isObservation = True
+
+  def psp(self): return self.sp().outputPSP
 
   def parents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode] + self.esrParents

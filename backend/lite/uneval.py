@@ -43,7 +43,7 @@ def unevalRequests(trace,node,scaffold,omegaDB):
     omegaDB.registerLatentDB(node.sp(),node.sp().constructLatentDB())
 
   for lsr in reversed(lsrs):
-    weight += node.sp().detachLatents(node.spaux(),lsr,omegaDB.latentDB(node.sp()))
+    weight += node.sp().detachLatents(node.spaux(),lsr,omegaDB.getLatentDB(node.sp()))
 
   for id,exp,env,block,subblock in reversed(esrs):
     esrParent = trace.popLastESRParent(node.outputNode())

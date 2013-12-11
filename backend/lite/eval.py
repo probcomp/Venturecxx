@@ -36,7 +36,10 @@ def processMadeSP(trace,node,isAAA):
 
 def applyPSP(node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0;
-  oldValue = omegaDB.getValue(node)
+
+  if omegaDB.hasValueFor(node): oldValue = omegaDB.getValue(node)
+  else: oldValue = None
+
   if shouldRestore: newValue = oldValue
   elif scaffold.hasKernelFor(node):
     k = scaffold.getKernel(node)
@@ -62,7 +65,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   # first evaluate exposed simulation requests (ESRs)
   for (id,exp,env,block,subblock) in esrs:
     if not node.spaux().containsFamily(id):
-      if shouldRestore: weight += restore(omegaDB.getESRNode(node.sp(),id),scaffold,omegaDB)
+      if shouldRestore: weight += restore(omegaDB.getESRParent(node.sp(),id),scaffold,omegaDB)
       else:
         (w,esrParent) = evalFamily(trace,exp,env,scaffold,omegaDB)
         weight += w

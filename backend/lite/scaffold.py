@@ -19,6 +19,9 @@ class Scaffold():
     self.setRegenCounts()
     self.loadDefaultKernels(useDeltaKernels)
 
+  def hasKernelFor(self,node): return node in self.kernels
+  
+
   def isAbsorbing(self,node): return node in self.absorbing
   def isResampling(self,node): return node in self.drg
   def isAAA(self,node): return node in self.aaa
