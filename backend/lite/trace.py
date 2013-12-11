@@ -2,6 +2,7 @@ from builtin import builtInValues, builtInSPs
 from env import Env
 from node import *
 from eval import processMadeSP
+from spref import SPRef
 
 class Trace():
   def __init__(self):
@@ -11,7 +12,7 @@ class Trace():
     for name,sp in builtInSPs().iteritems():
       spNode = ConstantNode(sp)
       processMadeSP(self,spNode,False)
-      assert isinstance(spNode, SPRef)
+      assert isinstance(spNode.value, SPRef)
       self.globalEnv.addBinding(name,spNode)
 
     self.rcs = [] # TODO make this an EasyEraseVector
