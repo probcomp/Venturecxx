@@ -285,7 +285,8 @@ isRandomNode _ _ = False
 --    the list of parentAddrs of A.
 -- 4. The request counts are right, to wit M.lookup a request_counts
 --    is always Just the number of times a appears as a value
---    in any requests maps of any SPRecords.
+--    in any requests maps of any SPRecords and Nothing iff a never
+--    appears as such a value.
 --    - TODO This is actually the wrong thing to be counting.  Daniel
 --      says that every request is always fulfilled by a unique
 --      Address; the issue is how many applications of that SP make
