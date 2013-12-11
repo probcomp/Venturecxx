@@ -8,7 +8,7 @@ import infer
 
 class Trace():
   def __init__(self):
-    self.gkernels = { ("mh",False) : infer.OutermostMixMHGKernel(infer.DetachAndRegenGKernel()) }
+    self.gkernels = { ("mh",False) : infer.OutermostMixMHGKernel(self,infer.DetachAndRegenGKernel()) }
     self.globalEnv = Env()
     for name,val in builtInValues().iteritems():
       self.globalEnv.addBinding(name,ConstantNode(val))
