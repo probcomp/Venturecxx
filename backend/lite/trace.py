@@ -39,7 +39,7 @@ class Trace():
     requestNode = RequestNode(operatorNode,operandNodes,env)
     outputNode = OutputNode(operatorNode,operandNodes,requestNode,env)
     requestNode.children.add(outputNode)
-    return outputNode
+    return (requestNode,outputNode)
 
   def reconnectLookup(self,node,sourceNode): sourceNode.children.add(node)
 
