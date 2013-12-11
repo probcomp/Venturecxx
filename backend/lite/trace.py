@@ -11,7 +11,7 @@ class Trace():
     for name,sp in builtInSPs().iteritems():
       spNode = ConstantNode(sp)
       processMadeSP(self,spNode,False)
-      assert spNode.value == spNode
+      assert isinstance(spNode, SPRef)
       self.globalEnv.addBinding(name,spNode)
 
     self.rcs = [] # TODO make this an EasyEraseVector
