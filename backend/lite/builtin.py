@@ -28,6 +28,7 @@ def builtInSPs():
            "first" : SP(NullRequestPSP(),listsps.FirstListOutputPSP()),
            "rest" : SP(NullRequestPSP(),listsps.RestListOutputPSP()),
 
+           "flip" : SP(NullRequestPSP(),discrete.BernoulliOutputPSP()),
            "bernoulli" : SP(NullRequestPSP(),discrete.BernoulliOutputPSP()),
            "categorical" : SP(NullRequestPSP(),discrete.CategoricalOutputPSP()),
 

@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from spaux import SPAux
 
 class SP():
   __metaclass__ = ABCMeta
@@ -7,7 +8,7 @@ class SP():
     self.requestPSP = requestPSP
     self.outputPSP = outputPSP
 
-  def constructSPAux(self): return None
+  def constructSPAux(self): return SPAux()
   def constructLatentDB(self): return None
   def simulateLatents(self,spaux,lsr,shouldRestore,latentDB): pass
   def detachLatents(self,spaux,lsr,latentDB): pass

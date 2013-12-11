@@ -36,21 +36,21 @@ def unapplyPSP(node,scaffold,omegaDB):
   omegaDB.extractValue(node,node.value)
   return weight
 
-def unevalRequests(trace,node,scaffold,omegaDB):
+def unevalRequests(trace,requestNode,scaffold,omegaDB):
   weight = 0
-  (esrs,lsrs) = node.value
-  if lsrs and not omegaDB.hasLatentDB(node.sp()):
+  request = requestNode.value
+  if request.lsrs and not omegaDB.hasLatentDB(node.sp()):
     omegaDB.registerLatentDB(node.sp(),node.sp().constructLatentDB())
 
-  for lsr in reversed(lsrs):
+  for lsr in reversed(request.lsrs):
     weight += node.sp().detachLatents(node.spaux(),lsr,omegaDB.getLatentDB(node.sp()))
 
-  for id,exp,env,block,subblock in reversed(esrs):
-    esrParent = trace.popLastESRParent(node.outputNode())
-    if block: trace.unregisterBlock(block,subblock,esrParent)
+  for esr in reversed(request.esrs):
+    esrParent = trace.popLastESRParent(node.outputNode)
+    if esr.block: trace.unregisterBlock(esr.block,esr.subblock,esrParent)
     if esrParent.numRequests == 0:
-      node.spaux().unregisterFamily(id)
-      omegaDB.registerSPFamily(node.sp(),id,esrParent)
+      node.spaux().unregisterFamily(esr.id)
+      omegaDB.registerSPFamily(node.sp(),esr.id,esrParent)
       weight += unevalFamily(trace,node,scaffold,omegaDB)
     else: weight += extract(trace,esrParent,scaffold,omegaDB)
 

@@ -1,4 +1,5 @@
 from psp import PSP
+from request import Request,ESR
 
 class BranchRequestPSP(PSP):
   def simulate(self,args): 
@@ -6,4 +7,4 @@ class BranchRequestPSP(PSP):
     else: expIndex = 2
 
     exp = args.operandValues[expIndex]
-    return ([(args.node,exp,args.env)],[])
+    return Request([ESR(args.node,exp,args.env)])

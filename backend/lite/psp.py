@@ -1,4 +1,6 @@
 from abc import ABCMeta, abstractmethod
+from request import Request
+
 
 class PSP():
   __metaclass__ = ABCMeta
@@ -18,7 +20,7 @@ class PSP():
   def hasDeltaKernel(self): return False
 
 class NullRequestPSP(PSP):
-  def simulate(self,args): return ([],[])
+  def simulate(self,args): return Request()
   def canAbsorb(self): return True
 
 class ESRRefOutputPSP(PSP):

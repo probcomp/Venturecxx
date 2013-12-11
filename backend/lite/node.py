@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from spref import SPRef
 
 class Node():
   __metaclass__ = ABCMeta
@@ -31,7 +32,13 @@ class ApplicationNode(Node):
   __metaclass__ = ABCMeta
 
   def args(self): return Args(self)
-  def spRef(self): return self.operatorNode.value
+  def spRef(self): 
+    if not isinstance(self.operatorNode.value,SPRef):
+      print "spRef not an spRef"
+      print "is a: " + str(type(self.operatorNode.value))
+    assert isinstance(self.operatorNode.value,SPRef)
+    return self.operatorNode.value
+
   def sp(self): return self.spRef().makerNode.madeSP
   def spaux(self): return self.spRef().makerNode.madeSPAux
 
@@ -41,7 +48,12 @@ class RequestNode(ApplicationNode):
     self.operandNodes = operandNodes
     self.numRequests = 0
     self.env = env
+    self.outputNode = None
     self.children = set()
+
+  def registerOutputNode(self,outputNode):
+    self.outputNode = outputNode
+    self.children.add(outputNode)
 
   def psp(self): return self.sp().requestPSP
 

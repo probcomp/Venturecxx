@@ -1,6 +1,8 @@
-from psp import PSP
+from psp import PSP, ESRRefOutputPSP
 from sp import SP
 from env import Env
+from request import Request,ESR
+
 
 class MakeMSPOutputPSP(PSP):
   def simulate(self,args):
@@ -13,4 +15,4 @@ class MSPRequestPSP(PSP):
     id = str(args.operandValues)
     exp = ["memoizedSP"] + args.operandValues
     env = Env(None,["memoizedSP"],[self.sharedOperatorNode])
-    return ([(id,exp,env)],[])
+    return Request([ESR((id,exp,env))])

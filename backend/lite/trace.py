@@ -38,7 +38,8 @@ class Trace():
   def createApplicationNodes(self,operatorNode,operandNodes,env):
     requestNode = RequestNode(operatorNode,operandNodes,env)
     outputNode = OutputNode(operatorNode,operandNodes,requestNode,env)
-    requestNode.children.add(outputNode)
+    requestNode.registerOutputNode(outputNode)
+#    requestNode.children.add(outputNode)
     return (requestNode,outputNode)
 
   def reconnectLookup(self,node,sourceNode): sourceNode.children.add(node)
