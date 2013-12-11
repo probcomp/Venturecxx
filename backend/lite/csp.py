@@ -6,7 +6,7 @@ class MakeCSPOutputPSP(PSP):
     return SP(CSPRequestPSP(ids,exp,env),ESRReferenceOutputPSP())
 
 class CSPRequestPSP(PSP):
-  def simulate(self.args):
+  def simulate(self,args):
     extendedEnv = Env(self.env,ids,args.operandNodes)
     return ([(args.node,self.exp,extendedEnv)],[])
     
