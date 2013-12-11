@@ -4,8 +4,8 @@ from spref import SPRef
 
 def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
   weight = 0
-  if isSelfEvaluating(exp): return (0,trace.createConstantNode(exp))
-  elif isVariable(exp): return (0,trace.createLookupNode(env.lookup(exp)))
+  if isVariable(exp): return (0,trace.createLookupNode(env.findSymbol(exp)))
+  elif isSelfEvaluating(exp): return (0,trace.createConstantNode(exp))
   elif isQuotation(exp): return (0,trace.createConstantNode(textOfQuotation(exp)))
   else:
     (weight,operatorNode) = evalFamily(trace,getOperator(exp),env,scaffold,omegaDB,gradients)

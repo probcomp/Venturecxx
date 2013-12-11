@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from args import Args
 
 class Node():
   __metaclass__ = ABCMeta
@@ -32,8 +33,8 @@ class ApplicationNode(Node):
   
   def args(self): return Args(self)
   def spRef(self): return self.operatorNode.value
-  def sp(self): return self.spRef().madeSP
-  def spaux(self): return self.spRef().madeSPAux
+  def sp(self): return self.spRef().makerNode.madeSP
+  def spaux(self): return self.spRef().makerNode.madeSPAux
 
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
