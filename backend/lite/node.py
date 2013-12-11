@@ -4,7 +4,7 @@ class Node():
   __metaclass__ = ABCMeta
 
 class ConstantNode(Node):
-  def __init__(self,value): 
+  def __init__(self,value):
     self.value = value
     self.numRequests = 0
     self.children = set()
@@ -14,7 +14,7 @@ class ConstantNode(Node):
   def groundValue(self):
     if isinstance(self.value,SPRef): return self.value.makerNode.madeSP
     else: return self.value
-    
+
   def parents(self): return []
 
 class LookupNode(Node):
@@ -29,7 +29,7 @@ class LookupNode(Node):
 
 class ApplicationNode(Node):
   __metaclass__ = ABCMeta
-  
+
   def args(self): return Args(self)
   def spRef(self): return self.operatorNode.value
   def sp(self): return self.spRef().makerNode.madeSP
@@ -42,9 +42,9 @@ class RequestNode(ApplicationNode):
     self.numRequests = 0
     self.env = env
     self.children = set()
-  
+
   def psp(self): return self.sp().requestPSP
- 
+
   def parents(self): return [self.operatorNode] + self.operandNodes
 
 class OutputNode(ApplicationNode):
