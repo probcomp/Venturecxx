@@ -1,3 +1,5 @@
+from node import OutputNode
+
 class Args():
   def __init__(self,node):
     self.node = node

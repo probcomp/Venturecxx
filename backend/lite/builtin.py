@@ -4,6 +4,7 @@ from psp import NullRequestPSP, ESRRefOutputPSP
 import discrete
 import continuous
 import number
+import listsps
 import csp
 import msp
 import conditionals
@@ -11,13 +12,32 @@ import conditionals
 def builtInValues(): return { "true" : True, "false" : False }
 
 def builtInSPs():
-  return { "plus" : SP(NullRequestPSP,number.PlusOutputPSP),
-           "minus" : SP(NullRequestPSP,number.MinusOutputPSP),
-           "bernoulli" : SP(NullRequestPSP,discrete.BernoulliOutputPSP),
-           "normal" : SP(NullRequestPSP,continuous.NormalOutputPSP),
-           "branch" : SP(conditionals.BranchRequestPSP,ESRRefOutputPSP),
-           "make_csp" : SP(NullRequestPSP,csp.MakeCSPOutputPSP),
-           "make_msp" : SP(NullRequestPSP,msp.MakeMSPOutputPSP),
+  return { "plus" : SP(NullRequestPSP(),number.PlusOutputPSP()),
+           "minus" : SP(NullRequestPSP(),number.MinusOutputPSP()),
+           "times" : SP(NullRequestPSP(),number.TimesOutputPSP()),
+           "div" : SP(NullRequestPSP(),number.DivideOutputPSP()),
+           "eq" : SP(NullRequestPSP(),number.EqualOutputPSP()),
+           "gt" : SP(NullRequestPSP(),number.GreaterThanOutputPSP()),
+           "lt" : SP(NullRequestPSP(),number.LessThanOutputPSP()),
+           "real" : SP(NullRequestPSP(),number.RealOutputPSP()),
+
+           "pair" : SP(NullRequestPSP(),listsps.PairOutputPSP()),
+           "list" : SP(NullRequestPSP(),listsps.ListOutputPSP()),
+           "is_pair" : SP(NullRequestPSP(),listsps.IsPairOutputPSP()),
+           "list_ref" : SP(NullRequestPSP(),listsps.ListRefOutputPSP()),
+           "first" : SP(NullRequestPSP(),listsps.FirstListOutputPSP()),
+           "rest" : SP(NullRequestPSP(),listsps.RestListOutputPSP()),
+
+           "bernoulli" : SP(NullRequestPSP(),discrete.BernoulliOutputPSP()),
+           "categorical" : SP(NullRequestPSP(),discrete.CategoricalOutputPSP()),
+
+           "normal" : SP(NullRequestPSP(),continuous.NormalOutputPSP()),
+
+           "branch" : SP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()),
+
+           "make_csp" : SP(NullRequestPSP(),csp.MakeCSPOutputPSP()),
+
+           "make_msp" : SP(NullRequestPSP(),msp.MakeMSPOutputPSP()),
   }
 
 
