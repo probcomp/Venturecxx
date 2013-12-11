@@ -1,6 +1,6 @@
 from builtin import builtInValues, builtInSPs
-
 from env import Env
+from node import *
 
 class Trace():
   def __init__(self):
