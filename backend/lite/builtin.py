@@ -13,6 +13,7 @@ def builtInSPs():
            "-" : SP(NullRequestPSP,MinusOutputPSP),
            "bernoulli" : SP(NullRequestPSP,BernoulliOutputPSP),
            "normal" : SP(NullRequestPSP,NormalOutputPSP),
+           "branch" : SP(BranchRequestPSP,ESRReferencePSP),
            "make_csp" : SP(NullRequestPSP,MakeCSPOutputPSP),
   }
 

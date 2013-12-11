@@ -8,6 +8,8 @@ class ConstantNode(Node):
     self.value = value
     self.numRequests = 0
     self.children = set()
+    self.madeSP = None
+    self.madeSPAux = None
 
   def groundValue(self):
     if isinstance(self.value,SPRef): return self.value.makerNode.madeSP
@@ -50,6 +52,8 @@ class OutputNode(ApplicationNode):
     self.numRequests = 0
     self.esrParents = []
     self.env = env
+    self.madeSP = None
+    self.madeSPAux = None
     self.observedValue = None
     self.isObservation = False
     self.children = set()
