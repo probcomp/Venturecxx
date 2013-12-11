@@ -1,3 +1,5 @@
+from psp import PSP
+
 class MakeCSPOutputPSP(PSP):
   def simulate(self,args):
     (ids,exp,env) = args.operandValues[0:4]
