@@ -33,7 +33,7 @@ class Trace():
     assert node in self.rcs
     del self.rcs[self.rcs.index(node)]
 
-  def createConstantNode(self,val): return ConstantNode(exp)
+  def createConstantNode(self,val): return ConstantNode(val)
   def createLookupNode(self,sourceNode): return LookupNode(sourceNode)
   def createApplicationNodes(self,operatorNode,operandNodes,env):
     requestNode = RequestNode(operatorNode,operandNodes,env)
