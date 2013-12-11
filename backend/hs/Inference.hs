@@ -12,7 +12,6 @@ import Trace
 import Regen
 import Detach hiding (empty)
 import qualified Detach as D (empty)
-import Utils
 
 type Kernel m a = a -> WriterT LogDensity m a
 
