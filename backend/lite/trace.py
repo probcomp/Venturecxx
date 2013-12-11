@@ -1,6 +1,7 @@
 from builtin import builtInValues, builtInSPs
 from env import Env
 from node import *
+from eval import processMadeSP
 
 class Trace():
   def __init__(self):
@@ -9,7 +10,7 @@ class Trace():
       self.globalEnv.addBinding(name,ConstantNode(val))
     for name,sp in builtInSPs().iteritems():
       spNode = ConstantNode(sp)
-      self.processMadeSP(spNode,False)
+      processMadeSP(self,spNode,False)
       assert spNode.value == spNode
       self.globalEnv.addBinding(name,spNode)
 
