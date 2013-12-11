@@ -208,7 +208,7 @@ canAbsorb _ _ _ = False
 data Trace rand =
     Trace { _nodes :: (M.Map Address Node)
           , _randoms :: S.Set Address
-          , _nodeChildren :: M.Map Address (S.Set Address)
+          , _node_children :: M.Map Address (S.Set Address)
           , _sprs :: (M.Map SPAddress (SPRecord rand))
           , _request_counts :: M.Map Address Int
           , _addr_seed :: UniqueSeed
@@ -303,7 +303,7 @@ isRandomNode _ _ = False
 --       node whose operatorRecord is Just r.
 
 -- An Address is "referenced by" a valid trace iff it occurs in any of
--- its Nodes or SPRecords (but the nodeChildren and request_counts
+-- its Nodes or SPRecords (but the node_children and request_counts
 -- maps don't count).
 
 -- I should be able to construct a valid trace from a valid pair of
@@ -323,8 +323,8 @@ lookupNode a t = t ^. nodes . at a
 -- If the given Trace is valid and the given Address is not referenced
 -- in it, returns a valid Trace with that node deleted.
 deleteNode :: Address -> Trace m -> Trace m
-deleteNode a t@Trace{_nodes = ns, _randoms = rs, _nodeChildren = cs} =
-    t{ _nodes = ns', _randoms = rs', _nodeChildren = cs'' } where
+deleteNode a t@Trace{_nodes = ns, _randoms = rs, _node_children = cs} =
+    t{ _nodes = ns', _randoms = rs', _node_children = cs'' } where
         node = fromJust "Deleting a non-existent node" $ M.lookup a ns
         ns' = M.delete a ns
         rs' = S.delete a rs -- OK even if it wasn't random
@@ -337,8 +337,8 @@ deleteNode a t@Trace{_nodes = ns, _randoms = rs, _nodeChildren = cs} =
 -- (distinct from every other Address in the trace) and a valid Trace
 -- with that Node added at that Address.
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
-addFreshNode node t@Trace{ _nodes = ns, _addr_seed = seed, _randoms = rs, _nodeChildren = cs } =
-    (a, t{ _nodes = ns', _addr_seed = seed', _randoms = rs', _nodeChildren = cs''}) where
+addFreshNode node t@Trace{ _nodes = ns, _addr_seed = seed, _randoms = rs, _node_children = cs } =
+    (a, t{ _nodes = ns', _addr_seed = seed', _randoms = rs', _node_children = cs''}) where
         (a, seed') = runUniqueSource (liftM Address fresh) seed
         ns' = M.insert a node ns
         -- TODO Argh! Need to maintain the randomness of nodes under
@@ -356,7 +356,7 @@ addFreshNode node t@Trace{ _nodes = ns, _addr_seed = seed, _randoms = rs, _nodeC
 -- Addresses of the Nodes in the trace that depend upon the value of
 -- the node at the given address.
 children :: Address -> Trace m -> [Address]
-children a t = t ^. nodeChildren . at a & fromJust "Loooking up the children of a nonexistent node" & S.toList
+children a t = t ^. node_children . at a & fromJust "Loooking up the children of a nonexistent node" & S.toList
 
 -- If the given Trace is valid, returns a unique SPAddress (distinct
 -- from every other SPAddress in the trace) and a valid Trace with the
@@ -555,9 +555,9 @@ invalidParentAddresses t = filter (invalidAddress t) $ concat $ map parentAddrs 
 invalidRandomChoices :: Trace m -> [Address]
 invalidRandomChoices t = filter (invalidAddress t) $ S.toList $ t ^. randoms
 invalidNodeChildrenKeys :: Trace m -> [Address]
-invalidNodeChildrenKeys t = filter (invalidAddress t) $ M.keys $ t ^. nodeChildren
+invalidNodeChildrenKeys t = filter (invalidAddress t) $ M.keys $ t ^. node_children
 invalidNodeChildren :: Trace m -> [Address]
-invalidNodeChildren t = filter (invalidAddress t) $ concat $ map S.toList $ M.elems $ t ^. nodeChildren
+invalidNodeChildren t = filter (invalidAddress t) $ concat $ map S.toList $ M.elems $ t ^. node_children
 invalidRequestedAddresses :: Trace m -> [Address]
 invalidRequestedAddresses t = filter (invalidAddress t) $ concat $ map (M.elems . requests) $ M.elems $ t ^. sprs
 invalidRequestCountKeys :: Trace m -> [Address]
