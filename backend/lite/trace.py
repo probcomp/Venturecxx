@@ -5,8 +5,9 @@ from env import Env
 class Trace():
   def __init__(self):
     self.globalEnv = Env()
-    for name,val in builtInValues():  globalEnv.addBinding(name,ConstantNode(val))
-    for name,sp in builtInSPs():
+    for name,val in builtInValues().iteritems():
+      self.globalEnv.addBinding(name,ConstantNode(val))
+    for name,sp in builtInSPs().iteritems():
       spNode = ConstantNode(sp)
       self.processMadeSP(spNode,False)
       assert spNode.value == spNode
