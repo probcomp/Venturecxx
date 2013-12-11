@@ -3,6 +3,7 @@ from env import Env
 from node import *
 from eval import processMadeSP, evalFamily
 from spref import SPRef
+from scaffold import Scaffold
 
 class Trace():
   def __init__(self):
