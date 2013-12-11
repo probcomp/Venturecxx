@@ -5,6 +5,7 @@ from eval import processMadeSP, evalFamily
 from spref import SPRef
 from scaffold import Scaffold
 import infer
+from omegadb import OmegaDB
 
 class Trace():
   def __init__(self):
