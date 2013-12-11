@@ -275,6 +275,45 @@ isRandomNode _ _ = False
 -- Intermediate Trace Manipulations                                 --
 ----------------------------------------------------------------------
 
+-- A Trace is "valid" if
+-- 1. Every Address held by the trace points to a Node in the trace
+--    (i.e. occurs as a key in the _nodes map)
+-- 2. Every SPAddress held by the trace points to an SPRecord in the
+--    trace (i.e. occurs as a key in the _sprs map)
+-- 3. The node children maps are be right, to wit A is recorded as a
+--    child of B iff A is in the trace and the address of B appears in
+--    the list of parentAddrs of A.
+-- 4. The request counts are right, to wit M.lookup a request_counts
+--    is always Just the number of times a appears as a value
+--    in any requests maps of any SPRecords.
+--    - TODO This is actually the wrong thing to be counting.  Daniel
+--      says that every request is always fulfilled by a unique
+--      Address; the issue is how many applications of that SP make
+--      that request.  This should be equal to the number of the
+--      requested node's children that are output nodes (as opposed to
+--      lookup nodes).
+-- 5. The seeds are right, to wit
+--    a. The _addr_seed exceeds every Address that appears in the
+--       trace;
+--    b. The _spaddr_seed exceeds every SPAddress that appears in the
+--       trace; and
+--    c. For each SPRecord r in the trace, the _srid_seed of r exceeds
+--       every SRId that appears in r's requests map, as well as every
+--       SRId that appears in any SimulationRequest of any Request
+--       node whose operatorRecord is Just r.
+
+-- An Address is "referenced by" a valid trace iff it occurs in any of
+-- its Nodes or SPRecords (but the nodeChildren and request_counts
+-- maps don't count).
+
+-- TODO What can I say about the randoms here?
+-- TODO Modulo randoms, I should be able to construct a valid trace
+-- from a valid pair of nodes and sprs maps.
+
+-- -> 1 and 2 together imply that the operatorRecord of any Request or
+--    Output Node in the trace is not Nothing (but only if the trace
+--    is well-typed, to wit spValue works when expected).
+
 -- TODO What invariants do these manipulations depend upon and enforce
 -- (if one does not circumvent them with basic trace manipulations)?
 
@@ -282,16 +321,22 @@ isRandomNode _ _ = False
 lookupNode :: Address -> Trace m -> Maybe Node
 lookupNode a t = t ^. nodes . at a
 
+-- If the given Trace is valid and the given Address is not referenced
+-- in it, returns a valid Trace with that node deleted.
 deleteNode :: Address -> Trace m -> Trace m
 deleteNode a t@Trace{_nodes = ns, _randoms = rs, _nodeChildren = cs} =
     t{ _nodes = ns', _randoms = rs', _nodeChildren = cs'' } where
         node = fromJust "Deleting a non-existent node" $ M.lookup a ns
         ns' = M.delete a ns
         rs' = S.delete a rs -- OK even if it wasn't random
-        cs' = foldl foo cs $ parentAddrs node
+        cs' = foldl dropChild cs $ parentAddrs node
         cs'' = M.delete a cs'
-        foo cs pa = M.adjust (S.delete a) pa cs
+        dropChild cs pa = M.adjust (S.delete a) pa cs
 
+-- If the given Trace is valid and every Address in the given Node
+-- points to a Node in the given Trace, returns a unique Address
+-- (distinct from every other Address in the trace) and a valid Trace
+-- with that Node added at that Address.
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
 addFreshNode node t@Trace{ _nodes = ns, _addr_seed = seed, _randoms = rs, _nodeChildren = cs } =
     (a, t{ _nodes = ns', _addr_seed = seed', _randoms = rs', _nodeChildren = cs''}) where
@@ -304,10 +349,19 @@ addFreshNode node t@Trace{ _nodes = ns, _addr_seed = seed, _randoms = rs, _nodeC
                   S.insert a rs
               else
                   rs
-        cs' = foldl foo cs $ parentAddrs node
+        cs' = foldl addChild cs $ parentAddrs node
         cs'' = M.insert a S.empty cs'
-        foo cs pa = M.adjust (S.insert a) pa cs
+        addChild cs pa = M.adjust (S.insert a) pa cs
 
+-- Given a valid Trace and an Address that occurs in it, returns the
+-- Addresses of the Nodes in the trace that depend upon the value of
+-- the node at the given address.
+children :: Address -> Trace m -> [Address]
+children a t = t ^. nodeChildren . at a & fromJust "Loooking up the children of a nonexistent node" & S.toList
+
+-- If the given Trace is valid, returns a unique SPAddress (distinct
+-- from every other SPAddress in the trace) and a valid Trace with the
+-- an SPRecord for the given SP added at that SPAddress.
 addFreshSP :: SP m -> Trace m -> (SPAddress, Trace m)
 addFreshSP sp t@Trace{ _sprs = ss, _spaddr_seed = seed } = (a, t{ _sprs = ss', _spaddr_seed = seed'}) where
     (a, seed') = runUniqueSource (liftM SPAddress fresh) seed
@@ -320,6 +374,17 @@ fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ re
     node = t ^. nodes . hardix "Asking for fulfilments of a missing node" a
     SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
 
+lookupResponse :: SPAddress -> SRId -> Trace m -> Maybe Address
+lookupResponse spa srid t = do
+  SPRecord { requests = reqs } <- t ^. sprs . at spa
+  M.lookup srid reqs
+
+-- Given a valid Trace, and an SPAddress, an SRId, and an Address that
+-- occur in it, and assuming (a) the SRId identifies a
+-- SimulationRequest made by an application of the SP whose SPAddress
+-- is given, and (b) there is no response recorded for that SRId yet,
+-- returns a valid Trace that assumes that said SimulationRequest is
+-- fulfilled by the Node at the given Address.
 insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
 insertResponse spa id a t@Trace{ _sprs = ss, _request_counts = r } =
     t{ _sprs = M.insert spa spr' ss, _request_counts = r' } where
@@ -329,11 +394,11 @@ insertResponse spa id a t@Trace{ _sprs = ss, _request_counts = r } =
         succ Nothing = Just 1
         succ (Just n) = Just (n+1)
 
-lookupResponse :: SPAddress -> SRId -> Trace m -> Maybe Address
-lookupResponse spa srid t = do
-  SPRecord { requests = reqs } <- t ^. sprs . at spa
-  M.lookup srid reqs
-
+-- Given a valid Trace, an SPAddress in it, and a list of SRIds
+-- identifying SimulationRequests made by applications of the SP at
+-- that SPAddress that were fulfilled, returns a valid Trace that
+-- assumes those SimulationRequests are being removed (by
+-- multiplicity).
 forgetResponses :: (SPAddress, [SRId]) -> Trace m -> Trace m
 forgetResponses (spaddr, srids) t@Trace{ _sprs = ss, _request_counts = r } =
     t{ _sprs = M.insert spaddr spr' ss, _request_counts = r' } where
@@ -346,21 +411,25 @@ forgetResponses (spaddr, srids) t@Trace{ _sprs = ss, _request_counts = r } =
             maybePred 1 = Nothing
             maybePred n = Just $ n-1
 
-runRequester :: (Monad m, MonadTrans t, MonadState (Trace m) (t m)) => SPAddress -> [Address] -> t m [SimulationRequest]
+-- Given a valid Trace and an Address that occurs in it, returns the
+-- number of times that address has been requested.
+numRequests :: Address -> Trace m -> Int
+numRequests a t = fromMaybe 0 $ t^.request_counts.at a
+
+-- Given that the state is a valid Trace, and the inputs are an
+-- SPAddress that occurs in it and a list of Addresses that also occur
+-- in it, returns the list of simulation requests that this SP makes
+-- when its args are nodes at these Addresses (in order).  The Trace
+-- in the state may change, but remains valid.  Fails if the call is
+-- ill-typed with respect to the SP.
+runRequester :: (Monad m, MonadTrans t, MonadState (Trace m) (t m)) =>
+                SPAddress -> [Address] -> t m [SimulationRequest]
 runRequester spaddr args = do
   spr@SPRecord { sp = SP{ requester = req, current = a }, srid_seed = seed } <-
       use $ sprs . hardix "Running the requester of a non-SP" spaddr
   (reqs, seed') <- lift $ runUniqueSourceT (asRandomR req a args) seed
   sprs . ix spaddr .= spr{ srid_seed = seed' }
   return reqs
-
--- How many times has the given address been requested.
-numRequests :: Address -> Trace m -> Int
-numRequests a t = fromMaybe 0 $ t^.request_counts.at a
-
--- Nodes in the trace that depend upon the node at the given address.
-children :: Address -> Trace m -> [Address]
-children a t = t ^. nodeChildren . at a & fromJust "Loooking up the children of a nonexistent node" & S.toList
 
 ----------------------------------------------------------------------
 -- Advanced Trace Manipulations                                     --
@@ -437,21 +506,8 @@ maybe_constrain_parents a v = do
     _ -> return ()
 
 ----------------------------------------------------------------------
--- Invariants that traces ought to obey                             --
+-- More invariants that traces ought to obey                        --
 ----------------------------------------------------------------------
-
--- 1. Every Address should point to a Node, except in the middle of
---    relevant operations (which are what? node insertion and node
---    deletion only?)
-
--- 2. Every SPAddress should point to an SPRecord, except in the
---    middle of relevant operations (which are what? SP insertion and
---    SP deletion only?)
-
--- 3. The node children maps should be right, to wit A should be
---    recorded as a child of B iff the address of B appears in the
---    list of parentAddrs of A (except in the middle of node insertion
---    and deletion only?).
 
 -- 4. All Request and Output nodes should come in pairs, determined by
 --    the reqA address of the Output node.  Their operator and
@@ -460,17 +516,6 @@ maybe_constrain_parents a v = do
 -- 5. After any regen, all Request nodes should have pointers to their
 --    output nodes (not necessarily during a regen, because the output
 --    nodes wish to be created with their fulfilments).
-
--- 6. The request counts should be right, to wit M.lookup a
---    request_counts should always be Just the number of times a
---    appears as a value in any requests maps of any SPRecords (except
---    when?)
-
--- 7. The seeds should be right, to wit the _addr_seed should exceed
---    every Address that appears in the trace, the _spaddr_seed should
---    exceed every extant SPAddress that appears in the trace, and the
---    _srid_seed of each SPRecord should exceed every SRId that
---    appears in that SPRecord's requests map.
 
 -- 8. After any detach-regen cycle, all nodes should have values.
 
