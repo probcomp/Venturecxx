@@ -1,4 +1,6 @@
 from exp import isVariable, isSelfEvaluating, isQuotation, textOfQuotation, getOperator, getOperands
+from sp import SP
+from spref import SPRef
 
 def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
   weight = 0
