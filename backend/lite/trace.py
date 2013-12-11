@@ -21,6 +21,8 @@ class Trace():
 
     self.rcs = [] # TODO make this an EasyEraseVector
     self.families = {}
+
+  
     
 
   def registerAEKernel(self,node): pass
