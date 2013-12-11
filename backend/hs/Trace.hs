@@ -367,13 +367,6 @@ addFreshSP sp t@Trace{ _sprs = ss, _spaddr_seed = seed } = (a, t{ _sprs = ss', _
     (a, seed') = runUniqueSource (liftM SPAddress fresh) seed
     ss' = M.insert a (spRecord sp) ss
 
-fulfilments :: Address -> Trace m -> [Address]
--- The addresses of the responses to the requests made by the Request
--- node at Address.
-fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ requestIds node where
-    node = t ^. nodes . hardix "Asking for fulfilments of a missing node" a
-    SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
-
 lookupResponse :: SPAddress -> SRId -> Trace m -> Maybe Address
 lookupResponse spa srid t = do
   SPRecord { requests = reqs } <- t ^. sprs . at spa
@@ -440,6 +433,13 @@ runRequester spaddr args = do
 -- What invariants do these operations expect and enforce (if one does
 -- not circumvent them)?  What, if anything, needs to be added to make
 -- this set complete?
+
+fulfilments :: Address -> Trace m -> [Address]
+-- The addresses of the responses to the requests made by the Request
+-- node at Address.
+fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ requestIds node where
+    node = t ^. nodes . hardix "Asking for fulfilments of a missing node" a
+    SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
 
 absorb :: Node -> SP m -> Trace m -> Double
 absorb (Request (Just reqs) _ _ args) SP{log_d_req = (Just f), current = a} _ = f a args reqs
