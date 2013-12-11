@@ -32,7 +32,7 @@ def processMadeSP(trace,node,isAAA):
   node.value = SPRef(node)
   if not isAAA:
     node.madeSPAux = sp.constructSPAux()
-    if sp.hasAEKernel: trace.registerAEKernel(node)
+    if sp.hasAEKernel(): trace.registerAEKernel(node)
 
 def applyPSP(node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0;
