@@ -8,7 +8,7 @@ def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
   else:
     (weight,operatorNode) = evalFamily(trace,getOperator(exp),env,scaffold,omegaDB,gradients)
     operandNodes = []
-    for operand in getOperands(exp)
+    for operand in getOperands(exp):
       (w,operandNode) = evalFamily(trace,operand,env,scaffold,omegaDB,gradients)
       weight += w
       operandNodes.append(operandNode)
@@ -52,7 +52,6 @@ def applyPSP(node,scaffold,shouldRestore,omegaDB,gradients):
   if isinstance(node.value,SP): processMadeSP(trace,node,scaffold.isAAA(node))
   if node.psp().isRandom(): trace.registerRandomChoice(node)
   return weight
-}
 
 def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0;
