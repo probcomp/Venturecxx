@@ -26,9 +26,9 @@ class Trace():
 
   def createConstantNode(self,val): return ConstantNode(exp)
   def createLookupNode(self,sourceNode): return LookupNode(sourceNode)
-  def createApplicationNodes(self,operatorNode,operandNodes):
-    requestNode = RequestNode(operatorNode,operandNodes)
-    outputNode = OutputNode(operatorNode,operandNodes,requestNode)
+  def createApplicationNodes(self,operatorNode,operandNodes,env):
+    requestNode = RequestNode(operatorNode,operandNodes,env)
+    outputNode = OutputNode(operatorNode,operandNodes,requestNode,env)
     requestNode.children.add(outputNode)
     return outputNode
 

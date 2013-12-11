@@ -23,8 +23,10 @@ def extractParents(trace,node,scaffold,omegaDB):
   return weight
 
 def detach(trace,node,scaffold,omegaDB):
-  node.psp().unincorporate(node.value,node.args())
-  weight = node.psp().logDensity(node.value,node.args())
+  # we need to pass groundValue here in case the return value is an SP
+  # in which case the node would only contain an SPRef
+  node.psp().unincorporate(node.groundValue(),node.args())
+  weight = node.psp().logDensity(node.groundValue(),node.args())
   weight += extractParents(trace,node,scaffold,omegaDB)
   return weight
 

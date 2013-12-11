@@ -25,8 +25,10 @@ def regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
 def attach(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
-  weight += node.psp().logDensity(node.value,node.args())
-  node.psp().incorporate(node.value,node.args())
+  # we need to pass groundValue here in case the return value is an SP
+  # in which case the node would only contain an SPRef
+  weight += node.psp().logDensity(node.groundValue(),node.args())
+  node.psp().incorporate(node.groundValue(),node.args())
   return weight
 
 def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
