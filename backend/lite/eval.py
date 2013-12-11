@@ -16,10 +16,10 @@ def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
       operandNodes.append(operandNode)
 
     (requestNode,outputNode) = trace.createApplicationNodes(operatorNode,operandNodes,env)
-    weight += apply(requestNode,outputNode,scaffold,False,omegaDB,gradients)
+    weight += apply(trace,requestNode,outputNode,scaffold,False,omegaDB,gradients)
     return weight,outputNode
 
-def apply(requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients):
+def apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients):
   weight = applyPSP(requestNode,scaffold,shouldRestore,omegaDB,gradients)
   weight += evalRequests(trace,requestNode,scaffold,shouldRestore,omegaDB,gradients)
   weight += applyPSP(outputNode,scaffold,shouldRestore,omegaDB,gradients)
@@ -92,5 +92,5 @@ def restore(trace,node,scaffold,omegaDB,gradients):
   else: # node is output node
     weight = restore(trace,node.operatorNode(),scaffold,omegaDB,gradients)
     for operandNode in node.operandNodes(): weight += restore(trace,operandNode,scaffold,omegaDB,gradients)
-    weight += apply(node.requestNode(),node)
+    weight += apply(trace,node.requestNode(),node)
     return weight
