@@ -1,6 +1,6 @@
 def constrain(node,value):
   if node.isLookupNode(): return constrain(node.sourceNode(),value)
-  if node.psp().isESRReference(): return constrain(node.esrParents[0],value)
+  if isinstance(node.psp(),ESRReferencePSP): return constrain(node.esrParents[0],value)
   node.psp().unincorporate(value,node.args())
   weight = node.psp().logDensity(value,node.args())
   node.setValue(value)
@@ -15,7 +15,7 @@ def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
       weight += attach(trace,scaffold,shouldRestore,omegaDB,gradients)
     else:
       weight += regen(trace,scaffold,shouldRestore,omegaDB,gradients)
-      if node.isConstrained(): weight += constrain(node,node.observedValue())
+      if node.isConstrained: weight += constrain(node,node.observedValue())
   return weight
 
 def regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):

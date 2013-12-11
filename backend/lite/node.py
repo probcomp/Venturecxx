@@ -50,6 +50,12 @@ class OutputNode(ApplicationNode):
     self.numRequests = 0
     self.esrParents = []
     self.env = env
+    self.observedValue = None
+    self.isObservation = False
     self.children = set()
-    
+
+  def observe(self,val):
+    self.observedValue = val
+    self.isObservation = True
+
   def parents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode] + self.esrParents

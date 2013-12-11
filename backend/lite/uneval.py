@@ -1,4 +1,4 @@
-def uneval(node,scaffold,omegaDB):
+def unevalFamily(trace,node,scaffold,omegaDB):
   weight = 0
   if node.isConstantNode(): pass
   elif node.isLookupNode():
@@ -7,8 +7,8 @@ def uneval(node,scaffold,omegaDB):
   else:
     weight += unapply(node,scaffold,omegaDB)
     for operandNode in reversed(node.operandNodes):
-      weight += uneval(operandNode,scaffold,omegaDB)
-    weight += uneval(node.operatorNode(),scaffold,omegaDB)
+      weight += unevalFamily(trace,operandNode,scaffold,omegaDB)
+    weight += unevalFamily(trace,node.operatorNode(),scaffold,omegaDB)
   return weight
 
 def unapply(trace,node,scaffold,omegaDB):
@@ -51,7 +51,7 @@ def unevalRequests(trace,node,scaffold,omegaDB):
     if esrParent.numRequests == 0:
       node.spaux().unregisterFamily(id)
       omegaDB.registerSPFamily(node.sp(),id,esrParent)
-      weight += uneval(node,scaffold,omegaDB)
+      weight += unevalFamily(trace,node,scaffold,omegaDB)
     else: weight += extract(trace,esrParent,scaffold,omegaDB)
 
   return weight

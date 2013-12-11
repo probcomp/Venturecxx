@@ -1,5 +1,7 @@
 def unconstrain(node):
-  if node.isReference(): return unconstrain(node.sourceNode())
+  if node.isLookupNode(): return unconstrain(node.sourceNode())
+  if isinstance(node.psp(),ESRReferencePSP): return unconstrain(node.esrParents[0])
+
   if node.psp().isRandom(): trace.registerRandomChoice(node)
   node.psp().unincorporate(node.value,node.args())
   weight = node.psp().logDensity(value,node.args())
@@ -13,7 +15,7 @@ def detachAndExtract(trace,border,scaffold):
     if scaffold.isAbsorbing(node):
       weight += detach(trace,scaffold,shouldRestore,omegaDB)
     else:
-      if node.isConstrained(): weight += unconstrain(node)
+      if node.isConstrained: weight += unconstrain(node)
       weight += extract(trace,scaffold,shouldRestore,omegaDB)
   return weight
   

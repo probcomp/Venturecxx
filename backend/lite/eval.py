@@ -1,15 +1,15 @@
 from exp import isVariable, isSelfEvaluating, isQuotation, textOfQuotation, getOperator, getOperands
 
-def eval(trace,exp,env,scaffold,omegaDB,gradients):
+def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
   weight = 0
   if isSelfEvaluating(exp): return (0,trace.createConstantNode(exp))
   elif isVariable(exp): return (0,trace.createLookupNode(env.lookup(exp)))
   elif isQuotation(exp): return (0,trace.createConstantNode(textOfQuotation(exp)))
   else:
-    (weight,operatorNode) = eval(trace,getOperator(exp),env,scaffold,omegaDB,gradients)
+    (weight,operatorNode) = evalFamily(trace,getOperator(exp),env,scaffold,omegaDB,gradients)
     operandNodes = []
     for operand in getOperands(exp)
-      (w,operandNode) = eval(trace,operand,env,scaffold,omegaDB,gradients)
+      (w,operandNode) = evalFamily(trace,operand,env,scaffold,omegaDB,gradients)
       weight += w
       operandNodes.append(operandNode)
 
@@ -63,7 +63,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
     if not node.spaux().containsFamily(id):
       if shouldRestore: weight += restore(omegaDB.getESRNode(node.sp(),id),scaffold,omegaDB)
       else:
-        (w,esrParent) = eval(trace,exp,env,scaffold,omegaDB)
+        (w,esrParent) = evalFamily(trace,exp,env,scaffold,omegaDB)
         weight += w
         node.spaux().registerFamily(id,esrParent)
     else: 
