@@ -73,3 +73,7 @@ class Trace():
     assert id in self.families
     unevalFamily(self,self.families[id],Scaffold(),OmegaDB())
     del self.families[id]
+
+  def continuous_inference_status(self): return {"running" : False}
+
+  def infer(self,params): raise Exception("INFER not implemented yet")
