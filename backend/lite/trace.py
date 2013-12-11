@@ -64,7 +64,7 @@ class Trace():
     
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
 
-  def extractValue(self,id): return self.families[id].value
+  def extractValue(self,id): return self.boxValue(self.families[id].value)
 
   def observe(self,id,val):
     node = self.families[id]
@@ -87,7 +87,18 @@ class Trace():
     gkernel = self.gkernels[(params["kernel"],params["use_global_scaffold"])]
     gkernel.infer(params["transitions"])
 
+
   #### Helpers (shouldn't be class methods)
+
+  # TODO temporary, probably need an extra layer of boxing for VentureValues
+  # as in CXX
+  def boxValue(self,val):
+    if type(val) is str: return {"type":"symbol","value":val}
+    elif type(val) is bool: return {"type":"boolean","value":val}
+    elif type(val) is list: return {"type":"list","value":val}
+    else: return {"type":"number","value":val}
+
+
   def unboxValue(self,val): return val["value"]
 
   def unboxExpression(self,exp):
