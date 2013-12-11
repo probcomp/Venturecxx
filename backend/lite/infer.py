@@ -44,7 +44,7 @@ class OutermostMixMHGKernel(MixMHGKernel):
   def processIndex(self,index): return (Scaffold(index),index)
 
 
-class detachAndRegenGKernel():
+class DetachAndRegenGKernel():
   def propose(self,scaffold):
     rhoWeight,self.rhoDB = detach(self.trace,self.scaffold.border(),self.scaffold)
     xiWeight = regen(self.trace,self.scaffold.border(),self.scaffold,False,self.rhoDB)
@@ -55,7 +55,7 @@ class detachAndRegenGKernel():
     detach(trace,scaffold.border(),scaffold)
     regen(trace,scaffold.border(),scaffold,True,rhoDB)
 
-class meanfieldGKernel(DetachAndRegenGKernel):
+class MeanfieldGKernel(DetachAndRegenGKernel):
   def propose(self,scaffold):
     _,rhoDB = detach(self.trace,self.scaffold.border(),self.scaffold)
     self.registerVariationalKernels()
