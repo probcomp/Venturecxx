@@ -60,7 +60,7 @@ class Trace():
   #### External interface to engine.py
   def eval(self,id,exp):
     assert not id in self.families
-    (_,self.families[id]) = evalFamily(self,id,exp,self.globalEnv,Scaffold(),OmegaDB(),{})
+    (_,self.families[id]) = evalFamily(self,exp,self.globalEnv,Scaffold(),OmegaDB(),{})
     
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
 
