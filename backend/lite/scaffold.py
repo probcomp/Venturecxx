@@ -54,8 +54,9 @@ class Scaffold():
       else: self.addResamplingNode(q,node)
 
   def disableBrush(self):
-    for node in self.drg: if isinstance(node,RequestNode): self.disableRequests(node)
-    self.drg = { node : 0 for node in in self.drg if not node in self.brush }
+    for node in self.drg:
+      if isinstance(node,RequestNode): self.disableRequests(node)
+    self.drg = { node : 0 for node in self.drg if not node in self.brush }
     self.absorbing = set([node for node in self.absorbing if not node in self.brush])
 
   def disableRequests(self,node):
