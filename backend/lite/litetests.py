@@ -467,6 +467,19 @@ def testMakeBetaBernoulli1(N):
   eps = normalizeList(countPredictions(predictions, [False,True]));
   printTest("TestMakeBetaBernoulli1",ps,eps)
 
+def testMakeBetaBernoulli2(N):
+  sivm = SIVM()
+  sivm.assume("a", "(normal 10.0 1.0)")
+  sivm.assume("f", "(make_ubeta_bernoulli a a)")
+  sivm.predict("(f)")
+
+  for j in range(20): sivm.observe("(f)", "true")
+
+  predictions = loggingInfer(sivm,3,N)
+  ps = [.25,.75]
+  eps = normalizeList(countPredictions(predictions, [False,True]));
+  printTest("TestMakeBetaBernoulli2",ps,eps)
+
 
 def testMakeUCSymDirMult1(N):
   sivm = SIVM()

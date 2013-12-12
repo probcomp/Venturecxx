@@ -4,7 +4,7 @@ import scipy
 from utils import sampleCategorical, normalizeList
 from psp import PSP, NullRequestPSP, RandomPSP
 from sp import SP
-from lkernel import DefaultAAALKernel
+from lkernel import LKernel, DefaultAAALKernel
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args): return random.random() < args.operandValues[0]
@@ -110,7 +110,7 @@ class MadeUBetaBernoulliSP(SP):
 
 class MadeUBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,weight):
-    self.weight
+    self.weight = weight
 
   def incorporate(self,value,args):
     spaux = args.spaux
