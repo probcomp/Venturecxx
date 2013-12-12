@@ -39,6 +39,8 @@ def builtInSPs():
            "make_csp" : SP(NullRequestPSP(),csp.MakeCSPOutputPSP()),
 
            "mem" : SP(NullRequestPSP(),msp.MakeMSPOutputPSP()),
+
+           "make_cbeta_bernoulli" : SP(NullRequestPSP(),discrete.CBetaBernoulliOutputPSP()),
   }
 
 
