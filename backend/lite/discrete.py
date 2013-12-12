@@ -25,18 +25,18 @@ class CategoricalOutputPSP(RandomPSP):
 
 #### Collapsed Beta Bernoulli
 
-class CBetaBernoulliOutputPSP(PSP):
+class MakerCBetaBernoulliOutputPSP(PSP):
   def childrenCanAAA(self): return True
   def getAAAKernel(self): return DefaultAAALKernel(self)
   def simulate(self,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
-    return MadeCBetaBernoulliSP(NullRequestPSP(), MadeCBetaBernoulliOutputPSP(alpha, beta))
+    return CBetaBernoulliSP(NullRequestPSP(), CBetaBernoulliOutputPSP(alpha, beta))
 
-class MadeCBetaBernoulliSP(SP):
+class CBetaBernoulliSP(SP):
   def constructSPAux(self): return [0.0,0.0]
 
-class MadeCBetaBernoulliOutputPSP(RandomPSP):
+class CBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,alpha,beta):
     self.alpha = alpha
     self.beta = beta
@@ -79,7 +79,7 @@ class MadeCBetaBernoulliOutputPSP(RandomPSP):
 
 #### Uncollapsed AAA Beta Bernoulli
 
-class UBetaBernoulliOutputPSP(RandomPSP):
+class MakerUBetaBernoulliOutputPSP(RandomPSP):
   def childrenCanAAA(self): return True
   def getAAAKernel(self): return UBetaBernoulliAAALKernel()
 
@@ -87,12 +87,12 @@ class UBetaBernoulliOutputPSP(RandomPSP):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     weight = scipy.stats.beta.rvs(alpha, beta)
-    return MadeUBetaBernoulliSP(NullRequestPSP(), MadeUBetaBernoulliOutputPSP(weight))
+    return UBetaBernoulliSP(NullRequestPSP(), UBetaBernoulliOutputPSP(weight))
 
   def logDensity(self,value,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
-    assert isinstance(value,MadeUBetaBernoulliSP)
+    assert isinstance(value,UBetaBernoulliSP)
     coinWeight = value.outputPSP.weight
     return scipy.stats.beta.logpdf(coinWeight,alpha,beta)
 
@@ -102,13 +102,13 @@ class UBetaBernoulliAAALKernel(LKernel):
     beta  = args.operandValues[1]
     [ctY,ctN] = args.madeSPAux
     newWeight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
-    return MadeUBetaBernoulliSP(NullRequestPSP(), MadeUBetaBernoulliOutputPSP(newWeight))
+    return UBetaBernoulliSP(NullRequestPSP(), UBetaBernoulliOutputPSP(newWeight))
   # Weight is zero because it's simulating from the right distribution
 
-class MadeUBetaBernoulliSP(SP):
+class UBetaBernoulliSP(SP):
   def constructSPAux(self): return [0.0,0.0]
 
-class MadeUBetaBernoulliOutputPSP(RandomPSP):
+class UBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,weight):
     self.weight = weight
 
