@@ -23,11 +23,13 @@ class Trace(object):
       self.globalEnv.addBinding(name,spNode)
 
     self.rcs = [] # TODO make this an EasyEraseVector
+    self.aes = []
     self.families = {}
 
   
-  def registerAEKernel(self,node): pass
-  def unregisterAEKernel(self,node): pass
+  def registerAEKernel(self,node): self.aes.append(node)
+  def unregisterAEKernel(self,node): del self.aes[self.aes.index(node)]
+
   def registerRandomChoice(self,node):
     assert not node in self.rcs
     self.rcs.append(node)
@@ -106,7 +108,7 @@ class Trace(object):
     assert (params["kernel"],params["use_global_scaffold"]) in self.gkernels
     gkernel = self.gkernels[(params["kernel"],params["use_global_scaffold"])]
     gkernel.infer(params["transitions"])
-
+    for node in self.aes: node.madeSP.AEInfer(node.madeSPAux)
 
   #### Helpers (shouldn't be class methods)
 

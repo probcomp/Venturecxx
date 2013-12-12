@@ -6,11 +6,10 @@ import numpy as np
 import numpy.random as npr
 import math
 
-
 def npSampleVector(pVec): return np.mat(npr.multinomial(1,np.array(pVec)[0,:]))
 def npIndexOfOne(pVec): return np.where(pVec[0] == 1)[1][0,0]
-def makeDiag(colvec): return np.diag(np.array(colvec)[:,0])
-def normalize(vec): return vec / sum(vec)
+def npMakeDiag(colvec): return np.diag(np.array(colvec)[:,0])
+def npNormalizeVector(vec): return vec / np.sum(vec)
 
 class HMMSPAux(SPAux):
   def __init__(self):
@@ -59,6 +58,28 @@ class UncollapsedHMMSP(SP):
     return 0
 
   def hasAEKernel(self): return True
+
+  def AEInfer(self,aux):
+    if not aux.os: return
+
+    # forward sampling
+    fs = [self.p0]
+    for i in range(1,len(aux.xs)):
+      f = fs[i-1] * self.T
+      if i in aux.os:
+        for o in aux.os[i]: 
+          f = f * npMakeDiag(self.O[:,o])
+        
+      fs.append(npNormalizeVector(f))
+
+    # backwards sampling
+    aux.xs[-1] = npSampleVector(fs[-1])
+    for i in range(len(aux.xs) - 2,-1,-1):
+      index = npIndexOfOne(aux.xs[i+1])
+      T_i = npMakeDiag(self.T[:,index])
+      gamma = npNormalizeVector(fs[i] * T_i)
+      aux.xs[i] = npSampleVector(gamma)
+
 
 class UncollapsedHMMOutputPSP(RandomPSP):
 

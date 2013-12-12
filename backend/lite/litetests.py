@@ -519,6 +519,8 @@ def testLazyHMM1(N):
   eps = [float(x) / N for x in sums] if N > 0 else [0 for x in sums]
   printTest("testLazyHMM1 (mixes terribly)",ps,eps)
 
+# Warning: cols sum to 1 in venturelite,
+# rows sum to 1 in cxx
 def testLazyHMMSP1(N):
   sivm = SIVM()
   sivm.assume("f","""
@@ -528,8 +530,8 @@ def testLazyHMMSP1(N):
     (list 0.7 0.3)
     (list 0.3 0.7))
   (list
-    (list 0.9 0.2)
-    (list 0.1 0.8)))
+    (list 0.9 0.1)
+    (list 0.2 0.8)))
 """);
   sivm.observe("(f 1)","atom<0>")
   sivm.observe("(f 2)","atom<0>")

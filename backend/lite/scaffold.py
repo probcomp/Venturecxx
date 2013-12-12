@@ -122,10 +122,10 @@ class Scaffold():
       # very efficient way to iterate here.
       for node in set(self.drg.keys()).union(self.absorbing):
         for parent in node.parents(): self.maybeIncrementAAARegenCount(parent)
-        for node in self.brush: 
-          if isinstance(node,OutputNode): 
-            for esrParent in node.esrParents: self.maybeIncrementAAARegenCount(esrParent)
-          elif isinstance(node,LookupNode): self.maybeIncrementAAARegenCount(node.sourceNode)
+      for node in self.brush: 
+        if isinstance(node,OutputNode): 
+          for esrParent in node.esrParents: self.maybeIncrementAAARegenCount(esrParent)
+        elif isinstance(node,LookupNode): self.maybeIncrementAAARegenCount(node.sourceNode)
 
   def maybeIncrementAAARegenCount(self,node):
     if isinstance(node.value,SPRef) and self.isAAA(node.value.makerNode): self.drg[node.value.makerNode] += 1
