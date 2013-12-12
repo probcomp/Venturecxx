@@ -81,7 +81,7 @@ class MadeCBetaBernoulliOutputPSP(RandomPSP):
 
 class UBetaBernoulliOutputPSP(RandomPSP):
   def childrenCanAAA(self): return True
-  def getAAAKernel(self): return UBetaBernoulliAAALKernel(self)
+  def getAAAKernel(self): return UBetaBernoulliAAALKernel()
 
   def simulate(self,args):
     alpha = args.operandValues[0]
@@ -100,7 +100,7 @@ class UBetaBernoulliAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
-    [ctY,ctN] = args.spaux
+    [ctY,ctN] = args.madeSPAux
     newWeight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
     return MadeUBetaBernoulliSP(NullRequestPSP(), MadeUBetaBernoulliOutputPSP(newWeight))
   # Weight is zero because it's simulating from the right distribution
