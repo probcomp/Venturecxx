@@ -29,20 +29,27 @@ class Trace():
   def registerAEKernel(self,node): pass
   def unregisterAEKernel(self,node): pass
   def registerRandomChoice(self,node):
-    print "REG"
     assert not node in self.rcs
     self.rcs.append(node)
 
   def unregisterRandomChoice(self,node): 
-    print "UNREG"
     assert node in self.rcs
     del self.rcs[self.rcs.index(node)]
 
   def createConstantNode(self,val): return ConstantNode(val)
-  def createLookupNode(self,sourceNode): return LookupNode(sourceNode)
+  def createLookupNode(self,sourceNode): 
+    lookupNode = LookupNode(sourceNode)
+    sourceNode.children.add(lookupNode)
+    return lookupNode
+
   def createApplicationNodes(self,operatorNode,operandNodes,env):
     requestNode = RequestNode(operatorNode,operandNodes,env)
     outputNode = OutputNode(operatorNode,operandNodes,requestNode,env)
+    operatorNode.children.add(requestNode)
+    operatorNode.children.add(outputNode)
+    for operandNode in operandNodes:
+      operandNode.children.add(requestNode)
+      operandNode.children.add(outputNode)
     requestNode.registerOutputNode(outputNode)
     return (requestNode,outputNode)
 
@@ -52,6 +59,7 @@ class Trace():
   def unregisterBlock(self,block,subblock,esrParent): pass
 
   def addESREdge(self,esrParent,outputNode):
+    esrParent.numRequests += 1
     esrParent.children.add(outputNode)
     outputNode.esrParents.append(esrParent)
 
@@ -61,12 +69,12 @@ class Trace():
     esrParent.children.remove(outputNode)
     esrParent.numRequests -= 1
     return esrParent
+  
+  def disconnectLookup(self,lookupNode): lookupNode.sourceNode.children.remove(lookupNode)
 
   #### For kernels
   def samplePrincipalNode(self): return random.choice(self.rcs)
-  def logDensityOfPrincipalNode(self,principalNode): 
-    print "len: " + str(len(self.rcs))
-    return -1 * math.log(len(self.rcs))
+  def logDensityOfPrincipalNode(self,principalNode): return -1 * math.log(len(self.rcs))
 
   #### External interface to engine.py
   def eval(self,id,exp):

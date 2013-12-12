@@ -10,8 +10,6 @@ class BernoulliOutputPSP(RandomPSP):
     if val: return math.log(p)
     else: return math.log(1 - p)
 
-  def canAbsorb(self): return True
-
 class CategoricalOutputPSP(RandomPSP):
   def simulate(self,args): 
     ps = normalizeList(args.operandValues)
@@ -20,6 +18,4 @@ class CategoricalOutputPSP(RandomPSP):
   def logDensity(self,val,args):
     ps = normalizeList(args.operandValues)
     return math.log(ps[val])
-
-  def canAbsorb(self): return True
 

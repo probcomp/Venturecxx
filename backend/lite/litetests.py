@@ -63,7 +63,7 @@ def loggingInfer(sivm,address,T):
   for t in range(T):
     sivm.infer(10,kernel=globalKernel, use_global_scaffold=globalUseGlobalScaffold)
     predictions.append(sivm.report(address))
-    print predictions[len(predictions)-1]
+#    print predictions[len(predictions)-1]
   return predictions
 
 def runLiteTests(N):

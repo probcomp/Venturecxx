@@ -1,5 +1,6 @@
 from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
 from psp import ESRRefOutputPSP
+import pdb
 
 # in class Scaffold()
 # skipping some helpers
@@ -22,6 +23,8 @@ class Scaffold():
     self.setRegenCounts()
     self.loadDefaultKernels(useDeltaKernels)
     self.border.extend(self.absorbing)
+#    self.show()
+#    pdb.set_trace()
 
   def hasKernelFor(self,node): return node in self.kernels
   def hasChildInAorD(self,node): 
@@ -32,7 +35,10 @@ class Scaffold():
   def isResampling(self,node): return node in self.drg
   def isAAA(self,node): return node in self.aaa
 
+  def unregisterAbsorbing(self,node): self.absorbing.remove(node)
+
   def addResamplingNode(self,q,node):
+#    print "adding resampling: " + str(node)
     if self.isAbsorbing(node): self.unregisterAbsorbing(node)
     self.drg.add(node)
     q.extend([(n,False) for n in node.children])
@@ -41,7 +47,9 @@ class Scaffold():
     self.drg.add(node)
     self.aaa.add(node)
 
-  def addAbsorbingNode(self,node): self.absorbing.add(node)
+  def addAbsorbingNode(self,node): 
+#    print "adding absorbing: " + str(node)
+    self.absorbing.add(node)
 
   def esrReferenceCanAbsorb(self,node):
     return isinstance(node.psp(),ESRRefOutputPSP) and \
@@ -49,11 +57,11 @@ class Scaffold():
            not self.isResampling(node.esrParents[0])
 
   def findPreliminaryBorder(self,principalNodes):
-    q = [] # (node,isPrincipal)
-    for pnode in principalNodes: q.append((pnode,True))
+    q = [(pnode,True) for pnode in principalNodes]
 
     while q:
       node,isPrincipal = q.pop()
+#      print node,isPrincipal
       if self.isResampling(node): pass
       elif isinstance(node,LookupNode): self.addResamplingNode(q,node)
       elif self.isResampling(node.operatorNode): self.addResamplingNode(q,node)
@@ -72,6 +80,7 @@ class Scaffold():
     if node in self.disabledRequests: return
     self.disabledRequests.add(node)
     for esrParent in node.outputNode.esrParents:
+      if not esrParent in self.disableCounts: self.disableCounts[esrParent] = 0
       self.disableCounts[esrParent] += 1
       if self.disableCounts[esrParent] == esrParent.numRequests:
         self.disableEval(esrParent)
@@ -137,4 +146,13 @@ class Scaffold():
     assert node in self.drg
     return self.drg[node]
 
-  def hasChildInAOrD(self,node): return node.children.intersection(self.absorbing) or node.children.intersection(self.drg)
+  def hasChildInAOrD(self,node): 
+    return node.children.intersection(self.absorbing) or node.children.intersection(self.drg)
+
+  def show(self):
+    print "---Scaffold---"
+    print "drg: " + str(self.drg)
+    print "absorbing: " + str(self.absorbing)
+    print "border: " + str(self.border)
+
+

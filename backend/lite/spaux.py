@@ -5,3 +5,5 @@ class SPAux():
   def registerFamily(self,id,esrParent): 
     assert not id in self.families
     self.families[id] = esrParent
+
+  def unregisterFamily(self,id): del self.families[id]

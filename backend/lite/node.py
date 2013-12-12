@@ -3,31 +3,34 @@ from spref import SPRef
 
 class Node():
   __metaclass__ = ABCMeta
-
-class ConstantNode(Node):
-  def __init__(self,value):
-    self.value = value
-    self.numRequests = 0
+  def __init__(self):
+    self.value = None
     self.children = set()
+    self.isObservation = False
     self.madeSP = None
     self.madeSPAux = None
+    self.numRequests = 0
 
   def groundValue(self):
     if isinstance(self.value,SPRef): return self.value.makerNode.madeSP
     else: return self.value
 
+class ConstantNode(Node):
+  def __init__(self,value):
+    super(ConstantNode,self).__init__()
+    self.value = value
+
+
   def parents(self): return []
 
 class LookupNode(Node):
   def __init__(self,sourceNode):
+    super(LookupNode,self).__init__()
     self.sourceNode = sourceNode
-    self.isConstrained = False
-    sourceNode.children.add(self)
     self.value = sourceNode.value
-    self.numRequests = 0
-    self.children = set()
 
   def parents(self): return [self.sourceNode]
+
 
 class ApplicationNode(Node):
   __metaclass__ = ABCMeta
@@ -45,13 +48,11 @@ class ApplicationNode(Node):
 
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
-    self.value = None
+    super(RequestNode,self).__init__()
     self.operatorNode = operatorNode
     self.operandNodes = operandNodes
-    self.numRequests = 0
     self.env = env
     self.outputNode = None
-    self.children = set()
 
   def registerOutputNode(self,outputNode):
     self.outputNode = outputNode
@@ -63,19 +64,12 @@ class RequestNode(ApplicationNode):
 
 class OutputNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,requestNode,env):
-    self.value = None
+    super(OutputNode,self).__init__()
     self.operatorNode = operatorNode
     self.operandNodes = operandNodes
     self.requestNode = requestNode
-    self.isConstrained = False
-    self.numRequests = 0
     self.esrParents = []
     self.env = env
-    self.madeSP = None
-    self.madeSPAux = None
-    self.observedValue = None
-    self.isObservation = False
-    self.children = set()
 
   def observe(self,val):
     self.observedValue = val

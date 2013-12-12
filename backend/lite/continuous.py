@@ -13,7 +13,6 @@ class NormalOutputPSP(RandomPSP):
 
   def logDensity(self,x,args):
     (mu,sigma) = args.operandValues[0:2]
-    return self.normalLogDensity(x,mu,sigma)
-
-  def canAbsorb(self): return True
-      
+    ld = self.normalLogDensity(x,mu,sigma)
+#    print "normal.ld(%d,%d,%d) = %d" % (x,mu,sigma,ld)
+    return ld

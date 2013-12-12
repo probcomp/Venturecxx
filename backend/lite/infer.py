@@ -12,12 +12,12 @@ class GKernel():
   def __init__(self,trace): self.trace = trace
 
   def infer(self,N):
-    if not self.trace.rcs: return
+    if not self.trace.rcs: raise Exception("No random choices to do inference on ")
     assert len(self.trace.rcs) > 0
     for n in range(N):
-      print "infer"
       alpha = self.propose()
       logU = math.log(random.random())
+#      print "alpha: " + str(alpha)
       if logU < alpha: self.accept()
       else: self.reject()
 
@@ -71,10 +71,8 @@ class DetachAndRegenGKernel(GKernel):
     return xiWeight - rhoWeight
 
   def accept(self): 
-    print "accept!"
     pass
   def reject(self): 
-    print "reject!"
     detachAndExtract(self.trace,self.scaffold.border,self.scaffold)
     assertTorus(self.scaffold)
     regenAndAttach(self.trace,self.scaffold.border,self.scaffold,True,self.rhoDB,{})
