@@ -160,5 +160,6 @@ class Scaffold():
     print "drg: " + str(self.drg)
     print "absorbing: " + str(self.absorbing)
     print "border: " + str(self.border)
+    print "aaa: " + str(self.aaa)
 
 

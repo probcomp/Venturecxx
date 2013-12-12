@@ -78,10 +78,13 @@ def runLiteTests(N):
   testMem3(N)
   testSprinkler1(N)
   testSprinkler2(N)
+  testMakeBetaBernoulli("make_beta_bernoulli", N)
+  testMakeBetaBernoulli("make_ubeta_bernoulli", N)
+  testMakeBetaBernoulli2("make_beta_bernoulli", N)
+  testMakeBetaBernoulli2("make_ubeta_bernoulli", N)
   testMHHMM1(N)
   testLazyHMM1(N)
   testLazyHMMSP1(N)
-  testMakeBetaBernoulli1(N)
 
 def runTests(N):
   testBernoulli0(N)
@@ -106,7 +109,10 @@ def runTests(N):
   testMakeSymDirMult2(N)
   testMakeUCSymDirMult1(N)
   testMakeDirMult1(N)
-  testMakeBetaBernoulli1(N)
+  testMakeBetaBernoulli("make_beta_bernoulli", N)
+  testMakeBetaBernoulli("make_ubeta_bernoulli", N)
+  testMakeBetaBernoulli2("make_beta_bernoulli", N)
+  testMakeBetaBernoulli2("make_ubeta_bernoulli", N)
   testMap1(N)
   testMap2()
   testMap3()
@@ -456,19 +462,48 @@ def testMakeDirMult1(N):
   eps = normalizeList(countPredictions(predictions, [0,1,2,3]))
   printTest("TestMakeDirMult2",ps,eps)
 
-def testMakeBetaBernoulli1(N):
+def testMakeBetaBernoulli(maker, N):
   sivm = SIVM()
   sivm.assume("a", "(normal 10.0 1.0)")
-  sivm.assume("f", "(make_beta_bernoulli a a)")
+  sivm.assume("f", "({0} a a)".format(maker))
   sivm.predict("(f)")
-  
+
   for j in range(20): sivm.observe("(f)", "true")
 
   predictions = loggingInfer(sivm,3,N)
   ps = [.25,.75]
   eps = normalizeList(countPredictions(predictions, [False,True]));
-  printTest("TestMakeBetaBernoulli1",ps,eps)
+  printTest("TestMakeBetaBernoulli {0}".format(maker),ps,eps)
 
+def testMakeBetaBernoulli2(maker, N):
+  sivm = SIVM()
+  sivm.assume("a", "(normal 10.0 1.0)")
+  sivm.assume("f", "((lambda () ({0} ((lambda () a)) ((lambda () a)))))".format(maker))
+  sivm.predict("(f)")
+
+  for j in range(20): sivm.observe("((lambda () (f)))", "true")
+
+  predictions = loggingInfer(sivm,3,N)
+  ps = [.25,.75]
+  eps = normalizeList(countPredictions(predictions, [False,True]));
+  printTest("TestMakeBetaBernoulli2 {0}".format(maker),ps,eps)
+
+def testMakeBetaBernoulli3(maker, N):
+  sivm = SIVM()
+  sivm.assume("a", "(normal 10.0 1.0)")
+  sivm.assume("f", "({0} a a)".format(maker))
+  sivm.predict("(f)")
+
+  for j in range(10): sivm.observe("(f)", "true")
+  for j in range(10): sivm.observe("""
+(branch (lt a 10.0)
+  (quote (f))
+  (quote (f)))""", "true")
+
+  predictions = loggingInfer(sivm,3,N)
+  ps = [.25,.75]
+  eps = normalizeList(countPredictions(predictions, [False,True]));
+  printTest("TestMakeBetaBernoulli3 {0}".format(maker),ps,eps)
 
 def testMakeUCSymDirMult1(N):
   sivm = SIVM()
