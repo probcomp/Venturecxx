@@ -4,19 +4,19 @@ class LKernel():
   __metaclass__ = ABCMeta
 
   @abstractmethod
-  def simulate(self,oldValue,args,latentDB): pass
+  def simulate(self,oldValue,args): pass
 
-  def weight(self,newValue,oldValue,args,latentDB): return 0
+  def weight(self,newValue,oldValue,args): return 0
 
-  def reverseWeight(self,oldValue,args,latentDB): 
-    return self.weight(oldValue,None,args,latentDB)
+  def reverseWeight(self,oldValue,args):
+    return self.weight(oldValue,None,args)
 
 class DefaultAAALKernel(LKernel):
   def __init__(self,makerPSP): self.makerPSP = makerPSP
 
-  def simulate(self,oldValue,args,latentDB): return self.makerPSP.simulate(args)
+  def simulate(self,oldValue,args): return self.makerPSP.simulate(args)
     
-  def weight(self,newValue,oldValue,args,latentDB):
+  def weight(self,newValue,oldValue,args):
     assert isinstance(newValue,SP)
     return newValue.logDensityOfCounts(args.madeSPAux)
 
@@ -25,5 +25,5 @@ class DeterministicLKernel(LKernel):
     self.value = value
     self.sp = sp
 
-  def simulate(self,oldValue,args,latentDB): return self.value
-  def weight(self,newValue,oldValue,args,latentDB): return self.sp.logDensity(newValue,args)
+  def simulate(self,oldValue,args): return self.value
+  def weight(self,newValue,oldValue,args): return self.sp.logDensity(newValue,args)
