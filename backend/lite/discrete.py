@@ -76,3 +76,60 @@ class MadeCBetaBernoulliOutputPSP(RandomPSP):
     numerator = scipy.special.betaln(trues,falses)
     denominator = scipy.special.betaln(self.alpha,self.beta)
     return math.log(numCombinations) + numerator - denominator
+
+#### Uncollapsed AAA Beta Bernoulli
+
+class UBetaBernoulliOutputPSP(RandomPSP):
+  def childrenCanAAA(self): return True
+  def getAAAKernel(self): return UBetaBernoulliAAALKernel(self)
+
+  def simulate(self,args):
+    alpha = args.operandValues[0]
+    beta  = args.operandValues[1]
+    weight = scipy.stats.beta.rvs(alpha, beta)
+    return MadeUBetaBernoulliSP(NullRequestPSP(), MadeUBetaBernoulliOutputPSP(weight))
+
+  def logDensity(self,value,args):
+    alpha = args.operandValues[0]
+    beta  = args.operandValues[1]
+    assert isinstance(value,MadeUBetaBernoulliSP)
+    coinWeight = value.outputPSP.weight
+    return scipy.stats.beta.logpdf(coinWeight,alpha,beta)
+
+class UBetaBernoulliAAALKernel(LKernel):
+  def simulate(self,trace,oldValue,args):
+    alpha = args.operandValues[0]
+    beta  = args.operandValues[1]
+    [ctY,ctN] = args.spaux
+    newWeight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
+    return MadeUBetaBernoulliSP(NullRequestPSP(), MadeUBetaBernoulliOutputPSP(newWeight))
+  # Weight is zero because it's simulating from the right distribution
+
+class MadeUBetaBernoulliSP(SP):
+  def constructSPAux(self): return [0.0,0.0]
+
+class MadeUBetaBernoulliOutputPSP(RandomPSP):
+  def __init__(self,weight):
+    self.weight
+
+  def incorporate(self,value,args):
+    spaux = args.spaux
+    if value: # I produced true
+      spaux[0] += 1
+    else: # I produced false
+      spaux[1] += 1
+
+  def unincorporate(self,value,args):
+    spaux = args.spaux
+    if value: # I produced true
+      spaux[0] -= 1
+    else: # I produced false
+      spaux[1] -= 1
+
+  def simulate(self,args): return random.random() < self.weight
+
+  def logDensity(self,value,args):
+    if value == True:
+      return math.log(self.weight)
+    else:
+      return math.log(1-self.weight)
