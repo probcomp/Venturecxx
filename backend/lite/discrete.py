@@ -3,6 +3,7 @@ import math
 from utils import sampleCategorical, normalizeList
 from psp import PSP, NullRequestPSP, RandomPSP
 from sp import SP
+from lkernel import DefaultAAALKernel
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args): return random.random() < args.operandValues[0]
@@ -25,6 +26,7 @@ class CategoricalOutputPSP(RandomPSP):
 
 class CBetaBernoulliOutputPSP(PSP):
   def childrenCanAAA(self): return True
+  def getAAAKernel(self): return DefaultAAALKernel(self)
   def simulate(self,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
