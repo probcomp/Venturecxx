@@ -7,6 +7,7 @@ import number
 import listsps
 import csp
 import msp
+import hmm
 import conditionals
 
 def builtInValues(): return { "true" : True, "false" : False }
@@ -42,6 +43,8 @@ def builtInSPs():
 
            "make_beta_bernoulli" : SP(NullRequestPSP(),discrete.MakerCBetaBernoulliOutputPSP()),
            "make_ubeta_bernoulli" : SP(NullRequestPSP(),discrete.MakerUBetaBernoulliOutputPSP()),
+
+           "make_hmm" : SP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()),
   }
 
 

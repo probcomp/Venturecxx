@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from spref import SPRef
 
-class Node():
+class Node(object):
   __metaclass__ = ABCMeta
   def __init__(self):
     self.value = None

@@ -1,4 +1,4 @@
-class SPAux():
+class SPAux(object):
   def __init__(self): self.families = {} # id => node
   def containsFamily(self,id): return id in self.families
   def getFamily(self,id): return self.families[id]

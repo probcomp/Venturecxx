@@ -82,7 +82,9 @@ def runLiteTests(N):
   testMakeBetaBernoulli("make_ubeta_bernoulli", N)
   testMakeBetaBernoulli2("make_beta_bernoulli", N)
   testMakeBetaBernoulli2("make_ubeta_bernoulli", N)
-
+  testMHHMM1(N)
+  testLazyHMM1(N)
+  testLazyHMMSP1(N)
 
 def runTests(N):
   testBernoulli0(N)
@@ -388,7 +390,7 @@ def testBLOGCSI(N):
 def testMHHMM1(N):
   sivm = SIVM()
   sivm.assume("f","""
-(mem (lambda (i) (branch (eq i 0) (lambda () (normal 0.0 1.0)) (lambda () (normal (f (minus i 1)) 1.0)))))
+(mem (lambda (i) (branch (eq i 0) (quote (normal 0.0 1.0)) (quote (normal (f (minus i 1)) 1.0)))))
 """)
   sivm.assume("g","""
 (mem (lambda (i) (normal (f i) 1.0)))
@@ -503,23 +505,22 @@ def testMakeUCSymDirMult1(N):
 
 
 def testLazyHMM1(N):
-  N = N
   sivm = SIVM()
   sivm.assume("f","""
 (mem 
 (lambda (i) 
   (branch (eq i 0) 
-     (lambda () (bernoulli 0.5))
-     (lambda () (branch (f (minus i 1))
-                 (lambda () (bernoulli 0.7))
-                 (lambda () (bernoulli 0.3)))))))
+     (quote (bernoulli 0.5))
+     (quote (branch (f (minus i 1))
+              (quote (bernoulli 0.7))
+              (quote (bernoulli 0.3)))))))
 """)
 
   sivm.assume("g","""
 (mem (lambda (i)
   (branch (f i)
-     (lambda () (bernoulli 0.8))
-     (lambda () (bernoulli 0.1)))))
+     (quote (bernoulli 0.8))
+     (quote (bernoulli 0.1)))))
 """)
 
   sivm.observe("(g 1)",False)
@@ -527,26 +528,26 @@ def testLazyHMM1(N):
   sivm.observe("(g 3)",True)
   sivm.observe("(g 4)",False)
   sivm.observe("(g 5)",False)
-  sivm.predict("(make_vector (f 0) (f 1) (f 2) (f 3) (f 4) (f 5))")
+  sivm.predict("(list (f 0) (f 1) (f 2) (f 3) (f 4) (f 5))")
 
-  # predictions = loggingInfer(sivm,8,N)
-  # sums = [0 for i in range(6)]
-  # for p in predictions: sums = [sums[i] + p[i] for i in range(6)]
-  # ps = [.3531,.1327,.1796,.6925,.1796,.1327]
-  # eps = [float(x) / N for x in sums] if N > 0 else [0 for x in sums]
-  # printTest("testLazyHMM1 (mixes terribly)",ps,eps)
+  predictions = loggingInfer(sivm,8,N)
+  sums = [0 for i in range(6)]
+  for p in predictions: sums = [sums[i] + p[i] for i in range(6)]
+  ps = [.3531,.1327,.1796,.6925,.1796,.1327]
+  eps = [float(x) / N for x in sums] if N > 0 else [0 for x in sums]
+  printTest("testLazyHMM1 (mixes terribly)",ps,eps)
 
 def testLazyHMMSP1(N):
   sivm = SIVM()
   sivm.assume("f","""
-(make_lazy_hmm 
-  (make_vector 0.5 0.5)
-  (make_vector 
-    (make_vector 0.7 0.3)
-    (make_vector 0.3 0.7))
-  (make_vector
-    (make_vector 0.9 0.2)
-    (make_vector 0.1 0.8)))
+(make_hmm 
+  (list 0.5 0.5)
+  (list 
+    (list 0.7 0.3)
+    (list 0.3 0.7))
+  (list
+    (list 0.9 0.2)
+    (list 0.1 0.8)))
 """);
   sivm.observe("(f 1)","atom<0>")
   sivm.observe("(f 2)","atom<0>")

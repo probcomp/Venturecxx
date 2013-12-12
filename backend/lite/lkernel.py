@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from sp import SP
 
-class LKernel():
+class LKernel(object):
   __metaclass__ = ABCMeta
 
   @abstractmethod

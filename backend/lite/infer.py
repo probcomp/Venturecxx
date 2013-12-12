@@ -7,7 +7,7 @@ from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import Scaffold
 
-class GKernel():
+class GKernel(object):
   __metaclass__ = ABCMeta
   def __init__(self,trace): self.trace = trace
 
