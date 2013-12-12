@@ -13,6 +13,7 @@ class PSP():
   def enumerate(self,args): return []
   def isRandom(self): return False
   def canAbsorb(self): return False
+  def childrenCanAAA(self): return False
   def makesHSRs(self): return False
   def canEnumerate(self): return False
   def hasVariationalKernel(self): return False
@@ -25,5 +26,9 @@ class NullRequestPSP(PSP):
 
 class ESRRefOutputPSP(PSP):
   def simulate(self,args):
-    assert len(args.esrParents) ==  1
-    return args.esrParents[0]
+    assert len(args.esrNodes) ==  1
+    return args.esrValues[0]
+
+class RandomPSP(PSP):
+  def isRandom(self): return True
+  def canAbsorb(self): return True

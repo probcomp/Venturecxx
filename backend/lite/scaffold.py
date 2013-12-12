@@ -1,3 +1,6 @@
+from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
+from psp import ESRRefOutputPSP
+
 # in class Scaffold()
 # skipping some helpers
 class Scaffold():
@@ -18,8 +21,11 @@ class Scaffold():
     self.disableBrush()
     self.setRegenCounts()
     self.loadDefaultKernels(useDeltaKernels)
+    self.border.extend(self.absorbing)
 
   def hasKernelFor(self,node): return node in self.kernels
+  def hasChildInAorD(self,node): 
+    return node.children.intersection(self.drg) or node.children.intersection(self.absorbing)
   
 
   def isAbsorbing(self,node): return node in self.absorbing
@@ -29,7 +35,7 @@ class Scaffold():
   def addResamplingNode(self,q,node):
     if self.isAbsorbing(node): self.unregisterAbsorbing(node)
     self.drg.add(node)
-    q.extend(node.children)
+    q.extend([(n,False) for n in node.children])
 
   def addAAANode(self,node):
     self.drg.add(node)
@@ -37,14 +43,14 @@ class Scaffold():
 
   def addAbsorbingNode(self,node): self.absorbing.add(node)
 
-  def esrReferenceCanAbsorb(node):
+  def esrReferenceCanAbsorb(self,node):
     return isinstance(node.psp(),ESRRefOutputPSP) and \
            not self.isResampling(node.requestNode) and \
            not self.isResampling(node.esrParents[0])
 
   def findPreliminaryBorder(self,principalNodes):
     q = [] # (node,isPrincipal)
-    for pnode in principalNodes: q.push(pnode,True)
+    for pnode in principalNodes: q.append((pnode,True))
 
     while q:
       node,isPrincipal = q.pop()
@@ -53,7 +59,7 @@ class Scaffold():
       elif self.isResampling(node.operatorNode): self.addResamplingNode(q,node)
       elif node.psp().canAbsorb() and not isPrincipal: self.addAbsorbingNode(node)
       elif node.psp().childrenCanAAA(): self.addAAANode(node)
-      elif esrReferenceCanAbsorb(node): self.addAbsorbingNode(node)
+      elif self.esrReferenceCanAbsorb(node): self.addAbsorbingNode(node)
       else: self.addResamplingNode(q,node)
 
   def disableBrush(self):
@@ -91,14 +97,14 @@ class Scaffold():
   def setRegenCounts(self):
     for node in self.drg:
       if self.isAAA(node):
-        self.drg[node].regenCount += 1
+        self.drg[node] += 1
         self.registerBorder(node)
         self.registerKernel(node,node.psp().getAAAKernel())
       elif not self.hasChildInAorD(node):
-        self.drg[node].regenCount = len(node.children()) + 1
+        self.drg[node] = len(node.children) + 1
         self.registerBorder(node)
       else:
-        self.drg[node].regenCount = len(node.children())
+        self.drg[node] = len(node.children)
 
     if self.hasAAANodes():
       for node in self.drg.union(absorbing): 
@@ -113,7 +119,7 @@ class Scaffold():
 
   def loadDefaultKernels(self,useDeltaKernels):
     for node in self.drg:
-      if isinstance(node,ApplicationNode) and not self.isAAA(node) and not self.isResampling(node.operatorNode()):
+      if isinstance(node,ApplicationNode) and not self.isAAA(node) and not self.isResampling(node.operatorNode):
         if useDeltaKernels and node.psp().hasDeltaKernel(): 
           self.registerKernel(node,node.psp().deltaKernel())
         elif node.psp().hasSimulationKernel():

@@ -1,8 +1,8 @@
 import random
 from utils import sampleCategorical, normalizeList
-from psp import PSP
+from psp import PSP, RandomPSP
 
-class BernoulliOutputPSP(PSP):
+class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args): return random.random() < args.operandValues[0]
     
   def logDensity(self,val,args):
@@ -12,7 +12,7 @@ class BernoulliOutputPSP(PSP):
 
   def canAbsorb(self): return True
 
-class CategoricalOutputPSP(PSP):
+class CategoricalOutputPSP(RandomPSP):
   def simulate(self,args): 
     ps = normalizeList(args.operandValues)
     return sampleCategorical(ps)

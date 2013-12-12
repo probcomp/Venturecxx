@@ -1,8 +1,8 @@
 import scipy.stats
 
-from psp import PSP
+from psp import PSP,RandomPSP
 
-class NormalOutputPSP(PSP):
+class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def normalSample(self,mu,sigma): return scipy.stats.norm.rvs(mu,sigma)
   def normalLogDensity(self,x,mu,sigma): return scipy.stats.norm.logpdf(x,mu,sigma)

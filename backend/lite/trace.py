@@ -1,15 +1,18 @@
 from builtin import builtInValues, builtInSPs
 from env import Env
-from node import *
-from eval import processMadeSP, evalFamily
+from node import ConstantNode,LookupNode,RequestNode,OutputNode
+import math
+from regen import constrain,processMadeSP, evalFamily
+from detach import unconstrain, teardownMadeSP, unevalFamily
 from spref import SPRef
 from scaffold import Scaffold
 import infer
+import random
 from omegadb import OmegaDB
 
 class Trace():
   def __init__(self):
-    self.gkernels = { ("mh",False) : infer.OutermostMixMHGKernel(self,infer.DetachAndRegenGKernel()) }
+    self.gkernels = { ("mh",False) : infer.OutermostMixMHGKernel(self,infer.DetachAndRegenGKernel(self)) }
     self.globalEnv = Env()
     for name,val in builtInValues().iteritems():
       self.globalEnv.addBinding(name,ConstantNode(val))
@@ -26,10 +29,12 @@ class Trace():
   def registerAEKernel(self,node): pass
   def unregisterAEKernel(self,node): pass
   def registerRandomChoice(self,node):
+    print "REG"
     assert not node in self.rcs
     self.rcs.append(node)
 
   def unregisterRandomChoice(self,node): 
+    print "UNREG"
     assert node in self.rcs
     del self.rcs[self.rcs.index(node)]
 
@@ -39,7 +44,6 @@ class Trace():
     requestNode = RequestNode(operatorNode,operandNodes,env)
     outputNode = OutputNode(operatorNode,operandNodes,requestNode,env)
     requestNode.registerOutputNode(outputNode)
-#    requestNode.children.add(outputNode)
     return (requestNode,outputNode)
 
   def reconnectLookup(self,node,sourceNode): sourceNode.children.add(node)
@@ -58,6 +62,12 @@ class Trace():
     esrParent.numRequests -= 1
     return esrParent
 
+  #### For kernels
+  def samplePrincipalNode(self): return random.choice(self.rcs)
+  def logDensityOfPrincipalNode(self,principalNode): 
+    print "len: " + str(len(self.rcs))
+    return -1 * math.log(len(self.rcs))
+
   #### External interface to engine.py
   def eval(self,id,exp):
     assert not id in self.families
@@ -70,7 +80,7 @@ class Trace():
   def observe(self,id,val):
     node = self.families[id]
     node.observe(self.unboxValue(val))
-    constrain(self,node)
+    constrain(self,node,node.observedValue)
 
   def unobserve(self,id): unconstrain(self,self.families[id])
 

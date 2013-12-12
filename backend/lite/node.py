@@ -21,6 +21,7 @@ class ConstantNode(Node):
 class LookupNode(Node):
   def __init__(self,sourceNode):
     self.sourceNode = sourceNode
+    self.isConstrained = False
     sourceNode.children.add(self)
     self.value = sourceNode.value
     self.numRequests = 0
@@ -44,6 +45,7 @@ class ApplicationNode(Node):
 
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
+    self.value = None
     self.operatorNode = operatorNode
     self.operandNodes = operandNodes
     self.numRequests = 0
@@ -61,9 +63,11 @@ class RequestNode(ApplicationNode):
 
 class OutputNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,requestNode,env):
+    self.value = None
     self.operatorNode = operatorNode
     self.operandNodes = operandNodes
     self.requestNode = requestNode
+    self.isConstrained = False
     self.numRequests = 0
     self.esrParents = []
     self.env = env
@@ -90,7 +94,7 @@ class Args():
     if isinstance(node,OutputNode):
       self.requestValue = node.requestNode.value
       self.esrValues = [esrParent.value for esrParent in node.esrParents]
-      self.esrParents = node.esrParents
+      self.esrNodes = node.esrParents
       self.madeSPAux = node.madeSPAux
       self.isOutput = True
 

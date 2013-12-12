@@ -1,3 +1,5 @@
+import random
+
 def normalizeList(seq): 
   denom = sum(seq)
   return [ float(x)/denom for x in seq]

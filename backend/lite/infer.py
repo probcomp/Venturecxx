@@ -1,8 +1,25 @@
 from abc import ABCMeta, abstractmethod
+import random
+import math
+from consistency import assertTorus
+from omegadb import OmegaDB
+from regen import regenAndAttach
+from detach import detachAndExtract
+from scaffold import Scaffold
 
 class GKernel():
   __metaclass__ = ABCMeta
   def __init__(self,trace): self.trace = trace
+
+  def infer(self,N):
+    if not self.trace.rcs: return
+    assert len(self.trace.rcs) > 0
+    for n in range(N):
+      print "infer"
+      alpha = self.propose()
+      logU = math.log(random.random())
+      if logU < alpha: self.accept()
+      else: self.reject()
 
   @abstractmethod
   def propose(self): pass
@@ -10,7 +27,7 @@ class GKernel():
   def accept(self): pass
   def reject(self): pass
 
-  def loadParameters(self): pass
+  def loadParameters(self,params): pass
 
 class MixMHGKernel(GKernel):
   __metaclass__ = ABCMeta
@@ -31,44 +48,51 @@ class MixMHGKernel(GKernel):
   def propose(self):
     index = self.sampleIndex()
     weightRho = self.logDensityOfIndex(index)
-    alpha = childGKernel.propose(self.processIndex(index))
+    self.childGKernel.loadParameters(self.processIndex(index))
+    alpha = self.childGKernel.propose()
     weightXi = self.logDensityOfIndex(index);
     return alpha + weightXi - weightRho
 
-  def accept(self): childGKernel.accept()
-  def reject(self): childGKernel.reject()
+  def accept(self): self.childGKernel.accept()
+  def reject(self): self.childGKernel.reject()
 
 class OutermostMixMHGKernel(MixMHGKernel):
-  def sampleIndex(self): return trace.sampleRandomChoiceUniformly()
-  def logDensityOfIndex(self,index): return -log(trace.numRandomChoices())
-  def processIndex(self,index): return (Scaffold(index),index)
+  def sampleIndex(self): return self.trace.samplePrincipalNode()
+  def logDensityOfIndex(self,index): return self.trace.logDensityOfPrincipalNode(index)
+  def processIndex(self,index): return (Scaffold([index]),index)
 
+class DetachAndRegenGKernel(GKernel):
+  def loadParameters(self,params): self.scaffold = params[0]
 
-class DetachAndRegenGKernel():
-  def propose(self,scaffold):
-    rhoWeight,self.rhoDB = detach(self.trace,self.scaffold.border(),self.scaffold)
-    xiWeight = regen(self.trace,self.scaffold.border(),self.scaffold,False,self.rhoDB)
+  def propose(self):
+    rhoWeight,self.rhoDB = detachAndExtract(self.trace,self.scaffold.border,self.scaffold)
+    assertTorus(self.scaffold)
+    xiWeight = regenAndAttach(self.trace,self.scaffold.border,self.scaffold,False,self.rhoDB,{})
     return xiWeight - rhoWeight
 
-  def accept(self): pass
+  def accept(self): 
+    print "accept!"
+    pass
   def reject(self): 
-    detach(trace,scaffold.border(),scaffold)
-    regen(trace,scaffold.border(),scaffold,True,rhoDB)
+    print "reject!"
+    detachAndExtract(self.trace,self.scaffold.border,self.scaffold)
+    assertTorus(self.scaffold)
+    regenAndAttach(self.trace,self.scaffold.border,self.scaffold,True,self.rhoDB,{})
 
 class MeanfieldGKernel(DetachAndRegenGKernel):
   def propose(self,scaffold):
-    _,rhoDB = detach(self.trace,self.scaffold.border(),self.scaffold)
+    _,self.rhoDB = detach(self.trace,self.scaffold.border,self.scaffold)
     self.registerVariationalKernels()
     for i in range(numIters):
       gradients = {}
-      gain = regen(self.trace,self.scaffold.border(),self.scaffold,False,None,gradients)
-      detach(self.trace,self.scaffold.border(),self.scaffold)
-      for node,lkernel in scaffold.lkernels():
+      gain = regenAndAttach(self.trace,self.scaffold.border,self.scaffold,False,None,gradients)
+      detachAndExtract(self.trace,self.scaffold.border,self.scaffold)
+      for node,lkernel in self.scaffold.lkernels():
         if lkernel.isVariationalLKernel(): lkernel.updateParameters(gradients[node],gain,stepSize)
 
-    rhoWeight = regen(trace,scaffold.border(),scaffold,True,rhoDB)
-    detach(trace,scaffold.border(),scaffold)
+    rhoWeight = regenAndAttach(self.trace,self.scaffold.border,self.scaffold,True,self.rhoDB,{})
+    detachAndExtract(trace,scaffold.border,scaffold)
     
-    xiWeight = regen(trace,scaffold,border(),scaffold,False,None)
+    xiWeight = regenAndAttach(trace,scaffold,border,scaffold,False,None,{})
     return rhoWeight - xiWeight
 
