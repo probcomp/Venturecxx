@@ -43,6 +43,8 @@ def builtInSPs():
 
            "make_hmm" : SP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()),
 
+           "make_beta_bernoulli" : SP(NullRequestPSP(),discrete.CBetaBernoulliOutputPSP()),
+
   }
 
 

@@ -81,6 +81,7 @@ def runLiteTests(N):
   testMHHMM1(N)
   testLazyHMM1(N)
   testLazyHMMSP1(N)
+  testMakeBetaBernoulli1(N)
 
 def runTests(N):
   testBernoulli0(N)

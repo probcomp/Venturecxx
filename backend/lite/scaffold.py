@@ -1,6 +1,7 @@
 from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
 from psp import ESRRefOutputPSP
 import pdb
+from spref import SPRef
 
 # in class Scaffold()
 # skipping some helpers
@@ -27,6 +28,7 @@ class Scaffold():
 #    pdb.set_trace()
 
   def hasKernelFor(self,node): return node in self.kernels
+  def getKernel(self,node): return self.kernels[node]
   def hasChildInAorD(self,node): 
     return node.children.intersection(self.drg) or node.children.intersection(self.absorbing)
   
@@ -89,7 +91,7 @@ class Scaffold():
 
   def registerBorder(self,node): self.border.append(node)
   def registerKernel(self,node,kernel): 
-    assert not node in kernels
+    assert not node in self.kernels
     self.kernels[node] = kernel
 
   def hasAAANodes(self): return self.aaa
@@ -116,7 +118,9 @@ class Scaffold():
         self.drg[node] = len(node.children)
 
     if self.hasAAANodes():
-      for node in self.drg.union(absorbing): 
+      # TODO Making a fresh set from the keys of the drg may not be a
+      # very efficient way to iterate here.
+      for node in set(self.drg.keys()).union(self.absorbing):
         for parent in node.parents(): self.maybeIncrementAAARegenCount(parent)
         for node in self.brush: 
           if isinstance(node,OutputNode): 
