@@ -31,7 +31,7 @@ class CBetaBernoulliOutputPSP(PSP):
     return MadeCBetaBernoulliSP(NullRequestPSP(), MadeCBetaBernoulliOutputPSP(alpha, beta))
 
 class MadeCBetaBernoulliSP(SP):
-  def constructSPAux(self): [0.0,0.0]
+  def constructSPAux(self): return [0.0,0.0]
 
 class MadeCBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,alpha,beta):
