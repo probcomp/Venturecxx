@@ -462,6 +462,8 @@ def testMakeDirMult1(N):
   eps = normalizeList(countPredictions(predictions, [0,1,2,3]))
   printTest("TestMakeDirMult2",ps,eps)
 
+# TODO These four illustrate mechanisms of mechanically adding
+# nastiness to programs.  Automate?
 def testMakeBetaBernoulli(maker, N):
   sivm = SIVM()
   sivm.assume("a", "(normal 10.0 1.0)")
@@ -504,6 +506,22 @@ def testMakeBetaBernoulli3(maker, N):
   ps = [.25,.75]
   eps = normalizeList(countPredictions(predictions, [False,True]));
   printTest("TestMakeBetaBernoulli3 {0}".format(maker),ps,eps)
+
+def testMakeBetaBernoulli4(maker, N):
+  sivm = SIVM()
+  sivm.assume("a", "(normal 10.0 1.0)")
+  sivm.assume("f", """
+(branch (lt a 10.0)
+  (quote ({0} a a))
+  (quote ({0} a a)))""".format(maker))
+  sivm.predict("(f)")
+
+  for j in range(20): sivm.observe("(f)", "true")
+
+  predictions = loggingInfer(sivm,3,N)
+  ps = [.25,.75]
+  eps = normalizeList(countPredictions(predictions, [False,True]));
+  printTest("TestMakeBetaBernoulli4 {0}".format(maker),ps,eps)
 
 def testMakeUCSymDirMult1(N):
   sivm = SIVM()
