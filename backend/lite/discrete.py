@@ -1,6 +1,7 @@
 import random
 from utils import sampleCategorical, normalizeList
-from psp import PSP, RandomPSP
+from psp import PSP, NullRequestPSP, RandomPSP
+from sp import SP
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args): return random.random() < args.operandValues[0]
