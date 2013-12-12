@@ -69,7 +69,6 @@ class MadeCBetaBernoulliOutputPSP(RandomPSP):
       return math.log(1-weight)
 
   def logDensityOfCounts(self,aux):
-    print aux
     [ctY,ctN] = aux
     trues = ctY + self.alpha
     falses = ctN + self.beta
