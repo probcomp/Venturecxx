@@ -1,5 +1,6 @@
 import random
 import math
+import scipy
 from utils import sampleCategorical, normalizeList
 from psp import PSP, NullRequestPSP, RandomPSP
 from sp import SP
