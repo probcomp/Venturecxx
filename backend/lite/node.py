@@ -10,6 +10,11 @@ class Node():
     self.madeSP = None
     self.madeSPAux = None
     self.numRequests = 0
+    self.isObservation = False
+
+  def observe(self,val):
+    self.observedValue = val
+    self.isObservation = True
 
   def groundValue(self):
     if isinstance(self.value,SPRef): return self.value.makerNode.madeSP
@@ -70,10 +75,6 @@ class OutputNode(ApplicationNode):
     self.requestNode = requestNode
     self.esrParents = []
     self.env = env
-
-  def observe(self,val):
-    self.observedValue = val
-    self.isObservation = True
 
   def psp(self): return self.sp().outputPSP
 

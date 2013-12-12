@@ -304,11 +304,11 @@ def testMem3(N):
 def testSprinkler1(N):
   sivm = SIVM()
   sivm.assume("rain","(bernoulli 0.2)")
-  sivm.assume("sprinkler","(branch rain (lambda () (bernoulli 0.01)) (lambda () (bernoulli 0.4)))")
+  sivm.assume("sprinkler","(branch rain (quote (bernoulli 0.01)) (quote (bernoulli 0.4)))")
   sivm.assume("grassWet","""
 (branch rain 
-(lambda () (branch sprinkler (lambda () (bernoulli 0.99)) (lambda () (bernoulli 0.8))))
-(lambda () (branch sprinkler (lambda () (bernoulli 0.9)) (lambda () (bernoulli 0.00001)))))
+(quote (branch sprinkler (quote (bernoulli 0.99)) (quote (bernoulli 0.8))))
+(quote (branch sprinkler (quote (bernoulli 0.9)) (quote (bernoulli 0.00001)))))
 """)
   sivm.observe("grassWet", True)
 
@@ -323,11 +323,11 @@ def testSprinkler2(N):
 
   sivm = SIVM()
   sivm.assume("rain","(bernoulli 0.2)")
-  sivm.assume("sprinkler","(bernoulli (branch rain (lambda () 0.01) (lambda () 0.4)))")
+  sivm.assume("sprinkler","(bernoulli (branch rain (quote 0.01) (quote 0.4)))")
   sivm.assume("grassWet","""
 (bernoulli (branch rain 
-(lambda () (branch sprinkler (lambda () 0.99) (lambda () 0.8)))
-(lambda () (branch sprinkler (lambda () 0.9) (lambda () 0.00001)))))
+(quote (branch sprinkler (quote 0.99) (quote 0.8)))
+(quote (branch sprinkler (quote 0.9) (quote 0.00001)))))
 """)
   sivm.observe("grassWet", True)
 
