@@ -93,7 +93,7 @@ def unapplyPSP(trace,node,scaffold,omegaDB):
   weight = 0
   node.psp().unincorporate(node.value,node.args())
   if scaffold.hasKernelFor(node): 
-    weight += scaffold.getKernel(node).reverseWeight(node.value,node.args())
+    weight += scaffold.getKernel(node).reverseWeight(trace,node.value,node.args())
   omegaDB.extractValue(node,node.value)
   return weight
 
