@@ -78,6 +78,7 @@ def runLiteTests(N):
   testMem3(N)
   testSprinkler1(N)
   testSprinkler2(N)
+  testMakeBetaBernoulli1(N)
 
 
 def runTests(N):
