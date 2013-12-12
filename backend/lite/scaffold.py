@@ -89,7 +89,7 @@ class Scaffold():
 
   def registerBorder(self,node): self.border.append(node)
   def registerKernel(self,node,kernel): 
-    assert not node in kernels
+    assert not node in self.kernels
     self.kernels[node] = kernel
 
   def hasAAANodes(self): return self.aaa
