@@ -28,6 +28,7 @@ class Scaffold():
 #    pdb.set_trace()
 
   def hasKernelFor(self,node): return node in self.kernels
+  def getKernel(self,node): return self.kernels[node]
   def hasChildInAorD(self,node): 
     return node.children.intersection(self.drg) or node.children.intersection(self.absorbing)
   
