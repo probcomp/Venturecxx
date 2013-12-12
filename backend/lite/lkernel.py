@@ -19,7 +19,7 @@ class DefaultAAALKernel(LKernel):
     
   def weight(self,newValue,oldValue,args):
     assert isinstance(newValue,SP)
-    return newValue.logDensityOfCounts(args.madeSPAux)
+    return newValue.outputPSP.logDensityOfCounts(args.madeSPAux)
 
 class DeterministicLKernel(LKernel):
   def __init__(self,value,sp): 
