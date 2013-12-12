@@ -72,6 +72,7 @@ class DetachAndRegenGKernel(GKernel):
 
   def accept(self): 
     pass
+
   def reject(self): 
     detachAndExtract(self.trace,self.scaffold.border,self.scaffold)
     assertTorus(self.scaffold)

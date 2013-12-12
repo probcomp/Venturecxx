@@ -135,10 +135,12 @@ class Scaffold():
           self.registerKernel(node,node.psp().simulationKernel()) # todo this should never happen
 
   def decrementRegenCount(self,node):
+#    print "dec: " + str(node) + ": " + str(self.drg[node]) + " => " + str(self.drg[node] - 1)
     assert node in self.drg
     self.drg[node] -= 1
 
   def incrementRegenCount(self,node):
+#    print "inc: " + str(node) + ": " + str(self.drg[node]) + " => " + str(self.drg[node] + 1)
     assert node in self.drg
     self.drg[node] += 1
 

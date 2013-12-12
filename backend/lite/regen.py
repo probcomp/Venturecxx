@@ -1,18 +1,8 @@
 from exp import isVariable, isSelfEvaluating, isQuotation, textOfQuotation, getOperator, getOperands
-from node import LookupNode, ApplicationNode, RequestNode, OutputNode
+from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
 from sp import SP
 from psp import ESRRefOutputPSP
 from spref import SPRef
-
-def constrain(trace,node,value):
-  if isinstance(node,LookupNode): return constrain(trace,node.sourceNode,value)
-  if isinstance(node.psp(),ESRRefOutputPSP): return constrain(trace,node.esrParents[0],value)
-  node.psp().unincorporate(value,node.args())
-  weight = node.psp().logDensity(value,node.args())
-  node.value = value
-  node.psp().incorporate(value,node.args())
-  trace.unregisterRandomChoice(node)
-  return weight
 
 def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
@@ -24,9 +14,14 @@ def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
       if node.isObservation: weight += constrain(node,node.observedValue)
   return weight
 
-def regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):
-  weight = 0
-  for parent in node.parents(): weight += regen(trace,parent,scaffold,shouldRestore,omegaDB,gradients)
+def constrain(trace,node,value):
+  if isinstance(node,LookupNode): return constrain(trace,node.sourceNode,value)
+  if isinstance(node.psp(),ESRRefOutputPSP): return constrain(trace,node.esrParents[0],value)
+  node.psp().unincorporate(value,node.args())
+  weight = node.psp().logDensity(value,node.args())
+  node.value = value
+  node.psp().incorporate(value,node.args())
+  trace.unregisterRandomChoice(node)
   return weight
 
 def attach(trace,node,scaffold,shouldRestore,omegaDB,gradients):
@@ -37,6 +32,12 @@ def attach(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight += node.psp().logDensity(node.groundValue(),node.args())
   node.psp().incorporate(node.groundValue(),node.args())
   return weight
+
+def regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):
+  weight = 0
+  for parent in node.parents(): weight += regen(trace,parent,scaffold,shouldRestore,omegaDB,gradients)
+  return weight
+
 
 def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
@@ -56,7 +57,10 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
 def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
   weight = 0
-  if isVariable(exp): return (0,trace.createLookupNode(env.findSymbol(exp)))
+  if isVariable(exp): 
+    sourceNode = env.findSymbol(exp)
+    regen(trace,sourceNode,scaffold,False,omegaDB,gradients)
+    return (0,trace.createLookupNode(sourceNode))
   elif isSelfEvaluating(exp): return (0,trace.createConstantNode(exp))
   elif isQuotation(exp): return (0,trace.createConstantNode(textOfQuotation(exp)))
   else:
@@ -119,11 +123,13 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   # first evaluate exposed simulation requests (ESRs)
   for esr in request.esrs:
     if not node.spaux().containsFamily(esr.id):
-      if shouldRestore: weight += restore(omegaDB.getESRParent(node.sp(),esr.id),scaffold,omegaDB)
+      if shouldRestore: 
+        esrParent = omegaDB.getESRParent(node.sp(),esr.id)
+        weight += restore(trace,esrParent,scaffold,omegaDB,gradients)
       else:
         (w,esrParent) = evalFamily(trace,esr.exp,esr.env,scaffold,omegaDB,gradients)
         weight += w
-        node.spaux().registerFamily(esr.id,esrParent)
+      node.spaux().registerFamily(esr.id,esrParent)
     else: 
       esrParent = node.spaux().getFamily(esr.id)
       weight += regen(trace,esrParent,scaffold,shouldRestore,omegaDB,gradients)
@@ -138,13 +144,14 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   return weight;
 
 def restore(trace,node,scaffold,omegaDB,gradients):
-  if isinstance(node,ConstantNode): pass
+  if isinstance(node,ConstantNode): return 0
   if isinstance(node,LookupNode):
-    regen(trace,node.sourceNode,scaffold,True,omegaDB,gradients)
+    weight = regen(trace,node.sourceNode,scaffold,True,omegaDB,gradients)
     node.value = node.sourceNode.value
-    trace.reconnectLookup(node,node.sourceNode) # awkward
+    trace.reconnectLookup(node) # awkward
+    return weight
   else: # node is output node
     weight = restore(trace,node.operatorNode,scaffold,omegaDB,gradients)
     for operandNode in node.operandNodes: weight += restore(trace,operandNode,scaffold,omegaDB,gradients)
-    weight += apply(trace,node.requestNode,node)
+    weight += apply(trace,node.requestNode,node,scaffold,True,omegaDB,gradients)
     return weight

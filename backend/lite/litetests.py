@@ -72,6 +72,12 @@ def runLiteTests(N):
   testCategorical1(N)
   testMHNormal0(N)
   testMHNormal1(N)
+  testMem0(N)
+  testMem1(N)
+  testMem2(N)
+  testMem3(N)
+  testSprinkler1(N)
+  testSprinkler2(N)
 
 
 def runTests(N):
@@ -193,6 +199,24 @@ def testMHNormal0(N):
   print "(12.0," + str(mean) + ")"
     
 
+
+def testMHNormal1a(N):
+  sivm = SIVM()
+  sivm.assume("a", "(normal 10.0 1.0)")
+  sivm.assume("b", "(normal a 1.0)")
+  sivm.observe("(normal b 1.0)", 14.0)
+  sivm.predict("""
+(branch a
+        (quote (normal (plus a b) 1.0))
+        (quote (normal (times a b) 1.0)))
+""")
+
+  predictions = loggingInfer(sivm,4,N)
+  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
+  print "---TestMHNormal1---"
+  print "(23.9," + str(mean) + ")"
+
+
 def testMHNormal1(N):
   sivm = SIVM()
   sivm.assume("a", "(normal 10.0 1.0)")
@@ -249,7 +273,7 @@ def testMem2(N):
   sivm = SIVM()
   sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
   sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
-  sivm.assume("x","(f ((branch (bernoulli 0.5) (lambda () (lambda () 1)) (lambda () (lambda () 1)))))")
+  sivm.assume("x","(f ((branch (bernoulli 0.5) (quote (lambda () 1)) (quote (lambda () 1)))))")
   sivm.assume("y","(g ((lambda () 0)))")
   sivm.assume("w","((lambda () (f 2)))")
   sivm.assume("z","(g 1)")
@@ -266,7 +290,7 @@ def testMem3(N):
   sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
   sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   sivm.assume("x","(f ((lambda () 1)))")
-  sivm.assume("y","(g ((lambda () (branch (bernoulli 1.0) (lambda () 0) (lambda () 100)))))")
+  sivm.assume("y","(g ((lambda () (branch (bernoulli 1.0) (quote 0) (quote 100)))))")
   sivm.assume("w","((lambda () (f 2)))")
   sivm.assume("z","(g 1)")
   sivm.assume("q","(plus 1 (real (categorical 0.1 0.9)))")

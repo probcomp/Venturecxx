@@ -71,6 +71,7 @@ class Trace():
     return esrParent
   
   def disconnectLookup(self,lookupNode): lookupNode.sourceNode.children.remove(lookupNode)
+  def reconnectLookup(self,lookupNode): lookupNode.sourceNode.children.add(lookupNode)
 
   #### For kernels
   def samplePrincipalNode(self): return random.choice(self.rcs)

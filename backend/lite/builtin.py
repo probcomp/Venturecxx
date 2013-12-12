@@ -38,7 +38,7 @@ def builtInSPs():
 
            "make_csp" : SP(NullRequestPSP(),csp.MakeCSPOutputPSP()),
 
-           "make_msp" : SP(NullRequestPSP(),msp.MakeMSPOutputPSP()),
+           "mem" : SP(NullRequestPSP(),msp.MakeMSPOutputPSP()),
   }
 
 

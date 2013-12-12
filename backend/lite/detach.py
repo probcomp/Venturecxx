@@ -26,17 +26,17 @@ def unconstrain(trace,node):
   node.psp().incorporateOutput(node.value,node.args())
   return weight
 
-def extractParents(trace,node,scaffold,omegaDB):
-  weight = 0
-  for parent in reversed(node.parents()): weight += extract(trace,parent,scaffold,omegaDB)
-  return weight
-
 def detach(trace,node,scaffold,omegaDB):
   # we need to pass groundValue here in case the return value is an SP
   # in which case the node would only contain an SPRef
   node.psp().unincorporate(node.groundValue(),node.args())
   weight = node.psp().logDensity(node.groundValue(),node.args())
   weight += extractParents(trace,node,scaffold,omegaDB)
+  return weight
+
+def extractParents(trace,node,scaffold,omegaDB):
+  weight = 0
+  for parent in reversed(node.parents()): weight += extract(trace,parent,scaffold,omegaDB)
   return weight
 
 def extract(trace,node,scaffold,omegaDB):
@@ -114,6 +114,7 @@ def unevalRequests(trace,node,scaffold,omegaDB):
       node.spaux().unregisterFamily(esr.id)
       omegaDB.registerSPFamily(node.sp(),esr.id,esrParent)
       weight += unevalFamily(trace,esrParent,scaffold,omegaDB)
-    else: weight += extract(trace,esrParent,scaffold,omegaDB)
+    else: 
+      weight += extract(trace,esrParent,scaffold,omegaDB)
 
   return weight

@@ -15,4 +15,4 @@ class MSPRequestPSP(PSP):
     id = str(args.operandValues)
     exp = ["memoizedSP"] + args.operandValues
     env = Env(None,["memoizedSP"],[self.sharedOperatorNode])
-    return Request([ESR((id,exp,env))])
+    return Request([ESR(id,exp,env)])
