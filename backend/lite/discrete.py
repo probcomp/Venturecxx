@@ -28,7 +28,7 @@ class CBetaBernoulliOutputPSP(PSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
-    return MadeCBetaBernoulliSP(NullRequestPSP, MadeCBetaBernoulliOutputPSP(alpha, beta))
+    return MadeCBetaBernoulliSP(NullRequestPSP(), MadeCBetaBernoulliOutputPSP(alpha, beta))
 
 class MadeCBetaBernoulliSP(SP):
   def constructSPAux(self): [0.0,0.0]
