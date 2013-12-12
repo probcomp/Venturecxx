@@ -116,7 +116,9 @@ class Scaffold():
         self.drg[node] = len(node.children)
 
     if self.hasAAANodes():
-      for node in self.drg.union(absorbing): 
+      # TODO Making a fresh set from the keys of the drg may not be a
+      # very efficient way to iterate here.
+      for node in set(self.drg.keys()).union(self.absorbing):
         for parent in node.parents(): self.maybeIncrementAAARegenCount(parent)
         for node in self.brush: 
           if isinstance(node,OutputNode): 
