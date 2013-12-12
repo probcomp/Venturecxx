@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-class LKernel():
+class LKernel(object):
   __metaclass__ = ABCMeta
 
   @abstractmethod

@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from spaux import SPAux
 
-class SP():
+class SP(object):
   __metaclass__ = ABCMeta
 
   def __init__(self,requestPSP,outputPSP):

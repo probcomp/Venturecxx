@@ -7,6 +7,7 @@ import number
 import listsps
 import csp
 import msp
+import hmm
 import conditionals
 
 def builtInValues(): return { "true" : True, "false" : False }
@@ -39,6 +40,9 @@ def builtInSPs():
            "make_csp" : SP(NullRequestPSP(),csp.MakeCSPOutputPSP()),
 
            "mem" : SP(NullRequestPSP(),msp.MakeMSPOutputPSP()),
+
+           "make_hmm" : SP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()),
+
   }
 
 

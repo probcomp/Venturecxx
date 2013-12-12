@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from request import Request
 
 
-class PSP():
+class PSP(object):
   __metaclass__ = ABCMeta
 
   @abstractmethod

@@ -10,7 +10,7 @@ import infer
 import random
 from omegadb import OmegaDB
 
-class Trace():
+class Trace(object):
   def __init__(self):
     self.gkernels = { ("mh",False) : infer.OutermostMixMHGKernel(self,infer.DetachAndRegenGKernel(self)) }
     self.globalEnv = Env()

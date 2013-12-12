@@ -14,3 +14,4 @@ def sampleCategorical(ps):
   index = sampleCategoricalIter(x,0,ps[0],ps[1:])
   assert index < len(ps)
   return index
+
