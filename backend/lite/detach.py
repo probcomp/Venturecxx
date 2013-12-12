@@ -12,7 +12,7 @@ def detachAndExtract(trace,border,scaffold):
     if scaffold.isAbsorbing(node):
       weight += detach(trace,node,scaffold,omegaDB)
     else:
-      if node.isObservation: weight += unconstrain(node)
+      if node.isObservation: weight += unconstrain(trace,node)
       weight += extract(trace,node,scaffold,omegaDB)
   return weight,omegaDB
 
@@ -22,8 +22,8 @@ def unconstrain(trace,node):
 
   if node.psp().isRandom(): trace.registerRandomChoice(node)
   node.psp().unincorporate(node.value,node.args())
-  weight = node.psp().logDensity(value,node.args())
-  node.psp().incorporateOutput(node.value,node.args())
+  weight = node.psp().logDensity(node.value,node.args())
+  node.psp().incorporate(node.value,node.args())
   return weight
 
 def detach(trace,node,scaffold,omegaDB):
