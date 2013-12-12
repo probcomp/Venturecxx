@@ -80,6 +80,8 @@ def runLiteTests(N):
   testSprinkler2(N)
   testMakeBetaBernoulli("make_beta_bernoulli", N)
   testMakeBetaBernoulli("make_ubeta_bernoulli", N)
+  testMakeBetaBernoulli2("make_beta_bernoulli", N)
+  testMakeBetaBernoulli2("make_ubeta_bernoulli", N)
 
 
 def runTests(N):
@@ -107,6 +109,8 @@ def runTests(N):
   testMakeDirMult1(N)
   testMakeBetaBernoulli("make_beta_bernoulli", N)
   testMakeBetaBernoulli("make_ubeta_bernoulli", N)
+  testMakeBetaBernoulli2("make_beta_bernoulli", N)
+  testMakeBetaBernoulli2("make_ubeta_bernoulli", N)
   testMap1(N)
   testMap2()
   testMap3()
@@ -468,6 +472,19 @@ def testMakeBetaBernoulli(maker, N):
   ps = [.25,.75]
   eps = normalizeList(countPredictions(predictions, [False,True]));
   printTest("TestMakeBetaBernoulli {0}".format(maker),ps,eps)
+
+def testMakeBetaBernoulli2(maker, N):
+  sivm = SIVM()
+  sivm.assume("a", "(normal 10.0 1.0)")
+  sivm.assume("f", "((lambda () ({0} ((lambda () a)) ((lambda () a)))))".format(maker))
+  sivm.predict("(f)")
+
+  for j in range(20): sivm.observe("((lambda () (f)))", "true")
+
+  predictions = loggingInfer(sivm,3,N)
+  ps = [.25,.75]
+  eps = normalizeList(countPredictions(predictions, [False,True]));
+  printTest("TestMakeBetaBernoulli2 {0}".format(maker),ps,eps)
 
 def testMakeUCSymDirMult1(N):
   sivm = SIVM()
