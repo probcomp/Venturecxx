@@ -1,6 +1,7 @@
 from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
 from psp import ESRRefOutputPSP
 import pdb
+from spref import SPRef
 
 # in class Scaffold()
 # skipping some helpers
