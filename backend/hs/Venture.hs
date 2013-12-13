@@ -196,6 +196,15 @@ self_select_2 =
     ]
 -- liftM discreteHistogram $ venture_main 100 self_select_2
 
+mem_1 :: [Directive]
+mem_1 =
+    [ Assume "coins" $ App (Var "mem") [Lam ["i"] (App (Var "bernoulli") [])]
+    , Predict $ App (Var "list") [flip 1, flip 1, flip 1, flip 2, flip 2, flip 2, flip 3, flip 3, flip 3]
+    ] where
+    flip k = App (Var "coins") [Datum $ Number k]
+-- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 mem_1
+-- Each triple should have the same value in each output, but vary across outputs
+
 -- Next subgoal: Daniel says that collapsed exchangeably coupled
 -- state, even in the presence of conditionals, does not force
 -- regen/detach order symmetry, only detach before regen.  Confirm.
