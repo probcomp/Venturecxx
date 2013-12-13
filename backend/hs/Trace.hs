@@ -444,6 +444,12 @@ runRequester spaddr args = do
   sprs . ix spaddr .= spr{ srid_seed = seed' }
   return reqs
 
+-- Given that the state is a valid Trace, and the inputs are an
+-- SPAddress that occurs in it and two lists of Addresses that also
+-- occur in it, returns the value this SP produces when its args and
+-- fulfilments are nodes at these Addresses (in order).  The Trace in
+-- the state may change, but remains valid.  Fails if the call is
+-- ill-typed with respect to the SP.
 runOutputter :: (Monad m, MonadTrans t, MonadState (Trace m) (t m)) =>
                 SPAddress -> [Address] -> [Address] -> t m Value
 runOutputter spaddr argAs resultAs = do
