@@ -4,6 +4,7 @@ module SP where
 import qualified Data.Map as M
 import Control.Monad.State.Lazy hiding (state)
 import Control.Monad.State.Class
+import Control.Monad.Reader
 import Control.Monad.Random -- From cabal install MonadRandom
 import Numeric.SpecFunctions -- From cabal install spec-functions
 import Control.Lens  -- from cabal install lens
@@ -40,6 +41,7 @@ data NoStateSP m = NoStateSP
 
 data SPRequesterNS m = DeterministicR ([Address] -> UniqueSource [SimulationRequest])
                      | RandomR ([Address] -> UniqueSourceT m [SimulationRequest])
+                     | ReaderR ([Address] -> ReaderT (Trace m) (UniqueSourceT m) [SimulationRequest])
 
 data SPOutputterNS m = Trivial
                      | DeterministicO ([Node] -> [Node] -> Value)
@@ -60,6 +62,7 @@ no_state_sp NoStateSP { requester = req, log_d_req = ldr, outputter = out, log_d
 no_state_r :: SPRequesterNS m -> T.SPRequester m a
 no_state_r (DeterministicR f) = T.DeterministicR $ const f
 no_state_r (RandomR f) = T.RandomR $ const f
+no_state_r (ReaderR f) = T.ReaderR $ const f
 
 no_state_o :: SPOutputterNS m -> T.SPOutputter m a
 no_state_o Trivial = T.Trivial
