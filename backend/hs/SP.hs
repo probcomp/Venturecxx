@@ -44,9 +44,9 @@ data SPRequesterNS m = DeterministicR ([Address] -> UniqueSource [SimulationRequ
 data SPOutputterNS m = Trivial
                      | DeterministicO ([Node] -> [Node] -> Value)
                      | RandomO ([Node] -> [Node] -> m Value)
-                     | SPMaker ([Node] -> [Node] -> T.SP m) -- Are these ever random?
+                     | SPMaker ([Node] -> [Node] -> SP m) -- Are these ever random?
 
-no_state_sp :: NoStateSP m -> T.SP m
+no_state_sp :: NoStateSP m -> SP m
 no_state_sp NoStateSP { requester = req, log_d_req = ldr, outputter = out, log_d_out = ldo } =
     T.SP { T.requester = no_state_r req
          , T.log_d_req = liftM const ldr
