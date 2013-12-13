@@ -107,6 +107,7 @@ data SPOutputter m a = Trivial
                      | DeterministicO (a -> [Node] -> [Node] -> Value)
                      | RandomO (a -> [Node] -> [Node] -> m Value)
                      | SPMaker (a -> [Node] -> [Node] -> SP m) -- Are these ever random?
+                     | ReferringSPMaker (a -> [Address] -> [Address] -> SP m)
 
 asRandomR :: (Monad m) => SPRequester m a -> a -> [Address] -> ReaderT (Trace m) (UniqueSourceT m) [SimulationRequest]
 asRandomR (RandomR f) st as = lift $ f st as
@@ -124,12 +125,20 @@ asRandomO Trivial _ _ _ = error "Trivial outputter requires one response"
 asRandomO (RandomO f) st args reqs = Left $ f st args reqs
 asRandomO (DeterministicO f) st args reqs = Left $ return $ f st args reqs
 asRandomO (SPMaker f) st args reqs = Right $ f st args reqs
+asRandomO _ _ _ _ = error "Should never pass ReferringSPMaker to asRandomO"
+
+asRandomO' :: (Monad m) => SPOutputter m a -> a -> [Address] -> [Address] -> Trace m -> Either (m Value) (SP m)
+asRandomO' (ReferringSPMaker f) a argAs resultAs _ = Right $ f a argAs resultAs
+asRandomO' out a argAs resultAs Trace{ _nodes = ns} = asRandomO out a args results where
+  args = map (fromJust "Running outputter for an output with a missing parent" . flip M.lookup ns) argAs
+  results = map (fromJust "Running outputter for an output with a missing request result" . flip M.lookup ns) resultAs
 
 isRandomO :: SPOutputter m a -> Bool
 isRandomO Trivial = False
 isRandomO (RandomO _) = True
 isRandomO (DeterministicO _) = False
 isRandomO (SPMaker _) = False
+isRandomO (ReferringSPMaker _) = False
 
 ----------------------------------------------------------------------
 -- Nodes                                                            --
@@ -455,10 +464,8 @@ runOutputter :: (Monad m, MonadTrans t, MonadState (Trace m) (t m)) =>
 runOutputter spaddr argAs resultAs = do
   SP{ outputter = out, current = st }
     <- uses (sprs . hardix "Running the outputter of a non-SP" spaddr) sp
-  ns <- use nodes
-  let args = map (fromJust "Running outputter for an output with a missing parent" . flip M.lookup ns) argAs
-  let results = map (fromJust "Running outputter for an output with a missing request result" . flip M.lookup ns) resultAs
-  let result = asRandomO out st args results
+  t <- get
+  let result = asRandomO' out st argAs resultAs t
   v <- case result of
          (Left vact) -> lift vact
          (Right sp) -> do spAddr <- state $ addFreshSP sp
