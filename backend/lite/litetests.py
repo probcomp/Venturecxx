@@ -78,13 +78,17 @@ def runLiteTests(N):
   testMem3(N)
   testSprinkler1(N)
   testSprinkler2(N)
+  testMHHMM1(N)
+  testLazyHMM1(N)
+  testLazyHMMSP1(N)
+  testAAA(N)
+  
+def testAAA(N):
   testMakeBetaBernoulli("make_beta_bernoulli", N)
   testMakeBetaBernoulli("make_ubeta_bernoulli", N)
   testMakeBetaBernoulli2("make_beta_bernoulli", N)
   testMakeBetaBernoulli2("make_ubeta_bernoulli", N)
-  testMHHMM1(N)
-  testLazyHMM1(N)
-  testLazyHMMSP1(N)
+
 
 def runTests(N):
   testBernoulli0(N)
