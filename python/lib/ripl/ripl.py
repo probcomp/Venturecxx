@@ -369,4 +369,6 @@ class Ripl():
         return args['expression'], arg_ranges['expression'][0]
 
 def _strip_types(value):
-    return value['value']
+    ans = value['value']
+    if isinstance(ans,list): return [_strip_types(v) for v in ans]
+    else: return ans
