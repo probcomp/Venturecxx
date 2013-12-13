@@ -82,6 +82,8 @@ data SP m = forall a. SP
     -- TODO Do these guys need to accept the argument lists?
     , incorporate :: Value -> a -> a
     , unincorporate :: Value -> a -> a
+    , incorporateR :: [SimulationRequest] -> a -> a
+    , unincorporateR :: [SimulationRequest] -> a -> a
     }
 -- TODO Can I refactor this data type to capture the fact that
 -- deterministic requesters and outputters never have meaningful log_d
