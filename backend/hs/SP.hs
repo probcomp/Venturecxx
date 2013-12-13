@@ -47,6 +47,7 @@ data SPOutputterNS m = Trivial
                      | DeterministicO ([Node] -> [Node] -> Value)
                      | RandomO ([Node] -> [Node] -> m Value)
                      | SPMaker ([Node] -> [Node] -> SP m) -- Are these ever random?
+                     | ReferringSPMaker ([Address] -> [Address] -> SP m)
 
 no_state_sp :: NoStateSP m -> SP m
 no_state_sp NoStateSP { requester = req, log_d_req = ldr, outputter = out, log_d_out = ldo } =
@@ -69,6 +70,7 @@ no_state_o Trivial = T.Trivial
 no_state_o (DeterministicO f) = T.DeterministicO $ const f
 no_state_o (RandomO f) = T.RandomO $ const f
 no_state_o (SPMaker f) = T.SPMaker $ const f
+no_state_o (ReferringSPMaker f) = T.ReferringSPMaker $ const f
 
 compoundSP :: (Monad m) => [String] -> Exp -> Env -> SP m
 compoundSP formals exp env = no_state_sp NoStateSP
