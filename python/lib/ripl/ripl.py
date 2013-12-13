@@ -155,7 +155,7 @@ class Ripl():
             s = self._cur_parser().get_instruction_string('labeled_assume')
             d = {'symbol':name, 'expression':expression, 'label':label}
         value = self.execute_instruction(s,d)['value']
-        return value if type else value['value']
+        return value if type else _strip_types(value)
 
     def predict(self, expression, label=None, type=False):
         if label==None:
@@ -165,7 +165,7 @@ class Ripl():
             s = self._cur_parser().get_instruction_string('labeled_predict')
             d = {'expression':expression, 'label':label}
         value = self.execute_instruction(s,d)['value']
-        return value if type else value['value']
+        return value if type else _strip_types(value)
 
     def observe(self, expression, value, label=None):
         if label==None:
@@ -219,7 +219,7 @@ class Ripl():
             s = self._cur_parser().get_instruction_string('labeled_report')
             d = {'label':label_or_did}
         value = self.execute_instruction(s,d)['value']
-        return value if type else value['value']
+        return value if type else _strip_types(value)
 
     def infer(self, transitions, kernel="mh", use_global_scaffold=False):
         s = self._cur_parser().get_instruction_string('infer')
@@ -267,7 +267,7 @@ class Ripl():
         s = self._cur_parser().get_instruction_string('sample')
         d = {'expression':expression}
         value = self.execute_instruction(s,d)['value']
-        return value if type else value['value']
+        return value if type else _strip_types(value)
     
     def continuous_inference_status(self):
         s = self._cur_parser().get_instruction_string('continuous_inference_status')
@@ -368,3 +368,5 @@ class Ripl():
         args, arg_ranges = p.split_instruction(text)
         return args['expression'], arg_ranges['expression'][0]
 
+def _strip_types(value):
+    return value['value']
