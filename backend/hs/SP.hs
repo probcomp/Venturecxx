@@ -238,6 +238,23 @@ select = no_state_sp NoStateSP
   , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
   }
 
+mem :: SP m
+mem = no_state_sp NoStateSP
+  { requester = nullReq
+  , log_d_req = Just $ trivial_log_d_req
+  , outputter = SPMaker $ on_values $ unary $ typed memoized_sp
+  , log_d_out = Nothing
+  }
+
+memoized_sp :: SPAddress -> SP m
+memoized_sp a = no_state_sp NoStateSP
+  { requester = undefined a
+  , log_d_req = Just $ trivial_log_d_req
+  , outputter = Trivial
+  , log_d_out = Nothing
+  }
+
+
 initializeBuiltins :: (MonadState (Trace m1) m, MonadRandom m1) => Env -> m Env
 initializeBuiltins env = do
   spaddrs <- mapM (state . addFreshSP) sps
