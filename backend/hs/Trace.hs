@@ -6,7 +6,7 @@ import Debug.Trace
 import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import qualified Data.Set as S
-import Control.Lens  -- from cabal install lens
+import Control.Lens hiding (children)  -- from cabal install lens
 import Control.Monad.State hiding (state) -- :set -hide-package monads-tf-0.1.0.1
 import Control.Monad.Writer.Class
 import Control.Monad.Reader
@@ -322,15 +322,8 @@ isRandomNode _ _ = False
 --    child of B iff A is in the trace and the address of B appears in
 --    the list of parentAddrs of A.
 -- 4. The request counts are right, to wit M.lookup a request_counts
---    is always Just the number of times a appears as a value
---    in any requests maps of any SPRecords and Nothing iff a never
---    appears as such a value.
---    - TODO This is actually the wrong thing to be counting.  Daniel
---      says that every request is always fulfilled by a unique
---      Address; the issue is how many applications of that SP make
---      that request.  This should be equal to the number of the
---      requested node's children that are output nodes (as opposed to
---      lookup nodes).
+--    is always Just the number of times a appears as a fulfilment of
+--    an Output node and Nothing iff a never so appears.
 -- 5. The seeds are right, to wit
 --    a. The _addr_seed exceeds every Address that appears in the
 --       trace;
@@ -443,7 +436,11 @@ forgetResponses (spaddr, srids) t@Trace{ _sprs = ss, _request_counts = r } =
 -- Given a valid Trace and an Address that occurs in it, returns the
 -- number of times that address has been requested.
 numRequests :: Address -> Trace m -> Int
-numRequests a t = fromMaybe 0 $ t^.request_counts.at a
+numRequests a t = length $ filter isOutput $ children a t where
+    isOutput a' = case M.lookup a' (t^.nodes) of
+                    (Just (Output _ _ _ _ _)) -> True
+                    (Just _) -> False
+                    Nothing -> error "Dangling child"
 
 -- Given that the state is a valid Trace, and the inputs are an
 -- SPAddress that occurs in it and a list of Addresses that also occur
