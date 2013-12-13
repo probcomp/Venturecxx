@@ -196,16 +196,11 @@ beta = no_state_sp NoStateSP
   , log_d_out = Just $ on_values $ binary $ typed3 log_denisty_beta
   }
 
--- TODO abstract the actual coin flipping between collapsed beta bernoulli and weighted
 cbeta_bernoulli_flip :: (MonadRandom m) => (Double,Double) -> m Value
-cbeta_bernoulli_flip (ctYes, ctNo) = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0) where
-    weight = ctYes / (ctYes + ctNo)
+cbeta_bernoulli_flip (ctYes, ctNo) = weightedFlip $ ctYes / (ctYes + ctNo)
 
 cbeta_bernoulli_log_d :: (Double,Double) -> Bool -> Double
-cbeta_bernoulli_log_d (ctYes, ctNo) True = log weight where
-    weight = ctYes / (ctYes + ctNo)
-cbeta_bernoulli_log_d (ctYes, ctNo) False = log (1-weight) where
-    weight = ctYes / (ctYes + ctNo)
+cbeta_bernoulli_log_d (ctYes, ctNo) = log_d_weight $ ctYes / (ctYes + ctNo)
 
 cbeta_bernoulli_frob :: (Double -> Double) -> Bool -> (Double,Double) -> (Double,Double)
 cbeta_bernoulli_frob f True  s = s & _1 %~ f
