@@ -92,7 +92,7 @@ flip_one_coin = [Predict $ App (Var "bernoulli") []]
 single_normal :: [Directive]
 single_normal = [Predict $ App (Var "normal") [(Datum $ Number 0.0), (Datum $ Number 2.0)]]
 -- venture_main 10 single_normal
--- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . numberOf) $ venture_main 500 $ single_normal) >>= printHistogram
+-- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . fromValue) $ venture_main 500 $ single_normal) >>= printHistogram
 
 condition_on_flip :: [Directive]
 condition_on_flip = [Predict $ App (App (Var "select") [(App (Var "bernoulli") []), (Lam [] (Datum $ Number 1.0)), (Lam [] (Datum $ Number 2.0))]) []]
@@ -106,7 +106,7 @@ chained_normals =
     , Predict $ Var "y"
     ]
 -- venture_main 10 $ chained_normals
--- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . numberOf) $ venture_main 500 $ chained_normals) >>= printHistogram
+-- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . fromValue) $ venture_main 500 $ chained_normals) >>= printHistogram
 
 observed_chained_normals :: [Directive]
 observed_chained_normals =
@@ -116,7 +116,7 @@ observed_chained_normals =
     , Predict $ Var "x"
     ]
 -- venture_main 10 $ observed_chained_normals
--- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . numberOf) $ venture_main 500 $ observed_chained_normals) >>= printHistogram
+-- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . fromValue) $ venture_main 500 $ observed_chained_normals) >>= printHistogram
 
 -- This example forces propagation of constraints backwards through
 -- forwarding outputs.  Predicting "y" should yield 4, and predicting
@@ -130,7 +130,7 @@ observed_chained_normals_lam =
     , Predict $ Var "x"
     ]
 -- venture_main 10 $ observed_chained_normals_lam
--- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . numberOf) $ venture_main 500 $ observed_chained_normals_lam) >>= printHistogram
+-- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . fromValue) $ venture_main 500 $ observed_chained_normals_lam) >>= printHistogram
 
 list_of_coins :: [Directive]
 list_of_coins = [Predict $ App (Var "list") [flip, flip, flip]] where

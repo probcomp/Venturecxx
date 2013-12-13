@@ -231,7 +231,7 @@ make_cbeta_bernoulli = no_state_sp NoStateSP
   }
 
 selectO :: [Value] -> [b] -> Value
-selectO [p,c,a] [] = if fromJust "Predicate was not a boolean" $ booleanOf p then c
+selectO [p,c,a] [] = if fromJust "Predicate was not a boolean" $ fromValue p then c
                      else a
 selectO _ _ = error "Wrong number of arguments to SELECT"
 

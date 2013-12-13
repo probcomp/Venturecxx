@@ -41,15 +41,6 @@ instance Valuable SPAddress where
 instance Valuable Value where
     fromValue = Just
 
-booleanOf :: Value -> Maybe Bool
-booleanOf = fromValue
-
-numberOf :: Value -> Maybe Double
-numberOf = fromValue
-
-spValue :: Value -> Maybe SPAddress
-spValue = fromValue
-
 newtype Address = Address Unique
     deriving (Eq, Ord, Show)
 
@@ -281,7 +272,7 @@ chaseOperator a t = do
   -- TODO This chase may be superfluous now that Reference nodes hold
   -- their values.
   source <- chaseReferences a t
-  valueOf source >>= spValue
+  valueOf source >>= fromValue
 
 operatorRecord :: Node -> Trace m -> Maybe (SPRecord m)
 operatorRecord n t = operatorAddr n t >>= (\addr -> t ^. sprs . at addr)
