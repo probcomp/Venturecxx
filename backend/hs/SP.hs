@@ -247,12 +247,12 @@ mem :: (Monad m) => SP m
 mem = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req
-  , outputter = SPMaker $ on_values $ unary $ typed memoized_sp
+  , outputter = ReferringSPMaker $ unary $ memoized_sp
   , log_d_out = Nothing
   }
 
-memoized_sp :: (Monad m) => SPAddress -> SP m
-memoized_sp a = no_state_sp NoStateSP
+memoized_sp :: (Monad m) => Address -> SP m
+memoized_sp proc = no_state_sp NoStateSP
   { requester = ReaderR req
   , log_d_req = Just $ trivial_log_d_req
   , outputter = Trivial
@@ -268,7 +268,6 @@ memoized_sp a = no_state_sp NoStateSP
           newId <- liftM SRId fresh
           let names = take (length args) $ map show $ ([1..] :: [Int])
               exp = App (Var "memoized-sp") $ map Var names
-              proc = undefined -- The Address of a Node whose Value is Procedure a
               env = Frame (M.fromList $ ("memoized-sp",proc):(zip names args)) Toplevel
           return [SimulationRequest newId exp env]
 
