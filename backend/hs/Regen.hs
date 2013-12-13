@@ -2,7 +2,6 @@
 
 module Regen where
 
-import qualified Data.Map as M
 import Data.Maybe hiding (fromJust)
 import Control.Monad
 import Control.Monad.Trans.Writer.Strict
@@ -57,17 +56,9 @@ regenValue a = lift (do
       case outA of
         Nothing -> return ()
         (Just outA') -> nodes . ix outA' . responses .= resps
-    (Output _ _ _ ps rs) -> do
-      SP{ outputter = out, current = st }
-          <- gets $ fromJust "Regenerating value for an output with no operator" . (operator node)
-      ns <- use nodes
-      let args = map (fromJust "Regenerating value for an output with a missing parent" . flip M.lookup ns) ps
-      let results = map (fromJust "Regenerating value for an output with a missing request result" . flip M.lookup ns) rs
-      let result = asRandomO out st args results
-      v <- case result of
-             (Left vact) -> lift vact
-             (Right sp) -> do spAddr <- state $ addFreshSP sp
-                              return $ Procedure spAddr
+    (Output _ _ opa ps rs) -> do
+      addr <- gets $ fromJust "Regenerating value for an output with no operator" . (chaseOperator opa)
+      v <- runOutputter addr ps rs
       nodes . ix a . value .= Just v
       do_incorporate a)
 

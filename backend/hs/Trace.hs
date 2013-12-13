@@ -10,6 +10,7 @@ import Control.Lens  -- from cabal install lens
 import Control.Monad.State hiding (state) -- :set -hide-package monads-tf-0.1.0.1
 import Control.Monad.Writer.Class
 import Control.Monad.Reader
+import Control.Monad.State.Class
 import Text.PrettyPrint -- presumably from cabal install pretty
 
 import Utils
@@ -442,6 +443,21 @@ runRequester spaddr args = do
   (reqs, seed') <- lift $ runUniqueSourceT (runReaderT (asRandomR req a args) t) seed
   sprs . ix spaddr .= spr{ srid_seed = seed' }
   return reqs
+
+runOutputter :: (Monad m, MonadTrans t, MonadState (Trace m) (t m)) =>
+                SPAddress -> [Address] -> [Address] -> t m Value
+runOutputter spaddr argAs resultAs = do
+  SP{ outputter = out, current = st }
+    <- uses (sprs . hardix "Running the outputter of a non-SP" spaddr) sp
+  ns <- use nodes
+  let args = map (fromJust "Running outputter for an output with a missing parent" . flip M.lookup ns) argAs
+  let results = map (fromJust "Running outputter for an output with a missing request result" . flip M.lookup ns) resultAs
+  let result = asRandomO out st args results
+  v <- case result of
+         (Left vact) -> lift vact
+         (Right sp) -> do spAddr <- state $ addFreshSP sp
+                          return $ Procedure spAddr
+  return v
 
 ----------------------------------------------------------------------
 -- Advanced Trace Manipulations                                     --
