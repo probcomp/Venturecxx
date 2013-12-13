@@ -169,7 +169,7 @@ normal_flip mu sigma = do
   return $ Number $ sigma * normal + mu
 
 log_d_normal :: Double -> Double -> Double -> Double
-log_d_normal mean sigma x = - (x - mean)^^2 / (2 * sigma ^^ 2) - scale where
+log_d_normal mean sigma x = - (x - mean)^^(2::Int) / (2 * sigma^^(2::Int)) - scale where
     scale = log sigma + (log pi)/2
 
 normal :: (MonadRandom m) => SP m
