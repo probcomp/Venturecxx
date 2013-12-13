@@ -77,6 +77,7 @@ class Scaffold():
       if isinstance(node,RequestNode): self.disableRequests(node)
     self.drg = { node : 0 for node in self.drg if not node in self.brush }
     self.absorbing = set([node for node in self.absorbing if not node in self.brush])
+    self.aaa = set([node for node in self.aaa if not node in self.brush])
 
   def disableRequests(self,node):
     if node in self.disabledRequests: return
