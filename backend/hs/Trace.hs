@@ -23,22 +23,22 @@ type Value = L.Value SPAddress
 type Exp = L.Exp Value
 type Env = L.Env String Address
 
-class Valueable b where
+class Valuable b where
     fromValue :: Value -> Maybe b
 
-instance Valueable Double where
+instance Valuable Double where
     fromValue (Number d) = Just d
     fromValue _ = Nothing
 
-instance Valueable Bool where
+instance Valuable Bool where
     fromValue (Boolean b) = Just b
     fromValue _ = Nothing
 
-instance Valueable SPAddress where
+instance Valuable SPAddress where
     fromValue (Procedure a) = Just a
     fromValue _ = Nothing
 
-instance Valueable Value where
+instance Valuable Value where
     fromValue = Just
 
 booleanOf :: Value -> Maybe Bool

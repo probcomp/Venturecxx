@@ -101,6 +101,16 @@ nullary f [] [] = f
 nullary _ [] l = error $ "No requests expected " ++ (show $ length l) ++ " given."
 nullary _ l _ = error $ "No arguments expected " ++ (show $ length l) ++ " given."
 
+-- Is there a better name for these three combinators?
+typed :: (Valuable a) => (a -> r) -> Value -> r
+typed f = f . (fromJust "Incorrect type argument") . fromValue
+
+typed2 :: (Valuable a, Valuable b) => (a -> b -> r) -> Value -> Value -> r
+typed2 = typed . (typed .)
+
+typed3 :: (Valuable a, Valuable b, Valuable c) => (a -> b -> c -> r) -> Value -> Value -> Value -> r
+typed3 = typed . (typed2 .)
+
 execList :: [Value] -> [b] -> Value
 execList vs [] = List vs
 execList _ _ = error "List SP given fulfilments"
