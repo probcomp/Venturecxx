@@ -280,7 +280,8 @@ memoized_sp proc = T.SP
               exp = App (Var "memoized-sp") $ map Var names
               env = Frame (M.fromList $ ("memoized-sp",proc):(zip names args)) Toplevel
           return [SimulationRequest newId exp env]
-    inc = undefined
+    inc vs [req] cache = M.insert vs (srid req) cache where
+    inc _ _ _ = error "Memoized procedure expects to incorporate exactly one request"
     dec = undefined
 
 
