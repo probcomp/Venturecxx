@@ -98,8 +98,6 @@ do_uninc v SP{..} = SP{ current = unincorporate v current, ..}
 instance Show (SP m) where
     show _ = "A stochastic procedure"
 
--- TODO Is there a nice way to unify these two data types and their
--- methods?
 data SPRequester m a = DeterministicR (a -> [Address] -> UniqueSource [SimulationRequest])
                      | RandomR (a -> [Address] -> UniqueSourceT m [SimulationRequest])
                      | ReaderR (a -> [Address] -> ReaderT (Trace m) (UniqueSourceT m) [SimulationRequest])
