@@ -40,7 +40,6 @@ def extractParents(trace,node,scaffold,omegaDB):
   return weight
 
 def extract(trace,node,scaffold,omegaDB):
-#  print "extract: " + str(node)
   weight = 0
   if isinstance(node.value,SPRef) and node.value.makerNode != node and scaffold.isAAA(node.value.makerNode):
     weight += extract(trace,node.value.makerNode,scaffold,omegaDB)
@@ -85,7 +84,6 @@ def teardownMadeSP(trace,node,isAAA):
     node.madeSPAux = None
 
 def unapplyPSP(trace,node,scaffold,omegaDB):
-#  print "unapplyPSP: " + str(node)
 
   if node.psp().isRandom(): trace.unregisterRandomChoice(node)
   if isinstance(node.value,SPRef) and node.value.makerNode == node: teardownMadeSP(trace,node,scaffold.isAAA(node))

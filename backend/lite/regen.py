@@ -26,10 +26,7 @@ def constrain(trace,node,value):
   return weight
 
 def attach(trace,node,scaffold,shouldRestore,omegaDB,gradients):
-#  print "attach: " + str(node)
   weight = regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
-  # we need to pass groundValue here in case the return value is an SP
-  # in which case the node would only contain an SPRef
   weight += node.psp().logDensity(node.groundValue(),node.args())
   node.psp().incorporate(node.groundValue(),node.args())
   return weight
@@ -92,7 +89,6 @@ def processMadeSP(trace,node,isAAA):
     if sp.hasAEKernel(): trace.registerAEKernel(node)
 
 def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
-#  print "applyPSP: " + str(node)
   weight = 0;
 
   if omegaDB.hasValueFor(node): oldValue = omegaDB.getValue(node)
@@ -151,7 +147,7 @@ def restore(trace,node,scaffold,omegaDB,gradients):
   if isinstance(node,LookupNode):
     weight = regen(trace,node.sourceNode,scaffold,True,omegaDB,gradients)
     node.value = node.sourceNode.value
-    trace.reconnectLookup(node) # awkward
+    trace.reconnectLookup(node)
     return weight
   else: # node is output node
     weight = restore(trace,node.operatorNode,scaffold,omegaDB,gradients)
