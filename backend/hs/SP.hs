@@ -273,7 +273,7 @@ memoized_sp proc = T.SP
           vs = map (fromJust "Memoized SP given valueless argument node" . valueOf) ns
       let cachedSRId = M.lookup vs cache
       case cachedSRId of
-        (Just (id,_)) -> return [SimulationRequest id undefined undefined]
+        (Just (id,_)) -> return [SimulationRequest id (Var "unaccessed") Toplevel]
         Nothing -> do
           newId <- liftM SRId fresh
           let names = take (length args) $ map show $ ([1..] :: [Int])
