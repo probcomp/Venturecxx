@@ -161,12 +161,9 @@ normalFlip mu sigma = do
   let normal = box_muller_cos u1 u2
   return $ Number $ sigma * normal + mu
 
-log_d_normal' :: Double -> Double -> Double -> Double
-log_d_normal' mean sigma x = - (x - mean)^^2 / (2 * sigma ^^ 2) - scale where
-    scale = log sigma + (log pi)/2
-
 log_d_normal :: Double -> Double -> Double -> Double
-log_d_normal mu sigma x = log_d_normal' mu sigma x
+log_d_normal mean sigma x = - (x - mean)^^2 / (2 * sigma ^^ 2) - scale where
+    scale = log sigma + (log pi)/2
 
 normal :: (MonadRandom m) => SP m
 normal = no_state_sp NoStateSP
@@ -225,14 +222,11 @@ cbeta_bernoulli ctYes ctNo = T.SP
   , T.unincorporate = typed $ cbeta_bernoulli_frob pred
   }
 
-do_make_cbeta_bernoulli :: (MonadRandom m) => Double -> Double -> SP m
-do_make_cbeta_bernoulli yes no = cbeta_bernoulli yes no
-
 make_cbeta_bernoulli :: (MonadRandom m) => SP m
 make_cbeta_bernoulli = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = SPMaker $ on_values $ binary $ typed2 do_make_cbeta_bernoulli
+  , outputter = SPMaker $ on_values $ binary $ typed2 cbeta_bernoulli
   , log_d_out = Nothing
   }
 
