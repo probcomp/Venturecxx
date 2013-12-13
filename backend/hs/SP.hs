@@ -134,16 +134,12 @@ bernoulli = no_state_sp NoStateSP
   , log_d_out = Just $ nullary $ typed (const $ -log 2.0 :: Bool -> Double)
   }
 
-weightedFlip :: (MonadRandom m) => Value -> m Value
-weightedFlip wt = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0) where
-    weight = fromJust "No number supplied for weighted" $ numberOf wt
+weightedFlip :: (MonadRandom m) => Double -> m Value
+weightedFlip weight = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0)
 
-log_d_weight :: Value -> Value -> Double
-log_d_weight wt (Boolean True) = log weight where
-    weight = fromJust "No number supplied for weighted" $ numberOf wt
-log_d_weight wt (Boolean False) = log (1 - weight) where
-    weight = fromJust "No number supplied for weighted" $ numberOf wt
-log_d_weight _ _ = error "Value supplied to log_d_weight is not a boolean"
+log_d_weight :: Double -> Bool -> Double
+log_d_weight weight True = log weight
+log_d_weight weight False = log (1 - weight)
 
 weighted :: (MonadRandom m) => SP m
 weighted = no_state_sp NoStateSP
@@ -158,23 +154,19 @@ box_muller_cos u1 u2 = r * cos theta where
     r = sqrt (-2 * log u1)
     theta = 2 * pi * u2
 
-normalFlip :: (MonadRandom m) => Value -> Value -> m Value
-normalFlip meanV sigmaV = do
+normalFlip :: (MonadRandom m) => Double -> Double -> m Value
+normalFlip mu sigma = do
   u1 <- getRandomR (0.0, 1.0)
   u2 <- getRandomR (0.0, 1.0)
   let normal = box_muller_cos u1 u2
-      mu = fromJust "Argument value was not a number" $ numberOf meanV
-      sigma = fromJust "Argument value was not a number" $ numberOf sigmaV
   return $ Number $ sigma * normal + mu
 
 log_d_normal' :: Double -> Double -> Double -> Double
 log_d_normal' mean sigma x = - (x - mean)^^2 / (2 * sigma ^^ 2) - scale where
     scale = log sigma + (log pi)/2
 
-log_d_normal :: Value -> Value -> Value -> Double
-log_d_normal muV sigmaV (Number x) = log_d_normal' mu sigma x where
-    [mu, sigma] = map (fromJust "Argument value was not a number" . numberOf) [muV, sigmaV]
-log_d_normal _ _ _ = error "Given Value must be a number"
+log_d_normal :: Double -> Double -> Double -> Double
+log_d_normal mu sigma x = log_d_normal' mu sigma x
 
 normal :: (MonadRandom m) => SP m
 normal = no_state_sp NoStateSP
@@ -184,25 +176,20 @@ normal = no_state_sp NoStateSP
   , log_d_out = Just $ on_values $ binary $ typed3 log_d_normal
   }
 
-betaO :: (MonadRandom m) => Value -> Value -> m Value
-betaO alphaV betaV = do
+betaO :: (MonadRandom m) => Double -> Double -> m Value
+betaO alpha beta = do
   -- Adapted from Statistics.Distribution.Beta; not reused because of
   -- funny randomness management convention.
   x <- getRandomR (0.0,1.0)
   return $ Number $ quantile x
     where
-      alpha = fromJust "Argument value was not a number" $ numberOf alphaV
-      beta = fromJust "Argument value was not a number" $ numberOf betaV
       quantile x | x == 0 = 0
                  | x == 1 = 1
                  | 0 < x && x < 1 = invIncompleteBeta alpha beta x
                  | otherwise = error $ "x must be in the range [0,1], got: " ++ show x
 
-log_denisty_beta :: Value -> Value -> Value -> Double
-log_denisty_beta alphaV betaV (Number x) = (a-1)*log x + (b-1)*log (1-x) - logBeta a b where
-    a = fromJust "Argument value was not a number" $ numberOf alphaV
-    b = fromJust "Argument value was not a number" $ numberOf betaV
-log_denisty_beta _ _ _ = error "Given Value must be a number"
+log_denisty_beta :: Double -> Double -> Double -> Double
+log_denisty_beta a b x = (a-1)*log x + (b-1)*log (1-x) - logBeta a b
 
 beta :: (MonadRandom m) => SP m
 beta = no_state_sp NoStateSP
@@ -217,17 +204,15 @@ cbeta_bernoulli_flip :: (MonadRandom m) => (Double,Double) -> m Value
 cbeta_bernoulli_flip (ctYes, ctNo) = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0) where
     weight = ctYes / (ctYes + ctNo)
 
-cbeta_bernoulli_log_d :: (Double,Double) -> Value -> Double
-cbeta_bernoulli_log_d (ctYes, ctNo) (Boolean True) = log weight where
+cbeta_bernoulli_log_d :: (Double,Double) -> Bool -> Double
+cbeta_bernoulli_log_d (ctYes, ctNo) True = log weight where
     weight = ctYes / (ctYes + ctNo)
-cbeta_bernoulli_log_d (ctYes, ctNo) (Boolean False) = log (1-weight) where
+cbeta_bernoulli_log_d (ctYes, ctNo) False = log (1-weight) where
     weight = ctYes / (ctYes + ctNo)
-cbeta_bernoulli_log_d _ _ = error "Value supplied to collapsed beta bernoulli log_d is not a boolean"
 
-cbeta_bernoulli_frob :: (Double -> Double) -> Value -> (Double,Double) -> (Double,Double)
-cbeta_bernoulli_frob f (Boolean True)  s = s & _1 %~ f
-cbeta_bernoulli_frob f (Boolean False) s = s & _2 %~ f
-cbeta_bernoulli_frob _ _ _ = error "Trying to incorporate a non-boolean into collapsed beta bernoulli"
+cbeta_bernoulli_frob :: (Double -> Double) -> Bool -> (Double,Double) -> (Double,Double)
+cbeta_bernoulli_frob f True  s = s & _1 %~ f
+cbeta_bernoulli_frob f False s = s & _2 %~ f
 
 cbeta_bernoulli :: (MonadRandom m) => Double -> Double -> SP m
 cbeta_bernoulli ctYes ctNo = T.SP
@@ -240,10 +225,8 @@ cbeta_bernoulli ctYes ctNo = T.SP
   , T.unincorporate = typed $ cbeta_bernoulli_frob pred
   }
 
-do_make_cbeta_bernoulli :: (MonadRandom m) => Value -> Value -> SP m
-do_make_cbeta_bernoulli yesV noV = cbeta_bernoulli yes no where
-    yes = fromJust "Argument value was not a number" $ numberOf yesV
-    no  = fromJust "Argument value was not a number" $ numberOf noV
+do_make_cbeta_bernoulli :: (MonadRandom m) => Double -> Double -> SP m
+do_make_cbeta_bernoulli yes no = cbeta_bernoulli yes no
 
 make_cbeta_bernoulli :: (MonadRandom m) => SP m
 make_cbeta_bernoulli = no_state_sp NoStateSP
