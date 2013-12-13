@@ -4,6 +4,7 @@ module Unique (Unique, UniqueSeed, UniqueSourceT, UniqueSource, asInteger
 import Data.Functor.Identity
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Strict
+import Control.Monad.Reader
 
 -- A deterministic source of unique objects that, unlike Data.Unique,
 -- does not involve the IO monad.
@@ -32,6 +33,9 @@ instance Monad m => Monad (UniqueSourceT m) where
 
 instance Monad m => UniqueSourceMonad (UniqueSourceT m) where
     fresh = UniqueSourceT (modify succU >> gets fromSeed)
+
+instance (UniqueSourceMonad m) => UniqueSourceMonad (ReaderT r m) where
+    fresh = lift $ fresh
 
 uniqueSeed :: UniqueSeed
 uniqueSeed = UniqueSeed 0
