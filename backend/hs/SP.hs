@@ -58,8 +58,8 @@ no_state_sp NoStateSP { requester = req, log_d_req = ldr, outputter = out, log_d
          , T.current = ()
          , T.incorporate = const id
          , T.unincorporate = const id
-         , T.incorporateR = const id
-         , T.unincorporateR = const id
+         , T.incorporateR = const $ const id
+         , T.unincorporateR = const $ const id
          }
 
 no_state_r :: SPRequesterNS m -> T.SPRequester m a
@@ -222,8 +222,8 @@ cbeta_bernoulli ctYes ctNo = T.SP
   , T.current = (ctYes, ctNo)
   , T.incorporate = typed $ cbeta_bernoulli_frob succ
   , T.unincorporate = typed $ cbeta_bernoulli_frob pred
-  , T.incorporateR = const id
-  , T.unincorporateR = const id
+  , T.incorporateR = const $ const id
+  , T.unincorporateR = const $ const id
   }
 
 make_cbeta_bernoulli :: (MonadRandom m) => SP m
