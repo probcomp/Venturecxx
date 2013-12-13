@@ -86,17 +86,20 @@ on_values f ns1 ns2 = f vs1 vs2 where
 
 -- TODO Is there a clean way to pass down the name of the procedure
 -- here, so it can be included in the error message?
-binary :: (a -> a -> r) -> [a] -> r
-binary f [a1,a2] = f a1 a2
-binary _ l = error $ "Two arguments expected " ++ (show $ length l) ++ " given."
+binary :: (a -> a -> r) -> [a] -> [b] -> r
+binary f [a1,a2] [] = f a1 a2
+binary _ [_,_] l = error $ "No requests expected " ++ (show $ length l) ++ " given."
+binary _ l _ = error $ "Two arguments expected " ++ (show $ length l) ++ " given."
 
-unary :: (a -> r) -> [a] -> r
-unary f [a] = f a
-unary _ l = error $ "One argument expected " ++ (show $ length l) ++ " given."
+unary :: (a -> r) -> [a] -> [b] -> r
+unary f [a] [] = f a
+unary _ [_] l = error $ "No requests expected " ++ (show $ length l) ++ " given."
+unary _ l _ = error $ "One argument expected " ++ (show $ length l) ++ " given."
 
-nullary :: r -> [a] -> r
-nullary f [] = f
-nullary _ l = error $ "No arguments expected " ++ (show $ length l) ++ " given."
+nullary :: r -> [a] -> [b] -> r
+nullary f [] [] = f
+nullary _ [] l = error $ "No requests expected " ++ (show $ length l) ++ " given."
+nullary _ l _ = error $ "No arguments expected " ++ (show $ length l) ++ " given."
 
 execList :: [Value] -> [b] -> Value
 execList vs [] = List vs
@@ -110,37 +113,34 @@ list = no_state_sp NoStateSP
   , log_d_out = Nothing
   }
 
-bernoulliFlip :: (MonadRandom m) => [a] -> [b] -> m Value
-bernoulliFlip [] [] = liftM Boolean $ getRandomR (False,True)
-bernoulliFlip _ _ = error "Incorrect arity for bernoulli"
+bernoulliFlip :: (MonadRandom m) => m Value
+bernoulliFlip = liftM Boolean $ getRandomR (False,True)
 
 bernoulli :: (MonadRandom m) => SP m
 bernoulli = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO bernoulliFlip
+  , outputter = RandomO $ nullary bernoulliFlip
   , log_d_out = Just $ const $ const $ const $ -log 2.0
   }
 
-weightedFlip :: (MonadRandom m) => [Value] -> [b] -> m Value
-weightedFlip [wt] [] = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0) where
+weightedFlip :: (MonadRandom m) => Value -> m Value
+weightedFlip wt = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0) where
     weight = fromJust "No number supplied for weighted" $ numberOf wt
-weightedFlip _ _ = error "Incorrect arity for weighted"
 
-log_d_weight :: [Value] -> [b] -> Value -> Double
-log_d_weight [wt] [] (Boolean True) = log weight where
+log_d_weight :: Value -> Value -> Double
+log_d_weight wt (Boolean True) = log weight where
     weight = fromJust "No number supplied for weighted" $ numberOf wt
-log_d_weight [wt] [] (Boolean False) = log (1 - weight) where
+log_d_weight wt (Boolean False) = log (1 - weight) where
     weight = fromJust "No number supplied for weighted" $ numberOf wt
-log_d_weight [_] [] _ = error "Value supplied to log_d_weight is not a boolean"
-log_d_weight _ _ _ = error "Incorrect arity for log_d_weight"
+log_d_weight _ _ = error "Value supplied to log_d_weight is not a boolean"
 
 weighted :: (MonadRandom m) => SP m
 weighted = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values weightedFlip
-  , log_d_out = Just $ on_values log_d_weight
+  , outputter = RandomO $ on_values $ unary weightedFlip
+  , log_d_out = Just $ on_values $ unary log_d_weight
   }
 
 box_muller_cos :: Double -> Double -> Double
@@ -148,36 +148,34 @@ box_muller_cos u1 u2 = r * cos theta where
     r = sqrt (-2 * log u1)
     theta = 2 * pi * u2
 
-normalFlip :: (MonadRandom m) => [Value] -> [b] -> m Value
-normalFlip [meanV, sigmaV] [] = do
+normalFlip :: (MonadRandom m) => Value -> Value -> m Value
+normalFlip meanV sigmaV = do
   u1 <- getRandomR (0.0, 1.0)
   u2 <- getRandomR (0.0, 1.0)
   let normal = box_muller_cos u1 u2
       mu = fromJust "Argument value was not a number" $ numberOf meanV
       sigma = fromJust "Argument value was not a number" $ numberOf sigmaV
   return $ Number $ sigma * normal + mu
-normalFlip _ _ = error "Incorrect arity for normal"
 
 log_d_normal' :: Double -> Double -> Double -> Double
 log_d_normal' mean sigma x = - (x - mean)^^2 / (2 * sigma ^^ 2) - scale where
     scale = log sigma + (log pi)/2
 
-log_d_normal :: [Value] -> [b] -> Value -> Double
-log_d_normal args@[_,_] [] (Number x) = log_d_normal' mu sigma x where
-    [mu, sigma] = map (fromJust "Argument value was not a number" . numberOf) args
-log_d_normal [_,_] [] _ = error "Given Value must be a number"
-log_d_normal _ _ _ = error "Incorrect arity for log_d_normal"
+log_d_normal :: Value -> Value -> Value -> Double
+log_d_normal muV sigmaV (Number x) = log_d_normal' mu sigma x where
+    [mu, sigma] = map (fromJust "Argument value was not a number" . numberOf) [muV, sigmaV]
+log_d_normal _ _ _ = error "Given Value must be a number"
 
 normal :: (MonadRandom m) => SP m
 normal = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values normalFlip
-  , log_d_out = Just $ on_values log_d_normal
+  , outputter = RandomO $ on_values $ binary normalFlip
+  , log_d_out = Just $ on_values $ binary log_d_normal
   }
 
-betaO :: (MonadRandom m) => [Value] -> [b] -> m Value
-betaO [alphaV, betaV] [] = do
+betaO :: (MonadRandom m) => Value -> Value -> m Value
+betaO alphaV betaV = do
   -- Adapted from Statistics.Distribution.Beta; not reused because of
   -- funny randomness management convention.
   x <- getRandomR (0.0,1.0)
@@ -189,36 +187,32 @@ betaO [alphaV, betaV] [] = do
                  | x == 1 = 1
                  | 0 < x && x < 1 = invIncompleteBeta alpha beta x
                  | otherwise = error $ "x must be in the range [0,1], got: " ++ show x
-betaO _ _ = error "Incorrect arity for beta"
 
-log_denisty_beta :: [Value] -> [b] -> Value -> Double
-log_denisty_beta [alphaV, betaV] [] (Number x) = (a-1)*log x + (b-1)*log (1-x) - logBeta a b where
+log_denisty_beta :: Value -> Value -> Value -> Double
+log_denisty_beta alphaV betaV (Number x) = (a-1)*log x + (b-1)*log (1-x) - logBeta a b where
     a = fromJust "Argument value was not a number" $ numberOf alphaV
     b = fromJust "Argument value was not a number" $ numberOf betaV
-log_denisty_beta [_,_] [] _ = error "Given Value must be a number"
-log_denisty_beta _ _ _ = error "Incorrect arity for log_density_beta"
+log_denisty_beta _ _ _ = error "Given Value must be a number"
 
 beta :: (MonadRandom m) => SP m
 beta = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values betaO
-  , log_d_out = Just $ on_values log_denisty_beta
+  , outputter = RandomO $ on_values $ binary betaO
+  , log_d_out = Just $ on_values $ binary log_denisty_beta
   }
 
 -- TODO abstract the actual coin flipping between collapsed beta bernoulli and weighted
-cbeta_bernoulli_flip :: (MonadRandom m) => (Double,Double) -> [a] -> [b] -> m Value
-cbeta_bernoulli_flip (ctYes, ctNo) [] [] = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0) where
+cbeta_bernoulli_flip :: (MonadRandom m) => (Double,Double) -> m Value
+cbeta_bernoulli_flip (ctYes, ctNo) = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0) where
     weight = ctYes / (ctYes + ctNo)
-cbeta_bernoulli_flip _ _ _ = error "Incorrect arity for collapsed beta bernoulli"
 
-cbeta_bernoulli_log_d :: (Double,Double) -> [a] -> [b] -> Value -> Double
-cbeta_bernoulli_log_d (ctYes, ctNo) [] [] (Boolean True) = log weight where
+cbeta_bernoulli_log_d :: (Double,Double) -> Value -> Double
+cbeta_bernoulli_log_d (ctYes, ctNo) (Boolean True) = log weight where
     weight = ctYes / (ctYes + ctNo)
-cbeta_bernoulli_log_d (ctYes, ctNo) [] [] (Boolean False) = log (1-weight) where
+cbeta_bernoulli_log_d (ctYes, ctNo) (Boolean False) = log (1-weight) where
     weight = ctYes / (ctYes + ctNo)
-cbeta_bernoulli_log_d _ [] [] _ = error "Value supplied to collapsed beta bernoulli log_d is not a boolean"
-cbeta_bernoulli_log_d _ _ _ _ = error "Incorrect arity for collapsed beta bernoulli"
+cbeta_bernoulli_log_d _ _ = error "Value supplied to collapsed beta bernoulli log_d is not a boolean"
 
 cbeta_bernoulli_frob :: (Double -> Double) -> Value -> (Double,Double) -> (Double,Double)
 cbeta_bernoulli_frob f (Boolean True)  s = s & _1 %~ f
@@ -229,24 +223,23 @@ cbeta_bernoulli :: (MonadRandom m) => Double -> Double -> SP m
 cbeta_bernoulli ctYes ctNo = T.SP
   { T.requester = no_state_r nullReq
   , T.log_d_req = Just $ const trivial_log_d_req -- Only right for requests it actually made
-  , T.outputter = T.RandomO $ cbeta_bernoulli_flip
-  , T.log_d_out = Just $ cbeta_bernoulli_log_d
+  , T.outputter = T.RandomO $ nullary . cbeta_bernoulli_flip
+  , T.log_d_out = Just $ nullary . cbeta_bernoulli_log_d
   , T.current = (ctYes, ctNo)
   , T.incorporate = cbeta_bernoulli_frob succ
   , T.unincorporate = cbeta_bernoulli_frob pred
   }
 
-do_make_cbeta_bernoulli :: (MonadRandom m) => [Value] -> [b] -> SP m
-do_make_cbeta_bernoulli [yesV, noV] [] = cbeta_bernoulli yes no where
+do_make_cbeta_bernoulli :: (MonadRandom m) => Value -> Value -> SP m
+do_make_cbeta_bernoulli yesV noV = cbeta_bernoulli yes no where
     yes = fromJust "Argument value was not a number" $ numberOf yesV
     no  = fromJust "Argument value was not a number" $ numberOf noV
-do_make_cbeta_bernoulli _ _ = error "Incorrect arity for make collapsed beta bernoulli"
 
 make_cbeta_bernoulli :: (MonadRandom m) => SP m
 make_cbeta_bernoulli = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = SPMaker $ on_values do_make_cbeta_bernoulli
+  , outputter = SPMaker $ on_values $ binary do_make_cbeta_bernoulli
   , log_d_out = Nothing
   }
 
