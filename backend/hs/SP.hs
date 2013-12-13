@@ -256,16 +256,22 @@ mem = no_state_sp NoStateSP
   }
 
 memoized_sp :: (Monad m) => Address -> SP m
-memoized_sp proc = no_state_sp NoStateSP
-  { requester = ReaderR req
-  , log_d_req = Just $ trivial_log_d_req
-  , outputter = Trivial
-  , log_d_out = Nothing
+memoized_sp proc = T.SP
+  { T.requester = T.ReaderR req
+  , T.log_d_req = Just $ const $ trivial_log_d_req
+  , T.outputter = T.Trivial
+  , T.log_d_out = Nothing
+  , T.current = M.empty
+  , T.incorporate = const $ id
+  , T.unincorporate = const $ id
+  , T.incorporateR = inc
+  , T.unincorporateR = dec
   } where
-    req args = do
+    req cache args = do
       t <- ask
-      let vs = map (fromJust "Memoized SP given dangling address" . flip M.lookup (t^.nodes)) args
-      let cachedSRId = undefined -- Where is my cache?
+      let ns = map (fromJust "Memoized SP given dangling address" . flip M.lookup (t^.nodes)) args
+          vs = map (fromJust "Memoized SP given valueless argument node" . valueOf) ns
+      let cachedSRId = M.lookup vs cache
       case cachedSRId of
         (Just id) -> return [SimulationRequest id undefined undefined]
         Nothing -> do
@@ -274,6 +280,8 @@ memoized_sp proc = no_state_sp NoStateSP
               exp = App (Var "memoized-sp") $ map Var names
               env = Frame (M.fromList $ ("memoized-sp",proc):(zip names args)) Toplevel
           return [SimulationRequest newId exp env]
+    inc = undefined
+    dec = undefined
 
 
 initializeBuiltins :: (MonadState (Trace m1) m, MonadRandom m1) => Env -> m Env
