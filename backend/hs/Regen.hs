@@ -53,6 +53,7 @@ regenValue a = lift (do
       reqs <- runRequester addr ps
       nodes . ix a . sim_reqs .= Just reqs
       resps <- evalRequests addr reqs
+      do_incorporateR a
       case outA of
         Nothing -> return ()
         (Just outA') -> nodes . ix outA' . responses .= resps
