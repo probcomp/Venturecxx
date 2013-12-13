@@ -9,6 +9,7 @@ import qualified Data.Set as S
 import Control.Lens  -- from cabal install lens
 import Control.Monad.State hiding (state) -- :set -hide-package monads-tf-0.1.0.1
 import Control.Monad.Writer.Class
+import Control.Monad.Reader
 import Text.PrettyPrint -- presumably from cabal install pretty
 
 import Utils
@@ -101,19 +102,22 @@ instance Show (SP m) where
 -- methods?
 data SPRequester m a = DeterministicR (a -> [Address] -> UniqueSource [SimulationRequest])
                      | RandomR (a -> [Address] -> UniqueSourceT m [SimulationRequest])
+                     | ReaderR (a -> [Address] -> ReaderT (Trace m) (UniqueSourceT m) [SimulationRequest])
 
 data SPOutputter m a = Trivial
                      | DeterministicO (a -> [Node] -> [Node] -> Value)
                      | RandomO (a -> [Node] -> [Node] -> m Value)
                      | SPMaker (a -> [Node] -> [Node] -> SP m) -- Are these ever random?
 
-asRandomR :: (Monad m) => SPRequester m a -> a -> [Address] -> UniqueSourceT m [SimulationRequest]
-asRandomR (RandomR f) st as = f st as
-asRandomR (DeterministicR f) st as = returnT $ f st as
+asRandomR :: (Monad m) => SPRequester m a -> a -> [Address] -> ReaderT (Trace m) (UniqueSourceT m) [SimulationRequest]
+asRandomR (RandomR f) st as = lift $ f st as
+asRandomR (DeterministicR f) st as = lift $ returnT $ f st as
+asRandomR (ReaderR f) st as = f st as -- TODO Change the type of ReaderR to exclude the randomness source and hoist
 
 isRandomR :: SPRequester m a -> Bool
 isRandomR (RandomR _) = True
 isRandomR (DeterministicR _) = False
+isRandomR (ReaderR _) = False
 
 asRandomO :: (Monad m) => SPOutputter m a -> a -> [Node] -> [Node] -> Either (m Value) (SP m)
 asRandomO Trivial _ _ (r0:_) = Left $ return $ fromJust "Trivial outputter node had no value" $ valueOf r0
@@ -434,9 +438,10 @@ numRequests a t = fromMaybe 0 $ t^.request_counts.at a
 runRequester :: (Monad m, MonadTrans t, MonadState (Trace m) (t m)) =>
                 SPAddress -> [Address] -> t m [SimulationRequest]
 runRequester spaddr args = do
+  t <- get
   spr@SPRecord { sp = SP{ requester = req, current = a }, srid_seed = seed } <-
       use $ sprs . hardix "Running the requester of a non-SP" spaddr
-  (reqs, seed') <- lift $ runUniqueSourceT (asRandomR req a args) seed
+  (reqs, seed') <- lift $ runUniqueSourceT (runReaderT (asRandomR req a args) t) seed
   sprs . ix spaddr .= spr{ srid_seed = seed' }
   return reqs
 
