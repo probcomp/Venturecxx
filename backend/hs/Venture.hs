@@ -205,6 +205,15 @@ mem_1 =
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 mem_1
 -- Each triple should have the same value in each output, but vary across outputs
 
+mem_2 :: [Directive]
+mem_2 =
+    [ Assume "coins_p" $ App (Var "mem") [Lam ["i"] (App (Var "bernoulli") [])]
+    , Assume "coins" $ venture_if (App (Var "bernoulli") []) (Var "coins_p") (Var "coins_p")
+    , Predict $ App (Var "list") [flip 1, flip 1, flip 1, flip 2, flip 2, flip 2, flip 3, flip 3, flip 3]
+    ] where
+    flip k = App (Var "coins") [Datum $ Number k]
+-- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 mem_2
+
 -- Next subgoal: Daniel says that collapsed exchangeably coupled
 -- state, even in the presence of conditionals, does not force
 -- regen/detach order symmetry, only detach before regen.  Confirm.
