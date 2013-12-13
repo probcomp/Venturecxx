@@ -149,8 +149,8 @@ weighted :: (MonadRandom m) => SP m
 weighted = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values $ unary weightedFlip
-  , log_d_out = Just $ on_values $ unary log_d_weight
+  , outputter = RandomO $ on_values $ unary $ typed weightedFlip
+  , log_d_out = Just $ on_values $ unary $ typed2 log_d_weight
   }
 
 box_muller_cos :: Double -> Double -> Double
@@ -180,8 +180,8 @@ normal :: (MonadRandom m) => SP m
 normal = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values $ binary normalFlip
-  , log_d_out = Just $ on_values $ binary log_d_normal
+  , outputter = RandomO $ on_values $ binary $ typed2 normalFlip
+  , log_d_out = Just $ on_values $ binary $ typed3 log_d_normal
   }
 
 betaO :: (MonadRandom m) => Value -> Value -> m Value
@@ -208,8 +208,8 @@ beta :: (MonadRandom m) => SP m
 beta = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values $ binary betaO
-  , log_d_out = Just $ on_values $ binary log_denisty_beta
+  , outputter = RandomO $ on_values $ binary $ typed2 betaO
+  , log_d_out = Just $ on_values $ binary $ typed3 log_denisty_beta
   }
 
 -- TODO abstract the actual coin flipping between collapsed beta bernoulli and weighted
@@ -234,10 +234,10 @@ cbeta_bernoulli ctYes ctNo = T.SP
   { T.requester = no_state_r nullReq
   , T.log_d_req = Just $ const trivial_log_d_req -- Only right for requests it actually made
   , T.outputter = T.RandomO $ nullary . cbeta_bernoulli_flip
-  , T.log_d_out = Just $ nullary . cbeta_bernoulli_log_d
+  , T.log_d_out = Just $ nullary . typed . cbeta_bernoulli_log_d
   , T.current = (ctYes, ctNo)
-  , T.incorporate = cbeta_bernoulli_frob succ
-  , T.unincorporate = cbeta_bernoulli_frob pred
+  , T.incorporate = typed $ cbeta_bernoulli_frob succ
+  , T.unincorporate = typed $ cbeta_bernoulli_frob pred
   }
 
 do_make_cbeta_bernoulli :: (MonadRandom m) => Value -> Value -> SP m
@@ -249,7 +249,7 @@ make_cbeta_bernoulli :: (MonadRandom m) => SP m
 make_cbeta_bernoulli = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = SPMaker $ on_values $ binary do_make_cbeta_bernoulli
+  , outputter = SPMaker $ on_values $ binary $ typed2 do_make_cbeta_bernoulli
   , log_d_out = Nothing
   }
 
