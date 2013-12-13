@@ -261,7 +261,7 @@ memoized_sp proc = T.SP
   , T.log_d_req = Just $ const $ trivial_log_d_req
   , T.outputter = T.Trivial
   , T.log_d_out = Nothing
-  , T.current = M.empty
+  , T.current = (M.empty :: M.Map [Value] (SRId,Int))
   , T.incorporate = const $ id
   , T.unincorporate = const $ id
   , T.incorporateR = inc
@@ -273,16 +273,24 @@ memoized_sp proc = T.SP
           vs = map (fromJust "Memoized SP given valueless argument node" . valueOf) ns
       let cachedSRId = M.lookup vs cache
       case cachedSRId of
-        (Just id) -> return [SimulationRequest id undefined undefined]
+        (Just (id,_)) -> return [SimulationRequest id undefined undefined]
         Nothing -> do
           newId <- liftM SRId fresh
           let names = take (length args) $ map show $ ([1..] :: [Int])
               exp = App (Var "memoized-sp") $ map Var names
               env = Frame (M.fromList $ ("memoized-sp",proc):(zip names args)) Toplevel
           return [SimulationRequest newId exp env]
-    inc vs [req] cache = M.insert vs (srid req) cache where
+    inc vs [req] cache = M.alter incr vs cache where
+        incr Nothing = Just (srid req, 1)
+        incr (Just (srid', k)) | srid' == srid req = Just (srid', k+1)
+                               | otherwise = error "Memoized procedure incorporating different requests for the same values"
     inc _ _ _ = error "Memoized procedure expects to incorporate exactly one request"
-    dec = undefined
+    dec vs [req] cache = M.alter decr vs cache where
+        decr Nothing = error "Memoized procedure unincorporating a request it did not make"
+        decr (Just (srid', k)) | srid' == srid req = if (k==1) then Nothing
+                                                     else Just (srid', k-1)
+                               | otherwise = error "Memoized procedure unincorporating different requests for the same values"
+    dec _ _ _ = error "Memoized procedure expects to unincorporate exactly one request"
 
 
 initializeBuiltins :: (MonadState (Trace m1) m, MonadRandom m1) => Env -> m Env
