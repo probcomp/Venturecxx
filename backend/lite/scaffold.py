@@ -3,8 +3,6 @@ from psp import ESRRefOutputPSP
 import pdb
 from spref import SPRef
 
-# in class Scaffold()
-# skipping some helpers
 class Scaffold():
 
   def __init__(self,principalNodes=[],useDeltaKernels=False):
@@ -12,20 +10,29 @@ class Scaffold():
     self.absorbing = set()
     self.aaa = set()
     self.border = []
-
     self.disableCounts = {}
     self.brush = set()
     self.disabledRequests = set()
-
     self.kernels = {}
 
-    self.findPreliminaryBorder(principalNodes)
-    self.disableBrush()
-    self.setRegenCounts()
+    self.construct(principalNodes,useDeltaKernels)
+
+  def construct(self,principalNodes,useDeltaKernels):
+    # add all candidates to drg, absorbing, and aaa
+    self.findPreliminaryBorder(principalNodes) 
+
+    # remove the brush from drg, absorbing, and aaa
+    # initializes all regenCounts to 0 in the drg
+    self.disableBrush() 
+
+    # computes the regenCounts for all nodes in the drg
+    # adds terminal resampling nodes to the border
+    # registers aaa kernels
+    self.setRegenCounts() 
+
+    # registers any additional kernels, e.g. Gaussian drift kernels
     self.loadDefaultKernels(useDeltaKernels)
-    self.border.extend(self.absorbing)
-#    self.show()
-#    pdb.set_trace()
+
 
   def hasKernelFor(self,node): return node in self.kernels
   def getKernel(self,node): return self.kernels[node]
@@ -40,7 +47,6 @@ class Scaffold():
   def unregisterAbsorbing(self,node): self.absorbing.remove(node)
 
   def addResamplingNode(self,q,node):
-#    print "adding resampling: " + str(node)
     if self.isAbsorbing(node): self.unregisterAbsorbing(node)
     self.drg.add(node)
     q.extend([(n,False) for n in node.children])
@@ -50,7 +56,6 @@ class Scaffold():
     self.aaa.add(node)
 
   def addAbsorbingNode(self,node): 
-#    print "adding absorbing: " + str(node)
     self.absorbing.add(node)
 
   def esrReferenceCanAbsorb(self,node):
@@ -63,7 +68,6 @@ class Scaffold():
 
     while q:
       node,isPrincipal = q.pop()
-#      print node,isPrincipal
       if self.isResampling(node): pass
       elif isinstance(node,LookupNode): self.addResamplingNode(q,node)
       elif self.isResampling(node.operatorNode): self.addResamplingNode(q,node)
@@ -78,6 +82,7 @@ class Scaffold():
     self.drg = { node : 0 for node in self.drg if not node in self.brush }
     self.absorbing = set([node for node in self.absorbing if not node in self.brush])
     self.aaa = set([node for node in self.aaa if not node in self.brush])
+    self.border.extend(self.absorbing)
 
   def disableRequests(self,node):
     if node in self.disabledRequests: return
@@ -119,9 +124,7 @@ class Scaffold():
         self.drg[node] = len(node.children)
 
     if self.hasAAANodes():
-      # TODO Making a fresh set from the keys of the drg may not be a
-      # very efficient way to iterate here.
-      for node in set(self.drg.keys()).union(self.absorbing):
+      for node in self.absorbing.union(self.drg):
         for parent in node.parents(): self.maybeIncrementAAARegenCount(parent)
       for node in self.brush: 
         if isinstance(node,OutputNode): 
@@ -137,15 +140,13 @@ class Scaffold():
         if useDeltaKernels and node.psp().hasDeltaKernel(): 
           self.registerKernel(node,node.psp().deltaKernel())
         elif node.psp().hasSimulationKernel():
-          self.registerKernel(node,node.psp().simulationKernel()) # todo this should never happen
+          self.registerKernel(node,node.psp().simulationKernel())
 
   def decrementRegenCount(self,node):
-#    print "dec: " + str(node) + ": " + str(self.drg[node]) + " => " + str(self.drg[node] - 1)
     assert node in self.drg
     self.drg[node] -= 1
 
   def incrementRegenCount(self,node):
-#    print "inc: " + str(node) + ": " + str(self.drg[node]) + " => " + str(self.drg[node] + 1)
     assert node in self.drg
     self.drg[node] += 1
 
