@@ -23,6 +23,33 @@ type Value = L.Value SPAddress
 type Exp = L.Exp Value
 type Env = L.Env String Address
 
+class Valueable b where
+    fromValue :: Value -> Maybe b
+
+instance Valueable Double where
+    fromValue (Number d) = Just d
+    fromValue _ = Nothing
+
+instance Valueable Bool where
+    fromValue (Boolean b) = Just b
+    fromValue _ = Nothing
+
+instance Valueable SPAddress where
+    fromValue (Procedure a) = Just a
+    fromValue _ = Nothing
+
+instance Valueable Value where
+    fromValue = Just
+
+booleanOf :: Value -> Maybe Bool
+booleanOf = fromValue
+
+numberOf :: Value -> Maybe Double
+numberOf = fromValue
+
+spValue :: Value -> Maybe SPAddress
+spValue = fromValue
+
 newtype Address = Address Unique
     deriving (Eq, Ord, Show)
 
