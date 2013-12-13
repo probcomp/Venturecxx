@@ -98,6 +98,12 @@ do_inc v SP{..} = SP{ current = incorporate v current, ..}
 do_uninc :: Value -> SP m -> SP m
 do_uninc v SP{..} = SP{ current = unincorporate v current, ..}
 
+do_incR :: [Value] -> [SimulationRequest] -> SP m -> SP m
+do_incR vs rs SP{..} = SP{ current = incorporateR vs rs current, ..}
+
+do_unincR :: [Value] -> [SimulationRequest] -> SP m -> SP m
+do_unincR vs rs SP{..} = SP{ current = unincorporateR vs rs current, ..}
+
 instance Show (SP m) where
     show _ = "A stochastic procedure"
 
@@ -525,6 +531,27 @@ do_unincorporate :: (MonadState (Trace m) m1) => Address -> m1 ()
 do_unincorporate = corporate "Uni" do_uninc
 do_incorporate :: (MonadState (Trace m) m1) => Address -> m1 ()
 do_incorporate = corporate "I" do_inc
+
+-- TODO Can I abstract the commonalities between this for requests and
+-- the same thing for values?
+corporateR :: (MonadState (Trace m) m1) => String -> ([Value] -> [SimulationRequest] -> SP m -> SP m) -> Address -> m1 ()
+corporateR name f a = do
+  node <- use $ nodes . hardix (name ++ "ncorporating the requests of a nonexistent node") a
+  case node of
+    (Request reqs _ _ args) -> do
+      let rs = fromJust (name ++ "ncorporating requests that aren't there") reqs
+      spaddr <- gets $ fromJust (name ++ "ncorporating requests for a requester with no operator address") . (operatorAddr node)
+      sp <- gets $ fromJust (name ++ "ncorporating requests for a requester with no operator") . (operator node)
+      t <- get
+      let ns = map (fromJust (name ++ "ncorporate requests given dangling address") . flip M.lookup (t^.nodes)) args
+          vs = map (fromJust (name ++ "ncorporate requests given valueless argument node") . valueOf) ns
+      sprs . ix spaddr %= \r -> r{sp = f vs rs sp}
+    _ -> return ()
+
+do_unincorporateR :: (MonadState (Trace m) m1) => Address -> m1 ()
+do_unincorporateR = corporateR "Uni" do_unincR
+do_incorporateR :: (MonadState (Trace m) m1) => Address -> m1 ()
+do_incorporateR = corporateR "I" do_incR
 
 constrain :: (MonadState (Trace m) m1) => Address -> Value -> m1 ()
 constrain a v = do
