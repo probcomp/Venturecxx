@@ -241,7 +241,7 @@ select = no_state_sp NoStateSP
   , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
   }
 
-mem :: SP m
+mem :: (Monad m) => SP m
 mem = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req
@@ -249,13 +249,26 @@ mem = no_state_sp NoStateSP
   , log_d_out = Nothing
   }
 
-memoized_sp :: SPAddress -> SP m
+memoized_sp :: (Monad m) => SPAddress -> SP m
 memoized_sp a = no_state_sp NoStateSP
-  { requester = undefined a
+  { requester = ReaderR req
   , log_d_req = Just $ trivial_log_d_req
   , outputter = Trivial
   , log_d_out = Nothing
-  }
+  } where
+    req args = do
+      t <- ask
+      let vs = map (fromJust "Memoized SP given dangling address" . flip M.lookup (t^.nodes)) args
+      let cachedSRId = undefined -- Where is my cache?
+      case cachedSRId of
+        (Just id) -> return [SimulationRequest id undefined undefined]
+        Nothing -> do
+          newId <- liftM SRId fresh
+          let names = take (length args) $ map show $ ([1..] :: [Int])
+              exp = App (Var "memoized-sp") $ map Var names
+              proc = undefined -- The Address of a Node whose Value is Procedure a
+              env = Frame (M.fromList $ ("memoized-sp",proc):(zip names args)) Toplevel
+          return [SimulationRequest newId exp env]
 
 
 initializeBuiltins :: (MonadState (Trace m1) m, MonadRandom m1) => Env -> m Env
