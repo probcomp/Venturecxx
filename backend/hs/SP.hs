@@ -123,19 +123,19 @@ list = no_state_sp NoStateSP
   , log_d_out = Nothing
   }
 
-bernoulliFlip :: (MonadRandom m) => m Value
-bernoulliFlip = liftM Boolean $ getRandomR (False,True)
+bernoulli_flip :: (MonadRandom m) => m Value
+bernoulli_flip = liftM Boolean $ getRandomR (False,True)
 
 bernoulli :: (MonadRandom m) => SP m
 bernoulli = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ nullary bernoulliFlip
+  , outputter = RandomO $ nullary bernoulli_flip
   , log_d_out = Just $ nullary $ typed (const $ -log 2.0 :: Bool -> Double)
   }
 
-weightedFlip :: (MonadRandom m) => Double -> m Value
-weightedFlip weight = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0)
+weighted_flip :: (MonadRandom m) => Double -> m Value
+weighted_flip weight = liftM Boolean $ liftM (< weight) $ getRandomR (0.0,1.0)
 
 log_d_weight :: Double -> Bool -> Double
 log_d_weight weight True = log weight
@@ -145,7 +145,7 @@ weighted :: (MonadRandom m) => SP m
 weighted = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values $ unary $ typed weightedFlip
+  , outputter = RandomO $ on_values $ unary $ typed weighted_flip
   , log_d_out = Just $ on_values $ unary $ typed2 log_d_weight
   }
 
@@ -154,8 +154,8 @@ box_muller_cos u1 u2 = r * cos theta where
     r = sqrt (-2 * log u1)
     theta = 2 * pi * u2
 
-normalFlip :: (MonadRandom m) => Double -> Double -> m Value
-normalFlip mu sigma = do
+normal_flip :: (MonadRandom m) => Double -> Double -> m Value
+normal_flip mu sigma = do
   u1 <- getRandomR (0.0, 1.0)
   u2 <- getRandomR (0.0, 1.0)
   let normal = box_muller_cos u1 u2
@@ -169,7 +169,7 @@ normal :: (MonadRandom m) => SP m
 normal = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values $ binary $ typed2 normalFlip
+  , outputter = RandomO $ on_values $ binary $ typed2 normal_flip
   , log_d_out = Just $ on_values $ binary $ typed3 log_d_normal
   }
 
@@ -197,7 +197,7 @@ beta = no_state_sp NoStateSP
   }
 
 cbeta_bernoulli_flip :: (MonadRandom m) => (Double,Double) -> m Value
-cbeta_bernoulli_flip (ctYes, ctNo) = weightedFlip $ ctYes / (ctYes + ctNo)
+cbeta_bernoulli_flip (ctYes, ctNo) = weighted_flip $ ctYes / (ctYes + ctNo)
 
 cbeta_bernoulli_log_d :: (Double,Double) -> Bool -> Double
 cbeta_bernoulli_log_d (ctYes, ctNo) = log_d_weight $ ctYes / (ctYes + ctNo)
