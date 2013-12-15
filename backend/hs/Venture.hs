@@ -77,6 +77,12 @@ simulation ct ds = do
 venture_main :: (MonadRandom m) => Int -> [Directive] -> m [Value]
 venture_main ct ds = evalStateT (simulation ct ds) empty
 
+venture_if :: Exp -> Exp -> Exp -> Exp
+venture_if p c a = App (App (Var "select") [p, (Lam [] c), (Lam [] a)]) []
+
+v_let1 :: String -> Exp -> Exp -> Exp
+v_let1 name val body = App (Lam [name] body) [val]
+
 flip_one_coin :: [Directive]
 flip_one_coin = [Predict $ App (Var "bernoulli") []]
 -- venture_main 10 flip_one_coin
@@ -167,9 +173,6 @@ cbeta_binomial =
     ]
 
 -- liftM discreteHistogram $ venture_main 100 cbeta_binomial
-
-venture_if :: Exp -> Exp -> Exp -> Exp
-venture_if p c a = App (App (Var "select") [p, (Lam [] c), (Lam [] a)]) []
 
 -- (assume x (flip))
 -- (predict (if x x 0.0))
