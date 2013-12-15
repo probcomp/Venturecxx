@@ -210,6 +210,17 @@ mem_2 =
     flip k = App (Var "coins") [k]
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 mem_2
 
+conditional_and_coupled :: [Directive]
+conditional_and_coupled =
+    [ Assume "coin" $ App (Var "make-cbeta-bernoulli") [1, 1]
+    , Predict $ v_if coin
+              (App (Var "list") [coin, coin, coin])
+              (Datum $ Boolean False)
+    ] where coin = (App (Var "coin") [])
+-- Am I right that this should expect "false" (rather than the list)
+-- about 50% of the time?
+-- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ liftM M.toList $ liftM discreteHistogram $ venture_main 500 conditional_and_coupled
+
 -- Next subgoal: Daniel says that collapsed exchangeably coupled
 -- state, even in the presence of conditionals, does not force
 -- regen/detach order symmetry, only detach before regen.  Confirm.
