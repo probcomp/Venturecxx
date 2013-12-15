@@ -214,15 +214,11 @@ mem_2 =
 -- state, even in the presence of conditionals, does not force
 -- regen/detach order symmetry, only detach before regen.  Confirm.
 
--- Eventual goals
--- - Built-in SPs with collapsed exchangeably coupled state
---   - This is where incorporate and unincorporate (remove) come from
---   - In the presence of conditionals, does this impose the ordering
---     requirement on regen and detach or merely force detach to
---     precede regen?
+-- Next subgoal: Chase down request detachment overcounting bug
+
+-- Next subgoal: Test mem
 
 -- Potential goals
--- - Implement and test mem
 -- - Figure out better ways to assess whether inference is producing
 --   sensible results (graphical histograms, convergence metrics,
 --   comparisons against allegedly equivalent models, etc).
