@@ -77,13 +77,6 @@ simulation ct ds = do
 venture_main :: (MonadRandom m) => Int -> [Directive] -> m [Value]
 venture_main ct ds = evalStateT (simulation ct ds) empty
 
--- venture_main 1 $ [Predict $ Datum $ Number 1.0]
--- venture_main 1 $ [Predict $ App (Lam ["x"] (Var "x")) [(Datum $ Number 1.0)]]
--- (let (id ...) (id 1))
--- venture_main 1 $ [Predict $ App (Lam ["id"] (App (Var "id") [(Datum $ Number 1.0)])) [(Lam ["x"] (Var "x"))]]
--- K combinator
--- venture_main 1 $ [Predict $ App (App (Lam ["x"] (Lam ["y"] (Var "x"))) [(Datum $ Number 1.0)]) [(Datum $ Number 2.0)]]
-
 flip_one_coin :: [Directive]
 flip_one_coin = [Predict $ App (Var "bernoulli") []]
 -- venture_main 10 flip_one_coin
