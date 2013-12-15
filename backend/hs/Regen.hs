@@ -56,7 +56,7 @@ regenValue a = lift (do
       do_incorporateR a
       case outA of
         Nothing -> return ()
-        (Just outA') -> nodes . ix outA' . responses .= resps
+        (Just outA') -> responsesAt outA' .= resps
     (Output _ _ opa ps rs) -> do
       addr <- gets $ fromJust "Regenerating value for an output with no operator" . (chaseOperator opa)
       v <- runOutputter addr ps rs

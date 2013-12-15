@@ -448,6 +448,14 @@ numRequests a t = length $ filter isOutput $ children a t where
                     (Just _) -> False
                     Nothing -> error "Dangling child"
 
+responsesAt :: Address -> Simple Lens (Trace m) [Address]
+responsesAt a = lens _responses addResponses where
+    _responses t = t ^. nodes . hardix "Requesting reposnes from a dangling address" a . responses
+    addResponses t rs = execState (do
+      oldRs <- nodes . ix a . responses <<.= rs
+      node_children %= dropChildOf a oldRs
+      node_children %= addChildOf a rs) t
+
 -- Given that the state is a valid Trace, and the inputs are an
 -- SPAddress that occurs in it and a list of Addresses that also occur
 -- in it, returns the list of simulation requests that this SP makes

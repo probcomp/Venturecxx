@@ -143,7 +143,7 @@ detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru }
           do_unincorporateR a -- Effective if a is a Request node
           nodes . ix a . value .= Nothing
           case node of
-            (Request _ (Just outA) _ _) -> nodes . ix outA . responses .= []
+            (Request _ (Just outA) _ _) -> responsesAt outA .= []
             _ -> return ()
         forgetRequest :: (SPAddress, [SRId]) -> State (Trace m) ()
         forgetRequest x = modify $ forgetResponses x
