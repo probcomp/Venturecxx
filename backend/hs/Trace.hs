@@ -644,10 +644,19 @@ invalidAddress :: Trace m -> Address -> Bool
 invalidAddress t a = not $ isJust $ lookupNode a t
 
 referencedInvalidSPAddresses :: Trace m -> [SPAddress]
-referencedInvalidSPAddresses t = filter (invalidSPAddress t) $ undefined $ catMaybes $ map valueOf $ M.elems $ t ^. nodes
+referencedInvalidSPAddresses t = filter (invalidSPAddress t) $ catMaybes $ map (valueOf >=> fromValue) $ M.elems $ t ^. nodes
 
 invalidSPAddress :: Trace m -> SPAddress -> Bool
 invalidSPAddress t a = t ^. sprs . at a & isJust & not
+
+data TraceProblem = InvalidAddress Address
+                  | InvalidSPAddress SPAddress
+    deriving Show
+
+ -- TODO Add other structural faults as I start detecting them
+traceProblems :: Trace m -> [TraceProblem]
+traceProblems t = map InvalidAddress (referencedInvalidAddresses t)
+                  ++ map InvalidSPAddress (referencedInvalidSPAddresses t)
 
 ----------------------------------------------------------------------
 -- Displaying traces for debugging                                  --
@@ -665,12 +674,16 @@ instance Pretty SPAddress where
 instance Pretty SRId where
     pp (SRId u) = text "SR" <> integer (asInteger u)
 
+instance Pretty TraceProblem where
+    pp (InvalidAddress a) = pp a
+    pp (InvalidSPAddress a) = pp a
+
 instance Pretty (Trace m) where
     pp t = hang (text "Trace") 1 $
              hang (text "Problems") 1 problems $$
              hang (text "Content") 1 contents $$
              hang (text "SPs") 1 sps where
-      problems = pp $ referencedInvalidAddresses t -- Add other structural faults as I start detecting them
+      problems = pp $ traceProblems t
       contents = sep $ map entry $ M.toList $ t^.nodes
       sps = sep $ map entryS $ M.toList $ t^.sprs
       entry (k,v) = pp k <> colon <> rmark <> pp v
