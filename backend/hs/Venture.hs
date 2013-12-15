@@ -210,6 +210,18 @@ mem_2 =
     flip k = App (Var "coins") [k]
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 mem_2
 
+uncollapsed_conditional_and_coupled :: [Directive]
+uncollapsed_conditional_and_coupled =
+    [ Assume "weight" $ App (Var "beta") [1,1]
+    , Assume "coin" $ Lam [] (App (Var "weighted") [Var "weight"])
+    , Predict $ v_if coin
+              (App (Var "list") [coin, coin, coin])
+              (Datum $ Boolean False)
+    ] where coin = (App (Var "coin") [])
+-- Am I right that this should expect "false" (rather than the list)
+-- about 50% of the time?
+-- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ liftM M.toList $ liftM discreteHistogram $ venture_main 500 uncollapsed_conditional_and_coupled
+
 conditional_and_coupled :: [Directive]
 conditional_and_coupled =
     [ Assume "coin" $ App (Var "make-cbeta-bernoulli") [1, 1]
