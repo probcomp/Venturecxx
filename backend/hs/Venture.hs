@@ -77,8 +77,8 @@ simulation ct ds = do
 venture_main :: (MonadRandom m) => Int -> [Directive] -> m [Value]
 venture_main ct ds = evalStateT (simulation ct ds) empty
 
-venture_if :: Exp -> Exp -> Exp -> Exp
-venture_if p c a = App (App (Var "select") [p, (Lam [] c), (Lam [] a)]) []
+v_if :: Exp -> Exp -> Exp -> Exp
+v_if p c a = App (App (Var "select") [p, (Lam [] c), (Lam [] a)]) []
 
 v_let1 :: String -> Exp -> Exp -> Exp
 v_let1 name val body = App (Lam [name] body) [val]
@@ -179,7 +179,7 @@ cbeta_binomial =
 self_select_1 :: [Directive]
 self_select_1 =
     [ Assume "x" $ App (Var "bernoulli") []
-    , Predict $ venture_if (Var "x") (Var "x") (Datum $ Number 0.0)
+    , Predict $ v_if (Var "x") (Var "x") (Datum $ Number 0.0)
     ]
 -- liftM discreteHistogram $ venture_main 100 self_select_1
 
@@ -188,7 +188,7 @@ self_select_1 =
 self_select_2 :: [Directive]
 self_select_2 =
     [ Assume "x" $ App (Var "bernoulli") []
-    , Predict $ venture_if (Var "x") (venture_if (Var "x") (Var "x") (Datum $ Number 1.0)) (Datum $ Number 0.0)
+    , Predict $ v_if (Var "x") (v_if (Var "x") (Var "x") (Datum $ Number 1.0)) (Datum $ Number 0.0)
     ]
 -- liftM discreteHistogram $ venture_main 100 self_select_2
 
@@ -204,7 +204,7 @@ mem_1 =
 mem_2 :: [Directive]
 mem_2 =
     [ Assume "coins_p" $ App (Var "mem") [Lam ["i"] (App (Var "bernoulli") [])]
-    , Assume "coins" $ venture_if (App (Var "bernoulli") []) (Var "coins_p") (Var "coins_p")
+    , Assume "coins" $ v_if (App (Var "bernoulli") []) (Var "coins_p") (Var "coins_p")
     , Predict $ App (Var "list") [flip 1, flip 1, flip 1, flip 2, flip 2, flip 2, flip 3, flip 3, flip 3]
     ] where
     flip k = App (Var "coins") [Datum $ Number k]
