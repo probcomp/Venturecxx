@@ -94,7 +94,7 @@ single_normal = [Predict $ App (Var "normal") [0, 2]]
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . fromValue) $ venture_main 500 $ single_normal) >>= printHistogram
 
 condition_on_flip :: [Directive]
-condition_on_flip = [Predict $ App (App (Var "select") [(App (Var "bernoulli") []), (Lam [] 1), (Lam [] 2)]) []]
+condition_on_flip = [Predict $ v_if (App (Var "bernoulli") []) 1 2]
 -- venture_main 10 $ condition_on_flip
 -- liftM discreteHistogram $ venture_main 100 condition_on_flip
 
