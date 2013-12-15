@@ -14,6 +14,10 @@ data Value proc = Number Double
                 | Boolean Bool
   deriving (Eq, Ord, Show)
 
+instance Num (Value a) where
+    -- Only for fromInteger
+    fromInteger = Number . fromInteger
+
 newtype LogDensity = LogDensity Double
     deriving Random
 
@@ -29,6 +33,10 @@ data Exp v = Datum v
            | App (Exp v) [Exp v]
            | Lam [String] (Exp v)
     deriving Show
+
+instance (Num a) => Num (Exp a) where
+    -- Only for fromInteger
+    fromInteger = Datum . fromInteger
 
 data Env k v = Toplevel
              | Frame (M.Map k v) (Env k v)
