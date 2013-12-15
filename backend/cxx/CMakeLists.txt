@@ -55,7 +55,9 @@ ADD_LIBRARY(trace SHARED
     src/infer/meanfield.cxx
     src/utils.cxx
     src/check.cxx
+    src/omegadb.cxx
     src/sp.cxx
+    src/spaux.cxx
     src/scaffold.cxx
     src/sps/csp.cxx
     src/sps/mem.cxx
@@ -67,6 +69,7 @@ ADD_LIBRARY(trace SHARED
     src/sps/continuous.cxx
     src/sps/discrete.cxx
     src/sps/cond.cxx
+    src/sps/sym.cxx
     src/sps/vector.cxx
     src/sps/list.cxx
     src/sps/map.cxx
