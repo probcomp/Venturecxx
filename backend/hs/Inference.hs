@@ -1,3 +1,5 @@
+{-# LANGUAGE DoAndIfThenElse #-}
+
 module Inference where
 
 import qualified Data.Set as S

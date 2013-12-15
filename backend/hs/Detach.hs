@@ -1,4 +1,4 @@
-{-# Language TemplateHaskell #-}
+{-# Language TemplateHaskell, DoAndIfThenElse #-}
 
 module Detach where
 
