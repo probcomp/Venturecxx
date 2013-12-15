@@ -109,7 +109,7 @@ collectBrush = mapM_ disableRequests where
       disabled <- use $ _1 . hardix "Disabling request for a node that has never been disabled" a
       requested <- asks $ numRequests a
       if disabled > requested then
-          error $ "Request disablement overcounting bug " ++ (show disabled) ++ " " ++ (show requested) ++ " " ++ (show a)
+          error $ "Request disablement overcounting bug " ++ (show disabled) ++ " " ++ (show requested) ++ " " ++ (show $ pp a)
       else if disabled == requested then disableFamily a
       else return ()
     -- Given the address of a node that is no longer requested, put it
