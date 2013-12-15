@@ -360,9 +360,12 @@ deleteNode a t@Trace{_nodes = ns, _randoms = rs, _node_children = cs} =
         node = fromJust "Deleting a non-existent node" $ M.lookup a ns
         ns' = M.delete a ns
         rs' = S.delete a rs -- OK even if it wasn't random
-        cs' = foldl dropChild cs $ parentAddrs node
+        cs' = dropChildOf a (parentAddrs node) cs
         cs'' = M.delete a cs'
-        dropChild cs pa = M.adjust (S.delete a) pa cs
+
+dropChildOf :: (Ord c, Ord p) => c -> [p] -> M.Map p (S.Set c) -> M.Map p (S.Set c)
+dropChildOf c ps m = foldl dropChild m ps
+    where dropChild m p = M.adjust (S.delete c) p m
 
 -- If the given Trace is valid and every Address in the given Node
 -- points to a Node in the given Trace, returns a unique Address
@@ -380,9 +383,12 @@ addFreshNode node t@Trace{ _nodes = ns, _addr_seed = seed, _randoms = rs, _node_
                   S.insert a rs
               else
                   rs
-        cs' = foldl addChild cs $ parentAddrs node
+        cs' = addChildOf a (parentAddrs node) cs
         cs'' = M.insert a S.empty cs'
-        addChild cs pa = M.adjust (S.insert a) pa cs
+
+addChildOf :: (Ord c, Ord p) => c -> [p] -> M.Map p (S.Set c) -> M.Map p (S.Set c)
+addChildOf c ps m = foldl addChild m ps
+    where addChild m p = M.adjust (S.insert c) p m
 
 -- Given a valid Trace and an Address that occurs in it, returns the
 -- Addresses of the Nodes in the trace that depend upon the value of
