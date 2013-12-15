@@ -9,5 +9,6 @@ main = runTestTT $ test
   -- (let (id ...) (id 1))
   , venture_main 1 [Predict $ App (Lam ["id"] (App (Var "id") [1])) [(Lam ["x"] (Var "x"))]] >>= (@?= [1])
   -- K combinator
-  , venture_main 1 [Predict $ App (App (Lam ["x"] (Lam ["y"] (Var "x"))) [1]) [2]] >>= (@?= [1])
+  , venture_main 1 [Predict $ App (App k [1]) [2]] >>= (@?= [1])
   ]
+    where k = (Lam ["x"] (Lam ["y"] (Var "x")))
