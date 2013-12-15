@@ -24,10 +24,10 @@ mix_mh_kernels :: (Monad m) => (a -> m ind) -> (a -> ind -> LogDensity) ->
 mix_mh_kernels sampleIndex measureIndex paramK x = do
   ind <- lift $ sampleIndex x
   let ldRho = measureIndex x ind
-  tell ldRho
+  tell $ log_density_negate ldRho
   x' <- paramK ind x
   let ldXi = measureIndex x' ind
-  tell $ log_density_negate ldXi
+  tell ldXi
   return x'
 
 metropolis_hastings :: (MonadRandom m) => Kernel m a -> a -> m a
