@@ -651,14 +651,22 @@ invalidSPAddress t a = t ^. sprs . at a & isJust & not
 
 untrackedChildren :: Trace m -> [TraceProblem]
 untrackedChildren t = concat $ map with_unwitting_parents $ t ^. nodes . to M.toList where
-    with_unwitting_parents (a,node) = zipWith ParentLostChild (unwitting_parents (a,node)) (repeat a)
-    unwitting_parents (a,node) = filter (not . has_child a) $ parentAddrs node
-    has_child parentA childA | childA `elem` children parentA t = True
-                             | otherwise = False
+    with_unwitting_parents (c,node) = zipWith ParentLostChild (unwitting_parents (c,node)) (repeat c)
+    unwitting_parents (c,node) = filter (not . is_child_of c) $ parentAddrs node
+    is_child_of c p | c `elem` children p t = True
+                    | otherwise = False
+
+overtrackedChildren :: Trace m -> [TraceProblem]
+overtrackedChildren t = concat $ map with_unwitting_children $ t ^. node_children . to M.toList where
+    with_unwitting_children (p,cs) = zipWith CustodyClaim (repeat p) (unwitting_children (p,cs))
+    unwitting_children (p,cs) = filter (not . has_child p) $ S.toList cs
+    has_child p c | p `elem` parentAddrs (fromJust "dangling child" $ t ^. nodes . at c) = True
+                  | otherwise = False
 
 data TraceProblem = InvalidAddress Address
                   | InvalidSPAddress SPAddress
                   | ParentLostChild Address Address
+                  | CustodyClaim Address Address
     deriving Show
 
  -- TODO Add other structural faults as I start detecting them
@@ -666,6 +674,7 @@ traceProblems :: Trace m -> [TraceProblem]
 traceProblems t = map InvalidAddress (referencedInvalidAddresses t)
                   ++ map InvalidSPAddress (referencedInvalidSPAddresses t)
                   ++ untrackedChildren t
+                  ++ overtrackedChildren t
 
 ----------------------------------------------------------------------
 -- Displaying traces for debugging                                  --
@@ -687,6 +696,7 @@ instance Pretty TraceProblem where
     pp (InvalidAddress a) = pp a
     pp (InvalidSPAddress a) = pp a
     pp (ParentLostChild p c) = (pp p) <> text " lost child " <> (pp c)
+    pp (CustodyClaim p c) = (pp p) <> text " claims child " <> (pp c)
 
 instance Pretty (Trace m) where
     pp t = hang (text "Trace") 1 $
