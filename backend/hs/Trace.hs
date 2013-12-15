@@ -643,6 +643,12 @@ invalidRequestCountKeys t = filter (invalidAddress t) $ M.keys $ t ^. request_co
 invalidAddress :: Trace m -> Address -> Bool
 invalidAddress t a = not $ isJust $ lookupNode a t
 
+referencedInvalidSPAddresses :: Trace m -> [SPAddress]
+referencedInvalidSPAddresses t = filter (invalidSPAddress t) $ undefined $ catMaybes $ map valueOf $ M.elems $ t ^. nodes
+
+invalidSPAddress :: Trace m -> SPAddress -> Bool
+invalidSPAddress t a = t ^. sprs . at a & isJust & not
+
 ----------------------------------------------------------------------
 -- Displaying traces for debugging                                  --
 ----------------------------------------------------------------------
