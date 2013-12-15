@@ -649,14 +649,23 @@ referencedInvalidSPAddresses t = filter (invalidSPAddress t) $ catMaybes $ map (
 invalidSPAddress :: Trace m -> SPAddress -> Bool
 invalidSPAddress t a = t ^. sprs . at a & isJust & not
 
+untrackedChildren :: Trace m -> [TraceProblem]
+untrackedChildren t = concat $ map with_unwitting_parents $ t ^. nodes . to M.toList where
+    with_unwitting_parents (a,node) = zipWith ParentLostChild (unwitting_parents (a,node)) (repeat a)
+    unwitting_parents (a,node) = filter (not . has_child a) $ parentAddrs node
+    has_child parentA childA | childA `elem` children parentA t = True
+                             | otherwise = False
+
 data TraceProblem = InvalidAddress Address
                   | InvalidSPAddress SPAddress
+                  | ParentLostChild Address Address
     deriving Show
 
  -- TODO Add other structural faults as I start detecting them
 traceProblems :: Trace m -> [TraceProblem]
 traceProblems t = map InvalidAddress (referencedInvalidAddresses t)
                   ++ map InvalidSPAddress (referencedInvalidSPAddresses t)
+                  ++ untrackedChildren t
 
 ----------------------------------------------------------------------
 -- Displaying traces for debugging                                  --
@@ -677,6 +686,7 @@ instance Pretty SRId where
 instance Pretty TraceProblem where
     pp (InvalidAddress a) = pp a
     pp (InvalidSPAddress a) = pp a
+    pp (ParentLostChild p c) = (pp p) <> text " lost child " <> (pp c)
 
 instance Pretty (Trace m) where
     pp t = hang (text "Trace") 1 $

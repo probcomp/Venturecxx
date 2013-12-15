@@ -2,6 +2,7 @@
 
 module Inference where
 
+import Debug.Trace
 import qualified Data.Set as S
 import Control.Monad.Reader
 import Control.Monad.Trans.State.Lazy
@@ -9,6 +10,7 @@ import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Control.Lens -- From cabal install lens
 
+import Utils
 import Language hiding (Exp, Value, Env)
 import Trace
 import Regen
@@ -56,7 +58,8 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
         else do
           index <- getRandomR (0, trace^.randoms.to S.size - 1)
           let addr = (trace^.randoms.to S.toList) !! index
-          return $ runReader (scaffold_from_principal_node addr) trace
+          let scaffold = runReader (scaffold_from_principal_node addr) (traceShowTrace trace)
+          return $ traceShow (pp scaffold) scaffold
 
     log_density :: Trace m -> a -> LogDensity
     log_density t _ = LogDensity $ -log(fromIntegral $ t^.randoms.to S.size)
