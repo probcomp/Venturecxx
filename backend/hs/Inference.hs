@@ -4,7 +4,6 @@ module Inference where
 
 import qualified Data.Set as S
 import Control.Monad.Reader
-import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Control.Lens -- From cabal install lens
@@ -37,10 +36,6 @@ metropolis_hastings propose x = do
       return x'
   else
       return x
-
--- TODO Is this a standard combinator too?
-modifyM :: Monad m => (s -> m s) -> StateT s m ()
-modifyM act = get >>= (lift . act) >>= put
 
 scaffold_mh_kernel :: (MonadRandom m) => Scaffold -> Kernel m (Trace m)
 scaffold_mh_kernel scaffold trace = do

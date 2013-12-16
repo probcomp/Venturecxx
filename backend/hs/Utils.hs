@@ -7,6 +7,7 @@ import qualified Data.Set as S
 import Control.Lens
 import Control.Monad.Morph
 import Control.Monad.Identity
+import Control.Monad.Trans.State.Lazy
 import Text.PrettyPrint -- presumably from cabal install pretty
 
 import Unique
@@ -31,6 +32,9 @@ maybeSucc (Just x) = Just $ x+1
 
 returnT :: (Monad n0, MFunctor t0) => t0 Identity b -> t0 n0 b
 returnT = hoist (return . runIdentity)
+
+modifyM :: Monad m => (s -> m s) -> StateT s m ()
+modifyM act = get >>= (lift . act) >>= put
 
 embucket :: (Num a, Ord b) => [(b, b)] -> [b] -> M.Map (b, b) a
 embucket buckets values = foldl insert M.empty values where
