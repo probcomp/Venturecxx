@@ -135,7 +135,7 @@ detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru }
   mapM_ absorbAt $ reverse $ O.toList abs
   mapM_ (stupid . eraseValue) $ reverse $ O.toList d
   mapM_ (stupid . forgetRequest) reqs
-  mapM_ (stupid . forgetNode) $ S.toList bru
+  mapM_ (stupid . forgetNode) $ reverse $ S.toList bru
   where eraseValue :: Address -> State (Trace m) ()
         eraseValue a = do
           node <- use $ nodes . hardix "Erasing the value of a nonexistent node" a
@@ -148,7 +148,10 @@ detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru }
         forgetRequest :: (SPAddress, [SRId]) -> State (Trace m) ()
         forgetRequest x = modify $ forgetResponses x
         forgetNode :: Address -> State (Trace m) ()
-        forgetNode a = modify $ deleteNode a
+        forgetNode a = do
+          do_unincorporate a
+          do_unincorporateR a
+          modify $ deleteNode a
         stupid :: (Monad m) => State s a -> StateT s m a
         stupid = StateT . (return .) . runState
 
