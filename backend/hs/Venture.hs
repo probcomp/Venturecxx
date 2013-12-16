@@ -218,8 +218,7 @@ uncollapsed_conditional_and_coupled =
               (App (Var "list") [coin, coin, coin])
               (Datum $ Boolean False)
     ] where coin = (App (Var "coin") [])
--- Am I right that this should expect "false" (rather than the list)
--- about 50% of the time?
+-- This should see "false" (rather than a list) about 50% of the time
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ liftM M.toList $ liftM discreteHistogram $ venture_main 500 uncollapsed_conditional_and_coupled
 
 conditional_and_coupled :: [Directive]
@@ -229,13 +228,15 @@ conditional_and_coupled =
               (App (Var "list") [coin, coin, coin])
               (Datum $ Boolean False)
     ] where coin = (App (Var "coin") [])
--- Am I right that this should expect "false" (rather than the list)
--- about 50% of the time?
+-- This should be equivalent to the uncollapsed one
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ liftM M.toList $ liftM discreteHistogram $ venture_main 500 conditional_and_coupled
 
 -- Next subgoal: Daniel says that collapsed exchangeably coupled
 -- state, even in the presence of conditionals, does not force
 -- regen/detach order symmetry, only detach before regen.  Confirm.
+-- - Is is possible that my insertion ordered sets are actually
+--   enforcing detach/regen order symmetry?  At least on current
+--   examples?
 
 -- Next subgoal: Test mem
 
