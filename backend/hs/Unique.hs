@@ -1,10 +1,11 @@
 module Unique (Unique, UniqueSeed, UniqueSourceT, UniqueSource, asInteger
-              , runUniqueSourceT, uniqueSeed, fresh, runUniqueSource, returnT) where
+              , runUniqueSourceT, uniqueSeed, fresh, runUniqueSource) where
 
 import Data.Functor.Identity
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Strict
 import Control.Monad.Reader
+import Control.Monad.Morph
 
 -- A deterministic source of unique objects that, unlike Data.Unique,
 -- does not involve the IO monad.
@@ -54,5 +55,5 @@ type UniqueSource = UniqueSourceT Identity
 runUniqueSource :: UniqueSource a -> UniqueSeed -> (a, UniqueSeed)
 runUniqueSource a s = runIdentity $ runUniqueSourceT a s
 
-returnT :: (Monad m) => UniqueSource a -> UniqueSourceT m a
-returnT act = UniqueSourceT $ StateT $ return . runUniqueSource act
+instance MFunctor UniqueSourceT where
+    hoist nat act = UniqueSourceT $ hoist nat (unwrap act)

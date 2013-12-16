@@ -5,6 +5,8 @@ import Data.List (find)
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Control.Lens
+import Control.Monad.Morph
+import Control.Monad.Identity
 import Text.PrettyPrint -- presumably from cabal install pretty
 
 import Unique
@@ -26,6 +28,9 @@ hardix msg k = lens find replace where
 maybeSucc :: Num a => Maybe a -> Maybe a
 maybeSucc Nothing = Just 1
 maybeSucc (Just x) = Just $ x+1
+
+returnT :: (Monad n0, MFunctor t0) => t0 Identity b -> t0 n0 b
+returnT = hoist (return . runIdentity)
 
 embucket :: (Num a, Ord b) => [(b, b)] -> [b] -> M.Map (b, b) a
 embucket buckets values = foldl insert M.empty values where

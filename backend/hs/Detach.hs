@@ -133,9 +133,9 @@ collectBrush = mapM_ disableRequests where
 detach' :: Scaffold -> StateT (Trace m) (Writer LogDensity) ()
 detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru } = do
   mapM_ absorbAt $ reverse $ O.toList abs
-  mapM_ (stupid . eraseValue) $ reverse $ O.toList d
-  mapM_ (stupid . forgetRequest) reqs
-  mapM_ (stupid . forgetNode) $ reverse $ S.toList bru
+  mapM_ (returnT . eraseValue) $ reverse $ O.toList d
+  mapM_ (returnT . forgetRequest) reqs
+  mapM_ (returnT . forgetNode) $ reverse $ S.toList bru
   where eraseValue :: Address -> State (Trace m) ()
         eraseValue a = do
           node <- use $ nodes . hardix "Erasing the value of a nonexistent node" a
@@ -152,8 +152,6 @@ detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru }
           do_unincorporate a
           do_unincorporateR a
           modify $ deleteNode a
-        stupid :: (Monad m) => State s a -> StateT s m a
-        stupid = StateT . (return .) . runState
 
 detach :: Scaffold -> (Trace m) -> Writer LogDensity (Trace m)
 detach s t = liftM snd $ runStateT (detach' s) t
