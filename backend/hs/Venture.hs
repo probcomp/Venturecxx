@@ -1,5 +1,6 @@
 module Venture where
 
+import Debug.Trace
 import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import Control.Monad.Reader
@@ -75,7 +76,9 @@ simulation ct ds = do
   watching_infer target ct
 
 venture_main :: (MonadRandom m) => Int -> [Directive] -> m [Value]
-venture_main ct ds = evalStateT (simulation ct ds) empty
+venture_main ct ds = do
+    (vs,t) <- runStateT (simulation ct ds) empty
+    return $ traceShow (pp t) vs where
 
 v_if :: Exp -> Exp -> Exp -> Exp
 v_if p c a = App (App (Var "select") [p, (Lam [] c), (Lam [] a)]) []
