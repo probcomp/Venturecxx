@@ -9,6 +9,7 @@ import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Control.Lens -- From cabal install lens
 
+import Utils
 import Language hiding (Exp, Value, Env)
 import Trace
 import Regen
@@ -43,10 +44,8 @@ modifyM act = get >>= (lift . act) >>= put
 
 scaffold_mh_kernel :: (MonadRandom m) => Scaffold -> Kernel m (Trace m)
 scaffold_mh_kernel scaffold trace = do
-  torus <- censor log_density_negate $ stupid $ detach scaffold trace
+  torus <- censor log_density_negate $ returnT $ detach scaffold trace
   regen scaffold torus
-        where stupid :: (Monad m) => Writer w a -> WriterT w m a
-              stupid = WriterT . return . runWriter
 
 principal_node_mh :: (MonadRandom m) => Kernel m (Trace m)
 principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
