@@ -41,7 +41,7 @@ data NoStateSP m = NoStateSP
 
 data SPRequesterNS m = DeterministicR ([Address] -> UniqueSource [SimulationRequest])
                      | RandomR ([Address] -> UniqueSourceT m [SimulationRequest])
-                     | ReaderR ([Address] -> ReaderT (Trace m) (UniqueSourceT m) [SimulationRequest])
+                     | ReaderR ([Address] -> ReaderT (Trace m) UniqueSource [SimulationRequest])
 
 data SPOutputterNS m = Trivial
                      | DeterministicO ([Node] -> [Node] -> Value)

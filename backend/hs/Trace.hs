@@ -11,6 +11,7 @@ import Control.Monad.State hiding (state) -- :set -hide-package monads-tf-0.1.0.
 import Control.Monad.Writer.Class
 import Control.Monad.Reader
 import Control.Monad.State.Class
+import Control.Monad.Morph
 import Text.PrettyPrint -- presumably from cabal install pretty
 
 import Utils
@@ -110,7 +111,7 @@ instance Show (SP m) where
 
 data SPRequester m a = DeterministicR (a -> [Address] -> UniqueSource [SimulationRequest])
                      | RandomR (a -> [Address] -> UniqueSourceT m [SimulationRequest])
-                     | ReaderR (a -> [Address] -> ReaderT (Trace m) (UniqueSourceT m) [SimulationRequest])
+                     | ReaderR (a -> [Address] -> ReaderT (Trace m) UniqueSource [SimulationRequest])
 
 data SPOutputter m a = Trivial
                      | DeterministicO (a -> [Node] -> [Node] -> Value)
@@ -121,7 +122,7 @@ data SPOutputter m a = Trivial
 asRandomR :: (Monad m) => SPRequester m a -> a -> [Address] -> ReaderT (Trace m) (UniqueSourceT m) [SimulationRequest]
 asRandomR (RandomR f) st as = lift $ f st as
 asRandomR (DeterministicR f) st as = lift $ returnT $ f st as
-asRandomR (ReaderR f) st as = f st as -- TODO Change the type of ReaderR to exclude the randomness source and hoist
+asRandomR (ReaderR f) st as = hoist returnT $ f st as
 
 isRandomR :: SPRequester m a -> Bool
 isRandomR (RandomR _) = True
