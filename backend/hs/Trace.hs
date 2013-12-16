@@ -619,8 +619,11 @@ invalidAddress t a = not $ isJust $ lookupNode a t
 referencedInvalidAddresses :: Trace m -> [TraceProblem]
 referencedInvalidAddresses t = map InvalidAddress $ filter (invalidAddress t) $ traceAddresses t
 
-referencedInvalidSPAddresses :: Trace m -> [SPAddress]
-referencedInvalidSPAddresses t = filter (invalidSPAddress t) $ catMaybes $ map (valueOf >=> fromValue) $ M.elems $ t ^. nodes
+traceSPAddresses :: Trace m -> [SPAddress]
+traceSPAddresses t = catMaybes $ map (valueOf >=> fromValue) $ M.elems $ t ^. nodes
+
+referencedInvalidSPAddresses :: Trace m -> [TraceProblem]
+referencedInvalidSPAddresses t = map InvalidSPAddress $ filter (invalidSPAddress t) $ traceSPAddresses t
 
 invalidSPAddress :: Trace m -> SPAddress -> Bool
 invalidSPAddress t a = t ^. sprs . at a & isJust & not
@@ -648,7 +651,7 @@ data TraceProblem = InvalidAddress Address
  -- TODO Add other structural faults as I start detecting them
 traceProblems :: Trace m -> [TraceProblem]
 traceProblems t = referencedInvalidAddresses t
-                  ++ map InvalidSPAddress (referencedInvalidSPAddresses t)
+                  ++ referencedInvalidSPAddresses t
                   ++ untrackedChildren t
                   ++ overtrackedChildren t
 
