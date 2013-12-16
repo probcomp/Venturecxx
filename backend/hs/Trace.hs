@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, TemplateHaskell, TypeSynonymInstances, FlexibleInstances, ExistentialQuantification, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, TemplateHaskell, TypeSynonymInstances, FlexibleInstances, ExistentialQuantification, RecordWildCards, TupleSections #-}
 
 module Trace where
 
@@ -642,18 +642,38 @@ overtrackedChildren t = concat $ map with_unwitting_children $ t ^. node_childre
     has_child p c | p `elem` parentAddrs (fromJust "dangling child" $ t ^. nodes . at c) = True
                   | otherwise = False
 
+invalid_freshable :: (Ord a) => (Unique -> a) -> [a] -> UniqueSeed -> Maybe a
+invalid_freshable _ [] _ = Nothing
+invalid_freshable trans as seed = if max < max' then Nothing else Just max where
+    max = maximum as
+    (max', _) = runUniqueSource (liftM trans fresh) seed
+
+invalid_srid :: SPRecord m -> Maybe SRId
+invalid_srid SPRecord{srid_seed = seed, requests = reqs} = invalid_freshable SRId (M.keys reqs) seed
+
+invalid_seeds :: Trace m -> [TraceProblem]
+invalid_seeds t@Trace{_addr_seed = aseed, _spaddr_seed = spaseed, _sprs = sprs} =
+    catMaybes $ [addr] ++ [spaddr] ++ srids where
+        addr = liftM UnseededAddress $ invalid_freshable Address (traceAddresses t) aseed
+        spaddr = liftM UnseededSPAddress $ invalid_freshable SPAddress (traceSPAddresses t) spaseed
+        srids = map (liftM UnseededSRId) $ map invalid_srid_seed $ M.toList sprs
+        invalid_srid_seed (spa, record) = liftM (spa,) $ invalid_srid record
+
 data TraceProblem = InvalidAddress Address
                   | InvalidSPAddress SPAddress
                   | ParentLostChild Address Address
                   | CustodyClaim Address Address
+                  | UnseededAddress Address
+                  | UnseededSPAddress SPAddress
+                  | UnseededSRId (SPAddress, SRId)
     deriving Show
 
- -- TODO Add other structural faults as I start detecting them
 traceProblems :: Trace m -> [TraceProblem]
 traceProblems t = referencedInvalidAddresses t
                   ++ referencedInvalidSPAddresses t
                   ++ untrackedChildren t
                   ++ overtrackedChildren t
+                  ++ invalid_seeds t
 
 ----------------------------------------------------------------------
 -- Displaying traces for debugging                                  --
@@ -676,6 +696,9 @@ instance Pretty TraceProblem where
     pp (InvalidSPAddress a) = pp a
     pp (ParentLostChild p c) = (pp p) <> text " lost child " <> (pp c)
     pp (CustodyClaim p c) = (pp p) <> text " claims child " <> (pp c)
+    pp (UnseededAddress a) = (pp a) <> text " not generated from seed"
+    pp (UnseededSPAddress a) = (pp a) <> text " not generated from seed"
+    pp (UnseededSRId (a,srid)) = (pp a) <> text ", " <> (pp srid) <> text " not generated from seed"
 
 instance Pretty (Trace m) where
     pp t = hang (text "Trace") 1 $
