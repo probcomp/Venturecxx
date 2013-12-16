@@ -295,10 +295,14 @@ isRandomNode n@(Output _ _ _ _ _) t = case operator n t of
 isRandomNode _ _ = False
 
 ----------------------------------------------------------------------
--- Intermediate Trace Manipulations                                 --
+-- Structural Trace Manipulations                                   --
 ----------------------------------------------------------------------
 
--- A Trace is "valid" if
+-- These operations demand and preserve structural validity of the
+-- trace.  Structural validity is about the interlinks between nodes
+-- and has no dependence on any values they may or may not contain.
+
+-- More precisely, a trace is "valid" if
 -- 1. Every Address held by the trace points to a Node in the trace
 --    (i.e. occurs as a key in the _nodes map)
 -- 2. Every SPAddress held by the trace points to an SPRecord in the
@@ -316,6 +320,16 @@ isRandomNode _ _ = False
 --       SRId that appears in any SimulationRequest of any Request
 --       node whose operatorRecord is Just r.
 
+-- 5. Request and Output nodes come in pairs, determined by the reqA
+--    address of the Output node:
+--    a. The reqA address of every Output node points to a Request node
+--    b. Every Request node is thus pointed to at most once
+--    c. The operator and argument lists of every such pair are equal
+--    d. If it is not Nothing, the outA address of a Request node
+--       points to the Output node that points to it.
+-- 6. Distinct (SPAddress,SRId) pairs map to distinct Addresses
+--    through the SPRecords.
+
 -- An Address is "referenced by" a valid trace iff it occurs in any of
 -- its Nodes or SPRecords (but the node_children map doesn't count).
 
@@ -329,7 +343,6 @@ isRandomNode _ _ = False
 --   values), 1 and 2 together imply that the operatorRecord of any
 --   Request or Output Node in the trace is not Nothing.
 
--- TODO Can I turn these three into an appropriate lens?
 lookupNode :: Address -> Trace m -> Maybe Node
 lookupNode a t = t ^. nodes . at a
 
@@ -352,6 +365,7 @@ dropChildOf c ps m = foldl dropChild m ps
 -- points to a Node in the given Trace, returns a unique Address
 -- (distinct from every other Address in the trace) and a valid Trace
 -- with that Node added at that Address.
+-- N.B. addFreshNode cannot be a Setter because it is not idempotent
 addFreshNode :: Node -> Trace m -> (Address, Trace m)
 addFreshNode node t@Trace{ _nodes = ns, _addr_seed = seed, _randoms = rs, _node_children = cs } =
     (a, t{ _nodes = ns', _addr_seed = seed', _randoms = rs', _node_children = cs''}) where
@@ -415,6 +429,10 @@ numRequests a t = length $ filter isOutput $ children a t where
                     (Just _) -> False
                     Nothing -> error "Dangling child"
 
+-- Given the Address of an Output node in it, this is a lens from a
+-- valid Trace to that Output node's responses field (which maintains
+-- trace validity under insertion of responses, as long as they appear
+-- in the Trace).
 responsesAt :: Address -> Simple Lens (Trace m) [Address]
 responsesAt a = lens _responses addResponses where
     _responses t = t ^. nodes . hardix "Requesting reposnes from a dangling address" a . responses
@@ -422,6 +440,46 @@ responsesAt a = lens _responses addResponses where
       oldRs <- nodes . ix a . responses <<.= rs
       node_children %= dropChildOf a oldRs
       node_children %= addChildOf a rs) t
+
+----------------------------------------------------------------------
+-- Advanced Trace Manipulations                                     --
+----------------------------------------------------------------------
+
+-- These manipulations depend upon the values in trace nodes being
+-- sensible.
+
+-- TODO Specify what values are "sensible" to have in a Trace's nodes.
+-- Caution is advised, because preserving a strong notion of
+-- "sensible" would depend upon the interpreted program being
+-- completely well-typed, which would be overambitious to try to
+-- enforce.
+
+-- Some notes:
+
+-- 5. After any regen, all Request nodes should have pointers to their
+--    output nodes (not necessarily during a regen, because the output
+--    nodes wish to be created with their fulfilments).
+
+-- 8. After any detach-regen cycle, all nodes should have values.
+
+-- 9. After any regen, the request parents of any Output node should
+--    agree with the requests made by its Request node (through the
+--    requests map of the SPRecord of their mutual operator).
+
+-- 10. The _randoms should be the set of modifiable random choices.  A
+--     node is a random choice iff it is a Request or Output node, and
+--     the corresponding part of the SP that is the operator is
+--     actually stochastic.  A random choice is modifiable iff it is
+--     not constrained by observations, but the latter is currently
+--     not detectable from the trace itself (but modifiable choices
+--     are a subset of all choices).
+
+-- 11. A trace constructed during the course of executing directives,
+--     or by inference on such a trace, should have no garbage.  To
+--     wit, all Addresses and SPAddresses should be reachable via
+--     Nodes, SRIds, and SPRecords from the Addresses contained in the
+--     global environment, or the Addresses of predictions or
+--     observations (that have not been retracted).
 
 -- Given that the state is a valid Trace, and the inputs are an
 -- SPAddress that occurs in it and a list of Addresses that also occur
@@ -457,16 +515,6 @@ runOutputter spaddr argAs resultAs = do
          (Right sp) -> do spAddr <- state $ addFreshSP sp
                           return $ Procedure spAddr
   return v
-
-----------------------------------------------------------------------
--- Advanced Trace Manipulations                                     --
-----------------------------------------------------------------------
-
--- TODO Is there actually a coherent sense in which these are a higher
--- layer of abstraction than the intermediate trace manipulations?
--- What invariants do these operations expect and enforce (if one does
--- not circumvent them)?  What, if anything, needs to be added to make
--- this set complete?
 
 fulfilments :: Address -> Trace m -> [Address]
 -- The addresses of the responses to the requests made by the Request
@@ -561,43 +609,11 @@ maybe_constrain_parents a v = do
     _ -> return ()
 
 ----------------------------------------------------------------------
--- More invariants that traces ought to obey                        --
+-- Checking structural invariants of traces                         --
 ----------------------------------------------------------------------
 
--- 4. All Request and Output nodes should come in pairs, determined by
---    the reqA address of the Output node.  Their operator and
---    argument lists should be equal.
+-- TODO Define checkers for invariants 5 and 6.
 
--- 5. After any regen, all Request nodes should have pointers to their
---    output nodes (not necessarily during a regen, because the output
---    nodes wish to be created with their fulfilments).
-
--- 8. After any detach-regen cycle, all nodes should have values.
-
--- 9. After any regen, the request parents of any Output node should
---    agree with the requests made by its Request node (through the
---    requests map of the SPRecord of their mutual operator).
-
--- 10. The _randoms should be the set of modifiable random choices.  A
---     node is a random choice iff it is a Request or Output node, and
---     the corresponding part of the SP that is the operator is
---     actually stochastic.  A random choice is modifiable iff it is
---     not constrained by observations, but the latter is currently
---     not detectable from the trace itself (but modifiable choices
---     are a subset of all choices).
-
--- 11. A trace constructed during the course of executing directives,
---     or by inference on such a trace, should have no garbage.  To
---     wit, all Addresses and SPAddresses should be reachable via
---     Nodes, SRIds, and SPRecords from the Addresses contained in the
---     global environment, or the Addresses of predictions or
---     observations (that have not been retracted).
-
--- 12. Distinct SRIds should never map to the same Address, across the
---     whole trace.  This is sensible as a structural invariant, but I
---     do not currently check it.
-
--- TODO Define checkers for additional invariants of traces.
 -- TODO confirm (quickcheck?) that no sequence of trace operations at
 -- the appropriate level of abstraction can produce a trace that
 -- violates the structural invariants.  (Is rejection sampling a
@@ -680,6 +696,10 @@ traceProblems t = referencedInvalidAddresses t
                   ++ untrackedChildren t
                   ++ overtrackedChildren t
                   ++ invalid_seeds t
+
+----------------------------------------------------------------------
+-- TODO Checking advanced invariants of traces                      --
+----------------------------------------------------------------------
 
 ----------------------------------------------------------------------
 -- Displaying traces for debugging                                  --
