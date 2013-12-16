@@ -282,9 +282,7 @@ chaseReferences a t = do
           chase n = Just n
 
 operatorAddr :: Node -> Trace m -> Maybe SPAddress
-operatorAddr n t = do
-  a <- opAddr n
-  fromValueAt a t
+operatorAddr n t = opAddr n >>= (flip fromValueAt t)
 
 fromValueAt :: Valuable b => Address -> Trace m -> Maybe b
 fromValueAt a t = (t^. nodes . at a) >>= valueOf >>= fromValue
