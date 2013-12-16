@@ -98,19 +98,22 @@ collectBrush = mapM_ disableRequests where
         case node of
           (Request (Just reqs) _ _ _) -> do
             spaddr <- asks $ fromJust "Disabling requests of operator-less request node" . operatorAddr node
-            _2 . dead_reqs %= ((spaddr,map srid reqs):)
-            (asks $ fulfilments a) >>= (mapM_ disableRequestFor)
+            answers <- (asks $ fulfilments a)
+            sequence_ $ zipWith (disableRequestFor spaddr) (map srid reqs) answers
           _ -> return ()
-    -- Given the address of a requested node, account for the fact
-    -- that it is now requested one time less.
-    disableRequestFor :: Address -> StateT ((M.Map Address Int), Scaffold, S.Set Address) (Reader (Trace m)) ()
-    disableRequestFor a = do
+    -- Given the address of a requested node (and the SPAddress/SRId
+    -- path of the request) account for the fact that it is now
+    -- requested one time less.
+    disableRequestFor :: SPAddress -> SRId -> Address -> StateT ((M.Map Address Int), Scaffold, S.Set Address) (Reader (Trace m)) ()
+    disableRequestFor spaddr srid a = do
       _1 . at a %= maybeSucc
       disabled <- use $ _1 . hardix "Disabling request for a node that has never been disabled" a
       requested <- asks $ numRequests a
       if disabled > requested then
           error $ "Request disablement overcounting bug " ++ (show disabled) ++ " " ++ (show requested) ++ " " ++ (show $ pp a)
-      else if disabled == requested then disableFamily a
+      else if disabled == requested then do
+          _2 . dead_reqs %= ((spaddr,[srid]):)
+          disableFamily a
       else return ()
     -- Given the address of a node that is no longer requested, put it
     -- and its entire family in the brush.
