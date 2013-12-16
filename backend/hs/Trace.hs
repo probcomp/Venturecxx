@@ -79,7 +79,8 @@ data SP m = forall a. (Show a) => SP
     , outputter :: SPOutputter m a
     , log_d_out :: Maybe (a -> [Node] -> [Node] -> Value -> Double)
     , current :: a
-    -- TODO Do these guys need to accept the argument lists?
+    -- These guys may need to accept the argument lists, but I have
+    -- not yet seen an example that forces this.
     , incorporate :: Value -> a -> a
     , unincorporate :: Value -> a -> a
     , incorporateR :: [Value] -> [SimulationRequest] -> a -> a
