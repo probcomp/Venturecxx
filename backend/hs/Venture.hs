@@ -253,6 +253,8 @@ whether_a_node_is_random_can_change =
 
 -- Potential goals
 -- - Test mem more?
+--   - Make sure that I do not leak anything (but especially not memoized
+--     SRId entries) under inference with programs involving mem.
 -- - Figure out better ways to assess whether inference is producing
 --   sensible results (graphical histograms, convergence metrics,
 --   comparisons against allegedly equivalent models, etc).
@@ -264,6 +266,12 @@ whether_a_node_is_random_can_change =
 -- - Understand the set of layers of abstraction of trace operations:
 --   - what invariants does each layer preserve?
 --   - quickcheck and/or prove preservation of those invariants
+--     - do I want versions of layer operations that check their
+--       preconditions and throw errors?
+--       - e.g., deleteNode can probably do so at an additive log cost
+--         by checking whether the node to be deleted is referenced.
+--   - find complete sets of operations at each level, so that a higher
+--     level does not need to circumvent the level below it
 --   - enforce by module export lists that clients do not circumvent
 --     those abstraction boundaries.
 -- - Implement more inference strategies
@@ -289,3 +297,15 @@ whether_a_node_is_random_can_change =
 --   - This seems to be the only source of nonzero weights in {regen,detach}Internal
 --     (also eval and uneval (detachFamily?))
 -- - Absorbing At Applications (I don't even understand the machinery this requires)
+
+-- Daniel's explanation for how to do AAA appears to translate as follows:
+-- To cbeta_bernoullii add
+--   cbeta_bernoulli_flip (phanY, phanN) (incY, incN) = ... where
+--     ctYes = phanY + incY
+--     ctNo = phanN + incN
+-- etc; also
+--   cbeta_bernoulli_log_d_counts :: (phanY, phanN) (incY, incN) = ... -- some double
+-- which becomes the weight when detaching or regenning.
+-- Daniel says that complexities arise when, e.g., resampling the
+-- hyperparameter also causes the set of applications of the made SP to
+-- change.

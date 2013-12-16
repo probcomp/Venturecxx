@@ -593,6 +593,10 @@ maybe_constrain_parents a v = do
 --     global environment, or the Addresses of predictions or
 --     observations (that have not been retracted).
 
+-- 12. Distinct SRIds should never map to the same Address, across the
+--     whole trace.  This is sensible as a structural invariant, but I
+--     do not currently check it.
+
 -- TODO Define checkers for additional invariants of traces.
 -- TODO confirm (quickcheck?) that no sequence of trace operations at
 -- the appropriate level of abstraction can produce a trace that
