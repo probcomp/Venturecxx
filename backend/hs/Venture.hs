@@ -237,8 +237,6 @@ conditional_and_coupled =
 -- state, even in the presence of conditionals, does not force
 -- regen/detach order symmetry, only detach before regen.  Confirm.
 
--- Next subgoal: Chase down request detachment overcounting bug
-
 -- Next subgoal: Test mem
 
 -- Potential goals
@@ -256,6 +254,12 @@ conditional_and_coupled =
 --     those abstraction boundaries.
 -- - Implement more inference strategies
 --   - Particle methods should be easy because traces are persistent
+
+-- Known bugs:
+-- - mem_2 crashes with *** Exception: Forgetting response that isn't there
+--   because I am doing something wrong with counting requests
+-- - self_select_2 (but not self_select_1) leaks (empty) SPRecords
+--   (presumably for the lambdas that v_if desugars into)
 
 -- Potential uses for this code
 -- - Quasi-independent Venture implemetation for sanity checking
