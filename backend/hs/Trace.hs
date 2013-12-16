@@ -248,7 +248,6 @@ data Trace rand =
           , _randoms :: S.Set Address
           , _node_children :: M.Map Address (S.Set Address)
           , _sprs :: (M.Map SPAddress (SPRecord rand))
-          , _request_counts :: M.Map Address Int
           , _addr_seed :: UniqueSeed
           , _spaddr_seed :: UniqueSeed
           }
@@ -273,7 +272,7 @@ spRecord sp = SPRecord sp uniqueSeed M.empty
 makeLenses ''Trace
 
 empty :: Trace m
-empty = Trace M.empty S.empty M.empty M.empty M.empty uniqueSeed uniqueSeed
+empty = Trace M.empty S.empty M.empty M.empty uniqueSeed uniqueSeed
 
 chaseReferences :: Address -> Trace m -> Maybe Node
 chaseReferences a t = do
@@ -321,10 +320,7 @@ isRandomNode _ _ = False
 -- 3. The node children maps are be right, to wit A is recorded as a
 --    child of B iff A is in the trace and the address of B appears in
 --    the list of parentAddrs of A.
--- 4. The request counts are right, to wit M.lookup a request_counts
---    is always Just the number of times a appears as a fulfilment of
---    an Output node and Nothing iff a never so appears.
--- 5. The seeds are right, to wit
+-- 4. The seeds are right, to wit
 --    a. The _addr_seed exceeds every Address that appears in the
 --       trace;
 --    b. The _spaddr_seed exceeds every SPAddress that appears in the
@@ -335,8 +331,7 @@ isRandomNode _ _ = False
 --       node whose operatorRecord is Just r.
 
 -- An Address is "referenced by" a valid trace iff it occurs in any of
--- its Nodes or SPRecords (but the node_children and request_counts
--- maps don't count).
+-- its Nodes or SPRecords (but the node_children map doesn't count).
 
 -- I should be able to construct a valid trace from a valid pair of
 -- nodes and sprs maps.
@@ -416,11 +411,9 @@ lookupResponse spa srid t = do
 -- returns a valid Trace that assumes that said SimulationRequest is
 -- fulfilled by the Node at the given Address.
 insertResponse :: SPAddress -> SRId -> Address -> Trace m -> Trace m
-insertResponse spa id a t@Trace{ _sprs = ss, _request_counts = r } =
-    t{ _sprs = M.insert spa spr' ss, _request_counts = r' } where
+insertResponse spa id a t@Trace{ _sprs = ss } = t{ _sprs = M.insert spa spr' ss } where
         spr' = spr{ requests = M.insert id a reqs }
         spr@SPRecord { requests = reqs } = t ^. sprs . hardix "Inserting response to non-SP" spa
-        r' = M.alter maybeSucc a r
 
 -- Given a valid Trace, an SPAddress in it, and a list of SRIds
 -- identifying SimulationRequests made by applications of the SP at
@@ -428,16 +421,9 @@ insertResponse spa id a t@Trace{ _sprs = ss, _request_counts = r } =
 -- assumes those SimulationRequests are being removed (by
 -- multiplicity).
 forgetResponses :: (SPAddress, [SRId]) -> Trace m -> Trace m
-forgetResponses (spaddr, srids) t@Trace{ _sprs = ss, _request_counts = r } =
-    t{ _sprs = M.insert spaddr spr' ss, _request_counts = r' } where
+forgetResponses (spaddr, srids) t@Trace{ _sprs = ss } = t{ _sprs = M.insert spaddr spr' ss } where
         spr' = spr{ requests = foldl (flip M.delete) reqs srids }
         spr@SPRecord { requests = reqs } = t ^. sprs . hardix "Forgetting responses to non-SP" spaddr
-        r' = foldl decrement r srids
-        decrement :: (M.Map Address Int) -> SRId -> (M.Map Address Int)
-        decrement m srid = M.update maybePred k m where
-            k = fromJust "Forgetting response that isn't there" $ M.lookup srid reqs
-            maybePred 1 = Nothing
-            maybePred n = Just $ n-1
 
 -- Given a valid Trace and an Address that occurs in it, returns the
 -- number of times that address has been requested.
@@ -639,7 +625,6 @@ referencedInvalidAddresses t = invalidParentAddresses t
                                ++ invalidNodeChildrenKeys t
                                ++ invalidNodeChildren t
                                ++ invalidRequestedAddresses t
-                               ++ invalidRequestCountKeys t
 
 invalidParentAddresses :: Trace m -> [Address]
 invalidParentAddresses t = filter (invalidAddress t) $ concat $ map parentAddrs $ M.elems $ t ^. nodes
@@ -651,8 +636,6 @@ invalidNodeChildren :: Trace m -> [Address]
 invalidNodeChildren t = filter (invalidAddress t) $ concat $ map S.toList $ M.elems $ t ^. node_children
 invalidRequestedAddresses :: Trace m -> [Address]
 invalidRequestedAddresses t = filter (invalidAddress t) $ concat $ map (M.elems . requests) $ M.elems $ t ^. sprs
-invalidRequestCountKeys :: Trace m -> [Address]
-invalidRequestCountKeys t = filter (invalidAddress t) $ M.keys $ t ^. request_counts
 
 invalidAddress :: Trace m -> Address -> Bool
 invalidAddress t a = not $ isJust $ lookupNode a t
