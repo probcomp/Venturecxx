@@ -591,33 +591,33 @@ maybe_constrain_parents a v = do
 --     global environment, or the Addresses of predictions or
 --     observations (that have not been retracted).
 
--- TODO Define checkers for structural invariants of traces.
+-- TODO Define checkers for additional invariants of traces.
 -- TODO confirm (quickcheck?) that no sequence of trace operations at
 -- the appropriate level of abstraction can produce a trace that
 -- violates the structural invariants.  (Is rejection sampling a
 -- sensible way to generate conforming traces, or do I need to test
 -- long instruction sequences?)
 
-referencedInvalidAddresses :: Trace m -> [Address]
-referencedInvalidAddresses t = invalidParentAddresses t
-                               ++ invalidRandomChoices t
-                               ++ invalidNodeChildrenKeys t
-                               ++ invalidNodeChildren t
-                               ++ invalidRequestedAddresses t
+traceAddresses :: Trace m -> [Address]
+traceAddresses t = parentAddresses t ++ randomChoices t
+                   ++ nodeChildrenKeys t ++ nodeChildren t ++ requestedAddresses t
 
-invalidParentAddresses :: Trace m -> [Address]
-invalidParentAddresses t = filter (invalidAddress t) $ concat $ map parentAddrs $ M.elems $ t ^. nodes
-invalidRandomChoices :: Trace m -> [Address]
-invalidRandomChoices t = filter (invalidAddress t) $ S.toList $ t ^. randoms
-invalidNodeChildrenKeys :: Trace m -> [Address]
-invalidNodeChildrenKeys t = filter (invalidAddress t) $ M.keys $ t ^. node_children
-invalidNodeChildren :: Trace m -> [Address]
-invalidNodeChildren t = filter (invalidAddress t) $ concat $ map S.toList $ M.elems $ t ^. node_children
-invalidRequestedAddresses :: Trace m -> [Address]
-invalidRequestedAddresses t = filter (invalidAddress t) $ concat $ map (M.elems . requests) $ M.elems $ t ^. sprs
+parentAddresses :: Trace m -> [Address]
+parentAddresses t = concat $ map parentAddrs $ M.elems $ t ^. nodes
+randomChoices :: Trace m -> [Address]
+randomChoices t = S.toList $ t ^. randoms
+nodeChildrenKeys :: Trace m -> [Address]
+nodeChildrenKeys t = M.keys $ t ^. node_children
+nodeChildren :: Trace m -> [Address]
+nodeChildren t = concat $ map S.toList $ M.elems $ t ^. node_children
+requestedAddresses :: Trace m -> [Address]
+requestedAddresses t = concat $ map (M.elems . requests) $ M.elems $ t ^. sprs
 
 invalidAddress :: Trace m -> Address -> Bool
 invalidAddress t a = not $ isJust $ lookupNode a t
+
+referencedInvalidAddresses :: Trace m -> [TraceProblem]
+referencedInvalidAddresses t = map InvalidAddress $ filter (invalidAddress t) $ traceAddresses t
 
 referencedInvalidSPAddresses :: Trace m -> [SPAddress]
 referencedInvalidSPAddresses t = filter (invalidSPAddress t) $ catMaybes $ map (valueOf >=> fromValue) $ M.elems $ t ^. nodes
@@ -647,7 +647,7 @@ data TraceProblem = InvalidAddress Address
 
  -- TODO Add other structural faults as I start detecting them
 traceProblems :: Trace m -> [TraceProblem]
-traceProblems t = map InvalidAddress (referencedInvalidAddresses t)
+traceProblems t = referencedInvalidAddresses t
                   ++ map InvalidSPAddress (referencedInvalidSPAddresses t)
                   ++ untrackedChildren t
                   ++ overtrackedChildren t
