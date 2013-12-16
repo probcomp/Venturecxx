@@ -231,6 +231,16 @@ conditional_and_coupled =
 -- This should be equivalent to the uncollapsed one
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ liftM M.toList $ liftM discreteHistogram $ venture_main 500 conditional_and_coupled
 
+whether_a_node_is_random_can_change :: [Directive]
+whether_a_node_is_random_can_change =
+    [ Assume "coin" $ v_if (App (Var "bernoulli") [])
+             (Lam [] $ Datum $ Boolean True)
+             (Var "bernoulli")
+    , Predict $ App (Var "coin") []
+    ]
+-- venture_main 10 whether_a_node_is_random_can_change
+-- liftM discreteHistogram $ venture_main 100 whether_a_node_is_random_can_change
+
 -- Next subgoal: Daniel says that collapsed exchangeably coupled
 -- state, even in the presence of conditionals, does not force
 -- regen/detach order symmetry, only detach before regen.  Confirm.
@@ -257,6 +267,12 @@ conditional_and_coupled =
 --   - Particle methods should be easy because traces are persistent
 
 -- Known bugs:
+-- - whether_a_node_is_random_can_change successfully confuses the
+--   _randoms field of the Trace, but it is not clear how to get
+--   measurably incorrect behavior from this
+--   - Presumably the fix would be to insert an approprate
+--     isRandomNode check into regenValue somewhere; is a symmetric
+--     affordance needed for detach?
 -- - self_select_2 (but not self_select_1) leaks (empty) SPRecords
 --   (presumably for the lambdas that v_if desugars into)
 
