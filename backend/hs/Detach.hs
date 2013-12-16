@@ -93,8 +93,8 @@ collectBrush = mapM_ disableRequests where
         _3 . contains a .= True
         node <- view $ nodes . hardix "Disabling requests of non-existent node" a
         case node of
-          (Request (Just reqs) _ _ _) -> do
-            spaddr <- asks $ fromJust "Disabling requests of operator-less request node" . operatorAddr node
+          (Request (Just reqs) _ opa _) -> do
+            spaddr <- asks $ fromJust "Disabling requests of operator-less request node" . fromValueAt opa
             answers <- (asks $ fulfilments a)
             sequence_ $ zipWith (disableRequestFor spaddr) (map srid reqs) answers
           _ -> return ()

@@ -281,14 +281,11 @@ chaseReferences a t = do
     where chase (Reference _ a) = chaseReferences a t
           chase n = Just n
 
-operatorAddr :: Node -> Trace m -> Maybe SPAddress
-operatorAddr n t = opAddr n >>= (flip fromValueAt t)
-
 fromValueAt :: Valuable b => Address -> Trace m -> Maybe b
 fromValueAt a t = (t^. nodes . at a) >>= valueOf >>= fromValue
 
 operatorRecord :: Node -> Trace m -> Maybe (SPRecord m)
-operatorRecord n t = operatorAddr n t >>= (\addr -> t ^. sprs . at addr)
+operatorRecord n t = opAddr n >>= (flip fromValueAt t) >>= (\addr -> t ^. sprs . at addr)
 
 operator :: Node -> Trace m -> Maybe (SP m)
 operator n = liftM sp . operatorRecord n
@@ -506,9 +503,9 @@ corporate :: (MonadState (Trace m) m1) => String -> (Value -> SP m -> SP m) -> A
 corporate name f a = do
   node <- use $ nodes . hardix (name ++ "ncorporating the value of a nonexistent node") a
   case node of
-    (Output _ _ _ _ _) -> do
+    (Output _ _ opa _ _) -> do
       let v = fromJust (name ++ "ncorporating value that isn't there") $ valueOf node
-      spaddr <- gets $ fromJust (name ++ "ncorporating value for an output with no operator address") . (operatorAddr node)
+      spaddr <- gets $ fromJust (name ++ "ncorporating value for an output with no operator address") . (fromValueAt opa)
       sp <- gets $ fromJust (name ++ "ncorporating value for an output with no operator") . (operator node)
       sprs . ix spaddr %= \r -> r{sp = f v sp}
     _ -> return ()
@@ -524,9 +521,9 @@ corporateR :: (MonadState (Trace m) m1) => String -> ([Value] -> [SimulationRequ
 corporateR name f a = do
   node <- use $ nodes . hardix (name ++ "ncorporating the requests of a nonexistent node") a
   case node of
-    (Request reqs _ _ args) -> do
+    (Request reqs _ opa args) -> do
       let rs = fromJust (name ++ "ncorporating requests that aren't there") reqs
-      spaddr <- gets $ fromJust (name ++ "ncorporating requests for a requester with no operator address") . (operatorAddr node)
+      spaddr <- gets $ fromJust (name ++ "ncorporating requests for a requester with no operator address") . (fromValueAt opa)
       sp <- gets $ fromJust (name ++ "ncorporating requests for a requester with no operator") . (operator node)
       t <- get
       let ns = map (fromJust (name ++ "ncorporate requests given dangling address") . flip M.lookup (t^.nodes)) args
