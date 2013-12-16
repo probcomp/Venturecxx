@@ -73,7 +73,7 @@ srid (SimulationRequest id _ _) = id
 -- expected to form an _Abelian_ group acting on a (except for v on
 -- which they error out).  Further, for any given v, (unincorporate v)
 -- and (incorporate v) are expected to be inverses.
-data SP m = forall a. SP
+data SP m = forall a. (Show a) => SP
     { requester :: SPRequester m a
     , log_d_req :: Maybe (a -> [Address] -> [SimulationRequest] -> Double)
     , outputter :: SPOutputter m a
@@ -105,7 +105,7 @@ do_unincR :: [Value] -> [SimulationRequest] -> SP m -> SP m
 do_unincR vs rs SP{..} = SP{ current = unincorporateR vs rs current, ..}
 
 instance Show (SP m) where
-    show _ = "A stochastic procedure"
+    show SP{current = s} = "A stochastic procedure with state " ++ show s
 
 data SPRequester m a = DeterministicR (a -> [Address] -> UniqueSource [SimulationRequest])
                      | RandomR (a -> [Address] -> UniqueSourceT m [SimulationRequest])
@@ -745,7 +745,8 @@ ppDefault _ (Just a) = pp a
 ppDefault d Nothing = text d
 
 instance Pretty (SPRecord m) where
-    pp SPRecord { requests = rs } = brackets $ sep $ map entry $ M.toList rs where
+    pp SPRecord { sp = SP{current = s}, requests = rs } = text (show s) <+> requests where
+      requests = brackets $ sep $ map entry $ M.toList rs
       entry (k,v) = pp k <> colon <> space <> pp v
 
 instance Pretty Value where
