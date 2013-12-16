@@ -238,14 +238,14 @@ conditional_and_coupled =
 --   enforcing detach/regen order symmetry?  At least on current
 --   examples?
 
--- Next subgoal: Test mem
-
 -- Potential goals
+-- - Test mem more?
 -- - Figure out better ways to assess whether inference is producing
 --   sensible results (graphical histograms, convergence metrics,
 --   comparisons against allegedly equivalent models, etc).
--- - Do MH inference with observations on some trivial programs
---   involving brush.  Is there anything here besides the
+--   - Move my exemplary examples into a fully automated test suite
+-- - Do more tests on the interaction between brush, collapsed state,
+--   mem, and observations.  Is there anything here besides the
 --   (observe (max (normal .) (normal .)) 0) can of bugs?
 -- - Massage the code until I can tutor Daniel in it
 -- - Understand the set of layers of abstraction of trace operations:
@@ -257,8 +257,6 @@ conditional_and_coupled =
 --   - Particle methods should be easy because traces are persistent
 
 -- Known bugs:
--- - mem_2 crashes with *** Exception: Forgetting response that isn't there
---   because I am doing something wrong with counting requests
 -- - self_select_2 (but not self_select_1) leaks (empty) SPRecords
 --   (presumably for the lambdas that v_if desugars into)
 
