@@ -86,13 +86,14 @@ compoundSP formals exp env = no_state_sp NoStateSP
       let r = SimulationRequest freshId exp $ Frame (M.fromList $ zip formals args) env
       return [r]
 
+-- It would be nice if these combinators admitted a nice way to pass
+-- down the name of the SP they are being used for, without having to
+-- repeat it all over its own definition.
 on_values :: ([Value] -> [Value] -> a) -> ([Node] -> [Node] -> a)
 on_values f ns1 ns2 = f vs1 vs2 where
     vs1 = map (fromJust "Argument node had no value" . valueOf) ns1
     vs2 = map (fromJust "Fulfilment node had no value" . valueOf) ns2
 
--- TODO Is there a clean way to pass down the name of the procedure
--- here, so it can be included in the error message?
 binary :: (a -> a -> r) -> [a] -> [b] -> r
 binary f [a1,a2] [] = f a1 a2
 binary _ [_,_] l = error $ "No requests expected " ++ (show $ length l) ++ " given."
