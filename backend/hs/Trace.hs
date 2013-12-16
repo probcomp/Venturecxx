@@ -274,13 +274,6 @@ makeLenses ''Trace
 empty :: Trace m
 empty = Trace M.empty S.empty M.empty M.empty uniqueSeed uniqueSeed
 
-chaseReferences :: Address -> Trace m -> Maybe Node
-chaseReferences a t = do
-  n <- t^.nodes.(at a)
-  chase n
-    where chase (Reference _ a) = chaseReferences a t
-          chase n = Just n
-
 fromValueAt :: Valuable b => Address -> Trace m -> Maybe b
 fromValueAt a t = (t^. nodes . at a) >>= valueOf >>= fromValue
 
