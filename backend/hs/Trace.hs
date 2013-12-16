@@ -284,10 +284,10 @@ chaseReferences a t = do
 operatorAddr :: Node -> Trace m -> Maybe SPAddress
 operatorAddr n t = do
   a <- opAddr n
-  chaseOperator a t
+  fromValueAt a t
 
-chaseOperator :: Address -> Trace m -> Maybe SPAddress
-chaseOperator a t = (t^. nodes . at a) >>= valueOf >>= fromValue
+fromValueAt :: Valuable b => Address -> Trace m -> Maybe b
+fromValueAt a t = (t^. nodes . at a) >>= valueOf >>= fromValue
 
 operatorRecord :: Node -> Trace m -> Maybe (SPRecord m)
 operatorRecord n t = operatorAddr n t >>= (\addr -> t ^. sprs . at addr)

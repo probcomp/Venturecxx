@@ -49,7 +49,7 @@ regenValue a = lift (do
       let v = fromJust "Regenerating value for a reference with non-regenerated referent" $ node' ^. value
       nodes . ix a . value .= Just v
     (Request _ outA opa ps) -> do
-      addr <- gets $ fromJust "Regenerating value for a request with no operator" . (chaseOperator opa)
+      addr <- gets $ fromJust "Regenerating value for a request with no operator" . (fromValueAt opa)
       reqs <- runRequester addr ps
       nodes . ix a . sim_reqs .= Just reqs
       resps <- evalRequests addr reqs
@@ -58,7 +58,7 @@ regenValue a = lift (do
         Nothing -> return ()
         (Just outA') -> responsesAt outA' .= resps
     (Output _ _ opa ps rs) -> do
-      addr <- gets $ fromJust "Regenerating value for an output with no operator" . (chaseOperator opa)
+      addr <- gets $ fromJust "Regenerating value for an output with no operator" . (fromValueAt opa)
       v <- runOutputter addr ps rs
       nodes . ix a . value .= Just v
       do_incorporate a)
