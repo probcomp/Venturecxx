@@ -19,9 +19,6 @@ data Scaffold = Scaffold { _drg :: O.Set Address
                          , _absorbers :: O.Set Address
                          , _dead_reqs :: [(SPAddress, [SRId])]
                          , _brush :: S.Set Address
-                         -- TODO If I don't keep track somewhere, I
-                         -- will leak SPRecords under detach and
-                         -- regen.
                          }
   deriving Show
 
