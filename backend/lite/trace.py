@@ -26,7 +26,6 @@ class Trace(object):
     self.aes = []
     self.families = {}
 
-  
   def registerAEKernel(self,node): self.aes.append(node)
   def unregisterAEKernel(self,node): del self.aes[self.aes.index(node)]
 
@@ -75,6 +74,33 @@ class Trace(object):
   def disconnectLookup(self,lookupNode): lookupNode.sourceNode.children.remove(lookupNode)
   def reconnectLookup(self,lookupNode): lookupNode.sourceNode.children.add(lookupNode)
 
+  #### Stuff that a particle trace would need to override for persistence
+  def valueAt(self,node): return node.value
+  def setValueAt(self,node,value): node.value = value
+  def groundValueAt(self,node): return node.groundValue()
+  def madeSPAt(self,node): return node.madeSP
+  def setMadeSPAt(self,node,sp): node.madeSP = sp
+  def setMadeSPAux(self,node,aux): node.madeSPAux = aux
+  def esrParentsAt(self,node): return node.esrParents
+  def parentsAt(self,node): return node.parents()
+  def childrenAt(self,node): return node.children
+  def pspAt(self,node): return node.psp()
+  def spAt(self,node): return node.sp()
+  def spauxAt(self,node): return node.spaux()
+  def argsAt(self,node): return node.args()
+  def unincorporateAt(self,node):
+    # TODO Should this really be groundValue and not value?
+    return node.psp().unincorporate(node.groundValue(), node.args())
+  def incorporateAt(self,node):
+    # TODO Should this really be groundValue and not value?
+    return node.psp().incorporate(node.groundValue(), node.args())
+  def logDensityAt(self,node,value):
+    return node.psp().logDensity(value,node.args())
+  def registerFamilyAt(self,node,esrId,esrParent):
+    node.spaux().registerFamily(esrId,esrParent)
+  def unregisterFamilyAt(self,node,esrId):
+    node.spaux().unregisterFamily(esrId)
+
   #### For kernels
   def samplePrincipalNode(self): return random.choice(self.rcs)
   def logDensityOfPrincipalNode(self,principalNode): return -1 * math.log(len(self.rcs))
@@ -82,7 +108,7 @@ class Trace(object):
   #### External interface to engine.py
   def eval(self,id,exp):
     assert not id in self.families
-    (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),OmegaDB(),{})
+    (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(self),OmegaDB(),{})
     
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
 
@@ -97,7 +123,7 @@ class Trace(object):
 
   def uneval(self,id):
     assert id in self.families
-    unevalFamily(self,self.families[id],Scaffold(),OmegaDB())
+    unevalFamily(self,self.families[id],Scaffold(self),OmegaDB())
     del self.families[id]
 
   def continuous_inference_status(self): return {"running" : False}

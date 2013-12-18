@@ -5,7 +5,8 @@ from spref import SPRef
 
 class Scaffold():
 
-  def __init__(self,principalNodes=[],useDeltaKernels=False):
+  def __init__(self,trace,principalNodes=[],useDeltaKernels=False):
+    self.trace = trace
     self.drg = set() # later becomes a map { node => regenCount }
     self.absorbing = set()
     self.aaa = set()
@@ -36,8 +37,9 @@ class Scaffold():
 
   def hasKernelFor(self,node): return node in self.kernels
   def getKernel(self,node): return self.kernels[node]
-  def hasChildInAorD(self,node): 
-    return node.children.intersection(self.drg) or node.children.intersection(self.absorbing)
+  def hasChildInAorD(self,node):
+    kids = self.trace.childrenAt(node)
+    return kids.intersection(self.drg) or kids.intersection(self.absorbing)
   
 
   def isAbsorbing(self,node): return node in self.absorbing
@@ -59,9 +61,9 @@ class Scaffold():
     self.absorbing.add(node)
 
   def esrReferenceCanAbsorb(self,node):
-    return isinstance(node.psp(),ESRRefOutputPSP) and \
+    return isinstance(self.trace.pspAt(node),ESRRefOutputPSP) and \
            not self.isResampling(node.requestNode) and \
-           not self.isResampling(node.esrParents[0])
+           not self.isResampling(self.trace.esrParentsAt(node)[0])
 
   def findPreliminaryBorder(self,principalNodes):
     q = [(pnode,True) for pnode in principalNodes]
@@ -71,8 +73,8 @@ class Scaffold():
       if self.isResampling(node): pass
       elif isinstance(node,LookupNode): self.addResamplingNode(q,node)
       elif self.isResampling(node.operatorNode): self.addResamplingNode(q,node)
-      elif node.psp().canAbsorb() and not isPrincipal: self.addAbsorbingNode(node)
-      elif node.psp().childrenCanAAA(): self.addAAANode(node)
+      elif self.trace.pspAt(node).canAbsorb() and not isPrincipal: self.addAbsorbingNode(node)
+      elif self.trace.pspAt(node).childrenCanAAA(): self.addAAANode(node)
       elif self.esrReferenceCanAbsorb(node): self.addAbsorbingNode(node)
       else: self.addResamplingNode(q,node)
 
@@ -87,7 +89,7 @@ class Scaffold():
   def disableRequests(self,node):
     if node in self.disabledRequests: return
     self.disabledRequests.add(node)
-    for esrParent in node.outputNode.esrParents:
+    for esrParent in self.trace.esrParentsAt(node.outputNode):
       if not esrParent in self.disableCounts: self.disableCounts[esrParent] = 0
       self.disableCounts[esrParent] += 1
       if self.disableCounts[esrParent] == esrParent.numRequests:
@@ -116,31 +118,33 @@ class Scaffold():
       if self.isAAA(node):
         self.drg[node] += 1
         self.registerBorder(node)
-        self.registerKernel(node,node.psp().getAAAKernel())
+        self.registerKernel(node,self.trace.pspAt(node).getAAAKernel())
       elif not self.hasChildInAorD(node):
-        self.drg[node] = len(node.children) + 1
+        self.drg[node] = len(self.trace.childrenAt(node)) + 1
         self.registerBorder(node)
       else:
-        self.drg[node] = len(node.children)
+        self.drg[node] = len(self.trace.childrenAt(node))
 
     if self.hasAAANodes():
       for node in self.absorbing.union(self.drg):
-        for parent in node.parents(): self.maybeIncrementAAARegenCount(parent)
+        for parent in self.trace.parentsAt(node): self.maybeIncrementAAARegenCount(parent)
       for node in self.brush: 
-        if isinstance(node,OutputNode): 
-          for esrParent in node.esrParents: self.maybeIncrementAAARegenCount(esrParent)
+        if isinstance(node,OutputNode):
+          for esrParent in self.trace.esrParesntsAt(node): self.maybeIncrementAAARegenCount(esrParent)
         elif isinstance(node,LookupNode): self.maybeIncrementAAARegenCount(node.sourceNode)
 
   def maybeIncrementAAARegenCount(self,node):
-    if isinstance(node.value,SPRef) and self.isAAA(node.value.makerNode): self.drg[node.value.makerNode] += 1
+    value = self.trace.valueAt(node)
+    if isinstance(value,SPRef) and self.isAAA(value.makerNode): self.drg[value.makerNode] += 1
 
   def loadDefaultKernels(self,useDeltaKernels):
     for node in self.drg:
       if isinstance(node,ApplicationNode) and not self.isAAA(node) and not self.isResampling(node.operatorNode):
-        if useDeltaKernels and node.psp().hasDeltaKernel(): 
-          self.registerKernel(node,node.psp().deltaKernel())
-        elif node.psp().hasSimulationKernel():
-          self.registerKernel(node,node.psp().simulationKernel())
+        psp = self.trace.pspAt(node)
+        if useDeltaKernels and psp.hasDeltaKernel():
+          self.registerKernel(node,psp.deltaKernel())
+        elif psp.hasSimulationKernel():
+          self.registerKernel(node,psp.simulationKernel())
 
   def decrementRegenCount(self,node):
     assert node in self.drg
@@ -153,9 +157,6 @@ class Scaffold():
   def regenCount(self,node):
     assert node in self.drg
     return self.drg[node]
-
-  def hasChildInAOrD(self,node): 
-    return node.children.intersection(self.absorbing) or node.children.intersection(self.drg)
 
   def show(self):
     print "---Scaffold---"

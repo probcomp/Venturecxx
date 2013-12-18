@@ -17,39 +17,40 @@ def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
 def constrain(trace,node,value):
   if isinstance(node,LookupNode): return constrain(trace,node.sourceNode,value)
   assert isinstance(node,OutputNode)
-  if isinstance(node.psp(),ESRRefOutputPSP): return constrain(trace,node.esrParents[0],value)
-  node.psp().unincorporate(node.value,node.args())
-  weight = node.psp().logDensity(value,node.args())
-  node.value = value
-  node.psp().incorporate(value,node.args())
+  if isinstance(trace.pspAt(node),ESRRefOutputPSP): return constrain(trace,trace.esrParentsAt(node)[0],value)
+  trace.unincorporateAt(node)
+  weight = trace.logDensityAt(node,value)
+  trace.setValueAt(node,value)
+  trace.incorporateAt(node)
   trace.unregisterRandomChoice(node)
   return weight
 
 def attach(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
-  weight += node.psp().logDensity(node.groundValue(),node.args())
-  node.psp().incorporate(node.groundValue(),node.args())
+  weight += trace.logDensityAt(node,trace.groundValueAt(node))
+  trace.incorporateAt(node)
   return weight
 
 def regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
-  for parent in node.parents(): weight += regen(trace,parent,scaffold,shouldRestore,omegaDB,gradients)
+  for parent in trace.parentsAt(node): weight += regen(trace,parent,scaffold,shouldRestore,omegaDB,gradients)
   return weight
-
 
 def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
   if scaffold.isResampling(node):
     if scaffold.regenCount(node) == 0:
       weight += regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
-      if isinstance(node,LookupNode): node.value = node.sourceNode.value
+      if isinstance(node,LookupNode):
+        trace.setValueAt(node, trace.valueAt(node.sourceNode))
       else: 
         weight += applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients)
         if isinstance(node,RequestNode): weight += evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients)
     scaffold.incrementRegenCount(node)
 
-  if isinstance(node.value,SPRef) and node.value.makerNode != node and scaffold.isAAA(node.value.makerNode):
-    weight += regen(trace,node.value.makerNode,scaffold,shouldRestore,omegaDB,gradients)
+  value = trace.valueAt(node)
+  if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
+    weight += regen(trace,value.makerNode,scaffold,shouldRestore,omegaDB,gradients)
 
   return weight
 
@@ -80,12 +81,12 @@ def apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
   return weight
 
 def processMadeSP(trace,node,isAAA):
-  assert isinstance(node.value,SP)
-  sp = node.value
-  node.madeSP = sp
-  node.value = SPRef(node)
+  sp = trace.valueAt(node)
+  assert isinstance(sp,SP)
+  trace.setMadeSPAt(node,sp)
+  trace.setValueAt(node,SPRef(node))
   if not isAAA:
-    node.madeSPAux = sp.constructSPAux()
+    trace.setMadeSPAux(node, sp.constructSPAux())
     if sp.hasAEKernel(): trace.registerAEKernel(node)
 
 def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
@@ -97,48 +98,48 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   if shouldRestore: newValue = oldValue
   elif scaffold.hasKernelFor(node):
     k = scaffold.getKernel(node)
-    newValue = k.simulate(trace,oldValue,node.args())
-    weight += k.weight(trace,newValue,oldValue,node.args())
+    newValue = k.simulate(trace,oldValue,trace.argsAt(node))
+    weight += k.weight(trace,newValue,oldValue,trace.argsAt(node))
     if gradients and k.isVariationalKernel(): 
-      gradients[node] = k.gradientOfLogDensity(newValue,node.args()) 
+      gradients[node] = k.gradientOfLogDensity(newValue,trace.argsAt(node))
   else: 
     # if we simulate from the prior, the weight is 0
-    newValue = node.psp().simulate(node.args())
+    newValue = trace.pspAt(node).simulate(trace.argsAt(node))
 
-  node.psp().incorporate(newValue,node.args())
-  node.value = newValue
+  trace.setValueAt(node,newValue)
+  trace.incorporateAt(node)
 
-  if isinstance(node.value,SP): processMadeSP(trace,node,scaffold.isAAA(node))
-  if node.psp().isRandom(): trace.registerRandomChoice(node)
+  if isinstance(newValue,SP): processMadeSP(trace,node,scaffold.isAAA(node))
+  if trace.pspAt(node).isRandom(): trace.registerRandomChoice(node)
   return weight
 
 def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   assert isinstance(node,RequestNode)
   weight = 0;
-  request = node.value
+  request = trace.valueAt(node)
 
   # first evaluate exposed simulation requests (ESRs)
   for esr in request.esrs:
-    if not node.spaux().containsFamily(esr.id):
+    if not trace.spauxAt(node).containsFamily(esr.id):
       if shouldRestore: 
-        esrParent = omegaDB.getESRParent(node.sp(),esr.id)
+        esrParent = omegaDB.getESRParent(trace.spAt(node),esr.id)
         weight += restore(trace,esrParent,scaffold,omegaDB,gradients)
       else:
         (w,esrParent) = evalFamily(trace,esr.exp,esr.env,scaffold,omegaDB,gradients)
         weight += w
-      node.spaux().registerFamily(esr.id,esrParent)
-    else: 
-      esrParent = node.spaux().getFamily(esr.id)
+      trace.registerFamilyAt(node,esr.id,esrParent)
+    else:
+      esrParent = trace.spauxAt(node).getFamily(esr.id)
       weight += regen(trace,esrParent,scaffold,shouldRestore,omegaDB,gradients)
-    esrParent = node.spaux().getFamily(esr.id)
+    esrParent = trace.spauxAt(node).getFamily(esr.id)
     if esr.block: trace.registerBlock(esr.block,esr.subblock,esrParent)
     trace.addESREdge(esrParent,node.outputNode)
 
   # next evaluate latent simulation requests (LSRs)
   for lsr in request.lsrs:
-    if omegaDB.hasLatentDB(node.sp()): latentDB = omegaDB.getLatentDB(node.sp())
+    if omegaDB.hasLatentDB(trace.spAt(node)): latentDB = omegaDB.getLatentDB(trace.apAt(node))
     else: latentDB = None
-    weight += node.sp().simulateLatents(node.spaux(),lsr,shouldRestore,latentDB)
+    weight += trace.spAt(node).simulateLatents(trace.spauxAt(node),lsr,shouldRestore,latentDB)
   
   return weight;
 
@@ -146,7 +147,7 @@ def restore(trace,node,scaffold,omegaDB,gradients):
   if isinstance(node,ConstantNode): return 0
   if isinstance(node,LookupNode):
     weight = regen(trace,node.sourceNode,scaffold,True,omegaDB,gradients)
-    node.value = node.sourceNode.value
+    trace.setValueAt(node,trace.valueAt(node.sourceNode))
     trace.reconnectLookup(node)
     return weight
   else: # node is output node
