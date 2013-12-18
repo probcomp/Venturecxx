@@ -117,30 +117,30 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   assert isinstance(node,RequestNode)
   weight = 0;
-  request = node.value
+  request = trace.valueAt(node)
 
   # first evaluate exposed simulation requests (ESRs)
   for esr in request.esrs:
-    if not node.spaux().containsFamily(esr.id):
+    if not trace.spauxAt(node).containsFamily(esr.id):
       if shouldRestore: 
-        esrParent = omegaDB.getESRParent(node.sp(),esr.id)
+        esrParent = omegaDB.getESRParent(trace.spAt(node),esr.id)
         weight += restore(trace,esrParent,scaffold,omegaDB,gradients)
       else:
         (w,esrParent) = evalFamily(trace,esr.exp,esr.env,scaffold,omegaDB,gradients)
         weight += w
-      node.spaux().registerFamily(esr.id,esrParent)
-    else: 
-      esrParent = node.spaux().getFamily(esr.id)
+      trace.registerFamilyAt(node,esr.id,esrParent)
+    else:
+      esrParent = trace.spauxAt(node).getFamily(esr.id)
       weight += regen(trace,esrParent,scaffold,shouldRestore,omegaDB,gradients)
-    esrParent = node.spaux().getFamily(esr.id)
+    esrParent = trace.spauxAt(node).getFamily(esr.id)
     if esr.block: trace.registerBlock(esr.block,esr.subblock,esrParent)
     trace.addESREdge(esrParent,node.outputNode)
 
   # next evaluate latent simulation requests (LSRs)
   for lsr in request.lsrs:
-    if omegaDB.hasLatentDB(node.sp()): latentDB = omegaDB.getLatentDB(node.sp())
+    if omegaDB.hasLatentDB(trace.spAt(node)): latentDB = omegaDB.getLatentDB(trace.apAt(node))
     else: latentDB = None
-    weight += node.sp().simulateLatents(node.spaux(),lsr,shouldRestore,latentDB)
+    weight += trace.spAt(node).simulateLatents(trace.spauxAt(node),lsr,shouldRestore,latentDB)
   
   return weight;
 
@@ -148,7 +148,7 @@ def restore(trace,node,scaffold,omegaDB,gradients):
   if isinstance(node,ConstantNode): return 0
   if isinstance(node,LookupNode):
     weight = regen(trace,node.sourceNode,scaffold,True,omegaDB,gradients)
-    node.value = node.sourceNode.value
+    trace.setValueAt(node,trace.valueAt(node.sourceNode))
     trace.reconnectLookup(node)
     return weight
   else: # node is output node

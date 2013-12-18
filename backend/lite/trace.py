@@ -80,6 +80,8 @@ class Trace(object):
   def groundValueAt(self,node): return node.groundValue()
   def esrParentsAt(self,node): return node.esrParents
   def pspAt(self,node): return node.psp()
+  def spAt(self,node): return node.sp()
+  def spauxAt(self,node): return node.spaux()
   def argsAt(self,node): return node.args()
   def unincorporateAt(self,node):
     # TODO Should this really be groundValue and not value?
@@ -89,6 +91,8 @@ class Trace(object):
     return node.psp().incorporate(node.groundValue(), node.args())
   def logDensityAt(self,node,value):
     return node.psp().logDensity(value,node.args())
+  def registerFamilyAt(self,node,esrId,esrParent):
+    node.spaux().registerFamily(esrId,esrParent)
 
   #### For kernels
   def samplePrincipalNode(self): return random.choice(self.rcs)
