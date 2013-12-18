@@ -59,7 +59,7 @@ class MixMHGKernel(GKernel):
 class OutermostMixMHGKernel(MixMHGKernel):
   def sampleIndex(self): return self.trace.samplePrincipalNode()
   def logDensityOfIndex(self,index): return self.trace.logDensityOfPrincipalNode(index)
-  def processIndex(self,index): return (Scaffold([index]),index)
+  def processIndex(self,index): return (Scaffold(self.trace,[index]),index)
 
 class DetachAndRegenGKernel(GKernel):
   def loadParameters(self,params): self.scaffold = params[0]
