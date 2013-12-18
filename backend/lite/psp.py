@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from lkernel import DefaultAAALKernel,DefaultVariationalLKernel
 from request import Request
 
 
@@ -13,10 +14,16 @@ class PSP(object):
   def enumerate(self,args): return []
   def isRandom(self): return False
   def canAbsorb(self): return False
+
   def childrenCanAAA(self): return False
+  def getAAALKernel(self): return DefaultAAALKernel(self)
+
   def makesHSRs(self): return False
   def canEnumerate(self): return False
-  def hasVariationalKernel(self): return False
+
+  def hasVariationalLKernel(self): return False
+  def getVariationalLKernel(self,trace,node): return DefaultVariationalLKernel(trace,self,node)
+
   def hasSimulationKernel(self): return False
   def hasDeltaKernel(self): return False
 

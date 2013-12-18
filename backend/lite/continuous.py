@@ -1,18 +1,23 @@
 import scipy.stats
+import math
 
 from psp import PSP,RandomPSP
 
 class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def normalSample(self,mu,sigma): return scipy.stats.norm.rvs(mu,sigma)
-  def normalLogDensity(self,x,mu,sigma): return scipy.stats.norm.logpdf(x,mu,sigma)
+  def simulateNumeric(self,params): return scipy.stats.norm.rvs(*params)
+  def logDensityNumeric(self,x,params): return scipy.stats.norm.logpdf(x,*params)
     
-  def simulate(self,args):
-    (mu,sigma) = args.operandValues[0:2]
-    return self.normalSample(mu,sigma)
+  def simulate(self,args): return self.simulateNumeric(args.operandValues)
+  def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues) 
 
-  def logDensity(self,x,args):
-    (mu,sigma) = args.operandValues[0:2]
-    ld = self.normalLogDensity(x,mu,sigma)
-#    print "normal.ld(%d,%d,%d) = %d" % (x,mu,sigma,ld)
-    return ld
+  def hasVariationalLKernel(self): return True
+  def getParameterScopes(self): return ["REAL","POSITIVE_REAL"]
+
+  def gradientOfLogDensity(self,x,params):
+    mu = params[0]
+    sigma = params[1]
+    
+    gradMu = (x - mu) / (math.pow(sigma,2))
+    gradSigma = (math.pow(x - mu,2) - math.pow(sigma,2)) / math.pow(sigma,3)
+    return [gradMu,gradSigma]

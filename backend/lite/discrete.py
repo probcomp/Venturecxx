@@ -4,7 +4,7 @@ import scipy
 from utils import sampleCategorical, normalizeList
 from psp import PSP, NullRequestPSP, RandomPSP
 from sp import SP
-from lkernel import LKernel, DefaultAAALKernel
+from lkernel import LKernel
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args): return random.random() < args.operandValues[0]
@@ -27,7 +27,7 @@ class CategoricalOutputPSP(RandomPSP):
 
 class MakerCBetaBernoulliOutputPSP(PSP):
   def childrenCanAAA(self): return True
-  def getAAAKernel(self): return DefaultAAALKernel(self)
+
   def simulate(self,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
@@ -81,7 +81,7 @@ class CBetaBernoulliOutputPSP(RandomPSP):
 
 class MakerUBetaBernoulliOutputPSP(RandomPSP):
   def childrenCanAAA(self): return True
-  def getAAAKernel(self): return UBetaBernoulliAAALKernel()
+  def getAAALKernel(self): return UBetaBernoulliAAALKernel()
 
   def simulate(self,args):
     alpha = args.operandValues[0]

@@ -6,7 +6,7 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, teardownMadeSP, unevalFamily
 from spref import SPRef
 from scaffold import Scaffold
-from infer import MHInfer
+from infer import MHInfer,MeanfieldInfer
 import random
 from omegadb import OmegaDB
 
@@ -101,6 +101,10 @@ class Trace(object):
   def unregisterFamilyAt(self,node,esrId):
     node.spaux().unregisterFamily(esrId)
 
+  def isConstrainedAt(self,node):
+    # TODO keep track of ccs explicitly
+    return self.pspAt(node).isRandom() and node not in self.rcs
+
   #### For kernels
   def samplePrincipalNode(self): return random.choice(self.rcs)
   def logDensityOfPrincipalNode(self,principalNode): return -1 * math.log(len(self.rcs))
@@ -129,11 +133,14 @@ class Trace(object):
   def continuous_inference_status(self): return {"running" : False}
 
   def infer(self,params): 
-    if not params["kernel"] == "mh": raise Exception("INFER (%s) MH is implemented" % params["kernel"])
     if params["use_global_scaffold"]: raise Exception("INFER global scaffold not yet implemented")
 
-    for n in range(params["transitions"]): MHInfer(self)
-    for node in self.aes: node.madeSP.AEInfer(node.madeSPAux)
+    for n in range(params["transitions"]): 
+      if params["kernel"] == "mh": MHInfer(self)
+      elif params["kernel"] == "meanfield": MeanfieldInfer(self,10,0.0001)
+      else: raise Exception("INFER (%s) MH is implemented" % params["kernel"])
+
+      for node in self.aes: node.madeSP.AEInfer(node.madeSPAux)
 
   #### Helpers (shouldn't be class methods)
 
