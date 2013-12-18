@@ -6,13 +6,13 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, teardownMadeSP, unevalFamily
 from spref import SPRef
 from scaffold import Scaffold
-import infer
+from infer import MHInfer
 import random
 from omegadb import OmegaDB
 
 class Trace(object):
   def __init__(self):
-    self.gkernels = { ("mh",False) : infer.OutermostMixMHGKernel(self,infer.DetachAndRegenGKernel(self)) }
+
     self.globalEnv = Env()
     for name,val in builtInValues().iteritems():
       self.globalEnv.addBinding(name,ConstantNode(val))
@@ -105,9 +105,8 @@ class Trace(object):
   def infer(self,params): 
     if not params["kernel"] == "mh": raise Exception("INFER (%s) MH is implemented" % params["kernel"])
     if params["use_global_scaffold"]: raise Exception("INFER global scaffold not yet implemented")
-    assert (params["kernel"],params["use_global_scaffold"]) in self.gkernels
-    gkernel = self.gkernels[(params["kernel"],params["use_global_scaffold"])]
-    gkernel.infer(params["transitions"])
+
+    for n in range(params["transitions"]): MHInfer(self)
     for node in self.aes: node.madeSP.AEInfer(node.madeSPAux)
 
   #### Helpers (shouldn't be class methods)

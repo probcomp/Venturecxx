@@ -82,6 +82,7 @@ def runLiteTests(N):
   testLazyHMM1(N)
   testLazyHMMSP1(N)
   testAAA(N)
+  testOuterMix1(N)
   
 def testAAA(N):
   testMakeBetaBernoulli("make_beta_bernoulli", N)
@@ -245,6 +246,20 @@ def testMHNormal1(N):
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestMHNormal1---"
   print "(23.9," + str(mean) + ")"
+
+def testOuterMix1(N):
+  sivm = SIVM()
+  sivm.predict("""
+(branch (bernoulli 0.5) 
+  (quote (branch (bernoulli 0.5) (quote 2) (quote 3)))
+  (quote 1))
+""")
+
+  predictions = loggingInfer(sivm,1,N)
+  ps = [.5, .25,.25]
+  eps = normalizeList(countPredictions(predictions, [1, 2, 3]))
+  printTest("TestOuterMix1",ps,eps)
+
 
 def testStudentT0(N):
   # Modeled on testMHNormal0, but I do not know what the answer is
@@ -411,19 +426,6 @@ def testMHHMM1(N):
   print "---TestMHHMM1---"
   print "(4.3ish," + str(mean) + ")"
 
-def testOuterMix1(N):
-  sivm = SIVM()
-  sivm.predict("""
-(branch (bernoulli 0.5) 
-  (lambda ()
-    (branch (bernoulli 0.5) (lambda () 2) (lambda () 3)))
-  (lambda () 1))
-""")
-
-  predictions = loggingInfer(sivm,1,N)
-  ps = [.5, .25,.25]
-  eps = normalizeList(countPredictions(predictions, [1, 2, 3]))
-  printTest("TestOuterMix1",ps,eps)
 
 
 def testMakeSymDirMult1(N):
