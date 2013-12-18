@@ -158,10 +158,6 @@ class Scaffold():
     assert node in self.drg
     return self.drg[node]
 
-  def hasChildInAOrD(self,node):
-    kids = self.trace.childrenAt(node)
-    return kids.intersection(self.absorbing) or kids.intersection(self.drg)
-
   def show(self):
     print "---Scaffold---"
     print "drg: " + str(self.drg)
