@@ -17,7 +17,7 @@ def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
 def constrain(trace,node,value):
   if isinstance(node,LookupNode): return constrain(trace,node.sourceNode,value)
   assert isinstance(node,OutputNode)
-  if isinstance(node.psp(),ESRRefOutputPSP): return constrain(trace,node.esrParents[0],value)
+  if isinstance(trace.pspAt(node),ESRRefOutputPSP): return constrain(trace,trace.esrParentsAt(node)[0],value)
   trace.unincorporateAt(node)
   weight = trace.logDensityAt(node,value)
   trace.setValueAt(node,value)

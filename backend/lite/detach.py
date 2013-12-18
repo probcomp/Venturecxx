@@ -19,19 +19,19 @@ def detachAndExtract(trace,border,scaffold):
 def unconstrain(trace,node):
   if isinstance(node,LookupNode): return unconstrain(trace,node.sourceNode)
   assert isinstance(node,OutputNode)
-  if isinstance(node.psp(),ESRRefOutputPSP): return unconstrain(trace,node.esrParents[0])
+  if isinstance(trace.pspAt(node),ESRRefOutputPSP): return unconstrain(trace,trace.esrParentsAt(node)[0])
 
-  if node.psp().isRandom(): trace.registerRandomChoice(node)
-  node.psp().unincorporate(node.value,node.args())
-  weight = node.psp().logDensity(node.value,node.args())
-  node.psp().incorporate(node.value,node.args())
+  if trace.pspAt(node).isRandom(): trace.registerRandomChoice(node)
+  trace.unincorporateAt(node)
+  weight = trace.logDensityAt(node,trace.valueAt(node))
+  trace.incorporateAt(node)
   return weight
 
 def detach(trace,node,scaffold,omegaDB):
   # we need to pass groundValue here in case the return value is an SP
   # in which case the node would only contain an SPRef
-  node.psp().unincorporate(node.groundValue(),node.args())
-  weight = node.psp().logDensity(node.groundValue(),node.args())
+  trace.unincorporateAt(node)
+  weight = trace.logDensityAt(node,trace.groundValueAt(node))
   weight += extractParents(trace,node,scaffold,omegaDB)
   return weight
 
