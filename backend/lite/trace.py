@@ -77,6 +77,10 @@ class Trace(object):
   def reconnectLookup(self,lookupNode):
     self.addChildAt(lookupNode.sourceNode,lookupNode)
 
+  def groundValueAt(self,node):
+    value = self.valueAt(node)
+    if isinstance(value,SPRef): return self.madeSPAt(value.makerNode)
+    else: return value
   def argsAt(self,node): return Args(self,node)
   def unincorporateAt(self,node):
     # TODO Should this really be groundValue and not value?
@@ -90,7 +94,6 @@ class Trace(object):
   #### Stuff that a particle trace would need to override for persistence
   def valueAt(self,node): return node.Tvalue
   def setValueAt(self,node,value): node.Tvalue = value
-  def groundValueAt(self,node): return node.TgroundValue()
   def madeSPAt(self,node): return node.TmadeSP
   def setMadeSPAt(self,node,sp): node.TmadeSP = sp
   def madeSPAuxAt(self,node): return node.TmadeSPAux

@@ -16,10 +16,6 @@ class Node(object):
     self.observedValue = val
     self.isObservation = True
 
-  def TgroundValue(self):
-    if isinstance(self.Tvalue,SPRef): return self.Tvalue.makerNode.TmadeSP
-    else: return self.Tvalue
-
 class ConstantNode(Node):
   def __init__(self,value):
     super(ConstantNode,self).__init__()
