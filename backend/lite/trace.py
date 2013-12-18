@@ -100,6 +100,7 @@ class Trace(object):
     node.spaux().registerFamily(esrId,esrParent)
   def unregisterFamilyAt(self,node,esrId):
     node.spaux().unregisterFamily(esrId)
+  def numRequestsAt(self,node): return node.numRequests
 
   #### For kernels
   def samplePrincipalNode(self): return random.choice(self.rcs)

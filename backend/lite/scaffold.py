@@ -92,7 +92,7 @@ class Scaffold():
     for esrParent in self.trace.esrParentsAt(node.outputNode):
       if not esrParent in self.disableCounts: self.disableCounts[esrParent] = 0
       self.disableCounts[esrParent] += 1
-      if self.disableCounts[esrParent] == esrParent.numRequests:
+      if self.disableCounts[esrParent] == self.trace.numRequestsAt(esrParent):
         self.disableEval(esrParent)
 
   def registerBrush(self,node): self.brush.add(node)

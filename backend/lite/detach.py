@@ -111,7 +111,7 @@ def unevalRequests(trace,node,scaffold,omegaDB):
   for esr in reversed(request.esrs):
     esrParent = trace.popLastESRParent(node.outputNode)
     if esr.block: trace.unregisterBlock(esr.block,esr.subblock,esrParent)
-    if esrParent.numRequests == 0:
+    if trace.numRequestsAt(esrParent) == 0:
       trace.unregisterFamilyAt(node,esr.id)
       omegaDB.registerSPFamily(trace.spAt(node),esr.id,esrParent)
       weight += unevalFamily(trace,esrParent,scaffold,omegaDB)
