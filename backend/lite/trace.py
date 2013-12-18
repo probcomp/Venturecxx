@@ -135,9 +135,10 @@ class Trace(object):
   def infer(self,params): 
     if params["use_global_scaffold"]: raise Exception("INFER global scaffold not yet implemented")
 
-    for n in range(params["transitions"]): 
-      if params["kernel"] == "mh": MHInfer(self)
-      elif params["kernel"] == "meanfield": MeanfieldInfer(self,10,0.0001)
+    for n in range(params["transitions"]):
+      pnode = self.samplePrincipalNode()
+      if params["kernel"] == "mh": MHInfer(self,pnode)
+      elif params["kernel"] == "meanfield": MeanfieldInfer(self,pnode,10,0.0001)
       else: raise Exception("INFER (%s) MH is implemented" % params["kernel"])
 
       for node in self.aes: node.madeSP.AEInfer(node.madeSPAux)

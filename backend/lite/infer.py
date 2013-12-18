@@ -8,8 +8,7 @@ from scaffold import Scaffold
 from node import ApplicationNode, OutputNode
 from lkernel import VariationalLKernel
 
-def MHInfer(trace):
-  pnode = trace.samplePrincipalNode()
+def MHInfer(trace,pnode):
   rhoMix = trace.logDensityOfPrincipalNode(pnode)
   scaffold = Scaffold(trace,[pnode])
   rhoWeight,rhoDB = detachAndExtract(trace,scaffold.border,scaffold)
@@ -32,11 +31,10 @@ def registerVariationalLKernels(trace,scaffold):
       hasVariational = True
   return hasVariational
 
-def MeanfieldInfer(trace,numIters,stepSize):
-  pnode = trace.samplePrincipalNode()
+def MeanfieldInfer(trace,pnode,numIters,stepSize):
   rhoMix = trace.logDensityOfPrincipalNode(pnode)
   scaffold = Scaffold(trace,[pnode])
-  if not registerVariationalLKernels(trace,scaffold): return MHInfer(trace)
+  if not registerVariationalLKernels(trace,scaffold): return MHInfer(trace,pnode)
   _,rhoDB = detachAndExtract(trace,scaffold.border,scaffold)
   assertTorus(scaffold)
 
