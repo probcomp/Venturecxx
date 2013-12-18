@@ -18,6 +18,7 @@ def detachAndExtract(trace,border,scaffold):
 
 def unconstrain(trace,node):
   if isinstance(node,LookupNode): return unconstrain(trace,node.sourceNode)
+  assert isinstance(node,OutputNode)
   if isinstance(node.psp(),ESRRefOutputPSP): return unconstrain(trace,node.esrParents[0])
 
   if node.psp().isRandom(): trace.registerRandomChoice(node)
