@@ -39,7 +39,6 @@ class LookupNode(Node):
 class ApplicationNode(Node):
   __metaclass__ = ABCMeta
 
-  def Targs(self): return Args(self)
   def TspRef(self):
     if not isinstance(self.operatorNode.Tvalue,SPRef):
       print "spRef not an spRef"
@@ -80,17 +79,17 @@ class OutputNode(ApplicationNode):
   def Tparents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode] + self.TesrParents
 
 class Args():
-  def __init__(self,node):
+  def __init__(self,trace,node):
     self.node = node
-    self.operandValues = [operandNode.Tvalue for operandNode in node.operandNodes]
+    self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]
     self.operandNodes = node.operandNodes
 
     if isinstance(node,OutputNode):
-      self.requestValue = node.requestNode.Tvalue
-      self.esrValues = [esrParent.Tvalue for esrParent in node.TesrParents]
-      self.esrNodes = node.TesrParents
-      self.madeSPAux = node.TmadeSPAux
+      self.requestValue = trace.valueAt(node.requestNode)
+      self.esrValues = [trace.valueAt(esrParent) for esrParent in trace.esrParentsAt(node)]
+      self.esrNodes = trace.esrParentsAt(node)
+      self.madeSPAux = trace.madeSPAuxAt(node)
       self.isOutput = True
 
-    self.spaux = node.Tspaux()
+    self.spaux = trace.spauxAt(node)
     self.env = node.env
