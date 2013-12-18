@@ -33,9 +33,8 @@ def attach(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
 def regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
-  for parent in node.parents(): weight += regen(trace,parent,scaffold,shouldRestore,omegaDB,gradients)
+  for parent in trace.parentsAt(node): weight += regen(trace,parent,scaffold,shouldRestore,omegaDB,gradients)
   return weight
-
 
 def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
@@ -82,12 +81,12 @@ def apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
   return weight
 
 def processMadeSP(trace,node,isAAA):
-  assert isinstance(node.value,SP)
-  sp = node.value
-  node.madeSP = sp
-  node.value = SPRef(node)
+  sp = trace.valueAt(node)
+  assert isinstance(sp,SP)
+  trace.setMadeSPAt(node,sp)
+  trace.setValueAt(node,SPRef(node))
   if not isAAA:
-    node.madeSPAux = sp.constructSPAux()
+    trace.setMadeSPAux(node, sp.constructSPAux())
     if sp.hasAEKernel(): trace.registerAEKernel(node)
 
 def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):

@@ -78,7 +78,11 @@ class Trace(object):
   def valueAt(self,node): return node.value
   def setValueAt(self,node,value): node.value = value
   def groundValueAt(self,node): return node.groundValue()
+  def madeSPAt(self,node): return node.madeSP
+  def setMadeSPAt(self,node,sp): node.madeSP = sp
+  def setMadeSPAux(self,node,aux): node.madeSPAux = aux
   def esrParentsAt(self,node): return node.esrParents
+  def parentsAt(self,node): return node.parents()
   def pspAt(self,node): return node.psp()
   def spAt(self,node): return node.sp()
   def spauxAt(self,node): return node.spaux()
@@ -93,6 +97,8 @@ class Trace(object):
     return node.psp().logDensity(value,node.args())
   def registerFamilyAt(self,node,esrId,esrParent):
     node.spaux().registerFamily(esrId,esrParent)
+  def unregisterFamilyAt(self,node,esrId):
+    node.spaux().unregisterFamily(esrId)
 
   #### For kernels
   def samplePrincipalNode(self): return random.choice(self.rcs)
