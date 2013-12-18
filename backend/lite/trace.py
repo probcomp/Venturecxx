@@ -26,7 +26,6 @@ class Trace(object):
     self.aes = []
     self.families = {}
 
-  
   def registerAEKernel(self,node): self.aes.append(node)
   def unregisterAEKernel(self,node): del self.aes[self.aes.index(node)]
 
@@ -74,6 +73,19 @@ class Trace(object):
   
   def disconnectLookup(self,lookupNode): lookupNode.sourceNode.children.remove(lookupNode)
   def reconnectLookup(self,lookupNode): lookupNode.sourceNode.children.add(lookupNode)
+
+  #### Stuff that a particle trace would need to override for persistence
+  def valueAt(self,node): node.value
+  def setValueAt(self,node,value): node.value = value
+  def esrParentsAt(self,node): node.esrParents
+  def pspAt(self,node): node.psp()
+  def argsAt(self,node): node.args()
+  def unincorporateAt(self,node):
+    node.psp().unincorporate(node.value, node.args())
+  def incorporateAt(self,node):
+    node.psp().incorporate(node.value, node.args())
+  def logDensityAt(self,node,value):
+    node.psp().logDensity(value,node.args())
 
   #### For kernels
   def samplePrincipalNode(self): return random.choice(self.rcs)

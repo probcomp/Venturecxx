@@ -18,10 +18,10 @@ def constrain(trace,node,value):
   if isinstance(node,LookupNode): return constrain(trace,node.sourceNode,value)
   assert isinstance(node,OutputNode)
   if isinstance(node.psp(),ESRRefOutputPSP): return constrain(trace,node.esrParents[0],value)
-  node.psp().unincorporate(node.value,node.args())
-  weight = node.psp().logDensity(value,node.args())
-  node.value = value
-  node.psp().incorporate(value,node.args())
+  trace.unincorporateAt(node)
+  weight = trace.logDensityAt(node,value)
+  trace.setValueAt(node,value)
+  trace.incorporateAt(node)
   trace.unregisterRandomChoice(node)
   return weight
 
