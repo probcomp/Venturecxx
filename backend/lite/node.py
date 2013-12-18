@@ -32,7 +32,6 @@ class LookupNode(Node):
   def __init__(self,sourceNode):
     super(LookupNode,self).__init__()
     self.sourceNode = sourceNode
-    self.Tvalue = sourceNode.Tvalue # TODO This assignment is wrong for particles
 
   def Tparents(self): return [self.sourceNode]
 
