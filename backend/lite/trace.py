@@ -75,17 +75,20 @@ class Trace(object):
   def reconnectLookup(self,lookupNode): lookupNode.sourceNode.children.add(lookupNode)
 
   #### Stuff that a particle trace would need to override for persistence
-  def valueAt(self,node): node.value
+  def valueAt(self,node): return node.value
   def setValueAt(self,node,value): node.value = value
-  def esrParentsAt(self,node): node.esrParents
-  def pspAt(self,node): node.psp()
-  def argsAt(self,node): node.args()
+  def groundValueAt(self,node): return node.groundValue()
+  def esrParentsAt(self,node): return node.esrParents
+  def pspAt(self,node): return node.psp()
+  def argsAt(self,node): return node.args()
   def unincorporateAt(self,node):
-    node.psp().unincorporate(node.value, node.args())
+    # TODO Should this really be groundValue and not value?
+    return node.psp().unincorporate(node.groundValue(), node.args())
   def incorporateAt(self,node):
-    node.psp().incorporate(node.value, node.args())
+    # TODO Should this really be groundValue and not value?
+    return node.psp().incorporate(node.groundValue(), node.args())
   def logDensityAt(self,node,value):
-    node.psp().logDensity(value,node.args())
+    return node.psp().logDensity(value,node.args())
 
   #### For kernels
   def samplePrincipalNode(self): return random.choice(self.rcs)
