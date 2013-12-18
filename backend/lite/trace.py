@@ -40,7 +40,7 @@ class Trace(object):
   def createConstantNode(self,val): return ConstantNode(val)
   def createLookupNode(self,sourceNode): 
     lookupNode = LookupNode(sourceNode)
-    self.setValueAt(lookupNode,self.getValueAt(sourceNode))
+    self.setValueAt(lookupNode,self.valueAt(sourceNode))
     self.addChildAt(sourceNode,lookupNode)
     return lookupNode
 
