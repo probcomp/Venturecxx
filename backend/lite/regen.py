@@ -86,7 +86,7 @@ def processMadeSP(trace,node,isAAA):
   trace.setMadeSPAt(node,sp)
   trace.setValueAt(node,SPRef(node))
   if not isAAA:
-    trace.setMadeSPAux(node, sp.constructSPAux())
+    trace.setMadeSPAuxAt(node, sp.constructSPAux())
     if sp.hasAEKernel(): trace.registerAEKernel(node)
 
 def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):

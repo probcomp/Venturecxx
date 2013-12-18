@@ -17,9 +17,9 @@ class Trace(object):
     for name,val in builtInValues().iteritems():
       self.globalEnv.addBinding(name,ConstantNode(val))
     for name,sp in builtInSPs().iteritems():
-      spNode = ConstantNode(sp)
+      spNode = self.createConstantNode(sp)
       processMadeSP(self,spNode,False)
-      assert isinstance(spNode.value, SPRef)
+      assert isinstance(self.valueAt(spNode), SPRef)
       self.globalEnv.addBinding(name,spNode)
 
     self.rcs = [] # TODO make this an EasyEraseVector
@@ -40,17 +40,17 @@ class Trace(object):
   def createConstantNode(self,val): return ConstantNode(val)
   def createLookupNode(self,sourceNode): 
     lookupNode = LookupNode(sourceNode)
-    sourceNode.children.add(lookupNode)
+    self.addChildAt(sourceNode,lookupNode)
     return lookupNode
 
   def createApplicationNodes(self,operatorNode,operandNodes,env):
     requestNode = RequestNode(operatorNode,operandNodes,env)
     outputNode = OutputNode(operatorNode,operandNodes,requestNode,env)
-    operatorNode.children.add(requestNode)
-    operatorNode.children.add(outputNode)
+    self.addChildAt(operatorNode,requestNode)
+    self.addChildAt(operatorNode,outputNode)
     for operandNode in operandNodes:
-      operandNode.children.add(requestNode)
-      operandNode.children.add(outputNode)
+      self.addChildAt(operandNode,requestNode)
+      self.addChildAt(operandNode,outputNode)
     requestNode.registerOutputNode(outputNode)
     return (requestNode,outputNode)
 
@@ -60,47 +60,56 @@ class Trace(object):
   def unregisterBlock(self,block,subblock,esrParent): pass
 
   def addESREdge(self,esrParent,outputNode):
-    esrParent.numRequests += 1
-    esrParent.children.add(outputNode)
-    outputNode.esrParents.append(esrParent)
+    self.incRequestsAt(esrParent)
+    self.addChildAt(esrParent,outputNode)
+    self.appendEsrParentAt(outputNode,esrParent)
 
   def popLastESRParent(self,outputNode):
-    assert outputNode.esrParents
-    esrParent = outputNode.esrParents.pop()
-    esrParent.children.remove(outputNode)
-    esrParent.numRequests -= 1
+    assert self.esrParentsAt(outputNode)
+    esrParent = self.popEsrParentAt(outputNode)
+    self.removeChildAt(esrParent,outputNode)
+    self.decRequestsAt(esrParent)
     return esrParent
   
-  def disconnectLookup(self,lookupNode): lookupNode.sourceNode.children.remove(lookupNode)
-  def reconnectLookup(self,lookupNode): lookupNode.sourceNode.children.add(lookupNode)
+  def disconnectLookup(self,lookupNode):
+    self.removeChildAt(lookupNode.sourceNode,lookupNode)
+  def reconnectLookup(self,lookupNode):
+    self.addChildAt(lookupNode.sourceNode,lookupNode)
 
   #### Stuff that a particle trace would need to override for persistence
-  def valueAt(self,node): return node.value
-  def setValueAt(self,node,value): node.value = value
-  def groundValueAt(self,node): return node.groundValue()
-  def madeSPAt(self,node): return node.madeSP
-  def setMadeSPAt(self,node,sp): node.madeSP = sp
-  def setMadeSPAux(self,node,aux): node.madeSPAux = aux
-  def esrParentsAt(self,node): return node.esrParents
-  def parentsAt(self,node): return node.parents()
-  def childrenAt(self,node): return node.children
-  def pspAt(self,node): return node.psp()
-  def spAt(self,node): return node.sp()
-  def spauxAt(self,node): return node.spaux()
-  def argsAt(self,node): return node.args()
+  def valueAt(self,node): return node.Tvalue
+  def setValueAt(self,node,value): node.Tvalue = value
+  def groundValueAt(self,node): return node.TgroundValue()
+  def madeSPAt(self,node): return node.TmadeSP
+  def setMadeSPAt(self,node,sp): node.TmadeSP = sp
+  def madeSPAuxAt(self,node): return node.TmadeSPAux
+  def setMadeSPAuxAt(self,node,aux): node.TmadeSPAux = aux
+  def esrParentsAt(self,node): return node.TesrParents
+  def appendEsrParentAt(self,node,parent): node.TesrParents.append(parent)
+  def popEsrParentAt(self,node): return node.TesrParents.pop()
+  def parentsAt(self,node): return node.Tparents()
+  def childrenAt(self,node): return node.Tchildren
+  def addChildAt(self,node,child): node.Tchildren.add(child)
+  def removeChildAt(self,node,child): node.Tchildren.remove(child)
+  def pspAt(self,node): return node.Tpsp()
+  def spAt(self,node): return node.Tsp()
+  def spauxAt(self,node): return node.Tspaux()
+  def argsAt(self,node): return node.Targs()
   def unincorporateAt(self,node):
     # TODO Should this really be groundValue and not value?
-    return node.psp().unincorporate(node.groundValue(), node.args())
+    return node.Tpsp().unincorporate(node.TgroundValue(), node.Targs())
   def incorporateAt(self,node):
     # TODO Should this really be groundValue and not value?
-    return node.psp().incorporate(node.groundValue(), node.args())
+    return node.Tpsp().incorporate(node.TgroundValue(), node.Targs())
   def logDensityAt(self,node,value):
-    return node.psp().logDensity(value,node.args())
+    return node.Tpsp().logDensity(value,node.Targs())
   def registerFamilyAt(self,node,esrId,esrParent):
-    node.spaux().registerFamily(esrId,esrParent)
+    node.Tspaux().registerFamily(esrId,esrParent)
   def unregisterFamilyAt(self,node,esrId):
-    node.spaux().unregisterFamily(esrId)
-  def numRequestsAt(self,node): return node.numRequests
+    node.Tspaux().unregisterFamily(esrId)
+  def numRequestsAt(self,node): return node.TnumRequests
+  def incRequestsAt(self,node): node.TnumRequests += 1
+  def decRequestsAt(self,node): node.TnumRequests -= 1
 
   #### For kernels
   def samplePrincipalNode(self): return random.choice(self.rcs)
@@ -113,7 +122,7 @@ class Trace(object):
     
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
 
-  def extractValue(self,id): return self.boxValue(self.families[id].value)
+  def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
 
   def observe(self,id,val):
     node = self.families[id]
@@ -134,7 +143,7 @@ class Trace(object):
     if params["use_global_scaffold"]: raise Exception("INFER global scaffold not yet implemented")
 
     for n in range(params["transitions"]): MHInfer(self)
-    for node in self.aes: node.madeSP.AEInfer(node.madeSPAux)
+    for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
   #### Helpers (shouldn't be class methods)
 

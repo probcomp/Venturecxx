@@ -51,7 +51,7 @@ class Scaffold():
   def addResamplingNode(self,q,node):
     if self.isAbsorbing(node): self.unregisterAbsorbing(node)
     self.drg.add(node)
-    q.extend([(n,False) for n in node.children])
+    q.extend([(n,False) for n in self.trace.childrenAt(node)])
 
   def addAAANode(self,node):
     self.drg.add(node)

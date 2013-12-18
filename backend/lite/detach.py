@@ -83,7 +83,7 @@ def teardownMadeSP(trace,node,isAAA):
   trace.setMadeSPAt(node,None)
   if not isAAA: 
     if sp.hasAEKernel(): trace.unregisterAEKernel(node)
-    trace.setMadeSPAux(node,None)
+    trace.setMadeSPAuxAt(node,None)
 
 def unapplyPSP(trace,node,scaffold,omegaDB):
 
