@@ -78,6 +78,14 @@ class Trace(object):
     self.addChildAt(lookupNode.sourceNode,lookupNode)
 
   def argsAt(self,node): return Args(self,node)
+  def unincorporateAt(self,node):
+    # TODO Should this really be groundValue and not value?
+    return self.pspAt(node).unincorporate(self.groundValueAt(node), self.argsAt(node))
+  def incorporateAt(self,node):
+    # TODO Should this really be groundValue and not value?
+    return self.pspAt(node).incorporate(self.groundValueAt(node), self.argsAt(node))
+  def logDensityAt(self,node,value):
+    return self.pspAt(node).logDensity(value,self.argsAt(node))
 
   #### Stuff that a particle trace would need to override for persistence
   def valueAt(self,node): return node.Tvalue
@@ -97,14 +105,6 @@ class Trace(object):
   def pspAt(self,node): return node.Tpsp()
   def spAt(self,node): return node.Tsp()
   def spauxAt(self,node): return node.Tspaux()
-  def unincorporateAt(self,node):
-    # TODO Should this really be groundValue and not value?
-    return node.Tpsp().unincorporate(node.TgroundValue(), self.argsAt(node))
-  def incorporateAt(self,node):
-    # TODO Should this really be groundValue and not value?
-    return node.Tpsp().incorporate(node.TgroundValue(), self.argsAt(node))
-  def logDensityAt(self,node,value):
-    return node.Tpsp().logDensity(value,self.argsAt(node))
   def registerFamilyAt(self,node,esrId,esrParent):
     node.Tspaux().registerFamily(esrId,esrParent)
   def unregisterFamilyAt(self,node,esrId):
