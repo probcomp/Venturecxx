@@ -14,15 +14,15 @@ class Particle(Trace):
   def valueAt(self,node):
     return self._at(node).value
   def setValueAt(self,node,value):
-    self._alterAt(node, lambda r: r.update_value(value))
+    self._alterAt(node, lambda r: r.update(value=value))
   def madeSPAt(self,node):
     return self._at(node).madeSP
   def setMadeSPAt(self,node,sp):
-    self._alterAt(node, lambda r: r.update_madeSP(sp))
+    self._alterAt(node, lambda r: r.update(madeSP=sp))
   def madeSPAuxAt(self,node):
     return self._at(node).madeSPAux
   def setMadeSPAuxAt(self,node,aux):
-    self._alterAt(node, lambda r: r.update_madeSPAux(aux))
+    self._alterAt(node, lambda r: r.update(madeSPAux=aux))
   def esrParentsAt(self,node):
     return self._at(node).esrParents
   def appendEsrParentAt(self,node,parent):
@@ -49,3 +49,25 @@ class Particle(Trace):
     self._alterAt(node, lambda r: r.incRequests)
   def decRequestsAt(self,node):
     self._alterAt(node, lambda r: r.decRequests)
+
+class Record(object):
+  def __init__(self,value=None,madeSP=None,madeSPAux=None,esrParents=None,children=None,numRequests=0):
+    self.value = value
+    self.madeSP = madeSP
+    self.madeSPAux = madeSPAux
+    self.esrParents = if esrParents: esrParents else: []
+    self.children = if children: children else: []
+    self.numRequests = numRequests
+
+  def _copy():
+    return Record(self.value, self.madeSP, self.madeSPAux, self.esrParents, self.children, self.numRequests)
+
+  def update(self,value=None,madeSP=None,madeSPAux=None,esrParents=None,children=None,numRequests=None):
+    ans = self._copy()
+    if value: ans.value = value
+    if madeSP: ans.madeSP = madeSP
+    if madeSPAux: ans.madeSPAux = madeSPAux
+    if esrParents: ans.esrParents = esrParents
+    if children: ans.children = children
+    if numRequests: ans.numRequests = numRequests
+    return ans
