@@ -241,3 +241,12 @@ def renderAlexeyBug1():
   ripl.predict("(coin)")
 
   renderRIPL(ripl,"graphs/alexey_bug_1")
+
+################### Tutorial for regen/detach
+def renderRegenDetachTutorial1():
+  ripl = RIPL()
+  ripl.assume("x","(snormal 0.0)")
+  ripl.predict("(snormal (+ x))")
+  ripl.predict("(snormal (+ x))")
+
+  renderRIPL(ripl,"graphs/regen_detach_tutorial_1")
