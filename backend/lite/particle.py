@@ -1,4 +1,5 @@
 from copy import copy
+import math
 
 from trace import Trace
 
