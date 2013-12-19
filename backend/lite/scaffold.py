@@ -130,7 +130,7 @@ class Scaffold():
         for parent in self.trace.parentsAt(node): self.maybeIncrementAAARegenCount(parent)
       for node in self.brush: 
         if isinstance(node,OutputNode):
-          for esrParent in self.trace.esrParesntsAt(node): self.maybeIncrementAAARegenCount(esrParent)
+          for esrParent in self.trace.esrParentsAt(node): self.maybeIncrementAAARegenCount(esrParent)
         elif isinstance(node,LookupNode): self.maybeIncrementAAARegenCount(node.sourceNode)
 
   def maybeIncrementAAARegenCount(self,node):
