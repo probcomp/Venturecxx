@@ -28,7 +28,7 @@ class Particle(Trace):
   def appendEsrParentAt(self,node,parent):
     self._alterAt(node, lambda r: r.append_esrParent(parent))
   def popEsrParentAt(self,node):
-    ans = self._at(node).topEsrParent()
+    ans = self._at(node).top_esrParent()
     self._alterAt(node, lambda r: r.pop_esrParent())
     return ans
   def parentsAt(self,node):
@@ -46,9 +46,9 @@ class Particle(Trace):
   def numRequestsAt(self,node):
     return self._at(node).numRequests
   def incRequestsAt(self,node):
-    self._alterAt(node, lambda r: r.incRequests)
+    self._alterAt(node, lambda r: r.update(numRequests = r.numRequests + 1))
   def decRequestsAt(self,node):
-    self._alterAt(node, lambda r: r.decRequests)
+    self._alterAt(node, lambda r: r.update(numRequests = r.numRequests - 1))
 
 class Record(object):
   def __init__(self,value=None,madeSP=None,madeSPAux=None,esrParents=None,children=None,numRequests=0):
@@ -71,3 +71,26 @@ class Record(object):
     if children: ans.children = children
     if numRequests: ans.numRequests = numRequests
     return ans
+
+  def add_child(self,child):
+    new_children = [c for c in self.children]
+    new_children.add(child)
+    return self.update(children=new_children)
+
+  def remove_child(self,child):
+    new_children = [c for c in self.children]
+    new_children.remove(child)
+    return self.update(children=new_children)
+
+  def top_espParent(self):
+    return self.esrParents[len(self.esrParents)-1]
+
+  def pop_esrParent(self):
+    new_esrParents = [p for p in self.esrParents]
+    new_esrParents.pop()
+    return self.update(esrParents=new_esrParents)
+
+  def append_esrParent(self,parent):
+    new_esrParents = [p for p in self.esrParents]
+    new_esrParents.append(parent)
+    return self.update(esrParents=new_esrParents)
