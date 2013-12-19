@@ -72,7 +72,7 @@ class Record(object):
     if children: self.children = children
     self.numRequests = numRequests
 
-  def _copy():
+  def _copy(self):
     return Record(self.value, self.madeSP, self.madeSPAux, self.esrParents, self.children, self.numRequests)
 
   def update(self,value=None,madeSP=None,madeSPAux=None,esrParents=None,children=None,numRequests=None):
