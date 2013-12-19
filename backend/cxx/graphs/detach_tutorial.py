@@ -13,15 +13,15 @@ class RenderTutorial1(object):
     self.edges = edges
 
     # isdrg
-    self.stackColors = { True : "grey80",
-                         False : "black"
+    self.stackColors = { True : "grey90",
+                         False : "grey70"
                          }
 
     # (isdrg,isregened)
-    self.colors = { (True,True) : "red" , 
+    self.colors = { (True,True) : "darkgoldenrod3" , 
                     (True,False) : "gold", 
-                    (False,True) : "blue",
-                    (False,False) : "green",
+                    (False,True) : "royalblue",
+                    (False,False) : "steelblue1",
                 }
 
     self.regenCounts = {node : len(self.edges[node]) for node in self.drg}
