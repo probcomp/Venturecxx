@@ -100,6 +100,12 @@ class Trace(object):
     return candidate
   def spAt(self,node): return self.madeSPAt(self.spRefAt(node).makerNode)
   def spauxAt(self,node): return self.madeSPAuxAt(self.spRefAt(node).makerNode)
+  def pspAt(self,node):
+    if isinstance(node, RequestNode):
+      return self.spAt(node).requestPSP
+    else:
+      assert isinstance(node, OutputNode)
+      return self.spAt(node).outputPSP
 
   #### Stuff that a particle trace would need to override for persistence
   def valueAt(self,node): return node.Tvalue
@@ -115,7 +121,6 @@ class Trace(object):
   def childrenAt(self,node): return node.Tchildren
   def addChildAt(self,node,child): node.Tchildren.add(child)
   def removeChildAt(self,node,child): node.Tchildren.remove(child)
-  def pspAt(self,node): return node.Tpsp()
   def registerFamilyAt(self,node,esrId,esrParent):
     self.spauxAt(node).registerFamily(esrId,esrParent)
   def unregisterFamilyAt(self,node,esrId):
@@ -214,8 +219,6 @@ class Particle(Trace):
     self._alterAt(node, lambda r: r.add_child(child))
   def removeChildAt(self,node,child):
     self._alterAt(node, lambda r: r.remove_child(child))
-  def pspAt(self,node):
-    return self._at(node).psp()
   def registerFamilyAt(self,node,esrId,esrParent):
     self._alterAt(node, lambda r: r.registerFamily(esrId,esrParent))
   def unregisterFamilyAt(self,node,esrId):

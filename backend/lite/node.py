@@ -35,16 +35,6 @@ class LookupNode(Node):
 class ApplicationNode(Node):
   __metaclass__ = ABCMeta
 
-  def TspRef(self):
-    if not isinstance(self.operatorNode.Tvalue,SPRef):
-      print "spRef not an spRef"
-      print "is a: " + str(type(self.operatorNode.Tvalue))
-    assert isinstance(self.operatorNode.Tvalue,SPRef)
-    return self.operatorNode.Tvalue
-
-  def Tsp(self): return self.TspRef().makerNode.TmadeSP
-  def Tspaux(self): return self.TspRef().makerNode.TmadeSPAux
-
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
     super(RequestNode,self).__init__()
@@ -57,8 +47,6 @@ class RequestNode(ApplicationNode):
     self.outputNode = outputNode
     self.Tchildren.add(outputNode)
 
-  def Tpsp(self): return self.Tsp().requestPSP
-
   def Tparents(self): return [self.operatorNode] + self.operandNodes
 
 class OutputNode(ApplicationNode):
@@ -69,8 +57,6 @@ class OutputNode(ApplicationNode):
     self.requestNode = requestNode
     self.TesrParents = []
     self.env = env
-
-  def Tpsp(self): return self.Tsp().outputPSP
 
   def Tparents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode] + self.TesrParents
 
