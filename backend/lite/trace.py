@@ -106,7 +106,11 @@ class Trace(object):
     else:
       assert isinstance(node, OutputNode)
       return self.spAt(node).outputPSP
-  def parentsAt(self,node): return node.fixed_parents() + self.esrParentsAt(node)
+  def parentsAt(self,node):
+    if isinstance(node, OutputNode):
+      return node.fixed_parents() + self.esrParentsAt(node)
+    else:
+      return node.fixed_parents()
 
   #### Stuff that a particle trace would need to override for persistence
   def valueAt(self,node): return node.Tvalue
