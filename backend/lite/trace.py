@@ -120,9 +120,11 @@ class Trace(object):
   def madeSPAuxAt(self,node): return node.TmadeSPAux
   def setMadeSPAuxAt(self,node,aux): node.TmadeSPAux = aux
   def esrParentsAt(self,node): return node.TesrParents
+  def setEsrParentsAt(self,node,parents): node.TesrParents = parents
   def appendEsrParentAt(self,node,parent): node.TesrParents.append(parent)
   def popEsrParentAt(self,node): return node.TesrParents.pop()
   def childrenAt(self,node): return node.Tchildren
+  def setChildrenAt(self,node,children): node.Tchildren = children
   def addChildAt(self,node,child): node.Tchildren.add(child)
   def removeChildAt(self,node,child): node.Tchildren.remove(child)
   def registerFamilyAt(self,node,esrId,esrParent):
@@ -130,6 +132,7 @@ class Trace(object):
   def unregisterFamilyAt(self,node,esrId):
     self.spauxAt(node).unregisterFamily(esrId)
   def numRequestsAt(self,node): return node.TnumRequests
+  def setNumRequestsAt(self,node,num): node.TnumRequests = num
   def incRequestsAt(self,node): node.TnumRequests += 1
   def decRequestsAt(self,node): node.TnumRequests -= 1
 

@@ -4,6 +4,8 @@ import math
 from trace import Trace
 
 class Particle(Trace):
+  # The trace is expected to be a torus, with the chosen scaffold
+  # already detached.
   def __init__(self,trace):
     self.base = trace
     self.cache = {} # TODO persistent map from nodes to node records
@@ -71,6 +73,10 @@ class Particle(Trace):
     ct = len(self.base.rcs) + len(self.rcs)
     return -1 * math.log(ct)
 
+  def commit(self):
+    for (node,r) in self.cache.iteritems():
+      r.commit(self.base, node)
+
 def record_for(node):
   return Record(value=node.Tvalue, madeSP=node.TmadeSP, madeSPAux=spaux_record_for(node.TmadeSPAux),
                 esrParents=node.TesrParents, children=node.Tchildren, numRequests=node.TnumRequests)
@@ -122,6 +128,14 @@ class Record(object):
     new_esrParents.append(parent)
     return self.update(esrParents=new_esrParents)
 
+  def commit(self,trace,node):
+    if self.value: trace.setValueAt(node,self.value)
+    if self.madeSP: trace.setMadeSPAt(node,self.madeSP)
+    if self.madeSPAux: self.madeSPAux.commit(trace,node)
+    if self.esrParents: trace.setEsrParentsAt(node,self.esrParents)
+    if self.children: trace.setChildrenAt(node,self.children)
+    if self.numRequests: trace.setNumRequestsAt(node,self.numRequests)
+
 def spaux_record_for(spaux):
   if spaux == None:
     return None
@@ -134,6 +148,14 @@ class SPAuxRecord(object):
   def getFamily(self,id): return self.families[id]
   def registerFamily(self,id,esrParent):
     assert not id in self.families
-    return SPAuxRecord(self.families.insert(id,esrParent))
+    new_families = copy(self.families)
+    new_families[id] = esrParent
+    return SPAuxRecord(new_families)
   def unregisterFamily(self,id):
-    return SPAuxRecord(self.families.delete(id))
+    new_families = copy(self.families)
+    new_families.delete(id)
+    return SPAuxRecord(new_families)
+
+  def commit(self,trace,node):
+    for (id,esrParent) in self.families.iteritems():
+      trace.registerFamilyAt(node,id,esrParent)
