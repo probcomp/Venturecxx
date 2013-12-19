@@ -11,6 +11,9 @@ class Particle(Trace):
   def _alterAt(self,node,f):
     self.cache = self.cache.insert(node,f(self._at(node)))
 
+  def _alterSpauxAt(self,node,f):
+    self._alterAt(self.spRefAt(node).makerNode, lambda r: r.update(madeSPAux=f(madeSPAux)))
+
   def valueAt(self,node):
     return self._at(node).value
   def setValueAt(self,node,value):
@@ -38,9 +41,9 @@ class Particle(Trace):
   def removeChildAt(self,node,child):
     self._alterAt(node, lambda r: r.remove_child(child))
   def registerFamilyAt(self,node,esrId,esrParent):
-    self._alterAt(node, lambda r: r.registerFamily(esrId,esrParent))
+    self._alterSpauxAt(node, lambda spauxr: spauxr.registerFamily(esrId,esrParent))
   def unregisterFamilyAt(self,node,esrId):
-    self._alterAt(node, lambda r: r.unregisterFamily(esrId))
+    self._alterSpauxAt(node, lambda spauxr: spauxr.unregisterFamily(esrId))
   def numRequestsAt(self,node):
     return self._at(node).numRequests
   def incRequestsAt(self,node):
@@ -92,3 +95,14 @@ class Record(object):
     new_esrParents = [p for p in self.esrParents]
     new_esrParents.append(parent)
     return self.update(esrParents=new_esrParents)
+
+class SPAuxRecord(object):
+  def __init__(self,families={}): # id => node TODO persistent
+    self.families = families
+  def containsFamily(self,id): return id in self.families
+  def getFamily(self,id): return self.families[id]
+  def registerFamily(self,id,esrParent):
+    assert not id in self.families
+    return SPAuxRecord(self.families.insert(id,esrParent))
+  def unregisterFamily(self,id):
+    return SPAuxRecord(self.families.delete(id))
