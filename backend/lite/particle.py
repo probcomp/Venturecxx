@@ -1,3 +1,5 @@
+from copy import copy
+
 from trace import Trace
 
 class Particle(Trace):
@@ -6,7 +8,10 @@ class Particle(Trace):
     self.cache = {} # TODO persistent map from nodes to node records
 
   def _at(self,node):
-    return self.cache[node]
+    if node in self.cache:
+      return self.cache[node]
+    else:
+      return record_for(node)
 
   def _alterAt(self,node,f):
     self.cache = self.cache.insert(node,f(self._at(node)))
@@ -50,6 +55,10 @@ class Particle(Trace):
     self._alterAt(node, lambda r: r.update(numRequests = r.numRequests + 1))
   def decRequestsAt(self,node):
     self._alterAt(node, lambda r: r.update(numRequests = r.numRequests - 1))
+
+def record_for(node):
+  return Record(value=node.Tvalue, madeSP=node.TmadeSP, madeSPAux=spaux_record_for(node.TmadeSPAux),
+                esrParents=node.TesrParents, children=node.Tchildren, numRequests=node.TnumRequests)
 
 class Record(object):
   def __init__(self,value=None,madeSP=None,madeSPAux=None,esrParents=None,children=None,numRequests=0):
@@ -95,6 +104,11 @@ class Record(object):
     new_esrParents = [p for p in self.esrParents]
     new_esrParents.append(parent)
     return self.update(esrParents=new_esrParents)
+
+def spaux_record_for(spaux):
+  if spaux == None:
+    return None
+  return SPAuxRecord(copy(spaux.families))
 
 class SPAuxRecord(object):
   def __init__(self,families={}): # id => node TODO persistent
