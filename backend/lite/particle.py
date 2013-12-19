@@ -94,7 +94,7 @@ class Record(object):
     new_children.remove(child)
     return self.update(children=new_children)
 
-  def top_espParent(self):
+  def top_esrParent(self):
     return self.esrParents[len(self.esrParents)-1]
 
   def pop_esrParent(self):
