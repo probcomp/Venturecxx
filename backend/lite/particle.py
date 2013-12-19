@@ -67,7 +67,7 @@ class Record(object):
     self.madeSPAux = madeSPAux
     self.esrParents = []
     if esrParents: self.esrParents = esrParents
-    self.children = []
+    self.children = set()
     if children: self.children = children
     self.numRequests = numRequests
 
@@ -85,12 +85,12 @@ class Record(object):
     return ans
 
   def add_child(self,child):
-    new_children = [c for c in self.children]
+    new_children = copy(self.children)
     new_children.add(child)
     return self.update(children=new_children)
 
   def remove_child(self,child):
-    new_children = [c for c in self.children]
+    new_children = copy(self.children)
     new_children.remove(child)
     return self.update(children=new_children)
 
