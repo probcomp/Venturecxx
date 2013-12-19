@@ -16,3 +16,4 @@ def MHInfer(trace):
   if math.log(random.random()) > (xiAux + xiWeight) - (rhoAux + rhoWeight): # reject
     detachAndExtract(trace,scaffold.border,scaffold)
     regenAndAttach(trace,scaffold.border,scaffold,True,rhoDB,{})
+  else: pass # accept
