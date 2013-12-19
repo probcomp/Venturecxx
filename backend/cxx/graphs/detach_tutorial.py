@@ -6,11 +6,16 @@ import copy
 class RenderTutorial1(object):
   def __init__(self,nodes,drg,edges,dirpath):
     self.dirpath = dirpath
-    self.fmt = "svg"
+    self.fmt = "pdf"
     self.i = 0
     self.nodes = nodes
     self.drg = drg
     self.edges = edges
+
+    # isdrg
+    self.stackColors = { True : "grey80",
+                         False : "black"
+                         }
 
     # (isdrg,isregened)
     self.colors = { (True,True) : "red" , 
@@ -22,8 +27,20 @@ class RenderTutorial1(object):
     self.regenCounts = {node : len(self.edges[node]) for node in self.drg}
 
     self.regenerated = copy.deepcopy(self.nodes)
+    self.stack = set()
     self.dot = ""
     self.renderDot()
+
+  def addToStack(self,node):
+    assert not node in self.stack
+    assert not node in self.regenerated
+    self.stack.add(node)
+    self.renderDot()
+
+  def removeFromStack(self,node):
+    assert node in self.stack
+    assert not node in self.regenerated
+    self.stack.remove(node)
     
   def performOperation(self,isRegen,node):
     if isRegen and node in self.drg: self.regenNode(node)
@@ -58,10 +75,14 @@ class RenderTutorial1(object):
 
   def nodeAttributes(self,node):
     return { "shape" : "ellipse",
-             "fillcolor" : self.colors[(node in self.drg,node in self.regenerated)],
+             "fillcolor" : self.getFillColor(node),
              "style" : "filled",
              "label" : self.getLabel(node),
          }
+
+  def getFillColor(self,node):
+    if node in self.stack: return self.stackColors[node in self.drg]
+    else: return self.colors[(node in self.drg,node in self.regenerated)]
 
   def getLabel(self,node):
     if node in self.drg: return self.regenCounts[node]
@@ -121,9 +142,31 @@ class RenderTutorial1(object):
 drg = set([1,2,3,4])
 nodes = set([1,2,3,4,5,6,7])
 edges = {1 : [2,3,4], 2 : [5,6], 3 : [6], 4: [7] }
-rt1 = RenderTutorial1(nodes,drg,edges,"tutorial_1")
-sequence = [7,4,1,6,3,1,2,5,2,1]
+rt1 = RenderTutorial1(nodes,drg,edges,"tutorial_1_pdf")
 
-for node in sequence: rt1.performOperation(False,node)
-for node in reversed(sequence): rt1.performOperation(True,node)
+operations = [ (5, [(2, [(1,[])])]),
+               (6, [(2,[]),(3, [(1,[])])]),
+               (7, [(4, [(1,[])])]),
+             ]
+
+# need to reverse the nested calls
+def detachOperation(node,parents):
+  rt1.performOperation(False,node)
+  for (n,ps) in reversed(parents):
+    detachOperation(n,ps)
+
+def regenOperation(node,parents):
+  if parents:
+    rt1.addToStack(node)
+    for (n,ps) in parents: regenOperation(n,ps)
+    rt1.removeFromStack(node)
+
+  rt1.performOperation(True,node)
+
+
+for (node,parents) in reversed(operations): detachOperation(node,parents)
+for (node,parents) in operations: regenOperation(node,parents)
+
+#for node in sequence: rt1.performOperation(False,node)
+#for node in reversed(sequence): rt1.performOperation(True,node)
 
