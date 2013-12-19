@@ -82,12 +82,6 @@ class Trace(object):
     if isinstance(value,SPRef): return self.madeSPAt(value.makerNode)
     else: return value
   def argsAt(self,node): return Args(self,node)
-  def unincorporateAt(self,node):
-    # TODO Should this really be groundValue and not value?
-    return self.pspAt(node).unincorporate(self.groundValueAt(node), self.argsAt(node))
-  def incorporateAt(self,node):
-    # TODO Should this really be groundValue and not value?
-    return self.pspAt(node).incorporate(self.groundValueAt(node), self.argsAt(node))
   def logDensityAt(self,node,value):
     return self.pspAt(node).logDensity(value,self.argsAt(node))
 
@@ -131,6 +125,12 @@ class Trace(object):
     self.spauxAt(node).registerFamily(esrId,esrParent)
   def unregisterFamilyAt(self,node,esrId):
     self.spauxAt(node).unregisterFamily(esrId)
+  def unincorporateAt(self,node):
+    # TODO Should this really be groundValue and not value?
+    return self.pspAt(node).unincorporate(self.groundValueAt(node), self.argsAt(node))
+  def incorporateAt(self,node):
+    # TODO Should this really be groundValue and not value?
+    return self.pspAt(node).incorporate(self.groundValueAt(node), self.argsAt(node))
   def numRequestsAt(self,node): return node.TnumRequests
   def setNumRequestsAt(self,node,num): node.TnumRequests = num
   def incRequestsAt(self,node): node.TnumRequests += 1

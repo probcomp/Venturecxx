@@ -21,6 +21,10 @@ class Particle(Trace):
     # self.cache = self.cache.insert(node,f(self._at(node)))
     self.cache[node] = f(self._at(node))
 
+  def _ensure_spaux_cached(self,node):
+    if node in self.cache: pass # OK
+    else: self.cache[node] = self._at(node)
+
   def valueAt(self,node):
     return self._at(node).value
   def setValueAt(self,node,value):
@@ -51,6 +55,14 @@ class Particle(Trace):
     self._alterAt(self.spRefAt(node).makerNode, lambda r: r.registerFamily(esrId,esrParent))
   def unregisterFamilyAt(self,node,esrId):
     self._alterAt(self.spRefAt(node).makerNode, lambda r: r.unRegisterFamily(esrId))
+  def unincorporateAt(self,node):
+    self._ensure_spaux_cached(node)
+    self._ensure_spaux_cached(self.spRefAt(node).makerNode)
+    super(Particle, self).unincorporateAt(node)
+  def incorporateAt(self,node):
+    self._ensure_spaux_cached(node)
+    self._ensure_spaux_cached(self.spRefAt(node).makerNode)
+    super(Particle, self).incorporateAt(node)
   def numRequestsAt(self,node):
     return self._at(node).numRequests
   def incRequestsAt(self,node):
