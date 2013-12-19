@@ -4,15 +4,13 @@ import copy
 ##### Tutorial 1 for regen/detach
 
 class RenderTutorial1(object):
-  def __init__(self):
-    self.dirpath = "tutorial_1"
+  def __init__(self,nodes,drg,edges,dirpath):
+    self.dirpath = dirpath
     self.fmt = "svg"
     self.i = 0
-    self.drg = set([1,2,3,4])
-    self.nodes = set([1,2,3,4,5,6,7])
-#    self.active = None
-
-    self.edges = [(1,2),(2,5),(2,6),(1,3),(3,6),(1,4),(4,7)]
+    self.nodes = nodes
+    self.drg = drg
+    self.edges = edges
 
     # (isdrg,isregened)
     self.colors = { (True,True) : "red" , 
@@ -21,7 +19,7 @@ class RenderTutorial1(object):
                     (False,False) : "green",
                 }
 
-    self.regenCounts = {1:3, 2:2, 3:1,4:1}
+    self.regenCounts = {node : len(self.edges[node]) for node in self.drg}
 
     self.regenerated = copy.deepcopy(self.nodes)
     self.dot = ""
@@ -88,17 +86,19 @@ class RenderTutorial1(object):
   def dotTrace(self):
     self.dot = "digraph {\nrankdir=BT\nfontsize=24\n"
     for node in self.nodes: self.dotNode(node)
-    for edge in self.edges: self.dotEdge(edge)
+    for (startNode,outgoingEdges) in self.edges.iteritems(): 
+      for endNode in outgoingEdges:
+        self.dotEdge(startNode,endNode)
     self.dot += "}"
 
-  def edgeAttributes(self,edge):
+  def edgeAttributes(self,startNode,endNode):
     return { "arrowhead" : "normal",
              "style" : "solid",
              "color" : "black" }
 
-  def dotEdge(self,edge):
-    self.dot += str(edge[0]) + " -> " + str(edge[1])
-    self.dotAttributes(self.edgeAttributes(edge))
+  def dotEdge(self,startNode,endNode):
+    self.dot += str(startNode) + " -> " + str(endNode)
+    self.dotAttributes(self.edgeAttributes(startNode,endNode))
     self.dot += "\n"
 
   def renderDot(self):
@@ -117,8 +117,13 @@ class RenderTutorial1(object):
     print cmd
     call(cmd)
 
-rt1 = RenderTutorial1()
+
+drg = set([1,2,3,4])
+nodes = set([1,2,3,4,5,6,7])
+edges = {1 : [2,3,4], 2 : [5,6], 3 : [6], 4: [7] }
+rt1 = RenderTutorial1(nodes,drg,edges,"tutorial_1")
 sequence = [7,4,1,6,3,1,2,5,2,1]
 
 for node in sequence: rt1.performOperation(False,node)
 for node in reversed(sequence): rt1.performOperation(True,node)
+
