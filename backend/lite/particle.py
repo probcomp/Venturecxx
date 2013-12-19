@@ -65,8 +65,10 @@ class Record(object):
     self.value = value
     self.madeSP = madeSP
     self.madeSPAux = madeSPAux
-    self.esrParents = if esrParents: esrParents else: []
-    self.children = if children: children else: []
+    self.esrParents = []
+    if esrParents: self.esrParents = esrParents
+    self.children = []
+    if children: self.children = children
     self.numRequests = numRequests
 
   def _copy():
