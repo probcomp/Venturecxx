@@ -19,7 +19,7 @@ class Particle(Trace):
     self.cache[node] = f(self._at(node))
 
   def _alterSpauxAt(self,node,f):
-    self._alterAt(self.spRefAt(node).makerNode, lambda r: r.update(madeSPAux=f(madeSPAux)))
+    self._alterAt(self.spRefAt(node).makerNode, lambda r: r.update(madeSPAux=f(r.madeSPAux)))
 
   def valueAt(self,node):
     return self._at(node).value
