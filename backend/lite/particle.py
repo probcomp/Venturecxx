@@ -21,9 +21,6 @@ class Particle(Trace):
     # self.cache = self.cache.insert(node,f(self._at(node)))
     self.cache[node] = f(self._at(node))
 
-  def _alterSpauxAt(self,node,f):
-    self._alterAt(self.spRefAt(node).makerNode, lambda r: r.update(madeSPAux=f(r.madeSPAux)))
-
   def valueAt(self,node):
     return self._at(node).value
   def setValueAt(self,node,value):
@@ -51,9 +48,9 @@ class Particle(Trace):
   def removeChildAt(self,node,child):
     self._alterAt(node, lambda r: r.remove_child(child))
   def registerFamilyAt(self,node,esrId,esrParent):
-    self._alterSpauxAt(node, lambda spauxr: spauxr.registerFamily(esrId,esrParent))
+    self._alterAt(self.spRefAt(node).makerNode, lambda r: r.registerFamily(esrId,esrParent))
   def unregisterFamilyAt(self,node,esrId):
-    self._alterSpauxAt(node, lambda spauxr: spauxr.unregisterFamily(esrId))
+    self._alterAt(self.spRefAt(node).makerNode, lambda r: r.unRegisterFamily(esrId))
   def numRequestsAt(self,node):
     return self._at(node).numRequests
   def incRequestsAt(self,node):
@@ -79,7 +76,10 @@ class Particle(Trace):
     self.base.rcs = self.base.rcs + self.rcs
 
 def record_for(node):
-  return Record(value=node.Tvalue, madeSP=node.TmadeSP, madeSPAux=spaux_record_for(node.TmadeSPAux),
+  madeAux = None
+  if node.TmadeSPAux:
+    madeAux = node.TmadeSPAux.copy()
+  return Record(value=node.Tvalue, madeSP=node.TmadeSP, madeSPAux=madeAux,
                 esrParents=node.TesrParents, children=node.Tchildren, numRequests=node.TnumRequests)
 
 class Record(object):
@@ -129,34 +129,18 @@ class Record(object):
     new_esrParents.append(parent)
     return self.update(esrParents=new_esrParents)
 
+  def registerFamily(self,esrId,esrParent):
+    self.madeSPAux.registerFamily(esrId,esrParent)
+    return self
+
+  def unRegisterFamily(self,esrId):
+    self.madeSPAux.unRegisterFamily(esrId)
+    return self
+
   def commit(self,trace,node):
     if self.value: trace.setValueAt(node,self.value)
     if self.madeSP: trace.setMadeSPAt(node,self.madeSP)
-    if self.madeSPAux: self.madeSPAux.commit(trace,node)
+    if self.madeSPAux: trace.setMadeSPAuxAt(node,self.madeSPAux)
     if self.esrParents: trace.setEsrParentsAt(node,self.esrParents)
     if self.children: trace.setChildrenAt(node,self.children)
     if self.numRequests: trace.setNumRequestsAt(node,self.numRequests)
-
-def spaux_record_for(spaux):
-  if spaux == None:
-    return None
-  return SPAuxRecord(copy(spaux.families))
-
-class SPAuxRecord(object):
-  def __init__(self,families={}): # id => node TODO persistent
-    self.families = families
-  def containsFamily(self,id): return id in self.families
-  def getFamily(self,id): return self.families[id]
-  def registerFamily(self,id,esrParent):
-    assert not id in self.families
-    new_families = copy(self.families)
-    new_families[id] = esrParent
-    return SPAuxRecord(new_families)
-  def unregisterFamily(self,id):
-    new_families = copy(self.families)
-    new_families.delete(id)
-    return SPAuxRecord(new_families)
-
-  def commit(self,trace,node):
-    for (id,esrParent) in self.families.iteritems():
-      trace.madeSPAuxAt(node).registerFamily(id,esrParent) # TODO Go through the trace for the actual registration?

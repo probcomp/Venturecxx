@@ -5,6 +5,7 @@ from request import Request
 import numpy as np
 import numpy.random as npr
 import math
+from copy import copy
 
 def npSampleVector(pVec): return np.mat(npr.multinomial(1,np.array(pVec)[0,:]))
 def npIndexOfOne(pVec): return np.where(pVec[0] == 1)[1][0,0]
@@ -16,6 +17,12 @@ class HMMSPAux(SPAux):
     super(HMMSPAux,self).__init__()
     self.xs = [] # [ x_n ],
     self.os = {} #  { n => [o_n1, ... ,o_nK] }
+
+  def copy(self):
+    ans = HMMSPAux()
+    ans.xs = copy(self.xs)
+    ans.os = copy(self.os)
+    return ans
 
 class MakeUncollapsedHMMOutputPSP(PSP):
   def simulate(self,args):
