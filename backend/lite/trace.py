@@ -91,6 +91,16 @@ class Trace(object):
   def logDensityAt(self,node,value):
     return self.pspAt(node).logDensity(value,self.argsAt(node))
 
+  def spRefAt(self,node):
+    candidate = self.valueAt(node.operatorNode)
+    if not isinstance(candidate, SPRef):
+      print "spRef not an spRef"
+      print "is a: " + str(type(candidate))
+    assert isinstance(candidate, SPRef)
+    return candidate
+  def spAt(self,node): return self.madeSPAt(self.spRefAt(node).makerNode)
+  def spauxAt(self,node): return self.madeSPAuxAt(self.spRefAt(node).makerNode)
+
   #### Stuff that a particle trace would need to override for persistence
   def valueAt(self,node): return node.Tvalue
   def setValueAt(self,node,value): node.Tvalue = value
@@ -106,12 +116,10 @@ class Trace(object):
   def addChildAt(self,node,child): node.Tchildren.add(child)
   def removeChildAt(self,node,child): node.Tchildren.remove(child)
   def pspAt(self,node): return node.Tpsp()
-  def spAt(self,node): return node.Tsp()
-  def spauxAt(self,node): return node.Tspaux()
   def registerFamilyAt(self,node,esrId,esrParent):
-    node.Tspaux().registerFamily(esrId,esrParent)
+    self.spauxAt(node).registerFamily(esrId,esrParent)
   def unregisterFamilyAt(self,node,esrId):
-    node.Tspaux().unregisterFamily(esrId)
+    self.spauxAt(node).unregisterFamily(esrId)
   def numRequestsAt(self,node): return node.TnumRequests
   def incRequestsAt(self,node): node.TnumRequests += 1
   def decRequestsAt(self,node): node.TnumRequests -= 1
@@ -208,10 +216,6 @@ class Particle(Trace):
     self._alterAt(node, lambda r: r.remove_child(child))
   def pspAt(self,node):
     return self._at(node).psp()
-  def spAt(self,node):
-    return self._at(node).sp()
-  def spauxAt(self,node):
-    return self._at(node).spaux()
   def registerFamilyAt(self,node,esrId,esrParent):
     self._alterAt(node, lambda r: r.registerFamily(esrId,esrParent))
   def unregisterFamilyAt(self,node,esrId):
