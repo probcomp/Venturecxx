@@ -31,8 +31,6 @@ class Particle(Trace):
     ans = self._at(node).top_esrParent()
     self._alterAt(node, lambda r: r.pop_esrParent())
     return ans
-  def parentsAt(self,node):
-    return self._at(node).parents()
   def childrenAt(self,node):
     return self._at(node).children
   def addChildAt(self,node,child):

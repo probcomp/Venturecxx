@@ -21,7 +21,7 @@ class ConstantNode(Node):
     super(ConstantNode,self).__init__()
     self.Tvalue = value
 
-  def Tparents(self): return []
+  def fixed_parents(self): return []
 
 
 class LookupNode(Node):
@@ -29,7 +29,7 @@ class LookupNode(Node):
     super(LookupNode,self).__init__()
     self.sourceNode = sourceNode
 
-  def Tparents(self): return [self.sourceNode]
+  def fixed_parents(self): return [self.sourceNode]
 
 
 class ApplicationNode(Node):
@@ -47,7 +47,7 @@ class RequestNode(ApplicationNode):
     self.outputNode = outputNode
     self.Tchildren.add(outputNode)
 
-  def Tparents(self): return [self.operatorNode] + self.operandNodes
+  def fixed_parents(self): return [self.operatorNode] + self.operandNodes
 
 class OutputNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,requestNode,env):
@@ -58,7 +58,7 @@ class OutputNode(ApplicationNode):
     self.TesrParents = []
     self.env = env
 
-  def Tparents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode] + self.TesrParents
+  def fixed_parents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]
 
 class Args():
   def __init__(self,trace,node):
