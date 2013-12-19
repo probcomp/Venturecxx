@@ -76,6 +76,7 @@ class Particle(Trace):
   def commit(self):
     for (node,r) in self.cache.iteritems():
       r.commit(self.base, node)
+    self.base.rcs = self.base.rcs + self.rcs
 
 def record_for(node):
   return Record(value=node.Tvalue, madeSP=node.TmadeSP, madeSPAux=spaux_record_for(node.TmadeSPAux),
