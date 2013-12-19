@@ -158,4 +158,4 @@ class SPAuxRecord(object):
 
   def commit(self,trace,node):
     for (id,esrParent) in self.families.iteritems():
-      trace.registerFamilyAt(node,id,esrParent)
+      trace.madeSPAuxAt(node).registerFamily(id,esrParent) # TODO Go through the trace for the actual registration?
