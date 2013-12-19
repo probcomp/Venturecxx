@@ -6,6 +6,7 @@ class Particle(Trace):
   def __init__(self,trace):
     self.base = trace
     self.cache = {} # TODO persistent map from nodes to node records
+    self.rcs = [] # TODO persistent set?
 
   def _at(self,node):
     if node in self.cache:
@@ -56,6 +57,18 @@ class Particle(Trace):
     self._alterAt(node, lambda r: r.update(numRequests = r.numRequests + 1))
   def decRequestsAt(self,node):
     self._alterAt(node, lambda r: r.update(numRequests = r.numRequests - 1))
+
+  def registerRandomChoice(self,node):
+    assert not node in self.rcs
+    self.rcs.append(node)
+
+  def unregisterRandomChoice(self,node):
+    assert node in self.rcs
+    del self.rcs[self.rcs.index(node)]
+
+  def logDensityOfPrincipalNode(self,node):
+    ct = len(self.base.rcs) + len(self.rcs)
+    return -1 * math.log(ct)
 
 def record_for(node):
   return Record(value=node.Tvalue, madeSP=node.TmadeSP, madeSPAux=spaux_record_for(node.TmadeSPAux),
