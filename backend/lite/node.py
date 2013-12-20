@@ -10,6 +10,7 @@ class Node(object):
     self.TmadeSP = None
     self.TmadeSPAux = None
     self.TnumRequests = 0
+    self.TesrParents = []
     self.isObservation = False
 
   def observe(self,val):
@@ -55,7 +56,6 @@ class OutputNode(ApplicationNode):
     self.operatorNode = operatorNode
     self.operandNodes = operandNodes
     self.requestNode = requestNode
-    self.TesrParents = []
     self.env = env
 
   def fixed_parents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]

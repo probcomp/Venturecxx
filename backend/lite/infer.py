@@ -7,13 +7,17 @@ from detach import detachAndExtract
 from scaffold import Scaffold
 
 def MHInfer(trace):
+  import particle
   pnode = trace.samplePrincipalNode()
   rhoAux = trace.logDensityOfPrincipalNode(pnode)
   scaffold = Scaffold(trace,[pnode])
   rhoWeight,rhoDB = detachAndExtract(trace,scaffold.border,scaffold)
-  xiWeight = regenAndAttach(trace,scaffold.border,scaffold,False,rhoDB,{})
-  xiAux = trace.logDensityOfPrincipalNode(pnode)
+  particle = particle.Particle(trace)
+  xiWeight = regenAndAttach(particle,scaffold.border,scaffold,False,rhoDB,{})
+  xiAux = particle.logDensityOfPrincipalNode(pnode)
   if math.log(random.random()) > (xiAux + xiWeight) - (rhoAux + rhoWeight): # reject
-    detachAndExtract(trace,scaffold.border,scaffold)
+#    detachAndExtract(particle,scaffold.border,scaffold)
+    scaffold.resetRegenCounts()
     regenAndAttach(trace,scaffold.border,scaffold,True,rhoDB,{})
-  else: pass # accept
+  else: # accept
+    particle.commit()
