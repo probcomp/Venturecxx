@@ -55,8 +55,6 @@ class Trace(object):
     requestNode.registerOutputNode(outputNode)
     return (requestNode,outputNode)
 
-  def reconnectLookup(self,node,sourceNode): sourceNode.children.add(node)
-
   def registerBlock(self,block,subblock,esrParent): pass
   def unregisterBlock(self,block,subblock,esrParent): pass
 
