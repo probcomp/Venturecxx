@@ -113,6 +113,9 @@ class Scaffold():
       self.disableEval(node.operatorNode)
       for operandNode in node.operandNodes: self.disableEval(operandNode)
 
+  def resetRegenCounts(self):
+    self.drg = {node:0 for node in self.drg}
+
   def setRegenCounts(self):
     for node in self.drg:
       if self.isAAA(node):
