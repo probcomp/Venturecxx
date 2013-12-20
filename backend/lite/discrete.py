@@ -115,13 +115,13 @@ class UBetaBernoulliAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
-    [ctY,ctN] = args.madeSPAux
+    [ctY,ctN] = args.madeSPAux.cts()
     newWeight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
     return UBetaBernoulliSP(NullRequestPSP(), UBetaBernoulliOutputPSP(newWeight))
   # Weight is zero because it's simulating from the right distribution
 
 class UBetaBernoulliSP(SP):
-  def constructSPAux(self): return [0.0,0.0]
+  def constructSPAux(self): return CBetaBernoulliAux()
 
 class UBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,weight):
@@ -130,16 +130,16 @@ class UBetaBernoulliOutputPSP(RandomPSP):
   def incorporate(self,value,args):
     spaux = args.spaux
     if value: # I produced true
-      spaux[0] += 1
+      spaux.yes += 1
     else: # I produced false
-      spaux[1] += 1
+      spaux.no += 1
 
   def unincorporate(self,value,args):
     spaux = args.spaux
     if value: # I produced true
-      spaux[0] -= 1
+      spaux.yes -= 1
     else: # I produced false
-      spaux[1] -= 1
+      spaux.no -= 1
 
   def simulate(self,args): return random.random() < self.weight
 
