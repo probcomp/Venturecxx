@@ -110,7 +110,7 @@ class Record(object):
 
   def update(self,value=None,madeSP=None,madeSPAux=None,esrParents=None,children=None,numRequests=None):
     ans = self._copy()
-    if value: ans.value = value
+    if value is not None: ans.value = value
     if madeSP: ans.madeSP = madeSP
     if madeSPAux: ans.madeSPAux = madeSPAux
     if esrParents: ans.esrParents = esrParents
