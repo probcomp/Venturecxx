@@ -5,6 +5,7 @@ from utils import sampleCategorical, normalizeList
 from psp import PSP, NullRequestPSP, RandomPSP
 from sp import SP
 from lkernel import LKernel, DefaultAAALKernel
+from spaux import SPAux
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args): return random.random() < args.operandValues[0]
@@ -34,7 +35,21 @@ class MakerCBetaBernoulliOutputPSP(PSP):
     return CBetaBernoulliSP(NullRequestPSP(), CBetaBernoulliOutputPSP(alpha, beta))
 
 class CBetaBernoulliSP(SP):
-  def constructSPAux(self): return [0.0,0.0]
+  def constructSPAux(self): return CBetaBernoulliAux()
+
+class CBetaBernoulliAux(SPAux):
+  def __init__(self):
+    super(CBetaBernoulliAux,self).__init__()
+    self.yes = 0.0
+    self.no = 0.0
+
+  def copy(self):
+    ans = CBetaBernoulliAux()
+    ans.yes = self.yes
+    ans.no = self.no
+    return ans
+
+  def cts(self): return [self.yes,self.no]
 
 class CBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,alpha,beta):
@@ -44,24 +59,24 @@ class CBetaBernoulliOutputPSP(RandomPSP):
   def incorporate(self,value,args):
     spaux = args.spaux
     if value: # I produced true
-      spaux[0] += 1
+      spaux.yes += 1
     else: # I produced false
-      spaux[1] += 1
+      spaux.no += 1
 
   def unincorporate(self,value,args):
     spaux = args.spaux
     if value: # I produced true
-      spaux[0] -= 1
+      spaux.yes -= 1
     else: # I produced false
-      spaux[1] -= 1
+      spaux.no -= 1
 
   def simulate(self,args):
-    [ctY,ctN] = args.spaux
+    [ctY,ctN] = args.spaux.cts()
     weight = (self.alpha + ctY) / (self.alpha + ctY + self.beta + ctN)
     return random.random() < weight
 
   def logDensity(self,value,args):
-    [ctY,ctN] = args.spaux
+    [ctY,ctN] = args.spaux.cts()
     weight = (self.alpha + ctY) / (self.alpha + ctY + self.beta + ctN)
     if value == True:
       return math.log(weight)
@@ -69,7 +84,7 @@ class CBetaBernoulliOutputPSP(RandomPSP):
       return math.log(1-weight)
 
   def logDensityOfCounts(self,aux):
-    [ctY,ctN] = aux
+    [ctY,ctN] = aux.cts()
     trues = ctY + self.alpha
     falses = ctN + self.beta
     numCombinations = scipy.misc.comb(ctY + ctN,ctY) # TODO Do this directly in log space
