@@ -90,7 +90,7 @@ class Particle(Trace):
 
 def record_for(node):
   madeAux = None
-  if node.TmadeSPAux:
+  if node.TmadeSPAux is not None:
     madeAux = node.TmadeSPAux.copy()
   return Record(value=node.Tvalue, madeSP=node.TmadeSP, madeSPAux=madeAux,
                 esrParents=node.TesrParents, children=node.Tchildren, numRequests=node.TnumRequests)
@@ -151,9 +151,9 @@ class Record(object):
     return self
 
   def commit(self,trace,node):
-    if self.value: trace.setValueAt(node,self.value)
-    if self.madeSP: trace.setMadeSPAt(node,self.madeSP)
-    if self.madeSPAux: trace.setMadeSPAuxAt(node,self.madeSPAux)
-    if self.esrParents: trace.setEsrParentsAt(node,self.esrParents)
-    if self.children: trace.setChildrenAt(node,self.children)
-    if self.numRequests: trace.setNumRequestsAt(node,self.numRequests)
+    if self.value is not None: trace.setValueAt(node,self.value)
+    if self.madeSP is not None: trace.setMadeSPAt(node,self.madeSP)
+    if self.madeSPAux is not None: trace.setMadeSPAuxAt(node,self.madeSPAux)
+    if self.esrParents is not None: trace.setEsrParentsAt(node,self.esrParents)
+    if self.children is not None: trace.setChildrenAt(node,self.children)
+    if self.numRequests is not None: trace.setNumRequestsAt(node,self.numRequests)

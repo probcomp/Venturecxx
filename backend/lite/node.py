@@ -75,3 +75,6 @@ class Args():
 
     self.spaux = trace.spauxAt(node)
     self.env = node.env
+
+  def __repr__(self):
+    return "%s(%r)" % (self.__class__, self.__dict__)
