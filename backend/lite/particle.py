@@ -129,15 +129,15 @@ class Record(object):
     return self.update(children=new_children)
 
   def top_esrParent(self):
-    return self.esrParents[len(self.esrParents)-1]
+    return self.esrParents[-1]
 
   def pop_esrParent(self):
-    new_esrParents = [p for p in self.esrParents]
+    new_esrParents = copy(self.esrParents)
     new_esrParents.pop()
     return self.update(esrParents=new_esrParents)
 
   def append_esrParent(self,parent):
-    new_esrParents = [p for p in self.esrParents]
+    new_esrParents = copy(self.esrParents)
     new_esrParents.append(parent)
     return self.update(esrParents=new_esrParents)
 
