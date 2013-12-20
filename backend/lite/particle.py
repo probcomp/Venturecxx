@@ -70,6 +70,7 @@ class Particle(Trace):
   def decRequestsAt(self,node):
     self._alterAt(node, lambda r: r.update(numRequests = r.numRequests - 1))
 
+
   def registerRandomChoice(self,node):
     assert not node in self.rcs
     self.rcs.append(node)
@@ -111,11 +112,11 @@ class Record(object):
   def update(self,value=None,madeSP=None,madeSPAux=None,esrParents=None,children=None,numRequests=None):
     ans = self._copy()
     if value is not None: ans.value = value
-    if madeSP: ans.madeSP = madeSP
-    if madeSPAux: ans.madeSPAux = madeSPAux
-    if esrParents: ans.esrParents = esrParents
-    if children: ans.children = children
-    if numRequests: ans.numRequests = numRequests
+    if madeSP is not None: ans.madeSP = madeSP
+    if madeSPAux is not None: ans.madeSPAux = madeSPAux
+    if esrParents is not None: ans.esrParents = esrParents
+    if children is not None: ans.children = children
+    if numRequests is not None: ans.numRequests = numRequests
     return ans
 
   def add_child(self,child):
