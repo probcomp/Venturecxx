@@ -17,8 +17,9 @@ def MHInfer(trace):
   xiWeight = regenAndAttach(particle,scaffold.border,scaffold,False,rhoDB,{})
   xiAux = particle.logDensityOfPrincipalNode(pnode)
   if math.log(random.random()) > (xiAux + xiWeight) - (rhoAux + rhoWeight): # reject
+    detachAndExtract(particle,scaffold.border,scaffold)
+#    scaffold.resetRegenCounts()
     assertTorus(scaffold)
-    scaffold.resetRegenCounts()
     regenAndAttach(trace,scaffold.border,scaffold,True,rhoDB,{})
   else: # accept
     particle.commit()
