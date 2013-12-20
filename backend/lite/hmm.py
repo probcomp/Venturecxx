@@ -21,7 +21,7 @@ class HMMSPAux(SPAux):
   def copy(self):
     ans = HMMSPAux()
     ans.xs = copy(self.xs)
-    ans.os = copy(self.os)
+    ans.os = {k:copy(v) for (k,v) in self.os.iteritems()}
     return ans
 
 class MakeUncollapsedHMMOutputPSP(PSP):
