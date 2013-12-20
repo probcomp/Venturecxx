@@ -131,8 +131,10 @@ class Trace(object):
     return self.pspAt(node).incorporate(self.groundValueAt(node), self.argsAt(node))
   def numRequestsAt(self,node): return node.TnumRequests
   def setNumRequestsAt(self,node,num): node.TnumRequests = num
-  def incRequestsAt(self,node): node.TnumRequests += 1
-  def decRequestsAt(self,node): node.TnumRequests -= 1
+  def incRequestsAt(self,node): 
+    node.TnumRequests += 1
+  def decRequestsAt(self,node): 
+    node.TnumRequests -= 1
 
   #### For kernels
   def samplePrincipalNode(self): return random.choice(self.rcs)

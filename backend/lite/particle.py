@@ -54,7 +54,7 @@ class Particle(Trace):
   def registerFamilyAt(self,node,esrId,esrParent):
     self._alterAt(self.spRefAt(node).makerNode, lambda r: r.registerFamily(esrId,esrParent))
   def unregisterFamilyAt(self,node,esrId):
-    self._alterAt(self.spRefAt(node).makerNode, lambda r: r.unRegisterFamily(esrId))
+    self._alterAt(self.spRefAt(node).makerNode, lambda r: r.unregisterFamily(esrId))
   def unincorporateAt(self,node):
     self._ensure_spaux_cached(node)
     self._ensure_spaux_cached(self.spRefAt(node).makerNode)
@@ -69,6 +69,7 @@ class Particle(Trace):
     self._alterAt(node, lambda r: r.update(numRequests = r.numRequests + 1))
   def decRequestsAt(self,node):
     self._alterAt(node, lambda r: r.update(numRequests = r.numRequests - 1))
+
 
   def registerRandomChoice(self,node):
     assert not node in self.rcs
@@ -111,11 +112,11 @@ class Record(object):
   def update(self,value=None,madeSP=None,madeSPAux=None,esrParents=None,children=None,numRequests=None):
     ans = self._copy()
     if value is not None: ans.value = value
-    if madeSP: ans.madeSP = madeSP
-    if madeSPAux: ans.madeSPAux = madeSPAux
-    if esrParents: ans.esrParents = esrParents
-    if children: ans.children = children
-    if numRequests: ans.numRequests = numRequests
+    if madeSP is not None: ans.madeSP = madeSP
+    if madeSPAux is not None: ans.madeSPAux = madeSPAux
+    if esrParents is not None: ans.esrParents = esrParents
+    if children is not None: ans.children = children
+    if numRequests is not None: ans.numRequests = numRequests
     return ans
 
   def add_child(self,child):
@@ -145,8 +146,8 @@ class Record(object):
     self.madeSPAux.registerFamily(esrId,esrParent)
     return self
 
-  def unRegisterFamily(self,esrId):
-    self.madeSPAux.unRegisterFamily(esrId)
+  def unregisterFamily(self,esrId):
+    self.madeSPAux.unregisterFamily(esrId)
     return self
 
   def commit(self,trace,node):
