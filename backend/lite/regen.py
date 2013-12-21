@@ -55,11 +55,10 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   return weight
 
 def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
-  weight = 0
   if isVariable(exp): 
     sourceNode = env.findSymbol(exp)
-    regen(trace,sourceNode,scaffold,False,omegaDB,gradients)
-    return (0,trace.createLookupNode(sourceNode))
+    weight = regen(trace,sourceNode,scaffold,False,omegaDB,gradients)
+    return (weight,trace.createLookupNode(sourceNode))
   elif isSelfEvaluating(exp): return (0,trace.createConstantNode(exp))
   elif isQuotation(exp): return (0,trace.createConstantNode(textOfQuotation(exp)))
   else:
