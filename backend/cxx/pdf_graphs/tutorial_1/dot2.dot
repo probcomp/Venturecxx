@@ -1,13 +1,13 @@
 digraph {
 rankdir=BT
 fontsize=24
-1["shape" ="ellipse" "style" ="filled" "fillcolor" ="darkgoldenrod3" "label" ="3" ]
-2["shape" ="ellipse" "style" ="filled" "fillcolor" ="darkgoldenrod3" "label" ="2" ]
-3["shape" ="ellipse" "style" ="filled" "fillcolor" ="darkgoldenrod3" "label" ="1" ]
-4["shape" ="ellipse" "style" ="filled" "fillcolor" ="darkgoldenrod3" "label" ="1" ]
-5["shape" ="ellipse" "style" ="filled" "fillcolor" ="royalblue" "label" ="" ]
-6["shape" ="ellipse" "style" ="filled" "fillcolor" ="royalblue" "label" ="" ]
-7["shape" ="ellipse" "style" ="filled" "fillcolor" ="steelblue1" "label" ="" ]
+1["style" ="filled" "color" ="gold" "label" ="3" "shape" ="ellipse" "fillcolor" ="gold" "penwidth" ="3" ]
+2["style" ="filled" "color" ="gold" "label" ="2" "shape" ="ellipse" "fillcolor" ="gold" "penwidth" ="3" ]
+3["style" ="filled" "color" ="gold" "label" ="1" "shape" ="ellipse" "fillcolor" ="gold" "penwidth" ="3" ]
+4["style" ="filled" "color" ="gold" "label" ="1" "shape" ="ellipse" "fillcolor" ="gold" "penwidth" ="3" ]
+5["style" ="filled" "color" ="steelblue1" "label" ="" "shape" ="ellipse" "fillcolor" ="steelblue1" "penwidth" ="3" ]
+6["style" ="filled" "color" ="steelblue1" "label" ="" "shape" ="ellipse" "fillcolor" ="steelblue1" "penwidth" ="3" ]
+7["style" ="filled" "color" ="steelblue1" "label" ="" "shape" ="ellipse" "fillcolor" ="white" "penwidth" ="3" ]
 1 -> 2["color" ="black" "style" ="solid" "arrowhead" ="normal" ]
 1 -> 3["color" ="black" "style" ="solid" "arrowhead" ="normal" ]
 1 -> 4["color" ="black" "style" ="solid" "arrowhead" ="normal" ]

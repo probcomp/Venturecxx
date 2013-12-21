@@ -13,16 +13,13 @@ class RenderTutorial1(object):
     self.edges = edges
 
     # isdrg
-    self.stackColors = { True : "grey90",
-                         False : "grey70"
-                         }
+    self.stackFillColor = "grey90"
+    self.detachFillColor = "white"
 
-    # (isdrg,isregened)
-    self.colors = { (True,True) : "darkgoldenrod3" , 
-                    (True,False) : "gold", 
-                    (False,True) : "royalblue",
-                    (False,False) : "steelblue1",
-                }
+
+    # isdrg
+    self.colors = { True : "gold", False : "steelblue1" }
+
 
     self.regenCounts = {node : len(self.edges[node]) for node in self.drg}
 
@@ -75,14 +72,17 @@ class RenderTutorial1(object):
 
   def nodeAttributes(self,node):
     return { "shape" : "ellipse",
-             "fillcolor" : self.getFillColor(node),
+             "color" : self.colors[node in self.drg],
+             "fillcolor" : self.getFillColor(node) ,
              "style" : "filled",
              "label" : self.getLabel(node),
+             "penwidth" : 3,
          }
 
   def getFillColor(self,node):
-    if node in self.stack: return self.stackColors[node in self.drg]
-    else: return self.colors[(node in self.drg,node in self.regenerated)]
+    if node in self.stack: return self.stackFillColor
+    elif node in self.regenerated: return self.colors[node in self.drg]
+    else: return self.detachFillColor
 
   def getLabel(self,node):
     if node in self.drg: return self.regenCounts[node]
