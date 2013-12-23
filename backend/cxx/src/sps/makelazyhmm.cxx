@@ -96,7 +96,10 @@ pair<double,LatentDB *> MakeLazyHMMSP::detachAllLatents(SPAux * spaux) const
   latents->xs.swap(aux->xs);
   return {0,latents};
 }
- 
+
+// TODO FIXME URGENT this method is bizarrely wrong, and should be the one line
+// aux->xs.swap(latentDB->xs)
+// Am not setup to test this right now though, so I won't make the change.
 void MakeLazyHMMSP::restoreAllLatents(SPAux * spaux, LatentDB * latentDB)
 {
   LazyHMMSPAux * aux = dynamic_cast<LazyHMMSPAux*>(spaux);
