@@ -18,13 +18,14 @@ import Trace (SP)
 -- Critical example SPs forcing aspects of the interface:
 -- +                         just a basic deterministic function as an SP
 -- bernoulli                 just a basic stochastic function
--- normal                    a basic continuous stochastic function
--- compoundSP                Venture's lambda; forces selective absorbing
+-- normal                    a basic continuous stochastic function; absorbing forces log densities
+-- select                    one way to do if; forces a brush
+-- compoundSP                Venture's lambda; forces ESRs and selective absorbing
+-- observe (not an SP)       forces constraints and propagation thereof
 -- collapsed beta bernoulli  a higher-order SP, emitting SPs with state
 -- mem                       exercises memoization of requests
--- make-hmm                  ?? forces latent simulation requests; anything else?
 -- collapsed beta bernoulli  forces AAA under proposing to the hyperparameters
--- others?
+-- make-lazy-hmm             forces latent simulation requests; advanced version forces AEKernels
 
 nullReq :: SPRequesterNS m
 nullReq = DeterministicR $ \_ -> return []
