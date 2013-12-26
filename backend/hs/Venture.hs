@@ -309,3 +309,6 @@ whether_a_node_is_random_can_change =
 -- Daniel says that complexities arise when, e.g., resampling the
 -- hyperparameter also causes the set of applications of the made SP to
 -- change.
+
+-- Code review topics:
+-- - Does all the hair with Uniques make sense, and does it compile away?
