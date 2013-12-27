@@ -59,11 +59,11 @@ def runAllTests(N):
     globalUseGlobalScaffold = options[i][1]
     runTests(N)
 
-def loggingInfer(sivm,address,T):
+def loggingInfer(ripl,address,T):
   predictions = []
   for t in range(T):
-    sivm.infer(10,kernel=globalKernel, use_global_scaffold=globalUseGlobalScaffold)
-    predictions.append(sivm.report(address))
+    ripl.infer(10,kernel=globalKernel, use_global_scaffold=globalUseGlobalScaffold)
+    predictions.append(ripl.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
 
@@ -129,57 +129,57 @@ def runTests2(N):
 
 
 def testMakeCSP():
-  sivm = RIPL()
-  sivm.assume("f", "(lambda (x) (* x x))")
-  sivm.predict("(f 1)")
+  ripl = RIPL()
+  ripl.assume("f", "(lambda (x) (* x x))")
+  ripl.predict("(f 1)")
 
-  sivm.assume("g", "(lambda (x y) (* x y))")
-  sivm.predict("(g 2 3)")
+  ripl.assume("g", "(lambda (x y) (* x y))")
+  ripl.predict("(g 2 3)")
 
-  sivm.assume("h", "(lambda () 5)")
-  sivm.predict("(h)")
+  ripl.assume("h", "(lambda () 5)")
+  ripl.predict("(h)")
 
-  print sivm.report(2)
-  print sivm.report(4)
-  print sivm.report(6)
+  print ripl.report(2)
+  print ripl.report(4)
+  print ripl.report(6)
 
 
 def testBernoulli0(N):
-  sivm = RIPL()
-  sivm.assume("b", "((lambda () (bernoulli)))")
-  sivm.predict("""
+  ripl = RIPL()
+  ripl.assume("b", "((lambda () (bernoulli)))")
+  ripl.predict("""
 ((biplex
   b
   (lambda () (normal 0.0 1.0))
   (lambda () ((lambda () (normal 10.0 1.0))))))
 """);
-  predictions = loggingInfer(sivm,2,N)
+  predictions = loggingInfer(ripl,2,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestBernoulli0---"
   print "(5.0," + str(mean) + ")"
 
 
 def testBernoulli1(N):
-  sivm = RIPL()
-  sivm.assume("b", "((lambda () (bernoulli 0.7)))")
-  sivm.predict("""
+  ripl = RIPL()
+  ripl.assume("b", "((lambda () (bernoulli 0.7)))")
+  ripl.predict("""
 (branch
   b
   (lambda () (normal 0.0 1.0))
   (lambda () ((lambda () (normal 10.0 1.0)))))
 """);
-  predictions = loggingInfer(sivm,2,N)
+  predictions = loggingInfer(ripl,2,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestBernoulli1---"
   print "(3.0," + str(mean) + ")"
 
 def testCategorical1(N):
-  sivm = RIPL()
-  sivm.assume("x", "(real (categorical 0.1 0.2 0.3 0.4))")
-  sivm.assume("y", "(real (categorical 0.2 0.6 0.2))")
-  sivm.predict("(plus x y)")
+  ripl = RIPL()
+  ripl.assume("x", "(real (categorical 0.1 0.2 0.3 0.4))")
+  ripl.assume("y", "(real (categorical 0.2 0.6 0.2))")
+  ripl.predict("(plus x y)")
 
-  predictions = loggingInfer(sivm,3,N)
+  predictions = loggingInfer(ripl,3,N)
   ps = [0.1 * 0.2,
         0.1 * 0.6 + 0.2 * 0.2,
         0.1 * 0.2 + 0.2 * 0.6 + 0.3 * 0.2,
@@ -190,29 +190,29 @@ def testCategorical1(N):
   printTest("testCategorical1",ps,eps)
 
 def testMHNormal0(N):
-  sivm = RIPL()
-  sivm.assume("a", "(normal 10.0 1.0)")
-  sivm.observe("(normal a 1.0)", 14.0)
-  sivm.predict("(normal a 1.0)")
+  ripl = RIPL()
+  ripl.assume("a", "(normal 10.0 1.0)")
+  ripl.observe("(normal a 1.0)", 14.0)
+  ripl.predict("(normal a 1.0)")
 
-  predictions = loggingInfer(sivm,3,N)
+  predictions = loggingInfer(ripl,3,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestMHNormal0---"
   print "(12.0," + str(mean) + ")"
 
 
 def testMHNormal1(N):
-  sivm = RIPL()
-  sivm.assume("a", "(normal 10.0 1.0)")
-  sivm.assume("b", "(normal a 1.0)")
-  sivm.observe("((lambda () (normal b 1.0)))", 14.0)
-  sivm.predict("""
+  ripl = RIPL()
+  ripl.assume("a", "(normal 10.0 1.0)")
+  ripl.assume("b", "(normal a 1.0)")
+  ripl.observe("((lambda () (normal b 1.0)))", 14.0)
+  ripl.predict("""
 (branch (lt a 100.0)
         (lambda () (normal (plus a b) 1.0))
         (lambda () (normal (times a b) 1.0)))
 """)
 
-  predictions = loggingInfer(sivm,4,N)
+  predictions = loggingInfer(ripl,4,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestMHNormal1---"
   print "(23.9," + str(mean) + ")"
@@ -220,83 +220,83 @@ def testMHNormal1(N):
 def testStudentT0(N):
   # Modeled on testMHNormal0, but I do not know what the answer is
   # supposed to be.  However, the run not crashing says something.
-  sivm = RIPL()
-  sivm.assume("a", "(student_t 1.0)")
-  sivm.observe("(normal a 1.0)", 3.0)
-  sivm.predict("(normal a 1.0)")
-  predictions = loggingInfer(sivm,3,N)
+  ripl = RIPL()
+  ripl.assume("a", "(student_t 1.0)")
+  ripl.observe("(normal a 1.0)", 3.0)
+  ripl.predict("(normal a 1.0)")
+  predictions = loggingInfer(ripl,3,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestStudentT0---"
   print "(2.3ish (regression)," + str(mean) + ")"
 
 def testMem0(N):
-  sivm = RIPL()
-  sivm.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
-  sivm.predict("(f (bernoulli 0.5))")
-  sivm.predict("(f (bernoulli 0.5))")
-  sivm.infer(N, kernel="mh", use_global_scaffold=False)
+  ripl = RIPL()
+  ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
+  ripl.predict("(f (bernoulli 0.5))")
+  ripl.predict("(f (bernoulli 0.5))")
+  ripl.infer(N, kernel="mh", use_global_scaffold=False)
   print "Passed TestMem0"
 
 
 def testMem1(N):
-  sivm = RIPL()
-  sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
-  sivm.assume("x","(f 1)")
-  sivm.assume("y","(f 1)")
-  sivm.assume("w","(f 2)")
-  sivm.assume("z","(f 2)")
-  sivm.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
-  sivm.predict('(plus x y w z q)');
+  ripl = RIPL()
+  ripl.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
+  ripl.assume("x","(f 1)")
+  ripl.assume("y","(f 1)")
+  ripl.assume("w","(f 2)")
+  ripl.assume("z","(f 2)")
+  ripl.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
+  ripl.predict('(plus x y w z q)');
 
-  predictions = loggingInfer(sivm,7,N)
+  predictions = loggingInfer(ripl,7,N)
   ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
   eps = [ float(x) / N for x in countPredictions(predictions, [5,10])] if N > 0 else [0,0]
   printTest("TestMem1",ps,eps)
 
 def testMem2(N):
-  sivm = RIPL()
-  sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
-  sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
-  sivm.assume("x","(f ((branch (bernoulli 0.5) (lambda () (lambda () 1)) (lambda () (lambda () 1)))))")
-  sivm.assume("y","(g ((lambda () 0)))")
-  sivm.assume("w","((lambda () (f 2)))")
-  sivm.assume("z","(g 1)")
-  sivm.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
-  sivm.predict('(plus x y w z q)');
+  ripl = RIPL()
+  ripl.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
+  ripl.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
+  ripl.assume("x","(f ((branch (bernoulli 0.5) (lambda () (lambda () 1)) (lambda () (lambda () 1)))))")
+  ripl.assume("y","(g ((lambda () 0)))")
+  ripl.assume("w","((lambda () (f 2)))")
+  ripl.assume("z","(g 1)")
+  ripl.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
+  ripl.predict('(plus x y w z q)');
 
-  predictions = loggingInfer(sivm,8,N)
+  predictions = loggingInfer(ripl,8,N)
   ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
   eps = [ float(x) / N for x in countPredictions(predictions, [5,10])] if N > 0 else [0,0]
   printTest("TestMem2",ps,eps)
 
 def testMem3(N):
-  sivm = RIPL()
-  sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
-  sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
-  sivm.assume("x","(f ((lambda () 1)))")
-  sivm.assume("y","(g ((lambda () (branch (bernoulli 1.0) (lambda () 0) (lambda () 100)))))")
-  sivm.assume("w","((lambda () (f 2)))")
-  sivm.assume("z","(g 1)")
-  sivm.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
-  sivm.predict('(plus x y w z q)');
+  ripl = RIPL()
+  ripl.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
+  ripl.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
+  ripl.assume("x","(f ((lambda () 1)))")
+  ripl.assume("y","(g ((lambda () (branch (bernoulli 1.0) (lambda () 0) (lambda () 100)))))")
+  ripl.assume("w","((lambda () (f 2)))")
+  ripl.assume("z","(g 1)")
+  ripl.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
+  ripl.predict('(plus x y w z q)');
 
-  predictions = loggingInfer(sivm,8,N)
+  predictions = loggingInfer(ripl,8,N)
   ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
   eps = [ float(x) / N for x in countPredictions(predictions, [5,10])] if N > 0 else [0,0]
   printTest("TestMem3",ps,eps)
 
 def testSprinkler1(N):
-  sivm = RIPL()
-  sivm.assume("rain","(bernoulli 0.2)")
-  sivm.assume("sprinkler","(branch rain (lambda () (bernoulli 0.01)) (lambda () (bernoulli 0.4)))")
-  sivm.assume("grassWet","""
+  ripl = RIPL()
+  ripl.assume("rain","(bernoulli 0.2)")
+  ripl.assume("sprinkler","(branch rain (lambda () (bernoulli 0.01)) (lambda () (bernoulli 0.4)))")
+  ripl.assume("grassWet","""
 (branch rain
 (lambda () (branch sprinkler (lambda () (bernoulli 0.99)) (lambda () (bernoulli 0.8))))
 (lambda () (branch sprinkler (lambda () (bernoulli 0.9)) (lambda () (bernoulli 0.00001)))))
 """)
-  sivm.observe("grassWet", True)
+  ripl.observe("grassWet", True)
 
-  predictions = loggingInfer(sivm,1,N)
+  predictions = loggingInfer(ripl,1,N)
   ps = [.3577,.6433]
   eps = normalizeList(countPredictions(predictions, [True,False]))
   printTest("TestSprinkler1",ps,eps)
@@ -305,163 +305,163 @@ def testSprinkler2(N):
   # this test needs more iterations than most others, because it mixes badly
   N = N
 
-  sivm = RIPL()
-  sivm.assume("rain","(bernoulli 0.2)")
-  sivm.assume("sprinkler","(bernoulli (branch rain (lambda () 0.01) (lambda () 0.4)))")
-  sivm.assume("grassWet","""
+  ripl = RIPL()
+  ripl.assume("rain","(bernoulli 0.2)")
+  ripl.assume("sprinkler","(bernoulli (branch rain (lambda () 0.01) (lambda () 0.4)))")
+  ripl.assume("grassWet","""
 (bernoulli (branch rain
 (lambda () (branch sprinkler (lambda () 0.99) (lambda () 0.8)))
 (lambda () (branch sprinkler (lambda () 0.9) (lambda () 0.00001)))))
 """)
-  sivm.observe("grassWet", True)
+  ripl.observe("grassWet", True)
 
-  predictions = loggingInfer(sivm,1,N)
+  predictions = loggingInfer(ripl,1,N)
   ps = [.3577,.6433]
   eps = normalizeList(countPredictions(predictions, [True,False]))
   printTest("TestSprinkler2 (mixes terribly)",ps,eps)
 
 def testGamma1(N):
-  sivm = RIPL()
-  sivm.assume("a","(gamma 10.0 10.0)")
-  sivm.assume("b","(gamma 10.0 10.0)")
-  sivm.predict("(gamma a b)")
+  ripl = RIPL()
+  ripl.assume("a","(gamma 10.0 10.0)")
+  ripl.assume("b","(gamma 10.0 10.0)")
+  ripl.predict("(gamma a b)")
 
-  predictions = loggingInfer(sivm,3,N)
+  predictions = loggingInfer(ripl,3,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestMHGamma1---"
   print "(1," + str(mean) + ")"
 
 def testIf1(N):
-  sivm = RIPL()
-  sivm.assume('IF', '(lambda () branch)')
-  sivm.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
-  sivm.predict('(IF2 (bernoulli 0.5) IF IF)')
-  sivm.infer(N/10, kernel="mh", use_global_scaffold=False)
+  ripl = RIPL()
+  ripl.assume('IF', '(lambda () branch)')
+  ripl.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
+  ripl.predict('(IF2 (bernoulli 0.5) IF IF)')
+  ripl.infer(N/10, kernel="mh", use_global_scaffold=False)
   print "Passed TestIf1()"
 
 def testIf2(N):
-  sivm = RIPL()
-  sivm.assume('if1', '(branch (bernoulli 0.5) (lambda () branch) (lambda () branch))')
-  sivm.assume('if2', '(branch (bernoulli 0.5) (lambda () if1) (lambda () if1))')
-  sivm.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
-  sivm.assume('if4', '(branch (bernoulli 0.5) (lambda () if3) (lambda () if3))')
-  sivm.infer(N/10, kernel="mh", use_global_scaffold=False)
+  ripl = RIPL()
+  ripl.assume('if1', '(branch (bernoulli 0.5) (lambda () branch) (lambda () branch))')
+  ripl.assume('if2', '(branch (bernoulli 0.5) (lambda () if1) (lambda () if1))')
+  ripl.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
+  ripl.assume('if4', '(branch (bernoulli 0.5) (lambda () if3) (lambda () if3))')
+  ripl.infer(N/10, kernel="mh", use_global_scaffold=False)
   print "Passed TestIf2()"
 
 def testBLOGCSI(N):
-  sivm = RIPL()
-  sivm.assume("u","(bernoulli 0.3)")
-  sivm.assume("v","(bernoulli 0.9)")
-  sivm.assume("w","(bernoulli 0.1)")
-  sivm.assume("getParam","(lambda (z) (branch z (lambda () 0.8) (lambda () 0.2)))")
-  sivm.assume("x","(bernoulli (branch u (lambda () (getParam w)) (lambda () (getParam v))))")
+  ripl = RIPL()
+  ripl.assume("u","(bernoulli 0.3)")
+  ripl.assume("v","(bernoulli 0.9)")
+  ripl.assume("w","(bernoulli 0.1)")
+  ripl.assume("getParam","(lambda (z) (branch z (lambda () 0.8) (lambda () 0.2)))")
+  ripl.assume("x","(bernoulli (branch u (lambda () (getParam w)) (lambda () (getParam v))))")
 
-  predictions = loggingInfer(sivm,5,N)
+  predictions = loggingInfer(ripl,5,N)
   ps = [.596, .404]
   eps = normalizeList(countPredictions(predictions, [True, False]))
   printTest("TestBLOGCSI",ps,eps)
 
 
 def testMHHMM1(N):
-  sivm = RIPL()
-  sivm.assume("f","""
+  ripl = RIPL()
+  ripl.assume("f","""
 (mem (lambda (i) (branch (eq i 0) (lambda () (normal 0.0 1.0)) (lambda () (normal (f (minus i 1)) 1.0)))))
 """)
-  sivm.assume("g","""
+  ripl.assume("g","""
 (mem (lambda (i) (normal (f i) 1.0)))
 """)
-  sivm.observe("(g 0)",1.0)
-  sivm.observe("(g 1)",2.0)
-  sivm.observe("(g 2)",3.0)
-  sivm.observe("(g 3)",4.0)
-  sivm.observe("(g 4)",5.0)
-  sivm.predict("(f 4)")
+  ripl.observe("(g 0)",1.0)
+  ripl.observe("(g 1)",2.0)
+  ripl.observe("(g 2)",3.0)
+  ripl.observe("(g 3)",4.0)
+  ripl.observe("(g 4)",5.0)
+  ripl.predict("(f 4)")
 
-  predictions = loggingInfer(sivm,8,N)
+  predictions = loggingInfer(ripl,8,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestMHHMM1---"
   print "(4.3ish," + str(mean) + ")"
 
 def testOuterMix1(N):
-  sivm = RIPL()
-  sivm.predict("""
+  ripl = RIPL()
+  ripl.predict("""
 (branch (bernoulli 0.5)
   (lambda ()
     (branch (bernoulli 0.5) (lambda () 2) (lambda () 3)))
   (lambda () 1))
 """)
 
-  predictions = loggingInfer(sivm,1,N)
+  predictions = loggingInfer(ripl,1,N)
   ps = [.5, .25,.25]
   eps = normalizeList(countPredictions(predictions, [1, 2, 3]))
   printTest("TestOuterMix1",ps,eps)
 
 
 def testMakeSymDirMult1(N):
-  sivm = RIPL()
-  sivm.assume("f", "(make_sym_dir_mult 1.0 2)")
-  sivm.predict("(f)")
-  predictions = loggingInfer(sivm,2,N)
+  ripl = RIPL()
+  ripl.assume("f", "(make_sym_dir_mult 1.0 2)")
+  ripl.predict("(f)")
+  predictions = loggingInfer(ripl,2,N)
   ps = [.5, .5]
   eps = normalizeList(countPredictions(predictions, [0,1]))
   printTest("TestMakeSymDirMult1",ps,eps)
 
 
 def testMakeSymDirMult2(N):
-  sivm = RIPL()
-  sivm.assume("a", "(normal 10.0 1.0)")
-  sivm.assume("f", "(make_sym_dir_mult a 4)")
-  sivm.predict("(f)")
+  ripl = RIPL()
+  ripl.assume("a", "(normal 10.0 1.0)")
+  ripl.assume("f", "(make_sym_dir_mult a 4)")
+  ripl.predict("(f)")
 
   for i in range(1,4):
     for j in range(20):
-      sivm.observe("(f)", "atom<%d>" % i)
+      ripl.observe("(f)", "atom<%d>" % i)
 
-  predictions = loggingInfer(sivm,3,N)
+  predictions = loggingInfer(ripl,3,N)
   ps = [.1,.3,.3,.3]
   eps = normalizeList(countPredictions(predictions, [0,1,2,3]))
   printTest("TestMakeSymDirMult2",ps,eps)
 
 def testMakeDirMult1(N):
-  sivm = RIPL()
-  sivm.assume("a", "(normal 10.0 1.0)")
-  sivm.assume("f", "(make_dir_mult a a a a)")
-  sivm.predict("(f)")
+  ripl = RIPL()
+  ripl.assume("a", "(normal 10.0 1.0)")
+  ripl.assume("f", "(make_dir_mult a a a a)")
+  ripl.predict("(f)")
 
   for i in range(1,4):
     for j in range(20):
-      sivm.observe("(f)", "atom<%d>" % i)
+      ripl.observe("(f)", "atom<%d>" % i)
 
-  predictions = loggingInfer(sivm,3,N)
+  predictions = loggingInfer(ripl,3,N)
   ps = [.1,.3,.3,.3]
   eps = normalizeList(countPredictions(predictions, [0,1,2,3]))
   printTest("TestMakeDirMult2",ps,eps)
 
 def testMakeBetaBernoulli1(N):
-  sivm = RIPL()
-  sivm.assume("a", "(normal 10.0 1.0)")
-  sivm.assume("f", "(make_beta_bernoulli a a)")
-  sivm.predict("(f)")
+  ripl = RIPL()
+  ripl.assume("a", "(normal 10.0 1.0)")
+  ripl.assume("f", "(make_beta_bernoulli a a)")
+  ripl.predict("(f)")
 
-  for j in range(20): sivm.observe("(f)", "true")
+  for j in range(20): ripl.observe("(f)", "true")
 
-  predictions = loggingInfer(sivm,3,N)
+  predictions = loggingInfer(ripl,3,N)
   ps = [.25,.75]
   eps = normalizeList(countPredictions(predictions, [False,True]));
   printTest("TestMakeBetaBernoulli1",ps,eps)
 
 
 def testMakeUCSymDirMult1(N):
-  sivm = RIPL()
-  sivm.assume("a", "(normal 10.0 1.0)")
-  sivm.assume("f", "(make_uc_sym_dir_mult a 4)")
-  sivm.predict("(f)")
+  ripl = RIPL()
+  ripl.assume("a", "(normal 10.0 1.0)")
+  ripl.assume("f", "(make_uc_sym_dir_mult a 4)")
+  ripl.predict("(f)")
 
   for i in range(1,4):
     for j in range(20):
-      sivm.observe("(f)", "atom<%d>" % i)
+      ripl.observe("(f)", "atom<%d>" % i)
 
-  predictions = loggingInfer(sivm,3,N)
+  predictions = loggingInfer(ripl,3,N)
   ps = [.1,.3,.3,.3]
   eps = normalizeList(countPredictions(predictions, [0,1,2,3]))
   printTest("TestMakeUCSymDirMult1",ps,eps)
@@ -469,8 +469,8 @@ def testMakeUCSymDirMult1(N):
 
 def testLazyHMM1(N):
   N = N
-  sivm = RIPL()
-  sivm.assume("f","""
+  ripl = RIPL()
+  ripl.assume("f","""
 (mem
 (lambda (i)
   (branch (eq i 0)
@@ -480,21 +480,21 @@ def testLazyHMM1(N):
                  (lambda () (bernoulli 0.3)))))))
 """)
 
-  sivm.assume("g","""
+  ripl.assume("g","""
 (mem (lambda (i)
   (branch (f i)
      (lambda () (bernoulli 0.8))
      (lambda () (bernoulli 0.1)))))
 """)
 
-  sivm.observe("(g 1)",False)
-  sivm.observe("(g 2)",False)
-  sivm.observe("(g 3)",True)
-  sivm.observe("(g 4)",False)
-  sivm.observe("(g 5)",False)
-  sivm.predict("(make_vector (f 0) (f 1) (f 2) (f 3) (f 4) (f 5))")
+  ripl.observe("(g 1)",False)
+  ripl.observe("(g 2)",False)
+  ripl.observe("(g 3)",True)
+  ripl.observe("(g 4)",False)
+  ripl.observe("(g 5)",False)
+  ripl.predict("(make_vector (f 0) (f 1) (f 2) (f 3) (f 4) (f 5))")
 
-  # predictions = loggingInfer(sivm,8,N)
+  # predictions = loggingInfer(ripl,8,N)
   # sums = [0 for i in range(6)]
   # for p in predictions: sums = [sums[i] + p[i] for i in range(6)]
   # ps = [.3531,.1327,.1796,.6925,.1796,.1327]
@@ -502,8 +502,8 @@ def testLazyHMM1(N):
   # printTest("testLazyHMM1 (mixes terribly)",ps,eps)
 
 def testLazyHMMSP1(N):
-  sivm = RIPL()
-  sivm.assume("f","""
+  ripl = RIPL()
+  ripl.assume("f","""
 (make_lazy_hmm
   (make_vector 0.5 0.5)
   (make_vector
@@ -513,175 +513,175 @@ def testLazyHMMSP1(N):
     (make_vector 0.9 0.2)
     (make_vector 0.1 0.8)))
 """);
-  sivm.observe("(f 1)","atom<0>")
-  sivm.observe("(f 2)","atom<0>")
-  sivm.observe("(f 3)","atom<1>")
-  sivm.observe("(f 4)","atom<0>")
-  sivm.observe("(f 5)","atom<0>")
-  sivm.predict("(f 6)")
-  sivm.predict("(f 7)")
-  sivm.predict("(f 8)")
+  ripl.observe("(f 1)","atom<0>")
+  ripl.observe("(f 2)","atom<0>")
+  ripl.observe("(f 3)","atom<1>")
+  ripl.observe("(f 4)","atom<0>")
+  ripl.observe("(f 5)","atom<0>")
+  ripl.predict("(f 6)")
+  ripl.predict("(f 7)")
+  ripl.predict("(f 8)")
 
-  predictions = loggingInfer(sivm,7,N)
+  predictions = loggingInfer(ripl,7,N)
   ps = [0.6528, 0.3472]
   eps = normalizeList(countPredictions(predictions,[0,1]))
   printTest("testLazyHMMSP1",ps,eps)
 
 def testStaleAAA1(N):
-  sivm = RIPL()
-  sivm.assume("a", "1.0")
-  sivm.assume("f", "(make_uc_sym_dir_mult a 2)")
-  sivm.assume("g", "(mem f)")
-  sivm.assume("h", "g")
-  sivm.predict("(h)")
+  ripl = RIPL()
+  ripl.assume("a", "1.0")
+  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("g", "(mem f)")
+  ripl.assume("h", "g")
+  ripl.predict("(h)")
 
   for i in range(9):
-    sivm.observe("(f)", "atom<1>")
+    ripl.observe("(f)", "atom<1>")
 
-  predictions = loggingInfer(sivm,5,N)
+  predictions = loggingInfer(ripl,5,N)
   ps = [.9, .1]
   eps = normalizeList(countPredictions(predictions, [1, 0]))
   printTest("TestStaleAAA1",ps,eps)
 
 def testStaleAAA2(N):
-  sivm = RIPL()
-  sivm.assume("a", "1.0")
-  sivm.assume("f", "(make_uc_sym_dir_mult a 2)")
-  sivm.assume("g", "(lambda () f)")
-  sivm.assume("h", "(g)")
-  sivm.predict("(h)")
+  ripl = RIPL()
+  ripl.assume("a", "1.0")
+  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("g", "(lambda () f)")
+  ripl.assume("h", "(g)")
+  ripl.predict("(h)")
 
   for i in range(9):
-    sivm.observe("(f)", "atom<1>")
+    ripl.observe("(f)", "atom<1>")
 
-  predictions = loggingInfer(sivm,5,N)
+  predictions = loggingInfer(ripl,5,N)
   ps = [.9, .1]
   eps = normalizeList(countPredictions(predictions, [1, 0]))
   printTest("TestStaleAAA2",ps,eps)
 
 def testMap1(N):
-  sivm = RIPL()
-  sivm.assume("x","(bernoulli 1.0)")
-  sivm.assume("m","""(make_map (list (quote x) (quote y))
+  ripl = RIPL()
+  ripl.assume("x","(bernoulli 1.0)")
+  ripl.assume("m","""(make_map (list (quote x) (quote y))
                                (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
-  sivm.predict("""(normal (plus
+  ripl.predict("""(normal (plus
                            (map_lookup m (quote x))
                            (map_lookup m (quote y))
                            (map_lookup m (quote y)))
                          1.0)""")
 
-  predictions = loggingInfer(sivm,3,N)
+  predictions = loggingInfer(ripl,3,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestMap1---"
   print "(20.0," + str(mean) + ")"
 
 def testMap2():
-  sivm = RIPL()
-  sivm.assume("m","""(make_map (list (quote x) (quote y))
+  ripl = RIPL()
+  ripl.assume("m","""(make_map (list (quote x) (quote y))
                                (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
-  sivm.predict("(map_contains m (quote x))",label="p1")
-  sivm.predict("(map_contains m (quote y))",label="p2")
-  sivm.predict("(map_contains m (quote z))",label="p3")
+  ripl.predict("(map_contains m (quote x))",label="p1")
+  ripl.predict("(map_contains m (quote y))",label="p2")
+  ripl.predict("(map_contains m (quote z))",label="p3")
 
-  assert sivm.report("p1")
-  assert sivm.report("p2")
-  assert not sivm.report("p3")
+  assert ripl.report("p1")
+  assert ripl.report("p2")
+  assert not ripl.report("p3")
   print "---Passed TestMap2---"
 
 def testMap3():
-  sivm = RIPL()
-  sivm.assume("m","""(make_map (list atom<1> atom<2>)
+  ripl = RIPL()
+  ripl.assume("m","""(make_map (list atom<1> atom<2>)
                                (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
-  sivm.predict("(map_contains m atom<1>)",label="p1")
-  sivm.predict("(map_contains m atom<2>)",label="p2")
-  sivm.predict("(map_contains m atom<3>)",label="p3")
+  ripl.predict("(map_contains m atom<1>)",label="p1")
+  ripl.predict("(map_contains m atom<2>)",label="p2")
+  ripl.predict("(map_contains m atom<3>)",label="p3")
 
-  assert sivm.report("p1")
-  assert sivm.report("p2")
-  assert not sivm.report("p3")
+  assert ripl.report("p1")
+  assert ripl.report("p2")
+  assert not ripl.report("p3")
   print "---Passed TestMap3---"
 
 def testMap4():
-  sivm = RIPL()
-  sivm.assume("m","""(make_map (list (make_vector atom<1> atom<2>))
+  ripl = RIPL()
+  ripl.assume("m","""(make_map (list (make_vector atom<1> atom<2>))
                                (list (normal 0.0 1.0)))""")
-  sivm.predict("(map_contains m (make_vector atom<1> atom<2>))",label="p1")
-  sivm.predict("(map_contains m atom<1>)",label="p2")
-  sivm.predict("(map_contains m (make_vector atom<1>))",label="p3")
+  ripl.predict("(map_contains m (make_vector atom<1> atom<2>))",label="p1")
+  ripl.predict("(map_contains m atom<1>)",label="p2")
+  ripl.predict("(map_contains m (make_vector atom<1>))",label="p3")
 
-  assert sivm.report("p1")
-  assert not sivm.report("p2")
-  assert not sivm.report("p3")
+  assert ripl.report("p1")
+  assert not ripl.report("p2")
+  assert not ripl.report("p3")
   print "---Passed TestMap4---"
 
 def testEval1(N):
-  sivm = RIPL()
-  sivm.assume("globalEnv","(get_current_environment)")
-  sivm.assume("exp","(quote (bernoulli 0.7))")
-  sivm.predict("(eval exp globalEnv)")
+  ripl = RIPL()
+  ripl.assume("globalEnv","(get_current_environment)")
+  ripl.assume("exp","(quote (bernoulli 0.7))")
+  ripl.predict("(eval exp globalEnv)")
 
-  predictions = loggingInfer(sivm,3,N)
+  predictions = loggingInfer(ripl,3,N)
   ps = [.7, .3]
   eps = normalizeList(countPredictions(predictions, [1, 0]))
   printTest("TestEval1",ps,eps)
 
 def testEval2(N):
-  sivm = RIPL()
-  sivm.assume("p","(uniform_continuous 0.0 1.0)")
-  sivm.assume("globalEnv","(get_current_environment)")
-  sivm.assume("exp","""(quote
+  ripl = RIPL()
+  ripl.assume("p","(uniform_continuous 0.0 1.0)")
+  ripl.assume("globalEnv","(get_current_environment)")
+  ripl.assume("exp","""(quote
   (branch (bernoulli p)
         (lambda () (normal 10.0 1.0))
         (lambda () (normal 0.0 1.0)))
 )""")
 
-  sivm.assume("x","(eval exp globalEnv)")
-  sivm.observe("x",11.0)
+  ripl.assume("x","(eval exp globalEnv)")
+  ripl.observe("x",11.0)
 
-  predictions = loggingInfer(sivm,1,N)
+  predictions = loggingInfer(ripl,1,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestEval2---"
   print "(0.667," + str(mean) + ")"
 
 def testEval3(N):
-  sivm = RIPL()
-  sivm.assume("p","(uniform_continuous 0.0 1.0)")
-  sivm.assume("globalEnv","(get_current_environment)")
-  sivm.assume("exp","""(quote
+  ripl = RIPL()
+  ripl.assume("p","(uniform_continuous 0.0 1.0)")
+  ripl.assume("globalEnv","(get_current_environment)")
+  ripl.assume("exp","""(quote
   (branch ((lambda () (bernoulli p)))
         (lambda () ((lambda () (normal 10.0 1.0))))
         (lambda () (normal 0.0 1.0)))
 )""")
 
-  sivm.assume("x","(eval exp globalEnv)")
-  sivm.observe("x",11.0)
+  ripl.assume("x","(eval exp globalEnv)")
+  ripl.observe("x",11.0)
 
-  predictions = loggingInfer(sivm,1,N)
+  predictions = loggingInfer(ripl,1,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestEval3---"
   print "(0.667," + str(mean) + ")"
 
 def testApply1(N):
-  sivm = RIPL()
-  sivm.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
-  sivm.predict("(apply times (list (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
+  ripl = RIPL()
+  ripl.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
+  ripl.predict("(apply times (list (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
 
-  predictions = loggingInfer(sivm,2,N)
+  predictions = loggingInfer(ripl,2,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestApply1---"
   print "(1000ish," + str(mean) + ")"
 
 
 def testExtendEnv1(N):
-  sivm = RIPL()
-  sivm.assume("env1","(get_current_environment)")
+  ripl = RIPL()
+  ripl.assume("env1","(get_current_environment)")
 
-  sivm.assume("env2","(extend_environment env1 (quote x) (normal 0.0 1.0))")
-  sivm.assume("env3","(extend_environment env2 (quote x) (normal 10.0 1.0))")
-  sivm.assume("exp","(quote (normal x 1.0))")
-  sivm.predict("(normal (eval exp env3) 1.0)")
+  ripl.assume("env2","(extend_environment env1 (quote x) (normal 0.0 1.0))")
+  ripl.assume("env3","(extend_environment env2 (quote x) (normal 10.0 1.0))")
+  ripl.assume("exp","(quote (normal x 1.0))")
+  ripl.predict("(normal (eval exp env3) 1.0)")
 
-  predictions = loggingInfer(sivm,5,N)
+  predictions = loggingInfer(ripl,5,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestExtendEnv1---"
   print "(10," + str(mean) + ")"
@@ -689,11 +689,11 @@ def testExtendEnv1(N):
 
 
 # TODO need extend_env, symbol?
-def sivmWithSTDLIB(sivm):
-  sivm.assume("make_ref","(lambda (x) (lambda () x))")
-  sivm.assume("deref","(lambda (x) (x))")
-  sivm.assume("venture_apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
-  sivm.assume("incremental_apply","""
+def riplWithSTDLIB(ripl):
+  ripl.assume("make_ref","(lambda (x) (lambda () x))")
+  ripl.assume("deref","(lambda (x) (x))")
+  ripl.assume("venture_apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
+  ripl.assume("incremental_apply","""
 (lambda (operator operands)
   (incremental_eval (deref (list_ref operator 3))
 
@@ -701,7 +701,7 @@ def sivmWithSTDLIB(sivm):
 				(deref (list_ref operator 2))
                                 operands)))
 """)
-  sivm.assume("incremental_eval","""
+  ripl.assume("incremental_eval","""
 (lambda (exp env)
   (branch
     (is_symbol exp)
@@ -723,43 +723,43 @@ def sivmWithSTDLIB(sivm):
              (map_list (lambda (x) (make_ref (incremental_eval (deref x) env))) (rest exp))))
 )))))
 """)
-  return sivm
+  return ripl
 
 def testList1():
-  sivm = RIPL()
-  sivm.assume("x1","(list)")
-  sivm.assume("x2","(pair 1.0 x1)")
-  sivm.assume("x3","(pair 2.0 x2)")
-  sivm.assume("x4","(pair 3.0 x3)")
-  sivm.assume("f","(lambda (x) (times x x x))")
-  sivm.assume("y4","(map_list f x4)")
+  ripl = RIPL()
+  ripl.assume("x1","(list)")
+  ripl.assume("x2","(pair 1.0 x1)")
+  ripl.assume("x3","(pair 2.0 x2)")
+  ripl.assume("x4","(pair 3.0 x3)")
+  ripl.assume("f","(lambda (x) (times x x x))")
+  ripl.assume("y4","(map_list f x4)")
 
-  y4 = sivm.predict("(first y4)")
-  y3 = sivm.predict("(list_ref y4 1)")
-  y2 = sivm.predict("(list_ref (rest y4) 1)")
-  px1 = sivm.predict("(is_pair x1)")
-  px4 = sivm.predict("(is_pair x4)")
-  py4 = sivm.predict("(is_pair y4)")
+  y4 = ripl.predict("(first y4)")
+  y3 = ripl.predict("(list_ref y4 1)")
+  y2 = ripl.predict("(list_ref (rest y4) 1)")
+  px1 = ripl.predict("(is_pair x1)")
+  px4 = ripl.predict("(is_pair x4)")
+  py4 = ripl.predict("(is_pair y4)")
 
-  assert(sivm.report(7) == 27.0);
-  assert(sivm.report(8) == 8.0);
-  assert(sivm.report(9) == 1.0);
+  assert(ripl.report(7) == 27.0);
+  assert(ripl.report(8) == 8.0);
+  assert(ripl.report(9) == 1.0);
 
-  assert(not sivm.report(10));
-  assert(sivm.report(11));
-  assert(sivm.report(11));
+  assert(not ripl.report(10));
+  assert(ripl.report(11));
+  assert(ripl.report(11));
 
   print "Passed TestList1()"
 
-def loadPYMem(sivm):
-  sivm.assume("pick_a_stick","""
+def loadPYMem(ripl):
+  ripl.assume("pick_a_stick","""
 (lambda (sticks k)
   (branch (bernoulli (sticks k))
           (lambda () k)
           (lambda () (pick_a_stick sticks (plus k 1)))))
 """)
 
-  sivm.assume("make_sticks","""
+  ripl.assume("make_sticks","""
 (lambda (alpha d)
   ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
    (mem
@@ -768,7 +768,7 @@ def loadPYMem(sivm):
             (plus alpha (times k d)))))))
 """)
 
-  sivm.assume("u_pymem","""
+  ripl.assume("u_pymem","""
 (lambda (alpha d base_dist)
   ((lambda (augmented_proc py)
      (lambda () (augmented_proc (py))))
@@ -776,7 +776,7 @@ def loadPYMem(sivm):
    (make_sticks alpha d)))
 """)
 
-  sivm.assume("pymem","""
+  ripl.assume("pymem","""
 (lambda (alpha d base_dist)
   ((lambda (augmented_proc crp)
      (lambda () (augmented_proc (crp))))
@@ -784,15 +784,15 @@ def loadPYMem(sivm):
    (make_crp alpha d)))
 """)
 
-def loadDPMem(sivm):
-  sivm.assume("pick_a_stick","""
+def loadDPMem(ripl):
+  ripl.assume("pick_a_stick","""
 (lambda (sticks k)
   (branch (bernoulli (sticks k))
           (lambda () k)
           (lambda () (pick_a_stick sticks (plus k 1)))))
 """)
 
-  sivm.assume("make_sticks","""
+  ripl.assume("make_sticks","""
 (lambda (alpha)
   ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
    (mem
@@ -800,7 +800,7 @@ def loadDPMem(sivm):
       (beta 1 (plus alpha (times k k)))))))
 """)
 
-  sivm.assume("u_dpmem","""
+  ripl.assume("u_dpmem","""
 (lambda (alpha base_dist)
   ((lambda (augmented_proc py)
      (lambda () (augmented_proc (py))))
@@ -810,74 +810,74 @@ def loadDPMem(sivm):
 
 
 def testDPMem1(N):
-  sivm = RIPL()
-  loadDPMem(sivm)
+  ripl = RIPL()
+  loadDPMem(ripl)
 
-  sivm.assume("alpha","(uniform_continuous 0.1 20.0)")
-  sivm.assume("base_dist","(lambda () (real (categorical 0.5 0.5)))")
-  sivm.assume("f","(u_dpmem alpha base_dist)")
+  ripl.assume("alpha","(uniform_continuous 0.1 20.0)")
+  ripl.assume("base_dist","(lambda () (real (categorical 0.5 0.5)))")
+  ripl.assume("f","(u_dpmem alpha base_dist)")
 
-  sivm.predict("(f)")
-  sivm.predict("(f)")
-  sivm.observe("(normal (f) 1.0)",1.0)
-  sivm.observe("(normal (f) 1.0)",1.0)
-  sivm.observe("(normal (f) 1.0)",0.0)
-  sivm.observe("(normal (f) 1.0)",0.0)
-  sivm.infer(N)
+  ripl.predict("(f)")
+  ripl.predict("(f)")
+  ripl.observe("(normal (f) 1.0)",1.0)
+  ripl.observe("(normal (f) 1.0)",1.0)
+  ripl.observe("(normal (f) 1.0)",0.0)
+  ripl.observe("(normal (f) 1.0)",0.0)
+  ripl.infer(N)
 
-def observeCategories(sivm,counts):
+def observeCategories(ripl,counts):
   for i in range(len(counts)):
     for ct in range(counts[i]):
-      sivm.observe("(normal (f) 1.0)",i)
+      ripl.observe("(normal (f) 1.0)",i)
 
 def testCRP1(N,isCollapsed):
-  sivm = RIPL()
-  loadPYMem(sivm)
-  sivm.assume("alpha","(gamma 1.0 1.0)")
-  sivm.assume("d","(uniform_continuous 0.0 0.1)")
-  sivm.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
-  if isCollapsed: sivm.assume("f","(pymem alpha d base_dist)")
-  else: sivm.assume("f","(u_pymem alpha d base_dist)")
+  ripl = RIPL()
+  loadPYMem(ripl)
+  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("d","(uniform_continuous 0.0 0.1)")
+  ripl.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
+  if isCollapsed: ripl.assume("f","(pymem alpha d base_dist)")
+  else: ripl.assume("f","(u_pymem alpha d base_dist)")
 
-  sivm.predict("(f)",label="pid")
+  ripl.predict("(f)",label="pid")
 
-  observeCategories(sivm,[2,2,5,1,0])
+  observeCategories(ripl,[2,2,5,1,0])
 
-  predictions = loggingInfer(sivm,"pid",N)
+  predictions = loggingInfer(ripl,"pid",N)
   ps = normalizeList([3,3,6,2,1])
   eps = normalizeList(countPredictions(predictions, [0,1,2,3,4]))
   printTest("TestCRP1 (not exact)",ps,eps)
 
-def loadHPY(sivm,topCollapsed,botCollapsed):
-  loadPYMem(sivm)
-  sivm.assume("alpha","(gamma 1.0 1.0)")
-  sivm.assume("d","(uniform_continuous 0.0 0.1)")
-  sivm.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
-  if topCollapsed: sivm.assume("intermediate_dist","(pymem alpha d base_dist)")
-  else: sivm.assume("intermediate_dist","(u_pymem alpha d base_dist)")
-  if botCollapsed: sivm.assume("f","(pymem alpha d intermediate_dist)")
-  else: sivm.assume("f","(u_pymem alpha d intermediate_dist)")
+def loadHPY(ripl,topCollapsed,botCollapsed):
+  loadPYMem(ripl)
+  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("d","(uniform_continuous 0.0 0.1)")
+  ripl.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
+  if topCollapsed: ripl.assume("intermediate_dist","(pymem alpha d base_dist)")
+  else: ripl.assume("intermediate_dist","(u_pymem alpha d base_dist)")
+  if botCollapsed: ripl.assume("f","(pymem alpha d intermediate_dist)")
+  else: ripl.assume("f","(u_pymem alpha d intermediate_dist)")
 
-def loadPY(sivm):
-  loadPYMem(sivm)
-  sivm.assume("alpha","(gamma 1.0 1.0)")
-  sivm.assume("d","(uniform_continuous 0 0.0001)")
-  sivm.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
-  sivm.assume("f","(u_pymem alpha d base_dist)")
+def loadPY(ripl):
+  loadPYMem(ripl)
+  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("d","(uniform_continuous 0 0.0001)")
+  ripl.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
+  ripl.assume("f","(u_pymem alpha d base_dist)")
 
 def predictPY(N):
-  sivm = RIPL()
-  loadPY(sivm)
-  sivm.predict("(f)",label="pid")
-  observeCategories(sivm,[2,2,5,1,0])
-  return loggingInfer(sivm,"pid",N)
+  ripl = RIPL()
+  loadPY(ripl)
+  ripl.predict("(f)",label="pid")
+  observeCategories(ripl,[2,2,5,1,0])
+  return loggingInfer(ripl,"pid",N)
 
 def predictHPY(N,topCollapsed,botCollapsed):
-  sivm = RIPL()
-  loadHPY(sivm,topCollapsed,botCollapsed)
-  sivm.predict("(f)",label="pid")
-  observeCategories(sivm,[2,2,5,1,0])
-  return loggingInfer(sivm,"pid",N)
+  ripl = RIPL()
+  loadHPY(ripl,topCollapsed,botCollapsed)
+  ripl.predict("(f)",label="pid")
+  observeCategories(ripl,[2,2,5,1,0])
+  return loggingInfer(ripl,"pid",N)
 
 def testHPYMem1(N):
   print "---TestHPYMem1---"
@@ -887,14 +887,14 @@ def testHPYMem1(N):
       print("(%s,%s): %s" % (top,bot,attempt))
 
 def testGeometric1(N):
-  sivm = RIPL()
-  sivm.assume("alpha1","(gamma 5.0 2.0)")
-  sivm.assume("alpha2","(gamma 5.0 2.0)")
-  sivm.assume("p", "(beta alpha1 alpha2)")
-  sivm.assume("geo","(lambda (p) (branch (bernoulli p) (lambda () 1) (lambda () (plus 1 (geo p)))))")
-  sivm.predict("(geo p)",label="pid")
+  ripl = RIPL()
+  ripl.assume("alpha1","(gamma 5.0 2.0)")
+  ripl.assume("alpha2","(gamma 5.0 2.0)")
+  ripl.assume("p", "(beta alpha1 alpha2)")
+  ripl.assume("geo","(lambda (p) (branch (bernoulli p) (lambda () 1) (lambda () (plus 1 (geo p)))))")
+  ripl.predict("(geo p)",label="pid")
 
-  predictions = loggingInfer(sivm,"pid",N)
+  predictions = loggingInfer(ripl,"pid",N)
 
   k = 7
   ps = [math.pow(2,-n) for n in range(1,k)]
@@ -903,48 +903,48 @@ def testGeometric1(N):
 
 
 def testTrig1(N):
-  sivm = RIPL()
-  sivm.assume("sq","(lambda (x) (* x x))")
-  sivm.assume("x","(normal 0.0 1.0)")
-  sivm.assume("a","(sq (sin x))")
-  sivm.assume("b","(sq (cos x))")
-  sivm.predict("(+ a b)")
+  ripl = RIPL()
+  ripl.assume("sq","(lambda (x) (* x x))")
+  ripl.assume("x","(normal 0.0 1.0)")
+  ripl.assume("a","(sq (sin x))")
+  ripl.assume("b","(sq (cos x))")
+  ripl.predict("(+ a b)")
   for i in range(N/10):
-    sivm.infer(10,kernel="mh",use_global_scaffold=False)
-    assert abs(sivm.report(5) - 1) < .001
+    ripl.infer(10,kernel="mh",use_global_scaffold=False)
+    assert abs(ripl.report(5) - 1) < .001
   print "Passed TestTrig1()"
 
 def testForget1():
-  sivm = RIPL()
+  ripl = RIPL()
 
-  sivm.assume("x","(normal 0.0 1.0)")
-  sivm.assume("f","(lambda (y) (normal y 1.0))")
-  sivm.assume("g","(lambda (z) (normal z 2.0))")
+  ripl.assume("x","(normal 0.0 1.0)")
+  ripl.assume("f","(lambda (y) (normal y 1.0))")
+  ripl.assume("g","(lambda (z) (normal z 2.0))")
 
-  sivm.predict("(f 1.0)",label="id1")
-  sivm.observe("(g 2.0)",3.0,label="id2")
-  sivm.observe("(g 3.0)",3.0,label="id3")
+  ripl.predict("(f 1.0)",label="id1")
+  ripl.observe("(g 2.0)",3.0,label="id2")
+  ripl.observe("(g 3.0)",3.0,label="id3")
 
-  sivm.forget("id3")
-  sivm.forget("id2")
-  sivm.forget("id1")
+  ripl.forget("id3")
+  ripl.forget("id2")
+  ripl.forget("id1")
 
 def testForget2():
-  sivm = RIPL()
+  ripl = RIPL()
 
-  sivm.assume("x","(normal 0.0 1.0)")
-  sivm.assume("f","(lambda (y) (normal y 1.0))")
-  sivm.assume("g","(lambda (z) (normal z 2.0))")
+  ripl.assume("x","(normal 0.0 1.0)")
+  ripl.assume("f","(lambda (y) (normal y 1.0))")
+  ripl.assume("g","(lambda (z) (normal z 2.0))")
 
-  sivm.predict("(f 1.0)",label="id1")
-  sivm.observe("(g 2.0)",3.0,label="id2")
-  sivm.observe("(g 3.0)",3.0,label="id3")
+  ripl.predict("(f 1.0)",label="id1")
+  ripl.observe("(g 2.0)",3.0,label="id2")
+  ripl.observe("(g 3.0)",3.0,label="id3")
 
-  sivm.forget("id1")
-  sivm.forget("id2")
-  sivm.forget("id3")
+  ripl.forget("id1")
+  ripl.forget("id2")
+  ripl.forget("id3")
 
-  real_sivm = sivm.sivm.core_sivm.engine
+  real_sivm = ripl.sivm.core_sivm.engine
   assert real_sivm.get_entropy_info()["unconstrained_random_choices"] == 1
   assert real_sivm.logscore() < 0
 
@@ -1034,19 +1034,19 @@ def testObserveAPredict0(N):
 
 
 def testBreakMem(N):
-  sivm = RIPL()
-  sivm.assume("pick_a_stick","""
+  ripl = RIPL()
+  ripl.assume("pick_a_stick","""
 (lambda (sticks k)
   (if (bernoulli (sticks k))
       k
       (pick_a_stick sticks (plus k 1))))
 """)
-  sivm.assume("d","(uniform_continuous 0.4 0.41)")
+  ripl.assume("d","(uniform_continuous 0.4 0.41)")
 
-  sivm.assume("f","(mem (lambda (k) (beta 1.0 (times k d))))")
-  sivm.assume("g","(lambda () (pick_a_stick f 1))")
-  sivm.predict("(g)")
-  sivm.infer(N)
+  ripl.assume("f","(mem (lambda (k) (beta 1.0 (times k d))))")
+  ripl.assume("g","(lambda () (pick_a_stick f 1))")
+  ripl.predict("(g)")
+  ripl.infer(N)
 
 def testHPYLanguageModel1(N):
   ripl = RIPL()
