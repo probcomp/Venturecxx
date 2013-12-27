@@ -23,7 +23,7 @@ import numpy as np
 
 globalKernel = "meanfield";
 globalUseGlobalScaffold = True;
-globalAlwaysReport = True;
+globalAlwaysReport = False;
 
 def RIPL():
   return make_church_prime_ripl()
