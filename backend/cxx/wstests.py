@@ -1,17 +1,17 @@
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
+#
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from venture.shortcuts import *
 import math
@@ -24,7 +24,7 @@ globalUseGlobalScaffold = True;
 def RIPL():
   return make_church_prime_ripl()
 
-def normalizeList(seq): 
+def normalizeList(seq):
   denom = sum(seq)
   if denom > 0: return [ float(x)/denom for x in seq]
   else: return [0 for x in seq]
@@ -33,7 +33,7 @@ def countPredictions(predictions, seq):
   return [predictions.count(x) for x in seq]
 
 def rmsDifference(eps,ops): return math.sqrt(sum([ math.pow(x - y,2) for (x,y) in zip(eps,ops)]))
-    
+
 def printTest(testName,eps,ops):
   print "---Test: " + testName + "---"
   print "Expected: " + str(eps)
@@ -132,7 +132,7 @@ def testMakeCSP():
   sivm = RIPL()
   sivm.assume("f", "(lambda (x) (* x x))")
   sivm.predict("(f 1)")
-  
+
   sivm.assume("g", "(lambda (x y) (* x y))")
   sivm.predict("(g 2 3)")
 
@@ -180,7 +180,7 @@ def testCategorical1(N):
   sivm.predict("(plus x y)")
 
   predictions = loggingInfer(sivm,3,N)
-  ps = [0.1 * 0.2, 
+  ps = [0.1 * 0.2,
         0.1 * 0.6 + 0.2 * 0.2,
         0.1 * 0.2 + 0.2 * 0.6 + 0.3 * 0.2,
         0.2 * 0.2 + 0.3 * 0.6 + 0.4 * 0.2,
@@ -199,7 +199,7 @@ def testMHNormal0(N):
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestMHNormal0---"
   print "(12.0," + str(mean) + ")"
-    
+
 
 def testMHNormal1(N):
   sivm = RIPL()
@@ -207,7 +207,7 @@ def testMHNormal1(N):
   sivm.assume("b", "(normal a 1.0)")
   sivm.observe("((lambda () (normal b 1.0)))", 14.0)
   sivm.predict("""
-(branch (lt a 100.0) 
+(branch (lt a 100.0)
         (lambda () (normal (plus a b) 1.0))
         (lambda () (normal (times a b) 1.0)))
 """)
@@ -290,7 +290,7 @@ def testSprinkler1(N):
   sivm.assume("rain","(bernoulli 0.2)")
   sivm.assume("sprinkler","(branch rain (lambda () (bernoulli 0.01)) (lambda () (bernoulli 0.4)))")
   sivm.assume("grassWet","""
-(branch rain 
+(branch rain
 (lambda () (branch sprinkler (lambda () (bernoulli 0.99)) (lambda () (bernoulli 0.8))))
 (lambda () (branch sprinkler (lambda () (bernoulli 0.9)) (lambda () (bernoulli 0.00001)))))
 """)
@@ -309,7 +309,7 @@ def testSprinkler2(N):
   sivm.assume("rain","(bernoulli 0.2)")
   sivm.assume("sprinkler","(bernoulli (branch rain (lambda () 0.01) (lambda () 0.4)))")
   sivm.assume("grassWet","""
-(bernoulli (branch rain 
+(bernoulli (branch rain
 (lambda () (branch sprinkler (lambda () 0.99) (lambda () 0.8)))
 (lambda () (branch sprinkler (lambda () 0.9) (lambda () 0.00001)))))
 """)
@@ -355,7 +355,7 @@ def testBLOGCSI(N):
   sivm.assume("w","(bernoulli 0.1)")
   sivm.assume("getParam","(lambda (z) (branch z (lambda () 0.8) (lambda () 0.2)))")
   sivm.assume("x","(bernoulli (branch u (lambda () (getParam w)) (lambda () (getParam v))))")
-  
+
   predictions = loggingInfer(sivm,5,N)
   ps = [.596, .404]
   eps = normalizeList(countPredictions(predictions, [True, False]))
@@ -385,7 +385,7 @@ def testMHHMM1(N):
 def testOuterMix1(N):
   sivm = RIPL()
   sivm.predict("""
-(branch (bernoulli 0.5) 
+(branch (bernoulli 0.5)
   (lambda ()
     (branch (bernoulli 0.5) (lambda () 2) (lambda () 3)))
   (lambda () 1))
@@ -412,7 +412,7 @@ def testMakeSymDirMult2(N):
   sivm.assume("a", "(normal 10.0 1.0)")
   sivm.assume("f", "(make_sym_dir_mult a 4)")
   sivm.predict("(f)")
-  
+
   for i in range(1,4):
     for j in range(20):
       sivm.observe("(f)", "atom<%d>" % i)
@@ -427,7 +427,7 @@ def testMakeDirMult1(N):
   sivm.assume("a", "(normal 10.0 1.0)")
   sivm.assume("f", "(make_dir_mult a a a a)")
   sivm.predict("(f)")
-  
+
   for i in range(1,4):
     for j in range(20):
       sivm.observe("(f)", "atom<%d>" % i)
@@ -442,7 +442,7 @@ def testMakeBetaBernoulli1(N):
   sivm.assume("a", "(normal 10.0 1.0)")
   sivm.assume("f", "(make_beta_bernoulli a a)")
   sivm.predict("(f)")
-  
+
   for j in range(20): sivm.observe("(f)", "true")
 
   predictions = loggingInfer(sivm,3,N)
@@ -471,9 +471,9 @@ def testLazyHMM1(N):
   N = N
   sivm = RIPL()
   sivm.assume("f","""
-(mem 
-(lambda (i) 
-  (branch (eq i 0) 
+(mem
+(lambda (i)
+  (branch (eq i 0)
      (lambda () (bernoulli 0.5))
      (lambda () (branch (f (minus i 1))
                  (lambda () (bernoulli 0.7))
@@ -504,9 +504,9 @@ def testLazyHMM1(N):
 def testLazyHMMSP1(N):
   sivm = RIPL()
   sivm.assume("f","""
-(make_lazy_hmm 
+(make_lazy_hmm
   (make_vector 0.5 0.5)
-  (make_vector 
+  (make_vector
     (make_vector 0.7 0.3)
     (make_vector 0.3 0.7))
   (make_vector
@@ -564,7 +564,7 @@ def testMap1(N):
   sivm.assume("x","(bernoulli 1.0)")
   sivm.assume("m","""(make_map (list (quote x) (quote y))
                                (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
-  sivm.predict("""(normal (plus 
+  sivm.predict("""(normal (plus
                            (map_lookup m (quote x))
                            (map_lookup m (quote y))
                            (map_lookup m (quote y)))
@@ -629,12 +629,12 @@ def testEval2(N):
   sivm = RIPL()
   sivm.assume("p","(uniform_continuous 0.0 1.0)")
   sivm.assume("globalEnv","(get_current_environment)")
-  sivm.assume("exp","""(quote 
-  (branch (bernoulli p) 
+  sivm.assume("exp","""(quote
+  (branch (bernoulli p)
         (lambda () (normal 10.0 1.0))
         (lambda () (normal 0.0 1.0)))
 )""")
-  
+
   sivm.assume("x","(eval exp globalEnv)")
   sivm.observe("x",11.0)
 
@@ -647,12 +647,12 @@ def testEval3(N):
   sivm = RIPL()
   sivm.assume("p","(uniform_continuous 0.0 1.0)")
   sivm.assume("globalEnv","(get_current_environment)")
-  sivm.assume("exp","""(quote 
+  sivm.assume("exp","""(quote
   (branch ((lambda () (bernoulli p)))
         (lambda () ((lambda () (normal 10.0 1.0))))
         (lambda () (normal 0.0 1.0)))
 )""")
-  
+
   sivm.assume("x","(eval exp globalEnv)")
   sivm.observe("x",11.0)
 
@@ -675,7 +675,7 @@ def testApply1(N):
 def testExtendEnv1(N):
   sivm = RIPL()
   sivm.assume("env1","(get_current_environment)")
-  
+
   sivm.assume("env2","(extend_environment env1 (quote x) (normal 0.0 1.0))")
   sivm.assume("env3","(extend_environment env2 (quote x) (normal 10.0 1.0))")
   sivm.assume("exp","(quote (normal x 1.0))")
@@ -703,19 +703,19 @@ def sivmWithSTDLIB(sivm):
 """)
   sivm.assume("incremental_eval","""
 (lambda (exp env)
-  (branch 
+  (branch
     (is_symbol exp)
     (quote (eval exp env))
-    (quote 
+    (quote
       (branch
         (not (is_pair exp))
         (quote exp)
-        (branch 
+        (branch
           (sym_eq (deref (list_ref exp 0)) (quote lambda))
 	  (quote (pair env (rest exp)))
-          (quote 
+          (quote
             ((lambda (operator operands)
-               (branch 
+               (branch
                  (is_pair operator)
                  (quote (incremental_apply operator operands))
                  (quote (venture_apply operator operands))))
@@ -758,7 +758,7 @@ def loadPYMem(sivm):
           (lambda () k)
           (lambda () (pick_a_stick sticks (plus k 1)))))
 """)
-  
+
   sivm.assume("make_sticks","""
 (lambda (alpha d)
   ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
@@ -791,7 +791,7 @@ def loadDPMem(sivm):
           (lambda () k)
           (lambda () (pick_a_stick sticks (plus k 1)))))
 """)
-  
+
   sivm.assume("make_sticks","""
 (lambda (alpha)
   ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
@@ -838,7 +838,7 @@ def testCRP1(N,isCollapsed):
   sivm.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
   if isCollapsed: sivm.assume("f","(pymem alpha d base_dist)")
   else: sivm.assume("f","(u_pymem alpha d base_dist)")
-    
+
   sivm.predict("(f)",label="pid")
 
   observeCategories(sivm,[2,2,5,1,0])
@@ -893,7 +893,7 @@ def testGeometric1(N):
   sivm.assume("p", "(beta alpha1 alpha2)")
   sivm.assume("geo","(lambda (p) (branch (bernoulli p) (lambda () 1) (lambda () (plus 1 (geo p)))))")
   sivm.predict("(geo p)",label="pid")
-  
+
   predictions = loggingInfer(sivm,"pid",N)
 
   k = 7
@@ -924,7 +924,7 @@ def testForget1():
   sivm.predict("(f 1.0)",label="id1")
   sivm.observe("(g 2.0)",3.0,label="id2")
   sivm.observe("(g 3.0)",3.0,label="id3")
-  
+
   sivm.forget("id3")
   sivm.forget("id2")
   sivm.forget("id1")
@@ -939,7 +939,7 @@ def testForget2():
   sivm.predict("(f 1.0)",label="id1")
   sivm.observe("(g 2.0)",3.0,label="id2")
   sivm.observe("(g 3.0)",3.0,label="id3")
-  
+
   sivm.forget("id1")
   sivm.forget("id2")
   sivm.forget("id3")
@@ -962,7 +962,7 @@ def testReferences1(N):
   eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
   printTest("TestReferences1()",ps,eps)
 
-# 
+#
 def testReferences2(N):
   ripl = RIPL()
   ripl.assume("f", "(if (flip 0.5) (make_dir_mult 1 1) (lambda () 1))")
@@ -1061,7 +1061,7 @@ def testHPYLanguageModel1(N):
 
   # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
   ripl.assume("G","""
-(mem 
+(mem
   (lambda (context)
     (if (is_pair context)
         (pymem alpha d (G (rest context)))
@@ -1071,11 +1071,11 @@ def testHPYLanguageModel1(N):
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
 
   atoms = [0, 1, 2, 3, 4] * 4;
-  
+
   for i in range(1,len(atoms)):
     ripl.observe("""
-(noisy_true 
-  (atom_eq 
+(noisy_true
+  (atom_eq
     ((G (list %d)))
     atom<%d>)
   0.001)
@@ -1105,11 +1105,11 @@ def testHPYLanguageModel2(N):
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
 
   atoms = [0, 1, 2, 3, 4] * 4;
-  
+
   for i in range(1,len(atoms)):
     ripl.observe("""
-(noisy_true 
-  (atom_eq 
+(noisy_true
+  (atom_eq
     ((H %d))
     atom<%d>)
   0.001)
@@ -1139,11 +1139,11 @@ def testHPYLanguageModel3(N):
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
 
   atoms = [0, 1, 2, 3, 4] * 4;
-  
+
   for i in range(1,len(atoms)):
     ripl.observe("""
-(noisy_true 
-  (atom_eq 
+(noisy_true
+  (atom_eq
     ((H atom<%d>))
     atom<%d>)
   0.001)
@@ -1169,7 +1169,7 @@ def testHPYLanguageModel4(N):
 
   # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
   ripl.assume("G","""
-(mem 
+(mem
   (lambda (context)
     (if (is_pair context)
         (pymem alpha d (G (rest context)))
@@ -1179,11 +1179,11 @@ def testHPYLanguageModel4(N):
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
 
   atoms = [0, 1, 2, 3, 4] * 4;
-  
+
   for i in range(1,len(atoms)):
     ripl.observe("""
-(noisy_true 
-  (atom_eq 
+(noisy_true
+  (atom_eq
     ((G (list atom<%d>)))
     atom<%d>)
   0.001)
@@ -1223,42 +1223,42 @@ def testGoldwater1(N):
   v.assume("sample_word_id", "(make_crp 1.0)")
 
   v.assume("sample_letter_in_word", """
-(mem 
-  (lambda (word_id pos) 
+(mem
+  (lambda (word_id pos)
     (sample_phone)))
 """)
 #7
   v.assume("is_end", """
-(mem 
-  (lambda (word_id pos) 
+(mem
+  (lambda (word_id pos)
     (flip .3)))
 """)
 
   v.assume("get_word_id","""
-(mem 
-  (lambda (sentence sentence_pos) 
+(mem
+  (lambda (sentence sentence_pos)
     (branch (= sentence_pos 0)
         (lambda () (sample_word_id))
-        (lambda () 
+        (lambda ()
           (branch (is_end (get_word_id sentence (- sentence_pos 1)) (get_pos sentence (- sentence_pos 1)))
             (lambda () (sample_word_id))
             (lambda () (get_word_id sentence (- sentence_pos 1))))))))
 """)
 
   v.assume("get_pos","""
-(mem 
-  (lambda (sentence sentence_pos) 
+(mem
+  (lambda (sentence sentence_pos)
     (branch (= sentence_pos 0)
         (lambda () 0)
-        (lambda () 
+        (lambda ()
           (branch (is_end (get_word_id sentence (- sentence_pos 1)) (get_pos sentence (- sentence_pos 1)))
             (lambda () 0)
             (lambda () (+ (get_pos sentence (- sentence_pos 1)) 1)))))))
 """)
 
   v.assume("sample_symbol","""
-(mem 
-  (lambda (sentence sentence_pos) 
+(mem
+  (lambda (sentence sentence_pos)
     (sample_letter_in_word (get_word_id sentence sentence_pos) (get_pos sentence sentence_pos))))
 """)
 
@@ -1277,7 +1277,7 @@ def testGoldwater1(N):
 
 
 def testMemHashFunction1(A,B):
-  ripl = RIPL()  
+  ripl = RIPL()
   ripl.assume("f","(mem (lambda (a b) (normal 0.0 1.0)))")
   for a in range(A):
     for b in range(B):
