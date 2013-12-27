@@ -20,7 +20,7 @@ from venture.exception import VentureException
 # Thin wrapper around cxx Trace
 # TODO: merge with CoreSivmCxx?
 
-class SIVM:
+class Engine:
 
     def __init__(self):
         self.directiveCounter = 0
