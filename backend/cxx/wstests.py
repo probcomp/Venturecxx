@@ -23,7 +23,7 @@ import numpy as np
 
 globalKernel = "meanfield";
 globalUseGlobalScaffold = True;
-globalAlwaysReport = False;
+globalAlwaysReport = True;
 
 def RIPL():
   return make_church_prime_ripl()
@@ -46,9 +46,13 @@ def printTest(testName,eps,ops):
 
 # printTest2 :: (Ord a) => String -> [(a,Double)] -> [a] -> IO ()
 def printTest2(name, expectedRates, observed):
-  total = len(observed)
   items = [pair[0] for pair in expectedRates]
+  # N.B. This ignores observations outside the support of the given
+  # expectation.  This is useful when information about the right
+  # answer is incomplete, but could be strengthened in circumstances
+  # where all possibilities are known.
   counts = countPredictions(observed, items)
+  total = sum(counts)
   expRates = normalizeList([pair[1] for pair in expectedRates])
   expCounts = [total * r for r in expRates]
   (chisq,pval) = chisquare(counts, np.array(expCounts))
@@ -269,9 +273,11 @@ def testMem1(N):
   ripl.predict('(plus x y w z q)');
 
   predictions = loggingInfer(ripl,7,N)
-  ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
-  eps = [ float(x) / N for x in countPredictions(predictions, [5,10])] if N > 0 else [0,0]
-  printTest("TestMem1",ps,eps)
+  # TODO This test can be strengthened by computing more of the ratios in the answer
+  # (also by picking constants to have less severe buckets)
+  ans = [(5,  0.4 * 0.4 * 0.1),
+         (10, 0.6 * 0.6 * 0.9)]
+  printTest2("TestMem1", ans, predictions)
 
 def testMem2(N):
   ripl = RIPL()
@@ -285,9 +291,11 @@ def testMem2(N):
   ripl.predict('(plus x y w z q)');
 
   predictions = loggingInfer(ripl,8,N)
-  ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
-  eps = [ float(x) / N for x in countPredictions(predictions, [5,10])] if N > 0 else [0,0]
-  printTest("TestMem2",ps,eps)
+  # TODO This test can be strengthened by computing more of the ratios in the answer
+  # (also by picking constants to have less severe buckets)
+  ans = [(5,  0.4 * 0.4 * 0.1),
+         (10, 0.6 * 0.6 * 0.9)]
+  printTest2("TestMem2", ans, predictions)
 
 def testMem3(N):
   ripl = RIPL()
@@ -301,9 +309,11 @@ def testMem3(N):
   ripl.predict('(plus x y w z q)');
 
   predictions = loggingInfer(ripl,8,N)
-  ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
-  eps = [ float(x) / N for x in countPredictions(predictions, [5,10])] if N > 0 else [0,0]
-  printTest("TestMem3",ps,eps)
+  # TODO This test can be strengthened by computing more of the ratios in the answer
+  # (also by picking constants to have less severe buckets)
+  ans = [(5,  0.4 * 0.4 * 0.1),
+         (10, 0.6 * 0.6 * 0.9)]
+  printTest2("TestMem3", ans, predictions)
 
 def testSprinkler1(N):
   ripl = RIPL()
