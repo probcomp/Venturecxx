@@ -30,8 +30,8 @@ class CoreSivmCxx(object):
 
     def __init__(self):
 	# TODO: merge venture.cxx.sivm into this file
-        from venture.cxx import sivm
-        self.engine = sivm.SIVM()
+        from venture.cxx import engine
+        self.engine = engine.SIVM()
         self.state = 'default'
         # the current cpp engine doesn't support reporting "observe" directives
         self.observe_dict = {}
