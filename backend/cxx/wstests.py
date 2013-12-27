@@ -364,7 +364,7 @@ def testGamma1(N):
 
   predictions = loggingInfer(ripl,3,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestMHGamma1---"
+  print "---TestGamma1---"
   print "(1," + str(mean) + ")"
 
 def testIf1(N):
