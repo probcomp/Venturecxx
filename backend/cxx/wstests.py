@@ -21,7 +21,7 @@ import itertools
 globalKernel = "meanfield";
 globalUseGlobalScaffold = True;
 
-def SIVM():
+def RIPL():
   return make_church_prime_ripl()
 
 def normalizeList(seq): 
@@ -129,7 +129,7 @@ def runTests2(N):
 
 
 def testMakeCSP():
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("f", "(lambda (x) (* x x))")
   sivm.predict("(f 1)")
   
@@ -145,7 +145,7 @@ def testMakeCSP():
 
 
 def testBernoulli0(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("b", "((lambda () (bernoulli)))")
   sivm.predict("""
 ((biplex
@@ -160,7 +160,7 @@ def testBernoulli0(N):
 
 
 def testBernoulli1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("b", "((lambda () (bernoulli 0.7)))")
   sivm.predict("""
 (branch
@@ -174,7 +174,7 @@ def testBernoulli1(N):
   print "(3.0," + str(mean) + ")"
 
 def testCategorical1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("x", "(real (categorical 0.1 0.2 0.3 0.4))")
   sivm.assume("y", "(real (categorical 0.2 0.6 0.2))")
   sivm.predict("(plus x y)")
@@ -190,7 +190,7 @@ def testCategorical1(N):
   printTest("testCategorical1",ps,eps)
 
 def testMHNormal0(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("a", "(normal 10.0 1.0)")
   sivm.observe("(normal a 1.0)", 14.0)
   sivm.predict("(normal a 1.0)")
@@ -202,7 +202,7 @@ def testMHNormal0(N):
     
 
 def testMHNormal1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("a", "(normal 10.0 1.0)")
   sivm.assume("b", "(normal a 1.0)")
   sivm.observe("((lambda () (normal b 1.0)))", 14.0)
@@ -220,7 +220,7 @@ def testMHNormal1(N):
 def testStudentT0(N):
   # Modeled on testMHNormal0, but I do not know what the answer is
   # supposed to be.  However, the run not crashing says something.
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("a", "(student_t 1.0)")
   sivm.observe("(normal a 1.0)", 3.0)
   sivm.predict("(normal a 1.0)")
@@ -230,7 +230,7 @@ def testStudentT0(N):
   print "(2.3ish (regression)," + str(mean) + ")"
 
 def testMem0(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   sivm.predict("(f (bernoulli 0.5))")
   sivm.predict("(f (bernoulli 0.5))")
@@ -239,7 +239,7 @@ def testMem0(N):
 
 
 def testMem1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
   sivm.assume("x","(f 1)")
   sivm.assume("y","(f 1)")
@@ -254,7 +254,7 @@ def testMem1(N):
   printTest("TestMem1",ps,eps)
 
 def testMem2(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
   sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   sivm.assume("x","(f ((branch (bernoulli 0.5) (lambda () (lambda () 1)) (lambda () (lambda () 1)))))")
@@ -270,7 +270,7 @@ def testMem2(N):
   printTest("TestMem2",ps,eps)
 
 def testMem3(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
   sivm.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   sivm.assume("x","(f ((lambda () 1)))")
@@ -286,7 +286,7 @@ def testMem3(N):
   printTest("TestMem3",ps,eps)
 
 def testSprinkler1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("rain","(bernoulli 0.2)")
   sivm.assume("sprinkler","(branch rain (lambda () (bernoulli 0.01)) (lambda () (bernoulli 0.4)))")
   sivm.assume("grassWet","""
@@ -305,7 +305,7 @@ def testSprinkler2(N):
   # this test needs more iterations than most others, because it mixes badly
   N = N
 
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("rain","(bernoulli 0.2)")
   sivm.assume("sprinkler","(bernoulli (branch rain (lambda () 0.01) (lambda () 0.4)))")
   sivm.assume("grassWet","""
@@ -321,7 +321,7 @@ def testSprinkler2(N):
   printTest("TestSprinkler2 (mixes terribly)",ps,eps)
 
 def testGamma1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("a","(gamma 10.0 10.0)")
   sivm.assume("b","(gamma 10.0 10.0)")
   sivm.predict("(gamma a b)")
@@ -332,7 +332,7 @@ def testGamma1(N):
   print "(1," + str(mean) + ")"
 
 def testIf1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume('IF', '(lambda () branch)')
   sivm.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
   sivm.predict('(IF2 (bernoulli 0.5) IF IF)')
@@ -340,7 +340,7 @@ def testIf1(N):
   print "Passed TestIf1()"
 
 def testIf2(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume('if1', '(branch (bernoulli 0.5) (lambda () branch) (lambda () branch))')
   sivm.assume('if2', '(branch (bernoulli 0.5) (lambda () if1) (lambda () if1))')
   sivm.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
@@ -349,7 +349,7 @@ def testIf2(N):
   print "Passed TestIf2()"
 
 def testBLOGCSI(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("u","(bernoulli 0.3)")
   sivm.assume("v","(bernoulli 0.9)")
   sivm.assume("w","(bernoulli 0.1)")
@@ -363,7 +363,7 @@ def testBLOGCSI(N):
 
 
 def testMHHMM1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("f","""
 (mem (lambda (i) (branch (eq i 0) (lambda () (normal 0.0 1.0)) (lambda () (normal (f (minus i 1)) 1.0)))))
 """)
@@ -383,7 +383,7 @@ def testMHHMM1(N):
   print "(4.3ish," + str(mean) + ")"
 
 def testOuterMix1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.predict("""
 (branch (bernoulli 0.5) 
   (lambda ()
@@ -398,7 +398,7 @@ def testOuterMix1(N):
 
 
 def testMakeSymDirMult1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("f", "(make_sym_dir_mult 1.0 2)")
   sivm.predict("(f)")
   predictions = loggingInfer(sivm,2,N)
@@ -408,7 +408,7 @@ def testMakeSymDirMult1(N):
 
 
 def testMakeSymDirMult2(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("a", "(normal 10.0 1.0)")
   sivm.assume("f", "(make_sym_dir_mult a 4)")
   sivm.predict("(f)")
@@ -423,7 +423,7 @@ def testMakeSymDirMult2(N):
   printTest("TestMakeSymDirMult2",ps,eps)
 
 def testMakeDirMult1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("a", "(normal 10.0 1.0)")
   sivm.assume("f", "(make_dir_mult a a a a)")
   sivm.predict("(f)")
@@ -438,7 +438,7 @@ def testMakeDirMult1(N):
   printTest("TestMakeDirMult2",ps,eps)
 
 def testMakeBetaBernoulli1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("a", "(normal 10.0 1.0)")
   sivm.assume("f", "(make_beta_bernoulli a a)")
   sivm.predict("(f)")
@@ -452,7 +452,7 @@ def testMakeBetaBernoulli1(N):
 
 
 def testMakeUCSymDirMult1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("a", "(normal 10.0 1.0)")
   sivm.assume("f", "(make_uc_sym_dir_mult a 4)")
   sivm.predict("(f)")
@@ -469,7 +469,7 @@ def testMakeUCSymDirMult1(N):
 
 def testLazyHMM1(N):
   N = N
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("f","""
 (mem 
 (lambda (i) 
@@ -502,7 +502,7 @@ def testLazyHMM1(N):
   # printTest("testLazyHMM1 (mixes terribly)",ps,eps)
 
 def testLazyHMMSP1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("f","""
 (make_lazy_hmm 
   (make_vector 0.5 0.5)
@@ -528,7 +528,7 @@ def testLazyHMMSP1(N):
   printTest("testLazyHMMSP1",ps,eps)
 
 def testStaleAAA1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("a", "1.0")
   sivm.assume("f", "(make_uc_sym_dir_mult a 2)")
   sivm.assume("g", "(mem f)")
@@ -544,7 +544,7 @@ def testStaleAAA1(N):
   printTest("TestStaleAAA1",ps,eps)
 
 def testStaleAAA2(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("a", "1.0")
   sivm.assume("f", "(make_uc_sym_dir_mult a 2)")
   sivm.assume("g", "(lambda () f)")
@@ -560,7 +560,7 @@ def testStaleAAA2(N):
   printTest("TestStaleAAA2",ps,eps)
 
 def testMap1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("x","(bernoulli 1.0)")
   sivm.assume("m","""(make_map (list (quote x) (quote y))
                                (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
@@ -576,7 +576,7 @@ def testMap1(N):
   print "(20.0," + str(mean) + ")"
 
 def testMap2():
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("m","""(make_map (list (quote x) (quote y))
                                (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
   sivm.predict("(map_contains m (quote x))",label="p1")
@@ -589,7 +589,7 @@ def testMap2():
   print "---Passed TestMap2---"
 
 def testMap3():
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("m","""(make_map (list atom<1> atom<2>)
                                (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
   sivm.predict("(map_contains m atom<1>)",label="p1")
@@ -602,7 +602,7 @@ def testMap3():
   print "---Passed TestMap3---"
 
 def testMap4():
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("m","""(make_map (list (make_vector atom<1> atom<2>))
                                (list (normal 0.0 1.0)))""")
   sivm.predict("(map_contains m (make_vector atom<1> atom<2>))",label="p1")
@@ -615,7 +615,7 @@ def testMap4():
   print "---Passed TestMap4---"
 
 def testEval1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("globalEnv","(get_current_environment)")
   sivm.assume("exp","(quote (bernoulli 0.7))")
   sivm.predict("(eval exp globalEnv)")
@@ -626,7 +626,7 @@ def testEval1(N):
   printTest("TestEval1",ps,eps)
 
 def testEval2(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("p","(uniform_continuous 0.0 1.0)")
   sivm.assume("globalEnv","(get_current_environment)")
   sivm.assume("exp","""(quote 
@@ -644,7 +644,7 @@ def testEval2(N):
   print "(0.667," + str(mean) + ")"
 
 def testEval3(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("p","(uniform_continuous 0.0 1.0)")
   sivm.assume("globalEnv","(get_current_environment)")
   sivm.assume("exp","""(quote 
@@ -662,7 +662,7 @@ def testEval3(N):
   print "(0.667," + str(mean) + ")"
 
 def testApply1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
   sivm.predict("(apply times (list (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
 
@@ -673,7 +673,7 @@ def testApply1(N):
 
 
 def testExtendEnv1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("env1","(get_current_environment)")
   
   sivm.assume("env2","(extend_environment env1 (quote x) (normal 0.0 1.0))")
@@ -726,7 +726,7 @@ def sivmWithSTDLIB(sivm):
   return sivm
 
 def testList1():
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("x1","(list)")
   sivm.assume("x2","(pair 1.0 x1)")
   sivm.assume("x3","(pair 2.0 x2)")
@@ -810,7 +810,7 @@ def loadDPMem(sivm):
 
 
 def testDPMem1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   loadDPMem(sivm)
 
   sivm.assume("alpha","(uniform_continuous 0.1 20.0)")
@@ -831,7 +831,7 @@ def observeCategories(sivm,counts):
       sivm.observe("(normal (f) 1.0)",i)
 
 def testCRP1(N,isCollapsed):
-  sivm = SIVM()
+  sivm = RIPL()
   loadPYMem(sivm)
   sivm.assume("alpha","(gamma 1.0 1.0)")
   sivm.assume("d","(uniform_continuous 0.0 0.1)")
@@ -866,14 +866,14 @@ def loadPY(sivm):
   sivm.assume("f","(u_pymem alpha d base_dist)")
 
 def predictPY(N):
-  sivm = SIVM()
+  sivm = RIPL()
   loadPY(sivm)
   sivm.predict("(f)",label="pid")
   observeCategories(sivm,[2,2,5,1,0])
   return loggingInfer(sivm,"pid",N)
 
 def predictHPY(N,topCollapsed,botCollapsed):
-  sivm = SIVM()
+  sivm = RIPL()
   loadHPY(sivm,topCollapsed,botCollapsed)
   sivm.predict("(f)",label="pid")
   observeCategories(sivm,[2,2,5,1,0])
@@ -887,7 +887,7 @@ def testHPYMem1(N):
       print("(%s,%s): %s" % (top,bot,attempt))
 
 def testGeometric1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("alpha1","(gamma 5.0 2.0)")
   sivm.assume("alpha2","(gamma 5.0 2.0)")
   sivm.assume("p", "(beta alpha1 alpha2)")
@@ -903,7 +903,7 @@ def testGeometric1(N):
 
 
 def testTrig1(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("sq","(lambda (x) (* x x))")
   sivm.assume("x","(normal 0.0 1.0)")
   sivm.assume("a","(sq (sin x))")
@@ -915,7 +915,7 @@ def testTrig1(N):
   print "Passed TestTrig1()"
 
 def testForget1():
-  sivm = SIVM()
+  sivm = RIPL()
 
   sivm.assume("x","(normal 0.0 1.0)")
   sivm.assume("f","(lambda (y) (normal y 1.0))")
@@ -930,7 +930,7 @@ def testForget1():
   sivm.forget("id1")
 
 def testForget2():
-  sivm = SIVM()
+  sivm = RIPL()
 
   sivm.assume("x","(normal 0.0 1.0)")
   sivm.assume("f","(lambda (y) (normal y 1.0))")
@@ -950,7 +950,7 @@ def testForget2():
 
 # This is the original one that fires an assert, when the (flip) has 0.0 or 1.0 it doesn't fail
 def testReferences1(N):
-  ripl = SIVM()
+  ripl = RIPL()
   ripl.assume("draw_type1", "(make_crp 1.0)")
   ripl.assume("draw_type0", "(if (flip) draw_type1 (lambda () 1))")
   ripl.assume("draw_type2", "(make_dir_mult 1 1)")
@@ -964,7 +964,7 @@ def testReferences1(N):
 
 # 
 def testReferences2(N):
-  ripl = SIVM()
+  ripl = RIPL()
   ripl.assume("f", "(if (flip 0.5) (make_dir_mult 1 1) (lambda () 1))")
   ripl.predict("(f)")
 #  ripl.predict("(flip)",label="pid")
@@ -975,13 +975,13 @@ def testReferences2(N):
   printTest("TestReferences2()",ps,eps)
 
 def testMemoizingOnAList():
-  ripl = SIVM()
+  ripl = RIPL()
   ripl.assume("G","(mem (lambda (x) 1))")
   ripl.predict("(G (list 0))")
   print "Passed TestMemoizingOnAList()"
 
 def testOperatorChanging(N):
-  ripl = SIVM()
+  ripl = RIPL()
   ripl.assume("f","(mem (lambda () (flip)))")
   ripl.assume("op1","(if (flip) flip (lambda () (f)))")
   ripl.assume("op2","(if (op1) op1 (lambda () (op1)))")
@@ -993,7 +993,7 @@ def testOperatorChanging(N):
   print "Passed TestOperatorChanging()"
 
 def testObserveAPredict0(N):
-  ripl = SIVM()
+  ripl = RIPL()
   ripl.assume("f","(if (flip) (lambda () (flip)) (lambda () (flip)))")
   ripl.predict("(f)")
   ripl.observe("(f)","true")
@@ -1010,7 +1010,7 @@ def testObserveAPredict0(N):
 # twice.
 
 # def testObserveAPredict1(N):
-#   ripl = SIVM()
+#   ripl = RIPL()
 #   ripl.assume("f","(if (flip 0.0) (lambda () (flip)) (mem (lambda () (flip))))")
 #   ripl.predict("(f)")
 #   ripl.observe("(f)","true")
@@ -1022,7 +1022,7 @@ def testObserveAPredict0(N):
 
 
 # def testObserveAPredict2(N):
-#   ripl = SIVM()
+#   ripl = RIPL()
 #   ripl.assume("f","(if (flip) (lambda () (normal 0.0 1.0)) (mem (lambda () (normal 0.0 1.0))))")
 #   ripl.observe("(f)","1.0")
 #   ripl.predict("(* (f) 100)")
@@ -1034,7 +1034,7 @@ def testObserveAPredict0(N):
 
 
 def testBreakMem(N):
-  sivm = SIVM()
+  sivm = RIPL()
   sivm.assume("pick_a_stick","""
 (lambda (sticks k)
   (if (bernoulli (sticks k))
@@ -1049,7 +1049,7 @@ def testBreakMem(N):
   sivm.infer(N)
 
 def testHPYLanguageModel1(N):
-  ripl = SIVM()
+  ripl = RIPL()
   loadPYMem(ripl)
 
   # 5 letters for now
@@ -1089,7 +1089,7 @@ def testHPYLanguageModel1(N):
   printTest("testHPYLanguageModel1 (approximate)",ps,eps)
 
 def testHPYLanguageModel2(N):
-  ripl = SIVM()
+  ripl = RIPL()
   loadPYMem(ripl)
 
   # 5 letters for now
@@ -1123,7 +1123,7 @@ def testHPYLanguageModel2(N):
   printTest("testHPYLanguageModel2 (approximate)",ps,eps)
 
 def testHPYLanguageModel3(N):
-  ripl = SIVM()
+  ripl = RIPL()
   loadPYMem(ripl)
 
   # 5 letters for now
@@ -1157,7 +1157,7 @@ def testHPYLanguageModel3(N):
   printTest("testHPYLanguageModel3 (approximate)",ps,eps)
 
 def testHPYLanguageModel4(N):
-  ripl = SIVM()
+  ripl = RIPL()
   loadPYMem(ripl)
 
   # 5 letters for now
@@ -1198,7 +1198,7 @@ def testHPYLanguageModel4(N):
 
 
 def testGoldwater1(N):
-  v = SIVM()
+  v = RIPL()
 
   #brent = open("brent_ratner/br-phono.txt", "r").readlines()
   #brent = [b.strip().split() for b in brent]
@@ -1277,7 +1277,7 @@ def testGoldwater1(N):
 
 
 def testMemHashFunction1(A,B):
-  ripl = SIVM()  
+  ripl = RIPL()  
   ripl.assume("f","(mem (lambda (a b) (normal 0.0 1.0)))")
   for a in range(A):
     for b in range(B):
