@@ -201,14 +201,13 @@ def testCategorical1(N):
   ripl.predict("(plus x y)")
 
   predictions = loggingInfer(ripl,3,N)
-  ps = [0.1 * 0.2,
-        0.1 * 0.6 + 0.2 * 0.2,
-        0.1 * 0.2 + 0.2 * 0.6 + 0.3 * 0.2,
-        0.2 * 0.2 + 0.3 * 0.6 + 0.4 * 0.2,
-        0.3 * 0.2 + 0.4 * 0.6,
-        0.4 * 0.2]
-  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4,5])) if N > 0 else [0 for x in range(6)]
-  printTest("testCategorical1",ps,eps)
+  ans = [(0, 0.1 * 0.2),
+         (1, 0.1 * 0.6 + 0.2 * 0.2),
+         (2, 0.1 * 0.2 + 0.2 * 0.6 + 0.3 * 0.2),
+         (3, 0.2 * 0.2 + 0.3 * 0.6 + 0.4 * 0.2),
+         (4, 0.3 * 0.2 + 0.4 * 0.6),
+         (5, 0.4 * 0.2)]
+  printTest2("testCategorical1", ans, predictions)
 
 def testMHNormal0(N):
   ripl = RIPL()
@@ -318,10 +317,8 @@ def testSprinkler1(N):
   ripl.observe("grassWet", True)
 
   predictions = loggingInfer(ripl,1,N)
-  ps = [.3577,.6433]
-  eps = normalizeList(countPredictions(predictions, [True,False]))
-  printTest("TestSprinkler1",ps,eps)
-  printTest2("TestSprinkler1", [(True, ps[0]), (False, ps[1])], predictions)
+  ans = [(True, .3577), (False, .6433)]
+  printTest2("TestSprinkler1", ans, predictions)
 
 def testSprinkler2(N):
   # this test needs more iterations than most others, because it mixes badly
@@ -338,9 +335,8 @@ def testSprinkler2(N):
   ripl.observe("grassWet", True)
 
   predictions = loggingInfer(ripl,1,N)
-  ps = [.3577,.6433]
-  eps = normalizeList(countPredictions(predictions, [True,False]))
-  printTest("TestSprinkler2 (mixes terribly)",ps,eps)
+  ans = [(True, .3577), (False, .6433)]
+  printTest2("TestSprinkler2 (mixes terribly)", ans, predictions)
 
 def testGamma1(N):
   ripl = RIPL()
@@ -379,9 +375,8 @@ def testBLOGCSI(N):
   ripl.assume("x","(bernoulli (branch u (lambda () (getParam w)) (lambda () (getParam v))))")
 
   predictions = loggingInfer(ripl,5,N)
-  ps = [.596, .404]
-  eps = normalizeList(countPredictions(predictions, [True, False]))
-  printTest("TestBLOGCSI",ps,eps)
+  ans = [(True, .596), (False, .404)]
+  printTest2("TestBLOGCSI", ans, predictions)
 
 
 def testMHHMM1(N):
@@ -414,20 +409,16 @@ def testOuterMix1(N):
 """)
 
   predictions = loggingInfer(ripl,1,N)
-  ps = [.5, .25,.25]
-  eps = normalizeList(countPredictions(predictions, [1, 2, 3]))
-  printTest("TestOuterMix1",ps,eps)
-
+  ans = [(1,.5), (2,.25), (3,.25)]
+  printTest2("TestOuterMix1", ans, predictions)
 
 def testMakeSymDirMult1(N):
   ripl = RIPL()
   ripl.assume("f", "(make_sym_dir_mult 1.0 2)")
   ripl.predict("(f)")
   predictions = loggingInfer(ripl,2,N)
-  ps = [.5, .5]
-  eps = normalizeList(countPredictions(predictions, [0,1]))
-  printTest("TestMakeSymDirMult1",ps,eps)
-
+  ans = [(0,.5), (1,.5)]
+  printTest2("TestMakeSymDirMult1", ans, predictions)
 
 def testMakeSymDirMult2(N):
   ripl = RIPL()
@@ -440,9 +431,8 @@ def testMakeSymDirMult2(N):
       ripl.observe("(f)", "atom<%d>" % i)
 
   predictions = loggingInfer(ripl,3,N)
-  ps = [.1,.3,.3,.3]
-  eps = normalizeList(countPredictions(predictions, [0,1,2,3]))
-  printTest("TestMakeSymDirMult2",ps,eps)
+  ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
+  printTest2("TestMakeSymDirMult2", ans, predictions)
 
 def testMakeDirMult1(N):
   ripl = RIPL()
@@ -455,9 +445,8 @@ def testMakeDirMult1(N):
       ripl.observe("(f)", "atom<%d>" % i)
 
   predictions = loggingInfer(ripl,3,N)
-  ps = [.1,.3,.3,.3]
-  eps = normalizeList(countPredictions(predictions, [0,1,2,3]))
-  printTest("TestMakeDirMult2",ps,eps)
+  ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
+  printTest2("TestMakeDirMult1", ans, predictions)
 
 def testMakeBetaBernoulli1(N):
   ripl = RIPL()
@@ -468,10 +457,8 @@ def testMakeBetaBernoulli1(N):
   for j in range(20): ripl.observe("(f)", "true")
 
   predictions = loggingInfer(ripl,3,N)
-  ps = [.25,.75]
-  eps = normalizeList(countPredictions(predictions, [False,True]));
-  printTest("TestMakeBetaBernoulli1",ps,eps)
-
+  ans = [(False,.25), (True,.75)]
+  printTest2("TestMakeBetaBernoulli1", ans, predictions)
 
 def testMakeUCSymDirMult1(N):
   ripl = RIPL()
@@ -484,10 +471,8 @@ def testMakeUCSymDirMult1(N):
       ripl.observe("(f)", "atom<%d>" % i)
 
   predictions = loggingInfer(ripl,3,N)
-  ps = [.1,.3,.3,.3]
-  eps = normalizeList(countPredictions(predictions, [0,1,2,3]))
-  printTest("TestMakeUCSymDirMult1",ps,eps)
-
+  ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
+  printTest2("TestMakeUCSymDirMult1", ans, predictions)
 
 def testLazyHMM1(N):
   N = N
@@ -545,9 +530,8 @@ def testLazyHMMSP1(N):
   ripl.predict("(f 8)")
 
   predictions = loggingInfer(ripl,7,N)
-  ps = [0.6528, 0.3472]
-  eps = normalizeList(countPredictions(predictions,[0,1]))
-  printTest("testLazyHMMSP1",ps,eps)
+  ans = [(0,0.6528), (1,0.3472)]
+  printTest2("testLazyHMMSP1", ans, predictions)
 
 def testStaleAAA1(N):
   ripl = RIPL()
@@ -561,9 +545,8 @@ def testStaleAAA1(N):
     ripl.observe("(f)", "atom<1>")
 
   predictions = loggingInfer(ripl,5,N)
-  ps = [.9, .1]
-  eps = normalizeList(countPredictions(predictions, [1, 0]))
-  printTest("TestStaleAAA1",ps,eps)
+  ans = [(1,.9), (0,.1)]
+  printTest2("TestStaleAAA1", ans, predictions)
 
 def testStaleAAA2(N):
   ripl = RIPL()
@@ -577,9 +560,8 @@ def testStaleAAA2(N):
     ripl.observe("(f)", "atom<1>")
 
   predictions = loggingInfer(ripl,5,N)
-  ps = [.9, .1]
-  eps = normalizeList(countPredictions(predictions, [1, 0]))
-  printTest("TestStaleAAA2",ps,eps)
+  ans = [(1,.9), (0,.1)]
+  printTest2("TestStaleAAA2", ans, predictions)
 
 def testMap1(N):
   ripl = RIPL()
@@ -643,9 +625,8 @@ def testEval1(N):
   ripl.predict("(eval exp globalEnv)")
 
   predictions = loggingInfer(ripl,3,N)
-  ps = [.7, .3]
-  eps = normalizeList(countPredictions(predictions, [1, 0]))
-  printTest("TestEval1",ps,eps)
+  ans = [(1,.7), (0,.3)]
+  printTest2("TestEval1", ans, predictions)
 
 def testEval2(N):
   ripl = RIPL()
@@ -866,9 +847,8 @@ def testCRP1(N,isCollapsed):
   observeCategories(ripl,[2,2,5,1,0])
 
   predictions = loggingInfer(ripl,"pid",N)
-  ps = normalizeList([3,3,6,2,1])
-  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4]))
-  printTest("TestCRP1 (not exact)",ps,eps)
+  ans = [(0,3), (1,3), (2,6), (3,2), (4,1)]
+  printTest2("TestCRP1 (not exact)", ans, predictions)
 
 def loadHPY(ripl,topCollapsed,botCollapsed):
   loadPYMem(ripl)
@@ -919,10 +899,8 @@ def testGeometric1(N):
   predictions = loggingInfer(ripl,"pid",N)
 
   k = 7
-  ps = [math.pow(2,-n) for n in range(1,k)]
-  eps = normalizeList(countPredictions(predictions, range(1,k)))
-  printTest("TestGeometric1",ps,eps)
-
+  ans = [(n,math.pow(2,-n)) for n in range(1,k)]
+  printTest2("TestGeometric1", ans, predictions)
 
 def testTrig1(N):
   ripl = RIPL()
@@ -979,10 +957,10 @@ def testReferences1(N):
   ripl.assume("class", "(if (flip) (lambda (name) (draw_type0)) (lambda (name) (draw_type2)))")
   ripl.predict("(class 1)")
   ripl.predict("(flip)")
+  # TODO What is trying to test?  The address in the logging infer refers to the bare (flip).
   predictions = loggingInfer(ripl,6,N)
-  ps = normalizeList([0.5,0.5])
-  eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
-  printTest("TestReferences1()",ps,eps)
+  ans = [(True,0.5), (False,0.5)]
+  printTest2("TestReferences1", ans, predictions)
 
 #
 def testReferences2(N):
@@ -992,9 +970,8 @@ def testReferences2(N):
 #  ripl.predict("(flip)",label="pid")
 
   predictions = loggingInfer(ripl,2,N)
-  ps = normalizeList([0.75,0.25])
-  eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
-  printTest("TestReferences2()",ps,eps)
+  ans = [(True,0.75), (False,0.25)]
+  printTest2("TestReferences2", ans, predictions)
 
 def testMemoizingOnAList():
   ripl = RIPL()
@@ -1021,9 +998,8 @@ def testObserveAPredict0(N):
   ripl.observe("(f)","true")
   ripl.predict("(f)")
   predictions = loggingInfer(ripl,2,N)
-  ps = normalizeList([0.75,0.25])
-  eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
-  printTest("TestObserveAPredict0()",ps,eps)
+  ans = [(True,0.5), (False,0.5)]
+  printTest2("TestObserveAPredict0", ans, predictions)
 
 
 ### These tests are illegal Venture programs, and cause PGibbs to fail because
@@ -1038,9 +1014,8 @@ def testObserveAPredict0(N):
 #   ripl.observe("(f)","true")
 #   ripl.predict("(f)")
 #   predictions = loggingInfer(ripl,2,N)
-#   ps = normalizeList([0.75,0.25])
-#   eps = normalizeList(countPredictions(predictions, [True,False])) if N > 0 else [0 for i in ps]
-#   printTest("TestObserveAPredict1()",ps,eps)
+#   ans = [(True,0.75), (False,0.25)]
+#   printTest2("TestObserveAPredict1", ans, predictions)
 
 
 # def testObserveAPredict2(N):
@@ -1106,9 +1081,8 @@ def testHPYLanguageModel1(N):
   ripl.predict("((G (list 0)))",label="pid")
 
   predictions = loggingInfer(ripl,"pid",N)
-  ps = [0.03, 0.88, 0.03, 0.03, 0.03]
-  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
-  printTest("testHPYLanguageModel1 (approximate)",ps,eps)
+  ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
+  printTest2("testHPYLanguageModel1 (approximate)", ans, predictions)
 
 def testHPYLanguageModel2(N):
   ripl = RIPL()
@@ -1140,9 +1114,8 @@ def testHPYLanguageModel2(N):
   ripl.predict("((H 0))",label="pid")
 
   predictions = loggingInfer(ripl,"pid",N)
-  ps = [0.03, 0.88, 0.03, 0.03, 0.03]
-  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
-  printTest("testHPYLanguageModel2 (approximate)",ps,eps)
+  ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
+  printTest2("testHPYLanguageModel2 (approximate)", ans, predictions)
 
 def testHPYLanguageModel3(N):
   ripl = RIPL()
@@ -1174,9 +1147,8 @@ def testHPYLanguageModel3(N):
   ripl.predict("((H atom<0>))",label="pid")
 
   predictions = loggingInfer(ripl,"pid",N)
-  ps = [0.03, 0.88, 0.03, 0.03, 0.03]
-  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
-  printTest("testHPYLanguageModel3 (approximate)",ps,eps)
+  ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
+  printTest2("testHPYLanguageModel3 (approximate)", ans, predictions)
 
 def testHPYLanguageModel4(N):
   ripl = RIPL()
@@ -1214,10 +1186,8 @@ def testHPYLanguageModel4(N):
   ripl.predict("((G (list atom<0>)))",label="pid")
 
   predictions = loggingInfer(ripl,"pid",N)
-  ps = [0.03, 0.88, 0.03, 0.03, 0.03]
-  eps = normalizeList(countPredictions(predictions, [0,1,2,3,4])) if N > 0 else [0 for x in range(5)]
-  printTest("testHPYLanguageModel4 (approximate)",ps,eps)
-
+  ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
+  printTest2("testHPYLanguageModel4 (approximate)", ans, predictions)
 
 def testGoldwater1(N):
   v = RIPL()
