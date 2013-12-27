@@ -65,6 +65,12 @@ def printTest2(name, expectedRates, observed):
   else:
     sys.stdout.write(".")
 
+def reportPassage(name):
+  if globalAlwaysReport:
+    print "--- Passed %s ---" % name
+  else:
+    sys.stdout.write(".")
+
 def runAllTests(N):
   print "========= RunAllTests(N) ========"
   options = [ ("mh",False),
@@ -259,7 +265,7 @@ def testMem0(N):
   ripl.predict("(f (bernoulli 0.5))")
   ripl.predict("(f (bernoulli 0.5))")
   ripl.infer(N, kernel="mh", use_global_scaffold=False)
-  print "Passed TestMem0"
+  reportPassage("TestMem0")
 
 
 def testMem1(N):
@@ -365,7 +371,7 @@ def testIf1(N):
   ripl.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
   ripl.predict('(IF2 (bernoulli 0.5) IF IF)')
   ripl.infer(N/10, kernel="mh", use_global_scaffold=False)
-  print "Passed TestIf1()"
+  reportPassage("TestIf1")
 
 def testIf2(N):
   ripl = RIPL()
@@ -374,7 +380,7 @@ def testIf2(N):
   ripl.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
   ripl.assume('if4', '(branch (bernoulli 0.5) (lambda () if3) (lambda () if3))')
   ripl.infer(N/10, kernel="mh", use_global_scaffold=False)
-  print "Passed TestIf2()"
+  reportPassage("TestIf2")
 
 def testBLOGCSI(N):
   ripl = RIPL()
@@ -600,7 +606,7 @@ def testMap2():
   assert ripl.report("p1")
   assert ripl.report("p2")
   assert not ripl.report("p3")
-  print "---Passed TestMap2---"
+  reportPassage("TestMap2")
 
 def testMap3():
   ripl = RIPL()
@@ -613,7 +619,7 @@ def testMap3():
   assert ripl.report("p1")
   assert ripl.report("p2")
   assert not ripl.report("p3")
-  print "---Passed TestMap3---"
+  reportPassage("TestMap3")
 
 def testMap4():
   ripl = RIPL()
@@ -626,7 +632,7 @@ def testMap4():
   assert ripl.report("p1")
   assert not ripl.report("p2")
   assert not ripl.report("p3")
-  print "---Passed TestMap4---"
+  reportPassage("TestMap4")
 
 def testEval1(N):
   ripl = RIPL()
@@ -762,7 +768,7 @@ def testList1():
   assert(ripl.report(11));
   assert(ripl.report(11));
 
-  print "Passed TestList1()"
+  reportPassage("TestList1")
 
 def loadPYMem(ripl):
   ripl.assume("pick_a_stick","""
@@ -922,7 +928,7 @@ def testTrig1(N):
   for i in range(N/10):
     ripl.infer(10,kernel="mh",use_global_scaffold=False)
     assert abs(ripl.report(5) - 1) < .001
-  print "Passed TestTrig1()"
+  reportPassage("TestTrig1")
 
 def testForget1():
   ripl = RIPL()
@@ -987,7 +993,7 @@ def testMemoizingOnAList():
   ripl = RIPL()
   ripl.assume("G","(mem (lambda (x) 1))")
   ripl.predict("(G (list 0))")
-  print "Passed TestMemoizingOnAList()"
+  reportPassage("TestMemoizingOnAList")
 
 def testOperatorChanging(N):
   ripl = RIPL()
@@ -999,7 +1005,7 @@ def testOperatorChanging(N):
   ripl.predict("(op4)")
   ripl.observe("(op4)",True)
   ripl.infer(N)
-  print "Passed TestOperatorChanging()"
+  reportPassage("TestOperatorChanging")
 
 def testObserveAPredict0(N):
   ripl = RIPL()
@@ -1275,7 +1281,7 @@ def testGoldwater1(N):
       v.observe("(noisy_true (atom_eq (sample_symbol %d %d) atom<%d>) noise)" %(i, j,d[str(brent[i][j])]), "true")
 
   v.infer(N)
-  print "Passed TestGoldwater1()"
+  reportPassage("TestGoldwater1")
 
 
 def testMemHashFunction1(A,B):
@@ -1284,6 +1290,6 @@ def testMemHashFunction1(A,B):
   for a in range(A):
     for b in range(B):
       ripl.observe("(f %d %d)" % (a,b),"0.5")
-  print "Passed TestMemHashFunction(%d,%d)" % (A,B)
+  reportPassage("TestMemHashFunction(%d,%d)" % (A,B))
 
 
