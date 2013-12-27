@@ -29,7 +29,7 @@ class CoreSivmCxx(object):
     ###############################
 
     def __init__(self):
-	# TODO: merge venture.cxx.sivm into this file
+	# TODO: merge venture.cxx.engine into this file
         from venture.cxx import engine
         self.engine = engine.Engine()
         self.state = 'default'
