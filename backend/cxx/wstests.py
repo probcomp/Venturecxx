@@ -14,12 +14,16 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from venture.shortcuts import *
+import sys
 import math
 import pdb
 import itertools
+from scipy.stats import chisquare
+import numpy as np
 
 globalKernel = "meanfield";
 globalUseGlobalScaffold = True;
+globalAlwaysReport = False;
 
 def RIPL():
   return make_church_prime_ripl()
@@ -39,6 +43,23 @@ def printTest(testName,eps,ops):
   print "Expected: " + str(eps)
   print "Observed: " + str(ops)
   print "Root Mean Square Difference: " + str(rmsDifference(eps,ops))
+
+# printTest2 :: (Ord a) => String -> [(a,Double)] -> [a] -> IO ()
+def printTest2(name, expectedRates, observed):
+  total = len(observed)
+  items = [pair[0] for pair in expectedRates]
+  counts = countPredictions(observed, items)
+  expRates = normalizeList([pair[1] for pair in expectedRates])
+  expCounts = [total * r for r in expRates]
+  (chisq,pval) = chisquare(counts, np.array(expCounts))
+  if globalAlwaysReport or pval < 0.1:
+    print "---Test: " + name + "---"
+    print "Expected: " + str(expCounts)
+    print "Observed: " + str(counts)
+    print "Chi^2   : " + str(chisq)
+    print "P value : " + str(pval)
+  else:
+    sys.stdout.write(".")
 
 def runAllTests(N):
   print "========= RunAllTests(N) ========"
@@ -300,6 +321,7 @@ def testSprinkler1(N):
   ps = [.3577,.6433]
   eps = normalizeList(countPredictions(predictions, [True,False]))
   printTest("TestSprinkler1",ps,eps)
+  printTest2("TestSprinkler1", [(True, ps[0]), (False, ps[1])], predictions)
 
 def testSprinkler2(N):
   # this test needs more iterations than most others, because it mixes badly
