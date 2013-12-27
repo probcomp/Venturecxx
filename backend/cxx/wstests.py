@@ -170,9 +170,11 @@ def testMakeCSP():
   ripl.assume("h", "(lambda () 5)")
   ripl.predict("(h)")
 
-  print ripl.report(2)
-  print ripl.report(4)
-  print ripl.report(6)
+  assert(ripl.report(2) == 1.0)
+  assert(ripl.report(4) == 6.0)
+  assert(ripl.report(6) == 5.0)
+
+  reportPassage("TestMakeCSP")
 
 
 def testBernoulli0(N):
