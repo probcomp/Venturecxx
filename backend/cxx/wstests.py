@@ -1098,7 +1098,7 @@ def testHPYLanguageModel1(N):
 
   predictions = loggingInfer(ripl,"pid",N)
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
-  reportKnownDiscrete("testHPYLanguageModel3 (approximate)", ans, predictions)
+  reportKnownDiscrete("testHPYLanguageModel1 (approximate)", ans, predictions)
 
 def testHPYLanguageModel2(N):
   ripl = RIPL()
@@ -1136,7 +1136,7 @@ def testHPYLanguageModel2(N):
 
   predictions = loggingInfer(ripl,"pid",N)
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
-  reportKnownDiscrete("testHPYLanguageModel4 (approximate)", ans, predictions)
+  reportKnownDiscrete("testHPYLanguageModel2 (approximate)", ans, predictions)
 
 def testGoldwater1(N):
   v = RIPL()
