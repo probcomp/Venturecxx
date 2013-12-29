@@ -994,6 +994,8 @@ def testMemoizingOnAList():
   ripl = RIPL()
   ripl.assume("G","(mem (lambda (x) 1))")
   ripl.predict("(G (list 0))")
+  predictions = loggingInfer(ripl,2,1)
+  assert predictions == [1]
   reportPassage("TestMemoizingOnAList")
 
 def testOperatorChanging(N):
