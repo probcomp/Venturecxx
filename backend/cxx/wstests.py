@@ -613,9 +613,8 @@ def testMap1(N):
                          1.0)""")
 
   predictions = loggingInfer(ripl,3,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestMap1---"
-  print "(20.0," + str(mean) + ")"
+  cdf = stats.norm(loc=20, scale=2).cdf
+  reportKnownContinuous("testMap1", cdf, predictions, "Expected: samples from N(20,2)")
 
 def testMap2():
   ripl = RIPL()
@@ -680,9 +679,8 @@ def testEval2(N):
   ripl.observe("x",11.0)
 
   predictions = loggingInfer(ripl,1,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestEval2---"
-  print "(0.667," + str(mean) + ")"
+  cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
+  reportKnownContinuous("testEval2", cdf, predictions, "Expected: samples from approximately beta(2,1)")
 
 def testEval3(N):
   ripl = RIPL()
@@ -698,9 +696,8 @@ def testEval3(N):
   ripl.observe("x",11.0)
 
   predictions = loggingInfer(ripl,1,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestEval3---"
-  print "(0.667," + str(mean) + ")"
+  cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
+  reportKnownContinuous("testEval2", cdf, predictions, "Expected: samples from approximately beta(2,1)")
 
 def testApply1(N):
   ripl = RIPL()
@@ -723,10 +720,8 @@ def testExtendEnv1(N):
   ripl.predict("(normal (eval exp env3) 1.0)")
 
   predictions = loggingInfer(ripl,5,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestExtendEnv1---"
-  print "(10," + str(mean) + ")"
-
+  cdf = stats.norm(loc=10, scale=math.sqrt(3)).cdf
+  reportKnownContinuous("testExtendEnv1", cdf, predictions, "Expected: samples from N(10,sqrt(3))")
 
 
 # TODO need extend_env, symbol?
