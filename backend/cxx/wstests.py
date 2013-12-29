@@ -18,7 +18,7 @@ import sys
 import math
 import pdb
 import itertools
-from scipy.stats import chisquare
+import scipy.stats as stats
 import numpy as np
 
 globalKernel = "meanfield";
@@ -55,12 +55,24 @@ def reportKnownDiscrete(name, expectedRates, observed):
   total = sum(counts)
   expRates = normalizeList([pair[1] for pair in expectedRates])
   expCounts = [total * r for r in expRates]
-  (chisq,pval) = chisquare(counts, np.array(expCounts))
+  (chisq,pval) = stats.chisquare(counts, np.array(expCounts))
   if globalAlwaysReport or pval < 0.1:
     print "---Test: " + name + "---"
     print "Expected: " + str(expCounts)
     print "Observed: " + str(counts)
     print "Chi^2   : " + str(chisq)
+    print "P value : " + str(pval)
+  else:
+    sys.stdout.write(".")
+
+def reportKnownContinuous(name, expectedCDF, observed, msg=None):
+  (K, pval) = stats.kstest(observed, expectedCDF)
+  if globalAlwaysReport or pval < 0.1:
+    print "---Test: " + name + "---"
+    if msg is not None:
+      print msg
+    print "Observed: " + str(observed)
+    print "K stat  : " + str(K)
     print "P value : " + str(pval)
   else:
     sys.stdout.write(".")
@@ -190,7 +202,8 @@ def testBernoulli0(N):
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   print "---TestBernoulli0---"
   print "(5.0," + str(mean) + ")"
-
+  cdf = lambda x: 0.5 * stats.norm.cdf(x,loc=0,scale=1) + 0.5 * stats.norm.cdf(x,loc=10,scale=1)
+  reportKnownContinuous("TestBernoulli0", cdf, predictions)
 
 def testBernoulli1(N):
   ripl = RIPL()
