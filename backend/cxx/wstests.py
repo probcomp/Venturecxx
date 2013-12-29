@@ -683,7 +683,7 @@ def testEval3(N):
 
   predictions = loggingInfer(ripl,1,N)
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
-  reportKnownContinuous("testEval2", cdf, predictions, "Expected: samples from approximately beta(2,1)")
+  reportKnownContinuous("testEval3", cdf, predictions, "Expected: samples from approximately beta(2,1)")
 
 def testApply1(N):
   ripl = RIPL()
