@@ -47,7 +47,7 @@ def printTest(testName,eps,ops):
 def fmtlst(fmt, lst):
   return "[" + ", ".join(map((lambda n: fmt % n), lst)) + "]"
 
-# reportKnownDiscrete :: (Ord a) => String -> [(a,Double)] -> [a] -> IO ()
+# reportKnownDiscrete :: (Eq a) => String -> [(a,Double)] -> [a] -> IO ()
 def reportKnownDiscrete(name, expectedRates, observed):
   items = [pair[0] for pair in expectedRates]
   # N.B. This ignores observations outside the support of the given
