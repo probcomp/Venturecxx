@@ -255,8 +255,8 @@ def testMHNormal1(N):
   # Posterior for a is normal with mean 34/3, precision 3/2 (variance 2/3)
   ripl.predict("""
 (branch (lt a 100.0)
-        (lambda () (normal (plus a b) 1.0))
-        (lambda () (normal (times a b) 1.0)))
+  (lambda () (normal (plus a b) 1.0))
+  (lambda () (normal (times a b) 1.0)))
 """)
 
   predictions = loggingInfer(ripl,4,N)
@@ -345,8 +345,10 @@ def testSprinkler1(N):
   ripl.assume("sprinkler","(branch rain (lambda () (bernoulli 0.01)) (lambda () (bernoulli 0.4)))")
   ripl.assume("grassWet","""
 (branch rain
-(lambda () (branch sprinkler (lambda () (bernoulli 0.99)) (lambda () (bernoulli 0.8))))
-(lambda () (branch sprinkler (lambda () (bernoulli 0.9)) (lambda () (bernoulli 0.00001)))))
+  (lambda ()
+    (branch sprinkler (lambda () (bernoulli 0.99)) (lambda () (bernoulli 0.8))))
+  (lambda ()
+    (branch sprinkler (lambda () (bernoulli 0.9)) (lambda () (bernoulli 0.00001)))))
 """)
   ripl.observe("grassWet", True)
 
@@ -362,9 +364,12 @@ def testSprinkler2(N):
   ripl.assume("rain","(bernoulli 0.2)")
   ripl.assume("sprinkler","(bernoulli (branch rain (lambda () 0.01) (lambda () 0.4)))")
   ripl.assume("grassWet","""
-(bernoulli (branch rain
-(lambda () (branch sprinkler (lambda () 0.99) (lambda () 0.8)))
-(lambda () (branch sprinkler (lambda () 0.9) (lambda () 0.00001)))))
+(bernoulli
+ (branch rain
+   (lambda ()
+     (branch sprinkler (lambda () 0.99) (lambda () 0.8)))
+   (lambda ()
+     (branch sprinkler (lambda () 0.9) (lambda () 0.00001)))))
 """)
   ripl.observe("grassWet", True)
 
@@ -516,11 +521,10 @@ def testLazyHMM1(N):
   N = N
   ripl = RIPL()
   ripl.assume("f","""
-(mem
-(lambda (i)
+(mem (lambda (i)
   (branch (eq i 0)
-     (lambda () (bernoulli 0.5))
-     (lambda () (branch (f (minus i 1))
+    (lambda () (bernoulli 0.5))
+    (lambda () (branch (f (minus i 1))
                  (lambda () (bernoulli 0.7))
                  (lambda () (bernoulli 0.3)))))))
 """)
@@ -550,13 +554,13 @@ def testLazyHMMSP1(N):
   ripl = RIPL()
   ripl.assume("f","""
 (make_lazy_hmm
-  (make_vector 0.5 0.5)
-  (make_vector
-    (make_vector 0.7 0.3)
-    (make_vector 0.3 0.7))
-  (make_vector
-    (make_vector 0.9 0.2)
-    (make_vector 0.1 0.8)))
+ (make_vector 0.5 0.5)
+ (make_vector
+  (make_vector 0.7 0.3)
+  (make_vector 0.3 0.7))
+ (make_vector
+  (make_vector 0.9 0.2)
+  (make_vector 0.1 0.8)))
 """);
   ripl.observe("(f 1)","atom<0>")
   ripl.observe("(f 2)","atom<0>")
@@ -669,10 +673,11 @@ def testEval2(N):
   ripl = RIPL()
   ripl.assume("p","(uniform_continuous 0.0 1.0)")
   ripl.assume("globalEnv","(get_current_environment)")
-  ripl.assume("exp","""(quote
-  (branch (bernoulli p)
-        (lambda () (normal 10.0 1.0))
-        (lambda () (normal 0.0 1.0)))
+  ripl.assume("exp","""
+(quote
+ (branch (bernoulli p)
+   (lambda () (normal 10.0 1.0))
+   (lambda () (normal 0.0 1.0)))
 )""")
 
   ripl.assume("x","(eval exp globalEnv)")
@@ -686,10 +691,11 @@ def testEval3(N):
   ripl = RIPL()
   ripl.assume("p","(uniform_continuous 0.0 1.0)")
   ripl.assume("globalEnv","(get_current_environment)")
-  ripl.assume("exp","""(quote
-  (branch ((lambda () (bernoulli p)))
-        (lambda () ((lambda () (normal 10.0 1.0))))
-        (lambda () (normal 0.0 1.0)))
+  ripl.assume("exp","""
+(quote
+ (branch ((lambda () (bernoulli p)))
+   (lambda () ((lambda () (normal 10.0 1.0))))
+   (lambda () (normal 0.0 1.0)))
 )""")
 
   ripl.assume("x","(eval exp globalEnv)")
@@ -791,17 +797,16 @@ def loadPYMem(ripl):
   ripl.assume("pick_a_stick","""
 (lambda (sticks k)
   (branch (bernoulli (sticks k))
-          (lambda () k)
-          (lambda () (pick_a_stick sticks (plus k 1)))))
+    (lambda () k)
+    (lambda () (pick_a_stick sticks (plus k 1)))))
 """)
 
   ripl.assume("make_sticks","""
 (lambda (alpha d)
   ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
-   (mem
-    (lambda (k)
-      (beta (minus 1 d)
-            (plus alpha (times k d)))))))
+   (mem (lambda (k)
+     (beta (minus 1 d)
+           (plus alpha (times k d)))))))
 """)
 
   ripl.assume("u_pymem","""
@@ -824,16 +829,15 @@ def loadDPMem(ripl):
   ripl.assume("pick_a_stick","""
 (lambda (sticks k)
   (branch (bernoulli (sticks k))
-          (lambda () k)
-          (lambda () (pick_a_stick sticks (plus k 1)))))
+    (lambda () k)
+    (lambda () (pick_a_stick sticks (plus k 1)))))
 """)
 
   ripl.assume("make_sticks","""
 (lambda (alpha)
   ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
-   (mem
-    (lambda (k)
-      (beta 1 (plus alpha (times k k)))))))
+   (mem (lambda (k)
+     (beta 1 (plus alpha (times k k)))))))
 """)
 
   ripl.assume("u_dpmem","""
@@ -1091,11 +1095,10 @@ def testHPYLanguageModel1(N):
 
   # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
   ripl.assume("G","""
-(mem
-  (lambda (context)
-    (if (is_pair context)
-        (pymem alpha d (G (rest context)))
-        (pymem alpha d G_init))))
+(mem (lambda (context)
+  (if (is_pair context)
+      (pymem alpha d (G (rest context)))
+      (pymem alpha d G_init))))
 """)
 
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
@@ -1196,11 +1199,10 @@ def testHPYLanguageModel4(N):
 
   # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
   ripl.assume("G","""
-(mem
-  (lambda (context)
-    (if (is_pair context)
-        (pymem alpha d (G (rest context)))
-        (pymem alpha d G_init))))
+(mem (lambda (context)
+  (if (is_pair context)
+      (pymem alpha d (G (rest context)))
+      (pymem alpha d G_init))))
 """)
 
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
@@ -1248,43 +1250,40 @@ def testGoldwater1(N):
   v.assume("sample_word_id", "(make_crp 1.0)")
 
   v.assume("sample_letter_in_word", """
-(mem
-  (lambda (word_id pos)
-    (sample_phone)))
+(mem (lambda (word_id pos)
+  (sample_phone)))
 """)
 #7
   v.assume("is_end", """
-(mem
-  (lambda (word_id pos)
-    (flip .3)))
+(mem (lambda (word_id pos)
+  (flip .3)))
 """)
 
   v.assume("get_word_id","""
-(mem
-  (lambda (sentence sentence_pos)
-    (branch (= sentence_pos 0)
+(mem (lambda (sentence sentence_pos)
+  (branch (= sentence_pos 0)
+    (lambda () (sample_word_id))
+    (lambda ()
+      (branch (is_end (get_word_id sentence (- sentence_pos 1))
+                      (get_pos sentence (- sentence_pos 1)))
         (lambda () (sample_word_id))
-        (lambda ()
-          (branch (is_end (get_word_id sentence (- sentence_pos 1)) (get_pos sentence (- sentence_pos 1)))
-            (lambda () (sample_word_id))
-            (lambda () (get_word_id sentence (- sentence_pos 1))))))))
+        (lambda () (get_word_id sentence (- sentence_pos 1))))))))
 """)
 
   v.assume("get_pos","""
-(mem
-  (lambda (sentence sentence_pos)
-    (branch (= sentence_pos 0)
+(mem (lambda (sentence sentence_pos)
+  (branch (= sentence_pos 0)
+    (lambda () 0)
+    (lambda ()
+      (branch (is_end (get_word_id sentence (- sentence_pos 1))
+                      (get_pos sentence (- sentence_pos 1)))
         (lambda () 0)
-        (lambda ()
-          (branch (is_end (get_word_id sentence (- sentence_pos 1)) (get_pos sentence (- sentence_pos 1)))
-            (lambda () 0)
-            (lambda () (+ (get_pos sentence (- sentence_pos 1)) 1)))))))
+        (lambda () (+ (get_pos sentence (- sentence_pos 1)) 1)))))))
 """)
 
   v.assume("sample_symbol","""
-(mem
-  (lambda (sentence sentence_pos)
-    (sample_letter_in_word (get_word_id sentence sentence_pos) (get_pos sentence sentence_pos))))
+(mem (lambda (sentence sentence_pos)
+  (sample_letter_in_word (get_word_id sentence sentence_pos) (get_pos sentence sentence_pos))))
 """)
 
 #  v.assume("noise","(gamma 1 1)")
