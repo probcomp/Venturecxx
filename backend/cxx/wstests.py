@@ -105,10 +105,12 @@ def runAllTests(N):
     globalUseGlobalScaffold = options[i][1]
     runTests(N)
 
-def loggingInfer(ripl,address,T):
+def loggingInfer(ripl,address,T,kernel=None,use_global_scaffold=None):
+  kernel = kernel if kernel is not None else globalKernel
+  use_global_scaffold = use_global_scaffold if use_global_scaffold is not None else globalUseGlobalScaffold
   predictions = []
   for t in range(T):
-    ripl.infer(10,kernel=globalKernel, use_global_scaffold=globalUseGlobalScaffold)
+    ripl.infer(10,kernel,use_global_scaffold)
     predictions.append(ripl.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
@@ -1007,7 +1009,7 @@ def testOperatorChanging(N):
   ripl.assume("op4","(if (op3) op2 op1)")
   ripl.predict("(op4)")
   ripl.observe("(op4)",True)
-  predictions = loggingInfer(ripl,6,N)
+  predictions = loggingInfer(ripl,6,N,kernel="mh")
   ans = [(True,0.75), (False,0.25)]
   reportKnownDiscrete("TestOperatorChanging", ans, predictions)
 
