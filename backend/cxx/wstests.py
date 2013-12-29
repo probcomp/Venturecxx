@@ -44,8 +44,8 @@ def printTest(testName,eps,ops):
   print "Observed: " + str(ops)
   print "Root Mean Square Difference: " + str(rmsDifference(eps,ops))
 
-# printTest2 :: (Ord a) => String -> [(a,Double)] -> [a] -> IO ()
-def printTest2(name, expectedRates, observed):
+# reportKnownDiscrete :: (Ord a) => String -> [(a,Double)] -> [a] -> IO ()
+def reportKnownDiscrete(name, expectedRates, observed):
   items = [pair[0] for pair in expectedRates]
   # N.B. This ignores observations outside the support of the given
   # expectation.  This is useful when information about the right
@@ -219,7 +219,7 @@ def testCategorical1(N):
          (3, 0.2 * 0.2 + 0.3 * 0.6 + 0.4 * 0.2),
          (4, 0.3 * 0.2 + 0.4 * 0.6),
          (5, 0.4 * 0.2)]
-  printTest2("testCategorical1", ans, predictions)
+  reportKnownDiscrete("testCategorical1", ans, predictions)
 
 def testMHNormal0(N):
   ripl = RIPL()
@@ -285,7 +285,7 @@ def testMem1(N):
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
          (10, 0.6 * 0.6 * 0.9)]
-  printTest2("TestMem1", ans, predictions)
+  reportKnownDiscrete("TestMem1", ans, predictions)
 
 def testMem2(N):
   ripl = RIPL()
@@ -303,7 +303,7 @@ def testMem2(N):
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
          (10, 0.6 * 0.6 * 0.9)]
-  printTest2("TestMem2", ans, predictions)
+  reportKnownDiscrete("TestMem2", ans, predictions)
 
 def testMem3(N):
   ripl = RIPL()
@@ -321,7 +321,7 @@ def testMem3(N):
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
          (10, 0.6 * 0.6 * 0.9)]
-  printTest2("TestMem3", ans, predictions)
+  reportKnownDiscrete("TestMem3", ans, predictions)
 
 def testSprinkler1(N):
   ripl = RIPL()
@@ -336,7 +336,7 @@ def testSprinkler1(N):
 
   predictions = loggingInfer(ripl,1,N)
   ans = [(True, .3577), (False, .6433)]
-  printTest2("TestSprinkler1", ans, predictions)
+  reportKnownDiscrete("TestSprinkler1", ans, predictions)
 
 def testSprinkler2(N):
   # this test needs more iterations than most others, because it mixes badly
@@ -354,7 +354,7 @@ def testSprinkler2(N):
 
   predictions = loggingInfer(ripl,1,N)
   ans = [(True, .3577), (False, .6433)]
-  printTest2("TestSprinkler2 (mixes terribly)", ans, predictions)
+  reportKnownDiscrete("TestSprinkler2 (mixes terribly)", ans, predictions)
 
 def testGamma1(N):
   ripl = RIPL()
@@ -394,7 +394,7 @@ def testBLOGCSI(N):
 
   predictions = loggingInfer(ripl,5,N)
   ans = [(True, .596), (False, .404)]
-  printTest2("TestBLOGCSI", ans, predictions)
+  reportKnownDiscrete("TestBLOGCSI", ans, predictions)
 
 
 def testMHHMM1(N):
@@ -432,7 +432,7 @@ def testOuterMix1(N):
 
   predictions = loggingInfer(ripl,1,N)
   ans = [(1,.5), (2,.25), (3,.25)]
-  printTest2("TestOuterMix1", ans, predictions)
+  reportKnownDiscrete("TestOuterMix1", ans, predictions)
 
 def testMakeSymDirMult1(N):
   ripl = RIPL()
@@ -440,7 +440,7 @@ def testMakeSymDirMult1(N):
   ripl.predict("(f)")
   predictions = loggingInfer(ripl,2,N)
   ans = [(0,.5), (1,.5)]
-  printTest2("TestMakeSymDirMult1", ans, predictions)
+  reportKnownDiscrete("TestMakeSymDirMult1", ans, predictions)
 
 def testMakeSymDirMult2(N):
   ripl = RIPL()
@@ -454,7 +454,7 @@ def testMakeSymDirMult2(N):
 
   predictions = loggingInfer(ripl,3,N)
   ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
-  printTest2("TestMakeSymDirMult2", ans, predictions)
+  reportKnownDiscrete("TestMakeSymDirMult2", ans, predictions)
 
 def testMakeDirMult1(N):
   ripl = RIPL()
@@ -468,7 +468,7 @@ def testMakeDirMult1(N):
 
   predictions = loggingInfer(ripl,3,N)
   ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
-  printTest2("TestMakeDirMult1", ans, predictions)
+  reportKnownDiscrete("TestMakeDirMult1", ans, predictions)
 
 def testMakeBetaBernoulli1(N):
   ripl = RIPL()
@@ -480,7 +480,7 @@ def testMakeBetaBernoulli1(N):
 
   predictions = loggingInfer(ripl,3,N)
   ans = [(False,.25), (True,.75)]
-  printTest2("TestMakeBetaBernoulli1", ans, predictions)
+  reportKnownDiscrete("TestMakeBetaBernoulli1", ans, predictions)
 
 def testMakeUCSymDirMult1(N):
   ripl = RIPL()
@@ -494,7 +494,7 @@ def testMakeUCSymDirMult1(N):
 
   predictions = loggingInfer(ripl,3,N)
   ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
-  printTest2("TestMakeUCSymDirMult1", ans, predictions)
+  reportKnownDiscrete("TestMakeUCSymDirMult1", ans, predictions)
 
 def testLazyHMM1(N):
   N = N
@@ -553,7 +553,7 @@ def testLazyHMMSP1(N):
 
   predictions = loggingInfer(ripl,7,N)
   ans = [(0,0.6528), (1,0.3472)]
-  printTest2("testLazyHMMSP1", ans, predictions)
+  reportKnownDiscrete("testLazyHMMSP1", ans, predictions)
 
 def testStaleAAA1(N):
   ripl = RIPL()
@@ -568,7 +568,7 @@ def testStaleAAA1(N):
 
   predictions = loggingInfer(ripl,5,N)
   ans = [(1,.9), (0,.1)]
-  printTest2("TestStaleAAA1", ans, predictions)
+  reportKnownDiscrete("TestStaleAAA1", ans, predictions)
 
 def testStaleAAA2(N):
   ripl = RIPL()
@@ -583,7 +583,7 @@ def testStaleAAA2(N):
 
   predictions = loggingInfer(ripl,5,N)
   ans = [(1,.9), (0,.1)]
-  printTest2("TestStaleAAA2", ans, predictions)
+  reportKnownDiscrete("TestStaleAAA2", ans, predictions)
 
 def testMap1(N):
   ripl = RIPL()
@@ -648,7 +648,7 @@ def testEval1(N):
 
   predictions = loggingInfer(ripl,3,N)
   ans = [(1,.7), (0,.3)]
-  printTest2("TestEval1", ans, predictions)
+  reportKnownDiscrete("TestEval1", ans, predictions)
 
 def testEval2(N):
   ripl = RIPL()
@@ -870,7 +870,7 @@ def testCRP1(N,isCollapsed):
 
   predictions = loggingInfer(ripl,"pid",N)
   ans = [(0,3), (1,3), (2,6), (3,2), (4,1)]
-  printTest2("TestCRP1 (not exact)", ans, predictions)
+  reportKnownDiscrete("TestCRP1 (not exact)", ans, predictions)
 
 def loadHPY(ripl,topCollapsed,botCollapsed):
   loadPYMem(ripl)
@@ -922,7 +922,7 @@ def testGeometric1(N):
 
   k = 7
   ans = [(n,math.pow(2,-n)) for n in range(1,k)]
-  printTest2("TestGeometric1", ans, predictions)
+  reportKnownDiscrete("TestGeometric1", ans, predictions)
 
 def testTrig1(N):
   ripl = RIPL()
@@ -982,7 +982,7 @@ def testReferences1(N):
   # TODO What is trying to test?  The address in the logging infer refers to the bare (flip).
   predictions = loggingInfer(ripl,6,N)
   ans = [(True,0.5), (False,0.5)]
-  printTest2("TestReferences1", ans, predictions)
+  reportKnownDiscrete("TestReferences1", ans, predictions)
 
 #
 def testReferences2(N):
@@ -993,7 +993,7 @@ def testReferences2(N):
 
   predictions = loggingInfer(ripl,2,N)
   ans = [(True,0.75), (False,0.25)]
-  printTest2("TestReferences2", ans, predictions)
+  reportKnownDiscrete("TestReferences2", ans, predictions)
 
 def testMemoizingOnAList():
   ripl = RIPL()
@@ -1021,7 +1021,7 @@ def testObserveAPredict0(N):
   ripl.predict("(f)")
   predictions = loggingInfer(ripl,2,N)
   ans = [(True,0.5), (False,0.5)]
-  printTest2("TestObserveAPredict0", ans, predictions)
+  reportKnownDiscrete("TestObserveAPredict0", ans, predictions)
 
 
 ### These tests are illegal Venture programs, and cause PGibbs to fail because
@@ -1037,7 +1037,7 @@ def testObserveAPredict0(N):
 #   ripl.predict("(f)")
 #   predictions = loggingInfer(ripl,2,N)
 #   ans = [(True,0.75), (False,0.25)]
-#   printTest2("TestObserveAPredict1", ans, predictions)
+#   reportKnownDiscrete("TestObserveAPredict1", ans, predictions)
 
 
 # def testObserveAPredict2(N):
@@ -1104,7 +1104,7 @@ def testHPYLanguageModel1(N):
 
   predictions = loggingInfer(ripl,"pid",N)
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
-  printTest2("testHPYLanguageModel1 (approximate)", ans, predictions)
+  reportKnownDiscrete("testHPYLanguageModel1 (approximate)", ans, predictions)
 
 def testHPYLanguageModel2(N):
   ripl = RIPL()
@@ -1137,7 +1137,7 @@ def testHPYLanguageModel2(N):
 
   predictions = loggingInfer(ripl,"pid",N)
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
-  printTest2("testHPYLanguageModel2 (approximate)", ans, predictions)
+  reportKnownDiscrete("testHPYLanguageModel2 (approximate)", ans, predictions)
 
 def testHPYLanguageModel3(N):
   ripl = RIPL()
@@ -1170,7 +1170,7 @@ def testHPYLanguageModel3(N):
 
   predictions = loggingInfer(ripl,"pid",N)
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
-  printTest2("testHPYLanguageModel3 (approximate)", ans, predictions)
+  reportKnownDiscrete("testHPYLanguageModel3 (approximate)", ans, predictions)
 
 def testHPYLanguageModel4(N):
   ripl = RIPL()
@@ -1209,7 +1209,7 @@ def testHPYLanguageModel4(N):
 
   predictions = loggingInfer(ripl,"pid",N)
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
-  printTest2("testHPYLanguageModel4 (approximate)", ans, predictions)
+  reportKnownDiscrete("testHPYLanguageModel4 (approximate)", ans, predictions)
 
 def testGoldwater1(N):
   v = RIPL()
