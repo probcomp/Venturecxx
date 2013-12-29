@@ -116,6 +116,7 @@ def loggingInfer(ripl,address,T,kernel=None,use_global_scaffold=None):
   return predictions
 
 def runTests(N):
+  testMakeCSP()
   testBernoulli0(N)
   testBernoulli1(N)
   testCategorical1(N)
@@ -140,20 +141,23 @@ def runTests(N):
   testMakeSymDirMult2("make_uc_sym_dir_mult", N)
   testMakeDirMult1(N)
   testMakeBetaBernoulli1(N)
-  testMap1(N)
-  testMap2()
-  testMap3()
-  testMap4()
   testLazyHMM1(N)
   testLazyHMMSP1(N)
   testStaleAAA1(N)
   testStaleAAA2(N)
+  testMap1(N)
+  testMap2()
+  testMap3()
+  testMap4()
   testEval1(N)
   testEval2(N)
   testEval3(N)
   testApply1(N)
   testExtendEnv1(N)
   testList1()
+  testDPMem1(N)
+  testCRP1(N,True)
+#  testCRP1(N,False) # Uncollapsed is too slow
   testHPYMem1(N)
   testGeometric1(N)
   testTrig1(N)
@@ -162,12 +166,14 @@ def runTests(N):
   testReferences2(N)
   testMemoizingOnAList()
   testOperatorChanging(N)
+  testObserveAPredict0(N)
 #  testObserveAPredict1(N)
 #  testObserveAPredict2(N)
   testBreakMem(N)
   testHPYLanguageModel1(N) # fails
   testHPYLanguageModel2(N) # fails
   testGoldwater1(N)
+  testMemHashFunction1(5,5)
 
 def runTests2(N):
   testGeometric1(N)
@@ -416,7 +422,6 @@ def testBLOGCSI(N):
   predictions = loggingInfer(ripl,5,N)
   ans = [(True, .596), (False, .404)]
   reportKnownDiscrete("TestBLOGCSI", ans, predictions)
-
 
 def testMHHMM1(N):
   ripl = RIPL()
@@ -845,6 +850,7 @@ def testDPMem1(N):
   ripl.observe("(normal (f) 1.0)",0.0)
   ripl.observe("(normal (f) 1.0)",0.0)
   ripl.infer(N)
+  reportPassage("TestDPMem1")
 
 def observeCategories(ripl,counts):
   for i in range(len(counts)):
@@ -1051,6 +1057,7 @@ def testBreakMem(N):
   ripl.assume("g","(lambda () (pick_a_stick f 1))")
   ripl.predict("(g)")
   ripl.infer(N)
+  reportPassage("TestBreakMem")
 
 def testHPYLanguageModel1(N):
   ripl = RIPL()
