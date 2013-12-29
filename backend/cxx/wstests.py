@@ -132,7 +132,8 @@ def runTests(N):
   testBLOGCSI(N)
   testMHHMM1(N)
   testOuterMix1(N)
-  testMakeSymDirMult1(N)
+  testMakeSymDirMult1("make_sym_dir_mult", N)
+  testMakeSymDirMult1("make_uc_sym_dir_mult", N)
   testMakeSymDirMult2("make_sym_dir_mult", N)
   testMakeSymDirMult2("make_uc_sym_dir_mult", N)
   testMakeDirMult1(N)
@@ -455,13 +456,13 @@ def testOuterMix1(N):
   ans = [(1,.5), (2,.25), (3,.25)]
   reportKnownDiscrete("TestOuterMix1", ans, predictions)
 
-def testMakeSymDirMult1(N):
+def testMakeSymDirMult1(name, N):
   ripl = RIPL()
-  ripl.assume("f", "(make_sym_dir_mult 1.0 2)")
+  ripl.assume("f", "(%s 1.0 2)" % name)
   ripl.predict("(f)")
   predictions = loggingInfer(ripl,2,N)
   ans = [(0,.5), (1,.5)]
-  reportKnownDiscrete("TestMakeSymDirMult1", ans, predictions)
+  reportKnownDiscrete("TestMakeSymDirMult1(%s)" % name, ans, predictions)
 
 def testDirichletMultinomial1(name, ripl, index, N):
   for i in range(1,4):
