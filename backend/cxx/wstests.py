@@ -202,7 +202,6 @@ def testBernoulli0(N):
   (lambda () ((lambda () (normal 10.0 1.0))))))
 """);
   predictions = loggingInfer(ripl,2,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
   cdf = lambda x: 0.5 * stats.norm.cdf(x,loc=0,scale=1) + 0.5 * stats.norm.cdf(x,loc=10,scale=1)
   reportKnownContinuous("TestBernoulli0", cdf, predictions, "Expected: samples from N(0,1) + N(10,1)")
 
@@ -216,9 +215,8 @@ def testBernoulli1(N):
   (lambda () ((lambda () (normal 10.0 1.0)))))
 """);
   predictions = loggingInfer(ripl,2,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestBernoulli1---"
-  print "(3.0," + str(mean) + ")"
+  cdf = lambda x: 0.7 * stats.norm.cdf(x,loc=0,scale=1) + 0.3 * stats.norm.cdf(x,loc=10,scale=1)
+  reportKnownContinuous("TestBernoulli1", cdf, predictions, "Expected: samples from 0.7*N(0,1) + 0.3*N(10,1)")
 
 def testCategorical1(N):
   ripl = RIPL()
@@ -239,19 +237,22 @@ def testMHNormal0(N):
   ripl = RIPL()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.observe("(normal a 1.0)", 14.0)
+  # Posterior for a is normal with mean 12, precision 2
   ripl.predict("(normal a 1.0)")
 
   predictions = loggingInfer(ripl,3,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestMHNormal0---"
-  print "(12.0," + str(mean) + ")"
-
+  cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
+  reportKnownContinuous("testMHNormal0", cdf, predictions, "Expected: samples from N(12,sqrt(1.5))")
 
 def testMHNormal1(N):
   ripl = RIPL()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("b", "(normal a 1.0)")
+  # Prior for b is normal with mean 10, variance 2 (precision 1/2)
   ripl.observe("((lambda () (normal b 1.0)))", 14.0)
+  # Posterior for b is normal with mean 38/3, precision 3/2 (variance 2/3)
+  # Likelihood of a is normal with mean 0, variance 2 (precision 1/2)
+  # Posterior for a is normal with mean 34/3, precision 3/2 (variance 2/3)
   ripl.predict("""
 (branch (lt a 100.0)
         (lambda () (normal (plus a b) 1.0))
@@ -259,9 +260,10 @@ def testMHNormal1(N):
 """)
 
   predictions = loggingInfer(ripl,4,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestMHNormal1---"
-  print "(23.9," + str(mean) + ")"
+  # Unfortunately, a and b are (anti?)correlated now, so the true
+  # distribution of the sum is mysterious to me
+  cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
+  reportKnownContinuous("testMHNormal1", cdf, predictions, "Expected: samples from approximately N(24,sqrt(7/3))")
 
 def testStudentT0(N):
   # Modeled on testMHNormal0, but I do not know what the answer is
