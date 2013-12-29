@@ -133,8 +133,8 @@ def runTests(N):
   testMHHMM1(N)
   testOuterMix1(N)
   testMakeSymDirMult1(N)
-  testMakeSymDirMult2(N)
-  testMakeUCSymDirMult1(N)
+  testDirichletMultinomial1("make_sym_dir_mult", N)
+  testDirichletMultinomial1("make_uc_sym_dir_mult", N)
   testMakeDirMult1(N)
   testMakeBetaBernoulli1(N)
   testMap1(N)
@@ -463,10 +463,10 @@ def testMakeSymDirMult1(N):
   ans = [(0,.5), (1,.5)]
   reportKnownDiscrete("TestMakeSymDirMult1", ans, predictions)
 
-def testMakeSymDirMult2(N):
+def testDirichletMultinomial1(name, N):
   ripl = RIPL()
   ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "(make_sym_dir_mult a 4)")
+  ripl.assume("f", "(%s a 4)" % name)
   ripl.predict("(f)")
 
   for i in range(1,4):
@@ -475,7 +475,7 @@ def testMakeSymDirMult2(N):
 
   predictions = loggingInfer(ripl,3,N)
   ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
-  reportKnownDiscrete("TestMakeSymDirMult2", ans, predictions)
+  reportKnownDiscrete("TestDirichletMultinomial(%s)" % name, ans, predictions)
 
 def testMakeDirMult1(N):
   ripl = RIPL()
@@ -502,20 +502,6 @@ def testMakeBetaBernoulli1(N):
   predictions = loggingInfer(ripl,3,N)
   ans = [(False,.25), (True,.75)]
   reportKnownDiscrete("TestMakeBetaBernoulli1", ans, predictions)
-
-def testMakeUCSymDirMult1(N):
-  ripl = RIPL()
-  ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "(make_uc_sym_dir_mult a 4)")
-  ripl.predict("(f)")
-
-  for i in range(1,4):
-    for j in range(20):
-      ripl.observe("(f)", "atom<%d>" % i)
-
-  predictions = loggingInfer(ripl,3,N)
-  ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
-  reportKnownDiscrete("TestMakeUCSymDirMult1", ans, predictions)
 
 def testLazyHMM1(N):
   N = N
