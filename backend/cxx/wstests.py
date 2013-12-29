@@ -1007,8 +1007,9 @@ def testOperatorChanging(N):
   ripl.assume("op4","(if (op3) op2 op1)")
   ripl.predict("(op4)")
   ripl.observe("(op4)",True)
-  ripl.infer(N)
-  reportPassage("TestOperatorChanging")
+  predictions = loggingInfer(ripl,6,N)
+  ans = [(True,0.75), (False,0.25)]
+  reportKnownDiscrete("TestOperatorChanging", ans, predictions)
 
 def testObserveAPredict0(N):
   ripl = RIPL()
