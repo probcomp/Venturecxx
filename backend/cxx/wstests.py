@@ -165,9 +165,7 @@ def runTests(N):
 #  testObserveAPredict2(N)
   testBreakMem(N)
   testHPYLanguageModel1(N) # fails
-  testHPYLanguageModel2(N)
-  testHPYLanguageModel3(N)
-  testHPYLanguageModel4(N)
+  testHPYLanguageModel2(N) # fails
   testGoldwater1(N)
 
 def runTests2(N):
@@ -1076,77 +1074,6 @@ def testHPYLanguageModel1(N):
   ripl.assume("d","(uniform_continuous 0.0 0.01)")
 
   # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
-  ripl.assume("G","""
-(mem (lambda (context)
-  (if (is_pair context)
-      (pymem alpha d (G (rest context)))
-      (pymem alpha d G_init))))
-""")
-
-  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
-
-  atoms = [0, 1, 2, 3, 4] * 4;
-
-  for i in range(1,len(atoms)):
-    ripl.observe("""
-(noisy_true
-  (atom_eq
-    ((G (list %d)))
-    atom<%d>)
-  0.001)
-""" % (atoms[i-1],atoms[i]), "true")
-
-  ripl.predict("((G (list 0)))",label="pid")
-
-  predictions = loggingInfer(ripl,"pid",N)
-  ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
-  reportKnownDiscrete("testHPYLanguageModel1 (approximate)", ans, predictions)
-
-def testHPYLanguageModel2(N):
-  ripl = RIPL()
-  loadPYMem(ripl)
-
-  # 5 letters for now
-  ripl.assume("G_init","(make_sym_dir_mult 0.5 5)")
-
-  # globally shared parameters for now
-  ripl.assume("alpha","(gamma 1.0 1.0)")
-  ripl.assume("d","(uniform_continuous 0.0 0.01)")
-
-  # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
-  ripl.assume("H","(mem (lambda (a) (pymem alpha d G_init)))")
-
-  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
-
-  atoms = [0, 1, 2, 3, 4] * 4;
-
-  for i in range(1,len(atoms)):
-    ripl.observe("""
-(noisy_true
-  (atom_eq
-    ((H %d))
-    atom<%d>)
-  0.001)
-""" % (atoms[i-1],atoms[i]), "true")
-
-  ripl.predict("((H 0))",label="pid")
-
-  predictions = loggingInfer(ripl,"pid",N)
-  ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
-  reportKnownDiscrete("testHPYLanguageModel2 (approximate)", ans, predictions)
-
-def testHPYLanguageModel3(N):
-  ripl = RIPL()
-  loadPYMem(ripl)
-
-  # 5 letters for now
-  ripl.assume("G_init","(make_sym_dir_mult 0.5 5)")
-
-  # globally shared parameters for now
-  ripl.assume("alpha","(gamma 1.0 1.0)")
-  ripl.assume("d","(uniform_continuous 0.0 0.01)")
-
-  # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
   ripl.assume("H","(mem (lambda (a) (pymem alpha d G_init)))")
 
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
@@ -1168,7 +1095,7 @@ def testHPYLanguageModel3(N):
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
   reportKnownDiscrete("testHPYLanguageModel3 (approximate)", ans, predictions)
 
-def testHPYLanguageModel4(N):
+def testHPYLanguageModel2(N):
   ripl = RIPL()
   loadPYMem(ripl)
 
