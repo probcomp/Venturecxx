@@ -400,10 +400,14 @@ def testBLOGCSI(N):
 def testMHHMM1(N):
   ripl = RIPL()
   ripl.assume("f","""
-(mem (lambda (i) (branch (eq i 0) (lambda () (normal 0.0 1.0)) (lambda () (normal (f (minus i 1)) 1.0)))))
+(mem (lambda (i)
+  (branch (eq i 0)
+    (lambda () (normal 0.0 1.0))
+    (lambda () (normal (f (minus i 1)) 1.0)))))
 """)
   ripl.assume("g","""
-(mem (lambda (i) (normal (f i) 1.0)))
+(mem (lambda (i)
+  (normal (f i) 1.0)))
 """)
   ripl.observe("(g 0)",1.0)
   ripl.observe("(g 1)",2.0)
