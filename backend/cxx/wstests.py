@@ -44,8 +44,8 @@ def printTest(testName,eps,ops):
   print "Observed: " + str(ops)
   print "Root Mean Square Difference: " + str(rmsDifference(eps,ops))
 
-def strfloats(lst):
-  return "[" + ", ".join(map((lambda n: "%.2f" % n), lst)) + "]"
+def fmtlst(fmt, lst):
+  return "[" + ", ".join(map((lambda n: fmt % n), lst)) + "]"
 
 # reportKnownDiscrete :: (Ord a) => String -> [(a,Double)] -> [a] -> IO ()
 def reportKnownDiscrete(name, expectedRates, observed):
@@ -61,8 +61,8 @@ def reportKnownDiscrete(name, expectedRates, observed):
   (chisq,pval) = stats.chisquare(counts, np.array(expCounts))
   if globalAlwaysReport or pval < 0.1:
     print "---Test: " + name + "---"
-    print "Expected: " + strfloats(expCounts)
-    print "Observed: " + str(counts)
+    print "Expected: " + fmtlst("% 4.1f", expCounts)
+    print "Observed: " + fmtlst("% 4d", counts)
     print "Chi^2   : " + str(chisq)
     print "P value : " + str(pval)
   else:
@@ -74,7 +74,7 @@ def reportKnownContinuous(name, expectedCDF, observed, msg=None):
     print "---Test: " + name + "---"
     if msg is not None:
       print msg
-    print "Observed: " + strfloats(sorted(observed))
+    print "Observed: " + fmtlst("%.2f", sorted(observed))
     print "K stat  : " + str(K)
     print "P value : " + str(pval)
   else:
