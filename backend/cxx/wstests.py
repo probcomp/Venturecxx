@@ -158,7 +158,6 @@ def runTests(N):
   testGeometric1(N)
   testTrig1(N)
   testForget1()
-  testForget2()
   testReferences1(N)
   testReferences2(N)
   testMemoizingOnAList()
@@ -944,21 +943,6 @@ def testForget1():
   ripl.observe("(g 2.0)",3.0,label="id2")
   ripl.observe("(g 3.0)",3.0,label="id3")
 
-  ripl.forget("id3")
-  ripl.forget("id2")
-  ripl.forget("id1")
-
-def testForget2():
-  ripl = RIPL()
-
-  ripl.assume("x","(normal 0.0 1.0)")
-  ripl.assume("f","(lambda (y) (normal y 1.0))")
-  ripl.assume("g","(lambda (z) (normal z 2.0))")
-
-  ripl.predict("(f 1.0)",label="id1")
-  ripl.observe("(g 2.0)",3.0,label="id2")
-  ripl.observe("(g 3.0)",3.0,label="id3")
-
   ripl.forget("id1")
   ripl.forget("id2")
   ripl.forget("id3")
@@ -966,6 +950,7 @@ def testForget2():
   real_sivm = ripl.sivm.core_sivm.engine
   assert real_sivm.get_entropy_info()["unconstrained_random_choices"] == 1
   assert real_sivm.logscore() < 0
+  reportPassage("TestForget1")
 
 # This is the original one that fires an assert, when the (flip) has 0.0 or 1.0 it doesn't fail
 def testReferences1(N):
