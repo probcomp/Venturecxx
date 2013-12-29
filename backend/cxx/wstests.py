@@ -44,6 +44,9 @@ def printTest(testName,eps,ops):
   print "Observed: " + str(ops)
   print "Root Mean Square Difference: " + str(rmsDifference(eps,ops))
 
+def strfloats(lst):
+  return "[" + ", ".join(map((lambda n: "%.2f" % n), lst)) + "]"
+
 # reportKnownDiscrete :: (Ord a) => String -> [(a,Double)] -> [a] -> IO ()
 def reportKnownDiscrete(name, expectedRates, observed):
   items = [pair[0] for pair in expectedRates]
@@ -58,7 +61,7 @@ def reportKnownDiscrete(name, expectedRates, observed):
   (chisq,pval) = stats.chisquare(counts, np.array(expCounts))
   if globalAlwaysReport or pval < 0.1:
     print "---Test: " + name + "---"
-    print "Expected: " + str(expCounts)
+    print "Expected: " + strfloats(expCounts)
     print "Observed: " + str(counts)
     print "Chi^2   : " + str(chisq)
     print "P value : " + str(pval)
@@ -71,7 +74,7 @@ def reportKnownContinuous(name, expectedCDF, observed, msg=None):
     print "---Test: " + name + "---"
     if msg is not None:
       print msg
-    print "Observed: " + str(observed)
+    print "Observed: " + strfloats(sorted(observed))
     print "K stat  : " + str(K)
     print "P value : " + str(pval)
   else:
@@ -200,10 +203,8 @@ def testBernoulli0(N):
 """);
   predictions = loggingInfer(ripl,2,N)
   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestBernoulli0---"
-  print "(5.0," + str(mean) + ")"
   cdf = lambda x: 0.5 * stats.norm.cdf(x,loc=0,scale=1) + 0.5 * stats.norm.cdf(x,loc=10,scale=1)
-  reportKnownContinuous("TestBernoulli0", cdf, predictions)
+  reportKnownContinuous("TestBernoulli0", cdf, predictions, "Expected: samples from N(0,1) + N(10,1)")
 
 def testBernoulli1(N):
   ripl = RIPL()
