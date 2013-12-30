@@ -936,12 +936,28 @@ def predictHPY(N,topCollapsed,botCollapsed):
   observeCategories(ripl,[2,2,5,1,0])
   return loggingInfer(ripl,"pid",N)
 
+def doTestHPYMem1(N):
+  data = [countPredictions(predictHPY(N,top,bot), [0,1,2,3,4]) for top in [True,False] for bot in [True,False]]
+  (chisq, pval) = stats.chi2_contingency(data)
+  if globalAlwaysReport or pval < 0.1:
+    print "---TestHPYMem1---"
+    print "Expected: Samples from four equal distributions"
+    print "Observed:"
+    i = 0
+    for top in ["Collapsed", "Uncollapsed"]:
+      for bot in ["Collapsed", "Uncollapsed"]:
+        print "  (%s, %s): %s" % (top, bot, data[i])
+        i += 1
+    print "Chi^2   : " + str(chisq)
+    print "P value : " + str(pval)
+  else:
+    sys.stdout.write(".")
+
 def testHPYMem1(N):
-  print "---TestHPYMem1---"
-  for top in [False,True]:
-    for bot in [False,True]:
-      attempt = normalizeList(countPredictions(predictHPY(N,top,bot), [0,1,2,3,4]))
-      print("(%s,%s): %s" % (top,bot,attempt))
+  if hasattr(stats, 'chi2_contingency'):
+    doTestHPYMem1(N)
+  else:
+    print "---TestHPYMem1 skipped for lack of scipy.stats.chi2_contingency"
 
 def testGeometric1(N):
   ripl = RIPL()
