@@ -80,6 +80,25 @@ def reportKnownContinuous(name, expectedCDF, observed, msg=None):
   else:
     sys.stdout.write(".")
 
+def reportKnownMeanVariance(name, expMean, expVar, observed):
+  count = len(observed)
+  mean = np.mean(observed)
+  zscore = (mean - expMean) * math.sqrt(count) / math.sqrt(expVar)
+  pval = 2*stats.norm.sf(abs(zscore)) # Two-tailed
+  # TODO Also sensibly compare the variance of the sample to the
+  # expected variance (what's the right test statistic when the
+  # "population distribution" is not known?)
+  # TODO Can I use the Barry-Esseen theorem to use skewness
+  # information?
+  if globalAlwaysReport or pval < 0.1:
+    print "---Test: " + name + "---"
+    print "Expected: % 4d samples with mean %4.2f (stddev %4.2f)" % (count, expMean, math.sqrt(expVar))
+    print "Observed: % 4d samples with mean %4.2f" % (count, mean)
+    print "Z score : " + str(zscore)
+    print "P value : " + str(pval)
+  else:
+    sys.stdout.write(".")
+
 def reportPassage(name):
   if globalAlwaysReport:
     print "--- Passed %s ---" % name
@@ -697,10 +716,7 @@ def testApply1(N):
   ripl.predict("(apply times (list (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
 
   predictions = loggingInfer(ripl,2,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestApply1---"
-  print "(1000ish," + str(mean) + ")"
-
+  reportKnownMeanVariance("TestApply1", 1000, 101**3 - 100**3, predictions)
 
 def testExtendEnv1(N):
   ripl = RIPL()
@@ -714,7 +730,6 @@ def testExtendEnv1(N):
   predictions = loggingInfer(ripl,5,N)
   cdf = stats.norm(loc=10, scale=math.sqrt(3)).cdf
   reportKnownContinuous("testExtendEnv1", cdf, predictions, "Expected: samples from N(10,sqrt(3))")
-
 
 # TODO need extend_env, symbol?
 def riplWithSTDLIB(ripl):
