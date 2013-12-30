@@ -101,6 +101,7 @@ def reportKnownMeanVariance(name, expMean, expVar, observed):
     sys.stdout.write(".")
 
 def reportKnownMean(name, expMean, observed):
+  # TODO This is only valid if there are enough observations; 30 are recommended.
   count = len(observed)
   (tstat, pval) = stats.ttest_1samp(observed, expMean)
   mean = np.mean(observed)
@@ -306,16 +307,22 @@ def testMHNormal1(N):
   reportKnownContinuous("testMHNormal1", cdf, predictions, "Expected: samples from approximately N(24,sqrt(7/3))")
 
 def testStudentT0(N):
-  # Modeled on testMHNormal0, but I do not know what the answer is
-  # supposed to be.  However, the run not crashing says something.
   ripl = RIPL()
   ripl.assume("a", "(student_t 1.0)")
   ripl.observe("(normal a 1.0)", 3.0)
   ripl.predict("(normal a 1.0)")
   predictions = loggingInfer(ripl,3,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestStudentT0---"
-  print "(2.3ish (regression)," + str(mean) + ")"
+
+  # Posterior of a is proprtional to
+  def postprop(a):
+    return stats.t(1).pdf(a) * stats.norm(loc=3).pdf(a)
+  import scipy.integrate as int
+  (normalize,_) = int.quad(postprop, -10, 10)
+  def posterior(a): return postprop(a) / normalize
+  (meana,_) = int.quad(lambda x: x * posterior(x), -10, 10)
+  (meanasq,_) = int.quad(lambda x: x * x * posterior(x), -10, 10)
+  vara = meanasq - meana * meana
+  reportKnownMeanVariance("TestStudentT0", meana, vara + 1.0, predictions)
 
 def testMem0(N):
   ripl = RIPL()
