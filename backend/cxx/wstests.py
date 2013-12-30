@@ -83,6 +83,7 @@ def reportKnownContinuous(name, expectedCDF, observed, msg=None):
 def reportKnownMeanVariance(name, expMean, expVar, observed):
   count = len(observed)
   mean = np.mean(observed)
+  stddev = np.std(observed)
   zscore = (mean - expMean) * math.sqrt(count) / math.sqrt(expVar)
   pval = 2*stats.norm.sf(abs(zscore)) # Two-tailed
   # TODO Also sensibly compare the variance of the sample to the
@@ -92,9 +93,23 @@ def reportKnownMeanVariance(name, expMean, expVar, observed):
   # information?
   if globalAlwaysReport or pval < 0.1:
     print "---Test: " + name + "---"
-    print "Expected: % 4d samples with mean %4.3f (stddev %4.3f)" % (count, expMean, math.sqrt(expVar))
-    print "Observed: % 4d samples with mean %4.3f" % (count, mean)
+    print "Expected: % 4d samples with mean %4.3f, stddev %4.3f" % (count, expMean, math.sqrt(expVar))
+    print "Observed: % 4d samples with mean %4.3f, stddev %4.3f" % (count, mean, stddev)
     print "Z score : " + str(zscore)
+    print "P value : " + str(pval)
+  else:
+    sys.stdout.write(".")
+
+def reportKnownMean(name, expMean, observed):
+  count = len(observed)
+  (tstat, pval) = stats.ttest_1samp(observed, expMean)
+  mean = np.mean(observed)
+  stddev = np.std(observed)
+  if globalAlwaysReport or pval < 0.1:
+    print "---Test: " + name + "---"
+    print "Expected: % 4d samples with mean %4.3f" % (count, expMean)
+    print "Observed: % 4d samples with mean %4.3f, stddev %4.3f" % (count, mean, stddev)
+    print "T stat  : " + str(tstat)
     print "P value : " + str(pval)
   else:
     sys.stdout.write(".")
@@ -409,9 +424,9 @@ def testGamma1(N):
   ripl.predict("(gamma a b)")
 
   predictions = loggingInfer(ripl,3,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  print "---TestGamma1---"
-  print "(1," + str(mean) + ")"
+  # TODO What, actually, is the mean of (gamma (gamma 10 10) (gamma 10 10))?
+  # It's pretty clear that it's not 1.
+  reportKnownMean("TestGamma1", 10/9.0, predictions)
 
 def testIf1(N):
   ripl = RIPL()
