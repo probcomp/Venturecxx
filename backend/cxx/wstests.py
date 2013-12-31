@@ -47,6 +47,10 @@ def printTest(testName,eps,ops):
 def fmtlst(fmt, lst):
   return "[" + ", ".join(map((lambda n: fmt % n), lst)) + "]"
 
+def reportPassedQuitely():
+  sys.stdout.write(".")
+  sys.stdout.flush()
+
 # reportKnownDiscrete :: (Eq a) => String -> [(a,Double)] -> [a] -> IO ()
 def reportKnownDiscrete(name, expectedRates, observed):
   items = [pair[0] for pair in expectedRates]
@@ -66,7 +70,7 @@ def reportKnownDiscrete(name, expectedRates, observed):
     print "Chi^2   : " + str(chisq)
     print "P value : " + str(pval)
   else:
-    sys.stdout.write(".")
+    reportPassedQuitely()
 
 def reportKnownContinuous(name, expectedCDF, observed, msg=None):
   (K, pval) = stats.kstest(observed, expectedCDF)
@@ -78,7 +82,7 @@ def reportKnownContinuous(name, expectedCDF, observed, msg=None):
     print "K stat  : " + str(K)
     print "P value : " + str(pval)
   else:
-    sys.stdout.write(".")
+    reportPassedQuitely()
 
 def reportKnownMeanVariance(name, expMean, expVar, observed):
   count = len(observed)
@@ -98,7 +102,7 @@ def reportKnownMeanVariance(name, expMean, expVar, observed):
     print "Z score : " + str(zscore)
     print "P value : " + str(pval)
   else:
-    sys.stdout.write(".")
+    reportPassedQuitely()
 
 def reportKnownMean(name, expMean, observed):
   # TODO This is only valid if there are enough observations; 30 are recommended.
@@ -113,13 +117,13 @@ def reportKnownMean(name, expMean, observed):
     print "T stat  : " + str(tstat)
     print "P value : " + str(pval)
   else:
-    sys.stdout.write(".")
+    reportPassedQuitely()
 
 def reportPassage(name):
   if globalAlwaysReport:
     print "--- Passed %s ---" % name
   else:
-    sys.stdout.write(".")
+    reportPassedQuitely()
 
 def runAllTests(N):
   print "========= RunAllTests(N) ========"
@@ -973,7 +977,7 @@ def doTestHPYMem1(N):
     print "Chi^2   : " + str(chisq)
     print "P value : " + str(pval)
   else:
-    sys.stdout.write(".")
+    reportPassedQuitely()
 
 def testHPYMem1(N):
   if hasattr(stats, 'chi2_contingency'):
