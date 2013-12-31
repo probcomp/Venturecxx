@@ -51,6 +51,8 @@ def reportPassedQuitely():
   sys.stdout.write(".")
   sys.stdout.flush()
 
+# Chi^2 test for agreement with the given discrete distribution.
+# TODO Broken (too stringent?) for small sample sizes; warn?
 # reportKnownDiscrete :: (Eq a) => String -> [(a,Double)] -> [a] -> IO ()
 def reportKnownDiscrete(name, expectedRates, observed):
   items = [pair[0] for pair in expectedRates]
@@ -72,6 +74,7 @@ def reportKnownDiscrete(name, expectedRates, observed):
   else:
     reportPassedQuitely()
 
+# Kolmogorov-Smirnov test for agreement with known 1-D CDF.
 def reportKnownContinuous(name, expectedCDF, observed, msg=None):
   (K, pval) = stats.kstest(observed, expectedCDF)
   if globalAlwaysReport or pval < 0.1:
@@ -84,17 +87,22 @@ def reportKnownContinuous(name, expectedCDF, observed, msg=None):
   else:
     reportPassedQuitely()
 
+# Z-score test for known mean, given known variance.
+# Doesn't work for distributions that are fat-tailed enough not to
+# have a mean.
+# TODO Also sensibly compare the variance of the sample to the
+# expected variance (what's the right test statistic when the
+# "population distribution" is not known?  How many samples do I need
+# for it to become effectively normal, if it does?)
+# TODO Can I use the Barry-Esseen theorem to use skewness information
+# for a more precise computation of test validity?  How about
+# comparing sample skewness to expected skewness?
 def reportKnownMeanVariance(name, expMean, expVar, observed):
   count = len(observed)
   mean = np.mean(observed)
   stddev = np.std(observed)
   zscore = (mean - expMean) * math.sqrt(count) / math.sqrt(expVar)
   pval = 2*stats.norm.sf(abs(zscore)) # Two-tailed
-  # TODO Also sensibly compare the variance of the sample to the
-  # expected variance (what's the right test statistic when the
-  # "population distribution" is not known?)
-  # TODO Can I use the Barry-Esseen theorem to use skewness
-  # information?
   if globalAlwaysReport or pval < 0.1:
     print "---Test: " + name + "---"
     print "Expected: % 4d samples with mean %4.3f, stddev %4.3f" % (count, expMean, math.sqrt(expVar))
@@ -104,8 +112,11 @@ def reportKnownMeanVariance(name, expMean, expVar, observed):
   else:
     reportPassedQuitely()
 
+# T-test for known mean, without knowing the variance.
+# Doesn't work for distributions that are fat-tailed enough not to
+# have a mean.
+# TODO This is only valid if there are enough observations; 30 are recommended.
 def reportKnownMean(name, expMean, observed):
-  # TODO This is only valid if there are enough observations; 30 are recommended.
   count = len(observed)
   (tstat, pval) = stats.ttest_1samp(observed, expMean)
   mean = np.mean(observed)
@@ -119,6 +130,7 @@ def reportKnownMean(name, expMean, observed):
   else:
     reportPassedQuitely()
 
+# For a deterministic test
 def reportPassage(name):
   if globalAlwaysReport:
     print "--- Passed %s ---" % name
