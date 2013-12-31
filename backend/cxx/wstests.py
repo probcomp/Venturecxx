@@ -74,6 +74,18 @@ def reportKnownDiscrete(name, expectedRates, observed):
   else:
     reportPassedQuitely()
 
+def explainOneDSample(observed):
+  count = len(observed)
+  mean = np.mean(observed)
+  stddev = np.std(observed)
+  sys.stdout.write("Observed: % 4d samples with mean %4.3f, stddev %4.3f" % (count, mean, stddev))
+  if count < 11:
+    print ", data:"
+    print "  " + fmtlst("%.2f", sorted(observed))
+  else:
+    print ", deciles:"
+    print "  " + fmtlst("%.2f", [stats.scoreatpercentile(observed, p) for p in [0,10,20,30,40,50,60,70,80,90,100]])
+
 # Kolmogorov-Smirnov test for agreement with known 1-D CDF.
 def reportKnownContinuous(name, expectedCDF, observed, msg=None):
   (K, pval) = stats.kstest(observed, expectedCDF)
@@ -81,7 +93,7 @@ def reportKnownContinuous(name, expectedCDF, observed, msg=None):
     print "---Test: " + name + "---"
     if msg is not None:
       print msg
-    print "Observed: " + fmtlst("%.2f", sorted(observed))
+    explainOneDSample(observed)
     print "K stat  : " + str(K)
     print "P value : " + str(pval)
   else:
@@ -100,13 +112,12 @@ def reportKnownContinuous(name, expectedCDF, observed, msg=None):
 def reportKnownMeanVariance(name, expMean, expVar, observed):
   count = len(observed)
   mean = np.mean(observed)
-  stddev = np.std(observed)
   zscore = (mean - expMean) * math.sqrt(count) / math.sqrt(expVar)
   pval = 2*stats.norm.sf(abs(zscore)) # Two-tailed
   if globalAlwaysReport or pval < 0.1:
     print "---Test: " + name + "---"
     print "Expected: % 4d samples with mean %4.3f, stddev %4.3f" % (count, expMean, math.sqrt(expVar))
-    print "Observed: % 4d samples with mean %4.3f, stddev %4.3f" % (count, mean, stddev)
+    explainOneDSample(observed)
     print "Z score : " + str(zscore)
     print "P value : " + str(pval)
   else:
@@ -119,12 +130,10 @@ def reportKnownMeanVariance(name, expMean, expVar, observed):
 def reportKnownMean(name, expMean, observed):
   count = len(observed)
   (tstat, pval) = stats.ttest_1samp(observed, expMean)
-  mean = np.mean(observed)
-  stddev = np.std(observed)
   if globalAlwaysReport or pval < 0.1:
     print "---Test: " + name + "---"
     print "Expected: % 4d samples with mean %4.3f" % (count, expMean)
-    print "Observed: % 4d samples with mean %4.3f, stddev %4.3f" % (count, mean, stddev)
+    explainOneDSample(observed)
     print "T stat  : " + str(tstat)
     print "P value : " + str(pval)
   else:
