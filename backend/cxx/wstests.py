@@ -186,7 +186,7 @@ def runAllTests(N):
     globalUseGlobalScaffold = options[i][1]
     runTests(N)
 
-def loggingInfer(ripl,address,T,kernel=None,use_global_scaffold=None):
+def collectSamples(ripl,address,T,kernel=None,use_global_scaffold=None):
   kernel = kernel if kernel is not None else globalKernel
   use_global_scaffold = use_global_scaffold if use_global_scaffold is not None else globalUseGlobalScaffold
   predictions = []
@@ -289,7 +289,7 @@ def testBernoulli0(N):
   (lambda () (normal 0.0 1.0))
   (lambda () ((lambda () (normal 10.0 1.0))))))
 """);
-  predictions = loggingInfer(ripl,2,N)
+  predictions = collectSamples(ripl,2,N)
   cdf = lambda x: 0.5 * stats.norm.cdf(x,loc=0,scale=1) + 0.5 * stats.norm.cdf(x,loc=10,scale=1)
   reportKnownContinuous("TestBernoulli0", cdf, predictions, "N(0,1) + N(10,1)")
 
@@ -302,7 +302,7 @@ def testBernoulli1(N):
   (lambda () (normal 0.0 1.0))
   (lambda () ((lambda () (normal 10.0 1.0)))))
 """);
-  predictions = loggingInfer(ripl,2,N)
+  predictions = collectSamples(ripl,2,N)
   cdf = lambda x: 0.7 * stats.norm.cdf(x,loc=0,scale=1) + 0.3 * stats.norm.cdf(x,loc=10,scale=1)
   reportKnownContinuous("TestBernoulli1", cdf, predictions, "0.7*N(0,1) + 0.3*N(10,1)")
 
@@ -312,7 +312,7 @@ def testCategorical1(N):
   ripl.assume("y", "(real (categorical 0.2 0.6 0.2))")
   ripl.predict("(plus x y)")
 
-  predictions = loggingInfer(ripl,3,N)
+  predictions = collectSamples(ripl,3,N)
   ans = [(0, 0.1 * 0.2),
          (1, 0.1 * 0.6 + 0.2 * 0.2),
          (2, 0.1 * 0.2 + 0.2 * 0.6 + 0.3 * 0.2),
@@ -328,7 +328,7 @@ def testMHNormal0(N):
   # Posterior for a is normal with mean 12, precision 2
   ripl.predict("(normal a 1.0)")
 
-  predictions = loggingInfer(ripl,3,N)
+  predictions = collectSamples(ripl,3,N)
   cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
   reportKnownContinuous("testMHNormal0", cdf, predictions, "N(12,sqrt(1.5))")
 
@@ -347,7 +347,7 @@ def testMHNormal1(N):
   (lambda () (normal (times a b) 1.0)))
 """)
 
-  predictions = loggingInfer(ripl,4,N)
+  predictions = collectSamples(ripl,4,N)
   # Unfortunately, a and b are (anti?)correlated now, so the true
   # distribution of the sum is mysterious to me
   cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
@@ -358,7 +358,7 @@ def testStudentT0(N):
   ripl.assume("a", "(student_t 1.0)")
   ripl.observe("(normal a 1.0)", 3.0)
   ripl.predict("(normal a 1.0)")
-  predictions = loggingInfer(ripl,3,N)
+  predictions = collectSamples(ripl,3,N)
 
   # Posterior of a is proprtional to
   def postprop(a):
@@ -390,7 +390,7 @@ def testMem1(N):
   ripl.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
   ripl.predict('(plus x y w z q)');
 
-  predictions = loggingInfer(ripl,7,N)
+  predictions = collectSamples(ripl,7,N)
   # TODO This test can be strengthened by computing more of the ratios in the answer
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
@@ -408,7 +408,7 @@ def testMem2(N):
   ripl.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
   ripl.predict('(plus x y w z q)');
 
-  predictions = loggingInfer(ripl,8,N)
+  predictions = collectSamples(ripl,8,N)
   # TODO This test can be strengthened by computing more of the ratios in the answer
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
@@ -426,7 +426,7 @@ def testMem3(N):
   ripl.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
   ripl.predict('(plus x y w z q)');
 
-  predictions = loggingInfer(ripl,8,N)
+  predictions = collectSamples(ripl,8,N)
   # TODO This test can be strengthened by computing more of the ratios in the answer
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
@@ -446,7 +446,7 @@ def testSprinkler1(N):
 """)
   ripl.observe("grassWet", True)
 
-  predictions = loggingInfer(ripl,1,N)
+  predictions = collectSamples(ripl,1,N)
   ans = [(True, .3577), (False, .6433)]
   reportKnownDiscrete("TestSprinkler1", ans, predictions)
 
@@ -467,7 +467,7 @@ def testSprinkler2(N):
 """)
   ripl.observe("grassWet", True)
 
-  predictions = loggingInfer(ripl,1,N)
+  predictions = collectSamples(ripl,1,N)
   ans = [(True, .3577), (False, .6433)]
   reportKnownDiscrete("TestSprinkler2 (mixes terribly)", ans, predictions)
 
@@ -477,7 +477,7 @@ def testGamma1(N):
   ripl.assume("b","(gamma 10.0 10.0)")
   ripl.predict("(gamma a b)")
 
-  predictions = loggingInfer(ripl,3,N)
+  predictions = collectSamples(ripl,3,N)
   # TODO What, actually, is the mean of (gamma (gamma 10 10) (gamma 10 10))?
   # It's pretty clear that it's not 1.
   reportKnownMean("TestGamma1", 10/9.0, predictions)
@@ -507,7 +507,7 @@ def testBLOGCSI(N):
   ripl.assume("getParam","(lambda (z) (branch z (lambda () 0.8) (lambda () 0.2)))")
   ripl.assume("x","(bernoulli (branch u (lambda () (getParam w)) (lambda () (getParam v))))")
 
-  predictions = loggingInfer(ripl,5,N)
+  predictions = collectSamples(ripl,5,N)
   ans = [(True, .596), (False, .404)]
   reportKnownDiscrete("TestBLOGCSI", ans, predictions)
 
@@ -546,7 +546,7 @@ def testMHHMM1(N):
   # p((f 4) | history) = normal mean 390/89, var 55/89, prec 89/55
   ripl.predict("(f 4)")
 
-  predictions = loggingInfer(ripl,8,N)
+  predictions = collectSamples(ripl,8,N)
   reportKnownMeanVariance("TestMHHMM1", 390/89.0, 55/89.0, predictions)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   reportKnownContinuous("TestMHHMM1", cdf, predictions, "N(4.382, 0.786)")
@@ -560,7 +560,7 @@ def testOuterMix1(N):
   (lambda () 1))
 """)
 
-  predictions = loggingInfer(ripl,1,N)
+  predictions = collectSamples(ripl,1,N)
   ans = [(1,.5), (2,.25), (3,.25)]
   reportKnownDiscrete("TestOuterMix1", ans, predictions)
 
@@ -568,7 +568,7 @@ def testMakeSymDirMult1(name, N):
   ripl = RIPL()
   ripl.assume("f", "(%s 1.0 2)" % name)
   ripl.predict("(f)")
-  predictions = loggingInfer(ripl,2,N)
+  predictions = collectSamples(ripl,2,N)
   ans = [(0,.5), (1,.5)]
   reportKnownDiscrete("TestMakeSymDirMult1(%s)" % name, ans, predictions)
 
@@ -577,7 +577,7 @@ def testDirichletMultinomial1(name, ripl, index, N):
     for j in range(20):
       ripl.observe("(f)", "atom<%d>" % i)
 
-  predictions = loggingInfer(ripl,index,N)
+  predictions = collectSamples(ripl,index,N)
   ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
   reportKnownDiscrete("TestDirichletMultinomial(%s)" % name, ans, predictions)
 
@@ -603,7 +603,7 @@ def testMakeBetaBernoulli1(N):
 
   for j in range(20): ripl.observe("(f)", "true")
 
-  predictions = loggingInfer(ripl,3,N)
+  predictions = collectSamples(ripl,3,N)
   ans = [(False,.25), (True,.75)]
   reportKnownDiscrete("TestMakeBetaBernoulli1", ans, predictions)
 
@@ -633,7 +633,7 @@ def testLazyHMM1(N):
   ripl.observe("(g 5)",False)
   ripl.predict("(make_vector (f 0) (f 1) (f 2) (f 3) (f 4) (f 5))")
 
-  # predictions = loggingInfer(ripl,8,N)
+  # predictions = collectSamples(ripl,8,N)
   # sums = [0 for i in range(6)]
   # for p in predictions: sums = [sums[i] + p[i] for i in range(6)]
   # ps = [.3531,.1327,.1796,.6925,.1796,.1327]
@@ -661,7 +661,7 @@ def testLazyHMMSP1(N):
   ripl.predict("(f 7)")
   ripl.predict("(f 8)")
 
-  predictions = loggingInfer(ripl,7,N)
+  predictions = collectSamples(ripl,7,N)
   ans = [(0,0.6528), (1,0.3472)]
   reportKnownDiscrete("testLazyHMMSP1", ans, predictions)
 
@@ -676,7 +676,7 @@ def testStaleAAA1(N):
   for i in range(9):
     ripl.observe("(f)", "atom<1>")
 
-  predictions = loggingInfer(ripl,5,N)
+  predictions = collectSamples(ripl,5,N)
   ans = [(1,.9), (0,.1)]
   reportKnownDiscrete("TestStaleAAA1", ans, predictions)
 
@@ -691,7 +691,7 @@ def testStaleAAA2(N):
   for i in range(9):
     ripl.observe("(f)", "atom<1>")
 
-  predictions = loggingInfer(ripl,5,N)
+  predictions = collectSamples(ripl,5,N)
   ans = [(1,.9), (0,.1)]
   reportKnownDiscrete("TestStaleAAA2", ans, predictions)
 
@@ -706,7 +706,7 @@ def testMap1(N):
                            (map_lookup m (quote y)))
                          1.0)""")
 
-  predictions = loggingInfer(ripl,3,N)
+  predictions = collectSamples(ripl,3,N)
   cdf = stats.norm(loc=20, scale=2).cdf
   reportKnownContinuous("testMap1", cdf, predictions, "N(20,2)")
 
@@ -755,7 +755,7 @@ def testEval1(N):
   ripl.assume("exp","(quote (bernoulli 0.7))")
   ripl.predict("(eval exp globalEnv)")
 
-  predictions = loggingInfer(ripl,3,N)
+  predictions = collectSamples(ripl,3,N)
   ans = [(1,.7), (0,.3)]
   reportKnownDiscrete("TestEval1", ans, predictions)
 
@@ -773,7 +773,7 @@ def testEval2(N):
   ripl.assume("x","(eval exp globalEnv)")
   ripl.observe("x",11.0)
 
-  predictions = loggingInfer(ripl,1,N)
+  predictions = collectSamples(ripl,1,N)
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
   reportKnownContinuous("testEval2", cdf, predictions, "approximately beta(2,1)")
 
@@ -791,7 +791,7 @@ def testEval3(N):
   ripl.assume("x","(eval exp globalEnv)")
   ripl.observe("x",11.0)
 
-  predictions = loggingInfer(ripl,1,N)
+  predictions = collectSamples(ripl,1,N)
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
   reportKnownContinuous("testEval3", cdf, predictions, "approximately beta(2,1)")
 
@@ -800,7 +800,7 @@ def testApply1(N):
   ripl.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
   ripl.predict("(apply times (list (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
 
-  predictions = loggingInfer(ripl,2,N)
+  predictions = collectSamples(ripl,2,N)
   reportKnownMeanVariance("TestApply1", 1000, 101**3 - 100**3, predictions)
 
 def testExtendEnv1(N):
@@ -812,7 +812,7 @@ def testExtendEnv1(N):
   ripl.assume("exp","(quote (normal x 1.0))")
   ripl.predict("(normal (eval exp env3) 1.0)")
 
-  predictions = loggingInfer(ripl,5,N)
+  predictions = collectSamples(ripl,5,N)
   cdf = stats.norm(loc=10, scale=math.sqrt(3)).cdf
   reportKnownContinuous("testExtendEnv1", cdf, predictions, "N(10,sqrt(3))")
 
@@ -970,7 +970,7 @@ def testCRP1(N,isCollapsed):
 
   observeCategories(ripl,[2,2,5,1,0])
 
-  predictions = loggingInfer(ripl,"pid",N)
+  predictions = collectSamples(ripl,"pid",N)
   ans = [(0,3), (1,3), (2,6), (3,2), (4,1)]
   reportKnownDiscrete("TestCRP1 (not exact)", ans, predictions)
 
@@ -996,14 +996,14 @@ def predictPY(N):
   loadPY(ripl)
   ripl.predict("(f)",label="pid")
   observeCategories(ripl,[2,2,5,1,0])
-  return loggingInfer(ripl,"pid",N)
+  return collectSamples(ripl,"pid",N)
 
 def predictHPY(N,topCollapsed,botCollapsed):
   ripl = RIPL()
   loadHPY(ripl,topCollapsed,botCollapsed)
   ripl.predict("(f)",label="pid")
   observeCategories(ripl,[2,2,5,1,0])
-  return loggingInfer(ripl,"pid",N)
+  return collectSamples(ripl,"pid",N)
 
 def doTestHPYMem1(N):
   data = [countPredictions(predictHPY(N,top,bot), [0,1,2,3,4]) for top in [True,False] for bot in [True,False]]
@@ -1036,7 +1036,7 @@ def testGeometric1(N):
   ripl.assume("geo","(lambda (p) (branch (bernoulli p) (lambda () 1) (lambda () (plus 1 (geo p)))))")
   ripl.predict("(geo p)",label="pid")
 
-  predictions = loggingInfer(ripl,"pid",N)
+  predictions = collectSamples(ripl,"pid",N)
 
   k = 7
   ans = [(n,math.pow(2,-n)) for n in range(1,k)]
@@ -1084,7 +1084,7 @@ def testReferences1(N):
   ripl.predict("(class 1)")
   ripl.predict("(flip)")
   # TODO What is trying to test?  The address in the logging infer refers to the bare (flip).
-  predictions = loggingInfer(ripl,6,N)
+  predictions = collectSamples(ripl,6,N)
   ans = [(True,0.5), (False,0.5)]
   reportKnownDiscrete("TestReferences1", ans, predictions)
 
@@ -1095,7 +1095,7 @@ def testReferences2(N):
   ripl.predict("(f)")
 #  ripl.predict("(flip)",label="pid")
 
-  predictions = loggingInfer(ripl,2,N)
+  predictions = collectSamples(ripl,2,N)
   ans = [(True,0.75), (False,0.25)]
   reportKnownDiscrete("TestReferences2", ans, predictions)
 
@@ -1103,7 +1103,7 @@ def testMemoizingOnAList():
   ripl = RIPL()
   ripl.assume("G","(mem (lambda (x) 1))")
   ripl.predict("(G (list 0))")
-  predictions = loggingInfer(ripl,2,1)
+  predictions = collectSamples(ripl,2,1)
   assert predictions == [1]
   reportPassage("TestMemoizingOnAList")
 
@@ -1116,7 +1116,7 @@ def testOperatorChanging(N):
   ripl.assume("op4","(if (op3) op2 op1)")
   ripl.predict("(op4)")
   ripl.observe("(op4)",True)
-  predictions = loggingInfer(ripl,6,N,kernel="mh")
+  predictions = collectSamples(ripl,6,N,kernel="mh")
   ans = [(True,0.75), (False,0.25)]
   reportKnownDiscrete("TestOperatorChanging", ans, predictions)
 
@@ -1126,7 +1126,7 @@ def testObserveAPredict0(N):
   ripl.predict("(f)")
   ripl.observe("(f)","true")
   ripl.predict("(f)")
-  predictions = loggingInfer(ripl,2,N)
+  predictions = collectSamples(ripl,2,N)
   ans = [(True,0.5), (False,0.5)]
   reportKnownDiscrete("TestObserveAPredict0", ans, predictions)
 
@@ -1142,7 +1142,7 @@ def testObserveAPredict0(N):
 #   ripl.predict("(f)")
 #   ripl.observe("(f)","true")
 #   ripl.predict("(f)")
-#   predictions = loggingInfer(ripl,2,N)
+#   predictions = collectSamples(ripl,2,N)
 #   ans = [(True,0.75), (False,0.25)]
 #   reportKnownDiscrete("TestObserveAPredict1", ans, predictions)
 
@@ -1152,7 +1152,7 @@ def testObserveAPredict0(N):
 #   ripl.assume("f","(if (flip) (lambda () (normal 0.0 1.0)) (mem (lambda () (normal 0.0 1.0))))")
 #   ripl.observe("(f)","1.0")
 #   ripl.predict("(* (f) 100)")
-#   predictions = loggingInfer(ripl,3,N)
+#   predictions = collectSamples(ripl,3,N)
 #   mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
 #   print "---TestObserveAPredict2---"
 #   print "(25," + str(mean) + ")"
@@ -1204,7 +1204,7 @@ def testHPYLanguageModel1(N):
 
   ripl.predict("((H atom<0>))",label="pid")
 
-  predictions = loggingInfer(ripl,"pid",N)
+  predictions = collectSamples(ripl,"pid",N)
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
   reportKnownDiscrete("testHPYLanguageModel1 (approximate)", ans, predictions)
 
@@ -1242,7 +1242,7 @@ def testHPYLanguageModel2(N):
 
   ripl.predict("((G (list atom<0>)))",label="pid")
 
-  predictions = loggingInfer(ripl,"pid",N)
+  predictions = collectSamples(ripl,"pid",N)
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
   reportKnownDiscrete("testHPYLanguageModel2 (approximate)", ans, predictions)
 
