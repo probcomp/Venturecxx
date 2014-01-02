@@ -90,12 +90,12 @@ def explainOneDSample(observed):
     print "  " + fmtlst("%.2f", vigintiles[11:])
 
 # Kolmogorov-Smirnov test for agreement with known 1-D CDF.
-def reportKnownContinuous(name, expectedCDF, observed, msg=None):
+def reportKnownContinuous(name, expectedCDF, observed, descr=None):
   (K, pval) = stats.kstest(observed, expectedCDF)
   if globalAlwaysReport or pval < 0.1:
     print "---Test: " + name + "---"
-    if msg is not None:
-      print msg
+    if descr is not None:
+      print "Expected: %4d samples from %s" % (len(observed), descr)
     explainOneDSample(observed)
     print "K stat  : " + str(K)
     print "P value : " + str(pval)
@@ -281,7 +281,7 @@ def testBernoulli0(N):
 """);
   predictions = loggingInfer(ripl,2,N)
   cdf = lambda x: 0.5 * stats.norm.cdf(x,loc=0,scale=1) + 0.5 * stats.norm.cdf(x,loc=10,scale=1)
-  reportKnownContinuous("TestBernoulli0", cdf, predictions, "Expected: samples from N(0,1) + N(10,1)")
+  reportKnownContinuous("TestBernoulli0", cdf, predictions, "N(0,1) + N(10,1)")
 
 def testBernoulli1(N):
   ripl = RIPL()
@@ -294,7 +294,7 @@ def testBernoulli1(N):
 """);
   predictions = loggingInfer(ripl,2,N)
   cdf = lambda x: 0.7 * stats.norm.cdf(x,loc=0,scale=1) + 0.3 * stats.norm.cdf(x,loc=10,scale=1)
-  reportKnownContinuous("TestBernoulli1", cdf, predictions, "Expected: samples from 0.7*N(0,1) + 0.3*N(10,1)")
+  reportKnownContinuous("TestBernoulli1", cdf, predictions, "0.7*N(0,1) + 0.3*N(10,1)")
 
 def testCategorical1(N):
   ripl = RIPL()
@@ -320,7 +320,7 @@ def testMHNormal0(N):
 
   predictions = loggingInfer(ripl,3,N)
   cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
-  reportKnownContinuous("testMHNormal0", cdf, predictions, "Expected: samples from N(12,sqrt(1.5))")
+  reportKnownContinuous("testMHNormal0", cdf, predictions, "N(12,sqrt(1.5))")
 
 def testMHNormal1(N):
   ripl = RIPL()
@@ -341,7 +341,7 @@ def testMHNormal1(N):
   # Unfortunately, a and b are (anti?)correlated now, so the true
   # distribution of the sum is mysterious to me
   cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
-  reportKnownContinuous("testMHNormal1", cdf, predictions, "Expected: samples from approximately N(24,sqrt(7/3))")
+  reportKnownContinuous("testMHNormal1", cdf, predictions, "approximately N(24,sqrt(7/3))")
 
 def testStudentT0(N):
   ripl = RIPL()
@@ -539,7 +539,7 @@ def testMHHMM1(N):
   predictions = loggingInfer(ripl,8,N)
   reportKnownMeanVariance("TestMHHMM1", 390/89.0, 55/89.0, predictions)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
-  reportKnownContinuous("TestMHHMM1", cdf, predictions, "Expected: samples from N(4.382, 0.786)")
+  reportKnownContinuous("TestMHHMM1", cdf, predictions, "N(4.382, 0.786)")
 
 def testOuterMix1(N):
   ripl = RIPL()
@@ -698,7 +698,7 @@ def testMap1(N):
 
   predictions = loggingInfer(ripl,3,N)
   cdf = stats.norm(loc=20, scale=2).cdf
-  reportKnownContinuous("testMap1", cdf, predictions, "Expected: samples from N(20,2)")
+  reportKnownContinuous("testMap1", cdf, predictions, "N(20,2)")
 
 def testMap2():
   ripl = RIPL()
@@ -765,7 +765,7 @@ def testEval2(N):
 
   predictions = loggingInfer(ripl,1,N)
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
-  reportKnownContinuous("testEval2", cdf, predictions, "Expected: samples from approximately beta(2,1)")
+  reportKnownContinuous("testEval2", cdf, predictions, "approximately beta(2,1)")
 
 def testEval3(N):
   ripl = RIPL()
@@ -783,7 +783,7 @@ def testEval3(N):
 
   predictions = loggingInfer(ripl,1,N)
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
-  reportKnownContinuous("testEval3", cdf, predictions, "Expected: samples from approximately beta(2,1)")
+  reportKnownContinuous("testEval3", cdf, predictions, "approximately beta(2,1)")
 
 def testApply1(N):
   ripl = RIPL()
@@ -804,7 +804,7 @@ def testExtendEnv1(N):
 
   predictions = loggingInfer(ripl,5,N)
   cdf = stats.norm(loc=10, scale=math.sqrt(3)).cdf
-  reportKnownContinuous("testExtendEnv1", cdf, predictions, "Expected: samples from N(10,sqrt(3))")
+  reportKnownContinuous("testExtendEnv1", cdf, predictions, "N(10,sqrt(3))")
 
 # TODO need extend_env, symbol?
 def riplWithSTDLIB(ripl):
