@@ -21,7 +21,7 @@ import itertools
 import scipy.stats as stats
 import numpy as np
 
-globalKernel = "meanfield";
+globalKernel = "mh";
 globalUseGlobalScaffold = True;
 globalAlwaysReport = False;
 
