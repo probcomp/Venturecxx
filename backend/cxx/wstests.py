@@ -58,6 +58,20 @@ def tabulatelst(fmt, lst, width=10, prefix=""):
   bulk = (",\n" + prefix + " ").join(substrs)
   return prefix + "[" + bulk + "]"
 
+class TestResult(object):
+  def __init__(self, pval, report):
+    self.pval = pval
+    self.report = report
+
+  def __str__(self):
+    return self.report
+
+def reportTest(result):
+  if globalAlwaysReport or result.pval < 0.1:
+    print result
+  else:
+    reportPassedQuitely()
+
 def reportPassedQuitely():
   sys.stdout.write(".")
   sys.stdout.flush()
@@ -76,40 +90,36 @@ def reportKnownDiscrete(name, expectedRates, observed):
   expRates = normalizeList([pair[1] for pair in expectedRates])
   expCounts = [total * r for r in expRates]
   (chisq,pval) = stats.chisquare(counts, np.array(expCounts))
-  if globalAlwaysReport or pval < 0.1:
-    print "---Test: " + name + "---"
-    print "Expected: " + fmtlst("% 4.1f", expCounts)
-    print "Observed: " + fmtlst("% 4d", counts)
-    print "Chi^2   : " + str(chisq)
-    print "P value : " + str(pval)
-  else:
-    reportPassedQuitely()
+  return TestResult(pval, "\n".join([
+    "---Test: " + name + "---",
+    "Expected: " + fmtlst("% 4.1f", expCounts),
+    "Observed: " + fmtlst("% 4d", counts),
+    "Chi^2   : " + str(chisq),
+    "P value : " + str(pval)]))
 
 def explainOneDSample(observed):
   count = len(observed)
   mean = np.mean(observed)
   stddev = np.std(observed)
-  sys.stdout.write("Observed: % 4d samples with mean %4.3f, stddev %4.3f" % (count, mean, stddev))
+  ans = "Observed: % 4d samples with mean %4.3f, stddev %4.3f" % (count, mean, stddev)
   if count < 101:
-    print ", data"
-    print tabulatelst("%.2f", sorted(observed), width=10, prefix="  ")
+    ans += ", data\n"
+    ans += tabulatelst("%.2f", sorted(observed), width=10, prefix="  ")
   else:
-    print ", percentiles"
+    ans += ", percentiles\n"
     percentiles = [stats.scoreatpercentile(observed, p) for p in range(0,101)]
-    print tabulatelst("%.2f", percentiles, width=10, prefix="  ")
+    ans += tabulatelst("%.2f", percentiles, width=10, prefix="  ")
+  return ans
 
 # Kolmogorov-Smirnov test for agreement with known 1-D CDF.
 def reportKnownContinuous(name, expectedCDF, observed, descr=None):
   (K, pval) = stats.kstest(observed, expectedCDF)
-  if globalAlwaysReport or pval < 0.1:
-    print "---Test: " + name + "---"
-    if descr is not None:
-      print "Expected: %4d samples from %s" % (len(observed), descr)
-    explainOneDSample(observed)
-    print "K stat  : " + str(K)
-    print "P value : " + str(pval)
-  else:
-    reportPassedQuitely()
+  return TestResult(pval, "\n".join([
+    "---Test: " + name + "---",
+    "Expected: %4d samples from %s" % (len(observed), descr),
+    explainOneDSample(observed),
+    "K stat  : " + str(K),
+    "P value : " + str(pval)]))
 
 # Z-score test for known mean, given known variance.
 # Doesn't work for distributions that are fat-tailed enough not to
@@ -126,14 +136,12 @@ def reportKnownMeanVariance(name, expMean, expVar, observed):
   mean = np.mean(observed)
   zscore = (mean - expMean) * math.sqrt(count) / math.sqrt(expVar)
   pval = 2*stats.norm.sf(abs(zscore)) # Two-tailed
-  if globalAlwaysReport or pval < 0.1:
-    print "---Test: " + name + "---"
-    print "Expected: % 4d samples with mean %4.3f, stddev %4.3f" % (count, expMean, math.sqrt(expVar))
-    explainOneDSample(observed)
-    print "Z score : " + str(zscore)
-    print "P value : " + str(pval)
-  else:
-    reportPassedQuitely()
+  return TestResult(pval, "\n".join([
+    "---Test: " + name + "---",
+    "Expected: % 4d samples with mean %4.3f, stddev %4.3f" % (count, expMean, math.sqrt(expVar)),
+    explainOneDSample(observed),
+    "Z score : " + str(zscore),
+    "P value : " + str(pval)]))
 
 # T-test for known mean, without knowing the variance.
 # Doesn't work for distributions that are fat-tailed enough not to
@@ -142,21 +150,16 @@ def reportKnownMeanVariance(name, expMean, expVar, observed):
 def reportKnownMean(name, expMean, observed):
   count = len(observed)
   (tstat, pval) = stats.ttest_1samp(observed, expMean)
-  if globalAlwaysReport or pval < 0.1:
-    print "---Test: " + name + "---"
-    print "Expected: % 4d samples with mean %4.3f" % (count, expMean)
-    explainOneDSample(observed)
-    print "T stat  : " + str(tstat)
-    print "P value : " + str(pval)
-  else:
-    reportPassedQuitely()
+  return TestResult(pval, "\n".join([
+    "---Test: " + name + "---",
+    "Expected: % 4d samples with mean %4.3f" % (count, expMean),
+    explainOneDSample(observed),
+    "T stat  : " + str(tstat),
+    "P value : " + str(pval)]))
 
 # For a deterministic test
 def reportPassage(name):
-  if globalAlwaysReport:
-    print "--- Passed %s ---" % name
-  else:
-    reportPassedQuitely()
+  return TestResult(1.0, "--- Passed %s ---" % name)
 
 def profile(N):
   import statprof # From sudo pip install statprof
@@ -200,67 +203,67 @@ def collectSamples(ripl,address,T,kernel=None,use_global_scaffold=None):
   return predictions
 
 def runTests(N):
-  testMakeCSP()
-  testBernoulli0(N)
-  testBernoulli1(N)
-  testCategorical1(N)
-  testMHNormal0(N)
-  testMHNormal1(N)
-  testStudentT0(N)
-  testMem0(N)
-  testMem1(N)
-  testMem2(N)
-  testMem3(N)
-  testSprinkler1(N)
-  testSprinkler2(N)
-  testGamma1(N)
-  testIf1(N)
-  testIf2(N)
-  testBLOGCSI(N)
-  testMHHMM1(N)
-  testOuterMix1(N)
-  testMakeSymDirMult1("make_sym_dir_mult", N)
-  testMakeSymDirMult1("make_uc_sym_dir_mult", N)
-  testMakeSymDirMult2("make_sym_dir_mult", N)
-  testMakeSymDirMult2("make_uc_sym_dir_mult", N)
-  testMakeDirMult1(N)
-  testMakeBetaBernoulli1(N)
-  testLazyHMM1(N)
-  testLazyHMMSP1(N)
-  testStaleAAA1(N)
-  testStaleAAA2(N)
-  testMap1(N)
-  testMap2()
-  testMap3()
-  testMap4()
-  testEval1(N)
-  testEval2(N)
-  testEval3(N)
-  testApply1(N)
-  testExtendEnv1(N)
-  testList1()
-  testDPMem1(N)
-  # testCRP1(N,True) # TODO Slow and fails too much
-#  testCRP1(N,False) # Uncollapsed is too slow
-  testHPYMem1(N)
-  testGeometric1(N)
-  testTrig1(N)
-  testForget1()
-  testReferences1(N)
-  testReferences2(N)
-  testMemoizingOnAList()
-  testOperatorChanging(N)
-  testObserveAPredict0(N)
-#  testObserveAPredict1(N)
-#  testObserveAPredict2(N)
-  testBreakMem(N)
-  # testHPYLanguageModel1(N) # TODO slow and fails
-  # testHPYLanguageModel2(N) # TODO slow and fails
-  testGoldwater1(N)
-  testMemHashFunction1(5,5)
+  reportTest(testMakeCSP())
+  reportTest(testBernoulli0(N))
+  reportTest(testBernoulli1(N))
+  reportTest(testCategorical1(N))
+  reportTest(testMHNormal0(N))
+  reportTest(testMHNormal1(N))
+  reportTest(testStudentT0(N))
+  reportTest(testMem0(N))
+  reportTest(testMem1(N))
+  reportTest(testMem2(N))
+  reportTest(testMem3(N))
+  reportTest(testSprinkler1(N))
+  reportTest(testSprinkler2(N))
+  reportTest(testGamma1(N))
+  reportTest(testIf1(N))
+  reportTest(testIf2(N))
+  reportTest(testBLOGCSI(N))
+  reportTest(testMHHMM1(N))
+  reportTest(testOuterMix1(N))
+  reportTest(testMakeSymDirMult1("make_sym_dir_mult", N))
+  reportTest(testMakeSymDirMult1("make_uc_sym_dir_mult", N))
+  reportTest(testMakeSymDirMult2("make_sym_dir_mult", N))
+  reportTest(testMakeSymDirMult2("make_uc_sym_dir_mult", N))
+  reportTest(testMakeDirMult1(N))
+  reportTest(testMakeBetaBernoulli1(N))
+  reportTest(testLazyHMM1(N))
+  reportTest(testLazyHMMSP1(N))
+  reportTest(testStaleAAA1(N))
+  reportTest(testStaleAAA2(N))
+  reportTest(testMap1(N))
+  reportTest(testMap2())
+  reportTest(testMap3())
+  reportTest(testMap4())
+  reportTest(testEval1(N))
+  reportTest(testEval2(N))
+  reportTest(testEval3(N))
+  reportTest(testApply1(N))
+  reportTest(testExtendEnv1(N))
+  reportTest(testList1())
+  reportTest(testDPMem1(N))
+  # reportTest(testCRP1(N,True)) # TODO Slow and fails too much
+  # reportTest(testCRP1(N,False)) # Uncollapsed is too slow
+  reportTest(testHPYMem1(N))
+  reportTest(testGeometric1(N))
+  reportTest(testTrig1(N))
+  reportTest(testForget1())
+  reportTest(testReferences1(N))
+  reportTest(testReferences2(N))
+  reportTest(testMemoizingOnAList())
+  reportTest(testOperatorChanging(N))
+  reportTest(testObserveAPredict0(N))
+  # reportTest(testObserveAPredict1(N))
+  # testObserveAPredict2(N)
+  reportTest(testBreakMem(N))
+  # reportTest(testHPYLanguageModel1(N)) # TODO slow and fails
+  # reportTest(testHPYLanguageModel2(N)) # TODO slow and fails
+  reportTest(testGoldwater1(N))
+  reportTest(testMemHashFunction1(5,5))
 
 def runTests2(N):
-  testGeometric1(N)
+  reportTest(testGeometric1(N))
 
 
 
@@ -279,7 +282,7 @@ def testMakeCSP():
   assert(ripl.report(4) == 6.0)
   assert(ripl.report(6) == 5.0)
 
-  reportPassage("TestMakeCSP")
+  return reportPassage("TestMakeCSP")
 
 
 def testBernoulli0(N):
@@ -293,7 +296,7 @@ def testBernoulli0(N):
 """);
   predictions = collectSamples(ripl,2,N)
   cdf = lambda x: 0.5 * stats.norm.cdf(x,loc=0,scale=1) + 0.5 * stats.norm.cdf(x,loc=10,scale=1)
-  reportKnownContinuous("TestBernoulli0", cdf, predictions, "N(0,1) + N(10,1)")
+  return reportKnownContinuous("TestBernoulli0", cdf, predictions, "N(0,1) + N(10,1)")
 
 def testBernoulli1(N):
   ripl = RIPL()
@@ -306,7 +309,7 @@ def testBernoulli1(N):
 """);
   predictions = collectSamples(ripl,2,N)
   cdf = lambda x: 0.7 * stats.norm.cdf(x,loc=0,scale=1) + 0.3 * stats.norm.cdf(x,loc=10,scale=1)
-  reportKnownContinuous("TestBernoulli1", cdf, predictions, "0.7*N(0,1) + 0.3*N(10,1)")
+  return reportKnownContinuous("TestBernoulli1", cdf, predictions, "0.7*N(0,1) + 0.3*N(10,1)")
 
 def testCategorical1(N):
   ripl = RIPL()
@@ -321,7 +324,7 @@ def testCategorical1(N):
          (3, 0.2 * 0.2 + 0.3 * 0.6 + 0.4 * 0.2),
          (4, 0.3 * 0.2 + 0.4 * 0.6),
          (5, 0.4 * 0.2)]
-  reportKnownDiscrete("testCategorical1", ans, predictions)
+  return reportKnownDiscrete("testCategorical1", ans, predictions)
 
 def testMHNormal0(N):
   ripl = RIPL()
@@ -332,7 +335,7 @@ def testMHNormal0(N):
 
   predictions = collectSamples(ripl,3,N)
   cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
-  reportKnownContinuous("testMHNormal0", cdf, predictions, "N(12,sqrt(1.5))")
+  return reportKnownContinuous("testMHNormal0", cdf, predictions, "N(12,sqrt(1.5))")
 
 def testMHNormal1(N):
   ripl = RIPL()
@@ -353,7 +356,7 @@ def testMHNormal1(N):
   # Unfortunately, a and b are (anti?)correlated now, so the true
   # distribution of the sum is mysterious to me
   cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
-  reportKnownContinuous("testMHNormal1", cdf, predictions, "approximately N(24,sqrt(7/3))")
+  return reportKnownContinuous("testMHNormal1", cdf, predictions, "approximately N(24,sqrt(7/3))")
 
 def testStudentT0(N):
   ripl = RIPL()
@@ -371,7 +374,7 @@ def testStudentT0(N):
   (meana,_) = int.quad(lambda x: x * posterior(x), -10, 10)
   (meanasq,_) = int.quad(lambda x: x * x * posterior(x), -10, 10)
   vara = meanasq - meana * meana
-  reportKnownMeanVariance("TestStudentT0", meana, vara + 1.0, predictions)
+  return reportKnownMeanVariance("TestStudentT0", meana, vara + 1.0, predictions)
 
 def testMem0(N):
   ripl = RIPL()
@@ -379,7 +382,7 @@ def testMem0(N):
   ripl.predict("(f (bernoulli 0.5))")
   ripl.predict("(f (bernoulli 0.5))")
   ripl.infer(N, kernel="mh", use_global_scaffold=False)
-  reportPassage("TestMem0")
+  return reportPassage("TestMem0")
 
 
 def testMem1(N):
@@ -397,7 +400,7 @@ def testMem1(N):
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
          (10, 0.6 * 0.6 * 0.9)]
-  reportKnownDiscrete("TestMem1", ans, predictions)
+  return reportKnownDiscrete("TestMem1", ans, predictions)
 
 def testMem2(N):
   ripl = RIPL()
@@ -415,7 +418,7 @@ def testMem2(N):
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
          (10, 0.6 * 0.6 * 0.9)]
-  reportKnownDiscrete("TestMem2", ans, predictions)
+  return reportKnownDiscrete("TestMem2", ans, predictions)
 
 def testMem3(N):
   ripl = RIPL()
@@ -433,7 +436,7 @@ def testMem3(N):
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
          (10, 0.6 * 0.6 * 0.9)]
-  reportKnownDiscrete("TestMem3", ans, predictions)
+  return reportKnownDiscrete("TestMem3", ans, predictions)
 
 def testSprinkler1(N):
   ripl = RIPL()
@@ -450,7 +453,7 @@ def testSprinkler1(N):
 
   predictions = collectSamples(ripl,1,N)
   ans = [(True, .3577), (False, .6433)]
-  reportKnownDiscrete("TestSprinkler1", ans, predictions)
+  return reportKnownDiscrete("TestSprinkler1", ans, predictions)
 
 def testSprinkler2(N):
   # this test needs more iterations than most others, because it mixes badly
@@ -471,7 +474,7 @@ def testSprinkler2(N):
 
   predictions = collectSamples(ripl,1,N)
   ans = [(True, .3577), (False, .6433)]
-  reportKnownDiscrete("TestSprinkler2 (mixes terribly)", ans, predictions)
+  return reportKnownDiscrete("TestSprinkler2 (mixes terribly)", ans, predictions)
 
 def testGamma1(N):
   ripl = RIPL()
@@ -482,7 +485,7 @@ def testGamma1(N):
   predictions = collectSamples(ripl,3,N)
   # TODO What, actually, is the mean of (gamma (gamma 10 10) (gamma 10 10))?
   # It's pretty clear that it's not 1.
-  reportKnownMean("TestGamma1", 10/9.0, predictions)
+  return reportKnownMean("TestGamma1", 10/9.0, predictions)
 
 def testIf1(N):
   ripl = RIPL()
@@ -490,7 +493,7 @@ def testIf1(N):
   ripl.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
   ripl.predict('(IF2 (bernoulli 0.5) IF IF)')
   ripl.infer(N/10, kernel="mh", use_global_scaffold=False)
-  reportPassage("TestIf1")
+  return reportPassage("TestIf1")
 
 def testIf2(N):
   ripl = RIPL()
@@ -499,7 +502,7 @@ def testIf2(N):
   ripl.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
   ripl.assume('if4', '(branch (bernoulli 0.5) (lambda () if3) (lambda () if3))')
   ripl.infer(N/10, kernel="mh", use_global_scaffold=False)
-  reportPassage("TestIf2")
+  return reportPassage("TestIf2")
 
 def testBLOGCSI(N):
   ripl = RIPL()
@@ -511,7 +514,7 @@ def testBLOGCSI(N):
 
   predictions = collectSamples(ripl,5,N)
   ans = [(True, .596), (False, .404)]
-  reportKnownDiscrete("TestBLOGCSI", ans, predictions)
+  return reportKnownDiscrete("TestBLOGCSI", ans, predictions)
 
 def testMHHMM1(N):
   ripl = RIPL()
@@ -551,7 +554,7 @@ def testMHHMM1(N):
   predictions = collectSamples(ripl,8,N)
   reportKnownMeanVariance("TestMHHMM1", 390/89.0, 55/89.0, predictions)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
-  reportKnownContinuous("TestMHHMM1", cdf, predictions, "N(4.382, 0.786)")
+  return reportKnownContinuous("TestMHHMM1", cdf, predictions, "N(4.382, 0.786)")
 
 def testOuterMix1(N):
   ripl = RIPL()
@@ -564,7 +567,7 @@ def testOuterMix1(N):
 
   predictions = collectSamples(ripl,1,N)
   ans = [(1,.5), (2,.25), (3,.25)]
-  reportKnownDiscrete("TestOuterMix1", ans, predictions)
+  return reportKnownDiscrete("TestOuterMix1", ans, predictions)
 
 def testMakeSymDirMult1(name, N):
   ripl = RIPL()
@@ -572,7 +575,7 @@ def testMakeSymDirMult1(name, N):
   ripl.predict("(f)")
   predictions = collectSamples(ripl,2,N)
   ans = [(0,.5), (1,.5)]
-  reportKnownDiscrete("TestMakeSymDirMult1(%s)" % name, ans, predictions)
+  return reportKnownDiscrete("TestMakeSymDirMult1(%s)" % name, ans, predictions)
 
 def testDirichletMultinomial1(name, ripl, index, N):
   for i in range(1,4):
@@ -581,21 +584,21 @@ def testDirichletMultinomial1(name, ripl, index, N):
 
   predictions = collectSamples(ripl,index,N)
   ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
-  reportKnownDiscrete("TestDirichletMultinomial(%s)" % name, ans, predictions)
+  return reportKnownDiscrete("TestDirichletMultinomial(%s)" % name, ans, predictions)
 
 def testMakeSymDirMult2(name, N):
   ripl = RIPL()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a 4)" % name)
   ripl.predict("(f)")
-  testDirichletMultinomial1(name, ripl, 3, N)
+  return testDirichletMultinomial1(name, ripl, 3, N)
 
 def testMakeDirMult1(N):
   ripl = RIPL()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(make_dir_mult a a a a)")
   ripl.predict("(f)")
-  testDirichletMultinomial1("make_dir_mult", ripl, 3, N)
+  return testDirichletMultinomial1("make_dir_mult", ripl, 3, N)
 
 def testMakeBetaBernoulli1(N):
   ripl = RIPL()
@@ -607,7 +610,7 @@ def testMakeBetaBernoulli1(N):
 
   predictions = collectSamples(ripl,3,N)
   ans = [(False,.25), (True,.75)]
-  reportKnownDiscrete("TestMakeBetaBernoulli1", ans, predictions)
+  return reportKnownDiscrete("TestMakeBetaBernoulli1", ans, predictions)
 
 def testLazyHMM1(N):
   N = N
@@ -641,6 +644,7 @@ def testLazyHMM1(N):
   # ps = [.3531,.1327,.1796,.6925,.1796,.1327]
   # eps = [float(x) / N for x in sums] if N > 0 else [0 for x in sums]
   # printTest("testLazyHMM1 (mixes terribly)",ps,eps)
+  return reportPassage("TestLazyHMM1")
 
 def testLazyHMMSP1(N):
   ripl = RIPL()
@@ -665,7 +669,7 @@ def testLazyHMMSP1(N):
 
   predictions = collectSamples(ripl,7,N)
   ans = [(0,0.6528), (1,0.3472)]
-  reportKnownDiscrete("testLazyHMMSP1", ans, predictions)
+  return reportKnownDiscrete("testLazyHMMSP1", ans, predictions)
 
 def testStaleAAA1(N):
   ripl = RIPL()
@@ -680,7 +684,7 @@ def testStaleAAA1(N):
 
   predictions = collectSamples(ripl,5,N)
   ans = [(1,.9), (0,.1)]
-  reportKnownDiscrete("TestStaleAAA1", ans, predictions)
+  return reportKnownDiscrete("TestStaleAAA1", ans, predictions)
 
 def testStaleAAA2(N):
   ripl = RIPL()
@@ -695,7 +699,7 @@ def testStaleAAA2(N):
 
   predictions = collectSamples(ripl,5,N)
   ans = [(1,.9), (0,.1)]
-  reportKnownDiscrete("TestStaleAAA2", ans, predictions)
+  return reportKnownDiscrete("TestStaleAAA2", ans, predictions)
 
 def testMap1(N):
   ripl = RIPL()
@@ -710,7 +714,7 @@ def testMap1(N):
 
   predictions = collectSamples(ripl,3,N)
   cdf = stats.norm(loc=20, scale=2).cdf
-  reportKnownContinuous("testMap1", cdf, predictions, "N(20,2)")
+  return reportKnownContinuous("testMap1", cdf, predictions, "N(20,2)")
 
 def testMap2():
   ripl = RIPL()
@@ -723,7 +727,7 @@ def testMap2():
   assert ripl.report("p1")
   assert ripl.report("p2")
   assert not ripl.report("p3")
-  reportPassage("TestMap2")
+  return reportPassage("TestMap2")
 
 def testMap3():
   ripl = RIPL()
@@ -736,7 +740,7 @@ def testMap3():
   assert ripl.report("p1")
   assert ripl.report("p2")
   assert not ripl.report("p3")
-  reportPassage("TestMap3")
+  return reportPassage("TestMap3")
 
 def testMap4():
   ripl = RIPL()
@@ -749,7 +753,7 @@ def testMap4():
   assert ripl.report("p1")
   assert not ripl.report("p2")
   assert not ripl.report("p3")
-  reportPassage("TestMap4")
+  return reportPassage("TestMap4")
 
 def testEval1(N):
   ripl = RIPL()
@@ -759,7 +763,7 @@ def testEval1(N):
 
   predictions = collectSamples(ripl,3,N)
   ans = [(1,.7), (0,.3)]
-  reportKnownDiscrete("TestEval1", ans, predictions)
+  return reportKnownDiscrete("TestEval1", ans, predictions)
 
 def testEval2(N):
   ripl = RIPL()
@@ -777,7 +781,7 @@ def testEval2(N):
 
   predictions = collectSamples(ripl,1,N)
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
-  reportKnownContinuous("testEval2", cdf, predictions, "approximately beta(2,1)")
+  return reportKnownContinuous("testEval2", cdf, predictions, "approximately beta(2,1)")
 
 def testEval3(N):
   ripl = RIPL()
@@ -795,7 +799,7 @@ def testEval3(N):
 
   predictions = collectSamples(ripl,1,N)
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
-  reportKnownContinuous("testEval3", cdf, predictions, "approximately beta(2,1)")
+  return reportKnownContinuous("testEval3", cdf, predictions, "approximately beta(2,1)")
 
 def testApply1(N):
   ripl = RIPL()
@@ -803,7 +807,7 @@ def testApply1(N):
   ripl.predict("(apply times (list (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
 
   predictions = collectSamples(ripl,2,N)
-  reportKnownMeanVariance("TestApply1", 1000, 101**3 - 100**3, predictions)
+  return reportKnownMeanVariance("TestApply1", 1000, 101**3 - 100**3, predictions)
 
 def testExtendEnv1(N):
   ripl = RIPL()
@@ -816,7 +820,7 @@ def testExtendEnv1(N):
 
   predictions = collectSamples(ripl,5,N)
   cdf = stats.norm(loc=10, scale=math.sqrt(3)).cdf
-  reportKnownContinuous("testExtendEnv1", cdf, predictions, "N(10,sqrt(3))")
+  return reportKnownContinuous("testExtendEnv1", cdf, predictions, "N(10,sqrt(3))")
 
 # TODO need extend_env, symbol?
 def riplWithSTDLIB(ripl):
@@ -879,7 +883,7 @@ def testList1():
   assert(ripl.report(11));
   assert(ripl.report(11));
 
-  reportPassage("TestList1")
+  return reportPassage("TestList1")
 
 def loadPYMem(ripl):
   ripl.assume("pick_a_stick","""
@@ -952,7 +956,7 @@ def testDPMem1(N):
   ripl.observe("(normal (f) 1.0)",0.0)
   ripl.observe("(normal (f) 1.0)",0.0)
   ripl.infer(N)
-  reportPassage("TestDPMem1")
+  return reportPassage("TestDPMem1")
 
 def observeCategories(ripl,counts):
   for i in range(len(counts)):
@@ -974,7 +978,7 @@ def testCRP1(N,isCollapsed):
 
   predictions = collectSamples(ripl,"pid",N)
   ans = [(0,3), (1,3), (2,6), (3,2), (4,1)]
-  reportKnownDiscrete("TestCRP1 (not exact)", ans, predictions)
+  return reportKnownDiscrete("TestCRP1 (not exact)", ans, predictions)
 
 def loadHPY(ripl,topCollapsed,botCollapsed):
   loadPYMem(ripl)
@@ -1010,25 +1014,26 @@ def predictHPY(N,topCollapsed,botCollapsed):
 def doTestHPYMem1(N):
   data = [countPredictions(predictHPY(N,top,bot), [0,1,2,3,4]) for top in [True,False] for bot in [True,False]]
   (chisq, pval) = stats.chi2_contingency(data)
-  if globalAlwaysReport or pval < 0.1:
-    print "---TestHPYMem1---"
-    print "Expected: Samples from four equal distributions"
-    print "Observed:"
-    i = 0
-    for top in ["Collapsed", "Uncollapsed"]:
-      for bot in ["Collapsed", "Uncollapsed"]:
-        print "  (%s, %s): %s" % (top, bot, data[i])
-        i += 1
-    print "Chi^2   : " + str(chisq)
-    print "P value : " + str(pval)
-  else:
-    reportPassedQuitely()
+  report = [
+    "---TestHPYMem1---",
+    "Expected: Samples from four equal distributions",
+    "Observed:"]
+  i = 0
+  for top in ["Collapsed", "Uncollapsed"]:
+    for bot in ["Collapsed", "Uncollapsed"]:
+      report += "  (%s, %s): %s" % (top, bot, data[i])
+      i += 1
+  report += [
+    "Chi^2   : " + str(chisq),
+    "P value : " + str(pval)]
+  return TestResult(pval, "\n".join(report))
 
 def testHPYMem1(N):
   if hasattr(stats, 'chi2_contingency'):
-    doTestHPYMem1(N)
+    return doTestHPYMem1(N)
   else:
     print "---TestHPYMem1 skipped for lack of scipy.stats.chi2_contingency"
+    return reportPassage("TestHPYMem1")
 
 def testGeometric1(N):
   ripl = RIPL()
@@ -1042,7 +1047,7 @@ def testGeometric1(N):
 
   k = 7
   ans = [(n,math.pow(2,-n)) for n in range(1,k)]
-  reportKnownDiscrete("TestGeometric1", ans, predictions)
+  return reportKnownDiscrete("TestGeometric1", ans, predictions)
 
 def testTrig1(N):
   ripl = RIPL()
@@ -1054,7 +1059,7 @@ def testTrig1(N):
   for i in range(N/10):
     ripl.infer(10,kernel="mh",use_global_scaffold=False)
     assert abs(ripl.report(5) - 1) < .001
-  reportPassage("TestTrig1")
+  return reportPassage("TestTrig1")
 
 def testForget1():
   ripl = RIPL()
@@ -1074,7 +1079,7 @@ def testForget1():
   real_sivm = ripl.sivm.core_sivm.engine
   assert real_sivm.get_entropy_info()["unconstrained_random_choices"] == 1
   assert real_sivm.logscore() < 0
-  reportPassage("TestForget1")
+  return reportPassage("TestForget1")
 
 # This is the original one that fires an assert, when the (flip) has 0.0 or 1.0 it doesn't fail
 def testReferences1(N):
@@ -1088,7 +1093,7 @@ def testReferences1(N):
   # TODO What is trying to test?  The address in the logging infer refers to the bare (flip).
   predictions = collectSamples(ripl,6,N)
   ans = [(True,0.5), (False,0.5)]
-  reportKnownDiscrete("TestReferences1", ans, predictions)
+  return reportKnownDiscrete("TestReferences1", ans, predictions)
 
 #
 def testReferences2(N):
@@ -1099,7 +1104,7 @@ def testReferences2(N):
 
   predictions = collectSamples(ripl,2,N)
   ans = [(True,0.75), (False,0.25)]
-  reportKnownDiscrete("TestReferences2", ans, predictions)
+  return reportKnownDiscrete("TestReferences2", ans, predictions)
 
 def testMemoizingOnAList():
   ripl = RIPL()
@@ -1107,7 +1112,7 @@ def testMemoizingOnAList():
   ripl.predict("(G (list 0))")
   predictions = collectSamples(ripl,2,1)
   assert predictions == [1]
-  reportPassage("TestMemoizingOnAList")
+  return reportPassage("TestMemoizingOnAList")
 
 def testOperatorChanging(N):
   ripl = RIPL()
@@ -1120,7 +1125,7 @@ def testOperatorChanging(N):
   ripl.observe("(op4)",True)
   predictions = collectSamples(ripl,6,N,kernel="mh")
   ans = [(True,0.75), (False,0.25)]
-  reportKnownDiscrete("TestOperatorChanging", ans, predictions)
+  return reportKnownDiscrete("TestOperatorChanging", ans, predictions)
 
 def testObserveAPredict0(N):
   ripl = RIPL()
@@ -1130,7 +1135,7 @@ def testObserveAPredict0(N):
   ripl.predict("(f)")
   predictions = collectSamples(ripl,2,N)
   ans = [(True,0.5), (False,0.5)]
-  reportKnownDiscrete("TestObserveAPredict0", ans, predictions)
+  return reportKnownDiscrete("TestObserveAPredict0", ans, predictions)
 
 
 ### These tests are illegal Venture programs, and cause PGibbs to fail because
@@ -1146,7 +1151,7 @@ def testObserveAPredict0(N):
 #   ripl.predict("(f)")
 #   predictions = collectSamples(ripl,2,N)
 #   ans = [(True,0.75), (False,0.25)]
-#   reportKnownDiscrete("TestObserveAPredict1", ans, predictions)
+#   return reportKnownDiscrete("TestObserveAPredict1", ans, predictions)
 
 
 # def testObserveAPredict2(N):
@@ -1175,7 +1180,7 @@ def testBreakMem(N):
   ripl.assume("g","(lambda () (pick_a_stick f 1))")
   ripl.predict("(g)")
   ripl.infer(N)
-  reportPassage("TestBreakMem")
+  return reportPassage("TestBreakMem")
 
 def testHPYLanguageModel1(N):
   ripl = RIPL()
@@ -1208,7 +1213,7 @@ def testHPYLanguageModel1(N):
 
   predictions = collectSamples(ripl,"pid",N)
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
-  reportKnownDiscrete("testHPYLanguageModel1 (approximate)", ans, predictions)
+  return reportKnownDiscrete("testHPYLanguageModel1 (approximate)", ans, predictions)
 
 def testHPYLanguageModel2(N):
   ripl = RIPL()
@@ -1246,7 +1251,7 @@ def testHPYLanguageModel2(N):
 
   predictions = collectSamples(ripl,"pid",N)
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
-  reportKnownDiscrete("testHPYLanguageModel2 (approximate)", ans, predictions)
+  return reportKnownDiscrete("testHPYLanguageModel2 (approximate)", ans, predictions)
 
 def testGoldwater1(N):
   v = RIPL()
@@ -1321,7 +1326,7 @@ def testGoldwater1(N):
       v.observe("(noisy_true (atom_eq (sample_symbol %d %d) atom<%d>) noise)" %(i, j,d[str(brent[i][j])]), "true")
 
   v.infer(N)
-  reportPassage("TestGoldwater1")
+  return reportPassage("TestGoldwater1")
 
 
 def testMemHashFunction1(A,B):
@@ -1330,6 +1335,6 @@ def testMemHashFunction1(A,B):
   for a in range(A):
     for b in range(B):
       ripl.observe("(f %d %d)" % (a,b),"0.5")
-  reportPassage("TestMemHashFunction(%d,%d)" % (A,B))
+  return reportPassage("TestMemHashFunction(%d,%d)" % (A,B))
 
 
