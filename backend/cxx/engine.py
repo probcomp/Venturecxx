@@ -104,6 +104,11 @@ class Engine:
   def reset(self):
     worklist = sorted(self.directives.iteritems())
     self.clear()
+    # Frobnicate the trace's random seed because Trace() resets the
+    # RNG seed from the current time, which sucks if one calls this
+    # method often.
+    import random
+    self.set_seed(random.randint(1,2**32-1))
     [self.replay(dir) for (_,dir) in worklist]
 
   def replay(self,directive):

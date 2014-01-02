@@ -193,6 +193,7 @@ def loggingInfer(ripl,address,T,kernel=None,use_global_scaffold=None):
   for t in range(T):
     ripl.infer(100,kernel,use_global_scaffold)
     predictions.append(ripl.report(address))
+    ripl.sivm.core_sivm.engine.reset()
 #    print predictions[len(predictions)-1]
   return predictions
 
