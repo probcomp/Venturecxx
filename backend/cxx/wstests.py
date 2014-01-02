@@ -47,6 +47,17 @@ def printTest(testName,eps,ops):
 def fmtlst(fmt, lst):
   return "[" + ", ".join(map((lambda n: fmt % n), lst)) + "]"
 
+def tabulatelst(fmt, lst, width=10, prefix=""):
+  structure = []
+  rest = lst
+  while len(rest) > width + 1: # Avoid length 1 widows
+    structure.append(rest[:width])
+    rest = rest[width:]
+  structure.append(rest)
+  substrs = [", ".join(map((lambda n: fmt % n), l)) for l in structure]
+  bulk = (",\n" + prefix + " ").join(substrs)
+  return prefix + "[" + bulk + "]"
+
 def reportPassedQuitely():
   sys.stdout.write(".")
   sys.stdout.flush()
@@ -81,13 +92,12 @@ def explainOneDSample(observed):
   sys.stdout.write("Observed: % 4d samples with mean %4.3f, stddev %4.3f" % (count, mean, stddev))
   if count < 21:
     print ", data"
-    print "  " + fmtlst("%.2f", sorted(observed))
+    print tabulatelst("%.2f", sorted(observed), width=10, prefix="  ")
   else:
     print ", vigintiles"
     vigintiles = [stats.scoreatpercentile(observed, p)
                   for p in [0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100]]
-    print "  " + fmtlst("%.2f", vigintiles[:11])
-    print "  " + fmtlst("%.2f", vigintiles[11:])
+    print tabulatelst("%.2f", vigintiles, width=10, prefix="  ")
 
 # Kolmogorov-Smirnov test for agreement with known 1-D CDF.
 def reportKnownContinuous(name, expectedCDF, observed, descr=None):
