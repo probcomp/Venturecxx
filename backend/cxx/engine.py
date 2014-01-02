@@ -66,24 +66,28 @@ class Engine:
 
     # TODO check for -infinity? Throw an exception?
     if logDensity == float("-inf"):
-      raise VentureException("invalid_constraint", "Observe failed to constrain", expression=datum, value=val)
+      raise VentureException("invalid_constraint", "Observe failed to constrain",
+                             expression=datum, value=val)
     self.directives[self.directiveCounter] = ["observe",datum,val]
 
     return self.directiveCounter
 
   def forget(self,directiveId):
     if directiveId not in self.directives:
-      raise VentureException("invalid_argument", "Cannot forget a non-existent directive id", argument="directive_id", directive_id=directiveId)
+      raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
+                             argument="directive_id", directive_id=directiveId)
     directive = self.directives[directiveId]
     if directive[0] == "assume":
-      raise VentureException("invalid_argument", "Cannot forget an ASSUME directive", argument="directive_id", directive_id=directiveId)
+      raise VentureException("invalid_argument", "Cannot forget an ASSUME directive",
+                             argument="directive_id", directive_id=directiveId)
     if directive[0] == "observe": self.trace.unobserve(directiveId)
     self.trace.uneval(directiveId)
     del self.directives[directiveId]
 
   def report_value(self,directiveId):
     if directiveId not in self.directives:
-      raise VentureException("invalid_argument", "Cannot report a non-existent directive id", argument=directiveId)
+      raise VentureException("invalid_argument", "Cannot report a non-existent directive id",
+                             argument=directiveId)
     return self.trace.extractValue(directiveId)
 
   def clear(self):
@@ -100,7 +104,9 @@ class Engine:
     if 'transitions' not in params:
       params['transitions'] = 1
     else:
-      # FIXME: Kludge. If removed, test_infer (in python/test/ripl_test.py) fails, and if params are printed, you'll see a float for the number of transitions
+      # FIXME: Kludge. If removed, test_infer (in
+      # python/test/ripl_test.py) fails, and if params are printed,
+      # you'll see a float for the number of transitions
       params['transitions'] = int(params['transitions'])
 
     if 'kernel' not in params:
