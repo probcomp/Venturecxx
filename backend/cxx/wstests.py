@@ -24,6 +24,7 @@ import numpy as np
 globalKernel = "mh";
 globalUseGlobalScaffold = True;
 globalAlwaysReport = False;
+globalReportingThreshold = 0.1
 
 def RIPL():
   return make_church_prime_ripl()
@@ -66,8 +67,28 @@ class TestResult(object):
   def __str__(self):
     return self.report
 
+def fisherMethod(pvals):
+  if any([p == 0 for p in pvals]):
+    return 0
+  else:
+    chisq = -2 * sum([math.log(p) for p in pvals])
+    return stats.chi2.sf(chisq, 2*len(pvals))
+
+def repeatTest(func, *args):
+  result = func(*args)
+  if result.pval > 1:
+    return result
+  elif fisherMethod(result.pval + [1.0]*4) < globalReportingThreshold:
+    return result
+  else:
+    results = [result] + [func(*args) for i in range(1,5)]
+    pval = fisherMethod([r.pval for r in results])
+    report = "Failing consistently\n" + "\n".join([r.report for r in results])
+    report += "\nP value : " + str(pval)
+    return TestResult(pval, report)
+
 def reportTest(result):
-  if globalAlwaysReport or result.pval < 0.1:
+  if globalAlwaysReport or result.pval < globalReportingThreshold:
     print result
   else:
     reportPassedQuitely()
