@@ -90,14 +90,13 @@ def explainOneDSample(observed):
   mean = np.mean(observed)
   stddev = np.std(observed)
   sys.stdout.write("Observed: % 4d samples with mean %4.3f, stddev %4.3f" % (count, mean, stddev))
-  if count < 21:
+  if count < 101:
     print ", data"
     print tabulatelst("%.2f", sorted(observed), width=10, prefix="  ")
   else:
-    print ", vigintiles"
-    vigintiles = [stats.scoreatpercentile(observed, p)
-                  for p in [0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100]]
-    print tabulatelst("%.2f", vigintiles, width=10, prefix="  ")
+    print ", percentiles"
+    percentiles = [stats.scoreatpercentile(observed, p) for p in range(0,101)]
+    print tabulatelst("%.2f", percentiles, width=10, prefix="  ")
 
 # Kolmogorov-Smirnov test for agreement with known 1-D CDF.
 def reportKnownContinuous(name, expectedCDF, observed, descr=None):
