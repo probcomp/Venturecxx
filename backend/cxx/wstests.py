@@ -149,6 +149,15 @@ def reportPassage(name):
   else:
     reportPassedQuitely()
 
+def profile(N):
+  import statprof # From sudo pip install statprof
+  statprof.start()
+  try:
+    runAllTests(N)
+  finally:
+    statprof.stop()
+    statprof.display()
+
 def runAllTests(N):
   print "========= RunAllTests(N) ========"
   options = [ ("mh",False),
