@@ -82,6 +82,7 @@ def repeatTest(func, *args):
   elif fisherMethod(result.pval + [1.0]*4) < globalReportingThreshold:
     return result
   else:
+    print "Retrying suspicious test %s" % result.name
     results = [result] + [func(*args) for i in range(1,5)]
     pval = fisherMethod([r.pval for r in results])
     report = "\n".join([r.report for r in results])
