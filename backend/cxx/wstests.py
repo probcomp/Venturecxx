@@ -182,7 +182,7 @@ def loggingInfer(ripl,address,T,kernel=None,use_global_scaffold=None):
   use_global_scaffold = use_global_scaffold if use_global_scaffold is not None else globalUseGlobalScaffold
   predictions = []
   for t in range(T):
-    ripl.infer(10,kernel,use_global_scaffold)
+    ripl.infer(100,kernel,use_global_scaffold)
     predictions.append(ripl.report(address))
 #    print predictions[len(predictions)-1]
   return predictions
