@@ -197,7 +197,6 @@ def collectSamples(ripl,address,T,kernel=None,use_global_scaffold=None):
     # ripl.infer(100,kernel,use_global_scaffold)
     predictions.append(ripl.report(address))
     ripl.sivm.core_sivm.engine.reset()
-#    print predictions[len(predictions)-1]
   return predictions
 
 def runTests(N):
