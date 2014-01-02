@@ -77,7 +77,7 @@ def fisherMethod(pvals):
 
 def repeatTest(func, *args):
   result = func(*args)
-  if result.pval > 1:
+  if result.pval > 0.1:
     return result
   elif fisherMethod(result.pval + [1.0]*4) < globalReportingThreshold:
     return result
