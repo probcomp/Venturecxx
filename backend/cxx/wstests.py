@@ -60,12 +60,13 @@ def tabulatelst(fmt, lst, width=10, prefix=""):
   return prefix + "[" + bulk + "]"
 
 class TestResult(object):
-  def __init__(self, pval, report):
+  def __init__(self, name, pval, report):
+    self.name = name
     self.pval = pval
     self.report = report
 
   def __str__(self):
-    return self.report
+    return ("---Test: %s---\n" % self.name) + self.report
 
 def fisherMethod(pvals):
   if any([p == 0 for p in pvals]):
@@ -83,9 +84,9 @@ def repeatTest(func, *args):
   else:
     results = [result] + [func(*args) for i in range(1,5)]
     pval = fisherMethod([r.pval for r in results])
-    report = "Failing consistently\n" + "\n".join([r.report for r in results])
-    report += "\nP value : " + str(pval)
-    return TestResult(pval, report)
+    report = "\n".join([r.report for r in results])
+    report += "\nOverall P value: " + str(pval)
+    return TestResult(result.name + " failing consistently", pval, report)
 
 def reportTest(result):
   if globalAlwaysReport or result.pval < globalReportingThreshold:
@@ -111,8 +112,7 @@ def reportKnownDiscrete(name, expectedRates, observed):
   expRates = normalizeList([pair[1] for pair in expectedRates])
   expCounts = [total * r for r in expRates]
   (chisq,pval) = stats.chisquare(counts, np.array(expCounts))
-  return TestResult(pval, "\n".join([
-    "---Test: " + name + "---",
+  return TestResult(name, pval, "\n".join([
     "Expected: " + fmtlst("% 4.1f", expCounts),
     "Observed: " + fmtlst("% 4d", counts),
     "Chi^2   : " + str(chisq),
@@ -135,8 +135,7 @@ def explainOneDSample(observed):
 # Kolmogorov-Smirnov test for agreement with known 1-D CDF.
 def reportKnownContinuous(name, expectedCDF, observed, descr=None):
   (K, pval) = stats.kstest(observed, expectedCDF)
-  return TestResult(pval, "\n".join([
-    "---Test: " + name + "---",
+  return TestResult(name, pval, "\n".join([
     "Expected: %4d samples from %s" % (len(observed), descr),
     explainOneDSample(observed),
     "K stat  : " + str(K),
@@ -157,8 +156,7 @@ def reportKnownMeanVariance(name, expMean, expVar, observed):
   mean = np.mean(observed)
   zscore = (mean - expMean) * math.sqrt(count) / math.sqrt(expVar)
   pval = 2*stats.norm.sf(abs(zscore)) # Two-tailed
-  return TestResult(pval, "\n".join([
-    "---Test: " + name + "---",
+  return TestResult(name, pval, "\n".join([
     "Expected: % 4d samples with mean %4.3f, stddev %4.3f" % (count, expMean, math.sqrt(expVar)),
     explainOneDSample(observed),
     "Z score : " + str(zscore),
@@ -171,8 +169,7 @@ def reportKnownMeanVariance(name, expMean, expVar, observed):
 def reportKnownMean(name, expMean, observed):
   count = len(observed)
   (tstat, pval) = stats.ttest_1samp(observed, expMean)
-  return TestResult(pval, "\n".join([
-    "---Test: " + name + "---",
+  return TestResult(name, pval, "\n".join([
     "Expected: % 4d samples with mean %4.3f" % (count, expMean),
     explainOneDSample(observed),
     "T stat  : " + str(tstat),
@@ -180,7 +177,7 @@ def reportKnownMean(name, expMean, observed):
 
 # For a deterministic test
 def reportPassage(name):
-  return TestResult(1.0, "--- Passed %s ---" % name)
+  return TestResult("Passed %s" % name, 1.0, "")
 
 def profile(N):
   import statprof # From sudo pip install statprof
@@ -1036,7 +1033,6 @@ def doTestHPYMem1(N):
   data = [countPredictions(predictHPY(N,top,bot), [0,1,2,3,4]) for top in [True,False] for bot in [True,False]]
   (chisq, pval) = stats.chi2_contingency(data)
   report = [
-    "---TestHPYMem1---",
     "Expected: Samples from four equal distributions",
     "Observed:"]
   i = 0
@@ -1047,7 +1043,7 @@ def doTestHPYMem1(N):
   report += [
     "Chi^2   : " + str(chisq),
     "P value : " + str(pval)]
-  return TestResult(pval, "\n".join(report))
+  return TestResult("TestHPYMem1", pval, "\n".join(report))
 
 def testHPYMem1(N):
   if hasattr(stats, 'chi2_contingency'):
