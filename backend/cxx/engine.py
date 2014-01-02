@@ -33,9 +33,9 @@ class Engine:
 
   def desugarLambda(self,datum):
     if type(datum) is list and type(datum[0]) is dict and datum[0]["value"] == "lambda":
-    ids = [{"type" : "symbol","value" : "quote"}] + [datum[1]]
-    body = [{"type" : "symbol","value" : "quote"}] + [self.desugarLambda(datum[2])]
-    return [{"type" : "symbol", "value" : "make_csp"},ids,body]
+      ids = [{"type" : "symbol","value" : "quote"}] + [datum[1]]
+      body = [{"type" : "symbol","value" : "quote"}] + [self.desugarLambda(datum[2])]
+      return [{"type" : "symbol", "value" : "make_csp"},ids,body]
     elif type(datum) is list: return [self.desugarLambda(d) for d in datum]
     else: return datum
 
