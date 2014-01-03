@@ -130,6 +130,9 @@ class Trace(object):
     unevalFamily(self,self.families[id],Scaffold(self),OmegaDB())
     del self.families[id]
 
+  def numRandomChoices(self):
+    return len(self.rcs)
+
   def continuous_inference_status(self): return {"running" : False}
 
   def infer(self,params): 
