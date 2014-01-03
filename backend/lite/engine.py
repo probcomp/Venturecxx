@@ -95,6 +95,26 @@ class Engine:
     self.directives = {}
     self.trace = Trace()
 
+  # Blow away the trace and rebuild one from the directives.  The goal
+  # is to resample from the prior.  May have the unfortunate effect of
+  # renumbering the directives, if some had been forgotten.
+  # Note: This is not the same "reset" as appears in the Venture SIVM
+  # instruction set.
+  def reset(self):
+    worklist = sorted(self.directives.iteritems())
+    self.clear()
+    [self.replay(dir) for (_,dir) in worklist]
+
+  def replay(self,directive):
+    if directive[0] == "assume":
+      self.assume(directive[1], directive[2])
+    elif directive[0] == "observe":
+      self.observe(directive[1], directive[2])
+    elif directive[0] == "predict":
+      self.predict(directive[1])
+    else:
+      assert False, "Unkown directive type found %r" % directive
+
   # This could be parameterized to call different inference programs.
   def infer(self,params=None):
     if params is None:
