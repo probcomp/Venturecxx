@@ -7,7 +7,11 @@ from sp import SP
 from lkernel import LKernel
 
 class BernoulliOutputPSP(RandomPSP):
-  def simulate(self,args): return random.random() < args.operandValues[0]
+  def simulate(self,args):
+    if len(args.operandValues) >= 1:
+      return random.random() < args.operandValues[0]
+    else:
+      return random.random() < 0.5
     
   def logDensity(self,val,args):
     p = args.operandValues[0]
