@@ -265,25 +265,27 @@ def runTests(N):
     reportTest(repeatTest(testEval3, N))
     reportTest(repeatTest(testApply1, N))
     reportTest(repeatTest(testExtendEnv1, N))
-  reportTest(testList1())
-  reportTest(repeatTest(testDPMem1, N))
-  # reportTest(repeatTest(testCRP1, N, True)) # TODO Slow and fails too much
-  # reportTest(repeatTest(testCRP1, N, False)) # Uncollapsed is too slow
-  reportTest(repeatTest(testHPYMem1, N))
-  reportTest(repeatTest(testGeometric1, N))
-  reportTest(repeatTest(testTrig1, N))
-  reportTest(testForget1())
-  reportTest(repeatTest(testReferences1, N))
-  reportTest(repeatTest(testReferences2, N))
-  reportTest(repeatTest(testMemoizingOnAList, ))
+    reportTest(testList1())
+    reportTest(repeatTest(testDPMem1, N))
+    # reportTest(repeatTest(testCRP1, N, True)) # TODO Slow and fails too much
+    # reportTest(repeatTest(testCRP1, N, False)) # Uncollapsed is too slow
+    reportTest(repeatTest(testHPYMem1, N))
+    reportTest(repeatTest(testGeometric1, N))
+    reportTest(repeatTest(testTrig1, N))
+    # Not missing a primitive, but Lite Traces cannot report their global log scores.
+    reportTest(testForget1())
+    reportTest(repeatTest(testReferences1, N))
+    reportTest(repeatTest(testReferences2, N))
+    # TODO This failure looks like a real bug
+    reportTest(repeatTest(testMemoizingOnAList))
+    reportTest(repeatTest(testBreakMem, N))
+    # reportTest(repeatTest(testHPYLanguageModel1, N)) # TODO slow and fails
+    # reportTest(repeatTest(testHPYLanguageModel2, N)) # TODO slow and fails
+    reportTest(repeatTest(testGoldwater1, N))
   reportTest(repeatTest(testOperatorChanging, N))
   reportTest(repeatTest(testObserveAPredict0, N))
   # reportTest(repeatTest(testObserveAPredict1, N))
   # testObserveAPredict2(N)
-  reportTest(repeatTest(testBreakMem, N))
-  # reportTest(repeatTest(testHPYLanguageModel1, N)) # TODO slow and fails
-  # reportTest(repeatTest(testHPYLanguageModel2, N)) # TODO slow and fails
-  reportTest(repeatTest(testGoldwater1, N))
   reportTest(testMemHashFunction1(5,5))
 
 def runTests2(N):
