@@ -22,7 +22,7 @@ import scipy.stats as stats
 import numpy as np
 
 globalKernel = "mh";
-globalUseGlobalScaffold = True;
+globalUseGlobalScaffold = False;
 globalAlwaysReport = False;
 globalReportingThreshold = 0.001
 globalBackend = make_lite_church_prime_ripl
