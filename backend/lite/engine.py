@@ -18,6 +18,9 @@ import pdb
 from venture.exception import VentureException
 
 # Thin wrapper around Trace
+# N.B.: This class is copied nearly verbatim from
+# backend/cxx/engine.py.  Perhaps there is an opportunity for
+# abstraction here?
 
 class Engine:
 
