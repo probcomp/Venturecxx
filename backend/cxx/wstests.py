@@ -240,7 +240,10 @@ def runTests(N):
   reportTest(repeatTest(testBLOGCSI, N))
   reportTest(repeatTest(testMHHMM1, N))
   reportTest(repeatTest(testOuterMix1, N))
-  reportTest(repeatTest(testMakeBetaBernoulli1, N))
+  reportTest(repeatTest(testMakeBetaBernoulli1, "make_beta_bernoulli", N))
+  if globalBackend == make_lite_church_prime_ripl:
+    # These test primitives that only Lite has
+    reportTest(repeatTest(testMakeBetaBernoulli1, "make_ubeta_bernoulli", N))
   reportTest(repeatTest(testLazyHMM1, N))
   reportTest(repeatTest(testLazyHMMSP1, N))
   if globalBackend != make_lite_church_prime_ripl:
@@ -621,17 +624,17 @@ def testMakeDirMult1(N):
   ripl.predict("(f)")
   return testDirichletMultinomial1("make_dir_mult", ripl, 3, N)
 
-def testMakeBetaBernoulli1(N):
+def testMakeBetaBernoulli1(maker, N):
   ripl = RIPL()
   ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "(make_beta_bernoulli a a)")
+  ripl.assume("f", "(%s a a)" % maker)
   ripl.predict("(f)")
 
   for j in range(20): ripl.observe("(f)", "true")
 
   predictions = collectSamples(ripl,3,N)
   ans = [(False,.25), (True,.75)]
-  return reportKnownDiscrete("TestMakeBetaBernoulli1", ans, predictions)
+  return reportKnownDiscrete("TestMakeBetaBernoulli1 (%s)" % maker, ans, predictions)
 
 def testLazyHMM1(N):
   N = N
