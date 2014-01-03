@@ -33,9 +33,9 @@ class Engine:
 
   def desugarLambda(self,datum):
     if type(datum) is list and type(datum[0]) is dict and datum[0]["value"] == "lambda":
-    ids = [{"type" : "symbol","value" : "quote"}] + [datum[1]]
-    body = [{"type" : "symbol","value" : "quote"}] + [self.desugarLambda(datum[2])]
-    return [{"type" : "symbol", "value" : "make_csp"},ids,body]
+      ids = [{"type" : "symbol","value" : "quote"}] + [datum[1]]
+      body = [{"type" : "symbol","value" : "quote"}] + [self.desugarLambda(datum[2])]
+      return [{"type" : "symbol", "value" : "make_csp"},ids,body]
     elif type(datum) is list: return [self.desugarLambda(d) for d in datum]
     else: return datum
 
@@ -66,24 +66,28 @@ class Engine:
 
     # TODO check for -infinity? Throw an exception?
     if logDensity == float("-inf"):
-      raise VentureException("invalid_constraint", "Observe failed to constrain", expression=datum, value=val)
+      raise VentureException("invalid_constraint", "Observe failed to constrain",
+                             expression=datum, value=val)
     self.directives[self.directiveCounter] = ["observe",datum,val]
 
     return self.directiveCounter
 
   def forget(self,directiveId):
     if directiveId not in self.directives:
-      raise VentureException("invalid_argument", "Cannot forget a non-existent directive id", argument="directive_id", directive_id=directiveId)
+      raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
+                             argument="directive_id", directive_id=directiveId)
     directive = self.directives[directiveId]
     if directive[0] == "assume":
-      raise VentureException("invalid_argument", "Cannot forget an ASSUME directive", argument="directive_id", directive_id=directiveId)
+      raise VentureException("invalid_argument", "Cannot forget an ASSUME directive",
+                             argument="directive_id", directive_id=directiveId)
     if directive[0] == "observe": self.trace.unobserve(directiveId)
     self.trace.uneval(directiveId)
     del self.directives[directiveId]
 
   def report_value(self,directiveId):
     if directiveId not in self.directives:
-      raise VentureException("invalid_argument", "Cannot report a non-existent directive id", argument=directiveId)
+      raise VentureException("invalid_argument", "Cannot report a non-existent directive id",
+                             argument=directiveId)
     return self.trace.extractValue(directiveId)
 
   def clear(self):
@@ -91,6 +95,31 @@ class Engine:
     self.directiveCounter = 0
     self.directives = {}
     self.trace = Trace()
+
+  # Blow away the trace and rebuild one from the directives.  The goal
+  # is to resample from the prior.  May have the unfortunate effect of
+  # renumbering the directives, if some had been forgotten.
+  # Note: This is not the same "reset" as appears in the Venture SIVM
+  # instruction set.
+  def reset(self):
+    worklist = sorted(self.directives.iteritems())
+    self.clear()
+    # Frobnicate the trace's random seed because Trace() resets the
+    # RNG seed from the current time, which sucks if one calls this
+    # method often.
+    import random
+    self.set_seed(random.randint(1,2**32-1))
+    [self.replay(dir) for (_,dir) in worklist]
+
+  def replay(self,directive):
+    if directive[0] == "assume":
+      self.assume(directive[1], directive[2])
+    elif directive[0] == "observe":
+      self.observe(directive[1], directive[2])
+    elif directive[0] == "predict":
+      self.predict(directive[1])
+    else:
+      assert False, "Unkown directive type found %r" % directive
 
   # This could be parameterized to call different inference programs.
   def infer(self,params=None):
@@ -100,7 +129,9 @@ class Engine:
     if 'transitions' not in params:
       params['transitions'] = 1
     else:
-      # FIXME: Kludge. If removed, test_infer (in python/test/ripl_test.py) fails, and if params are printed, you'll see a float for the number of transitions
+      # FIXME: Kludge. If removed, test_infer (in
+      # python/test/ripl_test.py) fails, and if params are printed,
+      # you'll see a float for the number of transitions
       params['transitions'] = int(params['transitions'])
 
     if 'kernel' not in params:
