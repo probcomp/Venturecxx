@@ -14,7 +14,10 @@ class BernoulliOutputPSP(RandomPSP):
       return random.random() < 0.5
     
   def logDensity(self,val,args):
-    p = args.operandValues[0]
+    if len(args.operandValues) >= 1:
+      p = args.operandValues[0]
+    else:
+      p = 0.5
     if val: return math.log(p)
     else: return math.log(1 - p)
 
