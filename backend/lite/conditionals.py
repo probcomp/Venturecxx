@@ -9,3 +9,10 @@ class BranchRequestPSP(PSP):
 
     exp = args.operandValues[expIndex]
     return Request([ESR(args.node,exp,args.env)])
+
+class BiplexOutputPSP(PSP):
+  def simulate(self,args):
+    if args.operandValues[0]:
+      return args.operandValues[1]
+    else:
+      return args.operandValues[2]

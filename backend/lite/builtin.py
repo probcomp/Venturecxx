@@ -36,6 +36,7 @@ def builtInSPs():
            "normal" : SP(NullRequestPSP(),continuous.NormalOutputPSP()),
 
            "branch" : SP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()),
+           "biplex" : SP(NullRequestPSP(),conditionals.BiplexOutputPSP()),
 
            "make_csp" : SP(NullRequestPSP(),csp.MakeCSPOutputPSP()),
 
