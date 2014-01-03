@@ -150,7 +150,7 @@ class Trace(object):
   def boxValue(self,val):
     if type(val) is str: return {"type":"symbol","value":val}
     elif type(val) is bool: return {"type":"boolean","value":val}
-    elif type(val) is list: return {"type":"list","value":val}
+    elif type(val) is list: return {"type":"list","value":[self.boxValue(v) for v in val]}
     else: return {"type":"number","value":val}
 
 
