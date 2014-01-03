@@ -242,6 +242,7 @@ def runTests(N):
   reportTest(repeatTest(testOuterMix1, N))
   reportTest(repeatTest(testMakeBetaBernoulli1, N))
   reportTest(repeatTest(testLazyHMM1, N))
+  reportTest(repeatTest(testLazyHMMSP1, N))
   if globalBackend != make_lite_church_prime_ripl:
     # These rely upon builtins primitives that the Lite backend doesn't have.
     # Those that are testing those primitives (as opposed to testing the engine with them)
@@ -253,7 +254,6 @@ def runTests(N):
     reportTest(repeatTest(testMakeSymDirMult2, "make_sym_dir_mult", N))
     reportTest(repeatTest(testMakeSymDirMult2, "make_uc_sym_dir_mult", N))
     reportTest(repeatTest(testMakeDirMult1, N))
-    reportTest(repeatTest(testLazyHMMSP1, N))
     reportTest(repeatTest(testStaleAAA1, N))
     reportTest(repeatTest(testStaleAAA2, N))
     reportTest(repeatTest(testMap1, N))
