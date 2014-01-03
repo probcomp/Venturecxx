@@ -241,6 +241,7 @@ def runTests(N):
   reportTest(repeatTest(testMHHMM1, N))
   reportTest(repeatTest(testOuterMix1, N))
   reportTest(repeatTest(testMakeBetaBernoulli1, N))
+  reportTest(repeatTest(testLazyHMM1, N))
   if globalBackend != make_lite_church_prime_ripl:
     # These rely upon builtins primitives that the Lite backend doesn't have.
     # Those that are testing those primitives (as opposed to testing the engine with them)
@@ -252,7 +253,6 @@ def runTests(N):
     reportTest(repeatTest(testMakeSymDirMult2, "make_sym_dir_mult", N))
     reportTest(repeatTest(testMakeSymDirMult2, "make_uc_sym_dir_mult", N))
     reportTest(repeatTest(testMakeDirMult1, N))
-    reportTest(repeatTest(testLazyHMM1, N))
     reportTest(repeatTest(testLazyHMMSP1, N))
     reportTest(repeatTest(testStaleAAA1, N))
     reportTest(repeatTest(testStaleAAA2, N))
@@ -657,7 +657,7 @@ def testLazyHMM1(N):
   ripl.observe("(g 3)",True)
   ripl.observe("(g 4)",False)
   ripl.observe("(g 5)",False)
-  ripl.predict("(make_vector (f 0) (f 1) (f 2) (f 3) (f 4) (f 5))")
+  ripl.predict("(list (f 0) (f 1) (f 2) (f 3) (f 4) (f 5))")
 
   predictions = collectSamples(ripl,8,N)
   sums = [0 for i in range(6)]
