@@ -599,12 +599,7 @@ def testMHHMM1(N):
 
 def testOuterMix1(N):
   ripl = RIPL()
-  ripl.predict("""
-(branch (bernoulli 0.5)
-  (lambda ()
-    (branch (bernoulli 0.5) (lambda () 2) (lambda () 3)))
-  (lambda () 1))
-""")
+  ripl.predict("(if (bernoulli 0.5) (if (bernoulli 0.5) 2 3) 1)")
 
   predictions = collectSamples(ripl,1,N)
   ans = [(1,.5), (2,.25), (3,.25)]
