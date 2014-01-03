@@ -17,8 +17,7 @@ from trace import Trace
 import pdb
 from venture.exception import VentureException
 
-# Thin wrapper around cxx Trace
-# TODO: merge with CoreSivmCxx?
+# Thin wrapper around Trace
 
 class SIVM:
 
