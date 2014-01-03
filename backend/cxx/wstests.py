@@ -24,7 +24,7 @@ import numpy as np
 globalKernel = "mh";
 globalUseGlobalScaffold = True;
 globalAlwaysReport = False;
-globalReportingThreshold = 0.1
+globalReportingThreshold = 0.001
 
 def RIPL():
   return make_church_prime_ripl()
@@ -77,7 +77,7 @@ def fisherMethod(pvals):
 
 def repeatTest(func, *args):
   result = func(*args)
-  if result.pval > 0.1:
+  if result.pval > 0.05:
     return result
   elif fisherMethod(result.pval + [1.0]*4) < globalReportingThreshold:
     return result
