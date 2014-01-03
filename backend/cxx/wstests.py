@@ -241,9 +241,15 @@ def runTests(N):
   reportTest(repeatTest(testMHHMM1, N))
   reportTest(repeatTest(testOuterMix1, N))
   reportTest(repeatTest(testMakeBetaBernoulli1, "make_beta_bernoulli", N))
+  reportTest(repeatTest(testMakeBetaBernoulli2, "make_beta_bernoulli", N))
+  reportTest(repeatTest(testMakeBetaBernoulli3, "make_beta_bernoulli", N))
+  reportTest(repeatTest(testMakeBetaBernoulli4, "make_beta_bernoulli", N))
   if globalBackend == make_lite_church_prime_ripl:
     # These test primitives that only Lite has
     reportTest(repeatTest(testMakeBetaBernoulli1, "make_ubeta_bernoulli", N))
+    reportTest(repeatTest(testMakeBetaBernoulli2, "make_ubeta_bernoulli", N))
+    reportTest(repeatTest(testMakeBetaBernoulli3, "make_ubeta_bernoulli", N))
+    reportTest(repeatTest(testMakeBetaBernoulli4, "make_ubeta_bernoulli", N))
   reportTest(repeatTest(testLazyHMM1, N))
   reportTest(repeatTest(testLazyHMMSP1, N))
   if globalBackend != make_lite_church_prime_ripl:
@@ -635,6 +641,52 @@ def testMakeBetaBernoulli1(maker, N):
   predictions = collectSamples(ripl,3,N)
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete("TestMakeBetaBernoulli1 (%s)" % maker, ans, predictions)
+
+# These three represent mechanisable ways of fuzzing a program for
+# testing language feature interactions (in this case AAA with
+# constraint forwarding and brush).
+def testMakeBetaBernoulli2(maker, N):
+  ripl = RIPL()
+  ripl.assume("a", "(normal 10.0 1.0)")
+  ripl.assume("f", "((lambda () (%s ((lambda () a)) ((lambda () a)))))" % maker)
+  ripl.predict("(f)")
+
+  for j in range(20): ripl.observe("((lambda () (f)))", "true")
+
+  predictions = collectSamples(ripl,3,N)
+  ans = [(False,.25), (True,.75)]
+  return reportKnownDiscrete("TestMakeBetaBernoulli2 (%s)" % maker, ans, predictions)
+
+def testMakeBetaBernoulli3(maker, N):
+  ripl = RIPL()
+  ripl.assume("a", "(normal 10.0 1.0)")
+  ripl.assume("f", "(%s a a)" % maker)
+  ripl.predict("(f)")
+
+  for j in range(10): ripl.observe("(f)", "true")
+  for j in range(10): ripl.observe("""
+(if (lt a 10.0)
+  (f)
+  (f))""", "true")
+
+  predictions = collectSamples(ripl,3,N)
+  ans = [(False,.25), (True,.75)]
+  return reportKnownDiscrete("TestMakeBetaBernoulli3 (%s)" % maker, ans, predictions)
+
+def testMakeBetaBernoulli4(maker, N):
+  ripl = RIPL()
+  ripl.assume("a", "(normal 10.0 1.0)")
+  ripl.assume("f", """
+(if (lt a 10.0)
+  ({0} a a)
+  ({0} a a))""".format(maker))
+  ripl.predict("(f)")
+
+  for j in range(20): ripl.observe("(f)", "true")
+
+  predictions = collectSamples(ripl,3,N)
+  ans = [(False,.25), (True,.75)]
+  return reportKnownDiscrete("TestMakeBetaBernoulli4 (%s)" % maker, ans, predictions)
 
 def testLazyHMM1(N):
   N = N
