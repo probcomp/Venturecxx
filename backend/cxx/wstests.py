@@ -201,7 +201,7 @@ def runAllTests(N):
 
 
   for i in range(len(options)):
-    print "\n\n\n\n\n\n\n========= %d. (%s,%d) ========" % (i+1,options[i][0],options[i][1])
+    print "\n========= %d. (%s,%d) ========" % (i+1,options[i][0],options[i][1])
     global globalKernel
     global globalUseGlobalScaffold
     globalKernel = options[i][0]
