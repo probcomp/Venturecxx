@@ -19,7 +19,7 @@ from venture.exception import VentureException
 
 # Thin wrapper around Trace
 
-class SIVM:
+class Engine:
 
   def __init__(self):
     self.directiveCounter = 0

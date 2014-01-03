@@ -23,4 +23,4 @@ class CoreSivmLite(CoreSivmCxx):
     def __init__(self):
         super(CoreSivmLite, self).__init__()
         from venture.lite import engine
-        self.engine = engine.SIVM()
+        self.engine = engine.Engine()
