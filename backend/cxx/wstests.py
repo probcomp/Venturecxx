@@ -25,9 +25,10 @@ globalKernel = "mh";
 globalUseGlobalScaffold = True;
 globalAlwaysReport = False;
 globalReportingThreshold = 0.001
+globalBackend = make_lite_church_prime_ripl
 
 def RIPL():
-  return make_church_prime_ripl()
+  return globalBackend()
 
 def normalizeList(seq):
   denom = sum(seq)
