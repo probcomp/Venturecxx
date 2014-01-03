@@ -105,13 +105,15 @@ def reportPassedQuitely():
 # reportKnownDiscrete :: (Eq a) => String -> [(a,Double)] -> [a] -> IO ()
 def reportKnownDiscrete(name, expectedRates, observed):
   items = [pair[0] for pair in expectedRates]
-  # N.B. This ignores observations outside the support of the given
-  # expectation.  This is useful when information about the right
-  # answer is incomplete, but could be strengthened in circumstances
-  # where all possibilities are known.
-  counts = countPredictions(observed, items)
+  itemsDict = {pair[0]:pair[1] for pair in expectedRates}
+  for o in observed:
+    assert o in itemsDict, "Completely unexpected observation %r" % o
+  # N.B. This is not None test allows observations to be selectively
+  # ignored.  This is useful when information about the right answer
+  # is incomplete.
+  counts = [observed.count(x) for x in items if itemsDict[x] is not None]
   total = sum(counts)
-  expRates = normalizeList([pair[1] for pair in expectedRates])
+  expRates = normalizeList([pair[1] for pair in expectedRates if pair[1] is not None])
   expCounts = [total * r for r in expRates]
   (chisq,pval) = stats.chisquare(counts, np.array(expCounts))
   return TestResult(name, pval, "\n".join([
@@ -439,6 +441,7 @@ def testMem1(N):
   # TODO This test can be strengthened by computing more of the ratios in the answer
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
+         (6,  None), (7,  None), (8,  None), (9,  None),
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete("TestMem1", ans, predictions)
 
@@ -457,6 +460,7 @@ def testMem2(N):
   # TODO This test can be strengthened by computing more of the ratios in the answer
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
+         (6,  None), (7,  None), (8,  None), (9,  None),
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete("TestMem2", ans, predictions)
 
@@ -475,6 +479,7 @@ def testMem3(N):
   # TODO This test can be strengthened by computing more of the ratios in the answer
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
+         (6,  None), (7,  None), (8,  None), (9,  None),
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete("TestMem3", ans, predictions)
 
@@ -1126,7 +1131,7 @@ def testGeometric1(N):
 
   predictions = collectSamples(ripl,"pid",N)
 
-  k = 7
+  k = 16
   ans = [(n,math.pow(2,-n)) for n in range(1,k)]
   return reportKnownDiscrete("TestGeometric1", ans, predictions)
 
