@@ -659,12 +659,12 @@ def testLazyHMM1(N):
   ripl.observe("(g 5)",False)
   ripl.predict("(make_vector (f 0) (f 1) (f 2) (f 3) (f 4) (f 5))")
 
-  # predictions = collectSamples(ripl,8,N)
-  # sums = [0 for i in range(6)]
-  # for p in predictions: sums = [sums[i] + p[i] for i in range(6)]
-  # ps = [.3531,.1327,.1796,.6925,.1796,.1327]
-  # eps = [float(x) / N for x in sums] if N > 0 else [0 for x in sums]
-  # printTest("testLazyHMM1 (mixes terribly)",ps,eps)
+  predictions = collectSamples(ripl,8,N)
+  sums = [0 for i in range(6)]
+  for p in predictions: sums = [sums[i] + p[i] for i in range(6)]
+  ps = [.3531,.1327,.1796,.6925,.1796,.1327]
+  eps = [float(x) / N for x in sums] if N > 0 else [0 for x in sums]
+  printTest("testLazyHMM1 (mixes terribly)",ps,eps)
   return reportPassage("TestLazyHMM1")
 
 def testLazyHMMSP1(N):
