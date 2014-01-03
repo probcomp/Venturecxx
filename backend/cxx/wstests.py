@@ -192,21 +192,27 @@ def profile(N):
 
 def runAllTests(N):
   print "========= RunAllTests(N) ========"
-  options = [ ("mh",False),
-              ("mh",True),
-              ("pgibbs",False),
-              ("pgibbs",True),
-              ("meanfield",False),
-              ("meanfield",True),
-              ("gibbs",False)]
+  options = [ (make_church_prime_ripl, "mh", False),
+              (make_church_prime_ripl, "mh", True),
+              (make_church_prime_ripl, "pgibbs", False),
+              (make_church_prime_ripl, "pgibbs", True),
+              (make_church_prime_ripl, "meanfield", False),
+              (make_church_prime_ripl, "meanfield", True),
+              (make_church_prime_ripl, "gibbs", False),
+              (make_lite_church_prime_ripl, "mh", False),
+              (make_lite_church_prime_ripl, "meanfield", False)
+              ]
 
 
   for i in range(len(options)):
-    print "\n========= %d. (%s,%d) ========" % (i+1,options[i][0],options[i][1])
+    name = "CXX" if options[i][0] == make_church_prime_ripl else "Lite"
+    print "\n========= %d. (%s, %s, %d) ========" % (i+1,name,options[i][1],options[i][2])
+    global globalBackend
     global globalKernel
     global globalUseGlobalScaffold
-    globalKernel = options[i][0]
-    globalUseGlobalScaffold = options[i][1]
+    globalBackend = options[i][0]
+    globalKernel = options[i][1]
+    globalUseGlobalScaffold = options[i][2]
     runTests(N)
 
 def collectSamples(ripl,address,T,kernel=None,use_global_scaffold=None):
