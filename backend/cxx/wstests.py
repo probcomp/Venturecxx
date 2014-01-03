@@ -322,10 +322,9 @@ def testBernoulli1(N):
   ripl = RIPL()
   ripl.assume("b", "((lambda () (bernoulli 0.7)))")
   ripl.predict("""
-(branch
-  b
-  (lambda () (normal 0.0 1.0))
-  (lambda () ((lambda () (normal 10.0 1.0)))))
+(if b
+  (normal 0.0 1.0)
+  ((lambda () (normal 10.0 1.0))))
 """);
   predictions = collectSamples(ripl,2,N)
   cdf = lambda x: 0.7 * stats.norm.cdf(x,loc=0,scale=1) + 0.3 * stats.norm.cdf(x,loc=10,scale=1)
@@ -367,9 +366,9 @@ def testMHNormal1(N):
   # Likelihood of a is normal with mean 0, variance 2 (precision 1/2)
   # Posterior for a is normal with mean 34/3, precision 3/2 (variance 2/3)
   ripl.predict("""
-(branch (lt a 100.0)
-  (lambda () (normal (plus a b) 1.0))
-  (lambda () (normal (times a b) 1.0)))
+(if (lt a 100.0)
+  (normal (plus a b) 1.0)
+  (normal (times a b) 1.0))
 """)
 
   predictions = collectSamples(ripl,4,N)
@@ -445,7 +444,7 @@ def testMem3(N):
   ripl.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
   ripl.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   ripl.assume("x","(f ((lambda () 1)))")
-  ripl.assume("y","(g ((lambda () (branch (bernoulli 1.0) (lambda () 0) (lambda () 100)))))")
+  ripl.assume("y","(g ((lambda () (if (bernoulli 1.0) 0 100))))")
   ripl.assume("w","((lambda () (f 2)))")
   ripl.assume("z","(g 1)")
   ripl.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
@@ -461,13 +460,11 @@ def testMem3(N):
 def testSprinkler1(N):
   ripl = RIPL()
   ripl.assume("rain","(bernoulli 0.2)")
-  ripl.assume("sprinkler","(branch rain (lambda () (bernoulli 0.01)) (lambda () (bernoulli 0.4)))")
+  ripl.assume("sprinkler","(if rain (bernoulli 0.01) (bernoulli 0.4))")
   ripl.assume("grassWet","""
-(branch rain
-  (lambda ()
-    (branch sprinkler (lambda () (bernoulli 0.99)) (lambda () (bernoulli 0.8))))
-  (lambda ()
-    (branch sprinkler (lambda () (bernoulli 0.9)) (lambda () (bernoulli 0.00001)))))
+(if rain
+  (if sprinkler (bernoulli 0.99) (bernoulli 0.8))
+  (if sprinkler (bernoulli 0.9)  (bernoulli 0.00001)))
 """)
   ripl.observe("grassWet", True)
 
@@ -481,14 +478,12 @@ def testSprinkler2(N):
 
   ripl = RIPL()
   ripl.assume("rain","(bernoulli 0.2)")
-  ripl.assume("sprinkler","(bernoulli (branch rain (lambda () 0.01) (lambda () 0.4)))")
+  ripl.assume("sprinkler","(bernoulli (if rain 0.01 0.4))")
   ripl.assume("grassWet","""
 (bernoulli
- (branch rain
-   (lambda ()
-     (branch sprinkler (lambda () 0.99) (lambda () 0.8)))
-   (lambda ()
-     (branch sprinkler (lambda () 0.9) (lambda () 0.00001)))))
+ (if rain
+   (if sprinkler 0.99 0.8)
+   (if sprinkler 0.9 0.00001)))
 """)
   ripl.observe("grassWet", True)
 
@@ -529,8 +524,8 @@ def testBLOGCSI(N):
   ripl.assume("u","(bernoulli 0.3)")
   ripl.assume("v","(bernoulli 0.9)")
   ripl.assume("w","(bernoulli 0.1)")
-  ripl.assume("getParam","(lambda (z) (branch z (lambda () 0.8) (lambda () 0.2)))")
-  ripl.assume("x","(bernoulli (branch u (lambda () (getParam w)) (lambda () (getParam v))))")
+  ripl.assume("getParam","(lambda (z) (if z 0.8 0.2))")
+  ripl.assume("x","(bernoulli (if u (getParam w) (getParam v)))")
 
   predictions = collectSamples(ripl,5,N)
   ans = [(True, .596), (False, .404)]
@@ -540,9 +535,9 @@ def testMHHMM1(N):
   ripl = RIPL()
   ripl.assume("f","""
 (mem (lambda (i)
-  (branch (eq i 0)
-    (lambda () (normal 0.0 1.0))
-    (lambda () (normal (f (minus i 1)) 1.0)))))
+  (if (eq i 0)
+    (normal 0.0 1.0)
+    (normal (f (minus i 1)) 1.0))))
 """)
   ripl.assume("g","""
 (mem (lambda (i)
@@ -637,18 +632,18 @@ def testLazyHMM1(N):
   ripl = RIPL()
   ripl.assume("f","""
 (mem (lambda (i)
-  (branch (eq i 0)
-    (lambda () (bernoulli 0.5))
-    (lambda () (branch (f (minus i 1))
-                 (lambda () (bernoulli 0.7))
-                 (lambda () (bernoulli 0.3)))))))
+  (if (eq i 0)
+    (bernoulli 0.5)
+    (if (f (minus i 1))
+      (bernoulli 0.7)
+      (bernoulli 0.3)))))
 """)
 
   ripl.assume("g","""
 (mem (lambda (i)
-  (branch (f i)
-     (lambda () (bernoulli 0.8))
-     (lambda () (bernoulli 0.1)))))
+  (if (f i)
+    (bernoulli 0.8)
+    (bernoulli 0.1))))
 """)
 
   ripl.observe("(g 1)",False)
