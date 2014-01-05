@@ -438,6 +438,8 @@ import os
 
 # Displays parameters in top-left corner of the graph.
 def showParameters(parameters):
+    if len(parameters) == 0: return
+    
     items = sorted(parameters.items())
     
     text = items[0][0] + ' = ' + str(items[0][1])
@@ -530,7 +532,7 @@ def makeIterable(obj):
 
 def cartesianProduct(keyToValues):
     items = [(key, makeIterable(value)) for (key, value) in keyToValues.items()]
-    (keys, values) = zip(*items)
+    (keys, values) = zip(*items) if len(keyToValues) > 0 else ([], [])
     
     Key = namedtuple('Key', keys)
     return [Key._make(t) for t in itertools.product(*values)]
