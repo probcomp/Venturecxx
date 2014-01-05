@@ -47,6 +47,11 @@ class VentureUnit:
     # Override to constrain model on data.
     def makeObserves(self): pass
     
+    # Masquerade as a ripl.
+    def clear(self):
+        self.assumes = []
+        self.observes = []
+    
     # Initializes parameters, generates the model, and prepares the ripl.
     def __init__(self, ripl, parameters={}):
         self.ripl = ripl
