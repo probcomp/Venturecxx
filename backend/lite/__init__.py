@@ -13,10 +13,3 @@
 # GNU General Public License for more details.
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-from venture.sivm.core_sivm_cxx import CoreSivmCxx
-from venture.sivm.core_sivm_lite import CoreSivmLite
-from venture.sivm.core_sivm_cpp_engine import CoreSivmCppEngine
-from venture.sivm.venture_sivm import VentureSivm
