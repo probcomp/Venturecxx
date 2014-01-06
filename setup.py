@@ -96,7 +96,7 @@ cxx = Extension("venture.cxx.libtrace",
     undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
     include_dirs = inc_dirs,
     sources = src_files)
-#ext_modules.append(cxx)
+ext_modules.append(cxx)
 
 setup (
     name = 'Venture CXX',
