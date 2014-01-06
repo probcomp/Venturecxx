@@ -24,6 +24,8 @@ def builtInSPs():
 
            "pair" : SP(NullRequestPSP(),listsps.PairOutputPSP()),
            "list" : SP(NullRequestPSP(),listsps.ListOutputPSP()),
+           # Fake compatibility with CXX
+           "make_vector" : SP(NullRequestPSP(),listsps.ListOutputPSP()),
            "is_pair" : SP(NullRequestPSP(),listsps.IsPairOutputPSP()),
            "list_ref" : SP(NullRequestPSP(),listsps.ListRefOutputPSP()),
            "first" : SP(NullRequestPSP(),listsps.FirstListOutputPSP()),
@@ -36,6 +38,7 @@ def builtInSPs():
            "normal" : SP(NullRequestPSP(),continuous.NormalOutputPSP()),
 
            "branch" : SP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()),
+           "biplex" : SP(NullRequestPSP(),conditionals.BiplexOutputPSP()),
 
            "make_csp" : SP(NullRequestPSP(),csp.MakeCSPOutputPSP()),
 
@@ -44,7 +47,7 @@ def builtInSPs():
            "make_beta_bernoulli" : SP(NullRequestPSP(),discrete.MakerCBetaBernoulliOutputPSP()),
            "make_ubeta_bernoulli" : SP(NullRequestPSP(),discrete.MakerUBetaBernoulliOutputPSP()),
 
-           "make_hmm" : SP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()),
+           "make_lazy_hmm" : SP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()),
   }
 
 

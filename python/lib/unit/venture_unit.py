@@ -47,6 +47,11 @@ class VentureUnit:
     # Override to constrain model on data.
     def makeObserves(self): pass
     
+    # Masquerade as a ripl.
+    def clear(self):
+        self.assumes = []
+        self.observes = []
+    
     # Initializes parameters, generates the model, and prepares the ripl.
     def __init__(self, ripl, parameters={}):
         self.ripl = ripl
@@ -433,6 +438,8 @@ import os
 
 # Displays parameters in top-left corner of the graph.
 def showParameters(parameters):
+    if len(parameters) == 0: return
+    
     items = sorted(parameters.items())
     
     text = items[0][0] + ' = ' + str(items[0][1])
@@ -525,25 +532,30 @@ def makeIterable(obj):
 
 def cartesianProduct(keyToValues):
     items = [(key, makeIterable(value)) for (key, value) in keyToValues.items()]
-    (keys, values) = zip(*items)
+    (keys, values) = zip(*items) if len(keyToValues) > 0 else ([], [])
     
     Key = namedtuple('Key', keys)
     return [Key._make(t) for t in itertools.product(*values)]
 
 # Produces histories for a set of parameters.
 # Here the parameters can contain lists. For example, {'a':[0, 1], 'b':[2, 3]}.
-# Then histories will be computed for the parameter settings ('a', 'b') = (0, 1), (0, 2), (1, 2), (1, 3)
+# Then histories will be computed for the parameter settings ('a', 'b') = (0, 2), (0, 3), (1, 2), (1, 3)
 # Runner should take a given parameter setting and produce a history.
 # For example, runner = lambda params : Model(ripl, params).runConditionedFromPrior(sweeps, runs, track=0)
 # Returned is a dictionary mapping each parameter setting (as a namedtuple) to the history.
 def produceHistories(parameters, runner, verbose=False, mapper=map):
-    # verbose only included for backwards compatibility
-    # introduce verbosity by passing in appropriate runner
     parameters_product = cartesianProduct(parameters)
-    dictify = lambda x: x._asdict()
-    to_map = map(dictify, parameters_product)
-    map_results = mapper(runner, to_map)
-    return dict(zip(parameters_product, map_results))
+    
+    results = []
+    
+    for params in parameters_product:
+        if verbose:
+            print 'Running with ' + str(params)
+        
+        result = runner(params._asdict())
+        results.append(result)
+    
+    return dict(zip(parameters_product, results))
 
 # Sets key to value and returns the updated dictionary.
 def addToDict(dictionary, key, value):

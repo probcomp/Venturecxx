@@ -3,6 +3,7 @@ from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputN
 from sp import SP
 from psp import ESRRefOutputPSP
 from spref import SPRef
+from lkernel import VariationalLKernel
 
 def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
@@ -99,7 +100,7 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
     k = scaffold.getKernel(node)
     newValue = k.simulate(trace,oldValue,trace.argsAt(node))
     weight += k.weight(trace,newValue,oldValue,trace.argsAt(node))
-    if gradients and k.isVariationalKernel(): 
+    if isinstance(k,VariationalLKernel): 
       gradients[node] = k.gradientOfLogDensity(newValue,trace.argsAt(node))
   else: 
     # if we simulate from the prior, the weight is 0

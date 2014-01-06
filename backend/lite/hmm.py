@@ -27,7 +27,8 @@ class HMMSPAux(SPAux):
 class MakeUncollapsedHMMOutputPSP(PSP):
   def simulate(self,args):
     (p0,T,O) = [np.mat(x) for x in args.operandValues]
-    return UncollapsedHMMSP(p0,T,O)
+    # Transposition for compatibility with CXX
+    return UncollapsedHMMSP(p0,np.transpose(T),np.transpose(O))
 
 class UncollapsedHMMSP(SP):
   def __init__(self,p0,T,O):

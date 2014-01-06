@@ -8,10 +8,17 @@ from lkernel import LKernel, DefaultAAALKernel
 from spaux import SPAux
 
 class BernoulliOutputPSP(RandomPSP):
-  def simulate(self,args): return random.random() < args.operandValues[0]
+  def simulate(self,args):
+    if len(args.operandValues) >= 1:
+      return random.random() < args.operandValues[0]
+    else:
+      return random.random() < 0.5
     
   def logDensity(self,val,args):
-    p = args.operandValues[0]
+    if len(args.operandValues) >= 1:
+      p = args.operandValues[0]
+    else:
+      p = 0.5
     if val: return math.log(p)
     else: return math.log(1 - p)
 
@@ -28,7 +35,7 @@ class CategoricalOutputPSP(RandomPSP):
 
 class MakerCBetaBernoulliOutputPSP(PSP):
   def childrenCanAAA(self): return True
-  def getAAAKernel(self): return DefaultAAALKernel(self)
+
   def simulate(self,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
@@ -96,7 +103,7 @@ class CBetaBernoulliOutputPSP(RandomPSP):
 
 class MakerUBetaBernoulliOutputPSP(RandomPSP):
   def childrenCanAAA(self): return True
-  def getAAAKernel(self): return UBetaBernoulliAAALKernel()
+  def getAAALKernel(self): return UBetaBernoulliAAALKernel()
 
   def simulate(self,args):
     alpha = args.operandValues[0]

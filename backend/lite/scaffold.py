@@ -14,7 +14,7 @@ class Scaffold():
     self.disableCounts = {}
     self.brush = set()
     self.disabledRequests = set()
-    self.kernels = {}
+    self.lkernels = {}
 
     self.construct(principalNodes,useDeltaKernels)
 
@@ -35,8 +35,8 @@ class Scaffold():
     self.loadDefaultKernels(useDeltaKernels)
 
 
-  def hasKernelFor(self,node): return node in self.kernels
-  def getKernel(self,node): return self.kernels[node]
+  def hasKernelFor(self,node): return node in self.lkernels
+  def getKernel(self,node): return self.lkernels[node]
   def hasChildInAorD(self,node):
     kids = self.trace.childrenAt(node)
     return kids.intersection(self.drg) or kids.intersection(self.absorbing)
@@ -99,8 +99,8 @@ class Scaffold():
 
   def registerBorder(self,node): self.border.append(node)
   def registerKernel(self,node,kernel): 
-    assert not node in self.kernels
-    self.kernels[node] = kernel
+    assert not node in self.lkernels
+    self.lkernels[node] = kernel
 
   def hasAAANodes(self): return self.aaa
 
@@ -121,7 +121,7 @@ class Scaffold():
       if self.isAAA(node):
         self.drg[node] += 1
         self.registerBorder(node)
-        self.registerKernel(node,self.trace.pspAt(node).getAAAKernel())
+        self.registerKernel(node,self.trace.pspAt(node).getAAALKernel())
       elif not self.hasChildInAorD(node):
         self.drg[node] = len(self.trace.childrenAt(node)) + 1
         self.registerBorder(node)

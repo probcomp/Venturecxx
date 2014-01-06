@@ -15,6 +15,7 @@
 * 
 * You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "Python.h"
 #include "lkernel.h"
 #include "infer/meanfield.h"
 #include "trace.h"

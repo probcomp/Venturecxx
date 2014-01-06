@@ -44,7 +44,7 @@ double BetaBernoulliSP::logDensityOfCounts(SPAux * generic_spaux) const
   assert(spaux);
 
   auto N = boost::accumulate(spaux->counts, 0);
-  double A = boost::accumulate(alphaVector, 0);
+  double A = boost::accumulate(alphaVector, 0.0);
 
   double x = gsl_sf_lngamma(A) - gsl_sf_lngamma(N + A);
   for (size_t i = 0; i < alphaVector.size(); ++i)

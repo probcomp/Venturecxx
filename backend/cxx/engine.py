@@ -13,14 +13,12 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-from trace import Trace
+from libtrace import Trace
 import pdb
 from venture.exception import VentureException
 
-# Thin wrapper around Trace
-# N.B.: This class is copied nearly verbatim from
-# backend/cxx/engine.py.  Perhaps there is an opportunity for
-# abstraction here?
+# Thin wrapper around cxx Trace
+# TODO: merge with CoreSivmCxx?
 
 class Engine:
 
@@ -106,6 +104,11 @@ class Engine:
   def reset(self):
     worklist = sorted(self.directives.iteritems())
     self.clear()
+    # Frobnicate the trace's random seed because Trace() resets the
+    # RNG seed from the current time, which sucks if one calls this
+    # method often.
+    import random
+    self.set_seed(random.randint(1,2**32-1))
     [self.replay(dir) for (_,dir) in worklist]
 
   def replay(self,directive):

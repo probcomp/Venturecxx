@@ -590,7 +590,7 @@ class TestVentureScriptParser(ParserTestCase):
         output = f('observe')
         self.assertEqual(output,'observe %(expression)s = %(value)v')
         output = f('infer')
-        self.assertEqual(output,'infer %(iterations)j %(resample)j')
+        self.assertEqual(output,'infer %(params)j')
 
 
 class TestInstructions(ParserTestCase):
@@ -693,8 +693,7 @@ class TestInstructions(ParserTestCase):
         self.run_test( " infer 132",
                 [{"loc":j(1,5,7,3), "value":{
                     "instruction" : {"loc":j(1,5), "value":"infer"},
-                    "iterations" : {"loc":j(7,3), "value":132},
-                    "resample" : {"loc":j(1,9), "value":False},
+                    "params" : {"loc":j(7,3), "value":132.0},
                     }}])
 
     def test_program(self):
@@ -707,8 +706,7 @@ class TestInstructions(ParserTestCase):
                         "value" : {"loc":j(13,10), "value":{'type':'count', 'value':132.0}},
                         }},{"loc":j(24,5,30,3), "value":{
                         "instruction" : {"loc":j(24,5), "value":"infer"},
-                        "iterations" : {"loc":j(30,3), "value":132},
-                        "resample" : {"loc":j(24,9), "value":False},
+                        "params" : {"loc":j(30,3), "value":132.0},
                     }}]}])
 
 
