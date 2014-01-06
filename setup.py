@@ -85,7 +85,7 @@ inc_dirs = ["backend/cxx/" + d for d in inc_dirs]
 ext_modules = []
 packages=["venture","venture.sivm","venture.ripl",
     "venture.parser","venture.server","venture.shortcuts",
-    "venture.unit", "venture.test", "venture.cxx"]
+    "venture.unit", "venture.test", "venture.cxx", "venture.lite"]
 
 cxx = Extension("venture.cxx.libtrace",
     define_macros = [('MAJOR_VERSION', '0'),
@@ -106,7 +106,7 @@ setup (
     long_description = 'TBA.',
     packages = packages,
     package_dir={"venture":"python/lib/", "venture.test":"python/test/",
-        "venture.cxx":"backend/cxx/"},
+        "venture.cxx":"backend/cxx/", "venture.lite":"backend/lite/"},
     ext_modules = ext_modules,
     scripts = ['script/venture']
 )
