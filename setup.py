@@ -75,6 +75,7 @@ src_files = [
     "src/sps/makebetabernoulli.cxx",
     "src/sps/makeucsymdirmult.cxx",
     "src/sps/makelazyhmm.cxx",
+    "src/sps/simulator.cxx",
     "src/pytrace.cxx",
 ]
 src_files = ["backend/cxx/" + f for f in src_files]

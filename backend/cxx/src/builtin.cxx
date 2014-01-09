@@ -40,6 +40,8 @@
 #include "sps/list.h"
 #include "sps/map.h"
 
+#include "sps/simulator.h"
+
 /* GC All new calls in both of these functions will be freed
    by Trace's destructor. */
 map<string,VentureValue *> initBuiltInValues()
@@ -153,6 +155,9 @@ map<string,SP *> initBuiltInSPs()
 
     // with shared ESRs
     {"mem", new MakeMSP},
+
+    // Ardavan's simulator template (MATLAB)
+    {"make_simulator", new MakeSimulatorSP},
   };
 }
 

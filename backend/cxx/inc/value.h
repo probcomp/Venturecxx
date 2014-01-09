@@ -208,6 +208,13 @@ struct VentureSP : VentureValue
 
 };
 
+struct VentureSimulatorToken : VentureValue
+{
+  VentureSimulatorToken(uint32_t fileID): fileID(fileID) {}
+  uint32_t fileID{0};
+  ~VentureSimulatorToken() {} // TODO URGENT GC (WAIT FOR SPAUX-FLUSH FIX)
+};
+
 
 
 #endif
