@@ -423,7 +423,7 @@ def testMem0(N):
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   ripl.predict("(f (bernoulli 0.5))")
   ripl.predict("(f (bernoulli 0.5))")
-  ripl.infer(N, kernel="mh", use_global_scaffold=False)
+  ripl.infer(N, kernel="mh")
   return reportPassage("TestMem0")
 
 
@@ -533,7 +533,7 @@ def testIf1(N):
   ripl.assume('IF', '(lambda () branch)')
   ripl.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
   ripl.predict('(IF2 (bernoulli 0.5) IF IF)')
-  ripl.infer(N/10, kernel="mh", use_global_scaffold=False)
+  ripl.infer(N/10, kernel="mh")
   return reportPassage("TestIf1")
 
 def testIf2(N):
@@ -542,7 +542,7 @@ def testIf2(N):
   ripl.assume('if2', '(branch (bernoulli 0.5) (lambda () if1) (lambda () if1))')
   ripl.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
   ripl.assume('if4', '(branch (bernoulli 0.5) (lambda () if3) (lambda () if3))')
-  ripl.infer(N/10, kernel="mh", use_global_scaffold=False)
+  ripl.infer(N/10, kernel="mh")
   return reportPassage("TestIf2")
 
 def testBLOGCSI(N):
@@ -1138,7 +1138,7 @@ def testTrig1(N):
   ripl.assume("b","(sq (cos x))")
   ripl.predict("(+ a b)")
   for i in range(N/10):
-    ripl.infer(10,kernel="mh",use_global_scaffold=False)
+    ripl.infer(10,kernel="mh")
     assert abs(ripl.report(5) - 1) < .001
   return reportPassage("TestTrig1")
 
