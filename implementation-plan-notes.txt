@@ -1,0 +1,12 @@
+Step 0: Refactor stack INFER instruction and existing calls to be extensible to the new spec
+- Eliminate "use_global_scaffold" in favor of "all" on the "default" block
+Step 1: Block MH in Lite controlled by the stack
+
+
+Is there right now a way to say how many particles pgibbs should use?
+- Selsam says "hardcoded in inc/infer/pgibbs.h as the variable P".
+
+Patch the spec:
+- pgibbs should accept a count of repeats as well as particles
+- meanfield maybe not, because it does not read the contents of the scaffold
+  - though iterating (meanfield one) may make sense
