@@ -177,6 +177,7 @@ void PyTrace::infer(boost::python::dict params)
   string scope = boost::python::extract<string>(params["scope"]);
   string block = boost::python::extract<string>(params["block"]); // TODO may be an ID also?
   
+  assert (scope == "default");
   assert(!(block == "all" && kernel == "gibbs"));
   MixMHKernel * gkernel = gkernels[make_pair(kernel,block)];
   gkernel->infer(numTransitions);
@@ -203,6 +204,7 @@ void PyTrace::start_continuous_inference(boost::python::dict params) {
   string kernel = boost::python::extract<string>(params["kernel"]);
   string scope = boost::python::extract<string>(params["scope"]);
   string block = boost::python::extract<string>(params["block"]); // TODO may be an ID also?
+  assert (scope == "default");
   assert(!(block == "all" && kernel == "gibbs"));
   MixMHKernel * gkernel = gkernels[make_pair(kernel,block)];
 
