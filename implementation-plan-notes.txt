@@ -22,3 +22,6 @@ Patch the spec:
 - pgibbs should accept a count of repeats as well as particles
 - meanfield maybe not, because it does not read the contents of the scaffold
   - though iterating (meanfield one) may make sense
+
+More issues:
+- How does this inference control language interact with continuous inference?
