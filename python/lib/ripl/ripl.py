@@ -221,10 +221,11 @@ class Ripl():
         value = self.execute_instruction(s,d)['value']
         return value if type else _strip_types(value)
 
-    def infer(self, transitions, kernel="mh", use_global_scaffold=False):
+    # TODO Correctly default block choice?
+    def infer(self, transitions, kernel="mh", scope="default", block="one"):
         s = self._cur_parser().get_instruction_string('infer')
         self.execute_instruction(s, {'params': {"transitions": transitions,
-            "kernel": kernel, "use_global_scaffold": use_global_scaffold}})
+            "kernel": kernel, "scope":scope, "block":block}})
 
     def clear(self):
         s = self._cur_parser().get_instruction_string('clear')

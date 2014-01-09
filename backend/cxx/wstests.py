@@ -25,7 +25,7 @@ globalKernel = "mh";
 globalUseGlobalScaffold = False;
 globalAlwaysReport = False;
 globalReportingThreshold = 0.001
-globalBackend = make_lite_church_prime_ripl
+globalBackend = make_church_prime_ripl
 
 def RIPL():
   return globalBackend()
@@ -220,11 +220,12 @@ def runAllTests(N):
 def collectSamples(ripl,address,T,kernel=None,use_global_scaffold=None):
   kernel = kernel if kernel is not None else globalKernel
   use_global_scaffold = use_global_scaffold if use_global_scaffold is not None else globalUseGlobalScaffold
+  block = "one" if not use_global_scaffold else "all"
   predictions = []
   for t in range(T):
     # Going direct here saved 5 of 35 seconds on some unscientific
     # tests, presumably by avoiding the parser.
-    ripl.sivm.core_sivm.engine.infer({"transitions":100, "kernel":kernel, "use_global_scaffold":use_global_scaffold})
+    ripl.sivm.core_sivm.engine.infer({"transitions":100, "kernel":kernel, "block":block})
     # ripl.infer(100,kernel,use_global_scaffold)
     predictions.append(ripl.report(address))
     ripl.sivm.core_sivm.engine.reset()

@@ -136,10 +136,12 @@ class Engine:
 
     if 'kernel' not in params:
       params['kernel'] = 'mh'
-    if 'use_global_scaffold' not in params:
-      params['use_global_scaffold'] = False
+    if 'scope' not in params:
+      params['scope'] = "default"
+    if 'block' not in params:
+      params['block'] = "one"
 
-    if len(params.keys()) > 3:
+    if len(params.keys()) > 4:
       raise Exception("Invalid parameter dictionary passed to infer: " + str(params))
 
     #print "params: " + str(params)

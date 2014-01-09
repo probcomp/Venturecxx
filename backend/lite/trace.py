@@ -135,8 +135,16 @@ class Trace(object):
 
   def continuous_inference_status(self): return {"running" : False}
 
-  def infer(self,params): 
-    if params["use_global_scaffold"]: raise Exception("INFER global scaffold not yet implemented")
+  # params is a hash with keys "kernel", "scope", "block",
+  # "transitions" (the latter should be named "repeats").  Right now,
+  # "kernel" must be one of "mh" or "meanfield", "scope" must be
+  # "default", "block" must be "one", and "transitions" must be an
+  # integer.
+  def infer(self,params):
+    if not(params["scope"] == "default"):
+      raise Exception("INFER custom scopes not yet implemented (%r)" % params)
+    if not(params["block"] == "one"):
+      raise Exception("INFER custom blocks not yet implemented (%r)" % params)
 
     for n in range(params["transitions"]):
       pnode = self.samplePrincipalNode()
