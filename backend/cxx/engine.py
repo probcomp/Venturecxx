@@ -125,7 +125,6 @@ class Engine:
   def infer(self,params=None):
     if params is None:
       params = {}
-
     if 'transitions' not in params:
       params['transitions'] = 1
     else:
@@ -133,20 +132,19 @@ class Engine:
       # python/test/ripl_test.py) fails, and if params are printed,
       # you'll see a float for the number of transitions
       params['transitions'] = int(params['transitions'])
+    self.set_default_params(params)
+    self.trace.infer(params)
 
+  def set_default_params(self,params):
     if 'kernel' not in params:
       params['kernel'] = 'mh'
     if 'scope' not in params:
       params['scope'] = "default"
     if 'block' not in params:
       params['block'] = "one"
-
     if len(params.keys()) > 4:
       raise Exception("Invalid parameter dictionary passed to infer: " + str(params))
-
     #print "params: " + str(params)
-
-    self.trace.infer(params)
 
   def logscore(self): return self.trace.getGlobalLogScore()
 
@@ -163,6 +161,7 @@ class Engine:
     return self.trace.continuous_inference_status()
 
   def start_continuous_inference(self, params):
+    self.set_default_params(params)
     self.trace.start_continuous_inference(params)
 
   def stop_continuous_inference(self):
