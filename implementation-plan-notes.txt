@@ -2,6 +2,18 @@ Step 0: Refactor stack INFER instruction and existing calls to be extensible to 
 - Eliminate "use_global_scaffold" in favor of "all" on the "default" block
 Step 1: Block MH in Lite controlled by the stack
 
+Implementing primitives:
+- Do I need to deal with separating LKernels from MH somehow?
+  - detachAndRegen does what, exactly?
+- Everything except pgibbs/scope/all is just something we have, over a
+  scaffold with multiple principal nodes (which might be randomly
+  selected)
+- Vikash wants rejection sampling more than ordered pgibbs
+  - (default/all first; then on a scaffold)
+  - truly infinite bounds are contentful
+- Vikash suggested pgibbs/scope/ordered, where we require all the border
+  nodes to have ids in the scope and just do the thing cxx/pgibbs does
+  on a border ordered by block id.
 
 Is there right now a way to say how many particles pgibbs should use?
 - Selsam says "hardcoded in inc/infer/pgibbs.h as the variable P".
