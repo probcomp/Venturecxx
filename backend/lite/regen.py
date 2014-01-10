@@ -72,6 +72,8 @@ def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
       operandNodes.append(operandNode)
 
     (requestNode,outputNode) = trace.createApplicationNodes(operatorNode,operandNodes,env)
+    requestNode.scopes = expScopes(exp)
+    outputNode.scopes = expScopes(exp)
     weight += apply(trace,requestNode,outputNode,scaffold,False,omegaDB,gradients)
     return weight,outputNode
 

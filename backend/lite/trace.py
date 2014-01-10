@@ -25,6 +25,7 @@ class Trace(object):
     self.rcs = [] # TODO make this an EasyEraseVector
     self.aes = []
     self.families = {}
+    self.scopes = {} # :: {(scope-name,block-id):set(node)}
 
   def registerAEKernel(self,node): self.aes.append(node)
   def unregisterAEKernel(self,node): del self.aes[self.aes.index(node)]
@@ -32,10 +33,18 @@ class Trace(object):
   def registerRandomChoice(self,node):
     assert not node in self.rcs
     self.rcs.append(node)
+    for k in node.scopes.iteritems():
+      if k in self.scopes:
+        self.scopes[k].add(node)
+      else:
+        self.scopes[k] = set([node])
 
   def unregisterRandomChoice(self,node): 
     assert node in self.rcs
     del self.rcs[self.rcs.index(node)]
+    for k in node.scopes.iteritems():
+      if k in self.scopes:
+        self.scopes[k].remove(node)
 
   def createConstantNode(self,val): return ConstantNode(val)
   def createLookupNode(self,sourceNode): 

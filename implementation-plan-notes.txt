@@ -1,4 +1,8 @@
 Step 1: Block MH in Lite controlled by the stack
+- Maintain {scope:block} in each node
+  - Purely local syntactic scope specs for starters
+- Data structure in trace: {(scope,block):set(node)}
+  - adjust registerRandomChoice to maintain these
 
 Implementing primitives:
 - Do I need to deal with separating LKernels from MH somehow?
@@ -13,6 +17,9 @@ Implementing primitives:
   nodes to have ids in the scope and just do the thing cxx/pgibbs does
   on a border ordered by block id.
 
+Alternate step:
+- Actually implement dynamic scope over traces, like the spec calls for
+
 Is there right now a way to say how many particles pgibbs should use?
 - Selsam says "hardcoded in inc/infer/pgibbs.h as the variable P".
 
@@ -23,3 +30,5 @@ Patch the spec:
 
 More issues:
 - How does this inference control language interact with continuous inference?
+  - Obvious answer: start-continuous-inference accepts a control expression
+    just like infer does, except that top-level repeat counts are pointless
