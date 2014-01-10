@@ -1,4 +1,4 @@
-from exp import isVariable, isSelfEvaluating, isQuotation, textOfQuotation, getOperator, getOperands
+from exp import *
 from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
 from sp import SP
 from psp import ESRRefOutputPSP
