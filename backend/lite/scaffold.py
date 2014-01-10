@@ -110,7 +110,7 @@ def findBorder(trace,drg,absorbing,aaa):
 
 def maybeIncrementAAARegenCount(trace,regenCounts,aaa,node):
   value = trace.valueAt(node)
-  if isinstance(value,SPRef) and value.makerNode != node and value.makerNode in aaa: 
+  if isinstance(value,SPRef) and value.makerNode in aaa: 
     regenCounts[value.makerNode] += 1
 
 def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
