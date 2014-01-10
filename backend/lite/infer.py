@@ -8,33 +8,47 @@ from scaffold import Scaffold
 from node import ApplicationNode, OutputNode
 from lkernel import VariationalLKernel
 
-def mixMH(trace,scope,block,operator):
-  if scope == "default":
-    if not(block == "one"):
-      raise Exception("INFER custom blocks for default scope not yet implemented (%r)" % block)
-    pnode = trace.samplePrincipalNode()
-    rhoMix = trace.logDensityOfPrincipalNode(pnode)
-    scaffold = Scaffold(trace,[pnode])
-  else:
-    if block == "one":
-      raise Exception("INFER mixMH for custom blocks yet implemented")
-    if block == "all":
-      raise Exception("INFER scope unioning not yet implemented")
-    pnodes = trace.scopes[(scope,block)]
-    rhoMix = 0
-    scaffold = Scaffold(trace,pnodes)
-
-  logAlpha = operator.propose(trace,scaffold) # Mutates trace and possibly operator
-
-  if scope == "default":
-    xiMix = trace.logDensityOfPrincipalNode(pnode)
-  else:
-    xiMix = 0
+def mixMH(trace,indexer,operator):
+  index = indexer.sampleIndex(trace)
+  rhoMix = indexer.logDensityOfIndex(trace,index)
+  logAlpha = operator.propose(trace,index) # Mutates trace and possibly operator
+  xiMix = indexer.logDensityOfIndex(trace,index)
 
   if math.log(random.random()) < xiMix + logAlpha - rhoMix:
     operator.accept() # May mutate trace
   else:
     operator.reject() # May mutate trace
+
+class BlockScaffoldIndexer(object):
+  def __init__(self,scope,block):
+    self.scope = scope
+    self.block = block
+
+  def sampleIndex(self,trace):
+    if self.scope == "default":
+      if not(self.block == "one"):
+        raise Exception("INFER custom blocks for default scope not yet implemented (%r)" % block)
+      pnode = trace.samplePrincipalNode()
+      return Scaffold(trace,[pnode])
+    else:
+      if self.block == "one":
+        raise Exception("INFER mixMH for custom blocks yet implemented")
+      if self.block == "all":
+        raise Exception("INFER scope unioning not yet implemented")
+      pnodes = trace.scopes[(self.scope,self.block)]
+      return Scaffold(trace,pnodes)
+
+  def logDensityOfIndex(self,trace,scaffold):
+    if self.scope == "default":
+      if not(self.block == "one"):
+        raise Exception("INFER custom blocks for default scope not yet implemented (%r)" % block)
+      return trace.logDensityOfPrincipalNode(None) # the actual principal node is irrelevant
+    else:
+      if self.block == "one":
+        raise Exception("INFER mixMH for custom blocks yet implemented")
+      if self.block == "all":
+        raise Exception("INFER scope unioning not yet implemented")
+      return 0
 
 class MHOperator(object):
   def propose(self,trace,scaffold):
