@@ -4,12 +4,12 @@ import pdb
 from spref import SPRef
 
 class Scaffold:
-  def __init__(self,regenCounts={},absorbing=set(),aaa=set(),border=set(),lkernels={}):
+  def __init__(self,regenCounts={},absorbing=set(),aaa=set(),border=[],lkernels={}):
     assert type(regenCounts) is dict
     self.regenCounts = regenCounts
     self.absorbing = absorbing
     self.aaa = aaa
-    self.border = [x for x in border]
+    self.border = border
     self.lkernels = lkernels
 
   def getRegenCount(self,node): return self.regenCounts[node]
@@ -28,41 +28,54 @@ class Scaffold:
     print "aaa: " + str(self.aaa)
     print "border: " + str(self.border)
 
-def constructScaffold(trace,pnodes):
-  cDRG,cAbsorbing,cAAA = findCandidateScaffold(trace,pnodes)
+def constructScaffold(trace,setsOfPNodes):
+  cDRG,cAbsorbing,cAAA = set(),set(),set()
+  indexAssignments = {}
+  for i in range(len(setsOfPNodes)):
+    extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i)
+
   brush = findBrush(trace,cDRG,cAbsorbing,cAAA)
   drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
   border = findBorder(trace,drg,absorbing,aaa)
   regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
   lkernels = loadKernels(trace,drg,aaa)
-  return Scaffold(regenCounts,absorbing,aaa,border,lkernels)
+  borderSequence = assignBorderSequnce(border,indexAssignments)
+  return Scaffold(regenCounts,absorbing,aaa,borderSequence,lkernels)
 
-def addResamplingNode(trace,drg,absorbing,q,node):
+def addResamplingNode(trace,drg,absorbing,q,node,indexAssignments,i):
   if node in absorbing: absorbing.remove(node)
   drg.add(node)
   q.extend([(n,False) for n in trace.childrenAt(node)])
+  indexAssignments[node] = i
+
+def addAbsorbingNode(absorbing,node,indexAssignments,i):
+  absorbing.add(node)
+  indexAssignments[node] = i
+
+def addAAANode(drg,aaa,node,indexAssignments,i):
+  drg.add(node)
+  aaa.add(node)
+  indexAssignments[node] = i
 
 def esrReferenceCanAbsorb(trace,drg,node):
   return isinstance(trace.pspAt(node),ESRRefOutputPSP) and \
          not node.requestNode in drg and \
          not trace.esrParentsAt(node)[0] in drg
 
-def findCandidateScaffold(trace,principalNodes):
-  drg,absorbing,aaa = set(),set(),set()
-  q = [(pnode,True) for pnode in principalNodes]
+def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
+  q = [(pnode,True) for pnode in pnodes]
 
   while q:
     node,isPrincipal = q.pop()
-    if node in drg: pass
-    elif isinstance(node,LookupNode): addResamplingNode(trace,drg,absorbing,q,node)
-    elif node.operatorNode in drg: addResamplingNode(trace,drg,absorbing,q,node)
-    elif trace.pspAt(node).canAbsorb() and not isPrincipal: absorbing.add(node)
-    elif esrReferenceCanAbsorb(trace,drg,node): absorbing.add(node)
+    if node in drg or isinstance(node,LookupNode) or node.operatorNode in drg:
+      addResamplingNode(trace,drg,absorbing,q,node,indexAssignments,i)
+    elif (trace.pspAt(node).canAbsorb() or esrReferenceCanAbsorb(trace,drg,node)) and not isPrincipal: 
+      addAbsorbingNode(absorbing,node,indexAssignments,i)
     elif trace.pspAt(node).childrenCanAAA(): 
-      drg.add(node)
-      aaa.add(node)
-    else: addResamplingNode(trace,drg,absorbing,q,node)
-  return drg,absorbing,aaa
+      addAAANode(drg,aaa,node,indexAssignments,i)
+    else: 
+      addResamplingNode(trace,drg,absorbing,q,node,indexAssignments,i)
+
 
 def findBrush(trace,cDRG,cAbsorbing,cAAA):
   disableCounts = {}
@@ -140,3 +153,8 @@ def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
 def loadKernels(trace,drg,aaa):
   return { node : trace.pspAt(node).getAAALKernel() for node in aaa}
 
+def assignBorderSequnce(border,indexAssignments,numIndices):
+  borderSequence = [set() for i in range(numIndices)]
+  for node in border:
+    borderSequence[indexAssignments[node]].add(node)
+  return borderSequence
