@@ -6,7 +6,7 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, teardownMadeSP, unevalFamily
 from spref import SPRef
 from scaffold import Scaffold
-from infer import MHInfer,MeanfieldInfer
+from infer import mixMH,MHOperator,MeanfieldOperator
 import random
 from omegadb import OmegaDB
 
@@ -147,9 +147,8 @@ class Trace(object):
       raise Exception("INFER custom blocks not yet implemented (%r)" % params)
 
     for n in range(params["transitions"]):
-      pnode = self.samplePrincipalNode()
-      if params["kernel"] == "mh": MHInfer(self,pnode)
-      elif params["kernel"] == "meanfield": MeanfieldInfer(self,pnode,10,0.0001)
+      if params["kernel"] == "mh": mixMH(self,MHOperator())
+      elif params["kernel"] == "meanfield": mixMH(self,MeanfieldOperator(10,0.0001))
       else: raise Exception("INFER (%s) MH is implemented" % params["kernel"])
 
       for node in self.aes: node.madeSP.AEInfer(node.madeSPAux)
