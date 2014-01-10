@@ -3,12 +3,13 @@ from psp import ESRRefOutputPSP
 import pdb
 from spref import SPRef
 
-class Scaffold
-  def __init__(self,regenCounts,absorbing,aaa,borders,lkernels):
+class Scaffold:
+  def __init__(self,regenCounts={},absorbing=set(),aaa=set(),border=set(),lkernels={}):
+    assert type(regenCounts) is dict
     self.regenCounts = regenCounts
     self.absorbing = absorbing
     self.aaa = aaa
-    self.border = border
+    self.border = [x for x in border]
     self.lkernels = lkernels
 
   def getRegenCount(self,node): return self.regenCounts[node]
@@ -20,6 +21,13 @@ class Scaffold
   def hasLKernel(self,node): return node in self.lkernels
   def getLKernel(self,node): return self.lkernels[node]
 
+  def show(self):
+    print "---Scaffold---"
+    print "regenCounts: " + str(self.regenCounts)
+    print "absorbing: " + str(self.absorbing)
+    print "aaa: " + str(self.aaa)
+    print "border: " + str(self.border)
+
 def constructScaffold(trace,pnodes):
   cDRG,cAbsorbing,cAAA = findCandidateScaffold(trace,pnodes)
   brush = findBrush(trace,cDRG,cAbsorbing,cAAA)
@@ -29,7 +37,6 @@ def constructScaffold(trace,pnodes):
   lkernels = loadKernels(trace,drg,aaa)
   return Scaffold(regenCounts,absorbing,aaa,border,lkernels)
 
-  
 def addResamplingNode(trace,drg,absorbing,q,node):
   if node in absorbing: absorbing.remove(node)
   drg.add(node)
@@ -40,22 +47,24 @@ def esrReferenceCanAbsorb(trace,drg,node):
          not node.requestNode in drg and \
          not trace.esrParentsAt(node)[0] in drg
 
-def findCandidateScaffold(self,principalNodes):
+def findCandidateScaffold(trace,principalNodes):
   drg,absorbing,aaa = set(),set(),set()
   q = [(pnode,True) for pnode in principalNodes]
 
   while q:
     node,isPrincipal = q.pop()
-    if self.isResampling(node): pass
+    if node in drg: pass
     elif isinstance(node,LookupNode): addResamplingNode(trace,drg,absorbing,q,node)
     elif node.operatorNode in drg: addResamplingNode(trace,drg,absorbing,q,node)
     elif trace.pspAt(node).canAbsorb() and not isPrincipal: absorbing.add(node)
-    elif esrReferenceCanAbsorb(node): absorbing.add(node)
-    elif trace.pspAt(node).childrenCanAAA(): drg.add(node) ; aaa.add(node) # TODO does this work?
+    elif esrReferenceCanAbsorb(trace,drg,node): absorbing.add(node)
+    elif trace.pspAt(node).childrenCanAAA(): 
+      drg.add(node)
+      aaa.add(node)
     else: addResamplingNode(trace,drg,absorbing,q,node)
   return drg,absorbing,aaa
 
-def findBrush(trace,cDRG,cAbsorbing,cAAA)
+def findBrush(trace,cDRG,cAbsorbing,cAAA):
   disableCounts = {}
   disabledRequests = set()
   brush = set()
@@ -64,7 +73,7 @@ def findBrush(trace,cDRG,cAbsorbing,cAAA)
       disableRequests(trace,node,disableCounts,disabledRequests,brush)
   return brush
 
-def disableRequests(trace,node,disableCounts,disabledRequests,brush)
+def disableRequests(trace,node,disableCounts,disabledRequests,brush):
   if node in disabledRequests: return
   disabledRequests.add(node)
   for esrParent in trace.esrParentsAt(node.outputNode):
@@ -73,7 +82,7 @@ def disableRequests(trace,node,disableCounts,disabledRequests,brush)
     if disableCounts[esrParent] == esrParent.numRequests:
       disableFamily(trace,esrParent,disableCounts,disabledRequests,brush)
 
-def disableFamily(trace,node,disableCounts,disabledRequests,brush)
+def disableFamily(trace,node,disableCounts,disabledRequests,brush):
   if node in brush: return
   brush.add(node)
   if isinstance(node,OutputNode):
@@ -89,20 +98,20 @@ def removeBrush(cDRG,cAbsorbing,cAAA,brush):
   aaa = cAAA - brush
   return drg,absorbing,aaa
 
-def hasChildInAorD(trace,node):
+def hasChildInAorD(trace,drg,absorbing,node):
   kids = trace.childrenAt(node)
   return kids.intersection(drg) or kids.intersection(absorbing)
 
 def findBorder(trace,drg,absorbing,aaa):
   border = absorbing.union(aaa)
   for node in drg - aaa:
-    if not hasChildInAorD(trace,node): border.add(node)
+    if not hasChildInAorD(trace,drg,absorbing,node): border.add(node)
   return border
 
-def maybeIncrementAAARegenCount(trace,regenCounts,aaa,node)
+def maybeIncrementAAARegenCount(trace,regenCounts,aaa,node):
   value = trace.valueAt(node)
   if isinstance(value,SPRef) and value.makerNode != node and value.makerNode in aaa: 
-    drg[value.makerNode] += 1
+    regenCounts[value.makerNode] += 1
 
 def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
   regenCounts = {}
@@ -115,12 +124,12 @@ def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
       regenCounts[node] = len(trace.childrenAt(node))
   
   if aaa:
-    for node in drg.union(absorbing)
-      for parent in trace.parentsAt(node)
+    for node in drg.union(absorbing):
+      for parent in trace.parentsAt(node):
         maybeIncrementAAARegenCount(trace,regenCounts,aaa,parent)
 
-    for node in brush
-      if isinstance(node,OutputNode)
+    for node in brush:
+      if isinstance(node,OutputNode):
         for esrParent in trace.esrParentsAt(node):
           maybeIncrementAAARegenCount(trace,regenCounts,aaa,esrParent)
       elif isinstance(node,LookupNode):
@@ -129,11 +138,5 @@ def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
   return regenCounts
 
 def loadKernels(trace,drg,aaa):
-  return { node => trace.pspAt(node).getAAALKernel() }
+  return { node : trace.pspAt(node).getAAALKernel() for node in aaa}
 
-def show(self):
-  print "---Scaffold---"
-  print "drg: " + str(self.drg)
-  print "absorbing: " + str(self.absorbing)
-  print "border: " + str(self.border)
-  print "aaa: " + str(self.aaa)

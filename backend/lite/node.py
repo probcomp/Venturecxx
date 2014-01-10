@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from spref import SPRef
+from sp import SP
 
 class Node(object):
   __metaclass__ = ABCMeta
@@ -46,6 +47,8 @@ class ApplicationNode(Node):
       print "spRef not an spRef"
       print "is a: " + str(type(self.operatorNode.value))
     assert isinstance(self.operatorNode.value,SPRef)
+    assert isinstance(self.operatorNode.value.makerNode,Node)
+    assert isinstance(self.operatorNode.value.makerNode.madeSP,SP)
     return self.operatorNode.value
 
   def sp(self): return self.spRef().makerNode.madeSP

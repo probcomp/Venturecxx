@@ -112,7 +112,7 @@ class Trace(object):
   #### External interface to engine.py
   def eval(self,id,exp):
     assert not id in self.families
-    (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(self),OmegaDB(),{})
+    (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),OmegaDB(),{})
     
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
 
@@ -127,7 +127,7 @@ class Trace(object):
 
   def uneval(self,id):
     assert id in self.families
-    unevalFamily(self,self.families[id],Scaffold(self),OmegaDB())
+    unevalFamily(self,self.families[id],Scaffold(),OmegaDB())
     del self.families[id]
 
   def numRandomChoices(self):

@@ -4,13 +4,13 @@ from consistency import assertTorus
 from omegadb import OmegaDB
 from regen import regenAndAttach
 from detach import detachAndExtract
-from scaffold import Scaffold
+from scaffold import constructScaffold
 from node import ApplicationNode, OutputNode
 from lkernel import VariationalLKernel
 
 def MHInfer(trace,pnode):
   rhoMix = trace.logDensityOfPrincipalNode(pnode)
-  scaffold = Scaffold(trace,[pnode])
+  scaffold = constructScaffold(trace,[pnode])
   rhoWeight,rhoDB = detachAndExtract(trace,scaffold.border,scaffold)
   assertTorus(scaffold)
   xiWeight = regenAndAttach(trace,scaffold.border,scaffold,False,rhoDB,{})
@@ -22,7 +22,7 @@ def MHInfer(trace,pnode):
 
 def registerVariationalLKernels(trace,scaffold):
   hasVariational = False
-  for node in scaffold.drg:
+  for node in scaffold.regenCounts:
     if isinstance(node,ApplicationNode) and \
        not trace.isConstrainedAt(node) and \
        trace.pspAt(node).hasVariationalLKernel() and \
@@ -33,7 +33,7 @@ def registerVariationalLKernels(trace,scaffold):
 
 def MeanfieldInfer(trace,pnode,numIters,stepSize):
   rhoMix = trace.logDensityOfPrincipalNode(pnode)
-  scaffold = Scaffold(trace,[pnode])
+  scaffold = constructScaffold(trace,[pnode])
   if not registerVariationalLKernels(trace,scaffold): return MHInfer(trace,pnode)
   _,rhoDB = detachAndExtract(trace,scaffold.border,scaffold)
   assertTorus(scaffold)
