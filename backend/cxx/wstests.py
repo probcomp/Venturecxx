@@ -221,9 +221,9 @@ def collectSamples(ripl,address,T,kernel=None,use_global_scaffold=None):
   kernel = kernel if kernel is not None else globalKernel
   use_global_scaffold = use_global_scaffold if use_global_scaffold is not None else globalUseGlobalScaffold
   block = "one" if not use_global_scaffold else "all"
-  return collectSamplesWith(ripl, address, {"transitions":100, "kernel":kernel, "block":block})
+  return collectSamplesWith(ripl, address, T, {"transitions":100, "kernel":kernel, "block":block})
 
-def collectSamplesWith(ripl, address, params):
+def collectSamplesWith(ripl, address, T, params):
   predictions = []
   for t in range(T):
     # Going direct here saved 5 of 35 seconds on some unscientific
