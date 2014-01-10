@@ -240,6 +240,8 @@ def runTests(N):
   reportTest(repeatTest(testCategorical1, N))
   reportTest(repeatTest(testMHNormal0, N))
   reportTest(repeatTest(testMHNormal1, N))
+  if globalBackend == make_lite_church_prime_ripl:
+    reportTest(repeatTest(testMHNormal2, N))
   reportTest(repeatTest(testMem0, N))
   reportTest(repeatTest(testMem1, N))
   reportTest(repeatTest(testMem2, N))
@@ -402,6 +404,21 @@ def testMHNormal1(N):
   # distribution of the sum is mysterious to me
   cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
   return reportKnownContinuous("testMHNormal1", cdf, predictions, "approximately N(24,sqrt(7/3))")
+
+def testMHNormal2(N):
+  ripl = RIPL()
+  ripl.assume("a", "(normal 10.0 1.0 (scope 0 0))")
+  ripl.assume("b", "(normal a 1.0 (scope 1 1))")
+  # Prior for b is normal with mean 10, variance 2 (precision 1/2)
+  ripl.observe("(normal b 1.0)", 14.0)
+  # Posterior for b is normal with mean 38/3, precision 3/2 (variance 2/3)
+  # Likelihood of a is normal with mean 0, variance 2 (precision 1/2)
+  # Posterior for a is normal with mean 34/3, precision 3/2 (variance 2/3)
+  ripl.predict("(normal a 1.0)")
+
+  predictions = collectSamples(ripl,3,N)
+  cdf = stats.norm(loc=34.0/3, scale=math.sqrt(2.0/3.0)).cdf
+  return reportKnownContinuous("testMHNormal2", cdf, predictions, "N(34.0/3,sqrt(2.0/3.0))")
 
 def testStudentT0(N):
   ripl = RIPL()
