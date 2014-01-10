@@ -1,5 +1,3 @@
-Step 0: Refactor stack INFER instruction and existing calls to be extensible to the new spec
-- Eliminate "use_global_scaffold" in favor of "all" on the "default" block
 Step 1: Block MH in Lite controlled by the stack
 
 Implementing primitives:
