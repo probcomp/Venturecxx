@@ -3,6 +3,8 @@ Step 1: Block MH in Lite controlled by the stack
   - Purely local syntactic scope specs for starters
 - Data structure in trace: {(scope,block):set(node)}
   - adjust registerRandomChoice to maintain these
+- Use scope specs from infer instructions to determine
+  constructed scaffolds
 
 Implementing primitives:
 - Do I need to deal with separating LKernels from MH somehow?
@@ -17,8 +19,15 @@ Implementing primitives:
   nodes to have ids in the scope and just do the thing cxx/pgibbs does
   on a border ordered by block id.
 
-Alternate step:
+Further steps:
 - Actually implement dynamic scope over traces, like the spec calls for
+- Implement changeable block ids
+
+In CXX:
+- Maintain scope/block membership data in the nodes/trace
+- Implement scaffold construction from blocks
+- Actually implement dynamic scope over traces, like the spec calls for
+- Implement changeable block ids
 
 Is there right now a way to say how many particles pgibbs should use?
 - Selsam says "hardcoded in inc/infer/pgibbs.h as the variable P".
