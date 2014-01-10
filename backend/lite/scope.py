@@ -9,7 +9,7 @@ def evalScope(exp):
 def scopeUnion(scopes):
   def valMerge(v1, v2):
     raise Exception("Assigning one node to two blocks in the same scope")
-  return reduce(lambda ans, scope: mergeWith(ans, scope, valMerge), scopes)
+  return reduce(lambda ans, scope: mergeWith(ans, scope, valMerge), scopes, {})
 
 def mergeWith(d1, d2, merge):
   result = dict(d1.iteritems())
