@@ -40,7 +40,7 @@ def regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
   if scaffold.isResampling(node):
-    if scaffold.regenCount(node) == 0:
+    if scaffold.getRegenCount(node) == 0:
       weight += regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
       if isinstance(node,LookupNode):
         trace.setValueAt(node, trace.valueAt(node.sourceNode))
@@ -97,8 +97,8 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   else: oldValue = None
 
   if shouldRestore: newValue = oldValue
-  elif scaffold.hasKernelFor(node):
-    k = scaffold.getKernel(node)
+  elif scaffold.hasLKernel(node):
+    k = scaffold.getLKernel(node)
     newValue = k.simulate(trace,oldValue,trace.argsAt(node))
     weight += k.weight(trace,newValue,oldValue,trace.argsAt(node))
     if isinstance(k,VariationalLKernel): 
