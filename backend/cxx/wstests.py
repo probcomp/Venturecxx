@@ -409,16 +409,13 @@ def testMHNormal2(N):
   ripl = RIPL()
   ripl.assume("a", "(normal 10.0 1.0 (scope 0 0))")
   ripl.assume("b", "(normal a 1.0 (scope 1 1))")
-  # Prior for b is normal with mean 10, variance 2 (precision 1/2)
   ripl.observe("(normal b 1.0)", 14.0)
-  # Posterior for b is normal with mean 38/3, precision 3/2 (variance 2/3)
-  # Likelihood of a is normal with mean 0, variance 2 (precision 1/2)
-  # Posterior for a is normal with mean 34/3, precision 3/2 (variance 2/3)
-  ripl.predict("(normal a 1.0)")
 
-  predictions = collectSamples(ripl,3,N)
-  cdf = stats.norm(loc=34.0/3, scale=math.sqrt(2.0/3.0)).cdf
-  return reportKnownContinuous("testMHNormal2", cdf, predictions, "N(34.0/3,sqrt(2.0/3.0))")
+  # If inference only frobnicates b, then the distribution on a
+  # remains the prior.
+  predictions = collectSamplesWith(ripl,1,N,{"transitions":10,"kernel":"mh","scope":1,"block":1})
+  cdf = stats.norm(loc=10.0, scale=1.0).cdf
+  return reportKnownContinuous("testMHNormal2", cdf, predictions, "N(10.0,1.0)")
 
 def testStudentT0(N):
   ripl = RIPL()

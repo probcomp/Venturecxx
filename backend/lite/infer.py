@@ -9,16 +9,28 @@ from node import ApplicationNode, OutputNode
 from lkernel import VariationalLKernel
 
 def mixMH(trace,scope,block,operator):
-  if not(scope == "default"):
-    raise Exception("INFER custom scopes not yet implemented (%r)" % scope)
-  if not(block == "one"):
-    raise Exception("INFER custom blocks not yet implemented (%r)" % block)
+  if scope == "default":
+    if not(block == "one"):
+      raise Exception("INFER custom blocks for default scope not yet implemented (%r)" % block)
+    pnode = trace.samplePrincipalNode()
+    rhoMix = trace.logDensityOfPrincipalNode(pnode)
+    scaffold = Scaffold(trace,[pnode])
+  else:
+    if block == "one":
+      raise Exception("INFER mixMH for custom blocks yet implemented")
+    if block == "all":
+      raise Exception("INFER scope unioning not yet implemented")
+    pnodes = trace.scopes[(scope,block)]
+    rhoMix = 0
+    scaffold = Scaffold(trace,pnodes)
 
-  pnode = trace.samplePrincipalNode()
-  rhoMix = trace.logDensityOfPrincipalNode(pnode)
-  scaffold = Scaffold(trace,[pnode])
   logAlpha = operator.propose(trace,scaffold) # Mutates trace and possibly operator
-  xiMix = trace.logDensityOfPrincipalNode(pnode)
+
+  if scope == "default":
+    xiMix = trace.logDensityOfPrincipalNode(pnode)
+  else:
+    xiMix = 0
+
   if math.log(random.random()) < xiMix + logAlpha - rhoMix:
     operator.accept() # May mutate trace
   else:
