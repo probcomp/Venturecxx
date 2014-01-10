@@ -10,9 +10,9 @@ from lkernel import VariationalLKernel
 
 def mixMH(trace,scope,block,operator):
   if not(scope == "default"):
-    raise Exception("INFER custom scopes not yet implemented (%r)" % params)
+    raise Exception("INFER custom scopes not yet implemented (%r)" % scope)
   if not(block == "one"):
-    raise Exception("INFER custom blocks not yet implemented (%r)" % params)
+    raise Exception("INFER custom blocks not yet implemented (%r)" % block)
 
   pnode = trace.samplePrincipalNode()
   rhoMix = trace.logDensityOfPrincipalNode(pnode)
