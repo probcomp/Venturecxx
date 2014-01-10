@@ -4,7 +4,7 @@ def isScopeSpec(exp):
 def evalScope(exp):
   assert exp[0] == "scope"
   # Scopes are always literal for now
-  { exp[1] : exp[2] }
+  return { exp[1] : exp[2] }
 
 def scopeUnion(scopes):
   def valMerge(v1, v2):
