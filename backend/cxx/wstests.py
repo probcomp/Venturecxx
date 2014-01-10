@@ -25,7 +25,7 @@ globalKernel = "mh";
 globalUseGlobalScaffold = False;
 globalAlwaysReport = False;
 globalReportingThreshold = 0.001
-globalBackend = make_church_prime_ripl
+globalBackend = make_lite_church_prime_ripl
 
 def RIPL():
   return globalBackend()
@@ -1127,7 +1127,7 @@ def testGeometric1(N):
 
   predictions = collectSamples(ripl,"pid",N)
 
-  k = 16
+  k = 128
   ans = [(n,math.pow(2,-n)) for n in range(1,k)]
   return reportKnownDiscrete("TestGeometric1", ans, predictions)
 
