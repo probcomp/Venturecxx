@@ -8,7 +8,12 @@ from scaffold import Scaffold
 from node import ApplicationNode, OutputNode
 from lkernel import VariationalLKernel
 
-def mixMH(trace,operator):
+def mixMH(trace,scope,block,operator):
+  if not(scope == "default"):
+    raise Exception("INFER custom scopes not yet implemented (%r)" % params)
+  if not(block == "one"):
+    raise Exception("INFER custom blocks not yet implemented (%r)" % params)
+
   pnode = trace.samplePrincipalNode()
   rhoMix = trace.logDensityOfPrincipalNode(pnode)
   scaffold = Scaffold(trace,[pnode])

@@ -141,14 +141,9 @@ class Trace(object):
   # "default", "block" must be "one", and "transitions" must be an
   # integer.
   def infer(self,params):
-    if not(params["scope"] == "default"):
-      raise Exception("INFER custom scopes not yet implemented (%r)" % params)
-    if not(params["block"] == "one"):
-      raise Exception("INFER custom blocks not yet implemented (%r)" % params)
-
     for n in range(params["transitions"]):
-      if params["kernel"] == "mh": mixMH(self,MHOperator())
-      elif params["kernel"] == "meanfield": mixMH(self,MeanfieldOperator(10,0.0001))
+      if params["kernel"] == "mh": mixMH(self,params["scope"],params["block"],MHOperator())
+      elif params["kernel"] == "meanfield": mixMH(self,params["scope"],params["block"],MeanfieldOperator(10,0.0001))
       else: raise Exception("INFER (%s) MH is implemented" % params["kernel"])
 
       for node in self.aes: node.madeSP.AEInfer(node.madeSPAux)
