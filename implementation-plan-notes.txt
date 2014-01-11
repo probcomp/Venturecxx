@@ -6,12 +6,19 @@ Step 1: Block MH in Lite controlled by the stack
 - Use scope specs from infer instructions to determine
   constructed scaffolds
 
-Implementing primitives:
-- Do I need to deal with separating LKernels from MH somehow?
-  - detachAndRegen does what, exactly?
+Step 2: Test block MH in Lite
+
+Step 3: Broaden scope specs to allow "one" and "all" everywhere
+- and test
+
+Probable step 4: port/implement other primitives
 - Everything except pgibbs/scope/all is just something we have, over a
   scaffold with multiple principal nodes (which might be randomly
   selected)
+- Do I need to deal with separating LKernels from MH somehow?
+  - does not current detachAndRegen run all the latents too?  What
+    about the AEKernels?
+  - How do I run only the latents and not the other stuff?
 - Vikash wants rejection sampling more than ordered pgibbs
   - (default/all first; then on a scaffold)
   - truly infinite bounds are contentful
