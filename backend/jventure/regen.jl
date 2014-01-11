@@ -152,6 +152,13 @@ function applyPSP(trace::Trace,node::ApplicationNode,scaffold::Scaffold,shouldRe
 
   if isa(newValue,SP) processMadeSP(trace,node,isAAA(scaffold,node)) end
   if isRandom(psp) registerRandomChoice!(trace,node) end
+  if isa(psp,ApplyInScopeOutputPSP)
+    operandNodes = getOperandNodes(trace,node)
+    (scope,block) = [getValue(trace,n) for n in operandNodes[1:2]]
+    blockNode = operandNodes[3]
+    @assert isRandom(getPSP(trace,blockNode))
+    registerRandomChoiceInScope!(trace,scope,block,blockNode)
+  end
   return weight
 end
 

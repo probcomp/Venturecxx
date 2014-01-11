@@ -109,6 +109,14 @@ function unapplyPSP(trace::Trace,node::ApplicationNode,scaffold::Scaffold,db::DB
 
   (psp,args) = (getPSP(trace,node),getArgs(trace,node))
 
+  if isa(psp,ApplyInScopeOutputPSP)
+    operandNodes = getOperandNodes(trace,node)
+    (scope,block) = [getValue(trace,n) for n in operandNodes[1:2]]
+    blockNode = operandNodes[3]
+    @assert isRandom(getPSP(trace,blockNode))
+    unregisterRandomChoiceInScope!(trace,scope,block,blockNode)
+  end
+
   if isRandom(psp) unregisterRandomChoice!(trace,node) end
   if isa(getValue(trace,node),SPRef) && getValue(trace,node).makerNode == node
     teardownMadeSP(trace,node,isAAA(scaffold,node))

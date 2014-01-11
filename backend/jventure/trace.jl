@@ -1,12 +1,13 @@
 require("node.jl")
-require("eearray.jl")
+require("smap.jl")
 require("sp.jl")
 
 typealias DirectiveID Int
+typealias Scope VentureValue
+typealias Block VentureValue
 
 type Trace
-  rcs::EEArray{Node}
-  aes::Set{Node}
+  scopes::Dict{Scope}{SMap{Any,Set{Node}}}
   families::Dict{DirectiveID,Node}
   esrParents::Dict{Node,Array{Node}}
   madeSPRecords::Dict{Node,SPRecord}
@@ -21,8 +22,7 @@ require("db.jl")
 
 
 function Trace()
-  trace = Trace(EEArray{Node}((Node=>Int)[],Array(Node,0)),
-                Set{Node}(),
+  trace = Trace(Dict{Scope}{SMap{Any,Set{Node}}}(),
                 (DirectiveID=>Node)[],
                 (Node=>Array{Node})[],
                 (Node=>SPRecord)[],
@@ -72,11 +72,23 @@ reconnectLookup!(trace::Trace,node::LookupNode) = push!(trace.children[node.sour
 disconnectLookup!(trace::Trace,node::LookupNode) = delete!(trace.children[node.sourceNode],node)
 
 ## Random Choices
-registerRandomChoice!(trace::Trace,node::ApplicationNode) = push!(trace.rcs,node)
-unregisterRandomChoice!(trace::Trace,node::ApplicationNode) = delete!(trace.rcs,node)
+registerRandomChoice!(trace::Trace,node::ApplicationNode) = registerRandomChoiceInScope!(trace,"default",node,node)
+unregisterRandomChoice!(trace::Trace,node::ApplicationNode) = unregisterRandomChoiceInScope!(trace,"default",node,node)
 
-registerAEKernel!(trace::Trace,node::OutputNode) = push!(trace.aes,node)
-unregisterAEKernel!(trace::Trace,node::OutputNode) = delete!(trace.aes,node)
+function registerRandomChoiceInScope!(trace::Trace,scope,block,blockNode::Node)
+  if !haskey(trace.scopes,scope) trace.scopes[scope] = constructSMap(Block,Set{Node}) end
+  if !haskey(trace.scopes[scope],block) trace.scopes[scope][block] = Set{Node}() end
+  push!(trace.scopes[scope][block],blockNode)
+  @assert scope != "default" || length(trace.scopes[scope][block]) == 1
+end
+
+function unregisterRandomChoiceInScope!(trace,scope,block,blockNode)
+  delete!(trace.scopes[scope][block],blockNode)
+  @assert scope != "default" || length(trace.scopes[scope][block]) == 0
+  if isempty(trace.scopes[scope][block]) delete!(trace.scopes[scope],block) end
+  if isempty(trace.scopes[scope]) delete!(trace.scopes,scope) end
+end
+
 
 ### ESR Edges
 function registerESREdge!(trace::Trace,esrParent::Node,outputNode::OutputNode)
@@ -246,17 +258,18 @@ function observe(trace::Trace,id::DirectiveID,value::Any)
 end
 
 ### Kernel facing
-logDensityOfPrincipalNode(trace::Trace,pnode::Node) = -log(length(trace.rcs))
-samplePrincipalNode(trace::Trace) = sample(trace.rcs)
+function logDensityOfBlock(trace::Trace,scope,block)
+  return -log(length(trace.scopes[scope]))
+end
+
+function sampleBlock(trace::Trace,scope)
+  (block,pnodes) = sample(trace.scopes[scope])
+  return (block,pnodes)
+end
 
 require("lkernel.jl")
 require("infer.jl")
 
-function infer(trace::Trace,N::Int)
-  for i = 1:N
-    mhInfer(trace,samplePrincipalNode(trace))
-  end
-end
 
 function showScaffoldSize(s::Scaffold)
   print((length(s.regenCounts),length(s.absorbing),length(s.aaa)))
@@ -272,10 +285,16 @@ function showScaffoldSizes(trace::Trace)
   println("---")
 end
 
-function loggingInfer(trace::Trace,id::DirectiveID,N::Int)
+function infer(trace::Trace;scope = "default",N::Int=1)
+  for i = 1:N
+    mhInfer(trace,scope,sampleBlock(trace,scope)...)
+  end
+end
+
+function loggingInfer(trace::Trace,id::DirectiveID;scope="default",N::Int=1)
   predictions = Array(Any,N)
   for n = 1:N
-    mhInfer(trace,samplePrincipalNode(trace))
+    mhInfer(trace,"default",sampleBlock(trace,scope)...)
     predictions[n] = extractValue(trace,id)
   end
   return predictions

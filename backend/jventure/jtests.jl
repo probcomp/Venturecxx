@@ -69,7 +69,7 @@ function testGamma1(N)
   assume(sivm,"b","(gamma 10.0 10.0)")
   predict(sivm,"(gamma a b)")
 
-  predictions = loggingInfer(sivm.trace,3,N)
+  predictions = loggingInfer(sivm.trace,3,N=N)
   println("---TestMHGamma1---")
   println(string("(10000,",mean(predictions),")"))
 end
@@ -79,7 +79,7 @@ function testIf1(N)
   assume(sivm,"IF","branch")
   assume(sivm,"IF2","(if (flip 0.5) IF IF)")
   predict(sivm,"(IF2 (flip 0.5) IF IF)")
-  infer(sivm.trace,N)
+  infer(sivm.trace,N=N)
   println("Passed TestIf1()")
 end
 
@@ -89,7 +89,7 @@ function testIf2(N)
   assume(sivm,"if2", "(if (flip 0.5) if1 if1)")
   assume(sivm,"if3", "(if (flip 0.5) if2 if2)")
   assume(sivm,"if4", "(if (flip 0.5) if3 if3)")
-  infer(sivm.trace,N)
+  infer(sivm.trace,N=N)
   println("Passed TestIf2()")
 end
 
@@ -101,7 +101,7 @@ function testBLOGCSI(N)
   assume(sivm,"getParam","(lambda (z) (if z 0.8 0.2))")
   assume(sivm,"x","(flip (if u (getParam w) (getParam v)))")
   
-  predictions = loggingInfer(sivm.trace,5,N)
+  predictions = loggingInfer(sivm.trace,5,N=N)
   ps = [.596, .404]
   eps = normalizeList(countPredictions(predictions, [true, false]))
   printTest("TestBLOGCSI",ps,eps)
@@ -122,7 +122,7 @@ function testMHHMM1(N)
   observe(sivm,"(g 4)",5.0)
   predict(sivm,"(f 4)")
 
-  predictions = loggingInfer(sivm.trace,8,N)
+  predictions = loggingInfer(sivm.trace,8,N=N)
   println("---TestMHHMM1---")
   println(string("(4.3ish,",mean(predictions),")"))
 end
@@ -135,7 +135,7 @@ function testGeometric1(N)
   assume(sivm,"geo","(lambda (p) (if (flip p) 1 (+ 1 (geo p))))")
   predict(sivm,"(geo p)")
   
-  predictions = loggingInfer(sivm.trace,5,N)
+  predictions = loggingInfer(sivm.trace,5,N=N)
 
   k = 6
   ps = [^(2.0,-n) for n in 1:k]
@@ -152,7 +152,7 @@ function testFlip0(N)
   (normal 0.0 1.0)
   (normal 10.0 1.0))
 """)
-  predictions = loggingInfer(sivm.trace,2,N)
+  predictions = loggingInfer(sivm.trace,2,N=N)
   println("---TestFlip0---")
   println(string("(5.0,",mean(predictions),")"))
 end
@@ -166,7 +166,7 @@ function testFlip1(N)
   (normal 0.0 1.0)
   ((lambda () (normal 10.0 1.0))))
 """)
-  predictions = loggingInfer(sivm.trace,2,N)
+  predictions = loggingInfer(sivm.trace,2,N=N)
   println("---TestFlip1---")
   println(string("(3.0,",mean(predictions),")"))
 end
@@ -177,7 +177,7 @@ function testCategorical1(N)
   assume(sivm,"y", "(categorical (float_array 0.2 0.6 0.2))")
   predict(sivm,"(+ x y)")
 
-  predictions = loggingInfer(sivm.trace,3,N)
+  predictions = loggingInfer(sivm.trace,3,N=N)
   ps = [0.1 * 0.2, 
         0.1 * 0.6 + 0.2 * 0.2,
         0.1 * 0.2 + 0.2 * 0.6 + 0.3 * 0.2,
@@ -194,7 +194,7 @@ function testMHNormal0(N)
   observe(sivm,"(normal a 1.0)", 14.0)
   predict(sivm,"(normal a 1.0)")
 
-  predictions = loggingInfer(sivm.trace,3,N)
+  predictions = loggingInfer(sivm.trace,3,N=N)
   println("---TestMHNormal0---")
   println(string("(12.0,",mean(predictions),")"))
 end    
@@ -210,7 +210,7 @@ function testMHNormal1(N)
         (normal (* a b) 1.0))
 """)
 
-  predictions = loggingInfer(sivm.trace,4,N)
+  predictions = loggingInfer(sivm.trace,4,N=N)
   println("---TestMHNormal1---")
   println(string("(23.9,",mean(predictions),")"))
 end
@@ -223,7 +223,7 @@ function testOuterMix1(N)
   1)
 """)
 
-  predictions = loggingInfer(sivm.trace,1,N)
+  predictions = loggingInfer(sivm.trace,1,N=N)
   ps = [.5, .25,.25]
   eps = normalizeList(countPredictions(predictions, [1, 2, 3]))
   printTest("TestOuterMix1",ps,eps)
@@ -234,7 +234,7 @@ function testMem0(N)
   assume(sivm,"f","(mem (lambda (x) (flip 0.5)))")
   predict(sivm,"(f (flip 0.5))")
   predict(sivm,"(f (flip 0.5))")
-  infer(sivm.trace,N)
+  infer(sivm.trace,N=N)
   println("Passed TestMem0")
 end
 
@@ -248,7 +248,7 @@ function testMem1(N)
   assume(sivm,"q","(categorical (float_array 0.1 0.9))")
   predict(sivm,"(+ x y w z q)")
 
-  predictions = loggingInfer(sivm.trace,7,N)
+  predictions = loggingInfer(sivm.trace,7,N=N)
   ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
   eps = normalizeList(countPredictions(predictions, [5,10]),N)
   printTest("TestMem1",ps,eps)
@@ -265,7 +265,7 @@ function testMem2(N)
   assume(sivm,"q","(categorical (float_array 0.1 0.9))")
   predict(sivm,"(+ x y w z q)")
 
-  predictions = loggingInfer(sivm.trace,8,N)
+  predictions = loggingInfer(sivm.trace,8,N=N)
   ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
   eps = normalizeList(countPredictions(predictions, [5,10]),N)
   printTest("TestMem2",ps,eps)
@@ -282,7 +282,7 @@ function testMem3(N)
   assume(sivm,"q","(categorical (float_array 0.1 0.9))")
   predict(sivm,"(+ x y w z q)")
 
-  predictions = loggingInfer(sivm.trace,8,N)
+  predictions = loggingInfer(sivm.trace,8,N=N)
   ps = [0.4 * 0.4 * 0.1, 0.6 * 0.6 * 0.9]
   eps = normalizeList(countPredictions(predictions, [5,10]),N)
   printTest("TestMem3",ps,eps)
@@ -294,7 +294,7 @@ function testMem4(N)
   (id1,val1) = predict(sivm,"(f 1)")
   (id2,val2) = predict(sivm,"(f 1)")
   for n = 1:N
-    infer(sivm.trace,1)
+    infer(sivm.trace)
     @assert extractValue(sivm.trace,id1) == extractValue(sivm.trace,id2)
   end
   println("Passed TestMem4")
@@ -312,7 +312,7 @@ function testSprinkler1(N)
 """)
   observe(sivm,"grassWet", true)
 
-  predictions = loggingInfer(sivm.trace,1,N)
+  predictions = loggingInfer(sivm.trace,1,N=N)
   ps = [.3577,.6433]
   eps = normalizeList(countPredictions(predictions, [true,false]))
   printTest("TestSprinkler1",ps,eps)
@@ -332,7 +332,7 @@ function testSprinkler2(N)
 """)
   observe(sivm,"grassWet", true)
 
-  predictions = loggingInfer(sivm.trace,1,N)
+  predictions = loggingInfer(sivm.trace,1,N=N)
   ps = [.3577,.6433]
   eps = normalizeList(countPredictions(predictions, [true,false]))
   printTest("TestSprinkler2 (mixes terribly)",ps,eps)
@@ -378,7 +378,7 @@ function testDirichletMultinomial1(name::String, sivm::Engine, index::Int, N::In
     end
   end
 
-  predictions = loggingInfer(sivm.trace,index,N)
+  predictions = loggingInfer(sivm.trace,index,N=N)
   ps = [.1,.3,.3,.3]
   eps = normalizeList(countPredictions(predictions, [1,2,3,4]))
   printTest(string("testDirichletMultinomial(",name,")"),ps,eps)
@@ -399,7 +399,7 @@ function testScope1(N)
 """)
   observe(sivm,"grassWet", true)
 
-  predictions = loggingInfer(sivm.trace,1,N)
+  predictions = loggingInfer(sivm.trace,1,N=N)
   ps = [.3577,.6433]
   eps = normalizeList(countPredictions(predictions, [true,false]))
   printTest("TestSprinkler2 (mixes terribly)",ps,eps)
