@@ -384,3 +384,23 @@ function testDirichletMultinomial1(name::String, sivm::Engine, index::Int, N::In
   printTest(string("testDirichletMultinomial(",name,")"),ps,eps)
 end
 
+
+function testScope1(N)
+  # this test needs more iterations than most others, because it mixes badly
+  N = 5*N
+
+  sivm = Engine()
+  assume(sivm,"rain","(apply_in_scope 0 0 (flip 0.2))")
+  assume(sivm,"sprinkler","(apply_in_scope 0 0 (flip (if rain 0.01 0.4)))")
+  assume(sivm,"grassWet","""
+(flip (if rain 
+(if sprinkler 0.99 0.8)
+(if sprinkler 0.9 0.00001)))
+""")
+  observe(sivm,"grassWet", true)
+
+  predictions = loggingInfer(sivm.trace,1,N)
+  ps = [.3577,.6433]
+  eps = normalizeList(countPredictions(predictions, [true,false]))
+  printTest("TestSprinkler2 (mixes terribly)",ps,eps)
+end
