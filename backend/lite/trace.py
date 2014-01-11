@@ -33,18 +33,18 @@ class Trace(object):
   def registerRandomChoice(self,node):
     assert not node in self.rcs
     self.rcs.append(node)
-    for k in node.scopes.iteritems():
-      if k in self.scopes:
-        self.scopes[k].add(node)
+    for key in node.scopes.iteritems():
+      if key in self.scopes:
+        self.scopes[key].add(node)
       else:
-        self.scopes[k] = set([node])
+        self.scopes[key] = set([node])
 
   def unregisterRandomChoice(self,node): 
     assert node in self.rcs
     del self.rcs[self.rcs.index(node)]
-    for k in node.scopes.iteritems():
-      if k in self.scopes:
-        self.scopes[k].remove(node)
+    for key in node.scopes.iteritems():
+      if key in self.scopes:
+        self.scopes[key].remove(node)
 
   def createConstantNode(self,val): return ConstantNode(val)
   def createLookupNode(self,sourceNode): 
