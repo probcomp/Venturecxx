@@ -18,7 +18,7 @@ end
 constrain(trace::Trace,node::LookupNode,value::Any) = constrain(trace,node.sourceNode,value)
 function constrain(trace::Trace,node::Node,value::Any)
   if isa(getPSP(trace,node),ESRRefOutputPSP)
-    constrain(trace,getESRSourceNode(trace,node),value)
+    return constrain(trace,getESRSourceNode(trace,node),value)
   else
     (psp,args) = (getPSP(trace,node),getArgs(trace,node))
     oldValue = getGroundValue(trace,node)

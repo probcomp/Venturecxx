@@ -384,33 +384,3 @@ function testDirichletMultinomial1(name::String, sivm::Engine, index::Int, N::In
   printTest(string("testDirichletMultinomial(",name,")"),ps,eps)
 end
 
-## This test causes crazy errors and segfaults when there are more than ~20ish observations
-import Distributions
-function testIff(N::Int)
-  sivm = Engine()
-  assume(sivm,"f","(branch (flip 1.0) (quote normal) (quote normal))")
-  assume(sivm,"g","normal")
-  predict(sivm,"(f 0.0 1.0)")
-
-  for i = 1:30
-    observe(sivm,"(f 0.0 1.0)",Distributions.rand(Distributions.Normal(0.0,1.0)))
-  end
-
-  predictions = loggingInfer(sivm.trace,2,N)
-end
-
-function testMUSDM(N::Int)
-  sivm = Engine()
-  assume(sivm,"f","(make_usym_dir_mult (normal 10.0 1.0) 2)")
-  predict(sivm,"(f)")
-
-  for i = 1:500
-    observe(sivm,"(f)",1)
-  end
-
-  showScaffoldSizes(sivm.trace)
-  predictions = loggingInfer(sivm.trace,2,N)
-end
-
-
-
