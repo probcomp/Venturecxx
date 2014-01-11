@@ -417,6 +417,19 @@ def testMHNormal2(N):
   cdf = stats.norm(loc=10.0, scale=1.0).cdf
   return reportKnownContinuous("testMHNormal2", cdf, predictions, "N(10.0,1.0)")
 
+def testBlockingExample():
+  ripl = RIPL()
+  ripl.assume("a", "(normal 0.0 1.0 (scope 0 0))")
+  ripl.assume("b", "(normal 1.0 1.0 (scope 0 0))")
+  olda = ripl.report(1)
+  oldb = ripl.report(2)
+  # The point of block proposals is that both things change at once.
+  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":"mh", "scope":0, "block":0})
+  newa = ripl.report(1)
+  newb = ripl.report(2)
+  assert not(olda == newa)
+  assert not(oldb == newb)
+
 def testStudentT0(N):
   ripl = RIPL()
   ripl.assume("a", "(student_t 1.0)")
