@@ -1,7 +1,6 @@
 require("node.jl")
 require("eearray.jl")
-require("builtins.jl")
-require("db.jl")
+require("sp.jl")
 
 typealias DirectiveID Int
 
@@ -16,6 +15,10 @@ type Trace
   constrainedNodes::Set{Node}
   globalEnv::ExtendedEnvironment
 end
+
+require("builtins.jl")
+require("db.jl")
+
 
 function Trace()
   trace = Trace(EEArray{Node}((Node=>Int)[],Array(Node,0)),
@@ -273,11 +276,6 @@ function loggingInfer(trace::Trace,id::DirectiveID,N::Int)
   predictions = Array(Any,N)
   for n = 1:N
     mhInfer(trace,samplePrincipalNode(trace))
-    if n % 5 == 0 # TODO Hard-coded Constant
-      for node = trace.aes # can all be in parallel
-        AEInfer(getMadeSP(trace,node).outputPSP,getArgs(trace,node))
-      end
-    end
     predictions[n] = extractValue(trace,id)
   end
   return predictions

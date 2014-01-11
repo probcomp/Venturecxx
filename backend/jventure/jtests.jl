@@ -35,7 +35,7 @@ function runJTests(N)
   testBLOGCSI(N)
 #  testGeometric1(N)
   testMem(N)
-#  testAAA(N)
+  testAAA(N)
 end
 
 function jprofile(N,filename="dump.txt")
