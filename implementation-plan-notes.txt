@@ -48,3 +48,7 @@ More issues:
 - How does this inference control language interact with continuous inference?
   - Obvious answer: start-continuous-inference accepts a control expression
     just like infer does, except that top-level repeat counts are pointless
+
+Step n: Cause there to be only one scheme, instead of the esr.block
+and block.py stuff
+- Selsam knows what this is
