@@ -49,6 +49,7 @@ jventure_cxx = Extension("venture.jventure.libtrace",
     extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC"],
     undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
     include_dirs = inc_dirs,
+    library_dirs = ['/home/axch/work/pcp/julia/usr/lib'],
     sources = src_files)
 
 ext_modules.append(jventure_cxx)
