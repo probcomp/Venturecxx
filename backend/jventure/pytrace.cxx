@@ -37,7 +37,11 @@ jl_value_t * PyTrace::parseValue(boost::python::dict d)
 {
   if (d["type"] == "boolean") { return jl_box_bool(boost::python::extract<bool>(d["value"])); }
   else if (d["type"] == "number") { return jl_box_float64(boost::python::extract<double>(d["value"])); }
-  else if (d["type"] == "symbol") { return jl_symbol(boost::python::extract<string>(d["value"])().c_str()); }
+  else if (d["type"] == "symbol") {
+    // The cast at the return here appears to be fine, per
+    // http://stackoverflow.com/questions/3766229/casting-one-struct-pointer-to-other-c
+    return (jl_value_t*)jl_symbol(boost::python::extract<string>(d["value"])().c_str());
+  }
   else if (d["type"] == "atom") { return jl_box_int32(boost::python::extract<uint32_t>(d["value"])); }
   else { assert(false); }
 }
@@ -61,7 +65,7 @@ jl_value_t * PyTrace::parseExpression(boost::python::object o)
   {
     jl_arrayset(exp,parseExpression(l[i-1]),i-1);
   }
-  return exp;
+  return (jl_value_t*)exp;
 }
 
 void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
@@ -89,7 +93,7 @@ boost::python::object PyTrace::extractPythonValue(size_t directiveID)
 void PyTrace::bindInGlobalEnv(string sym, size_t directiveID)
 {
   jl_function_t *f_bind = jl_get_function(jl_base_module, "bindInGlobalEnv"); // TODO FIX ME
-  jl_value_t * jsym = jl_symbol(sym);
+  jl_value_t * jsym = (jl_value_t*)jl_symbol(sym.c_str());
   jl_value_t * id = jl_box_int64(directiveID);
   jl_call3(f_bind,jl_trace,jsym,id);
 }
