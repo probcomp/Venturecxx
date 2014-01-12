@@ -8,17 +8,62 @@ from scaffold import constructScaffold
 from node import ApplicationNode, OutputNode
 from lkernel import VariationalLKernel
 
-def MHInfer(trace,pnode):
-  rhoMix = trace.logDensityOfPrincipalNode(pnode)
-  scaffold = constructScaffold(trace,[pnode])
-  rhoWeight,rhoDB = detachAndExtract(trace,scaffold.border,scaffold)
-  assertTorus(scaffold)
-  xiWeight = regenAndAttach(trace,scaffold.border,scaffold,False,rhoDB,{})
-  xiMix = trace.logDensityOfPrincipalNode(pnode)
-  if math.log(random.random()) > (xiMix + xiWeight) - (rhoMix + rhoWeight): # reject
-    detachAndExtract(trace,scaffold.border,scaffold)
+def mixMH(trace,indexer,operator):
+  index = indexer.sampleIndex(trace)
+  rhoMix = indexer.logDensityOfIndex(trace,index)
+  logAlpha = operator.propose(trace,index) # Mutates trace and possibly operator
+  xiMix = indexer.logDensityOfIndex(trace,index)
+
+  if math.log(random.random()) < xiMix + logAlpha - rhoMix:
+    operator.accept() # May mutate trace
+  else:
+    operator.reject() # May mutate trace
+
+class BlockScaffoldIndexer(object):
+  def __init__(self,scope,block):
+    self.scope = scope
+    self.block = block
+
+  def sampleIndex(self,trace):
+    if self.scope == "default":
+      if not(self.block == "one"):
+        raise Exception("INFER custom blocks for default scope not yet implemented (%r)" % block)
+      pnode = trace.samplePrincipalNode()
+      return constructScaffold(trace,[pnode])
+    else:
+      if self.block == "one":
+        raise Exception("INFER mixMH for custom blocks yet implemented")
+      if self.block == "all":
+        raise Exception("INFER scope unioning not yet implemented")
+      pnodes = trace.scopes[(self.scope,self.block)]
+      return constructScaffold(trace,pnodes)
+
+  def logDensityOfIndex(self,trace,scaffold):
+    if self.scope == "default":
+      if not(self.block == "one"):
+        raise Exception("INFER custom blocks for default scope not yet implemented (%r)" % block)
+      return trace.logDensityOfPrincipalNode(None) # the actual principal node is irrelevant
+    else:
+      if self.block == "one":
+        raise Exception("INFER mixMH for custom blocks yet implemented")
+      if self.block == "all":
+        raise Exception("INFER scope unioning not yet implemented")
+      return 0
+
+class MHOperator(object):
+  def propose(self,trace,scaffold):
+    self.trace = trace
+    self.scaffold = scaffold
+    rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border,scaffold)
     assertTorus(scaffold)
-    regenAndAttach(trace,scaffold.border,scaffold,True,rhoDB,{})
+    xiWeight = regenAndAttach(trace,scaffold.border,scaffold,False,self.rhoDB,{})
+    return xiWeight - rhoWeight
+
+  def accept(self): pass
+  def reject(self):
+    detachAndExtract(self.trace,self.scaffold.border,self.scaffold)
+    assertTorus(self.scaffold)
+    regenAndAttach(self.trace,self.scaffold.border,self.scaffold,True,self.rhoDB,{})
 
 def registerVariationalLKernels(trace,scaffold):
   hasVariational = False
@@ -31,30 +76,43 @@ def registerVariationalLKernels(trace,scaffold):
       hasVariational = True
   return hasVariational
 
-def MeanfieldInfer(trace,pnode,numIters,stepSize):
-  rhoMix = trace.logDensityOfPrincipalNode(pnode)
-  scaffold = constructScaffold(trace,[pnode])
-  if not registerVariationalLKernels(trace,scaffold): return MHInfer(trace,pnode)
-  _,rhoDB = detachAndExtract(trace,scaffold.border,scaffold)
-  assertTorus(scaffold)
+class MeanfieldOperator(object):
+  def __init__(self,numIters,stepSize):
+    self.numIters = numIters
+    self.stepSize = stepSize
+    self.delegate = None
 
-  for i in range(numIters):
-    gradients = {}
-    gain = regenAndAttach(trace,scaffold.border,scaffold,False,OmegaDB(),gradients)
+  def propose(self,trace,scaffold):
+    self.trace = trace
+    self.scaffold = scaffold
+    if not registerVariationalLKernels(trace,scaffold):
+      self.delegate = MHOperator()
+      return self.delegate.propose(trace,scaffold)
+    _,self.rhoDB = detachAndExtract(trace,scaffold.border,scaffold)
+    assertTorus(scaffold)
+
+    for i in range(self.numIters):
+      gradients = {}
+      gain = regenAndAttach(trace,scaffold.border,scaffold,False,OmegaDB(),gradients)
+      detachAndExtract(trace,scaffold.border,scaffold)
+      assertTorus(scaffold)
+      for node,lkernel in scaffold.lkernels.iteritems():
+        if isinstance(lkernel,VariationalLKernel):
+          assert node in gradients
+          lkernel.updateParameters(gradients[node],gain,self.stepSize)
+
+    rhoWeight = regenAndAttach(trace,scaffold.border,scaffold,True,self.rhoDB,{})
     detachAndExtract(trace,scaffold.border,scaffold)
     assertTorus(scaffold)
-    for node,lkernel in scaffold.lkernels.iteritems():
-      if isinstance(lkernel,VariationalLKernel):
-        assert node in gradients
-        lkernel.updateParameters(gradients[node],gain,stepSize)
 
-  rhoWeight = regenAndAttach(trace,scaffold.border,scaffold,True,rhoDB,{})
-  detachAndExtract(trace,scaffold.border,scaffold)
-  assertTorus(scaffold)
-    
-  xiWeight = regenAndAttach(trace,scaffold.border,scaffold,False,OmegaDB(),{})
-  xiMix = trace.logDensityOfPrincipalNode(pnode)
-  if math.log(random.random()) > (xiMix + xiWeight) - (rhoMix + rhoWeight): # reject
-    detachAndExtract(trace,scaffold.border,scaffold)
-    assertTorus(scaffold)
-    regenAndAttach(trace,scaffold.border,scaffold,True,rhoDB,{})
+    xiWeight = regenAndAttach(trace,scaffold.border,scaffold,False,OmegaDB(),{})
+    return xiWeight - rhoWeight
+
+  def accept(self): pass
+  def reject(self):
+    if self.delegate is None:
+      detachAndExtract(self.trace,self.scaffold.border,self.scaffold)
+      assertTorus(self.scaffold)
+      regenAndAttach(self.trace,self.scaffold.border,self.scaffold,True,self.rhoDB,{})
+    else:
+      self.delegate.reject()

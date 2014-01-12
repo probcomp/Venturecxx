@@ -61,6 +61,7 @@ class RequestNode(ApplicationNode):
     self.operandNodes = operandNodes
     self.env = env
     self.outputNode = None
+    self.scopes = {}
 
   def registerOutputNode(self,outputNode):
     self.outputNode = outputNode
@@ -78,6 +79,7 @@ class OutputNode(ApplicationNode):
     self.requestNode = requestNode
     self.esrParents = []
     self.env = env
+    self.scopes = {}
 
   def psp(self): return self.sp().outputPSP
 
