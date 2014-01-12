@@ -38,22 +38,22 @@
 PyTrace::PyTrace() :
   trace(new Trace()),
   gkernels{
-    {{"mh",false}, new OutermostMixMH(trace,new ScaffoldMHGKernel(trace))},
-    {{"mh",true}, new GlobalScaffoldMixMH(trace,new ScaffoldMHGKernel(trace))},
+    {{"mh","one"}, new OutermostMixMH(trace,new ScaffoldMHGKernel(trace))},
+    {{"mh","all"}, new GlobalScaffoldMixMH(trace,new ScaffoldMHGKernel(trace))},
 
-    {{"pgibbs",false}, new OutermostMixMH(trace,new PGibbsGKernel(trace))},
-    {{"pgibbs",true}, new GlobalScaffoldMixMH(trace,new PGibbsGKernel(trace))},
+    {{"pgibbs","one"}, new OutermostMixMH(trace,new PGibbsGKernel(trace))},
+    {{"pgibbs","all"}, new GlobalScaffoldMixMH(trace,new PGibbsGKernel(trace))},
 
-    {{"gibbs",false}, new OutermostMixMH(trace,new GibbsGKernel(trace))},
+    {{"gibbs","one"}, new OutermostMixMH(trace,new GibbsGKernel(trace))},
 
-    {{"meanfield",false}, new OutermostMixMH(trace,new MeanFieldGKernel(trace))},
-    {{"meanfield",true}, new GlobalScaffoldMixMH(trace,new MeanFieldGKernel(trace))}}
+    {{"meanfield","one"}, new OutermostMixMH(trace,new MeanFieldGKernel(trace))},
+    {{"meanfield","all"}, new GlobalScaffoldMixMH(trace,new MeanFieldGKernel(trace))}}
  {}
 
 PyTrace::~PyTrace()
 {
   delete trace;
-  for (pair< pair<string,bool>,MixMHKernel *> p : gkernels)
+  for (pair< pair<string,string>,MixMHKernel *> p : gkernels)
   {
     p.second->destroyChildGKernel();
     delete p.second;
@@ -174,10 +174,12 @@ void PyTrace::infer(boost::python::dict params)
 { 
   size_t numTransitions = boost::python::extract<size_t>(params["transitions"]);
   string kernel = boost::python::extract<string>(params["kernel"]);
-  bool useGlobalScaffold = boost::python::extract<bool>(params["use_global_scaffold"]);
+  string scope = boost::python::extract<string>(params["scope"]);
+  string block = boost::python::extract<string>(params["block"]); // TODO may be an ID also?
   
-  assert(!(useGlobalScaffold && kernel == "gibbs"));
-  MixMHKernel * gkernel = gkernels[make_pair(kernel,useGlobalScaffold)];
+  assert (scope == "default");
+  assert(!(block == "all" && kernel == "gibbs"));
+  MixMHKernel * gkernel = gkernels[make_pair(kernel,block)];
   gkernel->infer(numTransitions);
 }
 
@@ -200,9 +202,11 @@ void PyTrace::start_continuous_inference(boost::python::dict params) {
   stop_continuous_inference();
 
   string kernel = boost::python::extract<string>(params["kernel"]);
-  bool useGlobalScaffold = boost::python::extract<bool>(params["use_global_scaffold"]);
-  assert(!(useGlobalScaffold && kernel == "gibbs"));
-  MixMHKernel * gkernel = gkernels[make_pair(kernel,useGlobalScaffold)];
+  string scope = boost::python::extract<string>(params["scope"]);
+  string block = boost::python::extract<string>(params["block"]); // TODO may be an ID also?
+  assert (scope == "default");
+  assert(!(block == "all" && kernel == "gibbs"));
+  MixMHKernel * gkernel = gkernels[make_pair(kernel,block)];
 
   continuous_inference_params = params;
   continuous_inference_running = true;
