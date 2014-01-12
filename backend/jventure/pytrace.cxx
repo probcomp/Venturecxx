@@ -21,8 +21,8 @@
 
 PyJlTrace::PyJlTrace()
 {
-  printf("Making a Julia Trace.");
-  jl_init(NULL);
+  printf("Making a Julia Trace.\n");
+  jl_init("/home/axch/work/pcp/julia/usr/bin/");
   jl_function_t *f_ctrace = jl_get_function(jl_base_module, "CTrace"); // TODO FIX ME
   jl_trace = jl_call0(f_ctrace);
 
