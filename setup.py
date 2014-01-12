@@ -39,7 +39,7 @@ ext_modules = []
 
 packages=["venture","venture.sivm","venture.ripl",
     "venture.parser","venture.server","venture.shortcuts",
-    "venture.unit", "venture.test", "venture.cxx", "venture.lite"]
+    "venture.unit", "venture.test", "venture.cxx", "venture.lite", "venture.jventure"]
 
 jventure_cxx = Extension("venture.jventure.libtrace",
     define_macros = [('MAJOR_VERSION', '0'),
@@ -62,7 +62,8 @@ setup (
     long_description = 'TBA.',
     packages = packages,
     package_dir={"venture":"python/lib/", "venture.test":"python/test/",
-        "venture.cxx":"backend/cxx/", "venture.lite":"backend/lite/"},
+        "venture.cxx":"backend/cxx/", "venture.lite":"backend/lite/",
+        "venture.jventure":"backend/jventure"},
     ext_modules = ext_modules,
     scripts = ['script/venture']
 )
