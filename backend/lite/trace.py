@@ -6,7 +6,7 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, teardownMadeSP, unevalFamily
 from spref import SPRef
 from scaffold import Scaffold
-from infer import MHInfer,MeanfieldInfer
+from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer
 import random
 from omegadb import OmegaDB
 
@@ -25,6 +25,7 @@ class Trace(object):
     self.rcs = [] # TODO make this an EasyEraseVector
     self.aes = []
     self.families = {}
+    self.scopes = {} # :: {(scope-name,block-id):set(node)}
 
   def registerAEKernel(self,node): self.aes.append(node)
   def unregisterAEKernel(self,node): del self.aes[self.aes.index(node)]
@@ -32,10 +33,18 @@ class Trace(object):
   def registerRandomChoice(self,node):
     assert not node in self.rcs
     self.rcs.append(node)
+    for key in node.scopes.iteritems():
+      if key in self.scopes:
+        self.scopes[key].add(node)
+      else:
+        self.scopes[key] = set([node])
 
   def unregisterRandomChoice(self,node): 
     assert node in self.rcs
     del self.rcs[self.rcs.index(node)]
+    for key in node.scopes.iteritems():
+      if key in self.scopes:
+        self.scopes[key].remove(node)
 
   def createConstantNode(self,val): return ConstantNode(val)
   def createLookupNode(self,sourceNode): 
@@ -135,13 +144,15 @@ class Trace(object):
 
   def continuous_inference_status(self): return {"running" : False}
 
-  def infer(self,params): 
-    if params["use_global_scaffold"]: raise Exception("INFER global scaffold not yet implemented")
-
+  # params is a hash with keys "kernel", "scope", "block",
+  # "transitions" (the latter should be named "repeats").  Right now,
+  # "kernel" must be one of "mh" or "meanfield", "scope" must be
+  # "default", "block" must be "one", and "transitions" must be an
+  # integer.
+  def infer(self,params):
     for n in range(params["transitions"]):
-      pnode = self.samplePrincipalNode()
-      if params["kernel"] == "mh": MHInfer(self,pnode)
-      elif params["kernel"] == "meanfield": MeanfieldInfer(self,pnode,10,0.0001)
+      if params["kernel"] == "mh": mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MHOperator())
+      elif params["kernel"] == "meanfield": mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MeanfieldOperator(10,0.0001))
       else: raise Exception("INFER (%s) MH is implemented" % params["kernel"])
 
       for node in self.aes: node.madeSP.AEInfer(node.madeSPAux)

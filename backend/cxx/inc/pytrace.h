@@ -44,7 +44,7 @@ struct PyTrace
   void stop_continuous_inference();
 
   Trace * trace;
-  map<pair<string,bool> ,MixMHKernel *> gkernels;
+  map<pair<string,string> ,MixMHKernel *> gkernels;
   
   bool continuous_inference_running = false;
   boost::python::dict continuous_inference_params;

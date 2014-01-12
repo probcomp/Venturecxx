@@ -220,12 +220,15 @@ def runAllTests(N):
 def collectSamples(ripl,address,T,kernel=None,use_global_scaffold=None):
   kernel = kernel if kernel is not None else globalKernel
   use_global_scaffold = use_global_scaffold if use_global_scaffold is not None else globalUseGlobalScaffold
+  block = "one" if not use_global_scaffold else "all"
+  return collectSamplesWith(ripl, address, T, {"transitions":100, "kernel":kernel, "block":block})
+
+def collectSamplesWith(ripl, address, T, params):
   predictions = []
   for t in range(T):
     # Going direct here saved 5 of 35 seconds on some unscientific
     # tests, presumably by avoiding the parser.
-    ripl.sivm.core_sivm.engine.infer({"transitions":100, "kernel":kernel, "use_global_scaffold":use_global_scaffold})
-    # ripl.infer(100,kernel,use_global_scaffold)
+    ripl.sivm.core_sivm.engine.infer(params)
     predictions.append(ripl.report(address))
     ripl.sivm.core_sivm.engine.reset()
   return predictions
@@ -237,6 +240,8 @@ def runTests(N):
   reportTest(repeatTest(testCategorical1, N))
   reportTest(repeatTest(testMHNormal0, N))
   reportTest(repeatTest(testMHNormal1, N))
+  if globalBackend == make_lite_church_prime_ripl:
+    reportTest(repeatTest(testMHNormal2, N))
   reportTest(repeatTest(testMem0, N))
   reportTest(repeatTest(testMem1, N))
   reportTest(repeatTest(testMem2, N))
@@ -400,6 +405,31 @@ def testMHNormal1(N):
   cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
   return reportKnownContinuous("testMHNormal1", cdf, predictions, "approximately N(24,sqrt(7/3))")
 
+def testMHNormal2(N):
+  ripl = RIPL()
+  ripl.assume("a", "(normal 10.0 1.0 (scope 0 0))")
+  ripl.assume("b", "(normal a 1.0 (scope 1 1))")
+  ripl.observe("(normal b 1.0)", 14.0)
+
+  # If inference only frobnicates b, then the distribution on a
+  # remains the prior.
+  predictions = collectSamplesWith(ripl,1,N,{"transitions":10,"kernel":"mh","scope":1,"block":1})
+  cdf = stats.norm(loc=10.0, scale=1.0).cdf
+  return reportKnownContinuous("testMHNormal2", cdf, predictions, "N(10.0,1.0)")
+
+def testBlockingExample():
+  ripl = RIPL()
+  ripl.assume("a", "(normal 0.0 1.0 (scope 0 0))")
+  ripl.assume("b", "(normal 1.0 1.0 (scope 0 0))")
+  olda = ripl.report(1)
+  oldb = ripl.report(2)
+  # The point of block proposals is that both things change at once.
+  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":"mh", "scope":0, "block":0})
+  newa = ripl.report(1)
+  newb = ripl.report(2)
+  assert not(olda == newa)
+  assert not(oldb == newb)
+
 def testStudentT0(N):
   ripl = RIPL()
   ripl.assume("a", "(student_t 1.0)")
@@ -423,7 +453,7 @@ def testMem0(N):
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   ripl.predict("(f (bernoulli 0.5))")
   ripl.predict("(f (bernoulli 0.5))")
-  ripl.infer(N, kernel="mh", use_global_scaffold=False)
+  ripl.infer(N, kernel="mh")
   return reportPassage("TestMem0")
 
 
@@ -533,7 +563,7 @@ def testIf1(N):
   ripl.assume('IF', '(lambda () branch)')
   ripl.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
   ripl.predict('(IF2 (bernoulli 0.5) IF IF)')
-  ripl.infer(N/10, kernel="mh", use_global_scaffold=False)
+  ripl.infer(N/10, kernel="mh")
   return reportPassage("TestIf1")
 
 def testIf2(N):
@@ -542,7 +572,7 @@ def testIf2(N):
   ripl.assume('if2', '(branch (bernoulli 0.5) (lambda () if1) (lambda () if1))')
   ripl.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
   ripl.assume('if4', '(branch (bernoulli 0.5) (lambda () if3) (lambda () if3))')
-  ripl.infer(N/10, kernel="mh", use_global_scaffold=False)
+  ripl.infer(N/10, kernel="mh")
   return reportPassage("TestIf2")
 
 def testBLOGCSI(N):
@@ -1126,7 +1156,7 @@ def testGeometric1(N):
 
   predictions = collectSamples(ripl,"pid",N)
 
-  k = 16
+  k = 128
   ans = [(n,math.pow(2,-n)) for n in range(1,k)]
   return reportKnownDiscrete("TestGeometric1", ans, predictions)
 
@@ -1138,7 +1168,7 @@ def testTrig1(N):
   ripl.assume("b","(sq (cos x))")
   ripl.predict("(+ a b)")
   for i in range(N/10):
-    ripl.infer(10,kernel="mh",use_global_scaffold=False)
+    ripl.infer(10,kernel="mh")
     assert abs(ripl.report(5) - 1) < .001
   return reportPassage("TestTrig1")
 
