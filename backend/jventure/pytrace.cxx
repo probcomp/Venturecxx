@@ -138,7 +138,7 @@ size_t PyTrace::get_seed() {
 void PyTrace::infer(boost::python::dict params) 
 { 
   jl_function_t *f_infer = jl_get_function(jl_base_module, "infer"); // TODO FIX ME
-  jl_call2(f_infer,jl_trace,id); // TODO translate the params, make it so I can pass N
+  jl_call1(f_infer,jl_trace); // TODO translate the params, make it so I can pass N
 }
 
 
