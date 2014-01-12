@@ -33,7 +33,7 @@ src_files = [
     "backend/jventure/pytrace.cxx",
 ]
 
-inc_dirs = ['backend/jventure/','/home/parallels/julia/src','/home/parallels/julia/src/support','/home/parallels/julia/usr/include']
+inc_dirs = ['backend/jventure/','/home/axch/work/pcp/julia/src','/home/axch/work/pcp/julia/src/support','/home/axch/work/pcp/julia/usr/include']
 
 ext_modules = []
 
