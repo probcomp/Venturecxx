@@ -21,6 +21,7 @@
 
 PyTrace::PyTrace()
 {
+  printf("Making a Julia Trace.");
   jl_init(NULL);
   jl_function_t *f_ctrace = jl_get_function(jl_base_module, "CTrace"); // TODO FIX ME
   jl_trace = jl_call0(f_ctrace);
@@ -58,7 +59,7 @@ jl_value_t * PyTrace::parseExpression(boost::python::object o)
   boost::python::list l = getList();
  
   boost::python::ssize_t L = boost::python::len(l);
-  jl_value_t* array_type = jl_apply_array_type(jl_any_type, 1);
+  jl_value_t* array_type = NULL; // TOOD Fix jl_any_type symbol not found error jl_apply_array_type(jl_any_type, 1);
   jl_array_t* exp = jl_alloc_array_1d(array_type, L);
   
   for(boost::python::ssize_t i=L;i > 0;i--) 
