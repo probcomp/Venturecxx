@@ -143,10 +143,10 @@ void PyTrace::infer(boost::python::dict params)
 }
 
 
-BOOST_PYTHON_MODULE(libtrace)
+BOOST_PYTHON_MODULE(libjltrace)
 {
   using namespace boost::python;
-  class_<PyTrace>("Trace",init<>())
+  class_<PyTrace>("JlTrace",init<>())
     .def("eval", &PyTrace::evalExpression)
     .def("uneval", &PyTrace::unevalDirectiveID)
     .def("extractValue", &PyTrace::extractPythonValue)

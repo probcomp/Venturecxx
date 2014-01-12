@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-from libtrace import Trace
+from libjltrace import JlTrace
 import pdb
 from venture.exception import VentureException
 from venture.cxx import engine
@@ -27,13 +27,13 @@ class Engine(engine.Engine):
     print "Making JVenture engine"
     self.directiveCounter = 0
     self.directives = {}
-    self.trace = Trace() # Same code, different Trace, due to different import
+    self.trace = JlTrace()
 
   def clear(self):
     del self.trace
     self.directiveCounter = 0
     self.directives = {}
-    self.trace = Trace()
+    self.trace = JlTrace()
 
   def reset(self):
     worklist = sorted(self.directives.iteritems())

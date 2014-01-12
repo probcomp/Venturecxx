@@ -41,7 +41,7 @@ packages=["venture","venture.sivm","venture.ripl",
     "venture.parser","venture.server","venture.shortcuts",
     "venture.unit", "venture.test", "venture.cxx", "venture.lite", "venture.jventure"]
 
-jventure_cxx = Extension("venture.jventure.libtrace",
+jventure_cxx = Extension("venture.jventure.libjltrace",
     define_macros = [('MAJOR_VERSION', '0'),
                      ('MINOR_VERSION', '1'),
                      ('REVISION', '1')],
