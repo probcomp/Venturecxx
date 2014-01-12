@@ -25,7 +25,7 @@ globalKernel = "mh";
 globalUseGlobalScaffold = False;
 globalAlwaysReport = False;
 globalReportingThreshold = 0.001
-globalBackend = make_lite_church_prime_ripl
+globalBackend = make_jventure_church_prime_ripl
 
 def RIPL():
   return globalBackend()
