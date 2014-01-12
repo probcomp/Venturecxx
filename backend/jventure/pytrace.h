@@ -9,10 +9,10 @@
 
 using namespace std;
 
-struct PyTrace
+struct PyJlTrace
 {
-  PyTrace();
-  ~PyTrace();
+  PyJlTrace();
+  ~PyJlTrace();
   
   jl_value_t * parseValue(boost::python::dict d);
   jl_value_t * parseExpression(boost::python::object o);

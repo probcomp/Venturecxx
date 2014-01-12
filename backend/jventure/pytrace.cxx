@@ -19,7 +19,7 @@
 #include <iostream>
 #include <list>
 
-PyTrace::PyTrace()
+PyJlTrace::PyJlTrace()
 {
   printf("Making a Julia Trace.");
   jl_init(NULL);
@@ -29,12 +29,12 @@ PyTrace::PyTrace()
   JL_GC_PUSH1(&jl_trace);
 }
 
-PyTrace::~PyTrace()
+PyJlTrace::~PyJlTrace()
 {
 
 }
 
-jl_value_t * PyTrace::parseValue(boost::python::dict d)
+jl_value_t * PyJlTrace::parseValue(boost::python::dict d)
 {
   if (d["type"] == "boolean") { return jl_box_bool(boost::python::extract<bool>(d["value"])); }
   else if (d["type"] == "number") { return jl_box_float64(boost::python::extract<double>(d["value"])); }
@@ -48,7 +48,7 @@ jl_value_t * PyTrace::parseValue(boost::python::dict d)
 }
 
 // TODO create a Julia array
-jl_value_t * PyTrace::parseExpression(boost::python::object o)
+jl_value_t * PyJlTrace::parseExpression(boost::python::object o)
 {
   boost::python::extract<boost::python::dict> getDict(o);
   if (getDict.check()) { return parseValue(getDict()); }
@@ -69,7 +69,7 @@ jl_value_t * PyTrace::parseExpression(boost::python::object o)
   return (jl_value_t*)exp;
 }
 
-void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
+void PyJlTrace::evalExpression(size_t directiveID, boost::python::object o)
 {
   jl_value_t * exp = parseExpression(o);
 
@@ -78,7 +78,7 @@ void PyTrace::evalExpression(size_t directiveID, boost::python::object o)
   jl_call3(f_eval,jl_trace,id,exp);
 }
 
-void PyTrace::unevalDirectiveID(size_t directiveID)
+void PyJlTrace::unevalDirectiveID(size_t directiveID)
 {
   jl_function_t *f_uneval = jl_get_function(jl_base_module, "unevalExpression"); // TODO FIX ME
   jl_value_t * id = jl_box_int64(directiveID);
@@ -86,12 +86,12 @@ void PyTrace::unevalDirectiveID(size_t directiveID)
 }
 
 // TODO
-boost::python::object PyTrace::extractPythonValue(size_t directiveID)
+boost::python::object PyJlTrace::extractPythonValue(size_t directiveID)
 {
   assert(false);
 }
 
-void PyTrace::bindInGlobalEnv(string sym, size_t directiveID)
+void PyJlTrace::bindInGlobalEnv(string sym, size_t directiveID)
 {
   jl_function_t *f_bind = jl_get_function(jl_base_module, "bindInGlobalEnv"); // TODO FIX ME
   jl_value_t * jsym = (jl_value_t*)jl_symbol(sym.c_str());
@@ -99,7 +99,7 @@ void PyTrace::bindInGlobalEnv(string sym, size_t directiveID)
   jl_call3(f_bind,jl_trace,jsym,id);
 }
 
-void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
+void PyJlTrace::observe(size_t directiveID,boost::python::object valueExp)
 {
   jl_function_t *f_observe = jl_get_function(jl_base_module, "observe"); // TODO FIX ME
   jl_value_t * id = jl_box_int64(directiveID);
@@ -107,36 +107,36 @@ void PyTrace::observe(size_t directiveID,boost::python::object valueExp)
   jl_call3(f_observe,jl_trace,id,val);
 }
 
-double PyTrace::getGlobalLogScore()
+double PyJlTrace::getGlobalLogScore()
 {
   assert(false);
   return 0;
 }
 
-uint32_t PyTrace::numRandomChoices()
+uint32_t PyJlTrace::numRandomChoices()
 {
   assert(false);
   return 0;
 }
 
-void PyTrace::unobserve(size_t directiveID)
+void PyJlTrace::unobserve(size_t directiveID)
 {
   jl_function_t *f_unobserve = jl_get_function(jl_base_module, "unobserve"); // TODO FIX ME
   jl_value_t * id = jl_box_int64(directiveID);
   jl_call2(f_unobserve,jl_trace,id);
 }
 
-void PyTrace::set_seed(size_t n) {
+void PyJlTrace::set_seed(size_t n) {
   assert(false);
 }
 
-size_t PyTrace::get_seed() {
+size_t PyJlTrace::get_seed() {
   // TODO FIXME get_seed can't be implemented as spec'd (need a generic RNG state); current impl always returns 0, which may not interact well with VentureUnit
   return 0;
 }
 
 
-void PyTrace::infer(boost::python::dict params) 
+void PyJlTrace::infer(boost::python::dict params) 
 { 
   jl_function_t *f_infer = jl_get_function(jl_base_module, "infer"); // TODO FIX ME
   jl_call1(f_infer,jl_trace); // TODO translate the params, make it so I can pass N
@@ -146,18 +146,18 @@ void PyTrace::infer(boost::python::dict params)
 BOOST_PYTHON_MODULE(libjltrace)
 {
   using namespace boost::python;
-  class_<PyTrace>("JlTrace",init<>())
-    .def("eval", &PyTrace::evalExpression)
-    .def("uneval", &PyTrace::unevalDirectiveID)
-    .def("extractValue", &PyTrace::extractPythonValue)
-    .def("bindInGlobalEnv", &PyTrace::bindInGlobalEnv)
-    .def("numRandomChoices", &PyTrace::numRandomChoices)
-    .def("getGlobalLogScore", &PyTrace::getGlobalLogScore)
-    .def("observe", &PyTrace::observe)
-    .def("unobserve", &PyTrace::unobserve)
-    .def("infer", &PyTrace::infer)
-    .def("set_seed", &PyTrace::set_seed)
-    .def("get_seed", &PyTrace::get_seed)
+  class_<PyJlTrace>("JlTrace",init<>())
+    .def("eval", &PyJlTrace::evalExpression)
+    .def("uneval", &PyJlTrace::unevalDirectiveID)
+    .def("extractValue", &PyJlTrace::extractPythonValue)
+    .def("bindInGlobalEnv", &PyJlTrace::bindInGlobalEnv)
+    .def("numRandomChoices", &PyJlTrace::numRandomChoices)
+    .def("getGlobalLogScore", &PyJlTrace::getGlobalLogScore)
+    .def("observe", &PyJlTrace::observe)
+    .def("unobserve", &PyJlTrace::unobserve)
+    .def("infer", &PyJlTrace::infer)
+    .def("set_seed", &PyJlTrace::set_seed)
+    .def("get_seed", &PyJlTrace::get_seed)
     ;
 };
 
