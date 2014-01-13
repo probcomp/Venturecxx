@@ -308,3 +308,12 @@ function loggingGibbsInfer(trace::Trace,id::DirectiveID,scope,N)
   end
   return predictions
 end
+
+function loggingPGibbsInfer(trace::Trace,id::DirectiveID,scope,N)
+  predictions = Array(Any,N)
+  for n = 1:N
+    pGibbsInfer(trace,scope,sampleBlock(trace,scope)...,2)
+    predictions[n] = extractValue(trace,id)
+  end
+  return predictions
+end

@@ -3,7 +3,8 @@ require("detach.jl")
 
 ####### (1) MH
 
-function mhInfer(trace::Trace,scope,block,pnodes::Set{Node})
+function mhInfer(trace::Trace,scope,block,mutatingPNodes::Set{Node})
+  pnodes = copy(mutatingPNodes)
   assertTrace(trace)
   rhoMix = logDensityOfBlock(trace,scope,block)
   scaffold = constructScaffold(trace,pnodes)
@@ -44,8 +45,8 @@ function getCartesianProductOfEnumeratedValues(trace::Trace,pnodes::Set{Node})
 end
 
 
-function enumerativeGibbsInfer(trace::Trace,scope,block,mutating_pnodes::Set{Node})
-  pnodes = copy(mutating_pnodes)
+function enumerativeGibbsInfer(trace::Trace,scope,block,mutatingPNodes::Set{Node})
+  pnodes = copy(mutatingPNodes)
   assertTrace(trace)
   rhoMix = logDensityOfBlock(trace,scope,block)
   scaffold = constructScaffold(trace,pnodes)
@@ -94,124 +95,117 @@ end
 
 ########## (3) PGibbs
 
-# # TODO CURRENT SPOT
+# Construct ancestor path backwards
+function constructAncestorPath(ancestorIndices,t::Int,p::Int)
+  if (t == 1) return [] end
+  path = [ancestorIndices[t,p]]
 
-# # Construct ancestor path backwards
-# def constructAncestorPath(ancestorIndices,t,n):
-#   if t > 0: path = [ancestorIndices[t][n]]
-#   else: path = []
+  for i in reverse(2:t-1)
+    unshift!(path,ancestorIndices[i,path[1]])
+  end
 
-#   for i in reversed(range(1,t)): path.insert(0, ancestorIndices[i][path[0]])
-#   assert len(path) == t
-#   return path
+  @assert length(path) == t-1
+  return path
+end
 
-# # Restore the particle along the ancestor path
-# def restoreAncestorPath(trace,sinks,drg,omegaDBs,omegaESR_DBs,t,path):
-#   for i in range(t):
-#     selectedDB = omegaDBs[i][path[i]]
-#     selectedESR_DB = omegaESR_DBs[i][path[i]]
-        
-#     regen(trace,sinks[i],drg,True,selectedDB,selectedESR_DB)
+# Restore the particle along the ancestor path
+function restoreAncestorPath(trace::Trace,border,scaffold,omegaDBs,t,path::Array{Int})
+  for i in 1:(t-1)
+    selectedDB = omegaDBs[i,path[i]]
+    regenAndAttach(trace,border[i],scaffold,true,selectedDB)
+  end
+end
 
-# # detach the rest of the particle
-# def detachRest(trace,sinks,drg,t):
-#   for i in reversed(range(t)): 
-#     detach(trace,sinks[i],drg)
+# detach the rest of the particle
+function detachRest(trace::Trace,border,scaffold,t::Int)
+  for i = reverse(1:t-1)
+    detachAndExtract(trace,border[i],scaffold)
+  end
+end
 
-# # split the sinks into groups, and return the number of 
-# # time steps settled on.
-# def splitSinks(drg,T):
-#   allSinks = drg.sinks()
-#   sinks = utilities.splitListIntoGroups(allSinks,T)
-#   T = len(sinks)
-#   return sinks, T
+# P particles, not including RHO
+# TODO for now, no resampling
+# and then one final resampling step to select XI
 
-# # P particles, not including RHO
-# # T groups of sinks, with T-1 resampling steps
-# # and then one final resampling step to select XI
-# def pGibbsInfer(trace,P,T,depth):
-#   (principalNode,ldRho) = trace.samplePrincipalNode()
-#   drg = constructDRG(trace,[principalNode],depth)
-#   sinks,T = splitSinks(drg,T)
+function pGibbsInfer(trace::Trace,scope,block,mutatingPNodes::Set{Node},P::Int)
+  T = 1
+  pnodes = copy(mutatingPNodes)
+  assertTrace(trace)
+  rhoMix = logDensityOfBlock(trace,scope,block)
+  scaffold = constructScaffold(trace,pnodes)
+  border = {scaffold.border} # TODO scaffold will fix this
 
-#   rhoDBs = [None for t in range(T)]
-#   rhoESR_DBs = [None for t in range(T)]
-#   weightsRho = [None for t in range(T)]
+  rhoWeights = (Float64)[0.0 for t in 1:T]
 
-#   # Compute all weights, DBs, and ESR_DBs for RHO
-#   for t in reversed(range(T)):
-#     (rhoDBs[t],rhoESR_DBs[t],weightsRho[t]) = detach(trace,sinks[t],drg)
+  omegaDBs = cell(T,P+1)
+  ancestorIndices = cell(T,P+1)
 
-#   assertRegenCountsZero(trace,drg)
+  # Compute all weights, DBs, and ESR_DBs for RHO
+  for t = reverse(1:T)
+    (rhoWeights[t],omegaDBs[t,P+1]) = detachAndExtract(trace,border[t],scaffold)
+    if t > 1
+      ancestorIndices[t,P+1] = P+1
+    end
+  end
 
-#   omegaDBs = [[None for n in range(P)] + [rhoDBs[t]] for t in range(T)] 
-#   omegaESR_DBs = [[None for n in range(P)] + [rhoESR_DBs[t]]for t in range(T)]
-#   ancestorIndices = [[None for n in range(P)] + [P] for t in range(T)]
-#   weights = [0 for n in range(P)]
+  assertTorus(scaffold)
 
-#   ldOmegas = [0 for n in range(P)]
+  xiWeights = (Float64)[0.0 for p = 1:P]
+  xiMixs = (Float64)[0.0 for p = 1:P]
 
-#   # Simulate and calculate initial weights
-#   for n in range(P):
-#     weightRegen = regen(trace,sinks[0],drg,False)
-#     ldOmegas[n] = trace.logDensityOfPrincipalNode(principalNode)
-#     (omegaDBs[0][n],omegaESR_DBs[0][n],weights[n]) = detach(trace,sinks[0],drg)
-#     assert abs(weightRegen - weights[n]) < .00001
-    
+  # Simulate and calculate initial xiWeights
+  for p = 1:P
+    regenAndAttach(trace,border[1],scaffold,false,DB())
+    xiMixs[p] = logDensityOfBlock(trace,scope,block)
+    (xiWeights[p],omegaDBs[1,p]) = detachAndExtract(trace,border[1],scaffold)
+  end
 
-#   # for every time step,
-#   for t in range(1,T):
-#     newWeights = [0 for n in range(P)]
-#     # Sample new particle and propagate
-#     for n in range(P):
-#       extendedWeights = weights + [weightsRho[t-1]]
-#       # sample ancestor
-#       # might be nice to catch this as sample, and then construct path recursively from it.
-#       ancestorIndices[t][n] = Categorical(utilities.mapExp(extendedWeights),range(P+1))
-#       # restore ancestor
-#       path = constructAncestorPath(ancestorIndices,t,n)
-#       restoreAncestorPath(trace,sinks,drg,omegaDBs,omegaESR_DBs,t,path)
-#       # propagate one time step
-#       weightRegen = regen(trace,sinks[t],drg,False)
-#       # only needed the last time
-#       ldOmegas[n] = trace.logDensityOfPrincipalNode(principalNode)
-#       # detach and extract the last sink
-#       (omegaDBs[t][n],omegaESR_DBs[t][n],newWeights[n]) = detach(trace,sinks[t],drg)
-      
-#       assert abs(weightRegen - newWeights[n]) < .00001
+  # for every time step,
+  for t = 2:T
+    newXiWeights = (Float64)[0.0 for n in range(P)]
+    # Sample new particle and propagate
+    for p = 1:P
+      extendedWeights = [xiWeights,rhoWeights[t-1]]
+      # sample ancestor
+      # might be nice to catch this as sample, and then construct path recursively from it.
+      ancestorIndices[t,p] = Distributions.rand(Distributions.Categorical([exp(w) for w in extendedWeights]))
+      # restore ancestor
+      path = constructAncestorPath(ancestorIndices,t,p)
+      restoreAncestorPath(trace,border,drg,omegaDBs,t,path)
+      # propagate one time step
+      regenAndAttach(trace,border[t],scaffold,false,DB())
+      # only needed the last time
+      xiMixs[p] = logDensityOfBlock(trace,scope,block)
+      # detach and extract the last sink
+      (newXiWeights[p],omegaDBs[t,p]) = detachAndExtract(trace,scaffold.border[t],scaffold)
 
-#       # detach the rest of the sinks to yield the torus
-#       detachRest(trace,sinks,drg,t)
+      # detach the rest of the sinks to yield the torus
+      detachRest(trace,border,drg,t)
+    end
+    xiWeights = newXiWeights
+  end
 
-#     weights = newWeights
+  # Now sample a NEW particle in proportion to its weight
+  xiExpWeights = [exp(w) for w in xiWeights]
+  rhoExpWeight = exp(rhoWeights[T])
 
-#   # Now sample a NEW particle in proportion to its weight
-#   finalIndex = Categorical(utilities.mapExp(weights),range(P))
-#   weightRho = weightsRho[T-1]
-#   weightXi = weights[finalIndex]
+  i = Distributions.rand(Distributions.Categorical(normalizeList(xiExpWeights)))
+  (xiWeight,xiDB,xiMix) = (xiWeights[i],omegaDBs[i],xiMixs[i])
+  totalExpWeight = sum(xiExpWeights) + rhoExpWeight
+  weightMinusRho = log(totalExpWeight - rhoExpWeight)
+  weightMinusXi = log(totalExpWeight - xiExpWeights[i])
 
-#   ldXi = ldOmegas[finalIndex]
-  
-#   weightMinusXi = math.log(sum(utilities.mapExp(weights)) + math.exp(weightRho) - math.exp(weightXi))
-#   weightMinusRho = math.log(sum(utilities.mapExp(weights)))
-
-#   alpha = (ldXi + weightMinusRho) - (ldRho + weightMinusXi)
-
-#   print "alpha: " + str(alpha)
-
-#   # TODO URGENT need to do much more thorough flushing!
-#   # Everytime a DB is abandoned we need to flush.
-#   if math.log(random.random()) < alpha: # accept
-#     path = constructAncestorPath(ancestorIndices,T-1,finalIndex) + [finalIndex]
-# #    print "(path,T): " + str(path)
-#   else: # reject
-#     path = constructAncestorPath(ancestorIndices,T-1,P) + [P]
-# #    print "should be all P: " + str(path)
-    
-#   assert len(path) == T
-#   restoreAncestorPath(trace,sinks,drg,omegaDBs,omegaESR_DBs,T,path)
-#   assertNoUndefineds(trace,drg)
-
-
-
+  if log(rand()) < (xiMix + weightMinusRho) - (rhoMix + weightMinusXi) # accept
+    print(".")
+    # TODO construct XI path
+    path = [constructAncestorPath(ancestorIndices,T,i),i]
+  else # reject
+    print("!")
+    # TODO construct RHO path
+    path = [constructAncestorPath(ancestorIndices,T,P+1),P+1]
+  end
+  @assert length(path) == T
+  restoreAncestorPath(trace,border,scaffold,omegaDBs,T+1,path)
+  assertTrace(trace)
+end
 

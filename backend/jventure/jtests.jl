@@ -422,3 +422,23 @@ function testGibbs2(N)
   printTest(string("testGibbs2"),ps,eps)
 
 end
+
+function testPGibbs1(N)
+  sivm = Engine()
+  assume(sivm,"f","""
+(mem (lambda (i) (if (== i 0) (normal 0.0 1.0) (normal (f (- i 1)) 1.0))))
+""")
+  assume(sivm,"g","""
+(mem (lambda (i) (normal (f i) 1.0)))
+""")
+  observe(sivm,"(g 0)",1.0)
+  observe(sivm,"(g 1)",2.0)
+  observe(sivm,"(g 2)",3.0)
+  observe(sivm,"(g 3)",4.0)
+  observe(sivm,"(g 4)",5.0)
+  (id,_) = predict(sivm,"(f 4)")
+
+  predictions = loggingPGibbsInfer(sivm.trace,id,"default",N)
+  println("---TestMHHMM1---")
+  println(string("(4.3ish,",mean(predictions),")"))
+end
