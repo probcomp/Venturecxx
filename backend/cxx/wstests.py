@@ -1449,3 +1449,5 @@ def testMemHashFunction1(A,B):
   return reportPassage("TestMemHashFunction(%d,%d)" % (A,B))
 
 
+if __name__ == "__main__":
+  runTests(1)
