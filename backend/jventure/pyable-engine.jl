@@ -27,4 +27,4 @@ function runWsTests(N)
   wstests.runTests(N)
 end
 
-runWsTests(ARGS[0])
+runWsTests(ARGS[1])
