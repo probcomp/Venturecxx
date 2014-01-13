@@ -41,6 +41,11 @@ def make_lite_church_prime_ripl():
     parser1 = parser.ChurchPrimeParser()
     return ripl.Ripl(v,{"church_prime":parser1})
 
+def make_jlv_church_prime_ripl(jl_token):
+    v = sivm.VentureSivm(sivm.CoreSivmJVenture(jl_token))
+    parser1 = parser.ChurchPrimeParser()
+    return ripl.Ripl(v,{"church_prime":parser1})
+
 def make_venture_script_ripl():
     v = make_venture_sivm()
     parser1 = parser.VentureScriptParser()
