@@ -21,11 +21,21 @@ import itertools
 import scipy.stats as stats
 import numpy as np
 
+globalJVentureRipl = None
+
+def setUpJVentureBackend(jl_token):
+  global globalJVentureRipl
+  globalJVentureRipl = make_jlv_church_prime_ripl(jl_token)
+
+def new_jventure_ripl():
+  globalJVentureRipl.sivm.core_sivm.engine.reboot()
+  return globalJVentureRipl
+
 globalKernel = "mh";
 globalUseGlobalScaffold = False;
 globalAlwaysReport = False;
 globalReportingThreshold = 0.001
-globalBackend = make_lite_church_prime_ripl
+globalBackend = new_jventure_ripl
 
 def RIPL():
   return globalBackend()

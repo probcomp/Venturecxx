@@ -16,8 +16,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from venture.sivm.core_sivm_cxx import CoreSivmCxx
-from venture.sivm.core_sivm_lite import CoreSivmLite
-from venture.sivm.core_sivm_jlventure import CoreSivmJVenture
-from venture.sivm.core_sivm_cpp_engine import CoreSivmCppEngine
-from venture.sivm.venture_sivm import VentureSivm
+from core_sivm_cxx import CoreSivmCxx
+
+class CoreSivmJVenture(CoreSivmCxx):
+    
+    def __init__(self, jl_token):
+        super(CoreSivmJVenture, self).__init__()
+        from venture.jventure import engine
+        self.engine = engine.Engine(jl_token)
