@@ -23,8 +23,11 @@ PyJlTrace::PyJlTrace()
 {
   printf("Making a Julia Trace.\n");
   jl_init("/home/axch/work/pcp/julia/usr/bin/");
-  jl_function_t *f_ctrace = jl_get_function(jl_base_module, "CTrace"); // TODO FIX ME
+  printf("Initialized Julia.\n");
+  jl_function_t *f_ctrace = jl_get_function(jl_main_module, "CTrace"); // TODO FIX ME
+  printf("Found CTrace constructor.\n");
   jl_trace = jl_call0(f_ctrace);
+  printf("Made a Trace.\n");
 
   JL_GC_PUSH1(&jl_trace);
 }
@@ -73,14 +76,14 @@ void PyJlTrace::evalExpression(size_t directiveID, boost::python::object o)
 {
   jl_value_t * exp = parseExpression(o);
 
-  jl_function_t *f_eval = jl_get_function(jl_base_module, "evalExpression"); // TODO FIX ME
+  jl_function_t *f_eval = jl_get_function(jl_main_module, "evalExpression"); // TODO FIX ME
   jl_value_t * id = jl_box_int64(directiveID);
   jl_call3(f_eval,jl_trace,id,exp);
 }
 
 void PyJlTrace::unevalDirectiveID(size_t directiveID)
 {
-  jl_function_t *f_uneval = jl_get_function(jl_base_module, "unevalExpression"); // TODO FIX ME
+  jl_function_t *f_uneval = jl_get_function(jl_main_module, "unevalExpression"); // TODO FIX ME
   jl_value_t * id = jl_box_int64(directiveID);
   jl_call2(f_uneval,jl_trace,id);
 }
@@ -93,7 +96,7 @@ boost::python::object PyJlTrace::extractPythonValue(size_t directiveID)
 
 void PyJlTrace::bindInGlobalEnv(string sym, size_t directiveID)
 {
-  jl_function_t *f_bind = jl_get_function(jl_base_module, "bindInGlobalEnv"); // TODO FIX ME
+  jl_function_t *f_bind = jl_get_function(jl_main_module, "bindInGlobalEnv"); // TODO FIX ME
   jl_value_t * jsym = (jl_value_t*)jl_symbol(sym.c_str());
   jl_value_t * id = jl_box_int64(directiveID);
   jl_call3(f_bind,jl_trace,jsym,id);
@@ -101,7 +104,7 @@ void PyJlTrace::bindInGlobalEnv(string sym, size_t directiveID)
 
 void PyJlTrace::observe(size_t directiveID,boost::python::object valueExp)
 {
-  jl_function_t *f_observe = jl_get_function(jl_base_module, "observe"); // TODO FIX ME
+  jl_function_t *f_observe = jl_get_function(jl_main_module, "observe"); // TODO FIX ME
   jl_value_t * id = jl_box_int64(directiveID);
   jl_value_t * val = parseExpression(valueExp);
   jl_call3(f_observe,jl_trace,id,val);
@@ -121,7 +124,7 @@ uint32_t PyJlTrace::numRandomChoices()
 
 void PyJlTrace::unobserve(size_t directiveID)
 {
-  jl_function_t *f_unobserve = jl_get_function(jl_base_module, "unobserve"); // TODO FIX ME
+  jl_function_t *f_unobserve = jl_get_function(jl_main_module, "unobserve"); // TODO FIX ME
   jl_value_t * id = jl_box_int64(directiveID);
   jl_call2(f_unobserve,jl_trace,id);
 }
@@ -138,7 +141,7 @@ size_t PyJlTrace::get_seed() {
 
 void PyJlTrace::infer(boost::python::dict params) 
 { 
-  jl_function_t *f_infer = jl_get_function(jl_base_module, "infer"); // TODO FIX ME
+  jl_function_t *f_infer = jl_get_function(jl_main_module, "infer"); // TODO FIX ME
   jl_call1(f_infer,jl_trace); // TODO translate the params, make it so I can pass N
 }
 
