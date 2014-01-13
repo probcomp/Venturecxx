@@ -24,12 +24,34 @@ PyJlTrace::PyJlTrace()
   printf("Making a Julia Trace.\n");
   jl_init("/home/axch/work/pcp/julia/usr/bin/");
   printf("Initialized Julia.\n");
-  jl_function_t *f_ctrace = jl_get_function(jl_main_module, "CTrace"); // TODO FIX ME
-  printf("Found CTrace constructor.\n");
-  jl_trace = jl_call0(f_ctrace);
+  jl_eval_string("print(\"foo\\n\")");
+  printf("Executed a command in Julia.\n");
+
+  jl_function_t *func = jl_get_function(jl_base_module, "sqrt");
+  printf("Fetched sqrt.\n");
+  jl_value_t *argument = jl_box_float64(2.0);
+  printf("Boxed a float.\n");
+  jl_value_t *ret = jl_call1(func, argument);
+  JL_GC_PUSH(&ret);
+  printf("Ran sqrt.\n");
+
+  if (jl_is_float64(ret)) {
+    printf("Was a float.\n");
+    double ret_unboxed = jl_unbox_float64(ret);
+    printf("Unboxed the float.\n");
+    printf("sqrt(2.0) in C: %e \n", ret_unboxed);
+  } else {
+    printf("Not a float.\n");
+  }
+
+  jl_eval_string("require(\"engine.jl\")");
+  printf("Loaded jventure source.\n");
+  jl_function_t *f_trace = jl_get_function(jl_main_module, "Trace"); // TODO FIX ME
+  printf("Found Trace constructor.\n");
+  jl_trace = jl_call0(f_trace);
   printf("Made a Trace.\n");
 
-  JL_GC_PUSH1(&jl_trace);
+  //  JL_GC_PUSH1(&jl_trace);
 }
 
 PyJlTrace::~PyJlTrace()
