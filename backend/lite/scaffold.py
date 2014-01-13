@@ -67,7 +67,9 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
 
   while q:
     node,isPrincipal = q.pop()
-    if node in drg or isinstance(node,LookupNode) or node.operatorNode in drg:
+    if node in drg:
+      pass
+    elif isinstance(node,LookupNode) or node.operatorNode in drg:
       addResamplingNode(trace,drg,absorbing,q,node,indexAssignments,i)
     elif (trace.pspAt(node).canAbsorb() or esrReferenceCanAbsorb(trace,drg,node)) and not isPrincipal: 
       addAbsorbingNode(absorbing,node,indexAssignments,i)
