@@ -416,7 +416,7 @@ def testBlockingExample0(N):
   # remains the prior.
   predictions = collectSamplesWith(ripl,1,N,{"transitions":10,"kernel":"mh","scope":1,"block":1})
   cdf = stats.norm(loc=10.0, scale=1.0).cdf
-  return reportKnownContinuous("testMHNormal2", cdf, predictions, "N(10.0,1.0)")
+  return reportKnownContinuous("testBlockingExample0", cdf, predictions, "N(10.0,1.0)")
 
 def testBlockingExample1():
   ripl = RIPL()
