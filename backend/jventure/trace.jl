@@ -299,3 +299,12 @@ function loggingInfer(trace::Trace,id::DirectiveID;scope="default",N::Int=1)
   end
   return predictions
 end
+
+function loggingGibbsInfer(trace::Trace,id::DirectiveID,scope,N)
+  predictions = Array(Any,N)
+  for n = 1:N
+    enumerativeGibbsInfer(trace,scope,sampleBlock(trace,scope)...)
+    predictions[n] = extractValue(trace,id)
+  end
+  return predictions
+end

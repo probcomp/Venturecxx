@@ -20,70 +20,82 @@ function mhInfer(trace::Trace,scope,block,pnodes::Set{Node})
   end
 end
 
+
+unbox(a::Array) = unbox(a[1])
+unbox(a) = a
+
 ####### (2) Enumerative Gibbs
 getCurrentValues(trace::Trace,pnodes::Set{Node}) = [getValue(trace,pnode) for pnode in pnodes]
-function registerDeterministicLKernels(scaffold::Scaffold,pnodes::Set{Node},currentValues)
+function registerDeterministicLKernels(trace::Trace,scaffold::Scaffold,pnodes::Set{Node},currentValues)
   for (pnode,currentValue) = zip(pnodes,currentValues)
-    scaffold.lkernels[pnode] = DeterministicLKernel(currentValue) # TODO this must take the PSP as well
+    # TODO unbox is a hack.
+    # this would fail if a stochastic SP that returns arrays can enumerate its values
+    scaffold.lkernels[pnode] = DeterministicLKernel(getPSP(trace,pnode),unbox(currentValue)) 
   end
 end
 
 function getCartesianProductOfEnumeratedValues(trace::Trace,pnodes::Set{Node})
-  @assert length(pnodes) <= 2
-
-  allValues = [Set for i in 1:length(pnodes)]
-  i = 1
-  for pnode = pnodes
-    psp = getPSP(trace,pnode)
-    
-  z = Array(Any,length(x) * length(y))
-  for i = 1:length(x)
-    for j = 1:length(y)
-      k = (j-1) * length(x) + i
-      z[k] = (x[i],y[j])
-    end
-  end
-  return z
+  @assert !isempty(pnodes)
+  enumeratedValues = [[{v} for v in enumerateValues(getPSP(trace,pnode),getArgs(trace,pnode))] for pnode in pnodes]
+  @assert !isempty(enumeratedValues)
+  return cartesianProduct(enumeratedValues)
 end
 
 
-
-end
-
-function enumerativeGibbsInfer(trace::Trace,scope,block,pnodes::Set{Node})
-  @assert length(pnodes) == 1
+function enumerativeGibbsInfer(trace::Trace,scope,block,mutating_pnodes::Set{Node})
+  pnodes = copy(mutating_pnodes)
   assertTrace(trace)
-  rhoMix = logDensityofBlock(trace,scope,block)
+  rhoMix = logDensityOfBlock(trace,scope,block)
   scaffold = constructScaffold(trace,pnodes)
-  currentValue = getCurrentValue(trace,pnodes)
-  registerDeterministicLKernels(scaffold,pnodes,currentValue)
+
+  currentValues = getCurrentValues(trace,pnodes)
+  allSetsOfValues = getCartesianProductOfEnumeratedValues(trace,pnodes)
+
+  # println("All sets of values:")
+  # show(allSetsOfValues)
+  # println("------------------")
+
+  registerDeterministicLKernels(trace,scaffold,pnodes,currentValues)
   
   (rhoWeight,rhoDB) = detachAndExtract(trace,scaffold.border,scaffold)
+  @assert isa(rhoDB,DB)
   assertTorus(scaffold)
 
-  xiWeights = []
-  xiDBs = []
+  xiWeights = (Float64)[]
+  xiDBs = {}
+  xiMixs = (Float64)[]
   
-  allValues = getCartesianProductOfEnumeratedValues(trace,pnodes)
-  for newValue = allValues
-    if (newValue == currentValue) continue end
-    registerDeterministicLKernels(scaffold,pnodes,newValue)
-    append!(xiWeights,regenAndAttach(trace,scaffold.border,scaffold,false,DB()))
-    append!(xiDBs,detachAndExtract(trace,scaffold.border,scaffold)[1])
+
+  for newValues = allSetsOfValues
+    if (newValues == currentValues) continue end
+
+    registerDeterministicLKernels(trace,scaffold,pnodes,newValues)
+    push!(xiWeights,regenAndAttach(trace,scaffold.border,scaffold,false,DB()))
+    push!(xiMixs,logDensityOfBlock(trace,scope,block))
+    push!(xiDBs,detachAndExtract(trace,scaffold.border,scaffold)[2])
   end
 
-  allExpWeights = [exp(w) for w in xiWeights + [rhoWeight]]
-  xiExpWeights = expWeights[1:end-1]
-  i = Distributions.rand(Distributions.Categorical(normalizeList(xiExpWeights)))
-  xiWeight,xiDB = xiWeights[i],xiDBs[i]
-  totalExpWeight = sum(allExpWeights)
-  weightMinusRho = log(totalExpWeight - expWeights[end])
-  weightMinusXi = log(totalExpWeight - expWeights[i])
-  xiMix = logDensityofBlock(trace,scope,block)
+  xiExpWeights = [exp(w) for w in xiWeights]
+  rhoExpWeight = exp(rhoWeight)
 
-  if log(rand()) < (xiMix + xiWeight) - (rhoMix + rhoWeight) # accept
-    regenAndAttach(trace,scaffold.border,scaffold,true,xiDBs[i])
+  # println("-----------")
+  # println("\nxi:")
+  # show(xiExpWeights)
+  # println("\nrho:")
+  # show(rhoExpWeight)
+  # println("-----------")
+
+  i = Distributions.rand(Distributions.Categorical(normalizeList(xiExpWeights)))
+  (xiWeight,xiDB,xiMix) = (xiWeights[i],xiDBs[i],xiMixs[i])
+  totalExpWeight = sum(xiExpWeights) + rhoExpWeight
+  weightMinusRho = log(totalExpWeight - rhoExpWeight)
+  weightMinusXi = log(totalExpWeight - xiExpWeights[i])
+
+  if log(rand()) < (xiMix + weightMinusRho) - (rhoMix + weightMinusXi) # accept
+    print(".")
+    regenAndAttach(trace,scaffold.border,scaffold,true,xiDB)
   else # reject
+    print("!")
     regenAndAttach(trace,scaffold.border,scaffold,true,rhoDB)
   end
   assertTrace(trace)

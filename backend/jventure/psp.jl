@@ -33,3 +33,5 @@ childrenCanAAA(psp::PSP) = false
 constructSPAux(psp::OutputPSP) = nothing # just so that SPs don't need to be abstract
 
 hasAEKernel(psp::OutputPSP) = false
+
+enumerateValues(psp::PSP,args::Args) = error("PSP cannot enumerate values.")

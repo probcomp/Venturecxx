@@ -13,3 +13,11 @@ function kweight(k::DefaultAAALKernel,trace::Trace,newValue::SP,oldValue::Union(
 end
 
 getAAALKernel(psp::OutputPSP) = DefaultAAALKernel(psp)
+
+type DeterministicLKernel <: LKernel
+  psp::PSP
+  value::VentureValue
+end
+
+ksimulate(k::DeterministicLKernel,trace::Trace,oldValue::Union(SP,Nothing),args::OutputArgs) = k.value
+kweight(k::DefaultAAALKernel,trace::Trace,newValue::SP,oldValue::Union(SP,Nothing),args::OutputArgs) = logDensity(k.psp,newValue,args)

@@ -1,4 +1,5 @@
 require("engine.jl")
+require("utils.jl")
 
 function printTest(testName,eps,ops)
   println(string("---Test: ",testName,"---"))
@@ -6,14 +7,6 @@ function printTest(testName,eps,ops)
   print("Observed: ") ; show(ops) ; println("")
 end
 
-normalizeList(seq) = normalizeList(seq,sum(seq))
-function normalizeList(seq,N)
-  if N > 0
-    return [x/N for x in seq]
-  else
-    return [0 for x in seq]
-  end
-end
 
 function countPredictions(predictions, seq)
   return [count(y->y==x,predictions) for x in seq]
@@ -36,6 +29,7 @@ function runJTests(N)
 #  testGeometric1(N)
   testMem(N)
   testAAA(N)
+  testGibbs(N)
 end
 
 function jprofile(N,filename="dump.txt")
@@ -403,4 +397,28 @@ function testScope1(N)
   ps = [.3577,.6433]
   eps = normalizeList(countPredictions(predictions, [true,false]))
   printTest("TestSprinkler2 (mixes terribly)",ps,eps)
+end
+
+function testGibbs1(N)
+  sivm = Engine()
+  (id,val) = predict(sivm,"(bernoulli)")
+  predictions = loggingGibbsInfer(sivm.trace,id,"default",N)
+  ps = [.5,.5]
+  println(predictions)
+  eps = normalizeList(countPredictions(predictions, [1,0]))
+  printTest("testGibbs1",ps,eps)
+end
+
+function testGibbs2(N)
+  sivm = Engine()
+  (xid,_) = assume(sivm,"x","(apply_in_scope \"xor\" 0 (bernoulli 0.001))")
+  (yid,_) = assume(sivm,"y","(apply_in_scope \"xor\" 0 (bernoulli 0.001))")
+  observe(sivm,"(noisy_true (== (+ x y) 1) .001)",true)
+  predictions = loggingGibbsInfer(sivm.trace,xid,"xor",N)
+  println(predictions)
+
+  ps = [.5,.5]
+  eps = normalizeList(countPredictions(predictions, [1,0]))
+  printTest(string("testGibbs2"),ps,eps)
+
 end

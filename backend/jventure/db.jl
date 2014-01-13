@@ -19,3 +19,10 @@ function registerSPFamilyRoot!(db::DB,sp::SP,id::SPFamilyID,esrParent::Node)
   @assert !haskey(db.spFamilyDBs,(sp,id))
   db.spFamilyDBs[(sp,id)] = esrParent
 end
+
+function disp(db::DB)
+  println("Displaying DB")
+  for (node,value) = db.values
+    println(value)
+  end
+end

@@ -9,7 +9,11 @@ type Engine
 end
 
 
-Engine() = Engine(0,(DirectiveID=>Any)[],Trace())
+function Engine()
+  sivm = Engine(0,(DirectiveID=>Any)[],Trace())
+  assume(sivm,"noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+  return sivm
+end
 
 function nextBaseAddr(engine::Engine)
   engine.directiveCounter += 1
