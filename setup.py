@@ -1,17 +1,17 @@
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
+#
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/python
 
@@ -30,16 +30,75 @@ from os import path
 #print(src_files)
 
 src_files = [
+    "src/value.cxx",
+    "src/node.cxx",
+    "src/env.cxx",
+    "src/render.cxx",
+    "src/builtin.cxx",
+    "src/findsproots.cxx",
+    "src/trace.cxx",
+    "src/rcs.cxx",
+    "src/omegadb.cxx",
+    "src/regen.cxx",
+    "src/detach.cxx",
+    "src/flush.cxx",
+    "src/lkernel.cxx",
+    "src/infer/gkernel.cxx",
+    "src/infer/mh.cxx",
+    "src/infer/gibbs.cxx",
+    "src/infer/pgibbs.cxx",
+    "src/infer/meanfield.cxx",
+    "src/utils.cxx",
+    "src/check.cxx",
+    "src/sp.cxx",
+    "src/spaux.cxx",
+    "src/scaffold.cxx",
+    "src/sps/csp.cxx",
+    "src/sps/mem.cxx",
+    "src/sps/number.cxx",
+    "src/sps/sym.cxx",
+    "src/sps/trig.cxx",
+    #"src/sps/real.cxx",
+    #"src/sps/count.cxx",
+    "src/sps/bool.cxx",
+    "src/sps/continuous.cxx",
+    "src/sps/discrete.cxx",
+    "src/sps/cond.cxx",
+    "src/sps/vector.cxx",
+    "src/sps/list.cxx",
+    "src/sps/map.cxx",
+    "src/sps/envs.cxx",
+    "src/sps/eval.cxx",
+    "src/sps/pycrp.cxx",
+    "src/sps/makesymdirmult.cxx",
+    "src/sps/makedirmult.cxx",
+    "src/sps/makebetabernoulli.cxx",
+    "src/sps/makeucsymdirmult.cxx",
+    "src/sps/makelazyhmm.cxx",
+    "src/pytrace.cxx"
+]
+
+src_files = ["backend/cxx/" + f for f in src_files]
+
+inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/']
+inc_dirs = ["backend/cxx/" + d for d in inc_dirs]
+
+cxx = Extension("venture.cxx.libtrace",
+    define_macros = [('MAJOR_VERSION', '0'),
+                     ('MINOR_VERSION', '1'),
+                     ('REVISION', '1')],
+    libraries = ['gsl', 'gslcblas', 'boost_python'],
+    extra_compile_args = ["-std=c++11", "-Wall", "-gstabs+", "-Og", "-fPIC"],
+    undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
+    include_dirs = inc_dirs,
+    library_dirs = ['/home/axch/work/pcp/julia/usr/lib'],
+    sources = src_files)
+
+jlsrc_files = [
     "backend/jventure/pytrace.cxx",
 ]
 
-inc_dirs = ['backend/jventure/','/home/axch/work/pcp/julia/src','/home/axch/work/pcp/julia/src/support','/home/axch/work/pcp/julia/usr/include']
-
-ext_modules = []
-
-packages=["venture","venture.sivm","venture.ripl",
-    "venture.parser","venture.server","venture.shortcuts",
-    "venture.unit", "venture.test", "venture.cxx", "venture.lite", "venture.jventure"]
+jlinc_dirs = ['backend/jventure/','/home/axch/work/pcp/julia/src','/home/axch/work/pcp/julia/src/support','/home/axch/work/pcp/julia/usr/include']
 
 jventure_cxx = Extension("venture.jventure.libjltrace",
     define_macros = [('MAJOR_VERSION', '0'),
@@ -52,6 +111,13 @@ jventure_cxx = Extension("venture.jventure.libjltrace",
     library_dirs = ['/home/axch/work/pcp/julia/usr/lib'],
     sources = src_files)
 
+packages=["venture","venture.sivm","venture.ripl",
+    "venture.parser","venture.server","venture.shortcuts",
+    "venture.unit", "venture.test", "venture.cxx", "venture.lite",
+    "venture.jventure"]
+
+ext_modules = []
+ext_modules.append(cxx)
 ext_modules.append(jventure_cxx)
 
 setup (
