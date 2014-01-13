@@ -117,6 +117,14 @@ class Trace(object):
   #### For kernels
   def samplePrincipalNode(self): return random.choice(self.rcs)
   def logDensityOfPrincipalNode(self,principalNode): return -1 * math.log(len(self.rcs))
+  def sampleBlock(self,scope):
+    # TODO Use a better data structure for this
+    blocks = [blk for (sc,blk) in self.scopes.keys() if sc == scope]
+    return random.choice(blocks)
+  def logDensityOfBlock(self,scope,block):
+    # TODO Use a better data structure for this
+    blocks = [blk for (sc,blk) in self.scopes.keys() if sc == scope]
+    return -1 * math.log(len(blocks))
 
   #### External interface to engine.py
   def eval(self,id,exp):

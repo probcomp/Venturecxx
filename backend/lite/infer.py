@@ -32,10 +32,12 @@ class BlockScaffoldIndexer(object):
       return constructScaffold(trace,[pnode])
     else:
       if self.block == "one":
-        raise Exception("INFER mixMH for custom blocks yet implemented")
+        goalBlock = trace.sampleBlock(self.scope)
+        pnodes = trace.scopes[(self.scope,goalBlock)]
       if self.block == "all":
         raise Exception("INFER scope unioning not yet implemented")
-      pnodes = trace.scopes[(self.scope,self.block)]
+      else:
+        pnodes = trace.scopes[(self.scope,self.block)]
       return constructScaffold(trace,pnodes)
 
   def logDensityOfIndex(self,trace,scaffold):
@@ -45,10 +47,11 @@ class BlockScaffoldIndexer(object):
       return trace.logDensityOfPrincipalNode(None) # the actual principal node is irrelevant
     else:
       if self.block == "one":
-        raise Exception("INFER mixMH for custom blocks yet implemented")
+        return trace.logDensityOfBlock(self.scope,None) # The actual block in irrelevant
       if self.block == "all":
         raise Exception("INFER scope unioning not yet implemented")
-      return 0
+      else:
+        return 0
 
 class MHOperator(object):
   def propose(self,trace,scaffold):
