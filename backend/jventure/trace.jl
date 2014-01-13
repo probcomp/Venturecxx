@@ -267,6 +267,10 @@ function sampleBlock(trace::Trace,scope)
   return (block,pnodes)
 end
 
+function arrayOfPNodesFromScope(trace::Trace,scope)
+  return asArray(trace.scopes[scope])
+end
+
 require("lkernel.jl")
 require("infer.jl")
 
@@ -309,10 +313,10 @@ function loggingGibbsInfer(trace::Trace,id::DirectiveID,scope,N)
   return predictions
 end
 
-function loggingPGibbsInfer(trace::Trace,id::DirectiveID,scope,N)
+function loggingPGibbsInfer(trace::Trace,id::DirectiveID,scope,N,P)
   predictions = Array(Any,N)
   for n = 1:N
-    pGibbsInfer(trace,scope,sampleBlock(trace,scope)...,2)
+    pGibbsInfer(trace,scope,arrayOfPNodesFromScope(trace,scope),P)
     predictions[n] = extractValue(trace,id)
   end
   return predictions

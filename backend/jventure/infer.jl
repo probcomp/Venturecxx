@@ -7,16 +7,16 @@ function mhInfer(trace::Trace,scope,block,mutatingPNodes::Set{Node})
   pnodes = copy(mutatingPNodes)
   assertTrace(trace)
   rhoMix = logDensityOfBlock(trace,scope,block)
-  scaffold = constructScaffold(trace,pnodes)
-  (rhoWeight,rhoDB) = detachAndExtract(trace,scaffold.border,scaffold)
+  scaffold = constructScaffold(trace,{pnodes})
+  (rhoWeight,rhoDB) = detachAndExtract(trace,scaffold.border[1],scaffold)
   assertTorus(scaffold)
-  xiWeight = regenAndAttach(trace,scaffold.border,scaffold,false,rhoDB)
+  xiWeight = regenAndAttach(trace,scaffold.border[1],scaffold,false,rhoDB)
   assertTrace(trace)
   xiMix = logDensityOfBlock(trace,scope,block)
   if log(rand()) > (xiMix + xiWeight) - (rhoMix + rhoWeight) # reject
-    detachAndExtract(trace,scaffold.border,scaffold)
+    detachAndExtract(trace,scaffold.border[1],scaffold)
     assertTorus(scaffold)
-    regenAndAttach(trace,scaffold.border,scaffold,true,rhoDB)
+    regenAndAttach(trace,scaffold.border[1],scaffold,true,rhoDB)
     assertTrace(trace)
   end
 end
@@ -49,14 +49,14 @@ function enumerativeGibbsInfer(trace::Trace,scope,block,mutatingPNodes::Set{Node
   pnodes = copy(mutatingPNodes)
   assertTrace(trace)
   rhoMix = logDensityOfBlock(trace,scope,block)
-  scaffold = constructScaffold(trace,pnodes)
+  scaffold = constructScaffold(trace,{pnodes})
 
   currentValues = getCurrentValues(trace,pnodes)
   allSetsOfValues = getCartesianProductOfEnumeratedValues(trace,pnodes)
 
   registerDeterministicLKernels(trace,scaffold,pnodes,currentValues)
   
-  (rhoWeight,rhoDB) = detachAndExtract(trace,scaffold.border,scaffold)
+  (rhoWeight,rhoDB) = detachAndExtract(trace,scaffold.border[1],scaffold)
   @assert isa(rhoDB,DB)
   assertTorus(scaffold)
 
@@ -69,9 +69,9 @@ function enumerativeGibbsInfer(trace::Trace,scope,block,mutatingPNodes::Set{Node
     if (newValues == currentValues) continue end
 
     registerDeterministicLKernels(trace,scaffold,pnodes,newValues)
-    push!(xiWeights,regenAndAttach(trace,scaffold.border,scaffold,false,DB()))
+    push!(xiWeights,regenAndAttach(trace,scaffold.border[1],scaffold,false,DB()))
     push!(xiMixs,logDensityOfBlock(trace,scope,block))
-    push!(xiDBs,detachAndExtract(trace,scaffold.border,scaffold)[2])
+    push!(xiDBs,detachAndExtract(trace,scaffold.border[1],scaffold)[2])
   end
 
   xiExpWeights = [exp(w) for w in xiWeights]
@@ -85,10 +85,10 @@ function enumerativeGibbsInfer(trace::Trace,scope,block,mutatingPNodes::Set{Node
 
   if log(rand()) < (xiMix + weightMinusRho) - (rhoMix + weightMinusXi) # accept
     print(".")
-    regenAndAttach(trace,scaffold.border,scaffold,true,xiDB)
+    regenAndAttach(trace,scaffold.border[1],scaffold,true,xiDB)
   else # reject
     print("!")
-    regenAndAttach(trace,scaffold.border,scaffold,true,rhoDB)
+    regenAndAttach(trace,scaffold.border[1],scaffold,true,rhoDB)
   end
   assertTrace(trace)
 end
@@ -127,22 +127,20 @@ end
 # TODO for now, no resampling
 # and then one final resampling step to select XI
 
-function pGibbsInfer(trace::Trace,scope,block,mutatingPNodes::Set{Node},P::Int)
-  T = 1
-  pnodes = copy(mutatingPNodes)
+function pGibbsInfer(trace::Trace,scope,arrayOfMutatingPNodes::Array{Set{Node}},P::Int)
+  T = length(arrayOfMutatingPNodes)
+  arrayOfPNodes = [copy(mutatingPNodes) for mutatingPNodes in arrayOfMutatingPNodes]
   assertTrace(trace)
-  rhoMix = logDensityOfBlock(trace,scope,block)
-  scaffold = constructScaffold(trace,pnodes)
-  border = {scaffold.border} # TODO scaffold will fix this
+  scaffold = constructScaffold(trace,arrayOfPNodes)
 
-  rhoWeights = (Float64)[0.0 for t in 1:T]
+  rhoWeights = zeros(T)
 
   omegaDBs = cell(T,P+1)
   ancestorIndices = cell(T,P+1)
 
   # Compute all weights, DBs, and ESR_DBs for RHO
   for t = reverse(1:T)
-    (rhoWeights[t],omegaDBs[t,P+1]) = detachAndExtract(trace,border[t],scaffold)
+    (rhoWeights[t],omegaDBs[t,P+1]) = detachAndExtract(trace,scaffold.border[t],scaffold)
     if t > 1
       ancestorIndices[t,P+1] = P+1
     end
@@ -150,37 +148,33 @@ function pGibbsInfer(trace::Trace,scope,block,mutatingPNodes::Set{Node},P::Int)
 
   assertTorus(scaffold)
 
-  xiWeights = (Float64)[0.0 for p = 1:P]
-  xiMixs = (Float64)[0.0 for p = 1:P]
+  xiWeights = zeros(P)
 
   # Simulate and calculate initial xiWeights
   for p = 1:P
-    regenAndAttach(trace,border[1],scaffold,false,DB())
-    xiMixs[p] = logDensityOfBlock(trace,scope,block)
-    (xiWeights[p],omegaDBs[1,p]) = detachAndExtract(trace,border[1],scaffold)
+    regenAndAttach(trace,scaffold.border[1],scaffold,false,DB())
+    (xiWeights[p],omegaDBs[1,p]) = detachAndExtract(trace,scaffold.border[1],scaffold)
   end
 
   # for every time step,
   for t = 2:T
-    newXiWeights = (Float64)[0.0 for n in range(P)]
+    newXiWeights = zeros(P)
     # Sample new particle and propagate
     for p = 1:P
       extendedWeights = [xiWeights,rhoWeights[t-1]]
       # sample ancestor
       # might be nice to catch this as sample, and then construct path recursively from it.
-      ancestorIndices[t,p] = Distributions.rand(Distributions.Categorical([exp(w) for w in extendedWeights]))
+      ancestorIndices[t,p] = Distributions.rand(Distributions.Categorical(normalizeList(map(exp,extendedWeights))))
       # restore ancestor
       path = constructAncestorPath(ancestorIndices,t,p)
-      restoreAncestorPath(trace,border,drg,omegaDBs,t,path)
+      restoreAncestorPath(trace,scaffold.border,scaffold,omegaDBs,t,path)
       # propagate one time step
-      regenAndAttach(trace,border[t],scaffold,false,DB())
-      # only needed the last time
-      xiMixs[p] = logDensityOfBlock(trace,scope,block)
+      regenAndAttach(trace,scaffold.border[t],scaffold,false,DB())
       # detach and extract the last sink
       (newXiWeights[p],omegaDBs[t,p]) = detachAndExtract(trace,scaffold.border[t],scaffold)
 
       # detach the rest of the sinks to yield the torus
-      detachRest(trace,border,drg,t)
+      detachRest(trace,scaffold.border,scaffold,t)
     end
     xiWeights = newXiWeights
   end
@@ -190,12 +184,12 @@ function pGibbsInfer(trace::Trace,scope,block,mutatingPNodes::Set{Node},P::Int)
   rhoExpWeight = exp(rhoWeights[T])
 
   i = Distributions.rand(Distributions.Categorical(normalizeList(xiExpWeights)))
-  (xiWeight,xiDB,xiMix) = (xiWeights[i],omegaDBs[i],xiMixs[i])
+  (xiWeight,xiDB) = (xiWeights[i],omegaDBs[i])
   totalExpWeight = sum(xiExpWeights) + rhoExpWeight
   weightMinusRho = log(totalExpWeight - rhoExpWeight)
   weightMinusXi = log(totalExpWeight - xiExpWeights[i])
 
-  if log(rand()) < (xiMix + weightMinusRho) - (rhoMix + weightMinusXi) # accept
+  if log(rand()) < weightMinusRho - weightMinusXi # accept
     print(".")
     # TODO construct XI path
     path = [constructAncestorPath(ancestorIndices,T,i),i]
@@ -205,7 +199,7 @@ function pGibbsInfer(trace::Trace,scope,block,mutatingPNodes::Set{Node},P::Int)
     path = [constructAncestorPath(ancestorIndices,T,P+1),P+1]
   end
   @assert length(path) == T
-  restoreAncestorPath(trace,border,scaffold,omegaDBs,T+1,path)
+  restoreAncestorPath(trace,scaffold.border,scaffold,omegaDBs,T+1,path)
   assertTrace(trace)
 end
 

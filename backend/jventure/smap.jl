@@ -40,3 +40,5 @@ Base.getindex{K,T}(sm::SMap{K,T},k) = sm.v[sm.d[k]][2]
 
 sample{K,T}(sm::SMap{K,T}) = sm.v[rand(1:length(sm))]
 Base.length{K,T}(sm::SMap{K,T}) = length(sm.v)
+
+asArray{K,T}(sm::SMap{K,T}) = [t for (k,t) in sm.v]

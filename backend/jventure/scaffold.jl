@@ -5,7 +5,7 @@ type Scaffold
   regenCounts::Dict{Node,Int}
   absorbing::Set{Node}
   aaa::Set{Node}
-  border::Array{Node}
+  border::Array{Array{Node}}
   lkernels::Dict{Node,LKernel}
 end
 
@@ -20,18 +20,25 @@ isAAA(scaffold::Scaffold,node::Node) = in(node,scaffold.aaa)
 hasLKernel(scaffold::Scaffold,node::Node) = haskey(scaffold.lkernels,node)
 getLKernel(scaffold,node) = scaffold.lkernels[node]
 
-function constructScaffold(trace::Trace,pnodes::Set{Node})
-  (cDRG,cAbsorbing,cAAA) = findCandidateScaffold(trace,pnodes)
+function constructScaffold(trace::Trace,arrayOfSetsOfPNodes::Array{Set{Node}})
+  (cDRG,cAbsorbing,cAAA) = (Set{Node}(),Set{Node}(),Set{Node}())
+  indexAssignments = Dict{Node,Int}()
+  for i = 1:length(arrayOfSetsOfPNodes)
+    extendCandidateScaffold(trace,arrayOfSetsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i)
+  end
+
   brush = findBrush(trace,cDRG,cAbsorbing,cAAA)
   drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
   border = findBorder(trace,drg,absorbing,aaa)
   regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
   lkernels = loadKernels(trace,drg,aaa)
-  return Scaffold(regenCounts,absorbing,aaa,(Node)[x for x in border],lkernels)
+  borderSequence = assignBorderSequnce(border,indexAssignments,length(arrayOfSetsOfPNodes))
+  return Scaffold(regenCounts,absorbing,aaa,borderSequence,lkernels)
 end
 
-function addResamplingNode(trace::Trace,drg::Set{Node},absorbing::Set{Node},q::Array{(Node,Bool)},node::Node)
+function addResamplingNode(trace::Trace,drg::Set{Node},absorbing::Set{Node},q::Array{(Node,Bool)},node::Node,indexAssignments::Dict{Node,Int},i::Int)
   delete!(absorbing,node)
+  indexAssignments[node] = i
   push!(drg,node)
   for child = getChildren(trace,node)
     push!(q,(child,false))
@@ -41,38 +48,42 @@ function addResamplingNode(trace::Trace,drg::Set{Node},absorbing::Set{Node},q::A
   end
 end
 
+function addAbsorbingNode(absorbing::Set{Node},node::Node,indexAssignments::Dict{Node,Int},i)
+  indexAssignments[node] = i
+  push!(absorbing,node)
+end
+
+function addAAANode(drg::Set{Node},aaa::Set{Node},node::Node,indexAssignments::Dict{Node,Int},i)
+  indexAssignments[node] = i
+  push!(drg,node)
+  push!(aaa,node)
+end
+
+
 function esrReferenceCanAbsorb(trace::Trace,drg::Set{Node},node::OutputNode)
   return isa(getPSP(trace,node),ESRRefOutputPSP) && !in(node.requestNode,drg) && !in(getESRSourceNode(trace,node),drg)
 end
 
 esrReferenceCanAbsorb(trace::Trace,drg::Set{Node},node::Node) = false
 
-function findCandidateScaffold(trace::Trace,pnodes::Set{Node})
-  (drg,absorbing,aaa,q) = (Set{Node}(),Set{Node}(),Set{Node}(),Array((Node,Bool),0))
-  for pnode = pnodes
-    push!(q,(pnode,true))
-  end
+function extendCandidateScaffold(trace::Trace,pnodes::Set{Node},cDRG::Set{Node},cAbsorbing::Set{Node},cAAA::Set{Node},indexAssignments::Dict{Node,Int},i::Int)
+  q = [(pnode,true) for pnode in pnodes]
 
   while !isempty(q)
     (node,isPrincipal) = pop!(q)
-    if in(node,drg)
+    if in(node,cDRG)
       continue
-    elseif isa(node,LookupNode)
-      addResamplingNode(trace,drg,absorbing,q,node)
-    elseif in(getOperatorNode(trace,node),drg)
-      addResamplingNode(trace,drg,absorbing,q,node)
-    elseif canAbsorb(getPSP(trace,node)) && !isPrincipal
-      push!(absorbing,node)
-    elseif esrReferenceCanAbsorb(trace,drg,node)
-      push!(absorbing,node)
+    elseif isa(node,LookupNode) || in(getOperatorNode(trace,node),cDRG)
+      addResamplingNode(trace,cDRG,cAbsorbing,q,node,indexAssignments,i)
+    elseif (canAbsorb(getPSP(trace,node)) && !isPrincipal) || esrReferenceCanAbsorb(trace,cDRG,node)
+      addAbsorbingNode(cAbsorbing,node,indexAssignments,i)
     elseif childrenCanAAA(getPSP(trace,node))
-      push!(drg,node)
-      push!(aaa,node)
+      addAAANode(cDRG,cAAA,node,indexAssignments,i)
     else
-      addResamplingNode(trace,drg,absorbing,q,node)
+      addResamplingNode(trace,cDRG,cAbsorbing,q,node,indexAssignments,i)
     end
   end
-  return (drg,absorbing,aaa)
+  return (cDRG,cAbsorbing,cAAA)
 end
       
 function findBrush(trace::Trace,cDRG::Set{Node},cAbsorbing::Set{Node},cAAA::Set{Node})
@@ -177,3 +188,10 @@ end
 
 loadKernels(trace::Trace,drg::Set{Node},aaa::Set{Node}) = (Node=>LKernel)[node => getAAALKernel(getPSP(trace,node)) for node in aaa]
 
+function assignBorderSequnce(border::Set{Node},indexAssignments::Dict{Node,Int},numIndices::Int)
+  borderSequence = [Array(Node,0) for i in 1:numIndices]
+  for node = border
+    push!(borderSequence[indexAssignments[node]],node)
+  end
+  return borderSequence
+end
