@@ -15,3 +15,5 @@ class Engine:
     self.observe = jfuncs[2]
     self.report = jfuncs[3]
     self.infer = jfuncs[4]
+
+  def continuous_inference_status(self): return {"running" : False}
