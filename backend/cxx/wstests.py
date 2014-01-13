@@ -241,7 +241,8 @@ def runTests(N):
   reportTest(repeatTest(testMHNormal0, N))
   reportTest(repeatTest(testMHNormal1, N))
   if globalBackend == make_lite_church_prime_ripl:
-    reportTest(repeatTest(testMHNormal2, N))
+    reportTest(repeatTest(testBlockingExample0, N))
+    reportTest(testBlockingExample1())
   reportTest(repeatTest(testMem0, N))
   reportTest(repeatTest(testMem1, N))
   reportTest(repeatTest(testMem2, N))
@@ -405,7 +406,7 @@ def testMHNormal1(N):
   cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
   return reportKnownContinuous("testMHNormal1", cdf, predictions, "approximately N(24,sqrt(7/3))")
 
-def testMHNormal2(N):
+def testBlockingExample0(N):
   ripl = RIPL()
   ripl.assume("a", "(normal 10.0 1.0 (scope 0 0))")
   ripl.assume("b", "(normal a 1.0 (scope 1 1))")
@@ -417,7 +418,7 @@ def testMHNormal2(N):
   cdf = stats.norm(loc=10.0, scale=1.0).cdf
   return reportKnownContinuous("testMHNormal2", cdf, predictions, "N(10.0,1.0)")
 
-def testBlockingExample():
+def testBlockingExample1():
   ripl = RIPL()
   ripl.assume("a", "(normal 0.0 1.0 (scope 0 0))")
   ripl.assume("b", "(normal 1.0 1.0 (scope 0 0))")
