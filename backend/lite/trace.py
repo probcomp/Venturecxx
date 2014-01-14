@@ -45,6 +45,8 @@ class Trace(object):
     for key in node.scopes.iteritems():
       if key in self.scopes:
         self.scopes[key].remove(node)
+        if not(self.scopes[key]): # Now empty
+          self.scopes.remove(key)
 
   def createConstantNode(self,val): return ConstantNode(val)
   def createLookupNode(self,sourceNode): 
