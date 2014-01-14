@@ -470,7 +470,7 @@ def testBlockingExample3():
   newb = ripl.report(2)
   assert not(olda == newa)
   assert not(oldb == newb)
-  return reportPassage("testBlockingExample1")
+  return reportPassage("testBlockingExample3")
 
 def testStudentT0(N):
   ripl = RIPL()
