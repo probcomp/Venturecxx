@@ -240,7 +240,7 @@ def runTests(N):
   reportTest(repeatTest(testCategorical1, N))
   reportTest(repeatTest(testMHNormal0, N))
   reportTest(repeatTest(testMHNormal1, N))
-  runBlockingTests()
+  runBlockingTests(N)
   reportTest(repeatTest(testMem0, N))
   reportTest(repeatTest(testMem1, N))
   reportTest(repeatTest(testMem2, N))
