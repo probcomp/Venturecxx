@@ -39,7 +39,7 @@ def constructScaffold(trace,setsOfPNodes):
   border = findBorder(trace,drg,absorbing,aaa)
   regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
   lkernels = loadKernels(trace,drg,aaa)
-  borderSequence = assignBorderSequnce(border,indexAssignments)
+  borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
   return Scaffold(regenCounts,absorbing,aaa,borderSequence,lkernels)
 
 def addResamplingNode(trace,drg,absorbing,q,node,indexAssignments,i):
@@ -156,7 +156,7 @@ def loadKernels(trace,drg,aaa):
   return { node : trace.pspAt(node).getAAALKernel() for node in aaa}
 
 def assignBorderSequnce(border,indexAssignments,numIndices):
-  borderSequence = [set() for i in range(numIndices)]
+  borderSequence = [[] for i in range(numIndices)]
   for node in border:
-    borderSequence[indexAssignments[node]].add(node)
+    borderSequence[indexAssignments[node]].append(node)
   return borderSequence
