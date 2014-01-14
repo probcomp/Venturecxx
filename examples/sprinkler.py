@@ -33,5 +33,7 @@ class Sprinkler(VentureUnit):
 if __name__ == '__main__':
   ripl = shortcuts.make_church_prime_ripl()
   model = Sprinkler(ripl)
-  history = model.runFromConditional(50, verbose=True)
+  def blockInfer(ripl, ct):
+    ripl.infer(ct, block="all")
+  history = model.runFromConditional(50, verbose=True, infer=blockInfer)
   history.plot(fmt='png')

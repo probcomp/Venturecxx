@@ -164,7 +164,7 @@ class VentureUnit:
         return history
     
     # iterates until (approximately) all random choices have been resampled
-    def sweep(self):
+    def sweep(self,infer=None):
         iterations = 0
         
         #FIXME: use a profiler method here
@@ -172,7 +172,12 @@ class VentureUnit:
         
         while iterations < get_entropy_info()['unconstrained_random_choices']:
             step = get_entropy_info()['unconstrained_random_choices']
-            self.ripl.infer(step)
+            if infer is None:
+                self.ripl.infer(step)
+            else:
+                # TODO Incoming infer procedure may touch more than
+                # "step" choices; how to count sweeps right?
+                infer(self.ripl, step)
             iterations += step
         
         return iterations
@@ -249,7 +254,7 @@ class VentureUnit:
     
     # Runs inference on the model conditioned on observed data.
     # By default the data is as given in makeObserves(parameters).
-    def runFromConditional(self, sweeps, data=None, runs=3, verbose=False, profile=False):
+    def runFromConditional(self, sweeps, data=None, runs=3, verbose=False, profile=False, infer=None):
         history = History('run_from_conditional', self.parameters)
         
         for run in range(runs):
@@ -281,7 +286,7 @@ class VentureUnit:
                 
                 # FIXME: use timeit module for better precision
                 start = time.time()
-                iterations = self.sweep()
+                iterations = self.sweep(infer=infer)
                 end = time.time()
                 
                 sweepTimes.append(end-start)
