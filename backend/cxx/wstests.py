@@ -221,7 +221,7 @@ def collectSamples(ripl,address,T,kernel=None,use_global_scaffold=None):
   kernel = kernel if kernel is not None else globalKernel
   use_global_scaffold = use_global_scaffold if use_global_scaffold is not None else globalUseGlobalScaffold
   block = "one" if not use_global_scaffold else "all"
-  return collectSamplesWith(ripl, address, T, {"transitions":100, "kernel":kernel, "block":block})
+  return collectSamplesWith(ripl, address, T, {"transitions":10, "kernel":kernel, "block":block})
 
 def collectSamplesWith(ripl, address, T, params):
   predictions = []
@@ -230,7 +230,7 @@ def collectSamplesWith(ripl, address, T, params):
     # tests, presumably by avoiding the parser.
     ripl.sivm.core_sivm.engine.infer(params)
     predictions.append(ripl.report(address))
-    ripl.sivm.core_sivm.engine.reset()
+#    ripl.sivm.core_sivm.engine.reset()
   return predictions
 
 def runTests(N):
@@ -1122,7 +1122,7 @@ def testDPMem1(N):
 def observeCategories(ripl,counts):
   for i in range(len(counts)):
     for ct in range(counts[i]):
-      ripl.observe("(normal (f) 1.0)",i)
+      ripl.observe("(flip (if (= (f) %d) 1.0 0.1))" % i,"true")
 
 def testCRP1(N,isCollapsed):
   ripl = RIPL()
@@ -1499,6 +1499,8 @@ def testMemHashFunction1(A,B):
 
 
 ###########################
+###### DSELSAM (madness) ##
+###########################
 def testPGibbsMHHMM1(N):
   ripl = RIPL()
   ripl.assume("f","""
@@ -1538,3 +1540,26 @@ def testPGibbsMHHMM1(N):
   reportKnownMeanVariance("TestPGibbsMHHMM1", 390/89.0, 55/89.0, predictions)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous("TestPGibbsMHHMM1", cdf, predictions, "N(4.382, 0.786)")
+
+def testDHSCRP1(N):
+  ripl = RIPL()
+  ripl.assume("dpmem","""
+(lambda (alpha base_dist)
+  ((lambda (augmented_proc crp)
+     (lambda () (augmented_proc (crp))))
+   (mem (lambda (table) (base_dist)))
+   (make_crp alpha)))
+""")
+
+#  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("alpha","1.0")
+  ripl.assume("base_dist","(lambda () (categorical 0.2 0.2 0.2 0.2 0.2))")
+  ripl.assume("f","(dpmem alpha base_dist)")
+
+  ripl.predict("(f)",label="pid")
+
+  observeCategories(ripl,[2,2,5,1,0])
+
+  predictions = collectSamples(ripl,"pid",N)
+  ans = [(0,2.2), (1,2.2), (2,5.2), (3,1.2), (4,0.2)]
+  return reportKnownDiscrete("TestDHSCRP1", ans, predictions)
