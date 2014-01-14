@@ -198,6 +198,7 @@ class Trace(object):
     if type(val) is str: return {"type":"symbol","value":val}
     elif type(val) is bool: return {"type":"boolean","value":val}
     elif type(val) is list: return {"type":"list","value":[self.boxValue(v) for v in val]}
+    elif isinstance(val, SPRef): return {"type":"SP","value":val}
     else: return {"type":"number","value":val}
 
 
