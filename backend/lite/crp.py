@@ -59,8 +59,8 @@ class CRPOutputPSP(RandomPSP):
       aux.numTables -= 1
       del aux.tableCounts[index]
         
-  # def logDensityOfState(self,aux):
-  #   term1 = scipy.special.gammaln(self.alpha) - scipy.special.gammaln(self.alpha + aux.numCustomers)
-  #   term2 = aux.numTables + math.log(self.alpha)
-  #   term3 = sum([scipy.special.gammaln(aux.tableCounts[index]) for index in aux.tableCounts])
-  #   return term1 + term2 + term3
+  def logDensityOfState(self,aux):
+    term1 = scipy.special.gammaln(self.alpha) - scipy.special.gammaln(self.alpha + aux.numCustomers)
+    term2 = aux.numTables + math.log(self.alpha)
+    term3 = sum([scipy.special.gammaln(aux.tableCounts[index]) for index in aux.tableCounts])
+    return term1 + term2 + term3
