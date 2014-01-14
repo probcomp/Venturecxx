@@ -146,9 +146,9 @@ def restoreAncestorPath(trace,border,scaffold,omegaDBs,t,path):
     regenAndAttach(trace,border[i],scaffold,True,selectedDB,{})
 
 # detach the rest of the particle
-def detachRest(trace,sinks,drg,t):
+def detachRest(trace,border,scaffold,t):
   for i in reversed(range(t)): 
-    detach(trace,sinks[i],drg)
+    detachAndExtract(trace,border[i],scaffold)
 
 
 # P particles, not including RHO
@@ -173,6 +173,9 @@ class PGibbsOperator(object):
     rhoWeights = [None for t in range(T)]
     omegaDBs = [[None for p in range(P+1)] for t in range(T)]
     ancestorIndices = [[None for n in range(P)] + [P] for t in range(T)]
+
+    self.omegaDBs = omegaDBs
+    self.ancestorIndices = ancestorIndices
 
     for t in reversed(range(T)):
       (rhoWeights[t],omegaDBs[t][P]) = detachAndExtract(trace,scaffold.border[t],scaffold)
@@ -210,12 +213,17 @@ class PGibbsOperator(object):
     path = constructAncestorPath(ancestorIndices,T-1,finalIndex) + [finalIndex]
     assert len(path) == T
     restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,T,path)
-    return weightMinusRho - weightMinusXi
+    alpha = weightMinusRho - weightMinusXi
+    print "alpha: ",alpha
+    return alpha
 
-  def accept(self): pass
+  def accept(self):
+#    print "."
+    pass
   def reject(self):
+#    print "!"
     detachRest(self.trace,self.scaffold.border,self.scaffold,self.T)
     assertTorus(self.scaffold)
-    path = constructAncestorPath(ancestorIndices,self.T-1,self.P) + [self.P]
+    path = constructAncestorPath(self.ancestorIndices,self.T-1,self.P) + [self.P]
     assert len(path) == self.T
-    restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,self.T,path)
+    restoreAncestorPath(self.trace,self.scaffold.border,self.scaffold,self.omegaDBs,self.T,path)

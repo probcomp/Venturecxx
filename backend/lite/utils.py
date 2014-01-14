@@ -10,6 +10,7 @@ def sampleCategoricalIter(x,index,psSoFar,psRemaining):
   else: return sampleCategoricalIter(x,index+1,psSoFar + psRemaining[0],psRemaining[1:])
 
 def sampleCategorical(ps):
+  ps = normalizeList(ps)
   x = random.random()
   index = sampleCategoricalIter(x,0,ps[0],ps[1:])
   assert index < len(ps)
