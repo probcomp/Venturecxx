@@ -37,8 +37,8 @@ class PitmanYorMixtureDemo(VentureUnit):
   (scope_include parameters cluster
     (gamma 1 scale))))]
 
-[ASSUME get_component_model (mem (lambda (cluster)
-  (normal (get_mean cluster) (get_variance cluster))))]
+[ASSUME get_component_model (lambda (cluster)
+  (lambda () (normal (get_mean cluster) (get_variance cluster))))]
 
 [ASSUME get_datapoint (mem (lambda (id)
   ((get_component_model (get_cluster id)))))]
