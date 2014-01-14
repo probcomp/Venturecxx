@@ -37,6 +37,10 @@ def builtInSPs():
            "categorical" : SP(NullRequestPSP(),discrete.CategoricalOutputPSP()),
 
            "normal" : SP(NullRequestPSP(),continuous.NormalOutputPSP()),
+
+           "uniform_continuous" : SP(NullRequestPSP(),continuous.UniformOutputPSP()),
+           "beta" : SP(NullRequestPSP(),continuous.BetaOutputPSP()),
+
            "gamma" : SP(NullRequestPSP(),continuous.GammaOutputPSP()),
 
            "branch" : SP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()),

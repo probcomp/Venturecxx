@@ -5,6 +5,7 @@ def normalizeList(seq):
   return [ float(x)/denom for x in seq]
 
 def sampleCategoricalIter(x,index,psSoFar,psRemaining):
+  assert index < 1000
   if x < psSoFar: return index
   if not psRemaining: return index
   else: return sampleCategoricalIter(x,index+1,psSoFar + psRemaining[0],psRemaining[1:])

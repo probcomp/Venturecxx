@@ -23,7 +23,7 @@ import numpy as np
 
 globalKernel = "mh";
 globalUseGlobalScaffold = False;
-globalAlwaysReport = False;
+globalAlwaysReport = True;
 globalReportingThreshold = 0.001
 globalBackend = make_lite_church_prime_ripl
 
@@ -264,12 +264,13 @@ def runTests(N):
     reportTest(repeatTest(testMakeBetaBernoulli4, "make_ubeta_bernoulli", N))
   reportTest(repeatTest(testLazyHMM1, N))
   reportTest(repeatTest(testLazyHMMSP1, N))
+  reportTest(repeatTest(testGamma1, N))
+  reportTest(repeatTest(testBreakMem, N))
   if globalBackend != make_lite_church_prime_ripl:
     # These rely upon builtins primitives that the Lite backend doesn't have.
     # Those that are testing those primitives (as opposed to testing the engine with them)
     # can reasonably stay gated for a while.
     reportTest(repeatTest(testStudentT0, N))
-    reportTest(repeatTest(testGamma1, N))
     reportTest(repeatTest(testMakeSymDirMult1, "make_sym_dir_mult", N))
     reportTest(repeatTest(testMakeSymDirMult1, "make_uc_sym_dir_mult", N))
     reportTest(repeatTest(testMakeSymDirMult2, "make_sym_dir_mult", N))
@@ -299,7 +300,6 @@ def runTests(N):
     reportTest(repeatTest(testReferences2, N))
     # TODO This failure looks like a real bug
     reportTest(repeatTest(testMemoizingOnAList))
-    reportTest(repeatTest(testBreakMem, N))
     # reportTest(repeatTest(testHPYLanguageModel1, N)) # TODO slow and fails
     # reportTest(repeatTest(testHPYLanguageModel2, N)) # TODO slow and fails
     reportTest(repeatTest(testGoldwater1, N))
@@ -414,8 +414,8 @@ def testMHNormal1(N):
 
 def testBlockingExample0(N):
   ripl = RIPL()
-  ripl.assume("a", "(normal 10.0 1.0 (scope 0 0))")
-  ripl.assume("b", "(normal a 1.0 (scope 1 1))")
+  ripl.assume("a", "(scope_include 0 0 (normal 10.0 1.0))")
+  ripl.assume("b", "(scope_include 1 1 (normal a 1.0))")
   ripl.observe("(normal b 1.0)", 14.0)
 
   # If inference only frobnicates b, then the distribution on a
@@ -426,8 +426,8 @@ def testBlockingExample0(N):
 
 def testBlockingExample1():
   ripl = RIPL()
-  ripl.assume("a", "(normal 0.0 1.0 (scope 0 0))")
-  ripl.assume("b", "(normal 1.0 1.0 (scope 0 0))")
+  ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))")
+  ripl.assume("b", "(scope_include 0 0 (normal 1.0 1.0))")
   olda = ripl.report(1)
   oldb = ripl.report(2)
   # The point of block proposals is that both things change at once.
@@ -440,10 +440,10 @@ def testBlockingExample1():
 
 def testBlockingExample2():
   ripl = RIPL()
-  ripl.assume("a", "(normal 0.0 1.0 (scope 0 0))")
-  ripl.assume("b", "(normal 1.0 1.0 (scope 0 0))")
-  ripl.assume("c", "(normal 2.0 1.0 (scope 0 1))")
-  ripl.assume("d", "(normal 3.0 1.0 (scope 0 1))")
+  ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))")
+  ripl.assume("b", "(scope_include 0 0 (normal 1.0 1.0))")
+  ripl.assume("c", "(scope_include 0 1 (normal 2.0 1.0))")
+  ripl.assume("d", "(scope_include 0 1 (normal 3.0 1.0))")
   olda = ripl.report(1)
   oldb = ripl.report(2)
   oldc = ripl.report(3)
@@ -466,8 +466,8 @@ def testBlockingExample2():
 
 def testBlockingExample3():
   ripl = RIPL()
-  ripl.assume("a", "(normal 0.0 1.0 (scope 0 0))")
-  ripl.assume("b", "(normal 1.0 1.0 (scope 0 1))")
+  ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))")
+  ripl.assume("b", "(scope_include 0 1 (normal 1.0 1.0))")
   olda = ripl.report(1)
   oldb = ripl.report(2)
   # The point of block proposals is that both things change at once.
@@ -1568,25 +1568,26 @@ def testDHSCRP1(N):
 def testPGibbsBlockingMHHMM1(N):
   ripl = RIPL()
 
-  ripl.assume("f","""
-(mem (lambda (i)
-  (if (eq i 0)
-    (normal 0.0 1.0 (scope 0 0))
-    (normal (f (minus i 1)) 1.0 (scope 0 0)))))
-""")
-  ripl.assume("g","""
-(mem (lambda (i)
-  (normal (f i) 1.0)))
-""")
+  ripl.assume("x0","(scope_include 0 0 (normal 0.0 1.0))")
+  ripl.assume("x1","(scope_include 0 1 (normal x0 1.0))")
+  ripl.assume("x2","(scope_include 0 2 (normal x1 1.0))")
+  ripl.assume("x3","(scope_include 0 3 (normal x2 1.0))")
+  ripl.assume("x4","(scope_include 0 4 (normal x3 1.0))")
 
-  ripl.observe("(g 0)",1.0)
-  ripl.observe("(g 1)",2.0)
-  ripl.observe("(g 2)",3.0)
-  ripl.observe("(g 3)",4.0)
-  ripl.observe("(g 4)",5.0)
-  ripl.predict("(f 4)")
+  ripl.assume("y0","(normal x0 1.0)")
+  ripl.assume("y1","(normal x1 1.0)")
+  ripl.assume("y2","(normal x2 1.0)")
+  ripl.assume("y3","(normal x3 1.0)")
+  ripl.assume("y4","(normal x4 1.0)")
 
-  predictions = collectSamplesWith(ripl,8,N,{"kernel":"pgibbs","transitions":10,"scope":0})
+  ripl.observe("y0",1.0)
+  ripl.observe("y1",2.0)
+  ripl.observe("y2",3.0)
+  ripl.observe("y3",4.0)
+  ripl.observe("y4",5.0)
+  ripl.predict("x4")
+
+  predictions = collectSamplesWith(ripl,16,N,{"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered"})
   reportKnownMeanVariance("TestPGibbsBlockingMHHMM1", 390/89.0, 55/89.0, predictions)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous("TestPGibbsBlockingMHHMM1", cdf, predictions, "N(4.382, 0.786)")

@@ -27,10 +27,13 @@ class BlockScaffoldIndexer(object):
 
   def sampleIndex(self,trace):
     if self.scope == "default":
-      if not(self.block == "one"):
-        raise Exception("INFER custom blocks for default scope not yet implemented (%r)" % block)
-      pnode = [[trace.samplePrincipalNode()]]
-      return constructScaffold(trace,pnode)
+      if self.block == "one":
+        pnode = trace.samplePrincipalNode()
+        return constructScaffold(trace,[[pnode]])
+      elif self.block == "all":
+        return constructScaffold(trace,[trace.rcs])
+      else:
+        raise Exception("INFER default scope does not admit custom blocks (%r)" % self.block)
     else:
       if self.block == "one":
         goalBlock = trace.sampleBlock(self.scope)
@@ -41,16 +44,19 @@ class BlockScaffoldIndexer(object):
         pnodes = [set().union(*pnodeSets)]
       elif self.block == "ordered":
         blocks = trace.blocksInScope(self.scope)
-        pnode = [trace.scopes[self.scope][block] for block in blocks]
+        pnodes = [trace.scopes[self.scope][block] for block in blocks]
       else:
         pnodes = [trace.scopes[self.scope][self.block]]
       return constructScaffold(trace,pnodes)
 
   def logDensityOfIndex(self,trace,scaffold):
     if self.scope == "default":
-      if not(self.block == "one"):
-        raise Exception("INFER custom blocks for default scope not yet implemented (%r)" % block)
-      return trace.logDensityOfPrincipalNode(None) # the actual principal node is irrelevant
+      if self.block == "one":
+        return trace.logDensityOfPrincipalNode(None) # the actual principal node is irrelevant
+      elif self.block == "all":
+        return 0
+      else:
+        raise Exception("INFER default scope does not admit custom blocks (%r)" % self.block)
     else:
       if self.block == "one":
         return trace.logDensityOfBlock(self.scope,None) # The actual block in irrelevant
@@ -168,9 +174,9 @@ class PGibbsOperator(object):
 
     ### TODO TEMPORARY
     assertTrace(self.trace,self.scaffold)
-
-    self.T = 1
-
+  
+    self.T = len(self.scaffold.border)
+#    assert self.T == 5
     T = self.T
     P = self.P
     ### END INSANITY
@@ -200,7 +206,7 @@ class PGibbsOperator(object):
       for p in range(P):
         extendedWeights = xiWeights + [rhoWeights[t-1]]
         ancestorIndices[t][p] = sampleCategorical([math.exp(w) for w in extendedWeights])
-        path = constructAncestorPath(ancestorIndices,t,n)
+        path = constructAncestorPath(ancestorIndices,t,p)
         restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,t,path)
         regenAndAttach(trace,self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
         (newWeights[p],omegaDBs[t][p]) = detachAndExtract(trace,self.scaffold.border[t],self.scaffold)
@@ -236,7 +242,7 @@ class PGibbsOperator(object):
     detachRest(self.trace,self.scaffold.border,self.scaffold,self.T)
     assertTorus(self.scaffold)
     path = constructAncestorPath(self.ancestorIndices,self.T-1,self.P) + [self.P]
-    assert path == [self.P]
+#    assert path == [self.P]
     assert len(path) == self.T
     restoreAncestorPath(self.trace,self.scaffold.border,self.scaffold,self.omegaDBs,self.T,path)
     assertTrace(self.trace,self.scaffold)

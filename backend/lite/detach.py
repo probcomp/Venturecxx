@@ -21,7 +21,7 @@ def unconstrain(trace,node):
   assert isinstance(node,OutputNode)
   if isinstance(trace.pspAt(node),ESRRefOutputPSP): return unconstrain(trace,trace.esrParentsAt(node)[0])
 
-  if trace.pspAt(node).isRandom(): trace.registerRandomChoice(node)
+  trace.unregisterConstrainedChoice(node)
   trace.unincorporateAt(node)
   weight = trace.logDensityAt(node,trace.valueAt(node))
   trace.incorporateAt(node)
