@@ -171,6 +171,15 @@ class Trace(object):
 
       for node in self.aes: node.madeSP.AEInfer(node.madeSPAux)
 
+  def get_seed(self):
+    # TODO Trace does not support seed control because it uses
+    # Python's native randomness.
+    return 0
+
+  def getGlobalLogScore(self):
+    # TODO Get the constrained nodes too
+    return sum([self.logDensityAt(node,self.valueAt(node)) for node in self.rcs])
+
   #### Helpers (shouldn't be class methods)
 
   # TODO temporary, probably need an extra layer of boxing for VentureValues

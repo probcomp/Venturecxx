@@ -31,7 +31,7 @@ class Sprinkler(VentureUnit):
     self.observe("grassWet", True)
 
 if __name__ == '__main__':
-  ripl = shortcuts.make_church_prime_ripl()
+  ripl = shortcuts.make_lite_church_prime_ripl()
   model = Sprinkler(ripl)
   history = model.runFromConditional(50, verbose=True, name="defaultMH")
   history.plot(fmt='png')
