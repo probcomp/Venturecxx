@@ -24,20 +24,22 @@ class PitmanYorMixtureDemo(VentureUnit):
 
 [ASSUME pyp (pyp/make alpha)]
 
-[ASSUME get_cluster (mem (lambda (id) (scope_include clustering default (pyp)) ))]
+[ASSUME get_cluster (mem (lambda (id)
+  (scope_include clustering default (pyp))))]
 
 [ASSUME get_mean (mem (lambda (cluster)
   (scope_include parameters cluster
-     (normal 0 10) ))]
+    (normal 0 10))))]
 
 [ASSUME get_variance (mem (lambda (cluster)
   (scope_include parameters cluster
-     (gamma 1 scale) ))]
+    (gamma 1 scale))))]
 
 [ASSUME get_component_model (mem (lambda (cluster)
-  (normal (get_mean cluster) (get_variance cluster)) ))]
+  (normal (get_mean cluster) (get_variance cluster))))]
 
-[ASSUME get_datapoint (mem (lambda (id) ( (get_component_model (get_cluster id)) ) ))]
+[ASSUME get_datapoint (mem (lambda (id)
+  ((get_component_model (get_cluster id)))))]
 """
     commands = [command_str.split("]")[0].split(" ", 1) for command_str in program.strip().split("[ASSUME ") if command_str]
     for (var, exp) in commands:
