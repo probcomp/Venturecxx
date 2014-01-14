@@ -26,10 +26,11 @@ class BlockScaffoldIndexer(object):
 
   def sampleIndex(self,trace):
     if self.scope == "default":
-      if not(self.block == "one"):
+      if self.block == "one":
+        pnode = trace.samplePrincipalNode()
+        return constructScaffold(trace,[pnode])
+      else:
         raise Exception("INFER custom blocks for default scope not yet implemented (%r)" % block)
-      pnode = trace.samplePrincipalNode()
-      return constructScaffold(trace,[pnode])
     else:
       if self.block == "one":
         goalBlock = trace.sampleBlock(self.scope)
@@ -44,9 +45,10 @@ class BlockScaffoldIndexer(object):
 
   def logDensityOfIndex(self,trace,scaffold):
     if self.scope == "default":
-      if not(self.block == "one"):
+      if self.block == "one":
+        return trace.logDensityOfPrincipalNode(None) # the actual principal node is irrelevant
+      else:
         raise Exception("INFER custom blocks for default scope not yet implemented (%r)" % block)
-      return trace.logDensityOfPrincipalNode(None) # the actual principal node is irrelevant
     else:
       if self.block == "one":
         return trace.logDensityOfBlock(self.scope,None) # The actual block in irrelevant
