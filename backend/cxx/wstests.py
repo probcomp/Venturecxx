@@ -240,9 +240,7 @@ def runTests(N):
   reportTest(repeatTest(testCategorical1, N))
   reportTest(repeatTest(testMHNormal0, N))
   reportTest(repeatTest(testMHNormal1, N))
-  if globalBackend == make_lite_church_prime_ripl:
-    reportTest(repeatTest(testBlockingExample0, N))
-    reportTest(testBlockingExample1())
+  runBlockingTests()
   reportTest(repeatTest(testMem0, N))
   reportTest(repeatTest(testMem1, N))
   reportTest(repeatTest(testMem2, N))
@@ -310,6 +308,14 @@ def runTests(N):
   # reportTest(repeatTest(testObserveAPredict1, N))
   # testObserveAPredict2(N)
   reportTest(testMemHashFunction1(5,5))
+
+def runBlockingTests(N):
+  if globalBackend == make_lite_church_prime_ripl:
+    reportTest(repeatTest(testBlockingExample0, N))
+    reportTest(testBlockingExample1())
+    reportTest(testBlockingExample2())
+    reportTest(testBlockingExample3())
+
 
 def runTests2(N):
   reportTest(testGeometric1(N))
@@ -414,7 +420,7 @@ def testBlockingExample0(N):
 
   # If inference only frobnicates b, then the distribution on a
   # remains the prior.
-  predictions = collectSamplesWith(ripl,1,N,{"transitions":10,"kernel":"mh","scope":1,"block":1})
+  predictions = collectSamplesWith(ripl,1,N,{"transitions":10,"kernel":globalKernel,"scope":1,"block":1})
   cdf = stats.norm(loc=10.0, scale=1.0).cdf
   return reportKnownContinuous("testBlockingExample0", cdf, predictions, "N(10.0,1.0)")
 
@@ -425,7 +431,7 @@ def testBlockingExample1():
   olda = ripl.report(1)
   oldb = ripl.report(2)
   # The point of block proposals is that both things change at once.
-  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":"mh", "scope":0, "block":0})
+  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":globalKernel, "scope":0, "block":0})
   newa = ripl.report(1)
   newb = ripl.report(2)
   assert not(olda == newa)
@@ -443,7 +449,7 @@ def testBlockingExample2():
   oldc = ripl.report(3)
   oldd = ripl.report(4)
   # Should change everything in one or the other block
-  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":"mh", "scope":0, "block":"one"})
+  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":globalKernel, "scope":0, "block":"one"})
   newa = ripl.report(1)
   newb = ripl.report(2)
   newc = ripl.report(3)
@@ -465,7 +471,7 @@ def testBlockingExample3():
   olda = ripl.report(1)
   oldb = ripl.report(2)
   # The point of block proposals is that both things change at once.
-  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":"mh", "scope":0, "block":"all"})
+  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":globalKernel, "scope":0, "block":"all"})
   newa = ripl.report(1)
   newb = ripl.report(2)
   assert not(olda == newa)
