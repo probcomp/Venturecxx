@@ -55,9 +55,8 @@ class PitmanYorMixtureDemo(VentureUnit):
 if __name__ == '__main__':
   ripl = shortcuts.make_lite_church_prime_ripl()
   model = PitmanYorMixtureDemo(ripl)
-  history = model.runFromConditional(5, runs=2, verbose=True, name="defaultMH")
-  history.plot(fmt='png')
   def blockInfer(ripl, ct):
     ripl.infer(ct, block="all")
-  history = model.runFromConditional(5, runs=2, verbose=True, infer=blockInfer, name="blockMH")
-  history.plot(fmt='png')
+  for (name,inference) in [("defaultMH", None), ("blockMH", blockInfer)]:
+    history = model.runFromConditional(5, runs=2, verbose=True, name=name, infer=inference)
+    history.plot(fmt='png')
