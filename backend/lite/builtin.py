@@ -36,6 +36,7 @@ def builtInSPs():
            "categorical" : SP(NullRequestPSP(),discrete.CategoricalOutputPSP()),
 
            "normal" : SP(NullRequestPSP(),continuous.NormalOutputPSP()),
+           "uniform_continuous" : SP(NullRequestPSP(),continuous.UniformOutputPSP()),
 
            "branch" : SP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()),
            "biplex" : SP(NullRequestPSP(),conditionals.BiplexOutputPSP()),

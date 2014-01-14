@@ -21,3 +21,13 @@ class NormalOutputPSP(RandomPSP):
     gradMu = (x - mu) / (math.pow(sigma,2))
     gradSigma = (math.pow(x - mu,2) - math.pow(sigma,2)) / math.pow(sigma,3)
     return [gradMu,gradSigma]
+
+class UniformOutputPSP(RandomPSP):
+  # TODO don't need to be class methods
+  def simulateNumeric(self,low,high): return scipy.stats.uniform.rvs(low, high-low)
+  def logDensityNumeric(self,x,low,high): return scipy.stats.uniform.logpdf(x, low, high-low)
+
+  def simulate(self,args): return self.simulateNumeric(*args.operandValues)
+  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+
+  # TODO Uniform presumably has a variational kernel?

@@ -19,8 +19,8 @@ from venture.unit import *
 class PitmanYorMixtureDemo(VentureUnit):
   def makeAssumes(self):
     program = """
-[ASSUME alpha (scope_include hypers default (uniform 0 10))]
-[ASSUME scale (scope_include hypers default (uniform 0 10))]
+[ASSUME alpha (scope_include hypers default (uniform_continuous 0 10))]
+[ASSUME scale (scope_include hypers default (uniform_continuous 0 10))]
 
 [ASSUME pyp (pyp/make alpha)]
 
@@ -49,7 +49,7 @@ class PitmanYorMixtureDemo(VentureUnit):
     self.observe("(get_datapoint 3)", 5)
 
 if __name__ == '__main__':
-  ripl = shortcuts.make_church_prime_ripl()
+  ripl = shortcuts.make_lite_church_prime_ripl()
   model = PitmanYorMixtureDemo(ripl)
   history = model.runFromConditional(5, runs=2, verbose=True, name="defaultMH")
   history.plot(fmt='png')
