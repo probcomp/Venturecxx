@@ -119,7 +119,12 @@ class MeanfieldOperator(object):
     xiWeight = regenAndAttach(trace,scaffold.border,scaffold,False,OmegaDB(),{})
     return xiWeight - rhoWeight
 
-  def accept(self): pass
+  def accept(self): 
+    if self.delegate is None:
+      pass
+    else:
+      self.delegate.accept()
+
   def reject(self):
     if self.delegate is None:
       detachAndExtract(self.trace,self.scaffold.border,self.scaffold)
