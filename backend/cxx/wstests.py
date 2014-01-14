@@ -1122,7 +1122,7 @@ def testDPMem1(N):
 def observeCategories(ripl,counts):
   for i in range(len(counts)):
     for ct in range(counts[i]):
-      ripl.observe("(normal (f) 1.0)",i)
+      ripl.observe("(flip (if (= (f) %d) 1.0 0.1))" % i,"true")
 
 def testCRP1(N,isCollapsed):
   ripl = RIPL()
@@ -1499,6 +1499,8 @@ def testMemHashFunction1(A,B):
 
 
 ###########################
+###### DSELSAM (madness) ##
+###########################
 def testPGibbsMHHMM1(N):
   ripl = RIPL()
   ripl.assume("f","""
@@ -1534,7 +1536,57 @@ def testPGibbsMHHMM1(N):
   # p((f 4) | history) = normal mean 390/89, var 55/89, prec 89/55
   ripl.predict("(f 4)")
 
-  predictions = collectSamplesWith(ripl,8,N,{"kernel":"pgibbs"})
+  predictions = collectSamplesWith(ripl,8,N,{"kernel":"mh","transitions":100,"scope":"default"})
   reportKnownMeanVariance("TestPGibbsMHHMM1", 390/89.0, 55/89.0, predictions)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous("TestPGibbsMHHMM1", cdf, predictions, "N(4.382, 0.786)")
+
+def testDHSCRP1(N):
+  ripl = RIPL()
+  ripl.assume("dpmem","""
+(lambda (alpha base_dist)
+  ((lambda (augmented_proc crp)
+     (lambda () (augmented_proc (crp))))
+   (mem (lambda (table) (base_dist)))
+   (make_crp alpha)))
+""")
+
+#  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("alpha","1.0")
+  ripl.assume("base_dist","(lambda () (categorical 0.2 0.2 0.2 0.2 0.2))")
+  ripl.assume("f","(dpmem alpha base_dist)")
+
+  ripl.predict("(f)",label="pid")
+
+  observeCategories(ripl,[2,2,5,1,0])
+
+  predictions = collectSamples(ripl,"pid",N)
+  ans = [(0,2.2), (1,2.2), (2,5.2), (3,1.2), (4,0.2)]
+  return reportKnownDiscrete("TestDHSCRP1", ans, predictions)
+
+
+def testPGibbsBlockingMHHMM1(N):
+  ripl = RIPL()
+
+  ripl.assume("f","""
+(mem (lambda (i)
+  (if (eq i 0)
+    (normal 0.0 1.0 (scope 0 0))
+    (normal (f (minus i 1)) 1.0 (scope 0 0)))))
+""")
+  ripl.assume("g","""
+(mem (lambda (i)
+  (normal (f i) 1.0)))
+""")
+
+  ripl.observe("(g 0)",1.0)
+  ripl.observe("(g 1)",2.0)
+  ripl.observe("(g 2)",3.0)
+  ripl.observe("(g 3)",4.0)
+  ripl.observe("(g 4)",5.0)
+  ripl.predict("(f 4)")
+
+  predictions = collectSamplesWith(ripl,8,N,{"kernel":"pgibbs","transitions":10,"scope":0})
+  reportKnownMeanVariance("TestPGibbsBlockingMHHMM1", 390/89.0, 55/89.0, predictions)
+  cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
+  return reportKnownContinuous("TestPGibbsBlockingMHHMM1", cdf, predictions, "N(4.382, 0.786)")

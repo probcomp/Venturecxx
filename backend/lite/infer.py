@@ -1,6 +1,6 @@
 import random
 import math
-from consistency import assertTorus
+from consistency import assertTorus,assertTrace
 from omegadb import OmegaDB
 from regen import regenAndAttach
 from detach import detachAndExtract
@@ -29,19 +29,22 @@ class BlockScaffoldIndexer(object):
     if self.scope == "default":
       if not(self.block == "one"):
         raise Exception("INFER custom blocks for default scope not yet implemented (%r)" % block)
-      pnode = trace.samplePrincipalNode()
-      return constructScaffold(trace,[[pnode]])
+      pnode = [[trace.samplePrincipalNode()]]
+      return constructScaffold(trace,pnode)
     else:
       if self.block == "one":
         goalBlock = trace.sampleBlock(self.scope)
-        pnodes = trace.scopes[self.scope][goalBlock]
+        pnodes = [trace.scopes[self.scope][goalBlock]]
       elif self.block == "all":
         blocks = trace.blocksInScope(self.scope)
         pnodeSets = [trace.scopes[self.scope][block] for block in blocks]
-        pnodes = set().union(*pnodeSets)
+        pnodes = [set().union(*pnodeSets)]
+      elif self.block == "ordered":
+        blocks = trace.blocksInScope(self.scope)
+        pnode = [trace.scopes[self.scope][block] for block in blocks]
       else:
-        pnodes = trace.scopes[self.scope][self.block]
-      return constructScaffold(trace,[pnodes])
+        pnodes = [trace.scopes[self.scope][self.block]]
+      return constructScaffold(trace,pnodes)
 
   def logDensityOfIndex(self,trace,scaffold):
     if self.scope == "default":
@@ -164,7 +167,8 @@ class PGibbsOperator(object):
     self.scaffold = scaffold
 
     ### TODO TEMPORARY
-#    self.scaffold.border = [self.scaffold.border]
+    assertTrace(self.trace,self.scaffold)
+
     self.T = 1
 
     T = self.T
@@ -173,7 +177,7 @@ class PGibbsOperator(object):
 
     rhoWeights = [None for t in range(T)]
     omegaDBs = [[None for p in range(P+1)] for t in range(T)]
-    ancestorIndices = [[None for n in range(P)] + [P] for t in range(T)]
+    ancestorIndices = [[None for p in range(P)] + [P] for t in range(T)]
 
     self.omegaDBs = omegaDBs
     self.ancestorIndices = ancestorIndices
@@ -189,9 +193,9 @@ class PGibbsOperator(object):
       regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),{})
       (xiWeights[p],omegaDBs[0][p]) = detachAndExtract(trace,scaffold.border[0],scaffold)
 
-    # for every time step,
+#    for every time step,
     for t in range(1,T):
-      newWeights = [0 for n in range(P)]
+      newWeights = [None for p in range(P)]
       # Sample new particle and propagate
       for p in range(P):
         extendedWeights = xiWeights + [rhoWeights[t-1]]
@@ -205,17 +209,23 @@ class PGibbsOperator(object):
 
     # Now sample a NEW particle in proportion to its weight
     finalIndex = sampleCategorical([math.exp(w) for w in xiWeights])
+#    assert finalIndex == 0
     rhoWeight = rhoWeights[T-1]
     xiWeight = xiWeights[finalIndex]
 
     weightMinusXi = math.log(sum([math.exp(w) for w in xiWeights]) + math.exp(rhoWeight) - math.exp(xiWeight))
     weightMinusRho = math.log(sum([math.exp(w) for w in xiWeights]))
 
+#    assert weightMinusXi == rhoWeight
+#    assert weightMinusRho == xiWeight
+
     path = constructAncestorPath(ancestorIndices,T-1,finalIndex) + [finalIndex]
     assert len(path) == T
+#    assert path == [0]
     restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,T,path)
+    assertTrace(self.trace,self.scaffold)
     alpha = weightMinusRho - weightMinusXi
-    print "alpha: ",alpha
+#    print "alpha: ",alpha
     return alpha
 
   def accept(self):
@@ -226,6 +236,7 @@ class PGibbsOperator(object):
     detachRest(self.trace,self.scaffold.border,self.scaffold,self.T)
     assertTorus(self.scaffold)
     path = constructAncestorPath(self.ancestorIndices,self.T-1,self.P) + [self.P]
+    assert path == [self.P]
     assert len(path) == self.T
     restoreAncestorPath(self.trace,self.scaffold.border,self.scaffold,self.omegaDBs,self.T,path)
-
+    assertTrace(self.trace,self.scaffold)
