@@ -34,7 +34,7 @@ class BlockScaffoldIndexer(object):
       if self.block == "one":
         goalBlock = trace.sampleBlock(self.scope)
         pnodes = trace.scopes[(self.scope,goalBlock)]
-      if self.block == "all":
+      elif self.block == "all":
         raise Exception("INFER scope unioning not yet implemented")
       else:
         pnodes = trace.scopes[(self.scope,self.block)]
@@ -48,7 +48,7 @@ class BlockScaffoldIndexer(object):
     else:
       if self.block == "one":
         return trace.logDensityOfBlock(self.scope,None) # The actual block in irrelevant
-      if self.block == "all":
+      elif self.block == "all":
         raise Exception("INFER scope unioning not yet implemented")
       else:
         return 0
