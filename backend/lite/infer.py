@@ -33,13 +33,13 @@ class BlockScaffoldIndexer(object):
     else:
       if self.block == "one":
         goalBlock = trace.sampleBlock(self.scope)
-        pnodes = trace.scopes[(self.scope,goalBlock)]
+        pnodes = trace.scopes[self.scope][goalBlock]
       elif self.block == "all":
         blocks = trace.blocksInScope(self.scope)
-        pnodeSets = [trace.scopes[(self.scope,block)] for block in blocks]
+        pnodeSets = [trace.scopes[self.scope][block] for block in blocks]
         pnodes = set().union(*pnodeSets)
       else:
-        pnodes = trace.scopes[(self.scope,self.block)]
+        pnodes = trace.scopes[self.scope][self.block]
       return constructScaffold(trace,pnodes)
 
   def logDensityOfIndex(self,trace,scaffold):
