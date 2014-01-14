@@ -254,8 +254,9 @@ class VentureUnit:
     
     # Runs inference on the model conditioned on observed data.
     # By default the data is as given in makeObserves(parameters).
-    def runFromConditional(self, sweeps, data=None, runs=3, verbose=False, profile=False, infer=None):
-        history = History('run_from_conditional', self.parameters)
+    def runFromConditional(self, sweeps, data=None, runs=3, verbose=False, profile=False, infer=None, name=None):
+        tag = 'run_from_conditional' if name is None else name + '_run_from_conditional'
+        history = History(tag, self.parameters)
         
         for run in range(runs):
             if verbose:
