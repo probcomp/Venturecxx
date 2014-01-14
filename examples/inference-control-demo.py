@@ -55,12 +55,22 @@ class PitmanYorMixtureDemo(VentureUnit):
 if __name__ == '__main__':
   ripl = shortcuts.make_lite_church_prime_ripl()
   model = PitmanYorMixtureDemo(ripl)
-  def blockInfer(ripl, ct):
+  def blockInfer(ripl, ct): # Is this the same thing as "church default" from the email?
     ripl.infer({"transitions":ct, "kernel":"mh", "scope":"default", "block":"all"})
-  for (name,inference) in [("defaultMH", None), ("blockMH", blockInfer)]:
+  def statisticsInfer(ripl, ct):
+    # Note: this is equivalent to "block":"all" because the "hypers"
+    # scope has only one block.
+    hypers =     {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":10}
+    # Ditto, but for a stupid reason (blocks are not expressions right now)
+    parameters = {"kernel":"mh", "scope":"parameters", "block":"one", "transitions":50}
+    # Ditto, for the same stupid reason (blocks are not expressions right now)
+    clustering = {"kernel":"mh", "scope":"clustering", "block":"one", "transitions":50}
+    ripl.infer({"transitions":10, "kernel":"cycle", "subkernels":[hypers, parameters, clustering]})
+  for (name,inference) in [("defaultMH", None), ("blockMH", blockInfer),
+                           ("statisticsDefault", statisticsInfer)]:
     # history = model.runFromConditional(5, runs=2, verbose=True, name=name, infer=inference)
     # history.plot(fmt='png')
-    (sampled, inferred, kl) = model.computeJointKL(50, 30, runs=3, verbose=True, name=name, infer=inference)
+    (sampled, inferred, kl) = model.computeJointKL(5, 30, runs=3, verbose=True, name=name, infer=inference)
     sampled.plot(fmt='png')
     inferred.plot(fmt='png')
     kl.plot(fmt='png')
