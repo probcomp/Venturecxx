@@ -442,14 +442,12 @@ def testBlockingExample2():
   oldb = ripl.report(2)
   oldc = ripl.report(3)
   oldd = ripl.report(4)
-  print [olda, oldb, oldc, oldd]
   # Should change everything in one or the other block
   ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":"mh", "scope":0, "block":"one"})
   newa = ripl.report(1)
   newb = ripl.report(2)
   newc = ripl.report(3)
   newd = ripl.report(4)
-  print [newa, newb, newc, newd]
   if (olda == newa):
     assert oldb == newb
     assert not(oldc == newc)
