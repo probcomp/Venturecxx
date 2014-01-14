@@ -458,6 +458,20 @@ def testBlockingExample2():
     assert oldd == newd
   return reportPassage("testBlockingExample2")
 
+def testBlockingExample3():
+  ripl = RIPL()
+  ripl.assume("a", "(normal 0.0 1.0 (scope 0 0))")
+  ripl.assume("b", "(normal 1.0 1.0 (scope 0 1))")
+  olda = ripl.report(1)
+  oldb = ripl.report(2)
+  # The point of block proposals is that both things change at once.
+  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":"mh", "scope":0, "block":"all"})
+  newa = ripl.report(1)
+  newb = ripl.report(2)
+  assert not(olda == newa)
+  assert not(oldb == newb)
+  return reportPassage("testBlockingExample1")
+
 def testStudentT0(N):
   ripl = RIPL()
   ripl.assume("a", "(student_t 1.0)")
