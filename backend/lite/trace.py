@@ -170,9 +170,8 @@ class Trace(object):
 
   # params is a hash with keys "kernel", "scope", "block",
   # "transitions" (the latter should be named "repeats").  Right now,
-  # "kernel" must be one of "mh" or "meanfield", "scope" must be
-  # "default", "block" must be "one", and "transitions" must be an
-  # integer.
+  # "kernel" must be one of "mh" or "meanfield", and "transitions"
+  # must be an integer.
   def infer(self,params):
     for n in range(params["transitions"]):
       if params["kernel"] == "mh": mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MHOperator())
