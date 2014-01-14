@@ -11,6 +11,8 @@ Step 2: Test block MH in Lite
 Step 3: Broaden scope specs to allow "one" and "all" everywhere
 - and test
 
+-------------------- The above is done --------------------
+
 Probable step 4: port/implement other primitives
 - Vikash wants rejection sampling more than ordered pgibbs
   - (default/all first; then on a scaffold)
