@@ -56,7 +56,7 @@ if __name__ == '__main__':
   ripl = shortcuts.make_lite_church_prime_ripl()
   model = PitmanYorMixtureDemo(ripl)
   def blockInfer(ripl, ct):
-    ripl.infer(ct, block="all")
+    ripl.infer({"transitions":ct, "kernel":"mh", "scope":"default", "block":"all")
   for (name,inference) in [("defaultMH", None), ("blockMH", blockInfer)]:
     # history = model.runFromConditional(5, runs=2, verbose=True, name=name, infer=inference)
     # history.plot(fmt='png')

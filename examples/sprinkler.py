@@ -37,7 +37,7 @@ if __name__ == '__main__':
   history.plot(fmt='png')
 
   # def blockInfer(ripl, ct):
-  #   ripl.infer(ct, block="all")
+  #       ripl.infer({"transitions":ct, "kernel":"mh", "scope":"default", "block":"all")
   # history = model.runFromConditional(50, verbose=True, infer=blockInfer, name="blockMH")
   # history.plot(fmt='png')
 
