@@ -129,7 +129,7 @@ class VentureUnit:
     
     # Provides independent samples from the joint distribution (observes turned into predicts).
     # A random subset of the predicts are tracked along with the assumed variables.
-    def sampleFromJoint(self, samples, track=5, verbose=False):
+    def sampleFromJoint(self, samples, track=5, verbose=False, name=None):
         assumedValues = {}
         for (symbol, expression) in self.assumes:
           assumedValues[symbol] = []
@@ -150,7 +150,8 @@ class VentureUnit:
             self.updateValues(assumedValues, assumeToDirective)
             self.updateValues(predictedValues, predictToDirective)
         
-        history = History('sample_from_joint', self.parameters)
+        tag = 'sample_from_joint' if name is None else name + '_sample_from_joint'
+        history = History(tag, self.parameters)
         
         history.addSeries('logscore', 'i.i.d.', logscores)
         
@@ -185,8 +186,9 @@ class VentureUnit:
     # Runs inference on the joint distribution (observes turned into predicts).
     # A random subset of the predicts are tracked along with the assumed variables.
     # If profiling is enabled, information about random choices is recorded.
-    def runFromJoint(self, sweeps, track=5, runs=3, verbose=False, profile=False):
-        history = History('run_from_joint', self.parameters)
+    def runFromJoint(self, sweeps, track=5, runs=3, verbose=False, profile=False, name=None, infer=None):
+        tag = 'run_from_joint' if name is None else name + '_run_from_joint'
+        history = History(tag, self.parameters)
         
         for run in range(runs):
             if verbose:
@@ -207,7 +209,7 @@ class VentureUnit:
                 
                 # FIXME: use timeit module for better precision
                 start = time.time()
-                iterations = self.sweep()
+                iterations = self.sweep(infer)
                 end = time.time()
                 
                 sweepTimes.append(end-start)
@@ -234,11 +236,12 @@ class VentureUnit:
     
     # Computes the KL divergence on i.i.d. samples from the prior and inference on the joint.
     # Returns the sampled history, inferred history, and history of KL divergences.
-    def computeJointKL(self, sweeps, samples, track=5, runs=3, verbose=False):
-        sampledHistory = self.sampleFromJoint(samples, track, verbose)
-        inferredHistory = self.runFromJoint(sweeps, track, runs, verbose)
+    def computeJointKL(self, sweeps, samples, track=5, runs=3, verbose=False, name=None, infer=None):
+        sampledHistory = self.sampleFromJoint(samples, track, verbose, name=name)
+        inferredHistory = self.runFromJoint(sweeps, track, runs, verbose, name=name, infer=infer)
         
-        klHistory = History('kl_divergence', self.parameters)
+        tag = 'kl_divergence' if name is None else name + '_kl_divergence'
+        klHistory = History(tag, self.parameters)
         
         for (name, seriesList) in inferredHistory.nameToSeries.iteritems():
             if name not in sampledHistory.nameToSeries: continue

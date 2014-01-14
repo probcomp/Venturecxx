@@ -58,5 +58,9 @@ if __name__ == '__main__':
   def blockInfer(ripl, ct):
     ripl.infer(ct, block="all")
   for (name,inference) in [("defaultMH", None), ("blockMH", blockInfer)]:
-    history = model.runFromConditional(5, runs=2, verbose=True, name=name, infer=inference)
-    history.plot(fmt='png')
+    # history = model.runFromConditional(5, runs=2, verbose=True, name=name, infer=inference)
+    # history.plot(fmt='png')
+    (sampled, inferred, kl) = model.computeJointKL(50, 30, runs=3, verbose=True, name=name, infer=inference)
+    sampled.plot(fmt='png')
+    inferred.plot(fmt='png')
+    kl.plot(fmt='png')
