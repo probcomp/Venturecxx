@@ -12,7 +12,7 @@ Step 3: Broaden scope specs to allow "one" and "all" everywhere
 - and test
 
 Probable step 4: port/implement other primitives
-- Everything except pgibbs/scope/all is just something we have, over a
+- Everything except pgibbs/scope/ordered is just something we have, over a
   scaffold with multiple principal nodes (which might be randomly
   selected)
 - Do I need to deal with separating LKernels from MH somehow?
