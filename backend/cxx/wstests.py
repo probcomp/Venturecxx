@@ -414,8 +414,8 @@ def testMHNormal1(N):
 
 def testBlockingExample0(N):
   ripl = RIPL()
-  ripl.assume("a", "(normal 10.0 1.0 (scope 0 0))")
-  ripl.assume("b", "(normal a 1.0 (scope 1 1))")
+  ripl.assume("a", "(scope_include 0 0 (normal 10.0 1.0))")
+  ripl.assume("b", "(scope_include 1 1 (normal a 1.0))")
   ripl.observe("(normal b 1.0)", 14.0)
 
   # If inference only frobnicates b, then the distribution on a
@@ -426,8 +426,8 @@ def testBlockingExample0(N):
 
 def testBlockingExample1():
   ripl = RIPL()
-  ripl.assume("a", "(normal 0.0 1.0 (scope 0 0))")
-  ripl.assume("b", "(normal 1.0 1.0 (scope 0 0))")
+  ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))")
+  ripl.assume("b", "(scope_include 0 0 (normal 1.0 1.0))")
   olda = ripl.report(1)
   oldb = ripl.report(2)
   # The point of block proposals is that both things change at once.
@@ -440,10 +440,10 @@ def testBlockingExample1():
 
 def testBlockingExample2():
   ripl = RIPL()
-  ripl.assume("a", "(normal 0.0 1.0 (scope 0 0))")
-  ripl.assume("b", "(normal 1.0 1.0 (scope 0 0))")
-  ripl.assume("c", "(normal 2.0 1.0 (scope 0 1))")
-  ripl.assume("d", "(normal 3.0 1.0 (scope 0 1))")
+  ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))")
+  ripl.assume("b", "(scope_include 0 0 (normal 1.0 1.0))")
+  ripl.assume("c", "(scope_include 0 1 (normal 2.0 1.0))")
+  ripl.assume("d", "(scope_include 0 1 (normal 3.0 1.0))")
   olda = ripl.report(1)
   oldb = ripl.report(2)
   oldc = ripl.report(3)
@@ -466,8 +466,8 @@ def testBlockingExample2():
 
 def testBlockingExample3():
   ripl = RIPL()
-  ripl.assume("a", "(normal 0.0 1.0 (scope 0 0))")
-  ripl.assume("b", "(normal 1.0 1.0 (scope 0 1))")
+  ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))")
+  ripl.assume("b", "(scope_include 0 1 (normal 1.0 1.0))")
   olda = ripl.report(1)
   oldb = ripl.report(2)
   # The point of block proposals is that both things change at once.
