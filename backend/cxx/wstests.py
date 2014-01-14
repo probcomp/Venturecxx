@@ -264,13 +264,13 @@ def runTests(N):
     reportTest(repeatTest(testMakeBetaBernoulli4, "make_ubeta_bernoulli", N))
   reportTest(repeatTest(testLazyHMM1, N))
   reportTest(repeatTest(testLazyHMMSP1, N))
+  reportTest(repeatTest(testGamma1, N))
   reportTest(repeatTest(testBreakMem, N))
   if globalBackend != make_lite_church_prime_ripl:
     # These rely upon builtins primitives that the Lite backend doesn't have.
     # Those that are testing those primitives (as opposed to testing the engine with them)
     # can reasonably stay gated for a while.
     reportTest(repeatTest(testStudentT0, N))
-    reportTest(repeatTest(testGamma1, N))
     reportTest(repeatTest(testMakeSymDirMult1, "make_sym_dir_mult", N))
     reportTest(repeatTest(testMakeSymDirMult1, "make_uc_sym_dir_mult", N))
     reportTest(repeatTest(testMakeSymDirMult2, "make_sym_dir_mult", N))
