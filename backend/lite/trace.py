@@ -23,6 +23,7 @@ class Trace(object):
       self.globalEnv.addBinding(name,spNode)
 
     self.rcs = [] # TODO make this an EasyEraseVector
+    self.ccs = []
     self.aes = []
     self.families = {}
     self.scopes = {} # :: {scope-name:{block-id:set(node)}}
@@ -53,6 +54,15 @@ class Trace(object):
             del self.scopes[scope][block]
           if not(self.scopes[scope]): # Now empty scope
             del self.scopes[scope]
+
+  def registerConstrainedChoice(self,node):
+    self.ccs.append(node)
+    self.unregisterRandomChoice(node)
+
+  def unregisterConstrainedChoice(self,node):
+    assert node in self.ccs
+    del self.ccs[self.ccs.index(node)]
+    if self.pspAt(node).isRandom(): self.registerRandomChoice(node)
 
   def createConstantNode(self,val): return ConstantNode(val)
   def createLookupNode(self,sourceNode): 
@@ -178,7 +188,7 @@ class Trace(object):
 
   def getGlobalLogScore(self):
     # TODO Get the constrained nodes too
-    return sum([self.logDensityAt(node,self.valueAt(node)) for node in self.rcs])
+    return sum([self.logDensityAt(node,self.valueAt(node)) for node in self.rcs + self.ccs])
 
   #### Helpers (shouldn't be class methods)
 

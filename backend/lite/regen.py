@@ -23,7 +23,7 @@ def constrain(trace,node,value):
   weight = trace.logDensityAt(node,value)
   trace.setValueAt(node,value)
   trace.incorporateAt(node)
-  trace.unregisterRandomChoice(node)
+  trace.registerConstrainedChoice(node)
   return weight
 
 def attach(trace,node,scaffold,shouldRestore,omegaDB,gradients):

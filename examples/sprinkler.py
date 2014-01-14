@@ -35,7 +35,12 @@ if __name__ == '__main__':
   model = Sprinkler(ripl)
   history = model.runFromConditional(50, verbose=True, name="defaultMH")
   history.plot(fmt='png')
-  def blockInfer(ripl, ct):
-    ripl.infer(ct, block="all")
-  history = model.runFromConditional(50, verbose=True, infer=blockInfer, name="blockMH")
+
+  # def blockInfer(ripl, ct):
+  #   ripl.infer(ct, block="all")
+  # history = model.runFromConditional(50, verbose=True, infer=blockInfer, name="blockMH")
+  # history.plot(fmt='png')
+
+  model = Sprinkler(shortcuts.make_church_prime_ripl())
+  history = model.runFromConditional(50, verbose=True, name="defaultMH-CXX")
   history.plot(fmt='png')
