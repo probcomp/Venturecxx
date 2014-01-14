@@ -37,6 +37,7 @@ def builtInSPs():
 
            "normal" : SP(NullRequestPSP(),continuous.NormalOutputPSP()),
            "uniform_continuous" : SP(NullRequestPSP(),continuous.UniformOutputPSP()),
+           "beta" : SP(NullRequestPSP(),continuous.BetaOutputPSP()),
 
            "branch" : SP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()),
            "biplex" : SP(NullRequestPSP(),conditionals.BiplexOutputPSP()),

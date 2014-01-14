@@ -264,6 +264,7 @@ def runTests(N):
     reportTest(repeatTest(testMakeBetaBernoulli4, "make_ubeta_bernoulli", N))
   reportTest(repeatTest(testLazyHMM1, N))
   reportTest(repeatTest(testLazyHMMSP1, N))
+  reportTest(repeatTest(testBreakMem, N))
   if globalBackend != make_lite_church_prime_ripl:
     # These rely upon builtins primitives that the Lite backend doesn't have.
     # Those that are testing those primitives (as opposed to testing the engine with them)
@@ -299,7 +300,6 @@ def runTests(N):
     reportTest(repeatTest(testReferences2, N))
     # TODO This failure looks like a real bug
     reportTest(repeatTest(testMemoizingOnAList))
-    reportTest(repeatTest(testBreakMem, N))
     # reportTest(repeatTest(testHPYLanguageModel1, N)) # TODO slow and fails
     # reportTest(repeatTest(testHPYLanguageModel2, N)) # TODO slow and fails
     reportTest(repeatTest(testGoldwater1, N))
