@@ -1,28 +1,28 @@
-regularOperators = [("Plus",+,"+"),
-                    ("Minus",-,"-"),
-                    ("Times",*,"*"),
-                    ("Divides",/,"/"),
-                    ("Pow",^,"pow"),
-                    ("LessThan",<,"<"),
-                    ("LessThanOrEqualTo",<=,"<="),
-                    ("GreaterThan",>,">"),
-                    ("GreaterThanOrEqual",>=,">="),
-                    ("Not",!,"not"),
-                    ("Equals",==,"=="),
-                    ("NotEquals",!=,"!="),
-                    ("Log",log,"log"),
-                    ("Exp",exp,"exp"),
-                    ("Min",min,"min"),
-                    ("Max",max,"max"),
-                    ("Abs",abs,"abs"),
+regularOperators = [("Plus",+),
+                    ("Minus",-),
+                    ("Times",*),
+                    ("Divides",/),
+                    ("Pow",^),
+                    ("LT",<),
+                    ("LTE",<=),
+                    ("GT",>),
+                    ("GTE",>=),
+                    ("Not",!),
+                    ("Equals",==),
+                    ("NotEquals",!=),
+                    ("Log",log),
+                    ("Exp",exp),
+                    ("Min",min),
+                    ("Max",max),
+                    ("Abs",abs),
 ]
 
 ## Add regular operators
-for (prefix,op,sym) = regularOperators
+for (prefix,op) = regularOperators
   name = symbol(string(prefix,"OutputPSP"))
   @eval begin
     type $name <: OutputPSP end
     simulate(psp::$name,args::OutputArgs) = ($op)(args.operandValues...)
-    builtInSPs[symbol($sym)] = SP(NullRequestPSP(),($name)(),($prefix))
+    builtInSPs[symbol(lowercase($prefix))] = SP(NullRequestPSP(),($name)(),(lowercase($prefix)))
   end
 end

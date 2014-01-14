@@ -13,8 +13,6 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-from trace import Trace
-import pdb
 from venture.exception import VentureException
 from venture.cxx import engine
 

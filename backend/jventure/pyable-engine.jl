@@ -3,17 +3,17 @@ require("engine.jl")
 
 function ConstructPyableEngine()
   engine = Engine()
-  function myAssume(sym::String,exp_datum::String)
+  function myAssume(sym::String,exp_datum)
     assume(engine,sym,exp_datum)
   end
-  function myPredict(exp_datum::String)
+  function myPredict(exp_datum)
     predict(engine,exp_datum)
   end
-  function myObserve(exp_datum::String,value) # TODO What's the type that Value needs to be?
+  function myObserve(exp_datum,value) # TODO What's the type that Value needs to be?
     observe(engine,exp_datum,value)
   end
   function myReport(id::DirectiveID)
-    report(engine,id)
+    report_value(engine,id)
   end
   function myInfer(N::Int64)
     infer(engine,N)

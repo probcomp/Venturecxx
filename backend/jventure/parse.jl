@@ -42,16 +42,16 @@ function desugar(exp::Array{Any})
     ids = (Any)[:quote,exp[2]]
     body = (Any)[:quote,desugar(exp[3])]
     return (Any)[:make_csp,ids,body]
-  elseif exp[1] == :if
-    cond = (Any)[:quote,desugar(exp[3])]
-    alt = (Any)[:quote,desugar(exp[4])]
-    return (Any)[:branch,desugar(exp[2]),cond,alt]
+  # elseif exp[1] == :if
+  #   cond = (Any)[:quote,desugar(exp[3])]
+  #   alt = (Any)[:quote,desugar(exp[4])]
+  #   return (Any)[:branch,desugar(exp[2]),cond,alt]
   else
     return [desugar(subexp) for subexp = exp]
   end
 end
-desugar(exp::Any) = exp
 
+desugar(exp::Any) = exp
 
 vunparse(exp::Array{Any}) = "(" * join([vunparse(subexp) for subexp = exp]," ") * ")"
 vunparse(exp::Any) = string(x)

@@ -350,7 +350,7 @@ def testBernoulli0(N):
   b
   (lambda () (normal 0.0 1.0))
   (lambda () ((lambda () (normal 10.0 1.0))))))
-""");
+""")
   predictions = collectSamples(ripl,2,N)
   cdf = lambda x: 0.5 * stats.norm.cdf(x,loc=0,scale=1) + 0.5 * stats.norm.cdf(x,loc=10,scale=1)
   return reportKnownContinuous("TestBernoulli0", cdf, predictions, "N(0,1) + N(10,1)")

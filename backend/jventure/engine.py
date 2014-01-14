@@ -5,7 +5,7 @@ class Engine:
     self.assume = jfuncs[0]
     self.predict = jfuncs[1]
     self.observe = jfuncs[2]
-    self.report = jfuncs[3]
+    self.report_value = jfuncs[3]
     self.infer = jfuncs[4]
 
   def reboot(self):
@@ -13,7 +13,7 @@ class Engine:
     self.assume = jfuncs[0]
     self.predict = jfuncs[1]
     self.observe = jfuncs[2]
-    self.report = jfuncs[3]
+    self.report_value = jfuncs[3]
     self.infer = jfuncs[4]
 
   def continuous_inference_status(self): return {"running" : False}
