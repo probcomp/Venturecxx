@@ -432,6 +432,34 @@ def testBlockingExample1():
   assert not(oldb == newb)
   return reportPassage("testBlockingExample1")
 
+def testBlockingExample2():
+  ripl = RIPL()
+  ripl.assume("a", "(normal 0.0 1.0 (scope 0 0))")
+  ripl.assume("b", "(normal 1.0 1.0 (scope 0 0))")
+  ripl.assume("c", "(normal 2.0 1.0 (scope 0 1))")
+  ripl.assume("d", "(normal 3.0 1.0 (scope 0 1))")
+  olda = ripl.report(1)
+  oldb = ripl.report(2)
+  oldc = ripl.report(3)
+  oldd = ripl.report(4)
+  print [olda, oldb, oldc, oldd]
+  # Should change everything in one or the other block
+  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":"mh", "scope":0, "block":"one"})
+  newa = ripl.report(1)
+  newb = ripl.report(2)
+  newc = ripl.report(3)
+  newd = ripl.report(4)
+  print [newa, newb, newc, newd]
+  if (olda == newa):
+    assert oldb == newb
+    assert not(oldc == newc)
+    assert not(oldd == newd)
+  else:
+    assert not(oldb == newb)
+    assert oldc == newc
+    assert oldd == newd
+  return reportPassage("testBlockingExample2")
+
 def testStudentT0(N):
   ripl = RIPL()
   ripl.assume("a", "(student_t 1.0)")
