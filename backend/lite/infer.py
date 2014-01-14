@@ -173,7 +173,7 @@ class PGibbsOperator(object):
 
     rhoWeights = [None for t in range(T)]
     omegaDBs = [[None for p in range(P+1)] for t in range(T)]
-    ancestorIndices = [[None for n in range(P)] + [P] for t in range(T)]
+    ancestorIndices = [[None for p in range(P)] + [P] for t in range(T)]
 
     self.omegaDBs = omegaDBs
     self.ancestorIndices = ancestorIndices
@@ -189,39 +189,39 @@ class PGibbsOperator(object):
       regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),{})
       (xiWeights[p],omegaDBs[0][p]) = detachAndExtract(trace,scaffold.border[0],scaffold)
 
-    # for every time step,
-    # for t in range(1,T):
-    #   newWeights = [None for p in range(P)]
-    #   # Sample new particle and propagate
-    #   for p in range(P):
-    #     extendedWeights = xiWeights + [rhoWeights[t-1]]
-    #     ancestorIndices[t][p] = sampleCategorical([math.exp(w) for w in extendedWeights])
-    #     path = constructAncestorPath(ancestorIndices,t,n)
-    #     restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,t,path)
-    #     regenAndAttach(trace,self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
-    #     (newWeights[p],omegaDBs[t][p]) = detachAndExtract(trace,self.scaffold.border[t],self.scaffold)
-    #     detachRest(trace,self.scaffold.border,self.scaffold,t)
-    #   xiWeights = newWeights
+#    for every time step,
+    for t in range(1,T):
+      newWeights = [None for p in range(P)]
+      # Sample new particle and propagate
+      for p in range(P):
+        extendedWeights = xiWeights + [rhoWeights[t-1]]
+        ancestorIndices[t][p] = sampleCategorical([math.exp(w) for w in extendedWeights])
+        path = constructAncestorPath(ancestorIndices,t,n)
+        restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,t,path)
+        regenAndAttach(trace,self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
+        (newWeights[p],omegaDBs[t][p]) = detachAndExtract(trace,self.scaffold.border[t],self.scaffold)
+        detachRest(trace,self.scaffold.border,self.scaffold,t)
+      xiWeights = newWeights
 
     # Now sample a NEW particle in proportion to its weight
     finalIndex = sampleCategorical([math.exp(w) for w in xiWeights])
-    assert finalIndex == 0
+#    assert finalIndex == 0
     rhoWeight = rhoWeights[T-1]
     xiWeight = xiWeights[finalIndex]
 
     weightMinusXi = math.log(sum([math.exp(w) for w in xiWeights]) + math.exp(rhoWeight) - math.exp(xiWeight))
     weightMinusRho = math.log(sum([math.exp(w) for w in xiWeights]))
 
-    assert weightMinusXi == rhoWeight
-    assert weightMinusRho == xiWeight
+#    assert weightMinusXi == rhoWeight
+#    assert weightMinusRho == xiWeight
 
     path = constructAncestorPath(ancestorIndices,T-1,finalIndex) + [finalIndex]
     assert len(path) == T
-    assert path == [0]
+#    assert path == [0]
     restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,T,path)
     assertTrace(self.trace,self.scaffold)
     alpha = weightMinusRho - weightMinusXi
-    print "alpha: ",alpha
+#    print "alpha: ",alpha
     return alpha
 
   def accept(self):
@@ -232,7 +232,7 @@ class PGibbsOperator(object):
     detachRest(self.trace,self.scaffold.border,self.scaffold,self.T)
     assertTorus(self.scaffold)
     path = constructAncestorPath(self.ancestorIndices,self.T-1,self.P) + [self.P]
-    assert path == [1]
+    assert path == [self.P]
     assert len(path) == self.T
     restoreAncestorPath(self.trace,self.scaffold.border,self.scaffold,self.omegaDBs,self.T,path)
     assertTrace(self.trace,self.scaffold)

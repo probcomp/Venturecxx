@@ -112,6 +112,8 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   trace.setValueAt(node,newValue)
   trace.incorporateAt(node)
 
+#  print "applyPSP",shouldRestore,newValue
+
   if isinstance(newValue,SP): processMadeSP(trace,node,scaffold.isAAA(node))
   if trace.pspAt(node).isRandom(): trace.registerRandomChoice(node)
   return weight

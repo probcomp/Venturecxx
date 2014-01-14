@@ -221,7 +221,7 @@ def collectSamples(ripl,address,T,kernel=None,use_global_scaffold=None):
   kernel = kernel if kernel is not None else globalKernel
   use_global_scaffold = use_global_scaffold if use_global_scaffold is not None else globalUseGlobalScaffold
   block = "one" if not use_global_scaffold else "all"
-  return collectSamplesWith(ripl, address, T, {"transitions":10, "kernel":kernel, "block":block})
+  return collectSamplesWith(ripl, address, T, {"transitions":200, "kernel":kernel, "block":block})
 
 def collectSamplesWith(ripl, address, T, params):
   predictions = []
@@ -1536,7 +1536,7 @@ def testPGibbsMHHMM1(N):
   # p((f 4) | history) = normal mean 390/89, var 55/89, prec 89/55
   ripl.predict("(f 4)")
 
-  predictions = collectSamplesWith(ripl,8,N,{"kernel":"mh"})
+  predictions = collectSamplesWith(ripl,8,N,{"kernel":"mh","transitions":100,"scope":"default"})
   reportKnownMeanVariance("TestPGibbsMHHMM1", 390/89.0, 55/89.0, predictions)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous("TestPGibbsMHHMM1", cdf, predictions, "N(4.382, 0.786)")
