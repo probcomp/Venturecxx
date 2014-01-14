@@ -12,19 +12,21 @@ Step 3: Broaden scope specs to allow "one" and "all" everywhere
 - and test
 
 Probable step 4: port/implement other primitives
-- Everything except pgibbs/scope/ordered is just something we have, over a
-  scaffold with multiple principal nodes (which might be randomly
-  selected)
-- Do I need to deal with separating LKernels from MH somehow?
-  - does not current detachAndRegen run all the latents too?  What
-    about the AEKernels?
-  - How do I run only the latents and not the other stuff?
 - Vikash wants rejection sampling more than ordered pgibbs
   - (default/all first; then on a scaffold)
   - truly infinite bounds are contentful
 - Vikash suggested pgibbs/scope/ordered, where we require all the border
   nodes to have ids in the scope and just do the thing cxx/pgibbs does
   on a border ordered by block id.
+  - Daniel seems to have more or less implemented a much better scaffold
+    for pgibbs.
+- I do not grok what the "latents" command in the inference language
+  actually means.  Is the line
+    for node in self.aes: node.madeSP.AEInfer(node.madeSPAux)
+  in trace.py?  Is it something else?
+- I do not grok what LKernels are, and how they interact with
+  the inference control language
+  - regenAndAttach runs them in Lite; should the "mh" command not?
 
 Further steps:
 - Actually implement dynamic scope over traces, like the spec calls for
