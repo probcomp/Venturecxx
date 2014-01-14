@@ -127,13 +127,20 @@ class Engine:
       params = {}
     if 'transitions' not in params:
       params['transitions'] = 1
-    else:
-      # FIXME: Kludge. If removed, test_infer (in
-      # python/test/ripl_test.py) fails, and if params are printed,
-      # you'll see a float for the number of transitions
-      params['transitions'] = int(params['transitions'])
-    self.set_default_params(params)
-    self.trace.infer(params)
+    if params['kernel'] == "cycle":
+      if 'subkernels' not in params:
+        raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
+      for n in range(params["transitions"]):
+        for k in params["subkernels"]:
+          self.infer(k)
+    else: # A primitive infer expression
+      else:
+        # FIXME: Kludge. If removed, test_infer (in
+        # python/test/ripl_test.py) fails, and if params are printed,
+        # you'll see a float for the number of transitions
+        params['transitions'] = int(params['transitions'])
+      self.set_default_params(params)
+      self.trace.infer(params)
 
   def set_default_params(self,params):
     if 'kernel' not in params:
