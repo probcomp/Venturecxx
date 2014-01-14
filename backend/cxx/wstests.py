@@ -1534,7 +1534,7 @@ def testPGibbsMHHMM1(N):
   # p((f 4) | history) = normal mean 390/89, var 55/89, prec 89/55
   ripl.predict("(f 4)")
 
-  predictions = collectSamplesWith(ripl,8,N,{"kernel":"pgibbs"})
+  predictions = collectSamplesWith(ripl,8,N,{"kernel":"mh"})
   reportKnownMeanVariance("TestPGibbsMHHMM1", 390/89.0, 55/89.0, predictions)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous("TestPGibbsMHHMM1", cdf, predictions, "N(4.382, 0.786)")

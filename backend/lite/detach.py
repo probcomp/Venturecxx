@@ -96,6 +96,7 @@ def unapplyPSP(trace,node,scaffold,omegaDB):
   if scaffold.hasLKernel(node): 
     weight += scaffold.getLKernel(node).reverseWeight(trace,trace.valueAt(node),trace.argsAt(node))
   omegaDB.extractValue(node,trace.valueAt(node))
+  trace.setValueAt(node,None)
   return weight
 
 def unevalRequests(trace,node,scaffold,omegaDB):
