@@ -19,22 +19,23 @@ from venture.unit import *
 class PitmanYorMixtureDemo(VentureUnit):
   def makeAssumes(self):
     program = """
-[ASSUME alpha (scope_include hypers default (uniform_continuous 0 10))]
-[ASSUME scale (scope_include hypers default (uniform_continuous 0 10))]
+[ASSUME alpha (scope_include (quote hypers) (quote default) (uniform_continuous 0 10))]
+[ASSUME scale (scope_include (quote hypers) (quote default) (uniform_continuous 0 10))]
 
-[ASSUME pyp_make (lambda (alpha) (lambda () (if (scope_include clustering default (flip)) 1 2)))]
+[ASSUME pyp_make (lambda (alpha)
+  (lambda () (if (scope_include (quote clustering) (quote default) (flip)) 1 2)))]
 
 [ASSUME pyp (pyp_make alpha)]
 
 [ASSUME get_cluster (mem (lambda (id)
-  (scope_include clustering default (pyp))))]
+  (scope_include (quote clustering) (quote default) (pyp))))]
 
 [ASSUME get_mean (mem (lambda (cluster)
-  (scope_include parameters cluster
+  (scope_include (quote parameters) cluster
     (normal 0 10))))]
 
 [ASSUME get_variance (mem (lambda (cluster)
-  (scope_include parameters cluster
+  (scope_include (quote parameters) cluster
     (gamma 1 scale))))]
 
 [ASSUME get_component_model (lambda (cluster)
