@@ -2,7 +2,10 @@ import random
 
 def normalizeList(seq): 
   denom = sum(seq)
-  return [ float(x)/denom for x in seq]
+  if denom > 0: return [ float(x)/denom for x in seq]
+  else: 
+    n = float(len(seq))
+    return [1.0/n for x in seq]
 
 def sampleCategoricalIter(x,index,psSoFar,psRemaining):
   assert index < 1000
