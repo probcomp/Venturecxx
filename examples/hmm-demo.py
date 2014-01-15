@@ -76,9 +76,9 @@ if __name__ == '__main__':
 
   for (name,inference) in [("hmm_defaultMH", None), 
                            ("hmm_particleFilterInfer",particleFilterInfer),
-#                           ("hmm_reasonableInfer",reasonableInfer),
+                           ("hmm_reasonableInfer",reasonableInfer),
   ]:
-    history = model.runFromConditional(5, runs=5, verbose=True, name=name, infer=inference)
+    history = model.runFromConditional(3, runs=5, verbose=True, name=name, infer=inference)
     history.plot(fmt='png')
 #    (sampled, inferred, kl) = model.computeJointKL(5, 200, runs=3, verbose=True, name=name, infer=inference)
     # (sampled, inferred, kl) = model.computeJointKL(1, 20, runs=1, verbose=True, name=name, infer=inference)
