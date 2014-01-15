@@ -438,6 +438,16 @@ class History:
         
         print 'plots written to ' + directory
 
+# :: string -> [(string,History)] -> History containing all those time series overlaid
+# TODO Parameters have to agree for now
+def historyOverlay(name, named_hists):
+    answer = History(label=name, parameters=named_hists[0][1].parameters)
+    for (subname,subhist) in named_hists:
+        for (seriesname,seriesSet) in subhist.nameToSeries.iteritems():
+            for subseries in seriesSet:
+                answer.addSeries(seriesname, subname + "_" + subseries.label, subseries.values, subseries.hist)
+    return answer
+
 # aggregates values for one variable over the course of a run
 class Series:
     def __init__(self, label, values, hist, xvals=None):
