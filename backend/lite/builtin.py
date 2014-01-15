@@ -6,6 +6,7 @@ import continuous
 import number
 import listsps
 import csp
+import crp
 import msp
 import hmm
 import conditionals
@@ -36,8 +37,10 @@ def builtInSPs():
            "categorical" : SP(NullRequestPSP(),discrete.CategoricalOutputPSP()),
 
            "normal" : SP(NullRequestPSP(),continuous.NormalOutputPSP()),
+
            "uniform_continuous" : SP(NullRequestPSP(),continuous.UniformOutputPSP()),
            "beta" : SP(NullRequestPSP(),continuous.BetaOutputPSP()),
+
            "gamma" : SP(NullRequestPSP(),continuous.GammaOutputPSP()),
 
            "branch" : SP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()),
@@ -49,6 +52,8 @@ def builtInSPs():
 
            "make_beta_bernoulli" : SP(NullRequestPSP(),discrete.MakerCBetaBernoulliOutputPSP()),
            "make_ubeta_bernoulli" : SP(NullRequestPSP(),discrete.MakerUBetaBernoulliOutputPSP()),
+
+           "make_crp" : SP(NullRequestPSP(),crp.MakeCRPOutputPSP()),
 
            "make_lazy_hmm" : SP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()),
   }

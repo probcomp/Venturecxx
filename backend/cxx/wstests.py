@@ -478,6 +478,7 @@ def testBlockingExample3():
   assert not(oldb == newb)
   return reportPassage("testBlockingExample3")
 
+
 def testStudentT0(N):
   ripl = RIPL()
   ripl.assume("a", "(student_t 1.0)")
@@ -1081,15 +1082,15 @@ def loadDPMem(ripl):
   ripl.assume("pick_a_stick","""
 (lambda (sticks k)
   (branch (bernoulli (sticks k))
-    (lambda () k)
-    (lambda () (pick_a_stick sticks (plus k 1)))))
+    (quote k)
+    (quote (pick_a_stick sticks (plus k 1)))))
 """)
 
   ripl.assume("make_sticks","""
 (lambda (alpha)
   ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
    (mem (lambda (k)
-     (beta 1 (plus alpha (times k k)))))))
+     (beta 1 alpha)))))
 """)
 
   ripl.assume("u_dpmem","""
@@ -1121,7 +1122,7 @@ def testDPMem1(N):
 def observeCategories(ripl,counts):
   for i in range(len(counts)):
     for ct in range(counts[i]):
-      ripl.observe("(normal (f) 1.0)",i)
+      ripl.observe("(flip (if (= (f) %d) 1.0 0.1))" % i,"true")
 
 def testCRP1(N,isCollapsed):
   ripl = RIPL()
@@ -1497,3 +1498,77 @@ def testMemHashFunction1(A,B):
   return reportPassage("TestMemHashFunction(%d,%d)" % (A,B))
 
 
+###########################
+###### DSELSAM (madness) ##
+###########################
+def testDHSCRP1(N):
+  ripl = RIPL()
+
+  ripl.assume("dpmem","""
+(lambda (alpha base_dist)
+  ((lambda (augmented_proc crp)
+     (lambda () (augmented_proc (crp))))
+   (mem (lambda (table) (base_dist)))
+   (make_crp alpha)))
+""")
+
+#  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("alpha","1.0")
+  ripl.assume("base_dist","(lambda () (categorical 0.2 0.2 0.2 0.2 0.2))")
+  ripl.assume("f","(dpmem alpha base_dist)")
+
+  ripl.predict("(f)",label="pid")
+
+  observeCategories(ripl,[2,2,5,1,0])
+
+  predictions = collectSamples(ripl,"pid",N)
+  ans = [(0,2.2), (1,2.2), (2,5.2), (3,1.2), (4,0.2)]
+  return reportKnownDiscrete("TestDHSCRP1", ans, predictions)
+
+def testDHSCRP2(N):
+  ripl = RIPL()
+  loadDPMem(ripl)
+
+  ripl.assume("alpha","1.0")
+
+  ripl.assume("base_dist","(lambda () (categorical 0.2 0.2 0.2 0.2 0.2))")
+  ripl.assume("f","(u_dpmem alpha base_dist)")
+
+  ripl.predict("(f)",label="pid")
+
+  observeCategories(ripl,[2,2,5,1,0])
+
+  predictions = collectSamples(ripl,"pid",N)
+  ans = [(0,2.2), (1,2.2), (2,5.2), (3,1.2), (4,0.2)]
+  return reportKnownDiscrete("TestDHSCRP2", ans, predictions)
+
+
+
+
+
+def testPGibbsBlockingMHHMM1(N):
+  ripl = RIPL()
+
+  ripl.assume("x0","(scope_include 0 0 (normal 0.0 1.0))")
+  ripl.assume("x1","(scope_include 0 1 (normal x0 1.0))")
+  ripl.assume("x2","(scope_include 0 2 (normal x1 1.0))")
+  ripl.assume("x3","(scope_include 0 3 (normal x2 1.0))")
+  ripl.assume("x4","(scope_include 0 4 (normal x3 1.0))")
+
+  ripl.assume("y0","(normal x0 1.0)")
+  ripl.assume("y1","(normal x1 1.0)")
+  ripl.assume("y2","(normal x2 1.0)")
+  ripl.assume("y3","(normal x3 1.0)")
+  ripl.assume("y4","(normal x4 1.0)")
+
+  ripl.observe("y0",1.0)
+  ripl.observe("y1",2.0)
+  ripl.observe("y2",3.0)
+  ripl.observe("y3",4.0)
+  ripl.observe("y4",5.0)
+  ripl.predict("x4")
+
+  predictions = collectSamplesWith(ripl,16,N,{"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered"})
+  reportKnownMeanVariance("TestPGibbsBlockingMHHMM1", 390/89.0, 55/89.0, predictions)
+  cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
+  return reportKnownContinuous("TestPGibbsBlockingMHHMM1", cdf, predictions, "N(4.382, 0.786)")

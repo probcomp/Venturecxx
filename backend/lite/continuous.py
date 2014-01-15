@@ -1,6 +1,7 @@
 import scipy.stats
+import scipy.special
 import math
-
+import random
 from psp import PSP,RandomPSP
 
 class NormalOutputPSP(RandomPSP):
@@ -51,3 +52,4 @@ class GammaOutputPSP(RandomPSP):
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
 
   # TODO Gamma presumably has a variational kernel too?
+
