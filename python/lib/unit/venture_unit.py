@@ -18,6 +18,8 @@ import random
 import pdb
 import numpy
 import pylab
+import cPickle as pickle
+import os
 
 # whether to record a value returned from the ripl
 def record(value):
@@ -419,6 +421,7 @@ class History:
     # directory specifies location of plots
     # default format is pdf
     def plot(self, fmt='pdf', directory=None):
+        self.save(directory)
         if directory == None:
             directory = self.defaultDirectory()
         
@@ -437,6 +440,27 @@ class History:
             plotSeries("logscore_vs_wallclock", self.label, score_v_time, self.parameters, fmt, directory, xlabel="time (s)")
         
         print 'plots written to ' + directory
+
+    def save(self, directory=None):
+        if directory == None:
+            directory = self.defaultDirectory()
+        ensure_directory(directory)
+        filename = directory + "/" + self.label
+        pickle.dump(self, open(filename, "wb" ) )
+        print "History dumped to %s using pickle" % filename
+
+def ensure_directory(directory):
+    if not os.path.isdir(directory):
+        try:
+            os.makedirs(directory)
+        except OSError as e:
+            if os.path.isdir(directory):
+                pass
+            else:
+                raise
+
+def loadHistory(filename):
+    return pickle.load(open(filename))
 
 # :: string -> [(string,History)] -> History containing all those time series overlaid
 # TODO Parameters have to agree for now
