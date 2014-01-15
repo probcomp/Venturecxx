@@ -1081,9 +1081,9 @@ def loadPYMem(ripl):
 def loadDPMem(ripl):
   ripl.assume("pick_a_stick","""
 (lambda (sticks k)
-  (branch (bernoulli (sticks k))
-    (quote k)
-    (quote (pick_a_stick sticks (plus k 1)))))
+  (if (bernoulli (sticks k))
+      k
+      (pick_a_stick sticks (plus k 1))))
 """)
 
   ripl.assume("make_sticks","""
