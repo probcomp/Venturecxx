@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from spref import SPRef
 from sp import SP
+from scope import mergeWith
 
 class Node(object):
   __metaclass__ = ABCMeta
@@ -53,6 +54,13 @@ class ApplicationNode(Node):
 
   def sp(self): return self.spRef().makerNode.madeSP
   def spaux(self): return self.spRef().makerNode.madeSPAux
+  def addScope(self,scope):
+    def valMerge(v1, v2):
+      if not(v1 == v2):
+        raise Exception("Assigning one node to two blocks in the same scope")
+      else:
+        return v1
+    self.scopes = mergeWith(self.scopes, scope, valMerge)
 
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):

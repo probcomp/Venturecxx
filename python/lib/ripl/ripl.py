@@ -222,10 +222,13 @@ class Ripl():
         return value if type else _strip_types(value)
 
     # TODO Correctly default block choice?
-    def infer(self, transitions, kernel="mh", scope="default", block="one"):
-        s = self._cur_parser().get_instruction_string('infer')
-        self.execute_instruction(s, {'params': {"transitions": transitions,
-            "kernel": kernel, "scope":scope, "block":block}})
+    def infer(self, params):
+        if isinstance(params, int):
+            self.infer({"transitions": params, "kernel": "mh",
+                        "scope":"default", "block":"one"})
+        else:
+            s = self._cur_parser().get_instruction_string('infer')
+            self.execute_instruction(s, {'params': params})
 
     def clear(self):
         s = self._cur_parser().get_instruction_string('clear')

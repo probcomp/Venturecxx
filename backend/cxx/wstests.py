@@ -502,7 +502,7 @@ def testMem0(N):
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   ripl.predict("(f (bernoulli 0.5))")
   ripl.predict("(f (bernoulli 0.5))")
-  ripl.infer(N, kernel="mh")
+  ripl.infer(N)
   return reportPassage("TestMem0")
 
 
@@ -612,7 +612,7 @@ def testIf1(N):
   ripl.assume('IF', '(lambda () branch)')
   ripl.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
   ripl.predict('(IF2 (bernoulli 0.5) IF IF)')
-  ripl.infer(N/10, kernel="mh")
+  ripl.infer(N/10)
   return reportPassage("TestIf1")
 
 def testIf2(N):
@@ -621,7 +621,7 @@ def testIf2(N):
   ripl.assume('if2', '(branch (bernoulli 0.5) (lambda () if1) (lambda () if1))')
   ripl.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
   ripl.assume('if4', '(branch (bernoulli 0.5) (lambda () if3) (lambda () if3))')
-  ripl.infer(N/10, kernel="mh")
+  ripl.infer(N/10)
   return reportPassage("TestIf2")
 
 def testBLOGCSI(N):
@@ -1081,9 +1081,9 @@ def loadPYMem(ripl):
 def loadDPMem(ripl):
   ripl.assume("pick_a_stick","""
 (lambda (sticks k)
-  (branch (bernoulli (sticks k))
-    (quote k)
-    (quote (pick_a_stick sticks (plus k 1)))))
+  (if (bernoulli (sticks k))
+      k
+      (pick_a_stick sticks (plus k 1))))
 """)
 
   ripl.assume("make_sticks","""
@@ -1217,7 +1217,7 @@ def testTrig1(N):
   ripl.assume("b","(sq (cos x))")
   ripl.predict("(+ a b)")
   for i in range(N/10):
-    ripl.infer(10,kernel="mh")
+    ripl.infer(10)
     assert abs(ripl.report(5) - 1) < .001
   return reportPassage("TestTrig1")
 

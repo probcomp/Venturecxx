@@ -16,7 +16,7 @@
 from venture import shortcuts
 from venture.unit import *
 
-class PitmanYorMixtureDemo(VentureUnit):
+class CRPMixtureDemo(VentureUnit):
   def makeAssumes(self):
     program = """
 [ASSUME alpha (scope_include (quote hypers) 0 (gamma 1.0 1.0))]
@@ -25,7 +25,7 @@ class PitmanYorMixtureDemo(VentureUnit):
 [ASSUME crp (make_crp alpha)]
 
 [ASSUME get_cluster (mem (lambda (id)
-  (scope_include (quote clustering) id (crp))]
+  (scope_include (quote clustering) id (crp))))]
 
 [ASSUME get_mean (mem (lambda (cluster)
   (scope_include (quote parameters) cluster (normal 0 10))))]
@@ -53,20 +53,43 @@ class PitmanYorMixtureDemo(VentureUnit):
     # c3 = N(0,1.5)
     c3 = [1.2862190097549782, -2.0918456617214947, -2.466858195215555, -0.9989735378944502, 1.6654310434851636, -0.47667095805497206, 1.2842732995675072, -1.4688099699500534, 0.5895325341217226, 0.2894536369600946, 0.4618849196904734, 0.4678957436449437, -2.077507965906229, -2.566577198660523, 0.8964088468588131, -0.9752402407709437, 3.084206058143385, -1.5056921323213415, -1.6942644719468085, 2.307315802945018]
 
-    for i in range(len(c1)):
+#    for i in range(len(c1)):
+    for i in range(2):
       self.observe("(get_datapoint %d)" % i, c1[i])
-      self.observe("(get_datapoint %d)", % len(c1) + i, c2[i])
-      self.observe("(get_datapoint %d)", % len(c1) + len(c2) + i, c3[i])
+      self.observe("(get_datapoint %d)" % (len(c1) + i), c2[i])
+      self.observe("(get_datapoint %d)" % (len(c1) + len(c2) + i), c3[i])
 
 if __name__ == '__main__':
   ripl = shortcuts.make_lite_church_prime_ripl()
-  model = PitmanYorMixtureDemo(ripl)
-  def blockInfer(ripl, ct):
-    ripl.infer(ct, block="all")
-  for (name,inference) in [("defaultMH", None), ("blockMH", blockInfer)]:
-    # history = model.runFromConditional(5, runs=2, verbose=True, name=name, infer=inference)
-    # history.plot(fmt='png')
-    (sampled, inferred, kl) = model.computeJointKL(50, 30, runs=3, verbose=True, name=name, infer=inference)
-    sampled.plot(fmt='png')
-    inferred.plot(fmt='png')
-    kl.plot(fmt='png')
+  model = CRPMixtureDemo(ripl)
+  def statisticsInfer(ripl, ct):
+    # hypers =     {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":5}
+    # parameters = {"kernel":"mh", "scope":"parameters", "block":"one", "transitions":20}
+    # clustering = {"kernel":"mh", "scope":"clustering", "block":"one", "transitions":80}
+    # ripl.infer({"transitions":10, "kernel":"cycle", "subkernels":[hypers, parameters, clustering]})
+    hypers =     {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":2}
+    parameters = {"kernel":"mh", "scope":"parameters", "block":"one", "transitions":3}
+    clustering = {"kernel":"mh", "scope":"clustering", "block":"one", "transitions":8}
+    ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, parameters, clustering]})
+  def pGibbsInfer(ripl, ct):
+    # hypers =     {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":5}
+    # parameters = {"kernel":"mh", "scope":"parameters", "block":"one", "transitions":20}
+    # clustering = {"kernel":"pgibbs", "scope":"clustering", "block":"ordered", "transitions":1}
+    # ripl.infer({"transitions":10, "kernel":"cycle", "subkernels":[hypers, parameters, clustering]})
+
+    hypers =     {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":2}
+    parameters = {"kernel":"mh", "scope":"parameters", "block":"one", "transitions":3}
+    clustering = {"kernel":"pgibbs", "scope":"clustering", "block":"ordered", "transitions":1}
+    ripl.infer({"transitions":3, "kernel":"cycle", "subkernels":[hypers, parameters, clustering]})
+
+  for (name,inference) in [#("crp_defaultMH", None), 
+                           #("crp_statisticsInfer", statisticsInfer),
+                           ("crp_pGibbsInfer",pGibbsInfer)]:
+    history = model.runFromConditional(5, runs=1, verbose=True, name=name, infer=inference)
+    history.plot(fmt='png')
+#    (sampled, inferred, kl) = model.computeJointKL(5, 200, runs=3, verbose=True, name=name, infer=inference)
+    # (sampled, inferred, kl) = model.computeJointKL(3, 20, runs=1, verbose=True, name=name, infer=inference)
+    # sampled.plot(fmt='png')
+    # inferred.plot(fmt='png')
+    # kl.plot(fmt='png')
+

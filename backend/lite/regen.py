@@ -72,8 +72,6 @@ def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
       operandNodes.append(operandNode)
 
     (requestNode,outputNode) = trace.createApplicationNodes(operatorNode,operandNodes,env)
-    requestNode.scopes = expScopes(exp)
-    outputNode.scopes = expScopes(exp)
     weight += apply(trace,requestNode,outputNode,scaffold,False,omegaDB,gradients)
     return weight,outputNode
 
@@ -115,6 +113,20 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 #  print "applyPSP",shouldRestore,newValue
 
   if isinstance(newValue,SP): processMadeSP(trace,node,scaffold.isAAA(node))
+  if isinstance(trace.pspAt(node), ScopeIncludeOutputPSP):
+    # Oh, what hacky hacks we hack.
+    blockNode = trace.argsAt(node).operandNodes[2]
+    if trace.pspAt(blockNode).isRandom():
+      # Was already registered in the previous time around the
+      # recursion; update
+      trace.unregisterRandomChoice(blockNode)
+    # TODO As written, this does not support a node appearing in multiple scopes.
+    [scope,block] = trace.argsAt(node).operandValues[0:2]
+    blockNode.addScope({scope:block})
+    assert isinstance(blockNode, OutputNode)
+    blockNode.requestNode.addScope({scope:block})
+    if trace.pspAt(blockNode).isRandom():
+      trace.registerRandomChoice(blockNode)
   if trace.pspAt(node).isRandom(): trace.registerRandomChoice(node)
   return weight
 
