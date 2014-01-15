@@ -219,7 +219,7 @@ class VentureUnit:
                 self.updateValues(assumedValues, assumeToDirective)
                 self.updateValues(predictedValues, predictToDirective)
             
-            history.addSeries('sweep_time', 'run ' + str(run), sweepTimes)
+            history.addSeries('sweep time (s)', 'run ' + str(run), sweepTimes)
             history.addSeries('sweep_iters', 'run ' + str(run), sweepIters)
             history.addSeries('logscore', 'run ' + str(run), logscores)
             
@@ -299,7 +299,7 @@ class VentureUnit:
                 
                 self.updateValues(assumedValues, assumeToDirective)
             
-            history.addSeries('sweep_time', 'run ' + str(run), sweepTimes)
+            history.addSeries('sweep time (s)', 'run ' + str(run), sweepTimes)
             history.addSeries('sweep_iters', 'run ' + str(run), sweepIters)
             history.addSeries('logscore', 'run ' + str(run), logscores)
             
@@ -429,9 +429,9 @@ class History:
             plotSeries(name, self.label, seriesList, self.parameters, fmt, directory)
             plotHistogram(name, self.label, seriesList, self.parameters, fmt, directory)
 
-        if "logscore" in self.nameToSeries and "sweep_time" in self.nameToSeries:
+        if "logscore" in self.nameToSeries and "sweep time (s)" in self.nameToSeries:
             logscores = self.nameToSeries["logscore"] # :: [Series]
-            sweep_times = self.nameToSeries["sweep_time"]
+            sweep_times = self.nameToSeries["sweep time (s)"]
             score_v_time = [Series("run " + str(run), run_logs.values, True, xvals=numpy.cumsum(run_times.values))
                             for (run, run_logs, run_times) in zip(range(len(logscores)), logscores, sweep_times)]
             plotSeries("logscore_vs_wallclock", self.label, score_v_time, self.parameters, fmt, directory, xlabel="time (s)")
