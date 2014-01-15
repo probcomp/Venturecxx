@@ -433,10 +433,17 @@ class History:
 
 # aggregates values for one variable over the course of a run
 class Series:
-    def __init__(self, label, values, hist):
+    def __init__(self, label, values, hist, xvals=None):
         self.label = label
         self.values = values
         self.hist = hist
+        self._xvals = xvals
+
+    def xvals(self):
+        if self._xvals is not None:
+            return self._xvals
+        else:
+            return range(len(self.values)) # Should be the same as plotting just the values
 
 import matplotlib
 #matplotlib.use('pdf')
@@ -458,15 +465,15 @@ def showParameters(parameters):
     plt.text(0, 1, text, transform=plt.axes().transAxes, va='top', size='small', linespacing=1.0)
 
 # Plots a set of series.
-def plotSeries(name, subtitle, seriesList, parameters, fmt, directory):
+def plotSeries(name, subtitle, seriesList, parameters, fmt, directory, xlabel='Sweep'):
     fig = plt.figure()
     plt.clf()
     plt.title('Series for ' + name + '\n' + subtitle)
-    plt.xlabel('Sweep')
+    plt.xlabel(xlabel)
     plt.ylabel(name)
     showParameters(parameters)
     
-    plots = [plt.plot(series.values, label=series.label)[0] for series in seriesList]
+    plots = [plt.plot(series.xvals(), series.values, label=series.label)[0] for series in seriesList]
     
     #plt.legend(plots, [series.label for series in seriesList])
     legend_outside()
