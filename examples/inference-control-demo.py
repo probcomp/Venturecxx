@@ -22,7 +22,7 @@ class PitmanYorMixtureDemo(VentureUnit):
 [ASSUME alpha (scope_include hypers default (uniform_continuous 0 10))]
 [ASSUME scale (scope_include hypers default (uniform_continuous 0 10))]
 
-[ASSUME pyp_make (lambda (alpha) (lambda () 1))]
+[ASSUME pyp_make (lambda (alpha) (lambda () (if (scope_include clustering default (flip)) 1 2)))]
 
 [ASSUME pyp (pyp_make alpha)]
 
