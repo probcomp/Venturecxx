@@ -82,7 +82,7 @@ def run(arg):
   name = arg[0]
   inference = arg[1]
 
-  history = model.runFromConditional(50, runs=3, verbose=True, name=name, infer=inference)
+  history = model.runFromConditional(100, runs=10, verbose=True, name=name, infer=inference)
   history.plot(fmt='png')
 
 from multiprocessing import Pool
