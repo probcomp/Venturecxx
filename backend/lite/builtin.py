@@ -10,6 +10,7 @@ import crp
 import msp
 import hmm
 import conditionals
+import scope
 
 def builtInValues(): return { "true" : True, "false" : False }
 
@@ -56,6 +57,8 @@ def builtInSPs():
            "make_crp" : SP(NullRequestPSP(),crp.MakeCRPOutputPSP()),
 
            "make_lazy_hmm" : SP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()),
+
+           "scope_include" : SP(NullRequestPSP(),scope.ScopeIncludeOutputPSP()),
   }
 
 
