@@ -13,6 +13,9 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+import matplotlib
+matplotlib.use('Agg')
+
 from venture import shortcuts
 from venture.unit import *
 
@@ -82,11 +85,20 @@ if __name__ == '__main__':
     clustering = {"kernel":"pgibbs", "scope":"clustering", "block":"ordered", "transitions":1}
     ripl.infer({"transitions":3, "kernel":"cycle", "subkernels":[hypers, parameters, clustering]})
 
-  for (name,inference) in [#("crp_defaultMH", None), 
-                           #("crp_statisticsInfer", statisticsInfer),
-                           ("crp_pGibbsInfer",pGibbsInfer)]:
-    history = model.runFromConditional(5, runs=1, verbose=True, name=name, infer=inference)
-    history.plot(fmt='png')
+def run(arg):
+  name = arg[0]
+  inference = arg[1]
+
+  history = model.runFromConditional(50, runs=3, verbose=True, name=name, infer=inference)
+  history.plot(fmt='png')
+
+from multiprocessing import Pool
+pool = Pool(30)
+pool.map(run, [("crp_defaultMH", None), 
+               ("crp_statisticsInfer", statisticsInfer),
+               ("crp_pGibbsInfer",pGibbsInfer)])
+#    history = model.runFromConditional(50, runs=3, verbose=True, name=name, infer=inference)
+#    history.plot(fmt='png')
 #    (sampled, inferred, kl) = model.computeJointKL(5, 200, runs=3, verbose=True, name=name, infer=inference)
     # (sampled, inferred, kl) = model.computeJointKL(3, 20, runs=1, verbose=True, name=name, infer=inference)
     # sampled.plot(fmt='png')

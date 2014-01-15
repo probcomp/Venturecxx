@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-from libtrace import Trace
+#from libtrace import Trace
 import pdb
 from venture.exception import VentureException
 
@@ -25,7 +25,7 @@ class Engine:
   def __init__(self):
     self.directiveCounter = 0
     self.directives = {}
-    self.trace = Trace()
+    #self.trace = Trace()
 
   def nextBaseAddr(self):
     self.directiveCounter += 1
