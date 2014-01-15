@@ -86,7 +86,7 @@ def run(arg):
   history.plot(fmt='png')
 
 from multiprocessing import Pool
-pool = Pool(30)
+pool = Pool(10)
 pool.map(run, [("hmm_defaultMH", None), 
                ("hmm_particleFilterInfer",particleFilterInfer),
                ("hmm_reasonableInfer",reasonableInfer)])

@@ -56,8 +56,8 @@ class CRPMixtureDemo(VentureUnit):
     # c3 = N(0,1.5)
     c3 = [1.2862190097549782, -2.0918456617214947, -2.466858195215555, -0.9989735378944502, 1.6654310434851636, -0.47667095805497206, 1.2842732995675072, -1.4688099699500534, 0.5895325341217226, 0.2894536369600946, 0.4618849196904734, 0.4678957436449437, -2.077507965906229, -2.566577198660523, 0.8964088468588131, -0.9752402407709437, 3.084206058143385, -1.5056921323213415, -1.6942644719468085, 2.307315802945018]
 
-#    for i in range(len(c1)):
-    for i in range(2):
+    for i in range(len(c1)):
+#    for i in range(2):
       self.observe("(get_datapoint %d)" % i, c1[i])
       self.observe("(get_datapoint %d)" % (len(c1) + i), c2[i])
       self.observe("(get_datapoint %d)" % (len(c1) + len(c2) + i), c3[i])
@@ -89,7 +89,7 @@ def run(arg):
   name = arg[0]
   inference = arg[1]
 
-  history = model.runFromConditional(50, runs=3, verbose=True, name=name, infer=inference)
+  history = model.runFromConditional(100, runs=10, verbose=True, name=name, infer=inference)
   history.plot(fmt='png')
 
 from multiprocessing import Pool
