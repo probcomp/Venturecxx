@@ -176,7 +176,7 @@ class Trace(object):
     for n in range(params["transitions"]):
       if params["kernel"] == "mh": mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MHOperator())
       elif params["kernel"] == "meanfield": mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MeanfieldOperator(10,0.0001))
-      elif params["kernel"] == "pgibbs": mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(100))
+      elif params["kernel"] == "pgibbs": mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(20))
       else: raise Exception("INFER (%s) MH is implemented" % params["kernel"])
 
       for node in self.aes: node.madeSP.AEInfer(node.madeSPAux)
