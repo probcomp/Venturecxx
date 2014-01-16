@@ -20,7 +20,7 @@ from core_sivm_cxx import CoreSivmCxx
 
 class CoreSivmJVenture(CoreSivmCxx):
     
-    def __init__(self, jl_token):
+    def __init__(self):
         super(CoreSivmJVenture, self).__init__()
         from venture.jventure import engine
-        self.engine = engine.Engine(jl_token)
+        self.engine = engine.Engine()
