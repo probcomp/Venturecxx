@@ -20,24 +20,14 @@ import itertools
 import scipy.stats as stats
 import numpy as np
 
-globalJVentureRipl = None
-
-def setUpJVentureBackend(jl_token):
-  global globalJVentureRipl
-  globalJVentureRipl = make_jlv_church_prime_ripl(jl_token)
-
-def new_jventure_ripl():
-  globalJVentureRipl.sivm.core_sivm.engine.reboot()
-  return globalJVentureRipl
-
 globalKernel = "mh";
 globalUseGlobalScaffold = False;
 globalAlwaysReport = False;
 globalReportingThreshold = 0.001
-globalBackend = new_jventure_ripl
+globalBackend = make_jlv_church_prime_ripl()
 
 def RIPL():
-  return globalBackend()
+  return globalBackend
 
 def normalizeList(seq):
   denom = sum(seq)
@@ -326,7 +316,9 @@ def runTests2(N):
 
 def testMakeCSP():
   ripl = RIPL()
+  print "created RIPL"
   ripl.assume("f", "(lambda (x) (* x x))")
+  print "sent ASSUME"
   ripl.predict("(f 1)")
 
   ripl.assume("g", "(lambda (x y) (* x y))")

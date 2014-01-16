@@ -25,11 +25,17 @@ def make_core_sivm():
 def make_core_lite_sivm():
     return sivm.CoreSivmLite()
 
+def make_core_jl_sivm():
+    return sivm.CoreSivmJVenture()
+
 def make_venture_sivm():
     return sivm.VentureSivm(make_core_sivm())
 
 def make_venture_lite_sivm():
     return sivm.VentureSivm(make_core_lite_sivm())
+
+def make_jventure_sivm():
+    return sivm.VentureSivm(make_core_jl_sivm())
 
 def make_church_prime_ripl():
     v = make_venture_sivm()
@@ -41,8 +47,8 @@ def make_lite_church_prime_ripl():
     parser1 = parser.ChurchPrimeParser()
     return ripl.Ripl(v,{"church_prime":parser1})
 
-def make_jlv_church_prime_ripl(jl_token):
-    v = sivm.VentureSivm(sivm.CoreSivmJVenture(jl_token))
+def make_jlv_church_prime_ripl():
+    v = make_jventure_sivm()
     parser1 = parser.ChurchPrimeParser()
     return ripl.Ripl(v,{"church_prime":parser1})
 

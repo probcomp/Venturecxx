@@ -2,7 +2,6 @@ require("trace.jl")
 require("parse.jl")
 require("sparse.jl")
 
-
 type Engine
   directiveCounter::DirectiveID
   directives::Dict{DirectiveID,Any}
@@ -62,8 +61,6 @@ end
 
 function report_value(engine::Engine,id::DirectiveID)
   val = extractValue(engine.trace,id)
-  println("[JL-START]")
-  println(string("report_value: ",val,typeof(val)))
   if isa(val,Bool)
     return { "type"=>"boolean", "value" => val }
   elseif isa(val,Number)
@@ -75,7 +72,6 @@ function report_value(engine::Engine,id::DirectiveID)
   else
     return { "type"=>"unknown", "value"=>"<unknown>" }
   end
-  println("[JL-END]")
 end
 
-infer(engine::Engine,N::Int64) = infer(engine.trace,N::Int64)
+infer(engine::Engine,params) = infer(engine.trace,params)
