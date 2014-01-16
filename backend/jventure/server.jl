@@ -24,6 +24,10 @@ function VentureServer(port::Int = 2000)
   
 end
 
+# False is not ideal -- the strings "sp" and "node" probably more appropriate
+JSON.print(io::IO, s::SPRef) = print(io,false)
+JSON.print(io::IO, n::Node) = print(io,false)
+
 function handleDirective(sock,sivm::Engine,directive::Array) 
   ops = { 
          "assume" => assume, 
@@ -32,7 +36,7 @@ function handleDirective(sock,sivm::Engine,directive::Array)
          "report" => report,
          "infer" => infer,
 #         "reboot" => reboot,
-         }
+        }
   result = ops[directive[1]](sivm,directive[2:end]...)
   write(sock,json(result))
 end
