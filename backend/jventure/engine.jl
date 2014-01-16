@@ -1,7 +1,6 @@
 require("trace.jl")
 require("parse.jl")
 
-
 type Engine
   directiveCounter::DirectiveID
   directives::Dict{DirectiveID,Any}
@@ -11,7 +10,7 @@ end
 
 function Engine()
   sivm = Engine(0,(DirectiveID=>Any)[],Trace())
-  assume(sivm,"noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+#  assume(sivm,"noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
   return sivm
 end
 
