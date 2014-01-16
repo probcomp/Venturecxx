@@ -27,6 +27,7 @@ globalReportingThreshold = 0.001
 globalBackend = make_jlv_church_prime_ripl()
 
 def RIPL():
+  globalBackend.sivm.core_sivm.engine.reset()
   return globalBackend
 
 def normalizeList(seq):
@@ -106,7 +107,7 @@ def reportKnownDiscrete(name, expectedRates, observed):
   items = [pair[0] for pair in expectedRates]
   itemsDict = {pair[0]:pair[1] for pair in expectedRates}
   for o in observed:
-    assert o in itemsDict, "Completely unexpected observation %r" % o
+    assert o in itemsDict, "Completely unexpected observation %r,%r" % (o,observed)
   # N.B. This is not None test allows observations to be selectively
   # ignored.  This is useful when information about the right answer
   # is incomplete.
@@ -233,15 +234,15 @@ def collectSamplesWith(ripl, address, T, params):
   return predictions
 
 def runTests(N):
-  reportTest(testMakeCSP())
-  reportTest(repeatTest(testBernoulli0, N))
-  reportTest(repeatTest(testBernoulli1, N))
-  reportTest(repeatTest(testCategorical1, N))
-  reportTest(repeatTest(testMHNormal0, N))
-  reportTest(repeatTest(testMHNormal1, N))
-  if globalBackend == make_lite_church_prime_ripl:
-    reportTest(repeatTest(testMHNormal2, N))
-  reportTest(repeatTest(testMem0, N))
+  # reportTest(testMakeCSP())
+  # reportTest(repeatTest(testBernoulli0, N))
+  # reportTest(repeatTest(testBernoulli1, N))
+  # reportTest(repeatTest(testCategorical1, N))
+  # reportTest(repeatTest(testMHNormal0, N))
+  # reportTest(repeatTest(testMHNormal1, N))
+  # if globalBackend == make_lite_church_prime_ripl:
+  #   reportTest(repeatTest(testMHNormal2, N))
+  # reportTest(repeatTest(testMem0, N))
   reportTest(repeatTest(testMem1, N))
   reportTest(repeatTest(testMem2, N))
   reportTest(repeatTest(testMem3, N))
@@ -252,10 +253,10 @@ def runTests(N):
   reportTest(repeatTest(testBLOGCSI, N))
   reportTest(repeatTest(testMHHMM1, N))
   reportTest(repeatTest(testOuterMix1, N))
-  reportTest(repeatTest(testMakeBetaBernoulli1, "make_beta_bernoulli", N))
-  reportTest(repeatTest(testMakeBetaBernoulli2, "make_beta_bernoulli", N))
-  reportTest(repeatTest(testMakeBetaBernoulli3, "make_beta_bernoulli", N))
-  reportTest(repeatTest(testMakeBetaBernoulli4, "make_beta_bernoulli", N))
+#  reportTest(repeatTest(testMakeBetaBernoulli1, "make_beta_bernoulli", N))
+#  reportTest(repeatTest(testMakeBetaBernoulli2, "make_beta_bernoulli", N))
+#  reportTest(repeatTest(testMakeBetaBernoulli3, "make_beta_bernoulli", N))
+#  reportTest(repeatTest(testMakeBetaBernoulli4, "make_beta_bernoulli", N))
   if globalBackend == make_lite_church_prime_ripl:
     # These test primitives that only Lite has
     reportTest(repeatTest(testMakeBetaBernoulli1, "make_ubeta_bernoulli", N))
@@ -263,7 +264,7 @@ def runTests(N):
     reportTest(repeatTest(testMakeBetaBernoulli3, "make_ubeta_bernoulli", N))
     reportTest(repeatTest(testMakeBetaBernoulli4, "make_ubeta_bernoulli", N))
   reportTest(repeatTest(testLazyHMM1, N))
-  reportTest(repeatTest(testLazyHMMSP1, N))
+#  reportTest(repeatTest(testLazyHMMSP1, N))
   if globalBackend != make_lite_church_prime_ripl:
     # These rely upon builtins primitives that the Lite backend doesn't have.
     # Those that are testing those primitives (as opposed to testing the engine with them)
@@ -361,17 +362,17 @@ def testBernoulli1(N):
 
 def testCategorical1(N):
   ripl = RIPL()
-  ripl.assume("x", "(real (categorical 0.1 0.2 0.3 0.4))")
-  ripl.assume("y", "(real (categorical 0.2 0.6 0.2))")
+  ripl.assume("x", "(categorical (float_array 0.1 0.2 0.3 0.4))")
+  ripl.assume("y", "(categorical (float_array 0.2 0.6 0.2))")
   ripl.predict("(plus x y)")
 
   predictions = collectSamples(ripl,3,N)
-  ans = [(0, 0.1 * 0.2),
-         (1, 0.1 * 0.6 + 0.2 * 0.2),
-         (2, 0.1 * 0.2 + 0.2 * 0.6 + 0.3 * 0.2),
-         (3, 0.2 * 0.2 + 0.3 * 0.6 + 0.4 * 0.2),
-         (4, 0.3 * 0.2 + 0.4 * 0.6),
-         (5, 0.4 * 0.2)]
+  ans = [(2, 0.1 * 0.2),
+         (3, 0.1 * 0.6 + 0.2 * 0.2),
+         (4, 0.1 * 0.2 + 0.2 * 0.6 + 0.3 * 0.2),
+         (5, 0.2 * 0.2 + 0.3 * 0.6 + 0.4 * 0.2),
+         (6, 0.3 * 0.2 + 0.4 * 0.6),
+         (7, 0.4 * 0.2)]
   return reportKnownDiscrete("testCategorical1", ans, predictions)
 
 def testMHNormal0(N):
@@ -460,13 +461,13 @@ def testMem0(N):
 
 def testMem1(N):
   ripl = RIPL()
-  ripl.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
+  ripl.assume("f","(mem (lambda (arg) (categorical (float_array 0.4 0.6))))")
   ripl.assume("x","(f 1)")
   ripl.assume("y","(f 1)")
   ripl.assume("w","(f 2)")
   ripl.assume("z","(f 2)")
-  ripl.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
-  ripl.predict('(plus x y w z q)');
+  ripl.assume("q","(categorical (float_array 0.1 0.9))")
+  ripl.predict('(plus x y w z q)')
 
   predictions = collectSamples(ripl,7,N)
   # TODO This test can be strengthened by computing more of the ratios in the answer
@@ -478,13 +479,13 @@ def testMem1(N):
 
 def testMem2(N):
   ripl = RIPL()
-  ripl.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
-  ripl.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
+  ripl.assume("f","(mem (lambda (arg) (categorical (float_array 0.4 0.6))))")
+  ripl.assume("g","((lambda () (mem (lambda (y) (f y)))))")
   ripl.assume("x","(f ((branch (bernoulli 0.5) (lambda () (lambda () 1)) (lambda () (lambda () 1)))))")
   ripl.assume("y","(g ((lambda () 0)))")
   ripl.assume("w","((lambda () (f 2)))")
   ripl.assume("z","(g 1)")
-  ripl.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
+  ripl.assume("q","(categorical (float_array 0.1 0.9))")
   ripl.predict('(plus x y w z q)');
 
   predictions = collectSamples(ripl,8,N)
@@ -497,13 +498,13 @@ def testMem2(N):
 
 def testMem3(N):
   ripl = RIPL()
-  ripl.assume("f","(mem (lambda (arg) (plus 1 (real (categorical 0.4 0.6)))))")
-  ripl.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
+  ripl.assume("f","(mem (lambda (arg) (categorical (float_array 0.4 0.6))))")
+  ripl.assume("g","((lambda () (mem (lambda (y) (f y)))))")
   ripl.assume("x","(f ((lambda () 1)))")
   ripl.assume("y","(g ((lambda () (if (bernoulli 1.0) 0 100))))")
   ripl.assume("w","((lambda () (f 2)))")
   ripl.assume("z","(g 1)")
-  ripl.assume("q","(plus 1 (real (categorical 0.1 0.9)))")
+  ripl.assume("q","(categorical (float_array 0.1 0.9))")
   ripl.predict('(plus x y w z q)');
 
   predictions = collectSamples(ripl,8,N)
@@ -1059,7 +1060,7 @@ def testDPMem1(N):
   loadDPMem(ripl)
 
   ripl.assume("alpha","(uniform_continuous 0.1 20.0)")
-  ripl.assume("base_dist","(lambda () (real (categorical 0.5 0.5)))")
+  ripl.assume("base_dist","(lambda () (categorical (float_array 0.5 0.5)))")
   ripl.assume("f","(u_dpmem alpha base_dist)")
 
   ripl.predict("(f)")
@@ -1081,7 +1082,7 @@ def testCRP1(N,isCollapsed):
   loadPYMem(ripl)
   ripl.assume("alpha","(gamma 1.0 1.0)")
   ripl.assume("d","(uniform_continuous 0.0 0.1)")
-  ripl.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
+  ripl.assume("base_dist","(lambda () (categorical (float_array 0.2 0.2 0.2 0.2 0.2)))")
   if isCollapsed: ripl.assume("f","(pymem alpha d base_dist)")
   else: ripl.assume("f","(u_pymem alpha d base_dist)")
 
@@ -1097,7 +1098,7 @@ def loadHPY(ripl,topCollapsed,botCollapsed):
   loadPYMem(ripl)
   ripl.assume("alpha","(gamma 1.0 1.0)")
   ripl.assume("d","(uniform_continuous 0.0 0.1)")
-  ripl.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
+  ripl.assume("base_dist","(lambda () (categorical (float_array 0.2 0.2 0.2 0.2 0.2)))")
   if topCollapsed: ripl.assume("intermediate_dist","(pymem alpha d base_dist)")
   else: ripl.assume("intermediate_dist","(u_pymem alpha d base_dist)")
   if botCollapsed: ripl.assume("f","(pymem alpha d intermediate_dist)")
@@ -1107,7 +1108,7 @@ def loadPY(ripl):
   loadPYMem(ripl)
   ripl.assume("alpha","(gamma 1.0 1.0)")
   ripl.assume("d","(uniform_continuous 0 0.0001)")
-  ripl.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
+  ripl.assume("base_dist","(lambda () (categorical (float_array 0.2 0.2 0.2 0.2 0.2)))")
   ripl.assume("f","(u_pymem alpha d base_dist)")
 
 def predictPY(N):
@@ -1315,7 +1316,7 @@ def testHPYLanguageModel1(N):
   for i in range(1,len(atoms)):
     ripl.observe("""
 (noisy_true
-  (atom_eq
+  (eq
     ((H atom<%d>))
     atom<%d>)
   0.001)
@@ -1353,7 +1354,7 @@ def testHPYLanguageModel2(N):
   for i in range(1,len(atoms)):
     ripl.observe("""
 (noisy_true
-  (atom_eq
+  (eq
     ((G (list atom<%d>)))
     atom<%d>)
   0.001)
@@ -1402,7 +1403,7 @@ def testGoldwater1(N):
 
   v.assume("get_word_id","""
 (mem (lambda (sentence sentence_pos)
-  (branch (= sentence_pos 0)
+  (branch (eq sentence_pos 0)
     (lambda () (sample_word_id))
     (lambda ()
       (branch (is_end (get_word_id sentence (- sentence_pos 1))
@@ -1413,7 +1414,7 @@ def testGoldwater1(N):
 
   v.assume("get_pos","""
 (mem (lambda (sentence sentence_pos)
-  (branch (= sentence_pos 0)
+  (branch (eq sentence_pos 0)
     (lambda () 0)
     (lambda ()
       (branch (is_end (get_word_id sentence (- sentence_pos 1))
@@ -1435,7 +1436,7 @@ def testGoldwater1(N):
   for i in range(len(brent)): #for each sentence
     for j in range(len(brent[i])): #for each letter
       v.predict("(sample_symbol %d %d)" %(i, j))
-      v.observe("(noisy_true (atom_eq (sample_symbol %d %d) atom<%d>) noise)" %(i, j,d[str(brent[i][j])]), "true")
+      v.observe("(noisy_true (eq (sample_symbol %d %d) atom<%d>) noise)" %(i, j,d[str(brent[i][j])]), "true")
 
   v.infer(N)
   return reportPassage("TestGoldwater1")

@@ -3,24 +3,16 @@ using JSON
 
 function VentureServer(port::Int = 2000)
   @async begin
-#    print("initializing server...")
     server = listen(port)
-#    println("done")
-
     while true
-#      print("waiting for connection...")
       sock = accept(server)
-#      println("done")
 
-#      print("initializing SIVM...")
-      sivm = Engine()
-#      println("done")
-
-      while true
-#        println("waiting for directive...")
-        directive = readuntil(sock,"#")[1:end-1]
-#        println("received directive: " * directive)
-        handleDirective(sock,sivm,JSON.parse(directive))
+      @async begin
+        sivm = Engine()
+        while true
+          directive = readuntil(sock,"#")[1:end-1]
+          handleDirective(sock,sivm,JSON.parse(directive))
+        end
       end
     end
   end
@@ -37,7 +29,7 @@ function handleDirective(sock,sivm::Engine,directive::Array)
          "observe" => observe,
          "report_value" => report_value,
          "infer" => infer,
-#         "reboot" => reboot,
+         "reset" => reset,
         }
   result = ops[directive[1]](sivm,directive[2:end]...)
   write(sock,json(result))

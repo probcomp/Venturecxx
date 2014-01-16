@@ -289,35 +289,15 @@ function showScaffoldSizes(trace::Trace)
   println("---")
 end
 
-function infer(trace::Trace;scope = "default",N::Int=1)
-  for i = 1:N
-    mhInfer(trace,scope,sampleBlock(trace,scope)...)
+function infer(trace::Trace,params::Dict)
+  for n = 1:params["transitions"]
+    if (params["kernel"] == "mh") mhInfer(trace,params["scope"],sampleBlock(trace,params["scope"])...)
+    elseif (params["kernel"] == "gibbs") enumerativeGibbsInfer(trace,params["scope"],sampleBlock(trace,params["scope"])...)
+    elseif (params["kernel"] == "pgibbs")
+      @assert params["block"] = "ordered"
+      pGibbsInfer(trace,params["scope"],arrayOfPNodesFromScope(trace,params["scope"]),params["particles"])
+    else
+      error("INFER ($s) is not yet implemented")
+    end
   end
-end
-
-function loggingInfer(trace::Trace,id::DirectiveID;scope="default",N::Int=1)
-  predictions = Array(Any,N)
-  for n = 1:N
-    mhInfer(trace,"default",sampleBlock(trace,scope)...)
-    predictions[n] = extractValue(trace,id)
-  end
-  return predictions
-end
-
-function loggingGibbsInfer(trace::Trace,id::DirectiveID,scope,N)
-  predictions = Array(Any,N)
-  for n = 1:N
-    enumerativeGibbsInfer(trace,scope,sampleBlock(trace,scope)...)
-    predictions[n] = extractValue(trace,id)
-  end
-  return predictions
-end
-
-function loggingPGibbsInfer(trace::Trace,id::DirectiveID,scope,N,P)
-  predictions = Array(Any,N)
-  for n = 1:N
-    pGibbsInfer(trace,scope,arrayOfPNodesFromScope(trace,scope),P)
-    predictions[n] = extractValue(trace,id)
-  end
-  return predictions
 end

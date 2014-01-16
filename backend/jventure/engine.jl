@@ -11,7 +11,6 @@ end
 
 function Engine()
   sivm = Engine(0,(DirectiveID=>Any)[],Trace())
-#  assume(sivm,"noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
   return sivm
 end
 
@@ -50,7 +49,7 @@ function observe(engine::Engine,exp_datum,value::VentureValue)
   exp = sParse(exp_datum)
 
   evalExpression(engine.trace,baseAddr,exp)
-  logDensity = observe(engine.trace,baseAddr,value)
+  logDensity = observe(engine.trace,baseAddr,sParse(value))
   if logDensity == -Inf
     error("Observe failed to constrain")
   end
@@ -74,4 +73,30 @@ function report_value(engine::Engine,id::DirectiveID)
   end
 end
 
-infer(engine::Engine,params) = infer(engine.trace,params)
+function infer(engine::Engine,params::Dict)
+  if !haskey(params,"transitions") params["transitions"] = 1 end
+  if params["kernel"] == "cycle"
+    if !haskey(params,"subkernels") error("Cycle kernel must have things to cycle over ($params)") end
+    for n = 1:params["transitions"]
+      for k = params["subkernels"]
+        infer(engine,k)
+      end
+    end
+  else # A primitive infer expression
+    set_default_params(params)
+    infer(engine.trace,params)
+  end
+end
+
+function reset(engine::Engine)
+  engine.directiveCounter = 0
+  engine.directives = (DirectiveID=>Any)[]
+  engine.trace = Trace()
+  return true
+end
+
+function set_default_params(params::Dict)
+  if !haskey(params,"kernel") params["kernel"] = "mh" end
+  if !haskey(params,"scope") params["scope"] = "default" end
+  if !haskey(params,"block") params["block"] = "one" end
+end
