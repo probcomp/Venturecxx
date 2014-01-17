@@ -38,7 +38,6 @@ function predict(engine::Engine,exp_datum)
   exp = sParse(exp_datum)
 
   evalExpression(engine.trace,baseAddr,exp)
-  println("evaluated")
   return (engine.directiveCounter,report_value(engine,baseAddr))
 end
 

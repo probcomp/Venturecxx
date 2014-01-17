@@ -21,10 +21,8 @@ class Engine:
 
   def execute(self,directive):
     data_out = json.dumps(directive) + "#"
-    print "about to execute: ", data_out
     self.s.sendall(data_out)
     retval = self.s.recv(1024)
-    print "received: ", retval
     return json.loads(retval)
 
   def assume(self,sym,exp): return self.execute(["assume",sym,desugarLambda(exp)])

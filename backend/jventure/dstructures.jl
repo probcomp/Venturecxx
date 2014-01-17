@@ -90,7 +90,6 @@ builtInSPs[symbol("list_ref")] = SP(NullRequestPSP(),ListRefOutputPSP(),"list_re
 type MakeMapOutputPSP <: OutputPSP end
 function simulate(psp::MakeMapOutputPSP,args::OutputArgs)
   m = [key => val for (key,val) in zip(args.operandValues...)]
-  println(string("constructed map: ",m))
   return m
 end
 builtInSPs[symbol("make_map")] = SP(NullRequestPSP(),MakeMapOutputPSP(),"make_map")

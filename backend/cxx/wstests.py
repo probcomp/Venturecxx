@@ -231,7 +231,7 @@ def collectSamplesWith(ripl, address, T, params):
     # tests, presumably by avoiding the parser.
     ripl.sivm.core_sivm.engine.infer(params)
     predictions.append(ripl.report(address))
-    ripl.sivm.core_sivm.engine.reset()
+#    ripl.sivm.core_sivm.engine.reset()
   return predictions
 
 def runJTests(N):
@@ -368,9 +368,7 @@ def runTests2(N):
 
 def testMakeCSP():
   ripl = RIPL()
-  print "created RIPL"
   ripl.assume("f", "(lambda (x) (* x x))")
-  print "sent ASSUME"
   ripl.predict("(f 1)")
 
   ripl.assume("g", "(lambda (x y) (* x y))")
@@ -703,7 +701,7 @@ def testDirichletMultinomial1(name, ripl, index, N):
       ripl.observe("(f)", "atom<%d>" % i)
 
   predictions = collectSamples(ripl,index,N)
-  ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
+  ans = [(1,.1), (2,.3), (3,.3), (4,.3)]
   return reportKnownDiscrete("TestDirichletMultinomial(%s)" % name, ans, predictions)
 
 def testMakeSymDirMult2(name, N):
