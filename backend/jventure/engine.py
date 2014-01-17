@@ -1,10 +1,6 @@
 import socket
 import json
 
-def sendItems(s,items):
-  for item in items:
-    s.sendall(item + "#")
-
 def desugarLambda(datum):
   if type(datum) is list and type(datum[0]) is dict and datum[0]["value"] == "lambda":
     ids = [{"type" : "symbol","value" : "quote"}] + [datum[1]]

@@ -22,7 +22,7 @@ import numpy as np
 
 globalKernel = "mh";
 globalUseGlobalScaffold = False;
-globalAlwaysReport = False;
+globalAlwaysReport = True;
 globalReportingThreshold = 0.001
 globalBackend = make_jlv_church_prime_ripl()
 

@@ -11,7 +11,9 @@ function VentureServer(port::Int = 2000)
         sivm = Engine()
         while true
           directive = readuntil(sock,"#")[1:end-1]
-          handleDirective(sock,sivm,JSON.parse(directive))
+          if !isa(directive,Nothing)
+            handleDirective(sock,sivm,JSON.parse(directive))
+          end
         end
       end
     end
