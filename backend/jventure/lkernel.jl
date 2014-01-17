@@ -20,4 +20,4 @@ type DeterministicLKernel <: LKernel
 end
 
 ksimulate(k::DeterministicLKernel,trace::Trace,oldValue::Union(SP,Nothing),args::OutputArgs) = k.value
-kweight(k::DefaultAAALKernel,trace::Trace,newValue::SP,oldValue::Union(SP,Nothing),args::OutputArgs) = logDensity(k.psp,newValue,args)
+kweight(k::DeterministicLKernel,trace::Trace,newValue::SP,oldValue::Union(SP,Nothing),args::OutputArgs) = logDensity(k.psp,newValue,args)

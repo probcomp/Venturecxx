@@ -20,7 +20,9 @@ getK(psp::SymDirMultOutputPSP) = psp.K
 function simulate(psp::SymDirMultOutputPSP,args::OutputArgs)
   counts = args.spaux + psp.alpha
   p = counts / sum(counts)
-  return rand(Distributions.Categorical(p))
+  retval = Distributions.rand(Distributions.Categorical(p))
+  @assert retval <= psp.K
+  return retval
 end
 
 function logDensity(psp::SymDirMultOutputPSP,value::Int64,args::OutputArgs)
@@ -50,13 +52,14 @@ getAAALKernel(psp::MakeUSymDirMultOutputPSP) = MakeUSymDirMultAAALKernel()
 
 function simulate(psp::MakeUSymDirMultOutputPSP,args::OutputArgs)
   (alpha,K) = args.operandValues
-  theta = Distributions.rand(Distributions.Dirichlet(K,alpha))
-  return SP(NullRequestPSP(),USymDirMultOutputPSP(theta),"make_usym_dir_mult")
+  theta = Distributions.rand(Distributions.Dirichlet(int(K),alpha))
+  @assert length(theta) == K
+  return SP(NullRequestPSP(),USymDirMultOutputPSP(theta),"make_uc_sym_dir_mult")
 end
 
 function logDensity(psp::MakeUSymDirMultOutputPSP,value::SP,args::OutputArgs)
   (alpha,K) = args.operandValues
-  d = Distributions.Dirichlet(K,alpha)
+  d = Distributions.Dirichlet(int(K),alpha)
   theta = value.outputPSP.theta
   ld = Distributions.logpdf(d,theta)
   return ld
@@ -67,7 +70,7 @@ function ksimulate(k::MakeUSymDirMultAAALKernel,trace::Trace,oldValue::SP,args::
   (alpha,K) = args.operandValues
   counts = args.madeSPAux + alpha
   theta = rand(Distributions.Dirichlet(counts))
-  return SP(NullRequestPSP(),USymDirMultOutputPSP(theta),"make_usym_dir_mult")
+  return SP(NullRequestPSP(),USymDirMultOutputPSP(theta),"make_uc_sym_dir_mult")
 end
 
 type USymDirMultOutputPSP <: DirMultOutputPSP
@@ -79,7 +82,7 @@ getK(psp::USymDirMultOutputPSP) = length(psp.theta)
 simulate(psp::USymDirMultOutputPSP,args::OutputArgs) = Distributions.rand(Distributions.Categorical(psp.theta))
 logDensity(psp::USymDirMultOutputPSP,value::Int64,args::OutputArgs) = Distributions.logpdf(Distributions.Categorical(psp.theta),value)
 
-builtInSPs[symbol("make_usym_dir_mult")] = SP(NullRequestPSP(),MakeUSymDirMultOutputPSP(),"make_usym_dir_mult")
+builtInSPs[symbol("make_uc_sym_dir_mult")] = SP(NullRequestPSP(),MakeUSymDirMultOutputPSP(),"make_uc_sym_dir_mult")
 
 
 

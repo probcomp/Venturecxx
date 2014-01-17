@@ -58,20 +58,14 @@ function observe(engine::Engine,exp_datum,value::VentureValue)
 end
 
 
-function report_value(engine::Engine,id::DirectiveID)
-  val = extractValue(engine.trace,id)
-  if isa(val,Bool)
-    return { "type"=>"boolean", "value" => val }
-  elseif isa(val,Number)
-    return { "type"=>"number", "value" => val }
-  elseif isa(val,Union(String,Symbol))
-    return { "type"=>"symbol", "value" => val }
-  elseif isa(val,SPRef)
-    return { "type"=>"sp", "value"=>"<sp>" }
-  else
-    return { "type"=>"unknown", "value"=>"<unknown>" }
-  end
-end
+value_to_python(val::Bool) = { "type"=>"boolean", "value" => val }
+value_to_python(val::Number) = { "type"=>"number", "value" => val }
+value_to_python(val::Union(String,Symbol)) = { "type"=>"symbol", "value" => val }
+value_to_python(val::SPRef) = { "type"=>"sp", "value"=>"<sp>" }
+value_to_python(val::VentureList) = { "type"=>"list", "value"=>map(value_to_python,ventureListToArray(val)) }
+value_to_python(val::Any) = { "type"=>"unknown", "value"=>"<unknown>" }
+
+report_value(engine::Engine,id::DirectiveID) = value_to_python(extractValue(engine.trace,id))
 
 function infer(engine::Engine,params::Dict)
   if !haskey(params,"transitions") params["transitions"] = 1 end

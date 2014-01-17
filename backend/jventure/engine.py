@@ -33,5 +33,6 @@ class Engine:
   def report_value(self,id): return self.execute(["report_value",id])
   def infer(self,params): return self.execute(["infer",params])
   def reset(self): return self.execute(["reset"])
+  def clear(self): return self.execute(["reset"])
 
   def continuous_inference_status(self): return {"running" : False}

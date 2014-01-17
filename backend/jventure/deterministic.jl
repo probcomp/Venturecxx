@@ -15,6 +15,20 @@ regularOperators = [("Plus",+),
                     ("Min",min),
                     ("Max",max),
                     ("Abs",abs),
+
+#                    ("Make_Map",Dict),
+                    ("Map_Lookup",getindex),
+                    ("Map_Contains",haskey),
+                    ("Map_Size",length),
+
+                    ("Make_Set",Set),
+                    ("Set_Contains",(s,x)->in(x,s)),
+                    ("Set_Size",length),
+
+                    ("Vector_Lookup",getindex),
+                    ("Vector_Length",length),
+
+
 ]
 
 ## Add regular operators
@@ -26,3 +40,5 @@ for (prefix,op) = regularOperators
     builtInSPs[symbol(lowercase($prefix))] = SP(NullRequestPSP(),($name)(),(lowercase($prefix)))
   end
 end
+
+
