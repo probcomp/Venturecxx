@@ -22,7 +22,7 @@ import numpy as np
 
 globalKernel = "mh";
 globalUseGlobalScaffold = False;
-globalAlwaysReport = True;
+globalAlwaysReport = False
 globalReportingThreshold = 0.001
 globalBackend = make_jlv_church_prime_ripl()
 
@@ -222,7 +222,7 @@ def collectSamples(ripl,address,T,kernel=None,use_global_scaffold=None):
   kernel = kernel if kernel is not None else globalKernel
   use_global_scaffold = use_global_scaffold if use_global_scaffold is not None else globalUseGlobalScaffold
   block = "one" if not use_global_scaffold else "all"
-  return collectSamplesWith(ripl, address, T, {"transitions":100, "kernel":kernel, "block":block})
+  return collectSamplesWith(ripl, address, T, {"transitions":200, "kernel":kernel, "block":block})
 
 def collectSamplesWith(ripl, address, T, params):
   predictions = []
@@ -253,7 +253,6 @@ def runJTests(N):
   reportTest(repeatTest(testMHHMM1, N))
   reportTest(repeatTest(testOuterMix1, N))
   reportTest(repeatTest(testLazyHMM1, N))
-  reportTest(repeatTest(testGamma1, N))
   reportTest(repeatTest(testMakeSymDirMult1, "make_sym_dir_mult", N))
   reportTest(repeatTest(testMakeSymDirMult1, "make_uc_sym_dir_mult", N))
   reportTest(repeatTest(testMakeSymDirMult2, "make_sym_dir_mult", N))
