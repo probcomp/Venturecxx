@@ -33,8 +33,9 @@ class Sprinkler(VentureUnit):
 if __name__ == '__main__':
   ripl = shortcuts.make_lite_church_prime_ripl()
   model = Sprinkler(ripl)
-  history1 = model.runFromConditional(50, verbose=True, name="defaultMH")
-  history1.plot(fmt='png')
+  history1 = model.runFromConditional(20, verbose=True, name="defaultMH")
+#  history1.plot(fmt='png')
+  history1.plotOneSeries("sprinkler", fmt='png', ybounds=[-20,30])
 
   # def blockInfer(ripl, ct):
   #       ripl.infer({"transitions":ct, "kernel":"mh", "scope":"default", "block":"all")
@@ -42,7 +43,7 @@ if __name__ == '__main__':
   # history.plot(fmt='png')
 
   model = Sprinkler(shortcuts.make_church_prime_ripl())
-  history2 = model.runFromConditional(50, verbose=True, name="defaultMH-CXX")
+  history2 = model.runFromConditional(20, verbose=True, name="defaultMH-CXX")
   history2.plot(fmt='png')
 
   history3 = historyOverlay("sprinkler", [("Lite", history1), ("CXX", history2)])
