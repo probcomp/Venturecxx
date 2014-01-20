@@ -13,7 +13,6 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-from libtrace import Trace
 from venture.exception import VentureException
 
 # Thin wrapper around cxx Trace
@@ -24,6 +23,7 @@ class Engine:
   def __init__(self):
     self.directiveCounter = 0
     self.directives = {}
+    from libtrace import Trace
     self.trace = Trace()
 
   def nextBaseAddr(self):
@@ -93,6 +93,7 @@ class Engine:
     del self.trace
     self.directiveCounter = 0
     self.directives = {}
+    from libtrace import Trace
     self.trace = Trace()
 
   # Blow away the trace and rebuild one from the directives.  The goal
