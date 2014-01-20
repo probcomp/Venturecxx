@@ -96,6 +96,7 @@ cxx = Extension("venture.cxx.libtrace",
     undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
     include_dirs = inc_dirs,
     sources = src_files)
+
 if "SKIP_CXX_BACKEND" in os.environ:
     print "Skipping CXX backend because SKIP_CXX_BACKEND is %s" % os.environ["SKIP_CXX_BACKEND"]
     print "Unset it to build the CXX backend."
