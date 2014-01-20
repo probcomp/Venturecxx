@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from venture.shortcuts import *
 import math
-import pdb
 
 def RIPL(): return make_church_prime_ripl()
 
