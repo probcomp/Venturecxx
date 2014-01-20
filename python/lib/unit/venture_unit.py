@@ -441,6 +441,17 @@ class History:
         
         print 'plots written to ' + directory
 
+    def plotOneSeries(self, name, fmt='pdf', directory=None, ybounds=None):
+        # TODO Is it ok for a method to have the same name as a global
+        # function in Python?
+        if directory == None:
+            directory = self.defaultDirectory()
+        ensure_directory(directory)
+        if name in self.nameToSeries:
+            plotSeries(name, self.label, self.nameToSeries[name], self.parameters, fmt, directory, ybounds=ybounds)
+        else:
+            raise Exception("Cannot plot non-existent series %s" % name)
+
     def save(self, directory=None):
         if directory == None:
             directory = self.defaultDirectory()
