@@ -506,7 +506,7 @@ def showParameters(parameters):
     plt.text(0, 1, text, transform=plt.axes().transAxes, va='top', size='small', linespacing=1.0)
 
 # Plots a set of series.
-def plotSeries(name, subtitle, seriesList, parameters, fmt, directory, xlabel='Sweep'):
+def plotSeries(name, subtitle, seriesList, parameters, fmt, directory, xlabel='Sweep', ybounds=None):
     fig = plt.figure()
     plt.clf()
     plt.title('Series for ' + name + '\n' + subtitle)
@@ -519,13 +519,17 @@ def plotSeries(name, subtitle, seriesList, parameters, fmt, directory, xlabel='S
     #plt.legend(plots, [series.label for series in seriesList])
     legend_outside()
 
-    ymin = min([min(series.values) for series in seriesList])
-    ymax = max([max(series.values) for series in seriesList])
+    if ybounds is None:
+        ymin = min([min(series.values) for series in seriesList])
+        ymax = max([max(series.values) for series in seriesList])
 
-    offset = 0.1 * max([(ymax - ymin), 1.0])
+        offset = 0.1 * max([(ymax - ymin), 1.0])
 
-    if not any([any([numpy.isinf(v) for v in series.values]) for series in seriesList]):
-        plt.ylim([ymin - offset, ymax + offset])
+        if not any([any([numpy.isinf(v) for v in series.values]) for series in seriesList]):
+            plt.ylim([ymin - offset, ymax + offset])
+    else:
+        [ylow,yhigh] = ybounds
+        plt.ylim([ylow,yhigh])
     
     #plt.tight_layout()
     #fig.savefig(directory + name.replace(' ', '_') + '_series.' + fmt, format=fmt)
