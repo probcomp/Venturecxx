@@ -425,8 +425,7 @@ class History:
         if directory == None:
             directory = self.defaultDirectory()
         
-        if not os.path.exists(directory):
-            os.mkdir(directory)
+        ensure_directory(directory)
         
         for (name, seriesList) in self.nameToSeries.iteritems():
             plotSeries(name, self.label, seriesList, self.parameters, fmt, directory)
