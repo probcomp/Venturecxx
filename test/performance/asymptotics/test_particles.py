@@ -1,6 +1,7 @@
 from venture.test.stats import *
 from testconfig import config
 import scipy.stats
+import time
 
 def loadHMMParticleAsymptoticProgram1(M):
   """Easiest possible HMM asymptotic test for particles"""
@@ -28,15 +29,16 @@ def loadHMMParticleAsymptoticProgram1(M):
 
 
 # O(N) forwards
-# O(1) to infer
+# O(N) to infer
 def testHMMParticleAsymptotics1():
-  from nose import SkipTest
-  raise SkipTest("Skipping testHMMParticleAsymptotics1: no linear regression test")
+#  from nose import SkipTest
+#  raise SkipTest("Skipping testHMMParticleAsymptotics1: no linear regression test")
 
-  Ts = [pow(2,T) for T in range(2,10)]
+  K = 5
+  Ts = [2 * T for T in range(1,K+1)]
+  N = 10
 
   inferTimes = []
-  N = 100
 
   for T in Ts:
     ripl = loadHMMParticleAsymptoticProgram1(T)
@@ -47,4 +49,5 @@ def testHMMParticleAsymptotics1():
 
   # TODO some kind of linear regression R-value 
   # (the run times should grow linearly in T)
-  assert False
+  assert (max(inferTimes) / min(inferTimes)) < 2 * K
+
