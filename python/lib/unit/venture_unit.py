@@ -547,12 +547,9 @@ def plotSeries(name, subtitle, seriesList, parameters, fmt, directory, xlabel='S
     
     plots = [plt.plot(series.xvals(), series.values, label=series.label)[0] for series in seriesList]
     
-    #plt.legend(plots, [series.label for series in seriesList])
     legend_outside()
     setYBounds(seriesList, ybounds)
 
-    #plt.tight_layout()
-    #fig.savefig(directory + name.replace(' ', '_') + '_series.' + fmt, format=fmt)
     filename = directory + name.replace(' ', '_') + '_series.' + fmt
     savefig_legend_outside(filename)
 
@@ -568,10 +565,7 @@ def plotHistogram(name, subtitle, seriesList, parameters, fmt, directory):
     # FIXME: choose a better bin size
     plt.hist([series.values for series in seriesList], bins=20, label=[series.label for series in seriesList])
     legend_outside()
-    # plt.legend()
     
-    #plt.tight_layout()
-    #fig.savefig(directory + name.replace(' ', '_') + '_hist.' + fmt, format=fmt)
     filename = directory + name.replace(' ', '_') + '_hist.' + fmt
     savefig_legend_outside(filename)
 
