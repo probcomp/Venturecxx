@@ -435,7 +435,8 @@ class History:
             sweep_times = self.nameToSeries["sweep time (s)"]
             score_v_time = [Series(run_logs.label, run_logs.values, True, xvals=numpy.cumsum(run_times.values))
                             for (run_logs, run_times) in zip(logscores, sweep_times)]
-            plotSeries("logscore_vs_wallclock", score_v_time, self.label, self.parameters, fmt, directory, xlabel="time (s)")
+            plotSeries("logscore_vs_wallclock", score_v_time, subtitle=self.label,
+                       parameters=self.parameters, fmt=fmt, directory=directory, xlabel="time (s)")
         
         print 'plots written to ' + directory
 
