@@ -52,3 +52,40 @@ def testMem3(N):
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete("TestMem3", ans, predictions)
 
+def testMem4(N):
+  "Like TestMem1, makes sure that MSPs handle changes to their arguments without crashing"
+  ripl = RIPL()
+  ripl.assume("pick_a_stick","""
+(lambda (sticks k)
+  (if (bernoulli (sticks k))
+      k
+      (pick_a_stick sticks (plus k 1))))
+""")
+  ripl.assume("d","(uniform_continuous 0.4 0.41)")
+  ripl.assume("f","(mem (lambda (k) (beta 1.0 (times k d))))")
+  ripl.assume("g","(lambda () (pick_a_stick f 1))")
+  ripl.predict("(g)")
+  ripl.infer(N)
+  return reportPassage("TestMem4")
+
+############ CXX mem tests
+
+def testMemoizingOnAList():
+  "VentureList needs to override several VentureValue methods for this to work."
+  ripl = RIPL()
+  ripl.assume("G","(mem (lambda (x) 1))")
+  ripl.predict("(G (list 0))")
+  predictions = collectSamples(ripl,2,1)
+  assert predictions == [1]
+  return reportPassage("TestMemoizingOnAList")
+
+
+def testMemHashCollisions1(A,B):
+  """For large A and B, makes sure that MSPs don't allow hash collisions for requests based on
+   different arguments."""
+  ripl = RIPL()
+  ripl.assume("f","(mem (lambda (a b) (normal 0.0 1.0)))")
+  for a in range(A):
+    for b in range(B):
+      ripl.observe("(f %d %d)" % (a,b),"0.5")
+  return reportPassage("TestMemHashFunction(%d,%d)" % (A,B))
