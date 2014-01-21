@@ -71,16 +71,6 @@ def testBlockingExample3():
 
 
 
-def testGamma1(N):
-  ripl = RIPL()
-  ripl.assume("a","(gamma 10.0 10.0)")
-  ripl.assume("b","(gamma 10.0 10.0)")
-  ripl.predict("(gamma a b)")
-
-  predictions = collectSamples(ripl,3,N)
-  # TODO What, actually, is the mean of (gamma (gamma 10 10) (gamma 10 10))?
-  # It's pretty clear that it's not 1.
-  return reportKnownMean("TestGamma1", 10/9.0, predictions)
 
 
 
@@ -91,207 +81,11 @@ def testGamma1(N):
 
 
 
-def testList1():
-  ripl = RIPL()
-  ripl.assume("x1","(list)")
-  ripl.assume("x2","(pair 1.0 x1)")
-  ripl.assume("x3","(pair 2.0 x2)")
-  ripl.assume("x4","(pair 3.0 x3)")
-  ripl.assume("f","(lambda (x) (times x x x))")
-  ripl.assume("y4","(map_list f x4)")
-
-  y4 = ripl.predict("(first y4)")
-  y3 = ripl.predict("(list_ref y4 1)")
-  y2 = ripl.predict("(list_ref (rest y4) 1)")
-  px1 = ripl.predict("(is_pair x1)")
-  px4 = ripl.predict("(is_pair x4)")
-  py4 = ripl.predict("(is_pair y4)")
-
-  assert(ripl.report(7) == 27.0);
-  assert(ripl.report(8) == 8.0);
-  assert(ripl.report(9) == 1.0);
-
-  assert(not ripl.report(10));
-  assert(ripl.report(11));
-  assert(ripl.report(11));
-
-  return reportPassage("TestList1")
-
-def loadPYMem(ripl):
-  ripl.assume("pick_a_stick","""
-(lambda (sticks k)
-  (branch (bernoulli (sticks k))
-    (lambda () k)
-    (lambda () (pick_a_stick sticks (plus k 1)))))
-""")
-
-  ripl.assume("make_sticks","""
-(lambda (alpha d)
-  ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
-   (mem (lambda (k)
-     (beta (minus 1 d)
-           (plus alpha (times k d)))))))
-""")
-
-  ripl.assume("u_pymem","""
-(lambda (alpha d base_dist)
-  ((lambda (augmented_proc py)
-     (lambda () (augmented_proc (py))))
-   (mem (lambda (stick_index) (base_dist)))
-   (make_sticks alpha d)))
-""")
-
-  ripl.assume("pymem","""
-(lambda (alpha d base_dist)
-  ((lambda (augmented_proc crp)
-     (lambda () (augmented_proc (crp))))
-   (mem (lambda (table) (base_dist)))
-   (make_crp alpha d)))
-""")
-
-def loadDPMem(ripl):
-  ripl.assume("pick_a_stick","""
-(lambda (sticks k)
-  (if (bernoulli (sticks k))
-      k
-      (pick_a_stick sticks (plus k 1))))
-""")
-
-  ripl.assume("make_sticks","""
-(lambda (alpha)
-  ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
-   (mem (lambda (k)
-     (beta 1 alpha)))))
-""")
-
-  ripl.assume("u_dpmem","""
-(lambda (alpha base_dist)
-  ((lambda (augmented_proc py)
-     (lambda () (augmented_proc (py))))
-   (mem (lambda (stick_index) (base_dist)))
-   (make_sticks alpha)))
-""")
 
 
-def testDPMem1(N):
-  ripl = RIPL()
-  loadDPMem(ripl)
 
-  ripl.assume("alpha","(uniform_continuous 0.1 20.0)")
-  ripl.assume("base_dist","(lambda () (real (categorical 0.5 0.5)))")
-  ripl.assume("f","(u_dpmem alpha base_dist)")
 
-  ripl.predict("(f)")
-  ripl.predict("(f)")
-  ripl.observe("(normal (f) 1.0)",1.0)
-  ripl.observe("(normal (f) 1.0)",1.0)
-  ripl.observe("(normal (f) 1.0)",0.0)
-  ripl.observe("(normal (f) 1.0)",0.0)
-  ripl.infer(N)
-  return reportPassage("TestDPMem1")
-
-def observeCategories(ripl,counts):
-  for i in range(len(counts)):
-    for ct in range(counts[i]):
-      ripl.observe("(flip (if (= (f) %d) 1.0 0.1))" % i,"true")
-
-def testCRP1(N,isCollapsed):
-  ripl = RIPL()
-  loadPYMem(ripl)
-  ripl.assume("alpha","(gamma 1.0 1.0)")
-  ripl.assume("d","(uniform_continuous 0.0 0.1)")
-  ripl.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
-  if isCollapsed: ripl.assume("f","(pymem alpha d base_dist)")
-  else: ripl.assume("f","(u_pymem alpha d base_dist)")
-
-  ripl.predict("(f)",label="pid")
-
-  observeCategories(ripl,[2,2,5,1,0])
-
-  predictions = collectSamples(ripl,"pid",N)
-  ans = [(0,3), (1,3), (2,6), (3,2), (4,1)]
-  return reportKnownDiscrete("TestCRP1 (not exact)", ans, predictions)
-
-def loadHPY(ripl,topCollapsed,botCollapsed):
-  loadPYMem(ripl)
-  ripl.assume("alpha","(gamma 1.0 1.0)")
-  ripl.assume("d","(uniform_continuous 0.0 0.1)")
-  ripl.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
-  if topCollapsed: ripl.assume("intermediate_dist","(pymem alpha d base_dist)")
-  else: ripl.assume("intermediate_dist","(u_pymem alpha d base_dist)")
-  if botCollapsed: ripl.assume("f","(pymem alpha d intermediate_dist)")
-  else: ripl.assume("f","(u_pymem alpha d intermediate_dist)")
-
-def loadPY(ripl):
-  loadPYMem(ripl)
-  ripl.assume("alpha","(gamma 1.0 1.0)")
-  ripl.assume("d","(uniform_continuous 0 0.0001)")
-  ripl.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
-  ripl.assume("f","(u_pymem alpha d base_dist)")
-
-def predictPY(N):
-  ripl = RIPL()
-  loadPY(ripl)
-  ripl.predict("(f)",label="pid")
-  observeCategories(ripl,[2,2,5,1,0])
-  return collectSamples(ripl,"pid",N)
-
-def predictHPY(N,topCollapsed,botCollapsed):
-  ripl = RIPL()
-  loadHPY(ripl,topCollapsed,botCollapsed)
-  ripl.predict("(f)",label="pid")
-  observeCategories(ripl,[2,2,5,1,0])
-  return collectSamples(ripl,"pid",N)
-
-def doTestHPYMem1(N):
-  data = [countPredictions(predictHPY(N,top,bot), [0,1,2,3,4]) for top in [True,False] for bot in [True,False]]
-  (chisq, pval) = stats.chi2_contingency(data)
-  report = [
-    "Expected: Samples from four equal distributions",
-    "Observed:"]
-  i = 0
-  for top in ["Collapsed", "Uncollapsed"]:
-    for bot in ["Collapsed", "Uncollapsed"]:
-      report += "  (%s, %s): %s" % (top, bot, data[i])
-      i += 1
-  report += [
-    "Chi^2   : " + str(chisq),
-    "P value : " + str(pval)]
-  return TestResult("TestHPYMem1", pval, "\n".join(report))
-
-def testHPYMem1(N):
-  if hasattr(stats, 'chi2_contingency'):
-    return doTestHPYMem1(N)
-  else:
-    print "---TestHPYMem1 skipped for lack of scipy.stats.chi2_contingency"
-    return reportPassage("TestHPYMem1")
-
-def testGeometric1(N):
-  ripl = RIPL()
-  ripl.assume("alpha1","(gamma 5.0 2.0)")
-  ripl.assume("alpha2","(gamma 5.0 2.0)")
-  ripl.assume("p", "(beta alpha1 alpha2)")
-  ripl.assume("geo","(lambda (p) (branch (bernoulli p) (lambda () 1) (lambda () (plus 1 (geo p)))))")
-  ripl.predict("(geo p)",label="pid")
-
-  predictions = collectSamples(ripl,"pid",N)
-
-  k = 128
-  ans = [(n,math.pow(2,-n)) for n in range(1,k)]
-  return reportKnownDiscrete("TestGeometric1", ans, predictions)
-
-def testTrig1(N):
-  ripl = RIPL()
-  ripl.assume("sq","(lambda (x) (* x x))")
-  ripl.assume("x","(normal 0.0 1.0)")
-  ripl.assume("a","(sq (sin x))")
-  ripl.assume("b","(sq (cos x))")
-  ripl.predict("(+ a b)")
-  for i in range(N/10):
-    ripl.infer(10)
-    assert abs(ripl.report(5) - 1) < .001
-  return reportPassage("TestTrig1")
-
+#### Not sure where this should go
 def testForget1():
   ripl = RIPL()
 
@@ -312,30 +106,6 @@ def testForget1():
   assert real_sivm.logscore() < 0
   return reportPassage("TestForget1")
 
-# This is the original one that fires an assert, when the (flip) has 0.0 or 1.0 it doesn't fail
-def testReferences1(N):
-  ripl = RIPL()
-  ripl.assume("draw_type1", "(make_crp 1.0)")
-  ripl.assume("draw_type0", "(if (flip) draw_type1 (lambda () 1))")
-  ripl.assume("draw_type2", "(make_dir_mult 1 1)")
-  ripl.assume("class", "(if (flip) (lambda (name) (draw_type0)) (lambda (name) (draw_type2)))")
-  ripl.predict("(class 1)")
-  ripl.predict("(flip)")
-  # TODO What is trying to test?  The address in the logging infer refers to the bare (flip).
-  predictions = collectSamples(ripl,6,N)
-  ans = [(True,0.5), (False,0.5)]
-  return reportKnownDiscrete("TestReferences1", ans, predictions)
-
-#
-def testReferences2(N):
-  ripl = RIPL()
-  ripl.assume("f", "(if (flip 0.5) (make_dir_mult 1 1) (lambda () 1))")
-  ripl.predict("(f)")
-#  ripl.predict("(flip)",label="pid")
-
-  predictions = collectSamples(ripl,2,N)
-  ans = [(True,0.75), (False,0.25)]
-  return reportKnownDiscrete("TestReferences2", ans, predictions)
 
 def testMemoizingOnAList():
   ripl = RIPL()

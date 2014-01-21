@@ -1,0 +1,31 @@
+from venture.shortcuts import *
+from stat_helpers import *
+from test_globals import N, globalKernel
+
+def RIPL(): return make_lite_church_prime_ripl()
+
+# At some point, this program caused CXX to fire an assert.
+# When the (flip) had a 0.0 or 1.0 it didn't fail
+def testReferences1(N):
+  "Checks that the program runs without crashing."
+  ripl = RIPL()
+  ripl.assume("draw_type0", "(make_crp 1.0)")
+  ripl.assume("draw_type1", "(if (flip) draw_type0 (lambda () atom<1>))")
+  ripl.assume("draw_type2", "(make_dir_mult 1 1)")
+  ripl.assume("class", "(if (flip) (lambda (name) (draw_type1)) (lambda (name) (draw_type2)))")
+  ripl.predict("(class 1)")
+  ripl.predict("(flip)")
+
+  predictions = collectSamples(ripl,6,N)
+  ans = [(True,0.5), (False,0.5)]
+  return reportKnownDiscrete("TestReferences1", ans, predictions)
+
+
+def testReferences2(N):
+  ripl = RIPL()
+  ripl.assume("f", "(if (flip 0.5) (make_dir_mult 1 1) (lambda () atom<1>))")
+  ripl.predict("(f)")
+
+  predictions = collectSamples(ripl,2,N)
+  ans = [(True,0.75), (False,0.25)]
+  return reportKnownDiscrete("TestReferences2", ans, predictions)
