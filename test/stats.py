@@ -147,6 +147,8 @@ def reportKnownMean(name, expMean, observed):
     "T stat  : " + str(tstat),
     "P value : " + str(pval)]))
 
+def reportKnownEqualDistributions(data): raise Exception("reportKnownEqualDistributions() not yet implemented")
+
 # For a deterministic test
 def reportPassage(name):
   return TestResult("Passed %s" % name, 1.0, "")
@@ -176,3 +178,4 @@ def collectSamplesWith(ripl, address, T, params):
     predictions.append(ripl.report(address))
     ripl.sivm.core_sivm.engine.reset()
   return predictions
+

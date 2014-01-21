@@ -1,14 +1,11 @@
-from venture.shortcuts import *
-from stat_helpers import *
-from test_globals import N, globalKernel
+from venture.test.stats import *
+from testconfig import config
 
-def RIPL(): return make_lite_church_prime_ripl()
 
-# At some point, this program caused CXX to fire an assert.
-# When the (flip) had a 0.0 or 1.0 it didn't fail
-def testReferences1(N):
-  "Checks that the program runs without crashing."
-  ripl = RIPL()
+def testReferences1():
+  """Checks that the program runs without crashing. At some point, this program caused CXX to fire an assert.  When the (flip) had a 0.0 or 1.0 it didn't fail."""
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("draw_type0", "(make_crp 1.0)")
   ripl.assume("draw_type1", "(if (flip) draw_type0 (lambda () atom<1>))")
   ripl.assume("draw_type2", "(make_dir_mult 1 1)")
@@ -21,8 +18,10 @@ def testReferences1(N):
   return reportKnownDiscrete("TestReferences1", ans, predictions)
 
 
-def testReferences2(N):
-  ripl = RIPL()
+def testReferences2():
+  "Simpler version of the old bug testReferences1() tries to trigger"
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("f", "(if (flip 0.5) (make_dir_mult 1 1) (lambda () atom<1>))")
   ripl.predict("(f)")
 

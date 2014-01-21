@@ -1,11 +1,10 @@
-from venture.shortcuts import *
-from stat_helpers import *
-from test_globals import N, globalKernel
+from venture.test.stats import *
+from testconfig import config
 
-def RIPL(): return make_lite_church_prime_ripl()
+def testVentureNormalHMM1():
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
 
-def testVentureNormalHMM1(N):
-  ripl = RIPL()
   ripl.assume("f","""
 (mem (lambda (i)
   (if (eq i 0)
@@ -42,10 +41,12 @@ def testVentureNormalHMM1(N):
   predictions = collectSamples(ripl,8,N)
   reportKnownMeanVariance("TestVentureNormalHMM1", 390/89.0, 55/89.0, predictions)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
-  return reportKnownContinuous("TestVentureHMM1", cdf, predictions, "N(4.382, 0.786)")
+  return reportKnownContinuous("TestVentureNormalHMM1", cdf, predictions, "N(4.382, 0.786)")
 
 def testVentureBinaryHMM1():
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
+
   ripl.assume("f","""
 (mem (lambda (i)
   (if (eq i 0)
@@ -67,12 +68,8 @@ def testVentureBinaryHMM1():
   ripl.observe("(g 3)",True)
   ripl.observe("(g 4)",False)
   ripl.observe("(g 5)",False)
-  ripl.predict("(list (f 0) (f 1) (f 2) (f 3) (f 4) (f 5))")
+  ripl.predict("(g 6)",label="pid")
 
-  predictions = collectSamples(ripl,8,N)
-  sums = [0 for i in range(6)]
-  for p in predictions: sums = [sums[i] + p[i] for i in range(6)]
-  ps = [.3531,.1327,.1796,.6925,.1796,.1327]
-  eps = [float(x) / N for x in sums] if N > 0 else [0 for x in sums]
-  printTest("TestVentureBinaryHMM1 (mixes terribly)",ps,eps)
-  return reportPassage("TestVentureBinaryHMM1")
+  predictions = collectSamples(ripl,"pid",N)
+  ans = [(0,0.6528), (1,0.3472)]
+  return reportKnownDiscrete("testVentureBinaryHMM1", ans, predictions)

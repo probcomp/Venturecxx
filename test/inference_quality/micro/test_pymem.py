@@ -1,11 +1,5 @@
-from venture.shortcuts import *
-from stat_helpers import *
-from test_globals import N, globalKernel
-
-def RIPL(): return make_lite_church_prime_ripl()
-
-# TODO this file is a chaotic dump from wstests
-
+from venture.test.stats import *
+from testconfig import config
 
 def loadPYMem(ripl):
   ripl.assume("pick_a_stick","""
@@ -23,7 +17,7 @@ def loadPYMem(ripl):
            (plus alpha (times k d)))))))
 """)
 
-  ripl.assume("u_pymem","""
+  ripl.assume("uc_pymem","""
 (lambda (alpha d base_dist)
   ((lambda (augmented_proc py)
      (lambda () (augmented_proc (py))))
@@ -39,69 +33,24 @@ def loadPYMem(ripl):
    (make_crp alpha d)))
 """)
 
-
-def testDPMem1(N):
-  ripl = RIPL()
-  loadDPMem(ripl)
-
-  ripl.assume("alpha","(uniform_continuous 0.1 20.0)")
-  ripl.assume("base_dist","(lambda () (real (categorical 0.5 0.5)))")
-  ripl.assume("f","(u_dpmem alpha base_dist)")
-
-  ripl.predict("(f)")
-  ripl.predict("(f)")
-  ripl.observe("(normal (f) 1.0)",1.0)
-  ripl.observe("(normal (f) 1.0)",1.0)
-  ripl.observe("(normal (f) 1.0)",0.0)
-  ripl.observe("(normal (f) 1.0)",0.0)
-  ripl.infer(N)
-  return reportPassage("TestDPMem1")
-
 def observeCategories(ripl,counts):
   for i in range(len(counts)):
     for ct in range(counts[i]):
       ripl.observe("(flip (if (= (f) %d) 1.0 0.1))" % i,"true")
 
-def testCRP1(N,isCollapsed):
-  ripl = RIPL()
+def loadHPYModel1(ripl,topCollapsed,botCollapsed):
   loadPYMem(ripl)
   ripl.assume("alpha","(gamma 1.0 1.0)")
   ripl.assume("d","(uniform_continuous 0.0 0.1)")
-  ripl.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
-  if isCollapsed: ripl.assume("f","(pymem alpha d base_dist)")
-  else: ripl.assume("f","(u_pymem alpha d base_dist)")
-
-  ripl.predict("(f)",label="pid")
-
-  observeCategories(ripl,[2,2,5,1,0])
-
-  predictions = collectSamples(ripl,"pid",N)
-  ans = [(0,3), (1,3), (2,6), (3,2), (4,1)]
-  return reportKnownDiscrete("TestCRP1 (not exact)", ans, predictions)
-
-def loadHPY(ripl,topCollapsed,botCollapsed):
-  loadPYMem(ripl)
-  ripl.assume("alpha","(gamma 1.0 1.0)")
-  ripl.assume("d","(uniform_continuous 0.0 0.1)")
-  ripl.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
+  ripl.assume("base_dist","""
+(lambda () 
+  (categorical (simplex 0.2 0.2 0.2 0.2 0.2)
+               (array 0 1 2 3 4)))
+""")
   if topCollapsed: ripl.assume("intermediate_dist","(pymem alpha d base_dist)")
-  else: ripl.assume("intermediate_dist","(u_pymem alpha d base_dist)")
+  else: ripl.assume("intermediate_dist","(uc_pymem alpha d base_dist)")
   if botCollapsed: ripl.assume("f","(pymem alpha d intermediate_dist)")
-  else: ripl.assume("f","(u_pymem alpha d intermediate_dist)")
-
-def loadPY(ripl):
-  loadPYMem(ripl)
-  ripl.assume("alpha","(gamma 1.0 1.0)")
-  ripl.assume("d","(uniform_continuous 0 0.0001)")
-  ripl.assume("base_dist","(lambda () (real (categorical 0.2 0.2 0.2 0.2 0.2)))")
-  ripl.assume("f","(u_pymem alpha d base_dist)")
-
-def predictPY(N):
-  ripl = RIPL()
-  loadPY(ripl)
-  ripl.predict("(f)",label="pid")
-  observeCategories(ripl,[2,2,5,1,0])
-  return collectSamples(ripl,"pid",N)
+  else: ripl.assume("f","(uc_pymem alpha d intermediate_dist)")
 
 def predictHPY(N,topCollapsed,botCollapsed):
   ripl = RIPL()
@@ -110,25 +59,52 @@ def predictHPY(N,topCollapsed,botCollapsed):
   observeCategories(ripl,[2,2,5,1,0])
   return collectSamples(ripl,"pid",N)
 
-def doTestHPYMem1(N):
+def testHPYMem1():
+  from nose import SkipTest
+  raise SkipTest("Skipping testHPYMem1: no p-value test for comparing empirical distributions")
   data = [countPredictions(predictHPY(N,top,bot), [0,1,2,3,4]) for top in [True,False] for bot in [True,False]]
-  (chisq, pval) = stats.chi2_contingency(data)
-  report = [
-    "Expected: Samples from four equal distributions",
-    "Observed:"]
-  i = 0
-  for top in ["Collapsed", "Uncollapsed"]:
-    for bot in ["Collapsed", "Uncollapsed"]:
-      report += "  (%s, %s): %s" % (top, bot, data[i])
-      i += 1
-  report += [
-    "Chi^2   : " + str(chisq),
-    "P value : " + str(pval)]
-  return TestResult("TestHPYMem1", pval, "\n".join(report))
+  return reportKnownEqualDistributions(data)
 
-def testHPYMem1(N):
-  if hasattr(stats, 'chi2_contingency'):
-    return doTestHPYMem1(N)
-  else:
-    print "---TestHPYMem1 skipped for lack of scipy.stats.chi2_contingency"
-    return reportPassage("TestHPYMem1")
+####
+
+def testHPYLanguageModel1():
+  """Nice model from http://www.cs.berkeley.edu/~jordan/papers/teh-jordan-bnp.pdf.
+     Checks that it learns that 1 follows 0"""
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
+
+  loadPYMem(ripl)
+
+  # 5 letters for now
+  ripl.assume("G_init","(make_sym_dir_mult 0.5 5)")
+
+  # globally shared parameters for now
+  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("d","(uniform_continuous 0.0 0.01)")
+
+  # G(letter1 letter2 letter3) ~ pymem(alpha,d,G(letter2 letter3))
+  ripl.assume("G","""
+(mem (lambda (context)
+  (if (is_pair context)
+      (pymem alpha d (G (rest context)))
+      (pymem alpha d G_init))))
+""")
+
+  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+
+  atoms = [0, 1, 2, 3, 4] * 5;
+
+  for i in range(1,len(atoms)):
+    ripl.observe("""
+(noisy_true
+  (atom_eq
+    ((G (list atom<%d>)))
+    atom<%d>)
+  0.001)
+""" % (atoms[i-1],atoms[i]), "true")
+
+  ripl.predict("((G (list atom<0>)))",label="pid")
+
+  predictions = collectSamples(ripl,"pid",N)
+  ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
+  return reportKnownDiscrete("testHPYLanguageModel1 (approximate)", ans, predictions)
