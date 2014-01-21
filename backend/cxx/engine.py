@@ -132,7 +132,8 @@ class Engine:
       # python/test/ripl_test.py) fails, and if params are printed,
       # you'll see a float for the number of transitions
       params['transitions'] = int(params['transitions'])
-    if params['kernel'] == "cycle":
+    
+    if "kernel" in params and params['kernel'] == "cycle":
       if 'subkernels' not in params:
         raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
       for n in range(params["transitions"]):
