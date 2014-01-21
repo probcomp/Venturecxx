@@ -537,12 +537,15 @@ def setYBounds(seriesList, ybounds=None):
         plt.ylim([ylow,yhigh])
 
 # Plots a set of series.
-def plotSeries(name, seriesList, subtitle="", parameters=None, fmt='pdf', directory='.', xlabel='Sweep', ybounds=None):
+def plotSeries(name, seriesList, subtitle="", parameters=None,
+               fmt='pdf', directory='.', xlabel='Sweep', ylabel=None, ybounds=None):
     fig = plt.figure()
     plt.clf()
     plt.title('Series for ' + name + '\n' + subtitle)
     plt.xlabel(xlabel)
-    plt.ylabel(name)
+    if ylabel is None:
+        ylabel = name
+    plt.ylabel(ylabel)
     if parameters is not None:
         showParameters(parameters)
     
@@ -555,17 +558,20 @@ def plotSeries(name, seriesList, subtitle="", parameters=None, fmt='pdf', direct
     savefig_legend_outside(filename)
 
 # Plots histograms for a set of series.
-def plotHistogram(name, seriesList, subtitle="", parameters=None, fmt='pdf', directory='.'):
+def plotHistogram(name, seriesList, subtitle="", parameters=None,
+                  fmt='pdf', directory='.', xlabel=None, ylabel='Frequency', bins=20):
     fig = plt.figure()
     plt.clf()
     plt.title('Histogram of ' + name + '\n' + subtitle)
-    plt.xlabel(name)
-    plt.ylabel('Frequency')
+    if xlabel is None:
+        xlabel = name
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
     if parameters is not None:
         showParameters(parameters)
     
     # FIXME: choose a better bin size
-    plt.hist([series.values for series in seriesList], bins=20, label=[series.label for series in seriesList])
+    plt.hist([series.values for series in seriesList], bins=bins, label=[series.label for series in seriesList])
     legend_outside()
     
     filename = directory + name.replace(' ', '_') + '_hist.' + fmt
