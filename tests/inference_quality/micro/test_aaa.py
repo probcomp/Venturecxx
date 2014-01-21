@@ -4,6 +4,13 @@ from test_globals import N, globalKernel
 
 def RIPL(): return make_lite_church_prime_ripl()
 
+
+# TODO this whole file will need to be parameterized.
+# Most of these will become "check" functions instead of "test"
+# functions, and then we will have a few test-generators.
+
+# TODO this folder needs many more interesting test cases!
+
 def testMakeSymDirMult1(name):
   ripl = RIPL()
   ripl.assume("f", "(%s 1.0 2)" % name)
