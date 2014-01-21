@@ -435,7 +435,7 @@ class History:
             sweep_times = self.nameToSeries["sweep time (s)"]
             score_v_time = [Series(run_logs.label, run_logs.values, True, xvals=numpy.cumsum(run_times.values))
                             for (run_logs, run_times) in zip(logscores, sweep_times)]
-            plotSeries("logscore_vs_wallclock", self.label, score_v_time, self.parameters, fmt, directory, xlabel="time (s)")
+            plotSeries("logscore_vs_wallclock", score_v_time, self.label, self.parameters, fmt, directory, xlabel="time (s)")
         
         print 'plots written to ' + directory
 
@@ -446,7 +446,7 @@ class History:
             directory = self.defaultDirectory()
         ensure_directory(directory)
         if name in self.nameToSeries:
-            plotSeries(name, self.label, self.nameToSeries[name], self.parameters, fmt, directory, ybounds=ybounds)
+            plotSeries(name, self.nameToSeries[name], self.label, self.parameters, fmt, directory, ybounds=ybounds)
         else:
             raise Exception("Cannot plot non-existent series %s" % name)
 
@@ -455,7 +455,7 @@ class History:
             directory = self.defaultDirectory()
         ensure_directory(directory)
         if name in self.nameToSeries:
-            plotHistogram(name, self.label, self.nameToSeries[name], self.parameters, fmt, directory)
+            plotHistogram(name, self.nameToSeries[name], self.label, self.parameters, fmt, directory)
         else:
             raise Exception("Cannot histogram non-existent series %s" % name)
 
@@ -537,7 +537,7 @@ def setYBounds(seriesList, ybounds=None):
         plt.ylim([ylow,yhigh])
 
 # Plots a set of series.
-def plotSeries(name, subtitle, seriesList, parameters, fmt, directory, xlabel='Sweep', ybounds=None):
+def plotSeries(name, seriesList, subtitle, parameters, fmt, directory, xlabel='Sweep', ybounds=None):
     fig = plt.figure()
     plt.clf()
     plt.title('Series for ' + name + '\n' + subtitle)
@@ -554,7 +554,7 @@ def plotSeries(name, subtitle, seriesList, parameters, fmt, directory, xlabel='S
     savefig_legend_outside(filename)
 
 # Plots histograms for a set of series.
-def plotHistogram(name, subtitle, seriesList, parameters, fmt, directory):
+def plotHistogram(name, seriesList, subtitle, parameters, fmt, directory):
     fig = plt.figure()
     plt.clf()
     plt.title('Histogram of ' + name + '\n' + subtitle)
