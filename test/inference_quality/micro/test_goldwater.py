@@ -1,9 +1,6 @@
 from venture.test.stats import *
 from testconfig import config
 
-  N = config["num_samples"]
-  ripl = config["get_ripl"]()
-
 def testGoldwater1():
   """Fairly complicated program. Just checks to make sure it runs without crashing."""
   N = config["num_samples"]
