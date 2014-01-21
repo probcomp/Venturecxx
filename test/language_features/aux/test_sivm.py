@@ -1,12 +1,8 @@
-from venture.shortcuts import *
-from stat_helpers import *
-from test_globals import N, globalKernel
-
-def RIPL(): return make_lite_church_prime_ripl()
-
+from venture.test.stats import *
+from testconfig import config
 
 def testForget1():
-  ripl = RIPL()
+  ripl = config["get_ripl"]()
 
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("f","(lambda (y) (normal y 1.0))")
