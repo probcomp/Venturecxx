@@ -129,11 +129,10 @@ def testBLOGCSI1():
   return reportKnownDiscrete("TestBLOGCSI1", ans, predictions)
 
 def testGeometric1():
+  "Geometric written with bernoullis and ifs, with absorbing at the condition."
   N = config["num_samples"]
   ripl = config["get_ripl"]()
-  ripl.assume("alpha1","(gamma 5.0 2.0)")
-  ripl.assume("alpha2","(gamma 5.0 2.0)")
-  ripl.assume("p", "(beta alpha1 alpha2)")
+  ripl.assume("p","(if (flip) 0.5 0.5)")
   ripl.assume("geo","(lambda (p) (if (bernoulli p) 1 (plus 1 (geo p))))")
   ripl.predict("(geo p)",label="pid")
 
@@ -143,15 +142,3 @@ def testGeometric1():
   ans = [(n,math.pow(2,-n)) for n in range(1,k)]
   return reportKnownDiscrete("TestGeometric1", ans, predictions)
 
-def testTrig1():
-  N = config["num_samples"]
-  ripl = config["get_ripl"]()
-  ripl.assume("sq","(lambda (x) (* x x))")
-  ripl.assume("x","(normal 0.0 1.0)")
-  ripl.assume("a","(sq (sin x))")
-  ripl.assume("b","(sq (cos x))")
-  ripl.predict("(+ a b)")
-  for i in range(N/10):
-    ripl.infer(10)
-    assert abs(ripl.report(5) - 1) < .001
-  return reportPassage("TestTrig1")
