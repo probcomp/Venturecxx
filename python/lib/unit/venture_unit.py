@@ -427,7 +427,7 @@ class History:
         ensure_directory(directory)
         
         for (name, seriesList) in self.nameToSeries.iteritems():
-            plotSeries(name, self.label, seriesList, self.parameters, fmt, directory)
+            self.plotOneSeries(name, fmt=fmt, directory=directory)
             plotHistogram(name, self.label, seriesList, self.parameters, fmt, directory)
 
         if "logscore" in self.nameToSeries and "sweep time (s)" in self.nameToSeries:
