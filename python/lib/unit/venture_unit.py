@@ -430,6 +430,9 @@ class History:
             self.plotOneSeries(name, fmt=fmt, directory=directory)
             self.plotOneHistogram(name, fmt=fmt, directory=directory)
 
+        # TODO There is a better way to expose computed series like
+        # this: make the nameToSeries lookup be a method that does
+        # this computation.
         if "logscore" in self.nameToSeries and "sweep time (s)" in self.nameToSeries:
             logscores = self.nameToSeries["logscore"] # :: [Series]
             sweep_times = self.nameToSeries["sweep time (s)"]
@@ -440,6 +443,9 @@ class History:
         
         print 'plots written to ' + directory
 
+    # Plots one series of interest, offering greater control over the
+    # configuration of the plot.
+    # TODO Carefully spec which names are available to plot.
     def plotOneSeries(self, name, directory=None, **kwargs):
         # TODO Is it ok for a method to have the same name as a global
         # function in Python?
