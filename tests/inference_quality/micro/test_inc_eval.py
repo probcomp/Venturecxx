@@ -1,10 +1,35 @@
+# Copyright (c) 2013, MIT Probabilistic Computing Project.
+# 
+# This file is part of Venture.
+# 	
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 	
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 	
+# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from venture.shortcuts import *
 from stat_helpers import *
 from test_globals import N, globalKernel
+import math
+from subprocess import call
 
 def RIPL(): return make_lite_church_prime_ripl()
 
-# TODO the current version of this has been lost, so I need to make sure this old version works.
+### Expressions
+
+## <exp> := symbol
+##       := value
+##       := [references]
+
+## <list_exp> := [ref("lambda"), ref([symbol]), ref(exp)]
+##            := [ref("op_name"), ... refs of arguments]
+
 
 ## References
 def loadReferences(ripl):
@@ -14,13 +39,22 @@ def loadReferences(ripl):
 ## Environments
 ## { sym => ref }
 def loadEnvironments(ripl):
-  ripl.assume("initial_environment","""
+  ripl.assume("incremental_initial_environment","""
 (lambda () 
   (list 
     (make_map 
       (list (quote bernoulli) (quote normal) (quote +) (quote *))
       (list (make_ref bernoulli) (make_ref normal) (make_ref plus) (make_ref times)))))
 """)
+
+  ripl.assume("concrete_initial_environment","""
+(lambda () 
+  (list 
+    (make_map 
+      (list (quote bernoulli) (quote normal) (quote +) (quote *))
+      (list bernoulli normal plus times))))
+""")
+
 
   ripl.assume("extend_environment","""
   (lambda (outer_env syms vals) 
@@ -30,39 +64,69 @@ def loadEnvironments(ripl):
   ripl.assume("find_symbol","""
   (lambda (sym env)
     (if (map_contains (first env) sym)
-        (map_lookup (first env) sym)
-        (find_symbol sym (rest env))))
+	(map_lookup (first env) sym)
+	(find_symbol sym (rest env))))
 """)
 
 ## Application of compound
 ## operator = [&env &ids &body]
 ## operands = [&op1 ... &opN]
 def loadEvaluator(ripl):
-  ripl.assume("venture_apply","(lambda (op args) (eval (pair op (map_list deref args)) (get_empty_environment)))")
+  ripl.assume("incremental_venture_apply","(lambda (op args) (eval (pair op (map_list deref args)) (get_empty_environment)))")
 
   ripl.assume("incremental_apply","""
   (lambda (operator operands)
     (incremental_eval (deref (list_ref operator 2))
-                      (extend_environment (deref (list_ref operator 0))
-                                          (map_list deref (deref (list_ref operator 1)))
-                                          operands)))
+		      (extend_environment (deref (list_ref operator 0))
+					  (map_list deref (deref (list_ref operator 1)))
+					  operands)))
 """)
 
   ripl.assume("incremental_eval","""
   (lambda (exp env)
     (if (is_symbol exp)
-        (deref (find_symbol exp env))
-        (if (not (is_pair exp))
-            exp
-            (if (= (deref (list_ref exp 0)) (quote lambda))
-                (pair (make_ref env) (rest exp))
-                ((lambda (operator operands)
-                   (if (is_pair operator)
-                       (incremental_apply operator operands)
-                       (venture_apply operator operands)))
-                 (incremental_eval (deref (list_ref exp 0)) env)
-                 (map_list (lambda (x) (make_ref (incremental_eval (deref x) env))) (rest exp)))))))
+	(deref (find_symbol exp env))
+	(if (not (is_pair exp))
+	    exp
+	    (if (= (deref (list_ref exp 0)) (quote lambda))
+		(pair (make_ref env) (rest exp))
+		((lambda (operator operands)
+		   (if (is_pair operator)
+		       (incremental_apply operator operands)
+		       (incremental_venture_apply operator operands)))
+		 (incremental_eval (deref (list_ref exp 0)) env)
+		 (map_list (lambda (x) (make_ref (incremental_eval (deref x) env))) (rest exp)))))))
 """)
+  
+def loadConcreteEvaluator(ripl):
+
+  ripl.assume("concrete_venture_apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
+
+  ripl.assume("concrete_apply","""
+  (lambda (operator operands)
+    (concrete_eval (list_ref operator 2)
+		      (extend_environment (list_ref operator 0)
+					  (list_ref operator 1)
+					  operands)))
+""")
+
+  ripl.assume("concrete_eval","""
+  (lambda (exp env)
+    (if (is_symbol exp)
+	(find_symbol exp env)
+	(if (not (is_pair exp))
+	    exp
+	    (if (= (list_ref exp 0) (quote lambda))
+		(pair env (rest exp))
+		((lambda (operator operands)
+		   (if (is_pair operator)
+		       (concrete_apply operator operands)
+		       (concrete_venture_apply operator operands)))
+		 (concrete_eval (list_ref exp 0) env)
+		 (map_list (lambda (x) (concrete_eval x env)) (rest exp)))))))
+""")
+
+
 
 def loadConcretize(ripl):
   ripl.assume("concretizeExp","""
@@ -77,18 +141,20 @@ def loadAll(ripl):
   loadEnvironments(ripl)
   loadEvaluator(ripl)
   loadConcretize(ripl)
+  loadConcreteEvaluator(ripl)
   return ripl
 
 def computeF(x): return x * 5 + 5
+
 def extractValue(d): 
   if type(d) is dict: return extractValue(d["value"])
   elif type(d) is list: return [extractValue(e) for e in d]
   else: return d
 
-# TODO need to turn this into a test
-# One option is to assert that we have gotten the right answer at some point in the first
-# 5,000 iterations
+
+# TODO N needs to be managed so that this can consistently find the right answer
 def testIncrementalEvaluator1(N):
+  "Difficult test. We make sure that it stumbles on the solution in a reasonable amount of time."
   ripl = RIPL()
   loadAll(ripl)
   
@@ -112,7 +178,7 @@ def testIncrementalEvaluator1(N):
 (mem 
   (lambda (y) 
     (incremental_eval exp 
-                      (extend_environment (initial_environment) 
+                      (extend_environment (incremental_initial_environment) 
                                           (list (quote x)) 
                                           (list (make_ref y))))))
 """)
@@ -127,12 +193,15 @@ def testIncrementalEvaluator1(N):
   for x in range(X): ripl.observe("(g %d)" % x,computeF(x))
 
   vals = []
+
+  foundSolution = False
   for t in range(N):
     ripl.infer(50)
-    print ripl.report("pid")
-    print extractValue(ripl.report("exp"))
+    if ripl.report("pid") < 1: 
+      foundSolution = True
+      break
 
-
+  assert foundSolution
 
 def testIncrementalEvaluator2():
   "Incremental version of micro/test_basic_stats.py:testBernoulli1"
