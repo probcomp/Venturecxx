@@ -1,11 +1,9 @@
 import sys
 import math
-import pdb
 import itertools
 import scipy.stats as stats
 import numpy as np
-from test_globals import globalKernel,globalReportingThreshold,globalUseGlobalScaffold
-
+from testconfig import config
 
 def normalizeList(seq):
   denom = sum(seq)
@@ -48,6 +46,7 @@ def fisherMethod(pvals):
     return stats.chi2.sf(chisq, 2*len(pvals))
 
 def repeatTest(func, *args):
+  globalReportingThreshold = config["params"]["global_reporting_threshold"]
   result = func(*args)
   if result.pval > 0.05:
     return result
@@ -63,6 +62,7 @@ def repeatTest(func, *args):
     return TestResult(result.name + " failing consistently", pval, report)
 
 def reportTest(result):
+  globalReportingThreshold = config["params"]["global_reporting_threshold"]
   assert result.pval > globalReportingThreshold
 
 
@@ -160,35 +160,8 @@ def profile(N):
     statprof.stop()
     statprof.display()
 
-def runAllTests(N):
-  print "========= RunAllTests(N) ========"
-  options = [ (make_church_prime_ripl, "mh", False),
-              (make_church_prime_ripl, "mh", True),
-              (make_church_prime_ripl, "pgibbs", False),
-              (make_church_prime_ripl, "pgibbs", True),
-              (make_church_prime_ripl, "meanfield", False),
-              (make_church_prime_ripl, "meanfield", True),
-              (make_church_prime_ripl, "gibbs", False),
-              (make_lite_church_prime_ripl, "mh", False),
-              (make_lite_church_prime_ripl, "meanfield", False)
-              ]
-
-
-  for i in range(len(options)):
-    name = "CXX" if options[i][0] == make_church_prime_ripl else "Lite"
-    print "\n========= %d. (%s, %s, %d) ========" % (i+1,name,options[i][1],options[i][2])
-    global globalBackend
-    global globalKernel
-    global globalUseGlobalScaffold
-    globalBackend = options[i][0]
-    globalKernel = options[i][1]
-    globalUseGlobalScaffold = options[i][2]
-    runTests(N)
-
-def collectSamples(ripl,address,T,kernel=None,use_global_scaffold=None):
-  kernel = kernel if kernel is not None else "mh" # TODO
-  use_global_scaffold = use_global_scaffold if use_global_scaffold is not None else globalUseGlobalScaffold
-  block = "one" if not use_global_scaffold else "all"
+def collectSamples(ripl,address,T,kernel="mh",block="one"):
+  numTransitionsPerSample = config["params"]["num_transitions_per_sample"]
   return collectSamplesWith(ripl, address, T, {"transitions":100, "kernel":kernel, "block":block})
 
 def collectSamplesWith(ripl, address, T, params):
