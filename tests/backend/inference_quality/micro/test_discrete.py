@@ -1,7 +1,7 @@
 from venture.shortcuts import *
 from stat_helpers import *
 
-N = 50
+N = 100
 globalKernel = "mh";
 
 def RIPL(): return make_lite_church_prime_ripl()
@@ -20,15 +20,15 @@ def testBernoulli1():
   ripl.assume("b", "(bernoulli 0.3)")
   ripl.predict("(if b (normal 0.0 1.0) (normal 10.0 1.0))")
   predictions = collectSamples(ripl,2,N)
-  cdf = lambda x: 0.5 * stats.norm.cdf(x,loc=0,scale=1) + 0.5 * stats.norm.cdf(x,loc=10,scale=1)
-  return reportTest(reportKnownContinuous("TestBernoulli1", cdf, predictions, "N(0,1) + N(10,1)"))
+  cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
+  return reportTest(reportKnownContinuous("TestBernoulli1", cdf, predictions, "0.7*N(0,1) + 0.3*N(10,1)"))
 
 def testBernoulli2():
   ripl = RIPL()
   ripl.assume("b", "(bernoulli 0.3)")
-  ripl.predict("(normal (if b 10.0 1.0) 1.0)")
+  ripl.predict("(normal (if b 0.0 10.0) 1.0)")
   predictions = collectSamples(ripl,2,N)
-  cdf = lambda x: 0.7 * stats.norm.cdf(x,loc=0,scale=1) + 0.3 * stats.norm.cdf(x,loc=10,scale=1)
+  cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
   return reportTest(reportKnownContinuous("TestBernoulli2", cdf, predictions, "0.7*N(0,1) + 0.3*N(10,1)"))
 
 # Fails currently because:
