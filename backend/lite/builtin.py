@@ -52,7 +52,7 @@ def builtInSPs():
            "mem" : SP(NullRequestPSP(),msp.MakeMSPOutputPSP()),
 
            "make_beta_bernoulli" : SP(NullRequestPSP(),discrete.MakerCBetaBernoulliOutputPSP()),
-           "make_ubeta_bernoulli" : SP(NullRequestPSP(),discrete.MakerUBetaBernoulliOutputPSP()),
+           "make_uc_beta_bernoulli" : SP(NullRequestPSP(),discrete.MakerUBetaBernoulliOutputPSP()),
 
            "make_crp" : SP(NullRequestPSP(),crp.MakeCRPOutputPSP()),
 
