@@ -13,6 +13,7 @@ class MSPRequestPSP(PSP):
   def __init__(self,sharedOperatorNode): self.sharedOperatorNode = sharedOperatorNode
   def simulate(self,args): 
     id = str(args.operandValues)
+    # TODO needs to be quoted
     exp = ["memoizedSP"] + args.operandValues
     env = Env(None,["memoizedSP"],[self.sharedOperatorNode])
     return Request([ESR(id,exp,env)])

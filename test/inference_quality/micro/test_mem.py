@@ -1,12 +1,10 @@
-from venture.shortcuts import *
-from stat_helpers import *
-from test_globals import N, globalKernel
-
-def RIPL(): return make_lite_church_prime_ripl()
+from venture.test.stats import *
+from testconfig import config
 
 def testMem1():
   "This test used to cause CXX to crash"
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   ripl.predict("(f (bernoulli 0.5))")
   ripl.predict("(f (bernoulli 0.5))")
@@ -15,7 +13,8 @@ def testMem1():
 
 def testMem2():
   "Ensures that all (f 1) and (f 2) are the same"
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("x","(f 1)")
   ripl.assume("y","(f 1)")
@@ -32,9 +31,10 @@ def testMem2():
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete("TestMem2", ans, predictions)
 
-def testMem3(N):
+def testMem3():
   "Same as testMem3 but with booby traps"
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   ripl.assume("x","(f ((if (bernoulli 0.5) (lambda () 1) (lambda () 1))))")
@@ -52,9 +52,10 @@ def testMem3(N):
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete("TestMem3", ans, predictions)
 
-def testMem4(N):
+def testMem4():
   "Like TestMem1, makes sure that MSPs handle changes to their arguments without crashing"
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("pick_a_stick","""
 (lambda (sticks k)
   (if (bernoulli (sticks k))
@@ -70,22 +71,38 @@ def testMem4(N):
 
 ############ CXX mem tests
 
-def testMemoizingOnAList():
-  "VentureList needs to override several VentureValue methods for this to work."
-  ripl = RIPL()
-  ripl.assume("G","(mem (lambda (x) 1))")
-  ripl.predict("(G (list 0))")
-  predictions = collectSamples(ripl,2,1)
+def testMemoizingOnAList1():
+  """MSP.requestPSP.simulate() needs to quote the values to pass this.
+     In CXX, VentureList needs to override several VentureValue methods as well"""
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
+  ripl.assume("f","(mem (lambda (x) (flip)))")
+  ripl.predict("(f (list 0))",label="pid")
+  predictions = collectSamples(ripl,"pid",1)
   assert predictions == [1]
   return reportPassage("TestMemoizingOnAList")
 
+def testMemoizingOnASymbol1():
+  """MSP.requestPSP.simulate() needs to quote the values to pass this.
+     In CXX, VentureSymbol needs to override several VentureValue methods as well"""
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
+  ripl.assume("f","(mem (lambda (x) (flip)))")
+  ripl.predict("(f (quote sym))",label="pid")
+  predictions = collectSamples(ripl,"pid",1)
+  assert predictions == [1]
+  return reportPassage("TestMemoizingOnASymbol")
 
-def testMemHashCollisions1(A,B):
+# TODO slow to run, and not worth it 
+def testMemHashCollisions1():
   """For large A and B, makes sure that MSPs don't allow hash collisions for requests based on
    different arguments."""
-  ripl = RIPL()
+  from nose import SkipTest
+  raise SkipTest("Skipping testMemHashCollisions1")
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda (a b) (normal 0.0 1.0)))")
-  for a in range(A):
-    for b in range(B):
+  for a in range(1000):
+    for b in range(1000):
       ripl.observe("(f %d %d)" % (a,b),"0.5")
   return reportPassage("TestMemHashFunction(%d,%d)" % (A,B))

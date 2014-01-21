@@ -1,11 +1,10 @@
-from venture.shortcuts import *
-from stat_helpers import *
-from test_globals import N, globalKernel
-
-def RIPL(): return make_lite_church_prime_ripl()
+from venture.test.stats import *
+from testconfig import config
 
 def testIf1():
-  ripl = RIPL()
+  "This caused an earlier CXX implementation to crash"
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume('IF', '(lambda () branch)')
   ripl.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
   ripl.predict('(IF2 (bernoulli 0.5) IF IF)')
@@ -13,7 +12,9 @@ def testIf1():
   return reportPassage("TestIf1")
 
 def testIf2():
-  ripl = RIPL()
+  "More extended version of testIf1"
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume('if1', '(branch (bernoulli 0.5) (lambda () branch) (lambda () branch))')
   ripl.assume('if2', '(branch (bernoulli 0.5) (lambda () if1) (lambda () if1))')
   ripl.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
