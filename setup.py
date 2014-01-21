@@ -110,7 +110,7 @@ setup (
     url = 'TBA',
     long_description = 'TBA.',
     packages = packages,
-    package_dir={"venture":"python/lib/", "venture.test":"python/test/",
+    package_dir={"venture":"python/lib/", "venture.test":"test/",
         "venture.cxx":"backend/cxx/", "venture.lite":"backend/lite/"},
     ext_modules = ext_modules,
     scripts = ['script/venture']

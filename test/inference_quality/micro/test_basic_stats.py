@@ -1,12 +1,10 @@
-from venture.shortcuts import *
-from stat_helpers import *
-from test_globals import N, globalKernel
-
-def RIPL(): return make_lite_church_prime_ripl()
+from venture.test.stats import *
+from testconfig import config
 
 def testBernoulliIfNormal1():
   "A simple program with bernoulli, if, and normal applications in the brush"
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("b", "(bernoulli 0.3)")
   ripl.predict("(if b (normal 0.0 1.0) (normal 10.0 1.0))")
   predictions = collectSamples(ripl,2,N)
@@ -15,7 +13,8 @@ def testBernoulliIfNormal1():
 
 def testBernoulliIfNormal2():
   "A simple program with bernoulli, if, and an absorbing application of normal"
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("b", "(bernoulli 0.3)")
   ripl.predict("(normal (if b 0.0 10.0) 1.0)")
   predictions = collectSamples(ripl,2,N)
@@ -24,7 +23,8 @@ def testBernoulliIfNormal2():
 
 def testNormalWithObserve1():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.observe("(normal a 1.0)", 14.0)
   # Posterior for a is normal with mean 12, precision 2
@@ -36,7 +36,8 @@ def testNormalWithObserve1():
 
 def testNormalWithObserve2():
   "Checks the posterior of a Gaussian in a Linear-Gaussian-BN"
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("b", "(normal a 1.0)")
   # Prior for b is normal with mean 10, variance 2 (precision 1/2)
@@ -58,7 +59,8 @@ def testNormalWithObserve2():
 
 def testStudentT1():
   "Simple program involving simulating from a student_t"
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("a", "(student_t 1.0)")
   ripl.observe("(normal a 1.0)", 3.0)
   ripl.predict("(normal a 1.0)")
@@ -78,7 +80,8 @@ def testStudentT1():
 
 def testSprinkler1():
   "Classic Bayes-net example, with no absorbing when proposing to 'rain'"
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("rain","(bernoulli 0.2)")
   ripl.assume("sprinkler","(if rain (bernoulli 0.01) (bernoulli 0.4))")
   ripl.assume("grassWet","""
@@ -95,8 +98,8 @@ def testSprinkler1():
 def testSprinkler2():
   "Classic Bayes-net example, absorbing at 'sprinkler' when proposing to 'rain'"
   # this test needs more iterations than most others, because it mixes badly
-
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("rain","(bernoulli 0.2)")
   ripl.assume("sprinkler","(bernoulli (if rain 0.01 0.4))")
   ripl.assume("grassWet","""
@@ -113,7 +116,8 @@ def testSprinkler2():
 
 def testBLOGCSI1():
   "Context-sensitive Bayes-net taken from BLOG examples"
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("u","(bernoulli 0.3)")
   ripl.assume("v","(bernoulli 0.9)")
   ripl.assume("w","(bernoulli 0.1)")
@@ -124,12 +128,13 @@ def testBLOGCSI1():
   ans = [(True, .596), (False, .404)]
   return reportKnownDiscrete("TestBLOGCSI1", ans, predictions)
 
-def testGeometric1(N):
-  ripl = RIPL()
+def testGeometric1():
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("alpha1","(gamma 5.0 2.0)")
   ripl.assume("alpha2","(gamma 5.0 2.0)")
   ripl.assume("p", "(beta alpha1 alpha2)")
-  ripl.assume("geo","(lambda (p) (branch (bernoulli p) (lambda () 1) (lambda () (plus 1 (geo p)))))")
+  ripl.assume("geo","(lambda (p) (if (bernoulli p) 1 (plus 1 (geo p))))")
   ripl.predict("(geo p)",label="pid")
 
   predictions = collectSamples(ripl,"pid",N)
@@ -138,8 +143,9 @@ def testGeometric1(N):
   ans = [(n,math.pow(2,-n)) for n in range(1,k)]
   return reportKnownDiscrete("TestGeometric1", ans, predictions)
 
-def testTrig1(N):
-  ripl = RIPL()
+def testTrig1():
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
   ripl.assume("sq","(lambda (x) (* x x))")
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("a","(sq (sin x))")

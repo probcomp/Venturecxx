@@ -46,7 +46,7 @@ def fisherMethod(pvals):
     return stats.chi2.sf(chisq, 2*len(pvals))
 
 def repeatTest(func, *args):
-  globalReportingThreshold = config["params"]["global_reporting_threshold"]
+  globalReportingThreshold = config["global_reporting_threshold"]
   result = func(*args)
   if result.pval > 0.05:
     return result
@@ -62,7 +62,7 @@ def repeatTest(func, *args):
     return TestResult(result.name + " failing consistently", pval, report)
 
 def reportTest(result):
-  globalReportingThreshold = config["params"]["global_reporting_threshold"]
+  globalReportingThreshold = config["global_reporting_threshold"]
   assert result.pval > globalReportingThreshold
 
 
@@ -161,8 +161,11 @@ def profile(N):
     statprof.display()
 
 def collectSamples(ripl,address,T,kernel="mh",block="one"):
-  numTransitionsPerSample = config["params"]["num_transitions_per_sample"]
-  return collectSamplesWith(ripl, address, T, {"transitions":100, "kernel":kernel, "block":block})
+  numTransitionsPerSample = config["num_transitions_per_sample"]
+  kernel = config["kernel"]
+  scope = config["scope"]
+  block = config["block"]
+  return collectSamplesWith(ripl, address, T, {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block})
 
 def collectSamplesWith(ripl, address, T, params):
   predictions = []
