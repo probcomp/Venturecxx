@@ -1,11 +1,10 @@
-from venture.shortcuts import *
-from stat_helpers import *
-from test_globals import N, globalKernel
+from venture.test.stats import *
+from testconfig import config
 
-def RIPL(): return make_lite_church_prime_ripl()
+def testEval1():
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
 
-def testEval1(N):
-  ripl = RIPL()
   ripl.assume("globalEnv","(get_current_environment)")
   ripl.assume("exp","(quote (bernoulli 0.7))")
   ripl.predict("(eval exp globalEnv)")
@@ -14,8 +13,10 @@ def testEval1(N):
   ans = [(1,.7), (0,.3)]
   return reportKnownDiscrete("TestEval1", ans, predictions)
 
-def testEval2(N):
-  ripl = RIPL()
+def testEval2():
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
+
   ripl.assume("p","(uniform_continuous 0.0 1.0)")
   ripl.assume("globalEnv","(get_current_environment)")
   ripl.assume("exp","""
@@ -32,9 +33,11 @@ def testEval2(N):
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
   return reportKnownContinuous("testEval2", cdf, predictions, "approximately beta(2,1)")
 
-def testEval3(N):
+def testEval3():
   "testEval2 with booby traps"
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
+
   ripl.assume("p","(uniform_continuous 0.0 1.0)")
   ripl.assume("globalEnv","(get_current_environment)")
   ripl.assume("exp","""
@@ -52,9 +55,11 @@ def testEval3(N):
   return reportKnownContinuous("testEval3", cdf, predictions, "approximately beta(2,1)")
 
 
-def testApply1(N):
+def testApply1():
   "This CSP does not handle lists and symbols correctly."
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
+
   ripl.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
   ripl.predict("(apply times (list (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
 
@@ -65,8 +70,10 @@ def testApply1(N):
 # TODO not sure the best interface for extend_environment.
 # Just like dict it could take a list of pairs.
 # It could even take a dict!
-def testExtendEnv1(N):
-  ripl = RIPL()
+def testExtendEnv1():
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
+
   ripl.assume("env1","(get_current_environment)")
 
   ripl.assume("env2","(extend_environment env1 (quote x) (normal 0.0 1.0))")

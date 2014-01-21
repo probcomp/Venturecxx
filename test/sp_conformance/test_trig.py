@@ -1,3 +1,6 @@
+from venture.test.stats import *
+from testconfig import config
+
 def testTrig1():
   "Simple test that verifies sin^2 + cos^2 = 1 as x varies"
   N = config["num_samples"]

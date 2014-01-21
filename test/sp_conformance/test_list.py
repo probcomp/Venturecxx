@@ -1,12 +1,9 @@
-from venture.shortcuts import *
-from stat_helpers import *
-from test_globals import N, globalKernel
-
-def RIPL(): return make_lite_church_prime_ripl()
+from venture.test.stats import *
+from testconfig import config
 
 class TestListExtended():
   def setup(self):
-    self.ripl = RIPL()
+    self.ripl = config["get_ripl"]()
     self.ripl.assume("x1","(list)")
     self.ripl.assume("x2","(pair 1.0 x1)")
     self.ripl.assume("x3","(pair 2.0 x2)")

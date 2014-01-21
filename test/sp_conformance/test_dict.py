@@ -1,8 +1,5 @@
-from venture.shortcuts import *
-from stat_helpers import *
-from test_globals import N, globalKernel
-
-def RIPL(): return make_lite_church_prime_ripl()
+from venture.test.stats import *
+from testconfig import config
 
 # TODO
 # This file contains one possibility for the Dictionary interface
@@ -13,8 +10,10 @@ def RIPL(): return make_lite_church_prime_ripl()
 # but will leave it as is for now. It would not be hard to check the argument types
 # and allow either.
 
-def testDict1(N):
-  ripl = RIPL()
+def testDict1():
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
+
   ripl.assume("x","(bernoulli 1.0)")
   ripl.assume("d","""(dict (list (quote x) (quote y))
                            (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
@@ -29,7 +28,7 @@ def testDict1(N):
   return reportKnownContinuous("TestDict1", cdf, predictions, "N(20,2)")
 
 def testDict2():
-  ripl = RIPL()
+  ripl = config["get_ripl"]()
   ripl.assume("d","""(dict (list (quote x) (quote y))
                            (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
   ripl.predict("(contains d (quote x))",label="p1")
@@ -42,7 +41,7 @@ def testDict2():
   return reportPassage("TestDict2")
 
 def testDict3():
-  ripl = RIPL()
+  ripl = config["get_ripl"]()
   ripl.assume("d","""(dict (list atom<1> atom<2>)
                            (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
   ripl.predict("(contains d atom<1>)",label="p1")
@@ -55,12 +54,12 @@ def testDict3():
   return reportPassage("TestDict3")
 
 def testDict4():
-  ripl = RIPL()
+  ripl = config["get_ripl"]()
   ripl.assume("d","""(dict (list (array atom<1> atom<2>))
                            (list (normal 0.0 1.0)))""")
-  ripl.predict("(contains m (array atom<1> atom<2>))",label="p1")
-  ripl.predict("(contains m atom<1>)",label="p2")
-  ripl.predict("(contains m (array atom<1>))",label="p3")
+  ripl.predict("(contains d (array atom<1> atom<2>))",label="p1")
+  ripl.predict("(contains d atom<1>)",label="p2")
+  ripl.predict("(contains d (array atom<1>))",label="p3")
 
   assert ripl.report("p1")
   assert not ripl.report("p2")
