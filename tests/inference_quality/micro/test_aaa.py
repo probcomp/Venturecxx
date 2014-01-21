@@ -99,3 +99,40 @@ def testMakeBetaBernoulli4(maker):
   predictions = collectSamples(ripl,3,N)
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete("TestMakeBetaBernoulli4 (%s)" % maker, ans, predictions)
+
+
+##### Staleness
+# TODO write better ones, and include arrays.
+# This section should not hope to find staleness, since all backends should
+# assert that a makerNode has been regenerated before applying it.
+# Therefore this section should try to trigger that assertion.
+
+def testStaleAAA1(N):
+  ripl = RIPL()
+  ripl.assume("a", "1.0")
+  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("g", "(mem f)")
+  ripl.assume("h", "g")
+  ripl.predict("(h)")
+
+  for i in range(9):
+    ripl.observe("(f)", "atom<1>")
+
+  predictions = collectSamples(ripl,5,N)
+  ans = [(1,.9), (0,.1)]
+  return reportKnownDiscrete("TestStaleAAA1", ans, predictions)
+
+def testStaleAAA2(N):
+  ripl = RIPL()
+  ripl.assume("a", "1.0")
+  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("g", "(lambda () f)")
+  ripl.assume("h", "(g)")
+  ripl.predict("(h)")
+
+  for i in range(9):
+    ripl.observe("(f)", "atom<1>")
+
+  predictions = collectSamples(ripl,5,N)
+  ans = [(1,.9), (0,.1)]
+  return reportKnownDiscrete("TestStaleAAA2", ans, predictions)
