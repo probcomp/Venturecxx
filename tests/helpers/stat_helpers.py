@@ -4,10 +4,8 @@ import pdb
 import itertools
 import scipy.stats as stats
 import numpy as np
+from test_globals import globalKernel,globalReportingThreshold,globalUseGlobalScaffold
 
-globalUseGlobalScaffold = False;
-globalAlwaysReport = False;
-globalReportingThreshold = 0.001
 
 def normalizeList(seq):
   denom = sum(seq)
