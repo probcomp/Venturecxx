@@ -428,7 +428,7 @@ class History:
         
         for (name, seriesList) in self.nameToSeries.iteritems():
             self.plotOneSeries(name, fmt=fmt, directory=directory)
-            plotHistogram(name, self.label, seriesList, self.parameters, fmt, directory)
+            self.plotOneHistogram(name, fmt=fmt, directory=directory)
 
         if "logscore" in self.nameToSeries and "sweep time (s)" in self.nameToSeries:
             logscores = self.nameToSeries["logscore"] # :: [Series]
@@ -449,6 +449,15 @@ class History:
             plotSeries(name, self.label, self.nameToSeries[name], self.parameters, fmt, directory, ybounds=ybounds)
         else:
             raise Exception("Cannot plot non-existent series %s" % name)
+
+    def plotOneHistogram(self, name, fmt='pdf', directory=None):
+        if directory == None:
+            directory = self.defaultDirectory()
+        ensure_directory(directory)
+        if name in self.nameToSeries:
+            plotHistogram(name, self.label, self.nameToSeries[name], self.parameters, fmt, directory)
+        else:
+            raise Exception("Cannot histogram non-existent series %s" % name)
 
     def save(self, directory=None):
         if directory == None:
