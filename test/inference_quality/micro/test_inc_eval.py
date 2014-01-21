@@ -13,13 +13,10 @@
 # GNU General Public License for more details.
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-from venture.shortcuts import *
-from stat_helpers import *
-from test_globals import N, globalKernel
-import math
-from subprocess import call
 
-def RIPL(): return make_lite_church_prime_ripl()
+from venture.test.stats import *
+from testconfig import config
+import math
 
 ### Expressions
 
@@ -42,36 +39,27 @@ def loadEnvironments(ripl):
   ripl.assume("incremental_initial_environment","""
 (lambda () 
   (list 
-    (make_map 
+    (dict 
       (list (quote bernoulli) (quote normal) (quote +) (quote *))
       (list (make_ref bernoulli) (make_ref normal) (make_ref plus) (make_ref times)))))
 """)
 
-  ripl.assume("concrete_initial_environment","""
-(lambda () 
-  (list 
-    (make_map 
-      (list (quote bernoulli) (quote normal) (quote +) (quote *))
-      (list bernoulli normal plus times))))
-""")
-
-
   ripl.assume("extend_environment","""
   (lambda (outer_env syms vals) 
-    (pair (make_map syms vals) outer_env))
+    (pair (dict syms vals) outer_env))
 """)
 
   ripl.assume("find_symbol","""
   (lambda (sym env)
-    (if (map_contains (first env) sym)
-	(map_lookup (first env) sym)
+    (if (contains (first env) sym)
+	(lookup (first env) sym)
 	(find_symbol sym (rest env))))
 """)
 
 ## Application of compound
 ## operator = [&env &ids &body]
 ## operands = [&op1 ... &opN]
-def loadEvaluator(ripl):
+def loadIncrementalEvaluator(ripl):
   ripl.assume("incremental_venture_apply","(lambda (op args) (eval (pair op (map_list deref args)) (get_empty_environment)))")
 
   ripl.assume("incremental_apply","""
@@ -98,50 +86,11 @@ def loadEvaluator(ripl):
 		 (map_list (lambda (x) (make_ref (incremental_eval (deref x) env))) (rest exp)))))))
 """)
   
-def loadConcreteEvaluator(ripl):
-
-  ripl.assume("concrete_venture_apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
-
-  ripl.assume("concrete_apply","""
-  (lambda (operator operands)
-    (concrete_eval (list_ref operator 2)
-		      (extend_environment (list_ref operator 0)
-					  (list_ref operator 1)
-					  operands)))
-""")
-
-  ripl.assume("concrete_eval","""
-  (lambda (exp env)
-    (if (is_symbol exp)
-	(find_symbol exp env)
-	(if (not (is_pair exp))
-	    exp
-	    (if (= (list_ref exp 0) (quote lambda))
-		(pair env (rest exp))
-		((lambda (operator operands)
-		   (if (is_pair operator)
-		       (concrete_apply operator operands)
-		       (concrete_venture_apply operator operands)))
-		 (concrete_eval (list_ref exp 0) env)
-		 (map_list (lambda (x) (concrete_eval x env)) (rest exp)))))))
-""")
-
-
-
-def loadConcretize(ripl):
-  ripl.assume("concretizeExp","""
-(lambda (exp)
-  (if (not (is_pair exp))
-      exp
-      (map_list (lambda (ref) (concretizeExp (deref ref))) exp)))
-""")
 
 def loadAll(ripl):
   loadReferences(ripl)
   loadEnvironments(ripl)
-  loadEvaluator(ripl)
-  loadConcretize(ripl)
-  loadConcreteEvaluator(ripl)
+  loadIncrementalEvaluator(ripl)
   return ripl
 
 def computeF(x): return x * 5 + 5
@@ -152,10 +101,23 @@ def extractValue(d):
   else: return d
 
 
+def testIncrementalEvaluator1():
+  "Incremental version of micro/test_basic_stats.py:testBernoulli1"
+  ripl = config["get_ripl"]()
+  loadAll(ripl)
+  ripl.predict("(incremental_eval (quote (branch (bernoulli 0.3) (normal 0.0 1.0) (normal 10.0 1.0))))")
+  predictions = collectSamples(ripl,2,N)
+  cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
+  return reportTest(reportKnownContinuous("TestIncrementalEvaluator1", cdf, predictions, "0.7*N(0,1) + 0.3*N(10,1)"))
+
+
 # TODO N needs to be managed so that this can consistently find the right answer
-def testIncrementalEvaluator1(N):
+# (this test may need tweaking once it runs)
+def testIncrementalEvaluator2():
   "Difficult test. We make sure that it stumbles on the solution in a reasonable amount of time."
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
+
   loadAll(ripl)
   
   ripl.assume("genBinaryOp","(lambda () (if (flip) (quote +) (quote *)))")
@@ -173,7 +135,7 @@ def testIncrementalEvaluator1(N):
 
   ripl.assume("noise","(gamma 2 2)")
   ripl.assume("exp","(genExp (quote x))")
-  ripl.assume("concrete_exp","(concretizeExp exp)",label="exp")
+
   ripl.assume("f","""
 (mem 
   (lambda (y) 
@@ -203,12 +165,4 @@ def testIncrementalEvaluator1(N):
 
   assert foundSolution
 
-def testIncrementalEvaluator2():
-  "Incremental version of micro/test_basic_stats.py:testBernoulli1"
-  ripl = RIPL()
-  loadIncrementalEvaluator(ripl)
-  ripl.predict("(incremental_eval (quote (branch (bernoulli 0.3) (normal 0.0 1.0) (normal 10.0 1.0))))")
-  predictions = collectSamples(ripl,2,N)
-  cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
-  return reportTest(reportKnownContinuous("TestIncrementalEvaluator2", cdf, predictions, "0.7*N(0,1) + 0.3*N(10,1)"))
 

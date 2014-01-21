@@ -3,6 +3,7 @@ from psp import NullRequestPSP, ESRRefOutputPSP
 
 import discrete
 import continuous
+import boolean
 import number
 import listsps
 import csp
@@ -23,6 +24,8 @@ def builtInSPs():
            "gt" : SP(NullRequestPSP(),number.GreaterThanOutputPSP()),
            "lt" : SP(NullRequestPSP(),number.LessThanOutputPSP()),
            "real" : SP(NullRequestPSP(),number.RealOutputPSP()),
+
+           "not" : SP(NullRequestPSP(),boolean.NotOutputPSP()),
 
            "pair" : SP(NullRequestPSP(),listsps.PairOutputPSP()),
            "list" : SP(NullRequestPSP(),listsps.ListOutputPSP()),

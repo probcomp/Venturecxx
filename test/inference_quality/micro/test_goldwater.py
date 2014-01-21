@@ -1,12 +1,13 @@
-from venture.shortcuts import *
-from stat_helpers import *
-from test_globals import N, globalKernel
+from venture.test.stats import *
+from testconfig import config
 
-def RIPL(): return make_lite_church_prime_ripl()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
 
-def testGoldwater1(N):
+def testGoldwater1():
   """Fairly complicated program. Just checks to make sure it runs without crashing."""
-  ripl = RIPL()
+  N = config["num_samples"]
+  ripl = config["get_ripl"]()
 
   brent = ["catanddog", "dogandcat", "birdandcat","dogandbird","birdcatdog"]
 
