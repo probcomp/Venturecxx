@@ -12,6 +12,7 @@ import msp
 import hmm
 import conditionals
 import scope
+import eval_sps
 
 def builtInValues(): return { "true" : True, "false" : False }
 
@@ -102,6 +103,11 @@ def builtInSPs():
            "make_lazy_hmm" : SP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()),
 
            "scope_include" : SP(NullRequestPSP(),scope.ScopeIncludeOutputPSP()),
+
+           "eval" : SP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()),
+           "get_current_environment" : SP(NullRequestPSP(),eval_sps.GetCurrentEnvOutputPSP()),
+           "get_empty_environment" : SP(NullRequestPSP(),eval_sps.GetEmptyEnvOutputPSP()),
+           "extend_environment" : SP(NullRequestPSP(),eval_sps.ExtendEnvOutputPSP()),
   }
 
 
