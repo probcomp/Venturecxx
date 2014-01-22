@@ -1,5 +1,7 @@
+import math
+
 from sp import SP
-from psp import NullRequestPSP, ESRRefOutputPSP
+from psp import NullRequestPSP, ESRRefOutputPSP, PSP
 
 import discrete
 import continuous
@@ -15,6 +17,13 @@ import scope
 
 def builtInValues(): return { "true" : True, "false" : False }
 
+def deterministic(f):
+  class DeterministicPSP(PSP):
+    def simulate(self,args):
+      print args
+      return f(*args.operandValues)
+  return SP(NullRequestPSP(), DeterministicPSP())
+
 def builtInSPs():
   return { "plus" : SP(NullRequestPSP(),number.PlusOutputPSP()),
            "minus" : SP(NullRequestPSP(),number.MinusOutputPSP()),
@@ -24,6 +33,9 @@ def builtInSPs():
            "gt" : SP(NullRequestPSP(),number.GreaterThanOutputPSP()),
            "lt" : SP(NullRequestPSP(),number.LessThanOutputPSP()),
            "real" : SP(NullRequestPSP(),number.RealOutputPSP()),
+
+           "sin" : deterministic(math.sin),
+           "cos" : deterministic(math.cos),
 
            "not" : SP(NullRequestPSP(),boolean.NotOutputPSP()),
 
