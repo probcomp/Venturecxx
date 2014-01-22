@@ -9,6 +9,7 @@ from scaffold import Scaffold
 from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,PGibbsOperator
 import random
 from omegadb import OmegaDB
+from smap import SMap
 
 class Trace(object):
   def __init__(self):
@@ -26,7 +27,8 @@ class Trace(object):
     self.ccs = []
     self.aes = []
     self.families = {}
-    self.scopes = {} # :: {scope-name:{block-id:set(node)}}
+#    self.scopes = {} # :: {scope-name:{block-id:set(node)}}
+    self.scopes = {} # :: {scope-name:smap{block-id:set(node)}}
 
   def registerAEKernel(self,node): self.aes.append(node)
   def unregisterAEKernel(self,node): del self.aes[self.aes.index(node)]
