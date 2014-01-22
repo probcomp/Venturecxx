@@ -5,8 +5,8 @@ def testEval1():
   ripl = config["get_ripl"]()
 
   ripl.assume("globalEnv","(get_current_environment)")
-  ripl.assume("exp","(quote (bernoulli 0.7))")
-  ripl.predict("(eval exp globalEnv)")
+  ripl.assume("expr","(quote (bernoulli 0.7))")
+  ripl.predict("(eval expr globalEnv)")
 
   predictions = collectSamples(ripl,3)
   ans = [(1,.7), (0,.3)]
@@ -17,14 +17,14 @@ def testEval2():
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)")
   ripl.assume("globalEnv","(get_current_environment)")
-  ripl.assume("exp","""
+  ripl.assume("expr","""
 (quote
  (branch (bernoulli p)
-   (lambda () (normal 10.0 1.0))
-   (lambda () (normal 0.0 1.0)))
-)""")
+   (quote (normal 10.0 1.0))
+   (quote (normal 0.0 1.0))))
+""")
 
-  ripl.assume("x","(eval exp globalEnv)")
+  ripl.assume("x","(eval expr globalEnv)")
   ripl.observe("x",11.0)
 
   predictions = collectSamples(ripl,1)
@@ -37,14 +37,14 @@ def testEval3():
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)")
   ripl.assume("globalEnv","(get_current_environment)")
-  ripl.assume("exp","""
+  ripl.assume("expr","""
 (quote
  (branch ((lambda () (bernoulli p)))
-   (lambda () ((lambda () (normal 10.0 1.0))))
-   (lambda () (normal 0.0 1.0)))
-)""")
+   (quote ((lambda () (normal 10.0 1.0))))
+   (quote (normal 0.0 1.0))))
+""")
 
-  ripl.assume("x","(eval exp globalEnv)")
+  ripl.assume("x","(eval expr globalEnv)")
   ripl.observe("x",11.0)
 
   predictions = collectSamples(ripl,1)
@@ -73,8 +73,8 @@ def testExtendEnv1():
 
   ripl.assume("env2","(extend_environment env1 (quote x) (normal 0.0 1.0))")
   ripl.assume("env3","(extend_environment env2 (quote x) (normal 10.0 1.0))")
-  ripl.assume("exp","(quote (normal x 1.0))")
-  ripl.predict("(normal (eval exp env3) 1.0)")
+  ripl.assume("expr","(quote (normal x 1.0))")
+  ripl.predict("(normal (eval expr env3) 1.0)")
 
   predictions = collectSamples(ripl,5)
   cdf = stats.norm(loc=10, scale=math.sqrt(3)).cdf
