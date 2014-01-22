@@ -54,6 +54,7 @@ def builtInSPs():
            "array" : SP(NullRequestPSP(),dstructures.ArrayOutputPSP()),
            "is_array" : SP(NullRequestPSP(),dstructures.IsArrayOutputPSP()),
            "dict" : SP(NullRequestPSP(),dstructures.DictOutputPSP()),
+           "matrix" : SP(NullRequestPSP(),dstructures.MatrixOutputPSP()),
 
            "pair" : SP(NullRequestPSP(),dstructures.PairOutputPSP()),
            "list" : SP(NullRequestPSP(),dstructures.ListOutputPSP()),

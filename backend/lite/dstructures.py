@@ -29,6 +29,10 @@ class DictOutputPSP(PSP):
     d.update(zip(*args.operandValues))
     return d
 
+### Matrices
+class MatrixOutputPSP(PSP):
+  def simulate(self,args): return np.mat(args.operandValues[0])
+
 ### Arrays
 
 class ArrayOutputPSP(PSP):

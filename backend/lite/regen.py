@@ -154,7 +154,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
   # next evaluate latent simulation requests (LSRs)
   for lsr in request.lsrs:
-    if omegaDB.hasLatentDB(trace.spAt(node)): latentDB = omegaDB.getLatentDB(trace.apAt(node))
+    if omegaDB.hasLatentDB(trace.spAt(node)): latentDB = omegaDB.getLatentDB(trace.spAt(node))
     else: latentDB = None
     weight += trace.spAt(node).simulateLatents(trace.spauxAt(node),lsr,shouldRestore,latentDB)
   
