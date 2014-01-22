@@ -23,7 +23,6 @@ class Trace(object):
       assert isinstance(spNode.value, SPRef)
       self.globalEnv.addBinding(name,spNode)
 
-    self.rcs = [] # TODO make this an EasyEraseVector
     self.ccs = []
     self.aes = []
     self.families = {}
@@ -34,28 +33,29 @@ class Trace(object):
   def unregisterAEKernel(self,node): del self.aes[self.aes.index(node)]
 
   def registerRandomChoice(self,node):
-    assert not node in self.rcs
-    self.rcs.append(node)
-    for (scope,block) in node.scopes.iteritems():
-      if scope in self.scopes:
-        if block in self.scopes[scope]:
-          self.scopes[scope][block].add(node)
-        else:
-          self.scopes[scope][block] = set([node])
-      else:
-        self.scopes[scope] = {block: set([node])}
+    self.registerRandomChoiceInScope(node,"default",node)
+    for (scope,block) in node.scopes.iteritems(): 
+      self.registerRandomChoiceInScope(node,scope,block)
+
+  def registerRandomChoiceInScope(self,node,scope,block):
+    if not scope in self.scopes: self.scopes[scope] = SMap()
+    if not block in self.scopes[scope]: self.scopes[scope][block] = set()
+    assert not node in self.scopes[scope][block]
+    self.scopes[scope][block].add(node)
+    assert not scope == "default" or len(self.scopes[scope][block]) == 1
 
   def unregisterRandomChoice(self,node): 
-    assert node in self.rcs
-    del self.rcs[self.rcs.index(node)]
-    for (scope,block) in node.scopes.iteritems():
-      if scope in self.scopes:
-        if block in self.scopes[scope]:
-          self.scopes[scope][block].remove(node)
-          if not(self.scopes[scope][block]): # Now empty block
-            del self.scopes[scope][block]
-          if not(self.scopes[scope]): # Now empty scope
-            del self.scopes[scope]
+    self.unregisterRandomChoiceInScope(node,"default",node)
+    for (scope,block) in node.scopes.iteritems(): 
+      self.unregisterRandomChoiceInScope(node,scope,block)
+
+  def unregisterRandomChoiceInScope(self,node,scope,block):
+    self.scopes[scope][block].remove(node)
+    assert not scope == "default" or len(self.scopes[scope][block]) == 0
+    if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
+    if len(self.scopes[scope]) == 0: del self.scopes[scope]
+
+
 
   def registerConstrainedChoice(self,node):
     self.ccs.append(node)
@@ -132,22 +132,17 @@ class Trace(object):
 
   def isConstrainedAt(self,node):
     # TODO keep track of ccs explicitly
-    return self.pspAt(node).isRandom() and node not in self.rcs
+    return node in self.ccs
 
   #### For kernels
-  def samplePrincipalNode(self): return random.choice(self.rcs)
-  def logDensityOfPrincipalNode(self,principalNode): return -1 * math.log(len(self.rcs))
-  def blocksInScope(self,scope):
-    return self.scopes[scope].keys()
-  def sampleBlock(self,scope):
-    return random.choice(self.blocksInScope(scope))
+  def blocksInScope(self,scope): return self.scopes[scope].keys()
+  def sampleBlock(self,scope): return self.scopes[scope].sample()
+
   def logDensityOfBlock(self,scope,block):
     return -1 * math.log(len(self.blocksInScope(scope)))
-  def scopeHasEntropy(self,scope):
-    if scope == "default":
-      return len(self.rcs) > 0
-    else:
-      return scope in self.scopes and len(self.blocksInScope(scope)) > 0
+  def scopeHasEntropy(self,scope): 
+    # right now scope in self.scopes iff it has entropy
+    return scope in self.scopes and len(self.blocksInScope(scope)) > 0
 
   #### External interface to engine.py
   def eval(self,id,exp):
