@@ -20,7 +20,7 @@ def checkMakeSymDirMult1(maker):
   ripl = config["get_ripl"]()
   ripl.assume("f", "(%s 1.0 2)" % maker)
   ripl.predict("(f)",label="pid")
-  predictions = collectSamples(ripl,"pid",N)
+  predictions = collectSamples(ripl,"pid")
   ans = [(0,.5), (1,.5)]
   return reportKnownDiscrete("CheckMakeSymDirMult1(%s)" % maker, ans, predictions)
 
@@ -124,7 +124,7 @@ def checkMakeBetaBernoulli1(maker):
 
   for j in range(20): ripl.observe("(f)", "true")
 
-  predictions = collectSamples(ripl,3,N)
+  predictions = collectSamples(ripl,3)
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete("TestMakeBetaBernoulli1 (%s)" % maker, ans, predictions)
 
@@ -145,7 +145,7 @@ def checkMakeBetaBernoulli2(maker):
 
   for j in range(20): ripl.observe("((lambda () (f)))", "true")
 
-  predictions = collectSamples(ripl,3,N)
+  predictions = collectSamples(ripl,3)
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete("TestMakeBetaBernoulli2 (%s)" % maker, ans, predictions)
 
@@ -167,7 +167,7 @@ def checkMakeBetaBernoulli3(maker):
   (f)
   (f))""", "true")
 
-  predictions = collectSamples(ripl,3,N)
+  predictions = collectSamples(ripl,3)
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete("TestMakeBetaBernoulli3 (%s)" % maker, ans, predictions)
 
@@ -188,7 +188,7 @@ def checkMakeBetaBernoulli4(maker):
 
   for j in range(20): ripl.observe("(f)", "true")
 
-  predictions = collectSamples(ripl,3,N)
+  predictions = collectSamples(ripl,3)
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete("TestMakeBetaBernoulli4 (%s)" % maker, ans, predictions)
 
@@ -213,7 +213,7 @@ def testStaleAAA1():
   for i in range(9):
     ripl.observe("(f)", "atom<1>")
 
-  predictions = collectSamples(ripl,5,N)
+  predictions = collectSamples(ripl,5)
   ans = [(1,.9), (0,.1)]
   return reportKnownDiscrete("TestStaleAAA1", ans, predictions)
 
@@ -230,7 +230,7 @@ def testStaleAAA2():
   for i in range(9):
     ripl.observe("(f)", "atom<1>")
 
-  predictions = collectSamples(ripl,5,N)
+  predictions = collectSamples(ripl,5)
   ans = [(1,.9), (0,.1)]
   return reportKnownDiscrete("TestStaleAAA2", ans, predictions)
 
@@ -241,6 +241,6 @@ def checkDirichletMultinomial1(maker, ripl, label,N):
     for j in range(20):
       ripl.observe("(f)", "atom<%d>" % i)
 
-  predictions = collectSamples(ripl,label,N)
+  predictions = collectSamples(ripl,label)
   ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
   return reportKnownDiscrete("CheckDirichletMultinomial(%s)" % maker, ans, predictions)

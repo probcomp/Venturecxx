@@ -38,7 +38,7 @@ def testVentureNormalHMM1():
   # p((f 4) | history) = normal mean 390/89, var 55/89, prec 89/55
   ripl.predict("(f 4)")
 
-  predictions = collectSamples(ripl,8,N)
+  predictions = collectSamples(ripl,8)
   reportKnownMeanVariance("TestVentureNormalHMM1", 390/89.0, 55/89.0, predictions)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous("TestVentureNormalHMM1", cdf, predictions, "N(4.382, 0.786)")
@@ -70,6 +70,6 @@ def testVentureBinaryHMM1():
   ripl.observe("(g 5)",False)
   ripl.predict("(g 6)",label="pid")
 
-  predictions = collectSamples(ripl,"pid",N)
+  predictions = collectSamples(ripl,"pid")
   ans = [(0,0.6528), (1,0.3472)]
   return reportKnownDiscrete("testVentureBinaryHMM1", ans, predictions)

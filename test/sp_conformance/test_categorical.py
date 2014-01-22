@@ -14,7 +14,7 @@ def testCategorical1():
   ripl.assume("y", "(categorical (simplex 0.2 0.6 0.2) (array 1 2 3))")
   ripl.predict("(plus x y)")
 
-  predictions = collectSamples(ripl,3,N)
+  predictions = collectSamples(ripl,3)
   ans = [(2, 0.1 * 0.2),
          (3, 0.1 * 0.6 + 0.2 * 0.2),
          (4, 0.1 * 0.2 + 0.2 * 0.6 + 0.3 * 0.2),

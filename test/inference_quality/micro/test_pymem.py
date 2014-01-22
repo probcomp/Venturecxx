@@ -57,7 +57,7 @@ def predictHPY(N,topCollapsed,botCollapsed):
   loadHPY(ripl,topCollapsed,botCollapsed)
   ripl.predict("(f)",label="pid")
   observeCategories(ripl,[2,2,5,1,0])
-  return collectSamples(ripl,"pid",N)
+  return collectSamples(ripl,"pid")
 
 def testHPYMem1():
   from nose import SkipTest
@@ -105,6 +105,6 @@ def testHPYLanguageModel1():
 
   ripl.predict("((G (list atom<0>)))",label="pid")
 
-  predictions = collectSamples(ripl,"pid",N)
+  predictions = collectSamples(ripl,"pid")
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
   return reportKnownDiscrete("testHPYLanguageModel1 (approximate)", ans, predictions)

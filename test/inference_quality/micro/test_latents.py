@@ -29,6 +29,6 @@ def testHMMSP1():
   ripl.predict("(f 7)")
   ripl.predict("(f 8)")
 
-  predictions = collectSamples(ripl,"pid",N)
+  predictions = collectSamples(ripl,"pid")
   ans = [(0,0.6528), (1,0.3472)]
   return reportKnownDiscrete("testHMMSP1", ans, predictions)

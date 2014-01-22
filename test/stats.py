@@ -162,12 +162,15 @@ def profile(N):
     statprof.stop()
     statprof.display()
 
-def collectSamples(ripl,address,T):
+def collectSamples(ripl,address,num_samples=None):
+  if num_samples is None:
+    num_samples = config["num_samples"]
   numTransitionsPerSample = config["num_transitions_per_sample"]
   kernel = config["kernel"]
   scope = config["scope"]
   block = config["block"]
-  return collectSamplesWith(ripl, address, T, {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block})
+  return collectSamplesWith(ripl, address, num_samples,
+                            {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block})
 
 def collectSamplesWith(ripl, address, T, params):
   predictions = []

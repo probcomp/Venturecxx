@@ -13,7 +13,7 @@ def testReferences1():
   ripl.predict("(class 1)")
   ripl.predict("(flip)")
 
-  predictions = collectSamples(ripl,6,N)
+  predictions = collectSamples(ripl,6)
   ans = [(True,0.5), (False,0.5)]
   return reportKnownDiscrete("TestReferences1", ans, predictions)
 
@@ -25,6 +25,6 @@ def testReferences2():
   ripl.assume("f", "(if (flip 0.5) (make_dir_mult 1 1) (lambda () atom<1>))")
   ripl.predict("(f)")
 
-  predictions = collectSamples(ripl,2,N)
+  predictions = collectSamples(ripl,2)
   ans = [(True,0.75), (False,0.25)]
   return reportKnownDiscrete("TestReferences2", ans, predictions)
