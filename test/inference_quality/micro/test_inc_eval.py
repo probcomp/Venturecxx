@@ -111,11 +111,8 @@ def testIncrementalEvaluator1():
   return reportTest(reportKnownContinuous("TestIncrementalEvaluator1", cdf, predictions, "0.7*N(0,1) + 0.3*N(10,1)"))
 
 
-# TODO N needs to be managed so that this can consistently find the right answer
-# (this test may need tweaking once it runs)
 def testIncrementalEvaluator2():
   "Difficult test. We make sure that it stumbles on the solution in a reasonable amount of time."
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   loadAll(ripl)
@@ -157,8 +154,10 @@ def testIncrementalEvaluator2():
   vals = []
 
   foundSolution = False
-  for t in range(N):
-    ripl.infer(50)
+  # TODO These counts need to be managed so that this can consistently
+  # find the right answer (this test may need tweaking once it runs)
+  for _ in range(25):
+    ripl.infer(10)
     if ripl.report("pid") < 1: 
       foundSolution = True
       break
