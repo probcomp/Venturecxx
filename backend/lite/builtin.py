@@ -57,11 +57,12 @@ def builtInSPs():
 
            "pair" : SP(NullRequestPSP(),dstructures.PairOutputPSP()),
            "list" : SP(NullRequestPSP(),dstructures.ListOutputPSP()),
+           "map_list" : SP(dstructures.MapListRequestPSP(),dstructures.MapListOutputPSP()),
+
            # Fake compatibility with CXX
-           "make_vector" : SP(NullRequestPSP(),dstructures.ListOutputPSP()),
            "is_pair" : SP(NullRequestPSP(),dstructures.IsPairOutputPSP()),
-           "list_ref" : SP(NullRequestPSP(),dstructures.ListRefOutputPSP()),
            "first" : SP(NullRequestPSP(),dstructures.FirstListOutputPSP()),
+           "second" : SP(NullRequestPSP(),dstructures.SecondListOutputPSP()),
            "rest" : SP(NullRequestPSP(),dstructures.RestListOutputPSP()),
 
            "flip" : SP(NullRequestPSP(),discrete.BernoulliOutputPSP()),

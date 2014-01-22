@@ -1,4 +1,6 @@
 from psp import PSP
+from request import Request,ESR
+from env import Env
 import numpy as np
 
 ### Simplex Points
@@ -8,7 +10,11 @@ class SimplexOutputPSP(PSP):
 
 ### Polymorphic Operators
 class LookupOutputPSP(PSP):
-  def simulate(self,args): return args.operandValues[0][int(args.operandValues[1])]
+  def simulate(self,args): 
+    xs = args.operandValues[0]
+    x = args.operandValues[1]
+    if isinstance(xs,list) and isinstance(x,float): return xs[int(x)]
+    else: return xs[x]
 
 class ContainsOutputPSP(PSP):
   def simulate(self,args): return args.operandValues[1] in args.operandValues[0]
@@ -42,13 +48,30 @@ class IsPairOutputPSP(PSP):
 class ListOutputPSP(PSP): 
   def simulate(self,args): return args.operandValues
 
-class ListRefOutputPSP(PSP): 
-  def simulate(self,args): return args.operandValues[0][args.operandValues[1]]
-
 class FirstListOutputPSP(PSP): 
   def simulate(self,args): return args.operandValues[0][0]
+
+class SecondListOutputPSP(PSP): 
+  def simulate(self,args): return args.operandValues[0][1]
 
 class RestListOutputPSP(PSP): 
   def simulate(self,args): return args.operandValues[0][1:]
 
+class MapListRequestPSP(PSP):
+  def simulate(self,args):
+    fNode = args.operandNodes[0]
+    xs = args.operandValues[1]    
 
+    request = Request()
+    for i in range(len(xs)):
+      x = xs[i]
+      id = str([args.node] + [i])
+      exp = ["mappedSP"] + [["quote",x]]
+      env = Env(None,["mappedSP"],[fNode])
+      request.esrs.append(ESR(id,exp,env))
+
+    return request
+
+class MapListOutputPSP(PSP):
+  def simulate(self,args):
+    return args.esrValues

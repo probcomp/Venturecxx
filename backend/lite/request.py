@@ -1,5 +1,7 @@
 class Request(object):
-  def __init__(self,esrs=[],lsrs=[]):
+  def __init__(self,esrs=None,lsrs=None):
+    if esrs is None: esrs = []
+    if lsrs is None: lsrs = []
     self.esrs = esrs
     self.lsrs = lsrs
 
