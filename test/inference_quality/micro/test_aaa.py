@@ -65,7 +65,7 @@ def testMakeSymDirMult4():
      (if (lt a 10.5)
          make_uc_sym_dir_mult
          (lambda (alpha k) 
-           ((lambda (theta) (bernoulli theta))
+           ((lambda (theta) (lambda () (categorical theta)))
             (symmetric_dirichlet alpha k)))))
  a 4)
 """)
@@ -92,19 +92,23 @@ def checkMakeSymDirMult5(maker_1,maker_2):
   for i in range(5): ripl.observe("(g)","true")
   ripl.predict("(if (f) (g) (g))")
   ripl.predict("(if (g) (f) (f))")
-  return checkDirichletMultinomial1(maker, ripl, "pid",N)
+  return checkDirichletMultinomial1(maker_1 + "&" + maker_2, ripl, "pid",N)
 
 
 ############# (2) Test Misc AAA
 
-def testMakeDirMult1():
+def testMakeSymDirMult1():
+  for maker in ["make_dir_mult","make_uc_dir_mult"]:
+    yield checkMakeDirMult1,maker
+
+def checkMakeDirMult1(maker):
   N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "(make_dir_mult a a a a)")
+  ripl.assume("f", "(make_dir_mult (simplex a a a a))")
   ripl.predict("(f)")
-  return testDirichletMultinomial1("make_dir_mult", ripl, 3, N)
+  return checkDirichletMultinomial1("make_dir_mult", ripl, 3, N)
 
 def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:

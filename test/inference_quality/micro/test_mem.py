@@ -20,10 +20,10 @@ def testMem2():
   ripl.assume("y","(f 1)")
   ripl.assume("w","(f 2)")
   ripl.assume("z","(f 2)")
-  ripl.assume("q","(categorical (simplex 0.1 0.9) (array 1 2))))")
-  ripl.predict('(plus x y w z q)');
+  ripl.assume("q","(categorical (simplex 0.1 0.9) (array 1 2))")
+  ripl.predict('(plus x y w z q)',label="pid");
 
-  predictions = collectSamples(ripl,7,N)
+  predictions = collectSamples(ripl,"pid",N)
   # TODO This test can be strengthened by computing more of the ratios in the answer
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
@@ -87,7 +87,7 @@ def testMemoizingOnASymbol1():
      In CXX, VentureSymbol needs to override several VentureValue methods as well"""
   N = config["num_samples"]
   ripl = config["get_ripl"]()
-  ripl.assume("f","(mem (lambda (x) (flip)))")
+  ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (quote sym))",label="pid")
   predictions = collectSamples(ripl,"pid",1)
   assert predictions == [1]

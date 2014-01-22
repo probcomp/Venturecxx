@@ -3,7 +3,7 @@ from sp import SP
 import math
 import scipy.special
 import scipy.stats
-from utils import sampleCategorical
+from utils import simulateCategorical
 
 class CRPSPAux(object):
   def __init__(self):
@@ -30,10 +30,7 @@ class CRPOutputPSP(RandomPSP):
     old_indices = [i for i in aux.tableCounts]
     counts = [aux.tableCounts[i] for i in old_indices] + [self.alpha]
     indices = old_indices + [aux.nextIndex]
-    index = indices[sampleCategorical(counts)]
-#    print (counts,indices,index)
-
-    return index
+    return simulateCategorical(counts,indices)
 
   def logDensity(self,index,args):
     aux = args.spaux

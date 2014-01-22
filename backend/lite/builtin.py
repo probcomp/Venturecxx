@@ -7,7 +7,7 @@ import discrete
 import continuous
 import boolean
 import number
-import listsps
+import dstructures
 import csp
 import crp
 import msp
@@ -39,14 +39,19 @@ def builtInSPs():
 
            "not" : SP(NullRequestPSP(),boolean.NotOutputPSP()),
 
-           "pair" : SP(NullRequestPSP(),listsps.PairOutputPSP()),
-           "list" : SP(NullRequestPSP(),listsps.ListOutputPSP()),
+           "simplex" : SP(NullRequestPSP(),dstructures.SimplexOutputPSP()),
+
+           "array" : SP(NullRequestPSP(),dstructures.ArrayOutputPSP()),
+           "lookup" : SP(NullRequestPSP(),dstructures.LookupOutputPSP()),
+
+           "pair" : SP(NullRequestPSP(),dstructures.PairOutputPSP()),
+           "list" : SP(NullRequestPSP(),dstructures.ListOutputPSP()),
            # Fake compatibility with CXX
-           "make_vector" : SP(NullRequestPSP(),listsps.ListOutputPSP()),
-           "is_pair" : SP(NullRequestPSP(),listsps.IsPairOutputPSP()),
-           "list_ref" : SP(NullRequestPSP(),listsps.ListRefOutputPSP()),
-           "first" : SP(NullRequestPSP(),listsps.FirstListOutputPSP()),
-           "rest" : SP(NullRequestPSP(),listsps.RestListOutputPSP()),
+           "make_vector" : SP(NullRequestPSP(),dstructures.ListOutputPSP()),
+           "is_pair" : SP(NullRequestPSP(),dstructures.IsPairOutputPSP()),
+           "list_ref" : SP(NullRequestPSP(),dstructures.ListRefOutputPSP()),
+           "first" : SP(NullRequestPSP(),dstructures.FirstListOutputPSP()),
+           "rest" : SP(NullRequestPSP(),dstructures.RestListOutputPSP()),
 
            "flip" : SP(NullRequestPSP(),discrete.BernoulliOutputPSP()),
            "bernoulli" : SP(NullRequestPSP(),discrete.BernoulliOutputPSP()),
@@ -68,6 +73,15 @@ def builtInSPs():
 
            "make_beta_bernoulli" : SP(NullRequestPSP(),discrete.MakerCBetaBernoulliOutputPSP()),
            "make_uc_beta_bernoulli" : SP(NullRequestPSP(),discrete.MakerUBetaBernoulliOutputPSP()),
+
+           "make_sym_dir_mult" : SP(NullRequestPSP(),discrete.MakerCSymDirMultOutputPSP()),
+           "make_uc_sym_dir_mult" : SP(NullRequestPSP(),discrete.MakerUSymDirMultOutputPSP()),
+
+           "make_dir_mult" : SP(NullRequestPSP(),discrete.MakerCDirMultOutputPSP()),
+           "make_uc_dir_mult" : SP(NullRequestPSP(),discrete.MakerUDirMultOutputPSP()),
+
+           "dirichlet" : SP(NullRequestPSP(),discrete.DirichletOutputPSP()),
+           "symmetric_dirichlet" : SP(NullRequestPSP(),discrete.SymmetricDirichletOutputPSP()),
 
            "make_crp" : SP(NullRequestPSP(),crp.MakeCRPOutputPSP()),
 
