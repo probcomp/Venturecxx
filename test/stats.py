@@ -164,7 +164,7 @@ def profile(N):
 
 def collectSamples(ripl,address,num_samples=None,infer=None):
   if num_samples is None:
-    num_samples = config["num_samples"]
+    num_samples = int(config["num_samples"])
   if infer is None:
     numTransitionsPerSample = config["num_transitions_per_sample"]
     kernel = config["kernel"]
