@@ -68,6 +68,7 @@ def builtInSPs():
            "beta" : SP(NullRequestPSP(),continuous.BetaOutputPSP()),
 
            "gamma" : SP(NullRequestPSP(),continuous.GammaOutputPSP()),
+           "student_t" : SP(NullRequestPSP(),continuous.StudentTOutputPSP()),
 
            "branch" : SP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()),
            "biplex" : SP(NullRequestPSP(),conditionals.BiplexOutputPSP()),

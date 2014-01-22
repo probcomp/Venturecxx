@@ -53,3 +53,13 @@ class GammaOutputPSP(RandomPSP):
 
   # TODO Gamma presumably has a variational kernel too?
 
+class StudentTOutputPSP(RandomPSP):
+  # TODO don't need to be class methods
+  def simulateNumeric(self,nu): return scipy.stats.t.rvs(nu)
+  def logDensityNumeric(self,x,nu): return scipy.stats.t.logpdf(x,nu)
+
+  def simulate(self,args): return self.simulateNumeric(*args.operandValues)
+  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+
+  # TODO StudentT presumably has a variational kernel too?
+
