@@ -1,9 +1,10 @@
 from psp import PSP
+import numpy as np
 
 ### Simplex Points
 
 class SimplexOutputPSP(PSP):
-  def simulate(self,args): return args.operandValues
+  def simulate(self,args): return np.array(args.operandValues)
 
 ### Polymorphic Operators
 class LookupOutputPSP(PSP):
