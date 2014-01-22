@@ -67,7 +67,9 @@ class ParserTestCase(unittest.TestCase):
 
     def run_test(self, code, expected_result):
         self._run_test(code, expected_result, self.expression, legacy=False)
+    run_test.__test__ = False
 
     def run_legacy_test(self, code, expected_result, name):
         e = getattr(self.p, name)
         self._run_test(code, expected_result, e, legacy=True)
+    run_legacy_test.__test__ = False
