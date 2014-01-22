@@ -3,12 +3,11 @@ from testconfig import config
 
 def testMem1():
   "This test used to cause CXX to crash"
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   ripl.predict("(f (bernoulli 0.5))")
   ripl.predict("(f (bernoulli 0.5))")
-  ripl.infer(N)
+  ripl.infer(20)
   return reportPassage("TestMem1")
 
 def testMem2():
@@ -52,7 +51,6 @@ def testMem3():
 
 def testMem4():
   "Like TestMem1, makes sure that MSPs handle changes to their arguments without crashing"
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
   ripl.assume("pick_a_stick","""
 (lambda (sticks k)
@@ -64,7 +62,7 @@ def testMem4():
   ripl.assume("f","(mem (lambda (k) (beta 1.0 (times k d))))")
   ripl.assume("g","(lambda () (pick_a_stick f 1))")
   ripl.predict("(g)")
-  ripl.infer(N)
+  ripl.infer(40)
   return reportPassage("TestMem4")
 
 ############ CXX mem tests
