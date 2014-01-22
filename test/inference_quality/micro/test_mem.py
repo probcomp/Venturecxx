@@ -87,7 +87,7 @@ def testMemoizingOnASymbol1():
      In CXX, VentureSymbol needs to override several VentureValue methods as well"""
   N = config["num_samples"]
   ripl = config["get_ripl"]()
-  ripl.assume("f","(mem (lambda (x) (flip)))")
+  ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (quote sym))",label="pid")
   predictions = collectSamples(ripl,"pid",1)
   assert predictions == [1]
