@@ -5,6 +5,7 @@ from utils import sampleCategorical, normalizeList
 from psp import PSP, NullRequestPSP, RandomPSP
 from sp import SP
 from lkernel import LKernel
+import numpy.random as npr
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args):
@@ -22,13 +23,17 @@ class BernoulliOutputPSP(RandomPSP):
     else: return math.log(1 - p)
 
 class CategoricalOutputPSP(RandomPSP):
+  # (categorical ps outputs)
   def simulate(self,args): 
-    ps = normalizeList(args.operandValues)
-    return sampleCategorical(ps)
+    ps = normalizeList(args.operandValues[0])
+    os = args.operandValues[1]
+    return os[npr.multinomial(1,ps).argmax()]
 
   def logDensity(self,val,args):
-    ps = normalizeList(args.operandValues)
-    return math.log(ps[val])
+    ps = normalizeList(args.operandValues[0])
+    os = args.operandValues[1]
+    p = sum([ps(i) for i in range(len(os)) if os[i] == val])
+    return math.log(p)
 
 #### Collapsed Beta Bernoulli
 
