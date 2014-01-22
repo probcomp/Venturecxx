@@ -84,7 +84,7 @@ def checkMakeSymDirMult5(maker_1,maker_2):
   ripl.assume("g", "(%s a 4)" % maker_2)
   ripl.predict("(f)",label="pid")
   ripl.predict("(g)")
-  for i in range(5): ripl.observe("(g)","true")
+  for _ in range(5): ripl.observe("(g)","true")
   ripl.predict("(if (f) (g) (g))")
   ripl.predict("(if (g) (f) (f))")
   return checkDirichletMultinomial1(maker_1 + "&" + maker_2, ripl, "pid")
@@ -115,7 +115,7 @@ def checkMakeBetaBernoulli1(maker):
   ripl.assume("f", "(%s a a)" % maker)
   ripl.predict("(f)")
 
-  for j in range(20): ripl.observe("(f)", "true")
+  for _ in range(20): ripl.observe("(f)", "true")
 
   predictions = collectSamples(ripl,3)
   ans = [(False,.25), (True,.75)]
@@ -135,7 +135,7 @@ def checkMakeBetaBernoulli2(maker):
   ripl.assume("f", "((lambda () (%s ((lambda () a)) ((lambda () a)))))" % maker)
   ripl.predict("(f)")
 
-  for j in range(20): ripl.observe("((lambda () (f)))", "true")
+  for _ in range(20): ripl.observe("((lambda () (f)))", "true")
 
   predictions = collectSamples(ripl,3)
   ans = [(False,.25), (True,.75)]
@@ -152,8 +152,8 @@ def checkMakeBetaBernoulli3(maker):
   ripl.assume("f", "(%s a a)" % maker)
   ripl.predict("(f)")
 
-  for j in range(10): ripl.observe("(f)", "true")
-  for j in range(10): ripl.observe("""
+  for _ in range(10): ripl.observe("(f)", "true")
+  for _ in range(10): ripl.observe("""
 (if (lt a 10.0)
   (f)
   (f))""", "true")
@@ -176,7 +176,7 @@ def checkMakeBetaBernoulli4(maker):
   ({0} a a))""".format(maker))
   ripl.predict("(f)")
 
-  for j in range(20): ripl.observe("(f)", "true")
+  for _ in range(20): ripl.observe("(f)", "true")
 
   predictions = collectSamples(ripl,3)
   ans = [(False,.25), (True,.75)]
@@ -199,7 +199,7 @@ def testStaleAAA1():
   ripl.assume("h", "g")
   ripl.predict("(h)")
 
-  for i in range(9):
+  for _ in range(9):
     ripl.observe("(f)", "atom<1>")
 
   predictions = collectSamples(ripl,5)
@@ -215,7 +215,7 @@ def testStaleAAA2():
   ripl.assume("h", "(g)")
   ripl.predict("(h)")
 
-  for i in range(9):
+  for _ in range(9):
     ripl.observe("(f)", "atom<1>")
 
   predictions = collectSamples(ripl,5)
@@ -226,7 +226,7 @@ def testStaleAAA2():
 
 def checkDirichletMultinomial1(maker, ripl, label):
   for i in range(1,4):
-    for j in range(20):
+    for _ in range(20):
       ripl.observe("(f)", "atom<%d>" % i)
 
   predictions = collectSamples(ripl,label)
