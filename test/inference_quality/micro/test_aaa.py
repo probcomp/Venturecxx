@@ -100,9 +100,9 @@ def checkMakeDirMult1(maker):
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "(make_dir_mult (simplex a a a a))")
+  ripl.assume("f", "(%s (simplex a a a a))" % maker)
   ripl.predict("(f)")
-  return checkDirichletMultinomial1("make_dir_mult", ripl, 3)
+  return checkDirichletMultinomial1(maker, ripl, 3)
 
 def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
