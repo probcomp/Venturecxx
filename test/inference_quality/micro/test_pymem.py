@@ -52,7 +52,7 @@ def loadHPYModel1(ripl,topCollapsed,botCollapsed):
   if botCollapsed: ripl.assume("f","(pymem alpha d intermediate_dist)")
   else: ripl.assume("f","(uc_pymem alpha d intermediate_dist)")
 
-def predictHPY(N,topCollapsed,botCollapsed):
+def predictHPY(topCollapsed,botCollapsed):
   ripl = RIPL()
   loadHPY(ripl,topCollapsed,botCollapsed)
   ripl.predict("(f)",label="pid")
@@ -62,7 +62,7 @@ def predictHPY(N,topCollapsed,botCollapsed):
 def testHPYMem1():
   from nose import SkipTest
   raise SkipTest("Skipping testHPYMem1: no p-value test for comparing empirical distributions")
-  data = [countPredictions(predictHPY(N,top,bot), [0,1,2,3,4]) for top in [True,False] for bot in [True,False]]
+  data = [countPredictions(predictHPY(top,bot), [0,1,2,3,4]) for top in [True,False] for bot in [True,False]]
   return reportKnownEqualDistributions(data)
 
 ####
