@@ -36,6 +36,12 @@ def builtInSPs():
 
            "sin" : deterministic(math.sin),
            "cos" : deterministic(math.cos),
+           "tan" : deterministic(math.tan),
+           "hypot" : deterministic(math.hypot),
+           "exp" : deterministic(math.exp),
+           "log" : deterministic(math.log),
+           "pow" : deterministic(math.pow),
+           "sqrt" : deterministic(math.sqrt),
 
            "not" : SP(NullRequestPSP(),boolean.NotOutputPSP()),
 
