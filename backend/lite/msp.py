@@ -14,6 +14,6 @@ class MSPRequestPSP(PSP):
   def simulate(self,args): 
     id = str(args.operandValues)
     # TODO needs to be quoted
-    exp = ["memoizedSP"] + [["quote"] + args.operandValues]
+    exp = ["memoizedSP"] + [["quote"] + args.operandValues] if args.operandValues else ["memoizedSP"]
     env = Env(None,["memoizedSP"],[self.sharedOperatorNode])
     return Request([ESR(id,exp,env)])

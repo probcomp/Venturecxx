@@ -47,12 +47,12 @@ def testMakeSymDirMult3():
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "((if (lt a 10) make_sym_dir_mult make_uc_sym_dir_mult) a 4)" % maker)
+  ripl.assume("f", "((if (lt a 10) make_sym_dir_mult make_uc_sym_dir_mult) a 4)")
   ripl.predict("(f)",label="pid")
-  return checkDirichletMultinomial1(maker, ripl, "pid",N)
+  return checkDirichletMultinomial1("flip_C_UC", ripl, "pid",N)
 
 # Test 1:4
-def testMakeSymDirMult4(maker):
+def testMakeSymDirMult4():
   """AAA where the SP flips between collapsed, uncollapsed, and native"""
   N = config["num_samples"]
   ripl = config["get_ripl"]()
@@ -65,12 +65,12 @@ def testMakeSymDirMult4(maker):
      (if (lt a 10.5)
          make_uc_sym_dir_mult
          (lambda (alpha k) 
-           ((lambda (theta) (bernoulli theta))
+           ((lambda (theta) (lambda () (categorical theta)))
             (symmetric_dirichlet alpha k)))))
  a 4)
 """)
   ripl.predict("(f)",label="pid")
-  return checkDirichletMultinomial1(maker, ripl, "pid",N)
+  return checkDirichletMultinomial1("flip_C_UC_NV", ripl, "pid",N)
 
 
 # Test 1:5
@@ -92,19 +92,23 @@ def checkMakeSymDirMult5(maker_1,maker_2):
   for i in range(5): ripl.observe("(g)","true")
   ripl.predict("(if (f) (g) (g))")
   ripl.predict("(if (g) (f) (f))")
-  return checkDirichletMultinomial1(maker, ripl, "pid",N)
+  return checkDirichletMultinomial1(maker_1 + "&" + maker_2, ripl, "pid",N)
 
 
 ############# (2) Test Misc AAA
 
-def testMakeDirMult1():
+def testMakeSymDirMult1():
+  for maker in ["make_dir_mult","make_uc_dir_mult"]:
+    yield checkMakeDirMult1,maker
+
+def checkMakeDirMult1(maker):
   N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "(make_dir_mult a a a a)")
+  ripl.assume("f", "(make_dir_mult (simplex a a a a))")
   ripl.predict("(f)")
-  return testDirichletMultinomial1("make_dir_mult", ripl, 3, N)
+  return checkDirichletMultinomial1("make_dir_mult", ripl, 3, N)
 
 def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:

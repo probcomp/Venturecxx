@@ -65,6 +65,12 @@ def builtInSPs():
            "make_sym_dir_mult" : SP(NullRequestPSP(),discrete.MakerCSymDirMultOutputPSP()),
            "make_uc_sym_dir_mult" : SP(NullRequestPSP(),discrete.MakerUSymDirMultOutputPSP()),
 
+           "make_dir_mult" : SP(NullRequestPSP(),discrete.MakerCDirMultOutputPSP()),
+           "make_uc_dir_mult" : SP(NullRequestPSP(),discrete.MakerUDirMultOutputPSP()),
+
+           "dirichlet" : SP(NullRequestPSP(),discrete.DirichletOutputPSP()),
+           "symmetric_dirichlet" : SP(NullRequestPSP(),discrete.SymmetricDirichletOutputPSP()),
+
            "make_crp" : SP(NullRequestPSP(),crp.MakeCRPOutputPSP()),
 
            "make_lazy_hmm" : SP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()),

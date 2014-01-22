@@ -1,7 +1,7 @@
 import random
 import numpy.random as npr
 import math
-import scipy.special
+import scipy.special as ss
 import numpy as np
 
 def normalizeList(seq): 
@@ -23,8 +23,10 @@ def logDensityCategorical(val,ps,os=None):
   assert os.count(val) == 1
   return math.log(p)
 
+def simulateDirichlet(alpha): return npr.dirichlet(alpha)
 
-def logDensityDirichlet(x, theta):
-  xvec = np.array([0.0 for i in theta])
-  xvec[x] = 1
-  return scipy.special.gammaln(sum(alpha)) - sum(scipy.special.gammaln(alpha)) + np.dot((alpha - 1).T, np.log(xvec).T)
+def logDensityDirichlet(theta, alpha):
+  theta = np.array(theta)
+  alpha = np.array(alpha)
+
+  return ss.gammaln(sum(alpha)) - sum(ss.gammaln(alpha)) + np.dot((alpha - 1).T, np.log(theta).T)

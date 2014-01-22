@@ -3,7 +3,7 @@ import math
 import scipy
 import scipy.special
 import numpy.random as npr
-from utils import simulateCategorical, logDensityCategorical, logDensityDirichlet
+from utils import simulateCategorical, logDensityCategorical, simulateDirichlet, logDensityDirichlet
 from psp import PSP, NullRequestPSP, RandomPSP
 from sp import SP
 from lkernel import LKernel
@@ -30,7 +30,7 @@ class CategoricalOutputPSP(RandomPSP):
     return simulateCategorical(*args.operandValues)
 
   def logDensity(self,val,args):
-    return logDensityCategorical(*args.operandValues)
+    return logDensityCategorical(val,*args.operandValues)
 
 #### Collapsed Beta Bernoulli
 class MakerCBetaBernoulliOutputPSP(PSP):
@@ -144,9 +144,20 @@ class UBetaBernoulliOutputPSP(RandomPSP):
 
 ################### Symmetric Dirichlet
 
-class SymDirMultSP(SP):
+class SymmetricDirichletOutputPSP(RandomPSP):
+
+  def simulate(self,args):
+    (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
+    return simulateDirichlet([alpha for i in range(n)])
+    
+  def logDensity(self,val,args):
+    (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
+    return logDensityDirichlet(val,[alpha for i in range(n)])
+
+
+class DirMultSP(SP):
   def __init__(self,requestPSP,outputPSP,n):
-    super(SymDirMultSP,self).__init__(requestPSP,outputPSP)
+    super(DirMultSP,self).__init__(requestPSP,outputPSP)
     self.n = n
 
   def constructSPAux(self): return [0.0 for i in range(self.n)]
@@ -158,7 +169,7 @@ class MakerCSymDirMultOutputPSP(PSP):
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else range(n)
-    return SymDirMultSP(NullRequestPSP(),CSymDirMultOutputPSP(alpha,n,os),n)
+    return DirMultSP(NullRequestPSP(),CSymDirMultOutputPSP(alpha,n,os),n)
 
   def childrenCanAbsorbAtApplications(self): return True
 
@@ -203,12 +214,12 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else range(n)
     theta = npr.dirichlet([alpha for i in range(n)])
-    return SymDirMultSP(NullRequestPSP(),USymDirMultOutputPSP(theta,os),n)
+    return DirMultSP(NullRequestPSP(),USymDirMultOutputPSP(theta,os),n)
 
   def logDensity(self,value,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else range(n)
-    assert isinstance(value,SymDirMultSP)
+    assert isinstance(value,DirMultSP)
     assert isinstance(value.outputPSP,USymDirMultOutputPSP)
     return logDensityDirichlet(value.outputPSP.theta,[alpha for i in range(n)])
 
@@ -218,9 +229,106 @@ class USymDirMultAAALKernel(LKernel):
     os = args.operandValues[2] if len(args.operandValues) > 2 else range(n)
     counts = [count + alpha for count in args.madeSPAux]
     newTheta = npr.dirichlet(counts)
-    return SymDirMultSP(NullRequestPSP(),USymDirMultOutputPSP(newTheta,os),n)
+    return DirMultSP(NullRequestPSP(),USymDirMultOutputPSP(newTheta,os),n)
 
 class USymDirMultOutputPSP(RandomPSP):
+  def __init__(self,theta,os):
+    self.theta = theta
+    self.os = os
+
+  def simulate(self,args): return simulateCategorical(self.theta,self.os)
+
+  def logDensity(self,val,args): return logDensityCategorical(val,self.theta,self.os)
+
+  def incorporate(self,val,args):
+    index = self.os.index(val)
+    args.spaux[index] += 1
+    
+  def remove(self,val,args):
+    index = self.os.index(val)
+    args.spaux[index] -= 1
+
+################### (Not-necessarily-symmetric) Dirichlet-Multinomial
+
+class DirichletOutputPSP(RandomPSP):
+
+  def simulate(self,args):
+    alpha = args.operandValues[0]
+    return simulateDirichlet(alpha)
+    
+  def logDensity(self,val,args):
+    alpha = args.operandValues[0]
+    return logDensityDirichlet(val,alpha)
+
+### Collapsed Dirichlet-Multinomial
+
+class MakerCDirMultOutputPSP(PSP):
+  def simulate(self,args):
+    alpha = args.operandValues[0]
+    os = args.operandValues[1] if len(args.operandValues) > 1 else range(len(alpha))
+    return DirMultSP(NullRequestPSP(),CDirMultOutputPSP(alpha,os),len(alpha))
+
+  def childrenCanAbsorbAtApplications(self): return True
+
+class CDirMultOutputPSP(RandomPSP):
+  def __init__(self,alpha,os):
+    self.alpha = alpha
+    self.os = os
+
+  def simulate(self,args):
+    counts = [count + alpha for (count,alpha) in zip(args.spaux,self.alpha)]
+    return simulateCategorical(counts,self.os)
+      
+  def logDensity(self,val,args):
+    counts = [count + alpha for (count,alpha) in zip(args.spaux,self.alpha)]
+    return logDensityCategorical(val,counts,self.os)
+
+  def incorporate(self,val,args):
+    index = self.os.index(val)
+    args.spaux[index] += 1
+    
+  def remove(self,val,args):
+    index = self.os.index(val)
+    args.spaux[index] -= 1
+        
+  def logDensityOfState(self,aux):
+    N = sum(aux)
+    A = sum(self.alpha)
+
+    term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N + A)
+    term2 = sum([scipy.special.gammaln(alpha + count) - scipy.special.gammaln(alpha) for (alpha,count) in zip(self.alpha,aux)])
+    return term1 + term2
+
+#### Uncollapsed DirMult
+
+class MakerUDirMultOutputPSP(RandomPSP):
+  def childrenCanAAA(self): return True
+  def getAAALKernel(self): return UDirMultAAALKernel()
+
+  def simulate(self,args):
+    alpha = args.operandValues[0]
+    n = len(alpha)
+    os = args.operandValues[1] if len(args.operandValues) > 1 else range(n)
+    theta = npr.dirichlet(alpha)
+    return DirMultSP(NullRequestPSP(),UDirMultOutputPSP(theta,os),n)
+
+  def logDensity(self,value,args):
+    alpha = args.operandValues[0]
+    os = args.operandValues[1] if len(args.operandValues) > 1 else range(len(alpha))
+
+    assert isinstance(value,DirMultSP)
+    assert isinstance(value.outputPSP,UDirMultOutputPSP)
+    return logDensityDirichlet(value.outputPSP.theta,alpha)
+
+class UDirMultAAALKernel(LKernel):
+  def simulate(self,trace,oldValue,args):
+    alpha = args.operandValues[0]
+    os = args.operandValues[1] if len(args.operandValues) > 1 else range(len(alpha))
+    counts = [count + a for (count,a) in zip(args.madeSPAux,alpha)]
+    newTheta = npr.dirichlet(counts)
+    return DirMultSP(NullRequestPSP(),UDirMultOutputPSP(newTheta,os),n)
+
+class UDirMultOutputPSP(RandomPSP):
   def __init__(self,theta,os):
     self.theta = theta
     self.os = os
