@@ -73,8 +73,8 @@ def testMemoizingOnAList1():
   ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (list 0))",label="pid")
-  predictions = collectSamples(ripl,"pid",1)
-  assert predictions == [1]
+  predictions = collectSamples(ripl,"pid",3)
+  assert predictions == [1, 1, 1]
   return reportPassage("TestMemoizingOnAList")
 
 def testMemoizingOnASymbol1():
@@ -83,8 +83,8 @@ def testMemoizingOnASymbol1():
   ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (quote sym))",label="pid")
-  predictions = collectSamples(ripl,"pid",1)
-  assert predictions == [1]
+  predictions = collectSamples(ripl,"pid",3)
+  assert predictions == [1, 1, 1]
   return reportPassage("TestMemoizingOnASymbol")
 
 # TODO slow to run, and not worth it 
