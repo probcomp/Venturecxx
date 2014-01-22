@@ -141,6 +141,11 @@ class Trace(object):
     return random.choice(self.blocksInScope(scope))
   def logDensityOfBlock(self,scope,block):
     return -1 * math.log(len(self.blocksInScope(scope)))
+  def scopeHasEntropy(self,scope):
+    if scope == "default":
+      return len(self.rcs) > 0
+    else:
+      return scope in self.scopes and len(self.blocksInScope(scope)) > 0
 
   #### External interface to engine.py
   def eval(self,id,exp):
@@ -173,6 +178,8 @@ class Trace(object):
   # "kernel" must be one of "mh" or "meanfield", and "transitions"
   # must be an integer.
   def infer(self,params):
+    if not(self.scopeHasEntropy(params["scope"])):
+      return
     for n in range(params["transitions"]):
       if params["kernel"] == "mh":
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MHOperator())
