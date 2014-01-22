@@ -162,23 +162,21 @@ def profile(N):
     statprof.stop()
     statprof.display()
 
-def collectSamples(ripl,address,num_samples=None):
+def collectSamples(ripl,address,num_samples=None,infer=None):
   if num_samples is None:
     num_samples = config["num_samples"]
-  numTransitionsPerSample = config["num_transitions_per_sample"]
-  kernel = config["kernel"]
-  scope = config["scope"]
-  block = config["block"]
-  return collectSamplesWith(ripl, address, num_samples,
-                            {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block})
+  if infer is None:
+    numTransitionsPerSample = config["num_transitions_per_sample"]
+    kernel = config["kernel"]
+    scope = config["scope"]
+    block = config["block"]
+    infer = {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block}
 
-def collectSamplesWith(ripl, address, T, params):
   predictions = []
-  for t in range(T):
+  for _ in range(num_samples):
     # Going direct here saved 5 of 35 seconds on some unscientific
     # tests, presumably by avoiding the parser.
-    ripl.sivm.core_sivm.engine.infer(params)
+    ripl.sivm.core_sivm.engine.infer(infer)
     predictions.append(ripl.report(address))
     ripl.sivm.core_sivm.engine.reset()
   return predictions
-
