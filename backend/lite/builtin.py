@@ -5,7 +5,6 @@ from psp import NullRequestPSP, ESRRefOutputPSP, PSP
 
 import discrete
 import continuous
-import boolean
 import dstructures
 import csp
 import crp
@@ -43,7 +42,7 @@ def builtInSPs():
            "pow" : deterministic(math.pow),
            "sqrt" : deterministic(math.sqrt),
 
-           "not" : SP(NullRequestPSP(),boolean.NotOutputPSP()),
+           "not" : deterministic(lambda x: not x),
 
            "simplex" : SP(NullRequestPSP(),dstructures.SimplexOutputPSP()),
 
