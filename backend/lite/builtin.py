@@ -19,7 +19,6 @@ def builtInValues(): return { "true" : True, "false" : False }
 def deterministic(f):
   class DeterministicPSP(PSP):
     def simulate(self,args):
-      print args
       return f(*args.operandValues)
   return SP(NullRequestPSP(), DeterministicPSP())
 
