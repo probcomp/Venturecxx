@@ -1,11 +1,12 @@
 import random
 import math
 import scipy
-from utils import sampleCategorical, normalizeList
+import scipy.special
+from utils import simulateCategorical, logDensityCategorical
 from psp import PSP, NullRequestPSP, RandomPSP
 from sp import SP
 from lkernel import LKernel
-import numpy.random as npr
+
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args):
@@ -25,18 +26,12 @@ class BernoulliOutputPSP(RandomPSP):
 class CategoricalOutputPSP(RandomPSP):
   # (categorical ps outputs)
   def simulate(self,args): 
-    ps = normalizeList(args.operandValues[0])
-    os = args.operandValues[1]
-    return os[npr.multinomial(1,ps).argmax()]
+    return simulateCategorical(*args.operandValues)
 
   def logDensity(self,val,args):
-    ps = normalizeList(args.operandValues[0])
-    os = args.operandValues[1]
-    p = sum([ps(i) for i in range(len(os)) if os[i] == val])
-    return math.log(p)
+    return logDensityCategorical(*args.operandValues)
 
 #### Collapsed Beta Bernoulli
-
 class MakerCBetaBernoulliOutputPSP(PSP):
   def childrenCanAAA(self): return True
 
@@ -145,3 +140,51 @@ class UBetaBernoulliOutputPSP(RandomPSP):
       return math.log(self.weight)
     else:
       return math.log(1-self.weight)
+
+################### Symmetric Dirichlet
+
+class MakeSymDirMultPSPOutput(PSP):
+  def simulate(self,args):
+    (alpha,n) = args.operandValues[0:2]
+    os = args.operandValues[2] if len(args.operandValues) > 0 else range(n)
+    return SymDirMultSP(DummyWhich(),SymDirMultPSPOutput(alpha,n,os),n)
+
+  def childrenCanAbsorbAtApplications(self): return True
+
+class SymDirMultSP(SP):
+  def __init__(self,requestPSP,outputPSP,n):
+    super(self,SP).__init__(requestPSP,outputPSP)
+    self.n = n
+
+  def constructSPAux(self): return [0.0 for i in range(n)]
+
+class SymDirMultPSPOutput(RandomPSP):
+  def __init__(self,alpha,n,os):
+    self.alpha = float(alpha)
+    self.n = n
+    self.os = os
+
+  def simulate(self,args):
+    counts = [count + self.alpha for count in args.spaux]
+    return simulateCategorical(counts,self.os)
+      
+  def logDensity(self,val,args):
+    counts = [count + self.alpha for count in args.spaux]
+    return logDensityCategorical(val,counts,self.os)
+
+  def incorporate(self,val,args):
+    index = self.os.index(val)
+    args.spaux[index] += 1
+    
+  def remove(self,val,args):
+    index = self.os.index(val)
+    args.spaux[index] -= 1
+        
+  def logDensityOfState(self,aux):
+    N = sum(aux)
+    A = self.alpha * self.n
+
+    term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N + A)
+    galpha = scipy.special.gammaln(self.alpha)
+    term2 = sum([scipy.special.gammaln(self.alpha + aux[index]) - galpha for index in range(self.n)])
+    return term1 + term2

@@ -7,7 +7,7 @@ from detach import detachAndExtract
 from scaffold import constructScaffold
 from node import ApplicationNode, OutputNode
 from lkernel import VariationalLKernel
-from utils import sampleCategorical
+from utils import simulateCategorical
 
 def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
@@ -205,7 +205,7 @@ class PGibbsOperator(object):
       # Sample new particle and propagate
       for p in range(P):
         extendedWeights = xiWeights + [rhoWeights[t-1]]
-        ancestorIndices[t][p] = sampleCategorical([math.exp(w) for w in extendedWeights])
+        ancestorIndices[t][p] = simulateCategorical([math.exp(w) for w in extendedWeights])
         path = constructAncestorPath(ancestorIndices,t,p)
         restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,t,path)
         regenAndAttach(trace,self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
@@ -214,7 +214,7 @@ class PGibbsOperator(object):
       xiWeights = newWeights
 
     # Now sample a NEW particle in proportion to its weight
-    finalIndex = sampleCategorical([math.exp(w) for w in xiWeights])
+    finalIndex = simulateCategorical([math.exp(w) for w in xiWeights])
 #    assert finalIndex == 0
     rhoWeight = rhoWeights[T-1]
     xiWeight = xiWeights[finalIndex]
