@@ -45,5 +45,4 @@ def testObserveAPredict2():
   ripl.observe("(f)","1.0")
   ripl.predict("(* (f) 100)")
   predictions = collectSamples(ripl,3,N)
-  mean = float(sum(predictions))/len(predictions) if len(predictions) > 0 else 0
-  return reportKnownMean("TestObserveAPredict2", 50, mean)
+  return reportKnownMean("TestObserveAPredict2", 50, predictions)
