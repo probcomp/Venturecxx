@@ -46,9 +46,13 @@ def builtInSPs():
 
            "simplex" : SP(NullRequestPSP(),dstructures.SimplexOutputPSP()),
 
-           "array" : SP(NullRequestPSP(),dstructures.ArrayOutputPSP()),
+
            "lookup" : SP(NullRequestPSP(),dstructures.LookupOutputPSP()),
            "contains" : SP(NullRequestPSP(),dstructures.ContainsOutputPSP()),
+           "size" : SP(NullRequestPSP(),dstructures.SizeOutputPSP()),
+
+           "array" : SP(NullRequestPSP(),dstructures.ArrayOutputPSP()),
+           "is_array" : SP(NullRequestPSP(),dstructures.IsArrayOutputPSP()),
            "dict" : SP(NullRequestPSP(),dstructures.DictOutputPSP()),
 
            "pair" : SP(NullRequestPSP(),dstructures.PairOutputPSP()),
