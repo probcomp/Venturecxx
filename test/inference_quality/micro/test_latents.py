@@ -29,7 +29,6 @@ def testHMMSP1():
   return reportKnownDiscrete("testHMMSP1", ans, predictions)
 
 def testHMMSP2():
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
   ripl.assume("f","""
 (if (flip)
@@ -55,6 +54,6 @@ def testHMMSP2():
   ripl.predict("(f 7)")
   ripl.predict("(f 8)")
 
-  predictions = collectSamples(ripl,"pid",N)
+  predictions = collectSamples(ripl,"pid")
   ans = [(0,0.6528), (1,0.3472)]
   return reportKnownDiscrete("testHMMSP2", ans, predictions)
