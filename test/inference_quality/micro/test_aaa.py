@@ -49,7 +49,7 @@ def testMakeSymDirMult3():
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((if (lt a 10) make_sym_dir_mult make_uc_sym_dir_mult) a 4)")
   ripl.predict("(f)",label="pid")
-  return checkDirichletMultinomial1("flip_C_UC", ripl, "pid",N)
+  return checkDirichletMultinomial1("alternating collapsed/uncollapsed", ripl, "pid",N)
 
 # Test 1:4
 def testMakeSymDirMult4():
@@ -70,7 +70,7 @@ def testMakeSymDirMult4():
  a 4)
 """)
   ripl.predict("(f)",label="pid")
-  return checkDirichletMultinomial1("flip_C_UC_NV", ripl, "pid",N)
+  return checkDirichletMultinomial1("alternating collapsed/uncollapsed-sp/uncollapsed-venture", ripl, "pid",N)
 
 
 # Test 1:5
