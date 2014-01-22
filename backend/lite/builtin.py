@@ -6,7 +6,6 @@ from psp import NullRequestPSP, ESRRefOutputPSP, PSP
 import discrete
 import continuous
 import boolean
-import number
 import dstructures
 import csp
 import crp
@@ -25,14 +24,15 @@ def deterministic(f):
   return SP(NullRequestPSP(), DeterministicPSP())
 
 def builtInSPs():
-  return { "plus" : SP(NullRequestPSP(),number.PlusOutputPSP()),
-           "minus" : SP(NullRequestPSP(),number.MinusOutputPSP()),
-           "times" : SP(NullRequestPSP(),number.TimesOutputPSP()),
-           "div" : SP(NullRequestPSP(),number.DivideOutputPSP()),
-           "eq" : SP(NullRequestPSP(),number.EqualOutputPSP()),
-           "gt" : SP(NullRequestPSP(),number.GreaterThanOutputPSP()),
-           "lt" : SP(NullRequestPSP(),number.LessThanOutputPSP()),
-           "real" : SP(NullRequestPSP(),number.RealOutputPSP()),
+  return { "plus" :  deterministic(lambda *args: sum(args)),
+           "minus" : deterministic(lambda x,y: x - y),
+           "times" : deterministic(lambda *args: reduce(lambda x,y: x * y,args,1)),
+           "div" :   deterministic(lambda x,y: x / y),
+           "eq" :    deterministic(lambda x,y: x == y),
+           "gt" :    deterministic(lambda x,y: x < y),
+           "lt" :    deterministic(lambda x,y: x > y),
+           # Only makes sense with VentureAtom/VentureNumber distinction
+           "real" :  deterministic(lambda x:x),
 
            "sin" : deterministic(math.sin),
            "cos" : deterministic(math.cos),
