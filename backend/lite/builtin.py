@@ -62,6 +62,8 @@ def builtInSPs():
            "make_beta_bernoulli" : SP(NullRequestPSP(),discrete.MakerCBetaBernoulliOutputPSP()),
            "make_uc_beta_bernoulli" : SP(NullRequestPSP(),discrete.MakerUBetaBernoulliOutputPSP()),
 
+           "make_sym_dir_mult" : SP(NullRequestPSP(),discrete.MakerCSymDirMultOutputPSP()),
+
            "make_crp" : SP(NullRequestPSP(),crp.MakeCRPOutputPSP()),
 
            "make_lazy_hmm" : SP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()),

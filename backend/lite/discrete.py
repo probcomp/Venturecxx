@@ -143,24 +143,24 @@ class UBetaBernoulliOutputPSP(RandomPSP):
 
 ################### Symmetric Dirichlet
 
-class MakeSymDirMultPSPOutput(PSP):
+class MakerCSymDirMultOutputPSP(PSP):
   def simulate(self,args):
-    (alpha,n) = args.operandValues[0:2]
-    os = args.operandValues[2] if len(args.operandValues) > 0 else range(n)
-    return SymDirMultSP(DummyWhich(),SymDirMultPSPOutput(alpha,n,os),n)
+    (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
+    os = args.operandValues[2] if len(args.operandValues) > 2 else range(n)
+    return CSymDirMultSP(NullRequestPSP(),CSymDirMultOutputPSP(alpha,n,os),n)
 
   def childrenCanAbsorbAtApplications(self): return True
 
-class SymDirMultSP(SP):
+class CSymDirMultSP(SP):
   def __init__(self,requestPSP,outputPSP,n):
-    super(self,SP).__init__(requestPSP,outputPSP)
+    super(CSymDirMultSP,self).__init__(requestPSP,outputPSP)
     self.n = n
 
-  def constructSPAux(self): return [0.0 for i in range(n)]
+  def constructSPAux(self): return [0.0 for i in range(self.n)]
 
-class SymDirMultPSPOutput(RandomPSP):
+class CSymDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,n,os):
-    self.alpha = float(alpha)
+    self.alpha = alpha
     self.n = n
     self.os = os
 

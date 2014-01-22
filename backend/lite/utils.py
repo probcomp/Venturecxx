@@ -1,5 +1,6 @@
 import random
 import numpy.random as npr
+import math
 
 def normalizeList(seq): 
   denom = sum(seq)
