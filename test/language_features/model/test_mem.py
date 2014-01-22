@@ -71,7 +71,7 @@ def testMemoizingOnAList1():
   """MSP.requestPSP.simulate() needs to quote the values to pass this.
      In CXX, VentureList needs to override several VentureValue methods as well"""
   ripl = config["get_ripl"]()
-  ripl.assume("f","(mem (lambda (x) (flip)))")
+  ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (list 0))",label="pid")
   predictions = collectSamples(ripl,"pid",1)
   assert predictions == [1]
