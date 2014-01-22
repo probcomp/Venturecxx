@@ -162,7 +162,7 @@ def profile(N):
     statprof.stop()
     statprof.display()
 
-def collectSamples(ripl,address,T,kernel="mh",block="one"):
+def collectSamples(ripl,address,T):
   numTransitionsPerSample = config["num_transitions_per_sample"]
   kernel = config["kernel"]
   scope = config["scope"]

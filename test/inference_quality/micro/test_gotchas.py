@@ -30,7 +30,7 @@ def testObserveAPredict1():
   ripl.assume("op4","(if (op3) op2 op1)")
   ripl.predict("(op4)")
   ripl.observe("(op4)",True)
-  predictions = collectSamples(ripl,6,N,kernel="mh")
+  predictions = collectSamples(ripl,6,N)
   ans = [(True,0.75), (False,0.25)]
   return reportKnownDiscrete("TestObserveAPredict1", ans, predictions)
 
