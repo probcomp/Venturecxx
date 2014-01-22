@@ -6,7 +6,6 @@ from testconfig import config
 # Note that different backends have used different conventions
 # for row/column vectors, so I want to make that explicit.
 def testHMMSP1():
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
   ripl.assume("f","""
 (make_lazy_hmm

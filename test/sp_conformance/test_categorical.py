@@ -7,7 +7,6 @@ from testconfig import config
 # 3. make_vector is used instead of array
 def testCategorical1():
   "A simple test that checks the interface of categorical and its simulate method"
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("x", "(categorical (simplex 0.1 0.2 0.3 0.4) (array 1 2 3 4))")

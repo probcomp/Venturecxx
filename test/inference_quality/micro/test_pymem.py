@@ -70,7 +70,6 @@ def testHPYMem1():
 def testHPYLanguageModel1():
   """Nice model from http://www.cs.berkeley.edu/~jordan/papers/teh-jordan-bnp.pdf.
      Checks that it learns that 1 follows 0"""
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   loadPYMem(ripl)

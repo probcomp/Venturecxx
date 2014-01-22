@@ -2,7 +2,6 @@ from venture.test.stats import *
 from testconfig import config
 
 def testEval1():
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("globalEnv","(get_current_environment)")
@@ -14,7 +13,6 @@ def testEval1():
   return reportKnownDiscrete("TestEval1", ans, predictions)
 
 def testEval2():
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)")
@@ -35,7 +33,6 @@ def testEval2():
 
 def testEval3():
   "testEval2 with booby traps"
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)")
@@ -57,7 +54,6 @@ def testEval3():
 
 def testApply1():
   "This CSP does not handle lists and symbols correctly."
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
@@ -71,7 +67,6 @@ def testApply1():
 # Just like dict it could take a list of pairs.
 # It could even take a dict!
 def testExtendEnv1():
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("env1","(get_current_environment)")

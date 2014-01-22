@@ -13,7 +13,6 @@ def testMem1():
 
 def testMem2():
   "Ensures that all (f 1) and (f 2) are the same"
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("x","(f 1)")
@@ -33,7 +32,6 @@ def testMem2():
 
 def testMem3():
   "Same as testMem3 but with booby traps"
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
@@ -74,7 +72,6 @@ def testMem4():
 def testMemoizingOnAList1():
   """MSP.requestPSP.simulate() needs to quote the values to pass this.
      In CXX, VentureList needs to override several VentureValue methods as well"""
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda (x) (flip)))")
   ripl.predict("(f (list 0))",label="pid")
@@ -85,7 +82,6 @@ def testMemoizingOnAList1():
 def testMemoizingOnASymbol1():
   """MSP.requestPSP.simulate() needs to quote the values to pass this.
      In CXX, VentureSymbol needs to override several VentureValue methods as well"""
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (quote sym))",label="pid")
@@ -99,7 +95,6 @@ def testMemHashCollisions1():
    different arguments."""
   from nose import SkipTest
   raise SkipTest("Skipping testMemHashCollisions1")
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda (a b) (normal 0.0 1.0)))")
   for a in range(1000):

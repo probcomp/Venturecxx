@@ -16,7 +16,6 @@ def testMakeSymDirMult1():
 
 def checkMakeSymDirMult1(maker):
   """Extremely simple program, with an AAA procedure when uncollapsed"""
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
   ripl.assume("f", "(%s 1.0 2)" % maker)
   ripl.predict("(f)",label="pid")
@@ -115,7 +114,6 @@ def testMakeBetaBernoulli1():
     yield checkMakeBetaBernoulli1,maker
 
 def checkMakeBetaBernoulli1(maker):
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -136,7 +134,6 @@ def testMakeBetaBernoulli2():
 # testing language feature interactions (in this case AAA with
 # constraint forwarding and brush).
 def checkMakeBetaBernoulli2(maker):
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -154,7 +151,6 @@ def testMakeBetaBernoulli3():
     yield checkMakeBetaBernoulli3,maker
 
 def checkMakeBetaBernoulli3(maker):
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -176,7 +172,6 @@ def testMakeBetaBernoulli4():
     yield checkMakeBetaBernoulli4,maker
 
 def checkMakeBetaBernoulli4(maker):
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -201,7 +196,6 @@ def checkMakeBetaBernoulli4(maker):
 # Therefore this section should try to trigger that assertion.
 
 def testStaleAAA1():
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "1.0")
@@ -218,7 +212,6 @@ def testStaleAAA1():
   return reportKnownDiscrete("TestStaleAAA1", ans, predictions)
 
 def testStaleAAA2():
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "1.0")

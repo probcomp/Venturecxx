@@ -2,7 +2,6 @@ from venture.test.stats import *
 from testconfig import config
 
 def testVentureNormalHMM1():
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("f","""
@@ -44,7 +43,6 @@ def testVentureNormalHMM1():
   return reportKnownContinuous("TestVentureNormalHMM1", cdf, predictions, "N(4.382, 0.786)")
 
 def testVentureBinaryHMM1():
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("f","""

@@ -11,7 +11,6 @@ from testconfig import config
 # and allow either.
 
 def testDict1():
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("x","(bernoulli 1.0)")

@@ -4,7 +4,6 @@ from testconfig import config
 
 def testReferences1():
   """Checks that the program runs without crashing. At some point, this program caused CXX to fire an assert.  When the (flip) had a 0.0 or 1.0 it didn't fail."""
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
   ripl.assume("draw_type0", "(make_crp 1.0)")
   ripl.assume("draw_type1", "(if (flip) draw_type0 (lambda () atom<1>))")
@@ -20,7 +19,6 @@ def testReferences1():
 
 def testReferences2():
   "Simpler version of the old bug testReferences1() tries to trigger"
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
   ripl.assume("f", "(if (flip 0.5) (make_dir_mult 1 1) (lambda () atom<1>))")
   ripl.predict("(f)")

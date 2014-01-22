@@ -3,7 +3,6 @@ from testconfig import config
 
 def testGamma1():
   "Check that Gamma is parameterized correctly"
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a","(gamma 10.0 10.0)")
