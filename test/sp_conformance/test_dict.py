@@ -52,16 +52,3 @@ def testDict3():
   assert ripl.report("p2")
   assert not ripl.report("p3")
   return reportPassage("TestDict3")
-
-def testDict4():
-  ripl = config["get_ripl"]()
-  ripl.assume("d","""(dict (list (array atom<1> atom<2>))
-                           (list (normal 0.0 1.0)))""")
-  ripl.predict("(contains d (array atom<1> atom<2>))",label="p1")
-  ripl.predict("(contains d atom<1>)",label="p2")
-  ripl.predict("(contains d (array atom<1>))",label="p3")
-
-  assert ripl.report("p1")
-  assert not ripl.report("p2")
-  assert not ripl.report("p3")
-  return reportPassage("TestDict4")

@@ -48,6 +48,8 @@ def builtInSPs():
 
            "array" : SP(NullRequestPSP(),dstructures.ArrayOutputPSP()),
            "lookup" : SP(NullRequestPSP(),dstructures.LookupOutputPSP()),
+           "contains" : SP(NullRequestPSP(),dstructures.ContainsOutputPSP()),
+           "dict" : SP(NullRequestPSP(),dstructures.DictOutputPSP()),
 
            "pair" : SP(NullRequestPSP(),dstructures.PairOutputPSP()),
            "list" : SP(NullRequestPSP(),dstructures.ListOutputPSP()),

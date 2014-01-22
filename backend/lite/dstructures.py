@@ -10,6 +10,15 @@ class SimplexOutputPSP(PSP):
 class LookupOutputPSP(PSP):
   def simulate(self,args): return args.operandValues[0][args.operandValues[1]]
 
+class ContainsOutputPSP(PSP):
+  def simulate(self,args): return args.operandValues[1] in args.operandValues[0]
+
+### Dicts
+class DictOutputPSP(PSP):
+  def simulate(self,args): 
+    d = {}
+    d.update(zip(*args.operandValues))
+    return d
 
 ### Lists (use Python lists instead of VenturePairs
 class PairOutputPSP(PSP):
