@@ -32,24 +32,22 @@ def testGoldwater1():
 
   ripl.assume("get_word_id","""
 (mem (lambda (sentence sentence_pos)
-  (branch (= sentence_pos 0)
-    (lambda () (sample_word_id))
-    (lambda ()
-      (branch (is_end (get_word_id sentence (- sentence_pos 1))
-                      (get_pos sentence (- sentence_pos 1)))
-        (lambda () (sample_word_id))
-        (lambda () (get_word_id sentence (- sentence_pos 1))))))))
+  (if (= sentence_pos 0)
+      (sample_word_id)
+      (if (is_end (get_word_id sentence (- sentence_pos 1))
+                  (get_pos sentence (- sentence_pos 1)))
+          (sample_word_id)
+          (get_word_id sentence (- sentence_pos 1))))))
 """)
 
   ripl.assume("get_pos","""
 (mem (lambda (sentence sentence_pos)
-  (branch (= sentence_pos 0)
-    (lambda () 0)
-    (lambda ()
-      (branch (is_end (get_word_id sentence (- sentence_pos 1))
-                      (get_pos sentence (- sentence_pos 1)))
-        (lambda () 0)
-        (lambda () (+ (get_pos sentence (- sentence_pos 1)) 1)))))))
+  (if (= sentence_pos 0)
+      0
+      (if (is_end (get_word_id sentence (- sentence_pos 1))
+                  (get_pos sentence (- sentence_pos 1)))
+        0
+        (+ (get_pos sentence (- sentence_pos 1)) 1)))))
 """)
 
   ripl.assume("sample_symbol","""
