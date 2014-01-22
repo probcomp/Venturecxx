@@ -13,6 +13,8 @@ def assertLinearTime(f):
   ratios = [t/n for (n,t) in norm_times]
   differences = [ratios[i+1] - ratios[i] for i in range(len(ratios)-1)]
   ct_falling = len(filter(lambda r: r < 0, differences))
+  # print times
+  # print ratios
   assert ct_falling > len(ratios)*0.1, "Runtime of f is growing too fast.\nTimes: %r\nRatios: %r" % (times, ratios)
   assert ct_falling < len(ratios)*0.9, "Runtime of f is not growing fast enough.\nTimes: %r\nRatios: %r" % (times, ratios)
 
@@ -25,7 +27,7 @@ def assertLinearTime(f):
 #   runtime.
 def timings(f):
   def try_next(n):
-    return int(math.floor(max(1.2*n, n+1)))
+    return int(math.floor(min(2*n,max(1.2*n, n+5))))
   def stop(duration, sample_ct):
     acceptable_duration = 1 # second
     if duration > acceptable_duration and sample_ct > 10:
