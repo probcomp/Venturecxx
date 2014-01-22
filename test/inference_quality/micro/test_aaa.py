@@ -30,30 +30,27 @@ def testMakeSymDirMult2():
 
 def checkMakeSymDirMult2(maker):
   """Simplest program with collapsed AAA"""
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a 4)" % maker)
   ripl.predict("(f)",label="pid")
-  return checkDirichletMultinomial1(maker, ripl, "pid",N)
+  return checkDirichletMultinomial1(maker, ripl, "pid")
 
 
 # Test 1:3
 def testMakeSymDirMult3():
   """AAA where the SP flips between collapsed and uncollapsed."""
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((if (lt a 10) make_sym_dir_mult make_uc_sym_dir_mult) a 4)")
   ripl.predict("(f)",label="pid")
-  return checkDirichletMultinomial1("alternating collapsed/uncollapsed", ripl, "pid",N)
+  return checkDirichletMultinomial1("alternating collapsed/uncollapsed", ripl, "pid")
 
 # Test 1:4
 def testMakeSymDirMult4():
   """AAA where the SP flips between collapsed, uncollapsed, and native"""
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -69,7 +66,7 @@ def testMakeSymDirMult4():
  a 4)
 """)
   ripl.predict("(f)",label="pid")
-  return checkDirichletMultinomial1("alternating collapsed/uncollapsed-sp/uncollapsed-venture", ripl, "pid",N)
+  return checkDirichletMultinomial1("alternating collapsed/uncollapsed-sp/uncollapsed-venture", ripl, "pid")
 
 
 # Test 1:5
@@ -80,7 +77,6 @@ def testMakeSymDirMult5():
 
 def checkMakeSymDirMult5(maker_1,maker_2):
   """Two AAA SPs with same parameters"""
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -91,7 +87,7 @@ def checkMakeSymDirMult5(maker_1,maker_2):
   for i in range(5): ripl.observe("(g)","true")
   ripl.predict("(if (f) (g) (g))")
   ripl.predict("(if (g) (f) (f))")
-  return checkDirichletMultinomial1(maker_1 + "&" + maker_2, ripl, "pid",N)
+  return checkDirichletMultinomial1(maker_1 + "&" + maker_2, ripl, "pid")
 
 
 ############# (2) Test Misc AAA
@@ -101,13 +97,12 @@ def testMakeSymDirMult1():
     yield checkMakeDirMult1,maker
 
 def checkMakeDirMult1(maker):
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(make_dir_mult (simplex a a a a))")
   ripl.predict("(f)")
-  return checkDirichletMultinomial1("make_dir_mult", ripl, 3, N)
+  return checkDirichletMultinomial1("make_dir_mult", ripl, 3)
 
 def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
@@ -229,7 +224,7 @@ def testStaleAAA2():
 
 #### Helpers
 
-def checkDirichletMultinomial1(maker, ripl, label,N):
+def checkDirichletMultinomial1(maker, ripl, label):
   for i in range(1,4):
     for j in range(20):
       ripl.observe("(f)", "atom<%d>" % i)
