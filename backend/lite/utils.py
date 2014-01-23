@@ -30,3 +30,18 @@ def logDensityDirichlet(theta, alpha):
   alpha = np.array(alpha)
 
   return ss.gammaln(sum(alpha)) - sum(ss.gammaln(alpha)) + np.dot((alpha - 1).T, np.log(theta).T)
+
+def cartesianProduct(xs):
+  if len(xs) == 0: return []
+  elif len(xs) == 1: return xs[0]
+  elif len(xs) == 2:
+    z = []
+    for x in xs[0]:
+      for y in xs[1]:
+        z.append([x,y])
+    return z
+  else:
+    rest = cartesianProduct(xs[1:])
+    oneForEach = [[[u] + v for v in rest] for u in xs[0]]
+    return [item for sublist in oneForEach for item in sublist]
+  
