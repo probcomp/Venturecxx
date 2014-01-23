@@ -1,12 +1,16 @@
 from venture.test.stats import *
 from testconfig import config
 import time
+import cProfile
+import sys
+
+sys.setrecursionlimit(1000000) 
 
 def loadChurchPairProgram(K):
   ripl = config["get_ripl"]()
 
   ripl.assume("make_church_pair","(lambda (x y) (lambda (f) (if (= f 0) x y)))")
-  ripl.assume("church_pair_lookup","(lambda (cp n) (if (= n 0) (cp 0) (church_pair_lookup (cp 1))))")
+  ripl.assume("church_pair_lookup","(lambda (cp n) (if (= n 0) (cp 0) (church_pair_lookup (cp 1) (- n 1))))")
   ripl.assume("cp0","(make_church_pair (flip 0.5) 0)")
     
   for i in range(K):
@@ -14,6 +18,12 @@ def loadChurchPairProgram(K):
 
   ripl.predict('(church_pair_lookup cp%d %d)' % (K, K))
   return ripl
+
+
+def testProfileChurchPairProgram():
+  sivm = loadChurchPairProgram(200)
+  cProfile.runctx("sivm.infer(100)",None,locals())
+
 
 # O(N) forwards
 # O(1) to infer

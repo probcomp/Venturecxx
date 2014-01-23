@@ -10,6 +10,7 @@ class CSPRequestPSP(PSP):
     self.env = env
 
   def simulate(self,args):
+    assert len(self.ids) == len(args.operandNodes)
     extendedEnv = Env(self.env,self.ids,args.operandNodes)
     return Request([ESR(args.node,self.exp,extendedEnv)])
     
