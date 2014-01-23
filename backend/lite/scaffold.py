@@ -30,7 +30,9 @@ class Scaffold:
 def constructScaffold(trace,setsOfPNodes):
   cDRG,cAbsorbing,cAAA = set(),set(),set()
   indexAssignments = {}
+  assert isinstance(setsOfPNodes,list)
   for i in range(len(setsOfPNodes)):
+    assert isinstance(setsOfPNodes[i],set)
     extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i)
 
   brush = findBrush(trace,cDRG,cAbsorbing,cAAA)

@@ -135,14 +135,28 @@ class Trace(object):
     return node in self.ccs
 
   #### For kernels
+  def sampleBlock(self,scope): return self.scopes[scope].sample()[1]
+  def logDensityOfBlock(self,scope): return -1 * math.log(len(self.blocksInScope(scope)))
   def blocksInScope(self,scope): return self.scopes[scope].keys()
-  def sampleBlock(self,scope): return self.scopes[scope].sample()
+  def getAllNodesInScope(self,scope): return set.union(*self.scopes[scope].values())
+  def getOrderedSetsInScope(self,scope): return self.scopes[scope].sortedValues()
+  def getNodesInBlock(self,scope,block): return self.scopes[scope][block]
 
-  def logDensityOfBlock(self,scope,block):
-    return -1 * math.log(len(self.blocksInScope(scope)))
+
   def scopeHasEntropy(self,scope): 
     # right now scope in self.scopes iff it has entropy
     return scope in self.scopes and len(self.blocksInScope(scope)) > 0
+
+
+
+
+
+
+
+
+
+
+
 
   #### External interface to engine.py
   def eval(self,id,exp):

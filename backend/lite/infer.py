@@ -22,48 +22,22 @@ def mixMH(trace,indexer,operator):
 
 class BlockScaffoldIndexer(object):
   def __init__(self,scope,block):
+    if scope == "default" and not (block == "all" or block == "one"):
+        raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
     self.scope = scope
     self.block = block
 
   def sampleIndex(self,trace):
-    if self.scope == "default":
-      if self.block == "one":
-        pnode = trace.samplePrincipalNode()
-        return constructScaffold(trace,[[pnode]])
-      elif self.block == "all":
-        return constructScaffold(trace,[trace.rcs])
-      else:
-        raise Exception("INFER default scope does not admit custom blocks (%r)" % self.block)
-    else:
-      if self.block == "one":
-        goalBlock = trace.sampleBlock(self.scope)
-        pnodes = [trace.scopes[self.scope][goalBlock]]
-      elif self.block == "all":
-        blocks = trace.blocksInScope(self.scope)
-        pnodeSets = [trace.scopes[self.scope][block] for block in blocks]
-        pnodes = [set().union(*pnodeSets)]
-      elif self.block == "ordered":
-        blocks = trace.blocksInScope(self.scope)
-        pnodes = [trace.scopes[self.scope][block] for block in blocks]
-      else:
-        pnodes = [trace.scopes[self.scope][self.block]]
-      return constructScaffold(trace,pnodes)
+    if self.block == "one": return constructScaffold(trace,[trace.sampleBlock(self.scope)])
+    elif self.block == "all": return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
+    elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
+    else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])
 
   def logDensityOfIndex(self,trace,scaffold):
-    if self.scope == "default":
-      if self.block == "one":
-        return trace.logDensityOfPrincipalNode(None) # the actual principal node is irrelevant
-      elif self.block == "all":
-        return 0
-      else:
-        raise Exception("INFER default scope does not admit custom blocks (%r)" % self.block)
-    else:
-      if self.block == "one":
-        return trace.logDensityOfBlock(self.scope,None) # The actual block in irrelevant
-      elif self.block == "all":
-        return 0
-      else:
-        return 0
+    if self.block == "one": return trace.logDensityOfBlock(self.scope)
+    elif self.block == "all": return 0
+    elif self.block == "ordered": return 0
+    else: return 0
 
 class MHOperator(object):
   def propose(self,trace,scaffold):

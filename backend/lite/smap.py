@@ -31,4 +31,8 @@ class SMap:
 
   def sample(self): return random.sample(self.a,1)[0]
 
-  def asArray(self): return [t for (k,t) in self.a]
+  def keys(self): return self.d.keys()
+  def values(self): return [v for (k,v) in self.a]
+  def sortedValues(self): return [v for (k,v) in sorted(self.a, key = lambda kv: kv[0])]
+
+
