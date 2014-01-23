@@ -54,7 +54,7 @@ def repeatTest(func, *args):
     return result
   else:
     print "Retrying suspicious test %s" % result.name
-    results = [result] + [func(*args) for i in range(1,5)]
+    results = [result] + [func(*args) for _ in range(1,5)]
     pval = fisherMethod([r.pval for r in results])
     assert pval > globalReportingThreshold
     report = "\n".join([r.report for r in results])
@@ -162,20 +162,21 @@ def profile(N):
     statprof.stop()
     statprof.display()
 
-def collectSamples(ripl,address,T,kernel="mh",block="one"):
-  numTransitionsPerSample = config["num_transitions_per_sample"]
-  kernel = config["kernel"]
-  scope = config["scope"]
-  block = config["block"]
-  return collectSamplesWith(ripl, address, T, {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block})
+def collectSamples(ripl,address,num_samples=None,infer=None):
+  if num_samples is None:
+    num_samples = int(config["num_samples"])
+  if infer is None:
+    numTransitionsPerSample = config["num_transitions_per_sample"]
+    kernel = config["kernel"]
+    scope = config["scope"]
+    block = config["block"]
+    infer = {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block}
 
-def collectSamplesWith(ripl, address, T, params):
   predictions = []
-  for t in range(T):
+  for _ in range(num_samples):
     # Going direct here saved 5 of 35 seconds on some unscientific
     # tests, presumably by avoiding the parser.
-    ripl.sivm.core_sivm.engine.infer(params)
+    ripl.sivm.core_sivm.engine.infer(infer)
     predictions.append(ripl.report(address))
     ripl.sivm.core_sivm.engine.reset()
   return predictions
-

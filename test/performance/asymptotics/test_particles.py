@@ -5,7 +5,6 @@ import time
 
 def loadHMMParticleAsymptoticProgram1(M):
   """Easiest possible HMM asymptotic test for particles"""
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("f","""

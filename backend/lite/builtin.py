@@ -19,7 +19,6 @@ def builtInValues(): return { "true" : True, "false" : False }
 def deterministic(f):
   class DeterministicPSP(PSP):
     def simulate(self,args):
-      print args
       return f(*args.operandValues)
   return SP(NullRequestPSP(), DeterministicPSP())
 
@@ -33,6 +32,8 @@ def builtInSPs():
            "lt" :    deterministic(lambda x,y: x > y),
            # Only makes sense with VentureAtom/VentureNumber distinction
            "real" :  deterministic(lambda x:x),
+           # Atoms appear to be represented as Python integers
+           "atom_eq" : deterministic(lambda x,y: x == y),
 
            "sin" : deterministic(math.sin),
            "cos" : deterministic(math.cos),
@@ -68,6 +69,9 @@ def builtInSPs():
            "first" : SP(NullRequestPSP(),dstructures.FirstListOutputPSP()),
            "second" : SP(NullRequestPSP(),dstructures.SecondListOutputPSP()),
            "rest" : SP(NullRequestPSP(),dstructures.RestListOutputPSP()),
+
+           # Symbols are Python strings
+           "is_symbol" : deterministic(lambda x: isinstance(x, basestring)),
 
            "flip" : SP(NullRequestPSP(),discrete.BernoulliOutputPSP()),
            "bernoulli" : SP(NullRequestPSP(),discrete.BernoulliOutputPSP()),

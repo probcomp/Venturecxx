@@ -3,7 +3,6 @@ from testconfig import config
 
 def testGoldwater1():
   """Fairly complicated program. Just checks to make sure it runs without crashing."""
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   brent = ["catanddog", "dogandcat", "birdandcat","dogandbird","birdcatdog"]
@@ -34,19 +33,19 @@ def testGoldwater1():
   ripl.assume("get_word_id","""
 (mem (lambda (sentence sentence_pos)
   (if (= sentence_pos 0)
-    (sample_word_id)
-    (if (is_end (get_word_id sentence (- sentence_pos 1))
-                      (get_pos sentence (- sentence_pos 1)))
-        (sample_word_id)
-        (get_word_id sentence (- sentence_pos 1))))))
+      (sample_word_id)
+      (if (is_end (get_word_id sentence (- sentence_pos 1))
+                  (get_pos sentence (- sentence_pos 1)))
+          (sample_word_id)
+          (get_word_id sentence (- sentence_pos 1))))))
 """)
 
   ripl.assume("get_pos","""
 (mem (lambda (sentence sentence_pos)
   (if (= sentence_pos 0)
-    0
-    (if (is_end (get_word_id sentence (- sentence_pos 1))
-                (get_pos sentence (- sentence_pos 1)))
+      0
+      (if (is_end (get_word_id sentence (- sentence_pos 1))
+                  (get_pos sentence (- sentence_pos 1)))
         0
         (+ (get_pos sentence (- sentence_pos 1)) 1)))))
 """)
@@ -65,5 +64,5 @@ def testGoldwater1():
       ripl.predict("(sample_symbol %d %d)" %(i, j))
       ripl.observe("(noisy_true (atom_eq (sample_symbol %d %d) atom<%d>) noise)" %(i, j,d[str(brent[i][j])]), "true")
 
-  ripl.infer(N)
+  ripl.infer(10) # TODO Make this an actual inference quality test.
   return reportPassage("TestGoldwater1")

@@ -2,7 +2,6 @@ from venture.test.stats import *
 from testconfig import config
 
 def testBlockingExample0():
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(scope_include 0 0 (normal 10.0 1.0))")
@@ -11,7 +10,7 @@ def testBlockingExample0():
 
   # If inference only frobnicates b, then the distribution on a
   # remains the prior.
-  predictions = collectSamplesWith(ripl,1,N,{"transitions":10,"kernel":"mh","scope":1,"block":1})
+  predictions = collectSamples(ripl,1,infer={"transitions":10,"kernel":"mh","scope":1,"block":1})
   cdf = stats.norm(loc=10.0, scale=1.0).cdf
   return reportKnownContinuous("testBlockingExample0", cdf, predictions, "N(10.0,1.0)")
 

@@ -326,7 +326,7 @@ class UDirMultAAALKernel(LKernel):
     os = args.operandValues[1] if len(args.operandValues) > 1 else range(len(alpha))
     counts = [count + a for (count,a) in zip(args.madeSPAux,alpha)]
     newTheta = npr.dirichlet(counts)
-    return DirMultSP(NullRequestPSP(),UDirMultOutputPSP(newTheta,os),n)
+    return DirMultSP(NullRequestPSP(),UDirMultOutputPSP(newTheta,os),len(alpha))
 
 class UDirMultOutputPSP(RandomPSP):
   def __init__(self,theta,os):

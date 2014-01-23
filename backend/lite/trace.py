@@ -22,8 +22,10 @@ class Trace(object):
       processMadeSP(self,spNode,False)
       assert isinstance(spNode.value, SPRef)
       self.globalEnv.addBinding(name,spNode)
+    self.globalEnv = Env(self.globalEnv) # New frame so users can shadow globals
 
-    self.ccs = []
+    self.rcs = set()
+    self.ccs = set()
     self.aes = []
     self.families = {}
 #    self.scopes = {} # :: {scope-name:{block-id:set(node)}}
@@ -33,6 +35,8 @@ class Trace(object):
   def unregisterAEKernel(self,node): del self.aes[self.aes.index(node)]
 
   def registerRandomChoice(self,node):
+    assert not node in self.rcs
+    self.rcs.add(node)
     self.registerRandomChoiceInScope(node,"default",node)
     for (scope,block) in node.scopes.iteritems(): 
       self.registerRandomChoiceInScope(node,scope,block)
@@ -45,6 +49,8 @@ class Trace(object):
     assert not scope == "default" or len(self.scopes[scope][block]) == 1
 
   def unregisterRandomChoice(self,node): 
+    assert node in self.rcs
+    self.rcs.remove(node)
     self.unregisterRandomChoiceInScope(node,"default",node)
     for (scope,block) in node.scopes.iteritems(): 
       self.unregisterRandomChoiceInScope(node,scope,block)
@@ -58,12 +64,12 @@ class Trace(object):
 
 
   def registerConstrainedChoice(self,node):
-    self.ccs.append(node)
+    self.ccs.add(node)
     self.unregisterRandomChoice(node)
 
   def unregisterConstrainedChoice(self,node):
     assert node in self.ccs
-    del self.ccs[self.ccs.index(node)]
+    self.ccs.remove(node)
     if self.pspAt(node).isRandom(): self.registerRandomChoice(node)
 
   def createConstantNode(self,val): return ConstantNode(val)
@@ -209,7 +215,7 @@ class Trace(object):
 
   def getGlobalLogScore(self):
     # TODO Get the constrained nodes too
-    return sum([self.logDensityAt(node,self.valueAt(node)) for node in self.rcs + self.ccs])
+    return sum([self.logDensityAt(node,self.valueAt(node)) for node in self.rcs.union(self.ccs)])
 
   #### Helpers (shouldn't be class methods)
 
