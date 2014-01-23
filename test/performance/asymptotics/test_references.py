@@ -21,7 +21,7 @@ def loadChurchPairProgram(K):
 
 
 def testProfileChurchPairProgram():
-  sivm = loadChurchPairProgram(200)
+  sivm = loadChurchPairProgram(100)
   cProfile.runctx("sivm.infer(100)",None,locals())
 
 
@@ -46,13 +46,14 @@ def testChurchPairProgram1():
 def loadReferencesProgram(K):
   ripl = config["get_ripl"]()
   ripl.assume("make_ref","(lambda (x) (lambda () x))")
+  ripl.assume("deref","(lambda (r) (r))")
 
   ripl.assume("cp0","(list (make_ref (flip)))")
     
   for i in range(K):
     ripl.assume('cp%d' % (i+1), '(pair (make_ref (flip)) cp%d)' % i)
 
-  ripl.predict('(lookup cp%d %d)' % (K, K))
+  ripl.predict('(deref (lookup cp%d %d))' % (K, K))
   return ripl
 
 # O(N) forwards
