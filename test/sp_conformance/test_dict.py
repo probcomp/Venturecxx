@@ -11,7 +11,6 @@ from testconfig import config
 # and allow either.
 
 def testDict1():
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   ripl.assume("x","(bernoulli 1.0)")
@@ -23,7 +22,7 @@ def testDict1():
                            (lookup d (quote y)))
                          1.0)""")
 
-  predictions = collectSamples(ripl,3,N)
+  predictions = collectSamples(ripl,3)
   cdf = stats.norm(loc=20, scale=2).cdf
   return reportKnownContinuous("TestDict1", cdf, predictions, "N(20,2)")
 

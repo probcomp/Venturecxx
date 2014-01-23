@@ -22,6 +22,7 @@ class Trace(object):
       processMadeSP(self,spNode,False)
       assert isinstance(spNode.value, SPRef)
       self.globalEnv.addBinding(name,spNode)
+    self.globalEnv = Env(self.globalEnv) # New frame so users can shadow globals
 
     self.rcs = [] # TODO make this an EasyEraseVector
     self.ccs = []

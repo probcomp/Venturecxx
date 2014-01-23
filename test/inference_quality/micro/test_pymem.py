@@ -52,17 +52,17 @@ def loadHPYModel1(ripl,topCollapsed,botCollapsed):
   if botCollapsed: ripl.assume("f","(pymem alpha d intermediate_dist)")
   else: ripl.assume("f","(uc_pymem alpha d intermediate_dist)")
 
-def predictHPY(N,topCollapsed,botCollapsed):
+def predictHPY(topCollapsed,botCollapsed):
   ripl = RIPL()
   loadHPY(ripl,topCollapsed,botCollapsed)
   ripl.predict("(f)",label="pid")
   observeCategories(ripl,[2,2,5,1,0])
-  return collectSamples(ripl,"pid",N)
+  return collectSamples(ripl,"pid")
 
 def testHPYMem1():
   from nose import SkipTest
   raise SkipTest("Skipping testHPYMem1: no p-value test for comparing empirical distributions")
-  data = [countPredictions(predictHPY(N,top,bot), [0,1,2,3,4]) for top in [True,False] for bot in [True,False]]
+  data = [countPredictions(predictHPY(top,bot), [0,1,2,3,4]) for top in [True,False] for bot in [True,False]]
   return reportKnownEqualDistributions(data)
 
 ####
@@ -70,7 +70,6 @@ def testHPYMem1():
 def testHPYLanguageModel1():
   """Nice model from http://www.cs.berkeley.edu/~jordan/papers/teh-jordan-bnp.pdf.
      Checks that it learns that 1 follows 0"""
-  N = config["num_samples"]
   ripl = config["get_ripl"]()
 
   loadPYMem(ripl)
@@ -105,6 +104,6 @@ def testHPYLanguageModel1():
 
   ripl.predict("((G (list atom<0>)))",label="pid")
 
-  predictions = collectSamples(ripl,"pid",N)
+  predictions = collectSamples(ripl,"pid")
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
   return reportKnownDiscrete("testHPYLanguageModel1 (approximate)", ans, predictions)
