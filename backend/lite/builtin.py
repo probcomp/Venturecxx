@@ -32,6 +32,8 @@ def builtInSPs():
            "lt" :    deterministic(lambda x,y: x > y),
            # Only makes sense with VentureAtom/VentureNumber distinction
            "real" :  deterministic(lambda x:x),
+           # Atoms appear to be represented as Python integers
+           "atom_eq" : deterministic(lambda x,y: x == y),
 
            "sin" : deterministic(math.sin),
            "cos" : deterministic(math.cos),
