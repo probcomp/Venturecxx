@@ -68,6 +68,9 @@ def builtInSPs():
            "second" : SP(NullRequestPSP(),dstructures.SecondListOutputPSP()),
            "rest" : SP(NullRequestPSP(),dstructures.RestListOutputPSP()),
 
+           # Symbols are Python strings
+           "is_symbol" : deterministic(lambda x: isinstance(x, basestring)),
+
            "flip" : SP(NullRequestPSP(),discrete.BernoulliOutputPSP()),
            "bernoulli" : SP(NullRequestPSP(),discrete.BernoulliOutputPSP()),
            "categorical" : SP(NullRequestPSP(),discrete.CategoricalOutputPSP()),
