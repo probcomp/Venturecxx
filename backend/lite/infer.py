@@ -6,8 +6,8 @@ from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
 from node import ApplicationNode, OutputNode
-from lkernel import VariationalLKernel
-from utils import simulateCategorical
+from lkernel import VariationalLKernel, DeterministicLKernel
+from utils import simulateCategorical, cartesianProduct
 
 def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
@@ -112,6 +112,70 @@ class MeanfieldOperator(object):
     else:
       self.delegate.reject()
 
+
+################## Enumerative Gibbs
+
+def getCurrentValues(trace,pnodes): return [trace.valueAt(pnode) for pnode in pnodes]
+def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
+  for (pnode,currentValue) in zip(pnodes,currentValues):
+    assert not isinstance(currentValue,list)
+    scaffold.lkernels[pnode] = DeterministicLKernel(trace.pspAt(pnode),currentValue)
+
+def getCartesianProductOfEnumeratedValues(trace,pnodes):
+  assert len(pnodes) > 0
+  enumeratedValues = [[[v] for v in trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode))] for pnode in pnodes]
+  assert len(enumeratedValues) > 0
+  return cartesianProduct(enumeratedValues)
+
+
+class EnumerativeGibbsOperator(object):
+
+  def propose(self,trace,scaffold):
+    self.trace = trace
+    self.scaffold = scaffold
+    assertTrace(self.trace,self.scaffold)
+
+    pnodes = scaffold.getPrincipalNodes()
+    currentValues = getCurrentValues(trace,pnodes)
+    allSetsOfValues = getCartesianProductOfEnumeratedValues(trace,pnodes)
+
+    registerDeterministicLKernels(trace,scaffold,pnodes,currentValues)
+
+    rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
+    assert isinstance(self.rhoDB,OmegaDB)
+    assertTorus(scaffold)
+    xiWeights = []
+    xiDBs = []
+
+    for newValues in allSetsOfValues:
+      if newValues == currentValues: continue
+      assertTorus(scaffold)
+      registerDeterministicLKernels(trace,scaffold,pnodes,newValues)
+      xiWeights.append(regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),{}))
+      xiDBs.append(detachAndExtract(trace,scaffold.border[0],scaffold)[1])
+
+    # Now sample a NEW particle in proportion to its weight
+    finalIndex = simulateCategorical([math.exp(w) for w in xiWeights])
+    xiWeight = xiWeights[finalIndex]
+    self.xiDB = xiDBs[finalIndex]
+
+    weightMinusXi = math.log(sum([math.exp(w) for w in xiWeights]) + math.exp(rhoWeight) - math.exp(xiWeight))
+    weightMinusRho = math.log(sum([math.exp(w) for w in xiWeights]))
+
+    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.xiDB,{})
+
+    return weightMinusRho - weightMinusXi
+
+  def accept(self): pass
+  def reject(self):
+    detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
+    assertTorus(self.scaffold)
+    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
+
+
+
+
+      
 ################## PGibbs
 
 # Construct ancestor path backwards
@@ -146,14 +210,11 @@ class PGibbsOperator(object):
     self.trace = trace
     self.scaffold = scaffold
 
-    ### TODO TEMPORARY
     assertTrace(self.trace,self.scaffold)
   
     self.T = len(self.scaffold.border)
-#    assert self.T == 5
     T = self.T
     P = self.P
-    ### END INSANITY
 
     rhoWeights = [None for t in range(T)]
     omegaDBs = [[None for p in range(P+1)] for t in range(T)]
@@ -173,7 +234,7 @@ class PGibbsOperator(object):
       regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),{})
       (xiWeights[p],omegaDBs[0][p]) = detachAndExtract(trace,scaffold.border[0],scaffold)
 
-#    for every time step,
+#   for every time step,
     for t in range(1,T):
       newWeights = [None for p in range(P)]
       # Sample new particle and propagate
@@ -189,34 +250,25 @@ class PGibbsOperator(object):
 
     # Now sample a NEW particle in proportion to its weight
     finalIndex = simulateCategorical([math.exp(w) for w in xiWeights])
-#    assert finalIndex == 0
     rhoWeight = rhoWeights[T-1]
     xiWeight = xiWeights[finalIndex]
 
     weightMinusXi = math.log(sum([math.exp(w) for w in xiWeights]) + math.exp(rhoWeight) - math.exp(xiWeight))
     weightMinusRho = math.log(sum([math.exp(w) for w in xiWeights]))
 
-#    assert weightMinusXi == rhoWeight
-#    assert weightMinusRho == xiWeight
-
     path = constructAncestorPath(ancestorIndices,T-1,finalIndex) + [finalIndex]
     assert len(path) == T
-#    assert path == [0]
     restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,T,path)
     assertTrace(self.trace,self.scaffold)
     alpha = weightMinusRho - weightMinusXi
-#    print "alpha: ",alpha
     return alpha
 
   def accept(self):
-#    print "."
     pass
   def reject(self):
-#    print "!"
     detachRest(self.trace,self.scaffold.border,self.scaffold,self.T)
     assertTorus(self.scaffold)
     path = constructAncestorPath(self.ancestorIndices,self.T-1,self.P) + [self.P]
-#    assert path == [self.P]
     assert len(path) == self.T
     restoreAncestorPath(self.trace,self.scaffold.border,self.scaffold,self.omegaDBs,self.T,path)
     assertTrace(self.trace,self.scaffold)

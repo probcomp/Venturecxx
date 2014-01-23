@@ -3,14 +3,16 @@ from psp import ESRRefOutputPSP
 from spref import SPRef
 
 class Scaffold:
-  def __init__(self,regenCounts={},absorbing=set(),aaa=set(),border=[],lkernels={}):
+  def __init__(self,setsOfPNodes=[],regenCounts={},absorbing=set(),aaa=set(),border=[],lkernels={}):
     assert type(regenCounts) is dict
+    self.setsOfPNodes = setsOfPNodes
     self.regenCounts = regenCounts
     self.absorbing = absorbing
     self.aaa = aaa
     self.border = border
     self.lkernels = lkernels
 
+  def getPrincipalNodes(self): return set.union(*self.setsOfPNodes)
   def getRegenCount(self,node): return self.regenCounts[node]
   def incrementRegenCount(self,node): self.regenCounts[node] += 1
   def decrementRegenCount(self,node): self.regenCounts[node] -= 1
@@ -41,7 +43,7 @@ def constructScaffold(trace,setsOfPNodes):
   regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
   lkernels = loadKernels(trace,drg,aaa)
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
-  return Scaffold(regenCounts,absorbing,aaa,borderSequence,lkernels)
+  return Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels)
 
 def addResamplingNode(trace,drg,absorbing,q,node,indexAssignments,i):
   if node in absorbing: absorbing.remove(node)

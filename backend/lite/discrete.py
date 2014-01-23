@@ -11,18 +11,19 @@ from lkernel import LKernel
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args):
-    if len(args.operandValues) >= 1:
-      return random.random() < args.operandValues[0]
-    else:
-      return random.random() < 0.5
+    p = args.operandValues[0] if args.operandValues else 0.5
+    return random.random() < p
     
   def logDensity(self,val,args):
-    if len(args.operandValues) >= 1:
-      p = args.operandValues[0]
-    else:
-      p = 0.5
+    p = args.operandValues[0] if args.operandValues else 0.5
     if val: return math.log(p)
     else: return math.log(1 - p)
+
+  def enumerateValues(self,args):
+    p = args.operandValues[0] if args.operandValues else 0.5
+    if p == 1: return [True]
+    elif p == 0: return [False]
+    else: return [True,False]
 
 class CategoricalOutputPSP(RandomPSP):
   # (categorical ps outputs)

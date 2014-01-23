@@ -1,0 +1,38 @@
+from venture.test.stats import *
+from testconfig import config
+
+# TODO N needs to be managed here more intelligently
+def testEnumerativeGibbsBasic1():
+  """Basic sanity test"""
+  ripl = config["get_ripl"]()
+  ripl.predict("(bernoulli)",label="pid")
+
+  predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs"})
+  ans = [(True,.5),(False,.5)]
+  return reportTest(reportKnownDiscrete("TestEnumerativeGibbsBasic1", ans, predictions))
+
+def testEnumerativeGibbsXOR1():
+  """Tests that an XOR chain mixes with enumerative gibbs.
+     Note that with RESET=True, this will seem to mix with MH.
+     The next test accounts for that."""
+  ripl = config["get_ripl"]()
+
+  ripl.assume("x","(scope_include 0 0 (bernoulli 0.001))",label="pid")
+  ripl.assume("y","(scope_include 0 0 (bernoulli 0.001))")
+  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+  ripl.observe("(noisy_true (= (+ x y) 1) .001)","true")
+  predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs"})
+  ans = [(True,.5),(False,.5)]
+  return reportTest(reportKnownDiscrete("TestEnumerativeGibbsXOR1", ans, predictions))
+
+def testEnumerativeGibbsXOR2():
+  """Tests that an XOR chain mixes with enumerative gibbs."""
+  ripl = config["get_ripl"]()
+
+  ripl.assume("x","(scope_include 0 0 (bernoulli 0.0015))",label="pid")
+  ripl.assume("y","(scope_include 0 0 (bernoulli 0.0005))")
+  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+  ripl.observe("(noisy_true (= (+ x y) 1) .001)","true")
+  predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs"})
+  ans = [(True,.667),(False,.333)]
+  return reportTest(reportKnownDiscrete("TestEnumerativeGibbsXOR2", ans, predictions))

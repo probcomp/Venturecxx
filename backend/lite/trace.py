@@ -6,7 +6,7 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, teardownMadeSP, unevalFamily
 from spref import SPRef
 from scaffold import Scaffold
-from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,PGibbsOperator
+from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator
 import random
 from omegadb import OmegaDB
 from smap import SMap
@@ -202,6 +202,8 @@ class Trace(object):
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MHOperator())
       elif params["kernel"] == "meanfield":
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MeanfieldOperator(10,0.0001))
+      elif params["kernel"] == "gibbs":
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
       elif params["kernel"] == "pgibbs":
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(20))
       else: raise Exception("INFER (%s) MH is implemented" % params["kernel"])
