@@ -195,7 +195,7 @@ class CSymDirMultOutputPSP(RandomPSP):
     index = self.os.index(val)
     args.spaux[index] -= 1
         
-  def logDensityOfState(self,aux):
+  def logDensityOfCounts(self,aux):
     N = sum(aux)
     A = self.alpha * self.n
 
@@ -292,7 +292,7 @@ class CDirMultOutputPSP(RandomPSP):
     index = self.os.index(val)
     args.spaux[index] -= 1
         
-  def logDensityOfState(self,aux):
+  def logDensityOfCounts(self,aux):
     N = sum(aux)
     A = sum(self.alpha)
 
