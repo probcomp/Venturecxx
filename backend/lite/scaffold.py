@@ -140,6 +140,7 @@ def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
       regenCounts[node] = len(trace.childrenAt(node))
   
   if aaa:
+    assert False
     for node in drg.union(absorbing):
       for parent in trace.parentsAt(node):
         maybeIncrementAAARegenCount(trace,regenCounts,aaa,parent)

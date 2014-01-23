@@ -171,7 +171,7 @@ class MakerCSymDirMultOutputPSP(PSP):
     os = args.operandValues[2] if len(args.operandValues) > 2 else range(n)
     return DirMultSP(NullRequestPSP(),CSymDirMultOutputPSP(alpha,n,os),n)
 
-  def childrenCanAbsorbAtApplications(self): return True
+  def childrenCanAAA(self): return True
 
 class CSymDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,n,os):
@@ -268,7 +268,8 @@ class MakerCDirMultOutputPSP(PSP):
     os = args.operandValues[1] if len(args.operandValues) > 1 else range(len(alpha))
     return DirMultSP(NullRequestPSP(),CDirMultOutputPSP(alpha,os),len(alpha))
 
-  def childrenCanAbsorbAtApplications(self): return True
+  def childrenCanAAA(self): return True
+
 
 class CDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,os):

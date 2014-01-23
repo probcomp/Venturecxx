@@ -147,7 +147,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
       trace.registerFamilyAt(node,esr.id,esrParent)
     else:
       esrParent = trace.spauxAt(node).getFamily(esr.id)
-      weight += regen(trace,esrParent,scaffold,shouldRestore,omegaDB,gradients)
+
     esrParent = trace.spauxAt(node).getFamily(esr.id)
     if esr.block: trace.registerBlock(esr.block,esr.subblock,esrParent)
     trace.addESREdge(esrParent,node.outputNode)

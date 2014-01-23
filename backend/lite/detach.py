@@ -4,7 +4,6 @@ from psp import ESRRefOutputPSP
 from sp import SP
 from spref import SPRef
 
-
 def detachAndExtract(trace,border,scaffold):
   weight = 0
   omegaDB = OmegaDB()
@@ -120,7 +119,5 @@ def unevalRequests(trace,node,scaffold,omegaDB):
       trace.unregisterFamilyAt(node,esr.id)
       omegaDB.registerSPFamily(trace.spAt(node),esr.id,esrParent)
       weight += unevalFamily(trace,esrParent,scaffold,omegaDB)
-    else: 
-      weight += extract(trace,esrParent,scaffold,omegaDB)
 
   return weight
