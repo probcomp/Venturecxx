@@ -20,11 +20,11 @@ import math
 
 ### Expressions
 
-## <exp> := symbol
+## <expr> := symbol
 ##       := value
 ##       := [references]
 
-## <list_exp> := [ref("lambda"), ref([symbol]), ref(exp)]
+## <list_expr> := [ref("lambda"), ref([symbol]), ref(expr)]
 ##            := [ref("op_name"), ... refs of arguments]
 
 
@@ -44,7 +44,7 @@ def loadEnvironments(ripl):
       (list (make_ref bernoulli) (make_ref normal) (make_ref plus) (make_ref times)))))
 """)
 
-  ripl.assume("extend_environment","""
+  ripl.assume("extend_env","""
   (lambda (outer_env syms vals) 
     (pair (dict syms vals) outer_env))
 """)
@@ -64,26 +64,26 @@ def loadIncrementalEvaluator(ripl):
 
   ripl.assume("incremental_apply","""
   (lambda (operator operands)
-    (incremental_eval (deref (list_ref operator 2))
-		      (extend_environment (deref (list_ref operator 0))
-					  (map_list deref (deref (list_ref operator 1)))
+    (incremental_eval (deref (lookup operator 2))
+		      (extend_env (deref (lookup operator 0))
+					  (map_list deref (deref (lookup operator 1)))
 					  operands)))
 """)
 
   ripl.assume("incremental_eval","""
-  (lambda (exp env)
-    (if (is_symbol exp)
-	(deref (find_symbol exp env))
-	(if (not (is_pair exp))
-	    exp
-	    (if (= (deref (list_ref exp 0)) (quote lambda))
-		(pair (make_ref env) (rest exp))
+  (lambda (expr env)
+    (if (is_symbol expr)
+	(deref (find_symbol expr env))
+	(if (not (is_pair expr))
+	    expr
+	    (if (= (deref (lookup expr 0)) (quote lambda))
+		(pair (make_ref env) (rest expr))
 		((lambda (operator operands)
 		   (if (is_pair operator)
 		       (incremental_apply operator operands)
 		       (incremental_venture_apply operator operands)))
-		 (incremental_eval (deref (list_ref exp 0)) env)
-		 (map_list (lambda (x) (make_ref (incremental_eval (deref x) env))) (rest exp)))))))
+		 (incremental_eval (deref (lookup expr 0)) env)
+		 (map_list (lambda (x) (make_ref (incremental_eval (deref x) env))) (rest expr)))))))
 """)
   
 
@@ -124,23 +124,23 @@ def testIncrementalEvaluator2():
   ripl.assume("genLeaf","(lambda () (normal 3 2))")
   ripl.assume("genVar","(lambda (x) x)")
 
-  ripl.assume("genExp","""
+  ripl.assume("genExpr","""
 (lambda (x)
   (if (flip 0.7) 
       (genLeaf)
       (if (flip 0.9)
           (genVar x)
-          (list (make_ref (genBinaryOp)) (make_ref (genExp x)) (make_ref (genExp x))))))
+          (list (make_ref (genBinaryOp)) (make_ref (genExpr x)) (make_ref (genExpr x))))))
 """)
 
   ripl.assume("noise","(gamma 2 2)")
-  ripl.assume("exp","(genExp (quote x))")
+  ripl.assume("expr","(genExpr (quote x))")
 
   ripl.assume("f","""
 (mem 
   (lambda (y) 
-    (incremental_eval exp 
-                      (extend_environment (incremental_initial_environment) 
+    (incremental_eval expr 
+                      (extend_env (incremental_initial_environment) 
                                           (list (quote x)) 
                                           (list (make_ref y))))))
 """)

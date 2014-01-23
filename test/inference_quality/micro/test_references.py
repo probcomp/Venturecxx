@@ -8,7 +8,7 @@ def testReferences1():
   ripl = config["get_ripl"]()
   ripl.assume("draw_type0", "(make_crp 1.0)")
   ripl.assume("draw_type1", "(if (flip) draw_type0 (lambda () atom<1>))")
-  ripl.assume("draw_type2", "(make_dir_mult 1 1)")
+  ripl.assume("draw_type2", "(make_dir_mult (simplex 1.0 1.0))")
   ripl.assume("class", "(if (flip) (lambda (name) (draw_type1)) (lambda (name) (draw_type2)))")
   ripl.predict("(class 1)")
   ripl.predict("(flip)")
@@ -22,7 +22,7 @@ def testReferences2():
   "Simpler version of the old bug testReferences1() tries to trigger"
   N = config["num_samples"]
   ripl = config["get_ripl"]()
-  ripl.assume("f", "(if (flip 0.5) (make_dir_mult 1 1) (lambda () atom<1>))")
+  ripl.assume("f", "(if (flip 0.5) (make_dir_mult (simplex 1.0 1.0)) (lambda () atom<1>))")
   ripl.predict("(f)")
 
   predictions = collectSamples(ripl,2,N)

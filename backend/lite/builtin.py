@@ -45,6 +45,8 @@ def builtInSPs():
 
            "not" : deterministic(lambda x: not x),
 
+           "is_symbol" : deterministic(lambda x: isinstance(x,str)),
+
            "simplex" : SP(NullRequestPSP(),dstructures.SimplexOutputPSP()),
 
 

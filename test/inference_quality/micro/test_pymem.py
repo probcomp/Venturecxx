@@ -97,7 +97,7 @@ def testHPYLanguageModel1():
   for i in range(1,len(atoms)):
     ripl.observe("""
 (noisy_true
-  (atom_eq
+  (eq
     ((G (list atom<%d>)))
     atom<%d>)
   0.001)
