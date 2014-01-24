@@ -28,8 +28,10 @@ def builtInSPs():
            "times" : deterministic(lambda *args: reduce(lambda x,y: x * y,args,1)),
            "div" :   deterministic(lambda x,y: x / y),
            "eq" :    deterministic(lambda x,y: x == y),
-           "gt" :    deterministic(lambda x,y: x < y),
-           "lt" :    deterministic(lambda x,y: x > y),
+           "gt" :    deterministic(lambda x,y: x > y),
+           "gte" :    deterministic(lambda x,y: x >= y),           
+           "lt" :    deterministic(lambda x,y: x < y),
+           "lte" :    deterministic(lambda x,y: x >= y),           
            # Only makes sense with VentureAtom/VentureNumber distinction
            "real" :  deterministic(lambda x:x),
            # Atoms appear to be represented as Python integers
