@@ -107,6 +107,7 @@ def extractValue(d):
   else: return d
 
 
+@statisticalTest
 def testIncrementalEvaluator1():
   "Incremental version of micro/test_basic_stats.py:testBernoulli1"
   from nose import SkipTest
@@ -116,7 +117,7 @@ def testIncrementalEvaluator1():
   ripl.predict("(incremental_eval (quote (branch (bernoulli 0.3) (normal 0.0 1.0) (normal 10.0 1.0))))")
   predictions = collectSamples(ripl,2)
   cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
-  return reportTest(reportKnownContinuous("TestIncrementalEvaluator1", cdf, predictions, "0.7*N(0,1) + 0.3*N(10,1)"))
+  return reportKnownContinuous("TestIncrementalEvaluator1", cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
 
 def testIncrementalEvaluator2():

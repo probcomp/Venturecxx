@@ -5,6 +5,7 @@ from testconfig import config
 # Not sure what the interface to make_lazy_hmm should be.
 # Note that different backends have used different conventions
 # for row/column vectors, so I want to make that explicit.
+@statisticalTest
 def testHMMSP1():
   ripl = config["get_ripl"]()
   ripl.assume("f","""
@@ -28,6 +29,7 @@ def testHMMSP1():
   ans = [(0,0.6528), (1,0.3472)]
   return reportKnownDiscrete("testHMMSP1", ans, predictions)
 
+@statisticalTest
 def testHMMSP2():
   ripl = config["get_ripl"]()
   ripl.assume("f","""

@@ -8,6 +8,7 @@ def testInferWithNoEntropy():
   ripl.predict("(if true 1 2)")
   ripl.infer(1)
   
+@statisticalTest
 def testOuterMix1():
   "Makes sure that the mix-mh weights are correct"
   ripl = config["get_ripl"]()
@@ -17,6 +18,7 @@ def testOuterMix1():
   ans = [(1,.5), (2,.25), (3,.25)]
   return reportKnownDiscrete("TestOuterMix1", ans, predictions)
 
+@statisticalTest
 def testObserveAPredict1():
   """Tests that constrain propagates the change along
      identity edges. This will fail in all current Ventures."""
@@ -32,6 +34,7 @@ def testObserveAPredict1():
   ans = [(True,0.75), (False,0.25)]
   return reportKnownDiscrete("TestObserveAPredict1", ans, predictions)
 
+@statisticalTest
 def testObserveAPredict2():
   """This test will fail at first, since we previously considered a program like this to be illegal
      and thus did not handle it correctly (we let the predict go stale). So we do not continually
