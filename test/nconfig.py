@@ -4,7 +4,7 @@ global config
 config = {}
 
 config["num_samples"] = 50
-config["num_transitions_per_sample"] = 100
+config["num_transitions_per_sample"] = 50
 config["should_reset"] = True
 config["get_ripl"] = make_lite_church_prime_ripl
 config["global_reporting_threshold"] = 0.001

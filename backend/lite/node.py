@@ -51,6 +51,7 @@ class ApplicationNode(Node):
       print "is a: " + str(type(self.operatorNode.value))
     assert isinstance(self.operatorNode.value,SPRef)
     assert isinstance(self.operatorNode.value.makerNode,Node)
+    assert not self.operatorNode.value.makerNode.madeSP is None
     assert isinstance(self.operatorNode.value.makerNode.madeSP,SP)
     return self.operatorNode.value
 

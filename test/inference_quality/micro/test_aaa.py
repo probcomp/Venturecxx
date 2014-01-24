@@ -10,6 +10,8 @@ from testconfig import config
 ############## (1) Test SymDirMult AAA
 
 # Test 1:1
+
+# TODO nosetests does not find this test for some reason
 def testMakeSymDirMult1():
   for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
     yield checkMakeSymDirMult1,maker
@@ -44,7 +46,7 @@ def testMakeSymDirMult3():
   ripl = config["get_ripl"]()
 
   ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "((if (lt a 10) make_sym_dir_mult make_sym_dir_mult) a 4)")
+  ripl.assume("f", "((if (lt a 100) make_sym_dir_mult make_sym_dir_mult) a 4)")
   ripl.predict("(f)",label="pid")
   return checkDirichletMultinomial1("alternating collapsed/collapsed", ripl, "pid")
 
