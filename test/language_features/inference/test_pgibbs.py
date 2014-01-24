@@ -2,6 +2,7 @@ from venture.test.stats import *
 from testconfig import config
 
 # TODO N needs to be managed here more intelligently
+@statisticalTest
 def testPGibbsBlockingMHHMM1():
   """The point of this is that it should give reasonable results in very few transitions but with a large number of particles."""
   ripl = config["get_ripl"]()
@@ -26,6 +27,5 @@ def testPGibbsBlockingMHHMM1():
   ripl.predict("x4",label="pid")
 
   predictions = collectSamples(ripl,"pid",infer={"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered"})
-  reportKnownMeanVariance("TestPGibbsBlockingMHHMM1", 390/89.0, 55/89.0, predictions)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous("TestPGibbsBlockingMHHMM1", cdf, predictions, "N(4.382, 0.786)")

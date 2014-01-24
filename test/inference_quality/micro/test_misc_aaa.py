@@ -5,6 +5,7 @@ def testMakeDirMult1():
   for maker in ["make_dir_mult","make_uc_dir_mult"]:
     yield checkMakeDirMult1,maker
 
+@statisticalTest
 def checkMakeDirMult1(maker):
   ripl = config["get_ripl"]()
 
@@ -17,6 +18,7 @@ def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
     yield checkMakeBetaBernoulli1,maker
 
+@statisticalTest
 def checkMakeBetaBernoulli1(maker):
   ripl = config["get_ripl"]()
 
@@ -37,6 +39,7 @@ def testMakeBetaBernoulli2():
 # These three represent mechanisable ways of fuzzing a program for
 # testing language feature interactions (in this case AAA with
 # constraint forwarding and brush).
+@statisticalTest
 def checkMakeBetaBernoulli2(maker):
   ripl = config["get_ripl"]()
 
@@ -54,6 +57,7 @@ def testMakeBetaBernoulli3():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
     yield checkMakeBetaBernoulli3,maker
 
+@statisticalTest
 def checkMakeBetaBernoulli3(maker):
   ripl = config["get_ripl"]()
 
@@ -75,6 +79,7 @@ def testMakeBetaBernoulli4():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
     yield checkMakeBetaBernoulli4,maker
 
+@statisticalTest
 def checkMakeBetaBernoulli4(maker):
   ripl = config["get_ripl"]()
 
@@ -99,6 +104,7 @@ def checkMakeBetaBernoulli4(maker):
 # assert that a makerNode has been regenerated before applying it.
 # Therefore this section should try to trigger that assertion.
 
+@statisticalTest
 def testStaleAAA1():
   ripl = config["get_ripl"]()
 
@@ -115,6 +121,7 @@ def testStaleAAA1():
   ans = [(1,.9), (0,.1)]
   return reportKnownDiscrete("TestStaleAAA1", ans, predictions)
 
+@statisticalTest
 def testStaleAAA2():
   ripl = config["get_ripl"]()
 

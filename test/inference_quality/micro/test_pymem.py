@@ -59,6 +59,7 @@ def predictHPY(topCollapsed,botCollapsed):
   observeCategories(ripl,[2,2,5,1,0])
   return collectSamples(ripl,"pid")
 
+@statisticalTest
 def testHPYMem1():
   from nose import SkipTest
   raise SkipTest("Skipping testHPYMem1: no p-value test for comparing empirical distributions")
@@ -67,6 +68,7 @@ def testHPYMem1():
 
 ####
 
+@statisticalTest
 def testHPYLanguageModel1():
   """Nice model from http://www.cs.berkeley.edu/~jordan/papers/teh-jordan-bnp.pdf.
      Checks that it learns that 1 follows 0"""

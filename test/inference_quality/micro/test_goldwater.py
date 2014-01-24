@@ -66,4 +66,3 @@ def testGoldwater1():
       ripl.observe("(noisy_true (atom_eq (sample_symbol %d %d) atom<%d>) noise)" %(i, j,d[str(brent[i][j])]), "true")
 
   ripl.infer(N * 10) # TODO Make this an actual inference quality test.
-  return reportPassage("TestGoldwater1")

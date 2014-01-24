@@ -1,6 +1,7 @@
 from venture.test.stats import *
 from testconfig import config
 
+@statisticalTest
 def testVentureNormalHMM1():
   ripl = config["get_ripl"]()
 
@@ -42,6 +43,7 @@ def testVentureNormalHMM1():
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous("TestVentureNormalHMM1", cdf, predictions, "N(4.382, 0.786)")
 
+@statisticalTest
 def testVentureBinaryHMM1():
   ripl = config["get_ripl"]()
 

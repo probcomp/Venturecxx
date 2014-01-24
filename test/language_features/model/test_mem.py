@@ -8,8 +8,8 @@ def testMem1():
   ripl.predict("(f (bernoulli 0.5))")
   ripl.predict("(f (bernoulli 0.5))")
   ripl.infer(20)
-  return reportPassage("TestMem1")
 
+@statisticalTest
 def testMem2():
   "Ensures that all (f 1) and (f 2) are the same"
   ripl = config["get_ripl"]()
@@ -29,6 +29,7 @@ def testMem2():
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete("TestMem2", ans, predictions)
 
+@statisticalTest
 def testMem3():
   "Same as testMem3 but with booby traps"
   ripl = config["get_ripl"]()
@@ -63,7 +64,6 @@ def testMem4():
   ripl.assume("g","(lambda () (pick_a_stick f 1))")
   ripl.predict("(g)")
   ripl.infer(40)
-  return reportPassage("TestMem4")
 
 ############ CXX mem tests
 
@@ -75,7 +75,6 @@ def testMemoizingOnAList1():
   ripl.predict("(f (list 0))",label="pid")
   predictions = collectSamples(ripl,"pid",3)
   assert predictions == [1, 1, 1]
-  return reportPassage("TestMemoizingOnAList")
 
 def testMemoizingOnASymbol1():
   """MSP.requestPSP.simulate() needs to quote the values to pass this.
@@ -85,7 +84,6 @@ def testMemoizingOnASymbol1():
   ripl.predict("(f (quote sym))",label="pid")
   predictions = collectSamples(ripl,"pid",3)
   assert predictions == [1, 1, 1]
-  return reportPassage("TestMemoizingOnASymbol")
 
 # TODO slow to run, and not worth it 
 def testMemHashCollisions1():
@@ -98,4 +96,3 @@ def testMemHashCollisions1():
   for a in range(1000):
     for b in range(1000):
       ripl.observe("(f %d %d)" % (a,b),"0.5")
-  return reportPassage("TestMemHashFunction(%d,%d)" % (A,B))

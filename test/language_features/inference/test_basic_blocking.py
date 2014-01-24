@@ -1,6 +1,7 @@
 from venture.test.stats import *
 from testconfig import config
 
+@statisticalTest
 def testBlockingExample0():
   ripl = config["get_ripl"]()
 
@@ -26,7 +27,6 @@ def testBlockingExample1():
   newb = ripl.report(2)
   assert not(olda == newa)
   assert not(oldb == newb)
-  return reportPassage("testBlockingExample1")
 
 def testBlockingExample2():
   ripl = config["get_ripl"]()
@@ -52,7 +52,6 @@ def testBlockingExample2():
     assert not(oldb == newb)
     assert oldc == newc
     assert oldd == newd
-  return reportPassage("testBlockingExample2")
 
 def testBlockingExample3():
   ripl = config["get_ripl"]()
@@ -66,4 +65,3 @@ def testBlockingExample3():
   newb = ripl.report(2)
   assert not(olda == newa)
   assert not(oldb == newb)
-  return reportPassage("testBlockingExample3")
