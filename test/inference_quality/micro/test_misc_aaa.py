@@ -1,110 +1,7 @@
 from venture.test.stats import *
 from testconfig import config
 
-# TODO this whole file will need to be parameterized.
-# Most of these will become "check" functions instead of "test"
-# functions, and then we will have a few test-generators.
-
-# TODO this folder needs many more interesting test cases!
-
-############## (1) Test SymDirMult AAA
-
-# Test 1:1
-
-# TODO nosetests does not find this test for some reason
-def testMakeSymDirMult1():
-  for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-    yield checkMakeSymDirMult1,maker
-
-def checkMakeSymDirMult1(maker):
-  """Extremely simple program, with an AAA procedure when uncollapsed"""
-  ripl = config["get_ripl"]()
-  ripl.assume("f", "(%s 1.0 2)" % maker)
-  ripl.predict("(f)",label="pid")
-  predictions = collectSamples(ripl,"pid")
-  ans = [(0,.5), (1,.5)]
-  return reportKnownDiscrete("CheckMakeSymDirMult1(%s)" % maker, ans, predictions)
-
-# Test 1:2
-def testMakeSymDirMult2():
-  for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-    yield checkMakeSymDirMult2,maker
-
-def checkMakeSymDirMult2(maker):
-  """Simplest program with collapsed AAA"""
-  ripl = config["get_ripl"]()
-
-  ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "(%s a 4)" % maker)
-  ripl.predict("(f)",label="pid")
-  return checkDirichletMultinomial1(maker, ripl, "pid")
-
-
-# Test 1:3
-def testMakeSymDirMult3():
-  """AAA where the SP flips between collapsed and collapsed."""
-  ripl = config["get_ripl"]()
-
-  ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "((if (lt a 100) make_sym_dir_mult make_sym_dir_mult) a 4)")
-  ripl.predict("(f)",label="pid")
-  return checkDirichletMultinomial1("alternating collapsed/collapsed", ripl, "pid")
-
-# Test 1:4
-def testMakeSymDirMult4():
-  """AAA where the SP flips between collapsed and uncollapsed."""
-  ripl = config["get_ripl"]()
-
-  ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "((if (lt a 10) make_sym_dir_mult make_uc_sym_dir_mult) a 4)")
-  ripl.predict("(f)",label="pid")
-  return checkDirichletMultinomial1("alternating collapsed/uncollapsed", ripl, "pid")
-
-# Test 1:5
-def testMakeSymDirMult5():
-  """AAA where the SP flips between collapsed, uncollapsed, and native"""
-  ripl = config["get_ripl"]()
-
-  ripl.assume("a", "(normal 10.0 1.0)")
-# Might be collapsed, uncollapsed, or uncollapsed in Venture
-  ripl.assume("f","""
-((if (lt a 10) 
-     make_sym_dir_mult 
-     (if (lt a 10.5)
-         make_uc_sym_dir_mult
-         (lambda (alpha k) 
-           ((lambda (theta) (lambda () (categorical theta)))
-            (symmetric_dirichlet alpha k)))))
- a 4)
-""")
-  ripl.predict("(f)",label="pid")
-  return checkDirichletMultinomial1("alternating collapsed/uncollapsed-sp/uncollapsed-venture", ripl, "pid")
-
-
-# Test 1:5
-def testMakeSymDirMult5():
-  for maker_1 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-    for maker_2 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-      yield checkMakeSymDirMult5,maker_1,maker_2
-
-def checkMakeSymDirMult5(maker_1,maker_2):
-  """Two AAA SPs with same parameters"""
-  ripl = config["get_ripl"]()
-
-  ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "(%s a 4)" % maker_1)
-  ripl.assume("g", "(%s a 4)" % maker_2)
-  ripl.predict("(f)",label="pid")
-  ripl.predict("(g)")
-  for _ in range(5): ripl.observe("(g)","true")
-  ripl.predict("(if (f) (g) (g))")
-  ripl.predict("(if (g) (f) (f))")
-  return checkDirichletMultinomial1(maker_1 + "&" + maker_2, ripl, "pid")
-
-
-############# (2) Test Misc AAA
-
-def testMakeSymDirMult1():
+def testMakeDirMult1():
   for maker in ["make_dir_mult","make_uc_dir_mult"]:
     yield checkMakeDirMult1,maker
 
@@ -114,7 +11,7 @@ def checkMakeDirMult1(maker):
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s (simplex a a a a))" % maker)
   ripl.predict("(f)")
-  return checkDirichletMultinomial1(maker, ripl, 3)
+  return checkDirichletMultinomialAAA(maker, ripl, 3)
 
 def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
@@ -233,15 +130,3 @@ def testStaleAAA2():
   predictions = collectSamples(ripl,5)
   ans = [(1,.9), (0,.1)]
   return reportKnownDiscrete("TestStaleAAA2", ans, predictions)
-
-#### Helpers
-
-def checkDirichletMultinomial1(maker, ripl, label):
-  for i in range(1,4):
-    for _ in range(20):
-      ripl.observe("(f)", "atom<%d>" % i)
-
-  predictions = collectSamples(ripl,label)
-  ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
-  return reportKnownDiscrete("CheckDirichletMultinomial(%s)" % maker, ans, predictions)
-
