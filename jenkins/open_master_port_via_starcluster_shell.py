@@ -3,7 +3,7 @@
 # settings
 port = 8080
 service_name = 'jenkins'
-cluster_name = 'crosscat'
+cluster_name = 'venture-jenkins'
 protocol = 'tcp'
 world_cidr = '0.0.0.0/0'
 
