@@ -21,4 +21,4 @@ def testCategorical1():
          (5, 0.2 * 0.2 + 0.3 * 0.6 + 0.4 * 0.2),
          (6, 0.3 * 0.2 + 0.4 * 0.6),
          (7, 0.4 * 0.2)]
-  return reportTest(reportKnownDiscrete("TestCategorical1", ans, predictions))
+  return reportKnownDiscrete("TestCategorical1", ans, predictions)
