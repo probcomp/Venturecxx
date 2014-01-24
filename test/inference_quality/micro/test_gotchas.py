@@ -1,4 +1,6 @@
 from venture.test.stats import *
+from nose.tools import *
+from nose import SkipTest
 from testconfig import config
 
 def testInferWithNoEntropy():
@@ -18,13 +20,21 @@ def testOuterMix1():
   ans = [(1,.5), (2,.25), (3,.25)]
   return reportKnownDiscrete("TestOuterMix1", ans, predictions)
 
+def testObserveAMem1():
+  "So, how should observe interact with mem?"
+  ripl = config["get_ripl"]()
+  ripl.assume("f","(mem (lambda () (normal 0.0 1.0)))")
+  ripl.observe("(f)", 3.0)
+  ripl.predict("(f)", label="pid")
+  ripl.infer(5) # Should be enough to solve itself, if that worked.
+  eq_(ripl.report("pid"), 3)
+
 @statisticalTest
 def testObserveAPredict1():
   """Tests that constrain propagates the change along identity edges,
      even unto if branches and mems.  Daniel says "This will fail in
      all current Ventures", but what the correct behavior would even
      be is mysterious to Alexey."""
-  from nose import SkipTest
   raise SkipTest("What is the testObserveAPredict1 program even supposed to do?")
   ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda () (flip)))")
@@ -44,6 +54,7 @@ def testObserveAPredict2():
      and thus did not handle it correctly (we let the predict go stale). So we do not continually
      bewilder our users, I suggest that we handle this case WHEN WE CAN, which means we propagate
      from a constrain as long as we don't hit an absorbing node or a DRG node with a kernel."""
+  raise SkipTest("This failure appears to be a more elaborate version of testObserveAMem1, so skip it.")
   ripl = config["get_ripl"]()
   ripl.assume("f","(if (flip) (lambda () (normal 0.0 1.0)) (mem (lambda () (normal 0.0 1.0))))")
   ripl.observe("(f)","1.0")
