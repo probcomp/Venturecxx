@@ -244,3 +244,4 @@ def checkDirichletMultinomial1(maker, ripl, label):
   predictions = collectSamples(ripl,label)
   ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
   return reportKnownDiscrete("CheckDirichletMultinomial(%s)" % maker, ans, predictions)
+

@@ -18,8 +18,10 @@ def mixMH(trace,indexer,operator):
   xiMix = indexer.logDensityOfIndex(trace,index)
 
   if math.log(random.random()) < xiMix + logAlpha - rhoMix:
+#    sys.stdout.write("!")
     operator.accept() # May mutate trace
   else:
+#    sys.stdout.write("?")
     operator.reject() # May mutate trace
 
 class BlockScaffoldIndexer(object):
