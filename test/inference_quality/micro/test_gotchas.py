@@ -20,8 +20,12 @@ def testOuterMix1():
 
 @statisticalTest
 def testObserveAPredict1():
-  """Tests that constrain propagates the change along
-     identity edges. This will fail in all current Ventures."""
+  """Tests that constrain propagates the change along identity edges,
+     even unto if branches and mems.  Daniel says "This will fail in
+     all current Ventures", but what the correct behavior would even
+     be is mysterious to Alexey."""
+  from nose import SkipTest
+  raise SkipTest("What is the testObserveAPredict1 program even supposed to do?")
   ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda () (flip)))")
   ripl.assume("op1","(if (flip) flip (lambda () (f)))")
