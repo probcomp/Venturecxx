@@ -1,17 +1,6 @@
 from venture.test.stats import *
 from testconfig import config
 
-def testMakeDirMult1():
-  for maker in ["make_dir_mult","make_uc_dir_mult"]:
-    yield checkMakeDirMult1,maker
-
-def checkMakeDirMult1(maker):
-  ripl = config["get_ripl"]()
-
-  ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "(%s (simplex a a a a))" % maker)
-  ripl.predict("(f)")
-  return checkDirichletMultinomialAAA(maker, ripl, 3)
 
 def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
