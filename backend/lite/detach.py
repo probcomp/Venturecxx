@@ -39,6 +39,12 @@ def extractParents(trace,node,scaffold,omegaDB):
   for parent in reversed(trace.parentsAt(node)): weight += extract(trace,parent,scaffold,omegaDB)
   return weight
 
+def extractESRParents(trace,node,scaffold,omegaDB):
+  weight = 0
+  for parent in reversed(trace.esrParentsAt(node)): weight += extract(trace,parent,scaffold,omegaDB)
+  return weight
+
+
 def extract(trace,node,scaffold,omegaDB):
   weight = 0
   value = trace.valueAt(node)
@@ -61,7 +67,7 @@ def unevalFamily(trace,node,scaffold,omegaDB):
   if isinstance(node,ConstantNode): pass
   elif isinstance(node,LookupNode):
     trace.disconnectLookup(node)
-    weight += extract(trace,node.sourceNode,scaffold,omegaDB)
+    weight += extractParents(trace,node,scaffold,omegaDB)
   else:
     assert isinstance(node,OutputNode)
     weight += unapply(trace,node,scaffold,omegaDB)
@@ -72,6 +78,7 @@ def unevalFamily(trace,node,scaffold,omegaDB):
 
 def unapply(trace,node,scaffold,omegaDB):
   weight = unapplyPSP(trace,node,scaffold,omegaDB)
+  weight += extractESRParents(trace,node,scaffold,omegaDB)
   weight += unevalRequests(trace,node.requestNode,scaffold,omegaDB)
   weight += unapplyPSP(trace,node.requestNode,scaffold,omegaDB)
   return weight

@@ -37,6 +37,11 @@ def regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   for parent in trace.parentsAt(node): weight += regen(trace,parent,scaffold,shouldRestore,omegaDB,gradients)
   return weight
 
+def regenESRParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):
+  weight = 0
+  for parent in trace.esrParentsAt(node): weight += regen(trace,parent,scaffold,shouldRestore,omegaDB,gradients)
+  return weight
+
 def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
   if scaffold.isResampling(node):
@@ -78,6 +83,7 @@ def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
 def apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients):
   weight = applyPSP(trace,requestNode,scaffold,shouldRestore,omegaDB,gradients)
   weight += evalRequests(trace,requestNode,scaffold,shouldRestore,omegaDB,gradients)
+  weight += regenESRParents(trace,outputNode,scaffold,shouldRestore,omegaDB,gradients)
   weight += applyPSP(trace,outputNode,scaffold,shouldRestore,omegaDB,gradients)
   return weight
 
@@ -145,8 +151,6 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
         (w,esrParent) = evalFamily(trace,esr.exp,esr.env,scaffold,omegaDB,gradients)
         weight += w
       trace.registerFamilyAt(node,esr.id,esrParent)
-    else:
-      esrParent = trace.spauxAt(node).getFamily(esr.id)
 
     esrParent = trace.spauxAt(node).getFamily(esr.id)
     if esr.block: trace.registerBlock(esr.block,esr.subblock,esrParent)
@@ -163,11 +167,12 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 def restore(trace,node,scaffold,omegaDB,gradients):
   if isinstance(node,ConstantNode): return 0
   if isinstance(node,LookupNode):
-    weight = regen(trace,node.sourceNode,scaffold,True,omegaDB,gradients)
-    trace.setValueAt(node,trace.valueAt(node.sourceNode))
+    weight = regenParents(trace,node,scaffold,True,omegaDB,gradients)
     trace.reconnectLookup(node)
+    trace.setValueAt(node,trace.valueAt(node.sourceNode))
     return weight
   else: # node is output node
+    assert isinstance(node,OutputNode)
     weight = restore(trace,node.operatorNode,scaffold,omegaDB,gradients)
     for operandNode in node.operandNodes: weight += restore(trace,operandNode,scaffold,omegaDB,gradients)
     weight += apply(trace,node.requestNode,node,scaffold,True,omegaDB,gradients)

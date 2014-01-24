@@ -8,6 +8,7 @@ from scaffold import constructScaffold
 from node import ApplicationNode, OutputNode
 from lkernel import VariationalLKernel, DeterministicLKernel
 from utils import simulateCategorical, cartesianProduct
+import sys
 
 def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
@@ -18,7 +19,9 @@ def mixMH(trace,indexer,operator):
   if math.log(random.random()) < xiMix + logAlpha - rhoMix:
     operator.accept() # May mutate trace
   else:
+    sys.stdout.write("!")
     operator.reject() # May mutate trace
+    sys.stdout.write("?")
 
 class BlockScaffoldIndexer(object):
   def __init__(self,scope,block):

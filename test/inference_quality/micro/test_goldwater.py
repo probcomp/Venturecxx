@@ -7,7 +7,8 @@ def testGoldwater1():
 
   brent = ["catanddog", "dogandcat", "birdandcat","dogandbird","birdcatdog"]
 
-  iterations = 100
+  N = config["num_transitions_per_sample"]
+  
   parameter_for_dirichlet = 1
 
   alphabet = "".join(set("".join(list(itertools.chain.from_iterable(brent)))))
@@ -64,5 +65,5 @@ def testGoldwater1():
       ripl.predict("(sample_symbol %d %d)" %(i, j))
       ripl.observe("(noisy_true (atom_eq (sample_symbol %d %d) atom<%d>) noise)" %(i, j,d[str(brent[i][j])]), "true")
 
-  ripl.infer(10) # TODO Make this an actual inference quality test.
+  ripl.infer(N) # TODO Make this an actual inference quality test.
   return reportPassage("TestGoldwater1")
