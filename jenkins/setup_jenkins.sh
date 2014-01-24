@@ -72,6 +72,11 @@ wait_for_web_response $jenkins_uri
 
 # miscellaneous support operations
 #
+# Copy the ssh key intended for Jenkins into its home directory
+mkdir -p ${jenkins_home}/.ssh/
+cp /root/.ssh/id_rsa* ${jenkins_home}/.ssh
+chown -R jenkins $jenkins_home
+#
 # set up headless matplotlib
 mkdir -p ${jenkins_home}/.matplotlib
 echo backend: Agg > ${jenkins_home}/.matplotlib/matplotlibrc
@@ -80,3 +85,9 @@ chown -R jenkins $jenkins_home
 # make sure jenkins can install python packages
 python_dir=/usr/local/lib/python2.7/dist-packages
 chown -R jenkins $python_dir
+#
+# make sure jenkins can install executables like Venture
+chown -R jenkins /usr/local/bin
+
+# Also had to manually install nose-testconfig
+echo "Make sure nose-testconfig is installed on the Jenkins machine"
