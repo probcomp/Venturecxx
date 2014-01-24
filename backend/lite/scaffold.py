@@ -23,10 +23,10 @@ class Scaffold:
 
   def show(self):
     print "---Scaffold---"
-    print "regenCounts: " + str(self.regenCounts)
-    print "absorbing: " + str(self.absorbing)
-    print "aaa: " + str(self.aaa)
-    print "border: " + str(self.border)
+    print "regenCounts: " + str(len(self.regenCounts))
+    print "absorbing: " + str(len(self.absorbing))
+    print "aaa: " + str(len(self.aaa))
+    print "border: " + str(len(self.border))
 
 def constructScaffold(trace,setsOfPNodes):
   cDRG,cAbsorbing,cAAA = set(),set(),set()
@@ -44,8 +44,9 @@ def constructScaffold(trace,setsOfPNodes):
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
   return Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels)
 
-def addResamplingNode(trace,drg,absorbing,q,node,indexAssignments,i):
+def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i):
   if node in absorbing: absorbing.remove(node)
+  if node in aaa: aaa.remove(node)
   drg.add(node)
   q.extend([(n,False) for n in trace.childrenAt(node)])
   indexAssignments[node] = i
@@ -72,13 +73,13 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
     if node in drg:
       pass
     elif isinstance(node,LookupNode) or node.operatorNode in drg:
-      addResamplingNode(trace,drg,absorbing,q,node,indexAssignments,i)
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
     elif (trace.pspAt(node).canAbsorb() or esrReferenceCanAbsorb(trace,drg,node)) and not isPrincipal: 
       addAbsorbingNode(absorbing,node,indexAssignments,i)
     elif trace.pspAt(node).childrenCanAAA(): 
       addAAANode(drg,aaa,node,indexAssignments,i)
     else: 
-      addResamplingNode(trace,drg,absorbing,q,node,indexAssignments,i)
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
 
 
 def findBrush(trace,cDRG,cAbsorbing,cAAA):
@@ -113,6 +114,7 @@ def removeBrush(cDRG,cAbsorbing,cAAA,brush):
   drg = cDRG - brush
   absorbing = cAbsorbing - brush
   aaa = cAAA - brush
+  assert aaa.issubset(drg)
   return drg,absorbing,aaa
 
 def hasChildInAorD(trace,drg,absorbing,node):

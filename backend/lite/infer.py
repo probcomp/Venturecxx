@@ -9,6 +9,7 @@ from node import ApplicationNode, OutputNode
 from lkernel import VariationalLKernel, DeterministicLKernel
 from utils import simulateCategorical, cartesianProduct
 import sys
+import copy
 
 def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
@@ -44,7 +45,8 @@ class MHOperator(object):
   def propose(self,trace,scaffold):
     self.trace = trace
     self.scaffold = scaffold
-    self.setsOfPNodes = [self.scaffold.getPrincipalNodes()]
+    self.setsOfPNodes = [self.scaffold.getPrincipalNodes().copy()]
+    for pnode in self.setsOfPNodes[0]: print type(trace.pspAt(pnode))
     rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
     assertTorus(scaffold)
     xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,self.rhoDB,{})

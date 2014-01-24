@@ -40,6 +40,16 @@ def checkMakeSymDirMult2(maker):
 
 # Test 1:3
 def testMakeSymDirMult3():
+  """AAA where the SP flips between collapsed and collapsed."""
+  ripl = config["get_ripl"]()
+
+  ripl.assume("a", "(normal 10.0 1.0)")
+  ripl.assume("f", "((if (lt a 10) make_sym_dir_mult make_sym_dir_mult) a 4)")
+  ripl.predict("(f)",label="pid")
+  return checkDirichletMultinomial1("alternating collapsed/collapsed", ripl, "pid")
+
+# Test 1:4
+def testMakeSymDirMult4():
   """AAA where the SP flips between collapsed and uncollapsed."""
   ripl = config["get_ripl"]()
 
@@ -48,8 +58,8 @@ def testMakeSymDirMult3():
   ripl.predict("(f)",label="pid")
   return checkDirichletMultinomial1("alternating collapsed/uncollapsed", ripl, "pid")
 
-# Test 1:4
-def testMakeSymDirMult4():
+# Test 1:5
+def testMakeSymDirMult5():
   """AAA where the SP flips between collapsed, uncollapsed, and native"""
   ripl = config["get_ripl"]()
 

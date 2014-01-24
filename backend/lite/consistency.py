@@ -10,6 +10,10 @@ def assertTrace(trace,scaffold):
     assert trace.valueAt(node) is not None
 
 def assertSameScaffolds(scaffoldA,scaffoldB):
+  print "----- from regen -----"
+  scaffoldA.show()
+  print "----- from construct -----"
+  scaffoldB.show()
   assert_equals(len(scaffoldA.regenCounts),len(scaffoldB.regenCounts))
   assert_equals(len(scaffoldA.absorbing),len(scaffoldB.absorbing))
   assert_equals(len(scaffoldA.aaa),len(scaffoldB.aaa))
