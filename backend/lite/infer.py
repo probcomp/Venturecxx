@@ -1,6 +1,6 @@
 import random
 import math
-from consistency import assertTorus,assertTrace
+from consistency import assertTorus,assertTrace,assertSameScaffolds
 from omegadb import OmegaDB
 from regen import regenAndAttach
 from detach import detachAndExtract
@@ -19,9 +19,7 @@ def mixMH(trace,indexer,operator):
   if math.log(random.random()) < xiMix + logAlpha - rhoMix:
     operator.accept() # May mutate trace
   else:
-    sys.stdout.write("!")
     operator.reject() # May mutate trace
-    sys.stdout.write("?")
 
 class BlockScaffoldIndexer(object):
   def __init__(self,scope,block):
@@ -46,6 +44,7 @@ class MHOperator(object):
   def propose(self,trace,scaffold):
     self.trace = trace
     self.scaffold = scaffold
+    self.setsOfPNodes = [self.scaffold.getPrincipalNodes()]
     rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
     assertTorus(scaffold)
     xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,self.rhoDB,{})
@@ -53,6 +52,10 @@ class MHOperator(object):
 
   def accept(self): pass
   def reject(self):
+    # start debug
+    newScaffold = constructScaffold(self.trace,self.setsOfPNodes)
+    assertSameScaffolds(self.scaffold,newScaffold)
+    # end debug
     detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
     assertTorus(self.scaffold)
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})

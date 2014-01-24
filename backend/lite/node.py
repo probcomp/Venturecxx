@@ -13,6 +13,7 @@ class Node(object):
     self.madeSPAux = None
     self.numRequests = 0
     self.isObservation = False
+    self.esrParents = []
 
   def observe(self,val):
     self.observedValue = val
@@ -22,13 +23,15 @@ class Node(object):
     if isinstance(self.value,SPRef): return self.value.makerNode.madeSP
     else: return self.value
 
+  def parents(self): return self.definiteParents()
+
+
 class ConstantNode(Node):
   def __init__(self,value):
     super(ConstantNode,self).__init__()
     self.value = value
 
-
-  def parents(self): return []
+  def definiteParents(self): return []
 
 class LookupNode(Node):
   def __init__(self,sourceNode):
@@ -36,8 +39,7 @@ class LookupNode(Node):
     self.sourceNode = sourceNode
     self.value = sourceNode.value
 
-  def parents(self): return [self.sourceNode]
-
+  def definiteParents(self): return [self.sourceNode]
 
 class ApplicationNode(Node):
   __metaclass__ = ABCMeta
@@ -77,7 +79,7 @@ class RequestNode(ApplicationNode):
 
   def psp(self): return self.sp().requestPSP
 
-  def parents(self): return [self.operatorNode] + self.operandNodes
+  def definiteParents(self): return [self.operatorNode] + self.operandNodes
 
 class OutputNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,requestNode,env):
@@ -85,13 +87,13 @@ class OutputNode(ApplicationNode):
     self.operatorNode = operatorNode
     self.operandNodes = operandNodes
     self.requestNode = requestNode
-    self.esrParents = []
     self.env = env
     self.scopes = {}
 
   def psp(self): return self.sp().outputPSP
 
-  def parents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode] + self.esrParents
+  def definiteParents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]
+  def parents(self): return self.definiteParents() + self.esrParents
 
 class Args():
   def __init__(self,node):

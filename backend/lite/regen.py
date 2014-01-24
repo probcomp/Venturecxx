@@ -34,7 +34,8 @@ def attach(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
 def regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
-  for parent in trace.parentsAt(node): weight += regen(trace,parent,scaffold,shouldRestore,omegaDB,gradients)
+  for parent in trace.definiteParentsAt(node): weight += regen(trace,parent,scaffold,shouldRestore,omegaDB,gradients)
+  for parent in trace.esrParentsAt(node): weight += regen(trace,parent,scaffold,shouldRestore,omegaDB,gradients)
   return weight
 
 def regenESRParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):
@@ -83,6 +84,7 @@ def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
 def apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients):
   weight = applyPSP(trace,requestNode,scaffold,shouldRestore,omegaDB,gradients)
   weight += evalRequests(trace,requestNode,scaffold,shouldRestore,omegaDB,gradients)
+  assert len(trace.esrParentsAt(outputNode)) == len(trace.valueAt(requestNode).esrs)
   weight += regenESRParents(trace,outputNode,scaffold,shouldRestore,omegaDB,gradients)
   weight += applyPSP(trace,outputNode,scaffold,shouldRestore,omegaDB,gradients)
   return weight

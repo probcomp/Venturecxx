@@ -3,14 +3,13 @@ from psp import ESRRefOutputPSP
 from spref import SPRef
 
 class Scaffold:
-  def __init__(self,setsOfPNodes=[],regenCounts={},absorbing=set(),aaa=set(),border=[],lkernels={}):
-    assert type(regenCounts) is dict
-    self.setsOfPNodes = setsOfPNodes
-    self.regenCounts = regenCounts
-    self.absorbing = absorbing
-    self.aaa = aaa
-    self.border = border
-    self.lkernels = lkernels
+  def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None):
+    self.setsOfPNodes = setsOfPNodes if setsOfPNodes else []
+    self.regenCounts = regenCounts if regenCounts else {}
+    self.absorbing = absorbing if absorbing else set()
+    self.aaa = aaa if aaa else set()
+    self.border = border if border else []
+    self.lkernels = lkernels if lkernels else {}
 
   def getPrincipalNodes(self): return set.union(*self.setsOfPNodes)
   def getRegenCount(self,node): return self.regenCounts[node]

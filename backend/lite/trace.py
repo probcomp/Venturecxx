@@ -117,6 +117,7 @@ class Trace(object):
   def setMadeSPAt(self,node,sp): node.madeSP = sp
   def setMadeSPAux(self,node,aux): node.madeSPAux = aux
   def esrParentsAt(self,node): return node.esrParents
+  def definiteParentsAt(self,node): return node.definiteParents()
   def parentsAt(self,node): return node.parents()
   def childrenAt(self,node): return node.children
   def pspAt(self,node): return node.psp()

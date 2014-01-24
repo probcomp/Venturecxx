@@ -42,8 +42,8 @@ def extractParents(trace,node,scaffold,omegaDB):
 def extractESRParents(trace,node,scaffold,omegaDB):
   weight = 0
   for parent in reversed(trace.esrParentsAt(node)): weight += extract(trace,parent,scaffold,omegaDB)
+  for parent in reversed(trace.definiteParentsAt(node)): weight += extract(trace,parent,scaffold,omegaDB)
   return weight
-
 
 def extract(trace,node,scaffold,omegaDB):
   weight = 0
