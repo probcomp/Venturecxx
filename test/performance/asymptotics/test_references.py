@@ -20,16 +20,11 @@ def loadChurchPairProgram(K):
   return ripl
 
 
-def testProfileChurchPairProgram():
-  sivm = loadChurchPairProgram(100)
-  cProfile.runctx("sivm.infer(100)",None,locals())
-
-
 # O(N) forwards
 # O(1) to infer
 def testChurchPairProgram1():
 
-  Ks = [pow(2,k) for k in range(2,8)]
+  Ks = [pow(2,k) for k in range(2,11)]
 
   inferTimes = []
   N = 100
@@ -60,7 +55,7 @@ def loadReferencesProgram(K):
 # O(1) to infer
 # (this could be reused from testChurchPairProgram
 def testReferencesProgram1():
-  Ks = [pow(2,k) for k in range(2,10)]
+  Ks = [pow(2,k) for k in range(2,11)]
 
   inferTimes = []
   N = 100
