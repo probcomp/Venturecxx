@@ -20,8 +20,8 @@ fi
 # Determine location of context
 local_jenkins_dir=`dirname "$(readlink -f "$0")"`
 
-# spin up the cluster
-starcluster start -c venture-default -i m1.small -s 1 $cluster_name
+# spin up the cluster (instance size constrained by AMI type)
+starcluster start -c "venture-default" -i m3.xlarge -s 1 $cluster_name
 hostname=$(starcluster listclusters $cluster_name | grep master | awk '{print $NF}')
 
 
@@ -33,10 +33,15 @@ starcluster shell < <(perl -pe "s/'venture-jenkins'/'$cluster_name'/" $open_port
 # bypass key checking
 ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no jenkins@$hostname exit || true
 
+# Start trusting github.com
+starcluster sshmaster $cluster_name "ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no github.com exit || true"
+
+# set up jenkins.  This also relies on the default ssh key being a key
+# of the mit-pcp-jenkins Github account.
 venture_repo=git@github.com:mit-probabilistic-computing-project/Venturecxx.git
-# set up jenkins: RELIES ON CODE BEING IN /root/crosscat
-starcluster sshmaster $cluster_name "git clone $venture_repo venture"
-starcluster sshmaster $cluster_name bash venture/jenkins/setup_jenkins.sh
+starcluster sshmaster $cluster_name "git clone $venture_repo"
+starcluster sshmaster $cluster_name "cd Venturecxx/; git checkout jenkins" # TODO fold back to master when merged
+starcluster sshmaster $cluster_name bash Venturecxx/jenkins/setup_jenkins.sh
 
 
 # # push up jenkins configuration
