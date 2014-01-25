@@ -90,7 +90,7 @@ def testMemHashCollisions1():
   """For large A and B, makes sure that MSPs don't allow hash collisions for requests based on
    different arguments."""
   from nose import SkipTest
-  raise SkipTest("Skipping testMemHashCollisions1")
+  raise SkipTest("Skipping testMemHashCollisions1.  Issue https://app.asana.com/0/9277419963067/9801332616438")
   ripl = config["get_ripl"]()
   ripl.assume("f","(mem (lambda (a b) (normal 0.0 1.0)))")
   for a in range(1000):
