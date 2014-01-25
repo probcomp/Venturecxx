@@ -42,7 +42,7 @@ def testHMMParticleAsymptotics1():
   for T in Ts:
     ripl = loadHMMParticleAsymptoticProgram1(T)
     start = time.clock()
-    ripl.infer({"kernel":"pgibbs","scope":"states","block":"ordered","transitions":N})
+    ripl.infer({"kernel":"pgibbs","scope":"states","block":"ordered","transitions":N,"particles":20})
     end = time.clock()
     inferTimes.append(end - start)
 
