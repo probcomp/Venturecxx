@@ -139,6 +139,64 @@ def checkMakeSymDirMultWeakPrior(maker):
   return checkDirichletMultinomialWeakPrior(maker,ripl,"pid")
 
 
+#### Staleness
+
+@statisticalTest
+def testStaleAAA_MSP():
+  ripl = config["get_ripl"]()
+
+  ripl.assume("a", "1.0")
+  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("g", "(mem f)")
+  ripl.assume("h", "g")
+  ripl.predict("(h)",label="pid")
+
+  return checkDirichletMultinomialWeakPrior("StaleAAA_CSP",ripl,"pid")  
+
+@statisticalTest
+def testStaleAAA_CSP():
+  ripl = config["get_ripl"]()
+
+  ripl.assume("a", "1.0")
+  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("g", "(lambda () f)")
+  ripl.assume("h", "(g)")
+  ripl.predict("(h)",label="pid")
+
+  return checkDirichletMultinomialWeakPrior("StaleAAA_CSP",ripl,"pid")  
+
+@statisticalTest
+def testStaleAAA_CSP():
+  ripl = config["get_ripl"]()
+
+  ripl.assume("a", "1.0")
+  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("g", "(lambda () f)")
+  ripl.assume("h", "(g)")
+  ripl.predict("(h)",label="pid")
+
+  return checkDirichletMultinomialWeakPrior("StaleAAA_CSP",ripl,"pid") 
+ 
+@statisticalTest
+def testStaleAAA_Madness():
+  ripl = config["get_ripl"]()
+
+  ripl.assume("make_ref","(lambda (x) (lambda () x))")
+  ripl.assume("deref","(lambda (x) (x))")
+
+  ripl.assume("a", "1.0")
+  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("f2_maker", "(lambda () f)")
+  ripl.assume("f2", "(f2_maker)")
+  ripl.assume("xs", "(array (make_ref f) (make_ref f2))")
+  ripl.assume("f3","(deref (lookup xs 1))")
+  ripl.assume("ys","(dict (list (quote aaa) (quote bbb)) (list (make_ref f3) (make_ref f3)))")
+  ripl.assume("g","(deref (if (flip) (lookup ys (quote aaa)) (lookup ys (quote bbb))))")
+  ripl.predict("(g)",label="pid")
+
+  return checkDirichletMultinomialWeakPrior("StaleAAA_Madness",ripl,"pid") 
+ 
+
 #### Helpers
 
 def checkDirichletMultinomialAAA(maker, ripl, label, infer=None):

@@ -86,45 +86,7 @@ def checkMakeBetaBernoulli4(maker):
 
 ##### (3) Staleness
 
-# TODO write better ones, and include arrays.
 # This section should not hope to find staleness, since all backends should
 # assert that a makerNode has been regenerated before applying it.
 # Therefore this section should try to trigger that assertion.
 
-@statisticalTest
-def testStaleAAA1():
-  ripl = config["get_ripl"]()
-
-  ripl.assume("a", "1.0")
-  ripl.assume("f", "(make_sym_dir_mult a 2)")
-#  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
-#  ripl.assume("theta","(dirichlet (simplex a a))")
-#  ripl.assume("f", "(lambda () (categorical theta))")
-#  ripl.assume("g", "(mem f)")
-#  ripl.assume("h", "g")
-#  ripl.predict("(h)")
-  ripl.predict("(f)",label="pid")
-
-  for _ in range(8):
-    ripl.observe("(f)", "atom<1>")
-
-  predictions = collectSamples(ripl,"pid",infer="mixes_slowly")
-  ans = [(1,.9), (0,.1)]
-  return reportKnownDiscrete("TestStaleAAA1", ans, predictions)
-
-@statisticalTest
-def testStaleAAA2():
-  ripl = config["get_ripl"]()
-
-  ripl.assume("a", "1.0")
-  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
-  ripl.assume("g", "(lambda () f)")
-  ripl.assume("h", "(g)")
-  ripl.predict("(h)")
-
-  for _ in range(9):
-    ripl.observe("(f)", "atom<1>")
-
-  predictions = collectSamples(ripl,5,infer="mixes_slowly")
-  ans = [(1,.9), (0,.1)]
-  return reportKnownDiscrete("TestStaleAAA2", ans, predictions)
