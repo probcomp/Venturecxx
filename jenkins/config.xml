@@ -38,7 +38,7 @@
   <builders>
     <hudson.tasks.Shell>
       <command>CC=&quot;ccache gcc&quot; python setup.py install
-nosetests</command>
+nosetests --processes=4 --process-timeout=1200</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
