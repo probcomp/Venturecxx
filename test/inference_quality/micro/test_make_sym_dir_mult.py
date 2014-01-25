@@ -123,6 +123,21 @@ def checkMakeDirMult1(maker):
   ripl.predict("(f)")
   return checkDirichletMultinomialAAA(maker, ripl, 3)
 
+def testMakeSymDirMultWeakPrior():
+  """This used to fail because nothing ever got unincorporated. Should work now"""
+  for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
+    yield checkMakeSymDirMultWeakPrior,maker
+
+@statisticalTest
+def checkMakeSymDirMultWeakPrior(maker):
+  ripl = config["get_ripl"]()
+
+  ripl.assume("a", "1.0")
+  ripl.assume("f", "(%s a 2)" % maker)
+  ripl.predict("(f)",label="pid")
+
+  return checkDirichletMultinomialWeakPrior(maker,ripl,"pid")
+
 
 #### Helpers
 
@@ -145,4 +160,12 @@ def checkDirichletMultinomialBrush(ripl,label):
   predictions = collectSamples(ripl,3)
   ans = [(0,.25), (1,.75)]
   return reportKnownDiscrete("CheckDirichletMultinomialBrush", ans, predictions)
+
+def checkDirichletMultinomialWeakPrior(maker,ripl,label):
+  for _ in range(8):
+    ripl.observe("(f)", "atom<1>")
+
+  predictions = collectSamples(ripl,"pid",infer="mixes_slowly")
+  ans = [(1,.9), (0,.1)]
+  return reportKnownDiscrete("TestDirichletMultinomialWeakPrior(%s)" % maker, ans, predictions)
 

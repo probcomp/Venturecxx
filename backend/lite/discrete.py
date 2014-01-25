@@ -192,7 +192,7 @@ class CSymDirMultOutputPSP(RandomPSP):
     index = self.os.index(val)
     args.spaux[index] += 1
     
-  def remove(self,val,args):
+  def unincorporate(self,val,args):
     index = self.os.index(val)
     args.spaux[index] -= 1
         
@@ -245,7 +245,7 @@ class USymDirMultOutputPSP(RandomPSP):
     index = self.os.index(val)
     args.spaux[index] += 1
     
-  def remove(self,val,args):
+  def unincorporate(self,val,args):
     index = self.os.index(val)
     args.spaux[index] -= 1
 
@@ -289,7 +289,7 @@ class CDirMultOutputPSP(RandomPSP):
     index = self.os.index(val)
     args.spaux[index] += 1
     
-  def remove(self,val,args):
+  def unincorporate(self,val,args):
     index = self.os.index(val)
     args.spaux[index] -= 1
         
@@ -343,6 +343,6 @@ class UDirMultOutputPSP(RandomPSP):
     index = self.os.index(val)
     args.spaux[index] += 1
     
-  def remove(self,val,args):
+  def unincorporate(self,val,args):
     index = self.os.index(val)
     args.spaux[index] -= 1
