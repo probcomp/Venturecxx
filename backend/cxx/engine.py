@@ -150,8 +150,6 @@ class Engine:
       params['scope'] = "default"
     if 'block' not in params:
       params['block'] = "one"
-    if len(params.keys()) > 4:
-      raise Exception("Invalid parameter dictionary passed to infer: " + str(params))
     #print "params: " + str(params)
 
   def logscore(self): return self.trace.getGlobalLogScore()

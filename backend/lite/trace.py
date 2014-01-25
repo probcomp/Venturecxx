@@ -206,7 +206,7 @@ class Trace(object):
       elif params["kernel"] == "gibbs":
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
       elif params["kernel"] == "pgibbs":
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(20))
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
       else: raise Exception("INFER (%s) MH is implemented" % params["kernel"])
 
       for node in self.aes: node.madeSP.AEInfer(node.madeSPAux)
