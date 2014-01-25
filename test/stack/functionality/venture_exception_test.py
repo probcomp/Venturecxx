@@ -29,12 +29,6 @@ DATA = {'data1':1,'data2':[1,2,3]}
 
 class TestVentureException(unittest.TestCase):
 
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def test_constructor(self):
         e = VentureException(EXCEPTION,
                 MESSAGE,**DATA)

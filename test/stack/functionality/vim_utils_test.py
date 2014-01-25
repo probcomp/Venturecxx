@@ -21,12 +21,6 @@ from venture.sivm import utils
 
 class TestSivmUtils(unittest.TestCase):
 
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     ######################################
     # is_valid_symbol
     ######################################

@@ -37,9 +37,6 @@ def j(*args):
     return [min(mins), max(maxes)]
 
 class TestParserUtilsAtoms(ParserTestCase):
-    def setUp(self):
-        pass
-
     def test_symbol(self):
         # Symbol
         #

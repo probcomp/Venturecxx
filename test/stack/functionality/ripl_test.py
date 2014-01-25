@@ -20,6 +20,8 @@ from venture.sivm import VentureSivm, CoreSivmCxx
 from venture.parser import ChurchPrimeParser, VentureScriptParser
 
 class TestRipl(unittest.TestCase):
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         self.core_sivm = CoreSivmCxx()
         self.core_sivm.execute_instruction({"instruction":"clear"})
@@ -31,7 +33,6 @@ class TestRipl(unittest.TestCase):
                     "church_prime_2":parser1,
                     "venture_script":parser2})
         self.ripl.set_mode('church_prime')
-        print "\nIn method " + self._testMethodName
 
     ############################################
     # Languages

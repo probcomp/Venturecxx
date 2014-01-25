@@ -22,6 +22,7 @@ from venture.test.test_helpers import ParserTestCase
 
 
 class TestChurchPrimeParser(ParserTestCase):
+    _multiprocess_can_split_ = True
     def setUp(self):
         self.p = ChurchPrimeParser()
 

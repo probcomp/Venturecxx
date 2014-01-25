@@ -2,6 +2,7 @@ from venture.test.stats import *
 from testconfig import config
 
 class TestArrayExtended():
+  _multiprocess_can_split_ = True
   def setup(self):
     self.ripl = config["get_ripl"]()
     self.ripl.assume("xs","(array 11 22 33)")
