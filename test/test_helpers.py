@@ -30,9 +30,6 @@ def _unpack(l):
     return l['value']
 
 class ParserTestCase(unittest.TestCase):
-    def setUp(self):
-        pass
-
     def _run_test(self, code, expected_result, expression, legacy):
         validation_error = None
         result = None

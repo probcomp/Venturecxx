@@ -22,10 +22,11 @@ from venture.exception import VentureException
 
 class TestCoreSivmCxx(unittest.TestCase):
 
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         self.sivm = CoreSivmCxx()
         self.sivm.execute_instruction({"instruction":"clear"})
-        print "\nIn method " + self._testMethodName
 
     def tearDown(self):
         pass

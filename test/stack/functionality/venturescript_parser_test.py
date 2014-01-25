@@ -43,6 +43,8 @@ def j(*args):
 
 
 class TestVentureScriptParserAtoms(ParserTestCase):
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         self.p = VentureScriptParser()
 

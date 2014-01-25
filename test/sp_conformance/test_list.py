@@ -2,6 +2,7 @@ from venture.test.stats import *
 from testconfig import config
 
 class TestListExtended():
+  _multiprocess_can_split_ = True
   def setup(self):
     self.ripl = config["get_ripl"]()
 
@@ -39,6 +40,7 @@ class TestListExtended():
 
 
 class TestMapListExtended():
+  _multiprocess_can_split_ = True
   def setup(self):
     self.ripl = config["get_ripl"]()
 
