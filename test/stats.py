@@ -169,11 +169,10 @@ def collectSamples(ripl,address,num_samples=None,infer=None):
   if num_samples is None:
     num_samples = int(config["num_samples"])
   if infer is None:
-    numTransitionsPerSample = config["num_transitions_per_sample"]
-    kernel = config["kernel"]
-    scope = config["scope"]
-    block = config["block"]
-    infer = {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block}
+    infer = defaultInfer()
+  elif infer == "mixes_slowly": # TODO Replace this awful hack with proper adjustment of tests for difficulty
+    infer = defaultInfer()
+    infer["transitions"] = 4 * int(infer["transitions"])
 
   predictions = []
   for _ in range(num_samples):
@@ -183,3 +182,10 @@ def collectSamples(ripl,address,num_samples=None,infer=None):
     predictions.append(ripl.report(address))
     ripl.sivm.core_sivm.engine.reset()
   return predictions
+
+def defaultInfer():
+  numTransitionsPerSample = config["num_transitions_per_sample"]
+  kernel = config["kernel"]
+  scope = config["scope"]
+  block = config["block"]
+  return {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block}

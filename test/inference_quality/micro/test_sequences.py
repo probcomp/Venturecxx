@@ -38,7 +38,7 @@ def testVentureNormalHMM1():
   # p((f 4) | history) = normal mean 390/89, var 55/89, prec 89/55
   ripl.predict("(f 4)")
 
-  predictions = collectSamples(ripl,8)
+  predictions = collectSamples(ripl,8,infer="mixes_slowly")
   reportKnownMeanVariance("TestVentureNormalHMM1", 390/89.0, 55/89.0, predictions)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous("TestVentureNormalHMM1", cdf, predictions, "N(4.382, 0.786)")

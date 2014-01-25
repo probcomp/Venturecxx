@@ -108,7 +108,7 @@ def checkMakeSymDirMultAppControlsFlip(maker_1,maker_2):
   for _ in range(5): ripl.observe("(g)","true")
   ripl.predict("(if (f) (g) (g))")
   ripl.predict("(if (g) (f) (f))")
-  return checkDirichletMultinomialAAA(maker_1 + "&" + maker_2, ripl, "pid")
+  return checkDirichletMultinomialAAA(maker_1 + "&" + maker_2, ripl, "pid", infer="mixes_slowly")
 
 def testMakeDirMult1():
   for maker in ["make_dir_mult","make_uc_dir_mult"]:
@@ -126,12 +126,12 @@ def checkMakeDirMult1(maker):
 
 #### Helpers
 
-def checkDirichletMultinomialAAA(maker, ripl, label):
+def checkDirichletMultinomialAAA(maker, ripl, label, infer=None):
   for i in range(1,4):
     for _ in range(20):
       ripl.observe("(f)", "atom<%d>" % i)
 
-  predictions = collectSamples(ripl,label)
+  predictions = collectSamples(ripl,label,infer=infer)
   ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
   return reportKnownDiscrete("CheckDirichletMultinomialAAA(%s)" % maker, ans, predictions)
 
