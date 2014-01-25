@@ -4,6 +4,7 @@ import itertools
 import scipy.stats as stats
 import numpy as np
 from testconfig import config
+import nose.tools as nose
 
 def normalizeList(seq):
   denom = sum(seq)
@@ -65,9 +66,9 @@ def reportTest(result):
   assert result.pval > globalReportingThreshold, result
 
 def statisticalTest(f):
+  @nose.make_decorator(f)
   def wrapped(*args):
     reportTest(repeatTest(f, *args))
-  wrapped.__name__ = f.__name__
   return wrapped
 
 
