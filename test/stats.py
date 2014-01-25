@@ -56,16 +56,19 @@ def repeatTest(func, *args):
     print "Retrying suspicious test %s" % result.name
     results = [result] + [func(*args) for _ in range(1,5)]
     pval = fisherMethod([r.pval for r in results])
-    assert pval > globalReportingThreshold
     report = "\n".join([r.report for r in results])
     report += "\nOverall P value: " + str(pval)
     return TestResult(result.name + " failing consistently", pval, report)
 
 def reportTest(result):
   globalReportingThreshold = config["global_reporting_threshold"]
-  assert result.pval > globalReportingThreshold
+  assert result.pval > globalReportingThreshold, result
 
-
+def statisticalTest(f):
+  def wrapped(*args):
+    reportTest(repeatTest(f, *args))
+  wrapped.__name__ = f.__name__
+  return wrapped
 
 
 # Chi^2 test for agreement with the given discrete distribution.
@@ -149,7 +152,7 @@ def reportKnownMean(name, expMean, observed):
 
 def reportKnownEqualDistributions(data): raise Exception("reportKnownEqualDistributions() not yet implemented")
 
-# For a deterministic test
+# For a deterministic test that is nonetheless labeled statistical
 def reportPassage(name):
   return TestResult("Passed %s" % name, 1.0, "")
 
@@ -166,11 +169,10 @@ def collectSamples(ripl,address,num_samples=None,infer=None):
   if num_samples is None:
     num_samples = int(config["num_samples"])
   if infer is None:
-    numTransitionsPerSample = config["num_transitions_per_sample"]
-    kernel = config["kernel"]
-    scope = config["scope"]
-    block = config["block"]
-    infer = {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block}
+    infer = defaultInfer()
+  elif infer == "mixes_slowly": # TODO Replace this awful hack with proper adjustment of tests for difficulty
+    infer = defaultInfer()
+    infer["transitions"] = 4 * int(infer["transitions"])
 
   predictions = []
   for _ in range(num_samples):
@@ -180,3 +182,10 @@ def collectSamples(ripl,address,num_samples=None,infer=None):
     predictions.append(ripl.report(address))
     ripl.sivm.core_sivm.engine.reset()
   return predictions
+
+def defaultInfer():
+  numTransitionsPerSample = config["num_transitions_per_sample"]
+  kernel = config["kernel"]
+  scope = config["scope"]
+  block = config["block"]
+  return {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block}

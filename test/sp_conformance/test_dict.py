@@ -10,6 +10,7 @@ from testconfig import config
 # but will leave it as is for now. It would not be hard to check the argument types
 # and allow either.
 
+@statisticalTest
 def testDict1():
   ripl = config["get_ripl"]()
 
@@ -37,7 +38,6 @@ def testDict2():
   assert ripl.report("p1")
   assert ripl.report("p2")
   assert not ripl.report("p3")
-  return reportPassage("TestDict2")
 
 def testDict3():
   ripl = config["get_ripl"]()
@@ -50,4 +50,3 @@ def testDict3():
   assert ripl.report("p1")
   assert ripl.report("p2")
   assert not ripl.report("p3")
-  return reportPassage("TestDict3")

@@ -12,4 +12,3 @@ def testTrig1():
   for _ in range(10):
     ripl.infer(1)
     assert abs(ripl.report(5) - 1) < .001
-  return reportPassage("TestTrig1")

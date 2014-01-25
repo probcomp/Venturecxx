@@ -1,5 +1,6 @@
 from venture.test.stats import *
 from testconfig import config
+from nose import SkipTest
 
 def loadPYMem(ripl):
   ripl.assume("pick_a_stick","""
@@ -59,14 +60,15 @@ def predictHPY(topCollapsed,botCollapsed):
   observeCategories(ripl,[2,2,5,1,0])
   return collectSamples(ripl,"pid")
 
+@statisticalTest
 def testHPYMem1():
-  from nose import SkipTest
-  raise SkipTest("Skipping testHPYMem1: no p-value test for comparing empirical distributions")
+  raise SkipTest("No p-value test for comparing empirical distributions.  Issue https://app.asana.com/0/9277419963067/9801332616433")
   data = [countPredictions(predictHPY(top,bot), [0,1,2,3,4]) for top in [True,False] for bot in [True,False]]
   return reportKnownEqualDistributions(data)
 
 ####
 
+@statisticalTest
 def testHPYLanguageModel1():
   """Nice model from http://www.cs.berkeley.edu/~jordan/papers/teh-jordan-bnp.pdf.
      Checks that it learns that 1 follows 0"""
@@ -104,6 +106,7 @@ def testHPYLanguageModel1():
 
   ripl.predict("((G (list atom<0>)))",label="pid")
 
+  raise SkipTest("Skipping testHPYLanguageModel because it's slow and I don't how fast it is expected to converge.  Issue https://app.asana.com/0/9277419963067/9801332616429")
   predictions = collectSamples(ripl,"pid")
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
   return reportKnownDiscrete("testHPYLanguageModel1 (approximate)", ans, predictions)

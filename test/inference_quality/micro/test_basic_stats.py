@@ -1,6 +1,8 @@
 from venture.test.stats import *
 from testconfig import config
+from nose import SkipTest
 
+@statisticalTest
 def testBernoulliIfNormal1():
   "A simple program with bernoulli, if, and normal applications in the brush"
   ripl = config["get_ripl"]()
@@ -8,8 +10,9 @@ def testBernoulliIfNormal1():
   ripl.predict("(if b (normal 0.0 1.0) (normal 10.0 1.0))")
   predictions = collectSamples(ripl,2)
   cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
-  return reportTest(reportKnownContinuous("TestBernoulli1", cdf, predictions, "0.7*N(0,1) + 0.3*N(10,1)"))
+  return reportKnownContinuous("TestBernoulli1", cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
+@statisticalTest
 def testBernoulliIfNormal2():
   "A simple program with bernoulli, if, and an absorbing application of normal"
   ripl = config["get_ripl"]()
@@ -17,8 +20,9 @@ def testBernoulliIfNormal2():
   ripl.predict("(normal (if b 0.0 10.0) 1.0)")
   predictions = collectSamples(ripl,2)
   cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
-  return reportTest(reportKnownContinuous("TestBernoulli2", cdf, predictions, "0.7*N(0,1) + 0.3*N(10,1)"))
+  return reportKnownContinuous("TestBernoulli2", cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
+@statisticalTest
 def testNormalWithObserve1():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
   ripl = config["get_ripl"]()
@@ -31,8 +35,10 @@ def testNormalWithObserve1():
   cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
   return reportKnownContinuous("testMHNormal0", cdf, predictions, "N(12,sqrt(1.5))")
 
+@statisticalTest
 def testNormalWithObserve2():
   "Checks the posterior of a Gaussian in a Linear-Gaussian-BN"
+  raise SkipTest("I do not know the right answer.  See issue https://app.asana.com/0/9277419963067/9797699085006")
   ripl = config["get_ripl"]()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("b", "(normal a 1.0)")
@@ -53,6 +59,7 @@ def testNormalWithObserve2():
   cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
   return reportKnownContinuous("testMHNormal1", cdf, predictions, "approximately N(24,sqrt(7/3))")
 
+@statisticalTest
 def testStudentT1():
   "Simple program involving simulating from a student_t"
   ripl = config["get_ripl"]()
@@ -73,6 +80,7 @@ def testStudentT1():
   return reportKnownMeanVariance("TestStudentT0", meana, vara + 1.0, predictions)
 
 
+@statisticalTest
 def testSprinkler1():
   "Classic Bayes-net example, with no absorbing when proposing to 'rain'"
   ripl = config["get_ripl"]()
@@ -89,6 +97,7 @@ def testSprinkler1():
   ans = [(True, .3577), (False, .6433)]
   return reportKnownDiscrete("TestSprinkler1", ans, predictions)
 
+@statisticalTest
 def testSprinkler2():
   "Classic Bayes-net example, absorbing at 'sprinkler' when proposing to 'rain'"
   # this test needs more iterations than most others, because it mixes badly
@@ -107,6 +116,7 @@ def testSprinkler2():
   ans = [(True, .3577), (False, .6433)]
   return reportKnownDiscrete("TestSprinkler2 (mixes terribly)", ans, predictions)
 
+@statisticalTest
 def testBLOGCSI1():
   "Context-sensitive Bayes-net taken from BLOG examples"
   ripl = config["get_ripl"]()
@@ -120,6 +130,7 @@ def testBLOGCSI1():
   ans = [(True, .596), (False, .404)]
   return reportKnownDiscrete("TestBLOGCSI1", ans, predictions)
 
+@statisticalTest
 def testGeometric1():
   "Geometric written with bernoullis and ifs, with absorbing at the condition."
   ripl = config["get_ripl"]()

@@ -20,4 +20,3 @@ def testForget1():
   real_sivm = ripl.sivm.core_sivm.engine
   assert real_sivm.get_entropy_info()["unconstrained_random_choices"] == 1
   assert real_sivm.logscore() < 0
-  return reportPassage("TestForget1")

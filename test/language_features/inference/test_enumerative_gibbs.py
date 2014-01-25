@@ -2,6 +2,7 @@ from venture.test.stats import *
 from testconfig import config
 
 # TODO N needs to be managed here more intelligently
+@statisticalTest
 def testEnumerativeGibbsBasic1():
   """Basic sanity test"""
   ripl = config["get_ripl"]()
@@ -9,8 +10,9 @@ def testEnumerativeGibbsBasic1():
 
   predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs"})
   ans = [(True,.5),(False,.5)]
-  return reportTest(reportKnownDiscrete("TestEnumerativeGibbsBasic1", ans, predictions))
+  return reportKnownDiscrete("TestEnumerativeGibbsBasic1", ans, predictions)
 
+@statisticalTest
 def testEnumerativeGibbsXOR1():
   """Tests that an XOR chain mixes with enumerative gibbs.
      Note that with RESET=True, this will seem to mix with MH.
@@ -23,8 +25,9 @@ def testEnumerativeGibbsXOR1():
   ripl.observe("(noisy_true (= (+ x y) 1) .001)","true")
   predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs"})
   ans = [(True,.5),(False,.5)]
-  return reportTest(reportKnownDiscrete("TestEnumerativeGibbsXOR1", ans, predictions))
+  return reportKnownDiscrete("TestEnumerativeGibbsXOR1", ans, predictions)
 
+@statisticalTest
 def testEnumerativeGibbsXOR2():
   """Tests that an XOR chain mixes with enumerative gibbs."""
   ripl = config["get_ripl"]()
@@ -35,4 +38,4 @@ def testEnumerativeGibbsXOR2():
   ripl.observe("(noisy_true (= (+ x y) 1) .001)","true")
   predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs"})
   ans = [(True,.667),(False,.333)]
-  return reportTest(reportKnownDiscrete("TestEnumerativeGibbsXOR2", ans, predictions))
+  return reportKnownDiscrete("TestEnumerativeGibbsXOR2", ans, predictions)

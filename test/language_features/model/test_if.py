@@ -8,7 +8,6 @@ def testIf1():
   ripl.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
   ripl.predict('(IF2 (bernoulli 0.5) IF IF)')
   ripl.infer(10)
-  return reportPassage("TestIf1")
 
 def testIf2():
   "More extended version of testIf1"
@@ -18,4 +17,3 @@ def testIf2():
   ripl.assume('if3', '(if (bernoulli 0.5) if2 if2)')
   ripl.assume('if4', '(if (bernoulli 0.5) if3 if3)')
   ripl.infer(20)
-  return reportPassage("TestIf2")

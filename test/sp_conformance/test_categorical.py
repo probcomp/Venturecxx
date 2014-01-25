@@ -5,6 +5,7 @@ from testconfig import config
 # 1. Neither backend implement categorical this way yet.
 # 2. Neither backend has simplex
 # 3. make_vector is used instead of array
+@statisticalTest
 def testCategorical1():
   "A simple test that checks the interface of categorical and its simulate method"
   ripl = config["get_ripl"]()
@@ -20,4 +21,4 @@ def testCategorical1():
          (5, 0.2 * 0.2 + 0.3 * 0.6 + 0.4 * 0.2),
          (6, 0.3 * 0.2 + 0.4 * 0.6),
          (7, 0.4 * 0.2)]
-  return reportTest(reportKnownDiscrete("TestCategorical1", ans, predictions))
+  return reportKnownDiscrete("TestCategorical1", ans, predictions)

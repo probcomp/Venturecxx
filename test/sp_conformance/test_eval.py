@@ -1,6 +1,7 @@
 from venture.test.stats import *
 from testconfig import config
 
+@statisticalTest
 def testEval1():
   ripl = config["get_ripl"]()
 
@@ -12,6 +13,7 @@ def testEval1():
   ans = [(1,.7), (0,.3)]
   return reportKnownDiscrete("TestEval1", ans, predictions)
 
+@statisticalTest
 def testEval2():
   ripl = config["get_ripl"]()
 
@@ -31,6 +33,7 @@ def testEval2():
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
   return reportKnownContinuous("testEval2", cdf, predictions, "approximately beta(2,1)")
 
+@statisticalTest
 def testEval3():
   "testEval2 with booby traps"
   ripl = config["get_ripl"]()
@@ -52,6 +55,7 @@ def testEval3():
   return reportKnownContinuous("testEval3", cdf, predictions, "approximately beta(2,1)")
 
 
+@statisticalTest
 def testApply1():
   "This CSP does not handle lists and symbols correctly."
   ripl = config["get_ripl"]()
@@ -66,6 +70,7 @@ def testApply1():
 # TODO not sure the best interface for extend_environment.
 # Just like dict it could take a list of pairs.
 # It could even take a dict!
+@statisticalTest
 def testExtendEnv1():
   ripl = config["get_ripl"]()
 

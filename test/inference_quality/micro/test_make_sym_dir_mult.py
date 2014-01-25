@@ -14,6 +14,7 @@ def testMakeSymDirMult1():
   for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
     yield checkMakeSymDirMult1,maker
 
+@statisticalTest
 def checkMakeSymDirMult1(maker):
   """Extremely simple program, with an AAA procedure when uncollapsed"""
   ripl = config["get_ripl"]()
@@ -23,11 +24,11 @@ def checkMakeSymDirMult1(maker):
   ans = [(0,.5), (1,.5)]
   return reportKnownDiscrete("CheckMakeSymDirMult1(%s)" % maker, ans, predictions)
 
-#
 def testMakeSymDirMultAAA():
   for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
     yield checkMakeSymDirMultAAA,maker
 
+@statisticalTest
 def checkMakeSymDirMultAAA(maker):
   """Simplest program with collapsed AAA"""
   ripl = config["get_ripl"]()
@@ -37,14 +38,13 @@ def checkMakeSymDirMultAAA(maker):
   ripl.predict("(f)",label="pid")
   return checkDirichletMultinomialAAA(maker, ripl, "pid")
 
-
-#
 def testMakeSymDirMultFlip():
   """AAA where the SP flips between collapsed and uncollapsed."""
   for maker_1 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
     for maker_2 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
       yield checkMakeSymDirMultFlip,maker_1,maker_2
   
+@statisticalTest
 def checkMakeSymDirMultFlip(maker_1,maker_2):
   ripl = config["get_ripl"]()
 
@@ -53,7 +53,6 @@ def checkMakeSymDirMultFlip(maker_1,maker_2):
   ripl.predict("(f)",label="pid")
   return checkDirichletMultinomialAAA("alternating collapsed/collapsed", ripl, "pid")
 
-#
 def testMakeSymDirMultBrushObserves():
   """AAA where the SP flips between collapsed and uncollapsed, and
      there are observations in the brush."""
@@ -61,6 +60,7 @@ def testMakeSymDirMultBrushObserves():
     for maker_2 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
       yield checkMakeSymDirMultBrushObserves,maker_1,maker_2
 
+@statisticalTest
 def checkMakeSymDirMultBrushObserves(maker_1,maker_2):
   ripl = config["get_ripl"]()
 
@@ -69,7 +69,8 @@ def checkMakeSymDirMultBrushObserves(maker_1,maker_2):
   ripl.predict("(f)",label="pid")
 
   return checkDirichletMultinomialBrush(ripl,"pid")
-#
+
+@statisticalTest
 def testMakeSymDirMultNative():
   """AAA where the SP flips between collapsed, uncollapsed, and native"""
   ripl = config["get_ripl"]()
@@ -89,12 +90,12 @@ def testMakeSymDirMultNative():
   ripl.predict("(f)",label="pid")
   return checkDirichletMultinomialAAA("alternating collapsed/uncollapsed-sp/uncollapsed-venture", ripl, "pid")
 
-#
 def testMakeSymDirMultAppControlsFlip():
   for maker_1 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
     for maker_2 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
       yield checkMakeSymDirMultAppControlsFlip,maker_1,maker_2
 
+@statisticalTest
 def checkMakeSymDirMultAppControlsFlip(maker_1,maker_2):
   """Two AAA SPs with same parameters, where their applications control which are applied"""
   ripl = config["get_ripl"]()
@@ -107,13 +108,13 @@ def checkMakeSymDirMultAppControlsFlip(maker_1,maker_2):
   for _ in range(5): ripl.observe("(g)","true")
   ripl.predict("(if (f) (g) (g))")
   ripl.predict("(if (g) (f) (f))")
-  return checkDirichletMultinomialAAA(maker_1 + "&" + maker_2, ripl, "pid")
+  return checkDirichletMultinomialAAA(maker_1 + "&" + maker_2, ripl, "pid", infer="mixes_slowly")
 
-#
 def testMakeDirMult1():
   for maker in ["make_dir_mult","make_uc_dir_mult"]:
     yield checkMakeDirMult1,maker
 
+@statisticalTest
 def checkMakeDirMult1(maker):
   ripl = config["get_ripl"]()
 
@@ -123,15 +124,14 @@ def checkMakeDirMult1(maker):
   return checkDirichletMultinomialAAA(maker, ripl, 3)
 
 
-
 #### Helpers
 
-def checkDirichletMultinomialAAA(maker, ripl, label):
+def checkDirichletMultinomialAAA(maker, ripl, label, infer=None):
   for i in range(1,4):
     for _ in range(20):
       ripl.observe("(f)", "atom<%d>" % i)
 
-  predictions = collectSamples(ripl,label)
+  predictions = collectSamples(ripl,label,infer=infer)
   ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
   return reportKnownDiscrete("CheckDirichletMultinomialAAA(%s)" % maker, ans, predictions)
 
