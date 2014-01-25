@@ -1,5 +1,6 @@
 from venture.test.stats import *
 from testconfig import config
+from nose import SkipTest
 
 @statisticalTest
 def testBernoulliIfNormal1():
@@ -37,6 +38,7 @@ def testNormalWithObserve1():
 @statisticalTest
 def testNormalWithObserve2():
   "Checks the posterior of a Gaussian in a Linear-Gaussian-BN"
+  raise SkipTest("I do not know the right answer.  See issue https://app.asana.com/0/9277419963067/9797699085006")
   ripl = config["get_ripl"]()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("b", "(normal a 1.0)")
