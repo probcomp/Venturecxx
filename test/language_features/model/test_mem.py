@@ -1,9 +1,8 @@
 from venture.test.stats import *
-from testconfig import config
 
 def testMem1():
   "This test used to cause CXX to crash"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   ripl.predict("(f (bernoulli 0.5))")
   ripl.predict("(f (bernoulli 0.5))")
@@ -12,7 +11,7 @@ def testMem1():
 @statisticalTest
 def testMem2():
   "Ensures that all (f 1) and (f 2) are the same"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("x","(f 1)")
   ripl.assume("y","(f 1)")
@@ -32,7 +31,7 @@ def testMem2():
 @statisticalTest
 def testMem3():
   "Same as testMem3 but with booby traps"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
   ripl.assume("x","(f ((if (bernoulli 0.5) (lambda () 1) (lambda () 1))))")
@@ -52,7 +51,7 @@ def testMem3():
 
 def testMem4():
   "Like TestMem1, makes sure that MSPs handle changes to their arguments without crashing"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("pick_a_stick","""
 (lambda (sticks k)
   (if (bernoulli (sticks k))
@@ -70,7 +69,7 @@ def testMem4():
 def testMemoizingOnAList1():
   """MSP.requestPSP.simulate() needs to quote the values to pass this.
      In CXX, VentureList needs to override several VentureValue methods as well"""
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (list 0))",label="pid")
   predictions = collectSamples(ripl,"pid",3)
@@ -79,7 +78,7 @@ def testMemoizingOnAList1():
 def testMemoizingOnASymbol1():
   """MSP.requestPSP.simulate() needs to quote the values to pass this.
      In CXX, VentureSymbol needs to override several VentureValue methods as well"""
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (quote sym))",label="pid")
   predictions = collectSamples(ripl,"pid",3)
@@ -91,7 +90,7 @@ def testMemHashCollisions1():
    different arguments."""
   from nose import SkipTest
   raise SkipTest("Skipping testMemHashCollisions1.  Issue https://app.asana.com/0/9277419963067/9801332616438")
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("f","(mem (lambda (a b) (normal 0.0 1.0)))")
   for a in range(1000):
     for b in range(1000):

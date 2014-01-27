@@ -1,5 +1,4 @@
 from venture.test.stats import *
-from testconfig import config
 import time
 import cProfile
 import sys
@@ -7,7 +6,7 @@ import sys
 sys.setrecursionlimit(1000000) 
 
 def loadChurchPairProgram(K):
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("make_church_pair","(lambda (x y) (lambda (f) (if (= f 0) x y)))")
   ripl.assume("church_pair_lookup","(lambda (cp n) (if (= n 0) (cp 0) (church_pair_lookup (cp 1) (- n 1))))")
@@ -39,7 +38,7 @@ def testChurchPairProgram1():
   assert (max(inferTimes) / min(inferTimes)) < 3
 
 def loadReferencesProgram(K):
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("make_ref","(lambda (x) (lambda () x))")
   ripl.assume("deref","(lambda (r) (r))")
 

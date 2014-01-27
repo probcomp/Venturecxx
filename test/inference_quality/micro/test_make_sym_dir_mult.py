@@ -1,5 +1,4 @@
 from venture.test.stats import *
-from testconfig import config
 
 # TODO this whole file will need to be parameterized.
 # Most of these will become "check" functions instead of "test"
@@ -17,7 +16,7 @@ def testMakeSymDirMult1():
 @statisticalTest
 def checkMakeSymDirMult1(maker):
   """Extremely simple program, with an AAA procedure when uncollapsed"""
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("f", "(%s 1.0 2)" % maker)
   ripl.predict("(f)",label="pid")
   predictions = collectSamples(ripl,"pid")
@@ -31,7 +30,7 @@ def testMakeSymDirMultAAA():
 @statisticalTest
 def checkMakeSymDirMultAAA(maker):
   """Simplest program with collapsed AAA"""
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a 4)" % maker)
@@ -46,7 +45,7 @@ def testMakeSymDirMultFlip():
   
 @statisticalTest
 def checkMakeSymDirMultFlip(maker_1,maker_2):
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((if (lt a 10) %s %s) a 4)" % (maker_1,maker_2))
@@ -62,7 +61,7 @@ def testMakeSymDirMultBrushObserves():
 
 @statisticalTest
 def checkMakeSymDirMultBrushObserves(maker_1,maker_2):
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((if (lt a 10) %s %s) a 2)" % (maker_1,maker_2))
@@ -73,7 +72,7 @@ def checkMakeSymDirMultBrushObserves(maker_1,maker_2):
 @statisticalTest
 def testMakeSymDirMultNative():
   """AAA where the SP flips between collapsed, uncollapsed, and native"""
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
 # Might be collapsed, uncollapsed, or uncollapsed in Venture
@@ -98,7 +97,7 @@ def testMakeSymDirMultAppControlsFlip():
 @statisticalTest
 def checkMakeSymDirMultAppControlsFlip(maker_1,maker_2):
   """Two AAA SPs with same parameters, where their applications control which are applied"""
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a 4)" % maker_1)
@@ -116,7 +115,7 @@ def testMakeDirMult1():
 
 @statisticalTest
 def checkMakeDirMult1(maker):
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s (simplex a a a a))" % maker)
@@ -130,7 +129,7 @@ def testMakeSymDirMultWeakPrior():
 
 @statisticalTest
 def checkMakeSymDirMultWeakPrior(maker):
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "1.0")
   ripl.assume("f", "(%s a 2)" % maker)
@@ -143,7 +142,7 @@ def checkMakeSymDirMultWeakPrior(maker):
 
 @statisticalTest
 def testStaleAAA_MSP():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "1.0")
   ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
@@ -155,7 +154,7 @@ def testStaleAAA_MSP():
 
 @statisticalTest
 def testStaleAAA_CSP():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "1.0")
   ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
@@ -167,7 +166,7 @@ def testStaleAAA_CSP():
 
 @statisticalTest
 def testStaleAAA_CSP():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "1.0")
   ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
@@ -179,7 +178,7 @@ def testStaleAAA_CSP():
  
 @statisticalTest
 def testStaleAAA_Madness():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("make_ref","(lambda (x) (lambda () x))")
   ripl.assume("deref","(lambda (x) (x))")

@@ -1,11 +1,10 @@
 from venture.test.stats import *
-from testconfig import config
 
 # TODO N needs to be managed here more intelligently
 @statisticalTest
 def testEnumerativeGibbsBasic1():
   """Basic sanity test"""
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.predict("(bernoulli)",label="pid")
 
   predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs"})
@@ -17,7 +16,7 @@ def testEnumerativeGibbsXOR1():
   """Tests that an XOR chain mixes with enumerative gibbs.
      Note that with RESET=True, this will seem to mix with MH.
      The next test accounts for that."""
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("x","(scope_include 0 0 (bernoulli 0.001))",label="pid")
   ripl.assume("y","(scope_include 0 0 (bernoulli 0.001))")
@@ -30,7 +29,7 @@ def testEnumerativeGibbsXOR1():
 @statisticalTest
 def testEnumerativeGibbsXOR2():
   """Tests that an XOR chain mixes with enumerative gibbs."""
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("x","(scope_include 0 0 (bernoulli 0.0015))",label="pid")
   ripl.assume("y","(scope_include 0 0 (bernoulli 0.0005))")

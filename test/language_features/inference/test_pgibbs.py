@@ -1,11 +1,10 @@
 from venture.test.stats import *
-from testconfig import config
 
 # TODO N needs to be managed here more intelligently
 @statisticalTest
 def testPGibbsBlockingMHHMM1():
   """The point of this is that it should give reasonable results in very few transitions but with a large number of particles."""
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("x0","(scope_include 0 0 (normal 0.0 1.0))")
   ripl.assume("x1","(scope_include 0 1 (normal x0 1.0))")

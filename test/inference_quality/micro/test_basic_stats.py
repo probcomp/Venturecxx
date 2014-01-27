@@ -1,11 +1,10 @@
 from venture.test.stats import *
-from testconfig import config
 from nose import SkipTest
 
 @statisticalTest
 def testBernoulliIfNormal1():
   "A simple program with bernoulli, if, and normal applications in the brush"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("b", "(bernoulli 0.3)")
   ripl.predict("(if b (normal 0.0 1.0) (normal 10.0 1.0))")
   predictions = collectSamples(ripl,2)
@@ -15,7 +14,7 @@ def testBernoulliIfNormal1():
 @statisticalTest
 def testBernoulliIfNormal2():
   "A simple program with bernoulli, if, and an absorbing application of normal"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("b", "(bernoulli 0.3)")
   ripl.predict("(normal (if b 0.0 10.0) 1.0)")
   predictions = collectSamples(ripl,2)
@@ -25,7 +24,7 @@ def testBernoulliIfNormal2():
 @statisticalTest
 def testNormalWithObserve1():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.observe("(normal a 1.0)", 14.0)
   # Posterior for a is normal with mean 12, precision 2
@@ -39,7 +38,7 @@ def testNormalWithObserve1():
 def testNormalWithObserve2():
   "Checks the posterior of a Gaussian in a Linear-Gaussian-BN"
   raise SkipTest("I do not know the right answer.  See issue https://app.asana.com/0/9277419963067/9797699085006")
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("b", "(normal a 1.0)")
   # Prior for b is normal with mean 10, variance 2 (precision 1/2)
@@ -62,7 +61,7 @@ def testNormalWithObserve2():
 @statisticalTest
 def testStudentT1():
   "Simple program involving simulating from a student_t"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("a", "(student_t 1.0)")
   ripl.observe("(normal a 1.0)", 3.0)
   ripl.predict("(normal a 1.0)")
@@ -83,7 +82,7 @@ def testStudentT1():
 @statisticalTest
 def testSprinkler1():
   "Classic Bayes-net example, with no absorbing when proposing to 'rain'"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("rain","(bernoulli 0.2)")
   ripl.assume("sprinkler","(if rain (bernoulli 0.01) (bernoulli 0.4))")
   ripl.assume("grassWet","""
@@ -101,7 +100,7 @@ def testSprinkler1():
 def testSprinkler2():
   "Classic Bayes-net example, absorbing at 'sprinkler' when proposing to 'rain'"
   # this test needs more iterations than most others, because it mixes badly
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("rain","(bernoulli 0.2)")
   ripl.assume("sprinkler","(bernoulli (if rain 0.01 0.4))")
   ripl.assume("grassWet","""
@@ -119,7 +118,7 @@ def testSprinkler2():
 @statisticalTest
 def testBLOGCSI1():
   "Context-sensitive Bayes-net taken from BLOG examples"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("u","(bernoulli 0.3)")
   ripl.assume("v","(bernoulli 0.9)")
   ripl.assume("w","(bernoulli 0.1)")
@@ -133,7 +132,7 @@ def testBLOGCSI1():
 @statisticalTest
 def testGeometric1():
   "Geometric written with bernoullis and ifs, with absorbing at the condition."
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("p","(if (flip) 0.5 0.5)")
   ripl.assume("geo","(lambda (p) (if (bernoulli p) 1 (plus 1 (geo p))))")
   ripl.predict("(geo p)",label="pid")

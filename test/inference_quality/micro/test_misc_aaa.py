@@ -1,5 +1,4 @@
 from venture.test.stats import *
-from testconfig import config
 
 def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
@@ -7,7 +6,7 @@ def testMakeBetaBernoulli1():
 
 @statisticalTest
 def checkMakeBetaBernoulli1(maker):
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a a)" % maker)
@@ -28,7 +27,7 @@ def testMakeBetaBernoulli2():
 # constraint forwarding and brush).
 @statisticalTest
 def checkMakeBetaBernoulli2(maker):
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((lambda () (%s ((lambda () a)) ((lambda () a)))))" % maker)
@@ -46,7 +45,7 @@ def testMakeBetaBernoulli3():
 
 @statisticalTest
 def checkMakeBetaBernoulli3(maker):
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a a)" % maker)
@@ -68,7 +67,7 @@ def testMakeBetaBernoulli4():
 
 @statisticalTest
 def checkMakeBetaBernoulli4(maker):
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", """

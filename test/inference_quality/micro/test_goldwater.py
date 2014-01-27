@@ -3,11 +3,11 @@ from testconfig import config
 
 def testGoldwater1():
   """Fairly complicated program. Just checks to make sure it runs without crashing."""
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   brent = ["catanddog", "dogandcat", "birdandcat","dogandbird","birdcatdog"]
 
-  N = config["num_transitions_per_sample"]
+  N = int(config["num_transitions_per_sample"])
   
   parameter_for_dirichlet = 1
 

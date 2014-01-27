@@ -1,9 +1,8 @@
 from venture.test.stats import *
-from testconfig import config
 
 @statisticalTest
 def testBlockingExample0():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a", "(scope_include 0 0 (normal 10.0 1.0))")
   ripl.assume("b", "(scope_include 1 1 (normal a 1.0))")
@@ -16,7 +15,7 @@ def testBlockingExample0():
   return reportKnownContinuous("testBlockingExample0", cdf, predictions, "N(10.0,1.0)")
 
 def testBlockingExample1():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))")
   ripl.assume("b", "(scope_include 0 0 (normal 1.0 1.0))")
   olda = ripl.report(1)
@@ -29,7 +28,7 @@ def testBlockingExample1():
   assert not(oldb == newb)
 
 def testBlockingExample2():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))")
   ripl.assume("b", "(scope_include 0 0 (normal 1.0 1.0))")
   ripl.assume("c", "(scope_include 0 1 (normal 2.0 1.0))")
@@ -54,7 +53,7 @@ def testBlockingExample2():
     assert oldd == newd
 
 def testBlockingExample3():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))")
   ripl.assume("b", "(scope_include 0 1 (normal 1.0 1.0))")
   olda = ripl.report(1)
