@@ -1,5 +1,4 @@
 from venture.test.stats import *
-from testconfig import config
 from nose import SkipTest
 
 def loadPYMem(ripl):
@@ -72,7 +71,7 @@ def testHPYMem1():
 def testHPYLanguageModel1():
   """Nice model from http://www.cs.berkeley.edu/~jordan/papers/teh-jordan-bnp.pdf.
      Checks that it learns that 1 follows 0"""
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   loadPYMem(ripl)
 

@@ -1,10 +1,9 @@
 from venture.test.stats import *
-from testconfig import config
 
 @statisticalTest
 def testGamma1():
   "Check that Gamma is parameterized correctly"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("a","(gamma 10.0 10.0)")
   ripl.assume("b","(gamma 10.0 10.0)")

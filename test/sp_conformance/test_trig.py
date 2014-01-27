@@ -1,9 +1,8 @@
 from venture.test.stats import *
-from testconfig import config
 
 def testTrig1():
   "Simple test that verifies sin^2 + cos^2 = 1 as x varies"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("sq","(lambda (x) (* x x))")
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("a","(sq (sin x))")

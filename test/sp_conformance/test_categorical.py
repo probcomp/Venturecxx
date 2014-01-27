@@ -1,5 +1,4 @@
 from venture.test.stats import *
-from testconfig import config
 
 # Fails currently because:
 # 1. Neither backend implement categorical this way yet.
@@ -8,7 +7,7 @@ from testconfig import config
 @statisticalTest
 def testCategorical1():
   "A simple test that checks the interface of categorical and its simulate method"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("x", "(categorical (simplex 0.1 0.2 0.3 0.4) (array 1 2 3 4))")
   ripl.assume("y", "(categorical (simplex 0.2 0.6 0.2) (array 1 2 3))")

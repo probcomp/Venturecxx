@@ -1,5 +1,4 @@
 from venture.test.stats import *
-from testconfig import config
 
 # TODO this is just one idea for how to encode matrices. 
 # Not sure what the interface to make_lazy_hmm should be.
@@ -7,7 +6,7 @@ from testconfig import config
 # for row/column vectors, so I want to make that explicit.
 @statisticalTest
 def testHMMSP1():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("f","""
 (make_lazy_hmm
  (matrix (list 0.5 0.5))
@@ -31,7 +30,7 @@ def testHMMSP1():
 
 @statisticalTest
 def testHMMSP2():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("f","""
 (if (flip)
 (make_lazy_hmm

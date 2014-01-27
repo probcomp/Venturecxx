@@ -1,9 +1,8 @@
 from venture.test.stats import *
-from testconfig import config
 
 @statisticalTest
 def testVentureNormalHMM1():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("f","""
 (mem (lambda (i)
@@ -45,7 +44,7 @@ def testVentureNormalHMM1():
 
 @statisticalTest
 def testVentureBinaryHMM1():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("f","""
 (mem (lambda (i)

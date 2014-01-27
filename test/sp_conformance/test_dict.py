@@ -1,5 +1,4 @@
 from venture.test.stats import *
-from testconfig import config
 
 # TODO
 # This file contains one possibility for the Dictionary interface
@@ -12,7 +11,7 @@ from testconfig import config
 
 @statisticalTest
 def testDict1():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("x","(bernoulli 1.0)")
   ripl.assume("d","""(dict (list (quote x) (quote y))
@@ -28,7 +27,7 @@ def testDict1():
   return reportKnownContinuous("TestDict1", cdf, predictions, "N(20,2)")
 
 def testDict2():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("d","""(dict (list (quote x) (quote y))
                            (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
   ripl.predict("(contains d (quote x))",label="p1")
@@ -40,7 +39,7 @@ def testDict2():
   assert not ripl.report("p3")
 
 def testDict3():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   ripl.assume("d","""(dict (list atom<1> atom<2>)
                            (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
   ripl.predict("(contains d atom<1>)",label="p1")

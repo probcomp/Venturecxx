@@ -1,10 +1,9 @@
 from venture.test.stats import *
-from testconfig import config
 
 class TestListExtended():
   _multiprocess_can_split_ = True
   def setup(self):
-    self.ripl = config["get_ripl"]()
+    self.ripl = get_ripl()
 
     self.ripl.assume("vmap_list","""
 (lambda (f xs)
@@ -42,7 +41,7 @@ class TestListExtended():
 class TestMapListExtended():
   _multiprocess_can_split_ = True
   def setup(self):
-    self.ripl = config["get_ripl"]()
+    self.ripl = get_ripl()
 
     self.ripl.assume("x1","(list)")
     self.ripl.assume("x2","(pair 1.0 x1)")

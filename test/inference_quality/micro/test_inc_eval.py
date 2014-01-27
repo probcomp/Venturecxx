@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from venture.test.stats import *
-from testconfig import config
 from nose import SkipTest
 import math
 
@@ -112,7 +111,7 @@ def extractValue(d):
 def testIncrementalEvaluator1():
   "Incremental version of micro/test_basic_stats.py:testBernoulli1"
   raise SkipTest("Errors out due to a Venture-level type error (a string flowed into operator position).  Re-enable when there are facilities for debugging such things.  Issue https://app.asana.com/0/9277419963067/9280122191537")
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
   loadAll(ripl)
   ripl.predict("(incremental_eval (quote (branch (bernoulli 0.3) (normal 0.0 1.0) (normal 10.0 1.0))))")
   predictions = collectSamples(ripl,2)
@@ -123,7 +122,7 @@ def testIncrementalEvaluator1():
 def testIncrementalEvaluator2():
   "Difficult test. We make sure that it stumbles on the solution in a reasonable amount of time."
   raise SkipTest("Errors out due to a Venture-level type error (something wanted a list as an argument and got a float).  Re-enable when there are facilities for debugging such things.  Issue https://app.asana.com/0/9277419963067/9280122191537")
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   loadAll(ripl)
   

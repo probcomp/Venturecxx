@@ -1,8 +1,7 @@
 from venture.test.stats import *
-from testconfig import config
 
 def testForget1():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("f","(lambda (y) (normal y 1.0))")

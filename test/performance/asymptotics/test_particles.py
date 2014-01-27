@@ -1,11 +1,10 @@
 from venture.test.stats import *
-from testconfig import config
 import scipy.stats
 import time
 
 def loadHMMParticleAsymptoticProgram1(M):
   """Easiest possible HMM asymptotic test for particles"""
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("f","""
 (mem (lambda (i)

@@ -6,6 +6,9 @@ import numpy as np
 from testconfig import config
 import nose.tools as nose
 
+def get_ripl():
+  return config["get_ripl"]()
+
 def normalizeList(seq):
   denom = sum(seq)
   if denom > 0: return [ float(x)/denom for x in seq]
