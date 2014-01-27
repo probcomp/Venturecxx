@@ -22,7 +22,7 @@ def testEnumerativeGibbsXOR1():
   ripl.assume("y","(scope_include 0 0 (bernoulli 0.001))")
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
   ripl.observe("(noisy_true (= (+ x y) 1) .001)","true")
-  predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs"})
+  predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs","scope":0,"block":0})
   ans = [(True,.5),(False,.5)]
   return reportKnownDiscrete("TestEnumerativeGibbsXOR1", ans, predictions)
 
@@ -35,6 +35,6 @@ def testEnumerativeGibbsXOR2():
   ripl.assume("y","(scope_include 0 0 (bernoulli 0.0005))")
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
   ripl.observe("(noisy_true (= (+ x y) 1) .001)","true")
-  predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs"})
-  ans = [(True,.667),(False,.333)]
+  predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs","scope":0,"block":0})
+  ans = [(True,.75),(False,.25)]
   return reportKnownDiscrete("TestEnumerativeGibbsXOR2", ans, predictions)
