@@ -16,7 +16,7 @@
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.lite.builtin import builtInSPs
+from venture.lite.builtin import builtInSPsList
 
-for (name,sp) in builtInSPs().iteritems():
+for (name,sp) in builtInSPsList():
   print sp.description(name)
