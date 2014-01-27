@@ -5,9 +5,15 @@ import scipy.stats as stats
 import numpy as np
 from testconfig import config
 import nose.tools as nose
+from venture.shortcuts import make_lite_church_prime_ripl, make_church_prime_ripl
 
 def get_ripl():
-  return config["get_ripl"]()
+  if config["get_ripl"] == "lite":
+    return make_lite_church_prime_ripl()
+  elif config["get_ripl"] == "cxx":
+    return make_church_prime_ripl()
+  else:
+    raise Exception("Unknown backend type %s" % config["get_ripl"])
 
 def normalizeList(seq):
   denom = sum(seq)
