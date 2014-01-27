@@ -168,7 +168,7 @@ class SymmetricDirichletOutputPSP(RandomPSP):
     return logDensityDirichlet(val,[alpha for i in range(n)])
 
   def description(self,name):
-    return "(%s <alpha> <n>) -> <number>" % name
+    return "(%s <alpha> <n>) -> <list of numbers>" % name
 
 class DirMultSP(SP):
   def __init__(self,requestPSP,outputPSP,n):
@@ -282,7 +282,7 @@ class DirichletOutputPSP(RandomPSP):
     return logDensityDirichlet(val,alpha)
 
   def description(self,name):
-    return "(%s <list of numbers>) -> <number>"
+    return "(%s <list of numbers>) -> <list of numbers>"
 
 ### Collapsed Dirichlet-Multinomial
 
