@@ -23,6 +23,9 @@ class MakeUncollapsedHMMOutputPSP(PSP):
     # Transposition for compatibility with CXX
     return UncollapsedHMMSP(p0,np.transpose(T),np.transpose(O))
 
+  def description(self,name):
+    return "(%s <matrix> <matrix> <matrix>) -> <SP :: Number -> Number>" % name
+
 class UncollapsedHMMSP(SP):
   def __init__(self,p0,T,O):
     super(UncollapsedHMMSP,self).__init__(UncollapsedHMMRequestPSP(),UncollapsedHMMOutputPSP(O))

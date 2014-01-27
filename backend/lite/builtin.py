@@ -20,6 +20,8 @@ def deterministic(f):
   class DeterministicPSP(PSP):
     def simulate(self,args):
       return f(*args.operandValues)
+    def description(self,name):
+      return "deterministic %s" % name
   return SP(NullRequestPSP(), DeterministicPSP())
 
 def builtInSPs():

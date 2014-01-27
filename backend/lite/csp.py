@@ -15,8 +15,11 @@ class CSPRequestPSP(PSP):
     return Request([ESR(args.node,self.exp,extendedEnv)])
 
   def canAbsorb(self): return True
-    
+
 class MakeCSPOutputPSP(PSP):
   def simulate(self,args):
     (ids,exp) = args.operandValues[0:3]
     return SP(CSPRequestPSP(ids,exp,args.env),ESRRefOutputPSP())
+
+  def description(self,name):
+    return "%s is used internally in the implementation of compound procedures" % name
