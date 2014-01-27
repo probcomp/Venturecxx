@@ -4,6 +4,7 @@ from sp import SP
 from psp import ESRRefOutputPSP
 from spref import SPRef
 from lkernel import VariationalLKernel
+from scope import ScopeIncludeOutputPSP
 
 def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
@@ -100,6 +101,7 @@ def processMadeSP(trace,node,isAAA):
 
 def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0;
+  psp,args = trace.pspAt(node),trace.argsAt(node)
 
   if omegaDB.hasValueFor(node): oldValue = omegaDB.getValue(node)
   else: oldValue = None
@@ -107,35 +109,24 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   if shouldRestore: newValue = oldValue
   elif scaffold.hasLKernel(node):
     k = scaffold.getLKernel(node)
-    newValue = k.simulate(trace,oldValue,trace.argsAt(node))
-    weight += k.weight(trace,newValue,oldValue,trace.argsAt(node))
+    newValue = k.simulate(trace,oldValue,args)
+    weight += k.weight(trace,newValue,oldValue,args)
     if isinstance(k,VariationalLKernel): 
-      gradients[node] = k.gradientOfLogDensity(newValue,trace.argsAt(node))
+      gradients[node] = k.gradientOfLogDensity(newValue,args)
   else: 
     # if we simulate from the prior, the weight is 0
-    newValue = trace.pspAt(node).simulate(trace.argsAt(node))
+    newValue = psp.simulate(args)
 
   trace.setValueAt(node,newValue)
   trace.incorporateAt(node)
 
-#  print "applyPSP",shouldRestore,newValue
-
   if isinstance(newValue,SP): processMadeSP(trace,node,scaffold.isAAA(node))
-  if isinstance(trace.pspAt(node), ScopeIncludeOutputPSP):
-    # Oh, what hacky hacks we hack.
-    blockNode = trace.argsAt(node).operandNodes[2]
+  if psp.isRandom(): trace.registerRandomChoice(node)
+  if isinstance(psp,ScopeIncludeOutputPSP):
+    scope,block = [n.value for n in node.operandNodes[0:2]]
+    blockNode = node.operandNodes[2]
     if trace.pspAt(blockNode).isRandom():
-      # Was already registered in the previous time around the
-      # recursion; update
-      trace.unregisterRandomChoice(blockNode)
-    # TODO As written, this does not support a node appearing in multiple scopes.
-    [scope,block] = trace.argsAt(node).operandValues[0:2]
-    blockNode.addScope({scope:block})
-    assert isinstance(blockNode, OutputNode)
-    blockNode.requestNode.addScope({scope:block})
-    if trace.pspAt(blockNode).isRandom():
-      trace.registerRandomChoice(blockNode)
-  if trace.pspAt(node).isRandom(): trace.registerRandomChoice(node)
+      trace.registerRandomChoiceInScope(scope,block,blockNode)
   return weight
 
 def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):

@@ -3,6 +3,7 @@ from omegadb import OmegaDB
 from psp import ESRRefOutputPSP
 from sp import SP
 from spref import SPRef
+from scope import ScopeIncludeOutputPSP
 
 def detachAndExtract(trace,border,scaffold):
   weight = 0
@@ -92,15 +93,20 @@ def teardownMadeSP(trace,node,isAAA):
     trace.setMadeSPAux(node,None)
 
 def unapplyPSP(trace,node,scaffold,omegaDB):
-
-  if trace.pspAt(node).isRandom(): trace.unregisterRandomChoice(node)
+  psp,args = trace.pspAt(node),trace.argsAt(node)
+  if isinstance(psp,ScopeIncludeOutputPSP):
+    scope,block = [n.value for n in node.operandNodes[0:2]]
+    blockNode = node.operandNodes[2]
+    if trace.pspAt(blockNode).isRandom():
+      trace.unregisterRandomChoiceInScope(scope,block,blockNode)
+  if psp.isRandom(): trace.unregisterRandomChoice(node)
   if isinstance(trace.valueAt(node),SPRef) and trace.valueAt(node).makerNode == node:
     teardownMadeSP(trace,node,scaffold.isAAA(node))
 
   weight = 0
   trace.unincorporateAt(node)
   if scaffold.hasLKernel(node): 
-    weight += scaffold.getLKernel(node).reverseWeight(trace,trace.valueAt(node),trace.argsAt(node))
+    weight += scaffold.getLKernel(node).reverseWeight(trace,trace.valueAt(node),args)
   omegaDB.extractValue(node,trace.valueAt(node))
 
 #  print "unapplyPSP",trace.valueAt(node)

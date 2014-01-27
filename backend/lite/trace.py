@@ -37,11 +37,9 @@ class Trace(object):
   def registerRandomChoice(self,node):
     assert not node in self.rcs
     self.rcs.add(node)
-    self.registerRandomChoiceInScope(node,"default",node)
-    for (scope,block) in node.scopes.iteritems(): 
-      self.registerRandomChoiceInScope(node,scope,block)
+    self.registerRandomChoiceInScope("default",node,node)
 
-  def registerRandomChoiceInScope(self,node,scope,block):
+  def registerRandomChoiceInScope(self,scope,block,node):
     if not scope in self.scopes: self.scopes[scope] = SMap()
     if not block in self.scopes[scope]: self.scopes[scope][block] = set()
     assert not node in self.scopes[scope][block]
@@ -51,11 +49,9 @@ class Trace(object):
   def unregisterRandomChoice(self,node): 
     assert node in self.rcs
     self.rcs.remove(node)
-    self.unregisterRandomChoiceInScope(node,"default",node)
-    for (scope,block) in node.scopes.iteritems(): 
-      self.unregisterRandomChoiceInScope(node,scope,block)
+    self.unregisterRandomChoiceInScope("default",node,node)
 
-  def unregisterRandomChoiceInScope(self,node,scope,block):
+  def unregisterRandomChoiceInScope(self,scope,block,node):
     self.scopes[scope][block].remove(node)
     assert not scope == "default" or len(self.scopes[scope][block]) == 0
     if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
