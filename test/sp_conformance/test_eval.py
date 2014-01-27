@@ -1,9 +1,8 @@
 from venture.test.stats import *
-from testconfig import config
 
 @statisticalTest
 def testEval1():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("globalEnv","(get_current_environment)")
   ripl.assume("expr","(quote (bernoulli 0.7))")
@@ -15,7 +14,7 @@ def testEval1():
 
 @statisticalTest
 def testEval2():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)")
   ripl.assume("globalEnv","(get_current_environment)")
@@ -36,7 +35,7 @@ def testEval2():
 @statisticalTest
 def testEval3():
   "testEval2 with booby traps"
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)")
   ripl.assume("globalEnv","(get_current_environment)")
@@ -58,7 +57,7 @@ def testEval3():
 @statisticalTest
 def testApply1():
   "This CSP does not handle lists and symbols correctly."
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
   ripl.predict("(apply times (list (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
@@ -72,7 +71,7 @@ def testApply1():
 # It could even take a dict!
 @statisticalTest
 def testExtendEnv1():
-  ripl = config["get_ripl"]()
+  ripl = get_ripl()
 
   ripl.assume("env1","(get_current_environment)")
 
