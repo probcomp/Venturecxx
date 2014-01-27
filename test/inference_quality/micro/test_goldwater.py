@@ -3,7 +3,7 @@ from testconfig import config
 
 def testGoldwater1():
   """Fairly complicated program. Just checks to make sure it runs without crashing."""
-  get_ripl()
+  ripl = get_ripl()
 
   brent = ["catanddog", "dogandcat", "birdandcat","dogandbird","birdcatdog"]
 
