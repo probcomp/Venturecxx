@@ -9,3 +9,4 @@ config["global_reporting_threshold"] = 0.001
 config["kernel"] = "mh"
 config["scope"] = "default"
 config["block"] = "one"
+config["particles"] = 3

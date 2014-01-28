@@ -198,4 +198,5 @@ def defaultInfer():
   kernel = config["kernel"]
   scope = config["scope"]
   block = config["block"]
-  return {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block}
+  particles = int(config["particles"])
+  return {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block, "particles":particles}
