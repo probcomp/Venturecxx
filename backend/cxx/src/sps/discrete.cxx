@@ -100,9 +100,11 @@ vector<VentureValue*> BernoulliSP::enumerateOutput(Node * node) const
 VentureValue * CategoricalSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<double> ps;
-  for (Node * operandNode : node->operandNodes)
+  VentureVector * vec = dynamic_cast<VentureVector *>(node->operandNodes[0]->getValue());
+  assert(vec);
+  for (VentureValue * x : vec->xs)
   {
-    VentureNumber * d = dynamic_cast<VentureNumber *>(operandNode->getValue());
+    VentureNumber * d = dynamic_cast<VentureNumber *>(x);
     assert(d);
     ps.push_back(d->x);
   }
