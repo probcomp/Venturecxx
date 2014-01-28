@@ -24,4 +24,14 @@ void destroyExpression(VentureValue * exp);
 
 uint32_t sampleCategorical(vector<double> xs, gsl_rng * rng);
 
+template <typename T>
+T* value_cast(VentureValue* x) {
+  T* answer = dynamic_cast<T*>(x);
+  if (answer == nullptr) {
+    throw "Dynamic cast failed";
+  } else {
+    return answer;
+  }
+}
+
 #endif
