@@ -23,7 +23,7 @@ class MakeCRPOutputPSP(PSP):
   def childrenCanAAA(self): return True
 
   def description(self,name):
-    return "(%s <alpha>) -> <SP :: () -> Number>" % name
+    return "(%s alpha) -> <SP () <number>>\n  Chinese Restaurant Process with hyperparameter alpha." % name
 
 class CRPOutputPSP(RandomPSP):
   def __init__(self,alpha): self.alpha = float(alpha)

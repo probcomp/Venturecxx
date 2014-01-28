@@ -26,7 +26,7 @@ class BernoulliOutputPSP(RandomPSP):
     else: return [True,False]
 
   def description(self,name):
-    return "(%s <p>) -> <bool>\n(%s) -> <bool>"
+    return "(%s <number>) -> <bool>\n(%s) -> <bool>" % (name,name)
 
 class CategoricalOutputPSP(RandomPSP):
   # (categorical ps outputs)
@@ -37,7 +37,7 @@ class CategoricalOutputPSP(RandomPSP):
     return logDensityCategorical(val,*args.operandValues)
 
   def description(self,name):
-    return "categorical :: [Probability] -> Number\ncategorical :: [Probability] -> [a] -> a"
+    return "(%s <simplex>) -> <number>\n(%s <simplex> <list a>) -> a\n  Samples a categorical.  In the one argument case, returns the index of the chosen option; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % (name, name)
 
 #### Collapsed Beta Bernoulli
 class MakerCBetaBernoulliOutputPSP(PSP):
@@ -49,7 +49,7 @@ class MakerCBetaBernoulliOutputPSP(PSP):
     return CBetaBernoulliSP(NullRequestPSP(), CBetaBernoulliOutputPSP(alpha, beta))
 
   def description(self,name):
-    return "(make_beta_bernoulli <alpha> <beta>) -> <SP>"
+    return "(%s alpha beta) -> <SP () <bool>>\n  Collapsed beta Bernoulli." % name
 
 class CBetaBernoulliSP(SP):
   def constructSPAux(self): return [0.0,0.0]
@@ -115,7 +115,7 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
     return scipy.stats.beta.logpdf(coinWeight,alpha,beta)
 
   def description(self,name):
-    return "(make_uc_beta_bernoulli <alpha> <beta>) -> <SP>"
+    return "(%s alpha beta) -> <SP () <bool>>\n  Uncollapsed beta Bernoulli." % name
 
 class UBetaBernoulliAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):
@@ -168,7 +168,7 @@ class SymmetricDirichletOutputPSP(RandomPSP):
     return logDensityDirichlet(val,[alpha for i in range(n)])
 
   def description(self,name):
-    return "(%s <alpha> <n>) -> <list of numbers>" % name
+    return "(%s alpha n) -> <simplex>" % name
 
 class DirMultSP(SP):
   def __init__(self,requestPSP,outputPSP,n):
@@ -189,7 +189,7 @@ class MakerCSymDirMultOutputPSP(PSP):
   def childrenCanAAA(self): return True
 
   def description(self,name):
-    return "(%s <alpha> <n>) -> <SP>" % name
+    return "(%s alpha n) -> <SP () <number>>\n(%s alpha n <list a>) -> <SP () a>\n  Collapsed symmetric Dirichlet nultinomial in n dimensions.  The two argument version returns a sampler for the dimension; the three argument version returns a sampler from the given list of options.  It is an error if the length of the given list is not n." % (name, name)
 
 class CSymDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,n,os):
@@ -242,7 +242,7 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
     return logDensityDirichlet(value.outputPSP.theta,[alpha for i in range(n)])
 
   def description(self,name):
-    return "(%s <alpha> <n>) -> <SP>" % name
+    return "(%s alpha n) -> <SP () <number>>\n(%s alpha n <list a>) -> <SP () a>\n  Uncollapsed symmetric Dirichlet nultinomial in n dimensions.  The two argument version returns a sampler for the dimension; the three argument version returns a sampler from the given list of options.  It is an error if the length of the given list is not n." % (name, name)
 
 class USymDirMultAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):
@@ -282,7 +282,7 @@ class DirichletOutputPSP(RandomPSP):
     return logDensityDirichlet(val,alpha)
 
   def description(self,name):
-    return "(%s <list of numbers>) -> <list of numbers>"
+    return "(%s <list alpha>) -> <simplex>" % name
 
 ### Collapsed Dirichlet-Multinomial
 
@@ -295,7 +295,7 @@ class MakerCDirMultOutputPSP(PSP):
   def childrenCanAAA(self): return True
 
   def description(self,name):
-    return ("(%s <list of alpha> <list of s>) -> <SP>" % name) + ("(%s <list of alpha>) -> <SP>" % name)
+    return "(%s <list alpha>) -> <SP () <number>>\n(%s <list alpha> <list a>) -> <SP () a>\n  Collapsed Dirichlet multinomial." % (name, name)
 
 class CDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,os):
@@ -348,7 +348,7 @@ class MakerUDirMultOutputPSP(RandomPSP):
     return logDensityDirichlet(value.outputPSP.theta,alpha)
 
   def description(self,name):
-    return ("(%s <list of alpha> <list of os>) -> <SP>\n" % name) + ("(%s <list of alpha>) -> <SP>\n" % name)
+    return "(%s <list alpha>) -> <SP () <number>>\n(%s <list alpha> <list a>) -> <SP () a>\n  Uncollapsed Dirichlet multinomial." % (name,name)
 
 class UDirMultAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):

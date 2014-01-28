@@ -24,7 +24,7 @@ class NormalOutputPSP(RandomPSP):
     return [gradMu,gradSigma]
 
   def description(self,name):
-    return "(%s <mean> <std-dev>) -> <number>"
+    return "(%s mu sigma) -> <number>" % name
 
 class UniformOutputPSP(RandomPSP):
   # TODO don't need to be class methods
@@ -35,7 +35,7 @@ class UniformOutputPSP(RandomPSP):
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
 
   def description(self,name):
-    return "(%s <low> <high>) -> <number>"
+    return "(%s low high) -> <number>" % name
 
   # TODO Uniform presumably has a variational kernel?
 
@@ -48,7 +48,7 @@ class BetaOutputPSP(RandomPSP):
   def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues)
 
   def description(self,name):
-    return "(%s <a> <b>) -> <number>"
+    return "(%s a b) -> <number>" % name
 
   # TODO Beta presumably has a variational kernel too?
 
@@ -61,7 +61,7 @@ class GammaOutputPSP(RandomPSP):
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
 
   def description(self,name):
-    return "(%s <alpha> <beta>) -> <number>"
+    return "(%s alpha beta) -> <number>" % name
 
   # TODO Gamma presumably has a variational kernel too?
 
@@ -74,7 +74,7 @@ class StudentTOutputPSP(RandomPSP):
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
 
   def description(self,name):
-    return "(%s <nu>) -> <number>"
+    return "(%s nu) -> <number>" % name
 
   # TODO StudentT presumably has a variational kernel too?
 

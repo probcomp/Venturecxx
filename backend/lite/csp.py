@@ -22,4 +22,4 @@ class MakeCSPOutputPSP(PSP):
     return SP(CSPRequestPSP(ids,exp,args.env),ESRRefOutputPSP())
 
   def description(self,name):
-    return "%s is used internally in the implementation of compound procedures" % name
+    return "%s\n  Used internally in the implementation of compound procedures." % name
