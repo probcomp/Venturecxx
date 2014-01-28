@@ -3,7 +3,8 @@ from venture.test.stats import *
 @statisticalTest
 def testBlockingExample0():
   ripl = get_ripl()
-
+  if not config["should_reset"]: raise SkipTest("This test should not pass without reset.")
+  
   ripl.assume("a", "(scope_include 0 0 (normal 10.0 1.0))")
   ripl.assume("b", "(scope_include 1 1 (normal a 1.0))")
   ripl.observe("(normal b 1.0)", 14.0)

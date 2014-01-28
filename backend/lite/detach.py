@@ -54,9 +54,9 @@ def extract(trace,node,scaffold,omegaDB):
     weight += extract(trace,value.makerNode,scaffold,omegaDB)
 
   if scaffold.isResampling(node):
-    scaffold.decrementRegenCount(node)
-    assert scaffold.getRegenCount(node) >= 0
-    if scaffold.getRegenCount(node) == 0:
+    trace.decRegenCountAt(scaffold,node)
+    assert trace.regenCountAt(scaffold,node) >= 0
+    if trace.regenCountAt(scaffold,node) == 0:
       if isinstance(node,ApplicationNode): 
         if isinstance(node,RequestNode): weight += unevalRequests(trace,node,scaffold,omegaDB)
         weight += unapplyPSP(trace,node,scaffold,omegaDB)

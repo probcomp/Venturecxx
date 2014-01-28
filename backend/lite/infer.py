@@ -8,6 +8,7 @@ from scaffold import constructScaffold
 from node import ApplicationNode, OutputNode
 from lkernel import VariationalLKernel, DeterministicLKernel
 from utils import simulateCategorical, cartesianProduct
+
 import sys
 import copy
 
@@ -294,6 +295,7 @@ class ParticlePGibbsOperator(object):
     self.P = P
 
   def propose(self,trace,scaffold):
+    from particle import Particle
     self.trace = trace
     self.scaffold = scaffold
 
@@ -304,22 +306,29 @@ class ParticlePGibbsOperator(object):
     P = self.P
 
     assert T == 1 # TODO temporary
+    rhoDBs = [None for t in range(T)]    
     rhoWeights = [None for t in range(T)]
-    particles = [Particle(trace) for p in range(P+1)]
-    self.particles = particles
 
     for t in reversed(range(T)):
-      (rhoWeights[t],omegaDBs[t][P]) = detachAndExtract(trace,scaffold.border[t],scaffold)
+      rhoWeights[t],rhoDBs[t] = detachAndExtract(trace,scaffold.border[t],scaffold)
 
+      
     assertTorus(scaffold)
+
+    particles = [Particle(trace) for p in range(P+1)]
+    self.particles = particles
+    
     particleWeights = [None for p in range(P+1)]
 
+    
     # Simulate and calculate initial xiWeights
+
     for p in range(P):
       particleWeights[p] = regenAndAttach(particles[p],scaffold.border[0],scaffold,False,OmegaDB(),{})
+
     particleWeights[P] = regenAndAttach(particles[P],scaffold.border[0],scaffold,True,rhoDBs[0],{})
     assert particleWeights[P] == rhoWeights[0] # TODO this might fail, but I'd like to make it work
-    
+          
 #   for every time step,
     for t in range(1,T):
       newParticles = [None for p in range(P+1)]
@@ -337,11 +346,12 @@ class ParticlePGibbsOperator(object):
 
     # Now sample a NEW particle in proportion to its weight
     finalIndex = simulateCategorical([math.exp(w) for w in particleWeights[0:-1]])
-    rhoWeight = rhoWeights[-1]
     xiWeight = particleWeights[finalIndex]
+    rhoWeight = particleWeights[-1]
 
-    weightMinusXi = math.log(sum([math.exp(w) for w in particleWeights]) - math.exp(xiWeight))
-    weightMinusRho = math.log(sum([math.exp(w) for w in particleWeights]) - math.exp(rhoWeight))    
+    totalExpWeight = sum([math.exp(w) for w in particleWeights])
+    weightMinusXi = math.log(totalExpWeight - math.exp(xiWeight) + 0.00001) # TODO numerical hacks
+    weightMinusRho = math.log(totalExpWeight - math.exp(rhoWeight) + 0.00001)    
 
     alpha = weightMinusRho - weightMinusXi
 

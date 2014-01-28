@@ -24,7 +24,7 @@ class NormalOutputPSP(RandomPSP):
   def simulate(self,args): return self.simulateNumeric(args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues)
 
-  def hasDeltaKernel(self): return True
+  def hasDeltaKernel(self): return False # have each gkernel control whether it is delta or not
   def getDeltaKernel(self): return NormalDriftKernel()
 
   def hasVariationalLKernel(self): return True

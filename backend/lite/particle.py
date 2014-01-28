@@ -1,9 +1,9 @@
 from copy import copy
 import math
 
-from trace import Trace
+import trace
 
-class Particle(Trace):
+class Particle(trace.Trace):
   # The trace is expected to be a torus, with the chosen scaffold
   # already detached.
   def __init__(self,trace):
@@ -11,8 +11,9 @@ class Particle(Trace):
     self.cache = {} # TODO persistent map from nodes to node records
     self.rcs = set() # TODO persistent set?
     self.ccs = set()
-    self.aes = {}
+    self.aes = set()
     self.scopes = {}
+    self.regenCounts = {}
 
   def _at(self,node):
     if node in self.cache:
@@ -29,7 +30,8 @@ class Particle(Trace):
     else: self.cache[node] = self._at(node)
 
   def valueAt(self,node):
-    return self._at(node).value
+    value = self._at(node).value
+    return value
   def setValueAt(self,node,value):
     self._alterAt(node, lambda r: r.update(value=value))
   def madeSPAt(self,node):
@@ -74,29 +76,74 @@ class Particle(Trace):
     self._alterAt(node, lambda r: r.update(numRequests = r.numRequests - 1))
 
 
+  def registerAEKernel(self,node): self.aes.add(node)
+  def unregisterAEKernel(self,node): self.aes.remove(node)
+
   def registerRandomChoice(self,node):
     assert not node in self.rcs
-    self.rcs.append(node)
+    self.rcs.add(node)
+    self.registerRandomChoiceInScope("default",node,node)
 
-  def unregisterRandomChoice(self,node):
+  def registerRandomChoiceInScope(self,scope,block,node):
+    if not scope in self.scopes: self.scopes[scope] = {}
+    if not block in self.scopes[scope]:
+      if scope in self.base.scopes and block in self.base.scopes[scope]:
+        self.scopes[scope][block] = self.base.scopes[scope][block].copy()
+      else: self.scopes[scope][block] = set()
+    assert not node in self.scopes[scope][block]
+    self.scopes[scope][block].add(node)
+    assert not scope == "default" or len(self.scopes[scope][block]) == 1
+
+  def unregisterRandomChoice(self,node): 
     assert node in self.rcs
-    del self.rcs[self.rcs.index(node)]
+    self.rcs.remove(node)
+    self.unregisterRandomChoiceInScope("default",node,node)
 
-  def logDensityOfPrincipalNode(self,node):
-    ct = len(self.base.rcs) + len(self.rcs)
-    return -1 * math.log(ct)
+  def unregisterRandomChoiceInScope(self,scope,block,node):
+    self.scopes[scope][block].remove(node)
+    assert not scope == "default" or len(self.scopes[scope][block]) == 0
+    if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
+    if len(self.scopes[scope]) == 0: del self.scopes[scope]
+
+  def registerConstrainedChoice(self,node):
+    self.ccs.add(node)
+    self.unregisterRandomChoice(node)
+
+  def unregisterConstrainedChoice(self,node):
+    assert node in self.ccs
+    self.ccs.remove(node)
+    if self.pspAt(node).isRandom(): self.registerRandomChoice(node)
+
+  def regenCountAt(self,scaffold,node):
+    if not node in self.regenCounts: self.regenCounts[node] = 0
+    return self.regenCounts[node]
+  
+  def incRegenCountAt(self,scaffold,node): self.regenCounts[node] += 1
+  def decRegenCountAt(self,scaffold,node): self.regenCounts[node] -= 1 # need not be overriden
+      
+
+  def blocksInScope(self,scope):
+    blocks = set()
+    if scope in self.base.scopes: blocks.update(self.base.scopes[scope].keys())
+    if scope in self.scopes: blocks.update(self.scopes[scope].keys())
+    return blocks
 
   def commit(self):
-    for (node,r) in self.cache.iteritems():
-      r.commit(self.base, node)
-    self.base.rcs = self.base.rcs + self.rcs
+    for (node,r) in self.cache.iteritems(): r.commit(self.base, node)
+    self.base.rcs.update(self.rcs)
+    self.base.ccs.update(self.ccs)
+    self.base.aes.update(self.aes)
+    for scope in self.scopes:
+      for block in self.scopes[scope].keys():
+        for node in self.scopes[scope][block]:
+          self.base.registerRandomChoiceInScope(scope,block,node)
 
 def record_for(node):
   madeAux = None
-  if node.TmadeSPAux is not None:
-    madeAux = node.TmadeSPAux.copy()
-  return Record(value=node.Tvalue, madeSP=node.TmadeSP, madeSPAux=madeAux,
-                esrParents=node.TesrParents, children=node.Tchildren, numRequests=node.TnumRequests)
+  if node.madeSPAux is not None:
+    madeAux = node.madeSPAux.copy()
+  return Record(value=node.value, madeSP=node.madeSP, madeSPAux=madeAux,
+                esrParents=node.esrParents, children=node.children, numRequests=node.numRequests)
 
 class Record(object):
   def __init__(self,value=None,madeSP=None,madeSPAux=None,esrParents=None,children=None,numRequests=0):

@@ -49,14 +49,14 @@ def regenESRParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
   if scaffold.isResampling(node):
-    if scaffold.getRegenCount(node) == 0:
+    if trace.regenCountAt(scaffold,node) == 0:
       weight += regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
       if isinstance(node,LookupNode):
         trace.setValueAt(node, trace.valueAt(node.sourceNode))
       else: 
         weight += applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients)
         if isinstance(node,RequestNode): weight += evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients)
-    scaffold.incrementRegenCount(node)
+    trace.incRegenCountAt(scaffold,node)
 
   value = trace.valueAt(node)
   if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):

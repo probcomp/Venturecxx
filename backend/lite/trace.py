@@ -6,7 +6,7 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, teardownMadeSP, unevalFamily
 from spref import SPRef
 from scaffold import Scaffold
-from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator
+from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator
 import random
 from omegadb import OmegaDB
 from smap import SMap
@@ -26,12 +26,12 @@ class Trace(object):
 
     self.rcs = set()
     self.ccs = set()
-    self.aes = []
+    self.aes = set()
     self.families = {}
     self.scopes = {} # :: {scope-name:smap{block-id:set(node)}}
 
-  def registerAEKernel(self,node): self.aes.append(node)
-  def unregisterAEKernel(self,node): del self.aes[self.aes.index(node)]
+  def registerAEKernel(self,node): self.aes.add(node)
+  def unregisterAEKernel(self,node): self.aes.remove(node)
 
   def registerRandomChoice(self,node):
     assert not node in self.rcs
@@ -127,8 +127,10 @@ class Trace(object):
 
   #### Stuff that a particle trace would need to override for persistence
 
-  def valueAt(self,node): return node.value
-  def setValueAt(self,node,value): node.value = value
+  def valueAt(self,node):
+    return node.value
+  def setValueAt(self,node,value):
+    node.value = value
 
   def madeSPAt(self,node): return node.madeSP
   def setMadeSPAt(self,node,sp): node.madeSP = sp
@@ -157,7 +159,7 @@ class Trace(object):
   def incRequestsAt(self,node): node.numRequests += 1
   def decRequestsAt(self,node): node.numRequests -= 1
 
-  def regenCountAt(self,scaffold,node): scaffold.regenCounts[node]
+  def regenCountAt(self,scaffold,node): return scaffold.regenCounts[node]
   def incRegenCountAt(self,scaffold,node): scaffold.regenCounts[node] += 1
   def decRegenCountAt(self,scaffold,node): scaffold.regenCounts[node] -= 1 # need not be overriden
     
@@ -222,13 +224,19 @@ class Trace(object):
       return
     for n in range(params["transitions"]):
       if params["kernel"] == "mh":
+        assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MHOperator())
       elif params["kernel"] == "meanfield":
+        assert params["with_mutation"]        
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MeanfieldOperator(10,0.0001))
       elif params["kernel"] == "gibbs":
+        assert params["with_mutation"]        
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
       elif params["kernel"] == "pgibbs":
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
+        if params["with_mutation"]:
+          mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
+        else:
+          mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))          
       else: raise Exception("INFER (%s) MH is implemented" % params["kernel"])
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
