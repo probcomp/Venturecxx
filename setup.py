@@ -114,7 +114,6 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     N=2 # number of parallel compilations
     import multiprocessing.pool
     def _single_compile(obj):
-        print "compiling!"
         try: src, ext = build[obj]
         except KeyError: return
         self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
