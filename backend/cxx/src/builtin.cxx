@@ -96,13 +96,14 @@ map<string,SP *> initBuiltInSPs()
     {"map_list", new MapListSP},
 
     // vectors
-    {"make_vector", new MakeVectorSP},
-    {"vector_lookup", new VectorLookupSP},
+    {"simplex", new MakeVectorSP},
+    {"array", new MakeVectorSP},
+    {"array_lookup", new VectorLookupSP},
 
     // maps
-    {"make_map", new MakeMapSP},
-    {"map_contains", new MapContainsSP},
-    {"map_lookup", new MapLookupSP},
+    {"dict", new MakeMapSP},
+    {"dict_contains", new MapContainsSP},
+    {"dict_lookup", new MapLookupSP},
     
     // booleans
     {"and", new BoolAndSP},
