@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import string
+import textwrap
 from venture.lite.builtin import builtInSPsList
 
 def flags(psp):
@@ -37,5 +38,12 @@ def flags(psp):
   return ans
 
 for (name,sp) in builtInSPsList():
-  print sp.description(name)
-  print "  " + string.join(flags(sp.outputPSP), ", ")
+  print ""
+  desc_lines = sp.description(name).split("\n")
+  if len(desc_lines) == 1:
+    print desc_lines[0]
+  else:
+    for line in desc_lines[0:-1]:
+      print line
+    print textwrap.fill(desc_lines[-1],70)
+  print "  " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
