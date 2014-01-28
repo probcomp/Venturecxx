@@ -15,8 +15,10 @@ def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
   pnodes = index.getPrincipalNodes().copy()
   rhoMix = indexer.logDensityOfIndex(trace,index)
-  logAlpha = operator.propose(trace,index) # Mutates trace and possibly operator
-  xiMix = indexer.logDensityOfIndex(trace,index)
+  # May mutate trace and possibly operator, proposedTrace is the mutated trace
+  # This is necessary for the non-mutating versions
+  proposedTrace,logAlpha = operator.propose(trace,index) 
+  xiMix = indexer.logDensityOfIndex(proposedTrace,index)
 
   if math.log(random.random()) < xiMix + logAlpha - rhoMix:
 #    sys.stdout.write("!")
@@ -52,7 +54,7 @@ class MHOperator(object):
     rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
     assertTorus(scaffold)
     xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,self.rhoDB,{})
-    return xiWeight - rhoWeight
+    return trace,xiWeight - rhoWeight
 
   def accept(self): pass
   def reject(self):
@@ -106,7 +108,7 @@ class MeanfieldOperator(object):
     assertTorus(scaffold)
 
     xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),{})
-    return xiWeight - rhoWeight
+    return trace,xiWeight - rhoWeight
 
   def accept(self): 
     if self.delegate is None:
@@ -175,7 +177,7 @@ class EnumerativeGibbsOperator(object):
 
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.xiDB,{})
 
-    return weightMinusRho - weightMinusXi
+    return trace,weightMinusRho - weightMinusXi
 
   def accept(self): pass
   def reject(self):
@@ -272,7 +274,7 @@ class PGibbsOperator(object):
     restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,T,path)
     assertTrace(self.trace,self.scaffold)
     alpha = weightMinusRho - weightMinusXi
-    return alpha
+    return trace,alpha
 
   def accept(self):
     pass
@@ -283,3 +285,76 @@ class PGibbsOperator(object):
     assert len(path) == self.T
     restoreAncestorPath(self.trace,self.scaffold.border,self.scaffold,self.omegaDBs,self.T,path)
     assertTrace(self.trace,self.scaffold)
+
+
+### Non-mutating PGibbs
+
+class ParticlePGibbsOperator(object):
+  def __init__(self,P):
+    self.P = P
+
+  def propose(self,trace,scaffold):
+    self.trace = trace
+    self.scaffold = scaffold
+
+    assertTrace(self.trace,self.scaffold)
+  
+    self.T = len(self.scaffold.border)
+    T = self.T
+    P = self.P
+
+    assert T == 1 # TODO temporary
+    rhoWeights = [None for t in range(T)]
+    particles = [Particle(trace) for p in range(P+1)]
+    self.particles = particles
+
+    for t in reversed(range(T)):
+      (rhoWeights[t],omegaDBs[t][P]) = detachAndExtract(trace,scaffold.border[t],scaffold)
+
+    assertTorus(scaffold)
+    particleWeights = [None for p in range(P+1)]
+
+    # Simulate and calculate initial xiWeights
+    for p in range(P):
+      particleWeights[p] = regenAndAttach(particles[p],scaffold.border[0],scaffold,False,OmegaDB(),{})
+    particleWeights[P] = regenAndAttach(particles[P],scaffold.border[0],scaffold,True,rhoDBs[0],{})
+    assert particleWeights[P] == rhoWeights[0] # TODO this might fail, but I'd like to make it work
+    
+#   for every time step,
+    for t in range(1,T):
+      newParticles = [None for p in range(P+1)]
+      newParticleWeights = [None for p in range(P+1)]
+      # Sample new particle and propagate
+      for p in range(P):
+        parent = simulateCategorical([math.exp(w) for w in particleWeights])
+        newParticles[p] = Particle(particles[parent])
+        newParticleWeights[p] = regenAndAttach(newParticles[p],self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
+      newParticles[P] = Particle(particles[P])
+      newParticleWeights[P] = regenAndAttach(newParticles[P],self.scaffold.border[t],self.scaffold,True,rhoDBs[t],{})
+      assert particleWeights[P] == rhoWeights[t] # TODO this might fail, but I'd like to make it work
+      particles = newParticles
+      particleWeights = newParticleWeights
+
+    # Now sample a NEW particle in proportion to its weight
+    finalIndex = simulateCategorical([math.exp(w) for w in particleWeights[0:-1]])
+    rhoWeight = rhoWeights[-1]
+    xiWeight = particleWeights[finalIndex]
+
+    weightMinusXi = math.log(sum([math.exp(w) for w in particleWeights]) - math.exp(xiWeight))
+    weightMinusRho = math.log(sum([math.exp(w) for w in particleWeights]) - math.exp(rhoWeight))    
+
+    alpha = weightMinusRho - weightMinusXi
+
+    self.finalIndex = finalIndex
+
+    # TODO need to return a trace as well
+    return particles[finalIndex],alpha
+
+  def accept(self):
+    self.particles[self.finalIndex].commit()
+    assertTrace(self.trace,self.scaffold)    
+    
+  def reject(self):
+    self.particles[-1].commit()
+    assertTrace(self.trace,self.scaffold)
+    

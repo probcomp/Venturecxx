@@ -103,7 +103,7 @@ def testStudentT1():
   (meana,_) = int.quad(lambda x: x * posterior(x), -10, 10)
   (meanasq,_) = int.quad(lambda x: x * x * posterior(x), -10, 10)
   vara = meanasq - meana * meana
-  return reportKnownMeanVariance("TestStudentT1", meana, vara + 1.0, predictions)
+  return reportKnownMeanVariance("TestStudentT1", meana, vara, predictions)
 
 @statisticalTest
 def testStudentT2():
