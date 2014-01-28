@@ -3,6 +3,7 @@
 
 #include "all.h"
 
+#include <iostream>
 #include <vector>
 #include <cstdint>
 #include <gsl/gsl_rng.h>
@@ -28,7 +29,8 @@ template <typename T>
 T* value_cast(VentureValue* x) {
   T* answer = dynamic_cast<T*>(x);
   if (answer == nullptr) {
-    throw "Dynamic cast failed";
+    cout << "Venture type error" << endl;
+    throw "Venture type error";
   } else {
     return answer;
   }
