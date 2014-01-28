@@ -214,13 +214,11 @@ class CSymDirMultOutputPSP(RandomPSP):
     assert_equal(type(args.spaux),DirMultSPAux)
     assert_greater_equal(min(args.spaux.os),0)
     index = self.os.index(val)
-    print "INC: ",val,index,args.spaux.os
     args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
     assert_equal(type(args.spaux),DirMultSPAux)
     index = self.os.index(val)
-    print "UNINC: ",val,index,args.spaux.os
     args.spaux.os[index] -= 1
     assert_greater_equal(min(args.spaux.os),0)
         
@@ -379,13 +377,13 @@ class UDirMultOutputPSP(RandomPSP):
   def logDensity(self,val,args): return logDensityCategorical(val,self.theta,self.os)
 
   def incorporate(self,val,args):
-    assert_equal(type(aux),DirMultSPAux)
+    assert_equal(type(args.spaux),DirMultSPAux)
     assert_greater_equal(min(args.spaux.os),0)
     index = self.os.index(val)
     args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
-    assert_equal(type(aux),DirMultSPAux)
+    assert_equal(type(args.spaux),DirMultSPAux)
     index = self.os.index(val)
     args.spaux.os[index] -= 1
     assert_greater_equal(min(args.spaux.os),0)

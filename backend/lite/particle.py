@@ -32,10 +32,11 @@ class Particle(trace.Trace):
     if node in self.cache:
       return self.cache[node]
     else:
-      return record_for(node)
+      self.cache[node] = record_for(node)
+      return self.cache[node]
 
   def _alterAt(self,node,f):
-    # self.cache = self.cache.insert(node,f(self._at(node)))
+    # self.cache = self.cache.insert(node,f(self._a(tnode)))
     self.cache[node] = f(self._at(node))
 
   def _ensure_spaux_cached(self,node):
@@ -147,7 +148,6 @@ class Particle(trace.Trace):
 
   def commit(self):
     for (node,r) in self.cache.iteritems(): 
-      print "comitting record..."
       r.commit(self.base, node)
     self.base.rcs.update(self.rcs)
     self.base.ccs.update(self.ccs)
@@ -230,7 +230,6 @@ class Record(object):
     if self.madeSP is not None: trace.setMadeSPAt(node,self.madeSP)
     if self.madeSPFamilies is not None: trace.setMadeSPFamiliesAt(node,self.madeSPFamilies)
     if self.madeSPAux is not None: 
-      print "committing aux..."
       trace.setMadeSPAuxAt(node,self.madeSPAux)
     if self.esrParents is not None: trace.setEsrParentsAt(node,self.esrParents)
     if self.children is not None: trace.setChildrenAt(node,self.children)
