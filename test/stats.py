@@ -190,7 +190,7 @@ def collectSamples(ripl,address,num_samples=None,infer=None):
     # tests, presumably by avoiding the parser.
     ripl.sivm.core_sivm.engine.infer(infer)
     predictions.append(ripl.report(address))
-    ripl.sivm.core_sivm.engine.reset()
+    if config["should_reset"]: ripl.sivm.core_sivm.engine.reset()
   return predictions
 
 def defaultInfer():

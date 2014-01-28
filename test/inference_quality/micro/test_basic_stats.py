@@ -9,20 +9,48 @@ def testBernoulliIfNormal1():
   ripl.predict("(if b (normal 0.0 1.0) (normal 10.0 1.0))")
   predictions = collectSamples(ripl,2)
   cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
-  return reportKnownContinuous("TestBernoulli1", cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
+  return reportKnownContinuous("TestBernoulliIfNormal1", cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
 @statisticalTest
 def testBernoulliIfNormal2():
   "A simple program with bernoulli, if, and an absorbing application of normal"
+  if not config["should_reset"]: raise SkipTest("This test should not pass without reset.")
+
   ripl = get_ripl()
   ripl.assume("b", "(bernoulli 0.3)")
   ripl.predict("(normal (if b 0.0 10.0) 1.0)")
   predictions = collectSamples(ripl,2)
   cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
-  return reportKnownContinuous("TestBernoulli2", cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
+  return reportKnownContinuous("TestBernoulliIfNormal2", cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
 @statisticalTest
 def testNormalWithObserve1():
+  "Checks the posterior distribution on a Gaussian given an unlikely observation"
+  ripl = get_ripl()
+  ripl.assume("a", "(normal 10.0 1.0)")
+  ripl.observe("(normal a 1.0)", 14.0)
+  # Posterior for a is normal with mean 12, precision 2
+#  ripl.predict("(normal a 1.0)")
+
+  predictions = collectSamples(ripl,1)
+  cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
+  return reportKnownContinuous("TestNormalWithObserve1", cdf, predictions, "N(12,sqrt(1.5))")
+
+@statisticalTest
+def testNormalWithObserve2a():
+  "Checks the posterior distribution on a Gaussian given an unlikely observation"
+  ripl = get_ripl()
+  ripl.assume("a", "(normal 10.0 1.0)")
+  ripl.observe("(normal a 1.0)", 14.0)
+  # Posterior for a is normal with mean 12, precision 2
+  ripl.predict("(normal a 1.0)")
+
+  predictions = collectSamples(ripl,1)
+  cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
+  return reportKnownContinuous("TestNormalWithObserve2a", cdf, predictions, "N(12,sqrt(0.5))")
+
+@statisticalTest
+def testNormalWithObserve2b():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -32,10 +60,10 @@ def testNormalWithObserve1():
 
   predictions = collectSamples(ripl,3)
   cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
-  return reportKnownContinuous("TestNormalWithObserve1", cdf, predictions, "N(12,sqrt(1.5))")
+  return reportKnownContinuous("TestNormalWithObserve2b", cdf, predictions, "N(12,sqrt(1.5))")
 
 @statisticalTest
-def testNormalWithObserve2():
+def testNormalWithObserve3():
   "Checks the posterior of a Gaussian in a Linear-Gaussian-BN"
   raise SkipTest("I do not know the right answer.  See issue https://app.asana.com/0/9277419963067/9797699085006")
   ripl = get_ripl()
@@ -56,10 +84,29 @@ def testNormalWithObserve2():
   # Unfortunately, a and b are (anti?)correlated now, so the true
   # distribution of the sum is mysterious to me
   cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
-  return reportKnownContinuous("testMHNormal1", cdf, predictions, "approximately N(24,sqrt(7/3))")
+  return reportKnownContinuous("testNormalWithObserve3", cdf, predictions, "approximately N(24,sqrt(7/3))")
 
 @statisticalTest
 def testStudentT1():
+  "Simple program involving simulating from a student_t"
+  ripl = get_ripl()
+  ripl.assume("a", "(student_t 1.0)")
+  ripl.observe("(normal a 1.0)", 3.0)
+  predictions = collectSamples(ripl,1)
+
+  # Posterior of a is proprtional to
+  def postprop(a):
+    return stats.t(1).pdf(a) * stats.norm(loc=3).pdf(a)
+  import scipy.integrate as int
+  (normalize,_) = int.quad(postprop, -10, 10)
+  def posterior(a): return postprop(a) / normalize
+  (meana,_) = int.quad(lambda x: x * posterior(x), -10, 10)
+  (meanasq,_) = int.quad(lambda x: x * x * posterior(x), -10, 10)
+  vara = meanasq - meana * meana
+  return reportKnownMeanVariance("TestStudentT1", meana, vara + 1.0, predictions)
+
+@statisticalTest
+def testStudentT2():
   "Simple program involving simulating from a student_t"
   ripl = get_ripl()
   ripl.assume("a", "(student_t 1.0)")
@@ -76,7 +123,7 @@ def testStudentT1():
   (meana,_) = int.quad(lambda x: x * posterior(x), -10, 10)
   (meanasq,_) = int.quad(lambda x: x * x * posterior(x), -10, 10)
   vara = meanasq - meana * meana
-  return reportKnownMeanVariance("TestStudentT0", meana, vara + 1.0, predictions)
+  return reportKnownMeanVariance("TestStudentT2", meana, vara + 1.0, predictions)
 
 
 @statisticalTest

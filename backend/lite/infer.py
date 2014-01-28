@@ -13,6 +13,7 @@ import copy
 
 def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
+  pnodes = index.getPrincipalNodes().copy()
   rhoMix = indexer.logDensityOfIndex(trace,index)
   logAlpha = operator.propose(trace,index) # Mutates trace and possibly operator
   xiMix = indexer.logDensityOfIndex(trace,index)
