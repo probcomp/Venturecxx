@@ -16,7 +16,26 @@
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import string
 from venture.lite.builtin import builtInSPsList
+
+def flags(psp):
+  ans = []
+  if psp.isRandom():
+    ans += ["stochastic"]
+  else:
+    ans += ["deterministic"]
+  if psp.canAbsorb():
+    ans += ["constrainable"]
+  if psp.childrenCanAAA():
+    ans += ["children can absorb at applications"]
+  if psp.canEnumerate():
+    ans += ["enumerable"]
+  if psp.hasVariationalLKernel():
+    ans += ["variationable"]
+  # Simulation kernels and delta kernels are unused right now
+  return ans
 
 for (name,sp) in builtInSPsList():
   print sp.description(name)
+  print "  " + string.join(flags(sp.outputPSP), ", ")
