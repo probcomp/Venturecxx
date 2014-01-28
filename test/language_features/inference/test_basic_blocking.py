@@ -1,4 +1,6 @@
 from venture.test.stats import *
+from nose import SkipTest
+
 
 @statisticalTest
 def testBlockingExample0():
