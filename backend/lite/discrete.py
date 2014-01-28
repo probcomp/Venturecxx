@@ -46,6 +46,8 @@ class BetaBernoulliSPAux(SPAux):
     aux.no = self.no
     return aux
 
+  def cts(self): return [self.yes,self.no]
+
 class BetaBernoulliSP(SP):
   def constructSPAux(self): return BetaBernoulliSPAux()
 
@@ -56,8 +58,6 @@ class MakerCBetaBernoulliOutputPSP(PSP):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     return BetaBernoulliSP(NullRequestPSP(), CBetaBernoulliOutputPSP(alpha, beta))
-
-  def cts(self): return [self.yes,self.no]
 
 class CBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,alpha,beta):
