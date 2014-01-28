@@ -3,7 +3,7 @@ from omegadb import OmegaDB
 from psp import ESRRefOutputPSP
 from sp import SP
 from spref import SPRef
-
+from scope import ScopeIncludeOutputPSP
 
 def detachAndExtract(trace,border,scaffold):
   weight = 0
@@ -20,24 +20,31 @@ def unconstrain(trace,node):
   if isinstance(node,LookupNode): return unconstrain(trace,node.sourceNode)
   assert isinstance(node,OutputNode)
   if isinstance(trace.pspAt(node),ESRRefOutputPSP): return unconstrain(trace,trace.esrParentsAt(node)[0])
-
-  if trace.pspAt(node).isRandom(): trace.registerRandomChoice(node)
-  trace.unincorporateAt(node)
-  weight = trace.logDensityAt(node,trace.valueAt(node))
-  trace.incorporateAt(node)
+  psp,args,value = trace.pspAt(node),trace.argsAt(node),trace.valueAt(node)
+  trace.unregisterConstrainedChoice(node)
+  psp.unincorporate(value,args)
+  weight = psp.logDensity(value,args)
+  psp.incorporate(value,args)
   return weight
 
 def detach(trace,node,scaffold,omegaDB):
   # we need to pass groundValue here in case the return value is an SP
   # in which case the node would only contain an SPRef
-  trace.unincorporateAt(node)
-  weight = trace.logDensityAt(node,trace.groundValueAt(node))
+  psp,args,gvalue = trace.pspAt(node),trace.argsAt(node),trace.groundValueAt(node)  
+  psp.unincorporate(gvalue,args)
+  weight = psp.logDensity(gvalue,args)
   weight += extractParents(trace,node,scaffold,omegaDB)
   return weight
 
 def extractParents(trace,node,scaffold,omegaDB):
   weight = 0
-  for parent in reversed(trace.parentsAt(node)): weight += extract(trace,parent,scaffold,omegaDB)
+  for parent in reversed(trace.esrParentsAt(node)): weight += extract(trace,parent,scaffold,omegaDB)
+  for parent in reversed(trace.definiteParentsAt(node)): weight += extract(trace,parent,scaffold,omegaDB)    
+  return weight
+
+def extractESRParents(trace,node,scaffold,omegaDB):
+  weight = 0
+  for parent in reversed(trace.esrParentsAt(node)): weight += extract(trace,parent,scaffold,omegaDB)
   return weight
 
 def extract(trace,node,scaffold,omegaDB):
@@ -48,8 +55,8 @@ def extract(trace,node,scaffold,omegaDB):
 
   if scaffold.isResampling(node):
     scaffold.decrementRegenCount(node)
-    assert scaffold.regenCount(node) >= 0
-    if scaffold.regenCount(node) == 0:
+    assert scaffold.getRegenCount(node) >= 0
+    if scaffold.getRegenCount(node) == 0:
       if isinstance(node,ApplicationNode): 
         if isinstance(node,RequestNode): weight += unevalRequests(trace,node,scaffold,omegaDB)
         weight += unapplyPSP(trace,node,scaffold,omegaDB)
@@ -62,7 +69,7 @@ def unevalFamily(trace,node,scaffold,omegaDB):
   if isinstance(node,ConstantNode): pass
   elif isinstance(node,LookupNode):
     trace.disconnectLookup(node)
-    weight += extract(trace,node.sourceNode,scaffold,omegaDB)
+    weight += extractParents(trace,node,scaffold,omegaDB)
   else:
     assert isinstance(node,OutputNode)
     weight += unapply(trace,node,scaffold,omegaDB)
@@ -73,6 +80,7 @@ def unevalFamily(trace,node,scaffold,omegaDB):
 
 def unapply(trace,node,scaffold,omegaDB):
   weight = unapplyPSP(trace,node,scaffold,omegaDB)
+  weight += extractESRParents(trace,node,scaffold,omegaDB)
   weight += unevalRequests(trace,node.requestNode,scaffold,omegaDB)
   weight += unapplyPSP(trace,node.requestNode,scaffold,omegaDB)
   return weight
@@ -86,16 +94,26 @@ def teardownMadeSP(trace,node,isAAA):
     trace.setMadeSPAuxAt(node,None)
 
 def unapplyPSP(trace,node,scaffold,omegaDB):
-
-  if trace.pspAt(node).isRandom(): trace.unregisterRandomChoice(node)
+  psp,args = trace.pspAt(node),trace.argsAt(node)
+  if isinstance(psp,ScopeIncludeOutputPSP):
+    scope,block = [n.value for n in node.operandNodes[0:2]]
+    blockNode = node.operandNodes[2]
+    if trace.pspAt(blockNode).isRandom():
+      trace.unregisterRandomChoiceInScope(scope,block,blockNode)
+  if psp.isRandom(): trace.unregisterRandomChoice(node)
   if isinstance(trace.valueAt(node),SPRef) and trace.valueAt(node).makerNode == node:
     teardownMadeSP(trace,node,scaffold.isAAA(node))
 
   weight = 0
-  trace.unincorporateAt(node)
-  if scaffold.hasKernelFor(node): 
-    weight += scaffold.getKernel(node).reverseWeight(trace,trace.valueAt(node),trace.argsAt(node))
+  psp.unincorporate(trace.valueAt(node),args)
+  if scaffold.hasLKernel(node): 
+    weight += scaffold.getLKernel(node).reverseWeight(trace,trace.valueAt(node),args)
   omegaDB.extractValue(node,trace.valueAt(node))
+
+#  print "unapplyPSP",trace.valueAt(node)
+
+  trace.setValueAt(node,None)
+
   return weight
 
 def unevalRequests(trace,node,scaffold,omegaDB):
@@ -110,12 +128,9 @@ def unevalRequests(trace,node,scaffold,omegaDB):
 
   for esr in reversed(request.esrs):
     esrParent = trace.popLastESRParent(node.outputNode)
-    if esr.block: trace.unregisterBlock(esr.block,esr.subblock,esrParent)
     if trace.numRequestsAt(esrParent) == 0:
       trace.unregisterFamilyAt(node,esr.id)
       omegaDB.registerSPFamily(trace.spAt(node),esr.id,esrParent)
       weight += unevalFamily(trace,esrParent,scaffold,omegaDB)
-    else: 
-      weight += extract(trace,esrParent,scaffold,omegaDB)
 
   return weight

@@ -26,7 +26,7 @@ class HMMSPAux(SPAux):
 
 class MakeUncollapsedHMMOutputPSP(PSP):
   def simulate(self,args):
-    (p0,T,O) = [np.mat(x) for x in args.operandValues]
+    (p0,T,O) = args.operandValues
     # Transposition for compatibility with CXX
     return UncollapsedHMMSP(p0,np.transpose(T),np.transpose(O))
 
@@ -53,8 +53,8 @@ class UncollapsedHMMSP(SP):
     assert len(aux.xs) > lsr
     return 0
     
-  def detachLatents(self,spaux,lsr,latentDB):
-    if len(aux.xs) == lsr + 1 and not aux.os.count(lsr):
+  def detachLatents(self,aux,lsr,latentDB):
+    if len(aux.xs) == lsr + 1 and not lsr in aux.os:
       if not aux.os:
         for i in range(len(aux.xs)): latentDB[i] = aux.xs[i]
         del aux.xs[:]

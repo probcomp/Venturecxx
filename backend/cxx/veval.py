@@ -16,6 +16,7 @@
 from venture.shortcuts import *
 import math
 import pdb
+from subprocess import call
 
 def RIPL(): return make_church_prime_ripl()
 
@@ -39,13 +40,22 @@ def loadReferences(ripl):
 ## Environments
 ## { sym => ref }
 def loadEnvironments(ripl):
-  ripl.assume("initial_environment","""
+  ripl.assume("incremental_initial_environment","""
 (lambda () 
   (list 
     (make_map 
       (list (quote bernoulli) (quote normal) (quote +) (quote *))
       (list (make_ref bernoulli) (make_ref normal) (make_ref plus) (make_ref times)))))
 """)
+
+  ripl.assume("concrete_initial_environment","""
+(lambda () 
+  (list 
+    (make_map 
+      (list (quote bernoulli) (quote normal) (quote +) (quote *))
+      (list bernoulli normal plus times))))
+""")
+
 
   ripl.assume("extend_environment","""
   (lambda (outer_env syms vals) 
@@ -63,7 +73,7 @@ def loadEnvironments(ripl):
 ## operator = [&env &ids &body]
 ## operands = [&op1 ... &opN]
 def loadEvaluator(ripl):
-  ripl.assume("venture_apply","(lambda (op args) (eval (pair op (map_list deref args)) (get_empty_environment)))")
+  ripl.assume("incremental_venture_apply","(lambda (op args) (eval (pair op (map_list deref args)) (get_empty_environment)))")
 
   ripl.assume("incremental_apply","""
   (lambda (operator operands)
@@ -84,10 +94,39 @@ def loadEvaluator(ripl):
 		((lambda (operator operands)
 		   (if (is_pair operator)
 		       (incremental_apply operator operands)
-		       (venture_apply operator operands)))
+		       (incremental_venture_apply operator operands)))
 		 (incremental_eval (deref (list_ref exp 0)) env)
 		 (map_list (lambda (x) (make_ref (incremental_eval (deref x) env))) (rest exp)))))))
 """)
+  
+def loadConcreteEvaluator(ripl):
+
+  ripl.assume("concrete_venture_apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
+
+  ripl.assume("concrete_apply","""
+  (lambda (operator operands)
+    (concrete_eval (list_ref operator 2)
+		      (extend_environment (list_ref operator 0)
+					  (list_ref operator 1)
+					  operands)))
+""")
+
+  ripl.assume("concrete_eval","""
+  (lambda (exp env)
+    (if (is_symbol exp)
+	(find_symbol exp env)
+	(if (not (is_pair exp))
+	    exp
+	    (if (= (list_ref exp 0) (quote lambda))
+		(pair env (rest exp))
+		((lambda (operator operands)
+		   (if (is_pair operator)
+		       (concrete_apply operator operands)
+		       (concrete_venture_apply operator operands)))
+		 (concrete_eval (list_ref exp 0) env)
+		 (map_list (lambda (x) (concrete_eval x env)) (rest exp)))))))
+""")
+
 
 def loadSampleExpressions(ripl):
   ripl.assume("exp1","5")
@@ -124,7 +163,8 @@ def loadAll(ripl):
   loadEnvironments(ripl)
   loadEvaluator(ripl)
   loadConcretize(ripl)
-  loadSampleExpressions(ripl)
+  loadConcreteEvaluator(ripl)
+#  loadSampleExpressions(ripl)
   return ripl
 
 def evalExp(ripl):
@@ -177,7 +217,7 @@ def testIncrementalEvaluator(N):
 (mem 
   (lambda (y) 
     (incremental_eval exp 
-                      (extend_environment (initial_environment) 
+                      (extend_environment (incremental_initial_environment) 
                                           (list (quote x)) 
                                           (list (make_ref y))))))
 """)
@@ -205,3 +245,176 @@ def testIncrementalEvaluator(N):
 #  mean = float(sum(vals))/len(vals)
 #  print "---DemoChurchEval4---"
 #  print "(5," + str(mean) + ")"
+
+
+def runTests():
+  ripl = RIPL()
+  loadAll(ripl)
+
+def renderDot(dot,i):
+  name = "dot%d" % i
+  dname = name + ".dot"
+  oname = name + ".svg"
+  f = open(dname,"w")
+  f.write(dot)
+  f.close()
+  cmd = ["dot", "-Tsvg", dname, "-o", oname]
+  call(cmd)
+  print "written to file: " + oname
+
+def computeIncrementalScaffolds(p,n,k):
+  ripl = RIPL()
+  loadAll(ripl)
+
+  ripl.assume("genBinaryOp","(lambda () (if (flip) (quote +) (quote *)))")
+  ripl.assume("genLeaf","(lambda () (normal 3 2))")
+  ripl.assume("genVar","(lambda (x) x)")
+
+  ripl.assume("p",str(p))
+  ripl.assume("n",str(n))
+
+  ripl.assume("genExp","""
+(lambda (x n) 
+(if (= n 0) (normal 3 2)
+  (if (flip p)
+      (list (make_ref (genBinaryOp)) (make_ref (genExp x (- n 1))) (make_ref (genExp x (- n 1))))
+      (if (flip) (genLeaf) (genVar x)))))
+  """)
+
+  ripl.assume("exp","(genExp (quote x) n)",label="exp")
+
+  ripl.assume("f","""
+(mem 
+  (lambda (y) 
+    (incremental_eval exp
+                      (extend_environment (incremental_initial_environment) 
+                                          (list (quote x)) 
+                                          (list (make_ref y))))))
+""")
+  ripl.assume("noise","(gamma 2 2)")
+  ripl.assume("g","(lambda (z) (normal (f z) noise))")
+
+  for x in range(k): ripl.predict("(g %d)" % x)
+
+#  print extractValue(ripl.report("exp"))
+  sizes = ripl.sivm.core_sivm.engine.trace.scaffold_sizes()
+  return [sum(zones) for zones in sizes]
+
+def computeConcreteScaffolds(p,n,k):
+  ripl = RIPL()
+  loadAll(ripl)
+
+  ripl.assume("genBinaryOp","(lambda () (if (flip) (quote +) (quote *)))")
+  ripl.assume("genLeaf","(lambda () (normal 3 2))")
+  ripl.assume("genVar","(lambda (x) x)")
+
+  ripl.assume("p",str(p))
+  ripl.assume("n",str(n))
+
+  ripl.assume("genExp","""
+(lambda (x n) 
+(if (= n 0) (normal 3 2)
+  (if (flip p)
+      (list (genBinaryOp) (genExp x (- n 1)) (genExp x (- n 1)))
+      (if (flip) (genLeaf) (genVar x)))))
+  """)
+
+  ripl.assume("exp","(genExp (quote x) n)",label="exp")
+
+  ripl.assume("f","""
+(mem 
+  (lambda (y) 
+    (concrete_eval exp
+                      (extend_environment (concrete_initial_environment) 
+                                          (list (quote x)) 
+                                          (list y)))))
+""")
+  ripl.assume("noise","(gamma 2 2)")
+  ripl.assume("g","(lambda (z) (normal (f z) noise))")
+
+  for x in range(k): ripl.predict("(g %d)" % x)
+
+#  print extractValue(ripl.report("exp"))
+  sizes = ripl.sivm.core_sivm.engine.trace.scaffold_sizes()
+  return [sum(zones) for zones in sizes]
+
+def computeBuiltinScaffolds(p,n,k):
+  ripl = RIPL()
+
+  ripl.assume("genBinaryOp","(lambda () (if (flip) (quote +) (quote *)))")
+  ripl.assume("genLeaf","(lambda () (normal 3 2))")
+  ripl.assume("genVar","(lambda (x) x)")
+
+  ripl.assume("p",str(p))
+  ripl.assume("n",str(n))
+
+  ripl.assume("genExp","""
+(lambda (x n) 
+(if (= n 0) (normal 3 2)
+  (if (flip p)
+      (list (genBinaryOp) (genExp x (- n 1)) (genExp x (- n 1)))
+      (if (flip) (genLeaf) (genVar x)))))
+  """)
+
+  ripl.assume("exp","(genExp (quote x) n)",label="exp")
+
+  ripl.assume("f","""
+(mem 
+  (lambda (y) 
+    (eval exp
+          (extend_environment (get_current_environment) 
+                              (quote x)
+                              y))))
+""")
+  ripl.assume("noise","(gamma 2 2)")
+  ripl.assume("g","(lambda (z) (normal (f z) noise))")
+
+  for x in range(k): ripl.predict("(g %d)" % x)
+
+#  print extractValue(ripl.report("exp"))
+  sizes = ripl.sivm.core_sivm.engine.trace.scaffold_sizes()
+  return [sum(zones) for zones in sizes]
+
+
+def mean(seq): return float(sum(seq))/len(seq)
+def var(seq): 
+  mu = mean(seq)
+  return sum([math.pow(float(x) - mu,2) for x in seq])/(len(seq)-1)
+
+def collectAsymptotics(D):
+
+  inc_sizes = [0 for x in range(D)]
+  for d in range(D):
+    seq = computeIncrementalScaffolds(1,d,1)
+    inc_sizes[d] = mean(seq)
+
+  print "incremental: " + str(inc_sizes)
+
+  # con_sizes = [0 for x in range(D)]
+  # for d in range(D):
+  #   seq = computeConcreteScaffolds(1,d,1)
+  #   con_sizes[d] = mean(seq)
+
+  # print "concrete: " + str(con_sizes)
+
+  con_sizes = [0 for x in range(D)]
+  for d in range(D):
+    seq = computeBuiltinScaffolds(1,d,1)
+    con_sizes[d] = mean(seq)
+
+  print "builtin: " + str(con_sizes)
+
+  
+
+
+#    printExpression(ripl.trace,ripl.trace.getNode(expAddr).getValue())
+#    val = ripl.trace.getNode(valAddr).getValue()
+#    noise = ripl.trace.getNode(noiseAddr).getValue()
+#    print "--> " + str(val) + " (" + str(noise) + ")"
+#    vals.append(val)
+
+#  mean = float(sum(vals))/len(vals)
+#  print "---DemoChurchEval4---"
+#  print "(5," + str(mean) + ")"
+
+  

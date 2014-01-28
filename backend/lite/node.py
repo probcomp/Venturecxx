@@ -1,40 +1,64 @@
 from abc import ABCMeta, abstractmethod
 from spref import SPRef
+from sp import SP
+from scope import mergeWith
 
 class Node(object):
   __metaclass__ = ABCMeta
   def __init__(self):
-    self.Tvalue = None
-    self.Tchildren = set()
+    self.value = None
+    self.children = set()
     self.isObservation = False
-    self.TmadeSP = None
-    self.TmadeSPAux = None
-    self.TnumRequests = 0
-    self.TesrParents = []
+    self.madeSP = None
+    self.madeSPAux = None
+    self.numRequests = 0
+    self.esrParents = []
     self.isObservation = False
+    self.esrParents = []
 
   def observe(self,val):
     self.observedValue = val
     self.isObservation = True
 
+  def groundValue(self):
+    if isinstance(self.value,SPRef): return self.value.makerNode.madeSP
+    else: return self.value
+
+  def parents(self): return self.definiteParents()
+
 class ConstantNode(Node):
   def __init__(self,value):
     super(ConstantNode,self).__init__()
-    self.Tvalue = value
+    self.value = value
 
-  def fixed_parents(self): return []
-
+  def parents(self): return []
+  def definiteParents(self): return []
 
 class LookupNode(Node):
   def __init__(self,sourceNode):
     super(LookupNode,self).__init__()
     self.sourceNode = sourceNode
 
-  def fixed_parents(self): return [self.sourceNode]
+  def parents(self): return [self.sourceNode]
+  def definiteParents(self): return [self.sourceNode]
 
 
 class ApplicationNode(Node):
   __metaclass__ = ABCMeta
+
+  def spRef(self): 
+    if not isinstance(self.operatorNode.value,SPRef):
+      print "spRef not an spRef"
+      print "is a: " + str(type(self.operatorNode.value))
+    assert isinstance(self.operatorNode.value,SPRef)
+    assert isinstance(self.operatorNode.value.makerNode,Node)
+    assert not self.operatorNode.value.makerNode.madeSP is None
+    assert isinstance(self.operatorNode.value.makerNode.madeSP,SP)
+    return self.operatorNode.value
+
+  def sp(self): return self.spRef().makerNode.madeSP
+  def spaux(self): return self.spRef().makerNode.madeSPAux
+  def psp(self): return self.sp().requestPSP
 
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
@@ -46,9 +70,11 @@ class RequestNode(ApplicationNode):
 
   def registerOutputNode(self,outputNode):
     self.outputNode = outputNode
-    self.Tchildren.add(outputNode)
+    self.children.add(outputNode)
 
-  def fixed_parents(self): return [self.operatorNode] + self.operandNodes
+  def parents(self): return [self.operatorNode] + self.operandNodes
+  def definiteParents(self): return [self.operatorNode] + self.operandNodes
+
 
 class OutputNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,requestNode,env):
@@ -58,7 +84,8 @@ class OutputNode(ApplicationNode):
     self.requestNode = requestNode
     self.env = env
 
-  def fixed_parents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]
+  def definiteParents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]
+  def parents(self): return self.definiteParents() + self.esrParents
 
 class Args():
   def __init__(self,trace,node):

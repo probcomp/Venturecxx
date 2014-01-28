@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import time
 import random
-import pdb
 import numpy
 import pylab
+import cPickle as pickle
+import os
 
 # whether to record a value returned from the ripl
 def record(value):
@@ -129,7 +130,7 @@ class VentureUnit:
     
     # Provides independent samples from the joint distribution (observes turned into predicts).
     # A random subset of the predicts are tracked along with the assumed variables.
-    def sampleFromJoint(self, samples, track=5, verbose=False):
+    def sampleFromJoint(self, samples, track=5, verbose=False, name=None):
         assumedValues = {}
         for (symbol, expression) in self.assumes:
           assumedValues[symbol] = []
@@ -150,7 +151,8 @@ class VentureUnit:
             self.updateValues(assumedValues, assumeToDirective)
             self.updateValues(predictedValues, predictToDirective)
         
-        history = History('sample_from_joint', self.parameters)
+        tag = 'sample_from_joint' if name is None else name + '_sample_from_joint'
+        history = History(tag, self.parameters)
         
         history.addSeries('logscore', 'i.i.d.', logscores)
         
@@ -164,7 +166,7 @@ class VentureUnit:
         return history
     
     # iterates until (approximately) all random choices have been resampled
-    def sweep(self):
+    def sweep(self,infer=None):
         iterations = 0
         
         #FIXME: use a profiler method here
@@ -172,7 +174,12 @@ class VentureUnit:
         
         while iterations < get_entropy_info()['unconstrained_random_choices']:
             step = get_entropy_info()['unconstrained_random_choices']
-            self.ripl.infer(step)
+            if infer is None:
+                self.ripl.infer(step)
+            else:
+                # TODO Incoming infer procedure may touch more than
+                # "step" choices; how to count sweeps right?
+                infer(self.ripl, step)
             iterations += step
         
         return iterations
@@ -180,8 +187,9 @@ class VentureUnit:
     # Runs inference on the joint distribution (observes turned into predicts).
     # A random subset of the predicts are tracked along with the assumed variables.
     # If profiling is enabled, information about random choices is recorded.
-    def runFromJoint(self, sweeps, track=5, runs=3, verbose=False, profile=False):
-        history = History('run_from_joint', self.parameters)
+    def runFromJoint(self, sweeps, track=5, runs=3, verbose=False, profile=False, name=None, infer=None):
+        tag = 'run_from_joint' if name is None else name + '_run_from_joint'
+        history = History(tag, self.parameters)
         
         for run in range(runs):
             if verbose:
@@ -202,7 +210,7 @@ class VentureUnit:
                 
                 # FIXME: use timeit module for better precision
                 start = time.time()
-                iterations = self.sweep()
+                iterations = self.sweep(infer)
                 end = time.time()
                 
                 sweepTimes.append(end-start)
@@ -212,7 +220,7 @@ class VentureUnit:
                 self.updateValues(assumedValues, assumeToDirective)
                 self.updateValues(predictedValues, predictToDirective)
             
-            history.addSeries('sweep_time', 'run ' + str(run), sweepTimes)
+            history.addSeries('sweep time (s)', 'run ' + str(run), sweepTimes)
             history.addSeries('sweep_iters', 'run ' + str(run), sweepIters)
             history.addSeries('logscore', 'run ' + str(run), logscores)
             
@@ -229,11 +237,12 @@ class VentureUnit:
     
     # Computes the KL divergence on i.i.d. samples from the prior and inference on the joint.
     # Returns the sampled history, inferred history, and history of KL divergences.
-    def computeJointKL(self, sweeps, samples, track=5, runs=3, verbose=False):
-        sampledHistory = self.sampleFromJoint(samples, track, verbose)
-        inferredHistory = self.runFromJoint(sweeps, track, runs, verbose)
+    def computeJointKL(self, sweeps, samples, track=5, runs=3, verbose=False, name=None, infer=None):
+        sampledHistory = self.sampleFromJoint(samples, track, verbose, name=name)
+        inferredHistory = self.runFromJoint(sweeps, track, runs, verbose, name=name, infer=infer)
         
-        klHistory = History('kl_divergence', self.parameters)
+        tag = 'kl_divergence' if name is None else name + '_kl_divergence'
+        klHistory = History(tag, self.parameters)
         
         for (name, seriesList) in inferredHistory.nameToSeries.iteritems():
             if name not in sampledHistory.nameToSeries: continue
@@ -249,8 +258,9 @@ class VentureUnit:
     
     # Runs inference on the model conditioned on observed data.
     # By default the data is as given in makeObserves(parameters).
-    def runFromConditional(self, sweeps, data=None, runs=3, verbose=False, profile=False):
-        history = History('run_from_conditional', self.parameters)
+    def runFromConditional(self, sweeps, data=None, runs=3, verbose=False, profile=False, infer=None, name=None):
+        tag = 'run_from_conditional' if name is None else name + '_run_from_conditional'
+        history = History(tag, self.parameters)
         
         for run in range(runs):
             if verbose:
@@ -281,7 +291,7 @@ class VentureUnit:
                 
                 # FIXME: use timeit module for better precision
                 start = time.time()
-                iterations = self.sweep()
+                iterations = self.sweep(infer=infer)
                 end = time.time()
                 
                 sweepTimes.append(end-start)
@@ -290,7 +300,7 @@ class VentureUnit:
                 
                 self.updateValues(assumedValues, assumeToDirective)
             
-            history.addSeries('sweep_time', 'run ' + str(run), sweepTimes)
+            history.addSeries('sweep time (s)', 'run ' + str(run), sweepTimes)
             history.addSeries('sweep_iters', 'run ' + str(run), sweepIters)
             history.addSeries('logscore', 'run ' + str(run), logscores)
             
@@ -410,24 +420,98 @@ class History:
     # directory specifies location of plots
     # default format is pdf
     def plot(self, fmt='pdf', directory=None):
+        self.save(directory)
         if directory == None:
             directory = self.defaultDirectory()
         
-        if not os.path.exists(directory):
-            os.mkdir(directory)
+        ensure_directory(directory)
         
         for (name, seriesList) in self.nameToSeries.iteritems():
-            plotSeries(name, self.label, seriesList, self.parameters, fmt, directory)
-            plotHistogram(name, self.label, seriesList, self.parameters, fmt, directory)
+            self.plotOneSeries(name, fmt=fmt, directory=directory)
+            self.plotOneHistogram(name, fmt=fmt, directory=directory)
+
+        # TODO There is a better way to expose computed series like
+        # this: make the nameToSeries lookup be a method that does
+        # this computation.
+        if "logscore" in self.nameToSeries and "sweep time (s)" in self.nameToSeries:
+            logscores = self.nameToSeries["logscore"] # :: [Series]
+            sweep_times = self.nameToSeries["sweep time (s)"]
+            score_v_time = [Series(run_logs.label, run_logs.values, True, xvals=numpy.cumsum(run_times.values))
+                            for (run_logs, run_times) in zip(logscores, sweep_times)]
+            plotSeries("logscore_vs_wallclock", score_v_time, subtitle=self.label,
+                       parameters=self.parameters, fmt=fmt, directory=directory, xlabel="time (s)")
         
         print 'plots written to ' + directory
 
+    # Plots one series of interest, offering greater control over the
+    # configuration of the plot.
+    # TODO Carefully spec which names are available to plot.
+    def plotOneSeries(self, name, directory=None, **kwargs):
+        # TODO Is it ok for a method to have the same name as a global
+        # function in Python?
+        if directory == None:
+            directory = self.defaultDirectory()
+        ensure_directory(directory)
+        if name in self.nameToSeries:
+            plotSeries(name, self.nameToSeries[name], subtitle=self.label,
+                       parameters=self.parameters, directory=directory, **kwargs)
+        else:
+            raise Exception("Cannot plot non-existent series %s" % name)
+
+    def plotOneHistogram(self, name, directory=None, **kwargs):
+        if directory == None:
+            directory = self.defaultDirectory()
+        ensure_directory(directory)
+        if name in self.nameToSeries:
+            plotHistogram(name, self.nameToSeries[name], subtitle=self.label,
+                          parameters=self.parameters, directory=directory, **kwargs)
+        else:
+            raise Exception("Cannot histogram non-existent series %s" % name)
+
+    def save(self, directory=None):
+        if directory == None:
+            directory = self.defaultDirectory()
+        ensure_directory(directory)
+        filename = directory + "/" + self.label
+        pickle.dump(self, open(filename, "wb" ) )
+        print "History dumped to %s using pickle" % filename
+
+def ensure_directory(directory):
+    if not os.path.isdir(directory):
+        try:
+            os.makedirs(directory)
+        except OSError as e:
+            if os.path.isdir(directory):
+                pass
+            else:
+                raise
+
+def loadHistory(filename):
+    return pickle.load(open(filename))
+
+# :: string -> [(string,History)] -> History containing all those time series overlaid
+# TODO Parameters have to agree for now
+def historyOverlay(name, named_hists):
+    answer = History(label=name, parameters=named_hists[0][1].parameters)
+    for (subname,subhist) in named_hists:
+        for (seriesname,seriesSet) in subhist.nameToSeries.iteritems():
+            for subseries in seriesSet:
+                answer.addSeries(seriesname, subname + "_" + subseries.label, subseries.values, subseries.hist)
+    return answer
+
 # aggregates values for one variable over the course of a run
 class Series:
-    def __init__(self, label, values, hist):
+    def __init__(self, label, values, hist, xvals=None):
         self.label = label
         self.values = values
         self.hist = hist
+        self._xvals = xvals
+
+    def xvals(self):
+        if self._xvals is not None:
+            return self._xvals
+        else:
+            return range(len(self.values)) # Should be the same as plotting just the values
 
 import matplotlib
 #matplotlib.use('pdf')
@@ -448,49 +532,57 @@ def showParameters(parameters):
     
     plt.text(0, 1, text, transform=plt.axes().transAxes, va='top', size='small', linespacing=1.0)
 
+def setYBounds(seriesList, ybounds=None):
+    if ybounds is None:
+        ymin = min([min(series.values) for series in seriesList])
+        ymax = max([max(series.values) for series in seriesList])
+
+        offset = 0.1 * max([(ymax - ymin), 1.0])
+
+        if not any([any([numpy.isinf(v) for v in series.values]) for series in seriesList]):
+            plt.ylim([ymin - offset, ymax + offset])
+    else:
+        [ylow,yhigh] = ybounds
+        plt.ylim([ylow,yhigh])
+
 # Plots a set of series.
-def plotSeries(name, subtitle, seriesList, parameters, fmt, directory):
+def plotSeries(name, seriesList, subtitle="", parameters=None,
+               fmt='pdf', directory='.', xlabel='Sweep', ylabel=None, ybounds=None):
     fig = plt.figure()
     plt.clf()
     plt.title('Series for ' + name + '\n' + subtitle)
-    plt.xlabel('Sweep')
-    plt.ylabel(name)
-    showParameters(parameters)
+    plt.xlabel(xlabel)
+    if ylabel is None:
+        ylabel = name
+    plt.ylabel(ylabel)
+    if parameters is not None:
+        showParameters(parameters)
     
-    plots = [plt.plot(series.values, label=series.label)[0] for series in seriesList]
+    plots = [plt.plot(series.xvals(), series.values, label=series.label)[0] for series in seriesList]
     
-    #plt.legend(plots, [series.label for series in seriesList])
     legend_outside()
+    setYBounds(seriesList, ybounds)
 
-    ymin = min([min(series.values) for series in seriesList])
-    ymax = max([max(series.values) for series in seriesList])
-
-    offset = 0.1 * max([(ymax - ymin), 1.0])
-
-    if not any([any([numpy.isinf(v) for v in series.values]) for series in seriesList]):
-        plt.ylim([ymin - offset, ymax + offset])
-    
-    #plt.tight_layout()
-    #fig.savefig(directory + name.replace(' ', '_') + '_series.' + fmt, format=fmt)
     filename = directory + name.replace(' ', '_') + '_series.' + fmt
     savefig_legend_outside(filename)
 
 # Plots histograms for a set of series.
-def plotHistogram(name, subtitle, seriesList, parameters, fmt, directory):
+def plotHistogram(name, seriesList, subtitle="", parameters=None,
+                  fmt='pdf', directory='.', xlabel=None, ylabel='Frequency', bins=20):
     fig = plt.figure()
     plt.clf()
     plt.title('Histogram of ' + name + '\n' + subtitle)
-    plt.xlabel(name)
-    plt.ylabel('Frequency')
-    showParameters(parameters)
+    if xlabel is None:
+        xlabel = name
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    if parameters is not None:
+        showParameters(parameters)
     
     # FIXME: choose a better bin size
-    plt.hist([series.values for series in seriesList], bins=20, label=[series.label for series in seriesList])
+    plt.hist([series.values for series in seriesList], bins=bins, label=[series.label for series in seriesList])
     legend_outside()
-    # plt.legend()
     
-    #plt.tight_layout()
-    #fig.savefig(directory + name.replace(' ', '_') + '_hist.' + fmt, format=fmt)
     filename = directory + name.replace(' ', '_') + '_hist.' + fmt
     savefig_legend_outside(filename)
 

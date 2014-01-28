@@ -13,8 +13,6 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-from libtrace import Trace
-import pdb
 from venture.exception import VentureException
 
 # Thin wrapper around cxx Trace
@@ -25,6 +23,7 @@ class Engine:
   def __init__(self):
     self.directiveCounter = 0
     self.directives = {}
+    from libtrace import Trace
     self.trace = Trace()
 
   def nextBaseAddr(self):
@@ -94,6 +93,7 @@ class Engine:
     del self.trace
     self.directiveCounter = 0
     self.directives = {}
+    from libtrace import Trace
     self.trace = Trace()
 
   # Blow away the trace and rebuild one from the directives.  The goal
@@ -125,7 +125,6 @@ class Engine:
   def infer(self,params=None):
     if params is None:
       params = {}
-
     if 'transitions' not in params:
       params['transitions'] = 1
     else:
@@ -133,18 +132,25 @@ class Engine:
       # python/test/ripl_test.py) fails, and if params are printed,
       # you'll see a float for the number of transitions
       params['transitions'] = int(params['transitions'])
+    
+    if "kernel" in params and params['kernel'] == "cycle":
+      if 'subkernels' not in params:
+        raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
+      for n in range(params["transitions"]):
+        for k in params["subkernels"]:
+          self.infer(k)
+    else: # A primitive infer expression
+      self.set_default_params(params)
+      self.trace.infer(params)
 
+  def set_default_params(self,params):
     if 'kernel' not in params:
       params['kernel'] = 'mh'
-    if 'use_global_scaffold' not in params:
-      params['use_global_scaffold'] = False
-
-    if len(params.keys()) > 3:
-      raise Exception("Invalid parameter dictionary passed to infer: " + str(params))
-
+    if 'scope' not in params:
+      params['scope'] = "default"
+    if 'block' not in params:
+      params['block'] = "one"
     #print "params: " + str(params)
-
-    self.trace.infer(params)
 
   def logscore(self): return self.trace.getGlobalLogScore()
 
@@ -161,6 +167,7 @@ class Engine:
     return self.trace.continuous_inference_status()
 
   def start_continuous_inference(self, params):
+    self.set_default_params(params)
     self.trace.start_continuous_inference(params)
 
   def stop_continuous_inference(self):

@@ -9,7 +9,10 @@ class Particle(Trace):
   def __init__(self,trace):
     self.base = trace
     self.cache = {} # TODO persistent map from nodes to node records
-    self.rcs = [] # TODO persistent set?
+    self.rcs = set() # TODO persistent set?
+    self.ccs = set()
+    self.aes = {}
+    self.scopes = {}
 
   def _at(self,node):
     if node in self.cache:

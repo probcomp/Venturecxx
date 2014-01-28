@@ -16,7 +16,7 @@
 #!/usr/bin/python
 
 from distutils.core import setup, Extension
-from os import path
+import os
 
 #src_dir = "backend/cxx/src"
 #src_files = []
@@ -24,9 +24,9 @@ from os import path
 #def find_cxx(agg, dirname, fnames):
 #    for f in fnames:
 #        if f.endswith(".cxx"):
-#            agg.append(path.join(dirname, f))
+#            agg.append(os.path.join(dirname, f))
 #
-#path.walk(src_dir, find_cxx, src_files)
+#os.path.walk(src_dir, find_cxx, src_files)
 #print(src_files)
 
 src_files = [
@@ -96,7 +96,12 @@ cxx = Extension("venture.cxx.libtrace",
     undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
     include_dirs = inc_dirs,
     sources = src_files)
-ext_modules.append(cxx)
+
+if "SKIP_CXX_BACKEND" in os.environ:
+    print "Skipping CXX backend because SKIP_CXX_BACKEND is %s" % os.environ["SKIP_CXX_BACKEND"]
+    print "Unset it to build the CXX backend."
+else:
+    ext_modules.append(cxx)
 
 setup (
     name = 'Venture CXX',
@@ -105,7 +110,7 @@ setup (
     url = 'TBA',
     long_description = 'TBA.',
     packages = packages,
-    package_dir={"venture":"python/lib/", "venture.test":"python/test/",
+    package_dir={"venture":"python/lib/", "venture.test":"test/",
         "venture.cxx":"backend/cxx/", "venture.lite":"backend/lite/"},
     ext_modules = ext_modules,
     scripts = ['script/venture']

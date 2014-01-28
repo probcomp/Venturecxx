@@ -1,171 +1,165 @@
 from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
 from psp import ESRRefOutputPSP
-import pdb
 from spref import SPRef
 
-class Scaffold():
+class Scaffold:
+  def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None):
+    self.setsOfPNodes = setsOfPNodes if setsOfPNodes else []
+    self.regenCounts = regenCounts if regenCounts else {}
+    self.absorbing = absorbing if absorbing else set()
+    self.aaa = aaa if aaa else set()
+    self.border = border if border else []
+    self.lkernels = lkernels if lkernels else {}
 
-  def __init__(self,trace,principalNodes=[],useDeltaKernels=False):
-    self.trace = trace
-    self.drg = set() # later becomes a map { node => regenCount }
-    self.absorbing = set()
-    self.aaa = set()
-    self.border = []
-    self.disableCounts = {}
-    self.brush = set()
-    self.disabledRequests = set()
-    self.lkernels = {}
-
-    self.construct(principalNodes,useDeltaKernels)
-
-  def construct(self,principalNodes,useDeltaKernels):
-    # add all candidates to drg, absorbing, and aaa
-    self.findPreliminaryBorder(principalNodes) 
-
-    # remove the brush from drg, absorbing, and aaa
-    # initializes all regenCounts to 0 in the drg
-    self.disableBrush() 
-
-    # computes the regenCounts for all nodes in the drg
-    # adds terminal resampling nodes to the border
-    # registers aaa kernels
-    self.setRegenCounts() 
-
-    # registers any additional kernels, e.g. Gaussian drift kernels
-    self.loadDefaultKernels(useDeltaKernels)
-
-
-  def hasKernelFor(self,node): return node in self.lkernels
-  def getKernel(self,node): return self.lkernels[node]
-  def hasChildInAorD(self,node):
-    kids = self.trace.childrenAt(node)
-    return kids.intersection(self.drg) or kids.intersection(self.absorbing)
-  
-
+  def getPrincipalNodes(self): return set.union(*self.setsOfPNodes)
+  def getRegenCount(self,node): return self.regenCounts[node]
+  def incrementRegenCount(self,node): self.regenCounts[node] += 1
+  def decrementRegenCount(self,node): self.regenCounts[node] -= 1
+  def isResampling(self,node): return node in self.regenCounts
   def isAbsorbing(self,node): return node in self.absorbing
-  def isResampling(self,node): return node in self.drg
   def isAAA(self,node): return node in self.aaa
-
-  def unregisterAbsorbing(self,node): self.absorbing.remove(node)
-
-  def addResamplingNode(self,q,node):
-    if self.isAbsorbing(node): self.unregisterAbsorbing(node)
-    self.drg.add(node)
-    q.extend([(n,False) for n in self.trace.childrenAt(node)])
-
-  def addAAANode(self,node):
-    self.drg.add(node)
-    self.aaa.add(node)
-
-  def addAbsorbingNode(self,node): 
-    self.absorbing.add(node)
-
-  def esrReferenceCanAbsorb(self,node):
-    return isinstance(self.trace.pspAt(node),ESRRefOutputPSP) and \
-           not self.isResampling(node.requestNode) and \
-           not self.isResampling(self.trace.esrParentsAt(node)[0])
-
-  def findPreliminaryBorder(self,principalNodes):
-    q = [(pnode,True) for pnode in principalNodes]
-
-    while q:
-      node,isPrincipal = q.pop()
-      if self.isResampling(node): pass
-      elif isinstance(node,LookupNode): self.addResamplingNode(q,node)
-      elif self.isResampling(node.operatorNode): self.addResamplingNode(q,node)
-      elif self.trace.pspAt(node).canAbsorb() and not isPrincipal: self.addAbsorbingNode(node)
-      elif self.trace.pspAt(node).childrenCanAAA(): self.addAAANode(node)
-      elif self.esrReferenceCanAbsorb(node): self.addAbsorbingNode(node)
-      else: self.addResamplingNode(q,node)
-
-  def disableBrush(self):
-    for node in self.drg:
-      if isinstance(node,RequestNode): self.disableRequests(node)
-    self.drg = { node : 0 for node in self.drg if not node in self.brush }
-    self.absorbing = set([node for node in self.absorbing if not node in self.brush])
-    self.aaa = set([node for node in self.aaa if not node in self.brush])
-    self.border.extend(self.absorbing)
-
-  def disableRequests(self,node):
-    if node in self.disabledRequests: return
-    self.disabledRequests.add(node)
-    for esrParent in self.trace.esrParentsAt(node.outputNode):
-      if not esrParent in self.disableCounts: self.disableCounts[esrParent] = 0
-      self.disableCounts[esrParent] += 1
-      if self.disableCounts[esrParent] == self.trace.numRequestsAt(esrParent):
-        self.disableEval(esrParent)
-
-  def registerBrush(self,node): self.brush.add(node)
-
-  def registerBorder(self,node): self.border.append(node)
-  def registerKernel(self,node,kernel): 
-    assert not node in self.lkernels
-    self.lkernels[node] = kernel
-
-  def hasAAANodes(self): return self.aaa
-
-  def disableEval(self,node):
-    if node in self.brush: return
-    self.registerBrush(node)
-    if isinstance(node,OutputNode):
-      self.registerBrush(node.requestNode)
-      self.disableRequests(node.requestNode)
-      self.disableEval(node.operatorNode)
-      for operandNode in node.operandNodes: self.disableEval(operandNode)
-
-  def resetRegenCounts(self):
-    self.drg = {node:0 for node in self.drg}
-
-  def setRegenCounts(self):
-    for node in self.drg:
-      if self.isAAA(node):
-        self.drg[node] += 1
-        self.registerBorder(node)
-        self.registerKernel(node,self.trace.pspAt(node).getAAALKernel())
-      elif not self.hasChildInAorD(node):
-        self.drg[node] = len(self.trace.childrenAt(node)) + 1
-        self.registerBorder(node)
-      else:
-        self.drg[node] = len(self.trace.childrenAt(node))
-
-    if self.hasAAANodes():
-      for node in self.absorbing.union(self.drg):
-        for parent in self.trace.parentsAt(node): self.maybeIncrementAAARegenCount(parent)
-      for node in self.brush: 
-        if isinstance(node,OutputNode):
-          for esrParent in self.trace.esrParentsAt(node): self.maybeIncrementAAARegenCount(esrParent)
-        elif isinstance(node,LookupNode): self.maybeIncrementAAARegenCount(node.sourceNode)
-
-  def maybeIncrementAAARegenCount(self,node):
-    value = self.trace.valueAt(node)
-    if isinstance(value,SPRef) and self.isAAA(value.makerNode): self.drg[value.makerNode] += 1
-
-  def loadDefaultKernels(self,useDeltaKernels):
-    for node in self.drg:
-      if isinstance(node,ApplicationNode) and not self.isAAA(node) and not self.isResampling(node.operatorNode):
-        psp = self.trace.pspAt(node)
-        if useDeltaKernels and psp.hasDeltaKernel():
-          self.registerKernel(node,psp.deltaKernel())
-        elif psp.hasSimulationKernel():
-          self.registerKernel(node,psp.simulationKernel())
-
-  def decrementRegenCount(self,node):
-    assert node in self.drg
-    self.drg[node] -= 1
-
-  def incrementRegenCount(self,node):
-    assert node in self.drg
-    self.drg[node] += 1
-
-  def regenCount(self,node):
-    assert node in self.drg
-    return self.drg[node]
+  def hasLKernel(self,node): return node in self.lkernels
+  def getLKernel(self,node): return self.lkernels[node]
 
   def show(self):
     print "---Scaffold---"
-    print "drg: " + str(self.drg)
-    print "absorbing: " + str(self.absorbing)
-    print "border: " + str(self.border)
-    print "aaa: " + str(self.aaa)
+    print "regenCounts: " + str(len(self.regenCounts))
+    print "absorbing: " + str(len(self.absorbing))
+    print "aaa: " + str(len(self.aaa))
+    print "border: " + str(len(self.border))
+
+def constructScaffold(trace,setsOfPNodes):
+  cDRG,cAbsorbing,cAAA = set(),set(),set()
+  indexAssignments = {}
+  assert isinstance(setsOfPNodes,list)
+  for i in range(len(setsOfPNodes)):
+    assert isinstance(setsOfPNodes[i],set)
+    extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i)
+
+  brush = findBrush(trace,cDRG,cAbsorbing,cAAA)
+  drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
+  border = findBorder(trace,drg,absorbing,aaa)
+  regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
+  lkernels = loadKernels(trace,drg,aaa)
+  borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
+  return Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels)
+
+def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i):
+  if node in absorbing: absorbing.remove(node)
+  if node in aaa: aaa.remove(node)
+  drg.add(node)
+  q.extend([(n,False) for n in trace.childrenAt(node)])
+  indexAssignments[node] = i
+
+def addAbsorbingNode(absorbing,node,indexAssignments,i):
+  absorbing.add(node)
+  indexAssignments[node] = i
+
+def addAAANode(drg,aaa,node,indexAssignments,i):
+  drg.add(node)
+  aaa.add(node)
+  indexAssignments[node] = i
+
+def esrReferenceCanAbsorb(trace,drg,node):
+  return isinstance(trace.pspAt(node),ESRRefOutputPSP) and \
+         not node.requestNode in drg and \
+         not trace.esrParentsAt(node)[0] in drg
+
+def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
+  q = [(pnode,True) for pnode in pnodes]
+
+  while q:
+    node,isPrincipal = q.pop()
+    if node in drg and not node in aaa: pass
+    elif isinstance(node,LookupNode) or node.operatorNode in drg:
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
+    elif (trace.pspAt(node).canAbsorb() or esrReferenceCanAbsorb(trace,drg,node)) and not isPrincipal: 
+      addAbsorbingNode(absorbing,node,indexAssignments,i)
+    elif trace.pspAt(node).childrenCanAAA(): 
+      addAAANode(drg,aaa,node,indexAssignments,i)
+    else: 
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
 
 
+def findBrush(trace,cDRG,cAbsorbing,cAAA):
+  disableCounts = {}
+  disabledRequests = set()
+  brush = set()
+  for node in cDRG:
+    if isinstance(node,RequestNode):
+      disableRequests(trace,node,disableCounts,disabledRequests,brush)
+  return brush
+
+def disableRequests(trace,node,disableCounts,disabledRequests,brush):
+  if node in disabledRequests: return
+  disabledRequests.add(node)
+  for esrParent in trace.esrParentsAt(node.outputNode):
+    if not esrParent in disableCounts: disableCounts[esrParent] = 0
+    disableCounts[esrParent] += 1
+    if disableCounts[esrParent] == esrParent.numRequests:
+      disableFamily(trace,esrParent,disableCounts,disabledRequests,brush)
+
+def disableFamily(trace,node,disableCounts,disabledRequests,brush):
+  if node in brush: return
+  brush.add(node)
+  if isinstance(node,OutputNode):
+    brush.add(node.requestNode)
+    disableRequests(trace,node.requestNode,disableCounts,disabledRequests,brush)
+    disableFamily(trace,node.operatorNode,disableCounts,disabledRequests,brush)
+    for operandNode in node.operandNodes: 
+      disableFamily(trace,operandNode,disableCounts,disabledRequests,brush)
+
+def removeBrush(cDRG,cAbsorbing,cAAA,brush):
+  drg = cDRG - brush
+  absorbing = cAbsorbing - brush
+  aaa = cAAA - brush
+  assert aaa.issubset(drg)
+  return drg,absorbing,aaa
+
+def hasChildInAorD(trace,drg,absorbing,node):
+  kids = trace.childrenAt(node)
+  return kids.intersection(drg) or kids.intersection(absorbing)
+
+def findBorder(trace,drg,absorbing,aaa):
+  border = absorbing.union(aaa)
+  for node in drg - aaa:
+    if not hasChildInAorD(trace,drg,absorbing,node): border.add(node)
+  return border
+
+def maybeIncrementAAARegenCount(trace,regenCounts,aaa,node):
+  value = trace.valueAt(node)
+  if isinstance(value,SPRef) and value.makerNode in aaa: 
+    regenCounts[value.makerNode] += 1
+
+def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
+  regenCounts = {}
+  for node in drg:
+    if node in aaa:
+      regenCounts[node] = 1 # will be added to shortly
+    elif node in border:
+      regenCounts[node] = len(trace.childrenAt(node)) + 1
+    else:
+      regenCounts[node] = len(trace.childrenAt(node))
+  
+  if aaa:
+    for node in drg.union(absorbing):
+      for parent in trace.parentsAt(node):
+        maybeIncrementAAARegenCount(trace,regenCounts,aaa,parent)
+
+    for node in brush:
+      if isinstance(node,OutputNode):
+        for esrParent in trace.esrParentsAt(node):
+          maybeIncrementAAARegenCount(trace,regenCounts,aaa,esrParent)
+      elif isinstance(node,LookupNode):
+        maybeIncrementAAARegenCount(trace,regenCounts,aaa,node.sourceNode)
+
+  return regenCounts
+
+def loadKernels(trace,drg,aaa):
+  return { node : trace.pspAt(node).getAAALKernel() for node in aaa}
+
+def assignBorderSequnce(border,indexAssignments,numIndices):
+  borderSequence = [[] for i in range(numIndices)]
+  for node in border:
+    borderSequence[indexAssignments[node]].append(node)
+  return borderSequence

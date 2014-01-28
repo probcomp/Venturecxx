@@ -1,17 +1,17 @@
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
+#
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -140,19 +140,9 @@ def run_venture_console(ripl):
           expression_and_literal_value = content.rsplit(" ", 1)
           ripl.force(expression_and_literal_value[0], expression_and_literal_value[1])
         elif (directive_name == "infer"):
-          args = content.split(" ")
-          kernel = "mh"
-          scaffold = "local"
-          if len(args) == 3:
-            ripl.infer(int(args[0]), args[1], True)
-            kernel = args[1]
-            scaffold = "global"
-          elif len(args) == 2:
-            ripl.infer(int(args[0]), args[1])
-            kernel = args[1]
-          else:
-            ripl.infer(int(args[0]))
-          print "Made {0} inference iterations of {1} kernel with {2} scaffold.".format(args[0], kernel, scaffold)
+          command = expToDict(parse(content))
+          ripl.infer(command)
+          print "Inferred according to %s." % command
         elif (directive_name == "report"):
           print ripl.report(int(content))
         else:
@@ -161,3 +151,93 @@ def run_venture_console(ripl):
       print "Your query has generated an error:"
       traceback.print_exc()
 
+def read(s):
+  "Read a Scheme expression from a string."
+  return read_from(tokenize(s))
+
+parse = read
+
+def tokenize(s):
+  "Convert a string into a list of tokens."
+  return s.replace('(',' ( ').replace(')',' ) ').split()
+
+def read_from(tokens):
+  "Read an expression from a sequence of tokens."
+  if len(tokens) == 0:
+    raise SyntaxError('unexpected EOF while reading')
+  token = tokens.pop(0)
+  if '(' == token:
+    L = []
+    while tokens[0] != ')':
+      L.append(read_from(tokens))
+    tokens.pop(0) # pop off ')'
+    return L
+  elif ')' == token:
+    raise SyntaxError('unexpected )')
+  else:
+    return atom(token)
+
+def atom(token):
+  "Numbers become numbers; every other token is a symbol."
+  try: return int(token)
+  except ValueError:
+    try: return float(token)
+    except ValueError:
+      return str(token)
+
+def unparse(exp):
+  "Convert a Python object back into a Lisp-readable string."
+  return '('+' '.join(map(unparse, exp))+')' if isinstance(exp, list) else str(exp)
+
+def expToDict(exp):
+  tag = exp[0]
+  if tag == "mh":
+    assert len(exp) == 4
+    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3]}
+  elif tag == "pgibbs":
+    assert len(exp) == 5
+    return {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4]}
+  elif tag == "meanfield":
+    assert len(exp) == 5
+    return {"kernel":"meanfield","scope":exp[1],"block":exp[2],"steps":exp[3],"transitions":exp[4]}
+  elif tag == "latents":
+    assert len(exp) == 4
+    return {"kernel":"latents","scope":exp[1],"block":exp[2],"transitions":exp[3]}
+  elif tag == "rejection":
+    assert len(exp) == 4
+    return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":exp[3]}
+  elif tag == "mixture":
+    assert len(exp) == 3
+    weights = []
+    subkernels = []
+    assert type(exp[1]) is list
+    for i in range(len(exp[1])/2):
+      j = 2*i
+      k = j + 1
+      weights.append(exp[1][j])
+      subkernels.append(expToDict(exp[1][k]))
+    return {"kernel":"mixture","weights":weights,"subkernels":subkernels,"transitions":exp[2]}
+  elif tag == "cycle":
+    assert len(exp) == 3
+    assert type(exp[1]) is list
+    subkernels = [expToDict(e) for e in exp[1]]
+    return {"kernel":"cycle","subkernels":subkernels,"transitions":exp[2]}
+  else:
+    raise Exception("Cannot parse infer instruction")
+
+def testHandInspect():
+  k1 = "(mh 11 22 33)"
+  k2 = "(pgibbs 11 22 33 44)"
+  k3 = "(meanfield 11 22 33 44)"
+  k4 = "(latents 11 22 33)"
+  k5 = "(rejection 11 22 33)"
+
+  print k1,expToDict(parse(k1))
+  print k2,expToDict(parse(k2))
+  print k3,expToDict(parse(k3))
+  print k4,expToDict(parse(k4))
+  print k5,expToDict(parse(k5))
+  print "----------------------"
+  print expToDict(parse("(cycle (%s %s) 100)" % (k1,k2)))
+  print expToDict(parse("(mixture (.1 %s .9 %s) 100)" % (k1,k2)))
+  print expToDict(parse("(cycle (%s (mixture (.1 %s .9 %s) 100)) 1000)" % (k1,k2,k3)))

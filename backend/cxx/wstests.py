@@ -16,7 +16,6 @@
 from venture.shortcuts import *
 import sys
 import math
-import pdb
 import itertools
 import scipy.stats as stats
 import numpy as np
@@ -220,12 +219,15 @@ def runAllTests(N):
 def collectSamples(ripl,address,T,kernel=None,use_global_scaffold=None):
   kernel = kernel if kernel is not None else globalKernel
   use_global_scaffold = use_global_scaffold if use_global_scaffold is not None else globalUseGlobalScaffold
+  block = "one" if not use_global_scaffold else "all"
+  return collectSamplesWith(ripl, address, T, {"transitions":100, "kernel":kernel, "block":block})
+
+def collectSamplesWith(ripl, address, T, params):
   predictions = []
   for t in range(T):
     # Going direct here saved 5 of 35 seconds on some unscientific
     # tests, presumably by avoiding the parser.
-    ripl.sivm.core_sivm.engine.infer({"transitions":100, "kernel":kernel, "use_global_scaffold":use_global_scaffold})
-    # ripl.infer(100,kernel,use_global_scaffold)
+    ripl.sivm.core_sivm.engine.infer(params)
     predictions.append(ripl.report(address))
     ripl.sivm.core_sivm.engine.reset()
   return predictions
@@ -237,6 +239,7 @@ def runTests(N):
   reportTest(repeatTest(testCategorical1, N))
   reportTest(repeatTest(testMHNormal0, N))
   reportTest(repeatTest(testMHNormal1, N))
+  runBlockingTests(N)
   reportTest(repeatTest(testMem0, N))
   reportTest(repeatTest(testMem1, N))
   reportTest(repeatTest(testMem2, N))
@@ -260,12 +263,13 @@ def runTests(N):
     reportTest(repeatTest(testMakeBetaBernoulli4, "make_ubeta_bernoulli", N))
   reportTest(repeatTest(testLazyHMM1, N))
   reportTest(repeatTest(testLazyHMMSP1, N))
+  reportTest(repeatTest(testGamma1, N))
+  reportTest(repeatTest(testBreakMem, N))
   if globalBackend != make_lite_church_prime_ripl:
     # These rely upon builtins primitives that the Lite backend doesn't have.
     # Those that are testing those primitives (as opposed to testing the engine with them)
     # can reasonably stay gated for a while.
     reportTest(repeatTest(testStudentT0, N))
-    reportTest(repeatTest(testGamma1, N))
     reportTest(repeatTest(testMakeSymDirMult1, "make_sym_dir_mult", N))
     reportTest(repeatTest(testMakeSymDirMult1, "make_uc_sym_dir_mult", N))
     reportTest(repeatTest(testMakeSymDirMult2, "make_sym_dir_mult", N))
@@ -295,7 +299,6 @@ def runTests(N):
     reportTest(repeatTest(testReferences2, N))
     # TODO This failure looks like a real bug
     reportTest(repeatTest(testMemoizingOnAList))
-    reportTest(repeatTest(testBreakMem, N))
     # reportTest(repeatTest(testHPYLanguageModel1, N)) # TODO slow and fails
     # reportTest(repeatTest(testHPYLanguageModel2, N)) # TODO slow and fails
     reportTest(repeatTest(testGoldwater1, N))
@@ -304,6 +307,14 @@ def runTests(N):
   # reportTest(repeatTest(testObserveAPredict1, N))
   # testObserveAPredict2(N)
   reportTest(testMemHashFunction1(5,5))
+
+def runBlockingTests(N):
+  if globalBackend == make_lite_church_prime_ripl:
+    reportTest(repeatTest(testBlockingExample0, N))
+    reportTest(testBlockingExample1())
+    reportTest(testBlockingExample2())
+    reportTest(testBlockingExample3())
+
 
 def runTests2(N):
   reportTest(testGeometric1(N))
@@ -400,6 +411,73 @@ def testMHNormal1(N):
   cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
   return reportKnownContinuous("testMHNormal1", cdf, predictions, "approximately N(24,sqrt(7/3))")
 
+def testBlockingExample0(N):
+  ripl = RIPL()
+  ripl.assume("a", "(scope_include 0 0 (normal 10.0 1.0))")
+  ripl.assume("b", "(scope_include 1 1 (normal a 1.0))")
+  ripl.observe("(normal b 1.0)", 14.0)
+
+  # If inference only frobnicates b, then the distribution on a
+  # remains the prior.
+  predictions = collectSamplesWith(ripl,1,N,{"transitions":10,"kernel":globalKernel,"scope":1,"block":1})
+  cdf = stats.norm(loc=10.0, scale=1.0).cdf
+  return reportKnownContinuous("testBlockingExample0", cdf, predictions, "N(10.0,1.0)")
+
+def testBlockingExample1():
+  ripl = RIPL()
+  ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))")
+  ripl.assume("b", "(scope_include 0 0 (normal 1.0 1.0))")
+  olda = ripl.report(1)
+  oldb = ripl.report(2)
+  # The point of block proposals is that both things change at once.
+  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":globalKernel, "scope":0, "block":0})
+  newa = ripl.report(1)
+  newb = ripl.report(2)
+  assert not(olda == newa)
+  assert not(oldb == newb)
+  return reportPassage("testBlockingExample1")
+
+def testBlockingExample2():
+  ripl = RIPL()
+  ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))")
+  ripl.assume("b", "(scope_include 0 0 (normal 1.0 1.0))")
+  ripl.assume("c", "(scope_include 0 1 (normal 2.0 1.0))")
+  ripl.assume("d", "(scope_include 0 1 (normal 3.0 1.0))")
+  olda = ripl.report(1)
+  oldb = ripl.report(2)
+  oldc = ripl.report(3)
+  oldd = ripl.report(4)
+  # Should change everything in one or the other block
+  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":globalKernel, "scope":0, "block":"one"})
+  newa = ripl.report(1)
+  newb = ripl.report(2)
+  newc = ripl.report(3)
+  newd = ripl.report(4)
+  if (olda == newa):
+    assert oldb == newb
+    assert not(oldc == newc)
+    assert not(oldd == newd)
+  else:
+    assert not(oldb == newb)
+    assert oldc == newc
+    assert oldd == newd
+  return reportPassage("testBlockingExample2")
+
+def testBlockingExample3():
+  ripl = RIPL()
+  ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))")
+  ripl.assume("b", "(scope_include 0 1 (normal 1.0 1.0))")
+  olda = ripl.report(1)
+  oldb = ripl.report(2)
+  # The point of block proposals is that both things change at once.
+  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":globalKernel, "scope":0, "block":"all"})
+  newa = ripl.report(1)
+  newb = ripl.report(2)
+  assert not(olda == newa)
+  assert not(oldb == newb)
+  return reportPassage("testBlockingExample3")
+
+
 def testStudentT0(N):
   ripl = RIPL()
   ripl.assume("a", "(student_t 1.0)")
@@ -423,7 +501,7 @@ def testMem0(N):
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   ripl.predict("(f (bernoulli 0.5))")
   ripl.predict("(f (bernoulli 0.5))")
-  ripl.infer(N, kernel="mh", use_global_scaffold=False)
+  ripl.infer(N)
   return reportPassage("TestMem0")
 
 
@@ -533,7 +611,7 @@ def testIf1(N):
   ripl.assume('IF', '(lambda () branch)')
   ripl.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
   ripl.predict('(IF2 (bernoulli 0.5) IF IF)')
-  ripl.infer(N/10, kernel="mh", use_global_scaffold=False)
+  ripl.infer(N/10)
   return reportPassage("TestIf1")
 
 def testIf2(N):
@@ -542,7 +620,7 @@ def testIf2(N):
   ripl.assume('if2', '(branch (bernoulli 0.5) (lambda () if1) (lambda () if1))')
   ripl.assume('if3', '(branch (bernoulli 0.5) (lambda () if2) (lambda () if2))')
   ripl.assume('if4', '(branch (bernoulli 0.5) (lambda () if3) (lambda () if3))')
-  ripl.infer(N/10, kernel="mh", use_global_scaffold=False)
+  ripl.infer(N/10)
   return reportPassage("TestIf2")
 
 def testBLOGCSI(N):
@@ -1002,16 +1080,16 @@ def loadPYMem(ripl):
 def loadDPMem(ripl):
   ripl.assume("pick_a_stick","""
 (lambda (sticks k)
-  (branch (bernoulli (sticks k))
-    (lambda () k)
-    (lambda () (pick_a_stick sticks (plus k 1)))))
+  (if (bernoulli (sticks k))
+      k
+      (pick_a_stick sticks (plus k 1))))
 """)
 
   ripl.assume("make_sticks","""
 (lambda (alpha)
   ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
    (mem (lambda (k)
-     (beta 1 (plus alpha (times k k)))))))
+     (beta 1 alpha)))))
 """)
 
   ripl.assume("u_dpmem","""
@@ -1043,7 +1121,7 @@ def testDPMem1(N):
 def observeCategories(ripl,counts):
   for i in range(len(counts)):
     for ct in range(counts[i]):
-      ripl.observe("(normal (f) 1.0)",i)
+      ripl.observe("(flip (if (= (f) %d) 1.0 0.1))" % i,"true")
 
 def testCRP1(N,isCollapsed):
   ripl = RIPL()
@@ -1126,7 +1204,7 @@ def testGeometric1(N):
 
   predictions = collectSamples(ripl,"pid",N)
 
-  k = 16
+  k = 128
   ans = [(n,math.pow(2,-n)) for n in range(1,k)]
   return reportKnownDiscrete("TestGeometric1", ans, predictions)
 
@@ -1138,7 +1216,7 @@ def testTrig1(N):
   ripl.assume("b","(sq (cos x))")
   ripl.predict("(+ a b)")
   for i in range(N/10):
-    ripl.infer(10,kernel="mh",use_global_scaffold=False)
+    ripl.infer(10)
     assert abs(ripl.report(5) - 1) < .001
   return reportPassage("TestTrig1")
 
@@ -1418,4 +1496,81 @@ def testMemHashFunction1(A,B):
       ripl.observe("(f %d %d)" % (a,b),"0.5")
   return reportPassage("TestMemHashFunction(%d,%d)" % (A,B))
 
+
+###########################
+###### DSELSAM (madness) ##
+###########################
+def testDHSCRP1(N):
+  ripl = RIPL()
+
+  ripl.assume("dpmem","""
+(lambda (alpha base_dist)
+  ((lambda (augmented_proc crp)
+     (lambda () (augmented_proc (crp))))
+   (mem (lambda (table) (base_dist)))
+   (make_crp alpha)))
+""")
+
+#  ripl.assume("alpha","(gamma 1.0 1.0)")
+  ripl.assume("alpha","1.0")
+  ripl.assume("base_dist","(lambda () (categorical 0.2 0.2 0.2 0.2 0.2))")
+  ripl.assume("f","(dpmem alpha base_dist)")
+
+  ripl.predict("(f)",label="pid")
+
+  observeCategories(ripl,[2,2,5,1,0])
+
+  predictions = collectSamples(ripl,"pid",N)
+  ans = [(0,2.2), (1,2.2), (2,5.2), (3,1.2), (4,0.2)]
+  return reportKnownDiscrete("TestDHSCRP1", ans, predictions)
+
+def testDHSCRP2(N):
+  ripl = RIPL()
+  loadDPMem(ripl)
+
+  ripl.assume("alpha","1.0")
+
+  ripl.assume("base_dist","(lambda () (categorical 0.2 0.2 0.2 0.2 0.2))")
+  ripl.assume("f","(u_dpmem alpha base_dist)")
+
+  ripl.predict("(f)",label="pid")
+
+  observeCategories(ripl,[2,2,5,1,0])
+
+  predictions = collectSamples(ripl,"pid",N)
+  ans = [(0,2.2), (1,2.2), (2,5.2), (3,1.2), (4,0.2)]
+  return reportKnownDiscrete("TestDHSCRP2", ans, predictions)
+
+
+
+
+
+def testPGibbsBlockingMHHMM1(N):
+  ripl = RIPL()
+
+  ripl.assume("x0","(scope_include 0 0 (normal 0.0 1.0))")
+  ripl.assume("x1","(scope_include 0 1 (normal x0 1.0))")
+  ripl.assume("x2","(scope_include 0 2 (normal x1 1.0))")
+  ripl.assume("x3","(scope_include 0 3 (normal x2 1.0))")
+  ripl.assume("x4","(scope_include 0 4 (normal x3 1.0))")
+
+  ripl.assume("y0","(normal x0 1.0)")
+  ripl.assume("y1","(normal x1 1.0)")
+  ripl.assume("y2","(normal x2 1.0)")
+  ripl.assume("y3","(normal x3 1.0)")
+  ripl.assume("y4","(normal x4 1.0)")
+
+  ripl.observe("y0",1.0)
+  ripl.observe("y1",2.0)
+  ripl.observe("y2",3.0)
+  ripl.observe("y3",4.0)
+  ripl.observe("y4",5.0)
+  ripl.predict("x4")
+
+  predictions = collectSamplesWith(ripl,16,N,{"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered"})
+  reportKnownMeanVariance("TestPGibbsBlockingMHHMM1", 390/89.0, 55/89.0, predictions)
+  cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
+  return reportKnownContinuous("TestPGibbsBlockingMHHMM1", cdf, predictions, "N(4.382, 0.786)")
+
+##########
 
