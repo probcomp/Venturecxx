@@ -64,3 +64,28 @@ VentureValue * MapLookupSP::simulateOutput(Node * node, gsl_rng * rng) const
 }
 
 
+VentureValue * GenericLookupSP::simulateOutput(Node * node, gsl_rng * rng) const
+{
+  vector<Node *> & operands = node->operandNodes;
+  VentureMap * vmap = dynamic_cast<VentureMap*>(operands[0]->getValue());
+  if (vmap) {
+    // TODO Is there a way to avoid duplicating these code bodies with
+    // the non-generic SPs?
+    assert(vmap->map.count(operands[1]->getValue()));
+    return vmap->map[operands[1]->getValue()];
+  } else {
+    VentureVector * vec = dynamic_cast<VentureVector *>(operands[0]->getValue());
+    if (vec) {
+      VentureNumber * i = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+      assert(i);
+      assert(0 <= i->getInt() && i->getInt() < vec->xs.size());
+      return vec->xs[i->getInt()];
+    } else {
+      VentureList * lst = dynamic_cast<VentureList *>(operands[0]->getValue());
+      assert(lst);
+      VentureNumber * i = dynamic_cast<VentureNumber *>(operands[1]->getValue());
+      assert(i);
+      return listRef(lst, i->getInt());
+    }
+  }
+}

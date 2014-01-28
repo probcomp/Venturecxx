@@ -102,8 +102,10 @@ map<string,SP *> initBuiltInSPs()
 
     // maps
     {"dict", new MakeMapSP},
-    {"dict_contains", new MapContainsSP},
+    {"contains", new MapContainsSP},
     {"dict_lookup", new MapLookupSP},
+
+    {"lookup", new GenericLookupSP},
     
     // booleans
     {"and", new BoolAndSP},
