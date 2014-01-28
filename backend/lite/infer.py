@@ -8,7 +8,7 @@ from scaffold import constructScaffold
 from node import ApplicationNode, OutputNode
 from lkernel import VariationalLKernel, DeterministicLKernel
 from utils import simulateCategorical, cartesianProduct
-
+from nose.tools import assert_almost_equal
 import sys
 import copy
 
@@ -22,10 +22,10 @@ def mixMH(trace,indexer,operator):
   xiMix = indexer.logDensityOfIndex(proposedTrace,index)
 
   if math.log(random.random()) < xiMix + logAlpha - rhoMix:
-#    sys.stdout.write("!")
+    sys.stdout.write("!")
     operator.accept() # May mutate trace
   else:
-#    sys.stdout.write("?")
+    sys.stdout.write("?")
     operator.reject() # May mutate trace
 
 class BlockScaffoldIndexer(object):
@@ -315,7 +315,7 @@ class ParticlePGibbsOperator(object):
       
     assertTorus(scaffold)
 
-    particles = [Particle(trace) for p in range(P+1)]
+    particles = [Particle(trace=trace) for p in range(P+1)]
     self.particles = particles
     
     particleWeights = [None for p in range(P+1)]
@@ -327,7 +327,7 @@ class ParticlePGibbsOperator(object):
       particleWeights[p] = regenAndAttach(particles[p],scaffold.border[0],scaffold,False,OmegaDB(),{})
 
     particleWeights[P] = regenAndAttach(particles[P],scaffold.border[0],scaffold,True,rhoDBs[0],{})
-    assert particleWeights[P] == rhoWeights[0] # TODO this might fail, but I'd like to make it work
+    assert_almost_equal(particleWeights[P],rhoWeights[0])
           
 #   for every time step,
     for t in range(1,T):
@@ -336,11 +336,11 @@ class ParticlePGibbsOperator(object):
       # Sample new particle and propagate
       for p in range(P):
         parent = simulateCategorical([math.exp(w) for w in particleWeights])
-        newParticles[p] = Particle(particles[parent])
+        newParticles[p] = Particle(particle=particles[parent])
         newParticleWeights[p] = regenAndAttach(newParticles[p],self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
-      newParticles[P] = Particle(particles[P])
+      newParticles[P] = Particle(particle=particles[P])
       newParticleWeights[P] = regenAndAttach(newParticles[P],self.scaffold.border[t],self.scaffold,True,rhoDBs[t],{})
-      assert particleWeights[P] == rhoWeights[t] # TODO this might fail, but I'd like to make it work
+      assert_almost_equal(particleWeights[P],rhoWeights[t])
       particles = newParticles
       particleWeights = newParticleWeights
 

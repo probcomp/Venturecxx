@@ -10,6 +10,7 @@ class Node(object):
     self.children = set()
     self.isObservation = False
     self.madeSP = None
+    self.madeSPFamilies = None
     self.madeSPAux = None
     self.numRequests = 0
     self.esrParents = []

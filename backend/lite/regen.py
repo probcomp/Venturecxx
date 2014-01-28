@@ -1,6 +1,6 @@
 from exp import *
 from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
-from sp import SP
+from sp import SP,SPFamilies,SPAux
 from psp import ESRRefOutputPSP
 from spref import SPRef
 from lkernel import VariationalLKernel
@@ -97,7 +97,8 @@ def processMadeSP(trace,node,isAAA):
   trace.setMadeSPAt(node,sp)
   trace.setValueAt(node,SPRef(node))
   if not isAAA:
-    trace.setMadeSPAuxAt(node, sp.constructSPAux())
+    trace.setMadeSPFamiliesAt(node,SPFamilies())
+    trace.setMadeSPAuxAt(node,sp.constructSPAux())
     if sp.hasAEKernel(): trace.registerAEKernel(node)
 
 def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
@@ -107,16 +108,15 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   if omegaDB.hasValueFor(node): oldValue = omegaDB.getValue(node)
   else: oldValue = None
 
-  if shouldRestore: newValue = oldValue
-  elif scaffold.hasLKernel(node):
+  if scaffold.hasLKernel(node):
     k = scaffold.getLKernel(node)
-    newValue = k.simulate(trace,oldValue,args)
+    newValue = k.simulate(trace,oldValue,args) if not shouldRestore else oldValue
     weight += k.weight(trace,newValue,oldValue,args)
     if isinstance(k,VariationalLKernel): 
       gradients[node] = k.gradientOfLogDensity(newValue,args)
   else: 
     # if we simulate from the prior, the weight is 0
-    newValue = psp.simulate(args)
+    newValue = psp.simulate(args) if not shouldRestore else oldValue
 
   trace.setValueAt(node,newValue)
   psp.incorporate(newValue,args)
@@ -137,7 +137,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
   # first evaluate exposed simulation requests (ESRs)
   for esr in request.esrs:
-    if not trace.spauxAt(node).containsFamily(esr.id):
+    if not trace.spFamiliesAt(node).containsFamily(esr.id):
       if shouldRestore: 
         esrParent = omegaDB.getESRParent(trace.spAt(node),esr.id)
         weight += restore(trace,esrParent,scaffold,omegaDB,gradients)
@@ -146,7 +146,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
         weight += w
       trace.registerFamilyAt(node,esr.id,esrParent)
 
-    esrParent = trace.spauxAt(node).getFamily(esr.id)
+    esrParent = trace.spFamiliesAt(node).getFamily(esr.id)
     trace.addESREdge(esrParent,node.outputNode)
 
   # next evaluate latent simulation requests (LSRs)

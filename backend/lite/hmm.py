@@ -1,6 +1,5 @@
-from sp import SP
+from sp import SP,SPAux
 from psp import PSP, RandomPSP
-from spaux import SPAux
 from request import Request
 import numpy as np
 import numpy.random as npr

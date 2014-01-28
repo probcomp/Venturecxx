@@ -23,8 +23,8 @@ class Engine:
   def __init__(self):
     self.directiveCounter = 0
     self.directives = {}
-    from libtrace import Trace
-    self.trace = Trace()
+    #from libtrace import Trace
+    self.trace = None
 
   def nextBaseAddr(self):
     self.directiveCounter += 1
@@ -150,6 +150,9 @@ class Engine:
       params['scope'] = "default"
     if 'block' not in params:
       params['block'] = "one"
+    if 'with_mutation' not in params:
+      params['with_mutation'] = True
+
     #print "params: " + str(params)
 
   def logscore(self): return self.trace.getGlobalLogScore()

@@ -1,19 +1,32 @@
-from copy import copy
+import copy
 import math
-
+from sp import SPFamilies
+from nose.tools import assert_equal
 import trace
 
 class Particle(trace.Trace):
   # The trace is expected to be a torus, with the chosen scaffold
   # already detached.
-  def __init__(self,trace):
-    self.base = trace
-    self.cache = {} # TODO persistent map from nodes to node records
-    self.rcs = set() # TODO persistent set?
-    self.ccs = set()
-    self.aes = set()
-    self.scopes = {}
-    self.regenCounts = {}
+  def __init__(self,trace=None,particle=None):
+    if trace is not None:
+      assert particle is None
+      self.base = trace
+      self.cache = {} # TODO persistent map from nodes to node records
+      self.rcs = set() # TODO persistent set?
+      self.ccs = set()
+      self.aes = set()
+      self.scopes = {}
+      self.regenCounts = {}
+    elif particle is not None:
+      self.base = particle.base
+      self.cache = particle.cache.copy() # TODO persistent map from nodes to node records
+      self.rcs = particle.rcs.copy() # TODO persistent set?
+      self.ccs = particle.ccs.copy()
+      self.aes = particle.aes.copy()
+      self.scopes = particle.scopes.copy()
+      self.regenCounts = particle.regenCounts.copy()
+    else:
+      raise Exception("Particle has no default constructor")
 
   def _at(self,node):
     if node in self.cache:
@@ -38,6 +51,11 @@ class Particle(trace.Trace):
     return self._at(node).madeSP
   def setMadeSPAt(self,node,sp):
     self._alterAt(node, lambda r: r.update(madeSP=sp))
+
+  def madeSPFamiliesAt(self,node): return self._at(node).madeSPFamilies
+  def setMadeSPFamiliesAt(self,node,madeSPFamilies):     
+    self._alterAt(node, lambda r: r.update(madeSPFamilies=madeSPFamilies))
+
   def madeSPAuxAt(self,node):
     return self._at(node).madeSPAux
   def setMadeSPAuxAt(self,node,aux):
@@ -120,7 +138,6 @@ class Particle(trace.Trace):
   
   def incRegenCountAt(self,scaffold,node): self.regenCounts[node] += 1
   def decRegenCountAt(self,scaffold,node): self.regenCounts[node] -= 1 # need not be overriden
-      
 
   def blocksInScope(self,scope):
     blocks = set()
@@ -129,7 +146,9 @@ class Particle(trace.Trace):
     return blocks
 
   def commit(self):
-    for (node,r) in self.cache.iteritems(): r.commit(self.base, node)
+    for (node,r) in self.cache.iteritems(): 
+      print "comitting record..."
+      r.commit(self.base, node)
     self.base.rcs.update(self.rcs)
     self.base.ccs.update(self.ccs)
     self.base.aes.update(self.aes)
@@ -142,13 +161,18 @@ def record_for(node):
   madeAux = None
   if node.madeSPAux is not None:
     madeAux = node.madeSPAux.copy()
-  return Record(value=node.value, madeSP=node.madeSP, madeSPAux=madeAux,
-                esrParents=node.esrParents, children=node.children, numRequests=node.numRequests)
+    assert_equal(type(madeAux),type(node.madeSPAux))
+  madeFamilies = None
+  if node.madeSPFamilies is not None:
+    madeFamilies = node.madeSPFamilies.copy()
+  return Record(value=copy.copy(node.value), madeSP=node.madeSP, madeSPFamilies=madeFamilies,madeSPAux=madeAux,
+                esrParents=copy.copy(node.esrParents), children=node.children.copy(), numRequests=node.numRequests)
 
 class Record(object):
-  def __init__(self,value=None,madeSP=None,madeSPAux=None,esrParents=None,children=None,numRequests=0):
+  def __init__(self,value=None,madeSP=None,madeSPFamilies=None,madeSPAux=None,esrParents=None,children=None,numRequests=0):
     self.value = value
     self.madeSP = madeSP
+    self.madeSPFamilies = madeSPFamilies
     self.madeSPAux = madeSPAux
     self.esrParents = []
     if esrParents: self.esrParents = esrParents
@@ -157,12 +181,13 @@ class Record(object):
     self.numRequests = numRequests
 
   def _copy(self):
-    return Record(self.value, self.madeSP, self.madeSPAux, self.esrParents, self.children, self.numRequests)
+    return Record(self.value, self.madeSP, self.madeSPFamilies,self.madeSPAux, self.esrParents, self.children, self.numRequests)
 
-  def update(self,value=None,madeSP=None,madeSPAux=None,esrParents=None,children=None,numRequests=None):
+  def update(self,value=None,madeSP=None,madeSPFamilies=None,madeSPAux=None,esrParents=None,children=None,numRequests=None):
     ans = self._copy()
     if value is not None: ans.value = value
     if madeSP is not None: ans.madeSP = madeSP
+    if madeSPFamilies is not None: ans.madeSPFamilies = madeSPFamilies
     if madeSPAux is not None: ans.madeSPAux = madeSPAux
     if esrParents is not None: ans.esrParents = esrParents
     if children is not None: ans.children = children
@@ -170,12 +195,12 @@ class Record(object):
     return ans
 
   def add_child(self,child):
-    new_children = copy(self.children)
+    new_children = copy.copy(self.children)
     new_children.add(child)
     return self.update(children=new_children)
 
   def remove_child(self,child):
-    new_children = copy(self.children)
+    new_children = copy.copy(self.children)
     new_children.remove(child)
     return self.update(children=new_children)
 
@@ -183,27 +208,30 @@ class Record(object):
     return self.esrParents[-1]
 
   def pop_esrParent(self):
-    new_esrParents = copy(self.esrParents)
+    new_esrParents = copy.copy(self.esrParents)
     new_esrParents.pop()
     return self.update(esrParents=new_esrParents)
 
   def append_esrParent(self,parent):
-    new_esrParents = copy(self.esrParents)
+    new_esrParents = copy.copy(self.esrParents)
     new_esrParents.append(parent)
     return self.update(esrParents=new_esrParents)
 
   def registerFamily(self,esrId,esrParent):
-    self.madeSPAux.registerFamily(esrId,esrParent)
+    self.madeSPFamilies.registerFamily(esrId,esrParent)
     return self
 
   def unregisterFamily(self,esrId):
-    self.madeSPAux.unregisterFamily(esrId)
+    self.madeSPFamilies.unregisterFamily(esrId)
     return self
 
   def commit(self,trace,node):
     if self.value is not None: trace.setValueAt(node,self.value)
     if self.madeSP is not None: trace.setMadeSPAt(node,self.madeSP)
-    if self.madeSPAux is not None: trace.setMadeSPAuxAt(node,self.madeSPAux)
+    if self.madeSPFamilies is not None: trace.setMadeSPFamiliesAt(node,self.madeSPFamilies)
+    if self.madeSPAux is not None: 
+      print "committing aux..."
+      trace.setMadeSPAuxAt(node,self.madeSPAux)
     if self.esrParents is not None: trace.setEsrParentsAt(node,self.esrParents)
     if self.children is not None: trace.setChildrenAt(node,self.children)
     if self.numRequests is not None: trace.setNumRequestsAt(node,self.numRequests)

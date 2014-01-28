@@ -10,6 +10,7 @@ from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,Enumer
 import random
 from omegadb import OmegaDB
 from smap import SMap
+from sp import SPFamilies
 
 class Trace(object):
   def __init__(self):
@@ -117,6 +118,10 @@ class Trace(object):
     return candidate
   
   def spAt(self,node): return self.madeSPAt(self.spRefAt(node).makerNode)
+  def spFamiliesAt(self,node): 
+    spFamilies = self.madeSPFamiliesAt(self.spRefAt(node).makerNode)
+    assert isinstance(spFamilies,SPFamilies)
+    return spFamilies
   def spauxAt(self,node): return self.madeSPAuxAt(self.spRefAt(node).makerNode)
   def pspAt(self,node):
     if isinstance(node, RequestNode):
@@ -135,6 +140,9 @@ class Trace(object):
   def madeSPAt(self,node): return node.madeSP
   def setMadeSPAt(self,node,sp): node.madeSP = sp
     
+  def madeSPFamiliesAt(self,node): return node.madeSPFamilies
+  def setMadeSPFamiliesAt(self,node,families): node.madeSPFamilies = families
+
   def madeSPAuxAt(self,node): return node.madeSPAux
   def setMadeSPAuxAt(self,node,aux): node.madeSPAux = aux
 
@@ -151,8 +159,8 @@ class Trace(object):
   def addChildAt(self,node,child): node.children.add(child)
   def removeChildAt(self,node,child): node.children.remove(child)
     
-  def registerFamilyAt(self,node,esrId,esrParent): self.spauxAt(node).registerFamily(esrId,esrParent)
-  def unregisterFamilyAt(self,node,esrId): self.spauxAt(node).unregisterFamily(esrId)
+  def registerFamilyAt(self,node,esrId,esrParent): self.spFamiliesAt(node).registerFamily(esrId,esrParent)
+  def unregisterFamilyAt(self,node,esrId): self.spFamiliesAt(node).unregisterFamily(esrId)
 
   def numRequestsAt(self,node): return node.numRequests
   def setNumRequestsAt(self,node,num): node.numRequests = num
