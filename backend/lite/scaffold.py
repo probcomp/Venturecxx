@@ -51,11 +51,14 @@ def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i):
   q.extend([(n,False) for n in trace.childrenAt(node)])
   indexAssignments[node] = i
 
-def addAbsorbingNode(absorbing,node,indexAssignments,i):
+def addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i):
+  assert not node in drg
+  assert not node in aaa
   absorbing.add(node)
   indexAssignments[node] = i
 
-def addAAANode(drg,aaa,node,indexAssignments,i):
+def addAAANode(drg,aaa,absorbing,node,indexAssignments,i):
+  if node in absorbing: absorbing.remove(node)
   drg.add(node)
   aaa.add(node)
   indexAssignments[node] = i
@@ -73,10 +76,12 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
     if node in drg and not node in aaa: pass
     elif isinstance(node,LookupNode) or node.operatorNode in drg:
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
+    # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
+    elif node in aaa: pass 
     elif (trace.pspAt(node).canAbsorb() or esrReferenceCanAbsorb(trace,drg,node)) and not isPrincipal: 
-      addAbsorbingNode(absorbing,node,indexAssignments,i)
+      addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i)
     elif trace.pspAt(node).childrenCanAAA(): 
-      addAAANode(drg,aaa,node,indexAssignments,i)
+      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
     else: 
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
 
@@ -114,6 +119,7 @@ def removeBrush(cDRG,cAbsorbing,cAAA,brush):
   absorbing = cAbsorbing - brush
   aaa = cAAA - brush
   assert aaa.issubset(drg)
+  assert not drg.intersection(absorbing)
   return drg,absorbing,aaa
 
 def hasChildInAorD(trace,drg,absorbing,node):
