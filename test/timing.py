@@ -18,6 +18,21 @@ def assertLinearTime(f):
   assert ct_falling > len(ratios)*0.1, "Runtime of f is growing too fast.\nTimes: %r\nRatios: %r" % (times, ratios)
   assert ct_falling < len(ratios)*0.9, "Runtime of f is not growing fast enough.\nTimes: %r\nRatios: %r" % (times, ratios)
 
+# Checks that the runtime of the unary function f(n)() does not depend
+# on its input.
+def assertConstantTime(f):
+  times = timings(f)
+  (base_n,base_t) = times[0]
+  norm_times = [(n - base_n, t - base_t) for (n,t) in times[1:]]
+  # The notion is that the ratios of delta t to delta n should neither
+  # systematically grow nor systematically shrink.
+  differences = [norm_times[i+1][1] - norm_times[i][1] for i in range(len(norm_times)-1)]
+  ct_falling = len(filter(lambda r: r < 0, differences))
+  # print times
+  # print differences
+  assert ct_falling > len(differences)*0.1, "Runtime of f is growing.\nTimes: %r\nDifferences: %r" % (times, differences)
+  assert ct_falling < len(differences)*0.9, "Runtime of f is falling.\nTimes: %r\nDifferences: %r" % (times, differences)
+
 # :: (Integer -> (() -> a)) -> [(Integer,Time)]
 # Measures the runtime of the unary function f at several points.  The
 # interface to the function (returning a thunk) permits it to have an

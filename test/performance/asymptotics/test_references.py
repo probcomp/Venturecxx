@@ -1,4 +1,5 @@
 from venture.test.stats import *
+import venture.test.timing as timing
 import time
 import cProfile
 import sys
@@ -25,19 +26,12 @@ def loadChurchPairProgram(K):
 @attr('slow')
 def testChurchPairProgram1():
 
-  Ks = [pow(2,k) for k in range(2,11)]
-
-  inferTimes = []
-  N = 100
-
-  for K in Ks:
+  def pairify(K):
     ripl = loadChurchPairProgram(K)
-    start = time.clock()
-    ripl.infer(N)
-    end = time.clock()
-    inferTimes.append(end - start)
+    return lambda : ripl.infer(100)
 
-  assert (max(inferTimes) / min(inferTimes)) < 3
+  timing.assertConstantTime(pairify)
+
 
 def loadReferencesProgram(K):
   ripl = get_ripl()
@@ -57,16 +51,9 @@ def loadReferencesProgram(K):
 # (this could be reused from testChurchPairProgram
 @attr('slow')
 def testReferencesProgram1():
-  Ks = [pow(2,k) for k in range(2,11)]
 
-  inferTimes = []
-  N = 100
-
-  for K in Ks:
+  def refify(K):
     ripl = loadReferencesProgram(K)
-    start = time.clock()
-    ripl.infer(N)
-    end = time.clock()
-    inferTimes.append(end - start)
+    return lambda : ripl.infer(100)
 
-  assert (max(inferTimes) / min(inferTimes)) < 3
+  timing.assertConstantTime(refify)
