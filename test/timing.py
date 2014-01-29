@@ -13,9 +13,9 @@ def assertLinearTime(f):
   ratios = [t/n for (n,t) in norm_times]
   differences = [ratios[i+1] - ratios[i] for i in range(len(ratios)-1)]
   ct_falling = len(filter(lambda r: r < 0, differences))
-  print times
-  print ratios
-  print differences
+  # print times
+  # print ratios
+  # print differences
   assert ct_falling > len(differences)*0.2, "Runtime of f is growing too fast.\nTimes: %r\nRatios: %r" % (times, ratios)
   assert ct_falling < len(differences)*0.8, "Runtime of f is not growing fast enough.\nTimes: %r\nRatios: %r" % (times, ratios)
 
@@ -29,8 +29,8 @@ def assertConstantTime(f):
   # systematically grow nor systematically shrink.
   differences = [norm_times[i+1][1] - norm_times[i][1] for i in range(len(norm_times)-1)]
   ct_falling = len(filter(lambda r: r < 0, differences))
-  print times
-  print differences
+  # print times
+  # print differences
   assert ct_falling > len(differences)*0.2, "Runtime of f is growing.\nTimes: %r\nDifferences: %r" % (times, differences)
   assert ct_falling < len(differences)*0.8, "Runtime of f is falling.\nTimes: %r\nDifferences: %r" % (times, differences)
 
