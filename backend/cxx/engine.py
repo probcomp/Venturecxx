@@ -150,6 +150,8 @@ class Engine:
       params['scope'] = "default"
     if 'block' not in params:
       params['block'] = "one"
+    if 'with_mutation' not in params:
+      params['with_mutation'] = True
     #print "params: " + str(params)
 
   def logscore(self): return self.trace.getGlobalLogScore()
