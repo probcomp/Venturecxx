@@ -1,8 +1,8 @@
 import math
 import time
 
-# Checks that the runtime of the unary function f is affine in its
-# input (to wit, f(n) takes An + B time to run, and A is decidedly
+# Checks that the runtime of the unary function f(n)() is affine in its
+# input (to wit, f(n)() takes An + B time to run, and A is decidedly
 # nonzero).
 def assertLinearTime(f):
   times = timings(f)
@@ -18,13 +18,17 @@ def assertLinearTime(f):
   assert ct_falling > len(ratios)*0.1, "Runtime of f is growing too fast.\nTimes: %r\nRatios: %r" % (times, ratios)
   assert ct_falling < len(ratios)*0.9, "Runtime of f is not growing fast enough.\nTimes: %r\nRatios: %r" % (times, ratios)
 
-# :: (Integer -> a) -> [(Integer,Time)]
-# Measures the runtime of the unary function f at several points,
-# chosen so that
-# - f runs long enough to trust the accuracy of the clock
+# :: (Integer -> (() -> a)) -> [(Integer,Time)]
+# Measures the runtime of the unary function f at several points.  The
+# interface to the function (returning a thunk) permits it to have an
+# untimed setup portion, for example building a large data structure
+# and then testing that some operations on it do not depend on its
+# size.
+# The points are chosen so that
+# - the thunk runs long enough to trust the accuracy of the clock
 # - the whole process doesn't take too long
-# - the produced values are useful for assessing f's asymptotic
-#   runtime.
+# - the produced values are useful for assessing the thunk's
+#   asymptotic runtime.
 def timings(f):
   def try_next(n):
     return int(math.floor(min(2*n,max(1.2*n, n+5))))
@@ -43,23 +47,26 @@ def timings(f):
   now = time.clock()
   while not(stop(now - start_time, len(answer))):
     n = try_next(n)
-    f(n)
+    thunk = f(n)
+    start = time.clock()
+    thunk()
     end = time.clock()
-    answer.append((n,end - now))
+    answer.append((n,end - start))
     now = end
   return answer
 
-# :: (Integer -> a) -> (Integer,Time)
-# Returns a plausible input to the given function f such that f(input)
+# :: (Integer -> (() -> a)) -> (Integer,Time)
+# Returns a plausible input to the given function f such that f(input)()
 # takes long enough to trust the accuracy of the clock, and the amount
-# of time f(input) took.  The assumption is that f will only get
+# of time f(input)() took.  The assumption is that f will only get
 # slower as its input is increased.
 def min_measurable_input(f):
   clock_accuracy = 0.01 # seconds
   n = 1
   while True:
+    thunk = f(n)
     start = time.clock()
-    f(n)
+    thunk()
     duration = time.clock() - start
     if duration > 10*clock_accuracy:
       return (n, duration)
