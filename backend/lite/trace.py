@@ -161,6 +161,7 @@ class Trace(object):
     
   def registerFamilyAt(self,node,esrId,esrParent): self.spFamiliesAt(node).registerFamily(esrId,esrParent)
   def unregisterFamilyAt(self,node,esrId): self.spFamiliesAt(node).unregisterFamily(esrId)
+  def containsSPFamilyAt(self,node,id): return self.spFamiliesAt(node).containsFamily(esrId)
 
   def numRequestsAt(self,node): return node.numRequests
   def setNumRequestsAt(self,node,num): node.numRequests = num

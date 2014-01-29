@@ -126,5 +126,3 @@ class RBTree(object):
       yield self.root.val
       for x in self.right(): yield x
       
-#class PersistentSet(object):
-#  def 
