@@ -120,22 +120,11 @@ class RBTree(object):
     assert not self.isEmpty()
     return RBTree(None,color,self.left(),self.root.val,self.right())
 
-
-# void forEach(RBTree<T> const & t, F f) {
-#     if (!t.isEmpty()) {
-#         forEach(t.left(), f);
-#         f(t.root());
-#         forEach(t.right(), f);
-#     }
-# }
-
-# template<class T, class Beg, class End>
-# RBTree<T> insert(RBTree<T> t, Beg it, End end)
-# {
-#     if (it == end)
-#         return t;
-#     T item = *it;
-#     auto t1 = insert(t, ++it, end);
-#     return t1.insert(item);
-# }
-
+  def __iter__(self):
+    if not self.isEmpty():
+      for x in self.left(): yield x
+      yield self.root.val
+      for x in self.right(): yield x
+      
+#class PersistentSet(object):
+#  def 
