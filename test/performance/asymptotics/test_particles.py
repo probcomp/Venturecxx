@@ -1,4 +1,5 @@
 from venture.test.stats import *
+import venture.test.timing as timing
 import scipy.stats
 import time
 from nose.plugins.attrib import attr
@@ -34,20 +35,8 @@ def testHMMParticleAsymptotics1():
 #  from nose import SkipTest
 #  raise SkipTest("Skipping testHMMParticleAsymptotics1: no linear regression test")
 
-  K = 5
-  Ts = [2 * T for T in range(1,K+1)]
-  N = 10
+  def particulate(num_steps):
+    ripl = loadHMMParticleAsymptoticProgram1(num_steps)
+    return lambda : ripl.infer({"kernel":"pgibbs","scope":"states","block":"ordered","transitions":5,"particles":10})
 
-  inferTimes = []
-
-  for T in Ts:
-    ripl = loadHMMParticleAsymptoticProgram1(T)
-    start = time.clock()
-    ripl.infer({"kernel":"pgibbs","scope":"states","block":"ordered","transitions":N,"particles":20})
-    end = time.clock()
-    inferTimes.append(end - start)
-
-  # TODO some kind of linear regression R-value 
-  # (the run times should grow linearly in T)
-  assert (max(inferTimes) / min(inferTimes)) < 2 * K
-
+  timing.assertLinearTime(particulate)
