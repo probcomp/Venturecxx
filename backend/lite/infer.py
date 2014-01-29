@@ -356,8 +356,9 @@ class ParticlePGibbsOperator(object):
 
     totalExpWeight = sum([math.exp(w) for w in particleWeights])
     totalXiExpWeight = sum([math.exp(w) for w in particleWeights[0:-1]])
-    weightMinusXi = math.log(totalExpWeight - math.exp(xiWeight))
-    weightMinusRho = math.log(totalXiExpWeight)
+
+    weightMinusXi = math.log(totalExpWeight - math.exp(xiWeight)) if (totalExpWeight - math.exp(xiWeight)) > 0 else float("-inf")
+    weightMinusRho = math.log(totalXiExpWeight) if totalXiExpWeight > 0 else float("-inf")
 
 #    print particleWeights,weightMinusXi,weightMinusRho
     alpha = weightMinusRho - weightMinusXi
