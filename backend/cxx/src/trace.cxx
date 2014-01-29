@@ -100,7 +100,13 @@ Trace::~Trace()
 
   for (pair< pair<string,bool >, uint32_t> pp : callCounts)
   {
-    assert(callCounts[make_pair(pp.first.first,false)] == callCounts[make_pair(pp.first.first,true)]);
+    if(callCounts[make_pair(pp.first.first,false)] == callCounts[make_pair(pp.first.first,true)]) {
+      // OK
+    } else {
+      cout << "Cleanup mismatch " << pp.first.first << endl;
+      cout << callCounts[make_pair(pp.first.first,false)] << " " << callCounts[make_pair(pp.first.first,true)] << endl;
+      assert(false);
+    }
   }
 
 

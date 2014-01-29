@@ -19,5 +19,10 @@ struct MapLookupSP : SP
   void flushOutput(VentureValue * value) const override { }
 };
 
+struct GenericLookupSP : SP
+{
+  VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+};
+
 
 #endif

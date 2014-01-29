@@ -132,7 +132,8 @@ class Engine:
       # python/test/ripl_test.py) fails, and if params are printed,
       # you'll see a float for the number of transitions
       params['transitions'] = int(params['transitions'])
-    if params['kernel'] == "cycle":
+    
+    if "kernel" in params and params['kernel'] == "cycle":
       if 'subkernels' not in params:
         raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
       for n in range(params["transitions"]):
@@ -149,8 +150,8 @@ class Engine:
       params['scope'] = "default"
     if 'block' not in params:
       params['block'] = "one"
-    if len(params.keys()) > 4:
-      raise Exception("Invalid parameter dictionary passed to infer: " + str(params))
+    if 'with_mutation' not in params:
+      params['with_mutation'] = True
     #print "params: " + str(params)
 
   def logscore(self): return self.trace.getGlobalLogScore()

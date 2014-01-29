@@ -100,9 +100,11 @@ vector<VentureValue*> BernoulliSP::enumerateOutput(Node * node) const
 VentureValue * CategoricalSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<double> ps;
-  for (Node * operandNode : node->operandNodes)
+  VentureVector * vec = dynamic_cast<VentureVector *>(node->operandNodes[0]->getValue());
+  assert(vec);
+  for (VentureValue * x : vec->xs)
   {
-    VentureNumber * d = dynamic_cast<VentureNumber *>(operandNode->getValue());
+    VentureNumber * d = dynamic_cast<VentureNumber *>(x);
     assert(d);
     ps.push_back(d->x);
   }
@@ -122,7 +124,9 @@ double CategoricalSP::logDensityOutput(VentureValue * value, Node * node) const
 {
   VentureAtom * i = dynamic_cast<VentureAtom *>(value);
   assert(i);
-  VentureNumber * d = dynamic_cast<VentureNumber *>(node->operandNodes[i->n]->getValue());
+  VentureVector * vec = dynamic_cast<VentureVector *>(node->operandNodes[0]->getValue());
+  assert(vec);
+  VentureNumber * d = dynamic_cast<VentureNumber *>(vec->xs[i->n]);
   assert(d);
 
   return log(d->x);

@@ -3,6 +3,7 @@
 
 #include "all.h"
 
+#include <iostream>
 #include <vector>
 #include <cstdint>
 #include <gsl/gsl_rng.h>
@@ -23,5 +24,16 @@ void normalizeVector(vector<double> & xs);
 void destroyExpression(VentureValue * exp);
 
 uint32_t sampleCategorical(vector<double> xs, gsl_rng * rng);
+
+template <typename T>
+T* value_cast(VentureValue* x) {
+  T* answer = dynamic_cast<T*>(x);
+  if (answer == nullptr) {
+    cout << "Venture type error" << endl;
+    throw "Venture type error";
+  } else {
+    return answer;
+  }
+}
 
 #endif

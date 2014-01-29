@@ -27,6 +27,8 @@ class PSP(object):
   def hasSimulationKernel(self): return False
   def hasDeltaKernel(self): return False
 
+  def description(self,name): return None
+
 class NullRequestPSP(PSP):
   def simulate(self,args): return Request()
   def canAbsorb(self): return True

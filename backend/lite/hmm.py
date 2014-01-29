@@ -1,10 +1,10 @@
-from sp import SP
+from sp import SP,SPAux
 from psp import PSP, RandomPSP
-from spaux import SPAux
 from request import Request
 import numpy as np
 import numpy.random as npr
 import math
+from copy import copy
 
 def npSampleVector(pVec): return np.mat(npr.multinomial(1,np.array(pVec)[0,:]))
 def npIndexOfOne(pVec): return np.where(pVec[0] == 1)[1][0,0]
@@ -17,11 +17,20 @@ class HMMSPAux(SPAux):
     self.xs = [] # [ x_n ],
     self.os = {} #  { n => [o_n1, ... ,o_nK] }
 
+  def copy(self):
+    ans = HMMSPAux()
+    ans.xs = copy(self.xs)
+    ans.os = {k:copy(v) for (k,v) in self.os.iteritems()}
+    return ans
+
 class MakeUncollapsedHMMOutputPSP(PSP):
   def simulate(self,args):
-    (p0,T,O) = [np.mat(x) for x in args.operandValues]
+    (p0,T,O) = args.operandValues
     # Transposition for compatibility with CXX
     return UncollapsedHMMSP(p0,np.transpose(T),np.transpose(O))
+
+  def description(self,name):
+    return "(%s <simplex> <matrix> <matrix>) -> <SP <number> <number>>\n  Discrete-state HMM of unbounded length with discrete observations.  The inputs are the probability distribution of the first state, the transition matrix, and the observation matrix.  It is an error if the dimensionalities do not line up.  Returns observations from the HMM encoded as a stochastic procedure that takes the time step and samples a new observation at that time step." % name
 
 class UncollapsedHMMSP(SP):
   def __init__(self,p0,T,O):
@@ -46,8 +55,8 @@ class UncollapsedHMMSP(SP):
     assert len(aux.xs) > lsr
     return 0
     
-  def detachLatents(self,spaux,lsr,latentDB):
-    if len(aux.xs) == lsr + 1 and not aux.os.count(lsr):
+  def detachLatents(self,aux,lsr,latentDB):
+    if len(aux.xs) == lsr + 1 and not lsr in aux.os:
       if not aux.os:
         for i in range(len(aux.xs)): latentDB[i] = aux.xs[i]
         del aux.xs[:]

@@ -10,10 +10,16 @@ class CSPRequestPSP(PSP):
     self.env = env
 
   def simulate(self,args):
+    assert len(self.ids) == len(args.operandNodes)
     extendedEnv = Env(self.env,self.ids,args.operandNodes)
     return Request([ESR(args.node,self.exp,extendedEnv)])
-    
+
+  def canAbsorb(self): return True
+
 class MakeCSPOutputPSP(PSP):
   def simulate(self,args):
     (ids,exp) = args.operandValues[0:3]
     return SP(CSPRequestPSP(ids,exp,args.env),ESRRefOutputPSP())
+
+  def description(self,name):
+    return "%s\n  Used internally in the implementation of compound procedures." % name

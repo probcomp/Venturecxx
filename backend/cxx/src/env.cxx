@@ -46,7 +46,7 @@ Node * VentureEnvironment::findSymbol(const string & sym)
   else if (outerEnv == nullptr) 
   { 
     cout << "Cannot find symbol: " << sym << endl;
-    assert(outerEnv);
+    throw "Cannot find symbol: " + sym;
     return nullptr;
   }
   else 

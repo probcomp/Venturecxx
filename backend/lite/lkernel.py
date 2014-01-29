@@ -20,9 +20,10 @@ class DefaultAAALKernel(LKernel):
     return newValue.outputPSP.logDensityOfCounts(args.madeSPAux)
 
 class DeterministicLKernel(LKernel):
-  def __init__(self,value,sp): 
-    self.value = value
+  def __init__(self,sp,value):
     self.sp = sp
+    self.value = value
+
   def simulate(self,trace,oldValue,args): return self.value
   def weight(self,trace,newValue,oldValue,args): return self.sp.logDensity(newValue,args)
 

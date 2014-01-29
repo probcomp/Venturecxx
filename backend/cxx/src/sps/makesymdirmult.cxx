@@ -69,7 +69,7 @@ double SymDirMultSP::logDensityOutput(VentureValue * value, Node * node) const
   SymDirMultSPAux * spaux = dynamic_cast<SymDirMultSPAux *>(node->spaux());
   assert(spaux);
 
-  VentureAtom * vint = dynamic_cast<VentureAtom*>(value);
+  VentureAtom * vint = value_cast<VentureAtom>(value);
   assert(vint);
   uint32_t observedIndex = vint->n;
 

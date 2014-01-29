@@ -3,14 +3,15 @@ from psp import ESRRefOutputPSP
 from spref import SPRef
 
 class Scaffold:
-  def __init__(self,regenCounts={},absorbing=set(),aaa=set(),border=[],lkernels={}):
-    assert type(regenCounts) is dict
-    self.regenCounts = regenCounts
-    self.absorbing = absorbing
-    self.aaa = aaa
-    self.border = border
-    self.lkernels = lkernels
+  def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None):
+    self.setsOfPNodes = setsOfPNodes if setsOfPNodes else []
+    self.regenCounts = regenCounts if regenCounts else {}
+    self.absorbing = absorbing if absorbing else set()
+    self.aaa = aaa if aaa else set()
+    self.border = border if border else []
+    self.lkernels = lkernels if lkernels else {}
 
+  def getPrincipalNodes(self): return set.union(*self.setsOfPNodes)
   def getRegenCount(self,node): return self.regenCounts[node]
   def incrementRegenCount(self,node): self.regenCounts[node] += 1
   def decrementRegenCount(self,node): self.regenCounts[node] -= 1
@@ -22,36 +23,42 @@ class Scaffold:
 
   def show(self):
     print "---Scaffold---"
-    print "regenCounts: " + str(self.regenCounts)
-    print "absorbing: " + str(self.absorbing)
-    print "aaa: " + str(self.aaa)
-    print "border: " + str(self.border)
+    print "regenCounts: " + str(len(self.regenCounts))
+    print "absorbing: " + str(len(self.absorbing))
+    print "aaa: " + str(len(self.aaa))
+    print "border: " + str(len(self.border))
 
-def constructScaffold(trace,setsOfPNodes):
+def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
   cDRG,cAbsorbing,cAAA = set(),set(),set()
   indexAssignments = {}
+  assert isinstance(setsOfPNodes,list)
   for i in range(len(setsOfPNodes)):
+    assert isinstance(setsOfPNodes[i],set)
     extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i)
 
   brush = findBrush(trace,cDRG,cAbsorbing,cAAA)
   drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
   border = findBorder(trace,drg,absorbing,aaa)
   regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
-  lkernels = loadKernels(trace,drg,aaa)
+  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels)
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
-  return Scaffold(regenCounts,absorbing,aaa,borderSequence,lkernels)
+  return Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels)
 
-def addResamplingNode(trace,drg,absorbing,q,node,indexAssignments,i):
+def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i):
   if node in absorbing: absorbing.remove(node)
+  if node in aaa: aaa.remove(node)
   drg.add(node)
   q.extend([(n,False) for n in trace.childrenAt(node)])
   indexAssignments[node] = i
 
-def addAbsorbingNode(absorbing,node,indexAssignments,i):
+def addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i):
+  assert not node in drg
+  assert not node in aaa
   absorbing.add(node)
   indexAssignments[node] = i
 
-def addAAANode(drg,aaa,node,indexAssignments,i):
+def addAAANode(drg,aaa,absorbing,node,indexAssignments,i):
+  if node in absorbing: absorbing.remove(node)
   drg.add(node)
   aaa.add(node)
   indexAssignments[node] = i
@@ -66,16 +73,17 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
 
   while q:
     node,isPrincipal = q.pop()
-    if node in drg:
-      pass
+    if node in drg and not node in aaa: pass
     elif isinstance(node,LookupNode) or node.operatorNode in drg:
-      addResamplingNode(trace,drg,absorbing,q,node,indexAssignments,i)
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
+    # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
+    elif node in aaa: pass 
     elif (trace.pspAt(node).canAbsorb() or esrReferenceCanAbsorb(trace,drg,node)) and not isPrincipal: 
-      addAbsorbingNode(absorbing,node,indexAssignments,i)
+      addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i)
     elif trace.pspAt(node).childrenCanAAA(): 
-      addAAANode(drg,aaa,node,indexAssignments,i)
+      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
     else: 
-      addResamplingNode(trace,drg,absorbing,q,node,indexAssignments,i)
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
 
 
 def findBrush(trace,cDRG,cAbsorbing,cAAA):
@@ -110,6 +118,8 @@ def removeBrush(cDRG,cAbsorbing,cAAA,brush):
   drg = cDRG - brush
   absorbing = cAbsorbing - brush
   aaa = cAAA - brush
+  assert aaa.issubset(drg)
+  assert not drg.intersection(absorbing)
   return drg,absorbing,aaa
 
 def hasChildInAorD(trace,drg,absorbing,node):
@@ -151,8 +161,16 @@ def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
 
   return regenCounts
 
-def loadKernels(trace,drg,aaa):
-  return { node : trace.pspAt(node).getAAALKernel() for node in aaa}
+def loadKernels(trace,drg,aaa,useDeltaKernels):
+  lkernels = { node : trace.pspAt(node).getAAALKernel() for node in aaa}
+  if useDeltaKernels:
+    for node in drg - aaa:
+      if not isinstance(node,OutputNode): continue
+      if node.operatorNode in drg: continue
+      for o in node.operandNodes:
+        if o in drg: continue
+      if trace.pspAt(node).hasDeltaKernel(): lkernels[node] = trace.pspAt(node).getDeltaKernel()
+  return lkernels
 
 def assignBorderSequnce(border,indexAssignments,numIndices):
   borderSequence = [[] for i in range(numIndices)]
