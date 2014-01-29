@@ -1,9 +1,10 @@
 from exp import *
 from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
-from sp import SP
+from sp import SP,SPFamilies,SPAux
 from psp import ESRRefOutputPSP
 from spref import SPRef
 from lkernel import VariationalLKernel
+from scope import ScopeIncludeOutputPSP
 
 def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
@@ -19,17 +20,19 @@ def constrain(trace,node,value):
   if isinstance(node,LookupNode): return constrain(trace,node.sourceNode,value)
   assert isinstance(node,OutputNode)
   if isinstance(trace.pspAt(node),ESRRefOutputPSP): return constrain(trace,trace.esrParentsAt(node)[0],value)
-  trace.unincorporateAt(node)
-  weight = trace.logDensityAt(node,value)
+  psp,args = trace.pspAt(node),trace.argsAt(node)
+  psp.unincorporate(trace.valueAt(node),args)
+  weight = psp.logDensity(value,args)
   trace.setValueAt(node,value)
-  trace.incorporateAt(node)
+  psp.incorporate(value,args)
   trace.registerConstrainedChoice(node)
   return weight
 
 def attach(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
-  weight += trace.logDensityAt(node,trace.groundValueAt(node))
-  trace.incorporateAt(node)
+  psp,args,gvalue = trace.pspAt(node),trace.argsAt(node),trace.groundValueAt(node)
+  weight += psp.logDensity(gvalue,args)
+  psp.incorporate(gvalue,args)
   return weight
 
 def regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):
@@ -46,14 +49,14 @@ def regenESRParents(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
   if scaffold.isResampling(node):
-    if scaffold.getRegenCount(node) == 0:
+    if trace.regenCountAt(scaffold,node) == 0:
       weight += regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
       if isinstance(node,LookupNode):
         trace.setValueAt(node, trace.valueAt(node.sourceNode))
       else: 
         weight += applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients)
         if isinstance(node,RequestNode): weight += evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients)
-    scaffold.incrementRegenCount(node)
+    trace.incRegenCountAt(scaffold,node)
 
   value = trace.valueAt(node)
   if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
@@ -62,11 +65,10 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   return weight
 
 def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
-  weight = 0
   if isVariable(exp): 
     sourceNode = env.findSymbol(exp)
-    regen(trace,sourceNode,scaffold,False,omegaDB,gradients)
-    return (0,trace.createLookupNode(sourceNode))
+    weight = regen(trace,sourceNode,scaffold,False,omegaDB,gradients)
+    return (weight,trace.createLookupNode(sourceNode))
   elif isSelfEvaluating(exp): return (0,trace.createConstantNode(exp))
   elif isQuotation(exp): return (0,trace.createConstantNode(textOfQuotation(exp)))
   else:
@@ -95,47 +97,37 @@ def processMadeSP(trace,node,isAAA):
   trace.setMadeSPAt(node,sp)
   trace.setValueAt(node,SPRef(node))
   if not isAAA:
-    trace.setMadeSPAux(node, sp.constructSPAux())
+    trace.setMadeSPFamiliesAt(node,SPFamilies())
+    trace.setMadeSPAuxAt(node,sp.constructSPAux())
     if sp.hasAEKernel(): trace.registerAEKernel(node)
 
 def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0;
+  psp,args = trace.pspAt(node),trace.argsAt(node)
 
   if omegaDB.hasValueFor(node): oldValue = omegaDB.getValue(node)
   else: oldValue = None
 
-  if shouldRestore: newValue = oldValue
-  elif scaffold.hasLKernel(node):
+  if scaffold.hasLKernel(node):
     k = scaffold.getLKernel(node)
-    newValue = k.simulate(trace,oldValue,trace.argsAt(node))
-    weight += k.weight(trace,newValue,oldValue,trace.argsAt(node))
+    newValue = k.simulate(trace,oldValue,args) if not shouldRestore else oldValue
+    weight += k.weight(trace,newValue,oldValue,args)
     if isinstance(k,VariationalLKernel): 
-      gradients[node] = k.gradientOfLogDensity(newValue,trace.argsAt(node))
+      gradients[node] = k.gradientOfLogDensity(newValue,args)
   else: 
     # if we simulate from the prior, the weight is 0
-    newValue = trace.pspAt(node).simulate(trace.argsAt(node))
+    newValue = psp.simulate(args) if not shouldRestore else oldValue
 
   trace.setValueAt(node,newValue)
-  trace.incorporateAt(node)
-
-#  print "applyPSP",shouldRestore,newValue
+  psp.incorporate(newValue,args)
 
   if isinstance(newValue,SP): processMadeSP(trace,node,scaffold.isAAA(node))
-  if isinstance(trace.pspAt(node), ScopeIncludeOutputPSP):
-    # Oh, what hacky hacks we hack.
-    blockNode = trace.argsAt(node).operandNodes[2]
+  if psp.isRandom(): trace.registerRandomChoice(node)
+  if isinstance(psp,ScopeIncludeOutputPSP):
+    scope,block = [n.value for n in node.operandNodes[0:2]]
+    blockNode = node.operandNodes[2]
     if trace.pspAt(blockNode).isRandom():
-      # Was already registered in the previous time around the
-      # recursion; update
-      trace.unregisterRandomChoice(blockNode)
-    # TODO As written, this does not support a node appearing in multiple scopes.
-    [scope,block] = trace.argsAt(node).operandValues[0:2]
-    blockNode.addScope({scope:block})
-    assert isinstance(blockNode, OutputNode)
-    blockNode.requestNode.addScope({scope:block})
-    if trace.pspAt(blockNode).isRandom():
-      trace.registerRandomChoice(blockNode)
-  if trace.pspAt(node).isRandom(): trace.registerRandomChoice(node)
+      trace.registerRandomChoiceInScope(scope,block,blockNode)
   return weight
 
 def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
@@ -145,7 +137,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
   # first evaluate exposed simulation requests (ESRs)
   for esr in request.esrs:
-    if not trace.spauxAt(node).containsFamily(esr.id):
+    if not trace.spFamiliesAt(node).containsFamily(esr.id):
       if shouldRestore: 
         esrParent = omegaDB.getESRParent(trace.spAt(node),esr.id)
         weight += restore(trace,esrParent,scaffold,omegaDB,gradients)
@@ -154,8 +146,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
         weight += w
       trace.registerFamilyAt(node,esr.id,esrParent)
 
-    esrParent = trace.spauxAt(node).getFamily(esr.id)
-    if esr.block: trace.registerBlock(esr.block,esr.subblock,esrParent)
+    esrParent = trace.spFamiliesAt(node).getFamily(esr.id)
     trace.addESREdge(esrParent,node.outputNode)
 
   # next evaluate latent simulation requests (LSRs)

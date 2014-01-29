@@ -1,5 +1,25 @@
 from abc import ABCMeta, abstractmethod
-from spaux import SPAux
+
+class SPFamilies(object):
+  def __init__(self, families=None):
+    if families:
+      assert type(families) is dict
+      self.families = families
+    else:
+      self.families = {} # id => node
+
+  def containsFamily(self,id): return id in self.families
+  def getFamily(self,id): return self.families[id]
+  def registerFamily(self,id,esrParent): 
+    assert not id in self.families
+    self.families[id] = esrParent
+  def unregisterFamily(self,id): del self.families[id]
+
+  def copy(self):
+    return SPFamilies(self.families.copy())
+  
+class SPAux(object):
+  def copy(self): return SPAux()
 
 class SP(object):
   __metaclass__ = ABCMeta

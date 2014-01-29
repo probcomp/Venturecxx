@@ -10,8 +10,10 @@ class Node(object):
     self.children = set()
     self.isObservation = False
     self.madeSP = None
+    self.madeSPFamilies = None
     self.madeSPAux = None
     self.numRequests = 0
+    self.esrParents = []
     self.isObservation = False
     self.esrParents = []
 
@@ -25,26 +27,26 @@ class Node(object):
 
   def parents(self): return self.definiteParents()
 
-
 class ConstantNode(Node):
   def __init__(self,value):
     super(ConstantNode,self).__init__()
     self.value = value
 
+  def parents(self): return []
   def definiteParents(self): return []
 
 class LookupNode(Node):
   def __init__(self,sourceNode):
     super(LookupNode,self).__init__()
     self.sourceNode = sourceNode
-    self.value = sourceNode.value
 
+  def parents(self): return [self.sourceNode]
   def definiteParents(self): return [self.sourceNode]
+
 
 class ApplicationNode(Node):
   __metaclass__ = ABCMeta
 
-  def args(self): return Args(self)
   def spRef(self): 
     if not isinstance(self.operatorNode.value,SPRef):
       print "spRef not an spRef"
@@ -57,13 +59,7 @@ class ApplicationNode(Node):
 
   def sp(self): return self.spRef().makerNode.madeSP
   def spaux(self): return self.spRef().makerNode.madeSPAux
-  def addScope(self,scope):
-    def valMerge(v1, v2):
-      if not(v1 == v2):
-        raise Exception("Assigning one node to two blocks in the same scope")
-      else:
-        return v1
-    self.scopes = mergeWith(self.scopes, scope, valMerge)
+  def psp(self): return self.sp().requestPSP
 
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
@@ -72,15 +68,14 @@ class RequestNode(ApplicationNode):
     self.operandNodes = operandNodes
     self.env = env
     self.outputNode = None
-    self.scopes = {}
 
   def registerOutputNode(self,outputNode):
     self.outputNode = outputNode
     self.children.add(outputNode)
 
-  def psp(self): return self.sp().requestPSP
-
+  def parents(self): return [self.operatorNode] + self.operandNodes
   def definiteParents(self): return [self.operatorNode] + self.operandNodes
+
 
 class OutputNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,requestNode,env):
@@ -89,26 +84,25 @@ class OutputNode(ApplicationNode):
     self.operandNodes = operandNodes
     self.requestNode = requestNode
     self.env = env
-    self.scopes = {}
-
-  def psp(self): return self.sp().outputPSP
 
   def definiteParents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]
   def parents(self): return self.definiteParents() + self.esrParents
 
 class Args():
-  def __init__(self,node):
+  def __init__(self,trace,node):
     self.node = node
-    self.operandValues = [operandNode.value for operandNode in node.operandNodes]
+    self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]
     self.operandNodes = node.operandNodes
 
     if isinstance(node,OutputNode):
-      self.requestValue = node.requestNode.value
-      self.esrValues = [esrParent.value for esrParent in node.esrParents]
-      self.esrNodes = node.esrParents
-      self.madeSPAux = node.madeSPAux
+      self.requestValue = trace.valueAt(node.requestNode)
+      self.esrValues = [trace.valueAt(esrParent) for esrParent in trace.esrParentsAt(node)]
+      self.esrNodes = trace.esrParentsAt(node)
+      self.madeSPAux = trace.madeSPAuxAt(node)
       self.isOutput = True
 
-    self.spaux = node.spaux()
+    self.spaux = trace.spauxAt(node)
     self.env = node.env
 
+  def __repr__(self):
+    return "%s(%r)" % (self.__class__, self.__dict__)

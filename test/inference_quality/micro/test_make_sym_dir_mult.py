@@ -50,7 +50,7 @@ def checkMakeSymDirMultFlip(maker_1,maker_2):
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((if (lt a 10) %s %s) a 4)" % (maker_1,maker_2))
   ripl.predict("(f)",label="pid")
-  return checkDirichletMultinomialAAA("alternating collapsed/collapsed", ripl, "pid")
+  return checkDirichletMultinomialAAA("flip controls which maker(%s,%s)" % (maker_1,maker_2), ripl, "pid")
 
 def testMakeSymDirMultBrushObserves():
   """AAA where the SP flips between collapsed and uncollapsed, and

@@ -8,14 +8,18 @@ from scaffold import constructScaffold
 from node import ApplicationNode, OutputNode
 from lkernel import VariationalLKernel, DeterministicLKernel
 from utils import simulateCategorical, cartesianProduct
+from nose.tools import assert_almost_equal
 import sys
 import copy
 
 def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
+  pnodes = index.getPrincipalNodes().copy()
   rhoMix = indexer.logDensityOfIndex(trace,index)
-  logAlpha = operator.propose(trace,index) # Mutates trace and possibly operator
-  xiMix = indexer.logDensityOfIndex(trace,index)
+  # May mutate trace and possibly operator, proposedTrace is the mutated trace
+  # This is necessary for the non-mutating versions
+  proposedTrace,logAlpha = operator.propose(trace,index) 
+  xiMix = indexer.logDensityOfIndex(proposedTrace,index)
 
   if math.log(random.random()) < xiMix + logAlpha - rhoMix:
 #    sys.stdout.write("!")
@@ -51,7 +55,7 @@ class MHOperator(object):
     rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
     assertTorus(scaffold)
     xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,self.rhoDB,{})
-    return xiWeight - rhoWeight
+    return trace,xiWeight - rhoWeight
 
   def accept(self): pass
   def reject(self):
@@ -105,7 +109,7 @@ class MeanfieldOperator(object):
     assertTorus(scaffold)
 
     xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),{})
-    return xiWeight - rhoWeight
+    return trace,xiWeight - rhoWeight
 
   def accept(self): 
     if self.delegate is None:
@@ -132,10 +136,12 @@ def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
 
 def getCartesianProductOfEnumeratedValues(trace,pnodes):
   assert len(pnodes) > 0
-  enumeratedValues = [[[v] for v in trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode))] for pnode in pnodes]
+  enumeratedValues = [[v for v in trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode))] for pnode in pnodes]
   assert len(enumeratedValues) > 0
-  return cartesianProduct(enumeratedValues)
-
+  cp = cartesianProduct(enumeratedValues)
+  # This line is confusing! But it seems to work.
+  if not type(cp[0]) is list: cp = [[x] for x in cp]
+  return cp
 
 class EnumerativeGibbsOperator(object):
 
@@ -147,7 +153,6 @@ class EnumerativeGibbsOperator(object):
     pnodes = scaffold.getPrincipalNodes()
     currentValues = getCurrentValues(trace,pnodes)
     allSetsOfValues = getCartesianProductOfEnumeratedValues(trace,pnodes)
-
     registerDeterministicLKernels(trace,scaffold,pnodes,currentValues)
 
     rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
@@ -173,7 +178,7 @@ class EnumerativeGibbsOperator(object):
 
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.xiDB,{})
 
-    return weightMinusRho - weightMinusXi
+    return trace,weightMinusRho - weightMinusXi
 
   def accept(self): pass
   def reject(self):
@@ -270,7 +275,7 @@ class PGibbsOperator(object):
     restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,T,path)
     assertTrace(self.trace,self.scaffold)
     alpha = weightMinusRho - weightMinusXi
-    return alpha
+    return trace,alpha
 
   def accept(self):
     pass
@@ -281,3 +286,85 @@ class PGibbsOperator(object):
     assert len(path) == self.T
     restoreAncestorPath(self.trace,self.scaffold.border,self.scaffold,self.omegaDBs,self.T,path)
     assertTrace(self.trace,self.scaffold)
+
+
+### Non-mutating PGibbs
+
+class ParticlePGibbsOperator(object):
+  def __init__(self,P):
+    self.P = P
+
+  def propose(self,trace,scaffold):
+    from particle import Particle
+    self.trace = trace
+    self.scaffold = scaffold
+
+    assertTrace(self.trace,self.scaffold)
+  
+    self.T = len(self.scaffold.border)
+    T = self.T
+    P = self.P
+
+    assert T == 1 # TODO temporary
+    rhoDBs = [None for t in range(T)]    
+    rhoWeights = [None for t in range(T)]
+
+    for t in reversed(range(T)):
+      rhoWeights[t],rhoDBs[t] = detachAndExtract(trace,scaffold.border[t],scaffold)
+
+      
+    assertTorus(scaffold)
+
+    particles = [Particle(trace=trace) for p in range(P+1)]
+    self.particles = particles
+    
+    particleWeights = [None for p in range(P+1)]
+
+    
+    # Simulate and calculate initial xiWeights
+
+    for p in range(P):
+      particleWeights[p] = regenAndAttach(particles[p],scaffold.border[0],scaffold,False,OmegaDB(),{})
+
+    particleWeights[P] = regenAndAttach(particles[P],scaffold.border[0],scaffold,True,rhoDBs[0],{})
+    assert_almost_equal(particleWeights[P],rhoWeights[0])
+          
+#   for every time step,
+    for t in range(1,T):
+      newParticles = [None for p in range(P+1)]
+      newParticleWeights = [None for p in range(P+1)]
+      # Sample new particle and propagate
+      for p in range(P):
+        parent = simulateCategorical([math.exp(w) for w in particleWeights])
+        newParticles[p] = Particle(particle=particles[parent])
+        newParticleWeights[p] = regenAndAttach(newParticles[p],self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
+      newParticles[P] = Particle(particle=particles[P])
+      newParticleWeights[P] = regenAndAttach(newParticles[P],self.scaffold.border[t],self.scaffold,True,rhoDBs[t],{})
+      assert_almost_equal(particleWeights[P],rhoWeights[t])
+      particles = newParticles
+      particleWeights = newParticleWeights
+
+    # Now sample a NEW particle in proportion to its weight
+    finalIndex = simulateCategorical([math.exp(w) for w in particleWeights[0:-1]])
+    xiWeight = particleWeights[finalIndex]
+    rhoWeight = particleWeights[-1]
+
+    totalExpWeight = sum([math.exp(w) for w in particleWeights])
+    weightMinusXi = math.log(totalExpWeight - math.exp(xiWeight) + 0.00001) # TODO numerical hacks
+    weightMinusRho = math.log(totalExpWeight - math.exp(rhoWeight) + 0.00001)    
+
+    alpha = weightMinusRho - weightMinusXi
+
+    self.finalIndex = finalIndex
+
+    # TODO need to return a trace as well
+    return particles[finalIndex],alpha
+
+  def accept(self):
+    self.particles[self.finalIndex].commit()
+    assertTrace(self.trace,self.scaffold)    
+    
+  def reject(self):
+    self.particles[-1].commit()
+    assertTrace(self.trace,self.scaffold)
+    

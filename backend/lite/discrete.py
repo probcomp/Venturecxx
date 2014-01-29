@@ -5,9 +5,10 @@ import scipy.special
 import numpy.random as npr
 from utils import simulateCategorical, logDensityCategorical, simulateDirichlet, logDensityDirichlet
 from psp import PSP, NullRequestPSP, RandomPSP
-from sp import SP
-from lkernel import LKernel
-
+from sp import SP,SPAux
+from lkernel import LKernel, DefaultAAALKernel
+from nose.tools import assert_equal,assert_greater_equal
+import copy
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args):
@@ -40,19 +41,34 @@ class CategoricalOutputPSP(RandomPSP):
     return "(%s <simplex>) -> <number>\n(%s <simplex> <list a>) -> a\n  Samples a categorical.  In the one argument case, returns the index of the chosen option; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % (name, name)
 
 #### Collapsed Beta Bernoulli
+class BetaBernoulliSPAux(SPAux):
+  def __init__(self):
+    self.yes = 0.0
+    self.no = 0.0
+
+  def copy(self): 
+    aux = BetaBernoulliSPAux()
+    aux.yes = self.yes
+    aux.no = self.no
+    return aux
+
+  def cts(self): return [self.yes,self.no]
+
+class BetaBernoulliSP(SP):
+  def constructSPAux(self): return BetaBernoulliSPAux()
+
 class MakerCBetaBernoulliOutputPSP(PSP):
   def childrenCanAAA(self): return True
 
   def simulate(self,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
-    return CBetaBernoulliSP(NullRequestPSP(), CBetaBernoulliOutputPSP(alpha, beta))
+
+    return BetaBernoulliSP(NullRequestPSP(), CBetaBernoulliOutputPSP(alpha, beta))
 
   def description(self,name):
     return "(%s alpha beta) -> <SP () <bool>>\n  Collapsed beta Bernoulli." % name
 
-class CBetaBernoulliSP(SP):
-  def constructSPAux(self): return [0.0,0.0]
 
 class CBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,alpha,beta):
@@ -62,24 +78,24 @@ class CBetaBernoulliOutputPSP(RandomPSP):
   def incorporate(self,value,args):
     spaux = args.spaux
     if value: # I produced true
-      spaux[0] += 1
+      spaux.yes += 1
     else: # I produced false
-      spaux[1] += 1
+      spaux.no += 1
 
   def unincorporate(self,value,args):
     spaux = args.spaux
     if value: # I produced true
-      spaux[0] -= 1
+      spaux.yes -= 1
     else: # I produced false
-      spaux[1] -= 1
+      spaux.no -= 1
 
   def simulate(self,args):
-    [ctY,ctN] = args.spaux
+    [ctY,ctN] = args.spaux.cts()
     weight = (self.alpha + ctY) / (self.alpha + ctY + self.beta + ctN)
     return random.random() < weight
 
   def logDensity(self,value,args):
-    [ctY,ctN] = args.spaux
+    [ctY,ctN] = args.spaux.cts()
     weight = (self.alpha + ctY) / (self.alpha + ctY + self.beta + ctN)
     if value == True:
       return math.log(weight)
@@ -87,7 +103,7 @@ class CBetaBernoulliOutputPSP(RandomPSP):
       return math.log(1-weight)
 
   def logDensityOfCounts(self,aux):
-    [ctY,ctN] = aux
+    [ctY,ctN] = aux.cts()
     trues = ctY + self.alpha
     falses = ctN + self.beta
     numCombinations = scipy.misc.comb(ctY + ctN,ctY) # TODO Do this directly in log space
@@ -105,12 +121,12 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     weight = scipy.stats.beta.rvs(alpha, beta)
-    return UBetaBernoulliSP(NullRequestPSP(), UBetaBernoulliOutputPSP(weight))
+    return BetaBernoulliSP(NullRequestPSP(), UBetaBernoulliOutputPSP(weight))
 
   def logDensity(self,value,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
-    assert isinstance(value,UBetaBernoulliSP)
+    assert isinstance(value,BetaBernoulliSP)
     coinWeight = value.outputPSP.weight
     return scipy.stats.beta.logpdf(coinWeight,alpha,beta)
 
@@ -121,13 +137,10 @@ class UBetaBernoulliAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
-    [ctY,ctN] = args.madeSPAux
+    [ctY,ctN] = args.madeSPAux.cts()
     newWeight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
-    return UBetaBernoulliSP(NullRequestPSP(), UBetaBernoulliOutputPSP(newWeight))
+    return BetaBernoulliSP(NullRequestPSP(), UBetaBernoulliOutputPSP(newWeight))
   # Weight is zero because it's simulating from the right distribution
-
-class UBetaBernoulliSP(SP):
-  def constructSPAux(self): return [0.0,0.0]
 
 class UBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,weight):
@@ -136,16 +149,16 @@ class UBetaBernoulliOutputPSP(RandomPSP):
   def incorporate(self,value,args):
     spaux = args.spaux
     if value: # I produced true
-      spaux[0] += 1
+      spaux.yes += 1
     else: # I produced false
-      spaux[1] += 1
+      spaux.no += 1
 
   def unincorporate(self,value,args):
     spaux = args.spaux
     if value: # I produced true
-      spaux[0] -= 1
+      spaux.yes -= 1
     else: # I produced false
-      spaux[1] -= 1
+      spaux.no -= 1
 
   def simulate(self,args): return random.random() < self.weight
 
@@ -156,6 +169,17 @@ class UBetaBernoulliOutputPSP(RandomPSP):
       return math.log(1-self.weight)
 
 ################### Symmetric Dirichlet
+class DirMultSPAux(SPAux):
+  def __init__(self,n=None,os=None):
+    if os is not None: 
+      self.os = os
+      assert_greater_equal(min(self.os),0)
+    elif n is not None: self.os = [0.0 for i in range(n)]
+    else: raise Exception("Must pass 'n' or 'os' to DirMultSPAux")
+
+  def copy(self): 
+    assert_greater_equal(min(self.os),0)
+    return DirMultSPAux(os = copy.copy(self.os))
 
 class SymmetricDirichletOutputPSP(RandomPSP):
 
@@ -175,7 +199,7 @@ class DirMultSP(SP):
     super(DirMultSP,self).__init__(requestPSP,outputPSP)
     self.n = n
 
-  def constructSPAux(self): return [0.0 for i in range(self.n)]
+  def constructSPAux(self): return DirMultSPAux(n=self.n)
 
 
 ### Collapsed SymDirMult
@@ -198,28 +222,32 @@ class CSymDirMultOutputPSP(RandomPSP):
     self.os = os
 
   def simulate(self,args):
-    counts = [count + self.alpha for count in args.spaux]
+    counts = [count + self.alpha for count in args.spaux.os]
     return simulateCategorical(counts,self.os)
       
   def logDensity(self,val,args):
-    counts = [count + self.alpha for count in args.spaux]
+    counts = [count + self.alpha for count in args.spaux.os]
     return logDensityCategorical(val,counts,self.os)
 
   def incorporate(self,val,args):
+    assert_equal(type(args.spaux),DirMultSPAux)
+    assert_greater_equal(min(args.spaux.os),0)
     index = self.os.index(val)
-    args.spaux[index] += 1
+    args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
+    assert_equal(type(args.spaux),DirMultSPAux)
     index = self.os.index(val)
-    args.spaux[index] -= 1
+    args.spaux.os[index] -= 1
+    assert_greater_equal(min(args.spaux.os),0)
         
   def logDensityOfCounts(self,aux):
-    N = sum(aux)
+    N = sum(aux.os)
     A = self.alpha * self.n
 
     term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N + A)
     galpha = scipy.special.gammaln(self.alpha)
-    term2 = sum([scipy.special.gammaln(self.alpha + aux[index]) - galpha for index in range(self.n)])
+    term2 = sum([scipy.special.gammaln(self.alpha + aux.os[index]) - galpha for index in range(self.n)])
     return term1 + term2
 
 #### Uncollapsed SymDirMult
@@ -248,7 +276,8 @@ class USymDirMultAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else range(n)
-    counts = [count + alpha for count in args.madeSPAux]
+    assert_equal(type(args.madeSPAux),DirMultSPAux)
+    counts = [count + alpha for count in args.madeSPAux.os]
     newTheta = npr.dirichlet(counts)
     return DirMultSP(NullRequestPSP(),USymDirMultOutputPSP(newTheta,os),n)
 
@@ -262,12 +291,16 @@ class USymDirMultOutputPSP(RandomPSP):
   def logDensity(self,val,args): return logDensityCategorical(val,self.theta,self.os)
 
   def incorporate(self,val,args):
+    assert_equal(type(args.spaux),DirMultSPAux)
+    assert_greater_equal(min(args.spaux.os),0)
     index = self.os.index(val)
-    args.spaux[index] += 1
+    args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
+    assert_equal(type(args.spaux),DirMultSPAux)
     index = self.os.index(val)
-    args.spaux[index] -= 1
+    args.spaux.os[index] -= 1
+    assert_greater_equal(min(args.spaux.os),0)
 
 ################### (Not-necessarily-symmetric) Dirichlet-Multinomial
 
@@ -303,27 +336,32 @@ class CDirMultOutputPSP(RandomPSP):
     self.os = os
 
   def simulate(self,args):
-    counts = [count + alpha for (count,alpha) in zip(args.spaux,self.alpha)]
+    counts = [count + alpha for (count,alpha) in zip(args.spaux.os,self.alpha)]
     return simulateCategorical(counts,self.os)
       
   def logDensity(self,val,args):
-    counts = [count + alpha for (count,alpha) in zip(args.spaux,self.alpha)]
+    counts = [count + alpha for (count,alpha) in zip(args.spaux.os,self.alpha)]
     return logDensityCategorical(val,counts,self.os)
 
   def incorporate(self,val,args):
+    assert_equal(type(args.spaux),DirMultSPAux)
+    assert_greater_equal(min(args.spaux.os),0)
     index = self.os.index(val)
-    args.spaux[index] += 1
+    args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
+    assert_equal(type(args.spaux),DirMultSPAux)
     index = self.os.index(val)
-    args.spaux[index] -= 1
+    args.spaux.os[index] -= 1
+    assert_greater_equal(min(args.spaux.os),0)
         
   def logDensityOfCounts(self,aux):
-    N = sum(aux)
+    assert_equal(type(aux),DirMultSPAux)
+    N = sum(aux.os)
     A = sum(self.alpha)
 
     term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N + A)
-    term2 = sum([scipy.special.gammaln(alpha + count) - scipy.special.gammaln(alpha) for (alpha,count) in zip(self.alpha,aux)])
+    term2 = sum([scipy.special.gammaln(alpha + count) - scipy.special.gammaln(alpha) for (alpha,count) in zip(self.alpha,aux.os)])
     return term1 + term2
 
 #### Uncollapsed DirMult
@@ -354,7 +392,8 @@ class UDirMultAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):
     alpha = args.operandValues[0]
     os = args.operandValues[1] if len(args.operandValues) > 1 else range(len(alpha))
-    counts = [count + a for (count,a) in zip(args.madeSPAux,alpha)]
+    assert_equal(type(args.madeSPAux),DirMultSPAux)
+    counts = [count + a for (count,a) in zip(args.madeSPAux.os,alpha)]
     newTheta = npr.dirichlet(counts)
     return DirMultSP(NullRequestPSP(),UDirMultOutputPSP(newTheta,os),len(alpha))
 
@@ -368,9 +407,13 @@ class UDirMultOutputPSP(RandomPSP):
   def logDensity(self,val,args): return logDensityCategorical(val,self.theta,self.os)
 
   def incorporate(self,val,args):
+    assert_equal(type(args.spaux),DirMultSPAux)
+    assert_greater_equal(min(args.spaux.os),0)
     index = self.os.index(val)
-    args.spaux[index] += 1
+    args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
+    assert_equal(type(args.spaux),DirMultSPAux)
     index = self.os.index(val)
-    args.spaux[index] -= 1
+    args.spaux.os[index] -= 1
+    assert_greater_equal(min(args.spaux.os),0)

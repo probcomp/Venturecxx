@@ -3,7 +3,19 @@ import scipy.special
 import math
 import random
 from psp import PSP,RandomPSP
+from lkernel import LKernel
 
+class NormalDriftKernel(LKernel):
+  def __init__(self,epsilon = 0.7): self.epsilon = epsilon
+
+  def simulate(self,trace,oldValue,args):
+    mu,sigma = args.operandValues
+    nu = scipy.stats.norm.rvs(0,sigma)
+    term1 = mu
+    term2 = math.sqrt(1 - (self.epsilon * self.epsilon)) * (oldValue - mu)
+    term3 = self.epsilon * nu
+    return term1 + term2 + term3
+                                                        
 class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,params): return scipy.stats.norm.rvs(*params)
@@ -11,6 +23,9 @@ class NormalOutputPSP(RandomPSP):
 
   def simulate(self,args): return self.simulateNumeric(args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues)
+
+  def hasDeltaKernel(self): return False # have each gkernel control whether it is delta or not
+  def getDeltaKernel(self): return NormalDriftKernel()
 
   def hasVariationalLKernel(self): return True
   def getParameterScopes(self): return ["REAL","POSITIVE_REAL"]

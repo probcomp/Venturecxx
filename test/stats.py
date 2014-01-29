@@ -190,7 +190,7 @@ def collectSamples(ripl,address,num_samples=None,infer=None):
     # tests, presumably by avoiding the parser.
     ripl.sivm.core_sivm.engine.infer(infer)
     predictions.append(ripl.report(address))
-    ripl.sivm.core_sivm.engine.reset()
+    if config["should_reset"]: ripl.sivm.core_sivm.engine.reset()
   return predictions
 
 def defaultInfer():
@@ -198,5 +198,13 @@ def defaultInfer():
   kernel = config["kernel"]
   scope = config["scope"]
   block = config["block"]
-  particles = int(config["particles"])
-  return {"transitions":numTransitionsPerSample, "kernel":kernel, "scope":scope, "block":block, "particles":particles}
+
+  with_mutation = config["with_mutation"]  
+  particles = int(config["particles"]) if "particles" in config else None
+  return {"transitions":numTransitionsPerSample,
+          "kernel":kernel,
+          "scope":scope,
+          "block":block,
+          "with_mutation":with_mutation,
+          "particles":particles
+          }
