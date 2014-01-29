@@ -28,7 +28,7 @@ class Scaffold:
     print "aaa: " + str(len(self.aaa))
     print "border: " + str(len(self.border))
 
-def constructScaffold(trace,setsOfPNodes,useDeltaKernels = True):
+def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
   cDRG,cAbsorbing,cAAA = set(),set(),set()
   indexAssignments = {}
   assert isinstance(setsOfPNodes,list)

@@ -21,11 +21,14 @@ def mixMH(trace,indexer,operator):
   proposedTrace,logAlpha = operator.propose(trace,index) 
   xiMix = indexer.logDensityOfIndex(proposedTrace,index)
 
-  if math.log(random.random()) < xiMix + logAlpha - rhoMix:
-#    sys.stdout.write("!")
+  alpha = xiMix + logAlpha - rhoMix
+  if math.log(random.random()) < alpha:
+#    sys.stdout.write("<accept>")
+#    print "<accept(%d)>"%alpha
     operator.accept() # May mutate trace
   else:
-#    sys.stdout.write("?")
+#    sys.stdout.write("<reject>")
+#    print "<reject(%d)>"%alpha
     operator.reject() # May mutate trace
 
 class BlockScaffoldIndexer(object):
@@ -274,6 +277,7 @@ class PGibbsOperator(object):
     assert len(path) == T
     restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,T,path)
     assertTrace(self.trace,self.scaffold)
+
     alpha = weightMinusRho - weightMinusXi
     return trace,alpha
 
@@ -346,13 +350,16 @@ class ParticlePGibbsOperator(object):
 
     # Now sample a NEW particle in proportion to its weight
     finalIndex = simulateCategorical([math.exp(w) for w in particleWeights[0:-1]])
+    assert finalIndex < P
     xiWeight = particleWeights[finalIndex]
     rhoWeight = particleWeights[-1]
 
     totalExpWeight = sum([math.exp(w) for w in particleWeights])
-    weightMinusXi = math.log(totalExpWeight - math.exp(xiWeight) + 0.00001) # TODO numerical hacks
-    weightMinusRho = math.log(totalExpWeight - math.exp(rhoWeight) + 0.00001)    
+    totalXiExpWeight = sum([math.exp(w) for w in particleWeights[0:-1]])
+    weightMinusXi = math.log(totalExpWeight - math.exp(xiWeight))
+    weightMinusRho = math.log(totalXiExpWeight)
 
+#    print particleWeights,weightMinusXi,weightMinusRho
     alpha = weightMinusRho - weightMinusXi
 
     self.finalIndex = finalIndex
