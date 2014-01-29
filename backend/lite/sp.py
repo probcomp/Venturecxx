@@ -33,3 +33,11 @@ class SP(object):
   def simulateLatents(self,spaux,lsr,shouldRestore,latentDB): pass
   def detachLatents(self,spaux,lsr,latentDB): pass
   def hasAEKernel(self): return False
+  def description(self,name):
+    candidate = self.outputPSP.description(name)
+    if candidate:
+      return candidate
+    candidate = self.requestPSP.description(name)
+    if candidate:
+      return candidate
+    return name

@@ -1,6 +1,7 @@
 from venture.test.stats import *
 import scipy.stats
 import time
+from nose.plugins.attrib import attr
 
 def loadHMMParticleAsymptoticProgram1(M):
   """Easiest possible HMM asymptotic test for particles"""
@@ -28,6 +29,7 @@ def loadHMMParticleAsymptoticProgram1(M):
 
 # O(N) forwards
 # O(N) to infer
+@attr('slow')
 def testHMMParticleAsymptotics1():
 #  from nose import SkipTest
 #  raise SkipTest("Skipping testHMMParticleAsymptotics1: no linear regression test")

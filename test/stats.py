@@ -198,8 +198,9 @@ def defaultInfer():
   kernel = config["kernel"]
   scope = config["scope"]
   block = config["block"]
+
   with_mutation = config["with_mutation"]  
-  particles = config["particles"] if "particles" in config else None
+  particles = int(config["particles"]) if "particles" in config else None
   return {"transitions":numTransitionsPerSample,
           "kernel":kernel,
           "scope":scope,

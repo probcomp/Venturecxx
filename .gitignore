@@ -6,3 +6,6 @@ env.d
 
 # gedit temp files
 *~
+
+htmlcov
+.coverage

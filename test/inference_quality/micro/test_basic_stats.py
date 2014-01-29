@@ -58,7 +58,7 @@ def testNormalWithObserve2b():
   # Posterior for a is normal with mean 12, precision 2
   ripl.predict("(normal a 1.0)")
 
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,3,infer="mixes_slowly")
   cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
   return reportKnownContinuous("TestNormalWithObserve2b", cdf, predictions, "N(12,sqrt(1.5))")
 
@@ -80,7 +80,7 @@ def testNormalWithObserve3():
   (normal (times a b) 1.0))
 """)
 
-  predictions = collectSamples(ripl,4)
+  predictions = collectSamples(ripl,4,infer="mixes_slowly")
   # Unfortunately, a and b are (anti?)correlated now, so the true
   # distribution of the sum is mysterious to me
   cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
@@ -112,7 +112,7 @@ def testStudentT2():
   ripl.assume("a", "(student_t 1.0)")
   ripl.observe("(normal a 1.0)", 3.0)
   ripl.predict("(normal a 1.0)")
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,3,infer="mixes_slowly")
 
   # Posterior of a is proprtional to
   def postprop(a):
@@ -158,7 +158,7 @@ def testSprinkler2():
 """)
   ripl.observe("grassWet", True)
 
-  predictions = collectSamples(ripl,1)
+  predictions = collectSamples(ripl,1,infer="mixes_slowly")
   ans = [(True, .3577), (False, .6433)]
   return reportKnownDiscrete("TestSprinkler2 (mixes terribly)", ans, predictions)
 

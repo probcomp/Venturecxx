@@ -1,7 +1,9 @@
 from venture.test.stats import *
+from nose.plugins.attrib import attr
 
 # TODO N needs to be managed here more intelligently
 @statisticalTest
+@attr('slow')
 def testPGibbsBlockingMHHMM1():
   """The point of this is that it should give reasonable results in very few transitions but with a large number of particles."""
   ripl = get_ripl()

@@ -2,6 +2,7 @@ from venture.test.stats import *
 import time
 import cProfile
 import sys
+from nose.plugins.attrib import attr
 
 sys.setrecursionlimit(1000000) 
 
@@ -21,6 +22,7 @@ def loadChurchPairProgram(K):
 
 # O(N) forwards
 # O(1) to infer
+@attr('slow')
 def testChurchPairProgram1():
 
   Ks = [pow(2,k) for k in range(2,11)]
@@ -53,6 +55,7 @@ def loadReferencesProgram(K):
 # O(N) forwards
 # O(1) to infer
 # (this could be reused from testChurchPairProgram
+@attr('slow')
 def testReferencesProgram1():
   Ks = [pow(2,k) for k in range(2,11)]
 

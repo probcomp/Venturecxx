@@ -30,7 +30,7 @@ def mixMH(trace,indexer,operator):
 
 class BlockScaffoldIndexer(object):
   def __init__(self,scope,block):
-    if scope == "default" and not (block == "all" or block == "one"):
+    if scope == "default" and not (block == "all" or block == "one" or block == "ordered"):
         raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
     self.scope = scope
     self.block = block
