@@ -4,40 +4,11 @@ from sp import SPFamilies
 from nose.tools import assert_equal
 import trace
 
+### TODO be careful about the boxing and unboxing
 class Particle(trace.Trace):
-  class PSets(object):
-    def __init__(self,rcs,ccs,aes,sbns):
-      # TODO
-      # we don't have deletion yet, so we don't remove from rcs from a node that is ccs.
-      # when we commit, we only commit the rcs that are not in ccs
-      self.rcs = rcs
-      self.ccs = ccs
-      self.aes = aes
-      self.sbns = sbns
-
-  class PMaps(object):
-    def __init__(self,values,madeSPs,esrParents,scopesToBlocks):
-      self.values = values
-      self.madeSPs = madeSPs
-      self.esrParents = esrParents
-      self.scopesToBlocks = scopesToBlocks
-
-  class MapsToConstants(object):
-    def __init__(self,numRequests,regenCounts):
-      self.numRequests = numRequests
-      self.regenCounts = regenCounts
-
-  class MapsToPSets(object):
-    def __init__(self,madeSPFamilies,newChildren):
-      self.madeSPFamilies = madeSPFamilies
-      self.newChildren = newChildren
-
-  class MapsToUniqueClones(object):
-    def __init__(self,madeSPAuxs):
-      self.madeSPAuxs
 
   # The trace is expected to be a torus, with the chosen scaffold
-  # already detached.
+  # already detached, or a particle.
   def __init__(self,trace):
     if type(trace) is Particle: initFromParticle(self,trace)
     elif type(trace) is Trace: initFromTrace(self,trace)
@@ -47,43 +18,52 @@ class Particle(trace.Trace):
   def initFromParticle(self,particle):
     self.base = particle.base    
 
-    self.psets = self.PSets(particle.psets.rcs,
-                            particle.psets.ccs,
-                            particle.psets.aes,
-                            particle.psets.sbns)
+    # (1) Persistent Sets
+    self.rcs = particle.rcs.pcopy()
+    self.ccs = particle.ccs.pcopy()
+    self.aes = particle.aes.pcopy()
+    self.sbns = particle.sbns.pcopy()
 
-    self.pmaps = self.PMaps(particle.pmaps.values,
-                            particle.pmaps.madeSPs,
-                            particle.pmaps.esrParents,
-                            particle.pmaps.scopesToBlocks)
+    # (2) Persistent Maps to constants
+    self.values = particle.values.pcopy()
+    self.madeSPs = particle.madeSPs.pcopy()
 
-    self.maps_to_constants = self.MapsToConstants(particle.numRequests.copy(),regenCounts.copy())
-    self.maps_to_psets = self.MapsToPSets(particle.madeSPFamilies.copy(),particle.newChildren.copy())
-    self.maps_to_clones = self.MapsToUniqueClones({ node => spaux.copy() for node,spaux in particle.madeSPAuxs })
+    # (3) Persistent Maps to things that change through particle methods only
+    self.esrParents = particle.esrParents.pcopy()
+    self.scopesToBlocks = particle.scopesToBlocks.pcopy()
+    self.numRequests = particle.numRequests.pcopy()
+    self.regenCounts = particle.regenCounts.pcopy()
+    self.madeSPFamilies = particle.madeSPFamilies.pcopy()
+    self.newChildren = particle.newChildren.pcopy()
+    # this one could be a legit_map, since we don't care about the asymptotics with respect to the # of scopes in a scaffold
+    # TODO where is the boxing? If we don't need to copy psets explicitly, then we can skip this step
+    # (and also remove all pcopy(), but no longer use the mutation-syntax, and instead right x = x.insert(_)
+    # confirm design with alexey before proceeding
+    self.scopesToBlocks = pmap_values(lambda blocks: blocks.pcopy(), particle.scopesToBlocks) # { scope => pset { block } }
+    
+    # (4) Persistent Maps to things that change outside of particle methods
+    # TODO we want this to be lazy, and not need to visit all of the SPAuxs a
+    self.madeSPAuxs = pmap_values(lambda spaux: spaux.copy(), particle.madeSPAuxs)
 
-  def initFromTrace(self,trace):
-    self.psets = self.PSets(pset(),
-                            pset(),
-                            pset(),
-                            pset())
-
-    self.pmaps = self.PMaps(pmap(),
-                            pmap(),
-                            pmap(),
-                            pmap())
-
-    self.maps_to_constants = self.MapsToConstants(particle.numRequests.copy())
-    self.maps_to_psets = self.MapsToPSets(particle.madeSPFamilies.copy(),particle.newChildren.copy())
-    self.maps_to_clones = self.MapsToUniqueClones({ node => spaux.copy() for node,spaux in particle.madeSPAuxs })
+  def initFromTrace(self,trace): raise Exception("Not yet implemented")
 
 
-######################### Persistent Sets
-  def registerRandomChoice(self,node): self.rcs.add(node)
+######################### (1) Persistent Sets
+  def registerRandomChoice(self,node): 
+    self.rcs.add(node)
+    self.registerRandomChoiceInScope(self,"default",node,node)
+
   def registerAEKernel(self,node): self.aes.add(node)
-  def registerConstrainedChoice(self,node): self.ccs.add(node) # NOTE does not remove from rcs, commit() addresses this
-  def registerRandomChoiceInScope(self,scope,block,node): self.sbns.add((scope,block,node))
 
-######################### Persistent Maps to constants
+  # TODO
+  # we don't have deletion yet, so we don't remove from rcs from a node that is ccs.
+  # when we commit, we only commit the rcs that are not in ccs
+  def registerConstrainedChoice(self,node): self.ccs.add(node)
+  def registerRandomChoiceInScope(self,scope,block,node): 
+    self.sbns.add((scope,block,node))
+    self._registerBlockInScope(scope,block)
+
+######################### (2) Persistent Maps to constants
 
 #### Getters
   
@@ -107,7 +87,7 @@ class Particle(trace.Trace):
     self.madeSPs[node] = sp
 
 
-######################## Persistent Maps to things that change through particle methods only
+######################## (3) Persistent Maps to things that change through particle methods only
 
 #### Getters (do not need to cache on reads)
   def esrParentsAt(self,node): 
@@ -152,7 +132,11 @@ class Particle(trace.Trace):
     if not makerNode in self.madeSPFamilies: self.madeSPFamilies[makerNode] = pmap()
     self.madeSPFamilies[makerNode][esrId] = esrParent
 
-######################## Persistent Maps to things that change outside of particle methods
+  def _registerBlockInScope(self,scope,block):
+    if not scope in self.scopesToBlocks: self.scopesToBlocks[scope] = pset()
+    scopesToBlocks[scope].add(block)
+
+######################## (4) Persistent Maps to things that change outside of particle methods
 
 #### Getters (need to cache on reads)
 
