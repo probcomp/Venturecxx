@@ -76,13 +76,15 @@ def timings(f):
 # slower as its input is increased.
 def min_measurable_input(f):
   clock_accuracy = 0.01 # seconds
+  acceptable_duration = 0.5 # seconds
   n = 1
+  begin = time.clock()
   while True:
     thunk = f(n)
     start = time.clock()
     thunk()
     duration = time.clock() - start
-    if duration > 10*clock_accuracy or n > 1000:
+    if duration > 10*clock_accuracy or n > 1000 or start - begin > acceptable_duration:
       return (n, duration)
     else:
       n *= 2
