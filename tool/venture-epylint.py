@@ -29,17 +29,18 @@ lintfile = mypath + "/pylintrc"
 workdir = os.path.dirname(sys.argv[1])
 filename = os.path.basename(sys.argv[1])
 
-cmd = "pylint --output-format parseable --include-ids y --reports n --rcfile %s %s" % \
+cmd = "pylint --output-format parseable --reports n --rcfile %s %s" % \
     (lintfile, filename)
 
 p = Popen ( cmd, shell = True, bufsize = -1, cwd = workdir or None,
-            stdin = PIPE, stdout = PIPE, stderr = PIPE, close_fds = True )
+            stdin = PIPE, stdout = PIPE, close_fds = True )
 pylint_re = re.compile (
     '^([^:]+):(\d+):\s*\[([WECR])([^,]+),\s*([^\]]+)\]\s*(.*)$'
     )
 pylint_no_context_re = re.compile (
     '^([^:]+):(\d+):\s*\[([WECR])([^,]+)\]\s*(.*)$'
     )
+
 for line in p.stdout:
     line = line.strip()
     matched = False
