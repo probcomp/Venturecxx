@@ -207,7 +207,6 @@ class Set(object):
   def __iter__(self):
     return node_traverse_keys_in_order(self.root)
 
-# Testing TODO:
-# - Correctness, per Daniel's rbtree tests
-# - Balance, either as asymptotics with the timings framework or
-#   through an explicit check.
+# TODO test balance, either as asymptotics with the timings framework
+# or through an explicit check that a tree built by some mechanism is
+# balanced.
