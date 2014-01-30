@@ -1,6 +1,6 @@
 import random
 
-class SMap:
+class SMap(object):
   def __init__(self):
     self.d = {}
     self.a = []
@@ -33,5 +33,6 @@ class SMap:
 
   def keys(self): return self.d.keys()
 
-  def values(self): return [v for (k,v) in self.a]
-  def sortedValues(self): return [v for (k,v) in sorted(self.a, key = lambda kv: kv[0])]
+  def values(self): return [v for (_,v) in self.a]
+  def sortedValues(self):
+    return [v for (_,v) in sorted(self.a, key = lambda kv: kv[0])]

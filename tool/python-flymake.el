@@ -1,5 +1,6 @@
 ;;; N.B. venture-epylint.py or a symlink thereto needs to be on your
 ;;; $PATH somewhere for flymake to work right.
+;;; Of course, pylint also needs to be installed.
 
 (setq python-indent 2)
 (add-hook 'python-mode-hook 'python-guess-indent)
