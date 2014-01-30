@@ -3,8 +3,10 @@ from venture.lite.wttree import Map
 def testMapInsertContainsDelete():
   r = Map()
   assert len(r) == 0
+  assert not r # Things with len == 0 register as False in Python
 
   r1 = r.insert(1,2)
+  assert r1 # Things with len != 0 register as True
   assert len(r1) == 1
   assert 1 in r1
   assert len(r) == 0
