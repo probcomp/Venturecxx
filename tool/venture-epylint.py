@@ -23,7 +23,7 @@ ignore = ",".join ( [
     "R0201",  # Method could be a function
 ] )
 
-mypath = os.path.dirname(sys.argv[0])
+mypath = os.path.dirname(os.path.realpath(sys.argv[0]))
 lintfile = mypath + "/pylintrc"
 
 workdir = os.path.dirname(sys.argv[1])
