@@ -21,8 +21,8 @@ Chris Hansen and Taylor Campbell.'''
 # arguments in-order.
 
 class EmptyNode(object): #pylint: disable=W0232
-  def size(self):
-    return 0
+  def size(self): return 0
+  def isEmpty(self): return True
 
 class Node(object):
   def __init__(self, left, key, value, right):
@@ -32,8 +32,8 @@ class Node(object):
     self.right = right
     self.ct = left.size() + right.size() + 1
 
-  def size(self):
-    return self.ct
+  def size(self): return self.ct
+  def isEmpty(self): return False
 
 # TODO Manually inline this?
 def node_weight(node):
@@ -78,6 +78,91 @@ def t_join(l, key, value, r):
       return double_right(l, key, value, r)
   else:
     return Node(l, key, value, r)
+
+def node_popmin(node):
+  if node.isEmpty():
+    raise Exception("Trying to pop the minimum off an empty node")
+  elif node.left.isEmpty():
+    return (node.key, node.value, node.right)
+  else:
+    # TODO Is this constant creation and desctruction of tuples
+    # actually any more efficient than just finding the minimum in one
+    # pass and removing it in another?
+    (mink, minv, newl) = node_popmin(node.left)
+    return (mink, minv, t_join(newl, node.key, node.value, node.right))
+
+def node_lookup(node, key):
+  if node.isEmpty():
+    return None
+  elif key < node.key:
+    return node_lookup(node.left, key)
+  elif node.key < key:
+    return node_lookup(node.right, key)
+  else:
+    return node.value
+
+def node_insert(node, key, value):
+  if node.isEmpty():
+    return Node(EmptyNode(), key, value, EmptyNode())
+  elif key < node.key:
+    return t_join(node_insert(node.left, key, value),
+                  node.key, node.value, node.right)
+  elif node.key < key:
+    return t_join(node.left, node.key, node.value,
+                  node_insert(node.right, key, value))
+  else:
+    return Node(node.left, key, value, node.right)
+
+def node_adjust(node, key, f):
+  if node.isEmpty():
+    # TODO Optimize the not-found case by not reconstructing the tree
+    # on the way up?
+    return node
+  elif key < node.key:
+    return Node(node_adjust(node.left, key, f),
+                node.key, node.value, node.right)
+  elif node.key < key:
+    return Node(node.left, node.key, node.value,
+                node_adjust(node.right, key, f))
+  else:
+    return Node(node.left, key, f(node.value), node.right)
+
+def node_delete(node, key):
+  if node.isEmpty():
+    return node
+  elif key < node.key:
+    return t_join(node_delete(node.left, key),
+                  node.key, node.value, node.right)
+  elif node.key < key:
+    return t_join(node.left, node.key, node.value,
+                  node_delete(node.right, key))
+  else:
+    # Deleting the key at this node
+    if node.right.isEmpty():
+      return node.left
+    elif node.left.isEmpty():
+      return node.right
+    else:
+      [min_r_k, min_r_v, new_r] = node_popmin(node.right)
+      return t_join(node.left, min_r_k, min_r_v, new_r)
+
+class Map(object):
+  """Persistent map backed by a weight-balanced tree.
+
+  The lookup method returns None if the key is not found.  Do not
+  insert None as a value or you will get confused."""
+  def __init__(self, root=None):
+    self.root = root if root is not None else EmptyNode()
+  def lookup(self, key):
+    return node_lookup(self.root, key)
+  def contains(self, key):
+    return node_lookup(self.root, key) is not None
+  def insert(self, key, value):
+    return Map(node_insert(self.root, key, value))
+  def adjust(self, key, f):
+    return Map(node_adjust(self.root, key, f))
+  def delete(self, key):
+    return Map(node_delete(self.root, key))
 
 # Testing TODO:
 # - Correctness, per Daniel's rbtree tests
