@@ -32,7 +32,7 @@ filename = os.path.basename(sys.argv[1])
 cmd = "pylint --output-format parseable --include-ids y --reports n --rcfile %s %s" % \
     (lintfile, filename)
 
-p = Popen ( cmd, shell = True, bufsize = -1, cwd = workdir,
+p = Popen ( cmd, shell = True, bufsize = -1, cwd = workdir or None,
             stdin = PIPE, stdout = PIPE, stderr = PIPE, close_fds = True )
 pylint_re = re.compile (
     '^([^:]+):(\d+):\s*\[([WECR])([^,]+),\s*([^\]]+)\]\s*(.*)$'
