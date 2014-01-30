@@ -37,11 +37,21 @@ p = Popen ( cmd, shell = True, bufsize = -1, cwd = workdir,
 pylint_re = re.compile (
     '^([^:]+):(\d+):\s*\[([WECR])([^,]+),\s*([^\]]+)\]\s*(.*)$'
     )
+pylint_no_context_re = re.compile (
+    '^([^:]+):(\d+):\s*\[([WECR])([^,]+)\]\s*(.*)$'
+    )
 for line in p.stdout:
     line = line.strip()
-    m = pylint_re.match ( line )
+    matched = False
+    m = pylint_re.match(line)
     if m:
         filename, linenum, errtype, errnum, context, description = m.groups()
+        matched = True
+    m = pylint_no_context_re.match(line)
+    if m:
+        filename, linenum, errtype, errnum, description = m.groups()
+        matched = True
+    if matched:
         if errtype == "E":
             msg = "Error"
         else:
