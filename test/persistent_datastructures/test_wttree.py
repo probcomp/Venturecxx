@@ -27,10 +27,11 @@ def testMapStressInsertDelete():
   r = Map()
   N = 1000
   for i in range(N):
-    r = r.insert(_hash(i), True)
+    r = r.insert(_hash(i), i)
 
   for i in range(N):
     assert _hash(i) in r
+    assert r.lookup(_hash(i)) == i
 
   r2 = r
   for i in range(N/2,N):
@@ -38,11 +39,15 @@ def testMapStressInsertDelete():
 
   for i in range(N/2):
     assert _hash(i) in r
+    assert r.lookup(_hash(i)) == i
     assert _hash(i) in r2
+    assert r2.lookup(_hash(i)) == i
 
   for i in range(N/2,N):
     assert _hash(i) in r
+    assert r.lookup(_hash(i)) == i
     assert _hash(i) not in r2
+    assert r2.lookup(_hash(i)) is None
 
 def testMapIterate():
   r = Map()
