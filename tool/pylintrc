@@ -5,8 +5,10 @@
 # C0321: More than one statement on a single line
 # C0324: Comma not followed by a space
 # R0201: Method could be a function
+# R0904: Too few public methods
 # R0904: Too many public methods
-disable=C0103,C0111,C0321,C0324,R0201,R0904
+# W0511 (warning notes in code comments)
+disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0511
 
 [REPORTS]
 include-ids=yes
