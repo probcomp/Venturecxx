@@ -1,0 +1,38 @@
+[MESSAGES CONTROL]
+# Disabled messages:
+# C0103: Name violates convention
+# C0111: Missing docstring
+# C0321: More than one statement on a single line
+# C0324: Comma not followed by a space
+# R0201: Method could be a function
+# R0904: Too few public methods
+# R0904: Too many public methods
+# W0511 (warning notes in code comments)
+disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0511
+
+[REPORTS]
+include-ids=yes
+
+[FORMAT]
+indent-string='  '
+
+[BASIC]
+# List of builtins function names that should not be used, separated by a comma
+# map and filter are suggested here, presumably in favor of list comprehensions
+bad-functions=apply,input
+
+# Regular expression which should only match correct function names
+function-rgx=[a-z_][a-z0-9_]{0,30}$
+
+# Regular expression which should only match correct method names
+method-rgx=[a-z_][a-z0-9_]{0,30}$
+
+# Regular expression which should only match correct instance attribute names
+attr-rgx=[a-z_][a-z0-9_]{0,30}$
+
+# Regular expression which should only match correct argument names
+argument-rgx=[a-z_][a-z0-9_]{0,30}$
+
+# Regular expression which should only match correct variable names
+variable-rgx=[a-z_][a-z0-9_]{0,30}$
+
