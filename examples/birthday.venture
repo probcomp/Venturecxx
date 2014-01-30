@@ -1,0 +1,6 @@
+[assume birthday (mem (lambda (i) (uniform-discrete 1 365)))]
+[assume b0 (birthday 0)]
+[assume N 100]
+[assume birthday-equals (lambda (b0 n) (if (= n 0) 0 (if (= (birthday n) b0) 1 (birthday-equals (- n 1) b0))))]
+[predict (birthday-equals b0 N)]
+;[predict (power (/ 364 365) N)]

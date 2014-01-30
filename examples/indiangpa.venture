@@ -1,0 +1,6 @@
+[assume indiangpa (lambda () (if (flip .5) (* 10 (beta 5 5)) (* 10 (if (flip .7) 1 0))))]
+[assume americangpa (lambda () (if (flip .5) (* 4 (beta 5 5)) (* 4 (if (flip .5) 1 0))))]
+[assume isindian (flip .5)]
+[assume gpa (if isindian (indiangpa) (americangpa))]
+[observe (normal gpa .000001) 4]
+[predict isindian]

@@ -1,0 +1,5 @@
+[assume x (if (flip 0.5) 1 3)]
+[assume y (normal 0 1)]
+[assume s (* x y)]
+[observe (normal s .000001) 0]
+[predict x]
