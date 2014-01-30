@@ -136,12 +136,10 @@ class Trace(object):
   #### Stuff that a particle trace would need to override for persistence
 
   def valueAt(self,node):
-    print "TRACE::VALUE_AT",node
     return node.value
 
   def setValueAt(self,node,value):
     node.value = value
-    if value is None: print "TRACE::CLEAR_VALUE",node
 
   def madeSPAt(self,node): return node.madeSP
   def setMadeSPAt(self,node,sp): node.madeSP = sp
@@ -173,6 +171,9 @@ class Trace(object):
   def containsSPFamilyAt(self,node,esrId): return self.spFamiliesAt(node).containsFamily(esrId)
   def spFamilyAt(self,node,esrId): return self.spFamiliesAt(node).getFamily(esrId)
   def madeSPFamilyAt(self,node,esrId): return self.madeSPFamiliesAt(node).getFamily(esrId)
+
+  def initMadeSPFamiliesAt(self,node): self.setMadeSPFamiliesAt(node,SPFamilies())
+  def clearMadeSPFamiliesAt(self,node): self.setMadeSPFamiliesAt(node,None)
 
   def numRequestsAt(self,node): return node.numRequests
   def setNumRequestsAt(self,node,num): node.numRequests = num
@@ -292,7 +293,7 @@ class Trace(object):
 #################### Misc for particle commit
 
   def addNewMadeSPFamilies(self,node,newMadeSPFamilies):
-    if node.madeSPFamilies is None: node.madeSPFamilies = {}
+    if node.madeSPFamilies is None: node.madeSPFamilies = SPFamilies()
     for id,root in newMadeSPFamilies.iteritems():
       node.madeSPFamilies.registerFamily(id,root)
 

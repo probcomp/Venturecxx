@@ -95,10 +95,9 @@ def processMadeSP(trace,node,isAAA):
   sp = trace.valueAt(node)
   assert isinstance(sp,SP)
   trace.setMadeSPAt(node,sp)
-  print "SET_SPREF",node
   trace.setValueAt(node,SPRef(node))
   if not isAAA:
-    trace.setMadeSPFamiliesAt(node,SPFamilies())
+    trace.initMadeSPFamiliesAt(node)
     trace.setMadeSPAuxAt(node,sp.constructSPAux())
     if sp.hasAEKernel(): trace.registerAEKernel(node)
 

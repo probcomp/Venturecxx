@@ -2,7 +2,7 @@ import copy
 import math
 from sp import SPFamilies
 from spref import SPRef
-from nose.tools import assert_equal,assert_is_none
+from nose.tools import assert_equal,assert_is_none,assert_is_instance
 from wttree import PMap, PSet
 from trace import Trace
 import pdb
@@ -91,16 +91,12 @@ class Particle(Trace):
 #### Misc
 
   def valueAt(self,node): 
-    print "PARTICLE::VALUE_AT",node
     if node in self.values: return self.values.lookup(node)
     else: 
-      print "(recurse to trace...)"
       return self.base.valueAt(node)
 
   def setValueAt(self,node,value): 
-    if value is None: print "PARTICLE::CLEAR_VALUE",node
-    if isinstance(value,SPRef): print "PARTICLE::SET_SPREF",node
-#    assert_is_none(self.base.valueAt(node))
+    assert_is_none(self.base.valueAt(node))
     self.values = self.values.insert(node,value)
 
   def madeSPAt(self,node):
@@ -141,24 +137,29 @@ class Particle(Trace):
 
   def containsSPFamilyAt(self,node,id): 
     makerNode = self.spRefAt(node).makerNode
-    madeSPFamilies = self.madeSPFamiliesAt(makerNode)
-    assert isinstance(madeSPFamilies,SPFamilies)
-    return madeSPFamilies.containsFamily(id)
+    if makerNode in self.newMadeSPFamilies:
+      assert_is_instance(self.newMadeSPFamilies.lookup(makerNode),PMap)
+      if id in self.newMadeSPFamilies.lookup(makerNode): 
+        return True
+    elif self.base.madeSPFamiliesAt(makerNode).containsFamily(id): return True
+    return False
 
-  def setMadeSPFamiliesAt(self,node,madeSPFamilies):
+  def initMadeSPFamiliesAt(self,node): 
     assert not node in self.newMadeSPFamilies
     assert node.madeSPFamilies is None
-    self.newMadeSPFamilies = self.newMadeSPFamilies.insert(node,madeSPFamilies)
+    self.newMadeSPFamilies = self.newMadeSPFamilies.insert(node,PMap())
 
   def registerFamilyAt(self,node,esrId,esrParent): 
     makerNode = self.spRefAt(node).makerNode
     if not makerNode in self.newMadeSPFamilies: self.newMadeSPFamilies = self.newMadeSPFamilies.insert(makerNode,PMap())
     self.newMadeSPFamilies = self.newMadeSPFamilies.adjust(makerNode,lambda ids: ids.insert(esrId,esrParent))
 
+
   def madeSPFamilyAt(self,node,esrId): 
     if node in self.newMadeSPFamilies and esrId in self.newMadeSPFamilies.lookup(node): 
       return self.newMadeSPFamilies.lookup(node).lookup(esrId)
-    else: return self.base.madeSPFamilyAt(node,esrId)
+    else: 
+      return self.base.madeSPFamilyAt(node,esrId)
 
   def spFamilyAt(self,node,esrId): 
     makerNode = self.spRefAt(node).makerNode

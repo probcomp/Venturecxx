@@ -24,11 +24,9 @@ def mixMH(trace,indexer,operator):
   alpha = xiMix + logAlpha - rhoMix
   if math.log(random.random()) < alpha:
 #    sys.stdout.write("<accept>")
-    print "<accept(%d)>"%alpha
     operator.accept() # May mutate trace
   else:
 #    sys.stdout.write("<reject>")
-    print "<reject(%d)>"%alpha
     operator.reject() # May mutate trace
 
 class BlockScaffoldIndexer(object):
@@ -316,7 +314,6 @@ class ParticlePGibbsOperator(object):
     for t in reversed(range(T)):
       rhoWeights[t],rhoDBs[t] = detachAndExtract(trace,scaffold.border[t],scaffold)
 
-    print "<TORUS>"
     assertTorus(scaffold)
 
     particles = [Particle(trace=trace) for p in range(P+1)]
@@ -329,7 +326,6 @@ class ParticlePGibbsOperator(object):
 
     for p in range(P):
       particleWeights[p] = regenAndAttach(particles[p],scaffold.border[0],scaffold,False,OmegaDB(),{})
-      print "<END:PARTICLE:REGEN>"
 
     particleWeights[P] = regenAndAttach(particles[P],scaffold.border[0],scaffold,True,rhoDBs[0],{})
     assert_almost_equal(particleWeights[P],rhoWeights[0])
