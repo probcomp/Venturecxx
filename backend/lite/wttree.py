@@ -209,4 +209,4 @@ class Set(object):
 
 # TODO test balance, either as asymptotics with the timings framework
 # or through an explicit check that a tree built by some mechanism is
-# balanced.
+# balanced.  Issue https://app.asana.com/0/9277419963067/9924589720809
