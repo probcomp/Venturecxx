@@ -161,7 +161,7 @@ class Map(object):
     self.root = root if root is not None else EmptyNode()
   def lookup(self, key):
     return node_lookup(self.root, key)
-  def contains(self, key):
+  def __contains__(self, key):
     return node_lookup(self.root, key) is not None
   def insert(self, key, value):
     return Map(node_insert(self.root, key, value))
@@ -175,6 +175,8 @@ class Map(object):
     return Map(node_adjust(self.root, key, f))
   def delete(self, key):
     return Map(node_delete(self.root, key))
+
+  def __len__(self): return self.root.size()
   def iteritems(self):
     return node_traverse_in_order(self.root)
 
