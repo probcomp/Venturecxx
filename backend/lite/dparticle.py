@@ -35,7 +35,27 @@ class Particle(trace.Trace):
     # (2) Maps to things that change outside of particle methods
     self.madeSPAuxs = { node => spaux.copy() for node,spaux in particle.madeSPAuxs }
 
-  def initFromTrace(self,trace): raise Exception("Not yet implemented")
+  def initFromTrace(self,trace):
+    self.base = trace
+
+    # (1) Persistent stuff
+    self.rcs = PSet()
+    self.ccs = PSet()
+    self.aes = PSet()
+
+    self.values = PMap()
+    self.madeSPs = PMap()
+
+    self.scopes = PMap()
+    self.esrParents = PMap()
+    self.numRequests = PMap()
+    self.regenCounts = PMap()
+    self.newMadeSPFamilies = PMap()
+    self.newChildren = PMap()
+
+    # (2) Maps to things that change outside of particle methods
+    self.madeSPAuxs = {}
+
 
 #### Random choices and scopes
 
