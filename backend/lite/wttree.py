@@ -160,6 +160,12 @@ class Map(object):
   def insert(self, key, value):
     return Map(node_insert(self.root, key, value))
   def adjust(self, key, f):
+    """adjust :: (Map k v) -> k -> (v -> v) -> Map k v
+
+    Returns a new Map obtained from this one by applying the given
+    function to the value at the given key.  Returns the original Map
+    unchanged if the key is not present.  The name is chosen by
+    analogy to Data.Map.adjust from the Haskell standard library."""
     return Map(node_adjust(self.root, key, f))
   def delete(self, key):
     return Map(node_delete(self.root, key))
