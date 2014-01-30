@@ -77,12 +77,12 @@ class Particle(trace.Trace):
 
   def registerRandomChoiceInScope(self,scope,block,node): 
     if not scope in self.scopes: self.scopes = self.scopes.insert(scope,PMap())
-    if not block in self.scopes.lookup(scope): self.scopes = self.scopes.insert(block,PSet())
-    self.scopes = self.scopes.alter(scope,lambda block: block.alter(lambda pnodes: pnodes.insert(node)))
+    if not block in self.scopes.lookup(scope): self.scopes.alter(scope,lambda blocks: blocks.insert(block,PSet()))
+    self.scopes = self.scopes.alter(scope,lambda blocks: blocks.alter(block,lambda pnodes: pnodes.insert(node)))
 
   def unregisterRandomChoiceInScope(self,scope,block,node):
-    self.scopes = self.scopes.alter(scope,lambda block: block.alter(lambda pnodes: pnodes.remove(node)))
-    if self.scopes.lookup(scope).lookup(block).isEmpty(): self.scopes = self.scopes.alter(scope,lambda scope: scope.remove(block))
+    self.scopes = self.scopes.alter(scope,lambda blocks: blocks.alter(block,lambda pnodes: pnodes.remove(node)))
+    if self.scopes.lookup(scope).lookup(block).isEmpty(): self.scopes = self.scopes.alter(scope,lambda blocks: blocks.remove(block))
     if self.scopes.lookup(scope).isEmpty(): self.scopes = self.scopes.remove(scope)
 
 #### Misc
