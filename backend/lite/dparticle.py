@@ -142,7 +142,7 @@ class Particle(trace.Trace):
 
   def registerFamilyAt(self,node,esrId,esrParent): 
     makerNode = self.spRef(node).makerNode
-    if not makerNode in self.newMadeSPFamilies: self.newMadeSPFamilies.insert(makerNode,PMap())
+    if not makerNode in self.newMadeSPFamilies: self.newMadeSPFamilies = self.newMadeSPFamilies.insert(makerNode,PMap())
     self.newMadeSPFamilies.alter(makerNode,lambda ids: ids.insert(esrId,esrParent))
 
 ### Regular maps
