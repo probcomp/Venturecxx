@@ -35,18 +35,13 @@ class Particle(trace.Trace):
     self.regenCounts = particle.regenCounts.pcopy()
     self.madeSPFamilies = particle.madeSPFamilies.pcopy()
     self.newChildren = particle.newChildren.pcopy()
-    # this one could be a legit_map, since we don't care about the asymptotics with respect to the # of scopes in a scaffold
-    # TODO where is the boxing? If we don't need to copy psets explicitly, then we can skip this step
-    # (and also remove all pcopy(), but no longer use the mutation-syntax, and instead right x = x.insert(_)
-    # confirm design with alexey before proceeding
-    self.scopesToBlocks = pmap_values(lambda blocks: blocks.pcopy(), particle.scopesToBlocks) # { scope => pset { block } }
+    # note: this is a legit map, but it shouldn't matter other than the copy cost which should be negligible
+    self.scopesToBlocks = { scope : blocks.pcopy() for scope,blocks in particle.scopesToBlocks} # { scope => pset { block } }
     
-    # (4) Persistent Maps to things that change outside of particle methods
-    # TODO we want this to be lazy, and not need to visit all of the SPAuxs a
-    self.madeSPAuxs = pmap_values(lambda spaux: spaux.copy(), particle.madeSPAuxs)
+    # (4) Maps to things that change outside of particle methods
+    self.madeSPAuxs = { node => spaux.copy() for node,spaux in particle.madeSPAuxs }
 
   def initFromTrace(self,trace): raise Exception("Not yet implemented")
-
 
 ######################### (1) Persistent Sets
   def registerRandomChoice(self,node): 
@@ -55,10 +50,10 @@ class Particle(trace.Trace):
 
   def registerAEKernel(self,node): self.aes.add(node)
 
-  # TODO
-  # we don't have deletion yet, so we don't remove from rcs from a node that is ccs.
-  # when we commit, we only commit the rcs that are not in ccs
-  def registerConstrainedChoice(self,node): self.ccs.add(node)
+  def registerConstrainedChoice(self,node): 
+    self.ccs.add(node)
+    self.unregisterRandomChoice(node)
+
   def registerRandomChoiceInScope(self,scope,block,node): 
     self.sbns.add((scope,block,node))
     self._registerBlockInScope(scope,block)
@@ -132,6 +127,7 @@ class Particle(trace.Trace):
     if not makerNode in self.madeSPFamilies: self.madeSPFamilies[makerNode] = pmap()
     self.madeSPFamilies[makerNode][esrId] = esrParent
 
+  # NOTE this map is not persistent, but the same semantics applies (and it maps to a persistent set)
   def _registerBlockInScope(self,scope,block):
     if not scope in self.scopesToBlocks: self.scopesToBlocks[scope] = pset()
     scopesToBlocks[scope].add(block)
@@ -172,3 +168,19 @@ class Particle(trace.Trace):
   def unregisterConstrainedChoice(self,node): raise Exception("Should not be called on a particle")
   def decRegenCountAt(self,scaffold,node): raise Exception("Should never be called on a particle")
   def numRequestsAt(self,node): raise Exception("Should not be called on a particle")
+
+################## Pipeline
+  def unregisterRandomChoice(self,node): 
+    assert node in self.rcs
+    self.rcs.remove(node)
+    self.unregisterRandomChoiceInScope("default",node,node)
+
+  def unregisterRandomChoiceInScope(self,scope,block,node):
+    self.sbns.remove((scope,block,node))
+    self._unregisterBlockInScope(scope,block)
+
+  def _unregisterBlockInScope(self,scope,block):
+    self.scopeToBlocks[scope].remove(block)
+  def _registerBlockInScope(self,scope,block):
+    if not scope in self.scopesToBlocks: self.scopesToBlocks[scope] = pset()
+    scopesToBlocks[scope].add(block)
