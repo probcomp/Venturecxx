@@ -30,13 +30,13 @@ def testMapStressInsertDelete():
     assert r.contains((i * 14536777) % 107331)
     assert not r2.contains((i * 14536777) % 107331)
 
-# def testMapIterate():
-#   r = Map()
-#   for i in range(1000):
-#     r = r.insert((i * 14536777) % 107331)
+def testMapIterate():
+  r = Map()
+  for i in range(1000):
+    r = r.insert((i * 14536777) % 107331, i)
 
-#   xs = set()
-#   for x in r: xs.add(x)
+  xs = dict()
+  for (k,v) in r.iteritems(): xs[k] = v
 
-#   for i in range(1000):
-#     assert (i * 14536777) % 107331 in xs
+  for i in range(1000):
+    assert xs[(i * 14536777) % 107331] == i

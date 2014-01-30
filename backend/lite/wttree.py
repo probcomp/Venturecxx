@@ -146,6 +146,12 @@ def node_delete(node, key):
       [min_r_k, min_r_v, new_r] = node_popmin(node.right)
       return t_join(node.left, min_r_k, min_r_v, new_r)
 
+def node_traverse_in_order(node):
+  if not node.isEmpty():
+    for pair in node_traverse_in_order(node.left): yield pair
+    yield (node.key, node.value)
+    for pair in node_traverse_in_order(node.right): yield pair
+
 class Map(object):
   """Persistent map backed by a weight-balanced tree.
 
@@ -169,6 +175,8 @@ class Map(object):
     return Map(node_adjust(self.root, key, f))
   def delete(self, key):
     return Map(node_delete(self.root, key))
+  def iteritems(self):
+    return node_traverse_in_order(self.root)
 
 # Testing TODO:
 # - Correctness, per Daniel's rbtree tests
