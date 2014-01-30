@@ -277,3 +277,13 @@ class Trace(object):
   def unboxExpression(self,exp):
     if type(exp) == list: return [self.unboxExpression(subexp) for subexp in exp]
     else: return self.unboxValue(exp)
+
+#################### Misc for particle commit
+
+  def addNewMadeSPFamilies(self,node,newMadeSPFamilies):
+    if node.madeSPFamilies is None: node.madeSPFamilies = {}
+    for node,newMadeSPFamilies in newMadeSPFamilies: 
+      for id,root in newMadeSPFamilies:
+        node.madeSPFamilies[id] = root
+
+  def addNewChildren(self,node,newChildren): for node,child in newChildren: node.children.add(child)
