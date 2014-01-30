@@ -152,6 +152,12 @@ def node_traverse_in_order(node):
     yield (node.key, node.value)
     for pair in node_traverse_in_order(node.right): yield pair
 
+def node_traverse_keys_in_order(node):
+  if not node.isEmpty():
+    for key in node_traverse_keys_in_order(node.left): yield key
+    yield node.key
+    for key in node_traverse_keys_in_order(node.right): yield key
+
 class Map(object):
   """Persistent map backed by a weight-balanced tree.
 
@@ -177,10 +183,30 @@ class Map(object):
     return Map(node_delete(self.root, key))
 
   def __len__(self): return self.root.size()
+  def __iter__(self):
+    return node_traverse_keys_in_order(self.root)
   def iteritems(self):
     return node_traverse_in_order(self.root)
 
-# Testing TODO:
-# - Correctness, per Daniel's rbtree tests
-# - Balance, either as asymptotics with the timings framework or
-#   through an explicit check.
+class Set(object):
+  """Persistent set backed by a weight-balanced tree.
+
+  At present, happens to be implemented just like a Map, but with the
+  values always being True.  In principle could be impemented more
+  efficiently by specializing the nodes not to store values at all."""
+  def __init__(self, root=None):
+    self.root = root if root is not None else EmptyNode()
+  def __contains__(self, key):
+    return node_lookup(self.root, key) is not None
+  def insert(self, key):
+    return Set(node_insert(self.root, key, True))
+  def delete(self, key):
+    return Set(node_delete(self.root, key))
+
+  def __len__(self): return self.root.size()
+  def __iter__(self):
+    return node_traverse_keys_in_order(self.root)
+
+# TODO test balance, either as asymptotics with the timings framework
+# or through an explicit check that a tree built by some mechanism is
+# balanced.
