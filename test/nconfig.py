@@ -10,4 +10,4 @@ config["kernel"] = "pgibbs"
 config["scope"] = "default"
 config["block"] = "all"
 config["with_mutation"] = False
-config["particles"] = 3
+config["particles"] = 2

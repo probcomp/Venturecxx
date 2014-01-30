@@ -190,7 +190,9 @@ class Trace(object):
   def sampleBlock(self,scope): return self.scopes[scope].sample()[1]
   def logDensityOfBlock(self,scope): return -1 * math.log(self.numBlocksInScope(scope))
   def blocksInScope(self,scope): return self.scopes[scope].keys()
-  def numBlocksInScope(self,scope): return len(self.blocksInScope(scope))
+  def numBlocksInScope(self,scope): 
+    if scope in self.scopes: return len(self.scopes[scope].keys())
+    else: return 0
   def getAllNodesInScope(self,scope): return set.union(*self.scopes[scope].values())
   def getOrderedSetsInScope(self,scope): return self.scopes[scope].sortedValues()
   def getNodesInBlock(self,scope,block): return self.scopes[scope][block]

@@ -180,7 +180,7 @@ class Particle(Trace):
     self.madeSPAuxs[node] = aux
 
 ### Miscellaneous bookkeeping
-  def numBlocksInScope(self,scope): return len(self.scopes.lookup(block)) + len(self.base.numBlocksInScope(scope))
+  def numBlocksInScope(self,scope): return len(self.scopes.lookup(scope)) + self.base.numBlocksInScope(scope)
 
 ### Commit
   def commit(self): 

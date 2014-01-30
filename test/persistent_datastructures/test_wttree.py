@@ -116,23 +116,3 @@ def testPSetIterate():
 
   for i in range(N):
     assert _hash(i) in xs
-
-def testPMapToPMap():
-  r = PMap()
-  assert len(r) == 0
-  assert not r # Things with len == 0 register as False in Python
-
-  r1 = r.insert(1,2)
-  assert r1 # Things with len != 0 register as True
-  assert len(r1) == 1
-  assert 1 in r1
-  assert r1.lookup(1) == 2
-  assert len(r) == 0
-  assert 1 not in r
-
-  r2 = r1.delete(1)
-  assert 1 in r1
-  assert r1.lookup(1) == 2
-  assert 1 not in r2
-  assert r2.lookup(1) is None
-  assert len(r2) == 0
