@@ -17,6 +17,7 @@
 
 from distutils.core import setup, Extension
 import os
+import sys
 
 #src_dir = "backend/cxx/src"
 #src_files = []
@@ -28,6 +29,10 @@ import os
 #
 #os.path.walk(src_dir, find_cxx, src_files)
 #print(src_files)
+
+ON_LINUX = 'linux' in sys.platform
+if ON_LINUX:
+    os.environ['CC'] = 'ccache gcc'
 
 src_files = [
     "src/value.cxx",
