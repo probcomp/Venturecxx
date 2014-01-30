@@ -1,0 +1,24 @@
+
+[FORMAT]
+indent-string='  '
+
+[BASIC]
+# List of builtins function names that should not be used, separated by a comma
+# map and filter are suggested here, presumably in favor of list comprehensions
+bad-functions=apply,input
+
+# Regular expression which should only match correct function names
+function-rgx=[a-z_][a-z0-9_]{0,30}$
+
+# Regular expression which should only match correct method names
+method-rgx=[a-z_][a-z0-9_]{0,30}$
+
+# Regular expression which should only match correct instance attribute names
+attr-rgx=[a-z_][a-z0-9_]{0,30}$
+
+# Regular expression which should only match correct argument names
+argument-rgx=[a-z_][a-z0-9_]{0,30}$
+
+# Regular expression which should only match correct variable names
+variable-rgx=[a-z_][a-z0-9_]{0,30}$
+
