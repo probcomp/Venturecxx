@@ -1,16 +1,19 @@
 import copy
 import math
 from sp import SPFamilies
-from nose.tools import assert_equal
-import trace
+from spref import SPRef
+from nose.tools import assert_equal,assert_is_none
+from wttree import PMap, PSet
+from trace import Trace
+import pdb
 
-class Particle(trace.Trace):
+class Particle(Trace):
 
   # The trace is expected to be a torus, with the chosen scaffold
   # already detached, or a particle.
   def __init__(self,trace):
-    if type(trace) is Particle: initFromParticle(self,trace)
-    elif type(trace) is Trace: initFromTrace(self,trace)
+    if type(trace) is Particle: self.initFromParticle(trace)
+    elif type(trace) is Trace: self.initFromTrace(trace)
     else: raise Exception("Must init particle from trace or particle")
 
   # Note: using "copy()" informally for both legit_copy and persistent_copy
@@ -33,7 +36,7 @@ class Particle(trace.Trace):
     self.newChildren = particle.newChildren
 
     # (2) Maps to things that change outside of particle methods
-    self.madeSPAuxs = { node => spaux.copy() for node,spaux in particle.madeSPAuxs }
+    self.madeSPAuxs = { node : spaux.copy() for node,spaux in particle.madeSPAuxs }
 
   def initFromTrace(self,trace):
     self.base = trace
@@ -61,7 +64,7 @@ class Particle(trace.Trace):
 
   def registerRandomChoice(self,node):
     self.rcs = self.rcs.insert(node)
-    self.registerRandomChoiceInScope(self,"default",node,node)
+    self.registerRandomChoiceInScope("default",node,node)
 
   def registerAEKernel(self,node): 
     self.aes = self.aes.insert(node)
@@ -72,27 +75,32 @@ class Particle(trace.Trace):
 
   def unregisterRandomChoice(self,node): 
     assert node in self.rcs
-    self.rcs = self.rcs.remove(node)
+    self.rcs = self.rcs.delete(node)
     self.unregisterRandomChoiceInScope("default",node,node)
 
-  def registerRandomChoiceInScope(self,scope,block,node): 
+  def registerRandomChoiceInScope(self,scope,block,node):
     if not scope in self.scopes: self.scopes = self.scopes.insert(scope,PMap())
-    if not block in self.scopes.lookup(scope): self.scopes.adjust(scope,lambda blocks: blocks.insert(block,PSet()))
+    if not block in self.scopes.lookup(scope): self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.insert(block,PSet()))
     self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.adjust(block,lambda pnodes: pnodes.insert(node)))
 
   def unregisterRandomChoiceInScope(self,scope,block,node):
-    self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.adjust(block,lambda pnodes: pnodes.remove(node)))
-    if not len(self.scopes.lookup(scope).lookup(block)): self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.remove(block))
-    if not len(self.scopes.lookup(scope)): self.scopes = self.scopes.remove(scope)
+    self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.adjust(block,lambda pnodes: pnodes.delete(node)))
+    if not len(self.scopes.lookup(scope).lookup(block)): self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.delete(block))
+    if not len(self.scopes.lookup(scope)): self.scopes = self.scopes.delete(scope)
 
 #### Misc
 
   def valueAt(self,node): 
+    print "PARTICLE::VALUE_AT",node
     if node in self.values: return self.values.lookup(node)
-    else: return self.base.valueAt(node)
+    else: 
+      print "(recurse to trace...)"
+      return self.base.valueAt(node)
 
   def setValueAt(self,node,value): 
-    assert self.base.valueAt(node) is None
+    if value is None: print "PARTICLE::CLEAR_VALUE",node
+    if isinstance(value,SPRef): print "PARTICLE::SET_SPREF",node
+#    assert_is_none(self.base.valueAt(node))
     self.values = self.values.insert(node,value)
 
   def madeSPAt(self,node):
@@ -118,22 +126,24 @@ class Particle(trace.Trace):
     else: return self.base.regenCountAt(scaffold,node)
 
   def incRegenCountAt(self,scaffold,node): 
-    if not node in self.regenCounts: self.regenCounts.insert(node,0)
-    self.regenCounts.adjust(node,lambda rc: rc + 1)
+    if not node in self.regenCounts: self.regenCounts = self.regenCounts.insert(node,0)
+    self.regenCounts = self.regenCounts.adjust(node,lambda rc: rc + 1)
 
   def incRequestsAt(self,node):
-    if not node in self.numRequests: self.numRequests = self.numRequests.insert(node,self.base.numRequests[node])
-    self.numRequests.adjust(node,lambda nr: nr + 1)
+    if not node in self.numRequests: self.numRequests = self.numRequests.insert(node,self.base.numRequestsAt(node))
+    self.numRequests = self.numRequests.adjust(node,lambda nr: nr + 1)
 
   def addChildAt(self,node,child):
-    if not node in self.newChildren: self.newChildren.insert(node,[])
+    if not node in self.newChildren: self.newChildren = self.newChildren.insert(node,[])
     self.newChildren.lookup(node).append(child)
 
 ### SPFamilies
 
   def containsSPFamilyAt(self,node,id): 
-    if node in self.newMadeSPFamilies and id in self.newMadeSPFamilies.lookup(node): return True
-    else: return self.base.containsSPFamilyAt(node,id)
+    makerNode = self.spRefAt(node).makerNode
+    madeSPFamilies = self.madeSPFamiliesAt(makerNode)
+    assert isinstance(madeSPFamilies,SPFamilies)
+    return madeSPFamilies.containsFamily(id)
 
   def setMadeSPFamiliesAt(self,node,madeSPFamilies):
     assert not node in self.newMadeSPFamilies
@@ -141,14 +151,26 @@ class Particle(trace.Trace):
     self.newMadeSPFamilies = self.newMadeSPFamilies.insert(node,madeSPFamilies)
 
   def registerFamilyAt(self,node,esrId,esrParent): 
-    makerNode = self.spRef(node).makerNode
+    makerNode = self.spRefAt(node).makerNode
     if not makerNode in self.newMadeSPFamilies: self.newMadeSPFamilies = self.newMadeSPFamilies.insert(makerNode,PMap())
-    self.newMadeSPFamilies.adjust(makerNode,lambda ids: ids.insert(esrId,esrParent))
+    self.newMadeSPFamilies = self.newMadeSPFamilies.adjust(makerNode,lambda ids: ids.insert(esrId,esrParent))
 
+  def madeSPFamilyAt(self,node,esrId): 
+    if node in self.newMadeSPFamilies and esrId in self.newMadeSPFamilies.lookup(node): 
+      return self.newMadeSPFamilies.lookup(node).lookup(esrId)
+    else: return self.base.madeSPFamilyAt(node,esrId)
+
+  def spFamilyAt(self,node,esrId): 
+    makerNode = self.spRefAt(node).makerNode
+    return self.madeSPFamilyAt(makerNode,esrId)
+ 
 ### Regular maps
 
   def madeSPAuxAt(self,node):
-    if not node in self.madeSPAuxs: self.madeSPAuxs[node] = self.base.madeSPAuxAt(node).copy()
+    if not node in self.madeSPAuxs: 
+      if self.base.madeSPAuxAt(node) is not None:
+        self.madeSPAuxs[node] = self.base.madeSPAuxAt(node).copy()
+      else: return None
     return self.madeSPAuxs[node]
 
   def setMadeSPAuxAt(self,node,aux):
@@ -169,25 +191,24 @@ class Particle(trace.Trace):
 
     for node in self.aes: self.base.registerAEKernel(node)
 
-    for (node,value) in self.values: self.base.setValueAt(node,value)
-    for (node,madeSP) in self.madeSPs: self.base.setMadeSPAt(node,madeSP)
+    for (node,value) in self.values.iteritems(): self.base.setValueAt(node,value)
+    for (node,madeSP) in self.madeSPs.iteritems(): self.base.setMadeSPAt(node,madeSP)
 
     # this iteration includes "default"
-    for (scope,blocks) in self.scopes:
-      for (block,pnodes) in blocks:
+    for (scope,blocks) in self.scopes.iteritems():
+      for (block,pnodes) in blocks.iteritems():
         for pnode in pnodes:
           self.base.registerRandomChoiceInScope(scope,block,pnode)
           
-    for (node,esrParents) in self.esrParents: trace.setEsrParentsAt(node,esrParents)
-    for (node,numRequests) in self.numRequests: trace.setNumRequestsAt(node,numRequests)
-    for (node,newMadeSPFamilies) in self.newMadeSPFamilies: trace.addNewMadeSPFamilies(node,newMadeSPFamilies)
-    for (node,newChildren) in self.newChildren: trace.addNewChildren(node,newChildren)
+    for (node,esrParents) in self.esrParents.iteritems(): self.base.setEsrParentsAt(node,esrParents)
+    for (node,numRequests) in self.numRequests.iteritems(): self.base.setNumRequestsAt(node,numRequests)
+    for (node,newMadeSPFamilies) in self.newMadeSPFamilies.iteritems(): self.base.addNewMadeSPFamilies(node,newMadeSPFamilies)
+    for (node,newChildren) in self.newChildren.iteritems(): self.base.addNewChildren(node,newChildren)
 
-    for (node,spaux) in self.madeSPAuxs: trace.setMadeSPAuxAt(node,spaux)
+    for (node,spaux) in self.madeSPAuxs.iteritems(): self.base.setMadeSPAuxAt(node,spaux)
 
 ################### Methods that should never be called on particles
   def unregisterFamilyAt(self,node,esrId): raise Exception("Should not be called on a particle")
-  def madeSPFamiliesAt(self,node): raise Exception("Should not be called on a particle")
   def popEsrParentAt(self,node): raise Exception("Should not be called on a particle")
   def childrenAt(self,node): raise Exception("Should not be called on a particle")
   def removeChildAt(self,node,child): raise Exception("Should not be called on a particle")

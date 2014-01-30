@@ -11,6 +11,8 @@ import random
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
+from nose.tools import assert_equal,assert_is_not_none
+
 
 class Trace(object):
   def __init__(self):
@@ -114,6 +116,7 @@ class Trace(object):
     if not isinstance(candidate, SPRef):
       print "spRef not an spRef"
       print "is a: " + str(type(candidate))
+      print node,node.operatorNode
     assert isinstance(candidate, SPRef)
     return candidate
   
@@ -133,14 +136,20 @@ class Trace(object):
   #### Stuff that a particle trace would need to override for persistence
 
   def valueAt(self,node):
+    print "TRACE::VALUE_AT",node
     return node.value
+
   def setValueAt(self,node,value):
     node.value = value
+    if value is None: print "TRACE::CLEAR_VALUE",node
 
   def madeSPAt(self,node): return node.madeSP
   def setMadeSPAt(self,node,sp): node.madeSP = sp
     
-  def madeSPFamiliesAt(self,node): return node.madeSPFamilies
+  def madeSPFamiliesAt(self,node):
+    assert_is_not_none(node.madeSPFamilies)
+    return node.madeSPFamilies
+
   def setMadeSPFamiliesAt(self,node,families): node.madeSPFamilies = families
 
   def madeSPAuxAt(self,node): return node.madeSPAux
@@ -161,7 +170,9 @@ class Trace(object):
     
   def registerFamilyAt(self,node,esrId,esrParent): self.spFamiliesAt(node).registerFamily(esrId,esrParent)
   def unregisterFamilyAt(self,node,esrId): self.spFamiliesAt(node).unregisterFamily(esrId)
-  def containsSPFamilyAt(self,node,id): return self.spFamiliesAt(node).containsFamily(esrId)
+  def containsSPFamilyAt(self,node,esrId): return self.spFamiliesAt(node).containsFamily(esrId)
+  def spFamilyAt(self,node,esrId): return self.spFamiliesAt(node).getFamily(esrId)
+  def madeSPFamilyAt(self,node,esrId): return self.madeSPFamiliesAt(node).getFamily(esrId)
 
   def numRequestsAt(self,node): return node.numRequests
   def setNumRequestsAt(self,node,num): node.numRequests = num
@@ -282,8 +293,9 @@ class Trace(object):
 
   def addNewMadeSPFamilies(self,node,newMadeSPFamilies):
     if node.madeSPFamilies is None: node.madeSPFamilies = {}
-    for node,newMadeSPFamilies in newMadeSPFamilies: 
-      for id,root in newMadeSPFamilies:
-        node.madeSPFamilies[id] = root
+    for id,root in newMadeSPFamilies.iteritems():
+      node.madeSPFamilies.registerFamily(id,root)
 
-  def addNewChildren(self,node,newChildren): for node,child in newChildren: node.children.add(child)
+  def addNewChildren(self,node,newChildren): 
+    for child in newChildren:
+      node.children.add(child)

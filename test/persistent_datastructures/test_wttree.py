@@ -1,7 +1,7 @@
-from venture.lite.wttree import Map, Set
+from venture.lite.wttree import PMap, PSet
 
-def testMapInsertContainsDelete():
-  r = Map()
+def testPMapInsertContainsDelete():
+  r = PMap()
   assert len(r) == 0
   assert not r # Things with len == 0 register as False in Python
 
@@ -23,8 +23,8 @@ def testMapInsertContainsDelete():
 def _hash(i):
   return (i * 14536777) % 107331
 
-def testMapStressInsertDelete():
-  r = Map()
+def testPMapStressInsertDelete():
+  r = PMap()
   N = 1000
   for i in range(N):
     r = r.insert(_hash(i), i)
@@ -49,8 +49,8 @@ def testMapStressInsertDelete():
     assert _hash(i) not in r2
     assert r2.lookup(_hash(i)) is None
 
-def testMapIterate():
-  r = Map()
+def testPMapIterate():
+  r = PMap()
   N = 1000
   for i in range(N):
     r = r.insert(_hash(i), i)
@@ -67,8 +67,8 @@ def testMapIterate():
   for i in range(N):
     assert _hash(i) in ks
 
-def testSetInsertContainsDelete():
-  r = Set()
+def testPSetInsertContainsDelete():
+  r = PSet()
   assert len(r) == 0
   assert not r # Things with len == 0 register as False in Python
 
@@ -84,8 +84,8 @@ def testSetInsertContainsDelete():
   assert 1 not in r2
   assert len(r2) == 0
 
-def testSetStressInsertDelete():
-  r = Set()
+def testPSetStressInsertDelete():
+  r = PSet()
   N = 1000
   for i in range(N):
     r = r.insert(_hash(i))
@@ -105,8 +105,8 @@ def testSetStressInsertDelete():
     assert _hash(i) in r
     assert _hash(i) not in r2
 
-def testSetIterate():
-  r = Set()
+def testPSetIterate():
+  r = PSet()
   N = 1000
   for i in range(N):
     r = r.insert(_hash(i))
@@ -116,3 +116,23 @@ def testSetIterate():
 
   for i in range(N):
     assert _hash(i) in xs
+
+def testPMapToPMap():
+  r = PMap()
+  assert len(r) == 0
+  assert not r # Things with len == 0 register as False in Python
+
+  r1 = r.insert(1,2)
+  assert r1 # Things with len != 0 register as True
+  assert len(r1) == 1
+  assert 1 in r1
+  assert r1.lookup(1) == 2
+  assert len(r) == 0
+  assert 1 not in r
+
+  r2 = r1.delete(1)
+  assert 1 in r1
+  assert r1.lookup(1) == 2
+  assert 1 not in r2
+  assert r2.lookup(1) is None
+  assert len(r2) == 0

@@ -158,7 +158,7 @@ def node_traverse_keys_in_order(node):
     yield node.key
     for key in node_traverse_keys_in_order(node.right): yield key
 
-class Map(object):
+class PMap(object):
   """Persistent map backed by a weight-balanced tree.
 
   The lookup method returns None if the key is not found.  Do not
@@ -170,17 +170,17 @@ class Map(object):
   def __contains__(self, key):
     return node_lookup(self.root, key) is not None
   def insert(self, key, value):
-    return Map(node_insert(self.root, key, value))
+    return PMap(node_insert(self.root, key, value))
   def adjust(self, key, f):
-    """adjust :: (Map k v) -> k -> (v -> v) -> Map k v
+    """adjust :: (PMap k v) -> k -> (v -> v) -> PMap k v
 
-    Returns a new Map obtained from this one by applying the given
-    function to the value at the given key.  Returns the original Map
+    Returns a new PMap obtained from this one by applying the given
+    function to the value at the given key.  Returns the original PMap
     unchanged if the key is not present.  The name is chosen by
-    analogy to Data.Map.adjust from the Haskell standard library."""
-    return Map(node_adjust(self.root, key, f))
+    analogy to Data.PMap.adjust from the Haskell standard library."""
+    return PMap(node_adjust(self.root, key, f))
   def delete(self, key):
-    return Map(node_delete(self.root, key))
+    return PMap(node_delete(self.root, key))
 
   def __len__(self): return self.root.size()
   def __iter__(self):
@@ -188,10 +188,10 @@ class Map(object):
   def iteritems(self):
     return node_traverse_in_order(self.root)
 
-class Set(object):
+class PSet(object):
   """Persistent set backed by a weight-balanced tree.
 
-  At present, happens to be implemented just like a Map, but with the
+  At present, happens to be implemented just like a PMap, but with the
   values always being True.  In principle could be impemented more
   efficiently by specializing the nodes not to store values at all."""
   def __init__(self, root=None):
@@ -199,9 +199,9 @@ class Set(object):
   def __contains__(self, key):
     return node_lookup(self.root, key) is not None
   def insert(self, key):
-    return Set(node_insert(self.root, key, True))
+    return PSet(node_insert(self.root, key, True))
   def delete(self, key):
-    return Set(node_delete(self.root, key))
+    return PSet(node_delete(self.root, key))
 
   def __len__(self): return self.root.size()
   def __iter__(self):
