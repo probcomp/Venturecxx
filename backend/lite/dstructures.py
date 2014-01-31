@@ -64,7 +64,9 @@ class PairOutputPSP(PSP):
     return "(%s <object> <list>) -> <list>" % name
 
 class IsPairOutputPSP(PSP): 
-  def simulate(self,args): return len(args.operandValues[0]) > 0
+  def simulate(self,args):
+    return isinstance(args.operandValues[0],list) and len(args.operandValues[0]) > 0
+
   def description(self,name):
     return "(%s <object>) -> <bool>" % name
 

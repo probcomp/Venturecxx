@@ -17,6 +17,7 @@
 from venture.test.stats import *
 from nose import SkipTest
 import math
+from nose.tools import assert_equal
 
 ### Expressions
 
@@ -37,11 +38,11 @@ def loadReferences(ripl):
 ## { sym => ref }
 def loadEnvironments(ripl):
   ripl.assume("incremental_initial_environment","""
-(lambda () 
-  (list 
+(lambda ()
+  (list
     (dict 
-      (list (quote bernoulli) (quote normal) (quote +) (quote *))
-      (list (make_ref bernoulli) (make_ref normal) (make_ref plus) (make_ref times)))))
+      (list (quote bernoulli) (quote normal) (quote plus) (quote times) (quote branch))
+      (list (make_ref bernoulli) (make_ref normal) (make_ref plus) (make_ref times) (make_ref branch)))))
 """)
 
   ripl.assume("extend_env","""
@@ -52,44 +53,39 @@ def loadEnvironments(ripl):
   ripl.assume("find_symbol","""
   (lambda (sym env)
     (if (contains (first env) sym)
-	(lookup (first env) sym)
-	(find_symbol sym (rest env))))
+     	(lookup (first env) sym)
+    	(find_symbol sym (rest env))))
 """)
 
 ## Application of compound
 ## operator = [&env &ids &body]
 ## operands = [&op1 ... &opN]
 def loadIncrementalEvaluator(ripl):
-  # TODO Replace list_ref with a builtin?
-  ripl.assume("list_ref","""
-(lambda (lst i)
-  (if (eq 0 i)
-      (first lst)
-      (list_ref (second lst) (minus i 1))))""")
+
   ripl.assume("incremental_venture_apply","(lambda (op args) (eval (pair op (map_list deref args)) (get_empty_environment)))")
 
   ripl.assume("incremental_apply","""
   (lambda (operator operands)
     (incremental_eval (deref (lookup operator 2))
 		      (extend_env (deref (lookup operator 0))
-					  (map_list deref (deref (lookup operator 1)))
+					  (deref (lookup operator 1))
 					  operands)))
 """)
 
   ripl.assume("incremental_eval","""
   (lambda (expr env)
     (if (is_symbol expr)
-	(deref (find_symbol expr env))
-	(if (not (is_pair expr))
-	    expr
-	    (if (= (deref (lookup expr 0)) (quote lambda))
-		(pair (make_ref env) (rest expr))
-		((lambda (operator operands)
-		   (if (is_pair operator)
-		       (incremental_apply operator operands)
-		       (incremental_venture_apply operator operands)))
-		 (incremental_eval (deref (lookup expr 0)) env)
-		 (map_list (lambda (x) (make_ref (incremental_eval (deref x) env))) (rest expr)))))))
+    	(deref (find_symbol expr env))
+	    (if (not (is_pair expr))
+	        expr
+     	    (if (= (deref (lookup expr 0)) (quote lambda))
+	        	(pair (make_ref env) (rest expr))
+        		((lambda (operator operands)
+		           (if (is_pair operator)
+         		       (incremental_apply operator operands)
+		               (incremental_venture_apply operator operands)))
+         		 (incremental_eval (deref (lookup expr 0)) env)
+		         (map_list (lambda (x) (make_ref (incremental_eval (deref x) env))) (rest expr)))))))
 """)
   
 
@@ -107,39 +103,69 @@ def extractValue(d):
   else: return d
 
 
-@statisticalTest
-def testIncrementalEvaluator1():
-  "Incremental version of micro/test_basic_stats.py:testBernoulli1"
-  raise SkipTest("Errors out due to a Venture-level type error (a string flowed into operator position).  Re-enable when there are facilities for debugging such things.  Issue https://app.asana.com/0/9277419963067/9280122191537")
+def testIncrementalEvaluator1a():
+  "Extremely basic test"
   ripl = get_ripl()
   loadAll(ripl)
-  ripl.predict("(incremental_eval (quote (branch (bernoulli 0.3) (normal 0.0 1.0) (normal 10.0 1.0))))")
-  predictions = collectSamples(ripl,2)
+  ripl.assume("expr","(quote 1)")
+  ripl.assume("env","(incremental_initial_environment)")
+  ripl.predict("(incremental_eval expr env)",label="pid")
+  assert_equal(ripl.report("pid"),1)
+
+def testIncrementalEvaluator1b():
+  "Extremely basic test"
+  ripl = get_ripl()
+  loadAll(ripl)
+  ripl.assume("expr","(list (make_ref plus) (make_ref 1) (make_ref 1))")
+  ripl.assume("env","(incremental_initial_environment)")
+  ripl.predict("(incremental_eval expr env)",label="pid")
+  assert_equal(ripl.report("pid"),2)
+
+@statisticalTest
+def testIncrementalEvaluator1c():
+  "Incremental version of micro/test_basic_stats.py:testBernoulli1"
+#  raise SkipTest("Errors out due to a Venture-level type error (a string flowed into operator position).  Re-enable when there are facilities for debugging such things.  Issue https://app.asana.com/0/9277419963067/9280122191537")
+  ripl = get_ripl()
+  loadAll(ripl)
+  ripl.assume("expr","""
+(list (make_ref branch)
+      (make_ref (list (make_ref bernoulli)
+                      (make_ref 0.3)))
+      (make_ref (list (make_ref normal)
+                      (make_ref 0.0)
+                      (make_ref 1.0)))
+      (make_ref (list (make_ref normal)
+                      (make_ref 10.0)
+                      (make_ref 1.0))))
+""")
+  ripl.assume("env","(incremental_initial_environment)")
+  ripl.predict("(incremental_eval expr env)",label="pid")
+  predictions = collectSamples(ripl,"pid")
   cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
   return reportKnownContinuous("TestIncrementalEvaluator1", cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
 
 def testIncrementalEvaluator2():
   "Difficult test. We make sure that it stumbles on the solution in a reasonable amount of time."
-  raise SkipTest("Errors out due to a Venture-level type error (something wanted a list as an argument and got a float).  Re-enable when there are facilities for debugging such things.  Issue https://app.asana.com/0/9277419963067/9280122191537")
+#  raise SkipTest("Errors out due to a Venture-level type error (something wanted a list as an argument and got a float).  Re-enable when there are facilities for debugging such things.  Issue https://app.asana.com/0/9277419963067/9280122191537")
   ripl = get_ripl()
 
   loadAll(ripl)
   
-  ripl.assume("genBinaryOp","(lambda () (if (flip) (quote +) (quote *)))")
-  ripl.assume("genLeaf","(lambda () (normal 3 2))")
+  ripl.assume("genBinaryOp","(lambda () (if (flip) (quote plus) (quote times)))")
+  ripl.assume("genLeaf","(lambda () (normal 4 3))")
   ripl.assume("genVar","(lambda (x) x)")
 
   ripl.assume("genExpr","""
 (lambda (x)
-  (if (flip 0.7) 
+  (if (flip 0.4) 
       (genLeaf)
-      (if (flip 0.9)
+      (if (flip 0.8)
           (genVar x)
           (list (make_ref (genBinaryOp)) (make_ref (genExpr x)) (make_ref (genExpr x))))))
 """)
 
-  ripl.assume("noise","(gamma 2 2)")
+  ripl.assume("noise","(gamma 5 .2)")
   ripl.assume("expr","(genExpr (quote x))")
 
   ripl.assume("f","""
@@ -152,9 +178,9 @@ def testIncrementalEvaluator2():
 """)
   ripl.assume("g","(lambda (z) (normal (f z) noise))")
 
-  ripl.assume("square","(lambda (x) (* x x))")
+  ripl.assume("square","(lambda (x) (times x x))")
   X = 10
-  predictStr = "(+ "
+  predictStr = "(plus "
   for x in range(X): predictStr += "(square (- (f %d) %d))" % (x,computeF(x))
   predictStr += ")"
   ripl.predict(predictStr,label="pid")
@@ -163,9 +189,10 @@ def testIncrementalEvaluator2():
   foundSolution = False
   # TODO These counts need to be managed so that this can consistently
   # find the right answer (this test may need tweaking once it runs)
-  for _ in range(25):
+  for _ in range(500):
     ripl.infer(10)
-    if ripl.report("pid") < 1: 
+#    print ripl.report("pid")
+    if ripl.report("pid") < 80: 
       foundSolution = True
       break
 
