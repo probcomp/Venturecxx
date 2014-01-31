@@ -60,6 +60,8 @@ def extract(trace,node,scaffold,omegaDB):
       if isinstance(node,ApplicationNode): 
         if isinstance(node,RequestNode): weight += unevalRequests(trace,node,scaffold,omegaDB)
         weight += unapplyPSP(trace,node,scaffold,omegaDB)
+      else: 
+        trace.setValueAt(node,None)
       weight += extractParents(trace,node,scaffold,omegaDB)
 
   return weight
@@ -69,6 +71,7 @@ def unevalFamily(trace,node,scaffold,omegaDB):
   if isinstance(node,ConstantNode): pass
   elif isinstance(node,LookupNode):
     trace.disconnectLookup(node)
+    trace.setValueAt(node,None)
     weight += extractParents(trace,node,scaffold,omegaDB)
   else:
     assert isinstance(node,OutputNode)
@@ -92,7 +95,7 @@ def teardownMadeSP(trace,node,isAAA):
   if not isAAA: 
     if sp.hasAEKernel(): trace.unregisterAEKernel(node)
     trace.setMadeSPAuxAt(node,None)
-    trace.setMadeSPFamiliesAt(node,None)
+    trace.clearMadeSPFamiliesAt(node)
 
 def unapplyPSP(trace,node,scaffold,omegaDB):
   psp,args = trace.pspAt(node),trace.argsAt(node)

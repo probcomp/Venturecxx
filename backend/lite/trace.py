@@ -11,6 +11,8 @@ import random
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
+from nose.tools import assert_equal,assert_is_not_none
+
 
 class Trace(object):
   def __init__(self):
@@ -114,6 +116,7 @@ class Trace(object):
     if not isinstance(candidate, SPRef):
       print "spRef not an spRef"
       print "is a: " + str(type(candidate))
+      print node,node.operatorNode
     assert isinstance(candidate, SPRef)
     return candidate
   
@@ -134,13 +137,17 @@ class Trace(object):
 
   def valueAt(self,node):
     return node.value
+
   def setValueAt(self,node,value):
     node.value = value
 
   def madeSPAt(self,node): return node.madeSP
   def setMadeSPAt(self,node,sp): node.madeSP = sp
     
-  def madeSPFamiliesAt(self,node): return node.madeSPFamilies
+  def madeSPFamiliesAt(self,node):
+    assert_is_not_none(node.madeSPFamilies)
+    return node.madeSPFamilies
+
   def setMadeSPFamiliesAt(self,node,families): node.madeSPFamilies = families
 
   def madeSPAuxAt(self,node): return node.madeSPAux
@@ -161,6 +168,12 @@ class Trace(object):
     
   def registerFamilyAt(self,node,esrId,esrParent): self.spFamiliesAt(node).registerFamily(esrId,esrParent)
   def unregisterFamilyAt(self,node,esrId): self.spFamiliesAt(node).unregisterFamily(esrId)
+  def containsSPFamilyAt(self,node,esrId): return self.spFamiliesAt(node).containsFamily(esrId)
+  def spFamilyAt(self,node,esrId): return self.spFamiliesAt(node).getFamily(esrId)
+  def madeSPFamilyAt(self,node,esrId): return self.madeSPFamiliesAt(node).getFamily(esrId)
+
+  def initMadeSPFamiliesAt(self,node): self.setMadeSPFamiliesAt(node,SPFamilies())
+  def clearMadeSPFamiliesAt(self,node): self.setMadeSPFamiliesAt(node,None)
 
   def numRequestsAt(self,node): return node.numRequests
   def setNumRequestsAt(self,node,num): node.numRequests = num
@@ -175,8 +188,11 @@ class Trace(object):
   
   #### For kernels
   def sampleBlock(self,scope): return self.scopes[scope].sample()[1]
-  def logDensityOfBlock(self,scope): return -1 * math.log(len(self.blocksInScope(scope)))
+  def logDensityOfBlock(self,scope): return -1 * math.log(self.numBlocksInScope(scope))
   def blocksInScope(self,scope): return self.scopes[scope].keys()
+  def numBlocksInScope(self,scope): 
+    if scope in self.scopes: return len(self.scopes[scope].keys())
+    else: return 0
   def getAllNodesInScope(self,scope): return set.union(*self.scopes[scope].values())
   def getOrderedSetsInScope(self,scope): return self.scopes[scope].sortedValues()
   def getNodesInBlock(self,scope,block): return self.scopes[scope][block]
@@ -275,3 +291,14 @@ class Trace(object):
   def unboxExpression(self,exp):
     if type(exp) == list: return [self.unboxExpression(subexp) for subexp in exp]
     else: return self.unboxValue(exp)
+
+#################### Misc for particle commit
+
+  def addNewMadeSPFamilies(self,node,newMadeSPFamilies):
+    if node.madeSPFamilies is None: node.madeSPFamilies = SPFamilies()
+    for id,root in newMadeSPFamilies.iteritems():
+      node.madeSPFamilies.registerFamily(id,root)
+
+  def addNewChildren(self,node,newChildren): 
+    for child in newChildren:
+      node.children.add(child)

@@ -1,5 +1,6 @@
 import math
 import time
+from nose.tools import assert_greater, assert_less
 
 # Checks that the runtime of the unary function f(n)() is affine in its
 # input (to wit, f(n)() takes An + B time to run, and A is decidedly
@@ -16,8 +17,8 @@ def assertLinearTime(f):
   # print times
   # print ratios
   # print differences
-  assert ct_falling > len(differences)*0.2, "Runtime of f is growing too fast.\nTimes: %r\nRatios: %r" % (times, ratios)
-  assert ct_falling < len(differences)*0.8, "Runtime of f is not growing fast enough.\nTimes: %r\nRatios: %r" % (times, ratios)
+  assert_greater(ct_falling,len(differences)*0.2, "Runtime of f is growing too fast.\nTimes: %r\nRatios: %r" % (times, ratios))
+  assert_less(ct_falling,len(differences)*0.8, "Runtime of f is not growing fast enough.\nTimes: %r\nRatios: %r" % (times, ratios))
 
 # Checks that the runtime of the unary function f(n)() does not depend
 # on its input.
@@ -88,3 +89,12 @@ def min_measurable_input(f):
       return (n, duration)
     else:
       n *= 2
+
+
+################# Temporary Hacks
+def assertNLogNTime(f,slack=2):
+  times = timings(f)
+  ns = [t[0] for t in times]
+  ts = [t[1] for t in times]
+  nlogns = [n * math.log(n) for n in ns]
+  assert_less(max(ts) / min(ts), (max(nlogns) / min(nlogns)) * slack)

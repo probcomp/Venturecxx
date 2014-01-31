@@ -97,7 +97,7 @@ def processMadeSP(trace,node,isAAA):
   trace.setMadeSPAt(node,sp)
   trace.setValueAt(node,SPRef(node))
   if not isAAA:
-    trace.setMadeSPFamiliesAt(node,SPFamilies())
+    trace.initMadeSPFamiliesAt(node)
     trace.setMadeSPAuxAt(node,sp.constructSPAux())
     if sp.hasAEKernel(): trace.registerAEKernel(node)
 
@@ -137,7 +137,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
   # first evaluate exposed simulation requests (ESRs)
   for esr in request.esrs:
-    if not trace.spFamiliesAt(node).containsFamily(esr.id):
+    if not trace.containsSPFamilyAt(node,esr.id):
       if shouldRestore: 
         esrParent = omegaDB.getESRParent(trace.spAt(node),esr.id)
         weight += restore(trace,esrParent,scaffold,omegaDB,gradients)
@@ -146,7 +146,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
         weight += w
       trace.registerFamilyAt(node,esr.id,esrParent)
 
-    esrParent = trace.spFamiliesAt(node).getFamily(esr.id)
+    esrParent = trace.spFamilyAt(node,esr.id)
     trace.addESREdge(esrParent,node.outputNode)
 
   # next evaluate latent simulation requests (LSRs)

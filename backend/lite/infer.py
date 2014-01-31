@@ -24,11 +24,9 @@ def mixMH(trace,indexer,operator):
   alpha = xiMix + logAlpha - rhoMix
   if math.log(random.random()) < alpha:
 #    sys.stdout.write("<accept>")
-#    print "<accept(%d)>"%alpha
     operator.accept() # May mutate trace
   else:
 #    sys.stdout.write("<reject>")
-#    print "<reject(%d)>"%alpha
     operator.reject() # May mutate trace
 
 class BlockScaffoldIndexer(object):
@@ -309,17 +307,16 @@ class ParticlePGibbsOperator(object):
     T = self.T
     P = self.P
 
-    assert T == 1 # TODO temporary
+#    assert T == 1 # TODO temporary
     rhoDBs = [None for t in range(T)]    
     rhoWeights = [None for t in range(T)]
 
     for t in reversed(range(T)):
       rhoWeights[t],rhoDBs[t] = detachAndExtract(trace,scaffold.border[t],scaffold)
 
-      
     assertTorus(scaffold)
 
-    particles = [Particle(trace=trace) for p in range(P+1)]
+    particles = [Particle(trace) for p in range(P+1)]
     self.particles = particles
     
     particleWeights = [None for p in range(P+1)]
@@ -340,11 +337,11 @@ class ParticlePGibbsOperator(object):
       # Sample new particle and propagate
       for p in range(P):
         parent = simulateCategorical([math.exp(w) for w in particleWeights])
-        newParticles[p] = Particle(particle=particles[parent])
+        newParticles[p] = Particle(particles[parent])
         newParticleWeights[p] = regenAndAttach(newParticles[p],self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
-      newParticles[P] = Particle(particle=particles[P])
+      newParticles[P] = Particle(particles[P])
       newParticleWeights[P] = regenAndAttach(newParticles[P],self.scaffold.border[t],self.scaffold,True,rhoDBs[t],{})
-      assert_almost_equal(particleWeights[P],rhoWeights[t])
+      assert_almost_equal(newParticleWeights[P],rhoWeights[t])
       particles = newParticles
       particleWeights = newParticleWeights
 
@@ -364,6 +361,7 @@ class ParticlePGibbsOperator(object):
     alpha = weightMinusRho - weightMinusXi
 
     self.finalIndex = finalIndex
+    self.particles = particles
 
     # TODO need to return a trace as well
     return particles[finalIndex],alpha

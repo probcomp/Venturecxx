@@ -12,6 +12,14 @@ class CRPSPAux(object):
     self.numTables = 0
     self.numCustomers = 0
 
+  def copy(self):
+    crp = CRPSPAux()
+    crp.tableCounts = self.tableCounts
+    crp.nextIndex = self.nextIndex
+    crp.numTables = self.numTables
+    crp.numCustomers = self.numCustomers
+    return crp
+
 class CRPSP(SP):
   def constructSPAux(self): return CRPSPAux()
 

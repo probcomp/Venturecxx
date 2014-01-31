@@ -1,236 +1,223 @@
 import copy
 import math
 from sp import SPFamilies
-from nose.tools import assert_equal
-import trace
+from spref import SPRef
+from nose.tools import assert_equal,assert_is_none,assert_is_instance
+from wttree import PMap, PSet
+from trace import Trace
+import pdb
 
-class Particle(trace.Trace):
+class Particle(Trace):
+
   # The trace is expected to be a torus, with the chosen scaffold
-  # already detached.
-  def __init__(self,trace=None,particle=None):
-    if trace is not None:
-      assert particle is None
-      self.base = trace
-      self.cache = {} # TODO persistent map from nodes to node records
-      self.rcs = set() # TODO persistent set?
-      self.ccs = set()
-      self.aes = set()
-      self.scopes = {}
-      self.regenCounts = {}
-    elif particle is not None:
-      self.base = particle.base
-      self.cache = particle.cache.copy() # TODO persistent map from nodes to node records
-      self.rcs = particle.rcs.copy() # TODO persistent set?
-      self.ccs = particle.ccs.copy()
-      self.aes = particle.aes.copy()
-      self.scopes = particle.scopes.copy()
-      self.regenCounts = particle.regenCounts.copy()
-    else:
-      raise Exception("Particle has no default constructor")
+  # already detached, or a particle.
+  def __init__(self,trace):
+    if type(trace) is Particle: self.initFromParticle(trace)
+    elif type(trace) is Trace: self.initFromTrace(trace)
+    else: raise Exception("Must init particle from trace or particle")
 
-  def _at(self,node):
-    if node in self.cache:
-      return self.cache[node]
-    else:
-      self.cache[node] = record_for(node)
-      return self.cache[node]
+  # Note: using "copy()" informally for both legit_copy and persistent_copy
+  def initFromParticle(self,particle):
+    self.base = particle.base    
 
-  def _alterAt(self,node,f):
-    # self.cache = self.cache.insert(node,f(self._a(tnode)))
-    self.cache[node] = f(self._at(node))
+    # (1) Persistent stuff
+    self.rcs = particle.rcs
+    self.ccs = particle.ccs
+    self.aes = particle.aes
 
-  def _ensure_spaux_cached(self,node):
-    if node in self.cache: pass # OK
-    else: self.cache[node] = self._at(node)
+    self.values = particle.values
+    self.madeSPs = particle.madeSPs
 
-  def valueAt(self,node):
-    value = self._at(node).value
-    return value
-  def setValueAt(self,node,value):
-    self._alterAt(node, lambda r: r.update(value=value))
-  def madeSPAt(self,node):
-    return self._at(node).madeSP
-  def setMadeSPAt(self,node,sp):
-    self._alterAt(node, lambda r: r.update(madeSP=sp))
+    self.scopes = particle.scopes # pmap => pmap => pset
+    self.esrParents = particle.esrParents
+    self.numRequests = particle.numRequests
+    self.regenCounts = particle.regenCounts
+    self.newMadeSPFamilies = particle.newMadeSPFamilies # pmap => pmap => node
+    self.newChildren = particle.newChildren
 
-  def madeSPFamiliesAt(self,node): return self._at(node).madeSPFamilies
-  def setMadeSPFamiliesAt(self,node,madeSPFamilies):     
-    self._alterAt(node, lambda r: r.update(madeSPFamilies=madeSPFamilies))
+    # (2) Maps to things that change outside of particle methods
+    self.madeSPAuxs = { node : spaux.copy() for node,spaux in particle.madeSPAuxs.iteritems() }
 
-  def madeSPAuxAt(self,node):
-    return self._at(node).madeSPAux
-  def setMadeSPAuxAt(self,node,aux):
-    self._alterAt(node, lambda r: r.update(madeSPAux=aux))
-  def esrParentsAt(self,node):
-    return self._at(node).esrParents
-  def appendEsrParentAt(self,node,parent):
-    self._alterAt(node, lambda r: r.append_esrParent(parent))
-  def popEsrParentAt(self,node):
-    ans = self._at(node).top_esrParent()
-    self._alterAt(node, lambda r: r.pop_esrParent())
-    return ans
-  def childrenAt(self,node):
-    return self._at(node).children
-  def addChildAt(self,node,child):
-    self._alterAt(node, lambda r: r.add_child(child))
-  def removeChildAt(self,node,child):
-    self._alterAt(node, lambda r: r.remove_child(child))
-  def registerFamilyAt(self,node,esrId,esrParent):
-    self._alterAt(self.spRefAt(node).makerNode, lambda r: r.registerFamily(esrId,esrParent))
-  def unregisterFamilyAt(self,node,esrId):
-    self._alterAt(self.spRefAt(node).makerNode, lambda r: r.unregisterFamily(esrId))
-  def unincorporateAt(self,node):
-    self._ensure_spaux_cached(node)
-    self._ensure_spaux_cached(self.spRefAt(node).makerNode)
-    super(Particle, self).unincorporateAt(node)
-  def incorporateAt(self,node):
-    self._ensure_spaux_cached(node)
-    self._ensure_spaux_cached(self.spRefAt(node).makerNode)
-    super(Particle, self).incorporateAt(node)
-  def numRequestsAt(self,node):
-    return self._at(node).numRequests
-  def incRequestsAt(self,node):
-    self._alterAt(node, lambda r: r.update(numRequests = r.numRequests + 1))
-  def decRequestsAt(self,node):
-    self._alterAt(node, lambda r: r.update(numRequests = r.numRequests - 1))
+  def initFromTrace(self,trace):
+    self.base = trace
+
+    # (1) Persistent stuff
+    self.rcs = PSet()
+    self.ccs = PSet()
+    self.aes = PSet()
+
+    self.values = PMap()
+    self.madeSPs = PMap()
+
+    self.scopes = PMap()
+    self.esrParents = PMap()
+    self.numRequests = PMap()
+    self.regenCounts = PMap()
+    self.newMadeSPFamilies = PMap()
+    self.newChildren = PMap()
+
+    # (2) Maps to things that change outside of particle methods
+    self.madeSPAuxs = {}
 
 
-  def registerAEKernel(self,node): self.aes.add(node)
-  def unregisterAEKernel(self,node): self.aes.remove(node)
+#### Random choices and scopes
 
   def registerRandomChoice(self,node):
-    assert not node in self.rcs
-    self.rcs.add(node)
+    self.rcs = self.rcs.insert(node)
     self.registerRandomChoiceInScope("default",node,node)
 
-  def registerRandomChoiceInScope(self,scope,block,node):
-    if not scope in self.scopes: self.scopes[scope] = {}
-    if not block in self.scopes[scope]:
-      if scope in self.base.scopes and block in self.base.scopes[scope]:
-        self.scopes[scope][block] = self.base.scopes[scope][block].copy()
-      else: self.scopes[scope][block] = set()
-    assert not node in self.scopes[scope][block]
-    self.scopes[scope][block].add(node)
-    assert not scope == "default" or len(self.scopes[scope][block]) == 1
+  def registerAEKernel(self,node): 
+    self.aes = self.aes.insert(node)
+
+  def registerConstrainedChoice(self,node): 
+    self.ccs = self.ccs.insert(node)
+    self.unregisterRandomChoice(node)
 
   def unregisterRandomChoice(self,node): 
     assert node in self.rcs
-    self.rcs.remove(node)
+    self.rcs = self.rcs.delete(node)
     self.unregisterRandomChoiceInScope("default",node,node)
 
+  def registerRandomChoiceInScope(self,scope,block,node):
+    if not scope in self.scopes: self.scopes = self.scopes.insert(scope,PMap())
+    if not block in self.scopes.lookup(scope): self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.insert(block,PSet()))
+    self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.adjust(block,lambda pnodes: pnodes.insert(node)))
+
   def unregisterRandomChoiceInScope(self,scope,block,node):
-    self.scopes[scope][block].remove(node)
-    assert not scope == "default" or len(self.scopes[scope][block]) == 0
-    if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
-    if len(self.scopes[scope]) == 0: del self.scopes[scope]
+    self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.adjust(block,lambda pnodes: pnodes.delete(node)))
+    if not len(self.scopes.lookup(scope).lookup(block)): self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.delete(block))
+    if not len(self.scopes.lookup(scope)): self.scopes = self.scopes.delete(scope)
 
-  def registerConstrainedChoice(self,node):
-    self.ccs.add(node)
-    self.unregisterRandomChoice(node)
+#### Misc
 
-  def unregisterConstrainedChoice(self,node):
-    assert node in self.ccs
-    self.ccs.remove(node)
-    if self.pspAt(node).isRandom(): self.registerRandomChoice(node)
+  def valueAt(self,node): 
+    if node in self.values: return self.values.lookup(node)
+    else: 
+      return self.base.valueAt(node)
 
-  def regenCountAt(self,scaffold,node):
-    if not node in self.regenCounts: self.regenCounts[node] = 0
-    return self.regenCounts[node]
-  
-  def incRegenCountAt(self,scaffold,node): self.regenCounts[node] += 1
-  def decRegenCountAt(self,scaffold,node): self.regenCounts[node] -= 1 # need not be overriden
+  def setValueAt(self,node,value): 
+    assert_is_none(self.base.valueAt(node))
+    self.values = self.values.insert(node,value)
 
-  def blocksInScope(self,scope):
-    blocks = set()
-    if scope in self.base.scopes: blocks.update(self.base.scopes[scope].keys())
-    if scope in self.scopes: blocks.update(self.scopes[scope].keys())
-    return blocks
+  def madeSPAt(self,node):
+    if node in self.madeSPs: return self.madeSPs.lookup(node)
+    else: return self.base.madeSPAt(node)
 
-  def commit(self):
-    for (node,r) in self.cache.iteritems(): 
-      r.commit(self.base, node)
-    self.base.rcs.update(self.rcs)
-    self.base.ccs.update(self.ccs)
-    self.base.aes.update(self.aes)
-    for scope in self.scopes:
-      for block in self.scopes[scope].keys():
-        for node in self.scopes[scope][block]:
-          self.base.registerRandomChoiceInScope(scope,block,node)
+  def setMadeSPAt(self,node,sp): 
+    assert not node in self.madeSPs
+    assert self.base.madeSPAt(node) is None
+    self.madeSPs = self.madeSPs.insert(node,sp)
 
-def record_for(node):
-  madeAux = None
-  if node.madeSPAux is not None:
-    madeAux = node.madeSPAux.copy()
-    assert_equal(type(madeAux),type(node.madeSPAux))
-  madeFamilies = None
-  if node.madeSPFamilies is not None:
-    madeFamilies = node.madeSPFamilies.copy()
-  return Record(value=copy.copy(node.value), madeSP=node.madeSP, madeSPFamilies=madeFamilies,madeSPAux=madeAux,
-                esrParents=copy.copy(node.esrParents), children=node.children.copy(), numRequests=node.numRequests)
+  def esrParentsAt(self,node): 
+    if node in self.esrParents: return self.esrParents.lookup(node)
+    else: return self.base.esrParentsAt(node)
 
-class Record(object):
-  def __init__(self,value=None,madeSP=None,madeSPFamilies=None,madeSPAux=None,esrParents=None,children=None,numRequests=0):
-    self.value = value
-    self.madeSP = madeSP
-    self.madeSPFamilies = madeSPFamilies
-    self.madeSPAux = madeSPAux
-    self.esrParents = []
-    if esrParents: self.esrParents = esrParents
-    self.children = set()
-    if children: self.children = children
-    self.numRequests = numRequests
+  def appendEsrParentAt(self,node,parent):
+    assert not self.base.esrParentsAt(node)
+    if not node in self.esrParents: self.esrParents = self.esrParents.insert(node,[])
+    self.esrParents.lookup(node).append(parent)
 
-  def _copy(self):
-    return Record(self.value, self.madeSP, self.madeSPFamilies,self.madeSPAux, self.esrParents, self.children, self.numRequests)
+  def regenCountAt(self,scaffold,node): 
+    assert self.base.regenCountAt(scaffold,node) == 0
+    if node in self.regenCounts: return self.regenCounts.lookup(node)
+    else: return self.base.regenCountAt(scaffold,node)
 
-  def update(self,value=None,madeSP=None,madeSPFamilies=None,madeSPAux=None,esrParents=None,children=None,numRequests=None):
-    ans = self._copy()
-    if value is not None: ans.value = value
-    if madeSP is not None: ans.madeSP = madeSP
-    if madeSPFamilies is not None: ans.madeSPFamilies = madeSPFamilies
-    if madeSPAux is not None: ans.madeSPAux = madeSPAux
-    if esrParents is not None: ans.esrParents = esrParents
-    if children is not None: ans.children = children
-    if numRequests is not None: ans.numRequests = numRequests
-    return ans
+  def incRegenCountAt(self,scaffold,node): 
+    if not node in self.regenCounts: self.regenCounts = self.regenCounts.insert(node,0)
+    self.regenCounts = self.regenCounts.adjust(node,lambda rc: rc + 1)
 
-  def add_child(self,child):
-    new_children = copy.copy(self.children)
-    new_children.add(child)
-    return self.update(children=new_children)
+  def incRequestsAt(self,node):
+    if not node in self.numRequests: self.numRequests = self.numRequests.insert(node,self.base.numRequestsAt(node))
+    self.numRequests = self.numRequests.adjust(node,lambda nr: nr + 1)
 
-  def remove_child(self,child):
-    new_children = copy.copy(self.children)
-    new_children.remove(child)
-    return self.update(children=new_children)
+  def addChildAt(self,node,child):
+    if not node in self.newChildren: self.newChildren = self.newChildren.insert(node,[])
+    self.newChildren.lookup(node).append(child)
 
-  def top_esrParent(self):
-    return self.esrParents[-1]
+### SPFamilies
 
-  def pop_esrParent(self):
-    new_esrParents = copy.copy(self.esrParents)
-    new_esrParents.pop()
-    return self.update(esrParents=new_esrParents)
+  def containsSPFamilyAt(self,node,id): 
+    makerNode = self.spRefAt(node).makerNode
+    if makerNode in self.newMadeSPFamilies:
+      assert_is_instance(self.newMadeSPFamilies.lookup(makerNode),PMap)
+      if id in self.newMadeSPFamilies.lookup(makerNode): 
+        return True
+    elif self.base.madeSPFamiliesAt(makerNode).containsFamily(id): return True
+    return False
 
-  def append_esrParent(self,parent):
-    new_esrParents = copy.copy(self.esrParents)
-    new_esrParents.append(parent)
-    return self.update(esrParents=new_esrParents)
+  def initMadeSPFamiliesAt(self,node): 
+    assert not node in self.newMadeSPFamilies
+    assert node.madeSPFamilies is None
+    self.newMadeSPFamilies = self.newMadeSPFamilies.insert(node,PMap())
 
-  def registerFamily(self,esrId,esrParent):
-    self.madeSPFamilies.registerFamily(esrId,esrParent)
-    return self
+  def registerFamilyAt(self,node,esrId,esrParent): 
+    makerNode = self.spRefAt(node).makerNode
+    if not makerNode in self.newMadeSPFamilies: self.newMadeSPFamilies = self.newMadeSPFamilies.insert(makerNode,PMap())
+    self.newMadeSPFamilies = self.newMadeSPFamilies.adjust(makerNode,lambda ids: ids.insert(esrId,esrParent))
 
-  def unregisterFamily(self,esrId):
-    self.madeSPFamilies.unregisterFamily(esrId)
-    return self
 
-  def commit(self,trace,node):
-    if self.value is not None: trace.setValueAt(node,self.value)
-    if self.madeSP is not None: trace.setMadeSPAt(node,self.madeSP)
-    if self.madeSPFamilies is not None: trace.setMadeSPFamiliesAt(node,self.madeSPFamilies)
-    if self.madeSPAux is not None: 
-      trace.setMadeSPAuxAt(node,self.madeSPAux)
-    if self.esrParents is not None: trace.setEsrParentsAt(node,self.esrParents)
-    if self.children is not None: trace.setChildrenAt(node,self.children)
-    if self.numRequests is not None: trace.setNumRequestsAt(node,self.numRequests)
+  def madeSPFamilyAt(self,node,esrId): 
+    if node in self.newMadeSPFamilies and esrId in self.newMadeSPFamilies.lookup(node): 
+      return self.newMadeSPFamilies.lookup(node).lookup(esrId)
+    else: 
+      return self.base.madeSPFamilyAt(node,esrId)
+
+  def spFamilyAt(self,node,esrId): 
+    makerNode = self.spRefAt(node).makerNode
+    return self.madeSPFamilyAt(makerNode,esrId)
+ 
+### Regular maps
+
+  def madeSPAuxAt(self,node):
+    if not node in self.madeSPAuxs: 
+      if self.base.madeSPAuxAt(node) is not None:
+        self.madeSPAuxs[node] = self.base.madeSPAuxAt(node).copy()
+      else: return None
+    return self.madeSPAuxs[node]
+
+  def setMadeSPAuxAt(self,node,aux):
+    assert not node in self.madeSPAuxs
+    assert self.base.madeSPAuxAt(node) is None
+    self.madeSPAuxs[node] = aux
+
+### Miscellaneous bookkeeping
+  def numBlocksInScope(self,scope): return len(self.scopes.lookup(scope)) + self.base.numBlocksInScope(scope)
+
+### Commit
+  def commit(self): 
+    # note that we do not call registerRandomChoice() because it in turn calls registerRandomChoiceInScope()
+    for node in self.rcs: self.base.rcs.add(node)
+
+    # note that we do not call registerConstrainedChoice() because it in turn calls unregisterRandomChoice()
+    for node in self.ccs: self.base.ccs.add(node)
+
+    for node in self.aes: self.base.registerAEKernel(node)
+
+    for (node,value) in self.values.iteritems(): 
+      self.base.setValueAt(node,value)
+    for (node,madeSP) in self.madeSPs.iteritems(): self.base.setMadeSPAt(node,madeSP)
+
+    # this iteration includes "default"
+    for (scope,blocks) in self.scopes.iteritems():
+      for (block,pnodes) in blocks.iteritems():
+        for pnode in pnodes:
+          self.base.registerRandomChoiceInScope(scope,block,pnode)
+          
+    for (node,esrParents) in self.esrParents.iteritems(): self.base.setEsrParentsAt(node,esrParents)
+    for (node,numRequests) in self.numRequests.iteritems(): self.base.setNumRequestsAt(node,numRequests)
+    for (node,newMadeSPFamilies) in self.newMadeSPFamilies.iteritems(): self.base.addNewMadeSPFamilies(node,newMadeSPFamilies)
+    for (node,newChildren) in self.newChildren.iteritems(): self.base.addNewChildren(node,newChildren)
+
+    for (node,spaux) in self.madeSPAuxs.iteritems(): self.base.setMadeSPAuxAt(node,spaux)
+
+################### Methods that should never be called on particles
+  def unregisterFamilyAt(self,node,esrId): raise Exception("Should not be called on a particle")
+  def popEsrParentAt(self,node): raise Exception("Should not be called on a particle")
+  def childrenAt(self,node): raise Exception("Should not be called on a particle")
+  def removeChildAt(self,node,child): raise Exception("Should not be called on a particle")
+  def decRequestsAt(self,node): raise Exception("Should not be called on a particle")
+  def unregisterAEKernel(self,node): raise Exception("Should not be called on a particle")
+  def unregisterConstrainedChoice(self,node): raise Exception("Should not be called on a particle")
+  def decRegenCountAt(self,scaffold,node): raise Exception("Should never be called on a particle")
+  def numRequestsAt(self,node): raise Exception("Should not be called on a particle")
+
