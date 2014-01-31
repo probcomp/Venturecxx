@@ -36,7 +36,7 @@ class Particle(Trace):
     self.newChildren = particle.newChildren
 
     # (2) Maps to things that change outside of particle methods
-    self.madeSPAuxs = { node : spaux.copy() for node,spaux in particle.madeSPAuxs }
+    self.madeSPAuxs = { node : spaux.copy() for node,spaux in particle.madeSPAuxs.iteritems() }
 
   def initFromTrace(self,trace):
     self.base = trace
