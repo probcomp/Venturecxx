@@ -9,8 +9,6 @@ def testGoldwater1():
 
   N = int(config["num_transitions_per_sample"])
   
-  parameter_for_dirichlet = 1
-
   alphabet = "".join(set("".join(list(itertools.chain.from_iterable(brent)))))
   d = {}
   for i in xrange(len(alphabet)): d[alphabet[i]] = i

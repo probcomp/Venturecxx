@@ -5,10 +5,19 @@
 # C0321: More than one statement on a single line
 # C0324: Comma not followed by a space
 # R0201: Method could be a function
-# R0904: Too few public methods
+# R0903: Too few public methods
 # R0904: Too many public methods
+# W0142: Used * or ** magic
 # W0511 (warning notes in code comments)
-disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0511
+
+# Messages disabled pending normalization of our codebase:
+# C0301: Line too long
+# C0303: Trailing whitespace
+# W0311: Bad indentation
+# W0403: Relative import
+# W0614: Unused import from wildcard import
+# W0401: Wildcard import
+disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W0311,W0403,C0301,C0303,W0614,W0401
 
 [REPORTS]
 include-ids=yes

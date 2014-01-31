@@ -14,7 +14,7 @@ def testHMMSP1():
                (list 0.3 0.7)))
  (matrix (list (list 0.9 0.2)
                (list 0.1 0.8))))
-""");
+""")
   ripl.observe("(f 1)","atom<0>")
   ripl.observe("(f 2)","atom<0>")
   ripl.observe("(f 3)","atom<1>")
@@ -45,7 +45,7 @@ def testHMMSP2():
                (list 0.3 0.7)))
  (matrix (list (list 0.9 0.2)
                (list 0.1 0.8)))))
-""");
+""")
   ripl.observe("(f 1)","atom<0>")
   ripl.observe("(f 2)","atom<0>")
   ripl.observe("(f 3)","atom<1>")

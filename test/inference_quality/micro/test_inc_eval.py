@@ -160,8 +160,6 @@ def testIncrementalEvaluator2():
   ripl.predict(predictStr,label="pid")
   for x in range(X): ripl.observe("(g %d)" % x,computeF(x))
 
-  vals = []
-
   foundSolution = False
   # TODO These counts need to be managed so that this can consistently
   # find the right answer (this test may need tweaking once it runs)

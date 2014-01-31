@@ -35,7 +35,7 @@ def loadPYMem(ripl):
 
 def observeCategories(ripl,counts):
   for i in range(len(counts)):
-    for ct in range(counts[i]):
+    for _ in range(counts[i]):
       ripl.observe("(flip (if (= (f) %d) 1.0 0.1))" % i,"true")
 
 def loadHPYModel1(ripl,topCollapsed,botCollapsed):
@@ -53,8 +53,8 @@ def loadHPYModel1(ripl,topCollapsed,botCollapsed):
   else: ripl.assume("f","(uc_pymem alpha d intermediate_dist)")
 
 def predictHPY(topCollapsed,botCollapsed):
-  ripl = RIPL()
-  loadHPY(ripl,topCollapsed,botCollapsed)
+  ripl = get_ripl()
+  loadHPYModel1(ripl,topCollapsed,botCollapsed)
   ripl.predict("(f)",label="pid")
   observeCategories(ripl,[2,2,5,1,0])
   return collectSamples(ripl,"pid")
@@ -92,7 +92,7 @@ def testHPYLanguageModel1():
 
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
 
-  atoms = [0, 1, 2, 3, 4] * 5;
+  atoms = [0, 1, 2, 3, 4] * 5
 
   for i in range(1,len(atoms)):
     ripl.observe("""

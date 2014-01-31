@@ -1,6 +1,4 @@
-import sys
 import math
-import itertools
 import scipy.stats as stats
 import numpy as np
 from testconfig import config
@@ -26,7 +24,7 @@ def countPredictions(predictions, seq):
 def rmsDifference(eps,ops): return math.sqrt(sum([ math.pow(x - y,2) for (x,y) in zip(eps,ops)]))
 
 def fmtlst(fmt, lst):
-  return "[" + ", ".join(map((lambda n: fmt % n), lst)) + "]"
+  return "[" + ", ".join([fmt % n for n in lst]) + "]"
 
 def tabulatelst(fmt, lst, width=10, prefix=""):
   structure = []
@@ -35,7 +33,7 @@ def tabulatelst(fmt, lst, width=10, prefix=""):
     structure.append(rest[:width])
     rest = rest[width:]
   structure.append(rest)
-  substrs = [", ".join(map((lambda n: fmt % n), l)) for l in structure]
+  substrs = [", ".join([fmt % n for n in l]) for l in structure]
   bulk = (",\n" + prefix + " ").join(substrs)
   return prefix + "[" + bulk + "]"
 
@@ -160,20 +158,12 @@ def reportKnownMean(name, expMean, observed):
     "T stat  : " + str(tstat),
     "P value : " + str(pval)]))
 
-def reportKnownEqualDistributions(data): raise Exception("reportKnownEqualDistributions() not yet implemented")
+def reportKnownEqualDistributions(data):
+  raise Exception("reportKnownEqualDistributions() not yet implemented %s" % data)
 
 # For a deterministic test that is nonetheless labeled statistical
 def reportPassage(name):
   return TestResult("Passed %s" % name, 1.0, "")
-
-def profile(N):
-  import statprof # From sudo pip install statprof
-  statprof.start()
-  try:
-    runAllTests(N)
-  finally:
-    statprof.stop()
-    statprof.display()
 
 def collectSamples(ripl,address,num_samples=None,infer=None):
   if num_samples is None:

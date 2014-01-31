@@ -12,7 +12,7 @@ def assertLinearTime(f):
   # systematically grow nor systematically shrink.
   ratios = [t/n for (n,t) in norm_times]
   differences = [ratios[i+1] - ratios[i] for i in range(len(ratios)-1)]
-  ct_falling = len(filter(lambda r: r < 0, differences))
+  ct_falling = len([r for r in differences if r < 0])
   # print times
   # print ratios
   # print differences
@@ -28,7 +28,7 @@ def assertConstantTime(f):
   # The notion is that the ratios of delta t to delta n should neither
   # systematically grow nor systematically shrink.
   differences = [norm_times[i+1][1] - norm_times[i][1] for i in range(len(norm_times)-1)]
-  ct_falling = len(filter(lambda r: r < 0, differences))
+  ct_falling = len([r for r in differences if r < 0])
   # print times
   # print differences
   assert ct_falling > len(differences)*0.2, "Runtime of f is growing.\nTimes: %r\nDifferences: %r" % (times, differences)
@@ -59,7 +59,7 @@ def timings(f):
   (n,t) = min_measurable_input(f)
   answer = [(n,t)]
   now = time.clock()
-  while not(stop(now - start_time, len(answer))):
+  while not stop(now - start_time, len(answer)):
     n = try_next(n)
     thunk = f(n)
     start = time.clock()

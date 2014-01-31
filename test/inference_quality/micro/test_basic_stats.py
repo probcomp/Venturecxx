@@ -97,11 +97,11 @@ def testStudentT1():
   # Posterior of a is proprtional to
   def postprop(a):
     return stats.t(1).pdf(a) * stats.norm(loc=3).pdf(a)
-  import scipy.integrate as int
-  (normalize,_) = int.quad(postprop, -10, 10)
+  import scipy.integrate as integrate
+  (normalize,_) = integrate.quad(postprop, -10, 10)
   def posterior(a): return postprop(a) / normalize
-  (meana,_) = int.quad(lambda x: x * posterior(x), -10, 10)
-  (meanasq,_) = int.quad(lambda x: x * x * posterior(x), -10, 10)
+  (meana,_) = integrate.quad(lambda x: x * posterior(x), -10, 10)
+  (meanasq,_) = integrate.quad(lambda x: x * x * posterior(x), -10, 10)
   vara = meanasq - meana * meana
   return reportKnownMeanVariance("TestStudentT1", meana, vara, predictions)
 
@@ -117,11 +117,11 @@ def testStudentT2():
   # Posterior of a is proprtional to
   def postprop(a):
     return stats.t(1).pdf(a) * stats.norm(loc=3).pdf(a)
-  import scipy.integrate as int
-  (normalize,_) = int.quad(postprop, -10, 10)
+  import scipy.integrate as integrate
+  (normalize,_) = integrate.quad(postprop, -10, 10)
   def posterior(a): return postprop(a) / normalize
-  (meana,_) = int.quad(lambda x: x * posterior(x), -10, 10)
-  (meanasq,_) = int.quad(lambda x: x * x * posterior(x), -10, 10)
+  (meana,_) = integrate.quad(lambda x: x * posterior(x), -10, 10)
+  (meanasq,_) = integrate.quad(lambda x: x * x * posterior(x), -10, 10)
   vara = meanasq - meana * meana
   return reportKnownMeanVariance("TestStudentT2", meana, vara + 1.0, predictions)
 
