@@ -18,7 +18,7 @@ def testMem2():
   ripl.assume("w","(f 2)")
   ripl.assume("z","(f 2)")
   ripl.assume("q","(categorical (simplex 0.1 0.9) (array 1 2))")
-  ripl.predict('(plus x y w z q)',label="pid");
+  ripl.predict('(plus x y w z q)',label="pid")
 
   predictions = collectSamples(ripl,"pid")
   # TODO This test can be strengthened by computing more of the ratios in the answer
@@ -39,7 +39,7 @@ def testMem3():
   ripl.assume("w","((lambda () (f 2)))")
   ripl.assume("z","(g 1)")
   ripl.assume("q","(categorical (simplex 0.1 0.9) (array 1 2))")
-  ripl.predict('(plus x y w z q)');
+  ripl.predict('(plus x y w z q)')
 
   predictions = collectSamples(ripl,8)
   # TODO This test can be strengthened by computing more of the ratios in the answer

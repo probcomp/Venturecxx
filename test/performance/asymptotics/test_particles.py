@@ -1,7 +1,6 @@
 from venture.test.stats import *
 import venture.test.timing as timing
 import scipy.stats
-import time
 from nose.plugins.attrib import attr
 
 def loadHMMParticleAsymptoticProgram1(M):

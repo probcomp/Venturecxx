@@ -20,11 +20,6 @@ from venture.exception import VentureException
 from venture.parser import utils
 from venture.test.test_helpers import ParserTestCase
 
-import time
-import sys
-import traceback
-import StringIO
-
 def r(a,b,c):
     return [{"loc":[a,a+b-1], "value":c}]
 

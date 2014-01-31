@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
 from venture.sivm import CoreSivmCxx, VentureSivm
-import venture.sivm.venture_sivm as module
 from venture.exception import VentureException
+from nose import SkipTest
 
 # Note -- these tests only check for minimum functionality
 # these tests also depend on a functional CoreSivmCxx
@@ -162,7 +162,7 @@ class TestVentureSivm(unittest.TestCase):
                 'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
                 'label' : 'moo',
                 }
-        o1 = self.sivm.execute_instruction(inst1)
+        self.sivm.execute_instruction(inst1)
         inst2 = {
                 'instruction':'labeled_forget',
                 'label' : 'moo',
@@ -183,7 +183,7 @@ class TestVentureSivm(unittest.TestCase):
                 'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
                 'label' : 'moo',
                 }
-        o1 = self.sivm.execute_instruction(inst1)
+        self.sivm.execute_instruction(inst1)
         inst2 = {
                 'instruction':'labeled_report',
                 'label' : 'moo',
@@ -196,7 +196,7 @@ class TestVentureSivm(unittest.TestCase):
                 'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
                 'label' : 'moo',
                 }
-        o1 = self.sivm.execute_instruction(inst1)
+        self.sivm.execute_instruction(inst1)
         inst2 = {
                 'instruction':'labeled_get_logscore',
                 'label' : 'moo',
@@ -254,7 +254,7 @@ class TestVentureSivm(unittest.TestCase):
                 'expression': ['normal',{'type':'number','value':1},{'type':'number','value':2}],
                 'value': {"type":"real","value":3}
                 }
-        o = self.sivm.execute_instruction(inst)
+        self.sivm.execute_instruction(inst)
         inst2 = {
                 'instruction':'list_directives',
                 }
@@ -275,16 +275,15 @@ class TestVentureSivm(unittest.TestCase):
         self.assertEquals(o2['directives'], [])
         
     def test_get_current_exception(self):
-        # FIXME: cxx -> python exceptions not implemented
-        return
+        raise SkipTest("cxx -> python exceptions not implemented.  Issue: https://app.asana.com/0/9277419963067/9940667562266")
         inst1 = {
                 'instruction':'force',
                 'expression': ['moo',{'type':'number','value':1},{'type':'number','value':2}],
                 'value': {"type":"real","value":3}
                 }
         try:
-            o1 = self.sivm.execute_instruction(inst1)
-        except VentureException as e:
+            self.sivm.execute_instruction(inst1)
+        except VentureException:
             pass
         inst2 = {
                 'instruction':'get_current_exception',
@@ -304,10 +303,9 @@ class TestVentureSivm(unittest.TestCase):
                 }
         self.sivm.execute_instruction(inst1)
     def test_debugger_list_breakpoints_and_debugger_get_breakpoint(self):
-        # FIXME: breakpoints not implemented
-        return
+        raise SkipTest("Breakpoints not implemented.  Issue: https://app.asana.com/0/9277419963067/9280122191539")
         #stub the Sivm
-        def f(expression):
+        def f(_):
             return {"breakpoint_id":14}
         self.core_sivm.execute_instruction = f
         inst1 = {

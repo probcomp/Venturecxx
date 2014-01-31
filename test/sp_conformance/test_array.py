@@ -1,6 +1,6 @@
 from venture.test.stats import *
 
-class TestArrayExtended():
+class TestArrayExtended(object):
   _multiprocess_can_split_ = True
   def setup(self):
     self.ripl = get_ripl()

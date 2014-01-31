@@ -1,7 +1,5 @@
 from venture.test.stats import *
 import venture.test.timing as timing
-import time
-import cProfile
 import sys
 from nose.plugins.attrib import attr
 

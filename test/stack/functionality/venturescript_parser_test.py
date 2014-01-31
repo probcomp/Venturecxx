@@ -17,7 +17,6 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from venture.exception import VentureException
 from venture.parser import VentureScriptParser
 import venture.parser.venture_script_parser as module
 from venture.test.test_helpers import ParserTestCase

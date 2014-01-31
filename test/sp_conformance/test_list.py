@@ -1,6 +1,6 @@
 from venture.test.stats import *
 
-class TestListExtended():
+class TestListExtended(object):
   _multiprocess_can_split_ = True
   def setup(self):
     self.ripl = get_ripl()
@@ -38,7 +38,7 @@ class TestListExtended():
     assert self.ripl.predict("(is_pair y4)")
 
 
-class TestMapListExtended():
+class TestMapListExtended(object):
   _multiprocess_can_split_ = True
   def setup(self):
     self.ripl = get_ripl()

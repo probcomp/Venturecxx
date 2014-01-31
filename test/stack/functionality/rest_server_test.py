@@ -18,20 +18,21 @@
 
 import unittest
 import json
-from venture.exception import VentureException
 from venture.server import RiplRestServer
 from venture.server import utils
 from venture.shortcuts import make_venture_script_ripl, make_combined_ripl
 
 class ServerTestCase(unittest.TestCase):
 
-    def _request(self,endpoint,data=[]):
+    def _request(self,endpoint,data=None):
+        if data is None: data = []
         r = self.client.open(path=endpoint,data=json.dumps(data),content_type='application/json')
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.headers['content-type'], 'application/json')
         return r
 
-    def _error_request(self,endpoint,data=[]):
+    def _error_request(self,endpoint,data=None):
+        if data is None: data = []
         r = self.client.open(path=endpoint,data=json.dumps(data),content_type='application/json')
         self.assertEqual(r.status_code, 500)
         self.assertEqual(r.headers['content-type'], 'application/json')

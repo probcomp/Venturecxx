@@ -18,6 +18,7 @@ from venture.ripl import Ripl
 from venture.exception import VentureException
 from venture.sivm import VentureSivm, CoreSivmCxx
 from venture.parser import ChurchPrimeParser, VentureScriptParser
+from nose import SkipTest
 
 class TestRipl(unittest.TestCase):
     _multiprocess_can_split_ = True
@@ -182,13 +183,12 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output,1)
 
     def test_infer(self):
-        #print "***test_infer"
         # FIXME: Should test multiple kernels and other infer parameters here
-        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
         self.ripl.infer(1)
 
     def test_clear(self):
-        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
         self.ripl.report('moo')
         self.ripl.clear()
         with self.assertRaises(VentureException):
@@ -238,8 +238,7 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output,'default')
 
     def test_get_logscore(self):
-        # TODO: fix test after per-directive logscore is implemented
-        return
+        raise SkipTest("Fix test after per-directive logscore is implemented.  https://app.asana.com/0/9277419963067/9940667562272")
         ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
         output = self.ripl.get_logscore(ret_value['directive_id'])
         self.assertEqual(output,0)

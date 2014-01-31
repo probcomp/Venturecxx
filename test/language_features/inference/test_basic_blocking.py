@@ -27,8 +27,8 @@ def testBlockingExample1():
   ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":"mh", "scope":0, "block":0})
   newa = ripl.report(1)
   newb = ripl.report(2)
-  assert not(olda == newa)
-  assert not(oldb == newb)
+  assert not olda == newa
+  assert not oldb == newb
 
 def testBlockingExample2():
   ripl = get_ripl()
@@ -46,12 +46,12 @@ def testBlockingExample2():
   newb = ripl.report(2)
   newc = ripl.report(3)
   newd = ripl.report(4)
-  if (olda == newa):
+  if olda == newa:
     assert oldb == newb
-    assert not(oldc == newc)
-    assert not(oldd == newd)
+    assert not oldc == newc
+    assert not oldd == newd
   else:
-    assert not(oldb == newb)
+    assert not oldb == newb
     assert oldc == newc
     assert oldd == newd
 
@@ -65,5 +65,5 @@ def testBlockingExample3():
   ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":"mh", "scope":0, "block":"all"})
   newa = ripl.report(1)
   newb = ripl.report(2)
-  assert not(olda == newa)
-  assert not(oldb == newb)
+  assert not olda == newa
+  assert not oldb == newb

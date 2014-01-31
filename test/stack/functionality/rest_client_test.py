@@ -18,9 +18,8 @@
 
 import unittest
 import json
-from venture.exception import VentureException
 from venture.server import RiplRestServer
-from venture.shortcuts import make_venture_script_ripl, make_combined_ripl
+from venture.shortcuts import make_combined_ripl
 from venture.ripl import RiplRestClient
 import socket
 import multiprocessing
@@ -36,13 +35,15 @@ def get_open_port():
         return port
 
 class ClientTestCase(unittest.TestCase):
-    def _request(self,endpoint,data=[]):
+    def _request(self,endpoint,data=None):
+        if data is None: data = []
         r = self.client.open(path=endpoint,data=json.dumps(data),content_type='application/json')
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.headers['content-type'], 'application/json')
         return r
 
-    def _error_request(self,endpoint,data=[]):
+    def _error_request(self,endpoint,data=None):
+        if data is None: data = []
         r = self.client.open(path=endpoint,data=json.dumps(data),content_type='application/json')
         self.assertEqual(r.status_code, 500)
         self.assertEqual(r.headers['content-type'], 'application/json')
