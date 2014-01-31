@@ -1,5 +1,5 @@
 from psp import PSP, ESRRefOutputPSP
-from sp import SP
+from sp import VentureSP
 from env import VentureEnvironment
 from request import Request,ESR
 from nose.tools import assert_equal
@@ -20,7 +20,7 @@ class CSPRequestPSP(PSP):
 class MakeCSPOutputPSP(PSP):
   def simulate(self,args):
     (ids,exp) = args.operandValues[0:3]
-    return SP(CSPRequestPSP(ids,exp,args.env),ESRRefOutputPSP())
+    return VentureSP(CSPRequestPSP(ids,exp,args.env),ESRRefOutputPSP())
 
   def description(self,name):
     return "%s\n  Used internally in the implementation of compound procedures." % name

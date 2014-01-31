@@ -1,6 +1,6 @@
 import exp as e
 from node import ConstantNode, LookupNode, RequestNode, OutputNode
-from sp import SP
+from sp import VentureSP
 from psp import NullRequestPSP
 from spref import SPRef
 from lkernel import VariationalLKernel
@@ -114,7 +114,7 @@ def apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
 
 def processMadeSP(trace,node,isAAA):
   sp = trace.valueAt(node)
-  assert isinstance(sp,SP)
+  assert isinstance(sp,VentureSP)
   trace.setMadeSPAt(node,sp)
   trace.setValueAt(node,SPRef(node))
   if not isAAA:
@@ -142,7 +142,7 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   trace.setValueAt(node,newValue)
   psp.incorporate(newValue,args)
 
-  if isinstance(newValue,SP): processMadeSP(trace,node,scaffold.isAAA(node))
+  if isinstance(newValue,VentureSP): processMadeSP(trace,node,scaffold.isAAA(node))
   if psp.isRandom(): trace.registerRandomChoice(node)
   if isinstance(psp,ScopeIncludeOutputPSP):
     scope,block = [n.value for n in node.operandNodes[0:2]]

@@ -3,6 +3,7 @@ from omegadb import OmegaDB
 from psp import ESRRefOutputPSP
 from spref import SPRef
 from scope import ScopeIncludeOutputPSP
+from sp import VentureSP
 
 def detachAndExtract(trace,border,scaffold):
   weight = 0
@@ -86,6 +87,7 @@ def unapply(trace,node,scaffold,omegaDB):
 
 def teardownMadeSP(trace,node,isAAA):
   sp = trace.madeSPAt(node)
+  assert isinstance(sp,VentureSP)
   trace.setValueAt(node,sp)
   trace.setMadeSPAt(node,None)
   if not isAAA: 

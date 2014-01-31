@@ -1,3 +1,5 @@
+from value import VentureValue
+
 class VentureEnvironment(VentureValue):
   def __init__(self,outerEnv=None,ids=None,nodes=None):
     self.outerEnv = outerEnv
