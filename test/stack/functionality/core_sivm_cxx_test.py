@@ -184,7 +184,7 @@ class TestCoreSivmCxx(unittest.TestCase):
         inst2 = {
                 'instruction':'clear',
                 }
-        o2 = self.sivm.execute_instruction(inst2)
+        self.sivm.execute_instruction(inst2)
         inst = {
                 'instruction':'report',
                 'directive_id':o1['directive_id'],
@@ -195,15 +195,14 @@ class TestCoreSivmCxx(unittest.TestCase):
             self.assertEquals(e.exception,'invalid_argument')
 
     def test_rollback(self):
-        # FIXME: cxx asserts cause segfaults instead of python exceptions
-        return
+        raise SkipTest("Engine should report a polite exception on unbound variable.  Issue: https://app.asana.com/0/9277419963067/9940667562266")
         inst1 = {
                 'instruction':'observe',
                 'expression': 'aweopfjiaweopfaweopfjopawejiawoiejf',
                 'value':{"type":"number","value":3}
                 }
         try:
-            o1 = self.sivm.execute_instruction(inst1)
+            self.sivm.execute_instruction(inst1)
         except VentureException as e:
             self.assertEquals(e.exception,'evaluation')
         self.assertEquals(self.sivm.state,'exception')
@@ -219,15 +218,14 @@ class TestCoreSivmCxx(unittest.TestCase):
                 'expression': ['flip'],
                 'value': {"type":"boolean","value":True}
                 }
-        o1 = self.sivm.execute_instruction(inst1)
+        self.sivm.execute_instruction(inst1)
         inst2 = {
                 'instruction':'get_global_logscore',
                 }
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['logscore'],-0.6931471805599453)
     def test_get_logscore(self):
-        # FIXME: per-directive logscore not implemented in cxx
-        return
+        raise SkipTest("Per-directive logscore not implemented in cxx.  Issue: https://app.asana.com/0/9277419963067/9940667562272")
         inst1 = {
                 'instruction':'observe',
                 'expression': ['flip'],
