@@ -30,8 +30,8 @@ class DeterministicLKernel(LKernel):
 ######## Variational #########
 
 class VariationalLKernel(LKernel):
-  def gradientOfLogDensity(value,args): return 0
-  def updateParameters(gradient,gain,stepSize): pass
+  def gradientOfLogDensity(self,value,args): return 0
+  def updateParameters(self,gradient,gain,stepSize): pass
 
 class DefaultVariationalLKernel(VariationalLKernel):
   def __init__(self,trace,psp,node):

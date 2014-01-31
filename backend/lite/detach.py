@@ -1,7 +1,6 @@
 from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
 from omegadb import OmegaDB
 from psp import ESRRefOutputPSP
-from sp import SP
 from spref import SPRef
 from scope import ScopeIncludeOutputPSP
 

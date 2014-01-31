@@ -5,16 +5,14 @@ from omegadb import OmegaDB
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
-from node import ApplicationNode, OutputNode
+from node import ApplicationNode
 from lkernel import VariationalLKernel, DeterministicLKernel
 from utils import simulateCategorical, cartesianProduct
 from nose.tools import assert_almost_equal
 import sys
-import copy
 
 def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
-  pnodes = index.getPrincipalNodes().copy()
   rhoMix = indexer.logDensityOfIndex(trace,index)
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
   # This is necessary for the non-mutating versions
@@ -42,7 +40,7 @@ class BlockScaffoldIndexer(object):
     elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
     else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])
 
-  def logDensityOfIndex(self,trace,scaffold):
+  def logDensityOfIndex(self,trace,_):
     if self.block == "one": return trace.logDensityOfBlock(self.scope)
     elif self.block == "all": return 0
     elif self.block == "ordered": return 0
@@ -95,7 +93,7 @@ class MeanfieldOperator(object):
     _,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
     assertTorus(scaffold)
 
-    for i in range(self.numIters):
+    for _ in range(self.numIters):
       gradients = {}
       gain = regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),gradients)
       detachAndExtract(trace,scaffold.border[0],scaffold)

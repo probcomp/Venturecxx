@@ -3,11 +3,10 @@ from env import Env
 from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args
 import math
 from regen import constrain,processMadeSP, evalFamily
-from detach import unconstrain, teardownMadeSP, unevalFamily
+from detach import unconstrain, unevalFamily
 from spref import SPRef
 from scaffold import Scaffold
 from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator
-import random
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
@@ -244,9 +243,9 @@ class Trace(object):
   # "kernel" must be one of "mh" or "meanfield", and "transitions"
   # must be an integer.
   def infer(self,params):
-    if not(self.scopeHasEntropy(params["scope"])):
+    if not self.scopeHasEntropy(params["scope"]):
       return
-    for n in range(params["transitions"]):
+    for _ in range(params["transitions"]):
       if params["kernel"] == "mh":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MHOperator())

@@ -2,7 +2,7 @@ import pdb
 from nose.tools import assert_equals
 
 def assertTorus(scaffold):
-  for node,regenCount in scaffold.regenCounts.iteritems(): 
+  for _,regenCount in scaffold.regenCounts.iteritems(): 
     if regenCount != 0: pdb.set_trace()
 
 def assertTrace(trace,scaffold):

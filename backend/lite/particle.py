@@ -1,11 +1,6 @@
-import copy
-import math
-from sp import SPFamilies
-from spref import SPRef
 from nose.tools import assert_equal,assert_is_none,assert_is_instance
 from wttree import PMap, PSet
 from trace import Trace
-import pdb
 
 class Particle(Trace):
 

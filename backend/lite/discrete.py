@@ -6,7 +6,7 @@ import numpy.random as npr
 from utils import simulateCategorical, logDensityCategorical, simulateDirichlet, logDensityDirichlet
 from psp import PSP, NullRequestPSP, RandomPSP
 from sp import SP,SPAux
-from lkernel import LKernel, DefaultAAALKernel
+from lkernel import LKernel
 from nose.tools import assert_equal,assert_greater_equal
 import copy
 
@@ -174,7 +174,7 @@ class DirMultSPAux(SPAux):
     if os is not None: 
       self.os = os
       assert_greater_equal(min(self.os),0)
-    elif n is not None: self.os = [0.0 for i in range(n)]
+    elif n is not None: self.os = [0.0 for _ in range(n)]
     else: raise Exception("Must pass 'n' or 'os' to DirMultSPAux")
 
   def copy(self): 
@@ -185,11 +185,11 @@ class SymmetricDirichletOutputPSP(RandomPSP):
 
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
-    return simulateDirichlet([alpha for i in range(n)])
+    return simulateDirichlet([alpha for _ in range(n)])
     
   def logDensity(self,val,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
-    return logDensityDirichlet(val,[alpha for i in range(n)])
+    return logDensityDirichlet(val,[alpha for _ in range(n)])
 
   def description(self,name):
     return "(%s alpha n) -> <simplex>" % name
@@ -259,7 +259,7 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else range(n)
-    theta = npr.dirichlet([alpha for i in range(n)])
+    theta = npr.dirichlet([alpha for _ in range(n)])
     return DirMultSP(NullRequestPSP(),USymDirMultOutputPSP(theta,os),n)
 
   def logDensity(self,value,args):
@@ -267,7 +267,7 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
     os = args.operandValues[2] if len(args.operandValues) > 2 else range(n)
     assert isinstance(value,DirMultSP)
     assert isinstance(value.outputPSP,USymDirMultOutputPSP)
-    return logDensityDirichlet(value.outputPSP.theta,[alpha for i in range(n)])
+    return logDensityDirichlet(value.outputPSP.theta,[alpha for _ in range(n)])
 
   def description(self,name):
     return "(%s alpha n) -> <SP () <number>>\n(%s alpha n <list a>) -> <SP () a>\n  Uncollapsed symmetric Dirichlet nultinomial in n dimensions.  The two argument version returns a sampler for the dimension; the three argument version returns a sampler from the given list of options.  It is an error if the length of the given list is not n." % (name, name)

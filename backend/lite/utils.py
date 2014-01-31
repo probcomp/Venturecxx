@@ -1,4 +1,3 @@
-import random
 import numpy.random as npr
 import math
 import scipy.special as ss

@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 
 class SPFamilies(object):
   def __init__(self, families=None):

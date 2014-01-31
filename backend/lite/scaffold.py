@@ -1,8 +1,8 @@
-from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
+from node import LookupNode, RequestNode, OutputNode
 from psp import ESRRefOutputPSP
 from spref import SPRef
 
-class Scaffold:
+class Scaffold(object):
   def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None):
     self.setsOfPNodes = setsOfPNodes if setsOfPNodes else []
     self.regenCounts = regenCounts if regenCounts else {}
@@ -173,7 +173,7 @@ def loadKernels(trace,drg,aaa,useDeltaKernels):
   return lkernels
 
 def assignBorderSequnce(border,indexAssignments,numIndices):
-  borderSequence = [[] for i in range(numIndices)]
+  borderSequence = [[] for _ in range(numIndices)]
   for node in border:
     borderSequence[indexAssignments[node]].append(node)
   return borderSequence

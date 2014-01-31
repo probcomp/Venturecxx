@@ -1,6 +1,6 @@
 from exp import *
-from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
-from sp import SP,SPFamilies,SPAux
+from node import ConstantNode, LookupNode, RequestNode, OutputNode
+from sp import SP
 from psp import ESRRefOutputPSP
 from spref import SPRef
 from lkernel import VariationalLKernel
@@ -102,7 +102,7 @@ def processMadeSP(trace,node,isAAA):
     if sp.hasAEKernel(): trace.registerAEKernel(node)
 
 def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
-  weight = 0;
+  weight = 0
   psp,args = trace.pspAt(node),trace.argsAt(node)
 
   if omegaDB.hasValueFor(node): oldValue = omegaDB.getValue(node)
@@ -132,7 +132,7 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
 def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   assert isinstance(node,RequestNode)
-  weight = 0;
+  weight = 0
   request = trace.valueAt(node)
 
   # first evaluate exposed simulation requests (ESRs)
@@ -155,7 +155,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
     else: latentDB = None
     weight += trace.spAt(node).simulateLatents(trace.spauxAt(node),lsr,shouldRestore,latentDB)
   
-  return weight;
+  return weight
 
 def restore(trace,node,scaffold,omegaDB,gradients):
   if isinstance(node,ConstantNode): return 0

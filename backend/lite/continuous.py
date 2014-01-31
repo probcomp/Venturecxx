@@ -1,8 +1,7 @@
 import scipy.stats
 import scipy.special
 import math
-import random
-from psp import PSP,RandomPSP
+from psp import RandomPSP
 from lkernel import LKernel
 
 class NormalDriftKernel(LKernel):

@@ -1,7 +1,6 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from spref import SPRef
 from sp import SP
-from scope import mergeWith
 
 class Node(object):
   __metaclass__ = ABCMeta
@@ -88,7 +87,7 @@ class OutputNode(ApplicationNode):
   def definiteParents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]
   def parents(self): return self.definiteParents() + self.esrParents
 
-class Args():
+class Args(object):
   def __init__(self,trace,node):
     self.node = node
     self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]

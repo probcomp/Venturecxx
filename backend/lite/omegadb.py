@@ -1,4 +1,4 @@
-class OmegaDB():
+class OmegaDB(object):
   def __init__(self):
     self.latentDBs = {} # not sure if keys are nodes or sps
     self.values = {} # node => value
