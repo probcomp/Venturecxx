@@ -21,7 +21,7 @@ class SPFamilies(object):
 class SPAux(object):
   def copy(self): return SPAux()
 
-class SP(object):
+class VentureSP(VentureValue):
   __metaclass__ = ABCMeta
 
   def __init__(self,requestPSP,outputPSP):

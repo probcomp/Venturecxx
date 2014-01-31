@@ -1,4 +1,4 @@
-from sp import SP,SPAux
+from sp import VentureSP,SPAux
 from psp import PSP, RandomPSP
 from request import Request
 import numpy as np
@@ -32,7 +32,7 @@ class MakeUncollapsedHMMOutputPSP(PSP):
   def description(self,name):
     return "(%s <simplex> <matrix> <matrix>) -> <SP <number> <number>>\n  Discrete-state HMM of unbounded length with discrete observations.  The inputs are the probability distribution of the first state, the transition matrix, and the observation matrix.  It is an error if the dimensionalities do not line up.  Returns observations from the HMM encoded as a stochastic procedure that takes the time step and samples a new observation at that time step." % name
 
-class UncollapsedHMMSP(SP):
+class UncollapsedHMMSP(VentureSP):
   def __init__(self,p0,T,O):
     super(UncollapsedHMMSP,self).__init__(UncollapsedHMMRequestPSP(),UncollapsedHMMOutputPSP(O))
     self.p0 = p0

@@ -1,4 +1,4 @@
-class Env(object):
+class VentureEnvironment(VentureValue):
   def __init__(self,outerEnv=None,ids=None,nodes=None):
     self.outerEnv = outerEnv
     self.frame = {}

@@ -1,5 +1,5 @@
 from builtin import builtInValues, builtInSPs
-from env import Env
+from env import VentureEnvironment
 from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args
 import math
 from regen import constrain,processMadeSP, evalFamily
@@ -23,7 +23,7 @@ import pdb
 class Trace(object):
   def __init__(self):
 
-    self.globalEnv = Env()
+    self.globalEnv = VentureEnvironment()
     for name,val in builtInValues().iteritems():
       self.globalEnv.addBinding(name,ConstantNode(val))
     for name,sp in builtInSPs().iteritems():
@@ -31,7 +31,7 @@ class Trace(object):
       processMadeSP(self,spNode,False)
       assert isinstance(self.valueAt(spNode), SPRef)
       self.globalEnv.addBinding(name,spNode)
-    self.globalEnv = Env(self.globalEnv) # New frame so users can shadow globals
+    self.globalEnv = VentureEnvironment(self.globalEnv) # New frame so users can shadow globals
 
     self.rcs = set()
     self.ccs = set()

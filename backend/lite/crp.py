@@ -1,5 +1,5 @@
 from psp import PSP, NullRequestPSP, RandomPSP
-from sp import SP
+from sp import VentureSP
 import math
 import scipy.special
 import scipy.stats
@@ -20,7 +20,7 @@ class CRPSPAux(object):
     crp.numCustomers = self.numCustomers
     return crp
 
-class CRPSP(SP):
+class CRPSP(VentureSP):
   def constructSPAux(self): return CRPSPAux()
 
 class MakeCRPOutputPSP(PSP):

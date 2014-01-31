@@ -1,5 +1,5 @@
 from psp import PSP
-from env import Env
+from env import VentureEnvironment
 from request import Request,ESR
 
 class EvalRequestPSP(PSP):
@@ -15,7 +15,7 @@ class GetCurrentEnvOutputPSP(PSP):
     return "(%s) -> <env>" % name
 
 class GetEmptyEnvOutputPSP(PSP):
-  def simulate(self,args): return Env()
+  def simulate(self,args): return VentureEnvironment()
   def description(self,name):
     return "(%s) -> <env>" % name
 
@@ -23,6 +23,6 @@ class ExtendEnvOutputPSP(PSP):
   def simulate(self,args): 
     env,sym = args.operandValues[0:2]
     node = args.operandNodes[2]
-    return Env(env,[sym],[node])
+    return VentureEnvironment(env,[sym],[node])
   def description(self,name):
     return "(%s <env> <symbol> <object>) -> <env>" % name

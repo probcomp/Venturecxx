@@ -1,6 +1,6 @@
 from psp import PSP
 from request import Request,ESR
-from env import Env
+from env import VentureEnvironment
 import numpy as np
 
 ### Simplex Points
@@ -100,7 +100,7 @@ class MapListRequestPSP(PSP):
       x = xs[i]
       id = str([args.node] + [i])
       exp = ["mappedSP"] + [["quote",x]]
-      env = Env(None,["mappedSP"],[fNode])
+      env = VentureEnvironment(None,["mappedSP"],[fNode])
       request.esrs.append(ESR(id,exp,env))
 
     return request

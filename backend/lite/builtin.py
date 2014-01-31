@@ -1,6 +1,6 @@
 import math
 
-from sp import SP
+from sp import VentureSP
 from psp import NullRequestPSP, ESRRefOutputPSP, PSP
 
 import discrete
@@ -22,7 +22,7 @@ def deterministic(f):
       return f(*args.operandValues)
     def description(self,name):
       return "deterministic %s" % name
-  return SP(NullRequestPSP(), DeterministicPSP())
+  return VentureSP(NullRequestPSP(), DeterministicPSP())
 
 def builtInSPsList():
   return [ [ "plus",  deterministic(lambda *args: sum(args)) ],
@@ -53,65 +53,65 @@ def builtInSPsList():
            # Symbols are Python strings
            [ "is_symbol", deterministic(lambda x: isinstance(x, basestring)) ],
 
-           [ "lookup", SP(NullRequestPSP(),dstructures.LookupOutputPSP()) ],
-           [ "contains", SP(NullRequestPSP(),dstructures.ContainsOutputPSP()) ],
-           [ "size", SP(NullRequestPSP(),dstructures.SizeOutputPSP()) ],
+           [ "lookup",VentureSP(NullRequestPSP(),dstructures.LookupOutputPSP()) ],
+           [ "contains",VentureSP(NullRequestPSP(),dstructures.ContainsOutputPSP()) ],
+           [ "size",VentureSP(NullRequestPSP(),dstructures.SizeOutputPSP()) ],
 
-           [ "pair", SP(NullRequestPSP(),dstructures.PairOutputPSP()) ],
-           [ "list", SP(NullRequestPSP(),dstructures.ListOutputPSP()) ],
-           [ "map_list", SP(dstructures.MapListRequestPSP(),dstructures.MapListOutputPSP()) ],
+           [ "pair",VentureSP(NullRequestPSP(),dstructures.PairOutputPSP()) ],
+           [ "list",VentureSP(NullRequestPSP(),dstructures.ListOutputPSP()) ],
+           [ "map_list",VentureSP(dstructures.MapListRequestPSP(),dstructures.MapListOutputPSP()) ],
 
            # Fake compatibility with CXX
-           [ "is_pair", SP(NullRequestPSP(),dstructures.IsPairOutputPSP()) ],
-           [ "first", SP(NullRequestPSP(),dstructures.FirstListOutputPSP()) ],
-           [ "second", SP(NullRequestPSP(),dstructures.SecondListOutputPSP()) ],
-           [ "rest", SP(NullRequestPSP(),dstructures.RestListOutputPSP()) ],
+           [ "is_pair", VentureSP(NullRequestPSP(),dstructures.IsPairOutputPSP()) ],
+           [ "first", VentureSP(NullRequestPSP(),dstructures.FirstListOutputPSP()) ],
+           [ "second", VentureSP(NullRequestPSP(),dstructures.SecondListOutputPSP()) ],
+           [ "rest", VentureSP(NullRequestPSP(),dstructures.RestListOutputPSP()) ],
 
-           [ "array", SP(NullRequestPSP(),dstructures.ArrayOutputPSP()) ],
-           [ "is_array", SP(NullRequestPSP(),dstructures.IsArrayOutputPSP()) ],
-           [ "dict", SP(NullRequestPSP(),dstructures.DictOutputPSP()) ],
-           [ "matrix", SP(NullRequestPSP(),dstructures.MatrixOutputPSP()) ],
-           [ "simplex", SP(NullRequestPSP(),dstructures.SimplexOutputPSP()) ],
+           [ "array", VentureSP(NullRequestPSP(),dstructures.ArrayOutputPSP()) ],
+           [ "is_array", VentureSP(NullRequestPSP(),dstructures.IsArrayOutputPSP()) ],
+           [ "dict", VentureSP(NullRequestPSP(),dstructures.DictOutputPSP()) ],
+           [ "matrix", VentureSP(NullRequestPSP(),dstructures.MatrixOutputPSP()) ],
+           [ "simplex", VentureSP(NullRequestPSP(),dstructures.SimplexOutputPSP()) ],
 
-           [ "branch", SP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()) ],
-           [ "biplex", SP(NullRequestPSP(),conditionals.BiplexOutputPSP()) ],
-           [ "make_csp", SP(NullRequestPSP(),csp.MakeCSPOutputPSP()) ],
+           [ "branch", VentureSP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()) ],
+           [ "biplex", VentureSP(NullRequestPSP(),conditionals.BiplexOutputPSP()) ],
+           [ "make_csp", VentureSP(NullRequestPSP(),csp.MakeCSPOutputPSP()) ],
 
-           [ "eval", SP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()) ],
-           [ "get_current_environment", SP(NullRequestPSP(),eval_sps.GetCurrentEnvOutputPSP()) ],
-           [ "get_empty_environment", SP(NullRequestPSP(),eval_sps.GetEmptyEnvOutputPSP()) ],
-           [ "extend_environment", SP(NullRequestPSP(),eval_sps.ExtendEnvOutputPSP()) ],
+           [ "eval",VentureSP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()) ],
+           [ "get_current_environment",VentureSP(NullRequestPSP(),eval_sps.GetCurrentEnvOutputPSP()) ],
+           [ "get_empty_environment",VentureSP(NullRequestPSP(),eval_sps.GetEmptyEnvOutputPSP()) ],
+           [ "extend_environment",VentureSP(NullRequestPSP(),eval_sps.ExtendEnvOutputPSP()) ],
 
-           [ "mem", SP(NullRequestPSP(),msp.MakeMSPOutputPSP()) ],
+           [ "mem",VentureSP(NullRequestPSP(),msp.MakeMSPOutputPSP()) ],
 
-           [ "scope_include", SP(NullRequestPSP(),scope.ScopeIncludeOutputPSP()) ],
+           [ "scope_include",VentureSP(NullRequestPSP(),scope.ScopeIncludeOutputPSP()) ],
 
-           [ "flip", SP(NullRequestPSP(),discrete.BernoulliOutputPSP()) ],
-           [ "bernoulli", SP(NullRequestPSP(),discrete.BernoulliOutputPSP()) ],
-           [ "binomial", SP(NullRequestPSP(),discrete.BinomialOutputPSP()) ],           
-           [ "categorical", SP(NullRequestPSP(),discrete.CategoricalOutputPSP()) ],
+           [ "binomial", VentureSP(NullRequestPSP(),discrete.BinomialOutputPSP()) ],           
+           [ "flip",VentureSP(NullRequestPSP(),discrete.BernoulliOutputPSP()) ],
+           [ "bernoulli",VentureSP(NullRequestPSP(),discrete.BernoulliOutputPSP()) ],
+           [ "categorical",VentureSP(NullRequestPSP(),discrete.CategoricalOutputPSP()) ],
 
-           [ "normal", SP(NullRequestPSP(),continuous.NormalOutputPSP()) ],
-           [ "uniform_continuous", SP(NullRequestPSP(),continuous.UniformOutputPSP()) ],
-           [ "beta", SP(NullRequestPSP(),continuous.BetaOutputPSP()) ],
-           [ "gamma", SP(NullRequestPSP(),continuous.GammaOutputPSP()) ],
-           [ "student_t", SP(NullRequestPSP(),continuous.StudentTOutputPSP()) ],
+           [ "normal",VentureSP(NullRequestPSP(),continuous.NormalOutputPSP()) ],
+           [ "uniform_continuous",VentureSP(NullRequestPSP(),continuous.UniformOutputPSP()) ],
+           [ "beta",VentureSP(NullRequestPSP(),continuous.BetaOutputPSP()) ],
+           [ "gamma",VentureSP(NullRequestPSP(),continuous.GammaOutputPSP()) ],
+           [ "student_t",VentureSP(NullRequestPSP(),continuous.StudentTOutputPSP()) ],
 
-           [ "dirichlet", SP(NullRequestPSP(),discrete.DirichletOutputPSP()) ],
-           [ "symmetric_dirichlet", SP(NullRequestPSP(),discrete.SymmetricDirichletOutputPSP()) ],
+           [ "dirichlet",VentureSP(NullRequestPSP(),discrete.DirichletOutputPSP()) ],
+           [ "symmetric_dirichlet",VentureSP(NullRequestPSP(),discrete.SymmetricDirichletOutputPSP()) ],
 
-           [ "make_dir_mult", SP(NullRequestPSP(),discrete.MakerCDirMultOutputPSP()) ],
-           [ "make_uc_dir_mult", SP(NullRequestPSP(),discrete.MakerUDirMultOutputPSP()) ],
+           [ "make_dir_mult",VentureSP(NullRequestPSP(),discrete.MakerCDirMultOutputPSP()) ],
+           [ "make_uc_dir_mult",VentureSP(NullRequestPSP(),discrete.MakerUDirMultOutputPSP()) ],
 
-           [ "make_beta_bernoulli", SP(NullRequestPSP(),discrete.MakerCBetaBernoulliOutputPSP()) ],
-           [ "make_uc_beta_bernoulli", SP(NullRequestPSP(),discrete.MakerUBetaBernoulliOutputPSP()) ],
+           [ "make_beta_bernoulli",VentureSP(NullRequestPSP(),discrete.MakerCBetaBernoulliOutputPSP()) ],
+           [ "make_uc_beta_bernoulli",VentureSP(NullRequestPSP(),discrete.MakerUBetaBernoulliOutputPSP()) ],
 
-           [ "make_sym_dir_mult", SP(NullRequestPSP(),discrete.MakerCSymDirMultOutputPSP()) ],
-           [ "make_uc_sym_dir_mult", SP(NullRequestPSP(),discrete.MakerUSymDirMultOutputPSP()) ],
+           [ "make_sym_dir_mult",VentureSP(NullRequestPSP(),discrete.MakerCSymDirMultOutputPSP()) ],
+           [ "make_uc_sym_dir_mult",VentureSP(NullRequestPSP(),discrete.MakerUSymDirMultOutputPSP()) ],
 
-           [ "make_crp", SP(NullRequestPSP(),crp.MakeCRPOutputPSP()) ],
+           [ "make_crp",VentureSP(NullRequestPSP(),crp.MakeCRPOutputPSP()) ],
 
-           [ "make_lazy_hmm", SP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()) ],
+           [ "make_lazy_hmm",VentureSP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()) ],
   ]
 
 def builtInSPs():

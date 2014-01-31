@@ -1,6 +1,6 @@
 from psp import PSP, ESRRefOutputPSP
 from sp import SP
-from env import Env
+from env import VentureEnvironment
 from request import Request,ESR
 
 
@@ -17,5 +17,5 @@ class MSPRequestPSP(PSP):
   def simulate(self,args): 
     id = str(args.operandValues)
     exp = ["memoizedSP"] + [["quote",val] for val in args.operandValues]
-    env = Env(None,["memoizedSP"],[self.sharedOperatorNode])
+    env = VentureEnvironment(None,["memoizedSP"],[self.sharedOperatorNode])
     return Request([ESR(id,exp,env)])

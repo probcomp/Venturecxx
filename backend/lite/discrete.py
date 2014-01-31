@@ -5,7 +5,7 @@ import scipy.special
 import numpy.random as npr
 from utils import simulateCategorical, logDensityCategorical, simulateDirichlet, logDensityDirichlet
 from psp import PSP, NullRequestPSP, RandomPSP
-from sp import SP,SPAux
+from sp import VentureSP,SPAux
 from lkernel import LKernel
 from nose.tools import assert_equal,assert_greater_equal
 import copy
@@ -75,7 +75,7 @@ class BetaBernoulliSPAux(SPAux):
 
   def cts(self): return [self.yes,self.no]
 
-class BetaBernoulliSP(SP):
+class BetaBernoulliSP(VentureSP):
   def constructSPAux(self): return BetaBernoulliSPAux()
 
 class MakerCBetaBernoulliOutputPSP(PSP):
@@ -215,7 +215,7 @@ class SymmetricDirichletOutputPSP(RandomPSP):
   def description(self,name):
     return "(%s alpha n) -> <simplex>" % name
 
-class DirMultSP(SP):
+class DirMultSP(VentureSP):
   def __init__(self,requestPSP,outputPSP,n):
     super(DirMultSP,self).__init__(requestPSP,outputPSP)
     self.n = n

@@ -1,6 +1,6 @@
 from psp import PSP, ESRRefOutputPSP
 from sp import SP
-from env import Env
+from env import VentureEnvironment
 from request import Request,ESR
 from nose.tools import assert_equal
 
@@ -12,7 +12,7 @@ class CSPRequestPSP(PSP):
 
   def simulate(self,args):
     assert_equal(len(self.ids),len(args.operandNodes))
-    extendedEnv = Env(self.env,self.ids,args.operandNodes)
+    extendedEnv = VentureEnvironment(self.env,self.ids,args.operandNodes)
     return Request([ESR(args.node,self.exp,extendedEnv)])
 
   def canAbsorb(self,trace,appNode,parentNode): return True
