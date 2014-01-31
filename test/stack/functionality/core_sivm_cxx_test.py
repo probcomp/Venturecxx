@@ -17,6 +17,7 @@ import unittest
 from venture.sivm import CoreSivmCxx
 import venture.sivm.core_sivm_cxx as module
 from venture.exception import VentureException
+from nose import SkipTest
 
 #Note -- these tests only check for minimum functionality
 
@@ -91,8 +92,7 @@ class TestCoreSivmCxx(unittest.TestCase):
         o = self.sivm.execute_instruction(inst)
         self.assertIsInstance(o['directive_id'],(int,float))
     def test_observe_fail(self):
-        # FIXME: engine can only constrain random choices
-        return
+        raise SkipTest("Engine should report a polite exception on constraint of a deterministic choice.  Issue: https://app.asana.com/0/9277419963067/9940667562268")
         inst = {
                 'instruction':'observe',
                 'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
