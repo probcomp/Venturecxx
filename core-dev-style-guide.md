@@ -6,15 +6,15 @@ unanimous consent.
 
 - We use [Asana](http://asana.com) to coordinate tasks.
 
-- We use nosetests for running the test suite.
+- We use [nosetests](https://nose.readthedocs.org/en/latest/) for running the test suite.
 
-- We use Starcluster over EC2 for cloud compute.
+- We use [Starcluster](http://star.mit.edu/cluster/) over EC2 for cloud compute.
 
-- We use Jenkins for the continuous build.  As of this writing, the
+- We use [Jenkins](http://jenkins-ci.org/) for the continuous build.  As of this writing, the
   server listens to http://ec2-54-84-30-252.compute-1.amazonaws.com:8080/
 
-- We use pylint to maintain our Python code style.  The normative
-  pylint configuration file is in tool/pylintrc.
+- We use [pylint](http://www.pylint.org/) to maintain our Python code style.  The normative
+  pylint configuration file is in `tool/pylintrc`.
 
 Particulars
 ===========
@@ -39,7 +39,7 @@ Testing
 
 - The test suite can be configured to test different inference
   strategies and backends by choosing other parameters.  See
-  test/nconfig.py.
+  `test/nconfig.py`.
 
 - We treat a skipped test as an issue.  To wit, resolution is required
   but need not be immediate.  The actual skipped test should be linked
@@ -54,7 +54,7 @@ Testing
 
 - Python-side code coverage can be obtained via coverage.py and the
   nose-cov plugin by uncommenting the appropriate section in
-  setup.cfg.
+  `setup.cfg`.
 
 - Ideally, we would define task-oriented test launch patterns:
   - Confirm that there are no stupid crashes (quickly)
@@ -74,7 +74,7 @@ Starcluster
 
 - Right now, you're basically on your own here.  The only piece of
   help is an EC2 AMI with Venture CXX (and all its dependencies!)
-  preinstalled: ami-59c9f930 .  Ask Dan Lovell for it if you want.
+  preinstalled: ami-59c9f930 .  Ask Dan Lovell for access to it if you want.
 
 - Ideally, we would have a Starcluster Venture plugin that lets you
   type `starcluster start venture {master|release}` and get a cluster
@@ -110,4 +110,4 @@ Pylint
     with `pylint: disable=<violation-type>` and a comment explaining
     why.
   - If you feel that a particular style constraint is too strict or
-    inappropriate, let's discuss it.
+    inappropriate in general, let's discuss it.
