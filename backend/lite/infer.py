@@ -341,7 +341,7 @@ class ParticlePGibbsOperator(object):
         newParticleWeights[p] = regenAndAttach(newParticles[p],self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
       newParticles[P] = Particle(particles[P])
       newParticleWeights[P] = regenAndAttach(newParticles[P],self.scaffold.border[t],self.scaffold,True,rhoDBs[t],{})
-      assert_almost_equal(particleWeights[P],rhoWeights[t])
+      assert_almost_equal(newParticleWeights[P],rhoWeights[t])
       particles = newParticles
       particleWeights = newParticleWeights
 
@@ -361,6 +361,7 @@ class ParticlePGibbsOperator(object):
     alpha = weightMinusRho - weightMinusXi
 
     self.finalIndex = finalIndex
+    self.particles = particles
 
     # TODO need to return a trace as well
     return particles[finalIndex],alpha

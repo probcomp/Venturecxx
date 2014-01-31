@@ -118,6 +118,7 @@ class Particle(Trace):
     self.esrParents.lookup(node).append(parent)
 
   def regenCountAt(self,scaffold,node): 
+    assert self.base.regenCountAt(scaffold,node) == 0
     if node in self.regenCounts: return self.regenCounts.lookup(node)
     else: return self.base.regenCountAt(scaffold,node)
 
@@ -192,7 +193,8 @@ class Particle(Trace):
 
     for node in self.aes: self.base.registerAEKernel(node)
 
-    for (node,value) in self.values.iteritems(): self.base.setValueAt(node,value)
+    for (node,value) in self.values.iteritems(): 
+      self.base.setValueAt(node,value)
     for (node,madeSP) in self.madeSPs.iteritems(): self.base.setMadeSPAt(node,madeSP)
 
     # this iteration includes "default"
