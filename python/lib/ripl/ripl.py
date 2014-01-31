@@ -16,9 +16,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from venture.ripl import utils
 from venture.exception import VentureException
-
 
 class Ripl():
     def __init__(self,sivm,parsers):
@@ -181,7 +179,8 @@ class Ripl():
     # Core
     ############################################
 
-    def configure(self, options={}):
+    def configure(self, options=None):
+        if options is None: options = {}
         p = self._cur_parser()
         s = p.get_instruction_string('configure')
         d = {'options':options}
@@ -232,7 +231,6 @@ class Ripl():
 
     def clear(self):
         s = self._cur_parser().get_instruction_string('clear')
-        d = {}
         self.execute_instruction(s,{})
         return None
 
@@ -313,7 +311,8 @@ class Ripl():
     # Profiler methods (stubs)
     ############################################
     
-    def profiler_configure(self, options={}):
+    def profiler_configure(self, options=None):
+        if options is None: options = {}
         s = self._cur_parser().get_instruction_string('profiler_configure')
         d = {'options': options}
         return self.execute_instruction(s, d)['options']
@@ -333,7 +332,7 @@ class Ripl():
         return None
     
     # insert a random choice into the profiler
-    def profiler_make_random_choice():
+    def profiler_make_random_choice(self):
         import random
         address = random.randrange(1 << 16)
         trials = random.randrange(1, 1000)
@@ -346,16 +345,16 @@ class Ripl():
         
         return address
     
-    def profiler_list_random_choices():
+    def profiler_list_random_choices(self):
         return self.random_choices
     
-    def profiler_address_to_source_code_location(address):
+    def profiler_address_to_source_code_location(self,address):
         return address
     
-    def profiler_get_acceptance_rate(address):
+    def profiler_get_acceptance_rate(self,address):
         return self.address_to_acceptance_rate[address]
     
-    def profiler_get_proposal_time(address):
+    def profiler_get_proposal_time(self,address):
         return self.address_to_proposal_time[address]
     
     ############################################

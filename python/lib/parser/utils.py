@@ -16,12 +16,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from pyparsing import Literal,CaselessLiteral,Regex,Word,Combine,Group,Optional,\
-    ZeroOrMore,OneOrMore,Forward,nums,alphas,FollowedBy,Empty,ParseException,\
+from pyparsing import Literal,Regex,Optional,\
+    ZeroOrMore,OneOrMore,Forward,ParseException,\
     Keyword, CaselessKeyword, MatchFirst, ParseResults, White, And, NotAny
 import re
 import json
-import copy
 
 from venture.exception import VentureException
 
@@ -56,7 +55,10 @@ def combine_locs(l):
 # <symbol>
 #
 # evaluates to itself as a string
-def symbol_token(blacklist_symbols=[], whitelist_symbols=[], symbol_map={}):
+def symbol_token(blacklist_symbols=None, whitelist_symbols=None, symbol_map=None):
+    if blacklist_symbols is None: blacklist_symbols = []
+    if whitelist_symbols is None: whitelist_symbols = []
+    if symbol_map is None: symbol_map = {}
     regex = Regex(r'\b[a-zA-Z_][a-zA-Z_0-9]*\b')
     whitelist_toks = [Keyword(x) for x in whitelist_symbols]
     if blacklist_symbols:
@@ -360,7 +362,8 @@ def get_expression_index(parse_tree, text_index):
     """text index to expression-index, the parse_tree
     is supposed to be the parse tree of an exception"""
     d = {}
-    def unpack(l, prefix=[]):
+    def unpack(l, prefix=None):
+        if prefix is None: prefix = []
         for loc in range(l['loc'][0], l['loc'][1]+1):
             if loc in d:
                 d[loc].append(prefix)
@@ -388,7 +391,8 @@ def inst(keyword, instruction):
     k.setParseAction(process_k)
     return k
 
-def make_instruction(patterns, instruction, syntax, defaults={}):
+def make_instruction(patterns, instruction, syntax, defaults=None):
+    if defaults is None: defaults = {}
     toks = syntax.split()
     pattern = []
     mapping = []

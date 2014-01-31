@@ -18,10 +18,7 @@
 
 from venture.exception import VentureException
 from venture.sivm import utils
-import json
 import copy
-from threading import Thread
-from multiprocessing import Process
 
 class CoreSivmCxx(object):
     ###############################
@@ -128,13 +125,13 @@ class CoreSivmCxx(object):
         val = self.engine.infer(d)
         return {}
 
-    def _do_clear(self,instruction):
+    def _do_clear(self,_):
         utils.require_state(self.state,'default')
         self.engine.clear()
         self.observe_dict = {}
         return {}
 
-    def _do_rollback(self,instruction):
+    def _do_rollback(self,_):
         utils.require_state(self.state,'exception','paused')
         #rollback not implemented in C++
         self.state = 'default'
@@ -157,7 +154,7 @@ class CoreSivmCxx(object):
                 raise
         return {"logscore":0}
 
-    def _do_get_global_logscore(self,instruction):
+    def _do_get_global_logscore(self,_):
         utils.require_state(self.state,'default')
         l = self.engine.logscore()
         return {"logscore":l}
@@ -166,7 +163,7 @@ class CoreSivmCxx(object):
     # Continuous Inference
     ###########################
     
-    def _do_continuous_inference_status(self,instruction):
+    def _do_continuous_inference_status(self,_):
         utils.require_state(self.state,'default')
         return self.engine.continuous_inference_status()
 
@@ -176,7 +173,7 @@ class CoreSivmCxx(object):
         # TODO: validate parameters?
         self.engine.start_continuous_inference(params)
         
-    def _do_stop_continuous_inference(self,instruction):
+    def _do_stop_continuous_inference(self,_):
         utils.require_state(self.state,'default')
         self.engine.trace.stop_continuous_inference()
     

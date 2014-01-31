@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import time
 import random
-import numpy
+import numpy as np
 import pylab
 import cPickle as pickle
 import os
@@ -28,7 +28,7 @@ def parseValue(value):
     return value['value']
 
 # VentureUnit is an experimental harness for developing, debugging and profiling Venture programs.
-class VentureUnit:
+class VentureUnit(object):
     ripl = None
     parameters = {}
     assumes = []
@@ -54,7 +54,8 @@ class VentureUnit:
         self.observes = []
     
     # Initializes parameters, generates the model, and prepares the ripl.
-    def __init__(self, ripl, parameters={}):
+    def __init__(self, ripl, parameters=None):
+        if parameters is None: parameters = {}
         self.ripl = ripl
         
         # FIXME: Should the random seed be stored, or re-initialized?
@@ -90,7 +91,7 @@ class VentureUnit:
                 assumeToDirective[symbol] = symbol
         
         predictToDirective = {}
-        for (index, (expression, literal)) in enumerate(self.observes):
+        for (index, (expression, _)) in enumerate(self.observes):
             #print("self.ripl.predict('%s', label='%d')" % (expression, index))
             label = 'observe_%d' % index
             value = self.ripl.predict(expression, label=label, type=True)
@@ -132,7 +133,7 @@ class VentureUnit:
     # A random subset of the predicts are tracked along with the assumed variables.
     def sampleFromJoint(self, samples, track=5, verbose=False, name=None):
         assumedValues = {}
-        for (symbol, expression) in self.assumes:
+        for (symbol, _) in self.assumes:
           assumedValues[symbol] = []
         predictedValues = {}
         for index in range(len(self.observes)):
@@ -342,7 +343,7 @@ class VentureUnit:
 # Reads the profile data from the ripl.
 # Returns a map from (random choice) addresses to info objects.
 # The info contains the trials, successes, acceptance_rate, proposal_time, and source_location.
-class Profile:
+class Profile(object):
     def __init__(self, ripl):
         random_choices = ripl.profiler_list_random_choices()
         self.addressToInfo = {}
@@ -384,19 +385,18 @@ class Profile:
     # The [5] longest
     def hotspots(self, num=5):
         hot = sorted(self.addressToInfo.values(), key=lambda info: info.proposal_time, reverse=True)
-        return hot[:maxnum]
+        return hot[:num]
     
     def coldspots(self, num=5):
         cold = sorted(self.addressToInfo.values(), key=lambda info: info.acceptance_rate)
         return cold[:num]
 
-from numpy import mean
-
 # Records data for each sweep. Typically, all scalar assumes are recorded.
 # Certain running modes convert observes to predicts. In those cases, a random subset of the observes (now predicts) are tracked.
 # Some extra data is also recorded, such as the logscore, sweep_time, and sweep_iters.
-class History:
-    def __init__(self, label='empty_history', parameters={}):
+class History(object):
+    def __init__(self, label='empty_history', parameters=None):
+        if parameters is None: parameters = {}
         self.label = label
         self.parameters = parameters
         self.nameToSeries = {}
@@ -408,7 +408,7 @@ class History:
     
     # Returns the average over all series with the given name.
     def averageValue(self, seriesName):
-        return mean([mean(series.values) for series in self.nameToSeries[seriesName]])
+        return np.mean([np.mean(series.values) for series in self.nameToSeries[seriesName]])
     
     # default directory for plots, created from parameters
     def defaultDirectory(self):
@@ -426,7 +426,7 @@ class History:
         
         ensure_directory(directory)
         
-        for (name, seriesList) in self.nameToSeries.iteritems():
+        for name in self.nameToSeries:
             self.plotOneSeries(name, fmt=fmt, directory=directory)
             self.plotOneHistogram(name, fmt=fmt, directory=directory)
 
@@ -436,7 +436,7 @@ class History:
         if "logscore" in self.nameToSeries and "sweep time (s)" in self.nameToSeries:
             logscores = self.nameToSeries["logscore"] # :: [Series]
             sweep_times = self.nameToSeries["sweep time (s)"]
-            score_v_time = [Series(run_logs.label, run_logs.values, True, xvals=numpy.cumsum(run_times.values))
+            score_v_time = [Series(run_logs.label, run_logs.values, True, xvals=np.cumsum(run_times.values))
                             for (run_logs, run_times) in zip(logscores, sweep_times)]
             plotSeries("logscore_vs_wallclock", score_v_time, subtitle=self.label,
                        parameters=self.parameters, fmt=fmt, directory=directory, xlabel="time (s)")
@@ -480,7 +480,7 @@ def ensure_directory(directory):
     if not os.path.isdir(directory):
         try:
             os.makedirs(directory)
-        except OSError as e:
+        except OSError:
             if os.path.isdir(directory):
                 pass
             else:
@@ -500,7 +500,7 @@ def historyOverlay(name, named_hists):
     return answer
 
 # aggregates values for one variable over the course of a run
-class Series:
+class Series(object):
     def __init__(self, label, values, hist, xvals=None):
         self.label = label
         self.values = values
@@ -518,7 +518,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 #from matplotlib.backends.backend_pdf import PdfPages
-import os
 
 # Displays parameters in top-left corner of the graph.
 def showParameters(parameters):
@@ -539,7 +538,7 @@ def setYBounds(seriesList, ybounds=None):
 
         offset = 0.1 * max([(ymax - ymin), 1.0])
 
-        if not any([any([numpy.isinf(v) for v in series.values]) for series in seriesList]):
+        if not any([any([np.isinf(v) for v in series.values]) for series in seriesList]):
             plt.ylim([ymin - offset, ymax + offset])
     else:
         [ylow,yhigh] = ybounds
@@ -548,7 +547,7 @@ def setYBounds(seriesList, ybounds=None):
 # Plots a set of series.
 def plotSeries(name, seriesList, subtitle="", parameters=None,
                fmt='pdf', directory='.', xlabel='Sweep', ylabel=None, ybounds=None):
-    fig = plt.figure()
+    plt.figure()
     plt.clf()
     plt.title('Series for ' + name + '\n' + subtitle)
     plt.xlabel(xlabel)
@@ -558,7 +557,8 @@ def plotSeries(name, seriesList, subtitle="", parameters=None,
     if parameters is not None:
         showParameters(parameters)
     
-    plots = [plt.plot(series.xvals(), series.values, label=series.label)[0] for series in seriesList]
+    for series in seriesList:
+        plt.plot(series.xvals(), series.values, label=series.label)
     
     legend_outside()
     setYBounds(seriesList, ybounds)
@@ -569,7 +569,7 @@ def plotSeries(name, seriesList, subtitle="", parameters=None,
 # Plots histograms for a set of series.
 def plotHistogram(name, seriesList, subtitle="", parameters=None,
                   fmt='pdf', directory='.', xlabel=None, ylabel='Frequency', bins=20):
-    fig = plt.figure()
+    plt.figure()
     plt.clf()
     plt.title('Histogram of ' + name + '\n' + subtitle)
     if xlabel is None:
@@ -590,8 +590,6 @@ def plotHistogram(name, seriesList, subtitle="", parameters=None,
 def smooth(pdf, amt=0.1):
     return [(p + amt / len(pdf)) / (1.0 + amt) for p in pdf]
 
-import numpy as np
-#np.seterr(all='raise')
 import math
 
 # Approximates the KL divergence between samples from two distributions.
@@ -750,8 +748,8 @@ def legend_outside(ax=None, bbox_to_anchor=(0.5, -.10), loc='upper center',
     handles = [label_to_handle[label] for label in labels]
     if ncol is None:
         ncol = min(len(labels), 3)
-    lgd = ax.legend(handles, labels, loc=loc, ncol=ncol,
-                    bbox_to_anchor=bbox_to_anchor, prop={"size":14})
+    ax.legend(handles, labels, loc=loc, ncol=ncol,
+              bbox_to_anchor=bbox_to_anchor, prop={"size":14})
     return
 
 def savefig_legend_outside(filename, ax=None, bbox_inches='tight'):

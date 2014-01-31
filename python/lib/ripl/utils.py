@@ -19,8 +19,6 @@
 import sys
 import traceback
 
-from venture.exception import VentureException
-
 # This list of functions defines the public REST API
 # of the Ripl server and client
 #
@@ -77,16 +75,16 @@ Commands for interaction:
 
 def run_venture_console(ripl):
   done = False
-  while not(done):
+  while not done:
     sys.stdout.write('>>> ')
     current_line = sys.stdin.readline()
-    if (not current_line):
+    if not current_line:
       print ''
       print "End of input reached."
       print "Moriturus te saluto."
       break
     current_line = current_line.strip()
-    if (current_line == ""):
+    if current_line == "":
       continue
     if current_line[0] == "(":
       current_line = current_line[1:-1]
@@ -96,54 +94,54 @@ def run_venture_console(ripl):
     directive_name = directive_and_content[0].lower()
     sys.stdout.write('')
     try:
-      if (directive_name == "quit"):
+      if directive_name == "quit":
         print "Moriturus te saluto."
         done = True
-      elif (directive_name == "help"):
+      elif directive_name == "help":
         print help_string
-      elif (directive_name == "list-directives"):
+      elif directive_name == "list-directives":
         for d in ripl.list_directives():
           print d
-      elif (directive_name == "global-log-score"):
+      elif directive_name == "global-log-score":
         print ripl.get_global_logscore()
-      elif (directive_name == "ci-status"):
+      elif directive_name == "ci-status":
         print ripl.continuous_inference_status()
-      elif (directive_name == "start-ci"):
+      elif directive_name == "start-ci":
         args = current_line.split(" ")[1:]
         if len(args) == 2:
           ripl.start_continuous_inference(args[0], True)
         else:
           ripl.start_continuous_inference(args[0])
         print ripl.continuous_inference_status()
-      elif (directive_name == "stop-ci"):
+      elif directive_name == "stop-ci":
         ripl.stop_continuous_inference()
         print ripl.continuous_inference_status()
-      elif (directive_name == "clear"):
+      elif directive_name == "clear":
         ripl.clear()
         print "Cleared trace."
       else:
         content = directive_and_content[1]
-        if (directive_name == "assume"):
+        if directive_name == "assume":
           name_and_expression = content.split(" ", 1)
           print ripl.assume(name_and_expression[0], name_and_expression[1])
-        elif (directive_name == "predict"):
+        elif directive_name == "predict":
           print ripl.predict(content)
-        elif (directive_name == "observe"):
+        elif directive_name == "observe":
           expression_and_literal_value = content.rsplit(" ", 1)
           ripl.observe(expression_and_literal_value[0], expression_and_literal_value[1])
-        elif (directive_name == "forget"):
+        elif directive_name == "forget":
           ripl.forget(int(content))
           print "Forgotten directive # {0}.".format(content)
-        elif (directive_name == "sample"):
+        elif directive_name == "sample":
           print ripl.sample(content)
-        elif (directive_name == "force"):
+        elif directive_name == "force":
           expression_and_literal_value = content.rsplit(" ", 1)
           ripl.force(expression_and_literal_value[0], expression_and_literal_value[1])
-        elif (directive_name == "infer"):
+        elif directive_name == "infer":
           command = expToDict(parse(content))
           ripl.infer(command)
           print "Inferred according to %s." % command
-        elif (directive_name == "report"):
+        elif directive_name == "report":
           print ripl.report(int(content))
         else:
           print "Sorry, unknown directive."

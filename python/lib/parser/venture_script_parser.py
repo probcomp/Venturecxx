@@ -16,10 +16,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from pyparsing import Literal,CaselessLiteral,Regex,Word,Combine,Group,Optional,\
-    ZeroOrMore,OneOrMore,Forward,nums,alphas,FollowedBy,Empty,ParseException,\
-    Keyword, CaselessKeyword, MatchFirst
-import re
+from pyparsing import Literal,Optional,ZeroOrMore,OneOrMore,Forward,\
+    ParseException,Keyword,MatchFirst
 from venture.parser import utils
 
 #shortcuts
@@ -103,7 +101,7 @@ def _make_infix_token(previous_token, operator_map, lower_precedence, left_to_ri
     token.setParseAction(f)
     return token
 
-class VentureScriptParser():
+class VentureScriptParser(object):
     def __init__(self):
         # <expression>
         self.expression = Forward()

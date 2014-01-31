@@ -18,8 +18,6 @@
 
 from venture.exception import VentureException
 from venture.sivm import utils
-import json
-import re
 import copy
 
 
@@ -248,7 +246,7 @@ class VentureSivm(object):
             #tmp['instruction'] = 'labeled_' + tmp['instruction']
         return tmp
     
-    def _do_list_directives(self, instruction):
+    def _do_list_directives(self, _):
         return { "directives" : [self.get_directive(did) for did in self.directive_dict.keys()] }
     
     def _do_get_directive(self, instruction):
@@ -279,7 +277,7 @@ class VentureSivm(object):
                 "instruction" : "forget",
                 "directive_id" : o1['directive_id'],
                 }
-        o2 = self._call_core_sivm_instruction(inst2)
+        self._call_core_sivm_instruction(inst2)
         return {}
     
     def _do_sample(self, instruction):
@@ -294,7 +292,7 @@ class VentureSivm(object):
                 "instruction" : "forget",
                 "directive_id" : o1['directive_id'],
                 }
-        o2 = self._call_core_sivm_instruction(inst2)
+        self._call_core_sivm_instruction(inst2)
         return {"value":o1['value']}
     
     # not used anymore?
@@ -312,13 +310,13 @@ class VentureSivm(object):
                 "continuous_inference_enable" : self._continuous_inference_enabled(),
                 }}
     
-    def _do_get_current_exception(self, instruction):
+    def _do_get_current_exception(self, _):
         utils.require_state(self.state,'exception','paused')
         return {
                 'exception': copy.deepcopy(self.current_exception),
                 }
     
-    def _do_get_state(self, instruction):
+    def _do_get_state(self, _):
         return {
                 'state': self.state,
                 }
@@ -335,7 +333,7 @@ class VentureSivm(object):
         self._call_core_sivm_instruction(instruction)
         return {}
     
-    def _do_debugger_list_breakpoints(self, instruction):
+    def _do_debugger_list_breakpoints(self, _):
         return {
                 "breakpoints" : copy.deepcopy(self.breakpoint_dict.values()),
                 }
