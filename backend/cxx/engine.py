@@ -23,8 +23,8 @@ class Engine:
   def __init__(self):
     self.directiveCounter = 0
     self.directives = {}
-#    from libtrace import Trace
-#    self.trace = Trace()
+    from libtrace import Trace
+    self.trace = Trace()
 
   def nextBaseAddr(self):
     self.directiveCounter += 1
@@ -90,11 +90,11 @@ class Engine:
     return self.trace.extractValue(directiveId)
 
   def clear(self):
-#    del self.trace
+    del self.trace
     self.directiveCounter = 0
     self.directives = {}
-#    from libtrace import Trace
-#    self.trace = Trace()
+    from libtrace import Trace
+    self.trace = Trace()
 
   # Blow away the trace and rebuild one from the directives.  The goal
   # is to resample from the prior.  May have the unfortunate effect of
