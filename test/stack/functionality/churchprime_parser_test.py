@@ -16,7 +16,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import unittest
-from venture.exception import VentureException
 from venture.parser import ChurchPrimeParser
 from venture.test.test_helpers import ParserTestCase
 
@@ -25,6 +24,7 @@ class TestChurchPrimeParser(ParserTestCase):
     _multiprocess_can_split_ = True
     def setUp(self):
         self.p = ChurchPrimeParser()
+        self.expression = None
 
     def test_expression(self):
         self.expression = self.p.expression

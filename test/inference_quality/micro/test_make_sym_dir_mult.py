@@ -163,18 +163,6 @@ def testStaleAAA_CSP():
   ripl.predict("(h)",label="pid")
 
   return checkDirichletMultinomialWeakPrior("StaleAAA_CSP",ripl,"pid")  
-
-@statisticalTest
-def testStaleAAA_CSP():
-  ripl = get_ripl()
-
-  ripl.assume("a", "1.0")
-  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
-  ripl.assume("g", "(lambda () f)")
-  ripl.assume("h", "(g)")
-  ripl.predict("(h)",label="pid")
-
-  return checkDirichletMultinomialWeakPrior("StaleAAA_CSP",ripl,"pid") 
  
 @statisticalTest
 def testStaleAAA_Madness():
@@ -214,7 +202,7 @@ def checkDirichletMultinomialBrush(ripl,label):
   (f)
   (f))""","atom<1>")
 
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,label)
   ans = [(0,.25), (1,.75)]
   return reportKnownDiscrete("CheckDirichletMultinomialBrush", ans, predictions)
 
@@ -222,7 +210,7 @@ def checkDirichletMultinomialWeakPrior(maker,ripl,label):
   for _ in range(8):
     ripl.observe("(f)", "atom<1>")
 
-  predictions = collectSamples(ripl,"pid",infer="mixes_slowly")
+  predictions = collectSamples(ripl,label,infer="mixes_slowly")
   ans = [(1,.9), (0,.1)]
   return reportKnownDiscrete("TestDirichletMultinomialWeakPrior(%s)" % maker, ans, predictions)
 

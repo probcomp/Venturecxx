@@ -1,5 +1,6 @@
 from venture.test.stats import *
 from testconfig import config
+import itertools
 
 def testGoldwater1():
   """Fairly complicated program. Just checks to make sure it runs without crashing."""
