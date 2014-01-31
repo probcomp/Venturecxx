@@ -13,7 +13,6 @@
 # GNU General Public License for more details.
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import unittest
@@ -80,5 +79,3 @@ class TestRiplRestServer(ServerTestCase):
         self.assertEqual(json.loads(r.data), 30)
 
 
-if __name__ == "__main__":
-    unittest.main()

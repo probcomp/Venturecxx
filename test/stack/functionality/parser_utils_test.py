@@ -13,9 +13,7 @@
 # GNU General Public License for more details.
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import unittest
 from venture.exception import VentureException
 from venture.parser import utils
 from venture.test.test_helpers import ParserTestCase
@@ -371,5 +369,3 @@ class TestParserUtilsStuff(ParserTestCase):
             utils.substitute_params('abc%s',{})
 
 
-if __name__ == '__main__':
-    unittest.main()

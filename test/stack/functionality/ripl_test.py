@@ -262,5 +262,3 @@ class TestRipl(unittest.TestCase):
         output = self.ripl.profiler_configure({'profiler_enabled': False})
         self.assertEqual(output, {'profiler_enabled': False})
     
-if __name__ == '__main__':
-    unittest.main()

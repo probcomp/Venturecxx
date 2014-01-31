@@ -13,10 +13,8 @@
 # GNU General Public License for more details.
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import unittest
 from venture.parser import VentureScriptParser
 import venture.parser.venture_script_parser as module
 from venture.test.test_helpers import ParserTestCase
@@ -712,5 +710,3 @@ class TestInstructions(ParserTestCase):
 
 
 
-if __name__ == '__main__':
-    unittest.main()

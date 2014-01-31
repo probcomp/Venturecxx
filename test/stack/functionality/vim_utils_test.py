@@ -322,8 +322,3 @@ class TestSivmUtils(unittest.TestCase):
             modifier=lambda x: "red"),"red")
 
 
-if __name__ == '__main__':
-    unittest.main()
-
-if __name__ == '__main__':
-    unittest.main()

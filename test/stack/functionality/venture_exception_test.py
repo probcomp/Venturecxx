@@ -46,5 +46,3 @@ class TestVentureException(unittest.TestCase):
         self.assertEqual(e.to_json_object(),JSON_EXCEPTION)
 
 
-if __name__ == '__main__':
-    unittest.main()

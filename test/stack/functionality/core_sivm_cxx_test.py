@@ -269,5 +269,3 @@ class TestCoreSivmCxx(unittest.TestCase):
         e3 = {'options': {'profiler_enabled': False}}
         self.assertEquals(o3, e3)
 
-if __name__ == '__main__':
-    unittest.main()

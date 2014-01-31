@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import unittest
 from venture.parser import ChurchPrimeParser
 from venture.test.test_helpers import ParserTestCase
 
@@ -119,5 +118,3 @@ class TestChurchPrimeParser(ParserTestCase):
         self.assertEqual(output,'[ infer %(params)j ]')
 
 
-if __name__ == '__main__':
-    unittest.main()
