@@ -33,6 +33,10 @@ Testing
 
 - The test suite can be sliced by test/group in the usual way.
 
+- There is a test configuration for quickly checking for crashes (as
+  opposed to poor inferences) in `crashes.cfg`; run it with
+  `nosetests -c crashes.cfg`.
+
 - The test suite can be configured to go faster at the cost of giving
   less confidence by setting configuration parameters:
   `--tc=num_samples:5 --tc=num_transitions_per_sample:5`
