@@ -5,6 +5,21 @@ from testconfig import config
 import nose.tools as nose
 from venture.shortcuts import make_lite_church_prime_ripl, make_church_prime_ripl
 
+# These sorts of contortions are necessary because nose's parser of
+# configuration files doesn't seem to deal with supplying the same
+# option repeatedly, as the nose-testconfig plugin calls for.
+def default_num_samples():
+  if not config["ignore_inference_quality"]:
+    return int(config["num_samples"])
+  else:
+    return 2
+
+def default_num_transitions_per_sample():
+  if not config["ignore_inference_quality"]:
+    return int(config["num_transitions_per_sample"])
+  else:
+    return 3
+
 def get_ripl():
   if config["get_ripl"] == "lite":
     return make_lite_church_prime_ripl()
@@ -56,6 +71,8 @@ def fisherMethod(pvals):
 def repeatTest(func, *args):
   globalReportingThreshold = config["global_reporting_threshold"]
   result = func(*args)
+  if config["ignore_inference_quality"]:
+    return result
   if result.pval > 0.05:
     return result
   elif fisherMethod(result.pval + [1.0]*4) < globalReportingThreshold:
@@ -70,7 +87,8 @@ def repeatTest(func, *args):
 
 def reportTest(result):
   globalReportingThreshold = config["global_reporting_threshold"]
-  assert result.pval > globalReportingThreshold, result
+  if not config["ignore_inference_quality"]:
+    assert result.pval > globalReportingThreshold, result
 
 def statisticalTest(f):
   @nose.make_decorator(f)
@@ -167,7 +185,7 @@ def reportPassage(name):
 
 def collectSamples(ripl,address,num_samples=None,infer=None):
   if num_samples is None:
-    num_samples = int(config["num_samples"])
+    num_samples = default_num_samples()
   if infer is None:
     infer = defaultInfer()
   elif infer == "mixes_slowly": # TODO Replace this awful hack with proper adjustment of tests for difficulty
@@ -184,7 +202,7 @@ def collectSamples(ripl,address,num_samples=None,infer=None):
   return predictions
 
 def defaultInfer():
-  numTransitionsPerSample = config["num_transitions_per_sample"]
+  numTransitionsPerSample = default_num_transitions_per_sample()
   kernel = config["kernel"]
   scope = config["scope"]
   block = config["block"]

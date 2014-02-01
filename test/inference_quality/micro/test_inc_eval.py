@@ -18,6 +18,7 @@ from venture.test.stats import *
 from nose import SkipTest
 import math
 from nose.tools import assert_equal
+from nose.plugins.attrib import attr
 
 ### Expressions
 
@@ -144,7 +145,7 @@ def testIncrementalEvaluator1c():
   cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
   return reportKnownContinuous("TestIncrementalEvaluator1", cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
-
+@attr('slow')
 def testIncrementalEvaluator2():
   "Difficult test. We make sure that it stumbles on the solution in a reasonable amount of time."
 #  raise SkipTest("Errors out due to a Venture-level type error (something wanted a list as an argument and got a float).  Re-enable when there are facilities for debugging such things.  Issue https://app.asana.com/0/9277419963067/9280122191537")

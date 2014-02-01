@@ -1,7 +1,9 @@
 from venture.test.stats import *
 from testconfig import config
 import itertools
+from nose.plugins.attrib import attr
 
+@attr("slow")
 def testGoldwater1():
   """Fairly complicated program. Just checks to make sure it runs without crashing."""
   ripl = get_ripl()

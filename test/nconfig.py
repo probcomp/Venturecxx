@@ -11,3 +11,4 @@ config["scope"] = "default"
 config["block"] = "one"
 config["with_mutation"] = True
 config["particles"] = 2
+config["ignore_inference_quality"] = False
