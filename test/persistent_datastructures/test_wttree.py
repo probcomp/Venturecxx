@@ -20,6 +20,11 @@ def testPMapInsertContainsDelete():
   assert r2.lookup(1) is None
   assert len(r2) == 0
 
+  r3 = r1.adjust(1, lambda v: v+1)
+  assert r1.lookup(1) == 2
+  assert r3.lookup(1) == 3
+  assert 1 not in r2
+
 def _hash(i):
   return (i * 14536777) % 107331
 
