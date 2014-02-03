@@ -20,33 +20,39 @@ def testOuterMix1():
   return reportKnownDiscrete("TestOuterMix1", ans, predictions)
 
 def testObserveAVar1():
-  "So, how should observe interact with variables?"
-#  raise SkipTest("How should observe interact with variables?  Issue https://app.asana.com/0/9277419963067/9801332616425")
+  "Observations should propagate through variables."
+  raise SkipTest("Issue https://app.asana.com/0/9277419963067/9999884793625")
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.observe("x", 3.0)
   ripl.predict("x", label="pid")
-  ripl.infer(5) # Should be enough to solve itself, if that worked.
+  # TODO assert that ripl.report("pid") is normally distributed here
+  ripl.infer(1)
+  # But the infer should have propagated by here
   eq_(ripl.report("pid"), 3)
 
 def testObserveAVar2():
-  "So, how should observe interact with variables?"
-#  raise SkipTest("How should observe interact with variables?  Issue https://app.asana.com/0/9277419963067/9801332616425")
+  "Observations should propagate through variables."
+  raise SkipTest("Issue https://app.asana.com/0/9277419963067/9999884793625")
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.predict("x", label="pid")
   ripl.observe("x", 3.0)
-  ripl.infer(5) # Should be enough to solve itself, if that worked.
+  # TODO assert that ripl.report("pid") is normally distributed here
+  ripl.infer(1)
+  # But the infer should have propagated by here
   eq_(ripl.report("pid"), 3)
 
 def testObserveAMem1():
-  "So, how should observe interact with mem?"
-#  raise SkipTest("How should observe interact with mem?  Issue https://app.asana.com/0/9277419963067/9801332616425")
+  "Observations should propagate through mem."
+  raise SkipTest("Issue https://app.asana.com/0/9277419963067/9999884793625")
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda () (normal 0.0 1.0)))")
   ripl.observe("(f)", 3.0)
   ripl.predict("(f)", label="pid")
-  ripl.infer(5) # Should be enough to solve itself, if that worked.
+  # TODO assert that ripl.report("pid") is normally distributed here
+  ripl.infer(1)
+  # But the infer should have propagated by here
   eq_(ripl.report("pid"), 3)
 
 @statisticalTest
