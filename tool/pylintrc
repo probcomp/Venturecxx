@@ -9,6 +9,7 @@
 # R0904: Too many public methods
 # W0142: Used * or ** magic
 # W0511 (warning notes in code comments)
+# W1201: Specify string format arguments as logging function parameters
 
 # Messages disabled pending normalization of our codebase:
 # C0301: Line too long
@@ -17,7 +18,7 @@
 # W0403: Relative import
 # W0614: Unused import from wildcard import
 # W0401: Wildcard import
-disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W0311,W0403,C0301,C0303,W0614,W0401
+disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0311,W0403,C0301,C0303,W0614,W0401
 
 [REPORTS]
 include-ids=yes
