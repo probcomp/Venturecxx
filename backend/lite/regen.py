@@ -9,17 +9,16 @@ from scope import ScopeIncludeOutputPSP
 def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
   for node in border:
+#    print "regenAndAttach...",node
     if scaffold.isAbsorbing(node):
       weight += attach(trace,node,scaffold,shouldRestore,omegaDB,gradients)
     else:
       weight += regen(trace,node,scaffold,shouldRestore,omegaDB,gradients)
-      if node.isObservation: weight += constrain(trace,node,node.observedValue)
+      if node.isObservation: weight += constrain(trace,trace.getOutermostNonReferenceApplication(node),node.observedValue)
+#    print "new value...",trace.valueAt(node)
   return weight
 
 def constrain(trace,node,value):
-  if isinstance(node,LookupNode): return constrain(trace,node.sourceNode,value)
-  assert isinstance(node,OutputNode)
-  if isinstance(trace.pspAt(node),ESRRefOutputPSP): return constrain(trace,trace.esrParentsAt(node)[0],value)
   psp,args = trace.pspAt(node),trace.argsAt(node)
   psp.unincorporate(trace.valueAt(node),args)
   weight = psp.logDensity(value,args)

@@ -134,3 +134,35 @@ def testConstrainAVar5b():
   ripl.predict("(if (f) (normal x 0.0001) (normal y 0.0001))")
   ripl.observe("(if (f) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
+
+@statisticalTest
+def testConstrainWithAPredict1():
+  """Tests that constrain propagates the change along identity edges,
+     even unto if branches and mems.  Daniel says "This will fail in
+     all current Ventures", but what the correct behavior would even
+     be is mysterious to Alexey."""
+  ripl = get_ripl()
+  ripl.assume("f","(mem (lambda () (flip)))")
+  ripl.assume("op1","(if (flip) flip (lambda () (f)))")
+  ripl.assume("op2","(if (op1) op1 (lambda () (op1)))")
+  ripl.assume("op3","(if (op2) op2 (lambda () (op2)))")
+  ripl.assume("op4","(if (op3) op2 op1)")
+  ripl.predict("(op4)")
+  ripl.observe("(op4)",True)
+  predictions = collectSamples(ripl,6)
+  ans = [(True,0.75), (False,0.25)]
+  return reportKnownDiscrete("TestObserveAPredict1", ans, predictions)
+
+@statisticalTest
+def testConstrainWithAPredict2():
+  """This test will fail at first, since we previously considered a program like this to be illegal
+     and thus did not handle it correctly (we let the predict go stale). So we do not continually
+     bewilder our users, I suggest that we handle this case WHEN WE CAN, which means we propagate
+     from a constrain as long as we don't hit an absorbing node or a DRG node with a kernel."""
+  ripl = get_ripl()
+  ripl.assume("f","(if (flip) (lambda () (normal 0.0 1.0)) (mem (lambda () (normal 0.0 1.0))))")
+  ripl.observe("(f)","1.0")
+  ripl.predict("(* (f) 100)")
+  predictions = collectSamples(ripl,3)
+  return reportKnownMean("TestObserveAPredict2", 50, predictions)
+  
