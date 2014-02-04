@@ -1,6 +1,12 @@
+# Venture
 pyparsing>=1.5.7
 flask>=0.10
 requests>=1.2
+
+# nose
+nose-testconfig
+nose-ignore-docstring
+nose-cov
 
 # VentureUnit
 numpy
