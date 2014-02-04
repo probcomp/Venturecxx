@@ -13,6 +13,7 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
     self.tarfile = tarfile
     self.checkout = checkout
     self.skip_cxx = skip_cxx
+    self.checkout_parent = None
     self.unpacked_venture_dir = unpacked_dir
     self._check_config()
 
@@ -33,11 +34,12 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
       # The purpose of this complexity is to allow a user to install
       # Venture from a checkout that names the repository something
       # other than Venturecxx.
-      candidate = os.path.basename(self.checkout)
-      if candidate == "":
-        candidate = os.path.basename(os.path.dirname(self.checkout))
-      if candidate != "":
-        self.unpacked_venture_dir = candidate
+      (d, f) = os.path.split(self.checkout)
+      if f == "":
+        (d, f) = os.path.split(os.path.dirname(self.checkout))
+      if f != "":
+        self.checkout_parent = d
+        self.unpacked_venture_dir = f
     if self.unpacked_venture_dir is None:
       self.unpacked_venture_dir = "Venturecxx"
 
@@ -84,19 +86,24 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
       try:
         tarfile = os.path.join(tempd, "venture.tgz")
         try:
-          subprocess.call(["tar", "-czf", tarfile, self.checkout])
-          node.ssh.put(tarfile, 'venture.tgz')
-          node.ssh.execute('tar --extract --gunzip --file venture.tgz')
+          subprocess.call(["tar", "-czf", tarfile, self.unpacked_venture_dir], cwd=self.checkout_parent)
+          self.push_venture_from_tarball(node, tarfile)
         finally:
           if os.path.isfile(tarfile):
             os.remove(tarfile)
       finally:
         os.rmdir(tempd)
     elif self.tarfile is not None:
-      node.ssh.put(self.tarfile, 'venture.tgz')
-      node.ssh.execute('tar --extract --gunzip --file venture.tgz')
+      self.push_venture_from_tarball(node, self.tarfile)
     else:
       raise Exception("This should not happen: no Venture source found in valid config.")
+
+  def push_venture_from_tarball(self, node, tarfile):
+    node.ssh.put(tarfile, 'venture.tgz')
+    # TODO blows away all the caches :( but at least ensures unpacking
+    # of fresh source.
+    node.ssh.execute('rm -rf %s' % self.unpacked_venture_dir)
+    node.ssh.execute('tar --extract --gunzip --file venture.tgz')
 
   def ensure_venture(self, node):
     log.info("Building Venture on %s" % node.alias)
