@@ -88,6 +88,7 @@ def builtInSPsList():
 
            [ "flip", SP(NullRequestPSP(),discrete.BernoulliOutputPSP()) ],
            [ "bernoulli", SP(NullRequestPSP(),discrete.BernoulliOutputPSP()) ],
+           [ "binomial", SP(NullRequestPSP(),discrete.BinomialOutputPSP()) ],           
            [ "categorical", SP(NullRequestPSP(),discrete.CategoricalOutputPSP()) ],
 
            [ "normal", SP(NullRequestPSP(),continuous.NormalOutputPSP()) ],

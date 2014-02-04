@@ -1,9 +1,5 @@
 from venture.test.stats import *
 
-# Fails currently because:
-# 1. Neither backend implement categorical this way yet.
-# 2. Neither backend has simplex
-# 3. make_vector is used instead of array
 @statisticalTest
 def testCategorical1():
   "A simple test that checks the interface of categorical and its simulate method"

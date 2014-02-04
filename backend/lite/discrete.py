@@ -29,6 +29,27 @@ class BernoulliOutputPSP(RandomPSP):
   def description(self,name):
     return "(%s <number>) -> <bool>\n(%s) -> <bool>" % (name,name)
 
+class BinomialOutputPSP(RandomPSP):
+  def simulate(self,args):
+    (n,p) = args.operandValues
+    return scipy.stats.binom.rvs(n,p)
+    
+  def logDensity(self,val,args):
+    (n,p) = args.operandValues
+    return scipy.stats.binom.logpmf(val,n,p)
+
+  def enumerateValues(self,args):
+    (n,p) = args.operandValues
+    if p == 1: return [n]
+    elif p == 0: return [0]
+    else: return [i for i in range(int(n)+1)]
+
+  # TODO AXCH can we have a convention where we include the types and the meanings?
+  # e.g. (%s count::Number probability::Number)
+  def description(self,name):
+    return "(%s <count> <probability>) -> <bool>" % (name,name)
+
+
 class CategoricalOutputPSP(RandomPSP):
   # (categorical ps outputs)
   def simulate(self,args): 
