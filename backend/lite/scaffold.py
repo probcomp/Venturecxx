@@ -48,7 +48,7 @@ def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i):
   if node in absorbing: absorbing.remove(node)
   if node in aaa: aaa.remove(node)
   drg.add(node)
-  q.extend([(n,False) for n in trace.childrenAt(node)])
+  q.extend([(n,False,node) for n in trace.childrenAt(node)])
   indexAssignments[node] = i
 
 def addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i):
@@ -63,22 +63,18 @@ def addAAANode(drg,aaa,absorbing,node,indexAssignments,i):
   aaa.add(node)
   indexAssignments[node] = i
 
-def esrReferenceCanAbsorb(trace,drg,node):
-  return isinstance(trace.pspAt(node),ESRRefOutputPSP) and \
-         not node.requestNode in drg and \
-         not trace.esrParentsAt(node)[0] in drg
 
 def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
-  q = [(pnode,True) for pnode in pnodes]
+  q = [(pnode,True,None) for pnode in pnodes]
 
   while q:
-    node,isPrincipal = q.pop()
+    node,isPrincipal,parentNode = q.pop()
     if node in drg and not node in aaa: pass
     elif isinstance(node,LookupNode) or node.operatorNode in drg:
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
     # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
     elif node in aaa: pass 
-    elif (trace.pspAt(node).canAbsorb() or esrReferenceCanAbsorb(trace,drg,node)) and not isPrincipal: 
+    elif (not isPrincipal) and trace.pspAt(node).canAbsorb(trace,node,parentNode):
       addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i)
     elif trace.pspAt(node).childrenCanAAA(): 
       addAAANode(drg,aaa,absorbing,node,indexAssignments,i)

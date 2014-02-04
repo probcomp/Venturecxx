@@ -39,7 +39,7 @@ def testPGibbsDynamicScope1():
   ripl.assume("transition_fn", "(lambda (x) (normal x 1.0))")
   ripl.assume("observation_fn", "(lambda (y) (normal y 1.0))")
 
-  ripl.assume("initial_state_fn", "(lambda () (normal 10.0 1.0))")
+  ripl.assume("initial_state_fn", "(lambda () (normal 0.0 1.0))")
   ripl.assume("f","""
 (mem (lambda (t)
   (scope_include 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
