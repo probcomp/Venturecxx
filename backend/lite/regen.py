@@ -1,21 +1,29 @@
 from exp import *
 from node import ConstantNode, LookupNode, RequestNode, OutputNode
 from sp import SP
-from psp import ESRRefOutputPSP
+from psp import ESRRefOutputPSP,NullRequestPSP
 from spref import SPRef
 from lkernel import VariationalLKernel
 from scope import ScopeIncludeOutputPSP
+import pdb
 
 def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
+  constraintsToPropagate = {}
   for node in border:
 #    print "regenAndAttach...",node
     if scaffold.isAbsorbing(node):
       weight += attach(trace,node,scaffold,shouldRestore,omegaDB,gradients)
     else:
       weight += regen(trace,node,scaffold,shouldRestore,omegaDB,gradients)
-      if node.isObservation: weight += constrain(trace,trace.getOutermostNonReferenceApplication(node),node.observedValue)
-#    print "new value...",trace.valueAt(node)
+      if node.isObservation:
+        appNode = trace.getOutermostNonReferenceApplication(node)
+        weight += constrain(trace,appNode,node.observedValue)
+        constraintsToPropagate[appNode] = node.observedValue
+  for node,value in constraintsToPropagate.iteritems():
+    for child in trace.childrenAt(node):
+      propagateConstraint(trace,child,value)
+      
   return weight
 
 def constrain(trace,node,value):
@@ -26,6 +34,20 @@ def constrain(trace,node,value):
   psp.incorporate(value,args)
   trace.registerConstrainedChoice(node)
   return weight
+
+def propagateConstraint(trace,node,value):
+  if isinstance(node,LookupNode): trace.setValueAt(node,value)
+  elif isinstance(node,RequestNode):
+    if not isinstance(trace.pspAt(node),NullRequestPSP):
+      raise Exception("Cannot make requests downstream of a node that gets constrained during regen")
+  else:
+    # TODO there may be more cases to ban here.
+    # e.g. certain kinds of deterministic coupling through mutation.
+    assert isinstance(node,OutputNode)
+    if trace.pspAt(node).isRandom():
+      raise Exception("Cannot make random choices downstream of a node that gets constrained during regen")
+    trace.setValueAt(node,trace.pspAt(node).simulate(trace.argsAt(node)))
+  for child in trace.childrenAt(node): propagateConstraint(trace,child,value)
 
 def attach(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
