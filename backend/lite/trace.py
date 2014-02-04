@@ -12,6 +12,12 @@ from smap import SMap
 from sp import SPFamilies
 from nose.tools import assert_equal,assert_is_not_none
 from scope import ScopeIncludeOutputPSP
+from regen import regenAndAttach
+from detach import detachAndExtract
+from scaffold import constructScaffold
+from consistency import assertTorus,assertTrace,assertSameScaffolds
+from lkernel import DeterministicLKernel
+from psp import ESRRefOutputPSP
 import pdb
 
 class Trace(object):
@@ -30,6 +36,7 @@ class Trace(object):
     self.rcs = set()
     self.ccs = set()
     self.aes = set()
+    self.unpropagatedObservations = {} # {node:val}
     self.families = {}
     self.scopes = {} # :: {scope-name:smap{block-id:set(node)}}
 
@@ -233,17 +240,6 @@ class Trace(object):
     # right now scope in self.scopes iff it has entropy
     return scope in self.scopes and len(self.blocksInScope(scope)) > 0
 
-
-
-
-
-
-
-
-
-
-
-
   #### External interface to engine.py
   def eval(self,id,exp):
     assert not id in self.families
@@ -255,10 +251,35 @@ class Trace(object):
 
   def observe(self,id,val):
     node = self.families[id]
-    node.observe(self.unboxValue(val))
-    constrain(self,node,node.observedValue)
+    self.unpropagatedObservations[node] = self.unboxValue(val)
 
-  def unobserve(self,id): unconstrain(self,self.families[id])
+  def makeConsistent(self):
+    for node,val in self.unpropagatedObservations.iteritems():
+      appNode = self.getOutermostNonReferenceApplication(node)
+#      print "PROPAGATE",node,appNode
+      scaffold = constructScaffold(self,[set([appNode])])
+      detachAndExtract(self,scaffold.border[0],scaffold)
+      assertTorus(scaffold)
+      scaffold.lkernels[appNode] = DeterministicLKernel(self.pspAt(appNode),val)
+      xiWeight = regenAndAttach(self,scaffold.border[0],scaffold,False,OmegaDB(),{})
+      if xiWeight == float("-inf"): raise Exception("Unable to propagate constraint")
+      node.observe(val)
+      constrain(self,appNode,node.observedValue)
+    self.unpropagatedObservations.clear()
+
+  def getOutermostNonReferenceApplication(self,node):
+    if isinstance(node,LookupNode): return self.getOutermostNonReferenceApplication(node.sourceNode)
+    assert isinstance(node,OutputNode)      
+    if isinstance(self.pspAt(node),ESRRefOutputPSP): return self.getOutermostNonReferenceApplication(self.esrParentsAt(node)[0])
+    else: return node
+          
+  def unobserve(self,id):
+    node = self.families[id]
+    appNode = self.getOutermostNonReferenceApplication(node)    
+    if node.isObservation: unconstrain(self,appNode)
+    else:
+      assert node in self.unpropagatedObservations
+      del self.unpropagatedObservations[node]
 
   def uneval(self,id):
     assert id in self.families
@@ -275,6 +296,7 @@ class Trace(object):
   # "kernel" must be one of "mh" or "meanfield", and "transitions"
   # must be an integer.
   def infer(self,params):
+    self.makeConsistent()
     if not self.scopeHasEntropy(params["scope"]):
       return
     for _ in range(params["transitions"]):

@@ -11,14 +11,11 @@ def detachAndExtract(trace,border,scaffold):
     if scaffold.isAbsorbing(node):
       weight += detach(trace,node,scaffold,omegaDB)
     else:
-      if node.isObservation: weight += unconstrain(trace,node)
+      if node.isObservation: weight += unconstrain(trace,trace.getOutermostNonReferenceApplication(node))
       weight += extract(trace,node,scaffold,omegaDB)
   return weight,omegaDB
 
 def unconstrain(trace,node):
-  if isinstance(node,LookupNode): return unconstrain(trace,node.sourceNode)
-  assert isinstance(node,OutputNode)
-  if isinstance(trace.pspAt(node),ESRRefOutputPSP): return unconstrain(trace,trace.esrParentsAt(node)[0])
   psp,args,value = trace.pspAt(node),trace.argsAt(node),trace.valueAt(node)
   trace.unregisterConstrainedChoice(node)
   psp.unincorporate(value,args)
