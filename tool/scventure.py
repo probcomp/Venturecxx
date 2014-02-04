@@ -8,11 +8,13 @@ import tempfile
 import subprocess
 
 class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pylint: disable=abstract-method
-  def __init__(self, tarfile=None, checkout=None, unpacked_dir=None, skip_cxx=False): # pylint: disable=super-init-not-called
+  def __init__(self, tarfile=None, checkout=None, unpacked_dir=None, release=None, skip_cxx=False): # pylint: disable=super-init-not-called
     # The example in docs didn't call super.
-    self.tarfile = tarfile
     self.checkout = checkout
+    self.tarfile = tarfile
+    self.release = release
     self.skip_cxx = skip_cxx
+
     self.checkout_parent = None
     self.unpacked_venture_dir = unpacked_dir
     self._check_config()
@@ -24,12 +26,25 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
     if self.checkout is not None and not os.path.isdir(self.checkout):
       log.warn("%s does not appear to be a directory; ignoring." % self.checkout)
       self.checkout = None
-    if self.tarfile is None and self.checkout is None:
+    valid_releases = ["0.1.1"]
+    if self.release is not None and self.release not in valid_releases:
+      log.warn("%s is not a valid released version of Venture; ignoring.  Valid releases are %s" % (self.release, valid_releases))
+      self.release = None
+
+    if self.tarfile is None and self.checkout is None and self.release is None:
       # TODO What exception to raise?
-      raise Exception("No source for Venture specified.  Please indicate either a tarball or a checkout.")
+      raise Exception("No source for Venture specified.  Please indicate a tarball, a checkout, or a public release.")
+
     if self.tarfile is not None and self.checkout is not None:
       log.warn("Checkout %s and tarfile %s given as sources for Venture.  Preferring the checkout." % (self.checkout, self.tarfile))
       self.tarfile = None
+    if self.release is not None and self.checkout is not None:
+      log.warn("Checkout %s and release %s given as sources for Venture.  Preferring the checkout." % (self.checkout, self.release))
+      self.release = None
+    if self.release is not None and self.tarfile is not None:
+      log.warn("Tarfile %s and release %s given as sources for Venture.  Preferring the tarfile." % (self.tarfile, self.release))
+      self.release = None
+
     if self.checkout is not None and self.unpacked_venture_dir is None:
       # The purpose of this complexity is to allow a user to install
       # Venture from a checkout that names the repository something
@@ -95,6 +110,12 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
         os.rmdir(tempd)
     elif self.tarfile is not None:
       self.push_venture_from_tarball(node, self.tarfile)
+    elif self.release is not None:
+      node.ssh.execute("wget http://probcomp.csail.mit.edu/venture/venture-%s.tgz" % self.release)
+      # TODO blows away all the caches :( but at least ensures unpacking
+      # of fresh source.
+      node.ssh.execute('rm -rf Venturecxx')
+      node.ssh.execute('tar --extract --gunzip --file venture-%s.tgz' % self.release)
     else:
       raise Exception("This should not happen: no Venture source found in valid config.")
 
