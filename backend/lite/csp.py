@@ -15,7 +15,7 @@ class CSPRequestPSP(PSP):
     extendedEnv = Env(self.env,self.ids,args.operandNodes)
     return Request([ESR(args.node,self.exp,extendedEnv)])
 
-  def canAbsorb(self,parentNode): return True
+  def canAbsorb(self,trace,appNode,parentNode): return True
 
 class MakeCSPOutputPSP(PSP):
   def simulate(self,args):

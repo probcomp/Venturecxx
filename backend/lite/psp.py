@@ -13,7 +13,7 @@ class PSP(object):
   def unincorporate(self,value,args): pass
   def enumerate(self,args): return []
   def isRandom(self): return False
-  def canAbsorb(self,parentNode): return False
+  def canAbsorb(self,trace,appNode,parentNode): return False
 
   def childrenCanAAA(self): return False
   def getAAALKernel(self): return DefaultAAALKernel(self)
@@ -31,7 +31,7 @@ class PSP(object):
 
 class NullRequestPSP(PSP):
   def simulate(self,args): return Request()
-  def canAbsorb(self,parentNode): return True
+  def canAbsorb(self,trace,appNode,parentNode): return True
 
 class ESRRefOutputPSP(PSP):
   def simulate(self,args):
@@ -40,4 +40,4 @@ class ESRRefOutputPSP(PSP):
 
 class RandomPSP(PSP):
   def isRandom(self): return True
-  def canAbsorb(self,parentNode): return True
+  def canAbsorb(self,trace,appNode,parentNode): return True    
