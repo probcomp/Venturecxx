@@ -27,8 +27,9 @@ which you can set in your starcluster configuration file:
 
 Additional option:
 - skip_cxx = true
-    saves time by not installing the dependencies for the CXX backend
-    of Venture, and by not compiling the backend itself.
+    for version of Venture that support it, saves time by not
+    installing the dependencies for the CXX backend of Venture, and by
+    not compiling the backend itself.
 """
 from starcluster.clustersetup import ClusterSetup
 from starcluster.logger import log
