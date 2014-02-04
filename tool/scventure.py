@@ -5,8 +5,9 @@ from starcluster.clustersetup import ClusterSetup
 from starcluster.logger import log
 
 class VentureInstaller(ClusterSetup):
-  def __init__(self, tarfile):
+  def __init__(self, tarfile, skip_cxx=False):
     self.tarfile = tarfile
+    self.skip_cxx = skip_cxx
 
   def run(self, nodes, master, user, user_shell, volumes):
     for node in nodes:
@@ -14,16 +15,22 @@ class VentureInstaller(ClusterSetup):
       self.install_venture(node)
 
   def install_venture(self, node):
-    self.prepare_for_c11(node)
-    self.ensure_c11(node)
+    self.ensure_basics(node)
+    if not self.skip_cxx:
+      self.prepare_for_c11(node)
+      self.ensure_c11(node)
     self.ensure_python_deps(node)
     self.ensure_venture(node)
 
+  def ensure_basics(self, node):
+    log.info("Ensuring basic dependencies present on %s" % node.alias)
+    node.apt_command('update')
+    node.apt_install('git python-pip python-virtualenv')
+    node.ssh.execute('pip install -U distribute')
+
   def prepare_for_c11(self, node):
     log.info("Preparing %s for C++11" % node.alias)
-    node.apt_command('update')
-    node.apt_install('libboost1.48-all-dev libgsl0-dev cmake make git python-pip python-virtualenv ccache')
-    node.ssh.execute('pip install -U distribute')
+    node.apt_install('libboost1.48-all-dev libgsl0-dev cmake make ccache')
 
   def ensure_c11(self, node):
     log.info("Installing C++11 on %s" % node.alias)
@@ -43,4 +50,7 @@ class VentureInstaller(ClusterSetup):
     node.ssh.put(self.tarfile, 'venture.tgz')
     node.ssh.execute('tar --extract --gunzip --file venture.tgz')
     node.ssh.execute('cd Venturecxx; pip install -r requirements.txt')
-    node.ssh.execute('cd Venturecxx; python setup.py install')
+    if not self.skip_cxx:
+      node.ssh.execute('cd Venturecxx; python setup.py install')
+    else:
+      node.ssh.execute('cd Venturecxx; SKIP_CXX_BACKEND=true python setup.py install')
