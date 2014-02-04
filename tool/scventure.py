@@ -39,7 +39,7 @@ import subprocess
 
 class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pylint: disable=abstract-method
   def __init__(self, tarfile=None, checkout=None, unpacked_dir=None, release=None,
-               github_branch="master", skip_cxx=False): # pylint: disable=super-init-not-called
+               github_branch=None, skip_cxx=False): # pylint: disable=super-init-not-called
     # The example in docs didn't call super.
     self.checkout = checkout
     self.github_branch = github_branch
