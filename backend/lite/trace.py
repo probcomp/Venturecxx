@@ -186,15 +186,25 @@ class Trace(object):
   def isConstrainedAt(self,node): return node in self.ccs
   
   #### For kernels
-  def sampleBlock(self,scope): return self.scopes[scope].sample()[1]
+  def sampleBlock(self,scope): return self.scopes[scope].sample()[0]
   def logDensityOfBlock(self,scope): return -1 * math.log(self.numBlocksInScope(scope))
   def blocksInScope(self,scope): return self.scopes[scope].keys()
   def numBlocksInScope(self,scope): 
     if scope in self.scopes: return len(self.scopes[scope].keys())
     else: return 0
-  def getAllNodesInScope(self,scope): return set.union(*self.scopes[scope].values())
-  def getOrderedSetsInScope(self,scope): return self.scopes[scope].sortedValues()
-  def getNodesInBlock(self,scope,block): return self.scopes[scope][block]
+
+  def getAllNodesInScope(self,scope): return set.union(*[trace.getNodesInBlock(scope,self.scopes[scope].keys())])
+    
+  def getOrderedSetsInScope(self,scope): return [trace.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
+
+  def getNodesInBlock(self,scope,block):
+    nodes = self.scopes[scope][block]
+    if scope == "default": return nodes
+    else:
+      pnodes = set()
+      for node in nodes: self.addRandomChoicesInBlock(pnodes,node)
+      return pnodes
+
 
 
   def scopeHasEntropy(self,scope): 

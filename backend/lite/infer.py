@@ -35,7 +35,7 @@ class BlockScaffoldIndexer(object):
     self.block = block
 
   def sampleIndex(self,trace):
-    if self.block == "one": return constructScaffold(trace,[trace.sampleBlock(self.scope)])
+    if self.block == "one": return constructScaffold(trace,[trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))])
     elif self.block == "all": return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
     elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
     else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])

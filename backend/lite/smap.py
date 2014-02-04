@@ -34,5 +34,3 @@ class SMap(object):
   def keys(self): return self.d.keys()
 
   def values(self): return [v for (_,v) in self.a]
-  def sortedValues(self):
-    return [v for (_,v) in sorted(self.a, key = lambda kv: kv[0])]
