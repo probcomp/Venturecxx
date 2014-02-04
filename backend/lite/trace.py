@@ -273,7 +273,13 @@ class Trace(object):
     if isinstance(self.pspAt(node),ESRRefOutputPSP): return self.getOutermostNonReferenceApplication(self.esrParentsAt(node)[0])
     else: return node
           
-  def unobserve(self,id): unconstrain(self,self.families[id])
+  def unobserve(self,id):
+    node = self.families[id]
+    appNode = self.getOutermostNonReferenceApplication(node)    
+    if node.isObservation: unconstrain(self,appNode)
+    else:
+      assert node in self.unpropagatedObservations
+      del self.unpropagatedObservations[node]
 
   def uneval(self,id):
     assert id in self.families
