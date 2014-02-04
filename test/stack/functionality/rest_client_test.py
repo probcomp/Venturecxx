@@ -22,6 +22,7 @@ from venture.shortcuts import make_combined_ripl
 from venture.ripl import RiplRestClient
 import socket
 import multiprocessing
+from nose import SkipTest
 
 # from stackoverflow
 # prone to race conditions, but its good enough for now
@@ -65,6 +66,7 @@ class TestRiplRestClient(ClientTestCase):
         self.server_thread.join()
 
     def test_multiple_instructions(self):
+        raise SkipTest("Fails sporadically:  Issue: https://app.asana.com/0/9277419963067/10034153747714")
         self.ripl.set_mode('venture_script')
         self.ripl.clear()
         self.ripl.assume('a','1 + 2')
@@ -73,5 +75,3 @@ class TestRiplRestClient(ClientTestCase):
         self.ripl.execute_instruction('[ assume c (+ a b) ]')
         output = self.ripl.predict('c')
         self.assertEqual(output,10)
-
-
