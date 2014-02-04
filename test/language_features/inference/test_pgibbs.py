@@ -45,7 +45,7 @@ def testPGibbsDynamicScope1():
   (scope_include 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
 """)  
 
-  ripl.assume("g","(mem (lambda (t) (observation_fn (f t)))")
+  ripl.assume("g","(mem (lambda (t) (observation_fn (f t))))")
 
   ripl.observe("(g 0)",1.0)
   ripl.observe("(g 1)",2.0)

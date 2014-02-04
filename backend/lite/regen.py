@@ -126,8 +126,7 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   if isinstance(psp,ScopeIncludeOutputPSP):
     scope,block = [n.value for n in node.operandNodes[0:2]]
     blockNode = node.operandNodes[2]
-    if trace.pspAt(blockNode).isRandom():
-      trace.registerRandomChoiceInScope(scope,block,blockNode)
+    trace.registerRandomChoiceInScope(scope,block,blockNode)
   return weight
 
 def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):

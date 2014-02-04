@@ -11,7 +11,8 @@ from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
 from nose.tools import assert_equal,assert_is_not_none
-
+from scope import ScopeIncludeOutputPSP
+import pdb
 
 class Trace(object):
   def __init__(self):
@@ -193,18 +194,38 @@ class Trace(object):
     if scope in self.scopes: return len(self.scopes[scope].keys())
     else: return 0
 
-  def getAllNodesInScope(self,scope): return set.union(*[trace.getNodesInBlock(scope,self.scopes[scope].keys())])
+  def getAllNodesInScope(self,scope): return set.union(*[self.getNodesInBlock(scope,self.scopes[scope].keys())])
     
-  def getOrderedSetsInScope(self,scope): return [trace.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
+  def getOrderedSetsInScope(self,scope):
+    return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
 
   def getNodesInBlock(self,scope,block):
     nodes = self.scopes[scope][block]
     if scope == "default": return nodes
     else:
       pnodes = set()
-      for node in nodes: self.addRandomChoicesInBlock(pnodes,node)
+      for node in nodes: self.addRandomChoicesInBlock(scope,block,pnodes,node)
       return pnodes
 
+  def addRandomChoicesInBlock(self,scope,block,pnodes,node):
+    if not isinstance(node,OutputNode): return
+
+    if self.pspAt(node).isRandom(): pnodes.add(node)    
+
+    requestNode = node.requestNode
+    if self.pspAt(requestNode).isRandom(): pnodes.add(requestNode)
+
+    for esr in self.valueAt(node.requestNode).esrs:
+      self.addRandomChoicesInBlock(scope,block,pnodes,self.spFamilyAt(requestNode,esr.id))
+
+    self.addRandomChoicesInBlock(scope,block,pnodes,node.operatorNode)
+          
+    for i,operandNode in enumerate(node.operandNodes):
+      if i == 2 and isinstance(self.pspAt(node),ScopeIncludeOutputPSP):
+        (new_scope,new_block,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
+        if scope != new_scope or block == new_block: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
+      else:
+        self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
 
 
   def scopeHasEntropy(self,scope): 
