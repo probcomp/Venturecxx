@@ -68,7 +68,10 @@ def testConstrainAVar3b():
   ripl.infer({"kernel":"mh","transitions":20})
   eq_(ripl.report("pid"), 3)
 
+
+@raises(Exception)    
 def testConstrainAVar4a():
+  """Downstream processing of any kind is currently illegal"""
   raise SkipTest("Issue https://app.asana.com/0/9277419963067/9999884793625")
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -77,8 +80,8 @@ def testConstrainAVar4a():
   ripl.predict("(if (f) (* x 5) (* y 5))", label="pid")  
   ripl.observe("(if (f) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
-  eq_(ripl.report("pid"), 15)
 
+@raises(Exception)    
 def testConstrainAVar4b():
   raise SkipTest("Issue https://app.asana.com/0/9277419963067/9999884793625")
   ripl = get_ripl()
@@ -88,8 +91,8 @@ def testConstrainAVar4b():
   ripl.predict("(if (not (f)) (* x 5) (* y 5))", label="pid")  
   ripl.observe("(if (f) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
-  eq_(ripl.report("pid"), 15)
 
+@raises(Exception)    
 def testConstrainAVar4c():
   raise SkipTest("Issue https://app.asana.com/0/9277419963067/9999884793625")
   ripl = get_ripl()
@@ -99,7 +102,6 @@ def testConstrainAVar4c():
   ripl.predict("(* x 5)", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
-  eq_(ripl.report("pid"), 15)
 
 @raises(Exception)  
 def testConstrainAVar5a():
@@ -107,7 +109,7 @@ def testConstrainAVar5a():
     This program is illegal, because when proposing to f, we may end up constraining x,
     which needs to be propagated but the propagation reaches a random choice. This could
     in principal be allowed because there is no exchangeable couping, but for now we have
-    decided to allow only deterministic nodes downstream.
+    decided to forbid all non-identity downstream edges.
 """
   raise SkipTest("Issue https://app.asana.com/0/9277419963067/9999884793625")
   ripl = get_ripl()
@@ -117,7 +119,6 @@ def testConstrainAVar5a():
   ripl.predict("(normal x 0.0001)")
   ripl.observe("(if (f) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
-  eq_(ripl.report("pid"), 15)
 
 @raises(Exception)  
 def testConstrainAVar5b():
