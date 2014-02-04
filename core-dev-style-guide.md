@@ -76,14 +76,12 @@ Testing
 Starcluster
 -----------
 
-- Right now, you're basically on your own here.  The only piece of
-  help is an EC2 AMI with Venture CXX (and all its dependencies!)
-  preinstalled: ami-59c9f930 .  Ask Dan Lovell for access to it if you want.
-
-- Ideally, we would have a Starcluster Venture plugin that lets you
-  type `starcluster start venture {master|release}` and get a cluster
-  with Ventures as of the specified branch up and running with zero
-  effort.  Issue: https://app.asana.com/0/9277419963067/9892931948558
+- We have a Starcluster Venture plugin in that lets you painlessly get
+  a cluster with Venture installed on every node.  See instructions in
+  `tool/scventure.py` for how to use it (assuming you already know how
+  to use Starcluster).  For development, we suggest you configure the
+  plugin to build Venture either from a Github branch or from your
+  local clone.
 
 Pylint
 ------
