@@ -194,7 +194,8 @@ class Trace(object):
     if scope in self.scopes: return len(self.scopes[scope].keys())
     else: return 0
 
-  def getAllNodesInScope(self,scope): return set.union(*[self.getNodesInBlock(scope,self.scopes[scope].keys())])
+  def getAllNodesInScope(self,scope):
+    return set.union(*[self.getNodesInBlock(scope,block) for block in self.scopes[scope].keys()])
     
   def getOrderedSetsInScope(self,scope):
     return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
