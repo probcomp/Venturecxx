@@ -1,6 +1,35 @@
 """A StarCluster plugin for Venture.
 
-Installs Venture (including development sources) on all nodes."""
+Installs Venture (including development sources) on all nodes.
+
+Minimal setup:
+1. Put this Python module in ~/.starcluster/plugins or somewhere on your PYTHONPATH.
+2. Add a plugin section like this to your Starcluster configuration file:
+     [plugin my-name-for-the-venture-plugin]
+     SETUP_CLASS = scventure.VentureInstaller
+     release = 0.1.1
+3. Add PLUGINS=my-name-for-the-venture-plugin to a cluster definition.
+
+This plugin supports collecting Venture from several possible sources,
+which you can set in your starcluster configuration file:
+- release = <version>
+    collects Venture from the given public release (currently only
+    0.1.1 is available)
+- tarball = <path>
+    collects Venture from the given tar file, e.g. if you have
+    already downloaded the release
+- github_branch = <branch>
+    collects Venture from the given branch on Github, if you have
+    permission to clone the repository.
+- checkout = <path>
+    collects Venture from the given directory on your local drive,
+    if you already have the source code unpacked.
+
+Additional option:
+- skip_cxx = true
+    saves time by not installing the dependencies for the CXX backend
+    of Venture, and by not compiling the backend itself.
+"""
 from starcluster.clustersetup import ClusterSetup
 from starcluster.logger import log
 import os.path
