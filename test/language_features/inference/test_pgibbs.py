@@ -30,3 +30,31 @@ def testPGibbsBlockingMHHMM1():
   predictions = collectSamples(ripl,"pid",infer={"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered","particles":20})
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous("TestPGibbsBlockingMHHMM1", cdf, predictions, "N(4.382, 0.786)")
+
+
+@statisticalTest
+def testPGibbsDynamicScope1():
+  ripl = get_ripl()
+  
+  ripl.assume("transition_fn", "(lambda (x) (normal x 1.0))")
+  ripl.assume("observation_fn", "(lambda (y) (normal y 1.0))")
+
+  ripl.assume("initial_state_fn", "(lambda () (normal 10.0 1.0))")
+  ripl.assume("f","""
+(mem (lambda (t)
+  (scope_include 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
+""")  
+
+  ripl.assume("g","(mem (lambda (t) (observation_fn (f t)))")
+
+  ripl.observe("(g 0)",1.0)
+  ripl.observe("(g 1)",2.0)
+  ripl.observe("(g 2)",3.0)
+  ripl.observe("(g 3)",4.0)
+  ripl.observe("(g 4)",5.0)
+
+  ripl.predict("(f 4)","pid")
+
+  predictions = collectSamples(ripl,"pid",infer={"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered","particles":20})
+  cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
+  return reportKnownContinuous("TestPGibbsBlockingMHHMM1", cdf, predictions, "N(4.382, 0.786)")
