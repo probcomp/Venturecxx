@@ -8,9 +8,11 @@ import tempfile
 import subprocess
 
 class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pylint: disable=abstract-method
-  def __init__(self, tarfile=None, checkout=None, unpacked_dir=None, release=None, skip_cxx=False): # pylint: disable=super-init-not-called
+  def __init__(self, tarfile=None, checkout=None, unpacked_dir=None, release=None,
+               github_branch="master", skip_cxx=False): # pylint: disable=super-init-not-called
     # The example in docs didn't call super.
     self.checkout = checkout
+    self.github_branch = github_branch
     self.tarfile = tarfile
     self.release = release
     self.skip_cxx = skip_cxx
@@ -31,19 +33,19 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
       log.warn("%s is not a valid released version of Venture; ignoring.  Valid releases are %s" % (self.release, valid_releases))
       self.release = None
 
-    if self.tarfile is None and self.checkout is None and self.release is None:
+    if self.tarfile is None and self.checkout is None and self.release is None and self.github_branch is None:
       # TODO What exception to raise?
-      raise Exception("No source for Venture specified.  Please indicate a tarball, a checkout, or a public release.")
+      raise Exception("No source for Venture specified.  Please indicate a checkout, a Github branch (if you have permission to read the repository), a tarball, or a public release.")
 
-    if self.tarfile is not None and self.checkout is not None:
-      log.warn("Checkout %s and tarfile %s given as sources for Venture.  Preferring the checkout." % (self.checkout, self.tarfile))
-      self.tarfile = None
-    if self.release is not None and self.checkout is not None:
-      log.warn("Checkout %s and release %s given as sources for Venture.  Preferring the checkout." % (self.checkout, self.release))
-      self.release = None
-    if self.release is not None and self.tarfile is not None:
-      log.warn("Tarfile %s and release %s given as sources for Venture.  Preferring the tarfile." % (self.tarfile, self.release))
-      self.release = None
+    method_attrs = ["checkout", "github_branch", "tarfile", "release"]
+    for i in range(len(method_attrs)):
+      if getattr(self, method_attrs[i]) is not None:
+        for j in range(i+1,len(method_attrs)):
+          if getattr(self, method_attrs[j]) is not None:
+            log.warn("%s %s and %s %s given as source for Venture.  Preferring the %s." %
+                     (method_attrs[i].capitalize(), getattr(self, method_attrs[i]),
+                      method_attrs[j], getattr(self, method_attrs[j]), method_attrs[i]))
+            setattr(self, method_attrs[j], None)
 
     if self.checkout is not None and self.unpacked_venture_dir is None:
       # The purpose of this complexity is to allow a user to install
@@ -74,7 +76,7 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
 
   def ensure_basics(self, node):
     log.info("Ensuring basic dependencies present on %s" % node.alias)
-    node.apt_command('update')
+#    node.apt_command('update')
     node.apt_install('git python-pip python-virtualenv')
     node.ssh.execute('pip install -U distribute')
 
@@ -108,6 +110,14 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
             os.remove(tarfile)
       finally:
         os.rmdir(tempd)
+    if self.github_branch is not None:
+      # Trust github.com
+      node.ssh.execute("ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no github.com exit || true")
+      # TODO blows away all the caches :( but at least ensures unpacking
+      # of fresh source.
+      node.ssh.execute('rm -rf Venturecxx')
+      node.shell(forward_agent=True, command="git clone git@github.com:mit-probabilistic-computing-project/Venturecxx.git")
+      node.ssh.execute('cd Venturecxx; git checkout %s' % self.github_branch)
     elif self.tarfile is not None:
       self.push_venture_from_tarball(node, self.tarfile)
     elif self.release is not None:
