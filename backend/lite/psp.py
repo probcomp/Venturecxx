@@ -38,8 +38,8 @@ class ESRRefOutputPSP(PSP):
     assert len(args.esrNodes) ==  1
     return args.esrValues[0]
 
-  def canAbsorb(self,trace,appNode,parentNode): return parentNode != trace.esrParentsAt(appNode)[0]
-
+  def canAbsorb(self,trace,appNode,parentNode):
+    return parentNode != trace.esrParentsAt(appNode)[0] and parentNode != appNode.requestNode
 
 class RandomPSP(PSP):
   def isRandom(self): return True
