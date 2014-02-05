@@ -1,5 +1,5 @@
 from venture.test.stats import *
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample
 import scipy.stats
 from nose.tools import assert_equal, assert_almost_equal
 
@@ -49,7 +49,7 @@ def testBinomial3():
 
   k1 = {"kernel":"mh","scope":0,"block":1,"transitions":1}
   k2 = {"kernel":"gibbs","scope":0,"block":0,"transitions":1}
-  predictions = collectSamples(ripl,"pid",infer={"kernel":"cycle","subkernels":[k1,k2],"transitions":int(config["num_transitions_per_sample"])})
+  predictions = collectSamples(ripl,"pid",infer={"kernel":"cycle","subkernels":[k1,k2],"transitions":default_num_transitions_per_sample()})
 
   ans = [(x,b * scipy.stats.binom.pmf(x,n,p1) + (1 - b) * scipy.stats.binom.pmf(x,n,p2)) for x in range(n+1)]
   assert_almost_equal(sum([xx[1] for xx in ans]),1)

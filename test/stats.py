@@ -41,7 +41,7 @@ def fisherMethod(pvals):
     return stats.chi2.sf(chisq, 2*len(pvals))
 
 def repeatTest(func, *args):
-  globalReportingThreshold = config["global_reporting_threshold"]
+  globalReportingThreshold = float(config["global_reporting_threshold"])
   result = func(*args)
   if ignore_inference_quality():
     return result
@@ -58,7 +58,7 @@ def repeatTest(func, *args):
     return TestResult(result.name + " failing consistently", pval, report)
 
 def reportTest(result):
-  globalReportingThreshold = config["global_reporting_threshold"]
+  globalReportingThreshold = float(config["global_reporting_threshold"])
   if ignore_inference_quality():
     assert result.pval > globalReportingThreshold, result
 
