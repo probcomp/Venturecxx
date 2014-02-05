@@ -1,17 +1,40 @@
 from testconfig import config
 from venture.shortcuts import make_lite_church_prime_ripl, make_church_prime_ripl
 
+def yes_like(thing):
+  if isinstance(thing, str):
+    return thing.lower() in ["y", "yes", "t", "true"]
+  elif thing: return True
+  else: return False
+
+def no_like(thing):
+  if isinstance(thing, str):
+    return thing.lower() in ["n", "no", "f", "false"]
+  elif not thing: return True
+  else: return False
+
+def bool_like_option(name, default):
+  thing = config[name]
+  if yes_like(thing): return True
+  elif no_like(thing): return False
+  else:
+    print "Option %s valued %s not clearly truthy or falsy, treating as %s" % (name, thing, default)
+    return default
+
+def ignore_inference_quality():
+  return bool_like_option("ignore_inference_quality", False)
+
 # These sorts of contortions are necessary because nose's parser of
 # configuration files doesn't seem to deal with supplying the same
 # option repeatedly, as the nose-testconfig plugin calls for.
 def default_num_samples():
-  if not config["ignore_inference_quality"]:
+  if ignore_inference_quality():
     return int(config["num_samples"])
   else:
     return 2
 
 def default_num_transitions_per_sample():
-  if not config["ignore_inference_quality"]:
+  if ignore_inference_quality():
     return int(config["num_transitions_per_sample"])
   else:
     return 3
@@ -49,7 +72,7 @@ def defaultInfer():
   scope = config["scope"]
   block = config["block"]
 
-  with_mutation = config["with_mutation"]  
+  with_mutation = config["with_mutation"]
   particles = int(config["particles"]) if "particles" in config else None
   return {"transitions":numTransitionsPerSample,
           "kernel":kernel,

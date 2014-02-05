@@ -3,6 +3,7 @@ import scipy.stats as stats
 import numpy as np
 import nose.tools as nose
 from testconfig import config
+from venture.test.config import ignore_inference_quality
 
 def normalizeList(seq):
   denom = sum(seq)
@@ -42,7 +43,7 @@ def fisherMethod(pvals):
 def repeatTest(func, *args):
   globalReportingThreshold = config["global_reporting_threshold"]
   result = func(*args)
-  if config["ignore_inference_quality"]:
+  if ignore_inference_quality():
     return result
   if result.pval > 0.05:
     return result
@@ -58,7 +59,7 @@ def repeatTest(func, *args):
 
 def reportTest(result):
   globalReportingThreshold = config["global_reporting_threshold"]
-  if not config["ignore_inference_quality"]:
+  if ignore_inference_quality():
     assert result.pval > globalReportingThreshold, result
 
 def statisticalTest(f):
