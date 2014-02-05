@@ -24,6 +24,9 @@ def bool_like_option(name, default):
 def ignore_inference_quality():
   return bool_like_option("ignore_inference_quality", False)
 
+def collect_iid_samples():
+  return bool_like_option("should_reset", True)
+
 # These sorts of contortions are necessary because nose's parser of
 # configuration files doesn't seem to deal with supplying the same
 # option repeatedly, as the nose-testconfig plugin calls for.
@@ -63,7 +66,7 @@ def collectSamples(ripl,address,num_samples=None,infer=None):
     # tests, presumably by avoiding the parser.
     ripl.sivm.core_sivm.engine.infer(infer)
     predictions.append(ripl.report(address))
-    if config["should_reset"]: ripl.sivm.core_sivm.engine.reset()
+    if collect_iid_samples(): ripl.sivm.core_sivm.engine.reset()
   return predictions
 
 def defaultInfer():

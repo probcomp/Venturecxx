@@ -1,5 +1,5 @@
 from venture.test.stats import *
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, collect_iid_samples
 from nose import SkipTest
 
 @statisticalTest
@@ -15,7 +15,7 @@ def testBernoulliIfNormal1():
 @statisticalTest
 def testBernoulliIfNormal2():
   "A simple program with bernoulli, if, and an absorbing application of normal"
-  if not config["should_reset"]: raise SkipTest("This test should not pass without reset.")
+  if not collect_iid_samples(): raise SkipTest("This test should not pass without reset.")
 
   ripl = get_ripl()
   ripl.assume("b", "(bernoulli 0.3)")
