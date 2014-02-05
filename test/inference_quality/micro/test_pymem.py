@@ -70,7 +70,7 @@ def testHPYMem1():
 @statisticalTest
 def checkHPYMem1(baseline, topC, botC):
   data = predictHPY(topC, botC)
-  return reportSameDistribution("testHPYMem1(%s,%s)" % (topC,botC), baseline, data)
+  return reportSameDiscrete("testHPYMem1(%s,%s)" % (topC,botC), baseline, data)
 
 ####
 

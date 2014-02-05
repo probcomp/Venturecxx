@@ -3,6 +3,7 @@ import scipy.stats as stats
 import numpy as np
 from testconfig import config
 import nose.tools as nose
+from nose import SkipTest
 from venture.shortcuts import make_lite_church_prime_ripl, make_church_prime_ripl
 
 # These sorts of contortions are necessary because nose's parser of
@@ -114,6 +115,27 @@ def reportKnownDiscrete(name, expectedRates, observed):
     "Chi^2   : " + str(chisq),
     "P value : " + str(pval)]))
 
+def chi2_contingency(table):
+  if hasattr(stats, "chi2_contingency"):
+    # Yes pylint, I am explicitly checking for the member
+    # pylint: disable=no-member
+    (chisq, pval, _, _) = stats.chi2_contingency(table)
+    return (chisq, pval)
+  else:
+    raise SkipTest("chi2_contingency not available in this version of scipy.")
+
+def reportSameDiscrete(name, observed1, observed2):
+  items = sorted(set(observed1 + observed2))
+  counts1 = [observed1.count(x) for x in items]
+  counts2 = [observed2.count(x) for x in items]
+  (chisq, pval) = chi2_contingency([counts1, counts2])
+  return TestResult(name, pval, "\n".join([
+    "Expected two samples from the same discrete distribution",
+    "Observed: " + fmtlst("% 4d", counts1),
+    "Observed: " + fmtlst("% 4d", counts2),
+    "Chi^2   : " + str(chisq),
+    "P value : " + str(pval)]))
+
 def explainOneDSample(observed):
   count = len(observed)
   mean = np.mean(observed)
@@ -137,7 +159,7 @@ def reportKnownContinuous(name, expectedCDF, observed, descr=None):
     "K stat  : " + str(K),
     "P value : " + str(pval)]))
 
-def reportSameDistribution(name, observed1, observed2):
+def reportSameContinuous(name, observed1, observed2):
   (D, pval) = stats.ks_2samp(observed1, observed2)
   return TestResult(name, pval, "\n".join([
     "Expected samples from the same distribution",
