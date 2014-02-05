@@ -115,20 +115,28 @@ def reportKnownDiscrete(name, expectedRates, observed):
     "Chi^2   : " + str(chisq),
     "P value : " + str(pval)]))
 
-def chi2_contingency(table):
+def chi2_contingency(cts1, cts2):
   if hasattr(stats, "chi2_contingency"):
     # Yes pylint, I am explicitly checking for the member
     # pylint: disable=no-member
-    (chisq, pval, _, _) = stats.chi2_contingency(table)
+    (chisq, pval, _, _) = stats.chi2_contingency([cts1, cts2])
     return (chisq, pval)
   else:
-    raise SkipTest("chi2_contingency not available in this version of scipy.")
+    # Reimplement it for the 2-dimensional 2xN case
+    total = sum(cts1) + sum(cts2)
+    ratio1 = float(sum(cts1))/total
+    ratio2 = float(sum(cts2))/total
+    expected1 = [ratio1 * (cts1[i] + cts2[i]) for i in range(len(cts1))]
+    expected2 = [ratio2 * (cts1[i] + cts2[i]) for i in range(len(cts2))]
+    assert len(expected1) == len(expected2)
+    dof = len(expected1) -1
+    return stats.chisquare(cts1 + cts2, f_exp = np.array(expected1 + expected2), ddof = len(cts1 + cts2) - 1 - dof)
 
 def reportSameDiscrete(name, observed1, observed2):
   items = sorted(set(observed1 + observed2))
   counts1 = [observed1.count(x) for x in items]
   counts2 = [observed2.count(x) for x in items]
-  (chisq, pval) = chi2_contingency([counts1, counts2])
+  (chisq, pval) = chi2_contingency(counts1, counts2)
   return TestResult(name, pval, "\n".join([
     "Expected two samples from the same discrete distribution",
     "Observed: " + fmtlst("% 4d", counts1),
