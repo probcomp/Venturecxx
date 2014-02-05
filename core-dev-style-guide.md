@@ -2,7 +2,8 @@ Overview
 ========
 
 This document is meant to be normative, and therefore changes only by
-unanimous consent.
+unanimous consent (except re: availability of new tools, etc).  If you
+disagree with something you see here, please raise it.
 
 - We use [Asana](http://asana.com) to coordinate tasks.
 
