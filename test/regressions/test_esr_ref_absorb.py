@@ -8,6 +8,7 @@ def testESRRefAbsorb1():
   This test ensures that an ESRRefOutputPSP does not absorb when its RequestPSP
   might change.
   """
+  if config["should_reset"]: raise SkipTest("This test should not pass without reset.")
   ripl = get_ripl()
   ripl.predict("(branch (flip 0.7) 1 0)",label="pid")
   predictions = collectSamples(ripl,"pid")
