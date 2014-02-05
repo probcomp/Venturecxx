@@ -142,6 +142,15 @@ def reportKnownContinuous(name, expectedCDF, observed, descr=None):
     "K stat  : " + str(K),
     "P value : " + str(pval)]))
 
+def reportSameDistribution(name, observed1, observed2):
+  (D, pval) = stats.ks_2samp(observed1, observed2)
+  return TestResult(name, pval, "\n".join([
+    "Expected samples from the same distribution",
+    explainOneDSample(observed1),
+    explainOneDSample(observed2),
+    "D stat  : " + str(D),
+    "P value : " + str(pval)]))
+
 # Z-score test for known mean, given known variance.
 # Doesn't work for distributions that are fat-tailed enough not to
 # have a mean.
