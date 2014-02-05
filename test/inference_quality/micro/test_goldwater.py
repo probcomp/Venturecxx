@@ -1,5 +1,5 @@
 from venture.test.stats import *
-from testconfig import config
+from venture.test.config import get_ripl, default_num_transitions_per_sample
 import itertools
 from nose.plugins.attrib import attr
 
@@ -10,7 +10,7 @@ def testGoldwater1():
 
   brent = ["catanddog", "dogandcat", "birdandcat","dogandbird","birdcatdog"]
 
-  N = int(config["num_transitions_per_sample"])
+  N = default_num_transitions_per_sample()
   
   alphabet = "".join(set("".join(list(itertools.chain.from_iterable(brent)))))
   d = {}

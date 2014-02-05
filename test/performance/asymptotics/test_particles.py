@@ -1,4 +1,5 @@
 from venture.test.stats import *
+from venture.test.config import get_ripl
 import venture.test.timing as timing
 import scipy.stats
 from nose.plugins.attrib import attr

@@ -1,4 +1,5 @@
 from venture.test.stats import *
+from venture.test.config import get_ripl, collectSamples
 
 # TODO this whole file will need to be parameterized.
 # Most of these will become "check" functions instead of "test"

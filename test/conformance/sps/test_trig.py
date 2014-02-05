@@ -1,4 +1,5 @@
 from venture.test.stats import *
+from venture.test.config import get_ripl
 
 def testTrig1():
   "Simple test that verifies sin^2 + cos^2 = 1 as x varies"

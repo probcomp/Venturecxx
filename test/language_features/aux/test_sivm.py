@@ -1,4 +1,5 @@
 from venture.test.stats import *
+from venture.test.config import get_ripl
 
 def testForget1():
   ripl = get_ripl()

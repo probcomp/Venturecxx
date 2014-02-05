@@ -1,4 +1,5 @@
 from venture.test.stats import *
+from venture.test.config import get_ripl, collectSamples
 
 def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:

@@ -1,5 +1,6 @@
 from venture.test.stats import *
 from nose.tools import *
+from venture.test.config import get_ripl, collectSamples
 from nose import SkipTest
 
 def testConstrainAVar1a():

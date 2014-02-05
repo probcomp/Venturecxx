@@ -1,4 +1,5 @@
 from venture.test.stats import *
+from venture.test.config import get_ripl
 from nose.tools import assert_equals
 
 def testMakeCSP1():

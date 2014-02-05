@@ -1,5 +1,6 @@
 from venture.test.stats import *
 from nose import SkipTest
+from venture.test.config import get_ripl
 from nose.tools import assert_equal
 
 def testDynamicScope1():

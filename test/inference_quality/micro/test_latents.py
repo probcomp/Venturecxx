@@ -1,4 +1,5 @@
 from venture.test.stats import *
+from venture.test.config import get_ripl, collectSamples
 
 # TODO this is just one idea for how to encode matrices. 
 # Not sure what the interface to make_lazy_hmm should be.

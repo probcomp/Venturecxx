@@ -1,4 +1,5 @@
 from venture.test.stats import *
+from venture.test.config import get_ripl, collectSamples
 
 @statisticalTest
 def testEval1():

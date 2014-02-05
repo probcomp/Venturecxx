@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from venture.test.stats import *
+from venture.test.config import get_ripl, collectSamples
 from nose import SkipTest
 import math
 from nose.tools import assert_equal

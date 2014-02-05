@@ -1,4 +1,5 @@
 from venture.test.stats import *
+from venture.test.config import get_ripl, collectSamples
 from nose.plugins.attrib import attr
 
 # TODO N needs to be managed here more intelligently

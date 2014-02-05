@@ -1,4 +1,5 @@
 from venture.test.stats import *
+from venture.test.config import get_ripl, collectSamples
 import scipy.stats
 from nose.tools import assert_equal, assert_almost_equal
 

@@ -1,6 +1,6 @@
 from venture.test.stats import *
 from nose import SkipTest
-
+from venture.test.config import get_ripl, collectSamples
 
 @statisticalTest
 def testBlockingExample0():

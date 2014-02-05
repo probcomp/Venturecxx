@@ -1,4 +1,5 @@
 from venture.test.stats import *
+from venture.test.config import get_ripl, collectSamples
 
 def testMem1():
   "This test used to cause CXX to crash"
