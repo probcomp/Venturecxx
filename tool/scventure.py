@@ -135,6 +135,7 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
 
   def ensure_venture_source(self, node):
     if self.checkout is not None:
+      log.info("Uploading venture to %s from %s" % (node.alias, self.checkout))
       tempd = tempfile.mkdtemp()
       try:
         tarfile = os.path.join(tempd, "venture.tgz")
@@ -147,6 +148,7 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
       finally:
         os.rmdir(tempd)
     elif self.github_branch is not None:
+      log.info("Cloning venture on %s from %s" % (node.alias, self.github_branch))
       # Trust github.com
       node.ssh.execute("ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no github.com exit || true")
       # TODO blows away all the caches :( but at least ensures unpacking
@@ -155,8 +157,10 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
       node.shell(forward_agent=True, command="git clone git@github.com:mit-probabilistic-computing-project/Venturecxx.git")
       node.ssh.execute('cd Venturecxx; git checkout %s' % self.github_branch)
     elif self.tarfile is not None:
+      log.info("Uploading venture to %s from %s" % (node.alias, self.tarfile))
       self.push_venture_from_tarball(node, self.tarfile)
     elif self.release is not None:
+      log.info("Downloading venture release %s to %s" % (self.release, node.alias))
       node.ssh.execute("wget http://probcomp.csail.mit.edu/venture/venture-%s.tgz" % self.release)
       # TODO blows away all the caches :( but at least ensures unpacking
       # of fresh source.
