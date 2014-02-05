@@ -25,13 +25,11 @@ def tabulatelst(fmt, lst, width=10, prefix=""):
   return prefix + "[" + bulk + "]"
 
 class TestResult(object):
-  def __init__(self, name, pval, report):
-    self.name = name
+  def __init__(self, pval, report):
     self.pval = pval
     self.report = report
 
-  def __str__(self):
-    return ("---Test: %s---\n" % self.name) + self.report
+  def __str__(self): return self.report
 
 def fisherMethod(pvals):
   if any([p == 0 for p in pvals]):
@@ -48,14 +46,16 @@ def repeatTest(func, *args):
   if result.pval > 0.05:
     return result
   elif fisherMethod(result.pval + [1.0]*4) < globalReportingThreshold:
+    # Hopeless
     return result
   else:
-    print "Retrying suspicious test %s" % result.name
+    print "Retrying suspicious test"
     results = [result] + [func(*args) for _ in range(1,5)]
     pval = fisherMethod([r.pval for r in results])
-    report = "\n".join([r.report for r in results])
+    report = "Test failing consistently\n"
+    report += "\n".join([r.report for r in results])
     report += "\nOverall P value: " + str(pval)
-    return TestResult(result.name + " failing consistently", pval, report)
+    return TestResult(pval, report)
 
 def reportTest(result):
   globalReportingThreshold = float(config["global_reporting_threshold"])
@@ -85,7 +85,7 @@ def reportKnownDiscrete(name, expectedRates, observed):
   expRates = normalizeList([pair[1] for pair in expectedRates if pair[1] is not None])
   expCounts = [total * r for r in expRates]
   (chisq,pval) = stats.chisquare(counts, np.array(expCounts))
-  return TestResult(name, pval, "\n".join([
+  return TestResult(pval, "\n".join([
     "Expected: " + fmtlst("% 4.1f", expCounts),
     "Observed: " + fmtlst("% 4d", counts),
     "Chi^2   : " + str(chisq),
@@ -113,7 +113,7 @@ def reportSameDiscrete(name, observed1, observed2):
   counts1 = [observed1.count(x) for x in items]
   counts2 = [observed2.count(x) for x in items]
   (chisq, pval) = chi2_contingency(counts1, counts2)
-  return TestResult(name, pval, "\n".join([
+  return TestResult(pval, "\n".join([
     "Expected two samples from the same discrete distribution",
     "Observed: " + fmtlst("% 4d", counts1),
     "Observed: " + fmtlst("% 4d", counts2),
@@ -137,7 +137,7 @@ def explainOneDSample(observed):
 # Kolmogorov-Smirnov test for agreement with known 1-D CDF.
 def reportKnownContinuous(name, expectedCDF, observed, descr=None):
   (K, pval) = stats.kstest(observed, expectedCDF)
-  return TestResult(name, pval, "\n".join([
+  return TestResult(pval, "\n".join([
     "Expected: %4d samples from %s" % (len(observed), descr),
     explainOneDSample(observed),
     "K stat  : " + str(K),
@@ -145,7 +145,7 @@ def reportKnownContinuous(name, expectedCDF, observed, descr=None):
 
 def reportSameContinuous(name, observed1, observed2):
   (D, pval) = stats.ks_2samp(observed1, observed2)
-  return TestResult(name, pval, "\n".join([
+  return TestResult(pval, "\n".join([
     "Expected samples from the same distribution",
     explainOneDSample(observed1),
     explainOneDSample(observed2),
@@ -167,7 +167,7 @@ def reportKnownMeanVariance(name, expMean, expVar, observed):
   mean = np.mean(observed)
   zscore = (mean - expMean) * math.sqrt(count) / math.sqrt(expVar)
   pval = 2*stats.norm.sf(abs(zscore)) # Two-tailed
-  return TestResult(name, pval, "\n".join([
+  return TestResult(pval, "\n".join([
     "Expected: % 4d samples with mean %4.3f, stddev %4.3f" % (count, expMean, math.sqrt(expVar)),
     explainOneDSample(observed),
     "Z score : " + str(zscore),
@@ -180,7 +180,7 @@ def reportKnownMeanVariance(name, expMean, expVar, observed):
 def reportKnownMean(name, expMean, observed):
   count = len(observed)
   (tstat, pval) = stats.ttest_1samp(observed, expMean)
-  return TestResult(name, pval, "\n".join([
+  return TestResult(pval, "\n".join([
     "Expected: % 4d samples with mean %4.3f" % (count, expMean),
     explainOneDSample(observed),
     "T stat  : " + str(tstat),
@@ -188,4 +188,4 @@ def reportKnownMean(name, expMean, observed):
 
 # For a deterministic test that is nonetheless labeled statistical
 def reportPassage(name):
-  return TestResult("Passed %s" % name, 1.0, "")
+  return TestResult(1.0, "")
