@@ -33,11 +33,6 @@ def normalizeList(seq):
   if denom > 0: return [ float(x)/denom for x in seq]
   else: return [0 for x in seq]
 
-def countPredictions(predictions, seq):
-  return [predictions.count(x) for x in seq]
-
-def rmsDifference(eps,ops): return math.sqrt(sum([ math.pow(x - y,2) for (x,y) in zip(eps,ops)]))
-
 def fmtlst(fmt, lst):
   return "[" + ", ".join([fmt % n for n in lst]) + "]"
 
@@ -184,9 +179,6 @@ def reportKnownMean(name, expMean, observed):
     explainOneDSample(observed),
     "T stat  : " + str(tstat),
     "P value : " + str(pval)]))
-
-def reportKnownEqualDistributions(data):
-  raise Exception("reportKnownEqualDistributions() not yet implemented %s" % data)
 
 # For a deterministic test that is nonetheless labeled statistical
 def reportPassage(name):
