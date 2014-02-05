@@ -59,7 +59,7 @@ def repeatTest(func, *args):
 
 def reportTest(result):
   globalReportingThreshold = float(config["global_reporting_threshold"])
-  if ignore_inference_quality():
+  if not ignore_inference_quality():
     assert result.pval > globalReportingThreshold, result
 
 def statisticalTest(f):

@@ -31,13 +31,13 @@ def collect_iid_samples():
 # configuration files doesn't seem to deal with supplying the same
 # option repeatedly, as the nose-testconfig plugin calls for.
 def default_num_samples():
-  if ignore_inference_quality():
+  if not ignore_inference_quality():
     return int(config["num_samples"])
   else:
     return 2
 
 def default_num_transitions_per_sample():
-  if ignore_inference_quality():
+  if not ignore_inference_quality():
     return int(config["num_transitions_per_sample"])
   else:
     return 3
