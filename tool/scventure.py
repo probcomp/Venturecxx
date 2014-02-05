@@ -146,7 +146,7 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
             os.remove(tarfile)
       finally:
         os.rmdir(tempd)
-    if self.github_branch is not None:
+    elif self.github_branch is not None:
       # Trust github.com
       node.ssh.execute("ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no github.com exit || true")
       # TODO blows away all the caches :( but at least ensures unpacking
