@@ -1,5 +1,6 @@
 from venture.test.stats import *
 from nose import SkipTest
+from nose.plugins.attrib import attr
 
 def loadPYMem(ripl):
   ripl.assume("pick_a_stick","""
@@ -59,11 +60,17 @@ def predictHPY(topCollapsed,botCollapsed):
   observeCategories(ripl,[2,2,5,1,0])
   return collectSamples(ripl,"pid")
 
-@statisticalTest
+@attr("slow")
 def testHPYMem1():
-  raise SkipTest("No p-value test for comparing empirical distributions.  Issue https://app.asana.com/0/9277419963067/9801332616433")
-  data = [countPredictions(predictHPY(top,bot), [0,1,2,3,4]) for top in [True,False] for bot in [True,False]]
-  return reportKnownEqualDistributions(data)
+  baseline = predictHPY(True, True)
+  for topC in [True,False]:
+    for botC in [True,False]:
+      yield checkHPYMem1, baseline, topC, botC
+
+@statisticalTest
+def checkHPYMem1(baseline, topC, botC):
+  data = predictHPY(topC, botC)
+  return reportSameDistribution("testHPYMem1(%s,%s)" % (topC,botC), baseline, data)
 
 ####
 
