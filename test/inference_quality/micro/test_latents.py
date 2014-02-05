@@ -1,4 +1,4 @@
-from venture.test.stats import *
+from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 
 # TODO this is just one idea for how to encode matrices. 
@@ -27,7 +27,7 @@ def testHMMSP1():
 
   predictions = collectSamples(ripl,"pid")
   ans = [(0,0.6528), (1,0.3472)]
-  return reportKnownDiscrete("testHMMSP1", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testHMMSP2():
@@ -58,4 +58,4 @@ def testHMMSP2():
 
   predictions = collectSamples(ripl,"pid")
   ans = [(0,0.6528), (1,0.3472)]
-  return reportKnownDiscrete("testHMMSP2", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)

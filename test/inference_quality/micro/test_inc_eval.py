@@ -14,12 +14,12 @@
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.stats import *
-from venture.test.config import get_ripl, collectSamples
+import scipy.stats as stats
 from nose import SkipTest
-import math
 from nose.tools import assert_equal
 from nose.plugins.attrib import attr
+from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import get_ripl, collectSamples
 
 ### Expressions
 
@@ -144,7 +144,7 @@ def testIncrementalEvaluator1c():
   ripl.predict("(incremental_eval expr env)",label="pid")
   predictions = collectSamples(ripl,"pid")
   cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
-  return reportKnownContinuous("TestIncrementalEvaluator1", cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
+  return reportKnownContinuous(cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
 @attr('slow')
 def testIncrementalEvaluator2():

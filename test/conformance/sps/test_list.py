@@ -1,4 +1,3 @@
-from venture.test.stats import *
 from venture.test.config import get_ripl
 
 class TestListExtended(object):

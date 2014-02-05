@@ -1,4 +1,4 @@
-from venture.test.stats import *
+from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 
 # TODO N needs to be managed here more intelligently
@@ -10,7 +10,7 @@ def testEnumerativeGibbsBasic1():
 
   predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs"})
   ans = [(True,.5),(False,.5)]
-  return reportKnownDiscrete("TestEnumerativeGibbsBasic1", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testEnumerativeGibbsXOR1():
@@ -25,7 +25,7 @@ def testEnumerativeGibbsXOR1():
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)","true")
   predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs","scope":0,"block":0})
   ans = [(True,.5),(False,.5)]
-  return reportKnownDiscrete("TestEnumerativeGibbsXOR1", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testEnumerativeGibbsXOR2():
@@ -38,4 +38,4 @@ def testEnumerativeGibbsXOR2():
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)","true")
   predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs","scope":0,"block":0})
   ans = [(True,.75),(False,.25)]
-  return reportKnownDiscrete("TestEnumerativeGibbsXOR2", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)

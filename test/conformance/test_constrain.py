@@ -1,4 +1,4 @@
-from venture.test.stats import *
+from venture.test.stats import statisticalTest, reportKnownMean
 from nose.tools import *
 from venture.test.config import get_ripl, collectSamples
 from nose import SkipTest
@@ -6,7 +6,7 @@ from nose import SkipTest
 def testConstrainAVar1a():
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
-  ripl.assume("y","(normal 0.0 1.0)")  
+  ripl.assume("y","(normal 0.0 1.0)")
   ripl.observe("(if (scope_include 0 0 (flip)) x y)", 3.0)
   ripl.predict("x", label="pid")
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
@@ -16,17 +16,17 @@ def testConstrainAVar1b():
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
-  ripl.predict("x", label="pid")  
+  ripl.predict("x", label="pid")
   ripl.observe("(if (scope_include 0 0 (flip)) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
   eq_(ripl.report("pid"), 3)
-  
+
 def testConstrainAVar2a():
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
-  ripl.predict("(if (f) x y)", label="pid")  
+  ripl.predict("(if (f) x y)", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
   eq_(ripl.report("pid"), 3)
@@ -36,7 +36,7 @@ def testConstrainAVar2b():
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
-  ripl.predict("(if (not (f)) x y)", label="pid")  
+  ripl.predict("(if (not (f)) x y)", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
   eq_(ripl.report("pid"), 3)
@@ -46,7 +46,7 @@ def testConstrainAVar3a():
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
   ripl.assume("f","(mem (lambda () (flip)))")
-  ripl.predict("x", label="pid")  
+  ripl.predict("x", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
   ripl.observe("(f)","true")
   ripl.infer({"kernel":"mh","transitions":20})
@@ -58,7 +58,7 @@ def testConstrainAVar3b():
   ripl.assume("y","(normal 0.0 1.0)")
   ripl.assume("f","(mem (lambda () (flip)))")
   ripl.observe("(if (f) x y)", 3.0)
-  ripl.predict("x", label="pid")      
+  ripl.predict("x", label="pid")
   ripl.observe("(f)","true")
   ripl.infer({"kernel":"mh","transitions":20})
   eq_(ripl.report("pid"), 3)
@@ -70,7 +70,7 @@ def testConstrainAVar4a():
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
-  ripl.predict("(if (f) (* x 5) (* y 5))", label="pid")  
+  ripl.predict("(if (f) (* x 5) (* y 5))", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
 
@@ -79,7 +79,7 @@ def testConstrainAVar4b():
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
-  ripl.predict("(if (not (f)) (* x 5) (* y 5))", label="pid")  
+  ripl.predict("(if (not (f)) (* x 5) (* y 5))", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
 
@@ -92,7 +92,7 @@ def testConstrainAVar4c():
   ripl.observe("(if (f) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
 
-@raises(Exception)  
+@raises(Exception)
 def testConstrainAVar5a():
   """
     This program is illegal, because when proposing to f, we may end up constraining x,
@@ -108,7 +108,7 @@ def testConstrainAVar5a():
   ripl.observe("(if (f) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
 
-@raises(Exception)  
+@raises(Exception)
 def testConstrainAVar5b():
   """
     This program is illegal, because when proposing to f, we may end up constraining x,
@@ -122,7 +122,7 @@ def testConstrainAVar5b():
   ripl.observe("(if (f) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
 
-@raises(Exception)  
+@raises(Exception)
 def testConstrainAVar6a():
   """
     This program is illegal, because when proposing to f, we may end up constraining x,
@@ -136,7 +136,7 @@ def testConstrainAVar6a():
   ripl.observe("(if (f) x y)", 3.0)
   ripl.infer({"kernel":"mh","transitions":20,"scope":0,"block":0})
 
-@raises(Exception)  
+@raises(Exception)
 def testConstrainAVar6b():
   """
     This program is illegal, because when proposing to f, we may end up constraining x,
@@ -166,7 +166,7 @@ def testConstrainWithAPredict1():
   ripl.observe("(op4)",True)
   predictions = collectSamples(ripl,6)
 
-                                 
+
 @statisticalTest
 def testConstrainWithAPredict2():
   """This test will fail at first, since we previously considered a program like this to be illegal
@@ -178,5 +178,5 @@ def testConstrainWithAPredict2():
   ripl.observe("(f)","1.0")
   ripl.predict("(* (f) 100)",label="pid")
   predictions = collectSamples(ripl,"pid")
-  return reportKnownMean("TestObserveAPredict2", 50, predictions)
-  
+  return reportKnownMean(50, predictions)
+

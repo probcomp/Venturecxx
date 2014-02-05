@@ -1,4 +1,4 @@
-from venture.test.stats import *
+from testconfig import config
 from nose import SkipTest
 from venture.test.config import get_ripl
 from nose.tools import assert_equal
@@ -55,7 +55,7 @@ def testDynamicScope6():
   ripl.predict("(scope_include 0 0 (normal (+ (f) (normal (f) 1) (normal 0 1)) 1))")
   assert_equal(len(ripl.sivm.core_sivm.engine.trace.getNodesInBlock(0,0)),3)
 
-def testDynamicScope6():
+def testDynamicScope6a():
   ripl = get_ripl()
   if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by CXX yet")
   

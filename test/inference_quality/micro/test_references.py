@@ -1,4 +1,4 @@
-from venture.test.stats import *
+from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 
 @statisticalTest
@@ -14,7 +14,7 @@ def testReferences1():
 
   predictions = collectSamples(ripl,6)
   ans = [(True,0.5), (False,0.5)]
-  return reportKnownDiscrete("TestReferences1", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 
 @statisticalTest
@@ -26,4 +26,4 @@ def testReferences2():
 
   predictions = collectSamples(ripl,2)
   ans = [(True,0.75), (False,0.25)]
-  return reportKnownDiscrete("TestReferences2", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)

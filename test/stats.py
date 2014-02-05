@@ -72,7 +72,7 @@ def statisticalTest(f):
 # Chi^2 test for agreement with the given discrete distribution.
 # TODO Broken (too stringent?) for small sample sizes; warn?
 # reportKnownDiscrete :: (Eq a) => String -> [(a,Double)] -> [a] -> IO ()
-def reportKnownDiscrete(name, expectedRates, observed):
+def reportKnownDiscrete(expectedRates, observed):
   items = [pair[0] for pair in expectedRates]
   itemsDict = {pair[0]:pair[1] for pair in expectedRates}
   for o in observed:
@@ -108,7 +108,7 @@ def chi2_contingency(cts1, cts2):
     dof = len(expected1) -1
     return stats.chisquare(cts1 + cts2, f_exp = np.array(expected1 + expected2), ddof = len(cts1 + cts2) - 1 - dof)
 
-def reportSameDiscrete(name, observed1, observed2):
+def reportSameDiscrete(observed1, observed2):
   items = sorted(set(observed1 + observed2))
   counts1 = [observed1.count(x) for x in items]
   counts2 = [observed2.count(x) for x in items]
@@ -135,7 +135,7 @@ def explainOneDSample(observed):
   return ans
 
 # Kolmogorov-Smirnov test for agreement with known 1-D CDF.
-def reportKnownContinuous(name, expectedCDF, observed, descr=None):
+def reportKnownContinuous(expectedCDF, observed, descr=None):
   (K, pval) = stats.kstest(observed, expectedCDF)
   return TestResult(pval, "\n".join([
     "Expected: %4d samples from %s" % (len(observed), descr),
@@ -143,7 +143,7 @@ def reportKnownContinuous(name, expectedCDF, observed, descr=None):
     "K stat  : " + str(K),
     "P value : " + str(pval)]))
 
-def reportSameContinuous(name, observed1, observed2):
+def reportSameContinuous(observed1, observed2):
   (D, pval) = stats.ks_2samp(observed1, observed2)
   return TestResult(pval, "\n".join([
     "Expected samples from the same distribution",
@@ -162,7 +162,7 @@ def reportSameContinuous(name, observed1, observed2):
 # TODO Can I use the Barry-Esseen theorem to use skewness information
 # for a more precise computation of test validity?  How about
 # comparing sample skewness to expected skewness?
-def reportKnownMeanVariance(name, expMean, expVar, observed):
+def reportKnownMeanVariance(expMean, expVar, observed):
   count = len(observed)
   mean = np.mean(observed)
   zscore = (mean - expMean) * math.sqrt(count) / math.sqrt(expVar)
@@ -177,7 +177,7 @@ def reportKnownMeanVariance(name, expMean, expVar, observed):
 # Doesn't work for distributions that are fat-tailed enough not to
 # have a mean.
 # TODO This is only valid if there are enough observations; 30 are recommended.
-def reportKnownMean(name, expMean, observed):
+def reportKnownMean(expMean, observed):
   count = len(observed)
   (tstat, pval) = stats.ttest_1samp(observed, expMean)
   return TestResult(pval, "\n".join([
@@ -187,5 +187,5 @@ def reportKnownMean(name, expMean, observed):
     "P value : " + str(pval)]))
 
 # For a deterministic test that is nonetheless labeled statistical
-def reportPassage(name):
+def reportPassage():
   return TestResult(1.0, "")

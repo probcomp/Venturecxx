@@ -1,4 +1,3 @@
-from venture.test.stats import *
 from venture.test.config import get_ripl, default_num_transitions_per_sample
 import itertools
 from nose.plugins.attrib import attr

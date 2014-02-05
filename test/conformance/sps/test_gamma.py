@@ -1,4 +1,4 @@
-from venture.test.stats import *
+from venture.test.stats import statisticalTest, reportKnownMean
 from venture.test.config import get_ripl, collectSamples
 
 @statisticalTest
@@ -13,5 +13,5 @@ def testGamma1():
   predictions = collectSamples(ripl,3)
   # TODO What, actually, is the mean of (gamma (gamma 10 10) (gamma 10 10))?
   # It's pretty clear that it's not 1.
-  return reportKnownMean("TestGamma1", 10/9.0, predictions)
+  return reportKnownMean(10/9.0, predictions)
 

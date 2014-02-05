@@ -1,4 +1,4 @@
-from venture.test.stats import *
+from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 
 def testMem1():
@@ -27,7 +27,7 @@ def testMem2():
   ans = [(5,  0.4 * 0.4 * 0.1),
          (6,  None), (7,  None), (8,  None), (9,  None),
          (10, 0.6 * 0.6 * 0.9)]
-  return reportKnownDiscrete("TestMem2", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testMem3():
@@ -48,7 +48,7 @@ def testMem3():
   ans = [(5,  0.4 * 0.4 * 0.1),
          (6,  None), (7,  None), (8,  None), (9,  None),
          (10, 0.6 * 0.6 * 0.9)]
-  return reportKnownDiscrete("TestMem3", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 def testMem4():
   "Like TestMem1, makes sure that MSPs handle changes to their arguments without crashing"

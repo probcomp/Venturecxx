@@ -1,4 +1,4 @@
-from venture.test.stats import *
+from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 
 def testMakeBetaBernoulli1():
@@ -17,7 +17,7 @@ def checkMakeBetaBernoulli1(maker):
 
   predictions = collectSamples(ripl,3)
   ans = [(False,.25), (True,.75)]
-  return reportKnownDiscrete("TestMakeBetaBernoulli1 (%s)" % maker, ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 def testMakeBetaBernoulli2():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
@@ -38,7 +38,7 @@ def checkMakeBetaBernoulli2(maker):
 
   predictions = collectSamples(ripl,3)
   ans = [(False,.25), (True,.75)]
-  return reportKnownDiscrete("TestMakeBetaBernoulli2 (%s)" % maker, ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 def testMakeBetaBernoulli3():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
@@ -60,7 +60,7 @@ def checkMakeBetaBernoulli3(maker):
 
   predictions = collectSamples(ripl,3)
   ans = [(False,.25), (True,.75)]
-  return reportKnownDiscrete("TestMakeBetaBernoulli3 (%s)" % maker, ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 def testMakeBetaBernoulli4():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
@@ -81,7 +81,7 @@ def checkMakeBetaBernoulli4(maker):
 
   predictions = collectSamples(ripl,3)
   ans = [(False,.25), (True,.75)]
-  return reportKnownDiscrete("TestMakeBetaBernoulli4 (%s)" % maker, ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 
 ##### (3) Staleness

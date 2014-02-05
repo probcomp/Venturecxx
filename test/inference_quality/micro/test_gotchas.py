@@ -1,4 +1,4 @@
-from venture.test.stats import *
+from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 from nose.tools import *
 
@@ -17,5 +17,4 @@ def testOuterMix1():
 
   predictions = collectSamples(ripl,1)
   ans = [(1,.5), (2,.25), (3,.25)]
-  return reportKnownDiscrete("TestOuterMix1", ans, predictions)
-
+  return reportKnownDiscrete(ans, predictions)

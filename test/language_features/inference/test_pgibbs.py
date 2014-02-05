@@ -1,4 +1,6 @@
-from venture.test.stats import *
+import math
+import scipy.stats as stats
+from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, collectSamples
 from nose.plugins.attrib import attr
 
@@ -30,7 +32,7 @@ def testPGibbsBlockingMHHMM1():
 
   predictions = collectSamples(ripl,"pid",infer={"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered","particles":20})
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
-  return reportKnownContinuous("TestPGibbsBlockingMHHMM1", cdf, predictions, "N(4.382, 0.786)")
+  return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
 
 
 @statisticalTest
@@ -58,4 +60,4 @@ def testPGibbsDynamicScope1():
 
   predictions = collectSamples(ripl,"pid",infer={"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered","particles":20})
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
-  return reportKnownContinuous("TestPGibbsBlockingMHHMM1", cdf, predictions, "N(4.382, 0.786)")
+  return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")

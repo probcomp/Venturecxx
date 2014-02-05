@@ -1,5 +1,6 @@
-from venture.test.stats import *
+from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, collectSamples
+import scipy.stats as stats
 
 # TODO
 # This file contains one possibility for the Dictionary interface
@@ -25,7 +26,7 @@ def testDict1():
 
   predictions = collectSamples(ripl,3)
   cdf = stats.norm(loc=20, scale=2).cdf
-  return reportKnownContinuous("TestDict1", cdf, predictions, "N(20,2)")
+  return reportKnownContinuous(cdf, predictions, "N(20,2)")
 
 def testDict2():
   ripl = get_ripl()

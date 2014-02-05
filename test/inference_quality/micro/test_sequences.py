@@ -1,4 +1,6 @@
-from venture.test.stats import *
+import math
+import scipy.stats as stats
+from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 
 @statisticalTest
@@ -39,9 +41,8 @@ def testVentureNormalHMM1():
   ripl.predict("(f 4)")
 
   predictions = collectSamples(ripl,8,infer="mixes_slowly")
-  reportKnownMeanVariance("TestVentureNormalHMM1", 390/89.0, 55/89.0, predictions)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
-  return reportKnownContinuous("TestVentureNormalHMM1", cdf, predictions, "N(4.382, 0.786)")
+  return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
 
 @statisticalTest
 def testVentureBinaryHMM1():
@@ -72,4 +73,4 @@ def testVentureBinaryHMM1():
 
   predictions = collectSamples(ripl,"pid")
   ans = [(0,0.6528), (1,0.3472)]
-  return reportKnownDiscrete("testVentureBinaryHMM1", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)

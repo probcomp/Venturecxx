@@ -1,4 +1,5 @@
-from venture.test.stats import *
+import scipy.stats as stats
+from venture.test.stats import statisticalTest, reportKnownContinuous
 from nose import SkipTest
 from venture.test.config import get_ripl, collectSamples, collect_iid_samples
 
@@ -15,7 +16,7 @@ def testBlockingExample0():
   # remains the prior.
   predictions = collectSamples(ripl,1,infer={"transitions":10,"kernel":"mh","scope":1,"block":1})
   cdf = stats.norm(loc=10.0, scale=1.0).cdf
-  return reportKnownContinuous("testBlockingExample0", cdf, predictions, "N(10.0,1.0)")
+  return reportKnownContinuous(cdf, predictions, "N(10.0,1.0)")
 
 def testBlockingExample1():
   ripl = get_ripl()

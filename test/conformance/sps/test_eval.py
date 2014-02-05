@@ -1,4 +1,6 @@
-from venture.test.stats import *
+import scipy.stats as stats
+import math
+from venture.test.stats import statisticalTest, reportKnownDiscrete, reportKnownContinuous, reportKnownMeanVariance
 from venture.test.config import get_ripl, collectSamples
 
 @statisticalTest
@@ -11,7 +13,7 @@ def testEval1():
 
   predictions = collectSamples(ripl,3)
   ans = [(1,.7), (0,.3)]
-  return reportKnownDiscrete("TestEval1", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testEval2():
@@ -31,7 +33,7 @@ def testEval2():
 
   predictions = collectSamples(ripl,1)
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
-  return reportKnownContinuous("testEval2", cdf, predictions, "approximately beta(2,1)")
+  return reportKnownContinuous(cdf, predictions, "approximately beta(2,1)")
 
 @statisticalTest
 def testEval3():
@@ -52,7 +54,7 @@ def testEval3():
 
   predictions = collectSamples(ripl,1)
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
-  return reportKnownContinuous("testEval3", cdf, predictions, "approximately beta(2,1)")
+  return reportKnownContinuous(cdf, predictions, "approximately beta(2,1)")
 
 
 @statisticalTest
@@ -64,7 +66,7 @@ def testApply1():
   ripl.predict("(apply times (list (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
 
   predictions = collectSamples(ripl,2)
-  return reportKnownMeanVariance("TestApply1", 1000, 101**3 - 100**3, predictions)
+  return reportKnownMeanVariance(1000, 101**3 - 100**3, predictions)
 
 
 # TODO not sure the best interface for extend_environment.
@@ -83,4 +85,4 @@ def testExtendEnv1():
 
   predictions = collectSamples(ripl,5)
   cdf = stats.norm(loc=10, scale=math.sqrt(3)).cdf
-  return reportKnownContinuous("testExtendEnv1", cdf, predictions, "N(10,sqrt(3))")
+  return reportKnownContinuous(cdf, predictions, "N(10,sqrt(3))")

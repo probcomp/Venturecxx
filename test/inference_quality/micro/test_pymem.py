@@ -1,4 +1,4 @@
-from venture.test.stats import *
+from venture.test.stats import statisticalTest, reportSameDiscrete, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 from nose import SkipTest
 from nose.plugins.attrib import attr
@@ -71,7 +71,7 @@ def testHPYMem1():
 @statisticalTest
 def checkHPYMem1(baseline, topC, botC):
   data = predictHPY(topC, botC)
-  return reportSameDiscrete("testHPYMem1(%s,%s)" % (topC,botC), baseline, data)
+  return reportSameDiscrete(baseline, data)
 
 ####
 
@@ -116,4 +116,4 @@ def testHPYLanguageModel1():
   raise SkipTest("Skipping testHPYLanguageModel because it's slow and I don't how fast it is expected to converge.  Issue https://app.asana.com/0/9277419963067/9801332616429")
   predictions = collectSamples(ripl,"pid")
   ans = [(0,0.03), (1,0.88), (2,0.03), (3,0.03), (4,0.03)]
-  return reportKnownDiscrete("testHPYLanguageModel1 (approximate)", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)

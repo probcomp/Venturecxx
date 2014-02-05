@@ -1,4 +1,4 @@
-from venture.test.stats import *
+from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample
 import scipy.stats
 from nose.tools import assert_equal, assert_almost_equal
@@ -16,7 +16,7 @@ def testBinomial1():
   predictions = collectSamples(ripl,"pid")
   ans = [(x,scipy.stats.binom.pmf(x,n,p)) for x in range(n+1)]
   assert_almost_equal(sum([xx[1] for xx in ans]),1)
-  return reportKnownDiscrete("TestBinomial1", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testBinomial2():
@@ -33,7 +33,7 @@ def testBinomial2():
   predictions = collectSamples(ripl,"pid")
   ans = [(x,b * scipy.stats.binom.pmf(x,n,p1) + (1 - b) * scipy.stats.binom.pmf(x,n,p2)) for x in range(n+1)]
   assert_almost_equal(sum([xx[1] for xx in ans]),1)
-  return reportKnownDiscrete("TestBinomial2", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testBinomial3():
@@ -53,4 +53,4 @@ def testBinomial3():
 
   ans = [(x,b * scipy.stats.binom.pmf(x,n,p1) + (1 - b) * scipy.stats.binom.pmf(x,n,p2)) for x in range(n+1)]
   assert_almost_equal(sum([xx[1] for xx in ans]),1)
-  return reportKnownDiscrete("TestBinomial2", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)

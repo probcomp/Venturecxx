@@ -1,6 +1,9 @@
-from venture.test.stats import *
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples
+import math
+import scipy.stats as stats
 from nose import SkipTest
+
+from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance, reportKnownDiscrete
+from venture.test.config import get_ripl, collectSamples, collect_iid_samples
 
 @statisticalTest
 def testBernoulliIfNormal1():
@@ -10,7 +13,7 @@ def testBernoulliIfNormal1():
   ripl.predict("(if b (normal 0.0 1.0) (normal 10.0 1.0))")
   predictions = collectSamples(ripl,2)
   cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
-  return reportKnownContinuous("TestBernoulliIfNormal1", cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
+  return reportKnownContinuous(cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
 @statisticalTest
 def testBernoulliIfNormal2():
@@ -22,7 +25,7 @@ def testBernoulliIfNormal2():
   ripl.predict("(normal (if b 0.0 10.0) 1.0)")
   predictions = collectSamples(ripl,2)
   cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
-  return reportKnownContinuous("TestBernoulliIfNormal2", cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
+  return reportKnownContinuous(cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
 @statisticalTest
 def testNormalWithObserve1():
@@ -35,7 +38,7 @@ def testNormalWithObserve1():
 
   predictions = collectSamples(ripl,1)
   cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous("TestNormalWithObserve1", cdf, predictions, "N(12,sqrt(1.5))")
+  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(1.5))")
 
 @statisticalTest
 def testNormalWithObserve2a():
@@ -48,7 +51,7 @@ def testNormalWithObserve2a():
 
   predictions = collectSamples(ripl,1)
   cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous("TestNormalWithObserve2a", cdf, predictions, "N(12,sqrt(0.5))")
+  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
 
 @statisticalTest
 def testNormalWithObserve2b():
@@ -61,7 +64,7 @@ def testNormalWithObserve2b():
 
   predictions = collectSamples(ripl,3,infer="mixes_slowly")
   cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
-  return reportKnownContinuous("TestNormalWithObserve2b", cdf, predictions, "N(12,sqrt(1.5))")
+  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(1.5))")
 
 @statisticalTest
 def testNormalWithObserve3():
@@ -85,7 +88,7 @@ def testNormalWithObserve3():
   # Unfortunately, a and b are (anti?)correlated now, so the true
   # distribution of the sum is mysterious to me
   cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
-  return reportKnownContinuous("testNormalWithObserve3", cdf, predictions, "approximately N(24,sqrt(7/3))")
+  return reportKnownContinuous(cdf, predictions, "approximately N(24,sqrt(7/3))")
 
 @statisticalTest
 def testStudentT1():
@@ -104,7 +107,7 @@ def testStudentT1():
   (meana,_) = integrate.quad(lambda x: x * posterior(x), -10, 10)
   (meanasq,_) = integrate.quad(lambda x: x * x * posterior(x), -10, 10)
   vara = meanasq - meana * meana
-  return reportKnownMeanVariance("TestStudentT1", meana, vara, predictions)
+  return reportKnownMeanVariance(meana, vara, predictions)
 
 @statisticalTest
 def testStudentT2():
@@ -124,7 +127,7 @@ def testStudentT2():
   (meana,_) = integrate.quad(lambda x: x * posterior(x), -10, 10)
   (meanasq,_) = integrate.quad(lambda x: x * x * posterior(x), -10, 10)
   vara = meanasq - meana * meana
-  return reportKnownMeanVariance("TestStudentT2", meana, vara + 1.0, predictions)
+  return reportKnownMeanVariance(meana, vara + 1.0, predictions)
 
 
 @statisticalTest
@@ -142,7 +145,7 @@ def testSprinkler1():
 
   predictions = collectSamples(ripl,1)
   ans = [(True, .3577), (False, .6433)]
-  return reportKnownDiscrete("TestSprinkler1", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testSprinkler2():
@@ -161,7 +164,7 @@ def testSprinkler2():
 
   predictions = collectSamples(ripl,1,infer="mixes_slowly")
   ans = [(True, .3577), (False, .6433)]
-  return reportKnownDiscrete("TestSprinkler2 (mixes terribly)", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testBLOGCSI1():
@@ -175,7 +178,7 @@ def testBLOGCSI1():
 
   predictions = collectSamples(ripl,5)
   ans = [(True, .596), (False, .404)]
-  return reportKnownDiscrete("TestBLOGCSI1", ans, predictions)
+  return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testGeometric1():
@@ -189,5 +192,4 @@ def testGeometric1():
 
   k = 128
   ans = [(n,math.pow(2,-n)) for n in range(1,k)]
-  return reportKnownDiscrete("TestGeometric1", ans, predictions)
-
+  return reportKnownDiscrete(ans, predictions)
