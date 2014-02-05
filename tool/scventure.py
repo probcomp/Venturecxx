@@ -10,6 +10,12 @@ Minimal setup:
      release = 0.1.1
 3. Add PLUGINS=my-name-for-the-venture-plugin to a cluster definition.
 
+The plugin should be able to build Venture on any reasonable Ubuntu
+AMI; but you might wish to make an AMI with the dependencies already
+installed (for example, with starcluster ebsimage on an instance built
+with this plugin) to save time on future cluster starts.  The plugin
+is intended to be idempotent, to support that use case.
+
 This plugin supports collecting Venture from several possible sources,
 which you can set in your starcluster configuration file:
 - release = <version>
