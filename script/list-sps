@@ -26,8 +26,9 @@ def flags(psp):
     ans += ["stochastic"]
   else:
     ans += ["deterministic"]
-  if psp.canAbsorb():
-    ans += ["constrainable"]
+  # TODO Absorbing is very context-sensitive now; how do we handle this?
+  # if psp.canAbsorb():
+  #   ans += ["constrainable"]
   if psp.childrenCanAAA():
     ans += ["children can absorb at applications"]
   if psp.canEnumerate():
