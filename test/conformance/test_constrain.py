@@ -1,5 +1,5 @@
 from venture.test.stats import statisticalTest, reportKnownMean
-from nose.tools import *
+from nose.tools import eq_, raises
 from venture.test.config import get_ripl, collectSamples
 from nose import SkipTest
 

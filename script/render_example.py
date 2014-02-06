@@ -1,5 +1,5 @@
 from subprocess import call
-from venture.shortcuts import *
+from venture.shortcuts import make_church_prime_ripl
 
 def RIPL():
   return make_church_prime_ripl()

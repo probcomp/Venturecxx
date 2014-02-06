@@ -1,7 +1,7 @@
-from exp import *
+import exp as e
 from node import ConstantNode, LookupNode, RequestNode, OutputNode
 from sp import SP
-from psp import ESRRefOutputPSP,NullRequestPSP
+from psp import NullRequestPSP
 from spref import SPRef
 from lkernel import VariationalLKernel
 from scope import ScopeIncludeOutputPSP
@@ -86,16 +86,16 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   return weight
 
 def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
-  if isVariable(exp): 
+  if e.isVariable(exp): 
     sourceNode = env.findSymbol(exp)
     weight = regen(trace,sourceNode,scaffold,False,omegaDB,gradients)
     return (weight,trace.createLookupNode(sourceNode))
-  elif isSelfEvaluating(exp): return (0,trace.createConstantNode(exp))
-  elif isQuotation(exp): return (0,trace.createConstantNode(textOfQuotation(exp)))
+  elif e.isSelfEvaluating(exp): return (0,trace.createConstantNode(exp))
+  elif e.isQuotation(exp): return (0,trace.createConstantNode(e.textOfQuotation(exp)))
   else:
-    (weight,operatorNode) = evalFamily(trace,getOperator(exp),env,scaffold,omegaDB,gradients)
+    (weight,operatorNode) = evalFamily(trace,e.getOperator(exp),env,scaffold,omegaDB,gradients)
     operandNodes = []
-    for operand in getOperands(exp):
+    for operand in e.getOperands(exp):
       (w,operandNode) = evalFamily(trace,operand,env,scaffold,omegaDB,gradients)
       weight += w
       operandNodes.append(operandNode)

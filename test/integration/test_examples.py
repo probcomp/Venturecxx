@@ -1,7 +1,7 @@
-from subprocess import *
+import subprocess as s
 
 def checkExample(example):
-  assert call("timeout 1.5s python examples/%s" % example, shell=True) == 124
+  assert s.call("timeout 1.5s python examples/%s" % example, shell=True) == 124
 
 def testExamples():
   for ex in ["lda.py", "crosscat.py"]:

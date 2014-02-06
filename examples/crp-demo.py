@@ -17,7 +17,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 from venture import shortcuts
-from venture.unit import *
+from venture.unit import VentureUnit
 
 class CRPMixtureDemo(VentureUnit):
   def makeAssumes(self):

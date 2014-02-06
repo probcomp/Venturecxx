@@ -1,5 +1,5 @@
 from venture.test.config import get_ripl
-from nose.tools import *
+from nose.tools import eq_, assert_greater, assert_less
 from nose import SkipTest
 
 def testObserveAVar1a():

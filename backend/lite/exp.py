@@ -1,5 +1,3 @@
-from scope import *
-
 def isVariable(exp): return isinstance(exp,str)
 def isSelfEvaluating(exp): return not isinstance(exp,list)
 

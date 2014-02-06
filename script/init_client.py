@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-from venture.shortcuts import *
+from venture.shortcuts import make_ripl_rest_client
 
 port = 8082
 if len(sys.argv) > 1:
