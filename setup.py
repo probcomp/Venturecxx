@@ -84,7 +84,7 @@ src_files = [
 ]
 src_files = ["backend/cxx/" + f for f in src_files]
 
-inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/']
+inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/', 'inc/Eigen']
 inc_dirs = ["backend/cxx/" + d for d in inc_dirs]
 
 ext_modules = []
