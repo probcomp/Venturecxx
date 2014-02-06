@@ -1,3 +1,5 @@
+# For lack of a better place, rationales are collected below.
+
 [MESSAGES CONTROL]
 # Disabled messages:
 # C0103: Name violates convention
@@ -16,9 +18,12 @@
 # C0303: Trailing whitespace
 # W0311: Bad indentation
 # W0403: Relative import
-# W0614: Unused import from wildcard import
-# W0401: Wildcard import
-disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0311,W0403,C0301,C0303,W0614,W0401
+disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0311,W0403,C0301,C0303
+
+# Rationale: Wildcard imports
+#   Turns out wildcard imports in Python import every name visible in
+#   the imported module, including ones it itself imported.  Import
+#   chains like that are confusing disasters waiting to happen.
 
 [REPORTS]
 include-ids=yes
