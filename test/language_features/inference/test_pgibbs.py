@@ -36,6 +36,7 @@ def testPGibbsBlockingMHHMM1():
 
 
 @statisticalTest
+@attr('slow')
 def testPGibbsDynamicScope1():
   ripl = get_ripl()
   
