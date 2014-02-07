@@ -73,6 +73,7 @@ class SPRef(VentureValue):
   def asStackDict(self): return {"type":"SP","value":self}
 
 ## SPs and Environments as well
+## Not Requests, because we do not reflect on them
 
 def isVentureValue(thing):
   return thing is None or isinstance(thing, VentureValue)

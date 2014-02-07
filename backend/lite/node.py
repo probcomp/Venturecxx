@@ -1,5 +1,6 @@
 from abc import ABCMeta
 from value import VentureValue, SPRef, isVentureValue, asVentureValue
+from request import Request
 
 class Node(object):
   __metaclass__ = ABCMeta
@@ -24,7 +25,11 @@ class Node(object):
     if isinstance(self.value,SPRef): return self.value.makerNode.madeSP
     else: return self.value
 
+  def isAppropriateValue(self, value):
+    return isVentureValue(value)
+
   def parents(self): return self.definiteParents()
+
 
 class ConstantNode(Node):
   def __init__(self,value):
@@ -33,6 +38,7 @@ class ConstantNode(Node):
 
   def parents(self): return []
   def definiteParents(self): return []
+
 
 class LookupNode(Node):
   def __init__(self,sourceNode):
@@ -60,6 +66,7 @@ class ApplicationNode(Node):
   def spaux(self): return self.spRef().makerNode.madeSPAux
   def psp(self): return self.sp().requestPSP
 
+
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
     super(RequestNode,self).__init__()
@@ -75,6 +82,9 @@ class RequestNode(ApplicationNode):
   def parents(self): return [self.operatorNode] + self.operandNodes
   def definiteParents(self): return [self.operatorNode] + self.operandNodes
 
+  def isAppropriateValue(self, value):
+    return isinstance(value, Request)
+
 
 class OutputNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,requestNode,env):
@@ -86,6 +96,7 @@ class OutputNode(ApplicationNode):
 
   def definiteParents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]
   def parents(self): return self.definiteParents() + self.esrParents
+
 
 class Args(object):
   def __init__(self,trace,node):
