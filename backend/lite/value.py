@@ -86,5 +86,5 @@ def asVentureValue(thing):
     return VentureNumber(thing)
   if isinstance(thing, str):
     return VentureSymbol(thing)
-  # TODO Do Python lists become Venture (liked) lists or Venture arrays?
+  # TODO Do Python lists become Venture (linked) lists or Venture arrays?
   # TODO Do Python dicts become Venture dicts?
