@@ -3,10 +3,12 @@ Organization of the Venture test suite
 
 The test suite lives in the `test/` directory.
 
-- `core/` is small tests of essential pieces of the Venture modeling language
+- `core/` is small tests of essential pieces of the Venture language
+  (modeling, as opposed to inference control).
 
-- `conformance/` is tests of details -- that choices that could have
-  gone one way or another given the core went the way we chose.
+- `conformance/` is tests of details -- choices that could have gone
+  one way or another given the core, pinned down to go the way we
+  chose.
 
 - `inference_language/` is tests of features related to inference
   control.
