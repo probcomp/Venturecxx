@@ -89,3 +89,5 @@ def asVentureValue(thing):
     return VentureSymbol(thing)
   # TODO Do Python lists become Venture (linked) lists or Venture arrays?
   # TODO Do Python dicts become Venture dicts?
+  else:
+    raise Exception("Cannot convert Python object %r to a Venture Value" % thing)
