@@ -2,7 +2,7 @@ from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 
 def testMem1():
-  "This test used to cause CXX to crash"
+  "MSPs should deal with their arguments changing under inference."
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   ripl.predict("(f (bernoulli 0.5))")
