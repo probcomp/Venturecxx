@@ -20,19 +20,16 @@ from venture.exception import VentureException
 from venture.sivm import utils
 import copy
 
-class CoreSivmCxx(object):
+class CoreSivm(object):
     ###############################
     # public methods
     ###############################
 
-    def __init__(self):
-	# TODO: merge venture.cxx.engine into this file
-        from venture.cxx import engine
-        self.engine = engine.Engine()
+    def __init__(self, engine):
+        self.engine = engine
         self.state = 'default'
-        # the current cpp engine doesn't support reporting "observe" directives
+        # the engine doesn't support reporting "observe" directives
         self.observe_dict = {}
-        # cpp engine doesn't support profiling yet
         self.profiler_enabled = False
     
     _implemented_instructions = {"assume","observe","predict",
