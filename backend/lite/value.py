@@ -16,26 +16,36 @@ class VentureValue(object):
   def getSP(self): raise Exception("Cannot convert %s to sp" % type(self))
   def getEnvironment(self): raise Exception("Cannot convert %s to environment" % type(self))
 
+  def asStackDict(self): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
+
 class VentureNumber(VentureValue):
   def __init__(self,number): self.number = number
   def getNumber(self): return self.number
+  def asStackDict(self): return {"type":"number","value":self.number}
 
 class VentureAtom(VentureValue):
   def __init__(self,atom): self.atom = atom
   def getNumber(self): return self.atom
   def getBool(self): return self.atom
+  def asStackDict(self): return {"type":"atom","value":self.atom}
 
 class VentureBool(VentureValue):
   def __init__(self,boolean): self.boolean = boolean
   def getBool(self): return self.boolean
+  def asStackDict(self): return {"type":"boolean","value":self.boolean}
 
 class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
   def getSymbol(self): return self.symbol
+  def asStackDict(self): return {"type":"symbol","value":self.symbol}
 
 class VentureArray(VentureValue):
   def __init__(self,array): self.array = array
   def getArray(self): return self.array
+  def asStackDict(self):
+    # TODO Are venture arrays reflected as lists to the stack?
+    # TODO Are venture arrays heterogeneous?  (not much of an array then...)
+    return {"type":"list","value":[v.asStackDict() for v in self.array]}
 
 class VentureNil(VentureValue):
   def __init__(self): pass
@@ -60,6 +70,7 @@ class VentureMatrix(VentureValue):
 
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
+  def asStackDict(self): return {"type":"SP","value":self}
 
 ## SPs and Environments as well
 

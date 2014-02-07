@@ -333,16 +333,8 @@ class Trace(object):
 
   # TODO temporary, probably need an extra layer of boxing for VentureValues
   # as in CXX
-  def boxValue(self,val):
-    if type(val) is str: return {"type":"symbol","value":val}
-    elif type(val) is bool: return {"type":"boolean","value":val}
-    elif type(val) is list: return {"type":"list","value":[self.boxValue(v) for v in val]}
-    elif isinstance(val, SPRef): return {"type":"SP","value":val}
-    else: return {"type":"number","value":val}
-
-
+  def boxValue(self,val): return val.asStackDict()
   def unboxValue(self,val): return val["value"]
-
   def unboxExpression(self,exp):
     if type(exp) == list: return [self.unboxExpression(subexp) for subexp in exp]
     else: return self.unboxValue(exp)
