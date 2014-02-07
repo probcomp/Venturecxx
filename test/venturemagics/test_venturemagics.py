@@ -13,8 +13,8 @@ import subprocess
 
 # Script for testing notebooks taken from 
 # https://github.com/ipython/ipython/wiki/Cookbook%3a-Notebook-utilities
-notebook_tester = 'nb_tester.py'
-test_file =  'test_venturemagics_nb.ipynb'
+notebook_tester = 'test/venturemagics/nb_tester.py'
+test_file =  'test/venturemagics/test_venturemagics_nb.ipynb'
 
 out=subprocess.check_output(['python',notebook_tester,test_file])
 
@@ -24,7 +24,7 @@ if 'failure' in out.lower():
 
 
 ## Testing in IPython
-test_file = 'test_venturemagics_ipy.ipy'
+test_file = 'test/venturemagics/test_venturemagics_ipy.ipy'
 out = subprocess.check_output(['ipython',test_file])
 if 'error' in out.lower() or 'assertion' in out.lower():
     assert False, 'Error running %s in IPython' % test_file
