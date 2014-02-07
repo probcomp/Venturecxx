@@ -1,7 +1,6 @@
-from value import VentureValue
 from builtin import builtInValues, builtInSPs
 from env import VentureEnvironment
-from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args
+from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args,isVentureValue
 import math
 from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
@@ -144,11 +143,11 @@ class Trace(object):
   #### Stuff that a particle trace would need to override for persistence
 
   def valueAt(self,node):
-    assert node.value is None or isinstance(node.value, VentureValue)
+    assert isVentureValue(node.value)
     return node.value
 
   def setValueAt(self,node,value):
-    assert isinstance(value, VentureValue)
+    assert isVentureValue(value)
     node.value = value
 
   def madeSPAt(self,node): return node.madeSP

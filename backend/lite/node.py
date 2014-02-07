@@ -95,7 +95,7 @@ class Args(object):
     self.node = node
     self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]
     for v in self.operandValues:
-      assert isinstance(v, VentureValue)
+      assert isVentureValue(v)
     self.operandNodes = node.operandNodes
 
     if isinstance(node,OutputNode):
@@ -110,3 +110,6 @@ class Args(object):
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)
+
+def isVentureValue(thing):
+  return thing is None or isinstance(thing, VentureValue) or isinstance(thing, SPRef)
