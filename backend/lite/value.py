@@ -91,3 +91,31 @@ def asVentureValue(thing):
   # TODO Do Python dicts become Venture dicts?
   else:
     raise Exception("Cannot convert Python object %r to a Venture Value" % thing)
+
+class VentureType(object): pass
+
+# TODO Is there any way to make these guys be proper singleton
+# objects?
+
+# This is a prototypical example of the classes I am autogenerating
+# below, for legibility.  I could have removed this and added "Number"
+# to the list in the for.
+class NumberType(VentureType):
+  def asVentureValue(self, thing): return VentureNumber(thing)
+  def asPython(self, vthing): return vthing.getNumber()
+
+# TODO Also Nil?
+for typename in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "Matrix", "SP", "Environment"]:
+  exec("""
+class %sType(VentureType):
+  def asVentureValue(self, thing): return Venture%s(thing)
+  def asPython(self, vthing): return vthing.get%s()
+""" % (typename, typename, typename))
+
+class NilType(VentureType):
+  def asVentureValue(self, thing):
+    # TODO Throw an error if not null-line?
+    return VentureNil()
+  def asPython(self, vthing):
+    # TODO Throw an error if not nil?
+    return []
