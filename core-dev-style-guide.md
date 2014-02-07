@@ -26,6 +26,9 @@ Testing
 - `nosetests` at the top level runs our test suite.  At present,
   the suite defaults to confidence above speed.
 
+- See [test/README.md](https://github.com/mit-probabilistic-computing-project/Venturecxx/tree/master/test)
+  for the organization of the test suite.
+
 - The test suite can be run in parallel via the nose multiprocessing
   plugin:
   `--processes=[NUM] --process-timeout=[SECONDS]`
