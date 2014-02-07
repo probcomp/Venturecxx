@@ -1,5 +1,5 @@
 from node import LookupNode, RequestNode, OutputNode
-from values import SPRef
+from value import SPRef
 
 class Scaffold(object):
   def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None):

@@ -1,6 +1,6 @@
 from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
 from omegadb import OmegaDB
-from values import SPRef
+from value import SPRef
 from scope import ScopeIncludeOutputPSP
 from sp import VentureSP
 

@@ -13,10 +13,10 @@ import hmm
 import conditionals
 import scope
 import eval_sps
-import values
+import value
 
 def builtInValues():
-  return { "true" : values.VentureBool(True), "false" : values.VentureBool(False) }
+  return { "true" : value.VentureBool(True), "false" : value.VentureBool(False) }
 
 def deterministic(f):
   class DeterministicPSP(PSP):

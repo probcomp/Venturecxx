@@ -2,7 +2,7 @@ import exp as e
 from node import ConstantNode, LookupNode, RequestNode, OutputNode
 from sp import VentureSP
 from psp import NullRequestPSP
-from values import SPRef
+from value import SPRef
 from lkernel import VariationalLKernel
 from scope import ScopeIncludeOutputPSP
 import pdb

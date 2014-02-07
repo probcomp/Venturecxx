@@ -1,6 +1,5 @@
 from abc import ABCMeta
-from value import VentureValue
-from values import SPRef
+from value import VentureValue, SPRef
 
 class Node(object):
   __metaclass__ = ABCMeta

@@ -4,7 +4,7 @@ from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args,isVentureVa
 import math
 from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
-from values import SPRef
+from value import SPRef
 from scaffold import Scaffold
 from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator
 from omegadb import OmegaDB
