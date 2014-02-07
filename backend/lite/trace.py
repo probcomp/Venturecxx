@@ -1,3 +1,4 @@
+from value import VentureValue
 from builtin import builtInValues, builtInSPs
 from env import VentureEnvironment
 from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args
@@ -15,7 +16,7 @@ from scope import ScopeIncludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
-from consistency import assertTorus,assertTrace,assertSameScaffolds
+from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
 import pdb
@@ -143,9 +144,11 @@ class Trace(object):
   #### Stuff that a particle trace would need to override for persistence
 
   def valueAt(self,node):
+    assert node.value is None or isinstance(node.value, VentureValue)
     return node.value
 
   def setValueAt(self,node,value):
+    assert isinstance(value, VentureValue)
     node.value = value
 
   def madeSPAt(self,node): return node.madeSP

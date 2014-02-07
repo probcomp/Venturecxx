@@ -1,6 +1,7 @@
 from abc import ABCMeta
 from spref import SPRef
 from sp import VentureSP
+from value import VentureValue
 
 class Node(object):
   __metaclass__ = ABCMeta
@@ -19,6 +20,7 @@ class Node(object):
   def observe(self,val):
     self.observedValue = val
     self.isObservation = True
+    assert isinstance(val, VentureValue)
 
   def groundValue(self):
     if isinstance(self.value,SPRef): return self.value.makerNode.madeSP
@@ -30,6 +32,7 @@ class ConstantNode(Node):
   def __init__(self,value):
     super(ConstantNode,self).__init__()
     self.value = value
+    assert isinstance(value, VentureValue)
 
   def parents(self): return []
   def definiteParents(self): return []
@@ -91,6 +94,8 @@ class Args(object):
   def __init__(self,trace,node):
     self.node = node
     self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]
+    for v in self.operandValues:
+      assert isinstance(v, VentureValue)
     self.operandNodes = node.operandNodes
 
     if isinstance(node,OutputNode):
