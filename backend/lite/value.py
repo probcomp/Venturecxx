@@ -61,3 +61,6 @@ class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
 
 ## SPs and Environments as well
+
+def isVentureValue(thing):
+  return thing is None or isinstance(thing, VentureValue)

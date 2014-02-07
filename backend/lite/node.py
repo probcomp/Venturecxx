@@ -1,5 +1,5 @@
 from abc import ABCMeta
-from value import VentureValue, SPRef
+from value import VentureValue, SPRef, isVentureValue
 
 class Node(object):
   __metaclass__ = ABCMeta
@@ -108,6 +108,3 @@ class Args(object):
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)
-
-def isVentureValue(thing):
-  return thing is None or isinstance(thing, VentureValue)

@@ -1,10 +1,10 @@
 from builtin import builtInValues, builtInSPs
 from env import VentureEnvironment
-from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args,isVentureValue
+from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args
 import math
 from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
-from value import SPRef
+from value import SPRef,isVentureValue
 from scaffold import Scaffold
 from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator
 from omegadb import OmegaDB
