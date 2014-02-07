@@ -1,4 +1,5 @@
 from abc import ABCMeta
+from numbers import Number
 
 class VentureValue(object):
   __metaclass__ = ABCMeta
@@ -64,3 +65,15 @@ class SPRef(VentureValue):
 
 def isVentureValue(thing):
   return thing is None or isinstance(thing, VentureValue)
+
+def asVentureValue(thing):
+  if isinstance(thing, VentureValue):
+    return thing
+  if isinstance(thing, bool):
+    return VentureBool(thing)
+  if isinstance(thing, Number):
+    return VentureNumber(thing)
+  if isinstance(thing, str):
+    return VentureSymbol(thing)
+  # TODO Do Python lists become Venture (liked) lists or Venture arrays?
+  # TODO Do Python dicts become Venture dicts?

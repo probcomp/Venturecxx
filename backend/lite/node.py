@@ -1,5 +1,5 @@
 from abc import ABCMeta
-from value import VentureValue, SPRef, isVentureValue
+from value import VentureValue, SPRef, isVentureValue, asVentureValue
 
 class Node(object):
   __metaclass__ = ABCMeta
@@ -29,8 +29,7 @@ class Node(object):
 class ConstantNode(Node):
   def __init__(self,value):
     super(ConstantNode,self).__init__()
-    self.value = value
-    assert isinstance(value, VentureValue)
+    self.value = asVentureValue(value)
 
   def parents(self): return []
   def definiteParents(self): return []
