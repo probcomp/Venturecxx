@@ -42,4 +42,7 @@ class VentureMatrix(value.VentureValue):
   def __init__(self,matrix): self.matrix = matrix
   def getMatrix(self): return self.matrix
 
+class SPRef(value.VentureValue):
+  def __init__(self,makerNode): self.makerNode = makerNode
+
 ## SPs and Environments as well

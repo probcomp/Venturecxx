@@ -1,7 +1,6 @@
 from abc import ABCMeta
-from spref import SPRef
-from sp import VentureSP
 from value import VentureValue
+from values import SPRef
 
 class Node(object):
   __metaclass__ = ABCMeta
@@ -112,4 +111,4 @@ class Args(object):
     return "%s(%r)" % (self.__class__, self.__dict__)
 
 def isVentureValue(thing):
-  return thing is None or isinstance(thing, VentureValue) or isinstance(thing, SPRef)
+  return thing is None or isinstance(thing, VentureValue)
