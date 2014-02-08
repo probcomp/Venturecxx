@@ -3,23 +3,17 @@
 
 #include <boost/shared_ptr.hpp>
 
-struct VentureValue;
-struct VentureSP;
-struct VentureEnvironment;
+using boost::shared_ptr;
 
+struct VentureValue;
 struct Node;
 
 typedef int DirectiveID;
-
-typedef boost::shared_ptr<VentureValue> VentureValuePtr;
-typedef boost::shared_ptr<VentureSP> VentureSPPtr;
-typedef boost::shared_ptr<VentureEnvironment> VentureEnvironmentPtr;
-
-
+typedef shared_ptr<VentureValue> VentureValuePtr;
 typedef VentureValuePtr ScopeID;
 typedef VentureValuePtr BlockID;
 typedef VentureValuePtr FamilyID;
-typedef boost::shared_ptr<Node> RootOfFamily;
+typedef shared_ptr<Node> RootOfFamily;
 typedef vector<double> simplex;
 
 #endif

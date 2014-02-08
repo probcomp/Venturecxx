@@ -9,9 +9,7 @@
 using std::vector;
 using std::pair;
 
-struct VenturePair;
-struct VentureSP;
-struct VentureEnvironment;
+
 
 // TODO AXCH
 // We need to be more consistent about whether this unboxes
@@ -29,6 +27,7 @@ struct VentureValue
   MatrixXd getMatrix();
   VentureSPPtr getSP();
   VentureEnvironmentPtr getEnvironment();
+  pair<vector<ESR>,vector<LSR *> > getRequests();
 };
 
 

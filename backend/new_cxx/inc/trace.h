@@ -22,7 +22,7 @@ struct ConcreteTrace : Trace
   set<Node*> constrainedChoices;
   set<Node*> arbitraryErgodicKernels;
   set<Node*> unpropagatedObservations;
-  map<DirectiveID,RootOfFamily> families;
+  map<DirectiveID,RootNodePtr> families;
   map<ScopeID,SMap<BlockID,set<Node*> > scopes;
 
   map<Node*, vector<Node*> > esrParents;

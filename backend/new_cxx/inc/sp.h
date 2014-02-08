@@ -13,10 +13,10 @@ using std::map;
 
 struct SPFamilies
 {
-  map<FamilyID,RootOfFamily> families;
+  map<FamilyID,RootNodePtr> families;
   bool containsFamily(FamilyID id);
   Node * getFamily(FamilyID id);
-  void registerFamily(FamilyID id,RootOfFamily root);
+  void registerFamily(FamilyID id,RootNodePtr root);
   void unregisterFamily(FamilyID id);
 };
 
