@@ -22,11 +22,13 @@ struct PSP
   virtual bool canEnumerateValues(Args * args) const { return false; }
   virtual vector<VentureValuePtr> enumerateValues(Args * args) const { return vector<VentureValuePtr>(); }
 
-  virtual bool hasVariationalLKernel() const { return false; }
-  virtual shared_ptr<LKernel> getVariationalLKernel(ConcreteTrace * trace,Node * node) const;
+  // TODO variational is punted for now
+  // virtual bool hasVariationalLKernel() const { return false; }
+  // virtual shared_ptr<LKernel> getVariationalLKernel(ConcreteTrace * trace,Node * node) const;
 
-  virtual bool hasSimulationKernel() const { return false; }
-  virtual bool hasDeltaKernel() const { return false; }
+  // TODO special psp-specific lkernels are punted for now
+  // virtual bool hasSimulationKernel() const { return false; }
+  // virtual bool hasDeltaKernel() const { return false; }
 };
 
 struct NullRequestPSP : PSP

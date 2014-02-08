@@ -36,8 +36,9 @@ struct VentureSP : VentureValue
 
 struct SPRecord
 {
-  SPFamilies * spFamilies;
-  SPAux * spAux;
-  VentureSP * sp;
+  // TODO these could be unique pointers
+  shared_ptr<SPFamilies> spFamilies;
+  shared_ptr<SPAux> spAux;
+  VentureSPPtr sp;
 }
 #endif

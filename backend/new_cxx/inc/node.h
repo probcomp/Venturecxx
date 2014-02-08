@@ -8,7 +8,7 @@
 struct Node
 {
   boost::shared_ptr<VentureValue> value;
-  std::vector<Node*> definiteParents{};
+  std::vector<Node*> definiteParents{}; // TODO should be an iterator
 };
 
 struct ConstantNode : Node { ConstantNode(boost::shared_ptr<VentureValue> value); };
