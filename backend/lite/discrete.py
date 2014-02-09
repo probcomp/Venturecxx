@@ -10,6 +10,17 @@ from lkernel import LKernel
 from nose.tools import assert_equal,assert_greater_equal
 import copy
 
+import captcha
+class is_stochastic_match(RandomPSP):
+  def simulate(self,args):
+    return True
+    
+  def logDensity(self,val,args):
+    return captcha.stochastic_comparer(args)
+
+  def description(self,name):
+    return "(%s <number>) -> <bool>\n(%s) -> <bool>" % (name,name)
+
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args):
     p = args.operandValues[0] if args.operandValues else 0.5

@@ -13,6 +13,7 @@ import hmm
 import conditionals
 import scope
 import eval_sps
+import captcha
 
 def builtInValues(): return { "true" : True, "false" : False }
 
@@ -112,6 +113,12 @@ def builtInSPsList():
            [ "make_crp", SP(NullRequestPSP(),crp.MakeCRPOutputPSP()) ],
 
            [ "make_lazy_hmm", SP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()) ],
+           
+           [ "render_glyph", deterministic(captcha.render_glyph) ],
+           [ "blur", deterministic(captcha.blur) ],
+           [ "composite", deterministic(captcha.composite) ],
+           [ "save_image", deterministic(captcha.save_image) ],
+           [ "is_stochastic_match", SP(NullRequestPSP(),discrete.is_stochastic_match()) ],
   ]
 
 def builtInSPs():
