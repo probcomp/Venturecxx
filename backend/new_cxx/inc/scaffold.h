@@ -27,7 +27,8 @@ private:
 shared_ptr<Scaffold> constructScaffold(Trace * trace,const vector<set<Node*> > & setsOfPNodes);
 
 
-static void addResamplingNode(Trace * trace,
+// TODO everything from here on should be moved to .cxx
+void addResamplingNode(Trace * trace,
 set<Node*> & cDRG,
 			      set<Node*> & cAbsorbing,
 			      set<Node*> & cAAA,
@@ -36,14 +37,14 @@ set<Node*> & cDRG,
 			      map<Node*,int> & indexAssignments,
 			      int i);
 
-static void addAbsorbingNode(set<Node*> & cDRG,
+void addAbsorbingNode(set<Node*> & cDRG,
 			      set<Node*> & cAbsorbing,
 			      set<Node*> & cAAA,
 			      Node * node,
 			      map<Node*,int> & indexAssignments,
 			      int i);
 
-static void addAAANode(set<Node*> & cDRG,
+void addAAANode(set<Node*> & cDRG,
 			      set<Node*> & cAbsorbing,
 			      set<Node*> & cAAA,
 			      Node * node,

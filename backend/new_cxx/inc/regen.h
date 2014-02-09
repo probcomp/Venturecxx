@@ -13,6 +13,8 @@ double constrain(Trace * trace,
 		 Node * node,
 		 VentureValuePtr value);
 
+
+
 void propagateConstraint(Trace * trace,
 			 Node * node,
 			 VentureValuePtr value);
