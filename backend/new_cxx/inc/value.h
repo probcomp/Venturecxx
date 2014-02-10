@@ -21,12 +21,13 @@ struct VentureValue
   bool getBool();
   string getSymbol();
   vector<VentureValuePtr> getArray();
+  bool isNil() { return false; }
   pair<VentureValuePtr,VentureValuePtr> getPair();
   simplex getSimplex();
-  map<VentureValuePtr,VentureValuePtr> getDict();
+  map<VentureValuePtr,VentureValuePtr> getDictionary();
   MatrixXd getMatrix();
-  VentureSPPtr getSP();
-  VentureEnvironmentPtr getEnvironment();
+//  shared_ptr<VentureSP> getSP();
+//  shared_ptr<VentureEnvironment> getEnvironment();
   pair<vector<ESR>,vector<LSR *> > getRequests();
 };
 
