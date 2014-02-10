@@ -39,12 +39,13 @@ class VentureSymbol(VentureValue):
   def getSymbol(self): return self.symbol
   def asStackDict(self): return {"type":"symbol","value":self.symbol}
 
+# Venture arrays are heterogeneous, with O(1) access and O(n) copy.
+# Venture does not yet have a story for homogeneous packed arrays.
 class VentureArray(VentureValue):
   def __init__(self,array): self.array = array
   def getArray(self): return self.array
   def asStackDict(self):
     # TODO Are venture arrays reflected as lists to the stack?
-    # TODO Are venture arrays heterogeneous?  (not much of an array then...)
     return {"type":"list","value":[v.asStackDict() for v in self.array]}
 
 class VentureNil(VentureValue):
@@ -87,7 +88,8 @@ def asVentureValue(thing):
     return VentureNumber(thing)
   if isinstance(thing, str):
     return VentureSymbol(thing)
-  # TODO Do Python lists become Venture (linked) lists or Venture arrays?
+  if hasattr(thing, "__getitem__"): # Already not a string
+    return VentureArray([asVentureValue(v) for v in thing])
   # TODO Do Python dicts become Venture dicts?
   else:
     raise Exception("Cannot convert Python object %r to a Venture Value" % thing)
