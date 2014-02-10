@@ -14,7 +14,7 @@ typedef VentureValuePtr ScopeID;
 typedef VentureValuePtr BlockID;
 typedef VentureValuePtr FamilyID;
 typedef shared_ptr<Node> RootOfFamily;
-typedef vector<double> simplex;
+typedef vector<double> Simplex;
 
 /* TODO I keep oscillating on these. 
    One convention could be to only use this shortcut for VentureValuePtr.

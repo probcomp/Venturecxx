@@ -30,31 +30,33 @@ struct Trace
   /* Creating nodes */
   virtual ConstantNode * createConstantNode(VentureValuePtr);
   virtual LookupNode * createLookupNode(Node * sourceNode);
-  virtual pair<RequestNode*,OutputNode*> createApplicationNodes(Node *operatorNode,const vector<Node*> & operandNodes,VentureEnvironmentPtr env);
+  virtual pair<RequestNode*,OutputNode*> createApplicationNodes(Node *operatorNode,
+								const vector<Node*> & operandNodes,
+								shared_ptr<VentureEnvironment> env);
 
   /* Regen mutations */
-  virtual void addESREdge(Node *esrParent,OutputNode * outputNode);
-  virtual void reconnectLookup(LookupNode * lookupNode);
-  virtual void incNumRequests(Node * node);
-  virtual void addChild(Node * node, Node * child);
+  virtual void addESREdge(Node *esrParent,OutputNode * outputNode) =0;
+  virtual void reconnectLookup(LookupNode * lookupNode) =0;
+  virtual void incNumRequests(Node * node) =0;
+  virtual void addChild(Node * node, Node * child) =0;
 
   /* Detach mutations */  
-  virtual Node * popLastESRParent(OutputNode * outputNode);
-  virtual void disconnectLookup(LookupNode * lookupNode);
-  virtual void decNumRequests(Node * node);
-  virtual def removeChild(Node * node, Node * child);
+  virtual Node * popLastESRParent(OutputNode * outputNode) =0;
+  virtual void disconnectLookup(LookupNode * lookupNode) =0;
+  virtual void decNumRequests(Node * node) =0;
+  virtual def removeChild(Node * node, Node * child) =0;
 
   /* Primitive getters */
-  virtual VentureValuePtr getValue(Node * node);
-  virtual SPRecord getMadeSPRecord(OutputNode * makerNode);
-  virtual vector<Node*> getESRParents(Node * node);
-  virtual set<Node*> getChildren(Node * node);
-  virtual int getNumRequests(Node * node);
-  virtual int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
-  virtual VentureValuePtr getObservedValue(Node * node);
+  virtual VentureValuePtr getValue(Node * node) =0;
+  virtual SPRecord getMadeSPRecord(OutputNode * makerNode) =0;
+  virtual vector<Node*> getESRParents(Node * node) =0;
+  virtual set<Node*> getChildren(Node * node) =0;
+  virtual int getNumRequests(Node * node) =0;
+  virtual int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) =0;
+  virtual VentureValuePtr getObservedValue(Node * node) =0;
 
-  virtual bool isConstrained(Node * node);
-  virtual bool isObservation(Node * node);
+  virtual bool isConstrained(Node * node) =0;
+  virtual bool isObservation(Node * node) =0;
 
   /* Derived getters (just for convenience)*/
   virtual VentureValuePtr getGroundValue(Node * node);
@@ -67,79 +69,31 @@ struct Trace
   virtual vector<Node*> getParents(Node * node);
 
   /* Primitive setters */
-  virtual void setValue(Node * node, VentureValuePtr value);
-  virtual void clearValue(Node * node);
+  virtual void setValue(Node * node, VentureValuePtr value) =0;
+  virtual void clearValue(Node * node) =0;
 
-  virtual void createSPRecord(OutputNode * makerNode); // No analogue in VentureLite
+  virtual void createSPRecord(OutputNode * makerNode) =0; // No analogue in VentureLite
 
-  virtual void initMadeSPFamilies(Node * node);
-  virtual void clearMadeSPFamilies(Node * node);
+  virtual void initMadeSPFamilies(Node * node) =0;
+  virtual void clearMadeSPFamilies(Node * node) =0;
 
-  virtual void setMadeSP(Node * node,shared_ptr<VentureSP> sp);
-  virtual void setMadeSPAux(Node * node,shared_ptr<SPAux> spaux);
+  virtual void setMadeSP(Node * node,shared_ptr<VentureSP> sp) =0;
+  virtual void setMadeSPAux(Node * node,shared_ptr<SPAux> spaux) =0;
 
-  virtual void setChildren(Node * node,set<Node*> children);
-  virtual void setESRParents(Node * node,const vector<Node*> & esrParents);
+  virtual void setChildren(Node * node,set<Node*> children) =0;
+  virtual void setESRParents(Node * node,const vector<Node*> & esrParents) =0;
 
-  virtual void setNumRequests(Node * node,int num);
+  virtual void setNumRequests(Node * node,int num) =0;
 
   /* SPFamily operations */
   // Note: this are different from current VentureLite, since it does not automatically jump
   // from a node to its spmakerNode. (motivation: avoid confusing non-commutativity in particles)
-  virtual void registerMadeSPFamily(OutputNode * makerNode, FamilyID id, Node * esrParent);
-  virtual void unregisterMadeSPFamily(OutputNode * maderNode, FamilyID id, Node * esrParent);
-  virtual bool containsMadeSPFamily(OutputNode * makerNode, FamilyID id);
-  virtual Node * getMadeSPFamilyRoot(OutputNode * makerNode, FamilyID id);
+  virtual void registerMadeSPFamily(OutputNode * makerNode, FamilyID id, Node * esrParent) =0;
+  virtual void unregisterMadeSPFamily(OutputNode * maderNode, FamilyID id, Node * esrParent) =0;
+  virtual bool containsMadeSPFamily(OutputNode * makerNode, FamilyID id) =0;
+  virtual Node * getMadeSPFamilyRoot(OutputNode * makerNode, FamilyID id) =0;
 
 };
 
-struct ConcreteTrace : Trace
-{
-  BlockID sampleBlock(ScopeID scope);
-  double logDensityOfBlock(ScopeID scope);
-  vector<BlockID> blocksInScope(ScopeID scope); // TODO this should be an iterator
-  int numBlocksInScope(ScopeID scope);
-  set<Node*> getAllNodesInScope(ScopeID scope);
-    
-  vector<set<Node*> > getOrderedSetsInScope(ScopeID scope);
-
-  // TODO Vlad: read this carefully. The default scope is handled differently than the other scopes.
-  // For default, the nodes are the actualy principal nodes.
-  // For every other scope, they are only the roots w.r.t. the dynamic scoping rules.
-  set<Node*> getNodesInBlock(ScopeID scope, BlockID block);
-
-  // Helper function for dynamic scoping
-  void addRandomChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node);
-
-  bool scopeHasEntropy(ScopeID scope); 
-  void makeConsistent();
-  Node * getOutermostNonRefAppNode(Node * node);
-
-  int numRandomChoices();
-
-  int getSeed();
-  double getGlobalLogScore();
-
-  // Helpers for particle commit
-  void addNewMadeSPFamilies(Node * node, PMap newMadeSPFamilies);
-  void addNewChildren(Node * node,PSet newChildren);
-
-private:
-  VentureEnvironment * globalEnvironment;
-  set<Node*> unconstrainedRandomChoices;
-  set<Node*> constrainedChoices;
-  set<Node*> arbitraryErgodicKernels;
-  set<Node*> unpropagatedObservations;
-  map<DirectiveID,RootNodePtr> families;
-  map<ScopeID,SMap<BlockID,set<Node*> > scopes;
-
-  map<Node*, vector<Node*> > esrParents;
-  map<Node*, int> numRequests;
-  map<Node*, SPRecord> madeSPRecords;
-  map<Node*,set<Node*> > children;
-  map<Node*,VentureValuePtr> observedValues;
-
-
-};
 
 #endif
