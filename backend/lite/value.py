@@ -106,6 +106,8 @@ class NumberType(VentureType):
 
 # TODO Also Nil?
 for typename in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "Matrix", "SP", "Environment"]:
+  # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
+  # pylint: disable=exec-used
   exec("""
 class %sType(VentureType):
   def asVentureValue(self, thing): return Venture%s(thing)
