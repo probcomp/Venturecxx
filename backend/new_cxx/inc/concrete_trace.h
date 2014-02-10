@@ -1,3 +1,8 @@
+#ifndef CONCRETE_TRACE_H
+#define CONCRETE_TRACE_H
+
+#include "types.h"
+
 struct ConcreteTrace : Trace
 {
   /* TODO once we pass particle tests and care about supporting people, we will remove "override" keywords */
@@ -110,3 +115,5 @@ private:
 
 
 };
+
+#endif
