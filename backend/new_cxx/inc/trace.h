@@ -28,68 +28,68 @@ struct Trace
   virtual void unregisterConstrainedChoice(Node * node) =0;
 
   /* Creating nodes */
-  ConstantNode * createConstantNode(VentureValuePtr);
-  LookupNode * createLookupNode(Node * sourceNode);
-  pair<RequestNode*,OutputNode*> createApplicationNodes(Node *operatorNode,const vector<Node*> & operandNodes,VentureEnvironmentPtr env);
+  virtual ConstantNode * createConstantNode(VentureValuePtr);
+  virtual LookupNode * createLookupNode(Node * sourceNode);
+  virtual pair<RequestNode*,OutputNode*> createApplicationNodes(Node *operatorNode,const vector<Node*> & operandNodes,VentureEnvironmentPtr env);
 
   /* Regen mutations */
-  void addESREdge(Node *esrParent,OutputNode * outputNode);
-  void reconnectLookup(LookupNode * lookupNode);
-  void incNumRequests(Node * node);
-  void addChild(Node * node, Node * child);
+  virtual void addESREdge(Node *esrParent,OutputNode * outputNode);
+  virtual void reconnectLookup(LookupNode * lookupNode);
+  virtual void incNumRequests(Node * node);
+  virtual void addChild(Node * node, Node * child);
 
   /* Detach mutations */  
-  Node * popLastESRParent(OutputNode * outputNode);
-  void disconnectLookup(LookupNode * lookupNode);
-  void decNumRequests(Node * node);
-  def removeChild(Node * node, Node * child);
+  virtual Node * popLastESRParent(OutputNode * outputNode);
+  virtual void disconnectLookup(LookupNode * lookupNode);
+  virtual void decNumRequests(Node * node);
+  virtual def removeChild(Node * node, Node * child);
 
   /* Primitive getters */
-  VentureValuePtr getValue(Node * node);
-  SPRecord getMadeSPRecord(OutputNode * makerNode);
-  vector<Node*> getESRParents(Node * node);
-  set<Node*> getChildren(Node * node);
-  int getNumRequests(Node * node);
-  int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
-  VentureValuePtr getObservedValue(Node * node);
+  virtual VentureValuePtr getValue(Node * node);
+  virtual SPRecord getMadeSPRecord(OutputNode * makerNode);
+  virtual vector<Node*> getESRParents(Node * node);
+  virtual set<Node*> getChildren(Node * node);
+  virtual int getNumRequests(Node * node);
+  virtual int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
+  virtual VentureValuePtr getObservedValue(Node * node);
 
-  bool isConstrained(Node * node);
-  bool isObservation(Node * node);
+  virtual bool isConstrained(Node * node);
+  virtual bool isObservation(Node * node);
 
   /* Derived getters (just for convenience)*/
-  VentureValuePtr getGroundValue(Node * node);
-  Node * getSPMakerNode(Node * node);
-  shared_ptr<SPRef> getSPRef(Node * node);
-  shared_ptr<VentureSP> getSP(Node * node);
-  shared_ptr<SPFamilies> getSPFamilies(Node * node);
-  shared_ptr<SPAux> getSPAux(Node * node);
-  shared_ptr<PSP> getPSP(Node * node);
-  vector<Node*> getParents(Node * node);
+  virtual VentureValuePtr getGroundValue(Node * node);
+  virtual Node * getSPMakerNode(Node * node);
+  virtual shared_ptr<SPRef> getSPRef(Node * node);
+  virtual shared_ptr<VentureSP> getSP(Node * node);
+  virtual shared_ptr<SPFamilies> getSPFamilies(Node * node);
+  virtual shared_ptr<SPAux> getSPAux(Node * node);
+  virtual shared_ptr<PSP> getPSP(Node * node);
+  virtual vector<Node*> getParents(Node * node);
 
   /* Primitive setters */
-  void setValue(Node * node, VentureValuePtr value);
-  void clearValue(Node * node);
+  virtual void setValue(Node * node, VentureValuePtr value);
+  virtual void clearValue(Node * node);
 
-  void createSPRecord(OutputNode * makerNode); // No analogue in VentureLite
+  virtual void createSPRecord(OutputNode * makerNode); // No analogue in VentureLite
 
-  void initMadeSPFamilies(Node * node);
-  void clearMadeSPFamilies(Node * node);
+  virtual void initMadeSPFamilies(Node * node);
+  virtual void clearMadeSPFamilies(Node * node);
 
-  void setMadeSP(Node * node,shared_ptr<VentureSP> sp);
-  void setMadeSPAux(Node * node,shared_ptr<SPAux> spaux);
+  virtual void setMadeSP(Node * node,shared_ptr<VentureSP> sp);
+  virtual void setMadeSPAux(Node * node,shared_ptr<SPAux> spaux);
 
-  void setChildren(Node * node,set<Node*> children);
-  void setESRParents(Node * node,const vector<Node*> & esrParents);
+  virtual void setChildren(Node * node,set<Node*> children);
+  virtual void setESRParents(Node * node,const vector<Node*> & esrParents);
 
-  void setNumRequests(Node * node,int num);
+  virtual void setNumRequests(Node * node,int num);
 
   /* SPFamily operations */
   // Note: this are different from current VentureLite, since it does not automatically jump
   // from a node to its spmakerNode. (motivation: avoid confusing non-commutativity in particles)
-  void registerMadeSPFamily(OutputNode * makerNode, FamilyID id, Node * esrParent);
-  void unregisterMadeSPFamily(OutputNode * maderNode, FamilyID id, Node * esrParent);
-  bool containsMadeSPFamily(OutputNode * makerNode, FamilyID id);
-  Node * getMadeSPFamilyRoot(OutputNode * makerNode, FamilyID id);
+  virtual void registerMadeSPFamily(OutputNode * makerNode, FamilyID id, Node * esrParent);
+  virtual void unregisterMadeSPFamily(OutputNode * maderNode, FamilyID id, Node * esrParent);
+  virtual bool containsMadeSPFamily(OutputNode * makerNode, FamilyID id);
+  virtual Node * getMadeSPFamilyRoot(OutputNode * makerNode, FamilyID id);
 
 };
 

@@ -1,95 +1,79 @@
-#ifndef TRACE_H
-#define TRACE_H
 
-#include "types.h"
-#include <set>
-#include <map>
-#include <vector>
-#include "smap.h"
-
-using std::set;
-using std::map;
-using std::vector;
-
-struct Node;
-
-struct Trace 
-{
   /* Registering metadata */
-  virtual void registerAEKernel(Node * node) =0;
-  virtual void registerRandomChoice(Node * node) =0;
-  virtual void registerRandomChoiceInScope(ScopeID scope,BlockID block,Node * node) =0;
-  virtual void registerConstrainedChoice(Node * node) =0;
+void Trace::registerAEKernel(Node * node);
+  virtual void Trace::registerRandomChoice(Node * node) =0;
+  virtual void Trace::registerRandomChoiceInScope(ScopeID scope,BlockID block,Node * node) =0;
+  virtual void Trace::registerConstrainedChoice(Node * node) =0;
 
   /* Unregistering metadata */
-  virtual void unregisterAEKernel(Node * node) =0;
-  virtual void unregisterRandomChoice(Node * node) =0;
-  virtual void unregisterRandomChoiceInScope(ScopeID scope,BlockID block,Node * node) =0;
-  virtual void unregisterConstrainedChoice(Node * node) =0;
+  virtual void Trace::unregisterAEKernel(Node * node) =0;
+  virtual void Trace::unregisterRandomChoice(Node * node) =0;
+  virtual void Trace::unregisterRandomChoiceInScope(ScopeID scope,BlockID block,Node * node) =0;
+  virtual void Trace::unregisterConstrainedChoice(Node * node) =0;
 
   /* Creating nodes */
-  ConstantNode * createConstantNode(VentureValuePtr);
-  LookupNode * createLookupNode(Node * sourceNode);
-  pair<RequestNode*,OutputNode*> createApplicationNodes(Node *operatorNode,const vector<Node*> & operandNodes,VentureEnvironmentPtr env);
+  ConstantNode * Trace::createConstantNode(VentureValuePtr);
+  LookupNode * Trace::createLookupNode(Node * sourceNode);
+  pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node *operatorNode,const vector<Node*> & operandNodes,VentureEnvironmentPtr env);
 
   /* Regen mutations */
-  void addESREdge(Node *esrParent,OutputNode * outputNode);
-  void reconnectLookup(LookupNode * lookupNode);
-  void incNumRequests(Node * node);
-  void addChild(Node * node, Node * child);
+  void Trace::addESREdge(Node *esrParent,OutputNode * outputNode);
+  void Trace::reconnectLookup(LookupNode * lookupNode);
+  void Trace::incNumRequests(Node * node);
+  void Trace::addChild(Node * node, Node * child);
 
   /* Detach mutations */  
-  Node * popLastESRParent(OutputNode * outputNode);
-  void disconnectLookup(LookupNode * lookupNode);
-  void decNumRequests(Node * node);
-  def removeChild(Node * node, Node * child);
+  Node * Trace::popLastESRParent(OutputNode * outputNode);
+  void Trace::disconnectLookup(LookupNode * lookupNode);
+  void Trace::decNumRequests(Node * node);
+  def Trace::removeChild(Node * node, Node * child);
 
   /* Primitive getters */
-  VentureValuePtr getValue(Node * node);
-  SPRecord getMadeSPRecord(OutputNode * makerNode);
-  vector<Node*> getESRParents(Node * node);
-  set<Node*> getChildren(Node * node);
-  int getNumRequests(Node * node);
-  int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
-  VentureValuePtr getObservedValue(Node * node);
+  VentureValuePtr Trace::getValue(Node * node);
+  SPRecord Trace::getMadeSPRecord(OutputNode * makerNode);
+  vector<Node*> Trace::getESRParents(Node * node);
+  set<Node*> Trace::getChildren(Node * node);
+  int Trace::getNumRequests(Node * node);
+  int Trace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
+  VentureValuePtr Trace::getObservedValue(Node * node);
 
-  bool isConstrained(Node * node);
-  bool isObservation(Node * node);
+  bool Trace::isConstrained(Node * node);
+  bool Trace::isObservation(Node * node);
 
   /* Derived getters (just for convenience)*/
-  VentureValuePtr getGroundValue(Node * node);
-  Node * getSPMakerNode(Node * node);
-  shared_ptr<SPRef> getSPRef(Node * node);
-  shared_ptr<VentureSP> getSP(Node * node);
-  shared_ptr<SPFamilies> getSPFamilies(Node * node);
-  shared_ptr<SPAux> getSPAux(Node * node);
-  shared_ptr<PSP> getPSP(Node * node);
-  vector<Node*> getParents(Node * node);
+  VentureValuePtr Trace::getGroundValue(Node * node);
+  Node * Trace::getSPMakerNode(Node * node);
+  shared_ptr<SPRef> Trace::getSPRef(Node * node);
+  shared_ptr<VentureSP> Trace::getSP(Node * node);
+  shared_ptr<SPFamilies> Trace::getSPFamilies(Node * node);
+  shared_ptr<SPAux> Trace::getSPAux(Node * node);
+  shared_ptr<PSP> Trace::getPSP(Node * node);
+  vector<Node*> Trace::getParents(Node * node);
 
   /* Primitive setters */
-  void setValue(Node * node, VentureValuePtr value);
-  void clearValue(Node * node);
+  void Trace::setValue(Node * node, VentureValuePtr value);
+  void Trace::clearValue(Node * node);
 
-  void createSPRecord(OutputNode * makerNode); // No analogue in VentureLite
+  void Trace::createSPRecord(OutputNode * makerNode); // No analogue in VentureLite
 
-  void initMadeSPFamilies(Node * node);
-  void clearMadeSPFamilies(Node * node);
+  void Trace::initMadeSPFamilies(Node * node);
+  void Trace::clearMadeSPFamilies(Node * node);
 
-  void setMadeSP(Node * node,shared_ptr<VentureSP> sp);
-  void setMadeSPAux(Node * node,shared_ptr<SPAux> spaux);
+  void Trace::setMadeSP(Node * node,shared_ptr<VentureSP> sp);
+  void Trace::setMadeSPAux(Node * node,shared_ptr<SPAux> spaux);
 
-  void setChildren(Node * node,set<Node*> children);
-  void setESRParents(Node * node,const vector<Node*> & esrParents);
+  void Trace::setChildren(Node * node,set<Node*> children);
+  void Trace::setESRParents(Node * node,const vector<Node*> & esrParents);
 
-  void setNumRequests(Node * node,int num);
+  void Trace::setNumRequests(Node * node,int num);
 
   /* SPFamily operations */
   // Note: this are different from current VentureLite, since it does not automatically jump
   // from a node to its spmakerNode. (motivation: avoid confusing non-commutativity in particles)
-  void registerMadeSPFamily(OutputNode * makerNode, FamilyID id, Node * esrParent);
-  void unregisterMadeSPFamily(OutputNode * maderNode, FamilyID id, Node * esrParent);
-  bool containsMadeSPFamily(OutputNode * makerNode, FamilyID id);
-  Node * getMadeSPFamilyRoot(OutputNode * makerNode, FamilyID id);
+  void Trace::registerMadeSPFamily(OutputNode * makerNode, FamilyID id, Node * esrParent);
+  void Trace::unregisterMadeSPFamily(OutputNode * maderNode, FamilyID id, Node * esrParent);
+  bool Trace::containsMadeSPFamily(OutputNode * makerNode, FamilyID id);
+  Node * Trace::getMadeSPFamilyRoot(OutputNode * makerNode, FamilyID id);
 
 };
 
