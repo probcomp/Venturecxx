@@ -238,7 +238,7 @@ class Trace(object):
 
   def scopeHasEntropy(self,scope): 
     # right now scope in self.scopes iff it has entropy
-    return scope in self.scopes and len(self.blocksInScope(scope)) > 0
+    return scope in self.scopes and self.numBlocksInScope(scope) > 0
 
   #### External interface to engine.py
   def eval(self,id,exp):
