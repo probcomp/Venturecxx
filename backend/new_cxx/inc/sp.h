@@ -20,17 +20,17 @@ struct SPFamilies
   void unregisterFamily(FamilyID id);
 };
 
-struct SPAux { virtual SPAux * copy(); }
+struct SPAux { virtual shared_ptr<SPAux> copy(); }
 
 struct VentureSP : VentureValue
 {
-  PSP * requestPSP;
-  PSP * outputPSP;
+  shared_ptr<PSP> requestPSP;
+  shared_ptr<PSP> outputPSP;
 
-  SPAux * constructSPAux();
-  LatentDB * constructLatentDB();
-  void simulateLatents(SPAux * spaux,LSR * lsr,bool shouldRestore,LatentDB * latentDB);
-  double detachLatents(SPAux * spaux,LSR * lsr,LatentDB * latentDB);
+  shared_ptr<SPAux> constructSPAux();
+  shared_ptr<LatentDB> constructLatentDB();
+  void simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB);
+  double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB);
   bool hasAEKernel();
 };
 
@@ -39,6 +39,6 @@ struct SPRecord
   // TODO these could be unique pointers
   shared_ptr<SPFamilies> spFamilies;
   shared_ptr<SPAux> spAux;
-  VentureSPPtr sp;
+  shared_ptr<VentureSP> sp;
 }
 #endif

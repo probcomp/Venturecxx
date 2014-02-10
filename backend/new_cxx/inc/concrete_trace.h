@@ -100,12 +100,16 @@ struct ConcreteTrace : Trace
 
 private:
   VentureEnvironment * globalEnvironment;
+
   set<Node*> unconstrainedRandomChoices;
   set<Node*> constrainedChoices;
   set<Node*> arbitraryErgodicKernels;
+
   set<Node*> unpropagatedObservations;
+
   map<DirectiveID,RootNodePtr> families;
-  map<ScopeID,SMap<BlockID,set<Node*> > scopes;
+
+  map<ScopeID,SamplableMap<BlockID,set<Node*> > scopes; // VLAD skip everything that touches this
 
   map<Node*, vector<Node*> > esrParents;
   map<Node*, int> numRequests;
