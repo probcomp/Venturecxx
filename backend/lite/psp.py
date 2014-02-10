@@ -11,7 +11,7 @@ class PSP(object):
   def logDensity(self,value,args): return 0
   def incorporate(self,value,args): pass
   def unincorporate(self,value,args): pass
-  def enumerate(self,args): return []
+  def enumerateValues(self,args): raise Exception("Cannot enumerate")
   def isRandom(self): return False
   def canAbsorb(self,trace,appNode,parentNode): return False
 
