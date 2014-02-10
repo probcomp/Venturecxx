@@ -17,7 +17,6 @@ import subprocess
 # https://github.com/ipython/ipython/wiki/Cookbook%3a-Notebook-utilities
 
 def testMagicNotebook():
-    notebook_test = '
     notebook_tester = 'test/venturemagics/nb_tester.py'
     test_file =  'test/venturemagics/test_venturemagics_nb.ipynb'
     
