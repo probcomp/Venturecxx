@@ -8,12 +8,24 @@
 struct Node
 {
   boost::shared_ptr<VentureValue> value;
-  std::vector<Node*> definiteParents{}; // TODO should be an iterator
+  std::vector<Node*> definiteParents; // TODO should be an iterator
+  virtual ~Node() {} // TODO destroy family
 };
 
 struct ConstantNode : Node { ConstantNode(boost::shared_ptr<VentureValue> value); };
-struct LookupNode : Node { LookupNode(Node * sourceNode); };
-struct ApplicationNode : Node;
+
+struct LookupNode : Node 
+{ 
+  LookupNode(Node * sourceNode); 
+  Node * sourceNode;
+};
+
+struct ApplicationNode : Node
+{
+  Node * operatorNode;
+  vector<Node *> operandNodes;
+};
+
 struct RequestNode : ApplicationNode
 {
   RequestNode(Node * operatorNode,std::vector<Node*> operandNodes, VentureEnvironment * env);
@@ -22,4 +34,5 @@ struct RequestNode : ApplicationNode
 struct OutputNode : ApplicationNode
 {
   OutputNode(Node * operatorNode,std::vector<Node*> operandNodes,Node * requestNode,VentureEnvironment * env);
+  RequestNode * requestNode;
 };
