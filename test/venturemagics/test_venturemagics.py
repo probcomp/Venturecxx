@@ -15,31 +15,39 @@ import subprocess
 
 # Script for testing notebooks taken from 
 # https://github.com/ipython/ipython/wiki/Cookbook%3a-Notebook-utilities
-notebook_tester = 'test/venturemagics/nb_tester.py'
-test_file =  'test/venturemagics/test_venturemagics_nb.ipynb'
 
-out=subprocess.check_output(['python',notebook_tester,test_file])
+def testMagicNotebook():
+    notebook_test = '
+    notebook_tester = 'test/venturemagics/nb_tester.py'
+    test_file =  'test/venturemagics/test_venturemagics_nb.ipynb'
+    
+    out=subprocess.check_output(['python',notebook_tester,test_file])
+    
+    if 'failure' in out.lower():
+        assert False, 'Notebook tester (%s) reports failure on notebook (%s)' % (
+            notebook_tester, test_file)
+    
+    raise SkipTest("The sequel fails in Jenkins for some reason.  Issue: https://app.asana.com/0/9277419963067/10168145986333")
 
-if 'failure' in out.lower():
-    assert False, 'Notebook tester (%s) reports failure on notebook (%s)' % (
-        notebook_tester, test_file)
 
-raise SkipTest("The sequel fails in Jenkins for some reason.  Issue: https://app.asana.com/0/9277419963067/10168145986333")
 
 ## Testing in IPython
-test_file = 'test/venturemagics/test_venturemagics_ipy.ipy'
-out = subprocess.check_output(['ipython',test_file])
-if 'error' in out.lower() or 'assertion' in out.lower():
-    assert False, 'Error running %s in IPython' % test_file
+def testMagicIpython():
+    test_file = 'test/venturemagics/test_venturemagics_ipy.ipy'
+    out = subprocess.check_output(['ipython',test_file])
+    if 'error' in out.lower() or 'assertion' in out.lower():
+        assert False, 'Error running %s in IPython' % test_file
+
 
 
 ## Test in Python (weak test because can't test IPython magics)
-from venture.venturemagics.venturemagics import *
-ipy_ripl.assume('x1','(flip)')
-ipy_ripl.infer(10)
-ipy_ripl.assume('x5','(beta 1 1)')
-assert(True==ipy_ripl.predict('true'))
-assert(ipy_ripl.predict('x5')>0)
+def testMagicPython():
+    from venture.venturemagics.venturemagics import *
+    ipy_ripl.assume('x1','(flip)')
+    ipy_ripl.infer(10)
+    ipy_ripl.assume('x5','(beta 1 1)')
+    assert(True==ipy_ripl.predict('true'))
+    assert(ipy_ripl.predict('x5')>0)
 
 
 
