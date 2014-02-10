@@ -11,7 +11,8 @@ class PSP(object):
   def logDensity(self,value,args): return 0
   def incorporate(self,value,args): pass
   def unincorporate(self,value,args): pass
-  def enumerate(self,args): return [] # Returns a Python list of VentureValue objects
+  # Returns a Python list of VentureValue objects
+  def enumerateValues(self,args): raise Exception("Cannot enumerate")
   def isRandom(self): return False
   def canAbsorb(self,trace,appNode,parentNode): return False
 
@@ -78,8 +79,8 @@ class TypedPSP(PSP):
     return self.psp.incorporate(self.unwrap_return(value), self.unwrap_args(args))
   def unincorporate(self,value,args):
     return self.psp.unincorporate(self.unwrap_return(value), self.unwrap_args(args))
-  def enumerate(self,args):
-    return [self.wrap_return(v) for v in self.psp.enumerate(self.unwrap_args(args))]
+  def enumerateValues(self,args):
+    return [self.wrap_return(v) for v in self.psp.enumerateValues(self.unwrap_args(args))]
   def isRandom(self):
     return self.psp.isRandom()
   def canAbsorb(self,trace,appNode,parentNode):
