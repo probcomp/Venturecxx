@@ -1,7 +1,7 @@
 import math
 
 from sp import VentureSP
-from psp import NullRequestPSP, ESRRefOutputPSP, PSP
+from psp import NullRequestPSP, ESRRefOutputPSP, PSP, TypedPSP
 
 import discrete
 import continuous
@@ -13,42 +13,57 @@ import hmm
 import conditionals
 import scope
 import eval_sps
-import value
+import value as v
 
 def builtInValues():
-  return { "true" : value.VentureBool(True), "false" : value.VentureBool(False) }
+  return { "true" : v.VentureBool(True), "false" : v.VentureBool(False) }
 
-def deterministic(f):
+def deterministic_psp(f):
   class DeterministicPSP(PSP):
     def simulate(self,args):
       return f(*args.operandValues)
     def description(self,name):
       return "deterministic %s" % name
-  return VentureSP(NullRequestPSP(), DeterministicPSP())
+  return DeterministicPSP()
+
+def deterministic(f):
+  return VentureSP(NullRequestPSP(), deterministic_psp(f))
+
+def deterministic_typed(f, args_types, return_type, variadic=False):
+  return VentureSP(NullRequestPSP(), TypedPSP(args_types, return_type, deterministic_psp(f), variadic))
+
+def binaryNum(f):
+  return deterministic_typed(f, [v.NumberType(), v.NumberType()], v.NumberType())
+
+def unaryNum(f):
+  return deterministic_typed(f, [v.NumberType()], v.NumberType())
+
+def naryNum(f):
+  return deterministic_typed(f, [v.NumberType()], v.NumberType(), True)
 
 def builtInSPsList():
-  return [ [ "plus",  deterministic(lambda *args: sum(args)) ],
-           [ "minus", deterministic(lambda x,y: x - y) ],
-           [ "times", deterministic(lambda *args: reduce(lambda x,y: x * y,args,1)) ],
-           [ "div",   deterministic(lambda x,y: x / y) ],
+  return [ [ "plus",  naryNum(lambda *args: sum(args)) ],
+           [ "minus", binaryNum(lambda x,y: x - y) ],
+           [ "times", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1)) ],
+           [ "div",   binaryNum(lambda x,y: x / y) ],
            [ "eq",    deterministic(lambda x,y: x == y) ],
            [ "gt",    deterministic(lambda x,y: x > y) ],
            [ "gte",    deterministic(lambda x,y: x >= y) ],
            [ "lt",    deterministic(lambda x,y: x < y) ],
            [ "lte",    deterministic(lambda x,y: x >= y) ],
            # Only makes sense with VentureAtom/VentureNumber distinction
-           [ "real",  deterministic(lambda x:x) ],
+           [ "real",  deterministic_typed(lambda x:x, [v.AtomType()], v.NumberType()) ],
            # Atoms appear to be represented as Python integers
            [ "atom_eq", deterministic(lambda x,y: x == y) ],
 
-           [ "sin", deterministic(math.sin) ],
-           [ "cos", deterministic(math.cos) ],
-           [ "tan", deterministic(math.tan) ],
-           [ "hypot", deterministic(math.hypot) ],
-           [ "exp", deterministic(math.exp) ],
-           [ "log", deterministic(math.log) ],
-           [ "pow", deterministic(math.pow) ],
-           [ "sqrt", deterministic(math.sqrt) ],
+           [ "sin", unaryNum(math.sin) ],
+           [ "cos", unaryNum(math.cos) ],
+           [ "tan", unaryNum(math.tan) ],
+           [ "hypot", unaryNum(math.hypot) ],
+           [ "exp", unaryNum(math.exp) ],
+           [ "log", unaryNum(math.log) ],
+           [ "pow", unaryNum(math.pow) ],
+           [ "sqrt", unaryNum(math.sqrt) ],
 
            [ "not", deterministic(lambda x: not x) ],
 

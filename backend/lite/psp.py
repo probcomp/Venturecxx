@@ -70,6 +70,7 @@ class TypedPSP(PSP):
       answer.operandValues = [self.args_types[i].asPython(args.operandValues[i]) for i in len(args.operandValues)]
     else:
       answer.operandValues = [self.args_types[0].asPython(v) for v in args.operandValues]
+    return answer
 
   def simulate(self,args):
     return self.wrap_return(self.psp.simulate(self.unwrap_args(args)))
