@@ -17,7 +17,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 from venture import shortcuts
-from venture.unit import VentureUnit
+from venture.unit import VentureUnit, produceHistories, plotAsymptotics
 
 
 class HMMDemo(VentureUnit):
@@ -97,12 +97,16 @@ def main1():
   # Running the job in-process gives better exceptions
 #  map(run, work)
 
-  #    history = model.runFromConditional(5, runs=5, verbose=True, name=name, infer=inference)
-  #    history.plot(fmt='png')
-      # (sampled, inferred, kl) = model.computeJointKL(1, 20, runs=1, verbose=True, name=name, infer=inference)
-      # sampled.plot(fmt='png')
-      # inferred.plot(fmt='png')
-      # kl.plot(fmt='png')
+def main2():
+  parameters = {"length": [5,10,15]}
+  def runner(params):
+    model = HMMDemo(shortcuts.make_lite_church_prime_ripl(), params)
+    inference = reasonableInfer
+    args = [False]
+    return model.runFromConditional(3, runs=5, verbose=True, infer=inference(*args))
+
+  histories = produceHistories(parameters, runner)
+  plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png')
 
 if __name__ == '__main__':
-  main1()
+  main2()
