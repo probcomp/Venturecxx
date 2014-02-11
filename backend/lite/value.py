@@ -107,7 +107,7 @@ class %sType(VentureType):
 
 class NilType(VentureType):
   def asVentureValue(self, thing):
-    # TODO Throw an error if not null-line?
+    # TODO Throw an error if not null-like?
     return VentureNil()
   def asPython(self, vthing):
     # TODO Throw an error if not nil?
