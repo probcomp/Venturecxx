@@ -49,6 +49,7 @@ class Trace(object):
     self.registerRandomChoiceInScope("default",node,node)
 
   def registerRandomChoiceInScope(self,scope,block,node):
+    assert block is not None
     if not scope in self.scopes: self.scopes[scope] = SMap()
     if not block in self.scopes[scope]: self.scopes[scope][block] = set()
     assert not node in self.scopes[scope][block]
