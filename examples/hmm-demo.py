@@ -60,8 +60,7 @@ class HMMDemo(VentureUnit):
       self.observe("(observation_fn (get_state %d))" % i, xs[i])
 
 if __name__ == '__main__':
-  ripl = shortcuts.make_lite_church_prime_ripl()
-  model = HMMDemo(ripl)
+  model = HMMDemo(shortcuts.make_lite_church_prime_ripl())
   def particleFilterInfer(ripl, ct):
     ripl.infer({"transitions":2, "kernel":"pgibbs", "scope":"state", "block":"ordered"})
 
