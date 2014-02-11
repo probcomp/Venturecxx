@@ -1,7 +1,7 @@
 import math
 import scipy.stats as stats
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, ignore_inference_quality
 from nose.plugins.attrib import attr
 
 # TODO N needs to be managed here more intelligently
@@ -62,6 +62,11 @@ def checkPGibbsDynamicScope1(mutate):
 
   ripl.predict("(f 4)","pid")
 
-  predictions = collectSamples(ripl,"pid",infer={"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered","particles":20, "with_mutation":mutate})
+  if ignore_inference_quality():
+    infer = {"kernel":"pgibbs","transitions":2,"scope":0,"block":"ordered","particles":3, "with_mutation":mutate}
+  else:
+    infer = {"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered","particles":20, "with_mutation":mutate}
+
+  predictions = collectSamples(ripl,"pid",infer=infer)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
