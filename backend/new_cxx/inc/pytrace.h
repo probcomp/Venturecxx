@@ -27,8 +27,8 @@ struct PyTrace
 
   boost::python::object extractPythonValue(size_t did);
 
-  void set_seed(size_t seed);
-  size_t get_seed();
+  void setSeed(size_t seed);
+  size_t getSeed();
 
   double getGlobalLogScore();
   uint32_t numRandomChoices();
@@ -36,7 +36,7 @@ struct PyTrace
   void infer(boost::python::dict params);
 
 private:
-  Trace * trace;
+  shared_ptr<Trace> trace;
   
 };
 
