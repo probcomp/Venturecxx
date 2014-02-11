@@ -96,7 +96,7 @@ def teardownMadeSP(trace,node,isAAA):
 def unapplyPSP(trace,node,scaffold,omegaDB):
   psp,args = trace.pspAt(node),trace.argsAt(node)
   if isinstance(psp,ScopeIncludeOutputPSP):
-    scope,block = [n.value for n in node.operandNodes[0:2]]
+    scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
     blockNode = node.operandNodes[2]
     trace.unregisterRandomChoiceInScope(scope,block,blockNode)
   if psp.isRandom(): trace.unregisterRandomChoice(node)
