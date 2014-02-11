@@ -34,6 +34,7 @@ void ConcreteTrace::addESREdge(Node *esrParent,OutputNode * outputNode) { throw 
 void ConcreteTrace::reconnectLookup(LookupNode * lookupNode) { throw 500; }
 void ConcreteTrace::incNumRequests(Node * node) { throw 500; }
 void ConcreteTrace::addChild(Node * node, Node * child) {
+  assert(children[node].count(child) == 0);
   children[node].insert(child);
 }
 
@@ -95,9 +96,7 @@ void ConcreteTrace::clearMadeSPFamilies(Node * node) { throw 500; }
 void ConcreteTrace::setMadeSP(Node * node,shared_ptr<VentureSP> sp) { throw 500; }
 void ConcreteTrace::setMadeSPAux(Node * node,shared_ptr<SPAux> spaux) { throw 500; }
 
-void ConcreteTrace::setChildren(Node * node,set<Node*> children) {
-  
-}
+void ConcreteTrace::setChildren(Node * node,set<Node*> children) { throw 500; }
 void ConcreteTrace::setESRParents(Node * node,const vector<Node*> & esrParents) { throw 500; }
 
 void ConcreteTrace::setNumRequests(Node * node,int num) { throw 500; }
