@@ -8,7 +8,7 @@ using std::vector;
 
 struct PSP
 {
-  virtual VentureValuePtr simulate(Args * args) const =0;
+  virtual VentureValuePtr simulate(Args * args,gsl_rng * rng) const =0;
   virtual double logDensity(VentureValuePtr value,Args * args) const { return 0; }
   virtual void incorporate(VentureValuePtr value,Args * args) const {}
   virtual void unincorporate(VentureValuePtr value,Args * args) const {}
@@ -33,13 +33,13 @@ struct PSP
 
 struct NullRequestPSP : PSP
 {
-  VentureValuePtr simulate(Args * args) const override;
+  VentureValuePtr simulate(Args * args,gsl_rng * rng) const override;
   bool canAbsorb(ConcreteTrace * trace,Node * appNode,Node * parentNode) const override { return true; }
 };
 
 struct ESRRefOutputPSP : PSP
 {
-  VentureValuePtr simulate(Args * args) const override;
+  VentureValuePtr simulate(Args * args,gsl_rng * rng) const override;
   bool canAbsorb(ConcreteTrace * trace,Node * appNode,Node * parentNode) const override;
 };
 

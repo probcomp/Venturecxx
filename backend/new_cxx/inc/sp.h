@@ -11,6 +11,12 @@ struct LatentDB;
 
 using std::map;
 
+struct VentureSPRef : VentureValue
+{
+  VentureSPRef(Node * makerNode): makerNode(makerNode) {}
+  Node * makerNode;
+};
+
 struct SPFamilies
 {
   map<FamilyID,RootNodePtr> families;
