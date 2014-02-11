@@ -1,225 +1,102 @@
 #ifndef TRACE_H
 #define TRACE_H
 
-#include <vector>
-#include <map>
-#include <unordered_map>
+#include "types.h"
+#include "sprecord.h"
 #include <set>
-#include <string>
-#include <functional>
+#include <map>
+#include <vector>
+#include "smap.h"
+#include "node.h"
 
-#include <gsl/gsl_rng.h>
-#include <boost/python/object.hpp>
 
-using namespace std;
 
-struct VentureValue;
 struct Node;
-struct VentureEnvironment;
-struct OmegaDB;
-struct Scaffold;
-struct SP;
-struct VentureSP;
+struct SPRef;
 
-
-struct Trace
+struct Trace 
 {
-  /* Constructor will add nodes for primitives and environments. */
+  /* Registering metadata */
+  /** AE (Arbitrary Ergodic) kernels repropose random choices within an sp that 
+      have no effect on the trace. This optimizes some cases that otherwise could
+      be handled by AAA.
+   */
+  virtual void registerAEKernel(Node * node) =0;
+  virtual void registerRandomChoice(Node * node) =0;
+  virtual void registerRandomChoiceInScope(ScopeID scope,BlockID block,Node * node) =0;
+  virtual void registerConstrainedChoice(Node * node) =0;
 
-  Trace();
-  ~Trace();
+  /* Unregistering metadata */
+  virtual void unregisterAEKernel(Node * node) =0;
+  virtual void unregisterRandomChoice(Node * node) =0;
+  virtual void unregisterRandomChoiceInScope(ScopeID scope,BlockID block,Node * node) =0;
+  virtual void unregisterConstrainedChoice(Node * node) =0;
 
-  /* Global RNG for GSL */
-  gsl_rng * rng = gsl_rng_alloc(gsl_rng_mt19937);
+  /* Creating nodes */
+  virtual ConstantNode * createConstantNode(VentureValuePtr);
+  virtual LookupNode * createLookupNode(Node * sourceNode);
+  virtual pair<RequestNode*,OutputNode*> createApplicationNodes(Node *operatorNode,
+								const vector<Node*> & operandNodes,
+								shared_ptr<VentureEnvironment> env);
 
-  /* Outer mix-mh */
-  Node * getRandomChoiceByIndex(uint32_t index) { return randomChoices[index]; }
-  uint32_t numRandomChoices() { return randomChoices.size(); }
+  /* Regen mutations */
+  virtual void addESREdge(Node *esrParent,OutputNode * outputNode) =0;
+  virtual void reconnectLookup(LookupNode * lookupNode) =0;
+  virtual void incNumRequests(Node * node) =0;
+  virtual void addChild(Node * node, Node * child) =0;
 
-  double regen(const vector<Node *> & border,
-	       Scaffold * scaffold,
-	       bool shouldRestore,
-	       OmegaDB * omegaDB,
-	       map<Node *,vector<double> > *gradients);
+  /* Detach mutations */  
+  virtual Node * popLastESRParent(OutputNode * outputNode) =0;
+  virtual void disconnectLookup(LookupNode * lookupNode) =0;
+  virtual void decNumRequests(Node * node) =0;
+  virtual def removeChild(Node * node, Node * child) =0;
 
-  pair<double, OmegaDB*> detach(const vector<Node *> & border,
-				Scaffold * scaffold);
+  /* Primitive getters */
+  virtual VentureValuePtr getValue(Node * node) =0;
+  virtual SPRecord getMadeSPRecord(OutputNode * makerNode) =0;
+  virtual vector<Node*> getESRParents(Node * node) =0;
+  virtual set<Node*> getChildren(Node * node) =0;
+  virtual int getNumRequests(Node * node) =0;
+  virtual int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) =0;
+  virtual VentureValuePtr getObservedValue(Node * node) =0;
 
+  virtual bool isConstrained(Node * node) =0;
+  virtual bool isObservation(Node * node) =0;
 
-  pair<double, Node*> evalVentureFamily(size_t directiveID, VentureValue * expression,
-					map<Node *,vector<double> > *gradients);
+  /* Derived getters (just for convenience)*/
+  virtual VentureValuePtr getGroundValue(Node * node);
+  virtual Node * getSPMakerNode(Node * node);
+  virtual shared_ptr<SPRef> getSPRef(Node * node);
+  virtual shared_ptr<VentureSP> getSP(Node * node);
+  virtual shared_ptr<SPFamilies> getSPFamilies(Node * node);
+  virtual shared_ptr<SPAux> getSPAux(Node * node);
+  virtual shared_ptr<PSP> getPSP(Node * node);
+  virtual vector<Node*> getParents(Node * node);
 
+  /* Primitive setters */
+  virtual void setValue(Node * node, VentureValuePtr value) =0;
+  virtual void clearValue(Node * node) =0;
 
-  /* Note: does not remove from ventureFamilies, so that destruction is easy.
-     If I learn c++, there is probably a way to use a safe iterator. */
-  double detachVentureFamily(Node * root, OmegaDB * omegaDB);
+  virtual void createSPRecord(OutputNode * makerNode) =0; // No analogue in VentureLite
 
-  double constrain(Node * node,bool reclaimValue);
+  virtual void initMadeSPFamilies(Node * node) =0;
+  virtual void clearMadeSPFamilies(Node * node) =0;
 
-  double unconstrain(Node * node,bool giveOwnershipToSP);
-  
-  Scaffold constructScaffold(vector<Node *> principalNodes,
-			     unsigned int depth,
-			     bool useDeltaKernels) const;
+  virtual void setMadeSP(Node * node,shared_ptr<VentureSP> sp) =0;
+  virtual void setMadeSPAux(Node * node,shared_ptr<SPAux> spaux) =0;
 
-  vector<Node *> getRandomChoices(); // used by kernels
+  virtual void setChildren(Node * node,set<Node*> children) =0;
+  virtual void setESRParents(Node * node,const vector<Node*> & esrParents) =0;
 
-  unordered_map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
+  virtual void setNumRequests(Node * node,int num) =0;
 
-
-//  map<size_t,Node*> definiteFamilies;
-
-  /* Regen helpers */
-
-  double regenParents(Node * node,
-		      Scaffold * scaffold,
-		      bool shouldRestore,
-		      OmegaDB * omegaDB,
-		      map<Node *,vector<double> > *gradients);
-
-  double absorb(Node * node,
-		Scaffold * scaffold,
-		bool shouldRestore,
-		OmegaDB * omegaDB,
-		map<Node *,vector<double> > *gradients);
-
-
-  // Eh, could pass gradients but don't need to
-  double constrain(Node * node, VentureValue * value,bool reclaimValue);
-
-  double regenInternal(Node * node,
-		       Scaffold * scaffold,
-		       bool shouldRestore,
-		       OmegaDB * omegaDB,
-		       map<Node *,vector<double> > *gradients);
-
-  void processMadeSP(Node * node,bool isAAA);
-
-
-  double applyPSP(Node * node,
-		  Scaffold * scaffold,
-		  bool shouldRestore,
-		  OmegaDB * omegaDB,
-		  map<Node *,vector<double> > *gradients);
-
-  double evalRequests(Node * node,
-		      Scaffold * scaffold,
-		      bool shouldRestore,
-		      OmegaDB * omegaDB,
-		      map<Node *,vector<double> > *gradients);
-
-
-  pair<double,Node*> evalFamily(VentureValue * exp, 
-				VentureEnvironment * familyEnv,
-				Scaffold * scaffold,
-				OmegaDB * omegaDB,
-				bool isDefinite,
-				map<Node *,vector<double> > *gradients);
-
-
-  // Meh, don't need to pass gradients
-  double restoreSPFamily(VentureSP * vsp,
-			 size_t id,
-			 Node * root,
-			 Scaffold * scaffold,
-			 OmegaDB * omegaDB);
-
-  double restoreFamily(Node * root,
-		       Scaffold * scaffold,
-		       OmegaDB * omegaDB);
-
-
-  double restoreVentureFamily(Node * root);
-  
-
-
-  double apply(Node * requestNode,
-	       Node * outputNode,
-	       Scaffold * scaffold,
-	       bool shouldRestore,
-	       OmegaDB * omegaDB,
-	       map<Node *,vector<double> > *gradients);
-
-  /* detach helpers */
-
-
-  double detachParents(Node * node,
-		       Scaffold * scaffold,
-		       OmegaDB * omegaDB);
-
-
-  double unabsorb(Node * node,
-		  Scaffold * scaffold,
-		  OmegaDB * omegaDB);
-
-
-  double detachInternal(Node * node,
-			Scaffold * scaffold,
-			OmegaDB * omegaDB);
-
-  void teardownMadeSP(Node * node,bool isAAA,OmegaDB * omegaDB);
-
-  double unapplyPSP(Node * node,
-		    Scaffold * scaffold,
-		    OmegaDB * omegaDB);
-
-  double unevalRequests(Node * node,
-			Scaffold * scaffold,
-			OmegaDB * omegaDB);
-
-  double detachSPFamily(VentureSP * vsp,
-			size_t id,
-			Scaffold * scaffold,
-			OmegaDB * omegaDB);
-
-  double detachFamily(Node * node,
-		      Scaffold * scaffold,
-		      OmegaDB * omegaDB);
-
-
-  double unapply(Node * node,
-		 Scaffold * scaffold,
-		 OmegaDB * omegaDB);
-
-  /* Misc */
-  void addApplicationEdges(Node * operatorNode,const vector<Node *> & operandNodes, Node * requestNode, Node * outputNode);
-
-  void registerRandomChoice(Node * node);
-  void unregisterRandomChoice(Node * node);
-
-  void registerConstrainedChoice(Node *node);
-  void unregisterConstrainedChoice(Node *node);
-
-  /* (Arbitrary ergodic, for latents)  */
-  void registerAEKernel(VentureSP * vsp);
-  void unregisterAEKernel(VentureSP * vsp);
-
-  /* Part of initialization. */
-  void addPrimitives(const map<string,VentureValue *> & builtInValues,
-		     const vector<SP *> & builtInSPs);
-
-  void addEnvironments(const map<string,VentureValue *> & builtInValues,
-		       const vector<SP *> & builtInSPs);
-
-  Node * getSPAuxNode(SP * sp);
-
-  VentureEnvironment * primitivesEnv;
-  VentureEnvironment * globalEnv;
-  
-  unordered_map<Node *, uint32_t> rcToIndex;
-  vector<Node *> randomChoices;
-
-  unordered_map<Node *, uint32_t> ccToIndex;
-  vector<Node *> constrainedChoices;
-
-  // Bool is TRUE for detach
-  map<pair<string,bool>,uint32_t> callCounts;
-
-  //////////////////////////////////////////
-//  void forEachNode(function<void(Node *)> f);
-//  void forEachEdge(function<void(Edge *)> f);
-  set<Node *> findSPFamilyRoots();
-
+  /* SPFamily operations */
+  // Note: this are different from current VentureLite, since it does not automatically jump
+  // from a node to its spmakerNode. (motivation: avoid confusing non-commutativity in particles)
+  virtual void registerMadeSPFamily(OutputNode * makerNode, FamilyID id, Node * esrParent) =0;
+  virtual void unregisterMadeSPFamily(OutputNode * maderNode, FamilyID id, Node * esrParent) =0;
+  virtual bool containsMadeSPFamily(OutputNode * makerNode, FamilyID id) =0;
+  virtual Node * getMadeSPFamilyRoot(OutputNode * makerNode, FamilyID id) =0;
 
 };
 

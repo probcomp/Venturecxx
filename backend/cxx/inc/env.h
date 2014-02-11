@@ -1,35 +1,23 @@
-#ifndef ENV_H
-#define ENV_H
+#ifndef ENVIRONMENT_H
+#define ENVIRONMENT_H
 
+#include "types.h"
 #include "value.h"
-#include "all.h"
-#include <string>
-#include <map>
-#include <vector>
-
-using namespace std;
-
-struct Node;
+#include "values.h"
+#include "node.h"
 
 struct VentureEnvironment : VentureValue
 {
-  VentureEnvironment() {}
-  VentureEnvironment(VentureEnvironment * outerEnv): outerEnv(outerEnv) {}
+  VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv,
+		     const vector<shared_ptr<VentureSymbol> > & syms,
+		     const vector<Node*> & nodes);
 
-  void addBinding(VentureSymbol * vsym, Node * node);
+  void addBinding(shared_ptr<VentureSymbol> sym,Node * node);
+  Node * lookupSymbol(shared_ptr<VentureSymbol> sym) const;
+  Node * lookupSymbol(shared_ptr<VentureSymbol> sym) const;
 
-  map<string, Node *> frame;
-  vector<VentureSymbol*> vsyms;
-
-  void destroySymbols();
-
-  VentureEnvironment * outerEnv{nullptr};
-
-  Node * findSymbol(VentureSymbol * vsym);
-
-private:
-  Node * findSymbol(const string & sym);
+  shared_ptr<VentureEnvironment> outerEnv;
+  map<string,Node*> frame;
 };
-
 
 #endif

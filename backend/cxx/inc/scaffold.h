@@ -1,91 +1,115 @@
 #ifndef SCAFFOLD_H
 #define SCAFFOLD_H
 
-#include <set>
-#include <map>
-#include <map>
-#include <queue>
-
-#include <cassert>
-
-using namespace std;
-
-struct Node;
-struct LKernel;
-
-class Scaffold
+struct Scaffold
 {
-
-public:
-  struct DRGNode
-  {
-    DRGNode() { assert(false); }
-    DRGNode(bool isAAA): isAAA(isAAA) {}
-
-    int regenCount{0};
-    bool isAAA;
-  };
-
-
-/* Fake scaffold. */
-  Scaffold() {}
-
-/* Constructs real scaffold. */
-  Scaffold(set<Node *> principalNodes);
-
-  ~Scaffold();
-
-/* TODO Most of this should be private. */
-  set<Node *> principalNodes;
-
-  map<Node *, DRGNode> drg{};
-  set<Node *> absorbing{};
-
-  map<Node *, LKernel*> lkernels{};
-  set<Node *> brush{};
-
-  vector<Node *> border;
-
-  bool hasAAANodes{false};
-
-  bool isResampling(Node * node) { return drg.count(node); }
-  bool isAAA(Node * node) { return isResampling(node) && drg[node].isAAA; }
-  bool isAbsorbing(Node * node) { return absorbing.count(node); }
-  bool hasKernelFor(Node * node) { return lkernels.count(node); }
-
-  inline bool esrReferenceCanAbsorb(Node * node);
-
-/* Removes from A or D if necessary, and adds to the brush. */
-  void registerBrush(Node * node) 
-    { absorbing.erase(node); drg.erase(node); brush.insert(node); }
-
-  void addResamplingNode(queue<pair<Node *,bool>> &q, Node * node);
-  void addAAANode(Node * node) { drg.emplace(node,true); hasAAANodes = true; }
-  void addAbsorbingNode(Node * node) { absorbing.insert(node); }
-
-  void loadDefaultKernels(bool deltaKernels);
-
-  void show();
+  set<Node *> getPrincipalNodes();
+  int getRegenCount(Node * node);
+  void incRegenCount(Node * node);
+  void dectRegenCount(Node * node);
+  bool isResampling(Node * node);
+  bool isAbsorbing(Node * node);
+  bool isAAA(Node * node);
+  bool hasLKernel(Node * node);
+  shared_ptr<LKernel> getLKernel(Node * node);
 
 private:
+  vector<set<Node*> > setsOfPNodes;
+  map<Node*,int> regenCounts;
+  set<Node*> absorbing;
+  set<Node*> aaa;
+  vector<vector<Node *> > border;
+  map<Node*,shared_ptr<LKernel> > lkernels;
 
-  void assembleERG(set<Node *> principalNodes);
-
-  void disableBrush();
-  void disableRequests(Node * node, 
-		       map<Node *,uint32_t> & disableCounts);
-  void disableEval(Node * node,     
-		   map<Node *,uint32_t> & disableCounts);
-
-
-  bool hasChildInAorD(Node * node);
-  void processParentsAAA(Node * node);
-  void processParentAAA(Node * parent);
-  void setRegenCounts();
-
-  
 };
 
-ostream& operator<<(ostream& os, Scaffold * scaffold);
+
+shared_ptr<Scaffold> constructScaffold(Trace * trace,const vector<set<Node*> > & setsOfPNodes);
+
+
+// TODO everything from here on should be moved to .cxx
+void addResamplingNode(Trace * trace,
+set<Node*> & cDRG,
+			      set<Node*> & cAbsorbing,
+			      set<Node*> & cAAA,
+			      queue<tuple<Node*,bool,Node*> > & q,
+			      Node * node,
+			      map<Node*,int> & indexAssignments,
+			      int i);
+
+void addAbsorbingNode(set<Node*> & cDRG,
+			      set<Node*> & cAbsorbing,
+			      set<Node*> & cAAA,
+			      Node * node,
+			      map<Node*,int> & indexAssignments,
+			      int i);
+
+void addAAANode(set<Node*> & cDRG,
+			      set<Node*> & cAbsorbing,
+			      set<Node*> & cAAA,
+			      Node * node,
+			      map<Node*,int> & indexAssignments,
+			      int i);
+
+void extendCandidateScaffold(ConcreteTrace * trace,
+			     const set<Node*> & pnodes,
+			     set<Node*> & cDRG,
+			     set<Node*> & cAbsorbing,
+			     set<Node*> & cAAA,
+			     map<Node*,int> & indexAssignments,
+			     int i);
+
+set<Node*> findBrush(ConcreteTrace * trace,
+		     set<Node*> & cDRG,
+		     set<Node*> & cAbsorbing,
+		     set<Node*> & cAAA);
+
+void disableRequests(ConcreteTrace * trace,
+		     Node * node,
+		     map<Node*,int> & disableCounts,
+		     set<RequestNode*> & disabledRequests,
+		     set<Node*> & brush);
+
+void disableFamily(ConcreteTrace * trace,
+		     Node * node,
+		     map<Node*,int> & disableCounts,
+		     set<RequestNode*> & disabledRequests,
+		     set<Node*> & brush);
+
+
+tuple<set<Node*>,set<Node*>,set<Node*> > removeBrush(set<Node*> & cDRG,
+						     set<Node*> & cAbsorbing,
+						     set<Node*> & cAAA,
+						     set<Node*> & brush);
+
+bool hasChildInAorD(ConcreteTrace * trace,
+		    set<Node*> & drg,
+		    set<Node*> & absorbing,
+		    Node * node);
+
+set<Node*> findBorder(ConcreteTrace * trace,
+		    set<Node*> & drg,
+		    set<Node*> & absorbing,
+		      set<Node*> & aaa);
+
+void maybeIncrementAAARegenCount(ConcreteTrace * trace,
+				 map<Node*,int> & regenCounts,
+				 set<Node*> & aaa,
+				 Node * node);
+
+set<Node*> computeRegenCounts(ConcreteTrace * trace,
+		    set<Node*> & drg,
+		    set<Node*> & absorbing,
+			      set<Node*> & aaa,
+			      set<Node*> & border,
+			      set<Node*> & brush);
+
+map<Node*,shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
+		    set<Node*> & drg,
+					    set<Node*> & absorbing);
+
+vector<vector<Node *> > assignBorderSequnce(set<Node*> & border,
+					    map<Node*,int> & indexAssignments,
+					    int numIndices);
 
 #endif

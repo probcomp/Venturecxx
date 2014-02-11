@@ -1,103 +1,43 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "all.h"
-#include <string>
-#include <vector>
+#include <boost/shared_ptr.hpp>
 #include <set>
-#include <unordered_set>
-#include <stdint.h>
-#include <cassert>
+#include <vector>
+#include "types.h"
 
-
-struct VentureValue;
-struct VentureSP;
 struct VentureEnvironment;
-struct SPAux;
-
-struct SP;
-struct Trace;
-
-
-enum class NodeType { VALUE, LOOKUP, REQUEST, OUTPUT };
-string strNodeType(NodeType nt);
-
 
 struct Node
 {
-  static void addOperatorEdge(Node * operatorNode, Node * applicationNode);
-  static void addOperandEdges(vector<Node *> operandNodes, Node * applicationNode);
-  static void addRequestEdge(Node * requestNode, Node * outputNode);
-  static void addESREdge(Node * node, Node * outputNode);
-  static void addLookupEdge(Node * lookedUpNode, Node * lookupNode);
-
-  /* 1D for 1 direction. We just clear outputNode->esrParents afterwards. */
-  Node * removeLastESREdge();
-
-  Node(NodeType type): nodeType(type) {}
-  Node(NodeType type, VentureValue * value): nodeType(type), _value(value) {}
-  Node(NodeType type, VentureValue * value, VentureEnvironment * familyEnv): 
-    nodeType(type), _value(value), familyEnv(familyEnv) {}
-
-
-
-  void disconnectLookup();
-  void reconnectLookup();
-
-  void registerReference(Node * lookedUpNode);
-  bool isReference() const { return sourceNode != nullptr; }
-
-  void registerObservation(VentureValue *val) { observedValue = val; }
-  bool isObservation() const { return observedValue != nullptr; }
-
-  void setValue(VentureValue *value);
-  void clearValue();
-  VentureValue * getValue() const;
-
-  bool isApplication() { return nodeType == NodeType::REQUEST || nodeType == NodeType::OUTPUT; }
-
-  /* Attributes */
-  const NodeType nodeType;
-
-  Node * lookedUpNode{nullptr};
-  Node * sourceNode{nullptr};
-
-  bool isActive{false};
-
-  unordered_set<Node*> children{};
-  uint32_t numRequests{0};
-
-  VentureValue * observedValue{nullptr};
-  Node * operatorNode{nullptr};
-  vector<Node *> operandNodes{};
-
-  VentureSP * vsp();
-  SP * sp();
-  SPAux * spaux();
-
-  vector<Node *> esrParents{};
-  Node * requestNode{nullptr};
-  Node * outputNode{nullptr};
-  bool isConstrained{false};
-  bool spOwnsValue{true};
-
-  VentureValue * expression{nullptr};
-
-  SPAux * madeSPAux{nullptr}; // owner
-
-  bool isValid() { return magic == 653135; }
-  uint32_t magic = 653135;
-  ~Node() { assert(isValid()); magic = 0; }
-private:
-  /* I like the constructor order, that's all. */
-  VentureValue * _value{nullptr};
-
-public:
-  VentureEnvironment * familyEnv;
-
-
+  //boost::shared_ptr<VentureValue> value;
+  std::vector<Node*> definiteParents; // TODO should be an iterator
+  virtual ~Node() {} // TODO destroy family
 };
 
+struct ConstantNode : Node { ConstantNode(boost::shared_ptr<VentureValue> value); };
 
+struct LookupNode : Node 
+{ 
+  LookupNode(Node * sourceNode); 
+  Node * sourceNode;
+};
+
+struct ApplicationNode : Node
+{
+  Node * operatorNode;
+  vector<Node *> operandNodes;
+};
+
+struct RequestNode : ApplicationNode
+{
+  RequestNode(Node * operatorNode,std::vector<Node*> operandNodes, shared_ptr<VentureEnvironment> env);
+};
+
+struct OutputNode : ApplicationNode
+{
+  OutputNode(Node * operatorNode,std::vector<Node*> operandNodes,Node * requestNode,shared_ptr<VentureEnvironment> env);
+  RequestNode * requestNode;
+};
 
 #endif

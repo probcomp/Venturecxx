@@ -1,54 +1,58 @@
+#ifndef REGEN_H
+#define REGEN_H
+
+struct Trace;
+struct Scaffold;
+struct DB;
+struct Node;
+struct ApplicationNode;
+struct OutputNode;
+struct RequestNode;
+
 double regenAndAttach(Trace * trace,
 		      const vector<Node*> & border,
 		      shared_ptr<Scaffold> scaffold,
 		      bool shouldRestore,
 		      shared_ptr<DB> db,
-		      shared_ptr<map<Node*,Gradient> > gradients)
-{ throw 500; }
+		      shared_ptr<map<Node*,Gradient> > gradients);
 
 double constrain(Trace * trace,
 		 Node * node,
-		 VentureValuePtr value)
-{ throw 500; }
+		 VentureValuePtr value);
 
 
 
 void propagateConstraint(Trace * trace,
 			 Node * node,
-			 VentureValuePtr value)
-{ throw 500; }
+			 VentureValuePtr value);
 
 double attach(Trace * trace,
-	      Node * node,
+	      ApplicationNode * node,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
-{ throw 500; }
+	      shared_ptr<map<Node*,Gradient> > gradients);
 
 double regen(Trace * trace,
 	      Node * node,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
-{ throw 500; }
+	      shared_ptr<map<Node*,Gradient> > gradients);
 
 double regenParents(Trace * trace,
 	      Node * node,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
-{ throw 500; }
+	      shared_ptr<map<Node*,Gradient> > gradients);
 
 double regenESRParents(Trace * trace,
 	      Node * node,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
-{ throw 500; }
+	      shared_ptr<map<Node*,Gradient> > gradients);
 
 pair<double,Node*> evalFamily(Trace * trace,
 			      VentureValuePtr exp,
@@ -56,8 +60,7 @@ pair<double,Node*> evalFamily(Trace * trace,
 			      shared_ptr<Scaffold> scaffold,
 			      bool shouldRestore,
 			      shared_ptr<DB> db,
-			      shared_ptr<map<Node*,Gradient> > gradients)
-{ throw 500; }
+			      shared_ptr<map<Node*,Gradient> > gradients);
 
 
 double apply(Trace * trace,
@@ -66,32 +69,30 @@ double apply(Trace * trace,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
-{ throw 500; }
+	      shared_ptr<map<Node*,Gradient> > gradients);
 
 
-void processMadeSP(Trace * trace, Node * node, bool isAAA)
-{ throw 500; }
+void processMadeSP(Trace * trace, OutputNode * node, bool isAAA);
 
 double applyPSP(Trace * trace,
-	      Node * node,
+	      ApplicationNode * node,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
-{ throw 500; }
+	      shared_ptr<map<Node*,Gradient> > gradients);
 
 double evalRequests(Trace * trace,
 	      RequestNode * requestNode,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
-{ throw 500; }
+	      shared_ptr<map<Node*,Gradient> > gradients);
 
 double restore(Trace * trace,
-	      RequestNode * requestNode,
+	      Node * node,
 	      shared_ptr<Scaffold> scaffold,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
-{ throw 500; }
+	      shared_ptr<map<Node*,Gradient> > gradients);
+
+
+#endif
