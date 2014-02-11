@@ -1,4 +1,16 @@
-ConstantNode::ConstantNode(boost::shared_ptr<VentureValue> value) { throw 500; }
-LookupNode::LookupNode(Node * sourceNode) { throw 500; }
-RequestNode::RequestNode(Node * operatorNode,std::vector<Node*> operandNodes, VentureEnvironment * env) { throw 500; }
-OutputNode::OutputNode(Node * operatorNode,std::vector<Node*> operandNodes,Node * requestNode,VentureEnvironment * env) { throw 500; }
+LookupNode::LookupNode(Node * sourceNode) :
+  sourceNode(sourceNode)
+  {}
+
+RequestNode::RequestNode(Node * operatorNode, const std::vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env) :
+  operatorNode(operatorNode),
+  operandNodes(operandNodes),
+  env(env)
+  {}
+
+OutputNode::OutputNode(Node * operatorNode, const std::vector<Node*>& operandNodes, Node * requestNode, const share_ptr<VentureEnvironment> env) :
+  operatorNode(operatorNode),
+  operandNodes(operandNodes),
+  requestNode(requestNode),
+  env(env),
+  {}
