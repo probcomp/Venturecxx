@@ -8,7 +8,7 @@ RequestNode::RequestNode(Node * operatorNode, const std::vector<Node*>& operandN
   env(env)
   {}
 
-OutputNode::OutputNode(Node * operatorNode, const std::vector<Node*>& operandNodes, Node * requestNode, const share_ptr<VentureEnvironment> env) :
+OutputNode::OutputNode(Node * operatorNode, const std::vector<Node*>& operandNodes, Node * requestNode, const share_ptr<VentureEnvironment>& env) :
   operatorNode(operatorNode),
   operandNodes(operandNodes),
   requestNode(requestNode),

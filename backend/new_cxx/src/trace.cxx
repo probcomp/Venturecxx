@@ -1,30 +1,51 @@
-ConstantNode * Trace::createConstantNode(VentureValuePtr value) { return ConstantNode(value); }
+#include<memory>
+
+ConstantNode * Trace::createConstantNode(VentureValuePtr value)
+{
+  ConstantNode * constantNode = new ConstantNode();
+  setValue(constantNode, value);
+  return constantNode;
+}
+
 LookupNode * Trace::createLookupNode(Node * sourceNode)
 {
-  LookupNode * lookupNode = LookupNode(sourceNode);
-  setValueAt(lookupNode,getValue(sourceNode));
-  addChildAt(sourceNode,lookupNode);
+  LookupNode * lookupNode = new LookupNode(sourceNode);
+  setValue(lookupNode,getValue(sourceNode));
+  addChild(sourceNode,lookupNode);
   return lookupNode;
 }
 
 
-pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node *operatorNode,const vector<Node*> & operandNodes,VentureEnvironmentPtr env)
+pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env)
 {
-/* The Python: */
-    // requestNode = RequestNode(operatorNode,operandNodes,env)
-    // outputNode = OutputNode(operatorNode,operandNodes,requestNode,env)
-    // self.addChildAt(operatorNode,requestNode)
-    // self.addChildAt(operatorNode,outputNode)
-    // for operandNode in operandNodes:
-    //   self.addChildAt(operandNode,requestNode)
-    //   self.addChildAt(operandNode,outputNode)
-    // requestNode.registerOutputNode(outputNode)
-    // return (requestNode,outputNode)
-  throw 500;
+  RequestNode * requestNode = new RequestNode(operatorNode, operandNodes, env);
+  OutputNode * outputNode = new OutputNode(operatorNode, operandNodes, requestNode, env);
+  
+  requestNode.outputNode = outputNode;
+  addChild(requestNode, outputNode);
+  
+  addChild(operatorNode, requestNode);
+  addChild(operatorNode, outputNode);
+  
+  for (size_t i = 0; i < operandNodes.size(); ++i) {
+    addChild(operandNodes[i], requestNode);
+    addChild(operandNodes[i], outputNode);
+  }
+  
+  return make_pair(requestNode, outputNode);
 }
 
+VentureValuePtr getGroundValue(Node * node)
+{
+  throw 500;
 
-VentureValuePtr getGroundValue(Node * node) { throw 500; }
+  VentureValuePtr value = getValue(node);
+  shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
+  
+  if (spRef) { return getMade(); }
+  else { return value; }
+}
+
 Node * getSPMakerNode(Node * node) { throw 500; }
 shared_ptr<SPRef> getSPRef(Node * node) { throw 500; }
 shared_ptr<VentureSP> getSP(Node * node) { throw 500; }

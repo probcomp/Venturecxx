@@ -34,9 +34,10 @@ struct Trace
   /* Creating nodes */
   virtual ConstantNode * createConstantNode(VentureValuePtr);
   virtual LookupNode * createLookupNode(Node * sourceNode);
-  virtual pair<RequestNode*,OutputNode*> createApplicationNodes(Node *operatorNode,
-								const vector<Node*> & operandNodes,
-								shared_ptr<VentureEnvironment> env);
+  virtual pair<RequestNode*,OutputNode*> createApplicationNodes(
+                Node *operatorNode,
+								const vector<Node*>& operandNodes,
+								shared_ptr<VentureEnvironment>& env);
 
   /* Regen mutations */
   virtual void addESREdge(Node *esrParent,OutputNode * outputNode) =0;
@@ -66,10 +67,10 @@ struct Trace
   virtual VentureValuePtr getGroundValue(Node * node);
   virtual Node * getSPMakerNode(Node * node);
   virtual shared_ptr<SPRef> getSPRef(Node * node);
-  virtual shared_ptr<VentureSP> getSP(Node * node);
-  virtual shared_ptr<SPFamilies> getSPFamilies(Node * node);
-  virtual shared_ptr<SPAux> getSPAux(Node * node);
-  virtual shared_ptr<PSP> getPSP(Node * node);
+  virtual shared_ptr<VentureSP> getMadeSP(Node * node);
+  virtual shared_ptr<SPFamilies> getMadeSPFamilies(Node * node);
+  virtual shared_ptr<SPAux> getMadeSPAux(Node * node);
+  virtual shared_ptr<PSP> getMadePSP(Node * node);
   virtual vector<Node*> getParents(Node * node);
 
   /* Primitive setters */
