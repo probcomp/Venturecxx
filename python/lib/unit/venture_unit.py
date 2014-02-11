@@ -652,7 +652,7 @@ def addToDict(dictionary, key, value):
     dictionary[key] = value
     return dictionary
 
-# Produces plots for a a given variable over a set of runs.
+# Produces plots for a given variable over a set of runs.
 # Variable parameters are the x-axis, 'seriesName' is the y-axis.
 # If aggregate=True, multiple plots that differ in only one parameter are overlayed.
 def plotAsymptotics(parameters, histories, seriesName, fmt='pdf', directory=None, verbose=False, aggregate=False):
