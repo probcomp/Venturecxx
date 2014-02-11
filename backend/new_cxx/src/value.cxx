@@ -17,3 +17,4 @@ map<VentureValuePtr,VentureValuePtr> VentureValue::getDictionary() { cannotConve
 MatrixXd VentureValue::getMatrix() const { cannotConvertType(this,"matrix"); }
 pair<vector<ESR>,vector<LSR *> > VentureValue::getRequests() { cannotConvertType(this,"requests"); }
 bool equals(const VentureValuePtr & other) const { return false; }
+size_t hash() const { assert(false); }
