@@ -19,32 +19,37 @@ struct VentureSPRef : VentureValue
 
 struct SPFamilies
 {
+  SPFamilies() {}
+  SPFamilies(const map<FamilyID,RootNodePtr> & families): families(families) {}
+
   map<FamilyID,RootNodePtr> families;
-  bool containsFamily(FamilyID id);
+  bool containsFamily(FamilyID id) const;
   Node * getFamily(FamilyID id);
   void registerFamily(FamilyID id,RootNodePtr root);
   void unregisterFamily(FamilyID id);
 };
 
-struct SPAux { virtual shared_ptr<SPAux> copy(); }
+struct SPAux { virtual shared_ptr<SPAux> copy() const; }
 
 struct VentureSP : VentureValue
 {
   shared_ptr<PSP> requestPSP;
   shared_ptr<PSP> outputPSP;
 
-  shared_ptr<SPAux> constructSPAux();
-  shared_ptr<LatentDB> constructLatentDB();
-  void simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB);
-  double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB);
-  bool hasAEKernel();
+  virtual shared_ptr<SPAux> constructSPAux() const;
+  virtual shared_ptr<LatentDB> constructLatentDB() const;
+  virtual void simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB) const;
+  virtual double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const;
+  virtual bool hasAEKernel() const;
 };
 
+// TODO URGENT not sure when or how this is called yet.
 struct SPRecord
 {
-  // TODO these could be unique pointers
   shared_ptr<SPFamilies> spFamilies;
   shared_ptr<SPAux> spAux;
   shared_ptr<VentureSP> sp;
-}
+};
+
+
 #endif
