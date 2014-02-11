@@ -12,9 +12,9 @@ struct SamplableMap
   V& operator[](K k) { throw 500; }
   const V& operator[](K k) const { throw 500; }
 
-  size_type erase(const K & k) { throw 500; }
-  size_type count(const K& k) const { throw 500; }
-  size_type size() const { throw 500; }
+  size_t erase(const K & k) { throw 500; }
+  size_t count(const K& k) const { throw 500; }
+  size_t size() const { throw 500; }
 
   const K& sampleKeyUniformly() { throw 500; }
   

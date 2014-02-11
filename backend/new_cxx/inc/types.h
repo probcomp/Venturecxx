@@ -14,7 +14,6 @@ using std::map;
 using std::set;
 using std::string;
 using std::size_t;
-using std::size_type;
 using std::pair;
 using std::make_pair;
 
