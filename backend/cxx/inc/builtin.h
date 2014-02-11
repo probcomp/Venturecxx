@@ -1,10 +1,12 @@
-#ifndef BUILTIN_H
-#define BUILTIN_H
+#ifndef BUILT_IN_H
+#define BUILT_IN_H
 
-#include "types.h"
-struct VentureSP;
+#include "value.h"
 
-map<string,VentureValuePtr> initBuiltInValues();
-map<string,shared_ptr<VentureSP> > initBuiltInSPs();
+#include <map>
+#include <vector>
+
+map<string,VentureValue *> initBuiltInValues();
+map<string,SP *> initBuiltInSPs();
 
 #endif

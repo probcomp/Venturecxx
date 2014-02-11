@@ -65,10 +65,10 @@ src_files = [
     "src/sps/deterministic.cxx",
     
 ]
-src_files = ["backend/cxx/" + f for f in src_files]
+src_files = ["backend/new_cxx/" + f for f in src_files]
 
 inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/', 'inc/Eigen']
-inc_dirs = ["backend/cxx/" + d for d in inc_dirs]
+inc_dirs = ["backend/new_cxx/" + d for d in inc_dirs]
 
 ext_modules = []
 packages=["venture","venture.sivm","venture.ripl",
@@ -119,7 +119,7 @@ setup (
     long_description = 'TBA.',
     packages = packages,
     package_dir={"venture":"python/lib/", "venture.test":"test/",
-        "venture.cxx":"backend/cxx/", "venture.lite":"backend/lite/"},
+        "venture.cxx":"backend/new_cxx/", "venture.lite":"backend/lite/"},
     ext_modules = ext_modules,
     scripts = ['script/venture']
 )
