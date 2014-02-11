@@ -23,11 +23,30 @@ disagree with something you see here, please raise it.
 Particulars
 ===========
 
-Testing
--------
+Testing Policy
+--------------
 
 - `nosetests` at the top level runs our test suite.  At present,
   the suite defaults to confidence above speed.
+
+- `nosetests -c crashes.cfg` runs the suite to quickly check for
+  crashes without measuring inference quality.  Please keep this test
+  suite passing on the master branch; raise `nose.SkipTest` if
+  necessary.
+
+- We treat a skipped test as an issue.  To wit, resolution is required
+  but need not be immediate.  The actual skipped test should be linked
+  to an issue in the issue tracker. [*] When that issue is closed, the
+  test should be re-enabled.  Issues that have skipped tests
+  associated with them should be marked as such, so the tests can be
+  found (by grep) and turned back on.
+
+  [*] While we're using Asana as the main issue tracker, this means
+  copy the Asana URL of the task into the message given to the
+  SkipTest exception.
+
+Test Suite Configuration
+------------------------
 
 - See [test/README.md](https://github.com/mit-probabilistic-computing-project/Venturecxx/tree/master/test)
   for the organization of the test suite.
@@ -40,28 +59,13 @@ Testing
 
 - The test suite can be sliced by test/group in the usual way.
 
-- There is a test configuration for quickly checking for crashes (as
-  opposed to poor inferences) in `crashes.cfg`; run it with
-  `nosetests -c crashes.cfg`.
-
-- The test suite can be configured to go faster at the cost of giving
-  less confidence by setting configuration parameters:
-  `--tc=num_samples:5 --tc=num_transitions_per_sample:5`
-
 - The test suite can be configured to test different inference
   strategies and backends by choosing other parameters.  See
   `test/nconfig.py`.
 
-- We treat a skipped test as an issue.  To wit, resolution is required
-  but need not be immediate.  The actual skipped test should be linked
-  to an issue in the issue tracker. [*] When that issue is closed, the
-  test should be re-enabled.  Issues that have skipped tests
-  associated with them should be marked as such, so the tests can be
-  found (by grep) and turned back on.
-
-  [*] While we're using Asana as the main issue tracker, this means
-  copy the Asana URL of the task into the message given to the
-  SkipTest exception.
+- The test suite can be tuned to spend more or less computation to get
+  more or less confidence in the quality of inferences Venture
+  produces.  Compare `setup.cfg` and `crashes.cfg` to see how.
 
 - Python-side code coverage can be obtained via coverage.py and the
   nose-cov plugin by uncommenting the appropriate section in
