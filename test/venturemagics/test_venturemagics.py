@@ -20,9 +20,6 @@ from venture.venturemagics.venturemagics import *
 
 def testMagicNotebook():
     file_dir = os.path.dirname(os.path.realpath(__file__))
-    print file_dir
-    notebook_tester = 'test/venturemagics/nb_tester.py'
-    test_file =  'test/venturemagics/test_venturemagics_nb.ipynb'
     notebook_tester = file_dir + '/nb_tester.py'
     test_file =  file_dir + '/test_venturemagics_nb.ipynb'
     out=subprocess.check_output(['python',notebook_tester,test_file])
@@ -31,18 +28,19 @@ def testMagicNotebook():
         assert False, 'Notebook tester (%s) reports failure on notebook (%s)' % (
             notebook_tester, test_file)
     
-
+print '1- after NB, before IP'
 
 ## Testing in IPython
 def testMagicIpython():
-    raise SkipTest("The sequel fails in Jenkins for some reason.  Issue: https://app.asana.com/0/9277419963067/10168145986333")
+    #raise SkipTest("The sequel fails in Jenkins for some reason.  Issue: https://app.asana.com/0/9277419963067/10168145986333")
     file_dir = os.path.dirname(os.path.realpath(__file__))
     test_file = file_dir + '/test_venturemagics_ipy.ipy'
     out = subprocess.check_output(['ipython',test_file])
+    print 'test_ipy output', out
     if 'error' in out.lower() or 'assertion' in out.lower():
         assert False, 'Error running %s in IPython' % test_file
 
-
+print '1- after IP, before Py'
 
 ## Test in Python (weak test because can't test IPython magics)
 def testMagicPython():
