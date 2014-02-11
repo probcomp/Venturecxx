@@ -59,40 +59,34 @@ class HMMDemo(VentureUnit):
     for i in range(6):
       self.observe("(observation_fn (get_state %d))" % i, xs[i])
 
+def particleFilterInfer(mutate):
+  def infer(ripl, ct):
+    ripl.infer({"transitions":2, "kernel":"pgibbs", "with_mutation": mutate,
+                "scope":"state", "block":"ordered", "particles":2})
+
+def reasonableInfer(mutate):
+  def infer(ripl, ct):
+    hypers = {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":3}
+    state = {"kernel":"pgibbs", "scope":"state", "block":"ordered",
+             "transitions":1, "particles":4, "with_mutation":mutate}
+    ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, state]})
+  return infer
+
 if __name__ == '__main__':
   model = HMMDemo(shortcuts.make_lite_church_prime_ripl())
-  def particleFilterInfer(ripl, ct):
-    ripl.infer({"transitions":2, "kernel":"pgibbs", "scope":"state", "block":"ordered", "particles":2})
-
-  # def blockMH(ripl, ct):
-  #   # TODO does this sort the default blocks in any reasonable way?
-  #   ripl.infer({"transitions":10, "kernel":"pgibbs", "scope":"default", "block":"all", "particles":2})
-
-  def reasonableInferMutative(ripl, ct):
-    # hypers = {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":10}
-    # state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1, "particles":2}
-    # ripl.infer({"transitions":10, "kernel":"cycle", "subkernels":[hypers, state]})
-
-    hypers = {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":3}
-    state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1, "particles":4, "with_mutation":True}
-    ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, state]})
-
-  def reasonableInferPersistent(ripl, ct):
-    hypers = {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":3}
-    state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1, "particles":4, "with_mutation":False}
-    ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, state]})
 
   def run(arg):
     name = arg[0]
     inference = arg[1]
+    args = arg[2:]
 
-    history = model.runFromConditional(100, runs=5, verbose=True, name=name, infer=inference)
+    history = model.runFromConditional(3, runs=5, verbose=True, name=name, infer=inference(*args))
     history.plot(fmt='png')
 
-  work = [#("hmm_defaultMH", None),
-          # ("hmm_particleFilterInfer",particleFilterInfer),
-          ("hmm_reasonableInferMutative",reasonableInferMutative),
-          ("hmm_reasonableInferPersistent",reasonableInferPersistent)]
+  work = [#("hmm_particleFilterInferMutative",particleFilterInfer, True),
+          #("hmm_particleFilterInferPersistent",particleFilterInfer, False),
+          ("hmm_reasonableInferMutative", reasonableInfer, True),
+          ("hmm_reasonableInferPersistent", reasonableInfer, False)]
 
   from multiprocessing import Pool
   pool = Pool(3)
