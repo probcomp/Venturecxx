@@ -86,19 +86,19 @@ if __name__ == '__main__':
     name = arg[0]
     inference = arg[1]
 
-    history = model.runFromConditional(2, runs=1, verbose=True, name=name, infer=inference)
+    history = model.runFromConditional(100, runs=5, verbose=True, name=name, infer=inference)
     history.plot(fmt='png')
 
   work = [#("hmm_defaultMH", None),
           # ("hmm_particleFilterInfer",particleFilterInfer),
-          #("hmm_reasonableInferMutative",reasonableInferMutative),
+          ("hmm_reasonableInferMutative",reasonableInferMutative),
           ("hmm_reasonableInferPersistent",reasonableInferPersistent)]
 
   from multiprocessing import Pool
-#  pool = Pool(3)
-#  pool.map(run, work)
+  pool = Pool(3)
+  pool.map(run, work)
   # Running the job in-process gives better exceptions
-  map(run, work)
+#  map(run, work)
 
   #    history = model.runFromConditional(5, runs=5, verbose=True, name=name, infer=inference)
   #    history.plot(fmt='png')
