@@ -143,3 +143,12 @@ class ExpressionType(VentureType):
       return thing.getSymbol()
     if isinstance(thing, VentureArray):
       return thing.getArray(self)
+
+# Parametric values -- no conversion
+class AnyType(VentureType):
+  def asVentureValue(self, thing):
+    assert isinstance(thing, VentureValue)
+    return thing
+  def asPython(self, thing):
+    assert isinstance(thing, VentureValue)
+    return thing
