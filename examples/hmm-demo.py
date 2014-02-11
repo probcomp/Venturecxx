@@ -55,8 +55,11 @@ class HMMDemo(VentureUnit):
 
     xs[3:7] = [-x for x in xs[5:10]]
     xs[17:23] = [-x for x in xs[17:23]]
-#    for i in range(len(xs)):
-    for i in range(6):
+    if "length" in self.parameters:
+      num_obs = max(len(xs), int(self.parameters["length"]))
+    else:
+      num_obs = 6
+    for i in range(num_obs):
       self.observe("(observation_fn (get_state %d))" % i, xs[i])
 
 def particleFilterInfer(mutate):
@@ -74,6 +77,7 @@ def reasonableInfer(mutate):
 
 if __name__ == '__main__':
   model = HMMDemo(shortcuts.make_lite_church_prime_ripl())
+  model.parameters["length"] = 3
 
   def run(arg):
     name = arg[0]
