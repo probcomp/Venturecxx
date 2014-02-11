@@ -56,7 +56,7 @@ class HMMDemo(VentureUnit):
     xs[3:7] = [-x for x in xs[5:10]]
     xs[17:23] = [-x for x in xs[17:23]]
     if "length" in self.parameters:
-      num_obs = max(len(xs), int(self.parameters["length"]))
+      num_obs = min(len(xs), int(self.parameters["length"]))
     else:
       num_obs = 6
     for i in range(num_obs):
