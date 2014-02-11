@@ -26,6 +26,7 @@ class VentureNumber(VentureValue):
 class VentureAtom(VentureValue):
   def __init__(self,atom): self.atom = atom
   def getNumber(self): return self.atom
+  def getAtom(self): return self.atom
   def getBool(self): return self.atom
   def asStackDict(self): return {"type":"atom","value":self.atom}
 

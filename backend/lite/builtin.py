@@ -15,6 +15,10 @@ import scope
 import eval_sps
 import value as v
 
+# The types in the value module are generated programmatically, so
+# pylint doesn't find out about them.
+# pylint: disable=no-member
+
 def builtInValues():
   return { "true" : v.VentureBool(True), "false" : v.VentureBool(False) }
 
@@ -54,7 +58,7 @@ def builtInSPsList():
            # Only makes sense with VentureAtom/VentureNumber distinction
            [ "real",  deterministic_typed(lambda x:x, [v.AtomType()], v.NumberType()) ],
            # Atoms appear to be represented as Python integers
-           [ "atom_eq", deterministic(lambda x,y: x == y) ],
+           [ "atom_eq", deterministic_typed(lambda x,y: x == y, [v.AtomType(), v.AtomType()], v.BoolType()) ],
 
            [ "sin", unaryNum(math.sin) ],
            [ "cos", unaryNum(math.cos) ],
@@ -65,10 +69,9 @@ def builtInSPsList():
            [ "pow", unaryNum(math.pow) ],
            [ "sqrt", unaryNum(math.sqrt) ],
 
-           [ "not", deterministic(lambda x: not x) ],
+           [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType()) ],
 
-           # Symbols are Python strings
-           [ "is_symbol", deterministic(lambda x: isinstance(x, basestring)) ],
+           [ "is_symbol", deterministic(lambda x: v.VentureBool(isinstance(x, v.VentureSymbol))) ],
 
            [ "lookup",VentureSP(NullRequestPSP(),dstructures.LookupOutputPSP()) ],
            [ "contains",VentureSP(NullRequestPSP(),dstructures.ContainsOutputPSP()) ],
