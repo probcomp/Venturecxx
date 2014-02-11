@@ -77,22 +77,22 @@ if __name__ == '__main__':
     state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1}
     ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, state]})
 
-def run(arg):
-  name = arg[0]
-  inference = arg[1]
+  def run(arg):
+    name = arg[0]
+    inference = arg[1]
 
-  history = model.runFromConditional(100, runs=10, verbose=True, name=name, infer=inference)
-  history.plot(fmt='png')
+    history = model.runFromConditional(100, runs=10, verbose=True, name=name, infer=inference)
+    history.plot(fmt='png')
 
-from multiprocessing import Pool
-pool = Pool(10)
-pool.map(run, [("hmm_defaultMH", None), 
-               ("hmm_particleFilterInfer",particleFilterInfer),
-               ("hmm_reasonableInfer",reasonableInfer)])
+  from multiprocessing import Pool
+  pool = Pool(10)
+  pool.map(run, [("hmm_defaultMH", None),
+                 ("hmm_particleFilterInfer",particleFilterInfer),
+                 ("hmm_reasonableInfer",reasonableInfer)])
 
-#    history = model.runFromConditional(5, runs=5, verbose=True, name=name, infer=inference)
-#    history.plot(fmt='png')
-    # (sampled, inferred, kl) = model.computeJointKL(1, 20, runs=1, verbose=True, name=name, infer=inference)
-    # sampled.plot(fmt='png')
-    # inferred.plot(fmt='png')
-    # kl.plot(fmt='png')
+  #    history = model.runFromConditional(5, runs=5, verbose=True, name=name, infer=inference)
+  #    history.plot(fmt='png')
+      # (sampled, inferred, kl) = model.computeJointKL(1, 20, runs=1, verbose=True, name=name, infer=inference)
+      # sampled.plot(fmt='png')
+      # inferred.plot(fmt='png')
+      # kl.plot(fmt='png')
