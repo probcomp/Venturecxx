@@ -17,16 +17,16 @@ ipy_ripl.assume('x5','(beta 1 1)')
 assert(True==ipy_ripl.predict('true'))
 assert(ipy_ripl.predict('x5')>0)
 
-print '3ipy, before cell'
-## test cell magic
-cell='''
-%%v
-[assume cellx 10.0]
-[predict cellx]'''
+# print '3ipy, before cell'
+# ## test cell magic
+# cell='''
+# %%v
+# [assume cellx 10.0]
+# [predict cellx]'''
 
-ip = get_ipython()
-ip.run_cell(cell)
+# ip = get_ipython()
+# ip.run_cell(cell)
 
-assert(ipy_ripl.predict('cellx')==10.0)
+# assert(ipy_ripl.predict('cellx')==10.0)
 
 
