@@ -35,8 +35,12 @@ def testPGibbsBlockingMHHMM1():
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
 
 
-@statisticalTest
 def testPGibbsDynamicScope1():
+  yield checkPGibbsDynamicScope1, True
+  yield checkPGibbsDynamicScope1, False
+
+@statisticalTest
+def checkPGibbsDynamicScope1(mutate):
   ripl = get_ripl()
   
   ripl.assume("transition_fn", "(lambda (x) (normal x 1.0))")
@@ -58,6 +62,6 @@ def testPGibbsDynamicScope1():
 
   ripl.predict("(f 4)","pid")
 
-  predictions = collectSamples(ripl,"pid",infer={"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered","particles":20})
+  predictions = collectSamples(ripl,"pid",infer={"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered","particles":20, "with_mutation":mutate})
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
