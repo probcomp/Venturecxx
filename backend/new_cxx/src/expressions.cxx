@@ -1,14 +1,15 @@
-bool isVariable(VentureValuePtr exp)
-{ throw 500; }
-bool isSelfEvaluating(VentureValuePtr exp)
-{ throw 500; }
+bool isVariable(VentureValuePtr exp) { return dynamic_pointer_cast<VentureSymbol>(exp); }
+bool isSelfEvaluating(VentureValuePtr exp) { return !dynamic_pointer_cast<VentureArray>(exp); }
 bool isQuotation(VentureValuePtr exp)
-{ throw 500; }
+{ 
+  v_xs = dynamic_pointer_cast<VentureArray>(exp);
+  assert(v_xs);
+  return v_xs->xs[0] == "quote";
+}
 
 VentureValuePtr textOfQuotation(VentureValuePtr exp)
-{ throw 500; }
-
-VentureValuePtr getOperator(VentureValuePtr exp)
-{ throw 500; }
-vector<VentureValuePtr> getOperands(VentureValuePtr exp)
-{ throw 500; }
+{ 
+  v_xs = dynamic_pointer_cast<VentureArray>(exp);
+  assert(v_xs);
+  return v_xs->xs[1];
+}

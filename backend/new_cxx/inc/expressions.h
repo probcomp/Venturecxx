@@ -9,7 +9,5 @@ bool isQuotation(VentureValuePtr exp);
 
 VentureValuePtr textOfQuotation(VentureValuePtr exp);
 
-VentureValuePtr getOperator(VentureValuePtr exp);
-vector<VentureValuePtr> getOperands(VentureValuePtr exp);
 
 #endif
