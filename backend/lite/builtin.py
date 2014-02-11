@@ -14,7 +14,7 @@ import conditionals
 import scope
 import eval_sps
 
-def builtInValues(): return { "true" : True, "false" : False }
+def builtInValues(): return { "true" : True, "false" : False , "nil": []}
 
 def deterministic(f):
   class DeterministicPSP(PSP):

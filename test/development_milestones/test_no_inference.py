@@ -70,13 +70,7 @@ def testPredictCSP6():
   ripl = get_ripl()
   ripl.assume("f","(lambda (x y) (+ x y 1))")
   ripl.predict("(f (f 2 3) (f 1 2))",label="pid")
-  assert_equal(ripl.report("pid"),10)
-
-def testPredictCSP6():
-  ripl = get_ripl()
-  ripl.assume("f","(lambda (x y) (+ x y 1))")
-  ripl.predict("(f (f 2 3) (f 1 2))",label="pid")
-  assert_equal(ripl.report("pid"),10)
+  assert_equal(ripl.report("pid"),11)
 
 def testPredictArray1():
   ripl = get_ripl()
@@ -86,8 +80,8 @@ def testPredictArray1():
 
 def testPredictPair1():
   ripl = get_ripl()
-  ripl.assume("xs","(pair 2 3)")
-  ripl.predict("(* (first xs) (rest xs))",label="pid")
+  ripl.assume("xs","(pair 2 (pair 3 nil))")
+  ripl.predict("(* (first xs) (first (rest xs)))",label="pid")
   assert_equal(ripl.report("pid"),6)
 
 def testPredictList1():
