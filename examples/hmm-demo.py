@@ -62,19 +62,19 @@ class HMMDemo(VentureUnit):
 if __name__ == '__main__':
   model = HMMDemo(shortcuts.make_lite_church_prime_ripl())
   def particleFilterInfer(ripl, ct):
-    ripl.infer({"transitions":2, "kernel":"pgibbs", "scope":"state", "block":"ordered"})
+    ripl.infer({"transitions":2, "kernel":"pgibbs", "scope":"state", "block":"ordered", "particles":2})
 
   # def blockMH(ripl, ct):
   #   # TODO does this sort the default blocks in any reasonable way?
-  #   ripl.infer({"transitions":10, "kernel":"pgibbs", "scope":"default", "block":"all"})
+  #   ripl.infer({"transitions":10, "kernel":"pgibbs", "scope":"default", "block":"all", "particles":2})
 
   def reasonableInfer(ripl, ct):
     # hypers = {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":10}
-    # state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1}
+    # state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1, "particles":2}
     # ripl.infer({"transitions":10, "kernel":"cycle", "subkernels":[hypers, state]})
 
     hypers = {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":3}
-    state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1}
+    state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1, "particles":2}
     ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, state]})
 
   def run(arg):
