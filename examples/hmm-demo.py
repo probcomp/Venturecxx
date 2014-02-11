@@ -98,7 +98,7 @@ def main1():
 #  map(run, work)
 
 def main2():
-  parameters = {"length": [5,10,15], "mutation": [True, False]}
+  parameters = {"length": [5,10,15,20,25], "mutation": [True, False]}
   def runner(params):
     model = HMMDemo(shortcuts.make_lite_church_prime_ripl(), params)
     inference = reasonableInfer
@@ -106,7 +106,7 @@ def main2():
     return model.runFromConditional(3, runs=5, verbose=True, infer=inference(*args))
 
   histories = produceHistories(parameters, runner)
-  plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png')
+  plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png', aggregate=True)
 
 if __name__ == '__main__':
   main2()
