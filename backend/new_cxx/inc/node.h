@@ -7,7 +7,7 @@
 
 struct Node
 {
-  boost::shared_ptr<VentureValue> value;
+  //boost::shared_ptr<VentureValue> value;
   std::vector<Node*> definiteParents; // TODO should be an iterator
   virtual ~Node() {} // TODO destroy family
 };
