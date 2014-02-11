@@ -75,18 +75,17 @@ def reasonableInfer(mutate):
     ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, state]})
   return infer
 
-if __name__ == '__main__':
+def runOneStrategy(arg):
+  name = arg[0]
+  inference = arg[1]
+  args = arg[2:]
+
   model = HMMDemo(shortcuts.make_lite_church_prime_ripl())
   model.parameters["length"] = 3
+  history = model.runFromConditional(3, runs=5, verbose=True, name=name, infer=inference(*args))
+  history.plot(fmt='png')
 
-  def run(arg):
-    name = arg[0]
-    inference = arg[1]
-    args = arg[2:]
-
-    history = model.runFromConditional(3, runs=5, verbose=True, name=name, infer=inference(*args))
-    history.plot(fmt='png')
-
+def main1():
   work = [#("hmm_particleFilterInferMutative",particleFilterInfer, True),
           #("hmm_particleFilterInferPersistent",particleFilterInfer, False),
           ("hmm_reasonableInferMutative", reasonableInfer, True),
@@ -94,7 +93,7 @@ if __name__ == '__main__':
 
   from multiprocessing import Pool
   pool = Pool(3)
-  pool.map(run, work)
+  pool.map(runOneStrategy, work)
   # Running the job in-process gives better exceptions
 #  map(run, work)
 
@@ -104,3 +103,6 @@ if __name__ == '__main__':
       # sampled.plot(fmt='png')
       # inferred.plot(fmt='png')
       # kl.plot(fmt='png')
+
+if __name__ == '__main__':
+  main1()
