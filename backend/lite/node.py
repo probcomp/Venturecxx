@@ -1,5 +1,5 @@
 from abc import ABCMeta
-from value import VentureValue, SPRef, isVentureValue, asVentureValue
+from value import VentureValue, SPRef, isVentureValue, ExpressionType
 from request import Request
 
 class Node(object):
@@ -34,7 +34,11 @@ class Node(object):
 class ConstantNode(Node):
   def __init__(self,value):
     super(ConstantNode,self).__init__()
-    self.value = asVentureValue(value)
+    if isinstance(value, VentureValue):
+      # Possible for programmatic construction, e.g. builtin.py
+      self.value = value
+    else: # In eval
+      self.value = ExpressionType().asVentureValue(value)
 
   def parents(self): return []
   def definiteParents(self): return []

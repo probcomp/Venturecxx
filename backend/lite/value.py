@@ -83,21 +83,6 @@ class SPRef(VentureValue):
 def isVentureValue(thing):
   return thing is None or isinstance(thing, VentureValue)
 
-def asVentureValue(thing):
-  if isinstance(thing, VentureValue):
-    return thing
-  if isinstance(thing, bool):
-    return VentureBool(thing)
-  if isinstance(thing, Number):
-    return VentureNumber(thing)
-  if isinstance(thing, str):
-    return VentureSymbol(thing)
-  if hasattr(thing, "__getitem__"): # Already not a string
-    return VentureArray([asVentureValue(v) for v in thing])
-  # TODO Do Python dicts become Venture dicts?
-  else:
-    raise Exception("Cannot convert Python object %r to a Venture Value" % thing)
-
 class VentureType(object): pass
 
 # TODO Is there any way to make these guys be proper singleton
