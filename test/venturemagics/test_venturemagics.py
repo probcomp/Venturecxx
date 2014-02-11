@@ -28,7 +28,7 @@ def testMagicNotebook():
         assert False, 'Notebook tester (%s) reports failure on notebook (%s)' % (
             notebook_tester, test_file)
     
-print '1- after NB, before IP'
+
 
 ## Testing in IPython
 def testMagicIpython():
@@ -40,7 +40,7 @@ def testMagicIpython():
     if 'error' in out.lower() or 'assertion' in out.lower():
         assert False, 'Error running %s in IPython' % test_file
 
-print '1- after IP, before Py'
+
 
 ## Test in Python (weak test because can't test IPython magics)
 def testMagicPython():
