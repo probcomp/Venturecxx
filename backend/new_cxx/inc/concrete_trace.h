@@ -9,14 +9,14 @@ struct ConcreteTrace : Trace
 
   /* Registering metadata */
   void registerAEKernel(Node * node) override;
-  void registerRandomChoice(Node * node) override;
-  void registerRandomChoiceInScope(ScopeID scope,BlockID block,Node * node) override;
+  void registerUnconstrainedChoice(Node * node) override;
+  void registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) override;
   void registerConstrainedChoice(Node * node) override;
 
   /* Unregistering metadata */
   void unregisterAEKernel(Node * node) override;
-  void unregisterRandomChoice(Node * node) override;
-  void unregisterRandomChoiceInScope(ScopeID scope,BlockID block,Node * node) override;
+  void unregisterUnconstrainedChoice(Node * node) override;
+  void unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) override;
   void unregisterConstrainedChoice(Node * node) override;
 
   /* Regen mutations */
@@ -100,8 +100,7 @@ struct ConcreteTrace : Trace
 
 private:
   VentureEnvironment * globalEnvironment;
-
-  set<Node*> unconstrainedRandomChoices;
+  set<Node*> unconstrainedChoices;
   set<Node*> constrainedChoices;
   set<Node*> arbitraryErgodicKernels;
 
@@ -115,8 +114,8 @@ private:
   map<Node*, int> numRequests;
   map<Node*, SPRecord> madeSPRecords;
   map<Node*,set<Node*> > children;
+  map<Node*,VentureValuePtr> values;
   map<Node*,VentureValuePtr> observedValues;
-
 
 };
 

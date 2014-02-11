@@ -16,6 +16,10 @@ struct Node;
 struct Trace 
 {
   /* Registering metadata */
+  /** AE (Arbitrary Ergodic) kernels repropose random choices within an sp that 
+      have no effect on the trace. This optimizes some cases that otherwise could
+      be handled by AAA.
+   */
   virtual void registerAEKernel(Node * node) =0;
   virtual void registerRandomChoice(Node * node) =0;
   virtual void registerRandomChoiceInScope(ScopeID scope,BlockID block,Node * node) =0;
