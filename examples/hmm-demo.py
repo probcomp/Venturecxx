@@ -98,11 +98,11 @@ def main1():
 #  map(run, work)
 
 def main2():
-  parameters = {"length": [5,10,15]}
+  parameters = {"length": [5,10,15], "mutation": [True, False]}
   def runner(params):
     model = HMMDemo(shortcuts.make_lite_church_prime_ripl(), params)
     inference = reasonableInfer
-    args = [False]
+    args = [params["mutation"]]
     return model.runFromConditional(3, runs=5, verbose=True, infer=inference(*args))
 
   histories = produceHistories(parameters, runner)
