@@ -68,31 +68,37 @@ if __name__ == '__main__':
   #   # TODO does this sort the default blocks in any reasonable way?
   #   ripl.infer({"transitions":10, "kernel":"pgibbs", "scope":"default", "block":"all", "particles":2})
 
-  def reasonableInfer(ripl, ct):
+  def reasonableInferMutative(ripl, ct):
     # hypers = {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":10}
     # state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1, "particles":2}
     # ripl.infer({"transitions":10, "kernel":"cycle", "subkernels":[hypers, state]})
 
     hypers = {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":3}
-    state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1, "particles":2}
+    state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1, "particles":4, "with_mutation":True}
+    ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, state]})
+
+  def reasonableInferPersistent(ripl, ct):
+    hypers = {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":3}
+    state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1, "particles":4, "with_mutation":False}
     ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, state]})
 
   def run(arg):
     name = arg[0]
     inference = arg[1]
 
-    history = model.runFromConditional(100, runs=10, verbose=True, name=name, infer=inference)
+    history = model.runFromConditional(2, runs=1, verbose=True, name=name, infer=inference)
     history.plot(fmt='png')
 
-  work = [("hmm_defaultMH", None),
-          ("hmm_particleFilterInfer",particleFilterInfer),
-          ("hmm_reasonableInfer",reasonableInfer)]
+  work = [#("hmm_defaultMH", None),
+          # ("hmm_particleFilterInfer",particleFilterInfer),
+          #("hmm_reasonableInferMutative",reasonableInferMutative),
+          ("hmm_reasonableInferPersistent",reasonableInferPersistent)]
 
   from multiprocessing import Pool
-  pool = Pool(10)
-  pool.map(run, work)
+#  pool = Pool(3)
+#  pool.map(run, work)
   # Running the job in-process gives better exceptions
-#  map(run, work)
+  map(run, work)
 
   #    history = model.runFromConditional(5, runs=5, verbose=True, name=name, infer=inference)
   #    history.plot(fmt='png')
