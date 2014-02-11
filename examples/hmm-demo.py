@@ -84,11 +84,15 @@ if __name__ == '__main__':
     history = model.runFromConditional(100, runs=10, verbose=True, name=name, infer=inference)
     history.plot(fmt='png')
 
+  work = [("hmm_defaultMH", None),
+          ("hmm_particleFilterInfer",particleFilterInfer),
+          ("hmm_reasonableInfer",reasonableInfer)]
+
   from multiprocessing import Pool
   pool = Pool(10)
-  pool.map(run, [("hmm_defaultMH", None),
-                 ("hmm_particleFilterInfer",particleFilterInfer),
-                 ("hmm_reasonableInfer",reasonableInfer)])
+  pool.map(run, work)
+  # Running the job in-process gives better exceptions
+#  map(run, work)
 
   #    history = model.runFromConditional(5, runs=5, verbose=True, name=name, infer=inference)
   #    history.plot(fmt='png')
