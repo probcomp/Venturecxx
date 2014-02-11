@@ -8,7 +8,7 @@ class VentureValue(object):
   def getAtom(self): raise Exception("Cannot convert %s to atom" % type(self))
   def getBool(self): raise Exception("Cannot convert %s to bool" % type(self))
   def getSymbol(self): raise Exception("Cannot convert %s to symbol" % type(self))
-  def getArray(self): raise Exception("Cannot convert %s to array" % type(self))
+  def getArray(self, elt_type=None): raise Exception("Cannot convert %s to array" % type(self))
   def getPair(self): raise Exception("Cannot convert %s to pair" % type(self))
   def getSimplex(self): raise Exception("Cannot convert %s to simplex" % type(self))
   def getDict(self): raise Exception("Cannot convert %s to dict" % type(self))
@@ -43,7 +43,11 @@ class VentureSymbol(VentureValue):
 # Venture does not yet have a story for homogeneous packed arrays.
 class VentureArray(VentureValue):
   def __init__(self,array): self.array = array
-  def getArray(self): return self.array
+  def getArray(self, elt_type=None):
+    if elt_type is None: # No conversion
+      return self.array
+    else:
+      return [elt_type.asPython(v) for v in self.array]
   def asStackDict(self):
     # TODO Are venture arrays reflected as lists to the stack?
     return {"type":"list","value":[v.asStackDict() for v in self.array]}
@@ -123,3 +127,33 @@ class NilType(VentureType):
   def asPython(self, vthing):
     # TODO Throw an error if not nil?
     return []
+
+# A Venture expression is either a Venture self-evaluating object
+# (bool, number, atom), or a Venture symbol, or a Venture array of
+# Venture Expressions.
+# data Expression = Bool | Number | Atom | Symbol | Array Expression
+class ExpressionType(VentureType):
+  def asVentureValue(self, thing):
+    if isinstance(thing, bool):
+      return VentureBool(thing)
+    if isinstance(thing, Number):
+      return VentureNumber(thing)
+    # TODO How do we actually evaluate literal atoms?
+    if isinstance(thing, str):
+      return VentureSymbol(thing)
+    if hasattr(thing, "__getitem__"): # Already not a string
+      return VentureArray([self.asVentureValue(v) for v in thing])
+    else:
+      raise Exception("Cannot convert Python object %r to a Venture Expression" % thing)
+
+  def asPython(self, thing):
+    if isinstance(thing, VentureBool):
+      return thing.getBool()
+    if isinstance(thing, VentureNumber):
+      return thing.getNumber()
+    if isinstance(thing, VentureAtom):
+      return thing.getAtom()
+    if isinstance(thing, VentureSymbol):
+      return thing.getSymbol()
+    if isinstance(thing, VentureArray):
+      return thing.getArray(self)
