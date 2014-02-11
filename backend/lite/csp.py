@@ -3,6 +3,7 @@ from sp import VentureSP
 from env import VentureEnvironment
 from request import Request,ESR
 from nose.tools import assert_equal
+import value as v
 
 class CSPRequestPSP(PSP):
   def __init__(self,ids,exp,env):
@@ -19,7 +20,8 @@ class CSPRequestPSP(PSP):
 
 class MakeCSPOutputPSP(PSP):
   def simulate(self,args):
-    (ids,exp) = args.operandValues[0:3]
+    ids = args.operandValues[0].getArray(v.SymbolType())
+    exp = v.ExpressionType().asPython(args.operandValues[1])
     return VentureSP(CSPRequestPSP(ids,exp,args.env),ESRRefOutputPSP())
 
   def description(self,name):
