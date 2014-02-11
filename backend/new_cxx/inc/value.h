@@ -15,21 +15,26 @@ using std::pair;
 // We need to be more consistent about whether this unboxes
 struct VentureValue
 {
-  double getDouble();
-  int getInt();
-  int getAtom();
-  bool getBool();
-  string getSymbol();
-  vector<VentureValuePtr> getArray();
-  bool isNil() { return false; }
-  pair<VentureValuePtr,VentureValuePtr> getPair();
-  simplex getSimplex();
-  map<VentureValuePtr,VentureValuePtr> getDictionary();
-  MatrixXd getMatrix();
-//  shared_ptr<VentureSP> getSP();
-//  shared_ptr<VentureEnvironment> getEnvironment();
-  pair<vector<ESR>,vector<LSR *> > getRequests();
+  virtual double getDouble() const;
+  virtual int getInt() const;
+  virtual int getAtom() const;
+  virtual bool getBool() const;
+  virtual string getSymbol() const;
+  virtual vector<VentureValuePtr> getArray() const;
+  virtual bool isNil() const { return false; }
+  virtual pair<VentureValuePtr,VentureValuePtr> getPair() const;
+  virtual simplex getSimplex() const;
+  virtual map<VentureValuePtr,VentureValuePtr> getDictionary() const;
+  virtual MatrixXd getMatrix() const;
+  virtual pair<vector<ESR>,vector<LSR *> > getRequests() const;
+  virtual bool equals(const VentureValue * & other) const;
 };
+
+/* For hashing. */
+bool operator==(shared_ptr<const VentureValue> & a, shared_ptr<const VentureValue> & b)
+{
+  return a->equals(b);
+}
 
 
 #endif
