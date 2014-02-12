@@ -126,6 +126,7 @@ def main2():
                 "command": ["(cycle ((mh hypers one 3) (pgibbs state ordered 4 1)) 1)",
                             "(cycle ((mh hypers one 3) (func-pgibbs state ordered 4 1)) 1)"]}
   def runner(params):
+    print "Running with params %s" % params
     model = HMMDemo(shortcuts.make_lite_church_prime_ripl(), params)
     return model.runFromConditional(3, runs=3, verbose=True, infer=commandInfer(params["command"]))
 
