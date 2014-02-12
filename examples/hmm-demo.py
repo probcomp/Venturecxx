@@ -17,8 +17,8 @@ import matplotlib
 matplotlib.use('Agg')
 
 from venture import shortcuts
-from venture.unit import VentureUnit
-
+from venture.unit import VentureUnit, produceHistories, plotAsymptotics
+from venture.ripl.utils import expToDict, parse
 
 class HMMDemo(VentureUnit):
   def makeAssumes(self):
@@ -51,49 +51,88 @@ class HMMDemo(VentureUnit):
       self.assume(var, exp)
 
   def makeObserves(self):
-    xs = [4.17811131241034, 3.8207451562269097, 3.8695630629179485, 0.22006118284977338, 2.210199033799397, 3.783908156611711, 2.837419867371207, 1.317835790137246, -0.16712980626716778, 2.9172052420088024, 2.510820987230155, 3.8160095647125587, 2.1845237960891737, 4.857767012696541, 3.575666111020788, 0.5826540416187078, 4.911935337633685, 1.6865857289172699, 2.096957795256201, 3.962559707705782, 2.0649737290837695, 4.447773338208195, 3.0441473773992254, 1.9403530443371844, 2.149892339815339, 1.8535027835799924, 1.3764327100611682, 2.787737100652772, 4.605218953213757, 4.3600668534442955]
+    xs = [4.17811131241034, 3.8207451562269097, 3.8695630629179485,
+          0.22006118284977338, 2.210199033799397, 3.783908156611711,
+          2.837419867371207, 1.317835790137246, -0.16712980626716778,
+          2.9172052420088024, 2.510820987230155, 3.8160095647125587,
+          2.1845237960891737, 4.857767012696541, 3.575666111020788,
+          0.5826540416187078, 4.911935337633685, 1.6865857289172699,
+          2.096957795256201, 3.962559707705782, 2.0649737290837695,
+          4.447773338208195, 3.0441473773992254, 1.9403530443371844,
+          2.149892339815339, 1.8535027835799924, 1.3764327100611682,
+          2.787737100652772, 4.605218953213757, 4.3600668534442955,
+          4.479476152575004, 2.903384365135718, 3.228308841685054,
+          2.768731834655059, 2.677169426912596, 4.548729323863021,
+          4.45470931661095, 2.2756630109749754, 3.8043219817661464,
+          4.041893001861111, 4.932539777501281, 3.392272043248744,
+          3.5285486875160186, 1.7961542635140841, 2.9493126820691664,
+          1.7582718429078779, 3.444330463983401, 2.031284816908312,
+          1.6347773147087383, 4.423285189276542, 0.5149704854992727,
+          4.470589149104097, 4.4519204418264575, 3.610788527431577,
+          3.7908243330830036, 3.0038367596454187, 3.3486671878130028,
+          4.474091346599369, 2.7734106792197633, 1.8127987198750086]
 
     xs[3:7] = [-x for x in xs[5:10]]
     xs[17:23] = [-x for x in xs[17:23]]
-#    for i in range(len(xs)):
-    for i in range(6):
+    if "length" in self.parameters:
+      num_obs = min(len(xs), int(self.parameters["length"]))
+    else:
+      num_obs = 6
+    for i in range(num_obs):
       self.observe("(observation_fn (get_state %d))" % i, xs[i])
 
-if __name__ == '__main__':
-  ripl = shortcuts.make_lite_church_prime_ripl()
-  model = HMMDemo(ripl)
-  def particleFilterInfer(ripl, ct):
-    ripl.infer({"transitions":2, "kernel":"pgibbs", "scope":"state", "block":"ordered"})
+def particleFilterInfer(mutate):
+  def infer(ripl, ct):
+    ripl.infer({"transitions":2, "kernel":"pgibbs", "with_mutation": mutate,
+                "scope":"state", "block":"ordered", "particles":2})
 
-  # def blockMH(ripl, ct):
-  #   # TODO does this sort the default blocks in any reasonable way?
-  #   ripl.infer({"transitions":10, "kernel":"pgibbs", "scope":"default", "block":"all"})
-
-  def reasonableInfer(ripl, ct):
-    # hypers = {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":10}
-    # state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1}
-    # ripl.infer({"transitions":10, "kernel":"cycle", "subkernels":[hypers, state]})
-
+def reasonableInfer(mutate):
+  def infer(ripl, ct):
     hypers = {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":3}
-    state = {"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":1}
+    state = {"kernel":"pgibbs", "scope":"state", "block":"ordered",
+             "transitions":1, "particles":4, "with_mutation":mutate}
     ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, state]})
+  return infer
 
-def run(arg):
+def commandInfer(command):
+  def infer(ripl, ct):
+    ripl.infer(expToDict(parse(command)))
+  return infer
+
+def runOneStrategy(arg):
   name = arg[0]
   inference = arg[1]
+  args = arg[2:]
 
-  history = model.runFromConditional(100, runs=10, verbose=True, name=name, infer=inference)
+  model = HMMDemo(shortcuts.make_lite_church_prime_ripl())
+  model.parameters["length"] = 3
+  history = model.runFromConditional(3, runs=5, verbose=True, name=name, infer=inference(*args))
   history.plot(fmt='png')
 
-from multiprocessing import Pool
-pool = Pool(10)
-pool.map(run, [("hmm_defaultMH", None), 
-               ("hmm_particleFilterInfer",particleFilterInfer),
-               ("hmm_reasonableInfer",reasonableInfer)])
+def main1():
+  work = [#("hmm_particleFilterInferMutative",particleFilterInfer, True),
+          #("hmm_particleFilterInferPersistent",particleFilterInfer, False),
+          ("hmm_reasonableInferMutative", reasonableInfer, True),
+          ("hmm_reasonableInferPersistent", reasonableInfer, False)]
 
-#    history = model.runFromConditional(5, runs=5, verbose=True, name=name, infer=inference)
-#    history.plot(fmt='png')
-    # (sampled, inferred, kl) = model.computeJointKL(1, 20, runs=1, verbose=True, name=name, infer=inference)
-    # sampled.plot(fmt='png')
-    # inferred.plot(fmt='png')
-    # kl.plot(fmt='png')
+  from multiprocessing import Pool
+  pool = Pool(3)
+  pool.map(runOneStrategy, work)
+  # Running the job in-process gives better exceptions
+#  map(run, work)
+
+def runner(params):
+  print "Running with params %s" % params
+  model = HMMDemo(shortcuts.make_lite_church_prime_ripl(), params)
+  return model.runFromConditional(3, runs=3, verbose=True, infer=commandInfer(params["command"]))
+
+def main2():
+  parameters = {"length": [5,10,15,20,25,30,35,40,45,50,55],
+                "command": ["(cycle ((mh hypers one 3) (pgibbs state ordered 4 1)) 1)",
+                            "(cycle ((mh hypers one 3) (func-pgibbs state ordered 4 1)) 1)"]}
+  histories = produceHistories(parameters, runner, processes=3)
+  plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png', aggregate=True)
+  plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png')
+
+if __name__ == '__main__':
+  main2()
