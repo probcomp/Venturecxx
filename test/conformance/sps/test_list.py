@@ -37,6 +37,9 @@ class TestList(object):
   def testFirst1(self):
     assert self.ripl.predict("(first x4)") == 3.0
 
+  def testSecond1(self):
+    assert self.ripl.predict("(second x4)") == 2.0
+
   def testRest1(self):
     assert self.ripl.predict("(rest x4)") == [2.0, 1.0]
 
