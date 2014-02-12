@@ -54,7 +54,7 @@ struct Trace
 
   /* Primitive getters */
   virtual VentureValuePtr getValue(Node * node) =0;
-  virtual SPRecord getMadeSPRecord(OutputNode * makerNode) =0;
+  virtual SPRecord getMadeSPRecord(Node * makerNode) =0;
   virtual vector<Node*> getESRParents(Node * node) =0;
   virtual set<Node*> getChildren(Node * node) =0;
   virtual int getNumRequests(Node * node) =0;
@@ -66,23 +66,23 @@ struct Trace
 
   /* Derived getters (just for convenience)*/
   virtual VentureValuePtr getGroundValue(Node * node);
-  virtual OutputNode * getOperatorSPMakerNode(ApplicationNode * node);
-  virtual shared_ptr<VentureSP> getMadeSP(OutputNode * node);
-  virtual shared_ptr<SPFamilies> getMadeSPFamilies(OutputNode * node);
-  virtual shared_ptr<SPAux> getMadeSPAux(OutputNode * node);
+  virtual Node * getOperatorSPMakerNode(ApplicationNode * node);
+  virtual shared_ptr<VentureSP> getMadeSP(Node * makerNode);
+  virtual shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode);
+  virtual shared_ptr<SPAux> getMadeSPAux(Node * node);
   virtual vector<Node*> getParents(Node * node);
 
   /* Primitive setters */
   virtual void setValue(Node * node, VentureValuePtr value) =0;
   virtual void clearValue(Node * node) =0;
 
-  virtual void createSPRecord(OutputNode * makerNode) =0; // No analogue in VentureLite
+  virtual void createSPRecord(Node * makerNode) =0; // No analogue in VentureLite
 
-  virtual void initMadeSPFamilies(Node * node) =0;
-  virtual void clearMadeSPFamilies(Node * node) =0;
+  virtual void initMadeSPFamilies(Node * makerNode) =0;
+  virtual void clearMadeSPFamilies(Node * makerNode) =0;
 
-  virtual void setMadeSP(Node * node,shared_ptr<VentureSP> sp) =0;
-  virtual void setMadeSPAux(Node * node,shared_ptr<SPAux> spaux) =0;
+  virtual void setMadeSP(Node * makerNode,shared_ptr<VentureSP> sp) =0;
+  virtual void setMadeSPAux(Node * makerNode,shared_ptr<SPAux> spaux) =0;
 
   virtual void setChildren(Node * node,set<Node*> children) =0;
   virtual void setESRParents(Node * node,const vector<Node*> & esrParents) =0;
@@ -92,10 +92,10 @@ struct Trace
   /* SPFamily operations */
   // Note: this are different from current VentureLite, since it does not automatically jump
   // from a node to its spmakerNode. (motivation: avoid confusing non-commutativity in particles)
-  virtual void registerMadeSPFamily(OutputNode * makerNode, FamilyID id, Node * esrParent) =0;
-  virtual void unregisterMadeSPFamily(OutputNode * maderNode, FamilyID id, Node * esrParent) =0;
-  virtual bool containsMadeSPFamily(OutputNode * makerNode, FamilyID id) =0;
-  virtual Node * getMadeSPFamilyRoot(OutputNode * makerNode, FamilyID id) =0;
+  virtual void registerMadeSPFamily(Node * makerNode, FamilyID id, Node * esrParent) =0;
+  virtual void unregisterMadeSPFamily(Node * maderNode, FamilyID id, Node * esrParent) =0;
+  virtual bool containsMadeSPFamily(Node * makerNode, FamilyID id) =0;
+  virtual Node * getMadeSPFamilyRoot(Node * makerNode, FamilyID id) =0;
 
 };
 

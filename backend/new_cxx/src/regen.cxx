@@ -142,16 +142,16 @@ double apply(Trace * trace,
 
 
 
-void processMadeSP(Trace * trace, Node * node, bool isAAA)
+void processMadeSP(Trace * trace, Node * makerNode, bool isAAA)
 {
-  shared_ptr<VentureSP> sp = dynamic_pointer_cast<VentureSP>(trace->getValue(node));
+  shared_ptr<VentureSP> sp = dynamic_pointer_cast<VentureSP>(trace->getValue(makerNode));
   if (!isAAA)
   {
     trace->initMadeSPRecord(sp,sp->constructSPAux());
-    if (sp->hasAEKernel()) { trace->registerAEKernel(node); }
+    if (sp->hasAEKernel()) { trace->registerAEKernel(makerNode); }
   }
-  else { trace->setMadeSP(node,sp); }
-  trace->setValue(node,new VentureSPRef(node));
+  else { trace->setMadeSP(makerNode,sp); }
+  trace->setValue(node,new VentureSPRef(makerNode));
 }
 
 double applyPSP(Trace * trace,

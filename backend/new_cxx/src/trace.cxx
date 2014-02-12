@@ -46,26 +46,26 @@ VentureValuePtr getGroundValue(Node * node)
   else { return value; }
 }
 
-OutputNode * getOperatorSPMakerNode(ApplicationNode * node)
+Node * getOperatorSPMakerNode(ApplicationNode * node)
 {
   shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(getValue(node->operatorNode));
   assert(spRef);
   return spRef->makerNode;
 }
 
-shared_ptr<VentureSP> getMadeSP(OutputNode * node)
+shared_ptr<VentureSP> getMadeSP(Node * makerNode)
 {
   SPRecord spRecord = getMadeSPRecord(node);
   return spRecord.sp;
 }
 
-shared_ptr<SPFamilies> getMadeSPFamilies(OutputNode * node)
+shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode)
 {
   SPRecord spRecord = getMadeSPRecord(node);
   return spRecord.spFamilies;
 }
 
-shared_ptr<SPAux> getMadeSPAux(OutputNode * node)
+shared_ptr<SPAux> getMadeSPAux(Node * makerNode)
 {
   SPRecord spRecord = getMadeSPRecord(node);
   return spRecord.spAux;
