@@ -79,7 +79,7 @@ def builtInSPsList():
            [ "list", deterministic(v.pythonListToVentureList) ],
            [ "pair", deterministic(v.VenturePair) ],
            [ "is_pair", type_test(v.VenturePair) ],
-           [ "first", VentureSP(NullRequestPSP(),dstructures.FirstListOutputPSP()) ],
+           [ "first", deterministic_typed(lambda p: p[0], [v.PairType()], v.AnyType()) ],
            [ "second", VentureSP(NullRequestPSP(),dstructures.SecondListOutputPSP()) ],
            [ "rest", VentureSP(NullRequestPSP(),dstructures.RestListOutputPSP()) ],
 
