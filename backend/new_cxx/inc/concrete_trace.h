@@ -84,13 +84,13 @@ struct ConcreteTrace : Trace
   set<Node*> getNodesInBlock(ScopeID scope, BlockID block);
 
   // Helper function for dynamic scoping
-  void addRandomChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node);
+  void addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node);
 
   bool scopeHasEntropy(ScopeID scope); 
   void makeConsistent();
   Node * getOutermostNonRefAppNode(Node * node);
 
-  int numRandomChoices();
+  int numUnconstrainedChoices();
 
   int getSeed();
   double getGlobalLogScore();

@@ -36,6 +36,8 @@ struct SPAux
 
 struct VentureSP : VentureValue
 {
+  VentureSP(PSP * requestPSP, PSP * outputPSP);
+  
   shared_ptr<PSP> requestPSP;
   shared_ptr<PSP> outputPSP;
 

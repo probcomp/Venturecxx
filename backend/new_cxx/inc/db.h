@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+struct OutputNode;
+
 struct LatentDB { virtual ~LatentDB() {}; };
 
 struct DB
