@@ -18,7 +18,7 @@ matplotlib.use('Agg')
 
 from venture import shortcuts
 from venture.unit import VentureUnit, produceHistories, plotAsymptotics
-
+from venture.ripl.utils import expToDict, parse
 
 class HMMDemo(VentureUnit):
   def makeAssumes(self):
@@ -94,6 +94,11 @@ def reasonableInfer(mutate):
     ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, state]})
   return infer
 
+def commandInfer(command):
+  def infer(ripl, ct):
+    ripl.infer(expToDict(parse(command)))
+  return infer
+
 def runOneStrategy(arg):
   name = arg[0]
   inference = arg[1]
@@ -117,12 +122,11 @@ def main1():
 #  map(run, work)
 
 def main2():
-  parameters = {"length": [5,10,15,20,25,30,35,40], "mutation": [True, False]}
+  parameters = {"length": [5], "command": ["(cycle ((mh hypers one 3) (pgibbs state ordered 4 1)) 1)",
+                                           "(cycle ((mh hypers one 3) (func-pgibbs state ordered 4 1)) 1)"]}
   def runner(params):
     model = HMMDemo(shortcuts.make_lite_church_prime_ripl(), params)
-    inference = reasonableInfer
-    args = [params["mutation"]]
-    return model.runFromConditional(3, runs=5, verbose=True, infer=inference(*args))
+    return model.runFromConditional(3, runs=3, verbose=True, infer=commandInfer(params["command"]))
 
   histories = produceHistories(parameters, runner)
   plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png', aggregate=True)
