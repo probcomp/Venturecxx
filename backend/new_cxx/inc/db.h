@@ -14,16 +14,16 @@ struct DB
   void registerValue(Node * node, VentureValuePtr value);
 
   bool hasLatentDB(OutputNode * makerNode);
-  void hasLatentDB(OutputNode * makerNode);
+  shared_ptr<LatentDB> getLatentDB(OutputNode * makerNode);
   void registerLatentDB(OutputNode * makerNode, shared_ptr<LatentDB> latentDB);
 
-  Node * getESRParent(VentureSPPtr sp,FamilyID id);
-  void registerSPFamily(VentureSPPtr sp,FamilyID id,Node * esrParent);
+  RootOfFamily getESRParent(shared_ptr<VentureSP> sp,FamilyID id);
+  void registerSPFamily(shared_ptr<VentureSP> sp,FamilyID id,RootOfFamily esrParent);
 
 private:
-  map<Node*,shared_ptr<LatentDB> > latentDBs;
-  map<OutputNode*,VentureValuePtr> values;
-  map<shared_ptr<SP>,map<FamilyID,RootNodePtr> > spFamilyDBs;
+  map<OutputNode*,shared_ptr<LatentDB> > latentDBs;
+  map<Node*,VentureValuePtr> values;
+  map<shared_ptr<VentureSP>,map<FamilyID,RootOfFamily> > spFamilyDBs;
   
 };
 
