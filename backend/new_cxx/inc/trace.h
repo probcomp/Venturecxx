@@ -66,12 +66,10 @@ struct Trace
 
   /* Derived getters (just for convenience)*/
   virtual VentureValuePtr getGroundValue(Node * node);
-  virtual Node * getSPMakerNode(Node * node);
-  virtual shared_ptr<SPRef> getSPRef(Node * node);
-  virtual shared_ptr<VentureSP> getMadeSP(Node * node);
-  virtual shared_ptr<SPFamilies> getMadeSPFamilies(Node * node);
-  virtual shared_ptr<SPAux> getMadeSPAux(Node * node);
-  virtual shared_ptr<PSP> getMadePSP(Node * node);
+  virtual OutputNode * getSPMakerNode(ApplicationNode * node);
+  virtual shared_ptr<VentureSP> getMadeSP(OutputNode * node);
+  virtual shared_ptr<SPFamilies> getMadeSPFamilies(OutputNode * node);
+  virtual shared_ptr<SPAux> getMadeSPAux(OutputNode * node);
   virtual vector<Node*> getParents(Node * node);
 
   /* Primitive setters */
