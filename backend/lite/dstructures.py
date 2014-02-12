@@ -58,13 +58,6 @@ class IsArrayOutputPSP(PSP):
     return "(%s <object>) -> <bool>" % name
 
 ### Lists
-class IsPairOutputPSP(PSP): 
-  def simulate(self,args):
-    return isinstance(args.operandValues[0],list) and len(args.operandValues[0]) > 0
-
-  def description(self,name):
-    return "(%s <object>) -> <bool>" % name
-
 class FirstListOutputPSP(PSP):
   def simulate(self,args): return args.operandValues[0][0]
   def description(self,name):
