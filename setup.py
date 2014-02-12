@@ -81,7 +81,7 @@ cxx = Extension("venture.cxx.libtrace",
                      ('REVISION', '1')],
     libraries = ['gsl', 'gslcblas', 'boost_python'],
     extra_compile_args = ["-Wall", "-g", "-O1", "-fPIC"],
-    undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
+    #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
     include_dirs = inc_dirs,
     sources = src_files)
 
@@ -98,6 +98,12 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     # those lines are copied from distutils.ccompiler.CCompiler directly
     macros, objects, extra_postargs, pp_opts, build = self._setup_compile(output_dir, macros, include_dirs, sources, depends, extra_postargs)
     cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
+    
+    # FIXME: this is probably not the best way to do this
+    # I could find no other way to override the extra flags
+    # from the python makefile's CFLAGS and OPTS variables
+    self.compiler_so = ["ccache", "gcc"]
+    
     # parallel code
     N=2 # number of parallel compilations
     import multiprocessing.pool
