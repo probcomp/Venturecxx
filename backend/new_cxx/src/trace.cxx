@@ -35,21 +35,49 @@ pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode
   return make_pair(requestNode, outputNode);
 }
 
+/* Derived getters */
+
 VentureValuePtr getGroundValue(Node * node)
 {
-  throw 500;
-
   VentureValuePtr value = getValue(node);
   shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
   
-  if (spRef) { return getMade(); }
+  if (spRef) { return getValue(spRef->makerNode); }
   else { return value; }
 }
 
-Node * getSPMakerNode(Node * node) { throw 500; }
-shared_ptr<SPRef> getSPRef(Node * node) { throw 500; }
-shared_ptr<VentureSP> getSP(Node * node) { throw 500; }
-shared_ptr<SPFamilies> getSPFamilies(Node * node) { throw 500; }
-shared_ptr<SPAux> getSPAux(Node * node) { throw 500; }
-shared_ptr<PSP> getPSP(Node * node) { throw 500; }
-vector<Node*> getParents(Node * node) { throw 500; }
+OutputNode * getSPMakerNode(ApplicationNode * node)
+{
+  shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(getValue(node->operatorNode));
+  assert(spRef);
+  return spRef->makerNode;
+}
+
+shared_ptr<VentureSP> getMadeSP(OutputNode * node)
+{
+  SPRecord spRecord = getMadeSPRecord(node);
+  return spRecord.sp;
+}
+
+shared_ptr<SPFamilies> getMadeSPFamilies(OutputNode * node)
+{
+  SPRecord spRecord = getMadeSPRecord(node);
+  return spRecord.spFamilies;
+}
+
+shared_ptr<SPAux> getMadeSPAux(OutputNode * node)
+{
+  SPRecord spRecord = getMadeSPRecord(node);
+  return spRecord.spAux;
+}
+
+vector<Node*> getParents(Node * node)
+{
+  vector<Node*> parents = node->definiteParents;
+  if (dynamic_cast<OutputNode*>(node)) 
+  {
+    vector<Node*> esrParents = getESRParents(node);
+    parents.insert(definiteParents.end(),esrParents.begin(),esrParents.end());
+  }
+  return parents;
+}
