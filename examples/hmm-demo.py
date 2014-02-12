@@ -121,16 +121,16 @@ def main1():
   # Running the job in-process gives better exceptions
 #  map(run, work)
 
+def runner(params):
+  print "Running with params %s" % params
+  model = HMMDemo(shortcuts.make_lite_church_prime_ripl(), params)
+  return model.runFromConditional(3, runs=3, verbose=True, infer=commandInfer(params["command"]))
+
 def main2():
   parameters = {"length": [5,10,15,20,25,30,35,40,45,50,55],
                 "command": ["(cycle ((mh hypers one 3) (pgibbs state ordered 4 1)) 1)",
                             "(cycle ((mh hypers one 3) (func-pgibbs state ordered 4 1)) 1)"]}
-  def runner(params):
-    print "Running with params %s" % params
-    model = HMMDemo(shortcuts.make_lite_church_prime_ripl(), params)
-    return model.runFromConditional(3, runs=3, verbose=True, infer=commandInfer(params["command"]))
-
-  histories = produceHistories(parameters, runner)
+  histories = produceHistories(parameters, runner, processes=3)
   plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png', aggregate=True)
   plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png')
 

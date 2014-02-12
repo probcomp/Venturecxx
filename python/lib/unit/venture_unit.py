@@ -625,7 +625,7 @@ def cartesianProduct(keyToValues):
     (keys, values) = zip(*items) if len(keyToValues) > 0 else ([], [])
 
     Key = namedtuple('Key', keys)
-    return [Key._make(t) for t in itertools.product(*values)]
+    return [Key._make(t)._asdict() for t in itertools.product(*values)]
 
 # Produces histories for a set of parameters.
 # Here the parameters can contain lists. For example, {'a':[0, 1], 'b':[2, 3]}.
@@ -633,9 +633,19 @@ def cartesianProduct(keyToValues):
 # Runner should take a given parameter setting and produce a history.
 # For example, runner = lambda params : Model(ripl, params).runConditionedFromPrior(sweeps, runs, track=0)
 # Returned is a dictionary mapping each parameter setting (as a namedtuple) to the history.
-def produceHistories(parameters, runner):
+# If the processes argument is not None, use that many worker
+# processes, running the parameter settings in parallel.
+# Unfortunately, this seems to require the function to run be defined
+# at the top level.  Why?
+def produceHistories(parameters, runner, processes=None):
     parameters_product = cartesianProduct(parameters)
-    results = [runner(params._asdict()) for params in parameters_product]
+    if processes is None:
+        results = [runner(params) for params in parameters_product]
+    else:
+        from multiprocessing import Pool
+        pool = Pool(int(processes))
+        results = pool.map(runner, parameters_product)
+
     return dict(zip(parameters_product, results))
 
 # Sets key to value and returns the updated dictionary.
@@ -686,13 +696,13 @@ def plotAsymptotics(parameters, histories, seriesName, fmt='pdf', directory=None
                     plt.title(seriesName + ' versus ' + key)
                     plt.xlabel(key)
                     plt.ylabel(seriesName)
-                    showParameters(params._asdict())
+                    showParameters(params)
 
                     colors = cm.rainbow(np.linspace(0, 1, len(otherValues)))
 
                     # For each setting of the aggregate parameter, plot the values with respect to the x-axis parameter.
                     for (otherValue, c) in zip(otherValues, colors):
-                        p = addToDict(params._asdict(), other, otherValue)
+                        p = addToDict(params, other, otherValue)
                         plt.scatter(values, [paramsToValue[Key(**addToDict(p, key, value))] for value in values],
                                     label=other+'='+str(otherValue), color=c)
 
@@ -700,7 +710,7 @@ def plotAsymptotics(parameters, histories, seriesName, fmt='pdf', directory=None
                     legend_outside()
 
                     filename = key
-                    for (param, value) in params._asdict().items():
+                    for (param, value) in params.items():
                         filename += '_' + param + '=' + str(value)
 
                     #plt.tight_layout()
@@ -714,12 +724,12 @@ def plotAsymptotics(parameters, histories, seriesName, fmt='pdf', directory=None
                 plt.title(seriesName + ' versus ' + key)
                 plt.xlabel(key)
                 plt.ylabel(seriesName)
-                showParameters(params._asdict())
+                showParameters(params)
 
-                plt.scatter(values, [paramsToValue[Key(**addToDict(params._asdict(), key, v))] for v in values])
+                plt.scatter(values, [paramsToValue[Key(**addToDict(params, key, v))] for v in values])
 
                 filename = key
-                for (param, value) in params._asdict().items():
+                for (param, value) in params.items():
                     filename += '_' + param + '=' + str(value)
 
                 #plt.tight_layout()
