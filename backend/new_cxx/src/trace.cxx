@@ -46,7 +46,7 @@ VentureValuePtr getGroundValue(Node * node)
   else { return value; }
 }
 
-OutputNode * getSPMakerNode(ApplicationNode * node)
+OutputNode * getOperatorSPMakerNode(ApplicationNode * node)
 {
   shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(getValue(node->operatorNode));
   assert(spRef);

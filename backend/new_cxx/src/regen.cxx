@@ -162,7 +162,7 @@ double applyPSP(Trace * trace,
 	      shared_ptr<map<Node*,Gradient> > gradients)
 {
   double weight = 0;
-  shared_ptr<PSP> psp = trace->getMadeSP(trace->getSPMakerNode(node))->getPSP();
+  shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP();
   shared_ptr<Args> args = trace->getArgs(node);
 
   VentureValuePtr oldValue;
@@ -220,7 +220,7 @@ double evalRequests(Trace * trace,
       Node * esrParent;
       if (shouldRestore)
       {
-        esrParent = db->getESRParent(trace->getMadeSP(trace->getSPMakerNode(node)),esr.id);
+        esrParent = db->getESRParent(trace->getMadeSP(trace->getOperatorSPMakerNode(node)),esr.id);
         weight += restore(trace,esrParent,scaffold,db,gradients);
       }
       else
@@ -231,7 +231,7 @@ double evalRequests(Trace * trace,
       }
       trace->registerFamilyAt(node,esr.id,esrParent);
     }
-    Node * esrParent = trace->getMadeSPFamilyRoot(trace->getSPMakerNode(requestNode),esr.id);
+    Node * esrParent = trace->getMadeSPFamilyRoot(trace->getOperatorSPMakerNode(requestNode),esr.id);
     trace.addESREdge(esrParent,requestNode->outputNode);
   }
 
