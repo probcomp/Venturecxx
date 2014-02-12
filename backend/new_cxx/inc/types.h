@@ -10,6 +10,7 @@
 using boost::unordered_map;
 using boost::shared_ptr;
 using boost::dynamic_pointer_cast;
+using boost::static_pointer_cast;
 using std::vector;
 using std::map;
 using std::set;

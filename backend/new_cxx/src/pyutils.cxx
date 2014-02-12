@@ -1,9 +1,12 @@
+#include "pyutils.h"
+#include "values.h"
+
 VentureValuePtr parseValue(boost::python::dict d)
 {
-  if (d["type"] == "boolean") { return new VentureBool(boost::python::extract<bool>(d["value"])); }
-  else if (d["type"] == "number") { return new VentureNumber(boost::python::extract<double>(d["value"])); }
-  else if (d["type"] == "symbol") { return new VentureSymbol(boost::python::extract<string>(d["value"])); }
-  else if (d["type"] == "atom") { return new VentureAtom(boost::python::extract<uint32_t>(d["value"])); }
+  if (d["type"] == "boolean") { return shared_ptr<VentureValue>(new VentureBool(boost::python::extract<bool>(d["value"]))); }
+  else if (d["type"] == "number") { return shared_ptr<VentureValue>(new VentureNumber(boost::python::extract<double>(d["value"]))); }
+  else if (d["type"] == "symbol") { return shared_ptr<VentureValue>(new VentureSymbol(boost::python::extract<string>(d["value"]))); }
+  else if (d["type"] == "atom") { return shared_ptr<VentureValue>(new VentureAtom(boost::python::extract<uint32_t>(d["value"]))); }
   else { assert(false); }
 }
 
@@ -11,7 +14,7 @@ VentureValuePtr parseValue(boost::python::dict d)
 VentureValuePtr parseExpression(boost::python::object o)
 {
   boost::python::extract<boost::python::dict> getDict(o);
-  if (getDict.check()) { return parseValue(getDict()); }
+  if (getDict.check()) { return shared_ptr<VentureValue>(parseValue(getDict())); }
   
   boost::python::extract<boost::python::list> getList(o);
   assert(getList.check());
@@ -26,5 +29,5 @@ VentureValuePtr parseExpression(boost::python::object o)
   {
     exp.push_back(parseExpression(l[i-1]));
   }
-  return new VentureArray(exp);
+  return shared_ptr<VentureValue>(new VentureArray(exp));
 }

@@ -3,6 +3,7 @@
 #include "env.h"
 #include "builtin.h"
 #include "regen.h"
+#include "sp.h"
 
 /* Constructor */
 
@@ -35,7 +36,7 @@ ConcreteTrace::ConcreteTrace()
     nodes.push_back(node);
   }
 
-  globalEnvironment = new VentureEnvironment(shared_ptr<VentureEnvironment>(NULL),syms,nodes);  
+  globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(shared_ptr<VentureEnvironment>(),syms,nodes));
 }
 
 

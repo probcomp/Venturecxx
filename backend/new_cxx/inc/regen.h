@@ -72,7 +72,7 @@ double apply(Trace * trace,
 	      shared_ptr<map<Node*,Gradient> > gradients);
 
 
-void processMadeSP(Trace * trace, OutputNode * node, bool isAAA);
+void processMadeSP(Trace * trace, Node * node, bool isAAA);
 
 double applyPSP(Trace * trace,
 	      ApplicationNode * node,
