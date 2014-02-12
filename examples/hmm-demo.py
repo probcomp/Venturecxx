@@ -18,7 +18,6 @@ matplotlib.use('Agg')
 
 from venture import shortcuts
 from venture.unit import VentureUnit, produceHistories, plotAsymptotics
-from venture.ripl.utils import expToDict, parse
 
 class HMMDemo(VentureUnit):
   def makeAssumes(self):
@@ -95,8 +94,7 @@ def reasonableInfer(mutate):
   return infer
 
 def commandInfer(command):
-  def infer(ripl, ct):
-    ripl.infer(expToDict(parse(command)))
+  def infer(ripl, _): ripl.infer(command)
   return infer
 
 def runOneStrategy(arg):
