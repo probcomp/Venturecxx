@@ -33,7 +33,9 @@ class VentureNumber(VentureValue):
   def getNumber(self): return self.number
   def asStackDict(self): return {"type":"number","value":self.number}
   def compareSameType(self, other):
-    return self.number.__cmp__(other.number)
+    if self.number < other.number: return -1
+    elif self.number > other.number: return 1
+    else: return 0 # self.number.__cmp__(other.number) works for ints but not floats.  Guido, WTF!?
 
 class VentureAtom(VentureValue):
   def __init__(self,atom): self.atom = atom
