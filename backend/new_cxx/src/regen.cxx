@@ -106,7 +106,6 @@ pair<double,Node*> evalFamily(Trace * trace,
 			      VentureValuePtr exp,
 			      shared_ptr<VentureEnvironment> env,
 			      shared_ptr<Scaffold> scaffold,
-			      bool shouldRestore,
 			      shared_ptr<DB> db,
 			      shared_ptr<map<Node*,Gradient> > gradients)
 {
@@ -123,13 +122,13 @@ pair<double,Node*> evalFamily(Trace * trace,
   else
   {
     shared_ptr<VentureArray> array = dynamic_pointer_cast<VentureArray>(exp);
-    pair<double,Node*> p = evalFamily(trace,array->xs[0],env,scaffold,shouldRestore,db,gradients);
+    pair<double,Node*> p = evalFamily(trace,array->xs[0],env,scaffold,db,gradients);
     double weight = p.first;
     Node * operatorNode = p.second;
     vector<Node*> operandNodes;
     for (size_t i = 1; i < array->xs.size(); ++i)
     {
-      pair<double,Node*>p = evalFamily(trace,array->xs[i],env,scaffold,shouldRestore,db,gradients);
+      pair<double,Node*>p = evalFamily(trace,array->xs[i],env,scaffold,db,gradients);
       weight += p.first;
       operandNodes.push_back(p.second);
     }
@@ -246,7 +245,7 @@ double evalRequests(Trace * trace,
       }
       else
       {
-      	pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,shouldRestore,db,gradients);
+      	pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,db,gradients);
         weight += p.first;
 	esrParent = shared_ptr<Node>(p.second);
       }

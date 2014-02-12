@@ -110,7 +110,7 @@ struct ConcreteTrace : Trace
   set<Node*> constrainedChoices;
   set<Node*> arbitraryErgodicKernels;
 
-  set<Node*> unpropagatedObservations;
+  map<Node*,VentureValuePtr> unpropagatedObservations;
 
   map<DirectiveID,RootOfFamily> families;
 

@@ -6,6 +6,9 @@
 #include <vector>
 #include "Eigen/Dense"
 
+#include <boost/python/object.hpp>
+#include <boost/python/dict.hpp>
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -28,6 +31,8 @@ struct VentureValue
   virtual unordered_map<VentureValuePtr,VentureValuePtr> getDictionary() const;
   virtual MatrixXd getMatrix() const;
   virtual pair<vector<ESR>,vector<LSR *> > getRequests() const;
+
+  virtual boost::python::dict toPython() const { throw "need to override toPython()"; };
 
   virtual bool equals(const shared_ptr<const VentureValue> & other) const;
   virtual size_t hash() const;

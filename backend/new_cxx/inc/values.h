@@ -11,6 +11,8 @@ struct VentureNumber : VentureValue
   int getInt() const { return static_cast<int>(x); }
   bool equals(const shared_ptr<const VentureValue> & other) const;
   size_t hash() const;
+  boost::python::dict toPython() const;
+
   double x;
 
 };

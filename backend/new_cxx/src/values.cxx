@@ -113,3 +113,12 @@ size_t VentureSimplex::hash() const
 }
 
 
+//////////////
+
+boost::python::dict VentureNumber::toPython() const
+{
+  boost::python::dict value;
+  value["type"] = "number";
+  value["value"] = boost::python::object(x);
+  return value;
+}

@@ -23,7 +23,7 @@ struct PyTrace
   void observe(DirectiveID did,boost::python::object valueExp);
   void unobserve(DirectiveID did);
 
-  void bindInGlobalEnv(string sym, size_t did);
+  void bindInGlobalEnv(string sym, DirectiveID did);
 
   boost::python::object extractPythonValue(DirectiveID did);
 
@@ -31,7 +31,7 @@ struct PyTrace
   size_t getSeed();
 
   double getGlobalLogScore();
-  uint32_t numRandomChoices();
+  uint32_t numUnconstrainedChoices();
 
   void infer(boost::python::dict params);
 
