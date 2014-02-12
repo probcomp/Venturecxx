@@ -51,10 +51,10 @@ def builtInSPsList():
            [ "times", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1)) ],
            [ "div",   binaryNum(lambda x,y: x / y) ],
            [ "eq",    deterministic(lambda x,y: v.VentureBool(x.compare(y) == 0)) ],
-           [ "gt",    deterministic(lambda x,y: x > y) ],
-           [ "gte",    deterministic(lambda x,y: x >= y) ],
-           [ "lt",    deterministic(lambda x,y: x < y) ],
-           [ "lte",    deterministic(lambda x,y: x >= y) ],
+           [ "gt",    deterministic(lambda x,y: v.VentureBool(x.compare(y) >  0)) ],
+           [ "gte",   deterministic(lambda x,y: v.VentureBool(x.compare(y) >= 0)) ],
+           [ "lt",    deterministic(lambda x,y: v.VentureBool(x.compare(y) <  0)) ],
+           [ "lte",   deterministic(lambda x,y: v.VentureBool(x.compare(y) <= 0)) ],
            # Only makes sense with VentureAtom/VentureNumber distinction
            [ "real",  deterministic_typed(lambda x:x, [v.AtomType()], v.NumberType()) ],
            # Atoms appear to be represented as Python integers
