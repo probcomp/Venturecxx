@@ -9,6 +9,8 @@ struct SPAux;
 struct LSR;
 struct LatentDB;
 struct PSP;
+struct RequestNode;
+struct OutputNode;
 struct gsl_rng;
 
 struct VentureSPRef : VentureValue
@@ -41,8 +43,8 @@ struct VentureSP : VentureValue
   shared_ptr<PSP> requestPSP;
   shared_ptr<PSP> outputPSP;
   
-  virtual getPSP(RequestNode * requestNode) const { return requestPSP; }
-  virtual getPSP(OutputNode * outputNode) const { return outputNode; }
+  virtual shared_ptr<PSP> getPSP(RequestNode * requestNode) const { return requestPSP; }
+  virtual shared_ptr<PSP> getPSP(OutputNode * outputNode) const { return outputPSP; }
 
   virtual shared_ptr<SPAux> constructSPAux() const;
   virtual shared_ptr<LatentDB> constructLatentDB() const;
@@ -50,8 +52,5 @@ struct VentureSP : VentureValue
   virtual double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const;
   virtual bool hasAEKernel() const;
 };
-
-
-
 
 #endif

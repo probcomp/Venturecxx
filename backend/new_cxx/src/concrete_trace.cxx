@@ -1,4 +1,5 @@
 #include "concrete_trace.h"
+#include "values.h"
 
 /* Constructor */
 
