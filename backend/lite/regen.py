@@ -145,7 +145,7 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   if isinstance(newValue,VentureSP): processMadeSP(trace,node,scaffold.isAAA(node))
   if psp.isRandom(): trace.registerRandomChoice(node)
   if isinstance(psp,ScopeIncludeOutputPSP):
-    scope,block = [n.value for n in node.operandNodes[0:2]]
+    scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
     blockNode = node.operandNodes[2]
     trace.registerRandomChoiceInScope(scope,block,blockNode)
   return weight

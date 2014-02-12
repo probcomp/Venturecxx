@@ -14,19 +14,20 @@
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
-from venture.sivm import CoreSivmCxx
-import venture.sivm.core_sivm_cxx as module
+from venture.sivm import CoreSivm
+import venture.sivm.core_sivm as module
 from venture.exception import VentureException
 from nose import SkipTest
 
 #Note -- these tests only check for minimum functionality
 
-class TestCoreSivmCxx(unittest.TestCase):
+class TestCoreSivm(unittest.TestCase):
 
     _multiprocess_can_split_ = True
 
     def setUp(self):
-        self.sivm = CoreSivmCxx()
+        from venture.cxx import engine
+        self.sivm = CoreSivm(engine.Engine())
         self.sivm.execute_instruction({"instruction":"clear"})
 
     def tearDown(self):
@@ -225,7 +226,7 @@ class TestCoreSivmCxx(unittest.TestCase):
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['logscore'],-0.6931471805599453)
     def test_get_logscore(self):
-        raise SkipTest("Per-directive logscore not implemented in cxx.  Issue: https://app.asana.com/0/9277419963067/9940667562272")
+        raise SkipTest("Per-directive logscore not implemented.  Issue: https://app.asana.com/0/9277419963067/9940667562272")
         inst1 = {
                 'instruction':'observe',
                 'expression': ['flip'],

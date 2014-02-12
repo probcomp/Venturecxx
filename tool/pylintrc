@@ -12,18 +12,23 @@
 # W0142: Used * or ** magic
 # W0511 (warning notes in code comments)
 # W1201: Specify string format arguments as logging function parameters
+# W0201: Attribute defined outside init
 
 # Messages disabled pending normalization of our codebase:
 # C0301: Line too long
 # C0303: Trailing whitespace
 # W0311: Bad indentation
 # W0403: Relative import
-disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0311,W0403,C0301,C0303
+disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0201,W0311,W0403,C0301,C0303
 
 # Rationale: Wildcard imports
 #   Turns out wildcard imports in Python import every name visible in
 #   the imported module, including ones it itself imported.  Import
 #   chains like that are confusing disasters waiting to happen.
+
+# Rationale: Permit defining attributes outside init
+#   We just have too much code that relies upon being able to store
+#   arbitrary stuff in an object.
 
 [REPORTS]
 include-ids=yes

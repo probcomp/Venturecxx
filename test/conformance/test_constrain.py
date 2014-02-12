@@ -164,7 +164,7 @@ def testConstrainWithAPredict1():
   ripl.assume("op4","(if (op3) op2 op1)")
   ripl.predict("(op4)")
   ripl.observe("(op4)",True)
-  predictions = collectSamples(ripl,6)
+  ripl.infer({"kernel":"mh","transitions":100,"scope":"default","block":"one"})
 
 
 @statisticalTest
