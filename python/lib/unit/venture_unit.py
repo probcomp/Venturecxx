@@ -635,13 +635,7 @@ def cartesianProduct(keyToValues):
 # Returned is a dictionary mapping each parameter setting (as a namedtuple) to the history.
 def produceHistories(parameters, runner):
     parameters_product = cartesianProduct(parameters)
-
-    results = []
-
-    for params in parameters_product:
-        result = runner(params._asdict())
-        results.append(result)
-
+    results = [runner(params._asdict()) for params in parameters_product]
     return dict(zip(parameters_product, results))
 
 # Sets key to value and returns the updated dictionary.
