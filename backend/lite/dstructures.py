@@ -57,22 +57,7 @@ class IsArrayOutputPSP(PSP):
   def description(self,name):
     return "(%s <object>) -> <bool>" % name
 
-### Lists
-class FirstListOutputPSP(PSP):
-  def simulate(self,args): return args.operandValues[0][0]
-  def description(self,name):
-    return "(%s <list>) -> <object>" % name
-
-class SecondListOutputPSP(PSP): 
-  def simulate(self,args): return args.operandValues[0][1]
-  def description(self,name):
-    return "(%s <list>) -> <object>" % name
-
-class RestListOutputPSP(PSP):
-  def simulate(self,args): return args.operandValues[0][1:] # TODO Is this constant time in Python?
-  def description(self,name):
-    return "(%s <list>) -> <list>" % name
-
+### Map, the weird way.
 class MapListRequestPSP(PSP):
   def simulate(self,args):
     fNode = args.operandNodes[0]
