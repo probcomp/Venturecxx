@@ -12,6 +12,18 @@ def testList3():
 def testPair1():
   assert get_ripl().predict("(pair 1 (list))") == [1.0]
 
+def testIsPair1():
+  assert not get_ripl().predict("(is_pair 1)")
+
+def testIsPair2():
+  assert not get_ripl().predict("(is_pair (list))")
+
+def testIsPair3():
+  assert get_ripl().predict("(is_pair (list 1))")
+
+def testIsPair4():
+  assert get_ripl().predict("(is_pair (pair 1 3))")
+
 class TestList(object):
   _multiprocess_can_split_ = True
   def setup(self):

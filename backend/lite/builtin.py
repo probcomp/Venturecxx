@@ -45,6 +45,9 @@ def unaryNum(f):
 def naryNum(f):
   return deterministic_typed(f, [v.NumberType()], v.NumberType(), True)
 
+def type_test(t):
+  return deterministic(lambda thing: v.VentureBool(isinstance(thing, t)))
+
 def builtInSPsList():
   return [ [ "plus",  naryNum(lambda *args: sum(args)) ],
            [ "minus", binaryNum(lambda x,y: x - y) ],
@@ -71,11 +74,11 @@ def builtInSPsList():
 
            [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType()) ],
 
-           [ "is_symbol", deterministic(lambda x: v.VentureBool(isinstance(x, v.VentureSymbol))) ],
+           [ "is_symbol", type_test(v.VentureSymbol) ],
 
            [ "list", deterministic(v.pythonListToVentureList) ],
            [ "pair", deterministic(v.VenturePair) ],
-           [ "is_pair", VentureSP(NullRequestPSP(),dstructures.IsPairOutputPSP()) ],
+           [ "is_pair", type_test(v.VenturePair) ],
            [ "first", VentureSP(NullRequestPSP(),dstructures.FirstListOutputPSP()) ],
            [ "second", VentureSP(NullRequestPSP(),dstructures.SecondListOutputPSP()) ],
            [ "rest", VentureSP(NullRequestPSP(),dstructures.RestListOutputPSP()) ],
