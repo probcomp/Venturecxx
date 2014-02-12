@@ -1,5 +1,34 @@
 #include "concrete_trace.h"
 
+/* Constructor */
+
+ConcreteTrace::ConcreteTrace()
+{
+  map<string,VentureValuePtr> builtInValues = initBuiltInValues();
+  map<string,shared_ptr<VentureSP> > builtInSPs = initBuiltInSPs();
+
+  for (map<string,VentureValuePtr>::iterator iter = builtInValues.begin();
+       iter != builtInValues.end();
+       ++iter)
+  {
+    shared_ptr<VentureSymbol> sym = new VentureSymbol(iter->first);
+    ConstantNode * node = createConstantNode(iter->second);
+    globalEnv->addBinding(sym,node);
+  }
+
+  for (map<string,shared_ptr<VentureSP> >::iterator iter = builtInSPs.begin();
+       iter != builtInSPs.end();
+       ++iter)
+  {
+    shared_ptr<VentureSymbol> sym = new VentureSymbol(iter->first);
+    ConstantNode * node = createConstantNode(iter->second);
+    processMadeSP(this,node,false);
+    globalEnv->addBinding(sym,node);
+  }
+}
+
+
+
 /* Registering metadata */
 void ConcreteTrace::registerAEKernel(Node * node) { throw 500; }
 

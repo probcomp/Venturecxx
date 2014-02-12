@@ -6,6 +6,7 @@
 
 struct ConcreteTrace : Trace
 {
+  ConcreteTrace();
   /* TODO once we pass particle tests and care about supporting people, we will remove "override" keywords */
 
   /* Registering metadata */
@@ -100,7 +101,7 @@ struct ConcreteTrace : Trace
   //void addNewChildren(Node * node,PSet newChildren);
 
 private:
-  VentureEnvironment * globalEnvironment;
+  shared_ptr<VentureEnvironment> globalEnvironment = new VentureEnvironment();
   set<Node*> unconstrainedChoices;
   set<Node*> constrainedChoices;
   set<Node*> arbitraryErgodicKernels;
