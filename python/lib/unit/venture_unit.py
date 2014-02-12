@@ -19,6 +19,8 @@ import numpy as np
 import pylab
 import cPickle as pickle
 import os
+import copy
+from collections import OrderedDict
 
 # whether to record a value returned from the ripl
 def record(value):
@@ -620,12 +622,11 @@ from matplotlib import cm
 def makeIterable(obj):
     return obj if hasattr(obj, '__iter__') else [obj]
 
+# :: {a: [b]} -> [{a: b}]
 def cartesianProduct(keyToValues):
     items = [(key, makeIterable(value)) for (key, value) in keyToValues.items()]
     (keys, values) = zip(*items) if len(keyToValues) > 0 else ([], [])
-
-    Key = namedtuple('Key', keys)
-    return [Key._make(t)._asdict() for t in itertools.product(*values)]
+    return [OrderedDict(zip(keys, t)) for t in itertools.product(*values)]
 
 # Produces histories for a set of parameters.
 # Here the parameters can contain lists. For example, {'a':[0, 1], 'b':[2, 3]}.
@@ -646,12 +647,15 @@ def produceHistories(parameters, runner, processes=None):
         pool = Pool(int(processes))
         results = pool.map(runner, parameters_product)
 
-    return dict(zip(parameters_product, results))
+    Key = namedtuple('Key', parameters_product[0].keys())
+    hashable_keys = [Key._make(params.values()) for params in parameters_product]
+    return dict(zip(hashable_keys, results))
 
 # Sets key to value and returns the updated dictionary.
 def addToDict(dictionary, key, value):
-    dictionary[key] = value
-    return dictionary
+    answer = copy.copy(dictionary)
+    answer[key] = value
+    return answer
 
 # Produces plots for a given variable over a set of runs.
 # Variable parameters are the x-axis, 'seriesName' is the y-axis.
