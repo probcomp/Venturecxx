@@ -18,6 +18,16 @@ class VentureValue(object):
 
   def asStackDict(self): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
 
+  def compare(self, other):
+    st = type(self)
+    ot = type(other)
+    if st == ot:
+      return self.compareSameType(other)
+    if venture_types.index(st) < venture_types.index(ot) : return -1
+    else: return 1 # We already checked for equality
+
+  def compareSameType(self, _): raise Exception("Cannot compare %s" % type(self))
+
 class VentureNumber(VentureValue):
   def __init__(self,number): self.number = number
   def getNumber(self): return self.number
@@ -80,6 +90,12 @@ class SPRef(VentureValue):
 
 ## SPs and Environments as well
 ## Not Requests, because we do not reflect on them
+
+venture_types = [VentureBool, VentureNumber, VentureAtom, VentureSymbol, VentureNil, VenturePair, VentureArray, VentureSimplex, VentureDict, VentureMatrix, SPRef] # Break load order dependency but not adding SPs and Environments yet
+
+def registerVentureType(t):
+  if t in venture_types: pass
+  else: venture_types.append(t)
 
 def isVentureValue(thing):
   return thing is None or isinstance(thing, VentureValue)

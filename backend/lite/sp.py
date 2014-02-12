@@ -1,4 +1,4 @@
-from value import VentureValue
+from value import VentureValue, registerVentureType
 from abc import ABCMeta
 
 class SPFamilies(object):
@@ -42,3 +42,5 @@ class VentureSP(VentureValue):
     if candidate:
       return candidate
     return name
+
+registerVentureType(VentureSP)

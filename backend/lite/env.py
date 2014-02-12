@@ -1,4 +1,4 @@
-from value import VentureValue
+from value import VentureValue, registerVentureType
 
 class VentureEnvironment(VentureValue):
   def __init__(self,outerEnv=None,ids=None,nodes=None):
@@ -14,3 +14,5 @@ class VentureEnvironment(VentureValue):
     if sym in self.frame: return self.frame[sym]
     elif not self.outerEnv: raise Exception("Cannot find symbol %s" % sym)
     else: return self.outerEnv.findSymbol(sym)
+
+registerVentureType(VentureEnvironment)
