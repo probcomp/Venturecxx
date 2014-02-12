@@ -8,8 +8,8 @@
 #include <vector>
 #include "smap.h"
 #include "node.h"
-
-
+#include "scaffold.h"
+#include "psp.h"
 
 struct Node;
 struct SPRef;
@@ -50,7 +50,7 @@ struct Trace
   virtual Node * popLastESRParent(OutputNode * outputNode) =0;
   virtual void disconnectLookup(LookupNode * lookupNode) =0;
   virtual void decNumRequests(Node * node) =0;
-  virtual def removeChild(Node * node, Node * child) =0;
+  virtual void removeChild(Node * node, Node * child) =0;
 
   /* Primitive getters */
   virtual VentureValuePtr getValue(Node * node) =0;

@@ -1,4 +1,4 @@
-ESRRefOutputPSP::simulate(Args * args) const
+ESRRefOutputPSP::simulate(shared_ptr<Args> args) const
 {
   throw 500;
 }

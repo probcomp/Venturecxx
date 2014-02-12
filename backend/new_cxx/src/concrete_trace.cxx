@@ -1,3 +1,4 @@
+#include "concrete_trace.h"
 
 /* Registering metadata */
 void ConcreteTrace::registerAEKernel(Node * node) { throw 500; }

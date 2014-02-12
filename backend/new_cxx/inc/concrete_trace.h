@@ -2,6 +2,7 @@
 #define CONCRETE_TRACE_H
 
 #include "types.h"
+#include "trace.h"
 
 struct ConcreteTrace : Trace
 {

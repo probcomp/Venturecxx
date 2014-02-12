@@ -8,8 +8,8 @@
 struct SPAux;
 struct LSR;
 struct LatentDB;
-
-#include <gsl/gsl_rng.h>
+struct PSP;
+struct gsl_rng;
 
 struct VentureSPRef : VentureValue
 {
@@ -29,7 +29,10 @@ struct SPFamilies
   void unregisterFamily(FamilyID id);
 };
 
-struct SPAux { virtual shared_ptr<SPAux> copy() const; }
+struct SPAux
+{
+  virtual shared_ptr<SPAux> copy() const;
+};
 
 struct VentureSP : VentureValue
 {

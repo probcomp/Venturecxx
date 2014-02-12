@@ -6,6 +6,8 @@
 
 struct Trace;
 struct Node;
+struct ApplicationNode;
+struct RequestNode;
 struct VentureRequest;
 struct SPAux;
 struct VentureEnvironment;
@@ -14,12 +16,12 @@ struct Args
 {
   Args(Trace * trace, Node * node);
 
-  Node * node;
+  ApplicationNode * node;
   vector<VentureValuePtr> operandValues;
   vector<Node*> operandNodes;
 
   shared_ptr<VentureRequest> requestValue;
-  Node * requestNode;
+  RequestNode * requestNode;
 
   vector<VentureValuePtr> esrParentValues;
   vector<Node*> esrParentNodes;
@@ -30,7 +32,5 @@ struct Args
   shared_ptr<VentureEnvironment> env;
 
 };
-
-
 
 #endif

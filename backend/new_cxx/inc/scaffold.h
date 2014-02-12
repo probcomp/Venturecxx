@@ -1,6 +1,16 @@
 #ifndef SCAFFOLD_H
 #define SCAFFOLD_H
 
+#include <queue>
+#include <tuple>
+
+using std::queue;
+using std::tuple;
+
+struct Trace;
+struct LKernel;
+struct ConcreteTrace;
+
 struct Scaffold
 {
   set<Node *> getPrincipalNodes();
@@ -29,7 +39,7 @@ shared_ptr<Scaffold> constructScaffold(Trace * trace,const vector<set<Node*> > &
 
 // TODO everything from here on should be moved to .cxx
 void addResamplingNode(Trace * trace,
-set<Node*> & cDRG,
+            set<Node*> & cDRG,
 			      set<Node*> & cAbsorbing,
 			      set<Node*> & cAAA,
 			      queue<tuple<Node*,bool,Node*> > & q,

@@ -29,6 +29,8 @@ struct ApplicationNode : Node
   shared_ptr<VentureEnvironment> env;
 };
 
+struct OutputNode;
+
 struct RequestNode : ApplicationNode
 {
   RequestNode(Node * operatorNode, const std::vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env);
