@@ -76,6 +76,7 @@ class VentureArray(VentureValue):
 class VentureNil(VentureValue):
   def __init__(self): pass
   def compareSameType(self, _): return 0 # All Nils are equal
+  def _asPythonList(self): return []
 
 class VenturePair(VentureValue):
   def __init__(self,first,rest):
@@ -84,6 +85,12 @@ class VenturePair(VentureValue):
     self.first = first
     self.rest = rest
   def getPair(self): return (self.first,self.rest)
+  def _asPythonList(self):
+    return [self.first] + self.rest._asPythonList()
+  def asStackDict(self):
+    # TODO Venture pairs should be usable to build structures other
+    # than proper lists.  But then, what are their types?
+    return {"type":"list", "value":[v.asStackDict() for v in self._asPythonList()]}
   def compareSameType(self, other):
     fstcmp = self.first.compare(other.first)
     if fstcmp != 0: return fstcmp
