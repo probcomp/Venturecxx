@@ -1,5 +1,3 @@
-#include<memory>
-
 ConstantNode * Trace::createConstantNode(VentureValuePtr value)
 {
   ConstantNode * constantNode = new ConstantNode();

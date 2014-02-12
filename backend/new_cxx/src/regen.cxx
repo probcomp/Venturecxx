@@ -1,3 +1,12 @@
+#include "regen.h"
+
+#include "scaffold.h"
+#include "trace.h"
+#include "node.h"
+#include "expressions.h"
+#include "env.h"
+
+/*
 double regenAndAttach(Trace * trace,
 		      const vector<Node*> & border,
 		      shared_ptr<Scaffold> scaffold,
@@ -10,15 +19,20 @@ double regenAndAttach(Trace * trace,
   for (size_t i = 0; i < border.size(); ++i)
   {
     Node * node = border[i];
-    if scaffold->isAbsorbing(node) { weight += attach(trace,node,scaffold,shouldRestore,db,gradients); }
+    if (scaffold->isAbsorbing(node))
+    {
+      ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
+      assert(appNode);
+      weight += attach(trace,appNode,scaffold,shouldRestore,db,gradients);
+    }
     else
     {
       weight += regen(trace,node,scaffold,shouldRestore,db,gradients);
       if (trace->isObservation(node))
       {
         OutputNode * outputNode = trace->getOutermostNonReferenceApplication(node);
-	weight += constrain(trace,outputNode,trace->getObservedValue(node));
-	constraintsToPropagate[outputNode] = trace->getObservedValue(node);
+	      weight += constrain(trace,outputNode,trace->getObservedValue(node));
+        constraintsToPropagate[outputNode] = trace->getObservedValue(node);
       }
     }
   }
@@ -35,7 +49,7 @@ double regenAndAttach(Trace * trace,
   }
   return weight;
 }
-
+*/
 
 double constrain(Trace * trace,
 		 Node * node,
@@ -65,7 +79,7 @@ double regen(Trace * trace,
 	      shared_ptr<map<Node*,Gradient> > gradients)
 { 
   if (!scaffold) { return 0; }
-  return throw 500; 
+  throw 500;
 }
 
 double regenParents(Trace * trace,
@@ -94,7 +108,9 @@ pair<double,Node*> evalFamily(Trace * trace,
 {
   if (isVariable(exp))
   {
-    Node * sourceNode = env->lookupSymbol(exp);
+    double weight = 0;
+    shared_ptr<VentureSymbol> symbol = dynamic_pointer_cast<VentureSymbol>(exp);
+    Node * sourceNode = env->lookupSymbol(symbol);
     weight = regen(trace,sourceNode,scaffold,false,db,gradients);
     return make_pair(weight,trace->createLookupNode(sourceNode));
   }
@@ -102,19 +118,20 @@ pair<double,Node*> evalFamily(Trace * trace,
   else if (isQuotation(exp)) { return make_pair(0,trace->createConstantNode(textOfQuotation(exp))); }
   else
   {
-    pair<double,Node*> p = evalFamily(trace,exp[0],env,scaffold,db,gradients);
+    shared_ptr<VentureArray> array = dynamic_pointer_cast<VentureArray>(exp);
+    pair<double,Node*> p = evalFamily(trace,array->xs[0],env,scaffold,shouldRestore,db,gradients);
     double weight = p.first;
     Node * operatorNode = p.second;
     vector<Node*> operandNodes;
-    for (size_t i = 1; i < exp.size(); ++i)
+    for (size_t i = 1; i < array->xs.size(); ++i)
     {
-      pair<double,Node*> p = evalFamily(trace,exp[i],env,scaffold,db,gradients);
+      pair<double,Node*>p = evalFamily(trace,array->xs[i],env,scaffold,shouldRestore,db,gradients);
       weight += p.first;
       operandNodes.push_back(p.second);
     }
 
-    pair<RequestNode*,OutputNode*> p = trace->createApplicationNodes(operatorNode,operandNodes,env);
-    weight += apply(trace,p.first,p.second,scaffold,false,db,gradients);
+    pair<RequestNode*,OutputNode*> appNodes = trace->createApplicationNodes(operatorNode,operandNodes,env);
+    weight += apply(trace,appNodes.first,appNodes.second,scaffold,false,db,gradients);
     return make_pair(weight,p.second);
   }
 }
@@ -225,9 +242,9 @@ double evalRequests(Trace * trace,
       }
       else
       {
-	pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,db,gradients);
+      	pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,shouldRestore,db,gradients);
         weight += p.first;
-	esrParent = p.second;
+	      esrParent = p.second;
       }
       trace->registerFamily(node,esr.id,esrParent);
     }

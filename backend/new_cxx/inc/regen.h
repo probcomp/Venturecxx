@@ -1,13 +1,15 @@
 #ifndef REGEN_H
 #define REGEN_H
 
+#include "types.h"
+
 struct Trace;
 struct Scaffold;
 struct DB;
-struct Node;
 struct ApplicationNode;
 struct OutputNode;
 struct RequestNode;
+struct VentureEnvironment;
 
 double regenAndAttach(Trace * trace,
 		      const vector<Node*> & border,

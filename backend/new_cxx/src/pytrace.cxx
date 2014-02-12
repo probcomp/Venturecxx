@@ -1,8 +1,8 @@
 #include "pytrace.h"
 #include "regen.h"
 
-PyTrace::PyTrace() { throw 500; }
-PyTrace::~PyTrace() { throw 500; }
+PyTrace::PyTrace() : trace(shared_ptr<Trace>(new ConcreteTrace()) {}
+PyTrace::~PyTrace() {}
   
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
 {
@@ -83,3 +83,20 @@ double PyTrace::getGlobalLogScore()
 uint32_t PyTrace::numRandomChoices() { return trace->numRandomChoices(); }
 
 void PyTrace::infer(boost::python::dict params) { throw "INFER not yet implemented"; }
+
+BOOST_PYTHON_MODULE(libtrace)
+{
+  using namespace boost::python;
+  class_<PyTrace>("Trace",init<>())
+    .def("eval", &PyTrace::evalExpression)
+    .def("uneval", &PyTrace::unevalDirectiveID)
+    .def("bindInGlobalEnv", &PyTrace::bindInGlobalEnv)
+    .def("extractPythonValue", &PyTrace::extractPythonValue)
+    .def("numRandomChoices", &PyTrace::numRandomChoices)
+    .def("getGlobalLogScore", &PyTrace::getGlobalLogScore)
+    .def("observe", &PyTrace::observe)
+    .def("unobserve", &PyTrace::unobserve)
+    .def("infer", &PyTrace::infer)
+    ;
+};
+
