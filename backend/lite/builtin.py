@@ -73,25 +73,24 @@ def builtInSPsList():
 
            [ "is_symbol", deterministic(lambda x: v.VentureBool(isinstance(x, v.VentureSymbol))) ],
 
-           [ "lookup",VentureSP(NullRequestPSP(),dstructures.LookupOutputPSP()) ],
-           [ "contains",VentureSP(NullRequestPSP(),dstructures.ContainsOutputPSP()) ],
-           [ "size",VentureSP(NullRequestPSP(),dstructures.SizeOutputPSP()) ],
-
            [ "pair",VentureSP(NullRequestPSP(),dstructures.PairOutputPSP()) ],
            [ "list",VentureSP(NullRequestPSP(),dstructures.ListOutputPSP()) ],
-           [ "map_list",VentureSP(dstructures.MapListRequestPSP(),dstructures.MapListOutputPSP()) ],
-
-           # Fake compatibility with CXX
            [ "is_pair", VentureSP(NullRequestPSP(),dstructures.IsPairOutputPSP()) ],
            [ "first", VentureSP(NullRequestPSP(),dstructures.FirstListOutputPSP()) ],
            [ "second", VentureSP(NullRequestPSP(),dstructures.SecondListOutputPSP()) ],
            [ "rest", VentureSP(NullRequestPSP(),dstructures.RestListOutputPSP()) ],
+
+           [ "map_list",VentureSP(dstructures.MapListRequestPSP(),dstructures.MapListOutputPSP()) ],
 
            [ "array", VentureSP(NullRequestPSP(),dstructures.ArrayOutputPSP()) ],
            [ "is_array", VentureSP(NullRequestPSP(),dstructures.IsArrayOutputPSP()) ],
            [ "dict", VentureSP(NullRequestPSP(),dstructures.DictOutputPSP()) ],
            [ "matrix", VentureSP(NullRequestPSP(),dstructures.MatrixOutputPSP()) ],
            [ "simplex", VentureSP(NullRequestPSP(),dstructures.SimplexOutputPSP()) ],
+
+           [ "lookup",VentureSP(NullRequestPSP(),dstructures.LookupOutputPSP()) ],
+           [ "contains",VentureSP(NullRequestPSP(),dstructures.ContainsOutputPSP()) ],
+           [ "size",VentureSP(NullRequestPSP(),dstructures.SizeOutputPSP()) ],
 
            [ "branch", VentureSP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()) ],
            [ "biplex", VentureSP(NullRequestPSP(),conditionals.BiplexOutputPSP()) ],
