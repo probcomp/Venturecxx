@@ -77,6 +77,7 @@ class VentureNil(VentureValue):
   def __init__(self): pass
   def compareSameType(self, _): return 0 # All Nils are equal
   def _asPythonList(self): return []
+  def asStackDict(self): return {"type":"list", "value":[]}
 
 class VenturePair(VentureValue):
   def __init__(self,first,rest):
@@ -95,6 +96,9 @@ class VenturePair(VentureValue):
     fstcmp = self.first.compare(other.first)
     if fstcmp != 0: return fstcmp
     else: return self.rest.compare(other.rest)
+
+def pythonListToVentureList(*l):
+  return reduce(lambda t, h: VenturePair(h, t), reversed(l), VentureNil())
 
 # Simplexes are homogeneous floating point arrays.  They are also
 # supposed to sum to 1, but we are not checking that.

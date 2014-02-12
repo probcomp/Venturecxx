@@ -1,13 +1,16 @@
 from venture.test.config import get_ripl
 
 def testList1():
-  get_ripl().predict("(list)")
+  assert get_ripl().predict("(list)") == []
 
 def testList2():
-  get_ripl().predict("(list 1)")
+  assert get_ripl().predict("(list 1)") == [1.0]
+
+def testList3():
+  assert get_ripl().predict("(list 1 2)") == [1.0, 2.0]
 
 def testPair1():
-  get_ripl().predict("(pair 1 (list))")
+  assert get_ripl().predict("(pair 1 (list))") == [1.0]
 
 class TestList(object):
   _multiprocess_can_split_ = True

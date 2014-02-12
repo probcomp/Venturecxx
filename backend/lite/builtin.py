@@ -73,8 +73,8 @@ def builtInSPsList():
 
            [ "is_symbol", deterministic(lambda x: v.VentureBool(isinstance(x, v.VentureSymbol))) ],
 
-           [ "pair",VentureSP(NullRequestPSP(),dstructures.PairOutputPSP()) ],
-           [ "list",VentureSP(NullRequestPSP(),dstructures.ListOutputPSP()) ],
+           [ "list", deterministic(v.pythonListToVentureList) ],
+           [ "pair", deterministic(v.VenturePair) ],
            [ "is_pair", VentureSP(NullRequestPSP(),dstructures.IsPairOutputPSP()) ],
            [ "first", VentureSP(NullRequestPSP(),dstructures.FirstListOutputPSP()) ],
            [ "second", VentureSP(NullRequestPSP(),dstructures.SecondListOutputPSP()) ],

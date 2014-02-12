@@ -57,23 +57,13 @@ class IsArrayOutputPSP(PSP):
   def description(self,name):
     return "(%s <object>) -> <bool>" % name
 
-### Lists (use Python lists instead of VenturePairs)
-class PairOutputPSP(PSP):
-  def simulate(self,args): return [args.operandValues[0]] + args.operandValues[1]
-  def description(self,name):
-    return "(%s <object> <list>) -> <list>" % name
-
+### Lists
 class IsPairOutputPSP(PSP): 
   def simulate(self,args):
     return isinstance(args.operandValues[0],list) and len(args.operandValues[0]) > 0
 
   def description(self,name):
     return "(%s <object>) -> <bool>" % name
-
-class ListOutputPSP(PSP): 
-  def simulate(self,args): return args.operandValues
-  def description(self,name):
-    return "(%s <object0> ...) -> <list>" % name
 
 class FirstListOutputPSP(PSP):
   def simulate(self,args): return args.operandValues[0][0]
