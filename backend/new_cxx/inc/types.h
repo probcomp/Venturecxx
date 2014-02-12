@@ -20,6 +20,7 @@ using std::make_pair;
 
 struct VentureValue;
 struct Node;
+struct VentureSP;
 
 typedef int DirectiveID;
 typedef shared_ptr<VentureValue> VentureValuePtr;

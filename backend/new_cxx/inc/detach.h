@@ -1,6 +1,8 @@
 #ifndef DETACH_H
 #define DETACH_H
 
+#include "types.h"
+
 struct Trace;
 struct Scaffold;
 struct DB;

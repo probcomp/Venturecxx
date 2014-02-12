@@ -1,3 +1,5 @@
+#include "detach.h"
+
 pair<double,DB*> detachAndExtract(Trace * trace,const vector<Node*> & border,shared_ptr<Scaffold> scaffold)
 { throw 500; }
 double unconstrain(Trace * trace,Node * node)
