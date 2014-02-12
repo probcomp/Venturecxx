@@ -122,8 +122,9 @@ def main1():
 #  map(run, work)
 
 def main2():
-  parameters = {"length": [5], "command": ["(cycle ((mh hypers one 3) (pgibbs state ordered 4 1)) 1)",
-                                           "(cycle ((mh hypers one 3) (func-pgibbs state ordered 4 1)) 1)"]}
+  parameters = {"length": [5,10,15,20,25,30,35,40,45,50,55],
+                "command": ["(cycle ((mh hypers one 3) (pgibbs state ordered 4 1)) 1)",
+                            "(cycle ((mh hypers one 3) (func-pgibbs state ordered 4 1)) 1)"]}
   def runner(params):
     model = HMMDemo(shortcuts.make_lite_church_prime_ripl(), params)
     return model.runFromConditional(3, runs=3, verbose=True, infer=commandInfer(params["command"]))
