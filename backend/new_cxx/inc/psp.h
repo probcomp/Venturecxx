@@ -4,10 +4,11 @@
 #include "types.h"
 #include <vector>
 
+#include <gsl/gsl_rng.h>
+
 struct Args;
 struct LKernel;
 struct ConcreteTrace;
-struct gsl_rng;
 
 using std::vector;
 

@@ -1,11 +1,13 @@
-bool SPFamilies::containsFamily(FamilyID id) const { return families.count(id); }
-Node * SPFamilies::getFamily(FamilyID id) const
+#include "sp.h"
+
+bool SPFamilies::containsFamily(FamilyID id)  { return families.count(id); }
+RootOfFamily SPFamilies::getFamily(FamilyID id) 
 {
   assert(families.count(id));
   return families[id];
 }
 
-void SPFamilies::registerFamily(FamilyID id,RootNodePtr root)
+void SPFamilies::registerFamily(FamilyID id,RootOfFamily root)
 {
   assert(!families.count(id));
   families[id] = root;
@@ -17,10 +19,10 @@ void SPFamilies::unregisterFamily(FamilyID id)
   families.erase(id);
 }
 
-shared_ptr<SPAux> SPAux::copy() { return new SPAux(); }
+//shared_ptr<SPAux> SPAux::copy() { return new SPAux(); }
 
-shared_ptr<SPAux> VentureSP::constructSPAux() const { return new SPAux(); }
-shared_ptr<LatentDB> VentureSP::constructLatentDB() const { return NULL; }
+shared_ptr<SPAux> VentureSP::constructSPAux() const { return shared_ptr<SPAux>(new SPAux()); }
+shared_ptr<LatentDB> VentureSP::constructLatentDB() const { return shared_ptr<LatentDB>(); }
 
 VentureSP::VentureSP(PSP * requestPSP, PSP * outputPSP) :
   requestPSP(shared_ptr<PSP>(requestPSP)),

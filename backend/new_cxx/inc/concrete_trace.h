@@ -35,7 +35,7 @@ struct ConcreteTrace : Trace
 
   /* Primitive getters */
   VentureValuePtr getValue(Node * node);
-  SPRecord getMadeSPRecord(OutputNode * makerNode);
+  SPRecord getMadeSPRecord(Node * makerNode);
   vector<Node*> getESRParents(Node * node);
   set<Node*> getChildren(Node * node);
   int getNumRequests(Node * node);
@@ -49,7 +49,8 @@ struct ConcreteTrace : Trace
   void setValue(Node * node, VentureValuePtr value);
   void clearValue(Node * node);
 
-  void createSPRecord(OutputNode * makerNode); // No analogue in VentureLite
+  void initMadeSPRecord(Node * makerNode, shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux);
+
 
   void initMadeSPFamilies(Node * node);
   void clearMadeSPFamilies(Node * node);
@@ -65,10 +66,11 @@ struct ConcreteTrace : Trace
   void setNumRequests(Node * node,int num);
 
   /* SPFamily operations */
-  void registerMadeSPFamily(OutputNode * makerNode, FamilyID id, Node * esrParent);
-  void unregisterMadeSPFamily(OutputNode * maderNode, FamilyID id, Node * esrParent);
-  bool containsMadeSPFamily(OutputNode * makerNode, FamilyID id);
-  Node * getMadeSPFamilyRoot(OutputNode * makerNode, FamilyID id);
+  void registerMadeSPFamily(Node * makerNode, FamilyID id, Node * esrParent);
+  void unregisterMadeSPFamily(Node * maderNode, FamilyID id, Node * esrParent);
+  bool containsMadeSPFamily(Node * makerNode, FamilyID id);
+  RootOfFamily getMadeSPFamilyRoot(Node * makerNode, FamilyID id);
+
 
 
   /* New in ConcreteTrace */

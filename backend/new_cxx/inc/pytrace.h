@@ -17,15 +17,15 @@ struct PyTrace
   PyTrace();
   ~PyTrace();
   
-  void evalExpression(size_t did, boost::python::object object);
-  void unevalDirectiveID(size_t directiveID);
+  void evalExpression(DirectiveID did, boost::python::object object);
+  void unevalDirectiveID(DirectiveID did);
 
-  void observe(size_t did,boost::python::object valueExp);
-  void unobserve(size_t directiveID);
+  void observe(DirectiveID did,boost::python::object valueExp);
+  void unobserve(DirectiveID did);
 
   void bindInGlobalEnv(string sym, size_t did);
 
-  boost::python::object extractPythonValue(size_t did);
+  boost::python::object extractPythonValue(DirectiveID did);
 
   void setSeed(size_t seed);
   size_t getSeed();

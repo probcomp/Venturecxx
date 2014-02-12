@@ -35,7 +35,7 @@ pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode
 
 /* Derived getters */
 
-VentureValuePtr getGroundValue(Node * node)
+VentureValuePtr Trace::getGroundValue(Node * node)
 {
   VentureValuePtr value = getValue(node);
   shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
@@ -44,32 +44,32 @@ VentureValuePtr getGroundValue(Node * node)
   else { return value; }
 }
 
-Node * getOperatorSPMakerNode(ApplicationNode * node)
+Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
 {
   shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(getValue(node->operatorNode));
   assert(spRef);
   return spRef->makerNode;
 }
 
-shared_ptr<VentureSP> getMadeSP(Node * makerNode)
+shared_ptr<VentureSP> Trace::getMadeSP(Node * makerNode)
 {
   SPRecord spRecord = getMadeSPRecord(node);
   return spRecord.sp;
 }
 
-shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode)
+shared_ptr<SPFamilies> Trace::getMadeSPFamilies(Node * makerNode)
 {
   SPRecord spRecord = getMadeSPRecord(node);
   return spRecord.spFamilies;
 }
 
-shared_ptr<SPAux> getMadeSPAux(Node * makerNode)
+shared_ptr<SPAux> Trace::getMadeSPAux(Node * makerNode)
 {
   SPRecord spRecord = getMadeSPRecord(node);
   return spRecord.spAux;
 }
 
-vector<Node*> getParents(Node * node)
+vector<Node*> Trace::getParents(Node * node)
 {
   vector<Node*> parents = node->definiteParents;
   if (dynamic_cast<OutputNode*>(node)) 
@@ -79,3 +79,5 @@ vector<Node*> getParents(Node * node)
   }
   return parents;
 }
+
+shared_ptr<Args> Trace::getArgs(ApplicationNode * node) { return shared_ptr<Args>(new Args(this,node)); }

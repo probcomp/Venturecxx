@@ -3,12 +3,15 @@
 
 #include <queue>
 #include "boost/tuple/tuple.hpp"
+#include "types.h"
 
 using std::queue;
 using boost::tuple;
 
 struct Trace;
 struct LKernel;
+struct Node;
+struct RequestNode;
 struct ConcreteTrace;
 
 struct Scaffold
@@ -16,7 +19,7 @@ struct Scaffold
   set<Node *> getPrincipalNodes();
   int getRegenCount(Node * node);
   void incRegenCount(Node * node);
-  void dectRegenCount(Node * node);
+  void decRegenCount(Node * node);
   bool isResampling(Node * node);
   bool isAbsorbing(Node * node);
   bool isAAA(Node * node);

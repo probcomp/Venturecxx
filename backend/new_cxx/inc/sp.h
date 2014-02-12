@@ -5,6 +5,8 @@
 #include "value.h"
 #include <map>
 
+#include <gsl/gsl_rng.h>
+
 struct SPAux;
 struct LSR;
 struct LatentDB;
@@ -12,7 +14,8 @@ struct PSP;
 struct ApplicationNode;
 struct RequestNode;
 struct OutputNode;
-struct gsl_rng;
+
+
 
 struct VentureSPRef : VentureValue
 {
@@ -26,15 +29,15 @@ struct SPFamilies
   SPFamilies(const map<FamilyID,RootOfFamily> & families): families(families) {}
 
   map<FamilyID,RootOfFamily> families;
-  bool containsFamily(FamilyID id) const;
-  Node * getFamily(FamilyID id);
+  bool containsFamily(FamilyID id);
+  RootOfFamily getFamily(FamilyID id);
   void registerFamily(FamilyID id,RootOfFamily root);
   void unregisterFamily(FamilyID id);
 };
 
 struct SPAux
 {
-  virtual shared_ptr<SPAux> copy() const;
+//  virtual shared_ptr<SPAux> copy() const;
 };
 
 struct VentureSP : VentureValue

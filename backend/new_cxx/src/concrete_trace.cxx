@@ -7,7 +7,7 @@
 
 /* Constructor */
 
-ConcreteTrace::ConcreteTrace()
+ConcreteTrace::ConcreteTrace(): Trace()
 {
   vector<shared_ptr<VentureSymbol> > syms;
   vector<Node*> nodes;
@@ -87,50 +87,33 @@ void ConcreteTrace::decNumRequests(Node * node) { throw 500; }
 void ConcreteTrace::removeChild(Node * node, Node * child) { throw 500; }
 
 /* Primitive getters */
-VentureValuePtr ConcreteTrace::getValue(Node * node) {
-  return values[node];
-}
-
-SPRecord ConcreteTrace::getMadeSPRecord(OutputNode * makerNode) {
-  return madeSPRecords[makerNode];
-}
-
-vector<Node*> ConcreteTrace::getESRParents(Node * node) {
-  return esrParents[node];
-}
-
-set<Node*> ConcreteTrace::getChildren(Node * node) {
-  return children[node];
-}
-
-int ConcreteTrace::getNumRequests(Node * node) {
-  return numRequests[node];
-}
-
+VentureValuePtr ConcreteTrace::getValue(Node * node) { return values[node]; }
+SPRecord ConcreteTrace::getMadeSPRecord(Node * makerNode) { return madeSPRecords[makerNode]; }
+vector<Node*> ConcreteTrace::getESRParents(Node * node) { return esrParents[node]; }
+set<Node*> ConcreteTrace::getChildren(Node * node) { return children[node]; }
+int ConcreteTrace::getNumRequests(Node * node) { return numRequests[node]; }
 int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { throw 500; }
 
-VentureValuePtr ConcreteTrace::getObservedValue(Node * node) {
-  return observedValues[node];
-}
+VentureValuePtr ConcreteTrace::getObservedValue(Node * node) { return observedValues[node]; }
+bool ConcreteTrace::isConstrained(Node * node) { return constrainedChoices.count(node); }
+bool ConcreteTrace::isObservation(Node * node) { return observedValues.count(node); }
 
-bool ConcreteTrace::isConstrained(Node * node) {
-  return constrainedChoices.count(node);
-}
-
-bool ConcreteTrace::isObservation(Node * node) {
-  return observedValues.count(node);
-}
 
 /* Primitive Setters */
-void ConcreteTrace::setValue(Node * node, VentureValuePtr value) {
-  values[node] = value;
+void ConcreteTrace::setValue(Node * node, VentureValuePtr value) { values[node] = value; }
+void ConcreteTrace::clearValue(Node * node) { values.erase(node); }
+
+
+void ConcreteTrace::initMadeSPRecord(Node * makerNode,shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux)
+{
+  assert(!madeSPRecords.count(makerNode));
+  SPRecord spRecord;
+  spRecord.sp = sp;
+  spRecord.spAux = spAux;
+  spRecord.spFamilies = shared_ptr<SPFamilies>(new SPFamilies());
+  madeSPRecords[makerNode] = spRecord;
 }
 
-void ConcreteTrace::clearValue(Node * node) {
-  values.erase(node);
-}
-
-void ConcreteTrace::createSPRecord(OutputNode * makerNode) { throw 500; }
 
 void ConcreteTrace::initMadeSPFamilies(Node * node) { throw 500; }
 void ConcreteTrace::clearMadeSPFamilies(Node * node) { throw 500; }
@@ -150,10 +133,10 @@ void ConcreteTrace::setESRParents(Node * node,const vector<Node*> & esrParents) 
 void ConcreteTrace::setNumRequests(Node * node,int num) { throw 500; }
 
 /* SPFamily operations */
-void ConcreteTrace::registerMadeSPFamily(OutputNode * makerNode, FamilyID id, Node * esrParent) { throw 500; }
-void ConcreteTrace::unregisterMadeSPFamily(OutputNode * maderNode, FamilyID id, Node * esrParent) { throw 500; }
-bool ConcreteTrace::containsMadeSPFamily(OutputNode * makerNode, FamilyID id) { throw 500; }
-Node * ConcreteTrace::getMadeSPFamilyRoot(OutputNode * makerNode, FamilyID id) { throw 500; }
+void ConcreteTrace::registerMadeSPFamily(Node * makerNode, FamilyID id, Node * esrParent) { throw 500; }
+void ConcreteTrace::unregisterMadeSPFamily(Node * maderNode, FamilyID id, Node * esrParent) { throw 500; }
+bool ConcreteTrace::containsMadeSPFamily(Node * makerNode, FamilyID id) { throw 500; }
+RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id) { throw 500; }
 
 
 /* New in ConcreteTrace */

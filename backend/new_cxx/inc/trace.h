@@ -11,11 +11,15 @@
 #include "scaffold.h"
 #include "psp.h"
 
+#include <gsl/gsl_rng.h>
+
 struct Node;
 struct SPRef;
 
 struct Trace 
 {
+  Trace(): rng(gsl_rng_alloc(gsl_rng_mt19937)) {} 
+
   /* Registering metadata */
   /** AE (Arbitrary Ergodic) kernels repropose random choices within an sp that 
       have no effect on the trace. This optimizes some cases that otherwise could
@@ -71,12 +75,13 @@ struct Trace
   virtual shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode);
   virtual shared_ptr<SPAux> getMadeSPAux(Node * node);
   virtual vector<Node*> getParents(Node * node);
+  virtual shared_ptr<Args> getArgs(ApplicationNode * node);
 
   /* Primitive setters */
   virtual void setValue(Node * node, VentureValuePtr value) =0;
   virtual void clearValue(Node * node) =0;
 
-  virtual void createSPRecord(Node * makerNode) =0; // No analogue in VentureLite
+  virtual void initMadeSPRecord(Node * makerNode, shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux);
 
   virtual void initMadeSPFamilies(Node * makerNode) =0;
   virtual void clearMadeSPFamilies(Node * makerNode) =0;
@@ -98,7 +103,9 @@ struct Trace
   virtual void registerMadeSPFamily(Node * makerNode, FamilyID id, Node * esrParent) =0;
   virtual void unregisterMadeSPFamily(Node * maderNode, FamilyID id, Node * esrParent) =0;
   virtual bool containsMadeSPFamily(Node * makerNode, FamilyID id) =0;
-  virtual Node * getMadeSPFamilyRoot(Node * makerNode, FamilyID id) =0;
+  virtual RootOfFamily getMadeSPFamilyRoot(Node * makerNode, FamilyID id) =0;
+
+  gsl_rng * rng;
 
 };
 
