@@ -24,6 +24,7 @@ struct LookupNode : Node
 
 struct ApplicationNode : Node
 {
+  ApplicationNode(Node * operatorNode, const std::vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env);
   Node * operatorNode;
   vector<Node *> operandNodes;
   shared_ptr<VentureEnvironment> env;
@@ -39,7 +40,7 @@ struct RequestNode : ApplicationNode
 
 struct OutputNode : ApplicationNode
 {
-  OutputNode(Node * operatorNode, const std::vector<Node*>& operandNodes, Node * requestNode, const shared_ptr<VentureEnvironment>& env);
+  OutputNode(Node * operatorNode, const std::vector<Node*>& operandNodes, RequestNode * requestNode, const shared_ptr<VentureEnvironment>& env);
   RequestNode * requestNode;
 };
 

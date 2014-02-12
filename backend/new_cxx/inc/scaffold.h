@@ -2,10 +2,10 @@
 #define SCAFFOLD_H
 
 #include <queue>
-#include <tuple>
+#include "boost/tuple/tuple.hpp"
 
 using std::queue;
-using std::tuple;
+using boost::tuple;
 
 struct Trace;
 struct LKernel;
@@ -35,7 +35,6 @@ private:
 
 
 shared_ptr<Scaffold> constructScaffold(Trace * trace,const vector<set<Node*> > & setsOfPNodes);
-
 
 // TODO everything from here on should be moved to .cxx
 void addResamplingNode(Trace * trace,

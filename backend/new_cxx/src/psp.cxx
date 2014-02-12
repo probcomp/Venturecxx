@@ -1,4 +1,6 @@
-ESRRefOutputPSP::simulate(shared_ptr<Args> args) const
+#include "psp.h"
+
+VentureValuePtr ESRRefOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   throw 500;
 }

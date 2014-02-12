@@ -1,3 +1,6 @@
+#include "pytrace.h"
+#include "regen.h"
+
 PyTrace::PyTrace() { throw 500; }
 PyTrace::~PyTrace() { throw 500; }
   

@@ -18,12 +18,12 @@ void VentureEnvironment::addBinding(shared_ptr<VentureSymbol> sym,Node * node)
   frame[sym->s] = node; 
 }
 
-Node * VentureEnvironment::lookupSymbol(shared_ptr<VentureSymbol> sym) const
+Node * VentureEnvironment::lookupSymbol(shared_ptr<VentureSymbol> sym)
 {
   return lookupSymbol(sym->s);
 }
 
-Node * VentureEnvironment::lookupSymbol(string sym) const
+Node * VentureEnvironment::lookupSymbol(string sym) 
 {
   if (frame.count(sym)) 
   { 
@@ -31,7 +31,6 @@ Node * VentureEnvironment::lookupSymbol(string sym) const
   }
   else if (outerEnv.get() == NULL)
   { 
-    cout << "Cannot find symbol: " << sym << endl;
     throw "Cannot find symbol: " + sym;
     return NULL;
   }

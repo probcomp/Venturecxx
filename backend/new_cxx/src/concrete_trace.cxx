@@ -1,10 +1,16 @@
 #include "concrete_trace.h"
 #include "values.h"
+#include "env.h"
+#include "builtin.h"
+#include "regen.h"
 
 /* Constructor */
 
 ConcreteTrace::ConcreteTrace()
 {
+  vector<shared_ptr<VentureSymbol> > syms;
+  vector<Node*> nodes;
+
   map<string,VentureValuePtr> builtInValues = initBuiltInValues();
   map<string,shared_ptr<VentureSP> > builtInSPs = initBuiltInSPs();
 
@@ -12,20 +18,24 @@ ConcreteTrace::ConcreteTrace()
        iter != builtInValues.end();
        ++iter)
   {
-    shared_ptr<VentureSymbol> sym = new VentureSymbol(iter->first);
-    ConstantNode * node = createConstantNode(iter->second);
-    globalEnv->addBinding(sym,node);
+    shared_ptr<VentureSymbol> sym(new VentureSymbol(iter->first));
+    ConstantNode * node = createConstantNode(static_pointer_cast<VentureValue>(iter->second));
+    syms.push_back(sym);
+    nodes.push_back(node);
   }
 
   for (map<string,shared_ptr<VentureSP> >::iterator iter = builtInSPs.begin();
        iter != builtInSPs.end();
        ++iter)
   {
-    shared_ptr<VentureSymbol> sym = new VentureSymbol(iter->first);
-    ConstantNode * node = createConstantNode(iter->second);
+    shared_ptr<VentureSymbol> sym(new VentureSymbol(iter->first));
+    ConstantNode * node = createConstantNode(static_pointer_cast<VentureValue>(iter->second));
     processMadeSP(this,node,false);
-    globalEnv->addBinding(sym,node);
+    syms.push_back(sym);
+    nodes.push_back(node);
   }
+
+  globalEnvironment = new VentureEnvironment(shared_ptr<VentureEnvironment>(NULL),syms,nodes);  
 }
 
 

@@ -103,7 +103,7 @@ struct ConcreteTrace : Trace
   //void addNewChildren(Node * node,PSet newChildren);
 
 private:
-  shared_ptr<VentureEnvironment> globalEnvironment = new VentureEnvironment();
+  shared_ptr<VentureEnvironment> globalEnvironment;
   set<Node*> unconstrainedChoices;
   set<Node*> constrainedChoices;
   set<Node*> arbitraryErgodicKernels;

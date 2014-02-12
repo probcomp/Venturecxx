@@ -4,15 +4,17 @@ LookupNode::LookupNode(Node * sourceNode) :
   sourceNode(sourceNode)
   {}
 
-RequestNode::RequestNode(Node * operatorNode, const std::vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env) :
+ApplicationNode::ApplicationNode(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env) :
   operatorNode(operatorNode),
   operandNodes(operandNodes),
   env(env)
+{}
+
+RequestNode::RequestNode(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env) :
+  ApplicationNode(operatorNode,operandNodes,env)
   {}
 
-OutputNode::OutputNode(Node * operatorNode, const std::vector<Node*>& operandNodes, Node * requestNode, const share_ptr<VentureEnvironment>& env) :
-  operatorNode(operatorNode),
-  operandNodes(operandNodes),
-  requestNode(requestNode),
-  env(env),
-  {}
+OutputNode::OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const shared_ptr<VentureEnvironment>& env) :
+  ApplicationNode(operatorNode,operandNodes,env),
+  requestNode(requestNode)
+{}

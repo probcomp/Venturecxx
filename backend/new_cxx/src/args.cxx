@@ -18,7 +18,7 @@ Args::Args(Trace * trace, ApplicationNode * appNode)
   operandNodes = node->operandNodes;
   operandValues = makeVectorOfValues(trace, operandNodes);
 
-  spAux = trace->getMadeSPAux(trace->getSPMakerNode(appNode));
+  spAux = trace->getMadeSPAux(trace->getOperatorSPMakerNode(appNode));
   env = node->env;
 
   OutputNode * outputNode = dynamic_cast<OutputNode*>(appNode);

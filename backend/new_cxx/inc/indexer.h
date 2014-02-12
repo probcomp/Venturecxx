@@ -1,6 +1,11 @@
 #ifndef INDEXER_H
 #define INDEXER_H
 
+#include "types.h"
+
+struct Scaffold;
+struct ConcreteTrace;
+
 struct ScaffoldIndexer
 {
   ScaffoldIndexer(ScopeID scope,BlockID block);

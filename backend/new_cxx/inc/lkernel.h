@@ -1,37 +1,41 @@
 #ifndef LKERNEL_H
 #define LKERNEL_H
 
+#include "types.h"
+struct Trace;
+struct Args;
+
 struct LKernel
 {
-  virtual VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,Args * args) =0;
-  virtual double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,Args * args) { return 0; }
-  virtual double reverseWeight(Trace * trace,VentureValuePtr oldValue,Args * args) 
+  virtual VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args) =0;
+  virtual double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args) { return 0; }
+  virtual double reverseWeight(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args) 
     { 
-      return weight(trace,oldValue,shared_ptr<VentureValue>(nullptr),args);
+      return weight(trace,oldValue,shared_ptr<VentureValue>(),args);
     }
   virtual bool isIndependent() const { return true; }
 };
 
-struct DefaultAAAKernel : LKernel
+struct DefaultAAALKernel : LKernel
 {
-  DefaultAAAKernel(const VentureSPPtr makerSP): makerSP(makerSP) {}
+  DefaultAAALKernel(const shared_ptr<VentureSP> makerSP): makerSP(makerSP) {}
 
-  VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,Args * args);
-  double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,Args * args);
+  VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args);
+  double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args);
 
-  const VentureSPPtr makerSP;
+  const shared_ptr<VentureSP> makerSP;
 
 };
 
 struct DeterministicLKernel : LKernel
 {
-  DeterministicLKernel(VentureValuePtr value, VentureSPPtr sp): value(value), sp(sp) {}
+  DeterministicLKernel(VentureValuePtr value, shared_ptr<VentureSP> sp): value(value), sp(sp) {}
 
-  VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,Args * args);
-  double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,Args * args);
+  VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args);
+  double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args);
 
   VentureValuePtr value;
-  VentureSPPtr sp;
+  shared_ptr<VentureSP> sp;
   
 };
 
