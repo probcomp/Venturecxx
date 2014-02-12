@@ -38,20 +38,20 @@ struct PSP
 
 struct NullRequestPSP : PSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args,gsl_rng * rng) const override;
-  bool canAbsorb(ConcreteTrace * trace,Node * appNode,Node * parentNode) const override { return true; }
+  VentureValuePtr simulate(shared_ptr<Args> args,gsl_rng * rng) const;
+  bool canAbsorb(ConcreteTrace * trace,Node * appNode,Node * parentNode) const { return true; }
 };
 
 struct ESRRefOutputPSP : PSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args,gsl_rng * rng) const override;
-  bool canAbsorb(ConcreteTrace * trace,Node * appNode,Node * parentNode) const override;
+  VentureValuePtr simulate(shared_ptr<Args> args,gsl_rng * rng) const;
+  bool canAbsorb(ConcreteTrace * trace,Node * appNode,Node * parentNode) const;
 };
 
 struct RandomPSP : PSP
 {
-  bool isRandom() const override { return true; }
-  bool canAbsorb(ConcreteTrace * trace,Node * appNode,Node * parentNode) const override { return true; }
+  bool isRandom() const { return true; }
+  bool canAbsorb(ConcreteTrace * trace,Node * appNode,Node * parentNode) const { return true; }
 };
 
 #endif

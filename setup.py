@@ -80,7 +80,7 @@ cxx = Extension("venture.cxx.libtrace",
                      ('MINOR_VERSION', '1'),
                      ('REVISION', '1')],
     libraries = ['gsl', 'gslcblas', 'boost_python'],
-    extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O1", "-fPIC"],
+    extra_compile_args = ["-Wall", "-g", "-O1", "-fPIC"],
     undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
     include_dirs = inc_dirs,
     sources = src_files)

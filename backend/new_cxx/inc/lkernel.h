@@ -16,8 +16,8 @@ struct DefaultAAAKernel : LKernel
 {
   DefaultAAAKernel(const VentureSPPtr makerSP): makerSP(makerSP) {}
 
-  VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,Args * args) override;
-  double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,Args * args) override;
+  VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,Args * args);
+  double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,Args * args);
 
   const VentureSPPtr makerSP;
 
@@ -27,8 +27,8 @@ struct DeterministicLKernel : LKernel
 {
   DeterministicLKernel(VentureValuePtr value, VentureSPPtr sp): value(value), sp(sp) {}
 
-  VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,Args * args) override;
-  double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,Args * args) override;
+  VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,Args * args);
+  double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,Args * args);
 
   VentureValuePtr value;
   VentureSPPtr sp;

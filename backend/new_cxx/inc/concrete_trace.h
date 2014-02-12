@@ -10,65 +10,65 @@ struct ConcreteTrace : Trace
   /* TODO once we pass particle tests and care about supporting people, we will remove "override" keywords */
 
   /* Registering metadata */
-  void registerAEKernel(Node * node) override;
-  void registerUnconstrainedChoice(Node * node) override;
-  void registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) override;
-  void registerConstrainedChoice(Node * node) override;
+  void registerAEKernel(Node * node);
+  void registerUnconstrainedChoice(Node * node);
+  void registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node);
+  void registerConstrainedChoice(Node * node);
 
   /* Unregistering metadata */
-  void unregisterAEKernel(Node * node) override;
-  void unregisterUnconstrainedChoice(Node * node) override;
-  void unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) override;
-  void unregisterConstrainedChoice(Node * node) override;
+  void unregisterAEKernel(Node * node);
+  void unregisterUnconstrainedChoice(Node * node);
+  void unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node);
+  void unregisterConstrainedChoice(Node * node);
 
   /* Regen mutations */
-  void addESREdge(Node *esrParent,OutputNode * outputNode) override;
-  void reconnectLookup(LookupNode * lookupNode) override;
-  void incNumRequests(Node * node) override;
-  void addChild(Node * node, Node * child) override;
+  void addESREdge(Node *esrParent,OutputNode * outputNode);
+  void reconnectLookup(LookupNode * lookupNode);
+  void incNumRequests(Node * node);
+  void addChild(Node * node, Node * child);
 
   /* Detach mutations */  
-  Node * popLastESRParent(OutputNode * outputNode) override;
-  void disconnectLookup(LookupNode * lookupNode) override;
-  void decNumRequests(Node * node) override;
-  void removeChild(Node * node, Node * child) override;
+  Node * popLastESRParent(OutputNode * outputNode);
+  void disconnectLookup(LookupNode * lookupNode);
+  void decNumRequests(Node * node);
+  void removeChild(Node * node, Node * child);
 
   /* Primitive getters */
-  VentureValuePtr getValue(Node * node) override;
-  SPRecord getMadeSPRecord(OutputNode * makerNode) override;
-  vector<Node*> getESRParents(Node * node) override;
-  set<Node*> getChildren(Node * node) override;
-  int getNumRequests(Node * node) override;
-  int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) override;
-  VentureValuePtr getObservedValue(Node * node) override;
+  VentureValuePtr getValue(Node * node);
+  SPRecord getMadeSPRecord(OutputNode * makerNode);
+  vector<Node*> getESRParents(Node * node);
+  set<Node*> getChildren(Node * node);
+  int getNumRequests(Node * node);
+  int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
+  VentureValuePtr getObservedValue(Node * node);
 
-  bool isConstrained(Node * node) override;
-  bool isObservation(Node * node) override;
+  bool isConstrained(Node * node);
+  bool isObservation(Node * node);
 
   /* Primitive Setters */
-  void setValue(Node * node, VentureValuePtr value) override;
-  void clearValue(Node * node) override;
+  void setValue(Node * node, VentureValuePtr value);
+  void clearValue(Node * node);
 
-  void createSPRecord(OutputNode * makerNode) override; // No analogue in VentureLite
+  void createSPRecord(OutputNode * makerNode); // No analogue in VentureLite
 
-  void initMadeSPFamilies(Node * node) override;
-  void clearMadeSPFamilies(Node * node) override;
+  void initMadeSPFamilies(Node * node);
+  void clearMadeSPFamilies(Node * node);
   
-  void registerFamily(RequestNode * node,FamilyID id,RootOfFamily esrParent) override;
+  void registerFamily(RequestNode * node,FamilyID id,RootOfFamily esrParent);
 
-  void setMadeSP(Node * node,shared_ptr<VentureSP> sp) override;
-  void setMadeSPAux(Node * node,shared_ptr<SPAux> spaux) override;
+  void setMadeSP(Node * node,shared_ptr<VentureSP> sp);
+  void setMadeSPAux(Node * node,shared_ptr<SPAux> spaux);
 
-  void setChildren(Node * node,set<Node*> children) override;
-  void setESRParents(Node * node,const vector<Node*> & esrParents) override;
+  void setChildren(Node * node,set<Node*> children);
+  void setESRParents(Node * node,const vector<Node*> & esrParents);
 
-  void setNumRequests(Node * node,int num) override;
+  void setNumRequests(Node * node,int num);
 
   /* SPFamily operations */
-  void registerMadeSPFamily(OutputNode * makerNode, FamilyID id, Node * esrParent) override;
-  void unregisterMadeSPFamily(OutputNode * maderNode, FamilyID id, Node * esrParent) override;
-  bool containsMadeSPFamily(OutputNode * makerNode, FamilyID id) override;
-  Node * getMadeSPFamilyRoot(OutputNode * makerNode, FamilyID id) override;
+  void registerMadeSPFamily(OutputNode * makerNode, FamilyID id, Node * esrParent);
+  void unregisterMadeSPFamily(OutputNode * maderNode, FamilyID id, Node * esrParent);
+  bool containsMadeSPFamily(OutputNode * makerNode, FamilyID id);
+  Node * getMadeSPFamilyRoot(OutputNode * makerNode, FamilyID id);
 
 
   /* New in ConcreteTrace */

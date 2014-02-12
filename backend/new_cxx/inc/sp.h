@@ -9,6 +9,7 @@ struct SPAux;
 struct LSR;
 struct LatentDB;
 struct PSP;
+struct ApplicationNode;
 struct RequestNode;
 struct OutputNode;
 struct gsl_rng;
