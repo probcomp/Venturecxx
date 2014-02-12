@@ -43,7 +43,7 @@ void ConcreteTrace::addChild(Node * node, Node * child) {
 Node * ConcreteTrace::popLastESRParent(OutputNode * outputNode) { throw 500; }
 void ConcreteTrace::disconnectLookup(LookupNode * lookupNode) { throw 500; }
 void ConcreteTrace::decNumRequests(Node * node) { throw 500; }
-def ConcreteTrace::removeChild(Node * node, Node * child) { throw 500; }
+void ConcreteTrace::removeChild(Node * node, Node * child) { throw 500; }
 
 /* Primitive getters */
 VentureValuePtr ConcreteTrace::getValue(Node * node) {
@@ -69,7 +69,7 @@ int ConcreteTrace::getNumRequests(Node * node) {
 int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { throw 500; }
 
 VentureValuePtr ConcreteTrace::getObservedValue(Node * node) {
-  return observedValue[node];
+  return observedValues[node];
 }
 
 bool ConcreteTrace::isConstrained(Node * node) {
@@ -132,5 +132,5 @@ int ConcreteTrace::numUnconstrainedChoices() { throw 500; }
 int ConcreteTrace::getSeed() { throw 500; }
 double ConcreteTrace::getGlobalLogScore() { throw 500; }
 
-void ConcreteTrace::addNewMadeSPFamilies(Node * node, PMap newMadeSPFamilies) { throw 500; }
-void ConcreteTrace::addNewChildren(Node * node,PSet newChildren) { throw 500; }
+//void ConcreteTrace::addNewMadeSPFamilies(Node * node, PMap newMadeSPFamilies) { throw 500; }
+//void ConcreteTrace::addNewChildren(Node * node,PSet newChildren) { throw 500; }

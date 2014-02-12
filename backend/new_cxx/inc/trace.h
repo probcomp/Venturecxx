@@ -22,14 +22,14 @@ struct Trace
       be handled by AAA.
    */
   virtual void registerAEKernel(Node * node) =0;
-  virtual void registerRandomChoice(Node * node) =0;
-  virtual void registerRandomChoiceInScope(ScopeID scope,BlockID block,Node * node) =0;
+  virtual void registerUnconstrainedChoice(Node * node) =0;
+  virtual void registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) =0;
   virtual void registerConstrainedChoice(Node * node) =0;
 
   /* Unregistering metadata */
   virtual void unregisterAEKernel(Node * node) =0;
-  virtual void unregisterRandomChoice(Node * node) =0;
-  virtual void unregisterRandomChoiceInScope(ScopeID scope,BlockID block,Node * node) =0;
+  virtual void unregisterUnconstrainedChoice(Node * node) =0;
+  virtual void unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) =0;
   virtual void unregisterConstrainedChoice(Node * node) =0;
 
   /* Creating nodes */

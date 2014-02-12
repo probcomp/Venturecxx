@@ -30,7 +30,7 @@ struct ConcreteTrace : Trace
   Node * popLastESRParent(OutputNode * outputNode) override;
   void disconnectLookup(LookupNode * lookupNode) override;
   void decNumRequests(Node * node) override;
-  def removeChild(Node * node, Node * child) override;
+  void removeChild(Node * node, Node * child) override;
 
   /* Primitive getters */
   VentureValuePtr getValue(Node * node) override;
@@ -96,8 +96,8 @@ struct ConcreteTrace : Trace
   double getGlobalLogScore();
 
   // Helpers for particle commit
-  void addNewMadeSPFamilies(Node * node, PMap newMadeSPFamilies);
-  void addNewChildren(Node * node,PSet newChildren);
+  //void addNewMadeSPFamilies(Node * node, PMap newMadeSPFamilies);
+  //void addNewChildren(Node * node,PSet newChildren);
 
 private:
   VentureEnvironment * globalEnvironment;
@@ -107,9 +107,9 @@ private:
 
   set<Node*> unpropagatedObservations;
 
-  map<DirectiveID,RootNodePtr> families;
+  map<DirectiveID,RootOfFamily> families;
 
-  map<ScopeID,SamplableMap<BlockID,set<Node*> > scopes; // VLAD skip everything that touches this
+  //map<ScopeID,SamplableMap<BlockID,set<Node*> > scopes; // VLAD skip everything that touches this
 
   map<Node*, vector<Node*> > esrParents;
   map<Node*, int> numRequests;
