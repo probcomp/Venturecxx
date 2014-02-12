@@ -39,10 +39,9 @@ struct Trace
   /* Creating nodes */
   virtual ConstantNode * createConstantNode(VentureValuePtr);
   virtual LookupNode * createLookupNode(Node * sourceNode);
-  virtual pair<RequestNode*,OutputNode*> createApplicationNodes(
-                Node *operatorNode,
-								const vector<Node*>& operandNodes,
-								shared_ptr<VentureEnvironment>& env);
+  virtual pair<RequestNode*,OutputNode*> createApplicationNodes(Node * operatorNode,
+								const vector<Node*> & operandNodes,
+								const shared_ptr<VentureEnvironment> & env);
 
   /* Regen mutations */
   virtual void addESREdge(Node *esrParent,OutputNode * outputNode) =0;

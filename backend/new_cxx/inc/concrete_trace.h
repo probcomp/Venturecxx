@@ -104,8 +104,8 @@ struct ConcreteTrace : Trace
   //void addNewMadeSPFamilies(Node * node, PMap newMadeSPFamilies);
   //void addNewChildren(Node * node,PSet newChildren);
 
-private:
   shared_ptr<VentureEnvironment> globalEnvironment;
+
   set<Node*> unconstrainedChoices;
   set<Node*> constrainedChoices;
   set<Node*> arbitraryErgodicKernels;

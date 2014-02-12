@@ -29,7 +29,7 @@ struct VentureValue
   virtual MatrixXd getMatrix() const;
   virtual pair<vector<ESR>,vector<LSR *> > getRequests() const;
 
-  virtual bool equals(shared_ptr<const VentureValue> & other) const;
+  virtual bool equals(const shared_ptr<const VentureValue> & other) const;
   virtual size_t hash() const;
 };
 

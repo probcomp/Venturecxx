@@ -1,3 +1,8 @@
+#include "trace.h"
+#include "sp.h"
+#include "sprecord.h"
+#include "args.h"
+
 ConstantNode * Trace::createConstantNode(VentureValuePtr value)
 {
   ConstantNode * constantNode = new ConstantNode();
@@ -19,7 +24,7 @@ pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode
   RequestNode * requestNode = new RequestNode(operatorNode, operandNodes, env);
   OutputNode * outputNode = new OutputNode(operatorNode, operandNodes, requestNode, env);
   
-  requestNode.outputNode = outputNode;
+  requestNode->outputNode = outputNode;
   addChild(requestNode, outputNode);
   
   addChild(operatorNode, requestNode);
@@ -53,19 +58,19 @@ Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
 
 shared_ptr<VentureSP> Trace::getMadeSP(Node * makerNode)
 {
-  SPRecord spRecord = getMadeSPRecord(node);
+  SPRecord spRecord = getMadeSPRecord(makerNode);
   return spRecord.sp;
 }
 
 shared_ptr<SPFamilies> Trace::getMadeSPFamilies(Node * makerNode)
 {
-  SPRecord spRecord = getMadeSPRecord(node);
+  SPRecord spRecord = getMadeSPRecord(makerNode);
   return spRecord.spFamilies;
 }
 
 shared_ptr<SPAux> Trace::getMadeSPAux(Node * makerNode)
 {
-  SPRecord spRecord = getMadeSPRecord(node);
+  SPRecord spRecord = getMadeSPRecord(makerNode);
   return spRecord.spAux;
 }
 
@@ -75,7 +80,7 @@ vector<Node*> Trace::getParents(Node * node)
   if (dynamic_cast<OutputNode*>(node)) 
   {
     vector<Node*> esrParents = getESRParents(node);
-    parents.insert(definiteParents.end(),esrParents.begin(),esrParents.end());
+    parents.insert(parents.end(),esrParents.begin(),esrParents.end());
   }
   return parents;
 }

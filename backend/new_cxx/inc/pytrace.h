@@ -36,7 +36,7 @@ struct PyTrace
   void infer(boost::python::dict params);
 
 private:
-  shared_ptr<Trace> trace;
+  shared_ptr<ConcreteTrace> trace;
   
 };
 

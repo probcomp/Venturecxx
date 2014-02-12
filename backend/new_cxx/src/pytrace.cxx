@@ -1,23 +1,24 @@
 #include "pytrace.h"
 #include "regen.h"
 #include "concrete_trace.h"
+#include "db.h"
 
-PyTrace::PyTrace() : trace(shared_ptr<Trace>(new ConcreteTrace())) {}
+PyTrace::PyTrace() : trace(shared_ptr<ConcreteTrace>(new ConcreteTrace())) {}
 PyTrace::~PyTrace() {}
   
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
 {
   VentureValuePtr exp = parseExpression(object);
-  pair<double,Node*> p = evalFamily(trace,exp,globalEnv,Scaffold(),DB(),NULL);
+  pair<double,Node*> p = evalFamily(trace.get(),exp,trace->globalEnvironment,shared_ptr<Scaffold>(new Scaffold()),shared_ptr<DB>(new DB()),NULL);
   assert(p.first == 0);
   assert(!trace->families.count(did));
-  trace->families[did] = p.second;
+  trace->families[did] = shared_ptr<Node>(p.second);
 }
 
 void PyTrace::unevalDirectiveID(DirectiveID did) 
 { 
   assert(trace->families.count(did));
-  unevalFamily(trace,trace->families[did],new Scaffold(),new DB());
+  unevalFamily(trace.get(),trace->families[did],shared_ptr<Scaffold>(new Scaffold()),shared_ptr<DB>(new DB()));
   trace->families.erase(did);
 }
 
@@ -33,7 +34,7 @@ void PyTrace::unobserve(size_t directiveID)
   assert(trace->families.count(did));
   Node * node = trace->families[id];
   OutputNode * appNode = trace->getOutermostNonReferenceApplication(node);
-  if (trace->isObservation(node)) { unconstrain(trace,appNode); }
+  if (trace->isObservation(node)) { unconstrain(trace.get(),appNode); }
   else
   {
     assert(trace->unpropagatedObservations.count(node));
@@ -43,7 +44,7 @@ void PyTrace::unobserve(size_t directiveID)
 
 void PyTrace::bindInGlobalEnv(string sym, DirectiveID did)
 {
-  trace->globalEnv->addBinding(new VentureSymbol(sym),trace->families[did]);
+  trace->globalEnvironment->addBinding(new VentureSymbol(sym),trace->families[did]);
 }
 
 boost::python::object PyTrace::extractPythonValue(DirectiveID did)

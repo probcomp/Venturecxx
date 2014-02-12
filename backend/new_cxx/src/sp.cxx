@@ -1,4 +1,6 @@
 #include "sp.h"
+#include "node.h"
+#include "psp.h"
 
 bool SPFamilies::containsFamily(FamilyID id)  { return families.count(id); }
 RootOfFamily SPFamilies::getFamily(FamilyID id) 
@@ -29,13 +31,13 @@ VentureSP::VentureSP(PSP * requestPSP, PSP * outputPSP) :
   outputPSP(shared_ptr<PSP>(outputPSP))
   {}
 
-void VentureSP::simulateLatents(shared_ptr<SPAux> spaux,LSR * lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB) const { throw "no default latent handling"; }
-double VentureSP::detachLatents(shared_ptr<SPAux> spaux,LSR * lsr,shared_ptr<LatentDB> latentDB) const { throw "no default latent handling"; }
+void VentureSP::simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB) const { throw "no default latent handling"; }
+double VentureSP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const { throw "no default latent handling"; }
 bool VentureSP::hasAEKernel() const { return false; }
 
 
 shared_ptr<PSP> VentureSP::getPSP(ApplicationNode * node) const
 {
-  if (dynamic_cast<RequestNode>(node)) { return requestPSP; }
+  if (dynamic_cast<RequestNode*>(node)) { return requestPSP; }
   else { return outputPSP; }
 }

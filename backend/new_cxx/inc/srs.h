@@ -1,6 +1,8 @@
 #ifndef SRS_H
 #define SRS_H
 
+#include "types.h"
+
 struct VentureEnvironment;
 
 struct ESR
