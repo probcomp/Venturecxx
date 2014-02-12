@@ -7,7 +7,7 @@ PyTrace::~PyTrace() {}
   
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
 {
-  VentureValuePtr exp = parseExpression(o);
+  VentureValuePtr exp = parseExpression(object);
   pair<double,Node*> p = evalFamily(trace,exp,globalEnv,Scaffold(),DB(),NULL);
   assert(p.first == 0);
   assert(!trace->families.count(did));

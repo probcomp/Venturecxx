@@ -29,8 +29,8 @@ VentureSP::VentureSP(PSP * requestPSP, PSP * outputPSP) :
   outputPSP(shared_ptr<PSP>(outputPSP))
   {}
 
-void VentureSP::simulateLatents(SPAux * spaux,LSR * lsr,bool shouldRestore,LatentDB * latentDB) const { throw "no default latent handling"; }
-double VentureSP::detachLatents(SPAux * spaux,LSR * lsr,LatentDB * latentDB) const { throw "no default latent handling"; }
+void VentureSP::simulateLatents(shared_ptr<SPAux> spaux,LSR * lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB) const { throw "no default latent handling"; }
+double VentureSP::detachLatents(shared_ptr<SPAux> spaux,LSR * lsr,shared_ptr<LatentDB> latentDB) const { throw "no default latent handling"; }
 bool VentureSP::hasAEKernel() const { return false; }
 
 
