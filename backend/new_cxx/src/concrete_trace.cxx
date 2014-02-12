@@ -124,6 +124,12 @@ void ConcreteTrace::createSPRecord(OutputNode * makerNode) { throw 500; }
 void ConcreteTrace::initMadeSPFamilies(Node * node) { throw 500; }
 void ConcreteTrace::clearMadeSPFamilies(Node * node) { throw 500; }
 
+void ConcreteTrace::registerFamily(RequestNode * node,FamilyID id,RootOfFamily esrParent)
+{
+  getMadeSPFamilies(getOperatorSPMakerNode(node))->registerFamily(id,esrParent);
+}
+
+
 void ConcreteTrace::setMadeSP(Node * node,shared_ptr<VentureSP> sp) { throw 500; }
 void ConcreteTrace::setMadeSPAux(Node * node,shared_ptr<SPAux> spaux) { throw 500; }
 

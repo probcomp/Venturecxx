@@ -53,6 +53,8 @@ struct ConcreteTrace : Trace
 
   void initMadeSPFamilies(Node * node) override;
   void clearMadeSPFamilies(Node * node) override;
+  
+  void registerFamily(RequestNode * node,FamilyID id,RootOfFamily esrParent) override;
 
   void setMadeSP(Node * node,shared_ptr<VentureSP> sp) override;
   void setMadeSPAux(Node * node,shared_ptr<SPAux> spaux) override;

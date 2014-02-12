@@ -217,7 +217,7 @@ double evalRequests(Trace * trace,
     ESR esr = requests.first[i];
     if (!trace->containsSPFamilyAt(requestNode,esr.id))
     {
-      Node * esrParent;
+      RootOfFamily esrParent;
       if (shouldRestore)
       {
         esrParent = db->getESRParent(trace->getMadeSP(trace->getOperatorSPMakerNode(node)),esr.id);
@@ -229,10 +229,10 @@ double evalRequests(Trace * trace,
         weight += p.first;
 	esrParent = p.second;
       }
-      trace->registerFamilyAt(node,esr.id,esrParent);
+      trace->registerFamily(node,esr.id,esrParent);
     }
-    Node * esrParent = trace->getMadeSPFamilyRoot(trace->getOperatorSPMakerNode(requestNode),esr.id);
-    trace.addESREdge(esrParent,requestNode->outputNode);
+    RootOfFamily esrParent = trace->getMadeSPFamilyRoot(trace->getOperatorSPMakerNode(requestNode),esr.id);
+    trace.addESREdge(esrParent->get(),requestNode->outputNode);
   }
 
   // TODO LSRs
