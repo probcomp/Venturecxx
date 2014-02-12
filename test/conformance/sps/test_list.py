@@ -1,5 +1,31 @@
 from venture.test.config import get_ripl
 
+class TestList(object):
+  _multiprocess_can_split_ = True
+  def setup(self):
+    self.ripl = get_ripl()
+
+    self.ripl.assume("x1","(list)")
+    self.ripl.assume("x2","(pair 1.0 x1)")
+    self.ripl.assume("x3","(pair 2.0 x2)")
+    self.ripl.assume("x4","(pair 3.0 x3)")
+
+  def testFirst1(self):
+    assert self.ripl.predict("(first x4)") == 3.0
+
+  def testLookup1(self):
+    assert self.ripl.predict("(lookup x4 1)") == 2.0
+
+  def testLookup2(self):
+    assert self.ripl.predict("(lookup (rest x4) 1)") == 1.0
+
+  def testIsPair1(self):
+    assert not self.ripl.predict("(is_pair x1)")
+
+  def testIsPair2(self):
+    assert self.ripl.predict("(is_pair x4)")
+
+
 class TestListExtended(object):
   _multiprocess_can_split_ = True
   def setup(self):
@@ -12,30 +38,21 @@ class TestListExtended(object):
       xs))
 """)
 
-    self.ripl.assume("x1","(list)")
-    self.ripl.assume("x2","(pair 1.0 x1)")
-    self.ripl.assume("x3","(pair 2.0 x2)")
-    self.ripl.assume("x4","(pair 3.0 x3)")
+    self.ripl.assume("x","(list 3.0 2.0 1.0)")
     self.ripl.assume("f","(lambda (x) (times x x x))")
-    self.ripl.assume("y4","(vmap_list f x4)")
+    self.ripl.assume("y","(vmap_list f x)")
 
   def testFirst1(self):
-    assert self.ripl.predict("(first y4)") == 27.0
+    assert self.ripl.predict("(first y)") == 27.0
 
   def testLookup1(self):
-    assert self.ripl.predict("(lookup y4 1)") == 8.0
+    assert self.ripl.predict("(lookup y 1)") == 8.0
 
   def testLookup2(self):
-    assert self.ripl.predict("(lookup (rest y4) 1)") == 1.0
-
-  def testIsPair1(self):
-    assert not self.ripl.predict("(is_pair x1)")
-
-  def testIsPair2(self):
-    assert self.ripl.predict("(is_pair x4)")
+    assert self.ripl.predict("(lookup (rest y) 1)") == 1.0
 
   def testIsPair3(self):
-    assert self.ripl.predict("(is_pair y4)")
+    assert self.ripl.predict("(is_pair y)")
 
 
 class TestMapListExtended(object):
@@ -43,28 +60,19 @@ class TestMapListExtended(object):
   def setup(self):
     self.ripl = get_ripl()
 
-    self.ripl.assume("x1","(list)")
-    self.ripl.assume("x2","(pair 1.0 x1)")
-    self.ripl.assume("x3","(pair 2.0 x2)")
-    self.ripl.assume("x4","(pair 3.0 x3)")
+    self.ripl.assume("x","(list 3.0 2.0 1.0)")
     self.ripl.assume("f","(lambda (x) (times x x x))")
-    self.ripl.assume("y4","(map_list f x4)")
+    self.ripl.assume("y","(map_list f x)")
 
   def testFirst1(self):
-    assert self.ripl.predict("(first y4)") == 27.0
+    assert self.ripl.predict("(first y)") == 27.0
 
   def testLookup1(self):
-    assert self.ripl.predict("(lookup y4 1)") == 8.0
+    assert self.ripl.predict("(lookup y 1)") == 8.0
 
   def testLookup2(self):
-    assert self.ripl.predict("(lookup (rest y4) 1)") == 1.0
-
-  def testIsPair1(self):
-    assert not self.ripl.predict("(is_pair x1)")
-
-  def testIsPair2(self):
-    assert self.ripl.predict("(is_pair x4)")
+    assert self.ripl.predict("(lookup (rest y) 1)") == 1.0
 
   def testIsPair3(self):
-    assert self.ripl.predict("(is_pair y4)")
+    assert self.ripl.predict("(is_pair y)")
 
