@@ -633,7 +633,7 @@ def cartesianProduct(keyToValues):
 # Runner should take a given parameter setting and produce a history.
 # For example, runner = lambda params : Model(ripl, params).runConditionedFromPrior(sweeps, runs, track=0)
 # Returned is a dictionary mapping each parameter setting (as a namedtuple) to the history.
-def produceHistories(parameters, runner, verbose=False, mapper=map):
+def produceHistories(parameters, runner, verbose=False):
     parameters_product = cartesianProduct(parameters)
 
     results = []
