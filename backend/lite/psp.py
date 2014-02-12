@@ -67,7 +67,7 @@ class TypedPSP(PSP):
     answer = copy.copy(args)
     if not self.variadic:
       assert len(args.operandValues) == len(self.args_types)
-      answer.operandValues = [self.args_types[i].asPython(args.operandValues[i]) for i in len(args.operandValues)]
+      answer.operandValues = [self.args_types[i].asPython(v) for (i,v) in enumerate(args.operandValues)]
     else:
       answer.operandValues = [self.args_types[0].asPython(v) for v in args.operandValues]
     return answer

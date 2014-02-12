@@ -10,5 +10,8 @@ def testConstant():
 def testLambda():
   assert 2 == get_ripl().predict("((lambda (x) x) 2)")
 
-def testTriviality():
+def testTriviality1():
   assert 4 == get_ripl().predict("(+ 2 2)")
+
+def testTriviality2():
+  assert 2 == get_ripl().predict("(- 4 2)")
