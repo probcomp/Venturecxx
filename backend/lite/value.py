@@ -32,6 +32,8 @@ class VentureNumber(VentureValue):
   def __init__(self,number): self.number = number
   def getNumber(self): return self.number
   def asStackDict(self): return {"type":"number","value":self.number}
+  def compareSameType(self, other):
+    return self.number.__cmp__(other.number)
 
 class VentureAtom(VentureValue):
   def __init__(self,atom): self.atom = atom
@@ -39,16 +41,22 @@ class VentureAtom(VentureValue):
   def getAtom(self): return self.atom
   def getBool(self): return self.atom
   def asStackDict(self): return {"type":"atom","value":self.atom}
+  def compareSameType(self, other):
+    return self.atom.__cmp__(other.atom)
 
 class VentureBool(VentureValue):
   def __init__(self,boolean): self.boolean = boolean
   def getBool(self): return self.boolean
   def asStackDict(self): return {"type":"boolean","value":self.boolean}
+  def compareSameType(self, other):
+    return self.boolean.__cmp__(other.boolean)
 
 class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
   def getSymbol(self): return self.symbol
   def asStackDict(self): return {"type":"symbol","value":self.symbol}
+  def compareSameType(self, other):
+    return self.symbol.__cmp__(other.symbol)
 
 # Venture arrays are heterogeneous, with O(1) access and O(n) copy.
 # Venture does not yet have a story for homogeneous packed arrays.
@@ -65,28 +73,51 @@ class VentureArray(VentureValue):
 
 class VentureNil(VentureValue):
   def __init__(self): pass
+  def compareSameType(self, _): return 0 # All Nils are equal
 
 class VenturePair(VentureValue):
   def __init__(self,first,rest):
+    assert isinstance(first, VentureValue)
+    assert isinstance(rest, VentureValue)
     self.first = first
     self.rest = rest
   def getPair(self): return (self.first,self.rest)
+  def compareSameType(self, other):
+    fstcmp = self.first.compare(other.first)
+    if fstcmp != 0: return fstcmp
+    else: return self.rest.compare(other.rest)
 
+# Simplexes are homogeneous floating point arrays.  They are also
+# supposed to sum to 1, but we are not checking that.
 class VentureSimplex(VentureValue):
   def __init__(self,simplex): self.simplex = simplex
   def getSimplex(self): return self.simplex
+  def compareSameType(self, other):
+    # The Python ordering is lexicographic first, then by length, but
+    # I think we want lower-d simplexes to compare less than higher-d
+    # ones regardless of the point.
+    lencmp = len(self.simplex).__cmp__(len(other.simplex))
+    if lencmp != 0:
+      return lencmp
+    else:
+      return self.simplex.__cmp__(other.simplex)
 
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
   def getDict(self): return self.dict
 
+# Backed by a numpy matrix object
 class VentureMatrix(VentureValue):
   def __init__(self,matrix): self.matrix = matrix
   def getMatrix(self): return self.matrix
+  def compareSameType(self, other):
+    # TODO Are numpy matrices comparable?
+    return self.matrix.__cmp__(other.matrix)
 
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
   def asStackDict(self): return {"type":"SP","value":self}
+  # SPRefs are intentionally not comparable until we decide otherwise
 
 ## SPs and Environments as well
 ## Not Requests, because we do not reflect on them

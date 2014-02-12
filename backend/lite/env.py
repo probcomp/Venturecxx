@@ -14,5 +14,7 @@ class VentureEnvironment(VentureValue):
     if sym in self.frame: return self.frame[sym]
     elif not self.outerEnv: raise Exception("Cannot find symbol %s" % sym)
     else: return self.outerEnv.findSymbol(sym)
+  # VentureEnvironments are intentionally not comparable until we
+  # decide otherwise
 
 registerVentureType(VentureEnvironment)

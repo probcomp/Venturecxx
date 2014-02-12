@@ -50,7 +50,7 @@ def builtInSPsList():
            [ "minus", binaryNum(lambda x,y: x - y) ],
            [ "times", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1)) ],
            [ "div",   binaryNum(lambda x,y: x / y) ],
-           [ "eq",    deterministic(lambda x,y: x == y) ],
+           [ "eq",    deterministic(lambda x,y: v.VentureBool(x.compare(y) == 0)) ],
            [ "gt",    deterministic(lambda x,y: x > y) ],
            [ "gte",    deterministic(lambda x,y: x >= y) ],
            [ "lt",    deterministic(lambda x,y: x < y) ],

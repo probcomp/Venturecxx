@@ -42,5 +42,7 @@ class VentureSP(VentureValue):
     if candidate:
       return candidate
     return name
+  # VentureSPs are intentionally not comparable until we decide
+  # otherwise
 
 registerVentureType(VentureSP)
