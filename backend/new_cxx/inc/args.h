@@ -5,7 +5,6 @@
 #include "values.h"
 
 struct Trace;
-struct Node;
 struct ApplicationNode;
 struct RequestNode;
 struct VentureRequest;
@@ -14,7 +13,7 @@ struct VentureEnvironment;
 
 struct Args
 {
-  Args(Trace * trace, Node * node);
+  Args(Trace * trace, ApplicationNode * node);
 
   ApplicationNode * node;
   vector<VentureValuePtr> operandValues;

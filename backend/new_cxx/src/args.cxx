@@ -11,11 +11,10 @@ vector<VentureValuePtr> makeVectorOfValues(Trace * trace, const vector<Node*> & 
   return values;
 }
 
-Args::Args(Trace * trace, Node * appNode)
+Args::Args(Trace * trace, ApplicationNode * appNode)
 {
-  node = dynamic_cast<ApplicationNode*>(appNode);
-  assert(node);
-  
+  node = appNode;
+
   operandNodes = node->operandNodes;
   operandValues = makeVectorOfValues(trace, operandNodes);
 
