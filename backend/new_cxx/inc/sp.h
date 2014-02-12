@@ -43,8 +43,7 @@ struct VentureSP : VentureValue
   shared_ptr<PSP> requestPSP;
   shared_ptr<PSP> outputPSP;
   
-  virtual shared_ptr<PSP> getPSP(RequestNode * requestNode) const { return requestPSP; }
-  virtual shared_ptr<PSP> getPSP(OutputNode * outputNode) const { return outputPSP; }
+  virtual shared_ptr<PSP> getPSP(ApplicationNode * node) const;
 
   virtual shared_ptr<SPAux> constructSPAux() const;
   virtual shared_ptr<LatentDB> constructLatentDB() const;

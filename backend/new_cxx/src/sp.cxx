@@ -32,3 +32,8 @@ double VentureSP::detachLatents(SPAux * spaux,LSR * lsr,LatentDB * latentDB) con
 bool VentureSP::hasAEKernel() const { return false; }
 
 
+shared_ptr<PSP> VentureSP::getPSP(ApplicationNode * node) const
+{
+  if (dynamic_cast<RequestNode>(node)) { return requestPSP; }
+  else { return outputPSP; }
+}
