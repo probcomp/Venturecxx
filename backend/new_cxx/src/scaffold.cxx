@@ -165,10 +165,23 @@ void extendCandidateScaffold(ConcreteTrace * trace,
 set<Node*> findBrush(ConcreteTrace * trace,
 		     set<Node*> & cDRG,
 		     set<Node*> & cAbsorbing,
-		     set<Node*> & cAAA) { assert(false); }
+		     set<Node*> & cAAA) 
+{
+  map<Node*,int> disableCounts;
+  set<RequestNode*> disabledRequests;
+  set<Node*> brush;
+  for (set<Node*>::iterator drgIter = cDRG.begin();
+       drgIter != cDRG.end();
+       ++drgIter)
+  {
+    RequestNode * requestNode = dynamic_cast<RequestNode*>(*drgIter);
+    if (requestNode) { disableRequests(trace,requestNode,disableCounts,disabledRequests,brush); }
+  }
+  return brush;
+}
 
 void disableRequests(ConcreteTrace * trace,
-		     Node * node,
+		     RequestNode * node,
 		     map<Node*,int> & disableCounts,
 		     set<RequestNode*> & disabledRequests,
 		     set<Node*> & brush) { assert(false); }

@@ -94,7 +94,7 @@ set<Node*> findBrush(ConcreteTrace * trace,
 		     set<Node*> & cAAA);
 
 void disableRequests(ConcreteTrace * trace,
-		     Node * node,
+		     RequestNode * node,
 		     map<Node*,int> & disableCounts,
 		     set<RequestNode*> & disabledRequests,
 		     set<Node*> & brush);
