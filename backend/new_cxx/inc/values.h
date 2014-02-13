@@ -9,7 +9,7 @@ struct VentureNumber : VentureValue
   VentureNumber(double x): x(x) {}
   double getDouble() const { return x; }
   int getInt() const { return static_cast<int>(x); }
-  bool equals(const shared_ptr<const VentureValue> & other) const;
+  bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   boost::python::dict toPython() const;
 
@@ -21,7 +21,7 @@ struct VentureAtom : VentureValue
 {
   VentureAtom(int n): n(n) {}
   int getAtom() const { return n; }
-  bool equals(const shared_ptr<const VentureValue> & other) const;
+  bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   boost::python::dict toPython() const;
   int n;
@@ -31,7 +31,7 @@ struct VentureBool : VentureValue
 {
   VentureBool(bool b): b(b) {}
   bool getBool() const { return b; }
-  bool equals(const shared_ptr<const VentureValue> & other) const;
+  bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   boost::python::dict toPython() const;
   bool b;
@@ -41,7 +41,7 @@ struct VentureSymbol : VentureValue
 {
   VentureSymbol(string s): s(s) {}
   const string& getSymbol() const { return s; }
-  bool equals(const shared_ptr<const VentureValue> & other) const;
+  bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   string s;
 };
@@ -50,7 +50,7 @@ struct VentureArray : VentureValue
 {
   VentureArray(const vector<VentureValuePtr> & xs): xs(xs) {}
   const vector<VentureValuePtr> & getArray() const { return xs; }
-  bool equals(const shared_ptr<const VentureValue> & other) const;
+  bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   vector<VentureValuePtr> xs;
 };
@@ -58,7 +58,7 @@ struct VentureArray : VentureValue
 struct VentureNil : VentureValue
 {
   bool isNil() const { return true; }
-  bool equals(const shared_ptr<const VentureValue> & other) const;
+  bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
 };
 
@@ -67,7 +67,7 @@ struct VenturePair : VentureValue
   VenturePair(VentureValuePtr car,VentureValuePtr cdr) { car = car; cdr = cdr; }
   const VentureValuePtr& getCar() const { return car; }
   const VentureValuePtr& getCdr() const { return cdr; }
-  bool equals(const shared_ptr<const VentureValue> & other) const;
+  bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   VentureValuePtr car;
   VentureValuePtr cdr;
@@ -77,7 +77,7 @@ struct VentureSimplex : VentureValue
 {
   VentureSimplex(const Simplex & ps): ps(ps) {}
   const Simplex& getSimplex() const { return ps; }
-  bool equals(const shared_ptr<const VentureValue> & other) const;
+  bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   Simplex ps;
 };

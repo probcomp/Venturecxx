@@ -27,5 +27,5 @@ const MatrixXd& VentureValue::getMatrix() const { cannotConvertType(this,"matrix
 const vector<ESR>& VentureValue::getESRs() const { cannotConvertType(this,"requests"); assert(false); throw "no return"; }
 const vector<shared_ptr<LSR> >& VentureValue::getLSRs() const { cannotConvertType(this,"requests"); assert(false); throw "no return"; }
 
-bool VentureValue::equals(const shared_ptr<const VentureValue> & other) const { return false; assert(false); throw "no return"; }
+bool VentureValue::equals(const VentureValuePtr & other) const { return false; assert(false); throw "no return"; }
 size_t VentureValue::hash() const { assert(false); assert(false); throw "no return"; }

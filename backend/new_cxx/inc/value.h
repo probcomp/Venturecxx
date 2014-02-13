@@ -47,7 +47,7 @@ struct VentureValue
   
   virtual boost::python::dict toPython() const { assert(false); throw "need to override toPython()"; };
 
-  virtual bool equals(const shared_ptr<const VentureValue> & other) const;
+  virtual bool equals(const VentureValuePtr & other) const;
   virtual size_t hash() const;
 };
 
