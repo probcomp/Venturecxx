@@ -1,5 +1,6 @@
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
+from nose import SkipTest
 
 # TODO N needs to be managed here more intelligently
 @statisticalTest
@@ -35,6 +36,24 @@ def testEnumerativeGibbsXOR2():
   ripl.assume("x","(scope_include 0 0 (bernoulli 0.0015))",label="pid")
   ripl.assume("y","(scope_include 0 0 (bernoulli 0.0005))")
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+  ripl.observe("(noisy_true (= (+ x y) 1) .000001)","true")
+  predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs","scope":0,"block":0})
+  ans = [(True,.75),(False,.25)]
+  return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+def testEnumerativeGibbsXOR3():
+  """A regression catching a mysterious math domain error."""
+  ripl = get_ripl()
+
+  ripl.assume("x","(scope_include 0 0 (bernoulli 0.0015))",label="pid")
+  ripl.assume("y","(scope_include 0 0 (bernoulli 0.0005))")
+  ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
+  # This predict is the different between this test and
+  # testEnumerativeGibbsXOR2, and currently causes a mystery math
+  # domain error.
+  raise SkipTest("Issue https://app.asana.com/0/9277419963067/10249544822516")
+  ripl.predict("(noisy_true (= (+ x y) 1) .000001)")
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)","true")
   predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs","scope":0,"block":0})
   ans = [(True,.75),(False,.25)]
