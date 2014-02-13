@@ -122,7 +122,7 @@ def builtInSPsList():
            [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ],
            [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
            [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
-           [ "categorical",no_request(discrete.CategoricalOutputPSP()) ],
+           [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
 
            [ "normal",no_request(continuous.NormalOutputPSP()) ],
            [ "uniform_continuous",no_request(continuous.UniformOutputPSP()) ],
