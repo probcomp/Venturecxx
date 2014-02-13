@@ -75,6 +75,7 @@ void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
 void ConcreteTrace::addESREdge(Node *esrParent,OutputNode * outputNode) { throw 500; }
 void ConcreteTrace::reconnectLookup(LookupNode * lookupNode) { throw 500; }
 void ConcreteTrace::incNumRequests(Node * node) { throw 500; }
+void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
 void ConcreteTrace::addChild(Node * node, Node * child) {
   assert(children[node].count(child) == 0);
   children[node].insert(child);
@@ -84,6 +85,7 @@ void ConcreteTrace::addChild(Node * node, Node * child) {
 Node * ConcreteTrace::popLastESRParent(OutputNode * outputNode) { throw 500; }
 void ConcreteTrace::disconnectLookup(LookupNode * lookupNode) { throw 500; }
 void ConcreteTrace::decNumRequests(Node * node) { throw 500; }
+void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
 void ConcreteTrace::removeChild(Node * node, Node * child) { throw 500; }
 
 /* Primitive getters */

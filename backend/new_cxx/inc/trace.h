@@ -47,12 +47,14 @@ struct Trace
   virtual void addESREdge(Node *esrParent,OutputNode * outputNode) =0;
   virtual void reconnectLookup(LookupNode * lookupNode) =0;
   virtual void incNumRequests(Node * node) =0;
+  virtual void incRegenCount(shared_ptr<Scaffold> scaffold,Node * node) =0;
   virtual void addChild(Node * node, Node * child) =0;
 
   /* Detach mutations */  
   virtual Node * popLastESRParent(OutputNode * outputNode) =0;
   virtual void disconnectLookup(LookupNode * lookupNode) =0;
   virtual void decNumRequests(Node * node) =0;
+  virtual void decRegenCount(shared_ptr<Scaffold> scaffold,Node * node) =0;
   virtual void removeChild(Node * node, Node * child) =0;
 
   /* Primitive getters */

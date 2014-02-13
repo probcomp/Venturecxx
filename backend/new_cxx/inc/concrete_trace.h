@@ -25,12 +25,14 @@ struct ConcreteTrace : Trace
   void addESREdge(Node *esrParent,OutputNode * outputNode);
   void reconnectLookup(LookupNode * lookupNode);
   void incNumRequests(Node * node);
+  void incRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
   void addChild(Node * node, Node * child);
 
   /* Detach mutations */  
   Node * popLastESRParent(OutputNode * outputNode);
   void disconnectLookup(LookupNode * lookupNode);
   void decNumRequests(Node * node);
+  void decRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
   void removeChild(Node * node, Node * child);
 
   /* Primitive getters */

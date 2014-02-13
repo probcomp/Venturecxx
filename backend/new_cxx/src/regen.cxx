@@ -128,8 +128,36 @@ double regen(Trace * trace,
 	      shared_ptr<DB> db,
 	      shared_ptr<map<Node*,Gradient> > gradients)
 { 
-  if (!scaffold) { return 0; }
-  throw 500;
+  double weight = 0;
+  if (scaffold->isResampling(node))
+  {
+    if (trace->getRegenCount(scaffold,node) == 0)
+    {
+      weight += regenParents(trace,node,scaffold,shouldRestore,db,gradients);
+      LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
+      RequestNode * requestNode = dynamic_cast<RequestNode*>(node);
+      OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
+      if (lookupNode) { trace->setValue(node, trace->getValue(lookupNode->sourceNode)); }
+      else if (requestNode)
+      {
+        weight += applyPSP(trace,requestNode,scaffold,shouldRestore,db,gradients);
+        weight += evalRequests(trace,requestNode,scaffold,shouldRestore,db,gradients);
+      }
+      else
+      {
+	assert(outputNode);
+        weight += applyPSP(trace,outputNode,scaffold,shouldRestore,db,gradients);
+      }
+    }
+    trace->incRegenCount(scaffold,node);
+  }
+  VentureValuePtr value = trace->getValue(node);
+  shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
+  if (spRef && spRef->makerNode != node && scaffold->isAAA(spRef->makerNode))
+  {
+    weight += regen(trace,spRef->makerNode,scaffold,shouldRestore,db,gradients);
+  }
+  return weight;
 }
 
 double regenParents(Trace * trace,
