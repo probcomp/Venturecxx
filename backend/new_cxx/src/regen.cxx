@@ -77,7 +77,32 @@ double constrain(Trace * trace,
 void propagateConstraint(Trace * trace,
 			 Node * node,
 			 VentureValuePtr value)
-{ throw 500; }
+{
+  LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
+  RequestNode * requestNode = dynamic_cast<RequestNode*>(node);
+  OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
+  if (lookupNode) { trace->setValue(lookupNode,value); }
+  else if (requestNode)
+  {
+    shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(requestNode))->getPSP(requestNode);
+    if (!dynamic_pointer_cast<NullRequestPSP>(psp)) { throw "Cannot make requests downstream of a node that gets constrained during regen"; }
+  }
+  else
+  {
+    assert(outputNode);
+    shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
+    if (psp->isRandom()) { throw "Cannot make random choices downstream of a node that gets constrained during regen"; }
+    trace->setValue(node,psp->simulate(trace->getArgs(outputNode),trace->rng));
+  }
+  set<Node*> children = trace->getChildren(node);
+  for (set<Node*>::iterator iter = children.begin();
+       iter != children.end();
+       ++iter)
+  {
+    propagateConstraint(trace,*iter,value);
+  }
+}
+
 
 double attach(Trace * trace,
 	      Node * node,
