@@ -134,8 +134,8 @@ map<Node*,int> computeRegenCounts(ConcreteTrace * trace,
 			      set<Node*> & brush);
 
 map<Node*,shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
-		    set<Node*> & drg,
-					    set<Node*> & absorbing);
+					    set<Node*> & drg,
+					    set<Node*> & aaa);
 
 vector<vector<Node *> > assignBorderSequnce(set<Node*> & border,
 					    map<Node*,int> & indexAssignments,

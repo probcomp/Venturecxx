@@ -302,9 +302,9 @@ map<Node*,int> computeRegenCounts(ConcreteTrace * trace,
   map<Node*,int> regenCounts;
   for (set<Node*>::iterator drgIter = drg.begin(); drgIter != drg.end(); ++drgIter)
   {
-    if (aaa.count(*drgIter)) { regenCounts[node] = 1; } // will be added to shortly
-    else if (border.count(*drgIter)) { regenCounts[node] = trace->getChildren(node).size() + 1; }
-    else { regenCounts[node] = trace->getChildren(node).size(); }
+    if (aaa.count(*drgIter)) { regenCounts[*drgIter] = 1; } // will be added to shortly
+    else if (border.count(*drgIter)) { regenCounts[*drgIter] = trace->getChildren(*drgIter).size() + 1; }
+    else { regenCounts[*drgIter] = trace->getChildren(*drgIter).size(); }
   }
 
   if (!aaa.empty())
@@ -341,8 +341,29 @@ map<Node*,int> computeRegenCounts(ConcreteTrace * trace,
 
 map<Node*,shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
 					    set<Node*> & drg,
-					    set<Node*> & absorbing) { assert(false); }
+					    set<Node*> & aaa)
+{ 
+  map<Node*,shared_ptr<LKernel> > lkernels;
+  for (set<Node*>::iterator aaaIter = aaa.begin(); aaaIter != aaa.end(); ++aaaIter)
+  {
+    OutputNode * outputNode = dynamic_cast<OutputNode*>(*aaaIter);
+    assert(outputNode);
+    shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
+    lkernels[*aaaIter] = psp->getAAALKernel();
+  }
+  // TODO delta kernels
+  return lkernels;
+}
+
 
 vector<vector<Node *> > assignBorderSequnce(set<Node*> & border,
 					    map<Node*,int> & indexAssignments,
-					    int numIndices) { assert(false); }
+					    int numIndices) 
+{
+  vector<vector<Node *> > borderSequence(numIndices);
+  for (set<Node*>::iterator borderIter = border.begin(); borderIter != border.end(); ++borderIter)
+  {
+    borderSequence[indexAssignments[*borderIter]].push_back(*borderIter);
+  }
+  return borderSequence;
+}
