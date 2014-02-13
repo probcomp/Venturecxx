@@ -96,7 +96,7 @@ struct VentureMatrix : VentureValue
 
 struct VentureRequest : VentureValue
 {
-  VentureRequest(const vector<ESR> & esrs, const vector<shared_ptr<LSR> > & lsrs);
+  VentureRequest(const vector<ESR> & esrs, const vector<shared_ptr<LSR> > & lsrs): esrs(esrs), lsrs(lsrs) {}
   vector<ESR> esrs;
   vector<shared_ptr<LSR> > lsrs;
 };

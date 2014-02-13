@@ -343,9 +343,10 @@ double evalRequests(Trace * trace,
 }
 
 
+
 double restore(Trace * trace,
-	      RequestNode * requestNode,
-	      shared_ptr<Scaffold> scaffold,
-	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
+	       Node * node,
+	       shared_ptr<Scaffold> scaffold,
+	       shared_ptr<DB> db,
+	       shared_ptr<map<Node*,Gradient> > gradients) 
 { throw 500; }

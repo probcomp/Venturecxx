@@ -19,7 +19,7 @@ double regenAndAttach(Trace * trace,
 		      shared_ptr<map<Node*,Gradient> > gradients);
 
 double constrain(Trace * trace,
-		 Node * node,
+		 OutputNode * node,
 		 VentureValuePtr value);
 
 

@@ -82,7 +82,7 @@ struct Trace
   virtual void setValue(Node * node, VentureValuePtr value) =0;
   virtual void clearValue(Node * node) =0;
 
-  virtual void initMadeSPRecord(Node * makerNode, shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux);
+  virtual void initMadeSPRecord(Node * makerNode, shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux) =0;
 
   virtual void clearMadeSPFamilies(Node * makerNode) =0;
 
