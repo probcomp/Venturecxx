@@ -1,6 +1,8 @@
 from psp import PSP
 from request import Request,ESR
+import value as v
 
+# TODO This is used very little because the stack expands if to biplex.  Flush?
 class BranchRequestPSP(PSP):
   def simulate(self,args): 
 #    print "branchRequest::simulate()"
@@ -8,7 +10,7 @@ class BranchRequestPSP(PSP):
     if args.operandValues[0].getBool(): expIndex = 1
     else: expIndex = 2
 
-    exp = args.operandValues[expIndex]
+    exp = v.ExpressionType().asPython(args.operandValues[expIndex])
     return Request([ESR(args.node,exp,args.env)])
 
   def description(self,name):
