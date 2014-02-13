@@ -11,6 +11,9 @@ import scipy.stats as stats
 # but will leave it as is for now. It would not be hard to check the argument types
 # and allow either.
 
+def testDict0():
+  assert get_ripl().predict("(is_dict (dict (list) (list)))")
+
 @statisticalTest
 def testDict1():
   ripl = get_ripl()

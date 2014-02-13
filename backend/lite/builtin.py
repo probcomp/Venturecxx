@@ -89,6 +89,7 @@ def builtInSPsList():
            [ "array", deterministic(lambda *args: v.VentureArray(np.array(args))) ],
            [ "is_array", type_test(v.VentureArray) ],
            [ "dict", VentureSP(NullRequestPSP(),dstructures.DictOutputPSP()) ],
+           [ "is_dict", type_test(v.VentureDict) ],
            [ "matrix", VentureSP(NullRequestPSP(),dstructures.MatrixOutputPSP()) ],
            [ "simplex", VentureSP(NullRequestPSP(),dstructures.SimplexOutputPSP()) ],
 
