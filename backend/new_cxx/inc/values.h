@@ -107,6 +107,9 @@ struct VentureRequest : VentureValue
 };
 
 /* Use the memory location as a unique hash. */
-struct VentureID {};
-
+struct VentureID : VentureValue
+{
+  bool equals(const VentureValuePtr & other) const;
+  size_t hash() const;
+};
 #endif

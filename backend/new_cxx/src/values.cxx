@@ -119,7 +119,7 @@ size_t VentureSimplex::hash() const
 
 size_t VentureID::hash() const
 {
-  return this;
+  return reinterpret_cast<size_t>(this);
 }
 
 //////////////
