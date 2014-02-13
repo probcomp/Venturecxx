@@ -72,11 +72,18 @@ void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
 }
 
 /* Regen mutations */
-void ConcreteTrace::addESREdge(Node *esrParent,OutputNode * outputNode) { throw 500; }
+void ConcreteTrace::addESREdge(Node *esrParent,OutputNode * outputNode) 
+{
+  incNumRequests(esrParent);
+  addChild(esrParent,outputNode);
+  esrParents[outputNode].push_back(esrParent);
+}
+
 void ConcreteTrace::reconnectLookup(LookupNode * lookupNode) { throw 500; }
 void ConcreteTrace::incNumRequests(Node * node) { throw 500; }
 void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
-void ConcreteTrace::addChild(Node * node, Node * child) {
+void ConcreteTrace::addChild(Node * node, Node * child) 
+{
   assert(children[node].count(child) == 0);
   children[node].insert(child);
 }
@@ -116,9 +123,10 @@ void ConcreteTrace::initMadeSPRecord(Node * makerNode,shared_ptr<VentureSP> sp,s
   madeSPRecords[makerNode] = spRecord;
 }
 
-
-void ConcreteTrace::initMadeSPFamilies(Node * node) { throw 500; }
-void ConcreteTrace::clearMadeSPFamilies(Node * node) { throw 500; }
+void ConcreteTrace::clearMadeSPFamilies(Node * node) 
+{ 
+  madeSPRecords[node].spFamilies = shared_ptr<SPFamilies>(new SPFamilies());
+}
 
 void ConcreteTrace::registerFamily(RequestNode * node,FamilyID id,RootOfFamily esrParent)
 {
