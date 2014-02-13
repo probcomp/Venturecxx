@@ -43,6 +43,10 @@ def testEval1():
   ans = [(1,.7), (0,.3)]
   return reportKnownDiscrete(ans, predictions)
 
+def testEvalIf1():
+  "Eval should work on programs that require macro expansion"
+  eq_(get_ripl().predict("(eval (quote (if true 1 2)) (get_current_environment))"), 1)
+
 @statisticalTest
 def testEval2():
   ripl = get_ripl()
