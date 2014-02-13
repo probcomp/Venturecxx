@@ -40,12 +40,6 @@ class DictOutputPSP(PSP):
   def description(self,name):
     return "(%s <list k> <list v>) -> <collection k v>\n  Returns the dictionary mapping the given keys to their respective given values.  It is an error if the given lists are not the same length." % name
 
-### Matrices
-class MatrixOutputPSP(PSP):
-  def simulate(self,args): return np.mat(args.operandValues[0])
-  def description(self,name):
-    return "(%s <list <list <number>>>) -> <matrix>\n  The input is the list of rows of the matrix." % name
-
 ### Map, the weird way.
 class MapListRequestPSP(PSP):
   def simulate(self,args):
