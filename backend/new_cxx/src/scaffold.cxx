@@ -2,6 +2,7 @@
 #include "node.h"
 #include "concrete_trace.h"
 #include "sp.h"
+#include <algorithm>
 
 set<Node *> Scaffold::getPrincipalNodes() { assert(false); }
 
@@ -205,13 +206,43 @@ void disableFamily(ConcreteTrace * trace,
 		   Node * node,
 		   map<RootOfFamily,int> & disableCounts,
 		   set<RequestNode*> & disabledRequests,
-		   set<Node*> & brush) { assert(false); }
+		   set<Node*> & brush) 
+{
+  if (brush.count(node)){ return; }
+  brush.insert(node);
+  OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
+  if (outputNode)
+  {
+    brush.insert(outputNode->requestNode);
+    disableRequests(trace,outputNode->requestNode,disableCounts,disabledRequests,brush);
+    disableFamily(trace,outputNode->operatorNode,disableCounts,disabledRequests,brush);
+    for (size_t i = 0; i < outputNode->operandNodes.size(); ++i)
+    {
+      disableFamily(trace,outputNode->operandNodes[i],disableCounts,disabledRequests,brush);
+    }
+  }
+}
 
 
 tuple<set<Node*>,set<Node*>,set<Node*> > removeBrush(set<Node*> & cDRG,
 						     set<Node*> & cAbsorbing,
 						     set<Node*> & cAAA,
-						     set<Node*> & brush) { assert(false); }
+						     set<Node*> & brush) 
+{
+  set<Node*> drg;
+  set<Node*> absorbing;
+  set<Node*> aaa;
+
+  std::set_difference(cDRG.begin(),cDRG.end(),brush.begin(),brush.end(), 
+		      std::inserter(drg,drg.begin()));
+
+  std::set_difference(cAbsorbing.begin(),cAbsorbing.end(),brush.begin(),brush.end(), 
+		      std::inserter(absorbing,absorbing.begin()));
+
+  std::set_difference(cAAA.begin(),cAAA.end(),brush.begin(),brush.end(), 
+		      std::inserter(aaa,aaa.begin()));
+  return make_tuple(drg,absorbing,aaa);
+}
 
 bool hasChildInAorD(ConcreteTrace * trace,
 		    set<Node*> & drg,
