@@ -104,5 +104,4 @@ struct VentureRequest : VentureValue
   vector<shared_ptr<LSR> > lsrs;
 };
 
-
 #endif

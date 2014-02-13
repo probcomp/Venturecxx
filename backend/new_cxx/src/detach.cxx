@@ -85,10 +85,43 @@ double extractESRParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold
   return weight;
 }
 
-
-
 double extract(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
-{ assert(false); }
+{
+  double weight = 0;
+  VentureValuePtr value = trace->getValue(node);
+
+  shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
+  if (spRef && spRef->makerNode != node && scaffold->isAAA(spRef->makerNode))
+  {
+    weight += extract(trace,spRef->makerNode,scaffold,db);
+  }
+
+  if (scaffold->isResampling(node))
+  {
+    trace->decRegenCount(scaffold,node);
+    assert(trace->getRegenCount(scaffold,node) >= 0);
+    if (trace->getRegenCount(scaffold,node) == 0)
+    {
+      LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
+      RequestNode * requestNode = dynamic_cast<RequestNode*>(node);
+      OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
+      if (lookupNode) { trace->setValue(lookupNode,shared_ptr<VentureValue>()); }
+      else if (requestNode) 
+      { 
+        weight += unevalRequests(trace,requestNode,scaffold,db);
+        weight += unapplyPSP(trace,requestNode,scaffold,db);
+      }
+      else
+      {
+	assert(outputNode);
+        weight += unapplyPSP(trace,outputNode,scaffold,db);
+      }
+      weight += extractParents(trace,node,scaffold,db);
+    }
+  }
+  return weight;
+}
+
 double unevalFamily(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 { assert(false); }
 double unapply(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
