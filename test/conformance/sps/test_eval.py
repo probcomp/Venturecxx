@@ -4,7 +4,8 @@ from venture.test.stats import statisticalTest, reportKnownDiscrete, reportKnown
 from venture.test.config import get_ripl, collectSamples
 
 def testEvalSmoke():
-  for form in ["(get_current_environment)", "(get_empty_environment)"]:
+  for form in ["(get_current_environment)", "(get_empty_environment)",
+               "(extend_environment (get_empty_environment) (quote foo) 5)"]:
     yield checkEvSmoke, form
 
 def checkEvSmoke(form):

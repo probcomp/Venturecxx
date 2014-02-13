@@ -21,7 +21,8 @@ class GetEmptyEnvOutputPSP(PSP):
 
 class ExtendEnvOutputPSP(PSP):
   def simulate(self,args): 
-    env,sym = args.operandValues[0:2]
+    env = args.operandValues[0]
+    sym = args.operandValues[1].getSymbol()
     node = args.operandNodes[2]
     return VentureEnvironment(env,[sym],[node])
   def description(self,name):
