@@ -286,7 +286,11 @@ set<Node*> findBorder(ConcreteTrace * trace,
 void maybeIncrementAAARegenCount(ConcreteTrace * trace,
 				 map<Node*,int> & regenCounts,
 				 set<Node*> & aaa,
-				 Node * node) { assert(false); }
+				 Node * node) 
+{
+  shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(trace->getValue(node));
+  if (spRef && aaa.count(spRef->makerNode)) { regenCounts[spRef->makerNode] += 1; }
+}
 
 map<Node*,int> computeRegenCounts(ConcreteTrace * trace,
 			      set<Node*> & drg,
