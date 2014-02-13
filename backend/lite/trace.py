@@ -71,13 +71,13 @@ class Trace(object):
   def _normalizeEvaluatedScopeAndBlock(self, scope, block):
     if scope == "default":
       assert isinstance(block, Node)
+      return (scope, block)
     else:
       assert isinstance(scope, VentureValue)
       assert isinstance(block, VentureValue)
       # TODO probably want to allow arbitrary values as scopes and
       # blocks; but this requires messing with hashability.
-      scope = scope.getNumber()
-      block = block.getNumber()
+      return (scope.getNumber(), block.getNumber())
 
   def registerConstrainedChoice(self,node):
     self.ccs.add(node)
