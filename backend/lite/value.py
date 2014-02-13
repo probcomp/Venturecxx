@@ -1,3 +1,12 @@
+"""Venture values.
+
+This design deliberately tries to avoid piggybacking on Python magic
+(like the __foo__ methods) in order to make the architecture clear
+enough to replicate in another language (such as C++).
+
+TODO Actually explain it.
+
+"""
 from abc import ABCMeta
 from numbers import Number
 
