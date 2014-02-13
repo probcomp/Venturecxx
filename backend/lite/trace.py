@@ -1,6 +1,6 @@
 from builtin import builtInValues, builtInSPs
 from env import VentureEnvironment
-from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args
+from node import Node,ConstantNode,LookupNode,RequestNode,OutputNode,Args
 import math
 from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
@@ -50,6 +50,11 @@ class Trace(object):
 
   def registerRandomChoiceInScope(self,scope,block,node):
     assert block is not None
+    if scope == "default":
+      assert isinstance(block, Node)
+    else:
+      assert isinstance(scope, VentureValue)
+      assert isinstance(block, VentureValue)
     if not scope in self.scopes: self.scopes[scope] = SMap()
     if not block in self.scopes[scope]: self.scopes[scope][block] = set()
     assert not node in self.scopes[scope][block]
@@ -62,6 +67,11 @@ class Trace(object):
     self.unregisterRandomChoiceInScope("default",node,node)
 
   def unregisterRandomChoiceInScope(self,scope,block,node):
+    if scope == "default":
+      assert isinstance(block, Node)
+    else:
+      assert isinstance(scope, VentureValue)
+      assert isinstance(block, VentureValue)
     self.scopes[scope][block].remove(node)
     assert not scope == "default" or len(self.scopes[scope][block]) == 0
     if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
