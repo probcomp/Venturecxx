@@ -49,16 +49,7 @@ class Trace(object):
     self.registerRandomChoiceInScope("default",node,node)
 
   def registerRandomChoiceInScope(self,scope,block,node):
-    assert block is not None
-    if scope == "default":
-      assert isinstance(block, Node)
-    else:
-      assert isinstance(scope, VentureValue)
-      assert isinstance(block, VentureValue)
-      # TODO probably want to allow arbitrary values as scopes and
-      # blocks; but this requires messing with hashability.
-      scope = scope.getNumber()
-      block = block.getNumber()
+    (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if not scope in self.scopes: self.scopes[scope] = SMap()
     if not block in self.scopes[scope]: self.scopes[scope][block] = set()
     assert not node in self.scopes[scope][block]
@@ -71,6 +62,13 @@ class Trace(object):
     self.unregisterRandomChoiceInScope("default",node,node)
 
   def unregisterRandomChoiceInScope(self,scope,block,node):
+    (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    self.scopes[scope][block].remove(node)
+    assert not scope == "default" or len(self.scopes[scope][block]) == 0
+    if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
+    if len(self.scopes[scope]) == 0: del self.scopes[scope]
+
+  def _normalizeEvaluatedScopeAndBlock(self, scope, block):
     if scope == "default":
       assert isinstance(block, Node)
     else:
@@ -80,10 +78,6 @@ class Trace(object):
       # blocks; but this requires messing with hashability.
       scope = scope.getNumber()
       block = block.getNumber()
-    self.scopes[scope][block].remove(node)
-    assert not scope == "default" or len(self.scopes[scope][block]) == 0
-    if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
-    if len(self.scopes[scope]) == 0: del self.scopes[scope]
 
   def registerConstrainedChoice(self,node):
     self.ccs.add(node)
