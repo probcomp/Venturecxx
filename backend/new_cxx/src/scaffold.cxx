@@ -233,6 +233,7 @@ tuple<set<Node*>,set<Node*>,set<Node*> > removeBrush(set<Node*> & cDRG,
   set<Node*> absorbing;
   set<Node*> aaa;
 
+  // TODO confirm that this works
   std::set_difference(cDRG.begin(),cDRG.end(),brush.begin(),brush.end(), 
 		      std::inserter(drg,drg.begin()));
 
@@ -241,6 +242,14 @@ tuple<set<Node*>,set<Node*>,set<Node*> > removeBrush(set<Node*> & cDRG,
 
   std::set_difference(cAAA.begin(),cAAA.end(),brush.begin(),brush.end(), 
 		      std::inserter(aaa,aaa.begin()));
+
+  /* DEBUG */
+  assert(std::includes(aaa.begin(),aaa.end(),drg.begin(),drg.end()));
+  set<Node*> intersection;
+  set_intersection(drg.begin(),drg.end(),absorbing.begin(),absorbing.end(), std::inserter(intersection,intersection.begin()));
+  assert(intersection.empty());
+  /* END DEBUG */
+
   return make_tuple(drg,absorbing,aaa);
 }
 
