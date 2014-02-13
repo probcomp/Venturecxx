@@ -10,9 +10,11 @@ pair<double,shared_ptr<DB> > detachAndExtract(Trace * trace,const vector<Node*> 
 {
   double weight = 0;
   shared_ptr<DB> db(new DB());
-  for (size_t i = border.size()-1; i >= 0; --i)
+  for (vector<Node*>::const_reverse_iterator borderIter = border.rbegin();
+       borderIter != border.rend();
+       ++borderIter)
   {
-    Node * node = border[i];
+    Node * node = *borderIter;
     if (scaffold->isAbsorbing(node)) 
     {
       ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
@@ -59,9 +61,32 @@ double detach(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold
 
 
 double extractParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
-{ assert(false); }
+{
+  double weight = extractESRParents(trace,node,scaffold,db);
+  for (vector<Node*>::reverse_iterator defParentIter = node->definiteParents.rbegin();
+       defParentIter != node->definiteParents.rend();
+       ++defParentIter)
+  {
+    weight += extract(trace,*defParentIter,scaffold,db);
+  }
+  return weight;
+}
+
 double extractESRParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
-{ assert(false); }
+{
+  double weight = 0;
+  vector<Node*> esrParents = trace->getESRParents(node);
+  for (vector<Node*>::reverse_iterator esrParentIter = esrParents.rbegin();
+       esrParentIter != esrParents.rend();
+       ++esrParentIter)
+  {
+    weight += extract(trace,*esrParentIter,scaffold,db);
+  }
+  return weight;
+}
+
+
+
 double extract(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 { assert(false); }
 double unevalFamily(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
