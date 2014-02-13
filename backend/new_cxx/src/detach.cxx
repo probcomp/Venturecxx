@@ -152,8 +152,15 @@ double unevalFamily(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shar
   return weight;
 }
 
-double unapply(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
-{ assert(false); }
+double unapply(Trace * trace,OutputNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+{
+  double weight = unapplyPSP(trace,node,scaffold,db);
+  weight += extractESRParents(trace,node,scaffold,db);
+  weight += unevalRequests(trace,node->requestNode,scaffold,db);
+  weight += unapplyPSP(trace,node->requestNode,scaffold,db);
+  return weight;
+}
+
 void teardownMadeSP(Trace * trace,Node * node,bool isAAA)
 { assert(false); }
 double unapplyPSP(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
