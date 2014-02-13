@@ -32,6 +32,7 @@ ConcreteTrace::ConcreteTrace(): Trace()
     shared_ptr<VentureSymbol> sym(new VentureSymbol(iter->first));
     ConstantNode * node = createConstantNode(static_pointer_cast<VentureValue>(iter->second));
     processMadeSP(this,node,false);
+    assert(dynamic_pointer_cast<VentureSPRef>(getValue(node)));
     syms.push_back(sym);
     nodes.push_back(node);
   }
@@ -42,14 +43,14 @@ ConcreteTrace::ConcreteTrace(): Trace()
 
 
 /* Registering metadata */
-void ConcreteTrace::registerAEKernel(Node * node) { throw 500; }
+void ConcreteTrace::registerAEKernel(Node * node) { assert(false); }
 
 void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
   assert(unconstrainedChoices.count(node) == 0);
   unconstrainedChoices.insert(node);
 }
 
-void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) { throw 500; }
+void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) { assert(false); }
 
 void ConcreteTrace::registerConstrainedChoice(Node * node) {
   assert(constrainedChoices.count(node) == 0);
@@ -57,14 +58,14 @@ void ConcreteTrace::registerConstrainedChoice(Node * node) {
 }
 
 /* Unregistering metadata */
-void ConcreteTrace::unregisterAEKernel(Node * node) { throw 500; }
+void ConcreteTrace::unregisterAEKernel(Node * node) { assert(false); }
 
 void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
   assert(unconstrainedChoices.count(node) == 1);
   unconstrainedChoices.erase(node);
 }
 
-void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) { throw 500; }
+void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) { assert(false); }
 
 void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
   assert(constrainedChoices.count(node) == 1);
@@ -79,8 +80,8 @@ void ConcreteTrace::addESREdge(Node *esrParent,OutputNode * outputNode)
   esrParents[outputNode].push_back(esrParent);
 }
 
-void ConcreteTrace::reconnectLookup(LookupNode * lookupNode) { throw 500; }
-void ConcreteTrace::incNumRequests(Node * node) { throw 500; }
+void ConcreteTrace::reconnectLookup(LookupNode * lookupNode) { assert(false); }
+void ConcreteTrace::incNumRequests(Node * node) { assert(false); }
 void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
 void ConcreteTrace::addChild(Node * node, Node * child) 
 {
@@ -89,11 +90,11 @@ void ConcreteTrace::addChild(Node * node, Node * child)
 }
 
 /* Detach mutations */  
-Node * ConcreteTrace::popLastESRParent(OutputNode * outputNode) { throw 500; }
-void ConcreteTrace::disconnectLookup(LookupNode * lookupNode) { throw 500; }
-void ConcreteTrace::decNumRequests(Node * node) { throw 500; }
+Node * ConcreteTrace::popLastESRParent(OutputNode * outputNode) { assert(false); }
+void ConcreteTrace::disconnectLookup(LookupNode * lookupNode) { assert(false); }
+void ConcreteTrace::decNumRequests(Node * node) { assert(false); }
 void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
-void ConcreteTrace::removeChild(Node * node, Node * child) { throw 500; }
+void ConcreteTrace::removeChild(Node * node, Node * child) { assert(false); }
 
 /* Primitive getters */
 VentureValuePtr ConcreteTrace::getValue(Node * node) { return values[node]; }
@@ -101,7 +102,7 @@ SPRecord ConcreteTrace::getMadeSPRecord(Node * makerNode) { return madeSPRecords
 vector<Node*> ConcreteTrace::getESRParents(Node * node) { return esrParents[node]; }
 set<Node*> ConcreteTrace::getChildren(Node * node) { return children[node]; }
 int ConcreteTrace::getNumRequests(Node * node) { return numRequests[node]; }
-int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { throw 500; }
+int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { assert(false); }
 
 VentureValuePtr ConcreteTrace::getObservedValue(Node * node) { return observedValues[node]; }
 bool ConcreteTrace::isConstrained(Node * node) { return constrainedChoices.count(node); }
@@ -134,43 +135,43 @@ void ConcreteTrace::registerFamily(RequestNode * node,FamilyID id,RootOfFamily e
 }
 
 
-void ConcreteTrace::setMadeSP(Node * node,shared_ptr<VentureSP> sp) { throw 500; }
-void ConcreteTrace::setMadeSPAux(Node * node,shared_ptr<SPAux> spaux) { throw 500; }
+void ConcreteTrace::setMadeSP(Node * node,shared_ptr<VentureSP> sp) { assert(false); }
+void ConcreteTrace::setMadeSPAux(Node * node,shared_ptr<SPAux> spaux) { assert(false); }
 
-void ConcreteTrace::setChildren(Node * node,set<Node*> children) { throw 500; }
-void ConcreteTrace::setESRParents(Node * node,const vector<Node*> & esrParents) { throw 500; }
+void ConcreteTrace::setChildren(Node * node,set<Node*> children) { assert(false); }
+void ConcreteTrace::setESRParents(Node * node,const vector<Node*> & esrParents) { assert(false); }
 
-void ConcreteTrace::setNumRequests(Node * node,int num) { throw 500; }
+void ConcreteTrace::setNumRequests(Node * node,int num) { assert(false); }
 
 /* SPFamily operations */
-void ConcreteTrace::registerMadeSPFamily(Node * makerNode, FamilyID id, Node * esrParent) { throw 500; }
-void ConcreteTrace::unregisterMadeSPFamily(Node * maderNode, FamilyID id, Node * esrParent) { throw 500; }
-bool ConcreteTrace::containsMadeSPFamily(Node * makerNode, FamilyID id) { throw 500; }
-RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id) { throw 500; }
+void ConcreteTrace::registerMadeSPFamily(Node * makerNode, FamilyID id, Node * esrParent) { assert(false); }
+void ConcreteTrace::unregisterMadeSPFamily(Node * maderNode, FamilyID id, Node * esrParent) { assert(false); }
+bool ConcreteTrace::containsMadeSPFamily(Node * makerNode, FamilyID id) { assert(false); }
+RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id) { assert(false); }
 
 
 /* New in ConcreteTrace */
 
-BlockID ConcreteTrace::sampleBlock(ScopeID scope) { throw 500; }
-double ConcreteTrace::logDensityOfBlock(ScopeID scope) { throw 500; }
-vector<BlockID> ConcreteTrace::blocksInScope(ScopeID scope) { throw 500; }
-int ConcreteTrace::numBlocksInScope(ScopeID scope) { throw 500; }
-set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope) { throw 500; }
+BlockID ConcreteTrace::sampleBlock(ScopeID scope) { assert(false); }
+double ConcreteTrace::logDensityOfBlock(ScopeID scope) { assert(false); }
+vector<BlockID> ConcreteTrace::blocksInScope(ScopeID scope) { assert(false); }
+int ConcreteTrace::numBlocksInScope(ScopeID scope) { assert(false); }
+set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope) { assert(false); }
     
-vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope) { throw 500; }
+vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope) { assert(false); }
 
-set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block) { throw 500; }
+set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block) { assert(false); }
 
-void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node) { throw 500; }
+void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node) { assert(false); }
 
-bool ConcreteTrace::scopeHasEntropy(ScopeID scope) { throw 500; }
-void ConcreteTrace::makeConsistent() { throw 500; }
+bool ConcreteTrace::scopeHasEntropy(ScopeID scope) { assert(false); }
+void ConcreteTrace::makeConsistent() { assert(false); }
 
 
-int ConcreteTrace::numUnconstrainedChoices() { throw 500; }
+int ConcreteTrace::numUnconstrainedChoices() { assert(false); }
 
-int ConcreteTrace::getSeed() { throw 500; }
-double ConcreteTrace::getGlobalLogScore() { throw 500; }
+int ConcreteTrace::getSeed() { assert(false); }
+double ConcreteTrace::getGlobalLogScore() { assert(false); }
 
-//void ConcreteTrace::addNewMadeSPFamilies(Node * node, PMap newMadeSPFamilies) { throw 500; }
-//void ConcreteTrace::addNewChildren(Node * node,PSet newChildren) { throw 500; }
+//void ConcreteTrace::addNewMadeSPFamilies(Node * node, PMap newMadeSPFamilies) { assert(false); }
+//void ConcreteTrace::addNewChildren(Node * node,PSet newChildren) { assert(false); }

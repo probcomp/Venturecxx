@@ -10,6 +10,10 @@
 #include "psp.h"
 #include "lkernel.h"
 
+#include <iostream>
+
+using std::cout;
+using std::endl;
 
 double regenAndAttach(Trace * trace,
 		      const vector<Node*> & border,
@@ -194,20 +198,34 @@ pair<double,Node*> evalFamily(Trace * trace,
 {
   if (isVariable(exp))
   {
+    cout << "isVariable" << endl;
     double weight = 0;
     shared_ptr<VentureSymbol> symbol = dynamic_pointer_cast<VentureSymbol>(exp);
     Node * sourceNode = env->lookupSymbol(symbol);
     weight = regen(trace,sourceNode,scaffold,false,db,gradients);
+
+    /* DEBUG */
+    shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(trace->getValue(sourceNode));
+    assert(spRef);
+    /* END DEBUG */
+
     return make_pair(weight,trace->createLookupNode(sourceNode));
   }
-  else if (isSelfEvaluating(exp)) { return make_pair(0,trace->createConstantNode(exp)); }
+  else if (isSelfEvaluating(exp)) { cout << "isSelfEvaluating" << endl; return make_pair(0,trace->createConstantNode(exp)); }
   else if (isQuotation(exp)) { return make_pair(0,trace->createConstantNode(textOfQuotation(exp))); }
   else
   {
+    cout << "isApp" << endl;
     shared_ptr<VentureArray> array = dynamic_pointer_cast<VentureArray>(exp);
     pair<double,Node*> p = evalFamily(trace,array->xs[0],env,scaffold,db,gradients);
     double weight = p.first;
     Node * operatorNode = p.second;
+
+    /* DEBUG */
+    shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(trace->getValue(operatorNode));
+    assert(spRef);
+    /* END DEBUG */
+
     vector<Node*> operandNodes;
     for (size_t i = 1; i < array->xs.size(); ++i)
     {
@@ -349,4 +367,4 @@ double restore(Trace * trace,
 	       shared_ptr<Scaffold> scaffold,
 	       shared_ptr<DB> db,
 	       shared_ptr<map<Node*,Gradient> > gradients) 
-{ throw 500; }
+{ assert(false); }

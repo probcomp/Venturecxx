@@ -9,14 +9,14 @@ struct SamplableMap
   map<K, int> d;
   vector<V> a;
 
-  V& operator[](K k) { throw 500; }
-  const V& operator[](K k) const { throw 500; }
+  V& operator[](K k) { assert(false); }
+  const V& operator[](K k) const { assert(false); }
 
-  size_t erase(const K & k) { throw 500; }
-  size_t count(const K& k) const { throw 500; }
-  size_t size() const { throw 500; }
+  size_t erase(const K & k) { assert(false); }
+  size_t count(const K& k) const { assert(false); }
+  size_t size() const { assert(false); }
 
-  const K& sampleKeyUniformly() { throw 500; }
+  const K& sampleKeyUniformly() { assert(false); }
   
   // TODO for keys(), we should write a custom iterator. 
   // For now, users can just iterate over d and ignore the second element

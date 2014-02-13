@@ -3,10 +3,10 @@
 
 VentureValuePtr parseValue(boost::python::dict d)
 {
-  if (d["type"] == "boolean") { return shared_ptr<VentureValue>(new VentureBool(boost::python::extract<bool>(d["value"]))); }
-  else if (d["type"] == "number") { return shared_ptr<VentureValue>(new VentureNumber(boost::python::extract<double>(d["value"]))); }
-  else if (d["type"] == "symbol") { return shared_ptr<VentureValue>(new VentureSymbol(boost::python::extract<string>(d["value"]))); }
-  else if (d["type"] == "atom") { return shared_ptr<VentureValue>(new VentureAtom(boost::python::extract<uint32_t>(d["value"]))); }
+  if (d["type"] == "boolean") { return shared_ptr<VentureBool>(new VentureBool(boost::python::extract<bool>(d["value"]))); }
+  else if (d["type"] == "number") { return shared_ptr<VentureNumber>(new VentureNumber(boost::python::extract<double>(d["value"]))); }
+  else if (d["type"] == "symbol") { return shared_ptr<VentureSymbol>(new VentureSymbol(boost::python::extract<string>(d["value"]))); }
+  else if (d["type"] == "atom") { return shared_ptr<VentureAtom>(new VentureAtom(boost::python::extract<uint32_t>(d["value"]))); }
   else { assert(false); }
 }
 
