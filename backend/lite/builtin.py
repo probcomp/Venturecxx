@@ -15,6 +15,7 @@ import conditionals
 import scope
 import eval_sps
 import value as v
+import env
 
 # The types in the value module are generated programmatically, so
 # pylint doesn't find out about them.
@@ -103,10 +104,11 @@ def builtInSPsList():
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType())],
            [ "make_csp", VentureSP(NullRequestPSP(),csp.MakeCSPOutputPSP()) ],
 
-           [ "eval",VentureSP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()) ],
            [ "get_current_environment",VentureSP(NullRequestPSP(),eval_sps.GetCurrentEnvOutputPSP()) ],
            [ "get_empty_environment",VentureSP(NullRequestPSP(),eval_sps.GetEmptyEnvOutputPSP()) ],
+           [ "is_environment", type_test(env.VentureEnvironment) ],
            [ "extend_environment",VentureSP(NullRequestPSP(),eval_sps.ExtendEnvOutputPSP()) ],
+           [ "eval",VentureSP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()) ],
 
            [ "mem",VentureSP(NullRequestPSP(),msp.MakeMSPOutputPSP()) ],
 

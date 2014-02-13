@@ -17,6 +17,10 @@ class VentureEnvironment(VentureValue):
   # VentureEnvironments are intentionally not comparable until we
   # decide otherwise
 
+  def asStackDict(self):
+    # Methinks environments can be pretty opaque things for now.
+    return {"type":"environment", "value":self}
+
   def lookup(self, key):
     return self.findSymbol(key.asSymbol())
   # TODO Define contains to check whether the symbol is there (without throwing exceptions)
