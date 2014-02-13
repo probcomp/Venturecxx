@@ -29,3 +29,11 @@ def testMatrix():
 def checkMatrix(form):
   get_ripl().predict(form)
   assert get_ripl().predict("(is_matrix %s)" % form)
+
+def testSimplex():
+  for form in ["(simplex)", "(simplex 1)", "(simplex 0.2 0.8)"]:
+    yield checkSimplex, form
+
+def checkSimplex(form):
+  get_ripl().predict(form)
+  assert get_ripl().predict("(is_simplex %s)" % form)

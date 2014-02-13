@@ -4,13 +4,6 @@ from env import VentureEnvironment
 import numpy as np
 import value as v
 
-### Simplex Points
-
-class SimplexOutputPSP(PSP):
-  def simulate(self,args): return np.array(args.operandValues)
-  def description(self,name):
-    return "(%s <number0> ...) -> <simplex>" % name
-
 ### Polymorphic Operators
 class LookupOutputPSP(PSP):
   def simulate(self,args): 
