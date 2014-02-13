@@ -17,9 +17,9 @@ def simulateCategorical(ps,os=None):
   return os[npr.multinomial(1,ps).argmax()]
 
 def logDensityCategorical(val,ps,os=None):
-  if os is None: os = range(len(ps))
+  if os is None: os = [VentureNumber(i) for i in range(len(ps))]
   ps = normalizeList(ps)
-  p = ps[os.index(val)]
+  p = ps[os.index(val)] # TODO This should work while the comparison is done by identity; do I want to override the Python magic methods for VentureValues?
   assert os.count(val) == 1
   return math.log(p)
 
