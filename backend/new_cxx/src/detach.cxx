@@ -206,11 +206,13 @@ double unapplyPSP(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaf
 double unevalRequests(Trace * trace,RequestNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
   double weight = 0;
-  pair<vector<ESR>,vector<shared_ptr<LSR> > > requests = trace->getValue(node)->getRequests();
+  const vector<ESR>& esrs = trace->getValue(node)->getESRs();
+  //const vector<shared_ptr<LSR> >& lsrs = trace->getValue(node)->getLSRs();
+  
   // TODO Latents
 
-  for (vector<ESR>::reverse_iterator esrIter = requests.first.rbegin();
-       esrIter != requests.first.rend();
+  for (vector<ESR>::const_reverse_iterator esrIter = esrs.rbegin();
+       esrIter != esrs.rend();
        ++esrIter)
   {
     RootOfFamily esrRoot = trace->popLastESRParent(node->outputNode);

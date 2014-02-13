@@ -251,8 +251,8 @@ double apply(Trace * trace,
   weight += evalRequests(trace,requestNode,scaffold,shouldRestore,db,gradients);
 
   /* DEBUG */
-  pair<vector<ESR>,vector<shared_ptr<LSR> > > p = trace->getValue(requestNode)->getRequests();
-  assert(trace->getESRParents(outputNode).size() == p.first.size());  
+  const vector<ESR>& esrs = trace->getValue(requestNode)->getESRs();
+  assert(trace->getESRParents(outputNode).size() == esrs.size());  
   /* END DEBUG */
 
   weight += regenESRParents(trace,outputNode,scaffold,shouldRestore,db,gradients);
@@ -342,11 +342,11 @@ double evalRequests(Trace * trace,
 	      shared_ptr<map<Node*,Gradient> > gradients)
 {
   double weight = 0;
-  pair<vector<ESR>,vector<shared_ptr<LSR> > > requests = trace->getValue(requestNode)->getRequests();
+  const vector<ESR>& esrs = trace->getValue(requestNode)->getESRs();
 
-  for (size_t i = 0; i < requests.first.size(); ++i)
+  for (size_t i = 0; i < esrs.size(); ++i)
   {
-    ESR esr = requests.first[i];
+    const ESR& esr = esrs[i];
     if (!trace->containsMadeSPFamily(trace->getOperatorSPMakerNode(requestNode),esr.id))
     {
       RootOfFamily esrRoot;
@@ -359,7 +359,7 @@ double evalRequests(Trace * trace,
       {
       	pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,db,gradients);
         weight += p.first;
-	esrRoot = shared_ptr<Node>(p.second);
+      	esrRoot = shared_ptr<Node>(p.second);
       }
       trace->registerMadeSPFamily(trace->getOperatorSPMakerNode(requestNode),esr.id,esrRoot);
     }
