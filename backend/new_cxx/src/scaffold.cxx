@@ -271,7 +271,17 @@ bool hasChildInAorD(ConcreteTrace * trace,
 set<Node*> findBorder(ConcreteTrace * trace,
 		      set<Node*> & drg,
 		      set<Node*> & absorbing,
-		      set<Node*> & aaa) { assert(false); }
+		      set<Node*> & aaa) 
+{
+  set<Node*> border;
+  std::set_union(absorbing.begin(),absorbing.end(),aaa.begin(),aaa.end(), 
+		 std::inserter(border,border.begin()));
+  for (set<Node*>::iterator drgIter = drg.begin(); drgIter != drg.end(); ++drgIter)
+  {
+    if (!hasChildInAorD(trace,drg,absorbing,*drgIter)) { border.insert(*drgIter); }
+  }
+  return border;
+}
 
 void maybeIncrementAAARegenCount(ConcreteTrace * trace,
 				 map<Node*,int> & regenCounts,
