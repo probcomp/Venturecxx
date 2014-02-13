@@ -25,9 +25,11 @@ class VentureValue(object):
       return self.compareSameType(other)
     if venture_types.index(st) < venture_types.index(ot) : return -1
     else: return 1 # We already checked for equality
-
   def compareSameType(self, _): raise Exception("Cannot compare %s" % type(self))
+  def equal(self, other): return self.compare(other) == 0
+
   def lookup(self, _): raise Exception("Cannot look things up in %s" % type(self))
+  def contains(self, _): raise Exception("Cannot look for things in %s" % type(self))
 
 class VentureNumber(VentureValue):
   def __init__(self,number): self.number = number
@@ -75,6 +77,11 @@ class VentureArray(VentureValue):
     return {"type":"list","value":[v.asStackDict() for v in self.array]}
   def lookup(self, index):
     return self.array[index.getNumber()]
+  def contains(self, obj):
+    # Not Python's `in` because I need to use custom equality
+    # TODO I am going to have to overload the equality for dicts
+    # anyway, so might as well eventually use `in` here.
+    return any(obj.equal(li) for li in self.array)
 
 class VentureNil(VentureValue):
   def __init__(self): pass
@@ -105,6 +112,15 @@ class VenturePair(VentureValue):
       return self.first
     else:
       return self.rest.lookup(VentureNumber(ind - 1))
+  def contains(self, obj): # Treat the list as a set
+    if obj.equal(self.first):
+      return True
+    elif not isinstance(self.rest, VenturePair):
+      # Notably, this means I am not checking whether the obj is the
+      # last member of an improper list.
+      return False
+    else:
+      return self.rest.contains(obj)
 
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair(h, t), reversed(l), VentureNil())
@@ -128,12 +144,17 @@ class VentureSimplex(VentureValue):
     return {"type":"simplex", "value":self.simplex}
   def lookup(self, index):
     return self.simplex[index.getNumber()]
+  def contains(self, obj):
+    # Homogeneous; TODO make it return False instead of exploding for non-numeric objects.
+    return obj.getNumber() in self.simplex
 
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
   def getDict(self): return self.dict
   def lookup(self, key):
     return self.dict[key]
+  def contains(self, key):
+    return key in self.dict
 
 # Backed by a numpy matrix object
 class VentureMatrix(VentureValue):

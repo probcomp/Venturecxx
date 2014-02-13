@@ -95,8 +95,8 @@ def builtInSPsList():
            [ "simplex", deterministic_typed(lambda *nums: np.array(nums), [v.NumberType()], v.SimplexType(), variadic=True) ],
            [ "is_simplex", type_test(v.VentureSimplex) ],
 
-           [ "lookup",deterministic(lambda xs, x: xs.lookup(x)) ],
-           [ "contains",VentureSP(NullRequestPSP(),dstructures.ContainsOutputPSP()) ],
+           [ "lookup", deterministic(lambda xs, x: xs.lookup(x)) ],
+           [ "contains", deterministic(lambda xs, x: v.VentureBool(xs.contains(x))) ],
            [ "size",VentureSP(NullRequestPSP(),dstructures.SizeOutputPSP()) ],
 
            [ "branch", VentureSP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()) ],

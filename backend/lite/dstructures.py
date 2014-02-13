@@ -5,11 +5,6 @@ import numpy as np
 import value as v
 
 ### Polymorphic Operators
-class ContainsOutputPSP(PSP):
-  def simulate(self,args): return args.operandValues[1] in args.operandValues[0]
-  def description(self,name):
-    return "(%s <collection k v> <object k>) -> <bool>" % name
-
 class SizeOutputPSP(PSP):
   def simulate(self,args): return len(args.operandValues[0])
   def description(self,name):
