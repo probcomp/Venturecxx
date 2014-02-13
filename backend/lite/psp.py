@@ -50,23 +50,25 @@ class RandomPSP(PSP):
   def canAbsorb(self,trace,appNode,parentNode): return True    
 
 class TypedPSP(PSP):
-  def __init__(self, args_types, return_type, psp, variadic=False):
+  def __init__(self, args_types, return_type, psp, variadic=False, min_req_args=None):
     self.args_types = args_types
     self.return_type = return_type
     self.psp = psp
     self.variadic = variadic
     if variadic:
       assert len(args_types) == 1 # TODO Support non-homogeneous variadics later
+    self.min_req_args = len(args_types) if min_req_args is None else min_req_args
 
   def wrap_return(self, value):
     return self.return_type.asVentureValue(value)
   def unwrap_return(self, value):
     return self.return_type.asPython(value)
   def unwrap_args(self, args):
-    assert not args.esrValues # TODO Only support outputs that have no requesters
+    assert not args.esrValues # TODO Later support outputs that have requesters
     answer = copy.copy(args)
     if not self.variadic:
-      assert len(args.operandValues) == len(self.args_types)
+      assert len(args.operandValues) >= self.min_req_args
+      assert len(args.operandValues) <= len(self.args_types)
       answer.operandValues = [self.args_types[i].asPython(v) for (i,v) in enumerate(args.operandValues)]
     else:
       answer.operandValues = [self.args_types[0].asPython(v) for v in args.operandValues]
