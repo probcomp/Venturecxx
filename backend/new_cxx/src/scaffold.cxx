@@ -84,7 +84,13 @@ void addAbsorbingNode(set<Node*> & cDRG,
 		      set<Node*> & cAAA,
 		      Node * node,
 		      map<Node*,int> & indexAssignments,
-		      int i) { assert(false); }
+		      int i) 
+{
+  assert(!cDRG.count(node));
+  assert(!cAAA.count(node));
+  cAbsorbing.insert(node);
+  indexAssignments[node] = i;
+}
 
 void addAAANode(set<Node*> & cDRG,
 		set<Node*> & cAbsorbing,
