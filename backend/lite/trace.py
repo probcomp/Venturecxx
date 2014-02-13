@@ -49,6 +49,7 @@ class Trace(object):
     self.registerRandomChoiceInScope("default",node,node)
 
   def registerRandomChoiceInScope(self,scope,block,node):
+    assert block is not None
     if not scope in self.scopes: self.scopes[scope] = SMap()
     if not block in self.scopes[scope]: self.scopes[scope][block] = set()
     assert not node in self.scopes[scope][block]
@@ -238,7 +239,7 @@ class Trace(object):
 
   def scopeHasEntropy(self,scope): 
     # right now scope in self.scopes iff it has entropy
-    return scope in self.scopes and len(self.blocksInScope(scope)) > 0
+    return scope in self.scopes and self.numBlocksInScope(scope) > 0
 
   #### External interface to engine.py
   def eval(self,id,exp):

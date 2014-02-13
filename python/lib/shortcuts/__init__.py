@@ -19,10 +19,12 @@
 from venture import parser, ripl, sivm, server
 
 def make_core_sivm():
-    return sivm.CoreSivmCxx()
+    from venture.cxx import engine
+    return sivm.CoreSivm(engine.Engine())
 
 def make_core_lite_sivm():
-    return sivm.CoreSivmLite()
+    from venture.lite import engine
+    return sivm.CoreSivm(engine.Engine())
 
 def make_venture_sivm():
     return sivm.VentureSivm(make_core_sivm())

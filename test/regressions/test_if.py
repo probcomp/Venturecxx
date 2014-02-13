@@ -1,7 +1,8 @@
 from venture.test.config import get_ripl
 
 def testIf1():
-  "This caused an earlier CXX implementation to crash"
+  """This caused an earlier CXX implementation to crash because of a
+  corner case of operators changing during inference."""
   ripl = get_ripl()
   ripl.assume('IF', '(quote branch)')
   ripl.assume('IF2', '(branch (bernoulli 0.5) IF IF)')
