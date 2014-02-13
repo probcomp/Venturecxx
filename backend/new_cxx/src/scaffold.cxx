@@ -356,4 +356,11 @@ map<Node*,shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
 
 vector<vector<Node *> > assignBorderSequnce(set<Node*> & border,
 					    map<Node*,int> & indexAssignments,
-					    int numIndices) { assert(false); }
+					    int numIndices) 
+{
+  // vector<vector<Node *> > borderSequence;
+  // borderSequence = [[] for _ in range(numIndices)]
+  // for node in border:
+  //   borderSequence[indexAssignments[node]].append(node)
+  // return borderSequence
+}
