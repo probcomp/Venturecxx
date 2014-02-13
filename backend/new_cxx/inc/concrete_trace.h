@@ -52,6 +52,8 @@ struct ConcreteTrace : Trace
   void clearValue(Node * node);
 
   void initMadeSPRecord(Node * makerNode, shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux);
+  void destroyMadeSPRecord(Node * makerNode);
+
 
   void clearMadeSPFamilies(Node * node);
   

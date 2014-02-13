@@ -124,10 +124,12 @@ void ConcreteTrace::initMadeSPRecord(Node * makerNode,shared_ptr<VentureSP> sp,s
   madeSPRecords[makerNode] = spRecord;
 }
 
-void ConcreteTrace::clearMadeSPFamilies(Node * node) 
-{ 
-  madeSPRecords[node].spFamilies = shared_ptr<SPFamilies>(new SPFamilies());
+void ConcreteTrace::destroyMadeSPRecord(Node * makerNode)
+{
+  assert(madeSPRecords.count(makerNode));
+  madeSPRecords.erase(makerNode);
 }
+
 
 void ConcreteTrace::registerFamily(RequestNode * node,FamilyID id,RootOfFamily esrParent)
 {

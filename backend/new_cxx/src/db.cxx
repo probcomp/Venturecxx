@@ -14,18 +14,18 @@ void DB::registerValue(Node * node,VentureValuePtr value)
   values[node] = value;
 }
 
-bool DB::hasLatentDB(OutputNode * makerNode)
+bool DB::hasLatentDB(Node * makerNode)
 {
   return latentDBs.count(makerNode);
 }
 
-shared_ptr<LatentDB> DB::getLatentDB(OutputNode * makerNode)
+shared_ptr<LatentDB> DB::getLatentDB(Node * makerNode)
 {
   assert(latentDBs.count(makerNode));
   return latentDBs[makerNode];
 }
 
-void DB::registerLatentDB(OutputNode * makerNode, shared_ptr<LatentDB> latentDB)
+void DB::registerLatentDB(Node * makerNode, shared_ptr<LatentDB> latentDB)
 {
   assert(!latentDBs.count(makerNode));
   latentDBs[makerNode] = latentDB;
@@ -43,3 +43,16 @@ void DB::registerSPFamily(shared_ptr<VentureSP> sp,FamilyID id,RootOfFamily esrP
   spFamilyDBs[sp][id] = esrParent;
 }
 
+bool DB::hasMadeSPAux(Node * makerNode) { return spAuxs.count(makerNode); }
+
+shared_ptr<SPAux> DB::getMadeSPAux(Node * makerNode)
+{
+  assert(spAuxs.count(makerNode));
+  return spAuxs[makerNode];
+}
+
+void DB::registerMadeSPAux(Node * makerNode, shared_ptr<SPAux> spAux)
+{
+  assert(!spAuxs.count(makerNode));
+  spAuxs[makerNode] = spAux;
+}

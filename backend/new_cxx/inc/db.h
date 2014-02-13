@@ -4,6 +4,8 @@
 #include "types.h"
 
 struct OutputNode;
+struct SPAux;
+struct Node;
 
 struct LatentDB { virtual ~LatentDB() {}; };
 
@@ -13,18 +15,22 @@ struct DB
   VentureValuePtr getValue(Node * node);
   void registerValue(Node * node, VentureValuePtr value);
 
-  bool hasLatentDB(OutputNode * makerNode);
-  shared_ptr<LatentDB> getLatentDB(OutputNode * makerNode);
-  void registerLatentDB(OutputNode * makerNode, shared_ptr<LatentDB> latentDB);
+  bool hasLatentDB(Node * makerNode);
+  shared_ptr<LatentDB> getLatentDB(Node * makerNode);
+  void registerLatentDB(Node * makerNode, shared_ptr<LatentDB> latentDB);
 
   RootOfFamily getESRParent(shared_ptr<VentureSP> sp,FamilyID id);
   void registerSPFamily(shared_ptr<VentureSP> sp,FamilyID id,RootOfFamily esrParent);
 
+  bool hasMadeSPAux(Node * makerNode);
+  shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
+  void registerMadeSPAux(Node * makerNode, shared_ptr<SPAux> spAux);
+
 private:
-  map<OutputNode*,shared_ptr<LatentDB> > latentDBs;
+  map<Node*,shared_ptr<LatentDB> > latentDBs;
   map<Node*,VentureValuePtr> values;
   map<shared_ptr<VentureSP>,map<FamilyID,RootOfFamily> > spFamilyDBs;
-  
+  map<Node*,shared_ptr<SPAux> > spAuxs;
 };
 
 #endif

@@ -161,8 +161,23 @@ double unapply(Trace * trace,OutputNode * node,shared_ptr<Scaffold> scaffold,sha
   return weight;
 }
 
-void teardownMadeSP(Trace * trace,Node * node,bool isAAA)
-{ assert(false); }
+void teardownMadeSP(Trace * trace,Node * makerNode,bool isAAA,shared_ptr<DB> db)
+{
+  shared_ptr<VentureSP> sp = trace->getMadeSP(makerNode);
+  assert(sp);
+  if (!isAAA)
+  {
+    if (sp->hasAEKernel()) { trace->unregisterAEKernel(makerNode); }
+    db->registerMadeSPAux(makerNode,trace->getMadeSPAux(makerNode));
+    trace->destroyMadeSPRecord(makerNode);
+  }
+  else
+  {
+    trace->setMadeSP(makerNode,shared_ptr<VentureSP>());
+  }
+  trace->setValue(makerNode,sp);
+}
+
 double unapplyPSP(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 { assert(false); }
 double unevalRequests(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)

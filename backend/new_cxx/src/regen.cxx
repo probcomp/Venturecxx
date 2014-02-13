@@ -265,12 +265,18 @@ double apply(Trace * trace,
 
 
 
-void processMadeSP(Trace * trace, Node * makerNode, bool isAAA)
+void processMadeSP(Trace * trace, Node * makerNode, bool isAAA, shared_ptr<DB> db)
 {
   shared_ptr<VentureSP> sp = dynamic_pointer_cast<VentureSP>(trace->getValue(makerNode));
+  assert(sp);
   if (!isAAA)
   {
-    trace->initMadeSPRecord(makerNode,sp,sp->constructSPAux());
+    shared_ptr<SPAux> spAux;
+    if (db->hasMadeSPAux(makerNode)) { spAux = db->getMadeSPAux(makerNode); }
+    else { spAux = sp->constructSPAux(); }
+
+    trace->initMadeSPRecord(makerNode,sp,spAux);
+
     if (sp->hasAEKernel()) { trace->registerAEKernel(makerNode); }
   }
   else { trace->setMadeSP(makerNode,sp); }
