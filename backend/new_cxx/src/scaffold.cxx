@@ -341,7 +341,18 @@ map<Node*,int> computeRegenCounts(ConcreteTrace * trace,
 
 map<Node*,shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
 					    set<Node*> & drg,
-					    set<Node*> & absorbing) { assert(false); }
+					    set<Node*> & aaa)
+{ 
+  map<Node*,shared_ptr<LKernel> > lkernels;
+  for (set<Node*>::iterator aaaIter = aaa.begin(); aaaIter != aaa.end(); ++aaaIter)
+  {
+    shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(*aaaIternode))->getPSP(node);
+    lkernels[*aaaIter] = psp->getAAALKernel();
+  }
+  // TODO delta kernels
+  return lkernels;
+}
+
 
 vector<vector<Node *> > assignBorderSequnce(set<Node*> & border,
 					    map<Node*,int> & indexAssignments,
