@@ -23,6 +23,7 @@ struct VentureAtom : VentureValue
   int getAtom() const { return n; }
   bool equals(const shared_ptr<const VentureValue> & other) const;
   size_t hash() const;
+  boost::python::dict toPython() const;
   int n;
 };
 
@@ -32,6 +33,7 @@ struct VentureBool : VentureValue
   bool getBool() const { return b; }
   bool equals(const shared_ptr<const VentureValue> & other) const;
   size_t hash() const;
+  boost::python::dict toPython() const;
   bool b;
 };
 

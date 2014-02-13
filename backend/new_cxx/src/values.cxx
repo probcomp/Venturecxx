@@ -122,3 +122,18 @@ boost::python::dict VentureNumber::toPython() const
   value["value"] = boost::python::object(x);
   return value;
 }
+
+boost::python::dict VentureAtom::toPython() const
+{
+  boost::python::dict value;
+  value["type"] = "atom";
+  value["value"] = boost::python::object(n);
+  return value;
+}
+boost::python::dict VentureBool::toPython() const
+{
+  boost::python::dict value;
+  value["type"] = "bool";
+  value["value"] = boost::python::object(b);
+  return value;
+}
