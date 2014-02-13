@@ -246,6 +246,7 @@ class Trace(object):
     for i,operandNode in enumerate(node.operandNodes):
       if i == 2 and isinstance(self.pspAt(node),ScopeIncludeOutputPSP):
         (new_scope,new_block,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
+        (new_scope,new_block) = self._normalizeEvaluatedScopeAndBlock(new_scope, new_block)
         if scope != new_scope or block == new_block: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
       else:
         self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
