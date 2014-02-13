@@ -2,6 +2,7 @@ from psp import PSP
 from request import Request,ESR
 from env import VentureEnvironment
 import numpy as np
+import value as v
 
 ### Simplex Points
 
@@ -61,7 +62,7 @@ class IsArrayOutputPSP(PSP):
 class MapListRequestPSP(PSP):
   def simulate(self,args):
     fNode = args.operandNodes[0]
-    xs = args.operandValues[1]    
+    xs = args.operandValues[1].asPythonList()
 
     request = Request()
     for i in range(len(xs)):
@@ -75,6 +76,6 @@ class MapListRequestPSP(PSP):
 
 class MapListOutputPSP(PSP):
   def simulate(self,args):
-    return args.esrValues
+    return v.pythonListToVentureList(*args.esrValues)
   def description(self,name):
     return "(%s <SP a b> <list a>) -> <list b>" % name
