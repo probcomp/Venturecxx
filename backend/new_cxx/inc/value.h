@@ -30,7 +30,7 @@ struct VentureValue
   virtual Simplex getSimplex() const;
   virtual unordered_map<VentureValuePtr,VentureValuePtr> getDictionary() const;
   virtual MatrixXd getMatrix() const;
-  virtual pair<vector<ESR>,vector<LSR * > > getRequests() const;
+  virtual pair<vector<ESR>,vector<shared_ptr<LSR> > > getRequests() const;
 
   virtual boost::python::dict toPython() const { assert(false); throw "need to override toPython()"; };
 

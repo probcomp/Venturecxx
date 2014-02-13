@@ -250,12 +250,15 @@ double apply(Trace * trace,
   weight += evalRequests(trace,requestNode,scaffold,shouldRestore,db,gradients);
 
   /* DEBUG */
-  pair<vector<ESR>,vector<LSR *> > p = trace->getValue(requestNode)->getRequests();
+  pair<vector<ESR>,vector<shared_ptr<LSR> > > p = trace->getValue(requestNode)->getRequests();
   assert(trace->getESRParents(outputNode).size() == p.first.size());  
   /* END DEBUG */
 
   weight += regenESRParents(trace,outputNode,scaffold,shouldRestore,db,gradients);
   weight += applyPSP(trace,outputNode,scaffold,shouldRestore,db,gradients);
+
+  trace->getValue(outputNode)->toPython();
+
   return weight;
 }
 
@@ -332,7 +335,7 @@ double evalRequests(Trace * trace,
 	      shared_ptr<map<Node*,Gradient> > gradients)
 {
   double weight = 0;
-  pair<vector<ESR>,vector<LSR *> > requests = trace->getValue(requestNode)->getRequests();
+  pair<vector<ESR>,vector<shared_ptr<LSR> > > requests = trace->getValue(requestNode)->getRequests();
 
   for (size_t i = 0; i < requests.first.size(); ++i)
   {
