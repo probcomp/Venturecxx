@@ -32,6 +32,7 @@ def testEvalSmoke2():
   eq_(ripl.predict("(eval (quote x) e)"), 4.0)
 
 def testEvalSmoke3():
+  "Eval should work on programmatically constructed expressions."
   ripl = get_ripl()
   ripl.assume("exp", "(array (quote plus) 2 2)")
   eq_(ripl.predict("(eval exp (get_current_environment))"), 4.0)
@@ -49,8 +50,15 @@ def testEval1():
   return reportKnownDiscrete(ans, predictions)
 
 def testEvalIf1():
-  "Eval should work on programs that require macro expansion"
+  "Eval should work on expressions that require macro expansion"
   eq_(get_ripl().predict("(eval (quote (if true 1 2)) (get_current_environment))"), 1)
+
+def testEvalIf2():
+  "Eval should work on programmatically constructed expressions that require macro expansion"
+  raise SkipTest("This fails because the stack's \"desugaring\" is not applied by eval itself to the expressions being evaluated.  Oops.  Issue: https://app.asana.com/0/9277419963067/10249544822511")
+  ripl = get_ripl()
+  ripl.assume("expr", "(array (quote if) true 1 2)")
+  eq_(ripl.predict("(eval expr (get_current_environment))"), 1)
 
 @statisticalTest
 def testEval2():
