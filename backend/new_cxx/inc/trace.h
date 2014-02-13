@@ -84,7 +84,6 @@ struct Trace
 
   virtual void initMadeSPRecord(Node * makerNode, shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux);
 
-  virtual void initMadeSPFamilies(Node * makerNode) =0;
   virtual void clearMadeSPFamilies(Node * makerNode) =0;
 
   virtual void registerFamily(RequestNode * node,FamilyID id,RootOfFamily esrParent) =0;

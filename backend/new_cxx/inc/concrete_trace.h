@@ -53,8 +53,6 @@ struct ConcreteTrace : Trace
 
   void initMadeSPRecord(Node * makerNode, shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux);
 
-
-  void initMadeSPFamilies(Node * node);
   void clearMadeSPFamilies(Node * node);
   
   void registerFamily(RequestNode * node,FamilyID id,RootOfFamily esrParent);
