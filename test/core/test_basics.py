@@ -39,4 +39,3 @@ def testFlip2():
   ripl.predict("(bernoulli 0.5)")
   predictions = collectSamples(ripl, 1)
   return reportKnownDiscrete([[True, 0.5], [False, 0.5]], predictions)
-

@@ -6,13 +6,16 @@ def testMemSmoke1():
   "Mem should be a noop on deterministic procedures (only memoizing)."
   eq_(get_ripl().predict("((mem (lambda (x) 3)) 1)"), 3.0)
 
+@statisticalTest
 def testMem1():
   "MSPs should deal with their arguments changing under inference."
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   ripl.predict("(f (bernoulli 0.5))")
   ripl.predict("(f (bernoulli 0.5))")
-  ripl.infer(20)
+  ripl.infer(20) # Run even in crash testing mode
+  predictions = collectSamples(ripl, 3)
+  return reportKnownDiscrete([[True, 0.5], [False, 0.5]], predictions)
 
 @statisticalTest
 def testMem2():
