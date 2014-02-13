@@ -54,7 +54,7 @@ struct VentureValue
 /* for unordered map */
 struct VentureValuePtrsEqual
 {
-  bool operator() (const VentureValuePtr& a, const VentureValuePtr& b)
+  bool operator() (const VentureValuePtr& a, const VentureValuePtr& b) const
   {
     return a->equals(b);
   }
@@ -62,7 +62,7 @@ struct VentureValuePtrsEqual
 
 struct HashVentureValuePtr
 {
-  size_t operator() (const VentureValuePtr& a)
+  size_t operator() (const VentureValuePtr& a) const
   {
     return a->hash();
   }

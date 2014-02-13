@@ -7,31 +7,31 @@
    
 bool VentureNumber::equals(const VentureValuePtr & other) const
 {
-  shared_ptr<const VentureNumber> other_v = dynamic_pointer_cast<const VentureNumber>(other);
+  shared_ptr<VentureNumber> other_v = dynamic_pointer_cast<VentureNumber>(other);
   return other_v && (other_v->x == x);
 }
 
 bool VentureAtom::equals(const VentureValuePtr & other) const
 {
-  shared_ptr<const VentureAtom> other_v = dynamic_pointer_cast<const VentureAtom>(other);
+  shared_ptr<VentureAtom> other_v = dynamic_pointer_cast<VentureAtom>(other);
   return other_v && (other_v->n == n);
 }
 
 bool VentureBool::equals(const VentureValuePtr & other) const
 {
-  shared_ptr<const VentureBool> other_v = dynamic_pointer_cast<const VentureBool>(other);
+  shared_ptr<VentureBool> other_v = dynamic_pointer_cast<VentureBool>(other);
   return other_v && (other_v->b == b);
 }
 
 bool VentureSymbol::equals(const VentureValuePtr & other) const
 {
-  shared_ptr<const VentureSymbol> other_v = dynamic_pointer_cast<const VentureSymbol>(other);
+  shared_ptr<VentureSymbol> other_v = dynamic_pointer_cast<VentureSymbol>(other);
   return other_v && (other_v->s == s);
 }
 
 bool VentureArray::equals(const VentureValuePtr & other) const
 {
-  shared_ptr<const VentureArray> other_v = dynamic_pointer_cast<const VentureArray>(other);
+  shared_ptr<VentureArray> other_v = dynamic_pointer_cast<VentureArray>(other);
   if (!other_v) { return false; }
   if (xs.size() != other_v->xs.size()) { return false; }
   for (size_t i = 0; i < xs.size(); ++i) 
@@ -43,20 +43,20 @@ bool VentureArray::equals(const VentureValuePtr & other) const
 
 bool VentureNil::equals(const VentureValuePtr & other) const
 {
-  shared_ptr<const VentureNil> other_v = dynamic_pointer_cast<const VentureNil>(other);
+  shared_ptr<VentureNil> other_v = dynamic_pointer_cast<VentureNil>(other);
   return other_v;
 }
 
 bool VenturePair::equals(const VentureValuePtr & other) const
 {
-  shared_ptr<const VenturePair> other_v = dynamic_pointer_cast<const VenturePair>(other);
+  shared_ptr<VenturePair> other_v = dynamic_pointer_cast<VenturePair>(other);
   if (!other_v) { return false; }
   return (other_v->car->equals(car) && other_v->cdr->equals(cdr));
 }
 
 bool VentureSimplex::equals(const VentureValuePtr & other) const
 {
-  shared_ptr<const VentureSimplex> other_v = dynamic_pointer_cast<const VentureSimplex>(other);
+  shared_ptr<VentureSimplex> other_v = dynamic_pointer_cast<VentureSimplex>(other);
   if (!other_v) { return false; }
   if (ps.size() != other_v->ps.size()) { return false; }
   for (size_t i = 0; i < ps.size(); ++i) { if (!ps[i] == other_v->ps[i]) { return false; } }
