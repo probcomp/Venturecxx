@@ -2,15 +2,23 @@ import scipy.stats as stats
 import math
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportKnownContinuous, reportKnownMeanVariance
 from venture.test.config import get_ripl, collectSamples
+from nose import SkipTest
+from nose.tools import eq_
 
-def testEvalSmoke():
+def testEnvSmoke():
   for form in ["(get_current_environment)", "(get_empty_environment)",
                "(extend_environment (get_empty_environment) (quote foo) 5)"]:
-    yield checkEvSmoke, form
+    yield checkEnvSmoke, form
 
-def checkEvSmoke(form):
+def checkEnvSmoke(form):
   get_ripl().predict(form)
   assert get_ripl().predict("(is_environment %s)" % form)
+
+def testEnvLookup():
+  raise SkipTest("Should lookup work on environments?  They store nodes, not values.  Issue: https://app.asana.com/0/9277419963067/10249544822507")
+  ripl = get_ripl()
+  ripl.assume("e", "(extend_environment (get_empty_environment) (quote foo) 5)")
+  eq_(ripl.predict("(lookup e (quote foo))"), 5.0)
 
 @statisticalTest
 def testEval1():

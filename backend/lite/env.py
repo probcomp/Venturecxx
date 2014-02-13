@@ -29,7 +29,7 @@ class VentureEnvironment(VentureValue):
     return {"type":"environment", "value":self}
 
   def lookup(self, key):
-    return self.findSymbol(key.asSymbol())
+    return self.findSymbol(key.getSymbol())
   # TODO Define contains to check whether the symbol is there (without throwing exceptions)
 
 registerVentureType(VentureEnvironment)
