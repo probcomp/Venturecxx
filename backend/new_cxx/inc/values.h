@@ -106,4 +106,7 @@ struct VentureRequest : VentureValue
   vector<shared_ptr<LSR> > lsrs;
 };
 
+/* Use the memory location as a unique hash. */
+struct VentureID {};
+
 #endif

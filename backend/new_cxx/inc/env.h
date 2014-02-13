@@ -8,6 +8,8 @@
 
 struct VentureEnvironment : VentureValue
 {
+  VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv);
+
   VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv,
 		     const vector<shared_ptr<VentureSymbol> > & syms,
 		     const vector<Node*> & nodes);

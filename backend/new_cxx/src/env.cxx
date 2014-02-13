@@ -1,5 +1,7 @@
 #include "env.h"
 
+VentureEnvironment::VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv) : outerEnv(outerEnv) {}
+
 VentureEnvironment::VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv,
 				       const vector<shared_ptr<VentureSymbol> > & syms,
 				       const vector<Node*> & nodes):
@@ -31,6 +33,7 @@ Node * VentureEnvironment::lookupSymbol(string sym)
   }
   else if (outerEnv.get() == NULL)
   { 
+    // TODO throw a syntax error once exceptions work
     assert(false); throw "Cannot find symbol: " + sym;
     return NULL;
   }

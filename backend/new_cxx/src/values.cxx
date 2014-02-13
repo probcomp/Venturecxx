@@ -63,6 +63,11 @@ bool VentureSimplex::equals(const VentureValuePtr & other) const
   return true;
 }
 
+bool VentureID::equals(const VentureValuePtr & other) const
+{
+  return this == other.get();
+}
+
 //////////////////////////////////////
 
 size_t VentureNumber::hash() const 
@@ -112,6 +117,10 @@ size_t VentureSimplex::hash() const
   return boost::hash_range(ps.begin(),ps.end());
 }
 
+size_t VentureID::hash() const
+{
+  return this;
+}
 
 //////////////
 
