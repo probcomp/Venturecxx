@@ -185,8 +185,8 @@ double regenESRParents(Trace * trace,
 	      shared_ptr<map<Node*,Gradient> > gradients)
 {
   double weight = 0;
-  vector<Node*> esrParents = trace->getESRParents(node);
-  for (size_t i = 0; i < esrParents.size(); ++i) { weight += regen(trace,esrParents[i],scaffold,shouldRestore,db,gradients); }
+  vector<RootOfFamily> esrRoots = trace->getESRParents(node);
+  for (size_t i = 0; i < esrRoots.size(); ++i) { weight += regen(trace,esrRoots[i].get(),scaffold,shouldRestore,db,gradients); }
   return weight;
 }
 
@@ -320,7 +320,7 @@ double applyPSP(Trace * trace,
 
   psp->incorporate(newValue,args);
 
-  if (dynamic_pointer_cast<VentureSP>(newValue)) { assert(false); processMadeSP(trace,node,scaffold->isAAA(node)); }
+  if (dynamic_pointer_cast<VentureSP>(newValue)) { assert(false); processMadeSP(trace,node,scaffold->isAAA(node),db); }
   /* TODO TEMP MILESTONE */
   // if (psp->isRandom()) { trace->registerRandomChoice(node); } 
   // if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
@@ -349,22 +349,22 @@ double evalRequests(Trace * trace,
     ESR esr = requests.first[i];
     if (!trace->containsMadeSPFamily(trace->getOperatorSPMakerNode(requestNode),esr.id))
     {
-      RootOfFamily esrParent;
+      RootOfFamily esrRoot;
       if (shouldRestore)
       {
-        esrParent = db->getESRParent(trace->getMadeSP(trace->getOperatorSPMakerNode(requestNode)),esr.id);
-        weight += restore(trace,esrParent.get(),scaffold,db,gradients);
+        esrRoot = db->getESRParent(trace->getMadeSP(trace->getOperatorSPMakerNode(requestNode)),esr.id);
+        weight += restore(trace,esrRoot.get(),scaffold,db,gradients);
       }
       else
       {
       	pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,db,gradients);
         weight += p.first;
-	esrParent = shared_ptr<Node>(p.second);
+	esrRoot = shared_ptr<Node>(p.second);
       }
-      trace->registerFamily(requestNode,esr.id,esrParent);
+      trace->registerMadeSPFamily(trace->getOperatorSPMakerNode(requestNode),esr.id,esrRoot);
     }
-    RootOfFamily esrParent = trace->getMadeSPFamilyRoot(trace->getOperatorSPMakerNode(requestNode),esr.id);
-    trace->addESREdge(esrParent.get(),requestNode->outputNode);
+    RootOfFamily esrRoot = trace->getMadeSPFamilyRoot(trace->getOperatorSPMakerNode(requestNode),esr.id);
+    trace->addESREdge(esrRoot,requestNode->outputNode);
   }
 
   // TODO LSRs

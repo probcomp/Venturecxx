@@ -4,6 +4,7 @@
 #include "builtin.h"
 #include "regen.h"
 #include "sp.h"
+#include "db.h"
 
 /* Constructor */
 
@@ -31,7 +32,7 @@ ConcreteTrace::ConcreteTrace(): Trace()
   {
     shared_ptr<VentureSymbol> sym(new VentureSymbol(iter->first));
     ConstantNode * node = createConstantNode(static_pointer_cast<VentureValue>(iter->second));
-    processMadeSP(this,node,false);
+    processMadeSP(this,node,false,shared_ptr<DB>(new DB()));
     assert(dynamic_pointer_cast<VentureSPRef>(getValue(node)));
     syms.push_back(sym);
     nodes.push_back(node);
@@ -73,15 +74,15 @@ void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
 }
 
 /* Regen mutations */
-void ConcreteTrace::addESREdge(Node *esrParent,OutputNode * outputNode) 
+void ConcreteTrace::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode) 
 {
-  incNumRequests(esrParent);
-  addChild(esrParent,outputNode);
-  esrParents[outputNode].push_back(esrParent);
+  incNumRequests(esrRoot);
+  addChild(esrRoot.get(),outputNode);
+  esrRoots[outputNode].push_back(esrRoot);
 }
 
 void ConcreteTrace::reconnectLookup(LookupNode * lookupNode) { assert(false); }
-void ConcreteTrace::incNumRequests(Node * node) { assert(false); }
+void ConcreteTrace::incNumRequests(RootOfFamily root) { assert(false); }
 void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
 void ConcreteTrace::addChild(Node * node, Node * child) 
 {
@@ -90,18 +91,18 @@ void ConcreteTrace::addChild(Node * node, Node * child)
 }
 
 /* Detach mutations */  
-Node * ConcreteTrace::popLastESRParent(OutputNode * outputNode) { assert(false); }
+RootOfFamily ConcreteTrace::popLastESRParent(OutputNode * outputNode) { assert(false); }
 void ConcreteTrace::disconnectLookup(LookupNode * lookupNode) { assert(false); }
-void ConcreteTrace::decNumRequests(Node * node) { assert(false); }
+void ConcreteTrace::decNumRequests(RootOfFamily root) { assert(false); }
 void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
 void ConcreteTrace::removeChild(Node * node, Node * child) { assert(false); }
 
 /* Primitive getters */
 VentureValuePtr ConcreteTrace::getValue(Node * node) { return values[node]; }
 SPRecord ConcreteTrace::getMadeSPRecord(Node * makerNode) { return madeSPRecords[makerNode]; }
-vector<Node*> ConcreteTrace::getESRParents(Node * node) { return esrParents[node]; }
+vector<RootOfFamily> ConcreteTrace::getESRParents(Node * node) { return esrRoots[node]; }
 set<Node*> ConcreteTrace::getChildren(Node * node) { return children[node]; }
-int ConcreteTrace::getNumRequests(Node * node) { return numRequests[node]; }
+int ConcreteTrace::getNumRequests(RootOfFamily root) { return numRequests[root]; }
 int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { assert(false); }
 
 VentureValuePtr ConcreteTrace::getObservedValue(Node * node) { return observedValues[node]; }
@@ -131,23 +132,28 @@ void ConcreteTrace::destroyMadeSPRecord(Node * makerNode)
 }
 
 
-void ConcreteTrace::registerFamily(RequestNode * node,FamilyID id,RootOfFamily esrParent)
-{
-  getMadeSPFamilies(getOperatorSPMakerNode(node))->registerFamily(id,esrParent);
-}
+
 
 
 void ConcreteTrace::setMadeSP(Node * node,shared_ptr<VentureSP> sp) { assert(false); }
 void ConcreteTrace::setMadeSPAux(Node * node,shared_ptr<SPAux> spaux) { assert(false); }
 
 void ConcreteTrace::setChildren(Node * node,set<Node*> children) { assert(false); }
-void ConcreteTrace::setESRParents(Node * node,const vector<Node*> & esrParents) { assert(false); }
+void ConcreteTrace::setESRParents(Node * node,const vector<RootOfFamily> & esrRoots) { assert(false); }
 
 void ConcreteTrace::setNumRequests(Node * node,int num) { assert(false); }
 
 /* SPFamily operations */
-void ConcreteTrace::registerMadeSPFamily(Node * makerNode, FamilyID id, Node * esrParent) { assert(false); }
-void ConcreteTrace::unregisterMadeSPFamily(Node * maderNode, FamilyID id, Node * esrParent) { assert(false); }
+void ConcreteTrace::registerMadeSPFamily(Node * makerNode,FamilyID id,RootOfFamily esrRoot)
+{
+  getMadeSPFamilies(makerNode)->registerFamily(id,esrRoot);
+}
+
+void ConcreteTrace::unregisterMadeSPFamily(Node * makerNode,FamilyID id)
+{
+  getMadeSPFamilies(makerNode)->unregisterFamily(id);
+}
+
 bool ConcreteTrace::containsMadeSPFamily(Node * makerNode, FamilyID id) { assert(false); }
 RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id) { assert(false); }
 

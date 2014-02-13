@@ -79,8 +79,11 @@ vector<Node*> Trace::getParents(Node * node)
   vector<Node*> parents = node->definiteParents;
   if (dynamic_cast<OutputNode*>(node)) 
   {
-    vector<Node*> esrParents = getESRParents(node);
-    parents.insert(parents.end(),esrParents.begin(),esrParents.end());
+    vector<RootOfFamily> esrRoots = getESRParents(node);
+    for (size_t i = 0; i < esrRoots.size(); ++i)
+    {
+      parents.push_back(esrRoots[i].get());
+    }
   }
   return parents;
 }
@@ -97,7 +100,7 @@ OutputNode * Trace::getOutermostNonRefAppNode(Node * node)
   assert(outputNode);
   if (dynamic_pointer_cast<ESRRefOutputPSP>(getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)))
   { 
-    return getOutermostNonRefAppNode(getESRParents(outputNode)[0]);
+    return getOutermostNonRefAppNode(getESRParents(outputNode)[0].get());
   }
   else { return outputNode; }
 }

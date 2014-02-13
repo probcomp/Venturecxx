@@ -11,6 +11,16 @@ vector<VentureValuePtr> makeVectorOfValues(Trace * trace, const vector<Node*> & 
   return values;
 }
 
+vector<VentureValuePtr> makeVectorOfValues(Trace * trace, const vector<RootOfFamily> & nodes)
+{
+  vector<VentureValuePtr> values;
+  for (size_t i = 0; i < nodes.size(); i++)
+  {
+    values.push_back(trace->getValue(nodes[i].get()));
+  }
+  return values;
+}
+
 Args::Args(Trace * trace, ApplicationNode * appNode)
 {
   node = appNode;

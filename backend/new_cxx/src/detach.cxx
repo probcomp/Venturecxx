@@ -76,12 +76,12 @@ double extractParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,sh
 double extractESRParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
   double weight = 0;
-  vector<Node*> esrParents = trace->getESRParents(node);
-  for (vector<Node*>::reverse_iterator esrParentIter = esrParents.rbegin();
+  vector<RootOfFamily> esrParents = trace->getESRParents(node);
+  for (vector<RootOfFamily>::reverse_iterator esrParentIter = esrParents.rbegin();
        esrParentIter != esrParents.rend();
        ++esrParentIter)
   {
-    weight += extract(trace,*esrParentIter,scaffold,db);
+    weight += extract(trace,esrParentIter->get(),scaffold,db);
   }
   return weight;
 }
@@ -203,7 +203,23 @@ double unapplyPSP(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaf
 }
 
 
+double unevalRequests(Trace * trace,RequestNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+{
+  double weight = 0;
+  pair<vector<ESR>,vector<shared_ptr<LSR> > > requests = trace->getValue(node)->getRequests();
+  // TODO Latents
 
-double unevalRequests(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
-{ assert(false); }
-
+  for (vector<ESR>::reverse_iterator esrIter = requests.first.rbegin();
+       esrIter != requests.first.rend();
+       ++esrIter)
+  {
+    RootOfFamily esrRoot = trace->popLastESRParent(node->outputNode);
+    if (trace->getNumRequests(esrRoot))
+    {
+      trace->unregisterMadeSPFamily(trace->getOperatorSPMakerNode(node),esrIter->id);
+      db->registerSPFamily(trace->getMadeSP(trace->getOperatorSPMakerNode(node)),esrIter->id,esrRoot);
+      weight += unevalFamily(trace,esrRoot.get(),scaffold,db);
+    }
+  }
+  return weight;
+}

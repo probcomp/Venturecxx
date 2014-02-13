@@ -23,7 +23,7 @@ struct Args
   RequestNode * requestNode;
 
   vector<VentureValuePtr> esrParentValues;
-  vector<Node*> esrParentNodes;
+  vector<RootOfFamily> esrParentNodes;
 
   shared_ptr<SPAux> spAux;
   shared_ptr<SPAux> madeSPAux;

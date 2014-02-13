@@ -22,25 +22,25 @@ struct ConcreteTrace : Trace
   void unregisterConstrainedChoice(Node * node);
 
   /* Regen mutations */
-  void addESREdge(Node *esrParent,OutputNode * outputNode);
+  void addESREdge(RootOfFamily esrRoot,OutputNode * outputNode);
   void reconnectLookup(LookupNode * lookupNode);
-  void incNumRequests(Node * node);
+  void incNumRequests(RootOfFamily root);
   void incRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
   void addChild(Node * node, Node * child);
 
   /* Detach mutations */  
-  Node * popLastESRParent(OutputNode * outputNode);
+  RootOfFamily popLastESRParent(OutputNode * outputNode);
   void disconnectLookup(LookupNode * lookupNode);
-  void decNumRequests(Node * node);
+  void decNumRequests(RootOfFamily root);
   void decRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
   void removeChild(Node * node, Node * child);
 
   /* Primitive getters */
   VentureValuePtr getValue(Node * node);
   SPRecord getMadeSPRecord(Node * makerNode);
-  vector<Node*> getESRParents(Node * node);
+  vector<RootOfFamily> getESRParents(Node * node);
   set<Node*> getChildren(Node * node);
-  int getNumRequests(Node * node);
+  int getNumRequests(RootOfFamily root);
   int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
   VentureValuePtr getObservedValue(Node * node);
 
@@ -57,19 +57,19 @@ struct ConcreteTrace : Trace
 
   void clearMadeSPFamilies(Node * node);
   
-  void registerFamily(RequestNode * node,FamilyID id,RootOfFamily esrParent);
 
   void setMadeSP(Node * node,shared_ptr<VentureSP> sp);
   void setMadeSPAux(Node * node,shared_ptr<SPAux> spaux);
 
   void setChildren(Node * node,set<Node*> children);
-  void setESRParents(Node * node,const vector<Node*> & esrParents);
+  void setESRParents(Node * node,const vector<RootOfFamily> & esrRoots);
 
   void setNumRequests(Node * node,int num);
 
   /* SPFamily operations */
-  void registerMadeSPFamily(Node * makerNode, FamilyID id, Node * esrParent);
-  void unregisterMadeSPFamily(Node * maderNode, FamilyID id, Node * esrParent);
+  void registerMadeSPFamily(Node * makerNode,FamilyID id,RootOfFamily esrRoot);
+  void unregisterMadeSPFamily(Node * makerNode,FamilyID id);
+
   bool containsMadeSPFamily(Node * makerNode, FamilyID id);
   RootOfFamily getMadeSPFamilyRoot(Node * makerNode, FamilyID id);
 
@@ -117,8 +117,8 @@ struct ConcreteTrace : Trace
 
   //map<ScopeID,SamplableMap<BlockID,set<Node*> > scopes; // VLAD skip everything that touches this
 
-  map<Node*, vector<Node*> > esrParents;
-  map<Node*, int> numRequests;
+  map<Node*, vector<RootOfFamily> > esrRoots;
+  map<RootOfFamily, int> numRequests;
   map<Node*, SPRecord> madeSPRecords;
   map<Node*,set<Node*> > children;
   map<Node*,VentureValuePtr> values;
