@@ -1,10 +1,12 @@
 from psp import PSP
 from env import VentureEnvironment
 from request import Request,ESR
+import value as v
 
 class EvalRequestPSP(PSP):
   def simulate(self,args):
-    exp,env = args.operandValues
+    exp = v.ExpressionType().asPython(args.operandValues[0])
+    env = args.operandValues[1]
     return Request([ESR(args.node,exp,env)])
   def description(self,name):
     return "(%s <exp> <env>) -> <object>\n  Evaluates the given expression in the given environment." % name

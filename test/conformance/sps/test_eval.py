@@ -20,6 +20,17 @@ def testEnvLookup():
   ripl.assume("e", "(extend_environment (get_empty_environment) (quote foo) 5)")
   eq_(ripl.predict("(lookup e (quote foo))"), 5.0)
 
+def testEvalSmoke1():
+  ripl = get_ripl()
+  ripl.assume("e", "(extend_environment (get_empty_environment) (quote foo) 5)")
+  eq_(ripl.predict("(eval (quote foo) e)"), 5.0)
+
+def testEvalSmoke2():
+  ripl = get_ripl()
+  ripl.assume("x", "4")
+  ripl.assume("e", "(get_current_environment)")
+  eq_(ripl.predict("(eval (quote x) e)"), 4.0)
+
 @statisticalTest
 def testEval1():
   ripl = get_ripl()
