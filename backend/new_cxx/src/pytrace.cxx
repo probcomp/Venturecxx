@@ -99,7 +99,7 @@ boost::python::dict PyTrace::continuousInferenceStatus()
   return status;
 }
 
-void PyTrace::infer(boost::python::dict params) { throw "INFER not yet implemented"; }
+void PyTrace::infer(boost::python::dict params) { assert(false); throw "INFER not yet implemented"; }
 
   
 BOOST_PYTHON_MODULE(libtrace)

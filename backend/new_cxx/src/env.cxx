@@ -31,7 +31,7 @@ Node * VentureEnvironment::lookupSymbol(string sym)
   }
   else if (outerEnv.get() == NULL)
   { 
-    throw "Cannot find symbol: " + sym;
+    assert(false); throw "Cannot find symbol: " + sym;
     return NULL;
   }
   else 

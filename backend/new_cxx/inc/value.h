@@ -32,7 +32,7 @@ struct VentureValue
   virtual MatrixXd getMatrix() const;
   virtual pair<vector<ESR>,vector<LSR * > > getRequests() const;
 
-  virtual boost::python::dict toPython() const { throw "need to override toPython()"; };
+  virtual boost::python::dict toPython() const { assert(false); throw "need to override toPython()"; };
 
   virtual bool equals(const shared_ptr<const VentureValue> & other) const;
   virtual size_t hash() const;

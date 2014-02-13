@@ -89,13 +89,13 @@ void propagateConstraint(Trace * trace,
   else if (requestNode)
   {
     shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(requestNode))->getPSP(requestNode);
-    if (!dynamic_pointer_cast<NullRequestPSP>(psp)) { throw "Cannot make requests downstream of a node that gets constrained during regen"; }
+    if (!dynamic_pointer_cast<NullRequestPSP>(psp)) { assert(false); throw "Cannot make requests downstream of a node that gets constrained during regen"; }
   }
   else
   {
     assert(outputNode);
     shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
-    if (psp->isRandom()) { throw "Cannot make random choices downstream of a node that gets constrained during regen"; }
+    if (psp->isRandom()) { assert(false); throw "Cannot make random choices downstream of a node that gets constrained during regen"; }
     trace->setValue(node,psp->simulate(trace->getArgs(outputNode),trace->rng));
   }
   set<Node*> children = trace->getChildren(node);
@@ -304,7 +304,10 @@ double applyPSP(Trace * trace,
     else { newValue = psp->simulate(args,trace->rng); } // TODO rng
   }
 
+  if (dynamic_cast<RequestNode*>(node)) { assert(dynamic_pointer_cast<VentureRequest>(newValue)); }
+
   trace->setValue(node,newValue);
+
   psp->incorporate(newValue,args);
 
   if (dynamic_pointer_cast<VentureSP>(newValue)) { processMadeSP(trace,node,scaffold->isAAA(node)); }
