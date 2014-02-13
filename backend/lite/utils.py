@@ -2,6 +2,7 @@ import numpy.random as npr
 import math
 import scipy.special as ss
 import numpy as np
+from value import VentureNumber
 
 def normalizeList(seq): 
   denom = sum(seq)
@@ -11,7 +12,7 @@ def normalizeList(seq):
     return [1.0/n for x in seq]
 
 def simulateCategorical(ps,os=None):
-  if os is None: os = range(len(ps))
+  if os is None: os = [VentureNumber(i) for i in range(len(ps))]
   ps = normalizeList(ps)
   return os[npr.multinomial(1,ps).argmax()]
 
