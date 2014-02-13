@@ -30,6 +30,7 @@ class VentureValue(object):
 
   def lookup(self, _): raise Exception("Cannot look things up in %s" % type(self))
   def contains(self, _): raise Exception("Cannot look for things in %s" % type(self))
+  def length(self): raise Exception("Cannot measure length of %s" % type(self))
 
 class VentureNumber(VentureValue):
   def __init__(self,number): self.number = number
@@ -82,12 +83,14 @@ class VentureArray(VentureValue):
     # TODO I am going to have to overload the equality for dicts
     # anyway, so might as well eventually use `in` here.
     return any(obj.equal(li) for li in self.array)
+  def size(self): return len(self.array)
 
 class VentureNil(VentureValue):
   def __init__(self): pass
   def compareSameType(self, _): return 0 # All Nils are equal
   def asPythonList(self): return []
   def asStackDict(self): return {"type":"list", "value":[]}
+  def size(self): return 0
 
 class VenturePair(VentureValue):
   def __init__(self,first,rest):
@@ -121,6 +124,8 @@ class VenturePair(VentureValue):
       return False
     else:
       return self.rest.contains(obj)
+  def size(self): # Really, length
+    return 1 + self.rest.size()
 
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair(h, t), reversed(l), VentureNil())
@@ -147,6 +152,7 @@ class VentureSimplex(VentureValue):
   def contains(self, obj):
     # Homogeneous; TODO make it return False instead of exploding for non-numeric objects.
     return obj.getNumber() in self.simplex
+  def size(self): return len(self.simplex)
 
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
@@ -160,6 +166,7 @@ class VentureDict(VentureValue):
     return self.dict[key]
   def contains(self, key):
     return key in self.dict
+  def size(self): return len(self.dict)
 
 # Backed by a numpy matrix object
 class VentureMatrix(VentureValue):

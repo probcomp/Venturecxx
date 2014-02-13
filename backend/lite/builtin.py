@@ -97,7 +97,7 @@ def builtInSPsList():
 
            [ "lookup", deterministic(lambda xs, x: xs.lookup(x)) ],
            [ "contains", deterministic(lambda xs, x: v.VentureBool(xs.contains(x))) ],
-           [ "size",VentureSP(NullRequestPSP(),dstructures.SizeOutputPSP()) ],
+           [ "size", deterministic(lambda xs: v.VentureNumber(xs.size())) ],
 
            [ "branch", VentureSP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()) ],
            [ "biplex", VentureSP(NullRequestPSP(),conditionals.BiplexOutputPSP()) ],

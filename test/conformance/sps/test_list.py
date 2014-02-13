@@ -24,6 +24,15 @@ def testIsPair3():
 def testIsPair4():
   assert get_ripl().predict("(is_pair (pair 1 3))")
 
+def testSize1():
+  assert get_ripl().predict("(size (list))") == 0
+
+def testSize2():
+  assert get_ripl().predict("(size (list 4))") == 1
+
+def testSize3():
+  assert get_ripl().predict("(size (pair 3 (list 4)))") == 2
+
 class TestList(object):
   _multiprocess_can_split_ = True
   def setup(self):
@@ -55,6 +64,8 @@ class TestList(object):
   def testIsPair2(self):
     assert self.ripl.predict("(is_pair x4)")
 
+  def testSize1(self):
+    assert self.ripl.predict("(size x4)") == 3
 
 class TestListExtended(object):
   _multiprocess_can_split_ = True
@@ -84,6 +95,8 @@ class TestListExtended(object):
   def testIsPair3(self):
     assert self.ripl.predict("(is_pair y)")
 
+  def testSize1(self):
+    assert self.ripl.predict("(size y)") == 3
 
 class TestMapListExtended(object):
   _multiprocess_can_split_ = True
@@ -106,3 +119,5 @@ class TestMapListExtended(object):
   def testIsPair3(self):
     assert self.ripl.predict("(is_pair y)")
 
+  def testSize1(self):
+    assert self.ripl.predict("(size y)") == 3

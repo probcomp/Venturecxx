@@ -4,12 +4,6 @@ from env import VentureEnvironment
 import numpy as np
 import value as v
 
-### Polymorphic Operators
-class SizeOutputPSP(PSP):
-  def simulate(self,args): return len(args.operandValues[0])
-  def description(self,name):
-    return "(%s <collection k v>) -> <number>" % name
-
 ### Dicts
 class DictOutputPSP(PSP):
   def simulate(self,args):
