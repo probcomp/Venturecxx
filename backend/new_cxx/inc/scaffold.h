@@ -16,6 +16,22 @@ struct ConcreteTrace;
 
 struct Scaffold
 {
+  Scaffold() {}
+  Scaffold(const vector<set<Node*> > & setsOfPNodes,
+	   const map<Node*,int> & regenCounts,
+	   const set<Node*> & absorbing,
+	   const set<Node*> & aaa,
+	   const vector<vector<Node *> > & border,
+	   const map<Node*,shared_ptr<LKernel> > & lkernels):
+    setsOfPNodes(setsOfPNodes),
+    regenCounts(regenCounts),
+    absorbing(absorbing),
+    aaa(aaa),
+    border(border),
+    lkernels(lkernels)
+    {}
+  
+
   set<Node *> getPrincipalNodes();
   int getRegenCount(Node * node);
   void incRegenCount(Node * node);
@@ -37,10 +53,10 @@ private:
 };
 
 
-shared_ptr<Scaffold> constructScaffold(Trace * trace,const vector<set<Node*> > & setsOfPNodes);
+shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<Node*> > & setsOfPNodes);
 
 // TODO everything from here on should be moved to .cxx
-void addResamplingNode(Trace * trace,
+void addResamplingNode(ConcreteTrace * trace,
             set<Node*> & cDRG,
 			      set<Node*> & cAbsorbing,
 			      set<Node*> & cAAA,
@@ -109,7 +125,7 @@ void maybeIncrementAAARegenCount(ConcreteTrace * trace,
 				 set<Node*> & aaa,
 				 Node * node);
 
-set<Node*> computeRegenCounts(ConcreteTrace * trace,
+map<Node*,int> computeRegenCounts(ConcreteTrace * trace,
 		    set<Node*> & drg,
 		    set<Node*> & absorbing,
 			      set<Node*> & aaa,
