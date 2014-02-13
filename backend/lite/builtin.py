@@ -100,7 +100,7 @@ def builtInSPsList():
            [ "size", deterministic(lambda xs: v.VentureNumber(xs.size())) ],
 
            [ "branch", VentureSP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()) ],
-           [ "biplex", VentureSP(NullRequestPSP(),conditionals.BiplexOutputPSP()) ],
+           [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType())],
            [ "make_csp", VentureSP(NullRequestPSP(),csp.MakeCSPOutputPSP()) ],
 
            [ "eval",VentureSP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()) ],
