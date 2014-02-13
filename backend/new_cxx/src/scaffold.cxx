@@ -1,6 +1,7 @@
 #include "scaffold.h"
 #include "node.h"
 #include "concrete_trace.h"
+#include "sp.h"
 
 set<Node *> Scaffold::getPrincipalNodes() { assert(false); }
 
@@ -111,7 +112,55 @@ void extendCandidateScaffold(ConcreteTrace * trace,
 			     set<Node*> & cAbsorbing,
 			     set<Node*> & cAAA,
 			     map<Node*,int> & indexAssignments,
-			     int i) { assert(false); }
+			     int i) 
+{
+  queue<tuple<Node*,bool,Node*> > q;
+  for (set<Node*>::iterator pnodeIter = pnodes.begin();
+       pnodeIter != pnodes.end();
+       ++pnodeIter)
+  {
+    Node * nullNode = NULL;
+    q.push(make_tuple(*pnodeIter,true,nullNode));
+  }
+
+  while (!q.empty())
+  {
+    tuple<Node*,bool,Node*> qElem = q.front();
+    Node * node = boost::get<0>(qElem);
+    bool isPrincipal = boost::get<1>(qElem);
+    Node * parentNode = boost::get<2>(qElem);
+    q.pop();
+
+    if (cDRG.count(node) && !cAAA.count(node)) { }
+    else if (dynamic_cast<LookupNode*>(node))
+    {
+      addResamplingNode(trace,cDRG,cAbsorbing,cAAA,q,node,indexAssignments,i);
+    }
+    else
+    {
+      ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
+      assert(appNode);
+      shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(appNode))->getPSP(appNode);
+      if (cDRG.count(appNode->operatorNode))
+      {
+	addResamplingNode(trace,cDRG,cAbsorbing,cAAA,q,node,indexAssignments,i);
+      }
+      else if (cAAA.count(appNode)) { }
+      else if (!isPrincipal && psp->canAbsorb(trace,appNode,parentNode))
+      {
+	addAbsorbingNode(cDRG,cAbsorbing,cAAA,appNode,indexAssignments,i);
+      }
+      else if (psp->childrenCanAAA())
+      {
+	addAAANode(cDRG,cAbsorbing,cAAA,node,indexAssignments,i);
+      }
+      else 
+      { 
+	addResamplingNode(trace,cDRG,cAbsorbing,cAAA,q,node,indexAssignments,i); 
+      }
+    }
+  }
+}
 
 set<Node*> findBrush(ConcreteTrace * trace,
 		     set<Node*> & cDRG,
