@@ -64,6 +64,7 @@ struct Trace
   virtual set<Node*> getChildren(Node * node) =0;
   virtual int getNumRequests(RootOfFamily root) =0;
   virtual int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) =0;
+
   virtual VentureValuePtr getObservedValue(Node * node) =0;
 
   virtual bool isConstrained(Node * node) =0;
@@ -81,6 +82,8 @@ struct Trace
   /* Primitive setters */
   virtual void setValue(Node * node, VentureValuePtr value) =0;
   virtual void clearValue(Node * node) =0;
+
+  virtual void observeNode(Node * node,VentureValuePtr value) =0;
 
   virtual void initMadeSPRecord(Node * makerNode, shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux) =0;
   virtual void destroyMadeSPRecord(Node * makerNode) =0;

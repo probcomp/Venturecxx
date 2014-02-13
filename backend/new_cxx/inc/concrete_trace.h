@@ -4,6 +4,7 @@
 #include "types.h"
 #include "trace.h"
 
+
 struct ConcreteTrace : Trace
 {
   ConcreteTrace();
@@ -50,6 +51,8 @@ struct ConcreteTrace : Trace
   /* Primitive Setters */
   void setValue(Node * node, VentureValuePtr value);
   void clearValue(Node * node);
+
+  void observeNode(Node * node,VentureValuePtr value);
 
   void initMadeSPRecord(Node * makerNode, shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux);
   void destroyMadeSPRecord(Node * makerNode);

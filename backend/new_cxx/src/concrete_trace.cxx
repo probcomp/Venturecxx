@@ -1,10 +1,17 @@
 #include "concrete_trace.h"
 #include "values.h"
+#include "detach.h"
 #include "env.h"
 #include "builtin.h"
+#include "lkernel.h"
 #include "regen.h"
 #include "sp.h"
 #include "db.h"
+
+#include <cmath>
+#include <cfloat>
+#include <cassert>
+
 
 /* Constructor */
 
@@ -114,6 +121,11 @@ bool ConcreteTrace::isObservation(Node * node) { return observedValues.count(nod
 void ConcreteTrace::setValue(Node * node, VentureValuePtr value) { values[node] = value; }
 void ConcreteTrace::clearValue(Node * node) { values.erase(node); }
 
+void ConcreteTrace::observeNode(Node * node,VentureValuePtr value) 
+{ 
+  assert(!observedValues.count(node));
+  observedValues[node] = value; 
+}
 
 void ConcreteTrace::initMadeSPRecord(Node * makerNode,shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux)
 {
@@ -173,7 +185,29 @@ set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block) { assert
 void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node) { assert(false); }
 
 bool ConcreteTrace::scopeHasEntropy(ScopeID scope) { assert(false); }
-void ConcreteTrace::makeConsistent() { assert(false); }
+void ConcreteTrace::makeConsistent() 
+{
+  for (map<Node*,VentureValuePtr>::iterator iter = unpropagatedObservations.begin();
+       iter != unpropagatedObservations.end();
+       ++iter)
+  {
+    OutputNode * appNode = getOutermostNonRefAppNode(iter->first);
+    vector<set<Node*> > setsOfPNodes;
+    set<Node*> pnodes;
+    pnodes.insert(appNode);
+    setsOfPNodes.push_back(pnodes);
+    shared_ptr<Scaffold> scaffold = constructScaffold(this,setsOfPNodes);
+    detachAndExtract(this,scaffold->border[0],scaffold);
+//    assertTorus(scaffold); // TODO
+    shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(appNode))->getPSP(appNode);
+    scaffold->lkernels[appNode] = shared_ptr<DeterministicLKernel>(new DeterministicLKernel(iter->second,psp));
+    double xiWeight = regenAndAttach(this,scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),shared_ptr<map<Node*,Gradient> >());
+    if (isinf(xiWeight)) { assert(false); throw "Unable to propagate constraint"; }
+    observeNode(iter->first,iter->second);
+    constrain(this,appNode,getObservedValue(iter->first));
+  }
+  unpropagatedObservations.clear();
+}
 
 
 int ConcreteTrace::numUnconstrainedChoices() { assert(false); }
