@@ -119,9 +119,9 @@ def builtInSPsList():
 
            [ "scope_include",no_request(scope.ScopeIncludeOutputPSP()) ],
 
-           [ "binomial", no_request(discrete.BinomialOutputPSP()) ],
-           [ "flip",typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
-           [ "bernoulli",typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
+           [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ],
+           [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
+           [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
            [ "categorical",no_request(discrete.CategoricalOutputPSP()) ],
 
            [ "normal",no_request(continuous.NormalOutputPSP()) ],

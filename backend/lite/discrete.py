@@ -47,7 +47,7 @@ class BinomialOutputPSP(RandomPSP):
   # TODO AXCH can we have a convention where we include the types and the meanings?
   # e.g. (%s count::Number probability::Number)
   def description(self,name):
-    return "(%s <count> <probability>) -> <bool>" % name
+    return "(%s <count> <probability>) -> <number>" % name
 
 
 class CategoricalOutputPSP(RandomPSP):
