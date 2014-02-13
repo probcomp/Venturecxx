@@ -138,7 +138,11 @@ double regenParents(Trace * trace,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
 	      shared_ptr<map<Node*,Gradient> > gradients)
-{ throw 500; }
+{
+  double weight = 0;
+  for (size_t i = 0; i < node->definiteParents.size(); ++i) { weight += regen(trace,node->definiteParents[i],scaffold,shouldRestore,db,gradients); }
+  return weight + regenESRParents(trace,node,scaffold,shouldRestore,db,gradients);
+}
 
 double regenESRParents(Trace * trace,
 	      Node * node,
@@ -146,7 +150,12 @@ double regenESRParents(Trace * trace,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
 	      shared_ptr<map<Node*,Gradient> > gradients)
-{ throw 500; }
+{
+  double weight = 0;
+  vector<Node*> esrParents = trace->getESRParents(node);
+  for (size_t i = 0; i < esrParents.size(); ++i) { weight += regen(trace,esrParents[i],scaffold,shouldRestore,db,gradients); }
+  return weight;
+}
 
 pair<double,Node*> evalFamily(Trace * trace,
 			      VentureValuePtr exp,
