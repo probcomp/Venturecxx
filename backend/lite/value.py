@@ -234,6 +234,18 @@ class NilType(VentureType):
     # TODO Throw an error if not nil?
     return []
 
+# A Venture list is either a VentureNil or a VenturePair whose second
+# field is a Venture list.  I choose that the corresponding Python
+# object is a list of VentureValue objects (this is consistent with
+# the Any type doing no conversion).
+
+# data List = Nil | Pair Any List
+class ListType(VentureType):
+  def asVentureValue(self, thing):
+    return pythonListToVentureList(*thing)
+  def asPython(self, thing):
+    return thing.asPythonList()
+
 # A Venture expression is either a Venture self-evaluating object
 # (bool, number, atom), or a Venture symbol, or a Venture array of
 # Venture Expressions.
