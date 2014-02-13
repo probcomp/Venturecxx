@@ -21,3 +21,11 @@ class TestArrayExtended(object):
     assert not self.ripl.predict("(is_array 0)")
 
 
+def testMatrix():
+  for form in ["(matrix (list))", "(matrix (list (list) (list)))",
+               "(matrix (list (list 1 0) (list 0 1)))"]:
+    yield checkMatrix, form
+
+def checkMatrix(form):
+  get_ripl().predict(form)
+  assert get_ripl().predict("(is_matrix %s)" % form)

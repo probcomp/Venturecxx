@@ -90,7 +90,8 @@ def builtInSPsList():
            [ "is_array", type_test(v.VentureArray) ],
            [ "dict", VentureSP(NullRequestPSP(),dstructures.DictOutputPSP()) ],
            [ "is_dict", type_test(v.VentureDict) ],
-           [ "matrix", VentureSP(NullRequestPSP(),dstructures.MatrixOutputPSP()) ],
+           [ "matrix", deterministic(lambda rows: v.VentureMatrix(np.mat([row.asPythonList() for row in rows.asPythonList()]))) ], # TODO Put in the description that the input is a list of the rows of the matrix
+           [ "is_dict", type_test(v.VentureMatrix) ],
            [ "simplex", VentureSP(NullRequestPSP(),dstructures.SimplexOutputPSP()) ],
 
            [ "lookup",VentureSP(NullRequestPSP(),dstructures.LookupOutputPSP()) ],
