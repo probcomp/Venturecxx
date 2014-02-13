@@ -198,7 +198,6 @@ pair<double,Node*> evalFamily(Trace * trace,
 {
   if (isVariable(exp))
   {
-    cout << "isVariable" << endl;
     double weight = 0;
     shared_ptr<VentureSymbol> symbol = dynamic_pointer_cast<VentureSymbol>(exp);
     Node * sourceNode = env->lookupSymbol(symbol);
@@ -211,11 +210,10 @@ pair<double,Node*> evalFamily(Trace * trace,
 
     return make_pair(weight,trace->createLookupNode(sourceNode));
   }
-  else if (isSelfEvaluating(exp)) { cout << "isSelfEvaluating" << endl; return make_pair(0,trace->createConstantNode(exp)); }
+  else if (isSelfEvaluating(exp)) { return make_pair(0,trace->createConstantNode(exp)); }
   else if (isQuotation(exp)) { return make_pair(0,trace->createConstantNode(textOfQuotation(exp))); }
   else
   {
-    cout << "isApp" << endl;
     shared_ptr<VentureArray> array = dynamic_pointer_cast<VentureArray>(exp);
     pair<double,Node*> p = evalFamily(trace,array->xs[0],env,scaffold,db,gradients);
     double weight = p.first;

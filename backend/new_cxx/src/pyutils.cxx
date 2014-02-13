@@ -1,6 +1,11 @@
 #include "pyutils.h"
 #include "values.h"
 
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
 VentureValuePtr parseValue(boost::python::dict d)
 {
   if (d["type"] == "boolean") { return shared_ptr<VentureBool>(new VentureBool(boost::python::extract<bool>(d["value"]))); }
@@ -27,7 +32,7 @@ VentureValuePtr parseExpression(boost::python::object o)
   
   for(boost::python::ssize_t i=0; i<L; i++)
   {
-    exp.push_back(parseExpression(l[i-1]));
+exp.push_back(parseExpression(l[i]));
   }
   return shared_ptr<VentureValue>(new VentureArray(exp));
 }
