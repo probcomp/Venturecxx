@@ -32,11 +32,19 @@ pair<double,shared_ptr<DB> > detachAndExtract(Trace * trace,const vector<Node*> 
 }
 
 
+double unconstrain(Trace * trace,OutputNode * node)
+{
+  shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
+  shared_ptr<Args> args = trace->getArgs(node);
+  VentureValuePtr value = trace->getValue(node);
 
+  trace->unregisterConstrainedChoice(node);
+  psp->unincorporate(value,args);
+  double weight = psp->logDensity(value,args);
+  psp->incorporate(value,args);
+  return weight;
+}
 
-
-double unconstrain(Trace * trace,Node * node)
-{ assert(false); }
 double detach(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,DB * db)
 { assert(false); }
 double extractParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,DB * db)
