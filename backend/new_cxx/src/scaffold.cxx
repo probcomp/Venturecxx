@@ -360,9 +360,10 @@ vector<vector<Node *> > assignBorderSequnce(set<Node*> & border,
 					    map<Node*,int> & indexAssignments,
 					    int numIndices) 
 {
-  // vector<vector<Node *> > borderSequence;
-  // borderSequence = [[] for _ in range(numIndices)]
-  // for node in border:
-  //   borderSequence[indexAssignments[node]].append(node)
-  // return borderSequence
+  vector<vector<Node *> > borderSequence(numIndices);
+  for (set<Node*>::iterator borderIter = border.begin(); borderIter != border.end(); ++borderIter)
+  {
+    borderSequence[indexAssignments[*borderIter]].push_back(*borderIter);
+  }
+  return borderSequence;
 }
