@@ -114,6 +114,9 @@ class VentureSimplex(VentureValue):
       return lencmp
     else:
       return self.simplex.__cmp__(other.simplex)
+  def asStackDict(self):
+    # TODO As what type to reflect simplex points to the stack?
+    return {"type":"simplex", "value":self.simplex}
 
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d

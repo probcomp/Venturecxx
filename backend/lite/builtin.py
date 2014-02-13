@@ -93,6 +93,7 @@ def builtInSPsList():
            [ "matrix", deterministic(lambda rows: v.VentureMatrix(np.mat([row.asPythonList() for row in rows.asPythonList()]))) ], # TODO Put in the description that the input is a list of the rows of the matrix
            [ "is_matrix", type_test(v.VentureMatrix) ],
            [ "simplex", deterministic_typed(lambda *nums: np.array(nums), [v.NumberType()], v.SimplexType(), variadic=True) ],
+           [ "is_simplex", type_test(v.VentureSimplex) ],
 
            [ "lookup",VentureSP(NullRequestPSP(),dstructures.LookupOutputPSP()) ],
            [ "contains",VentureSP(NullRequestPSP(),dstructures.ContainsOutputPSP()) ],
