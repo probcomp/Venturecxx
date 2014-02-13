@@ -26,6 +26,9 @@ class VentureValue(object):
   def getEnvironment(self): raise Exception("Cannot convert %s to environment" % type(self))
 
   def asStackDict(self): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
+  @staticmethod
+  def fromStackDict(thing):
+    return stackable_types[thing["type"]].fromStackDict(thing)
 
   def compare(self, other):
     st = type(self)
@@ -45,6 +48,8 @@ class VentureNumber(VentureValue):
   def __init__(self,number): self.number = number
   def getNumber(self): return self.number
   def asStackDict(self): return {"type":"number","value":self.number}
+  @staticmethod
+  def fromStackDict(thing): return VentureNumber(thing["value"])
   def compareSameType(self, other):
     if self.number < other.number: return -1
     elif self.number > other.number: return 1
@@ -56,6 +61,8 @@ class VentureAtom(VentureValue):
   def getAtom(self): return self.atom
   def getBool(self): return self.atom
   def asStackDict(self): return {"type":"atom","value":self.atom}
+  @staticmethod
+  def fromStackDict(thing): return VentureAtom(thing["value"])
   def compareSameType(self, other):
     return self.atom.__cmp__(other.atom)
 
@@ -63,6 +70,8 @@ class VentureBool(VentureValue):
   def __init__(self,boolean): self.boolean = boolean
   def getBool(self): return self.boolean
   def asStackDict(self): return {"type":"boolean","value":self.boolean}
+  @staticmethod
+  def fromStackDict(thing): return VentureBool(thing["value"])
   def compareSameType(self, other):
     return self.boolean.__cmp__(other.boolean)
 
@@ -70,6 +79,8 @@ class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
   def getSymbol(self): return self.symbol
   def asStackDict(self): return {"type":"symbol","value":self.symbol}
+  @staticmethod
+  def fromStackDict(thing): return VentureSymbol(thing["value"])
   def compareSameType(self, other):
     return self.symbol.__cmp__(other.symbol)
 
@@ -85,6 +96,9 @@ class VentureArray(VentureValue):
   def asStackDict(self):
     # TODO Are venture arrays reflected as lists to the stack?
     return {"type":"list","value":[v.asStackDict() for v in self.array]}
+  @staticmethod
+  def fromStackDict(thing):
+    return VentureArray([VentureValue.fromStackDict(v) for v in thing["value"]])
   def lookup(self, index):
     return self.array[index.getNumber()]
   def contains(self, obj):
@@ -99,6 +113,8 @@ class VentureNil(VentureValue):
   def compareSameType(self, _): return 0 # All Nils are equal
   def asPythonList(self): return []
   def asStackDict(self): return {"type":"list", "value":[]}
+  @staticmethod
+  def fromStackDict(_): return VentureNil()
   def size(self): return 0
 
 class VenturePair(VentureValue):
@@ -114,6 +130,8 @@ class VenturePair(VentureValue):
     # TODO Venture pairs should be usable to build structures other
     # than proper lists.  But then, what are their types?
     return {"type":"list", "value":[v.asStackDict() for v in self.asPythonList()]}
+  @staticmethod
+  def fromStackDict(_): raise Exception("Type clash!")
   def compareSameType(self, other):
     fstcmp = self.first.compare(other.first)
     if fstcmp != 0: return fstcmp
@@ -156,6 +174,8 @@ class VentureSimplex(VentureValue):
   def asStackDict(self):
     # TODO As what type to reflect simplex points to the stack?
     return {"type":"simplex", "value":self.simplex}
+  @staticmethod
+  def fromStackDict(thing): return VentureSimplex(thing["value"])
   def lookup(self, index):
     return self.simplex[index.getNumber()]
   def contains(self, obj):
@@ -171,6 +191,8 @@ class VentureDict(VentureValue):
     # would presumably need to be converted to stack dicts too, which
     # is a problem because they need to be hashable.
     return {"type":"dict", "value":self}
+  @staticmethod
+  def fromStackDict(thing): return thing["value"]
   def lookup(self, key):
     return self.dict[key]
   def contains(self, key):
@@ -186,20 +208,43 @@ class VentureMatrix(VentureValue):
     return self.matrix.__cmp__(other.matrix)
   def asStackDict(self):
     return {"type":"matrix", "value":self.matrix}
+  @staticmethod
+  def fromStackDict(thing): return VentureMatrix(thing["value"])
 
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
   def asStackDict(self): return {"type":"SP","value":self}
+  @staticmethod
+  def fromStackDict(thing): return thing["value"]
   # SPRefs are intentionally not comparable until we decide otherwise
 
 ## SPs and Environments as well
 ## Not Requests, because we do not reflect on them
 
-venture_types = [VentureBool, VentureNumber, VentureAtom, VentureSymbol, VentureNil, VenturePair, VentureArray, VentureSimplex, VentureDict, VentureMatrix, SPRef] # Break load order dependency but not adding SPs and Environments yet
+venture_types = [
+  VentureBool, VentureNumber, VentureAtom, VentureSymbol, VentureNil, VenturePair,
+  VentureArray, VentureSimplex, VentureDict, VentureMatrix, SPRef]
+  # Break load order dependency but not adding SPs and Environments yet
 
-def registerVentureType(t):
+stackable_types = {
+  "number": VentureNumber,
+  "atom": VentureAtom,
+  "boolean": VentureBool,
+  "symbol": VentureSymbol,
+  "list": VentureArray, # TODO Or should this be a linked list?  Should there be an array type?
+  "simplex": VentureSimplex,
+  "dict": VentureDict,
+  "matrix": VentureMatrix,
+  "SP": SPRef, # As opposed to VentureSP?
+  }
+
+def registerVentureType(t, name = None):
   if t in venture_types: pass
-  else: venture_types.append(t)
+  else:
+    venture_types.append(t)
+    if name is not None:
+      stackable_types[name] = t
+
 
 def isVentureValue(thing):
   return thing is None or isinstance(thing, VentureValue)
