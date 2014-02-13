@@ -72,8 +72,9 @@ inc_dirs = ["backend/new_cxx/" + d for d in inc_dirs]
 
 ext_modules = []
 packages=["venture","venture.sivm","venture.ripl",
-    "venture.parser","venture.server","venture.shortcuts",
-    "venture.unit", "venture.test", "venture.cxx", "venture.lite"]
+          "venture.parser","venture.server","venture.shortcuts",
+          "venture.unit", "venture.test", "venture.cxx", "venture.lite",
+          "venture.venturemagics"]
 
 cxx = Extension("venture.cxx.libtrace",
     define_macros = [('MAJOR_VERSION', '0'),

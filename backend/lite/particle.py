@@ -74,6 +74,7 @@ class Particle(Trace):
     self.unregisterRandomChoiceInScope("default",node,node)
 
   def registerRandomChoiceInScope(self,scope,block,node):
+    assert block is not None
     if not scope in self.scopes: self.scopes = self.scopes.insert(scope,PMap())
     if not block in self.scopes.lookup(scope): self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.insert(block,PSet()))
     self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.adjust(block,lambda pnodes: pnodes.insert(node)))

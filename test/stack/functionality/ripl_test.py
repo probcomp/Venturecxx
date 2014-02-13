@@ -16,7 +16,7 @@
 import unittest
 from venture.ripl import Ripl
 from venture.exception import VentureException
-from venture.sivm import VentureSivm, CoreSivmCxx
+from venture.sivm import VentureSivm, CoreSivm
 from venture.parser import ChurchPrimeParser, VentureScriptParser
 from nose import SkipTest
 
@@ -24,7 +24,8 @@ class TestRipl(unittest.TestCase):
     _multiprocess_can_split_ = True
 
     def setUp(self):
-        self.core_sivm = CoreSivmCxx()
+        from venture.cxx import engine
+        self.core_sivm = CoreSivm(engine.Engine())
         self.core_sivm.execute_instruction({"instruction":"clear"})
         self.venture_sivm = VentureSivm(self.core_sivm)
         parser1 = ChurchPrimeParser()
