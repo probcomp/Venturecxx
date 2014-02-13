@@ -1,5 +1,6 @@
 #include "scaffold.h"
 #include "node.h"
+#include "concrete_trace.h"
 
 set<Node *> Scaffold::getPrincipalNodes() { assert(false); }
 
@@ -63,7 +64,20 @@ void addResamplingNode(ConcreteTrace * trace,
 		       queue<tuple<Node*,bool,Node*> > & q,
 		       Node * node,
 		       map<Node*,int> & indexAssignments,
-		       int i) { assert(false); }
+		       int i)
+{
+  if (cAbsorbing.count(node)) { cAbsorbing.erase(node); }
+  if (cAAA.count(node)) { cAAA.erase(node); }
+  cDRG.insert(node);
+  set<Node*> children = trace->getChildren(node);
+  for (set<Node*>::iterator childIter = children.begin();
+       childIter != children.end();
+       ++childIter)
+  {
+    q.push(make_tuple(*childIter,false,node));
+  }
+  indexAssignments[node] = i;
+}
 
 void addAbsorbingNode(set<Node*> & cDRG,
 		      set<Node*> & cAbsorbing,

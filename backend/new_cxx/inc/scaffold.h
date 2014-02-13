@@ -7,6 +7,7 @@
 
 using std::queue;
 using boost::tuple;
+using boost::make_tuple;
 
 struct Trace;
 struct LKernel;
