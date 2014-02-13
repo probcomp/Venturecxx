@@ -151,6 +151,11 @@ class VentureSimplex(VentureValue):
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
   def getDict(self): return self.dict
+  def asStackDict(self):
+    # TODO Difficult to reflect as a Python dict because the keys
+    # would presumably need to be converted to stack dicts too, which
+    # is a problem because they need to be hashable.
+    return {"type":"dict", "value":self}
   def lookup(self, key):
     return self.dict[key]
   def contains(self, key):
