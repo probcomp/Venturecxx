@@ -52,6 +52,9 @@ def binaryNumS(output):
 def unaryNum(f):
   return deterministic_typed(f, [v.NumberType()], v.NumberType())
 
+def unaryNumS(f):
+  return typed_nr(f, [v.NumberType()], v.NumberType())
+
 def naryNum(f):
   return deterministic_typed(f, [v.NumberType()], v.NumberType(), variadic=True)
 
@@ -127,11 +130,11 @@ def builtInSPsList():
            [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
 
-           [ "normal",no_request(continuous.NormalOutputPSP()) ],
-           [ "uniform_continuous",no_request(continuous.UniformOutputPSP()) ],
-           [ "beta",no_request(continuous.BetaOutputPSP()) ],
-           [ "gamma",no_request(continuous.GammaOutputPSP()) ],
-           [ "student_t",no_request(continuous.StudentTOutputPSP()) ],
+           [ "normal",binaryNumS(continuous.NormalOutputPSP()) ],
+           [ "uniform_continuous",binaryNumS(continuous.UniformOutputPSP()) ],
+           [ "beta",binaryNumS(continuous.BetaOutputPSP()) ],
+           [ "gamma",binaryNumS(continuous.GammaOutputPSP()) ],
+           [ "student_t",unaryNumS(continuous.StudentTOutputPSP()) ],
 
            [ "dirichlet",no_request(discrete.DirichletOutputPSP()) ],
            [ "symmetric_dirichlet",no_request(discrete.SymmetricDirichletOutputPSP()) ],
