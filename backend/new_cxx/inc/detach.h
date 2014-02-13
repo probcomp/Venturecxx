@@ -11,7 +11,7 @@ struct ApplicationNode;
 struct OutputNode;
 struct RequestNode;
 
-pair<double,DB*> detachAndExtract(Trace * trace,const vector<Node*> & border,shared_ptr<Scaffold> scaffold);
+pair<double,shared_ptr<DB> > detachAndExtract(Trace * trace,const vector<Node*> & border,shared_ptr<Scaffold> scaffold);
 double unconstrain(Trace * trace,Node * node);
 double detach(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db);
 double extractParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db);
