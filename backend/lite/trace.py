@@ -4,7 +4,7 @@ from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args
 import math
 from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
-from value import SPRef,isVentureValue
+from value import SPRef, ExpressionType, VentureValue
 from scaffold import Scaffold
 from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator
 from omegadb import OmegaDB
@@ -335,10 +335,9 @@ class Trace(object):
   # TODO temporary, probably need an extra layer of boxing for VentureValues
   # as in CXX
   def boxValue(self,val): return val.asStackDict()
-  def unboxValue(self,val): return val["value"]
+  def unboxValue(self,val): return VentureValue.fromStackDict(val)
   def unboxExpression(self,exp):
-    if type(exp) == list: return [self.unboxExpression(subexp) for subexp in exp]
-    else: return self.unboxValue(exp)
+    return ExpressionType().asPython(VentureValue.fromStackDict(exp))
 
 #################### Misc for particle commit
 

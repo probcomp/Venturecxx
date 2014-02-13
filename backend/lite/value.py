@@ -28,7 +28,11 @@ class VentureValue(object):
   def asStackDict(self): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
   @staticmethod
   def fromStackDict(thing):
-    return stackable_types[thing["type"]].fromStackDict(thing)
+    if isinstance(thing, list):
+      # TODO Arrays or lists?
+      return VentureArray([VentureValue.fromStackDict(v) for v in thing])
+    else:
+      return stackable_types[thing["type"]].fromStackDict(thing)
 
   def compare(self, other):
     st = type(self)
@@ -95,6 +99,7 @@ class VentureArray(VentureValue):
       return [elt_type.asPython(v) for v in self.array]
   def asStackDict(self):
     # TODO Are venture arrays reflected as lists to the stack?
+    # TODO Are stack lists lists, or are they themselves type tagged?
     return {"type":"list","value":[v.asStackDict() for v in self.array]}
   @staticmethod
   def fromStackDict(thing):
