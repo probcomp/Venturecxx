@@ -20,10 +20,9 @@ class MapListRequestPSP(PSP):
     xs = args.operandValues[1].asPythonList()
 
     request = Request()
-    for i in range(len(xs)):
-      x = xs[i]
+    for (i,x) in enumerate(xs):
       id = str([args.node] + [i])
-      exp = ["mappedSP"] + [["quote",x]]
+      exp = ["mappedSP", ["quote",x]]
       env = VentureEnvironment(None,["mappedSP"],[fNode])
       request.esrs.append(ESR(id,exp,env))
 
