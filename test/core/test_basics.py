@@ -1,4 +1,5 @@
-from venture.test.config import get_ripl
+from venture.test.stats import statisticalTest, reportKnownDiscrete
+from venture.test.config import get_ripl, collectSamples
 from venture.ripl import Ripl
 from nose.tools import eq_
 
@@ -28,3 +29,14 @@ def testIf3():
   ripl.assume("z", "1")
   ripl.assume("y", "2")
   eq_(1, ripl.predict("(if true z y)"))
+
+def testFlip1():
+  assert isinstance(get_ripl().predict("(bernoulli 0.5)"), bool)
+
+@statisticalTest
+def testFlip2():
+  ripl = get_ripl()
+  ripl.predict("(bernoulli 0.5)")
+  predictions = collectSamples(ripl, 1)
+  return reportKnownDiscrete([[True, 0.5], [False, 0.5]], predictions)
+
