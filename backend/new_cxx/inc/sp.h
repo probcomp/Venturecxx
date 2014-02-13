@@ -15,8 +15,6 @@ struct ApplicationNode;
 struct RequestNode;
 struct OutputNode;
 
-
-
 struct VentureSPRef : VentureValue
 {
   VentureSPRef(Node * makerNode): makerNode(makerNode) {}

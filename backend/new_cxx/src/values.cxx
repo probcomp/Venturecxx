@@ -63,6 +63,16 @@ bool VentureSimplex::equals(const VentureValuePtr & other) const
   return true;
 }
 
+bool VentureNode::equals(const VentureValuePtr & other) const
+{
+  return dynamic_pointer_cast<VentureNode>(other) && node == other->getNode();
+}
+
+bool VentureID::equals(const VentureValuePtr & other) const
+{
+  return this == other.get();
+}
+
 //////////////////////////////////////
 
 size_t VentureNumber::hash() const 
@@ -112,6 +122,15 @@ size_t VentureSimplex::hash() const
   return boost::hash_range(ps.begin(),ps.end());
 }
 
+size_t VentureNode::hash() const
+{
+  return reinterpret_cast<size_t>(node);
+}
+
+size_t VentureID::hash() const
+{
+  return reinterpret_cast<size_t>(this);
+}
 
 //////////////
 

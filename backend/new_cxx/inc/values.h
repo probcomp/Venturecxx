@@ -106,12 +106,22 @@ struct VentureRequest : VentureValue
   vector<shared_ptr<LSR> > lsrs;
 };
 
+
 struct VentureNode : VentureValue
 {
   VentureNode(Node * node): node(node) {}
   Node * getNode() const { return node; }
+  bool equals(const VentureValuePtr & other) const;
+  size_t hash() const;
   Node * node;
 };
 
+
+/* Use the memory location as a unique hash. */
+struct VentureID : VentureValue
+{
+  bool equals(const VentureValuePtr & other) const;
+  size_t hash() const;
+};
 
 #endif
