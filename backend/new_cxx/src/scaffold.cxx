@@ -256,7 +256,17 @@ tuple<set<Node*>,set<Node*>,set<Node*> > removeBrush(set<Node*> & cDRG,
 bool hasChildInAorD(ConcreteTrace * trace,
 		    set<Node*> & drg,
 		    set<Node*> & absorbing,
-		    Node * node) { assert(false); }
+		    Node * node) 
+{
+  set<Node *> children = trace->getChildren(node);
+  for (set<Node*>::iterator childIter = children.begin();
+       childIter != children.end();
+       ++childIter)
+  {
+    if (drg.count(*childIter) || absorbing.count(*childIter)) { return true; }
+  }
+  return false;
+}
 
 set<Node*> findBorder(ConcreteTrace * trace,
 		      set<Node*> & drg,
