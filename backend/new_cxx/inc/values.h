@@ -106,4 +106,12 @@ struct VentureRequest : VentureValue
   vector<shared_ptr<LSR> > lsrs;
 };
 
+struct VentureNode : VentureValue
+{
+  VentureNode(Node * node): node(node) {}
+  Node * getNode() const { return node; }
+  Node * node;
+};
+
+
 #endif

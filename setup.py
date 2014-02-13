@@ -46,6 +46,7 @@ src_files = [
     "src/expressions.cxx",    
 
     "src/gkernel.cxx",
+    
     "src/indexer.cxx",
     "src/lkernel.cxx",
     "src/mixmh.cxx",
@@ -61,6 +62,7 @@ src_files = [
     "src/value.cxx",
     "src/values.cxx",
 
+    "src/gkernels/mh.cxx",
 
     "src/sps/deterministic.cxx",
     

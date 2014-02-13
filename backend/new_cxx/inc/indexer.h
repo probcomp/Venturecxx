@@ -5,12 +5,16 @@
 
 struct Scaffold;
 struct ConcreteTrace;
+struct Trace;
 
 struct ScaffoldIndexer
 {
   ScaffoldIndexer(ScopeID scope,BlockID block);
   shared_ptr<Scaffold> sampleIndex(ConcreteTrace * trace) const;
-  double logDensityOfIndex(ConcreteTrace * trace, shared_ptr<Scaffold> scaffold) const;
+  double logDensityOfIndex(Trace * trace, shared_ptr<Scaffold> scaffold) const;
+
+  ScopeID scope;
+  BlockID block;
 };
 
 

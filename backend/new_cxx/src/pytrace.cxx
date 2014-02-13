@@ -5,6 +5,10 @@
 #include "env.h"
 #include "values.h"
 #include "sp.h"
+#include "mixmh.h"
+#include "indexer.h"
+#include "gkernel.h"
+#include "gkernels/mh.h"
 
 PyTrace::PyTrace() : trace(shared_ptr<ConcreteTrace>(new ConcreteTrace())) {}
 PyTrace::~PyTrace() {}
@@ -101,7 +105,29 @@ boost::python::dict PyTrace::continuousInferenceStatus()
   return status;
 }
 
-void PyTrace::infer(boost::python::dict params) { assert(false); throw "INFER not yet implemented"; }
+// TODO URGENT placeholder
+void PyTrace::infer(boost::python::dict params) 
+{ 
+  size_t numTransitions = boost::python::extract<size_t>(params["transitions"]);
+  string kernel = boost::python::extract<string>(params["kernel"]);
+  
+  ScopeID scope = parseExpression(params["scope"]);
+  BlockID block = parseExpression(params["block"]);
+  
+  assert(kernel == "mh");
+//  assert(scope == "default");
+//  assert(block == "one");
+
+  trace->makeConsistent();
+  
+  for (size_t i = 0; i < numTransitions; ++i)
+  {
+    mixMH(trace.get(),
+	  shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block)),
+	  shared_ptr<MHGKernel>(new MHGKernel()));
+  }
+}
+
 
   
 BOOST_PYTHON_MODULE(libtrace)

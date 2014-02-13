@@ -209,7 +209,6 @@ void ConcreteTrace::makeConsistent()
   unpropagatedObservations.clear();
 }
 
-
 int ConcreteTrace::numUnconstrainedChoices() { assert(false); }
 
 int ConcreteTrace::getSeed() { assert(false); }
