@@ -46,6 +46,9 @@ def deterministic_typed(f, args_types, return_type, **kwargs):
 def binaryNum(f):
   return deterministic_typed(f, [v.NumberType(), v.NumberType()], v.NumberType())
 
+def binaryNumS(output):
+  return typed_nr(output, [v.NumberType(), v.NumberType()], v.NumberType())
+
 def unaryNum(f):
   return deterministic_typed(f, [v.NumberType()], v.NumberType())
 
@@ -119,7 +122,7 @@ def builtInSPsList():
 
            [ "scope_include",no_request(scope.ScopeIncludeOutputPSP()) ],
 
-           [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ],
+           [ "binomial", binaryNumS(discrete.BinomialOutputPSP()) ],
            [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
            [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
