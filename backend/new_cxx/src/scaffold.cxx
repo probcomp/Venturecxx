@@ -167,7 +167,7 @@ set<Node*> findBrush(ConcreteTrace * trace,
 		     set<Node*> & cAbsorbing,
 		     set<Node*> & cAAA) 
 {
-  map<Node*,int> disableCounts;
+  map<RootOfFamily,int> disableCounts;
   set<RequestNode*> disabledRequests;
   set<Node*> brush;
   for (set<Node*>::iterator drgIter = cDRG.begin();
@@ -182,13 +182,28 @@ set<Node*> findBrush(ConcreteTrace * trace,
 
 void disableRequests(ConcreteTrace * trace,
 		     RequestNode * node,
-		     map<Node*,int> & disableCounts,
+		     map<RootOfFamily,int> & disableCounts,
 		     set<RequestNode*> & disabledRequests,
-		     set<Node*> & brush) { assert(false); }
+		     set<Node*> & brush)
+{
+  if (disabledRequests.count(node)) { return; }
+  disabledRequests.insert(node);
+  vector<RootOfFamily> esrRoots = trace->getESRParents(node->outputNode);
+  for (size_t i = 0; i < esrRoots.size(); ++i) 
+  { 
+    RootOfFamily esrRoot = esrRoots[i];
+    disableCounts[esrRoot] += 1;
+    if (disableCounts[esrRoot] == trace->getNumRequests(esrRoot))
+    {
+      disableFamily(trace,esrRoot.get(),disableCounts,disabledRequests,brush);
+    }
+  }
+}
+
 
 void disableFamily(ConcreteTrace * trace,
 		   Node * node,
-		   map<Node*,int> & disableCounts,
+		   map<RootOfFamily,int> & disableCounts,
 		   set<RequestNode*> & disabledRequests,
 		   set<Node*> & brush) { assert(false); }
 

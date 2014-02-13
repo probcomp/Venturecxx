@@ -95,13 +95,13 @@ set<Node*> findBrush(ConcreteTrace * trace,
 
 void disableRequests(ConcreteTrace * trace,
 		     RequestNode * node,
-		     map<Node*,int> & disableCounts,
+		     map<RootOfFamily,int> & disableCounts,
 		     set<RequestNode*> & disabledRequests,
 		     set<Node*> & brush);
 
 void disableFamily(ConcreteTrace * trace,
 		     Node * node,
-		     map<Node*,int> & disableCounts,
+		     map<RootOfFamily,int> & disableCounts,
 		     set<RequestNode*> & disabledRequests,
 		     set<Node*> & brush);
 
