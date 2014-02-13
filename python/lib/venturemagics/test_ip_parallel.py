@@ -27,6 +27,10 @@ loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturem
 # [:-2] because current file is /Venturecxx/test/venturemagics
 
 
+## FIXME: change when back in test_suite
+loc_ip_parallel = file_dir + '/ip_parallel.py'
+
+
 execfile(loc_ip_parallel)
 
 
@@ -36,8 +40,6 @@ try:
 except:
     try: start_engines(2,sleeptime=30)
     except: print "test_ip_parallel: FAILED, couldn't start engines"
-
-
 
 
 def iptestCopyFunction():
