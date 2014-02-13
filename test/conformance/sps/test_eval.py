@@ -105,6 +105,7 @@ def testEval3():
 @statisticalTest
 def testApply1():
   "This CSP does not handle lists and symbols correctly."
+  raise SkipTest("There is a reason that expressions are usually made of linked lists rather than arrays.  Issue https://app.asana.com/0/9277419963067/10249544822514")
   ripl = get_ripl()
 
   ripl.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
