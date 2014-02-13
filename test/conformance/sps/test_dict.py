@@ -14,6 +14,9 @@ import scipy.stats as stats
 def testDict0():
   assert get_ripl().predict("(is_dict (dict (list) (list)))")
 
+def testDict01():
+  assert get_ripl().predict("(is_dict (dict (list 1) (list 2)))")
+
 @statisticalTest
 def testDict1():
   ripl = get_ripl()
