@@ -126,6 +126,8 @@ class VentureMatrix(VentureValue):
   def compareSameType(self, other):
     # TODO Are numpy matrices comparable?
     return self.matrix.__cmp__(other.matrix)
+  def asStackDict(self):
+    return {"type":"matrix", "value":self.matrix}
 
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
