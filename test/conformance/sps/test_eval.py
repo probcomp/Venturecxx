@@ -3,6 +3,14 @@ import math
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportKnownContinuous, reportKnownMeanVariance
 from venture.test.config import get_ripl, collectSamples
 
+def testEvalSmoke():
+  for form in ["(get_current_environment)", "(get_empty_environment)"]:
+    yield checkEvSmoke, form
+
+def checkEvSmoke(form):
+  get_ripl().predict(form)
+  assert get_ripl().predict("(is_environment %s)" % form)
+
 @statisticalTest
 def testEval1():
   ripl = get_ripl()
