@@ -123,7 +123,35 @@ double extract(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_pt
 }
 
 double unevalFamily(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
-{ assert(false); }
+{
+  double weight = 0;
+
+  LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
+  ConstantNode * constantNode = dynamic_cast<ConstantNode*>(node);
+  OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
+
+  if (constantNode) { }
+  else if (lookupNode)
+  {
+    trace->disconnectLookup(lookupNode);
+    trace->setValue(lookupNode,shared_ptr<VentureValue>());
+    weight += extractParents(trace,lookupNode,scaffold,db);
+  }
+  else
+  {
+    assert(outputNode);
+    weight += unapply(trace,outputNode,scaffold,db);
+    for (vector<Node*>::reverse_iterator operandNodeIter = outputNode->operandNodes.rbegin();
+	 operandNodeIter != outputNode->operandNodes.rend();
+	 ++operandNodeIter)
+    {
+      weight += unevalFamily(trace,*operandNodeIter,scaffold,db);
+    }
+    weight += unevalFamily(trace,outputNode->operatorNode,scaffold,db);
+  }
+  return weight;
+}
+
 double unapply(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 { assert(false); }
 void teardownMadeSP(Trace * trace,Node * node,bool isAAA)
