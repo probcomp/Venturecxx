@@ -4,6 +4,7 @@
 #include "db.h"
 #include "env.h"
 #include "values.h"
+#include "sp.h"
 
 PyTrace::PyTrace() : trace(shared_ptr<ConcreteTrace>(new ConcreteTrace())) {}
 PyTrace::~PyTrace() {}
@@ -60,6 +61,7 @@ boost::python::object PyTrace::extractPythonValue(DirectiveID did)
   RootOfFamily root = trace->families[did];
   VentureValuePtr value = trace->getValue(root.get());
   assert(value.get());
+  assert(!dynamic_pointer_cast<VentureSPRef>(value));
   return value->toPython();
 }
 

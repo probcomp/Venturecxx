@@ -4,7 +4,7 @@
 vector<VentureValuePtr> makeVectorOfValues(Trace * trace, const vector<Node*> & nodes)
 {
   vector<VentureValuePtr> values;
-  for (size_t i = 0; i < values.size(); i++)
+  for (size_t i = 0; i < nodes.size(); i++)
   {
     values.push_back(trace->getValue(nodes[i]));
   }

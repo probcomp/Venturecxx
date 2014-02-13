@@ -156,6 +156,7 @@ double regen(Trace * trace,
     trace->incRegenCount(scaffold,node);
   }
   VentureValuePtr value = trace->getValue(node);
+
   shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
   if (spRef && spRef->makerNode != node && scaffold->isAAA(spRef->makerNode))
   {
@@ -234,7 +235,7 @@ pair<double,Node*> evalFamily(Trace * trace,
 
     pair<RequestNode*,OutputNode*> appNodes = trace->createApplicationNodes(operatorNode,operandNodes,env);
     weight += apply(trace,appNodes.first,appNodes.second,scaffold,false,db,gradients);
-    return make_pair(weight,p.second);
+    return make_pair(weight,appNodes.second);
   }
 }
 
@@ -313,7 +314,7 @@ double applyPSP(Trace * trace,
 
   psp->incorporate(newValue,args);
 
-  if (dynamic_pointer_cast<VentureSP>(newValue)) { processMadeSP(trace,node,scaffold->isAAA(node)); }
+  if (dynamic_pointer_cast<VentureSP>(newValue)) { assert(false); processMadeSP(trace,node,scaffold->isAAA(node)); }
   /* TODO TEMP MILESTONE */
   // if (psp->isRandom()) { trace->registerRandomChoice(node); } 
   // if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
