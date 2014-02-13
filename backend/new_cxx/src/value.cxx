@@ -18,7 +18,7 @@ string VentureValue::getSymbol() const { cannotConvertType(this,"symbol"); asser
 vector<VentureValuePtr> VentureValue::getArray() const { cannotConvertType(this,"array"); assert(false); throw "no return"; }
 pair<VentureValuePtr,VentureValuePtr> VentureValue::getPair() const { cannotConvertType(this,"pair"); assert(false); throw "no return"; }
 Simplex VentureValue::getSimplex() const { cannotConvertType(this,"simplex"); assert(false); throw "no return"; }
-unordered_map<VentureValuePtr,VentureValuePtr> VentureValue::getDictionary() const { cannotConvertType(this,"dictionary"); assert(false); throw "no return"; }
+const VentureValuePtrMap<VentureValuePtr>& VentureValue::getDictionary() const { cannotConvertType(this,"dictionary"); assert(false); throw "no return"; }
 MatrixXd VentureValue::getMatrix() const { cannotConvertType(this,"matrix"); assert(false); throw "no return"; }
 pair<vector<ESR>,vector<shared_ptr<LSR> > > VentureValue::getRequests() const { cannotConvertType(this,"requests"); assert(false); throw "no return"; }
 bool VentureValue::equals(const shared_ptr<const VentureValue> & other) const { return false; assert(false); throw "no return"; }

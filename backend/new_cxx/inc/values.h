@@ -84,9 +84,9 @@ struct VentureSimplex : VentureValue
 struct VentureDictionary : VentureValue
 {
   // TODO need a special type with special hash/equality function.
-  VentureDictionary(const unordered_map<VentureValuePtr,VentureValuePtr> & dict): dict(dict) {}
-  unordered_map<VentureValuePtr,VentureValuePtr> getDictionary() const { return dict; }
-  unordered_map<VentureValuePtr,VentureValuePtr> dict;
+  VentureDictionary(const VentureValuePtrMap<VentureValuePtr> & dict): dict(dict) {}
+  const VentureValuePtrMap<VentureValuePtr>& getDictionary() const { return dict; }
+  VentureValuePtrMap<VentureValuePtr> dict;
 };
 
 struct VentureMatrix : VentureValue

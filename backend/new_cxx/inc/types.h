@@ -2,12 +2,10 @@
 #define TYPES_H
 
 #include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
 #include <vector>
 #include <map>
 #include <set>
 
-using boost::unordered_map;
 using boost::shared_ptr;
 using boost::dynamic_pointer_cast;
 using boost::static_pointer_cast;
