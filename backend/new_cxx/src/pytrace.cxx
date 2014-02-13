@@ -92,6 +92,13 @@ double PyTrace::getGlobalLogScore()
 
 uint32_t PyTrace::numUnconstrainedChoices() { return trace->numUnconstrainedChoices(); }
 
+boost::python::dict PyTrace::continuousInferenceStatus() 
+{
+  boost::python::dict status;
+  status["running"] = false;
+  return status;
+}
+
 void PyTrace::infer(boost::python::dict params) { throw "INFER not yet implemented"; }
 
   
@@ -102,11 +109,12 @@ BOOST_PYTHON_MODULE(libtrace)
     .def("eval", &PyTrace::evalExpression)
     .def("uneval", &PyTrace::unevalDirectiveID)
     .def("bindInGlobalEnv", &PyTrace::bindInGlobalEnv)
-    .def("extractPythonValue", &PyTrace::extractPythonValue)
+    .def("extractValue", &PyTrace::extractPythonValue)
     .def("set_seed", &PyTrace::setSeed)
     .def("get_seed", &PyTrace::getSeed)
     .def("numRandomChoices", &PyTrace::numUnconstrainedChoices)
     .def("getGlobalLogScore", &PyTrace::getGlobalLogScore)
+    .def("continuous_inference_status", &PyTrace::continuousInferenceStatus)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
     .def("infer", &PyTrace::infer)

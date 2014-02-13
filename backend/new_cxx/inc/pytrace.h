@@ -33,6 +33,8 @@ struct PyTrace
   double getGlobalLogScore();
   uint32_t numUnconstrainedChoices();
 
+  boost::python::dict continuousInferenceStatus();
+
   void infer(boost::python::dict params);
 
 private:
