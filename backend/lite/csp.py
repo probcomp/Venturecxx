@@ -2,7 +2,6 @@ from psp import PSP, ESRRefOutputPSP
 from sp import VentureSP
 from env import VentureEnvironment
 from request import Request,ESR
-from nose.tools import assert_equal
 import value as v
 
 class CSPRequestPSP(PSP):
@@ -12,7 +11,7 @@ class CSPRequestPSP(PSP):
     self.env = env
 
   def simulate(self,args):
-    assert_equal(len(self.ids),len(args.operandNodes))
+    assert len(self.ids) == len(args.operandNodes)
     extendedEnv = VentureEnvironment(self.env,self.ids,args.operandNodes)
     return Request([ESR(args.node,self.exp,extendedEnv)])
 
