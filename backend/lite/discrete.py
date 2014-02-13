@@ -7,7 +7,7 @@ from utils import simulateCategorical, logDensityCategorical, simulateDirichlet,
 from psp import PSP, NullRequestPSP, RandomPSP
 from sp import VentureSP,SPAux
 from lkernel import LKernel
-from nose.tools import assert_equal,assert_greater_equal
+from nose.tools import assert_greater_equal
 import copy
 
 class BernoulliOutputPSP(RandomPSP):
@@ -251,13 +251,13 @@ class CSymDirMultOutputPSP(RandomPSP):
     return logDensityCategorical(val,counts,self.os)
 
   def incorporate(self,val,args):
-    assert_equal(type(args.spaux),DirMultSPAux)
+    assert isinstance(args.spaux,DirMultSPAux)
     assert_greater_equal(min(args.spaux.os),0)
     index = self.os.index(val)
     args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
-    assert_equal(type(args.spaux),DirMultSPAux)
+    assert isinstance(args.spaux,DirMultSPAux)
     index = self.os.index(val)
     args.spaux.os[index] -= 1
     assert_greater_equal(min(args.spaux.os),0)
@@ -297,7 +297,7 @@ class USymDirMultAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else range(n)
-    assert_equal(type(args.madeSPAux),DirMultSPAux)
+    assert isinstance(args.madeSPAux,DirMultSPAux)
     counts = [count + alpha for count in args.madeSPAux.os]
     newTheta = npr.dirichlet(counts)
     return DirMultSP(NullRequestPSP(),USymDirMultOutputPSP(newTheta,os),n)
@@ -312,13 +312,13 @@ class USymDirMultOutputPSP(RandomPSP):
   def logDensity(self,val,args): return logDensityCategorical(val,self.theta,self.os)
 
   def incorporate(self,val,args):
-    assert_equal(type(args.spaux),DirMultSPAux)
+    assert isinstance(args.spaux,DirMultSPAux)
     assert_greater_equal(min(args.spaux.os),0)
     index = self.os.index(val)
     args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
-    assert_equal(type(args.spaux),DirMultSPAux)
+    assert isinstance(args.spaux,DirMultSPAux)
     index = self.os.index(val)
     args.spaux.os[index] -= 1
     assert_greater_equal(min(args.spaux.os),0)
@@ -365,19 +365,19 @@ class CDirMultOutputPSP(RandomPSP):
     return logDensityCategorical(val,counts,self.os)
 
   def incorporate(self,val,args):
-    assert_equal(type(args.spaux),DirMultSPAux)
+    assert isinstance(args.spaux,DirMultSPAux)
     assert_greater_equal(min(args.spaux.os),0)
     index = self.os.index(val)
     args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
-    assert_equal(type(args.spaux),DirMultSPAux)
+    assert isinstance(args.spaux,DirMultSPAux)
     index = self.os.index(val)
     args.spaux.os[index] -= 1
     assert_greater_equal(min(args.spaux.os),0)
         
   def logDensityOfCounts(self,aux):
-    assert_equal(type(aux),DirMultSPAux)
+    assert isinstance(aux,DirMultSPAux)
     N = sum(aux.os)
     A = sum(self.alpha)
 
@@ -413,7 +413,7 @@ class UDirMultAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):
     alpha = args.operandValues[0]
     os = args.operandValues[1] if len(args.operandValues) > 1 else range(len(alpha))
-    assert_equal(type(args.madeSPAux),DirMultSPAux)
+    assert isinstance(args.madeSPAux,DirMultSPAux)
     counts = [count + a for (count,a) in zip(args.madeSPAux.os,alpha)]
     newTheta = npr.dirichlet(counts)
     return DirMultSP(NullRequestPSP(),UDirMultOutputPSP(newTheta,os),len(alpha))
@@ -428,13 +428,13 @@ class UDirMultOutputPSP(RandomPSP):
   def logDensity(self,val,args): return logDensityCategorical(val,self.theta,self.os)
 
   def incorporate(self,val,args):
-    assert_equal(type(args.spaux),DirMultSPAux)
+    assert isinstance(args.spaux,DirMultSPAux)
     assert_greater_equal(min(args.spaux.os),0)
     index = self.os.index(val)
     args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
-    assert_equal(type(args.spaux),DirMultSPAux)
+    assert isinstance(args.spaux,DirMultSPAux)
     index = self.os.index(val)
     args.spaux.os[index] -= 1
     assert_greater_equal(min(args.spaux.os),0)
