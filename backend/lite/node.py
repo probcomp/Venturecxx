@@ -87,7 +87,7 @@ class RequestNode(ApplicationNode):
   def definiteParents(self): return [self.operatorNode] + self.operandNodes
 
   def isAppropriateValue(self, value):
-    return isinstance(value, Request)
+    return value is None or isinstance(value, Request)
 
 
 class OutputNode(ApplicationNode):
