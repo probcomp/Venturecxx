@@ -31,6 +31,11 @@ def testEvalSmoke2():
   ripl.assume("e", "(get_current_environment)")
   eq_(ripl.predict("(eval (quote x) e)"), 4.0)
 
+def testEvalSmoke3():
+  ripl = get_ripl()
+  ripl.assume("exp", "(array (quote plus) 2 2)")
+  eq_(ripl.predict("(eval exp (get_current_environment))"), 4.0)
+
 @statisticalTest
 def testEval1():
   ripl = get_ripl()

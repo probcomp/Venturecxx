@@ -275,6 +275,7 @@ class ExpressionType(VentureType):
       return thing.getSymbol()
     if isinstance(thing, VentureArray):
       return thing.getArray(self)
+    raise Exception("Cannot convert Venture object %r to a Python representation of a Venture Expression" % thing)
 
 # Parametric values -- no conversion
 class AnyType(VentureType):
