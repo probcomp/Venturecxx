@@ -59,10 +59,19 @@ double regenAndAttach(Trace * trace,
 
 
 double constrain(Trace * trace,
-		 Node * node,
+		 OutputNode * node,
 		 VentureValuePtr value)
-{ throw 500; }
+{
+  shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
+  shared_ptr<Args> args = trace->getArgs(node);
 
+  psp->unincorporate(trace->getValue(node),args);
+  double weight = psp->logDensity(value,args);
+  trace->setValue(node,value);
+  psp->incorporate(value,args);
+  trace->registerConstrainedChoice(node);
+  return weight;
+}
 
 
 void propagateConstraint(Trace * trace,
