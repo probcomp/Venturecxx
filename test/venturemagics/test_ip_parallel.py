@@ -40,14 +40,14 @@ except:
 
 
 
-def testCopyFunction():
+def iptestCopyFunction():
     clear_all_engines()
-# test for copy_ripl funtion
+# iptest for copy_ripl funtion
     myv = make_church_prime_ripl()
     myv.assume('x','(beta 1 1)'); myv.observe('(normal x 1)','5'); myv.predict('(flip)')
     assert [build_exp(di['expression']) for di in myv.list_directives() ] ==  [build_exp(di['expression']) for di in copy_ripl(myv).list_directives() ]
 
-def testParallelCopyFunction():
+def iptestParallelCopyFunction():
 # test for parallel use of copy_ripl_string
 
     cli = Client(); dv = cli[:]; dv.block=True
@@ -63,7 +63,7 @@ def testParallelCopyFunction():
 
 ## TEST adding and removing ripls and pulling info about ripls to mripl
 
-def testAddRemoveSize():
+def iptestAddRemoveSize():
     clear_all_engines()
     no_rips = 4
     vv=MRipl(no_rips)
@@ -86,7 +86,7 @@ def testAddRemoveSize():
     vv.remove_ripls(2)
     assert(check_size(vv,no_rips))
 
-def testCopyRipl():
+def iptestCopyRipl():
     # create rips, add an assume. add some rips. get some reports
     # and see if reports are all the same. 
     clear_all_engines()
@@ -103,7 +103,7 @@ def testCopyRipl():
     #assert( vv.report(1) == ( [3.] * no_rips ) )
     
 
-def testDirectives():
+def iptestDirectives():
     ## TEST DIRECTIVES
     clear_all_engines()
     
@@ -168,7 +168,7 @@ def testDirectives():
     assert ex[0][0] == ex[0][1] == ex[1]
     
 
-def testSnapshot():
+def iptestSnapshot():
     clear_all_engines()
     v=MRipl(4)
     v.assume('x','(poisson 10)',label='x')
@@ -182,7 +182,7 @@ def testSnapshot():
     assert v.snapshot('y')['total_transitions'] == 0
     assert len(v.snapshot('y')['ripls_info']) == 4
 
-def testMulti():
+def iptestMulti():
     clear_all_engines()
     no_rips = 4; no_mrips=2;
     vs = [MRipl(no_rips) for i in range(no_mrips) ]
@@ -214,7 +214,7 @@ def testMulti():
 
 
 
-def testMrMap():
+def iptestMrMap():
     clear_all_engines()
     no_rips = 4
     v = MRipl(no_rips)
@@ -255,10 +255,10 @@ def testMrMap():
 # run tests solely in Python interpreter
 
 
-tests = [testMrMap, testMulti, testSnapshot, testDirectives,testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
+tests = [iptestMrMap, iptestMulti, iptestSnapshot, iptestDirectives,iptestCopyRipl,iptestAddRemoveSize,iptestParallelCopyFunction,iptestCopyFunction]
 
 
-def all_ip_parallel(new_engines=False,sleeptime=30):
+def testAllIPParallel(new_engines=False,sleeptime=30):
     if new_engines:
         stop_engines()
         start_engines(2)
@@ -266,7 +266,9 @@ def all_ip_parallel(new_engines=False,sleeptime=30):
         time.sleep(sleeptime)
         [t() for t in tests]
         stop_engines(); time.sleep(5)
+
     [t() for t in tests]
+    stop_engines()
     return 'testAll complete'
 
 
