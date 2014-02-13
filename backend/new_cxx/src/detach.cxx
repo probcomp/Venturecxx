@@ -2,6 +2,7 @@
 #include "node.h"
 #include "trace.h"
 #include "scaffold.h"
+#include "lkernel.h"
 #include "db.h"
 #include "sp.h"
 #include "psp.h"
@@ -178,8 +179,31 @@ void teardownMadeSP(Trace * trace,Node * makerNode,bool isAAA,shared_ptr<DB> db)
   trace->setValue(makerNode,sp);
 }
 
-double unapplyPSP(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
-{ assert(false); }
+double unapplyPSP(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+{
+  shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
+  shared_ptr<Args> args = trace->getArgs(node);
+
+
+  // TODO ScopeInclude
+  if (psp->isRandom()) { trace->unregisterUnconstrainedChoice(node); }
+  shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(trace->getValue(node));
+  if (spRef && spRef->makerNode == node) { teardownMadeSP(trace,node,scaffold->isAAA(node),db); }
+
+  VentureValuePtr value = trace->getValue(node);
+
+  double weight = 0;
+  psp->unincorporate(value,args);
+  if (scaffold->hasLKernel(node)) { weight += scaffold->getLKernel(node)->reverseWeight(trace,value,args); }
+  db->registerValue(node,value);
+
+  trace->setValue(node,shared_ptr<VentureValue>());
+
+  return weight;
+}
+
+
+
 double unevalRequests(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 { assert(false); }
 
