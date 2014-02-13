@@ -45,22 +45,33 @@ double unconstrain(Trace * trace,OutputNode * node)
   return weight;
 }
 
-double detach(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,DB * db)
+double detach(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+{
+  shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
+  shared_ptr<Args> args = trace->getArgs(node);
+  VentureValuePtr groundValue = trace->getGroundValue(node);
+
+  psp->unincorporate(groundValue,args);
+  double weight = psp->logDensity(groundValue,args);
+  weight += extractParents(trace,node,scaffold,db);
+  return weight;
+}
+
+
+double extractParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 { assert(false); }
-double extractParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,DB * db)
+double extractESRParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 { assert(false); }
-double extractESRParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,DB * db)
+double extract(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 { assert(false); }
-double extract(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,DB * db)
+double unevalFamily(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 { assert(false); }
-double unevalFamily(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,DB * db)
-{ assert(false); }
-double unapply(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,DB * db)
+double unapply(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 { assert(false); }
 void teardownMadeSP(Trace * trace,Node * node,bool isAAA)
 { assert(false); }
-double unapplyPSP(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,DB * db)
+double unapplyPSP(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 { assert(false); }
-double unevalRequests(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,DB * db)
+double unevalRequests(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 { assert(false); }
 
