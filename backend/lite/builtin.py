@@ -24,6 +24,8 @@ import env
 def builtInValues():
   return { "true" : v.VentureBool(True), "false" : v.VentureBool(False) }
 
+def no_request(output): return VentureSP(NullRequestPSP(), output)
+
 def deterministic_psp(f):
   class DeterministicPSP(PSP):
     def simulate(self,args):
@@ -33,10 +35,10 @@ def deterministic_psp(f):
   return DeterministicPSP()
 
 def deterministic(f):
-  return VentureSP(NullRequestPSP(), deterministic_psp(f))
+  return no_request(deterministic_psp(f))
 
 def deterministic_typed(f, args_types, return_type, variadic=False):
-  return VentureSP(NullRequestPSP(), TypedPSP(args_types, return_type, deterministic_psp(f), variadic))
+  return no_request(TypedPSP(args_types, return_type, deterministic_psp(f), variadic))
 
 def binaryNum(f):
   return deterministic_typed(f, [v.NumberType(), v.NumberType()], v.NumberType())
@@ -89,7 +91,7 @@ def builtInSPsList():
 
            [ "array", deterministic(lambda *args: v.VentureArray(np.array(args))) ],
            [ "is_array", type_test(v.VentureArray) ],
-           [ "dict", VentureSP(NullRequestPSP(),dstructures.DictOutputPSP()) ],
+           [ "dict", no_request(dstructures.DictOutputPSP()) ],
            [ "is_dict", type_test(v.VentureDict) ],
            [ "matrix", deterministic(lambda rows: v.VentureMatrix(np.mat([row.asPythonList() for row in rows.asPythonList()]))) ], # TODO Put in the description that the input is a list of the rows of the matrix
            [ "is_matrix", type_test(v.VentureMatrix) ],
@@ -102,44 +104,44 @@ def builtInSPsList():
 
            [ "branch", VentureSP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType())],
-           [ "make_csp", VentureSP(NullRequestPSP(),csp.MakeCSPOutputPSP()) ],
+           [ "make_csp", no_request(csp.MakeCSPOutputPSP()) ],
 
-           [ "get_current_environment",VentureSP(NullRequestPSP(),eval_sps.GetCurrentEnvOutputPSP()) ],
-           [ "get_empty_environment",VentureSP(NullRequestPSP(),eval_sps.GetEmptyEnvOutputPSP()) ],
+           [ "get_current_environment",no_request(eval_sps.GetCurrentEnvOutputPSP()) ],
+           [ "get_empty_environment",no_request(eval_sps.GetEmptyEnvOutputPSP()) ],
            [ "is_environment", type_test(env.VentureEnvironment) ],
-           [ "extend_environment",VentureSP(NullRequestPSP(),eval_sps.ExtendEnvOutputPSP()) ],
+           [ "extend_environment",no_request(eval_sps.ExtendEnvOutputPSP()) ],
            [ "eval",VentureSP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()) ],
 
-           [ "mem",VentureSP(NullRequestPSP(),msp.MakeMSPOutputPSP()) ],
+           [ "mem",no_request(msp.MakeMSPOutputPSP()) ],
 
-           [ "scope_include",VentureSP(NullRequestPSP(),scope.ScopeIncludeOutputPSP()) ],
+           [ "scope_include",no_request(scope.ScopeIncludeOutputPSP()) ],
 
-           [ "binomial", VentureSP(NullRequestPSP(),discrete.BinomialOutputPSP()) ],           
-           [ "flip",VentureSP(NullRequestPSP(),discrete.BernoulliOutputPSP()) ],
-           [ "bernoulli",VentureSP(NullRequestPSP(),discrete.BernoulliOutputPSP()) ],
-           [ "categorical",VentureSP(NullRequestPSP(),discrete.CategoricalOutputPSP()) ],
+           [ "binomial", no_request(discrete.BinomialOutputPSP()) ],
+           [ "flip",no_request(discrete.BernoulliOutputPSP()) ],
+           [ "bernoulli",no_request(discrete.BernoulliOutputPSP()) ],
+           [ "categorical",no_request(discrete.CategoricalOutputPSP()) ],
 
-           [ "normal",VentureSP(NullRequestPSP(),continuous.NormalOutputPSP()) ],
-           [ "uniform_continuous",VentureSP(NullRequestPSP(),continuous.UniformOutputPSP()) ],
-           [ "beta",VentureSP(NullRequestPSP(),continuous.BetaOutputPSP()) ],
-           [ "gamma",VentureSP(NullRequestPSP(),continuous.GammaOutputPSP()) ],
-           [ "student_t",VentureSP(NullRequestPSP(),continuous.StudentTOutputPSP()) ],
+           [ "normal",no_request(continuous.NormalOutputPSP()) ],
+           [ "uniform_continuous",no_request(continuous.UniformOutputPSP()) ],
+           [ "beta",no_request(continuous.BetaOutputPSP()) ],
+           [ "gamma",no_request(continuous.GammaOutputPSP()) ],
+           [ "student_t",no_request(continuous.StudentTOutputPSP()) ],
 
-           [ "dirichlet",VentureSP(NullRequestPSP(),discrete.DirichletOutputPSP()) ],
-           [ "symmetric_dirichlet",VentureSP(NullRequestPSP(),discrete.SymmetricDirichletOutputPSP()) ],
+           [ "dirichlet",no_request(discrete.DirichletOutputPSP()) ],
+           [ "symmetric_dirichlet",no_request(discrete.SymmetricDirichletOutputPSP()) ],
 
-           [ "make_dir_mult",VentureSP(NullRequestPSP(),discrete.MakerCDirMultOutputPSP()) ],
-           [ "make_uc_dir_mult",VentureSP(NullRequestPSP(),discrete.MakerUDirMultOutputPSP()) ],
+           [ "make_dir_mult",no_request(discrete.MakerCDirMultOutputPSP()) ],
+           [ "make_uc_dir_mult",no_request(discrete.MakerUDirMultOutputPSP()) ],
 
-           [ "make_beta_bernoulli",VentureSP(NullRequestPSP(),discrete.MakerCBetaBernoulliOutputPSP()) ],
-           [ "make_uc_beta_bernoulli",VentureSP(NullRequestPSP(),discrete.MakerUBetaBernoulliOutputPSP()) ],
+           [ "make_beta_bernoulli",no_request(discrete.MakerCBetaBernoulliOutputPSP()) ],
+           [ "make_uc_beta_bernoulli",no_request(discrete.MakerUBetaBernoulliOutputPSP()) ],
 
-           [ "make_sym_dir_mult",VentureSP(NullRequestPSP(),discrete.MakerCSymDirMultOutputPSP()) ],
-           [ "make_uc_sym_dir_mult",VentureSP(NullRequestPSP(),discrete.MakerUSymDirMultOutputPSP()) ],
+           [ "make_sym_dir_mult",no_request(discrete.MakerCSymDirMultOutputPSP()) ],
+           [ "make_uc_sym_dir_mult",no_request(discrete.MakerUSymDirMultOutputPSP()) ],
 
-           [ "make_crp",VentureSP(NullRequestPSP(),crp.MakeCRPOutputPSP()) ],
+           [ "make_crp",no_request(crp.MakeCRPOutputPSP()) ],
 
-           [ "make_lazy_hmm",VentureSP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()) ],
+           [ "make_lazy_hmm",no_request(hmm.MakeUncollapsedHMMOutputPSP()) ],
   ]
 
 def builtInSPs():
