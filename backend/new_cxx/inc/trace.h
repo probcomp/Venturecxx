@@ -104,6 +104,9 @@ struct Trace
   virtual bool containsMadeSPFamily(Node * makerNode, FamilyID id) =0;
   virtual RootOfFamily getMadeSPFamilyRoot(Node * makerNode, FamilyID id) =0;
 
+  virtual OutputNode * getOutermostNonRefAppNode(Node * node);
+
+
   gsl_rng * rng;
 
 };

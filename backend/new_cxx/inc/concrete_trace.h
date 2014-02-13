@@ -93,7 +93,6 @@ struct ConcreteTrace : Trace
 
   bool scopeHasEntropy(ScopeID scope); 
   void makeConsistent();
-  Node * getOutermostNonRefAppNode(Node * node);
 
   int numUnconstrainedChoices();
 

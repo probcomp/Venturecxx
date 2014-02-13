@@ -155,7 +155,7 @@ void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,
 
 bool ConcreteTrace::scopeHasEntropy(ScopeID scope) { throw 500; }
 void ConcreteTrace::makeConsistent() { throw 500; }
-Node * ConcreteTrace::getOutermostNonRefAppNode(Node * node) { throw 500; }
+
 
 int ConcreteTrace::numUnconstrainedChoices() { throw 500; }
 

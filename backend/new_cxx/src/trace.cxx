@@ -86,3 +86,18 @@ vector<Node*> Trace::getParents(Node * node)
 }
 
 shared_ptr<Args> Trace::getArgs(ApplicationNode * node) { return shared_ptr<Args>(new Args(this,node)); }
+
+
+///////// misc
+OutputNode * Trace::getOutermostNonRefAppNode(Node * node)
+{
+  LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
+  if (lookupNode) { return getOutermostNonRefAppNode(lookupNode->sourceNode); }
+  OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
+  assert(outputNode);
+  if (dynamic_pointer_cast<ESRRefOutputPSP>(getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)))
+  { 
+    return getOutermostNonRefAppNode(getESRParents(outputNode)[0]);
+  }
+  else { return outputNode; }
+}

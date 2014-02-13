@@ -10,7 +10,7 @@
 #include "psp.h"
 #include "lkernel.h"
 
-/*
+
 double regenAndAttach(Trace * trace,
 		      const vector<Node*> & border,
 		      shared_ptr<Scaffold> scaffold,
@@ -34,26 +34,29 @@ double regenAndAttach(Trace * trace,
       weight += regen(trace,node,scaffold,shouldRestore,db,gradients);
       if (trace->isObservation(node))
       {
-        OutputNode * outputNode = trace->getOutermostNonReferenceApplication(node);
+        OutputNode * outputNode = trace->getOutermostNonRefAppNode(node);
 	      weight += constrain(trace,outputNode,trace->getObservedValue(node));
         constraintsToPropagate[outputNode] = trace->getObservedValue(node);
       }
     }
   }
-  for (map<Node*,VentureValuePtr>::iterator iter = constraintsToPropagate.begin();
-       iter != constraintsToPropagate.end();
-       ++iter)
+  // Propagate constraints
+  for (map<Node*,VentureValuePtr>::iterator iter1 = constraintsToPropagate.begin();
+       iter1 != constraintsToPropagate.end();
+       ++iter1)
   {
-    Node * node = iter->first;
-    for (size_t j = 0; j < trace->getChildren(node).size(); ++j)
+    Node * node = iter1->first;
+    set<Node*> children = trace->getChildren(node);
+    for (set<Node*>::iterator iter2 = children.begin();
+	 iter2 != children.end();
+	 ++iter2)
     {
-      Node * child = trace->getChildren(node)[j];
-      propagateConstraint(trace,child,iter->second);
+      propagateConstraint(trace,*iter2,iter1->second);
     }
   }
   return weight;
 }
-*/
+
 
 double constrain(Trace * trace,
 		 Node * node,
