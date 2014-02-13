@@ -105,12 +105,21 @@ void propagateConstraint(Trace * trace,
 
 
 double attach(Trace * trace,
-	      Node * node,
+	      ApplicationNode * node,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
 	      shared_ptr<map<Node*,Gradient> > gradients)
-{ throw 500; }
+{
+  double weight = regenParents(trace,node,scaffold,shouldRestore,db,gradients);
+  shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
+  shared_ptr<Args> args = trace->getArgs(node);
+  VentureValuePtr groundValue = trace->getGroundValue(node);
+  weight += psp->logDensity(groundValue,args);
+  psp->incorporate(groundValue,args);
+  return weight;
+}
+
 
 double regen(Trace * trace,
 	      Node * node,
