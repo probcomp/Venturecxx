@@ -31,15 +31,20 @@ struct VentureValue
   virtual int getInt() const;
   virtual int getAtom() const;
   virtual bool getBool() const;
-  virtual string getSymbol() const;
-  virtual vector<VentureValuePtr> getArray() const;
+  virtual const string & getSymbol() const;
+  virtual const vector<VentureValuePtr>& getArray() const;
   virtual bool isNil() const { return false; }
-  virtual pair<VentureValuePtr,VentureValuePtr> getPair() const;
-  virtual Simplex getSimplex() const;
+  
+  virtual const VentureValuePtr& getCar() const;
+  virtual const VentureValuePtr& getCdr() const;
+  
+  virtual const Simplex& getSimplex() const;
   virtual const VentureValuePtrMap<VentureValuePtr>& getDictionary() const;
-  virtual MatrixXd getMatrix() const;
-  virtual pair<vector<ESR>,vector<shared_ptr<LSR> > > getRequests() const;
-
+  virtual const MatrixXd& getMatrix() const;
+  
+  virtual const vector<ESR>& getESRs() const;
+  virtual const vector<shared_ptr<LSR> >& getLSRs() const;
+  
   virtual boost::python::dict toPython() const { assert(false); throw "need to override toPython()"; };
 
   virtual bool equals(const shared_ptr<const VentureValue> & other) const;
