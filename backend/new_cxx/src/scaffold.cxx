@@ -293,11 +293,51 @@ void maybeIncrementAAARegenCount(ConcreteTrace * trace,
 }
 
 map<Node*,int> computeRegenCounts(ConcreteTrace * trace,
-			      set<Node*> & drg,
-			      set<Node*> & absorbing,
-			      set<Node*> & aaa,
-			      set<Node*> & border,
-			      set<Node*> & brush) { assert(false); }
+				  set<Node*> & drg,
+				  set<Node*> & absorbing,
+				  set<Node*> & aaa,
+				  set<Node*> & border,
+				  set<Node*> & brush) 
+{
+  map<Node*,int> regenCounts;
+  for (set<Node*>::iterator drgIter = drg.begin(); drgIter != drg.end(); ++drgIter)
+  {
+    if (aaa.count(*drgIter)) { regenCounts[node] = 1; } // will be added to shortly
+    else if (border.count(*drgIter)) { regenCounts[node] = trace->getChildren(node).size() + 1; }
+    else { regenCounts[node] = trace->getChildren(node).size(); }
+  }
+
+  if (!aaa.empty())
+  {
+    for (set<Node*>::iterator drgIter = drg.begin(); drgIter != drg.end(); ++drgIter)
+    {
+      vector<Node*> parents = trace->getParents(*drgIter);
+      for (size_t i = 0; i < parents.size(); ++i) { maybeIncrementAAARegenCount(trace,regenCounts,aaa,parents[i]); }
+    }
+
+    for (set<Node*>::iterator absorbingIter = absorbing.begin(); absorbingIter != absorbing.end(); ++absorbingIter)
+    {
+      vector<Node*> parents = trace->getParents(*absorbingIter);
+      for (size_t i = 0; i < parents.size(); ++i) { maybeIncrementAAARegenCount(trace,regenCounts,aaa,parents[i]); }
+    }
+    
+    for (set<Node*>::iterator brushIter = brush.begin(); brushIter != brush.end(); ++brushIter)
+    {
+      LookupNode * lookupNode = dynamic_cast<LookupNode*>(*brushIter);
+      OutputNode * outputNode = dynamic_cast<OutputNode*>(*brushIter);
+      if (outputNode) 
+      {
+	vector<RootOfFamily> esrParents = trace->getESRParents(*brushIter);
+	for (size_t i = 0; i < esrParents.size(); ++i) { maybeIncrementAAARegenCount(trace,regenCounts,aaa,esrParents[i].get()); }
+      }
+      if (lookupNode)
+      {
+        maybeIncrementAAARegenCount(trace,regenCounts,aaa,lookupNode->sourceNode);
+      }
+    }
+  }
+  return regenCounts;
+}
 
 map<Node*,shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
 					    set<Node*> & drg,
