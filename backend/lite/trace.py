@@ -55,6 +55,10 @@ class Trace(object):
     else:
       assert isinstance(scope, VentureValue)
       assert isinstance(block, VentureValue)
+      # TODO probably want to allow arbitrary values as scopes and
+      # blocks; but this requires messing with hashability.
+      scope = scope.getNumber()
+      block = block.getNumber()
     if not scope in self.scopes: self.scopes[scope] = SMap()
     if not block in self.scopes[scope]: self.scopes[scope][block] = set()
     assert not node in self.scopes[scope][block]
@@ -72,6 +76,10 @@ class Trace(object):
     else:
       assert isinstance(scope, VentureValue)
       assert isinstance(block, VentureValue)
+      # TODO probably want to allow arbitrary values as scopes and
+      # blocks; but this requires messing with hashability.
+      scope = scope.getNumber()
+      block = block.getNumber()
     self.scopes[scope][block].remove(node)
     assert not scope == "default" or len(self.scopes[scope][block]) == 0
     if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
