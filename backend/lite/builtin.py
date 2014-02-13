@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 from sp import VentureSP
 from psp import NullRequestPSP, ESRRefOutputPSP, PSP, TypedPSP
@@ -85,8 +86,8 @@ def builtInSPsList():
 
            [ "map_list",VentureSP(dstructures.MapListRequestPSP(),dstructures.MapListOutputPSP()) ],
 
-           [ "array", VentureSP(NullRequestPSP(),dstructures.ArrayOutputPSP()) ],
-           [ "is_array", VentureSP(NullRequestPSP(),dstructures.IsArrayOutputPSP()) ],
+           [ "array", deterministic(lambda *args: v.VentureArray(np.array(args))) ],
+           [ "is_array", type_test(v.VentureArray) ],
            [ "dict", VentureSP(NullRequestPSP(),dstructures.DictOutputPSP()) ],
            [ "matrix", VentureSP(NullRequestPSP(),dstructures.MatrixOutputPSP()) ],
            [ "simplex", VentureSP(NullRequestPSP(),dstructures.SimplexOutputPSP()) ],

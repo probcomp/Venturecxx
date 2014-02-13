@@ -46,18 +46,6 @@ class MatrixOutputPSP(PSP):
   def description(self,name):
     return "(%s <list <list <number>>>) -> <matrix>\n  The input is the list of rows of the matrix." % name
 
-### Arrays
-
-class ArrayOutputPSP(PSP):
-  def simulate(self,args): return np.array(args.operandValues)
-  def description(self,name):
-    return "(%s <object0> ...) -> <array>" % name
-
-class IsArrayOutputPSP(PSP):
-  def simulate(self,args): return isinstance(args.operandValues[0],np.ndarray)
-  def description(self,name):
-    return "(%s <object>) -> <bool>" % name
-
 ### Map, the weird way.
 class MapListRequestPSP(PSP):
   def simulate(self,args):
