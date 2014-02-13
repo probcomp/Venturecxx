@@ -1,12 +1,19 @@
 from value import VentureValue, registerVentureType
 
+# Environments store Python strings for the symbols, not Venture
+# symbol objects.  This is a choice, but whichever way it is made it
+# should be consistent.
 class VentureEnvironment(VentureValue):
   def __init__(self,outerEnv=None,ids=None,nodes=None):
     self.outerEnv = outerEnv
     self.frame = {}
+    if ids:
+      for sym in ids:
+        assert isinstance(sym, str)
     if ids and nodes: self.frame.update(zip(ids,nodes))
 
   def addBinding(self,sym,val):
+    assert isinstance(sym, str)
     assert not sym in self.frame
     self.frame[sym] = val
 
