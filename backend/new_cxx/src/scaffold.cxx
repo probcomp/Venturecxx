@@ -97,7 +97,13 @@ void addAAANode(set<Node*> & cDRG,
 		set<Node*> & cAAA,
 		Node * node,
 		map<Node*,int> & indexAssignments,
-		int i) { assert(false); }
+		int i) 
+{
+  if (cAbsorbing.count(node)) { cAbsorbing.erase(node); }
+  cDRG.insert(node);
+  cAAA.insert(node);
+  indexAssignments[node] = i;
+}
 
 void extendCandidateScaffold(ConcreteTrace * trace,
 			     const set<Node*> & pnodes,
