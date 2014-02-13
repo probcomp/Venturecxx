@@ -5,15 +5,6 @@ import numpy as np
 import value as v
 
 ### Polymorphic Operators
-class LookupOutputPSP(PSP):
-  def simulate(self,args): 
-    xs = args.operandValues[0]
-    x = args.operandValues[1]
-    if isinstance(xs,list) and isinstance(x,float): return xs[int(x)]
-    else: return xs[x]
-  def description(self,name):
-    return "(%s <collection k v> <object k>) -> <object v>" % name
-
 class ContainsOutputPSP(PSP):
   def simulate(self,args): return args.operandValues[1] in args.operandValues[0]
   def description(self,name):

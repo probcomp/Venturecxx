@@ -27,6 +27,7 @@ class VentureValue(object):
     else: return 1 # We already checked for equality
 
   def compareSameType(self, _): raise Exception("Cannot compare %s" % type(self))
+  def lookup(self, _): raise Exception("Cannot look things up in %s" % type(self))
 
 class VentureNumber(VentureValue):
   def __init__(self,number): self.number = number
@@ -72,6 +73,8 @@ class VentureArray(VentureValue):
   def asStackDict(self):
     # TODO Are venture arrays reflected as lists to the stack?
     return {"type":"list","value":[v.asStackDict() for v in self.array]}
+  def lookup(self, index):
+    return self.array[index.getNumber()]
 
 class VentureNil(VentureValue):
   def __init__(self): pass
@@ -96,6 +99,12 @@ class VenturePair(VentureValue):
     fstcmp = self.first.compare(other.first)
     if fstcmp != 0: return fstcmp
     else: return self.rest.compare(other.rest)
+  def lookup(self, index):
+    ind = index.getNumber()
+    if ind < 1: # Equivalent to truncating for positive floats
+      return self.first
+    else:
+      return self.rest.lookup(VentureNumber(ind - 1))
 
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair(h, t), reversed(l), VentureNil())
@@ -117,10 +126,14 @@ class VentureSimplex(VentureValue):
   def asStackDict(self):
     # TODO As what type to reflect simplex points to the stack?
     return {"type":"simplex", "value":self.simplex}
+  def lookup(self, index):
+    return self.simplex[index.getNumber()]
 
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
   def getDict(self): return self.dict
+  def lookup(self, key):
+    return self.dict[key]
 
 # Backed by a numpy matrix object
 class VentureMatrix(VentureValue):

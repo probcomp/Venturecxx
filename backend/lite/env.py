@@ -17,4 +17,7 @@ class VentureEnvironment(VentureValue):
   # VentureEnvironments are intentionally not comparable until we
   # decide otherwise
 
+  def lookup(self, key):
+    return self.findSymbol(key.asSymbol())
+
 registerVentureType(VentureEnvironment)
