@@ -30,7 +30,7 @@ struct VentureValue
   virtual Simplex getSimplex() const;
   virtual unordered_map<VentureValuePtr,VentureValuePtr> getDictionary() const;
   virtual MatrixXd getMatrix() const;
-  virtual pair<vector<ESR>,vector<LSR *> > getRequests() const;
+  virtual pair<vector<ESR>,vector<LSR * > > getRequests() const;
 
   virtual boost::python::dict toPython() const { throw "need to override toPython()"; };
 
@@ -38,16 +38,20 @@ struct VentureValue
   virtual size_t hash() const;
 };
 
-/* For unordered_map. */
-bool operator==(shared_ptr<const VentureValue> & a, shared_ptr<const VentureValue> & b)
-{
-  return a->equals(b);
-}
+/* for unordered map */
+/*
+namespace boost {
+  template <>
+  bool operator==(const shared_ptr<const VentureValue> & a, const shared_ptr<const VentureValue> & b)
+  {
+    return a->equals(b);
+  }
 
-/* For unordered map. */
-size_t hash_value(shared_ptr<const VentureValue> & a)
-{
-  return a->hash();
+  template <>
+  size_t hash_value(const shared_ptr<const VentureValue> & a)
+  {
+    return a->hash();
+  }
 }
-
+*/
 #endif
