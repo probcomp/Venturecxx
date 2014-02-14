@@ -97,8 +97,6 @@ class TypedPSP(PSP):
   def childrenCanAAA(self):
     return self.psp.childrenCanAAA()
   def getAAALKernel(self):
-    # TODO Is this right?  Or should I somehow wrap the AAA LKernel so
-    # it deals with the types properly?
     return TypedAAALKernel(self.psp.getAAALKernel(), self.f_type)
 
   def makesHSRs(self): return self.psp.makeHSRs()
