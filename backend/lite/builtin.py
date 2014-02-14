@@ -88,6 +88,7 @@ def builtInSPsList():
            [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType()) ],
 
            [ "is_symbol", type_test(v.VentureSymbol) ],
+           [ "is_atom", type_test(v.VentureAtom) ],
 
            [ "list", deterministic(v.pythonListToVentureList) ],
            [ "pair", deterministic(v.VenturePair) ],
