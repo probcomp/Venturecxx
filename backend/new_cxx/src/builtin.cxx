@@ -1,9 +1,9 @@
 #include "builtin.h"
 #include "sp.h"
 #include "sps/csp.h"
+#include "sps/continuous.h"
 #include "sps/deterministic.h"
 #include "sps/discrete.h"
-
 
 map<string,VentureValuePtr> initBuiltInValues() 
 {
@@ -38,6 +38,16 @@ map<string,shared_ptr<VentureSP> > initBuiltInSPs()
   m["not"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new NotOutputPSP()));
   m["is_symbol"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new IsSymbolOutputPSP()));
   
+  /* Continuous SPs */
+  m["normal"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new NormalPSP()));
+  m["gamma"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new GammaPSP()));
+  m["inv_gamma"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new InvGammaPSP()));
+  m["uniform_continuous"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new UniformContinuousPSP()));
+  m["beta"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new BetaPSP()));
+  m["student_t"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new StudentTPSP()));
+  m["chi_sq"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new ChiSquaredPSP()));
+  m["inv_chi_sq"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new InvChiSquaredPSP()));
+
   /* Discrete SPs */
   m["bernoulli"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new BernoulliOutputPSP()));
 
