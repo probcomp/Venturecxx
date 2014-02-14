@@ -2,7 +2,6 @@ import numpy.random as npr
 import math
 import scipy.special as ss
 import numpy as np
-from value import VentureNumber
 
 def normalizeList(seq): 
   denom = sum(seq)
@@ -12,14 +11,17 @@ def normalizeList(seq):
     return [1.0/n for x in seq]
 
 def simulateCategorical(ps,os=None):
-  if os is None: os = [VentureNumber(i) for i in range(len(ps))]
+  if os is None: os = range(len(ps))
   ps = normalizeList(ps)
   return os[npr.multinomial(1,ps).argmax()]
 
 def logDensityCategorical(val,ps,os=None):
-  if os is None: os = [VentureNumber(i) for i in range(len(ps))]
+  if os is None: os = range(len(ps))
   ps = normalizeList(ps)
-  p = ps[os.index(val)] # TODO This should work while the comparison is done by identity; do I want to override the Python magic methods for VentureValues?
+  # TODO This should work for Venture Values while the comparison is
+  # done by identity; do I want to override the Python magic methods
+  # for VentureValues?
+  p = ps[os.index(val)]
   assert os.count(val) == 1
   return math.log(p)
 

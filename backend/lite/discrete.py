@@ -9,6 +9,7 @@ from sp import VentureSP,SPAux
 from lkernel import LKernel
 from nose.tools import assert_greater_equal
 import copy
+from value import VentureNumber
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args):
@@ -52,11 +53,17 @@ class BinomialOutputPSP(RandomPSP):
 
 class CategoricalOutputPSP(RandomPSP):
   # (categorical ps outputs)
-  def simulate(self,args): 
-    return simulateCategorical(*args.operandValues)
+  def simulate(self,args):
+    if len(args.operandValues) == 1: # Default values to choose from
+      return simulateCategorical(args.operandValues[0], [VentureNumber(i) for i in range(len(args.operandValues[0]))])
+    else:
+      return simulateCategorical(*args.operandValues)
 
   def logDensity(self,val,args):
-    return logDensityCategorical(val,*args.operandValues)
+    if len(args.operandValues) == 1: # Default values to choose from
+      return logDensityCategorical(val, args.operandValues[0], [VentureNumber(i) for i in range(len(args.operandValues[0]))])
+    else:
+      return logDensityCategorical(val,*args.operandValues)
 
   def description(self,name):
     return "(%s <simplex>) -> <number>\n(%s <simplex> <list a>) -> a\n  Samples a categorical.  In the one argument case, returns the index of the chosen option; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % (name, name)
