@@ -63,7 +63,9 @@ class VentureNumber(VentureValue):
     else: return 0 # self.number.__cmp__(other.number) works for ints but not floats.  Guido, WTF!?
 
 class VentureAtom(VentureValue):
-  def __init__(self,atom): self.atom = atom
+  def __init__(self,atom):
+    assert isinstance(atom, Number)
+    self.atom = atom
   def getNumber(self): return self.atom
   def getAtom(self): return self.atom
   def getBool(self): return self.atom
@@ -74,7 +76,9 @@ class VentureAtom(VentureValue):
     return self.atom.__cmp__(other.atom)
 
 class VentureBool(VentureValue):
-  def __init__(self,boolean): self.boolean = boolean
+  def __init__(self,boolean):
+    assert isinstance(boolean, bool)
+    self.boolean = boolean
   def getBool(self): return self.boolean
   def getNumber(self):
     # TODO This horrible thing permits adding the outputs of bernoulli
