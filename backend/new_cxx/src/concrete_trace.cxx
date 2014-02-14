@@ -7,6 +7,7 @@
 #include "regen.h"
 #include "sp.h"
 #include "db.h"
+#include "smap.h"
 
 #include <cmath>
 #include <cfloat>
