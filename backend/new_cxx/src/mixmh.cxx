@@ -10,11 +10,13 @@
 #include <iostream>
 using std::cout;
 using std::endl;
+using std::flush;
 
 void mixMH(ConcreteTrace * trace,
 	   shared_ptr<ScaffoldIndexer> indexer,
 	   shared_ptr<GKernel> gKernel)
 {
+//  cout << endl << "&&&&&" << endl;
   shared_ptr<Scaffold> index = indexer->sampleIndex(trace);
 
 //  cout << "Scaffold: " << index->showSizes() << endl;

@@ -128,10 +128,10 @@ void ConcreteTrace::addChild(Node * node, Node * child)
 /* Detach mutations */  
 RootOfFamily ConcreteTrace::popLastESRParent(OutputNode * outputNode) 
 { 
-  vector<RootOfFamily> esrRoots = getESRParents(outputNode);
-  assert(!esrRoots.empty());
-  RootOfFamily esrRoot = esrRoots.back();
-  esrRoots.pop_back();
+  vector<RootOfFamily> & esrParents = esrRoots[outputNode];
+  assert(!esrParents.empty());
+  RootOfFamily esrRoot = esrParents.back();
+  esrParents.pop_back();
   removeChild(esrRoot.get(),outputNode);
   decNumRequests(esrRoot);
   return esrRoot;
