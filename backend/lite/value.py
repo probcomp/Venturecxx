@@ -53,6 +53,7 @@ class VentureNumber(VentureValue):
   def __init__(self,number):
     assert isinstance(number, Number)
     self.number = number
+  def __repr__(self): return "Number(%s)" % self.number
   def getNumber(self): return self.number
   def asStackDict(self): return {"type":"number","value":self.number}
   @staticmethod
@@ -66,6 +67,7 @@ class VentureAtom(VentureValue):
   def __init__(self,atom):
     assert isinstance(atom, Number)
     self.atom = atom
+  def __repr__(self): return "Atom(%s)" % self.atom
   def getNumber(self): return self.atom
   def getAtom(self): return self.atom
   def getBool(self): return self.atom
@@ -79,6 +81,7 @@ class VentureBool(VentureValue):
   def __init__(self,boolean):
     assert isinstance(boolean, bool)
     self.boolean = boolean
+  def __repr__(self): return "Bool(%s)" % self.boolean
   def getBool(self): return self.boolean
   def getNumber(self):
     # TODO This horrible thing permits adding the outputs of bernoulli
@@ -93,6 +96,7 @@ class VentureBool(VentureValue):
 
 class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
+  def __repr__(self): return "Symbol(%s)" % self.symbol
   def getSymbol(self): return self.symbol
   def asStackDict(self): return {"type":"symbol","value":self.symbol}
   @staticmethod
@@ -131,6 +135,7 @@ class VentureArray(VentureValue):
 
 class VentureNil(VentureValue):
   def __init__(self): pass
+  def __repr__(self): return "Nil"
   def compareSameType(self, _): return 0 # All Nils are equal
   def asPythonList(self): return []
   def asStackDict(self): return {"type":"list", "value":[]}
