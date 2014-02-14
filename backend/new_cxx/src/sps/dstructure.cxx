@@ -56,3 +56,35 @@ VentureValuePtr IsArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
 }
 
 
+/* Lists */
+
+VentureValuePtr PairOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  return VentureValuePtr(new VenturePair(args->operandValues[0],args->operandValues[1]));
+}
+
+VentureValuePtr IsPairOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  return dynamic_pointer_cast<VenturePair>(args->operandValues[0]);
+}
+
+
+VentureValuePtr ListOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  VentureValuePtr l(new VentureNil());
+  for (size_t i = args->operandValues.size(); i > 0; --i)
+  {
+    l = VentureValuePtr(new VenturePair(args->operandValues[i-1],l));
+  }
+  return l;
+}
+
+VentureValuePtr FirstOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  return args->operandValues[0]->getFirst();
+}
+
+VentureValuePtr RestOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  return args->operandValues[0]->getRest();
+}

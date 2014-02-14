@@ -19,6 +19,7 @@ struct VentureNumber : VentureValue
 struct VentureAtom : VentureValue
 {
   VentureAtom(int n): n(n) {}
+  int getInt() const { return n; }
   int getAtom() const { return n; }
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
@@ -64,6 +65,7 @@ struct VentureArray : VentureValue
 struct VentureNil : VentureValue
 {
   bool isNil() const { return true; }
+  VentureValuePtr lookup(VentureValuePtr index) const { cout << "lookup in nil" << endl; assert(false); }
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   string toString() const;
@@ -71,9 +73,10 @@ struct VentureNil : VentureValue
 
 struct VenturePair : VentureValue
 {
-  VenturePair(VentureValuePtr car,VentureValuePtr cdr) { car = car; cdr = cdr; }
-  const VentureValuePtr& getCar() const { return car; }
-  const VentureValuePtr& getCdr() const { return cdr; }
+  VenturePair(VentureValuePtr car,VentureValuePtr cdr): car(car), cdr(cdr) { }
+  const VentureValuePtr& getFirst() const { return car; }
+  const VentureValuePtr& getRest() const { return cdr; }
+  VentureValuePtr lookup(VentureValuePtr index) const;
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   string toString() const;

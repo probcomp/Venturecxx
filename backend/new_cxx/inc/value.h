@@ -34,8 +34,8 @@ struct VentureValue
   virtual const vector<VentureValuePtr>& getArray() const;
   virtual bool isNil() const { return false; }
   
-  virtual const VentureValuePtr& getCar() const;
-  virtual const VentureValuePtr& getCdr() const;
+  virtual const VentureValuePtr& getFirst() const;
+  virtual const VentureValuePtr& getRest() const;
   
   virtual const Simplex& getSimplex() const;
   virtual const VentureValuePtrMap<VentureValuePtr>& getDictionary() const;

@@ -17,8 +17,8 @@ bool VentureValue::getBool() const { cannotConvertType(this,"bool"); assert(fals
 const string& VentureValue::getSymbol() const { cannotConvertType(this,"symbol"); assert(false); throw "no return"; }
 const vector<VentureValuePtr>& VentureValue::getArray() const { cannotConvertType(this,"array"); assert(false); throw "no return"; }
 
-const VentureValuePtr& VentureValue::getCar() const { cannotConvertType(this,"pair"); assert(false); throw "no return"; }
-const VentureValuePtr& VentureValue::getCdr() const { cannotConvertType(this,"pair"); assert(false); throw "no return"; }
+const VentureValuePtr& VentureValue::getFirst() const { cannotConvertType(this,"pair"); assert(false); throw "no return"; }
+const VentureValuePtr& VentureValue::getRest() const { cannotConvertType(this,"pair"); assert(false); throw "no return"; }
   
 const Simplex& VentureValue::getSimplex() const { cannotConvertType(this,"simplex"); assert(false); throw "no return"; }
 const VentureValuePtrMap<VentureValuePtr>& VentureValue::getDictionary() const { cannotConvertType(this,"dictionary"); assert(false); throw "no return"; }

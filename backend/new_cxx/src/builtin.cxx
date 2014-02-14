@@ -13,6 +13,7 @@ map<string,VentureValuePtr> initBuiltInValues()
   map<string,VentureValuePtr> m;
   m["true"] = shared_ptr<VentureBool>(new VentureBool(true));
   m["false"] = shared_ptr<VentureBool>(new VentureBool(false));
+  m["nil"] = shared_ptr<VentureNil>(new VentureNil());
   return m;
 }
 
@@ -68,6 +69,11 @@ map<string,shared_ptr<VentureSP> > initBuiltInSPs()
   m["dict"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new DictOutputPSP()));
   m["array"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new ArrayOutputPSP()));
   m["is_array"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new IsArrayOutputPSP()));
+  m["pair"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new PairOutputPSP()));
+  m["is_pair"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new IsPairOutputPSP()));
+  m["list"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new ListOutputPSP()));
+  m["first"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new FirstOutputPSP()));
+  m["rest"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new RestOutputPSP()));
 
 
   m["make_csp"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new MakeCSPOutputPSP()));
