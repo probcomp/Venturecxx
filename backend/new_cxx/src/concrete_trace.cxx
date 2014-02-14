@@ -133,10 +133,15 @@ RootOfFamily ConcreteTrace::popLastESRParent(OutputNode * outputNode)
   return esrRoot;
 }
 
-void ConcreteTrace::disconnectLookup(LookupNode * lookupNode) { assert(false); }
-void ConcreteTrace::decNumRequests(RootOfFamily root) { assert(false); }
+void ConcreteTrace::disconnectLookup(LookupNode * lookupNode) { removeChild(lookupNode->sourceNode,lookupNode); }
+void ConcreteTrace::decNumRequests(RootOfFamily root) 
+{ 
+  assert(numRequests.count(root));
+  numRequests[root]--;
+}
+
 void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
-void ConcreteTrace::removeChild(Node * node, Node * child) { assert(false); }
+void ConcreteTrace::removeChild(Node * node, Node * child) { assert(children.count(node)); children[node].erase(child); }
 
 /* Primitive getters */
 VentureValuePtr ConcreteTrace::getValue(Node * node) { return values[node]; }
