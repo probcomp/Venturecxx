@@ -3,10 +3,10 @@
 
 #include "types.h"
 #include <vector>
+#include "args.h"
 
 #include <gsl/gsl_rng.h>
 
-struct Args;
 struct LKernel;
 struct ConcreteTrace;
 struct ApplicationNode;

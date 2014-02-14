@@ -1,7 +1,8 @@
 #include "builtin.h"
 #include "sp.h"
-#include "sps/csp.h"
+#include "sps/conditional.h"
 #include "sps/continuous.h"
+#include "sps/csp.h"
 #include "sps/deterministic.h"
 #include "sps/discrete.h"
 
@@ -50,6 +51,10 @@ map<string,shared_ptr<VentureSP> > initBuiltInSPs()
 
   /* Discrete SPs */
   m["bernoulli"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new BernoulliOutputPSP()));
+
+  /* Conditiionals */
+  m["branch"] = shared_ptr<VentureSP>(new VentureSP(new BranchRequestPSP(), new ESRRefOutputPSP()));
+  m["biplex"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new BiplexOutputPSP()));
 
   m["make_csp"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new MakeCSPOutputPSP()));
   
