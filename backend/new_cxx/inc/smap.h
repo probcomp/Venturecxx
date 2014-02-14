@@ -18,12 +18,12 @@ struct SamplableMap
   V & get(K k) 
     {       
       assert(size() > 0);
-      cout << "get(" << this << ")" << endl; 
-      return a[d[k]].second; 
+      assert(d.count(k));
+      V & v = a[d[k]].second; 
+      return v;
     }
   void set(K k,V v) 
     { 
-      cout << "set(" << this << ")" << endl;
       assert(!d.count(k));
       d[k] = a.size();
       a.push_back(make_pair(k,v));
@@ -32,7 +32,6 @@ struct SamplableMap
 
   void erase(const K & k) 
     {
-      cout << "erase(" << this << ")" << endl;
       assert(d.count(k));
       int index = d[k];
       int lastIndex = a.size() - 1;
@@ -43,18 +42,16 @@ struct SamplableMap
 
       a.pop_back();
       d.erase(k);
-      cout << this << ": assert_equal(" << d.size() << "," << a.size() << ")" << endl;
       assert(d.size() == a.size());
     }
 
 
   size_t count(const K& k) const { assert(false); }
   size_t size() const { return a.size(); }
-  bool contains(K k){ return d.count(k); }
+  bool contains(K k) { return d.count(k); }
 
   K & sampleKeyUniformly(gsl_rng * rng) 
     { 
-      cout << "sample(" << this << ")" << endl;
       assert(size() > 0);
       int index = gsl_rng_uniform_int(rng, size());
       return a[index].first;

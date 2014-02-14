@@ -67,8 +67,10 @@ void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
 void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
   assert(block);
+  cout << "reg: " << block->getNode() << endl;
   if (!scopes.count(scope)) { scopes[scope] = SamplableMap<BlockID,set<Node*> >(); }
   if (!scopes[scope].contains(block)) { scopes[scope].set(block,set<Node*>()); }
+  assert(scopes[scope].contains(block));
   assert(!scopes[scope].get(block).count(node));
   scopes[scope].get(block).insert(node);
   assert(scopes[scope].size() > 0);
@@ -94,6 +96,8 @@ void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
 
 void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
+  cout << "unreg: " << block->getNode() << endl;
+  assert(scopes[scope].contains(block));
   assert(scopes[scope].get(block).count(node));
   scopes[scope].get(block).erase(node);
   assert(scope->getSymbol() != "default" || scopes[scope].get(block).empty());
@@ -269,6 +273,7 @@ vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope) { assert
 
 set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block) 
 { 
+  assert(scopes[scope].contains(block));
   set<Node * > nodes = scopes[scope].get(block);
   if (dynamic_pointer_cast<VentureSymbol>(scope) && scope->getSymbol() == "default") { return nodes; }
   set<Node *> pnodes;
