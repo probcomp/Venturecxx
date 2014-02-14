@@ -9,7 +9,7 @@ from sp import VentureSP,SPAux
 from lkernel import LKernel
 from nose.tools import assert_greater_equal
 import copy
-from value import VentureNumber, AnyType
+from value import VentureNumber, AnyType, VentureAtom
 from psp import TypedPSP
 
 class BernoulliOutputPSP(RandomPSP):
@@ -56,13 +56,13 @@ class CategoricalOutputPSP(RandomPSP):
   # (categorical ps outputs)
   def simulate(self,args):
     if len(args.operandValues) == 1: # Default values to choose from
-      return simulateCategorical(args.operandValues[0], [VentureNumber(i) for i in range(len(args.operandValues[0]))])
+      return simulateCategorical(args.operandValues[0], [VentureAtom(i) for i in range(len(args.operandValues[0]))])
     else:
       return simulateCategorical(*args.operandValues)
 
   def logDensity(self,val,args):
     if len(args.operandValues) == 1: # Default values to choose from
-      return logDensityCategorical(val, args.operandValues[0], [VentureNumber(i) for i in range(len(args.operandValues[0]))])
+      return logDensityCategorical(val, args.operandValues[0], [VentureAtom(i) for i in range(len(args.operandValues[0]))])
     else:
       return logDensityCategorical(val,*args.operandValues)
 
@@ -236,7 +236,7 @@ class DirMultSP(VentureSP):
 class MakerCSymDirMultOutputPSP(PSP):
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
-    os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureNumber(i) for i in range(n)]
+    os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureAtom(i) for i in range(n)]
     output = TypedPSP([], AnyType(), CSymDirMultOutputPSP(alpha,n,os))
     return DirMultSP(NullRequestPSP(),output,n)
 
@@ -288,7 +288,7 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
 
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
-    os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureNumber(i) for i in range(n)]
+    os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureAtom(i) for i in range(n)]
     theta = npr.dirichlet([alpha for _ in range(n)])
     output = TypedPSP([], AnyType(), USymDirMultOutputPSP(theta,os))
     return DirMultSP(NullRequestPSP(),output,n)
