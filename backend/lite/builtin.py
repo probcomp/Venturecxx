@@ -137,7 +137,7 @@ def builtInSPsList():
            [ "student_t",unaryNumS(continuous.StudentTOutputPSP()) ],
 
            [ "dirichlet",no_request(discrete.DirichletOutputPSP()) ],
-           [ "symmetric_dirichlet",no_request(discrete.SymmetricDirichletOutputPSP()) ],
+           [ "symmetric_dirichlet",typed_nr(discrete.SymmetricDirichletOutputPSP(), [v.NumberType(), v.NumberType()], v.SimplexType()) ],
 
            [ "make_dir_mult",no_request(discrete.MakerCDirMultOutputPSP()) ],
            [ "make_uc_dir_mult",no_request(discrete.MakerUDirMultOutputPSP()) ],
