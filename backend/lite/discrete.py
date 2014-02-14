@@ -9,7 +9,8 @@ from sp import VentureSP,SPAux
 from lkernel import LKernel
 from nose.tools import assert_greater_equal
 import copy
-from value import VentureNumber
+from value import VentureNumber, AnyType
+from psp import TypedPSP
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args):
@@ -235,8 +236,9 @@ class DirMultSP(VentureSP):
 class MakerCSymDirMultOutputPSP(PSP):
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
-    os = args.operandValues[2] if len(args.operandValues) > 2 else range(n)
-    return DirMultSP(NullRequestPSP(),CSymDirMultOutputPSP(alpha,n,os),n)
+    os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureNumber(i) for i in range(n)]
+    output = TypedPSP([], AnyType(), CSymDirMultOutputPSP(alpha,n,os))
+    return DirMultSP(NullRequestPSP(),output,n)
 
   def childrenCanAAA(self): return True
 
