@@ -299,9 +299,10 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
 
   def logDensity(self,value,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
-    assert isinstance(value,DirMultSP)
-    assert isinstance(value.outputPSP,USymDirMultOutputPSP)
-    return logDensityDirichlet(value.outputPSP.theta,[alpha for _ in range(n)])
+    assert isinstance(value, DirMultSP)
+    assert isinstance(value.outputPSP, TypedPSP)
+    assert isinstance(value.outputPSP.psp, USymDirMultOutputPSP)
+    return logDensityDirichlet(value.outputPSP.psp.theta, [alpha for _ in range(n)])
 
   def description(self,name):
     return "(%s alpha n) -> <SP () <number>>\n(%s alpha n <list a>) -> <SP () a>\n  Uncollapsed symmetric Dirichlet nultinomial in n dimensions.  The two argument version returns a sampler for the dimension; the three argument version returns a sampler from the given list of options.  It is an error if the length of the given list is not n." % (name, name)
@@ -416,9 +417,10 @@ class MakerUDirMultOutputPSP(RandomPSP):
 
   def logDensity(self,value,args):
     alpha = args.operandValues[0]
-    assert isinstance(value,DirMultSP)
-    assert isinstance(value.outputPSP,UDirMultOutputPSP)
-    return logDensityDirichlet(value.outputPSP.theta,alpha)
+    assert isinstance(value, DirMultSP)
+    assert isinstance(value.outputPSP, TypedPSP)
+    assert isinstance(value.outputPSP.psp, UDirMultOutputPSP)
+    return logDensityDirichlet(value.outputPSP.psp.theta,alpha)
 
   def description(self,name):
     return "(%s <list alpha>) -> <SP () <number>>\n(%s <list alpha> <list a>) -> <SP () a>\n  Uncollapsed Dirichlet multinomial." % (name,name)
