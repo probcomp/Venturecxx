@@ -64,6 +64,7 @@ src_files = [
 
     "src/gkernels/mh.cxx",
     
+    "src/sps/continuous.cxx",
     "src/sps/csp.cxx",
     "src/sps/deterministic.cxx",
     
