@@ -148,7 +148,7 @@ def builtInSPsList():
            [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], v.AnyType()) ],
            [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], v.AnyType()) ],
 
-           [ "make_crp",no_request(crp.MakeCRPOutputPSP()) ],
+           [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType()], v.AnyType()) ],
 
            [ "make_lazy_hmm",no_request(hmm.MakeUncollapsedHMMOutputPSP()) ],
   ]

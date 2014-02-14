@@ -1,9 +1,10 @@
-from psp import PSP, NullRequestPSP, RandomPSP
+from psp import PSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import VentureSP
 import math
 import scipy.special
 import scipy.stats
 from utils import simulateCategorical
+from value import AtomType # The type names are metaprogrammed pylint: disable=no-name-in-module
 
 class CRPSPAux(object):
   def __init__(self):
@@ -26,7 +27,8 @@ class CRPSP(VentureSP):
 class MakeCRPOutputPSP(PSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
-    return CRPSP(NullRequestPSP(),CRPOutputPSP(alpha))
+    output = TypedPSP([], AtomType(), CRPOutputPSP(alpha))
+    return CRPSP(NullRequestPSP(),output)
 
   def childrenCanAAA(self): return True
 
