@@ -4,6 +4,9 @@ This design deliberately tries to avoid piggybacking on Python magic
 (like the __foo__ methods) in order to make the architecture clear
 enough to replicate in another language (such as C++).
 
+However, __eq__ does need to be implemented, to make things like find
+and count (on Python lists of VentureValues) work.
+
 TODO Actually explain it.
 
 """
@@ -48,6 +51,12 @@ class VentureValue(object):
   def lookup(self, _): raise Exception("Cannot look things up in %s" % type(self))
   def contains(self, _): raise Exception("Cannot look for things in %s" % type(self))
   def length(self): raise Exception("Cannot measure length of %s" % type(self))
+
+  def __eq__(self, other):
+    if isinstance(other, VentureValue):
+      return self.equal(other)
+    else:
+      return False
 
 class VentureNumber(VentureValue):
   def __init__(self,number):
