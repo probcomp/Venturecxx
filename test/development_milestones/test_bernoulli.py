@@ -5,7 +5,7 @@ from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, collect_iid_samples
 
-#@statisticalTest
+@statisticalTest
 def testBernoulli1():
   ripl = get_ripl()
   ripl.predict("(bernoulli 0.3)")
@@ -15,5 +15,5 @@ def testBernoulli1():
   # ripl.assume("x5", "(bernoulli)")  
 
   predictions = collectSamples(ripl,1)
-#  ans = [(False, 0.3),(True, 0.7)]
-#  return reportKnownDiscrete(ans, predictions)
+  ans = [(True, 0.3),(False, 0.7)]
+  return reportKnownDiscrete(ans, predictions)
