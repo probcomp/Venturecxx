@@ -428,7 +428,7 @@ class MakerUDirMultOutputPSP(RandomPSP):
 class UDirMultAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):
     alpha = args.operandValues[0]
-    os = args.operandValues[1] if len(args.operandValues) > 1 else range(len(alpha))
+    os = args.operandValues[1] if len(args.operandValues) > 1 else [VentureAtom(i) for i in range(len(alpha))]
     assert isinstance(args.madeSPAux,DirMultSPAux)
     counts = [count + a for (count,a) in zip(args.madeSPAux.os,alpha)]
     newTheta = npr.dirichlet(counts)
