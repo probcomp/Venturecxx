@@ -50,6 +50,8 @@ struct VentureValue
 
   virtual bool equals(const VentureValuePtr & other) const;
   virtual size_t hash() const;
+  
+  virtual string toString() const { return "Unknown VentureValue"; };
 };
 
 /* for unordered map */
