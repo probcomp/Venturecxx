@@ -162,7 +162,8 @@ def testSprinkler2():
 """)
   ripl.observe("grassWet", True)
 
-  predictions = collectSamples(ripl,1,infer="mixes_slowly")
+#  predictions = collectSamples(ripl,1,infer="mixes_slowly")
+  predictions = collectSamples(ripl,1)
   ans = [(True, .3577), (False, .6433)]
   return reportKnownDiscrete(ans, predictions)
 

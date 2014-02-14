@@ -134,6 +134,7 @@ double extract(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_pt
 
 double unevalFamily(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
+  //cout << "unevalFamily(" << node << ")" << endl;
   double weight = 0;
 
   LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
@@ -228,7 +229,7 @@ double unevalRequests(Trace * trace,RequestNode * node,shared_ptr<Scaffold> scaf
        ++esrIter)
   {
     RootOfFamily esrRoot = trace->popLastESRParent(node->outputNode);
-    if (trace->getNumRequests(esrRoot))
+    if (trace->getNumRequests(esrRoot) == 0)
     {
       trace->unregisterMadeSPFamily(trace->getOperatorSPMakerNode(node),esrIter->id);
       db->registerSPFamily(trace->getMadeSP(trace->getOperatorSPMakerNode(node)),esrIter->id,esrRoot);
