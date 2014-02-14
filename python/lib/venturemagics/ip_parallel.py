@@ -587,8 +587,21 @@ def crp(no_ripls=2):
 
 
 def lang(no_ripls=2):
-    prog='''
-    [assume alpha (uniform_continuous .9 1)]
+
+
+prog2='''
+[assume zeros (lambda (n) (if (= n 0) (list) (pair 0 (zeros (minus n 1)))))]
+[assume is_nil (lambda (lst) (not (is_pair lst) ) ) ]
+[assume len (lambda (lst) (if (is_nil lst) 0 (plus 1. (len (rest lst))) ) ) ]
+[assume repeat (lambda (th n) (if (= n 0) (list) (pair (th) (repeat th (minus n 1) ) ) ) ) ] 
+[assume nps (list (quote bob) (quote time) (quote space) (quote truth) (quote alice) (quote fate) (quote man) (quote beast) (quote nature) (quote he) (quote she) (quote cynthia) (quote zeus) ) ]
+[assume np (lambda () (lookup nps (uniform_discrete 0 (len nps)) ) ) ]
+[assume uni_simplex (lambda (n) (map_list (lambda (x) (div 1 n)) (zeros n) ) ) ]
+[assume np2 (lambda () (lookup nps (categorical (simplex (uni_simplex (len nps) ) ) ) ) ) ]
+[assume npz (repeat np 3) ]
+
+
+ [assume alpha (uniform_continuous .9 1)]
     [assume crp (make_crp alpha) ]
     [assume z (mem (lambda (i) (crp) ) ) ]
     [assume nps (list (quote bob) (quote time) (quote space) (quote truth) (quote alice) (quote fate) (quote man) (quote beast) (quote nature) (quote he) (quote she) (quote cynthia) (quote zeus) ) ]
