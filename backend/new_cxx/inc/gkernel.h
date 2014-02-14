@@ -9,11 +9,11 @@ struct Trace;
 
 struct GKernel
 {
-  pair<Trace*,double> propose(ConcreteTrace * trace,
-			      shared_ptr<Scaffold> scaffold);
+  virtual pair<Trace*,double> propose(ConcreteTrace * trace,
+				      shared_ptr<Scaffold> scaffold) =0;
 
-  void accept();
-  void reject();
+  virtual void accept() =0;
+  virtual void reject() =0;
   
 };
 

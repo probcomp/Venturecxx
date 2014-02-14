@@ -43,6 +43,7 @@ struct SamplableMap
 
       a.pop_back();
       d.erase(k);
+      cout << this << ": assert_equal(" << d.size() << "," << a.size() << ")" << endl;
       assert(d.size() == a.size());
     }
 
