@@ -1,5 +1,6 @@
 #include "sps/csp.h"
 #include "sp.h"
+#include "env.h"
 
 VentureValuePtr MakeCSPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
@@ -29,8 +30,11 @@ VentureValuePtr CSPRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
   {
     shared_ptr<VentureSymbol> symbol = dynamic_pointer_cast<VentureSymbol>(symbols->xs[i]);
     assert(symbol); // TODO throw a syntax error once exceptions work
-    extendedEnv.addBinding(symbol, args->operandNodes[i]);
+    extendedEnv->addBinding(symbol, args->operandNodes[i]);
   }
   
-  return VentureValuePtr(new VentureRequest(VentureValuePtr(new VentureID),expression,extendedEnv));
+  vector<ESR> esrs;
+  esrs.push_back(ESR(VentureValuePtr(new VentureID()),expression,extendedEnv));
+  
+  return VentureValuePtr(new VentureRequest(esrs, vector<shared_ptr<LSR> >()));
 }
