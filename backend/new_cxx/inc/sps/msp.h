@@ -11,13 +11,13 @@ struct MakeMSPOutputPSP : PSP
 
 struct MSPRequestPSP : PSP
 {
-  MSPRequestPSP(VentureValuePtr sharedSP);
+  MSPRequestPSP(Node * sharedOperatorNode);
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace,Node * appNode,Node * parentNode) const { return true; }
 
 private:
-  VentureValuePtr sharedSP;
+  Node * sharedOperatorNode;
 };
 
 #endif
