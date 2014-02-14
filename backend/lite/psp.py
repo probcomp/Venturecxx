@@ -111,3 +111,7 @@ class TypedPSP(PSP):
   def description(self,name):
     # TODO Automatically add the type signature?
     return self.psp.description(name)
+
+  # TODO Is this method part of the psp interface?
+  def logDensityOfCounts(self,aux):
+    return self.psp.logDensityOfCounts(aux)
