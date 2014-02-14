@@ -352,8 +352,9 @@ class DirichletOutputPSP(RandomPSP):
 class MakerCDirMultOutputPSP(PSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
-    os = args.operandValues[1] if len(args.operandValues) > 1 else range(len(alpha))
-    return DirMultSP(NullRequestPSP(),CDirMultOutputPSP(alpha,os),len(alpha))
+    os = args.operandValues[1] if len(args.operandValues) > 1 else [VentureAtom(i) for i in range(len(alpha))]
+    output = TypedPSP([], AnyType(), CDirMultOutputPSP(alpha,os))
+    return DirMultSP(NullRequestPSP(),output,len(alpha))
 
   def childrenCanAAA(self): return True
 

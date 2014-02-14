@@ -119,7 +119,7 @@ def checkMakeDirMult1(maker):
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "(%s (simplex a a a a))" % maker)
+  ripl.assume("f", "(%s (array a a a a))" % maker)
   ripl.predict("(f)")
   return checkDirichletMultinomialAAA(ripl, 3)
 
