@@ -140,7 +140,7 @@ def builtInSPsList():
            [ "symmetric_dirichlet",typed_nr(discrete.SymmetricDirichletOutputPSP(), [v.NumberType(), v.NumberType()], v.SimplexType()) ],
 
            [ "make_dir_mult",typed_nr(discrete.MakerCDirMultOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.ArrayType()], v.AnyType(), min_req_args=1) ],
-           [ "make_uc_dir_mult",no_request(discrete.MakerUDirMultOutputPSP()) ],
+           [ "make_uc_dir_mult",typed_nr(discrete.MakerUDirMultOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.ArrayType()], v.AnyType(), min_req_args=1) ],
 
            [ "make_sym_dir_mult",typed_nr(discrete.MakerCSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], v.AnyType(), min_req_args=2) ], # Saying AnyType here requires the underlying psp to emit a VentureValue.
            [ "make_uc_sym_dir_mult",typed_nr(discrete.MakerUSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], v.AnyType(), min_req_args=2) ],
