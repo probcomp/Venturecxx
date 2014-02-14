@@ -86,8 +86,7 @@ class TestVentureSivm(unittest.TestCase):
 
     # test expression desugaring and exception sugaring
     def test_sugaring_1(self):
-        # FIXME: stubbing the sivm breaks pausing continuous inference
-        return
+        raise SkipTest("Stubbing the sivm breaks pausing continuous inference.  Issue: https://app.asana.com/0/9277419963067/10281673660714")
         #stub the Sivm
         def f(expression):
             raise VentureException('parse', 'moo', expression_index=[3,2,0,1,0])
@@ -103,6 +102,7 @@ class TestVentureSivm(unittest.TestCase):
             self.assertEqual(e.data['expression_index'],[3,1,0,0])
     # test exception_index desugaring
     def test_sugaring_2(self):
+        raise SkipTest("Stubbing the sivm breaks pausing continuous inference.  Issue: https://app.asana.com/0/9277419963067/10281673660714")
         num = {'type':'number','value':1}
         did = self.sivm.execute_instruction({
             "instruction":"assume",
@@ -110,8 +110,6 @@ class TestVentureSivm(unittest.TestCase):
             "expression":['if',num,num,['let',[['a',num]],num]]
             })['directive_id']
         #stub the Sivm
-        # FIXME: stubbing the sivm breaks pausing continuous inference
-        return
         def f(expression):
             got = expression['source_code_location']['expression_index']
             expected = [0,3,2,0,1,0]
