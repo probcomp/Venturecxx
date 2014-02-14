@@ -4,7 +4,7 @@
 #include "types.h"
 #include "trace.h"
 #include "smap.h"
-
+#include "value.h"
 
 struct ConcreteTrace : Trace
 {
@@ -120,7 +120,7 @@ struct ConcreteTrace : Trace
 
   map<DirectiveID,RootOfFamily> families;
 
-  map<ScopeID,SamplableMap<BlockID,set<Node*> > > scopes;
+  VentureValuePtrMap<SamplableMap<BlockID,set<Node*> > > scopes;
 
   map<Node*, vector<RootOfFamily> > esrRoots;
   map<RootOfFamily, int> numRequests;

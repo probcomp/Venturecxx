@@ -110,8 +110,9 @@ void PyTrace::infer(boost::python::dict params)
   size_t numTransitions = boost::python::extract<size_t>(params["transitions"]);
   string kernel = boost::python::extract<string>(params["kernel"]);
   
-  ScopeID scope = parseExpression(params["scope"]);
-  BlockID block = parseExpression(params["block"]);
+  /* TODO parse strings or integers */
+  ScopeID scope = shared_ptr<VentureSymbol>(new VentureSymbol(boost::python::extract<string>(params["scope"])));
+  BlockID block = shared_ptr<VentureSymbol>(new VentureSymbol(boost::python::extract<string>(params["block"])));
   
   assert(kernel == "mh");
 //  assert(scope == "default");

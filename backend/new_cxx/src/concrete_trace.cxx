@@ -71,6 +71,8 @@ void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID blo
   if (!scopes[scope].contains(block)) { scopes[scope].set(block,set<Node*>()); }
   assert(!scopes[scope].get(block).count(node));
   scopes[scope].get(block).insert(node);
+  assert(scopes[scope].size() > 0);
+  assert(scopes[scope].get(block).size() > 0);
   assert(scope->getSymbol() != "default" || scopes[scope].get(block).size() == 1);
 }
 
@@ -239,7 +241,7 @@ RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
 
 /* New in ConcreteTrace */
 
-BlockID ConcreteTrace::sampleBlock(ScopeID scope) { return scopes[scope].sampleKeyUniformly(rng); }
+BlockID ConcreteTrace::sampleBlock(ScopeID scope) { assert(scopes.count(scope)); return scopes[scope].sampleKeyUniformly(rng); }
 double ConcreteTrace::logDensityOfBlock(ScopeID scope) { return -1 * log(numBlocksInScope(scope)); }
 //vector<BlockID> ConcreteTrace::blocksInScope(ScopeID scope) { assert(false); }
 int ConcreteTrace::numBlocksInScope(ScopeID scope) 

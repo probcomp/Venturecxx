@@ -20,7 +20,7 @@ struct HashVentureValuePtr;
 struct VentureValuePtrsEqual;
 
 template <typename T>
-class VentureValuePtrMap : boost::unordered_map<VentureValuePtr, T, HashVentureValuePtr, VentureValuePtrsEqual> {};
+struct VentureValuePtrMap : boost::unordered_map<VentureValuePtr, T, HashVentureValuePtr, VentureValuePtrsEqual> {};
 
 // TODO AXCH
 // We need to be more consistent about whether this unboxes
