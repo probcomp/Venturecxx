@@ -14,6 +14,13 @@ from abc import ABCMeta
 from numbers import Number
 from request import Request # TODO Pull that file in here?
 
+def stupidCompare(thing, other):
+  # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
+  # strings don't have __cmp__ either?
+  if thing < other: return -1
+  elif thing > other: return 1
+  else: return 0
+
 class VentureValue(object):
   __metaclass__ = ABCMeta
 
@@ -67,11 +74,7 @@ class VentureNumber(VentureValue):
   def asStackDict(self): return {"type":"number","value":self.number}
   @staticmethod
   def fromStackDict(thing): return VentureNumber(thing["value"])
-  def compareSameType(self, other):
-    # self.number.__cmp__(other.number) works for ints but not floats.  Guido, WTF!?
-    if self.number < other.number: return -1
-    elif self.number > other.number: return 1
-    else: return 0
+  def compareSameType(self, other): return stupidCompare(self.number, other.number)
   def __hash__(self): return hash(self.number)
 
 class VentureAtom(VentureValue):
@@ -85,10 +88,7 @@ class VentureAtom(VentureValue):
   def asStackDict(self): return {"type":"atom","value":self.atom}
   @staticmethod
   def fromStackDict(thing): return VentureAtom(thing["value"])
-  def compareSameType(self, other):
-    if self.atom < other.atom: return -1
-    elif self.atom > other.atom: return 1
-    else: return 0
+  def compareSameType(self, other): return stupidCompare(self.atom, other.atom)
   def __hash__(self): return hash(self.atom)
 
 class VentureBool(VentureValue):
@@ -116,8 +116,7 @@ class VentureSymbol(VentureValue):
   def asStackDict(self): return {"type":"symbol","value":self.symbol}
   @staticmethod
   def fromStackDict(thing): return VentureSymbol(thing["value"])
-  def compareSameType(self, other):
-    return self.symbol.__cmp__(other.symbol)
+  def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
   def __hash__(self): return hash(self.symbol)
 
 # Venture arrays are heterogeneous, with O(1) access and O(n) copy.
