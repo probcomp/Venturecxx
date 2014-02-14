@@ -68,9 +68,10 @@ class VentureNumber(VentureValue):
   @staticmethod
   def fromStackDict(thing): return VentureNumber(thing["value"])
   def compareSameType(self, other):
+    # self.number.__cmp__(other.number) works for ints but not floats.  Guido, WTF!?
     if self.number < other.number: return -1
     elif self.number > other.number: return 1
-    else: return 0 # self.number.__cmp__(other.number) works for ints but not floats.  Guido, WTF!?
+    else: return 0
 
 class VentureAtom(VentureValue):
   def __init__(self,atom):
@@ -84,7 +85,9 @@ class VentureAtom(VentureValue):
   @staticmethod
   def fromStackDict(thing): return VentureAtom(thing["value"])
   def compareSameType(self, other):
-    return self.atom.__cmp__(other.atom)
+    if self.atom < other.atom: return -1
+    elif self.atom > other.atom: return 1
+    else: return 0
 
 class VentureBool(VentureValue):
   def __init__(self,boolean):
