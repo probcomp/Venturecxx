@@ -68,7 +68,7 @@ void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID blo
   if (!scopes[scope].contains(block)) { scopes[scope].set(block,set<Node*>()); }
   assert(!scopes[scope].get(block).count(node));
   scopes[scope].get(block).insert(node);
-  assert(scope->getSymbol() != "default" or scopes[scope].get(block).size() == 1);
+  assert(scope->getSymbol() != "default" || scopes[scope].get(block).size() == 1);
 }
 
 void ConcreteTrace::registerConstrainedChoice(Node * node) {
@@ -80,11 +80,21 @@ void ConcreteTrace::registerConstrainedChoice(Node * node) {
 void ConcreteTrace::unregisterAEKernel(Node * node) { assert(false); }
 
 void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
+  unregisterUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
+				       shared_ptr<VentureNode>(new VentureNode(node)),
+				       node);
   assert(unconstrainedChoices.count(node) == 1);
   unconstrainedChoices.erase(node);
 }
 
-void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) { assert(false); }
+void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
+{ 
+  assert(scopes[scope].get(block).count(node));
+  scopes[scope].get(block).erase(node);
+  assert(scope->getSymbol() != "default" || scopes[scope].get(block).empty());
+  if (scopes[scope].get(block).empty()) { scopes[scope].erase(block); }
+  if (scopes[scope].size() == 0) { scopes.erase(scope); }
+}
 
 void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
   assert(constrainedChoices.count(node) == 1);

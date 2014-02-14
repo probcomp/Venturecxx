@@ -19,7 +19,7 @@ struct SamplableMap
       a.push_back(make_pair(k,v));
     }
 
-  size_t erase(const K & k) 
+  void erase(const K & k) 
     {
       assert(d.count(k));
       int index = d[k];
@@ -29,7 +29,7 @@ struct SamplableMap
       d[lastPair.first] = index;
       a[index] = lastPair;
 
-      a.pop();
+      a.pop_back();
       d.erase(k);
       assert(d.size() == a.size());
     }
