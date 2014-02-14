@@ -21,6 +21,19 @@ def testBernoulli1():
 @statisticalTest
 def testCategorical1():
   ripl = get_ripl()
+  ripl.predict("(categorical (simplex 0.3 0.7))")
+  # ripl.assume("x2", "(bernoulli 0.4)")
+  # ripl.assume("x3", "(bernoulli 0.0)")
+  # ripl.assume("x4", "(bernoulli 1.0)")
+  # ripl.assume("x5", "(bernoulli)")  
+
+  predictions = collectSamples(ripl,1)
+  ans = [(0, 0.3),(1, 0.7)]
+  return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+def testCategorical2():
+  ripl = get_ripl()
   ripl.predict("(categorical (simplex 0.3 0.7) (array true false))")
   # ripl.assume("x2", "(bernoulli 0.4)")
   # ripl.assume("x3", "(bernoulli 0.0)")

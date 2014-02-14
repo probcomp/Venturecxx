@@ -46,7 +46,11 @@ struct VentureValue
 
   virtual Node * getNode() const;
   
-  virtual boost::python::dict toPython() const { assert(false); throw "need to override toPython()"; };
+  virtual boost::python::dict toPython() const 
+    { 
+      cout << "toPython() -- " << toString() << endl;
+      assert(false); throw "need to override toPython()"; 
+    };
 
   virtual bool equals(const VentureValuePtr & other) const;
   virtual size_t hash() const;

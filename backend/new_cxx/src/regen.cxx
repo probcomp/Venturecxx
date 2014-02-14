@@ -257,8 +257,6 @@ double apply(Trace * trace,
   weight += regenESRParents(trace,outputNode,scaffold,shouldRestore,db,gradients);
   weight += applyPSP(trace,outputNode,scaffold,shouldRestore,db,gradients);
 
-  trace->getValue(outputNode)->toPython();
-
   return weight;
 }
 
