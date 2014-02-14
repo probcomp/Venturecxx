@@ -247,7 +247,7 @@ class MakerCSymDirMultOutputPSP(PSP):
   def childrenCanAAA(self): return True
 
   def description(self,name):
-    return "(%s alpha n) -> <SP () <number>>\n(%s alpha n <list a>) -> <SP () a>\n  Collapsed symmetric Dirichlet nultinomial in n dimensions.  The two argument version returns a sampler for the dimension; the three argument version returns a sampler from the given list of options.  It is an error if the length of the given list is not n." % (name, name)
+    return "(%s alpha n) -> <SP () <atom>>\n(%s alpha n <array a>) -> <SP () a>\n  Collapsed symmetric Dirichlet nultinomial in n dimensions.  The two argument version returns a sampler for the dimension; the three argument version returns a sampler from the given list of options.  It is an error if the length of the given list is not n." % (name, name)
 
 class CSymDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,n,os):
