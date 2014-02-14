@@ -4,7 +4,7 @@ from node import Node,ConstantNode,LookupNode,RequestNode,OutputNode,Args
 import math
 from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
-from value import SPRef, ExpressionType, VentureValue
+from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
 from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator
 from omegadb import OmegaDB
@@ -76,8 +76,12 @@ class Trace(object):
       assert isinstance(scope, VentureValue)
       assert isinstance(block, VentureValue)
       # TODO probably want to allow arbitrary values as scopes and
-      # blocks; but this requires messing with hashability.
-      return (scope.getNumber(), block.getNumber())
+      # blocks; but this requires converting them from the inference
+      # program.
+      if isinstance(scope, VentureSymbol):
+        return (scope.getSymbol(), block.getNumber())
+      else:
+        return (scope.getNumber(), block.getNumber())
 
   def registerConstrainedChoice(self,node):
     self.ccs.add(node)
