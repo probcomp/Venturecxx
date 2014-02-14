@@ -216,7 +216,7 @@ class VentureDict(VentureValue):
     return key in self.dict
   def size(self): return len(self.dict)
 
-# Backed by a numpy matrix object
+# 2D array of numbers backed by a numpy matrix object
 class VentureMatrix(VentureValue):
   def __init__(self,matrix): self.matrix = matrix
   def getMatrix(self): return self.matrix
