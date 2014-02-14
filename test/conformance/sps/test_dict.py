@@ -16,8 +16,8 @@ def testDict1():
   ripl = get_ripl()
 
   ripl.assume("x","(bernoulli 1.0)")
-  ripl.assume("d","""(dict (list (quote x) (quote y))
-                           (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
+  ripl.assume("d","""(dict (array (quote x) (quote y))
+                           (array (normal 0.0 1.0) (normal 10.0 1.0)))""")
   ripl.predict("""(normal (plus
                            (lookup d (quote x))
                            (lookup d (quote y))
@@ -30,8 +30,8 @@ def testDict1():
 
 def testDict2():
   ripl = get_ripl()
-  ripl.assume("d","""(dict (list (quote x) (quote y))
-                           (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
+  ripl.assume("d","""(dict (array (quote x) (quote y))
+                           (array (normal 0.0 1.0) (normal 10.0 1.0)))""")
   ripl.predict("(contains d (quote x))",label="p1")
   ripl.predict("(contains d (quote y))",label="p2")
   ripl.predict("(contains d (quote z))",label="p3")
@@ -42,8 +42,8 @@ def testDict2():
 
 def testDict3():
   ripl = get_ripl()
-  ripl.assume("d","""(dict (list atom<1> atom<2>)
-                           (list (normal 0.0 1.0) (normal 10.0 1.0)))""")
+  ripl.assume("d","""(dict (array atom<1> atom<2>)
+                           (array (normal 0.0 1.0) (normal 10.0 1.0)))""")
   ripl.predict("(contains d atom<1>)",label="p1")
   ripl.predict("(contains d atom<2>)",label="p2")
   ripl.predict("(contains d atom<3>)",label="p3")
