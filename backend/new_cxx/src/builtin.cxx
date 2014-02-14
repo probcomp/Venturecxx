@@ -53,6 +53,7 @@ map<string,shared_ptr<VentureSP> > initBuiltInSPs()
   /* Discrete SPs */
   m["bernoulli"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new BernoulliOutputPSP()));
   m["flip"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new BernoulliOutputPSP()));
+  m["categorical"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new CategoricalOutputPSP()));
 
   /* Conditiionals */
   m["branch"] = shared_ptr<VentureSP>(new VentureSP(new BranchRequestPSP(), new ESRRefOutputPSP()));

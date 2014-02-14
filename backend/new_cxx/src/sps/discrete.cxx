@@ -3,6 +3,8 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_sf.h>
 
+#include "utils.h"
+
 VentureValuePtr BernoulliOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   double p = 0.5;
@@ -19,4 +21,18 @@ double BernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> ar
 
   if (value->getBool()) { return log(p); }
   else { return log(1 - p); }
+}
+
+
+VentureValuePtr CategoricalOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const 
+{
+  assert(args->operandValues.size() == 1 || args->operandValues.size() == 2);
+  if (args->operandValues.size() == 1) { return simulateCategorical(args->operandValues[0]->getSimplex(),rng); }
+  else { return simulateCategorical(args->operandValues[0]->getSimplex(),args->operandValues[1]->getArray(),rng); }
+}
+double CategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const 
+{ 
+  assert(args->operandValues.size() == 1 || args->operandValues.size() == 2);
+  if (args->operandValues.size() == 1) { return logDensityCategorical(value,args->operandValues[0]->getSimplex()); }
+  else { return logDensityCategorical(value,args->operandValues[0]->getSimplex(),args->operandValues[1]->getArray()); }
 }
