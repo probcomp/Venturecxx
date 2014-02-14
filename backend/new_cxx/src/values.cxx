@@ -1,5 +1,8 @@
 #include "values.h"
 #include "Eigen/Dense"
+#include <boost/lexical_cast.hpp>
+
+using boost::lexical_cast;
 
 /* TODO the constness in this file is incorrect, but I don't understand it well enough 
    yet, so I figure I will just play make-the-compiler-happy when the time comes.
@@ -131,6 +134,22 @@ size_t VentureID::hash() const
 {
   return reinterpret_cast<size_t>(this);
 }
+
+/* toString methods */
+
+string VentureNumber::toString() const { return "VentureNumber " + lexical_cast<string>(x);}
+string VentureAtom::toString() const { return "VentureAtom " + lexical_cast<string>(n);}
+string VentureBool::toString() const { return "VentureBool " + lexical_cast<string>(b);}
+string VentureSymbol::toString() const { return "VentureSymbol " + s;}
+string VentureArray::toString() const { return "VentureArray";}
+string VentureNil::toString() const { return "VentureNil";}
+string VenturePair::toString() const { return "VenturePair (" + car->toString() + ", " + cdr->toString() + ")";}
+string VentureSimplex::toString() const { return "VentureSimplex";}
+string VentureDictionary::toString() const { return "VentureDictionary";}
+string VentureMatrix::toString() const { return "VentureMatrix";}
+string VentureRequest::toString() const { return "VentureRequest";}
+string VentureNode::toString() const { return "VentureNode";}
+string VentureID::toString() const { return "VentureID";}
 
 //////////////
 
