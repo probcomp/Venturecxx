@@ -12,6 +12,9 @@
 #include <cfloat>
 #include <cassert>
 
+#include <iostream>
+using std::cout;
+using std::endl;
 
 /* Constructor */
 
@@ -56,9 +59,20 @@ void ConcreteTrace::registerAEKernel(Node * node) { assert(false); }
 void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
   assert(unconstrainedChoices.count(node) == 0);
   unconstrainedChoices.insert(node);
+  registerUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
+				     shared_ptr<VentureNode>(new VentureNode(node)),
+				     node);
 }
 
-void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) { assert(false); }
+void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
+{ 
+  assert(block);
+  if (!scopes.count(scope)) { scopes[scope] = SamplableMap<BlockID,set<Node*> >(); }
+  if (!scopes[scope].contains(block)) { scopes[scope].set(block,set<Node*>()); }
+  assert(!scopes[scope].get(block).count(node));
+  scopes[scope].get(block).insert(node);
+  assert(scope->getSymbol() != "default" || scopes[scope].get(block).size() == 1);
+}
 
 void ConcreteTrace::registerConstrainedChoice(Node * node) {
   assert(constrainedChoices.count(node) == 0);
@@ -69,11 +83,21 @@ void ConcreteTrace::registerConstrainedChoice(Node * node) {
 void ConcreteTrace::unregisterAEKernel(Node * node) { assert(false); }
 
 void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
+  unregisterUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
+				       shared_ptr<VentureNode>(new VentureNode(node)),
+				       node);
   assert(unconstrainedChoices.count(node) == 1);
   unconstrainedChoices.erase(node);
 }
 
-void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) { assert(false); }
+void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
+{ 
+  assert(scopes[scope].get(block).count(node));
+  scopes[scope].get(block).erase(node);
+  assert(scope->getSymbol() != "default" || scopes[scope].get(block).empty());
+  if (scopes[scope].get(block).empty()) { scopes[scope].erase(block); }
+  if (scopes[scope].size() == 0) { scopes.erase(scope); }
+}
 
 void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
   assert(constrainedChoices.count(node) == 1);
@@ -88,8 +112,8 @@ void ConcreteTrace::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode)
   esrRoots[outputNode].push_back(esrRoot);
 }
 
-void ConcreteTrace::reconnectLookup(LookupNode * lookupNode) { assert(false); }
-void ConcreteTrace::incNumRequests(RootOfFamily root) { assert(false); }
+void ConcreteTrace::reconnectLookup(LookupNode * lookupNode) { addChild(lookupNode->sourceNode,lookupNode); }
+void ConcreteTrace::incNumRequests(RootOfFamily root) { numRequests[root]++; }
 void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
 void ConcreteTrace::addChild(Node * node, Node * child) 
 {
@@ -98,21 +122,42 @@ void ConcreteTrace::addChild(Node * node, Node * child)
 }
 
 /* Detach mutations */  
-RootOfFamily ConcreteTrace::popLastESRParent(OutputNode * outputNode) { assert(false); }
-void ConcreteTrace::disconnectLookup(LookupNode * lookupNode) { assert(false); }
-void ConcreteTrace::decNumRequests(RootOfFamily root) { assert(false); }
+RootOfFamily ConcreteTrace::popLastESRParent(OutputNode * outputNode) 
+{ 
+  vector<RootOfFamily> esrRoots = getESRParents(outputNode);
+  assert(!esrRoots.empty());
+  RootOfFamily esrRoot = esrRoots.back();
+  esrRoots.pop_back();
+  removeChild(esrRoot.get(),outputNode);
+  decNumRequests(esrRoot);
+  return esrRoot;
+}
+
+void ConcreteTrace::disconnectLookup(LookupNode * lookupNode) { removeChild(lookupNode->sourceNode,lookupNode); }
+void ConcreteTrace::decNumRequests(RootOfFamily root) 
+{ 
+  assert(numRequests.count(root));
+  numRequests[root]--;
+}
+
 void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
-void ConcreteTrace::removeChild(Node * node, Node * child) { assert(false); }
+void ConcreteTrace::removeChild(Node * node, Node * child) { assert(children.count(node)); children[node].erase(child); }
 
 /* Primitive getters */
 VentureValuePtr ConcreteTrace::getValue(Node * node) { return values[node]; }
-SPRecord ConcreteTrace::getMadeSPRecord(Node * makerNode) { return madeSPRecords[makerNode]; }
+SPRecord ConcreteTrace::getMadeSPRecord(Node * makerNode) 
+{
+  assert(madeSPRecords.count(makerNode));
+  return madeSPRecords[makerNode]; 
+}
 vector<RootOfFamily> ConcreteTrace::getESRParents(Node * node) { return esrRoots[node]; }
 set<Node*> ConcreteTrace::getChildren(Node * node) { return children[node]; }
 int ConcreteTrace::getNumRequests(RootOfFamily root) { return numRequests[root]; }
-int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { assert(false); }
+int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { return scaffold->getRegenCount(node); }
 
 VentureValuePtr ConcreteTrace::getObservedValue(Node * node) { return observedValues[node]; }
+
+bool ConcreteTrace::isMakerNode(Node * node) { return madeSPRecords.count(node); }
 bool ConcreteTrace::isConstrained(Node * node) { return constrainedChoices.count(node); }
 bool ConcreteTrace::isObservation(Node * node) { return observedValues.count(node); }
 
@@ -144,16 +189,31 @@ void ConcreteTrace::destroyMadeSPRecord(Node * makerNode)
 }
 
 
+void ConcreteTrace::setMadeSP(Node * makerNode,shared_ptr<VentureSP> sp) 
+{
+  getMadeSPRecord(makerNode).sp = sp;
+}
+void ConcreteTrace::setMadeSPAux(Node * makerNode,shared_ptr<SPAux> spAux) 
+{ 
+  getMadeSPRecord(makerNode).spAux = spAux;
+}
 
+void ConcreteTrace::setChildren(Node * node,set<Node*> childNodes) 
+{ 
+  assert(false); 
+  children[node] = childNodes;
+}
+void ConcreteTrace::setESRParents(Node * node,const vector<RootOfFamily> & esrRootNodes) 
+{
+  assert(false);
+  esrRoots[node] = esrRootNodes;
+}
 
-
-void ConcreteTrace::setMadeSP(Node * node,shared_ptr<VentureSP> sp) { assert(false); }
-void ConcreteTrace::setMadeSPAux(Node * node,shared_ptr<SPAux> spaux) { assert(false); }
-
-void ConcreteTrace::setChildren(Node * node,set<Node*> children) { assert(false); }
-void ConcreteTrace::setESRParents(Node * node,const vector<RootOfFamily> & esrRoots) { assert(false); }
-
-void ConcreteTrace::setNumRequests(Node * node,int num) { assert(false); }
+void ConcreteTrace::setNumRequests(Node * node,int num) 
+{ 
+  assert(false); 
+//  numRequests[node] = num;
+}
 
 /* SPFamily operations */
 void ConcreteTrace::registerMadeSPFamily(Node * makerNode,FamilyID id,RootOfFamily esrRoot)
@@ -166,25 +226,99 @@ void ConcreteTrace::unregisterMadeSPFamily(Node * makerNode,FamilyID id)
   getMadeSPFamilies(makerNode)->unregisterFamily(id);
 }
 
-bool ConcreteTrace::containsMadeSPFamily(Node * makerNode, FamilyID id) { assert(false); }
-RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id) { assert(false); }
+bool ConcreteTrace::containsMadeSPFamily(Node * makerNode, FamilyID id) 
+{ 
+  return getMadeSPFamilies(makerNode)->containsFamily(id);
+}
+
+RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
+{
+  return getMadeSPFamilies(makerNode)->getRootOfFamily(id);
+}
 
 
 /* New in ConcreteTrace */
 
-BlockID ConcreteTrace::sampleBlock(ScopeID scope) { assert(false); }
-double ConcreteTrace::logDensityOfBlock(ScopeID scope) { assert(false); }
-vector<BlockID> ConcreteTrace::blocksInScope(ScopeID scope) { assert(false); }
-int ConcreteTrace::numBlocksInScope(ScopeID scope) { assert(false); }
-set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope) { assert(false); }
+BlockID ConcreteTrace::sampleBlock(ScopeID scope) { return scopes[scope].sampleKeyUniformly(rng); }
+double ConcreteTrace::logDensityOfBlock(ScopeID scope) { return -1 * log(numBlocksInScope(scope)); }
+//vector<BlockID> ConcreteTrace::blocksInScope(ScopeID scope) { assert(false); }
+int ConcreteTrace::numBlocksInScope(ScopeID scope) 
+{ 
+  if (scopes.count(scope)) { return scopes[scope].size(); }
+  else { return 0; }
+}
+
+set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope) 
+{ 
+  set<Node*> all;
+  // TODO have SamplableMap provide an iterator
+  for (map<VentureValuePtr,int>::iterator iter = scopes[scope].d.begin();
+       iter != scopes[scope].d.end();
+       ++iter)
+  {
+    set<Node*> nodesInBlock = getNodesInBlock(scope,iter->first);
+    all.insert(nodesInBlock.begin(),nodesInBlock.end());
+  }
+  return all;
+}
+
     
 vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope) { assert(false); }
 
-set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block) { assert(false); }
+set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block) 
+{ 
+  set<Node * > nodes = scopes[scope].get(block);
+  if (dynamic_pointer_cast<VentureSymbol>(scope) && scope->getSymbol() == "default") { return nodes; }
+  set<Node *> pnodes;
+  for (set<Node*>::iterator iter = nodes.begin();
+       iter != nodes.end();
+       ++iter)
+  {
+    addUnconstrainedChoicesInBlock(scope,block,pnodes,*iter);
+  }
+  return pnodes;
+}
 
-void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node) { assert(false); }
+void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node) 
+{ 
+  OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
+  if (!outputNode) { return; }
+  shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
+  if (psp->isRandom()) { pnodes.insert(outputNode); }
+  RequestNode * requestNode = outputNode->requestNode;
+  shared_ptr<PSP> requestPSP = getMadeSP(getOperatorSPMakerNode(requestNode))->getPSP(requestNode);
+  if (requestPSP->isRandom()) { pnodes.insert(requestNode); }
 
-bool ConcreteTrace::scopeHasEntropy(ScopeID scope) { assert(false); }
+  const vector<ESR>& esrs = getValue(requestNode)->getESRs();
+  Node * makerNode = getOperatorSPMakerNode(requestNode);
+  for (size_t i = 0; i < esrs.size(); ++i) { addUnconstrainedChoicesInBlock(scope,block,pnodes,getMadeSPFamilyRoot(makerNode,esrs[i].id).get()); }
+
+  addUnconstrainedChoicesInBlock(scope,block,pnodes,outputNode->operatorNode);
+  for (size_t i = 0; i < outputNode->operandNodes.size(); ++i)
+  {
+    Node * operandNode = outputNode->operandNodes[i];
+    // TODO once we implement ScopeIncludeOutputPSP
+    // if (i == 2 && dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+    // {
+    //   ScopeID new_scope = getValue(outputNode->operandNodes[0]);
+    //   BlockID new_block = getValue(outputNode->operandNodes[1]);
+    //   if (!scope->equals(new_scope) || block->equals(new_block))
+    //   {
+    // 	addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
+    //   }
+    // }
+    // else
+    // {
+      addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
+//    }
+  }
+}
+
+bool ConcreteTrace::scopeHasEntropy(ScopeID scope) 
+{ 
+  return scopes.count(scope) && numBlocksInScope(scope) > 0; 
+}
+
 void ConcreteTrace::makeConsistent() 
 {
   for (map<Node*,VentureValuePtr>::iterator iter = unpropagatedObservations.begin();
@@ -209,7 +343,7 @@ void ConcreteTrace::makeConsistent()
   unpropagatedObservations.clear();
 }
 
-int ConcreteTrace::numUnconstrainedChoices() { assert(false); }
+int ConcreteTrace::numUnconstrainedChoices() { return unconstrainedChoices.size(); }
 
 int ConcreteTrace::getSeed() { assert(false); }
 double ConcreteTrace::getGlobalLogScore() { assert(false); }

@@ -65,7 +65,6 @@ boost::python::object PyTrace::extractPythonValue(DirectiveID did)
   RootOfFamily root = trace->families[did];
   VentureValuePtr value = trace->getValue(root.get());
   assert(value.get());
-  assert(!dynamic_pointer_cast<VentureSPRef>(value));
   return value->toPython();
 }
 

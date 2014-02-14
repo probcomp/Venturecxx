@@ -67,6 +67,7 @@ struct Trace
 
   virtual VentureValuePtr getObservedValue(Node * node) =0;
 
+  virtual bool isMakerNode(Node * node) =0;
   virtual bool isConstrained(Node * node) =0;
   virtual bool isObservation(Node * node) =0;
 
@@ -82,6 +83,7 @@ struct Trace
   /* Primitive setters */
   virtual void setValue(Node * node, VentureValuePtr value) =0;
   virtual void clearValue(Node * node) =0;
+
 
   virtual void observeNode(Node * node,VentureValuePtr value) =0;
 

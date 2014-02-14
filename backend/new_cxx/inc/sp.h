@@ -18,6 +18,7 @@ struct OutputNode;
 struct VentureSPRef : VentureValue
 {
   VentureSPRef(Node * makerNode): makerNode(makerNode) {}
+  boost::python::dict toPython() const;
   Node * makerNode;
 };
 
@@ -28,7 +29,7 @@ struct SPFamilies
 
   map<FamilyID,RootOfFamily> families;
   bool containsFamily(FamilyID id);
-  RootOfFamily getFamily(FamilyID id);
+  RootOfFamily getRootOfFamily(FamilyID id);
   void registerFamily(FamilyID id,RootOfFamily root);
   void unregisterFamily(FamilyID id);
 };

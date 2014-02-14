@@ -3,7 +3,7 @@
 #include "psp.h"
 
 bool SPFamilies::containsFamily(FamilyID id)  { return families.count(id); }
-RootOfFamily SPFamilies::getFamily(FamilyID id) 
+RootOfFamily SPFamilies::getRootOfFamily(FamilyID id) 
 {
   assert(families.count(id));
   return families[id];
@@ -40,4 +40,12 @@ shared_ptr<PSP> VentureSP::getPSP(ApplicationNode * node) const
 {
   if (dynamic_cast<RequestNode*>(node)) { return requestPSP; }
   else { return outputPSP; }
+}
+
+boost::python::dict VentureSPRef::toPython() const 
+{ 
+  boost::python::dict value;
+  value["type"] = "sp";
+  value["value"] = false;
+  return value;
 }
