@@ -9,7 +9,7 @@ from sp import VentureSP,SPAux
 from lkernel import LKernel
 from nose.tools import assert_greater_equal
 import copy
-from value import VentureNumber, AnyType, VentureAtom
+from value import VentureNumber, AnyType, VentureAtom, BoolType
 from psp import TypedPSP
 
 class BernoulliOutputPSP(RandomPSP):
@@ -92,8 +92,8 @@ class MakerCBetaBernoulliOutputPSP(PSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
-
-    return BetaBernoulliSP(NullRequestPSP(), CBetaBernoulliOutputPSP(alpha, beta))
+    output = TypedPSP([], BoolType(), CBetaBernoulliOutputPSP(alpha, beta))
+    return BetaBernoulliSP(NullRequestPSP(), output)
 
   def description(self,name):
     return "(%s alpha beta) -> <SP () <bool>>\n  Collapsed beta Bernoulli." % name
