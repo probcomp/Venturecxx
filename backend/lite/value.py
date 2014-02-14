@@ -49,7 +49,9 @@ class VentureValue(object):
   def length(self): raise Exception("Cannot measure length of %s" % type(self))
 
 class VentureNumber(VentureValue):
-  def __init__(self,number): self.number = number
+  def __init__(self,number):
+    assert isinstance(number, float)
+    self.number = number
   def getNumber(self): return self.number
   def asStackDict(self): return {"type":"number","value":self.number}
   @staticmethod

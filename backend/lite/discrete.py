@@ -101,6 +101,8 @@ class MakerCBetaBernoulliOutputPSP(PSP):
 
 class CBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,alpha,beta):
+    assert isinstance(alpha, float)
+    assert isinstance(beta, float)
     self.alpha = alpha
     self.beta = beta
 
