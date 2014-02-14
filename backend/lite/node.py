@@ -116,6 +116,8 @@ class Args(object):
       self.esrNodes = trace.esrParentsAt(node)
       self.madeSPAux = trace.madeSPAuxAt(node)
       self.isOutput = True
+    else:
+      self.isOutput = False
 
     self.spaux = trace.spauxAt(node)
     self.env = node.env

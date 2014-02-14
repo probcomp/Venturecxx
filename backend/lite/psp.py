@@ -64,7 +64,8 @@ class TypedPSP(PSP):
   def unwrap_return(self, value):
     return self.return_type.asPython(value)
   def unwrap_args(self, args):
-    assert not args.esrValues # TODO Later support outputs that have requesters
+    if args.isOutput:
+      assert not args.esrValues # TODO Later support outputs that have non-latent requesters
     answer = copy.copy(args)
     if not self.variadic:
       assert len(args.operandValues) >= self.min_req_args
