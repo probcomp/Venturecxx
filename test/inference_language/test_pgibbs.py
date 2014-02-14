@@ -41,7 +41,6 @@ def checkPGibbsBlockingMHHMM1(mutate):
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
 
 
-@statisticalTest
 def testPGibbsDynamicScope1():
   yield checkPGibbsDynamicScope1, True
   yield checkPGibbsDynamicScope1, False
