@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "trace.h"
+#include "smap.h"
 
 
 struct ConcreteTrace : Trace
@@ -118,7 +119,7 @@ struct ConcreteTrace : Trace
 
   map<DirectiveID,RootOfFamily> families;
 
-  //map<ScopeID,SamplableMap<BlockID,set<Node*> > scopes; // VLAD skip everything that touches this
+  map<ScopeID,SamplableMap<BlockID,set<Node*> > > scopes;
 
   map<Node*, vector<RootOfFamily> > esrRoots;
   map<RootOfFamily, int> numRequests;

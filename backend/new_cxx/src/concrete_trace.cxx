@@ -7,7 +7,6 @@
 #include "regen.h"
 #include "sp.h"
 #include "db.h"
-#include "smap.h"
 
 #include <cmath>
 #include <cfloat>
@@ -57,9 +56,20 @@ void ConcreteTrace::registerAEKernel(Node * node) { assert(false); }
 void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
   assert(unconstrainedChoices.count(node) == 0);
   unconstrainedChoices.insert(node);
+  registerUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
+				     shared_ptr<VentureNode>(new VentureNode(node)),
+				     node);
 }
 
-void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) { assert(false); }
+void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
+{ 
+  assert(block);
+  if (!scopes.count(scope)) { scopes[scope] = SamplableMap<BlockID,set<Node*> >(); }
+  if (!scopes[scope].contains(block)) { scopes[scope].set(block,set<Node*>()); }
+  assert(!scopes[scope].get(block).count(node));
+  scopes[scope].get(block).insert(node);
+  assert(scope->getSymbol() != "default" or scopes[scope].get(block).size() == 1);
+}
 
 void ConcreteTrace::registerConstrainedChoice(Node * node) {
   assert(constrainedChoices.count(node) == 0);
