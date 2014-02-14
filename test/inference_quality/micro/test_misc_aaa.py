@@ -3,13 +3,14 @@ from venture.test.config import get_ripl, collectSamples
 
 def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
-    yield checkMakeBetaBernoulli1,maker
+    for hyper in ["10.0", "(normal 10.0 1.0)"]:
+      yield checkMakeBetaBernoulli1, maker, hyper
 
 @statisticalTest
-def checkMakeBetaBernoulli1(maker):
+def checkMakeBetaBernoulli1(maker, hyper):
   ripl = get_ripl()
 
-  ripl.assume("a", "(normal 10.0 1.0)")
+  ripl.assume("a", hyper)
   ripl.assume("f", "(%s a a)" % maker)
   ripl.predict("(f)")
 
