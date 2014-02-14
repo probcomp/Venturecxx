@@ -153,7 +153,7 @@ SPRecord ConcreteTrace::getMadeSPRecord(Node * makerNode)
 vector<RootOfFamily> ConcreteTrace::getESRParents(Node * node) { return esrRoots[node]; }
 set<Node*> ConcreteTrace::getChildren(Node * node) { return children[node]; }
 int ConcreteTrace::getNumRequests(RootOfFamily root) { return numRequests[root]; }
-int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { assert(false); }
+int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { return scaffold->getRegenCount(node); }
 
 VentureValuePtr ConcreteTrace::getObservedValue(Node * node) { return observedValues[node]; }
 
@@ -189,13 +189,31 @@ void ConcreteTrace::destroyMadeSPRecord(Node * makerNode)
 }
 
 
-void ConcreteTrace::setMadeSP(Node * node,shared_ptr<VentureSP> sp) { assert(false); }
-void ConcreteTrace::setMadeSPAux(Node * node,shared_ptr<SPAux> spaux) { assert(false); }
+void ConcreteTrace::setMadeSP(Node * makerNode,shared_ptr<VentureSP> sp) 
+{
+  getMadeSPRecord(makerNode).sp = sp;
+}
+void ConcreteTrace::setMadeSPAux(Node * makerNode,shared_ptr<SPAux> spAux) 
+{ 
+  getMadeSPRecord(makerNode).spAux = spAux;
+}
 
-void ConcreteTrace::setChildren(Node * node,set<Node*> children) { assert(false); }
-void ConcreteTrace::setESRParents(Node * node,const vector<RootOfFamily> & esrRoots) { assert(false); }
+void ConcreteTrace::setChildren(Node * node,set<Node*> childNodes) 
+{ 
+  assert(false); 
+  children[node] = childNodes;
+}
+void ConcreteTrace::setESRParents(Node * node,const vector<RootOfFamily> & esrRootNodes) 
+{
+  assert(false);
+  esrRoots[node] = esrRootNodes;
+}
 
-void ConcreteTrace::setNumRequests(Node * node,int num) { assert(false); }
+void ConcreteTrace::setNumRequests(Node * node,int num) 
+{ 
+  assert(false); 
+//  numRequests[node] = num;
+}
 
 /* SPFamily operations */
 void ConcreteTrace::registerMadeSPFamily(Node * makerNode,FamilyID id,RootOfFamily esrRoot)
