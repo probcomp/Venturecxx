@@ -353,7 +353,7 @@ class ExpressionType(VentureType):
     if isinstance(thing, VentureNumber):
       return thing.getNumber()
     if isinstance(thing, VentureAtom):
-      return thing.getAtom()
+      return thing
     if isinstance(thing, VentureSymbol):
       return thing.getSymbol()
     if isinstance(thing, VentureArray):

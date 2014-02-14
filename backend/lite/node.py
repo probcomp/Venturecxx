@@ -36,6 +36,8 @@ class ConstantNode(Node):
     super(ConstantNode,self).__init__()
     if isinstance(value, VentureValue):
       # Possible for programmatic construction, e.g. builtin.py
+      # Will also occur for literal atoms, since there's no other way
+      # to tell them apart from literal numbers.
       self.value = value
     else: # In eval
       self.value = ExpressionType().asVentureValue(value)
