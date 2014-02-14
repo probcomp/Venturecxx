@@ -34,6 +34,13 @@ bool VentureValue::contains(VentureValuePtr index) const { assert(false); }
 int VentureValue::size() const { assert(false); }
 
 
+boost::python::dict VentureValue::toPython() const
+{ 
+  boost::python::dict value;
+  value["type"] = "unknown";
+  value["value"] = boost::python::object(false);
+  return value;
+}
 
 
 bool VentureValue::equals(const VentureValuePtr & other) const { return false; assert(false); throw "no return"; }

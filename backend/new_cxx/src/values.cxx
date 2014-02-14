@@ -151,7 +151,7 @@ string VentureRequest::toString() const { return "VentureRequest";}
 string VentureNode::toString() const { return "VentureNode";}
 string VentureID::toString() const { return "VentureID";}
 
-//////////////
+/* toPython methods */
 
 boost::python::dict VentureNumber::toPython() const
 {
@@ -173,5 +173,23 @@ boost::python::dict VentureBool::toPython() const
   boost::python::dict value;
   value["type"] = "bool";
   value["value"] = boost::python::object(b);
+  return value;
+}
+
+boost::python::dict VentureArray::toPython() const
+{
+  boost::python::dict value;
+  value["type"] = "array";
+  boost::python::list l;
+  for (size_t i = 0; i < xs.size(); ++i) { l.append(xs[i]->toPython()); }
+  value["value"] = l;
+  return value;
+}
+
+boost::python::dict VentureDictionary::toPython() const
+{
+  boost::python::dict value;
+  value["type"] = "dict";
+  value["value"] = boost::python::object(false); // TODO
   return value;
 }

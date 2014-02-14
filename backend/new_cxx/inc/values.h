@@ -54,7 +54,7 @@ struct VentureArray : VentureValue
   const vector<VentureValuePtr> & getArray() const { return xs; }
   VentureValuePtr lookup(VentureValuePtr index) const { return xs[index->getInt()]; }
   int size() const { return xs.size(); }
-
+  boost::python::dict toPython() const;
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   string toString() const;
@@ -101,6 +101,7 @@ struct VentureDictionary : VentureValue
   bool contains(VentureValuePtr index) const { return dict.count(index); }
   int size() const { return dict.size(); }
 
+  boost::python::dict toPython() const;
   string toString() const;
   VentureValuePtrMap<VentureValuePtr> dict;
 };

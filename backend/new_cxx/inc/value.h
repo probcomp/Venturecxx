@@ -51,11 +51,7 @@ struct VentureValue
   virtual bool contains(VentureValuePtr index) const;
   virtual int size() const;
   
-  virtual boost::python::dict toPython() const 
-    { 
-      cout << "toPython() -- " << toString() << endl;
-      assert(false); throw "need to override toPython()"; 
-    };
+  virtual boost::python::dict toPython() const;
 
   /* for unordered_maps */
   virtual bool equals(const VentureValuePtr & other) const;
