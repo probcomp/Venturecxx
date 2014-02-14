@@ -5,6 +5,7 @@
 #include "sps/csp.h"
 #include "sps/deterministic.h"
 #include "sps/discrete.h"
+#include "sps/dstructure.h"
 #include "sps/msp.h"
 
 map<string,VentureValuePtr> initBuiltInValues() 

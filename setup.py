@@ -70,6 +70,7 @@ src_files = [
     "src/sps/csp.cxx",
     "src/sps/deterministic.cxx",
     "src/sps/discrete.cxx",
+    "src/sps/dstructure.cxx",
     "src/sps/msp.cxx",
 ]
 src_files = ["backend/new_cxx/" + f for f in src_files]
