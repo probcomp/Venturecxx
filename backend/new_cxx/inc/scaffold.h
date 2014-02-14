@@ -43,7 +43,7 @@ struct Scaffold
   bool hasLKernel(Node * node);
   shared_ptr<LKernel> getLKernel(Node * node);
 
-private:
+
   vector<set<Node*> > setsOfPNodes;
   map<Node*,int> regenCounts;
   set<Node*> absorbing;

@@ -6,6 +6,8 @@
 
 struct Trace;
 struct Args;
+struct PSP;
+struct VentureSP;
 
 struct LKernel
 {
@@ -31,13 +33,13 @@ struct DefaultAAALKernel : LKernel
 
 struct DeterministicLKernel : LKernel
 {
-  DeterministicLKernel(VentureValuePtr value, shared_ptr<VentureSP> sp): value(value), sp(sp) {}
+  DeterministicLKernel(VentureValuePtr value, shared_ptr<PSP> psp): value(value), psp(psp) {}
 
   VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng);
   double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args);
 
   VentureValuePtr value;
-  shared_ptr<VentureSP> sp;
+  shared_ptr<PSP> psp;
   
 };
 

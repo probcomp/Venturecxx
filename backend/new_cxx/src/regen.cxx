@@ -378,4 +378,29 @@ double restore(Trace * trace,
 	       shared_ptr<Scaffold> scaffold,
 	       shared_ptr<DB> db,
 	       shared_ptr<map<Node*,Gradient> > gradients) 
-{ assert(false); }
+{
+  double weight = 0;
+  ConstantNode * constantNode = dynamic_cast<ConstantNode*>(node);
+  LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
+  OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
+
+  if (constantNode) {  }
+  else if (lookupNode) 
+  { 
+    weight += regenParents(trace,lookupNode,scaffold,true,db,gradients);
+    trace->reconnectLookup(lookupNode);
+    trace->setValue(node,trace->getValue(lookupNode->sourceNode));
+  }
+  else
+  {
+    assert(outputNode);
+    weight += restore(trace,outputNode->operatorNode,scaffold,db,gradients);
+    for (size_t i = 0; i < outputNode->operandNodes.size(); ++i)
+    {
+      weight += restore(trace,outputNode->operandNodes[i],scaffold,db,gradients);
+    }
+    weight += apply(trace,outputNode->requestNode,outputNode,scaffold,true,db,gradients);
+  }
+  return weight;
+}
+

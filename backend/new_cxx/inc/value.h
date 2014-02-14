@@ -44,6 +44,8 @@ struct VentureValue
   
   virtual const vector<ESR>& getESRs() const;
   virtual const vector<shared_ptr<LSR> >& getLSRs() const;
+
+  virtual Node * getNode() const;
   
   virtual boost::python::dict toPython() const { assert(false); throw "need to override toPython()"; };
 

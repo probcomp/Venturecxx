@@ -5,14 +5,16 @@
 
 struct Scaffold;
 struct ConcreteTrace;
+struct Trace;
 
 struct GKernel
 {
-  double propose(ConcreteTrace * trace,
-		 shared_ptr<Scaffold> scaffold);
+  pair<Trace*,double> propose(ConcreteTrace * trace,
+			      shared_ptr<Scaffold> scaffold);
 
   void accept();
   void reject();
+  
 };
 
 
