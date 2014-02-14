@@ -59,6 +59,10 @@ map<string,shared_ptr<VentureSP> > initBuiltInSPs()
   m["branch"] = shared_ptr<VentureSP>(new VentureSP(new BranchRequestPSP(), new ESRRefOutputPSP()));
   m["biplex"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new BiplexOutputPSP()));
 
+  /* Data structures */
+  m["simplex"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new SimplexOutputPSP()));
+
+
   m["make_csp"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new MakeCSPOutputPSP()));
   m["mem"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new MakeMSPOutputPSP()));
   
