@@ -24,7 +24,6 @@ struct VentureValuePtrMap : boost::unordered_map<VentureValuePtr, T, HashVenture
 
 // TODO AXCH
 // We need to be more consistent about whether this unboxes
-// TODO optimization: return const&
 struct VentureValue
 {
   virtual double getDouble() const;

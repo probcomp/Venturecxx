@@ -8,6 +8,8 @@
 
 struct VentureEnvironment : VentureValue
 {
+  VentureEnvironment() {}
+
   VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv);
 
   VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv,

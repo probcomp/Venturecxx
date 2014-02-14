@@ -5,6 +5,7 @@
 #include "sps/csp.h"
 #include "sps/deterministic.h"
 #include "sps/discrete.h"
+#include "sps/msp.h"
 
 map<string,VentureValuePtr> initBuiltInValues() 
 {
@@ -58,6 +59,7 @@ map<string,shared_ptr<VentureSP> > initBuiltInSPs()
   m["biplex"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new BiplexOutputPSP()));
 
   m["make_csp"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new MakeCSPOutputPSP()));
+  m["mem"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new MakeMSPOutputPSP()));
   
   return m;
 }
