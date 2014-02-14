@@ -9,6 +9,7 @@ TODO Actually explain it.
 """
 from abc import ABCMeta
 from numbers import Number
+from request import Request # TODO Pull that file in here?
 
 class VentureValue(object):
   __metaclass__ = ABCMeta
@@ -355,3 +356,13 @@ class HomogeneousArrayType(VentureType):
     return VentureArray(thing, self.subtype)
   def asPython(self, vthing):
     return vthing.getArray(self.subtype)
+
+# Define a type object for requests so that RequestPSPs can be wrapped
+# in the TypedPSP wrapper.  No conversion is done
+class RequestType(VentureType):
+  def asVentureValue(self, thing):
+    assert isinstance(thing, Request)
+    return thing
+  def asPython(self, thing):
+    assert isinstance(thing, Request)
+    return thing
