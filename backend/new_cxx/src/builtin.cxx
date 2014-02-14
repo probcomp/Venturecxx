@@ -62,6 +62,12 @@ map<string,shared_ptr<VentureSP> > initBuiltInSPs()
 
   /* Data structures */
   m["simplex"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new SimplexOutputPSP()));
+  m["lookup"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new LookupOutputPSP()));
+  m["contains"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new ContainsOutputPSP()));
+  m["size"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new SizeOutputPSP()));
+  m["dict"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new DictOutputPSP()));
+  m["array"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new ArrayOutputPSP()));
+  m["is_array"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new IsArrayOutputPSP()));
 
 
   m["make_csp"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new MakeCSPOutputPSP()));

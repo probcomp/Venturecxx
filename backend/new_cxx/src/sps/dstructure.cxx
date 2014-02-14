@@ -33,7 +33,12 @@ VentureValuePtr SizeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
 
 VentureValuePtr DictOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-
+  VentureValuePtrMap<VentureValuePtr> d;
+  vector<VentureValuePtr> syms = args->operandValues[0]->getArray();
+  vector<VentureValuePtr> vals = args->operandValues[1]->getArray();
+  assert(syms.size() == vals.size());
+  for (size_t i = 0; i < syms.size(); ++i) { d[syms[i]] = vals[i]; }
+  return VentureValuePtr(new VentureDictionary(d));
 }
 
 
@@ -41,13 +46,13 @@ VentureValuePtr DictOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
 
 VentureValuePtr ArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-
+  return VentureValuePtr(new VentureArray(args->operandValues));
 }
 
 
 VentureValuePtr IsArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureArray>(args->operandValues[0])));
 }
 
 
