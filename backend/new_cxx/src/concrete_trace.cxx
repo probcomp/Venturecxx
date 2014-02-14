@@ -239,19 +239,86 @@ RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
 
 /* New in ConcreteTrace */
 
-BlockID ConcreteTrace::sampleBlock(ScopeID scope) { assert(false); }
-double ConcreteTrace::logDensityOfBlock(ScopeID scope) { assert(false); }
-vector<BlockID> ConcreteTrace::blocksInScope(ScopeID scope) { assert(false); }
-int ConcreteTrace::numBlocksInScope(ScopeID scope) { assert(false); }
-set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope) { assert(false); }
+BlockID ConcreteTrace::sampleBlock(ScopeID scope) { return scopes[scope].sampleKeyUniformly(rng); }
+double ConcreteTrace::logDensityOfBlock(ScopeID scope) { return -1 * log(numBlocksInScope(scope)); }
+//vector<BlockID> ConcreteTrace::blocksInScope(ScopeID scope) { assert(false); }
+int ConcreteTrace::numBlocksInScope(ScopeID scope) 
+{ 
+  if (scopes.count(scope)) { return scopes[scope].size(); }
+  else { return 0; }
+}
+
+set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope) 
+{ 
+  set<Node*> all;
+  // TODO have SamplableMap provide an iterator
+  for (map<VentureValuePtr,int>::iterator iter = scopes[scope].d.begin();
+       iter != scopes[scope].d.end();
+       ++iter)
+  {
+    set<Node*> nodesInBlock = getNodesInBlock(scope,iter->first);
+    all.insert(nodesInBlock.begin(),nodesInBlock.end());
+  }
+  return all;
+}
+
     
 vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope) { assert(false); }
 
-set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block) { assert(false); }
+set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block) 
+{ 
+  set<Node * > nodes = scopes[scope].get(block);
+  if (dynamic_pointer_cast<VentureSymbol>(scope) && scope->getSymbol() == "default") { return nodes; }
+  set<Node *> pnodes;
+  for (set<Node*>::iterator iter = nodes.begin();
+       iter != nodes.end();
+       ++iter)
+  {
+    addUnconstrainedChoicesInBlock(scope,block,pnodes,*iter);
+  }
+  return pnodes;
+}
 
-void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node) { assert(false); }
+void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node) 
+{ 
+  OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
+  if (!outputNode) { return; }
+  shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
+  if (psp->isRandom()) { pnodes.insert(outputNode); }
+  RequestNode * requestNode = outputNode->requestNode;
+  shared_ptr<PSP> requestPSP = getMadeSP(getOperatorSPMakerNode(requestNode))->getPSP(requestNode);
+  if (requestPSP->isRandom()) { pnodes.insert(requestNode); }
 
-bool ConcreteTrace::scopeHasEntropy(ScopeID scope) { assert(false); }
+  const vector<ESR>& esrs = getValue(requestNode)->getESRs();
+  Node * makerNode = getOperatorSPMakerNode(requestNode);
+  for (size_t i = 0; i < esrs.size(); ++i) { addUnconstrainedChoicesInBlock(scope,block,pnodes,getMadeSPFamilyRoot(makerNode,esrs[i].id).get()); }
+
+  addUnconstrainedChoicesInBlock(scope,block,pnodes,outputNode->operatorNode);
+  for (size_t i = 0; i < outputNode->operandNodes.size(); ++i)
+  {
+    Node * operandNode = outputNode->operandNodes[i];
+    // TODO once we implement ScopeIncludeOutputPSP
+    // if (i == 2 && dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+    // {
+    //   ScopeID new_scope = getValue(outputNode->operandNodes[0]);
+    //   BlockID new_block = getValue(outputNode->operandNodes[1]);
+    //   if (!scope->equals(new_scope) || block->equals(new_block))
+    //   {
+    // 	addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
+    //   }
+    // }
+    // else
+    // {
+      addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
+//    }
+  }
+}
+
+bool ConcreteTrace::scopeHasEntropy(ScopeID scope) 
+{ 
+  return scopes.count(scope) && numBlocksInScope(scope) > 0; 
+}
+
 void ConcreteTrace::makeConsistent() 
 {
   for (map<Node*,VentureValuePtr>::iterator iter = unpropagatedObservations.begin();
@@ -276,7 +343,7 @@ void ConcreteTrace::makeConsistent()
   unpropagatedObservations.clear();
 }
 
-int ConcreteTrace::numUnconstrainedChoices() { assert(false); }
+int ConcreteTrace::numUnconstrainedChoices() { return unconstrainedChoices.size(); }
 
 int ConcreteTrace::getSeed() { assert(false); }
 double ConcreteTrace::getGlobalLogScore() { assert(false); }
