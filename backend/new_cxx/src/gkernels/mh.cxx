@@ -17,6 +17,7 @@ pair<Trace*,double> MHGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold
 
 //  assertTorus(scaffold) // TODO URGENT
   double xiWeight = regenAndAttach(trace,scaffold->border[0],scaffold,false,rhoDB,shared_ptr<map<Node*,Gradient> >());
+
   return make_pair(trace,xiWeight - rhoWeight);
 }
 

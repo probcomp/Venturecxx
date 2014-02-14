@@ -3,6 +3,7 @@
 #include "concrete_trace.h"
 #include "sp.h"
 #include <algorithm>
+#include <boost/lexical_cast.hpp>
 
 set<Node *> Scaffold::getPrincipalNodes() { assert(false); }
 
@@ -35,6 +36,14 @@ shared_ptr<LKernel> Scaffold::getLKernel(Node * node)
   assert(lkernels.count(node));
   return lkernels[node];
 }
+
+string Scaffold::showSizes()
+{
+  string p = "(";
+  return p + boost::lexical_cast<string>(regenCounts.size()) + "," + boost::lexical_cast<string>(absorbing.size()) + "," + boost::lexical_cast<string>(aaa.size()) + "," + boost::lexical_cast<string>(border[0].size()) + ")";
+}
+
+
 
 shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<Node*> > & setsOfPNodes)
 {

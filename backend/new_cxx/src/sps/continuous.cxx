@@ -102,6 +102,7 @@ VentureValuePtr NormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
   assert(vmu);
   assert(vsigma);
   double x = gsl_ran_gaussian(rng, vsigma->getDouble()) + vmu->getDouble();
+//  cout << "Normal::simulate(" << x << " | " << vmu->getDouble() << ", " << vsigma->getDouble() << ")" << endl;
   return VentureValuePtr(new VentureNumber(x));
 }
 
@@ -133,6 +134,7 @@ double NormalPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  cons
   shared_ptr<VentureNumber> x = dynamic_pointer_cast<VentureNumber>(value);
   assert(sigma);
   assert(x);
+//  cout << "Normal::logDensity(" << x->getDouble() << " | " << mu << ", " << sigma->getDouble() << ")" << endl;
   return NormalDistributionLogLikelihood(x->getDouble(), mu, sigma->getDouble());
 }
 

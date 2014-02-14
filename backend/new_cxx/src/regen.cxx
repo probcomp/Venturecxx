@@ -115,6 +115,8 @@ double attach(Trace * trace,
 	      shared_ptr<DB> db,
 	      shared_ptr<map<Node*,Gradient> > gradients)
 {
+  // cout << "attach(" << node << ")" << endl;
+
   double weight = regenParents(trace,node,scaffold,shouldRestore,db,gradients);
   shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
   shared_ptr<Args> args = trace->getArgs(node);
@@ -132,9 +134,11 @@ double regen(Trace * trace,
 	      shared_ptr<DB> db,
 	      shared_ptr<map<Node*,Gradient> > gradients)
 { 
+  // cout << "regenOuter(" << node << ")" << endl;
   double weight = 0;
   if (scaffold->isResampling(node))
   {
+    // cout << "regen(" << node << ") = " << trace->getRegenCount(scaffold,node) << endl;
     if (trace->getRegenCount(scaffold,node) == 0)
     {
       weight += regenParents(trace,node,scaffold,shouldRestore,db,gradients);
@@ -285,6 +289,7 @@ double applyPSP(Trace * trace,
 	      shared_ptr<DB> db,
 	      shared_ptr<map<Node*,Gradient> > gradients)
 {
+  // cout << "applyPSP(" << node << ")" << endl;
   double weight = 0;
   shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
   shared_ptr<Args> args = trace->getArgs(node);
