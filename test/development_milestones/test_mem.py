@@ -6,4 +6,4 @@ def testMem1():
   ripl.assume('f', '(mem flip)')
   flip1 = ripl.predict('(f)')
   flip2 = ripl.predict('(f)')
-  assertEqual(flip1, flip2)
+  assert_equal(flip1, flip2)
