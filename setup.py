@@ -61,7 +61,7 @@ src_files = [
     "src/value.cxx",
     "src/values.cxx",
 
-
+    "src/sps/csp.cxx",
     "src/sps/deterministic.cxx",
     
 ]

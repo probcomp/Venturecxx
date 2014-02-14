@@ -1,5 +1,10 @@
 #include "env.h"
 
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
 VentureEnvironment::VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv) : outerEnv(outerEnv) {}
 
 VentureEnvironment::VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv,
@@ -33,6 +38,7 @@ Node * VentureEnvironment::lookupSymbol(string sym)
   }
   else if (outerEnv.get() == NULL)
   { 
+    cout << "Cannot find symbol: " << sym << endl;
     // TODO throw a syntax error once exceptions work
     assert(false); throw "Cannot find symbol: " + sym;
     return NULL;
