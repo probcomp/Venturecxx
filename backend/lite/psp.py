@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from lkernel import DefaultAAALKernel,DefaultVariationalLKernel
+from lkernel import DefaultAAALKernel,DefaultVariationalLKernel,LKernel
 from request import Request
 import copy
 
@@ -99,7 +99,7 @@ class TypedPSP(PSP):
   def getAAALKernel(self):
     # TODO Is this right?  Or should I somehow wrap the AAA LKernel so
     # it deals with the types properly?
-    return self.psp.getAAALKernel()
+    return TypedAAALKernel(self.psp.getAAALKernel(), self.f_type)
 
   def makesHSRs(self): return self.psp.makeHSRs()
   def canEnumerate(self): return self.psp.canEnumerate()
@@ -120,3 +120,21 @@ class TypedPSP(PSP):
   # TODO Is this method part of the psp interface?
   def logDensityOfCounts(self,aux):
     return self.psp.logDensityOfCounts(aux)
+
+class TypedAAALKernel(LKernel):
+  def __init__(self, kernel, f_type):
+    self.kernel = kernel
+    self.f_type = f_type
+
+  def simulate(self, trace, oldValue, args):
+    return self.f_type.wrap_return(self.kernel.simulate(trace, self.f_type.unwrap_return(oldValue),
+                                                        self.f_type.unwrap_args(args)))
+  def weight(self, trace, newValue, oldValue, args):
+    return self.kernel.weight(trace, self.f_type.unwrap_return(newValue),
+                              self.f_type.unwrap_return(oldValue),
+                              self.f_type.unwrap_args(args))
+
+  def reverseWeight(self, trace, oldValue, args):
+    return self.kernel.reverseWeight(trace,
+                                     self.f_type.unwrap_return(oldValue),
+                                     self.f_type.unwrap_args(args))
