@@ -46,6 +46,7 @@ struct ConcreteTrace : Trace
   int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
   VentureValuePtr getObservedValue(Node * node);
 
+  bool isMakerNode(Node * node);
   bool isConstrained(Node * node);
   bool isObservation(Node * node);
 

@@ -41,3 +41,11 @@ shared_ptr<PSP> VentureSP::getPSP(ApplicationNode * node) const
   if (dynamic_cast<RequestNode*>(node)) { return requestPSP; }
   else { return outputPSP; }
 }
+
+boost::python::dict VentureSPRef::toPython() const 
+{ 
+  boost::python::dict value;
+  value["type"] = "sp";
+  value["value"] = false;
+  return value;
+}

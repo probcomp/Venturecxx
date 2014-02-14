@@ -12,6 +12,9 @@
 #include <cfloat>
 #include <cassert>
 
+#include <iostream>
+using std::cout;
+using std::endl;
 
 /* Constructor */
 
@@ -137,13 +140,19 @@ void ConcreteTrace::removeChild(Node * node, Node * child) { assert(false); }
 
 /* Primitive getters */
 VentureValuePtr ConcreteTrace::getValue(Node * node) { return values[node]; }
-SPRecord ConcreteTrace::getMadeSPRecord(Node * makerNode) { return madeSPRecords[makerNode]; }
+SPRecord ConcreteTrace::getMadeSPRecord(Node * makerNode) 
+{
+  assert(madeSPRecords.count(makerNode));
+  return madeSPRecords[makerNode]; 
+}
 vector<RootOfFamily> ConcreteTrace::getESRParents(Node * node) { return esrRoots[node]; }
 set<Node*> ConcreteTrace::getChildren(Node * node) { return children[node]; }
 int ConcreteTrace::getNumRequests(RootOfFamily root) { return numRequests[root]; }
 int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { assert(false); }
 
 VentureValuePtr ConcreteTrace::getObservedValue(Node * node) { return observedValues[node]; }
+
+bool ConcreteTrace::isMakerNode(Node * node) { return madeSPRecords.count(node); }
 bool ConcreteTrace::isConstrained(Node * node) { return constrainedChoices.count(node); }
 bool ConcreteTrace::isObservation(Node * node) { return observedValues.count(node); }
 

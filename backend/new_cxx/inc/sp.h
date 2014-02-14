@@ -18,6 +18,7 @@ struct OutputNode;
 struct VentureSPRef : VentureValue
 {
   VentureSPRef(Node * makerNode): makerNode(makerNode) {}
+  boost::python::dict toPython() const;
   Node * makerNode;
 };
 
