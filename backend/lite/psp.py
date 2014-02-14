@@ -49,11 +49,10 @@ class RandomPSP(PSP):
   def isRandom(self): return True
   def canAbsorb(self,trace,appNode,parentNode): return True    
 
-class TypedPSP(PSP):
-  def __init__(self, args_types, return_type, psp, variadic=False, min_req_args=None):
+class FunctionType(object): # TODO make this a VentureType?  With conversions!?
+  def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
     self.args_types = args_types
     self.return_type = return_type
-    self.psp = psp
     self.variadic = variadic
     if variadic:
       assert len(args_types) == 1 # TODO Support non-homogeneous variadics later
@@ -75,16 +74,21 @@ class TypedPSP(PSP):
       answer.operandValues = [self.args_types[0].asPython(v) for v in args.operandValues]
     return answer
 
+class TypedPSP(PSP):
+  def __init__(self, args_types, return_type, psp, variadic=False, min_req_args=None):
+    self.f_type = FunctionType(args_types, return_type, variadic=variadic, min_req_args=min_req_args)
+    self.psp = psp
+
   def simulate(self,args):
-    return self.wrap_return(self.psp.simulate(self.unwrap_args(args)))
+    return self.f_type.wrap_return(self.psp.simulate(self.f_type.unwrap_args(args)))
   def logDensity(self,value,args):
-    return self.psp.logDensity(self.unwrap_return(value), self.unwrap_args(args))
+    return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def incorporate(self,value,args):
-    return self.psp.incorporate(self.unwrap_return(value), self.unwrap_args(args))
+    return self.psp.incorporate(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def unincorporate(self,value,args):
-    return self.psp.unincorporate(self.unwrap_return(value), self.unwrap_args(args))
+    return self.psp.unincorporate(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def enumerateValues(self,args):
-    return [self.wrap_return(v) for v in self.psp.enumerateValues(self.unwrap_args(args))]
+    return [self.f_type.wrap_return(v) for v in self.psp.enumerateValues(self.f_type.unwrap_args(args))]
   def isRandom(self):
     return self.psp.isRandom()
   def canAbsorb(self,trace,appNode,parentNode):
