@@ -42,6 +42,7 @@ struct Scaffold
   bool isAAA(Node * node);
   bool hasLKernel(Node * node);
   shared_ptr<LKernel> getLKernel(Node * node);
+  string showSizes();
 
 
   vector<set<Node*> > setsOfPNodes;

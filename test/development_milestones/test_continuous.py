@@ -13,10 +13,14 @@ def testNormal1():
   cdf = lambda x: stats.norm.cdf(x,loc=0,scale=1)
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
 
+@statisticalTest
 def testNormal2():
   ripl = get_ripl()
-  ripl.predict("(normal (normal 0 1) 1)")
+  ripl.assume("x","(normal 0 1)")
+  ripl.predict("(normal x 1)")
   predictions = collectSamples(ripl,1)
+  cdf = lambda x: stats.norm.cdf(x,loc=0,scale=1)
+  return reportKnownContinuous(cdf, predictions, "N(0,1)")
 
 def testNormal3():
   ripl = get_ripl()

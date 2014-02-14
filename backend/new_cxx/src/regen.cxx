@@ -115,6 +115,8 @@ double attach(Trace * trace,
 	      shared_ptr<DB> db,
 	      shared_ptr<map<Node*,Gradient> > gradients)
 {
+  //cout << "attach(" << node << ")" << endl;
+
   double weight = regenParents(trace,node,scaffold,shouldRestore,db,gradients);
   shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
   shared_ptr<Args> args = trace->getArgs(node);
@@ -132,9 +134,11 @@ double regen(Trace * trace,
 	      shared_ptr<DB> db,
 	      shared_ptr<map<Node*,Gradient> > gradients)
 { 
+  //cout << "regenOuter(" << node << ")" << endl;
   double weight = 0;
   if (scaffold->isResampling(node))
   {
+    //cout << "regen(" << node << ") = " << trace->getRegenCount(scaffold,node) << endl;
     if (trace->getRegenCount(scaffold,node) == 0)
     {
       weight += regenParents(trace,node,scaffold,shouldRestore,db,gradients);
@@ -285,6 +289,7 @@ double applyPSP(Trace * trace,
 	      shared_ptr<DB> db,
 	      shared_ptr<map<Node*,Gradient> > gradients)
 {
+  //cout << "applyPSP(" << node << ")" << endl;
   double weight = 0;
   shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
   shared_ptr<Args> args = trace->getArgs(node);
@@ -336,6 +341,8 @@ double evalRequests(Trace * trace,
 	      shared_ptr<DB> db,
 	      shared_ptr<map<Node*,Gradient> > gradients)
 {
+  //cout << "evalRequests(" << requestNode << "," << requestNode->outputNode << ")" << endl;
+
   double weight = 0;
   const vector<ESR>& esrs = trace->getValue(requestNode)->getESRs();
 
@@ -360,6 +367,8 @@ double evalRequests(Trace * trace,
     }
     RootOfFamily esrRoot = trace->getMadeSPFamilyRoot(trace->getOperatorSPMakerNode(requestNode),esr.id);
     trace->addESREdge(esrRoot,requestNode->outputNode);
+    //cout << "numESRParents(" << requestNode->outputNode << ") = " << trace->getESRParents(requestNode->outputNode).size() << endl;
+    assert(!trace->getESRParents(requestNode->outputNode).empty());
   }
 
   // TODO LSRs
@@ -374,6 +383,8 @@ double restore(Trace * trace,
 	       shared_ptr<DB> db,
 	       shared_ptr<map<Node*,Gradient> > gradients) 
 {
+  //cout << "restore(" << node << ")" << endl;
+
   double weight = 0;
   ConstantNode * constantNode = dynamic_cast<ConstantNode*>(node);
   LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);

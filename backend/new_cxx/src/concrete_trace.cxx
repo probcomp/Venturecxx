@@ -112,32 +112,44 @@ void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
 void ConcreteTrace::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode) 
 {
   incNumRequests(esrRoot);
+  //cout << "addESREdge(" << esrRoot.get() << "," << outputNode << ")" << endl;
   addChild(esrRoot.get(),outputNode);
   esrRoots[outputNode].push_back(esrRoot);
 }
 
-void ConcreteTrace::reconnectLookup(LookupNode * lookupNode) { addChild(lookupNode->sourceNode,lookupNode); }
+void ConcreteTrace::reconnectLookup(LookupNode * lookupNode) 
+{   
+  //cout << "reconnectLookup(" << lookupNode->sourceNode << "," << lookupNode << ")";
+  addChild(lookupNode->sourceNode,lookupNode); 
+}
+
 void ConcreteTrace::incNumRequests(RootOfFamily root) { numRequests[root]++; }
 void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
 void ConcreteTrace::addChild(Node * node, Node * child) 
 {
   assert(children[node].count(child) == 0);
   children[node].insert(child);
+  //cout << "addChild(" << node << "," << child << ") :: " << children[node].size() << endl;
 }
 
 /* Detach mutations */  
 RootOfFamily ConcreteTrace::popLastESRParent(OutputNode * outputNode) 
 { 
-  vector<RootOfFamily> esrRoots = getESRParents(outputNode);
-  assert(!esrRoots.empty());
-  RootOfFamily esrRoot = esrRoots.back();
-  esrRoots.pop_back();
+  vector<RootOfFamily> & esrParents = esrRoots[outputNode];
+  assert(!esrParents.empty());
+  RootOfFamily esrRoot = esrParents.back();
+  esrParents.pop_back();
+  //cout << "removeESREdge(" << esrRoot.get() << "," << outputNode << ")" << endl;
   removeChild(esrRoot.get(),outputNode);
   decNumRequests(esrRoot);
   return esrRoot;
 }
 
-void ConcreteTrace::disconnectLookup(LookupNode * lookupNode) { removeChild(lookupNode->sourceNode,lookupNode); }
+void ConcreteTrace::disconnectLookup(LookupNode * lookupNode) 
+{
+  //cout << "disconnectLookup(" << lookupNode->sourceNode << "," << lookupNode << ")";
+  removeChild(lookupNode->sourceNode,lookupNode); 
+}
 void ConcreteTrace::decNumRequests(RootOfFamily root) 
 { 
   assert(numRequests.count(root));
@@ -145,7 +157,13 @@ void ConcreteTrace::decNumRequests(RootOfFamily root)
 }
 
 void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
-void ConcreteTrace::removeChild(Node * node, Node * child) { assert(children.count(node)); children[node].erase(child); }
+void ConcreteTrace::removeChild(Node * node, Node * child) 
+{ 
+  assert(children.count(node)); 
+  assert(children[node].count(child));
+  children[node].erase(child); 
+  //cout << "removeChild(" << node << "," << child << ") :: " << children[node].size() << endl;
+}
 
 /* Primitive getters */
 VentureValuePtr ConcreteTrace::getValue(Node * node) { return values[node]; }

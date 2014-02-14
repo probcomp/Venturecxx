@@ -10,6 +10,7 @@
 #include "node.h"
 #include "scaffold.h"
 #include "psp.h"
+#include <ctime>
 
 #include <gsl/gsl_rng.h>
 
@@ -18,7 +19,7 @@ struct SPRef;
 
 struct Trace 
 {
-  Trace(): rng(gsl_rng_alloc(gsl_rng_mt19937)) {} 
+  Trace(): rng(gsl_rng_alloc(gsl_rng_mt19937)) {  gsl_rng_set (rng,time(NULL)) ; }
 
   /* Registering metadata */
   /** AE (Arbitrary Ergodic) kernels repropose random choices within an sp that 

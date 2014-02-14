@@ -7,6 +7,11 @@
 #include "sp.h"
 #include "psp.h"
 
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
 pair<double,shared_ptr<DB> > detachAndExtract(Trace * trace,const vector<Node*> & border,shared_ptr<Scaffold> scaffold)
 {
   double weight = 0;
@@ -50,6 +55,8 @@ double unconstrain(Trace * trace,OutputNode * node)
 
 double detach(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
+  //cout << "detach(" << node << ")" << endl;
+  
   shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
   shared_ptr<Args> args = trace->getArgs(node);
   VentureValuePtr groundValue = trace->getGroundValue(node);
@@ -88,6 +95,7 @@ double extractESRParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold
 
 double extract(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
+  //cout << "extractOuter(" << node << ")" << endl;
   double weight = 0;
   VentureValuePtr value = trace->getValue(node);
 
@@ -99,6 +107,7 @@ double extract(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_pt
 
   if (scaffold->isResampling(node))
   {
+    //cout << "extract(" << node << ") = " << trace->getRegenCount(scaffold,node) << endl;
     trace->decRegenCount(scaffold,node);
     assert(trace->getRegenCount(scaffold,node) >= 0);
     if (trace->getRegenCount(scaffold,node) == 0)
@@ -125,6 +134,7 @@ double extract(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_pt
 
 double unevalFamily(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
+  //cout << "unevalFamily(" << node << ")" << endl;
   double weight = 0;
 
   LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
@@ -181,6 +191,7 @@ void teardownMadeSP(Trace * trace,Node * makerNode,bool isAAA,shared_ptr<DB> db)
 
 double unapplyPSP(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
+  //cout << "unapplyPSP(" << node << ")" << endl;
   shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
   shared_ptr<Args> args = trace->getArgs(node);
 
@@ -205,6 +216,8 @@ double unapplyPSP(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaf
 
 double unevalRequests(Trace * trace,RequestNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
+  //cout << "unevalRequests(" << node << ")" << endl;
+
   double weight = 0;
   const vector<ESR>& esrs = trace->getValue(node)->getESRs();
   //const vector<shared_ptr<LSR> >& lsrs = trace->getValue(node)->getLSRs();
@@ -216,7 +229,7 @@ double unevalRequests(Trace * trace,RequestNode * node,shared_ptr<Scaffold> scaf
        ++esrIter)
   {
     RootOfFamily esrRoot = trace->popLastESRParent(node->outputNode);
-    if (trace->getNumRequests(esrRoot))
+    if (trace->getNumRequests(esrRoot) == 0)
     {
       trace->unregisterMadeSPFamily(trace->getOperatorSPMakerNode(node),esrIter->id);
       db->registerSPFamily(trace->getMadeSP(trace->getOperatorSPMakerNode(node)),esrIter->id,esrRoot);

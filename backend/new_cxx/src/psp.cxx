@@ -4,6 +4,11 @@
 #include "concrete_trace.h"
 #include "node.h"
 
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
 VentureValuePtr NullRequestPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   return shared_ptr<VentureRequest>(new VentureRequest(vector<ESR>(),vector<shared_ptr<LSR> >()));
@@ -12,6 +17,7 @@ VentureValuePtr NullRequestPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) co
 
 VentureValuePtr ESRRefOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
+//  cout << "ESRRefOutputPSP::simulate(" << args->node << ")" << endl;
   assert(args->esrParentNodes.size() == 1);
   return args->esrParentValues[0];
 }

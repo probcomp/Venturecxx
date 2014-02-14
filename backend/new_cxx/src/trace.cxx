@@ -14,6 +14,7 @@ LookupNode * Trace::createLookupNode(Node * sourceNode)
 {
   LookupNode * lookupNode = new LookupNode(sourceNode);
   setValue(lookupNode,getValue(sourceNode));
+  //cout << "createLookupNode(" << sourceNode << "," << lookupNode << ")";
   addChild(sourceNode,lookupNode);
   return lookupNode;
 }
@@ -23,6 +24,8 @@ pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode
 {
   RequestNode * requestNode = new RequestNode(operatorNode, operandNodes, env);
   OutputNode * outputNode = new OutputNode(operatorNode, operandNodes, requestNode, env);
+
+  //cout << "createApplicationNodes(" << operatorNode << "," << requestNode << ")";
   
   requestNode->outputNode = outputNode;
   addChild(requestNode, outputNode);
