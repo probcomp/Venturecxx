@@ -109,8 +109,8 @@ void ConcreteTrace::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode)
   esrRoots[outputNode].push_back(esrRoot);
 }
 
-void ConcreteTrace::reconnectLookup(LookupNode * lookupNode) { assert(false); }
-void ConcreteTrace::incNumRequests(RootOfFamily root) { assert(false); }
+void ConcreteTrace::reconnectLookup(LookupNode * lookupNode) { addChild(lookupNode->sourceNode,lookupNode); }
+void ConcreteTrace::incNumRequests(RootOfFamily root) { numRequests[root]++; }
 void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
 void ConcreteTrace::addChild(Node * node, Node * child) 
 {
@@ -119,7 +119,17 @@ void ConcreteTrace::addChild(Node * node, Node * child)
 }
 
 /* Detach mutations */  
-RootOfFamily ConcreteTrace::popLastESRParent(OutputNode * outputNode) { assert(false); }
+RootOfFamily ConcreteTrace::popLastESRParent(OutputNode * outputNode) 
+{ 
+  vector<RootOfFamily> esrRoots = getESRParents(outputNode);
+  assert(!esrRoots.empty());
+  RootOfFamily esrRoot = esrRoots.back();
+  esrRoots.pop_back();
+  removeChild(esrRoot.get(),outputNode);
+  decNumRequests(esrRoot);
+  return esrRoot;
+}
+
 void ConcreteTrace::disconnectLookup(LookupNode * lookupNode) { assert(false); }
 void ConcreteTrace::decNumRequests(RootOfFamily root) { assert(false); }
 void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
