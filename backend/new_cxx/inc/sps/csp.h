@@ -11,7 +11,7 @@ struct MakeCSPOutputPSP : PSP
 
 struct CSPRequestPSP : PSP
 {
-  CSPRequestPSP(VentureValuePtr symbols, VentureValuePtr expression, shared_ptr<VentureEnvironment> environment);
+  CSPRequestPSP(shared_ptr<VentureArray> symbols, VentureValuePtr expression, shared_ptr<VentureEnvironment> environment);
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   

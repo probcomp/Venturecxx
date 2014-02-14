@@ -320,7 +320,7 @@ double applyPSP(Trace * trace,
 
   psp->incorporate(newValue,args);
 
-  if (dynamic_pointer_cast<VentureSP>(newValue)) { assert(false); processMadeSP(trace,node,scaffold->isAAA(node),db); }
+  if (dynamic_pointer_cast<VentureSP>(newValue)) { processMadeSP(trace,node,scaffold->isAAA(node),db); }
   /* TODO TEMP MILESTONE */
   // if (psp->isRandom()) { trace->registerRandomChoice(node); } 
   // if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
