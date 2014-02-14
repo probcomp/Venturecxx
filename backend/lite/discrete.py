@@ -152,13 +152,14 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     weight = scipy.stats.beta.rvs(alpha, beta)
-    return BetaBernoulliSP(NullRequestPSP(), UBetaBernoulliOutputPSP(weight))
+    output = TypedPSP([], BoolType(), UBetaBernoulliOutputPSP(weight))
+    return BetaBernoulliSP(NullRequestPSP(), output)
 
   def logDensity(self,value,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     assert isinstance(value,BetaBernoulliSP)
-    coinWeight = value.outputPSP.weight
+    coinWeight = value.outputPSP.psp.weight
     return scipy.stats.beta.logpdf(coinWeight,alpha,beta)
 
   def description(self,name):

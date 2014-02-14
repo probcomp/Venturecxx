@@ -146,7 +146,7 @@ def builtInSPsList():
            [ "make_uc_sym_dir_mult",typed_nr(discrete.MakerUSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], v.AnyType(), min_req_args=2) ],
 
            [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], v.AnyType()) ],
-           [ "make_uc_beta_bernoulli",no_request(discrete.MakerUBetaBernoulliOutputPSP()) ],
+           [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], v.AnyType()) ],
 
            [ "make_crp",no_request(crp.MakeCRPOutputPSP()) ],
 
