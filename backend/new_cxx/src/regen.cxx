@@ -204,11 +204,6 @@ pair<double,Node*> evalFamily(Trace * trace,
     Node * sourceNode = env->lookupSymbol(symbol);
     weight = regen(trace,sourceNode,scaffold,false,db,gradients);
 
-    /* DEBUG */
-    shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(trace->getValue(sourceNode));
-    assert(spRef);
-    /* END DEBUG */
-
     return make_pair(weight,trace->createLookupNode(sourceNode));
   }
   else if (isSelfEvaluating(exp)) { return make_pair(0,trace->createConstantNode(exp)); }

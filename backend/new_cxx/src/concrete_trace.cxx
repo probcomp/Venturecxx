@@ -184,9 +184,6 @@ void ConcreteTrace::destroyMadeSPRecord(Node * makerNode)
 }
 
 
-
-
-
 void ConcreteTrace::setMadeSP(Node * node,shared_ptr<VentureSP> sp) { assert(false); }
 void ConcreteTrace::setMadeSPAux(Node * node,shared_ptr<SPAux> spaux) { assert(false); }
 
@@ -206,8 +203,15 @@ void ConcreteTrace::unregisterMadeSPFamily(Node * makerNode,FamilyID id)
   getMadeSPFamilies(makerNode)->unregisterFamily(id);
 }
 
-bool ConcreteTrace::containsMadeSPFamily(Node * makerNode, FamilyID id) { assert(false); }
-RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id) { assert(false); }
+bool ConcreteTrace::containsMadeSPFamily(Node * makerNode, FamilyID id) 
+{ 
+  return getMadeSPFamilies(makerNode)->containsFamily(id);
+}
+
+RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
+{
+  return getMadeSPFamilies(makerNode)->getRootOfFamily(id);
+}
 
 
 /* New in ConcreteTrace */

@@ -1,5 +1,8 @@
 #include "psp.h"
 #include "values.h"
+#include "args.h"
+#include "concrete_trace.h"
+#include "node.h"
 
 VentureValuePtr NullRequestPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
@@ -9,10 +12,16 @@ VentureValuePtr NullRequestPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) co
 
 VentureValuePtr ESRRefOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
-  assert(false);
+  assert(args->esrParentNodes.size() == 1);
+  return args->esrParentValues[0];
 }
 
-bool ESRRefOutputPSP::canAbsorb(ConcreteTrace * trace,Node * appNode,Node * parentNode) const
+bool ESRRefOutputPSP::canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const
 {
-  assert(false);
+  vector<RootOfFamily> esrParents = trace->getESRParents(appNode);
+  assert(esrParents.size() == 1);
+  if (parentNode == esrParents[0].get()) { return false; }
+  OutputNode * outputNode = dynamic_cast<OutputNode*>(appNode);
+  if (outputNode && parentNode == outputNode->requestNode) { return false; }
+  return true;
 }

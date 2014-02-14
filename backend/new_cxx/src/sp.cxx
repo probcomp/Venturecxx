@@ -3,7 +3,7 @@
 #include "psp.h"
 
 bool SPFamilies::containsFamily(FamilyID id)  { return families.count(id); }
-RootOfFamily SPFamilies::getFamily(FamilyID id) 
+RootOfFamily SPFamilies::getRootOfFamily(FamilyID id) 
 {
   assert(families.count(id));
   return families[id];

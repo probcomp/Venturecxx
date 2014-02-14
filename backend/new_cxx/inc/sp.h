@@ -29,7 +29,7 @@ struct SPFamilies
 
   map<FamilyID,RootOfFamily> families;
   bool containsFamily(FamilyID id);
-  RootOfFamily getFamily(FamilyID id);
+  RootOfFamily getRootOfFamily(FamilyID id);
   void registerFamily(FamilyID id,RootOfFamily root);
   void unregisterFamily(FamilyID id);
 };
