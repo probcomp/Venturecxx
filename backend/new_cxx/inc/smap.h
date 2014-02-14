@@ -2,6 +2,7 @@
 #define SMAP_H
 
 #include "types.h"
+#include "value.h"
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
@@ -12,7 +13,7 @@ using std::endl;
 template <typename K,typename V>
 struct SamplableMap
 {
-  map<K, int> d;
+  VentureValuePtrMap<int> d;
   vector<pair<K,V> > a;
 
   V & get(K k) 

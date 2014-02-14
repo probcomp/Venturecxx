@@ -67,7 +67,6 @@ void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
 void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
   assert(block);
-  cout << "reg: " << block->getNode() << endl;
   if (!scopes.count(scope)) { scopes[scope] = SamplableMap<BlockID,set<Node*> >(); }
   if (!scopes[scope].contains(block)) { scopes[scope].set(block,set<Node*>()); }
   assert(scopes[scope].contains(block));
@@ -96,7 +95,6 @@ void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
 
 void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
-  cout << "unreg: " << block->getNode() << endl;
   assert(scopes[scope].contains(block));
   assert(scopes[scope].get(block).count(node));
   scopes[scope].get(block).erase(node);
@@ -258,8 +256,8 @@ set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope)
 { 
   set<Node*> all;
   // TODO have SamplableMap provide an iterator
-  for (map<VentureValuePtr,int>::iterator iter = scopes[scope].d.begin();
-       iter != scopes[scope].d.end();
+  for (vector<pair<BlockID,set<Node*> > >::iterator iter = scopes[scope].a.begin();
+       iter != scopes[scope].a.end();
        ++iter)
   {
     set<Node*> nodesInBlock = getNodesInBlock(scope,iter->first);
