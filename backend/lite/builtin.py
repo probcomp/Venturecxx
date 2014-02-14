@@ -150,7 +150,7 @@ def builtInSPsList():
 
            [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType()], v.AnyType()) ],
 
-           [ "make_lazy_hmm",no_request(hmm.MakeUncollapsedHMMOutputPSP()) ],
+           [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], v.AnyType()) ],
   ]
 
 def builtInSPs():
