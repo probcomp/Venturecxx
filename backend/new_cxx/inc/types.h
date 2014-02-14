@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <iostream>
 
 using boost::shared_ptr;
 using boost::dynamic_pointer_cast;
@@ -16,6 +17,8 @@ using std::string;
 using std::size_t;
 using std::pair;
 using std::make_pair;
+using std::cout;
+using std::endl;
 
 struct VentureValue;
 struct Node;
