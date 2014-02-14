@@ -346,7 +346,8 @@ class ExpressionType(VentureType):
       return VentureBool(thing)
     if isinstance(thing, Number):
       return VentureNumber(thing)
-    # TODO How do we actually evaluate literal atoms?
+    if isinstance(thing, VentureAtom):
+      return thing
     if isinstance(thing, str):
       return VentureSymbol(thing)
     if hasattr(thing, "__getitem__"): # Already not a string
@@ -360,7 +361,7 @@ class ExpressionType(VentureType):
     if isinstance(thing, VentureNumber):
       return thing.getNumber()
     if isinstance(thing, VentureAtom):
-      return thing
+      return thing # Atoms are valid elements of expressions
     if isinstance(thing, VentureSymbol):
       return thing.getSymbol()
     if isinstance(thing, VentureArray):
