@@ -20,4 +20,25 @@ class TestArrayExtended(object):
     assert not self.ripl.predict("(is_array (list 1 2))")
     assert not self.ripl.predict("(is_array 0)")
 
+  def testSize(self):
+    assert self.ripl.predict("(size xs)") == 3
 
+def testMatrix():
+  for form in ["(matrix (list))", "(matrix (list (list) (list)))",
+               "(matrix (list (list 1 0) (list 0 1)))"]:
+    yield checkMatrix, form
+
+def checkMatrix(form):
+  get_ripl().predict(form)
+  assert get_ripl().predict("(is_matrix %s)" % form)
+
+def testSimplex():
+  for form in ["(simplex)", "(simplex 1)", "(simplex 0.2 0.8)"]:
+    yield checkSimplex, form
+
+def checkSimplex(form):
+  get_ripl().predict(form)
+  assert get_ripl().predict("(is_simplex %s)" % form)
+
+def testSimplexSize():
+  assert get_ripl().predict("(size (simplex 0.3 0.7))") == 2
