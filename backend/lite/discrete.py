@@ -171,7 +171,8 @@ class UBetaBernoulliAAALKernel(LKernel):
     beta  = args.operandValues[1]
     [ctY,ctN] = args.madeSPAux.cts()
     newWeight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
-    return BetaBernoulliSP(NullRequestPSP(), UBetaBernoulliOutputPSP(newWeight))
+    output = TypedPSP([], BoolType(), UBetaBernoulliOutputPSP(newWeight))
+    return BetaBernoulliSP(NullRequestPSP(), output)
   # Weight is zero because it's simulating from the right distribution
 
 class UBetaBernoulliOutputPSP(RandomPSP):
@@ -312,7 +313,8 @@ class USymDirMultAAALKernel(LKernel):
     assert isinstance(args.madeSPAux,DirMultSPAux)
     counts = [count + alpha for count in args.madeSPAux.os]
     newTheta = npr.dirichlet(counts)
-    return DirMultSP(NullRequestPSP(),USymDirMultOutputPSP(newTheta,os),n)
+    output = TypedPSP([], AnyType(), USymDirMultOutputPSP(newTheta,os))
+    return DirMultSP(NullRequestPSP(),output,n)
 
 class USymDirMultOutputPSP(RandomPSP):
   def __init__(self,theta,os):
@@ -428,7 +430,8 @@ class UDirMultAAALKernel(LKernel):
     assert isinstance(args.madeSPAux,DirMultSPAux)
     counts = [count + a for (count,a) in zip(args.madeSPAux.os,alpha)]
     newTheta = npr.dirichlet(counts)
-    return DirMultSP(NullRequestPSP(),UDirMultOutputPSP(newTheta,os),len(alpha))
+    output = TypedPSP([], AnyType(), UDirMultOutputPSP(newTheta,os))
+    return DirMultSP(NullRequestPSP(),output,len(alpha))
 
 class UDirMultOutputPSP(RandomPSP):
   def __init__(self,theta,os):
