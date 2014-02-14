@@ -50,7 +50,7 @@ class VentureValue(object):
 
 class VentureNumber(VentureValue):
   def __init__(self,number):
-    assert isinstance(number, float)
+    assert isinstance(number, Number)
     self.number = number
   def getNumber(self): return self.number
   def asStackDict(self): return {"type":"number","value":self.number}
