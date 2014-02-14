@@ -6,7 +6,7 @@ using std::endl;
 
 void cannotConvertType(const VentureValue * obj, string target)
 {
-  cout << "Cannot convert [unknown] to [" + target + "]" << endl;
+  cout << "Cannot convert " << obj->toString() << " to [" + target + "]" << endl;
   assert(false);
 }
 
