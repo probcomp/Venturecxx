@@ -1,6 +1,3 @@
-
-# #Python Freenode:#Python (channel), minrk or min_rk
-
 from IPython.parallel import Client
 from venture.shortcuts import make_church_prime_ripl
 import numpy as np
@@ -8,24 +5,18 @@ import matplotlib.pylab as plt
 from scipy.stats import kde
 gaussian_kde = kde.gaussian_kde
 import subprocess,time
-### PLAN
 
 
-# for being on master
-# doc_strings
-# todo list
-# need to get the right file path for the fie. can we do this by importing the 
-# module first and using the same function to ask where the file is
-# need to load up engines before this will work. which mgiht be troublesome, but
-# good to iron our problems early
+### IPython Parallel Magics
+## Use: See examples in /examples
 
-# todo list:
+# Tasks: 
 # 1. get to work with import instead of execute
 # 2. push and pull ripls: pass a ripl to the constructor. pull all ripls
 #    from the mripl. use the functions included but retain labels and 
 #    any other arguments of a directive. also consider via pickling (v_lite)
 #    (make it easy to save at least one of current ripls to file)
-# 3. improve type case-switch and support for mixed types
+# 3. improve type case-switch and plotting support for mixed types
 # 4. add continuous inference and write some unit tests for it
 # 5. have local ripl be optional (and update tests that depend on it)
 # 6. remove plotting from probes and have plotting that can do timeseries
@@ -33,98 +24,10 @@ import subprocess,time
 
 
 
-#TODO 1
-#- connect to EC2 and create some convenience features for doing so
-# - ask about the namespace issues for multiripls
-
-# test waiting on infer, test interactive mode, where an engine or ripl dies and you recover
-
-# - too many methods, find some way to structure better.
-
-# TODO 2
-# 1. make display work and plot with discrete and cts inputs. 
-#   so the crp example (maybe with ellipsoids). 
-#     -- should add snapshot (with total transitions), as display will depend on it.
-
-# 2. probes and scatter?
-
-# - better type mathod
-
-# - work out  
-
-# 3. have the local ripl be optional
-
-#4. map function should intercept infers to update total-transitions?
-
-# 5. add all directives
-
-# 7. want the user to be able to specify a cluster (a Client() output
-# object).
-# 8. async should be an option for plotting as you might have lots
-# of infers as part of your code, or you might easily (in interaction)
-# write somethign that causes crashes. (blocking is enemy of 
-# interactive development)
-
-# 9. In Master: clear shouldn't destroy the seed (delegate new seed after clear)
-
-# 10. continuous inference
-
-
-
-
-# Notes on Parallel IPython
-
-# Questions
-# 1. How exactly to enable user to purge data from a process
-# and to shutdown processes. Should we allow one engine
-# to fail and still get results back from others (vs. just
-# having to restart the whole thing again). 
-
-# 2. Basic design idea: only wait on infer. Everything else
-# is synchronous. Do we need to give user the option of 
-# making everything asynchronous?
-
-# If not: we could set blocking and then have everything 
-# be blocking by default (map not map_sync). 
-
-# For infer, we override by running apply_async. We get
-# back an async object.  
-
-# if infer is async, need to think about what if someone combines them
-# someone does a %v cell magic and it has (infer 10) in it. 
-# might need an infer to finish before the predict. so if 
-# waiting for an infer to fnish, what will predict do?
-
-# looks life v.predict(1000) waits for v.infer(1000) to finish. is this
-# a general rule, that one command will wait for the other? presumably
-# otherwise semantics wouldn't work out. 
-#  a=v.infer(100000);b= v.predict('100000000000000')
-
-
-# q: what to do when one or two engines segfault? engines die. how 
-# can we recover. engines won't start again. how to properly kill the engines?
-
-# cool stuff: interactive_wait. maybe what we want for stuff involving inference
-# cool stuff:  %px from IPython.parallel import bind_kernel; bind_kernel()
-#           %px %qtconsole
-
-
-
-# seems we can use magic commands in a %px
-# and so the engines are running ipython
-# --though they don't get the ipy_ripl (why not?)
-
-# question of what happens when you push a function to them
-# functions can't be mutated, so a pointer to a function
-# should be the same as copying the function, apart from 
-# the issue of the enclosing env. so: the function you
-# push is like a copy, it doesn't maintain the closure
-# (makes sense, coz we can't send across functions with closures)
-
-#e.g. s='local'; f=lambda:s; dv.push({'f':f}); %px f() = error (no s var)
-
+# Utility functions for working with ipcluster
 
 def clear_all_engines():
+    'Clears the namespaces of all IPython remote processes'
     cli = Client()
     cli.clear(block=True)
 
@@ -140,6 +43,10 @@ def stop_engines():
     stop.wait()
 
 
+
+# Functions needed for the MRipl Class (could be added to scope of the class definition)
+
+# functions that copy ripls by batch loading directives that are constructed from directives_list
 copy_ripl_string="""
 def build_exp(exp):
     'Take expression from directive_list and build the Lisp string'
@@ -196,6 +103,11 @@ def copy_ripl(ripl,seed=None):
     [run_py_directive(new_ripl,di) for di in di_list]
     return new_ripl
 
+
+
+# function for creating a list of ripls for each mripl (the function
+# will be mapped across each engine)
+
 make_mripl_string='''
 try:
     mripls.append([]); no_mripls += 1; seeds_lists.append([])
@@ -208,6 +120,23 @@ def make_mripl_string_function():
         mripls.append([]); no_mripls += 1; seeds_lists.append([])
     except:
         mripls=[ [], ]; no_mripls=1; seeds_lists = [ [], ]
+
+
+
+# Create MRipls. Multiple MRipls can be created, sharing the same engines.
+# Each engine has a list 'mripl', each element of which is a list 'ripl'
+# containing ripls for that mripl. So the mripls are all being run in a
+# single namespace on each remote engine.
+
+# The user will mostly interact with an
+# mripl via directives like 'mripl.assume(...)', which is applied to each
+# ripl of that mripl (across all engines). However, the mripl.dview 
+# attribute is a direct-view on the engines and allows the user to 
+# execute arbitrary code across the engines, including altering the state
+# of other mripls. (The user can also do this via %px). 
+
+# (We can consider ways of making the data of an mripl accessible only
+# via the mripl object in the user namespace). 
 
 
 class MRipl():
@@ -415,6 +344,7 @@ class MRipl():
 
 
     def type_list(self,lst):
+        'find the type of a list of values, if there is a single type'
         if any([type(lst[0])!=type(i) for i in lst]):
             return 'mixed'
             ## give user a warning and tell them if you cast or leave out some data
@@ -431,7 +361,7 @@ class MRipl():
 
         
     def plot(self,snapshot,scatter=False): #values,total_transitions=None,ripls_info=None,scatter_heat=False):
-        'values={ did_label: values_list } '
+        
         figs = []
         values = snapshot['values']
         no_trans = snapshot['total_transitions']
@@ -460,6 +390,10 @@ class MRipl():
                 
             elif var_type =='bool':
                 ax.hist(vals)
+            elif var_type =='string':
+                pass
+                
+            
             else:
                 print 'couldnt plot' ##FIXME, shouldnt add fig to figs
             fig.tight_layout()
@@ -520,7 +454,17 @@ class MRipl():
     
 
 
-## mr_map magic utility functions
+
+
+
+
+
+
+
+## Magic functions defined on MRipl objects 
+
+
+# Utility functions for the %mr_map scell magic
 
 def lst_flatten(l): return [el for subl in l for el in subl]
 
@@ -535,11 +479,13 @@ set_plotting_string = '''
 import matplotlib.pylab as plt
 %matplotlib inline'''
 
+
 def mr_map(line, cell):
-    'syntax: %%mr_map mripl_name proc_name [optional: store_variable_name, local_ripl] '
+    '''cell magic allows mapping of arbitrary functions across all ripls in an mripl.
+    syntax: %%mr_map mripl_name proc_name [optional: store_variable_name, local_ripl] '''
     ip = get_ipython()
 
-    assert len(str(line).split()) >= 2, 'Error. Syntax: %%mr_map proc_name mripl_name [optional: store_variable_name] ' 
+    assert len(str(line).split()) >= 2, 'Error. Syntax: %%mr_map mripl_name proc_name [optional: store_variable_name] ' 
 
     # get inputs
     proc_name = str(line).split()[1]
@@ -547,12 +493,14 @@ def mr_map(line, cell):
     mripl = eval(mripl_name,globals(),ip.user_ns) ## FIXME: what should globals,locals be?
     mrid = mripl.mrid
 
+
     ## FIXME: local_ripl will diverge from remotes if we don't have a third argument
     if len(str(line).split()) > 3:
         ip.run_cell(cell)  # run cell locally, for local ripl (FIXME is the namespace stuff s.t. this works?)
         eval( '%s( %s.local_ripl )' % (proc_name,mripl_name), globals(), ip.user_ns) # eval on local ripl 
 
-    ip.run_cell_magic("px", '', cell)  #FIXME, dview.execute is more general?
+
+    ip.run_cell_magic("px", '', cell)  
     
     ## FIXME: order of these commands (run_cell_mag, execute(plotting)) seems to matter. why?
     mripl.dview.execute(set_plotting_string) # matplotlib, inlining
@@ -574,10 +522,11 @@ def mr_map(line, cell):
     return out_dict
 
 
-## all version where user hands a function (which has to only include variables that 
-# are in the %px namespace
+
+# Non-magic version of the magic above (callable from normal Python script)
+# Takes an actual mripl and proc as inputs.
 def mr_map_nomagic(mripl,proc):
-    'Push proc into engine namespaces. Use execute to map across ripls.'
+    'Push procedure into engine namespaces. Use execute to map across ripls.'
     proc_name = 'user_proc_' + str( abs(hash(proc)) )
     mripl.dview.push( { proc_name: proc} )
     mripl.dview.execute(set_plotting_string) # matplotlib, inlining
@@ -593,25 +542,20 @@ def mr_map_nomagic(mripl,proc):
 
 
 
-
-
-
-## Consider Version where we use execute instead of %px
-    # one way: define function locally and sent it to all ripls
-    #f_name = f_name_parens[:f_name_parens.find('(')]
-    #res1 = v.dview.apply_sync(lambda:[func(r) for r in ripls])
-    
-    # second way: run all the code, which could include various 
-    # defines and imports needed for the function, across all engines
-    # then execute code that maps the defined function across all ripls
-    # in an engine and pull out the resulting object (should be something
-    # one can pull).
-
+## Register the cell magic for IPython use
 try:
     ip = get_ipython()
     ip.register_magic_function(mr_map, "cell")    
 except:
     print 'no ipython'
+
+
+
+
+
+
+
+## Use examples: to be moved to dedicated example scripts
 
 def sp(no_ripls=2):    
     v = MRipl(no_ripls)
@@ -640,21 +584,50 @@ def crp(no_ripls=2):
     y=np.array(xs)[range(1,len(xs),2)]
     return prog,v,xs,x,y
 
-# clear_all_engines()
-# no_rips = 5
-# v=MRipl(no_rips)
 
-# # test what happens when ripl directives results in exception or segfault
-# def m(x):
-#     import os; pid=os.getpid()
-#     if pid%4==0:
-#         [r.predict('(categorical 2 2)') for r in mripls[0] ]
-#         return [r.predict('x') for r in mripls[0]]
-#     else:
-#         return [r.predict('5') for r in mripls[0]]
 
-# ans=v.dview.map_async(m,range(no_rips))
-
+def lang(no_ripls=2):
+    prog='''
+    [assume alpha (uniform_continuous .9 1)]
+    [assume crp (make_crp alpha) ]
+    [assume z (mem (lambda (i) (crp) ) ) ]
+    [assume nps (list (quote bob) (quote time) (quote space) (quote truth) (quote alice) (quote fate) (quote man) (quote beast) (quote nature) (quote he) (quote she) (quote cynthia) (quote zeus) ) ]
+    [assume np (categorical (simplex 
+    [assume np (if (flip .1) (quote he)
+                 (if (flip .1) (quote the master)
+                 (if (flip .1) (quote alice)
+                 (if (flip .1) (quote the horse)
+                 (if (flip .1) (quote the chief)
+                 (if (flip .1) (quote a doctor) 
+                 (if (flip .1) (quote bob) (quote time) ) ) ))))) ]
+    [assume adv (if (flip .001) (quote quickly)
+                 (if (flip .1) (quote the master)
+                 (if (flip .1) (quote alice)
+                 (if (flip .1) (quote the horse)
+                 (if (flip .1) (quote the chief)
+                 (if (flip .1) (quote a doctor) 
+                 (if (flip .1) (quote bob) (quote time) ) ) ))))) ]
+    [assume vp (if (flip .1) (quote plays)
+                  (if (flip .1) (quote eats)
+                  (if (flip .1) (quote thinks)
+                  (if (flip .1) (quote surfs)
+              (if (flip .1) (quote ponders)
+              (if (flip .1) (quote begins)
+              (if (flip .1) (quote sleeps)
+              (if (flip .1) (quote moves)
+              (if (flip .1) (quote runs)
+                   (if (flip .1) (quote searches) (quote freezes) )))))))))) ]
+    [assume s (pair (np) (vp) ) ]
+    [assume ptype (mem (lambda (z) (s))) ]
+    [assume noise (lambda (p) (if (flip .1) 
+                                    (pair (first p) (pair (rest p) (rest p) ) )
+                                    (if (flip .2) 
+                                       (pair (first p) (pair (adv) (rest p) ) ) 
+                                       p ) ) ) ]
+    [assume x (mem (lambda (i) (noise (ptype (z i) ) ) ) )]'''
+    v=make_church_prime_ripl()
+    v.execute_program(prog)
+    return prog,v
 
 
 
