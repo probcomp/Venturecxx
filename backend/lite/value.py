@@ -96,7 +96,11 @@ class VentureSymbol(VentureValue):
 # Venture arrays are heterogeneous, with O(1) access and O(n) copy.
 # Venture does not yet have a story for homogeneous packed arrays.
 class VentureArray(VentureValue):
-  def __init__(self,array): self.array = array
+  def __init__(self, array, elt_type=None):
+    if elt_type is None: # No conversion
+      self.array = array
+    else:
+      self.array = [elt_type.asVentureValue(v) for v in array]
   def getArray(self, elt_type=None):
     if elt_type is None: # No conversion
       return self.array
@@ -340,3 +344,12 @@ class AnyType(VentureType):
   def asPython(self, thing):
     assert isinstance(thing, VentureValue)
     return thing
+
+class HomogeneousArrayType(VentureType):
+  def __init__(self, subtype):
+    assert isinstance(subtype, VentureType)
+    self.subtype = subtype
+  def asVentureValue(self, thing):
+    return VentureArray(thing, self.subtype)
+  def asPython(self, vthing):
+    return vthing.getArray(self.subtype)
