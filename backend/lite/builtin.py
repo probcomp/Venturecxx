@@ -143,7 +143,7 @@ def builtInSPsList():
            [ "make_uc_dir_mult",no_request(discrete.MakerUDirMultOutputPSP()) ],
 
            [ "make_sym_dir_mult",typed_nr(discrete.MakerCSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], v.AnyType(), min_req_args=2) ], # Saying AnyType here requires the underlying psp to emit a VentureValue.
-           [ "make_uc_sym_dir_mult",no_request(discrete.MakerUSymDirMultOutputPSP()) ],
+           [ "make_uc_sym_dir_mult",typed_nr(discrete.MakerUSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], v.AnyType(), min_req_args=2) ],
 
            [ "make_beta_bernoulli",no_request(discrete.MakerCBetaBernoulliOutputPSP()) ],
            [ "make_uc_beta_bernoulli",no_request(discrete.MakerUBetaBernoulliOutputPSP()) ],

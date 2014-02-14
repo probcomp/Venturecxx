@@ -288,13 +288,13 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
 
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
-    os = args.operandValues[2] if len(args.operandValues) > 2 else range(n)
+    os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureNumber(i) for i in range(n)]
     theta = npr.dirichlet([alpha for _ in range(n)])
-    return DirMultSP(NullRequestPSP(),USymDirMultOutputPSP(theta,os),n)
+    output = TypedPSP([], AnyType(), USymDirMultOutputPSP(theta,os))
+    return DirMultSP(NullRequestPSP(),output,n)
 
   def logDensity(self,value,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
-    os = args.operandValues[2] if len(args.operandValues) > 2 else range(n)
     assert isinstance(value,DirMultSP)
     assert isinstance(value.outputPSP,USymDirMultOutputPSP)
     return logDensityDirichlet(value.outputPSP.theta,[alpha for _ in range(n)])
