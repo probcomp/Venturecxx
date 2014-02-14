@@ -317,7 +317,7 @@ double applyPSP(Trace * trace,
 
   if (dynamic_pointer_cast<VentureSP>(newValue)) { processMadeSP(trace,node,scaffold->isAAA(node),db); }
   /* TODO TEMP MILESTONE */
-  // if (psp->isRandom()) { trace->registerRandomChoice(node); } 
+  if (psp->isRandom()) { trace->registerUnconstrainedChoice(node); }
   // if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
   // {
   //   ScopeID scope = trace->getValue(node->operandNodes[0]);

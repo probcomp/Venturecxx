@@ -1,8 +1,9 @@
 #include "builtin.h"
 #include "sp.h"
-#include "sps/deterministic.h"
 #include "sps/csp.h"
 #include "sps/continuous.h"
+#include "sps/deterministic.h"
+#include "sps/discrete.h"
 
 map<string,VentureValuePtr> initBuiltInValues() 
 {
@@ -47,9 +48,10 @@ map<string,shared_ptr<VentureSP> > initBuiltInSPs()
   m["chi_sq"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new ChiSquaredPSP()));
   m["inv_chi_sq"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new InvChiSquaredPSP()));
 
+  /* Discrete SPs */
+  m["bernoulli"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new BernoulliOutputPSP()));
+
   m["make_csp"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new MakeCSPOutputPSP()));
-  
-  
   
   return m;
 }
