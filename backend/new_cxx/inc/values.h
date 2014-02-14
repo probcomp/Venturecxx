@@ -52,6 +52,9 @@ struct VentureArray : VentureValue
 {
   VentureArray(const vector<VentureValuePtr> & xs): xs(xs) {}
   const vector<VentureValuePtr> & getArray() const { return xs; }
+  VentureValuePtr lookup(VentureValuePtr index) const { return xs[index->getInt()]; }
+  int size() const { return xs.size(); }
+
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   string toString() const;
@@ -93,6 +96,11 @@ struct VentureDictionary : VentureValue
   // TODO need a special type with special hash/equality function.
   VentureDictionary(const VentureValuePtrMap<VentureValuePtr> & dict): dict(dict) {}
   const VentureValuePtrMap<VentureValuePtr>& getDictionary() const { return dict; }
+
+  VentureValuePtr lookup(VentureValuePtr index) const { return dict.at(index); }
+  bool contains(VentureValuePtr index) const { return dict.count(index); }
+  int size() const { return dict.size(); }
+
   string toString() const;
   VentureValuePtrMap<VentureValuePtr> dict;
 };

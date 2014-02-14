@@ -29,5 +29,12 @@ const vector<shared_ptr<LSR> >& VentureValue::getLSRs() const { cannotConvertTyp
 
 Node * VentureValue::getNode() const { cannotConvertType(this,"node") ; assert(false); throw "no return"; }
 
+VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { assert(false); }
+bool VentureValue::contains(VentureValuePtr index) const { assert(false); }
+int VentureValue::size() const { assert(false); }
+
+
+
+
 bool VentureValue::equals(const VentureValuePtr & other) const { return false; assert(false); throw "no return"; }
 size_t VentureValue::hash() const { assert(false); assert(false); throw "no return"; }

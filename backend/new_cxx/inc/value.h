@@ -45,6 +45,11 @@ struct VentureValue
   virtual const vector<shared_ptr<LSR> >& getLSRs() const;
 
   virtual Node * getNode() const;
+
+  /* for containers */
+  virtual VentureValuePtr lookup(VentureValuePtr index) const;
+  virtual bool contains(VentureValuePtr index) const;
+  virtual int size() const;
   
   virtual boost::python::dict toPython() const 
     { 
@@ -52,6 +57,7 @@ struct VentureValue
       assert(false); throw "need to override toPython()"; 
     };
 
+  /* for unordered_maps */
   virtual bool equals(const VentureValuePtr & other) const;
   virtual size_t hash() const;
   
