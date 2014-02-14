@@ -72,6 +72,7 @@ class VentureNumber(VentureValue):
     if self.number < other.number: return -1
     elif self.number > other.number: return 1
     else: return 0
+  def __hash__(self): return hash(self.number)
 
 class VentureAtom(VentureValue):
   def __init__(self,atom):
@@ -88,6 +89,7 @@ class VentureAtom(VentureValue):
     if self.atom < other.atom: return -1
     elif self.atom > other.atom: return 1
     else: return 0
+  def __hash__(self): return hash(self.atom)
 
 class VentureBool(VentureValue):
   def __init__(self,boolean):
@@ -105,6 +107,7 @@ class VentureBool(VentureValue):
   def fromStackDict(thing): return VentureBool(thing["value"])
   def compareSameType(self, other):
     return self.boolean.__cmp__(other.boolean)
+  def __hash__(self): return hash(self.boolean)
 
 class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
@@ -115,6 +118,7 @@ class VentureSymbol(VentureValue):
   def fromStackDict(thing): return VentureSymbol(thing["value"])
   def compareSameType(self, other):
     return self.symbol.__cmp__(other.symbol)
+  def __hash__(self): return hash(self.symbol)
 
 # Venture arrays are heterogeneous, with O(1) access and O(n) copy.
 # Venture does not yet have a story for homogeneous packed arrays.
@@ -149,6 +153,7 @@ class VentureNil(VentureValue):
   def __init__(self): pass
   def __repr__(self): return "Nil"
   def compareSameType(self, _): return 0 # All Nils are equal
+  def __hash__(self): return 0
   def asPythonList(self): return []
   def asStackDict(self): return {"type":"list", "value":[]}
   @staticmethod
@@ -174,6 +179,7 @@ class VenturePair(VentureValue):
     fstcmp = self.first.compare(other.first)
     if fstcmp != 0: return fstcmp
     else: return self.rest.compare(other.rest)
+  # TODO Define a sensible hash function
   def lookup(self, index):
     ind = index.getNumber()
     if ind < 1: # Equivalent to truncating for positive floats
@@ -209,6 +215,7 @@ class VentureSimplex(VentureValue):
       return lencmp
     else:
       return self.simplex.__cmp__(other.simplex)
+  def __hash__(self): return hash(self.simplex)
   def asStackDict(self):
     # TODO As what type to reflect simplex points to the stack?
     return {"type":"simplex", "value":self.simplex}
@@ -244,6 +251,7 @@ class VentureMatrix(VentureValue):
   def compareSameType(self, other):
     # TODO Are numpy matrices comparable?
     return self.matrix.__cmp__(other.matrix)
+  def __hash__(self): return hash(self.matrix)
   def asStackDict(self):
     return {"type":"matrix", "value":self.matrix}
   @staticmethod
