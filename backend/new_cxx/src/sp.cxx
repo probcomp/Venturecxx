@@ -32,7 +32,6 @@ SP::SP(PSP * requestPSP, PSP * outputPSP) :
 
 void SP::simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB) const { assert(false); throw "no default latent handling"; }
 double SP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const { assert(false); throw "no default latent handling"; }
-bool SP::hasAEKernel() const { return false; }
 
 
 shared_ptr<PSP> SP::getPSP(ApplicationNode * node) const
@@ -40,6 +39,8 @@ shared_ptr<PSP> SP::getPSP(ApplicationNode * node) const
   if (dynamic_cast<RequestNode*>(node)) { return requestPSP; }
   else { return outputPSP; }
 }
+
+void SP::AEInfer(shared_ptr<SPAux> madeSPAux) const { assert(false); }
 
 boost::python::dict VentureSPRef::toPython() const 
 { 

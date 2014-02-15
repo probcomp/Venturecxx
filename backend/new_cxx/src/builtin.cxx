@@ -89,6 +89,7 @@ map<string,SP*> initBuiltInSPs()
   m["mem"] = new SP(new NullRequestPSP(), new MakeMSPOutputPSP());
 
   m["make_sym_dir_mult"] = new SP(new NullRequestPSP(), new MakeSymDirMultOutputPSP());
+  m["make_uc_sym_dir_mult"] = new SP(new NullRequestPSP(), new MakeUCSymDirMultOutputPSP());
   
   return m;
 }

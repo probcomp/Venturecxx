@@ -43,6 +43,8 @@ private:
 // Uncollapsed 
 struct UCSymDirMultSP : SP
 {
+  UCSymDirMultSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
+
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> madeSPAux) const;
 };
