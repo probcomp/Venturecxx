@@ -12,13 +12,6 @@ struct DirMultSPAux : SPAux
   vector<int> counts;
 };
 
-struct DirMultSP : VentureSP
-{
-  DirMultSP(PSP * requestPSP, PSP * outputPSP, int n);
-  shared_ptr<SPAux> constructSPAux() const;
-  int n;
-};
-
 // TODO not implemented
 struct DirMultOutputPSP : RandomPSP
 {

@@ -2,18 +2,16 @@
 #define SP_RECORD_H
 
 #include "types.h"
+#include "sp.h"
 
-struct SP;
-struct SPAux;
-struct SPFamilies;
 
 // TODO URGENT not sure when or how this is called yet.
 struct VentureSPRecord : VentureValue
 {
-  VentureSPRecord(SP * sp): sp(sp) {}
-  VentureSPRecord(SP * sp,SPAux * spAux): sp(sp), spAux(spAux) {}
+  VentureSPRecord(SP * sp): sp(sp), spFamilies(new SPFamilies()) {}
+  VentureSPRecord(SP * sp,SPAux * spAux): sp(sp), spAux(spAux), spFamilies(new SPFamilies()) {}
 
-  shared_ptr<VentureSP> sp;
+  shared_ptr<SP> sp;
   shared_ptr<SPAux> spAux;
   shared_ptr<SPFamilies> spFamilies;
 

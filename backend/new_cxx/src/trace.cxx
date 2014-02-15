@@ -59,7 +59,7 @@ Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
   return spRef->makerNode;
 }
 
-shared_ptr<VentureSP> Trace::getMadeSP(Node * makerNode)
+shared_ptr<SP> Trace::getMadeSP(Node * makerNode)
 {
   shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
   return spRecord->sp;

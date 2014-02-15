@@ -73,7 +73,7 @@ double apply(Trace * trace,
 	      shared_ptr<map<Node*,Gradient> > gradients);
 
 
-void processMadeSP(Trace * trace, Node * node, bool isAAA,shared_ptr<DB> db);
+void processMadeSP(Trace * trace, Node * node, bool isAAA,bool shouldRestore,shared_ptr<DB> db);
 
 double applyPSP(Trace * trace,
 	      ApplicationNode * node,

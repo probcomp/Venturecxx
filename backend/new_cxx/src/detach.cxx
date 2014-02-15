@@ -174,8 +174,9 @@ double unapply(Trace * trace,OutputNode * node,shared_ptr<Scaffold> scaffold,sha
 
 void teardownMadeSP(Trace * trace,Node * makerNode,bool isAAA,shared_ptr<DB> db)
 {
-  shared_ptr<VentureSP> sp = trace->getMadeSP(makerNode);
-  assert(sp);
+  shared_ptr<VentureSPRecord> spRecord = trace->getMadeSPRecord(makerNode);
+  assert(spRecord);
+  shared_ptr<SP> sp = spRecord->sp;
   if (!isAAA)
   {
     if (sp->hasAEKernel()) { trace->unregisterAEKernel(makerNode); }
@@ -184,9 +185,9 @@ void teardownMadeSP(Trace * trace,Node * makerNode,bool isAAA,shared_ptr<DB> db)
   }
   else
   {
-    trace->setMadeSP(makerNode,shared_ptr<VentureSP>());
+    trace->setMadeSP(makerNode,shared_ptr<SP>());
   }
-  trace->setValue(makerNode,sp);
+  trace->setValue(makerNode,spRecord);
 }
 
 double unapplyPSP(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)

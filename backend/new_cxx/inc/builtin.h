@@ -2,9 +2,9 @@
 #define BUILTIN_H
 
 #include "types.h"
-struct VentureSP;
+struct SP;
 
 map<string,VentureValuePtr> initBuiltInValues();
-map<string,shared_ptr<VentureSP> > initBuiltInSPs();
+map<string,SP *> initBuiltInSPs();
 
 #endif

@@ -60,7 +60,7 @@ struct Trace
 
   /* Primitive getters */
   virtual VentureValuePtr getValue(Node * node) =0;
-  virtual SPRecord getMadeSPRecord(Node * makerNode) =0;
+  virtual shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode) =0;
   virtual vector<RootOfFamily> getESRParents(Node * node) =0;
   virtual set<Node*> getChildren(Node * node) =0;
   virtual int getNumRequests(RootOfFamily root) =0;
@@ -75,7 +75,7 @@ struct Trace
   /* Derived getters (just for convenience)*/
   virtual VentureValuePtr getGroundValue(Node * node);
   virtual Node * getOperatorSPMakerNode(ApplicationNode * node);
-  virtual shared_ptr<VentureSP> getMadeSP(Node * makerNode);
+  virtual shared_ptr<SP> getMadeSP(Node * makerNode);
   virtual shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode);
   virtual shared_ptr<SPAux> getMadeSPAux(Node * node);
   virtual vector<Node*> getParents(Node * node);
@@ -88,9 +88,10 @@ struct Trace
 
   virtual void observeNode(Node * node,VentureValuePtr value) =0;
 
+  virtual void setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord) =0;
   virtual void destroyMadeSPRecord(Node * makerNode) =0;
 
-  virtual void setMadeSP(Node * makerNode,shared_ptr<VentureSP> sp) =0;
+  virtual void setMadeSP(Node * makerNode,shared_ptr<SP> sp) =0;
   virtual void setMadeSPAux(Node * makerNode,shared_ptr<SPAux> spaux) =0;
 
   virtual void setChildren(Node * node,set<Node*> children) =0;

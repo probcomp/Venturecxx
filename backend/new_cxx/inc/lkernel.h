@@ -7,7 +7,7 @@
 struct Trace;
 struct Args;
 struct PSP;
-struct VentureSP;
+struct SP;
 
 struct LKernel
 {
@@ -22,12 +22,12 @@ struct LKernel
 
 struct DefaultAAALKernel : LKernel
 {
-  DefaultAAALKernel(const shared_ptr<VentureSP> makerSP): makerSP(makerSP) {}
+  DefaultAAALKernel(const shared_ptr<SP> makerSP): makerSP(makerSP) {}
 
   VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng);
   double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args);
 
-  const shared_ptr<VentureSP> makerSP;
+  const shared_ptr<SP> makerSP;
 
 };
 

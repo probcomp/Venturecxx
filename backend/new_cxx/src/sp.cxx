@@ -23,20 +23,19 @@ void SPFamilies::unregisterFamily(FamilyID id)
 
 //shared_ptr<SPAux> SPAux::copy() { return new SPAux(); }
 
-shared_ptr<SPAux> VentureSP::constructSPAux() const { return shared_ptr<SPAux>(new SPAux()); }
-shared_ptr<LatentDB> VentureSP::constructLatentDB() const { return shared_ptr<LatentDB>(); }
+shared_ptr<LatentDB> SP::constructLatentDB() const { return shared_ptr<LatentDB>(); }
 
-VentureSP::VentureSP(PSP * requestPSP, PSP * outputPSP) :
+SP::SP(PSP * requestPSP, PSP * outputPSP) :
   requestPSP(shared_ptr<PSP>(requestPSP)),
   outputPSP(shared_ptr<PSP>(outputPSP))
   {}
 
-void VentureSP::simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB) const { assert(false); throw "no default latent handling"; }
-double VentureSP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const { assert(false); throw "no default latent handling"; }
-bool VentureSP::hasAEKernel() const { return false; }
+void SP::simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB) const { assert(false); throw "no default latent handling"; }
+double SP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const { assert(false); throw "no default latent handling"; }
+bool SP::hasAEKernel() const { return false; }
 
 
-shared_ptr<PSP> VentureSP::getPSP(ApplicationNode * node) const
+shared_ptr<PSP> SP::getPSP(ApplicationNode * node) const
 {
   if (dynamic_cast<RequestNode*>(node)) { return requestPSP; }
   else { return outputPSP; }

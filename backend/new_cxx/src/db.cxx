@@ -31,13 +31,13 @@ void DB::registerLatentDB(Node * makerNode, shared_ptr<LatentDB> latentDB)
   latentDBs[makerNode] = latentDB;
 }
 
-RootOfFamily DB::getESRParent(shared_ptr<VentureSP> sp,FamilyID id)
+RootOfFamily DB::getESRParent(shared_ptr<SP> sp,FamilyID id)
 {
   assert(spFamilyDBs[sp].count(id));
   return spFamilyDBs[sp][id];
 }
 
-void DB::registerSPFamily(shared_ptr<VentureSP> sp,FamilyID id,RootOfFamily esrParent)
+void DB::registerSPFamily(shared_ptr<SP> sp,FamilyID id,RootOfFamily esrParent)
 {
   assert(!spFamilyDBs[sp].count(id));
   spFamilyDBs[sp][id] = esrParent;

@@ -39,7 +39,7 @@ struct ConcreteTrace : Trace
 
   /* Primitive getters */
   VentureValuePtr getValue(Node * node);
-  SPRecord getMadeSPRecord(Node * makerNode);
+  shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode);
   vector<RootOfFamily> getESRParents(Node * node);
   set<Node*> getChildren(Node * node);
   int getNumRequests(RootOfFamily root);
@@ -56,13 +56,14 @@ struct ConcreteTrace : Trace
 
   void observeNode(Node * node,VentureValuePtr value);
 
+  void setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord);
   void destroyMadeSPRecord(Node * makerNode);
 
 
   void clearMadeSPFamilies(Node * node);
   
 
-  void setMadeSP(Node * node,shared_ptr<VentureSP> sp);
+  void setMadeSP(Node * node,shared_ptr<SP> sp);
   void setMadeSPAux(Node * node,shared_ptr<SPAux> spaux);
 
   void setChildren(Node * node,set<Node*> children);

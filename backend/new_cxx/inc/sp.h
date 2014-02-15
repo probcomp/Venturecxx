@@ -49,7 +49,6 @@ struct SP : VentureValue
   
   virtual shared_ptr<PSP> getPSP(ApplicationNode * node) const;
 
-  virtual shared_ptr<SPAux> constructSPAux() const;
   virtual shared_ptr<LatentDB> constructLatentDB() const;
   virtual void simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB) const;
   virtual double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const;

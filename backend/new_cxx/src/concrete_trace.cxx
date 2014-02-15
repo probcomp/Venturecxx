@@ -24,7 +24,7 @@ ConcreteTrace::ConcreteTrace(): Trace()
   vector<Node*> nodes;
 
   map<string,VentureValuePtr> builtInValues = initBuiltInValues();
-  map<string,shared_ptr<VentureSP> > builtInSPs = initBuiltInSPs();
+  map<string,SP *> builtInSPs = initBuiltInSPs();
 
   for (map<string,VentureValuePtr>::iterator iter = builtInValues.begin();
        iter != builtInValues.end();
@@ -36,13 +36,13 @@ ConcreteTrace::ConcreteTrace(): Trace()
     nodes.push_back(node);
   }
 
-  for (map<string,shared_ptr<VentureSP> >::iterator iter = builtInSPs.begin();
+  for (map<string,SP *>::iterator iter = builtInSPs.begin();
        iter != builtInSPs.end();
        ++iter)
   {
     shared_ptr<VentureSymbol> sym(new VentureSymbol(iter->first));
     ConstantNode * node = createConstantNode(VentureValuePtr(new VentureSPRecord(iter->second)));
-    processMadeSP(this,node,false,shared_ptr<DB>(new DB()));
+    processMadeSP(this,node,false,false,shared_ptr<DB>(new DB()));
     assert(dynamic_pointer_cast<VentureSPRef>(getValue(node)));
     syms.push_back(sym);
     nodes.push_back(node);
@@ -194,6 +194,12 @@ void ConcreteTrace::observeNode(Node * node,VentureValuePtr value)
   observedValues[node] = value; 
 }
 
+void ConcreteTrace::setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord)
+{
+  assert(!madeSPRecords.count(makerNode));
+  madeSPRecords[makerNode] = spRecord;
+}
+
 void ConcreteTrace::destroyMadeSPRecord(Node * makerNode)
 {
   assert(madeSPRecords.count(makerNode));
@@ -201,7 +207,7 @@ void ConcreteTrace::destroyMadeSPRecord(Node * makerNode)
 }
 
 
-void ConcreteTrace::setMadeSP(Node * makerNode,shared_ptr<VentureSP> sp) 
+void ConcreteTrace::setMadeSP(Node * makerNode,shared_ptr<SP> sp) 
 {
   getMadeSPRecord(makerNode)->sp = sp;
 }

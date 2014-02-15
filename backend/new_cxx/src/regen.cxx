@@ -262,19 +262,16 @@ double apply(Trace * trace,
 
 
 
-void processMadeSP(Trace * trace, Node * makerNode, bool isAAA, shared_ptr<DB> db)
+void processMadeSP(Trace * trace, Node * makerNode, bool isAAA, bool shouldRestore, shared_ptr<DB> db)
 {
-  shared_ptr<VentureSP> sp = dynamic_pointer_cast<VentureSP>(trace->getValue(makerNode));
-  assert(sp);
+  shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(trace->getValue(makerNode));
+  assert(spRecord);
+  shared_ptr<SP> sp = spRecord->sp;
   if (!isAAA)
   {
-    shared_ptr<SPAux> spAux;
-    if (db->hasMadeSPAux(makerNode)) { spAux = db->getMadeSPAux(makerNode); }
-    else { spAux = sp->constructSPAux(); }
-
-    trace->initMadeSPRecord(makerNode,sp,spAux);
-
+    if (shouldRestore && db->hasMadeSPAux(makerNode)) { spRecord->spAux = db->getMadeSPAux(makerNode); }
     if (sp->hasAEKernel()) { trace->registerAEKernel(makerNode); }
+    trace->setMadeSPRecord(makerNode,spRecord);
   }
   else { trace->setMadeSP(makerNode,sp); }
   trace->setValue(makerNode,shared_ptr<VentureValue>(new VentureSPRef(makerNode)));
@@ -318,7 +315,7 @@ double applyPSP(Trace * trace,
 
   psp->incorporate(newValue,args);
 
-  if (dynamic_pointer_cast<VentureSP>(newValue)) { processMadeSP(trace,node,scaffold->isAAA(node),db); }
+  if (dynamic_pointer_cast<VentureSPRecord>(newValue)) { processMadeSP(trace,node,scaffold->isAAA(node),shouldRestore,db); }
   /* TODO TEMP MILESTONE */
   if (psp->isRandom()) { trace->registerUnconstrainedChoice(node); }
   // if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))

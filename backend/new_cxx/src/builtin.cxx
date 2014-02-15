@@ -19,9 +19,9 @@ map<string,VentureValuePtr> initBuiltInValues()
   return m;
 }
 
-map<string,shared_ptr<SP> > initBuiltInSPs()
+map<string,SP*> initBuiltInSPs()
 {
-  map<string,shared_ptr<SP> > m;
+  map<string,SP*> m;
 
   /* Deterministic SPs */
   m["plus"] = new SP(new NullRequestPSP(), new PlusOutputPSP());

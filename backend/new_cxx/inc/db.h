@@ -5,6 +5,7 @@
 
 struct OutputNode;
 struct SPAux;
+struct SP;
 struct Node;
 
 struct LatentDB { virtual ~LatentDB() {}; };
@@ -19,8 +20,8 @@ struct DB
   shared_ptr<LatentDB> getLatentDB(Node * makerNode);
   void registerLatentDB(Node * makerNode, shared_ptr<LatentDB> latentDB);
 
-  RootOfFamily getESRParent(shared_ptr<VentureSP> sp,FamilyID id);
-  void registerSPFamily(shared_ptr<VentureSP> sp,FamilyID id,RootOfFamily esrParent);
+  RootOfFamily getESRParent(shared_ptr<SP> sp,FamilyID id);
+  void registerSPFamily(shared_ptr<SP> sp,FamilyID id,RootOfFamily esrParent);
 
   bool hasMadeSPAux(Node * makerNode);
   shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
@@ -29,7 +30,7 @@ struct DB
 private:
   map<Node*,shared_ptr<LatentDB> > latentDBs;
   map<Node*,VentureValuePtr> values;
-  map<shared_ptr<VentureSP>,map<FamilyID,RootOfFamily> > spFamilyDBs;
+  map<shared_ptr<SP>,map<FamilyID,RootOfFamily> > spFamilyDBs;
   map<Node*,shared_ptr<SPAux> > spAuxs;
 };
 

@@ -1,5 +1,5 @@
 #include "sps/msp.h"
-#include "sp.h"
+#include "sprecord.h"
 #include "env.h"
 
 VentureValuePtr MakeMSPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const

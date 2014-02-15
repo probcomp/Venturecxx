@@ -1,7 +1,8 @@
 #include "sps/dir_mult.h"
-
+#include "sprecord.h"
 #include "utils.h"
 #include "gsl/gsl_sf_gamma.h"
+
 #include<boost/range/numeric.hpp>
 
 /* DirMultSPAux */
@@ -21,7 +22,7 @@ VentureValuePtr MakeSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng
   
   PSP * requestPSP = new NullRequestPSP();
   PSP * outputPSP = new SymDirMultOutputPSP(alpha, n);
-  return VentureValuePtr(new VentureSPRecord(new SP(requestPSP,outputPSP,n),new DirMultSPAux(n)));
+  return VentureValuePtr(new VentureSPRecord(new SP(requestPSP,outputPSP),new DirMultSPAux(n)));
 }
 
 /* SymDirMultOutputPSP */
