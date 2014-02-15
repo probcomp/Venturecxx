@@ -6,6 +6,7 @@
 #include "sps/deterministic.h"
 #include "sps/discrete.h"
 #include "sps/dstructure.h"
+#include "sps/eval.h"
 #include "sps/msp.h"
 
 map<string,VentureValuePtr> initBuiltInValues() 
@@ -61,6 +62,13 @@ map<string,shared_ptr<VentureSP> > initBuiltInSPs()
   m["branch"] = shared_ptr<VentureSP>(new VentureSP(new BranchRequestPSP(), new ESRRefOutputPSP()));
   m["biplex"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new BiplexOutputPSP()));
 
+  /* Eval and envs */
+  m["eval"] = shared_ptr<VentureSP>(new VentureSP(new EvalRequestPSP(), new ESRRefOutputPSP()));
+  m["get_current_environment"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new GetCurrentEnvOutputPSP()));
+  m["get_empty_environment"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new GetEmptyEnvOutputPSP()));
+  m["extend_environment"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new ExtendEnvOutputPSP()));
+
+
   /* Data structures */
   m["simplex"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new SimplexOutputPSP()));
   m["lookup"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new LookupOutputPSP()));
@@ -68,6 +76,7 @@ map<string,shared_ptr<VentureSP> > initBuiltInSPs()
   m["size"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new SizeOutputPSP()));
   m["dict"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new DictOutputPSP()));
   m["array"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new ArrayOutputPSP()));
+  m["prepend"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new PrependOutputPSP()));
   m["is_array"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new IsArrayOutputPSP()));
   m["pair"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new PairOutputPSP()));
   m["is_pair"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new IsPairOutputPSP()));
