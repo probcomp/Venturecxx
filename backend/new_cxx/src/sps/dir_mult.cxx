@@ -79,3 +79,97 @@ void SymDirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> a
   assert(aux->counts[index] >= 0);
 }
 
+////////////////// Uncollapsed
+
+void UCDirMultSP::AEInfer(shared_ptr<SPAux> madeSPAux) const { assert(false); }
+
+VentureValuePtr MakeUCSymDirMult::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  assert(args->operandValues.size() == 2); // TODO optional 3rd argument
+  
+  double alpha = args->operandValues[0]->getDouble();
+  int n = args->operandValues[1]->getInt();
+  
+  PSP * requestPSP = new NullRequestPSP();
+  PSP * outputPSP = new SymDirMultOutputPSP(alpha, n);
+  SP * sp = new UCSymDirMultSP(requestPSP,outputPSP);
+
+  double *alphaVector = new double[d];
+  for (size_t i = 0; i < d; ++i) { alphaVector[i] = alpha; }
+
+  /* TODO GC watch the NEW */
+  double *theta = new double[d];
+
+  gsl_ran_dirichlet(rng,d,alphaVector,theta);
+
+  delete[] alphaVector;
+
+  SPAux * spAux = new UCDirMultSPAux(n,theta);
+  return VentureValuePtr(new VentureSPRecord(sp,spAux));
+}
+
+double MakeUCSymDirMult::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+{
+  assert(args->operandValues.size() == 2); // TODO optional 3rd argument
+  shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(value);
+  assert(spRecord);
+  shared_ptr<UCSymDirMultSP> sp = dynamic_pointer_cast<UCSymDirMultSP>(spRecord->sp);
+  assert(sp);
+
+  uint32_t d = static_cast<uint32_t>(n->x);
+
+  double *alphaVector = new double[d];
+  for (size_t i = 0; i < d; ++i) { alphaVector[i] = alpha->x; }
+
+  double ld = gsl_ran_dirichlet_lnpdf(d,alphaVector,sp->theta);
+  delete[] alphaVector;
+  return ld;
+}
+
+VentureValuePtr UCSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(args->spAux);
+  assert(aux);
+  assert(aux->counts.size() == n);
+
+  double u = gsl_ran_flat(rng,0.0,1.0);
+  double sum = 0.0;
+  for (size_t i = 0; i < n; ++i)
+  {
+    sum += theta[i];
+    if (u < sum) { return VentureValuePtr(new VentureAtom(i)); }
+  }
+  assert(false);
+  return nullptr;
+}
+
+double UCSymDirMultOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const
+{
+  shared_ptr<UCDirMultSPAux> aux = dynamic_pointer_cast<UCDirMultSPAux>(args->spAux);
+  assert(aux);
+  assert(aux->counts.size() == n);
+
+  return log(theta[value->getInt()]);
+}
+
+void UCSymDirMultOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
+{
+  shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(args->spAux);
+  assert(aux);
+  assert(aux->counts.size() == n);
+  
+  int index = value->getInt();
+  aux->counts[index]++;
+}
+
+void UCSymDirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
+{
+  shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(args->spAux);
+  assert(aux);
+  assert(aux->counts.size() == n);
+  
+  int index = value->getInt();
+  aux->counts[index]--;
+  
+  assert(aux->counts[index] >= 0);
+}
