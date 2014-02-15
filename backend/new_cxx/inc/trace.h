@@ -88,7 +88,6 @@ struct Trace
 
   virtual void observeNode(Node * node,VentureValuePtr value) =0;
 
-  virtual void initMadeSPRecord(Node * makerNode, shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux) =0;
   virtual void destroyMadeSPRecord(Node * makerNode) =0;
 
   virtual void setMadeSP(Node * makerNode,shared_ptr<VentureSP> sp) =0;

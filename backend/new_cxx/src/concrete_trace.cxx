@@ -167,7 +167,7 @@ void ConcreteTrace::removeChild(Node * node, Node * child)
 
 /* Primitive getters */
 VentureValuePtr ConcreteTrace::getValue(Node * node) { return values[node]; }
-SPRecord ConcreteTrace::getMadeSPRecord(Node * makerNode) 
+shared_ptr<VentureSPRecord> ConcreteTrace::getMadeSPRecord(Node * makerNode) 
 {
   assert(madeSPRecords.count(makerNode));
   return madeSPRecords[makerNode]; 
@@ -194,16 +194,6 @@ void ConcreteTrace::observeNode(Node * node,VentureValuePtr value)
   observedValues[node] = value; 
 }
 
-void ConcreteTrace::initMadeSPRecord(Node * makerNode,shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux)
-{
-  assert(!madeSPRecords.count(makerNode));
-  SPRecord spRecord;
-  spRecord.sp = sp;
-  spRecord.spAux = spAux;
-  spRecord.spFamilies = shared_ptr<SPFamilies>(new SPFamilies());
-  madeSPRecords[makerNode] = spRecord;
-}
-
 void ConcreteTrace::destroyMadeSPRecord(Node * makerNode)
 {
   assert(madeSPRecords.count(makerNode));
@@ -213,11 +203,11 @@ void ConcreteTrace::destroyMadeSPRecord(Node * makerNode)
 
 void ConcreteTrace::setMadeSP(Node * makerNode,shared_ptr<VentureSP> sp) 
 {
-  getMadeSPRecord(makerNode).sp = sp;
+  getMadeSPRecord(makerNode)->sp = sp;
 }
 void ConcreteTrace::setMadeSPAux(Node * makerNode,shared_ptr<SPAux> spAux) 
 { 
-  getMadeSPRecord(makerNode).spAux = spAux;
+  getMadeSPRecord(makerNode)->spAux = spAux;
 }
 
 void ConcreteTrace::setChildren(Node * node,set<Node*> childNodes) 

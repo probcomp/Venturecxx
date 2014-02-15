@@ -61,20 +61,20 @@ Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
 
 shared_ptr<VentureSP> Trace::getMadeSP(Node * makerNode)
 {
-  SPRecord spRecord = getMadeSPRecord(makerNode);
-  return spRecord.sp;
+  shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
+  return spRecord->sp;
 }
 
 shared_ptr<SPFamilies> Trace::getMadeSPFamilies(Node * makerNode)
 {
-  SPRecord spRecord = getMadeSPRecord(makerNode);
-  return spRecord.spFamilies;
+  shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
+  return spRecord->spFamilies;
 }
 
 shared_ptr<SPAux> Trace::getMadeSPAux(Node * makerNode)
 {
-  SPRecord spRecord = getMadeSPRecord(makerNode);
-  return spRecord.spAux;
+  shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
+  return spRecord->spAux;
 }
 
 vector<Node*> Trace::getParents(Node * node)

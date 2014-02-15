@@ -56,7 +56,6 @@ struct ConcreteTrace : Trace
 
   void observeNode(Node * node,VentureValuePtr value);
 
-  void initMadeSPRecord(Node * makerNode, shared_ptr<VentureSP> sp,shared_ptr<SPAux> spAux);
   void destroyMadeSPRecord(Node * makerNode);
 
 
@@ -124,7 +123,7 @@ struct ConcreteTrace : Trace
 
   map<Node*, vector<RootOfFamily> > esrRoots;
   map<RootOfFamily, int> numRequests;
-  map<Node*, SPRecord> madeSPRecords;
+  map<Node*, shared_ptr<VentureSPRecord> > madeSPRecords;
   map<Node*,set<Node*> > children;
   map<Node*,VentureValuePtr> values;
   map<Node*,VentureValuePtr> observedValues;
