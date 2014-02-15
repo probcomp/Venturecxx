@@ -40,9 +40,9 @@ struct SPAux
 //  virtual shared_ptr<SPAux> copy() const;
 };
 
-struct VentureSP : VentureValue
+struct SP : VentureValue
 {
-  VentureSP(PSP * requestPSP, PSP * outputPSP);
+  SP(PSP * requestPSP, PSP * outputPSP);
   
   shared_ptr<PSP> requestPSP;
   shared_ptr<PSP> outputPSP;

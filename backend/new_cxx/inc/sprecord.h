@@ -3,16 +3,21 @@
 
 #include "types.h"
 
-struct SPFamilies;
+struct SP;
 struct SPAux;
-struct VentureSP;
+struct SPFamilies;
 
 // TODO URGENT not sure when or how this is called yet.
-struct SPRecord
+struct VentureSPRecord : VentureValue
 {
-  shared_ptr<SPFamilies> spFamilies;
-  shared_ptr<SPAux> spAux;
+  VentureSPRecord(SP * sp): sp(sp) {}
+  VentureSPRecord(SP * sp,SPAux * spAux): sp(sp), spAux(spAux) {}
+
   shared_ptr<VentureSP> sp;
+  shared_ptr<SPAux> spAux;
+  shared_ptr<SPFamilies> spFamilies;
+
+
 };
 
 
