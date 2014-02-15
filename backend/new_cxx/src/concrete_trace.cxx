@@ -41,7 +41,7 @@ ConcreteTrace::ConcreteTrace(): Trace()
        ++iter)
   {
     shared_ptr<VentureSymbol> sym(new VentureSymbol(iter->first));
-    ConstantNode * node = createConstantNode(static_pointer_cast<VentureValue>(new VentureSPRecord(iter->second)));
+    ConstantNode * node = createConstantNode(VentureValuePtr(new VentureSPRecord(iter->second)));
     processMadeSP(this,node,false,shared_ptr<DB>(new DB()));
     assert(dynamic_pointer_cast<VentureSPRef>(getValue(node)));
     syms.push_back(sym);

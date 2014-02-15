@@ -11,7 +11,7 @@ VentureValuePtr MakeCSPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
   
   VentureValuePtr expression = args->operandValues[1];
   
-  return VentureValuePtr(new VentureSP(new CSPRequestPSP(symbols, expression, args->env), new ESRRefOutputPSP()));
+  return VentureValuePtr(new VentureSPRecord(new SP(new CSPRequestPSP(symbols, expression, args->env), new ESRRefOutputPSP())));
 }
 
 CSPRequestPSP::CSPRequestPSP(shared_ptr<VentureArray> symbols, VentureValuePtr expression, shared_ptr<VentureEnvironment> environment) :

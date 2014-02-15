@@ -5,7 +5,7 @@
 VentureValuePtr MakeMSPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   assert(args->operandValues.size() == 1); // TODO throw an error once exceptions work
-  return VentureValuePtr(new VentureSP(new MSPRequestPSP(args->operandNodes[0]), new ESRRefOutputPSP()));
+  return VentureValuePtr(new VentureSPRecord(new SP(new MSPRequestPSP(args->operandNodes[0]), new ESRRefOutputPSP())));
 }
 
 MSPRequestPSP::MSPRequestPSP(Node * sharedOperatorNode) : sharedOperatorNode(sharedOperatorNode) {}

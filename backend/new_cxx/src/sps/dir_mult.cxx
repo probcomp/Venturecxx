@@ -7,10 +7,6 @@
 /* DirMultSPAux */
 DirMultSPAux::DirMultSPAux(int n) : counts(n, 0) {}
 
-/* DirMultSP */
-DirMultSP::DirMultSP(PSP * requestPSP, PSP * outputPSP, int n) : VentureSP(requestPSP, outputPSP), n(n) {}
-shared_ptr<SPAux> DirMultSP::constructSPAux() const { return shared_ptr<SPAux>(new DirMultSPAux(n)); }
-
 /* DirMultOutputPSP */
 VentureValuePtr DirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const { assert(false); }
 double DirMultOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const { assert(false); }
@@ -25,8 +21,7 @@ VentureValuePtr MakeSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng
   
   PSP * requestPSP = new NullRequestPSP();
   PSP * outputPSP = new SymDirMultOutputPSP(alpha, n);
-  VentureSP * sp = new DirMultSP(requestPSP, outputPSP, n);
-  return VentureValuePtr(sp);
+  return VentureValuePtr(new VentureSPRecord(new SP(requestPSP,outputPSP,n),new DirMultSPAux(n)));
 }
 
 /* SymDirMultOutputPSP */
