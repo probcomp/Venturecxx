@@ -4,10 +4,10 @@
 
 VentureValuePtr MakeCSPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  assert(args->operandValues.size() == 2); // TODO throw a syntax error once exceptions work
+  assert(args->operandValues.size() == 2); // TODO throw an error once exceptions work
 
   shared_ptr<VentureArray> symbols = dynamic_pointer_cast<VentureArray>(args->operandValues[0]);
-  assert(symbols); // TODO throw a syntax error once exceptions work
+  assert(symbols); // TODO throw an error once exceptions work
   
   VentureValuePtr expression = args->operandValues[1];
   
@@ -22,14 +22,14 @@ CSPRequestPSP::CSPRequestPSP(shared_ptr<VentureArray> symbols, VentureValuePtr e
 
 VentureValuePtr CSPRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  assert(args->operandNodes.size() == symbols->xs.size()); // TODO throw a syntax error once exceptions work
+  assert(args->operandNodes.size() == symbols->xs.size()); // TODO throw an error once exceptions work
   
   shared_ptr<VentureEnvironment> extendedEnv = shared_ptr<VentureEnvironment>(new VentureEnvironment(environment));
   
   for (size_t i = 0; i < symbols->xs.size(); ++i)
   {
     shared_ptr<VentureSymbol> symbol = dynamic_pointer_cast<VentureSymbol>(symbols->xs[i]);
-    assert(symbol); // TODO throw a syntax error once exceptions work
+    assert(symbol); // TODO throw an error once exceptions work
     extendedEnv->addBinding(symbol, args->operandNodes[i]);
   }
   

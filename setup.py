@@ -69,6 +69,7 @@ src_files = [
     "src/sps/continuous.cxx",
     "src/sps/csp.cxx",
     "src/sps/deterministic.cxx",
+    "src/sps/dir_mult.cxx",
     "src/sps/discrete.cxx",
     "src/sps/dstructure.cxx",
     "src/sps/eval.cxx",

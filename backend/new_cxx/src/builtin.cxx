@@ -4,6 +4,7 @@
 #include "sps/continuous.h"
 #include "sps/csp.h"
 #include "sps/deterministic.h"
+#include "sps/dir_mult.h"
 #include "sps/discrete.h"
 #include "sps/dstructure.h"
 #include "sps/eval.h"
@@ -84,9 +85,10 @@ map<string,shared_ptr<VentureSP> > initBuiltInSPs()
   m["first"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new FirstOutputPSP()));
   m["rest"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new RestOutputPSP()));
 
-
   m["make_csp"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new MakeCSPOutputPSP()));
   m["mem"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new MakeMSPOutputPSP()));
+
+  m["make_sym_dir_mult"] = shared_ptr<VentureSP>(new VentureSP(new NullRequestPSP(), new MakeSymDirMultOutputPSP()));
   
   return m;
 }

@@ -36,6 +36,7 @@ struct SPFamilies
 
 struct SPAux
 {
+  virtual ~SPAux() {}
 //  virtual shared_ptr<SPAux> copy() const;
 };
 

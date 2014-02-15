@@ -21,7 +21,7 @@ Simplex normalizeVector(const vector<double> & xs)
   {
     if (sum < 0.000001) { ps.push_back(1.0/xs.size()); }
     else { ps.push_back(xs[i] / sum); }
-    newSum += xs[i];
+    newSum += ps[i];
   }
   if (!(fabs(newSum - 1) < 0.01))
   { 
