@@ -167,7 +167,10 @@ class MRipl():
         self.pids = self.dview.apply(p_getpids)
       
         self.dview.execute('from venture.shortcuts import make_church_prime_ripl')
-
+        
+        # import as plt for all plotting (note: user may need to have opened
+        # IPNB in inline mode for everything to work -- include in examples)
+        self.dview.execute('import matplotlib.pylab as plt')
         self.dview.push(copy_ripl_dict)
         self.dview.execute(make_mripl_string)
        
@@ -494,10 +497,6 @@ add_results_list_string = '''
 try: results.append([])
 except: results=[ [], ]'''
 
-set_plotting_string = '''
-import matplotlib.pylab as plt
-%matplotlib inline'''
-
 
 def mr_map(line, cell):
     '''cell magic allows mapping of arbitrary functions across all ripls in an mripl.
@@ -518,17 +517,17 @@ def mr_map(line, cell):
         ip.run_cell(cell)  # run cell locally, for local ripl (FIXME is the namespace stuff s.t. this works?)
         eval( '%s( %s.local_ripl )' % (proc_name,mripl_name), globals(), ip.user_ns) # eval on local ripl 
 
-
+    # execute cell input across engines to define function
     ip.run_cell_magic("px", '', cell)  
     
-    ## FIXME: order of these commands (run_cell_mag, execute(plotting)) seems to matter. why?
-    mripl.dview.execute(set_plotting_string) # matplotlib, inlining
     mripl.dview.execute(add_results_list_string)    
 
     map_proc_string = mk_map_proc_string(mripl_name,mrid,proc_name)
     mripl.dview.execute(map_proc_string)  # execute the proc across all ripls
 
     outputs_by_ripl = lst_flatten( mripl.dview.apply( lambda: results[-1]) ) # pull the result of map_proc
+    
+    ip.run_cell_magic("px",'','pass') # trying to make figs appear inline
 
     out_dict = {'info':{'mripl':mripl_name,'proc':proc_name}, 'out':outputs_by_ripl }
     
