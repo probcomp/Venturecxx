@@ -83,7 +83,33 @@ void SymDirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> a
 
 ////////////////// Uncollapsed
 
-void UCSymDirMultSP::AEInfer(shared_ptr<SPAux> madeSPAux) const { assert(false); }
+// Note: odd design
+// It gets the args 
+void UCSymDirMultSP::AEInfer(VentureValuePtr value, shared_ptr<Args> args,gsl_rng * rng) const 
+{ 
+  double alpha = args->operandValues[0]->getDouble();
+  int n = args->operandValues[1]->getInt();
+
+  shared_ptr<UCDirMultSPAux> spaux = dynamic_pointer_cast<UCDirMultSPAux>(value->getSPAux());
+  assert(spaux);
+
+  uint32_t d = static_cast<uint32_t>(n);
+
+  double *conjAlphaVector = new double[d];
+  for (size_t i = 0; i < d; ++i) 
+  { 
+    conjAlphaVector[i] = alpha + spaux->counts[i];
+  }
+
+  /* TODO GC watch the NEW */
+  double *theta = new double[d];
+
+  gsl_ran_dirichlet(rng,d,conjAlphaVector,theta);
+
+  delete[] conjAlphaVector;
+  delete[] spaux->theta;
+  spaux->theta = theta;
+}
 
 VentureValuePtr MakeUCSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {

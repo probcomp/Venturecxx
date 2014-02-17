@@ -2,6 +2,8 @@
 #include "node.h"
 #include "psp.h"
 
+
+
 bool SPFamilies::containsFamily(FamilyID id)  { return families.count(id); }
 RootOfFamily SPFamilies::getRootOfFamily(FamilyID id) 
 {
@@ -40,7 +42,8 @@ shared_ptr<PSP> SP::getPSP(ApplicationNode * node) const
   else { return outputPSP; }
 }
 
-void SP::AEInfer(shared_ptr<SPAux> madeSPAux) const { assert(false); }
+
+void SP::AEInfer(VentureValuePtr value, shared_ptr<Args> args,gsl_rng * rng) const { assert(false); }
 
 boost::python::dict VentureSPRef::toPython() const 
 { 

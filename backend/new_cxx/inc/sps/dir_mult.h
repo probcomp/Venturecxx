@@ -46,13 +46,13 @@ struct UCSymDirMultSP : SP
   UCSymDirMultSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
 
   bool hasAEKernel() const { return true; }
-  void AEInfer(shared_ptr<SPAux> madeSPAux) const;
+  void AEInfer(VentureValuePtr value, shared_ptr<Args> args,gsl_rng * rng) const;
 };
 
 struct UCDirMultSPAux : DirMultSPAux
 {
   UCDirMultSPAux(int n, double * theta): DirMultSPAux(n), theta(theta) {}
-  double * theta;
+  double * theta; // TODO GC delete[] this in the destructor
   vector<int> counts;
 };
 

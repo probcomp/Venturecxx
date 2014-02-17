@@ -29,6 +29,8 @@ const vector<shared_ptr<LSR> >& VentureValue::getLSRs() const { cannotConvertTyp
 
 Node * VentureValue::getNode() const { cannotConvertType(this,"node") ; assert(false); throw "no return"; }
 
+shared_ptr<SPAux> VentureValue::getSPAux() const { cannotConvertType(this,"sprecord") ; assert(false); throw "no return"; }
+
 VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { assert(false); }
 bool VentureValue::contains(VentureValuePtr index) const { assert(false); }
 int VentureValue::size() const { assert(false); }
