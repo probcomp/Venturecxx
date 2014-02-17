@@ -53,7 +53,7 @@ def iptestParallelCopyFunction():
 # test for parallel use of copy_ripl_string
 
     cli = Client(); dv = cli[:]; dv.block=True
-    dv.execute(copy_ripl_string)
+    dv.push(copy_ripl_dict)
     dv.execute('from venture.shortcuts import make_church_prime_ripl')
     dv.execute('v=make_church_prime_ripl()')
     dv.execute('v.set_seed(1)')

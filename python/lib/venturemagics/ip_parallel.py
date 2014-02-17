@@ -10,10 +10,6 @@ import subprocess,time
 ### IPython Parallel Magics
 ## Use: See examples in /examples
 
-
-
-
-
 # Tasks: 
 # 1. get to work with import instead of execute
 # 2. push and pull ripls: pass a ripl to the constructor. pull all ripls
@@ -51,34 +47,6 @@ def stop_engines():
 ### Functions needed for the MRipl Class (could be added to scope of the class definition)
 
 # functions that copy ripls by batch loading directives that are constructed from directives_list
-copy_ripl_string="""
-def build_exp(exp):
-    'Take expression from directive_list and build the Lisp string'
-    if type(exp)==str:
-        return exp
-    elif type(exp)==dict:
-        return str(exp['value'])
-    else:
-        return '('+str(exp[0])+' ' + ' '.join(map(build_exp,exp[1:])) + ')'
-
-def run_py_directive(ripl,d):
-    'Removes labels'
-    if d['instruction']=='assume':
-        ripl.assume( d['symbol'], build_exp(d['expression']) )
-    elif d['instruction']=='observe':
-        ripl.observe( build_exp(d['expression']), d['value'] )
-    elif d['instruction']=='predict':
-        ripl.predict( build_exp(d['expression']) )
-    
-def copy_ripl(ripl,seed=None):
-    '''copies ripl via di_list to fresh ripl, preserve directive_id
-    by preserving order, optionally set_seed'''
-    di_list = ripl.list_directives()
-    new_ripl = make_church_prime_ripl()
-    if seed: new_ripl.set_seed(seed)
-    [run_py_directive(new_ripl,di) for di in di_list]
-    return new_ripl
-"""
 
 def build_exp(exp):
     'Take expression from directive_list and build the Lisp string'
@@ -109,16 +77,10 @@ def copy_ripl(ripl,seed=None):
     [run_py_directive(new_ripl,di) for di in di_list]
     return new_ripl
 
-## FIXME add to code, push this across as part of constructor or 
-# conditionally as part of add_ripl. 
 copy_ripl_dict = {'build_exp':build_exp,
                   'run_py_directive':run_py_directive,'copy_ripl':copy_ripl}
 
-
-
-# function for creating a list of ripls for each mripl (the function
-# will be mapped across each engine)
-
+# function for creating a list of ripls for each mripl
 make_mripl_string='''
 try:
     mripls.append([]); no_mripls += 1; seeds_lists.append([])
@@ -500,7 +462,7 @@ except: results=[ [], ]'''
 
 
 def mr_map(line, cell):
-    '''cell magic allows mapping of arbitrary functions across all ripls in an mripl.
+    '''cell magic allows mapping of functions across all ripls in an MRipl.
     syntax: %%mr_map mripl_name proc_name [store_variable_name, local_ripl] '''
     ip = get_ipython()
     #ip.run_cell_magic("px","","%pylab --no-import-all;%pylab inline") # not sure if this is needed or works
