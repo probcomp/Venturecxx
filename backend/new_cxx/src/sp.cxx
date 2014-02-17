@@ -43,7 +43,7 @@ shared_ptr<PSP> SP::getPSP(ApplicationNode * node) const
 }
 
 
-void SP::AEInfer(VentureValuePtr value, shared_ptr<Args> args,gsl_rng * rng) const { assert(false); }
+void SP::AEInfer(shared_ptr<Args> args,gsl_rng * rng) const { assert(false); }
 
 boost::python::dict VentureSPRef::toPython() const 
 { 

@@ -267,13 +267,11 @@ void processMadeSP(Trace * trace, Node * makerNode, bool isAAA, bool shouldResto
   shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(trace->getValue(makerNode));
   assert(spRecord);
   shared_ptr<SP> sp = spRecord->sp;
-  if (!isAAA)
-  {
-    if (shouldRestore && db->hasMadeSPAux(makerNode)) { spRecord->spAux = db->getMadeSPAux(makerNode); }
-    if (sp->hasAEKernel()) { trace->registerAEKernel(makerNode); }
-    trace->setMadeSPRecord(makerNode,spRecord);
-  }
-  else { trace->setMadeSP(makerNode,sp); }
+
+  if (shouldRestore && db->hasMadeSPAux(makerNode)) { spRecord->spAux = db->getMadeSPAux(makerNode); }
+  if (sp->hasAEKernel()) { trace->registerAEKernel(makerNode); }
+  trace->setMadeSPRecord(makerNode,spRecord);
+
   trace->setValue(makerNode,shared_ptr<VentureValue>(new VentureSPRef(makerNode)));
 }
 

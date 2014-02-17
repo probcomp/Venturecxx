@@ -39,6 +39,8 @@ src_files = [
     "src/builtin.cxx",
 
     "src/concrete_trace.cxx",
+    "src/consistency.cxx",
+        
     "src/db.cxx",
     "src/detach.cxx",            
 

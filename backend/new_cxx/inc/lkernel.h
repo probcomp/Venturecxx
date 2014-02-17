@@ -8,6 +8,7 @@ struct Trace;
 struct Args;
 struct PSP;
 struct SP;
+struct SPAux;
 
 struct LKernel
 {
@@ -22,12 +23,13 @@ struct LKernel
 
 struct DefaultAAALKernel : LKernel
 {
-  DefaultAAALKernel(const shared_ptr<SP> makerSP): makerSP(makerSP) {}
+  // TODO GC this kernel will not outlast the PSP
+  DefaultAAALKernel(const PSP * makerPSP): makerPSP(makerPSP) {}
 
   VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng);
   double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args);
 
-  const shared_ptr<SP> makerSP;
+  const PSP * makerPSP;
 
 };
 

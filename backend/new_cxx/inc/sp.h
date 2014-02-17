@@ -54,7 +54,7 @@ struct SP : VentureValue
   virtual void simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB) const;
   virtual double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const;
   virtual bool hasAEKernel() const { return false; }
-  virtual void AEInfer(VentureValuePtr value, shared_ptr<Args> args, gsl_rng * rng) const;
+  virtual void AEInfer(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
 #endif

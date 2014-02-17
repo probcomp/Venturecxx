@@ -125,6 +125,15 @@ void PyTrace::infer(boost::python::dict params)
     mixMH(trace.get(),
 	  shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block)),
 	  shared_ptr<MHGKernel>(new MHGKernel()));
+
+    for (set<Node*>::iterator iter = trace->arbitraryErgodicKernels.begin();
+	 iter != trace->arbitraryErgodicKernels.end();
+	 ++iter)
+    {
+      OutputNode * node = dynamic_cast<OutputNode*>(*iter);
+      assert(node);
+      trace->getMadeSP(node)->AEInfer(trace->getArgs(node),trace->rng);
+    }
   }
 }
 

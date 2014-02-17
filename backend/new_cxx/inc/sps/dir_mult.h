@@ -35,6 +35,8 @@ struct SymDirMultOutputPSP : RandomPSP
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
+  double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
+
 private:
   double alpha;
   size_t n;
@@ -46,14 +48,13 @@ struct UCSymDirMultSP : SP
   UCSymDirMultSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
 
   bool hasAEKernel() const { return true; }
-  void AEInfer(VentureValuePtr value, shared_ptr<Args> args,gsl_rng * rng) const;
+  void AEInfer(shared_ptr<Args> args,gsl_rng * rng) const;
 };
 
 struct UCDirMultSPAux : DirMultSPAux
 {
   UCDirMultSPAux(int n, double * theta): DirMultSPAux(n), theta(theta) {}
   double * theta; // TODO GC delete[] this in the destructor
-  vector<int> counts;
 };
 
 struct MakeUCSymDirMultOutputPSP : PSP
