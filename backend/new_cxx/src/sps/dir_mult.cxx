@@ -49,15 +49,13 @@ double SymDirMultOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> ar
   assert(aux);
   assert(aux->counts.size() == n);
 
-  int N = boost::accumulate(aux->counts, 0);
-  double A = alpha * n;
-
-  double x = gsl_sf_lngamma(A) - gsl_sf_lngamma(N + A) - n * gsl_sf_lngamma(alpha);
-  for (size_t i = 0; i < n; ++i)
+  vector<double> xs;
+  for (size_t i = 0; i < n ; ++i)
   {
-    x += gsl_sf_lngamma(alpha + aux->counts[i]);
+    xs.push_back(aux->counts[i] + alpha);
   }
-  return x;
+  xs = normalizeVector(xs);
+  return log(xs[value->getInt()]);
 }
 
 void SymDirMultOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
@@ -116,6 +114,7 @@ void UCSymDirMultSP::AEInfer(shared_ptr<Args> args,gsl_rng * rng) const
   assert(spAux->counts.size() == d);
 
   double *conjAlphaVector = new double[d];
+
   for (size_t i = 0; i < d; ++i) 
   { 
     conjAlphaVector[i] = alpha + spAux->counts[i];
@@ -172,6 +171,7 @@ double MakeUCSymDirMultOutputPSP::logDensity(VentureValuePtr value, shared_ptr<A
   uint32_t d = static_cast<uint32_t>(n);
 
   double *alphaVector = new double[d];
+
   for (size_t i = 0; i < d; ++i) { alphaVector[i] = alpha; }
 
   double ld = gsl_ran_dirichlet_lnpdf(d,alphaVector,spAux->theta);

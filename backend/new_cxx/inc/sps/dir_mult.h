@@ -57,7 +57,7 @@ struct UCDirMultSPAux : DirMultSPAux
   double * theta; // TODO GC delete[] this in the destructor
 };
 
-struct MakeUCSymDirMultOutputPSP : PSP
+struct MakeUCSymDirMultOutputPSP : RandomPSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;

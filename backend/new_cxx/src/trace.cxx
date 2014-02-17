@@ -48,7 +48,7 @@ VentureValuePtr Trace::getGroundValue(Node * node)
   VentureValuePtr value = getValue(node);
   shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
   
-  if (spRef) { return getValue(spRef->makerNode); }
+  if (spRef) { return getMadeSPRecord(spRef->makerNode); }
   else { return value; }
 }
 
