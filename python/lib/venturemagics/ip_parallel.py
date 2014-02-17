@@ -252,7 +252,7 @@ class MRipl():
             next = max(self.seeds) + 1
             new_seeds = range( next, next+no_new_ripls )
 
-        def add_ripl_engine(seed,mrid):
+            def add_ripl_engine(seed,mrid):
             # load the di_list from an existing ripl from ripls
             # we only set_seed after having loaded, so all ripls
             # created by a call to add ripls may have same starting values
@@ -467,8 +467,7 @@ def mr_map(line, cell):
     ip = get_ipython()
     #ip.run_cell_magic("px","","%pylab --no-import-all;%pylab inline") # not sure if this is needed or works
     
-    assert len(str(line).split()) >= 2, 'Error. Syntax: %%mr_map mripl_name proc_name [optional: store_variable_name] ' 
-
+    assert len(str(line).split()) >= 2, 'Error. Syntax: %%mr_map mripl_name proc_name [optional: store_variable_name] '
     # get inputs
     proc_name = str(line).split()[1]
     mripl_name =  str(line).split()[0]
