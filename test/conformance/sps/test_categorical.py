@@ -1,5 +1,6 @@
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
+from nose.tools import eq_
 
 @statisticalTest
 def testCategorical1():
@@ -18,3 +19,6 @@ def testCategorical1():
          (6, 0.3 * 0.2 + 0.4 * 0.6),
          (7, 0.4 * 0.2)]
   return reportKnownDiscrete(ans, predictions)
+
+def testCategoricalDefault1():
+  eq_(get_ripl().predict("(categorical (simplex 1))"), 0)

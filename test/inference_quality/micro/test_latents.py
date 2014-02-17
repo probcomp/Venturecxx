@@ -10,7 +10,7 @@ def testHMMSP1():
   ripl = get_ripl()
   ripl.assume("f","""
 (make_lazy_hmm
- (matrix (list 0.5 0.5))
+ (simplex 0.5 0.5)
  (matrix (list (list 0.7 0.3)
                (list 0.3 0.7)))
  (matrix (list (list 0.9 0.2)
@@ -35,13 +35,13 @@ def testHMMSP2():
   ripl.assume("f","""
 (if (flip)
 (make_lazy_hmm
- (matrix (list 0.5 0.5))
+ (simplex 0.5 0.5)
  (matrix (list (list 0.7 0.3)
                (list 0.3 0.7)))
  (matrix (list (list 0.9 0.2)
                (list 0.1 0.8))))
 (make_lazy_hmm
- (matrix (list 0.5 0.5))
+ (simplex 0.5 0.5)
  (matrix (list (list 0.7 0.3)
                (list 0.3 0.7)))
  (matrix (list (list 0.9 0.2)

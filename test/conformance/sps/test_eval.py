@@ -2,6 +2,40 @@ import scipy.stats as stats
 import math
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportKnownContinuous, reportKnownMeanVariance
 from venture.test.config import get_ripl, collectSamples
+from nose import SkipTest
+from nose.tools import eq_
+
+def testEnvSmoke():
+  for form in ["(get_current_environment)", "(get_empty_environment)",
+               "(extend_environment (get_empty_environment) (quote foo) 5)"]:
+    yield checkEnvSmoke, form
+
+def checkEnvSmoke(form):
+  get_ripl().predict(form)
+  assert get_ripl().predict("(is_environment %s)" % form)
+
+def testEnvLookup():
+  raise SkipTest("Should lookup work on environments?  They store nodes, not values.  Issue: https://app.asana.com/0/9277419963067/10249544822507")
+  ripl = get_ripl()
+  ripl.assume("e", "(extend_environment (get_empty_environment) (quote foo) 5)")
+  eq_(ripl.predict("(lookup e (quote foo))"), 5.0)
+
+def testEvalSmoke1():
+  ripl = get_ripl()
+  ripl.assume("e", "(extend_environment (get_empty_environment) (quote foo) 5)")
+  eq_(ripl.predict("(eval (quote foo) e)"), 5.0)
+
+def testEvalSmoke2():
+  ripl = get_ripl()
+  ripl.assume("x", "4")
+  ripl.assume("e", "(get_current_environment)")
+  eq_(ripl.predict("(eval (quote x) e)"), 4.0)
+
+def testEvalSmoke3():
+  "Eval should work on programmatically constructed expressions."
+  ripl = get_ripl()
+  ripl.assume("exp", "(array (quote plus) 2 2)")
+  eq_(ripl.predict("(eval exp (get_current_environment))"), 4.0)
 
 @statisticalTest
 def testEval1():
@@ -14,6 +48,17 @@ def testEval1():
   predictions = collectSamples(ripl,3)
   ans = [(1,.7), (0,.3)]
   return reportKnownDiscrete(ans, predictions)
+
+def testEvalIf1():
+  "Eval should work on expressions that require macro expansion"
+  eq_(get_ripl().predict("(eval (quote (if true 1 2)) (get_current_environment))"), 1)
+
+def testEvalIf2():
+  "Eval should work on programmatically constructed expressions that require macro expansion"
+  raise SkipTest("This fails because the stack's \"desugaring\" is not applied by eval itself to the expressions being evaluated.  Oops.  Issue: https://app.asana.com/0/9277419963067/10249544822511")
+  ripl = get_ripl()
+  ripl.assume("expr", "(array (quote if) true 1 2)")
+  eq_(ripl.predict("(eval expr (get_current_environment))"), 1)
 
 @statisticalTest
 def testEval2():
@@ -60,6 +105,7 @@ def testEval3():
 @statisticalTest
 def testApply1():
   "This CSP does not handle lists and symbols correctly."
+  raise SkipTest("There is a reason that expressions are usually made of linked lists rather than arrays.  Issue https://app.asana.com/0/9277419963067/10249544822514")
   ripl = get_ripl()
 
   ripl.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
