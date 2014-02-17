@@ -171,6 +171,7 @@ class MRipl():
         # import as plt for all plotting (note: user may need to have opened
         # IPNB in inline mode for everything to work -- include in examples)
         self.dview.execute('import matplotlib.pylab as plt')
+        
         self.dview.push(copy_ripl_dict)
         self.dview.execute(make_mripl_string)
        
@@ -500,26 +501,25 @@ except: results=[ [], ]'''
 
 def mr_map(line, cell):
     '''cell magic allows mapping of arbitrary functions across all ripls in an mripl.
-    syntax: %%mr_map mripl_name proc_name [optional: store_variable_name, local_ripl] '''
+    syntax: %%mr_map mripl_name proc_name [store_variable_name, local_ripl] '''
     ip = get_ipython()
-
+    #ip.run_cell_magic("px","","%pylab --no-import-all;%pylab inline") # not sure if this is needed or works
+    
     assert len(str(line).split()) >= 2, 'Error. Syntax: %%mr_map mripl_name proc_name [optional: store_variable_name] ' 
 
     # get inputs
     proc_name = str(line).split()[1]
     mripl_name =  str(line).split()[0]
-    mripl = eval(mripl_name,globals(),ip.user_ns) ## FIXME: what should globals,locals be?
+    mripl = eval(mripl_name,globals(),ip.user_ns) ## FIXME ensure this works
     mrid = mripl.mrid
 
-
-    ## FIXME: local_ripl will diverge from remotes if we don't have a third argument
+    # optionally update the local_ripl (for debugging), must include var_name
     if len(str(line).split()) > 3:
-        ip.run_cell(cell)  # run cell locally, for local ripl (FIXME is the namespace stuff s.t. this works?)
-        eval( '%s( %s.local_ripl )' % (proc_name,mripl_name), globals(), ip.user_ns) # eval on local ripl 
+        ip.run_cell(cell) 
+        eval( '%s( %s.local_ripl )' % (proc_name,mripl_name),globals(),ip.user_ns)
 
     # execute cell input across engines to define function
     ip.run_cell_magic("px", '', cell)  
-    
     mripl.dview.execute(add_results_list_string)    
 
     map_proc_string = mk_map_proc_string(mripl_name,mrid,proc_name)
@@ -527,11 +527,11 @@ def mr_map(line, cell):
 
     outputs_by_ripl = lst_flatten( mripl.dview.apply( lambda: results[-1]) ) # pull the result of map_proc
     
-    ip.run_cell_magic("px",'','pass') # trying to make figs appear inline
+    ip.run_cell_magic("px",'','pass') # display any figs inline
 
     out_dict = {'info':{'mripl':mripl_name,'proc':proc_name}, 'out':outputs_by_ripl }
     
-    # store in user_ns under input var_name
+    # optionally store in user_ns under input var_name
     if len(str(line).split()) > 2: 
         var_name = str(line).split()[2]
         ip.push({ var_name: out_dict } )
@@ -547,10 +547,16 @@ def mr_map_nomagic(mripl,proc):
     'Push procedure into engine namespaces. Use execute to map across ripls.'
     proc_name = 'user_proc_' + str( abs(hash(proc)) )
     mripl.dview.push( { proc_name: proc} )
-    mripl.dview.execute(set_plotting_string) # matplotlib, inlining
+    #mripl.dview.execute(set_plotting_string) # matplotlib, inlining
 
     mripl.dview.execute('print %s' % proc_name)
     mripl.dview.execute( 'results_%s =  [ %s(ripl) for ripl in mripls[%i] ] ' % (proc_name, proc_name, mripl.mrid) )
+
+    try: # if running ipy, try to plot any figures from the ripls
+        ip=get_ipython()
+        ip.run_cell_magic("px",'','pass') # display any figs inline
+    except:
+        pass
 
     outputs_by_ripl = lst_flatten( mripl.dview['results_%s' % proc_name] )
     # could also pass the procedure out
@@ -566,8 +572,6 @@ try:
     ip.register_magic_function(mr_map, "cell")    
 except:
     print 'no ipython'
-
-
 
 
 
