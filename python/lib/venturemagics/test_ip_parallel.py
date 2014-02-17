@@ -270,7 +270,7 @@ def testAllIPParallel(new_engines=False,sleeptime=30):
         stop_engines(); time.sleep(5)
 
     [t() for t in tests]
-    stop_engines()
+    #stop_engines()
     return 'testAll complete'
 
 

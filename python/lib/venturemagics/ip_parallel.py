@@ -10,6 +10,10 @@ import subprocess,time
 ### IPython Parallel Magics
 ## Use: See examples in /examples
 
+
+
+
+
 # Tasks: 
 # 1. get to work with import instead of execute
 # 2. push and pull ripls: pass a ripl to the constructor. pull all ripls
@@ -44,7 +48,7 @@ def stop_engines():
 
 
 
-# Functions needed for the MRipl Class (could be added to scope of the class definition)
+### Functions needed for the MRipl Class (could be added to scope of the class definition)
 
 # functions that copy ripls by batch loading directives that are constructed from directives_list
 copy_ripl_string="""
@@ -86,7 +90,9 @@ def build_exp(exp):
         return '('+str(exp[0])+' ' + ' '.join(map(build_exp,exp[1:])) + ')'
 
 def run_py_directive(ripl,d):
-    'Removes labels'
+    '''FIXME: currently removes labels from instructions. Should be
+    rewritten so that the label (and any other crucial information)
+    is retained.'''
     if d['instruction']=='assume':
         ripl.assume( d['symbol'], build_exp(d['expression']) )
     elif d['instruction']=='observe':
@@ -95,13 +101,18 @@ def run_py_directive(ripl,d):
         ripl.predict( build_exp(d['expression']) )
     
 def copy_ripl(ripl,seed=None):
-    '''copies ripl via di_list to fresh ripl, preserve directive_id
+    '''copies ripl via directives_list to fresh ripl, preserve directive_id
     by preserving order, optionally set_seed'''
     di_list = ripl.list_directives()
     new_ripl = make_church_prime_ripl()
     if seed: new_ripl.set_seed(seed)
     [run_py_directive(new_ripl,di) for di in di_list]
     return new_ripl
+
+## FIXME add to code, push this across as part of constructor or 
+# conditionally as part of add_ripl. 
+copy_ripl_dict = {'build_exp':build_exp,
+                  'run_py_directive':run_py_directive,'copy_ripl':copy_ripl}
 
 
 
@@ -115,13 +126,14 @@ except:
     mripls=[ [], ]; no_mripls=1; seeds_lists = [ [], ]'''
 
 
-def make_mripl_string_function():
+def make_mripl_func():
     try:
         mripls.append([]); no_mripls += 1; seeds_lists.append([])
     except:
         mripls=[ [], ]; no_mripls=1; seeds_lists = [ [], ]
 
 
+## MRIPL CLASS
 
 # Create MRipls. Multiple MRipls can be created, sharing the same engines.
 # Each engine has a list 'mripl', each element of which is a list 'ripl'
@@ -155,9 +167,11 @@ class MRipl():
         self.pids = self.dview.apply(p_getpids)
       
         self.dview.execute('from venture.shortcuts import make_church_prime_ripl')
-        self.dview.execute(copy_ripl_string) # defines copy_ripl for self.add_ripl method
-        
+
+        self.dview.push(copy_ripl_dict)
         self.dview.execute(make_mripl_string)
+       
+       
         self.mrid = self.dview.pull('no_mripls')[0] - 1  # all engines should return same number
         name = 'mripl' if not(name) else name
         self.name_mrid = '%s_%i' % (name,self.mrid)
@@ -308,7 +322,7 @@ class MRipl():
 
         
     def remove_ripls(self,no_rm_ripls):
-        'map over the engines to remove a ripl if they have >1'
+        'map over the engines to remove a ripl if an engine has >1'
         no_removed = 0
         def check_remove(x,mrid):
             ripls = mripls[mrid]
@@ -328,6 +342,8 @@ class MRipl():
 
     
     def snapshot(self,labels_lst, plot=False, scatter=False, logscore=False):
+        '''report the value of a list of variables (input using labels or dids)
+        across the ripls and optionally plot as histograms or scatter plots'''
         
         if not(isinstance(labels_lst,list)): labels_lst = [labels_lst] 
         values = { did_label: self.report(did_label) for did_label in labels_lst}
@@ -360,7 +376,9 @@ class MRipl():
             return 'other'
 
         
-    def plot(self,snapshot,scatter=False): #values,total_transitions=None,ripls_info=None,scatter_heat=False):
+    def plot(self,snapshot,scatter=False):
+        '''Takes input from snapshot, checks type of values and plots accordingly.
+        Plots are inlined on IPNB and output as figure objects.'''
         
         figs = []
         values = snapshot['values']
@@ -414,6 +432,11 @@ class MRipl():
 
 
     def probes(self,did_label,no_transitions,no_probes,plot_hist=None,plot_series=None):
+        ## FIXME, should take a list of labels (like snapshot) and plot accordingly.
+        '''Run infer directive on ripls and record snapshots at a series of
+        probe points. Optionally produce plots of probe points and a time-series
+        plot.'''
+        
         label = did_label
         start = self.total_transitions
         probes = map(int,np.round( np.linspace(0,no_transitions,no_probes) ) )
@@ -457,14 +480,10 @@ class MRipl():
 
 
 
-
-
-
-
 ## Magic functions defined on MRipl objects 
 
 
-# Utility functions for the %mr_map scell magic
+# Utility functions for the %mr_map cell magic
 
 def lst_flatten(l): return [el for subl in l for el in subl]
 
@@ -586,61 +605,26 @@ def crp(no_ripls=2):
 
 
 
-def lang(no_ripls=2):
-
 
 prog2='''
-[assume zeros (lambda (n) (if (= n 0) (list) (pair 0 (zeros (minus n 1)))))]
-[assume is_nil (lambda (lst) (not (is_pair lst) ) ) ]
-[assume len (lambda (lst) (if (is_nil lst) 0 (plus 1. (len (rest lst))) ) ) ]
-[assume repeat (lambda (th n) (if (= n 0) (list) (pair (th) (repeat th (minus n 1) ) ) ) ) ] 
+
 [assume nps (list (quote bob) (quote time) (quote space) (quote truth) (quote alice) (quote fate) (quote man) (quote beast) (quote nature) (quote he) (quote she) (quote cynthia) (quote zeus) ) ]
 [assume np (lambda () (lookup nps (uniform_discrete 0 (len nps)) ) ) ]
 [assume uni_simplex (lambda (n) (map_list (lambda (x) (div 1 n)) (zeros n) ) ) ]
 [assume np2 (lambda () (lookup nps (categorical (simplex (uni_simplex (len nps) ) ) ) ) ) ]
 [assume npz (repeat np 3) ]
+[assume alpha (uniform_continuous .9 1)]
+[assume crp (make_crp alpha) ]
+[assume z (mem (lambda (i) (crp) ) ) ]
+[assume s (pair (np) (vp) ) ]
+[assume ptype (mem (lambda (z) (s))) ]
+[assume noise (lambda (p) (if (flip .1) 
+                                (pair (first p) (pair (rest p) (rest p) ) )
+                                (if (flip .2) 
+                                   (pair (first p) (pair (adv) (rest p) ) ) 
+                                   p ) ) ) ]
+[assume x (mem (lambda (i) (noise (ptype (z i) ) ) ) )]'''
 
-
- [assume alpha (uniform_continuous .9 1)]
-    [assume crp (make_crp alpha) ]
-    [assume z (mem (lambda (i) (crp) ) ) ]
-    [assume nps (list (quote bob) (quote time) (quote space) (quote truth) (quote alice) (quote fate) (quote man) (quote beast) (quote nature) (quote he) (quote she) (quote cynthia) (quote zeus) ) ]
-    [assume np (categorical (simplex 
-    [assume np (if (flip .1) (quote he)
-                 (if (flip .1) (quote the master)
-                 (if (flip .1) (quote alice)
-                 (if (flip .1) (quote the horse)
-                 (if (flip .1) (quote the chief)
-                 (if (flip .1) (quote a doctor) 
-                 (if (flip .1) (quote bob) (quote time) ) ) ))))) ]
-    [assume adv (if (flip .001) (quote quickly)
-                 (if (flip .1) (quote the master)
-                 (if (flip .1) (quote alice)
-                 (if (flip .1) (quote the horse)
-                 (if (flip .1) (quote the chief)
-                 (if (flip .1) (quote a doctor) 
-                 (if (flip .1) (quote bob) (quote time) ) ) ))))) ]
-    [assume vp (if (flip .1) (quote plays)
-                  (if (flip .1) (quote eats)
-                  (if (flip .1) (quote thinks)
-                  (if (flip .1) (quote surfs)
-              (if (flip .1) (quote ponders)
-              (if (flip .1) (quote begins)
-              (if (flip .1) (quote sleeps)
-              (if (flip .1) (quote moves)
-              (if (flip .1) (quote runs)
-                   (if (flip .1) (quote searches) (quote freezes) )))))))))) ]
-    [assume s (pair (np) (vp) ) ]
-    [assume ptype (mem (lambda (z) (s))) ]
-    [assume noise (lambda (p) (if (flip .1) 
-                                    (pair (first p) (pair (rest p) (rest p) ) )
-                                    (if (flip .2) 
-                                       (pair (first p) (pair (adv) (rest p) ) ) 
-                                       p ) ) ) ]
-    [assume x (mem (lambda (i) (noise (ptype (z i) ) ) ) )]'''
-    v=make_church_prime_ripl()
-    v.execute_program(prog)
-    return prog,v
 
 
 
