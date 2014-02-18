@@ -31,6 +31,7 @@ def teardown_function():
 
 @with_setup(setup_function,teardown_function)
 def testAddRemoveSize():
+    execfile(loc_ip_parallel)
     clear_all_engines();print 'IP_addremove  '
     no_rips = 4
     vv=MRipl(no_rips)
@@ -57,7 +58,7 @@ def testAddRemoveSize():
 
 @with_setup(setup_function,teardown_function)
 def testAll_IP():
-
+    execfile(loc_ip_parallel)
     def testCopyFunction():
         print 'IP_COPY'
         clear_all_engines()
