@@ -1,5 +1,13 @@
 """Venture values.
 
+It was decided that Venture values should be explcitly boxed, rather
+than simply inheriting from the underlying Python values.  One
+advantage of doing so is that we make various choices about Venture's
+value and type system explicitly, rather than inheriting it from the
+implementation language.  A consequent advantage is ease of enforcing
+uniformity between backends implemented in different implementation
+languages.
+
 This design deliberately tries to avoid piggybacking on Python magic
 (like the __foo__ methods) in order to make the architecture clear
 enough to replicate in another language (such as C++).
