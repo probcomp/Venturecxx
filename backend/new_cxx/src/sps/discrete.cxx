@@ -36,3 +36,26 @@ double CategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> 
   if (args->operandValues.size() == 1) { return logDensityCategorical(value,args->operandValues[0]->getSimplex()); }
   else { return logDensityCategorical(value,args->operandValues[0]->getSimplex(),args->operandValues[1]->getArray()); }
 }
+
+/* DirMultOutputPSP */
+VentureValuePtr SymmetricDirichletOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const 
+{ 
+  double alpha = args->operandValues[0]->getDouble();
+  int n = args->operandValues[1]->getInt();
+  vector<double> alphaVector(n,alpha);
+  /* TODO GC watch the NEW */
+  Simplex theta(n,-1);
+
+  gsl_ran_dirichlet(rng,static_cast<uint32_t>(n),&alphaVector[0],&theta[0]);
+  return VentureValuePtr(new VentureSimplex(theta));;
+}
+
+double SymmetricDirichletOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const 
+{ 
+  double alpha = args->operandValues[0]->getDouble();
+  int n = args->operandValues[1]->getInt();
+  vector<double> alphaVector(n,alpha);
+  /* TODO GC watch the NEW */
+  Simplex theta = value->getSimplex();
+  return gsl_ran_dirichlet_lnpdf(static_cast<uint32_t>(n),&alphaVector[0],&theta[0]);
+}

@@ -58,6 +58,7 @@ map<string,SP*> initBuiltInSPs()
   m["bernoulli"] = new SP(new NullRequestPSP(), new BernoulliOutputPSP());
   m["flip"] = new SP(new NullRequestPSP(), new BernoulliOutputPSP());
   m["categorical"] = new SP(new NullRequestPSP(), new CategoricalOutputPSP());
+  m["symmetric_dirichlet"] = new SP(new NullRequestPSP(), new SymmetricDirichletOutputPSP());
 
   /* Conditiionals */
   m["branch"] = new SP(new BranchRequestPSP(), new ESRRefOutputPSP());

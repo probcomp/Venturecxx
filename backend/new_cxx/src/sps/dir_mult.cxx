@@ -11,9 +11,6 @@
 /* DirMultSPAux */
 DirMultSPAux::DirMultSPAux(int n) : counts(n, 0) {}
 
-/* DirMultOutputPSP */
-VentureValuePtr DirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const { assert(false); }
-double DirMultOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const { assert(false); }
 
 /* MakeSymDirMultOutputPSP */
 VentureValuePtr MakeSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
