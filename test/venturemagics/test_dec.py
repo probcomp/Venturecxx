@@ -30,7 +30,7 @@ def teardown_function():
 
 
 @with_setup(setup_function,teardown_function)
- def testAddRemoveSize():
+def testAddRemoveSize():
     clear_all_engines();print 'IP_addremove  '
     no_rips = 4
     vv=MRipl(no_rips)
