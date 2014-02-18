@@ -135,12 +135,9 @@ def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
 
 def getCartesianProductOfEnumeratedValues(trace,pnodes):
   assert len(pnodes) > 0
-  enumeratedValues = [[v for v in trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode))] for pnode in pnodes]
+  enumeratedValues = [trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode)) for pnode in pnodes]
   assert len(enumeratedValues) > 0
-  cp = cartesianProduct(enumeratedValues)
-  # This line is confusing! But it seems to work.
-  if not type(cp[0]) is list: cp = [[x] for x in cp]
-  return cp
+  return cartesianProduct(enumeratedValues)
 
 class EnumerativeGibbsOperator(object):
 
