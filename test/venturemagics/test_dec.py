@@ -5,7 +5,8 @@ from IPython.parallel import Client
 from nose.tools import with_setup
 
 file_dir = os.path.dirname(os.path.realpath(__file__))
-loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] )   
+loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] ) 
+execfile(loc_ip_parallel)  
 
 def setup_function():
     print 'START SETUP'
@@ -34,7 +35,7 @@ def teardown_function():
 
 @with_setup(setup_function,teardown_function)
 def testAddRemoveSize():
-    execfile(loc_ip_parallel)
+    
     clear_all_engines()
     no_rips = 4
     vv=MRipl(no_rips)
