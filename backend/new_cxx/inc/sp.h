@@ -14,6 +14,7 @@ struct PSP;
 struct ApplicationNode;
 struct RequestNode;
 struct OutputNode;
+struct Args;
 
 struct VentureSPRef : VentureValue
 {
@@ -53,7 +54,7 @@ struct SP : VentureValue
   virtual void simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB) const;
   virtual double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const;
   virtual bool hasAEKernel() const { return false; }
-  virtual void AEInfer(shared_ptr<SPAux> madeSPAux) const;
+  virtual void AEInfer(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
 #endif

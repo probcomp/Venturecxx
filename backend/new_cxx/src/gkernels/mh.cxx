@@ -4,7 +4,7 @@
 #include "db.h"
 #include "regen.h"
 #include "detach.h"
-
+#include "consistency.h"
 
 pair<Trace*,double> MHGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold)
 {
@@ -15,7 +15,8 @@ pair<Trace*,double> MHGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold
   double rhoWeight = p.first;
   rhoDB = p.second;
 
-//  assertTorus(scaffold) // TODO URGENT
+  assertTorus(scaffold);
+
   double xiWeight = regenAndAttach(trace,scaffold->border[0],scaffold,false,rhoDB,shared_ptr<map<Node*,Gradient> >());
 
   return make_pair(trace,xiWeight - rhoWeight);
@@ -27,6 +28,6 @@ void MHGKernel::accept() { }
 void MHGKernel::reject()
 {
   detachAndExtract(trace,scaffold->border[0],scaffold);
-//  assertTorus(trace,scaffold);
+  assertTorus(scaffold);
   regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,shared_ptr<map<Node*,Gradient> >());
 }

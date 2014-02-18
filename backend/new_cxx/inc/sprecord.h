@@ -15,7 +15,7 @@ struct VentureSPRecord : VentureValue
   shared_ptr<SPAux> spAux;
   shared_ptr<SPFamilies> spFamilies;
 
-
+  shared_ptr<SPAux> getSPAux() const { return spAux; }
 };
 
 

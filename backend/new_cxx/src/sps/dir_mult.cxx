@@ -7,12 +7,10 @@
 
 #include<boost/range/numeric.hpp>
 
+
 /* DirMultSPAux */
 DirMultSPAux::DirMultSPAux(int n) : counts(n, 0) {}
 
-/* DirMultOutputPSP */
-VentureValuePtr DirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const { assert(false); }
-double DirMultOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const { assert(false); }
 
 /* MakeSymDirMultOutputPSP */
 VentureValuePtr MakeSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -48,15 +46,13 @@ double SymDirMultOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> ar
   assert(aux);
   assert(aux->counts.size() == n);
 
-  int N = boost::accumulate(aux->counts, 0);
-  double A = alpha * n;
-
-  double x = gsl_sf_lngamma(A) - gsl_sf_lngamma(N + A) - n * gsl_sf_lngamma(alpha);
-  for (size_t i = 0; i < n; ++i)
+  vector<double> xs;
+  for (size_t i = 0; i < n ; ++i)
   {
-    x += gsl_sf_lngamma(alpha + aux->counts[i]);
+    xs.push_back(aux->counts[i] + alpha);
   }
-  return x;
+  xs = normalizeVector(xs);
+  return log(xs[value->getInt()]);
 }
 
 void SymDirMultOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
@@ -81,9 +77,55 @@ void SymDirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> a
   assert(aux->counts[index] >= 0);
 }
 
+double SymDirMultOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
+{
+  shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(spAux);
+  assert(aux);
+
+  int N = boost::accumulate(aux->counts, 0);
+  double A = alpha * n;
+
+  double x = gsl_sf_lngamma(A) - gsl_sf_lngamma(N + A);
+  for (size_t i = 0; i < aux->counts.size(); ++i)
+  {
+    double count = aux->counts[i];
+    x += gsl_sf_lngamma(alpha + count) - gsl_sf_lngamma(alpha);
+  }
+  return x;
+}
+
 ////////////////// Uncollapsed
 
-void UCSymDirMultSP::AEInfer(shared_ptr<SPAux> madeSPAux) const { assert(false); }
+// Note: odd design
+// It gets the args 
+void UCSymDirMultSP::AEInfer(shared_ptr<Args> args,gsl_rng * rng) const 
+{ 
+  double alpha = args->operandValues[0]->getDouble();
+  int n = args->operandValues[1]->getInt();
+
+  shared_ptr<UCDirMultSPAux> spAux = dynamic_pointer_cast<UCDirMultSPAux>(args->madeSPAux);
+  assert(spAux);
+
+
+  uint32_t d = static_cast<uint32_t>(n);
+  assert(spAux->counts.size() == d);
+
+  double *conjAlphaVector = new double[d];
+
+  for (size_t i = 0; i < d; ++i) 
+  { 
+    conjAlphaVector[i] = alpha + spAux->counts[i];
+  }
+
+  /* TODO GC watch the NEW */
+  double *theta = new double[d];
+
+  gsl_ran_dirichlet(rng,d,conjAlphaVector,theta);
+
+  delete[] conjAlphaVector;
+  delete[] spAux->theta;
+  spAux->theta = theta;
+}
 
 VentureValuePtr MakeUCSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
@@ -126,6 +168,7 @@ double MakeUCSymDirMultOutputPSP::logDensity(VentureValuePtr value, shared_ptr<A
   uint32_t d = static_cast<uint32_t>(n);
 
   double *alphaVector = new double[d];
+
   for (size_t i = 0; i < d; ++i) { alphaVector[i] = alpha; }
 
   double ld = gsl_ran_dirichlet_lnpdf(d,alphaVector,spAux->theta);

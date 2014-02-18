@@ -3,11 +3,14 @@
 #include "args.h"
 #include "concrete_trace.h"
 #include "node.h"
+#include "lkernel.h"
 
 #include <iostream>
 
 using std::cout;
 using std::endl;
+
+shared_ptr<LKernel> const PSP::getAAALKernel() { return shared_ptr<LKernel>(new DefaultAAALKernel(this)); }
 
 VentureValuePtr NullRequestPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {

@@ -54,7 +54,11 @@ ConcreteTrace::ConcreteTrace(): Trace()
 
 
 /* Registering metadata */
-void ConcreteTrace::registerAEKernel(Node * node) { assert(false); }
+void ConcreteTrace::registerAEKernel(Node * node) 
+{ 
+  assert(!arbitraryErgodicKernels.count(node));
+  arbitraryErgodicKernels.insert(node);
+}
 
 void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
   assert(unconstrainedChoices.count(node) == 0);
@@ -83,7 +87,12 @@ void ConcreteTrace::registerConstrainedChoice(Node * node) {
 }
 
 /* Unregistering metadata */
-void ConcreteTrace::unregisterAEKernel(Node * node) { assert(false); }
+void ConcreteTrace::unregisterAEKernel(Node * node) 
+{
+  assert(arbitraryErgodicKernels.count(node));
+  arbitraryErgodicKernels.erase(node);
+}
+
 
 void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
   unregisterUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),

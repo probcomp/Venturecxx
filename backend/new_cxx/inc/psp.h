@@ -24,11 +24,12 @@ struct PSP
   virtual bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const { return false; }
 
   virtual bool childrenCanAAA() const { return false; }
-  virtual shared_ptr<LKernel> const getAAALKernel() { assert(false); throw "need to override getAAALKernel()"; }
+  virtual shared_ptr<LKernel> const getAAALKernel();
 
   virtual bool canEnumerateValues(shared_ptr<Args> args) const { return false; }
   virtual vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const { return vector<VentureValuePtr>(); }
 
+  virtual double logDensityOfCounts(shared_ptr<SPAux> spAux) const { assert(false); }
   // TODO variational is punted for now
   // virtual bool hasVariationalLKernel() const { return false; }
   // virtual shared_ptr<LKernel> getVariationalLKernel(ConcreteTrace * trace,Node * node) const;

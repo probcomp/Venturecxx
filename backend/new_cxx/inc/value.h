@@ -22,6 +22,8 @@ struct VentureValuePtrsEqual;
 template <typename T>
 struct VentureValuePtrMap : boost::unordered_map<VentureValuePtr, T, HashVentureValuePtr, VentureValuePtrsEqual> {};
 
+struct SPAux;
+
 // TODO AXCH
 // We need to be more consistent about whether this unboxes
 struct VentureValue
@@ -45,6 +47,8 @@ struct VentureValue
   virtual const vector<shared_ptr<LSR> >& getLSRs() const;
 
   virtual Node * getNode() const;
+
+  virtual shared_ptr<SPAux> getSPAux() const;
 
   /* for containers */
   virtual VentureValuePtr lookup(VentureValuePtr index) const;

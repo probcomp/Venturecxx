@@ -176,18 +176,13 @@ void teardownMadeSP(Trace * trace,Node * makerNode,bool isAAA,shared_ptr<DB> db)
 {
   shared_ptr<VentureSPRecord> spRecord = trace->getMadeSPRecord(makerNode);
   assert(spRecord);
-  shared_ptr<SP> sp = spRecord->sp;
-  if (!isAAA)
-  {
-    if (sp->hasAEKernel()) { trace->unregisterAEKernel(makerNode); }
-    db->registerMadeSPAux(makerNode,trace->getMadeSPAux(makerNode));
-    trace->destroyMadeSPRecord(makerNode);
-  }
-  else
-  {
-    trace->setMadeSP(makerNode,shared_ptr<SP>());
-  }
   trace->setValue(makerNode,spRecord);
+
+  shared_ptr<SP> sp = spRecord->sp;
+  if (sp->hasAEKernel()) { trace->unregisterAEKernel(makerNode); }
+  db->registerMadeSPAux(makerNode,trace->getMadeSPAux(makerNode));
+
+  trace->destroyMadeSPRecord(makerNode);
 }
 
 double unapplyPSP(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
