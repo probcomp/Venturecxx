@@ -286,7 +286,7 @@ def testMrMap():
 # run tests solely in Python interpreter
 
 
-tests = [testMrMap, testMulti, testSnapshot, testDirectives,testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
+#tests = [testMrMap, testMulti, testSnapshot, testDirectives,testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
 
 
 def AllIPParallel(new_engines=False,sleeptime=30):
