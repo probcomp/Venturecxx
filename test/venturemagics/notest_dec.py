@@ -14,7 +14,7 @@ def setup_function():
         start = subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines,'&'])
         time.sleep(sleeptime)
     try: 
-        start_engines(2,sleeptime=50)
+        start_engines(2,sleeptime=10)
         print 'SUBPROCESS IPCLUS START SUCCESS'
     except: assert False,"subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])"
 
@@ -22,7 +22,7 @@ def setup_function():
     loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] )   
     # [:-2] because current file is /Venturecxx/test/venturemagics
     print 'REACHED EXEC FILE'
-    execfile(loc_ip_parallel)
+    #execfile(loc_ip_parallel)
 
 
 def teardown_function():
@@ -60,9 +60,9 @@ def testAddRemoveSize():
     print 'IP_addremPASS'
 
 
-@with_setup(setup_function,teardown_function)
+#@with_setup(setup_function,teardown_function)
 def testAll_IP():
-    execfile(loc_ip_parallel)
+    #execfile(loc_ip_parallel)
     def testCopyFunction():
         print 'IP_COPY'
         clear_all_engines()
