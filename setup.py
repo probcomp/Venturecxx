@@ -78,6 +78,7 @@ src_files = [
     "src/sps/hmm.cxx",
     "src/sps/matrix.cxx",    
     "src/sps/msp.cxx",
+    "src/sps/scope.cxx",    
 ]
 src_files = ["backend/new_cxx/" + f for f in src_files]
 
