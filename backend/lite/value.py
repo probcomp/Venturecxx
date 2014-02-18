@@ -299,9 +299,6 @@ def registerVentureType(t, name = None):
       stackable_types[name] = t
 
 
-def isVentureValue(thing):
-  return thing is None or isinstance(thing, VentureValue)
-
 class VentureType(object): pass
 
 # TODO Is there any way to make these guys be proper singleton
