@@ -8,6 +8,8 @@
 #include "sps/discrete.h"
 #include "sps/dstructure.h"
 #include "sps/eval.h"
+#include "sps/hmm.h"
+#include "sps/matrix.h"
 #include "sps/msp.h"
 
 map<string,VentureValuePtr> initBuiltInValues() 
@@ -70,6 +72,11 @@ map<string,SP*> initBuiltInSPs()
   m["get_empty_environment"] = new SP(new NullRequestPSP(), new GetEmptyEnvOutputPSP());
   m["extend_environment"] = new SP(new NullRequestPSP(), new ExtendEnvOutputPSP());
 
+  /* Latents */
+  m["make_lazy_hmm"] = new SP(new NullRequestPSP(), new MakeUncollapsedHMMOutputPSP());
+
+  /* Matrices */
+  m["matrix"] = new SP(new NullRequestPSP(), new MatrixOutputPSP());
 
   /* Data structures */
   m["simplex"] = new SP(new NullRequestPSP(), new SimplexOutputPSP());

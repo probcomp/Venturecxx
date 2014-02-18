@@ -215,10 +215,23 @@ double unevalRequests(Trace * trace,RequestNode * node,shared_ptr<Scaffold> scaf
   //cout << "unevalRequests(" << node << ")" << endl;
 
   double weight = 0;
+
   const vector<ESR>& esrs = trace->getValue(node)->getESRs();
-  //const vector<shared_ptr<LSR> >& lsrs = trace->getValue(node)->getLSRs();
+  const vector<shared_ptr<LSR> >& lsrs = trace->getValue(node)->getLSRs();
   
-  // TODO Latents
+  Node * makerNode = trace->getOperatorSPMakerNode(node);
+  shared_ptr<SP> sp = trace->getMadeSP(makerNode);
+  shared_ptr<SPAux> spAux = trace->getMadeSPAux(makerNode);
+
+  if (!lsrs.empty() && !db->hasLatentDB(makerNode)) { db->registerLatentDB(makerNode,sp->constructLatentDB()); }
+
+  for (vector<shared_ptr<LSR> >::const_reverse_iterator lsrIter = lsrs.rbegin();
+       lsrIter != lsrs.rend();
+       ++lsrIter)
+  {
+    weight += sp->detachLatents(spAux,*lsrIter,db->getLatentDB(makerNode));
+  }
+
 
   for (vector<ESR>::const_reverse_iterator esrIter = esrs.rbegin();
        esrIter != esrs.rend();

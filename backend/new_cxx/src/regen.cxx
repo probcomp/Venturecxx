@@ -9,8 +9,11 @@
 #include "db.h"
 #include "psp.h"
 #include "lkernel.h"
+#include "srs.h"
 
 #include <iostream>
+#include <boost/foreach.hpp>
+
 
 using std::cout;
 using std::endl;
@@ -338,6 +341,7 @@ double evalRequests(Trace * trace,
 
   double weight = 0;
   const vector<ESR>& esrs = trace->getValue(requestNode)->getESRs();
+  const vector<shared_ptr<LSR> >& lsrs = trace->getValue(requestNode)->getLSRs();
 
   for (size_t i = 0; i < esrs.size(); ++i)
   {
@@ -364,7 +368,19 @@ double evalRequests(Trace * trace,
     assert(!trace->getESRParents(requestNode->outputNode).empty());
   }
 
-  // TODO LSRs
+  /* Next evaluate LSRs. */
+  BOOST_FOREACH (shared_ptr<LSR> lsr, lsrs)
+  {
+    shared_ptr<LatentDB> latentDB;
+    Node * makerNode = trace->getOperatorSPMakerNode(requestNode);
+    shared_ptr<SP> sp = trace->getMadeSP(makerNode);
+    shared_ptr<SPAux> spAux = trace->getMadeSPAux(makerNode);
+
+    if (db->hasLatentDB(makerNode)) { latentDB = db->getLatentDB(makerNode); }
+
+    weight += sp->simulateLatents(spAux,lsr,shouldRestore,latentDB,trace->rng);
+  }
+
   return weight;
 }
 

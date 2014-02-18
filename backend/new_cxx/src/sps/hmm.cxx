@@ -13,6 +13,8 @@
 #include "sps/hmm.h"
 #include "args.h"
 #include "sprecord.h"
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 
 VectorXd vvToEigenVector(VentureValue * value);
 MatrixXd vvToEigenMatrix(VentureValue * value);
@@ -21,12 +23,11 @@ VectorXd sampleVectorXd(const VectorXd & v,gsl_rng * rng);
 uint32_t sampleVector(const VectorXd & v,gsl_rng * rng);
 VectorXd normalizedVectorXd(VectorXd & v);
 
-
 VentureValuePtr MakeUncollapsedHMMOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 { 
   MatrixXd p0 = args->operandValues[0]->getMatrix();
   MatrixXd T = args->operandValues[1]->getMatrix();
-  MatrixXd O = args->operandValues[0]->getMatrix();
+  MatrixXd O = args->operandValues[2]->getMatrix();
   return VentureValuePtr( 
     new VentureSPRecord(
       new UncollapsedHMMSP(
@@ -74,6 +75,7 @@ double UncollapsedHMMSP::simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR>
     for (size_t i = aux->xs.size(); i <= request->index; ++i)
     {
       MatrixXd sample;
+
       if (shouldRestore) { sample = latents->xs[i]; }
       else { sample = sampleVectorXd(T * aux->xs.back(),rng); }
       aux->xs.push_back(sample);
@@ -129,21 +131,65 @@ VentureValuePtr UncollapsedHMMOutputPSP::simulate(shared_ptr<Args> args,gsl_rng 
 {
   shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
   assert(aux);
-  int index = argse->operandValues[0]->getInt();
+  int index = args->operandValues[0]->getInt();
   assert(aux->xs.size() > index);
+
   return VentureValuePtr(new VentureAtom(sampleVector(O * aux->xs[index],rng)));
 }
 
-double UncollapsedHMMOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const { assert(false); }
-void UncollapsedHMMOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const { assert(false); }
-void UncollapsedHMMOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const { assert(false); }
+double UncollapsedHMMOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const 
+{
+  shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
+  assert(aux);
+
+  int out = value->getInt();
+  int in = args->operandValues[0]->getInt();
+
+  assert(aux->xs.size() > in);
+
+  VectorXd dist = O * aux->xs[in];
+  return log(dist[out]);
+}
+
+void UncollapsedHMMOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
+{ 
+  shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
+  assert(aux);
+
+  int out = value->getInt();
+  int in = args->operandValues[0]->getInt();
+
+  /* Register observation */
+  aux->os[in].push_back(out);
+}
+
+void UncollapsedHMMOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const 
+{ 
+  shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
+  assert(aux);
+
+  int out = value->getInt();
+  int in = args->operandValues[0]->getInt();
+
+  vector<uint32_t> & iObs = aux->os[in];
+  size_t oldSize = iObs.size();
+
+  /* Remove observation. */
+  iObs.erase(find(iObs.begin(),iObs.end(),out));
+  assert(oldSize == iObs.size() + 1);
+  if (iObs.empty()) { aux->os.erase(in); }
+}
 
 
 /* UncollapsedHMMRequestPSP */
 
-VentureValuePtr UncollapsedHMMRequestPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const { assert(false); }
-
-
+VentureValuePtr UncollapsedHMMRequestPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const 
+{ 
+  int in = args->operandValues[0]->getInt();
+  vector<shared_ptr<LSR> > lsrs;
+  lsrs.push_back(shared_ptr<LSR>(new HMMLSR(in)));
+  return VentureValuePtr(new VentureRequest(lsrs));
+}
 
 
 
@@ -152,17 +198,14 @@ VentureValuePtr UncollapsedHMMRequestPSP::simulate(shared_ptr<Args> args,gsl_rng
 
 VectorXd vvToEigenVector(VentureValue * value)
 {
-  VentureVector * vvec = dynamic_cast<VentureVector*>(value);
-  assert(vvec);
+  vector<VentureValuePtr> vs = value->getArray();
 
-  size_t len = vvec->xs.size();
+  size_t len = vs.size();
   VectorXd v(len);
 
   for (size_t i = 0; i < len; ++i)
   {
-    VentureNumber * vdouble = dynamic_cast<VentureNumber*>(vvec->xs[i]);
-    assert(vdouble);
-    v(i) = vdouble->x;
+    v(i) = vs[i]->getDouble();
   }
   return v;
 }
@@ -171,29 +214,24 @@ MatrixXd vvToEigenMatrix(VentureValue * value)
 {
   uint32_t rows, cols;
 
-  VentureVector * allRows = dynamic_cast<VentureVector*>(value);
-  assert(allRows);
-  rows = allRows->xs.size();
+  vector<VentureValuePtr> allRows = value->getArray();
+  rows = allRows.size();
   assert(rows > 0);
 
-  VentureVector * vrow0 = dynamic_cast<VentureVector*>(allRows->xs[0]);
-  assert(vrow0);
-  cols = vrow0->xs.size();
+  vector<VentureValuePtr> row0 = allRows[0]->getArray();
+  cols = row0.size();
   assert(cols > 0);
 
   MatrixXd M(rows,cols);
 
   for (size_t i = 0; i < rows; ++i)
   {
-    VentureVector * vrow = dynamic_cast<VentureVector*>(allRows->xs[i]);
-    assert(vrow);
-    assert(cols == vrow->xs.size());
+    vector<VentureValuePtr> row_i = allRows[i]->getArray();
+    assert(cols == row_i.size());
     
     for (size_t j = 0; j < cols; ++j)
     {
-      VentureNumber * vdouble = dynamic_cast<VentureNumber*>(vrow->xs[j]);
-      assert(vdouble);
-      M(i,j) = vdouble->x;
+      M(i,j) = row_i[j]->getDouble();
     }
   }
   return M;
