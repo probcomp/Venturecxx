@@ -17,7 +17,7 @@ VentureValuePtr simulateCategorical(const Simplex & ps,const vector<VentureValue
 double logDensityCategorical(VentureValuePtr val, const Simplex & ps);
 double logDensityCategorical(VentureValuePtr val, const Simplex & ps,const vector<VentureValuePtr> & os);
 
-vector<vector<VentureValuePtr> > cartesianProduct(const vector<vector<VentureValuePtr> > & v);
+vector<vector<VentureValuePtr> > cartesianProduct(vector<vector<VentureValuePtr> > original);
 
 
 #endif
