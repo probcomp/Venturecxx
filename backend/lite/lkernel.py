@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from sp import SP
+from sp import VentureSP
+from value import VentureValue
 import sys
 import math
 
@@ -16,13 +17,14 @@ class DefaultAAALKernel(LKernel):
   def __init__(self,makerPSP): self.makerPSP = makerPSP
   def simulate(self,trace,oldValue,args): return self.makerPSP.simulate(args)
   def weight(self,trace,newValue,oldValue,args):
-    assert isinstance(newValue,SP)
+    assert isinstance(newValue,VentureSP)
     return newValue.outputPSP.logDensityOfCounts(args.madeSPAux)
 
 class DeterministicLKernel(LKernel):
   def __init__(self,sp,value):
     self.sp = sp
     self.value = value
+    assert isinstance(value, VentureValue)
 
   def simulate(self,trace,oldValue,args): return self.value
   def weight(self,trace,newValue,oldValue,args): return self.sp.logDensity(newValue,args)

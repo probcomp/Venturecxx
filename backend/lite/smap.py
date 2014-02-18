@@ -29,6 +29,12 @@ class SMap(object):
   def __contains__(self,k): return k in self.d
   def __len__(self): return len(self.a)
 
+  def __str__(self): return "SMap: " + self._as_dict().__str__()
+  def __repr__(self): return "SMap: " + self._as_dict().__repr__()
+
+  def _as_dict(self):
+    return {k:self[k] for k in self.d}
+
   def sample(self): return random.sample(self.a,1)[0]
 
   def keys(self): return self.d.keys()

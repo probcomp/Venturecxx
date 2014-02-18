@@ -1,8 +1,8 @@
 from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
 from omegadb import OmegaDB
-from psp import ESRRefOutputPSP
-from spref import SPRef
+from value import SPRef
 from scope import ScopeIncludeOutputPSP
+from sp import VentureSP
 
 def detachAndExtract(trace,border,scaffold):
   weight = 0
@@ -86,6 +86,7 @@ def unapply(trace,node,scaffold,omegaDB):
 
 def teardownMadeSP(trace,node,isAAA):
   sp = trace.madeSPAt(node)
+  assert isinstance(sp,VentureSP)
   trace.setValueAt(node,sp)
   trace.setMadeSPAt(node,None)
   if not isAAA: 
@@ -96,7 +97,7 @@ def teardownMadeSP(trace,node,isAAA):
 def unapplyPSP(trace,node,scaffold,omegaDB):
   psp,args = trace.pspAt(node),trace.argsAt(node)
   if isinstance(psp,ScopeIncludeOutputPSP):
-    scope,block = [n.value for n in node.operandNodes[0:2]]
+    scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
     blockNode = node.operandNodes[2]
     trace.unregisterRandomChoiceInScope(scope,block,blockNode)
   if psp.isRandom(): trace.unregisterRandomChoice(node)

@@ -12,7 +12,7 @@ from venture.test.config import get_ripl, collectSamples
 #
 def testMakeSymDirMult1():
   for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-    yield checkMakeSymDirMult1,maker
+    yield checkMakeSymDirMult1, maker
 
 @statisticalTest
 def checkMakeSymDirMult1(maker):
@@ -119,7 +119,7 @@ def checkMakeDirMult1(maker):
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "(%s (simplex a a a a))" % maker)
+  ripl.assume("f", "(%s (array a a a a))" % maker)
   ripl.predict("(f)")
   return checkDirichletMultinomialAAA(ripl, 3)
 

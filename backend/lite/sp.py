@@ -1,3 +1,4 @@
+from value import VentureValue, registerVentureType
 from abc import ABCMeta
 
 class SPFamilies(object):
@@ -21,7 +22,7 @@ class SPFamilies(object):
 class SPAux(object):
   def copy(self): return SPAux()
 
-class SP(object):
+class VentureSP(VentureValue):
   __metaclass__ = ABCMeta
 
   def __init__(self,requestPSP,outputPSP):
@@ -41,3 +42,7 @@ class SP(object):
     if candidate:
       return candidate
     return name
+  # VentureSPs are intentionally not comparable until we decide
+  # otherwise
+
+registerVentureType(VentureSP)

@@ -17,6 +17,7 @@
 # -*- coding: utf-8 -*-
 
 from venture.exception import VentureException
+import utils as u
 
 class Ripl():
     def __init__(self,sivm,parsers):
@@ -225,6 +226,8 @@ class Ripl():
         if isinstance(params, int):
             self.infer({"transitions": params, "kernel": "mh",
                         "scope":"default", "block":"one"})
+        elif isinstance(params, str):
+            self.infer(u.expToDict(u.parse(params)))
         else:
             s = self._cur_parser().get_instruction_string('infer')
             self.execute_instruction(s, {'params': params})

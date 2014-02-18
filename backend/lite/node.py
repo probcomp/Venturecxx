@@ -1,6 +1,6 @@
 from abc import ABCMeta
-from spref import SPRef
-from sp import SP
+from value import VentureValue, SPRef, isVentureValue, ExpressionType
+from request import Request
 
 class Node(object):
   __metaclass__ = ABCMeta
@@ -19,20 +19,32 @@ class Node(object):
   def observe(self,val):
     self.observedValue = val
     self.isObservation = True
+    assert isinstance(val, VentureValue)
 
   def groundValue(self):
     if isinstance(self.value,SPRef): return self.value.makerNode.madeSP
     else: return self.value
 
+  def isAppropriateValue(self, value):
+    return isVentureValue(value)
+
   def parents(self): return self.definiteParents()
+
 
 class ConstantNode(Node):
   def __init__(self,value):
     super(ConstantNode,self).__init__()
-    self.value = value
+    if isinstance(value, VentureValue):
+      # Possible for programmatic construction, e.g. builtin.py
+      # Will also occur for literal atoms, since there's no other way
+      # to tell them apart from literal numbers.
+      self.value = value
+    else: # In eval
+      self.value = ExpressionType().asVentureValue(value)
 
   def parents(self): return []
   def definiteParents(self): return []
+
 
 class LookupNode(Node):
   def __init__(self,sourceNode):
@@ -60,6 +72,7 @@ class ApplicationNode(Node):
   def spaux(self): return self.spRef().makerNode.madeSPAux
   def psp(self): return self.sp().requestPSP
 
+
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
     super(RequestNode,self).__init__()
@@ -75,6 +88,9 @@ class RequestNode(ApplicationNode):
   def parents(self): return [self.operatorNode] + self.operandNodes
   def definiteParents(self): return [self.operatorNode] + self.operandNodes
 
+  def isAppropriateValue(self, value):
+    return value is None or isinstance(value, Request)
+
 
 class OutputNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,requestNode,env):
@@ -87,10 +103,13 @@ class OutputNode(ApplicationNode):
   def definiteParents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]
   def parents(self): return self.definiteParents() + self.esrParents
 
+
 class Args(object):
   def __init__(self,trace,node):
     self.node = node
     self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]
+    for v in self.operandValues:
+      assert isVentureValue(v)
     self.operandNodes = node.operandNodes
 
     if isinstance(node,OutputNode):
@@ -99,6 +118,8 @@ class Args(object):
       self.esrNodes = trace.esrParentsAt(node)
       self.madeSPAux = trace.madeSPAuxAt(node)
       self.isOutput = True
+    else:
+      self.isOutput = False
 
     self.spaux = trace.spauxAt(node)
     self.env = node.env

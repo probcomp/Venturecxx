@@ -18,6 +18,9 @@ def simulateCategorical(ps,os=None):
 def logDensityCategorical(val,ps,os=None):
   if os is None: os = range(len(ps))
   ps = normalizeList(ps)
+  # TODO This should work for Venture Values while the comparison is
+  # done by identity and in the absence of observations; do I want to
+  # override the Python magic methods for VentureValues?
   p = ps[os.index(val)]
   assert os.count(val) == 1
   return math.log(p)

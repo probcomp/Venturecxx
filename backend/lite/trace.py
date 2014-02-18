@@ -1,10 +1,10 @@
 from builtin import builtInValues, builtInSPs
-from env import Env
-from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args
+from env import VentureEnvironment
+from node import Node,ConstantNode,LookupNode,RequestNode,OutputNode,Args
 import math
 from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
-from spref import SPRef
+from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
 from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator
 from omegadb import OmegaDB
@@ -15,7 +15,7 @@ from scope import ScopeIncludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
-from consistency import assertTorus,assertTrace,assertSameScaffolds
+from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
 import pdb
@@ -23,7 +23,7 @@ import pdb
 class Trace(object):
   def __init__(self):
 
-    self.globalEnv = Env()
+    self.globalEnv = VentureEnvironment()
     for name,val in builtInValues().iteritems():
       self.globalEnv.addBinding(name,ConstantNode(val))
     for name,sp in builtInSPs().iteritems():
@@ -31,7 +31,7 @@ class Trace(object):
       processMadeSP(self,spNode,False)
       assert isinstance(self.valueAt(spNode), SPRef)
       self.globalEnv.addBinding(name,spNode)
-    self.globalEnv = Env(self.globalEnv) # New frame so users can shadow globals
+    self.globalEnv = VentureEnvironment(self.globalEnv) # New frame so users can shadow globals
 
     self.rcs = set()
     self.ccs = set()
@@ -49,6 +49,7 @@ class Trace(object):
     self.registerRandomChoiceInScope("default",node,node)
 
   def registerRandomChoiceInScope(self,scope,block,node):
+    (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if not scope in self.scopes: self.scopes[scope] = SMap()
     if not block in self.scopes[scope]: self.scopes[scope][block] = set()
     assert not node in self.scopes[scope][block]
@@ -61,10 +62,26 @@ class Trace(object):
     self.unregisterRandomChoiceInScope("default",node,node)
 
   def unregisterRandomChoiceInScope(self,scope,block,node):
+    (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
     self.scopes[scope][block].remove(node)
     assert not scope == "default" or len(self.scopes[scope][block]) == 0
     if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
     if len(self.scopes[scope]) == 0: del self.scopes[scope]
+
+  def _normalizeEvaluatedScopeAndBlock(self, scope, block):
+    if scope == "default":
+      assert isinstance(block, Node)
+      return (scope, block)
+    else:
+      assert isinstance(scope, VentureValue)
+      assert isinstance(block, VentureValue)
+      # TODO probably want to allow arbitrary values as scopes and
+      # blocks; but this requires converting them from the inference
+      # program.
+      if isinstance(scope, VentureSymbol):
+        return (scope.getSymbol(), block.getNumber())
+      else:
+        return (scope.getNumber(), block.getNumber())
 
   def registerConstrainedChoice(self,node):
     self.ccs.add(node)
@@ -143,9 +160,11 @@ class Trace(object):
   #### Stuff that a particle trace would need to override for persistence
 
   def valueAt(self,node):
+    assert node.isAppropriateValue(node.value)
     return node.value
 
   def setValueAt(self,node,value):
+    assert node.isAppropriateValue(value)
     node.value = value
 
   def madeSPAt(self,node): return node.madeSP
@@ -231,6 +250,7 @@ class Trace(object):
     for i,operandNode in enumerate(node.operandNodes):
       if i == 2 and isinstance(self.pspAt(node),ScopeIncludeOutputPSP):
         (new_scope,new_block,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
+        (new_scope,new_block) = self._normalizeEvaluatedScopeAndBlock(new_scope, new_block)
         if scope != new_scope or block == new_block: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
       else:
         self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
@@ -331,19 +351,10 @@ class Trace(object):
 
   # TODO temporary, probably need an extra layer of boxing for VentureValues
   # as in CXX
-  def boxValue(self,val):
-    if type(val) is str: return {"type":"symbol","value":val}
-    elif type(val) is bool: return {"type":"boolean","value":val}
-    elif type(val) is list: return {"type":"list","value":[self.boxValue(v) for v in val]}
-    elif isinstance(val, SPRef): return {"type":"SP","value":val}
-    else: return {"type":"number","value":val}
-
-
-  def unboxValue(self,val): return val["value"]
-
+  def boxValue(self,val): return val.asStackDict()
+  def unboxValue(self,val): return VentureValue.fromStackDict(val)
   def unboxExpression(self,exp):
-    if type(exp) == list: return [self.unboxExpression(subexp) for subexp in exp]
-    else: return self.unboxValue(exp)
+    return ExpressionType().asPython(VentureValue.fromStackDict(exp))
 
 #################### Misc for particle commit
 
