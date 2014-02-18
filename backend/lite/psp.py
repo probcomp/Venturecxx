@@ -50,6 +50,10 @@ class RandomPSP(PSP):
   def canAbsorb(self,trace,appNode,parentNode): return True    
 
 class FunctionType(object): # TODO make this a VentureType?  With conversions!?
+  """An object loosely representing a Venture function type.  It knows
+the types expected for the arguments and the return, and thus knows
+how to wrap and unwrap individual values or Args objects.  This is
+used in the implementation of TypedPSP and TypedAAALKernel."""
   def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
     self.args_types = args_types
     self.return_type = return_type

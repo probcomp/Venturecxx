@@ -13,7 +13,30 @@ enforces (by an assert) that any object coming through must either be
 an instance of the VentureValue base class defined below, or None (for
 detaching from nodes, e.g.).
 
-The architecture of the Venture value system follows what Alexey
+This impacts the SP interface, of course.  The official interface is
+that SPs accept and return VentureValue objects in all the places that
+come from or go to nodes in the trace, and return implementation
+language entities in places that interact with the interpreter itself.
+To wit, simulate returns a VentureValue, logDensity returns an
+implementation number, enumerateValues returns an implementation
+sequence of VentureValues, and the various boolean methods return
+implementation booleans.  Notably, special kernels are expected to
+themselves be implementation language objects, but to accept and
+produce VentureValue objects as appropriate.
+
+If you're thinking that this interface will lead to tons of stupid
+boilerplate involving wrapping and unwrapping things, you're right.
+Fortunately, much of that boilerplate can be abstracted away --- most
+SPs have simple enough type signatures that they can just we wrapped
+in a generic wrapper that extracts implementation values from
+VentureValue objects, hands them to the SP, and then wraps the result.
+This wrapper is the class TypedPSP, in psp.py.  The interface
+presented by TypedPSP to the PSPs it would wrap is the same as the
+official SP interface, except that the unwrapping indicated by the
+type signature that TypedPSP is created with is handled on behalf of
+the underlying PSP.
+
+The architecture of Venture's actual type system follows what Alexey
 thinks of as the typical dynamic language pattern.  There is a
 universal notion of "a value", and then several particular kinds of
 values that instantiate that notion.  Every value directly knows what
@@ -24,10 +47,10 @@ hierarchy (for example, equality checking).  The underlying
 representation of a value of a given type is extracted by a method of
 the form getType.
 
-The particular Venture system contains an additional, perhaps somewhat
-Pythonic choice, which is that values of several different types are
-somewhat interconvertable (for example, a Venture Atom can be
-interpreted as a Venture Number if needed).  These conversions are
+The particular Venture type system contains an additional, perhaps
+somewhat Pythonic choice, which is that values of several different
+types are somewhat interconvertable (for example, a Venture Atom can
+be interpreted as a Venture Number if needed).  These conversions are
 implemented by the getType functions being methods, so that, for
 example, the VentureAtom class can implement the getNumber method.
 
@@ -48,15 +71,17 @@ representation, and also how to convert Python objects of appropriate
 type to Venture values of the type represented by the type object.
 The goal is to enable declarative discussion of Venture types by
 storing the type objects; the main extant use of this facility is the
-TypedPSP wrapper class, that automatically wraps and unwraps Venture
-values for use by simply typed PSPs, which can then be written as
-though they operated directly on the underlying Python
-representations.
+TypedPSP wrapper class.
 
 There are more subclasses of VentureType than of VentureValue, because
 several of the type objects represent sum types.  The most complex of
 these is ExpressionType, which represents the type of Venture
 expressions (reflected as Venture values).
+
+The actual type system is encoded in value.py (including the FooType
+classes, though those may profit from moving to a module of their
+own).  Alexey views it as open to sufficient debate and modification
+not to set down here.
 
 In general, this design eschews implementing Python magic functions,
 because the whole point is to clearly segregate Venture values from
@@ -64,6 +89,38 @@ the Python values used to implement them.  However, __eq__ and
 __hash__ do need to be implemented, so that Venture values can be
 effectively stored in Python data structures (e.g., to make things
 like find and count work on Python lists of VentureValues).
+
+Issues:
+
+The main outstanding issue with this design, as Alexey sees it, is
+that TypedPSP probably doesn't correctly wrap all the possible special
+kernels that a wrapped PSP might return.  The current suite of tests
+passes, however, so any corrections to these bugs should probably
+begin by adding tests that fail because of them.  In any case, Alexey
+thinks that wrapping the AAALKernel is right, so that can be used as a
+model for the others.
+
+The next issue is whether Venture expressions should be reflected as
+nested VentureArrays or as nested VenturePairs.  The former is more
+convenient to implement because they become more amenable to standard
+bulk operations from the implementation language.  The latter is
+advantageous because the user will be able to use the `pair` builtin
+to incrementally build up Venture expressions without paying
+surprising costs.
+
+The third issue is one of copying data when changing representations
+from VentureValues to implementation language values and back.  Alexey
+expects there to come a point when transfer without copying will
+become critical for performance.  The current design has no particular
+facilities for it, and some thought will likely be required to provide
+such facilities, but it also seems that the current design does not
+constitute programming us into a corner.
+
+There are on the order of 20 lesser issues documented as TODO comments
+in the code.  These involve either specific choices about the type
+system, or implementation choices.  Alexey hopes that the frame in
+which they are currently cast will allow us to tinker with them
+without requiring a significant rewrite.
 """
 from abc import ABCMeta
 from numbers import Number
