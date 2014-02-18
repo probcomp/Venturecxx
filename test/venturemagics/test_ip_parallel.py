@@ -19,12 +19,12 @@ from IPython.parallel import Client
 
 def setup_module():
     print 'START SETUP'
-    def start_engines(no_engines,sleeptime=10):
+    def start_engines(no_engines,sleeptime=20):
         start = subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines,'&'])
         time.sleep(sleeptime)
     
     try: 
-        start_engines(2,sleeptime=20)
+        start_engines(2,sleeptime=50)
         print 'SUBPROCESS IPCLUS START SUCCESS'
     except: assert False,"subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])"
 
