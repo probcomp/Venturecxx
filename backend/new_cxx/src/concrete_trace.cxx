@@ -1,5 +1,6 @@
 #include "concrete_trace.h"
 #include "values.h"
+#include "consistency.h"
 #include "detach.h"
 #include "env.h"
 #include "builtin.h"
@@ -7,7 +8,7 @@
 #include "regen.h"
 #include "sp.h"
 #include "db.h"
-
+#include "sps/scope.h"
 #include <cmath>
 #include <cfloat>
 #include <cassert>
@@ -325,20 +326,19 @@ void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,
   for (size_t i = 0; i < outputNode->operandNodes.size(); ++i)
   {
     Node * operandNode = outputNode->operandNodes[i];
-    // TODO once we implement ScopeIncludeOutputPSP
-    // if (i == 2 && dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
-    // {
-    //   ScopeID new_scope = getValue(outputNode->operandNodes[0]);
-    //   BlockID new_block = getValue(outputNode->operandNodes[1]);
-    //   if (!scope->equals(new_scope) || block->equals(new_block))
-    //   {
-    // 	addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
-    //   }
-    // }
-    // else
-    // {
+    if (i == 2 && dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+    {
+      ScopeID new_scope = getValue(outputNode->operandNodes[0]);
+      BlockID new_block = getValue(outputNode->operandNodes[1]);
+      if (!scope->equals(new_scope) || block->equals(new_block))
+      {
+    	addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
+      }
+    }
+    else
+    {
       addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
-//    }
+    }
   }
 }
 
@@ -360,7 +360,7 @@ void ConcreteTrace::makeConsistent()
     setsOfPNodes.push_back(pnodes);
     shared_ptr<Scaffold> scaffold = constructScaffold(this,setsOfPNodes);
     detachAndExtract(this,scaffold->border[0],scaffold);
-//    assertTorus(scaffold); // TODO
+    assertTorus(scaffold);
     shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(appNode))->getPSP(appNode);
     scaffold->lkernels[appNode] = shared_ptr<DeterministicLKernel>(new DeterministicLKernel(iter->second,psp));
     double xiWeight = regenAndAttach(this,scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),shared_ptr<map<Node*,Gradient> >());

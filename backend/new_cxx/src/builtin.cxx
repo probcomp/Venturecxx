@@ -11,6 +11,7 @@
 #include "sps/hmm.h"
 #include "sps/matrix.h"
 #include "sps/msp.h"
+#include "sps/scope.h"
 
 map<string,VentureValuePtr> initBuiltInValues() 
 {
@@ -77,6 +78,9 @@ map<string,SP*> initBuiltInSPs()
 
   /* Matrices */
   m["matrix"] = new SP(new NullRequestPSP(), new MatrixOutputPSP());
+
+  /* Scoping */
+  m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
 
   /* Data structures */
   m["simplex"] = new SP(new NullRequestPSP(), new SimplexOutputPSP());

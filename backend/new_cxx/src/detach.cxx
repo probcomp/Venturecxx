@@ -6,7 +6,7 @@
 #include "db.h"
 #include "sp.h"
 #include "psp.h"
-
+#include "sps/scope.h"
 #include <iostream>
 
 using std::cout;
@@ -193,6 +193,14 @@ double unapplyPSP(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaf
 
 
   // TODO ScopeInclude
+  if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+  {
+    ScopeID scope = trace->getValue(node->operandNodes[0]);
+    BlockID block = trace->getValue(node->operandNodes[1]);
+    Node * blockNode = node->operandNodes[2];
+    trace->unregisterUnconstrainedChoiceInScope(scope,block,blockNode);
+  }
+
   if (psp->isRandom()) { trace->unregisterUnconstrainedChoice(node); }
   shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(trace->getValue(node));
   if (spRef && spRef->makerNode == node) { teardownMadeSP(trace,node,scaffold->isAAA(node),db); }

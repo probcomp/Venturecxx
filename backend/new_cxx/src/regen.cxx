@@ -10,7 +10,7 @@
 #include "psp.h"
 #include "lkernel.h"
 #include "srs.h"
-
+#include "sps/scope.h"
 #include <iostream>
 #include <boost/foreach.hpp>
 
@@ -319,13 +319,14 @@ double applyPSP(Trace * trace,
   if (dynamic_pointer_cast<VentureSPRecord>(newValue)) { processMadeSP(trace,node,scaffold->isAAA(node),shouldRestore,db); }
   /* TODO TEMP MILESTONE */
   if (psp->isRandom()) { trace->registerUnconstrainedChoice(node); }
-  // if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
-  // {
-  //   ScopeID scope = trace->getValue(node->operandNodes[0]);
-  //   BlockID block = trace->getValue(node->operandNodes[1]);
-  //   Node * blockNode = node->operandNodes[2];
-  //   trace->registerRandomChoiceInScope(scope,block,blockNode);
-  // }
+
+  if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+  {
+    ScopeID scope = trace->getValue(node->operandNodes[0]);
+    BlockID block = trace->getValue(node->operandNodes[1]);
+    Node * blockNode = node->operandNodes[2];
+    trace->registerUnconstrainedChoiceInScope(scope,block,blockNode);
+  }
   return weight;
 }
 
