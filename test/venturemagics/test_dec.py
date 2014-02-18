@@ -4,6 +4,9 @@ import numpy as np
 from IPython.parallel import Client
 from nose.tools import with_setup
 
+file_dir = os.path.dirname(os.path.realpath(__file__))
+loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] )   
+
 def setup_function():
     print 'START SETUP'
     def start_engines(no_engines,sleeptime=20):
