@@ -1,5 +1,5 @@
 from abc import ABCMeta
-from value import VentureValue, SPRef, isVentureValue, ExpressionType
+from value import VentureValue, SPRef, ExpressionType
 from request import Request
 
 class Node(object):
@@ -26,7 +26,7 @@ class Node(object):
     else: return self.value
 
   def isAppropriateValue(self, value):
-    return isVentureValue(value)
+    return value is None or isinstance(value, VentureValue)
 
   def parents(self): return self.definiteParents()
 
@@ -109,7 +109,7 @@ class Args(object):
     self.node = node
     self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]
     for v in self.operandValues:
-      assert isVentureValue(v)
+      assert isinstance(v, VentureValue)
     self.operandNodes = node.operandNodes
 
     if isinstance(node,OutputNode):

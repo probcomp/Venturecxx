@@ -1,25 +1,11 @@
 """Venture values.
 
-This design deliberately tries to avoid piggybacking on Python magic
-(like the __foo__ methods) in order to make the architecture clear
-enough to replicate in another language (such as C++).
-
-However, __eq__ does need to be implemented, to make things like find
-and count (on Python lists of VentureValues) work.
-
-TODO Actually explain it.
-
+The design currently lives at
+https://docs.google.com/document/d/1URnJh5hNJ___-dwzIpca5Y2h-Mku1n5zjpGCiFBcUHM/edit
 """
 from abc import ABCMeta
 from numbers import Number
 from request import Request # TODO Pull that file in here?
-
-def stupidCompare(thing, other):
-  # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
-  # strings don't have __cmp__ either?
-  if thing < other: return -1
-  elif thing > other: return 1
-  else: return 0
 
 class VentureValue(object):
   __metaclass__ = ABCMeta
@@ -77,6 +63,13 @@ class VentureNumber(VentureValue):
   def compareSameType(self, other): return stupidCompare(self.number, other.number)
   def __hash__(self): return hash(self.number)
 
+def stupidCompare(thing, other):
+  # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
+  # strings don't have __cmp__ either?
+  if thing < other: return -1
+  elif thing > other: return 1
+  else: return 0
+
 class VentureAtom(VentureValue):
   def __init__(self,atom):
     assert isinstance(atom, Number)
@@ -119,9 +112,10 @@ class VentureSymbol(VentureValue):
   def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
   def __hash__(self): return hash(self.symbol)
 
-# Venture arrays are heterogeneous, with O(1) access and O(n) copy.
-# Venture does not yet have a story for homogeneous packed arrays.
 class VentureArray(VentureValue):
+  """Venture arrays are heterogeneous, with O(1) access and O(n) copy.
+Venture does not yet implement homogeneous packed arrays, but the
+interface here is compatible with one possible path."""
   def __init__(self, array, elt_type=None):
     if elt_type is None: # No conversion
       self.array = array
@@ -200,9 +194,9 @@ class VenturePair(VentureValue):
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair(h, t), reversed(l), VentureNil())
 
-# Simplexes are homogeneous floating point arrays.  They are also
-# supposed to sum to 1, but we are not checking that.
 class VentureSimplex(VentureValue):
+  """Simplexes are homogeneous floating point arrays.  They are also
+supposed to sum to 1, but we are not checking that."""
   def __init__(self,simplex): self.simplex = simplex
   def getSimplex(self): return self.simplex
   def compareSameType(self, other):
@@ -269,7 +263,7 @@ class SPRef(VentureValue):
 venture_types = [
   VentureBool, VentureNumber, VentureAtom, VentureSymbol, VentureNil, VenturePair,
   VentureArray, VentureSimplex, VentureDict, VentureMatrix, SPRef]
-  # Break load order dependency but not adding SPs and Environments yet
+  # Break load order dependency by not adding SPs and Environments yet
 
 stackable_types = {
   "number": VentureNumber,
@@ -291,9 +285,6 @@ def registerVentureType(t, name = None):
       stackable_types[name] = t
 
 
-def isVentureValue(thing):
-  return thing is None or isinstance(thing, VentureValue)
-
 class VentureType(object): pass
 
 # TODO Is there any way to make these guys be proper singleton
@@ -306,7 +297,6 @@ class NumberType(VentureType):
   def asVentureValue(self, thing): return VentureNumber(thing)
   def asPython(self, vthing): return vthing.getNumber()
 
-# TODO Also Nil?
 for typename in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "Matrix", "SP", "Environment"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
@@ -324,23 +314,32 @@ class NilType(VentureType):
     # TODO Throw an error if not nil?
     return []
 
-# A Venture list is either a VentureNil or a VenturePair whose second
-# field is a Venture list.  I choose that the corresponding Python
-# object is a list of VentureValue objects (this is consistent with
-# the Any type doing no conversion).
-
-# data List = Nil | Pair Any List
 class ListType(VentureType):
+  """A Venture list is either a VentureNil or a VenturePair whose
+second field is a Venture list.  I choose that the corresponding
+Python object is a list of VentureValue objects (this is consistent
+with the Any type doing no conversion).
+
+In Haskell type notation:
+
+data List = Nil | Pair Any List
+"""
   def asVentureValue(self, thing):
     return pythonListToVentureList(*thing)
   def asPython(self, thing):
     return thing.asPythonList()
 
-# A Venture expression is either a Venture self-evaluating object
-# (bool, number, atom), or a Venture symbol, or a Venture array of
-# Venture Expressions.
-# data Expression = Bool | Number | Atom | Symbol | Array Expression
 class ExpressionType(VentureType):
+  """A Venture expression is either a Venture self-evaluating object
+(bool, number, atom), or a Venture symbol, or a Venture array of
+Venture Expressions.  Note: I adopt the convention that, to
+distinguish them from numbers, Venture Atoms will be represented in
+Python as VentureAtom objects for purposes of this type.
+
+In Haskell type notation:
+
+data Expression = Bool | Number | Atom | Symbol | Array Expression
+"""
   def asVentureValue(self, thing):
     if isinstance(thing, bool):
       return VentureBool(thing)
@@ -368,8 +367,8 @@ class ExpressionType(VentureType):
       return thing.getArray(self)
     raise Exception("Cannot convert Venture object %r to a Python representation of a Venture Expression" % thing)
 
-# Parametric values -- no conversion
 class AnyType(VentureType):
+  """The type object to use for parametric types -- does no conversion."""
   def asVentureValue(self, thing):
     assert isinstance(thing, VentureValue)
     return thing
@@ -378,6 +377,10 @@ class AnyType(VentureType):
     return thing
 
 class HomogeneousArrayType(VentureType):
+  """Type objects for homogeneous arrays.  Right now, the homogeneity
+  is not captured in the implementation, in that on the Venture side
+  such data is still stored as heterogenous Venture arrays.  This type
+  does, however, encapsulate the necessary wrapping and unwrapping."""
   def __init__(self, subtype):
     assert isinstance(subtype, VentureType)
     self.subtype = subtype
@@ -386,9 +389,11 @@ class HomogeneousArrayType(VentureType):
   def asPython(self, vthing):
     return vthing.getArray(self.subtype)
 
-# Define a type object for requests so that RequestPSPs can be wrapped
-# in the TypedPSP wrapper.  No conversion is done
 class RequestType(VentureType):
+  """A type object for Venture's Requests.  Requests are not Venture
+  values in the strict sense, and reflection is not permitted on them.
+  This type exists to permit requester PSPs to be wrapped in the
+  TypedPSP wrapper."""
   def asVentureValue(self, thing):
     assert isinstance(thing, Request)
     return thing
