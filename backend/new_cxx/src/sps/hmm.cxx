@@ -15,6 +15,7 @@
 #include "sprecord.h"
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <boost/foreach.hpp>
 
 VectorXd vvToEigenVector(VentureValue * value);
 MatrixXd vvToEigenMatrix(VentureValue * value);
@@ -119,7 +120,43 @@ double UncollapsedHMMSP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> l
   return 0;
 }
 
-void UncollapsedHMMSP::AEInfer(shared_ptr<Args> args, gsl_rng * rng) const { assert(false); }
+void UncollapsedHMMSP::AEInfer(shared_ptr<Args> args, gsl_rng * rng) const 
+{ 
+  shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->madeSPAux);
+  assert(aux);
+
+  if (aux->os.empty()) { return; }
+
+  uint32_t maxObservation = (*(max_element(aux->os.begin(),aux->os.end()))).first;
+  vector<VectorXd> fs(1,p0);
+
+  /* Forwards filtering */
+  for (size_t i = 1; i <= maxObservation; ++i)
+  {
+    VectorXd f = T * fs[i-1];
+    if (aux->os.count(i))
+    {
+      assert(aux->os[i].size() == 1);
+      BOOST_FOREACH (uint32_t j, aux->os[i])
+      {
+	f = O.row(j).asDiagonal() * f;
+      }
+    }
+    fs.push_back(normalizedVectorXd(f));
+  }
+
+  /* Backwards sampling */
+  aux->xs.resize(maxObservation + 1);
+
+  aux->xs[maxObservation] = sampleVectorXd(fs[maxObservation],rng);
+  for (int i = maxObservation-1; i >= 0; --i)
+  {
+    size_t rowIndex = indexOfOne(aux->xs[i+1]);
+    MatrixXd T_i = T.row(rowIndex).asDiagonal();
+    VectorXd gamma = T_i * fs[i];
+    aux->xs[i] = sampleVectorXd(normalizedVectorXd(gamma),rng);
+  }
+}
 
 
 /* UncollapsedHMMOutputPSP */
