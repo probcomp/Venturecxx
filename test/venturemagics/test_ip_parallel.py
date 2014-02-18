@@ -15,41 +15,52 @@ import numpy as np
 # Note: ipcluster engines need to be running for the tests to work.
 
 
+def setup_module():
+    file_dir = os.path.dirname(os.path.realpath(__file__))
+    loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] )   
+    # [:-2] because current file is /Venturecxx/test/venturemagics
+    execfile(loc_ip_parallel)
+    try: start_engines(2,sleeptime=30)
+    except: assert False, "test_ip_parallel: FAILED, couldn't start engines"
 
+def teardown_module():
+    stop_engines()
 
 ## FIXME we want to find ip_parallel without importing it
 # (importing breaks it due to use of parallel)
 # we currently get its path by using os.path on this very test file, but
 # this is brittle and should be improved on
 
-file_dir = os.path.dirname(os.path.realpath(__file__))
-loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] )   
-# [:-2] because current file is /Venturecxx/test/venturemagics
 
 
-## FIXME: change when back in test_suite
-loc_ip_parallel = file_dir + '/ip_parallel.py'
+# file_dir = os.path.dirname(os.path.realpath(__file__))
+# loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] )   
+# # [:-2] because current file is /Venturecxx/test/venturemagics
 
 
-execfile(loc_ip_parallel)
+# ## FIXME: change when back in test_suite
+# loc_ip_parallel = file_dir + '/ip_parallel.py'
 
 
-# Tests below all depend on finding ipcluster engines or starting them successfully
-try: 
-    cli=Client() # try to find existing engines
-except:
-    try: start_engines(2,sleeptime=30)
-    except: print "test_ip_parallel: FAILED, couldn't start engines"
+
+# execfile(loc_ip_parallel)
+# # Tests below all depend on finding ipcluster engines or starting them successfully
+# try: 
+#     cli=Client() # try to find existing engines
+# except:
+#     try: start_engines(2,sleeptime=30)
+#     except: print "test_ip_parallel: FAILED, couldn't start engines"
 
 
-def iptestCopyFunction():
+
+def testCopyFunction():
     clear_all_engines()
 # iptest for copy_ripl funtion
     myv = make_church_prime_ripl()
     myv.assume('x','(beta 1 1)'); myv.observe('(normal x 1)','5'); myv.predict('(flip)')
     assert [build_exp(di['expression']) for di in myv.list_directives() ] ==  [build_exp(di['expression']) for di in copy_ripl(myv).list_directives() ]
 
-def iptestParallelCopyFunction():
+def testParallelCopyFunction():
 # test for parallel use of copy_ripl_string
 
     cli = Client(); dv = cli[:]; dv.block=True
@@ -65,7 +76,7 @@ def iptestParallelCopyFunction():
 
 ## TEST adding and removing ripls and pulling info about ripls to mripl
 
-def iptestAddRemoveSize():
+def testAddRemoveSize():
     clear_all_engines()
     no_rips = 4
     vv=MRipl(no_rips)
@@ -88,7 +99,7 @@ def iptestAddRemoveSize():
     vv.remove_ripls(2)
     assert(check_size(vv,no_rips))
 
-def iptestCopyRipl():
+def testCopyRipl():
     # create rips, add an assume. add some rips. get some reports
     # and see if reports are all the same. 
     clear_all_engines()
@@ -105,7 +116,7 @@ def iptestCopyRipl():
     #assert( vv.report(1) == ( [3.] * no_rips ) )
     
 
-def iptestDirectives():
+def testDirectives():
     ## TEST DIRECTIVES
     clear_all_engines()
     
@@ -170,7 +181,7 @@ def iptestDirectives():
     assert ex[0][0] == ex[0][1] == ex[1]
     
 
-def iptestSnapshot():
+def testSnapshot():
     clear_all_engines()
     v=MRipl(4)
     v.assume('x','(poisson 10)',label='x')
@@ -184,7 +195,7 @@ def iptestSnapshot():
     assert v.snapshot('y')['total_transitions'] == 0
     assert len(v.snapshot('y')['ripls_info']) == 4
 
-def iptestMulti():
+def testMulti():
     clear_all_engines()
     no_rips = 4; no_mrips=2;
     vs = [MRipl(no_rips) for i in range(no_mrips) ]
@@ -216,7 +227,7 @@ def iptestMulti():
 
 
 
-def iptestMrMap():
+def testMrMap():
     clear_all_engines()
     no_rips = 4
     v = MRipl(no_rips)
@@ -257,10 +268,10 @@ def iptestMrMap():
 # run tests solely in Python interpreter
 
 
-tests = [iptestMrMap, iptestMulti, iptestSnapshot, iptestDirectives,iptestCopyRipl,iptestAddRemoveSize,iptestParallelCopyFunction,iptestCopyFunction]
+tests = [testMrMap, testMulti, testSnapshot, testDirectives,testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
 
 
-def testAllIPParallel(new_engines=False,sleeptime=30):
+def AllIPParallel(new_engines=False,sleeptime=30):
     if new_engines:
         stop_engines()
         start_engines(2)

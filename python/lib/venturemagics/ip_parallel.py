@@ -256,12 +256,12 @@ class MRipl():
             # load the di_list from an existing ripl from ripls
             # we only set_seed after having loaded, so all ripls
             # created by a call to add ripls may have same starting values
-            ripls=mripls[mrid]; seeds=seeds_lists[mrid]
-            ripls.append( copy_ripl(ripls[0]) ) # ripls[0] must be present
-            ripls[-1].set_seed(seed)
-            seeds.append(seed)
-            import os;   pid = os.getpid();
-            print 'Engine %i created ripl %i' % (pid,seed)
+                ripls=mripls[mrid]; seeds=seeds_lists[mrid]
+                ripls.append( copy_ripl(ripls[0]) ) # ripls[0] must be present
+                ripls[-1].set_seed(seed)
+                seeds.append(seed)
+                import os;   pid = os.getpid();
+                print 'Engine %i created ripl %i' % (pid,seed)
             
         self.dview.map(add_ripl_engine,new_seeds,[self.mrid]*no_new_ripls)
         self.update_ripls_info()
