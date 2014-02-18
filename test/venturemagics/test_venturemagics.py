@@ -8,7 +8,7 @@ Python interpreter. Calls a notebook tester (nb_tester.py), a notebook
 (test_venturemagics2_nb.ipynb), and a .ipy file (test_venturemagics2_ipy.ipy).
 """
 import subprocess,os
-from venture.venturemagics.venturemagics import *
+##FIXME FIXME from venture.venturemagics.venturemagics import *
 
 
 
@@ -53,4 +53,7 @@ def testMagicPython():
     ipy_ripl.assume('x5','(beta 1 1)')
     assert(True==ipy_ripl.predict('true'))
     assert(ipy_ripl.predict('x5')>0)
+
+
+
 
