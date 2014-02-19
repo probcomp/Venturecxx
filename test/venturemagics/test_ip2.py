@@ -15,21 +15,34 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
 
-
+from IPython.parallel.util import interactive
 import subprocess,time
 from IPython.parallel import Client
 from nose.tools import with_setup
-print 'RUNNING TEST_IP'
-no_engines = 2
+# print 'RUNNING TEST_IP'
+# no_engines = 2
 
-def setup_function():
-    try: 
-        subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])
-        print 'SUBPROCESS IPCLUS START SUCCESS'
-    except: assert False,"subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])"
-    time.sleep(15)
+# def setup_function():
+#     try: 
+#         subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])
+#         print 'SUBPROCESS IPCLUS START SUCCESS'
+#     except: assert False,"subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])"
+#     time.sleep(15)
     
 
+# def teardown_function():
+#     stop=subprocess.Popen(['ipcluster', 'stop'])
+#     stop.wait()
+#     print  'SUBPROCESS IPCLUS START STOP SUCCESS'
+
+def setup_function():
+    no_engines = 2
+    try:
+        subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines,'&'])
+        print 'SUBPROCESS IPCLUS START SUCCESS'
+        time.sleep(15)
+    except: assert False,"subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])"
+    
 def teardown_function():
     stop=subprocess.Popen(['ipcluster', 'stop'])
     stop.wait()
@@ -37,18 +50,23 @@ def teardown_function():
 
 
 @with_setup(setup_function,teardown_function)
-def test_ip():
+def test_ip_f():
     cli = Client()
     print 'CLI IDS:',cli.ids
     dv = cli[:]
-    print dv.apply(lambda:'HELLO, IM AN ENGINE')
+    #print dv.apply(lambda:'HELLO, IM AN ENGINE')
 
+    from IPython.parallel.util import interactive
+    f = interactive(lambda: 333)
+    #dv.sync_import(os)
+    # def g():
+    #     import sys
+    #     return sys.path()
 
-    f = lambda: 333
-    def g():
-        import sys
-        return sys.path()
     dv.push({'f':f})
-    dv.apply_sync(g)
+    print dv.apply_sync(f)
 
+    # stop=subprocess.Popen(['ipcluster', 'stop'])
+    # stop.wait()
+    # print  'SUBPROCESS IPCLUS START STOP SUCCESS'
 
