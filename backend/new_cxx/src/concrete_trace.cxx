@@ -79,7 +79,7 @@ void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID blo
   scopes[scope].get(block).insert(node);
   assert(scopes[scope].size() > 0);
   assert(scopes[scope].get(block).size() > 0);
-  assert(scope->getSymbol() != "default" || scopes[scope].get(block).size() == 1);
+//  assert(scope->getSymbol() != "default" || scopes[scope].get(block).size() == 1);
 }
 
 void ConcreteTrace::registerConstrainedChoice(Node * node) {
@@ -108,7 +108,7 @@ void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID b
   assert(scopes[scope].contains(block));
   assert(scopes[scope].get(block).count(node));
   scopes[scope].get(block).erase(node);
-  assert(scope->getSymbol() != "default" || scopes[scope].get(block).empty());
+//  assert(scope->getSymbol() != "default" || scopes[scope].get(block).empty());
   if (scopes[scope].get(block).empty()) { scopes[scope].erase(block); }
   if (scopes[scope].size() == 0) { scopes.erase(scope); }
 }
