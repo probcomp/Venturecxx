@@ -5,7 +5,9 @@
 #include "pyutils.h"
 
 #include <boost/python.hpp>
+#include <boost/python/extract.hpp>
 #include <boost/python/object.hpp>
+#include <boost/python/str.hpp>
 #include <boost/python/list.hpp>
 #include <boost/python/dict.hpp>
 #include <boost/thread.hpp>
