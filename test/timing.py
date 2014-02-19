@@ -94,6 +94,9 @@ def min_measurable_input(f):
 ################# Temporary Hacks
 def assertNLogNTime(f,slack=2):
   times = timings(f)
+  while times[0][0] <= 1:
+    # This case would cause the below to throw a divide by zero
+    times = times[1:]
   ns = [t[0] for t in times]
   ts = [t[1] for t in times]
   nlogns = [n * math.log(n) for n in ns]
