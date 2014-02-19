@@ -47,6 +47,6 @@ def testMagicPython():
     ipy_ripl.assume('x1','(flip)')
     ipy_ripl.infer(10)
     ipy_ripl.assume('x5','(beta 1 1)')
-    assert(True==ipy_ripl.predict('true'))
-    assert(ipy_ripl.predict('x5')>0)
+    assert True==ipy_ripl.predict('true')
+    assert ipy_ripl.predict('x5')>0
 
