@@ -169,7 +169,7 @@ VentureValuePtr UncollapsedHMMOutputPSP::simulate(shared_ptr<Args> args,gsl_rng 
   shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
   assert(aux);
   int index = args->operandValues[0]->getInt();
-  assert(aux->xs.size() > index);
+  assert(aux->xs.size() > static_cast<uint32_t>(index));
 
   return VentureValuePtr(new VentureAtom(sampleVector(O * aux->xs[index],rng)));
 }
@@ -182,7 +182,7 @@ double UncollapsedHMMOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args
   int out = value->getInt();
   int in = args->operandValues[0]->getInt();
 
-  assert(aux->xs.size() > in);
+  assert(aux->xs.size() > static_cast<uint32_t>(in));
 
   VectorXd dist = O * aux->xs[in];
   return log(dist[out]);
