@@ -9,7 +9,7 @@ from sp import VentureSP,SPAux
 from lkernel import LKernel
 from nose.tools import assert_greater_equal
 import copy
-from value import VentureNumber, AnyType, VentureAtom, BoolType
+from value import AnyType, VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 from psp import TypedPSP
 
 class BernoulliOutputPSP(RandomPSP):
