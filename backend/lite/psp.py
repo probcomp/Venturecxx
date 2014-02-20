@@ -65,7 +65,12 @@ used in the implementation of TypedPSP and TypedAAALKernel."""
   def wrap_return(self, value):
     return self.return_type.asVentureValue(value)
   def unwrap_return(self, value):
-    return self.return_type.asPython(value)
+    if value is None:
+      # Could happen for e.g. a "delta kernel" that is expected, by
+      # e.g. pgibbs, to actually be a simulation kernel
+      return None
+    else:
+      return self.return_type.asPython(value)
   def unwrap_args(self, args):
     if args.isOutput:
       assert not args.esrValues # TODO Later support outputs that have non-latent requesters
