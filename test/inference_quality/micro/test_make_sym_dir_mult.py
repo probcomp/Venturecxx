@@ -106,8 +106,8 @@ def checkMakeSymDirMultAppControlsFlip(maker_1,maker_2):
   ripl.predict("(f)",label="pid")
   ripl.predict("(g)")
   for _ in range(5): ripl.observe("(g)","atom<1>")
-  ripl.predict("(if (atom_eq (f) atom<1>) (g) (g))")
-  ripl.predict("(if (atom_eq (g) atom<1>) (f) (f))")
+  ripl.predict("(if (eq (f) atom<1>) (g) (g))")
+  ripl.predict("(if (eq (g) atom<1>) (f) (f))")
   return checkDirichletMultinomialAAA(ripl, "pid", infer="mixes_slowly")
 
 def testMakeDirMult1():
@@ -119,7 +119,7 @@ def checkMakeDirMult1(maker):
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "(%s (simplex a a a a))" % maker)
+  ripl.assume("f", "(%s (array a a a a))" % maker)
   ripl.predict("(f)")
   return checkDirichletMultinomialAAA(ripl, 3)
 

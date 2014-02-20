@@ -11,6 +11,7 @@
 /* DirMultSPAux */
 DirMultSPAux::DirMultSPAux(int n) : counts(n, 0) {}
 
+// Collapsed Symmetric
 
 /* MakeSymDirMultOutputPSP */
 VentureValuePtr MakeSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -86,13 +87,109 @@ double SymDirMultOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
   double A = alpha * n;
 
   double x = gsl_sf_lngamma(A) - gsl_sf_lngamma(N + A);
-  for (size_t i = 0; i < aux->counts.size(); ++i)
+  for (size_t i = 0; i < n; ++i)
   {
-    double count = aux->counts[i];
-    x += gsl_sf_lngamma(alpha + count) - gsl_sf_lngamma(alpha);
+    x += gsl_sf_lngamma(alpha + aux->counts[i]);
+  }
+  x -= n * gsl_sf_lngamma(alpha);
+  return x;
+}
+
+// Collapsed Asymmetric
+
+/* MakeDirMultOutputPSP */
+VentureValuePtr MakeDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  assert(args->operandValues.size() == 1); // TODO throw an error once exceptions work
+  
+  shared_ptr<VentureArray> alphaArray = dynamic_pointer_cast<VentureArray>(args->operandValues[0]);
+  assert(alphaArray);
+  
+  size_t n = alphaArray->xs.size();
+  vector<double> alpha;
+  alpha.reserve(n);
+  
+  for (size_t i = 0; i < n; ++i)
+  {
+    alpha.push_back(alphaArray->xs[i]->getDouble());
+  }
+  
+  PSP * requestPSP = new NullRequestPSP();
+  PSP * outputPSP = new DirMultOutputPSP(alpha);
+  
+  return VentureValuePtr(new VentureSPRecord(new SP(requestPSP,outputPSP),new DirMultSPAux(n)));
+}
+
+/* DirMultOutputPSP */
+VentureValuePtr DirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(args->spAux);
+  assert(aux);
+  assert(aux->counts.size() == alpha.size());
+  
+  vector<double> weights(alpha);
+  for (size_t i = 0; i < alpha.size(); ++i)
+  {
+    weights[i] += aux->counts[i];
+  }
+  
+  return simulateCategorical(weights, rng);
+}
+
+double DirMultOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const
+{
+  shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(args->spAux);
+  assert(aux);
+  assert(aux->counts.size() == alpha.size());
+
+  vector<double> weights(alpha);
+  for (size_t i = 0; i < alpha.size(); ++i)
+  {
+    weights[i] += aux->counts[i];
+  }
+  weights = normalizeVector(weights);
+  return log(weights[value->getInt()]);
+}
+
+void DirMultOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
+{
+  shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(args->spAux);
+  assert(aux);
+  assert(aux->counts.size() == alpha.size());
+  
+  int index = value->getInt();
+  aux->counts[index]++;
+}
+
+void DirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
+{
+  shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(args->spAux);
+  assert(aux);
+  assert(aux->counts.size() == alpha.size());
+  
+  int index = value->getInt();
+  aux->counts[index]--;
+  
+  assert(aux->counts[index] >= 0);
+}
+
+double DirMultOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
+{
+  shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(spAux);
+  assert(aux);
+
+  int N = boost::accumulate(aux->counts, 0);
+  double A = boost::accumulate(alpha, 0);
+
+  double x = gsl_sf_lngamma(A) - gsl_sf_lngamma(N + A);
+  for (size_t i = 0; i < alpha.size(); ++i)
+  {
+    x += gsl_sf_lngamma(alpha[i] + aux->counts[i]);
+    x -= gsl_sf_lngamma(alpha[i]);
   }
   return x;
 }
+
 
 ////////////////// Uncollapsed
 

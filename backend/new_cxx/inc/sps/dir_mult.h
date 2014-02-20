@@ -13,7 +13,8 @@ struct DirMultSPAux : SPAux
 };
 
 
-// Collapsed
+// Collapsed Symmetric
+
 struct MakeSymDirMultOutputPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
@@ -36,7 +37,30 @@ private:
   size_t n;
 };
 
-// Uncollapsed 
+// Collapsed Asymmetric
+struct MakeDirMultOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  bool childrenCanAAA() const { return true; }
+};
+
+struct DirMultOutputPSP : RandomPSP
+{
+  DirMultOutputPSP(const vector<double>& alpha) : alpha(alpha) {}
+
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
+  void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+  void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+
+  double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
+
+private:
+  vector<double> alpha;
+};
+
+
+// Uncollapsed Symmetric
 struct UCSymDirMultSP : SP
 {
   UCSymDirMultSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
