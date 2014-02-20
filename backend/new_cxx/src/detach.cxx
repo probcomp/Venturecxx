@@ -1,6 +1,6 @@
 #include "detach.h"
 #include "node.h"
-#include "trace.h"
+#include "concrete_trace.h"
 #include "scaffold.h"
 #include "lkernel.h"
 #include "db.h"
@@ -12,7 +12,7 @@
 using std::cout;
 using std::endl;
 
-pair<double,shared_ptr<DB> > detachAndExtract(Trace * trace,const vector<Node*> & border,shared_ptr<Scaffold> scaffold)
+pair<double,shared_ptr<DB> > detachAndExtract(ConcreteTrace * trace,const vector<Node*> & border,shared_ptr<Scaffold> scaffold)
 {
   double weight = 0;
   shared_ptr<DB> db(new DB());
@@ -40,7 +40,7 @@ pair<double,shared_ptr<DB> > detachAndExtract(Trace * trace,const vector<Node*> 
 }
 
 
-double unconstrain(Trace * trace,OutputNode * node)
+double unconstrain(ConcreteTrace * trace,OutputNode * node)
 {
   shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
   shared_ptr<Args> args = trace->getArgs(node);
@@ -53,7 +53,7 @@ double unconstrain(Trace * trace,OutputNode * node)
   return weight;
 }
 
-double detach(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double detach(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
   //cout << "detach(" << node << ")" << endl;
   
@@ -68,7 +68,7 @@ double detach(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold
 }
 
 
-double extractParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double extractParents(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
   double weight = extractESRParents(trace,node,scaffold,db);
   for (vector<Node*>::reverse_iterator defParentIter = node->definiteParents.rbegin();
@@ -80,7 +80,7 @@ double extractParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,sh
   return weight;
 }
 
-double extractESRParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double extractESRParents(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
   double weight = 0;
   vector<RootOfFamily> esrParents = trace->getESRParents(node);
@@ -93,7 +93,7 @@ double extractESRParents(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold
   return weight;
 }
 
-double extract(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double extract(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
   //cout << "extractOuter(" << node << ")" << endl;
   double weight = 0;
@@ -132,7 +132,7 @@ double extract(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_pt
   return weight;
 }
 
-double unevalFamily(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double unevalFamily(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
   //cout << "unevalFamily(" << node << ")" << endl;
   double weight = 0;
@@ -163,7 +163,7 @@ double unevalFamily(Trace * trace,Node * node,shared_ptr<Scaffold> scaffold,shar
   return weight;
 }
 
-double unapply(Trace * trace,OutputNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double unapply(ConcreteTrace * trace,OutputNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
   double weight = unapplyPSP(trace,node,scaffold,db);
   weight += extractESRParents(trace,node,scaffold,db);
@@ -172,7 +172,7 @@ double unapply(Trace * trace,OutputNode * node,shared_ptr<Scaffold> scaffold,sha
   return weight;
 }
 
-void teardownMadeSP(Trace * trace,Node * makerNode,bool isAAA,shared_ptr<DB> db)
+void teardownMadeSP(ConcreteTrace * trace,Node * makerNode,bool isAAA,shared_ptr<DB> db)
 {
   shared_ptr<VentureSPRecord> spRecord = trace->getMadeSPRecord(makerNode);
   assert(spRecord);
@@ -185,7 +185,7 @@ void teardownMadeSP(Trace * trace,Node * makerNode,bool isAAA,shared_ptr<DB> db)
   trace->destroyMadeSPRecord(makerNode);
 }
 
-double unapplyPSP(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double unapplyPSP(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
   //cout << "unapplyPSP(" << node << ")" << endl;
   shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
@@ -218,7 +218,7 @@ double unapplyPSP(Trace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaf
 }
 
 
-double unevalRequests(Trace * trace,RequestNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double unevalRequests(ConcreteTrace * trace,RequestNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
   //cout << "unevalRequests(" << node << ")" << endl;
 

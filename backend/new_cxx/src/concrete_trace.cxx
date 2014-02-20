@@ -177,6 +177,24 @@ void ConcreteTrace::removeChild(Node * node, Node * child)
 
 /* Primitive getters */
 VentureValuePtr ConcreteTrace::getValue(Node * node) { return values[node]; }
+shared_ptr<SP> ConcreteTrace::getMadeSP(Node * makerNode)
+{
+  shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
+  return spRecord->sp;
+}
+
+shared_ptr<SPFamilies> ConcreteTrace::getMadeSPFamilies(Node * makerNode)
+{
+  shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
+  return spRecord->spFamilies;
+}
+
+shared_ptr<SPAux> ConcreteTrace::getMadeSPAux(Node * makerNode)
+{
+  shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
+  return spRecord->spAux;
+}
+
 shared_ptr<VentureSPRecord> ConcreteTrace::getMadeSPRecord(Node * makerNode) 
 {
   assert(madeSPRecords.count(makerNode));

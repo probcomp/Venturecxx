@@ -60,11 +60,15 @@ struct Trace
 
   /* Primitive getters */
   virtual VentureValuePtr getValue(Node * node) =0;
-  virtual shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode) =0;
   virtual vector<RootOfFamily> getESRParents(Node * node) =0;
   virtual set<Node*> getChildren(Node * node) =0;
   virtual int getNumRequests(RootOfFamily root) =0;
   virtual int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) =0;
+
+  virtual shared_ptr<SP> getMadeSP(Node * makerNode) =0;
+  virtual shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode) =0;
+  virtual shared_ptr<SPAux> getMadeSPAux(Node * node) =0;
+
 
   virtual VentureValuePtr getObservedValue(Node * node) =0;
 
@@ -75,9 +79,6 @@ struct Trace
   /* Derived getters (just for convenience)*/
   virtual VentureValuePtr getGroundValue(Node * node);
   virtual Node * getOperatorSPMakerNode(ApplicationNode * node);
-  virtual shared_ptr<SP> getMadeSP(Node * makerNode);
-  virtual shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode);
-  virtual shared_ptr<SPAux> getMadeSPAux(Node * node);
   virtual vector<Node*> getParents(Node * node);
   virtual shared_ptr<Args> getArgs(ApplicationNode * node);
 

@@ -9,7 +9,9 @@
 struct VentureSPRecord : VentureValue
 {
   VentureSPRecord(SP * sp): sp(sp), spFamilies(new SPFamilies()) {}
+  VentureSPRecord(shared_ptr<SP> sp): sp(sp), spFamilies(new SPFamilies()) {}
   VentureSPRecord(SP * sp,SPAux * spAux): sp(sp), spAux(spAux), spFamilies(new SPFamilies()) {}
+  VentureSPRecord(shared_ptr<SP> sp,shared_ptr<SPAux> spAux): sp(sp), spAux(spAux), spFamilies(new SPFamilies()) {}
 
   shared_ptr<SP> sp;
   shared_ptr<SPAux> spAux;

@@ -39,12 +39,16 @@ struct ConcreteTrace : Trace
 
   /* Primitive getters */
   VentureValuePtr getValue(Node * node);
-  shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode);
   vector<RootOfFamily> getESRParents(Node * node);
   set<Node*> getChildren(Node * node);
   int getNumRequests(RootOfFamily root);
   int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
   VentureValuePtr getObservedValue(Node * node);
+  shared_ptr<SP> getMadeSP(Node * makerNode);
+  shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode);
+  shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
+  shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode); // not in particle
+
 
   bool isMakerNode(Node * node);
   bool isConstrained(Node * node);

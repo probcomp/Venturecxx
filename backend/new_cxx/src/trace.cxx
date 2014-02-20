@@ -48,7 +48,8 @@ VentureValuePtr Trace::getGroundValue(Node * node)
   VentureValuePtr value = getValue(node);
   shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
   
-  if (spRef) { return getMadeSPRecord(spRef->makerNode); }
+  // TODO Hack!
+  if (spRef) { return VentureValuePtr(new VentureSPRecord(getMadeSP(spRef->makerNode),getMadeSPAux(spRef->makerNode))); }
   else { return value; }
 }
 
@@ -59,23 +60,6 @@ Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
   return spRef->makerNode;
 }
 
-shared_ptr<SP> Trace::getMadeSP(Node * makerNode)
-{
-  shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
-  return spRecord->sp;
-}
-
-shared_ptr<SPFamilies> Trace::getMadeSPFamilies(Node * makerNode)
-{
-  shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
-  return spRecord->spFamilies;
-}
-
-shared_ptr<SPAux> Trace::getMadeSPAux(Node * makerNode)
-{
-  shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
-  return spRecord->spAux;
-}
 
 vector<Node*> Trace::getParents(Node * node)
 {

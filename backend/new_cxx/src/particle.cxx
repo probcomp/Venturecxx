@@ -1,4 +1,5 @@
 #include "particle.h"
+#include "concrete_trace.h"
 
 Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
   Particle::Particle(Particle * outerParticle) { assert(false); }
@@ -47,6 +48,7 @@ Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
 					 node);
   }
 
+  /* These will never be called */
   void Particle::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) { assert(false); }
   void Particle::unregisterConstrainedChoice(Node * node) { assert(false); }
 
@@ -65,8 +67,16 @@ Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
   void Particle::removeChild(Node * node, Node * child) { assert(false); }
 
   /* Primitive getters */
-  VentureValuePtr Particle::getValue(Node * node) { assert(false); }
-  shared_ptr<VentureSPRecord> Particle::getMadeSPRecord(Node * makerNode) { assert(false); }
+  VentureValuePtr Particle::getValue(Node * node) 
+  { 
+    if (values.contains(node)) { return values.lookup(node); }
+    else { return baseTrace->getValue(node); }
+  }
+
+  shared_ptr<VentureSPRecord> Particle::getMadeSPRecord(Node * makerNode) 
+  { 
+    assert(false); 
+  }
   vector<RootOfFamily> Particle::getESRParents(Node * node) { assert(false); }
   set<Node*> Particle::getChildren(Node * node) { assert(false); }
   int Particle::getNumRequests(RootOfFamily root) { assert(false); }
@@ -79,7 +89,12 @@ Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
   bool Particle::isObservation(Node * node) { assert(false); }
 
   /* Primitive setters */
-  void Particle::setValue(Node * node, VentureValuePtr value) { assert(false); }
+  void Particle::setValue(Node * node, VentureValuePtr value) 
+  { 
+    assert(!baseTrace->getValue(node)); // TODO might not work
+    values = values.insert(node,value);
+  }
+
   void Particle::clearValue(Node * node) { assert(false); }
 
 
