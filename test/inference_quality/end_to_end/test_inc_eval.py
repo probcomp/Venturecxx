@@ -116,6 +116,7 @@ def testIncrementalEvaluator1a():
 
 def testIncrementalEvaluator1b():
   "Extremely basic test"
+  raise SkipTest("This test needs expressions to be pairs.  Issue: https://app.asana.com/0/9277419963067/10249544822514")
   ripl = get_ripl()
   loadAll(ripl)
   ripl.assume("expr","(list (make_ref plus) (make_ref 1) (make_ref 1))")
@@ -127,6 +128,7 @@ def testIncrementalEvaluator1b():
 def testIncrementalEvaluator1c():
   "Incremental version of micro/test_basic_stats.py:testBernoulli1"
 #  raise SkipTest("Errors out due to a Venture-level type error (a string flowed into operator position).  Re-enable when there are facilities for debugging such things.  Issue https://app.asana.com/0/9277419963067/9280122191537")
+  raise SkipTest("This test needs expressions to be pairs.  Issue: https://app.asana.com/0/9277419963067/10249544822514")
   ripl = get_ripl()
   loadAll(ripl)
   ripl.assume("expr","""
@@ -150,6 +152,7 @@ def testIncrementalEvaluator1c():
 def testIncrementalEvaluator2():
   "Difficult test. We make sure that it stumbles on the solution in a reasonable amount of time."
 #  raise SkipTest("Errors out due to a Venture-level type error (something wanted a list as an argument and got a float).  Re-enable when there are facilities for debugging such things.  Issue https://app.asana.com/0/9277419963067/9280122191537")
+  raise SkipTest("This test needs expressions to be pairs.  Issue: https://app.asana.com/0/9277419963067/10249544822514")
   ripl = get_ripl()
 
   loadAll(ripl)

@@ -10,6 +10,7 @@ def testHMMSP1():
   ripl = get_ripl()
   ripl.assume("f","""
 (make_lazy_hmm
+<<<<<<< HEAD
  (matrix (array 0.5 0.5))
  (matrix (array (array 0.7 0.3)
                (array 0.3 0.7)))

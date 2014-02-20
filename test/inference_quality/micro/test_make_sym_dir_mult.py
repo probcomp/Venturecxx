@@ -12,7 +12,7 @@ from venture.test.config import get_ripl, collectSamples
 #
 def testMakeSymDirMult1():
   for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-    yield checkMakeSymDirMult1,maker
+    yield checkMakeSymDirMult1, maker
 
 @statisticalTest
 def checkMakeSymDirMult1(maker):

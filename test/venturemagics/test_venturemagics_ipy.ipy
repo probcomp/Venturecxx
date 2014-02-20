@@ -1,7 +1,7 @@
 ## Tests for Venturemagics2.py (IPython Form)
-print '1ipy, before import'
+
 from venture.venturemagics.venturemagics import *
-print '2ipy, before line magic'
+
 # output of directive is first arg of %v output
 a,_ = %v [predict (+ 1.0 2.0)]
 assert(a==3.0)

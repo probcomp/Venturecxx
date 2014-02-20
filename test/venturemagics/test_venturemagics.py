@@ -8,7 +8,6 @@ Python interpreter. Calls a notebook tester (nb_tester.py), a notebook
 (test_venturemagics2_nb.ipynb), and a .ipy file (test_venturemagics2_ipy.ipy).
 """
 import subprocess,os
-from venture.venturemagics.venturemagics import *
 
 
 
@@ -44,9 +43,10 @@ def testMagicIpython():
 
 ## Test in Python (weak test because can't test IPython magics)
 def testMagicPython():
+    from venture.venturemagics.venturemagics import ipy_ripl
     ipy_ripl.assume('x1','(flip)')
     ipy_ripl.infer(10)
     ipy_ripl.assume('x5','(beta 1 1)')
-    assert(True==ipy_ripl.predict('true'))
-    assert(ipy_ripl.predict('x5')>0)
+    assert True==ipy_ripl.predict('true')
+    assert ipy_ripl.predict('x5')>0
 

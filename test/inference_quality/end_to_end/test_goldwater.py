@@ -19,7 +19,9 @@ def testGoldwater1():
   ripl.assume("alphabet_length", str(len(alphabet)))
 
   ripl.assume("sample_phone", "((if (flip) make_sym_dir_mult make_uc_sym_dir_mult) parameter_for_dirichlet alphabet_length)")
-  ripl.assume("sample_word_id", "((if (flip) make_crp make_crp) (gamma 1.0 1.0) (uniform_continuous 0.001 0.01))")
+  # TODO What is the second parameter to make_crp supposed to be?
+  # This line used to say "((if (flip) make_crp make_crp) (gamma 1.0 1.0) (uniform_continuous 0.001 0.01))"
+  ripl.assume("sample_word_id", "((if (flip) make_crp make_crp) (gamma 1.0 1.0))")
 
   ripl.assume("sample_letter_in_word", """
 (mem (lambda (word_id pos)

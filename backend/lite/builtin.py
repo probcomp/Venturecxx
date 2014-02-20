@@ -1,7 +1,8 @@
 import math
+import numpy as np
 
-from sp import SP
-from psp import NullRequestPSP, ESRRefOutputPSP, PSP
+from sp import VentureSP
+from psp import NullRequestPSP, ESRRefOutputPSP, PSP, TypedPSP
 
 import discrete
 import continuous
@@ -13,105 +14,144 @@ import hmm
 import conditionals
 import scope
 import eval_sps
+import value as v
+import env
 
-def builtInValues(): return { "true" : True, "false" : False , "nil": []}
+# The types in the value module are generated programmatically, so
+# pylint doesn't find out about them.
+# pylint: disable=no-member
 
-def deterministic(f):
+def builtInValues():
+  return { "true" : v.VentureBool(True), "false" : v.VentureBool(False) }
+
+def no_request(output): return VentureSP(NullRequestPSP(), output)
+
+def typed_nr(output, args_types, return_type, **kwargs):
+  return no_request(TypedPSP(args_types, return_type, output, **kwargs))
+
+def deterministic_psp(f):
   class DeterministicPSP(PSP):
     def simulate(self,args):
       return f(*args.operandValues)
     def description(self,name):
       return "deterministic %s" % name
-  return SP(NullRequestPSP(), DeterministicPSP())
+  return DeterministicPSP()
+
+def deterministic(f):
+  return no_request(deterministic_psp(f))
+
+def deterministic_typed(f, args_types, return_type, **kwargs):
+  return typed_nr(deterministic_psp(f), args_types, return_type, **kwargs)
+
+def binaryNum(f):
+  return deterministic_typed(f, [v.NumberType(), v.NumberType()], v.NumberType())
+
+def binaryNumS(output):
+  return typed_nr(output, [v.NumberType(), v.NumberType()], v.NumberType())
+
+def unaryNum(f):
+  return deterministic_typed(f, [v.NumberType()], v.NumberType())
+
+def unaryNumS(f):
+  return typed_nr(f, [v.NumberType()], v.NumberType())
+
+def naryNum(f):
+  return deterministic_typed(f, [v.NumberType()], v.NumberType(), variadic=True)
+
+def type_test(t):
+  return deterministic(lambda thing: v.VentureBool(isinstance(thing, t)))
 
 def builtInSPsList():
-  return [ [ "plus",  deterministic(lambda *args: sum(args)) ],
-           [ "minus", deterministic(lambda x,y: x - y) ],
-           [ "times", deterministic(lambda *args: reduce(lambda x,y: x * y,args,1)) ],
-           [ "div",   deterministic(lambda x,y: x / y) ],
-           [ "eq",    deterministic(lambda x,y: x == y) ],
-           [ "gt",    deterministic(lambda x,y: x > y) ],
-           [ "gte",    deterministic(lambda x,y: x >= y) ],
-           [ "lt",    deterministic(lambda x,y: x < y) ],
-           [ "lte",    deterministic(lambda x,y: x >= y) ],
+  return [ [ "plus",  naryNum(lambda *args: sum(args)) ],
+           [ "minus", binaryNum(lambda x,y: x - y) ],
+           [ "times", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1)) ],
+           [ "div",   binaryNum(lambda x,y: x / y) ],
+           [ "eq",    deterministic(lambda x,y: v.VentureBool(x.compare(y) == 0)) ],
+           [ "gt",    deterministic(lambda x,y: v.VentureBool(x.compare(y) >  0)) ],
+           [ "gte",   deterministic(lambda x,y: v.VentureBool(x.compare(y) >= 0)) ],
+           [ "lt",    deterministic(lambda x,y: v.VentureBool(x.compare(y) <  0)) ],
+           [ "lte",   deterministic(lambda x,y: v.VentureBool(x.compare(y) <= 0)) ],
            # Only makes sense with VentureAtom/VentureNumber distinction
-           [ "real",  deterministic(lambda x:x) ],
+           [ "real",  deterministic_typed(lambda x:x, [v.AtomType()], v.NumberType()) ],
            # Atoms appear to be represented as Python integers
-           [ "atom_eq", deterministic(lambda x,y: x == y) ],
+           [ "atom_eq", deterministic_typed(lambda x,y: x == y, [v.AtomType(), v.AtomType()], v.BoolType()) ],
 
-           [ "sin", deterministic(math.sin) ],
-           [ "cos", deterministic(math.cos) ],
-           [ "tan", deterministic(math.tan) ],
-           [ "hypot", deterministic(math.hypot) ],
-           [ "exp", deterministic(math.exp) ],
-           [ "log", deterministic(math.log) ],
-           [ "pow", deterministic(math.pow) ],
-           [ "sqrt", deterministic(math.sqrt) ],
+           [ "sin", unaryNum(math.sin) ],
+           [ "cos", unaryNum(math.cos) ],
+           [ "tan", unaryNum(math.tan) ],
+           [ "hypot", unaryNum(math.hypot) ],
+           [ "exp", unaryNum(math.exp) ],
+           [ "log", unaryNum(math.log) ],
+           [ "pow", unaryNum(math.pow) ],
+           [ "sqrt", unaryNum(math.sqrt) ],
 
-           [ "not", deterministic(lambda x: not x) ],
+           [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType()) ],
 
-           # Symbols are Python strings
-           [ "is_symbol", deterministic(lambda x: isinstance(x, basestring)) ],
+           [ "is_symbol", type_test(v.VentureSymbol) ],
+           [ "is_atom", type_test(v.VentureAtom) ],
 
-           [ "lookup", SP(NullRequestPSP(),dstructures.LookupOutputPSP()) ],
-           [ "contains", SP(NullRequestPSP(),dstructures.ContainsOutputPSP()) ],
-           [ "size", SP(NullRequestPSP(),dstructures.SizeOutputPSP()) ],
+           [ "list", deterministic(v.pythonListToVentureList) ],
+           [ "pair", deterministic(v.VenturePair) ],
+           [ "is_pair", type_test(v.VenturePair) ],
+           [ "first", deterministic_typed(lambda p: p[0], [v.PairType()], v.AnyType()) ],
+           [ "rest", deterministic_typed(lambda p: p[1], [v.PairType()], v.AnyType()) ],
+           [ "second", deterministic_typed(lambda p: p[1].first, [v.PairType()], v.AnyType()) ],
 
-           [ "pair", SP(NullRequestPSP(),dstructures.PairOutputPSP()) ],
-           [ "list", SP(NullRequestPSP(),dstructures.ListOutputPSP()) ],
-           [ "map_list", SP(dstructures.MapListRequestPSP(),dstructures.MapListOutputPSP()) ],
+           [ "map_list",VentureSP(dstructures.MapListRequestPSP(),dstructures.MapListOutputPSP()) ],
 
-           # Fake compatibility with CXX
-           [ "is_pair", SP(NullRequestPSP(),dstructures.IsPairOutputPSP()) ],
-           [ "first", SP(NullRequestPSP(),dstructures.FirstListOutputPSP()) ],
-           [ "second", SP(NullRequestPSP(),dstructures.SecondListOutputPSP()) ],
-           [ "rest", SP(NullRequestPSP(),dstructures.RestListOutputPSP()) ],
+           [ "array", deterministic(lambda *args: v.VentureArray(np.array(args))) ],
+           [ "is_array", type_test(v.VentureArray) ],
+           [ "dict", no_request(dstructures.DictOutputPSP()) ],
+           [ "is_dict", type_test(v.VentureDict) ],
+           [ "matrix", deterministic(lambda rows: v.VentureMatrix(np.mat([[val.getNumber() for val in row.asPythonList()] for row in rows.asPythonList()]))) ], # TODO Put in the description that the input is a list of the rows of the matrix
+           [ "is_matrix", type_test(v.VentureMatrix) ],
+           [ "simplex", deterministic_typed(lambda *nums: np.array(nums), [v.NumberType()], v.SimplexType(), variadic=True) ],
+           [ "is_simplex", type_test(v.VentureSimplex) ],
 
-           [ "array", SP(NullRequestPSP(),dstructures.ArrayOutputPSP()) ],
-           [ "is_array", SP(NullRequestPSP(),dstructures.IsArrayOutputPSP()) ],
-           [ "dict", SP(NullRequestPSP(),dstructures.DictOutputPSP()) ],
-           [ "matrix", SP(NullRequestPSP(),dstructures.MatrixOutputPSP()) ],
-           [ "simplex", SP(NullRequestPSP(),dstructures.SimplexOutputPSP()) ],
+           [ "lookup", deterministic(lambda xs, x: xs.lookup(x)) ],
+           [ "contains", deterministic(lambda xs, x: v.VentureBool(xs.contains(x))) ],
+           [ "size", deterministic(lambda xs: v.VentureNumber(xs.size())) ],
 
-           [ "branch", SP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()) ],
-           [ "biplex", SP(NullRequestPSP(),conditionals.BiplexOutputPSP()) ],
-           [ "make_csp", SP(NullRequestPSP(),csp.MakeCSPOutputPSP()) ],
+           [ "branch", VentureSP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()) ],
+           [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType())],
+           [ "make_csp", no_request(csp.MakeCSPOutputPSP()) ],
 
-           [ "eval", SP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()) ],
-           [ "get_current_environment", SP(NullRequestPSP(),eval_sps.GetCurrentEnvOutputPSP()) ],
-           [ "get_empty_environment", SP(NullRequestPSP(),eval_sps.GetEmptyEnvOutputPSP()) ],
-           [ "extend_environment", SP(NullRequestPSP(),eval_sps.ExtendEnvOutputPSP()) ],
+           [ "get_current_environment",no_request(eval_sps.GetCurrentEnvOutputPSP()) ],
+           [ "get_empty_environment",no_request(eval_sps.GetEmptyEnvOutputPSP()) ],
+           [ "is_environment", type_test(env.VentureEnvironment) ],
+           [ "extend_environment",no_request(eval_sps.ExtendEnvOutputPSP()) ],
+           [ "eval",VentureSP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()) ],
 
-           [ "mem", SP(NullRequestPSP(),msp.MakeMSPOutputPSP()) ],
+           [ "mem",no_request(msp.MakeMSPOutputPSP()) ],
 
-           [ "scope_include", SP(NullRequestPSP(),scope.ScopeIncludeOutputPSP()) ],
+           [ "scope_include",no_request(scope.ScopeIncludeOutputPSP()) ],
 
-           [ "flip", SP(NullRequestPSP(),discrete.BernoulliOutputPSP()) ],
-           [ "bernoulli", SP(NullRequestPSP(),discrete.BernoulliOutputPSP()) ],
-           [ "binomial", SP(NullRequestPSP(),discrete.BinomialOutputPSP()) ],           
-           [ "categorical", SP(NullRequestPSP(),discrete.CategoricalOutputPSP()) ],
+           [ "binomial", binaryNumS(discrete.BinomialOutputPSP()) ],
+           [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
+           [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
+           [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
 
-           [ "normal", SP(NullRequestPSP(),continuous.NormalOutputPSP()) ],
-           [ "uniform_continuous", SP(NullRequestPSP(),continuous.UniformOutputPSP()) ],
-           [ "beta", SP(NullRequestPSP(),continuous.BetaOutputPSP()) ],
-           [ "gamma", SP(NullRequestPSP(),continuous.GammaOutputPSP()) ],
-           [ "student_t", SP(NullRequestPSP(),continuous.StudentTOutputPSP()) ],
+           [ "normal",binaryNumS(continuous.NormalOutputPSP()) ],
+           [ "uniform_continuous",binaryNumS(continuous.UniformOutputPSP()) ],
+           [ "beta",binaryNumS(continuous.BetaOutputPSP()) ],
+           [ "gamma",binaryNumS(continuous.GammaOutputPSP()) ],
+           [ "student_t",unaryNumS(continuous.StudentTOutputPSP()) ],
 
-           [ "dirichlet", SP(NullRequestPSP(),discrete.DirichletOutputPSP()) ],
-           [ "symmetric_dirichlet", SP(NullRequestPSP(),discrete.SymmetricDirichletOutputPSP()) ],
+           [ "dirichlet",typed_nr(discrete.DirichletOutputPSP(), [v.HomogeneousArrayType(v.NumberType())], v.SimplexType()) ],
+           [ "symmetric_dirichlet",typed_nr(discrete.SymmetricDirichletOutputPSP(), [v.NumberType(), v.NumberType()], v.SimplexType()) ],
 
-           [ "make_dir_mult", SP(NullRequestPSP(),discrete.MakerCDirMultOutputPSP()) ],
-           [ "make_uc_dir_mult", SP(NullRequestPSP(),discrete.MakerUDirMultOutputPSP()) ],
+           [ "make_dir_mult",typed_nr(discrete.MakerCDirMultOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.ArrayType()], v.AnyType(), min_req_args=1) ],
+           [ "make_uc_dir_mult",typed_nr(discrete.MakerUDirMultOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.ArrayType()], v.AnyType(), min_req_args=1) ],
 
-           [ "make_beta_bernoulli", SP(NullRequestPSP(),discrete.MakerCBetaBernoulliOutputPSP()) ],
-           [ "make_uc_beta_bernoulli", SP(NullRequestPSP(),discrete.MakerUBetaBernoulliOutputPSP()) ],
+           [ "make_sym_dir_mult",typed_nr(discrete.MakerCSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], v.AnyType(), min_req_args=2) ], # Saying AnyType here requires the underlying psp to emit a VentureValue.
+           [ "make_uc_sym_dir_mult",typed_nr(discrete.MakerUSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], v.AnyType(), min_req_args=2) ],
 
-           [ "make_sym_dir_mult", SP(NullRequestPSP(),discrete.MakerCSymDirMultOutputPSP()) ],
-           [ "make_uc_sym_dir_mult", SP(NullRequestPSP(),discrete.MakerUSymDirMultOutputPSP()) ],
+           [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], v.AnyType()) ],
+           [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], v.AnyType()) ],
 
-           [ "make_crp", SP(NullRequestPSP(),crp.MakeCRPOutputPSP()) ],
+           [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType()], v.AnyType()) ],
 
-           [ "make_lazy_hmm", SP(NullRequestPSP(),hmm.MakeUncollapsedHMMOutputPSP()) ],
+           [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], v.AnyType()) ],
   ]
 
 def builtInSPs():
