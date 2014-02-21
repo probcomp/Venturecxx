@@ -20,6 +20,8 @@ int main() {
   for(size_t i = N; --i >0;)
   {
     //cout << pmap.size() << endl;
+    assert(pmap.contains(i));
     pmap = pmap.remove(i);
+    assert(!pmap.contains(i));    
   }
 }

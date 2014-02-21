@@ -161,11 +161,11 @@ struct Node
     }
     else if (comp(key, node->key))
     {
-      return node_contains(node->left, key);
+      return node_contains(node->left, key, comp);
     }
     else if (comp(node->key, key))
     {
-      return node_contains(node->right, key);
+      return node_contains(node->right, key, comp);
     }
     else
     {
@@ -183,11 +183,11 @@ struct Node
     }
     else if (comp(key, node->key))
     {
-      return node_lookup(node->left, key);
+      return node_lookup(node->left, key, comp);
     }
     else if (comp(node->key, key))
     {
-      return node_lookup(node->right, key);
+      return node_lookup(node->right, key, comp);
     }
     else
     {
