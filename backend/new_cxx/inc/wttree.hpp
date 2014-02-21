@@ -40,7 +40,10 @@ struct Node
   Node() : size(0) {}
 
   Node(const NodePtr& left, const Key& key, const Value& value, const NodePtr& right) :
-    left(left), key(key), value(value), right(right),
+    left(left),
+    key(key),
+    value(value),
+    right(right),
     size(left->size + right->size + 1)
   {}
   
@@ -51,7 +54,6 @@ struct Node
   Value value;
   NodePtr right;
   size_t size;
-
 
   static int node_weight(const NodePtr& node)
   {
@@ -149,20 +151,21 @@ struct Node
       return tuple<Key, Value, NodePtr>(get<0>(min), get<1>(min), t_join(get<2>(min), node->key, node->value, node->right));
     }
   }
-
-  static bool node_contains(const NodePtr& node, const Key& key)
+  
+  template <typename Comp>
+  static bool node_contains(const NodePtr& node, const Key& key, const Comp& comp)
   {
     if (node->isEmpty())
     {
       return false;
     }
-    else if (key < node->key)
+    else if (comp(key, node->key))
     {
-      return node_contains(node->left, key);
+      return node_contains(node->left, key, comp);
     }
-    else if (node->key < key)
+    else if (comp(node->key, key))
     {
-      return node_contains(node->right, key);
+      return node_contains(node->right, key, comp);
     }
     else
     {
@@ -170,20 +173,21 @@ struct Node
     }
   }
 
-  static Value node_lookup(const NodePtr& node, const Key& key)
+  template <typename Comp>
+  static Value node_lookup(const NodePtr& node, const Key& key, const Comp& comp)
   {
     if (node->isEmpty())
     {
       assert(false);
       throw "Key does not exist.";
     }
-    else if (key < node->key)
+    else if (comp(key, node->key))
     {
-      return node_lookup(node->left, key);
+      return node_lookup(node->left, key, comp);
     }
-    else if (node->key < key)
+    else if (comp(node->key, key))
     {
-      return node_lookup(node->right, key);
+      return node_lookup(node->right, key, comp);
     }
     else
     {
@@ -191,21 +195,22 @@ struct Node
     }
   }
 
-  static NodePtr node_insert(const NodePtr& node, const Key& key, const Value& value)
+  template <typename Comp>
+  static NodePtr node_insert(const NodePtr& node, const Key& key, const Value& value, const Comp& comp)
   {
     if (node->isEmpty())
     {
       return NodePtr(new Node(NodePtr(new Node()), key, value, NodePtr(new Node())));
     }
-    else if (key < node->key)
+    else if (comp(key, node->key))
     {
-      return t_join(node_insert(node->left, key, value),
+      return t_join(node_insert(node->left, key, value, comp),
                     node->key, node->value, node->right);
     }
-    else if (node->key < key)
+    else if (comp(node->key, key))
     {
       return t_join(node->left, node->key, node->value,
-                    node_insert(node->right, key, value));
+                    node_insert(node->right, key, value, comp));
     }
     else
     {
@@ -213,8 +218,8 @@ struct Node
     }
   }
 
-  template <class Function>
-  static NodePtr node_adjust(const NodePtr& node, const Key& key, const Function& f)
+  template <class Function, typename Comp>
+  static NodePtr node_adjust(const NodePtr& node, const Key& key, const Function& f, const Comp& comp)
   {
     if (node->isEmpty())
     {
@@ -222,15 +227,15 @@ struct Node
       // on the way up?
       return node;
     }
-    else if (key < node->key)
+    else if (comp(key, node->key))
     {
-      return NodePtr(new Node(node_adjust(node->left, key, f),
+      return NodePtr(new Node(node_adjust(node->left, key, f, comp),
                   node->key, node->value, node->right));
     }
-    else if (node->key < key)
+    else if (comp(node->key, key))
     {
       return NodePtr(new Node(node->left, node->key, node->value,
-                  node_adjust(node->right, key, f)));
+                  node_adjust(node->right, key, f, comp)));
     }
     else
     {
@@ -238,21 +243,22 @@ struct Node
     }
   }
 
-  static NodePtr node_remove(const NodePtr& node, const Key& key)
+  template <typename Comp>
+  static NodePtr node_remove(const NodePtr& node, const Key& key, const Comp& comp)
   {
     if (node->isEmpty())
     {
       return node;
     }
-    else if (key < node->key)
+    else if (comp(key, node->key))
     {
-      return t_join(node_remove(node->left, key),
+      return t_join(node_remove(node->left, key, comp),
                     node->key, node->value, node->right);
     }
-    else if (node->key < key)
+    else if (comp(node->key, key))
     {
       return t_join(node->left, node->key, node->value,
-                    node_remove(node->right, key));
+                    node_remove(node->right, key, comp));
     }
     else
     {

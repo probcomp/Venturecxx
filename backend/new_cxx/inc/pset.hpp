@@ -11,12 +11,13 @@ At present, happens to be implemented just like a PMap, but with the
 values always being True. In principle could be impemented more
 efficiently by specializing the nodes not to store values at all.
 */
-template <typename Key>
+template <typename Key, typename Comp = std::less<Key> >
 class PSet
 {
   typedef typename Node<Key, bool>::NodePtr NodePtr;
   
   NodePtr root;
+  Comp comp;
   
   PSet(NodePtr root) : root(root) {} 
 
@@ -24,10 +25,10 @@ public:
   PSet() : root(new Node<Key, bool>()) {}
   
   bool contains(const Key& key)
-    { return Node<Key, bool>::node_contains(root, key); }
+    { return Node<Key, bool>::node_contains(root, key, comp); }
   
   PSet insert(const Key& key)
-    { return PSet(Node<Key, bool>::node_insert(root, key, true)); }
+    { return PSet(Node<Key, bool>::node_insert(root, key, true, comp)); }
   
   /*
   adjust :: (PSet k v) -> k -> (v -> v) -> PSet k v
@@ -39,10 +40,10 @@ public:
   */
   template <class Function>
   PSet adjust(const Key& key, const Function& f)
-    { return PSet(Node<Key, bool>::node_adjust(root, key, f)); }
+    { return PSet(Node<Key, bool>::node_adjust(root, key, f, comp)); }
   
   PSet remove(const Key& key)
-    { return PSet(Node<Key, bool>::node_remove(root, key)); }
+    { return PSet(Node<Key, bool>::node_remove(root, key, comp)); }
 
   size_t size() { return root->size; }
   

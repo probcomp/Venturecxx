@@ -10,12 +10,13 @@ Persistent map backed by a weight-balanced tree.
 The lookup method throws an error if the key is not found. Use
 the contains method if you aren't sure whether the key exists.
 */
-template <typename Key, typename Value>
+template <typename Key, typename Value, typename Comp = std::less<Key> >
 class PMap
 {
   typedef typename Node<Key, Value>::NodePtr NodePtr;
   
   NodePtr root;
+  Comp comp;
   
   PMap(NodePtr root) : root(root) {} 
 
@@ -23,13 +24,13 @@ public:
   PMap() : root(new Node<Key, Value>()) {}
   
   bool contains(const Key& key)
-    { return Node<Key, Value>::node_contains(root, key); }
+    { return Node<Key, Value>::node_contains(root, key, comp); }
     
   Value lookup(const Key& key)
-    { return Node<Key, Value>::node_lookup(root, key); }
+    { return Node<Key, Value>::node_lookup(root, key, comp); }
   
   PMap insert(const Key& key, const Value& value)
-    { return PMap(Node<Key, Value>::node_insert(root, key, value)); }
+    { return PMap(Node<Key, Value>::node_insert(root, key, value, comp)); }
   
   /*
   adjust :: (PMap k v) -> k -> (v -> v) -> PMap k v
@@ -41,10 +42,10 @@ public:
   */
   template <class Function>
   PMap adjust(const Key& key, const Function& f)
-    { return PMap(Node<Key, Value>::node_adjust(root, key, f)); }
+    { return PMap(Node<Key, Value>::node_adjust(root, key, f, comp)); }
   
   PMap remove(const Key& key)
-    { return PMap(Node<Key, Value>::node_remove(root, key)); }
+    { return PMap(Node<Key, Value>::node_remove(root, key, comp)); }
 
   size_t size() { return root->size; }
   
