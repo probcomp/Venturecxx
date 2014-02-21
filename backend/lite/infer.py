@@ -260,19 +260,21 @@ class PGibbsOperator(object):
 
     # Now sample a NEW particle in proportion to its weight
     finalIndex = simulateCategorical([math.exp(w) for w in xiWeights])
-    rhoWeight = rhoWeights[T-1]
-    xiWeight = xiWeights[finalIndex]
-
-    weightMinusXi = math.log(sum([math.exp(w) for w in xiWeights]) + math.exp(rhoWeight) - math.exp(xiWeight))
-    weightMinusRho = math.log(sum([math.exp(w) for w in xiWeights]))
 
     path = constructAncestorPath(ancestorIndices,T-1,finalIndex) + [finalIndex]
     assert len(path) == T
     restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,T,path)
     assertTrace(self.trace,self.scaffold)
 
+    return trace,self._compute_alpha(rhoWeights[T-1], xiWeights, finalIndex)
+
+  def _compute_alpha(self, rhoWeight, xiWeights, finalIndex):
+    xiWeight = xiWeights[finalIndex]
+
+    weightMinusXi = math.log(sum([math.exp(w) for w in xiWeights]) + math.exp(rhoWeight) - math.exp(xiWeight))
+    weightMinusRho = math.log(sum([math.exp(w) for w in xiWeights]))
     alpha = weightMinusRho - weightMinusXi
-    return trace,alpha
+    return alpha
 
   def accept(self):
     pass
