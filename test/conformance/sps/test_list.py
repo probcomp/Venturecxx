@@ -1,3 +1,5 @@
+from nose.tools import eq_
+from math import sin, cos
 from venture.test.config import get_ripl
 
 def testList1():
@@ -98,6 +100,9 @@ class TestListExtended(object):
   def testSize1(self):
     assert self.ripl.predict("(size y)") == 3
 
+  def testMapOverListOfSPs(self):
+    eq_(self.ripl.predict("(vmap_list (lambda (f) (f 1)) (list sin cos (lambda (x) (+ (* (sin x) (sin x)) (* (cos x) (cos x))))))"), [ sin(1), cos(1), 1])
+
 class TestMapListExtended(object):
   _multiprocess_can_split_ = True
   def setup(self):
@@ -121,3 +126,6 @@ class TestMapListExtended(object):
 
   def testSize1(self):
     assert self.ripl.predict("(size y)") == 3
+
+  def testMapOverListOfSPs(self):
+    eq_(self.ripl.predict("(map_list (lambda (f) (f 1)) (list sin cos (lambda (x) (+ (* (sin x) (sin x)) (* (cos x) (cos x))))))"), [ sin(1), cos(1), 1])
