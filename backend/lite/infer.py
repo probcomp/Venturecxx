@@ -361,16 +361,14 @@ class ParticlePGibbsOperator(object):
     return particles[finalIndex],self._compute_alpha(particleWeights, finalIndex)
 
   def _compute_alpha(self, particleWeights, finalIndex):
-    xiWeight = particleWeights[finalIndex]
-    rhoWeight = particleWeights[-1]
+    # Remove the weight of the chosen xi from the list instead of
+    # trying to subtract in logspace to prevent catastrophic
+    # cancellation like the non-functional case
+    particleWeightsNoXi = copy.copy(particleWeights)
+    particleWeightsNoXi.pop(finalIndex)
 
-    totalExpWeight = sum([math.exp(w) for w in particleWeights])
-    totalXiExpWeight = sum([math.exp(w) for w in particleWeights[0:-1]])
-
-    weightMinusXi = math.log(totalExpWeight - math.exp(xiWeight)) if (totalExpWeight - math.exp(xiWeight)) > 0 else float("-inf")
-    weightMinusRho = math.log(totalXiExpWeight) if totalXiExpWeight > 0 else float("-inf")
-
-#    print particleWeights,weightMinusXi,weightMinusRho
+    weightMinusXi = logaddexp(particleWeightsNoXi)
+    weightMinusRho = logaddexp(particleWeights[0:-1])
     alpha = weightMinusRho - weightMinusXi
     return alpha
 
