@@ -2,7 +2,35 @@
 #include "concrete_trace.h"
 
 Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
-Particle::Particle(Particle * outerParticle) { assert(false); }
+Particle::Particle(Particle * outerParticle):
+  baseTrace(outerParticle->baseTrace),
+  unconstrainedChoices(outerParticle->unconstrainedChoices),
+  constrainedChoices(outerParticle->constrainedChoices),
+  arbitraryErgodicKernels(outerParticle->arbitraryErgodicKernels),
+
+  families(outerParticle->families),
+
+  scopes(outerParticle->scopes),
+
+  esrRoots(outerParticle->esrRoots),
+  numRequests(outerParticle->numRequests),
+
+  values(outerParticle->values),
+  madeSPs(outerParticle->madeSPs),
+
+  regenCounts(outerParticle->regenCounts),
+
+  newMadeSPFamilies(outerParticle->newMadeSPFamilies),
+  newChildren(outerParticle->newChildren)
+
+  {
+    for (map<Node*, shared_ptr<SPAux> >::iterator iter = outerParticle->madeSPAuxs.begin();
+	 iter != outerParticle->madeSPAuxs.end();
+	 ++iter)
+    {
+      madeSPAuxs[iter->first] = iter->second->copy();
+    }
+  }
 
 /* Methods */
 
