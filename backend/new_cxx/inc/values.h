@@ -88,6 +88,7 @@ struct VentureSimplex : VentureValue
 {
   VentureSimplex(const Simplex & ps): ps(ps) {}
   const Simplex& getSimplex() const { return ps; }
+  int size() const { return ps.size(); }
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   string toString() const;
