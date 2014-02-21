@@ -1,9 +1,10 @@
 #ifndef VALUE_H
 #define VALUE_H
 
+#include "Eigen/Dense"
 #include "types.h"
 #include "srs.h"
-#include "Eigen/Dense"
+
 
 #include <boost/python/object.hpp>
 #include <boost/python/dict.hpp>

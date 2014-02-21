@@ -65,8 +65,6 @@ struct Particle : Trace
   void clearValue(Node * node);
 
 
-  void observeNode(Node * node,VentureValuePtr value);
-
   void setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord);
   void destroyMadeSPRecord(Node * makerNode);
 

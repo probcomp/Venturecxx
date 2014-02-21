@@ -55,7 +55,14 @@ Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
   /* These will never be called */
 
   /* Regen mutations */
-  void Particle::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode) { assert(false); }
+  void Particle::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode) 
+  {
+    // Note: this mutates, because it never crosses a particle
+    assert(!baseTrace->getESRParents(outputNode));
+    if (!esrParents.contains(node)) { esrParents = esrParents.insert(node,vector<RootOfFamily>()); }
+    esrParents.lookup(node).push_back(esrRoot);
+  }
+
   void Particle::reconnectLookup(LookupNode * lookupNode) { assert(false); }
   void Particle::incNumRequests(RootOfFamily root) 
   {
@@ -120,9 +127,6 @@ shared_ptr<SPAux> Particle::getMadeSPAux(Node * makerNode)
 
   VentureValuePtr Particle::getObservedValue(Node * node) { assert(false); }
 
-  bool Particle::isMakerNode(Node * node) { assert(false); }
-  bool Particle::isConstrained(Node * node) { assert(false); }
-  bool Particle::isObservation(Node * node) { assert(false); }
 
   /* Primitive setters */
   void Particle::setValue(Node * node, VentureValuePtr value) 
@@ -131,28 +135,64 @@ shared_ptr<SPAux> Particle::getMadeSPAux(Node * makerNode)
     values = values.insert(node,value);
   }
 
-  void Particle::clearValue(Node * node) { assert(false); }
+void Particle::clearValue(Node * node)  { setValue(node,VentureValuePtr(); }
 
 
-  void Particle::observeNode(Node * node,VentureValuePtr value) { assert(false); }
+    void Particle::setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord) 
+  { 
+    madeSPs[makerNode] = spRecord->sp;
+    madeSPAuxs[makerNode] = spRecord->spAux;
+    newMadeSPFamilies[makerNode] = PSet<RootOfFamily>();
+  }
 
-  void Particle::setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord) { assert(false); }
-  void Particle::destroyMadeSPRecord(Node * makerNode) { assert(false); }
 
-  void Particle::setMadeSP(Node * makerNode,shared_ptr<SP> sp) { assert(false); }
-  void Particle::setMadeSPAux(Node * makerNode,shared_ptr<SPAux> spaux) { assert(false); }
+  void Particle::setMadeSP(Node * makerNode,shared_ptr<SP> sp) 
+  { 
+    assert(!madeSPs.contains(makerNode));
+    assert(!baseTrace->getMadeSP(makerNode));
+    madeSPs = madeSPs.insert(makerNode,sp);
+  }
 
-  void Particle::setChildren(Node * node,set<Node*> children) { assert(false); }
-  void Particle::setESRParents(Node * node,const vector<RootOfFamily> & esrRoots) { assert(false); }
+  void Particle::setMadeSPAux(Node * makerNode,shared_ptr<SPAux> spaux) 
+  { 
+    assert(!madeSPAuxs.count(makerNode));
+    assert(!baseTrace->getMadeSPAux(makerNode));
+    madeSPAuxs.insert(node,aux);
+  }
 
-  void Particle::setNumRequests(Node * node,int num) { assert(false); }
 
   /* SPFamily operations */
-  void Particle::registerMadeSPFamily(Node * makerNode,FamilyID id,RootOfFamily esrRoot) { assert(false); }
-  void Particle::unregisterMadeSPFamily(Node * makerNode,FamilyID id) { assert(false); }
+  void Particle::registerMadeSPFamily(Node * makerNode,FamilyID id,RootOfFamily esrRoot) 
+  { 
+    assert(false); // TODO handle LAMBDA
+    // if (!newMadeSPFamilies.contains(makerNode))
+    // {
+    //   newMadeSPFamilies = newMadeSPFamilies.insert(makerNode,PMap<FamilyID,RootOfFamily>());
+    // }
+    // newMadeSPFamilies = newMadeSPFamilies.adjust(makerNode,lambda ids: ids.insert(id,esrRoot));
+  }
 
-  bool Particle::containsMadeSPFamily(Node * makerNode, FamilyID id) { assert(false); }
-  RootOfFamily Particle::getMadeSPFamilyRoot(Node * makerNode, FamilyID id) { assert(false); }
+  bool Particle::containsMadeSPFamily(Node * makerNode, FamilyID id) 
+  { 
+    if (newMadeSPFamilies.contains(makerNode))
+    {
+      if (newMadeSPFamilies.lookup(makerNode).contains(id)) { return true; }
+    }
+    else if (baseTrace->getMadeSPFamilies(makerNode).containsFamily(id)) { return true; }
+    else { return false; }
+  }
+
+  RootOfFamily Particle::getMadeSPFamilyRoot(Node * makerNode, FamilyID id) 
+  { 
+    if (newMadeSPFamilies.contains(makerNode) && newMadeSPFamilies.lookup(makerNode).contains(id))
+    {
+      return newMadeSPFamilies.lookup(makerNode).lookup(id);
+    }
+    else
+    {
+      return baseTrace->getMadeSPFamilyRoot(makerNode,id);
+    }
+  }
 
   /* Inference (computing reverse weight) */
   double Particle::logDensityOfBlock(ScopeID scope) { assert(false); }
@@ -173,3 +213,18 @@ shared_ptr<SPAux> Particle::getMadeSPAux(Node * makerNode)
   void Particle::unregisterConstrainedChoice(Node * node) { assert(false); throw "should never be called"; }
 set<Node*> Particle::getChildren(Node * node) { assert(false); throw "should never be called"; }
   int Particle::getNumRequests(RootOfFamily root) { assert(false); throw "should never be called"; }
+
+  void Particle::destroyMadeSPRecord(Node * makerNode) { assert(false); }
+  void Particle::unregisterMadeSPFamily(Node * makerNode,FamilyID id) { assert(false); }
+
+/* Probably called */
+  bool Particle::isMakerNode(Node * node) { assert(false); }
+  bool Particle::isConstrained(Node * node) { assert(false); }
+  bool Particle::isObservation(Node * node) { assert(false); }
+
+
+/* Probably not called */
+  void Particle::setChildren(Node * node,set<Node*> children) { assert(false); }
+  void Particle::setESRParents(Node * node,const vector<RootOfFamily> & esrRoots) { assert(false); }
+
+  void Particle::setNumRequests(Node * node,int num) { assert(false); }
