@@ -257,7 +257,7 @@ def testMrMap():
 # run tests solely in Python interpreter
 
 
-#tests = [testMrMap, testMulti, testSnapshot, testDirectives,testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
+tests = [testMrMap, testMulti, testSnapshot, testDirectives,testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
 
 
 def AllIPParallel(new_engines=False,sleeptime=30):
@@ -274,12 +274,10 @@ def AllIPParallel(new_engines=False,sleeptime=30):
     return 'testAll complete'
 
 
-
 def start_engines(no_engines,sleeptime=20):
-    start = subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines,'&'])
+    st = subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines,'&'])
     time.sleep(sleeptime)
 
-   
 def stop_engines(): 
     stop=subprocess.Popen(['ipcluster', 'stop'])
     stop.wait()
@@ -295,7 +293,11 @@ file_dir = os.path.dirname(os.path.realpath(__file__))
 loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] )   
 # [:-2] because current file is /Venturecxx/test/venturemagics
 print 'REACHED EXEC FILE'
-%run loc_ip_parallel
+%run {loc_ip_parallel}
 
 
-AllIPParallel
+AllIPParallel()
+stop_engines()
+
+
+
