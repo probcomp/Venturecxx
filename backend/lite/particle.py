@@ -49,7 +49,7 @@ class Particle(Trace):
     self.numRequests = PMap() # PMap Node Int
     self.regenCounts = PMap() # PMap Node int
     self.newMadeSPFamilies = PMap() # PMap Node (PMap id Node)
-    self.newChildren = PMap() # PMap Node [Node] # TODO Should be PSet Node instead of [Node]
+    self.newChildren = PMap() # PMap Node (PSet Node)
 
     # (2) Maps to things that change outside of particle methods
     self.madeSPAuxs = {}
@@ -127,8 +127,8 @@ class Particle(Trace):
     self.numRequests = self.numRequests.adjust(node,lambda nr: nr + 1)
 
   def addChildAt(self,node,child):
-    if not node in self.newChildren: self.newChildren = self.newChildren.insert(node,[])
-    self.newChildren.lookup(node).append(child)
+    if not node in self.newChildren: self.newChildren = self.newChildren.insert(node,PSet())
+    self.newChildren = self.newChildren.adjust(node, lambda children: children.insert(child))
 
 ### SPFamilies
 
