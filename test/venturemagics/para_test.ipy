@@ -295,7 +295,7 @@ loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturem
 print 'REACHED EXEC FILE'
 %run {loc_ip_parallel}
 
-#assert False,'PARA TEST FAIL'
+assert False,'PARA TEST FAIL'
 AllIPParallel()
 print 'PARATEST PASSED'
 #stop_engines()
