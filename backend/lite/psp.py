@@ -23,7 +23,7 @@ class PSP(object):
   def canEnumerate(self): return False
 
   def hasVariationalLKernel(self): return False
-  def getVariationalLKernel(self,trace,node): return DefaultVariationalLKernel(trace,self,node)
+  def getVariationalLKernel(self,args): return DefaultVariationalLKernel(self, args)
 
   def hasSimulationKernel(self): return False
   def hasDeltaKernel(self): return False
@@ -112,8 +112,8 @@ class TypedPSP(PSP):
   def canEnumerate(self): return self.psp.canEnumerate()
 
   def hasVariationalLKernel(self): return self.psp.hasVariationalLKernel()
-  def getVariationalLKernel(self,trace,node):
-    return TypedVariationalLKernel(self.psp.getVariationalLKernel(trace, node), self.f_type)
+  def getVariationalLKernel(self,args):
+    return TypedVariationalLKernel(self.psp.getVariationalLKernel(self.f_type.unwrap_args(args)), self.f_type)
 
   def hasSimulationKernel(self): return self.psp.hasSimulationKernel()
   def hasDeltaKernel(self): return self.hasDeltaKernel()

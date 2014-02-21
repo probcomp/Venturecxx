@@ -5,7 +5,7 @@ from omegadb import OmegaDB
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
-from node import ApplicationNode
+from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
 from utils import simulateCategorical, cartesianProduct
 from nose.tools import assert_almost_equal
@@ -74,7 +74,7 @@ def registerVariationalLKernels(trace,scaffold):
        not trace.isConstrainedAt(node) and \
        trace.pspAt(node).hasVariationalLKernel() and \
        not scaffold.isResampling(node.operatorNode):
-      scaffold.lkernels[node] = trace.pspAt(node).getVariationalLKernel(trace,node)
+      scaffold.lkernels[node] = trace.pspAt(node).getVariationalLKernel(Args(trace,node))
       hasVariational = True
   return hasVariational
 
