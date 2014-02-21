@@ -70,17 +70,7 @@ def collectSamples(ripl,address,num_samples=None,infer=None):
   return predictions
 
 def defaultInfer():
-  numTransitionsPerSample = default_num_transitions_per_sample()
-  kernel = config["kernel"]
-  scope = config["scope"]
-  block = config["block"]
-
-  with_mutation = bool_like_option("with_mutation", True)
-  particles = int(config["particles"]) if "particles" in config else None
-  return {"transitions":numTransitionsPerSample,
-          "kernel":kernel,
-          "scope":scope,
-          "block":block,
-          "with_mutation":with_mutation,
-          "particles":particles
-          }
+  from venture.ripl.utils import parse, expToDict
+  candidate = expToDict(parse(config["infer"]))
+  candidate["transitions"] = default_num_transitions_per_sample()
+  return candidate
