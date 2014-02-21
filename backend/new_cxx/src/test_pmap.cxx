@@ -4,12 +4,12 @@
 
 using namespace std;
 
-using pmap::PMap;
+using persistent::PMap;
 
 int main() {
   PMap<int, int> pmap;
   
-  size_t N = 10000000;
+  size_t N = 1000000;
   
   for (size_t i = 0; i < N; ++i)
   {
