@@ -84,7 +84,6 @@ struct Particle : Trace
   RootOfFamily getMadeSPFamilyRoot(Node * makerNode, FamilyID id);
 
   /* Inference (computing reverse weight) */
-  double logDensityOfBlock(ScopeID scope);
   int numBlocksInScope(ScopeID scope);
 
 /* END methods */
