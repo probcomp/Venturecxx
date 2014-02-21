@@ -34,30 +34,6 @@ def teardown_function():
     stop_engines()
 
 
-#@with_setup(setup_function,teardown_function)
-def testAddRemoveSize():
-    clear_all_engines()
-    no_rips = 4
-    vv=MRipl(no_rips)
-
-    def check_size(mr,no_rips):
-        survey = mr.dview.apply(lambda mrid: len(mripls[mrid]), mr.mrid)
-        pred = len(mr.predict('(+ 1 1)'))
-
-        sizes = [mr.no_ripls, len(mr.seeds),
-                 len(mr.ripls_location), sum(survey), pred]
-        return sizes == ( [no_rips]*len(sizes) )
-
-    assert(check_size(vv,no_rips))
-
-    no_rips += 2
-    vv.add_ripls(2)
-    assert(check_size(vv,no_rips))
-
-    no_rips -= 2
-    vv.remove_ripls(2)
-    assert(check_size(vv,no_rips))
-    print 'IP_addremPASS'
 
 ### IPython Parallel Magics
 ## Use: See examples in /examples
@@ -177,8 +153,8 @@ class MRipl():
         self.cli = Client() if not(client) else client
         self.dview = self.cli[:]
         self.dview.block = True
-        def p_getpids(): import os; return os.getpid()
-        self.pids = self.dview.apply(p_getpids)
+        # def p_getpids(): import os; return os.getpid()
+        # self.pids = self.dview.apply(p_getpids)
       
         self.dview.execute('from venture.shortcuts import make_church_prime_ripl')
         
@@ -205,8 +181,11 @@ class MRipl():
             
             seeds = seeds_lists[mrid]
             seeds.append(seed)
+        print 'mk_ripl module', mk_ripl.__module__
         # self.dview.push( {'mk_ripl':mk_ripl})
-        print self.dview.apply(lambda: mk_ripl.__module__)
+        # self.dview.execute('mk_ripl = lambda: "RRRIPL"')
+        #print self.dview.apply(lambda: mk_ripl)
+        
         
         self.dview.map( mk_ripl, self.seeds, [self.mrid]*self.no_ripls )
         self.update_ripls_info()
@@ -581,4 +560,32 @@ def mr_map_nomagic(mripl,proc):
     out_dict = {'info':{'mripl':mripl.name_mrid,'proc':proc_name}, 'out':outputs_by_ripl }
     
     return out_dict
+
+def setup(): return None
+def tear(): return None
+
+#@with_setup(setup,tear)
+def testAddRemoveSize():
+    clear_all_engines()
+    no_rips = 4
+    vv=MRipl(no_rips)
+
+    def check_size(mr,no_rips):
+        survey = mr.dview.apply(lambda mrid: len(mripls[mrid]), mr.mrid)
+        pred = len(mr.predict('(+ 1 1)'))
+
+        sizes = [mr.no_ripls, len(mr.seeds),
+                 len(mr.ripls_location), sum(survey), pred]
+        return sizes == ( [no_rips]*len(sizes) )
+
+    assert(check_size(vv,no_rips))
+
+    no_rips += 2
+    vv.add_ripls(2)
+    assert(check_size(vv,no_rips))
+
+    no_rips -= 2
+    vv.remove_ripls(2)
+    assert(check_size(vv,no_rips))
+    print 'IP_addremPASS'
 
