@@ -126,6 +126,12 @@ class Particle(Trace):
     if not node in self.numRequests: self.numRequests = self.numRequests.insert(node,self.base.numRequestsAt(node))
     self.numRequests = self.numRequests.adjust(node,lambda nr: nr + 1)
 
+  def childrenAt(self,node):
+    if node in self.newChildren:
+      return self.base.childrenAt(node).union(self.newChildren.lookup(node))
+    else:
+      return self.base.childrenAt(node)
+
   def addChildAt(self,node,child):
     if not node in self.newChildren: self.newChildren = self.newChildren.insert(node,PSet())
     self.newChildren = self.newChildren.adjust(node, lambda children: children.insert(child))
@@ -209,7 +215,6 @@ class Particle(Trace):
 ################### Methods that should never be called on particles
   def unregisterFamilyAt(self,node,esrId): raise Exception("Should not be called on a particle")
   def popEsrParentAt(self,node): raise Exception("Should not be called on a particle")
-  def childrenAt(self,node): raise Exception("Should not be called on a particle")
   def removeChildAt(self,node,child): raise Exception("Should not be called on a particle")
   def decRequestsAt(self,node): raise Exception("Should not be called on a particle")
   def unregisterAEKernel(self,node): raise Exception("Should not be called on a particle")
