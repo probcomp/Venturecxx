@@ -60,6 +60,7 @@ map<string,SP*> initBuiltInSPs()
   /* Discrete SPs */
   m["bernoulli"] = new SP(new NullRequestPSP(), new BernoulliOutputPSP());
   m["flip"] = new SP(new NullRequestPSP(), new BernoulliOutputPSP());
+  m["binomial"] = new SP(new NullRequestPSP(), new BinomialOutputPSP());
   m["categorical"] = new SP(new NullRequestPSP(), new CategoricalOutputPSP());
   m["symmetric_dirichlet"] = new SP(new NullRequestPSP(), new SymmetricDirichletOutputPSP());
 

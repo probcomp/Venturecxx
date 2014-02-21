@@ -23,6 +23,16 @@ double BernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> ar
   else { return log(1 - p); }
 }
 
+VentureValuePtr BinomialOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+{
+  return VentureValuePtr(new VentureAtom(gsl_ran_binomial (rng,args->operandValues[0]->getDouble(),args->operandValues[1]->getInt())));
+}
+
+double BinomialOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+{
+  return gsl_ran_binomial_pdf(value->getInt(),args->operandValues[0]->getDouble(), args->operandValues[1]->getInt());
+}
+
 
 VentureValuePtr CategoricalOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const 
 {
