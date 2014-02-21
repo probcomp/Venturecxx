@@ -123,7 +123,7 @@ struct Particle : Trace
 
   /* persistent additions */
   PMap<Node*, PMap<FamilyID,RootOfFamily> > newMadeSPFamilies;
-  PMap<Node*,set<Node*> > newChildren;
+  PMap<Node*,PSet<Node*> > newChildren;
 
   /* Non-persistent */
   map<Node*, shared_ptr<SPAux> > madeSPAuxs;

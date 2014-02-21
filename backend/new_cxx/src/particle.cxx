@@ -2,7 +2,7 @@
 #include "concrete_trace.h"
 
 Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
-  Particle::Particle(Particle * outerParticle) { assert(false); }
+Particle::Particle(Particle * outerParticle) { assert(false); }
 
 /* Methods */
 
@@ -22,12 +22,15 @@ Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
 
   void Particle::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
   { 
-    assert(false); // no lambda yet
-    // assert(block);
-    // if (!scopes.contains(scope)) { scopes = scopes.insert(scope,PMap<ScopeID,PMap<BlockID,PSet<Node*> > >()); }
-    // if (!scopes.lookup(scope).contains(block)) { scopes = scopes.adjust(scope,
-    // 									lambda blocks: blocks.insert(block,PSet<Node*>())); }
-    // scopes = scopes.adjust(scope,lambda blocks: blocks.adjust(block,lambda pnodes: pnodes.insert(node)));
+    assert(block);
+    if (!scopes.contains(scope)) { scopes = scopes.insert(scope,PMap<BlockID,PSet<Node*> >()); }
+    if (!scopes.lookup(scope).contains(block)) 
+    { 
+      PMap<BlockID,PSet<Node*> > newBlock = scopes.lookup(scope).insert(block,PSet<Node*>());
+      scopes = scopes.insert(scope,newBlock);
+   } 
+    PSet<Node*> newPNodes = scopes.lookup(scope).lookup(block).insert(node);
+    scopes = scopes.insert(scope,scopes.lookup(scope).insert(block,newPNodes));
   }
 
   void Particle::registerConstrainedChoice(Node * node) 
@@ -48,11 +51,19 @@ Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
   }
 
   void Particle::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
-  { 
-    assert(false); // TODO
-  }
+  {
+    PSet<Node*> newPNodes = scopes.lookup(scope).lookup(block).remove(node);
+    scopes = scopes.insert(scope,scopes.lookup(scope).insert(block,newPNodes));
 
-  /* These will never be called */
+    if (scopes.lookup(scope).lookup(block).size() == 0)
+    { 
+      scopes = scopes.insert(scope,scopes.lookup(scope).remove(block));
+    }
+    if (scopes.lookup(scope).size() == 0)
+    {
+      scopes = scopes.remove(scope);
+    }
+  }
 
   /* Regen mutations */
   void Particle::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode) 
@@ -66,22 +77,19 @@ Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
   void Particle::reconnectLookup(LookupNode * lookupNode) { assert(false); }
   void Particle::incNumRequests(RootOfFamily root) 
   {
-    assert(false); // TODO handle LAMBDA
-    // if (!numRequests.contains(node)) { numRequests = numRequests.insert(node,baseTrace->getNumRequests(node)); }
-    // numRequests = numRequests.adjust(node,lambda nr: nr + 1);
+    if (!numRequests.contains(root)) { numRequests = numRequests.insert(root,baseTrace->getNumRequests(root)); }
+    numRequests = numRequests.insert(root,numRequests.lookup(root) + 1);
   }
   void Particle::incRegenCount(shared_ptr<Scaffold> scaffold,Node * node) 
   {
-    assert(false); // TODO handle LAMBDA
-    // if (!regenCounts.contains(node)) { regenCounts = regenCounts.insert(node,0); }
-    // regenCounts = regenCounts.adjust(node,lambda rc: rc + 1);
+    if (!regenCounts.contains(node)) { regenCounts = regenCounts.insert(node,0); }
+    regenCounts = regenCounts.insert(node,regenCounts.lookup(node) + 1);
   }
 
   void Particle::addChild(Node * node, Node * child) 
   { 
-    assert(false); // TODO handle LAMBDA
-    // if (!newChildren.contains(node)) { newChildren = newChildren.insert(node,PSet<Node*>()); }
-    // newChildren = newChildren.adjust(node, lambda children: children.insert(child));
+    if (!newChildren.contains(node)) { newChildren = newChildren.insert(node,PSet<Node*>()); }
+    newChildren = newChildren.insert(node, newChildren.lookup(node).insert(child)); 
   }
 
 
@@ -164,12 +172,11 @@ void Particle::setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRe
   /* SPFamily operations */
   void Particle::registerMadeSPFamily(Node * makerNode,FamilyID id,RootOfFamily esrRoot) 
   { 
-    assert(false); // TODO handle LAMBDA
-    // if (!newMadeSPFamilies.contains(makerNode))
-    // {
-    //   newMadeSPFamilies = newMadeSPFamilies.insert(makerNode,PMap<FamilyID,RootOfFamily>());
-    // }
-    // newMadeSPFamilies = newMadeSPFamilies.adjust(makerNode,lambda ids: ids.insert(id,esrRoot));
+    if (!newMadeSPFamilies.contains(makerNode))
+    {
+      newMadeSPFamilies = newMadeSPFamilies.insert(makerNode,PMap<FamilyID,RootOfFamily>());
+    }
+    newMadeSPFamilies = newMadeSPFamilies.insert(makerNode,newMadeSPFamilies.lookup(makerNode).insert(id,esrRoot));    
   }
 
   bool Particle::containsMadeSPFamily(Node * makerNode, FamilyID id) 
