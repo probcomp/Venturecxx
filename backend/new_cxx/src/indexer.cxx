@@ -10,13 +10,25 @@ ScaffoldIndexer::ScaffoldIndexer(ScopeID scope,BlockID block): scope(scope),bloc
 shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(ConcreteTrace * trace) const
 {
   if (dynamic_pointer_cast<VentureSymbol>(block) && block->getSymbol() == "one")
-  {
-    BlockID actualBlock = trace->sampleBlock(scope);
-    vector<set<Node*> > setsOfPNodes;
-    setsOfPNodes.push_back(trace->getNodesInBlock(scope,actualBlock));
-    return constructScaffold(trace,setsOfPNodes);
-  }
-  else { assert(false); }
+    {
+      BlockID actualBlock = trace->sampleBlock(scope);
+      vector<set<Node*> > setsOfPNodes;
+      setsOfPNodes.push_back(trace->getNodesInBlock(scope,actualBlock));
+      return constructScaffold(trace,setsOfPNodes);
+    }
+  else if (dynamic_pointer_cast<VentureSymbol>(block) && block->getSymbol() == "all")
+    {
+      assert(false);
+    }
+  else if (dynamic_pointer_cast<VentureSymbol>(block) && block->getSymbol() == "ordered")
+    {
+      assert(false);
+    }
+  else
+    {
+      vector<set<Node*> > setsOfPNodes(1,trace->getNodesInBlock(scope,block));
+      return constructScaffold(trace,setsOfPNodes);
+    }
 }
 
 
@@ -26,5 +38,7 @@ double ScaffoldIndexer::logDensityOfIndex(Trace * trace, shared_ptr<Scaffold> sc
   {
     return trace->logDensityOfBlock(scope);
   }
-  else { assert(false); }
+  else if (dynamic_pointer_cast<VentureSymbol>(block) && block->getSymbol() == "all") { return 0; }
+  else if (dynamic_pointer_cast<VentureSymbol>(block) && block->getSymbol() == "ordered") { return 0; }
+  else { return 0; }
 }
