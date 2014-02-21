@@ -2,15 +2,15 @@
 #define TYPES_H
 
 #include <boost/shared_ptr.hpp>
-#include <boost/container/vector.hpp>
 #include <map>
 #include <set>
 #include <iostream>
+#include <vector>
 
 using boost::shared_ptr;
 using boost::dynamic_pointer_cast;
 using boost::static_pointer_cast;
-using boost::container::vector;
+using std::vector;
 using std::map;
 using std::set;
 using std::string;

@@ -203,7 +203,7 @@ VentureValuePtr MakeUCSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_r
 
   UCDirMultSPAux * spAux = new UCDirMultSPAux(n);
 
-  gsl_ran_dirichlet(rng,n,alphaVector.data(),spAux->theta);
+  gsl_ran_dirichlet(rng,n,&alphaVector[0],spAux->theta);
 
   return VentureValuePtr(new VentureSPRecord(sp,spAux));
 }
@@ -222,7 +222,7 @@ double MakeUCSymDirMultOutputPSP::logDensity(VentureValuePtr value, shared_ptr<A
   vector<double> alphaVector(n, alpha);
   assert(alphaVector.size() == spAux->counts.size());
 
-  return gsl_ran_dirichlet_lnpdf(n,alphaVector.data(),spAux->theta);
+  return gsl_ran_dirichlet_lnpdf(n,&alphaVector[0],spAux->theta);
 }
 
 // Note: odd design
