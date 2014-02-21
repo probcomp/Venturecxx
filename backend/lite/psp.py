@@ -113,12 +113,11 @@ class TypedPSP(PSP):
 
   def hasVariationalLKernel(self): return self.psp.hasVariationalLKernel()
   def getVariationalLKernel(self,trace,node):
-    # TODO Is this right?  Or should I somehow wrap the variational
-    # LKernel so it deals with the types properly?
-    return self.psp.getVariationalLKernel(trace, node)
+    return TypedVariationalLKernel(self.psp.getVariationalLKernel(trace, node), self.f_type)
 
   def hasSimulationKernel(self): return self.psp.hasSimulationKernel()
   def hasDeltaKernel(self): return self.hasDeltaKernel()
+  # TODO Wrap the simulation and delta kernels properly (once those are tested)
 
   def description(self,name):
     # TODO Automatically add the type signature?
@@ -145,3 +144,9 @@ class TypedLKernel(LKernel):
     return self.kernel.reverseWeight(trace,
                                      self.f_type.unwrap_return(oldValue),
                                      self.f_type.unwrap_args(args))
+
+class TypedVariationalLKernel(TypedLKernel):
+  def gradientOfLogDensity(self, value, args):
+    return self.kernel.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
+  def updateParameters(self, gradient, gain, stepSize):
+    return self.kernel.updateParameters(gradient, gain, stepSize)
