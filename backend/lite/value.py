@@ -7,6 +7,9 @@ from abc import ABCMeta
 from numbers import Number
 from request import Request # TODO Pull that file in here?
 
+# TODO Define reasonable __str__ and/or __repr__ methods for all the
+# values and all the types.
+
 class VentureValue(object):
   __metaclass__ = ABCMeta
 
