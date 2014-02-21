@@ -353,6 +353,14 @@ class ParticlePGibbsOperator(object):
     # Now sample a NEW particle in proportion to its weight
     finalIndex = simulateCategorical([math.exp(w) for w in particleWeights[0:-1]])
     assert finalIndex < P
+
+    self.finalIndex = finalIndex
+    self.particles = particles
+
+    # TODO need to return a trace as well
+    return particles[finalIndex],self._compute_alpha(particleWeights, finalIndex)
+
+  def _compute_alpha(self, particleWeights, finalIndex):
     xiWeight = particleWeights[finalIndex]
     rhoWeight = particleWeights[-1]
 
@@ -364,12 +372,7 @@ class ParticlePGibbsOperator(object):
 
 #    print particleWeights,weightMinusXi,weightMinusRho
     alpha = weightMinusRho - weightMinusXi
-
-    self.finalIndex = finalIndex
-    self.particles = particles
-
-    # TODO need to return a trace as well
-    return particles[finalIndex],alpha
+    return alpha
 
   def accept(self):
     self.particles[self.finalIndex].commit()
