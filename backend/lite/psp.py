@@ -53,7 +53,7 @@ class FunctionType(object): # TODO make this a VentureType?  With conversions!?
   """An object loosely representing a Venture function type.  It knows
 the types expected for the arguments and the return, and thus knows
 how to wrap and unwrap individual values or Args objects.  This is
-used in the implementation of TypedPSP and TypedAAALKernel."""
+used in the implementation of TypedPSP and TypedLKernel."""
   def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
     self.args_types = args_types
     self.return_type = return_type
@@ -106,7 +106,7 @@ class TypedPSP(PSP):
   def childrenCanAAA(self):
     return self.psp.childrenCanAAA()
   def getAAALKernel(self):
-    return TypedAAALKernel(self.psp.getAAALKernel(), self.f_type)
+    return TypedLKernel(self.psp.getAAALKernel(), self.f_type)
 
   def makesHSRs(self): return self.psp.makeHSRs()
   def canEnumerate(self): return self.psp.canEnumerate()
@@ -128,7 +128,7 @@ class TypedPSP(PSP):
   def logDensityOfCounts(self,aux):
     return self.psp.logDensityOfCounts(aux)
 
-class TypedAAALKernel(LKernel):
+class TypedLKernel(LKernel):
   def __init__(self, kernel, f_type):
     self.kernel = kernel
     self.f_type = f_type
