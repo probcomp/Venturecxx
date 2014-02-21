@@ -167,15 +167,17 @@ class EnumerativeGibbsOperator(object):
 
     # Now sample a NEW particle in proportion to its weight
     finalIndex = simulateCategorical([math.exp(w) for w in xiWeights])
-    xiWeight = xiWeights[finalIndex]
     self.xiDB = xiDBs[finalIndex]
-
-    weightMinusXi = math.log(sum([math.exp(w) for w in xiWeights]) + math.exp(rhoWeight) - math.exp(xiWeight))
-    weightMinusRho = math.log(sum([math.exp(w) for w in xiWeights]))
 
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.xiDB,{})
 
-    return trace,weightMinusRho - weightMinusXi
+    return trace,self._compute_alpha(rhoWeight, xiWeights, finalIndex)
+
+  def _compute_alpha(self, rhoWeight, xiWeights, finalIndex):
+    xiWeight = xiWeights[finalIndex]
+    weightMinusXi = math.log(sum([math.exp(w) for w in xiWeights]) + math.exp(rhoWeight) - math.exp(xiWeight))
+    weightMinusRho = math.log(sum([math.exp(w) for w in xiWeights]))
+    return weightMinusRho - weightMinusXi
 
   def accept(self): pass
   def reject(self):
