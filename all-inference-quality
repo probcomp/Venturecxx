@@ -22,6 +22,6 @@ function test_inference_program() {
 }
 
 test_inference_program "(mh default one 50)"
-test_inference_program "(pgibbs default ordered 10 3)"
 test_inference_program "(func-pgibbs default ordered 10 3)"
+test_inference_program "(pgibbs default ordered 10 3)"
 test_inference_program "(meanfield default one 10 10)"
