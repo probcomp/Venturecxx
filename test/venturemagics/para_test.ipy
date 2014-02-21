@@ -297,6 +297,7 @@ print 'REACHED EXEC FILE'
 
 
 AllIPParallel()
+print 'PARATEST PASSED'
 stop_engines()
 
 
