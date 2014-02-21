@@ -7,9 +7,10 @@ from detach import detachAndExtract
 from scaffold import constructScaffold
 from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
-from utils import simulateCategorical, cartesianProduct
+from utils import simulateCategorical, cartesianProduct, logaddexp
 from nose.tools import assert_almost_equal
 import sys
+import copy
 
 def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
@@ -269,10 +270,17 @@ class PGibbsOperator(object):
     return trace,self._compute_alpha(rhoWeights[T-1], xiWeights, finalIndex)
 
   def _compute_alpha(self, rhoWeight, xiWeights, finalIndex):
-    xiWeight = xiWeights[finalIndex]
+    # Remove the weight of the chosen xi from the list instead of
+    # trying to subtract in logspace to prevent catastrophic
+    # cancellation (as would happen if the chosen xi weight were
+    # significantly larger than all the other xi weights and the rho
+    # weight).
+    otherXiWeightsWithRho = copy.copy(xiWeights)
+    otherXiWeightsWithRho.pop(finalIndex)
+    otherXiWeightsWithRho.append(rhoWeight)
 
-    weightMinusXi = math.log(sum([math.exp(w) for w in xiWeights]) + math.exp(rhoWeight) - math.exp(xiWeight))
-    weightMinusRho = math.log(sum([math.exp(w) for w in xiWeights]))
+    weightMinusXi = logaddexp(otherXiWeightsWithRho)
+    weightMinusRho = logaddexp(xiWeights)
     alpha = weightMinusRho - weightMinusXi
     return alpha
 
