@@ -25,6 +25,6 @@ echo nosetests --processes=4 --process-timeout=1200 -c crashes.cfg
 nosetests --processes=4 --process-timeout=1200 -c crashes.cfg
 abort_on_error "(mh default one 3)"
 
-test_inference_program "(pgibbs default ordered 5 3)"
-# test_inference_program "(func-pgibbs default ordered 5 3)"
-test_inference_program "(meanfield default one 10 3)"
+test_inference_program "(pgibbs default ordered 3 3)"
+# test_inference_program "(func-pgibbs default ordered 3 3)"
+test_inference_program "(meanfield default one 3 3)"
