@@ -6,8 +6,8 @@
 #include "smap.h"
 #include "value.h"
 
-#include "pset.h"
-#include "pmap.h"
+#include "pset.hpp"
+#include "pmap.hpp"
 
 using persistent::PMap;
 using persistent::PSet;

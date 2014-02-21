@@ -1,7 +1,7 @@
 #ifndef PERSISTENT_SET_H
 #define PERSISTENT_SET_H
 
-#include "wttree.h"
+#include "wttree.hpp"
 
 namespace persistent
 {
