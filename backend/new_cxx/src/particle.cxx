@@ -58,9 +58,9 @@ Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
   void Particle::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode) 
   {
     // Note: this mutates, because it never crosses a particle
-    assert(!baseTrace->getESRParents(outputNode));
-    if (!esrParents.contains(node)) { esrParents = esrParents.insert(node,vector<RootOfFamily>()); }
-    esrParents.lookup(node).push_back(esrRoot);
+    assert(baseTrace->getESRParents(outputNode).empty());
+    if (!esrRoots.contains(outputNode)) { esrRoots = esrRoots.insert(outputNode,vector<RootOfFamily>()); }
+    esrRoots.lookup(outputNode).push_back(esrRoot);
   }
 
   void Particle::reconnectLookup(LookupNode * lookupNode) { assert(false); }
@@ -135,14 +135,14 @@ shared_ptr<SPAux> Particle::getMadeSPAux(Node * makerNode)
     values = values.insert(node,value);
   }
 
-void Particle::clearValue(Node * node)  { setValue(node,VentureValuePtr(); }
+void Particle::clearValue(Node * node)  { setValue(node,VentureValuePtr()); }
 
 
-    void Particle::setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord) 
-  { 
-    madeSPs[makerNode] = spRecord->sp;
+void Particle::setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord) 
+{ 
+    madeSPs = madeSPs.insert(makerNode,spRecord->sp);
     madeSPAuxs[makerNode] = spRecord->spAux;
-    newMadeSPFamilies[makerNode] = PSet<RootOfFamily>();
+    newMadeSPFamilies = newMadeSPFamilies.insert(makerNode,PMap<FamilyID,RootOfFamily>());
   }
 
 
@@ -153,11 +153,11 @@ void Particle::clearValue(Node * node)  { setValue(node,VentureValuePtr(); }
     madeSPs = madeSPs.insert(makerNode,sp);
   }
 
-  void Particle::setMadeSPAux(Node * makerNode,shared_ptr<SPAux> spaux) 
+  void Particle::setMadeSPAux(Node * makerNode,shared_ptr<SPAux> spAux) 
   { 
     assert(!madeSPAuxs.count(makerNode));
     assert(!baseTrace->getMadeSPAux(makerNode));
-    madeSPAuxs.insert(node,aux);
+    madeSPAuxs[makerNode] = spAux;
   }
 
 
@@ -178,8 +178,8 @@ void Particle::clearValue(Node * node)  { setValue(node,VentureValuePtr(); }
     {
       if (newMadeSPFamilies.lookup(makerNode).contains(id)) { return true; }
     }
-    else if (baseTrace->getMadeSPFamilies(makerNode).containsFamily(id)) { return true; }
-    else { return false; }
+    else if (baseTrace->getMadeSPFamilies(makerNode)->containsFamily(id)) { return true; }
+    return false;
   }
 
   RootOfFamily Particle::getMadeSPFamilyRoot(Node * makerNode, FamilyID id) 
@@ -195,9 +195,7 @@ void Particle::clearValue(Node * node)  { setValue(node,VentureValuePtr(); }
   }
 
   /* Inference (computing reverse weight) */
-  double Particle::logDensityOfBlock(ScopeID scope) { assert(false); }
-  int Particle::numBlocksInScope(ScopeID scope) { assert(false); }
-
+  int Particle::numBlocksInScope(ScopeID scope) { return scopes.lookup(scope).size() + baseTrace->numBlocksInScope(scope); }
 
 
 /* The following should never be called on particles */

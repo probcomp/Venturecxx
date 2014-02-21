@@ -104,7 +104,7 @@ struct Trace
 
   virtual OutputNode * getOutermostNonRefAppNode(Node * node);
 
-  virtual double logDensityOfBlock(ScopeID scope) =0;
+  virtual double logDensityOfBlock(ScopeID scope);
   virtual int numBlocksInScope(ScopeID scope) =0;
 
   gsl_rng * rng;

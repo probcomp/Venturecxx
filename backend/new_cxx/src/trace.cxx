@@ -91,3 +91,6 @@ OutputNode * Trace::getOutermostNonRefAppNode(Node * node)
   }
   else { return outputNode; }
 }
+
+
+double Trace::logDensityOfBlock(ScopeID scope) { return -1 * log(numBlocksInScope(scope)); }

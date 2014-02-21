@@ -123,7 +123,7 @@ struct Particle : Trace
   PMap<Node*, int> regenCounts;
 
   /* persistent additions */
-  PMap<Node*, PSet<Node* > > newMadeSPFamilies;
+  PMap<Node*, PMap<FamilyID,RootOfFamily> > newMadeSPFamilies;
   PMap<Node*,set<Node*> > newChildren;
 
   /* Non-persistent */

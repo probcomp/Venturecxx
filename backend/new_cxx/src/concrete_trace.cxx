@@ -286,7 +286,7 @@ RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
 /* New in ConcreteTrace */
 
 BlockID ConcreteTrace::sampleBlock(ScopeID scope) { assert(scopes.count(scope)); return scopes[scope].sampleKeyUniformly(rng); }
-double ConcreteTrace::logDensityOfBlock(ScopeID scope) { return -1 * log(numBlocksInScope(scope)); }
+
 //vector<BlockID> ConcreteTrace::blocksInScope(ScopeID scope) { assert(false); }
 int ConcreteTrace::numBlocksInScope(ScopeID scope) 
 { 

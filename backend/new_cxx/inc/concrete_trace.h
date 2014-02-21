@@ -88,7 +88,6 @@ struct ConcreteTrace : Trace
   /* New in ConcreteTrace */
 
   BlockID sampleBlock(ScopeID scope);
-  double logDensityOfBlock(ScopeID scope);
   vector<BlockID> blocksInScope(ScopeID scope); // TODO this should be an iterator
   int numBlocksInScope(ScopeID scope);
   set<Node*> getAllNodesInScope(ScopeID scope);
