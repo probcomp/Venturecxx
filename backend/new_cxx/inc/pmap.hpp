@@ -1,7 +1,7 @@
 #ifndef PERSISTENT_MAP_H
 #define PERSISTENT_MAP_H
 
-#include "wttree.h"
+#include "wttree.hpp"
 
 namespace persistent
 {

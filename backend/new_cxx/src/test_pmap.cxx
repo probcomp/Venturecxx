@@ -1,10 +1,10 @@
-#include "../inc/wttree.hpp"
+#include "../inc/pmap.hpp"
 
 #include<iostream>
 
 using namespace std;
 
-using wttree::PMap;
+using pmap::PMap;
 
 int main() {
   PMap<int, int> pmap;
