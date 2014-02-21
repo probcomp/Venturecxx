@@ -134,7 +134,7 @@ interface here is compatible with one possible path."""
   def fromStackDict(thing):
     return VentureArray([VentureValue.fromStackDict(v) for v in thing["value"]])
   def lookup(self, index):
-    return self.array[index.getNumber()]
+    return self.array[int(index.getNumber())]
   def contains(self, obj):
     # Not Python's `in` because I need to use custom equality
     # TODO I am going to have to overload the equality for dicts
