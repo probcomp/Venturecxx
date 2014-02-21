@@ -9,5 +9,10 @@ struct MatrixOutputPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
+struct IsMatrixOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
 
 #endif

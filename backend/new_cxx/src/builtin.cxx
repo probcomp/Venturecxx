@@ -78,6 +78,7 @@ map<string,SP*> initBuiltInSPs()
 
   /* Matrices */
   m["matrix"] = new SP(new NullRequestPSP(), new MatrixOutputPSP());
+  m["is_matrix"] = new SP(new NullRequestPSP(), new IsMatrixOutputPSP());
 
   /* Scoping */
   m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
