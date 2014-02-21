@@ -293,9 +293,9 @@ file_dir = os.path.dirname(os.path.realpath(__file__))
 loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] )   
 # [:-2] because current file is /Venturecxx/test/venturemagics
 print 'REACHED EXEC FILE'
-%run {loc_ip_parallel}
+#%run {loc_ip_parallel}
+#%run /Venturecxx/test/venturemagics
 
-assert False,'PARA TEST FAIL'
 AllIPParallel()
 print 'PARATEST PASSED'
 #stop_engines()
