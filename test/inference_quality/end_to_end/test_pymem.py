@@ -6,9 +6,9 @@ from nose.plugins.attrib import attr
 def loadPYMem(ripl):
   ripl.assume("pick_a_stick","""
 (lambda (sticks k)
-  (branch (bernoulli (sticks k))
-    (lambda () k)
-    (lambda () (pick_a_stick sticks (plus k 1)))))
+  (if (bernoulli (sticks k))
+      k
+      (pick_a_stick sticks (plus k 1))))
 """)
 
   ripl.assume("make_sticks","""
@@ -32,8 +32,8 @@ def loadPYMem(ripl):
   ((lambda (augmented_proc crp)
      (lambda () (augmented_proc (crp))))
    (mem (lambda (table) (base_dist)))
-   (make_crp alpha d)))
-""")
+   (make_crp alpha)))
+""") # TODO Why did this test used to say (make_crp alpha d)?  What's d?
 
 def observeCategories(ripl,counts):
   for i in range(len(counts)):
@@ -63,6 +63,7 @@ def predictHPY(topCollapsed,botCollapsed):
 
 @attr("slow")
 def testHPYMem1():
+  raise SkipTest("Crashes occasionally because flip gets asked to evaluate how likely it is to return False when p is 1.0.  Issue: https://app.asana.com/0/9277419963067/10386828313646")
   baseline = predictHPY(True, True)
   for topC in [True,False]:
     for botC in [True,False]:

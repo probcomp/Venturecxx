@@ -12,7 +12,7 @@ from venture.test.config import get_ripl, collectSamples
 #
 def testMakeSymDirMult1():
   for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-    yield checkMakeSymDirMult1,maker
+    yield checkMakeSymDirMult1, maker
 
 @statisticalTest
 def checkMakeSymDirMult1(maker):
@@ -178,7 +178,7 @@ def testStaleAAA_Madness():
   ripl.assume("f2", "(f2_maker)")
   ripl.assume("xs", "(array (make_ref f) (make_ref f2))")
   ripl.assume("f3","(deref (lookup xs 1))")
-  ripl.assume("ys","(dict (list (quote aaa) (quote bbb)) (list (make_ref f3) (make_ref f3)))")
+  ripl.assume("ys","(dict (array (quote aaa) (quote bbb)) (array (make_ref f3) (make_ref f3)))")
   ripl.assume("g","(deref (if (flip) (lookup ys (quote aaa)) (lookup ys (quote bbb))))")
   ripl.predict("(g)",label="pid")
 

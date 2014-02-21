@@ -28,12 +28,9 @@ def loadHMMParticleAsymptoticProgram1(M):
 
 
 # O(N) forwards
-# O(N) to infer
+# O(N log N) to infer
 @attr('slow')
 def testHMMParticleAsymptotics1():
-#  from nose import SkipTest
-#  raise SkipTest("Skipping testHMMParticleAsymptotics1: no linear regression test")
-
   def particulate(num_steps):
     ripl = loadHMMParticleAsymptoticProgram1(num_steps)
     return lambda : ripl.infer({"kernel":"pgibbs","scope":"states","block":"ordered","transitions":5,"particles":10,"with_mutation":False})

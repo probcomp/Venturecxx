@@ -50,7 +50,7 @@ def timings(f):
   def try_next(n):
     return int(math.floor(min(2*n,max(1.2*n, n+5))))
   def stop(duration, sample_ct):
-    acceptable_duration = 1 # second
+    acceptable_duration = 10 # seconds
     if duration > acceptable_duration and sample_ct > 10:
       return True
     if duration > 0.5 * acceptable_duration and sample_ct > 20:
@@ -77,7 +77,7 @@ def timings(f):
 # slower as its input is increased.
 def min_measurable_input(f):
   clock_accuracy = 0.01 # seconds
-  acceptable_duration = 0.5 # seconds
+  acceptable_duration = 2 # seconds
   n = 1
   begin = time.clock()
   while True:
@@ -94,6 +94,9 @@ def min_measurable_input(f):
 ################# Temporary Hacks
 def assertNLogNTime(f,slack=2):
   times = timings(f)
+  while times[0][0] <= 1:
+    # This case would cause the below to throw a divide by zero
+    times = times[1:]
   ns = [t[0] for t in times]
   ts = [t[1] for t in times]
   nlogns = [n * math.log(n) for n in ns]

@@ -18,6 +18,9 @@ def simulateCategorical(ps,os=None):
 def logDensityCategorical(val,ps,os=None):
   if os is None: os = range(len(ps))
   ps = normalizeList(ps)
+  # TODO This should work for Venture Values while the comparison is
+  # done by identity and in the absence of observations; do I want to
+  # override the Python magic methods for VentureValues?
   p = ps[os.index(val)]
   assert os.count(val) == 1
   return math.log(p)
@@ -30,17 +33,10 @@ def logDensityDirichlet(theta, alpha):
 
   return ss.gammaln(sum(alpha)) - sum(ss.gammaln(alpha)) + np.dot((alpha - 1).T, np.log(theta).T)
 
-def cartesianProduct(xs):
-  if len(xs) == 0: return []
-  elif len(xs) == 1: return xs[0]
-  elif len(xs) == 2:
-    z = []
-    for x in xs[0]:
-      for y in xs[1]:
-        z.append([x,y])
-    return z
+def cartesianProduct(original):
+  if len(original) == 0: return []
+  elif len(original) == 1: return [[x] for x in original[0]]
   else:
-    rest = cartesianProduct(xs[1:])
-    oneForEach = [[[u] + v for v in rest] for u in xs[0]]
-    return [item for sublist in oneForEach for item in sublist]
-  
+    firstGroup = original[0]
+    recursiveProduct = cartesianProduct(original[1:])
+    return [ [v] + vs for v in firstGroup for vs in recursiveProduct]

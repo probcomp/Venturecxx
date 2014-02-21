@@ -44,7 +44,7 @@ class VentureMagics(Magics):
                     d = '%s %s   =  %s' % (ins, directive['symbol'], directive['value'])
             elif ins == 'observe':
                 if isinstance(directive['expression'],str):  # [observe x value]
-                    d = '%s %s   =  %s' % (ins, directive['expression'], directive['value'])
+                    d = '%s %s   =  %s' % (ins, directive['expressioxn'], directive['value'])
                 elif isinstance(directive['expression'],list):  # [observe (+ 1 x) value]
                     d = '%s (%s ... )    =  %s' % (ins, directive['expression'][0], directive['value'])
             elif ins == 'predict':

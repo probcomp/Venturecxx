@@ -72,7 +72,7 @@ void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
 void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
   assert(block);
-  if (!scopes.count(scope)) { scopes[scope] = SamplableMap<BlockID,set<Node*> >(); }
+  if (!scopes.count(scope)) { scopes[scope]/* = SamplableMap<BlockID,set<Node*> >()*/; }
   if (!scopes[scope].contains(block)) { scopes[scope].set(block,set<Node*>()); }
   assert(scopes[scope].contains(block));
   assert(!scopes[scope].get(block).count(node));

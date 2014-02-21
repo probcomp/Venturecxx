@@ -9,7 +9,9 @@ env.d
 
 htmlcov
 .coverage
+.coverage.*
 
 # dev/testing
 dump
 a.out
+

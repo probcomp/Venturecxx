@@ -3,7 +3,6 @@
 
 #include "types.h"
 #include "srs.h"
-#include <vector>
 #include "Eigen/Dense"
 
 #include <boost/python/object.hpp>
@@ -12,9 +11,6 @@
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
-
-using std::vector;
-using std::pair;
 
 struct HashVentureValuePtr;
 struct VentureValuePtrsEqual;
