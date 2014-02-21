@@ -1,4 +1,5 @@
 #include "../inc/pmap.hpp"
+#include "../inc/pset.hpp"
 
 #include<iostream>
 
@@ -9,7 +10,7 @@ using persistent::PMap;
 int main() {
   PMap<int, int> pmap;
   
-  size_t N = 1000000;
+  size_t N = 100000;
   
   for (size_t i = 0; i < N; ++i)
   {
