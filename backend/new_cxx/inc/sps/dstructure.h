@@ -8,6 +8,11 @@ struct SimplexOutputPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
+struct IsSimplexOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
 /* Polymorphic operators */
 
 struct LookupOutputPSP : PSP

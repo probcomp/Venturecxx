@@ -11,6 +11,12 @@ VentureValuePtr SimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
   return VentureValuePtr(new VentureSimplex(s));
 }
 
+VentureValuePtr IsSimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureSimplex>(args->operandValues[0])));
+}
+
+
 /* Polymorphic operators */
 
 VentureValuePtr LookupOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
