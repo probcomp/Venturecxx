@@ -46,6 +46,7 @@ struct ConcreteTrace : Trace
   VentureValuePtr getObservedValue(Node * node);
   shared_ptr<SP> getMadeSP(Node * makerNode);
   shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode);
+
   shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
   shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode); // not in particle
 

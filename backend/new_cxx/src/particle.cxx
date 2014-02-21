@@ -38,7 +38,6 @@ Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
 
 
   /* Unregistering metadata */
-  void Particle::unregisterAEKernel(Node * node) { assert(false); }
   void Particle::unregisterUnconstrainedChoice(Node * node) 
   { 
     assert(unconstrainedChoices.contains(node));
@@ -48,23 +47,36 @@ Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
 					 node);
   }
 
+  void Particle::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
+  { 
+    assert(false); // TODO
+  }
+
   /* These will never be called */
-  void Particle::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) { assert(false); }
-  void Particle::unregisterConstrainedChoice(Node * node) { assert(false); }
 
   /* Regen mutations */
   void Particle::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode) { assert(false); }
   void Particle::reconnectLookup(LookupNode * lookupNode) { assert(false); }
-  void Particle::incNumRequests(RootOfFamily root) { assert(false); }
-  void Particle::incRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { assert(false); }
-  void Particle::addChild(Node * node, Node * child) { assert(false); }
+  void Particle::incNumRequests(RootOfFamily root) 
+  {
+    assert(false); // TODO handle LAMBDA
+    // if (!numRequests.contains(node)) { numRequests = numRequests.insert(node,baseTrace->getNumRequests(node)); }
+    // numRequests = numRequests.adjust(node,lambda nr: nr + 1);
+  }
+  void Particle::incRegenCount(shared_ptr<Scaffold> scaffold,Node * node) 
+  {
+    assert(false); // TODO handle LAMBDA
+    // if (!regenCounts.contains(node)) { regenCounts = regenCounts.insert(node,0); }
+    // regenCounts = regenCounts.adjust(node,lambda rc: rc + 1);
+  }
 
-  /* Detach mutations */  
-  RootOfFamily Particle::popLastESRParent(OutputNode * outputNode) { assert(false); }
-  void Particle::disconnectLookup(LookupNode * lookupNode) { assert(false); }
-  void Particle::decNumRequests(RootOfFamily root) { assert(false); }
-  void Particle::decRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { assert(false); }
-  void Particle::removeChild(Node * node, Node * child) { assert(false); }
+  void Particle::addChild(Node * node, Node * child) 
+  { 
+    assert(false); // TODO handle LAMBDA
+    // if (!newChildren.contains(node)) { newChildren = newChildren.insert(node,PSet<Node*>()); }
+    // newChildren = newChildren.adjust(node, lambda children: children.insert(child));
+  }
+
 
   /* Primitive getters */
   VentureValuePtr Particle::getValue(Node * node) 
@@ -73,14 +85,38 @@ Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
     else { return baseTrace->getValue(node); }
   }
 
-  shared_ptr<VentureSPRecord> Particle::getMadeSPRecord(Node * makerNode) 
-  { 
-    assert(false); 
+shared_ptr<SP> Particle::getMadeSP(Node * makerNode)
+  {
+    if (madeSPs.contains(makerNode)) { return madeSPs.lookup(makerNode); }
+    else { return baseTrace->getMadeSP(makerNode); }
   }
-  vector<RootOfFamily> Particle::getESRParents(Node * node) { assert(false); }
-  set<Node*> Particle::getChildren(Node * node) { assert(false); }
-  int Particle::getNumRequests(RootOfFamily root) { assert(false); }
-  int Particle::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { assert(false); }
+
+shared_ptr<SPAux> Particle::getMadeSPAux(Node * makerNode)
+  {
+    if (!madeSPAuxs.count(makerNode))
+    {
+      if (baseTrace->getMadeSPAux(makerNode))
+      {
+	madeSPAuxs[makerNode] = baseTrace->getMadeSPAux(makerNode)->copy();
+      }
+      else { return shared_ptr<SPAux>(); }
+    }
+    return madeSPAuxs[makerNode];
+  }
+
+
+  vector<RootOfFamily> Particle::getESRParents(Node * node) 
+  {
+    if (esrRoots.contains(node)) { return esrRoots.lookup(node); }
+    else { return baseTrace->getESRParents(node); }
+  }
+
+  int Particle::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) 
+  { 
+    assert(baseTrace->getRegenCount(scaffold,node) == 0);
+    if (regenCounts.contains(node)) { return regenCounts.lookup(node); }
+    else { return baseTrace->getRegenCount(scaffold,node); }
+  }
 
   VentureValuePtr Particle::getObservedValue(Node * node) { assert(false); }
 
@@ -121,3 +157,19 @@ Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
   /* Inference (computing reverse weight) */
   double Particle::logDensityOfBlock(ScopeID scope) { assert(false); }
   int Particle::numBlocksInScope(ScopeID scope) { assert(false); }
+
+
+
+/* The following should never be called on particles */
+
+
+  RootOfFamily Particle::popLastESRParent(OutputNode * outputNode) { assert(false); throw "should never be called"; }
+  void Particle::disconnectLookup(LookupNode * lookupNode) { assert(false); throw "should never be called"; }
+  void Particle::decNumRequests(RootOfFamily root) { assert(false); throw "should never be called"; }
+  void Particle::decRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { assert(false); throw "should never be called"; }
+  void Particle::removeChild(Node * node, Node * child) { assert(false); throw "should never be called"; }
+  void Particle::unregisterAEKernel(Node * node) { assert(false); throw "should never be called"; }
+
+  void Particle::unregisterConstrainedChoice(Node * node) { assert(false); throw "should never be called"; }
+set<Node*> Particle::getChildren(Node * node) { assert(false); throw "should never be called"; }
+  int Particle::getNumRequests(RootOfFamily root) { assert(false); throw "should never be called"; }

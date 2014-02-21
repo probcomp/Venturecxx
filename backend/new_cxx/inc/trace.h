@@ -66,9 +66,7 @@ struct Trace
   virtual int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) =0;
 
   virtual shared_ptr<SP> getMadeSP(Node * makerNode) =0;
-  virtual shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode) =0;
   virtual shared_ptr<SPAux> getMadeSPAux(Node * node) =0;
-
 
   virtual VentureValuePtr getObservedValue(Node * node) =0;
 

@@ -127,6 +127,7 @@ class Particle(Trace):
     self.numRequests = self.numRequests.adjust(node,lambda nr: nr + 1)
 
   def addChildAt(self,node,child):
+    # TODO this is a BUG! not sure why the children themselves are not persistent
     if not node in self.newChildren: self.newChildren = self.newChildren.insert(node,[])
     self.newChildren.lookup(node).append(child)
 

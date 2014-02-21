@@ -47,7 +47,8 @@ struct Particle : Trace
 
   /* Primitive getters */
   VentureValuePtr getValue(Node * node);
-  shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode);
+  shared_ptr<SP> getMadeSP(Node * makerNode);
+  shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
   vector<RootOfFamily> getESRParents(Node * node);
   set<Node*> getChildren(Node * node);
   int getNumRequests(RootOfFamily root);
@@ -118,6 +119,7 @@ struct Particle : Trace
   PMap<RootOfFamily, int> numRequests;
 
   PMap<Node*,VentureValuePtr> values;
+  PMap<Node*,shared_ptr<SP> > madeSPs;
 
   /* persistent, not stored in concrete trace */
   PMap<Node*, int> regenCounts;
