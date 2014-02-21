@@ -2,7 +2,6 @@
 #define PSP_H
 
 #include "types.h"
-#include <vector>
 #include "args.h"
 
 #include <gsl/gsl_rng.h>
@@ -10,8 +9,6 @@
 struct LKernel;
 struct ConcreteTrace;
 struct ApplicationNode;
-
-using std::vector;
 
 struct PSP
 {

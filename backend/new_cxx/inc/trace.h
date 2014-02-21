@@ -3,9 +3,6 @@
 
 #include "types.h"
 #include "sprecord.h"
-#include <set>
-#include <map>
-#include <vector>
 #include "smap.h"
 #include "node.h"
 #include "scaffold.h"

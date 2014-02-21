@@ -6,12 +6,12 @@
 #include "args.h"
 #include "sp.h"
 
+// Collapsed SPAux
 struct DirMultSPAux : SPAux
 {
-  DirMultSPAux(int n);
+  DirMultSPAux(int n) : counts(n, 0) {}
   vector<int> counts;
 };
-
 
 // Collapsed Symmetric
 
@@ -59,26 +59,27 @@ private:
   vector<double> alpha;
 };
 
+// Uncollapsed SPAux
+struct UCDirMultSPAux : DirMultSPAux
+{
+  UCDirMultSPAux(int n): DirMultSPAux(n), theta(new double[n]) {}
+  ~UCDirMultSPAux() { delete[] theta; }
+  double * theta;
+};
 
 // Uncollapsed Symmetric
+struct MakeUCSymDirMultOutputPSP : RandomPSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+};
+
 struct UCSymDirMultSP : SP
 {
   UCSymDirMultSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
 
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<Args> args,gsl_rng * rng) const;
-};
-
-struct UCDirMultSPAux : DirMultSPAux
-{
-  UCDirMultSPAux(int n, double * theta): DirMultSPAux(n), theta(theta) {}
-  double * theta; // TODO GC delete[] this in the destructor
-};
-
-struct MakeUCSymDirMultOutputPSP : RandomPSP
-{
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 };
 
 struct UCSymDirMultOutputPSP : RandomPSP
@@ -93,5 +94,34 @@ struct UCSymDirMultOutputPSP : RandomPSP
 private:
   size_t n;
 };
+
+// Uncollapsed Asymmetric
+struct MakeUCDirMultOutputPSP : RandomPSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+};
+
+struct UCDirMultSP : SP
+{
+  UCDirMultSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
+
+  bool hasAEKernel() const { return true; }
+  void AEInfer(shared_ptr<Args> args,gsl_rng * rng) const;
+};
+
+struct UCDirMultOutputPSP : RandomPSP
+{
+  UCDirMultOutputPSP(size_t n) : n(n) {}
+
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
+  void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+  void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+
+private:
+  size_t n;
+};
+
 
 #endif

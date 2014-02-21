@@ -2,7 +2,7 @@
 #define TYPES_H
 
 #include <boost/shared_ptr.hpp>
-#include <vector>
+#include <boost/container/vector.hpp>
 #include <map>
 #include <set>
 #include <iostream>
@@ -10,7 +10,7 @@
 using boost::shared_ptr;
 using boost::dynamic_pointer_cast;
 using boost::static_pointer_cast;
-using std::vector;
+using boost::container::vector;
 using std::map;
 using std::set;
 using std::string;

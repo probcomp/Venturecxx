@@ -16,6 +16,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <boost/foreach.hpp>
+#include <algorithm>
 
 VectorXd vvToEigenVector(VentureValue * value);
 MatrixXd vvToEigenMatrix(VentureValue * value);
@@ -212,7 +213,7 @@ void UncollapsedHMMOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Arg
   size_t oldSize = iObs.size();
 
   /* Remove observation. */
-  iObs.erase(find(iObs.begin(),iObs.end(),out));
+  iObs.erase(std::find(iObs.begin(),iObs.end(),out));
   assert(oldSize == iObs.size() + 1);
   if (iObs.empty()) { aux->os.erase(in); }
 }
