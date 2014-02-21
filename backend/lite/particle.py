@@ -37,19 +37,19 @@ class Particle(Trace):
     self.base = trace
 
     # (1) Persistent stuff
-    self.rcs = PSet()
-    self.ccs = PSet()
-    self.aes = PSet()
+    self.rcs = PSet() # PSet Node
+    self.ccs = PSet() # PSet Node
+    self.aes = PSet() # PSet Node
 
-    self.values = PMap()
-    self.madeSPs = PMap()
+    self.values = PMap()  # PMap Node VentureValue
+    self.madeSPs = PMap() # PMap Node VentureSP
 
-    self.scopes = PMap()
-    self.esrParents = PMap()
-    self.numRequests = PMap()
-    self.regenCounts = PMap()
-    self.newMadeSPFamilies = PMap()
-    self.newChildren = PMap()
+    self.scopes = PMap()  # PMap scopeid (PMap blockid (PSet Node))
+    self.esrParents = PMap() # PMap Node [Node] # mutable list ok b/c only touched by one particle
+    self.numRequests = PMap() # PMap Node Int
+    self.regenCounts = PMap() # PMap Node int
+    self.newMadeSPFamilies = PMap() # PMap Node (PMap id Node)
+    self.newChildren = PMap() # PMap Node [Node] # TODO Should be PSet Node instead of [Node]
 
     # (2) Maps to things that change outside of particle methods
     self.madeSPAuxs = {}
