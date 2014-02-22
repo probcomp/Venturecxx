@@ -66,9 +66,11 @@ struct VentureNil : VentureValue
 {
   bool isNil() const { return true; }
   VentureValuePtr lookup(VentureValuePtr index) const { cout << "lookup in nil" << endl; assert(false); }
+  int size() const { return 0; }
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   string toString() const;
+  boost::python::dict toPython() const;
 };
 
 struct VenturePair : VentureValue
@@ -80,6 +82,8 @@ struct VenturePair : VentureValue
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   string toString() const;
+  boost::python::dict toPython() const;
+  int size() const { return 1 + getRest()->size(); }
   VentureValuePtr car;
   VentureValuePtr cdr;
 };

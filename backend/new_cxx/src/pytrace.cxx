@@ -116,14 +116,22 @@ void PyTrace::infer(boost::python::dict params)
 
   boost::python::extract<string> getScopeSymbol(params["scope"]);
   boost::python::extract<int> getScopeInt(params["scope"]);
+  boost::python::extract<bool> getScopeBool(params["scope"]);
   if (getScopeSymbol.check()) { scope = VentureValuePtr(new VentureSymbol(getScopeSymbol())); }
-  if (getScopeInt.check()) { scope = VentureValuePtr(new VentureNumber(getScopeInt())); }
+  else if (getScopeInt.check()) { scope = VentureValuePtr(new VentureNumber(getScopeInt())); }
+  else if (getScopeBool.check()) { scope = VentureValuePtr(new VentureBool(getScopeBool())); }
+  assert(scope);
+  //  cout << "scope: " << scope->toPython() << endl;
+
 
   boost::python::extract<string> getBlockSymbol(params["block"]);
   boost::python::extract<int> getBlockInt(params["block"]);
+  boost::python::extract<bool> getBlockBool(params["block"]);
   if (getBlockSymbol.check()) { block = VentureValuePtr(new VentureSymbol(getBlockSymbol())); }
-  if (getBlockInt.check()) { block = VentureValuePtr(new VentureNumber(getBlockInt())); }
-  
+  else if (getBlockInt.check()) { block = VentureValuePtr(new VentureNumber(getBlockInt())); }
+  else if (getBlockBool.check()) { block = VentureValuePtr(new VentureBool(getBlockBool())); }
+  assert(block);
+
   assert(kernel == "mh");
 //  assert(scope == "default");
 //  assert(block == "one");

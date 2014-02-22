@@ -34,8 +34,8 @@ def testEvalSmoke2():
 def testEvalSmoke3():
   "Eval should work on programmatically constructed expressions."
   ripl = get_ripl()
-  ripl.assume("exp", "(array (quote plus) 2 2)")
-  eq_(ripl.predict("(eval exp (get_current_environment))"), 4.0)
+  ripl.assume("expr", "(array (quote plus) 2 2)")
+  eq_(ripl.predict("(eval expr (get_current_environment))"), 4.0)
 
 @statisticalTest
 def testEval1():
