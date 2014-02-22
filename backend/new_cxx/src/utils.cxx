@@ -5,6 +5,71 @@
 #include "values.h"
 #include <gsl/gsl_randist.h>
 
+vector<double> mapExp(const vector<double>& xs)
+{
+  double max = *std::max_element(xs.begin(), xs.end());
+  vector<double> ps(xs.size());
+  
+  for (size_t i = 0; i < xs.size(); ++i)
+  {
+    ps[i] = exp(xs[i] - max);
+  }
+  return ps;
+}
+
+double logaddexp(const vector<double>& xs)
+{
+  double max = *std::max_element(xs.begin(), xs.end());
+  double sum = 0;
+  for (size_t i = 0; i < xs.size(); ++i)
+  {
+    sum += exp(xs[i] - max);
+  }
+  return max + log(sum);
+}
+
+size_t sampleCategorical(const vector<double> & ps, gsl_rng * rng)
+{
+  double total = std::accumulate(ps.begin(), ps.end(), 0);
+  double r = gsl_ran_flat(rng, 0, total);
+  
+  double sum = 0;
+  for (size_t i = 0; i < ps.size(); ++i)
+  {
+    sum += ps[i];
+    if (sum >= r)
+    {
+      return i;
+    }
+  }
+  assert(false);
+}
+
+vector<double> computePartialSums(const vector<double>& xs)
+{
+  vector<double> sums(1, 0);
+  for (size_t i = 0; i < xs.size(); ++i)
+  {
+    sums.push_back(sums.back() + xs[i]);
+  }
+  return sums;
+}
+
+size_t samplePartialSums(const vector<double> & sums, gsl_rng * rng)
+{
+  size_t lower = 0, upper = sums.size() - 1;
+  double r = gsl_ran_flat(rng, sums[lower], sums[upper]);
+  
+  while (lower < upper - 1)
+  {
+    size_t mid = (lower + upper) / 2;
+    if (r < sums[mid]) { upper = mid; }
+    else { lower = mid; }
+  }
+  
+  return lower;
+}
+
 double sumVector(const vector<double> & xs)
 {
   double sum = 0;
@@ -31,7 +96,6 @@ Simplex normalizeVector(const vector<double> & xs)
   assert(fabs(newSum - 1) < 0.01);
   return ps;
 }
-
 
 VentureValuePtr simulateCategorical(const Simplex & ps, gsl_rng * rng)
 {

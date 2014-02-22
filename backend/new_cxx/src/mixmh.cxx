@@ -27,7 +27,7 @@ void mixMH(ConcreteTrace * trace,
   double xiMix = indexer->logDensityOfIndex(p.first,index);
 
   double alpha = xiMix + p.second - rhoMix;
-  double logU = log(gsl_ran_flat(trace->rng,0.0,1.0));
+  double logU = log(gsl_ran_flat(trace->getRNG(),0.0,1.0));
 
 //  cout << "alpha: " << alpha << endl;
   

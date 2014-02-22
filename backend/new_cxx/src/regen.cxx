@@ -99,7 +99,7 @@ void propagateConstraint(Trace * trace,
     assert(outputNode);
     shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
     if (psp->isRandom()) { assert(false); throw "Cannot make random choices downstream of a node that gets constrained during regen"; }
-    trace->setValue(node,psp->simulate(trace->getArgs(outputNode),trace->rng));
+    trace->setValue(node,psp->simulate(trace->getArgs(outputNode),trace->getRNG()));
   }
   set<Node*> children = trace->getChildren(node);
   for (set<Node*>::iterator iter = children.begin();
@@ -299,7 +299,7 @@ double applyPSP(Trace * trace,
   {
     shared_ptr<LKernel> k = scaffold->getLKernel(node);
     if (shouldRestore) { newValue = oldValue; }
-    else { newValue = k->simulate(trace,oldValue,args,trace->rng); }
+    else { newValue = k->simulate(trace,oldValue,args,trace->getRNG()); }
 
     weight += k->weight(trace,newValue,oldValue,args);
     //TODO variational
@@ -307,7 +307,7 @@ double applyPSP(Trace * trace,
   else
   {
     if (shouldRestore) { newValue = oldValue; }
-    else { newValue = psp->simulate(args,trace->rng); } // TODO rng
+    else { newValue = psp->simulate(args,trace->getRNG()); } // TODO rng
   }
 
   if (dynamic_cast<RequestNode*>(node)) { assert(dynamic_pointer_cast<VentureRequest>(newValue)); }
@@ -379,7 +379,7 @@ double evalRequests(Trace * trace,
 
     if (db->hasLatentDB(makerNode)) { latentDB = db->getLatentDB(makerNode); }
 
-    weight += sp->simulateLatents(spAux,lsr,shouldRestore,latentDB,trace->rng);
+    weight += sp->simulateLatents(spAux,lsr,shouldRestore,latentDB,trace->getRNG());
   }
 
   return weight;

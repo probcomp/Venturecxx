@@ -69,7 +69,7 @@ boost::python::object PyTrace::extractPythonValue(DirectiveID did)
 }
 
 void PyTrace::setSeed(size_t n) {
-  gsl_rng_set(trace->rng, n);
+  gsl_rng_set(trace->getRNG(), n);
 }
 
 size_t PyTrace::getSeed() {
@@ -142,7 +142,7 @@ void PyTrace::infer(boost::python::dict params)
     {
       OutputNode * node = dynamic_cast<OutputNode*>(*iter);
       assert(node);
-      trace->getMadeSP(node)->AEInfer(trace->getArgs(node),trace->rng);
+      trace->getMadeSP(node)->AEInfer(trace->getArgs(node),trace->getRNG());
     }
   }
 }

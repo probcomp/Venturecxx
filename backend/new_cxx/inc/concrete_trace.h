@@ -9,7 +9,6 @@
 struct ConcreteTrace : Trace
 {
   ConcreteTrace();
-  /* TODO once we pass particle tests and care about supporting people, we will remove "override" keywords */
 
   /* Registering metadata */
   void registerAEKernel(Node * node);
@@ -38,6 +37,7 @@ struct ConcreteTrace : Trace
   void removeChild(Node * node, Node * child);
 
   /* Primitive getters */
+  gsl_rng * getRNG();
   VentureValuePtr getValue(Node * node);
   vector<RootOfFamily> getESRParents(Node * node);
   set<Node*> getChildren(Node * node);
@@ -113,6 +113,8 @@ struct ConcreteTrace : Trace
   // Helpers for particle commit
   //void addNewMadeSPFamilies(Node * node, PMap newMadeSPFamilies);
   //void addNewChildren(Node * node,PSet newChildren);
+
+  gsl_rng * rng;
 
   shared_ptr<VentureEnvironment> globalEnvironment;
 

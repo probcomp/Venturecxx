@@ -15,7 +15,7 @@ using persistent::PSet;
 struct Particle : Trace
 {
   Particle(ConcreteTrace * outerTrace);
-  Particle(Particle * outerParticle);
+  Particle(shared_ptr<Particle> outerParticle);
 
 /* Methods */
 
@@ -46,6 +46,7 @@ struct Particle : Trace
   void removeChild(Node * node, Node * child);
 
   /* Primitive getters */
+  gsl_rng * getRNG();
   VentureValuePtr getValue(Node * node);
   shared_ptr<SP> getMadeSP(Node * makerNode);
   shared_ptr<SPAux> getMadeSPAux(Node * makerNode);

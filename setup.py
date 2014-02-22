@@ -66,6 +66,7 @@ src_files = [
     "src/values.cxx",
 
     "src/gkernels/mh.cxx",
+    "src/gkernels/pgibbs.cxx",
 
     "src/sps/conditional.cxx",
     "src/sps/continuous.cxx",

@@ -19,8 +19,10 @@ using std::endl;
 
 /* Constructor */
 
-ConcreteTrace::ConcreteTrace(): Trace()
+ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937))
 {
+  gsl_rng_set (rng,time(NULL));
+
   vector<shared_ptr<VentureSymbol> > syms;
   vector<Node*> nodes;
 
@@ -176,6 +178,7 @@ void ConcreteTrace::removeChild(Node * node, Node * child)
 }
 
 /* Primitive getters */
+gsl_rng * ConcreteTrace::getRNG() { return rng; }
 VentureValuePtr ConcreteTrace::getValue(Node * node) { return values[node]; }
 shared_ptr<SP> ConcreteTrace::getMadeSP(Node * makerNode)
 {

@@ -16,8 +16,6 @@ struct SPRef;
 
 struct Trace 
 {
-  Trace(): rng(gsl_rng_alloc(gsl_rng_mt19937)) {  gsl_rng_set (rng,time(NULL)) ; }
-
   /* Registering metadata */
   /** AE (Arbitrary Ergodic) kernels repropose random choices within an sp that 
       have no effect on the trace. This optimizes some cases that otherwise could
@@ -107,8 +105,7 @@ struct Trace
   virtual double logDensityOfBlock(ScopeID scope);
   virtual int numBlocksInScope(ScopeID scope) =0;
 
-  gsl_rng * rng;
-
+  virtual gsl_rng * getRNG() =0;
 };
 
 

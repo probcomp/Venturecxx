@@ -7,6 +7,7 @@ struct ConcreteTrace;
 struct Scaffold;
 struct DB;
 
+/* single-site Metropolis-Hastings */
 struct MHGKernel : GKernel
 {
 
