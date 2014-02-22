@@ -16,6 +16,7 @@
 * You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "sps/continuous.h"
+#include "sps/numerical_helpers.h"
 #include "args.h"
 #include "values.h"
 

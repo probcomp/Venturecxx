@@ -5,6 +5,7 @@
 #include "sps/csp.h"
 #include "sps/deterministic.h"
 #include "sps/dir_mult.h"
+#include "sps/betabernoulli.h"
 #include "sps/discrete.h"
 #include "sps/dstructure.h"
 #include "sps/eval.h"
@@ -104,6 +105,11 @@ map<string,SP*> initBuiltInSPs()
   m["make_csp"] = new SP(new NullRequestPSP(), new MakeCSPOutputPSP());
   m["mem"] = new SP(new NullRequestPSP(), new MakeMSPOutputPSP());
 
+  /* Beta bernoullis */
+  m["make_beta_bernoulli"] = new SP(new NullRequestPSP(), new MakeBetaBernoulliOutputPSP());
+  m["make_uc_beta_bernoulli"] = new SP(new NullRequestPSP(), new MakeUBetaBernoulliOutputPSP());
+
+  /* Dir mults */
   m["make_sym_dir_mult"] = new SP(new NullRequestPSP(), new MakeSymDirMultOutputPSP());
   m["make_dir_mult"] = new SP(new NullRequestPSP(), new MakeDirMultOutputPSP());
   m["make_uc_sym_dir_mult"] = new SP(new NullRequestPSP(), new MakeUCSymDirMultOutputPSP());

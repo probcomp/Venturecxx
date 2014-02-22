@@ -1,4 +1,12 @@
 #include "sps/numerical_helpers.h"
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_sf.h>
+
+#include <cmath>
+#include <cfloat>
+
+using std::isfinite;
 
 // LogLikelihoods, from Yura's Utilities.cpp
 double NormalDistributionLogLikelihood(double sampled_value, double average, double sigma) {
