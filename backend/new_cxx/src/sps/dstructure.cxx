@@ -47,6 +47,12 @@ VentureValuePtr DictOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
   return VentureValuePtr(new VentureDictionary(d));
 }
 
+VentureValuePtr IsDictOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureDictionary>(args->operandValues[0])));
+}
+
+
 
 /* Arrays */
 
@@ -99,6 +105,12 @@ VentureValuePtr FirstOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) c
 {
   return args->operandValues[0]->getFirst();
 }
+
+VentureValuePtr SecondOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  return args->operandValues[0]->getRest()->getFirst();
+}
+
 
 VentureValuePtr RestOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {

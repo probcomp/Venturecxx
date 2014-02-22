@@ -2,9 +2,11 @@
 #include "sp.h"
 #include "sps/conditional.h"
 #include "sps/continuous.h"
+#include "sps/crp.h"
 #include "sps/csp.h"
 #include "sps/deterministic.h"
 #include "sps/dir_mult.h"
+#include "sps/betabernoulli.h"
 #include "sps/discrete.h"
 #include "sps/dstructure.h"
 #include "sps/eval.h"
@@ -63,6 +65,7 @@ map<string,SP*> initBuiltInSPs()
   m["binomial"] = new SP(new NullRequestPSP(), new BinomialOutputPSP());
   m["categorical"] = new SP(new NullRequestPSP(), new CategoricalOutputPSP());
   m["symmetric_dirichlet"] = new SP(new NullRequestPSP(), new SymmetricDirichletOutputPSP());
+  m["dirichlet"] = new SP(new NullRequestPSP(), new DirichletOutputPSP());
 
   /* Conditiionals */
   m["branch"] = new SP(new BranchRequestPSP(), new ESRRefOutputPSP());
@@ -73,6 +76,7 @@ map<string,SP*> initBuiltInSPs()
   m["get_current_environment"] = new SP(new NullRequestPSP(), new GetCurrentEnvOutputPSP());
   m["get_empty_environment"] = new SP(new NullRequestPSP(), new GetEmptyEnvOutputPSP());
   m["extend_environment"] = new SP(new NullRequestPSP(), new ExtendEnvOutputPSP());
+  m["is_environment"] = new SP(new NullRequestPSP(), new IsEnvOutputPSP());
 
   /* Latents */
   m["make_lazy_hmm"] = new SP(new NullRequestPSP(), new MakeUncollapsedHMMOutputPSP());
@@ -92,6 +96,7 @@ map<string,SP*> initBuiltInSPs()
   m["contains"] = new SP(new NullRequestPSP(), new ContainsOutputPSP());
   m["size"] = new SP(new NullRequestPSP(), new SizeOutputPSP());
   m["dict"] = new SP(new NullRequestPSP(), new DictOutputPSP());
+  m["is_dict"] = new SP(new NullRequestPSP(), new IsDictOutputPSP());
   m["array"] = new SP(new NullRequestPSP(), new ArrayOutputPSP());
   m["prepend"] = new SP(new NullRequestPSP(), new PrependOutputPSP());
   m["is_array"] = new SP(new NullRequestPSP(), new IsArrayOutputPSP());
@@ -99,15 +104,24 @@ map<string,SP*> initBuiltInSPs()
   m["is_pair"] = new SP(new NullRequestPSP(), new IsPairOutputPSP());
   m["list"] = new SP(new NullRequestPSP(), new ListOutputPSP());
   m["first"] = new SP(new NullRequestPSP(), new FirstOutputPSP());
+  m["second"] = new SP(new NullRequestPSP(), new SecondOutputPSP());
   m["rest"] = new SP(new NullRequestPSP(), new RestOutputPSP());
 
   m["make_csp"] = new SP(new NullRequestPSP(), new MakeCSPOutputPSP());
   m["mem"] = new SP(new NullRequestPSP(), new MakeMSPOutputPSP());
 
+  /* Beta bernoullis */
+  m["make_beta_bernoulli"] = new SP(new NullRequestPSP(), new MakeBetaBernoulliOutputPSP());
+  m["make_uc_beta_bernoulli"] = new SP(new NullRequestPSP(), new MakeUBetaBernoulliOutputPSP());
+
+  /* Dir mults */
   m["make_sym_dir_mult"] = new SP(new NullRequestPSP(), new MakeSymDirMultOutputPSP());
   m["make_dir_mult"] = new SP(new NullRequestPSP(), new MakeDirMultOutputPSP());
   m["make_uc_sym_dir_mult"] = new SP(new NullRequestPSP(), new MakeUCSymDirMultOutputPSP());
   m["make_uc_dir_mult"] = new SP(new NullRequestPSP(), new MakeUCDirMultOutputPSP());
+
+  /* Non parametrics */
+  m["make_crp"] = new SP(new NullRequestPSP(), new MakeCRPOutputPSP());
   
   return m;
 }

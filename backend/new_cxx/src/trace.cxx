@@ -2,6 +2,7 @@
 #include "sp.h"
 #include "sprecord.h"
 #include "args.h"
+#include "sps/scope.h"
 
 ConstantNode * Trace::createConstantNode(VentureValuePtr value)
 {
@@ -88,6 +89,10 @@ OutputNode * Trace::getOutermostNonRefAppNode(Node * node)
   if (dynamic_pointer_cast<ESRRefOutputPSP>(getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)))
   { 
     return getOutermostNonRefAppNode(getESRParents(outputNode)[0].get());
+  }
+  else if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)))
+  { 
+    return getOutermostNonRefAppNode(outputNode->operandNodes[2]);
   }
   else { return outputNode; }
 }

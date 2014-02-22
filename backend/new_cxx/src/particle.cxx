@@ -28,7 +28,7 @@ Particle::Particle(shared_ptr<Particle> outerParticle):
 	 iter != outerParticle->madeSPAuxs.end();
 	 ++iter)
     {
-      madeSPAuxs[iter->first] = iter->second->copy();
+      madeSPAuxs[iter->first] = iter->second->clone();
     }
   }
 
@@ -142,7 +142,7 @@ shared_ptr<SPAux> Particle::getMadeSPAux(Node * makerNode)
   {
     if (baseTrace->getMadeSPAux(makerNode))
     {
-madeSPAuxs[makerNode] = baseTrace->getMadeSPAux(makerNode)->copy();
+      madeSPAuxs[makerNode] = baseTrace->getMadeSPAux(makerNode)->clone();
     }
     else { return shared_ptr<SPAux>(); }
   }

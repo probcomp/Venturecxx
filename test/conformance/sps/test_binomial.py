@@ -2,6 +2,7 @@ from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample
 import scipy.stats
 from nose.tools import assert_equal, assert_almost_equal
+from nose import SkipTest
 
 @statisticalTest
 def testBinomial1():
@@ -38,6 +39,7 @@ def testBinomial2():
 @statisticalTest
 def testBinomial3():
   "A simple test that checks the binomial enumerate method"
+  if config["get_ripl"] == "cxx": raise SkipTest("CXX doesn't have EnumerativeGibbs yet")
   ripl = get_ripl()
 
   b = 0.7

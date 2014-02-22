@@ -38,6 +38,11 @@ struct DictOutputPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
+struct IsDictOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
 /* Arrays */
 
 struct ArrayOutputPSP : PSP
@@ -74,6 +79,11 @@ struct ListOutputPSP : PSP
 };
 
 struct FirstOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
+struct SecondOutputPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };

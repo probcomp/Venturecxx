@@ -7,24 +7,24 @@ import scipy.stats as stats
 # Note that "lookup" would be shared by arrays and "contains" would be 
 # shared by sets. Also note the convention of using the data-structure name
 # (i.e. "dict") as the constructor.
-# I probably prefer (dict (list k1 v1) ... (list kN vN))
+# I probably prefer (dict (array k1 v1) ... (array kN vN))
 # but will leave it as is for now. It would not be hard to check the argument types
 # and allow either.
 
 def testDict0():
-  assert get_ripl().predict("(is_dict (dict (list) (list)))")
+  assert get_ripl().predict("(is_dict (dict (array) (array)))")
 
 def testDict01():
-  assert get_ripl().predict("(is_dict (dict (list 1) (list 2)))")
+  assert get_ripl().predict("(is_dict (dict (array 1) (array 2)))")
 
 def testDictSize0():
-  assert get_ripl().predict("(size (dict (list) (list)))") == 0
+  assert get_ripl().predict("(size (dict (array) (array)))") == 0
 
 def testDictSize1():
-  assert get_ripl().predict("(size (dict (list 1) (list 2)))") == 1
+  assert get_ripl().predict("(size (dict (array 1) (array 2)))") == 1
 
 def testDictSize2():
-  assert get_ripl().predict("(size (dict (list 1 5) (list 2 6)))") == 2
+  assert get_ripl().predict("(size (dict (array 1 5) (array 2 6)))") == 2
 
 @statisticalTest
 def testDict1():

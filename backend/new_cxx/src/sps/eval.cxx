@@ -36,3 +36,7 @@ VentureValuePtr ExtendEnvOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
   return VentureValuePtr(new VentureEnvironment(env,syms,nodes));
 }
 
+VentureValuePtr IsEnvOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureEnvironment>(args->operandValues[0])));
+}

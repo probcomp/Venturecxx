@@ -194,6 +194,34 @@ boost::python::dict VentureDictionary::toPython() const
   return value;
 }
 
+boost::python::dict VentureNil::toPython() const
+{
+  boost::python::dict value;
+  value["type"] = "list";
+  boost::python::list l;
+  value["value"] = l;
+  return value;
+}
+
+
+boost::python::dict VenturePair::toPython() const
+{
+  boost::python::dict value;
+  value["type"] = "list";
+
+  boost::python::list l;
+  l.append(getFirst()->toPython());
+  shared_ptr<VenturePair>  p = dynamic_pointer_cast<VenturePair>(getRest());
+  while (p)
+    {
+      l.append(p->getFirst()->toPython());
+      p = dynamic_pointer_cast<VenturePair>(p->getRest());
+    }
+  value["value"] = l;
+  return value;
+}
+
+
 /* Lookup */
 VentureValuePtr VenturePair::lookup(VentureValuePtr index) const
 {

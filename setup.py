@@ -68,8 +68,10 @@ src_files = [
     "src/gkernels/mh.cxx",
     "src/gkernels/pgibbs.cxx",
 
+    "src/sps/betabernoulli.cxx",
     "src/sps/conditional.cxx",
     "src/sps/continuous.cxx",
+    "src/sps/crp.cxx",
     "src/sps/csp.cxx",
     "src/sps/deterministic.cxx",
     "src/sps/dir_mult.cxx",
@@ -79,6 +81,7 @@ src_files = [
     "src/sps/hmm.cxx",
     "src/sps/matrix.cxx",    
     "src/sps/msp.cxx",
+    "src/sps/numerical_helpers.cxx",
     "src/sps/scope.cxx",    
 ]
 src_files = ["backend/new_cxx/" + f for f in src_files]

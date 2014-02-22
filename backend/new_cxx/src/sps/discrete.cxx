@@ -2,6 +2,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_sf.h>
+#include <boost/foreach.hpp>
 
 #include "utils.h"
 
@@ -25,12 +26,17 @@ double BernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> ar
 
 VentureValuePtr BinomialOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
-  return VentureValuePtr(new VentureAtom(gsl_ran_binomial (rng,args->operandValues[0]->getDouble(),args->operandValues[1]->getInt())));
+  int n = args->operandValues[0]->getInt();
+  double p = args->operandValues[1]->getDouble();
+  int val = gsl_ran_binomial(rng,p,n);
+  return VentureValuePtr(new VentureAtom(val));
 }
 
 double BinomialOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
 {
-  return gsl_ran_binomial_pdf(value->getInt(),args->operandValues[0]->getDouble(), args->operandValues[1]->getInt());
+  int n = args->operandValues[0]->getInt();
+  double p = args->operandValues[1]->getDouble();
+  return log(gsl_ran_binomial_pdf(value->getInt(),p,n));
 }
 
 
@@ -68,4 +74,23 @@ double SymmetricDirichletOutputPSP::logDensity(VentureValuePtr value,shared_ptr<
   /* TODO GC watch the NEW */
   Simplex theta = value->getSimplex();
   return gsl_ran_dirichlet_lnpdf(static_cast<uint32_t>(n),&alphaVector[0],&theta[0]);
+}
+
+VentureValuePtr DirichletOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  vector<VentureValuePtr> vs = args->operandValues[0]->getArray();
+  vector<double> xs;
+  BOOST_FOREACH(VentureValuePtr v , vs) { xs.push_back(v->getDouble()); }
+  Simplex theta(xs.size(),-1);
+  gsl_ran_dirichlet(rng,xs.size(),&xs[0],&theta[0]);
+  return VentureValuePtr(new VentureSimplex(theta));;
+}
+
+double DirichletOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const
+{
+  vector<VentureValuePtr> vs = args->operandValues[0]->getArray();
+  vector<double> xs;
+  BOOST_FOREACH(VentureValuePtr v , vs) { xs.push_back(v->getDouble()); }
+  Simplex theta = value->getSimplex();
+  return gsl_ran_dirichlet_lnpdf(xs.size(),&xs[0],&theta[0]);
 }
