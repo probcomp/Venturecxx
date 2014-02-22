@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Reset the working directory to the script's path
+my_abs_path=$(readlink -f "$0")
+my_dirname=$(dirname $my_abs_path)
+cd "$my_dirname"
+
+function abort_on_error () {
+    if [[ $? -ne "0" ]]; then
+        echo FAILED: $1
+        exit 1
+    fi
+}
+
+# Attempts to abstract this better failed due to bash's impossible
+# quoting mechanisms.
+function test_inference_program() {
+    infer=$1
+    echo nosetests --processes=4 --process-timeout=1200 -c inference-quality.cfg --tc=ignore_inference_quality:true --tc=infer:"\"$infer\""
+    nosetests --processes=4 --process-timeout=1200 -c inference-quality.cfg --tc=ignore_inference_quality:true --tc=infer:"$infer"
+    abort_on_error "$infer"
+}
+
+echo nosetests --processes=4 --process-timeout=1200 -c crashes.cfg
+nosetests --processes=4 --process-timeout=1200 -c crashes.cfg
+abort_on_error "(mh default one 3)"
+
+test_inference_program "(func-pgibbs default ordered 3 3)"
+test_inference_program "(pgibbs default ordered 3 3)"
+test_inference_program "(meanfield default one 3 3)"

@@ -51,7 +51,16 @@ def get_ripl():
     raise Exception("Unknown backend type %s" % config["get_ripl"])
 
 
-def collectSamples(ripl,address,num_samples=None,infer=None):
+def collectSamples(*args, **kwargs):
+  return _collectData(collect_iid_samples(), *args, **kwargs)
+
+def collectStateSequence(*args, **kwargs):
+  return _collectData(False, *args, **kwargs)
+
+def collectIidSamples(*args, **kwargs):
+  return _collectData(True, *args, **kwargs)
+
+def _collectData(iid,ripl,address,num_samples=None,infer=None):
   if num_samples is None:
     num_samples = default_num_samples()
   if infer is None:
@@ -66,7 +75,7 @@ def collectSamples(ripl,address,num_samples=None,infer=None):
     # tests, presumably by avoiding the parser.
     ripl.sivm.core_sivm.engine.infer(infer)
     predictions.append(ripl.report(address))
-    if collect_iid_samples(): ripl.sivm.core_sivm.engine.reset()
+    if iid: ripl.sivm.core_sivm.engine.reset()
   return predictions
 
 def defaultInfer():

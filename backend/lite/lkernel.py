@@ -38,9 +38,9 @@ class VariationalLKernel(LKernel):
   def updateParameters(self,gradient,gain,stepSize): pass
 
 class DefaultVariationalLKernel(VariationalLKernel):
-  def __init__(self,trace,psp,node):
+  def __init__(self,psp,args):
     self.psp = psp
-    self.parameters = [trace.valueAt(o) for o in node.operandNodes]
+    self.parameters = args.operandValues
     self.parameterScopes = psp.getParameterScopes()
 
   def simulate(self,trace,oldValue,args):

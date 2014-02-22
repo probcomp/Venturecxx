@@ -40,3 +40,8 @@ def cartesianProduct(original):
     firstGroup = original[0]
     recursiveProduct = cartesianProduct(original[1:])
     return [ [v] + vs for v in firstGroup for vs in recursiveProduct]
+
+def logaddexp(items):
+  "Apparently this was added to scipy in a later version than the one installed on my machine.  Sigh."
+  the_max = max(items)
+  return the_max + math.log(sum(math.exp(item - the_max) for item in items))

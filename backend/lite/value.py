@@ -7,6 +7,9 @@ from abc import ABCMeta
 from numbers import Number
 from request import Request # TODO Pull that file in here?
 
+# TODO Define reasonable __str__ and/or __repr__ methods for all the
+# values and all the types.
+
 class VentureValue(object):
   __metaclass__ = ABCMeta
 
@@ -134,7 +137,7 @@ interface here is compatible with one possible path."""
   def fromStackDict(thing):
     return VentureArray([VentureValue.fromStackDict(v) for v in thing["value"]])
   def lookup(self, index):
-    return self.array[index.getNumber()]
+    return self.array[int(index.getNumber())]
   def contains(self, obj):
     # Not Python's `in` because I need to use custom equality
     # TODO I am going to have to overload the equality for dicts

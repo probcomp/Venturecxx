@@ -19,31 +19,7 @@ from nose.tools import with_setup
 
 
 
-def setup_module():
-    print 'START SETUP'
-    def start_engines(no_engines,sleeptime=20):
-        start = subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines,'&'])
-        time.sleep(sleeptime)
-    try: 
-        start_engines(2,sleeptime=50)
-        print 'SUBPROCESS IPCLUS START SUCCESS'
-    except: assert False,"subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])"
-
-    file_dir = os.path.dirname(os.path.realpath(__file__))
-    loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] )   
-    # [:-2] because current file is /Venturecxx/test/venturemagics
-    print 'REACHED EXEC FILE'
-    execfile(loc_ip_parallel)
-   
-
-
-def teardown_module():
-    print "TEARDOWN REACHED"
-    def stop_engines(): 
-        stop=subprocess.Popen(['ipcluster', 'stop'])
-        stop.wait()
-
-    stop_engines()
+    
 
 ## FIXME we want to find ip_parallel without importing it
 # (importing breaks it due to use of parallel)
@@ -62,13 +38,7 @@ def teardown_module():
 
 
 
-# execfile(loc_ip_parallel)
-# # Tests below all depend on finding ipcluster engines or starting them successfully
-# try: 
-#     cli=Client() # try to find existing engines
-# except:
-#     try: start_engines(2,sleeptime=30)
-#     except: print "test_ip_parallel: FAILED, couldn't start engines"
+
 
 
 
@@ -287,7 +257,7 @@ def testMrMap():
 # run tests solely in Python interpreter
 
 
-#tests = [testMrMap, testMulti, testSnapshot, testDirectives,testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
+tests = [testMrMap, testMulti, testSnapshot, testDirectives,testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
 
 
 def AllIPParallel(new_engines=False,sleeptime=30):
@@ -304,6 +274,31 @@ def AllIPParallel(new_engines=False,sleeptime=30):
     return 'testAll complete'
 
 
+def start_engines(no_engines,sleeptime=20):
+    st = subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines,'&'])
+    time.sleep(sleeptime)
+
+def stop_engines(): 
+    stop=subprocess.Popen(['ipcluster', 'stop'])
+    stop.wait()
+
+
+try: 
+    start_engines(2,sleeptime=50)
+    print 'SUBPROCESS IPCLUS START SUCCESS'
+except: assert False,"subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])"
+
+
+file_dir = os.path.dirname(os.path.realpath(__file__))
+loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] )   
+# [:-2] because current file is /Venturecxx/test/venturemagics
+print 'REACHED EXEC FILE'
+#%run {loc_ip_parallel}
+#%run /Venturecxx/test/venturemagics
+
+AllIPParallel()
+print 'PARATEST PASSED'
+#stop_engines()
 
 
 
