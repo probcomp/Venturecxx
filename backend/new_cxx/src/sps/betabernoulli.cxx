@@ -22,37 +22,37 @@ VentureValuePtr MakeBetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_
 
 // BetaBernoulliOutputPSP
 
-  VentureValuePtr BetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
-  {
-    shared_ptr<BetaBernoulliSPAux> aux = dynamic_pointer_cast<BetaBernoulliSPAux>(args->spAux);
-    double a = alpha + aux->heads;
-    double b = beta + aux->tails;
-    double w = a / (a + b);
-    return VentureValuePtr(new VentureBool(gsl_ran_flat(rng,0.0,1.0) < w));
-  }
+VentureValuePtr BetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  shared_ptr<BetaBernoulliSPAux> aux = dynamic_pointer_cast<BetaBernoulliSPAux>(args->spAux);
+  double a = alpha + aux->heads;
+  double b = beta + aux->tails;
+  double w = a / (a + b);
+  return VentureValuePtr(new VentureBool(gsl_ran_flat(rng,0.0,1.0) < w));
+}
 
-  double BetaBernoulliOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const
-  {
-    shared_ptr<BetaBernoulliSPAux> aux = dynamic_pointer_cast<BetaBernoulliSPAux>(args->spAux);
-    double a = alpha + aux->heads;
-    double b = beta + aux->tails;
-    double w = a / (a + b);
-    if (value->getBool()) { return log(w); }
-    else { return log(1-w); }
-  }
+double BetaBernoulliOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const
+{
+  shared_ptr<BetaBernoulliSPAux> aux = dynamic_pointer_cast<BetaBernoulliSPAux>(args->spAux);
+  double a = alpha + aux->heads;
+  double b = beta + aux->tails;
+  double w = a / (a + b);
+  if (value->getBool()) { return log(w); }
+  else { return log(1-w); }
+}
 
-  void BetaBernoulliOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
-  {
-    shared_ptr<BetaBernoulliSPAux> aux = dynamic_pointer_cast<BetaBernoulliSPAux>(args->spAux);
-    if (value->getBool()) { aux->heads++; }
-    else { aux->tails++; }
-  }
-  void BetaBernoulliOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
-  {
-    shared_ptr<BetaBernoulliSPAux> aux = dynamic_pointer_cast<BetaBernoulliSPAux>(args->spAux);
-    if (value->getBool()) { aux->heads++; }
-    else { aux->tails++; }
-  }
+void BetaBernoulliOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
+{
+  shared_ptr<BetaBernoulliSPAux> aux = dynamic_pointer_cast<BetaBernoulliSPAux>(args->spAux);
+  if (value->getBool()) { aux->heads++; }
+  else { aux->tails++; }
+}
+void BetaBernoulliOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
+{
+  shared_ptr<BetaBernoulliSPAux> aux = dynamic_pointer_cast<BetaBernoulliSPAux>(args->spAux);
+  if (value->getBool()) { aux->heads--; }
+  else { aux->tails--; }
+}
 
 double BetaBernoulliOutputPSP::logDensityOfCounts(shared_ptr<SPAux> aux) const 
 {
@@ -148,8 +148,8 @@ void UBetaBernoulliOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args>
 void UBetaBernoulliOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
 {
   shared_ptr<UBetaBernoulliSPAux> aux = dynamic_pointer_cast<UBetaBernoulliSPAux>(args->spAux);
-  if (value->getBool()) { aux->heads++; }
-  else { aux->tails++; }
+  if (value->getBool()) { aux->heads--; }
+  else { aux->tails--; }
 }
 
 
