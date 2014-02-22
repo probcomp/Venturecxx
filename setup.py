@@ -70,6 +70,7 @@ src_files = [
     "src/sps/betabernoulli.cxx",
     "src/sps/conditional.cxx",
     "src/sps/continuous.cxx",
+    "src/sps/crp.cxx",
     "src/sps/csp.cxx",
     "src/sps/deterministic.cxx",
     "src/sps/dir_mult.cxx",
