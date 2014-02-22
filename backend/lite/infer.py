@@ -174,9 +174,13 @@ class EnumerativeGibbsOperator(object):
     return trace,self._compute_alpha(rhoWeight, xiWeights, finalIndex)
 
   def _compute_alpha(self, rhoWeight, xiWeights, finalIndex):
-    xiWeight = xiWeights[finalIndex]
-    weightMinusXi = math.log(sum([math.exp(w) for w in xiWeights]) + math.exp(rhoWeight) - math.exp(xiWeight))
-    weightMinusRho = math.log(sum([math.exp(w) for w in xiWeights]))
+    # TODO This is the same as _compute_alpha in PGibbsOperator.  Abstract.
+    otherXiWeightsWithRho = copy.copy(xiWeights)
+    otherXiWeightsWithRho.pop(finalIndex)
+    otherXiWeightsWithRho.append(rhoWeight)
+
+    weightMinusXi = logaddexp(otherXiWeightsWithRho)
+    weightMinusRho = logaddexp(xiWeights)
     return weightMinusRho - weightMinusXi
 
   def accept(self): pass
