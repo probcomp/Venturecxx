@@ -23,8 +23,6 @@ void SPFamilies::unregisterFamily(FamilyID id)
   families.erase(id);
 }
 
-//shared_ptr<SPAux> SPAux::copy() { return new SPAux(); }
-
 shared_ptr<LatentDB> SP::constructLatentDB() const { return shared_ptr<LatentDB>(); }
 
 SP::SP(PSP * requestPSP, PSP * outputPSP) :

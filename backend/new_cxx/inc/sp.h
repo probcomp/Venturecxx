@@ -39,7 +39,7 @@ struct SPAux
 {
   virtual ~SPAux() {}
   // TODO stupid and may make bugs hard to find
-  virtual shared_ptr<SPAux> copy() { return shared_ptr<SPAux>(new SPAux()); } 
+  virtual shared_ptr<SPAux> clone() { return shared_ptr<SPAux>(new SPAux()); } 
 };
 
 struct SP : VentureValue
