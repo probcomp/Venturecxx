@@ -25,10 +25,14 @@ struct SPAux;
 // We need to be more consistent about whether this unboxes
 struct VentureValue
 {
+  virtual bool hasDouble() const; // TODO hack for operator<
   virtual double getDouble() const;
-  virtual int getInt() const;
+
+  virtual bool hasInt() const;
+  virtual long getInt() const;
   virtual int getAtom() const;
   virtual bool getBool() const;
+  bool hasSymbol() const;
   virtual const string & getSymbol() const;
   virtual const vector<VentureValuePtr>& getArray() const;
   virtual bool isNil() const { return false; }
@@ -43,6 +47,7 @@ struct VentureValue
   virtual const vector<ESR>& getESRs() const;
   virtual const vector<shared_ptr<LSR> >& getLSRs() const;
 
+  bool hasNode() const { return false; }
   virtual Node * getNode() const;
 
   virtual shared_ptr<SPAux> getSPAux() const;
@@ -59,6 +64,8 @@ struct VentureValue
   virtual size_t hash() const;
   
   virtual string toString() const { return "Unknown VentureValue"; };
+
+  bool operator<(const VentureValuePtr & rhs) const;
 };
 
 /* for unordered map */
@@ -77,5 +84,6 @@ struct HashVentureValuePtr
     return a->hash();
   }
 };
+
 
 #endif
