@@ -37,19 +37,19 @@ class Particle(Trace):
     self.base = trace
 
     # (1) Persistent stuff
-    self.rcs = PSet()
-    self.ccs = PSet()
-    self.aes = PSet()
+    self.rcs = PSet() # PSet Node
+    self.ccs = PSet() # PSet Node
+    self.aes = PSet() # PSet Node
 
-    self.values = PMap()
-    self.madeSPs = PMap()
+    self.values = PMap()  # PMap Node VentureValue
+    self.madeSPs = PMap() # PMap Node VentureSP
 
-    self.scopes = PMap()
-    self.esrParents = PMap()
-    self.numRequests = PMap()
-    self.regenCounts = PMap()
-    self.newMadeSPFamilies = PMap()
-    self.newChildren = PMap()
+    self.scopes = PMap()  # PMap scopeid (PMap blockid (PSet Node))
+    self.esrParents = PMap() # PMap Node [Node] # mutable list ok b/c only touched by one particle
+    self.numRequests = PMap() # PMap Node Int
+    self.regenCounts = PMap() # PMap Node int
+    self.newMadeSPFamilies = PMap() # PMap Node (PMap id Node)
+    self.newChildren = PMap() # PMap Node (PSet Node)
 
     # (2) Maps to things that change outside of particle methods
     self.madeSPAuxs = {}
@@ -126,9 +126,15 @@ class Particle(Trace):
     if not node in self.numRequests: self.numRequests = self.numRequests.insert(node,self.base.numRequestsAt(node))
     self.numRequests = self.numRequests.adjust(node,lambda nr: nr + 1)
 
+  def childrenAt(self,node):
+    if node in self.newChildren:
+      return self.base.childrenAt(node).union(self.newChildren.lookup(node))
+    else:
+      return self.base.childrenAt(node)
+
   def addChildAt(self,node,child):
-    if not node in self.newChildren: self.newChildren = self.newChildren.insert(node,[])
-    self.newChildren.lookup(node).append(child)
+    if not node in self.newChildren: self.newChildren = self.newChildren.insert(node,PSet())
+    self.newChildren = self.newChildren.adjust(node, lambda children: children.insert(child))
 
 ### SPFamilies
 
@@ -209,7 +215,6 @@ class Particle(Trace):
 ################### Methods that should never be called on particles
   def unregisterFamilyAt(self,node,esrId): raise Exception("Should not be called on a particle")
   def popEsrParentAt(self,node): raise Exception("Should not be called on a particle")
-  def childrenAt(self,node): raise Exception("Should not be called on a particle")
   def removeChildAt(self,node,child): raise Exception("Should not be called on a particle")
   def decRequestsAt(self,node): raise Exception("Should not be called on a particle")
   def unregisterAEKernel(self,node): raise Exception("Should not be called on a particle")

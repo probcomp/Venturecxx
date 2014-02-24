@@ -23,7 +23,7 @@ class PSP(object):
   def canEnumerate(self): return False
 
   def hasVariationalLKernel(self): return False
-  def getVariationalLKernel(self,trace,node): return DefaultVariationalLKernel(trace,self,node)
+  def getVariationalLKernel(self,args): return DefaultVariationalLKernel(self, args)
 
   def hasSimulationKernel(self): return False
   def hasDeltaKernel(self): return False
@@ -53,7 +53,7 @@ class FunctionType(object): # TODO make this a VentureType?  With conversions!?
   """An object loosely representing a Venture function type.  It knows
 the types expected for the arguments and the return, and thus knows
 how to wrap and unwrap individual values or Args objects.  This is
-used in the implementation of TypedPSP and TypedAAALKernel."""
+used in the implementation of TypedPSP and TypedLKernel."""
   def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
     self.args_types = args_types
     self.return_type = return_type
@@ -106,19 +106,18 @@ class TypedPSP(PSP):
   def childrenCanAAA(self):
     return self.psp.childrenCanAAA()
   def getAAALKernel(self):
-    return TypedAAALKernel(self.psp.getAAALKernel(), self.f_type)
+    return TypedLKernel(self.psp.getAAALKernel(), self.f_type)
 
   def makesHSRs(self): return self.psp.makeHSRs()
   def canEnumerate(self): return self.psp.canEnumerate()
 
   def hasVariationalLKernel(self): return self.psp.hasVariationalLKernel()
-  def getVariationalLKernel(self,trace,node):
-    # TODO Is this right?  Or should I somehow wrap the variational
-    # LKernel so it deals with the types properly?
-    return self.psp.getVariationalLKernel(trace, node)
+  def getVariationalLKernel(self,args):
+    return TypedVariationalLKernel(self.psp.getVariationalLKernel(self.f_type.unwrap_args(args)), self.f_type)
 
   def hasSimulationKernel(self): return self.psp.hasSimulationKernel()
   def hasDeltaKernel(self): return self.hasDeltaKernel()
+  # TODO Wrap the simulation and delta kernels properly (once those are tested)
 
   def description(self,name):
     # TODO Automatically add the type signature?
@@ -128,7 +127,7 @@ class TypedPSP(PSP):
   def logDensityOfCounts(self,aux):
     return self.psp.logDensityOfCounts(aux)
 
-class TypedAAALKernel(LKernel):
+class TypedLKernel(LKernel):
   def __init__(self, kernel, f_type):
     self.kernel = kernel
     self.f_type = f_type
@@ -145,3 +144,9 @@ class TypedAAALKernel(LKernel):
     return self.kernel.reverseWeight(trace,
                                      self.f_type.unwrap_return(oldValue),
                                      self.f_type.unwrap_args(args))
+
+class TypedVariationalLKernel(TypedLKernel):
+  def gradientOfLogDensity(self, value, args):
+    return self.kernel.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
+  def updateParameters(self, gradient, gain, stepSize):
+    return self.kernel.updateParameters(gradient, gain, stepSize)
