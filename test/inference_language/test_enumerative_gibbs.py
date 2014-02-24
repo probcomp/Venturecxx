@@ -2,7 +2,7 @@ from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 from nose import SkipTest
 
-# TODO N needs to be managed here more intelligently
+
 @statisticalTest
 def testEnumerativeGibbsBasic1():
   """Basic sanity test"""
@@ -12,6 +12,15 @@ def testEnumerativeGibbsBasic1():
   predictions = collectSamples(ripl,"pid",None,{"kernel":"gibbs"})
   ans = [(True,.5),(False,.5)]
   return reportKnownDiscrete(ans, predictions)
+
+def testEnumerativeGibbsGotcha():
+  """Enumeration should not break on things that look like they're in the support but aren't"""
+  raise SkipTest("Issue: https://app.asana.com/0/9277419963067/10464755327019")
+  ripl = get_ripl()
+  ripl.predict("(bernoulli 1)")
+  ripl.predict("(bernoulli 0)")
+  ripl.infer({"kernel":"gibbs"})
+  ripl.infer({"kernel":"gibbs", "scope":"default", "block":"all"})
 
 @statisticalTest
 def testEnumerativeGibbsXOR1():

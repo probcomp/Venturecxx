@@ -7,9 +7,10 @@ from detach import detachAndExtract
 from scaffold import constructScaffold
 from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
-from utils import simulateCategorical, cartesianProduct
+from utils import simulateCategorical, cartesianProduct, logaddexp
 from nose.tools import assert_almost_equal
 import sys
+import copy
 
 def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
@@ -166,15 +167,21 @@ class EnumerativeGibbsOperator(object):
 
     # Now sample a NEW particle in proportion to its weight
     finalIndex = simulateCategorical([math.exp(w) for w in xiWeights])
-    xiWeight = xiWeights[finalIndex]
     self.xiDB = xiDBs[finalIndex]
-
-    weightMinusXi = math.log(sum([math.exp(w) for w in xiWeights]) + math.exp(rhoWeight) - math.exp(xiWeight))
-    weightMinusRho = math.log(sum([math.exp(w) for w in xiWeights]))
 
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.xiDB,{})
 
-    return trace,weightMinusRho - weightMinusXi
+    return trace,self._compute_alpha(rhoWeight, xiWeights, finalIndex)
+
+  def _compute_alpha(self, rhoWeight, xiWeights, finalIndex):
+    # TODO This is the same as _compute_alpha in PGibbsOperator.  Abstract.
+    otherXiWeightsWithRho = copy.copy(xiWeights)
+    otherXiWeightsWithRho.pop(finalIndex)
+    otherXiWeightsWithRho.append(rhoWeight)
+
+    weightMinusXi = logaddexp(otherXiWeightsWithRho)
+    weightMinusRho = logaddexp(xiWeights)
+    return weightMinusRho - weightMinusXi
 
   def accept(self): pass
   def reject(self):
@@ -260,19 +267,28 @@ class PGibbsOperator(object):
 
     # Now sample a NEW particle in proportion to its weight
     finalIndex = simulateCategorical([math.exp(w) for w in xiWeights])
-    rhoWeight = rhoWeights[T-1]
-    xiWeight = xiWeights[finalIndex]
-
-    weightMinusXi = math.log(sum([math.exp(w) for w in xiWeights]) + math.exp(rhoWeight) - math.exp(xiWeight))
-    weightMinusRho = math.log(sum([math.exp(w) for w in xiWeights]))
 
     path = constructAncestorPath(ancestorIndices,T-1,finalIndex) + [finalIndex]
     assert len(path) == T
     restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,T,path)
     assertTrace(self.trace,self.scaffold)
 
+    return trace,self._compute_alpha(rhoWeights[T-1], xiWeights, finalIndex)
+
+  def _compute_alpha(self, rhoWeight, xiWeights, finalIndex):
+    # Remove the weight of the chosen xi from the list instead of
+    # trying to subtract in logspace to prevent catastrophic
+    # cancellation (as would happen if the chosen xi weight were
+    # significantly larger than all the other xi weights and the rho
+    # weight).
+    otherXiWeightsWithRho = copy.copy(xiWeights)
+    otherXiWeightsWithRho.pop(finalIndex)
+    otherXiWeightsWithRho.append(rhoWeight)
+
+    weightMinusXi = logaddexp(otherXiWeightsWithRho)
+    weightMinusRho = logaddexp(xiWeights)
     alpha = weightMinusRho - weightMinusXi
-    return trace,alpha
+    return alpha
 
   def accept(self):
     pass
@@ -343,23 +359,24 @@ class ParticlePGibbsOperator(object):
     # Now sample a NEW particle in proportion to its weight
     finalIndex = simulateCategorical([math.exp(w) for w in particleWeights[0:-1]])
     assert finalIndex < P
-    xiWeight = particleWeights[finalIndex]
-    rhoWeight = particleWeights[-1]
-
-    totalExpWeight = sum([math.exp(w) for w in particleWeights])
-    totalXiExpWeight = sum([math.exp(w) for w in particleWeights[0:-1]])
-
-    weightMinusXi = math.log(totalExpWeight - math.exp(xiWeight)) if (totalExpWeight - math.exp(xiWeight)) > 0 else float("-inf")
-    weightMinusRho = math.log(totalXiExpWeight) if totalXiExpWeight > 0 else float("-inf")
-
-#    print particleWeights,weightMinusXi,weightMinusRho
-    alpha = weightMinusRho - weightMinusXi
 
     self.finalIndex = finalIndex
     self.particles = particles
 
     # TODO need to return a trace as well
-    return particles[finalIndex],alpha
+    return particles[finalIndex],self._compute_alpha(particleWeights, finalIndex)
+
+  def _compute_alpha(self, particleWeights, finalIndex):
+    # Remove the weight of the chosen xi from the list instead of
+    # trying to subtract in logspace to prevent catastrophic
+    # cancellation like the non-functional case
+    particleWeightsNoXi = copy.copy(particleWeights)
+    particleWeightsNoXi.pop(finalIndex)
+
+    weightMinusXi = logaddexp(particleWeightsNoXi)
+    weightMinusRho = logaddexp(particleWeights[0:-1])
+    alpha = weightMinusRho - weightMinusXi
+    return alpha
 
   def accept(self):
     self.particles[self.finalIndex].commit()
