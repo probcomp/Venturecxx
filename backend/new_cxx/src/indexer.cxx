@@ -9,20 +9,22 @@ ScaffoldIndexer::ScaffoldIndexer(ScopeID scope,BlockID block): scope(scope),bloc
 
 shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(ConcreteTrace * trace) const
 {
-  if (dynamic_pointer_cast<VentureSymbol>(block) && block->getSymbol() == "one")
+  if (block->hasSymbol() && block->getSymbol() == "one")
     {
       BlockID actualBlock = trace->sampleBlock(scope);
       vector<set<Node*> > setsOfPNodes;
       setsOfPNodes.push_back(trace->getNodesInBlock(scope,actualBlock));
       return constructScaffold(trace,setsOfPNodes);
     }
-  else if (dynamic_pointer_cast<VentureSymbol>(block) && block->getSymbol() == "all")
+  else if (block->hasSymbol() && block->getSymbol() == "all")
     {
-      assert(false);
+      vector<set<Node*> > setsOfPNodes;
+      setsOfPNodes.push_back(trace->getAllNodesInScope(scope));
+      return constructScaffold(trace,setsOfPNodes);
     }
-  else if (dynamic_pointer_cast<VentureSymbol>(block) && block->getSymbol() == "ordered")
+  else if (block->hasSymbol() && block->getSymbol() == "ordered")
     {
-      assert(false);
+      return constructScaffold(trace,trace->getOrderedSetsInScope(scope));
     }
   else
     {

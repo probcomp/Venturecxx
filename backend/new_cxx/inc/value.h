@@ -32,7 +32,7 @@ struct VentureValue
   virtual long getInt() const;
   virtual int getAtom() const;
   virtual bool getBool() const;
-  bool hasSymbol() const;
+  virtual bool hasSymbol() const;
   virtual const string & getSymbol() const;
   virtual const vector<VentureValuePtr>& getArray() const;
   virtual bool isNil() const { return false; }
