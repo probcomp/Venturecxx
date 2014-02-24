@@ -25,3 +25,10 @@ OutputNode::OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, R
 {
   definiteParents.push_back(requestNode);
 }
+
+OutputNode::~OutputNode()
+{
+  delete requestNode;
+  for (size_t i = 0; i < operandNodes.size(); ++i) { delete operandNodes[i]; }
+  delete operatorNode;
+}
