@@ -10,10 +10,14 @@ void cannotConvertType(const VentureValue * obj, string target)
   assert(false);
 }
 
+bool VentureValue::hasDouble() const { return false; }
+
 double VentureValue::getDouble() const { cannotConvertType(this,"double"); assert(false); throw "no return"; }
-int VentureValue::getInt() const { cannotConvertType(this,"int"); assert(false); throw "no return"; }
+bool VentureValue::hasInt() const { return false; }
+long VentureValue::getInt() const { cannotConvertType(this,"int"); assert(false); throw "no return"; }
 int VentureValue::getAtom() const { cannotConvertType(this,"atom"); assert(false); throw "no return"; }
 bool VentureValue::getBool() const { cannotConvertType(this,"bool"); assert(false); throw "no return"; }
+bool VentureValue::hasSymbol() const { return false; }
 const string& VentureValue::getSymbol() const { cannotConvertType(this,"symbol"); assert(false); throw "no return"; }
 const vector<VentureValuePtr>& VentureValue::getArray() const { cannotConvertType(this,"array"); assert(false); throw "no return"; }
 
@@ -47,3 +51,11 @@ boost::python::dict VentureValue::toPython() const
 
 bool VentureValue::equals(const VentureValuePtr & other) const { return false; assert(false); throw "no return"; }
 size_t VentureValue::hash() const { assert(false); assert(false); throw "no return"; }
+
+struct VentureSymbol;
+bool VentureValue::operator<(const VentureValuePtr & rhs) const 
+{
+  if (hasDouble() && rhs->hasDouble()) { return getDouble() < rhs->getDouble(); }
+  else if (hasSymbol() && rhs->hasSymbol()) { return getSymbol() < rhs->getSymbol(); }
+  else { assert(false); return false; }
+}

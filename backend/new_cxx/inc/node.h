@@ -39,6 +39,7 @@ struct OutputNode : ApplicationNode
 {
   OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const shared_ptr<VentureEnvironment>& env);
   RequestNode * requestNode;
+  ~OutputNode();
 };
 
 #endif

@@ -312,7 +312,19 @@ set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope)
 }
 
     
-vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope) { assert(false); }
+vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope) 
+{ 
+  vector<set<Node*> > ordered;
+  
+  for (vector<pair<BlockID,set<Node*> > >::iterator iter = scopes[scope].a.begin();
+       iter != scopes[scope].a.end();
+       ++iter)
+    {
+      set<Node*> nodesInBlock = getNodesInBlock(scope,iter->first);
+      ordered.push_back(nodesInBlock);
+    }
+  return ordered;
+}
 
 set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block) 
 { 
