@@ -39,7 +39,7 @@ def testBinomial2():
 @statisticalTest
 def testBinomial3():
   "A simple test that checks the binomial enumerate method"
-  if config["get_ripl"] == "cxx": raise SkipTest("CXX doesn't have EnumerativeGibbs yet")
+#  if config["get_ripl"] == "cxx": raise SkipTest("CXX doesn't have EnumerativeGibbs yet")
   ripl = get_ripl()
 
   b = 0.7
