@@ -115,7 +115,7 @@ def make_mripl_func():
 
 class MRipl():
     
-    def __init__(self,no_ripls,client=None,name=None):
+    def __init__(self,no_ripls,lite=False,client=None,name=None):
         self.local_ripl = make_church_prime_ripl()
         self.local_ripl.set_seed(0)   # same seed as first remote ripl
         self.no_ripls = no_ripls
@@ -128,7 +128,9 @@ class MRipl():
         def p_getpids(): import os; return os.getpid()
         self.pids = self.dview.apply(p_getpids)
       
-        self.dview.execute('from venture.shortcuts import make_church_prime_ripl')
+        self.dview.execute('from venture.shortcuts import make_church_prime_ripl as make_ripl')
+        if lite: 
+            self.dview.execute('from venture.shortcuts import make_church_prime_ripl as make_ripl')
         
         # import as plt for all plotting (note: user may need to have opened
         # IPNB in inline mode for everything to work -- include in examples)
@@ -145,7 +147,7 @@ class MRipl():
 
         def mk_ripl(seed,mrid):
             ripls = mripls[mrid]
-            ripls.append( make_church_prime_ripl() )
+            ripls.append( make_ripl() )
             ripls[-1].set_seed(seed)
             
             seeds = seeds_lists[mrid]
@@ -541,7 +543,7 @@ except:
 ## Use examples: to be moved to dedicated example scripts
 
 def sp(no_ripls=2):    
-    v = MRipl(no_ripls)
+    v = MRipl(no_ripls,lite=True)
     v.assume('r','(normal 0 30)',label='r')
     v.assume('s','(normal 0 30)',label='s')
     v.assume('w1','(normal (+ r s) 5.)',label='w1')
