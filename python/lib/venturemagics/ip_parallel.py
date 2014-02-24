@@ -139,7 +139,7 @@ class MRipl():
         # import as plt for all plotting (note: user may need to have opened
         # IPNB in inline mode for everything to work -- include in examples)
         self.dview.execute('import matplotlib.pylab as plt')
-        
+        #self.dview.execute('%pylab inline
         self.dview.push(copy_ripl_dict)
         self.dview.execute(make_mripl_string)
        
@@ -471,7 +471,7 @@ def mr_map(line, cell):
     '''cell magic allows mapping of functions across all ripls in an MRipl.
     syntax: %%mr_map mripl_name proc_name [store_variable_name, local_ripl] '''
     ip = get_ipython()
-    #ip.run_cell_magic("px","","%pylab --no-import-all;%pylab inline") # not sure if this is needed or works
+    ip.run_cell_magic("px","","%pylab inline") #--no-import-all;%pylab inline") # not sure if this is needed or works
     
     assert len(str(line).split()) >= 2, 'Error. Syntax: %%mr_map mripl_name proc_name [optional: store_variable_name] '
     # get inputs
@@ -494,7 +494,7 @@ def mr_map(line, cell):
 
     outputs_by_ripl = lst_flatten( mripl.dview.apply( lambda: results[-1]) ) # pull the result of map_proc
     
-    ip.run_cell_magic("px",'','pass') # display any figs inline
+    ip.run_cell_magic("px",'','pass') #'plt.show()') # display any figs inline
 
     out_dict = {'info':{'mripl':mripl_name,'proc':proc_name}, 'out':outputs_by_ripl }
     
