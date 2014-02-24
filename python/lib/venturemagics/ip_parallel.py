@@ -1,10 +1,12 @@
 from IPython.parallel import Client
 from venture.shortcuts import make_church_prime_ripl
+from venture.shortcuts import make_lite_church_prime_ripl
 import numpy as np
 import matplotlib.pylab as plt
 from scipy.stats import kde
 gaussian_kde = kde.gaussian_kde
 import subprocess,time
+
 
 
 ### IPython Parallel Magics
@@ -72,7 +74,8 @@ def copy_ripl(ripl,seed=None):
     '''copies ripl via directives_list to fresh ripl, preserve directive_id
     by preserving order, optionally set_seed'''
     di_list = ripl.list_directives()
-    new_ripl = make_church_prime_ripl()
+    try: new_ripl = make_ripl()
+    except: new_ripl = make_church_prime_ripl()
     if seed: new_ripl.set_seed(seed)
     [run_py_directive(new_ripl,di) for di in di_list]
     return new_ripl
@@ -117,6 +120,7 @@ class MRipl():
     
     def __init__(self,no_ripls,lite=False,client=None,name=None):
         self.local_ripl = make_church_prime_ripl()
+        if lite: self.local_ripl = make_lite_church_prime_ripl()
         self.local_ripl.set_seed(0)   # same seed as first remote ripl
         self.no_ripls = no_ripls
         self.seeds = range(self.no_ripls)
