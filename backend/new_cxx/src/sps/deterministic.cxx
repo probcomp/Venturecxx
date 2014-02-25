@@ -112,6 +112,5 @@ VentureValuePtr NotOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 
 VentureValuePtr IsSymbolOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  // TODO not sure if this will work
-  return shared_ptr<VentureBool>(new VentureBool(dynamic_pointer_cast<VentureBool>(args->operandValues[0])));
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureSymbol>(args->operandValues[0])));
 }

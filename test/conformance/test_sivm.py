@@ -1,4 +1,5 @@
 from venture.test.config import get_ripl
+from nose.tools import assert_equal, assert_less
 
 def testForget1():
   ripl = get_ripl()
@@ -17,5 +18,5 @@ def testForget1():
 
   # TODO this line is completely unforgiveable
   real_sivm = ripl.sivm.core_sivm.engine
-  assert real_sivm.get_entropy_info()["unconstrained_random_choices"] == 1
-  assert real_sivm.logscore() < 0
+  assert_equal(real_sivm.get_entropy_info()["unconstrained_random_choices"],1)
+  assert_less(real_sivm.logscore(),0)

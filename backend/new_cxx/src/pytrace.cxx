@@ -1,5 +1,6 @@
 #include "pytrace.h"
 #include "regen.h"
+#include "detach.h"
 #include "concrete_trace.h"
 #include "db.h"
 #include "env.h"
@@ -29,9 +30,9 @@ void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
 
 void PyTrace::unevalDirectiveID(DirectiveID did) 
 { 
-  // assert(trace->families.count(did));
-  // unevalFamily(trace.get(),trace->families[did],shared_ptr<Scaffold>(new Scaffold()),shared_ptr<DB>(new DB()));
-  // trace->families.erase(did);
+ assert(trace->families.count(did));
+ unevalFamily(trace.get(),trace->families[did].get(),shared_ptr<Scaffold>(new Scaffold()),shared_ptr<DB>(new DB()));
+ trace->families.erase(did);
 }
 
 void PyTrace::observe(DirectiveID did,boost::python::object valueExp)
@@ -41,17 +42,17 @@ void PyTrace::observe(DirectiveID did,boost::python::object valueExp)
   trace->unpropagatedObservations[root.get()] = parseExpression(valueExp);
 }
 
-void PyTrace::unobserve(DirectiveID directiveID)
+void PyTrace::unobserve(DirectiveID did)
 {
-  // assert(trace->families.count(did));
-  // Node * node = trace->families[id];
-  // OutputNode * appNode = trace->getOutermostNonReferenceApplication(node);
-  // if (trace->isObservation(node)) { unconstrain(trace.get(),appNode); }
-  // else
-  // {
-  //   assert(trace->unpropagatedObservations.count(node));
-  //   trace->unpropagatedObservations.erase(node);
-  // }
+  assert(trace->families.count(did));
+  Node * node = trace->families[did].get();
+  OutputNode * appNode = trace->getOutermostNonRefAppNode(node);
+  if (trace->isObservation(node)) { unconstrain(trace.get(),appNode); }
+  else
+  {
+    assert(trace->unpropagatedObservations.count(node));
+    trace->unpropagatedObservations.erase(node);
+  }
 }
 
 void PyTrace::bindInGlobalEnv(string sym, DirectiveID did)
@@ -80,19 +81,26 @@ size_t PyTrace::getSeed() {
 
 double PyTrace::getGlobalLogScore() 
 {
-  // double ls = 0.0;
-  // for (size_t i = 0; i < trace->unconstrainedRandomChoices.size(); ++i)
-  // {
-  //   Node * node = trace->unconstrainedRandomChoices[i];
-  //   ls += trace->getPSP(node)->logDensity(trace->getValue(node),node);
-  // }
-  // for (size_t i = 0; i < trace->constrainedRandomChoices.size(); ++i)
-  // {
-  //   Node * node = trace->constrainedRandomChoices[i];
-  //   ls += trace->getPSP(node)->logDensity(trace->getValue(node),node);
-  // }
-  // return ls;
-  return 0;
+  double ls = 0.0;
+  for (set<Node*>::iterator iter = trace->unconstrainedChoices.begin();
+       iter != trace->unconstrainedChoices.end();
+       ++iter)
+  {
+    ApplicationNode * node = dynamic_cast<ApplicationNode*>(*iter);
+    shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
+    shared_ptr<Args> args = trace->getArgs(node);
+    ls += psp->logDensity(trace->getValue(node),args);
+  }
+  for (set<Node*>::iterator iter = trace->constrainedChoices.begin();
+       iter != trace->constrainedChoices.end();
+       ++iter)
+  {
+    ApplicationNode * node = dynamic_cast<ApplicationNode*>(*iter);
+    shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
+    shared_ptr<Args> args = trace->getArgs(node);
+    ls += psp->logDensity(trace->getValue(node),args);
+  }
+  return ls;
 }
 
 uint32_t PyTrace::numUnconstrainedChoices() { return trace->numUnconstrainedChoices(); }

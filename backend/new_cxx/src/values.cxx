@@ -176,6 +176,14 @@ boost::python::dict VentureBool::toPython() const
   return value;
 }
 
+boost::python::dict VentureSymbol::toPython() const
+{
+  boost::python::dict value;
+  value["type"] = "symbol";
+  value["value"] = boost::python::object(s);
+  return value;
+}
+
 boost::python::dict VentureArray::toPython() const
 {
   boost::python::dict value;

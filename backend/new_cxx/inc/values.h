@@ -50,7 +50,7 @@ struct VentureSymbol : VentureValue
   bool hasSymbol() const { return true; }
   const string& getSymbol() const { return s; }
   bool equals(const VentureValuePtr & other) const;
-
+  boost::python::dict toPython() const;
   size_t hash() const;
   string toString() const;
   string s;
