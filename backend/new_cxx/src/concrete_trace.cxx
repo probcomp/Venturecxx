@@ -256,7 +256,6 @@ void ConcreteTrace::setChildren(Node * node,set<Node*> childNodes)
 }
 void ConcreteTrace::setESRParents(Node * node,const vector<RootOfFamily> & esrRootNodes) 
 {
-  assert(false);
   esrRoots[node] = esrRootNodes;
 }
 
