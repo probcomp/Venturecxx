@@ -470,8 +470,14 @@ except: results=[ [], ]'''
 def mr_map(line, cell):
     '''cell magic allows mapping of functions across all ripls in an MRipl.
     syntax: %%mr_map mripl_name proc_name [store_variable_name, local_ripl] '''
+    ## FIXME:think about the use of %px, which will map code
+    # across whichever is the active dview on engines. If someone is running
+    # multiple sets of engines (e.g. separated into multiple clients or one client
+    # separated into multiple views) we'll need to be wary of px mapping to 
+    # wrong set of engines. (Could let the dview come from the mripl - so 
+    # no extra input argument needed).
     ip = get_ipython()
-    ip.run_cell_magic("px","","%pylab inline") #--no-import-all;%pylab inline") # not sure if this is needed or works
+    #ip.run_cell_magic("px","","%pylab inline") #--no-import-all;%pylab inline") # not sure if this is needed or works
     
     assert len(str(line).split()) >= 2, 'Error. Syntax: %%mr_map mripl_name proc_name [optional: store_variable_name] '
     # get inputs
@@ -519,6 +525,7 @@ def mr_map_nomagic(mripl,proc):
     mripl.dview.execute('print %s' % proc_name)
     mripl.dview.execute( 'results_%s =  [ %s(ripl) for ripl in mripls[%i] ] ' % (proc_name, proc_name, mripl.mrid) )
 
+    ## FIXME: should this be the same as the magic?
     try: # if running ipy, try to plot any figures from the ripls
         ip=get_ipython()
         ip.run_cell_magic("px",'','pass') # display any figs inline
