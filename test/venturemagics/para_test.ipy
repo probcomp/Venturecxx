@@ -288,16 +288,16 @@ def stop_engines():
     stop.wait()
 
 # Params
-sleeptime=20; no_engines = 2
+sleeptime=200; no_engines = 2
 loc_ip_parallel = sys.argv[1]
 
 # Set up engines
 try: 
     test_client = Client()
-    print 'para_test.ipy: cluster already running'
+    print 'para_tesxt.ipy: cluster already running'
 except:
     try:
-        start_engines(2,sleeptime=20)
+        start_engines(2,sleeptime=sleeptime)
         print 'para_test.ipy started cluster'
     except:
         assert False,"para_test: error in subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])"

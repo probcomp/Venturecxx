@@ -134,7 +134,7 @@ class MRipl():
       
         self.dview.execute('from venture.shortcuts import make_church_prime_ripl as make_ripl')
         if lite: 
-            self.dview.execute('from venture.shortcuts import make_church_prime_ripl as make_ripl')
+            self.dview.execute('from venture.shortcuts import make_lite_church_prime_ripl as make_ripl')
         
         # import as plt for all plotting (note: user may need to have opened
         # IPNB in inline mode for everything to work -- include in examples)
