@@ -11,6 +11,7 @@
 #include "gkernel.h"
 #include "gkernels/mh.h"
 #include "gkernels/func_mh.h"
+#include "gkernels/pgibbs.h"
 
 PyTrace::PyTrace() : trace(shared_ptr<ConcreteTrace>(new ConcreteTrace())) {}
 PyTrace::~PyTrace() {}
@@ -151,7 +152,7 @@ void PyTrace::infer(boost::python::dict params)
   {
     mixMH(trace.get(),
 	  shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block)),
-	  shared_ptr<GKernel>(new FuncMHGKernel()));
+	  shared_ptr<GKernel>(new PGibbsGKernel(3)));
 
     for (set<Node*>::iterator iter = trace->arbitraryErgodicKernels.begin();
 	 iter != trace->arbitraryErgodicKernels.end();

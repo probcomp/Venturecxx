@@ -3,6 +3,10 @@
 
 #include "wttree.hpp"
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 namespace persistent
 {
 /*
@@ -24,13 +28,22 @@ public:
   PMap() : root(new Node<Key, Value>()) {}
   
   bool contains(const Key& key)
-    { return Node<Key, Value>::node_contains(root, key, comp); }
+    { 
+      cout << "pmap::contains" << endl;
+      return Node<Key, Value>::node_contains(root, key, comp); 
+    }
     
   Value lookup(const Key& key)
-    { return Node<Key, Value>::node_lookup(root, key, comp); }
+    { 
+      cout << "pmap::lookup" << endl;
+      return Node<Key, Value>::node_lookup(root, key, comp); 
+    }
   
   PMap insert(const Key& key, const Value& value)
-    { return PMap(Node<Key, Value>::node_insert(root, key, value, comp)); }
+    { 
+      cout << "pmap::insert" << endl;
+      return PMap(Node<Key, Value>::node_insert(root, key, value, comp)); 
+    }
   
   /*
   adjust :: (PMap k v) -> k -> (v -> v) -> PMap k v

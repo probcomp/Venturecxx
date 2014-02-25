@@ -23,12 +23,19 @@ class PSet
 
 public:
   PSet() : root(new Node<Key, bool>()) {}
+
   
   bool contains(const Key& key)
-    { return Node<Key, bool>::node_contains(root, key, comp); }
+    { 
+      cout << "pset::contains" << endl;
+      return Node<Key, bool>::node_contains(root, key, comp); 
+    }
   
   PSet insert(const Key& key)
-    { return PSet(Node<Key, bool>::node_insert(root, key, true, comp)); }
+    { 
+      cout << "pset::contains" << endl;
+      return PSet(Node<Key, bool>::node_insert(root, key, true, comp)); 
+    }
   
   /*
   adjust :: (PSet k v) -> k -> (v -> v) -> PSet k v

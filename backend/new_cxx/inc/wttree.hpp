@@ -299,7 +299,7 @@ struct Node
     vector<Key> keys;
     keys.reserve(nodes.size());
     
-    for(int i = 0; i < nodes.size(); ++i) {
+    for(size_t i = 0; i < nodes.size(); ++i) {
       keys.push_back(nodes[i]->key);
     }
     return keys;
@@ -314,7 +314,7 @@ struct Node
     vector<pair<Key, Value> > items;
     items.reserve(nodes.size());
     
-    for(int i = 0; i < nodes.size(); ++i) {
+    for(size_t i = 0; i < nodes.size(); ++i) {
       items.push_back(pair<Key, Value>(nodes[i]->key, nodes[i]->value));
     }
     return items;

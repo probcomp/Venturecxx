@@ -51,10 +51,10 @@ void Particle::registerUnconstrainedChoice(Node * node)
 void Particle::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
   assert(block);
-  if (!scopes.contains(scope)) { scopes = scopes.insert(scope,PMap<BlockID,PSet<Node*> >()); }
+  if (!scopes.contains(scope)) { scopes = scopes.insert(scope,PMap<BlockID,PSet<Node*>,VentureValuePtrsLess >()); }
   if (!scopes.lookup(scope).contains(block)) 
   { 
-    PMap<BlockID,PSet<Node*> > newBlock = scopes.lookup(scope).insert(block,PSet<Node*>());
+    PMap<BlockID,PSet<Node*>,VentureValuePtrsLess > newBlock = scopes.lookup(scope).insert(block,PSet<Node*>());
     scopes = scopes.insert(scope,newBlock);
  } 
   PSet<Node*> newPNodes = scopes.lookup(scope).lookup(block).insert(node);
@@ -180,7 +180,7 @@ void Particle::setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRe
 { 
   madeSPs = madeSPs.insert(makerNode,spRecord->sp);
   madeSPAuxs[makerNode] = spRecord->spAux;
-  newMadeSPFamilies = newMadeSPFamilies.insert(makerNode,PMap<FamilyID,RootOfFamily>());
+  newMadeSPFamilies = newMadeSPFamilies.insert(makerNode,PMap<FamilyID,RootOfFamily,VentureValuePtrsLess>());
 }
 
 
@@ -204,7 +204,7 @@ void Particle::registerMadeSPFamily(Node * makerNode,FamilyID id,RootOfFamily es
 { 
   if (!newMadeSPFamilies.contains(makerNode))
   {
-    newMadeSPFamilies = newMadeSPFamilies.insert(makerNode,PMap<FamilyID,RootOfFamily>());
+    newMadeSPFamilies = newMadeSPFamilies.insert(makerNode,PMap<FamilyID,RootOfFamily,VentureValuePtrsLess>());
   }
   newMadeSPFamilies = newMadeSPFamilies.insert(makerNode,newMadeSPFamilies.lookup(makerNode).insert(id,esrRoot));    
 }
@@ -259,10 +259,10 @@ void Particle::commit()
   }
   
   // this iteration includes "default"
-  vector<pair<ScopeID,PMap<BlockID,PSet<Node*> > > > scopeItems = scopes.items();
+  vector<pair<ScopeID,PMap<BlockID,PSet<Node*>,VentureValuePtrsLess> > > scopeItems = scopes.items();
   for (size_t scopeIndex = 0; scopeIndex < scopeItems.size(); ++scopeIndex)
   {
-    pair<ScopeID,PMap<BlockID,PSet<Node*> > >& scopeItem = scopeItems[scopeIndex];
+    pair<ScopeID,PMap<BlockID,PSet<Node*>,VentureValuePtrsLess> > & scopeItem = scopeItems[scopeIndex];
     vector<pair<BlockID,PSet<Node*> > > blockItems = scopeItem.second.items();
     
     for (size_t blockIndex = 0; blockIndex < blockItems.size(); ++blockIndex)
@@ -291,10 +291,10 @@ void Particle::commit()
     baseTrace->setNumRequests(numRequestsItem.first, numRequestsItem.second);
   }
   
-  vector<pair<Node*, PMap<FamilyID,RootOfFamily> > > newMadeSPFamiliesItems = newMadeSPFamilies.items();
+  vector<pair<Node*, PMap<FamilyID,RootOfFamily,VentureValuePtrsLess> > > newMadeSPFamiliesItems = newMadeSPFamilies.items();
   for (size_t newMadeSPFamiliesIndex = 0; newMadeSPFamiliesIndex < newMadeSPFamiliesItems.size(); ++newMadeSPFamiliesIndex)
   {
-    pair<Node*, PMap<FamilyID,RootOfFamily> >& newMadeSPFamilyItem = newMadeSPFamiliesItems[newMadeSPFamiliesIndex];
+    pair<Node*, PMap<FamilyID,RootOfFamily,VentureValuePtrsLess> >& newMadeSPFamilyItem = newMadeSPFamiliesItems[newMadeSPFamiliesIndex];
     baseTrace->addNewMadeSPFamilies(newMadeSPFamilyItem.first, newMadeSPFamilyItem.second);
   }
   
@@ -332,12 +332,12 @@ void Particle::unregisterMadeSPFamily(Node * makerNode,FamilyID id) { assert(fal
 
 /* Probably called */
 bool Particle::isMakerNode(Node * node) { return madeSPs.contains(node) || baseTrace->madeSPRecords.count(node); }
-bool Particle::isConstrained(Node * node) { assert(false); }
 bool Particle::isObservation(Node * node) { return constrainedChoices.contains(node) || baseTrace->constrainedChoices.count(node); }
 
 
 /* Probably not called */
 void Particle::setChildren(Node * node,set<Node*> children) { assert(false); }
 void Particle::setESRParents(Node * node,const vector<RootOfFamily> & esrRoots) { assert(false); }
+bool Particle::isConstrained(Node * node) { assert(false); }
 
 void Particle::setNumRequests(RootOfFamily node,int num) { assert(false); }

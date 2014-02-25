@@ -113,9 +113,9 @@ struct Particle : Trace
   PSet<Node*> constrainedChoices;
   PSet<Node*> arbitraryErgodicKernels;
 
-  PMap<DirectiveID,RootOfFamily> families;
+  PMap<DirectiveID,RootOfFamily,VentureValuePtrsLess> families;
 
-  PMap<ScopeID,PMap<BlockID,PSet<Node*> > > scopes;
+  PMap<ScopeID,PMap<BlockID,PSet<Node*>,VentureValuePtrsLess>,VentureValuePtrsLess> scopes;
 
   PMap<Node*, vector<RootOfFamily> > esrRoots;
   PMap<RootOfFamily, int> numRequests;
@@ -127,7 +127,7 @@ struct Particle : Trace
   PMap<Node*, int> regenCounts;
 
   /* persistent additions */
-  PMap<Node*, PMap<FamilyID,RootOfFamily> > newMadeSPFamilies;
+  PMap<Node*, PMap<FamilyID,RootOfFamily,VentureValuePtrsLess> > newMadeSPFamilies;
   PMap<Node*,PSet<Node*> > newChildren;
 
   /* Non-persistent */

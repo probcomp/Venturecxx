@@ -409,5 +409,5 @@ int ConcreteTrace::numUnconstrainedChoices() { return unconstrainedChoices.size(
 int ConcreteTrace::getSeed() { assert(false); }
 double ConcreteTrace::getGlobalLogScore() { assert(false); }
 
-void ConcreteTrace::addNewMadeSPFamilies(Node * node, PMap<FamilyID,RootOfFamily> newMadeSPFamilies) { assert(false); }
+void ConcreteTrace::addNewMadeSPFamilies(Node * node, PMap<FamilyID,RootOfFamily,VentureValuePtrsLess> newMadeSPFamilies) { assert(false); }
 void ConcreteTrace::addNewChildren(Node * node,PSet<Node*> newChildren) { assert(false); }

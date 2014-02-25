@@ -116,7 +116,7 @@ struct ConcreteTrace : Trace
   double getGlobalLogScore();
 
   // Helpers for particle commit
-  void addNewMadeSPFamilies(Node * node, PMap<FamilyID,RootOfFamily> newMadeSPFamilies);
+  void addNewMadeSPFamilies(Node * node, PMap<FamilyID,RootOfFamily,VentureValuePtrsLess> newMadeSPFamilies);
   void addNewChildren(Node * node,PSet<Node*> newChildren);
 
   gsl_rng * rng;

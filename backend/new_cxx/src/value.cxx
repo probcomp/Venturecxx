@@ -55,7 +55,20 @@ size_t VentureValue::hash() const { assert(false); assert(false); throw "no retu
 struct VentureSymbol;
 bool VentureValue::operator<(const VentureValuePtr & rhs) const 
 {
+  // TODO hack
+  // double < int/atom < symbol
   if (hasDouble() && rhs->hasDouble()) { return getDouble() < rhs->getDouble(); }
+  else if (hasDouble() && rhs->hasInt()) { return true; }
+  else if (hasDouble() && rhs->hasSymbol()) { return true; }
+
+  else if (hasInt() && rhs->hasDouble()) { return false; }
+  else if (hasInt() && rhs->hasInt()) { return getInt() < rhs->getInt(); }
+  else if (hasInt() && rhs->hasSymbol()) { return true; }
+
+  else if (hasSymbol() && rhs->hasDouble()) { return false; }
+  else if (hasSymbol() && rhs->hasInt()) { return false; }
   else if (hasSymbol() && rhs->hasSymbol()) { return getSymbol() < rhs->getSymbol(); }
+
   else { assert(false); return false; }
 }
+

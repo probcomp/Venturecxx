@@ -151,6 +151,9 @@ struct VentureRequest : VentureValue
 struct VentureNode : VentureValue
 {
   VentureNode(Node * node): node(node) {}
+  bool hasInt() const { return true; }
+  long getInt() const { return reinterpret_cast<long>(node); }
+
   bool hasNode() const { return true; }
   Node * getNode() const { return node; }
   bool equals(const VentureValuePtr & other) const;

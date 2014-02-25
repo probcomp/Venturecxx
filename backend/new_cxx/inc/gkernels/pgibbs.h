@@ -11,7 +11,7 @@ struct Particle;
 /* Functional particle gibbs. */
 struct PGibbsGKernel : GKernel
 {
-  PGibbsGKernel(size_t numParticles) : numParticles(numParticles) {}
+  PGibbsGKernel(size_t numNewParticles) : numNewParticles(numNewParticles) {}
 
   pair<Trace*,double> propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold);
   void accept();
@@ -22,7 +22,7 @@ struct PGibbsGKernel : GKernel
   shared_ptr<DB> rhoDB;
   
   /* Does not include the old particle. */
-  size_t numParticles;
+  size_t numNewParticles;
 private:
   
   /* The particle generated from the old trace. */

@@ -65,8 +65,17 @@ struct VentureValue
   
   virtual string toString() const { return "Unknown VentureValue"; };
 
-  bool operator<(const VentureValuePtr & rhs) const;
+  virtual bool operator<(const VentureValuePtr & rhs) const;
 };
+
+
+
+inline bool operator==(const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return lhs->equals(rhs); }
+inline bool operator!=(const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return !operator==(lhs,rhs);}
+inline bool operator< (const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return lhs->operator<(rhs); }
+inline bool operator> (const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return  operator< (rhs,lhs);}
+inline bool operator<=(const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return !operator> (lhs,rhs);}
+inline bool operator>=(const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return !operator< (lhs,rhs);}
 
 /* for unordered map */
 struct VentureValuePtrsEqual
@@ -85,5 +94,12 @@ struct HashVentureValuePtr
   }
 };
 
+struct VentureValuePtrsLess
+{
+  bool operator() (const VentureValuePtr& a, const VentureValuePtr& b) const
+  {
+    return a < b;
+  }
+};
 
 #endif

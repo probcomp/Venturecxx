@@ -3,6 +3,7 @@
 #include "utils.h"
 #include <math.h>
 #include "particle.h"
+#include "consistency.h"
 #include "regen.h"
 #include "db.h"
 #include "concrete_trace.h"
@@ -23,37 +24,37 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
     rhoDBs[borderGroup] = weightAndDB.second;
   }
 
-  // assertTorus(scaffold)
+  assertTorus(scaffold);
 
   // Simulate and calculate initial xiWeights
 
   shared_ptr<map<Node*,Gradient> > nullGradients;
   
-  vector<shared_ptr<Particle> > particles(numParticles);
-  vector<double> particleWeights(numParticles);
+  vector<shared_ptr<Particle> > particles(numNewParticles + 1);
+  vector<double> particleWeights(numNewParticles + 1);
   
-  for (size_t p = 0; p < numParticles; ++p)
+  for (size_t p = 0; p < numNewParticles; ++p)
   {
     particles[p] = shared_ptr<Particle>(new Particle(trace));
     particleWeights[p] =
       regenAndAttach(particles[p].get(),scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),nullGradients);
   }
   
-  particles[numParticles] = shared_ptr<Particle>(new Particle(trace));
-  particleWeights[numParticles] =
-    regenAndAttach(particles[numParticles].get(),scaffold->border[0],scaffold,true,rhoDBs[0],nullGradients);
+  particles[numNewParticles] = shared_ptr<Particle>(new Particle(trace));
+  particleWeights[numNewParticles] =
+    regenAndAttach(particles[numNewParticles].get(),scaffold->border[0],scaffold,true,rhoDBs[0],nullGradients);
   // assert_almost_equal(particleWeights[P],rhoWeights[0])
 
   for (size_t borderGroup = 1; borderGroup < numBorderGroups; ++borderGroup)
   {
-    vector<shared_ptr<Particle> > newParticles(numParticles);
-    vector<double> newParticleWeights(numParticles);
+    vector<shared_ptr<Particle> > newParticles(numNewParticles + 1);
+    vector<double> newParticleWeights(numNewParticles + 1);
     
     // create partial sums in order to efficiently sample from ALL particles
     vector<double> sums = computePartialSums(mapExp(particleWeights));
     
     // Sample new particle and propagate
-    for (size_t p = 0; p < numParticles; ++p)
+    for (size_t p = 0; p < numNewParticles; ++p)
     {
       size_t parentIndex = samplePartialSums(sums, trace->getRNG());
       newParticles[p] = shared_ptr<Particle>(new Particle(particles[parentIndex]));
@@ -61,9 +62,9 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
         regenAndAttach(newParticles[p].get(),scaffold->border[borderGroup],scaffold,false,shared_ptr<DB>(new DB()),nullGradients);
     }
     
-    newParticles[numParticles] = shared_ptr<Particle>(new Particle(particles[numParticles]));
-    newParticleWeights[numParticles] =
-      regenAndAttach(newParticles[numParticles].get(),scaffold->border[borderGroup],scaffold,true,rhoDBs[borderGroup],nullGradients);
+    newParticles[numNewParticles] = shared_ptr<Particle>(new Particle(particles[numNewParticles]));
+    newParticleWeights[numNewParticles] =
+      regenAndAttach(newParticles[numNewParticles].get(),scaffold->border[borderGroup],scaffold,true,rhoDBs[borderGroup],nullGradients);
     // assert_almost_equal(newParticleWeights[P],rhoWeights[t])
     particles = newParticles;
     particleWeights = newParticleWeights;
@@ -93,12 +94,12 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
 
 void PGibbsGKernel::accept()
 {
-  // qfinalParticle->commit();
+  finalParticle->commit();
   // assertTrace(self.trace,self.scaffold)    
 }
 
 void PGibbsGKernel::reject()
 {
-  // oldParticle->commit();
+  oldParticle->commit();
   // assertTrace(self.trace,self.scaffold)
 }
