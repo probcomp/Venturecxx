@@ -4,8 +4,6 @@
 #include "types.h"
 #include "sp.h"
 
-
-// TODO URGENT not sure when or how this is called yet.
 struct VentureSPRecord : VentureValue
 {
   VentureSPRecord(SP * sp): sp(sp), spFamilies(new SPFamilies()) {}

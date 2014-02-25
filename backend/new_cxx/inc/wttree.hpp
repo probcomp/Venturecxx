@@ -311,7 +311,7 @@ struct Node
     nodes.reserve(node->size);
     node_traverse_in_order(node, nodes);
     
-    vector<Key> items;
+    vector<pair<Key, Value> > items;
     items.reserve(nodes.size());
     
     for(int i = 0; i < nodes.size(); ++i) {
