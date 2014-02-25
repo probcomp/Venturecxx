@@ -44,8 +44,7 @@ string Scaffold::showSizes()
 }
 
 
-
-shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<Node*> > & setsOfPNodes)
+shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<Node*> > & setsOfPNodes,bool useDeltaKernels)
 {
   set<Node*> cDRG;
   set<Node*> cAbsorbing;
@@ -64,7 +63,7 @@ shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<No
 
   set<Node*> border = findBorder(trace,drg,absorbing,aaa);
   map<Node*,int> regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush);
-  map<Node*,shared_ptr<LKernel> > lkernels = loadKernels(trace,drg,aaa);
+  map<Node*,shared_ptr<LKernel> > lkernels = loadKernels(trace,drg,aaa,false);
   vector<vector<Node *> > borderSequence = assignBorderSequnce(border,indexAssignments,setsOfPNodes.size());
   return shared_ptr<Scaffold>(new Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels));
 }
@@ -352,7 +351,8 @@ map<Node*,int> computeRegenCounts(ConcreteTrace * trace,
 
 map<Node*,shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
 					    set<Node*> & drg,
-					    set<Node*> & aaa)
+					    set<Node*> & aaa,
+					    bool useDeltaKernels)
 { 
   map<Node*,shared_ptr<LKernel> > lkernels;
   for (set<Node*>::iterator aaaIter = aaa.begin(); aaaIter != aaa.end(); ++aaaIter)
@@ -362,7 +362,19 @@ map<Node*,shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
     shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
     lkernels[*aaaIter] = psp->getAAALKernel();
   }
-  // TODO delta kernels
+
+  if (useDeltaKernels)
+    {
+      for (set<Node*>::iterator drgIter = drg.begin(); drgIter != drg.end(); ++drgIter)
+	{
+	  OutputNode * outputNode = dynamic_cast<OutputNode*>(*drgIter);
+	  if (!outputNode) { continue; }
+	  if (drg.count(outputNode->operatorNode)) { continue; }
+	  if (aaa.count(outputNode)) { continue; }
+	  shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
+	  if (psp->hasDeltaKernel()) { lkernels[outputNode] = psp->getDeltaKernel(); }
+	}
+    }
   return lkernels;
 }
 

@@ -55,7 +55,7 @@ struct Scaffold
 };
 
 
-shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<Node*> > & setsOfPNodes);
+shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<Node*> > & setsOfPNodes,bool useDeltaKernels);
 
 // TODO everything from here on should be moved to .cxx
 void addResamplingNode(ConcreteTrace * trace,
@@ -136,7 +136,8 @@ map<Node*,int> computeRegenCounts(ConcreteTrace * trace,
 
 map<Node*,shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
 					    set<Node*> & drg,
-					    set<Node*> & aaa);
+					    set<Node*> & aaa,
+					    bool useDeltaKernels);
 
 vector<vector<Node *> > assignBorderSequnce(set<Node*> & border,
 					    map<Node*,int> & indexAssignments,
