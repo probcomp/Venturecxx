@@ -10,6 +10,7 @@
 #include "indexer.h"
 #include "gkernel.h"
 #include "gkernels/mh.h"
+#include "gkernels/func_mh.h"
 
 PyTrace::PyTrace() : trace(shared_ptr<ConcreteTrace>(new ConcreteTrace())) {}
 PyTrace::~PyTrace() {}
@@ -140,7 +141,7 @@ void PyTrace::infer(boost::python::dict params)
   else if (getBlockBool.check()) { block = VentureValuePtr(new VentureBool(getBlockBool())); }
   assert(block);
 
-  assert(kernel == "mh");
+  //  assert(kernel == "mh");
 //  assert(scope == "default");
 //  assert(block == "one");
 
@@ -150,7 +151,7 @@ void PyTrace::infer(boost::python::dict params)
   {
     mixMH(trace.get(),
 	  shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block)),
-	  shared_ptr<MHGKernel>(new MHGKernel()));
+	  shared_ptr<GKernel>(new FuncMHGKernel()));
 
     for (set<Node*>::iterator iter = trace->arbitraryErgodicKernels.begin();
 	 iter != trace->arbitraryErgodicKernels.end();

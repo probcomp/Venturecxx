@@ -197,6 +197,7 @@ class Particle(Trace):
 
     for (node,value) in self.values.iteritems(): 
       self.base.setValueAt(node,value)
+
     for (node,madeSP) in self.madeSPs.iteritems(): self.base.setMadeSPAt(node,madeSP)
 
     # this iteration includes "default"

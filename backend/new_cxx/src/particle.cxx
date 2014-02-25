@@ -331,9 +331,9 @@ void Particle::destroyMadeSPRecord(Node * makerNode) { assert(false); }
 void Particle::unregisterMadeSPFamily(Node * makerNode,FamilyID id) { assert(false); }
 
 /* Probably called */
-bool Particle::isMakerNode(Node * node) { assert(false); }
+bool Particle::isMakerNode(Node * node) { return madeSPs.contains(node) || baseTrace->madeSPRecords.count(node); }
 bool Particle::isConstrained(Node * node) { assert(false); }
-bool Particle::isObservation(Node * node) { assert(false); }
+bool Particle::isObservation(Node * node) { return constrainedChoices.contains(node) || baseTrace->constrainedChoices.count(node); }
 
 
 /* Probably not called */

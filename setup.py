@@ -63,6 +63,7 @@ src_files = [
     "src/value.cxx",
     "src/values.cxx",
 
+    "src/gkernels/func_mh.cxx",
     "src/gkernels/mh.cxx",
     "src/gkernels/pgibbs.cxx",
 
