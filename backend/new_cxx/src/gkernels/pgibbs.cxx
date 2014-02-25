@@ -88,8 +88,7 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
   double weightMinusRho = logaddexp(particleWeightsNoRho);
   double alpha = weightMinusRho - weightMinusXi;
   
-  // TODO Dan change all Trace* to shared_ptr<Trace>
-  return make_pair(particles[finalIndex].get(),alpha);
+  return make_pair(finalParticle.get(),alpha);
 }
 
 void PGibbsGKernel::accept()

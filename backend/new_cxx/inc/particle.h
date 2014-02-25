@@ -75,7 +75,7 @@ struct Particle : Trace
   void setChildren(Node * node,set<Node*> children);
   void setESRParents(Node * node,const vector<RootOfFamily> & esrRoots);
 
-  void setNumRequests(Node * node,int num);
+  void setNumRequests(RootOfFamily node,int num);
 
   /* SPFamily operations */
   void registerMadeSPFamily(Node * makerNode,FamilyID id,RootOfFamily esrRoot);
@@ -87,6 +87,10 @@ struct Particle : Trace
   /* Inference (computing reverse weight) */
   int numBlocksInScope(ScopeID scope);
 
+  // "self-explanatory" -Dan Selsam, 2014
+  // Commits this particle's data to the concrete trace.
+  void commit();
+  
 /* END methods */
 
 

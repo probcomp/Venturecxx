@@ -89,7 +89,7 @@ struct Trace
   virtual void setChildren(Node * node,set<Node*> children) =0;
   virtual void setESRParents(Node * node,const vector<RootOfFamily> & esrRoots) =0;
 
-  virtual void setNumRequests(Node * node,int num) =0;
+  virtual void setNumRequests(RootOfFamily node,int num) =0;
 
   /* SPFamily operations */
   // Note: this are different from current VentureLite, since it does not automatically jump

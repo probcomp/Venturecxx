@@ -25,8 +25,8 @@ Particle::Particle(shared_ptr<Particle> outerParticle):
 
   {
     for (map<Node*, shared_ptr<SPAux> >::iterator iter = outerParticle->madeSPAuxs.begin();
-	 iter != outerParticle->madeSPAuxs.end();
-	 ++iter)
+      iter != outerParticle->madeSPAuxs.end();
+      ++iter)
     {
       madeSPAuxs[iter->first] = iter->second->clone();
     }
@@ -234,6 +234,84 @@ RootOfFamily Particle::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
 /* Inference (computing reverse weight) */
 int Particle::numBlocksInScope(ScopeID scope) { return scopes.lookup(scope).size() + baseTrace->numBlocksInScope(scope); }
 
+void Particle::commit()
+{
+  // note that we do not call registerUnconstrainedChoice() because it in turn calls registerUnconstrainedChoiceInScope()
+  vector<Node*> ucs = unconstrainedChoices.keys();
+  baseTrace->unconstrainedChoices.insert(ucs.begin(), ucs.end());
+  
+  // note that we do not call registerConstrainedChoice() because it in turn calls unregisterUnconstrainedChoice()
+  vector<Node*> ccs = constrainedChoices.keys();
+  baseTrace->constrainedChoices.insert(ccs.begin(), ccs.end());
+
+  // probably could call the appropriate register methods here
+  vector<Node*> aes = arbitraryErgodicKernels.keys();
+  baseTrace->arbitraryErgodicKernels.insert(aes.begin(), aes.end());
+  
+  vector<pair<Node*, VentureValuePtr> > valueItems = values.items();
+  baseTrace->values.insert(valueItems.begin(), valueItems.end());
+  
+  vector<pair<Node*, shared_ptr<SP> > > madeSPItems = madeSPs.items();
+  for (size_t madeSPIndex = 0; madeSPIndex < madeSPItems.size(); ++madeSPIndex)
+  {
+    pair<Node*, shared_ptr<SP> > madeSPItem = madeSPItems[madeSPIndex];
+    baseTrace->setMadeSPRecord(madeSPItem.first, shared_ptr<VentureSPRecord>(new VentureSPRecord(madeSPItem.second)));
+  }
+  
+  // this iteration includes "default"
+  vector<pair<ScopeID,PMap<BlockID,PSet<Node*> > > > scopeItems = scopes.items();
+  for (size_t scopeIndex = 0; scopeIndex < scopeItems.size(); ++scopeIndex)
+  {
+    pair<ScopeID,PMap<BlockID,PSet<Node*> > >& scopeItem = scopeItems[scopeIndex];
+    vector<pair<BlockID,PSet<Node*> > > blockItems = scopeItem.second.items();
+    
+    for (size_t blockIndex = 0; blockIndex < blockItems.size(); ++blockIndex)
+    {
+      pair<BlockID,PSet<Node*> >& blockItem = blockItems[blockIndex];
+      vector<Node*> nodes = blockItem.second.keys();
+      
+      for (size_t nodeIndex = 0; nodeIndex < nodes.size(); ++nodeIndex)
+      {
+        baseTrace->registerUnconstrainedChoiceInScope(scopeItem.first, blockItem.first, nodes[nodeIndex]);
+      }
+    }
+  }
+  
+  vector<pair<Node*, vector<RootOfFamily> > > esrItems = esrRoots.items();
+  for (size_t esrIndex = 0; esrIndex < esrItems.size(); ++esrIndex)
+  {
+    pair<Node*, vector<RootOfFamily> >& esrItem = esrItems[esrIndex];
+    baseTrace->setESRParents(esrItem.first, esrItem.second);
+  }
+  
+  vector<pair<RootOfFamily, int> > numRequestsItems = numRequests.items();
+  for (size_t numRequestsIndex = 0; numRequestsIndex < numRequestsItems.size(); ++numRequestsIndex)
+  {
+    pair<RootOfFamily, int>& numRequestsItem = numRequestsItems[numRequestsIndex];
+    baseTrace->setNumRequests(numRequestsItem.first, numRequestsItem.second);
+  }
+  
+  vector<pair<Node*, PMap<FamilyID,RootOfFamily> > > newMadeSPFamiliesItems = newMadeSPFamilies.items();
+  for (size_t newMadeSPFamiliesIndex = 0; newMadeSPFamiliesIndex < newMadeSPFamiliesItems.size(); ++newMadeSPFamiliesIndex)
+  {
+    pair<Node*, PMap<FamilyID,RootOfFamily> >& newMadeSPFamilyItem = newMadeSPFamiliesItems[newMadeSPFamiliesIndex];
+    baseTrace->addNewMadeSPFamilies(newMadeSPFamilyItem.first, newMadeSPFamilyItem.second);
+  }
+  
+  vector<pair<Node*, PSet<Node*> > > newChildrenItems = newChildren.items();
+  for (size_t newChildrenIndex = 0; newChildrenIndex < newChildrenItems.size(); ++newChildrenIndex)
+  {
+    pair<Node*, PSet<Node*> >& newChildrenItem = newChildrenItems[newChildrenIndex];
+    baseTrace->addNewChildren(newChildrenItem.first, newChildrenItem.second);
+  }
+  
+  vector<pair<Node*, shared_ptr<SPAux> > > madeSPAuxItems(madeSPAuxs.begin(), madeSPAuxs.end());
+  for (size_t madeSPAuxIndex = 0; madeSPAuxIndex < madeSPAuxItems.size(); ++madeSPAuxIndex)
+  {
+    pair<Node*, shared_ptr<SPAux> > madeSPAuxItem = madeSPAuxItems[madeSPAuxIndex];
+    baseTrace->setMadeSPAux(madeSPAuxItem.first, madeSPAuxItem.second);
+  }
+}
 
 /* The following should never be called on particles */
 
@@ -262,4 +340,4 @@ bool Particle::isObservation(Node * node) { assert(false); }
 void Particle::setChildren(Node * node,set<Node*> children) { assert(false); }
 void Particle::setESRParents(Node * node,const vector<RootOfFamily> & esrRoots) { assert(false); }
 
-void Particle::setNumRequests(Node * node,int num) { assert(false); }
+void Particle::setNumRequests(RootOfFamily node,int num) { assert(false); }

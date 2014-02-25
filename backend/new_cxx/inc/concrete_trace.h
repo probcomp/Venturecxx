@@ -5,6 +5,11 @@
 #include "trace.h"
 #include "smap.h"
 #include "value.h"
+#include "pmap.hpp"
+#include "pset.hpp"
+
+using persistent::PMap;
+using persistent::PSet;
 
 struct ConcreteTrace : Trace
 {
@@ -74,7 +79,7 @@ struct ConcreteTrace : Trace
   void setChildren(Node * node,set<Node*> children);
   void setESRParents(Node * node,const vector<RootOfFamily> & esrRoots);
 
-  void setNumRequests(Node * node,int num);
+  void setNumRequests(RootOfFamily node,int num);
 
   /* SPFamily operations */
   void registerMadeSPFamily(Node * makerNode,FamilyID id,RootOfFamily esrRoot);
@@ -111,8 +116,8 @@ struct ConcreteTrace : Trace
   double getGlobalLogScore();
 
   // Helpers for particle commit
-  //void addNewMadeSPFamilies(Node * node, PMap newMadeSPFamilies);
-  //void addNewChildren(Node * node,PSet newChildren);
+  void addNewMadeSPFamilies(Node * node, PMap<FamilyID,RootOfFamily> newMadeSPFamilies);
+  void addNewChildren(Node * node,PSet<Node*> newChildren);
 
   gsl_rng * rng;
 

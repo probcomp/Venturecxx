@@ -258,10 +258,10 @@ void ConcreteTrace::setESRParents(Node * node,const vector<RootOfFamily> & esrRo
   esrRoots[node] = esrRootNodes;
 }
 
-void ConcreteTrace::setNumRequests(Node * node,int num) 
+void ConcreteTrace::setNumRequests(RootOfFamily node,int num) 
 { 
-  assert(false); 
-//  numRequests[node] = num;
+  //assert(false); 
+  numRequests[node] = num;
 }
 
 /* SPFamily operations */
@@ -409,5 +409,5 @@ int ConcreteTrace::numUnconstrainedChoices() { return unconstrainedChoices.size(
 int ConcreteTrace::getSeed() { assert(false); }
 double ConcreteTrace::getGlobalLogScore() { assert(false); }
 
-//void ConcreteTrace::addNewMadeSPFamilies(Node * node, PMap newMadeSPFamilies) { assert(false); }
-//void ConcreteTrace::addNewChildren(Node * node,PSet newChildren) { assert(false); }
+void ConcreteTrace::addNewMadeSPFamilies(Node * node, PMap<FamilyID,RootOfFamily> newMadeSPFamilies) { assert(false); }
+void ConcreteTrace::addNewChildren(Node * node,PSet<Node*> newChildren) { assert(false); }

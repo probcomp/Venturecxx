@@ -42,7 +42,7 @@ struct SPAux
   virtual shared_ptr<SPAux> clone() { return shared_ptr<SPAux>(new SPAux()); } 
 };
 
-struct SP : VentureValue
+struct SP
 {
   SP(PSP * requestPSP, PSP * outputPSP);
   

@@ -46,8 +46,6 @@ src_files = [
 
     "src/env.cxx",
     "src/expressions.cxx",    
-
-    "src/gkernel.cxx",
     
     "src/indexer.cxx",
     "src/lkernel.cxx",
