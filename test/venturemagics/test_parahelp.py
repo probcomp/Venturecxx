@@ -41,8 +41,10 @@ def test_ip_parallel():
     
     if 'assertion' in out.lower():
         assert False, 'Error running para_test.ipy in IPython'
+        print 'test_parahelp on para_test.ipy on ip_parallel out and error: \n'
+        print out
 
-    print 'test_parahelp on para_test.ipy on ip_parallel out and error: \n'
-    print out    
+    
+    print 'test_parahelp ... PASSED'
    
 
