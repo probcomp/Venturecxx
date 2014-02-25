@@ -32,8 +32,8 @@ struct PSP
   // virtual shared_ptr<LKernel> getVariationalLKernel(ConcreteTrace * trace,Node * node) const;
 
   // TODO special psp-specific lkernels are punted for now
-  // virtual bool hasSimulationKernel() const { return false; }
-  // virtual bool hasDeltaKernel() const { return false; }
+  virtual bool hasDeltaKernel() const { return false; }
+  virtual shared_ptr<LKernel> getDeltaKernel() const { assert(false); return shared_ptr<LKernel>(); }
 };
 
 struct NullRequestPSP : PSP

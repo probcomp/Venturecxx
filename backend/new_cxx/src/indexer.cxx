@@ -14,22 +14,22 @@ shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(ConcreteTrace * trace) const
       BlockID actualBlock = trace->sampleBlock(scope);
       vector<set<Node*> > setsOfPNodes;
       setsOfPNodes.push_back(trace->getNodesInBlock(scope,actualBlock));
-      return constructScaffold(trace,setsOfPNodes);
+      return constructScaffold(trace,setsOfPNodes,false);
     }
   else if (block->hasSymbol() && block->getSymbol() == "all")
     {
       vector<set<Node*> > setsOfPNodes;
       setsOfPNodes.push_back(trace->getAllNodesInScope(scope));
-      return constructScaffold(trace,setsOfPNodes);
+      return constructScaffold(trace,setsOfPNodes,false);
     }
   else if (block->hasSymbol() && block->getSymbol() == "ordered")
     {
-      return constructScaffold(trace,trace->getOrderedSetsInScope(scope));
+      return constructScaffold(trace,trace->getOrderedSetsInScope(scope),false);
     }
   else
     {
       vector<set<Node*> > setsOfPNodes(1,trace->getNodesInBlock(scope,block));
-      return constructScaffold(trace,setsOfPNodes);
+      return constructScaffold(trace,setsOfPNodes,false);
     }
 }
 

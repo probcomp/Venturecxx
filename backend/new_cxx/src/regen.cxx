@@ -302,7 +302,12 @@ double applyPSP(Trace * trace,
     else { newValue = k->simulate(trace,oldValue,args,trace->getRNG()); }
 
     weight += k->weight(trace,newValue,oldValue,args);
-    //TODO variational
+    shared_ptr<VariationalLKernel> vk = dynamic_pointer_cast<VariationalLKernel>(k);
+    if (vk) 
+      { 
+	assert(gradients);
+	gradients->insert(make_pair(node,vk->gradientOfLogDensity(newValue,args))); 
+      }
   }
   else
   {

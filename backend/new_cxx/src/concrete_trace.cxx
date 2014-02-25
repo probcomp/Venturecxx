@@ -391,7 +391,7 @@ void ConcreteTrace::makeConsistent()
     set<Node*> pnodes;
     pnodes.insert(appNode);
     setsOfPNodes.push_back(pnodes);
-    shared_ptr<Scaffold> scaffold = constructScaffold(this,setsOfPNodes);
+    shared_ptr<Scaffold> scaffold = constructScaffold(this,setsOfPNodes,false);
     detachAndExtract(this,scaffold->border[0],scaffold);
     assertTorus(scaffold);
     shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(appNode))->getPSP(appNode);
