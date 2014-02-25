@@ -115,7 +115,7 @@ double extract(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,s
       LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
       RequestNode * requestNode = dynamic_cast<RequestNode*>(node);
       OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
-      if (lookupNode) { trace->setValue(lookupNode,shared_ptr<VentureValue>()); }
+      if (lookupNode) { trace->clearValue(lookupNode); }
       else if (requestNode) 
       { 
         weight += unevalRequests(trace,requestNode,scaffold,db);
@@ -145,7 +145,7 @@ double unevalFamily(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaff
   else if (lookupNode)
   {
     trace->disconnectLookup(lookupNode);
-    trace->setValue(lookupNode,shared_ptr<VentureValue>());
+    trace->clearValue(lookupNode);
     weight += extractParents(trace,lookupNode,scaffold,db);
   }
   else
@@ -212,7 +212,7 @@ double unapplyPSP(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffo
   if (scaffold->hasLKernel(node)) { weight += scaffold->getLKernel(node)->reverseWeight(trace,value,args); }
   db->registerValue(node,value);
 
-  trace->setValue(node,shared_ptr<VentureValue>());
+  trace->clearValue(node);
 
   return weight;
 }

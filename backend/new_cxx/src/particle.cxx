@@ -100,6 +100,8 @@ void Particle::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode)
   assert(baseTrace->getESRParents(outputNode).empty());
   if (!esrRoots.contains(outputNode)) { esrRoots = esrRoots.insert(outputNode,vector<RootOfFamily>()); }
   esrRoots.lookup(outputNode).push_back(esrRoot);
+  assert(esrRoots.contains(outputNode));
+  assert(!getESRParents(outputNode).empty());
 }
 
 void Particle::reconnectLookup(LookupNode * lookupNode) { assert(false); }
@@ -169,11 +171,10 @@ VentureValuePtr Particle::getObservedValue(Node * node) { assert(false); }
 /* Primitive setters */
 void Particle::setValue(Node * node, VentureValuePtr value) 
 { 
-  assert(!baseTrace->getValue(node)); // TODO might not work
+  assert(!baseTrace->values.count(node)); // TODO might not work
+  assert(!values.contains(node)); // TODO might not work
   values = values.insert(node,value);
 }
-
-void Particle::clearValue(Node * node)  { setValue(node,VentureValuePtr()); }
 
 
 void Particle::setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord) 
@@ -249,7 +250,24 @@ void Particle::commit()
   baseTrace->arbitraryErgodicKernels.insert(aes.begin(), aes.end());
   
   vector<pair<Node*, VentureValuePtr> > valueItems = values.items();
+  assert(valueItems.size() == values.size());
+  for (vector<pair<Node*, VentureValuePtr> >::iterator iter = valueItems.begin();
+       iter != valueItems.end();
+       ++iter)
+    {
+      assert(!baseTrace->values.count(iter->first));
+    }
+
   baseTrace->values.insert(valueItems.begin(), valueItems.end());
+  for (vector<pair<Node*, VentureValuePtr> >::iterator iter = valueItems.begin();
+       iter != valueItems.end();
+       ++iter)
+    {
+      assert(iter->second);
+      assert(baseTrace->getValue(iter->first));
+      assert(iter->second == baseTrace->getValue(iter->first));
+    }
+
   
   vector<pair<Node*, shared_ptr<SP> > > madeSPItems = madeSPs.items();
   for (size_t madeSPIndex = 0; madeSPIndex < madeSPItems.size(); ++madeSPIndex)
@@ -329,6 +347,7 @@ int Particle::getNumRequests(RootOfFamily root) { assert(false); throw "should n
 
 void Particle::destroyMadeSPRecord(Node * makerNode) { assert(false); }
 void Particle::unregisterMadeSPFamily(Node * makerNode,FamilyID id) { assert(false); }
+void Particle::clearValue(Node * node) { assert(false); }
 
 /* Probably called */
 bool Particle::isMakerNode(Node * node) { return madeSPs.contains(node) || baseTrace->madeSPRecords.count(node); }

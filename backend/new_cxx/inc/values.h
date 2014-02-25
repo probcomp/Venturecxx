@@ -165,6 +165,8 @@ struct VentureNode : VentureValue
 /* Use the memory location as a unique hash. */
 struct VentureID : VentureValue
 {
+  bool hasInt() const { return true; }
+  long getInt() const { return reinterpret_cast<long>(this); }
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   string toString() const;

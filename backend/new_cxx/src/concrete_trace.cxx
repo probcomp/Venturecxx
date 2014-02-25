@@ -179,7 +179,7 @@ void ConcreteTrace::removeChild(Node * node, Node * child)
 
 /* Primitive getters */
 gsl_rng * ConcreteTrace::getRNG() { return rng; }
-VentureValuePtr ConcreteTrace::getValue(Node * node) { return values[node]; }
+VentureValuePtr ConcreteTrace::getValue(Node * node) { assert(values[node]); return values[node]; }
 shared_ptr<SP> ConcreteTrace::getMadeSP(Node * makerNode)
 {
   shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
@@ -216,7 +216,9 @@ bool ConcreteTrace::isObservation(Node * node) { return observedValues.count(nod
 
 
 /* Primitive Setters */
-void ConcreteTrace::setValue(Node * node, VentureValuePtr value) { values[node] = value; }
+void ConcreteTrace::setValue(Node * node, VentureValuePtr value) 
+{ assert(value); values[node] = value; }
+
 void ConcreteTrace::clearValue(Node * node) { values.erase(node); }
 
 void ConcreteTrace::observeNode(Node * node,VentureValuePtr value) 
