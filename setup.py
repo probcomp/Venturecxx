@@ -58,6 +58,7 @@ src_files = [
     "src/regen.cxx",
     "src/scaffold.cxx",
     "src/sp.cxx",
+    "src/sprecord.cxx",
     "src/trace.cxx",
     "src/utils.cxx",
     "src/value.cxx",

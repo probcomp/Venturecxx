@@ -47,6 +47,20 @@ boost::python::dict VentureSPRef::toPython() const
 { 
   boost::python::dict value;
   value["type"] = "sp";
-  value["value"] = false;
+  value["value"] = "<sp>";
   return value;
 }
+
+bool VentureSPRef::equals(const VentureValuePtr & other) const
+{
+  shared_ptr<VentureSPRef> other_v = dynamic_pointer_cast<VentureSPRef>(other);
+  return other_v && (other_v->makerNode == makerNode);
+}
+
+size_t VentureSPRef::hash() const 
+{ 
+  boost::hash<long> long_hash;
+  return long_hash(reinterpret_cast<long>(makerNode));
+}
+
+string VentureSPRef::toString() const { return "spRef"; }

@@ -27,13 +27,13 @@ public:
   
   bool contains(const Key& key)
     { 
-      cout << "pset::contains" << endl;
+      //      cout << "pset::contains" << endl;
       return Node<Key, bool>::node_contains(root, key, comp); 
     }
   
   PSet insert(const Key& key)
     { 
-      cout << "pset::contains" << endl;
+      //      cout << "pset::contains" << endl;
       return PSet(Node<Key, bool>::node_insert(root, key, true, comp)); 
     }
   

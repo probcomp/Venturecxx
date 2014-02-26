@@ -16,6 +16,13 @@ struct VentureSPRecord : VentureValue
   shared_ptr<SPFamilies> spFamilies;
 
   shared_ptr<SPAux> getSPAux() const { return spAux; }
+
+  bool equals(const VentureValuePtr & other) const;
+  size_t hash() const;
+  boost::python::dict toPython() const;
+  string toString() const;
+
+
 };
 
 

@@ -38,11 +38,13 @@ Particle::Particle(shared_ptr<Particle> outerParticle):
 /* Registering metadata */
 void Particle::registerAEKernel(Node * node) 
 {
+  assert(!arbitraryErgodicKernels.contains(node));
   arbitraryErgodicKernels = arbitraryErgodicKernels.insert(node);
 }
 
 void Particle::registerUnconstrainedChoice(Node * node) 
 { 
+  assert(!unconstrainedChoices.contains(node));
   unconstrainedChoices = unconstrainedChoices.insert(node);
   registerUnconstrainedChoiceInScope(VentureValuePtr(new VentureSymbol("default")),
 			       VentureValuePtr(new VentureNode(node)),
@@ -64,6 +66,7 @@ void Particle::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,No
 
 void Particle::registerConstrainedChoice(Node * node) 
 { 
+  assert(!constrainedChoices.contains(node));
   constrainedChoices = constrainedChoices.insert(node);
   unregisterUnconstrainedChoice(node);
 }
@@ -103,6 +106,8 @@ void Particle::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode)
   vector<RootOfFamily> pars = esrRoots.lookup(outputNode);
   pars.push_back(esrRoot);
   esrRoots = esrRoots.insert(outputNode,pars);
+  addChild(esrRoot.get(),outputNode);
+  incNumRequests(esrRoot);
   assert(esrRoots.contains(outputNode));
   assert(esrRoots.contains((Node*)outputNode));
   assert(esrRoots.lookup(outputNode).size());
@@ -110,7 +115,8 @@ void Particle::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode)
   assert(!getESRParents(outputNode).empty());
 }
 
-void Particle::reconnectLookup(LookupNode * lookupNode) { assert(false); }
+void Particle::reconnectLookup(LookupNode * lookupNode) { addChild(lookupNode->sourceNode,lookupNode); }
+
 void Particle::incNumRequests(RootOfFamily root) 
 {
   if (!numRequests.contains(root)) { numRequests = numRequests.insert(root,baseTrace->getNumRequests(root)); }
@@ -272,6 +278,8 @@ void Particle::commit()
     {
       assert(iter->second);
       assert(baseTrace->getValue(iter->first));
+      //      cout << "assert_equal(" <<  iter->second->toString() << ", " << baseTrace->getValue(iter->first)->toString() << ")" << endl;
+      //      assert(baseTrace->getValue(iter->first)->equals(iter->second));
       //      assert(iter->second->equals(baseTrace->getValue(iter->first)));
     }
 

@@ -29,19 +29,19 @@ public:
   
   bool contains(const Key& key)
     { 
-      cout << "pmap::contains" << endl;
+      //      cout << "pmap::contains" << endl;
       return Node<Key, Value>::node_contains(root, key, comp); 
     }
     
   Value lookup(const Key& key)
     { 
-      cout << "pmap::lookup" << endl;
+      //      cout << "pmap::lookup" << endl;
       return Node<Key, Value>::node_lookup(root, key, comp); 
     }
   
   PMap insert(const Key& key, const Value& value)
     { 
-      cout << "pmap::insert" << endl;
+      //      cout << "pmap::insert" << endl;
       return PMap(Node<Key, Value>::node_insert(root, key, value, comp)); 
     }
   
