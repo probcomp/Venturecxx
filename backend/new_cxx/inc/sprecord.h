@@ -4,6 +4,8 @@
 #include "types.h"
 #include "sp.h"
 
+struct ConcreteTrace;
+
 struct VentureSPRecord : VentureValue
 {
   VentureSPRecord(SP * sp): sp(sp), spFamilies(new SPFamilies()) {}
@@ -19,7 +21,7 @@ struct VentureSPRecord : VentureValue
 
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
-  boost::python::dict toPython() const;
+  boost::python::dict toPython(ConcreteTrace * trace) const;
   string toString() const;
 
 

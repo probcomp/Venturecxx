@@ -13,7 +13,7 @@
 #include "gkernels/func_mh.h"
 #include "gkernels/pgibbs.h"
 
-PyTrace::PyTrace() : trace(shared_ptr<ConcreteTrace>(new ConcreteTrace())) {}
+PyTrace::PyTrace() : trace(new ConcreteTrace()) {}
 PyTrace::~PyTrace() {}
   
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
@@ -68,7 +68,7 @@ boost::python::object PyTrace::extractPythonValue(DirectiveID did)
   RootOfFamily root = trace->families[did];
   VentureValuePtr value = trace->getValue(root.get());
   assert(value.get());
-  return value->toPython();
+  return value->toPython(trace.get());
 }
 
 void PyTrace::setSeed(size_t n) {

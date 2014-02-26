@@ -13,7 +13,7 @@ struct VentureNumber : VentureValue
   long getInt() const { return static_cast<int>(x); }
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
-  boost::python::dict toPython() const;
+  boost::python::dict toPython(Trace * trace) const;
   string toString() const;
   double x;
 };
@@ -27,7 +27,7 @@ struct VentureAtom : VentureValue
   bool equals(const VentureValuePtr & other) const;
 
   size_t hash() const;
-  boost::python::dict toPython() const;
+  boost::python::dict toPython(Trace * trace) const;
   string toString() const;
   int n;
 };
@@ -39,7 +39,7 @@ struct VentureBool : VentureValue
   bool equals(const VentureValuePtr & other) const;
 
   size_t hash() const;
-  boost::python::dict toPython() const;
+  boost::python::dict toPython(Trace * trace) const;
   string toString() const;
   bool b;
 };
@@ -50,7 +50,7 @@ struct VentureSymbol : VentureValue
   bool hasSymbol() const { return true; }
   const string& getSymbol() const { return s; }
   bool equals(const VentureValuePtr & other) const;
-  boost::python::dict toPython() const;
+  boost::python::dict toPython(Trace * trace) const;
   size_t hash() const;
   string toString() const;
   string s;
@@ -62,7 +62,7 @@ struct VentureArray : VentureValue
   const vector<VentureValuePtr> & getArray() const { return xs; }
   VentureValuePtr lookup(VentureValuePtr index) const { return xs[index->getInt()]; }
   int size() const { return xs.size(); }
-  boost::python::dict toPython() const;
+  boost::python::dict toPython(Trace * trace) const;
   bool equals(const VentureValuePtr & other) const;
 
   size_t hash() const;
@@ -79,7 +79,7 @@ struct VentureNil : VentureValue
 
   size_t hash() const;
   string toString() const;
-  boost::python::dict toPython() const;
+  boost::python::dict toPython(Trace * trace) const;
 };
 
 struct VenturePair : VentureValue
@@ -92,7 +92,7 @@ struct VenturePair : VentureValue
 
   size_t hash() const;
   string toString() const;
-  boost::python::dict toPython() const;
+  boost::python::dict toPython(Trace * trace) const;
   int size() const { return 1 + getRest()->size(); }
   VentureValuePtr car;
   VentureValuePtr cdr;
@@ -121,7 +121,7 @@ struct VentureDictionary : VentureValue
   int size() const { return dict.size(); }
 
 
-  boost::python::dict toPython() const;
+  boost::python::dict toPython(Trace * trace) const;
   string toString() const;
   VentureValuePtrMap<VentureValuePtr> dict;
 };

@@ -24,12 +24,29 @@ VentureValuePtr MakeCRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
 
   if (args->operandValues.size() > 1) { d = args->operandValues[1]->getDouble(); }
 
-  PSP * requestPSP = new NullRequestPSP();
-  PSP * outputPSP = new CRPOutputPSP(alpha, d);
-  return VentureValuePtr(new VentureSPRecord(new SP(requestPSP,outputPSP),new CRPSPAux()));
+  return VentureValuePtr(new VentureSPRecord(new CRPSP(alpha, d),new CRPSPAux()));
 }
 
 // Made
+
+CRPSP::CRPSP(double alpha, double d) : SP(new NullRequestPSP(), new CRPOutputPSP(alpha, d)), alpha(alpha), d(d) {}
+
+boost::python::dict CRPSP::toPython(shared_ptr<SPAux> spAux) const
+{
+  boost::python::dict crp;
+  crp["type"] = "crp";
+  crp["alpha"] = alpha;
+  crp["d"] = d;
+  shared_ptr<CRPSPAux> crpSPAux = dynamic_pointer_cast<CRPSPAux>(spAux);
+  assert(crpSPAux);
+  crp["counts"] = toPythonDict(crpSPAux->tableCounts);
+  
+  boost::python::dict value;
+  value["type"] = "sp";
+  value["value"] = crp;
+  
+  return value;
+}
 
 VentureValuePtr CRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {

@@ -1,8 +1,7 @@
 #include "sp.h"
 #include "node.h"
 #include "psp.h"
-
-
+#include "concrete_trace.h"
 
 bool SPFamilies::containsFamily(FamilyID id)  { return families.count(id); }
 RootOfFamily SPFamilies::getRootOfFamily(FamilyID id) 
@@ -40,15 +39,19 @@ shared_ptr<PSP> SP::getPSP(ApplicationNode * node) const
   else { return outputPSP; }
 }
 
-
 void SP::AEInfer(shared_ptr<Args> args,gsl_rng * rng) const { assert(false); }
 
-boost::python::dict VentureSPRef::toPython() const 
-{ 
+boost::python::dict SP::toPython(shared_ptr<SPAux> spAux) const
+{
   boost::python::dict value;
   value["type"] = "sp";
-  value["value"] = "<sp>";
+  value["value"] = "unknown";
   return value;
+}
+
+boost::python::dict VentureSPRef::toPython(Trace * trace) const 
+{
+  return trace->getMadeSP(makerNode)->toPython(trace->getMadeSPAux(makerNode));
 }
 
 bool VentureSPRef::equals(const VentureValuePtr & other) const

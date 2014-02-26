@@ -153,7 +153,7 @@ string VentureID::toString() const { return "VentureID";}
 
 /* toPython methods */
 
-boost::python::dict VentureNumber::toPython() const
+boost::python::dict VentureNumber::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "number";
@@ -161,14 +161,14 @@ boost::python::dict VentureNumber::toPython() const
   return value;
 }
 
-boost::python::dict VentureAtom::toPython() const
+boost::python::dict VentureAtom::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "atom";
   value["value"] = boost::python::object(n);
   return value;
 }
-boost::python::dict VentureBool::toPython() const
+boost::python::dict VentureBool::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "bool";
@@ -176,7 +176,7 @@ boost::python::dict VentureBool::toPython() const
   return value;
 }
 
-boost::python::dict VentureSymbol::toPython() const
+boost::python::dict VentureSymbol::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "symbol";
@@ -184,17 +184,17 @@ boost::python::dict VentureSymbol::toPython() const
   return value;
 }
 
-boost::python::dict VentureArray::toPython() const
+boost::python::dict VentureArray::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "array";
   boost::python::list l;
-  for (size_t i = 0; i < xs.size(); ++i) { l.append(xs[i]->toPython()); }
+  for (size_t i = 0; i < xs.size(); ++i) { l.append(xs[i]->toPython(trace)); }
   value["value"] = l;
   return value;
 }
 
-boost::python::dict VentureDictionary::toPython() const
+boost::python::dict VentureDictionary::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "dict";
@@ -202,7 +202,7 @@ boost::python::dict VentureDictionary::toPython() const
   return value;
 }
 
-boost::python::dict VentureNil::toPython() const
+boost::python::dict VentureNil::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "list";
@@ -212,19 +212,19 @@ boost::python::dict VentureNil::toPython() const
 }
 
 
-boost::python::dict VenturePair::toPython() const
+boost::python::dict VenturePair::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "list";
 
   boost::python::list l;
-  l.append(getFirst()->toPython());
+  l.append(getFirst()->toPython(trace));
   shared_ptr<VenturePair>  p = dynamic_pointer_cast<VenturePair>(getRest());
   while (p)
-    {
-      l.append(p->getFirst()->toPython());
-      p = dynamic_pointer_cast<VenturePair>(p->getRest());
-    }
+  {
+    l.append(p->getFirst()->toPython(trace));
+    p = dynamic_pointer_cast<VenturePair>(p->getRest());
+  }
   value["value"] = l;
   return value;
 }

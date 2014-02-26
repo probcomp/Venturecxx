@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <numeric>
 
+#include <boost/python/dict.hpp>
+
 /* Maps exp over the vector, normalizing so that the maximum is 1. */
 vector<double> mapExp(const vector<double>& xs);
 
@@ -38,5 +40,15 @@ double logDensityCategorical(VentureValuePtr val, const Simplex & ps,const vecto
 
 vector<vector<VentureValuePtr> > cartesianProduct(vector<vector<VentureValuePtr> > original);
 
+// Converts a C++ map to a python dict
+template <class K, class V>
+boost::python::dict toPythonDict(std::map<K, V>& map) {
+  typename std::map<K, V>::iterator iter;
+  boost::python::dict dictionary;
+  for (iter = map.begin(); iter != map.end(); ++iter) {
+    dictionary[iter->first] = iter->second;
+  }
+  return dictionary;
+}
 
 #endif

@@ -40,7 +40,7 @@ bool VentureValue::contains(VentureValuePtr index) const { assert(false); }
 int VentureValue::size() const { assert(false); }
 
 
-boost::python::dict VentureValue::toPython() const
+boost::python::dict VentureValue::toPython(Trace * trace) const
 { 
   boost::python::dict value;
   value["type"] = "unknown";
