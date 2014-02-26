@@ -4,10 +4,11 @@ import numpy as np
 from IPython.parallel import Client
 from nose.tools import with_setup
 
-file_dir = os.path.dirname(os.path.realpath(__file__))
-loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] ) 
-
+## IMPORT VERSION OF IP_PARA, TESTS
+lite = True
 from int_ip_parallel import *
+
+
 
 def setup_function():
     print 'START SETUP'
@@ -39,7 +40,7 @@ def testAddRemoveSize():
     
     clear_all_engines()
     no_rips = 4
-    vv=MRipl(no_rips)
+    vv=MRipl(no_rips,lite=lite)
 
     def check_size(mr,no_rips):
         survey = mr.dview.apply(lambda mrid: len(mripls[mrid]), mr.mrid)
@@ -92,7 +93,7 @@ def testAll_IP():
     def testAddRemoveSize():
         clear_all_engines();print 'IP_addremove  '
         no_rips = 4
-        vv=MRipl(no_rips)
+        vv=MRipl(no_rips,lite=lite)
 
         def check_size(mr,no_rips):
             survey = mr.dview.apply(lambda mrid: len(mripls[mrid]), mr.mrid)
@@ -117,7 +118,7 @@ def testAll_IP():
         # and see if reports are all the same. 
         clear_all_engines();print 'IP_copy  '
         no_rips = 4
-        vv = MRipl(no_rips)
+        vv = MRipl(no_rips,lite=lite)
         vv.assume('x','3.')
 
         no_rips += 3
@@ -133,7 +134,7 @@ def testAll_IP():
         ## TEST DIRECTIVES
         clear_all_engines();print 'IP_directives  '
 
-        v = MRipl(2)
+        v = MRipl(2,lite=lite)
         test_v = make_church_prime_ripl(); test_v.set_seed(0)
         ls_x = v.assume('x','(uniform_continuous 0 1000)')
         test_x = test_v.assume('x','(uniform_continuous 0 1000)')
@@ -168,7 +169,7 @@ def testAll_IP():
         assert( not( v.no_ripls>10 and np.mean(test_x3) > 50) ) # may be too tight
 
     ## other directives
-        clear_all_engines(); v=MRipl(2)
+        clear_all_engines(); v=MRipl(2,lite=lite)
         test_v = make_church_prime_ripl(); test_v.set_seed(0)
         vs = [v, test_v]
         [r.assume('x','(normal 0 1)') for r in vs]
@@ -196,7 +197,7 @@ def testAll_IP():
 
     def testSnapshot():
         clear_all_engines();print 'IP_snap  '
-        v=MRipl(4)
+        v=MRipl(2,lite=lite)(4)
         v.assume('x','(poisson 10)',label='x')
         v.assume('y','3.',label='y')
         seeds_poisson = [15.,4.,9.,11.] #precomputed
@@ -211,7 +212,7 @@ def testAll_IP():
     def testMulti():
         clear_all_engines();print 'IP_multi  '
         no_rips = 4; no_mrips=2;
-        vs = [MRipl(no_rips) for i in range(no_mrips) ]
+        vs = [MRipl(no_rips,lite=lite) for i in range(no_mrips) ]
 
         #test mrids unique
         assert len(set([v.mrid for v in vs]) ) == len(vs)
@@ -243,7 +244,7 @@ def testAll_IP():
     def testMrMap():
         clear_all_engines();print 'IP_map  '
         no_rips = 4
-        v = MRipl(no_rips)
+        v = MRipl(no_rips,lite=lite)
         def f(ripl):
             import numpy
             ys = numpy.power([1, 2, 3, 4],2)
@@ -260,7 +261,7 @@ def testAll_IP():
         out_dict2 = mr_map_nomagic(v,g)
         assert out_dict2['info']['mripl'] == v.name_mrid
 
-        vv=MRipl(no_rips); mean = 10
+        vv=MRipl(no_rips,lite=lite); mean = 10
         vv_out = vv.predict('(poisson %i)' % mean)
         assert out_dict2['out'] == vv_out
 
