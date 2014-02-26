@@ -90,6 +90,7 @@ void ConcreteTrace::registerConstrainedChoice(Node * node) {
   cout << "CT::registerCC(" << node << ")" << endl;
   assert(constrainedChoices.count(node) == 0);
   constrainedChoices.insert(node);
+  unregisterUnconstrainedChoice(node);
 }
 
 /* Unregistering metadata */
@@ -124,6 +125,10 @@ void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
   cout << "CT::unregisterCC(" << node << ")" << endl;
   assert(constrainedChoices.count(node) == 1);
   constrainedChoices.erase(node);
+  ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
+  assert(appNode);
+  shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(appNode))->getPSP(appNode);
+  if (psp->isRandom()) { registerUnconstrainedChoice(appNode); }
 }
 
 /* Regen mutations */

@@ -68,6 +68,7 @@ void Particle::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,No
 
 void Particle::registerConstrainedChoice(Node * node) 
 { 
+  cout << "Particle::registerCC(" << node << ")" << endl;
   assert(!constrainedChoices.contains(node));
   constrainedChoices = constrainedChoices.insert(node);
   unregisterUnconstrainedChoice(node);
@@ -77,6 +78,7 @@ void Particle::registerConstrainedChoice(Node * node)
 /* Unregistering metadata */
 void Particle::unregisterUnconstrainedChoice(Node * node) 
 { 
+  cout << "Particle::unregisterUC(" << node << ")" << endl;
   assert(unconstrainedChoices.contains(node));
   unconstrainedChoices = unconstrainedChoices.remove(node);
   unregisterUnconstrainedChoiceInScope(VentureValuePtr(new VentureSymbol("default")),
@@ -86,6 +88,7 @@ void Particle::unregisterUnconstrainedChoice(Node * node)
 
 void Particle::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 {
+  cout << "Particle::unregisterUCinScope(" << node << ")" << endl;
   PSet<Node*> newPNodes = scopes.lookup(scope).lookup(block).remove(node);
   scopes = scopes.insert(scope,scopes.lookup(scope).insert(block,newPNodes));
 
@@ -184,7 +187,7 @@ int Particle::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node)
 /* Primitive setters */
 void Particle::setValue(Node * node, VentureValuePtr value) 
 { 
-  assert(!baseTrace->values.count(node)); // TODO might not work
+  //  assert(!baseTrace->values.count(node)); // TODO might not work
   values = values.insert(node,value);
 }
 
@@ -245,7 +248,11 @@ RootOfFamily Particle::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
 }
 
 /* Inference (computing reverse weight) */
-int Particle::numBlocksInScope(ScopeID scope) { return scopes.lookup(scope).size() + baseTrace->numBlocksInScope(scope); }
+int Particle::numBlocksInScope(ScopeID scope) 
+{ 
+  if (scopes.contains(scope)) { return scopes.lookup(scope).size() + baseTrace->numBlocksInScope(scope); }
+  else { return baseTrace->numBlocksInScope(scope); }
+}
 
 void Particle::commit()
 {
