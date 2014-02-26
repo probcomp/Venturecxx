@@ -44,6 +44,7 @@ void Particle::registerAEKernel(Node * node)
 
 void Particle::registerUnconstrainedChoice(Node * node) 
 { 
+  cout << "Particle::registerUC(" << node << ")" << endl;
   assert(!unconstrainedChoices.contains(node));
   unconstrainedChoices = unconstrainedChoices.insert(node);
   registerUnconstrainedChoiceInScope(VentureValuePtr(new VentureSymbol("default")),
@@ -53,6 +54,7 @@ void Particle::registerUnconstrainedChoice(Node * node)
 
 void Particle::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
+  cout << "Particle::registerUCinScope(" << node << ")" << endl;
   assert(block);
   if (!scopes.contains(scope)) { scopes = scopes.insert(scope,PMap<BlockID,PSet<Node*>,VentureValuePtrsLess >()); }
   if (!scopes.lookup(scope).contains(block)) 
@@ -130,7 +132,6 @@ void Particle::incRegenCount(shared_ptr<Scaffold> scaffold,Node * node)
 
 void Particle::addChild(Node * node, Node * child) 
 { 
-  cout << "particle::addChild(" << node << ", " << child << ")" << endl;
   if (!newChildren.contains(node)) { newChildren = newChildren.insert(node,PSet<Node*>()); }
   newChildren = newChildren.insert(node, newChildren.lookup(node).insert(child)); 
 }
@@ -178,14 +179,12 @@ int Particle::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node)
   else { return baseTrace->getRegenCount(scaffold,node); }
 }
 
-VentureValuePtr Particle::getObservedValue(Node * node) { assert(false); }
 
 
 /* Primitive setters */
 void Particle::setValue(Node * node, VentureValuePtr value) 
 { 
   assert(!baseTrace->values.count(node)); // TODO might not work
-  assert(!values.contains(node)); // TODO might not work
   values = values.insert(node,value);
 }
 
@@ -356,6 +355,25 @@ void Particle::commit()
   }
 }
 
+bool Particle::isMakerNode(Node * node) { return madeSPs.contains(node) || baseTrace->madeSPRecords.count(node); }
+bool Particle::isObservation(Node * node) { return baseTrace->observedValues.count(node); }
+VentureValuePtr Particle::getObservedValue(Node * node) { return baseTrace->getObservedValue(node); }
+
+set<Node*> Particle::getChildren(Node * node) 
+{
+  if (newChildren.contains(node))
+    {
+      set<Node *> old_children = baseTrace->getChildren(node);
+      vector<Node *> new_children = newChildren.lookup(node).keys();
+      old_children.insert(new_children.begin(),new_children.end());
+      return old_children;
+    }
+  else
+    {
+      return baseTrace->getChildren(node);
+    }
+}
+
 /* The following should never be called on particles */
 
 
@@ -367,16 +385,12 @@ void Particle::removeChild(Node * node, Node * child) { assert(false); throw "sh
 void Particle::unregisterAEKernel(Node * node) { assert(false); throw "should never be called"; }
 
 void Particle::unregisterConstrainedChoice(Node * node) { assert(false); throw "should never be called"; }
-set<Node*> Particle::getChildren(Node * node) { assert(false); throw "should never be called"; }
+
 int Particle::getNumRequests(RootOfFamily root) { assert(false); throw "should never be called"; }
 
 void Particle::destroyMadeSPRecord(Node * makerNode) { assert(false); }
 void Particle::unregisterMadeSPFamily(Node * makerNode,FamilyID id) { assert(false); }
 void Particle::clearValue(Node * node) { assert(false); }
-
-/* Probably called */
-bool Particle::isMakerNode(Node * node) { return madeSPs.contains(node) || baseTrace->madeSPRecords.count(node); }
-bool Particle::isObservation(Node * node) { return constrainedChoices.contains(node) || baseTrace->constrainedChoices.count(node); }
 
 
 /* Probably not called */
@@ -385,3 +399,4 @@ void Particle::setESRParents(Node * node,const vector<RootOfFamily> & esrRoots) 
 bool Particle::isConstrained(Node * node) { assert(false); }
 
 void Particle::setNumRequests(RootOfFamily node,int num) { assert(false); }
+

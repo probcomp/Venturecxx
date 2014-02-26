@@ -64,6 +64,7 @@ void ConcreteTrace::registerAEKernel(Node * node)
 }
 
 void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
+  cout << "CT::registerUC(" << node << ")" << endl;
   assert(unconstrainedChoices.count(node) == 0);
   unconstrainedChoices.insert(node);
   registerUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
@@ -73,6 +74,7 @@ void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
 
 void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
+  cout << "CT::registerUCinScope(" << node << ")" << endl;
   assert(block);
   if (!scopes.count(scope)) { scopes[scope]/* = SamplableMap<BlockID,set<Node*> >()*/; }
   if (!scopes[scope].contains(block)) { scopes[scope].set(block,set<Node*>()); }
@@ -85,6 +87,7 @@ void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID blo
 }
 
 void ConcreteTrace::registerConstrainedChoice(Node * node) {
+  cout << "CT::registerCC(" << node << ")" << endl;
   assert(constrainedChoices.count(node) == 0);
   constrainedChoices.insert(node);
 }
@@ -98,6 +101,7 @@ void ConcreteTrace::unregisterAEKernel(Node * node)
 
 
 void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
+  cout << "CT::unregisterUC(" << node << ")" << endl;
   unregisterUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
 				       shared_ptr<VentureNode>(new VentureNode(node)),
 				       node);
@@ -107,6 +111,7 @@ void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
 
 void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
+  cout << "CT::unregisterUCinScope(" << node << ")" << endl;
   assert(scopes[scope].contains(block));
   assert(scopes[scope].get(block).count(node));
   scopes[scope].get(block).erase(node);
@@ -116,6 +121,7 @@ void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID b
 }
 
 void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
+  cout << "CT::unregisterCC(" << node << ")" << endl;
   assert(constrainedChoices.count(node) == 1);
   constrainedChoices.erase(node);
 }
@@ -139,7 +145,6 @@ void ConcreteTrace::incNumRequests(RootOfFamily root) { numRequests[root]++; }
 void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
 void ConcreteTrace::addChild(Node * node, Node * child) 
 {
-  cout << "concreteTrace::addChild(" << node << ", " << child << ")" << endl;
   assert(children[node].count(child) == 0);
   children[node].insert(child);
   //cout << "addChild(" << node << "," << child << ") :: " << children[node].size() << endl;
@@ -172,7 +177,6 @@ void ConcreteTrace::decNumRequests(RootOfFamily root)
 void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
 void ConcreteTrace::removeChild(Node * node, Node * child) 
 { 
-  cout << "concreteTrace::removeChild(" << node << ", " << child << ")" << endl;
   assert(children.count(node)); 
   assert(children[node].count(child));
   children[node].erase(child); 
