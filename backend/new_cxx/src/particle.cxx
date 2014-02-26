@@ -1,5 +1,6 @@
 #include "particle.h"
 #include "concrete_trace.h"
+#include <boost/foreach.hpp>
 
 Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
 Particle::Particle(shared_ptr<Particle> outerParticle):
@@ -123,6 +124,7 @@ void Particle::incRegenCount(shared_ptr<Scaffold> scaffold,Node * node)
 
 void Particle::addChild(Node * node, Node * child) 
 { 
+  cout << "particle::addChild(" << node << ", " << child << ")" << endl;
   if (!newChildren.contains(node)) { newChildren = newChildren.insert(node,PSet<Node*>()); }
   newChildren = newChildren.insert(node, newChildren.lookup(node).insert(child)); 
 }
@@ -270,7 +272,6 @@ void Particle::commit()
     {
       assert(iter->second);
       assert(baseTrace->getValue(iter->first));
-      // TODO this assert fires but shouldn't!
       //      assert(iter->second->equals(baseTrace->getValue(iter->first)));
     }
 
@@ -319,14 +320,24 @@ void Particle::commit()
   for (size_t newMadeSPFamiliesIndex = 0; newMadeSPFamiliesIndex < newMadeSPFamiliesItems.size(); ++newMadeSPFamiliesIndex)
   {
     pair<Node*, PMap<FamilyID,RootOfFamily,VentureValuePtrsLess> >& newMadeSPFamilyItem = newMadeSPFamiliesItems[newMadeSPFamiliesIndex];
-    baseTrace->addNewMadeSPFamilies(newMadeSPFamilyItem.first, newMadeSPFamilyItem.second);
+    Node * node = newMadeSPFamilyItem.first;
+    vector<pair<FamilyID,RootOfFamily> > families = newMadeSPFamilyItem.second.items();
+    for (vector<pair<FamilyID,RootOfFamily> >::iterator iter = families.begin();
+	 iter != families.end();
+	 ++iter)
+      {
+	baseTrace->registerMadeSPFamily(node,iter->first,iter->second);
+      }
   }
   
   vector<pair<Node*, PSet<Node*> > > newChildrenItems = newChildren.items();
   for (size_t newChildrenIndex = 0; newChildrenIndex < newChildrenItems.size(); ++newChildrenIndex)
   {
     pair<Node*, PSet<Node*> >& newChildrenItem = newChildrenItems[newChildrenIndex];
-    baseTrace->addNewChildren(newChildrenItem.first, newChildrenItem.second);
+    Node * node = newChildrenItem.first;
+    vector<Node*> newChildrenItems = newChildrenItem.second.keys();
+    BOOST_FOREACH(Node * child, newChildrenItems) { baseTrace->children[node].insert(child); }
+    BOOST_FOREACH(Node * child, newChildrenItems) { assert(baseTrace->children[node].count(child)); }
   }
   
   vector<pair<Node*, shared_ptr<SPAux> > > madeSPAuxItems(madeSPAuxs.begin(), madeSPAuxs.end());

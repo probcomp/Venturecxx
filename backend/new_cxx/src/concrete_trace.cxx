@@ -139,6 +139,7 @@ void ConcreteTrace::incNumRequests(RootOfFamily root) { numRequests[root]++; }
 void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
 void ConcreteTrace::addChild(Node * node, Node * child) 
 {
+  cout << "concreteTrace::addChild(" << node << ", " << child << ")" << endl;
   assert(children[node].count(child) == 0);
   children[node].insert(child);
   //cout << "addChild(" << node << "," << child << ") :: " << children[node].size() << endl;
@@ -171,6 +172,7 @@ void ConcreteTrace::decNumRequests(RootOfFamily root)
 void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
 void ConcreteTrace::removeChild(Node * node, Node * child) 
 { 
+  cout << "concreteTrace::removeChild(" << node << ", " << child << ")" << endl;
   assert(children.count(node)); 
   assert(children[node].count(child));
   children[node].erase(child); 
