@@ -58,3 +58,9 @@ argument-rgx=[a-z_][a-z0-9_]{0,30}$
 # Regular expression which should only match correct variable names
 variable-rgx=[a-z_][a-z0-9_]{0,30}$
 
+[VARIABLES]
+# Regular expression which should match exactly the names that are OK
+# to define but not use.  TODO Here I use the underscore convention from
+# Haskell despite its conflict with the Python convention of treating
+# underscored names as semi-private.
+dummy-variables-rgx=_|dummy
