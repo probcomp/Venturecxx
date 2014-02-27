@@ -68,12 +68,11 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def wrap_return(self, value):
     return self.return_type.asVentureValue(value)
   def unwrap_return(self, value):
-    if value is None:
-      # Could happen for e.g. a "delta kernel" that is expected, by
-      # e.g. pgibbs, to actually be a simulation kernel
-      return None
-    else:
-      return self.return_type.asPython(value)
+    # value could be None for e.g. a "delta kernel" that is expected,
+    # by e.g. pgibbs, to actually be a simulation kernel; also when
+    # computing log density bounds over a torus for rejection
+    # sampling.
+    return self.return_type.asPythonNoneable(value)
   def unwrap_args(self, args):
     if args.isOutput:
       assert not args.esrValues # TODO Later support outputs that have non-latent requesters
@@ -81,9 +80,10 @@ used in the implementation of TypedPSP and TypedLKernel."""
     if not self.variadic:
       assert len(args.operandValues) >= self.min_req_args
       assert len(args.operandValues) <= len(self.args_types)
-      answer.operandValues = [self.args_types[i].asPython(v) for (i,v) in enumerate(args.operandValues)]
+      # v could be None when computing log density bounds for a torus
+      answer.operandValues = [self.args_types[i].asPythonNoneable(v) for (i,v) in enumerate(args.operandValues)]
     else:
-      answer.operandValues = [self.args_types[0].asPython(v) for v in args.operandValues]
+      answer.operandValues = [self.args_types[0].asPythonNoneable(v) for v in args.operandValues]
     return answer
 
 class TypedPSP(PSP):
@@ -95,6 +95,8 @@ class TypedPSP(PSP):
     return self.f_type.wrap_return(self.psp.simulate(self.f_type.unwrap_args(args)))
   def logDensity(self,value,args):
     return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
+  def logDensityBound(self, value, args):
+    return self.psp.logDensityBound(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def incorporate(self,value,args):
     return self.psp.incorporate(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def unincorporate(self,value,args):
