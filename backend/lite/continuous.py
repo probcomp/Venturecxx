@@ -19,7 +19,7 @@ class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,params): return scipy.stats.norm.rvs(*params)
   def logDensityNumeric(self,x,params): return scipy.stats.norm.logpdf(x,*params)
-  def logDensityBoundNumeric(self, mu, sigma):
+  def logDensityBoundNumeric(self, x, mu, sigma):
     if sigma is not None:
       return -(math.log(sigma) + 0.5 * math.log(2 * math.pi))
     else: # TODO if mu and the output are known and differ, we can do something
@@ -27,7 +27,7 @@ class NormalOutputPSP(RandomPSP):
 
   def simulate(self,args): return self.simulateNumeric(args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues)
-  def logDensityBound(self, args): return self.logDensityBoundNumeric(*args.operandValues)
+  def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 
   def hasDeltaKernel(self): return False # have each gkernel control whether it is delta or not
   def getDeltaKernel(self): return NormalDriftKernel()
@@ -50,7 +50,7 @@ class UniformOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,low,high): return scipy.stats.uniform.rvs(low, high-low)
   def logDensityNumeric(self,x,low,high): return scipy.stats.uniform.logpdf(x, low, high-low)
-  def logDensityBoundNumeric(self, low, high):
+  def logDensityBoundNumeric(self, _, low, high):
     if low is None or high is None:
       # Unbounded
       raise Exception("Cannot rejection sample psp with unbounded likelihood")
@@ -59,7 +59,7 @@ class UniformOutputPSP(RandomPSP):
 
   def simulate(self,args): return self.simulateNumeric(*args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
-  def logDensityBound(self, args): return self.logDensityBoundNumeric(*args.operandValues)
+  def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 
   def description(self,name):
     return "(%s low high) -> <number>" % name
