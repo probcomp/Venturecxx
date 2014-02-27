@@ -10,6 +10,8 @@ class PSP(object):
   def simulate(self,args): pass
   def logDensity(self,value,args): return 0
   def logDensityBound(self, args):
+    print type(self)
+    print self.description("foo")
     raise Exception("Cannot rejection sample psp with unbounded likelihood")
   def incorporate(self,value,args): pass
   def unincorporate(self,value,args): pass
@@ -35,6 +37,7 @@ class PSP(object):
 class NullRequestPSP(PSP):
   def simulate(self,args): return Request()
   def canAbsorb(self,trace,appNode,parentNode): return True
+  def logDensityBound(self, args): return 0
 
 class ESRRefOutputPSP(PSP):
   def simulate(self,args):

@@ -44,9 +44,16 @@ class UniformOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,low,high): return scipy.stats.uniform.rvs(low, high-low)
   def logDensityNumeric(self,x,low,high): return scipy.stats.uniform.logpdf(x, low, high-low)
+  def logDensityBoundNumeric(self, low, high):
+    if low is None or high is None:
+      # Unbounded
+      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+    else:
+      return -math.log(high - low)
 
   def simulate(self,args): return self.simulateNumeric(*args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+  def logDensityBound(self, args): return self.logDensityBoundNumeric(*args.operandValues)
 
   def description(self,name):
     return "(%s low high) -> <number>" % name
