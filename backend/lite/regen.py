@@ -46,6 +46,8 @@ def propagateConstraint(trace,node,value):
     assert isinstance(node,OutputNode)
     if trace.pspAt(node).isRandom():
       raise Exception("Cannot make random choices downstream of a node that gets constrained during regen")
+    # TODO Is it necessary to unincorporate and incorporate here?  If
+    # not, why not?
     trace.setValueAt(node,trace.pspAt(node).simulate(trace.argsAt(node)))
   for child in trace.childrenAt(node): propagateConstraint(trace,child,value)
 
