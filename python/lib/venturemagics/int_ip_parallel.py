@@ -455,7 +455,7 @@ class MRipl():
             var_type = self.type_list(vals)
             
             if var_type =='float':
-                fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(9,4))
+                fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(8,3.5))
                 xr = np.linspace(min(vals),max(vals),400)
                 ax[0].plot(xr,gaussian_kde(vals)(xr))
                 ax[0].set_xlim([min(vals),max(vals)])
@@ -486,7 +486,7 @@ class MRipl():
         if scatter:
             label0,vals0 = values.items()[0]
             label1,vals1 = values.items()[1]
-            fig, ax  = plt.subplots(figsize=(6,4))
+            fig, ax  = plt.subplots(figsize=(5,3.5))
             ax.scatter(vals0,vals1)
             ax.set_xlabel(label0); ax.set_ylabel(label1)
             ax.set_title('%s vs. %s (transitions: %i, ripls: %i)' % (str(label0),str(label1),
@@ -505,18 +505,28 @@ class MRipl():
         label = did_label
         start = self.total_transitions
         probes = map(int,np.round( np.linspace(0,no_transitions,no_probes) ) )
+
+        out = {'label':label, 'transition_limits':(start,start+no_transitions),
+                  'probes':probes, 'series':[], 'snapshots':[], }
         
+        # initialize list of snapshots and series
+        snapshots = [  self.snapshot(label), ]
         series = [self.snapshot(label)['values'][label], ]
+
         for i in range(len(probes[:-1])):
             self.infer(probes[i+1]-probes[i])
+            snapshots.append( self.snapshot(label) )
             series.append( self.snapshot(label)['values'][label] )
+
+        out['series'] = series; out['snapshots'] = snapshots
+
 
         if plot_hist:
             xmin = min([min(shot) for shot in series])
             xmax = max([max(shot) for shot in series])
             xr = np.linspace(xmin,xmax,400)
-            fig,ax = plt.subplots(ncols=no_probes,sharex=True,figsize=(10,5))
-            kdfig,kdax = plt.subplots(ncols=no_probes,sharex=True,figsize=(10,5))
+            fig,ax = plt.subplots(ncols=no_probes,sharex=True,figsize=(8,5))
+            kdfig,kdax = plt.subplots(ncols=no_probes,sharex=True,figsize=(8,5))
             for i in range(no_probes):
                 ax[i].hist(series[i],bins=12)
                 kdax[i].plot(xr,gaussian_kde(series[i])(xr))
@@ -528,17 +538,21 @@ class MRipl():
 
             fig.tight_layout(); kdfig.tight_layout()
 
+            out['hist_figs'] = (fig,kdfig)
+
+
         if plot_series:
-            fig,ax = plt.subplots()
+            fig,ax = plt.subplots(figsize=(5,3.5))
             for ripl in range(self.no_ripls):
                 vals = [shot[ripl] for shot in series]
                 ax.plot(probes,vals,label='R'+str(ripl))
 
             t = '%s: start %i, probes at %s' % (str(label),start,str(probes))
             ax.set_title(t)
+            out['timeseries_fig'] = fig
             #ax.legend()
 
-        return probes,series
+        return out
     
 
 
