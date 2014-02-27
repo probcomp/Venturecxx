@@ -109,7 +109,9 @@ class Args(object):
     self.node = node
     self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]
     for v in self.operandValues:
-      assert isinstance(v, VentureValue)
+      # v could be None if this is for logDensityBound for rejection
+      # sampling, which is computed from the torus.
+      assert v is None or isinstance(v, VentureValue)
     self.operandNodes = node.operandNodes
 
     if isinstance(node,OutputNode):
