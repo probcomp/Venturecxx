@@ -50,16 +50,35 @@ class BlockScaffoldIndexer(object):
 
 #### Rejection sampling
 
+def computeRejectionBound(trace, scaffold, border):
+  def logBoundAt(node):
+    psp,args = trace.pspAt(node),trace.argsAt(node)
+    return psp.logBound(args)
+  # This looks an awful lot like what would happen on forcing a thunk
+  # constructed by regenAndAttach for computing the logBound.
+  logBound = 0
+  # TODO Ignoring weight from lkernels, because there shouldn't be any
+  # when doing rejection sampling.  Should I assert that?
+  # TODO Ignoring weight from simulating latent requests, because I
+  # don't know what to do about it.  Write tests that expose?
+  for node in border:
+    if scaffold.isAbsorbing(node):
+      logBound += logBoundAt(node)
+    elif node.isObservation:
+      appNode = trace.getOutermostNonReferenceApplication(node)
+      logBound += logBoundAt(appNode)
+  return logBound
+
 class RejectionOperator(object):
   def propose(self, trace, scaffold):
     self.trace = trace
     self.scaffold = scaffold
-    _,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
+    _,self.rhoDB = detachAndExtract(trace, scaffold.border[0], scaffold)
     assertTorus(scaffold)
+    logBound = computeRejectionBound(trace, scaffold, scaffold.border[0])
     accept = False
     while not accept:
       xiWeight = regenAndAttach(trace, scaffold.border[0], scaffold, False, self.rhoDB, {})
-      logBound = computeRejectionBound(scaffold.border[0])
       accept = random.random() < math.exp(xiWeight - logBound)
       if not accept:
         detachAndExtract(trace, scaffold.border[0], scaffold)
