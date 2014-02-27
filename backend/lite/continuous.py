@@ -19,9 +19,15 @@ class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,params): return scipy.stats.norm.rvs(*params)
   def logDensityNumeric(self,x,params): return scipy.stats.norm.logpdf(x,*params)
+  def logDensityBoundNumeric(self, mu, sigma):
+    if sigma is not None:
+      return -(math.log(sigma) + 0.5 * math.log(2 * math.pi))
+    else: # TODO if mu and the output are known and differ, we can do something
+      raise Exception("Cannot rejection sample psp with unbounded likelihood")
 
   def simulate(self,args): return self.simulateNumeric(args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues)
+  def logDensityBound(self, args): return self.logDensityBoundNumeric(*args.operandValues)
 
   def hasDeltaKernel(self): return False # have each gkernel control whether it is delta or not
   def getDeltaKernel(self): return NormalDriftKernel()
