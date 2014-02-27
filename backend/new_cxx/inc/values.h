@@ -11,6 +11,7 @@ struct VentureNumber : VentureValue
   double getDouble() const { return x; }
   bool hasInt() const { return false; }
   long getInt() const { return static_cast<int>(x); }
+  bool getBool() const { return x; }
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
@@ -24,6 +25,7 @@ struct VentureAtom : VentureValue
   bool hasInt() const { return false; }
   long getInt() const { return n; }
   int getAtom() const { return n; }
+  bool getBool() const { return n; }
   bool equals(const VentureValuePtr & other) const;
 
   size_t hash() const;

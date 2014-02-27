@@ -91,4 +91,3 @@ bool VentureValue::operator<(const VentureValuePtr & rhs) const
 
   else { assert(false); return false; }
 }
-

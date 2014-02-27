@@ -6,13 +6,31 @@
 
 #include "utils.h"
 
-VentureValuePtr BernoulliOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+VentureValuePtr FlipOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   double p = 0.5;
   if (!args->operandValues.empty()) { p = args->operandValues[0]->getDouble(); }
   int n = gsl_ran_bernoulli(rng,p);
   assert(n == 0 || n == 1);
   return shared_ptr<VentureBool>(new VentureBool(n));
+}
+
+double FlipOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+{
+  double p = 0.5;
+  if (!args->operandValues.empty()) { p = args->operandValues[0]->getDouble(); }
+
+  if (value->getBool()) { return log(p); }
+  else { return log(1 - p); }
+}
+
+VentureValuePtr BernoulliOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+{
+  double p = 0.5;
+  if (!args->operandValues.empty()) { p = args->operandValues[0]->getDouble(); }
+  int n = gsl_ran_bernoulli(rng,p);
+  assert(n == 0 || n == 1);
+  return VentureValuePtr(new VentureAtom(n));
 }
 
 double BernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const

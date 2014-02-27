@@ -31,7 +31,7 @@ def testIf3():
   eq_(1, ripl.predict("(if true z y)"))
 
 def testFlip1():
-  assert isinstance(get_ripl().predict("(bernoulli 0.5)"), bool)
+  assert isinstance(get_ripl().predict("(bernoulli 0.5)"), int)
 
 @statisticalTest
 def testFlip2():
