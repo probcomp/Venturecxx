@@ -48,6 +48,31 @@ class BlockScaffoldIndexer(object):
     else: return 0
 
 
+#### Rejection sampling
+
+class RejectionOperator(object):
+  def propose(self, trace, scaffold):
+    self.trace = trace
+    self.scaffold = scaffold
+    _,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
+    assertTorus(scaffold)
+    accept = False
+    while not accept:
+      xiWeight = regenAndAttach(trace, scaffold.border[0], scaffold, False, self.rhoDB, {})
+      logBound = computeRejectionBound(scaffold.border[0])
+      accept = random.random() < math.exp(xiWeight - logBound)
+      if not accept:
+        detachAndExtract(trace, scaffold.border[0], scaffold)
+    return trace, 0
+
+  def accept(self): pass
+  def reject(self):
+    # TODO This is the same as the MHOperator rejection -- abstract
+    detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
+    assertTorus(self.scaffold)
+    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
+
+
 #### Resampling from the prior
 
 class MHOperator(object):
