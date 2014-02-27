@@ -8,8 +8,9 @@
 
 struct CRPSPAux : SPAux
 {
- CRPSPAux(): nextIndex(1), numCustomers(0), numTables(0) {}
-  shared_ptr<SPAux> clone() { assert(false); }
+  CRPSPAux(): nextIndex(1), numCustomers(0), numTables(0) {}
+  shared_ptr<SPAux> clone() { return shared_ptr<CRPSPAux>(new CRPSPAux(*this)); }
+  
   uint32_t nextIndex;
   uint32_t numCustomers;
   uint32_t numTables;
@@ -22,9 +23,18 @@ struct MakeCRPOutputPSP : PSP
   bool childrenCanAAA() const { return true; }
 };
 
+struct CRPSP : SP
+{
+  CRPSP(double alpha, double d);
+  boost::python::dict toPython(shared_ptr<SPAux> spAux) const;
+  
+  // for toPython
+  double alpha, d;
+};
+
 struct CRPOutputPSP : RandomPSP
 {
- CRPOutputPSP(double alpha,double d) : alpha(alpha), d(d) {}
+  CRPOutputPSP(double alpha,double d) : alpha(alpha), d(d) {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;

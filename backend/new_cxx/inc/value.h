@@ -20,6 +20,7 @@ template <typename T>
 struct VentureValuePtrMap : boost::unordered_map<VentureValuePtr, T, HashVentureValuePtr, VentureValuePtrsEqual> {};
 
 struct SPAux;
+struct Trace;
 
 // TODO AXCH
 // We need to be more consistent about whether this unboxes
@@ -59,7 +60,7 @@ struct VentureValue
   virtual bool contains(VentureValuePtr index) const;
   virtual int size() const;
   
-  virtual boost::python::dict toPython() const;
+  virtual boost::python::dict toPython(Trace * trace) const;
 
   /* for unordered_maps */
   virtual bool equals(const VentureValuePtr & other) const;

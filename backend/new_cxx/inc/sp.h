@@ -23,7 +23,7 @@ struct VentureSPRef : VentureValue
 
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
-  boost::python::dict toPython() const;
+  boost::python::dict toPython(Trace * trace) const;
   string toString() const;
 
 };
@@ -61,6 +61,8 @@ struct SP
   virtual double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const;
   virtual bool hasAEKernel() const { return false; }
   virtual void AEInfer(shared_ptr<Args> args, gsl_rng * rng) const;
+  
+  virtual boost::python::dict toPython(shared_ptr<SPAux> spAux) const;
 };
 
 #endif
