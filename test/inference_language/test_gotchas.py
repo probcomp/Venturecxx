@@ -1,3 +1,5 @@
+from nose.tools import assert_raises # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
+
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 
@@ -46,4 +48,9 @@ def checkRejectNormal(incl_mu, incl_sigma, incl_out):
   ripl.assume("mu", maybewrap("(normal 0 1)", incl_mu))
   ripl.assume("sigma", maybewrap("(uniform_continuous 0 10)", incl_sigma))
   ripl.assume("out", maybewrap("(normal mu sigma)", incl_out))
-  ripl.infer("(rejection scaffold 0 1)")
+  def doinfer():
+    ripl.infer("(rejection scaffold 0 1)")
+  if [incl_mu, incl_sigma, incl_out] == [True, True, False]:
+    assert_raises(Exception, doinfer) # Can't do rejection on normal when mu and sigma are unknown
+  else:
+    doinfer()
