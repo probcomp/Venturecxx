@@ -6,5 +6,5 @@ config["num_transitions_per_sample"] = 100
 config["should_reset"] = False
 config["get_ripl"] = "cxx"
 config["global_reporting_threshold"] = 0.001
-config["infer"] = "(mh default one 50)"
+config["infer"] = "(func-pgibbs default one 2 50)"
 config["ignore_inference_quality"] = False

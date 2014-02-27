@@ -85,7 +85,7 @@ VentureValuePtr MakeUBetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl
   UBetaBernoulliSPAux * aux = new UBetaBernoulliSPAux(p);
   PSP * requestPSP = new NullRequestPSP();
   PSP * outputPSP = new UBetaBernoulliOutputPSP();
-  return VentureValuePtr(new VentureSPRecord(new SP(requestPSP,outputPSP),aux));
+  return VentureValuePtr(new VentureSPRecord(new UBetaBernoulliSP(requestPSP,outputPSP),aux));
 }
 
 double MakeUBetaBernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
