@@ -1,5 +1,5 @@
 import scipy.stats as stats
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
 from nose import SkipTest
 from venture.test.config import get_ripl, collectSamples, collect_iid_samples
 
@@ -68,3 +68,11 @@ def testBlockingExample3():
   newb = ripl.report(2)
   assert not olda == newa
   assert not oldb == newb
+
+@statisticalTest
+def testBasicRejection():
+  ripl = get_ripl()
+  ripl.assume("x", "(bernoulli 0.5)")
+  predictions = collectSamples(ripl, 1, infer={"kernel":"reject", "scope":"default", "block":"all", "transitions":1})
+  ans = [(True, 0.5), (False, 0.5)]
+  return reportKnownDiscrete(ans, predictions)
