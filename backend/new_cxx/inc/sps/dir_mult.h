@@ -63,10 +63,9 @@ private:
 // Uncollapsed SPAux
 struct UCDirMultSPAux : DirMultSPAux
 {
-  UCDirMultSPAux(int n): DirMultSPAux(n), theta(new double[n]) {}
-  ~UCDirMultSPAux() { delete[] theta; }
+  UCDirMultSPAux(int n): DirMultSPAux(n), theta(n,0) {}
   shared_ptr<SPAux> clone();
-  double * theta;
+  vector<double> theta;
 };
 
 // Uncollapsed Symmetric
