@@ -47,6 +47,9 @@ class BlockScaffoldIndexer(object):
     elif self.block == "ordered": return 0
     else: return 0
 
+
+#### Resampling from the prior
+
 class MHOperator(object):
   def propose(self,trace,scaffold):
     self.trace = trace
@@ -67,6 +70,8 @@ class MHOperator(object):
     assertTorus(self.scaffold)
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
 
+
+#### Variational
 
 def registerVariationalLKernels(trace,scaffold):
   hasVariational = False
@@ -126,7 +131,7 @@ class MeanfieldOperator(object):
       self.delegate.reject()
 
 
-################## Enumerative Gibbs
+#### Enumerative Gibbs
 
 def getCurrentValues(trace,pnodes): return [trace.valueAt(pnode) for pnode in pnodes]
 def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
@@ -189,11 +194,8 @@ class EnumerativeGibbsOperator(object):
     assertTorus(self.scaffold)
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
 
-
-
-
       
-################## PGibbs
+#### PGibbs
 
 # Construct ancestor path backwards
 def constructAncestorPath(ancestorIndices,t,n):
@@ -301,7 +303,7 @@ class PGibbsOperator(object):
     assertTrace(self.trace,self.scaffold)
 
 
-### Non-mutating PGibbs
+#### Functional PGibbs
 
 class ParticlePGibbsOperator(object):
   def __init__(self,P):
