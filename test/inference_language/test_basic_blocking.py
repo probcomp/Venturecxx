@@ -85,3 +85,12 @@ def testBasicRejection2():
   predictions = collectSamples(ripl, 2, infer={"kernel":"rejection", "scope":"default", "block":"all", "transitions":1})
   ans = [(True, 0.5), (False, 0.5)]
   return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+def testBasicRejection3():
+  ripl = get_ripl()
+  ripl.assume("p", "(uniform_continuous 0 1)")
+  ripl.observe("(bernoulli p)", "true")
+  predictions = collectSamples(ripl, 1, infer={"kernel":"rejection", "scope":"default", "block":"all", "transitions":1})
+  cdf = stats.beta(2,1).cdf
+  return reportKnownContinuous(cdf, predictions, "beta(2,1)")
