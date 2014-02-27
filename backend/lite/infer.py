@@ -74,6 +74,12 @@ def computeRejectionBound(trace, scaffold, border):
   return logBound
 
 class RejectionOperator(object):
+  """Rejection sampling on a scaffold.
+
+  This is supposed to obey the semantics laid out in
+  Bayesian Statistics Without Tears: A Sampling-Resampling Perspective
+  A.F.M. Smith, A.E. Gelfand The American Statistician 46(2), 1992, p 84-88
+  http://faculty.chicagobooth.edu/hedibert.lopes/teaching/ccis2010/1992SmithGelfand.pdf"""
   def propose(self, trace, scaffold):
     self.trace = trace
     self.scaffold = scaffold
