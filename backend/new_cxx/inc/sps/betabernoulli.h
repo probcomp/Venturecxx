@@ -10,6 +10,8 @@
 struct BetaBernoulliSPAux : SPAux
 {
  BetaBernoulliSPAux(): heads(0), tails(0) {}
+  shared_ptr<SPAux> clone();
+
   int heads;
   int tails;
 };
@@ -41,6 +43,8 @@ private:
 struct UBetaBernoulliSPAux : BetaBernoulliSPAux
 {
  UBetaBernoulliSPAux(double p): BetaBernoulliSPAux(), p(p) {}
+  shared_ptr<SPAux> clone();
+
   double p;
 };
 

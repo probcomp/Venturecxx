@@ -17,6 +17,9 @@ struct HMMSPAux : SPAux
   /* Observations: may be many observations at a single index */
   /* We expect very few, otherwise we would use a set */
   map<size_t,vector<uint32_t> > os;
+
+  shared_ptr<SPAux> clone();
+
 };
 
 struct HMMLSR : LSR

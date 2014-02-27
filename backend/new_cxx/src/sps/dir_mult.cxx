@@ -418,3 +418,6 @@ void UCDirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> ar
   assert(aux->counts[index] >= 0);
 }
 
+// Aux clones
+shared_ptr<SPAux> DirMultSPAux::clone() { return shared_ptr<SPAux>(new DirMultSPAux(*this)); }
+shared_ptr<SPAux> UCDirMultSPAux::clone() { return shared_ptr<SPAux>(new UCDirMultSPAux(*this)); }

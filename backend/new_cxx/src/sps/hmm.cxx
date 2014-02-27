@@ -335,3 +335,8 @@ VectorXd normalizedVectorXd(VectorXd & v)
   for (size_t i = 0; i < len; ++i) { newVector[i] = v[i] / sum; }
   return newVector;
 }
+
+//
+
+shared_ptr<SPAux> HMMSPAux::clone() { return shared_ptr<SPAux>(new HMMSPAux(*this)); }
+

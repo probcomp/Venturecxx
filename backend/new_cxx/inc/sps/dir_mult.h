@@ -11,6 +11,7 @@ struct DirMultSPAux : SPAux
 {
   DirMultSPAux(int n) : counts(n, 0) {}
   vector<int> counts;
+  shared_ptr<SPAux> clone();
 };
 
 // Collapsed Symmetric
@@ -64,6 +65,7 @@ struct UCDirMultSPAux : DirMultSPAux
 {
   UCDirMultSPAux(int n): DirMultSPAux(n), theta(new double[n]) {}
   ~UCDirMultSPAux() { delete[] theta; }
+  shared_ptr<SPAux> clone();
   double * theta;
 };
 
