@@ -227,25 +227,25 @@ double MakeUCSymDirMultOutputPSP::logDensity(VentureValuePtr value, shared_ptr<A
 
 // Note: odd design
 // It gets the args 
-void UCSymDirMultSP::AEInfer(shared_ptr<Args> args,gsl_rng * rng) const 
+void UCSymDirMultSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const 
 { 
   double alpha = args->operandValues[0]->getDouble();
   int n = args->operandValues[1]->getInt();
 
-  shared_ptr<UCDirMultSPAux> spAux = dynamic_pointer_cast<UCDirMultSPAux>(args->madeSPAux);
-  assert(spAux);
+  shared_ptr<UCDirMultSPAux> aux = dynamic_pointer_cast<UCDirMultSPAux>(spAux);
+  assert(aux);
 
   uint32_t d = static_cast<uint32_t>(n);
-  assert(spAux->counts.size() == d);
+  assert(aux->counts.size() == d);
 
   double *conjAlphaVector = new double[d];
 
   for (size_t i = 0; i < d; ++i) 
   { 
-    conjAlphaVector[i] = alpha + spAux->counts[i];
+    conjAlphaVector[i] = alpha + aux->counts[i];
   }
 
-  gsl_ran_dirichlet(rng,d,conjAlphaVector,&spAux->theta[0]);
+  gsl_ran_dirichlet(rng,d,conjAlphaVector,&aux->theta[0]);
 
   delete[] conjAlphaVector;
 }
@@ -351,23 +351,23 @@ double MakeUCDirMultOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args
   return ld;
 }
 
-void UCDirMultSP::AEInfer(shared_ptr<Args> args,gsl_rng * rng) const 
+void UCDirMultSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const 
 {
   shared_ptr<VentureArray> alphaArray = dynamic_pointer_cast<VentureArray>(args->operandValues[0]);
   assert(alphaArray);
   size_t n = alphaArray->xs.size();
   
-  shared_ptr<UCDirMultSPAux> spAux = dynamic_pointer_cast<UCDirMultSPAux>(args->madeSPAux);
-  assert(spAux);
-  assert(spAux->counts.size() == n);
+  shared_ptr<UCDirMultSPAux> aux = dynamic_pointer_cast<UCDirMultSPAux>(spAux);
+  assert(aux);
+  assert(aux->counts.size() == n);
 
   double * conjAlphaVector = new double[n];
   for (size_t i = 0; i < n; ++i)
   { 
-    conjAlphaVector[i] = spAux->counts[i] + alphaArray->xs[i]->getDouble();
+    conjAlphaVector[i] = aux->counts[i] + alphaArray->xs[i]->getDouble();
   }
 
-  gsl_ran_dirichlet(rng,n,conjAlphaVector,&spAux->theta[0]);
+  gsl_ran_dirichlet(rng,n,conjAlphaVector,&aux->theta[0]);
 }
 
 VentureValuePtr UCDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const

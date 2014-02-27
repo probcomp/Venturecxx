@@ -7,10 +7,7 @@ VentureValuePtr DefaultAAALKernel::simulate(Trace * trace,VentureValuePtr oldVal
 { 
   shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(makerPSP->simulate(args,rng));
 
-  shared_ptr<VentureSPRecord> oldSPRecord = dynamic_pointer_cast<VentureSPRecord>(oldValue);
-  assert(oldSPRecord);
-
-  spRecord->spAux = oldSPRecord->spAux;
+  spRecord->spAux = args->aaaMadeSPAux;
   return spRecord;
 }
 

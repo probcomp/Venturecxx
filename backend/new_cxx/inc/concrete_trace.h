@@ -115,9 +115,10 @@ struct ConcreteTrace : Trace
   int getSeed();
   double getGlobalLogScore();
 
-  // Helpers for particle commit
-  void addNewMadeSPFamilies(Node * node, PMap<FamilyID,RootOfFamily,VentureValuePtrsLess> newMadeSPFamilies);
-  void addNewChildren(Node * node,PSet<Node*> newChildren);
+  bool hasAAAMadeSPAux(OutputNode * makerNode);
+  void discardAAAMadeSPAux(OutputNode * makerNode);
+  void registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux);
+  shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode);
 
   gsl_rng * rng;
 
@@ -128,6 +129,8 @@ struct ConcreteTrace : Trace
   set<Node*> arbitraryErgodicKernels;
 
   map<Node*,VentureValuePtr> unpropagatedObservations;
+
+  map<OutputNode*,shared_ptr<SPAux> > aaaMadeSPAuxs;
 
   map<DirectiveID,RootOfFamily> families;
 

@@ -160,7 +160,7 @@ void PyTrace::infer(boost::python::dict params)
     {
       OutputNode * node = dynamic_cast<OutputNode*>(*iter);
       assert(node);
-      trace->getMadeSP(node)->AEInfer(trace->getArgs(node),trace->getRNG());
+      trace->getMadeSP(node)->AEInfer(trace->getMadeSPAux(node),trace->getArgs(node),trace->getRNG());
     }
   }
 }

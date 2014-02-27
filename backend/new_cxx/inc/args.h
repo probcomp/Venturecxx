@@ -26,7 +26,7 @@ struct Args
   vector<RootOfFamily> esrParentNodes;
 
   shared_ptr<SPAux> spAux;
-  shared_ptr<SPAux> madeSPAux;
+  shared_ptr<SPAux> aaaMadeSPAux;
 
   shared_ptr<VentureEnvironment> env;
 

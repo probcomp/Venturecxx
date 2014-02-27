@@ -409,5 +409,8 @@ int ConcreteTrace::numUnconstrainedChoices() { return unconstrainedChoices.size(
 int ConcreteTrace::getSeed() { assert(false); }
 double ConcreteTrace::getGlobalLogScore() { assert(false); }
 
-void ConcreteTrace::addNewMadeSPFamilies(Node * node, PMap<FamilyID,RootOfFamily,VentureValuePtrsLess> newMadeSPFamilies) { assert(false); }
-void ConcreteTrace::addNewChildren(Node * node,PSet<Node*> newChildren) { assert(false); }
+
+bool ConcreteTrace::hasAAAMadeSPAux(OutputNode * makerNode) { return aaaMadeSPAuxs.count(makerNode); }
+void ConcreteTrace::discardAAAMadeSPAux(OutputNode * makerNode) { assert(aaaMadeSPAuxs.count(makerNode)); aaaMadeSPAuxs.erase(makerNode); }
+void ConcreteTrace::registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux) { aaaMadeSPAuxs[makerNode] = spAux; }
+shared_ptr<SPAux> ConcreteTrace::getAAAMadeSPAux(OutputNode * makerNode) { return aaaMadeSPAuxs[makerNode]; }

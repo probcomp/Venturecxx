@@ -39,7 +39,7 @@ shared_ptr<PSP> SP::getPSP(ApplicationNode * node) const
   else { return outputPSP; }
 }
 
-void SP::AEInfer(shared_ptr<Args> args,gsl_rng * rng) const { assert(false); }
+void SP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const { assert(false); }
 
 boost::python::dict SP::toPython(shared_ptr<SPAux> spAux) const
 {

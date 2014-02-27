@@ -40,9 +40,9 @@ Args::Args(Trace * trace, ApplicationNode * appNode)
     
     esrParentValues = makeVectorOfValues(trace, trace->getESRParents(outputNode));
     esrParentNodes = trace->getESRParents(outputNode);
-    if (trace->isMakerNode(outputNode))
+    if (trace->hasAAAMadeSPAux(outputNode))
     {
-      madeSPAux = trace->getMadeSPAux(outputNode);
+      aaaMadeSPAux = trace->getAAAMadeSPAux(outputNode);
     }
   }
 }

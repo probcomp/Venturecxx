@@ -47,7 +47,7 @@ struct UncollapsedHMMSP : SP
   double simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB,gsl_rng * rng) const;
   double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const;
   bool hasAEKernel() const { return true; }
-  void AEInfer(shared_ptr<Args> args, gsl_rng * rng) const;
+  void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const;
 
   MatrixXd p0;
   MatrixXd T;

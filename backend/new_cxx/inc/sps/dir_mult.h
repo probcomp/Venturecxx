@@ -80,7 +80,7 @@ struct UCSymDirMultSP : SP
   UCSymDirMultSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
 
   bool hasAEKernel() const { return true; }
-  void AEInfer(shared_ptr<Args> args,gsl_rng * rng) const;
+  void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const;
 };
 
 struct UCSymDirMultOutputPSP : RandomPSP
@@ -108,7 +108,7 @@ struct UCDirMultSP : SP
   UCDirMultSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
 
   bool hasAEKernel() const { return true; }
-  void AEInfer(shared_ptr<Args> args,gsl_rng * rng) const;
+  void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const;
 };
 
 struct UCDirMultOutputPSP : RandomPSP

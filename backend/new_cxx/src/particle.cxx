@@ -22,7 +22,9 @@ Particle::Particle(shared_ptr<Particle> outerParticle):
   regenCounts(outerParticle->regenCounts),
 
   newMadeSPFamilies(outerParticle->newMadeSPFamilies),
-  newChildren(outerParticle->newChildren)
+  newChildren(outerParticle->newChildren),
+
+  discardedAAAMakerNodes(outerParticle->discardedAAAMakerNodes)
 
   {
     for (map<Node*, shared_ptr<SPAux> >::iterator iter = outerParticle->madeSPAuxs.begin();
@@ -329,6 +331,9 @@ void Particle::commit()
     BOOST_FOREACH(Node * child, newChildrenItems) { baseTrace->children[node].insert(child); }
     BOOST_FOREACH(Node * child, newChildrenItems) { assert(baseTrace->children[node].count(child)); }
   }
+
+  vector<OutputNode*> discardedAAAMakerNodeItems = discardedAAAMakerNodes.keys();
+  BOOST_FOREACH(OutputNode * makerNode, discardedAAAMakerNodeItems) { baseTrace->discardAAAMadeSPAux(makerNode); }
   
   vector<pair<Node*, shared_ptr<SPAux> > > madeSPAuxItems(madeSPAuxs.begin(), madeSPAuxs.end());
   for (size_t madeSPAuxIndex = 0; madeSPAuxIndex < madeSPAuxItems.size(); ++madeSPAuxIndex)
@@ -357,9 +362,20 @@ set<Node*> Particle::getChildren(Node * node)
     }
 }
 
+bool Particle::hasAAAMadeSPAux(OutputNode * makerNode) 
+{ 
+  return baseTrace->hasAAAMadeSPAux(makerNode) && !discardedAAAMakerNodes.contains(makerNode);
+}
+void Particle::discardAAAMadeSPAux(OutputNode * makerNode) { discardedAAAMakerNodes = discardedAAAMakerNodes.insert(makerNode); }
+shared_ptr<SPAux> Particle::getAAAMadeSPAux(OutputNode * makerNode) 
+{ 
+  assert(hasAAAMadeSPAux(makerNode));
+  return baseTrace->aaaMadeSPAuxs[makerNode]; 
+}
+
 /* The following should never be called on particles */
 
-
+void Particle::registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux) { assert(false); }
 RootOfFamily Particle::popLastESRParent(OutputNode * outputNode) { assert(false); throw "should never be called"; }
 void Particle::disconnectLookup(LookupNode * lookupNode) { assert(false); throw "should never be called"; }
 void Particle::decNumRequests(RootOfFamily root) { assert(false); throw "should never be called"; }

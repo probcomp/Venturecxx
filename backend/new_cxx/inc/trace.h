@@ -105,6 +105,12 @@ struct Trace
   virtual double logDensityOfBlock(ScopeID scope);
   virtual int numBlocksInScope(ScopeID scope) =0;
 
+
+  virtual bool hasAAAMadeSPAux(OutputNode * makerNode) =0;
+  virtual void registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux) =0;
+  virtual void discardAAAMadeSPAux(OutputNode * makerNode) =0;
+  virtual shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode) =0;
+
   virtual gsl_rng * getRNG() =0;
 };
 

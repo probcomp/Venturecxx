@@ -36,7 +36,7 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
   {
     particles[p] = shared_ptr<Particle>(new Particle(trace));
     particleWeights[p] =
-      regenAndAttach(particles[p].get(),scaffold->border[0],scaffold,false,rhoDBs[0],nullGradients);
+      regenAndAttach(particles[p].get(),scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),nullGradients);
   }
   
   particles[numNewParticles] = shared_ptr<Particle>(new Particle(trace));
@@ -61,7 +61,7 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
       // TODO URGENT this is an error : we actually need to pass ALL the rhoDBs merged into a single rhoDB,
       // because different particles may reach different nodes in different border groups
       newParticleWeights[p] =
-        regenAndAttach(newParticles[p].get(),scaffold->border[borderGroup],scaffold,false,rhoDBs[borderGroup],nullGradients);
+        regenAndAttach(newParticles[p].get(),scaffold->border[borderGroup],scaffold,false,shared_ptr<DB>(new DB()),nullGradients);
     }
     
     newParticles[numNewParticles] = shared_ptr<Particle>(new Particle(particles[numNewParticles]));

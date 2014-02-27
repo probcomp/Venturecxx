@@ -60,7 +60,7 @@ struct SP
   virtual double simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB,gsl_rng * rng) const;
   virtual double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const;
   virtual bool hasAEKernel() const { return false; }
-  virtual void AEInfer(shared_ptr<Args> args, gsl_rng * rng) const;
+  virtual void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const;
   
   virtual boost::python::dict toPython(shared_ptr<SPAux> spAux) const;
 };

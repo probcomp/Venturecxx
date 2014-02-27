@@ -105,10 +105,10 @@ double MakeUBetaBernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr
 
 // Uncollapsed SP
 
-void UBetaBernoulliSP::AEInfer(shared_ptr<Args> args,gsl_rng * rng) const 
+void UBetaBernoulliSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const 
 { 
   assert(args->operandValues.size() == 2);
-  shared_ptr<UBetaBernoulliSPAux> aux = dynamic_pointer_cast<UBetaBernoulliSPAux>(args->madeSPAux);
+  shared_ptr<UBetaBernoulliSPAux> aux = dynamic_pointer_cast<UBetaBernoulliSPAux>(spAux);
 
   double alpha = args->operandValues[0]->getDouble();
   double beta = args->operandValues[1]->getDouble();

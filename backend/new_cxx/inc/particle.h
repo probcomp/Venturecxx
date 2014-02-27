@@ -90,6 +90,11 @@ struct Particle : Trace
   // "self-explanatory" -Dan Selsam, 2014
   // Commits this particle's data to the concrete trace.
   void commit();
+
+  bool hasAAAMadeSPAux(OutputNode * makerNode);
+  void discardAAAMadeSPAux(OutputNode * makerNode);
+  void registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux);
+  shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode);
   
 /* END methods */
 
@@ -126,9 +131,13 @@ struct Particle : Trace
   /* persistent, not stored in concrete trace */
   PMap<Node*, int> regenCounts;
 
+
   /* persistent additions */
   PMap<Node*, PMap<FamilyID,RootOfFamily,VentureValuePtrsLess> > newMadeSPFamilies;
   PMap<Node*,PSet<Node*> > newChildren;
+
+  /* Persistent subtractions */
+  PSet<OutputNode*> discardedAAAMakerNodes;
 
   /* Non-persistent */
   map<Node*, shared_ptr<SPAux> > madeSPAuxs;

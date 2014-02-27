@@ -181,7 +181,12 @@ void teardownMadeSP(ConcreteTrace * trace,Node * makerNode,bool isAAA,shared_ptr
   shared_ptr<SP> sp = spRecord->sp;
   if (sp->hasAEKernel()) { trace->unregisterAEKernel(makerNode); }
   db->registerMadeSPAux(makerNode,trace->getMadeSPAux(makerNode));
-
+  if (isAAA) 
+    {
+      OutputNode * outputNode = dynamic_cast<OutputNode*>(makerNode);
+      assert(outputNode);
+      trace->registerAAAMadeSPAux(outputNode,trace->getMadeSPAux(outputNode));
+    }
   trace->destroyMadeSPRecord(makerNode);
 }
 

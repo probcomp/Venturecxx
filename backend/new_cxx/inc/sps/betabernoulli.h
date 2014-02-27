@@ -60,7 +60,7 @@ struct UBetaBernoulliSP : SP
   UBetaBernoulliSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
 
   bool hasAEKernel() const { return true; }
-  void AEInfer(shared_ptr<Args> args,gsl_rng * rng) const;
+  void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const;
 };
 
 struct UBetaBernoulliOutputPSP : RandomPSP

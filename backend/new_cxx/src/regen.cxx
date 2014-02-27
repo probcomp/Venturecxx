@@ -274,7 +274,12 @@ void processMadeSP(Trace * trace, Node * makerNode, bool isAAA, bool shouldResto
   if (shouldRestore && db->hasMadeSPAux(makerNode)) { spRecord->spAux = db->getMadeSPAux(makerNode); }
   if (sp->hasAEKernel()) { trace->registerAEKernel(makerNode); }
   trace->setMadeSPRecord(makerNode,spRecord);
-
+  if (isAAA) 
+    { 
+      OutputNode * outputNode = dynamic_cast<OutputNode*>(makerNode);
+      assert(outputNode);
+      trace->discardAAAMadeSPAux(outputNode); 
+    }
   trace->setValue(makerNode,shared_ptr<VentureValue>(new VentureSPRef(makerNode)));
 }
 

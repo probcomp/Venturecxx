@@ -121,9 +121,9 @@ double UncollapsedHMMSP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> l
   return 0;
 }
 
-void UncollapsedHMMSP::AEInfer(shared_ptr<Args> args, gsl_rng * rng) const 
+void UncollapsedHMMSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const 
 { 
-  shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->madeSPAux);
+  shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(spAux);
   assert(aux);
 
   if (aux->os.empty()) { return; }
