@@ -1,4 +1,5 @@
 from IPython.parallel import Client
+from IPython.parallel.util import interactive
 from venture.shortcuts import make_church_prime_ripl
 from venture.shortcuts import make_lite_church_prime_ripl
 import numpy as np
@@ -149,6 +150,7 @@ class MRipl():
         self.name_mrid = '%s_%i' % (name,self.mrid)
 
 
+        @interactive
         def mk_ripl(seed,mrid):
             ripls = mripls[mrid]
             ripls.append( make_ripl() )

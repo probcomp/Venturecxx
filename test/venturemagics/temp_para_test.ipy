@@ -1,5 +1,5 @@
 from venture.shortcuts import make_church_prime_ripl
-import time,os,subprocess,sys
+import time,os,subprocess
 import numpy as np
 from IPython.parallel import Client
 from nose.tools import with_setup
@@ -19,18 +19,12 @@ from nose.tools import with_setup
 
 
 
-    
-
 ## FIXME we want to find ip_parallel without importing it
 # (importing breaks it due to use of parallel)
 # we currently get its path by using os.path on this very test file, but
 # this is brittle and should be improved on
 
 
-
-# file_dir = os.path.dirname(os.path.realpath(__file__))
-# loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] )   
-# # [:-2] because current file is /Venturecxx/test/venturemagics
 
 
 # ## FIXME: change when back in test_suite
@@ -44,7 +38,8 @@ from nose.tools import with_setup
 
 def testCopyFunction():
     clear_all_engines()
-# iptest for copy_ripl funtion
+# test for copy_ripl funtion (doesnt run parallel at all)
+
     myv = make_church_prime_ripl()
     myv.assume('x','(beta 1 1)'); myv.observe('(normal x 1)','5'); myv.predict('(flip)')
     assert [build_exp(di['expression']) for di in myv.list_directives() ] ==  [build_exp(di['expression']) for di in copy_ripl(myv).list_directives() ]
@@ -54,8 +49,8 @@ def testParallelCopyFunction():
 
     cli = Client(); dv = cli[:]; dv.block=True
     dv.push(copy_ripl_dict)
-    dv.execute('from venture.shortcuts import make_church_prime_ripl')
-    dv.execute('v=make_church_prime_ripl()')
+    dv.execute('from venture.shortcuts import make_church_prime_ripl as make_ripl')
+    dv.execute('v=make_ripl()')
     dv.execute('v.set_seed(1)')
     dv.execute("v.assume('x','(beta 1 1)'); v.observe('(normal x 1)','5'); v.predict('(flip)')" )
     dv.execute("v2 = copy_ripl(v,seed=1)" )
@@ -257,7 +252,7 @@ def testMrMap():
 # run tests solely in Python interpreter
 
 
-tests = [testMrMap, testMulti, testSnapshot, testDirectives,testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
+tests = [testMrMap, testMulti, testSnapshot, testDirectives,testCopyRipl,testAddRemoveSize,testCopyFunction]#,testParallelCopyFunction]
 
 
 def AllIPParallel(new_engines=False,sleeptime=30):
@@ -274,11 +269,6 @@ def AllIPParallel(new_engines=False,sleeptime=30):
     return 'testAll complete'
 
 
-
-
-########## Executing code for para_test
-
-# Utility functions
 def start_engines(no_engines,sleeptime=20):
     st = subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines,'&'])
     time.sleep(sleeptime)
@@ -287,31 +277,23 @@ def stop_engines():
     stop=subprocess.Popen(['ipcluster', 'stop'])
     stop.wait()
 
-# Params
-sleeptime=200; no_engines = 2
-loc_ip_parallel = sys.argv[1]
 
-# Set up engines
-try: 
-    test_client = Client()
-    print 'para_tesxt.ipy: cluster already running'
-except:
-    try:
-        start_engines(2,sleeptime=sleeptime)
-        print 'para_test.ipy started cluster'
-    except:
-        assert False,"para_test: error in subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])"
+# try: 
+#     start_engines(2,sleeptime=50)
+#     print 'SUBPROCESS IPCLUS START SUCCESS'
+# except: assert False,"subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])"
 
-# run, to get MRipl class etc. in namespace
+
+file_dir = os.path.dirname(os.path.realpath(__file__))
+loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturemagics','ip_parallel.py'] )   
+# [:-2] because current file is /Venturecxx/test/venturemagics
+print 'REACHED EXEC FILE'
 %run {loc_ip_parallel}
+#%run /Venturecxx/test/venturemagics
 
-# run all tests
 AllIPParallel()
-
-print 'para_test.ipy path',sys.argv[0]
-print 'para_test.ipy var "loc_ip_parallel"',loc_ip_parallel
-print '\n PARATEST PASSED'
-
+print 'PARATEST PASSED'
+#stop_engines()
 
 
 

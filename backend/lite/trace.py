@@ -19,6 +19,8 @@ from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
 import pdb
+import random
+import numpy.random
 
 class Trace(object):
   def __init__(self):
@@ -342,6 +344,10 @@ class Trace(object):
     # TODO Trace does not support seed control because it uses
     # Python's native randomness.
     return 0
+
+  def set_seed(self, seed):
+      random.seed(seed)
+      numpy.random.seed(seed)
 
   def getGlobalLogScore(self):
     # TODO Get the constrained nodes too
