@@ -73,7 +73,7 @@ def testBlockingExample3():
 def testBasicRejection1():
   ripl = get_ripl()
   ripl.assume("x", "(bernoulli 0.5)")
-  predictions = collectSamples(ripl, 1, infer={"kernel":"reject", "scope":"default", "block":"all", "transitions":1})
+  predictions = collectSamples(ripl, 1, infer={"kernel":"rejection", "scope":"default", "block":"all", "transitions":1})
   ans = [(True, 0.5), (False, 0.5)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -82,6 +82,6 @@ def testBasicRejection2():
   ripl = get_ripl()
   ripl.assume("p", "(uniform_continuous 0 1)")
   ripl.assume("x", "(bernoulli p)")
-  predictions = collectSamples(ripl, 2, infer={"kernel":"reject", "scope":"default", "block":"all", "transitions":1})
+  predictions = collectSamples(ripl, 2, infer={"kernel":"rejection", "scope":"default", "block":"all", "transitions":1})
   ans = [(True, 0.5), (False, 0.5)]
   return reportKnownDiscrete(ans, predictions)

@@ -46,4 +46,4 @@ def checkRejectNormal(incl_mu, incl_sigma, incl_out):
   ripl.assume("mu", maybewrap("(normal 0 1)", incl_mu))
   ripl.assume("sigma", maybewrap("(uniform_continuous 0 10)", incl_sigma))
   ripl.assume("out", maybewrap("(normal mu sigma)", incl_out))
-  ripl.infer("(reject scaffold 0 1)")
+  ripl.infer("(rejection scaffold 0 1)")

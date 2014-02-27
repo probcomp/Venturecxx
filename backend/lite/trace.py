@@ -336,7 +336,7 @@ class Trace(object):
           mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
         else:
           mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
-      elif params["kernel"] == "reject":
+      elif params["kernel"] == "rejection":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),RejectionOperator())
       else: raise Exception("INFER (%s) MH is implemented" % params["kernel"])
