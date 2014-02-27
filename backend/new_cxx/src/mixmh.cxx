@@ -16,10 +16,8 @@ void mixMH(ConcreteTrace * trace,
 	   shared_ptr<ScaffoldIndexer> indexer,
 	   shared_ptr<GKernel> gKernel)
 {
-  cout << endl << "&&&&&" << endl;
   shared_ptr<Scaffold> index = indexer->sampleIndex(trace);
 
-//  cout << "Scaffold: " << index->showSizes() << endl;
 
   double rhoMix = indexer->logDensityOfIndex(trace,index);
 
@@ -29,7 +27,6 @@ void mixMH(ConcreteTrace * trace,
   double alpha = xiMix + p.second - rhoMix;
   double logU = log(gsl_ran_flat(trace->getRNG(),0.0,1.0));
 
-  //  cout << "alpha: " << alpha << endl;
   
   if (logU < alpha) { gKernel->accept(); }
   else { gKernel->reject(); }

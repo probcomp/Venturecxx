@@ -64,7 +64,6 @@ void ConcreteTrace::registerAEKernel(Node * node)
 }
 
 void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
-  cout << "CT::registerUC(" << node << ")" << endl;
   assert(unconstrainedChoices.count(node) == 0);
   unconstrainedChoices.insert(node);
   registerUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
@@ -74,7 +73,6 @@ void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
 
 void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
-  cout << "CT::registerUCinScope(" << node << ")" << endl;
   assert(block);
   if (!scopes.count(scope)) { scopes[scope]/* = SamplableMap<BlockID,set<Node*> >()*/; }
   if (!scopes[scope].contains(block)) { scopes[scope].set(block,set<Node*>()); }
@@ -87,7 +85,6 @@ void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID blo
 }
 
 void ConcreteTrace::registerConstrainedChoice(Node * node) {
-  cout << "CT::registerCC(" << node << ")" << endl;
   assert(constrainedChoices.count(node) == 0);
   constrainedChoices.insert(node);
   unregisterUnconstrainedChoice(node);
@@ -102,7 +99,6 @@ void ConcreteTrace::unregisterAEKernel(Node * node)
 
 
 void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
-  cout << "CT::unregisterUC(" << node << ")" << endl;
   unregisterUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
 				       shared_ptr<VentureNode>(new VentureNode(node)),
 				       node);
@@ -112,7 +108,6 @@ void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
 
 void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
-  cout << "CT::unregisterUCinScope(" << node << ")" << endl;
   assert(scopes[scope].contains(block));
   assert(scopes[scope].get(block).count(node));
   scopes[scope].get(block).erase(node);
@@ -122,7 +117,6 @@ void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID b
 }
 
 void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
-  cout << "CT::unregisterCC(" << node << ")" << endl;
   assert(constrainedChoices.count(node) == 1);
   constrainedChoices.erase(node);
   ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
@@ -135,14 +129,12 @@ void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
 void ConcreteTrace::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode) 
 {
   incNumRequests(esrRoot);
-  //cout << "addESREdge(" << esrRoot.get() << "," << outputNode << ")" << endl;
   addChild(esrRoot.get(),outputNode);
   esrRoots[outputNode].push_back(esrRoot);
 }
 
 void ConcreteTrace::reconnectLookup(LookupNode * lookupNode) 
 {   
-  //cout << "reconnectLookup(" << lookupNode->sourceNode << "," << lookupNode << ")";
   addChild(lookupNode->sourceNode,lookupNode); 
 }
 
@@ -152,7 +144,6 @@ void ConcreteTrace::addChild(Node * node, Node * child)
 {
   assert(children[node].count(child) == 0);
   children[node].insert(child);
-  //cout << "addChild(" << node << "," << child << ") :: " << children[node].size() << endl;
 }
 
 /* Detach mutations */  
@@ -162,7 +153,6 @@ RootOfFamily ConcreteTrace::popLastESRParent(OutputNode * outputNode)
   assert(!esrParents.empty());
   RootOfFamily esrRoot = esrParents.back();
   esrParents.pop_back();
-  //cout << "removeESREdge(" << esrRoot.get() << "," << outputNode << ")" << endl;
   removeChild(esrRoot.get(),outputNode);
   decNumRequests(esrRoot);
   return esrRoot;
@@ -170,7 +160,6 @@ RootOfFamily ConcreteTrace::popLastESRParent(OutputNode * outputNode)
 
 void ConcreteTrace::disconnectLookup(LookupNode * lookupNode) 
 {
-  //cout << "disconnectLookup(" << lookupNode->sourceNode << "," << lookupNode << ")";
   removeChild(lookupNode->sourceNode,lookupNode); 
 }
 void ConcreteTrace::decNumRequests(RootOfFamily root) 
@@ -185,7 +174,6 @@ void ConcreteTrace::removeChild(Node * node, Node * child)
   assert(children.count(node)); 
   assert(children[node].count(child));
   children[node].erase(child); 
-  //cout << "removeChild(" << node << "," << child << ") :: " << children[node].size() << endl;
 }
 
 /* Primitive getters */

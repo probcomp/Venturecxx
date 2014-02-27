@@ -25,7 +25,6 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
   }
 
   assertTorus(scaffold);
-  cout << "|||" << endl;
   // Simulate and calculate initial xiWeights
 
   shared_ptr<map<Node*,Gradient> > nullGradients;

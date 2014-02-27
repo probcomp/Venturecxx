@@ -51,7 +51,6 @@ void Particle::registerAEKernel(Node * node)
 
 void Particle::registerUnconstrainedChoice(Node * node) 
 { 
-  cout << "Particle::registerUC(" << node << ")" << endl;
   assert(!unconstrainedChoices.contains(node));
   unconstrainedChoices = unconstrainedChoices.insert(node);
   registerUnconstrainedChoiceInScope(VentureValuePtr(new VentureSymbol("default")),
@@ -61,7 +60,6 @@ void Particle::registerUnconstrainedChoice(Node * node)
 
 void Particle::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
-  cout << "Particle::registerUCinScope(" << node << ")" << endl;
   assert(block);
   if (!scopes.contains(scope)) { scopes = scopes.insert(scope,PMap<BlockID,PSet<Node*>,VentureValuePtrsLess >()); }
   if (!scopes.lookup(scope).contains(block)) 
@@ -75,7 +73,6 @@ void Particle::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,No
 
 void Particle::registerConstrainedChoice(Node * node) 
 { 
-  cout << "Particle::registerCC(" << node << ")" << endl;
   assert(!constrainedChoices.contains(node));
   constrainedChoices = constrainedChoices.insert(node);
 }
