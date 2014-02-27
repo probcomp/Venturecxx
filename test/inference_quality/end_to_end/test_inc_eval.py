@@ -43,8 +43,8 @@ def loadEnvironments(ripl):
 (lambda ()
   (list
     (dict 
-      (list (quote bernoulli) (quote normal) (quote plus) (quote times) (quote branch))
-      (list (make_ref bernoulli) (make_ref normal) (make_ref plus) (make_ref times) (make_ref branch)))))
+      (array (quote bernoulli) (quote normal) (quote plus) (quote times) (quote branch))
+      (array (make_ref bernoulli) (make_ref normal) (make_ref plus) (make_ref times) (make_ref branch)))))
 """)
 
   ripl.assume("extend_env","""
