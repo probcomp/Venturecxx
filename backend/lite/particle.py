@@ -68,14 +68,8 @@ class Particle(Trace):
   def registerConstrainedChoice(self,node): 
     print "particle::registerCC(" + str(node) + ")"
     self.ccs = self.ccs.insert(node)
-    # TODO this is subtle
-    #    self.unregisterRandomChoice(node)
 
-  def unregisterRandomChoice(self,node): 
-    print "particle::unregisterUC(" + str(node) + ")"
-    assert node in self.rcs
-    self.rcs = self.rcs.delete(node)
-    self.unregisterRandomChoiceInScope("default",node,node)
+  def unregisterRandomChoice(self,node): assert False
 
   def registerRandomChoiceInScope(self,scope,block,node):
     assert block is not None
@@ -83,10 +77,7 @@ class Particle(Trace):
     if not block in self.scopes.lookup(scope): self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.insert(block,PSet()))
     self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.adjust(block,lambda pnodes: pnodes.insert(node)))
 
-  def unregisterRandomChoiceInScope(self,scope,block,node):
-    self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.adjust(block,lambda pnodes: pnodes.delete(node)))
-    if not len(self.scopes.lookup(scope).lookup(block)): self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.delete(block))
-    if not len(self.scopes.lookup(scope)): self.scopes = self.scopes.delete(scope)
+  def unregisterRandomChoiceInScope(self,scope,block,node): assert False
 
 #### Misc
 
@@ -197,14 +188,16 @@ class Particle(Trace):
 ### Commit
   def commit(self): 
     # note that we do not call registerRandomChoice() because it in turn calls registerRandomChoiceInScope()
-    for node in self.rcs: 
-      if not node in self.ccs: self.base.rcs.add(node)
+    for node in self.rcs: self.base.rcs.add(node)
+
+    # this iteration includes "default"
+    for (scope,blocks) in self.scopes.iteritems():
+      for (block,pnodes) in blocks.iteritems():
+        for pnode in pnodes:
+          self.base.registerRandomChoiceInScope(scope,block,pnode)
 
     # note that we do not call registerConstrainedChoice() because it in turn calls unregisterRandomChoice()
-    for node in self.ccs: 
-      self.base.ccs.add(node)
-      if node in self.base.rcs: self.base.rcs.remove(node)
-      if node in self.base.scopes["default"]: del self.base.scopes["default"][node]
+    for node in self.ccs: self.base.registerConstrainedChoice(node)
 
     for node in self.aes: self.base.registerAEKernel(node)
 
@@ -213,12 +206,6 @@ class Particle(Trace):
 
     for (node,madeSP) in self.madeSPs.iteritems(): self.base.setMadeSPAt(node,madeSP)
 
-    # this iteration includes "default"
-    for (scope,blocks) in self.scopes.iteritems():
-      for (block,pnodes) in blocks.iteritems():
-        for pnode in pnodes:
-          if scope != "default" or not pnode in self.ccs:
-            self.base.registerRandomChoiceInScope(scope,block,pnode)
         
           
     for (node,esrParents) in self.esrParents.iteritems(): self.base.setEsrParentsAt(node,esrParents)

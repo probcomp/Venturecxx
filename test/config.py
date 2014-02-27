@@ -60,7 +60,7 @@ def collectStateSequence(*args, **kwargs):
 def collectIidSamples(*args, **kwargs):
   return _collectData(True, *args, **kwargs)
 
-def _collectData(iid,ripl,address,num_samples=None,infer=None):
+def _collectData(iid,ripl,address,num_samples=None,infer=None,infer_merge=None):
   if num_samples is None:
     num_samples = default_num_samples()
   if infer is None:
@@ -68,6 +68,8 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None):
   elif infer == "mixes_slowly": # TODO Replace this awful hack with proper adjustment of tests for difficulty
     infer = defaultInfer()
     infer["transitions"] = 4 * int(infer["transitions"])
+
+  if infer_merge is not None: infer.update(infer_merge)
 
   predictions = []
   for _ in range(num_samples):
