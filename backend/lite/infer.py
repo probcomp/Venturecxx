@@ -53,7 +53,7 @@ class BlockScaffoldIndexer(object):
 def computeRejectionBound(trace, scaffold, border):
   def logBoundAt(node):
     psp,args = trace.pspAt(node),trace.argsAt(node)
-    return psp.logBound(args)
+    return psp.logDensityBound(args)
   # This looks an awful lot like what would happen on forcing a thunk
   # constructed by regenAndAttach for computing the logBound.
   logBound = 0

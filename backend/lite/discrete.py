@@ -22,6 +22,8 @@ class BernoulliOutputPSP(RandomPSP):
     if val: return math.log(p)
     else: return math.log(1 - p)
 
+  def logDensityBound(self, _): return 0
+
   def enumerateValues(self,args):
     p = args.operandValues[0] if args.operandValues else 0.5
     if p == 1: return [True]
