@@ -7,7 +7,7 @@ from nose.tools import with_setup
 
 ## IMPORT VERSION OF IP_PARA, TESTS
 ##FIXME: currently, seed based tests don't fully work for lite and so we skip them
-lite = True 
+lite = False 
 mk_ripl = make_church_prime_ripl if not(lite) else make_lite_church_prime_ripl
 from int_ip_parallel import *
 
@@ -174,6 +174,16 @@ def testAll_IP():
         assert( np.round(local_x3) in np.round(ls_x3) )
         if not(lite): assert( np.mean(test_x3) < np.mean(test_x) )
         if not(lite): assert( not( v.no_ripls>10 and np.mean(test_x3) > 50) ) # may be too tight
+
+        # test sp values
+        clear_all_engines(); v=MRipl(2,lite=lite)
+        v.assume('f','(lambda()(33))')
+        v.assume('hof','(lambda() (lambda()(+ 1 3)) )')
+        v.predict('(hof)')
+        
+        v.assume('h','(lambda () (flip) )')
+        v.sample('(h)')
+        v.observe('(h)','true')
 
     ## other directives
         clear_all_engines(); v=MRipl(2,lite=lite)
