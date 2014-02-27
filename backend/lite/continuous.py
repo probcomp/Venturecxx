@@ -22,7 +22,12 @@ class NormalOutputPSP(RandomPSP):
   def logDensityBoundNumeric(self, x, mu, sigma):
     if sigma is not None:
       return -(math.log(sigma) + 0.5 * math.log(2 * math.pi))
-    else: # TODO if mu and the output are known and differ, we can do something
+    elif x is not None and mu is not None:
+      # Per the derivative of the log density noted in the
+      # gradientOfLogDensity method, the maximum occurs when
+      # (x-mu)^2 = sigma^2
+      return scipy.stats.norm.logpdf(x, mu, abs(x-mu))
+    else:
       raise Exception("Cannot rejection sample psp with unbounded likelihood")
 
   def simulate(self,args): return self.simulateNumeric(args.operandValues)
@@ -41,6 +46,8 @@ class NormalOutputPSP(RandomPSP):
 
     gradMu = (x - mu) / (math.pow(sigma,2))
     gradSigma = (math.pow(x - mu,2) - math.pow(sigma,2)) / math.pow(sigma,3)
+    # for positive sigma, d(log density)/d(sigma) is <=> zero
+    # when math.pow(x - mu,2) <=> math.pow(sigma,2) respectively
     return [gradMu,gradSigma]
 
   def description(self,name):
