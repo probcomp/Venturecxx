@@ -10,7 +10,7 @@ from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,Enumer
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
-from nose.tools import assert_equal,assert_is_not_none
+from nose.tools import assert_is_not_none # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 from scope import ScopeIncludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
@@ -18,7 +18,6 @@ from scaffold import constructScaffold
 from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
-import pdb
 import random
 import numpy.random
 
