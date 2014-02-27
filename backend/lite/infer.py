@@ -123,6 +123,8 @@ class MeanfieldOperator(object):
       self.delegate.accept()
 
   def reject(self):
+    # TODO This is the same as MHOperator reject except for the
+    # delegation thing -- abstract
     if self.delegate is None:
       detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
       assertTorus(self.scaffold)
@@ -190,6 +192,7 @@ class EnumerativeGibbsOperator(object):
 
   def accept(self): pass
   def reject(self):
+    # TODO This is the same as the MHOperator rejection -- abstract
     detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
     assertTorus(self.scaffold)
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
