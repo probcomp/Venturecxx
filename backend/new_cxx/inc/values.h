@@ -35,6 +35,7 @@ struct VentureAtom : VentureValue
 struct VentureBool : VentureValue
 {
   VentureBool(bool b): b(b) {}
+  bool isBool() const { return true; }
   bool getBool() const { return b; }
   bool equals(const VentureValuePtr & other) const;
 

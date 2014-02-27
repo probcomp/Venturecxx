@@ -32,6 +32,7 @@ struct VentureValue
   virtual bool hasInt() const;
   virtual long getInt() const;
   virtual int getAtom() const;
+  virtual bool isBool() const;
   virtual bool getBool() const;
   virtual bool hasSymbol() const;
   virtual const string & getSymbol() const;

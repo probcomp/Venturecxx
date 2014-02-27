@@ -16,6 +16,7 @@ double VentureValue::getDouble() const { cannotConvertType(this,"double"); asser
 bool VentureValue::hasInt() const { return false; }
 long VentureValue::getInt() const { cannotConvertType(this,"int"); assert(false); throw "no return"; }
 int VentureValue::getAtom() const { cannotConvertType(this,"atom"); assert(false); throw "no return"; }
+bool VentureValue::isBool() const { return false; }
 bool VentureValue::getBool() const { cannotConvertType(this,"bool"); assert(false); throw "no return"; }
 bool VentureValue::hasSymbol() const { return false; }
 const string& VentureValue::getSymbol() const { cannotConvertType(this,"symbol"); assert(false); throw "no return"; }
@@ -83,6 +84,10 @@ bool VentureValue::operator<(const VentureValuePtr & rhs) const
     }
   else if (hasArray() && !rhs->hasArray()) { return true; }
   else if (!hasArray() && rhs->hasArray()) { return false; }
+
+  else if (isBool() && rhs->isBool()) { return !getBool() and rhs->getBool(); }
+  else if (isBool() && !rhs->isBool()) { return true; }
+  else if (!isBool() && rhs->isBool()) { return false; }
 
   else { assert(false); return false; }
 }
