@@ -34,6 +34,8 @@ struct VentureValue
   virtual bool getBool() const;
   virtual bool hasSymbol() const;
   virtual const string & getSymbol() const;
+
+  virtual bool hasArray() const { return false; }
   virtual const vector<VentureValuePtr>& getArray() const;
   virtual bool isNil() const { return false; }
   

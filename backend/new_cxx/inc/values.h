@@ -64,7 +64,7 @@ struct VentureArray : VentureValue
   int size() const { return xs.size(); }
   boost::python::dict toPython() const;
   bool equals(const VentureValuePtr & other) const;
-
+  bool hasArray() const { return true; }
   size_t hash() const;
   string toString() const;
   vector<VentureValuePtr> xs;

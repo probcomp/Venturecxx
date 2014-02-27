@@ -71,35 +71,18 @@ void Particle::registerConstrainedChoice(Node * node)
   cout << "Particle::registerCC(" << node << ")" << endl;
   assert(!constrainedChoices.contains(node));
   constrainedChoices = constrainedChoices.insert(node);
-  unregisterUnconstrainedChoice(node);
 }
 
 
 /* Unregistering metadata */
 void Particle::unregisterUnconstrainedChoice(Node * node) 
 { 
-  cout << "Particle::unregisterUC(" << node << ")" << endl;
-  assert(unconstrainedChoices.contains(node));
-  unconstrainedChoices = unconstrainedChoices.remove(node);
-  unregisterUnconstrainedChoiceInScope(VentureValuePtr(new VentureSymbol("default")),
-				 VentureValuePtr(new VentureNode(node)),
-				 node);
+  assert(false);
 }
 
 void Particle::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 {
-  cout << "Particle::unregisterUCinScope(" << node << ")" << endl;
-  PSet<Node*> newPNodes = scopes.lookup(scope).lookup(block).remove(node);
-  scopes = scopes.insert(scope,scopes.lookup(scope).insert(block,newPNodes));
-
-  if (scopes.lookup(scope).lookup(block).size() == 0)
-  { 
-    scopes = scopes.insert(scope,scopes.lookup(scope).remove(block));
-  }
-  if (scopes.lookup(scope).size() == 0)
-  {
-    scopes = scopes.remove(scope);
-  }
+  assert(false);
 }
 
 /* Regen mutations */
@@ -259,44 +242,7 @@ void Particle::commit()
   // note that we do not call registerUnconstrainedChoice() because it in turn calls registerUnconstrainedChoiceInScope()
   vector<Node*> ucs = unconstrainedChoices.keys();
   baseTrace->unconstrainedChoices.insert(ucs.begin(), ucs.end());
-  
-  // note that we do not call registerConstrainedChoice() because it in turn calls unregisterUnconstrainedChoice()
-  vector<Node*> ccs = constrainedChoices.keys();
-  baseTrace->constrainedChoices.insert(ccs.begin(), ccs.end());
 
-  // probably could call the appropriate register methods here
-  vector<Node*> aes = arbitraryErgodicKernels.keys();
-  baseTrace->arbitraryErgodicKernels.insert(aes.begin(), aes.end());
-  
-  vector<pair<Node*, VentureValuePtr> > valueItems = values.items();
-  assert(valueItems.size() == values.size());
-  for (vector<pair<Node*, VentureValuePtr> >::iterator iter = valueItems.begin();
-       iter != valueItems.end();
-       ++iter)
-    {
-      assert(!baseTrace->values.count(iter->first));
-    }
-
-  baseTrace->values.insert(valueItems.begin(), valueItems.end());
-  for (vector<pair<Node*, VentureValuePtr> >::iterator iter = valueItems.begin();
-       iter != valueItems.end();
-       ++iter)
-    {
-      assert(iter->second);
-      assert(baseTrace->getValue(iter->first));
-      //      cout << "assert_equal(" <<  iter->second->toString() << ", " << baseTrace->getValue(iter->first)->toString() << ")" << endl;
-      //      assert(baseTrace->getValue(iter->first)->equals(iter->second));
-      //      assert(iter->second->equals(baseTrace->getValue(iter->first)));
-    }
-
-  
-  vector<pair<Node*, shared_ptr<SP> > > madeSPItems = madeSPs.items();
-  for (size_t madeSPIndex = 0; madeSPIndex < madeSPItems.size(); ++madeSPIndex)
-  {
-    pair<Node*, shared_ptr<SP> > madeSPItem = madeSPItems[madeSPIndex];
-    baseTrace->setMadeSPRecord(madeSPItem.first, shared_ptr<VentureSPRecord>(new VentureSPRecord(madeSPItem.second)));
-  }
-  
   // this iteration includes "default"
   vector<pair<ScopeID,PMap<BlockID,PSet<Node*>,VentureValuePtrsLess> > > scopeItems = scopes.items();
   for (size_t scopeIndex = 0; scopeIndex < scopeItems.size(); ++scopeIndex)
@@ -315,6 +261,32 @@ void Particle::commit()
       }
     }
   }
+  
+  vector<Node*> ccs = constrainedChoices.keys();
+  BOOST_FOREACH(Node * node, ccs) { baseTrace->registerConstrainedChoice(node); }
+
+  // probably could call the appropriate register methods here
+  vector<Node*> aes = arbitraryErgodicKernels.keys();
+  baseTrace->arbitraryErgodicKernels.insert(aes.begin(), aes.end());
+  
+  vector<pair<Node*, VentureValuePtr> > valueItems = values.items();
+  assert(valueItems.size() == values.size());
+  for (vector<pair<Node*, VentureValuePtr> >::iterator iter = valueItems.begin();
+       iter != valueItems.end();
+       ++iter)
+    {
+      baseTrace->values[iter->first] = iter->second;
+    }
+
+
+  
+  vector<pair<Node*, shared_ptr<SP> > > madeSPItems = madeSPs.items();
+  for (size_t madeSPIndex = 0; madeSPIndex < madeSPItems.size(); ++madeSPIndex)
+  {
+    pair<Node*, shared_ptr<SP> > madeSPItem = madeSPItems[madeSPIndex];
+    baseTrace->setMadeSPRecord(madeSPItem.first, shared_ptr<VentureSPRecord>(new VentureSPRecord(madeSPItem.second)));
+  }
+  
   
   vector<pair<Node*, vector<RootOfFamily> > > esrItems = esrRoots.items();
   for (size_t esrIndex = 0; esrIndex < esrItems.size(); ++esrIndex)
