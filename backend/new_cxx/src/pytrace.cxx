@@ -147,7 +147,7 @@ void PyTrace::infer(boost::python::dict params)
 //  assert(block == "one");
 
   trace->makeConsistent();
-  
+  if (numUnconstrainedChoices() == 0) { return; }
   for (size_t i = 0; i < numTransitions; ++i)
   {
     mixMH(trace.get(),
