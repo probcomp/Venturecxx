@@ -21,6 +21,9 @@ from psp import ESRRefOutputPSP
 import random
 import numpy.random
 
+class MissingEsrParentError(Exception): pass
+# TODO Sane exception hierarchy?
+
 class Trace(object):
   def __init__(self):
 
@@ -291,7 +294,12 @@ class Trace(object):
   def getOutermostNonReferenceApplication(self,node):
     if isinstance(node,LookupNode): return self.getOutermostNonReferenceApplication(node.sourceNode)
     assert isinstance(node,OutputNode)
-    if isinstance(self.pspAt(node),ESRRefOutputPSP): return self.getOutermostNonReferenceApplication(self.esrParentsAt(node)[0])
+    if isinstance(self.pspAt(node),ESRRefOutputPSP):
+      if self.esrParentsAt(node):
+        return self.getOutermostNonReferenceApplication(self.esrParentsAt(node)[0])
+      else:
+        # Could happen if this method is called on a torus, e.g. for rejection sampling
+        raise MissingEsrParentError()
     else: return node
 
   def unobserve(self,id):
