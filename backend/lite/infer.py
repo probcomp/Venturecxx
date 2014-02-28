@@ -57,7 +57,14 @@ class BlockScaffoldIndexer(object):
 def computeRejectionBound(trace, scaffold, border):
   def logBoundAt(node):
     psp,value,args = trace.pspAt(node),trace.valueAt(node),trace.argsAt(node)
-    return psp.logDensityBound(value, args)
+    if scaffold.hasLKernel(node):
+      # TODO Is it right that the value here is the old value and the
+      # new value?  Or do I need to fetch the old value from the
+      # OmegaDB?
+      return scaffold.getLKernel(node).weightBound(trace, value, value, args)
+    else:
+      # Resimulation kernel
+      return psp.logDensityBound(value, args)
   # This looks an awful lot like what would happen on forcing a thunk
   # constructed by regenAndAttach for computing the logBound.
   logBound = 0
@@ -70,7 +77,8 @@ def computeRejectionBound(trace, scaffold, border):
   # don't know what to do about it.  Write tests that expose any
   # consequent problems?
   for node in border:
-    if scaffold.isAbsorbing(node):
+    if scaffold.isAbsorbing(node) or scaffold.isAAA(node):
+      # AAA nodes are conveniently always in the border...
       logBound += logBoundAt(node)
     elif node.isObservation:
       try:
