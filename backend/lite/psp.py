@@ -9,14 +9,14 @@ class PSP(object):
   @abstractmethod
   def simulate(self,args): pass
   # These are good defaults for deterministic PSPs
-  def logDensity(self,value,args): return 0
-  def logDensityBound(self, value, args): return 0
+  def logDensity(self, _value, _args): return 0
+  def logDensityBound(self, _value, _args): return 0
   def incorporate(self,value,args): pass
   def unincorporate(self,value,args): pass
   # Returns a Python list of VentureValue objects
-  def enumerateValues(self,args): raise Exception("Cannot enumerate")
+  def enumerateValues(self, _args): raise Exception("Cannot enumerate")
   def isRandom(self): return False
-  def canAbsorb(self,trace,appNode,parentNode): return False
+  def canAbsorb(self, _trace, _appNode, _parentNode): return False
 
   def childrenCanAAA(self): return False
   def getAAALKernel(self): return DefaultAAALKernel(self)
@@ -30,14 +30,14 @@ class PSP(object):
   def hasSimulationKernel(self): return False
   def hasDeltaKernel(self): return False
 
-  def description(self,name): return None
+  def description(self, _name): return None
 
   def madeSpLogDensityOfCountsBound(self, _aux):
     raise Exception("Cannot rejection sample AAA procedure with unbounded log density of counts")
 
 class NullRequestPSP(PSP):
   def simulate(self,args): return Request()
-  def canAbsorb(self,trace,appNode,parentNode): return True
+  def canAbsorb(self, _trace, _appNode, _parentNode): return True
 
 class ESRRefOutputPSP(PSP):
   def simulate(self,args):
@@ -52,8 +52,8 @@ class RandomPSP(PSP):
   @abstractmethod
   def simulate(self,args): pass
   def isRandom(self): return True
-  def canAbsorb(self,trace,appNode,parentNode): return True    
-  def logDensityBound(self, value, args):
+  def canAbsorb(self, _trace, _appNode, _parentNode): return True
+  def logDensityBound(self, _value, _args):
     raise Exception("Cannot rejection sample psp %s %s with unbounded likelihood" % (type(self), self.description("psp")))
 
 class FunctionType(object): # TODO make this a VentureType?  With conversions!?
