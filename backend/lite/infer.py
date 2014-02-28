@@ -8,8 +8,7 @@ from scaffold import constructScaffold
 from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
 from utils import simulateCategorical, cartesianProduct, logaddexp
-from nose.tools import assert_almost_equal
-import sys
+from nose.tools import assert_almost_equal # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 import copy
 
 def mixMH(trace,indexer,operator):
