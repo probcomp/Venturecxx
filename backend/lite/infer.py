@@ -11,6 +11,10 @@ from utils import simulateCategorical, cartesianProduct, logaddexp
 from nose.tools import assert_almost_equal # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 import copy
 
+class MissingEsrParentError(Exception): pass
+# TODO Sane exception hierarchy?
+# TODO Defined in a sane place, instead of "earliest place in the import graph where it is referenced"?
+
 def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
   rhoMix = indexer.logDensityOfIndex(trace,index)
@@ -68,8 +72,11 @@ def computeRejectionBound(trace, scaffold, border):
     if scaffold.isAbsorbing(node):
       logBound += logBoundAt(node)
     elif node.isObservation:
-      appNode = trace.getOutermostNonReferenceApplication(node)
-      logBound += logBoundAt(appNode)
+      try:
+        appNode = trace.getOutermostNonReferenceApplication(node)
+        logBound += logBoundAt(appNode)
+      except MissingEsrParentError:
+        raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
   return logBound
 
 class RejectionOperator(object):

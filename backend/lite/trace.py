@@ -6,7 +6,7 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
-from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator
+from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
@@ -20,9 +20,6 @@ from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
 import random
 import numpy.random
-
-class MissingEsrParentError(Exception): pass
-# TODO Sane exception hierarchy?
 
 class Trace(object):
   def __init__(self):
