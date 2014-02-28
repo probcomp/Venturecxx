@@ -1,4 +1,4 @@
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from value import VentureValue, SPRef, ExpressionType
 from request import Request
 
@@ -29,7 +29,8 @@ class Node(object):
     return value is None or isinstance(value, VentureValue)
 
   def parents(self): return self.definiteParents()
-
+  @abstractmethod
+  def definiteParents(self): pass
 
 class ConstantNode(Node):
   def __init__(self,value):
@@ -42,7 +43,6 @@ class ConstantNode(Node):
     else: # In eval
       self.value = ExpressionType().asVentureValue(value)
 
-  def parents(self): return []
   def definiteParents(self): return []
 
 
@@ -51,7 +51,6 @@ class LookupNode(Node):
     super(LookupNode,self).__init__()
     self.sourceNode = sourceNode
 
-  def parents(self): return [self.sourceNode]
   def definiteParents(self): return [self.sourceNode]
 
 
@@ -74,7 +73,6 @@ class RequestNode(ApplicationNode):
     self.outputNode = outputNode
     self.children.add(outputNode)
 
-  def parents(self): return [self.operatorNode] + self.operandNodes
   def definiteParents(self): return [self.operatorNode] + self.operandNodes
 
   def isAppropriateValue(self, value):
