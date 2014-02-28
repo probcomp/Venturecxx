@@ -67,7 +67,8 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None):
     infer = defaultInfer()
   elif infer == "mixes_slowly": # TODO Replace this awful hack with proper adjustment of tests for difficulty
     infer = defaultInfer()
-    infer["transitions"] = 4 * int(infer["transitions"])
+    if not infer["kernel"] == "rejection":
+      infer["transitions"] = 4 * int(infer["transitions"])
 
   predictions = []
   for _ in range(num_samples):
