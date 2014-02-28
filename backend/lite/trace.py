@@ -139,9 +139,7 @@ class Trace(object):
   def spRefAt(self,node):
     candidate = self.valueAt(node.operatorNode)
     if not isinstance(candidate, SPRef):
-      print "spRef not an spRef"
-      print "is a: " + str(type(candidate))
-      print node,node.operatorNode
+      raise Exception("spRef not an spRef but a %s at node %s with operator %s" % (type(candidate), node, node.operatorNode))
     assert isinstance(candidate, SPRef)
     return candidate
 
