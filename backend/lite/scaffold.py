@@ -22,10 +22,10 @@ class Scaffold(object):
 
   def show(self):
     print "---Scaffold---"
-    print "regenCounts: " + str(len(self.regenCounts))
-    print "absorbing: " + str(len(self.absorbing))
-    print "aaa: " + str(len(self.aaa))
-    print "border: " + str(len(self.border))
+    print "# pnodes: " + str(len(self.getPrincipalNodes()))
+    print "# absorbing nodes: " + str(len(self.absorbing))
+    print "# aaa nodes: " + str(len(self.aaa))
+    print "border lengths: " + str([len(segment) for segment in self.border])
 
 def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
   cDRG,cAbsorbing,cAAA = set(),set(),set()
