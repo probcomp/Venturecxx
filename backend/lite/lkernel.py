@@ -12,6 +12,11 @@ class LKernel(object):
   def weight(self,trace,newValue,oldValue,args): return 0
   def reverseWeight(self,trace,oldValue,args):
     return self.weight(trace,oldValue,None,args)
+  def weightBound(self, _trace, _newValue, _oldValue, _args):
+    # An upper bound on the value of weight over the variation
+    # possible by changing the values of everything in the arguments
+    # whose value is None.  Useful for rejection sampling.
+    raise Exception("Cannot rejection sample with weight-unbounded LKernel")
 
 class DefaultAAALKernel(LKernel):
   def __init__(self,makerPSP): self.makerPSP = makerPSP
