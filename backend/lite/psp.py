@@ -10,7 +10,7 @@ class PSP(object):
   def simulate(self,args): pass
   def logDensity(self,value,args): return 0
   def logDensityBound(self, value, args):
-    raise Exception("Cannot rejection sample psp with unbounded likelihood")
+    raise Exception("Cannot rejection sample psp %s %s with unbounded likelihood" % (type(self), self.description("psp")))
   def incorporate(self,value,args): pass
   def unincorporate(self,value,args): pass
   # Returns a Python list of VentureValue objects
