@@ -20,9 +20,10 @@
 # C0303: Trailing whitespace
 # W0311: Bad indentation
 # W0403: Relative import
+# R0902: Too many instance methods
 # R0913: Too many arguments
 # R0914: Too many local variables
-disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0201,W0622,W0311,W0403,C0301,C0303,R0913,R0914
+disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0201,W0622,W0311,W0403,C0301,C0303,R0902,R0913,R0914
 
 # Rationale: Wildcard imports
 #   Turns out wildcard imports in Python import every name visible in
@@ -43,7 +44,7 @@ disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0201,W0622,
 #   people even without Pylint getting in their face about it; and
 #   doing the refactorings to clean that up requires more taste than
 #   can be produced under pressure.
-#   TODO Perhaps turn R0913, R0914 these back on for the
+#   TODO Perhaps turn R0902, R0913, R0914 back on for the
 #   code-review-mode style check
 
 [REPORTS]
