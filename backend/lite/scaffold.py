@@ -42,7 +42,7 @@ def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
     assert isinstance(setsOfPNodes[i],set)
     extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i)
 
-  brush = findBrush(trace,cDRG,cAbsorbing,cAAA)
+  brush = findBrush(trace,cDRG)
   drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
   border = findBorder(trace,drg,absorbing,aaa)
   regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
@@ -88,7 +88,7 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
 
 
-def findBrush(trace,cDRG,cAbsorbing,cAAA):
+def findBrush(trace,cDRG):
   disableCounts = {}
   disabledRequests = set()
   brush = set()
