@@ -248,6 +248,24 @@ class MakerCSymDirMultOutputPSP(PSP):
 
   def childrenCanAAA(self): return True
 
+  def madeSpLogDensityOfCountsBound(self, aux):
+    """Upper bound the log density the made SP may report for its
+    counts, up to arbitrary additions to the aux (but not removals
+    from it), and up to arbitrary changes to the args wherewith the
+    maker is simulated."""
+    # TODO Communicate the maker's fixed parameters here for a more
+    # precise bound
+    # In the case where alpha is required to be an integer, it is
+    # clear that the log density of the counts is maximized for all
+    # values being as small as possible.
+    # TODO Can the aux ever be null?
+    # TODO Do the math properly, esp. for alpha < 1
+    N = sum(aux.os)
+    A = len(aux.os) * 1.0
+    gamma_one = scipy.special.gammaln(1.0)
+    term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N+A)
+    return term1 + sum([scipy.special.gammaln(1+o) - gamma_one for o in aux.os])
+
   def description(self,name):
     return "(%s alpha n) -> <SP () <atom>>\n(%s alpha n <array a>) -> <SP () a>\n  Collapsed symmetric Dirichlet nultinomial in n dimensions.  The two argument version returns a sampler for the dimension; the three argument version returns a sampler from the given list of options.  It is an error if the length of the given list is not n." % (name, name)
 
