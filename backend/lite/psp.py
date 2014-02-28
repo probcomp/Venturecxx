@@ -8,9 +8,9 @@ class PSP(object):
 
   @abstractmethod
   def simulate(self,args): pass
+  # These are good defaults for deterministic PSPs
   def logDensity(self,value,args): return 0
-  def logDensityBound(self, value, args):
-    raise Exception("Cannot rejection sample psp %s %s with unbounded likelihood" % (type(self), self.description("psp")))
+  def logDensityBound(self, value, args): return 0
   def incorporate(self,value,args): pass
   def unincorporate(self,value,args): pass
   # Returns a Python list of VentureValue objects
@@ -35,7 +35,6 @@ class PSP(object):
 class NullRequestPSP(PSP):
   def simulate(self,args): return Request()
   def canAbsorb(self,trace,appNode,parentNode): return True
-  def logDensityBound(self, value, args): return 0
 
 class ESRRefOutputPSP(PSP):
   def simulate(self,args):
@@ -51,6 +50,8 @@ class RandomPSP(PSP):
   def simulate(self,args): pass
   def isRandom(self): return True
   def canAbsorb(self,trace,appNode,parentNode): return True    
+  def logDensityBound(self, value, args):
+    raise Exception("Cannot rejection sample psp %s %s with unbounded likelihood" % (type(self), self.description("psp")))
 
 class FunctionType(object): # TODO make this a VentureType?  With conversions!?
   """An object loosely representing a Venture function type.  It knows
