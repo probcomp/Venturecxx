@@ -27,6 +27,13 @@ class Scaffold(object):
     print "# aaa nodes: " + str(len(self.aaa))
     print "border lengths: " + str([len(segment) for segment in self.border])
 
+  def showMore(self):
+    print "---Scaffold---"
+    print "pnodes: " + str(self.getPrincipalNodes())
+    print "absorbing nodes: " + str(self.absorbing)
+    print "aaa nodes: " + str(self.aaa)
+    print "borders: " + str(self.border)
+
 def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
   cDRG,cAbsorbing,cAAA = set(),set(),set()
   indexAssignments = {}
