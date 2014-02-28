@@ -6,7 +6,7 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
-from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError
+from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
@@ -139,7 +139,7 @@ class Trace(object):
   def spRefAt(self,node):
     candidate = self.valueAt(node.operatorNode)
     if not isinstance(candidate, SPRef):
-      raise Exception("spRef not an spRef but a %s at node %s with operator %s" % (type(candidate), node, node.operatorNode))
+      raise NoSPRefError("spRef not an spRef but a %s at node %s with operator %s" % (type(candidate), node, node.operatorNode))
     assert isinstance(candidate, SPRef)
     return candidate
 

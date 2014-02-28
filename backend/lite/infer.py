@@ -12,6 +12,7 @@ from nose.tools import assert_almost_equal # Pylint misses metaprogrammed names 
 import copy
 
 class MissingEsrParentError(Exception): pass
+class NoSPRefError(Exception): pass
 # TODO Sane exception hierarchy?
 # TODO Defined in a sane place, instead of "earliest place in the import graph where it is referenced"?
 
@@ -76,6 +77,8 @@ def computeRejectionBound(trace, scaffold, border):
         appNode = trace.getOutermostNonReferenceApplication(node)
         logBound += logBoundAt(appNode)
       except MissingEsrParentError:
+        raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
+      except NoSPRefError:
         raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
   return logBound
 
