@@ -83,3 +83,6 @@ def defaultInfer():
   candidate = expToDict(parse(config["infer"]))
   candidate["transitions"] = default_num_transitions_per_sample()
   return candidate
+
+def defaultKernel():
+  return defaultInfer()["kernel"]
