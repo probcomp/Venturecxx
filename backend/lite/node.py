@@ -63,20 +63,6 @@ class ApplicationNode(Node):
     self.operatorNode = operatorNode
     self.operandNodes = operandNodes
 
-  def spRef(self): 
-    if not isinstance(self.operatorNode.value,SPRef):
-      print "spRef not an spRef"
-      print "is a: " + str(type(self.operatorNode.value))
-    assert isinstance(self.operatorNode.value,SPRef)
-    assert isinstance(self.operatorNode.value.makerNode,Node)
-    assert not self.operatorNode.value.makerNode.madeSP is None
-    assert isinstance(self.operatorNode.value.makerNode.madeSP,SP)
-    return self.operatorNode.value
-
-  def sp(self): return self.spRef().makerNode.madeSP
-  def spaux(self): return self.spRef().makerNode.madeSPAux
-  def psp(self): return self.sp().requestPSP
-
 
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
