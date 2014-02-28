@@ -32,6 +32,9 @@ class PSP(object):
 
   def description(self,name): return None
 
+  def madeSpLogDensityOfCountsBound(self, _aux):
+    raise Exception("Cannot rejection sample AAA procedure with unbounded log density of counts")
+
 class NullRequestPSP(PSP):
   def simulate(self,args): return Request()
   def canAbsorb(self,trace,appNode,parentNode): return True
