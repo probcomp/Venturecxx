@@ -151,6 +151,11 @@ class TypedLKernel(LKernel):
                                      self.f_type.unwrap_return(oldValue),
                                      self.f_type.unwrap_args(args))
 
+  def weightBound(self, trace, newValue, oldValue, args):
+    return self.kernel.weightBound(trace, self.f_type.unwrap_return(newValue),
+                                   self.f_type.unwrap_return(oldValue),
+                                   self.f_type.unwrap_args(args))
+
 class TypedVariationalLKernel(TypedLKernel):
   def gradientOfLogDensity(self, value, args):
     return self.kernel.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
