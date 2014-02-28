@@ -25,6 +25,10 @@ class DefaultAAALKernel(LKernel):
     assert isinstance(newValue,VentureSP)
     return newValue.outputPSP.logDensityOfCounts(args.madeSPAux)
   def weightBound(self, _trace, _newValue, _oldValue, args):
+    # Going through the maker here because the new value is liable to
+    # be None when computing bounds for rejection, but the maker
+    # should know enough about its possible values future to answer my
+    # question.
     return self.makerPSP.madeSpLogDensityOfCountsBound(args.madeSPAux)
 
 class DeterministicLKernel(LKernel):
