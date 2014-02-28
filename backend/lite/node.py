@@ -58,6 +58,11 @@ class LookupNode(Node):
 class ApplicationNode(Node):
   __metaclass__ = ABCMeta
 
+  def __init__(self, operatorNode, operandNodes):
+    super(ApplicationNode, self).__init__()
+    self.operatorNode = operatorNode
+    self.operandNodes = operandNodes
+
   def spRef(self): 
     if not isinstance(self.operatorNode.value,SPRef):
       print "spRef not an spRef"
