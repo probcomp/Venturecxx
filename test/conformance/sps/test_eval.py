@@ -1,7 +1,7 @@
 import scipy.stats as stats
 import math
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportKnownContinuous, reportKnownMeanVariance
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, defaultKernel
 from nose import SkipTest
 from nose.tools import eq_
 
@@ -62,6 +62,8 @@ def testEvalIf2():
 
 @statisticalTest
 def testEval2():
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)")
@@ -83,6 +85,8 @@ def testEval2():
 @statisticalTest
 def testEval3():
   "testEval2 with booby traps"
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)")
