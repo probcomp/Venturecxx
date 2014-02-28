@@ -80,9 +80,7 @@ class ApplicationNode(Node):
 
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
-    super(RequestNode,self).__init__()
-    self.operatorNode = operatorNode
-    self.operandNodes = operandNodes
+    super(RequestNode,self).__init__(operatorNode, operandNodes)
     self.env = env
     self.outputNode = None
 
@@ -99,9 +97,7 @@ class RequestNode(ApplicationNode):
 
 class OutputNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,requestNode,env):
-    super(OutputNode,self).__init__()
-    self.operatorNode = operatorNode
-    self.operandNodes = operandNodes
+    super(OutputNode,self).__init__(operatorNode, operandNodes)
     self.requestNode = requestNode
     self.env = env
 
