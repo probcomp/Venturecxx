@@ -100,7 +100,6 @@ class MakerCBetaBernoulliOutputPSP(PSP):
   def description(self,name):
     return "(%s alpha beta) -> <SP () <bool>>\n  Collapsed beta Bernoulli." % name
 
-
 class CBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,alpha,beta):
     assert isinstance(alpha, float)
@@ -176,6 +175,8 @@ class UBetaBernoulliAAALKernel(LKernel):
     output = TypedPSP([], BoolType(), UBetaBernoulliOutputPSP(newWeight))
     return BetaBernoulliSP(NullRequestPSP(), output)
   # Weight is zero because it's simulating from the right distribution
+
+  def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
 
 class UBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,weight):
@@ -389,6 +390,25 @@ class MakerCDirMultOutputPSP(PSP):
   def description(self,name):
     return "(%s <list alpha>) -> <SP () <number>>\n(%s <list alpha> <list a>) -> <SP () a>\n  Collapsed Dirichlet multinomial." % (name, name)
 
+  def madeSpLogDensityOfCountsBound(self, aux):
+    """Upper bound the log density the made SP may report for its
+    counts, up to arbitrary additions to the aux (but not removals
+    from it), and up to arbitrary changes to the args wherewith the
+    maker is simulated."""
+    # TODO Communicate the maker's fixed parameters here for a more
+    # precise bound
+    # In the case where alphas are required to be integers, it is
+    # clear that the log density of the counts is maximized for all
+    # values being as small as possible.
+    # TODO Can the aux ever be null?
+    # TODO Do the math properly, esp. for alpha < 1
+    # TODO This is the same as MakeCSymDirMultOutputPSP; abstract
+    N = sum(aux.os)
+    A = len(aux.os) * 1.0
+    gamma_one = scipy.special.gammaln(1.0)
+    term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N+A)
+    return term1 + sum([scipy.special.gammaln(1+o) - gamma_one for o in aux.os])
+
 class CDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,os):
     self.alpha = alpha
@@ -456,6 +476,8 @@ class UDirMultAAALKernel(LKernel):
     newTheta = npr.dirichlet(counts)
     output = TypedPSP([], AnyType(), UDirMultOutputPSP(newTheta,os))
     return DirMultSP(NullRequestPSP(),output,len(alpha))
+
+  def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
 
 class UDirMultOutputPSP(RandomPSP):
   def __init__(self,theta,os):
