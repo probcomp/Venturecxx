@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from value import VentureValue, SPRef, ExpressionType
+from value import VentureValue, ExpressionType
 from request import Request
 
 class Node(object):
@@ -20,10 +20,6 @@ class Node(object):
     self.observedValue = val
     self.isObservation = True
     assert isinstance(val, VentureValue)
-
-  def groundValue(self):
-    if isinstance(self.value,SPRef): return self.value.makerNode.madeSP
-    else: return self.value
 
   def isAppropriateValue(self, value):
     return value is None or isinstance(value, VentureValue)
