@@ -1,6 +1,5 @@
 from venture.test.config import get_ripl
-from nose.tools import eq_, assert_greater, assert_less
-from nose import SkipTest
+from nose.tools import eq_, assert_greater, assert_less # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 
 def testObserveAVar1a():
   "Observations should propagate through variables."
