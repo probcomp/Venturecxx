@@ -514,7 +514,7 @@ class MRipl():
                   'probes':probes, 'series':[], 'snapshots':[], }
         
 
-        # initialize list of snapshots and series FIXME (once logscore interface fixed, share code)
+        # initialize list of snapshots and series. FIXME (once logscore interface fixed, share code)
         if not(logscore):
             snapshots = [  self.snapshot( did_labels_list = [label], plot=False, scatter=False, logscore=False ), ]
             series = [snapshots[-1]['values'][label], ]
