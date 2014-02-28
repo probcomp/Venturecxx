@@ -7,7 +7,7 @@ from utils import simulateCategorical, logDensityCategorical, simulateDirichlet,
 from psp import PSP, NullRequestPSP, RandomPSP
 from sp import VentureSP,SPAux
 from lkernel import LKernel
-from nose.tools import assert_greater_equal
+from nose.tools import assert_greater_equal # assert_greater_equal is metaprogrammed pylint:disable=no-name-in-module
 import copy
 from value import AnyType, VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 from psp import TypedPSP
