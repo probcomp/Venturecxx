@@ -58,6 +58,11 @@ class LookupNode(Node):
 class ApplicationNode(Node):
   __metaclass__ = ABCMeta
 
+  def __init__(self, operatorNode, operandNodes):
+    super(ApplicationNode, self).__init__()
+    self.operatorNode = operatorNode
+    self.operandNodes = operandNodes
+
   def spRef(self): 
     if not isinstance(self.operatorNode.value,SPRef):
       print "spRef not an spRef"
@@ -75,9 +80,7 @@ class ApplicationNode(Node):
 
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
-    super(RequestNode,self).__init__()
-    self.operatorNode = operatorNode
-    self.operandNodes = operandNodes
+    super(RequestNode,self).__init__(operatorNode, operandNodes)
     self.env = env
     self.outputNode = None
 
@@ -94,9 +97,7 @@ class RequestNode(ApplicationNode):
 
 class OutputNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,requestNode,env):
-    super(OutputNode,self).__init__()
-    self.operatorNode = operatorNode
-    self.operandNodes = operandNodes
+    super(OutputNode,self).__init__(operatorNode, operandNodes)
     self.requestNode = requestNode
     self.env = env
 
@@ -109,7 +110,9 @@ class Args(object):
     self.node = node
     self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]
     for v in self.operandValues:
-      assert isinstance(v, VentureValue)
+      # v could be None if this is for logDensityBound for rejection
+      # sampling, which is computed from the torus.
+      assert v is None or isinstance(v, VentureValue)
     self.operandNodes = node.operandNodes
 
     if isinstance(node,OutputNode):

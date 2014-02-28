@@ -288,7 +288,12 @@ def registerVentureType(t, name = None):
       stackable_types[name] = t
 
 
-class VentureType(object): pass
+class VentureType(object):
+  def asPythonNoneable(self, vthing):
+    if vthing is None:
+      return None
+    else:
+      return self.asPython(vthing)
 
 # TODO Is there any way to make these guys be proper singleton
 # objects?

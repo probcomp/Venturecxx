@@ -3,12 +3,12 @@ from value import SPRef
 
 class Scaffold(object):
   def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None):
-    self.setsOfPNodes = setsOfPNodes if setsOfPNodes else []
-    self.regenCounts = regenCounts if regenCounts else {}
-    self.absorbing = absorbing if absorbing else set()
-    self.aaa = aaa if aaa else set()
-    self.border = border if border else []
-    self.lkernels = lkernels if lkernels else {}
+    self.setsOfPNodes = setsOfPNodes if setsOfPNodes else [] # [Set Node]
+    self.regenCounts = regenCounts if regenCounts else {} # {Node:Int}
+    self.absorbing = absorbing if absorbing else set() # Set Node
+    self.aaa = aaa if aaa else set() # Set Node
+    self.border = border if border else [] # [[Node]]
+    self.lkernels = lkernels if lkernels else {} # {Node:LKernel}
 
   def getPrincipalNodes(self): return set.union(*self.setsOfPNodes)
   def getRegenCount(self,node): return self.regenCounts[node]
@@ -22,10 +22,17 @@ class Scaffold(object):
 
   def show(self):
     print "---Scaffold---"
-    print "regenCounts: " + str(len(self.regenCounts))
-    print "absorbing: " + str(len(self.absorbing))
-    print "aaa: " + str(len(self.aaa))
-    print "border: " + str(len(self.border))
+    print "# pnodes: " + str(len(self.getPrincipalNodes()))
+    print "# absorbing nodes: " + str(len(self.absorbing))
+    print "# aaa nodes: " + str(len(self.aaa))
+    print "border lengths: " + str([len(segment) for segment in self.border])
+
+  def showMore(self):
+    print "---Scaffold---"
+    print "pnodes: " + str(self.getPrincipalNodes())
+    print "absorbing nodes: " + str(self.absorbing)
+    print "aaa nodes: " + str(self.aaa)
+    print "borders: " + str(self.border)
 
 def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
   cDRG,cAbsorbing,cAAA = set(),set(),set()

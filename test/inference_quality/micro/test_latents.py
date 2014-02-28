@@ -1,5 +1,6 @@
+from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, defaultKernel
 
 # TODO this is just one idea for how to encode matrices. 
 # Not sure what the interface to make_lazy_hmm should be.
@@ -31,6 +32,8 @@ def testHMMSP1():
 
 @statisticalTest
 def testHMMSP2():
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
   ripl.assume("f","""
 (if (flip)
