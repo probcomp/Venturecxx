@@ -68,11 +68,9 @@ def computeRejectionBound(trace, scaffold, border):
   # This looks an awful lot like what would happen on forcing a thunk
   # constructed by regenAndAttach for computing the logBound.
   logBound = 0
-  # TODO Ignoring weight from lkernels.  There should be no delta
-  # kernels when doing rejection sampling; and I do not understand AAA
-  # lkernels enough to worry about them for this purpose, except to
-  # note that they are not delta kernels.  Should I assert lack of
-  # lkernels?
+  # TODO Ignoring weight from lkernels in the DRG but off the border.
+  # There should be no delta kernels when doing rejection sampling.
+  # Should I assert lack of such lkernels?
   # TODO Ignoring weight from simulating latent requests, because I
   # don't know what to do about it.  Write tests that expose any
   # consequent problems?
