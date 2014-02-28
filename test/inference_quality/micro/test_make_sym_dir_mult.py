@@ -123,6 +123,8 @@ def testMakeDirMult1():
 
 @statisticalTest
 def checkMakeDirMult1(maker):
+  if defaultKernel() == "rejection" and maker == "make_dir_mult":
+    raise SkipTest("Is the log density of counts bounded for collapsed beta bernoulli?  Issue: https://app.asana.com/0/9277419963067/10623454782852")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
