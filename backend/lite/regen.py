@@ -5,7 +5,6 @@ from psp import NullRequestPSP
 from value import SPRef
 from lkernel import VariationalLKernel
 from scope import ScopeIncludeOutputPSP
-import pdb
 
 def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
