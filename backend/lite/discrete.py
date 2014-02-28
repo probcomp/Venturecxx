@@ -337,6 +337,8 @@ class USymDirMultAAALKernel(LKernel):
     output = TypedPSP([], AnyType(), USymDirMultOutputPSP(newTheta,os))
     return DirMultSP(NullRequestPSP(),output,n)
 
+  def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
+
 class USymDirMultOutputPSP(RandomPSP):
   def __init__(self,theta,os):
     self.theta = theta
