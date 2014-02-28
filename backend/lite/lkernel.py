@@ -16,7 +16,7 @@ class LKernel(object):
     # An upper bound on the value of weight over the variation
     # possible by changing the values of everything in the arguments
     # whose value is None.  Useful for rejection sampling.
-    raise Exception("Cannot rejection sample with weight-unbounded LKernel")
+    raise Exception("Cannot rejection sample with weight-unbounded LKernel of type %s" % type(self))
 
 class DefaultAAALKernel(LKernel):
   def __init__(self,makerPSP): self.makerPSP = makerPSP
