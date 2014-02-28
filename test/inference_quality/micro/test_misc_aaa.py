@@ -1,5 +1,6 @@
+from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, defaultKernel
 
 def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
@@ -47,6 +48,8 @@ def testMakeBetaBernoulli3():
 
 @statisticalTest
 def checkMakeBetaBernoulli3(maker):
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -69,6 +72,8 @@ def testMakeBetaBernoulli4():
 
 @statisticalTest
 def checkMakeBetaBernoulli4(maker):
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
