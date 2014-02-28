@@ -256,8 +256,8 @@ class MakerCSymDirMultOutputPSP(PSP):
     maker is simulated."""
     # TODO Communicate the maker's fixed parameters here for a more
     # precise bound
-    # In the case where alpha is required to be an integer, it is
-    # clear that the log density of the counts is maximized for all
+    # TODO In the case where alpha is required to be an integer, I
+    # think the log density of the counts is maximized for all
     # values being as small as possible.
     # TODO Can the aux ever be null?
     # TODO Do the math properly, esp. for alpha < 1
@@ -389,25 +389,6 @@ class MakerCDirMultOutputPSP(PSP):
 
   def description(self,name):
     return "(%s <list alpha>) -> <SP () <number>>\n(%s <list alpha> <list a>) -> <SP () a>\n  Collapsed Dirichlet multinomial." % (name, name)
-
-  def madeSpLogDensityOfCountsBound(self, aux):
-    """Upper bound the log density the made SP may report for its
-    counts, up to arbitrary additions to the aux (but not removals
-    from it), and up to arbitrary changes to the args wherewith the
-    maker is simulated."""
-    # TODO Communicate the maker's fixed parameters here for a more
-    # precise bound
-    # In the case where alphas are required to be integers, it is
-    # clear that the log density of the counts is maximized for all
-    # values being as small as possible.
-    # TODO Can the aux ever be null?
-    # TODO Do the math properly, esp. for alpha < 1
-    # TODO This is the same as MakeCSymDirMultOutputPSP; abstract
-    N = sum(aux.os)
-    A = len(aux.os) * 1.0
-    gamma_one = scipy.special.gammaln(1.0)
-    term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N+A)
-    return term1 + sum([scipy.special.gammaln(1+o) - gamma_one for o in aux.os])
 
 class CDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,os):
