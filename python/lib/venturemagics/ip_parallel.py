@@ -409,13 +409,15 @@ class MRipl():
         print self.display_ripls()
 
     
-    def snapshot(self,did_labels_list=[], plot=False, scatter=False, logscore=False):
-        '''report the value of a list of variables (input using labels or dids)
-        across the ripls and optionally plot as histograms or scatter plots'''
+    def snapshot(self,did_labels_list=[],exp_list=[], plot=False, scatter=False, logscore=False):
+        '''input lists of dids_labels and expressions and return values from all ripls and
+        (optional) histograms, scatterplots.'''
+
         
-        if not(isinstance(did_labels_list,list)):
-            did_labels_list = [did_labels_list] 
+        if not(isinstance(did_labels_list,list)): did_labels_list = [did_labels_list] 
         values = { did_label:self.report(did_label) for did_label in did_labels_list}
+        
+        values.update( { exp:self.sample(exp) for exp in exp_list } )
         
         if logscore: values['global_logscore']= self.get_global_logscore()
         
