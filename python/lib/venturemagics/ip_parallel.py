@@ -502,13 +502,19 @@ class MRipl():
         return figs
 
 
-    def probes(self,did_label='',logscore=False,no_transitions=10,no_probes=2,plot_hist=None,plot_kde=None,plot_series=None):
+    def probes(self,did_label='',exp='',logscore=False,no_transitions=10,no_probes=2,plot_hist=None,plot_kde=None,plot_series=None):
         ## FIXME, should take a list of labels (like snapshot) and plot accordingly.
-        '''Run infer directive on ripls and record snapshots at a series of
-        probe points. Optionally produce plots of probe points and a time-series
-        plot.'''
+        '''Input: single did or label, or a single expression, no_transitions, number of points to
+        take snapshots and optional plotting. Outputs snapshots and plots.'''
         
-        label = '' if logscore else did_label
+        ## FIXME: use expression instead of did_label if both are entered
+        if logscore:
+            label = ''; did_label=''; exp=''
+        elif exp:
+            label = exp; did_label=''
+        else:
+            label = did_label
+        
         start = self.total_transitions
         probes = map(int,np.round( np.linspace(0,no_transitions,no_probes) ) )
 
@@ -518,12 +524,12 @@ class MRipl():
 
         # initialize list of snapshots and series. FIXME (once logscore interface fixed, share code)
         if not(logscore):
-            snapshots = [  self.snapshot( did_labels_list = [label], plot=False, scatter=False, logscore=False ), ]
+            snapshots = [  self.snapshot( did_labels_list = [did_label],exp_list=[exp], plot=False, scatter=False, logscore=False ), ]
             series = [snapshots[-1]['values'][label], ]
 
             for i in range(len(probes[:-1])):
                 self.infer(probes[i+1]-probes[i])
-                snapshots.append( self.snapshot( did_labels_list = [label], plot=False, scatter=False, logscore=False ) )
+                snapshots.append( self.snapshot( did_labels_list = [did_label],exp_list=[exp], plot=False, scatter=False, logscore=False ) )
                 series.append( snapshots[-1]['values'][label] )
 
         else:
