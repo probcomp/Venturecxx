@@ -425,7 +425,7 @@ class MRipl():
                'total_transitions':self.total_transitions,
                'ripls_info': self.ripls_location }
 
-        if plot: out['figs'] = self.plot(out,scatter=scatter)
+        if plot or scatter: out['figs'] = self.plot(out,plot1d=plot,scatter=scatter)
 
         return out
 
@@ -447,7 +447,7 @@ class MRipl():
             return 'other'
 
         
-    def plot(self,snapshot,scatter=False):
+    def plot(self,snapshot,plot1d=True,scatter=False):
         '''Takes input from snapshot, checks type of values and plots accordingly.
         Plots are inlined on IPNB and output as figure objects.'''
         
@@ -456,37 +456,35 @@ class MRipl():
         no_trans = snapshot['total_transitions']
         no_ripls = self.no_ripls
         
-        for label,vals in values.items():
+        if plot1d:
+            for label,vals in values.items():
+                var_type = self.type_list(vals)
 
-            var_type = self.type_list(vals)
-            
-            if var_type =='float':
-                fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(8,3.5))
-                xr = np.linspace(min(vals),max(vals),400)
-                ax[0].plot(xr,gaussian_kde(vals)(xr))
-                ax[0].set_xlim([min(vals),max(vals)])
-                ax[0].set_title('GKDE: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
+                if var_type =='float':
+                    fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(8,3.5))
+                    xr = np.linspace(min(vals),max(vals),400)
+                    ax[0].plot(xr,gaussian_kde(vals)(xr))
+                    ax[0].set_xlim([min(vals),max(vals)])
+                    ax[0].set_title('GKDE: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
 
-                ax[1].hist(vals)
-                ax[1].set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
-                [a.set_xlabel('Var %s' % str(label)) for a in ax]
-            
-            elif var_type =='int':
-                fig,ax = plt.subplots()
-                ax.hist(vals)
-                ax.set_xlabel = 'Variable %s' % str(label)
-                ax.set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
-                
-            elif var_type =='bool':
-                ax.hist(vals)
-            elif var_type =='string':
-                pass
-                
-            
-            else:
-                print 'cant plot this type of data' ##FIXME, shouldnt add fig to figs
-            fig.tight_layout()
-            figs.append(fig)
+                    ax[1].hist(vals)
+                    ax[1].set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
+                    [a.set_xlabel('Var %s' % str(label)) for a in ax]
+
+                elif var_type =='int':
+                    fig,ax = plt.subplots()
+                    ax.hist(vals)
+                    ax.set_xlabel = 'Variable %s' % str(label)
+                    ax.set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
+
+                elif var_type =='bool':
+                    ax.hist(vals)
+                elif var_type =='string':
+                    pass
+                else:
+                    print 'cant plot this type of data' ##FIXME, shouldnt add fig to figs
+                fig.tight_layout()
+                figs.append(fig)
 
             
         if scatter:
