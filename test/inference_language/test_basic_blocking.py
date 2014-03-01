@@ -1,5 +1,5 @@
 import scipy.stats as stats
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
 from nose import SkipTest
 from venture.test.config import get_ripl, collectSamples, collect_iid_samples
 
@@ -68,3 +68,29 @@ def testBlockingExample3():
   newb = ripl.report(2)
   assert not olda == newa
   assert not oldb == newb
+
+@statisticalTest
+def testBasicRejection1():
+  ripl = get_ripl()
+  ripl.assume("x", "(bernoulli 0.5)")
+  predictions = collectSamples(ripl, 1, infer={"kernel":"rejection", "scope":"default", "block":"all", "transitions":1})
+  ans = [(True, 0.5), (False, 0.5)]
+  return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+def testBasicRejection2():
+  ripl = get_ripl()
+  ripl.assume("p", "(uniform_continuous 0 1)")
+  ripl.assume("x", "(bernoulli p)")
+  predictions = collectSamples(ripl, 2, infer={"kernel":"rejection", "scope":"default", "block":"all", "transitions":1})
+  ans = [(True, 0.5), (False, 0.5)]
+  return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+def testBasicRejection3():
+  ripl = get_ripl()
+  ripl.assume("p", "(uniform_continuous 0 1)")
+  ripl.observe("(bernoulli p)", "true")
+  predictions = collectSamples(ripl, 1, infer={"kernel":"rejection", "scope":"default", "block":"all", "transitions":1})
+  cdf = stats.beta(2,1).cdf
+  return reportKnownContinuous(cdf, predictions, "beta(2,1)")

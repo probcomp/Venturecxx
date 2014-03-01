@@ -7,7 +7,7 @@ from utils import simulateCategorical, logDensityCategorical, simulateDirichlet,
 from psp import PSP, NullRequestPSP, RandomPSP
 from sp import VentureSP,SPAux
 from lkernel import LKernel
-from nose.tools import assert_greater_equal
+from nose.tools import assert_greater_equal # assert_greater_equal is metaprogrammed pylint:disable=no-name-in-module
 import copy
 from value import AnyType, VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 from psp import TypedPSP
@@ -21,6 +21,8 @@ class BernoulliOutputPSP(RandomPSP):
     p = args.operandValues[0] if args.operandValues else 0.5
     if val: return math.log(p)
     else: return math.log(1 - p)
+
+  def logDensityBound(self, _x, _args): return 0
 
   def enumerateValues(self,args):
     p = args.operandValues[0] if args.operandValues else 0.5
@@ -98,7 +100,6 @@ class MakerCBetaBernoulliOutputPSP(PSP):
   def description(self,name):
     return "(%s alpha beta) -> <SP () <bool>>\n  Collapsed beta Bernoulli." % name
 
-
 class CBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,alpha,beta):
     assert isinstance(alpha, float)
@@ -175,6 +176,8 @@ class UBetaBernoulliAAALKernel(LKernel):
     return BetaBernoulliSP(NullRequestPSP(), output)
   # Weight is zero because it's simulating from the right distribution
 
+  def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
+
 class UBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,weight):
     self.weight = weight
@@ -246,6 +249,24 @@ class MakerCSymDirMultOutputPSP(PSP):
 
   def childrenCanAAA(self): return True
 
+  def madeSpLogDensityOfCountsBound(self, aux):
+    """Upper bound the log density the made SP may report for its
+    counts, up to arbitrary additions to the aux (but not removals
+    from it), and up to arbitrary changes to the args wherewith the
+    maker is simulated."""
+    # TODO Communicate the maker's fixed parameters here for a more
+    # precise bound
+    # TODO In the case where alpha is required to be an integer, I
+    # think the log density of the counts is maximized for all
+    # values being as small as possible.
+    # TODO Can the aux ever be null?
+    # TODO Do the math properly, esp. for alpha < 1
+    N = sum(aux.os)
+    A = len(aux.os) * 1.0
+    gamma_one = scipy.special.gammaln(1.0)
+    term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N+A)
+    return term1 + sum([scipy.special.gammaln(1+o) - gamma_one for o in aux.os])
+
   def description(self,name):
     return "(%s alpha n) -> <SP () <atom>>\n(%s alpha n <array a>) -> <SP () a>\n  Collapsed symmetric Dirichlet nultinomial in n dimensions.  The two argument version returns a sampler for the dimension; the three argument version returns a sampler from the given list of options.  It is an error if the length of the given list is not n." % (name, name)
 
@@ -316,6 +337,8 @@ class USymDirMultAAALKernel(LKernel):
     newTheta = npr.dirichlet(counts)
     output = TypedPSP([], AnyType(), USymDirMultOutputPSP(newTheta,os))
     return DirMultSP(NullRequestPSP(),output,n)
+
+  def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
 
 class USymDirMultOutputPSP(RandomPSP):
   def __init__(self,theta,os):
@@ -434,6 +457,8 @@ class UDirMultAAALKernel(LKernel):
     newTheta = npr.dirichlet(counts)
     output = TypedPSP([], AnyType(), UDirMultOutputPSP(newTheta,os))
     return DirMultSP(NullRequestPSP(),output,len(alpha))
+
+  def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
 
 class UDirMultOutputPSP(RandomPSP):
   def __init__(self,theta,os):

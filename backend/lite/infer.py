@@ -8,9 +8,13 @@ from scaffold import constructScaffold
 from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
 from utils import simulateCategorical, cartesianProduct, logaddexp
-from nose.tools import assert_almost_equal
-import sys
+from nose.tools import assert_almost_equal # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 import copy
+
+class MissingEsrParentError(Exception): pass
+class NoSPRefError(Exception): pass
+# TODO Sane exception hierarchy?
+# TODO Defined in a sane place, instead of "earliest place in the import graph where it is referenced"?
 
 def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
@@ -47,6 +51,74 @@ class BlockScaffoldIndexer(object):
     elif self.block == "ordered": return 0
     else: return 0
 
+
+#### Rejection sampling
+
+def computeRejectionBound(trace, scaffold, border):
+  def logBoundAt(node):
+    psp,value,args = trace.pspAt(node),trace.valueAt(node),trace.argsAt(node)
+    if scaffold.hasLKernel(node):
+      # TODO Is it right that the value here is the old value and the
+      # new value?  Or do I need to fetch the old value from the
+      # OmegaDB?
+      return scaffold.getLKernel(node).weightBound(trace, value, value, args)
+    else:
+      # Resimulation kernel
+      return psp.logDensityBound(value, args)
+  # This looks an awful lot like what would happen on forcing a thunk
+  # constructed by regenAndAttach for computing the logBound.
+  logBound = 0
+  # TODO Ignoring weight from lkernels in the DRG but off the border.
+  # There should be no delta kernels when doing rejection sampling.
+  # Should I assert lack of such lkernels?
+  # TODO Ignoring weight from simulating latent requests, because I
+  # don't know what to do about it.  Write tests that expose any
+  # consequent problems?
+  for node in border:
+    if scaffold.isAbsorbing(node) or scaffold.isAAA(node):
+      # AAA nodes are conveniently always in the border...
+      logBound += logBoundAt(node)
+    elif node.isObservation:
+      try:
+        appNode = trace.getOutermostNonReferenceApplication(node)
+        logBound += logBoundAt(appNode)
+      except MissingEsrParentError:
+        raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
+      except NoSPRefError:
+        raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
+  return logBound
+
+class RejectionOperator(object):
+  """Rejection sampling on a scaffold.
+
+  This is supposed to obey the semantics laid out in
+  Bayesian Statistics Without Tears: A Sampling-Resampling Perspective
+  A.F.M. Smith, A.E. Gelfand The American Statistician 46(2), 1992, p 84-88
+  http://faculty.chicagobooth.edu/hedibert.lopes/teaching/ccis2010/1992SmithGelfand.pdf"""
+  def propose(self, trace, scaffold):
+    self.trace = trace
+    self.scaffold = scaffold
+    _,self.rhoDB = detachAndExtract(trace, scaffold.border[0], scaffold)
+    assertTorus(scaffold)
+    logBound = computeRejectionBound(trace, scaffold, scaffold.border[0])
+    accept = False
+    while not accept:
+      xiWeight = regenAndAttach(trace, scaffold.border[0], scaffold, False, self.rhoDB, {})
+      accept = random.random() < math.exp(xiWeight - logBound)
+      if not accept:
+        detachAndExtract(trace, scaffold.border[0], scaffold)
+    return trace, 0
+
+  def accept(self): pass
+  def reject(self):
+    # TODO This is the same as the MHOperator rejection -- abstract
+    detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
+    assertTorus(self.scaffold)
+    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
+
+
+#### Resampling from the prior
+
 class MHOperator(object):
   def propose(self,trace,scaffold):
     self.trace = trace
@@ -67,6 +139,8 @@ class MHOperator(object):
     assertTorus(self.scaffold)
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
 
+
+#### Variational
 
 def registerVariationalLKernels(trace,scaffold):
   hasVariational = False
@@ -118,6 +192,8 @@ class MeanfieldOperator(object):
       self.delegate.accept()
 
   def reject(self):
+    # TODO This is the same as MHOperator reject except for the
+    # delegation thing -- abstract
     if self.delegate is None:
       detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
       assertTorus(self.scaffold)
@@ -126,7 +202,7 @@ class MeanfieldOperator(object):
       self.delegate.reject()
 
 
-################## Enumerative Gibbs
+#### Enumerative Gibbs
 
 def getCurrentValues(trace,pnodes): return [trace.valueAt(pnode) for pnode in pnodes]
 def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
@@ -185,15 +261,13 @@ class EnumerativeGibbsOperator(object):
 
   def accept(self): pass
   def reject(self):
+    # TODO This is the same as the MHOperator rejection -- abstract
     detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
     assertTorus(self.scaffold)
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
 
-
-
-
       
-################## PGibbs
+#### PGibbs
 
 # Construct ancestor path backwards
 def constructAncestorPath(ancestorIndices,t,n):
@@ -301,7 +375,7 @@ class PGibbsOperator(object):
     assertTrace(self.trace,self.scaffold)
 
 
-### Non-mutating PGibbs
+#### Functional PGibbs
 
 class ParticlePGibbsOperator(object):
   def __init__(self,P):

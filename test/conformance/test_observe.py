@@ -1,5 +1,7 @@
-from venture.test.config import get_ripl
-from nose.tools import eq_, assert_greater, assert_less
+import scipy.stats as stats
+from venture.test.config import get_ripl, collectSamples, defaultKernel
+from venture.test.stats import statisticalTest, reportKnownContinuous
+from nose.tools import eq_, assert_greater, assert_less # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 from nose import SkipTest
 
 def testObserveAVar1a():
@@ -90,3 +92,21 @@ def testObserveThenProcessStochastically1b():
   assert_greater(ripl.report("pid"), 2.99)
   assert_less(ripl.report("pid"), 3.01)  
       
+@statisticalTest
+def testObserveOutputOfIf1():
+  "It is natural to want deterministic conditionals in one's error models.  Some cases Venture can handle gracefully."
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
+  ripl = get_ripl()
+
+  ripl.assume("p","(uniform_continuous 0.0 1.0)")
+  ripl.assume("x","""
+(if (bernoulli p)
+    (normal 10.0 1.0)
+    (normal 0.0 1.0))
+""")
+  ripl.observe("x",11.0)
+
+  predictions = collectSamples(ripl,1)
+  cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
+  return reportKnownContinuous(cdf, predictions, "approximately beta(2,1)")

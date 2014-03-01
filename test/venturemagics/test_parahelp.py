@@ -1,6 +1,7 @@
 import subprocess,os,time
 from subprocess import PIPE,STDOUT,Popen
 from time import sleep,time
+from nose.plugins.attrib import attr
 
 ##
 # test_parahelp.py is a python script that can be called by nose. it calls para_test.ipy which is an ipython script that actually contains the tests of ip_parallel.py (which is a set of ipython parallel tools and cell magics for ipython). the goal is to run para_test.ipy on an ipython instance by opening a process using subprocess (from test_parahelp.py). this ipython instance, in turn, will run subprocess to start an ipcluster (so we have grandchildren of original process). we need to be sure to kill all children of the parent process before exiting. we do this via a time_out, set with variable "time_before_kill".we run the .ipy subprocess. we wait until it exits or until time limit. if it\'s still running then we kill it, which should also kill its children and so close the ipcluster (need to check this). if it\'s not running we just kill the cluster.
@@ -13,6 +14,7 @@ loc_ip_parallel = '/'.join( file_dir.split('/')[:-2] + ['python','lib','venturem
 # NOTE: may need to be increased as tests are added to para_test.ipy
 time_before_kill = 20  
 
+@attr("slow")
 def test_ip_parallel():
 
     def checkOutput(cmd,time_before_kill):

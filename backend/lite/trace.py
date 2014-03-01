@@ -6,11 +6,11 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
-from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator
+from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
-from nose.tools import assert_equal,assert_is_not_none
+from nose.tools import assert_is_not_none # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 from scope import ScopeIncludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
@@ -18,7 +18,6 @@ from scaffold import constructScaffold
 from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
-import pdb
 import random
 import numpy.random
 
@@ -58,7 +57,7 @@ class Trace(object):
     self.scopes[scope][block].add(node)
     assert not scope == "default" or len(self.scopes[scope][block]) == 1
 
-  def unregisterRandomChoice(self,node): 
+  def unregisterRandomChoice(self,node):
     assert node in self.rcs
     self.rcs.remove(node)
     self.unregisterRandomChoiceInScope("default",node,node)
@@ -95,7 +94,7 @@ class Trace(object):
     if self.pspAt(node).isRandom(): self.registerRandomChoice(node)
 
   def createConstantNode(self,val): return ConstantNode(val)
-  def createLookupNode(self,sourceNode): 
+  def createLookupNode(self,sourceNode):
     lookupNode = LookupNode(sourceNode)
     self.setValueAt(lookupNode,self.valueAt(sourceNode))
     self.addChildAt(sourceNode,lookupNode)
@@ -123,7 +122,7 @@ class Trace(object):
     self.removeChildAt(esrParent,outputNode)
     self.decRequestsAt(esrParent)
     return esrParent
-  
+
   def disconnectLookup(self,lookupNode):
     self.removeChildAt(lookupNode.sourceNode,lookupNode)
 
@@ -134,20 +133,18 @@ class Trace(object):
     value = self.valueAt(node)
     if isinstance(value,SPRef): return self.madeSPAt(value.makerNode)
     else: return value
-      
+
   def argsAt(self,node): return Args(self,node)
 
   def spRefAt(self,node):
     candidate = self.valueAt(node.operatorNode)
     if not isinstance(candidate, SPRef):
-      print "spRef not an spRef"
-      print "is a: " + str(type(candidate))
-      print node,node.operatorNode
+      raise NoSPRefError("spRef not an spRef but a %s at node %s with operator %s" % (type(candidate), node, node.operatorNode))
     assert isinstance(candidate, SPRef)
     return candidate
-  
+
   def spAt(self,node): return self.madeSPAt(self.spRefAt(node).makerNode)
-  def spFamiliesAt(self,node): 
+  def spFamiliesAt(self,node):
     spFamilies = self.madeSPFamiliesAt(self.spRefAt(node).makerNode)
     assert isinstance(spFamilies,SPFamilies)
     return spFamilies
@@ -171,7 +168,7 @@ class Trace(object):
 
   def madeSPAt(self,node): return node.madeSP
   def setMadeSPAt(self,node,sp): node.madeSP = sp
-    
+
   def madeSPFamiliesAt(self,node):
     assert_is_not_none(node.madeSPFamilies)
     return node.madeSPFamilies
@@ -181,19 +178,19 @@ class Trace(object):
   def madeSPAuxAt(self,node): return node.madeSPAux
   def setMadeSPAuxAt(self,node,aux): node.madeSPAux = aux
 
-  def parentsAt(self,node): return node.parents()    
+  def parentsAt(self,node): return node.parents()
   def definiteParentsAt(self,node): return node.definiteParents()
-            
+
   def esrParentsAt(self,node): return node.esrParents
   def setEsrParentsAt(self,node,parents): node.esrParents = parents
   def appendEsrParentAt(self,node,parent): node.esrParents.append(parent)
   def popEsrParentAt(self,node): return node.esrParents.pop()
-    
+
   def childrenAt(self,node): return node.children
   def setChildrenAt(self,node,children): node.children = children
   def addChildAt(self,node,child): node.children.add(child)
   def removeChildAt(self,node,child): node.children.remove(child)
-    
+
   def registerFamilyAt(self,node,esrId,esrParent): self.spFamiliesAt(node).registerFamily(esrId,esrParent)
   def unregisterFamilyAt(self,node,esrId): self.spFamiliesAt(node).unregisterFamily(esrId)
   def containsSPFamilyAt(self,node,esrId): return self.spFamiliesAt(node).containsFamily(esrId)
@@ -211,20 +208,20 @@ class Trace(object):
   def regenCountAt(self,scaffold,node): return scaffold.regenCounts[node]
   def incRegenCountAt(self,scaffold,node): scaffold.regenCounts[node] += 1
   def decRegenCountAt(self,scaffold,node): scaffold.regenCounts[node] -= 1 # need not be overriden
-    
+
   def isConstrainedAt(self,node): return node in self.ccs
-  
+
   #### For kernels
   def sampleBlock(self,scope): return self.scopes[scope].sample()[0]
   def logDensityOfBlock(self,scope): return -1 * math.log(self.numBlocksInScope(scope))
   def blocksInScope(self,scope): return self.scopes[scope].keys()
-  def numBlocksInScope(self,scope): 
+  def numBlocksInScope(self,scope):
     if scope in self.scopes: return len(self.scopes[scope].keys())
     else: return 0
 
   def getAllNodesInScope(self,scope):
     return set.union(*[self.getNodesInBlock(scope,block) for block in self.scopes[scope].keys()])
-    
+
   def getOrderedSetsInScope(self,scope):
     return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
 
@@ -239,7 +236,7 @@ class Trace(object):
   def addRandomChoicesInBlock(self,scope,block,pnodes,node):
     if not isinstance(node,OutputNode): return
 
-    if self.pspAt(node).isRandom(): pnodes.add(node)    
+    if self.pspAt(node).isRandom(): pnodes.add(node)
 
     requestNode = node.requestNode
     if self.pspAt(requestNode).isRandom(): pnodes.add(requestNode)
@@ -248,7 +245,7 @@ class Trace(object):
       self.addRandomChoicesInBlock(scope,block,pnodes,self.spFamilyAt(requestNode,esr.id))
 
     self.addRandomChoicesInBlock(scope,block,pnodes,node.operatorNode)
-          
+
     for i,operandNode in enumerate(node.operandNodes):
       if i == 2 and isinstance(self.pspAt(node),ScopeIncludeOutputPSP):
         (new_scope,new_block,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
@@ -258,7 +255,7 @@ class Trace(object):
         self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
 
 
-  def scopeHasEntropy(self,scope): 
+  def scopeHasEntropy(self,scope):
     # right now scope in self.scopes iff it has entropy
     return scope in self.scopes and self.numBlocksInScope(scope) > 0
 
@@ -266,7 +263,7 @@ class Trace(object):
   def eval(self,id,exp):
     assert not id in self.families
     (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),OmegaDB(),{})
-    
+
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
 
   def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
@@ -291,13 +288,18 @@ class Trace(object):
 
   def getOutermostNonReferenceApplication(self,node):
     if isinstance(node,LookupNode): return self.getOutermostNonReferenceApplication(node.sourceNode)
-    assert isinstance(node,OutputNode)      
-    if isinstance(self.pspAt(node),ESRRefOutputPSP): return self.getOutermostNonReferenceApplication(self.esrParentsAt(node)[0])
+    assert isinstance(node,OutputNode)
+    if isinstance(self.pspAt(node),ESRRefOutputPSP):
+      if self.esrParentsAt(node):
+        return self.getOutermostNonReferenceApplication(self.esrParentsAt(node)[0])
+      else:
+        # Could happen if this method is called on a torus, e.g. for rejection sampling
+        raise MissingEsrParentError()
     else: return node
-          
+
   def unobserve(self,id):
     node = self.families[id]
-    appNode = self.getOutermostNonReferenceApplication(node)    
+    appNode = self.getOutermostNonReferenceApplication(node)
     if node.isObservation: unconstrain(self,appNode)
     else:
       assert node in self.unpropagatedObservations
@@ -326,16 +328,19 @@ class Trace(object):
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MHOperator())
       elif params["kernel"] == "meanfield":
-        assert params["with_mutation"]        
+        assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MeanfieldOperator(10,0.0001))
       elif params["kernel"] == "gibbs":
-        assert params["with_mutation"]        
+        assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
       elif params["kernel"] == "pgibbs":
         if params["with_mutation"]:
           mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
         else:
-          mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))          
+          mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
+      elif params["kernel"] == "rejection":
+        assert params["with_mutation"]
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),RejectionOperator())
       else: raise Exception("INFER (%s) MH is implemented" % params["kernel"])
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
@@ -369,6 +374,6 @@ class Trace(object):
     for id,root in newMadeSPFamilies.iteritems():
       node.madeSPFamilies.registerFamily(id,root)
 
-  def addNewChildren(self,node,newChildren): 
+  def addNewChildren(self,node,newChildren):
     for child in newChildren:
       node.children.add(child)
