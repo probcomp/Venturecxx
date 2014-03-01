@@ -517,7 +517,7 @@ class MRipl():
         
         start = self.total_transitions
         probes = map(int,np.round( np.linspace(0,no_transitions,no_probes) ) )
-
+`
         out = {'label':label, 'transition_limits':(start,start+no_transitions),
                   'probes':probes, 'series':[], 'snapshots':[], }
         
