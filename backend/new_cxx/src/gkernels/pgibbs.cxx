@@ -17,7 +17,7 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
   vector<double> rhoWeights(numBorderGroups);
   vector<shared_ptr<DB> > rhoDBs(numBorderGroups);
 
-  for (int borderGroup = numBorderGroups; --borderGroup >= 0;)
+  for (long borderGroup = numBorderGroups; --borderGroup >= 0;)
   {
     pair<double,shared_ptr<DB> > weightAndDB = detachAndExtract(trace,scaffold->border[borderGroup],scaffold);
     rhoWeights[borderGroup] = weightAndDB.first;
