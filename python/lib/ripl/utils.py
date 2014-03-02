@@ -108,10 +108,7 @@ def run_venture_console(ripl):
         print ripl.continuous_inference_status()
       elif directive_name == "start-ci":
         args = current_line.split(" ")[1:]
-        if len(args) == 2:
-          ripl.start_continuous_inference(args[0], True)
-        else:
-          ripl.start_continuous_inference(args[0])
+        ripl.start_continuous_inference()
         print ripl.continuous_inference_status()
       elif directive_name == "stop-ci":
         ripl.stop_continuous_inference()

@@ -35,13 +35,19 @@ struct PyTrace
   double getGlobalLogScore();
   uint32_t numUnconstrainedChoices();
 
-  boost::python::dict continuousInferenceStatus();
-
   void infer(boost::python::dict params);
+  
+  boost::python::dict continuous_inference_status();
+  void start_continuous_inference(boost::python::dict params);
+  void stop_continuous_inference();
 
 private:
   shared_ptr<ConcreteTrace> trace;
   
+  bool continuous_inference_running;
+  boost::python::dict continuous_inference_params;
+  boost::thread * continuous_inference_thread;
+
 };
 
 #endif

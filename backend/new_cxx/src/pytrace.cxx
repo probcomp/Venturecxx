@@ -13,7 +13,7 @@
 #include "gkernels/func_mh.h"
 #include "gkernels/pgibbs.h"
 
-PyTrace::PyTrace() : trace(new ConcreteTrace()) {}
+PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false) {}
 PyTrace::~PyTrace() {}
   
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
@@ -107,66 +107,107 @@ double PyTrace::getGlobalLogScore()
 
 uint32_t PyTrace::numUnconstrainedChoices() { return trace->numUnconstrainedChoices(); }
 
-boost::python::dict PyTrace::continuousInferenceStatus() 
+// parses params and does inference
+struct Inferer
 {
-  boost::python::dict status;
-  status["running"] = false;
-  return status;
-}
-
-// TODO URGENT placeholder
-void PyTrace::infer(boost::python::dict params) 
-{ 
-  size_t numTransitions = boost::python::extract<size_t>(params["transitions"]);
-  string kernel = boost::python::extract<string>(params["kernel"]);
-  
-  /* TODO HACK accept strings or integers as scopes/blocks */
+  shared_ptr<ConcreteTrace> trace;
   ScopeID scope;
   BlockID block;
-
-  boost::python::extract<string> getScopeSymbol(params["scope"]);
-  boost::python::extract<int> getScopeInt(params["scope"]);
-  boost::python::extract<bool> getScopeBool(params["scope"]);
-  if (getScopeSymbol.check()) { scope = VentureValuePtr(new VentureSymbol(getScopeSymbol())); }
-  else if (getScopeInt.check()) { scope = VentureValuePtr(new VentureNumber(getScopeInt())); }
-  else if (getScopeBool.check()) { scope = VentureValuePtr(new VentureBool(getScopeBool())); }
-  assert(scope);
-  //  cout << "scope: " << scope->toPython() << endl;
-
-
-  boost::python::extract<string> getBlockSymbol(params["block"]);
-  boost::python::extract<int> getBlockInt(params["block"]);
-  boost::python::extract<bool> getBlockBool(params["block"]);
-  if (getBlockSymbol.check()) { block = VentureValuePtr(new VentureSymbol(getBlockSymbol())); }
-  else if (getBlockInt.check()) { block = VentureValuePtr(new VentureNumber(getBlockInt())); }
-  else if (getBlockBool.check()) { block = VentureValuePtr(new VentureBool(getBlockBool())); }
-  assert(block);
-
-  //  assert(kernel == "mh");
-//  assert(scope == "default");
-//  assert(block == "one");
-
-  trace->makeConsistent();
-  if (numUnconstrainedChoices() == 0) { return; }
-  for (size_t i = 0; i < numTransitions; ++i)
+  
+  Inferer(shared_ptr<ConcreteTrace> trace, boost::python::dict params) : trace(trace)
   {
+    // TODO unused
+    string kernel = boost::python::extract<string>(params["kernel"]);
+    
+    /* TODO HACK accept strings or integers as scopes/blocks */
+
+    boost::python::extract<string> getScopeSymbol(params["scope"]);
+    boost::python::extract<int> getScopeInt(params["scope"]);
+    boost::python::extract<bool> getScopeBool(params["scope"]);
+    if (getScopeSymbol.check()) { scope = VentureValuePtr(new VentureSymbol(getScopeSymbol())); }
+    else if (getScopeInt.check()) { scope = VentureValuePtr(new VentureNumber(getScopeInt())); }
+    else if (getScopeBool.check()) { scope = VentureValuePtr(new VentureBool(getScopeBool())); }
+    assert(scope);
+    //  cout << "scope: " << scope->toPython() << endl;
+
+    boost::python::extract<string> getBlockSymbol(params["block"]);
+    boost::python::extract<int> getBlockInt(params["block"]);
+    boost::python::extract<bool> getBlockBool(params["block"]);
+    if (getBlockSymbol.check()) { block = VentureValuePtr(new VentureSymbol(getBlockSymbol())); }
+    else if (getBlockInt.check()) { block = VentureValuePtr(new VentureNumber(getBlockInt())); }
+    else if (getBlockBool.check()) { block = VentureValuePtr(new VentureBool(getBlockBool())); }
+    assert(block);
+  }
+  
+  void infer()
+  {
+    if (trace->numUnconstrainedChoices() == 0) { return; }
+    
+    // TODO why the new ScaffoldIndexer and GKernel, at each infer call?
     mixMH(trace.get(),
 	  shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block)),
-	  shared_ptr<GKernel>(new PGibbsGKernel(3)));
+	  shared_ptr<GKernel>(new MHGKernel));
 
     for (set<Node*>::iterator iter = trace->arbitraryErgodicKernels.begin();
-	 iter != trace->arbitraryErgodicKernels.end();
-	 ++iter)
+      iter != trace->arbitraryErgodicKernels.end();
+      ++iter)
     {
       OutputNode * node = dynamic_cast<OutputNode*>(*iter);
       assert(node);
       trace->getMadeSP(node)->AEInfer(trace->getMadeSPAux(node),trace->getArgs(node),trace->getRNG());
     }
   }
+};
+
+// TODO URGENT placeholder
+void PyTrace::infer(boost::python::dict params) 
+{ 
+  Inferer inferer(trace, params);
+  
+  trace->makeConsistent();
+  
+  size_t numTransitions = boost::python::extract<size_t>(params["transitions"]);
+
+  for (size_t i = 0; i < numTransitions; ++i)
+    { inferer.infer(); }
 }
 
+boost::python::dict PyTrace::continuous_inference_status()
+{
+  boost::python::dict status;
+  status["running"] = continuous_inference_running;
+  if(continuous_inference_running) {
+    status["params"] = continuous_inference_params;
+  }
+  return status;
+}
 
+void run_continuous_inference(shared_ptr<Inferer> inferer, bool * flag)
+{
+  while(*flag) { inferer->infer(); }
+}
+
+void PyTrace::start_continuous_inference(boost::python::dict params)
+{
+  stop_continuous_inference();
   
+  continuous_inference_params = params;
+  continuous_inference_running = true;
+  shared_ptr<Inferer> inferer = shared_ptr<Inferer>(new Inferer(trace, params));
+  
+  trace->makeConsistent();
+  
+  continuous_inference_thread = new boost::thread(run_continuous_inference, inferer, &continuous_inference_running);
+}
+
+void PyTrace::stop_continuous_inference() {
+  if(continuous_inference_running) {
+    continuous_inference_running = false;
+    continuous_inference_thread->join();
+    delete continuous_inference_thread;
+  }
+}
+
 BOOST_PYTHON_MODULE(libtrace)
 {
   using namespace boost::python;
@@ -179,10 +220,12 @@ BOOST_PYTHON_MODULE(libtrace)
     .def("get_seed", &PyTrace::getSeed)
     .def("numRandomChoices", &PyTrace::numUnconstrainedChoices)
     .def("getGlobalLogScore", &PyTrace::getGlobalLogScore)
-    .def("continuous_inference_status", &PyTrace::continuousInferenceStatus)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
     .def("infer", &PyTrace::infer)
+    .def("continuous_inference_status", &PyTrace::continuous_inference_status)
+    .def("start_continuous_inference", &PyTrace::start_continuous_inference)
+    .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)
     ;
 };
 
