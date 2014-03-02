@@ -608,6 +608,9 @@ def lst_flatten(l): return [el for subl in l for el in subl]
 
 def mk_map_proc_string(mripl_name,mrid,proc_name):
     return 'results[-1] = [%s(ripl) for ripl in mripls[%i]] ' % ( proc_name, mrid)
+
+def limit_mk_map_proc_string(mripl_name,mrid,proc_name,max_rips):
+    return 'results[-1] = [%s(ripl) for count,ripl in enumerate(mripls[%i]) if count<%i] ' % ( proc_name, mrid,max_rips)
     
 add_results_list_string = '''
 try: results.append([])
@@ -616,7 +619,7 @@ except: results=[ [], ]'''
 
 def mr_map(line, cell):
     '''cell magic allows mapping of functions across all ripls in an MRipl.
-    syntax: %%mr_map mripl_name proc_name [store_variable_name, local_ripl] '''
+    syntax: %%mr_map mripl_name proc_name [store_variable_name, limit, local_ripl] '''
     ## FIXME:think about the use of %px, which will map code
     # across whichever is the active dview on engines. If someone is running
     # multiple sets of engines (e.g. separated into multiple clients or one client
@@ -630,20 +633,27 @@ def mr_map(line, cell):
     # get inputs
     proc_name = str(line).split()[1]
     mripl_name =  str(line).split()[0]
+    if len(str(line).split()) > 3:
+        try: limit = int(str(line).split()[3])
+        except: limit = None
     mripl = eval(mripl_name,globals(),ip.user_ns) ## FIXME ensure this works
     mrid = mripl.mrid
 
+
     # optionally update the local_ripl (for debugging), must include var_name
-    if len(str(line).split()) > 3:
+    if len(str(line).split()) > 4:
         ip.run_cell(cell) 
         eval( '%s( %s.local_ripl )' % (proc_name,mripl_name),globals(),ip.user_ns)
+
 
     # execute cell input across engines to define function
     ip.run_cell_magic("px", '', cell)  
     mripl.dview.execute(add_results_list_string)    
 
-    map_proc_string = mk_map_proc_string(mripl_name,mrid,proc_name)
-    mripl.dview.execute(map_proc_string)  # execute the proc across all ripls
+    if limit:
+        mripl.dview.execute(limit_mk_map_proc_string(mripl_name,mrid,proc_name,limit) )
+    else:    
+        mripl.dview.execute(mk_map_proc_string(mripl_name,mrid,proc_name,limit) )
     
     outputs_by_ripl = lst_flatten( mripl.dview.apply( interactive(lambda: results[-1])) ) # pull the result of map_proc
     
