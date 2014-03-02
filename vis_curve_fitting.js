@@ -203,7 +203,7 @@ function InitializeDemo() {
         ripl.assume('c3','(make_coefficient 3 0.01)');
         ripl.assume('c4','(make_coefficient 4 0.001)');
         
-        ripl.assume('clean_func_poly','(lambda (x) (+ (* c1 (power x 1.0)) (* c2 (power x 2.0)) (* c3 (power x 3.0)) (* c4 (power x 4.0))))');
+        ripl.assume('clean_func_poly','(lambda (x) (+ (* c1 (pow x 1.0)) (* c2 (pow x 2.0)) (* c3 (pow x 3.0)) (* c4 (pow x 4.0))))');
         
         /* Fourier */
         ripl.assume('pi','3.14159');
