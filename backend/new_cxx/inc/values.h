@@ -22,6 +22,8 @@ struct VentureNumber : VentureValue
 struct VentureAtom : VentureValue
 {
   VentureAtom(int n): n(n) {}
+  bool hasDouble() const { return true; }
+  double getDouble() const { return n; }
   bool hasInt() const { return false; }
   long getInt() const { return n; }
   int getAtom() const { return n; }
