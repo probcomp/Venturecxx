@@ -71,17 +71,18 @@ bool VentureValue::operator<(const VentureValuePtr & rhs) const
   else if (hasSymbol() && rhs->hasSymbol()) { return getSymbol() < rhs->getSymbol(); }
 
   else if (hasArray() && rhs->hasArray())
-    {
-      vector<VentureValuePtr> a = getArray();
-      vector<VentureValuePtr> b = rhs->getArray();
-      if (a.size() < b.size()) { return true; }
-      if (b.size() < a.size()) { return false; }
-      for (size_t i = 0; i < a.size(); ++i)
-	{
-	  if (a[i] < b[i]) { return true; }
-	}
-      return false;
-    }
+  {
+    vector<VentureValuePtr> a = getArray();
+    vector<VentureValuePtr> b = rhs->getArray();
+    if (a.size() < b.size()) { return true; }
+    if (b.size() < a.size()) { return false; }
+    
+    for (size_t i = 0; i < a.size(); ++i)
+	  {
+	    if (a[i] < b[i]) { return true; }
+	  }
+    return false;
+  }
   else if (hasArray() && !rhs->hasArray()) { return true; }
   else if (!hasArray() && rhs->hasArray()) { return false; }
 
