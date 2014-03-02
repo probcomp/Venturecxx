@@ -633,9 +633,10 @@ def mr_map(line, cell):
     # get inputs
     proc_name = str(line).split()[1]
     mripl_name =  str(line).split()[0]
+    limit = None
     if len(str(line).split()) > 3:
         try: limit = int(str(line).split()[3])
-        except: limit = None
+        except: pass
     mripl = eval(mripl_name,globals(),ip.user_ns) ## FIXME ensure this works
     mrid = mripl.mrid
 
@@ -652,8 +653,9 @@ def mr_map(line, cell):
 
     if limit:
         mripl.dview.execute(limit_mk_map_proc_string(mripl_name,mrid,proc_name,limit) )
+        
     else:    
-        mripl.dview.execute(mk_map_proc_string(mripl_name,mrid,proc_name,limit) )
+        mripl.dview.execute(mk_map_proc_string(mripl_name,mrid,proc_name) )
     
     outputs_by_ripl = lst_flatten( mripl.dview.apply( interactive(lambda: results[-1])) ) # pull the result of map_proc
     
