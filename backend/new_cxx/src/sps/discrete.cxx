@@ -42,6 +42,26 @@ double BernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> ar
   else { return log(1 - p); }
 }
 
+VentureValuePtr UniformDiscreteOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+{
+  assert(args->operandValues.size() == 2);
+  long lower = args->operandValues[0]->getInt();
+  long upper = args->operandValues[1]->getInt();
+
+  int n = gsl_rng_uniform_int(rng, upper - lower);
+  return VentureValuePtr(new VentureAtom(lower + n));
+}
+
+double UniformDiscreteOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+{
+  assert(args->operandValues.size() == 2);
+  long lower = args->operandValues[0]->getInt();
+  long upper = args->operandValues[1]->getInt();
+  long sample = value->getInt();
+  
+  return log(gsl_ran_flat_pdf(sample,lower,upper));
+}
+
 VentureValuePtr BinomialOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   int n = args->operandValues[0]->getInt();

@@ -16,6 +16,12 @@ struct BernoulliOutputPSP : RandomPSP
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 };
 
+struct UniformDiscreteOutputPSP : RandomPSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args,gsl_rng * rng) const;
+  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+};
+
 struct CategoricalOutputPSP : RandomPSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args,gsl_rng * rng) const;
