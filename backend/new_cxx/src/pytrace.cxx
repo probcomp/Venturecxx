@@ -111,13 +111,27 @@ uint32_t PyTrace::numUnconstrainedChoices() { return trace->numUnconstrainedChoi
 struct Inferer
 {
   shared_ptr<ConcreteTrace> trace;
+  shared_ptr<GKernel> gKernel;
   ScopeID scope;
   BlockID block;
+  shared_ptr<ScaffoldIndexer> scaffoldIndexer;
   
   Inferer(shared_ptr<ConcreteTrace> trace, boost::python::dict params) : trace(trace)
   {
-    // TODO unused
     string kernel = boost::python::extract<string>(params["kernel"]);
+    
+    if (kernel == "mh")
+      { gKernel = shared_ptr<GKernel>(new MHGKernel); }
+    else if (kernel == "func_mh")
+      { gKernel = shared_ptr<GKernel>(new FuncMHGKernel); }
+    else if (kernel == "pgibbs")
+      { gKernel = shared_ptr<GKernel>(new PGibbsGKernel(3)); }
+    else
+    {
+      cout << "\n***Kernel " << kernel << " not supported. Using MH instead.***" << endl;
+      gKernel = shared_ptr<GKernel>(new MHGKernel);
+    }
+    
     
     /* TODO HACK accept strings or integers as scopes/blocks */
 
@@ -137,6 +151,8 @@ struct Inferer
     else if (getBlockInt.check()) { block = VentureValuePtr(new VentureNumber(getBlockInt())); }
     else if (getBlockBool.check()) { block = VentureValuePtr(new VentureBool(getBlockBool())); }
     assert(block);
+    
+    scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
   }
   
   void infer()
@@ -144,9 +160,7 @@ struct Inferer
     if (trace->numUnconstrainedChoices() == 0) { return; }
     
     // TODO why the new ScaffoldIndexer and GKernel, at each infer call?
-    mixMH(trace.get(),
-	  shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block)),
-	  shared_ptr<GKernel>(new MHGKernel));
+    mixMH(trace.get(), scaffoldIndexer, gKernel);
 
     for (set<Node*>::iterator iter = trace->arbitraryErgodicKernels.begin();
       iter != trace->arbitraryErgodicKernels.end();
