@@ -146,7 +146,7 @@ struct Inferer
     // TODO why the new ScaffoldIndexer and GKernel, at each infer call?
     mixMH(trace.get(),
 	  shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block)),
-	  shared_ptr<GKernel>(new MHGKernel));
+	  shared_ptr<GKernel>(new PGibbsGKernel(3)));
 
     for (set<Node*>::iterator iter = trace->arbitraryErgodicKernels.begin();
       iter != trace->arbitraryErgodicKernels.end();
