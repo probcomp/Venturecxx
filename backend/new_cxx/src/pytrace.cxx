@@ -159,7 +159,6 @@ struct Inferer
   {
     if (trace->numUnconstrainedChoices() == 0) { return; }
     
-    // TODO why the new ScaffoldIndexer and GKernel, at each infer call?
     mixMH(trace.get(), scaffoldIndexer, gKernel);
 
     for (set<Node*>::iterator iter = trace->arbitraryErgodicKernels.begin();

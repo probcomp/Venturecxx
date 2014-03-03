@@ -19,6 +19,7 @@ using std::pair;
 using std::make_pair;
 using std::cout;
 using std::endl;
+using std::flush;
 
 struct VentureValue;
 struct Node;

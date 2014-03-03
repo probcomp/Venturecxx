@@ -1,9 +1,13 @@
 #include "value.h"
 #include <iostream>
-
+#include "values.h"
+#include "sp.h"
+#include "sprecord.h"
+#include "env.h"
 using std::cout;
 using std::endl;
 
+int getValueTypeRank(const VentureValue * v);
 void cannotConvertType(const VentureValue * obj, string target)
 {
   cout << "Cannot convert " << obj->toString() << " to [" + target + "]" << endl;
@@ -50,45 +54,51 @@ boost::python::dict VentureValue::toPython(Trace * trace) const
 }
 
 
-bool VentureValue::equals(const VentureValuePtr & other) const { return false; assert(false); throw "no return"; }
 size_t VentureValue::hash() const { assert(false); assert(false); throw "no return"; }
 
+
 struct VentureSymbol;
+
+bool VentureValue::equals(const VentureValuePtr & other) const 
+{
+  int t1 = getValueTypeRank(this);
+  int t2 = getValueTypeRank(other.get());
+  if (t1 != t2) { return false; }
+  else { return equalsSameType(other); }
+}
+
+bool VentureValue::equalsSameType(const VentureValuePtr & rhs) const { assert(false); }
+
 bool VentureValue::operator<(const VentureValuePtr & rhs) const 
 {
-  // TODO hack
-  // double < int/atom < symbol
-  if (hasDouble() && rhs->hasDouble()) { return getDouble() < rhs->getDouble(); }
-  else if (hasDouble() && rhs->hasInt()) { return true; }
-  else if (hasDouble() && rhs->hasSymbol()) { return true; }
+  int t1 = getValueTypeRank(this);
+  int t2 = getValueTypeRank(rhs.get());
+  if (t1 < t2) { return true; }
+  else if (t2 < t1) { return false; }
+  else { return ltSameType(rhs); }
+}
 
-  else if (hasInt() && rhs->hasDouble()) { return false; }
-  else if (hasInt() && rhs->hasInt()) { return getInt() < rhs->getInt(); }
-  else if (hasInt() && rhs->hasSymbol()) { return true; }
+bool VentureValue::ltSameType(const VentureValuePtr & rhs) const { assert(false); }
 
-  else if (hasSymbol() && rhs->hasDouble()) { return false; }
-  else if (hasSymbol() && rhs->hasInt()) { return false; }
-  else if (hasSymbol() && rhs->hasSymbol()) { return getSymbol() < rhs->getSymbol(); }
 
-  else if (hasArray() && rhs->hasArray())
-  {
-    vector<VentureValuePtr> a = getArray();
-    vector<VentureValuePtr> b = rhs->getArray();
-    if (a.size() < b.size()) { return true; }
-    if (b.size() < a.size()) { return false; }
-    
-    for (size_t i = 0; i < a.size(); ++i)
-	  {
-	    if (a[i] < b[i]) { return true; }
-	  }
-    return false;
-  }
-  else if (hasArray() && !rhs->hasArray()) { return true; }
-  else if (!hasArray() && rhs->hasArray()) { return false; }
-
-  else if (isBool() && rhs->isBool()) { return !getBool() and rhs->getBool(); }
-  else if (isBool() && !rhs->isBool()) { return true; }
-  else if (!isBool() && rhs->isBool()) { return false; }
-
-  else { assert(false); return false; }
+int getValueTypeRank(const VentureValue * v)
+{
+  // Note: differs slightly from 
+  if (dynamic_cast<const VentureNumber *>(v)) { return 0; }
+  else if (dynamic_cast<const VentureAtom *>(v)) { return 1; }
+  else if (dynamic_cast<const VentureBool *>(v)) { return 2; }
+  else if (dynamic_cast<const VentureSymbol *>(v)) { return 3; }
+  else if (dynamic_cast<const VentureArray *>(v)) { return 4; }
+  else if (dynamic_cast<const VentureNil *>(v)) { return 5; }
+  else if (dynamic_cast<const VenturePair *>(v)) { return 6; }
+  else if (dynamic_cast<const VentureSimplex *>(v)) { return 7; }
+  else if (dynamic_cast<const VentureDictionary *>(v)) { return 8; }
+  else if (dynamic_cast<const VentureMatrix *>(v)) { return 9; }
+  else if (dynamic_cast<const VentureSPRef *>(v)) { return 10; }
+  else if (dynamic_cast<const VentureEnvironment *>(v)) { return 11; }
+  else if (dynamic_cast<const VentureSPRecord *>(v)) { return 12; }
+  else if (dynamic_cast<const VentureRequest *>(v)) { return 13; }
+  else if (dynamic_cast<const VentureNode *>(v)) { return 14; }
+  else if (dynamic_cast<const VentureID *>(v)) { return 15; }
+  else { assert(false); return -1; }
 }
