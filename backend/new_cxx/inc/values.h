@@ -69,7 +69,7 @@ struct VentureSymbol : VentureValue
 struct VentureArray : VentureValue
 {
   VentureArray(const vector<VentureValuePtr> & xs): xs(xs) {}
-  const vector<VentureValuePtr> & getArray() const { return xs; }
+  vector<VentureValuePtr> getArray() const { return xs; }
   VentureValuePtr lookup(VentureValuePtr index) const { return xs[index->getInt()]; }
   int size() const { return xs.size(); }
   boost::python::dict toPython(Trace * trace) const;
@@ -90,6 +90,8 @@ struct VentureNil : VentureValue
   bool equalsSameType(const VentureValuePtr & other) const;
   bool ltSameType(const VentureValuePtr & other) const;
 
+  bool hasArray() const { return true; }
+  vector<VentureValuePtr> getArray() const { return vector<VentureValuePtr>(); }
 
   size_t hash() const;
   string toString() const;
@@ -104,6 +106,9 @@ struct VenturePair : VentureValue
   VentureValuePtr lookup(VentureValuePtr index) const;
   bool equalsSameType(const VentureValuePtr & other) const;
   bool ltSameType(const VentureValuePtr & other) const;
+
+  bool hasArray() const { return true; }
+  vector<VentureValuePtr> getArray() const;
 
   size_t hash() const;
   string toString() const;

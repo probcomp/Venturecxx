@@ -328,3 +328,18 @@ MatrixXd VentureSimplex::getMatrix() const
   for (size_t i = 0; i < len; ++i) { v(i) = ps[i]; }
   return v;
 }
+
+/////////////
+vector<VentureValuePtr> VenturePair::getArray() const
+{
+  vector<VentureValuePtr> array;
+  array.push_back(getFirst());
+  VentureValuePtr v(getRest());
+  
+  while (!v->isNil())
+    {
+      array.push_back(v->getFirst());
+      v = v->getRest();
+    }
+  return array;
+}

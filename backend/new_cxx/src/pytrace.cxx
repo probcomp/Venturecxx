@@ -137,18 +137,22 @@ struct Inferer
 
     boost::python::extract<string> getScopeSymbol(params["scope"]);
     boost::python::extract<int> getScopeInt(params["scope"]);
+    boost::python::extract<double> getScopeDouble(params["scope"]);
     boost::python::extract<bool> getScopeBool(params["scope"]);
     if (getScopeSymbol.check()) { scope = VentureValuePtr(new VentureSymbol(getScopeSymbol())); }
     else if (getScopeInt.check()) { scope = VentureValuePtr(new VentureNumber(getScopeInt())); }
+    else if (getScopeDouble.check()) { scope = VentureValuePtr(new VentureNumber(getScopeDouble())); }
     else if (getScopeBool.check()) { scope = VentureValuePtr(new VentureBool(getScopeBool())); }
     assert(scope);
     //  cout << "scope: " << scope->toPython() << endl;
 
     boost::python::extract<string> getBlockSymbol(params["block"]);
     boost::python::extract<int> getBlockInt(params["block"]);
+    boost::python::extract<double> getBlockDouble(params["block"]);
     boost::python::extract<bool> getBlockBool(params["block"]);
     if (getBlockSymbol.check()) { block = VentureValuePtr(new VentureSymbol(getBlockSymbol())); }
     else if (getBlockInt.check()) { block = VentureValuePtr(new VentureNumber(getBlockInt())); }
+    else if (getBlockDouble.check()) { block = VentureValuePtr(new VentureNumber(getBlockDouble())); }
     else if (getBlockBool.check()) { block = VentureValuePtr(new VentureBool(getBlockBool())); }
     assert(block);
     

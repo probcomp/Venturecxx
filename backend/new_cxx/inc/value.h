@@ -38,7 +38,7 @@ struct VentureValue
   virtual const string & getSymbol() const;
 
   virtual bool hasArray() const { return false; }
-  virtual const vector<VentureValuePtr>& getArray() const;
+  virtual vector<VentureValuePtr> getArray() const;
   virtual bool isNil() const { return false; }
   
   virtual const VentureValuePtr& getFirst() const;

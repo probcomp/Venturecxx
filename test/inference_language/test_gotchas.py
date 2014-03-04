@@ -2,6 +2,7 @@ from nose.tools import eq_, assert_raises # Pylint misses metaprogrammed names p
 from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, collectStateSequence
+from testconfig import config
 
 def testInferWithNoEntropy():
   "Makes sure that infer doesn't crash when there are no random choices in the trace"
@@ -53,6 +54,8 @@ def testHiddenDeterminism2():
   return reportKnownDiscrete(ans, predictions)
 
 def testRejectNormal1():
+  if config["get_ripl"] != "lite": raise SkipTest("Rejection not implemented in Puma")
+
   """Rejection sampling shouldn't work if both mean and variance of a
   normal are subject to change; shouldn't work if the mean is known
   but the variance and the output are unknown; but still should work
@@ -65,7 +68,8 @@ def testRejectNormal1():
   for incl_mu in [False, True]:
     for incl_sigma in [False, True]:
       for incl_out in [False, True]:
-        yield checkRejectNormal, incl_mu, incl_sigma, incl_out
+        if not incl_mu and not incl_sigma and not incl_out: pass
+        else: yield checkRejectNormal, incl_mu, incl_sigma, incl_out
 
 def checkRejectNormal(incl_mu, incl_sigma, incl_out):
   # Sadly, there doesn't seem to be a pretty way to arrange the scopes

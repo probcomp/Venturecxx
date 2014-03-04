@@ -217,8 +217,9 @@ pair<double,Node*> evalFamily(Trace * trace,
   else if (isQuotation(exp)) { return make_pair(0,trace->createConstantNode(textOfQuotation(exp))); }
   else
   {
-    shared_ptr<VentureArray> array = dynamic_pointer_cast<VentureArray>(exp);
-    pair<double,Node*> p = evalFamily(trace,array->xs[0],env,scaffold,db,gradients);
+    assert(exp->hasArray());
+    vector<VentureValuePtr> array = exp->getArray();
+    pair<double,Node*> p = evalFamily(trace,array[0],env,scaffold,db,gradients);
     double weight = p.first;
     Node * operatorNode = p.second;
 
@@ -228,9 +229,9 @@ pair<double,Node*> evalFamily(Trace * trace,
     /* END DEBUG */
 
     vector<Node*> operandNodes;
-    for (size_t i = 1; i < array->xs.size(); ++i)
+    for (size_t i = 1; i < array.size(); ++i)
     {
-      pair<double,Node*>p = evalFamily(trace,array->xs[i],env,scaffold,db,gradients);
+      pair<double,Node*>p = evalFamily(trace,array[i],env,scaffold,db,gradients);
       weight += p.first;
       operandNodes.push_back(p.second);
     }

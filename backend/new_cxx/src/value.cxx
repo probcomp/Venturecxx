@@ -24,7 +24,7 @@ bool VentureValue::isBool() const { return false; }
 bool VentureValue::getBool() const { cannotConvertType(this,"bool"); assert(false); throw "no return"; }
 bool VentureValue::hasSymbol() const { return false; }
 const string& VentureValue::getSymbol() const { cannotConvertType(this,"symbol"); assert(false); throw "no return"; }
-const vector<VentureValuePtr>& VentureValue::getArray() const { cannotConvertType(this,"array"); assert(false); throw "no return"; }
+vector<VentureValuePtr> VentureValue::getArray() const { cannotConvertType(this,"array"); assert(false); throw "no return"; }
 
 const VentureValuePtr& VentureValue::getFirst() const { cannotConvertType(this,"pair"); assert(false); throw "no return"; }
 const VentureValuePtr& VentureValue::getRest() const { cannotConvertType(this,"pair"); assert(false); throw "no return"; }

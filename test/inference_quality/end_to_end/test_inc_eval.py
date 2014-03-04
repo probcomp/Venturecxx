@@ -95,6 +95,13 @@ def loadAll(ripl):
   loadReferences(ripl)
   loadEnvironments(ripl)
   loadIncrementalEvaluator(ripl)
+  ripl.assume("map_list","""
+(lambda (f xs)
+  (if (is_pair xs)
+      (pair (f (first xs))
+            (map_list f (rest xs)))
+      xs))
+""")
   return ripl
 
 def computeF(x): return x * 5 + 5
