@@ -1,4 +1,4 @@
-from value import VentureValue, registerVentureType
+from value import VentureValue, registerVentureType, standard_venture_type
 
 # Environments store Python strings for the symbols, not Venture
 # symbol objects.  This is a choice, but whichever way it is made it
@@ -35,3 +35,6 @@ class VentureEnvironment(VentureValue):
   # TODO Define contains to check whether the symbol is there (without throwing exceptions)
 
 registerVentureType(VentureEnvironment, "environment")
+# Exec is appropriate for metaprogramming
+from value import VentureType # Used by the exec pylint: disable=unused-import
+exec(standard_venture_type("Environment")) # pylint: disable=exec-used

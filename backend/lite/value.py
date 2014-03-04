@@ -304,17 +304,22 @@ class VentureType(object):
 class NumberType(VentureType):
   def asVentureValue(self, thing): return VentureNumber(thing)
   def asPython(self, vthing): return vthing.getNumber()
+  def __contains__(self, vthing): return isinstance(vthing, VentureNumber)
   def name(self): return "<number>"
 
-for typename in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "Matrix", "SP", "Environment"]:
-  # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
-  # pylint: disable=exec-used
-  exec("""
+def standard_venture_type(typename):
+  return """
 class %sType(VentureType):
   def asVentureValue(self, thing): return Venture%s(thing)
   def asPython(self, vthing): return vthing.get%s()
+  def __contains__(self, vthing): return isinstance(vthing, Venture%s)
   def name(self): return "<%s>"
-""" % (typename, typename, typename, typename.lower()))
+""" % (typename, typename, typename, typename, typename.lower())
+
+for typename in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "Matrix", "SP"]:
+  # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
+  # pylint: disable=exec-used
+  exec(standard_venture_type(typename))
 
 class NilType(VentureType):
   def asVentureValue(self, _thing):

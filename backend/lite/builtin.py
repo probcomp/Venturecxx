@@ -63,7 +63,8 @@ def naryNum(f, descr=None):
   return deterministic_typed(f, [v.NumberType()], v.NumberType(), variadic=True, descr=descr)
 
 def type_test(t):
-  return deterministic(lambda thing: v.VentureBool(isinstance(thing, t)))
+  return deterministic(lambda thing: v.VentureBool(thing in t),
+                       "%s :: <SP <object> -> <bool>>\nReturns true iff its argument is a " + t.name())
 
 def builtInSPsList():
   return [ [ "plus",  naryNum(lambda *args: sum(args),
@@ -102,12 +103,12 @@ def builtInSPsList():
            [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType(),
                                         "%s returns the logical negation of its argument") ],
 
-           [ "is_symbol", type_test(v.VentureSymbol) ],
-           [ "is_atom", type_test(v.VentureAtom) ],
+           [ "is_symbol", type_test(v.SymbolType()) ],
+           [ "is_atom", type_test(v.AtomType()) ],
 
            [ "list", deterministic(v.pythonListToVentureList) ],
            [ "pair", deterministic(v.VenturePair) ],
-           [ "is_pair", type_test(v.VenturePair) ],
+           [ "is_pair", type_test(v.PairType()) ],
            [ "first", deterministic_typed(lambda p: p[0], [v.PairType()], v.AnyType()) ],
            [ "rest", deterministic_typed(lambda p: p[1], [v.PairType()], v.AnyType()) ],
            [ "second", deterministic_typed(lambda p: p[1].first, [v.PairType()], v.AnyType()) ],
@@ -115,13 +116,13 @@ def builtInSPsList():
            [ "map_list",VentureSP(dstructures.MapListRequestPSP(),dstructures.MapListOutputPSP()) ],
 
            [ "array", deterministic(lambda *args: v.VentureArray(np.array(args))) ],
-           [ "is_array", type_test(v.VentureArray) ],
+           [ "is_array", type_test(v.ArrayType()) ],
            [ "dict", no_request(dstructures.DictOutputPSP()) ],
-           [ "is_dict", type_test(v.VentureDict) ],
+           [ "is_dict", type_test(v.DictType()) ],
            [ "matrix", deterministic(lambda rows: v.VentureMatrix(np.mat([[val.getNumber() for val in row.asPythonList()] for row in rows.asPythonList()]))) ], # TODO Put in the description that the input is a list of the rows of the matrix
-           [ "is_matrix", type_test(v.VentureMatrix) ],
+           [ "is_matrix", type_test(v.MatrixType()) ],
            [ "simplex", deterministic_typed(lambda *nums: np.array(nums), [v.NumberType()], v.SimplexType(), variadic=True) ],
-           [ "is_simplex", type_test(v.VentureSimplex) ],
+           [ "is_simplex", type_test(v.SimplexType()) ],
 
            [ "lookup", deterministic(lambda xs, x: xs.lookup(x)) ],
            [ "contains", deterministic(lambda xs, x: v.VentureBool(xs.contains(x))) ],
@@ -133,7 +134,7 @@ def builtInSPsList():
 
            [ "get_current_environment",no_request(eval_sps.GetCurrentEnvOutputPSP()) ],
            [ "get_empty_environment",no_request(eval_sps.GetEmptyEnvOutputPSP()) ],
-           [ "is_environment", type_test(env.VentureEnvironment) ],
+           [ "is_environment", type_test(env.EnvironmentType()) ],
            [ "extend_environment",no_request(eval_sps.ExtendEnvOutputPSP()) ],
            [ "eval",VentureSP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()) ],
 
