@@ -8,6 +8,7 @@ struct VentureEnvironment;
 struct Node
 {
   vector<Node*> definiteParents; // TODO should be an iterator
+  set<Node*> children; // particle stores NEW children
   virtual ~Node() {} // TODO destroy family
 };
 

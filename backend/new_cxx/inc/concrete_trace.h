@@ -139,7 +139,7 @@ struct ConcreteTrace : Trace
   map<Node*, vector<RootOfFamily> > esrRoots;
   map<RootOfFamily, int> numRequests;
   map<Node*, shared_ptr<VentureSPRecord> > madeSPRecords;
-  map<Node*,set<Node*> > children;
+
   map<Node*,VentureValuePtr> values;
   map<Node*,VentureValuePtr> observedValues;
 

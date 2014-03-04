@@ -328,8 +328,8 @@ void Particle::commit()
     pair<Node*, PSet<Node*> >& newChildrenItem = newChildrenItems[newChildrenIndex];
     Node * node = newChildrenItem.first;
     vector<Node*> newChildrenItems = newChildrenItem.second.keys();
-    BOOST_FOREACH(Node * child, newChildrenItems) { baseTrace->children[node].insert(child); }
-    BOOST_FOREACH(Node * child, newChildrenItems) { assert(baseTrace->children[node].count(child)); }
+    BOOST_FOREACH(Node * child, newChildrenItems) { node->children.insert(child); }
+    BOOST_FOREACH(Node * child, newChildrenItems) { assert(node->children.count(child)); }
   }
 
   vector<OutputNode*> discardedAAAMakerNodeItems = discardedAAAMakerNodes.keys();
