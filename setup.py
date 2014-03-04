@@ -40,13 +40,13 @@ src_files = [
 
     "src/concrete_trace.cxx",
     "src/consistency.cxx",
-        
+
     "src/db.cxx",
-    "src/detach.cxx",            
+    "src/detach.cxx",
 
     "src/env.cxx",
-    "src/expressions.cxx",    
-    
+    "src/expressions.cxx",
+
     "src/indexer.cxx",
     "src/lkernel.cxx",
     "src/mixmh.cxx",
@@ -79,10 +79,10 @@ src_files = [
     "src/sps/dstructure.cxx",
     "src/sps/eval.cxx",
     "src/sps/hmm.cxx",
-    "src/sps/matrix.cxx",    
+    "src/sps/matrix.cxx",
     "src/sps/msp.cxx",
     "src/sps/numerical_helpers.cxx",
-    "src/sps/scope.cxx",    
+    "src/sps/scope.cxx",
 ]
 src_files = ["backend/new_cxx/" + f for f in src_files]
 
@@ -118,12 +118,12 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     # those lines are copied from distutils.ccompiler.CCompiler directly
     macros, objects, extra_postargs, pp_opts, build = self._setup_compile(output_dir, macros, include_dirs, sources, depends, extra_postargs)
     cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
-    
+
     # FIXME: this is probably not the best way to do this
     # I could find no other way to override the extra flags
     # from the python makefile's CFLAGS and OPTS variables
     self.compiler_so = ["ccache", "gcc"]
-    
+
     # parallel code
     N=2 # number of parallel compilations
     import multiprocessing.pool
