@@ -125,7 +125,7 @@ class TypedPSP(PSP):
     return TypedVariationalLKernel(self.psp.getVariationalLKernel(self.f_type.unwrap_args(args)), self.f_type)
 
   def hasSimulationKernel(self): return self.psp.hasSimulationKernel()
-  def hasDeltaKernel(self): return self.hasDeltaKernel()
+  def hasDeltaKernel(self): return self.psp.hasDeltaKernel()
   # TODO Wrap the simulation and delta kernels properly (once those are tested)
 
   def description(self,name):
