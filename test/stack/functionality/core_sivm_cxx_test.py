@@ -14,9 +14,9 @@
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
-from venture.sivm import CoreSivm
 import venture.sivm.core_sivm as module
 from venture.exception import VentureException
+from venture.test.config import get_core_sivm
 from nose import SkipTest
 
 #Note -- these tests only check for minimum functionality
@@ -26,8 +26,7 @@ class TestCoreSivm(unittest.TestCase):
     _multiprocess_can_split_ = True
 
     def setUp(self):
-        from venture.cxx import engine
-        self.sivm = CoreSivm(engine.Engine())
+        self.sivm = get_core_sivm()
         self.sivm.execute_instruction({"instruction":"clear"})
 
     def tearDown(self):
