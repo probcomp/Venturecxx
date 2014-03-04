@@ -77,7 +77,6 @@ def builtInSPsList():
            [ "lte",   deterministic(lambda x,y: v.VentureBool(x.compare(y) <= 0)) ],
            # Only makes sense with VentureAtom/VentureNumber distinction
            [ "real",  deterministic_typed(lambda x:x, [v.AtomType()], v.NumberType()) ],
-           # Atoms appear to be represented as Python integers
            [ "atom_eq", deterministic_typed(lambda x,y: x == y, [v.AtomType(), v.AtomType()], v.BoolType()) ],
 
            [ "sin", unaryNum(math.sin) ],
