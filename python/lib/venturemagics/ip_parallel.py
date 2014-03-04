@@ -687,7 +687,7 @@ def mr_map_nomagic(mripl,proc,limit=None):
         s='results_%s =[%s(ripl) for count,ripl in enumerate(mripls[%i]) if count<%i]' % (p,p,mrid,limit)
         mripl.dview.execute(s) 
     else:
-        mripl.dview.execute( 'results_%s =  [ %s(ripl) for ripl in mripls[%i] ] ' % (p,p,mrid)
+        mripl.dview.execute( 'results_%s =  [ %s(ripl) for ripl in mripls[%i] ] ' % (p,p,mrid) )
 
                              
     ## FIXME: should this be the same as the magic?
