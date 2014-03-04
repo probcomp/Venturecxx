@@ -116,25 +116,9 @@ struct Inferer
   BlockID block;
   shared_ptr<ScaffoldIndexer> scaffoldIndexer;
   
-  Inferer(shared_ptr<ConcreteTrace> trace, boost::python::dict params) : trace(trace)
+  void getBlockAndScope(boost::python::dict& params)
   {
-    string kernel = boost::python::extract<string>(params["kernel"]);
-    
-    if (kernel == "mh")
-      { gKernel = shared_ptr<GKernel>(new MHGKernel); }
-    else if (kernel == "func_mh")
-      { gKernel = shared_ptr<GKernel>(new FuncMHGKernel); }
-    else if (kernel == "pgibbs")
-      { gKernel = shared_ptr<GKernel>(new PGibbsGKernel(3)); }
-    else
-    {
-      cout << "\n***Kernel " << kernel << " not supported. Using MH instead.***" << endl;
-      gKernel = shared_ptr<GKernel>(new MHGKernel);
-    }
-    
-    
     /* TODO HACK accept strings or integers as scopes/blocks */
-
     boost::python::extract<string> getScopeSymbol(params["scope"]);
     boost::python::extract<int> getScopeInt(params["scope"]);
     boost::python::extract<double> getScopeDouble(params["scope"]);
@@ -155,6 +139,34 @@ struct Inferer
     else if (getBlockDouble.check()) { block = VentureValuePtr(new VentureNumber(getBlockDouble())); }
     else if (getBlockBool.check()) { block = VentureValuePtr(new VentureBool(getBlockBool())); }
     assert(block);
+  }
+  
+  Inferer(shared_ptr<ConcreteTrace> trace, boost::python::dict params) : trace(trace)
+  {
+    string kernel = boost::python::extract<string>(params["kernel"]);
+    
+    if (kernel == "mh")
+    {
+      gKernel = shared_ptr<GKernel>(new MHGKernel);
+      getBlockAndScope(params);
+    }
+    else if (kernel == "func_mh")
+    {
+      gKernel = shared_ptr<GKernel>(new FuncMHGKernel);
+      getBlockAndScope(params);
+    }
+    else if (kernel == "pgibbs")
+    {
+      gKernel = shared_ptr<GKernel>(new PGibbsGKernel(3));
+      getBlockAndScope(params);
+    }
+    else
+    {
+      cout << "\n***Kernel '" << kernel << "' not supported. Using MH instead.***" << endl;
+      gKernel = shared_ptr<GKernel>(new MHGKernel);
+      block = VentureValuePtr(new VentureSymbol("default"));
+      scope = VentureValuePtr(new VentureSymbol("one"));
+    }
     
     scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
   }

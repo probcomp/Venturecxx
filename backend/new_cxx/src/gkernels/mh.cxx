@@ -10,7 +10,9 @@ pair<Trace*,double> MHGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold
 {
   this->trace = trace;
   this->scaffold = scaffold;
-
+  
+  assert(scaffold->border.size() == 1);
+  
   pair<double,shared_ptr<DB> > p = detachAndExtract(trace,scaffold->border[0],scaffold);
   double rhoWeight = p.first;
   rhoDB = p.second;

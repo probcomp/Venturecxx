@@ -65,6 +65,9 @@ def testRejectNormal1():
   TODO Actually, the logDensityBound of normal is well-defined as long
   as the variance is bounded away from zero, but that seems too hard
   to chase down."""
+  
+  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by CXX yet")
+
   for incl_mu in [False, True]:
     for incl_sigma in [False, True]:
       for incl_out in [False, True]:
