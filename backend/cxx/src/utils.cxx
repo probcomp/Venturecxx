@@ -102,12 +102,16 @@ void destroyExpression(VentureValue * exp)
 
 
 
-VentureValuePtr sampleCategorical(simplex ps, gsl_rng * rng)
+uint32_t sampleCategorical(vector<double> xs, gsl_rng * rng)
 {
-  normalizeVector(ps);
-  vector<unsigned int> ns(ps.size());
-  gsl_ran_multinomial(rng,ps.size(),1,&ps[0],&ns[0]);
-  for (size_t i = 0; i < ns.size(); ++i) { if (ns[i] == 1) { return os[i]; } }
+  normalizeVector(xs);
+  double u = gsl_ran_flat(rng,0.0,1.0);
+  double sum = 0.0;
+  for (size_t i = 0; i < xs.size(); ++i)
+  {
+    sum += xs[i];
+    if (u <= sum) { return i; }
+  }
   assert(false);
   return -1;
 }
