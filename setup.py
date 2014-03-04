@@ -34,7 +34,7 @@ ON_LINUX = 'linux' in sys.platform
 if ON_LINUX:
     os.environ['CC'] = 'ccache gcc'
 
-src_files = [
+puma_src_files = [
     "src/args.cxx",
     "src/builtin.cxx",
 
@@ -84,10 +84,10 @@ src_files = [
     "src/sps/numerical_helpers.cxx",
     "src/sps/scope.cxx",
 ]
-src_files = ["backend/new_cxx/" + f for f in src_files]
+puma_src_files = ["backend/new_cxx/" + f for f in puma_src_files]
 
-inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/', 'inc/Eigen']
-inc_dirs = ["backend/new_cxx/" + d for d in inc_dirs]
+puma_inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/', 'inc/Eigen']
+puma_inc_dirs = ["backend/new_cxx/" + d for d in puma_inc_dirs]
 
 ext_modules = []
 packages=["venture","venture.sivm","venture.ripl",
@@ -102,8 +102,8 @@ cxx = Extension("venture.cxx.libtrace",
     libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],
     extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC"],
     #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
-    include_dirs = inc_dirs,
-    sources = src_files)
+    include_dirs = puma_inc_dirs,
+    sources = puma_src_files)
 
 if "SKIP_CXX_BACKEND" in os.environ:
     print "Skipping CXX backend because SKIP_CXX_BACKEND is %s" % os.environ["SKIP_CXX_BACKEND"]
