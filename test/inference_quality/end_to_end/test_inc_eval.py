@@ -148,7 +148,6 @@ def testIncrementalEvaluator1c():
 @attr('slow')
 def testIncrementalEvaluator2():
   "Difficult test. We make sure that it stumbles on the solution in a reasonable amount of time."
-#  raise SkipTest("Errors out due to a Venture-level type error (something wanted a list as an argument and got a float).  Re-enable when there are facilities for debugging such things.  Issue https://app.asana.com/0/9277419963067/9280122191537")
   ripl = get_ripl()
 
   loadAll(ripl)
