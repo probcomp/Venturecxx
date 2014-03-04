@@ -12,7 +12,8 @@ struct VentureNumber : VentureValue
   bool hasInt() const { return false; }
   long getInt() const { return static_cast<int>(x); }
   bool getBool() const { return x; }
-  bool equals(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  bool ltSameType(const VentureValuePtr & other) const;
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
@@ -28,7 +29,8 @@ struct VentureAtom : VentureValue
   long getInt() const { return n; }
   int getAtom() const { return n; }
   bool getBool() const { return n; }
-  bool equals(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  bool ltSameType(const VentureValuePtr & other) const;
 
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
@@ -41,7 +43,8 @@ struct VentureBool : VentureValue
   VentureBool(bool b): b(b) {}
   bool isBool() const { return true; }
   bool getBool() const { return b; }
-  bool equals(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  bool ltSameType(const VentureValuePtr & other) const;
 
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
@@ -54,7 +57,9 @@ struct VentureSymbol : VentureValue
   VentureSymbol(string s): s(s) {}
   bool hasSymbol() const { return true; }
   const string& getSymbol() const { return s; }
-  bool equals(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  bool ltSameType(const VentureValuePtr & other) const;
+
   boost::python::dict toPython(Trace * trace) const;
   size_t hash() const;
   string toString() const;
@@ -68,7 +73,9 @@ struct VentureArray : VentureValue
   VentureValuePtr lookup(VentureValuePtr index) const { return xs[index->getInt()]; }
   int size() const { return xs.size(); }
   boost::python::dict toPython(Trace * trace) const;
-  bool equals(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  bool ltSameType(const VentureValuePtr & other) const;
+
   bool hasArray() const { return true; }
   size_t hash() const;
   string toString() const;
@@ -80,7 +87,9 @@ struct VentureNil : VentureValue
   bool isNil() const { return true; }
   VentureValuePtr lookup(VentureValuePtr index) const { cout << "lookup in nil" << endl; assert(false); }
   int size() const { return 0; }
-  bool equals(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  bool ltSameType(const VentureValuePtr & other) const;
+
 
   size_t hash() const;
   string toString() const;
@@ -93,7 +102,8 @@ struct VenturePair : VentureValue
   const VentureValuePtr& getFirst() const { return car; }
   const VentureValuePtr& getRest() const { return cdr; }
   VentureValuePtr lookup(VentureValuePtr index) const;
-  bool equals(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  bool ltSameType(const VentureValuePtr & other) const;
 
   size_t hash() const;
   string toString() const;
@@ -108,7 +118,8 @@ struct VentureSimplex : VentureValue
   VentureSimplex(const Simplex & ps): ps(ps) {}
   const Simplex& getSimplex() const { return ps; }
   int size() const { return ps.size(); }
-  bool equals(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  bool ltSameType(const VentureValuePtr & other) const;
 
   size_t hash() const;
   string toString() const;
@@ -161,7 +172,9 @@ struct VentureNode : VentureValue
 
   bool hasNode() const { return true; }
   Node * getNode() const { return node; }
-  bool equals(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  bool ltSameType(const VentureValuePtr & other) const;
+
   string toString() const;
   size_t hash() const;
   Node * node;
@@ -172,7 +185,9 @@ struct VentureID : VentureValue
 {
   bool hasInt() const { return true; }
   long getInt() const { return reinterpret_cast<long>(this); }
-  bool equals(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  bool ltSameType(const VentureValuePtr & other) const;
+
   size_t hash() const;
   string toString() const;
 };

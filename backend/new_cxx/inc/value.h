@@ -65,11 +65,13 @@ struct VentureValue
 
   /* for unordered_maps */
   virtual bool equals(const VentureValuePtr & other) const;
+  virtual bool equalsSameType(const VentureValuePtr & other) const;
   virtual size_t hash() const;
   
   virtual string toString() const { return "Unknown VentureValue"; };
 
   virtual bool operator<(const VentureValuePtr & rhs) const;
+  virtual bool ltSameType(const VentureValuePtr & rhs) const;
 };
 
 
