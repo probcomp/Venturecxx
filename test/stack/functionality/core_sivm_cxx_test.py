@@ -17,6 +17,7 @@ import unittest
 import venture.sivm.core_sivm as module
 from venture.exception import VentureException
 from venture.test.config import get_core_sivm
+from testconfig import config
 from nose import SkipTest
 
 #Note -- these tests only check for minimum functionality
@@ -240,6 +241,8 @@ class TestCoreSivm(unittest.TestCase):
         self.assertEquals(o2['logscore'],-0.6931471805599453)
     
     def test_continuous_inference(self):
+        if config["get_ripl"] == "lite":
+            raise SkipTest("Venture Lite does not support continuous inference")
         status = {'instruction':'continuous_inference_status'}
         o1 = self.sivm.execute_instruction(status)
         self.assertEquals(o1['running'], False)

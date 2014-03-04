@@ -19,6 +19,7 @@ from venture.exception import VentureException
 from venture.sivm import VentureSivm
 from venture.parser import ChurchPrimeParser, VentureScriptParser
 from venture.test.config import get_core_sivm
+from testconfig import config
 from nose import SkipTest
 
 class TestRipl(unittest.TestCase):
@@ -231,6 +232,8 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output, 2)
 
     def test_continuous_inference(self):
+        if config["get_ripl"] == "lite":
+            raise SkipTest("Venture Lite does not support continuous inference")
         self.ripl.start_continuous_inference()
         output = self.ripl.continuous_inference_status()
         self.assertEqual(output['running'], True)
