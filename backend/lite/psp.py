@@ -90,6 +90,12 @@ used in the implementation of TypedPSP and TypedLKernel."""
       answer.operandValues = [self.args_types[0].asPythonNoneable(v) for v in args.operandValues]
     return answer
 
+  def name(self):
+    args_spec = " ".join([t.name() for t in self.args_types])
+    variadicity_mark = " ..." if self.variadic else ""
+    return_spec = self.return_type.name()
+    return "<SP %s%s -> %s>" % (args_spec, variadicity_mark, return_spec)
+
 class TypedPSP(PSP):
   def __init__(self, args_types, return_type, psp, variadic=False, min_req_args=None):
     self.f_type = FunctionType(args_types, return_type, variadic=variadic, min_req_args=min_req_args)
@@ -129,8 +135,8 @@ class TypedPSP(PSP):
   # TODO Wrap the simulation and delta kernels properly (once those are tested)
 
   def description(self,name):
-    # TODO Automatically add the type signature?
-    return self.psp.description(name)
+    signature = "%s :: %s" % (name, self.f_type.name())
+    return signature + "\n" + self.psp.description(name)
 
   # TODO Is this method part of the psp interface?
   def logDensityOfCounts(self,aux):
