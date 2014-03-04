@@ -1,5 +1,5 @@
 import pdb
-from nose.tools import assert_equals
+from nose.tools import assert_equals # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 
 def assertTorus(scaffold):
   for _,regenCount in scaffold.regenCounts.iteritems(): 

@@ -1,7 +1,8 @@
 import math
 import scipy.stats as stats
+from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, defaultKernel
 
 @statisticalTest
 def testVentureNormalHMM1():
@@ -46,6 +47,8 @@ def testVentureNormalHMM1():
 
 @statisticalTest
 def testVentureBinaryHMM1():
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("f","""

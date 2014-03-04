@@ -13,13 +13,17 @@
 # W0511 (warning notes in code comments)
 # W1201: Specify string format arguments as logging function parameters
 # W0201: Attribute defined outside init
+# W0622: Redefined builtin
 
 # Messages disabled pending normalization of our codebase:
 # C0301: Line too long
 # C0303: Trailing whitespace
 # W0311: Bad indentation
 # W0403: Relative import
-disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0201,W0311,W0403,C0301,C0303
+# R0902: Too many instance methods
+# R0913: Too many arguments
+# R0914: Too many local variables
+disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0201,W0622,W0311,W0403,C0301,C0303,R0902,R0913,R0914
 
 # Rationale: Wildcard imports
 #   Turns out wildcard imports in Python import every name visible in
@@ -29,6 +33,19 @@ disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0201,W0311,
 # Rationale: Permit defining attributes outside init
 #   We just have too much code that relies upon being able to store
 #   arbitrary stuff in an object.
+
+# Rationale: Permit redefining builtin names
+#   id especially is just too useful a name to surrender to the
+#   useless builtin it names.
+
+# Rationale: Suppressing design-nanny warnings
+#   Yes, methods with too many arguments, local variables, and
+#   branches are poor design; but that is something that should bother
+#   people even without Pylint getting in their face about it; and
+#   doing the refactorings to clean that up requires more taste than
+#   can be produced under pressure.
+#   TODO Perhaps turn R0902, R0913, R0914 back on for the
+#   code-review-mode style check
 
 [REPORTS]
 include-ids=yes
@@ -56,3 +73,9 @@ argument-rgx=[a-z_][a-z0-9_]{0,30}$
 # Regular expression which should only match correct variable names
 variable-rgx=[a-z_][a-z0-9_]{0,30}$
 
+[VARIABLES]
+# Regular expression which should match exactly the names that are OK
+# to define but not use.  TODO Here I use the underscore convention from
+# Haskell despite its conflict with the Python convention of treating
+# underscored names as semi-private.
+dummy-variables-rgx=_|dummy

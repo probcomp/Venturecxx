@@ -1,5 +1,6 @@
+from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, defaultKernel
 
 # TODO this whole file will need to be parameterized.
 # Most of these will become "check" functions instead of "test"
@@ -46,6 +47,8 @@ def testMakeSymDirMultFlip():
   
 @statisticalTest
 def checkMakeSymDirMultFlip(maker_1,maker_2):
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -62,6 +65,8 @@ def testMakeSymDirMultBrushObserves():
 
 @statisticalTest
 def checkMakeSymDirMultBrushObserves(maker_1,maker_2):
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -73,6 +78,8 @@ def checkMakeSymDirMultBrushObserves(maker_1,maker_2):
 @statisticalTest
 def testMakeSymDirMultNative():
   """AAA where the SP flips between collapsed, uncollapsed, and native"""
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -116,6 +123,8 @@ def testMakeDirMult1():
 
 @statisticalTest
 def checkMakeDirMult1(maker):
+  if defaultKernel() == "rejection" and maker == "make_dir_mult":
+    raise SkipTest("Is the log density of counts bounded for collapsed beta bernoulli?  Issue: https://app.asana.com/0/9277419963067/10623454782852")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")

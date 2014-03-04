@@ -9,16 +9,27 @@ class LKernel(object):
 
   @abstractmethod
   def simulate(self,trace,oldValue,args): pass
-  def weight(self,trace,newValue,oldValue,args): return 0
+  def weight(self, _trace, _newValue, _oldValue, _args): return 0
   def reverseWeight(self,trace,oldValue,args):
     return self.weight(trace,oldValue,None,args)
+  def weightBound(self, _trace, _newValue, _oldValue, _args):
+    # An upper bound on the value of weight over the variation
+    # possible by changing the values of everything in the arguments
+    # whose value is None.  Useful for rejection sampling.
+    raise Exception("Cannot rejection sample with weight-unbounded LKernel of type %s" % type(self))
 
 class DefaultAAALKernel(LKernel):
   def __init__(self,makerPSP): self.makerPSP = makerPSP
   def simulate(self,trace,oldValue,args): return self.makerPSP.simulate(args)
-  def weight(self,trace,newValue,oldValue,args):
+  def weight(self,_trace,newValue,_oldValue,args):
     assert isinstance(newValue,VentureSP)
     return newValue.outputPSP.logDensityOfCounts(args.madeSPAux)
+  def weightBound(self, _trace, _newValue, _oldValue, args):
+    # Going through the maker here because the new value is liable to
+    # be None when computing bounds for rejection, but the maker
+    # should know enough about its possible values future to answer my
+    # question.
+    return self.makerPSP.madeSpLogDensityOfCountsBound(args.madeSPAux)
 
 class DeterministicLKernel(LKernel):
   # TODO sp => psp
@@ -29,12 +40,12 @@ class DeterministicLKernel(LKernel):
     assert isinstance(value, VentureValue)
 
   def simulate(self,trace,oldValue,args): return self.value
-  def weight(self,trace,newValue,oldValue,args): return self.sp.logDensity(newValue,args)
+  def weight(self, _trace, newValue, _oldValue, args): return self.sp.logDensity(newValue,args)
 
 ######## Variational #########
 
 class VariationalLKernel(LKernel):
-  def gradientOfLogDensity(self,value,args): return 0
+  def gradientOfLogDensity(self, _value, _args): return 0
   def updateParameters(self,gradient,gain,stepSize): pass
 
 class DefaultVariationalLKernel(VariationalLKernel):
@@ -46,14 +57,14 @@ class DefaultVariationalLKernel(VariationalLKernel):
   def simulate(self,trace,oldValue,args):
     return self.psp.simulateNumeric(self.parameters)
 
-  def weight(self,trace,newValue,oldValue,args): 
+  def weight(self, _trace, newValue, _oldValue, args):
     ld = self.psp.logDensityNumeric(newValue,args.operandValues)
     proposalLD = self.psp.logDensityNumeric(newValue,self.parameters)
     w = ld - proposalLD
     assert not math.isinf(w) and not math.isnan(w)
     return w
-    
-  def gradientOfLogDensity(self,value,args):
+
+  def gradientOfLogDensity(self, value, _args):
     return self.psp.gradientOfLogDensity(value, self.parameters)
 
   def updateParameters(self,gradient,gain,stepSize):

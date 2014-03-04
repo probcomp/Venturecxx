@@ -1,7 +1,6 @@
 from psp import PSP
 from request import Request,ESR
 from env import VentureEnvironment
-import numpy as np
 import value as v
 
 ### Dicts

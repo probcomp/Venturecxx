@@ -1,5 +1,5 @@
-from abc import ABCMeta
-from value import VentureValue, SPRef, ExpressionType
+from abc import ABCMeta, abstractmethod
+from value import VentureValue, ExpressionType
 from request import Request
 
 class Node(object):
@@ -21,15 +21,12 @@ class Node(object):
     self.isObservation = True
     assert isinstance(val, VentureValue)
 
-  def groundValue(self):
-    if isinstance(self.value,SPRef): return self.value.makerNode.madeSP
-    else: return self.value
-
   def isAppropriateValue(self, value):
     return value is None or isinstance(value, VentureValue)
 
   def parents(self): return self.definiteParents()
-
+  @abstractmethod
+  def definiteParents(self): pass
 
 class ConstantNode(Node):
   def __init__(self,value):
@@ -42,7 +39,6 @@ class ConstantNode(Node):
     else: # In eval
       self.value = ExpressionType().asVentureValue(value)
 
-  def parents(self): return []
   def definiteParents(self): return []
 
 
@@ -51,33 +47,21 @@ class LookupNode(Node):
     super(LookupNode,self).__init__()
     self.sourceNode = sourceNode
 
-  def parents(self): return [self.sourceNode]
   def definiteParents(self): return [self.sourceNode]
 
 
 class ApplicationNode(Node):
   __metaclass__ = ABCMeta
 
-  def spRef(self): 
-    if not isinstance(self.operatorNode.value,SPRef):
-      print "spRef not an spRef"
-      print "is a: " + str(type(self.operatorNode.value))
-    assert isinstance(self.operatorNode.value,SPRef)
-    assert isinstance(self.operatorNode.value.makerNode,Node)
-    assert not self.operatorNode.value.makerNode.madeSP is None
-    assert isinstance(self.operatorNode.value.makerNode.madeSP,SP)
-    return self.operatorNode.value
-
-  def sp(self): return self.spRef().makerNode.madeSP
-  def spaux(self): return self.spRef().makerNode.madeSPAux
-  def psp(self): return self.sp().requestPSP
+  def __init__(self, operatorNode, operandNodes):
+    super(ApplicationNode, self).__init__()
+    self.operatorNode = operatorNode
+    self.operandNodes = operandNodes
 
 
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
-    super(RequestNode,self).__init__()
-    self.operatorNode = operatorNode
-    self.operandNodes = operandNodes
+    super(RequestNode,self).__init__(operatorNode, operandNodes)
     self.env = env
     self.outputNode = None
 
@@ -85,7 +69,6 @@ class RequestNode(ApplicationNode):
     self.outputNode = outputNode
     self.children.add(outputNode)
 
-  def parents(self): return [self.operatorNode] + self.operandNodes
   def definiteParents(self): return [self.operatorNode] + self.operandNodes
 
   def isAppropriateValue(self, value):
@@ -94,9 +77,7 @@ class RequestNode(ApplicationNode):
 
 class OutputNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,requestNode,env):
-    super(OutputNode,self).__init__()
-    self.operatorNode = operatorNode
-    self.operandNodes = operandNodes
+    super(OutputNode,self).__init__(operatorNode, operandNodes)
     self.requestNode = requestNode
     self.env = env
 
@@ -109,7 +90,9 @@ class Args(object):
     self.node = node
     self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]
     for v in self.operandValues:
-      assert isinstance(v, VentureValue)
+      # v could be None if this is for logDensityBound for rejection
+      # sampling, which is computed from the torus.
+      assert v is None or isinstance(v, VentureValue)
     self.operandNodes = node.operandNodes
 
     if isinstance(node,OutputNode):

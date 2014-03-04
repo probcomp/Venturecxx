@@ -12,3 +12,6 @@ nose-cov
 numpy
 distribute>=0.7.3
 matplotlib
+
+# IPython Magics
+ipython>=0.13

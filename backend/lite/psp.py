@@ -8,13 +8,15 @@ class PSP(object):
 
   @abstractmethod
   def simulate(self,args): pass
-  def logDensity(self,value,args): return 0
+  # These are good defaults for deterministic PSPs
+  def logDensity(self, _value, _args): return 0
+  def logDensityBound(self, _value, _args): return 0
   def incorporate(self,value,args): pass
   def unincorporate(self,value,args): pass
   # Returns a Python list of VentureValue objects
-  def enumerateValues(self,args): raise Exception("Cannot enumerate")
+  def enumerateValues(self, _args): raise Exception("Cannot enumerate")
   def isRandom(self): return False
-  def canAbsorb(self,trace,appNode,parentNode): return False
+  def canAbsorb(self, _trace, _appNode, _parentNode): return False
 
   def childrenCanAAA(self): return False
   def getAAALKernel(self): return DefaultAAALKernel(self)
@@ -28,11 +30,14 @@ class PSP(object):
   def hasSimulationKernel(self): return False
   def hasDeltaKernel(self): return False
 
-  def description(self,name): return None
+  def description(self, _name): return None
+
+  def madeSpLogDensityOfCountsBound(self, _aux):
+    raise Exception("Cannot rejection sample AAA procedure with unbounded log density of counts")
 
 class NullRequestPSP(PSP):
   def simulate(self,args): return Request()
-  def canAbsorb(self,trace,appNode,parentNode): return True
+  def canAbsorb(self, _trace, _appNode, _parentNode): return True
 
 class ESRRefOutputPSP(PSP):
   def simulate(self,args):
@@ -47,7 +52,9 @@ class RandomPSP(PSP):
   @abstractmethod
   def simulate(self,args): pass
   def isRandom(self): return True
-  def canAbsorb(self,trace,appNode,parentNode): return True    
+  def canAbsorb(self, _trace, _appNode, _parentNode): return True
+  def logDensityBound(self, _value, _args):
+    raise Exception("Cannot rejection sample psp %s %s with unbounded likelihood" % (type(self), self.description("psp")))
 
 class FunctionType(object): # TODO make this a VentureType?  With conversions!?
   """An object loosely representing a Venture function type.  It knows
@@ -65,12 +72,11 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def wrap_return(self, value):
     return self.return_type.asVentureValue(value)
   def unwrap_return(self, value):
-    if value is None:
-      # Could happen for e.g. a "delta kernel" that is expected, by
-      # e.g. pgibbs, to actually be a simulation kernel
-      return None
-    else:
-      return self.return_type.asPython(value)
+    # value could be None for e.g. a "delta kernel" that is expected,
+    # by e.g. pgibbs, to actually be a simulation kernel; also when
+    # computing log density bounds over a torus for rejection
+    # sampling.
+    return self.return_type.asPythonNoneable(value)
   def unwrap_args(self, args):
     if args.isOutput:
       assert not args.esrValues # TODO Later support outputs that have non-latent requesters
@@ -78,9 +84,10 @@ used in the implementation of TypedPSP and TypedLKernel."""
     if not self.variadic:
       assert len(args.operandValues) >= self.min_req_args
       assert len(args.operandValues) <= len(self.args_types)
-      answer.operandValues = [self.args_types[i].asPython(v) for (i,v) in enumerate(args.operandValues)]
+      # v could be None when computing log density bounds for a torus
+      answer.operandValues = [self.args_types[i].asPythonNoneable(v) for (i,v) in enumerate(args.operandValues)]
     else:
-      answer.operandValues = [self.args_types[0].asPython(v) for v in args.operandValues]
+      answer.operandValues = [self.args_types[0].asPythonNoneable(v) for v in args.operandValues]
     return answer
 
 class TypedPSP(PSP):
@@ -92,6 +99,8 @@ class TypedPSP(PSP):
     return self.f_type.wrap_return(self.psp.simulate(self.f_type.unwrap_args(args)))
   def logDensity(self,value,args):
     return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
+  def logDensityBound(self, value, args):
+    return self.psp.logDensityBound(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def incorporate(self,value,args):
     return self.psp.incorporate(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def unincorporate(self,value,args):
@@ -144,6 +153,11 @@ class TypedLKernel(LKernel):
     return self.kernel.reverseWeight(trace,
                                      self.f_type.unwrap_return(oldValue),
                                      self.f_type.unwrap_args(args))
+
+  def weightBound(self, trace, newValue, oldValue, args):
+    return self.kernel.weightBound(trace, self.f_type.unwrap_return(newValue),
+                                   self.f_type.unwrap_return(oldValue),
+                                   self.f_type.unwrap_args(args))
 
 class TypedVariationalLKernel(TypedLKernel):
   def gradientOfLogDensity(self, value, args):

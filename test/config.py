@@ -67,7 +67,8 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None,infer_merge=None):
     infer = defaultInfer()
   elif infer == "mixes_slowly": # TODO Replace this awful hack with proper adjustment of tests for difficulty
     infer = defaultInfer()
-    infer["transitions"] = 4 * int(infer["transitions"])
+    if not infer["kernel"] == "rejection":
+      infer["transitions"] = 4 * int(infer["transitions"])
 
   if infer_merge is not None: infer.update(infer_merge)
 
@@ -83,5 +84,8 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None,infer_merge=None):
 def defaultInfer():
   from venture.ripl.utils import parse, expToDict
   candidate = expToDict(parse(config["infer"]))
-  candidate["transitions"] = default_num_transitions_per_sample()
+  candidate["transitions"] = min(default_num_transitions_per_sample(), int(candidate["transitions"]))
   return candidate
+
+def defaultKernel():
+  return defaultInfer()["kernel"]

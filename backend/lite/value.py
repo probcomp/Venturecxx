@@ -17,7 +17,7 @@ class VentureValue(object):
   def getAtom(self): raise Exception("Cannot convert %s to atom" % type(self))
   def getBool(self): raise Exception("Cannot convert %s to bool" % type(self))
   def getSymbol(self): raise Exception("Cannot convert %s to symbol" % type(self))
-  def getArray(self, elt_type=None): raise Exception("Cannot convert %s to array" % type(self))
+  def getArray(self, _elt_type=None): raise Exception("Cannot convert %s to array" % type(self))
   def getPair(self): raise Exception("Cannot convert %s to pair" % type(self))
   def getSimplex(self): raise Exception("Cannot convert %s to simplex" % type(self))
   def getDict(self): raise Exception("Cannot convert %s to dict" % type(self))
@@ -290,7 +290,12 @@ def registerVentureType(t, name = None):
       stackable_types[name] = t
 
 
-class VentureType(object): pass
+class VentureType(object):
+  def asPythonNoneable(self, vthing):
+    if vthing is None:
+      return None
+    else:
+      return self.asPython(vthing)
 
 # TODO Is there any way to make these guys be proper singleton
 # objects?
@@ -312,10 +317,10 @@ class %sType(VentureType):
 """ % (typename, typename, typename))
 
 class NilType(VentureType):
-  def asVentureValue(self, thing):
+  def asVentureValue(self, _thing):
     # TODO Throw an error if not null-like?
     return VentureNil()
-  def asPython(self, vthing):
+  def asPython(self, _vthing):
     # TODO Throw an error if not nil?
     return []
 
