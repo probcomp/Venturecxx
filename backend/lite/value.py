@@ -304,6 +304,7 @@ class VentureType(object):
 class NumberType(VentureType):
   def asVentureValue(self, thing): return VentureNumber(thing)
   def asPython(self, vthing): return vthing.getNumber()
+  def name(self): return "<number>"
 
 for typename in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "Matrix", "SP", "Environment"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
@@ -312,7 +313,8 @@ for typename in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "
 class %sType(VentureType):
   def asVentureValue(self, thing): return Venture%s(thing)
   def asPython(self, vthing): return vthing.get%s()
-""" % (typename, typename, typename))
+  def name(self): return "<%s>"
+""" % (typename, typename, typename, typename.lower()))
 
 class NilType(VentureType):
   def asVentureValue(self, _thing):
@@ -321,6 +323,7 @@ class NilType(VentureType):
   def asPython(self, _vthing):
     # TODO Throw an error if not nil?
     return []
+  def name(self): return "()"
 
 class ListType(VentureType):
   """A Venture list is either a VentureNil or a VenturePair whose
@@ -336,6 +339,7 @@ data List = Nil | Pair Any List
     return pythonListToVentureList(*thing)
   def asPython(self, thing):
     return thing.asPythonList()
+  def name(self): return "<list>"
 
 class ExpressionType(VentureType):
   """A Venture expression is either a Venture self-evaluating object
@@ -375,6 +379,8 @@ data Expression = Bool | Number | Atom | Symbol | Array Expression
       return thing.getArray(self)
     raise Exception("Cannot convert Venture object %r to a Python representation of a Venture Expression" % thing)
 
+  def name(self): return "<exp>"
+
 class AnyType(VentureType):
   """The type object to use for parametric types -- does no conversion."""
   def asVentureValue(self, thing):
@@ -383,6 +389,7 @@ class AnyType(VentureType):
   def asPython(self, thing):
     assert isinstance(thing, VentureValue)
     return thing
+  def name(self): return "<object>"
 
 class HomogeneousArrayType(VentureType):
   """Type objects for homogeneous arrays.  Right now, the homogeneity
@@ -396,6 +403,7 @@ class HomogeneousArrayType(VentureType):
     return VentureArray(thing, self.subtype)
   def asPython(self, vthing):
     return vthing.getArray(self.subtype)
+  def name(self): return "<array %s>" % self.subtype.name()
 
 class RequestType(VentureType):
   """A type object for Venture's Requests.  Requests are not Venture
@@ -408,3 +416,4 @@ class RequestType(VentureType):
   def asPython(self, thing):
     assert isinstance(thing, Request)
     return thing
+  def name(self): return "<request>"
