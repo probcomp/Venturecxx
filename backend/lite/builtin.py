@@ -29,34 +29,38 @@ def no_request(output): return VentureSP(NullRequestPSP(), output)
 def typed_nr(output, args_types, return_type, **kwargs):
   return no_request(TypedPSP(args_types, return_type, output, **kwargs))
 
-def deterministic_psp(f):
+def deterministic_psp(f, descr=None):
   class DeterministicPSP(PSP):
+    def __init__(self, descr):
+      self.descr = descr
+      if self.descr is None:
+        self.descr = "deterministic %s"
     def simulate(self,args):
       return f(*args.operandValues)
     def description(self,name):
-      return "deterministic %s" % name
-  return DeterministicPSP()
+      return self.descr % name
+  return DeterministicPSP(descr)
 
-def deterministic(f):
-  return no_request(deterministic_psp(f))
+def deterministic(f, descr=None):
+  return no_request(deterministic_psp(f, descr))
 
-def deterministic_typed(f, args_types, return_type, **kwargs):
-  return typed_nr(deterministic_psp(f), args_types, return_type, **kwargs)
+def deterministic_typed(f, args_types, return_type, descr=None, **kwargs):
+  return typed_nr(deterministic_psp(f, descr), args_types, return_type, **kwargs)
 
-def binaryNum(f):
-  return deterministic_typed(f, [v.NumberType(), v.NumberType()], v.NumberType())
+def binaryNum(f, descr=None):
+  return deterministic_typed(f, [v.NumberType(), v.NumberType()], v.NumberType(), descr=descr)
 
 def binaryNumS(output):
   return typed_nr(output, [v.NumberType(), v.NumberType()], v.NumberType())
 
-def unaryNum(f):
-  return deterministic_typed(f, [v.NumberType()], v.NumberType())
+def unaryNum(f, descr=None):
+  return deterministic_typed(f, [v.NumberType()], v.NumberType(), descr=descr)
 
 def unaryNumS(f):
   return typed_nr(f, [v.NumberType()], v.NumberType())
 
-def naryNum(f):
-  return deterministic_typed(f, [v.NumberType()], v.NumberType(), variadic=True)
+def naryNum(f, descr=None):
+  return deterministic_typed(f, [v.NumberType()], v.NumberType(), variadic=True, descr=descr)
 
 def type_test(t):
   return deterministic(lambda thing: v.VentureBool(isinstance(thing, t)))
