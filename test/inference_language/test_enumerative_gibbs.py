@@ -1,7 +1,7 @@
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 from nose import SkipTest
-
+from testconfig import config
 
 @statisticalTest
 def testEnumerativeGibbsBasic1():

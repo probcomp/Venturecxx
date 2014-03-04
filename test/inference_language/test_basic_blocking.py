@@ -2,6 +2,7 @@ import scipy.stats as stats
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
 from nose import SkipTest
 from venture.test.config import get_ripl, collectSamples, collect_iid_samples
+from testconfig import config
 
 @statisticalTest
 def testBlockingExample0():
