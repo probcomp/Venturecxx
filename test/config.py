@@ -1,5 +1,5 @@
 from testconfig import config
-from venture.shortcuts import make_lite_church_prime_ripl, make_cxx_church_prime_ripl, make_puma_church_prime_ripl
+import venture.shortcuts as s
 
 def yes_like(thing):
   if isinstance(thing, str):
@@ -44,11 +44,21 @@ def default_num_transitions_per_sample():
 
 def get_ripl():
   if config["get_ripl"] == "lite":
-    return make_lite_church_prime_ripl()
+    return s.make_lite_church_prime_ripl()
   elif config["get_ripl"] == "cxx":
-    return make_cxx_church_prime_ripl()
+    return s.make_cxx_church_prime_ripl()
   elif config["get_ripl"] == "puma":
-    return make_puma_church_prime_ripl()
+    return s.make_puma_church_prime_ripl()
+  else:
+    raise Exception("Unknown backend type %s" % config["get_ripl"])
+
+def get_core_sivm():
+  if config["get_ripl"] == "lite":
+    return s.make_core_lite_sivm()
+  elif config["get_ripl"] == "cxx":
+    return s.make_core_cxx_sivm()
+  elif config["get_ripl"] == "puma":
+    return s.make_core_puma_sivm()
   else:
     raise Exception("Unknown backend type %s" % config["get_ripl"])
 
