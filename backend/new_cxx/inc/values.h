@@ -117,6 +117,7 @@ struct VentureSimplex : VentureValue
 {
   VentureSimplex(const Simplex & ps): ps(ps) {}
   const Simplex& getSimplex() const { return ps; }
+  MatrixXd getMatrix() const;
   int size() const { return ps.size(); }
   bool equalsSameType(const VentureValuePtr & other) const;
   bool ltSameType(const VentureValuePtr & other) const;
@@ -145,7 +146,7 @@ struct VentureDictionary : VentureValue
 struct VentureMatrix : VentureValue
 {
   VentureMatrix(const Eigen::MatrixXd & m): m(m) {}
-  const MatrixXd& getMatrix() const { return m; }
+  MatrixXd getMatrix() const { return m; }
   string toString() const;
   MatrixXd m;
 };

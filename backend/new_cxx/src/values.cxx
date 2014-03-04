@@ -318,3 +318,13 @@ VentureValuePtr VenturePair::lookup(VentureValuePtr index) const
   if (index->getInt() == 0) { return car; }
   else { return cdr->lookup(VentureValuePtr(new VentureAtom(index->getInt() - 1))); }
 }
+
+////////////  
+MatrixXd VentureSimplex::getMatrix() const
+{
+  size_t len = ps.size();
+  VectorXd v(len);
+
+  for (size_t i = 0; i < len; ++i) { v(i) = ps[i]; }
+  return v;
+}
