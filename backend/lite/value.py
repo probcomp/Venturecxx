@@ -353,6 +353,9 @@ not distinguish the representation of lists and arrays.  So
 round-tripping from Venture to Python and back will not be the
 identity function, but should still be idempotent.
 
+Note 3: The same discussion applies to other nice types like
+VentureSPs.
+
 In Haskell type notation:
 
 data Expression = Bool | Number | Atom | Symbol | Array Expression
@@ -384,7 +387,8 @@ data Expression = Bool | Number | Atom | Symbol | Array Expression
       return thing.getArray(self)
     if isinstance(thing, VenturePair) or isinstance(thing, VentureNil):
       return thing.asPythonList(self)
-    raise Exception("Cannot convert Venture object %r to a Python representation of a Venture Expression" % thing)
+    # Many other things are represented as themselves now. TODO Restrict this to self-evaluatings?
+    return thing
 
 class AnyType(VentureType):
   """The type object to use for parametric types -- does no conversion."""
