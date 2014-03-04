@@ -58,7 +58,6 @@ class Particle(Trace):
 #### Random choices and scopes
 
   def registerRandomChoice(self,node):
-    print "particle::registerUC(" + str(node) + ")"
     self.rcs = self.rcs.insert(node)
     self.registerRandomChoiceInScope("default",node,node)
 
@@ -66,7 +65,6 @@ class Particle(Trace):
     self.aes = self.aes.insert(node)
 
   def registerConstrainedChoice(self,node): 
-    print "particle::registerCC(" + str(node) + ")"
     self.ccs = self.ccs.insert(node)
 
   def unregisterRandomChoice(self,node): assert False
