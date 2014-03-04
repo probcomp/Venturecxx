@@ -27,11 +27,13 @@ x_model_crp='''
 [assume z (mem (lambda (i) (crp) ) ) ]
 [assume mu (mem (lambda (z) (normal 0 5) ) ) ] 
 [assume sig (mem (lambda (z) (uniform_continuous .1 8) ) ) ]
+[assume x_d (lambda () ( (lambda (z) (normal (mu z) (sig z) )) (crp) ) ) ]
 [assume x (mem (lambda (i) (normal (mu (z i)) (sig (z i))))  ) ]
 '''
 x_model_t='''
 [assume nu (gamma 10 1)]
-[assume x (mem (lambda (i) (student_t nu) ) )]
+[assume x_d (lambda () (student_t nu) ) ]
+[assume x (mem (lambda (i) (x_d) ) )]
 '''
 pivot_model='''
 [assume w0 (mem (lambda (p)(normal 0 3))) ]
@@ -162,8 +164,10 @@ def logscores(mr,name='Model'):
 
 
 def plot_cond(ripl,no_reps=50):
-    '''Plot f(x) with 1sd noise curves. Plot y_x with no_reps 
-    y values for each x. Use xrange with limits based on posterior on x.'''
+    '''Plot f(x) with 1sd noise curves. Plot y_x with #(no_reps)
+    y values for each x. Use xrange with limits based on posterior on P(x).'''
+    
+    # find x-range from min/max of observed points
     n = int( np.round( ripl.sample('n') ) )  #FIXME
     xs = [ripl.sample('(x %i)' % i) for i in range(n)]
     ys = [ripl.sample('(y %i)' % i) for i in range(n)]
@@ -189,36 +193,48 @@ def plot_cond(ripl,no_reps=50):
     ax[0].set_title('Data and inferred f with 1sd noise (name= %s )' % model_name)
     
     [ ax[1].scatter(xr,[y[i] for y in y_x],s=6) for i in range(no_reps) ]
-    ax[1].set_title('Conditionals of y given x (name= %s)' % model_name)
+    ax[1].set_title('Single ripl: P(y/x) for uniform x-range (name= %s)' % model_name)
     
-    return None
+    return xs,ys
 
 
 def plot_ygivenx(mr,x):
     return mr.snapshot(exp_list=['(y_x %f)' % x ],plot=True)
 
 
-def plot_xgiveny(mr,y):
+def plot_xgiveny(mr,y,no_transitions=100):
+    '''P(x / Y=y), by combining ripls in mr. Works by finding next unused observation
+    label, setting Y=y for that observation, running inference, sampling x and then
+    forgetting the observation of y. NB: locally disruptive of inference.'''
+    
     obs_label = [di for di in mr.list_directives()[0] if di['instruction']=='observe' and di.get('label')]
     # labels should have form 'y1','y2', etc.
     if obs_label:
         y_nums = [int(di['label'][1:]) for di in obs_label if di['label'].startswith('y')]
-        print y_nums
         next_label = max(y_nums)+1
     else:
         next_label = int(np.random.randint(1000,10**8))
     
     mr.observe('(y %i)' % next_label, str(y), label='y%i' % next_label )
+    mr.infer(no_transitions)
     snapshot=mr.snapshot(exp_list=['(x %i)' % next_label],plot=True)
     mr.forget('y%i' % next_label)
     return snapshot
 
 
-
-
-
-
-
+def plot_joint(ripl,no_reps=300):
+    '''Sample from joint P(x,y) and plot as histogram and kde.'''
+    xs = [ ripl.sample('(x_d)') for i in range(no_reps) ]
+    ys = [ ripl.sample('(y_x %f)' % x) for x in xs]
+    
+    fig,ax = plt.subplots(1,2,figsize=(9,2),sharex=False,sharey=False)
+    ax[0].scatter(xs,ys)
+    ax[0].set_title('Single ripl: %i samples from P(y,x)' % no_reps)
+    H, xedges, yedges = np.histogram2d(xs, ys, bins=(10, 10))
+    extent = [yedges[0], yedges[-1], xedges[-1], xedges[0]]
+    ax[1].imshow(H, extent=extent, interpolation='nearest')
+    ax[1].set_title('Single ripl: hist of %i samples from P(y,x)' % no_reps)
+    return xs,ys
 
 
 
@@ -247,6 +263,20 @@ def test_funcs(mripl=False,n=14):
     else:
         [plot_cond(v) for v in vs]
 
+    if mripl: ## FIXME look over this test again
+        outs = [mr_map_nomagic(v,plot_joint,limit=1)['out'][0] for v in vs]
+        
+        for out in outs:
+            xs,ys = out
+            print np.mean(xs), np.mean(ys)
+            assert( 2 > np.abs( np.mean(xs) ) )
+    else:
+        outs=[plot_joint(v) for v in vs]
+        for out in outs:
+            xs,ys = out
+            assert( 2 > np.abs( np.mean(xs) ) )
+            
+
     # in-sample guess should be close to true vals after enough inference
     [v.infer(300) for v in vs]
     f0 = if_lst_flatten( [v.predict('(f 0)') for v in vs] )
@@ -256,7 +286,7 @@ def test_funcs(mripl=False,n=14):
     assert all( 10 > np.abs((1 - np.array(f1) ) )) and any( 5 > np.abs((1 - np.array(f0) ) ) )
     assert all( 10 > np.abs((1 - np.array(f1) ) )) and any( 5 > np.abs((1 - np.array(f0) ) ) )
 
-    if mripl:
+    if mripl:  ##FIXME, look over xgiveny for how much inference we need
         snap_outs= [plot_ygivenx(v,0) for v in vs]
         ygiven0 = np.array( snap_outs[0]['values'].values()[0] )
         assert all( 6 > np.abs((0 - ygiven0) ) )
@@ -265,7 +295,8 @@ def test_funcs(mripl=False,n=14):
         xgiven0 = np.array( snap_outs[0]['values'].values()[0] )
         assert all( 6 > np.abs((0 - xgiven0) ) )
     
-    # test conditional functions
+
+   
 
 
 ### PLAN: different plots/scores
@@ -274,6 +305,6 @@ def test_funcs(mripl=False,n=14):
 # 3. plot the joint (sample both x's and y's)
 # 4. plot posterior on sets of params
 # 5. plot posterior conditional
-# 6. plot posterior joint
-# 7. plot p(x / y) for some particular y's
+# 6. plot posterior joint (the posterior join density over x,y: get from running chain long time or combining chains)
+# 7. plot p(x / y) for some particular y's 
 
