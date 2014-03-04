@@ -14,7 +14,7 @@ class BranchRequestPSP(PSP):
     return Request([ESR(args.node,exp,args.env)])
 
   def description(self,name):
-    return "(%s <bool> <exp1> <exp2>) -> <object>\n  Evaluates either exp1 or exp2 in the current environment." % name
+    return "(%s <bool> <exp1> <exp2>) -> <object>\n  Evaluates either exp1 or exp2 in the current environment and returns the result." % name
 
 class BiplexOutputPSP(PSP):
   def simulate(self,args):
