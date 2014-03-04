@@ -156,12 +156,12 @@ class TestRipl(unittest.TestCase):
 
     def test_labeled_observe(self):
         #labeled observe
-        self.ripl.assume('b','(uniform_discrete 0 2)')
+        self.ripl.assume('b','(uniform_continuous 0 1)')
         b = self.ripl.sample('b')
-        self.ripl.observe('b',1, 'moo')
+        self.ripl.observe('b',0.5, 'moo')
         self.assertEqual(b,self.ripl.sample('b'))
         self.ripl.infer(0)
-        self.assertEqual(self.ripl.sample('b'), 1)
+        self.assertEqual(self.ripl.sample('b'), 0.5)
     
     ############################################
     # Core
