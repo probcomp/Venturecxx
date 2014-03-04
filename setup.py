@@ -92,10 +92,10 @@ puma_inc_dirs = ["backend/new_cxx/" + d for d in puma_inc_dirs]
 ext_modules = []
 packages=["venture","venture.sivm","venture.ripl",
           "venture.parser","venture.server","venture.shortcuts",
-          "venture.unit", "venture.test", "venture.cxx", "venture.lite",
+          "venture.unit", "venture.test", "venture.puma", "venture.lite",
           "venture.venturemagics"]
 
-cxx = Extension("venture.cxx.libtrace",
+puma = Extension("venture.puma.libtrace",
     define_macros = [('MAJOR_VERSION', '0'),
                      ('MINOR_VERSION', '1'),
                      ('REVISION', '1')],
@@ -105,11 +105,11 @@ cxx = Extension("venture.cxx.libtrace",
     include_dirs = puma_inc_dirs,
     sources = puma_src_files)
 
-if "SKIP_CXX_BACKEND" in os.environ:
-    print "Skipping CXX backend because SKIP_CXX_BACKEND is %s" % os.environ["SKIP_CXX_BACKEND"]
-    print "Unset it to build the CXX backend."
+if "SKIP_PUMA_BACKEND" in os.environ:
+    print "Skipping Puma backend because SKIP_PUMA_BACKEND is %s" % os.environ["SKIP_PUMA_BACKEND"]
+    print "Unset it to build the Puma backend."
 else:
-    ext_modules.append(cxx)
+    ext_modules.append(puma)
 
 # monkey-patch for parallel compilation from
 # http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
@@ -145,7 +145,7 @@ setup (
     long_description = 'TBA.',
     packages = packages,
     package_dir={"venture":"python/lib/", "venture.test":"test/",
-        "venture.cxx":"backend/new_cxx/", "venture.lite":"backend/lite/"},
+        "venture.puma":"backend/new_cxx/", "venture.lite":"backend/lite/"},
     ext_modules = ext_modules,
     scripts = ['script/venture']
 )

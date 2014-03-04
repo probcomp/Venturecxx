@@ -156,7 +156,7 @@ def testConstrainWithAPredict1():
   We may constrain the (flip) in f, and this has a child that makes requests. Therefore this
   should (currently) throw an exception.
   """
-  if config["get_ripl"] == "cxx": raise SkipTest("assert(false) crashes NoseTests")
+  if config["get_ripl"] != "lite": raise SkipTest("assert(false) crashes NoseTests")
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda () (flip)))")
   ripl.assume("op1","(if (flip) flip (lambda () (f)))")
