@@ -16,7 +16,8 @@ def kde_plot(x,y):
     sns.kdeplot(x,y,shade=True,cmap=None,ax=ax)
     return fig,ax
 
-from venture.venturemagics.ip_parallel import *; lite=False; clear_all_engines()
+from venture.venturemagics.ip_parallel import *; 
+lite=False; clear_all_engines()
 mk_l = make_lite_church_prime_ripl; mk_c = make_church_prime_ripl
 
 
@@ -33,6 +34,27 @@ x_model_t='''
 [assume x (mem (lambda (i) (student_t nu) ) )]
 '''
 pivot_model='''
+[assume w0 (mem (lambda (p)(normal 0 3))) ]
+[assume w1 (mem (lambda (p)(normal 0 3))) ]
+[assume w2 (mem (lambda (p)(normal 0 1))) ]
+[assume noise (mem (lambda (p) (gamma 2 1) )) ]
+[assume pivot (normal 0 5)]
+[assume p (lambda (x) (if (< x pivot) 0 1) ) ]
+
+[assume f (lambda (x)
+             ( (lambda (p) (+ (w0 p) (* (w1 p) x) (* (w2 p) (* x x)))  ) 
+               (p x)  ) ) ]
+
+[assume noise_p (lambda (fx x) (normal fx (noise (p x))) )] 
+
+[assume y_x (lambda (x) (noise_p (f x) x) ) ]
+                     
+[assume y (mem (lambda (i) (y_x (x i))  ))] 
+                     
+[assume n (gamma 1 1) ]
+'''
+
+pivot_model_old='''
 [assume w0 (mem (lambda (p)(normal 0 3))) ]
 [assume w1 (mem (lambda (p)(normal 0 3))) ]
 [assume w2 (mem (lambda (p)(normal 0 1))) ]
@@ -64,7 +86,7 @@ pivot_model='''
 
 pivot_check='''
 [observe (x 0) 0.]
-[observe pivot 20.]
+[observe pivot 10.]
 [observe (w0 0) 0.]
 [observe (w1 0) 1.]
 [observe (w2 0) 0.]
@@ -74,17 +96,12 @@ def test_pivot(v):
     v.execute_program(pivot_check)
     v.infer(1)
     assert v.predict('(= 0 (p (x 0)))')
-    assert 0 == v.predict('(f (x 0) (w0 (p 0)) (w1 (p 0)) (w2 (p 0)))')
+    assert .1 > (0 - v.predict('(f (x 0))'))
     assert .5 > (0 - v.assume('y0','(y 0)') ) # y0 close to 0
-    assert .5 > (0 - v.assume('y20','(y2 0)') ) # y0 close to 0
-
-    xys = [v.predict('(list (x %i) (y %i))' % (i,i)) for i in range(10) ];
-    xy2s = [v.predict('(list (x %i) (y2 %i))' % (i,i)) for i in range(10) ];
-    assert all( [ .5 > (xy[0] - xy[1]) for xy in xy2s ] )
+    assert .5 > (0 - v.predict('(y_x (x 0))'))
     
-    f2= np.array( [v.predict('(f2 %i)' % i) for i in range(5)] )
-    f = np.array( [v.predict('(f %i 0 1 0)' % i) for i in range(5) ] )
-    assert all( 0.01 > np.abs(f - f2) )
+    f= np.array( [v.predict('(f %i)' % i) for i in range(5)] )
+    assert all( 0.1 > np.abs(f - np.arange(5)) )
     [v.observe('(y %i)' % i, str(i+.01) ) for i in range(20,25)]
     y_x20 = np.array( [v.predict('(y_x %i)' % i) for i in range(20,25)] )
     y20 = np.array( [v.predict('(y %i)' % i) for i in range(20,25)] )
@@ -139,4 +156,88 @@ def test_quad_fourier(v):
 #[test_quad_fourier(v) for v in vs]
 
 
+
+def generate_data(n,xparams=None,yparams=None,sin=True):
+    'loc,scale = xparams, w0,w1,w2,omega,theta = yparams'
+    if xparams:
+        loc,scale = xparams; xs = np.random.normal(loc,scale,n)
+    else:
+        xs = np.random.normal(loc=0,scale=2.5,size=n)
+    if yparams:
+        w0,w1,w2,omega,theta = yparams
+        ys = w0*(np.sin(omega*xs + theta))+w1 if sin else w0+(w1*xs)+(w2*(xs**2))
+    else:
+        ys = 3*np.sin(xs)
+        
+    xys = zip(xs,ys)
+    fig,ax = plt.subplots(figsize=(6,2))
+    ax.scatter(xs,ys);
+    ax.set_title('Data from f w/ %s )' % str(yparams) ) if yparams else ax.set_title('Data from 3sin(x)')
+    return xys
+
+
+def observe_infer(vs,xys,no_transitions,withn=True):
+    '''Input is list of ripls or mripls, xy pairs and no_transitions. Optionally
+    observe the n variable to be the len(xys).'''
+    for i,(x,y) in enumerate(xys):
+        [v.observe('(x %i)' % i , '%f' % x) for v in vs]
+        [v.observe('(y %i)' % i , '%f' % y) for v in vs]
+    if withn: [v.observe('n','%i' % len(xys)) for v in vs]
+    [v.infer(no_transitions) for v in vs];
+
+
+def logscores(mr,name='Model'):
+    logscore = mr.get_global_logscore()
+    print '%s mean, max logscore:' % name, np.mean(logscore), np.max(logscore)
+    return np.mean(logscore), np.max(logscore)
+
+
+def plot_cond(ripl,no_reps=50):
+    '''Plot f(x) with 1sd noise curves. Plot y_x with no_reps 
+    y values for each x. Use xrange with limits based on posterior on x.'''
+    n = int( np.round( ripl.sample('n') ) )  #FIXME
+    xs = [ripl.sample('(x %i)' % i) for i in range(n)]
+    ys = [ripl.sample('(y %i)' % i) for i in range(n)]
+    xr = np.linspace(1.5*min(xs),1.5*max(xs),100)
+    f_xr = [ripl.sample('(f %f)' % x) for x in xr]
+    
+    # gaussian noise 1sd
+    noise = ripl.sample('noise')
+    f_a = [fx+noise for fx in f_xr]
+    f_b = [fx-noise for fx in f_xr]
+
+    # scatter for y conditional on x
+    y_x = [  [ripl.sample('(y_x %f)' % x) for r in range(no_reps)] for x in xr]
+    
+    
+    fig,ax = plt.subplots(1,2,figsize=(9,2),sharex=True,sharey=True)
+    ax[0].scatter(xs,ys)
+    ax[0].set_color_cycle(['m', 'gray','gray'])
+    ax[0].plot(xr,f_xr,xr,f_a,xr,f_b)
+    ax[0].set_title('Data and inferred f with 1sd noise')
+    
+    [ax[1].scatter(xr,[y[i] for y in y_x]) for i in range(len(y_x))]
+    ax[1].set_title('Conditionals of y given x')
+    
+    return None
+
+
+def test_funcs():
+    xys = generate_data(10,[0,3],[0,0,1,0,0],False)
+    vc = mk_l(); vl=mk_l(); vs = [vc,vl]
+    vc.execute_program(x_model_t+pivot_model); vl.execute_program(x_model_t+quad_fourier_model)
+    observe_infer(vs,xys,300,withn=True)
+    [logscores(v) for v in vs]
+    [plot_cond(v) for v in vs]
+
+
+
+### PLAN: different plots/scores
+#1. av logscore and best logscore.
+# 2. plot the curve, adding noise error (easiest way is with y_x)
+# 3. plot the join (sample both x's and y's)
+# 4. plot posterior on sets of params
+# 5. plot posterior conditional
+# 6. plot posterior joint
+# 7. plot p(x / y) for some particular y's
 
