@@ -124,8 +124,6 @@ def test_quad_fourier(v):
     assert .1 > ( v.predict('(y 0)') - v.predict('(y_x 0)') )
 
 
-
-
 def generate_data(n,xparams=None,yparams=None,sin=True):
     'loc,scale = xparams, w0,w1,w2,omega,theta = yparams'
     if xparams:
@@ -149,8 +147,8 @@ def observe_infer(vs,xys,no_transitions,withn=True):
     '''Input is list of ripls or mripls, xy pairs and no_transitions. Optionally
     observe the n variable to be the len(xys).'''
     for i,(x,y) in enumerate(xys):
-        [v.observe('(x %i)' % i , '%f' % x) for v in vs]
-        [v.observe('(y %i)' % i , '%f' % y) for v in vs]
+        [v.observe('(x %i)' % i , '%f' % x, label='x%i' % i) for v in vs]
+        [v.observe('(y %i)' % i , '%f' % y, label='y%i' % i ) for v in vs]
     if withn: [v.observe('n','%i' % len(xys)) for v in vs]
     [v.infer(no_transitions) for v in vs];
 
@@ -173,9 +171,11 @@ def plot_cond(ripl,no_reps=50):
     f_xr = [ripl.sample('(f %f)' % x) for x in xr]
     
     # gaussian noise 1sd
-    try: model_name = ripl.sample('model_name')
-    except: model_name = 'anon model'
-    
+    if 'model_name' in str(ripl.list_directives()):
+        try: model_name = ripl.sample('model_name')
+        except: pass
+    else:
+        model_name = 'anon model'
     noise=ripl.sample('(noise 0)') if model_name=='pivot' else ripl.sample('noise')
     f_a = [fx+noise for fx in f_xr]
     f_b = [fx-noise for fx in f_xr]
@@ -193,12 +193,44 @@ def plot_cond(ripl,no_reps=50):
     
     return None
 
+
+def plot_ygivenx(mr,x):
+    return mr.snapshot(exp_list=['(y_x %f)' % x ],plot=True)
+
+
+def plot_xgiveny(mr,y):
+    obs_label = [di for di in mr.list_directives()[0] if di['instruction']=='observe' and di.get('label')]
+    # labels should have form 'y1','y2', etc.
+    if obs_label:
+        y_nums = [int(di['label'][1:]) for di in obs_label if di['label'].startswith('y')]
+        print y_nums
+        next_label = max(y_nums)+1
+    else:
+        next_label = int(np.random.randint(1000,10**8))
+    
+    mr.observe('(y %i)' % next_label, str(y), label='y%i' % next_label )
+    snapshot=mr.snapshot(exp_list=['(x %i)' % next_label],plot=True)
+    mr.forget('y%i' % next_label)
+    return snapshot
+
+
+
+
+
+
+
+
+
+
+
+
+
 def if_lst_flatten(l):
     if type(l[0])==list: return [el for subl in l for el in subl]
     return l
 
-def test_funcs(mripl=False):
-    xys = generate_data(n=14,xparams=[0,3],yparams=[0,0,1,0,0],sin=False) # y=x^2
+def test_funcs(mripl=False,n=14):
+    xys = generate_data(n,xparams=[0,3],yparams=[0,0,1,0,0],sin=False) # y=x^2
     if mripl:
         v_piv = MRipl(2,lite=lite,verbose=False); v_fo = MRipl(2,lite=lite,verbose=False)
         vs = [v_piv,v_fo]
@@ -220,14 +252,26 @@ def test_funcs(mripl=False):
     f0 = if_lst_flatten( [v.predict('(f 0)') for v in vs] )
     f1 = if_lst_flatten( [v.predict('(f 1)') for v in vs] )
     f1 = if_lst_flatten( [v.predict('(f -1)') for v in vs] )
-    assert all( 6 > np.abs((0 - np.array(f0) ) ))
-    assert all( 6 > np.abs((1 - np.array(f1) ) ))
-    assert all( 6 > np.abs((1 - np.array(f1) ) ))
+    assert all( 10 > np.abs((0 - np.array(f0) ) )) and any( 5 > np.abs((0 - np.array(f0) ) ) )
+    assert all( 10 > np.abs((1 - np.array(f1) ) )) and any( 5 > np.abs((1 - np.array(f0) ) ) )
+    assert all( 10 > np.abs((1 - np.array(f1) ) )) and any( 5 > np.abs((1 - np.array(f0) ) ) )
+
+    if mripl:
+        snap_outs= [plot_ygivenx(v,0) for v in vs]
+        ygiven0 = np.array( snap_outs[0]['values'].values()[0] )
+        assert all( 6 > np.abs((0 - ygiven0) ) )
+
+        snap_outs= [plot_xgiveny(v,0) for v in vs]
+        xgiven0 = np.array( snap_outs[0]['values'].values()[0] )
+        assert all( 6 > np.abs((0 - xgiven0) ) )
+    
+    # test conditional functions
+
 
 ### PLAN: different plots/scores
 #1. av logscore and best logscore.
 # 2. plot the curve, adding noise error (easiest way is with y_x)
-# 3. plot the join (sample both x's and y's)
+# 3. plot the joint (sample both x's and y's)
 # 4. plot posterior on sets of params
 # 5. plot posterior conditional
 # 6. plot posterior joint
