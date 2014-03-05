@@ -92,7 +92,7 @@ class MakerCBetaBernoulliOutputPSP(PSP):
     return BetaBernoulliSP(NullRequestPSP(), output)
 
   def description(self,name):
-    return "(%s alpha beta) -> <SP () <bool>>\n  Collapsed beta Bernoulli." % name
+    return "  (%s alpha beta) returns a collapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false).  While this procedure itself is deterministic, the returned sampler is stochastic." % name
 
 class CBetaBernoulliOutputPSP(RandomPSP):
   def __init__(self,alpha,beta):
@@ -158,7 +158,7 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
     return scipy.stats.beta.logpdf(coinWeight,alpha,beta)
 
   def description(self,name):
-    return "(%s alpha beta) -> <SP () <bool>>\n  Uncollapsed beta Bernoulli." % name
+    return "  (%s alpha beta) returns an uncollapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false)." % name
 
 class UBetaBernoulliAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):

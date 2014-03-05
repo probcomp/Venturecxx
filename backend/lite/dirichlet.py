@@ -22,7 +22,7 @@ class DirichletOutputPSP(RandomPSP):
     return logDensityDirichlet(val,alpha)
 
   def description(self,name):
-    return "(%s <list alpha>) -> <simplex>" % name
+    return "  (%s alphas) samples a simplex point according to the given Dirichlet distribution." % name
 
 class SymmetricDirichletOutputPSP(RandomPSP):
 
@@ -35,9 +35,9 @@ class SymmetricDirichletOutputPSP(RandomPSP):
     return logDensityDirichlet(val,[alpha for _ in range(n)])
 
   def description(self,name):
-    return "(%s alpha n) -> <simplex>" % name
+    return "  (%s alpha n) samples a simplex point according to the symmetric Dirichlet distribution on n dimensions with concentration parameter alpha." % name
 
-#### Common aux for AAA dirichlet distributions
+#### Common classes for AAA dirichlet distributions
 
 class DirMultSPAux(SPAux):
   def __init__(self,n=None,os=None):
@@ -70,7 +70,7 @@ class MakerCDirMultOutputPSP(PSP):
   def childrenCanAAA(self): return True
 
   def description(self,name):
-    return "(%s <list alpha>) -> <SP () <number>>\n(%s <list alpha> <list a>) -> <SP () a>\n  Collapsed Dirichlet multinomial." % (name, name)
+    return "  (%s alphas objects) returns a sampler for a collapsed Dirichlet multinomial model.  If the objects argument is given, the sampler will return one of those objects on each call; if not, it will return one of n <atom>s where n is the length of the list of alphas.  It is an error if the list of objects is supplied and has different length from the list of alphas.  While this procedure itself is deterministic, the returned sampler is stochastic." % name
 
 class CDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,os):
@@ -128,7 +128,7 @@ class MakerUDirMultOutputPSP(RandomPSP):
     return logDensityDirichlet(value.outputPSP.psp.theta,alpha)
 
   def description(self,name):
-    return "(%s <list alpha>) -> <SP () <number>>\n(%s <list alpha> <list a>) -> <SP () a>\n  Uncollapsed Dirichlet multinomial." % (name,name)
+    return "  %s is an uncollapsed variant of make_dir_mult." % name
 
 class UDirMultAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):
@@ -193,7 +193,7 @@ class MakerCSymDirMultOutputPSP(PSP):
     return term1 + sum([scipy.special.gammaln(1+o) - gamma_one for o in aux.os])
 
   def description(self,name):
-    return "(%s alpha n) -> <SP () <atom>>\n(%s alpha n <array a>) -> <SP () a>\n  Collapsed symmetric Dirichlet nultinomial in n dimensions.  The two argument version returns a sampler for the dimension; the three argument version returns a sampler from the given list of options.  It is an error if the length of the given list is not n." % (name, name)
+    return "  %s is a symmetric variant of make_dir_mult." % name
 
 class CSymDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,n,os):
@@ -251,7 +251,7 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
     return logDensityDirichlet(value.outputPSP.psp.theta, [alpha for _ in range(n)])
 
   def description(self,name):
-    return "(%s alpha n) -> <SP () <number>>\n(%s alpha n <list a>) -> <SP () a>\n  Uncollapsed symmetric Dirichlet nultinomial in n dimensions.  The two argument version returns a sampler for the dimension; the three argument version returns a sampler from the given list of options.  It is an error if the length of the given list is not n." % (name, name)
+    return "  %s is an uncollapsed symmetric variant of make_dir_mult." % name
 
 class USymDirMultAAALKernel(LKernel):
   def simulate(self,trace,oldValue,args):
