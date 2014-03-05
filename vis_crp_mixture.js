@@ -61,12 +61,6 @@ function InitializeDemo() {
     
     }
     
-    var ArrayOfKeys = function(obj) {
-        a = [];
-        for (key in obj) { a.push(key); }
-        return a;
-    };
-    
     //TODO this number is arbritrary, not sure how to get browser dependent
     //max int
     var LargeRandomInt = function() {
@@ -241,13 +235,13 @@ function InitializeDemo() {
         local_cluster.id = cluster.id;
         local_cluster.color = colors.pop();
         local_cluster.circle = paper.ellipse(0, 0, 0, 0);
-        local_cluster.circle.attr('stroke-dasharray', "-")
-        local_cluster.circle.attr('stroke-width', "3")
+        local_cluster.circle.attr('stroke-dasharray', "-");
+        local_cluster.circle.attr('stroke-width', "3");
         return local_cluster;
     };
     
     var DeleteCluster = function(cluster_id) {
-        local_cluster = local_clusters[cluster_id]
+        local_cluster = local_clusters[cluster_id];
         local_cluster.circle.remove();
         colors.push(local_cluster.color);
         delete local_clusters[cluster_id];
