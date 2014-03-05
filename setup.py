@@ -158,10 +158,10 @@ cxx = Extension("venture.cxx.libtrace",
     include_dirs = inc_dirs,
     sources = src_files)
 
-if "COMPILE_OLD_CXX_BACKEND" in os.environ:
+if "COMPILE_CXX_BACKEND" in os.environ:
     ext_modules.append(cxx)
 else:
-    print "Skipping old CXX backend. To include it, set the flap COMPILE_OLD_CXX_BACKEND"
+    print "Skipping old CXX backend. To include it, set the flag COMPILE_CXX_BACKEND"
 
 puma = Extension("venture.puma.libtrace",
     define_macros = [('MAJOR_VERSION', '0'),
