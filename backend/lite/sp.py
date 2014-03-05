@@ -54,7 +54,7 @@ the types expected for the arguments and the return, and thus knows
 how to wrap and unwrap individual values or Args objects.  This is
 used in the implementation of TypedPSP and TypedLKernel."""
   def asVentureValue(self, thing): return thing
-  def asPythong(self, vthing): return vthing
+  def asPython(self, vthing): return vthing
   def __contains__(self, vthing): return isinstance(vthing, VentureSP)
 
   def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
