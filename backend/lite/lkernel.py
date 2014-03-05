@@ -32,6 +32,8 @@ class DefaultAAALKernel(LKernel):
     return self.makerPSP.madeSpLogDensityOfCountsBound(args.madeSPAux)
 
 class DeterministicLKernel(LKernel):
+  # TODO sp => psp
+  # (it is called correctly, just incorrect here)
   def __init__(self,sp,value):
     self.sp = sp
     self.value = value

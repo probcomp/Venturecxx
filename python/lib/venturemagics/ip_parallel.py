@@ -675,15 +675,21 @@ def mr_map(line, cell):
 
 # Non-magic version of the magic above (callable from normal Python script)
 # Takes an actual mripl and proc as inputs.
-def mr_map_nomagic(mripl,proc):
+def mr_map_nomagic(mripl,proc,limit=None):
     'Push procedure into engine namespaces. Use execute to map across ripls.'
     proc_name = 'user_proc_' + str( abs(hash(proc)) )
     mripl.dview.push( { proc_name: interactive(proc)} )
     #mripl.dview.execute(set_plotting_string) # matplotlib, inlining
 
     mripl.dview.execute('print %s' % proc_name)
-    mripl.dview.execute( 'results_%s =  [ %s(ripl) for ripl in mripls[%i] ] ' % (proc_name, proc_name, mripl.mrid) )
+    p=proc_name; mrid=mripl.mrid
+    if limit:
+        s='results_%s =[%s(ripl) for count,ripl in enumerate(mripls[%i]) if count<%i]' % (p,p,mrid,limit)
+        mripl.dview.execute(s) 
+    else:
+        mripl.dview.execute( 'results_%s =  [ %s(ripl) for ripl in mripls[%i] ] ' % (p,p,mrid) )
 
+                             
     ## FIXME: should this be the same as the magic?
     try: # if running ipy, try to plot any figures from the ripls
         ip=get_ipython()
@@ -692,7 +698,7 @@ def mr_map_nomagic(mripl,proc):
         pass
 
     outputs_by_ripl = lst_flatten( mripl.dview['results_%s' % proc_name] )
-    # could also pass the procedure out
+    
     out_dict = {'info':{'mripl':mripl.name_mrid,'proc':proc_name}, 'out':outputs_by_ripl }
     
     return out_dict

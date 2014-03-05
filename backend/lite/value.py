@@ -129,6 +129,8 @@ interface here is compatible with one possible path."""
       return self.array
     else:
       return [elt_type.asPython(v) for v in self.array]
+  def asPythonList(self, elt_type=None):
+    return self.getArray(elt_type)
   def asStackDict(self):
     # TODO Are venture arrays reflected as lists to the stack?
     # TODO Are stack lists lists, or are they themselves type tagged?
@@ -150,7 +152,7 @@ class VentureNil(VentureValue):
   def __repr__(self): return "Nil"
   def compareSameType(self, _): return 0 # All Nils are equal
   def __hash__(self): return 0
-  def asPythonList(self): return []
+  def asPythonList(self, _elt_type=None): return []
   def asStackDict(self): return {"type":"list", "value":[]}
   @staticmethod
   def fromStackDict(_): return VentureNil()
@@ -163,8 +165,11 @@ class VenturePair(VentureValue):
     self.first = first
     self.rest = rest
   def getPair(self): return (self.first,self.rest)
-  def asPythonList(self):
-    return [self.first] + self.rest.asPythonList()
+  def asPythonList(self, elt_type=None):
+    if elt_type is not None:
+      return [elt_type.asPython(self.first)] + self.rest.asPythonList(elt_type)
+    else:
+      return [self.first] + self.rest.asPythonList()
   def asStackDict(self):
     # TODO Venture pairs should be usable to build structures other
     # than proper lists.  But then, what are their types?
@@ -353,6 +358,15 @@ Venture Expressions.  Note: I adopt the convention that, to
 distinguish them from numbers, Venture Atoms will be represented in
 Python as VentureAtom objects for purposes of this type.
 
+Note 2: Consumers of expressions should also be able to consume lists
+of expressions, but the Python-side representation of expressions does
+not distinguish the representation of lists and arrays.  So
+round-tripping from Venture to Python and back will not be the
+identity function, but should still be idempotent.
+
+Note 3: The same discussion applies to other nice types like
+VentureSPs.
+
 In Haskell type notation:
 
 data Expression = Bool | Number | Atom | Symbol | Array Expression
@@ -382,7 +396,10 @@ data Expression = Bool | Number | Atom | Symbol | Array Expression
       return thing.getSymbol()
     if isinstance(thing, VentureArray):
       return thing.getArray(self)
-    raise Exception("Cannot convert Venture object %r to a Python representation of a Venture Expression" % thing)
+    if isinstance(thing, VenturePair) or isinstance(thing, VentureNil):
+      return thing.asPythonList(self)
+    # Many other things are represented as themselves now. TODO Restrict this to self-evaluatings?
+    return thing
 
   def name(self): return "<exp>"
 

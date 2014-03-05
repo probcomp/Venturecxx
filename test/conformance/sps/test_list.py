@@ -1,6 +1,8 @@
 from nose.tools import eq_
 from math import sin, cos
 from venture.test.config import get_ripl
+from nose import SkipTest
+from nose.tools import assert_equal
 
 def testList1():
   assert get_ripl().predict("(list)") == []
@@ -52,7 +54,7 @@ class TestList(object):
     assert self.ripl.predict("(second x4)") == 2.0
 
   def testRest1(self):
-    assert self.ripl.predict("(rest x4)") == [2.0, 1.0]
+    assert_equal(self.ripl.predict("(rest x4)"),[2.0, 1.0])
 
   def testLookup1(self):
     assert self.ripl.predict("(lookup x4 1)") == 2.0
@@ -106,6 +108,7 @@ class TestListExtended(object):
 class TestMapListExtended(object):
   _multiprocess_can_split_ = True
   def setup(self):
+    raise SkipTest("map_list silly and not supported by puma")
     self.ripl = get_ripl()
 
     self.ripl.assume("x","(list 3.0 2.0 1.0)")

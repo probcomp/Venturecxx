@@ -16,16 +16,17 @@
 import unittest
 from venture.ripl import Ripl
 from venture.exception import VentureException
-from venture.sivm import VentureSivm, CoreSivm
+from venture.sivm import VentureSivm
 from venture.parser import ChurchPrimeParser, VentureScriptParser
+from venture.test.config import get_core_sivm
+from testconfig import config
 from nose import SkipTest
 
 class TestRipl(unittest.TestCase):
     _multiprocess_can_split_ = True
 
     def setUp(self):
-        from venture.cxx import engine
-        self.core_sivm = CoreSivm(engine.Engine())
+        self.core_sivm = get_core_sivm()
         self.core_sivm.execute_instruction({"instruction":"clear"})
         self.venture_sivm = VentureSivm(self.core_sivm)
         parser1 = ChurchPrimeParser()
@@ -145,14 +146,22 @@ class TestRipl(unittest.TestCase):
     def test_observe(self):
         #normal observe
         self.ripl.assume('a','(uniform_continuous 0 1)')
+        a = self.ripl.sample('a')
         self.ripl.observe('a',0.5)
-        output = self.ripl.predict('a')
-        self.assertEqual(output, 0.5)
+        # observe does nothing without inference
+        self.assertEqual(a,self.ripl.sample('a'))
+        # But inference propagates information from observations
+        self.ripl.infer(0)
+        self.assertEqual(self.ripl.sample('a'), 0.5)
+
+    def test_labeled_observe(self):
         #labeled observe
-        self.ripl.assume('b','(uniform_discrete 0 2)')
-        self.ripl.observe('b',1, 'moo')
-        output = self.ripl.predict('b')
-        self.assertEqual(output, 1)
+        self.ripl.assume('b','(uniform_continuous 0 1)')
+        b = self.ripl.sample('b')
+        self.ripl.observe('b',0.5, 'moo')
+        self.assertEqual(b,self.ripl.sample('b'))
+        self.ripl.infer(0)
+        self.assertEqual(self.ripl.sample('b'), 0.5)
     
     ############################################
     # Core
@@ -211,6 +220,8 @@ class TestRipl(unittest.TestCase):
 
     def test_force(self):
         #normal force
+        if config["get_ripl"] == "puma":
+            raise SkipTest("Triggers a mystery assert in Puma.  Issue: https://app.asana.com/0/9277419963067/10705122294325")
         self.ripl.assume('a','(uniform_continuous 0 1)')
         self.ripl.force('a',0.2)
         self.ripl.force('a',0.5)
@@ -223,6 +234,8 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output, 2)
 
     def test_continuous_inference(self):
+        if config["get_ripl"] == "lite":
+            raise SkipTest("Venture Lite does not support continuous inference")
         self.ripl.start_continuous_inference()
         output = self.ripl.continuous_inference_status()
         self.assertEqual(output['running'], True)

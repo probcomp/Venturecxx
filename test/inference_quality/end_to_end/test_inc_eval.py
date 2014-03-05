@@ -43,8 +43,8 @@ def loadEnvironments(ripl):
 (lambda ()
   (list
     (dict 
-      (list (quote bernoulli) (quote normal) (quote plus) (quote times) (quote branch))
-      (list (make_ref bernoulli) (make_ref normal) (make_ref plus) (make_ref times) (make_ref branch)))))
+      (array (quote bernoulli) (quote normal) (quote plus) (quote times) (quote branch))
+      (array (make_ref bernoulli) (make_ref normal) (make_ref plus) (make_ref times) (make_ref branch)))))
 """)
 
   ripl.assume("extend_env","""
@@ -95,6 +95,13 @@ def loadAll(ripl):
   loadReferences(ripl)
   loadEnvironments(ripl)
   loadIncrementalEvaluator(ripl)
+  ripl.assume("map_list","""
+(lambda (f xs)
+  (if (is_pair xs)
+      (pair (f (first xs))
+            (map_list f (rest xs)))
+      xs))
+""")
   return ripl
 
 def computeF(x): return x * 5 + 5
@@ -116,7 +123,6 @@ def testIncrementalEvaluator1a():
 
 def testIncrementalEvaluator1b():
   "Extremely basic test"
-  raise SkipTest("This test needs expressions to be pairs.  Issue: https://app.asana.com/0/9277419963067/10249544822514")
   ripl = get_ripl()
   loadAll(ripl)
   ripl.assume("expr","(list (make_ref plus) (make_ref 1) (make_ref 1))")
@@ -127,8 +133,6 @@ def testIncrementalEvaluator1b():
 @statisticalTest
 def testIncrementalEvaluator1c():
   "Incremental version of micro/test_basic_stats.py:testBernoulli1"
-#  raise SkipTest("Errors out due to a Venture-level type error (a string flowed into operator position).  Re-enable when there are facilities for debugging such things.  Issue https://app.asana.com/0/9277419963067/9280122191537")
-  raise SkipTest("This test needs expressions to be pairs.  Issue: https://app.asana.com/0/9277419963067/10249544822514")
   ripl = get_ripl()
   loadAll(ripl)
   ripl.assume("expr","""
@@ -151,8 +155,6 @@ def testIncrementalEvaluator1c():
 @attr('slow')
 def testIncrementalEvaluator2():
   "Difficult test. We make sure that it stumbles on the solution in a reasonable amount of time."
-#  raise SkipTest("Errors out due to a Venture-level type error (something wanted a list as an argument and got a float).  Re-enable when there are facilities for debugging such things.  Issue https://app.asana.com/0/9277419963067/9280122191537")
-  raise SkipTest("This test needs expressions to be pairs.  Issue: https://app.asana.com/0/9277419963067/10249544822514")
   ripl = get_ripl()
 
   loadAll(ripl)

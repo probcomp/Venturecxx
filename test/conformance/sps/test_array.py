@@ -24,8 +24,8 @@ class TestArrayExtended(object):
     assert self.ripl.predict("(size xs)") == 3
 
 def testMatrix():
-  for form in ["(matrix (list))", "(matrix (list (list) (list)))",
-               "(matrix (list (list 1 0) (list 0 1)))"]:
+  for form in ["(matrix (array))", "(matrix (array (array) (array)))",
+               "(matrix (array (array 1 0) (array 0 1)))"]:
     yield checkMatrix, form
 
 def checkMatrix(form):

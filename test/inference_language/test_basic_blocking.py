@@ -2,6 +2,7 @@ import scipy.stats as stats
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
 from nose import SkipTest
 from venture.test.config import get_ripl, collectSamples, collect_iid_samples
+from testconfig import config
 
 @statisticalTest
 def testBlockingExample0():
@@ -71,6 +72,7 @@ def testBlockingExample3():
 
 @statisticalTest
 def testBasicRejection1():
+  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by CXX yet")
   ripl = get_ripl()
   ripl.assume("x", "(bernoulli 0.5)")
   predictions = collectSamples(ripl, 1, infer={"kernel":"rejection", "scope":"default", "block":"all", "transitions":1})
@@ -79,6 +81,7 @@ def testBasicRejection1():
 
 @statisticalTest
 def testBasicRejection2():
+  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by CXX yet")
   ripl = get_ripl()
   ripl.assume("p", "(uniform_continuous 0 1)")
   ripl.assume("x", "(bernoulli p)")
@@ -88,6 +91,7 @@ def testBasicRejection2():
 
 @statisticalTest
 def testBasicRejection3():
+  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by CXX yet")
   ripl = get_ripl()
   ripl.assume("p", "(uniform_continuous 0 1)")
   ripl.observe("(bernoulli p)", "true")

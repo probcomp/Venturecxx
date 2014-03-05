@@ -221,16 +221,24 @@ class Ripl():
         value = self.execute_instruction(s,d)['value']
         return value if type else _strip_types(value)
 
+    # takes params and turns them into the proper dict
     # TODO Correctly default block choice?
-    def infer(self, params):
+    def parseInferParams(self, params):
+        if params is None:
+            return {"transitions": 1, "kernel": "mh",
+                        "scope":"default", "block":"one"}
         if isinstance(params, int):
-            self.infer({"transitions": params, "kernel": "mh",
-                        "scope":"default", "block":"one"})
+            return {"transitions": params, "kernel": "mh",
+                        "scope":"default", "block":"one"}
         elif isinstance(params, str):
-            self.infer(u.expToDict(u.parse(params)))
-        else:
-            s = self._cur_parser().get_instruction_string('infer')
-            self.execute_instruction(s, {'params': params})
+            return u.expToDict(u.parse(params))
+        elif isinstance(params, dict):
+            return params
+        else: raise TypeError("Unknown params: " + str(params))
+        
+    def infer(self, params):
+        s = self._cur_parser().get_instruction_string('infer')
+        self.execute_instruction(s, {'params': self.parseInferParams(params)})
 
     def clear(self):
         s = self._cur_parser().get_instruction_string('clear')
@@ -278,10 +286,9 @@ class Ripl():
         s = self._cur_parser().get_instruction_string('continuous_inference_status')
         return self.execute_instruction(s)
 
-    def start_continuous_inference(self, kernel="mh", use_global_scaffold=False):
+    def start_continuous_inference(self, params=None):
         s = self._cur_parser().get_instruction_string('start_continuous_inference')
-        self.execute_instruction(s, {'params':
-            {"kernel": kernel, "use_global_scaffold": use_global_scaffold}})
+        self.execute_instruction(s, {'params': self.parseInferParams(params)})
         return None
 
     def stop_continuous_inference(self):
