@@ -332,14 +332,11 @@ MatrixXd VentureSimplex::getMatrix() const
 /////////////
 vector<VentureValuePtr> VenturePair::getArray() const
 {
-  vector<VentureValuePtr> array;
-  array.push_back(getFirst());
+  // TODO Make this not be quadratic
+  // The reason it's done this way is to permit improper lists whose
+  // tails are arrays to count as valid Venture sequences.
   VentureValuePtr v(getRest());
-  
-  while (!v->isNil())
-    {
-      array.push_back(v->getFirst());
-      v = v->getRest();
-    }
-  return array;
+  vector<VentureValuePtr> answer = v->getArray();
+  answer.insert(answer.begin(), getFirst());
+  return answer;
 }
