@@ -1,9 +1,12 @@
 from venture.test.stats import statisticalTest, reportKnownMean
 from nose.tools import eq_, raises
 from venture.test.config import get_ripl, collectSamples, defaultKernel
+from testconfig import config
 from nose import SkipTest
 
 def testConstrainAVar1a():
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -13,6 +16,8 @@ def testConstrainAVar1a():
   eq_(ripl.report("pid"), 3)
 
 def testConstrainAVar1b():
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -22,6 +27,8 @@ def testConstrainAVar1b():
   eq_(ripl.report("pid"), 3)
 
 def testConstrainAVar2a():
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -32,6 +39,8 @@ def testConstrainAVar2a():
   eq_(ripl.report("pid"), 3)
 
 def testConstrainAVar2b():
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -42,6 +51,8 @@ def testConstrainAVar2b():
   eq_(ripl.report("pid"), 3)
 
 def testConstrainAVar3a():
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -66,6 +77,8 @@ def testConstrainAVar3b():
 
 def testConstrainAVar4a():
   """We allow downstream processing with no requests and no randomness."""
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -75,6 +88,8 @@ def testConstrainAVar4a():
   collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0})
 
 def testConstrainAVar4b():
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -84,6 +99,8 @@ def testConstrainAVar4b():
   collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0})
 
 def testConstrainAVar4c():
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
