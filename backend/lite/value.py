@@ -129,8 +129,8 @@ interface here is compatible with one possible path."""
       return self.array
     else:
       return [elt_type.asPython(v) for v in self.array]
-  def asPythonList(self):
-    return self.array
+  def asPythonList(self, elt_type=None):
+    return self.getArray(elt_type)
   def asStackDict(self):
     # TODO Are venture arrays reflected as lists to the stack?
     # TODO Are stack lists lists, or are they themselves type tagged?
