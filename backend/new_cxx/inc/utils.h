@@ -14,7 +14,7 @@
 /* Maps exp over the vector, normalizing so that the maximum is 1. */
 vector<double> mapExp(const vector<double>& xs);
 
-/* Samples given the partial sums of an unnormalized sequence of probabilities. */
+/* Samples from an unnormalized sequence of probabilities. */
 size_t sampleCategorical(const vector<double> & ps, gsl_rng * rng);
 
 /* Computes the partial sums, including an initial zero. */
@@ -38,7 +38,31 @@ VentureValuePtr simulateCategorical(const Simplex & ps,const vector<VentureValue
 double logDensityCategorical(VentureValuePtr val, const Simplex & ps);
 double logDensityCategorical(VentureValuePtr val, const Simplex & ps,const vector<VentureValuePtr> & os);
 
-vector<vector<VentureValuePtr> > cartesianProduct(vector<vector<VentureValuePtr> > original);
+template <typename T>
+vector<vector<T> > cartesianProduct(vector<vector<T> > sequences)
+{
+  vector<vector<T> > products;
+  if (sequences.empty())
+  {
+    products.push_back(vector<T>());
+  }
+  else
+  {
+    vector<T> lastGroup = sequences.back();
+    sequences.pop_back();
+    vector<vector<T> > recursiveProduct = cartesianProduct(sequences);
+    BOOST_FOREACH(vector<T> vs, recursiveProduct)
+    {
+      BOOST_FOREACH(T v, lastGroup)
+      {
+        vector<VentureValuePtr> new_vs(vs);
+        new_vs.push_back(v);
+        products.push_back(new_vs);
+      }
+    }
+  }
+  return products;
+}
 
 // Converts a C++ map to a python dict
 template <class K, class V>

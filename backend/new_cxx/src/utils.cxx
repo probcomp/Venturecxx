@@ -127,32 +127,3 @@ double logDensityCategorical(VentureValuePtr val, const Simplex & xs,const vecto
   assert(false);
 }
 
-
-vector<vector<VentureValuePtr> > cartesianProduct(vector<vector<VentureValuePtr> > original)
-{
-  vector<vector<VentureValuePtr> > products;
-  if (original.empty()) {  }
-  else if (original.size() == 1)
-  {
-    BOOST_FOREACH(VentureValuePtr v , original[0])
-    {
-      products.push_back(vector<VentureValuePtr>(1,v));;
-    }
-  }
-  else
-  {
-    vector<VentureValuePtr> firstGroup = original.back();
-    original.pop_back();
-    vector<vector<VentureValuePtr> > recursiveProduct = cartesianProduct(original);
-    BOOST_FOREACH(VentureValuePtr v, firstGroup)
-    {
-      BOOST_FOREACH(vector<VentureValuePtr> vs, recursiveProduct)
-      {
-	vector<VentureValuePtr> new_vs(vs.begin(),vs.end());
-	new_vs.push_back(v);
-	products.push_back(new_vs);
-      }
-    }
-  }
-  return products;
-}
