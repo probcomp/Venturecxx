@@ -7,8 +7,10 @@
 
 vector<double> mapExp(const vector<double>& xs)
 {
-  double max = *std::max_element(xs.begin(), xs.end());
   vector<double> ps(xs.size());
+  if (xs.empty()) { return ps; }
+  double max = *std::max_element(xs.begin(), xs.end());
+
   
   for (size_t i = 0; i < xs.size(); ++i)
   {
@@ -19,8 +21,10 @@ vector<double> mapExp(const vector<double>& xs)
 
 double logaddexp(const vector<double>& xs)
 {
-  double max = *std::max_element(xs.begin(), xs.end());
   double sum = 0;
+  if (xs.empty()) { return sum; }
+  double max = *std::max_element(xs.begin(), xs.end());
+
   for (size_t i = 0; i < xs.size(); ++i)
   {
     sum += exp(xs[i] - max);
