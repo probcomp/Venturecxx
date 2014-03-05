@@ -298,7 +298,7 @@ class VentureType(object):
     if vthing is None:
       return None
     else:
-      return self.asPython(vthing)
+      return self.asPython(vthing) # Function will be added by inheritance pylint:disable=no-member
 
 # TODO Is there any way to make these guys be proper singleton
 # objects?
@@ -321,10 +321,10 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typename in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "Matrix", "SP"]:
+for typestring in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "Matrix", "SP"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
-  exec(standard_venture_type(typename))
+  exec(standard_venture_type(typestring))
 
 class NilType(VentureType):
   def asVentureValue(self, _thing):
