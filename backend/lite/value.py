@@ -432,10 +432,15 @@ class RequestType(VentureType):
   values in the strict sense, and reflection is not permitted on them.
   This type exists to permit requester PSPs to be wrapped in the
   TypedPSP wrapper."""
+  def __init__(self, name="<request>"):
+    # Accept a name to report in the documentation because the
+    # synthesizer is not clever enough to properly compose
+    # descriptions of SPs from descriptions of their PSPs.
+    self._name = name
   def asVentureValue(self, thing):
     assert isinstance(thing, Request)
     return thing
   def asPython(self, thing):
     assert isinstance(thing, Request)
     return thing
-  def name(self): return "<request>"
+  def name(self): return self._name

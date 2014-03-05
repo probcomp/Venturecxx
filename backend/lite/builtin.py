@@ -26,6 +26,8 @@ def builtInValues():
 
 def no_request(output): return VentureSP(NullRequestPSP(), output)
 
+def esr_output(request): return VentureSP(request, ESRRefOutputPSP())
+
 def typed_nr(output, args_types, return_type, **kwargs):
   return no_request(TypedPSP(args_types, return_type, output, **kwargs))
 
@@ -40,6 +42,9 @@ def deterministic_psp(f, descr=None):
     def description(self,name):
       return self.descr % name
   return DeterministicPSP(descr)
+
+def deterministic_typed_psp(f, args_types, return_type, descr=None, **kwargs):
+  return TypedPSP(args_types, return_type, deterministic_psp(f, descr), **kwargs)
 
 def deterministic(f, descr=None):
   return no_request(deterministic_psp(f, descr))
@@ -139,7 +144,7 @@ def builtInSPsList():
            [ "size", deterministic(lambda xs: v.VentureNumber(xs.size()),
                                    "%s :: <SP <collection> -> <number>>\nReturns the number of elements in the given collection") ],
 
-           [ "branch", VentureSP(conditionals.BranchRequestPSP(),ESRRefOutputPSP()) ],
+           [ "branch", esr_output(conditionals.branch_request_psp()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType())],
            [ "make_csp", no_request(csp.MakeCSPOutputPSP()) ],
 
