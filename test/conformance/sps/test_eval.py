@@ -111,7 +111,7 @@ def testApply1():
   "This CSP does not handle lists and symbols correctly."
   ripl = get_ripl()
 
-  ripl.assume("apply","(lambda (op args) (eval (prepend op args) (get_empty_environment)))")
+  ripl.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
   ripl.predict("(apply times (array (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
 
   predictions = collectSamples(ripl,2)
