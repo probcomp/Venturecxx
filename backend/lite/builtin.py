@@ -31,6 +31,27 @@ def esr_output(request): return VentureSP(request, ESRRefOutputPSP())
 def typed_nr(output, args_types, return_type, **kwargs):
   return no_request(TypedPSP(args_types, return_type, output, **kwargs))
 
+def func_psp(f, descr=None):
+  class FunctionPSP(PSP):
+    def __init__(self, descr):
+      self.descr = descr
+      if self.descr is None:
+        self.descr = "deterministic %s"
+    def simulate(self,args):
+      return f(args)
+    def description(self,name):
+      return self.descr % name
+  return FunctionPSP(descr)
+
+def typed_func_psp(f, args_types, return_type, descr=None, **kwargs):
+  return TypedPSP(args_types, return_type, func_psp(f, descr), kwargs)
+
+def typed_func(*args, **kwargs):
+  return no_request(typed_func_psp(*args, **kwargs))
+
+# TODO This should actually be named to distinguish it from the
+# previous version, which accepts the whole args object (where this
+# one splats the operand values).
 def deterministic_psp(f, descr=None):
   class DeterministicPSP(PSP):
     def __init__(self, descr):
@@ -145,10 +166,11 @@ def builtInSPsList():
                                    "%s :: <SP <collection> -> <number>>\nReturns the number of elements in the given collection") ],
 
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
-           [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType())],
+           [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),
+                                           descr="%s returns either its first or second argument.")],
            [ "make_csp", no_request(csp.MakeCSPOutputPSP()) ],
 
-           [ "get_current_environment",no_request(eval_sps.GetCurrentEnvOutputPSP()) ],
+           [ "get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType()) ],
            [ "get_empty_environment",no_request(eval_sps.GetEmptyEnvOutputPSP()) ],
            [ "is_environment", type_test(env.EnvironmentType()) ],
            [ "extend_environment",no_request(eval_sps.ExtendEnvOutputPSP()) ],

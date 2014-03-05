@@ -11,11 +11,6 @@ class EvalRequestPSP(PSP):
   def description(self,name):
     return "(%s <exp> <env>) -> <object>\n  Evaluates the given expression in the given environment." % name
 
-class GetCurrentEnvOutputPSP(PSP):
-  def simulate(self,args): return args.env
-  def description(self,name):
-    return "(%s) -> <env>" % name
-
 class GetEmptyEnvOutputPSP(PSP):
   def simulate(self,args): return VentureEnvironment()
   def description(self,name):

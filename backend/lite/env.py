@@ -24,6 +24,8 @@ class VentureEnvironment(VentureValue):
   # VentureEnvironments are intentionally not comparable until we
   # decide otherwise
 
+  def getEnvironment(self): return self
+
   def asStackDict(self):
     # Methinks environments can be pretty opaque things for now.
     return {"type":"environment", "value":self}
