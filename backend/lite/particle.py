@@ -66,12 +66,8 @@ class Particle(Trace):
 
   def registerConstrainedChoice(self,node): 
     self.ccs = self.ccs.insert(node)
-    self.unregisterRandomChoice(node)
 
-  def unregisterRandomChoice(self,node): 
-    assert node in self.rcs
-    self.rcs = self.rcs.delete(node)
-    self.unregisterRandomChoiceInScope("default",node,node)
+  def unregisterRandomChoice(self,node): assert False
 
   def registerRandomChoiceInScope(self,scope,block,node):
     assert block is not None
@@ -79,10 +75,7 @@ class Particle(Trace):
     if not block in self.scopes.lookup(scope): self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.insert(block,PSet()))
     self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.adjust(block,lambda pnodes: pnodes.insert(node)))
 
-  def unregisterRandomChoiceInScope(self,scope,block,node):
-    self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.adjust(block,lambda pnodes: pnodes.delete(node)))
-    if not len(self.scopes.lookup(scope).lookup(block)): self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.delete(block))
-    if not len(self.scopes.lookup(scope)): self.scopes = self.scopes.delete(scope)
+  def unregisterRandomChoiceInScope(self,scope,block,node): assert False
 
 #### Misc
 
@@ -92,7 +85,7 @@ class Particle(Trace):
       return self.base.valueAt(node)
 
   def setValueAt(self,node,value): 
-    assert_is_none(self.base.valueAt(node))
+#    assert_is_none(self.base.valueAt(node))
     self.values = self.values.insert(node,value)
 
   def madeSPAt(self,node):
@@ -183,27 +176,35 @@ class Particle(Trace):
     self.madeSPAuxs[node] = aux
 
 ### Miscellaneous bookkeeping
-  def numBlocksInScope(self,scope): return len(self.scopes.lookup(scope)) + self.base.numBlocksInScope(scope)
+  def numBlocksInScope(self,scope): 
+    if scope != "default": return len(self.scopes.lookup(scope)) + self.base.numBlocksInScope(scope)
+    actualUnconstrainedChoices = self.base.rcs.copy()
+    for node in self.rcs: actualUnconstrainedChoices.add(node)
+    for node in self.ccs: actualUnconstrainedChoices.remove(node)
+    return len(actualUnconstrainedChoices)
 
 ### Commit
   def commit(self): 
     # note that we do not call registerRandomChoice() because it in turn calls registerRandomChoiceInScope()
     for node in self.rcs: self.base.rcs.add(node)
 
-    # note that we do not call registerConstrainedChoice() because it in turn calls unregisterRandomChoice()
-    for node in self.ccs: self.base.ccs.add(node)
-
-    for node in self.aes: self.base.registerAEKernel(node)
-
-    for (node,value) in self.values.iteritems(): 
-      self.base.setValueAt(node,value)
-    for (node,madeSP) in self.madeSPs.iteritems(): self.base.setMadeSPAt(node,madeSP)
-
     # this iteration includes "default"
     for (scope,blocks) in self.scopes.iteritems():
       for (block,pnodes) in blocks.iteritems():
         for pnode in pnodes:
           self.base.registerRandomChoiceInScope(scope,block,pnode)
+
+    # note that we do not call registerConstrainedChoice() because it in turn calls unregisterRandomChoice()
+    for node in self.ccs: self.base.registerConstrainedChoice(node)
+
+    for node in self.aes: self.base.registerAEKernel(node)
+
+    for (node,value) in self.values.iteritems(): 
+      self.base.setValueAt(node,value)
+
+    for (node,madeSP) in self.madeSPs.iteritems(): self.base.setMadeSPAt(node,madeSP)
+
+        
           
     for (node,esrParents) in self.esrParents.iteritems(): self.base.setEsrParentsAt(node,esrParents)
     for (node,numRequests) in self.numRequests.iteritems(): self.base.setNumRequestsAt(node,numRequests)

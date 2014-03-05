@@ -108,10 +108,7 @@ def run_venture_console(ripl):
         print ripl.continuous_inference_status()
       elif directive_name == "start-ci":
         args = current_line.split(" ")[1:]
-        if len(args) == 2:
-          ripl.start_continuous_inference(args[0], True)
-        else:
-          ripl.start_continuous_inference(args[0])
+        ripl.start_continuous_inference()
         print ripl.continuous_inference_status()
       elif directive_name == "stop-ci":
         ripl.stop_continuous_inference()
@@ -191,7 +188,10 @@ def expToDict(exp):
   tag = exp[0]
   if tag == "mh":
     assert len(exp) == 4
-    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3]}
+    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":True}
+  elif tag == "func-mh":
+    assert len(exp) == 4
+    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
   elif tag == "pgibbs":
     assert len(exp) == 5
     return {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":True}

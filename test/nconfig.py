@@ -6,5 +6,6 @@ config["num_transitions_per_sample"] = 50
 config["should_reset"] = True
 config["get_ripl"] = "lite"
 config["global_reporting_threshold"] = 0.001
-config["infer"] = "(mh default one 50)"
+#config["infer"] = "(pgibbs default ordered 2 5)"
+config["infer"] = "(mh default one 100)"
 config["ignore_inference_quality"] = False

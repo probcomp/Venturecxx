@@ -129,6 +129,8 @@ interface here is compatible with one possible path."""
       return self.array
     else:
       return [elt_type.asPython(v) for v in self.array]
+  def asPythonList(self, elt_type=None):
+    return self.getArray(elt_type)
   def asStackDict(self):
     # TODO Are venture arrays reflected as lists to the stack?
     # TODO Are stack lists lists, or are they themselves type tagged?
@@ -296,7 +298,7 @@ class VentureType(object):
     if vthing is None:
       return None
     else:
-      return self.asPython(vthing)
+      return self.asPython(vthing) # Function will be added by inheritance pylint:disable=no-member
 
 # TODO Is there any way to make these guys be proper singleton
 # objects?
@@ -307,15 +309,22 @@ class VentureType(object):
 class NumberType(VentureType):
   def asVentureValue(self, thing): return VentureNumber(thing)
   def asPython(self, vthing): return vthing.getNumber()
+  def __contains__(self, vthing): return isinstance(vthing, VentureNumber)
+  def name(self): return "<number>"
 
-for typename in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "Matrix", "SP", "Environment"]:
-  # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
-  # pylint: disable=exec-used
-  exec("""
+def standard_venture_type(typename):
+  return """
 class %sType(VentureType):
   def asVentureValue(self, thing): return Venture%s(thing)
   def asPython(self, vthing): return vthing.get%s()
-""" % (typename, typename, typename))
+  def __contains__(self, vthing): return isinstance(vthing, Venture%s)
+  def name(self): return "<%s>"
+""" % (typename, typename, typename, typename, typename.lower())
+
+for typestring in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "Matrix", "SP"]:
+  # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
+  # pylint: disable=exec-used
+  exec(standard_venture_type(typestring))
 
 class NilType(VentureType):
   def asVentureValue(self, _thing):
@@ -324,6 +333,7 @@ class NilType(VentureType):
   def asPython(self, _vthing):
     # TODO Throw an error if not nil?
     return []
+  def name(self): return "()"
 
 class ListType(VentureType):
   """A Venture list is either a VentureNil or a VenturePair whose
@@ -339,6 +349,7 @@ data List = Nil | Pair Any List
     return pythonListToVentureList(*thing)
   def asPython(self, thing):
     return thing.asPythonList()
+  def name(self): return "<list>"
 
 class ExpressionType(VentureType):
   """A Venture expression is either a Venture self-evaluating object
@@ -390,6 +401,8 @@ data Expression = Bool | Number | Atom | Symbol | Array Expression
     # Many other things are represented as themselves now. TODO Restrict this to self-evaluatings?
     return thing
 
+  def name(self): return "<exp>"
+
 class AnyType(VentureType):
   """The type object to use for parametric types -- does no conversion."""
   def asVentureValue(self, thing):
@@ -398,6 +411,7 @@ class AnyType(VentureType):
   def asPython(self, thing):
     assert isinstance(thing, VentureValue)
     return thing
+  def name(self): return "<object>"
 
 class HomogeneousArrayType(VentureType):
   """Type objects for homogeneous arrays.  Right now, the homogeneity
@@ -411,15 +425,22 @@ class HomogeneousArrayType(VentureType):
     return VentureArray(thing, self.subtype)
   def asPython(self, vthing):
     return vthing.getArray(self.subtype)
+  def name(self): return "<array %s>" % self.subtype.name()
 
 class RequestType(VentureType):
   """A type object for Venture's Requests.  Requests are not Venture
   values in the strict sense, and reflection is not permitted on them.
   This type exists to permit requester PSPs to be wrapped in the
   TypedPSP wrapper."""
+  def __init__(self, name="<request>"):
+    # Accept a name to report in the documentation because the
+    # synthesizer is not clever enough to properly compose
+    # descriptions of SPs from descriptions of their PSPs.
+    self._name = name
   def asVentureValue(self, thing):
     assert isinstance(thing, Request)
     return thing
   def asPython(self, thing):
     assert isinstance(thing, Request)
     return thing
+  def name(self): return self._name

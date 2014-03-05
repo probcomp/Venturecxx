@@ -8,6 +8,7 @@ class SMap(object):
   def __getitem__(self,k):
     return self.a[self.d[k]][1]
 
+
   def __setitem__(self,k,v):
     assert not k in self.d
     self.d[k] = len(self.a)

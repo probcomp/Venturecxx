@@ -52,6 +52,10 @@ def lite(args):
     banner()
     run_venture_console(v.make_lite_church_prime_ripl())
 
+def puma(args):
+    banner()
+    run_venture_console(v.make_puma_church_prime_ripl())
+
 parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform')
 parser.add_argument('--version', action='version', version='Venture, version 0.1.1')
 subparsers = parser.add_subparsers(title="optional mode")
@@ -63,6 +67,10 @@ parser_local.set_defaults(func=local)
 parser_local = subparsers.add_parser("lite", help="Start a local Venture Lite session",
                                      description="Start a local Venture Lite session")
 parser_local.set_defaults(func=lite)
+
+parser_local = subparsers.add_parser("puma", help="Start a local Venture Puma session",
+                                     description="Start a local Venture Puma session")
+parser_local.set_defaults(func=puma)
 
 default_port = 8082
 

@@ -273,11 +273,14 @@ class VentureSivm(object):
                 "value" : val,
                 }
         o1 = self._call_core_sivm_instruction(inst1)
-        inst2 = {
+        inst2 = { "instruction" : "infer",
+                  "params" : { "transitions" : 0 } }
+        self._call_core_sivm_instruction(inst2)
+        inst3 = {
                 "instruction" : "forget",
                 "directive_id" : o1['directive_id'],
                 }
-        self._call_core_sivm_instruction(inst2)
+        self._call_core_sivm_instruction(inst3)
         return {}
     
     def _do_sample(self, instruction):

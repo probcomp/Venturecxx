@@ -1,0 +1,104 @@
+#include "value.h"
+#include <iostream>
+#include "values.h"
+#include "sp.h"
+#include "sprecord.h"
+#include "env.h"
+using std::cout;
+using std::endl;
+
+int getValueTypeRank(const VentureValue * v);
+void cannotConvertType(const VentureValue * obj, string target)
+{
+  cout << "Cannot convert " << obj->toString() << " to [" + target + "]" << endl;
+  assert(false);
+}
+
+bool VentureValue::hasDouble() const { return false; }
+
+double VentureValue::getDouble() const { cannotConvertType(this,"double"); assert(false); throw "no return"; }
+bool VentureValue::hasInt() const { return false; }
+long VentureValue::getInt() const { cannotConvertType(this,"int"); assert(false); throw "no return"; }
+int VentureValue::getAtom() const { cannotConvertType(this,"atom"); assert(false); throw "no return"; }
+bool VentureValue::isBool() const { return false; }
+bool VentureValue::getBool() const { cannotConvertType(this,"bool"); assert(false); throw "no return"; }
+bool VentureValue::hasSymbol() const { return false; }
+const string& VentureValue::getSymbol() const { cannotConvertType(this,"symbol"); assert(false); throw "no return"; }
+vector<VentureValuePtr> VentureValue::getArray() const { cannotConvertType(this,"array"); assert(false); throw "no return"; }
+
+const VentureValuePtr& VentureValue::getFirst() const { cannotConvertType(this,"pair"); assert(false); throw "no return"; }
+const VentureValuePtr& VentureValue::getRest() const { cannotConvertType(this,"pair"); assert(false); throw "no return"; }
+  
+const Simplex& VentureValue::getSimplex() const { cannotConvertType(this,"simplex"); assert(false); throw "no return"; }
+const VentureValuePtrMap<VentureValuePtr>& VentureValue::getDictionary() const { cannotConvertType(this,"dictionary"); assert(false); throw "no return"; }
+MatrixXd VentureValue::getMatrix() const { cannotConvertType(this,"matrix"); assert(false); throw "no return"; }
+
+const vector<ESR>& VentureValue::getESRs() const { cannotConvertType(this,"requests"); assert(false); throw "no return"; }
+const vector<shared_ptr<LSR> >& VentureValue::getLSRs() const { cannotConvertType(this,"requests"); assert(false); throw "no return"; }
+
+Node * VentureValue::getNode() const { cannotConvertType(this,"node") ; assert(false); throw "no return"; }
+
+shared_ptr<SPAux> VentureValue::getSPAux() const { cannotConvertType(this,"sprecord") ; assert(false); throw "no return"; }
+
+VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { assert(false); }
+bool VentureValue::contains(VentureValuePtr index) const { assert(false); }
+int VentureValue::size() const { assert(false); }
+
+
+boost::python::dict VentureValue::toPython(Trace * trace) const
+{ 
+  boost::python::dict value;
+  value["type"] = "unknown";
+  value["value"] = boost::python::object(false);
+  return value;
+}
+
+
+size_t VentureValue::hash() const { assert(false); assert(false); throw "no return"; }
+
+
+struct VentureSymbol;
+
+bool VentureValue::equals(const VentureValuePtr & other) const 
+{
+  int t1 = getValueTypeRank(this);
+  int t2 = getValueTypeRank(other.get());
+  if (t1 != t2) { return false; }
+  else { return equalsSameType(other); }
+}
+
+bool VentureValue::equalsSameType(const VentureValuePtr & rhs) const { assert(false); }
+
+bool VentureValue::operator<(const VentureValuePtr & rhs) const 
+{
+  int t1 = getValueTypeRank(this);
+  int t2 = getValueTypeRank(rhs.get());
+  if (t1 < t2) { return true; }
+  else if (t2 < t1) { return false; }
+  else { return ltSameType(rhs); }
+}
+
+bool VentureValue::ltSameType(const VentureValuePtr & rhs) const { assert(false); }
+
+
+int getValueTypeRank(const VentureValue * v)
+{
+  // Note: differs slightly from 
+  if (dynamic_cast<const VentureNumber *>(v)) { return 0; }
+  else if (dynamic_cast<const VentureAtom *>(v)) { return 1; }
+  else if (dynamic_cast<const VentureBool *>(v)) { return 2; }
+  else if (dynamic_cast<const VentureSymbol *>(v)) { return 3; }
+  else if (dynamic_cast<const VentureArray *>(v)) { return 4; }
+  else if (dynamic_cast<const VentureNil *>(v)) { return 5; }
+  else if (dynamic_cast<const VenturePair *>(v)) { return 6; }
+  else if (dynamic_cast<const VentureSimplex *>(v)) { return 7; }
+  else if (dynamic_cast<const VentureDictionary *>(v)) { return 8; }
+  else if (dynamic_cast<const VentureMatrix *>(v)) { return 9; }
+  else if (dynamic_cast<const VentureSPRef *>(v)) { return 10; }
+  else if (dynamic_cast<const VentureEnvironment *>(v)) { return 11; }
+  else if (dynamic_cast<const VentureSPRecord *>(v)) { return 12; }
+  else if (dynamic_cast<const VentureRequest *>(v)) { return 13; }
+  else if (dynamic_cast<const VentureNode *>(v)) { return 14; }
+  else if (dynamic_cast<const VentureID *>(v)) { return 15; }
+  else { assert(false); return -1; }
+}

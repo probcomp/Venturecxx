@@ -10,7 +10,7 @@ class MakeMSPOutputPSP(PSP):
     return VentureSP(MSPRequestPSP(sharedOperatorNode),ESRRefOutputPSP())
 
   def description(self,name):
-    return "(%s <SP a b>) -> <SP a b>\n  Returns the stochastically memoized version of the input SP." % name
+    return "%s :: <SP <SP a ... -> b> -> <SP a ... -> b>>\n  Returns the stochastically memoized version of the input SP." % name
 
 class MSPRequestPSP(PSP):
   def __init__(self,sharedOperatorNode): self.sharedOperatorNode = sharedOperatorNode

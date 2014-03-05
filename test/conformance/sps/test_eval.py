@@ -34,8 +34,8 @@ def testEvalSmoke2():
 def testEvalSmoke3():
   "Eval should work on programmatically constructed expressions."
   ripl = get_ripl()
-  ripl.assume("exp", "(array (quote plus) 2 2)")
-  eq_(ripl.predict("(eval exp (get_current_environment))"), 4.0)
+  ripl.assume("expr", "(array (quote plus) 2 2)")
+  eq_(ripl.predict("(eval expr (get_current_environment))"), 4.0)
 
 @statisticalTest
 def testEval1():
@@ -109,11 +109,10 @@ def testEval3():
 @statisticalTest
 def testApply1():
   "This CSP does not handle lists and symbols correctly."
-  raise SkipTest("There is a reason that expressions are usually made of linked lists rather than arrays.  Issue https://app.asana.com/0/9277419963067/10249544822514")
   ripl = get_ripl()
 
   ripl.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
-  ripl.predict("(apply times (list (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
+  ripl.predict("(apply times (array (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
 
   predictions = collectSamples(ripl,2)
   return reportKnownMeanVariance(1000, 101**3 - 100**3, predictions)

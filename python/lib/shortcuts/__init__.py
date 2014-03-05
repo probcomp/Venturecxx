@@ -18,7 +18,7 @@
 
 from venture import parser, ripl, sivm, server
 
-def make_core_sivm():
+def make_core_cxx_sivm():
     from venture.cxx import engine
     return sivm.CoreSivm(engine.Engine())
 
@@ -26,19 +26,41 @@ def make_core_lite_sivm():
     from venture.lite import engine
     return sivm.CoreSivm(engine.Engine())
 
-def make_venture_sivm():
-    return sivm.VentureSivm(make_core_sivm())
+def make_core_puma_sivm():
+    from venture.puma import engine
+    return sivm.CoreSivm(engine.Engine())
+
+make_core_sivm = make_core_puma_sivm
+
+def make_venture_cxx_sivm():
+    return sivm.VentureSivm(make_core_cxx_sivm())
 
 def make_venture_lite_sivm():
     return sivm.VentureSivm(make_core_lite_sivm())
+
+def make_venture_puma_sivm():
+    return sivm.VentureSivm(make_core_puma_sivm())
+
+def make_venture_sivm():
+    return sivm.VentureSivm(make_core_sivm())
 
 def make_church_prime_ripl():
     v = make_venture_sivm()
     parser1 = parser.ChurchPrimeParser()
     return ripl.Ripl(v,{"church_prime":parser1})
 
+def make_cxx_church_prime_ripl():
+    v = make_venture_cxx_sivm()
+    parser1 = parser.ChurchPrimeParser()
+    return ripl.Ripl(v,{"church_prime":parser1})
+
 def make_lite_church_prime_ripl():
     v = make_venture_lite_sivm()
+    parser1 = parser.ChurchPrimeParser()
+    return ripl.Ripl(v,{"church_prime":parser1})
+
+def make_puma_church_prime_ripl():
+    v = make_venture_puma_sivm()
     parser1 = parser.ChurchPrimeParser()
     return ripl.Ripl(v,{"church_prime":parser1})
 

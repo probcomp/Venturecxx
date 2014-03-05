@@ -14,9 +14,10 @@
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
-from venture.sivm import CoreSivm
 import venture.sivm.core_sivm as module
 from venture.exception import VentureException
+from venture.test.config import get_core_sivm
+from testconfig import config
 from nose import SkipTest
 
 #Note -- these tests only check for minimum functionality
@@ -26,8 +27,7 @@ class TestCoreSivm(unittest.TestCase):
     _multiprocess_can_split_ = True
 
     def setUp(self):
-        from venture.cxx import engine
-        self.sivm = CoreSivm(engine.Engine())
+        self.sivm = get_core_sivm()
         self.sivm.execute_instruction({"instruction":"clear"})
 
     def tearDown(self):
@@ -241,6 +241,8 @@ class TestCoreSivm(unittest.TestCase):
         self.assertEquals(o2['logscore'],-0.6931471805599453)
     
     def test_continuous_inference(self):
+        if config["get_ripl"] == "lite":
+            raise SkipTest("Venture Lite does not support continuous inference")
         status = {'instruction':'continuous_inference_status'}
         o1 = self.sivm.execute_instruction(status)
         self.assertEquals(o1['running'], False)
