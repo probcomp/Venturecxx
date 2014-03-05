@@ -57,7 +57,7 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
     possibleValues.push_back(psp->enumerateValues(args));
   }
   vector<vector<VentureValuePtr> > valueTuples = cartesianProduct(possibleValues);
-  
+
   // detach and extract from the principal nodes
   registerDeterministicLKernels(trace, scaffold, outputNodes, currentValues);
   pair<double, shared_ptr<DB> > rhoWeightAndDB = detachAndExtract(trace,scaffold->border[0],scaffold);
@@ -82,7 +82,16 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
       regenAndAttach(particle.get(),scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),nullGradients);
     xiWeights.push_back(xiWeight);
   }
-  
+
+  double alpha = 0;
+  if (xiWeights.empty())
+    {
+      shared_ptr<Particle> rhoParticle(new Particle(trace));
+      regenAndAttach(rhoParticle.get(),scaffold->border[0],scaffold,true,rhoDB,shared_ptr<map<Node*,Gradient> >());
+      finalParticle = rhoParticle;
+    }
+  else
+    {
   // sample a new particle
   size_t finalIndex = sampleCategorical(mapExp(xiWeights), trace->getRNG());
   finalParticle = particles[finalIndex];
@@ -94,8 +103,8 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
 
   double weightMinusXi = logaddexp(otherXiWeightsWithRho);
   double weightMinusRho = logaddexp(xiWeights);
-  double alpha = weightMinusRho - weightMinusXi;
-  
+  alpha = weightMinusRho - weightMinusXi;
+    }
   return make_pair(finalParticle.get(),alpha);
 }
 
