@@ -24,6 +24,18 @@ double FlipOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) c
   else { return log(1 - p); }
 }
 
+vector<VentureValuePtr> FlipOutputPSP::enumerateValues(shared_ptr<Args> args) const
+{
+  double p = 0.5;
+  if (!args->operandValues.empty()) { p = args->operandValues[0]->getDouble(); }
+
+  vector<VentureValuePtr> vs;
+
+  if (p > 0) { vs.push_back(VentureValuePtr(new VentureBool(true))); }
+  if (p < 1) { vs.push_back(VentureValuePtr(new VentureBool(false))); }
+  return vs;
+}
+
 VentureValuePtr BernoulliOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   double p = 0.5;
@@ -41,6 +53,19 @@ double BernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> ar
   if (value->getBool()) { return log(p); }
   else { return log(1 - p); }
 }
+
+vector<VentureValuePtr> BernoulliOutputPSP::enumerateValues(shared_ptr<Args> args) const
+{
+  double p = 0.5;
+  if (!args->operandValues.empty()) { p = args->operandValues[0]->getDouble(); }
+
+  vector<VentureValuePtr> vs;
+
+  if (p > 0) { vs.push_back(VentureValuePtr(new VentureAtom(1))); }
+  if (p < 1) { vs.push_back(VentureValuePtr(new VentureAtom(0))); }
+  return vs;
+}
+
 
 VentureValuePtr UniformDiscreteOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {

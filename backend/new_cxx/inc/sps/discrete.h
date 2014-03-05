@@ -8,12 +8,20 @@ struct FlipOutputPSP : RandomPSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args,gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+
 };
 
 struct BernoulliOutputPSP : RandomPSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args,gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+
 };
 
 struct UniformDiscreteOutputPSP : RandomPSP
