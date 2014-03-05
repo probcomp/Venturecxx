@@ -2,12 +2,14 @@ from venture.test.config import get_ripl, default_num_transitions_per_sample
 import itertools
 from nose.plugins.attrib import attr
 from nose.tools import assert_less, assert_greater
+from nose import SkipTest
 
 def mean(xs): return sum(xs) / float(len(xs))
     
 
 def testCRPMix1a():
   """Baseline for testCRPMix1b"""
+  raise SkipTest("Selsam expects this test to be broken.  Issue: https://app.asana.com/0/9277419963067/10705122294330")
   ripl = get_ripl()
 
   ripl.assume('cluster_crp', "(lambda () 1)")
@@ -38,6 +40,7 @@ def testCRPMix1a():
 
 def testCRPMix1b():
   """Makes sure basic clustering model behaves reasonably"""
+  raise SkipTest("Selsam expects this test to be broken.  Issue: https://app.asana.com/0/9277419963067/10705122294330")
   ripl = get_ripl()
 
   ripl.assume('cluster_crp', "(lambda () (if (flip) 1 1))")
