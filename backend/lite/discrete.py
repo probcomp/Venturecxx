@@ -48,10 +48,8 @@ class BinomialOutputPSP(RandomPSP):
     elif p == 0: return [0]
     else: return [i for i in range(int(n)+1)]
 
-  # TODO AXCH can we have a convention where we include the types and the meanings?
-  # e.g. (%s count::Number probability::Number)
   def description(self,name):
-    return "(%s <count> <probability>) -> <number>" % name
+    return "  (%s n p) simulates flipping n Bernoulli trials independently with probability p and returns the total number of successes." % name
 
 
 class CategoricalOutputPSP(RandomPSP):
