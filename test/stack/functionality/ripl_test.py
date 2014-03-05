@@ -220,8 +220,6 @@ class TestRipl(unittest.TestCase):
 
     def test_force(self):
         #normal force
-        if config["get_ripl"] == "puma":
-            raise SkipTest("Triggers a mystery assert in Puma.  Issue: https://app.asana.com/0/9277419963067/10705122294325")
         self.ripl.assume('a','(uniform_continuous 0 1)')
         self.ripl.force('a',0.2)
         self.ripl.force('a',0.5)
