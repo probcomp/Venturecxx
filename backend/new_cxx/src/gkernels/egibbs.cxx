@@ -31,7 +31,7 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   assertTrace(trace,scaffold);
   assert(scaffold->border.size() == 1);
   
-  // principal nodes should be OutputNodes
+  // principal nodes should be ApplicationNodes
   set<Node*> pNodes = scaffold->getPrincipalNodes();
   vector<OutputNode*> outputNodes;
   BOOST_FOREACH(Node * node, pNodes)
@@ -73,6 +73,7 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   BOOST_FOREACH(vector<VentureValuePtr> valueTuple, valueTuples)
   {
     // TODO skip currentValues
+    if (VentureValuePtr(new VentureArray(valueTuple))->equals(VentureValuePtr(new VentureArray(currentValues)))) { continue; }
     registerDeterministicLKernels(trace, scaffold, outputNodes, valueTuple);
     shared_ptr<Particle> particle(new Particle(trace));
     particles.push_back(particle);
