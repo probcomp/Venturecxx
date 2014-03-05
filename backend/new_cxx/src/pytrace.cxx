@@ -12,6 +12,7 @@
 #include "gkernels/mh.h"
 #include "gkernels/func_mh.h"
 #include "gkernels/pgibbs.h"
+#include "gkernels/egibbs.h"
 
 PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false) {}
 PyTrace::~PyTrace() {}
@@ -144,28 +145,27 @@ struct Inferer
   Inferer(shared_ptr<ConcreteTrace> trace, boost::python::dict params) : trace(trace)
   {
     string kernel = boost::python::extract<string>(params["kernel"]);
-    
+    getBlockAndScope(params);
     if (kernel == "mh")
     {
       gKernel = shared_ptr<GKernel>(new MHGKernel);
-      getBlockAndScope(params);
     }
     else if (kernel == "func_mh")
     {
       gKernel = shared_ptr<GKernel>(new FuncMHGKernel);
-      getBlockAndScope(params);
     }
     else if (kernel == "pgibbs")
     {
       gKernel = shared_ptr<GKernel>(new PGibbsGKernel(3));
-      getBlockAndScope(params);
+    }
+    else if (kernel == "gibbs")
+    {
+      gKernel = shared_ptr<GKernel>(new EnumerativeGibbsGKernel);
     }
     else
     {
       cout << "\n***Kernel '" << kernel << "' not supported. Using MH instead.***" << endl;
       gKernel = shared_ptr<GKernel>(new MHGKernel);
-      block = VentureValuePtr(new VentureSymbol("default"));
-      scope = VentureValuePtr(new VentureSymbol("one"));
     }
     
     scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
