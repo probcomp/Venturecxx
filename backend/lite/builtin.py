@@ -5,6 +5,7 @@ from sp import VentureSP
 from psp import NullRequestPSP, ESRRefOutputPSP, PSP, TypedPSP
 
 import discrete
+import dirichlet
 import continuous
 import dstructures
 import csp
@@ -193,17 +194,17 @@ def builtInSPsList():
            [ "gamma",binaryNumS(continuous.GammaOutputPSP()) ],
            [ "student_t",unaryNumS(continuous.StudentTOutputPSP()) ],
 
-           [ "dirichlet",typed_nr(discrete.DirichletOutputPSP(), [v.HomogeneousArrayType(v.NumberType())], v.SimplexType()) ],
-           [ "symmetric_dirichlet",typed_nr(discrete.SymmetricDirichletOutputPSP(), [v.NumberType(), v.NumberType()], v.SimplexType()) ],
-
-           [ "make_dir_mult",typed_nr(discrete.MakerCDirMultOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.ArrayType()], v.AnyType(), min_req_args=1) ],
-           [ "make_uc_dir_mult",typed_nr(discrete.MakerUDirMultOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.ArrayType()], v.AnyType(), min_req_args=1) ],
-
-           [ "make_sym_dir_mult",typed_nr(discrete.MakerCSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], v.AnyType(), min_req_args=2) ], # Saying AnyType here requires the underlying psp to emit a VentureValue.
-           [ "make_uc_sym_dir_mult",typed_nr(discrete.MakerUSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], v.AnyType(), min_req_args=2) ],
-
            [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], v.AnyType()) ],
            [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], v.AnyType()) ],
+
+           [ "dirichlet",typed_nr(dirichlet.DirichletOutputPSP(), [v.HomogeneousArrayType(v.NumberType())], v.SimplexType()) ],
+           [ "symmetric_dirichlet",typed_nr(dirichlet.SymmetricDirichletOutputPSP(), [v.NumberType(), v.NumberType()], v.SimplexType()) ],
+
+           [ "make_dir_mult",typed_nr(dirichlet.MakerCDirMultOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.ArrayType()], v.AnyType(), min_req_args=1) ],
+           [ "make_uc_dir_mult",typed_nr(dirichlet.MakerUDirMultOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.ArrayType()], v.AnyType(), min_req_args=1) ],
+
+           [ "make_sym_dir_mult",typed_nr(dirichlet.MakerCSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], v.AnyType(), min_req_args=2) ], # Saying AnyType here requires the underlying psp to emit a VentureValue.
+           [ "make_uc_sym_dir_mult",typed_nr(dirichlet.MakerUSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], v.AnyType(), min_req_args=2) ],
 
            [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType()], v.AnyType()) ],
 
