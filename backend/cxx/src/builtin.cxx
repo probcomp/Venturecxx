@@ -61,6 +61,7 @@ map<string,SP *> initBuiltInSPs()
     {"times", new TimesSP},
     {"div", new DivideSP},
     {"power", new PowerSP},
+    {"pow", new PowerSP},
     {"eq", new EqualSP},
     {"gt", new GreaterThanSP},
     {"lt", new LessThanSP},

@@ -212,6 +212,11 @@ bool ConcreteTrace::isMakerNode(Node * node) { return madeSPRecords.count(node);
 bool ConcreteTrace::isConstrained(Node * node) { return constrainedChoices.count(node); }
 bool ConcreteTrace::isObservation(Node * node) { return observedValues.count(node); }
 
+/* Derived Getters */
+shared_ptr<PSP> ConcreteTrace::getPSP(ApplicationNode * node)
+{
+  return getMadeSP(getOperatorSPMakerNode(node))->getPSP(node);
+}
 
 /* Primitive Setters */
 void ConcreteTrace::setValue(Node * node, VentureValuePtr value) 
