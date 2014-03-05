@@ -94,11 +94,8 @@ class TypedPSP(PSP):
   # TODO Wrap the simulation and delta kernels properly (once those are tested)
 
   def description(self,name):
-    type_name = self.f_type.name()
-    if isinstance(type_name, str):
-      signature = "%s :: %s" % (name, self.f_type.name())
-    else:
-      signature = "\n".join(["%s :: %s" % (name, variant) for variant in type_name])
+    type_names = self.f_type.names()
+    signature = "\n".join(["%s :: %s" % (name, variant) for variant in type_names])
     return signature + "\n" + self.psp.description(name)
 
   # TODO Is this method part of the psp interface?

@@ -92,8 +92,10 @@ used in the implementation of TypedPSP and TypedLKernel."""
     return_spec = self.return_type.name()
     return "<SP %s%s -> %s>" % (args_spec, variadicity_mark, return_spec)
 
+  def names(self):
+    """One name for each possible arity of this procedure."""
+    return [self._name_for_fixed_arity(self.args_types[0:i]) for i in range(self.min_req_args, len(self.args_types) + 1)]
+
   def name(self):
-    if self.min_req_args is None:
-      return self._name_for_fixed_arity(self.args_types)
-    else:
-      return [self._name_for_fixed_arity(self.args_types[0:i]) for i in range(self.min_req_args, len(self.args_types) + 1)]
+    """A default name for when there is only room for one name."""
+    return self._name_for_fixed_arity(self.args_types)
