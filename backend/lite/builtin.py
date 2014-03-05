@@ -170,8 +170,10 @@ def builtInSPsList():
                                            descr="%s returns either its first or second argument.")],
            [ "make_csp", no_request(csp.MakeCSPOutputPSP()) ],
 
-           [ "get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType()) ],
-           [ "get_empty_environment", typed_func(lambda args: env.VentureEnvironment(), [], env.EnvironmentType()) ],
+           [ "get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType(),
+                                                   descr="%s returns the lexical environment of its invocation site") ],
+           [ "get_empty_environment", typed_func(lambda args: env.VentureEnvironment(), [], env.EnvironmentType(),
+                                                 descr="%s returns the empty environment") ],
            [ "is_environment", type_test(env.EnvironmentType()) ],
            [ "extend_environment",no_request(eval_sps.ExtendEnvOutputPSP()) ],
            [ "eval",VentureSP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()) ],

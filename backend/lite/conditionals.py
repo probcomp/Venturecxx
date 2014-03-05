@@ -15,7 +15,7 @@ class BranchRequestPSP(PSP):
     return Request([ESR(args.node,exp,args.env)])
 
   def description(self,name):
-    return "%s evaluates either exp1 or exp2 in the current environment and returns the result." % name
+    return "%s evaluates either exp1 or exp2 in the current environment and returns the result.  Is itself deterministic, but the chosen expression may involve a stochastic computation." % name
 
 def branch_request_psp():
   return TypedPSP([v.BoolType(), v.ExpressionType(), v.ExpressionType()], v.RequestType("<object>"), BranchRequestPSP())
