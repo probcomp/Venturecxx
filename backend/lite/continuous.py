@@ -51,7 +51,7 @@ class NormalOutputPSP(RandomPSP):
     return [gradMu,gradSigma]
 
   def description(self,name):
-    return "(%s mu sigma) -> <number>" % name
+    return "  (%s mu sigma) samples a normal distribution with mean mu and standard deviation sigma." % name
 
 class UniformOutputPSP(RandomPSP):
   # TODO don't need to be class methods
@@ -69,7 +69,7 @@ class UniformOutputPSP(RandomPSP):
   def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 
   def description(self,name):
-    return "(%s low high) -> <number>" % name
+    return "  (%s low high) -> samples a uniform real number between low and high." % name
 
   # TODO Uniform presumably has a variational kernel?
 
@@ -82,7 +82,7 @@ class BetaOutputPSP(RandomPSP):
   def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues)
 
   def description(self,name):
-    return "(%s a b) -> <number>" % name
+    return "  (%s alpha beta) returns a sample from a beta distribution with shape parameters alpha and beta." % name
 
   # TODO Beta presumably has a variational kernel too?
 
@@ -95,7 +95,7 @@ class GammaOutputPSP(RandomPSP):
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
 
   def description(self,name):
-    return "(%s alpha beta) -> <number>" % name
+    return "  (%s alpha beta) returns a sample from a gamma distribution with shape parameter alpha and rate parameter beta." % name
 
   # TODO Gamma presumably has a variational kernel too?
 
@@ -108,7 +108,7 @@ class StudentTOutputPSP(RandomPSP):
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
 
   def description(self,name):
-    return "(%s nu) -> <number>" % name
+    return "  (%s nu) returns a sample from Student's t distribution with nu degrees of freedom." % name
 
   # TODO StudentT presumably has a variational kernel too?
 

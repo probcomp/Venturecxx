@@ -31,7 +31,7 @@ class BernoulliOutputPSP(RandomPSP):
     else: return [True,False]
 
   def description(self,name):
-    return "(%s <number>) -> <bool>\n(%s) -> <bool>" % (name,name)
+    return "  (%s p) returns true with probability p and false otherwise.  If omitted, p is taken to be 0.5." % name
 
 class BinomialOutputPSP(RandomPSP):
   def simulate(self,args):
@@ -67,7 +67,7 @@ class CategoricalOutputPSP(RandomPSP):
       return logDensityCategorical(val,*args.operandValues)
 
   def description(self,name):
-    return "(%s <simplex>) -> <number>\n(%s <simplex> <list a>) -> a\n  Samples a categorical.  In the one argument case, returns the index of the chosen option; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % (name, name)
+    return "  (%s weights objects) samples a categorical with the given weights.  In the one argument case, returns the index of the chosen option as an atom; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % name
 
 #### Collapsed Beta Bernoulli
 class BetaBernoulliSPAux(SPAux):
