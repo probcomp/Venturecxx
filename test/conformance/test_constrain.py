@@ -1,6 +1,6 @@
 from venture.test.stats import statisticalTest, reportKnownMean
 from nose.tools import eq_, raises
-from venture.test.config import get_ripl, collectSamples, defaultKernel
+from venture.test.config import get_ripl, collectSamples, defaultKernel, collectStateSequence
 from testconfig import config
 from nose import SkipTest
 
@@ -12,7 +12,9 @@ def testConstrainAVar1a():
   ripl.assume("y","(normal 0.0 1.0)")
   ripl.observe("(if (scope_include 0 0 (flip)) x y)", 3.0)
   ripl.predict("x", label="pid")
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0})
+  # Not collectSamples because we depend on the trace being in a
+  # non-reset state at the end
+  collectStateSequence(ripl,"pid",infer_merge={"scope":0,"block":0})
   eq_(ripl.report("pid"), 3)
 
 def testConstrainAVar1b():
@@ -23,7 +25,9 @@ def testConstrainAVar1b():
   ripl.assume("y","(normal 0.0 1.0)")
   ripl.predict("x", label="pid")
   ripl.observe("(if (scope_include 0 0 (flip)) x y)", 3.0)
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0})
+  # Not collectSamples because we depend on the trace being in a
+  # non-reset state at the end
+  collectStateSequence(ripl,"pid",infer_merge={"scope":0,"block":0})
   eq_(ripl.report("pid"), 3)
 
 def testConstrainAVar2a():
@@ -35,7 +39,9 @@ def testConstrainAVar2a():
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
   ripl.predict("(if (f) x y)", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0})
+  # Not collectSamples because we depend on the trace being in a
+  # non-reset state at the end
+  collectStateSequence(ripl,"pid",infer_merge={"scope":0,"block":0})
   eq_(ripl.report("pid"), 3)
 
 def testConstrainAVar2b():
@@ -47,7 +53,9 @@ def testConstrainAVar2b():
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
   ripl.predict("(if (not (f)) x y)", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0})
+  # Not collectSamples because we depend on the trace being in a
+  # non-reset state at the end
+  collectStateSequence(ripl,"pid",infer_merge={"scope":0,"block":0})
   eq_(ripl.report("pid"), 3)
 
 def testConstrainAVar3a():
@@ -61,6 +69,7 @@ def testConstrainAVar3a():
   ripl.observe("(if (f) x y)", 3.0)
   ripl.observe("(f)","true")
   ripl.sivm.core_sivm.engine.infer({"kernel":"mh","transitions":20})
+  eq_(ripl.report("pid"), 3)
 
 @raises(Exception)
 def testConstrainAVar3b():
@@ -73,6 +82,7 @@ def testConstrainAVar3b():
   ripl.predict("x", label="pid")
   ripl.observe("(f)","true")
   ripl.sivm.core_sivm.engine.infer({"kernel":"mh","transitions":20})
+  eq_(ripl.report("pid"), 3)
 
 
 def testConstrainAVar4a():
@@ -85,7 +95,10 @@ def testConstrainAVar4a():
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
   ripl.predict("(if (f) (* x 5) (* y 5))", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0})
+  # Not collectSamples because we depend on the trace being in a
+  # non-reset state at the end
+  collectStateSequence(ripl,"pid",infer_merge={"scope":0,"block":0})
+  eq_(ripl.report("pid"), 15.0)
 
 def testConstrainAVar4b():
   if defaultKernel() == "rejection":
@@ -96,7 +109,10 @@ def testConstrainAVar4b():
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
   ripl.predict("(if (not (f)) (* x 5) (* y 5))", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0})
+  # Not collectSamples because we depend on the trace being in a
+  # non-reset state at the end
+  collectStateSequence(ripl,"pid",infer_merge={"scope":0,"block":0})
+  eq_(ripl.report("pid"), 15.0)
 
 def testConstrainAVar4c():
   if defaultKernel() == "rejection":
@@ -107,7 +123,10 @@ def testConstrainAVar4c():
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
   ripl.predict("(* x 5)", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0})
+  # Not collectSamples because we depend on the trace being in a
+  # non-reset state at the end
+  collectStateSequence(ripl,"pid",infer_merge={"scope":0,"block":0})
+  eq_(ripl.report("pid"), 15.0)
 
 @raises(Exception)
 def testConstrainAVar5a():
