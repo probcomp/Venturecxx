@@ -90,11 +90,17 @@ used in the implementation of TypedPSP and TypedLKernel."""
       answer.operandValues = [self.args_types[0].asPythonNoneable(v) for v in args.operandValues]
     return answer
 
-  def name(self):
-    args_spec = " ".join([t.name() for t in self.args_types])
+  def _name_for_fixed_arity(self, args_types):
+    args_spec = " ".join([t.name() for t in args_types])
     variadicity_mark = " ..." if self.variadic else ""
     return_spec = self.return_type.name()
     return "<SP %s%s -> %s>" % (args_spec, variadicity_mark, return_spec)
+
+  def name(self):
+    if self.min_req_args is None:
+      return self._name_for_fixed_arity(self.args_types)
+    else:
+      return [self._name_for_fixed_arity(self.args_types[0:i]) for i in range(self.min_req_args, len(self.args_types) + 1)]
 
 class TypedPSP(PSP):
   def __init__(self, args_types, return_type, psp, variadic=False, min_req_args=None):
@@ -135,7 +141,11 @@ class TypedPSP(PSP):
   # TODO Wrap the simulation and delta kernels properly (once those are tested)
 
   def description(self,name):
-    signature = "%s :: %s" % (name, self.f_type.name())
+    type_name = self.f_type.name()
+    if isinstance(type_name, str):
+      signature = "%s :: %s" % (name, self.f_type.name())
+    else:
+      signature = "\n".join(["%s :: %s" % (name, variant) for variant in type_name])
     return signature + "\n" + self.psp.description(name)
 
   # TODO Is this method part of the psp interface?
