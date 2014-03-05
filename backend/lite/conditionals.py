@@ -15,13 +15,3 @@ class BranchRequestPSP(PSP):
 
   def description(self,name):
     return "(%s <bool> <exp1> <exp2>) -> <object>\n  Evaluates either exp1 or exp2 in the current environment and returns the result." % name
-
-class BiplexOutputPSP(PSP):
-  def simulate(self,args):
-    if args.operandValues[0]:
-      return args.operandValues[1]
-    else:
-      return args.operandValues[2]
-
-  def description(self,name):
-    return "(%s <bool> <object1> <object2>) -> <object>\n  Returns either object1 or object2." % name
