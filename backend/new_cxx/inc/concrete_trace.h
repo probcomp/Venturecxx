@@ -60,6 +60,9 @@ struct ConcreteTrace : Trace
   bool isConstrained(Node * node);
   bool isObservation(Node * node);
 
+  /* Derived Getters */
+  shared_ptr<PSP> getPSP(ApplicationNode * node);
+  
   /* Primitive Setters */
   void setValue(Node * node, VentureValuePtr value);
   void clearValue(Node * node);
@@ -100,7 +103,7 @@ struct ConcreteTrace : Trace
   vector<set<Node*> > getOrderedSetsInScope(ScopeID scope);
 
   // TODO Vlad: read this carefully. The default scope is handled differently than the other scopes.
-  // For default, the nodes are the actualy principal nodes.
+  // For default, the nodes are the actual principal nodes.
   // For every other scope, they are only the roots w.r.t. the dynamic scoping rules.
   set<Node*> getNodesInBlock(ScopeID scope, BlockID block);
 

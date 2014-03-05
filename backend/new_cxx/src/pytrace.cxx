@@ -225,6 +225,7 @@ void PyTrace::start_continuous_inference(boost::python::dict params)
   shared_ptr<Inferer> inferer = shared_ptr<Inferer>(new Inferer(trace, params));
   
   trace->makeConsistent();
+  cout << "Trace made consistent!" << endl;
   
   continuous_inference_thread = new boost::thread(run_continuous_inference, inferer, &continuous_inference_running);
 }
