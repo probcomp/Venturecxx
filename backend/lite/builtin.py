@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from sp import VentureSP
+from sp import VentureSP, SPType
 from psp import NullRequestPSP, ESRRefOutputPSP, PSP, TypedPSP
 
 import discrete
@@ -30,7 +30,7 @@ def no_request(output): return VentureSP(NullRequestPSP(), output)
 def esr_output(request): return VentureSP(request, ESRRefOutputPSP())
 
 def typed_nr(output, args_types, return_type, **kwargs):
-  return no_request(TypedPSP(args_types, return_type, output, **kwargs))
+  return no_request(TypedPSP(output, SPType(args_types, return_type, **kwargs)))
 
 def func_psp(f, descr=None):
   class FunctionPSP(PSP):
@@ -45,7 +45,7 @@ def func_psp(f, descr=None):
   return FunctionPSP(descr)
 
 def typed_func_psp(f, args_types, return_type, descr=None, **kwargs):
-  return TypedPSP(args_types, return_type, func_psp(f, descr), kwargs)
+  return TypedPSP(func_psp(f, descr), SPType(args_types, return_type, **kwargs))
 
 def typed_func(*args, **kwargs):
   return no_request(typed_func_psp(*args, **kwargs))
@@ -66,7 +66,7 @@ def deterministic_psp(f, descr=None):
   return DeterministicPSP(descr)
 
 def deterministic_typed_psp(f, args_types, return_type, descr=None, **kwargs):
-  return TypedPSP(args_types, return_type, deterministic_psp(f, descr), **kwargs)
+  return TypedPSP(deterministic_psp(f, descr), SPType(args_types, return_type, **kwargs))
 
 def deterministic(f, descr=None):
   return no_request(deterministic_psp(f, descr))

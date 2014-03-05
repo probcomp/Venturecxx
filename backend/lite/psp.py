@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from lkernel import DefaultAAALKernel,DefaultVariationalLKernel,LKernel
 from request import Request
-from sp import SPType
 
 class PSP(object):
   __metaclass__ = ABCMeta
@@ -57,8 +56,8 @@ class RandomPSP(PSP):
     raise Exception("Cannot rejection sample psp %s %s with unbounded likelihood" % (type(self), self.description("psp")))
 
 class TypedPSP(PSP):
-  def __init__(self, args_types, return_type, psp, variadic=False, min_req_args=None):
-    self.f_type = SPType(args_types, return_type, variadic=variadic, min_req_args=min_req_args)
+  def __init__(self, psp, f_type):
+    self.f_type = f_type
     self.psp = psp
 
   def simulate(self,args):

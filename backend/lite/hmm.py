@@ -1,4 +1,4 @@
-from sp import VentureSP,SPAux
+from sp import VentureSP, SPAux, SPType
 from psp import PSP, RandomPSP, TypedPSP
 from request import Request
 import numpy as np
@@ -37,8 +37,8 @@ class MakeUncollapsedHMMOutputPSP(PSP):
 
 class UncollapsedHMMSP(VentureSP):
   def __init__(self,p0,T,O):
-    req = TypedPSP([NumberType()], RequestType(), UncollapsedHMMRequestPSP())
-    output = TypedPSP([NumberType()], NumberType(), UncollapsedHMMOutputPSP(O))
+    req = TypedPSP(UncollapsedHMMRequestPSP(), SPType([NumberType()], RequestType()))
+    output = TypedPSP(UncollapsedHMMOutputPSP(O), SPType([NumberType()], NumberType()))
     super(UncollapsedHMMSP,self).__init__(req,output)
     self.p0 = p0
     self.T = T

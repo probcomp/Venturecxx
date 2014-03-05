@@ -4,7 +4,7 @@ import scipy.special
 import numpy.random as npr
 
 from lkernel import LKernel
-from sp import VentureSP,SPAux
+from sp import VentureSP, SPAux, SPType
 from psp import PSP, NullRequestPSP, RandomPSP, TypedPSP
 from utils import simulateCategorical, logDensityCategorical, simulateDirichlet, logDensityDirichlet
 from value import AnyType, VentureAtom
@@ -64,7 +64,7 @@ class MakerCDirMultOutputPSP(PSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     os = args.operandValues[1] if len(args.operandValues) > 1 else [VentureAtom(i) for i in range(len(alpha))]
-    output = TypedPSP([], AnyType(), CDirMultOutputPSP(alpha,os))
+    output = TypedPSP(CDirMultOutputPSP(alpha,os), SPType([], AnyType()))
     return DirMultSP(NullRequestPSP(),output,len(alpha))
 
   def childrenCanAAA(self): return True
@@ -117,7 +117,7 @@ class MakerUDirMultOutputPSP(RandomPSP):
     n = len(alpha)
     os = args.operandValues[1] if len(args.operandValues) > 1 else [VentureAtom(i) for i in range(n)]
     theta = npr.dirichlet(alpha)
-    output = TypedPSP([], AnyType(), UDirMultOutputPSP(theta,os))
+    output = TypedPSP(UDirMultOutputPSP(theta,os), SPType([], AnyType()))
     return DirMultSP(NullRequestPSP(),output,n)
 
   def logDensity(self,value,args):
@@ -137,7 +137,7 @@ class UDirMultAAALKernel(LKernel):
     assert isinstance(args.madeSPAux,DirMultSPAux)
     counts = [count + a for (count,a) in zip(args.madeSPAux.os,alpha)]
     newTheta = npr.dirichlet(counts)
-    output = TypedPSP([], AnyType(), UDirMultOutputPSP(newTheta,os))
+    output = TypedPSP(UDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
     return DirMultSP(NullRequestPSP(),output,len(alpha))
 
   def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
@@ -169,7 +169,7 @@ class MakerCSymDirMultOutputPSP(PSP):
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureAtom(i) for i in range(n)]
-    output = TypedPSP([], AnyType(), CSymDirMultOutputPSP(alpha,n,os))
+    output = TypedPSP(CSymDirMultOutputPSP(alpha,n,os), SPType([], AnyType()))
     return DirMultSP(NullRequestPSP(),output,n)
 
   def childrenCanAAA(self): return True
@@ -240,7 +240,7 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureAtom(i) for i in range(n)]
     theta = npr.dirichlet([alpha for _ in range(n)])
-    output = TypedPSP([], AnyType(), USymDirMultOutputPSP(theta,os))
+    output = TypedPSP(USymDirMultOutputPSP(theta,os), SPType([], AnyType()))
     return DirMultSP(NullRequestPSP(),output,n)
 
   def logDensity(self,value,args):
@@ -260,7 +260,7 @@ class USymDirMultAAALKernel(LKernel):
     assert isinstance(args.madeSPAux,DirMultSPAux)
     counts = [count + alpha for count in args.madeSPAux.os]
     newTheta = npr.dirichlet(counts)
-    output = TypedPSP([], AnyType(), USymDirMultOutputPSP(newTheta,os))
+    output = TypedPSP(USymDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
     return DirMultSP(NullRequestPSP(),output,n)
 
   def weightBound(self, _trace, _newValue, _oldValue, _args): return 0

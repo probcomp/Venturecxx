@@ -1,5 +1,5 @@
 from psp import PSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import VentureSP
+from sp import VentureSP, SPType
 import math
 import scipy.special
 import scipy.stats
@@ -27,7 +27,7 @@ class CRPSP(VentureSP):
 class MakeCRPOutputPSP(PSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
-    output = TypedPSP([], AtomType(), CRPOutputPSP(alpha))
+    output = TypedPSP(CRPOutputPSP(alpha), SPType([], AtomType()))
     return CRPSP(NullRequestPSP(),output)
 
   def childrenCanAAA(self): return True

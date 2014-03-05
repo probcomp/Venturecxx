@@ -4,7 +4,7 @@ import scipy
 import scipy.special
 from utils import simulateCategorical, logDensityCategorical
 from psp import PSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import VentureSP,SPAux
+from sp import VentureSP, SPAux, SPType
 from lkernel import LKernel
 from value import VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 
@@ -88,7 +88,7 @@ class MakerCBetaBernoulliOutputPSP(PSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
-    output = TypedPSP([], BoolType(), CBetaBernoulliOutputPSP(alpha, beta))
+    output = TypedPSP(CBetaBernoulliOutputPSP(alpha, beta), SPType([], BoolType()))
     return BetaBernoulliSP(NullRequestPSP(), output)
 
   def description(self,name):
@@ -147,7 +147,7 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     weight = scipy.stats.beta.rvs(alpha, beta)
-    output = TypedPSP([], BoolType(), UBetaBernoulliOutputPSP(weight))
+    output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], BoolType()))
     return BetaBernoulliSP(NullRequestPSP(), output)
 
   def logDensity(self,value,args):
@@ -166,7 +166,7 @@ class UBetaBernoulliAAALKernel(LKernel):
     beta  = args.operandValues[1]
     [ctY,ctN] = args.madeSPAux.cts()
     newWeight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
-    output = TypedPSP([], BoolType(), UBetaBernoulliOutputPSP(newWeight))
+    output = TypedPSP(UBetaBernoulliOutputPSP(newWeight), SPType([], BoolType()))
     return BetaBernoulliSP(NullRequestPSP(), output)
   # Weight is zero because it's simulating from the right distribution
 
