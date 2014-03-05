@@ -1,6 +1,7 @@
 #include "values.h"
 #include "Eigen/Dense"
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 
 using boost::lexical_cast;
 
@@ -39,7 +40,10 @@ bool VentureArray::equalsSameType(const VentureValuePtr & other) const
   if (xs.size() != other_v->xs.size()) { return false; }
   for (size_t i = 0; i < xs.size(); ++i) 
   { 
-    if (!xs[i]->equals(other_v->xs[i])) { return false; } 
+    if (!xs[i]->equals(other_v->xs[i])) 
+    { 
+      return false; 
+    } 
   }
   return true;
 }
@@ -186,7 +190,13 @@ size_t VentureSymbol::hash() const
 
 size_t VentureArray::hash() const
 { 
-  return boost::hash_range(xs.begin(),xs.end());
+  size_t seed = 0;
+
+  BOOST_FOREACH (VentureValuePtr x,xs)
+  { 
+    boost::hash_combine(seed, x->hash());
+  }
+  return seed;
 }
 
 size_t VentureNil::hash() const
@@ -197,8 +207,8 @@ size_t VentureNil::hash() const
 size_t VenturePair::hash() const
 { 
   size_t seed = 0;
-  boost::hash_combine(seed, car);
-  boost::hash_combine(seed, cdr);
+  boost::hash_combine(seed, car->hash());
+  boost::hash_combine(seed, cdr->hash());
   return seed;
 }
 

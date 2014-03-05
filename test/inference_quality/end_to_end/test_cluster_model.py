@@ -3,13 +3,13 @@ import itertools
 from nose.plugins.attrib import attr
 from nose.tools import assert_less, assert_greater
 from nose import SkipTest
+from venture.test.config import get_ripl, collectSamples, collect_iid_samples, defaultKernel
 
 def mean(xs): return sum(xs) / float(len(xs))
     
 
 def testCRPMix1a():
   """Baseline for testCRPMix1b"""
-  raise SkipTest("Selsam expects this test to be broken.  Issue: https://app.asana.com/0/9277419963067/10705122294330")
   ripl = get_ripl()
 
   ripl.assume('cluster_crp', "(lambda () 1)")
@@ -40,7 +40,72 @@ def testCRPMix1a():
 
 def testCRPMix1b():
   """Makes sure basic clustering model behaves reasonably"""
-  raise SkipTest("Selsam expects this test to be broken.  Issue: https://app.asana.com/0/9277419963067/10705122294330")
+  ripl = get_ripl()
+
+  ripl.assume('get_cluster_mean', "(mem (lambda (cluster) (uniform_continuous -10.0 10.0)))")
+  ripl.assume('sample_cluster', "(lambda (cluster) (normal (get_cluster_mean cluster) 1))")
+
+  ripl.assume("mu","(get_cluster_mean 1)",label="cmean")
+  
+  ripl.observe("(normal mu 1)","5")
+
+  B = 100
+  T = 100
+
+  mus = []
+
+  for _ in range(T):
+    ripl.infer(B)
+    mus.append(ripl.report("cmean"))
+
+  assert_less(mean(mus),5.5)
+  assert_greater(mean(mus),4.5)
+
+def testCRPMix1b_2():
+  """Makes sure basic clustering model behaves reasonably"""
+  ripl = get_ripl()
+
+  ripl.assume('get_cluster_mean', "(mem (lambda (cluster) (uniform_continuous -10.0 10.0)))")
+  ripl.predict("(get_cluster_mean 1)",label="cmean")
+  
+  ripl.observe("(normal (get_cluster_mean 1) 1)","5")
+
+  B = 100
+  T = 100
+
+  mus = []
+
+  for _ in range(T):
+    ripl.infer(B)
+    mus.append(ripl.report("cmean"))
+
+  assert_less(mean(mus),5.5)
+  assert_greater(mean(mus),4.5)
+
+def testCRPMix1b_3():
+  """Makes sure basic clustering model behaves reasonably"""
+  ripl = get_ripl()
+
+  ripl.assume('get_cluster_mean', "(mem (lambda (cluster) (uniform_continuous -10.0 10.0)))")
+  ripl.predict("(get_cluster_mean false)",label="cmean")
+  
+  ripl.observe("(normal (get_cluster_mean false) 1)","5")
+
+  B = 100
+  T = 100
+
+  mus = []
+
+  for _ in range(T):
+    ripl.infer(B)
+    mus.append(ripl.report("cmean"))
+
+  assert_less(mean(mus),5.5)
+  assert_greater(mean(mus),4.5)
+
+
+def testCRPMix1c():
+  """Makes sure basic clustering model behaves reasonably"""
   ripl = get_ripl()
 
   ripl.assume('cluster_crp', "(lambda () (if (flip) 1 1))")
