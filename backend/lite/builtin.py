@@ -136,6 +136,7 @@ def builtInSPsList():
            [ "beta",binaryNumS(continuous.BetaOutputPSP()) ],
            [ "gamma",binaryNumS(continuous.GammaOutputPSP()) ],
            [ "student_t",unaryNumS(continuous.StudentTOutputPSP()) ],
+           [ "inv_gamma",binaryNumS(continuous.InvGammaOutputPSP()) ],
 
            [ "dirichlet",typed_nr(discrete.DirichletOutputPSP(), [v.HomogeneousArrayType(v.NumberType())], v.SimplexType()) ],
            [ "symmetric_dirichlet",typed_nr(discrete.SymmetricDirichletOutputPSP(), [v.NumberType(), v.NumberType()], v.SimplexType()) ],
