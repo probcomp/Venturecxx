@@ -25,6 +25,10 @@ echo nosetests --processes=4 --process-timeout=1200 -c crashes.cfg
 nosetests --processes=4 --process-timeout=1200 -c crashes.cfg
 abort_on_error "(mh default one 3)"
 
+echo nosetests --processes=4 --process-timeout=1200 -c crashes.cfg --tc=get_ripl:puma
+nosetests --processes=4 --process-timeout=1200 -c crashes.cfg --tc=get_ripl:puma
+abort_on_error "(mh default one 3) in Puma"
+
 test_inference_program "(rejection default all 1)"
 test_inference_program "(func-pgibbs default ordered 3 3)"
 test_inference_program "(pgibbs default ordered 3 3)"

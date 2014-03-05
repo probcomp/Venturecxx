@@ -87,10 +87,65 @@ src_files = ["backend/cxx/" + f for f in src_files]
 inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/', 'inc/Eigen']
 inc_dirs = ["backend/cxx/" + d for d in inc_dirs]
 
+puma_src_files = [
+    "src/args.cxx",
+    "src/builtin.cxx",
+
+    "src/concrete_trace.cxx",
+    "src/consistency.cxx",
+
+    "src/db.cxx",
+    "src/detach.cxx",
+
+    "src/env.cxx",
+    "src/expressions.cxx",
+
+    "src/indexer.cxx",
+    "src/lkernel.cxx",
+    "src/mixmh.cxx",
+    "src/node.cxx",
+    "src/particle.cxx",
+    "src/psp.cxx",
+    "src/pytrace.cxx",
+    "src/pyutils.cxx",
+    "src/regen.cxx",
+    "src/scaffold.cxx",
+    "src/sp.cxx",
+    "src/sprecord.cxx",
+    "src/trace.cxx",
+    "src/utils.cxx",
+    "src/value.cxx",
+    "src/values.cxx",
+
+    "src/gkernels/func_mh.cxx",
+    "src/gkernels/mh.cxx",
+    "src/gkernels/pgibbs.cxx",
+
+    "src/sps/betabernoulli.cxx",
+    "src/sps/conditional.cxx",
+    "src/sps/continuous.cxx",
+    "src/sps/crp.cxx",
+    "src/sps/csp.cxx",
+    "src/sps/deterministic.cxx",
+    "src/sps/dir_mult.cxx",
+    "src/sps/discrete.cxx",
+    "src/sps/dstructure.cxx",
+    "src/sps/eval.cxx",
+    "src/sps/hmm.cxx",
+    "src/sps/matrix.cxx",
+    "src/sps/msp.cxx",
+    "src/sps/numerical_helpers.cxx",
+    "src/sps/scope.cxx",
+]
+puma_src_files = ["backend/new_cxx/" + f for f in puma_src_files]
+
+puma_inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/', 'inc/Eigen']
+puma_inc_dirs = ["backend/new_cxx/" + d for d in puma_inc_dirs]
+
 ext_modules = []
 packages=["venture","venture.sivm","venture.ripl",
           "venture.parser","venture.server","venture.shortcuts",
-          "venture.unit", "venture.test", "venture.cxx", "venture.lite",
+          "venture.unit", "venture.test", "venture.cxx", "venture.puma", "venture.lite",
           "venture.venturemagics"]
 
 cxx = Extension("venture.cxx.libtrace",
@@ -103,11 +158,26 @@ cxx = Extension("venture.cxx.libtrace",
     include_dirs = inc_dirs,
     sources = src_files)
 
-if "SKIP_CXX_BACKEND" in os.environ:
-    print "Skipping CXX backend because SKIP_CXX_BACKEND is %s" % os.environ["SKIP_CXX_BACKEND"]
-    print "Unset it to build the CXX backend."
-else:
+if "COMPILE_CXX_BACKEND" in os.environ:
     ext_modules.append(cxx)
+else:
+    print "Skipping old CXX backend. To include it, set the flag COMPILE_CXX_BACKEND"
+
+puma = Extension("venture.puma.libtrace",
+    define_macros = [('MAJOR_VERSION', '0'),
+                     ('MINOR_VERSION', '1'),
+                     ('REVISION', '1')],
+    libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],
+    extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC"],
+    #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
+    include_dirs = puma_inc_dirs,
+    sources = puma_src_files)
+
+if "SKIP_PUMA_BACKEND" in os.environ:
+    print "Skipping Puma backend because SKIP_PUMA_BACKEND is %s" % os.environ["SKIP_PUMA_BACKEND"]
+    print "Unset it to build the Puma backend."
+else:
+    ext_modules.append(puma)
 
 # monkey-patch for parallel compilation from
 # http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
@@ -116,6 +186,12 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     # those lines are copied from distutils.ccompiler.CCompiler directly
     macros, objects, extra_postargs, pp_opts, build = self._setup_compile(output_dir, macros, include_dirs, sources, depends, extra_postargs)
     cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
+
+    # FIXME: this is probably not the best way to do this
+    # I could find no other way to override the extra flags
+    # from the python makefile's CFLAGS and OPTS variables
+    self.compiler_so = ["ccache", "gcc"]
+
     # parallel code
     N=2 # number of parallel compilations
     import multiprocessing.pool
@@ -137,7 +213,8 @@ setup (
     long_description = 'TBA.',
     packages = packages,
     package_dir={"venture":"python/lib/", "venture.test":"test/",
-        "venture.cxx":"backend/cxx/", "venture.lite":"backend/lite/"},
+                 "venture.cxx":"backend/cxx",
+        "venture.puma":"backend/new_cxx/", "venture.lite":"backend/lite/"},
     ext_modules = ext_modules,
     scripts = ['script/venture']
 )
