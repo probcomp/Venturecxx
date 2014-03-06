@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from lkernel import DefaultAAALKernel,DefaultVariationalLKernel,LKernel
 from request import Request
-import copy
 
 class PSP(object):
   __metaclass__ = ABCMeta
@@ -56,43 +55,9 @@ class RandomPSP(PSP):
   def logDensityBound(self, _value, _args):
     raise Exception("Cannot rejection sample psp %s %s with unbounded likelihood" % (type(self), self.description("psp")))
 
-class FunctionType(object): # TODO make this a VentureType?  With conversions!?
-  """An object loosely representing a Venture function type.  It knows
-the types expected for the arguments and the return, and thus knows
-how to wrap and unwrap individual values or Args objects.  This is
-used in the implementation of TypedPSP and TypedLKernel."""
-  def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
-    self.args_types = args_types
-    self.return_type = return_type
-    self.variadic = variadic
-    if variadic:
-      assert len(args_types) == 1 # TODO Support non-homogeneous variadics later
-    self.min_req_args = len(args_types) if min_req_args is None else min_req_args
-
-  def wrap_return(self, value):
-    return self.return_type.asVentureValue(value)
-  def unwrap_return(self, value):
-    # value could be None for e.g. a "delta kernel" that is expected,
-    # by e.g. pgibbs, to actually be a simulation kernel; also when
-    # computing log density bounds over a torus for rejection
-    # sampling.
-    return self.return_type.asPythonNoneable(value)
-  def unwrap_args(self, args):
-    if args.isOutput:
-      assert not args.esrValues # TODO Later support outputs that have non-latent requesters
-    answer = copy.copy(args)
-    if not self.variadic:
-      assert len(args.operandValues) >= self.min_req_args
-      assert len(args.operandValues) <= len(self.args_types)
-      # v could be None when computing log density bounds for a torus
-      answer.operandValues = [self.args_types[i].asPythonNoneable(v) for (i,v) in enumerate(args.operandValues)]
-    else:
-      answer.operandValues = [self.args_types[0].asPythonNoneable(v) for v in args.operandValues]
-    return answer
-
 class TypedPSP(PSP):
-  def __init__(self, args_types, return_type, psp, variadic=False, min_req_args=None):
-    self.f_type = FunctionType(args_types, return_type, variadic=variadic, min_req_args=min_req_args)
+  def __init__(self, psp, f_type):
+    self.f_type = f_type
     self.psp = psp
 
   def simulate(self,args):
@@ -125,12 +90,13 @@ class TypedPSP(PSP):
     return TypedVariationalLKernel(self.psp.getVariationalLKernel(self.f_type.unwrap_args(args)), self.f_type)
 
   def hasSimulationKernel(self): return self.psp.hasSimulationKernel()
-  def hasDeltaKernel(self): return self.hasDeltaKernel()
+  def hasDeltaKernel(self): return self.psp.hasDeltaKernel()
   # TODO Wrap the simulation and delta kernels properly (once those are tested)
 
   def description(self,name):
-    # TODO Automatically add the type signature?
-    return self.psp.description(name)
+    type_names = self.f_type.names()
+    signature = "\n".join(["%s :: %s" % (name, variant) for variant in type_names])
+    return signature + "\n" + self.psp.description(name)
 
   # TODO Is this method part of the psp interface?
   def logDensityOfCounts(self,aux):

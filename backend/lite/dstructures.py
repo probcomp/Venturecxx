@@ -10,7 +10,7 @@ class DictOutputPSP(PSP):
     vals = args.operandValues[1].asPythonList()
     return v.VentureDict(dict(zip(keys, vals)))
   def description(self,name):
-    return "(%s <list k> <list v>) -> <collection k v>\n  Returns the dictionary mapping the given keys to their respective given values.  It is an error if the given lists are not the same length." % name
+    return "%s :: <SP <list k> <list v> -> <dictionary k v>>\n  Returns the dictionary mapping the given keys to their respective given values.  It is an error if the given lists are not the same length." % name
 
 ### Map, the weird way.
 class MapListRequestPSP(PSP):
@@ -31,4 +31,4 @@ class MapListOutputPSP(PSP):
   def simulate(self,args):
     return v.pythonListToVentureList(*args.esrValues)
   def description(self,name):
-    return "(%s <SP a b> <list a>) -> <list b>" % name
+    return "%s :: <SP <SP a -> b> <list a> -> <list b>>\nReturns the list of results obtained by applying its first (function) argument to its second (list) argument" % name

@@ -1,4 +1,4 @@
-from sp import VentureSP,SPAux
+from sp import VentureSP, SPAux, SPType
 from psp import PSP, RandomPSP, TypedPSP
 from request import Request
 import numpy as np
@@ -32,13 +32,13 @@ class MakeUncollapsedHMMOutputPSP(PSP):
     # Transposition for compatibility with CXX
     return UncollapsedHMMSP(p0,np.transpose(T),np.transpose(O))
 
-  def description(self,name):
-    return "(%s <simplex> <matrix> <matrix>) -> <SP <number> <number>>\n  Discrete-state HMM of unbounded length with discrete observations.  The inputs are the probability distribution of the first state, the transition matrix, and the observation matrix.  It is an error if the dimensionalities do not line up.  Returns observations from the HMM encoded as a stochastic procedure that takes the time step and samples a new observation at that time step." % name
+  def description(self, _name):
+    return "  Discrete-state HMM of unbounded length with discrete observations.  The inputs are the probability distribution of the first state, the transition matrix, and the observation matrix.  It is an error if the dimensionalities do not line up.  Returns observations from the HMM encoded as a stochastic procedure that takes the time step and samples a new observation at that time step."
 
 class UncollapsedHMMSP(VentureSP):
   def __init__(self,p0,T,O):
-    req = TypedPSP([NumberType()], RequestType(), UncollapsedHMMRequestPSP())
-    output = TypedPSP([NumberType()], NumberType(), UncollapsedHMMOutputPSP(O))
+    req = TypedPSP(UncollapsedHMMRequestPSP(), SPType([NumberType()], RequestType()))
+    output = TypedPSP(UncollapsedHMMOutputPSP(O), SPType([NumberType()], NumberType()))
     super(UncollapsedHMMSP,self).__init__(req,output)
     self.p0 = p0
     self.T = T
