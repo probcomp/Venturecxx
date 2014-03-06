@@ -34,7 +34,7 @@ Expect crashes that wipe out your Venture session.
 
 def server(args):
     banner(False)
-    server = v.make_ripl_rest_server()
+    server = v.backend(args.backend).make_ripl_rest_server()
     print "Launching RIPL Server"
     server.run(host='0.0.0.0', port=args.port, debug=True, use_reloader=False)
 
@@ -76,6 +76,7 @@ default_port = 8082
 
 parser_server = subparsers.add_parser("server", help="Start a Venture server session",
                                       description="Start a Venture server session")
+parser_server.add_argument("backend", default="lite", help="the Venture backend use")
 parser_server.add_argument("-p", "--port", type=int, default=default_port,
                            help="the port to listen on (default {0})".format(default_port))
 parser_server.set_defaults(func=server)
