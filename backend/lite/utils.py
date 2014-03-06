@@ -3,6 +3,8 @@ import math
 import scipy.special as ss
 import numpy as np
 
+def extendedLog(x): return math.log(x) if x > 0 else float("-inf")
+
 def normalizeList(seq): 
   denom = sum(seq)
   if denom > 0: return [ float(x)/denom for x in seq]
