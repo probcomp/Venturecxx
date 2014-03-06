@@ -219,6 +219,8 @@ def getCartesianProductOfEnumeratedValues(trace,pnodes):
 class EnumerativeGibbsOperator(object):
 
   def propose(self,trace,scaffold):
+    from particle import Particle
+
     self.trace = trace
     self.scaffold = scaffold
     assertTrace(self.trace,self.scaffold)
@@ -232,22 +234,27 @@ class EnumerativeGibbsOperator(object):
     assert isinstance(self.rhoDB,OmegaDB)
     assertTorus(scaffold)
     xiWeights = []
-    xiDBs = []
+    xiParticles = []
 
-    for newValues in allSetsOfValues:
+    for p in range(len(allSetsOfValues)):
+      newValues = allSetsOfValues[p]
       if newValues == currentValues: continue
+      xiParticle = Particle(trace)
       assertTorus(scaffold)
       registerDeterministicLKernels(trace,scaffold,pnodes,newValues)
-      xiWeights.append(regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),{}))
-      xiDBs.append(detachAndExtract(trace,scaffold.border[0],scaffold)[1])
+      xiParticles.append(xiParticle)
+      xiWeights.append(regenAndAttach(xiParticle,scaffold.border[0],scaffold,False,OmegaDB(),{}))
 
-    # Now sample a NEW particle in proportion to its weight
-    finalIndex = simulateCategorical([math.exp(w) for w in xiWeights])
-    self.xiDB = xiDBs[finalIndex]
-
-    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.xiDB,{})
-
-    return trace,self._compute_alpha(rhoWeight, xiWeights, finalIndex)
+    alpha = 0
+    if len(xiWeights) == 0:
+      self.finalParticle = Particle(trace)
+      regenAndAttach(self.finalParticle,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
+    else:
+      # Now sample a NEW particle in proportion to its weight
+      finalIndex = simulateCategorical([math.exp(w) for w in xiWeights])
+      self.finalParticle = xiParticles[finalIndex]
+      alpha = self._compute_alpha(rhoWeight, xiWeights, finalIndex)
+    return self.finalParticle,alpha
 
   def _compute_alpha(self, rhoWeight, xiWeights, finalIndex):
     # TODO This is the same as _compute_alpha in PGibbsOperator.  Abstract.
@@ -259,10 +266,9 @@ class EnumerativeGibbsOperator(object):
     weightMinusRho = logaddexp(xiWeights)
     return weightMinusRho - weightMinusXi
 
-  def accept(self): pass
+  def accept(self): self.finalParticle.commit()
   def reject(self):
     # TODO This is the same as the MHOperator rejection -- abstract
-    detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
     assertTorus(self.scaffold)
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
 
