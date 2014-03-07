@@ -9,7 +9,7 @@ def testEnumerativeGibbsBasic1():
   ripl = get_ripl()
   ripl.predict("(bernoulli)",label="pid")
 
-  predictions = collectSamples(ripl,"pid",infer={"kernel":"gibbs"})
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs"})
   ans = [(True,.5),(False,.5)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -32,7 +32,7 @@ def testEnumerativeGibbsXOR1():
   ripl.assume("y","(scope_include 0 0 (bernoulli 0.001))")
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)","true")
-  predictions = collectSamples(ripl,"pid",infer={"kernel":"gibbs","scope":0,"block":0})
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs","scope":0,"block":0})
   ans = [(True,.5),(False,.5)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -45,7 +45,7 @@ def testEnumerativeGibbsXOR2():
   ripl.assume("y","(scope_include 0 0 (bernoulli 0.0005))")
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)","true")
-  predictions = collectSamples(ripl,"pid",infer={"kernel":"gibbs","scope":0,"block":0})
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs","scope":0,"block":0})
   ans = [(True,.75),(False,.25)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -63,6 +63,6 @@ def testEnumerativeGibbsXOR3():
 
   ripl.predict("(noisy_true (= (+ x y) 1) .000001)")
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)","true")
-  predictions = collectSamples(ripl,"pid",infer={"kernel":"gibbs","scope":0,"block":0})
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs","scope":0,"block":0})
   ans = [(True,.75),(False,.25)]
   return reportKnownDiscrete(ans, predictions)
