@@ -6,6 +6,34 @@ def testMemSmoke1():
   "Mem should be a noop on deterministic procedures (only memoizing)."
   eq_(get_ripl().predict("((mem (lambda (x) 3)) 1)"), 3.0)
 
+def testMemBasic1():
+  "MSPs should always give the same answer when called on the same arguments"
+  ripl = get_ripl()
+  ripl.assume("f","(mem (lambda () (bernoulli 0.5)))")
+  for i in range(10): ripl.predict("(f)",label="p%d" % i)
+  for t in range(5):
+    assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
+    ripl.infer(5)
+
+def testMemBasic2():
+  "MSPs should always give the same answer when called on the same arguments"
+  ripl = get_ripl()
+  ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
+  for i in range(10): ripl.predict("(f 1)",label="p%d" % i)
+  for t in range(5):
+    assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
+    ripl.infer(5)
+
+def testMemBasic3():
+  "MSPs should always give the same answer when called on the same arguments"
+  ripl = get_ripl()
+  ripl.assume("f","(mem (lambda (x y) (bernoulli 0.5)))")
+  for i in range(10): ripl.predict("(f 1 2)",label="p%d" % i)
+  for t in range(5):
+    assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
+    ripl.infer(5)
+            
+  
 @statisticalTest
 def testMem1():
   "MSPs should deal with their arguments changing under inference."
