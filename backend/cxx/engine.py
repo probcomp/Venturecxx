@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from venture.exception import VentureException
+from venture.lite.utils import simulateCategorical
 
 # Thin wrapper around cxx Trace
 # TODO: merge with CoreSivmCxx?
@@ -138,6 +139,9 @@ class Engine:
       for n in range(params["transitions"]):
         for k in params["subkernels"]:
           self.infer(k)
+    elif "kernel" in params and params["kernel"] == "mixture":
+      for n in range(params["transitions"]):
+        self.infer(simulateCategorical(params["weights"], params["subkernels"]))
     else: # A primitive infer expression
       self.set_default_params(params)
       self.trace.infer(params)
