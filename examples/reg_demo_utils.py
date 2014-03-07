@@ -57,38 +57,10 @@ pivot_model='''
 [assume model_name (quote pivot)]
 '''
 
-pivot_check='''
-[observe (x 0) 0.]
-[observe pivot 10.]
-[observe (w0 0) 0.]
-[observe (w1 0) 1.]
-[observe (w2 0) 0.]
-[observe (noise 0) .01]'''
-
-def test_pivot():
-    v_crp=mk_c(); v_crp.execute_program(x_model_crp + pivot_model)
-    v_t=mk_l(); v_t.execute_program(x_model_t+pivot_model)
-    vs=[v_t,v_crp]
-    for v in vs:
-        v.execute_program(pivot_check)
-        v.infer(1)
-        assert v.predict('(= 0 (p (x 0)))')
-        assert .1 > (0 - v.predict('(f (x 0))'))
-        assert .5 > (0 - v.assume('y0','(y 0)') ) # y0 close to 0
-        assert .5 > (0 - v.predict('(y_x (x 0))'))
-
-        f= np.array( [v.predict('(f %i)' % i) for i in range(5)] )
-        assert all( 0.1 > np.abs(f - np.arange(5)) )
-        [v.observe('(y %i)' % i, str(i+.01) ) for i in range(20,25)]
-        y_x20 = np.array( [v.predict('(y_x %i)' % i) for i in range(20,25)] )
-        y20 = np.array( [v.predict('(y %i)' % i) for i in range(20,25)] )
-    #assert all( [ 2 > (y_x20[i] - y20[i]) for y_x20,y20 ] ) 
-
-
 quad_fourier_model='''
 [assume w0 (normal 0 3) ]
 [assume w1 (normal 0 3) ]
-[assume w2 (normal 0 3) ]
+[assume w2 (normal 0 1) ]
 [assume omega (normal 0 3) ]
 [assume theta (normal 0 3) ]
 [assume noise (gamma 2 1) ]
@@ -102,28 +74,86 @@ quad_fourier_model='''
 [assume y (mem (lambda (i) (normal (f (x i) ) noise) ) )]
 [assume n (gamma 1 1)]
 [assume model_name (quote quad_fourier)]'''
-quad_fourier_checks='''
-[observe (x 0) 0.]
-[observe w0 0.]
-[observe w1 1.]
-[observe w2 0.]
-[observe model 0]
-[observe noise .01]
-'''
 
-def test_quad_fourier(v):
-    v=mk_c()
-    v.execute_program(x_model_t + quad_fourier_model)
-    v.execute_program(quad_fourier_checks)
-    v.infer(1)
-    assert .1 > abs( 0 - v.predict('(x 0)') )
-    assert 0 == v.predict('model')
-    assert 2 > abs( (0 - v.predict('(y 0)') ) )
-    xfs = [v.predict('(list x (f (x %i) ))' % i) for i in range(10) ]
-    xys = [v.predict('(list (x %i) (y %i))' % (i,i)) for i in range(10) ];
-    assert all( [ .5 > (xy[0] - xy[1]) for xy in xys ] )
-    assert all( [ xf[1] - xy[1] for (xf,xy) in zip(xfs,xys) ] )    
-    assert .1 > ( v.predict('(y 0)') - v.predict('(y_x 0)') )
+logistic_model='''
+[assume w0 (normal 0 3)]
+[assume w1 (normal 0 3) ]
+[assume log_mu (normal 0 3)]
+[assume log_sig (normal 0 3) ]
+[assume noise (gamma 2 1) ]
+
+[assume sigmoid (lambda (x) (/ (- 1 (exp (* (- x log_mu) (* -1 log_sig) )) )
+                               (+ 1 (exp (* (- x log_mu) (* -1 log_sig) )) ) ) )]
+[assume f (lambda (x) (+ w0 (* w1 (sigmoid x) ) ) ) ]
+
+[assume y_x (lambda (x) (normal (f x) noise) ) ]
+[assume y (mem (lambda (i) (normal (f (x i) ) noise) ) )]
+[assume n (gamma 1 1)]
+[assume model_name (quote logistic)]'''
+
+
+def mk_piecewise(weight=.5,quad=True):
+    s='''
+    [assume myceil (lambda (x) (if (= x 0) 1
+                                 (if (< 0 x)
+                                   (if (< x 1) 1 (+ 1 (myceil (- x 1) ) ) )
+                                   (* -1 (myceil (* -1 x) ) ) ) ) ) ]
+    [assume w0 (mem (lambda (p)(normal 0 3))) ]
+    [assume w1 (mem (lambda (p)(normal 0 3))) ]
+    [assume w2 (mem (lambda (p)(normal 0 1))) ]
+    [assume noise (mem (lambda (p) (gamma 2 1) )) ]
+    [assume width <<width>>]
+    [assume p (lambda (x) (myceil (/ x width)))]
+
+    [assume f (lambda (x)
+                 ( (lambda (p) (+ (w0 p) (* (w1 p) x) (* (w2 p) (* x x)))  ) 
+                   (p x)  ) ) ]
+
+    [assume noise_p (lambda (fx x) (normal fx (noise (p x))) )] 
+
+    [assume y_x (lambda (x) (noise_p (f x) x) ) ]
+
+    [assume y (mem (lambda (i) (y_x (x i))  ))] 
+
+    [assume n (gamma 1 1) ]
+    [assume model_name (quote piecewise)]
+    '''
+    if not(quad):
+        s= s.replace('[assume w2 (mem (lambda (p)(normal 0 1))) ]',
+                     '[assume w2 0]')
+    return s.replace('<<width>>',str(weight))
+
+def v_mk_piecewise(weight,quad):
+    v=mk_l()
+    v.execute_program(x_model_t + mk_piecewise(weight=weight,quad=quad))
+    return v
+
+def test_piecewise():
+    ##FIXME try with lite
+    def v_mk_piecewise(weight,quad):
+        v=mk_c()
+        v.execute_program(x_model_t + mk_piecewise(weight=weight,quad=quad))
+        return v
+    v=v_mk_piecewise(.2,True)
+    xys=[ (.1*i,.1*i) for i in range(-6,6) ] * 6
+    no_trans=1000
+    observe_infer([v],xys,no_trans,with_index=True,withn=True)
+    a,b,c = v.sample('(list (f -.3) (f .05) (f .3))')
+    assert a<b<c
+    fig,xr,y_x = plot_cond(v)
+    ax = fig.axes[0]
+    ax.set_ylim(-1,1); ax.set_xlim(-1,1)
+
+    v=v_mk_piecewise(.5,False)
+    xys=[ (x,abs(x)) for x in np.linspace(-1,1,20)]
+    xys.extend( [ (x,-0.5*x) for x in np.linspace(1.1,2,20) ] )
+    no_trans=1000
+    observe_infer([v],xys,no_trans,with_index=True,withn=True)
+    a,b,c = v.sample('(list (f -.3) (f .05) (f .5))')
+    print a,b,c
+    fig,xr,y_x = plot_cond(v)
+    ax = fig.axes[0]
+    ax.set_ylim(-2.5,2,5); ax.set_xlim(-2,2.8)
 
 
 def generate_data(n,xparams=None,yparams=None,sin=True):
@@ -145,7 +175,7 @@ def generate_data(n,xparams=None,yparams=None,sin=True):
     return xys
 
 
-def observe_infer(vs,xys,no_transitions,with_index=False,withn=True):
+def observe_infer(vs,xys,no_transitions,with_index=True,withn=True):
     '''Input is list of ripls or mripls, xy pairs and no_transitions. Optionally
     observe the n variable to be the len(xys). We can either index the observations
     or we can treat them as drawn from x_d and y_x, which do not memoize but depend
@@ -185,20 +215,24 @@ def get_name(r_mr):  # FIXME dealing with ripl vs. mripl
         return 'anon model'
 
 
-def plot_cond(ripl,no_reps=50,plot=True):
+def plot_cond(ripl,no_reps=50,set_xr=None,plot=True):
     '''Plot f(x) with 1sd noise curves. Plot y_x with #(no_reps)
     y values for each x. Use xrange with limits based on posterior on P(x).'''
     
-    # find x-range from min/max of observed points
-    n = int( np.round( ripl.sample('n') ) )  #FIXME
-    xs = [ripl.sample('(x %i)' % i) for i in range(n)]
-    ys = [ripl.sample('(y %i)' % i) for i in range(n)]
-    xr = np.linspace(1.5*min(xs),1.5*max(xs),20)
+    if set_xr!=None:
+        xr=set_xr
+    else: # find x-range from min/max of observed points
+        n = int( np.round( ripl.sample('n') ) )  #FIXME
+        xs = [ripl.sample('(x %i)' % i) for i in range(n)]
+        ys = [ripl.sample('(y %i)' % i) for i in range(n)]
+        xr = np.linspace(1.5*min(xs),1.5*max(xs),20)
+    
     f_xr = [ripl.sample('(f %f)' % x) for x in xr]
     
     # gaussian noise 1sd
+    h_noise = ['pivot','piecewise']
     model_name=get_name(ripl)
-    noise=ripl.sample('(noise 0)') if model_name=='pivot' else ripl.sample('noise')
+    noise=ripl.sample('(noise 0)') if model_name in h_noise else ripl.sample('noise')
     f_a = [fx+noise for fx in f_xr]
     f_b = [fx-noise for fx in f_xr]
 
@@ -206,7 +240,7 @@ def plot_cond(ripl,no_reps=50,plot=True):
     if plot:
         y_x = [  [ripl.sample('(y_x %f)' % x) for r in range(no_reps)] for x in xr]
         fig,ax = plt.subplots(1,2,figsize=(12,4),sharex=True,sharey=True)
-        ax[0].scatter(xs,ys)
+        if set_xr==None: ax[0].scatter(xs,ys)
         ax[0].set_color_cycle(['m', 'gray','gray'])
         ax[0].plot(xr,f_xr,xr,f_a,xr,f_b)
         ax[0].set_title('Data and inferred f with 1sd noise (name= %s )' % model_name)
@@ -214,6 +248,8 @@ def plot_cond(ripl,no_reps=50,plot=True):
         [ ax[1].scatter(xr,[y[i] for y in y_x],s=5,c='gray') for i in range(no_reps) ]
         ax[1].set_title('Single ripl: P(y/X=x,params fixed) for uniform x-range (name= %s)' % model_name)
         fig.tight_layout()
+
+        return fig,xr,y_x
     return xr,y_x
 
 
@@ -287,7 +323,7 @@ def params_compare(mr,exp_pair,xys,no_transitions,plot=False):
 
 
 def plot_posterior_conditional(mr,no_reps=50,set_xr=None,plot=True):    
-    if set_xr:
+    if set_xr!=None:
         xr = set_xr
     else:
         # find x-range from min/max of observed points
@@ -303,7 +339,7 @@ def plot_posterior_conditional(mr,no_reps=50,set_xr=None,plot=True):
         y_x = [  if_lst_flatten( [mr.sample('(y_x %f)' % x) for r in range(no_reps)] ) for x in xr]
           
         fig,ax = plt.subplots(figsize=(10,5),sharex=True,sharey=True)
-        if set_xr: ax.scatter(xs,ys,c='m')
+        if set_xr==None: ax.scatter(xs,ys,c='m')
     
         [ ax.scatter(xr,[y[i] for y in y_x],s=6,c='gray') for i in range(no_reps) ]
         ax.set_title('Mripl: P(y/X=x) for uniform x-range (name= %s)' % get_name(mr))
@@ -327,7 +363,7 @@ def plot_posterior_joint(mr,no_reps=500,plot=True):
     return xys
 
 
-def test_ppj():
+def test_plot_posterior_joint():
     xys = generate_data(14,xparams=[0,1],yparams=[0,0,1,0,0],sin=False) # y=x^2
     v_piv = MRipl(10,lite=lite,verbose=False);
     v_piv.execute_program(x_model_t+pivot_model)
@@ -370,7 +406,58 @@ def test_plot_posterior_conditional():
             if abs(x)<.1: fil.append(y_x[i])
         print fil
         assert .1 > np.mean(fil)    
- 
+
+def test_plot_posterior_conditional_noisy_y():
+    '''When observations of y are noisy, P(y/X=x) will have entropy that 
+    depends on the noise for nearby observations'''
+    v_piv = MRipl(10,lite=lite,verbose=False);
+    v_fo = MRipl(10,lite=lite,verbose=False)
+    v_piv.execute_program(x_model_t+pivot_model)
+    v_fo.execute_program(x_model_t+quad_fourier_model)
+    vs = [v_piv,v_fo]
+    def noise_obs(x,y,e):
+        return '[observe (normal (y_x %f) %f) %f]' %(x,e,y)
+    for v in vs:
+        v.execute_program(noise_obs(0,0,.1) + noise_obs(2,2,.1) +
+                          noise_obs(-2,-2,1) + noise_obs(-4,-4,1))
+        v.infer(200)
+    xr =np.linspace(-6,6,30)
+    v_out=[plot_posterior_conditional(v,no_reps=40,set_xr=xr) for v in vs]
+
+
+def test_plot_posterior_conditional_noisy_x():
+    '''When observations of x are noisy, we use our prior on x and assume
+    that y's came from something closer to prior. Far off xy observations
+    will be informative for nearby predictions'''
+    def mk_mrs():
+        v_piv = MRipl(10,lite=lite,verbose=False);
+        v_fo = MRipl(10,lite=lite,verbose=False)
+        v_piv.execute_program(x_model_t+pivot_model)
+        v_fo.execute_program(x_model_t+quad_fourier_model)
+        return [v_piv,v_fo]
+    vs = mk_mrs()
+    def noise_obs(ind,x,y,e):
+        s1= '[observe (normal (x %i) %f) %f]' %(ind,e,x)
+        s2='[observe (y %i) %f]' %(ind,y)
+        return s1+s2
+
+    ## FIXME,add observed data to plot
+    for v in vs:
+        v.execute_program(noise_obs(0,0,0,.1) + noise_obs(1,2,2,.1) +
+                          noise_obs(2,-2,-2,1) + noise_obs(3,-4,-4,1))
+        v.infer(200)
+    xr =np.linspace(-6,6,30)
+    v_out=[plot_posterior_conditional(v,no_reps=30,set_xr=xr) for v in vs]
+
+
+    vs=mk_mrs()
+    for v in vs:
+        v.execute_program(noise_obs(0,14,14,3) + noise_obs(1,2,2,3) +
+                          noise_obs(2,-2,-2,3) + noise_obs(3,-14,-14,3))
+        v.infer(200)
+    xr =np.linspace(-20,20,30)
+    v_out=[plot_posterior_conditional(v,no_reps=30,set_xr=xr) for v in vs]    
+    
     
 def if_lst_flatten(l):
     if type(l[0])==list: return [el for subl in l for el in subl]
