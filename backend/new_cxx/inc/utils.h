@@ -12,7 +12,7 @@
 #include <boost/python/dict.hpp>
 
 /* Maps exp over the vector, normalizing so that the maximum is 1. */
-vector<double> mapExp(const vector<double>& xs);
+vector<double> mapExpUptoMultConstant(const vector<double>& xs);
 
 /* Samples from an unnormalized sequence of probabilities. */
 size_t sampleCategorical(const vector<double> & ps, gsl_rng * rng);

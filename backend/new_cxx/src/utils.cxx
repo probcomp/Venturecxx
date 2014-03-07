@@ -5,13 +5,12 @@
 #include "values.h"
 #include <gsl/gsl_randist.h>
 
-vector<double> mapExp(const vector<double>& xs)
+vector<double> mapExpUptoMultConstant(const vector<double>& xs)
 {
   vector<double> ps(xs.size());
   if (xs.empty()) { return ps; }
   double max = *std::max_element(xs.begin(), xs.end());
 
-  
   for (size_t i = 0; i < xs.size(); ++i)
   {
     ps[i] = exp(xs[i] - max);
@@ -46,6 +45,7 @@ size_t sampleCategorical(const vector<double> & ps, gsl_rng * rng)
       return i;
     }
   }
+
   assert(false);
 }
 

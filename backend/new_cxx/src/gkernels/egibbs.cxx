@@ -44,6 +44,9 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   
   // compute the cartesian product of all possible values
   vector<VentureValuePtr> currentValues;
+
+
+
   vector<vector<VentureValuePtr> > possibleValues;
   BOOST_FOREACH(ApplicationNode * node, applicationNodes)
   {
@@ -70,10 +73,12 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   // regen all possible values
   vector<shared_ptr<Particle> > particles;
   vector<double> xiWeights;
+
+  int numSameValues = 0;
   BOOST_FOREACH(vector<VentureValuePtr> valueTuple, valueTuples)
   {
     // TODO skip currentValues
-    if (VentureValuePtr(new VentureArray(valueTuple))->equals(VentureValuePtr(new VentureArray(currentValues)))) { continue; }
+    if (VentureValuePtr(new VentureArray(valueTuple))->equals(VentureValuePtr(new VentureArray(currentValues)))) { numSameValues++; continue; }
     registerDeterministicLKernels(trace, scaffold, applicationNodes, valueTuple);
     shared_ptr<Particle> particle(new Particle(trace));
     particles.push_back(particle);
@@ -82,6 +87,7 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
       regenAndAttach(particle.get(),scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),nullGradients);
     xiWeights.push_back(xiWeight);
   }
+  assert(numSameValues == 1);
 
   double alpha = 0;
   if (xiWeights.empty())
@@ -93,18 +99,18 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   else
     {
       // sample a new particle
-      size_t finalIndex = sampleCategorical(mapExp(xiWeights), trace->getRNG());
+      size_t finalIndex = sampleCategorical(mapExpUptoMultConstant(xiWeights), trace->getRNG());
       finalParticle = particles[finalIndex];
   
       // compute the acceptance ratio
       vector<double> otherXiWeightsWithRho = xiWeights;
-      otherXiWeightsWithRho.erase(otherXiWeightsWithRho.begin() + finalIndex);
-      otherXiWeightsWithRho.push_back(rhoWeight);
+      otherXiWeightsWithRho[finalIndex] = rhoWeight;
 
       double weightMinusXi = logaddexp(otherXiWeightsWithRho);
       double weightMinusRho = logaddexp(xiWeights);
       alpha = weightMinusRho - weightMinusXi;
     }
+
   return make_pair(finalParticle.get(),alpha);
 }
 

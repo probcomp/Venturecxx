@@ -50,7 +50,7 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
     vector<double> newParticleWeights(numNewParticles + 1);
     
     // create partial sums in order to efficiently sample from ALL particles
-    vector<double> sums = computePartialSums(mapExp(particleWeights));
+    vector<double> sums = computePartialSums(mapExpUptoMultConstant(particleWeights));
     
     // Sample new particle and propagate
     for (size_t p = 0; p < numNewParticles; ++p)
@@ -77,7 +77,7 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
   // Now sample a NEW particle in proportion to its weight
   vector<double> particleWeightsNoRho = particleWeights;
   particleWeightsNoRho.pop_back();
-  size_t finalIndex = sampleCategorical(mapExp(particleWeightsNoRho), trace->getRNG());
+  size_t finalIndex = sampleCategorical(mapExpUptoMultConstant(particleWeightsNoRho), trace->getRNG());
   // assert finalIndex < P
   finalParticle = particles[finalIndex];
   
