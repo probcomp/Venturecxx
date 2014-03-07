@@ -295,6 +295,8 @@ class Trace(object):
       else:
         # Could happen if this method is called on a torus, e.g. for rejection sampling
         raise MissingEsrParentError()
+    elif isinstance(self.pspAt(node),ScopeIncludeOutputPSP):
+      return self.getOutermostNonReferenceApplication(node.operandNodes[2])
     else: return node
 
   def unobserve(self,id):

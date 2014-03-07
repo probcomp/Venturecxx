@@ -5,7 +5,11 @@
 #include <algorithm>
 #include <boost/lexical_cast.hpp>
 
-set<Node *> Scaffold::getPrincipalNodes() { assert(false); }
+set<Node *> Scaffold::getPrincipalNodes() 
+{ 
+  assert(setsOfPNodes.size() == 1);
+  return setsOfPNodes[0];
+}
 
 int Scaffold::getRegenCount(Node * node) 
 { 

@@ -328,7 +328,6 @@ double applyPSP(Trace * trace,
   psp->incorporate(newValue,args);
 
   if (dynamic_pointer_cast<VentureSPRecord>(newValue)) { processMadeSP(trace,node,scaffold->isAAA(node),shouldRestore,db); }
-  /* TODO TEMP MILESTONE */
   if (psp->isRandom()) { trace->registerUnconstrainedChoice(node); }
 
   if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))

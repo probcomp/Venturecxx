@@ -2,11 +2,12 @@ import random
 import math
 import scipy
 import scipy.special
-from utils import simulateCategorical, logDensityCategorical
+from utils import extendedLog, simulateCategorical, logDensityCategorical
 from psp import PSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import VentureSP, SPAux, SPType
 from lkernel import LKernel
 from value import VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
+
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args):
@@ -15,8 +16,8 @@ class BernoulliOutputPSP(RandomPSP):
     
   def logDensity(self,val,args):
     p = args.operandValues[0] if args.operandValues else 0.5
-    if val: return math.log(p)
-    else: return math.log(1 - p)
+    if val: return extendedLog(p)
+    else: return extendedLog(1 - p)
 
   def logDensityBound(self, _x, _args): return 0
 

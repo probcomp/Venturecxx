@@ -5,11 +5,12 @@
 #include "values.h"
 #include <gsl/gsl_randist.h>
 
-vector<double> mapExp(const vector<double>& xs)
+vector<double> mapExpUptoMultConstant(const vector<double>& xs)
 {
-  double max = *std::max_element(xs.begin(), xs.end());
   vector<double> ps(xs.size());
-  
+  if (xs.empty()) { return ps; }
+  double max = *std::max_element(xs.begin(), xs.end());
+
   for (size_t i = 0; i < xs.size(); ++i)
   {
     ps[i] = exp(xs[i] - max);
@@ -19,8 +20,10 @@ vector<double> mapExp(const vector<double>& xs)
 
 double logaddexp(const vector<double>& xs)
 {
-  double max = *std::max_element(xs.begin(), xs.end());
   double sum = 0;
+  if (xs.empty()) { return sum; }
+  double max = *std::max_element(xs.begin(), xs.end());
+
   for (size_t i = 0; i < xs.size(); ++i)
   {
     sum += exp(xs[i] - max);
@@ -30,18 +33,9 @@ double logaddexp(const vector<double>& xs)
 
 size_t sampleCategorical(const vector<double> & ps, gsl_rng * rng)
 {
-  double total = std::accumulate(ps.begin(), ps.end(), 0);
-  double r = gsl_ran_flat(rng, 0, total);
-  
-  double sum = 0;
-  for (size_t i = 0; i < ps.size(); ++i)
-  {
-    sum += ps[i];
-    if (sum >= r)
-    {
-      return i;
-    }
-  }
+  vector<unsigned int> ns(ps.size());
+  gsl_ran_multinomial(rng,ps.size(),1,&ps[0],&ns[0]);
+  for (size_t i = 0; i < ns.size(); ++i) { if (ns[i] == 1) { return i; } }
   assert(false);
 }
 
