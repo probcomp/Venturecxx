@@ -9,6 +9,7 @@ from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
 from utils import simulateCategorical, cartesianProduct, logaddexp
 from nose.tools import assert_almost_equal # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
+from value import VentureNumber
 import copy
 
 class MissingEsrParentError(Exception): pass
@@ -465,4 +466,75 @@ class ParticlePGibbsOperator(object):
   def reject(self):
     self.particles[-1].commit()
     assertTrace(self.trace,self.scaffold)
+
+
+############### Slice
     
+# "stepping out" procedure
+# See "Slice Sampling" (Neal 2000) p11 for details
+def findInterval(f,x0,y,w,m):
+  U = random.random()  
+  L = x0 - w * U
+  R = L + w
+
+  V = random.random()
+  J = math.floor(m * V)
+  K = (m - 1) - J
+
+  while J > 0 and y < f(L):
+    L = L - w
+    J = J - 1
+
+  while K > 0 and y < f(R):
+    R = R + w
+    K = K - 1
+
+  return L,R
+
+def sampleInterval(f,x0,y,w,L,R):
+  while True:
+    U = random.random()
+    x1 = L + U * (R - L)
+    if y < f(x1): return x1
+    if x1 < x0: L = x1
+    else: R = x1
+
+def makeDensityFunction(trace,scaffold,psp,pnode):
+  from particle import Particle
+  def f(x):
+    scaffold.lkernels[pnode] = DeterministicLKernel(psp,VentureNumber(x))
+    return math.exp(regenAndAttach(Particle(trace),scaffold.border[0],scaffold,False,OmegaDB(),{}))
+  return f
+  
+class SliceOperator(object):
+
+  def propose(self,trace,scaffold):
+    self.trace = trace
+    self.scaffold = scaffold
+
+    pnode = scaffold.getPNode()
+    psp = trace.pspAt(pnode)
+    currentVValue = trace.valueAt(pnode)
+    currentValue = currentVValue.getNumber()
+    scaffold.lkernels[pnode] = DeterministicLKernel(psp,currentVValue)
+
+    rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
+    assertTorus(scaffold)
+
+    f = makeDensityFunction(trace,scaffold,psp,pnode)
+    y = random.uniform(0,f(currentValue))
+    w = .5
+    m = 20
+    L,R = findInterval(f,currentValue,y,w,m)
+    proposedValue = sampleInterval(f,currentValue,y,w,L,R)
+    proposedVValue = VentureNumber(proposedValue)
+    scaffold.lkernels[pnode] = DeterministicLKernel(psp,proposedVValue)
+    
+    xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,self.rhoDB,{})
+    return trace,xiWeight - rhoWeight
+
+  def accept(self): pass
+  def reject(self):
+    detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
+    assertTorus(self.scaffold)
+    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
