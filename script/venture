@@ -34,7 +34,7 @@ Expect crashes that wipe out your Venture session.
 
 def server(args):
     banner(False)
-    server = v.make_ripl_rest_server()
+    server = v.backend(args.backend).make_ripl_rest_server()
     print "Launching RIPL Server"
     server.run(host='0.0.0.0', port=args.port, debug=True, use_reloader=False)
 
@@ -44,38 +44,39 @@ def client(args):
     print "Connecting to RIPL Server at {0}".format(url)
     run_venture_console(v.make_ripl_rest_client(url))
 
-def local(args):
+def puma(args):
     banner()
-    run_venture_console(v.make_church_prime_ripl())
+    run_venture_console(v.make_puma_church_prime_ripl())
+
+def cxx(args):
+    banner()
+    run_venture_console(v.make_cxx_church_prime_ripl())
 
 def lite(args):
     banner()
     run_venture_console(v.make_lite_church_prime_ripl())
 
-def puma(args):
-    banner()
-    run_venture_console(v.make_puma_church_prime_ripl())
-
 parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform')
 parser.add_argument('--version', action='version', version='Venture, version 0.1.1')
 subparsers = parser.add_subparsers(title="optional mode")
 
-parser_local = subparsers.add_parser("run", help="[default] Start a local Venture session",
-                                     description="Start a local Venture session")
-parser_local.set_defaults(func=local)
+parser_local = subparsers.add_parser("puma", help="[default] Start a local Venture Puma session",
+                                     description="Start a local Venture Puma session")
+parser_local.set_defaults(func=puma)
+
+parser_local = subparsers.add_parser("cxx", help="Start a local Venture CXX session",
+                                     description="Start a local Venture CXX session")
+parser_local.set_defaults(func=cxx)
 
 parser_local = subparsers.add_parser("lite", help="Start a local Venture Lite session",
                                      description="Start a local Venture Lite session")
 parser_local.set_defaults(func=lite)
 
-parser_local = subparsers.add_parser("puma", help="Start a local Venture Puma session",
-                                     description="Start a local Venture Puma session")
-parser_local.set_defaults(func=puma)
-
 default_port = 8082
 
 parser_server = subparsers.add_parser("server", help="Start a Venture server session",
                                       description="Start a Venture server session")
+parser_server.add_argument("backend", default="lite", help="the Venture backend use")
 parser_server.add_argument("-p", "--port", type=int, default=default_port,
                            help="the port to listen on (default {0})".format(default_port))
 parser_server.set_defaults(func=server)
@@ -92,7 +93,7 @@ parser_client.set_defaults(func=client)
 
 if len(sys.argv) == 1:
     # Work around what appears to be a limitation of argparse
-    local(None)
+    puma(None)
 else:
     args = parser.parse_args()
     args.func(args)

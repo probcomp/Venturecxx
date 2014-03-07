@@ -43,24 +43,10 @@ def default_num_transitions_per_sample():
     return 3
 
 def get_ripl():
-  if config["get_ripl"] == "lite":
-    return s.make_lite_church_prime_ripl()
-  elif config["get_ripl"] == "cxx":
-    return s.make_cxx_church_prime_ripl()
-  elif config["get_ripl"] == "puma":
-    return s.make_puma_church_prime_ripl()
-  else:
-    raise Exception("Unknown backend type %s" % config["get_ripl"])
+  return s.backend(config["get_ripl"]).make_church_prime_ripl()
 
 def get_core_sivm():
-  if config["get_ripl"] == "lite":
-    return s.make_core_lite_sivm()
-  elif config["get_ripl"] == "cxx":
-    return s.make_core_cxx_sivm()
-  elif config["get_ripl"] == "puma":
-    return s.make_core_puma_sivm()
-  else:
-    raise Exception("Unknown backend type %s" % config["get_ripl"])
+  return s.backend(config["get_ripl"]).make_core_sivm()
 
 
 def collectSamples(*args, **kwargs):
