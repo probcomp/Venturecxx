@@ -33,19 +33,9 @@ double logaddexp(const vector<double>& xs)
 
 size_t sampleCategorical(const vector<double> & ps, gsl_rng * rng)
 {
-  double total = std::accumulate(ps.begin(), ps.end(), 0);
-  double r = gsl_ran_flat(rng, 0, total);
-  
-  double sum = 0;
-  for (size_t i = 0; i < ps.size(); ++i)
-  {
-    sum += ps[i];
-    if (sum >= r)
-    {
-      return i;
-    }
-  }
-
+  vector<unsigned int> ns(ps.size());
+  gsl_ran_multinomial(rng,ps.size(),1,&ps[0],&ns[0]);
+  for (size_t i = 0; i < ns.size(); ++i) { if (ns[i] == 1) { return i; } }
   assert(false);
 }
 
