@@ -6,6 +6,8 @@ from testconfig import config
 @statisticalTest
 def testEnumerativeGibbsBasic1():
   """Basic sanity test"""
+  if not config["should_reset"] and not config["num_transitions_per_sample"] % 2:
+    raise SkipTest("EnumerativeGibbsBasic needs either reset or an odd # of transitions per sample")
   ripl = get_ripl()
   ripl.predict("(bernoulli)",label="pid")
 
