@@ -101,7 +101,7 @@ def testBasicRejection3():
   return reportKnownContinuous(cdf, predictions, "beta(2,1)")
 
 def testCycleKernel():
-  """Same example as testBlockingExample0, but a cycle kernel should solve it"""
+  """Same example as testBlockingExample0, but a cycle kernel that covers everything should solve it"""
   ripl = get_ripl()
 
   ripl.assume("a", "(scope_include 0 0 (normal 10.0 1.0))")
@@ -112,5 +112,20 @@ def testCycleKernel():
   k2 = {"transitions":1,"kernel":"mh","scope":1,"block":1}
 
   predictions = collectSamples(ripl,1,infer_merge={"kernel":"cycle","subkernels":[k1,k2]})
+  cdf = stats.norm(loc=34.0/3.0, scale=math.sqrt(2.0/3.0)).cdf
+  return reportKnownContinuous(cdf, predictions, "N(34/3,sqrt(2/3))")
+
+def testMixtureKernel():
+  """Same example as testCycleKernel, but with a mixture kernel"""
+  ripl = get_ripl()
+
+  ripl.assume("a", "(scope_include 0 0 (normal 10.0 1.0))")
+  ripl.assume("b", "(scope_include 1 1 (normal a 1.0))")
+  ripl.observe("(normal b 1.0)", 14.0)
+
+  k1 = {"transitions":1,"kernel":"mh","scope":0,"block":0}
+  k2 = {"transitions":1,"kernel":"mh","scope":1,"block":1}
+
+  predictions = collectSamples(ripl,1,infer_merge={"kernel":"mixture","subkernels":[k1,k2],"weights":[0.5,0.5]})
   cdf = stats.norm(loc=34.0/3.0, scale=math.sqrt(2.0/3.0)).cdf
   return reportKnownContinuous(cdf, predictions, "N(34/3,sqrt(2/3))")
