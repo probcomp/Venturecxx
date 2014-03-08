@@ -257,8 +257,15 @@ class Ripl():
             # modified to add value to each directive
             # FIXME: is this correct behavior?
             for directive in directives:
-                value = self.report(directive['directive_id'], type)
-                directive['value'] = value
+                inst = { 'instruction':'report',
+                         'directive_id':directive['directive_id'],
+                         }
+                # Going around the string synthesis and parsing makes
+                # the demos acceptably fast (time for the venture
+                # server to respond to /list_directives improves by
+                # 5-10x, depending on the number of directives).
+                value = self.sivm.core_sivm.execute_instruction(inst)['value']
+                directive['value'] = value if type else _strip_types(value)
             return directives
 
     def get_directive(self, label_or_did):
