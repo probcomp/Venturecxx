@@ -514,7 +514,7 @@ function InitializeDemo() {
         }
 
         now = Date.now()
-        console.log("Rendering took", now - then "ms")
+        console.log("Rendering took", now - then, "ms")
     };
     
     var ShowCurvesQ = function() {
