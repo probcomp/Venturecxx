@@ -481,18 +481,30 @@ def findInterval(f,x0,y,w,m):
   J = math.floor(m * V)
   K = (m - 1) - J
 
+  maxIters = 10000
+  
+  iterJ = 0
   while J > 0 and y < f(L):
+    iterJ += 1
+    if iterJ == maxIters: raise Exception("Cannot find interval for slice")
     L = L - w
     J = J - 1
 
+  iterK = 0    
   while K > 0 and y < f(R):
+    iterK += 1
+    if iterK == maxIters: raise Exception("Cannot find interval for slice")
     R = R + w
     K = K - 1
 
   return L,R
 
 def sampleInterval(f,x0,y,w,L,R):
+  maxIters = 10000
+  it = 0
   while True:
+    it += 1
+    if it == maxIters: raise Exception("Cannot sample interval for slice")
     U = random.random()
     x1 = L + U * (R - L)
     if y < f(x1): return x1
@@ -524,7 +536,7 @@ class SliceOperator(object):
     f = makeDensityFunction(trace,scaffold,psp,pnode)
     y = random.uniform(0,f(currentValue))
     w = .5
-    m = 20
+    m = 100
     L,R = findInterval(f,currentValue,y,w,m)
     proposedValue = sampleInterval(f,currentValue,y,w,L,R)
     proposedVValue = VentureNumber(proposedValue)
