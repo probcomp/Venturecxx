@@ -425,6 +425,9 @@ function InitializeDemo() {
     /* This is the callback that we pass to GET_DIRECTIVES_CONTINUOUSLY. */
     var RenderAll = function(directives) {
         //console.log("CLICKS TO ADD: " + JSON.stringify(clicks_to_add));
+
+        console.log("Rendering starting")
+        then = Date.now()
                 
         UpdateVentureCode(directives);
         UpdateModelVariables(directives);
@@ -440,7 +443,9 @@ function InitializeDemo() {
             current_curve.c3,
             current_curve.c4,
         ];
-        
+
+        // console.log(current_curve.polynomial_coefficients);
+
         for (obs_id in points) {
             p = points[obs_id];
 
@@ -507,6 +512,9 @@ function InitializeDemo() {
                 }
             );
         }
+
+        now = Date.now()
+        console.log("Rendering took", now - then "ms")
     };
     
     var ShowCurvesQ = function() {

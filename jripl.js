@@ -17,36 +17,36 @@
 
 
 make_length_N = function(str, N) {
-	continuation = '...';
-	if (str.length > N){
-	    str = str.substr(0, N-continuation.length) + continuation;
-	}
-	else {
-	    extraspaces = N-str.length;
-	    str = str + Array(extraspaces + 1).join(" ");
-	}
-	return str
+        continuation = '...';
+        if (str.length > N){
+            str = str.substr(0, N-continuation.length) + continuation;
+        }
+        else {
+            extraspaces = N-str.length;
+            str = str + Array(extraspaces + 1).join(" ");
+        }
+        return str
 }
 
 undefined_to_empty_str = function(str) {
-	if(str == 'undefined') {
-		str = '';
-	}
-	return str
+        if(str == 'undefined') {
+                str = '';
+        }
+        return str
 }
 
 zip = function(arrays) {
-	return arrays[0].map(function(_,i){
-		return arrays.map(function(array){return array[i]})
-	});
+        return arrays[0].map(function(_,i){
+                return arrays.map(function(array){return array[i]})
+        });
 }
 
 join_for_console = function(str_arr) {
-	header_lengths = [15, 15, 15, 5];
-	str_N_tuples = zip([str_arr, header_lengths]);
-	strs = str_N_tuples.map(function(inarray) { return make_length_N(inarray[0], inarray[1] ) });
-	joined = strs.join("| ");
-	return joined
+        header_lengths = [15, 15, 15, 5];
+        str_N_tuples = zip([str_arr, header_lengths]);
+        strs = str_N_tuples.map(function(inarray) { return make_length_N(inarray[0], inarray[1] ) });
+        joined = strs.join("| ");
+        return joined
 }
 
 function jripl() {
@@ -108,7 +108,9 @@ function jripl() {
 
     /* Perform the actual AJAX request. */
     var ajax_execute_post = function(URL,data_in,on_success) {
-    	$.ajax({
+        then = Date.now()
+        console.log("Ajax request sent")
+        $.ajax({
             url: full_url(URL),
             type:'POST', 
             data: JSON.stringify(data_in),
@@ -116,14 +118,16 @@ function jripl() {
             contentType: 'application/json',
             crossDomain: true,
             success: function(data) {
-		        a_request_processed_callback();
-		        on_success(data);
+                now = Date.now()
+                console.log("Ajax response received", now - then)
+                a_request_processed_callback();
+                on_success(data);
                 ajax_continue_requests();
-    	    },
+            },
             // TODO this error callback needs updating
             error: function(data) { 
-    		    console.log(data);
-		    },
+                    console.log(data);
+                    },
             complete: function() {}
         });
     };
@@ -155,42 +159,42 @@ function jripl() {
     var pripl_functions_w_retval = ['assume_async','predict_async','observe_async'];
 
     for (i = 0; i < pripl_functions_w_retval.length; i++) {
-	var name = pripl_functions_w_retval[i];
-	var closure_name = name.substr(0,name.length-6);
-	var on_success = function(data_in, data) {
-	       console.log(data);
-	       if(data != null) {
-		       term.echo(data_in[0] + " | " + data)
-	       }
-	}
-	this[name] = create_closure(closure_name, on_success);
+        var name = pripl_functions_w_retval[i];
+        var closure_name = name.substr(0,name.length-6);
+        var on_success = function(data_in, data) {
+               console.log(data);
+               if(data != null) {
+                       term.echo(data_in[0] + " | " + data)
+               }
+        }
+        this[name] = create_closure(closure_name, on_success);
     };
 
     /* FIXME: write these, adding logs to term-mang.js to show that the procs are geting called with the
      * right arguments, returning the right values, and calling these versions for non-"example" mode */
 
     this['real_infer'] = function (num_iters) {
-	    ajax_post_in_sequence("infer", [num_iters], function () {
-		    echo_str = "real_infer(" + num_iters + ")";
-		    console.log(echo_str);
-		    // term.echo(echo_str);
-	    });
+            ajax_post_in_sequence("infer", [num_iters], function () {
+                    echo_str = "real_infer(" + num_iters + ")";
+                    console.log(echo_str);
+                    // term.echo(echo_str);
+            });
     }
 
     this['real_forget'] = function (directive_id) {
-	    ajax_post_in_sequence("forget", [directive_id], function () {
-		    echo_str = "real_forget(" + directive_id + ")";
-		    console.log(echo_str);
-		    // term.echo(echo_str);
-	    });
+            ajax_post_in_sequence("forget", [directive_id], function () {
+                    echo_str = "real_forget(" + directive_id + ")";
+                    console.log(echo_str);
+                    // term.echo(echo_str);
+            });
     }
 
     this['real_observe'] = function (expression, literal) {
-    	    ajax_post_in_sequence("observe", [expression, literal], function () {
-		    echo_str = "real_observe(" + expression + ", " + literal + ")";
-		    console.log(echo_str);
-		    // term.echo(echo_str);
-	    });
+            ajax_post_in_sequence("observe", [expression, literal], function () {
+                    echo_str = "real_observe(" + expression + ", " + literal + ")";
+                    console.log(echo_str);
+                    // term.echo(echo_str);
+            });
     }
 
 /* Continuous directives */
@@ -249,21 +253,21 @@ function jripl() {
     };
 
     this.display_directives = function() {
-	var success_fun = function(data) {
-	    console.log(data);
-	    column_names = ["Directives", "Instruction", "Values", "Ids"];
-	    header = join_for_console(column_names);
-	    term.echo(header);
-	    for (i = 0; i < data.length; i++){
-		sym = undefined_to_empty_str(data[i].symbol + "");
-		exp = undefined_to_empty_str(data[i].expression + "");
-		val = undefined_to_empty_str(data[i].value + "");
-		directive_id = undefined_to_empty_str(data[i].directive_id + "");
-		joined = join_for_console([sym, exp, val, directive_id]);
-		term.echo(joined);
-	    }
-	}
-	ajax_post_in_sequence("list_directives", [], success_fun);
+        var success_fun = function(data) {
+            console.log(data);
+            column_names = ["Directives", "Instruction", "Values", "Ids"];
+            header = join_for_console(column_names);
+            term.echo(header);
+            for (i = 0; i < data.length; i++){
+                sym = undefined_to_empty_str(data[i].symbol + "");
+                exp = undefined_to_empty_str(data[i].expression + "");
+                val = undefined_to_empty_str(data[i].value + "");
+                directive_id = undefined_to_empty_str(data[i].directive_id + "");
+                joined = join_for_console([sym, exp, val, directive_id]);
+                term.echo(joined);
+            }
+        }
+        ajax_post_in_sequence("list_directives", [], success_fun);
     };
     
 /* Registering special callback functions */
