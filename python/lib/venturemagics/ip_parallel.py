@@ -123,7 +123,7 @@ def make_mripl_func():
 
 class MRipl():
     
-    def __init__(self,no_ripls,lite=False,verbose=True,client=None,name=None):
+    def __init__(self,no_ripls,lite=False,verbose=False,client=None,name=None):
         self.lite = lite
         if not self.lite:
             self.local_ripl = make_church_prime_ripl()
@@ -703,12 +703,19 @@ def mr_map_f(mripl,proc,limit=None):
     
     return out_dict
 
-
+def venture(line, cell):
+    mripl_name =  str(line).split()[0]
+    mripl = eval(mripl_name,globals(),ip.user_ns)
+    mripl.execute_program(str(cell))
+    # mripl.infer(0)
+    return None
+    
 
 ## Register the cell magic for IPython use
 try:
     ip = get_ipython()
-    ip.register_magic_function(mr_map, "cell")    
+    ip.register_magic_function(mr_map, "cell")
+    ip.register_magic_function(venture, "cell")
 except:
     print 'no ipython'
 
