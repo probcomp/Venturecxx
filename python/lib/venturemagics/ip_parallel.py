@@ -288,7 +288,10 @@ class MRipl():
 
     def execute_program(self,  program_string, params=None):
         if program_string.split()[0].startswith('[clear]'):
-            self.total_transitions=0
+            self.clear()
+            self.execute_program( ' '.join(program_string.split()[1:]) )
+            #self.total_transitions=0
+
         self.local_ripl.execute_program( program_string, params )
         @interactive
         def f( program_string, params, mrid):
@@ -722,7 +725,7 @@ def mr_map_f(mripl,proc,limit=None):
 def venture(line, cell):
     mripl_name =  str(line).split()[0]
     mripl = eval(mripl_name,globals(),ip.user_ns)
-    mripl.execute_program(str(cell))
+    return mripl.execute_program(str(cell))
     # mripl.infer(0)
     return None
     
