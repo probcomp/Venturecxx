@@ -461,7 +461,7 @@ class MRipl():
                 var_type = self.type_list(vals)
 
                 if var_type =='float':
-                    fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(8,3.5))
+                    fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(12,3.5))
                     xr = np.linspace(min(vals),max(vals),400)
                     ax[0].plot(xr,gaussian_kde(vals)(xr))
                     ax[0].set_xlim([min(vals),max(vals)])
@@ -469,7 +469,7 @@ class MRipl():
 
                     ax[1].hist(vals)
                     ax[1].set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
-                    [a.set_xlabel('Var %s' % str(label)) for a in ax]
+                    [a.set_xlabel('Exp: %s' % str(label)) for a in ax]
 
                 elif var_type =='int':
                     fig,ax = plt.subplots()
@@ -675,7 +675,7 @@ def mr_map(line, cell):
 
 # Non-magic version of the magic above (callable from normal Python script)
 # Takes an actual mripl and proc as inputs.
-def mr_map_nomagic(mripl,proc,limit=None):
+def mr_map_f(mripl,proc,limit=None):
     'Push procedure into engine namespaces. Use execute to map across ripls.'
     proc_name = 'user_proc_' + str( abs(hash(proc)) )
     mripl.dview.push( { proc_name: interactive(proc)} )
