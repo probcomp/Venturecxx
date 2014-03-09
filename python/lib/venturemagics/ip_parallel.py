@@ -725,9 +725,9 @@ def mr_map_f(mripl,proc,limit=None):
 def venture(line, cell):
     mripl_name =  str(line).split()[0]
     mripl = eval(mripl_name,globals(),ip.user_ns)
-    return mripl.execute_program(str(cell))
+    out = mripl.execute_program(str(cell))
     # mripl.infer(0)
-    return None
+    return None ##FIXME: maybe some values should be output
     
 
 ## Register the cell magic for IPython use
