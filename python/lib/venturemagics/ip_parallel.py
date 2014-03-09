@@ -461,7 +461,7 @@ class MRipl():
                 var_type = self.type_list(vals)
 
                 if var_type =='float':
-                    fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(12,3.5))
+                    fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(11,2))
                     xr = np.linspace(min(vals),max(vals),400)
                     ax[0].plot(xr,gaussian_kde(vals)(xr))
                     ax[0].set_xlim([min(vals),max(vals)])
@@ -490,7 +490,7 @@ class MRipl():
         if scatter:
             label0,vals0 = values.items()[0]
             label1,vals1 = values.items()[1]
-            fig, ax  = plt.subplots(figsize=(5,3.5))
+            fig, ax  = plt.subplots(figsize=(4,2))
             ax.scatter(vals0,vals1)
             ax.set_xlabel(label0); ax.set_ylabel(label1)
             ax.set_title('%s vs. %s (transitions: %i, ripls: %i)' % (str(label0),str(label1),
