@@ -287,6 +287,8 @@ class MRipl():
         return self.lst_flatten( self.dview.apply(f,label_or_did,self.mrid) )
 
     def execute_program(self,  program_string, params=None):
+        if program_string.split()[0].startswith('[clear]'):
+            self.total_transitions=0
         self.local_ripl.execute_program( program_string, params )
         @interactive
         def f( program_string, params, mrid):
@@ -461,15 +463,29 @@ class MRipl():
                 var_type = self.type_list(vals)
 
                 if var_type =='float':
-                    fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(11,2))
-                    xr = np.linspace(min(vals),max(vals),400)
-                    ax[0].plot(xr,gaussian_kde(vals)(xr))
-                    ax[0].set_xlim([min(vals),max(vals)])
-                    ax[0].set_title('GKDE: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
+                    try:
+                        kd=gaussian_kde(vals)(np.linspace(min(vals),max(vals),400))
+                        kde=1
+                    except:
+                        kde=0
+                    if kde:
+                        fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(9,2))
 
-                    ax[1].hist(vals)
-                    ax[1].set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
-                    [a.set_xlabel('Exp: %s' % str(label)) for a in ax]
+                        xr = np.linspace(min(vals),max(vals),400)
+                        ax[0].plot(xr,gaussian_kde(vals)(xr))
+                        ax[0].set_xlim([min(vals),max(vals)])
+                        ax[0].set_title('GKDE: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
+
+                        ax[1].hist(vals)
+                        ax[1].set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
+                        [a.set_xlabel('Exp: %s' % str(label)) for a in ax]
+
+                    else:
+                        fig,ax = plt.subplots(figsize=(4,2))
+                        ax.hist(vals)
+                        ax.set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
+                        ax.set_xlabel('Exp: %s' % str(label))
+                        
 
                 elif var_type =='int':
                     fig,ax = plt.subplots()
