@@ -79,6 +79,7 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaff
   VentureValuePtr currentVValue = trace->getValue(pnode);
   double x0 = currentVValue->getDouble();
 
+  scaffold->lkernels[pnode] = shared_ptr<LKernel>(new DeterministicLKernel(currentVValue,psp));
   pair<double, shared_ptr<DB> > rhoWeightAndDB = detachAndExtract(trace,scaffold->border[0],scaffold);
   double rhoWeight = rhoWeightAndDB.first;
   rhoDB = rhoWeightAndDB.second;
@@ -93,8 +94,7 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaff
   double x1 = sliceSample(x0,w,m,lower,upper);
 
   scaffold->lkernels[pnode] = shared_ptr<LKernel>(new DeterministicLKernel(VentureValuePtr(new VentureNumber(x1)),psp));
-  double ldOfProposedValue = psp->logDensity(VentureValuePtr(new VentureNumber(x1)),trace->getArgs(pnode));
-  double xiWeight = regenAndAttach(trace,scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),shared_ptr<map<Node*,Gradient> >()) - ldOfProposedValue;
+  double xiWeight = regenAndAttach(trace,scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),shared_ptr<map<Node*,Gradient> >());
   /* This is subtle. We cancel out the weight compensation that we got by "forcing" x1, so that the weight is as if it had been sampled.
      This is because this weight is cancelled elsewhere (in the mixing over the slice). */
 
