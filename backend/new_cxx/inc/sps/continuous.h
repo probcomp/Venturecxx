@@ -28,7 +28,7 @@ struct GammaPSP : RandomPSP
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool isContinuous() const { return true; }
-  bool hasSupportLowerBound() const { return true; }
+  double getSupportLowerBound() const { return 0; }
 
 };
 
@@ -38,7 +38,7 @@ struct InvGammaPSP : RandomPSP
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool isContinuous() const { return true; }
-  bool hasSupportLowerBound() const { return true; }
+  double getSupportLowerBound() const { return 0; }
 
 };
 
@@ -48,8 +48,8 @@ struct UniformContinuousPSP : RandomPSP
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool isContinuous() const { return true; }
-  bool hasSupportLowerBound() const { return true; }
-  bool hasSupportUpperBound() const { return true; }
+  double getSupportLowerBound() const { return 0; }
+  double getSupportUpperBound() const { return 1; }
 
 };
 
@@ -66,8 +66,8 @@ struct BetaPSP : RandomPSP
 				      const vector<double> & arguments) const;
 
   bool isContinuous() const { return true; }
-  bool hasSupportLowerBound() const { return true; }
-  bool hasSupportUpperBound() const { return true; }
+  double getSupportLowerBound() const { return 0; }
+  double getSupportUpperBound() const { return 1; }
 
 };
 
@@ -87,7 +87,7 @@ struct ChiSquaredPSP : RandomPSP
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool isContinuous() const { return true; }
-  bool hasSupportLowerBound() const { return true; }
+  double getSupportLowerBound() const { return 0; }
 
 };
 
@@ -97,7 +97,7 @@ struct InvChiSquaredPSP : RandomPSP
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool isContinuous() const { return true; }
-  bool hasSupportLowerBound() const { return true; }
+  double getSupportLowerBound() const { return 0; }
 
 };
 
