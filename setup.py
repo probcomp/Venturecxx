@@ -121,6 +121,7 @@ puma_src_files = [
     "src/gkernels/mh.cxx",
     "src/gkernels/pgibbs.cxx",
     "src/gkernels/egibbs.cxx",
+    "src/gkernels/slice.cxx",    
 
     "src/sps/betabernoulli.cxx",
     "src/sps/conditional.cxx",
