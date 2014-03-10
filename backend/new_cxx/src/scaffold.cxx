@@ -4,11 +4,21 @@
 #include "sp.h"
 #include <algorithm>
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 
 set<Node *> Scaffold::getPrincipalNodes() 
 { 
   assert(setsOfPNodes.size() == 1);
   return setsOfPNodes[0];
+}
+
+Node * Scaffold::getPrincipalNode()
+{
+  assert(setsOfPNodes.size() == 1);
+  assert(setsOfPNodes[0].size() == 1);
+  BOOST_FOREACH(Node * pnode , setsOfPNodes[0]) { return pnode; }
+  assert(false);
+  return NULL;
 }
 
 int Scaffold::getRegenCount(Node * node) 

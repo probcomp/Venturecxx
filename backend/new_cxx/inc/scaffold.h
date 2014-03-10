@@ -34,6 +34,7 @@ struct Scaffold
   
 
   set<Node *> getPrincipalNodes();
+  Node * getPrincipalNode();
   int getRegenCount(Node * node);
   void incRegenCount(Node * node);
   void decRegenCount(Node * node);
