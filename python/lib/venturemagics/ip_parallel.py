@@ -132,6 +132,7 @@ class MRipl():
         self.local_ripl.set_seed(0)   # same seed as first remote ripl
         self.no_ripls = no_ripls
         self.seeds = range(self.no_ripls)
+        self.seeds = list(np.random.randint(1,10**3,self.no_ripls)) ##FIXME set np seed in advance for reproduce
         self.total_transitions = 0
         
         self.cli = Client() if not(client) else client
@@ -419,7 +420,8 @@ class MRipl():
         (optional) histograms, scatterplots.'''
 
         
-        if not(isinstance(did_labels_list,list)): did_labels_list = [did_labels_list] 
+        if not(isinstance(did_labels_list,list)): did_labels_list = [did_labels_list]
+        if not(isinstance(exp_list,list)): exp_list = [exp_list] 
         values = { did_label:self.report(did_label) for did_label in did_labels_list}
         
         values.update( { exp:self.sample(exp) for exp in exp_list } )
