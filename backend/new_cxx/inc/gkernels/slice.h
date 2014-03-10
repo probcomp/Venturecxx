@@ -35,6 +35,8 @@ struct SliceGKernel : GKernel
   shared_ptr<PSP> psp;
   ApplicationNode * pnode;
 
+  unsigned int seed;
+
   /* The old DB */
   shared_ptr<DB> rhoDB;
   

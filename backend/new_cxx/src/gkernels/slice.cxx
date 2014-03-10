@@ -1,4 +1,5 @@
 #include "gkernels/slice.h"
+#include <ctime>
 #include "psp.h"
 #include "scaffold.h"
 #include "lkernel.h"
@@ -8,13 +9,19 @@
 #include "concrete_trace.h"
 #include "db.h"
 #include "consistency.h"
+#include <gsl/gsl_rng.h>
 
 double SliceGKernel::computeLogDensity(double x)
 {
   Node * node = static_cast<Node*>(pnode);
   scaffold->lkernels[node] = shared_ptr<LKernel>(new DeterministicLKernel(VentureValuePtr(new VentureNumber(x)),psp));
-  shared_ptr<Particle> p = shared_ptr<Particle>(new Particle(trace));
-  // TODO p.setSeed(constant)
+  
+  /* The density is with respect to fixed entropy */
+  shared_ptr<gsl_rng> rng(gsl_rng_alloc(gsl_rng_mt19937));
+  gsl_rng_set (rng.get(),seed);
+
+  shared_ptr<Particle> p = shared_ptr<Particle>(new Particle(trace,rng));
+
   return regenAndAttach(p.get(),scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),shared_ptr<map<Node*,Gradient> >());
 }
 
@@ -67,6 +74,8 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaff
 {
   this->trace = trace;
   this->scaffold = scaffold;
+
+  seed = time(NULL);
   
   assertTrace(trace,scaffold);
   assert(scaffold->border.size() == 1);
