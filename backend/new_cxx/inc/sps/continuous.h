@@ -17,24 +17,40 @@ struct NormalPSP : RandomPSP
   vector<double> gradientOfLogDensity(double ,
 				      const vector<double> & arguments) const;
 
+  bool isContinuous() const { return true; }
+
+
 };
 
 struct GammaPSP : RandomPSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+
+  bool isContinuous() const { return true; }
+  bool hasSupportLowerBound() const { return true; }
+
 };
 
 struct InvGammaPSP : RandomPSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+
+  bool isContinuous() const { return true; }
+  bool hasSupportLowerBound() const { return true; }
+
 };
 
 struct UniformContinuousPSP : RandomPSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+
+  bool isContinuous() const { return true; }
+  bool hasSupportLowerBound() const { return true; }
+  bool hasSupportUpperBound() const { return true; }
+
 };
 
 struct BetaPSP : RandomPSP
@@ -48,12 +64,20 @@ struct BetaPSP : RandomPSP
   //vector<ParameterScope> getParameterScopes() const;
   vector<double> gradientOfLogDensity(double ,
 				      const vector<double> & arguments) const;
+
+  bool isContinuous() const { return true; }
+  bool hasSupportLowerBound() const { return true; }
+  bool hasSupportUpperBound() const { return true; }
+
 };
 
 struct StudentTPSP : RandomPSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+
+  bool isContinuous() const { return true; }
+
 };
 
 
@@ -61,12 +85,20 @@ struct ChiSquaredPSP : RandomPSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+
+  bool isContinuous() const { return true; }
+  bool hasSupportLowerBound() const { return true; }
+
 };
 
 struct InvChiSquaredPSP : RandomPSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+
+  bool isContinuous() const { return true; }
+  bool hasSupportLowerBound() const { return true; }
+
 };
 
 
