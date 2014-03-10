@@ -3,7 +3,7 @@
 
 #include "types.h"
 #include "args.h"
-
+#include <cfloat>
 #include <gsl/gsl_rng.h>
 
 struct LKernel;
@@ -37,10 +37,8 @@ struct PSP
 
   /* For slice sampling */
   virtual bool isContinuous() const { return false; }
-  virtual bool hasSupportLowerBound() const { return false; }
-  virtual double getSupportLowerBound() const { return 0; }
-  virtual bool hasSupportUpperBound() const { return false; }
-  virtual double getSupportUpperBound() const { return 1; }
+  virtual double getSupportLowerBound() const { return -FLT_MAX; }
+  virtual double getSupportUpperBound() const { return FLT_MAX; }
 };
 
 struct NullRequestPSP : PSP
