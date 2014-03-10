@@ -34,6 +34,13 @@ struct PSP
   // TODO special psp-specific lkernels are punted for now
   virtual bool hasDeltaKernel() const { return false; }
   virtual shared_ptr<LKernel> getDeltaKernel() const { assert(false); return shared_ptr<LKernel>(); }
+
+  /* For slice sampling */
+  virtual bool isContinuous() const { return false; }
+  virtual bool hasSupportLowerBound() const { return false; }
+  virtual double getSupportLowerBound() const { return 0; }
+  virtual bool hasSupportUpperBound() const { return false; }
+  virtual double getSupportUpperBound() const { return 1; }
 };
 
 struct NullRequestPSP : PSP
