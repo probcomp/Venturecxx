@@ -590,22 +590,12 @@ function InitializeDemo() {
     // // The main curve fitting HTML code.
     var InsertHTML = function(divclass) {
         $('.'+divclass).html('\
-        <h3><a href="https://github.com/perov/simpleinterpreter/">Bayesian Curve Fitting Demo</a></h3>\
+        <h3>Bayesian Curve Fitting Demo</h3>\
         <div id="working_space" style="display: ;">\
         <table><tr><td style="vertical-align: top;">\
         <div id="div_for_plots" style="background-color: white; width: 420px; height: 420px;"></div>\
         <br>\
         <label for="IfShowCurves"><input type="checkbox" id="IfShowCurves" name="IfShowCurves" checked> Show curves</label>\
-        <div>\
-        <div class="btn-group">\
-        <button class="btn btn-danger">Engine Status</button>\
-        <button class="btn btn-danger dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>\
-        <ul class="dropdown-menu">\
-        </ul>\
-        </div>\
-        </div>\
-        <br>\
-        <a href="graphingCurvefittingSimplified_simple.html">Basic demo.</a> <a href="http://www.yuraperov.com/MIT.PCP/demo.html">Return to the list of demos.</a>\
         <br><br>\
         Based on the Venture probabilistic programming language\
         </td><td>&nbsp;&nbsp;&nbsp;</td>\
@@ -626,47 +616,6 @@ function InitializeDemo() {
         </table>\
         <br>\
         <div id="venture_code"></div>\
-        <div style="display: none;"><div style="display: none;"><input type="text" id="iteration_info" style="border:0; background-color: white;" value="" disabled></div>\
-        <div id="slider" style="width: 500px; font-size: 10; display: none;"></div>\
-        <div id="function_formula"></div>\
-        <div id="noise_value"></div>\
-        Number of MH burn-in iterations: <input type="text" id="number_of_MH_burnin_iterations" value="100" style="width: 50px;">\
-        <input type="hidden" id="number_of_steps_to_show" value="1">\
-        start from\
-        <input type="radio" id="where_start_the_burnin__from_prior" name="where_start_the_burnin" value="from_prior"> the prior\
-        <input type="radio" id="where_start_the_burnin__from_last_state" name="where_start_the_burnin" value="from_last_state" checked> the last state\
-        <br>Polynomial degree (from 0 to 4 inclusive): <input type="text" id="polynomial_degree" value="4" style="width: 20px;">\
-        <br>\
-        <table><tr><td valign="top" style="width: 450px;">\
-        <br><br></div>\
-        </td><td>&nbsp;</td>\
-        <td valign="top">\
-        <small>\
-        Noise type:\
-        <input type="radio" name="noise_type" id="noise_type__uni_cont" checked> U[0.1; 1.0]\
-        <input type="radio" name="noise_type" id="noise_type__beta1"> &beta;(1, 3)\
-        <input type="radio" name="noise_type" id="noise_type__beta2"> &beta;(1, 3) * 0.9 + 0.1\
-        </small>\
-        <br>\
-        <input type="radio" name="coeff_type" id="coeff_type__decr" checked> Decreasing coefficients (normal)<br>\
-        <input type="radio" name="coeff_type" id="coeff_type__ident_sigma10"> Identical coefficients (normal, sigma = 10)<br>\
-        <input type="radio" name="coeff_type" id="coeff_type__ident_sigma1"> Identical coefficients (normal, sigma = 1)<br>\
-        <input type="radio" name="coeff_type" id="coeff_type__incr"> Increasing coefficients (normal)<br>\
-        <input type="radio" name="coeff_type" id="coeff_type__ident_uniform"> Via &beta;<br>\
-        <input type="checkbox" id="center_is_random"> If the center of distribution on coefficients is random<br>\
-        <input type="checkbox" id="a_is_random" disabled> If the center of polynomial is random\
-        </td></tr>\
-        </table>\
-        <br><div id="polynomialListbox" style="display: none;"></div>\
-        <br><input type="button" value="Do inference" id="do_inference_button" style="display: none;">\
-        </td></tr></table>\
-        </div>\
-        <div id="forced_disconnection" style="display: none;">\
-        Oh, no, you has been disconnected from the SimpleInterpreter cloud.<br>\
-        It is not very good. I am sorry about it.<br>\
-        Please, contact Yura Perov (<a href="mailto:yura.perov@gmail.com">yura.perov@gmail.com</a>)\
-        about this issue.\
-        </div>\
         ');
     };
 
