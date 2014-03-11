@@ -54,12 +54,12 @@ class BlockScaffoldIndexer(object):
 
 
 class InPlaceOperator(object):
-  def prepare(self, trace, scaffold):
+  def prepare(self, trace, scaffold, compute_gradient = False):
     """Record the trace and scaffold for accepting or rejecting later;
     detach along the scaffold and return the weight thereof."""
     self.trace = trace
     self.scaffold = scaffold
-    rhoWeight,self.rhoDB = detachAndExtract(trace, scaffold.border[0], scaffold)
+    rhoWeight,self.rhoDB = detachAndExtract(trace, scaffold.border[0], scaffold, compute_gradient)
     assertTorus(scaffold)
     return rhoWeight
 
@@ -465,23 +465,55 @@ class ParticlePGibbsOperator(object):
 
 class HamiltonianMonteCarloOperator(InPlaceOperator):
 
+  # Notionally, I want to do Hamiltonian Monte Carlo on the potential
+  # given by this function:
+  #   def potential(values):
+  #     registerDeterministicLKernels(trace,scaffold,pnodes,values)
+  #     return regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
+  #
+  # The trouble, of course, is that I need the gradient of this to
+  # actually do HMC.
+  #
+  # I don't trust any of Python's extant AD libraries to get this
+  # right, so I'm going to do it by implementing one level of reverse
+  # mode AD myself.  Fortunately, the trace acts like a tape already.
+  # Unfortunately, regen constitutes the forward phase but has no
+  # reverse phase.  Fortunately, detach traverses the trace in the
+  # proper order so can compute the reverse phase.  Unfortunately,
+  # detach mutates the trace as it goes, so there will be some
+  # machinations (perhaps I should use particles?)
+
   def propose(self, trace, scaffold):
     pnodes = scaffold.getPrincipalNodes()
     currentValues = getCurrentValues(trace,pnodes)
-    rhoWeight = self.prepare(trace, scaffold)
-    def potential(values):
-      registerDeterministicLKernels(trace,scaffold,pnodes,values)
-      # TODO regen will not return the weight I want if there are
-      # delta kernels.  Then again, delta kernels should crash since I
-      # am not giving them any previous values.
-      return regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
-    # TODO Include rhoWeight in the eventual weight properly
+
+    # So the initial detach will get the gradient right
+    registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
+    rhoWeight = self.prepare(trace, scaffold, True) # Gradient is in self.rhoDB
+
+    # TODO regen and detach may not return the weight I want if there
+    # are delta kernels.  Then again, there should not be any delta
+    # kernels.
 
     momenta = self.sampleMomenta(currentValues)
     start_K = self.kinetic(momenta)
 
-    (proposed_values, end_K) = self.evolve(potential, currentValues, momenta) # Mutates the trace
-    xiWeight = potential(proposed_values) # Mutates the trace
+    def grad(values):
+      registerDeterministicLKernels(trace, scaffold, pnodes, values)
+      regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
+      (_, rhoDB) = detachAndExtract(trace, scaffold.border[0], scaffold)
+      return [rhoDB.getPartial(pnode) for pnode in pnodes]
+
+    # Might as well save a gradient computation, since the initial
+    # detach does it
+    start_grad = [self.rhoDB.getPartial(pnode) for pnode in pnodes]
+
+    # Smashes the trace but leaves it a torus
+    (proposed_values, end_K) = self.evolve(grad, currentValues, start_grad, momenta)
+    assertTorus(trace)
+
+    registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
+    xiWeight = regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {}) # Mutates the trace
     return (trace, rhoWeight - xiWeight + start_K - end_K)
 
   def sampleMomenta(self, currentValues):
@@ -489,12 +521,11 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
   def kinetic(self, momenta):
     return sum([m*m for m in momenta]) / 2.0
 
-  def evolve(self, potential, start_q, start_p, epsilon=0.01, num_steps=20):
-    grad_U = gradient(potential)
+  def evolve(self, grad_U, start_q, start_grad_q, start_p, epsilon=0.01, num_steps=20):
 
     q = start_q
     # The initial momentum half-step
-    dpdt = grad_U(q)
+    dpdt = start_grad_q
     # TODO This code would look much better with numpy
     p = [pi - epsilon * dpdti / 2.0 for (pi, dpdti) in zip(start_p, dpdt)]
 
