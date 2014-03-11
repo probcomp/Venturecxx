@@ -185,6 +185,8 @@ def unparse(exp):
   return '('+' '.join(map(unparse, exp))+')' if isinstance(exp, list) else str(exp)
 
 def expToDict(exp):
+  if isinstance(exp, int):
+    return {"transitions": exp}
   tag = exp[0]
   if tag == "mh":
     assert len(exp) == 4
@@ -192,6 +194,9 @@ def expToDict(exp):
   elif tag == "func-mh":
     assert len(exp) == 4
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
+  elif tag == "slice":
+    assert len(exp) == 4
+    return {"kernel":"slice","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":True}
   elif tag == "pgibbs":
     assert len(exp) == 5
     return {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":True}

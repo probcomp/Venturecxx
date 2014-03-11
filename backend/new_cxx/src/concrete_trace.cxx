@@ -224,6 +224,12 @@ void ConcreteTrace::setValue(Node * node, VentureValuePtr value)
 
 void ConcreteTrace::clearValue(Node * node) { values.erase(node); }
 
+void ConcreteTrace::unobserveNode(Node * node)
+{ 
+  assert(observedValues.count(node));
+  observedValues.erase(node);
+}
+
 void ConcreteTrace::observeNode(Node * node,VentureValuePtr value) 
 { 
   assert(!observedValues.count(node));

@@ -1,5 +1,6 @@
 from testconfig import config
 import venture.shortcuts as s
+import venture.ripl.utils as u
 
 def yes_like(thing):
   if isinstance(thing, str):
@@ -67,6 +68,8 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None,infer_merge=None):
     infer = defaultInfer()
     if not infer["kernel"] == "rejection":
       infer["transitions"] = 4 * int(infer["transitions"])
+  elif isinstance(infer, str):
+    infer = u.expToDict(u.parse(infer))
 
   if infer_merge is not None: infer.update(infer_merge)
 

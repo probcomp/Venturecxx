@@ -14,15 +14,15 @@ function abort_on_error () {
 
 # Attempts to abstract this better failed due to bash's impossible
 # quoting mechanisms.
-function test_inference_program() {
+function test_inference_program_in_lite() {
     infer=$1
-    echo nosetests --processes=4 --process-timeout=6000 -c inference-quality.cfg --tc=infer:"\"$infer\""
-    nosetests --processes=4 --process-timeout=6000 -c inference-quality.cfg --tc=infer:"$infer"
-    abort_on_error "$infer"
+    echo nosetests --processes=4 --process-timeout=6000 -c inference-quality.cfg --tc=get_ripl:lite --tc=infer:"\"$infer\""
+    nosetests --processes=4 --process-timeout=6000 -c inference-quality.cfg --tc=get_ripl:lite --tc=infer:"$infer"
+    abort_on_error "$infer in Lite"
 }
 
-test_inference_program "(mh default one 50)"
-test_inference_program "(rejection default all 1)"
-test_inference_program "(func-pgibbs default ordered 2 2)"
-# test_inference_program "(pgibbs default ordered 10 3)"
-test_inference_program "(meanfield default one 10 10)"
+test_inference_program_in_lite "(mh default one 50)"
+test_inference_program_in_lite "(rejection default all 1)"
+test_inference_program_in_lite "(func-pgibbs default ordered 2 2)"
+# test_inference_program_in_lite "(pgibbs default ordered 10 3)"
+test_inference_program_in_lite "(meanfield default one 10 10)"
