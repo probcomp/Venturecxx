@@ -4,6 +4,12 @@ class OmegaDB(object):
     self.values = {} # node => value
     self.spFamilyDBs = {} # makerNode,id => root
 
+    # The partial derivative of the weight returned by the detach that
+    # made this DB with respect to the value of this node, at the
+    # value stored for this node in self.values.  Only meaningful for
+    # nodes with continuous values.
+    self.partials = {} # node => cotangent(value)
+
   def hasValueFor(self,node): return node in self.values
   def getValue(self,node): return self.values[node]
 
