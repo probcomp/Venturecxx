@@ -3,6 +3,11 @@
 #include <boost/foreach.hpp>
 
 Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
+Particle::Particle(ConcreteTrace * outerTrace, shared_ptr<gsl_rng> rng): 
+  baseTrace(outerTrace),
+  rng(rng) { }
+
+
 Particle::Particle(shared_ptr<Particle> outerParticle):
   baseTrace(outerParticle->baseTrace),
   unconstrainedChoices(outerParticle->unconstrainedChoices),
@@ -130,7 +135,11 @@ void Particle::addChild(Node * node, Node * child)
 
 
 /* Primitive getters */
-gsl_rng * Particle::getRNG() { return baseTrace->getRNG(); }
+gsl_rng * Particle::getRNG() 
+{
+  if (rng) { return rng.get(); }
+  else { return baseTrace->getRNG(); }
+}
 
 VentureValuePtr Particle::getValue(Node * node) 
 { 

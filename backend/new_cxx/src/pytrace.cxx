@@ -13,6 +13,7 @@
 #include "gkernels/func_mh.h"
 #include "gkernels/pgibbs.h"
 #include "gkernels/egibbs.h"
+#include "gkernels/slice.h"
 
 PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false) {}
 PyTrace::~PyTrace() {}
@@ -161,6 +162,10 @@ struct Inferer
     else if (kernel == "gibbs")
     {
       gKernel = shared_ptr<GKernel>(new EnumerativeGibbsGKernel);
+    }
+    else if (kernel == "slice")
+    {
+      gKernel = shared_ptr<GKernel>(new SliceGKernel);
     }
     else
     {

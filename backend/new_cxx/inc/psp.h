@@ -3,7 +3,7 @@
 
 #include "types.h"
 #include "args.h"
-
+#include <cfloat>
 #include <gsl/gsl_rng.h>
 
 struct LKernel;
@@ -34,6 +34,11 @@ struct PSP
   // TODO special psp-specific lkernels are punted for now
   virtual bool hasDeltaKernel() const { return false; }
   virtual shared_ptr<LKernel> getDeltaKernel() const { assert(false); return shared_ptr<LKernel>(); }
+
+  /* For slice sampling */
+  virtual bool isContinuous() const { return false; }
+  virtual double getSupportLowerBound() const { return -FLT_MAX; }
+  virtual double getSupportUpperBound() const { return FLT_MAX; }
 };
 
 struct NullRequestPSP : PSP

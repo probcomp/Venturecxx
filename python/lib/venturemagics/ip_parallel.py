@@ -132,7 +132,7 @@ class MRipl():
         self.local_ripl.set_seed(0)   # same seed as first remote ripl
         self.no_ripls = no_ripls
         self.seeds = range(self.no_ripls)
-        self.seeds = list(np.random.randint(1,10**3,self.no_ripls)) ##FIXME set np seed in advance for reproduce
+        #self.seeds = map(int,(list(np.random.randint(1,10**3,self.no_ripls)))) ##FIXME set np seed in advance for reproduce
         self.total_transitions = 0
         
         self.cli = Client() if not(client) else client
@@ -192,6 +192,7 @@ class MRipl():
             ripls=mripls[mrid]; seeds=seeds_lists[mrid]
             [ripl.clear() for ripl in ripls]
             [ripls[i].set_seed(seeds[i]) for i in range(len(ripls))]
+
         return  self.dview.apply(f,self.mrid) 
     
     def assume(self,sym,exp,**kwargs):
@@ -288,12 +289,14 @@ class MRipl():
         return self.lst_flatten( self.dview.apply(f,label_or_did,self.mrid) )
 
     def execute_program(self,  program_string, params=None):
+
         if program_string.split()[0].startswith('[clear]'):
             self.clear()
-            self.execute_program( ' '.join(program_string.split()[1:]) )
-            #self.total_transitions=0
+            if len(program_string.split()) > 1:
+                self.execute_program( ' '.join(program_string.split()[1:]) )
 
         self.local_ripl.execute_program( program_string, params )
+
         @interactive
         def f( program_string, params, mrid):
             return  [ripl.execute_program( program_string,params) for ripl in mripls[mrid]]
@@ -307,7 +310,18 @@ class MRipl():
                     return out
                 except:
                     return [None for ripl in mripls[mrid] ]
-        return self.lst_flatten( self.dview.apply(f, program_string, params,self.mrid) )
+                    
+                
+        out_execute=self.lst_flatten( self.dview.apply(f, program_string, params,self.mrid) )
+
+        @interactive  ## FIXME: this is pasted from self.clear() and should be properly abstracted
+        def reset_seeds(mrid):
+            ripls=mripls[mrid]; seeds=seeds_lists[mrid]
+            [ripls[i].set_seed(seeds[i]) for i in range(len(ripls))]
+
+        out_seeds=self.dview.apply(reset_seeds,self.mrid)
+        
+        return out_execute
 
     def get_global_logscore(self):
         self.local_ripl.get_global_logscore()
@@ -315,6 +329,8 @@ class MRipl():
         def f(mrid):
             return [ripl.get_global_logscore() for ripl in mripls[mrid]]
         return self.lst_flatten( self.dview.apply(f,self.mrid) )
+
+    
 
     def sample(self,exp,type=False):
         
@@ -415,13 +431,16 @@ class MRipl():
         print self.display_ripls()
 
     
-    def snapshot(self,did_labels_list=[],exp_list=[], plot=False, scatter=False, logscore=False):
+    def snapshot(self,did_labels_list=[], exp_list=[], plot=False,
+                 scatter=False, logscore=False, plot_range=None,
+                 plot_past_values=[]):
         '''input lists of dids_labels and expressions and return values from all ripls and
         (optional) histograms, scatterplots.'''
 
         
         if not(isinstance(did_labels_list,list)): did_labels_list = [did_labels_list]
-        if not(isinstance(exp_list,list)): exp_list = [exp_list] 
+        if not(isinstance(exp_list,list)): exp_list = [exp_list]
+        
         values = { did_label:self.report(did_label) for did_label in did_labels_list}
         
         values.update( { exp:self.sample(exp) for exp in exp_list } )
@@ -432,7 +451,25 @@ class MRipl():
                'total_transitions':self.total_transitions,
                'ripls_info': self.ripls_location }
 
-        if plot or scatter: out['figs'] = self.plot(out,plot1d=plot,scatter=scatter)
+        if plot_past_values:
+            if not(exp_list) and not(did_labels_list):
+                no_exp=1; exp_list=['']
+            else:
+                no_exp=0
+
+            list_vals = [ past_out['values'].values()[0] for past_out in plot_past_values]
+            if no_exp==0: list_vals.append( out['values'].values()[0] )
+            
+            fig,ax=plt.subplots(figsize=(5,3))
+            [ ax.hist( past_vals, normed=True, label='%i'%count) for count,past_vals in enumerate(list_vals) ]
+            ax.legend()
+            ax.set_title('Hist: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
+            if plot_range: ax.set_xlim(plot_range)
+            
+            out['figs'] = fig
+            return out
+            
+        if plot or scatter: out['figs'] = self.plot(out,plot1d=plot,scatter=scatter,plot_range=plot_range)
 
         return out
 
@@ -454,10 +491,11 @@ class MRipl():
             return 'other'
 
         
-    def plot(self,snapshot,plot1d=True,scatter=False):
+    def plot(self,snapshot,plot1d=True,scatter=False,plot_range=None):
         '''Takes input from snapshot, checks type of values and plots accordingly.
         Plots are inlined on IPNB and output as figure objects.'''
         
+        ## list of lists, values as an optional argument
         figs = []
         values = snapshot['values']
         no_trans = snapshot['total_transitions']
@@ -476,20 +514,24 @@ class MRipl():
                     if kde:
                         fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(9,2))
 
-                        xr = np.linspace(min(vals),max(vals),400)
+                        xr = np.linspace(min(vals),max(vals),400) 
                         ax[0].plot(xr,gaussian_kde(vals)(xr))
-                        ax[0].set_xlim([min(vals),max(vals)])
                         ax[0].set_title('GKDE: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
 
                         ax[1].hist(vals)
                         ax[1].set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
                         [a.set_xlabel('Exp: %s' % str(label)) for a in ax]
 
+                        if plot_range:
+                            [ax[myax].set_xlim(plot_range) for myax in range(2)]
+
                     else:
                         fig,ax = plt.subplots(figsize=(4,2))
                         ax.hist(vals)
                         ax.set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
                         ax.set_xlabel('Exp: %s' % str(label))
+                        if plot_range:
+                            [ax[myax].set_xlim(plot_range) for myax in range(2)]
                         
 
                 elif var_type =='int':
@@ -724,12 +766,38 @@ def mr_map_f(mripl,proc,limit=None):
     
     return out_dict
 
+
+def reset_seeds(mr):
+    def hasher(ripl):
+        seed = np.mod( abs(int(hash(ripl))), 10**4)
+        ripl.set_seed(seed)
+        print 'new seed:', seed
+        return None
+    mr_map_f(mr,hasher)
+    
+
 def venture(line, cell):
     mripl_name =  str(line).split()[0]
     mripl = eval(mripl_name,globals(),ip.user_ns)
     out = mripl.execute_program(str(cell))
-    # mripl.infer(0)
-    return None ##FIXME: maybe some values should be output
+    
+    if isinstance(mripl,MRipl):
+        try:
+            values = [[d['value']['value'] for d in ripl_out] for ripl_out in out ]
+            for i,val in enumerate(values):
+                if i<5:
+                    print 'Ripl %i of %i: '%(i,mripl.no_ripls), val
+                if i==5: print '...'
+        except:
+            pass
+    else:
+        try:
+            values = [d['value']['value'] for d in out]
+            print values
+        except:
+            pass
+
+    return None  ##FIXME: maybe some values should be output
     
 
 ## Register the cell magic for IPython use

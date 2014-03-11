@@ -15,6 +15,7 @@ using persistent::PSet;
 struct Particle : Trace
 {
   Particle(ConcreteTrace * outerTrace);
+  Particle(ConcreteTrace * outerTrace, shared_ptr<gsl_rng> rng);
   Particle(shared_ptr<Particle> outerParticle);
 
 /* Methods */
@@ -142,7 +143,8 @@ struct Particle : Trace
   /* Non-persistent */
   map<Node*, shared_ptr<SPAux> > madeSPAuxs;
 
-
+  /* (optional) rng override */
+  shared_ptr<gsl_rng> rng;
 };
 
 
