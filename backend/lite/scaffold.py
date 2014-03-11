@@ -2,13 +2,14 @@ from node import LookupNode, RequestNode, OutputNode
 from value import SPRef
 
 class Scaffold(object):
-  def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None):
+  def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None,brush=None):
     self.setsOfPNodes = setsOfPNodes if setsOfPNodes else [] # [Set Node]
     self.regenCounts = regenCounts if regenCounts else {} # {Node:Int}
     self.absorbing = absorbing if absorbing else set() # Set Node
     self.aaa = aaa if aaa else set() # Set Node
     self.border = border if border else [] # [[Node]]
     self.lkernels = lkernels if lkernels else {} # {Node:LKernel}
+    self.brush = brush if brush else set() # Set Node
 
   def getPrincipalNodes(self): return set.union(*self.setsOfPNodes)
   def getRegenCount(self,node): return self.regenCounts[node]
@@ -19,6 +20,7 @@ class Scaffold(object):
   def isAAA(self,node): return node in self.aaa
   def hasLKernel(self,node): return node in self.lkernels
   def getLKernel(self,node): return self.lkernels[node]
+  def isBrush(self, node): return node in self.brush
 
   def show(self):
     print "---Scaffold---"
@@ -48,7 +50,7 @@ def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
   regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
   lkernels = loadKernels(trace,drg,aaa,useDeltaKernels)
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
-  return Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels)
+  return Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
 
 def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i):
   if node in absorbing: absorbing.remove(node)
