@@ -30,3 +30,18 @@ class OmegaDB(object):
     assert not (sp,id) in self.spFamilyDBs
     self.spFamilyDBs[(sp,id)] = esrParent
 
+  def addPartials(self, nodes, partials):
+    for (n, p) in zip(nodes, partials):
+      self.addPartial(n, p)
+
+  def addPartial(self, node, partial):
+    if node not in self.partials:
+      # TODO Get the correct zero for structured partials for
+      # e.g. nodes with multi-dimensional outputs.
+      self.partials[node] = 0
+    self.partials[node] += partial
+
+  def getPartial(self, node):
+    if node not in self.partials:
+      self.partials[node] = 0
+    return self.partials[node]
