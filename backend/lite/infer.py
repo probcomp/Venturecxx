@@ -504,7 +504,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
       vs = [NumberType().asVentureValue(v) for v in values]
       registerDeterministicLKernels(trace, scaffold, pnodes, vs)
       regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
-      (_, rhoDB) = detachAndExtract(trace, scaffold.border[0], scaffold)
+      (_, rhoDB) = detachAndExtract(trace, scaffold.border[0], scaffold, True)
       # The potential function we want is - log (density)
       return [-rhoDB.getPartial(pnode) for pnode in pnodes]
 
