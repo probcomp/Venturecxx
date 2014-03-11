@@ -343,7 +343,7 @@ class Trace(object):
       elif params["kernel"] == "rejection":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),RejectionOperator())
-      else: raise Exception("INFER (%s) MH is implemented" % params["kernel"])
+      else: raise Exception("INFER (%s) MH is not implemented" % params["kernel"])
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 

@@ -8,7 +8,7 @@ from venture.test.config import get_ripl, collectSamples
 @statisticalTest
 def testNormalWithObserve1():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
-  if config["get_ripl"] != "puma": raise SkipTest("Slice only implemented in puma")
+  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite")
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.observe("(normal a 1.0)", 14.0)

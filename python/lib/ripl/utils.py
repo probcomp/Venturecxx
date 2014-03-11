@@ -206,6 +206,9 @@ def expToDict(exp):
   elif tag == "meanfield":
     assert len(exp) == 5
     return {"kernel":"meanfield","scope":exp[1],"block":exp[2],"steps":exp[3],"transitions":exp[4]}
+  elif tag == "hmc":
+    assert len(exp) == 4
+    return {"kernel":"hmc","scope":exp[1],"block":exp[2],"transitions":exp[3]}
   elif tag == "latents":
     assert len(exp) == 4
     return {"kernel":"latents","scope":exp[1],"block":exp[2],"transitions":exp[3]}
