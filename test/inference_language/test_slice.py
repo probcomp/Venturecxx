@@ -2,8 +2,8 @@ import math
 import scipy.stats as stats
 from nose import SkipTest
 from testconfig import config
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples, defaultKernel
+from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance
+from venture.test.config import get_ripl, collectSamples
 
 @statisticalTest
 def testNormalWithObserve1():
@@ -15,7 +15,7 @@ def testNormalWithObserve1():
   # Posterior for a is normal with mean 12, precision 2
 #  ripl.predict("(normal a 1.0)")
 
-  predictions = collectSamples(ripl,1,infer_merge={"kernel":"slice"})
+  predictions = collectSamples(ripl,1,infer="(slice default one 50)")
   cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(1.5))")
 
@@ -29,7 +29,7 @@ def testNormalWithObserve2a():
   # Posterior for a is normal with mean 12, precision 2
   ripl.predict("(normal a 1.0)")
 
-  predictions = collectSamples(ripl,1,infer_merge={"kernel":"slice"})
+  predictions = collectSamples(ripl,1,infer="(slice default one 50)")
   cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
 
@@ -43,7 +43,7 @@ def testNormalWithObserve2b():
   # Posterior for a is normal with mean 12, precision 2
   ripl.predict("(normal a 1.0)")
 
-  predictions = collectSamples(ripl,3,infer_merge={"kernel":"slice"})
+  predictions = collectSamples(ripl,3,infer="(slice default one 50)")
   cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(1.5))")
 
@@ -54,7 +54,7 @@ def testStudentT1():
   ripl = get_ripl()
   ripl.assume("a", "(student_t 1.0)")
   ripl.observe("(normal a 1.0)", 3.0)
-  predictions = collectSamples(ripl,1,infer_merge={"kernel":"slice"})
+  predictions = collectSamples(ripl,1,infer="(slice default one 50)")
 
   # Posterior of a is proprtional to
   def postprop(a):
@@ -75,7 +75,7 @@ def testStudentT2():
   ripl.assume("a", "(student_t 1.0)")
   ripl.observe("(normal a 1.0)", 3.0)
   ripl.predict("(normal a 1.0)")
-  predictions = collectSamples(ripl,3,infer_merge={"kernel":"slice"})
+  predictions = collectSamples(ripl,3,infer="(slice default one 50)")
 
   # Posterior of a is proprtional to
   def postprop(a):
