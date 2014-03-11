@@ -22,7 +22,7 @@ def mixMH(trace,indexer,operator):
   rhoMix = indexer.logDensityOfIndex(trace,index)
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
   # Returning the trace is necessary for the non-mutating versions
-  proposedTrace,logAlpha = operator.propose(trace,index) 
+  proposedTrace,logAlpha = operator.propose(trace,index)
   xiMix = indexer.logDensityOfIndex(proposedTrace,index)
 
   alpha = xiMix + logAlpha - rhoMix
@@ -179,7 +179,7 @@ class MeanfieldOperator(object):
     xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),{})
     return trace,xiWeight - rhoWeight
 
-  def accept(self): 
+  def accept(self):
     if self.delegate is None:
       pass
     else:
@@ -266,7 +266,7 @@ class EnumerativeGibbsOperator(object):
     assertTorus(self.scaffold)
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
 
-      
+
 #### PGibbs
 
 # Construct ancestor path backwards
@@ -286,7 +286,7 @@ def restoreAncestorPath(trace,border,scaffold,omegaDBs,t,path):
 
 # detach the rest of the particle
 def detachRest(trace,border,scaffold,t):
-  for i in reversed(range(t)): 
+  for i in reversed(range(t)):
     detachAndExtract(trace,border[i],scaffold)
 
 
@@ -302,7 +302,7 @@ class PGibbsOperator(object):
     self.scaffold = scaffold
 
     assertTrace(self.trace,self.scaffold)
-  
+
     self.T = len(self.scaffold.border)
     T = self.T
     P = self.P
@@ -387,13 +387,13 @@ class ParticlePGibbsOperator(object):
     self.scaffold = scaffold
 
     assertTrace(self.trace,self.scaffold)
-  
+
     self.T = len(self.scaffold.border)
     T = self.T
     P = self.P
 
 #    assert T == 1 # TODO temporary
-    rhoDBs = [None for t in range(T)]    
+    rhoDBs = [None for t in range(T)]
     rhoWeights = [None for t in range(T)]
 
     for t in reversed(range(T)):
@@ -403,10 +403,10 @@ class ParticlePGibbsOperator(object):
 
     particles = [Particle(trace) for p in range(P+1)]
     self.particles = particles
-    
+
     particleWeights = [None for p in range(P+1)]
 
-    
+
     # Simulate and calculate initial xiWeights
 
     for p in range(P):
@@ -414,7 +414,7 @@ class ParticlePGibbsOperator(object):
 
     particleWeights[P] = regenAndAttach(particles[P],scaffold.border[0],scaffold,True,rhoDBs[0],{})
     assert_almost_equal(particleWeights[P],rhoWeights[0])
-          
+
 #   for every time step,
     for t in range(1,T):
       newParticles = [None for p in range(P+1)]
@@ -454,8 +454,8 @@ class ParticlePGibbsOperator(object):
 
   def accept(self):
     self.particles[self.finalIndex].commit()
-    assertTrace(self.trace,self.scaffold)    
-    
+    assertTrace(self.trace,self.scaffold)
+
   def reject(self):
     self.particles[-1].commit()
     assertTrace(self.trace,self.scaffold)
@@ -480,7 +480,8 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     momenta = self.sampleMomenta(currentValues)
     start_K = self.kinetic(momenta)
 
-    (xiWeight, end_K) = self.evolve(potential, currentValues, momenta) # Mutates the trace
+    (proposed_values, end_K) = self.evolve(potential, currentValues, momenta) # Mutates the trace
+    xiWeight = potential(proposed_values) # Mutates the trace
     return (trace, rhoWeight - xiWeight + start_K - end_K)
 
   def sampleMomenta(self, currentValues):
@@ -488,5 +489,30 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
   def kinetic(self, momenta):
     return sum([m*m for m in momenta]) / 2.0
 
-  def evolve(self, potential, current_q, current_p, epsilon=0.01, num_steps=20):
-    pass # TODO Do what Neal said.
+  def evolve(self, potential, start_q, start_p, epsilon=0.01, num_steps=20):
+    grad_U = gradient(potential)
+
+    q = start_q
+    # The initial momentum half-step
+    dpdt = grad_U(q)
+    # TODO This code would look much better with numpy
+    p = [pi - epsilon * dpdti / 2.0 for (pi, dpdti) in zip(start_p, dpdt)]
+
+    for i in range(num_steps):
+      # Position step
+      q = [qi + epsilon * pi for (qi, pi) in zip(q,p)]
+
+      # Momentum step, except at the end
+      if i < num_steps - 1:
+        dpdt = grad_U(q)
+        p = [pi - epsilon * dpdti for (pi, dpdti) in zip(p, dpdt)]
+
+    # The final momentum half-step
+    dpdt = grad_U(q)
+    p = [pi - epsilon * dpdti / 2.0 for (pi, dpdti) in zip(p, dpdt)]
+
+    # Negate momenta at the end to make the proposal symmetric
+    # (irrelevant if the kinetic energy function is symmetric)
+    p = [-pi for pi in p]
+
+    return q, self.kinetic(p)
