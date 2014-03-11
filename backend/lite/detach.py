@@ -73,7 +73,7 @@ def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
       else: 
         trace.setValueAt(node,None)
         assert isinstance(node, LookupNode) or isinstance(node, ConstantNode)
-        assert len(trace.parentsAt(node) <= 1)
+        assert len(trace.parentsAt(node)) <= 1
         if compute_gradient:
           for p in trace.parentsAt(node):
             omegaDB.addPartial(p, omegaDB.getPartial(node)) # d/dx is 1 for a lookup node
