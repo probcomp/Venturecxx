@@ -526,6 +526,8 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
   def sampleMomenta(self, currentValues):
     return [scipy.stats.norm.rvs(loc=0, scale=1) for _ in currentValues]
   def kinetic(self, momenta):
+    # This is the log density of sampling these momenta, up to an
+    # additive constant
     return sum([m*m for m in momenta]) / 2.0
 
   def evolve(self, grad_U, start_q, start_grad_q, start_p, epsilon=0.01, num_steps=10):
