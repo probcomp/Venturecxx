@@ -1,13 +1,14 @@
 import math
 import scipy.stats as stats
 from nose import SkipTest
-
+from testconfig import config
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, collect_iid_samples, defaultKernel
 
 @statisticalTest
 def testNormalWithObserve1():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
+  if config["get_ripl"] != "puma": raise SkipTest("Slice only implemented in puma")
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.observe("(normal a 1.0)", 14.0)
@@ -21,6 +22,7 @@ def testNormalWithObserve1():
 @statisticalTest
 def testNormalWithObserve2a():
   "Checks the posterior distribution on a Gaussian given an unlikely observation.  The difference between this and 1 is an extra predict, which apparently has a deleterious effect on mixing."
+  if config["get_ripl"] != "puma": raise SkipTest("Slice only implemented in puma")
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.observe("(normal a 1.0)", 14.0)
@@ -34,6 +36,7 @@ def testNormalWithObserve2a():
 @statisticalTest
 def testNormalWithObserve2b():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
+  if config["get_ripl"] != "puma": raise SkipTest("Slice only implemented in puma")  
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.observe("(normal a 1.0)", 14.0)
@@ -47,6 +50,7 @@ def testNormalWithObserve2b():
 @statisticalTest
 def testStudentT1():
   "Simple program involving simulating from a student_t"
+  if config["get_ripl"] != "puma": raise SkipTest("Slice only implemented in puma")  
   ripl = get_ripl()
   ripl.assume("a", "(student_t 1.0)")
   ripl.observe("(normal a 1.0)", 3.0)
@@ -66,6 +70,7 @@ def testStudentT1():
 @statisticalTest
 def testStudentT2():
   "Simple program involving simulating from a student_t"
+  if config["get_ripl"] != "puma": raise SkipTest("Slice only implemented in puma")  
   ripl = get_ripl()
   ripl.assume("a", "(student_t 1.0)")
   ripl.observe("(normal a 1.0)", 3.0)
