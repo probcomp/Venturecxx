@@ -88,6 +88,7 @@ OutputNode * Trace::getOutermostNonRefAppNode(Node * node)
   assert(outputNode);
   if (dynamic_pointer_cast<ESRRefOutputPSP>(getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)))
   { 
+    assert(getESRParents(outputNode).size() == 1);
     return getOutermostNonRefAppNode(getESRParents(outputNode)[0].get());
   }
   else if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)))
