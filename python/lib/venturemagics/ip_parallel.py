@@ -461,6 +461,14 @@ class MRipl():
             else:
                 no_groups,pop_size = sample_populations
             exp = exp_list[0]
+
+            # @interactive
+            # def f(exp,type,mrid):
+            #    return [ripl.sample(exp,type) for ripl in mripls[mrid] ]
+            
+            # self.dview.apply(f,exp,type,self.mrid) ##FIXEM: use mr_map_f trick
+            
+            
             all_ripls = [self.sample(exp) for j in range(pop_size)]
             ## FIXME could be much faster by fixing ripls first
             indices = np.random.randint(0,self.no_ripls,no_groups)
