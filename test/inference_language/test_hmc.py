@@ -15,6 +15,6 @@ def testNormalWithObserve1():
   # Posterior for a is normal with mean 12, precision 2
 #  ripl.predict("(normal a 1.0)")
 
-  predictions = collectSamples(ripl,1,infer="(hmc default one 50)")
+  predictions = collectSamples(ripl,1,infer="(hmc default one 10)")
   cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
