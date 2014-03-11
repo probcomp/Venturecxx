@@ -52,6 +52,23 @@ class BlockScaffoldIndexer(object):
     else: return 0
 
 
+class InPlaceOperator(object):
+  def prepare(self, trace, scaffold):
+    """Record the trace and scaffold for accepting or rejecting later;
+    detach along the scaffold and return the weight thereof."""
+    self.trace = trace
+    self.scaffold = scaffold
+    rhoWeight,self.rhoDB = detachAndExtract(trace, scaffold.border[0], scaffold)
+    assertTorus(scaffold)
+    return rhoWeight
+
+  def accept(self): pass
+  def reject(self):
+    detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
+    assertTorus(self.scaffold)
+    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
+
+
 #### Rejection sampling
 
 def computeRejectionBound(trace, scaffold, border):
@@ -88,7 +105,7 @@ def computeRejectionBound(trace, scaffold, border):
         raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
   return logBound
 
-class RejectionOperator(object):
+class RejectionOperator(InPlaceOperator):
   """Rejection sampling on a scaffold.
 
   This is supposed to obey the semantics laid out in
@@ -96,10 +113,7 @@ class RejectionOperator(object):
   A.F.M. Smith, A.E. Gelfand The American Statistician 46(2), 1992, p 84-88
   http://faculty.chicagobooth.edu/hedibert.lopes/teaching/ccis2010/1992SmithGelfand.pdf"""
   def propose(self, trace, scaffold):
-    self.trace = trace
-    self.scaffold = scaffold
-    _,self.rhoDB = detachAndExtract(trace, scaffold.border[0], scaffold)
-    assertTorus(scaffold)
+    self.prepare(trace, scaffold)
     logBound = computeRejectionBound(trace, scaffold, scaffold.border[0])
     accept = False
     while not accept:
@@ -109,35 +123,14 @@ class RejectionOperator(object):
         detachAndExtract(trace, scaffold.border[0], scaffold)
     return trace, 0
 
-  def accept(self): pass
-  def reject(self):
-    # TODO This is the same as the MHOperator rejection -- abstract
-    detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
-    assertTorus(self.scaffold)
-    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
-
 
 #### Resampling from the prior
 
-class MHOperator(object):
-  def propose(self,trace,scaffold):
-    self.trace = trace
-    self.scaffold = scaffold
-    self.setsOfPNodes = [self.scaffold.getPrincipalNodes().copy()]
-    rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
-    assertTorus(scaffold)
+class MHOperator(InPlaceOperator):
+  def propose(self, trace, scaffold):
+    rhoWeight = self.prepare(trace, scaffold)
     xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,self.rhoDB,{})
-    return trace,xiWeight - rhoWeight
-
-  def accept(self): pass
-  def reject(self):
-    # start debug
-    newScaffold = constructScaffold(self.trace,self.setsOfPNodes)
-    assertSameScaffolds(self.scaffold,newScaffold)
-    # end debug
-    detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
-    assertTorus(self.scaffold)
-    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
+    return trace, xiWeight - rhoWeight
 
 
 #### Variational
@@ -465,4 +458,3 @@ class ParticlePGibbsOperator(object):
   def reject(self):
     self.particles[-1].commit()
     assertTrace(self.trace,self.scaffold)
-    
