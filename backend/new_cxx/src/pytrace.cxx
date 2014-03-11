@@ -51,7 +51,7 @@ void PyTrace::unobserve(DirectiveID did)
   assert(trace->families.count(did));
   Node * node = trace->families[did].get();
   OutputNode * appNode = trace->getOutermostNonRefAppNode(node);
-  if (trace->isObservation(node)) { unconstrain(trace.get(),appNode); }
+  if (trace->isObservation(node)) { unconstrain(trace.get(),appNode); trace->unobserveNode(node); }
   else
   {
     assert(trace->unpropagatedObservations.count(node));

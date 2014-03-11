@@ -67,7 +67,9 @@ struct ConcreteTrace : Trace
   void setValue(Node * node, VentureValuePtr value);
   void clearValue(Node * node);
 
+  void unobserveNode(Node * node);
   void observeNode(Node * node,VentureValuePtr value);
+
 
   void setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord);
   void destroyMadeSPRecord(Node * makerNode);
