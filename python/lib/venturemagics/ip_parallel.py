@@ -476,7 +476,7 @@ class MRipl():
                 xr=np.linspace(min(f),max(f),80)
                 lim = some_ripls.shape[1]
                 for col in range(lim):
-                    ax[0].hist(some_ripls[:,col],bins=20,histtype='stepfilled')
+                    ax[0].hist(some_ripls[:,col],bins=20,normed=True,histtype='stepfilled')
                     #ax[1].hist(some_ripls[:,col], bins=20,
                      #          histtype='stepfilled',alpha=1-(col/float(lim)) )
 
@@ -513,7 +513,7 @@ class MRipl():
             xr=np.linspace(min(f),max(f),80)
             [ ax[0].hist( past_vals, normed=True, label='%i'%count) for count,past_vals in enumerate(list_vals) ]
             [ ax[1].plot(xr,gaussian_kde(past_vals)(xr), label='%i'%count) for count,past_vals in enumerate(list_vals) ]
-            [ ax[i].legend() for i in range(2)]
+            [ ax[i].legend(loc='upper left',ncol=len(list_vals)) for i in range(2)]
             ax[0].set_title('Hist: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
             if plot_range: [ax[i].set_xlim(plot_range) for i in range(2)]
             
