@@ -35,7 +35,7 @@ function InitializeDemo() {
         };
         
         var clickEquals = function(click1,click2) {
-            if (click1[0] == click2[0] && click1[1] == click2[1]) {
+            if (click1[0] === click2[0] && click1[1] === click2[1]) {
                 return true;
             }
             return false;
@@ -63,7 +63,7 @@ function InitializeDemo() {
         this.uniqueF = function() {
             var unique = [];
             for (var i = 0; i < clicks.length; i++) {
-                if (this.indexOfClick(unique,clicks[i]) == -1) {
+                if (this.indexOfClick(unique,clicks[i]) === -1) {
                     unique.push(clicks[i]);
                 }
             }
@@ -107,16 +107,25 @@ function InitializeDemo() {
 
     /* Stores the obs_id of points that the user has clicked on. */
     var points_to_forget = {};
-
+    
+    var model_type = "linear";
+  
     /* Latent variables in the model. */
     var model_variables = {
+        /* Both */
+        'noise': 0.1,
+
+        /* Linear */
+        'a': 0,
+        'b': 0,
+        
+        /* Advanced */
         'poly_order': 0,
         'a0_c0': 0.0,
         'c1': 0.0,
         'c2': 0.0,
         'c3': 0.0,
         'c4': 0.0,
-        'noise': 0.1,
         'alpha': 0.5,
         'fourier_a1': 0.0,
         'fourier_omega': 1.0,
@@ -177,15 +186,37 @@ function InitializeDemo() {
         $("#loading-status").remove();
         ripl.register_a_request_processed_callback(function () {});
     };
-
-    var LoadModel = function() {
+    
+    var LoadLinearModel = function() {
         ripl.clear();
         ripl.set_mode("church_prime");
         
-        ripl.register_a_request_processed_callback(DirectiveLoadedCallback);
+        /* Model metadata */
+        ripl.assume('demo_id', demo_id, 'demo_id');
+        ripl.assume('model_type', '(quote linear)', 'model_type'); 
+        
+        /* Outliers */
+        ripl.assume('outlier_prob','0.1'); //(beta 1 3)?
+        ripl.assume('is_outlier','(mem (lambda (obs_id) (flip outlier_prob)))');
+        
+        /* Linear */
+        ripl.assume('a','(normal 0.0 10.0)');
+        ripl.assume('b','(normal 0.0 1.0)');
+        ripl.assume('f','(lambda (x) (+ a (* b x)))');
+
+        /* For observations */
+        ripl.assume('noise','(inv_gamma 1.0 1.0)');
+        ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (f (normal x noise))) (if (is_outlier obs_id) 100 noise)))');
+    
+    };
+    
+    var LoadAdvancedModel = function() {
+        ripl.clear();
+        ripl.set_mode("church_prime");
         
         /* Model metadata */
         ripl.assume('demo_id', demo_id, 'demo_id');
+        ripl.assume('model_type', '(quote advanced)', 'model_type'); 
         
         /* Outliers */
         ripl.assume('outlier_prob','(uniform_continuous 0.001 0.3)'); //(beta 1 3)?
@@ -214,13 +245,26 @@ function InitializeDemo() {
         ripl.assume('clean_func_fourier','(lambda (x) (* fourier_a1 (sin (+ (* fourier_omega x) fourier_theta1))))');
 
         /* For combination polynomial and Fourier */
-        ripl.assume('model_type','(uniform_discrete 0 3)');
-        ripl.assume('alpha','(if (= model_type 0) 1 (if (= model_type 1) 0 (beta 1 1)))');
+        ripl.assume('model_select','(uniform_discrete 0 3)');
+        ripl.assume('alpha','(if (= model_select 0) 1 (if (= model_select 1) 0 (beta 1 1)))');
         ripl.assume('clean_func','(lambda (x) (+ a0_c0 (* alpha (clean_func_poly x)) (* (- 1 alpha) (clean_func_fourier x))))');
 
         /* For observations */
         ripl.assume('noise','(inv_gamma 1.0 1.0)');
         ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (clean_func (normal x noise))) (if (is_outlier obs_id) outlier_sigma noise)))');
+    };
+    
+    var LoadModel = function() {
+        num_directives_loaded = 0;
+        ripl.register_a_request_processed_callback(DirectiveLoadedCallback);
+        
+        if (model_type == "linear") {
+            LoadLinearModel();
+        } else if (model_type == "advanced") {
+            LoadAdvancedModel();
+        } else {
+            alert("Unknown model type " + model_type);
+        }
 
         ripl.register_all_requests_processed_callback(AllDirectivesLoadedCallback);
     };
@@ -435,14 +479,7 @@ function InitializeDemo() {
         /* Get the observed points from the model. */
         var points = GetPoints(directives);
         
-        var current_curve = jQuery.extend({}, model_variables);
-        current_curve.polynomial_coefficients = [
-            current_curve.a0_c0,
-            current_curve.c1,
-            current_curve.c2,
-            current_curve.c3,
-            current_curve.c4,
-        ];
+        var current_curve = getCurrentCurve();
 
         // console.log(current_curve.polynomial_coefficients);
 
@@ -490,8 +527,8 @@ function InitializeDemo() {
         }
 
         /* Process polynomial orders and display results. */
-        add_to_poly_orders(current_curve.poly_order);
-        display_poly_orders_histogram();
+        //add_to_poly_orders(current_curve.poly_order);
+        //display_poly_orders_histogram();
 
         // Change opacity of previously drawn polynomials.
         previous_curve_objects.map(
@@ -514,36 +551,65 @@ function InitializeDemo() {
         }
 
         now = Date.now()
-        console.log("Rendering took", now - then, "ms")
+        //console.log("Rendering took", now - then, "ms")
     };
     
     var ShowCurvesQ = function() {
-        return document.getElementById('IfShowCurves').checked == true;
+        return document.getElementById('show_curves').checked === true;
     };
-
-    var CalculateCurve = function(x,curve) {
-        var result_poly = 0;
-        for (var i = 1; i < curve.polynomial_coefficients.length; ++i) {
-            result_poly += curve.polynomial_coefficients[i] * Math.pow(x, i);
+    
+    var getCurrentCurve = function() {
+        if (model_type == "linear") {
+        	return LinearCurve();
+        } else if (model_type == "advanced") {
+	        return AdvancedCurve();
         }
-        var result_f = curve.fourier_a1 * Math.sin(curve.fourier_omega * x + curve.fourier_theta1);
-        result = curve.polynomial_coefficients[0] + curve.alpha * result_poly + (1.0 - curve.alpha) * result_f;
-        return result;
+    }
+    
+    var LinearCurve = function() {
+        var curve = function(x) {
+        	return model_variables.a + model_variables.b * x;
+        };
+        
+        return curve;
     };
-
+    
+    var AdvancedCurve = function() {
+        polynomial_coefficients = [
+            model_variables.a0_c0,
+            model_variables.c1,
+            model_variables.c2,
+            model_variables.c3,
+            model_variables.c4,
+        ];
+        
+        var curve = function(x) {
+            var result_poly = 0;
+            for (var i = 1; i < polynomial_coefficients.length; ++i) {
+                result_poly += polynomial_coefficients[i] * Math.pow(x, i);
+            }
+            var result_f = model_variables.fourier_a1 * Math.sin(model_variables.fourier_omega * x + model_variables.fourier_theta1);
+            result = polynomial_coefficients[0] + model_variables.alpha * result_poly + (1.0 - model_variables.alpha) * result_f;
+            console.log(x + ", " + result);
+            return result;
+        };
+        
+        return curve;
+    };
+    
     var DrawCurve = function(curve) {
         var step = 1;
-        var plot_y = (420 / 2) - CalculateCurve(-10, curve) * 20;
+        var plot_y = (420 / 2) - curve(-10) * 20;
         var line_description = "M-10 " + plot_y;
         var plot_x1 = 0;
         var plot_y1 = 0;
         var plot_x = 0;
         var plot_y = 0;
-        for (var x = -12 + step; x <= 12; x = x + step) {
+        for (var x = -12 + step; x <= 12; x += step) {
             plot_x = (420 / 2) + x * 20;
-            plot_y = (420 / 2) - CalculateCurve(x, curve) * 20;
+            plot_y = (420 / 2) - curve(x) * 20;
             plot_x1 = (420 / 2) + (x + step / 2) * 20;
-            plot_y1 = (420 / 2) - CalculateCurve(x + step / 2, curve) * 20;
+            plot_y1 = (420 / 2) - curve(x + step / 2) * 20;
             line_description += "Q" + plot_x + " " + plot_y + " " + plot_x1 + " " + plot_y1;
         }
         var curve_object = paper.path(line_description);
@@ -595,13 +661,16 @@ function InitializeDemo() {
         <table><tr><td style="vertical-align: top;">\
         <div id="div_for_plots" style="background-color: white; width: 420px; height: 420px;"></div>\
         <br>\
-        <label for="IfShowCurves"><input type="checkbox" id="IfShowCurves" name="IfShowCurves" checked> Show curves</label>\
+        <label for="show_curves"><input type="checkbox" id="show_curves" name="show_curves" checked>Show Curves</label>\
         <br><br>\
         Based on the Venture probabilistic programming language\
         </td><td>&nbsp;&nbsp;&nbsp;</td>\
         <td style="vertical-align: top;">\
         <table width="100%" height="120px">\
         <tr>\
+        <label for="linear"><input type="radio" name="model_type" id="linear" value="linear">Linear Model</label>\
+        <label for="advanced"><input type="radio" name="model_type" id="advanced" value="advanced">Advanced Model</label>\
+        <br><br>\
         <td width="30px" valign="bottom"><b>Degree:</b></td>\
         <td width="30px" align="center" valign="bottom"><div id="poly0" style="width: 20px; height: 50px; background-color: #ee1111;"></div><br>0</td>\
         <td width="30px" align="center" valign="bottom"><div id="poly1" style="width: 20px; height: 50px; background-color: #ee1111;"></div><br>1</td>\
@@ -632,16 +701,17 @@ function InitializeDemo() {
     RenderInit();
 
     ripl.get_directives_once(function(directives) {
-        if (directives.length == 0) {
+        if (directives.length === 0) {
             // fresh Venture instance
             LoadModel();
             ripl.start_continuous_inference();
             RunDemo();
-        } else if (directives[0].symbol === "demo_id" && directives[0].value === demo_id) {
+        } else if (directives[0].symbol == "demo_id" && directives[0].value == demo_id) {
+        	model_type = directives[1].value;
             RunDemo();
         } else {
             throw "Error: Something other than curve-fitting demo running in Venture."
-        };
+        }
     });
 
 };
