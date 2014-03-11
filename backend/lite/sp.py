@@ -77,14 +77,17 @@ used in the implementation of TypedPSP and TypedLKernel."""
     if args.isOutput:
       assert not args.esrValues # TODO Later support outputs that have non-latent requesters
     answer = copy.copy(args)
-    if not self.variadic:
-      assert len(args.operandValues) >= self.min_req_args
-      assert len(args.operandValues) <= len(self.args_types)
-      # v could be None when computing log density bounds for a torus
-      answer.operandValues = [self.args_types[i].asPythonNoneable(v) for (i,v) in enumerate(args.operandValues)]
-    else:
-      answer.operandValues = [self.args_types[0].asPythonNoneable(v) for v in args.operandValues]
+    answer.operandValues = self.unwrap_arg_list(args.operandValues)
     return answer
+
+  def unwrap_arg_list(self, lst):
+    if not self.variadic:
+      assert len(lst) >= self.min_req_args
+      assert len(lst) <= len(self.args_types)
+      # v could be None when computing log density bounds for a torus
+      return [self.args_types[i].asPythonNoneable(v) for (i,v) in enumerate(lst)]
+    else:
+      return [self.args_types[0].asPythonNoneable(v) for v in lst]
 
   def _name_for_fixed_arity(self, args_types):
     args_spec = " ".join([t.name() for t in args_types])
