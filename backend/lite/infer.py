@@ -513,7 +513,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
 
     # Smashes the trace but leaves it a torus
     (proposed_vs, end_K) = self.evolve(grad, currentValues, start_grad, momenta)
-    assertTorus(trace)
+    assertTorus(scaffold)
 
     proposed_values = [NumberType().asVentureValue(v) for v in proposed_vs]
     registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
