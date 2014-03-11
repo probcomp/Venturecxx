@@ -94,6 +94,7 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaff
   rhoDB = rhoWeightAndDB.second;
   assertTorus(scaffold);
 
+  double rhoLD = computeLogDensity(x0);
   double w = 1; // TODO let psp's override this
   int m = 1000000; // TODO arbitrary large
   
@@ -101,13 +102,13 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaff
   double upper = psp->getSupportUpperBound();
 
   double x1 = sliceSample(x0,w,m,lower,upper);
-
+  double xiLD = computeLogDensity(x1);
   scaffold->lkernels[pnode] = shared_ptr<LKernel>(new DeterministicLKernel(VentureValuePtr(new VentureNumber(x1)),psp));
   double xiWeight = regenAndAttach(trace,scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),shared_ptr<map<Node*,Gradient> >());
   /* This is subtle. We cancel out the weight compensation that we got by "forcing" x1, so that the weight is as if it had been sampled.
      This is because this weight is cancelled elsewhere (in the mixing over the slice). */
 
-  return make_pair(trace,xiWeight - rhoWeight);
+  return make_pair(trace,(xiWeight - xiLD) - (rhoWeight - rhoLD));
 }
  
 
