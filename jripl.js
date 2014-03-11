@@ -15,40 +15,6 @@
  * Author: Daniel Selsam
  */
 
-
-make_length_N = function(str, N) {
-        continuation = '...';
-        if (str.length > N){
-            str = str.substr(0, N-continuation.length) + continuation;
-        }
-        else {
-            extraspaces = N-str.length;
-            str = str + Array(extraspaces + 1).join(" ");
-        }
-        return str
-}
-
-undefined_to_empty_str = function(str) {
-        if(str == 'undefined') {
-                str = '';
-        }
-        return str
-}
-
-zip = function(arrays) {
-        return arrays[0].map(function(_,i){
-                return arrays.map(function(array){return array[i]})
-        });
-}
-
-join_for_console = function(str_arr) {
-        header_lengths = [15, 15, 15, 5];
-        str_N_tuples = zip([str_arr, header_lengths]);
-        strs = str_N_tuples.map(function(inarray) { return make_length_N(inarray[0], inarray[1] ) });
-        joined = strs.join("| ");
-        return joined
-}
-
 function jripl() {
 
 /* Connect to Venture (vestigial hack) */
@@ -108,7 +74,7 @@ function jripl() {
 
     /* Perform the actual AJAX request. */
     var ajax_execute_post = function(URL,data_in,on_success) {
-        then = Date.now()
+        var then = Date.now()
         console.log("Ajax request sent")
         $.ajax({
             url: full_url(URL),
@@ -118,8 +84,8 @@ function jripl() {
             contentType: 'application/json',
             crossDomain: true,
             success: function(data) {
-                now = Date.now()
-                console.log("Ajax response received", now - then)
+                now = Date.now();
+                console.log("Ajax response received", now - then);
                 a_request_processed_callback();
                 on_success(data);
                 ajax_continue_requests();
@@ -136,9 +102,7 @@ function jripl() {
     /* These functions are all supported, and can be called just as in
      * the python layer, except the user cannot receive the return values.
      */
-    var supported_pripl_functions = ['set_mode', 'execute_instruction', 'execute_program', 'substitute_params', 'split_program', 'character_index_to_expression_index',
-        'expression_index_to_text_index', 'configure', 'infer', 'clear', 'rollback', 'assume', 'predict', 'observe', 'forget', 'force', 'sample', 'start_continuous_inference',
-        'stop_continuous_inference', 'continuous_inference_status'];
+    var supported_pripl_functions = ['set_mode', 'execute_instruction', 'execute_program', 'substitute_params', 'split_program', 'character_index_to_expression_index', 'expression_index_to_text_index', 'configure', 'infer', 'clear', 'rollback', 'assume', 'predict', 'observe', 'forget', 'force', 'sample', 'start_continuous_inference', 'stop_continuous_inference', 'continuous_inference_status'];
 
     /* Creates a function corresponding to one of the supported pripl functions 
      * listed above. */
@@ -251,7 +215,8 @@ function jripl() {
     this.get_directives_once = function(f) {
         ajax_post_in_sequence("list_directives", [], f);
     };
-
+    
+    /*
     this.display_directives = function() {
         var success_fun = function(data) {
             console.log(data);
@@ -269,6 +234,7 @@ function jripl() {
         }
         ajax_post_in_sequence("list_directives", [], success_fun);
     };
+    */
     
 /* Registering special callback functions */
     this.register_a_request_processed_callback = function(f) {
