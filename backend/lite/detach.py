@@ -72,6 +72,11 @@ def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
         weight += unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient)
       else: 
         trace.setValueAt(node,None)
+        assert isinstance(node, LookupNode) or isinstance(node, ConstantNode)
+        assert len(trace.parentsAt(node) <= 1)
+        if compute_gradient:
+          for p in trace.parentsAt(node):
+            omegaDB.addPartial(p, omegaDB.getPartial(node)) # d/dx is 1 for a lookup node
       weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
 
   return weight
@@ -131,6 +136,9 @@ def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
 #  print "unapplyPSP",trace.valueAt(node)
 
   trace.setValueAt(node,None)
+  if compute_gradient:
+    grad = psp.gradientOfSimulate(args, omegaDB.getPartial(node))
+    omegaDB.addPartials(trace.parentsAt(node), grad)
 
   return weight
 
@@ -138,6 +146,11 @@ def unevalRequests(trace, node, scaffold, omegaDB, compute_gradient = False):
   assert isinstance(node,RequestNode)
   weight = 0
   request = trace.valueAt(node)
+  # TODO I may have the following AD bug: if a request constructs an
+  # expression which contains an embedded constant, the constant node
+  # will not propagate the partial wrt that constant; and even if it
+  # did, I wouldn't know how to backpropagate that partial through the
+  # expression generator to the args.
   if request.lsrs and not omegaDB.hasLatentDB(trace.spAt(node)):
     omegaDB.registerLatentDB(trace.spAt(node),trace.spAt(node).constructLatentDB())
 

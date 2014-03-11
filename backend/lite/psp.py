@@ -7,6 +7,16 @@ class PSP(object):
 
   @abstractmethod
   def simulate(self,args): pass
+  def gradientOfSimulate(self, args, direction):
+    """Should return the gradient of this psp's simulation function,
+    with respect to the given direction on the output space, at the
+    point given by the args struct.  In other words, the
+    Jacobian-vector product
+      direction^T J_simulate(args).
+    For SPs with one scalar output, the direction will be a number,
+    and the correct answer is the gradient of simulate multiplied by
+    that number."""
+    pass
   # These are good defaults for deterministic PSPs
   def logDensity(self, _value, _args): return 0
   def logDensityBound(self, _value, _args): return 0
