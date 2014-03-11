@@ -9,6 +9,7 @@ from scaffold import constructScaffold
 from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
 from utils import simulateCategorical, cartesianProduct, logaddexp
+from value import NumberType
 from nose.tools import assert_almost_equal # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 import copy
 
@@ -483,6 +484,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
   # detach mutates the trace as it goes, so there will be some
   # machinations (perhaps I should use particles?)
 
+  # TODO Permit HMC on principal nodes of type other than VentureNumber
   def propose(self, trace, scaffold):
     pnodes = scaffold.getPrincipalNodes()
     currentValues = getCurrentValues(trace,pnodes)
@@ -499,7 +501,8 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     start_K = self.kinetic(momenta)
 
     def grad(values):
-      registerDeterministicLKernels(trace, scaffold, pnodes, values)
+      vs = [NumberType().asVentureValue(v) for v in values]
+      registerDeterministicLKernels(trace, scaffold, pnodes, vs)
       regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
       (_, rhoDB) = detachAndExtract(trace, scaffold.border[0], scaffold)
       return [rhoDB.getPartial(pnode) for pnode in pnodes]
@@ -509,9 +512,10 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     start_grad = [self.rhoDB.getPartial(pnode) for pnode in pnodes]
 
     # Smashes the trace but leaves it a torus
-    (proposed_values, end_K) = self.evolve(grad, currentValues, start_grad, momenta)
+    (proposed_vs, end_K) = self.evolve(grad, currentValues, start_grad, momenta)
     assertTorus(trace)
 
+    proposed_values = [NumberType().asVentureValue(v) for v in proposed_vs]
     registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
     xiWeight = regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {}) # Mutates the trace
     return (trace, rhoWeight - xiWeight + start_K - end_K)
@@ -522,8 +526,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     return sum([m*m for m in momenta]) / 2.0
 
   def evolve(self, grad_U, start_q, start_grad_q, start_p, epsilon=0.01, num_steps=20):
-
-    q = start_q
+    q = [NumberType().asPython(qi) for qi in start_q]
     # The initial momentum half-step
     dpdt = start_grad_q
     # TODO This code would look much better with numpy
