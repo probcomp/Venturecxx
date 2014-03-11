@@ -470,7 +470,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
   # given by this function:
   #   def potential(values):
   #     registerDeterministicLKernels(trace,scaffold,pnodes,values)
-  #     return regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
+  #     return -regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
   #
   # The trouble, of course, is that I need the gradient of this to
   # actually do HMC.
@@ -505,11 +505,12 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
       registerDeterministicLKernels(trace, scaffold, pnodes, vs)
       regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
       (_, rhoDB) = detachAndExtract(trace, scaffold.border[0], scaffold)
-      return [rhoDB.getPartial(pnode) for pnode in pnodes]
+      # The potential function we want is - log (density)
+      return [-rhoDB.getPartial(pnode) for pnode in pnodes]
 
     # Might as well save a gradient computation, since the initial
     # detach does it
-    start_grad = [self.rhoDB.getPartial(pnode) for pnode in pnodes]
+    start_grad = [-self.rhoDB.getPartial(pnode) for pnode in pnodes]
 
     # Smashes the trace but leaves it a torus
     (proposed_vs, end_K) = self.evolve(grad, currentValues, start_grad, momenta)
@@ -518,7 +519,9 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     proposed_values = [NumberType().asVentureValue(v) for v in proposed_vs]
     registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
     xiWeight = regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {}) # Mutates the trace
-    return (trace, rhoWeight - xiWeight + start_K - end_K)
+    # The weight arithmetic is given by the Hamiltonian being
+    # -weight + kinetic(momenta)
+    return (trace, xiWeight - rhoWeight + start_K - end_K)
 
   def sampleMomenta(self, currentValues):
     return [scipy.stats.norm.rvs(loc=0, scale=1) for _ in currentValues]
