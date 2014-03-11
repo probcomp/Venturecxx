@@ -1,6 +1,7 @@
 import random
 import math
-from consistency import assertTorus,assertTrace,assertSameScaffolds
+import scipy.stats
+from consistency import assertTorus,assertTrace
 from omegadb import OmegaDB
 from regen import regenAndAttach
 from detach import detachAndExtract
@@ -20,7 +21,7 @@ def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
   rhoMix = indexer.logDensityOfIndex(trace,index)
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
-  # This is necessary for the non-mutating versions
+  # Returning the trace is necessary for the non-mutating versions
   proposedTrace,logAlpha = operator.propose(trace,index) 
   xiMix = indexer.logDensityOfIndex(proposedTrace,index)
 
@@ -458,3 +459,34 @@ class ParticlePGibbsOperator(object):
   def reject(self):
     self.particles[-1].commit()
     assertTrace(self.trace,self.scaffold)
+
+
+#### Hamiltonian Monte Carlo
+
+class HamiltonianMonteCarloOperator(InPlaceOperator):
+
+  def propose(self, trace, scaffold):
+    pnodes = scaffold.getPrincipalNodes()
+    currentValues = getCurrentValues(trace,pnodes)
+    rhoWeight = self.prepare(trace, scaffold)
+    def potential(values):
+      registerDeterministicLKernels(trace,scaffold,pnodes,values)
+      # TODO regen will not return the weight I want if there are
+      # delta kernels.  Then again, delta kernels should crash since I
+      # am not giving them any previous values.
+      return regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
+    # TODO Include rhoWeight in the eventual weight properly
+
+    momenta = self.sampleMomenta(currentValues)
+    start_K = self.kinetic(momenta)
+
+    (xiWeight, end_K) = self.evolve(potential, currentValues, momenta) # Mutates the trace
+    return (trace, rhoWeight - xiWeight + start_K - end_K)
+
+  def sampleMomenta(self, currentValues):
+    return [scipy.stats.norm.rvs(loc=0, scale=1) for _ in currentValues]
+  def kinetic(self, momenta):
+    return sum([m*m for m in momenta]) / 2.0
+
+  def evolve(self, potential, current_q, current_p, epsilon=0.01, num_steps=20):
+    pass # TODO Do what Neal said.
