@@ -456,17 +456,33 @@ class MRipl():
 
 
         if sample_populations:
-            pop_size, no_groups = sample_populations
+            if isinstance(sample_populations,int):
+                no_groups,pop_size = sample_populations,100
+            else:
+                no_groups,pop_size = sample_populations
             exp = exp_list[0]
-            all_ripls = [self.sample(exp) for repeats in range(pop_size)]
+            all_ripls = [self.sample(exp) for j in range(pop_size)]
+            ## FIXME could be much faster by fixing ripls first
             indices = np.random.randint(0,self.no_ripls,no_groups)
-            some_ripls = [r for count,r in enumerate(all_ripls) if count in indices]
+
+            some_ripls= np.array([np.array(samp)[indices] for samp in all_ripls ])
+            #p1=some_ripls[:,0] ...
+            #some_ripls = [r for count,r in enumerate(all_ripls) if count in indices]
             out['values'][exp] = some_ripls
 
             if plot:
-                fig,ax=plt.subplots(figsize=(6,3))
-                [ ax.hist( population, normed=True) for population in some_ripls]
-                ax.set_title('Sample populations: %s (population size= %i)' % (exp,pop_size))
+                fig,ax=plt.subplots(1,2,figsize=(14,4),sharex=True,sharey=False)
+                f=self.lst_flatten(some_ripls)
+                xr=np.linspace(min(f),max(f),80)
+                lim = some_ripls.shape[1]
+                for col in range(lim):
+                    ax[0].hist(some_ripls[:,col],bins=20,histtype='stepfilled')
+                    #ax[1].hist(some_ripls[:,col], bins=20,
+                     #          histtype='stepfilled',alpha=1-(col/float(lim)) )
+
+                    ax[1].plot(xr,gaussian_kde(some_ripls[:,col])(xr))
+                ax[0].set_title('Sample populations: %s (population size= %i)' % (exp,pop_size))
+                ax[1].set_title('Sample populations: %s (population size= %i)' % (exp,pop_size))
                 out['figs']=fig
                 
         if repeat:
@@ -475,9 +491,9 @@ class MRipl():
             out['values'][exp] = r_values
             if plot:
                 fig,ax=plt.subplots(figsize=(5,3))
-                ax.hist(r_values,normed=True,color='m')
+                ax.hist(r_values,bins=20,normed=True,color='m')
                 xr=np.linspace(min(r_values),max(r_values),40)
-                ax.plot(xr,gaussian_kde(r_values)(xr),c='gray')
+                ax.plot(xr,gaussian_kde(r_values)(xr),c='black',lw=2)
                 ax.set_title('Predictive distribution: %s (repeats= %i)' % (exp,repeat))
                 out['figs'] = fig
                                    
@@ -492,11 +508,14 @@ class MRipl():
             list_vals = [ past_out['values'].values()[0] for past_out in plot_past_values]
             if no_exp==0: list_vals.append( out['values'].values()[0] )
             
-            fig,ax=plt.subplots(figsize=(5,3))
-            [ ax.hist( past_vals, normed=True, label='%i'%count) for count,past_vals in enumerate(list_vals) ]
-            ax.legend()
-            ax.set_title('Hist: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
-            if plot_range: ax.set_xlim(plot_range)
+            fig,ax=plt.subplots(1,2,figsize=(14,3.5),sharex=True)
+            f=self.lst_flatten(list_vals)
+            xr=np.linspace(min(f),max(f),80)
+            [ ax[0].hist( past_vals, normed=True, label='%i'%count) for count,past_vals in enumerate(list_vals) ]
+            [ ax[1].plot(xr,gaussian_kde(past_vals)(xr), label='%i'%count) for count,past_vals in enumerate(list_vals) ]
+            [ ax[i].legend() for i in range(2)]
+            ax[0].set_title('Hist: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
+            if plot_range: [ax[i].set_xlim(plot_range) for i in range(2)]
             
             out['figs'] = fig
             return out
