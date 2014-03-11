@@ -73,6 +73,8 @@ class TypedPSP(PSP):
 
   def simulate(self,args):
     return self.f_type.wrap_return(self.psp.simulate(self.f_type.unwrap_args(args)))
+  def gradientOfSimulate(self, args, direction):
+    return self.psp.gradientOfSimulate(self.f_type.unwrap_args(args), direction)
   def logDensity(self,value,args):
     return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def gradientOfLogDensity(self, value, args):
