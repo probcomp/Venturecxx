@@ -185,6 +185,8 @@ def unparse(exp):
   return '('+' '.join(map(unparse, exp))+')' if isinstance(exp, list) else str(exp)
 
 def expToDict(exp):
+  if isinstance(exp, int):
+    return {"transitions": exp}
   tag = exp[0]
   if tag == "mh":
     assert len(exp) == 4
