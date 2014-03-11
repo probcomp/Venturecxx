@@ -14,36 +14,23 @@
     <script type="text/javascript" src="jquery.cookie.js"></script>
     <script src="common-scripts.js"></script>
     
-  <script type="text/javascript">
-  function getParameterByName(name)
-  {
-    name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
-    var regexS = "[\\?&]" + name + "=([^&#]*)";
-    var regex = new RegExp(regexS);
-    var results = regex.exec(window.location.search);
-    if(results == null)
-      return "";
-    else
-      return decodeURIComponent(results[1].replace(/\+/g, " "));
-  }
-  
-  function SelectVentureServer(host, port) {
-    $.cookie("venture__ripl_host", host, { expires: 21 });
-    $.cookie("venture__ripl_port", port, { expires: 21 });
-    window.location = getParameterByName("url_referrer")
-  }
-  
-  function SelectMainDemoServer() {
-    SelectVentureServer(venture__venture_ec2_demo_instance_host, venture__venture_ec2_demo_instance_port);
-  }
-  function SelectMyOwnServer() {
-    SelectVentureServer($("#my_host").val(), $("#my_port").val());
-  }
-  function SelectMainVentureEC2InstanceAndMyPort() {
-    SelectVentureServer(venture__venture_ec2_demo_instance_host, $("#mainventureec2_port").val());
-  }
-  </script>
-  
+    <script type="text/javascript">
+    function SelectVentureServer(host, port) {
+      $.cookie("venture__ripl_host", host, { expires: 21 });
+      $.cookie("venture__ripl_port", port, { expires: 21 });
+      window.location = $.cookie('venture__demo_page');
+    }
+    
+    function SelectMainDemoServer() {
+      SelectVentureServer(venture__venture_ec2_demo_instance_host, venture__venture_ec2_demo_instance_port);
+    }
+    function SelectMyOwnServer() {
+      SelectVentureServer($("#my_host").val(), $("#my_port").val());
+    }
+    function SelectMainVentureEC2InstanceAndMyPort() {
+      SelectVentureServer(venture__venture_ec2_demo_instance_host, $("#mainventureec2_port").val());
+    }
+    </script>
   </head>
 
   <body>
@@ -54,15 +41,15 @@
       <b>1. MIT.PCP Venture demo server</b><br>
         <input type="button" value="Run" onClick="SelectMainDemoServer();"><br>
       <br><br>
-      <b>2. The server I have started myself</b><br>
-        <a href="http://www.yuraperov.com/MIT.PCP/wiki/index.php5?title=Installation">(See docs on how to install Venture yourself)</a><br>
-        Host: <input id="my_host" type="text" value="127.0.0.1"> <i>(You can provide another IP/host.)</i><br>
-        Port: <input id="my_port" type="text" value="8082"> <i>(The port on which you start the Venture by "$ ./start_venture port".)</i><br>
+      <b>2. My own Venture Server</b><br>
+        <a href="https://github.com/mit-probabilistic-computing-project/Venturecxx#venture">(See the README for more information.)</a><br>
+        Host: <input id="my_host" type="text" value="127.0.0.1"> <i>The IP address of the Venture server.</i><br>
+        Port: <input id="my_port" type="text" value="8082"> <i>The PORT on which venture is running ($ venture server -p PORT.)</i><br>
         <input type="button" value="Run" onClick="SelectMyOwnServer();"><br>
       <br><br>
       <b>3. "Venture demo" EC2 Instance (if you have access)</b><br>
         Host: <i>54.235.201.199</i><br>
-        Port: <input type="text" id="mainventureec2_port" value=""> <i>(The port on which you start the Venture by "$ /usr/venture/start_venture port".)</i><br>
+        Port: <input type="text" id="mainventureec2_port" value=""> <i>The PORT on which venture is running ($ venture server -p PORT.)</i><br>
         <input type="button" value="Run" onClick="SelectMainVentureEC2InstanceAndMyPort();"><br>
       <br><br>
       <i>If you have already been to this page, please, check that cookies are enabled in your browser.
