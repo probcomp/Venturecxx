@@ -288,12 +288,13 @@ class MRipl():
             return [ripl.forget(label_or_did) for ripl in mripls[mrid]]
         return self.lst_flatten( self.dview.apply(f,label_or_did,self.mrid) )
 
-    def execute_program(self,  program_string, params=None):
 
+    def execute_program(self,  program_string, params=None):
+        
+        ## FIXME: [clear] could appear anywhere
         if program_string.split()[0].startswith('[clear]'):
-            self.clear()
-            if len(program_string.split()) > 1:
-                self.execute_program( ' '.join(program_string.split()[1:]) )
+            self.total_transitions = 0
+            
 
         self.local_ripl.execute_program( program_string, params )
 
@@ -310,7 +311,6 @@ class MRipl():
                     return out
                 except:
                     return [None for ripl in mripls[mrid] ]
-                    
                 
         out_execute=self.lst_flatten( self.dview.apply(f, program_string, params,self.mrid) )
 
@@ -431,11 +431,14 @@ class MRipl():
         print self.display_ripls()
 
     
-    def snapshot(self,did_labels_list=[], exp_list=[], plot=False,
-                 scatter=False, logscore=False, plot_range=None,
-                 plot_past_values=[]):
-        '''input lists of dids_labels and expressions and return values from all ripls and
-        (optional) histograms, scatterplots.'''
+    def snapshot(self,did_labels_list=[], exp_list=[],
+                 plot=False, scatter=False, plot_range=None,
+                 logscore=False, plot_past_values=[],
+                 sample_populations=None, repeat=None):
+                
+        '''Input: lists of dids_labels and expressions.
+           Output: values from each ripl, (optional) plots.''' 
+        
 
         
         if not(isinstance(did_labels_list,list)): did_labels_list = [did_labels_list]
@@ -450,6 +453,35 @@ class MRipl():
         out = {'values':values,
                'total_transitions':self.total_transitions,
                'ripls_info': self.ripls_location }
+
+
+        if sample_populations:
+            pop_size, no_groups = sample_populations
+            exp = exp_list[0]
+            all_ripls = [self.sample(exp) for repeats in range(pop_size)]
+            indices = np.random.randint(0,self.no_ripls,no_groups)
+            some_ripls = [r for count,r in enumerate(all_ripls) if count in indices]
+            out['values'][exp] = some_ripls
+
+            if plot:
+                fig,ax=plt.subplots(figsize=(6,3))
+                [ ax.hist( population, normed=True) for population in some_ripls]
+                ax.set_title('Sample populations: %s (population size= %i)' % (exp,pop_size))
+                out['figs']=fig
+                
+        if repeat:
+            exp=exp_list[0]
+            r_values = lst_flatten([self.sample(exp) for repeats in range(repeat)])
+            out['values'][exp] = r_values
+            if plot:
+                fig,ax=plt.subplots(figsize=(5,3))
+                ax.hist(r_values,normed=True,color='m')
+                xr=np.linspace(min(r_values),max(r_values),40)
+                ax.plot(xr,gaussian_kde(r_values)(xr),c='gray')
+                ax.set_title('Predictive distribution: %s (repeats= %i)' % (exp,repeat))
+                out['figs'] = fig
+                                   
+                                   
 
         if plot_past_values:
             if not(exp_list) and not(did_labels_list):
@@ -469,7 +501,11 @@ class MRipl():
             out['figs'] = fig
             return out
             
-        if plot or scatter: out['figs'] = self.plot(out,plot1d=plot,scatter=scatter,plot_range=plot_range)
+
+        if (plot or scatter) and not(sample_populations) and not(repeat):
+            out['figs'] = self.plot(out,plot1d=plot,scatter=scatter,plot_range=plot_range)
+
+
 
         return out
 
