@@ -401,7 +401,7 @@ class History(object):
         if parameters is None: parameters = {}
         self.label = label
         self.parameters = parameters
-        self.nameToSeries = {}
+        self.nameToSeries = {} # Map string [Series]
 
     def addSeries(self, name, label, values, hist=True):
         if name not in self.nameToSeries:
@@ -504,10 +504,10 @@ def historyOverlay(name, named_hists):
 # aggregates values for one variable over the course of a run
 class Series(object):
     def __init__(self, label, values, hist, xvals=None):
-        self.label = label
-        self.values = values
-        self.hist = hist
-        self._xvals = xvals
+        self.label = label # string
+        self.values = values # [number]
+        self.hist = hist # bool (does it want to be a histogram?)
+        self._xvals = xvals # Maybe [number]
 
     def xvals(self):
         if self._xvals is not None:
