@@ -288,6 +288,26 @@ class MRipl():
             return [ripl.forget(label_or_did) for ripl in mripls[mrid]]
         return self.lst_flatten( self.dview.apply(f,label_or_did,self.mrid) )
 
+    def continuous_inference_status(self):
+        self.local_ripl.continuous_inference_status()
+        @interactive
+        def f(mrid):
+            return [ripl.continuous_inference_status() for ripl in mripls[mrid]]
+        return self.lst_flatten( self.dview.apply(f, self.mrid) )
+
+    def start_continuous_inference(self, params=None):
+        self.local_ripl.start_continuous_inference(params)
+        @interactive
+        def f(params, mrid):
+            return [ripl.start_continuous_inference(params) for ripl in mripls[mrid]]
+        return self.lst_flatten( self.dview.apply(f, params, self.mrid) )
+
+    def stop_continuous_inference(self):
+        self.local_ripl.stop_continuous_inference()
+        @interactive
+        def f(mrid):
+            return [ripl.stop_continuous_inference() for ripl in mripls[mrid]]
+        return self.lst_flatten( self.dview.apply(f, self.mrid) )
 
     def execute_program(self,  program_string, params=None):
         
