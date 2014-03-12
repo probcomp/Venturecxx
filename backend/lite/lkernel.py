@@ -66,7 +66,9 @@ class DefaultVariationalLKernel(VariationalLKernel):
     return w
 
   def gradientOfLogDensity(self, value, _args):
-    return self.psp.gradientOfLogDensity(value, self.parameters)
+    # Ignore the derivative of the value because we do not care about it
+    (_, grad) = self.psp.gradientOfLogDensity(value, self.parameters)
+    return grad
 
   def updateParameters(self,gradient,gain,stepSize):
     # TODO hacky numerical stuff
