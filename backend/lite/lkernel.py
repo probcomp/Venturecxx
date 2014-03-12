@@ -12,7 +12,7 @@ class LKernel(object):
   def weight(self, _trace, _newValue, _oldValue, _args): return 0
   def reverseWeight(self,trace,oldValue,args):
     return self.weight(trace,oldValue,None,args)
-  def gradientOfReverseWeight(self, _trace, _value, args): return [0 for _ in args.operandValues]
+  def gradientOfReverseWeight(self, _trace, _value, args): return (0, [0 for _ in args.operandValues])
   def weightBound(self, _trace, _newValue, _oldValue, _args):
     # An upper bound on the value of weight over the variation
     # possible by changing the values of everything in the arguments

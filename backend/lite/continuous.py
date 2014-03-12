@@ -44,11 +44,12 @@ class NormalOutputPSP(RandomPSP):
     mu = params[0]
     sigma = params[1]
 
+    gradX = -(x - mu) / (math.pow(sigma,2))
     gradMu = (x - mu) / (math.pow(sigma,2))
     gradSigma = (math.pow(x - mu,2) - math.pow(sigma,2)) / math.pow(sigma,3)
     # for positive sigma, d(log density)/d(sigma) is <=> zero
     # when math.pow(x - mu,2) <=> math.pow(sigma,2) respectively
-    return [gradMu,gradSigma]
+    return (gradX,[gradMu,gradSigma])
 
   def description(self,name):
     return "  (%s mu sigma) samples a normal distribution with mean mu and standard deviation sigma." % name

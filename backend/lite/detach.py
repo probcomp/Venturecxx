@@ -36,8 +36,9 @@ def detach(trace, node, scaffold, omegaDB, compute_gradient = False):
   psp.unincorporate(gvalue,args)
   weight = psp.logDensity(gvalue,args)
   if compute_gradient:
+    # Ignore the partial derivative of the value because the value is fixed
     # TODO Should this take the whole args?  Should it take the esr parents into account?
-    grad = psp.gradientOfLogDensity(gvalue, args.operandValues)
+    (_, grad) = psp.gradientOfLogDensity(gvalue, args.operandValues)
     omegaDB.addPartials(args.operandNodes, grad)
   weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
   return weight
@@ -66,7 +67,7 @@ def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
     trace.decRegenCountAt(scaffold,node)
     assert trace.regenCountAt(scaffold,node) >= 0
     if trace.regenCountAt(scaffold,node) == 0:
-      if isinstance(node,ApplicationNode): 
+      if isinstance(node,ApplicationNode):
         if isinstance(node,RequestNode):
           weight += unevalRequests(trace, node, scaffold, omegaDB, compute_gradient)
         weight += unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient)
@@ -129,7 +130,8 @@ def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
     weight += scaffold.getLKernel(node).reverseWeight(trace,trace.valueAt(node),args)
     if compute_gradient:
       # TODO Should this take the whole args?  Should it take the esr parents into account?
-      grad = scaffold.getLKernel(node).gradientOfReverseWeight(trace, trace.valueAt(node), args)
+      (partial, grad) = scaffold.getLKernel(node).gradientOfReverseWeight(trace, trace.valueAt(node), args)
+      omegaDB.addPartial(node, partial)
       omegaDB.addPartials(args.operandNodes, grad)
   omegaDB.extractValue(node,trace.valueAt(node))
 

@@ -19,7 +19,7 @@ class PSP(object):
     raise Exception("Cannot compute simulation gradient of %s", type(self))
   # These are good defaults for deterministic PSPs
   def logDensity(self, _value, _args): return 0
-  def gradientOfLogDensity(self, _value, arg_list): return [0 for _ in arg_list]
+  def gradientOfLogDensity(self, _value, arg_list): return (0, [0 for _ in arg_list])
   def logDensityBound(self, _value, _args): return 0
   def incorporate(self,value,args): pass
   def unincorporate(self,value,args): pass
