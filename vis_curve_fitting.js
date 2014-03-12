@@ -158,7 +158,7 @@ function InitializeDemo() {
         ripl.assume('model_type', '(quote linear)', 'model_type');
         
         /* Outliers */
-        ripl.assume('outlier_prob','(beta 1 3)'); //(beta 1 3)?
+        ripl.assume('outlier_prob','(uniform_continuous 0.01 0.3)'); //(beta 1 3)?
         ripl.assume('is_outlier','(mem (lambda (obs_id) (flip outlier_prob)))');
         
         /* Linear */
