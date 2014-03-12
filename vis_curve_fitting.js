@@ -73,9 +73,9 @@ function InitializeDemo() {
         this.length = function() { return clicks.length; }
 
         this.push = function(click) {
-            console.log("ADDING A CLICK!");
+            //console.log("ADDING A CLICK!");
             clicks.push(click);
-            console.log("clicks: " + clicks);
+            //console.log("clicks: " + clicks);
         };
 
     }
@@ -108,28 +108,29 @@ function InitializeDemo() {
     /* Stores the obs_id of points that the user has clicked on. */
     var points_to_forget = {};
     
-    var model_type = "linear";
+    var model_types = ["linear", "advanced"];
   
     /* Latent variables in the model. */
     var model_variables = {
         /* Both */
-        'noise': 0.1,
+    	model_type: "linear",
+        noise: 0.1,
 
         /* Linear */
-        'a': 0,
-        'b': 0,
+        a: 0,
+        b: 0,
         
         /* Advanced */
-        'poly_order': 0,
-        'a0_c0': 0.0,
-        'c1': 0.0,
-        'c2': 0.0,
-        'c3': 0.0,
-        'c4': 0.0,
-        'alpha': 0.5,
-        'fourier_a1': 0.0,
-        'fourier_omega': 1.0,
-        'fourier_theta1': 0.0,
+        poly_order: 0,
+        a0_c0: 0.0,
+        c1: 0.0,
+        c2: 0.0,
+        c3: 0.0,
+        c4: 0.0,
+        alpha: 0.5,
+        fourier_a1: 0.0,
+        fourier_omega: 1.0,
+        fourier_theta1: 0.0,
     };
 
     /* Polynomial orders (displayed upper-right) */
@@ -171,7 +172,9 @@ function InitializeDemo() {
     /* Raphael Objects */
     var paper;
     var paper_rect;
-
+	
+	var points = {};
+	
     /* Will be a map from OBS_ID -> POINT, where POINT contains the Raphael objects
      * corresponding to a single point. */
     var local_points = {};
@@ -193,7 +196,7 @@ function InitializeDemo() {
         
         /* Model metadata */
         ripl.assume('demo_id', demo_id, 'demo_id');
-        ripl.assume('model_type', '(quote linear)', 'model_type'); 
+        ripl.assume('model_type', '(quote linear)', 'model_type');
         
         /* Outliers */
         ripl.assume('outlier_prob','0.1'); //(beta 1 3)?
@@ -207,7 +210,7 @@ function InitializeDemo() {
         /* For observations */
         ripl.assume('noise','(inv_gamma 1.0 1.0)');
         ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (f (normal x noise))) (if (is_outlier obs_id) 100 noise)))');
-    
+        
     };
     
     var LoadAdvancedModel = function() {
@@ -245,8 +248,8 @@ function InitializeDemo() {
         ripl.assume('clean_func_fourier','(lambda (x) (* fourier_a1 (sin (+ (* fourier_omega x) fourier_theta1))))');
 
         /* For combination polynomial and Fourier */
-        ripl.assume('model_select','(uniform_discrete 0 3)');
-        ripl.assume('alpha','(if (= model_select 0) 1 (if (= model_select 1) 0 (beta 1 1)))');
+        ripl.assume('poly_fourier_mode','(uniform_discrete 0 3)');
+        ripl.assume('alpha','(if (= poly_fourier_mode 0) 1 (if (= poly_fourier_mode 1) 0 (beta 1 1)))');
         ripl.assume('clean_func','(lambda (x) (+ a0_c0 (* alpha (clean_func_poly x)) (* (- 1 alpha) (clean_func_fourier x))))');
 
         /* For observations */
@@ -254,17 +257,13 @@ function InitializeDemo() {
         ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (clean_func (normal x noise))) (if (is_outlier obs_id) outlier_sigma noise)))');
     };
     
+    var modelLoaders = {linear: LoadLinearModel, advanced: LoadAdvancedModel};
+    
     var LoadModel = function() {
         num_directives_loaded = 0;
         ripl.register_a_request_processed_callback(DirectiveLoadedCallback);
         
-        if (model_type == "linear") {
-            LoadLinearModel();
-        } else if (model_type == "advanced") {
-            LoadAdvancedModel();
-        } else {
-            alert("Unknown model type " + model_type);
-        }
+        modelLoaders[model_variables.model_type]();
 
         ripl.register_all_requests_processed_callback(AllDirectivesLoadedCallback);
     };
@@ -369,7 +368,7 @@ function InitializeDemo() {
     
     /* Gets the points that are in the ripl. */
     var GetPoints = function(directives) {
-        var points = {};
+        points = {};
 
         var extract = function(directive) {
             var path = directive.label.split('_').slice(1);
@@ -387,15 +386,12 @@ function InitializeDemo() {
             point.dids.push(parseInt(did));
         };
         
-        var observesAndPredicts =
-            directives.filter(function(dir) {return dir.instruction in {"observe":true, "predict":true}});
+        var observesAndPredicts = directives.filter(function(dir) {return dir.instruction != "assume";});
         observesAndPredicts.forEach(extract);
         
         for (obs_id in points) {
             points[obs_id].obs_id = obs_id;
         }
-        
-        return points;
     };
         
     var ObservePoint = function(obs_id, x, y) {
@@ -412,49 +408,6 @@ function InitializeDemo() {
         delete local_points[obs_id];
     };
     
-    var record = function(dict, path, value) {
-        if (path.length > 1) {
-            var key = path[0];
-            if (!(key in dict)) {
-                dict[key] = {};
-            }
-            record(dict[key], path.slice(1), value);
-        } else {
-            dict[path[0]] = value;
-        }
-    };
-    
-    /* Gets the points that are in the ripl. */
-    var GetPoints = function(directives) {
-        var points = {};
-
-        var extract = function(directive) {
-            var path = directive.label.split('_').slice(1);
-            //console.log(path.join("."));
-            record(points, path, directive.value);
-            
-            var did = directive.directive_id;
-            var point = points[path[0]];
-            
-            //console.log(point.toString());
-            
-            if (!('dids' in point)) {
-                point.dids = [];
-            }
-            point.dids.push(parseInt(did));
-        };
-        
-        var observesAndPredicts =
-            directives.filter(function(dir) {return dir.instruction in {"observe":true, "predict":true}});
-        observesAndPredicts.forEach(extract);
-        
-        for (obs_id in points) {
-            points[obs_id].obs_id = obs_id;
-        }
-        
-        return points;
-    };
-    
     var DrawPoint = function(local_point, point) {
         color = point.outlier ? "gray" : "red";
         
@@ -466,20 +419,45 @@ function InitializeDemo() {
         local_point.noise_circle.attr("ry", 0.25 * Math.abs(yScale) * factor);
     };
     
+    var SwitchModel = function(model_type, directives) {
+    	model_variables.model_type = model_type;
+    	LoadModel();
+        
+        var makeObserveOrPredict = function(directive) {
+        	switch(directive.instruction) {
+        	case "observe":
+        		ripl.observe(exprToString(directive.expression), directive.value, directive.label);
+    			break;
+			case "predict":
+				ripl.predict(exprToString(directive.expression), directive.label);
+				break;
+        	}
+        };
+        
+        directives.forEach(makeObserveOrPredict);
+    }
+    
     /* This is the callback that we pass to GET_DIRECTIVES_CONTINUOUSLY. */
     var RenderAll = function(directives) {
         //console.log("CLICKS TO ADD: " + JSON.stringify(clicks_to_add));
 
-        console.log("Rendering starting")
+        //console.log("Rendering starting")
         then = Date.now()
                 
-        UpdateVentureCode(directives);
         UpdateModelVariables(directives);
         
-        /* Get the observed points from the model. */
-        var points = GetPoints(directives);
+        var model_type = getModelType();
         
-        var current_curve = getCurrentCurve();
+        if (model_variables.model_type != model_type) {
+        	SwitchModel(model_type, directives);
+        }
+        
+        UpdateVentureCode(directives);
+	    
+	    /* Get the observed points from the model. */
+        GetPoints(directives);
+
+        var current_curve = getCurve[model_variables.model_type]();
 
         // console.log(current_curve.polynomial_coefficients);
 
@@ -555,16 +533,17 @@ function InitializeDemo() {
     };
     
     var ShowCurvesQ = function() {
-        return document.getElementById('show_curves').checked === true;
+        return document.getElementById("show_curves").checked;
     };
     
-    var getCurrentCurve = function() {
-        if (model_type == "linear") {
-        	return LinearCurve();
-        } else if (model_type == "advanced") {
-	        return AdvancedCurve();
-        }
-    }
+    var getModelType = function() {
+    	for (var i = 0; i < model_types.length; ++i) {
+    		if (document.getElementById(model_types[i]).checked) {
+    			return model_types[i];
+    		}
+    	}
+    	return null;
+    };
     
     var LinearCurve = function() {
         var curve = function(x) {
@@ -590,12 +569,14 @@ function InitializeDemo() {
             }
             var result_f = model_variables.fourier_a1 * Math.sin(model_variables.fourier_omega * x + model_variables.fourier_theta1);
             result = polynomial_coefficients[0] + model_variables.alpha * result_poly + (1.0 - model_variables.alpha) * result_f;
-            console.log(x + ", " + result);
+            //console.log(x + ", " + result);
             return result;
         };
         
         return curve;
     };
+    
+    var getCurve = {linear: LinearCurve, advanced: AdvancedCurve};
     
     var DrawCurve = function(curve) {
         var step = 1;
@@ -689,6 +670,7 @@ function InitializeDemo() {
     };
 
     var RunDemo = function() {
+    	document.getElementById(model_variables.model_type).checked = true;
         ripl.get_directives_continuously(
             [[50, 
             RenderAll,
@@ -707,7 +689,7 @@ function InitializeDemo() {
             ripl.start_continuous_inference();
             RunDemo();
         } else if (directives[0].symbol == "demo_id" && directives[0].value == demo_id) {
-        	model_type = directives[1].value;
+        	model_variables.model_type = directives[1].value;
             RunDemo();
         } else {
             throw "Error: Something other than curve-fitting demo running in Venture."
