@@ -132,29 +132,6 @@ function InitializeDemo() {
         fourier_omega: 1.0,
         fourier_theta1: 0.0,
     };
-
-    /* Polynomial orders (displayed upper-right) */
-    var poly_orders = [];
-    var poly_orders_histogram = [0,0,0,0,0];
-    var num_poly_orders_stored = 0;
-    var num_poly_orders_to_store = 100;
-    var add_to_poly_orders = function(order) {
-        if (poly_orders.length >= num_poly_orders_to_store) {
-            num_poly_orders_stored--;
-            poly_orders_histogram[poly_orders.shift()]--;
-        };
-        num_poly_orders_stored++;
-        poly_orders.push(order);
-        poly_orders_histogram[order]++;
-    };
-
-    var display_poly_orders_histogram = function() {
-        poly_orders_histogram.map(
-            function(value,degree) {
-                document.getElementById('poly' + degree).style.height = Math.round(100 * value / num_poly_orders_stored) + 'px'
-            }
-        );
-    };
     
     /* previous curve objects (for fading out) */
     var previous_curve_objects= [];
@@ -199,7 +176,7 @@ function InitializeDemo() {
         ripl.assume('model_type', '(quote linear)', 'model_type');
         
         /* Outliers */
-        ripl.assume('outlier_prob','0.1'); //(beta 1 3)?
+        ripl.assume('outlier_prob','(beta 1 3)'); //(beta 1 3)?
         ripl.assume('is_outlier','(mem (lambda (obs_id) (flip outlier_prob)))');
         
         /* Linear */
@@ -504,10 +481,6 @@ function InitializeDemo() {
             ObservePoint(obs_id, x, y);
         }
 
-        /* Process polynomial orders and display results. */
-        //add_to_poly_orders(current_curve.poly_order);
-        //display_poly_orders_histogram();
-
         // Change opacity of previously drawn polynomials.
         previous_curve_objects.map(
             function(curve,i) {
@@ -652,20 +625,10 @@ function InitializeDemo() {
         <label for="linear"><input type="radio" name="model_type" id="linear" value="linear">Linear Model</label>\
         <label for="advanced"><input type="radio" name="model_type" id="advanced" value="advanced">Advanced Model</label>\
         <br><br>\
-        <td width="30px" valign="bottom"><b>Degree:</b></td>\
-        <td width="30px" align="center" valign="bottom"><div id="poly0" style="width: 20px; height: 50px; background-color: #ee1111;"></div><br>0</td>\
-        <td width="30px" align="center" valign="bottom"><div id="poly1" style="width: 20px; height: 50px; background-color: #ee1111;"></div><br>1</td>\
-        <td width="30px" align="center" valign="bottom"><div id="poly2" style="width: 20px; height: 50px; background-color: #ee1111;"></div><br>2</td>\
-        <td width="30px" align="center" valign="bottom"><div id="poly3" style="width: 20px; height: 50px; background-color: #ee1111;"></div><br>3</td>\
-        <td width="30px" align="center" valign="bottom"><div id="poly4" style="width: 20px; height: 50px; background-color: #ee1111;"></div><br>4</td>\
-        <td width="20px"></td>\
-        <td valign="bottom" align="right">\
-        \
-        </td>\
+        <div id="venture_code"></div>\
         </tr>\
         </table>\
         <br>\
-        <div id="venture_code"></div>\
         ');
     };
 
