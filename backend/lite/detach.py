@@ -18,7 +18,7 @@ def detachAndExtract(trace, border, scaffold, compute_gradient = False):
       weight += detach(trace, node, scaffold, omegaDB, compute_gradient)
     else:
       if node.isObservation: weight += unconstrain(trace,trace.getOutermostNonReferenceApplication(node))
-      weight += extract(trace,node,scaffold,omegaDB)
+      weight += extract(trace,node,scaffold,omegaDB, compute_gradient)
   return weight,omegaDB
 
 def unconstrain(trace,node):
