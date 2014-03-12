@@ -4,24 +4,6 @@ function InitializeDemo() {
 
     var demo_id = 2;
 
-    var Curve = function(model_values) {
-        this.poly_order = model_values[0];
-
-        this.a0_c0 = model_values[1];
-        this.c1 = model_values[2];
-        this.c2 = model_values[3];
-        this.c3 = model_values[4];
-        this.c4 = model_values[5];
-
-        this.polynomial_coefficients = [this.a0_c0,this.c1,this.c2,this.c3,this.c4];
-
-        this.noise = model_values[6];
-        this.alpha = model_values[7];
-        this.fourier_a1 = model_values[8];
-        this.fourier_omega = model_values[9];
-        this.fourier_theta1 = model_values[10];
-    };
-
     /* This is awkward because it looks like an array but requires some subtleties,
      * like calling .length() instead of .length. This is all because javascript
      * doesn't seem to have a deep equals. It used to be just some click-list methods,
