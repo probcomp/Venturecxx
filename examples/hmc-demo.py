@@ -36,12 +36,6 @@ class HMCDemo(u.VentureUnit):
   def makeObserves(self):
     pass
 
-def hmcInfer(ripl, _ct):
-  ripl.infer("(hmc default all 1)")
-
-def mhInfer(ripl, _ct):
-  ripl.infer("(mh default all 1)")
-
 def plot_contours(xs, ys, func):
   xmin = min(xs)
   xmax = max(xs)
@@ -54,7 +48,9 @@ def plot_contours(xs, ys, func):
   Z = np.vectorize(func)(X,Y)
   plt.contour(X, Y, Z)
 
-def make_pic(name, infer):
+def make_pic(name, inf_prog):
+  def infer(ripl, _ct):
+    ripl.infer(inf_prog)
   model = HMCDemo(shortcuts.Lite().make_church_prime_ripl())
   history = model.runFromConditional(20, runs=1, verbose=True, name=name, infer=infer)
   xs = history.nameToSeries["x"][0].values
@@ -64,7 +60,7 @@ def make_pic(name, infer):
   plt.title("%s trajectory" % name)
   plt.xlabel("x")
   plt.ylabel("y")
-  plt.plot(xs, ys, label=name)
+  plt.plot(xs, ys, label=inf_prog)
   for (i, (x, y)) in enumerate(zip(xs, ys)):
     plt.text(x, y, i)
   plot_contours(xs, ys, lambda x, y: scipy.stats.norm.pdf(x, loc=0, scale=3) * scipy.stats.norm.pdf(y, loc=0, scale=2))
@@ -72,5 +68,5 @@ def make_pic(name, infer):
   u.savefig_legend_outside("%s-demo.png" % name)
 
 if __name__ == '__main__':
-  make_pic("hmc", hmcInfer)
-  make_pic("mh", mhInfer)
+  make_pic("hmc", "(hmc default all 1)")
+  make_pic("mh", "(mh default all 1)")
