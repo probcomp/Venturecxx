@@ -17,6 +17,9 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+import scipy.stats
+import numpy as np
+
 from venture import shortcuts
 import venture.unit as u
 
@@ -34,21 +37,40 @@ class HMCDemo(u.VentureUnit):
     pass
 
 def hmcInfer(ripl, _ct):
-  ripl.infer("(hmc default all 2)")
+  ripl.infer("(hmc default all 1)")
 
-def main():
+def mhInfer(ripl, _ct):
+  ripl.infer("(mh default all 1)")
+
+def plot_contours(xs, ys, func):
+  xmin = min(xs)
+  xmax = max(xs)
+  ymin = min(ys)
+  ymax = max(ys)
+  delta = 0.25
+  x = np.arange(xmin, xmax, delta)
+  y = np.arange(ymin, ymax, delta)
+  X, Y = np.meshgrid(x, y)
+  Z = np.vectorize(func)(X,Y)
+  plt.contour(X, Y, Z)
+
+def make_pic(name, infer):
   model = HMCDemo(shortcuts.Lite().make_church_prime_ripl())
-  history = model.runFromConditional(20, runs=1, verbose=True, name="hmc", infer=hmcInfer)
+  history = model.runFromConditional(20, runs=1, verbose=True, name=name, infer=infer)
   xs = history.nameToSeries["x"][0].values
   ys = history.nameToSeries["y"][0].values
   plt.figure()
   plt.clf()
-  plt.title("HMC trajectory")
+  plt.title("%s trajectory" % name)
   plt.xlabel("x")
   plt.ylabel("y")
-  plt.plot(xs, ys, '.', label="hmc")
+  plt.plot(xs, ys, label=name)
+  for (i, (x, y)) in enumerate(zip(xs, ys)):
+    plt.text(x, y, i)
+  plot_contours(xs, ys, lambda x, y: scipy.stats.norm.pdf(x, loc=0, scale=3) * scipy.stats.norm.pdf(y, loc=0, scale=2))
   u.legend_outside()
-  u.savefig_legend_outside("demo.png")
+  u.savefig_legend_outside("%s-demo.png" % name)
 
 if __name__ == '__main__':
-  main()
+  make_pic("hmc", hmcInfer)
+  make_pic("mh", mhInfer)
