@@ -2,6 +2,7 @@
 #define DB_H
 
 #include "types.h"
+#include <boost/thread.hpp>
 
 struct OutputNode;
 struct SPAux;
@@ -28,9 +29,16 @@ struct DB
   void registerMadeSPAux(Node * makerNode, shared_ptr<SPAux> spAux);
 
 private:
+  boost::shared_mutex _mutex_latentDBs;
   map<Node*,shared_ptr<LatentDB> > latentDBs;
+
+  boost::shared_mutex _mutex_values;
   map<Node*,VentureValuePtr> values;
+
+  boost::shared_mutex _mutex_spFamilyDBs;
   map<shared_ptr<SP>,map<FamilyID,RootOfFamily> > spFamilyDBs;
+
+  boost::shared_mutex _mutex_spAuxs;
   map<Node*,shared_ptr<SPAux> > spAuxs;
 };
 

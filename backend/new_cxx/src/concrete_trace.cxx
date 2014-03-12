@@ -14,6 +14,12 @@
 #include <cassert>
 
 #include <iostream>
+
+typedef boost::shared_lock<boost::shared_mutex> ReaderLock;
+typedef boost::upgrade_lock<boost::shared_mutex> UpgradeLock;
+typedef boost::upgrade_to_unique_lock<boost::shared_mutex> UpgradeToUniqueLock;
+typedef boost::unique_lock<boost::mutex> UniqueLock;
+
 using std::cout;
 using std::endl;
 
@@ -58,12 +64,14 @@ ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937))
 
 /* Registering metadata */
 void ConcreteTrace::registerAEKernel(Node * node) 
-{ 
+{
+  UniqueLock l(_mutex_arbitraryErgodicKernels);
   assert(!arbitraryErgodicKernels.count(node));
   arbitraryErgodicKernels.insert(node);
 }
 
 void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
+  UniqueLock l(_mutex_unconstrainedChoices);
   assert(unconstrainedChoices.count(node) == 0);
   unconstrainedChoices.insert(node);
   registerUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
@@ -73,6 +81,7 @@ void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
 
 void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
+  UniqueLock l(_mutex_scopes);
   assert(block);
   if (!scopes.count(scope)) { scopes[scope]/* = SamplableMap<BlockID,set<Node*> >()*/; }
   if (!scopes[scope].contains(block)) { scopes[scope].set(block,set<Node*>()); }
@@ -85,6 +94,8 @@ void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID blo
 }
 
 void ConcreteTrace::registerConstrainedChoice(Node * node) {
+  UpgradeLock l(_mutex_constrainedChoices);
+  UpgradeToUniqueLock ll(l);
   assert(constrainedChoices.count(node) == 0);
   constrainedChoices.insert(node);
   unregisterUnconstrainedChoice(node);
@@ -93,12 +104,14 @@ void ConcreteTrace::registerConstrainedChoice(Node * node) {
 /* Unregistering metadata */
 void ConcreteTrace::unregisterAEKernel(Node * node) 
 {
+  UniqueLock l(_mutex_arbitraryErgodicKernels);
   assert(arbitraryErgodicKernels.count(node));
   arbitraryErgodicKernels.erase(node);
 }
 
 
 void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
+  UniqueLock l(_mutex_unconstrainedChoices);
   unregisterUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
 				       shared_ptr<VentureNode>(new VentureNode(node)),
 				       node);
@@ -108,6 +121,7 @@ void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
 
 void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
 { 
+  UniqueLock l(_mutex_scopes);
   assert(scopes[scope].contains(block));
   assert(scopes[scope].get(block).count(node));
   scopes[scope].get(block).erase(node);
@@ -117,6 +131,9 @@ void ConcreteTrace::unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID b
 }
 
 void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
+  UpgradeLock l(_mutex_constrainedChoices);
+  UpgradeToUniqueLock ll(l);
+
   assert(constrainedChoices.count(node) == 1);
   constrainedChoices.erase(node);
   ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
@@ -128,6 +145,8 @@ void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
 /* Regen mutations */
 void ConcreteTrace::addESREdge(RootOfFamily esrRoot,OutputNode * outputNode) 
 {
+  UpgradeLock l(_mutex_esrRoots);
+  UpgradeToUniqueLock ll(l);
   incNumRequests(esrRoot);
   addChild(esrRoot.get(),outputNode);
   esrRoots[outputNode].push_back(esrRoot);
@@ -138,10 +157,24 @@ void ConcreteTrace::reconnectLookup(LookupNode * lookupNode)
   addChild(lookupNode->sourceNode,lookupNode); 
 }
 
-void ConcreteTrace::incNumRequests(RootOfFamily root) { numRequests[root]++; }
-void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
+void ConcreteTrace::incNumRequests(RootOfFamily root) 
+{ 
+  UpgradeLock l(_mutex_numRequests);
+  UpgradeToUniqueLock ll(l);
+  numRequests[root]++; 
+}
+
+void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node)
+{
+  UpgradeLock l(_mutex_regenCounts);
+  UpgradeToUniqueLock ll(l);
+  scaffold->incRegenCount(node);
+}
+
 void ConcreteTrace::addChild(Node * node, Node * child) 
 {
+  UpgradeLock l(_mutex_children);
+  UpgradeToUniqueLock ll(l);
   assert(node->children.count(child) == 0);
   node->children.insert(child);
 }
@@ -149,6 +182,9 @@ void ConcreteTrace::addChild(Node * node, Node * child)
 /* Detach mutations */  
 RootOfFamily ConcreteTrace::popLastESRParent(OutputNode * outputNode) 
 { 
+  UpgradeLock l(_mutex_esrRoots);
+  UpgradeToUniqueLock ll(l);
+
   vector<RootOfFamily> & esrParents = esrRoots[outputNode];
   assert(!esrParents.empty());
   RootOfFamily esrRoot = esrParents.back();
@@ -164,53 +200,106 @@ void ConcreteTrace::disconnectLookup(LookupNode * lookupNode)
 }
 void ConcreteTrace::decNumRequests(RootOfFamily root) 
 { 
+  UpgradeLock l(_mutex_numRequests);
+  UpgradeToUniqueLock ll(l);
+
   assert(numRequests.count(root));
   numRequests[root]--;
 }
 
-void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
+void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) 
+{
+  UpgradeLock l(_mutex_regenCounts);
+  UpgradeToUniqueLock ll(l);
+  scaffold->decRegenCount(node); 
+}
+
 void ConcreteTrace::removeChild(Node * node, Node * child) 
 { 
+  UpgradeLock l(_mutex_children);
+  UpgradeToUniqueLock ll(l);
   assert(node->children.count(child)); 
   node->children.erase(child);
 }
 
 /* Primitive getters */
 gsl_rng * ConcreteTrace::getRNG() { return rng; }
-VentureValuePtr ConcreteTrace::getValue(Node * node) { assert(values[node]); return values[node]; }
+VentureValuePtr ConcreteTrace::getValue(Node * node) 
+{ 
+  ReaderLock l(_mutex_values);
+  assert(values[node]); 
+  return values[node]; 
+}
 shared_ptr<SP> ConcreteTrace::getMadeSP(Node * makerNode)
 {
+  ReaderLock l(_mutex_madeSPRecords);
   shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
   return spRecord->sp;
 }
 
 shared_ptr<SPFamilies> ConcreteTrace::getMadeSPFamilies(Node * makerNode)
 {
+  ReaderLock l(_mutex_madeSPRecords);
   shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
   return spRecord->spFamilies;
 }
 
 shared_ptr<SPAux> ConcreteTrace::getMadeSPAux(Node * makerNode)
 {
+  ReaderLock l(_mutex_madeSPRecords);
   shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
   return spRecord->spAux;
 }
 
 shared_ptr<VentureSPRecord> ConcreteTrace::getMadeSPRecord(Node * makerNode) 
 {
+  ReaderLock l(_mutex_madeSPRecords);
   assert(madeSPRecords.count(makerNode));
   return madeSPRecords[makerNode]; 
 }
-vector<RootOfFamily> ConcreteTrace::getESRParents(Node * node) { return esrRoots[node]; }
-set<Node*> ConcreteTrace::getChildren(Node * node) { return node->children; }
-int ConcreteTrace::getNumRequests(RootOfFamily root) { return numRequests[root]; }
-int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { return scaffold->getRegenCount(node); }
+vector<RootOfFamily> ConcreteTrace::getESRParents(Node * node) 
+{ 
+  ReaderLock l(_mutex_esrRoots);
+  return esrRoots[node]; 
+}
+set<Node*> ConcreteTrace::getChildren(Node * node) 
+{ 
+  ReaderLock l(_mutex_children);
+  return node->children; 
+}
 
-VentureValuePtr ConcreteTrace::getObservedValue(Node * node) { return observedValues[node]; }
+int ConcreteTrace::getNumRequests(RootOfFamily root) 
+{ 
+  ReaderLock l(_mutex_numRequests);
+  return numRequests[root]; 
+}
+int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) 
+{ 
+  ReaderLock l(_mutex_regenCounts);
+  return scaffold->getRegenCount(node);
+}
 
-bool ConcreteTrace::isMakerNode(Node * node) { return madeSPRecords.count(node); }
-bool ConcreteTrace::isConstrained(Node * node) { return constrainedChoices.count(node); }
-bool ConcreteTrace::isObservation(Node * node) { return observedValues.count(node); }
+VentureValuePtr ConcreteTrace::getObservedValue(Node * node) 
+{
+  ReaderLock l(_mutex_observedValues);
+  return observedValues[node]; 
+}
+
+bool ConcreteTrace::isMakerNode(Node * node) 
+{ 
+  ReaderLock l(_mutex_madeSPRecords);
+  return madeSPRecords.count(node); 
+}
+bool ConcreteTrace::isConstrained(Node * node) 
+{ 
+  ReaderLock l(_mutex_constrainedChoices);
+  return constrainedChoices.count(node); 
+}
+bool ConcreteTrace::isObservation(Node * node) 
+{ 
+  ReaderLock l(_mutex_observedValues);
+  return observedValues.count(node); 
+}
 
 /* Derived Getters */
 shared_ptr<PSP> ConcreteTrace::getPSP(ApplicationNode * node)
@@ -220,30 +309,52 @@ shared_ptr<PSP> ConcreteTrace::getPSP(ApplicationNode * node)
 
 /* Primitive Setters */
 void ConcreteTrace::setValue(Node * node, VentureValuePtr value) 
-{ assert(value); values[node] = value; }
+{ 
+  UpgradeLock l(_mutex_values);
+  UpgradeToUniqueLock ll(l);
+  assert(value); 
+  values[node] = value; 
+}
 
-void ConcreteTrace::clearValue(Node * node) { values.erase(node); }
+void ConcreteTrace::clearValue(Node * node) 
+{
+  UpgradeLock l(_mutex_values);
+  UpgradeToUniqueLock ll(l);
+  values.erase(node);
+}
 
 void ConcreteTrace::unobserveNode(Node * node)
 { 
+  UpgradeLock l(_mutex_observedValues);
+  UpgradeToUniqueLock ll(l);
+
   assert(observedValues.count(node));
   observedValues.erase(node);
 }
 
 void ConcreteTrace::observeNode(Node * node,VentureValuePtr value) 
 { 
+  UpgradeLock l(_mutex_observedValues);
+  UpgradeToUniqueLock ll(l);
+
   assert(!observedValues.count(node));
   observedValues[node] = value; 
 }
 
 void ConcreteTrace::setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord)
 {
+  UpgradeLock l(_mutex_madeSPRecords);
+  UpgradeToUniqueLock ll(l);
+
   assert(!madeSPRecords.count(makerNode));
   madeSPRecords[makerNode] = spRecord;
 }
 
 void ConcreteTrace::destroyMadeSPRecord(Node * makerNode)
 {
+  UpgradeLock l(_mutex_madeSPRecords);
+  UpgradeToUniqueLock ll(l);
+
   assert(madeSPRecords.count(makerNode));
   madeSPRecords.erase(makerNode);
 }
@@ -265,12 +376,15 @@ void ConcreteTrace::setChildren(Node * node,set<Node*> childNodes)
 }
 void ConcreteTrace::setESRParents(Node * node,const vector<RootOfFamily> & esrRootNodes) 
 {
+  UpgradeLock l(_mutex_esrRoots);
+  UpgradeToUniqueLock ll(l);
   esrRoots[node] = esrRootNodes;
 }
 
 void ConcreteTrace::setNumRequests(RootOfFamily node,int num) 
 { 
-  //assert(false); 
+  UpgradeLock l(_mutex_numRequests);
+  UpgradeToUniqueLock ll(l);
   numRequests[node] = num;
 }
 

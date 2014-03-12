@@ -5,11 +5,7 @@
 #include "trace.h"
 #include "smap.h"
 #include "value.h"
-#include "pmap.hpp"
-#include "pset.hpp"
-
-using persistent::PMap;
-using persistent::PSet;
+#include <boost/thread.hpp>
 
 struct ConcreteTrace : Trace
 {
@@ -129,23 +125,41 @@ struct ConcreteTrace : Trace
 
   shared_ptr<VentureEnvironment> globalEnvironment;
 
+  boost::mutex _mutex_unconstrainedChoices;
   set<Node*> unconstrainedChoices;
+
+  boost::shared_mutex _mutex_constrainedChoices;
   set<Node*> constrainedChoices;
+
+  boost::mutex _mutex_arbitraryErgodicKernels;
   set<Node*> arbitraryErgodicKernels;
 
   map<Node*,VentureValuePtr> unpropagatedObservations;
 
+  boost::shared_mutex _mutex_aaaMadeSPAuxs;
   map<OutputNode*,shared_ptr<SPAux> > aaaMadeSPAuxs;
 
   map<DirectiveID,RootOfFamily> families;
 
+  boost::mutex _mutex_scopes;
   VentureValuePtrMap<SamplableMap<BlockID,set<Node*> > > scopes;
 
+  boost::shared_mutex _mutex_children; // TODO awful, should be at node level (most things should)
+  boost::shared_mutex _mutex_regenCounts; // TODO should be where the regenCounts are stored
+
+  boost::shared_mutex _mutex_esrRoots;
   map<Node*, vector<RootOfFamily> > esrRoots;
+
+  boost::shared_mutex _mutex_numRequests;
   map<RootOfFamily, int> numRequests;
+
+  boost::shared_mutex _mutex_madeSPRecords;
   map<Node*, shared_ptr<VentureSPRecord> > madeSPRecords;
 
+  boost::shared_mutex _mutex_values;
   map<Node*,VentureValuePtr> values;
+
+  boost::shared_mutex _mutex_observedValues;
   map<Node*,VentureValuePtr> observedValues;
 
 };
