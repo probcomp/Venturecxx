@@ -434,7 +434,7 @@ class MRipl():
     def snapshot(self,did_labels_list=[], exp_list=[],
                  plot=False, scatter=False, plot_range=None,
                  logscore=False, plot_past_values=[],
-                 sample_populations=None, repeat=None):
+                 sample_populations=None, repeat=None, predict=False):
                 
         '''Input: lists of dids_labels and expressions.
            Output: values from each ripl, (optional) plots.''' 
@@ -446,8 +446,11 @@ class MRipl():
         
         values = { did_label:self.report(did_label) for did_label in did_labels_list}
         
-        values.update( { exp:self.sample(exp) for exp in exp_list } )
-        
+        if not(predict):
+            values.update( { exp:self.sample(exp) for exp in exp_list } )
+        else:
+            values.update( { exp:self.predict(exp) for exp in exp_list } )
+            
         if logscore: values['global_logscore']= self.get_global_logscore()
         
         out = {'values':values,
