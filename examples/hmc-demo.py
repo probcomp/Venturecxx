@@ -52,7 +52,7 @@ def make_pic(name, inf_prog):
   def infer(ripl, _ct):
     ripl.infer(inf_prog)
   model = HMCDemo(shortcuts.Lite().make_church_prime_ripl())
-  history = model.runFromConditional(20, runs=1, verbose=True, name=name, infer=infer)
+  history = model.runFromConditional(200, runs=1, verbose=True, name=name, infer=infer)
   xs = history.nameToSeries["x"][0].values
   ys = history.nameToSeries["y"][0].values
   plt.figure()
@@ -60,9 +60,9 @@ def make_pic(name, inf_prog):
   plt.title("%s trajectory" % name)
   plt.xlabel("x")
   plt.ylabel("y")
-  plt.plot(xs, ys, label=inf_prog)
-  for (i, (x, y)) in enumerate(zip(xs, ys)):
-    plt.text(x, y, i)
+  plt.plot(xs, ys, '.', label=inf_prog)
+  # for (i, (x, y)) in enumerate(zip(xs, ys)):
+  #   plt.text(x, y, i)
   plot_contours(xs, ys, lambda x, y: scipy.stats.norm.pdf(x, loc=0, scale=3) * scipy.stats.norm.pdf(y, loc=0, scale=2))
   u.legend_outside()
   u.savefig_legend_outside("%s-demo.png" % name)
