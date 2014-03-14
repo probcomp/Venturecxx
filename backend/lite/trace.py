@@ -334,7 +334,7 @@ class Trace(object):
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MeanfieldOperator(params["steps"],0.0001))
       elif params["kernel"] == "hmc":
         assert params["with_mutation"]
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),HamiltonianMonteCarloOperator())
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),HamiltonianMonteCarloOperator(params["epsilon"], params["L"]))
       elif params["kernel"] == "gibbs":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())

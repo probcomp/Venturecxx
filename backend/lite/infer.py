@@ -466,6 +466,10 @@ class ParticlePGibbsOperator(object):
 
 class HamiltonianMonteCarloOperator(InPlaceOperator):
 
+  def __init__(self, epsilon, L):
+    self.epsilon = epsilon
+    self.num_steps = L
+
   # Notionally, I want to do Hamiltonian Monte Carlo on the potential
   # given by this function:
   #   def potential(values):
@@ -530,7 +534,9 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     # additive constant
     return sum([m*m for m in momenta]) / 2.0
 
-  def evolve(self, grad_U, start_q, start_grad_q, start_p, epsilon=0.05, num_steps=20):
+  def evolve(self, grad_U, start_q, start_grad_q, start_p):
+    epsilon = self.epsilon
+    num_steps = self.num_steps
     q = [NumberType().asPython(qi) for qi in start_q]
     # The initial momentum half-step
     dpdt = start_grad_q

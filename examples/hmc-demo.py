@@ -68,5 +68,5 @@ def make_pic(name, inf_prog):
   u.savefig_legend_outside("%s-demo.png" % name)
 
 if __name__ == '__main__':
-  make_pic("hmc", "(hmc default all 1)")
+  make_pic("hmc", "(hmc default all 0.05 20 1)")
   make_pic("mh", "(mh default all 1)")
