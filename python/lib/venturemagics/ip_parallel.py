@@ -472,7 +472,10 @@ class MRipl():
             # self.dview.apply(f,exp,type,self.mrid) ##FIXEM: use mr_map_f trick
             
             
-            all_ripls = [self.sample(exp) for j in range(pop_size)]
+            if not(predict):
+                all_ripls = [self.sample(exp) for j in range(pop_size)]
+            else:
+                all_ripls = [self.sample(exp) for j in range(pop_size)]
             ## FIXME could be much faster by fixing ripls first
             indices = np.random.randint(0,self.no_ripls,no_groups)
 
@@ -498,7 +501,10 @@ class MRipl():
                 
         if repeat:
             exp=exp_list[0]
-            r_values = lst_flatten([self.sample(exp) for repeats in range(repeat)])
+            if not(predict):
+                r_values = lst_flatten([self.sample(exp) for repeats in range(repeat)])
+            else:
+                r_values = lst_flatten([self.predict(exp) for repeats in range(repeat)])
             out['values'][exp] = r_values
             if plot:
                 fig,ax=plt.subplots(figsize=(5,3))
