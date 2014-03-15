@@ -543,7 +543,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     # TODO This code would look much better with numpy
     p = [pi - epsilon * dpdti / 2.0 for (pi, dpdti) in zip(start_p, dpdt)]
 
-    for i in range(num_steps):
+    for i in range(int(num_steps)):
       # Position step
       q = [qi + epsilon * pi for (qi, pi) in zip(q,p)]
 
