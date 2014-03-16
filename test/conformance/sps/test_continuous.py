@@ -15,5 +15,8 @@ def testMVGaussPrior():
   ripl.predict("(lookup vec 0)")
 
   predictions = collectSamples(ripl, 2)
+  print predictions
   cdf = stats.norm(loc=1, scale=1).cdf
   return reportKnownContinuous(cdf, predictions, "N(1,1)")
+
+testMVGaussPrior()
