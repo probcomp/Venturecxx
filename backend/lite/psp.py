@@ -7,7 +7,7 @@ class PSP(object):
 
   @abstractmethod
   def simulate(self,args): pass
-  def gradientOfSimulate(self, args, direction):
+  def gradientOfSimulate(self, _args, _direction):
     """Should return the gradient of this psp's simulation function,
     with respect to the given direction on the output space, at the
     point given by the args struct.  In other words, the
