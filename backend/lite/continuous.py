@@ -1,6 +1,10 @@
 import scipy.stats
 import scipy.special
 import math
+import numpy.random as npr
+import numpy.linalg as npla
+import numpy as np
+
 from psp import RandomPSP
 from lkernel import LKernel
 
@@ -15,6 +19,30 @@ class NormalDriftKernel(LKernel):
     term3 = self.epsilon * nu
     return term1 + term2 + term3
                                                         
+class MVNormalOutputPSP(RandomPSP):
+  def simulate(self, args):
+    return npr.multivariate_normal(*self.__parse_args__(args))
+
+  def logDensity(self, x, args):
+    (mu, sigma) = self.__parse_args__(args)
+    return -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
+          -.5*len(sigma)*np.log(np.pi)-.5*np.log(npla.det(sigma))
+
+  def gradientOfLogDensity(self, x, args):
+    (mu, sigma) = self.__parse_args__(args)
+    isigma = npla.inv(sigma)
+    xvar = np.dot(x-mu, np.transpose(x-mu))
+    gradX = -np.dot(isigma, np.transpose(x-mu))
+    gradMu = np.dot(isigma, np.transpose(x-mu))
+    gradSigma = .5*np.dot(np.dot(isigma, xvar),isigma)-.5*isigma
+    return gradX, [gradMu, gradSigma]
+
+  def description(self,name):
+    return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name
+
+  def __parse_args__(self, args):
+    return (np.array(args.operandValues[0]), args.operandValues[1])
+
 class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,params): return scipy.stats.norm.rvs(*params)
