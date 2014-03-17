@@ -192,6 +192,39 @@ def testAll_IP():
         if not(lite): assert ex[0][0] == ex[0][1] == ex[1]
         print '... passed'
 
+    def testContinuous():
+        clear_all_engines();print 'IP_continuous  '
+
+        v = MRipl(2,lite=lite)
+        test_v = mk_ripl(); test_v.set_seed(0)
+
+        for r in [v, test_v]:
+            r.clear()
+            r.assume('x', '(uniform_continuous 0 1000)')
+        pred1 = v.predict('x') + [test_v.predict('x')]
+
+        for r in [v, test_v]:
+            r.start_continuous_inference()
+        time.sleep(1.0)
+        pred2 = v.predict('x') + [test_v.predict('x')]
+        assert pred1[0] != pred2[0] and pred1[1] != pred2[1], 'continuous_infer'
+
+        for r in [v, test_v]:
+            r.observe('(normal x 10)', '-10')
+        time.sleep(1.0)
+        pred3 = v.predict('x') + [test_v.predict('x')]
+        assert pred3[0] < pred2[0] and pred3[1] < pred2[1], 'continuous_observation'
+
+        status = v.continuous_inference_status() + [test_v.continuous_inference_status()]
+        assert all(s['running'] for s in status), 'continuous_status'
+
+        for r in [v, test_v]:
+            r.stop_continuous_inference()
+        status = v.continuous_inference_status() + [test_v.continuous_inference_status()]
+        assert all(not s['running'] for s in status), 'continuous_stop'
+
+        print '... passed'
+
     def testSnapshot():
         print 'IP_snap  '
         def model():
@@ -390,6 +423,6 @@ def testAll_IP():
             print '... passed'
 
 
-    tests = [ testMrMap, testMulti, testSnapshot, testDirectives,testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
+    tests = [ testMrMap, testMulti, testSnapshot, testDirectives, testContinuous, testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
     [t() for t in tests]
     print 'passed all tests for ip_parallel'
