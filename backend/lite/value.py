@@ -6,6 +6,7 @@ https://docs.google.com/document/d/1URnJh5hNJ___-dwzIpca5Y2h-Mku1n5zjpGCiFBcUHM/
 from abc import ABCMeta
 from numbers import Number
 from request import Request # TODO Pull that file in here?
+import numpy as np
 
 # TODO Define reasonable __str__ and/or __repr__ methods for all the
 # values and all the types.
@@ -65,9 +66,9 @@ class VentureNumber(VentureValue):
     self.number = number
   def __repr__(self):
     if hasattr(self, "number"):
-      return "Number(%s)" % self.number
+      return "VentureNumber(%s)" % self.number
     else:
-      return "Number(uninitialized)"
+      return "VentureNumber(uninitialized)"
   def getNumber(self): return self.number
   def asStackDict(self): return {"type":"number","value":self.number}
   @staticmethod
@@ -213,7 +214,9 @@ interface here is compatible with one possible path."""
   def dot(self, other):
     return sum([x.dot(y) for (x,y) in zip(self.array, other.array)])
   def map_real(self, f):
-    return VentureArray([f(x) for x in self.array])
+    return VentureArray([x.map_real(f) for x in self.array])
+  def __repr__(self):
+    return "VentureArray(%s)" % self.array
 
 class VentureNil(VentureValue):
   def __init__(self): pass
@@ -325,6 +328,36 @@ class VentureMatrix(VentureValue):
     return {"type":"matrix", "value":self.matrix}
   @staticmethod
   def fromStackDict(thing): return VentureMatrix(thing["value"])
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureMatrix(self.matrix + other.matrix)
+  def __radd__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureMatrix(other.matrix + self.matrix)
+  def __neg__(self):
+    return VentureMatrix(-self.matrix)
+  def __sub__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureMatrix(self.matrix - other.matrix)
+  def __mul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureMatrix(self.matrix * other)
+  def __rmul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureMatrix(other * self.matrix)
+  def dot(self, other):
+    assert isinstance(other, VentureMatrix)
+    return np.sum(np.multiply(self.matrix, other.matrix))
+  def map_real(self, f):
+    return VentureMatrix(np.vectorize(f)(self.matrix))
 
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
