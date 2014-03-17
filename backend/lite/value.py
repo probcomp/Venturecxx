@@ -63,7 +63,11 @@ class VentureNumber(VentureValue):
   def __init__(self,number):
     assert isinstance(number, Number)
     self.number = number
-  def __repr__(self): return "Number(%s)" % self.number
+  def __repr__(self):
+    if hasattr(self, "number"):
+      return "Number(%s)" % self.number
+    else:
+      return "Number(uninitialized)"
   def getNumber(self): return self.number
   def asStackDict(self): return {"type":"number","value":self.number}
   @staticmethod
