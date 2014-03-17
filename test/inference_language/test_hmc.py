@@ -27,9 +27,12 @@ def testMVGaussSmoke():
   ripl.infer("(hmc default all 0.01 20 2)")
 
 def testMoreElaborate():
+  """Confirm that HMC still works in the presence of brush.  Do not,
+  however, mess with the possibility that the principal nodes that HMC
+  operates over may themselves be in the brush."""
   ripl = get_ripl()
-  ripl.assume("x", "(uniform_continuous -10 10)")
-  ripl.assume("y", "(uniform_continuous -10 10)")
+  ripl.assume("x", "(scope_include (quote param) 0 (uniform_continuous -10 10))")
+  ripl.assume("y", "(scope_include (quote param) 1 (uniform_continuous -10 10))")
   ripl.assume("out", """
 (if (< x 0)
     (multivariate_normal (array x y) (matrix (list (list 1 3) (list 3 1))))
@@ -46,4 +49,4 @@ def testMoreElaborate():
   v = [{"type": "real", "value": 0}, {"type": "real", "value": 0}]
   ripl.sivm.execute_instruction({"instruction":"observe","expression":"out","value":{"type":"list","value":v}})
 
-  ripl.infer("(hmc default all 0.01 20 2)")
+  ripl.infer("(hmc param all 0.01 20 2)")
