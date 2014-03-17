@@ -376,6 +376,7 @@ venture_types = [
 
 stackable_types = {
   "number": VentureNumber,
+  "real": VentureNumber,
   "atom": VentureAtom,
   "boolean": VentureBool,
   "symbol": VentureSymbol,

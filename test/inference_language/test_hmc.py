@@ -25,3 +25,25 @@ def testMVGaussSmoke():
   ripl = get_ripl()
   ripl.assume("vec", "(multivariate_normal (array 1 2) (matrix (list (list 1 2) (list 2 1))))")
   ripl.infer("(hmc default all 0.01 20 2)")
+
+def testMoreElaborate():
+  ripl = get_ripl()
+  ripl.assume("x", "(uniform_continuous -10 10)")
+  ripl.assume("y", "(uniform_continuous -10 10)")
+  ripl.assume("out", """
+(if (< x 0)
+    (multivariate_normal (array x y) (matrix (list (list 1 3) (list 3 1))))
+    (multivariate_normal (array x y) (matrix (list (list 3 0) (list 0 3)))))
+""")
+  # TODO Unexpectedly serious problem: how to observe a data structure?
+  # Can't observe coordinatewise because observe is not flexible
+  # enough.  For this to work we would need observations of splits.
+  # ripl.observe("(lookup out 0)", 0)
+  # ripl.observe("(lookup out 1)", 0)
+  # Can't observe through the ripl literally because the string
+  # substitution (!) is not flexible enough.
+  # ripl.observe("out", [0, 0])
+  v = [{"type": "real", "value": 0}, {"type": "real", "value": 0}]
+  ripl.sivm.execute_instruction({"instruction":"observe","expression":"out","value":{"type":"list","value":v}})
+
+  ripl.infer("(hmc default all 0.01 20 2)")
