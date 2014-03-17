@@ -79,7 +79,8 @@ class TypedPSP(PSP):
     return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def gradientOfLogDensity(self, value, args):
     # TODO maybe this should take an args object
-    return self.psp.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_arg_list(args))
+    (dvalue, dargs) = self.psp.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_arg_list(args))
+    return (self.f_type.wrap_return(dvalue), self.f_type.wrap_arg_list(dargs))
   def logDensityBound(self, value, args):
     return self.psp.logDensityBound(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def incorporate(self,value,args):
