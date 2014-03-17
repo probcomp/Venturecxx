@@ -18,3 +18,10 @@ def testNormalWithObserve1():
   predictions = collectSamples(ripl,1,infer="(hmc default one 0.05 20 10)")
   cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
+
+def testMVGaussSmoke():
+  """Confirm that projecting a multivariate Gaussian to one dimension
+  results in a univariate Gaussian."""
+  ripl = get_ripl()
+  ripl.assume("vec", "(multivariate_normal (array 1 2) (matrix (list (list 1 2) (list 2 1))))")
+  ripl.infer("(hmc default all 0.01 20 2)")
