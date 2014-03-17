@@ -195,6 +195,8 @@ def builtInSPsList():
            [ "student_t",unaryNumS(continuous.StudentTOutputPSP()) ],
            [ "inv_gamma",binaryNumS(continuous.InvGammaOutputPSP()) ],
 
+           [ "multivariate_normal", typed_nr(continuous.MVNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.MatrixType()], v.HomogeneousArrayType(v.NumberType())) ],
+
            [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], SPType([], v.BoolType())) ],
            [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], SPType([], v.BoolType())) ],
 
