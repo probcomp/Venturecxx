@@ -33,11 +33,16 @@ def testMoreElaborate():
   ripl = get_ripl()
   ripl.assume("x", "(scope_include (quote param) 0 (uniform_continuous -10 10))")
   ripl.assume("y", "(scope_include (quote param) 1 (uniform_continuous -10 10))")
-  ripl.assume("out", """
+#   ripl.assume("out", """
+# (if (< x 0)
+#     (multivariate_normal (array x y) (matrix (list (list 1 3) (list 3 1))))
+#     (multivariate_normal (array x y) (matrix (list (list 3 0) (list 0 3)))))
+# """)
+  ripl.assume("xout", """
 (if (< x 0)
-    (multivariate_normal (array x y) (matrix (list (list 1 3) (list 3 1))))
-    (multivariate_normal (array x y) (matrix (list (list 3 0) (list 0 3)))))
-""")
+    (normal x 1)
+    (normal x 2))""")
+  ripl.assume("out", "(multivariate_normal (array xout y) (matrix (list (list 1 3) (list 3 1))))")
   # TODO Unexpectedly serious problem: how to observe a data structure?
   # Can't observe coordinatewise because observe is not flexible
   # enough.  For this to work we would need observations of splits.
