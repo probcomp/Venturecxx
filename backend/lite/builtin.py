@@ -54,16 +54,7 @@ def typed_func(*args, **kwargs):
 # previous version, which accepts the whole args object (where this
 # one splats the operand values).
 def deterministic_psp(f, descr=None):
-  class DeterministicPSP(PSP):
-    def __init__(self, descr):
-      self.descr = descr
-      if self.descr is None:
-        self.descr = "deterministic %s"
-    def simulate(self,args):
-      return f(*args.operandValues)
-    def description(self,name):
-      return self.descr % name
-  return DeterministicPSP(descr)
+  return func_psp(lambda args: f(*args.operandValues), descr)
 
 def deterministic_typed_psp(f, args_types, return_type, descr=None, **kwargs):
   return TypedPSP(deterministic_psp(f, descr), SPType(args_types, return_type, **kwargs))
