@@ -286,6 +286,16 @@ boost::python::dict VentureArray::toPython(Trace * trace) const
   return value;
 }
 
+boost::python::dict VentureSimplex::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "simplex";
+  boost::python::list l;
+  for (size_t i = 0; i < ps.size(); ++i) { l.append(ps[i]); }
+  value["value"] = l;
+  return value;
+}
+
 boost::python::dict VentureDictionary::toPython(Trace * trace) const
 {
   boost::python::dict value;

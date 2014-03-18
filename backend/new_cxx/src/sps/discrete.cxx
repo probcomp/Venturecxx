@@ -116,7 +116,6 @@ double CategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> 
   else { return logDensityCategorical(value,args->operandValues[0]->getSimplex(),args->operandValues[1]->getArray()); }
 }
 
-/* DirMultOutputPSP */
 VentureValuePtr SymmetricDirichletOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const 
 { 
   double alpha = args->operandValues[0]->getDouble();
