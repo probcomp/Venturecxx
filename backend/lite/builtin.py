@@ -147,7 +147,8 @@ def builtInSPsList():
            [ "map_list",VentureSP(dstructures.MapListRequestPSP(),dstructures.MapListOutputPSP()) ],
 
            [ "array", deterministic(lambda *args: v.VentureArray(np.array(args)),
-                                    "%s :: <SP <object> ... -> <array>>\nReturns an array initialized with its arguments") ],
+                                    sim_grad=lambda args, direction: [direction], # TODO Is this actually right?
+                                    descr="%s :: <SP <object> ... -> <array>>\nReturns an array initialized with its arguments") ],
            [ "is_array", type_test(v.ArrayType()) ],
            [ "dict", no_request(dstructures.DictOutputPSP()) ],
            [ "is_dict", type_test(v.DictType()) ],

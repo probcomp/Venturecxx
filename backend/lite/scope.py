@@ -2,6 +2,7 @@ from psp import PSP
 
 class ScopeIncludeOutputPSP(PSP):
   def simulate(self,args): return args.operandValues[2]
+  def gradientOfSimulate(self, _args, direction): return [0, 0, direction]
   def canAbsorb(self, _trace, appNode, parentNode): return parentNode != appNode.operandNodes[2]
   
   def description(self,name):
