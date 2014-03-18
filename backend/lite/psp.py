@@ -53,6 +53,7 @@ class PSP(object):
 
 class NullRequestPSP(PSP):
   def simulate(self,args): return Request()
+  def gradientOfSimulate(self, args, _value, _direction): return [0 for _ in args.operandValues]
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
 
 class ESRRefOutputPSP(PSP):
