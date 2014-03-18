@@ -7,11 +7,12 @@ class PSP(object):
 
   @abstractmethod
   def simulate(self,args): pass
-  def gradientOfSimulate(self, args, direction):
+  def gradientOfSimulate(self, _args, _direction):
     """Should return the gradient of this psp's simulation function,
     with respect to the given direction on the output space, at the
-    point given by the args struct.  In other words, the
-    Jacobian-vector product
+    point given by the args struct (the input space is taken to be the
+    full list of parents).  In other words, the Jacobian-vector
+    product
       direction^T J_simulate(args).
     For SPs with one scalar output, the direction will be a number,
     and the correct answer is the gradient of simulate multiplied by
@@ -54,6 +55,9 @@ class ESRRefOutputPSP(PSP):
     assert len(args.esrNodes) ==  1
     return args.esrValues[0]
 
+  def gradientOfSimulate(self, args, direction):
+    return [0 for _ in args.operandValues] + [direction]
+
   def canAbsorb(self,trace,appNode,parentNode):
     return parentNode != trace.esrParentsAt(appNode)[0] and parentNode != appNode.requestNode
 
@@ -79,7 +83,8 @@ class TypedPSP(PSP):
     return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def gradientOfLogDensity(self, value, args):
     # TODO maybe this should take an args object
-    return self.psp.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_arg_list(args))
+    (dvalue, dargs) = self.psp.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_arg_list(args))
+    return (self.f_type.wrap_return(dvalue), self.f_type.wrap_arg_list(dargs))
   def logDensityBound(self, value, args):
     return self.psp.logDensityBound(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def incorporate(self,value,args):

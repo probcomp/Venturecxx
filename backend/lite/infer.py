@@ -505,7 +505,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     start_K = self.kinetic(momenta)
 
     def grad(values):
-      vs = [NumberType().asVentureValue(v) for v in values]
+      vs = values # [NumberType().asVentureValue(v) for v in values]
       registerDeterministicLKernels(trace, scaffold, pnodes, vs)
       regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
       (_, rhoDB) = detachAndExtract(trace, scaffold.border[0], scaffold, True)
@@ -520,7 +520,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     (proposed_vs, end_K) = self.evolve(grad, currentValues, start_grad, momenta)
     assertTorus(scaffold)
 
-    proposed_values = [NumberType().asVentureValue(v) for v in proposed_vs]
+    proposed_values = proposed_vs # [NumberType().asVentureValue(v) for v in proposed_vs]
     registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
     xiWeight = regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {}) # Mutates the trace
     # The weight arithmetic is given by the Hamiltonian being
@@ -528,33 +528,34 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     return (trace, xiWeight - rhoWeight + start_K - end_K)
 
   def sampleMomenta(self, currentValues):
-    return [scipy.stats.norm.rvs(loc=0, scale=1) for _ in currentValues]
+    def sample_normal(_):
+      return scipy.stats.norm.rvs(loc=0, scale=1)
+    return [v.map_real(sample_normal) for v in currentValues]
   def kinetic(self, momenta):
     # This is the log density of sampling these momenta, up to an
     # additive constant
-    return sum([m*m for m in momenta]) / 2.0
+    return sum([m.dot(m) for m in momenta]) / 2.0
 
   def evolve(self, grad_U, start_q, start_grad_q, start_p):
     epsilon = self.epsilon
     num_steps = self.num_steps
-    q = [NumberType().asPython(qi) for qi in start_q]
+    q = start_q # [NumberType().asPython(qi) for qi in start_q]
     # The initial momentum half-step
     dpdt = start_grad_q
-    # TODO This code would look much better with numpy
-    p = [pi - epsilon * dpdti / 2.0 for (pi, dpdti) in zip(start_p, dpdt)]
+    p = [pi - dpdti * (epsilon / 2.0) for (pi, dpdti) in zip(start_p, dpdt)]
 
     for i in range(int(num_steps)):
       # Position step
-      q = [qi + epsilon * pi for (qi, pi) in zip(q,p)]
+      q = [qi + pi * epsilon for (qi, pi) in zip(q,p)]
 
       # Momentum step, except at the end
       if i < num_steps - 1:
         dpdt = grad_U(q)
-        p = [pi - epsilon * dpdti for (pi, dpdti) in zip(p, dpdt)]
+        p = [pi - dpdti * epsilon for (pi, dpdti) in zip(p, dpdt)]
 
     # The final momentum half-step
     dpdt = grad_U(q)
-    p = [pi - epsilon * dpdti / 2.0 for (pi, dpdti) in zip(p, dpdt)]
+    p = [pi - dpdti * (epsilon / 2.0) for (pi, dpdti) in zip(p, dpdt)]
 
     # Negate momenta at the end to make the proposal symmetric
     # (irrelevant if the kinetic energy function is symmetric)

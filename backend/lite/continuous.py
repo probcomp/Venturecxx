@@ -28,14 +28,19 @@ class MVNormalOutputPSP(RandomPSP):
     return -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
           -.5*len(sigma)*np.log(np.pi)-.5*np.log(npla.det(sigma))
 
+<<<<<<< HEAD
   def gradientOfLogDensity(self, x, params):
     [mu,sigma] = [np.array(u) for u in params]
+=======
+  def gradientOfLogDensity(self, x, args):
+    (mu, sigma) = (np.array(args[0]), args[1])
+>>>>>>> origin/hamiltonian
     isigma = npla.inv(sigma)
     xvar = np.dot(x-mu, np.transpose(x-mu))
     gradX = -np.dot(isigma, np.transpose(x-mu))
     gradMu = np.dot(isigma, np.transpose(x-mu))
     gradSigma = .5*np.dot(np.dot(isigma, xvar),isigma)-.5*isigma
-    return gradX, [gradMu, gradSigma]
+    return np.array(gradX)[0].tolist(), [np.array(gradMu)[0].tolist(), gradSigma]
 
   def description(self,name):
     return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name

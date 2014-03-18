@@ -26,15 +26,20 @@ import venture.unit as u
 class HMCDemo(u.VentureUnit):
   def makeAssumes(self):
     program = """
-[ASSUME x (normal 0 3)]
-[ASSUME y (normal 0 2)]
+[ASSUME x (uniform_continuous -10 10)]
+[ASSUME y (uniform_continuous -10 10)]
+[ASSUME out
+ (if (< x 0)
+     (multivariate_normal (array x y) (matrix (list (list 1 3) (list 3 1))))
+     (multivariate_normal (array x y) (matrix (list (list 3 0) (list 0 3)))))]
 """
     commands = [command_str.split("]")[0].split(" ", 1) for command_str in program.strip().split("[ASSUME ") if command_str]
     for (var, exp) in commands:
       self.assume(var, exp)
 
   def makeObserves(self):
-    pass
+    self.observe("(lookup out 0)", 0)
+    self.observe("(lookup out 1)", 1)
 
 def plot_contours(xs, ys, func):
   xmin = min(xs)

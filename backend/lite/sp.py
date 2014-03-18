@@ -89,6 +89,15 @@ used in the implementation of TypedPSP and TypedLKernel."""
     else:
       return [self.args_types[0].asPythonNoneable(v) for v in lst]
 
+  def wrap_arg_list(self, lst):
+    if not self.variadic:
+      assert len(lst) >= self.min_req_args
+      assert len(lst) <= len(self.args_types)
+      # v could be None when computing log density bounds for a torus
+      return [self.args_types[i].asVentureValue(v) for (i,v) in enumerate(lst)]
+    else:
+      return [self.args_types[0].asVentureValue(v) for v in lst]
+
   def _name_for_fixed_arity(self, args_types):
     args_spec = " ".join([t.name() for t in args_types])
     variadicity_mark = " ..." if self.variadic else ""

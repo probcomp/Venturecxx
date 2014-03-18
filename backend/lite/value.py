@@ -6,6 +6,7 @@ https://docs.google.com/document/d/1URnJh5hNJ___-dwzIpca5Y2h-Mku1n5zjpGCiFBcUHM/
 from abc import ABCMeta
 from numbers import Number
 from request import Request # TODO Pull that file in here?
+import numpy as np
 
 # TODO Define reasonable __str__ and/or __repr__ methods for all the
 # values and all the types.
@@ -24,6 +25,11 @@ class VentureValue(object):
   def getMatrix(self): raise Exception("Cannot convert %s to matrix" % type(self))
   def getSP(self): raise Exception("Cannot convert %s to sp" % type(self))
   def getEnvironment(self): raise Exception("Cannot convert %s to environment" % type(self))
+
+  # Some Venture value types form a natural vector space over reals,
+  # so overload addition, subtraction, and multiplication by scalars.
+  # def __add__(self, other), and also __radd__, __neg__, __sub__,
+  # __mul__, __rmul__, and dot
 
   def asStackDict(self): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
   @staticmethod
@@ -58,13 +64,47 @@ class VentureNumber(VentureValue):
   def __init__(self,number):
     assert isinstance(number, Number)
     self.number = number
-  def __repr__(self): return "Number(%s)" % self.number
+  def __repr__(self):
+    if hasattr(self, "number"):
+      return "VentureNumber(%s)" % self.number
+    else:
+      return "VentureNumber(uninitialized)"
   def getNumber(self): return self.number
   def asStackDict(self): return {"type":"number","value":self.number}
   @staticmethod
   def fromStackDict(thing): return VentureNumber(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.number, other.number)
   def __hash__(self): return hash(self.number)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureNumber(self.number + other.number)
+  def __radd__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureNumber(other.number + self.number)
+  def __neg__(self):
+    return VentureNumber(-self.number)
+  def __sub__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureNumber(self.number - other.number)
+  def __mul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureNumber(self.number * other)
+  def __rmul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureNumber(other * self.number)
+  def dot(self, other):
+    assert isinstance(other, VentureNumber)
+    return self.number * other.number
+  def map_real(self, f):
+    return VentureNumber(f(self.number))
 
 def stupidCompare(thing, other):
   # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
@@ -146,6 +186,37 @@ interface here is compatible with one possible path."""
     # anyway, so might as well eventually use `in` here.
     return any(obj.equal(li) for li in self.array)
   def size(self): return len(self.array)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureArray([x + y for (x,y) in zip(self.array, other.array)])
+  def __radd__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureArray([y + x for (x,y) in zip(self.array, other.array)])
+  def __neg__(self):
+    return VentureArray([-x for x in self.array])
+  def __sub__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureArray([x - y for (x,y) in zip(self.array, other.array)])
+  def __mul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureArray([x * other for x in self.array])
+  def __rmul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureArray([other * x  for x in self.array])
+  def dot(self, other):
+    return sum([x.dot(y) for (x,y) in zip(self.array, other.array)])
+  def map_real(self, f):
+    return VentureArray([x.map_real(f) for x in self.array])
+  def __repr__(self):
+    return "VentureArray(%s)" % self.array
 
 class VentureNil(VentureValue):
   def __init__(self): pass
@@ -257,6 +328,36 @@ class VentureMatrix(VentureValue):
     return {"type":"matrix", "value":self.matrix}
   @staticmethod
   def fromStackDict(thing): return VentureMatrix(thing["value"])
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureMatrix(self.matrix + other.matrix)
+  def __radd__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureMatrix(other.matrix + self.matrix)
+  def __neg__(self):
+    return VentureMatrix(-self.matrix)
+  def __sub__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureMatrix(self.matrix - other.matrix)
+  def __mul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureMatrix(self.matrix * other)
+  def __rmul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureMatrix(other * self.matrix)
+  def dot(self, other):
+    assert isinstance(other, VentureMatrix)
+    return np.sum(np.multiply(self.matrix, other.matrix))
+  def map_real(self, f):
+    return VentureMatrix(np.vectorize(f)(self.matrix))
 
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
@@ -275,6 +376,7 @@ venture_types = [
 
 stackable_types = {
   "number": VentureNumber,
+  "real": VentureNumber,
   "atom": VentureAtom,
   "boolean": VentureBool,
   "symbol": VentureSymbol,
