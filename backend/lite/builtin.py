@@ -60,7 +60,9 @@ def typed_func(*args, **kwargs):
 # previous version, which accepts the whole args object (where this
 # one splats the operand values).
 def deterministic_psp(f, descr=None, sim_grad=None):
-  return func_psp(lambda args: f(*args.operandValues), descr, sim_grad=lambda args, direction: sim_grad(args.operandValues, direction))
+  def new_grad(args, direction):
+    return sim_grad(args.operandValues, direction)
+  return func_psp(lambda args: f(*args.operandValues), descr, sim_grad=(new_grad if sim_grad else None))
 
 def deterministic_typed_psp(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
   return TypedPSP(deterministic_psp(f, descr, sim_grad), SPType(args_types, return_type, **kwargs))
@@ -165,6 +167,7 @@ def builtInSPsList():
 
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),
+                                           sim_grad=lambda args, direc: [0, direc, 0] if args[0] else [0, 0, direc],
                                            descr="%s returns either its first or second argument.")],
            [ "make_csp", no_request(csp.MakeCSPOutputPSP()) ],
 
