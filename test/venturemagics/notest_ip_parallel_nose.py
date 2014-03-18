@@ -390,6 +390,7 @@ def testAll_IP():
             print '... passed'
 
 
-    tests = [ testMrMap, testMulti, testSnapshot, testDirectives,testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
+    tests = [ testMrMap, testMulti, testSnapshot, testDirectives,testCopyRipl]
+    #,testAddRemoveSize,]#testParallelCopyFunction,testCopyFunction]
     [t() for t in tests]
     print 'passed all tests for ip_parallel'
