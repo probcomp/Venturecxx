@@ -32,20 +32,26 @@ def esr_output(request): return VentureSP(request, ESRRefOutputPSP())
 def typed_nr(output, args_types, return_type, **kwargs):
   return no_request(TypedPSP(output, SPType(args_types, return_type, **kwargs)))
 
-def func_psp(f, descr=None):
+def func_psp(f, descr=None, sim_grad=None):
   class FunctionPSP(PSP):
     def __init__(self, descr):
       self.descr = descr
+      self.sim_grad = sim_grad
       if self.descr is None:
         self.descr = "deterministic %s"
     def simulate(self,args):
       return f(args)
+    def gradientOfSimulate(self, args, direction):
+      if self.sim_grad:
+        return self.sim_grad(args, direction)
+      else:
+        raise Exception("Cannot compute simulation gradient of %s", self.descr)
     def description(self,name):
       return self.descr % name
   return FunctionPSP(descr)
 
-def typed_func_psp(f, args_types, return_type, descr=None, **kwargs):
-  return TypedPSP(func_psp(f, descr), SPType(args_types, return_type, **kwargs))
+def typed_func_psp(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
+  return TypedPSP(func_psp(f, descr, sim_grad), SPType(args_types, return_type, **kwargs))
 
 def typed_func(*args, **kwargs):
   return no_request(typed_func_psp(*args, **kwargs))
@@ -53,17 +59,17 @@ def typed_func(*args, **kwargs):
 # TODO This should actually be named to distinguish it from the
 # previous version, which accepts the whole args object (where this
 # one splats the operand values).
-def deterministic_psp(f, descr=None):
-  return func_psp(lambda args: f(*args.operandValues), descr)
+def deterministic_psp(f, descr=None, sim_grad=None):
+  return func_psp(lambda args: f(*args.operandValues), descr, sim_grad=lambda args, direction: sim_grad(args.operandValues, direction))
 
-def deterministic_typed_psp(f, args_types, return_type, descr=None, **kwargs):
-  return TypedPSP(deterministic_psp(f, descr), SPType(args_types, return_type, **kwargs))
+def deterministic_typed_psp(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
+  return TypedPSP(deterministic_psp(f, descr, sim_grad), SPType(args_types, return_type, **kwargs))
 
-def deterministic(f, descr=None):
-  return no_request(deterministic_psp(f, descr))
+def deterministic(f, descr=None, sim_grad=None):
+  return no_request(deterministic_psp(f, descr, sim_grad))
 
-def deterministic_typed(f, args_types, return_type, descr=None, **kwargs):
-  return typed_nr(deterministic_psp(f, descr), args_types, return_type, **kwargs)
+def deterministic_typed(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
+  return typed_nr(deterministic_psp(f, descr, sim_grad), args_types, return_type, **kwargs)
 
 def binaryNum(f, descr=None):
   return deterministic_typed(f, [v.NumberType(), v.NumberType()], v.NumberType(), descr=descr)
