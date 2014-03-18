@@ -62,6 +62,10 @@ class NormalOutputPSP(RandomPSP):
       raise Exception("Cannot rejection sample psp with unbounded likelihood")
 
   def simulate(self,args): return self.simulateNumeric(args.operandValues)
+  def gradientOfSimulate(self, args, value, direction):
+    (mu, sigma) = args.operandValues
+    deviation = (value - mu) / sigma
+    return [direction*1, direction*deviation]
   def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues)
   def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 

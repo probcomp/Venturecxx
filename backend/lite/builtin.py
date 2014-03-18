@@ -41,7 +41,9 @@ def func_psp(f, descr=None, sim_grad=None):
         self.descr = "deterministic %s"
     def simulate(self,args):
       return f(args)
-    def gradientOfSimulate(self, args, direction):
+    def gradientOfSimulate(self, args, _value, direction):
+      # Don't need the value if the function is deterministic, because
+      # it consumes no randomness.
       if self.sim_grad:
         return self.sim_grad(args, direction)
       else:

@@ -141,7 +141,7 @@ def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
   if compute_gradient and any([scaffold.isResampling(p) or scaffold.isBrush(p) for p in trace.parentsAt(node)]):
     # Don't need to compute the simulation gradient if the parents are
     # not in the DRG or brush.
-    grad = psp.gradientOfSimulate(args, omegaDB.getPartial(node))
+    grad = psp.gradientOfSimulate(args, omegaDB.getValue(node), omegaDB.getPartial(node))
     omegaDB.addPartials(trace.parentsAt(node), grad)
 
   return weight
