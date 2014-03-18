@@ -5,6 +5,9 @@ import numpy.random as npr
 import numpy.linalg as npla
 import numpy as np
 
+# For some reason, pylint can never find numpy members (presumably metaprogramming).
+# pylint: disable=no-member
+
 from psp import RandomPSP
 from lkernel import LKernel
 
