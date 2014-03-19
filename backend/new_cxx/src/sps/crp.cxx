@@ -16,6 +16,11 @@
 // (cannot use a type with a comma)
 typedef pair<uint32_t,uint32_t> tableCountPair;
 
+boost::python::object CRPSPAux::toPython(Trace * trace) const
+{
+  return toPythonDict(trace, tableCounts);
+}
+
 // Maker
 VentureValuePtr MakeCRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
@@ -31,15 +36,13 @@ VentureValuePtr MakeCRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
 
 CRPSP::CRPSP(double alpha, double d) : SP(new NullRequestPSP(), new CRPOutputPSP(alpha, d)), alpha(alpha), d(d) {}
 
-boost::python::dict CRPSP::toPython(shared_ptr<SPAux> spAux) const
+boost::python::dict CRPSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) const
 {
   boost::python::dict crp;
   crp["type"] = "crp";
   crp["alpha"] = alpha;
   crp["d"] = d;
-  shared_ptr<CRPSPAux> crpSPAux = dynamic_pointer_cast<CRPSPAux>(spAux);
-  assert(crpSPAux);
-  crp["counts"] = toPythonDict(crpSPAux->tableCounts);
+  crp["counts"] = spAux->toPython(trace);
   
   boost::python::dict value;
   value["type"] = "sp";

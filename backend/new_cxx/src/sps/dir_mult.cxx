@@ -7,6 +7,11 @@
 
 #include<boost/range/numeric.hpp>
 
+boost::python::object DirMultSPAux::toPython(Trace * trace) const
+{
+  return toPythonList(trace, counts);
+}
+
 // Collapsed Symmetric
 
 /* MakeSymDirMultOutputPSP */
@@ -16,10 +21,24 @@ VentureValuePtr MakeSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng
   
   double alpha = args->operandValues[0]->getDouble();
   int n = args->operandValues[1]->getInt();
+  return VentureValuePtr(new VentureSPRecord(new SymDirMultSP(alpha, n),new DirMultSPAux(n)));
+}
+
+SymDirMultSP::SymDirMultSP(double alpha, size_t n) : SP(new NullRequestPSP(), new SymDirMultOutputPSP(alpha, n)), alpha(alpha), n(n) {}
+
+boost::python::dict SymDirMultSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) const
+{
+  boost::python::dict symDirMult;
+  symDirMult["type"] = "sym_dir_mult";
+  symDirMult["alpha"] = alpha;
+  symDirMult["n"] = n;
+  symDirMult["counts"] = spAux->toPython(trace);
   
-  PSP * requestPSP = new NullRequestPSP();
-  PSP * outputPSP = new SymDirMultOutputPSP(alpha, n);
-  return VentureValuePtr(new VentureSPRecord(new SP(requestPSP,outputPSP),new DirMultSPAux(n)));
+  boost::python::dict value;
+  value["type"] = "sp";
+  value["value"] = symDirMult;
+  
+  return value;
 }
 
 /* SymDirMultOutputPSP */

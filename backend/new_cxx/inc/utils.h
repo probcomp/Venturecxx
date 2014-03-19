@@ -2,14 +2,16 @@
 #define UTILS_H
 
 #include "types.h"
-#include <gsl/gsl_rng.h>
+#include "value.h"
 
+#include <gsl/gsl_rng.h>
 #include <cmath>
-#include <boost/foreach.hpp>
 #include <algorithm>
 #include <numeric>
 
+#include <boost/foreach.hpp>
 #include <boost/python/dict.hpp>
+#include <boost/python/list.hpp>
 
 /* Maps exp over the vector, normalizing so that the maximum is 1. */
 vector<double> mapExpUptoMultConstant(const vector<double>& xs);
@@ -64,15 +66,32 @@ vector<vector<T> > cartesianProduct(vector<vector<T> > sequences)
   return products;
 }
 
+template <class T>
+boost::python::object toPython(Trace * trace, const T& t)
+{ 
+  return boost::python::object(t);
+}
+
 // Converts a C++ map to a python dict
-template <class K, class V>
-boost::python::dict toPythonDict(std::map<K, V>& map) {
-  typename std::map<K, V>::iterator iter;
-  boost::python::dict dictionary;
-  for (iter = map.begin(); iter != map.end(); ++iter) {
-    dictionary[iter->first] = iter->second;
+template <class Map>
+boost::python::dict toPythonDict(Trace * trace, const Map& map) {
+  boost::python::dict dict;
+  BOOST_FOREACH(const typename Map::value_type& pair, map)
+  {
+    dict[toPython(trace, pair.first)["value"]] = toPython(trace, pair.second);
   }
-  return dictionary;
+  return dict;
+}
+
+// Converts a C++ vector to a python list
+template <class T>
+boost::python::list toPythonList(Trace * trace, const vector<T>& vec) {
+  boost::python::list list;
+  BOOST_FOREACH(const T& v, vec)
+  {
+    list.append(toPython(trace, v));
+  }
+  return list;
 }
 
 #endif
