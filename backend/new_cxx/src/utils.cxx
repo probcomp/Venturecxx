@@ -121,3 +121,12 @@ double logDensityCategorical(VentureValuePtr val, const Simplex & xs,const vecto
   assert(false);
 }
 
+// needs to go in the cxx, for an explanation see
+// http://stackoverflow.com/questions/4445654/multiple-definition-of-template-specialization-when-using-different-objects
+template <>
+boost::python::object toPython<VentureValuePtr>(Trace * trace, const VentureValuePtr& v)
+{
+  return v->toPython(trace);
+}
+
+

@@ -1,4 +1,5 @@
 #include "values.h"
+#include "utils.h"
 #include "Eigen/Dense"
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
@@ -300,7 +301,7 @@ boost::python::dict VentureDictionary::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "dict";
-  value["value"] = boost::python::object(false); // TODO
+  value["value"] = toPythonDict(trace, dict);
   return value;
 }
 
