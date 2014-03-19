@@ -49,7 +49,7 @@ boost::python::dict VentureValue::toPython(Trace * trace) const
 { 
   boost::python::dict value;
   value["type"] = "unknown";
-  value["value"] = boost::python::object(false);
+  value["value"] = "unknown";
   return value;
 }
 
