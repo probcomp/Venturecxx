@@ -9,13 +9,6 @@
 #include "sp.h"
 #include "db.h"
 #include "sps/scope.h"
-#include <cmath>
-#include <cfloat>
-#include <cassert>
-
-#include <iostream>
-using std::cout;
-using std::endl;
 
 /* Constructor */
 
