@@ -9,6 +9,7 @@
 #include "sp.h"
 #include "db.h"
 #include "sps/scope.h"
+#include "math.h"
 
 /* Constructor */
 
