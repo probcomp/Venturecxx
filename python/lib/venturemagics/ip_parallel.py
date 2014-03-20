@@ -957,8 +957,29 @@ prog2='''
 [assume x (mem (lambda (i) (noise (ptype (z i) ) ) ) )]'''
 
 
+library_string='''
+[assume zeros (lambda (n) (if (= n 0) (list) (pair 0 (zeros (minus n 1)))))]
+[assume ones (lambda (n) (if (= n 0) (list) (pair 1 (ones (minus n 1)))))]         [assume is_nil (lambda (lst) (= lst (list)) ) ]
+[assume map (lambda (f lst) (if (is_nil lst) nil 
+                                  (pair (f (first lst)) (map f (rest lst))) ) ) ]  
+[assume repeat (lambda (th n) (if (= n 0) (list) (pair (th) (repeat th (- n 1) ) ) ) ) ]
+[assume srange (lambda (b e s) (if (gte b e) (list)
+                                (pair b (srange (+ b s) e s) ) ) ) ]
+[assume range (lambda (n) (srange 0 n 1) ) ]
+[assume append (lambda (lst x) (if (is_nil lst) (list x)
+                               (pair (first lst) (append (rest lst) x) ) ) )]
+[assume cat (lambda (xs ys) (if (is_nil ys) xs
+                                 (cat (append xs (first ys)) (rest ys) ) ) )]
+[assume fold (lambda (f l el) (if (is_nil l) el
+                                (f (first l) (fold f (rest l) el) ) ) ) ]
+[assume suml (lambda (xs) (fold + xs 0) )]
+[assume prodl (lambda (xs) (fold * xs 1) ) ]
+'''
 
-
+def test_ripls(print_lib=False):
+    vs=[make_lite_church_prime_ripl(), make_church_prime_ripl()]
+    [v.execute_program(library_string) for v in vs]
+    return vs
 
 
 
