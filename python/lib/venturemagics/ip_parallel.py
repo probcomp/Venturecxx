@@ -8,7 +8,8 @@ from scipy.stats import kde
 gaussian_kde = kde.gaussian_kde
 import subprocess,time, pickle
 
-
+mk_c = make_church_prime_ripl
+mk_l = make_lite_church_prime_ripl
 
 ### IPython Parallel Magics
 ## Use: See examples in /examples
@@ -900,61 +901,6 @@ try:
 except:
     print 'no ipython'
 
-
-
-
-
-## Use examples: to be moved to dedicated example scripts
-
-def sp(no_ripls=2):    
-    v = MRipl(no_ripls,lite
-=True)
-    v.assume('r','(normal 0 30)',label='r')
-    v.assume('s','(normal 0 30)',label='s')
-    v.assume('w1','(normal (+ r s) 5.)',label='w1')
-    v.observe('w1','50.')
-    v.assume('w2','(normal (+ r s) 6.)',label='w2')
-    v.observe('w2','50.')
-    return v
-
-def crp(no_ripls=2):
-    prog='''
-    [assume alpha (uniform_continuous .9 1)]
-    [assume crp (make_crp alpha) ]
-    [assume z (mem (lambda (i) (crp) ) ) ]
-    [assume mu (mem (lambda (z dim) (normal 0 30) ) ) ] 
-    [assume sig (mem (lambda (z dim) (uniform_continuous .1 1) ) ) ]
-    [assume x (mem (lambda (i dim) (normal (mu (z i) dim) (sig (z i) dim)))  ) ]'''
-    v=make_church_prime_ripl()
-    v.execute_program(prog)
-    n=100
-    xs = [v.predict('(x ' + str(i) + ' ' +str(j) +')') for i in range(n) for j in range(2) ]
-    obs = [v.observe('(x ' + str(i) + ' ' +str(j) +')', str(xs[i*(j+1)]) ) for i in range(n) for j in range(2) ]
-    x=np.array(xs)[range(0,len(xs),2)]
-    y=np.array(xs)[range(1,len(xs),2)]
-    return prog,v,xs,x,y
-
-
-
-
-prog2='''
-
-[assume nps (list (quote bob) (quote time) (quote space) (quote truth) (quote alice) (quote fate) (quote man) (quote beast) (quote nature) (quote he) (quote she) (quote cynthia) (quote zeus) ) ]
-[assume np (lambda () (lookup nps (uniform_discrete 0 (len nps)) ) ) ]
-[assume uni_simplex (lambda (n) (map_list (lambda (x) (div 1 n)) (zeros n) ) ) ]
-[assume np2 (lambda () (lookup nps (categorical (simplex (uni_simplex (len nps) ) ) ) ) ) ]
-[assume npz (repeat np 3) ]
-[assume alpha (uniform_continuous .9 1)]
-[assume crp (make_crp alpha) ]
-[assume z (mem (lambda (i) (crp) ) ) ]
-[assume s (pair (np) (vp) ) ]
-[assume ptype (mem (lambda (z) (s))) ]
-[assume noise (lambda (p) (if (flip .1) 
-                                (pair (first p) (pair (rest p) (rest p) ) )
-                                (if (flip .2) 
-                                   (pair (first p) (pair (adv) (rest p) ) ) 
-                                   p ) ) ) ]
-[assume x (mem (lambda (i) (noise (ptype (z i) ) ) ) )]'''
 
 
 library_string='''
