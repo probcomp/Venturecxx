@@ -906,7 +906,7 @@ except:
 library_string='''
 [assume zeros (lambda (n) (if (= n 0) (list) (pair 0 (zeros (minus n 1)))))]
 [assume ones (lambda (n) (if (= n 0) (list) (pair 1 (ones (minus n 1)))))]         [assume is_nil (lambda (lst) (= lst (list)) ) ]
-[assume map (lambda (f lst) (if (is_nil lst) nil 
+[assume map (lambda (f lst) (if (is_nil lst) (list) 
                                   (pair (f (first lst)) (map f (rest lst))) ) ) ]  
 [assume repeat (lambda (th n) (if (= n 0) (list) (pair (th) (repeat th (- n 1) ) ) ) ) ]
 [assume srange (lambda (b e s) (if (gte b e) (list)
@@ -922,9 +922,14 @@ library_string='''
 [assume prodl (lambda (xs) (fold * xs 1) ) ]
 '''
 
+lite_addendum='''
+[assume nil (list)]
+'''
+
 def test_ripls(print_lib=False):
     vs=[make_lite_church_prime_ripl(), make_church_prime_ripl()]
     [v.execute_program(library_string) for v in vs]
+    vs[0].execute_program(lite_addendum)
     return vs
 
 
