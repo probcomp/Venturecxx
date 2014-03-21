@@ -110,7 +110,8 @@ def builtInSPsList():
            [ "gte",   deterministic(lambda x,y: v.VentureBool(x.compare(y) >= 0),
                                     "%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares greater than or equal to its second") ],
            [ "lt",    deterministic(lambda x,y: v.VentureBool(x.compare(y) <  0),
-                                    "%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares less than its second") ],
+                                    sim_grad=lambda args, direction: [0 for _ in args],
+                                    descr="%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares less than its second") ],
            [ "lte",   deterministic(lambda x,y: v.VentureBool(x.compare(y) <= 0),
                                     "%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares less than or equal to its second") ],
            # Only makes sense with VentureAtom/VentureNumber distinction
