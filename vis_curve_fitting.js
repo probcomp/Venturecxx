@@ -90,12 +90,12 @@ function InitializeDemo() {
     /* Stores the obs_id of points that the user has clicked on. */
     var points_to_forget = {};
     
-    var model_types = ["linear", "advanced"];
+    var model_types = ["simple", "linear", "advanced"];
   
     /* Latent variables in the model. */
     var model_variables = {
         /* Both */
-    	model_type: "linear",
+        model_type: "linear",
         noise: 0.1,
 
         /* Linear */
@@ -131,9 +131,9 @@ function InitializeDemo() {
     /* Raphael Objects */
     var paper;
     var paper_rect;
-	
-	var points = {};
-	
+    
+    var points = {};
+    
     /* Will be a map from OBS_ID -> POINT, where POINT contains the Raphael objects
      * corresponding to a single point. */
     var local_points = {};
@@ -147,6 +147,24 @@ function InitializeDemo() {
         $("#loading-status").html("Demo loaded successfully!");
         $("#loading-status").remove();
         ripl.register_a_request_processed_callback(function () {});
+    };
+    
+    var LoadSimpleModel = function() {
+        ripl.clear();
+        ripl.set_mode("church_prime");
+        
+        /* Model metadata */
+        ripl.assume('demo_id', demo_id, 'demo_id');
+        ripl.assume('model_type', '(quote simple)', 'model_type');
+        
+        /* Linear */
+        ripl.assume('a','(normal 0.0 10.0)');
+        ripl.assume('b','(normal 0.0 1.0)');
+        ripl.assume('f','(lambda (x) (+ a (* b x)))');
+        
+        ripl.assume('noise', '1.0')
+        ripl.assume('obs_fn','(lambda (obs_id x) (normal (f (normal x noise)) noise))');
+        
     };
     
     var LoadLinearModel = function() {
@@ -216,7 +234,7 @@ function InitializeDemo() {
         ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (clean_func (normal x noise))) (if (is_outlier obs_id) outlier_sigma noise)))');
     };
     
-    var modelLoaders = {linear: LoadLinearModel, advanced: LoadAdvancedModel};
+    var modelLoaders = {simple: LoadSimpleModel, linear: LoadLinearModel, advanced: LoadAdvancedModel};
     
     var LoadModel = function() {
         num_directives_loaded = 0;
@@ -358,7 +376,11 @@ function InitializeDemo() {
         
         ripl.predict(x, obs_str + '_x');
         ripl.observe('(obs_fn ' + obs_id + ' ' + x + ')', y, obs_str + '_y');
-        ripl.predict('(is_outlier ' + obs_id + ')', obs_str + '_outlier')
+        if (model_variables.model_type == "simple") {
+            ripl.predict('false', obs_str + '_outlier');
+        } else {
+            ripl.predict('(is_outlier ' + obs_id + ')', obs_str + '_outlier');
+        }
     };
     
     var DeletePoint = function(obs_id) {
@@ -379,21 +401,14 @@ function InitializeDemo() {
     };
     
     var SwitchModel = function(model_type, directives) {
-    	model_variables.model_type = model_type;
-    	LoadModel();
+        model_variables.model_type = model_type;
+        LoadModel();
         
-        var makeObserveOrPredict = function(directive) {
-        	switch(directive.instruction) {
-        	case "observe":
-        		ripl.observe(exprToString(directive.expression), directive.value, directive.label);
-    			break;
-			case "predict":
-				ripl.predict(exprToString(directive.expression), directive.label);
-				break;
-        	}
-        };
-        
-        directives.forEach(makeObserveOrPredict);
+        // reload all of the observed points
+        for (obs_id in points) {
+            p = points[obs_id];
+            ObservePoint(obs_id, p.x, p.y);
+        }
     }
     
     /* This is the callback that we pass to GET_DIRECTIVES_CONTINUOUSLY. */
@@ -408,12 +423,12 @@ function InitializeDemo() {
         var model_type = getModelType();
         
         if (model_variables.model_type != model_type) {
-        	SwitchModel(model_type, directives);
+            SwitchModel(model_type, directives);
         }
         
         UpdateVentureCode(directives);
-	    
-	    /* Get the observed points from the model. */
+        
+        /* Get the observed points from the model. */
         GetPoints(directives);
 
         var current_curve = getCurve[model_variables.model_type]();
@@ -492,17 +507,17 @@ function InitializeDemo() {
     };
     
     var getModelType = function() {
-    	for (var i = 0; i < model_types.length; ++i) {
-    		if (document.getElementById(model_types[i]).checked) {
-    			return model_types[i];
-    		}
-    	}
-    	return null;
+        for (var i = 0; i < model_types.length; ++i) {
+            if (document.getElementById(model_types[i]).checked) {
+                return model_types[i];
+            }
+        }
+        return null;
     };
     
     var LinearCurve = function() {
         var curve = function(x) {
-        	return model_variables.a + model_variables.b * x;
+            return model_variables.a + model_variables.b * x;
         };
         
         return curve;
@@ -531,7 +546,7 @@ function InitializeDemo() {
         return curve;
     };
     
-    var getCurve = {linear: LinearCurve, advanced: AdvancedCurve};
+    var getCurve = {simple: LinearCurve, linear: LinearCurve, advanced: AdvancedCurve};
     
     var DrawCurve = function(curve) {
         var step = 1;
@@ -604,6 +619,7 @@ function InitializeDemo() {
         <td style="vertical-align: top;">\
         <table width="100%" height="120px">\
         <tr>\
+        <label for="simple"><input type="radio" name="model_type" id="simple" value="simple">Simple Model</label>\
         <label for="linear"><input type="radio" name="model_type" id="linear" value="linear">Linear Model</label>\
         <label for="advanced"><input type="radio" name="model_type" id="advanced" value="advanced">Advanced Model</label>\
         <br><br>\
@@ -615,7 +631,7 @@ function InitializeDemo() {
     };
 
     var RunDemo = function() {
-    	document.getElementById(model_variables.model_type).checked = true;
+        document.getElementById(model_variables.model_type).checked = true;
         ripl.get_directives_continuously(
             [[50, 
             RenderAll,
@@ -634,7 +650,7 @@ function InitializeDemo() {
             ripl.start_continuous_inference();
             RunDemo();
         } else if (directives[0].symbol == "demo_id" && directives[0].value == demo_id) {
-        	model_variables.model_type = directives[1].value;
+            model_variables.model_type = directives[1].value;
             RunDemo();
         } else {
             throw "Error: Something other than curve-fitting demo running in Venture."

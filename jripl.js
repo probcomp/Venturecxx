@@ -92,7 +92,7 @@ function jripl() {
             },
             // TODO this error callback needs updating
             error: function(data) { 
-                    console.log(data);
+                    console.log(data.toString());
                     },
             complete: function() {}
         });
