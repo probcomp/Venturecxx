@@ -129,4 +129,21 @@ boost::python::object toPython<VentureValuePtr>(Trace * trace, const VentureValu
   return v->toPython(trace);
 }
 
+template <>
+boost::python::object toPython<uint32_t>(Trace * trace, const uint32_t& st)
+{
+  boost::python::dict dict;
+  dict["type"] = "number";
+  dict["value"] = st;
+  return dict;
+}
+
+template <>
+boost::python::object toPython<double>(Trace * trace, const double& st)
+{
+  boost::python::dict dict;
+  dict["type"] = "number";
+  dict["value"] = st;
+  return dict;
+}
 
