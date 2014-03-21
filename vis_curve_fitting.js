@@ -90,15 +90,17 @@ function InitializeDemo() {
     /* Stores the obs_id of points that the user has clicked on. */
     var points_to_forget = {};
     
-    var model_types = ["simple", "linear", "advanced"];
+    var model_types = ["simple", "advanced"];
   
     /* Latent variables in the model. */
     var model_variables = {
         /* Both */
-        model_type: "linear",
+        model_type: "simple",
+        infer_noise: false,
+        use_outliers: false,
         noise: 0.1,
 
-        /* Linear */
+        /* Simple */
         a: 0,
         b: 0,
         
@@ -156,38 +158,26 @@ function InitializeDemo() {
         /* Model metadata */
         ripl.assume('demo_id', demo_id, 'demo_id');
         ripl.assume('model_type', '(quote simple)', 'model_type');
+        ripl.assume('use_outliers', "" + model_variables.use_outliers);
+        ripl.assume('infer_noise', "" + model_variables.infer_noise);
         
-        /* Linear */
-        ripl.assume('a','(normal 0.0 10.0)');
-        ripl.assume('b','(normal 0.0 1.0)');
-        ripl.assume('f','(lambda (x) (+ a (* b x)))');
-        
-        ripl.assume('noise', '1.0')
-        ripl.assume('obs_fn','(lambda (obs_id x) (normal (f (normal x noise)) noise))');
-        
-    };
-    
-    var LoadLinearModel = function() {
-        ripl.clear();
-        ripl.set_mode("church_prime");
-        
-        /* Model metadata */
-        ripl.assume('demo_id', demo_id, 'demo_id');
-        ripl.assume('model_type', '(quote linear)', 'model_type');
-        
-        /* Outliers */
-        ripl.assume('outlier_prob','(uniform_continuous 0.01 0.3)'); //(beta 1 3)?
-        ripl.assume('is_outlier','(mem (lambda (obs_id) (flip outlier_prob)))');
-        
-        /* Linear */
-        ripl.assume('a','(normal 0.0 10.0)');
-        ripl.assume('b','(normal 0.0 1.0)');
-        ripl.assume('f','(lambda (x) (+ a (* b x)))');
+        if (model_variables.use_outliers) {
+            ripl.assume('outlier_prob','(uniform_continuous 0.001 0.3)'); //(beta 1 3)?
+            ripl.assume('is_outlier','(mem (lambda (obs_id) (flip outlier_prob)))');
+        }
 
-        /* For observations */
-        ripl.assume('noise','(inv_gamma 1.0 1.0)');
-        ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (f (normal x noise))) (if (is_outlier obs_id) 100 noise)))');
+        /* Linear */
+        ripl.assume('a','(normal 0.0 10.0)');
+        ripl.assume('b','(normal 0.0 1.0)');
+        ripl.assume('f','(lambda (x) (+ a (* b x)))');
         
+        ripl.assume('noise', model_variables.infer_noise ? '(inv_gamma 1.0 1.0)' : '1.0')
+        
+        if (model_variables.use_outliers) {
+            ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (f (normal x noise))) (if (is_outlier obs_id) 100 noise)))');
+        } else {
+            ripl.assume('obs_fn','(lambda (obs_id x) (normal (f (normal x noise)) noise))');
+        }
     };
     
     var LoadAdvancedModel = function() {
@@ -234,7 +224,7 @@ function InitializeDemo() {
         ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (clean_func (normal x noise))) (if (is_outlier obs_id) outlier_sigma noise)))');
     };
     
-    var modelLoaders = {simple: LoadSimpleModel, linear: LoadLinearModel, advanced: LoadAdvancedModel};
+    var modelLoaders = {simple: LoadSimpleModel, advanced: LoadAdvancedModel};
     
     var LoadModel = function() {
         num_directives_loaded = 0;
@@ -370,13 +360,13 @@ function InitializeDemo() {
             points[obs_id].obs_id = obs_id;
         }
     };
-        
+    
     var ObservePoint = function(obs_id, x, y) {
         obs_str = 'points_' + obs_id;
         
         ripl.predict(x, obs_str + '_x');
         ripl.observe('(obs_fn ' + obs_id + ' ' + x + ')', y, obs_str + '_y');
-        if (model_variables.model_type == "simple") {
+        if (model_variables.model_type == "simple" && !model_variables.use_outliers) {
             ripl.predict('false', obs_str + '_outlier');
         } else {
             ripl.predict('(is_outlier ' + obs_id + ')', obs_str + '_outlier');
@@ -400,13 +390,38 @@ function InitializeDemo() {
         local_point.noise_circle.attr("ry", 0.25 * Math.abs(yScale) * factor);
     };
     
-    var SwitchModel = function(model_type, directives) {
-        model_variables.model_type = model_type;
+    var CheckModelVariables = function() {
+        var model_type = getModelType();
+        var use_outliers = getUseOutliers();
+        var infer_noise = getInferNoise();
+        
+        var changed = false;
+        
+        if (model_variables.model_type != model_type) {
+            model_variables.model_type = model_type;
+            changed = true;
+        }
+        
+        if (model_variables.use_outliers != use_outliers) {
+            model_variables.use_outliers = use_outliers;
+            changed = true;
+        }
+        
+        if (model_variables.infer_noise != infer_noise) {
+            model_variables.infer_noise = infer_noise;
+            changed = true;
+        }
+        
+        return changed;
+    };
+    
+    var SwitchModel = function(directives) {
         LoadModel();
         
         // reload all of the observed points
         for (obs_id in points) {
             p = points[obs_id];
+            DeletePoint(obs_id);
             ObservePoint(obs_id, p.x, p.y);
         }
     }
@@ -418,14 +433,11 @@ function InitializeDemo() {
         //console.log("Rendering starting")
         then = Date.now()
                 
-        UpdateModelVariables(directives);
-        
-        var model_type = getModelType();
-        
-        if (model_variables.model_type != model_type) {
-            SwitchModel(model_type, directives);
+        if (CheckModelVariables()) {
+            SwitchModel(directives);
         }
         
+        UpdateModelVariables(directives);
         UpdateVentureCode(directives);
         
         /* Get the observed points from the model. */
@@ -515,6 +527,14 @@ function InitializeDemo() {
         return null;
     };
     
+    var getUseOutliers = function() {
+        return document.getElementById("use_outliers").checked;
+    };
+    
+    var getInferNoise = function() {
+        return document.getElementById("infer_noise").checked;
+    };
+    
     var LinearCurve = function() {
         var curve = function(x) {
             return model_variables.a + model_variables.b * x;
@@ -546,7 +566,7 @@ function InitializeDemo() {
         return curve;
     };
     
-    var getCurve = {simple: LinearCurve, linear: LinearCurve, advanced: AdvancedCurve};
+    var getCurve = {simple: LinearCurve, advanced: AdvancedCurve};
     
     var DrawCurve = function(curve) {
         var step = 1;
@@ -620,8 +640,10 @@ function InitializeDemo() {
         <table width="100%" height="120px">\
         <tr>\
         <label for="simple"><input type="radio" name="model_type" id="simple" value="simple">Simple Model</label>\
-        <label for="linear"><input type="radio" name="model_type" id="linear" value="linear">Linear Model</label>\
         <label for="advanced"><input type="radio" name="model_type" id="advanced" value="advanced">Advanced Model</label>\
+        <br>\
+        <label for="use_outliers"><input type="checkbox" id="use_outliers" name="use_outliers">Use Outliers</label>\
+        <label for="infer_noise"><input type="checkbox" id="infer_noise" name="infer_noise">Infer Noise</label>\
         <br><br>\
         <div id="venture_code"></div>\
         </tr>\
@@ -650,7 +672,7 @@ function InitializeDemo() {
             ripl.start_continuous_inference();
             RunDemo();
         } else if (directives[0].symbol == "demo_id" && directives[0].value == demo_id) {
-            model_variables.model_type = directives[1].value;
+            UpdateModelVariables(directives);
             RunDemo();
         } else {
             throw "Error: Something other than curve-fitting demo running in Venture."
