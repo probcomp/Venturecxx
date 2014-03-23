@@ -49,7 +49,7 @@ mk_l = make_lite_church_prime_ripl
 
 
 def px_plot_conditional(mr,limit=2,data=[],other_args):
-mripl.dview.execute( 'results_%s =  [ %s(ripl) for ripl in mripls[%i] ] ' % (p,p,mrid) )
+    mripl.dview.execute( 'results_%s =  [ %s(ripl) for ripl in mripls[%i] ] ' % (p,p,mrid) )
  
  
 #    mr_map plot_conditional 5
