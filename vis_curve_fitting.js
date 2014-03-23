@@ -158,8 +158,8 @@ function InitializeDemo() {
         /* Model metadata */
         ripl.assume('demo_id', demo_id, 'demo_id');
         ripl.assume('model_type', '(quote simple)', 'model_type');
-        ripl.assume('use_outliers', "" + model_variables.use_outliers);
-        ripl.assume('infer_noise', "" + model_variables.infer_noise);
+        ripl.assume('use_outliers', "" + model_variables.use_outliers, 'use_outliers');
+        ripl.assume('infer_noise', "" + model_variables.infer_noise, 'infer_noise');
         
         if (model_variables.use_outliers) {
             ripl.assume('outlier_prob','(uniform_continuous 0.001 0.3)'); //(beta 1 3)?
