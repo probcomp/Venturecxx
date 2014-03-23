@@ -422,8 +422,24 @@ def testAll_IP():
 
             print '... passed'
 
-
-    tests = [ testMrMap, testMulti, testSnapshot, testDirectives, testContinuous, testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
+    
+    
+    def testParaUtils():
+        clear_all_engines()
+        v=MRipl(2,lite=lite)
+        v.assume('model_name','(quote kolmogorov)')
+        name1 = get_name(mr)
+        def store_name(ripl): return get_name(ripl)
+        names = mr_map_f(store_name)['out']
+        assert name1==names[0]=='kolmogorov'
+        
+        print '... passed'
+       # test for mr_plot_cond: load a model, run mr_plot_cond
+       # output should be a set of xys for each ripl we get output from
+       # we can then compare that output to a local ripl, should be similar
+        
+        
+    tests = [ testParaUtils, testMrMap, testMulti, testSnapshot, testDirectives, testContinuous, testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
 
     [t() for t in tests]
     print 'passed all tests for ip_parallel'
