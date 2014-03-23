@@ -48,9 +48,22 @@ mk_l = make_lite_church_prime_ripl
 
 
 
-def px_plot_conditional(mr,limit=2,data=[],other_args):
-    mripl.dview.execute( 'results_%s =  [ %s(ripl) for ripl in mripls[%i] ] ' % (p,p,mrid) )
- 
+def px_plot_conditional(mr,limit=0,data=[],xr=(-4,4),no_xs=100):
+    # we take the default args from real plot_conditional
+    # note we changed limit to zero so that it's always an int (when zero there's no limit)
+  
+    # need to be careful of data: can send with string but maybe better to push the variable and 
+    # and send the variable name, instead of potentially long string
+    store_id = np.random.randint(10**8)
+    mr.dview.execute('plotcond_outs_%i = plot_conditional(mripls[%i], limit=%i, data=%s, xr=%s, no_xs=%i)' % 
+                      (store_id, mr.mrid, limit,str(data),str(xr),no_xs) )
+    
+    ## note, output can only be sent if pickable, and so no figures for rmripls (only local mripls)
+    outs = mr.dview.pull('plotcond_outs_%i' % store_id)                                                                     
+    
+    return outs
+        
+    
  
 #    mr_map plot_conditional 5
 #     pass
