@@ -28,7 +28,32 @@ mk_l = make_lite_church_prime_ripl
 #      display directives would have to be modified (print in vscript)
 # # 6. Need to clean up plotting functions so that they do sensible things
 #   given mistyped input, e.g. sample populations, etc. 
+
+
+## Plan: we want to have the engines import a set of utility functions. one 
+# easy thing for them to do is to import ip_parallel. that way, both their ripls
+# and any local ripls will have access to the same utils when we import ip_parallel.
+# (note that engines will have access via the import and with __module__=ip_para, whereas objects in ip_para
+# will have access via closures.
+
+# engines need heatplot, getname, getobserves (for plotting data). maybe life is easier also
+# if they just have plot_conditional also. that way, we don't have to both mapping it. otoh, 
+# how can be get the engines to do things like limit?
+
+# idea: plot_conditional (and similar) take a list of ripls and iterate over it, optionally
+# producing a plot with all curves on it. then iterate up to 'limit'.
+
+# to use on engines, we just %px plot_conditional(mripls[mr.mrid],limit=4,data=[],....)
+# this way we can customize the plots much more easily. 
+
+
+
+def px_plot_conditional(mr,limit=2,data=[],other_args):
+mripl.dview.execute( 'results_%s =  [ %s(ripl) for ripl in mripls[%i] ] ' % (p,p,mrid) )
  
+ 
+#    mr_map plot_conditional 5
+#     pass
 
 
 
