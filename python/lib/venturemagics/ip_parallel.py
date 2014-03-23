@@ -47,8 +47,33 @@ mk_l = make_lite_church_prime_ripl
 # this way we can customize the plots much more easily. 
 
 
+def heatplot(n2array,nbins=100):
+    """Input is an nx2 array, returns xi,yi,zi for colormesh""" 
+    x, y = n2array.T
+    k = kde.gaussian_kde(n2array.T)
+    xi, yi = np.mgrid[x.min():x.max():nbins*1j, y.min():y.max():nbins*1j]
+    zi = k(np.vstack([xi.flatten(), yi.flatten()]))
+    # plot ax.pcolormesh(xi, yi, zi.reshape(xi.shape))
+    return (xi, yi, zi.reshape(xi.shape))
+    
 
-def px_plot_conditional(mr,limit=0,data=[],xr=(-4,4),no_xs=100):
+def get_name(r_mr):
+    'Input is ripl or mripl, out name string via "model_name" ripl variable
+    try:
+        r_mr.dview; mr=1
+    except:
+        mr=0
+    di_l = r_mr.list_directives()[0] if mr else r_mr.list_directives()
+    if 'model_name' in str(di_l):
+        try:
+            n = r_mr.sample('model_name')[0] if mr else r_mr.sample('model_name')
+            return n
+        except: pass
+    else:
+        return 'anon model'
+
+
+def mr_plot_conditional(mr,limit=0,data=[],xr=(-4,4),no_xs=100):
     # we take the default args from real plot_conditional
     # note we changed limit to zero so that it's always an int (when zero there's no limit)
   
@@ -63,11 +88,6 @@ def px_plot_conditional(mr,limit=0,data=[],xr=(-4,4),no_xs=100):
     
     return outs
         
-    
- 
-#    mr_map plot_conditional 5
-#     pass
-
 
 
 
@@ -190,6 +210,10 @@ class MRipl():
         self.cli = Client() if not(client) else client
         self.dview = self.cli[:]
         self.dview.block = True
+        
+        # import ip_parallel: if we push anything with same name, the pushed thing should take precedence FIXME
+        self.dview.execute('from venture.venturemagics.ip_parallel import *)'
+        
         def p_getpids(): import os; return os.getpid()
         self.pids = self.dview.apply(p_getpids)
       
@@ -198,16 +222,17 @@ class MRipl():
         else:
             self.dview.execute('from venture.shortcuts import make_lite_church_prime_ripl as make_ripl')
         
-        # import as plt for all plotting (note: user may need to have opened
-        # IPNB in inline mode for everything to work -- include in examples)
+        # import plt for plotting 
         self.dview.execute('import matplotlib.pylab as plt')
+        self.dview.execute('import numpy as np')
         self.dview.execute('import pickle')
         self.dview.execute('%pylab inline --no-import-all')
-        #self.dview.execute('%pylab inline
+        
+        # these should overwrite the * import of ip_parallel (we could also alter names)
         self.dview.push(copy_ripl_dict)
         self.dview.execute(make_mripl_string)
        
-       
+    
         self.mrid = self.dview.pull('no_mripls')[0] - 1  # all engines should return same number
         name = 'mripl' if not(name) else name
         self.name_mrid = '%s_%i' % (name,self.mrid)
