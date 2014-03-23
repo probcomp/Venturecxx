@@ -46,6 +46,9 @@ mk_l = make_lite_church_prime_ripl
 # to use on engines, we just %px plot_conditional(mripls[mr.mrid],limit=4,data=[],....)
 # this way we can customize the plots much more easily. 
 
+def if_lst_flatten(l):
+    if type(l[0])==list: return [el for subl in l for el in subl]
+    return l
 
 def heatplot(n2array,nbins=100):
     """Input is an nx2 array, returns xi,yi,zi for colormesh""" 
