@@ -61,7 +61,7 @@ def heatplot(n2array,nbins=100):
     
 
 def get_name(r_mr):
-    'Input is ripl or mripl, out name string via "model_name" ripl variable
+    'Input is ripl or mripl, out name string via "model_name" ripl variable'
     try:
         r_mr.dview; mr=1
     except:
@@ -214,8 +214,8 @@ class MRipl():
         self.dview = self.cli[:]
         self.dview.block = True
         
-        # import ip_parallel: if we push anything with same name, the pushed thing should take precedence FIXME
-        self.dview.execute('from venture.venturemagics.ip_parallel import *)'
+        # FIXME if we push anything with same name, the pushed thing should take precedence
+        self.dview.execute('from venture.venturemagics.ip_parallel import *')
         
         def p_getpids(): import os; return os.getpid()
         self.pids = self.dview.apply(p_getpids)
