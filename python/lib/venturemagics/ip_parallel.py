@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pylab as plt
 from scipy.stats import kde
 gaussian_kde = kde.gaussian_kde
-import subprocess,time, pickle
+import subprocess,time,pickle
 
 mk_c = make_church_prime_ripl
 mk_l = make_lite_church_prime_ripl
@@ -15,16 +15,21 @@ mk_l = make_lite_church_prime_ripl
 ## Use: See examples in /examples
 
 # Tasks: 
-# 1. get to work with import instead of execute
-# 2. push and pull ripls: pass a ripl to the constructor. pull all ripls
-#    from the mripl. use the functions included but retain labels and 
-#    any other arguments of a directive. also consider via pickling (v_lite)
-#    (make it easy to save at least one of current ripls to file)
-# 3. improve type case-switch and plotting support for mixed types
-# 4. add continuous inference and write some unit tests for it
-# 5. have local ripl be optional (and update tests that depend on it)
-# 6. remove plotting from probes and have plotting that can do timeseries
-# 7. think about refactoring so the mripl object has fewer methods
+# 1. Create a list of lite and puma ripls on construction
+# all directives should run on each set apart from infer.
+# If user switches backend, you switch where you run the infers. 
+# (and no_transitions will be restarted). 
+
+# 2. Allow for all_ripls to be local - extending the local ripl. 
+
+# 3. Allow display of directives (assumes or observes) using build_exp
+# 4. Plotting functions should use predict instead of sample (discuss w vkm)
+# # 5. Need to look at Vscript and modify the cell magic for it, also the 
+#      display directives would have to be modified (print in vscript)
+# # 6. Need to clean up plotting functions so that they do sensible things
+#   given mistyped input, e.g. sample populations, etc. 
+ 
+
 
 
 
@@ -60,7 +65,15 @@ def build_exp(exp):
     elif type(exp)==dict:
         return str(exp['value'])
     else:
-        return '('+str(exp[0])+' ' + ' '.join(map(build_exp,exp[1:])) + ')'
+        return '('+ ' '.join(map(build_exp,exp)) + ')'
+
+def test_build():
+    v=mk_l()
+    s = library_string + x_model_crp + pivot_model
+    for line in s.split('\n'):
+        if line:
+            print line; v.execute_program(line)
+            print build_exp(v.list_directives()[-1]['expression'])
 
 
 @interactive
@@ -906,18 +919,13 @@ except:
 library_string='''
 [assume zeros (lambda (n) (if (= n 0) (list) (pair 0 (zeros (minus n 1)))))]
 [assume ones (lambda (n) (if (= n 0) (list) (pair 1 (ones (minus n 1)))))]         [assume is_nil (lambda (lst) (= lst (list)) ) ]
-[assume map (lambda (f lst) (if (is_nil lst) (list) 
-                                  (pair (f (first lst)) (map f (rest lst))) ) ) ]  
+[assume map (lambda (f lst) (if (is_nil lst) (list) (pair (f (first lst)) (map f (rest lst))) ) ) ]  
 [assume repeat (lambda (th n) (if (= n 0) (list) (pair (th) (repeat th (- n 1) ) ) ) ) ]
-[assume srange (lambda (b e s) (if (gte b e) (list)
-                                (pair b (srange (+ b s) e s) ) ) ) ]
+[assume srange (lambda (b e s) (if (gte b e) (list) (pair b (srange (+ b s) e s) ) ) ) ]
 [assume range (lambda (n) (srange 0 n 1) ) ]
-[assume append (lambda (lst x) (if (is_nil lst) (list x)
-                               (pair (first lst) (append (rest lst) x) ) ) )]
-[assume cat (lambda (xs ys) (if (is_nil ys) xs
-                                 (cat (append xs (first ys)) (rest ys) ) ) )]
-[assume fold (lambda (f l el) (if (is_nil l) el
-                                (f (first l) (fold f (rest l) el) ) ) ) ]
+[assume append (lambda (lst x) (if (is_nil lst) (list x) (pair (first lst) (append (rest lst) x) ) ) )]
+[assume cat (lambda (xs ys) (if (is_nil ys) xs (cat (append xs (first ys)) (rest ys) ) ) )]
+[assume fold (lambda (f l el) (if (is_nil l) el(f (first l) (fold f (rest l) el) ) ) ) ]
 [assume suml (lambda (xs) (fold + xs 0) )]
 [assume prodl (lambda (xs) (fold * xs 1) ) ]
 '''
@@ -933,7 +941,35 @@ def test_ripls(print_lib=False):
     return vs
 
 
-
+x_model_crp='''
+[assume alpha (uniform_continuous .01 1)]
+[assume crp (make_crp alpha) ]
+[assume z (mem (lambda (i) (crp) ) ) ]
+[assume mu (mem (lambda (z) (normal 0 5) ) ) ] 
+[assume sig (mem (lambda (z) (uniform_continuous .1 8) ) ) ]
+[assume x_d (lambda () ( (lambda (z) (normal (mu z) (sig z) )) (crp) ) ) ]
+[assume x (mem (lambda (i) (normal (mu (z i)) (sig (z i))))  ) ]
+'''
+pivot_model='''
+[assume w0 (mem (lambda (p)(normal 0 3))) ]
+[assume w1 (mem (lambda (p)(normal 0 3))) ]
+[assume w2 (mem (lambda (p)(normal 0 1))) ]
+[assume noise (mem (lambda (p) (gamma 2 1) )) ]
+[assume pivot (normal 0 5)]
+[assume p (lambda (x) (if (< x pivot) false true) ) ]
+[assume f (lambda (x)  ( (lambda (p) (+ (w0 p) (* (w1 p) x) (* (w2 p) (* x x)))  )    (p x)  ) ) ]
+[assume noise_p (lambda (fx x) (normal fx (noise (p x))) )] 
+[assume y_x (lambda (x) (noise_p (f x) x) ) ]     
+[assume y (mem (lambda (i) (y_x (x i))  ))]            
+[assume n (gamma 1 100) ]
+[assume model_name (quote pivot)]
+[observe (y_x) (+ 10 10)]
+[observe (+ 1 (y_x)) (+ 10 10)]
+[observe (+ (normal (lambda () 1) (lambda() (+ 1 1 1) ) ) (flip .5) ) (+ 11 1) ]
+[predict (lambda (x) (noise_p (f x) x))  ]
+[predict ((lambda (x) (noise_p (f x) x)) 5 )  ]
+[predict (+ ((lambda() 1)) (* (binomial 10 .5) ) ) ]
+'''
 
 
 
