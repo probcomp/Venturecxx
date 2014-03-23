@@ -425,12 +425,13 @@ def testAll_IP():
     
     
     def testParaUtils():
+        print 'testParaUtils'
         clear_all_engines()
         v=MRipl(2,lite=lite)
         v.assume('model_name','(quote kolmogorov)')
-        name1 = get_name(mr)
+        name1 = get_name(v)
         def store_name(ripl): return get_name(ripl)
-        names = mr_map_f(store_name)['out']
+        names = mr_map_f(v,store_name)['out']
         assert name1==names[0]=='kolmogorov'
         
         print '... passed'
