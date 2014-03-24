@@ -404,7 +404,7 @@ def plot_xgiveny(mr,y,no_transitions=100):
     return snapshot
 
 
-def params_compare(mr,exp_pair,xys,no_transitions,plot=False,sharexy=True):
+def params_compare(mr,exp_pair,xys,no_transitions,plot=False):
     '''Look at dependency between pair of expressions as data comes in'''
     name=get_name(mr)
     
@@ -422,10 +422,10 @@ def params_compare(mr,exp_pair,xys,no_transitions,plot=False,sharexy=True):
     xys=np.array(xys); xs=[None] + list( xys[:,0] ); ys=[None] + list( xys[:,1] )
 
     fig,ax = plt.subplots(len(vals_list), 2, figsize=(12,len(vals_list)*3),
-                          sharex=True,sharey=True)
+                          sharex='col',sharey='col')
 
     for i,vals in enumerate(vals_list):
-        ax[i,0].scatter( vals[exp_pair[0]], vals[exp_pair[1]], c='.6',s=3,lw=0)
+        ax[i,0].scatter( vals[exp_pair[0]], vals[exp_pair[1]], c='.6',s=5,lw=0)
         ax[i,0].set_title('%s vs. %s (name=%s)' % (exp_pair[0],
                                                    exp_pair[1],name) )
         ax[i,0].set_xlabel(exp_pair[0]); ax[i,0].set_ylabel(exp_pair[1])
