@@ -73,6 +73,7 @@ crp_model='''
 [assume f (lambda (gp x) (+ (w gp 0) (* (w gp 1) x) (* (w gp 2) (* x x)) ) ) ]
 
 [assume y (mem (lambda (i) (normal (f (gp i) (x i)) noise ) ))]
+[assume model_name (quote crp)]
 '''
 #[assume y_x (lambda (gp x) (normal (f gp x) noise) ) ]
 
