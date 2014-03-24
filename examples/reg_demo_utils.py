@@ -3,8 +3,84 @@ import matplotlib.pyplot as plt
 from venture.venturemagics.ip_parallel import *; 
 lite=False; 
 mk_l = make_lite_church_prime_ripl; mk_c = make_church_prime_ripl
+vs = test_ripls()
 
 
+simple_fourier_model='''
+[assume w0 (normal 0 3) ]
+[assume w1 (normal 0 3) ]
+[assume omega (normal 0 3) ]
+[assume theta (normal 0 3) ]
+[assume x (mem (lambda (i) (x_d) ) )]
+[assume x_d (lambda () (normal 0 5))]
+[assume noise (gamma 2 1) ]
+[assume f (lambda (x) (+ w0 (* w1 (sin (+ (* omega x) theta) ) ) ) ) ]
+[assume y_x (lambda (x) (normal (f x) noise) ) ]
+[assume y (mem (lambda (i) (y_x (x i))  ))] 
+[assume n (gamma 1 1)]
+[assume model_name (quote simple_fourier)]
+'''
+simple_quadratic_model='''
+[assume w0 (normal 0 3) ]
+[assume w1 (normal 0 1) ]
+[assume w2 (normal 0 .3) ]
+[assume x (mem (lambda (i) (x_d) ) )]
+[assume x_d (lambda () (normal 0 5))]
+[assume noise (gamma 2 1) ]
+[assume f (lambda (x) (+ w0 (* w1 x) (* w2 (* x x)) ) ) ]
+[assume y_x (lambda (x) (normal (f x) noise) ) ]
+[assume y (mem (lambda (i) (y_x (x i)) ) )]
+[assume model_name (quote simple_quadratic)]
+'''
+hi_quadratic_model='''
+[assume mu_prior (mem (lambda (j) (normal 0 20))) ]
+[assume sigma_prior (mem (lambda (j) (gamma 1 1)) ) ]
+[assume w (mem (lambda (gp j) (normal (mu_prior j) (sigma_prior j) ) ) ) ] 
+[assume x (mem (lambda (gp i) (x_d gp) ) )]
+[assume x_d (lambda (gp) (normal 0 3))]
+[assume noise (gamma 2 1) ]
+[assume f (lambda (gp x) (+ (w gp 0) (* (w gp 1) x) (* (w gp 2) (* x x)) ) ) ]
+[assume y_x (lambda (gp x) (normal (f gp x) noise) ) ]
+[assume y (mem (lambda (gp i) (y_x gp (x gp i)) ) )]
+[assume n (gamma 1 1)]
+[assume model_name (quote hi_quadratic)]
+'''
+crp_model2='''
+[assume alpha (uniform_continuous .01 1)]
+[assume crp (make_crp alpha) ]
+[assume gp (mem (lambda (i) (crp) ) ) ]
+[assume mu (mem (lambda (gp) (normal 0 5) ) ) ] 
+[assume sig (mem (lambda (gp) (uniform_continuous .1 8) ) ) ]
+[assume x_d (lambda () ( (lambda (gp) (normal (mu gp) (sig gp) )) (crp) ) ) ]
+[assume x (mem (lambda (i) (normal (mu (gp i)) (sig (gp i))))  ) ]
+[assume w (mem (lambda (gp j) (normal 0 (pow 2 (* -1 j)) ) ) )] 
+[assume noise (gamma 1 1) ]
+[assume pick_f (lambda (gp) (lambda (x)
+                     (+ (w gp 0) (* (w gp 1) x) (* (w gp 2) (* x x)) ) ) ) ]
+[assume y_x (lambda (gp x) (normal ( (pick_f gp) x) noise) ) ]
+[assume y (mem (lambda (i) (y_x (gp i) (x i)) ) )]
+'''
+crp_model='''
+[assume alpha (uniform_continuous .01 1)]
+[assume crp (make_crp alpha) ]
+[assume gp (mem (lambda (i) (crp) ) ) ]
+[assume mu (mem (lambda (gp) (normal 0 5) ) ) ] 
+[assume sig (mem (lambda (gp) (uniform_continuous .1 8) ) ) ]
+[assume x_d (lambda () ( (lambda (gp) (normal (mu gp) (sig gp) )) (crp) ) ) ]
+[assume x (mem (lambda (i) (normal (mu (gp i)) (sig (gp i))))  ) ]
+[assume w (mem (lambda (gp j) (normal 0 (pow 2 (* -1 j)) ) ) )] 
+[assume noise (gamma 1 1) ]
+[assume f (lambda (gp x) (+ (w gp 0) (* (w gp 1) x) (* (w gp 2) (* x x)) ) ) ]
+
+[assume y (mem (lambda (i) (normal (f (gp i) (x i)) noise ) ))]
+'''
+#[assume y_x (lambda (gp x) (normal (f gp x) noise) ) ]
+
+x_model_t='''
+[assume nu (gamma 10 1)]
+[assume x_d (lambda () (student_t nu) ) ]
+[assume x (mem (lambda (i) (x_d) ) )]
+'''
 x_model_crp='''
 [assume alpha (uniform_continuous .01 1)]
 [assume crp (make_crp alpha) ]
@@ -14,18 +90,13 @@ x_model_crp='''
 [assume x_d (lambda () ( (lambda (z) (normal (mu z) (sig z) )) (crp) ) ) ]
 [assume x (mem (lambda (i) (normal (mu (z i)) (sig (z i))))  ) ]
 '''
-x_model_t='''
-[assume nu (gamma 10 1)]
-[assume x_d (lambda () (student_t nu) ) ]
-[assume x (mem (lambda (i) (x_d) ) )]
-'''
 pivot_model='''
 [assume w0 (mem (lambda (p)(normal 0 3))) ]
-[assume w1 (mem (lambda (p)(normal 0 3))) ]
-[assume w2 (mem (lambda (p)(normal 0 1))) ]
+[assume w1 (mem (lambda (p)(normal 0 1))) ]
+[assume w2 (mem (lambda (p)(normal 0 .3))) ]
 [assume noise (mem (lambda (p) (gamma 2 1) )) ]
 [assume pivot (normal 0 5)]
-[assume p (lambda (x) (if (< x pivot) 0 1) ) ]
+[assume p (lambda (x) (if (< x pivot) false true) ) ]
 
 [assume f (lambda (x)
              ( (lambda (p) (+ (w0 p) (* (w1 p) x) (* (w2 p) (* x x)))  ) 
@@ -34,19 +105,19 @@ pivot_model='''
 [assume noise_p (lambda (fx x) (normal fx (noise (p x))) )] 
 
 [assume y_x (lambda (x) (noise_p (f x) x) ) ]
-                     
+              
 [assume y (mem (lambda (i) (y_x (x i))  ))] 
                      
 [assume n (gamma 1 100) ]
 [assume model_name (quote pivot)]
 '''
-
 quad_fourier_model='''
 [assume w0 (normal 0 3) ]
-[assume w1 (normal 0 3) ]
-[assume w2 (normal 0 1) ]
+[assume w1 (normal 0 1) ]
+[assume w2 (normal 0 .3) ]
 [assume omega (normal 0 3) ]
 [assume theta (normal 0 3) ]
+
 [assume noise (gamma 2 1) ]
 
 [assume model (if (flip) 1 0) ]
@@ -55,7 +126,7 @@ quad_fourier_model='''
 [assume f (if (= model 0) quadratic fourier) ]
 
 [assume y_x (lambda (x) (normal (f x) noise) ) ]
-[assume y (mem (lambda (i) (normal (f (x i) ) noise) ) )]
+[assume y (mem (lambda (i) (y_x (x i))  ))] 
 [assume n (gamma 1 100)]
 [assume model_name (quote quad_fourier)]'''
 
@@ -71,7 +142,7 @@ logistic_model='''
 [assume f (lambda (x) (+ w0 (* w1 (sigmoid x) ) ) ) ]
 
 [assume y_x (lambda (x) (normal (f x) noise) ) ]
-[assume y (mem (lambda (i) (normal (f (x i) ) noise) ) )]
+[assume y (mem (lambda (i) (y_x (x i))  ))] 
 [assume n (gamma 1 100)]
 [assume model_name (quote logistic)]'''
 
@@ -85,23 +156,22 @@ def mk_piecewise(weight=.5,quad=True):
     [assume w0 (mem (lambda (p)(normal 0 3))) ]
     [assume w1 (mem (lambda (p)(normal 0 3))) ]
     [assume w2 (mem (lambda (p)(normal 0 1))) ]
-    [assume noise (mem (lambda (p) (gamma 2 1) )) ]
+    [assume noise (mem (lambda (p) (gamma 5 1) )) ]
     [assume width <<width>>]
-    [assume p (lambda (x) (myceil (/ x width)))]
 
+    [assume p_func (lambda (x) (1) )]
     [assume f (lambda (x)
                  ( (lambda (p) (+ (w0 p) (* (w1 p) x) (* (w2 p) (* x x)))  ) 
-                   (p x)  ) ) ]
-
-    [assume noise_p (lambda (fx x) (normal fx (noise (p x))) )] 
-
-    [assume y_x (lambda (x) (noise_p (f x) x) ) ]
-
+                   (p_func x)  ) ) ]
+    [assume noise_p (lambda (x) 
+                         (lambda (fx) (normal fx (noise (p_func x)) ) ) 
+                            ) ]
+    [assume y_x (lambda (x) ( (noise_p x) (f x) ) ) ]
     [assume y (mem (lambda (i) (y_x (x i))  ))] 
-
     [assume n (gamma 1 100) ]
     [assume model_name (quote piecewise)]
     '''
+#    [assume p (lambda (x) (myceil (/ x width)))]
     if not(quad):
         s= s.replace('[assume w2 (mem (lambda (p)(normal 0 1))) ]',
                      '[assume w2 0]')
@@ -109,35 +179,8 @@ def mk_piecewise(weight=.5,quad=True):
 
 def v_mk_piecewise(weight,quad):
     v=mk_l()
-    v.execute_program(x_model_t + mk_piecewise(weight=weight,quad=quad))
+    v.execute_program(x_model_t_piece + mk_piecewise(weight=weight,quad=quad))
     return v
-
-def test_piecewise():
-    ##FIXME try with lite
-    def v_mk_piecewise(weight,quad):
-        v=mk_c()
-        v.execute_program(x_model_t + mk_piecewise(weight=weight,quad=quad))
-        return v
-    v=v_mk_piecewise(.2,True)
-    xys=[ (.1*i,.1*i) for i in range(-6,6) ] * 6
-    no_trans=1000
-    observe_infer([v],xys,no_trans,with_index=True,withn=True)
-    a,b,c = v.sample('(list (f -.3) (f .05) (f .3))')
-    assert a<b<c
-    fig,xr,y_x = plot_cond(v)
-    ax = fig.axes[0]
-    ax.set_ylim(-1,1); ax.set_xlim(-1,1)
-
-    v=v_mk_piecewise(.5,False)
-    xys=[ (x,abs(x)) for x in np.linspace(-1,1,20)]
-    xys.extend( [ (x,-0.5*x) for x in np.linspace(1.1,2,20) ] )
-    no_trans=1000
-    observe_infer([v],xys,no_trans,with_index=True,withn=True)
-    a,b,c = v.sample('(list (f -.3) (f .05) (f .5))')
-    print a,b,c
-    fig,xr,y_x = plot_cond(v)
-    ax = fig.axes[0]
-    ax.set_ylim(-2.5,2,5); ax.set_xlim(-2,2.8)
 
 
 from scipy.stats import kde
@@ -183,7 +226,7 @@ def generate_data(n,xparams=None,yparams=None,sin_quad=True):
     return xys
 
 
-def observe_infer(vs,xys,no_transitions,with_index=True,withn=True):
+def observe_infer(vs,xys,no_transitions,with_index=False,withn=False):
     '''Input is list of ripls or mripls, xy pairs and no_transitions. Optionally
     observe the n variable to be the len(xys). We can either index the observations
     or we can treat them as drawn from x_d and y_x, which do not memoize but depend
@@ -210,16 +253,130 @@ def logscores(mr,name='Model'):
     return np.mean(logscore), np.max(logscore)
 
 
-def get_name(r_mr):
-    mr=1 if isinstance(r_mr,MRipl) else 0
-    di_l = r_mr.list_directives()[0] if mr else r_mr.list_directives()
-    if 'model_name' in str(di_l):
-        try:
-            n = r_mr.sample('model_name')[0] if mr else r_mr.sample('model_name')
-            return n
-        except: pass
-    else:
-        return 'anon model'
+# def get_name(r_mr):
+#     mr=1 if isinstance(r_mr,MRipl) else 0
+#     di_l = r_mr.list_directives()[0] if mr else r_mr.list_directives()
+#     if 'model_name' in str(di_l):
+#         try:
+#             n = r_mr.sample('model_name')[0] if mr else r_mr.sample('model_name')
+#             return n
+#         except: pass
+#     else:
+#         return 'anon model'
+
+
+
+def plot_conditional(ripl,xr=(-3,3),data=[],no_reps=20, no_xs=20, return_fig=False):
+    ##FIXME 'Should be sample or predict???', 
+    # FIXME return_fig
+    name=get_name(ripl)
+
+    # try: n = int( np.round( ripl.sample('n') ) )  #FIXME
+    # except: n=0
+    # if n>0:
+    #     d_xs = [ripl.sample('(x %i)' % i) for i in range(n)]
+    #     d_ys = [ripl.sample('(y %i)' % i) for i in range(n)]
+    #     data = (d_xs,d_ys)
+    #     xr = ( min(d_xs)-1,max(d_ys)+1 )
+    
+    xr = np.linspace(xr[0],xr[1],no_xs)
+    
+    f_xr = [ripl.predict('(f %f)' % x) for x in xr]
+    if "'symbol': 'noise'" in str(ripl.list_directives()):
+        noise=ripl.sample('noise')
+        fixed_noise = isinstance(noise,float)
+        if fixed_noise:
+            f_u = [fx+noise for fx in f_xr]; f_l = [fx-noise for fx in f_xr]
+    
+    # sample y_xs and compute 1sd intervals
+    xys=[]; ymean=[]; ystd=[]
+    for x in xr:
+        x_y = [ripl.predict('(y_x %f)' % x) for r in range(no_reps)]        
+        ymean.append( np.mean(x_y) )
+        ystd.append( np.abs( np.std(x_y) ) )
+        xys.extend( [(x,y) for y in x_y] )
+    
+    xs,ys = zip(*xys)
+    ymean = np.array(ymean); ystd = np.array(ystd)
+    y_u = ymean+ystd; y_l = ymean - ystd
+    if not fixed_noise:
+        f_u = y_u ; f_l = y_l
+
+    # Plotting
+    fig,ax = plt.subplots(1,3,figsize=(17,5),sharex=True,sharey=True)
+    
+    # plot data and f with noise
+    if data: ax[0].scatter(zip(*data)[0],zip(*data)[1],label='Data')
+    
+    ax[0].plot(xr, f_xr, 'k', color='#CC4F1B')
+    ax[0].fill_between(xr,f_l,f_u,alpha=0.5,edgecolor='#CC4F1B',facecolor='#FF9848')
+    ax[0].set_title('Ripl: f (+- 1sd noise) w/ data [name: %s]' % name )
+    ax[0].legend()
+    ax[1].scatter(xs,ys,alpha=0.7,s=5,facecolor='0.6', lw = 0)
+
+    ax[1].plot(xr, ymean, 'k', alpha=.9,color='m',linewidth=1)
+    ax[1].plot(xr, y_l, 'k', alpha=.8, color='m',linewidth=.5)
+    ax[1].plot(xr, y_u, 'k', alpha=.8,color='m',linewidth=.5)
+    ax[1].set_title('Ripl: Samples from P(y/X=x), w/ mean +- 1sd [name: %s]' % name )
+        
+    xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
+    ax[2].pcolormesh(xi, yi, zi)
+    ax[2].set_title('Ripl: GKDE P(y/X=x) [name: %s]' % name )
+    
+    fig.tight_layout()
+    ## returns the function and then then the conditional
+    return {'f':(xr,f_xr),'xs,ys':(xs,ys)} 
+
+
+def posterior_conditional(mr,xr=(-3,3),data=[],no_reps=20, no_xs=20, return_fig=False ):
+    
+    name=get_name(mr)
+    
+    xr = np.linspace(xr[0],xr[1],no_xs)
+    
+    
+    ## get some curves (LIMIT)
+    #list_out=mr_plot_conditional(mr,limit=4,data=data,xr=xr,no_reps=1,no_xs=no_xs)
+    #fs = [ ripl_out['f'] for ripl_out in list_out]
+    fs=[xr,xr]
+
+
+    ## get y_xs from ripls and compute 1sd intervals
+    xys=[]; ymean=[]; ystd=[]
+    for x in xr:
+        # we get no_reps predicts from each ripl in mr
+        x_y=if_lst_flatten([mr.predict('(y_x %f)' % x) for r in range(no_reps)])   
+        ymean.append( np.mean(x_y) )
+        ystd.append( np.abs( np.std(x_y) ) )
+        xys.extend( [(x,y) for y in x_y] )
+    
+    xs,ys = zip(*xys)
+    ymean = np.array(ymean); ystd = np.array(ystd)
+    y_u = ymean+ystd; y_l = ymean-ystd
+    
+     # Plotting
+    fig,ax = plt.subplots(1,3,figsize=(17,5),sharex=True,sharey=True)
+
+    if data: ax[0].scatter(zip(*data)[0],zip(*data)[1],label='Data')
+    # sampled fs from mripl
+    [ax[0].plot(f[0],f[1],alpha=.6,linewidth=.5) for f in fs]
+    ax[0].legend()
+    ax[0].set_title('MR: Sampled fs w/ data [name: %s] ' % name )
+    
+    ax[1].scatter(xs,ys,alpha=0.5,s=5,facecolor='0.6', lw = 0)
+    ax[1].plot(xr, ymean, 'k', alpha=.9,color='m',linewidth=1)
+    ax[1].plot(xr, y_l, 'k', alpha=.8, color='m',linewidth=.5)
+    ax[1].plot(xr, y_u, 'k', alpha=.8,color='m',linewidth=.5)
+    ax[1].set_title('MR: Samples from P(y/X=x), w/ mean +- 1sd [name: %s] ' % name )
+        
+    xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
+    ax[2].pcolormesh(xi, yi, zi)
+    ax[2].set_title('MR: GKDE P(y/X=x) [name: %s] ' % name )
+    
+    fig.tight_layout()
+    
+    return xs,ys
+
 
 
 def plot_cond(ripl,no_reps=20,return_fig=False,set_xr=None,plot=True):
@@ -229,7 +386,8 @@ def plot_cond(ripl,no_reps=20,return_fig=False,set_xr=None,plot=True):
     if set_xr!=None:
         xr=set_xr; n=0
     else: # find x-range from min/max of observed points
-        n = int( np.round( ripl.sample('n') ) )  #FIXME
+        try: n = int( np.round( ripl.sample('n') ) )  #FIXME
+        except: n=0
         if n==0:
             xr= np.linspace(-3,3,50);
         else:
@@ -342,7 +500,7 @@ def params_compare(mr,exp_pair,xys,no_transitions,plot=False):
     for i,vals in enumerate(vals_list):
         ax[i,0].scatter( vals[exp_pair[0]], vals[exp_pair[1]], s=6)
         ax[i,0].set_title('%s vs. %s (name=%s)' % (exp_pair[0],
-                                                   exp_pair[1]),name)
+                                                   exp_pair[1],name) )
         ax[i,0].set_xlabel(exp_pair[0]); ax[i,0].set_ylabel(exp_pair[1])
         if i>0:
             ax[i,1].scatter(xs[1:i], ys[1:i], c='blue') ## FIXME start from 1 to ignore prior
@@ -411,18 +569,3 @@ def if_lst_flatten(l):
     return l
     
     
-
-
-
-   
-
-
-### PLAN: different plots/scores
-#1. av logscore and best logscore.
-# 2. plot the curve, adding noise error (easiest way is with y_x)
-# 3. plot the joint (sample both x's and y's)
-# 4. plot posterior on sets of params
-# 5. plot posterior conditional
-# 6. plot posterior joint (the posterior join density over x,y: get from running chain long time or combining chains)
-# 7. plot p(x / y) for some particular y's 
-

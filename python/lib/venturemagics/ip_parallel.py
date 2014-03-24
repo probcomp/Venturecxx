@@ -58,6 +58,17 @@ def heatplot(n2array,nbins=100):
     zi = k(np.vstack([xi.flatten(), yi.flatten()]))
     # plot ax.pcolormesh(xi, yi, zi.reshape(xi.shape))
     return (xi, yi, zi.reshape(xi.shape))
+
+
+### FIXME: we can always use the same function for lite and puma
+# by checking for pickling
+# every time or by always outputting a string representation (serializing)
+def pickle_safe(out):
+    try:
+        pickle.dumps(out)
+        return out
+    except:
+        return str(out)
     
 
 def get_name(r_mr):
@@ -290,7 +301,7 @@ class MRipl():
                     pickle.dumps(out)
                     return out
                 except:
-                    return [None for ripl in mripls[mrid] ]
+                    return ['sp' for ripl in mripls[mrid] ]
 
         return self.lst_flatten( self.dview.apply(f,sym,exp,self.mrid,**kwargs) )
         
@@ -308,7 +319,7 @@ class MRipl():
                     pickle.dumps(out)
                     return out
                 except:
-                    return [None for ripl in mripls[mrid] ]
+                    return ['sp' for ripl in mripls[mrid] ]
                 
         return self.lst_flatten( self.dview.apply(f,exp,val,label,self.mrid) )
     
@@ -325,7 +336,7 @@ class MRipl():
                     pickle.dumps(out)
                     return out
                 except:
-                    return [None for ripl in mripls[mrid] ]
+                    return ['sp' for ripl in mripls[mrid] ]
         
         return self.lst_flatten( self.dview.apply(f,exp,label,type,self.mrid) )
 
@@ -358,7 +369,7 @@ class MRipl():
                     pickle.dumps(out)
                     return out
                 except:
-                    return [None for ripl in mripls[mrid] ]
+                    return ['sp' for ripl in mripls[mrid] ]
         return self.lst_flatten( self.dview.apply(f,label_or_did,self.mrid, **kwargs) )
 
     def forget(self,label_or_did):
@@ -367,6 +378,7 @@ class MRipl():
         def f(label_or_did,mrid):
             return [ripl.forget(label_or_did) for ripl in mripls[mrid]]
         return self.lst_flatten( self.dview.apply(f,label_or_did,self.mrid) )
+
 
     def continuous_inference_status(self):
         self.local_ripl.continuous_inference_status()
@@ -389,6 +401,7 @@ class MRipl():
             return [ripl.stop_continuous_inference() for ripl in mripls[mrid]]
         return self.lst_flatten( self.dview.apply(f, self.mrid) )
 
+
     def execute_program(self,  program_string, params=None):
         
         ## FIXME: [clear] could appear anywhere
@@ -410,11 +423,11 @@ class MRipl():
                     pickle.dumps(out)
                     return out
                 except:
-                    return [None for ripl in mripls[mrid] ]
+                    return str(out)
                 
-        out_execute=self.lst_flatten( self.dview.apply(f, program_string, params,self.mrid) )
+        out_execute=if_lst_flatten( self.dview.apply(f, program_string, params,self.mrid) )
 
-        @interactive  ## FIXME: this is pasted from self.clear() and should be properly abstracted
+        @interactive ## FIXME:pasted from self.clear and should be properly abstracted
         def reset_seeds(mrid):
             ripls=mripls[mrid]; seeds=seeds_lists[mrid]
             [ripls[i].set_seed(seeds[i]) for i in range(len(ripls))]
@@ -431,7 +444,6 @@ class MRipl():
         return self.lst_flatten( self.dview.apply(f,self.mrid) )
 
     
-
     def sample(self,exp,type=False):
         
         self.local_ripl.sample(exp,type)
@@ -447,8 +459,9 @@ class MRipl():
                     pickle.dumps(out)
                     return out
                 except:
-                    return [None for ripl in mripls[mrid] ]
+                    return ['sp' for ripl in mripls[mrid] ]
         return self.lst_flatten( self.dview.apply(f,exp,type,self.mrid) )
+
 
     def list_directives(self,type=False):
 
@@ -456,7 +469,19 @@ class MRipl():
         @interactive
         def f(type,mrid):
                return [ripl.list_directives(type) for ripl in mripls[mrid] ]
-        return self.lst_flatten( self.dview.apply(f,type,self.mrid) )
+               
+        if self.lite:
+            @interactive
+            def f(type,mrid):
+                out = [ripl.list_directives(type) for ripl in mripls[mrid] ]
+                try:
+                    pickle.dumps(out)
+                    return out
+                except:
+                    return str(out)
+
+
+        return if_lst_flatten( self.dview.apply(f,type,self.mrid) )
                
     def add_ripls(self,no_new_ripls,new_seeds=None):
         'Add no_new_ripls ripls by mapping a copy_ripl function across engines'

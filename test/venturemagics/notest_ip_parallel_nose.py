@@ -423,7 +423,6 @@ def testAll_IP():
             print '... passed'
 
     
-    
     def testParaUtils():
         print 'testParaUtils'
         clear_all_engines()
