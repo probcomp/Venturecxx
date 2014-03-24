@@ -210,8 +210,12 @@ def expToDict(exp):
     assert len(exp) == 4
     return {"kernel":"latents","scope":exp[1],"block":exp[2],"transitions":exp[3]}
   elif tag == "rejection":
-    assert len(exp) == 4
-    return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":exp[3]}
+    assert len(exp) >= 3
+    assert len(exp) <= 4
+    if len(exp) == 4:
+      return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":exp[3]}
+    else:
+      return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":1}
   elif tag == "mixture":
     assert len(exp) == 3
     weights = []
