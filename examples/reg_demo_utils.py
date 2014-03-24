@@ -281,7 +281,7 @@ def plot_conditional(ripl,xr=(-3,3),data=[],no_reps=20, no_xs=20, return_fig=Fal
     
     xr = np.linspace(xr[0],xr[1],no_xs)
     
-    f_xr = [ripl.predict('(f %f)' % x) for x in xr]
+    f_xr = [ripl.sample('(f %f)' % x) for x in xr]
     if "'symbol': 'noise'" in str(ripl.list_directives()):
         noise=ripl.sample('noise')
         fixed_noise = isinstance(noise,float)
@@ -291,7 +291,7 @@ def plot_conditional(ripl,xr=(-3,3),data=[],no_reps=20, no_xs=20, return_fig=Fal
     # sample y_xs and compute 1sd intervals
     xys=[]; ymean=[]; ystd=[]
     for x in xr:
-        x_y = [ripl.predict('(y_x %f)' % x) for r in range(no_reps)]        
+        x_y = [ripl.sample('(y_x %f)' % x) for r in range(no_reps)]        
         ymean.append( np.mean(x_y) )
         ystd.append( np.abs( np.std(x_y) ) )
         xys.extend( [(x,y) for y in x_y] )
@@ -345,7 +345,7 @@ def posterior_conditional(mr,xr=(-3,3),data=[],no_reps=20, no_xs=20, return_fig=
     xys=[]; ymean=[]; ystd=[]
     for x in xr:
         # we get no_reps predicts from each ripl in mr
-        x_y=if_lst_flatten([mr.predict('(y_x %f)' % x) for r in range(no_reps)])   
+        x_y=if_lst_flatten([mr.sample('(y_x %f)' % x) for r in range(no_reps)])   
         ymean.append( np.mean(x_y) )
         ystd.append( np.abs( np.std(x_y) ) )
         xys.extend( [(x,y) for y in x_y] )
