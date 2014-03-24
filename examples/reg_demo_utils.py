@@ -114,7 +114,7 @@ pivot_model='''
 '''
 quad_fourier_model='''
 [assume w0 (normal 0 3) ]
-[assume w1 (normal 0 1) ]
+[assume w1 (normal 0 2.5) ]
 [assume w2 (normal 0 .3) ]
 [assume omega (normal 0 3) ]
 [assume theta (normal 0 3) ]
@@ -267,7 +267,7 @@ def logscores(mr,name='Model'):
 
 
 
-def plot_conditional(ripl,xr=(-3,3),data=[],no_reps=20, no_xs=20, return_fig=False):
+def plot_conditional(ripl,xr=(-3,3),data=[],no_reps=10, no_xs=25, return_fig=False):
     ##FIXME 'Should be sample or predict???', 
     # FIXME return_fig
     name=get_name(ripl)
@@ -358,7 +358,7 @@ def posterior_conditional(mr,xr=(-3,3),data=[],no_reps=20, no_xs=20, return_fig=
      # Plotting
     fig,ax = plt.subplots(1,3,figsize=(17,5),sharex=True,sharey=True)
 
-    if data: ax[0].scatter(zip(*data)[0],zip(*data)[1],label='Data')
+    if data: [ax[col].scatter(zip(*data)[0],zip(*data)[1],label='Data') for col in [1,2]]
     # sampled fs from mripl
     [ax[0].plot(f[0],f[1],alpha=.6,linewidth=.5) for f in fs]
     ax[0].legend()
@@ -369,6 +369,7 @@ def posterior_conditional(mr,xr=(-3,3),data=[],no_reps=20, no_xs=20, return_fig=
     ax[1].plot(xr, y_l, 'k', alpha=.8, color='m',linewidth=.5)
     ax[1].plot(xr, y_u, 'k', alpha=.8,color='m',linewidth=.5)
     ax[1].set_title('MR: Samples from P(y/X=x), w/ mean +- 1sd [name: %s] ' % name )
+    ax[1].legend()
         
     xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
     ax[2].pcolormesh(xi, yi, zi)
@@ -377,82 +378,6 @@ def posterior_conditional(mr,xr=(-3,3),data=[],no_reps=20, no_xs=20, return_fig=
     fig.tight_layout()
     
     return xs,ys
-
-
-
-def plot_cond(ripl,no_reps=20,return_fig=False,set_xr=None,plot=True):
-    '''Plot f(x) with 1sd noise curves. Plot y_x with #(no_reps)
-    y values for each x. Use xrange with limits based on posterior on P(x).'''
-    
-    if set_xr!=None:
-        xr=set_xr; n=0
-    else: # find x-range from min/max of observed points
-        try: n = int( np.round( ripl.sample('n') ) )  #FIXME
-        except: n=0
-        if n==0:
-            xr= np.linspace(-3,3,50);
-        else:
-            d_xs = [ripl.sample('(x %i)' % i) for i in range(n)]
-            d_ys = [ripl.sample('(y %i)' % i) for i in range(n)]
-            xr = np.linspace(1.5*min(d_xs),1.5*max(d_xs),30)
-    
-    f_xr = [ripl.sample('(f %f)' % x) for x in xr]
-    
-    # gaussian noise 1sd
-    h_noise = ['pivot','piecewise']
-    name=get_name(ripl)
-    noise=ripl.sample('(noise 0)') if name in h_noise else ripl.sample('noise')
-    f_a = [fx+noise for fx in f_xr]
-    f_b = [fx-noise for fx in f_xr]
-
-    # scatter for y conditional on x
-    if plot:
-        xys1 = [[(x,ripl.sample('(y_x %f)' % x)) for r in range(no_reps)] for x in xr]
-        xys = if_lst_flatten(xys1)
-        
-        xs=[xy[0] for xy in xys]; ys=[xy[1] for xy in xys]
-        
-        #y_x = [  [ripl.sample('(y_x %f)' % x) for r in range(no_reps)] for x in xr]
-        fig,ax = plt.subplots(1,3,figsize=(14,4),sharex=True,sharey=True)
-        if n!=0: ax[0].scatter(d_xs,d_ys)
-        ax[0].set_color_cycle(['m', 'gray','gray'])
-        ax[0].plot(xr,f_xr,xr,f_a,xr,f_b)
-        ax[0].set_title('Ripl: f (+- 1sd) (name= %s )' % name)
-        ax[1].scatter(xs,ys,s=5,c='gray')
-        #[ ax[1].scatter(xr,[y[i] for y in y_x],s=5,c='gray') for i in range(no_reps) ]
-        ax[1].set_title('Ripl: Scatter P(y/X=x,params) (name= %s)' % name)
-        
-        xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
-        ax[2].pcolormesh(xi, yi, zi)
-        ax[2].set_title('Ripl: GKDE P(y/X=x,params) (name= %s)' % name )
-        fig.tight_layout()
-        if return_fig:
-            return fig,xs,ys
-        else:
-            return xs,ys
-    return xs,ys
-
-
-def plot_joint(ripl,no_reps=500,return_fig=False):
-    '''Sample from joint P(x,y), holding other params fixed '''
-    name=get_name(ripl)
-    
-    xs = [ ripl.sample('(x_d)') for i in range(no_reps) ]
-    ys = [ ripl.sample('(y_x %f)' % x) for x in xs]
-    
-    fig,ax = plt.subplots(1,2,figsize=(12,4),sharex=True,sharey=True)
-    ax[0].scatter(xs,ys,s=5,c='gray')
-    ax[0].set_title('Single ripl: %i samples from P(x,y / params) (name= %s)' % no_reps, name)
-
-    xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
-    ax[1].pcolormesh(xi, yi, zi)
-    ax[1].set_title('Single ripl: GKDE of %i samples from P(x,y / params) (name= %s)' % (no_reps,name) )
-    fig.tight_layout()
-    
-    if return_fig:
-        return fig,xs,ys
-    else:
-        return xs,ys
 
 
 
@@ -479,7 +404,7 @@ def plot_xgiveny(mr,y,no_transitions=100):
     return snapshot
 
 
-def params_compare(mr,exp_pair,xys,no_transitions,plot=False):
+def params_compare(mr,exp_pair,xys,no_transitions,plot=False,sharexy=True):
     '''Look at dependency between pair of expressions as data comes in'''
     name=get_name(mr)
     
@@ -496,17 +421,18 @@ def params_compare(mr,exp_pair,xys,no_transitions,plot=False):
         
     xys=np.array(xys); xs=[None] + list( xys[:,0] ); ys=[None] + list( xys[:,1] )
 
-    fig,ax = plt.subplots(len(vals_list), 2, figsize=(12,len(vals_list)*4))
+    fig,ax = plt.subplots(len(vals_list), 2, figsize=(12,len(vals_list)*3),
+                          sharex=True,sharey=True)
 
     for i,vals in enumerate(vals_list):
-        ax[i,0].scatter( vals[exp_pair[0]], vals[exp_pair[1]], s=6)
+        ax[i,0].scatter( vals[exp_pair[0]], vals[exp_pair[1]], c='.6',s=3,lw=0)
         ax[i,0].set_title('%s vs. %s (name=%s)' % (exp_pair[0],
                                                    exp_pair[1],name) )
         ax[i,0].set_xlabel(exp_pair[0]); ax[i,0].set_ylabel(exp_pair[1])
         if i>0:
-            ax[i,1].scatter(xs[1:i], ys[1:i], c='blue') ## FIXME start from 1 to ignore prior
-            ax[i,1].scatter(xs[i], ys[i], c='red')
-            ax[i,1].set_title('Data with new point (%f,%f)'%(xs[i],ys[i]))
+            ax[i,1].scatter(xs[1:i], ys[1:i], c='blue',lw=0) ## FIXME start from 1 to ignore prior
+            ax[i,1].scatter(xs[i], ys[i], c='red',lw=0)
+            ax[i,1].set_title('Data with new point (%.2f,%.2f)'%(xs[i],ys[i]))
         
     fig.tight_layout()
     return fig,vals_list
