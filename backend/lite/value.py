@@ -60,6 +60,8 @@ class VentureNumber(VentureValue):
     self.number = number
   def __repr__(self): return "Number(%s)" % self.number
   def getNumber(self): return self.number
+  def getBool(self): return self.number
+    
   def asStackDict(self,trace): return {"type":"number","value":self.number}
   @staticmethod
   def fromStackDict(thing): return VentureNumber(thing["value"])
