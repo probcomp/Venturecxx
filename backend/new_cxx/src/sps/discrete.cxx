@@ -89,10 +89,11 @@ double UniformDiscreteOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Ar
 
 VentureValuePtr BinomialOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
+  assert(args->operandValues.size() == 2);
   int n = args->operandValues[0]->getInt();
   double p = args->operandValues[1]->getDouble();
   int val = gsl_ran_binomial(rng,p,n);
-  return VentureValuePtr(new VentureAtom(val));
+  return VentureValuePtr(new VentureNumber(val));
 }
 
 double BinomialOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
