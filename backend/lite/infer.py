@@ -1,4 +1,5 @@
 import random
+import numpy.random as npr
 import math
 import scipy.stats
 from consistency import assertTorus,assertTrace
@@ -501,13 +502,22 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     # are delta kernels.  Then again, there should not be any delta
     # kernels.
 
+    pyr_state = random.getstate()
+    numpyr_state = npr.get_state()
+
     momenta = self.sampleMomenta(currentValues)
     start_K = self.kinetic(momenta)
 
-    def grad(values):
+    def fixed_regen(values):
+      # Ensure repeatability of randomness
+      random.setstate(pyr_state)
+      npr.set_state(numpyr_state)
       vs = values # [NumberType().asVentureValue(v) for v in values]
       registerDeterministicLKernels(trace, scaffold, pnodes, vs)
-      regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
+      return regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
+
+    def grad(values):
+      fixed_regen(values)
       (_, rhoDB) = detachAndExtract(trace, scaffold.border[0], scaffold, True)
       # The potential function we want is - log (density)
       return [-rhoDB.getPartial(pnode) for pnode in pnodes]
@@ -522,7 +532,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
 
     proposed_values = proposed_vs # [NumberType().asVentureValue(v) for v in proposed_vs]
     registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
-    xiWeight = regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {}) # Mutates the trace
+    xiWeight = fixed_regen(proposed_values) # Mutates the trace
     # The weight arithmetic is given by the Hamiltonian being
     # -weight + kinetic(momenta)
     return (trace, xiWeight - rhoWeight + start_K - end_K)
