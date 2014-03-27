@@ -35,6 +35,7 @@ class VentureSP(VentureValue):
   def simulateLatents(self,spaux,lsr,shouldRestore,latentDB): pass
   def detachLatents(self,spaux,lsr,latentDB): pass
   def hasAEKernel(self): return False
+  def show(self,spaux): return "unknown spAux"
   def description(self,name):
     candidate = self.outputPSP.description(name)
     if candidate:

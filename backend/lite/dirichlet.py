@@ -57,6 +57,8 @@ class DirMultSP(VentureSP):
     self.n = n
 
   def constructSPAux(self): return DirMultSPAux(n=self.n)
+  def show(self,spaux): return spaux.os
+    
 
 #### Collapsed dirichlet multinomial
 

@@ -82,6 +82,8 @@ class BetaBernoulliSPAux(SPAux):
 
 class BetaBernoulliSP(VentureSP):
   def constructSPAux(self): return BetaBernoulliSPAux()
+  def show(self,spaux): return spaux.cts()
+    
 
 class MakerCBetaBernoulliOutputPSP(PSP):
   def childrenCanAAA(self): return True

@@ -23,7 +23,8 @@ class CRPSPAux(object):
 
 class CRPSP(VentureSP):
   def constructSPAux(self): return CRPSPAux()
-
+  def show(self,spaux): return spaux.tableCounts
+    
 class MakeCRPOutputPSP(PSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
