@@ -86,6 +86,20 @@ class CategoricalOutputPSP(RandomPSP):
   def description(self,name):
     return "  (%s weights objects) samples a categorical with the given weights.  In the one argument case, returns the index of the chosen option as an atom; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % name
 
+class UniformDiscreteOutputPSP(RandomPSP):
+  def simulate(self,args):
+    if args.operandValues[1] <= args.operandValues[0]: raise Exception("uniform_discrete called on invalid range (%d,%d)" % (args.operandValues[0],args.operandValues[1]))
+    return random.randrange(*args.operandValues)
+
+  def logDensity(self,val,args):
+    a,b = args.operandValues
+    if a <= output and output < b: return -math.log(b-a)
+    else: return extendedLog(0.0)
+
+  def description(self,name):
+    return "  (%s start end) samples a uniform discrete on the (start, start + 1, ..., end - 1)" % name
+
+
 #### Collapsed Beta Bernoulli
 class BetaBernoulliSPAux(SPAux):
   def __init__(self):

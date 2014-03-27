@@ -187,6 +187,7 @@ def builtInSPsList():
            [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.NumberType(), min_req_args=0) ],
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
 
+           [ "uniform_discrete",binaryNumS(discrete.UniformDiscreteOutputPSP()) ],
            [ "normal",binaryNumS(continuous.NormalOutputPSP()) ],
            [ "uniform_continuous",binaryNumS(continuous.UniformOutputPSP()) ],
            [ "beta",binaryNumS(continuous.BetaOutputPSP()) ],
