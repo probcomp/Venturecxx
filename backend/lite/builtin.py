@@ -145,7 +145,6 @@ def builtInSPsList():
            [ "second", deterministic_typed(lambda p: p[1].first, [v.PairType()], v.AnyType(),
                                            "%s returns the first component of the second component of its argument") ],
 
-           [ "map_list",VentureSP(dstructures.MapListRequestPSP(),dstructures.MapListOutputPSP()) ],
 
            [ "array", deterministic(lambda *args: v.VentureArray(np.array(args)),
                                     "%s :: <SP <object> ... -> <array>>\nReturns an array initialized with its arguments") ],
