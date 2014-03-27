@@ -133,6 +133,17 @@ interface here is compatible with one possible path."""
       return [elt_type.asPython(v) for v in self.array]
   def asPythonList(self, elt_type=None):
     return self.getArray(elt_type)
+
+  def compareSameType(self, other):
+    if len(self.array) < len(other.array): return -1
+    if len(self.array) > len(other.array): return 1
+
+    # else same length
+    for x,y in zip(self.array,other.array):
+      if x.compare(y) != 0: return x.compare(y)
+
+    return 0
+      
   def asStackDict(self,trace):
     # TODO Are venture arrays reflected as lists to the stack?
     # TODO Are stack lists lists, or are they themselves type tagged?
