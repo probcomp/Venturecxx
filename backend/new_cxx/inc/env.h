@@ -18,7 +18,7 @@ struct VentureEnvironment : VentureValue
 
   void addBinding(shared_ptr<VentureSymbol> sym,Node * node);
   Node * lookupSymbol(shared_ptr<VentureSymbol> sym);
-  Node * lookupSymbol(string sym);
+  Node * lookupSymbol(const string& sym);
 
   shared_ptr<VentureEnvironment> outerEnv;
   map<string,Node*> frame;

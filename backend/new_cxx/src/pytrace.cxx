@@ -15,9 +15,11 @@
 #include "gkernels/egibbs.h"
 #include "gkernels/slice.h"
 
+#include <boost/python/exception_translator.hpp>
+
 PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false) {}
 PyTrace::~PyTrace() {}
-  
+
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
 {
   VentureValuePtr exp = parseExpression(object);
@@ -243,9 +245,16 @@ void PyTrace::stop_continuous_inference() {
   }
 }
 
+void translateStringException(const string& err) {
+  PyErr_SetString(PyExc_RuntimeError, err.c_str());
+}
+
 BOOST_PYTHON_MODULE(libtrace)
 {
   using namespace boost::python;
+  
+  register_exception_translator<string>(&translateStringException);
+
   class_<PyTrace>("Trace",init<>())
     .def("eval", &PyTrace::evalExpression)
     .def("uneval", &PyTrace::unevalDirectiveID)

@@ -30,7 +30,7 @@ Node * VentureEnvironment::lookupSymbol(shared_ptr<VentureSymbol> sym)
   return lookupSymbol(sym->s);
 }
 
-Node * VentureEnvironment::lookupSymbol(string sym) 
+Node * VentureEnvironment::lookupSymbol(const string& sym) 
 {
   if (frame.count(sym)) 
   { 
@@ -38,10 +38,7 @@ Node * VentureEnvironment::lookupSymbol(string sym)
   }
   else if (outerEnv.get() == NULL)
   { 
-    cout << "Cannot find symbol: " << sym << endl;
-    // TODO throw a syntax error once exceptions work
-    assert(false); throw "Cannot find symbol: " + sym;
-    return NULL;
+    throw "Cannot find symbol: " + sym;
   }
   else 
   {

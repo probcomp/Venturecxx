@@ -32,7 +32,7 @@ VentureValuePtr parseExpression(boost::python::object o)
   
   for(boost::python::ssize_t i=0; i<L; i++)
   {
-exp.push_back(parseExpression(l[i]));
+    exp.push_back(parseExpression(l[i]));
   }
   return shared_ptr<VentureValue>(new VentureArray(exp));
 }
