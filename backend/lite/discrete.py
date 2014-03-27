@@ -8,11 +8,31 @@ from sp import VentureSP, SPAux, SPType
 from lkernel import LKernel
 from value import VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 
+class FlipOutputPSP(RandomPSP):
+  def simulate(self,args):
+    p = args.operandValues[0] if args.operandValues else 0.5
+    return random.random() < p
+    
+  def logDensity(self,val,args):
+    p = args.operandValues[0] if args.operandValues else 0.5
+    if val: return extendedLog(p)
+    else: return extendedLog(1 - p)
+
+  def logDensityBound(self, _x, _args): return 0
+
+  def enumerateValues(self,args):
+    p = args.operandValues[0] if args.operandValues else 0.5
+    if p == 1: return [True]
+    elif p == 0: return [False]
+    else: return [True,False]
+
+  def description(self,name):
+    return "  (%s p) returns true with probability p and false otherwise.  If omitted, p is taken to be 0.5." % name
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args):
     p = args.operandValues[0] if args.operandValues else 0.5
-    return random.random() < p
+    return int(random.random() < p)
     
   def logDensity(self,val,args):
     p = args.operandValues[0] if args.operandValues else 0.5
