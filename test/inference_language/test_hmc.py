@@ -2,7 +2,7 @@ import math
 import scipy.stats as stats
 from nose import SkipTest
 from testconfig import config
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest, reportKnownContinuous, reportSameContinuous
 from venture.test.config import get_ripl, collectSamples
 
 @statisticalTest
@@ -26,6 +26,7 @@ def testMVGaussSmoke():
   ripl.assume("vec", "(multivariate_normal (array 1 2) (matrix (list (list 1 2) (list 2 1))))")
   ripl.infer("(hmc default all 0.01 20 2)")
 
+@statisticalTest
 def testMoreElaborate():
   """Confirm that HMC still works in the presence of brush.  Do not,
   however, mess with the possibility that the principal nodes that HMC
@@ -54,4 +55,7 @@ def testMoreElaborate():
   v = [{"type": "real", "value": 0}, {"type": "real", "value": 0}]
   ripl.sivm.execute_instruction({"instruction":"observe","expression":"out","value":{"type":"list","value":v}})
 
-  ripl.infer("(hmc param all 0.01 20 2)")
+  preds_mh = collectSamples(ripl, 1)
+  ripl.sivm.core_sivm.engine.reset()
+  preds_hmc = collectSamples(ripl, 1, infer="(hmc param all 0.01 20 2)")
+  return reportSameContinuous(preds_mh, preds_hmc)
