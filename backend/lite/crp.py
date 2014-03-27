@@ -28,7 +28,9 @@ class CRPSP(VentureSP):
 class MakeCRPOutputPSP(PSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
-    output = TypedPSP(CRPOutputPSP(alpha), SPType([], AtomType()))
+    d = args.operandValues[1] if len(args.operandValues) == 2 else 0
+
+    output = TypedPSP(CRPOutputPSP(alpha,d), SPType([], AtomType()))
     return CRPSP(NullRequestPSP(),output)
 
   def childrenCanAAA(self): return True
@@ -37,21 +39,23 @@ class MakeCRPOutputPSP(PSP):
     return "(%s alpha) -> <SP () <number>>\n  Chinese Restaurant Process with hyperparameter alpha.  Returns a sampler for the table number." % name
 
 class CRPOutputPSP(RandomPSP):
-  def __init__(self,alpha): self.alpha = float(alpha)
+  def __init__(self,alpha,d):
+    self.alpha = float(alpha)
+    self.d = float(d)
 
   def simulate(self,args):
     aux = args.spaux
     old_indices = [i for i in aux.tableCounts]
-    counts = [aux.tableCounts[i] for i in old_indices] + [self.alpha]
+    counts = [aux.tableCounts[i] - self.d for i in old_indices] + [self.alpha + (aux.numTables * self.d)]
     indices = old_indices + [aux.nextIndex]
     return simulateCategorical(counts,indices)
 
   def logDensity(self,index,args):
     aux = args.spaux
     if index in aux.tableCounts:
-      return math.log(aux.tableCounts[index]) - math.log(self.alpha + aux.numCustomers)
+      return math.log(aux.tableCounts[index] - self.d) - math.log(self.alpha + aux.numCustomers)
     else:
-      return math.log(self.alpha) - math.log(self.alpha + aux.numCustomers)
+      return math.log(self.alpha + (aux.numTables * self.d)) - math.log(self.alpha + aux.numCustomers)
 
   def incorporate(self,index,args):
     aux = args.spaux
@@ -73,6 +77,6 @@ class CRPOutputPSP(RandomPSP):
         
   def logDensityOfCounts(self,aux):
     term1 = scipy.special.gammaln(self.alpha) - scipy.special.gammaln(self.alpha + aux.numCustomers)
-    term2 = aux.numTables + math.log(self.alpha)
-    term3 = sum([scipy.special.gammaln(aux.tableCounts[index]) for index in aux.tableCounts])
+    term2 = aux.numTables + math.log(self.alpha + (aux.numTables * self.d))
+    term3 = sum([scipy.special.gammaln(aux.tableCounts[index] - self.d) for index in aux.tableCounts])
     return term1 + term2 + term3
