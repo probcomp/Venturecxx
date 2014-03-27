@@ -63,12 +63,12 @@ def heatplot(n2array,nbins=100):
 ### FIXME: we can always use the same function for lite and puma
 # by checking for pickling
 # every time or by always outputting a string representation (serializing)
-def pickle_safe(out):
+def pickle_safe(out_lst):
     try:
-        pickle.dumps(out)
-        return out
+        pickle.dumps(out_lst)
+        return out_lst
     except:
-        return str(out)
+        return map(str,out_lst)
     
 
 def get_name(r_mr):
@@ -101,6 +101,24 @@ def mr_plot_conditional(mr,limit=0,data=[],xr=(-4,4),no_xs=100):
     outs = mr.dview.pull('plotcond_outs_%i' % store_id)                                                                     
     
     return outs
+
+
+
+def display_directives(ripl_mripl,instruction='observe'):
+    ## FIXME add replace with dict of symbls
+    v=ripl_mripl
+    mr=1  if isinstance(v,MRipl) else 0
+    di_list = v.local_ripl.list_directives() if mr else v.list_directives()
+
+    instruction_list = []
+    for di in di_list:
+        if di['instruction']==instruction:
+            instruction_list.append( directive_to_string(di) )
+            print directive_to_string(di)
+
+    return instruction_list
+
+    
         
 
 
@@ -147,6 +165,16 @@ def test_build():
             print line; v.execute_program(line)
             print build_exp(v.list_directives()[-1]['expression'])
 
+
+def directive_to_string(d):
+    ## FIXME: replace symbols, and reduce values to 2dp?
+    if d['instruction']=='assume':
+        return '[assume %s %s]' %( d['symbol'], build_exp(d['expression']) ) 
+    elif d['instruction']=='observe':
+        return '[observe %s %s]' %( build_exp(d['expression']), d['value']) 
+    elif d['instruction']=='predict':
+        return '[predict %s %s]' % build_exp(d['expression'])
+                                        
 
 @interactive
 def run_py_directive(ripl,d):
@@ -478,6 +506,8 @@ class MRipl():
                     pickle.dumps(out)
                     return out
                 except:
+
+
                     return str(out)
 
 
