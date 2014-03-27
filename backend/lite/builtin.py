@@ -23,7 +23,7 @@ import env
 # pylint: disable=no-member
 
 def builtInValues():
-  return { "true" : v.VentureBool(True), "false" : v.VentureBool(False) }
+  return { "true" : v.VentureBool(True), "false" : v.VentureBool(False), "nil" : v.VentureNil() }
 
 def no_request(output): return VentureSP(NullRequestPSP(), output)
 
