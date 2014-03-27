@@ -28,18 +28,17 @@ class HMCDemo(u.VentureUnit):
     program = """
 [ASSUME x (uniform_continuous -10 10)]
 [ASSUME y (uniform_continuous -10 10)]
-[ASSUME out
- (if (< x 0)
-     (multivariate_normal (array x y) (matrix (list (list 1 3) (list 3 1))))
-     (multivariate_normal (array x y) (matrix (list (list 3 0) (list 0 3)))))]
+[ASSUME xout (if (< x 0)
+    (normal x 1)
+    (normal x 2))]
+[ASSUME out (multivariate_normal (array xout y) (matrix (list (list 1 3) (list 3 1))))]
 """
     commands = [command_str.split("]")[0].split(" ", 1) for command_str in program.strip().split("[ASSUME ") if command_str]
     for (var, exp) in commands:
       self.assume(var, exp)
 
   def makeObserves(self):
-    self.observe("(lookup out 0)", 0)
-    self.observe("(lookup out 1)", 1)
+    pass
 
 def plot_contours(xs, ys, func):
   xmin = min(xs)
@@ -53,10 +52,24 @@ def plot_contours(xs, ys, func):
   Z = np.vectorize(func)(X,Y)
   plt.contour(X, Y, Z)
 
+observes_made = False
+
 def make_pic(name, inf_prog):
+  global observes_made
   def infer(ripl, _ct):
+    global observes_made
+    print observes_made
+    if not observes_made:
+      # TODO This is a hack around there being no good way to observe
+      # datastructures right now.
+      v = [{"type": "real", "value": 0}, {"type": "real", "value": 0}]
+      ripl.sivm.execute_instruction({"instruction":"observe","expression":"out","value":{"type":"list","value":v}})
+      observes_made = True
+    print observes_made
+    print ripl.list_directives()
     ripl.infer(inf_prog)
   model = HMCDemo(shortcuts.Lite().make_church_prime_ripl())
+  observes_made = False
   history = model.runFromConditional(200, runs=1, verbose=True, name=name, infer=infer)
   xs = history.nameToSeries["x"][0].values
   ys = history.nameToSeries["y"][0].values
