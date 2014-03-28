@@ -99,6 +99,12 @@ class UniformDiscreteOutputPSP(RandomPSP):
   def description(self,name):
     return "  (%s start end) samples a uniform discrete on the (start, start + 1, ..., end - 1)" % name
 
+class PoissonOutputPSP(RandomPSP):
+  def simulate(self,args): return scipy.stats.poisson.rvs(args.operandValues[0])
+  def logDensity(self,val,args): return scipy.stats.poisson.logpmf(val,args.operandValues[0])
+  def description(self,name):
+    return "  (%s lambda) samples a poisson with rate lambda" % name
+
 
 #### Collapsed Beta Bernoulli
 class BetaBernoulliSPAux(SPAux):

@@ -189,6 +189,8 @@ def builtInSPsList():
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
 
            [ "uniform_discrete",binaryNumS(discrete.UniformDiscreteOutputPSP()) ],
+           [ "poisson",unaryNumS(discrete.PoissonOutputPSP()) ],
+                      
            [ "normal",binaryNumS(continuous.NormalOutputPSP()) ],
            [ "uniform_continuous",binaryNumS(continuous.UniformOutputPSP()) ],
            [ "beta",binaryNumS(continuous.BetaOutputPSP()) ],
