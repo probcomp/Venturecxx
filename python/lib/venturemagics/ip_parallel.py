@@ -1086,15 +1086,20 @@ def plot_conditional(ripl,data=[],x_range=(-3,3),no_xs=40,no_reps=30, return_fig
     my_fig = fig if return_fig else None
     return {'f':(xr,f_xr),'xs,ys':(xs,ys),'fig':my_fig}
 
+def lst_plot_conditional(ripl_lst,engine_limit=0,data=[],x_range=(-3,3),no_xs=40,no_reps=40):
+    l=[plot_conditional(v,data,x_range,no_xs,no_reps) for i,v in enumerate(ripl_lst) if i<engine_limit]
+    return l
+
 def mr_plot_conditional(mr,limit=0,data=[],x_range=(-3,3),no_xs=40,no_reps=40):
-                                                                
-                                                                        
     # need to be careful of data: can send with string but maybe better to push the variable and 
     # and send the variable name, instead of potentially long string
     store_id = np.random.randint(10**8)
+    no_engines = len(mr.cli.ids)
+    engine_limit = int(np.ceil(limit/no_engines))
+    print engine_limit
     s1 = 'plotcond_outs_%i = ' % store_id
-    s2 = 'plot_conditional(mripls[%i],limit=%i,data=%s,x_range=%s,no_xs=%i,no_reps=%i)' %(mr.mrid,
-                                      limit,str(data),str(x_range),no_xs,no_reps )
+    s2 = 'lst_plot_conditional(mripls[%i],engine_limit=%i,data=%s,x_range=%s,no_xs=%i,no_reps=%i)' %(mr.mrid,
+                                      engine_limit,str(data),str(x_range),no_xs,no_reps )
     mr.dview.execute(s1+s2)
     outs = mr.dview.pull('plotcond_outs_%i' % store_id)                                                                     
                                                                                     
