@@ -29,10 +29,10 @@ def mixMH(trace,indexer,operator):
 
   alpha = xiMix + logAlpha - rhoMix
   if math.log(random.random()) < alpha:
-#    sys.stdout.write("<accept>")
+#    sys.stdout.write(".")
     operator.accept() # May mutate trace
   else:
-#    sys.stdout.write("<reject>")
+#    sys.stdout.write("!")
     operator.reject() # May mutate trace
 
 class BlockScaffoldIndexer(object):
