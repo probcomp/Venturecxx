@@ -78,11 +78,14 @@ def make_pic(name, inf_prog):
   plt.plot(xs, ys, '.', label=inf_prog)
   # for (i, (x, y)) in enumerate(zip(xs, ys)):
   #   plt.text(x, y, i)
-  plot_contours(xs, ys, lambda x, y: scipy.stats.norm.pdf(x, loc=0, scale=3) * scipy.stats.norm.pdf(y, loc=0, scale=2))
+  # TODO Plotting the contours would require integrating out the intermediate normal, which I do not wish to do now.
+  # plot_contours(xs, ys, lambda x, y: scipy.stats.norm.pdf(x, loc=0, scale=3) * scipy.stats.norm.pdf(y, loc=0, scale=2))
   u.legend_outside()
   u.savefig_legend_outside("%s-demo.png" % name)
   print "Figure saved in %s-demo.png" % name
 
 if __name__ == '__main__':
+  # TODO To compare rejection sampling, would need to define logDensityBound for MVNormalOutputPSP
+  # make_pic("rej", "(rejection default all 1)")
   make_pic("hmc", "(hmc param all 0.05 20 1)")
-  make_pic("mh", "(mh default all 1)")
+  make_pic("mh", "(mh default all 10)")
