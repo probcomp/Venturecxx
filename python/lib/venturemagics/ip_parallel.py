@@ -13,115 +13,23 @@ mk_l = make_lite_church_prime_ripl
 
 ### IPython Parallel Magics
 ## Use: See examples in /examples
+################### TODO
+# create branch where we have list of local_ripls instead of single,
+# (should local ripls do infer?)
+# implement the lite/puma simul. at infer, only update the one backend.
+# ---actually, we can't do test assume, coz forces compatibiility that won't exist
+# . so we need to check in the function what backend we have. 
 
-# Tasks: 
-# 1. Create a list of lite and puma ripls on construction
-# all directives should run on each set apart from infer.
-# If user switches backend, you switch where you run the infers. 
-# (and no_transitions will be restarted). 
-
-# 2. Allow for all_ripls to be local - extending the local ripl. 
-
-# 3. Allow display of directives (assumes or observes) using build_exp
-# 4. Plotting functions should use predict instead of sample (discuss w vkm)
-# # 5. Need to look at Vscript and modify the cell magic for it, also the 
-#      display directives would have to be modified (print in vscript)
-# # 6. Need to clean up plotting functions so that they do sensible things
-#   given mistyped input, e.g. sample populations, etc. 
+# special cases of lite vs. puma: infer, list_directives (get from local_ripl instead)
 
 
-## Plan: we want to have the engines import a set of utility functions. one 
-# easy thing for them to do is to import ip_parallel. that way, both their ripls
-# and any local ripls will have access to the same utils when we import ip_parallel.
-# (note that engines will have access via the import and with __module__=ip_para, whereas objects in ip_para
-# will have access via closures.
+### FIXME: no special case for lite, update both sets of ripls and return pickle_safe version
+## after having imported pickle safe across the engines (via the import of ip_para)
 
-# engines need heatplot, getname, getobserves (for plotting data). maybe life is easier also
-# if they just have plot_conditional also. that way, we don't have to both mapping it. otoh, 
-# how can be get the engines to do things like limit?
-
-# idea: plot_conditional (and similar) take a list of ripls and iterate over it, optionally
-# producing a plot with all curves on it. then iterate up to 'limit'.
-
-# to use on engines, we just %px plot_conditional(mripls[mr.mrid],limit=4,data=[],....)
-# this way we can customize the plots much more easily. 
-
-def if_lst_flatten(l):
-    if type(l[0])==list: return [el for subl in l for el in subl]
-    return l
-
-def heatplot(n2array,nbins=100):
-    """Input is an nx2 array, returns xi,yi,zi for colormesh""" 
-    x, y = n2array.T
-    k = kde.gaussian_kde(n2array.T)
-    xi, yi = np.mgrid[x.min():x.max():nbins*1j, y.min():y.max():nbins*1j]
-    zi = k(np.vstack([xi.flatten(), yi.flatten()]))
-    # plot ax.pcolormesh(xi, yi, zi.reshape(xi.shape))
-    return (xi, yi, zi.reshape(xi.shape))
-
-
-### FIXME: we can always use the same function for lite and puma
-# by checking for pickling
-# every time or by always outputting a string representation (serializing)
-def pickle_safe(out_lst):
-    try:
-        pickle.dumps(out_lst)
-        return out_lst
-    except:
-        return map(str,out_lst)
     
-
-def get_name(r_mr):
-    'Input is ripl or mripl, out name string via "model_name" ripl variable'
-    try:
-        r_mr.dview; mr=1
-    except:
-        mr=0
-    di_l = r_mr.list_directives()[0] if mr else r_mr.list_directives()
-    if 'model_name' in str(di_l):
-        try:
-            n = r_mr.sample('model_name')[0] if mr else r_mr.sample('model_name')
-            return n
-        except: pass
-    else:
-        return 'anon model'
-
-
-def mr_plot_conditional(mr,limit=0,data=[],xr=(-4,4),no_xs=100):
-    # we take the default args from real plot_conditional
-    # note we changed limit to zero so that it's always an int (when zero there's no limit)
-  
-    # need to be careful of data: can send with string but maybe better to push the variable and 
-    # and send the variable name, instead of potentially long string
-    store_id = np.random.randint(10**8)
-    mr.dview.execute('plotcond_outs_%i = plot_conditional(mripls[%i], limit=%i, data=%s, xr=%s, no_xs=%i)' % 
-                      (store_id, mr.mrid, limit,str(data),str(xr),no_xs) )
-    
-    ## note, output can only be sent if pickable, and so no figures for rmripls (only local mripls)
-    outs = mr.dview.pull('plotcond_outs_%i' % store_id)                                                                     
-    
-    return outs
-
-
-
-def display_directives(ripl_mripl,instruction='observe'):
-    ## FIXME add replace with dict of symbls
-    v=ripl_mripl
-    mr=1  if isinstance(v,MRipl) else 0
-    di_list = v.local_ripl.list_directives() if mr else v.list_directives()
-
-    instruction_list = []
-    for di in di_list:
-        if di['instruction']==instruction:
-            instruction_list.append( directive_to_string(di) )
-            print directive_to_string(di)
-
-    return instruction_list
 
     
         
-
-
 
 # Utility functions for working with ipcluster
 
@@ -145,8 +53,15 @@ def stop_engines():
 
 ### Functions needed for the MRipl Class (could be added to scope of the class definition)
 
-# functions that copy ripls by batch loading directives that are constructed from directives_list
+# functions used by engines (and imported when constructing an mripl)
+def pickle_safe(out_lst):
+    try:
+        pickle.dumps(out_lst)
+        return out_lst
+    except:
+        return map(str,out_lst)
 
+# functions that copy ripls by batch-loading directives that are constructed from directives_list
 @interactive
 def build_exp(exp):
     'Take expression from directive_list and build the Lisp string'
@@ -157,30 +72,9 @@ def build_exp(exp):
     else:
         return '('+ ' '.join(map(build_exp,exp)) + ')'
 
-def test_build():
-    v=mk_l()
-    s = library_string + x_model_crp + pivot_model
-    for line in s.split('\n'):
-        if line:
-            print line; v.execute_program(line)
-            print build_exp(v.list_directives()[-1]['expression'])
-
-
-def directive_to_string(d):
-    ## FIXME: replace symbols, and reduce values to 2dp?
-    if d['instruction']=='assume':
-        return '[assume %s %s]' %( d['symbol'], build_exp(d['expression']) ) 
-    elif d['instruction']=='observe':
-        return '[observe %s %s]' %( build_exp(d['expression']), d['value']) 
-    elif d['instruction']=='predict':
-        return '[predict %s %s]' % build_exp(d['expression'])
-                                        
-
 @interactive
 def run_py_directive(ripl,d):
-    '''FIXME: currently removes labels from instructions. Should be
-    rewritten so that the label (and any other crucial information)
-    is retained.'''
+    # FIXME removes labels
     if d['instruction']=='assume':
         ripl.assume( d['symbol'], build_exp(d['expression']) )
     elif d['instruction']=='observe':
@@ -249,7 +143,7 @@ class MRipl():
         #self.seeds = map(int,(list(np.random.randint(1,10**3,self.no_ripls)))) ##FIXME set np seed in advance for reproduce
         self.total_transitions = 0
         
-        self.cli = Client() if not(client) else client
+        self.cli = Client() if not(client) else client # REMOVE
         self.dview = self.cli[:]
         self.dview.block = True
         
@@ -313,7 +207,19 @@ class MRipl():
             [ripls[i].set_seed(seeds[i]) for i in range(len(ripls))]
 
         return  self.dview.apply(f,self.mrid) 
+
+
+    def test_assume(self,sym,exp,**kwargs):
+        self.local_ripl.assume(sym,exp,**kwargs)
+        
+        @interactive
+        def f(mrid,backend,sym,exp,**kwargs):
+            outs =[ [ripl.assume(sym,exp,**kwargs) for ripl in mripls[mrid]] for mripls in backends]
+            return outs[0] if backend=='puma' else pickle_safe(outs[1])
+
+        return self.lst_flatten( self.dview.apply(f,self.backend,self_mrid,sym,exp,**kwargs) )
     
+
     def assume(self,sym,exp,**kwargs):
         self.local_ripl.assume(sym,exp,**kwargs)
         
@@ -594,7 +500,6 @@ class MRipl():
         '''Input: lists of dids_labels and expressions.
            Output: values from each ripl, (optional) plots.''' 
         
-
         
         if not(isinstance(did_labels_list,list)): did_labels_list = [did_labels_list]
         if not(isinstance(exp_list,list)): exp_list = [exp_list]
@@ -1050,7 +955,6 @@ library_string='''
 [assume suml (lambda (xs) (fold + xs 0) )]
 [assume prodl (lambda (xs) (fold * xs 1) ) ]
 '''
-
 lite_addendum='''
 [assume nil (list)]
 '''
@@ -1062,37 +966,136 @@ def test_ripls(print_lib=False):
     return vs
 
 
-x_model_crp='''
-[assume alpha (uniform_continuous .01 1)]
-[assume crp (make_crp alpha) ]
-[assume z (mem (lambda (i) (crp) ) ) ]
-[assume mu (mem (lambda (z) (normal 0 5) ) ) ] 
-[assume sig (mem (lambda (z) (uniform_continuous .1 8) ) ) ]
-[assume x_d (lambda () ( (lambda (z) (normal (mu z) (sig z) )) (crp) ) ) ]
-[assume x (mem (lambda (i) (normal (mu (z i)) (sig (z i))))  ) ]
-'''
-pivot_model='''
-[assume w0 (mem (lambda (p)(normal 0 3))) ]
-[assume w1 (mem (lambda (p)(normal 0 3))) ]
-[assume w2 (mem (lambda (p)(normal 0 1))) ]
-[assume noise (mem (lambda (p) (gamma 2 1) )) ]
-[assume pivot (normal 0 5)]
-[assume p (lambda (x) (if (< x pivot) false true) ) ]
-[assume f (lambda (x)  ( (lambda (p) (+ (w0 p) (* (w1 p) x) (* (w2 p) (* x x)))  )    (p x)  ) ) ]
-[assume noise_p (lambda (fx x) (normal fx (noise (p x))) )] 
-[assume y_x (lambda (x) (noise_p (f x) x) ) ]     
-[assume y (mem (lambda (i) (y_x (x i))  ))]            
-[assume n (gamma 1 100) ]
-[assume model_name (quote pivot)]
-[observe (y_x) (+ 10 10)]
-[observe (+ 1 (y_x)) (+ 10 10)]
-[observe (+ (normal (lambda () 1) (lambda() (+ 1 1 1) ) ) (flip .5) ) (+ 11 1) ]
-[predict (lambda (x) (noise_p (f x) x))  ]
-[predict ((lambda (x) (noise_p (f x) x)) 5 )  ]
-[predict (+ ((lambda() 1)) (* (binomial 10 .5) ) ) ]
-'''
+## Utility functions for working with MRipls
+def display_directives(ripl_mripl,instruction='observe'):
+    ## FIXME add replace with dict of symbls
+    v=ripl_mripl
+    mr=1  if isinstance(v,MRipl) else 0
+    di_list = v.local_ripl.list_directives() if mr else v.list_directives()
+
+    instruction_list = []
+    for di in di_list:
+        if di['instruction']==instruction:
+            instruction_list.append( directive_to_string(di) )
+            print directive_to_string(di)
+    return instruction_list
+
+def directive_to_string(d):
+    ## FIXME: replace symbols
+    if d['instruction']=='assume':
+        return '[assume %s %s]' %( d['symbol'], build_exp(d['expression']) ) 
+    elif d['instruction']=='observe':
+        return '[observe %s %s]' %( build_exp(d['expression']), d['value']) 
+    elif d['instruction']=='predict':
+        return '[predict %s %s]' % build_exp(d['expression'])
 
 
-
+## MRipl Regression Utilities:
+###will all be imported to engines via the 'from ip_para import *' instruction for ripls
         
+def if_lst_flatten(l):
+    if type(l[0])==list: return [el for subl in l for el in subl]
+    return l
 
+def heatplot(n2array,nbins=100):
+    """Input is an nx2 array, returns xi,yi,zi for colormesh""" 
+    x, y = n2array.T
+    k = kde.gaussian_kde(n2array.T)
+    xi, yi = np.mgrid[x.min():x.max():nbins*1j, y.min():y.max():nbins*1j]
+    zi = k(np.vstack([xi.flatten(), yi.flatten()]))
+    # plot ax.pcolormesh(xi, yi, zi.reshape(xi.shape))
+    return (xi, yi, zi.reshape(xi.shape))
+
+def get_name(r_mr):
+    'Input is ripl or mripl, out name string via "model_name" ripl variable'
+    mr= 1 if isinstance(mripl,MRipl) else 0
+    # try:
+    #     r_mr.dview; mr=1
+    # except:
+    #     mr=0
+    di_l = r_mr.list_directives()[0] if mr else r_mr.list_directives()
+    if 'model_name' in str(di_l):
+        try:
+            n = r_mr.sample('model_name')[0] if mr else r_mr.sample('model_name')
+            return n
+        except: pass
+    else:
+        return 'anon model'
+
+
+def plot_conditional(ripl,data=[],x_range=(-3,3),no_xs=40,no_reps=30, return_fig=False):
+    ##FIXME we should predict and forget for pivot and maybe everything
+    
+    name=get_name(ripl)
+
+    # find data, set x-interval on which to sample f(x)
+    
+    # if data==[]: try: data=ripl_plotting_data; except: pass
+    if data:
+        d_xs,d_ys = zip(*data)
+        x_range = (min(d_xs)-1,max(d_xs)+1)
+    
+    xr = np.linspace(x_range[0],x_range[1],no_xs)
+    
+    # sample f on xr and add noise (if noise is a float)
+    f_xr = [ripl.sample('(f %f)' % x) for x in xr]
+    if "'symbol': 'noise'" in str(ripl.list_directives()):
+        noise=ripl.sample('noise')
+        fixed_noise = isinstance(noise,float)
+        if fixed_noise:
+            f_u = [fx+noise for fx in f_xr]; f_l = [fx-noise for fx in f_xr]
+    
+    # sample (y_x x) for x in xr and compute 1sd intervals
+    xys=[]; ymean=[]; ystd=[]
+    for x in xr:
+        x_y = [ripl.sample('(y_x %f)' % x) for r in range(no_reps)]        
+        ymean.append( np.mean(x_y) )
+        ystd.append( np.abs( np.std(x_y) ) )
+        xys.extend( [(x,y) for y in x_y] )
+    
+    xs,ys = zip(*xys)
+    ymean = np.array(ymean); ystd = np.array(ystd)
+    y_u = ymean+ystd; y_l = ymean - ystd
+    if not fixed_noise:
+        f_u = y_u ; f_l = y_l
+
+    # Plotting
+    fig,ax = plt.subplots(1,3,figsize=(17,5),sharex=True,sharey=True)
+    
+    # plot data and f with noise
+    if data:
+        ax[0].scatter(d_xs,d_ys,label='Data')
+        ax[0].legend()
+    
+    ax[0].plot(xr, f_xr, 'k', color='#CC4F1B')
+    ax[0].fill_between(xr,f_l,f_u,alpha=0.5,edgecolor='#CC4F1B',facecolor='#FF9848')
+    ax[0].set_title('Ripl: f (+- 1sd noise) w/ data [name: %s]' % name )
+
+    ax[1].scatter(xs,ys,alpha=0.7,s=5,facecolor='0.6', lw = 0)
+    ax[1].plot(xr, ymean, 'k', alpha=.9,color='m',linewidth=1)
+    ax[1].plot(xr, y_l, 'k', alpha=.8, color='m',linewidth=.5)
+    ax[1].plot(xr, y_u, 'k', alpha=.8,color='m',linewidth=.5)
+    ax[1].set_title('Ripl: Samples from P(y/X=x), w/ mean +- 1sd [name: %s]' % name )
+        
+    xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
+    ax[2].pcolormesh(xi, yi, zi)
+    ax[2].set_title('Ripl: GKDE P(y/X=x) [name: %s]' % name )
+    
+    fig.tight_layout()
+
+    my_fig = fig if return_fig else None
+    return {'f':(xr,f_xr),'xs,ys':(xs,ys),'fig':my_fig}
+
+def mr_plot_conditional(mr,limit=0,data=[],x_range=(-3,3),no_xs=40,no_reps=40):
+                                                                
+                                                                        
+    # need to be careful of data: can send with string but maybe better to push the variable and 
+    # and send the variable name, instead of potentially long string
+    store_id = np.random.randint(10**8)
+    s1 = 'plotcond_outs_%i = ' % store_id
+    s2 = 'plot_conditional(mripls[%i],limit=%i,data=%s,x_range=%s,no_xs=%i,no_reps=%i)' %(mr.mrid,
+                                      limit,str(data),str(x_range),no_xs,no_reps )
+    mr.dview.execute(s1+s2)
+    outs = mr.dview.pull('plotcond_outs_%i' % store_id)                                                                     
+                                                                                    
+    return outs
