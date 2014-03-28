@@ -10,6 +10,7 @@ import continuous
 import dstructures
 import csp
 import crp
+import cmvn
 import msp
 import hmm
 import conditionals
@@ -208,6 +209,7 @@ def builtInSPsList():
            [ "make_uc_sym_dir_mult",typed_nr(dirichlet.MakerUSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], SPType([], v.AnyType()), min_req_args=2) ],
 
            [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType(),v.NumberType()], SPType([], v.NumberType()), min_req_args = 1) ],
+           [ "make_cmvn",typed_nr(cmvn.MakeCMVNOutputPSP(), [v.HomogeneousArrayType(v.NumberType()),v.NumberType(),v.NumberType(),v.MatrixType()], SPType([], SPType([], v.MatrixType()))) ],           
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.NumberType()], v.NumberType())) ],
   ]
