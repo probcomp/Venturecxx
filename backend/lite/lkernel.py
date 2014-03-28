@@ -1,3 +1,4 @@
+import numbers
 from abc import ABCMeta, abstractmethod
 from sp import VentureSP
 from value import VentureValue
@@ -39,7 +40,10 @@ class DeterministicLKernel(LKernel):
     assert isinstance(value, VentureValue)
 
   def simulate(self,trace,oldValue,args): return self.value
-  def weight(self, _trace, newValue, _oldValue, args): return self.psp.logDensity(newValue,args)
+  def weight(self, _trace, newValue, _oldValue, args):
+    answer = self.psp.logDensity(newValue,args)
+    assert isinstance(answer, numbers.Number)
+    return answer
   def gradientOfReverseWeight(self, _trace, newValue, args):
     return self.psp.gradientOfLogDensity(newValue, args.operandValues)
 

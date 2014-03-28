@@ -1,3 +1,4 @@
+import numbers
 import scipy.stats
 import scipy.special
 import math
@@ -28,8 +29,10 @@ class MVNormalOutputPSP(RandomPSP):
 
   def logDensity(self, x, args):
     (mu, sigma) = self.__parse_args__(args)
-    return -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
-          -.5*len(sigma)*np.log(np.pi)-.5*np.log(npla.det(sigma))
+    answer =  -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
+              -.5*len(sigma)*np.log(np.pi)-.5*np.log(npla.det(sigma))
+    assert isinstance(answer, numbers.Number)
+    return answer
 
   def gradientOfLogDensity(self, x, args):
     (mu, sigma) = (np.array(args[0]), args[1])
