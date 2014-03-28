@@ -89,7 +89,6 @@ OutputNode * Trace::getOutermostNonRefAppNode(Node * node)
   assert(outputNode);
   
   shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
-  if(!psp->isRandom()) { throw "Cannot constrain a deterministic value."; }
   
   if (dynamic_pointer_cast<ESRRefOutputPSP>(psp))
   { 
@@ -100,7 +99,11 @@ OutputNode * Trace::getOutermostNonRefAppNode(Node * node)
   { 
     return getOutermostNonRefAppNode(outputNode->operandNodes[2]);
   }
-  else { return outputNode; }
+  else
+  {
+    if(!psp->isRandom()) { throw "Cannot constrain a deterministic value."; }
+    return outputNode;
+  }
 }
 
 
