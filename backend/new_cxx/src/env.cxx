@@ -19,10 +19,14 @@ VentureEnvironment::VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv,
   }
 }
 
-void VentureEnvironment::addBinding(shared_ptr<VentureSymbol> sym,Node * node)
+void VentureEnvironment::addBinding(const string& sym, Node * node)
 {
-  assert(!frame.count(sym->s));
-  frame[sym->s] = node; 
+  if (frame.count(sym))
+  {
+    throw sym + " already defined.";
+  }
+  
+  frame[sym] = node;
 }
 
 Node * VentureEnvironment::lookupSymbol(shared_ptr<VentureSymbol> sym)
@@ -38,7 +42,7 @@ Node * VentureEnvironment::lookupSymbol(const string& sym)
   }
   else if (outerEnv.get() == NULL)
   { 
-    throw "Cannot find symbol: " + sym;
+    throw "Cannot find symbol '" + sym + "'";
   }
   else 
   {

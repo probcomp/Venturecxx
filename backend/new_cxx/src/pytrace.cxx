@@ -61,9 +61,9 @@ void PyTrace::unobserve(DirectiveID did)
   }
 }
 
-void PyTrace::bindInGlobalEnv(string sym, DirectiveID did)
+void PyTrace::bindInGlobalEnv(const string& sym, DirectiveID did)
 {
-  trace->globalEnvironment->addBinding(shared_ptr<VentureSymbol>(new VentureSymbol(sym)),trace->families[did].get());
+  trace->globalEnvironment->addBinding(sym,trace->families[did].get());
 }
 
 boost::python::object PyTrace::extractPythonValue(DirectiveID did)
@@ -232,7 +232,6 @@ void PyTrace::start_continuous_inference(boost::python::dict params)
   shared_ptr<Inferer> inferer = shared_ptr<Inferer>(new Inferer(trace, params));
   
   trace->makeConsistent();
-  cout << "Trace made consistent!" << endl;
   
   continuous_inference_thread = new boost::thread(run_continuous_inference, inferer, &continuous_inference_running);
 }
@@ -249,11 +248,16 @@ void translateStringException(const string& err) {
   PyErr_SetString(PyExc_RuntimeError, err.c_str());
 }
 
+void translateCStringException(const char* err) {
+  PyErr_SetString(PyExc_RuntimeError, err);
+}
+
 BOOST_PYTHON_MODULE(libtrace)
 {
   using namespace boost::python;
   
   register_exception_translator<string>(&translateStringException);
+  register_exception_translator<const char*>(&translateCStringException);
 
   class_<PyTrace>("Trace",init<>())
     .def("eval", &PyTrace::evalExpression)

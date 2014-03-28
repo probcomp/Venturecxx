@@ -24,10 +24,12 @@ boost::python::object CRPSPAux::toPython(Trace * trace) const
 // Maker
 VentureValuePtr MakeCRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("make_crp", args, 1, 2);
+  
   double alpha = args->operandValues[0]->getDouble();
   double d = 0;
-
-  if (args->operandValues.size() > 1) { d = args->operandValues[1]->getDouble(); }
+  
+  if (args->operandValues.size() == 2) { d = args->operandValues[1]->getDouble(); }
 
   return VentureValuePtr(new VentureSPRecord(new CRPSP(alpha, d),new CRPSPAux()));
 }
@@ -53,6 +55,8 @@ boost::python::dict CRPSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) cons
 
 VentureValuePtr CRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("crp", args, 0);  
+  
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);
 

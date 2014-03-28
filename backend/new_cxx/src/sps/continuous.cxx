@@ -19,6 +19,7 @@
 #include "sps/numerical_helpers.h"
 #include "args.h"
 #include "values.h"
+#include "utils.h"
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -32,14 +33,13 @@ using std::isfinite;
 /* Normal */
 VentureValuePtr NormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
+  checkArgsLength("normal", args, 2);
 
-  shared_ptr<VentureNumber> vmu = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  shared_ptr<VentureNumber> vsigma = dynamic_pointer_cast<VentureNumber>(operands[1]);
-  assert(vmu);
-  assert(vsigma);
-  double x = gsl_ran_gaussian(rng, vsigma->getDouble()) + vmu->getDouble();
-//  cout << "Normal::simulate(" << x << " | " << vmu->getDouble() << ", " << vsigma->getDouble() << ")" << endl;
+  double mu = args->operandValues[0]->getDouble();
+  double sigma = args->operandValues[1]->getDouble();
+
+  double x = gsl_ran_gaussian(rng, sigma) + mu;
+
   return VentureValuePtr(new VentureNumber(x));
 }
 
@@ -56,23 +56,11 @@ double NormalPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng)  c
 
 double NormalPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  double mu;
-  shared_ptr<VentureNumber> vmu = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  if (vmu) { mu = vmu->getDouble(); }
-  else
-  {
-    shared_ptr<VentureAtom> vcmu = dynamic_pointer_cast<VentureAtom>(operands[0]);
-    assert(vcmu);
-    mu = vcmu->n;
-  }
+  double mu = args->operandValues[0]->getDouble();
+  double sigma = args->operandValues[1]->getDouble();
+  double x = value->getDouble();
 
-  shared_ptr<VentureNumber> sigma = dynamic_pointer_cast<VentureNumber>(operands[1]);
-  shared_ptr<VentureNumber> x = dynamic_pointer_cast<VentureNumber>(value);
-  assert(sigma);
-  assert(x);
-//  cout << "Normal::logDensity(" << x->getDouble() << " | " << mu << ", " << sigma->getDouble() << ")" << endl;
-  return NormalDistributionLogLikelihood(x->getDouble(), mu, sigma->getDouble());
+  return NormalDistributionLogLikelihood(x, mu, sigma);
 }
 
 double NormalPSP::logDensityNumeric(double output, const vector<double> & args) const
@@ -116,84 +104,72 @@ vector<double> NormalPSP::gradientOfLogDensity(double output,
 /* Gamma */
 VentureValuePtr GammaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> a = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  shared_ptr<VentureNumber> b = dynamic_pointer_cast<VentureNumber>(operands[1]);
-  assert(a);
-  assert(b);
-  double x = gsl_ran_gamma(rng, a->getDouble(), 1.0 / b->getDouble());
+  checkArgsLength("gamma", args, 2);
+
+  double a = args->operandValues[0]->getDouble();
+  double b = args->operandValues[1]->getDouble();
+
+  double x = gsl_ran_gamma(rng, a, 1.0 / b);
   return VentureValuePtr(new VentureNumber(x));
 }
 
 double GammaPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> a = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  shared_ptr<VentureNumber> b = dynamic_pointer_cast<VentureNumber>(operands[1]);
-  shared_ptr<VentureNumber> x = dynamic_pointer_cast<VentureNumber>(value);
-  assert(a);
-  assert(b);
-  assert(x);
-  return GammaDistributionLogLikelihood(x->getDouble(), a->getDouble(), b->getDouble());
+  double a = args->operandValues[0]->getDouble();
+  double b = args->operandValues[1]->getDouble();
+  double x = value->getDouble();
+  return GammaDistributionLogLikelihood(x, a, b);
 }
 
 /* Inv Gamma */
 VentureValuePtr InvGammaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> a = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  shared_ptr<VentureNumber> b = dynamic_pointer_cast<VentureNumber>(operands[1]);
-  assert(a);
-  assert(b);
-  double x = 1.0 / gsl_ran_gamma(rng, a->getDouble(), 1.0 / b->getDouble());
+  checkArgsLength("inv_gamma", args, 2);
+
+  double a = args->operandValues[0]->getDouble();
+  double b = args->operandValues[1]->getDouble();
+
+  double x = 1.0 / gsl_ran_gamma(rng, a, 1.0 / b);
   return VentureValuePtr(new VentureNumber(x));
 }
 
 double InvGammaPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> a = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  shared_ptr<VentureNumber> b = dynamic_pointer_cast<VentureNumber>(operands[1]);
-  shared_ptr<VentureNumber> x = dynamic_pointer_cast<VentureNumber>(value);
-  assert(a);
-  assert(b);
-  assert(x);
-  return InvGammaDistributionLogLikelihood(x->getDouble(), a->getDouble(), b->getDouble());
+  double a = args->operandValues[0]->getDouble();
+  double b = args->operandValues[1]->getDouble();
+  double x = value->getDouble();
+  return InvGammaDistributionLogLikelihood(x, a, b);
 }
 
 /* UniformContinuous */
 VentureValuePtr UniformContinuousPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> a = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  shared_ptr<VentureNumber> b = dynamic_pointer_cast<VentureNumber>(operands[1]);
-  assert(a);
-  assert(b);
-  double x = gsl_ran_flat(rng,a->getDouble(),b->getDouble());
+  checkArgsLength("uniform_continuous", args, 2);
+
+  double a = args->operandValues[0]->getDouble();
+  double b = args->operandValues[1]->getDouble();
+  
+  double x = gsl_ran_flat(rng,a,b);
   return VentureValuePtr(new VentureNumber(x));
 }
 
 double UniformContinuousPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> a = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  shared_ptr<VentureNumber> b = dynamic_pointer_cast<VentureNumber>(operands[1]);
-  shared_ptr<VentureNumber> x = dynamic_pointer_cast<VentureNumber>(value);
-  assert(a);
-  assert(b);
-  assert(x);
-  return log(gsl_ran_flat_pdf(x->getDouble(),a->getDouble(),b->getDouble()));
+  double a = args->operandValues[0]->getDouble();
+  double b = args->operandValues[1]->getDouble();
+  double x = value->getDouble();
+  return log(gsl_ran_flat_pdf(x,a,b));
 }
 
 /* Beta */
 VentureValuePtr BetaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> a = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  shared_ptr<VentureNumber> b = dynamic_pointer_cast<VentureNumber>(operands[1]);
-  assert(a);
-  assert(b);
-  double x = gsl_ran_beta(rng,a->getDouble(),b->getDouble());
+  checkArgsLength("beta", args, 2);
+
+  double a = args->operandValues[0]->getDouble();
+  double b = args->operandValues[1]->getDouble();
+  
+  double x = gsl_ran_beta(rng,a,b);
   if (x > .99) { x = 0.99; }
   if (x < 0.01) { x = 0.01; }
 
@@ -214,14 +190,10 @@ double BetaPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng) cons
 
 double BetaPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> a = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  shared_ptr<VentureNumber> b = dynamic_pointer_cast<VentureNumber>(operands[1]);
-  shared_ptr<VentureNumber> x = dynamic_pointer_cast<VentureNumber>(value);
-  assert(a);
-  assert(b);
-  assert(x);
-  return BetaDistributionLogLikelihood(x->getDouble(), a->getDouble(), b->getDouble());
+  double a = args->operandValues[0]->getDouble();
+  double b = args->operandValues[1]->getDouble();
+  double x = value->getDouble();
+  return BetaDistributionLogLikelihood(x, a, b);
 }
 
 double BetaPSP::logDensityNumeric(double output, const vector<double> & args) const
@@ -271,55 +243,52 @@ vector<double> BetaPSP::gradientOfLogDensity(double output,
 /* Student-t */
 VentureValuePtr StudentTPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> nu = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  assert(nu);
-  double x = gsl_ran_tdist(rng,nu->getDouble());
+  checkArgsLength("student_t", args, 1);
+
+  double nu = args->operandValues[0]->getDouble();
+  
+  double x = gsl_ran_tdist(rng,nu);
   return VentureValuePtr(new VentureNumber(x));
 }
 
 double StudentTPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> nu = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  shared_ptr<VentureNumber> x = dynamic_pointer_cast<VentureNumber>(value);
-  assert(nu);
-  assert(x);
-  return log(gsl_ran_tdist_pdf(x->getDouble(),nu->getDouble()));
+  double nu = args->operandValues[0]->getDouble();
+  double x = value->getDouble();
+  // TODO: compute in logspace
+  return log(gsl_ran_tdist_pdf(x,nu));
 }
 
 VentureValuePtr ChiSquaredPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> nu = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  assert(nu);
-  return VentureValuePtr(new VentureNumber(gsl_ran_chisq(rng,nu->getDouble())));
+  checkArgsLength("chi_sq", args, 1);
+
+  double nu = args->operandValues[0]->getDouble();
+  
+  double x = gsl_ran_chisq(rng,nu);
+  return VentureValuePtr(new VentureNumber(x));
 }
  
 double ChiSquaredPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> nu = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  shared_ptr<VentureNumber> x = dynamic_pointer_cast<VentureNumber>(value);
-  assert(nu);
-  assert(x);
-  return ChiSquaredDistributionLogLikelihood(x->getDouble(),nu->getDouble());
+  double nu = args->operandValues[0]->getDouble();
+  double x = value->getDouble();
+  return ChiSquaredDistributionLogLikelihood(x,nu);
 }
 
 VentureValuePtr InvChiSquaredPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> nu = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  assert(nu);
-  return VentureValuePtr(new VentureNumber(1.0 / gsl_ran_chisq(rng,nu->getDouble())));
+  checkArgsLength("inv_chi_sq", args, 1);
+
+  double nu = args->operandValues[0]->getDouble();
+  
+  double x = 1.0 / gsl_ran_chisq(rng,nu);
+  return VentureValuePtr(new VentureNumber(x));
 }
  
 double InvChiSquaredPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
 {
-  vector<VentureValuePtr> & operands = args->operandValues;
-  shared_ptr<VentureNumber> nu = dynamic_pointer_cast<VentureNumber>(operands[0]);
-  shared_ptr<VentureNumber> x = dynamic_pointer_cast<VentureNumber>(value);
-  assert(nu);
-  assert(x);
-  return InvChiSquaredDistributionLogLikelihood(x->getDouble(),nu->getDouble());
+  double nu = args->operandValues[0]->getDouble();
+  double x = value->getDouble();
+  return InvChiSquaredDistributionLogLikelihood(x,nu);
 }
