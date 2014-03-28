@@ -81,6 +81,7 @@ def make_pic(name, inf_prog):
   plot_contours(xs, ys, lambda x, y: scipy.stats.norm.pdf(x, loc=0, scale=3) * scipy.stats.norm.pdf(y, loc=0, scale=2))
   u.legend_outside()
   u.savefig_legend_outside("%s-demo.png" % name)
+  print "Figure saved in %s-demo.png" % name
 
 if __name__ == '__main__':
   make_pic("hmc", "(hmc param all 0.05 20 1)")
