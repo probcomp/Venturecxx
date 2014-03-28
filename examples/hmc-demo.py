@@ -26,8 +26,8 @@ import venture.unit as u
 class HMCDemo(u.VentureUnit):
   def makeAssumes(self):
     program = """
-[ASSUME x (uniform_continuous -10 10)]
-[ASSUME y (uniform_continuous -10 10)]
+[ASSUME x (scope_include (quote param) 0 (uniform_continuous -10 10))]
+[ASSUME y (scope_include (quote param) 1 (uniform_continuous -10 10))]
 [ASSUME xout (if (< x 0)
     (normal x 1)
     (normal x 2))]
@@ -58,15 +58,12 @@ def make_pic(name, inf_prog):
   global observes_made
   def infer(ripl, _ct):
     global observes_made
-    print observes_made
     if not observes_made:
       # TODO This is a hack around there being no good way to observe
       # datastructures right now.
       v = [{"type": "real", "value": 0}, {"type": "real", "value": 0}]
       ripl.sivm.execute_instruction({"instruction":"observe","expression":"out","value":{"type":"list","value":v}})
       observes_made = True
-    print observes_made
-    print ripl.list_directives()
     ripl.infer(inf_prog)
   model = HMCDemo(shortcuts.Lite().make_church_prime_ripl())
   observes_made = False
@@ -86,5 +83,5 @@ def make_pic(name, inf_prog):
   u.savefig_legend_outside("%s-demo.png" % name)
 
 if __name__ == '__main__':
-  make_pic("hmc", "(hmc default all 0.05 20 1)")
+  make_pic("hmc", "(hmc param all 0.05 20 1)")
   make_pic("mh", "(mh default all 1)")
