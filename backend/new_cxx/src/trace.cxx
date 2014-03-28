@@ -82,16 +82,21 @@ shared_ptr<Args> Trace::getArgs(ApplicationNode * node) { return shared_ptr<Args
 ///////// misc
 OutputNode * Trace::getOutermostNonRefAppNode(Node * node)
 {
+  if (dynamic_cast<ConstantNode*>(node)) { throw "Cannot constrain a deterministic value."; }
   LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
   if (lookupNode) { return getOutermostNonRefAppNode(lookupNode->sourceNode); }
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
   assert(outputNode);
-  if (dynamic_pointer_cast<ESRRefOutputPSP>(getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)))
+  
+  shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
+  if(!psp->isRandom()) { throw "Cannot constrain a deterministic value."; }
+  
+  if (dynamic_pointer_cast<ESRRefOutputPSP>(psp))
   { 
     assert(getESRParents(outputNode).size() == 1);
     return getOutermostNonRefAppNode(getESRParents(outputNode)[0].get());
   }
-  else if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)))
+  else if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
   { 
     return getOutermostNonRefAppNode(outputNode->operandNodes[2]);
   }
