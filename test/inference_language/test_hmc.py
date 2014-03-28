@@ -19,14 +19,18 @@ def testNormalWithObserve1():
   cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
 
-@statisticalTest
 def testMVGaussSmoke():
+  yield checkMVGaussSmoke, "(mh default one 1)"
+  yield checkMVGaussSmoke, "(hmc default one 0.05 20 10)"
+
+@statisticalTest
+def checkMVGaussSmoke(infer):
   """Confirm that projecting a multivariate Gaussian to one dimension
   results in a univariate Gaussian."""
   ripl = get_ripl()
   ripl.assume("vec", "(multivariate_normal (array 1 2) (matrix (list (list 1 2) (list 2 1))))")
   ripl.assume("x", "(lookup vec 0)")
-  predictions = collectSamples(ripl,2,infer="(hmc default one 0.05 20 10)")
+  predictions = collectSamples(ripl,2,infer=infer)
   cdf = stats.norm(loc=1, scale=1).cdf
   return reportKnownContinuous(cdf, predictions, "N(1,1)")
 
