@@ -180,6 +180,8 @@ interface here is compatible with one possible path."""
     return VentureArray([VentureValue.fromStackDict(v) for v in thing["value"]])
   def lookup(self, index):
     return self.array[int(index.getNumber())]
+  def lookup_grad(self, index, direction):
+    return VentureArray([direction if i == index else 0 for (_,i) in enumerate(self.array)])
   def contains(self, obj):
     # Not Python's `in` because I need to use custom equality
     # TODO I am going to have to overload the equality for dicts

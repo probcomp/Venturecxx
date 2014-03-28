@@ -163,6 +163,7 @@ def builtInSPsList():
            [ "is_simplex", type_test(v.SimplexType()) ],
 
            [ "lookup", deterministic(lambda xs, x: xs.lookup(x),
+                                     sim_grad=lambda args, direction: [args[0].lookup_grad(args[1], direction), 0],
                                      descr="%s :: <SP <mapping k v> k -> v>\nLooks the given key up in the given mapping and returns the result.  It is an error if the key is not in the mapping.  Lists and arrays are viewed as mappings from indices to the corresponding elements.") ],
            [ "contains", deterministic(lambda xs, x: v.VentureBool(xs.contains(x)),
                                        "%s :: <SP <mapping k v> k -> <bool>>\nReports whether the given key appears in the given mapping or not.") ],
