@@ -12,24 +12,11 @@ mk_l_ripl = make_lite_church_prime_ripl
 mk_p_ripl = make_puma_church_prime_ripl
 
 ### IPython Parallel Magics
-## Use: See examples in /examples
-################### TODO
-# create branch where we have list of local_ripls instead of single,
-# (should local ripls do infer?)
-# implement the lite/puma simul. at infer, only update the one backend.
-# ---actually, we can't do test assume, coz forces compatibiility that won't exist
-# . so we need to check in the function what backend we have. 
 
 # special cases of lite vs. puma: infer, list_directives (get from local_ripl instead)
 
 
-### FIXME: no special case for lite, update both sets of ripls and return pickle_safe version
-## after having imported pickle safe across the engines (via the import of ip_para)
-
     
-
-    
-        
 
 # Utility functions for working with ipcluster
 
@@ -251,12 +238,12 @@ class MRipl2():
         [r.clear() for r in self.local_ripls]
         
         @interactive
-        def f(mrid):
+        def f(mrid,backend):
             ripls=mripls[mrid][backend]
             seeds=mripls[mrid]['seeds']
             [r.clear() for r in ripls]
             [r.set_seed(seeds[i]) for i,r in enumerate(ripls)]
-        return  self.dview.apply(f,self.mrid) 
+        return  self.dview.apply(f,self.mrid,self.backend) 
 
 
 
@@ -1211,7 +1198,6 @@ def mr_map(line, cell):
     # wrong set of engines. (Could let the dview come from the mripl - so 
     # no extra input argument needed).
     ip = get_ipython()
-    #ip.run_cell_magic("px","","%pylab inline") #--no-import-all;%pylab inline") # not sure if this is needed or works
     
     assert len(str(line).split()) >= 2, 'Error. Syntax: %%mr_map mripl_name proc_name [optional: store_variable_name] '
     # get inputs
@@ -1223,7 +1209,6 @@ def mr_map(line, cell):
         except: pass
     mripl = eval(mripl_name,globals(),ip.user_ns) ## FIXME ensure this works
     mrid = mripl.mrid
-
 
     # optionally update the local_ripl (for debugging), must include var_name
     if len(str(line).split()) > 4:
@@ -1356,6 +1341,7 @@ def test_ripls(print_lib=False):
 
 
 ## Utility functions for working with MRipls
+
 def display_directives(ripl_mripl,instruction='observe'):
     ## FIXME add replace with dict of symbls
     v=ripl_mripl
