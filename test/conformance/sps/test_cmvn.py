@@ -1,11 +1,15 @@
 from venture.test.stats import statisticalTest, reportKnownMean
 from venture.test.config import get_ripl, collectSamples
+from nose import SkipTest
+from testconfig import config
 
 def testCMVNSmoke():
+  if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")  
   get_ripl().predict("((make_cmvn (array 1.0 1.0) 2 2 (matrix (array (array 1.0 0.0) (array 0.0 1.0)))))")
 
 @statisticalTest  
 def testCMVN2D_mu1():
+  if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")
   ripl = get_ripl()
   ripl.assume("m0","(array 5.0 5.0)")
   ripl.assume("k0","7.0")
@@ -22,6 +26,8 @@ def testCMVN2D_mu1():
 
 @statisticalTest  
 def testCMVN2D_mu2():
+  if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")
+  
   ripl = get_ripl()
   ripl.assume("m0","(array 5.0 5.0)")
   ripl.assume("k0","7.0")
