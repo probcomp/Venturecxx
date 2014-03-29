@@ -46,7 +46,13 @@ class Ripl():
             raise VentureException('invalid_mode',
                     "Mode {} is not implemented by this RIPL".format(mode))
 
-
+    ############################################
+    # Backend
+    ############################################
+    
+    def backend(self):
+        return self.sivm.core_sivm.engine.name
+    
     ############################################
     # Execution
     ############################################

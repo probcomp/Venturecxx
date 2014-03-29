@@ -22,6 +22,7 @@ from venture.lite.utils import simulateCategorical
 class Engine:
 
   def __init__(self):
+    self.name = "cxx"
     self.directiveCounter = 0
     self.directives = {}
     from libtrace import Trace
