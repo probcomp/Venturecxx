@@ -4,6 +4,7 @@ import numpy as np
 import nose.tools as nose
 from testconfig import config
 from venture.test.config import ignore_inference_quality
+import sys
 
 def normalizeList(seq):
   denom = sum(seq)

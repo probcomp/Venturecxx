@@ -243,20 +243,26 @@ vector<double> BetaPSP::gradientOfLogDensity(double output,
 /* Student-t */
 VentureValuePtr StudentTPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  checkArgsLength("student_t", args, 1);
+//  checkArgsLength("student_t", args, 1);
 
   double nu = args->operandValues[0]->getDouble();
+  double loc = 0; if (args->operandValues.size() > 1) { loc = args->operandValues[1]->getDouble(); }
+  double shape = 1; if (args->operandValues.size() > 2) { shape = args->operandValues[2]->getDouble(); }
   
   double x = gsl_ran_tdist(rng,nu);
-  return VentureValuePtr(new VentureNumber(x));
+  return VentureValuePtr(new VentureNumber((shape * x) + loc));
 }
 
 double StudentTPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
   double nu = args->operandValues[0]->getDouble();
+  double loc = 0; if (args->operandValues.size() > 1) { loc = args->operandValues[1]->getDouble(); }
+  double shape = 1; if (args->operandValues.size() > 2) { shape = args->operandValues[2]->getDouble(); }
+
   double x = value->getDouble();
+  double y = (x - loc) / shape;
   // TODO: compute in logspace
-  return log(gsl_ran_tdist_pdf(x,nu));
+  return log(gsl_ran_tdist_pdf(y,nu) / shape);
 }
 
 VentureValuePtr ChiSquaredPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
