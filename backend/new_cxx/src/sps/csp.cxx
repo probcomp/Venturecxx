@@ -1,20 +1,26 @@
 #include "sps/csp.h"
 #include "sprecord.h"
 #include "env.h"
+#include "utils.h"
+
+#include <boost/foreach.hpp>
 
 VentureValuePtr MakeCSPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  assert(args->operandValues.size() == 2); // TODO throw an error once exceptions work
-
-  shared_ptr<VentureArray> symbols = dynamic_pointer_cast<VentureArray>(args->operandValues[0]);
-  assert(symbols); // TODO throw an error once exceptions work
+  checkArgsLength("lambda", args, 2);
+  
+  vector<string> symbols;
+  BOOST_FOREACH(VentureValuePtr v, args->operandValues[0]->getArray())
+  {
+    symbols.push_back(v->getSymbol());
+  }
   
   VentureValuePtr expression = args->operandValues[1];
   
   return VentureValuePtr(new VentureSPRecord(new SP(new CSPRequestPSP(symbols, expression, args->env), new ESRRefOutputPSP())));
 }
 
-CSPRequestPSP::CSPRequestPSP(shared_ptr<VentureArray> symbols, VentureValuePtr expression, shared_ptr<VentureEnvironment> environment) :
+CSPRequestPSP::CSPRequestPSP(const vector<string>& symbols, VentureValuePtr expression, shared_ptr<VentureEnvironment> environment) :
   symbols(symbols),
   expression(expression),
   environment(environment)
@@ -22,15 +28,13 @@ CSPRequestPSP::CSPRequestPSP(shared_ptr<VentureArray> symbols, VentureValuePtr e
 
 VentureValuePtr CSPRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  assert(args->operandNodes.size() == symbols->xs.size()); // TODO throw an error once exceptions work
+  checkArgsLength("compound procedure", args, symbols.size());
   
   shared_ptr<VentureEnvironment> extendedEnv = shared_ptr<VentureEnvironment>(new VentureEnvironment(environment));
   
-  for (size_t i = 0; i < symbols->xs.size(); ++i)
+  for (size_t i = 0; i < symbols.size(); ++i)
   {
-    shared_ptr<VentureSymbol> symbol = dynamic_pointer_cast<VentureSymbol>(symbols->xs[i]);
-    assert(symbol); // TODO throw an error once exceptions work
-    extendedEnv->addBinding(symbol, args->operandNodes[i]);
+    extendedEnv->addBinding(symbols[i], args->operandNodes[i]);
   }
   
   vector<ESR> esrs;

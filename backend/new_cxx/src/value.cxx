@@ -1,17 +1,14 @@
 #include "value.h"
-#include <iostream>
 #include "values.h"
 #include "sp.h"
 #include "sprecord.h"
 #include "env.h"
-using std::cout;
-using std::endl;
+#include <boost/lexical_cast.hpp>
 
 int getValueTypeRank(const VentureValue * v);
 void cannotConvertType(const VentureValue * obj, string target)
 {
-  cout << "Cannot convert " << obj->toString() << " to [" + target + "]" << endl;
-  assert(false);
+  throw "Cannot convert " + obj->toString() + " to [" + target + "]";
 }
 
 bool VentureValue::hasDouble() const { return false; }
@@ -49,7 +46,7 @@ boost::python::dict VentureValue::toPython(Trace * trace) const
 { 
   boost::python::dict value;
   value["type"] = "unknown";
-  value["value"] = "unknown";
+  value["value"] = "opaque";
   return value;
 }
 

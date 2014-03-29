@@ -101,14 +101,20 @@ class GammaOutputPSP(RandomPSP):
 
 class StudentTOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def simulateNumeric(self,nu): return scipy.stats.t.rvs(nu)
-  def logDensityNumeric(self,x,nu): return scipy.stats.t.logpdf(x,nu)
+  def simulateNumeric(self,nu,loc,scale): return scipy.stats.t.rvs(nu,loc,scale)
+  def logDensityNumeric(self,x,nu,loc,scale): return scipy.stats.t.logpdf(x,nu,loc,scale)
 
-  def simulate(self,args): return self.simulateNumeric(*args.operandValues)
-  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+  def simulate(self,args):
+    loc = args.operandValues[1] if len(args.operandValues) > 1 else 0
+    shape = args.operandValues[2] if len(args.operandValues) > 1 else 1
+    return self.simulateNumeric(args.operandValues[0],loc,shape)
+  def logDensity(self,x,args):
+    loc = args.operandValues[1] if len(args.operandValues) > 1 else 0
+    shape = args.operandValues[2] if len(args.operandValues) > 1 else 1
+    return self.logDensityNumeric(x,args.operandValues[0],loc,shape)
 
   def description(self,name):
-    return "  (%s nu) returns a sample from Student's t distribution with nu degrees of freedom." % name
+    return "  (%s nu loc shape) returns a sample from Student's t distribution with nu degrees of freedom, with optional location and scale parameters." % name
 
   # TODO StudentT presumably has a variational kernel too?
 

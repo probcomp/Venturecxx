@@ -1,9 +1,11 @@
 #include "utils.h"
-#include <cmath>
 
 #include "types.h"
 #include "values.h"
+
+#include <cmath>
 #include <gsl/gsl_randist.h>
+#include <boost/lexical_cast.hpp>
 
 vector<double> mapExpUptoMultConstant(const vector<double>& xs)
 {
@@ -145,5 +147,25 @@ boost::python::object toPython<double>(Trace * trace, const double& st)
   dict["type"] = "number";
   dict["value"] = st;
   return dict;
+}
+
+using boost::lexical_cast;
+
+void checkArgsLength(const string& sp, const shared_ptr<Args> args, size_t expected)
+{
+  size_t length = args->operandValues.size();
+  if (length != expected)
+  {
+    throw sp + " expects " + lexical_cast<string>(expected) + " arguments, not " + lexical_cast<string>(length);
+  }
+}
+
+void checkArgsLength(const string& sp, const shared_ptr<Args> args, size_t lower, size_t upper)
+{
+  size_t length = args->operandValues.size();
+  if (length < lower || length > upper)
+  {
+    throw sp + " expects between " + lexical_cast<string>(lower) + " and " + lexical_cast<string>(upper) + " arguments, not " + lexical_cast<string>(length);
+  }
 }
 

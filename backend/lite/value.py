@@ -25,7 +25,7 @@ class VentureValue(object):
   def getSP(self): raise Exception("Cannot convert %s to sp" % type(self))
   def getEnvironment(self): raise Exception("Cannot convert %s to environment" % type(self))
 
-  def asStackDict(self): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
+  def asStackDict(self,trace): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
   @staticmethod
   def fromStackDict(thing):
     if isinstance(thing, list):
@@ -60,7 +60,9 @@ class VentureNumber(VentureValue):
     self.number = number
   def __repr__(self): return "Number(%s)" % self.number
   def getNumber(self): return self.number
-  def asStackDict(self): return {"type":"number","value":self.number}
+  def getBool(self): return self.number
+    
+  def asStackDict(self,trace): return {"type":"number","value":self.number}
   @staticmethod
   def fromStackDict(thing): return VentureNumber(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.number, other.number)
@@ -81,7 +83,7 @@ class VentureAtom(VentureValue):
   def getNumber(self): return self.atom
   def getAtom(self): return self.atom
   def getBool(self): return self.atom
-  def asStackDict(self): return {"type":"atom","value":self.atom}
+  def asStackDict(self,trace): return {"type":"atom","value":self.atom}
   @staticmethod
   def fromStackDict(thing): return VentureAtom(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.atom, other.atom)
@@ -98,7 +100,7 @@ class VentureBool(VentureValue):
     # trials as well as dispatching on them.  Or should flip and
     # bernoulli be different SPs?
     return self.boolean
-  def asStackDict(self): return {"type":"boolean","value":self.boolean}
+  def asStackDict(self,trace): return {"type":"boolean","value":self.boolean}
   @staticmethod
   def fromStackDict(thing): return VentureBool(thing["value"])
   def compareSameType(self, other):
@@ -109,7 +111,7 @@ class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
   def __repr__(self): return "Symbol(%s)" % self.symbol
   def getSymbol(self): return self.symbol
-  def asStackDict(self): return {"type":"symbol","value":self.symbol}
+  def asStackDict(self,trace): return {"type":"symbol","value":self.symbol}
   @staticmethod
   def fromStackDict(thing): return VentureSymbol(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
@@ -131,10 +133,21 @@ interface here is compatible with one possible path."""
       return [elt_type.asPython(v) for v in self.array]
   def asPythonList(self, elt_type=None):
     return self.getArray(elt_type)
-  def asStackDict(self):
+
+  def compareSameType(self, other):
+    if len(self.array) < len(other.array): return -1
+    if len(self.array) > len(other.array): return 1
+
+    # else same length
+    for x,y in zip(self.array,other.array):
+      if x.compare(y) != 0: return x.compare(y)
+
+    return 0
+      
+  def asStackDict(self,trace):
     # TODO Are venture arrays reflected as lists to the stack?
     # TODO Are stack lists lists, or are they themselves type tagged?
-    return {"type":"list","value":[v.asStackDict() for v in self.array]}
+    return {"type":"list","value":[v.asStackDict(trace) for v in self.array]}
   @staticmethod
   def fromStackDict(thing):
     return VentureArray([VentureValue.fromStackDict(v) for v in thing["value"]])
@@ -153,7 +166,7 @@ class VentureNil(VentureValue):
   def compareSameType(self, _): return 0 # All Nils are equal
   def __hash__(self): return 0
   def asPythonList(self, _elt_type=None): return []
-  def asStackDict(self): return {"type":"list", "value":[]}
+  def asStackDict(self,trace): return {"type":"list", "value":[]}
   @staticmethod
   def fromStackDict(_): return VentureNil()
   def size(self): return 0
@@ -170,10 +183,10 @@ class VenturePair(VentureValue):
       return [elt_type.asPython(self.first)] + self.rest.asPythonList(elt_type)
     else:
       return [self.first] + self.rest.asPythonList()
-  def asStackDict(self):
+  def asStackDict(self,trace):
     # TODO Venture pairs should be usable to build structures other
     # than proper lists.  But then, what are their types?
-    return {"type":"list", "value":[v.asStackDict() for v in self.asPythonList()]}
+    return {"type":"list", "value":[v.asStackDict(trace) for v in self.asPythonList()]}
   @staticmethod
   def fromStackDict(_): raise Exception("Type clash!")
   def compareSameType(self, other):
@@ -217,7 +230,7 @@ supposed to sum to 1, but we are not checking that."""
     else:
       return self.simplex.__cmp__(other.simplex)
   def __hash__(self): return hash(self.simplex)
-  def asStackDict(self):
+  def asStackDict(self,trace):
     # TODO As what type to reflect simplex points to the stack?
     return {"type":"simplex", "value":self.simplex}
   @staticmethod
@@ -232,7 +245,7 @@ supposed to sum to 1, but we are not checking that."""
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
   def getDict(self): return self.dict
-  def asStackDict(self):
+  def asStackDict(self,trace):
     # TODO Difficult to reflect as a Python dict because the keys
     # would presumably need to be converted to stack dicts too, which
     # is a problem because they need to be hashable.
@@ -253,14 +266,16 @@ class VentureMatrix(VentureValue):
     # TODO Are numpy matrices comparable?
     return self.matrix.__cmp__(other.matrix)
   def __hash__(self): return hash(self.matrix)
-  def asStackDict(self):
+  def asStackDict(self,trace):
     return {"type":"matrix", "value":self.matrix}
   @staticmethod
   def fromStackDict(thing): return VentureMatrix(thing["value"])
 
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
-  def asStackDict(self): return {"type":"SP","value":self}
+  def asStackDict(self,trace):
+    return {"type":"sp","value":trace.madeSPAt(self.makerNode).show(trace.madeSPAuxAt(self.makerNode))}
+  
   @staticmethod
   def fromStackDict(thing): return thing["value"]
   # SPRefs are intentionally not comparable until we decide otherwise

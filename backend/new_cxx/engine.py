@@ -22,6 +22,7 @@ class Engine(engine.Engine):
 
   def __init__(self): # pylint: disable=super-init-not-called
     # Intentionally overriding the superclass init to avoid loading libtrace.so
+    self.name = "puma"
     self.directiveCounter = 0
     self.directives = {}
     from libtrace import Trace

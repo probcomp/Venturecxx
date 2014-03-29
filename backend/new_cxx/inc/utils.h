@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "value.h"
+#include "args.h"
 
 #include <gsl/gsl_rng.h>
 #include <cmath>
@@ -93,5 +94,8 @@ boost::python::list toPythonList(Trace * trace, const vector<T>& vec) {
   }
   return list;
 }
+
+void checkArgsLength(const string& sp, const shared_ptr<Args> args, size_t expected);
+void checkArgsLength(const string& sp, const shared_ptr<Args> args, size_t lower, size_t upper);
 
 #endif

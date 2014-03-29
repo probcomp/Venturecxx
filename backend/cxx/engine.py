@@ -22,6 +22,7 @@ from venture.lite.utils import simulateCategorical
 class Engine:
 
   def __init__(self):
+    self.name = "cxx"
     self.directiveCounter = 0
     self.directives = {}
     from libtrace import Trace
@@ -43,7 +44,7 @@ class Engine:
     baseAddr = self.nextBaseAddr()
 
     exp = self.desugarLambda(datum)
-    self.trace.eval(baseAddr,exp);
+    self.trace.eval(baseAddr,exp)
     self.trace.bindInGlobalEnv(id,baseAddr)
 
     self.directives[self.directiveCounter] = ["assume",id,datum]

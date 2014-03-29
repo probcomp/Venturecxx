@@ -44,7 +44,8 @@ not packaged for Ubuntu yet but required for its c++11 support.
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 50
 
     # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
-    sudo apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib
+    # Also pulls in required external libraries
+    sudo apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib python-scipy
 
 Installation to global environment
 ----------------------------------

@@ -8,11 +8,31 @@ from sp import VentureSP, SPAux, SPType
 from lkernel import LKernel
 from value import VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 
+class FlipOutputPSP(RandomPSP):
+  def simulate(self,args):
+    p = args.operandValues[0] if args.operandValues else 0.5
+    return random.random() < p
+    
+  def logDensity(self,val,args):
+    p = args.operandValues[0] if args.operandValues else 0.5
+    if val: return extendedLog(p)
+    else: return extendedLog(1 - p)
+
+  def logDensityBound(self, _x, _args): return 0
+
+  def enumerateValues(self,args):
+    p = args.operandValues[0] if args.operandValues else 0.5
+    if p == 1: return [True]
+    elif p == 0: return [False]
+    else: return [True,False]
+
+  def description(self,name):
+    return "  (%s p) returns true with probability p and false otherwise.  If omitted, p is taken to be 0.5." % name
 
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args):
     p = args.operandValues[0] if args.operandValues else 0.5
-    return random.random() < p
+    return int(random.random() < p)
     
   def logDensity(self,val,args):
     p = args.operandValues[0] if args.operandValues else 0.5
@@ -66,6 +86,26 @@ class CategoricalOutputPSP(RandomPSP):
   def description(self,name):
     return "  (%s weights objects) samples a categorical with the given weights.  In the one argument case, returns the index of the chosen option as an atom; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % name
 
+class UniformDiscreteOutputPSP(RandomPSP):
+  def simulate(self,args):
+    if args.operandValues[1] <= args.operandValues[0]: raise Exception("uniform_discrete called on invalid range (%d,%d)" % (args.operandValues[0],args.operandValues[1]))
+    return random.randrange(*args.operandValues)
+
+  def logDensity(self,val,args):
+    a,b = args.operandValues
+    if a <= output and output < b: return -math.log(b-a)
+    else: return extendedLog(0.0)
+
+  def description(self,name):
+    return "  (%s start end) samples a uniform discrete on the (start, start + 1, ..., end - 1)" % name
+
+class PoissonOutputPSP(RandomPSP):
+  def simulate(self,args): return scipy.stats.poisson.rvs(args.operandValues[0])
+  def logDensity(self,val,args): return scipy.stats.poisson.logpmf(val,args.operandValues[0])
+  def description(self,name):
+    return "  (%s lambda) samples a poisson with rate lambda" % name
+
+
 #### Collapsed Beta Bernoulli
 class BetaBernoulliSPAux(SPAux):
   def __init__(self):
@@ -82,6 +122,8 @@ class BetaBernoulliSPAux(SPAux):
 
 class BetaBernoulliSP(VentureSP):
   def constructSPAux(self): return BetaBernoulliSPAux()
+  def show(self,spaux): return spaux.cts()
+    
 
 class MakerCBetaBernoulliOutputPSP(PSP):
   def childrenCanAAA(self): return True

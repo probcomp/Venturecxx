@@ -6,9 +6,10 @@
 #include <cmath>
 #include <cfloat>
 
+// LogLikelihoods, from Yura's Utilities.cpp
+
 using std::isfinite;
 
-// LogLikelihoods, from Yura's Utilities.cpp
 double NormalDistributionLogLikelihood(double sampled_value, double average, double sigma) {
   double loglikelihood = 0.0;
   loglikelihood -= log(sigma);

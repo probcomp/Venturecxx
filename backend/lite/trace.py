@@ -364,7 +364,7 @@ class Trace(object):
 
   # TODO temporary, probably need an extra layer of boxing for VentureValues
   # as in CXX
-  def boxValue(self,val): return val.asStackDict()
+  def boxValue(self,val): return val.asStackDict(self)
   def unboxValue(self,val): return VentureValue.fromStackDict(val)
   def unboxExpression(self,exp):
     return ExpressionType().asPython(VentureValue.fromStackDict(exp))
