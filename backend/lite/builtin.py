@@ -195,7 +195,7 @@ def builtInSPsList():
            [ "uniform_continuous",binaryNumS(continuous.UniformOutputPSP()) ],
            [ "beta",binaryNumS(continuous.BetaOutputPSP()) ],
            [ "gamma",binaryNumS(continuous.GammaOutputPSP()) ],
-           [ "student_t",unaryNumS(continuous.StudentTOutputPSP()) ],
+           [ "student_t",typed_nr(continuous.StudentTOutputPSP(),[v.NumberType(),v.NumberType(),v.NumberType()], v.NumberType(), min_req_args=1 ) ],
            [ "inv_gamma",binaryNumS(continuous.InvGammaOutputPSP()) ],
 
            [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], SPType([], v.BoolType())) ],
