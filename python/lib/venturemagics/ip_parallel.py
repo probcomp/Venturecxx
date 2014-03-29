@@ -23,7 +23,7 @@ def clear_all_engines():
     'Clears the namespaces of all IPython remote processes'
     cli = Client()
     cli.clear(block=True)
-    setup_mripls()
+    #setup_mripls() ##### FIXME CHANGE THIS
 
 def shutdown():
     cli = Client(); cli.shutdown()
