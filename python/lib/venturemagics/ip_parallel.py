@@ -16,6 +16,14 @@ mk_p_ripl = make_puma_church_prime_ripl
 # special cases of lite vs. puma: infer, list_directives (get from local_ripl instead)
 
 
+## NOTE
+## to do refactor: need to consider every use of mripls[mrid] and add the backend reference
+# need to change mr_map and mr_map_f, need to change mr_plot_conditiona
+# copy/delete need to be changed.
+# snapshot is mostly ok. but we need anyway to change sample populations
+# to make it fast, simplest way is just to limit number of engines
+# and then create dview on those engines and gather their results
+
 
 # Utility functions for working with ipcluster
 
@@ -1397,7 +1405,7 @@ def get_name(r_mr):
         return 'anon model'
 
 
-def plot_conditional(ripl,data=[],x_range=[],no_xs=40,no_reps=30, return_fig=False,figsize=(16,3.5)):
+def plot_conditional(ripl,data=[],x_range=[],number_xs=40,number_reps=30, return_fig=False,figsize=(16,3.5)):
     ##FIXME we should predict and forget for pivot and maybe everything
     
     name=get_name(ripl)
@@ -1410,7 +1418,7 @@ def plot_conditional(ripl,data=[],x_range=[],no_xs=40,no_reps=30, return_fig=Fal
         if not x_range: x_range = (min(d_xs)-1,max(d_xs)+1)
     
     if not x_range: x_range = (-3,3)
-    xr = np.linspace(x_range[0],x_range[1],no_xs)
+    xr = np.linspace(x_range[0],x_range[1],number_xs)
     
     # sample f on xr and add noise (if noise is a float)
     f_xr = [ripl.sample('(f %f)' % x) for x in xr]
@@ -1423,7 +1431,7 @@ def plot_conditional(ripl,data=[],x_range=[],no_xs=40,no_reps=30, return_fig=Fal
     # sample (y_x x) for x in xr and compute 1sd intervals
     xys=[]; ymean=[]; ystd=[]
     for x in xr:
-        x_y = [ripl.sample('(y_x %f)' % x) for r in range(no_reps)]        
+        x_y = [ripl.sample('(y_x %f)' % x) for r in range(number_reps)]        
         ymean.append( np.mean(x_y) )
         ystd.append( np.abs( np.std(x_y) ) )
         xys.extend( [(x,y) for y in x_y] )
@@ -1462,13 +1470,16 @@ def plot_conditional(ripl,data=[],x_range=[],no_xs=40,no_reps=30, return_fig=Fal
     my_fig = fig if return_fig else None
     return {'f':(xr,f_xr),'xs,ys':(xs,ys),'fig':my_fig}
 
-def lst_plot_conditional(ripl_lst,engine_limit=0,data=[],x_range=(-3,3),no_xs=40,no_reps=40,figsize=(16,3.5)):
-    if engine_limit:
-        return [plot_conditional(v,data,x_range,no_xs,no_reps) for i,v in enumerate(ripl_lst) if i<engine_limit]
-    else:
-        return [plot_conditional(v,data,x_range,no_xs,no_reps) for i,v in enumerate(ripl_lst)]
 
-def mr_plot_conditional(mr,plot=True,limit=0,data=[],x_range=(-3,3),no_xs=40,no_reps=40,figsize=(16,3.5)):
+
+
+def lst_plot_conditional(ripl_lst,engine_limit=0,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=(16,3.5)):
+    if engine_limit:
+        return [plot_conditional(v,data,x_range,number_xs,number_reps) for i,v in enumerate(ripl_lst) if i<engine_limit]
+    else:
+        return [plot_conditional(v,data,x_range,number_xs,number_reps) for i,v in enumerate(ripl_lst)]
+
+def mr_plot_conditional(mr,plot=True,limit=0,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=(16,3.5)):
     # need to be careful of data: can send with string but maybe better to push the variable and 
     # and send the variable name, instead of potentially long string
     store_id = np.random.randint(10**8)
@@ -1477,8 +1488,8 @@ def mr_plot_conditional(mr,plot=True,limit=0,data=[],x_range=(-3,3),no_xs=40,no_
     
     ## FIXME BACKEND
     s1 = 'plotcond_outs_%i = ' % store_id
-    s2 = 'lst_plot_conditional(mripls[%i],engine_limit=%i,data=%s,x_range=%s,no_xs=%i,no_reps=%i,figsize=%s)' %(mr.mrid,
-                                      engine_limit,str(data),str(x_range),no_xs,no_reps,str(figsize) )
+    s2 = 'lst_plot_conditional(mripls[%i],engine_limit=%i,data=%s,x_range=%s,number_xs=%i,number_reps=%i,figsize=%s)' %(mr.mrid,
+                                      engine_limit,str(data),str(x_range),number_xs,number_reps,str(figsize) )
     
     # dview.execute wouldn't do the inlining because it doesn't return
     if plot:
@@ -1490,5 +1501,60 @@ def mr_plot_conditional(mr,plot=True,limit=0,data=[],x_range=(-3,3),no_xs=40,no_
     else:
         mr.dview.execute(s1+s2)
     outs = if_lst_flatten( mr.dview.pull('plotcond_outs_%i' % store_id) )                                                                     
-                                                                                    
     return outs
+
+
+
+
+def predictive(mripl,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=(16,3.5),return_fig=False ):
+    mr = mripl
+    name=get_name(mr)
+    
+    if data:
+        d_xs,d_ys = zip(*data)
+        x_range = (min(d_xs)-1,max(d_xs)+1)
+        if not x_range: x_range = (min(d_xs)-1,max(d_xs)+1)
+    
+    if not x_range: x_range = (-3,3)
+        
+    xr = np.linspace(x_range[0],x_range[1],number_xs)
+    
+    list_out=mr_plot_conditional(mr,plot=False,limit=6,data=data,x_range=x_range,number_xs=number_xs,number_reps=1)
+    fs = [ ripl_out['f'] for ripl_out in list_out]
+    
+    ## get y_xs from ripls and compute 1sd intervals
+    xys=[]; ymean=[]; ystd=[]
+    for x in xr:
+        # we get number_reps predicts from each ripl in mr
+        x_y=if_lst_flatten([mr.sample('(y_x %f)' % x) for r in range(number_reps)])   
+        ymean.append( np.mean(x_y) )
+        ystd.append( np.abs( np.std(x_y) ) )
+        xys.extend( [(x,y) for y in x_y] )
+    
+    xs,ys = zip(*xys)
+    ymean = np.array(ymean); ystd = np.array(ystd)
+    y_u = ymean+ystd; y_l = ymean-ystd
+    
+     # Plotting
+    fig,ax = plt.subplots(1,3,figsize=figsize,sharex=True,sharey=True)
+
+    if data: [ax[col].scatter(d_xs,d_ys,label='Data') for col in [0,1]]
+    # sampled fs from mripl
+    [ax[0].plot(xr,f_xr,alpha=.8,linewidth=.5) for xr,f_xr in fs]
+    if data: ax[0].legend()
+    ax[0].set_title('MR: Sampled fs w/ data [name: %s] ' % name )
+    
+    ax[1].scatter(xs,ys,alpha=0.5,s=5,facecolor='0.6', lw = 0)
+    ax[1].plot(xr, ymean, 'k', alpha=.9,color='m',linewidth=1)
+    ax[1].plot(xr, y_l, 'k', alpha=.8, color='m',linewidth=.5)
+    ax[1].plot(xr, y_u, 'k', alpha=.8,color='m',linewidth=.5)
+    ax[1].set_title('MR: Samples from P(y/X=x), w/ mean +- 1sd [name: %s] ' % name )
+    if data: ax[1].legend()
+        
+    xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
+    ax[2].pcolormesh(xi, yi, zi)
+    ax[2].set_title('MR: GKDE P(y/X=x) [name: %s] ' % name )
+    
+    fig.tight_layout()
+    
+    return xs,ys

@@ -17,7 +17,6 @@ simple_fourier_model='''
 [assume f (lambda (x) (+ w0 (* w1 (sin (+ (* omega x) theta) ) ) ) ) ]
 [assume y_x (lambda (x) (normal (f x) noise) ) ]
 [assume y (mem (lambda (i) (y_x (x i))  ))] 
-[assume n (gamma 1 1)]
 [assume model_name (quote simple_fourier)]
 '''
 simple_quadratic_model='''
@@ -109,7 +108,6 @@ pivot_model='''
               
 [assume y (mem (lambda (i) (y_x (x i))  ))] 
                      
-[assume n (gamma 1 100) ]
 [assume model_name (quote pivot)]
 '''
 quad_fourier_model='''
@@ -132,18 +130,19 @@ quad_fourier_model='''
 
 logistic_model='''
 [assume w0 (normal 0 3)]
-[assume w1 (normal 0 3) ]
+[assume w1 (normal 0 1) ]
 [assume log_mu (normal 0 3)]
-[assume log_sig (normal 0 3) ]
+[assume sgn (if (flip) -1 1)]
+[assume log_sig (gamma 2 1) ]
 [assume noise (gamma 2 1) ]
 
-[assume sigmoid (lambda (x) (/ (- 1 (exp (* (- x log_mu) (* -1 log_sig) )) )
-                               (+ 1 (exp (* (- x log_mu) (* -1 log_sig) )) ) ) )]
+[assume sigmoid (lambda (x) (/ (- 1 (exp (* sgn log_sig (- x log_mu))) )
+                               (+ 1 (exp (* sgn log_sig (- x log_mu))) ) )   )]
 [assume f (lambda (x) (+ w0 (* w1 (sigmoid x) ) ) ) ]
 
 [assume y_x (lambda (x) (normal (f x) noise) ) ]
 [assume y (mem (lambda (i) (y_x (x i))  ))] 
-[assume n (gamma 1 100)]
+
 [assume model_name (quote logistic)]'''
 
 
