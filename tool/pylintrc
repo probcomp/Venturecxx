@@ -16,6 +16,7 @@
 # W0622: Redefined builtin
 
 # Messages disabled pending normalization of our codebase:
+# E1101: No member
 # C0301: Line too long
 # C0303: Trailing whitespace
 # W0311: Bad indentation
@@ -24,7 +25,14 @@
 # R0911: Too many return statements
 # R0913: Too many arguments
 # R0914: Too many local variables
-disable=C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0201,W0622,W0311,W0403,C0301,C0303,R0902,R0911,R0913,R0914
+disable=E1101,C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0201,W0622,W0311,W0403,C0301,C0303,R0902,R0911,R0913,R0914
+
+# Rationale: Suppressing no-member errors
+#   Pylint does not understand metaprogramming.  Sadly, much of
+#   visible interface of numpy and scipy appears to be metaprogrammed
+#   (for instance, by structured re-import from submodules), so every
+#   attempt to use those tools produces huge numbers of Pylint
+#   problems.
 
 # Rationale: Wildcard imports
 #   Turns out wildcard imports in Python import every name visible in
