@@ -63,8 +63,7 @@ class CRPMixtureDemo(VentureUnit):
       self.observe("(get_datapoint %d)" % (len(c1) + len(c2) + i), c3[i])
 
 if __name__ == '__main__':
-  ripl = shortcuts.make_lite_church_prime_ripl()
-  model = CRPMixtureDemo(ripl)
+  model = CRPMixtureDemo(shortcuts.make_lite_church_prime_ripl())
   def statisticsInfer(ripl, ct):
     # hypers =     {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":5}
     # parameters = {"kernel":"mh", "scope":"parameters", "block":"one", "transitions":20}
