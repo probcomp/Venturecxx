@@ -62,7 +62,7 @@ class VentureNumber(VentureValue):
   def getNumber(self): return self.number
   def getBool(self): return self.number
     
-  def asStackDict(self,trace): return {"type":"number","value":self.number}
+  def asStackDict(self, _trace): return {"type":"number","value":self.number}
   @staticmethod
   def fromStackDict(thing): return VentureNumber(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.number, other.number)
@@ -83,7 +83,7 @@ class VentureAtom(VentureValue):
   def getNumber(self): return self.atom
   def getAtom(self): return self.atom
   def getBool(self): return self.atom
-  def asStackDict(self,trace): return {"type":"atom","value":self.atom}
+  def asStackDict(self, _trace): return {"type":"atom","value":self.atom}
   @staticmethod
   def fromStackDict(thing): return VentureAtom(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.atom, other.atom)
@@ -100,7 +100,7 @@ class VentureBool(VentureValue):
     # trials as well as dispatching on them.  Or should flip and
     # bernoulli be different SPs?
     return self.boolean
-  def asStackDict(self,trace): return {"type":"boolean","value":self.boolean}
+  def asStackDict(self, _trace): return {"type":"boolean","value":self.boolean}
   @staticmethod
   def fromStackDict(thing): return VentureBool(thing["value"])
   def compareSameType(self, other):
@@ -111,7 +111,7 @@ class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
   def __repr__(self): return "Symbol(%s)" % self.symbol
   def getSymbol(self): return self.symbol
-  def asStackDict(self,trace): return {"type":"symbol","value":self.symbol}
+  def asStackDict(self, _trace): return {"type":"symbol","value":self.symbol}
   @staticmethod
   def fromStackDict(thing): return VentureSymbol(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
@@ -166,7 +166,7 @@ class VentureNil(VentureValue):
   def compareSameType(self, _): return 0 # All Nils are equal
   def __hash__(self): return 0
   def asPythonList(self, _elt_type=None): return []
-  def asStackDict(self,trace): return {"type":"list", "value":[]}
+  def asStackDict(self, _trace): return {"type":"list", "value":[]}
   @staticmethod
   def fromStackDict(_): return VentureNil()
   def size(self): return 0
@@ -230,7 +230,7 @@ supposed to sum to 1, but we are not checking that."""
     else:
       return self.simplex.__cmp__(other.simplex)
   def __hash__(self): return hash(self.simplex)
-  def asStackDict(self,trace):
+  def asStackDict(self, _trace):
     # TODO As what type to reflect simplex points to the stack?
     return {"type":"simplex", "value":self.simplex}
   @staticmethod
@@ -245,7 +245,7 @@ supposed to sum to 1, but we are not checking that."""
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
   def getDict(self): return self.dict
-  def asStackDict(self,trace):
+  def asStackDict(self, _trace):
     # TODO Difficult to reflect as a Python dict because the keys
     # would presumably need to be converted to stack dicts too, which
     # is a problem because they need to be hashable.
@@ -266,7 +266,7 @@ class VentureMatrix(VentureValue):
     # TODO Are numpy matrices comparable?
     return self.matrix.__cmp__(other.matrix)
   def __hash__(self): return hash(self.matrix)
-  def asStackDict(self,trace):
+  def asStackDict(self, _trace):
     return {"type":"matrix", "value":self.matrix}
   @staticmethod
   def fromStackDict(thing): return VentureMatrix(thing["value"])
