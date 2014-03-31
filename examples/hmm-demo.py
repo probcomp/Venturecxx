@@ -22,7 +22,7 @@ from venture.unit import VentureUnit, produceHistories, plotAsymptotics
 class HMMDemo(VentureUnit):
   def makeAssumes(self):
     program = """
-[ASSUME observation_noise (scope_include (quote hypers) (quote unique) (gamma 1.0 1.0))]
+[ASSUME observation_noise (scope_include (quote hypers) 0 (gamma 1.0 1.0))]
 
 [ASSUME get_state
   (mem (lambda (t)
@@ -80,44 +80,9 @@ class HMMDemo(VentureUnit):
     for i in range(num_obs):
       self.observe("(observation_fn (get_state %d))" % i, xs[i])
 
-def particleFilterInfer(mutate):
-  def infer(ripl, ct):
-    ripl.infer({"transitions":2, "kernel":"pgibbs", "with_mutation": mutate,
-                "scope":"state", "block":"ordered", "particles":2})
-
-def reasonableInfer(mutate):
-  def infer(ripl, ct):
-    hypers = {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":3}
-    state = {"kernel":"pgibbs", "scope":"state", "block":"ordered",
-             "transitions":1, "particles":4, "with_mutation":mutate}
-    ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, state]})
-  return infer
-
 def commandInfer(command):
   def infer(ripl, _): ripl.infer(command)
   return infer
-
-def runOneStrategy(arg):
-  name = arg[0]
-  inference = arg[1]
-  args = arg[2:]
-
-  model = HMMDemo(shortcuts.make_lite_church_prime_ripl())
-  model.parameters["length"] = 3
-  history = model.runFromConditional(3, runs=5, verbose=True, name=name, infer=inference(*args))
-  history.plot(fmt='png')
-
-def main1():
-  work = [#("hmm_particleFilterInferMutative",particleFilterInfer, True),
-          #("hmm_particleFilterInferPersistent",particleFilterInfer, False),
-          ("hmm_reasonableInferMutative", reasonableInfer, True),
-          ("hmm_reasonableInferPersistent", reasonableInfer, False)]
-
-  from multiprocessing import Pool
-  pool = Pool(3)
-  pool.map(runOneStrategy, work)
-  # Running the job in-process gives better exceptions
-#  map(run, work)
 
 def runner(params):
   print "Running with params %s" % params
