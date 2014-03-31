@@ -12,3 +12,6 @@ def checkDirSmoke1(form):
 
 def checkDirSmoke2(form):
   eq_(get_ripl().predict("(size %s)" % form), 4)
+
+def testDirichletComparisonRegression():
+  eq_(get_ripl().predict("(= (symmetric_dirichlet 3 2) (simplex 0.01 0.99))"), False) # As opposed to crashing
