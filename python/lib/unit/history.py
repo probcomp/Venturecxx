@@ -6,22 +6,22 @@ import numpy as np
 
 from utils import cartesianProduct, makeIterable
 
-# Aggregates data collected from a typical Venture experiment.
-#
-# The actual data are a mapping from arbitrary strings to lists of
-# Series objects (defined below).  The string keys are typically the
-# names of some of the model variables.  The Series represent the
-# values of those variables after each sweep.  The lists represent
-# different runs (they are all parallel; that is, the same run will be
-# in the same location in each key's list).
-#
-# A few extra series are typically also stored:
-# "logscore", "time (s)", "sweep_iters", and "sweep time (s)".
-#
-# Certain VentureUnit running modes convert observes to predicts. In
-# those cases, a random subset of the observes (now predicts) are
-# typically also tracked.
 class History(object):
+    """Aggregates data collected from a typical Venture experiment.
+
+The actual data are a mapping from arbitrary strings to lists of
+Series objects (defined below).  The string keys are typically the
+names of some of the model variables.  The Series represent the
+values of those variables after each sweep.  The lists represent
+different runs (they are all parallel; that is, the same run will be
+in the same location in each key's list).
+
+A few extra series are typically also stored:
+"logscore", "time (s)", "sweep_iters", and "sweep time (s)".
+
+Certain VentureUnit running modes convert observes to predicts. In
+those cases, a random subset of the observes (now predicts) are
+typically also tracked."""
     def __init__(self, label='empty_history', parameters=None):
         if parameters is None: parameters = {}
         self.label = label # :: string
