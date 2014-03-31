@@ -627,16 +627,22 @@ def cartesianProduct(keyToValues):
     (keys, values) = zip(*items) if len(keyToValues) > 0 else ([], [])
     return [OrderedDict(zip(keys, t)) for t in itertools.product(*values)]
 
-# Produces histories for a set of parameters.
-# Here the parameters can contain lists. For example, {'a':[0, 1], 'b':[2, 3]}.
-# Then histories will be computed for the parameter settings ('a', 'b') = (0, 2), (0, 3), (1, 2), (1, 3)
-# Runner should take a given parameter setting and produce a history.
-# For example, runner = lambda params : Model(ripl, params).runConditionedFromPrior(sweeps, runs, track=0)
-# Returned is a dictionary mapping each parameter setting (as a namedtuple) to the history.
+# :: {a: [b]} -> ({a: b} -> c) -> {namedtuple a b : c}  (multiplying out the [b] over all a)
+#
+# Given a dict defining spaces of possible parameter values, and a
+# parameterized function, returns a dict from all combinations of
+# parameter values to results of running that function on them.
+# Presumably, the function accepts parameters and returns a venture
+# unit History object.  For example, runner = lambda params :
+# Model(ripl, params).runConditionedFromPrior(sweeps, runs, track=0)
+#
 # If the processes argument is not None, use that many worker
 # processes, running the parameter settings in parallel.
 # Unfortunately, this seems to require the function to run be defined
 # at the top level.  Why?
+#
+# The answers are keyed by a namedtuple object because normal Python
+# dicts cannot appear as keys in Python dicts.
 def produceHistories(parameters, runner, processes=None):
     parameters_product = cartesianProduct(parameters)
     if processes is None:
