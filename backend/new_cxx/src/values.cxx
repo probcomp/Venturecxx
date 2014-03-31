@@ -68,7 +68,7 @@ bool VentureSimplex::equalsSameType(const VentureValuePtr & other) const
   shared_ptr<VentureSimplex> other_v = dynamic_pointer_cast<VentureSimplex>(other);
   assert(other_v);
   if (ps.size() != other_v->ps.size()) { return false; }
-  for (size_t i = 0; i < ps.size(); ++i) { if (!ps[i] == other_v->ps[i]) { return false; } }
+  for (size_t i = 0; i < ps.size(); ++i) { if (ps[i] != other_v->ps[i]) { return false; } }
   return true;
 }
 
