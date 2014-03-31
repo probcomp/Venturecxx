@@ -25,7 +25,7 @@ class VentureValue(object):
   def getSP(self): raise Exception("Cannot convert %s to sp" % type(self))
   def getEnvironment(self): raise Exception("Cannot convert %s to environment" % type(self))
 
-  def asStackDict(self,trace): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
+  def asStackDict(self, _trace): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
   @staticmethod
   def fromStackDict(thing):
     if isinstance(thing, list):
