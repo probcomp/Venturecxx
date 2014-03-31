@@ -23,9 +23,10 @@
 # W0403: Relative import
 # R0902: Too many instance methods
 # R0911: Too many return statements
+# R0912: Too many branches
 # R0913: Too many arguments
 # R0914: Too many local variables
-disable=E1101,C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0201,W0622,W0311,W0403,C0301,C0303,R0902,R0911,R0913,R0914
+disable=E1101,C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0201,W0622,W0311,W0403,C0301,C0303,R0902,R0911,R0912,R0913,R0914
 
 # Rationale: Suppressing no-member errors
 #   Pylint does not understand metaprogramming.  Sadly, much of
@@ -53,7 +54,7 @@ disable=E1101,C0103,C0111,C0321,C0324,R0201,R0903,R0904,W0142,W0511,W1201,W0201,
 #   people even without Pylint getting in their face about it; and
 #   doing the refactorings to clean that up requires more taste than
 #   can be produced under pressure.
-#   TODO Perhaps turn R0902, R0911, R0913, R0914 back on for the
+#   TODO Perhaps turn R0902, R0911, R0912, R0913, R0914 back on for the
 #   code-review-mode style check
 
 [REPORTS]
