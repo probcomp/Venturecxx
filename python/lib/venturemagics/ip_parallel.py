@@ -1554,6 +1554,8 @@ def predictive(mripl,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=
     xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
     ax[2].pcolormesh(xi, yi, zi)
     ax[2].set_title('MR: GKDE P(y/X=x) [name: %s] ' % name )
+
+    [ax[i].set_xlim(x_range[0],x_range[1]) for i in range(3)]
     
     fig.tight_layout()
     
