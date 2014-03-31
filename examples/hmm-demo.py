@@ -22,7 +22,7 @@ from venture.unit import VentureUnit, produceHistories, plotAsymptotics
 class HMMDemo(VentureUnit):
   def makeAssumes(self):
     program = """
-[ASSUME observation_noise (scope_include (quote hypers) (quote unique) (gamma 1.0 1.0))]
+[ASSUME observation_noise (scope_include (quote hypers) 0 (gamma 1.0 1.0))]
 
 [ASSUME get_state
   (mem (lambda (t)
