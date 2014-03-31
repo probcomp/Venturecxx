@@ -159,7 +159,6 @@ class VentureUnit(object):
 
         history.addSeries('logscore', 'i.i.d.', logscores)
 
-        series = assumedValues.copy()
         for (symbol, values) in assumedValues.iteritems():
             history.addSeries(symbol, 'i.i.d.', map(parseValue, values))
 
@@ -543,7 +542,7 @@ def setYBounds(seriesList, ybounds=None):
         if not any([any([np.isinf(v) for v in series.values]) for series in seriesList]):
             plt.ylim([ymin - offset, ymax + offset])
     else:
-        [ylow,yhigh] = ybounds
+        [ylow,yhigh] = ybounds # Silly pylint not noticing case on maybe type pylint:disable=unpacking-non-sequence
         plt.ylim([ylow,yhigh])
 
 # Plots a set of series.
