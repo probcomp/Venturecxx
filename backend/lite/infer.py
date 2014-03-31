@@ -510,11 +510,18 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
 
     def fixed_regen(values):
       # Ensure repeatability of randomness
-      random.setstate(pyr_state)
-      npr.set_state(numpyr_state)
-      vs = values # [NumberType().asVentureValue(v) for v in values]
-      registerDeterministicLKernels(trace, scaffold, pnodes, vs)
-      return regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
+      cur_pyr_state = random.getstate()
+      cur_numpyr_state = npr.get_state()
+      try:
+        random.setstate(pyr_state)
+        npr.set_state(numpyr_state)
+        vs = values # [NumberType().asVentureValue(v) for v in values]
+        registerDeterministicLKernels(trace, scaffold, pnodes, vs)
+        answer = regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
+      finally:
+        random.setstate(cur_pyr_state)
+        npr.set_state(cur_numpyr_state)
+      return answer
 
     def grad(values):
       fixed_regen(values)
