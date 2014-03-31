@@ -20,7 +20,7 @@ import pylab
 import cPickle as pickle
 import os
 import copy
-from collections import OrderedDict
+from utils import cartesianProduct, makeIterable
 
 # whether to record a value returned from the ripl
 def record(value):
@@ -587,16 +587,16 @@ def plotHistogram(name, seriesList, subtitle="", parameters=None,
     filename = directory + name.replace(' ', '_') + '_hist.' + fmt
     savefig_legend_outside(filename)
 
-# smooths out a probability distribution function
-def smooth(pdf, amt=0.1):
-    return [(p + amt / len(pdf)) / (1.0 + amt) for p in pdf]
-
 import math
 
 # Approximates the KL divergence between samples from two distributions.
 # 'reference' is the "true" distribution
 # 'approx' is an approximation of 'reference'
 def computeKL(reference, approx, numbins=20):
+
+    # smooths out a probability distribution function
+    def smooth(pdf, amt=0.1):
+        return [(p + amt / len(pdf)) / (1.0 + amt) for p in pdf]
 
     mn = min(reference + approx)
     mx = max(reference + approx)
@@ -614,47 +614,8 @@ def computeKL(reference, approx, numbins=20):
 
     return kl
 
-import itertools
 from collections import namedtuple
 from matplotlib import cm
-
-def makeIterable(obj):
-    return obj if hasattr(obj, '__iter__') else [obj]
-
-# :: {a: [b]} -> [{a: b}]
-def cartesianProduct(keyToValues):
-    items = [(key, makeIterable(value)) for (key, value) in keyToValues.items()]
-    (keys, values) = zip(*items) if len(keyToValues) > 0 else ([], [])
-    return [OrderedDict(zip(keys, t)) for t in itertools.product(*values)]
-
-# :: {a: [b]} -> ({a: b} -> c) -> {namedtuple a b : c}  (multiplying out the [b] over all a)
-#
-# Given a dict defining spaces of possible parameter values, and a
-# parameterized function, returns a dict from all combinations of
-# parameter values to results of running that function on them.
-# Presumably, the function accepts parameters and returns a venture
-# unit History object.  For example, runner = lambda params :
-# Model(ripl, params).runConditionedFromPrior(sweeps, runs, track=0)
-#
-# If the processes argument is not None, use that many worker
-# processes, running the parameter settings in parallel.
-# Unfortunately, this seems to require the function to run be defined
-# at the top level.  Why?
-#
-# The answers are keyed by a namedtuple object because normal Python
-# dicts cannot appear as keys in Python dicts.
-def productMap(parameters, runner, processes=None):
-    parameters_product = cartesianProduct(parameters)
-    if processes is None:
-        results = [runner(params) for params in parameters_product]
-    else:
-        from multiprocessing import Pool
-        pool = Pool(int(processes))
-        results = pool.map(runner, parameters_product)
-
-    Key = namedtuple('Key', parameters_product[0].keys())
-    hashable_keys = [Key._make(params.values()) for params in parameters_product]
-    return dict(zip(hashable_keys, results))
 
 # Sets key to value and returns the updated dictionary.
 def addToDict(dictionary, key, value):
