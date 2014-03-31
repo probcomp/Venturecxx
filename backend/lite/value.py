@@ -70,10 +70,30 @@ class VentureNumber(VentureValue):
 
 def stupidCompare(thing, other):
   # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
-  # strings don't have __cmp__ either?
+  # strings don't have __cmp__ either? or lists?
   if thing < other: return -1
   elif thing > other: return 1
   else: return 0
+
+def lexicographicBoxedCompare(thing, other):
+  if len(thing) < len(other): return -1
+  if len(thing) > len(other): return 1
+
+  # else same length
+  for x,y in zip(thing,other):
+    if x.compare(y) != 0: return x.compare(y)
+
+  return 0
+
+def lexicographicUnboxedCompare(thing, other):
+  if len(thing) < len(other): return -1
+  if len(thing) > len(other): return 1
+
+  # else same length
+  for x,y in zip(thing,other):
+    if stupidCompare(x,y) != 0: return stupidCompare(x,y)
+
+  return 0
 
 class VentureAtom(VentureValue):
   def __init__(self,atom):
@@ -135,14 +155,7 @@ interface here is compatible with one possible path."""
     return self.getArray(elt_type)
 
   def compareSameType(self, other):
-    if len(self.array) < len(other.array): return -1
-    if len(self.array) > len(other.array): return 1
-
-    # else same length
-    for x,y in zip(self.array,other.array):
-      if x.compare(y) != 0: return x.compare(y)
-
-    return 0
+    return lexicographicBoxedCompare(self.array, other.array)
       
   def asStackDict(self,trace):
     # TODO Are venture arrays reflected as lists to the stack?
@@ -224,11 +237,7 @@ supposed to sum to 1, but we are not checking that."""
     # The Python ordering is lexicographic first, then by length, but
     # I think we want lower-d simplexes to compare less than higher-d
     # ones regardless of the point.
-    lencmp = len(self.simplex).__cmp__(len(other.simplex))
-    if lencmp != 0:
-      return lencmp
-    else:
-      return self.simplex.__cmp__(other.simplex)
+    return lexicographicUnboxedCompare(self.simplex, other.simplex)
   def __hash__(self): return hash(self.simplex)
   def asStackDict(self, _trace):
     # TODO As what type to reflect simplex points to the stack?
