@@ -131,6 +131,7 @@ def setup_mripls():
 
 
 
+
 class MRipl2():
     
     def __init__(self,no_ripls,backend='puma',no_local_ripls=1,output='remote',verbose=False):
@@ -908,17 +909,12 @@ class MRipl():
                 no_groups,pop_size = sample_populations
             exp = exp_list[0]
 
-            # @interactive
-            # def f(exp,type,mrid):
-            #    return [ripl.sample(exp,type) for ripl in mripls[mrid] ]
-            
-            # self.dview.apply(f,exp,type,self.mrid) ##FIXEM: use mr_map_f trick
-            
             
             if not(predict):
                 all_ripls = [self.sample(exp) for j in range(pop_size)]
             else:
-                all_ripls = [self.sample(exp) for j in range(pop_size)]
+                all_ripls = [self.predict(exp,label='sp%i'%j) for j in range(pop_size)]
+                [self.forget('sp%i'%j) for j in range(pop_size)]
             ## FIXME could be much faster by fixing ripls first
             indices = np.random.randint(0,self.no_ripls,no_groups)
 
@@ -933,11 +929,14 @@ class MRipl():
                 xr=np.linspace(min(f),max(f),80)
                 lim = some_ripls.shape[1]
                 for col in range(lim):
-                    ax[0].hist(some_ripls[:,col],bins=20,normed=True,histtype='stepfilled')
+                    ax[0].hist(some_ripls[:,col],bins=20,normed=False,histtype='stepfilled')
+                    
                     #ax[1].hist(some_ripls[:,col], bins=20,
                      #          histtype='stepfilled',alpha=1-(col/float(lim)) )
 
                     ax[1].plot(xr,gaussian_kde(some_ripls[:,col])(xr))
+                ax[0].set_ylim((0,.66*pop_size))
+                ## FIXME: make ylim for ax[0] some sensible thing, like 1.5 times max bar height
                 ax[0].set_title('Sample populations: %s (population size= %i)' % (exp,pop_size))
                 ax[1].set_title('Sample populations: %s (population size= %i)' % (exp,pop_size))
                 out['figs']=fig
