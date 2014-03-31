@@ -643,7 +643,7 @@ def cartesianProduct(keyToValues):
 #
 # The answers are keyed by a namedtuple object because normal Python
 # dicts cannot appear as keys in Python dicts.
-def produceHistories(parameters, runner, processes=None):
+def productMap(parameters, runner, processes=None):
     parameters_product = cartesianProduct(parameters)
     if processes is None:
         results = [runner(params) for params in parameters_product]

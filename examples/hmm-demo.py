@@ -17,7 +17,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 from venture import shortcuts
-from venture.unit import VentureUnit, produceHistories, plotAsymptotics
+from venture.unit import VentureUnit, productMap, plotAsymptotics
 
 class HMMDemo(VentureUnit):
   def makeAssumes(self):
@@ -93,7 +93,7 @@ def main2():
   parameters = {"length": [5,10,15,20,25,30,35,40,45,50,55],
                 "command": ["(cycle ((mh hypers one 3) (pgibbs state ordered 4 1)) 1)",
                             "(cycle ((mh hypers one 3) (func-pgibbs state ordered 4 1)) 1)"]}
-  histories = produceHistories(parameters, runner, processes=3)
+  histories = productMap(parameters, runner, processes=3)
   plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png', aggregate=True)
   plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png')
 
