@@ -73,7 +73,8 @@ if __name__ == '__main__':
     hypers =     {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":2}
     parameters = {"kernel":"mh", "scope":"parameters", "block":"one", "transitions":3}
     clustering = {"kernel":"mh", "scope":"clustering", "block":"one", "transitions":8}
-    ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, parameters, clustering]})
+#    ripl.infer({"transitions":1, "kernel":"cycle", "subkernels":[hypers, parameters, clustering]})
+    ripl.infer("(cycle ((mh hypers one 2) (mh parameters one 3) (mh clustering one 8)) 1)")
   def pGibbsInfer(ripl, ct):
     # hypers =     {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":5}
     # parameters = {"kernel":"mh", "scope":"parameters", "block":"one", "transitions":20}
@@ -83,13 +84,14 @@ if __name__ == '__main__':
     hypers =     {"kernel":"mh", "scope":"hypers", "block":"one", "transitions":2}
     parameters = {"kernel":"mh", "scope":"parameters", "block":"one", "transitions":3}
     clustering = {"kernel":"pgibbs", "scope":"clustering", "block":"ordered", "transitions":1}
-    ripl.infer({"transitions":3, "kernel":"cycle", "subkernels":[hypers, parameters, clustering]})
+#    ripl.infer({"transitions":3, "kernel":"cycle", "subkernels":[hypers, parameters, clustering]})
+    ripl.infer("(cycle ((mh hypers one 2) (mh parameters one 3) (pgibbs clustering ordered 2 1)) 3)")
 
 def run(arg):
   name = arg[0]
   inference = arg[1]
 
-  history = model.runFromConditional(100, runs=10, verbose=True, name=name, infer=inference)
+  history = model.runFromConditional(5, runs=3, verbose=True, name=name, infer=inference)
   history.plot(fmt='png')
 
 from multiprocessing import Pool
