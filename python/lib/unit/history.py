@@ -29,9 +29,12 @@ typically also tracked."""
         self.nameToSeries = {} # :: {string: [Series]} the list is over multiple runs
 
     def addSeries(self, name, label, values, hist=True):
+        self._addSeries(name, Series(label, values, hist))
+
+    def _addSeries(self, name, series):
         if name not in self.nameToSeries:
             self.nameToSeries[name] = []
-        self.nameToSeries[name].append(Series(label, values, hist))
+        self.nameToSeries[name].append(series)
 
     # Returns the average over all series with the given name.
     def averageValue(self, seriesName):
