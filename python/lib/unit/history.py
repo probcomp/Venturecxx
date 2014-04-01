@@ -37,8 +37,7 @@ typically also tracked."""
         self.nameToSeries[name].append(series)
 
     def addRun(self, run):
-        assert run.label == self.label # Require compatible metadata
-        assert run.parameters == self.parameters
+        assert run.parameters == self.parameters # Require compatible metadata
         for (name, series) in run.namedSeries.iteritems():
             self._addSeries(name, series)
 
@@ -152,7 +151,7 @@ differently)."""
 
 # aggregates values for one variable over the course of a run
 class Series(object):
-    def __init__(self, label, values, hist, xvals=None):
+    def __init__(self, label, values, hist=True, xvals=None):
         self.label = label   # string
         self.values = values # [a]
         # Boolean indicating whether this series is meant to be histogrammed

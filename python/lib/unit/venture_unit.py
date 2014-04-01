@@ -17,7 +17,7 @@ import time
 import random
 import numpy as np
 
-from history import History
+from history import History, Run, Series
 
 # whether to record a value returned from the ripl
 def record(value):
@@ -186,53 +186,60 @@ class VentureUnit(object):
     # Runs inference on the joint distribution (observes turned into predicts).
     # A random subset of the predicts are tracked along with the assumed variables.
     # If profiling is enabled, information about random choices is recorded.
-    def runFromJoint(self, sweeps, track=5, runs=3, verbose=False, profile=False, name=None, infer=None):
+    def runFromJoint(self, sweeps, track=5, runs=3, verbose=False,
+                     profile=False, name=None, infer=None):
         tag = 'run_from_joint' if name is None else name + '_run_from_joint'
         history = History(tag, self.parameters)
 
         for run in range(runs):
             if verbose:
                 print "Starting run " + str(run) + " of " + str(runs)
-
-            (assumeToDirective, predictToDirective) = self.loadModelWithPredicts(track)
-
-            assumedValues = {symbol : [] for symbol in assumeToDirective}
-            predictedValues = {index: [] for index in predictToDirective}
-
-            sweepTimes = []
-            sweepIters = []
-            logscores = []
-
-            for sweep in range(sweeps):
-                if verbose:
-                    print "Running sweep " + str(sweep) + " of " + str(sweeps)
-
-                # FIXME: use timeit module for better precision
-                start = time.time()
-                iterations = self.sweep(infer)
-                end = time.time()
-
-                sweepTimes.append(end-start)
-                sweepIters.append(iterations)
-                logscores.append(self.ripl.get_global_logscore())
-
-                self.updateValues(assumedValues, assumeToDirective)
-                self.updateValues(predictedValues, predictToDirective)
-
-            history.addSeries('sweep time (s)', 'run ' + str(run), sweepTimes)
-            history.addSeries('sweep_iters', 'run ' + str(run), sweepIters)
-            history.addSeries('logscore', 'run ' + str(run), logscores)
-
-            for (symbol, values) in assumedValues.iteritems():
-                history.addSeries(symbol, 'run ' + str(run), map(parseValue, values))
-
-            for (index, values) in predictedValues.iteritems():
-                history.addSeries(self.nameObserve(index), 'run %d' % run, map(parseValue, values))
+            res = self.runFromJointOnce(sweeps, label="run %s" % run,
+                                        track=track, verbose=verbose, infer=infer)
+            history.addRun(res)
 
         if profile:
             history.profile = Profile(self.ripl)
-
         return history
+
+    def runFromJointOnce(self, sweeps, label=None, track=5, verbose=False, infer=None):
+        answer = Run(label, self.parameters)
+        (assumeToDirective, predictToDirective) = self.loadModelWithPredicts(track)
+
+        assumedValues = {symbol : [] for symbol in assumeToDirective}
+        predictedValues = {index: [] for index in predictToDirective}
+
+        sweepTimes = []
+        sweepIters = []
+        logscores = []
+
+        for sweep in range(sweeps):
+            if verbose:
+                print "Running sweep " + str(sweep) + " of " + str(sweeps)
+
+            # FIXME: use timeit module for better precision
+            start = time.time()
+            iterations = self.sweep(infer)
+            end = time.time()
+
+            sweepTimes.append(end-start)
+            sweepIters.append(iterations)
+            logscores.append(self.ripl.get_global_logscore())
+
+            self.updateValues(assumedValues, assumeToDirective)
+            self.updateValues(predictedValues, predictToDirective)
+
+        answer.addSeries('sweep time (s)', Series(label, sweepTimes))
+        answer.addSeries('sweep_iters', Series(label, sweepIters))
+        answer.addSeries('logscore', Series(label, logscores))
+
+        for (symbol, values) in assumedValues.iteritems():
+            answer.addSeries(symbol, Series(label, map(parseValue, values)))
+
+        for (index, values) in predictedValues.iteritems():
+            answer.addSeries(self.nameObserve(index), Series(label, map(parseValue, values)))
+
+        return answer
 
     # Computes the KL divergence on i.i.d. samples from the prior and inference on the joint.
     # Returns the sampled history, inferred history, and history of KL divergences.
