@@ -183,24 +183,27 @@ class VentureUnit(object):
 
         return iterations
 
+    def _runRepeatedly(self, f, tag, sweeps, runs=3, verbose=False,
+                       profile=False, **kwargs):
+        history = History(tag, self.parameters)
+
+        for run in range(runs):
+            if verbose:
+                print "Starting run " + str(run) + " of " + str(runs)
+            res = f(sweeps, label="run %s" % run, verbose=verbose, **kwargs)
+            history.addRun(res)
+
+        if profile:
+            history.profile = Profile(self.ripl)
+        return history
+
     # Runs inference on the joint distribution (observes turned into predicts).
     # A random subset of the predicts are tracked along with the assumed variables.
     # If profiling is enabled, information about random choices is recorded.
     def runFromJoint(self, sweeps, runs=3, verbose=False,
                      profile=False, name=None, **kwargs):
         tag = 'run_from_joint' if name is None else name + '_run_from_joint'
-        history = History(tag, self.parameters)
-
-        for run in range(runs):
-            if verbose:
-                print "Starting run " + str(run) + " of " + str(runs)
-            res = self.runFromJointOnce(sweeps, label="run %s" % run,
-                                        verbose=verbose, **kwargs)
-            history.addRun(res)
-
-        if profile:
-            history.profile = Profile(self.ripl)
-        return history
+        return self._runRepeatedly(self.runFromJointOnce, tag, sweeps, runs=runs, verbose=verbose, profile=profile, **kwargs)
 
     def runFromJointOnce(self, sweeps, label=None, track=5, verbose=False, infer=None):
         answer = Run(label, self.parameters)
@@ -266,17 +269,7 @@ class VentureUnit(object):
     # By default the data is as given in makeObserves(parameters).
     def runFromConditional(self, sweeps, runs=3, verbose=False, profile=False, name=None, **kwargs):
         tag = 'run_from_conditional' if name is None else name + '_run_from_conditional'
-        history = History(tag, self.parameters)
-
-        for run in range(runs):
-            if verbose:
-                print "Starting run " + str(run) + " of " + str(runs)
-            res = self.runFromConditionalOnce(sweeps, label="run %s" % run, verbose=verbose, **kwargs)
-            history.addRun(res)
-        if profile:
-            history.profile = Profile(self.ripl)
-
-        return history
+        return self._runRepeatedly(self.runFromConditionalOnce, tag, sweeps, runs=runs, verbose=verbose, profile=profile, **kwargs)
 
     def runFromConditionalOnce(self, sweeps, data=None, label=None, verbose=False, infer=None):
         answer = Run(label, self.parameters)
