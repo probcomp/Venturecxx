@@ -271,6 +271,7 @@ class VentureUnit(object):
         for run in range(runs):
             if verbose:
                 print "Starting run " + str(run) + " of " + str(runs)
+            label = "run %s" % run
 
             self.ripl.clear()
 
@@ -306,12 +307,12 @@ class VentureUnit(object):
 
                 self.updateValues(assumedValues, assumeToDirective)
 
-            history.addSeries('sweep time (s)', 'run ' + str(run), sweepTimes)
-            history.addSeries('sweep_iters', 'run ' + str(run), sweepIters)
-            history.addSeries('logscore', 'run ' + str(run), logscores)
+            history.addSeries('sweep time (s)', label, sweepTimes)
+            history.addSeries('sweep_iters', label, sweepIters)
+            history.addSeries('logscore', label, logscores)
 
             for (symbol, values) in assumedValues.iteritems():
-                history.addSeries(symbol, 'run ' + str(run), map(parseValue, values))
+                history.addSeries(symbol, label, map(parseValue, values))
 
             if profile:
                 history.profile = Profile(self.ripl)
