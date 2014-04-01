@@ -36,6 +36,12 @@ typically also tracked."""
             self.nameToSeries[name] = []
         self.nameToSeries[name].append(series)
 
+    def addRun(self, run):
+        assert run.label == self.label # Require compatible metadata
+        assert run.parameters == self.parameters
+        for (name, series) in run.namedSeries.iteritems():
+            self._addSeries(name, series)
+
     # Returns the average over all series with the given name.
     def averageValue(self, seriesName):
         return np.mean([np.mean(series.values) for series in self.nameToSeries[seriesName]])
