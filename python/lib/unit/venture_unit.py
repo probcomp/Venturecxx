@@ -271,53 +271,58 @@ class VentureUnit(object):
         for run in range(runs):
             if verbose:
                 print "Starting run " + str(run) + " of " + str(runs)
-            label = "run %s" % run
-
-            self.ripl.clear()
-
-            assumeToDirective = {}
-            for (symbol, expression) in self.assumes:
-                value = self.ripl.assume(symbol, expression, symbol, type=True)
-                if record(value): assumeToDirective[symbol] = symbol
-
-            for (index, (expression, literal)) in enumerate(self.observes):
-                datum = literal if data is None else data[index]
-                self.ripl.observe(expression, datum)
-
-            sweepTimes = []
-            sweepIters = []
-            logscores = []
-
-            assumedValues = {}
-            for symbol in assumeToDirective:
-              assumedValues[symbol] = []
-
-            for sweep in range(sweeps):
-                if verbose:
-                    print "Running sweep " + str(sweep) + " of " + str(sweeps)
-
-                # FIXME: use timeit module for better precision
-                start = time.time()
-                iterations = self.sweep(infer=infer)
-                end = time.time()
-
-                sweepTimes.append(end-start)
-                sweepIters.append(iterations)
-                logscores.append(self.ripl.get_global_logscore())
-
-                self.updateValues(assumedValues, assumeToDirective)
-
-            history.addSeries('sweep time (s)', label, sweepTimes)
-            history.addSeries('sweep_iters', label, sweepIters)
-            history.addSeries('logscore', label, logscores)
-
-            for (symbol, values) in assumedValues.iteritems():
-                history.addSeries(symbol, label, map(parseValue, values))
-
-            if profile:
-                history.profile = Profile(self.ripl)
+            res = self.runFromConditionalOnce(sweeps, label="run %s" % run, data=data, verbose=verbose, infer=infer)
+            history.addRun(res)
+        if profile:
+            history.profile = Profile(self.ripl)
 
         return history
+
+    def runFromConditionalOnce(self, sweeps, data=None, label=None, verbose=False, infer=None):
+        answer = Run(label, self.parameters)
+        self.ripl.clear()
+
+        assumeToDirective = {}
+        for (symbol, expression) in self.assumes:
+            value = self.ripl.assume(symbol, expression, symbol, type=True)
+            if record(value): assumeToDirective[symbol] = symbol
+
+        for (index, (expression, literal)) in enumerate(self.observes):
+            datum = literal if data is None else data[index]
+            self.ripl.observe(expression, datum)
+
+        sweepTimes = []
+        sweepIters = []
+        logscores = []
+
+        assumedValues = {}
+        for symbol in assumeToDirective:
+          assumedValues[symbol] = []
+
+        for sweep in range(sweeps):
+            if verbose:
+                print "Running sweep " + str(sweep) + " of " + str(sweeps)
+
+            # FIXME: use timeit module for better precision
+            start = time.time()
+            iterations = self.sweep(infer=infer)
+            end = time.time()
+
+            sweepTimes.append(end-start)
+            sweepIters.append(iterations)
+            logscores.append(self.ripl.get_global_logscore())
+
+            self.updateValues(assumedValues, assumeToDirective)
+
+        answer.addSeries('sweep time (s)', Series(label, sweepTimes))
+        answer.addSeries('sweep_iters', Series(label, sweepIters))
+        answer.addSeries('logscore', Series(label, logscores))
+
+        for (symbol, values) in assumedValues.iteritems():
+            answer.addSeries(symbol, Series(label, map(parseValue, values)))
+
+        return answer
+
 
     # Run inference conditioned on data generated from the prior.
     def runConditionedFromPrior(self, sweeps, runs=3, verbose=False, profile=False):
