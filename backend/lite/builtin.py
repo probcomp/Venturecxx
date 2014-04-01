@@ -63,8 +63,6 @@ def typed_func(*args, **kwargs):
 # one splats the operand values).
 def deterministic_psp(f, descr=None, sim_grad=None):
   def new_grad(args, direction):
-    if not isinstance(direction, list):
-        direction = [direction]
     return sim_grad(args.operandValues, direction)
   return func_psp(lambda args: f(*args.operandValues), descr, sim_grad=(new_grad if sim_grad else None))
 
@@ -89,19 +87,17 @@ def unaryNum(f, descr=None):
 def unaryNumS(f):
   return typed_nr(f, [v.NumberType()], v.NumberType())
 
-def naryNum(f, descr=None):
-  return deterministic_typed(f, [v.NumberType()], v.NumberType(), variadic=True, descr=descr)
+def naryNum(f, sim_grad=None, descr=None):
+  return deterministic_typed(f, [v.NumberType()], v.NumberType(), variadic=True, sim_grad=sim_grad, descr=descr)
 
 def type_test(t):
   return deterministic(lambda thing: v.VentureBool(thing in t),
                        "%s :: <SP <object> -> <bool>>\nReturns true iff its argument is a " + t.name())
 
 def builtInSPsList():
-  return [ ["plus", deterministic(lambda *args: v.VentureNumber(sum(args)), 
-                                 sim_grad=lambda args, direction: [sum(list(direction))],
-                                 descr="%s returns the sum of all its arguments")],
-           # [ "plus",  naryNum(lambda *args: sum(args),
-           #                   "%s returns the sum of all its arguments") ],
+  return [ [ "plus",  naryNum(lambda *args: sum(args),
+                              sim_grad=lambda args, direction: [direction for _ in args],
+                              descr="%s returns the sum of all its arguments") ],
            [ "minus", binaryNum(lambda x,y: x - y,
                                 "%s returns the difference between its first and second arguments") ],
            [ "times", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1),
