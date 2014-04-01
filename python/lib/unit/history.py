@@ -126,6 +126,21 @@ def historyOverlay(name, named_hists):
                 answer.addSeries(seriesname, subname + "_" + subseries.label, subseries.values, subseries.hist)
     return answer
 
+class Run(object):
+    """Data from a single run of a model.  A History is effectively a set
+of Runs with the same label and parameters (but represented
+differently)."""
+    def __init__(self, label='empty_run', parameters=None, data={}):
+        if parameters is None: parameters = {}
+        self.label = label # string
+        self.parameters = parameters # :: {string: a}
+        self.namedSeries = {}
+        for (name, series) in data.iteritems():
+            self.namedSeries[name] = series
+
+    def addSeries(self, name, series):
+        self.namedSeries[name] = series
+
 # aggregates values for one variable over the course of a run
 class Series(object):
     def __init__(self, label, values, hist, xvals=None):
