@@ -186,8 +186,8 @@ class VentureUnit(object):
     # Runs inference on the joint distribution (observes turned into predicts).
     # A random subset of the predicts are tracked along with the assumed variables.
     # If profiling is enabled, information about random choices is recorded.
-    def runFromJoint(self, sweeps, track=5, runs=3, verbose=False,
-                     profile=False, name=None, infer=None):
+    def runFromJoint(self, sweeps, runs=3, verbose=False,
+                     profile=False, name=None, **kwargs):
         tag = 'run_from_joint' if name is None else name + '_run_from_joint'
         history = History(tag, self.parameters)
 
@@ -195,7 +195,7 @@ class VentureUnit(object):
             if verbose:
                 print "Starting run " + str(run) + " of " + str(runs)
             res = self.runFromJointOnce(sweeps, label="run %s" % run,
-                                        track=track, verbose=verbose, infer=infer)
+                                        verbose=verbose, **kwargs)
             history.addRun(res)
 
         if profile:
@@ -264,14 +264,14 @@ class VentureUnit(object):
 
     # Runs inference on the model conditioned on observed data.
     # By default the data is as given in makeObserves(parameters).
-    def runFromConditional(self, sweeps, data=None, runs=3, verbose=False, profile=False, infer=None, name=None):
+    def runFromConditional(self, sweeps, runs=3, verbose=False, profile=False, name=None, **kwargs):
         tag = 'run_from_conditional' if name is None else name + '_run_from_conditional'
         history = History(tag, self.parameters)
 
         for run in range(runs):
             if verbose:
                 print "Starting run " + str(run) + " of " + str(runs)
-            res = self.runFromConditionalOnce(sweeps, label="run %s" % run, data=data, verbose=verbose, infer=infer)
+            res = self.runFromConditionalOnce(sweeps, label="run %s" % run, verbose=verbose, **kwargs)
             history.addRun(res)
         if profile:
             history.profile = Profile(self.ripl)
