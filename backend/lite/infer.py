@@ -561,7 +561,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     dpdt = start_grad_q
     p = [pi - dpdti * (epsilon / 2.0) for (pi, dpdti) in zip(start_p, dpdt)]
 
-    for i in range(int(num_steps)):
+    for i in range(npr.randint(int(num_steps))+1):
       # Position step
       q = [qi + pi * epsilon for (qi, pi) in zip(q,p)]
 
