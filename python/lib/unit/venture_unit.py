@@ -71,13 +71,7 @@ class VentureUnit(object):
         self.observes = []
         self.makeObserves()
 
-    # Loads the assumes and changes the observes to predicts.
-    # Also picks a subset of the predicts to track (by default all are tracked).
-    # Prunes non-scalar values, unless prune=False.
-    # Does not reset engine RNG.
-    def loadModelWithPredicts(self, track=-1, prune=True):
-        self.ripl.clear()
-
+    def _loadAssumes(self, prune=True):
         assumeToDirective = {}
         for (symbol, expression) in self.assumes:
             from venture.exception import VentureException
@@ -88,7 +82,9 @@ class VentureUnit(object):
                 raise e
             if (not prune) or record(value):
                 assumeToDirective[symbol] = symbol
+        return assumeToDirective
 
+    def _loadObservesAsPredicts(self, track=-1, prune=True):
         predictToDirective = {}
         for (index, (expression, _)) in enumerate(self.observes):
             #print("self.ripl.predict('%s', label='%d')" % (expression, index))
@@ -103,6 +99,18 @@ class VentureUnit(object):
             # FIXME: need predictable behavior from RNG
             random.seed(self.parameters['venture_random_seed'])
             predictToDirective = dict(random.sample(predictToDirective.items(), track))
+
+        return predictToDirective
+
+    # Loads the assumes and changes the observes to predicts.
+    # Also picks a subset of the predicts to track (by default all are tracked).
+    # Prunes non-scalar values, unless prune=False.
+    # Does not reset engine RNG.
+    def loadModelWithPredicts(self, track=-1, prune=True):
+        self.ripl.clear()
+
+        assumeToDirective = self._loadAssumes(prune=prune)
+        predictToDirective = self._loadObservesAsPredicts(track=track, prune=prune)
 
         return (assumeToDirective, predictToDirective)
 
