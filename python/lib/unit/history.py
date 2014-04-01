@@ -129,10 +129,11 @@ def historyOverlay(name, named_hists):
 # aggregates values for one variable over the course of a run
 class Series(object):
     def __init__(self, label, values, hist, xvals=None):
-        self.label = label
-        self.values = values
-        self.hist = hist
-        self._xvals = xvals
+        self.label = label   # string
+        self.values = values # [a]
+        # Boolean indicating whether this series is meant to be histogrammed
+        self.hist = hist     # Appears to be unused TODO remove?
+        self._xvals = xvals  # Maybe [Number] the ordinate values to plot at
 
     def xvals(self):
         if self._xvals is not None:
