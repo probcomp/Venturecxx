@@ -183,14 +183,13 @@ class VentureUnit(object):
 
         return iterations
 
-    def _runRepeatedly(self, f, tag, sweeps, runs=3, verbose=False,
-                       profile=False, **kwargs):
+    def _runRepeatedly(self, f, tag, runs=3, verbose=False, profile=False, **kwargs):
         history = History(tag, self.parameters)
 
         for run in range(runs):
             if verbose:
                 print "Starting run " + str(run) + " of " + str(runs)
-            res = f(sweeps, label="run %s" % run, verbose=verbose, **kwargs)
+            res = f(label="run %s" % run, verbose=verbose, **kwargs)
             history.addRun(res)
 
         if profile:
@@ -202,9 +201,9 @@ class VentureUnit(object):
     # If profiling is enabled, information about random choices is recorded.
     def runFromJoint(self, sweeps, name=None, **kwargs):
         tag = 'run_from_joint' if name is None else name + '_run_from_joint'
-        return self._runRepeatedly(self.runFromJointOnce, tag, sweeps, **kwargs)
+        return self._runRepeatedly(self.runFromJointOnce, tag, sweeps=sweeps, **kwargs)
 
-    def runFromJointOnce(self, sweeps, label=None, track=5, verbose=False, infer=None):
+    def runFromJointOnce(self, sweeps=100, label=None, track=5, verbose=False, infer=None):
         answer = Run(label, self.parameters)
         (assumeToDirective, predictToDirective) = self.loadModelWithPredicts(track)
 
@@ -268,9 +267,9 @@ class VentureUnit(object):
     # By default the data is as given in makeObserves(parameters).
     def runFromConditional(self, sweeps, name=None, **kwargs):
         tag = 'run_from_conditional' if name is None else name + '_run_from_conditional'
-        return self._runRepeatedly(self.runFromConditionalOnce, tag, sweeps, **kwargs)
+        return self._runRepeatedly(self.runFromConditionalOnce, tag, sweeps=sweeps, **kwargs)
 
-    def runFromConditionalOnce(self, sweeps, data=None, label=None, verbose=False, infer=None):
+    def runFromConditionalOnce(self, sweeps=100, data=None, label=None, verbose=False, infer=None):
         answer = Run(label, self.parameters)
         self.ripl.clear()
 
