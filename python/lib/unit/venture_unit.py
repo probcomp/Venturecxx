@@ -254,7 +254,7 @@ class VentureUnit(object):
     # Returns the sampled history, inferred history, and history of KL divergences.
     def computeJointKL(self, sweeps, samples, track=5, runs=3, verbose=False, name=None, infer=None):
         sampledHistory = self.sampleFromJoint(samples, track, verbose, name=name)
-        inferredHistory = self.runFromJoint(sweeps, track, runs, verbose, name=name, infer=infer)
+        inferredHistory = self.runFromJoint(sweeps, track=track, runs=runs, verbose=verbose, name=name, infer=infer)
 
         tag = 'kl_divergence' if name is None else name + '_kl_divergence'
         klHistory = History(tag, self.parameters)
@@ -340,7 +340,7 @@ class VentureUnit(object):
 
         logscore = self.ripl.get_global_logscore()
 
-        history = self.runFromConditional(sweeps, data, runs, verbose, profile)
+        history = self.runFromConditional(sweeps, data=data, runs=runs, verbose=verbose, profile=profile)
 
         history.addSeries('logscore', 'prior', [logscore]*sweeps, hist=False)
         for (symbol, value) in assumedValues.iteritems():
