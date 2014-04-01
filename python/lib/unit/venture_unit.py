@@ -200,10 +200,9 @@ class VentureUnit(object):
     # Runs inference on the joint distribution (observes turned into predicts).
     # A random subset of the predicts are tracked along with the assumed variables.
     # If profiling is enabled, information about random choices is recorded.
-    def runFromJoint(self, sweeps, runs=3, verbose=False,
-                     profile=False, name=None, **kwargs):
+    def runFromJoint(self, sweeps, name=None, **kwargs):
         tag = 'run_from_joint' if name is None else name + '_run_from_joint'
-        return self._runRepeatedly(self.runFromJointOnce, tag, sweeps, runs=runs, verbose=verbose, profile=profile, **kwargs)
+        return self._runRepeatedly(self.runFromJointOnce, tag, sweeps, **kwargs)
 
     def runFromJointOnce(self, sweeps, label=None, track=5, verbose=False, infer=None):
         answer = Run(label, self.parameters)
@@ -267,9 +266,9 @@ class VentureUnit(object):
 
     # Runs inference on the model conditioned on observed data.
     # By default the data is as given in makeObserves(parameters).
-    def runFromConditional(self, sweeps, runs=3, verbose=False, profile=False, name=None, **kwargs):
+    def runFromConditional(self, sweeps, name=None, **kwargs):
         tag = 'run_from_conditional' if name is None else name + '_run_from_conditional'
-        return self._runRepeatedly(self.runFromConditionalOnce, tag, sweeps, runs=runs, verbose=verbose, profile=profile, **kwargs)
+        return self._runRepeatedly(self.runFromConditionalOnce, tag, sweeps, **kwargs)
 
     def runFromConditionalOnce(self, sweeps, data=None, label=None, verbose=False, infer=None):
         answer = Run(label, self.parameters)
