@@ -102,6 +102,11 @@ class VentureUnit(object):
 
         return predictToDirective
 
+    def _loadObserves(self, data=None):
+        for (index, (expression, literal)) in enumerate(self.observes):
+            datum = literal if data is None else data[index]
+            self.ripl.observe(expression, datum)
+
     # Loads the assumes and changes the observes to predicts.
     # Also picks a subset of the predicts to track (by default all are tracked).
     # Prunes non-scalar values, unless prune=False.
@@ -282,10 +287,7 @@ class VentureUnit(object):
         self.ripl.clear()
 
         assumeToDirective = self._loadAssumes()
-
-        for (index, (expression, literal)) in enumerate(self.observes):
-            datum = literal if data is None else data[index]
-            self.ripl.observe(expression, datum)
+        self._loadObserves(data)
 
         sweepTimes = []
         sweepIters = []
