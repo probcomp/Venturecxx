@@ -84,6 +84,9 @@ typically also tracked."""
     def plotOneSeries(self, name, **kwargs):
         self._plotOne(plotSeries, name, **kwargs)
 
+    def quickPlot(self, name, **kwargs):
+        self._plotOne(plotSeries, name, save=False, show=True, **kwargs)
+
     def _plotOne(self, f, name, directory=None, **kwargs):
         if directory == None:
             directory = self.defaultDirectory()
@@ -96,6 +99,9 @@ typically also tracked."""
 
     def plotOneHistogram(self, name, **kwargs):
         self._plotOne(plotHistogram, name, **kwargs)
+
+    def quickHistogram(self, name, **kwargs):
+        self._plotOne(plotHistogram, name, save=False, show=True, **kwargs)
 
     def save(self, directory=None):
         if directory == None:
@@ -210,7 +216,7 @@ def _doPlotHistogram(seriesList, bins=20):
     plt.hist([series.values for series in seriesList], bins=bins, label=[series.label for series in seriesList])
 
 def _plotPrettily(f, name, seriesList, title="", parameters=None, filesuffix='',
-                  fmt='pdf', directory='.', xlabel=None, ylabel=None, **kwargs):
+                  fmt='pdf', directory='.', xlabel=None, ylabel=None, show=False, save=True, **kwargs):
     plt.figure()
     plt.clf()
     plt.title(title)
@@ -226,8 +232,12 @@ def _plotPrettily(f, name, seriesList, title="", parameters=None, filesuffix='',
     f(seriesList, **kwargs)
 
     legend_outside()
-    filename = directory + name.replace(' ', '_') + '_' + filesuffix + '.' + fmt
-    savefig_legend_outside(filename)
+
+    if save:
+        filename = directory + name.replace(' ', '_') + '_' + filesuffix + '.' + fmt
+        savefig_legend_outside(filename)
+    if show:
+        plt.show()
 
 from collections import namedtuple
 from matplotlib import cm
