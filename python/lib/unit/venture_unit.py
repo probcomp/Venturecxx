@@ -145,12 +145,8 @@ class VentureUnit(object):
     # A random subset of the predicts are tracked along with the assumed variables.
     # Returns a History object that always represents exactly one Run.
     def sampleFromJoint(self, samples, track=5, verbose=False, name=None):
-        assumedValues = {}
-        for (symbol, _) in self.assumes:
-          assumedValues[symbol] = []
-        predictedValues = {}
-        for index in range(len(self.observes)):
-          predictedValues[index] = []
+        assumedValues = {symbol:  [] for (symbol, _) in self.assumes}
+        predictedValues = {index: [] for index in range(len(self.observes))}
 
         logscores = []
 
