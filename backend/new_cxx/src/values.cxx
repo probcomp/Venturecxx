@@ -1,4 +1,5 @@
 #include "values.h"
+#include "utils.h"
 #include "Eigen/Dense"
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
@@ -67,7 +68,7 @@ bool VentureSimplex::equalsSameType(const VentureValuePtr & other) const
   shared_ptr<VentureSimplex> other_v = dynamic_pointer_cast<VentureSimplex>(other);
   assert(other_v);
   if (ps.size() != other_v->ps.size()) { return false; }
-  for (size_t i = 0; i < ps.size(); ++i) { if (!ps[i] == other_v->ps[i]) { return false; } }
+  for (size_t i = 0; i < ps.size(); ++i) { if (ps[i] != other_v->ps[i]) { return false; } }
   return true;
 }
 
@@ -286,11 +287,21 @@ boost::python::dict VentureArray::toPython(Trace * trace) const
   return value;
 }
 
+boost::python::dict VentureSimplex::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "simplex";
+  boost::python::list l;
+  for (size_t i = 0; i < ps.size(); ++i) { l.append(ps[i]); }
+  value["value"] = l;
+  return value;
+}
+
 boost::python::dict VentureDictionary::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "dict";
-  value["value"] = boost::python::object(false); // TODO
+  value["value"] = toPythonDict(trace, dict);
   return value;
 }
 

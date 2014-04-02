@@ -41,7 +41,12 @@ shared_ptr<PSP> SP::getPSP(ApplicationNode * node) const
 
 void SP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const { assert(false); }
 
-boost::python::dict SP::toPython(shared_ptr<SPAux> spAux) const
+boost::python::object SPAux::toPython(Trace * trace) const
+{
+  return boost::python::object("unknown spAux");
+}
+
+boost::python::dict SP::toPython(Trace * trace, shared_ptr<SPAux> spAux) const
 {
   boost::python::dict value;
   value["type"] = "sp";
@@ -51,7 +56,7 @@ boost::python::dict SP::toPython(shared_ptr<SPAux> spAux) const
 
 boost::python::dict VentureSPRef::toPython(Trace * trace) const 
 {
-  return trace->getMadeSP(makerNode)->toPython(trace->getMadeSPAux(makerNode));
+  return trace->getMadeSP(makerNode)->toPython(trace, trace->getMadeSPAux(makerNode));
 }
 
 bool VentureSPRef::equals(const VentureValuePtr & other) const

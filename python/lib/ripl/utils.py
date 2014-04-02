@@ -117,7 +117,7 @@ def run_venture_console(ripl):
         ripl.clear()
         print "Cleared trace."
       else:
-        content = directive_and_content[1]
+        content = directive_and_content[1] if len(directive_and_content) >= 2 else None
         if directive_name == "assume":
           name_and_expression = content.split(" ", 1)
           print ripl.assume(name_and_expression[0], name_and_expression[1])
@@ -135,9 +135,9 @@ def run_venture_console(ripl):
           expression_and_literal_value = content.rsplit(" ", 1)
           ripl.force(expression_and_literal_value[0], expression_and_literal_value[1])
         elif directive_name == "infer":
-          command = expToDict(parse(content))
+          command = expToDict(parse(content)) if content else None
           ripl.infer(command)
-          print "Inferred according to %s." % command
+          print "Inferred according to %s." % ripl.parseInferParams(command)
         elif directive_name == "report":
           print ripl.report(int(content))
         else:
@@ -213,8 +213,12 @@ def expToDict(exp):
     assert len(exp) == 4
     return {"kernel":"latents","scope":exp[1],"block":exp[2],"transitions":exp[3]}
   elif tag == "rejection":
-    assert len(exp) == 4
-    return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":exp[3]}
+    assert len(exp) >= 3
+    assert len(exp) <= 4
+    if len(exp) == 4:
+      return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":exp[3]}
+    else:
+      return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":1}
   elif tag == "mixture":
     assert len(exp) == 3
     weights = []

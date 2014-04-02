@@ -1,30 +1,28 @@
 from IPython.parallel import Client
 from IPython.parallel.util import interactive
-from venture.shortcuts import make_church_prime_ripl
+from venture.shortcuts import make_puma_church_prime_ripl
 from venture.shortcuts import make_lite_church_prime_ripl
 import numpy as np
 import matplotlib.pylab as plt
 from scipy.stats import kde
 gaussian_kde = kde.gaussian_kde
-import subprocess,time, pickle
-
-
+import subprocess,time,pickle
+make_church_prime_ripl = make_puma_church_prime_ripl
+mk_l_ripl = make_lite_church_prime_ripl
+mk_p_ripl = make_puma_church_prime_ripl
 
 ### IPython Parallel Magics
-## Use: See examples in /examples
 
-# Tasks: 
-# 1. get to work with import instead of execute
-# 2. push and pull ripls: pass a ripl to the constructor. pull all ripls
-#    from the mripl. use the functions included but retain labels and 
-#    any other arguments of a directive. also consider via pickling (v_lite)
-#    (make it easy to save at least one of current ripls to file)
-# 3. improve type case-switch and plotting support for mixed types
-# 4. add continuous inference and write some unit tests for it
-# 5. have local ripl be optional (and update tests that depend on it)
-# 6. remove plotting from probes and have plotting that can do timeseries
-# 7. think about refactoring so the mripl object has fewer methods
+# special cases of lite vs. puma: infer, list_directives (get from local_ripl instead)
 
+
+## NOTE
+## to do refactor: need to consider every use of mripls[mrid] and add the backend reference
+# need to change mr_map and mr_map_f, need to change mr_plot_conditiona
+# copy/delete need to be changed.
+# snapshot is mostly ok. but we need anyway to change sample populations
+# to make it fast, simplest way is just to limit number of engines
+# and then create dview on those engines and gather their results
 
 
 # Utility functions for working with ipcluster
@@ -33,6 +31,7 @@ def clear_all_engines():
     'Clears the namespaces of all IPython remote processes'
     cli = Client()
     cli.clear(block=True)
+    #setup_mripls() ##### FIXME CHANGE THIS
 
 def shutdown():
     cli = Client(); cli.shutdown()
@@ -49,8 +48,15 @@ def stop_engines():
 
 ### Functions needed for the MRipl Class (could be added to scope of the class definition)
 
-# functions that copy ripls by batch loading directives that are constructed from directives_list
+# functions used by engines (and imported when constructing an mripl)
+def pickle_safe(out_lst):
+    try:
+        pickle.dumps(out_lst)
+        return out_lst
+    except:
+        return map(str,out_lst)
 
+# functions that copy ripls by batch-loading directives that are constructed from directives_list
 @interactive
 def build_exp(exp):
     'Take expression from directive_list and build the Lisp string'
@@ -59,14 +65,11 @@ def build_exp(exp):
     elif type(exp)==dict:
         return str(exp['value'])
     else:
-        return '('+str(exp[0])+' ' + ' '.join(map(build_exp,exp[1:])) + ')'
-
+        return '('+ ' '.join(map(build_exp,exp)) + ')'
 
 @interactive
 def run_py_directive(ripl,d):
-    '''FIXME: currently removes labels from instructions. Should be
-    rewritten so that the label (and any other crucial information)
-    is retained.'''
+    # FIXME removes labels
     if d['instruction']=='assume':
         ripl.assume( d['symbol'], build_exp(d['expression']) )
     elif d['instruction']=='observe':
@@ -95,7 +98,7 @@ try:
 except:
     mripls=[ [], ]; no_mripls=1; seeds_lists = [ [], ]'''
 
-
+@interactive
 def make_mripl_func():
     try:
         mripls.append([]); no_mripls += 1; seeds_lists.append([])
@@ -120,6 +123,395 @@ def make_mripl_func():
 # (We can consider ways of making the data of an mripl accessible only
 # via the mripl object in the user namespace). 
 
+def setup_mripls():
+    'Create an mripls list on each engine'
+    cli=Client()
+    dv=cli[:]
+    dv.execute('mripls=[]; no_mripls=0')
+
+
+
+
+class MRipl2():
+    
+    def __init__(self,no_ripls,backend='puma',no_local_ripls=1,output='remote',verbose=False):
+        self.backend = backend
+        self.output = output
+
+        ## initialize remote ripls
+        self.cli = Client()
+        self.no_engines = len(self.cli.ids)
+        self.no_ripls_per_engine = int(np.ceil(no_ripls/float(self.no_engines)))
+        self.no_ripls = self.no_engines * self.no_ripls_per_engine # PRINT ME
+        self.seeds = range(self.no_ripls)  # seeds deterministic for reproducibility
+        self.dview = self.cli[:]
+        self.dview.block = True
+
+        # initialize local ripls
+        self.no_local_ripls=no_local_ripls
+        self.local_seeds = range(self.no_local_ripls)
+        if backend=='puma':
+            self.local_ripls = [make_puma_church_prime_ripl() for i in range(self.no_local_ripls)]
+        else:
+            self.local_ripls = [make_lite_church_prime_ripl() for i in range(self.no_local_ripls)]
+
+        [v.set_seed(i) for (v,i) in zip(self.local_ripls,self.local_seeds) ]
+        
+        # Imports for remote ripls
+        self.dview.execute('from venture.venturemagics.ip_parallel import *') # FIXME namespace issues
+        self.dview.execute('%pylab inline --no-import-all')
+        
+        def p_getpids(): import os; return os.getpid()
+        self.pids = self.dview.apply(p_getpids)
+
+        self.mrid = self.dview.pull('no_mripls')[0] # id is index into mripls list
+        self.dview.push({'no_mripls':self.mrid+1})
+        
+        @interactive
+        def make_mripl_proc(no_ripls_per_engine):
+            k=no_ripls_per_engine
+            mripls.append({'lite':[make_lite_church_prime_ripl() for i in range(k)],
+                           'puma':[make_puma_church_prime_ripl() for i in range(k)],
+                           'seeds':[]})
+            
+
+        self.dview.apply(make_mripl_proc,self.no_ripls_per_engine)
+         
+        @interactive
+        def set_engine_seeds(mrid,seeds_for_engine):
+            mripl=mripls[mrid]
+            mripl['seeds'] = seeds_for_engine
+            for backend in ['lite','puma']:
+                ripls = mripl[backend]
+                [ripl.set_seed(mripl['seeds'][i]) for i,ripl in enumerate(ripls)]
+
+        for i in range(self.no_engines):
+            engine_view = self.cli[i]
+            start = i*self.no_ripls_per_engine
+            seeds_for_engine = self.seeds[start:start+self.no_ripls_per_engine]
+            print 'seeds-for_eng',seeds_for_engine
+            engine_view.apply(set_engine_seeds,self.mrid,seeds_for_engine)
+        
+    
+        # these should overwrite the * import of ip_parallel (we could also alter names)
+        self.dview.push(copy_ripl_dict)
+
+        #initialize no_transitions
+        self.total_transitions = 0
+
+        ## Extract info from engines and ripls
+        #self.update_ripls_info()
+        
+        self.verbose = verbose
+        if self.verbose: print self.display_ripls()
+        
+    
+    def lst_flatten(self,l): return [el for subl in l for el in subl]
+
+    def out(self,local,remote):
+        if self.output=='local':
+            return local
+        elif self.output=='remote':
+            return remote
+        else:
+            return (local,remote)
+
+    def switch_backend(self,backend):
+        'Clears ripls for new backend and resets transition count'
+        if backend==self.backend: return None
+        self.backend = backend
+        self.total_transitions = 0
+        
+        di_string_lst = [directive_to_string(di) for di in self.local_ripls[0].list_directives() ]
+        if not(di_string_lst):
+            return None
+        else:
+            di_string = '\n'.join(di_string_lst)
+        print di_string
+        
+        # clear, otherwise, when we switch back to a backend
+        # we would redefine some variables
+        @interactive
+        def send_ripls_di_string(mrid,backend,di_string):
+            mripl=mripls[mrid]
+            [r.clear() for r in mripl[backend]]
+            [r.execute_program(di_string) for r in mripl[backend]]
+
+        self.dview.apply(send_ripls_di_string,self.mrid,self.backend,di_string)
+
+        
+
+    def clear(self):
+        self.total_transitions = 0
+        [r.clear() for r in self.local_ripls]
+        
+        @interactive
+        def f(mrid,backend):
+            ripls=mripls[mrid][backend]
+            seeds=mripls[mrid]['seeds']
+            [r.clear() for r in ripls]
+            [r.set_seed(seeds[i]) for i,r in enumerate(ripls)]
+        return  self.dview.apply(f,self.mrid,self.backend) 
+
+
+
+    def assume(self,sym,exp,**kwargs):
+        [r.assume(sym,exp,**kwargs) for r in self.local_ripls]
+        
+        @interactive
+        def f(mrid,backend,sym,exp,**kwargs):
+            mripl=mripls[mrid]
+            if backend=='puma':
+                return [r.assume(sym,exp,**kwargs) for r in mripl['puma']]
+            else:
+                return pickle_safe([r.assume(sym,exp,**kwargs) for r in mripl['lite']])
+
+        return self.lst_flatten( self.dview.apply(f,self.mrid,self.backend,sym,exp,**kwargs) )
+    
+
+    def observe(self,exp,val,label=None):
+        [r.observe(exp,val,label=None) for r in self.local_ripls]
+        
+        @interactive
+        def f(mrid,backend,exp,val,label=None):
+            mripl=mripls[mrid]
+            if backend=='puma':
+                return [r.observe(exp,val,label=None) for r in mripl['puma']]
+            else:
+                return pickle_safe([r.observe(exp,val,label=None) for r in mripl['lite']])
+
+        return self.lst_flatten( self.dview.apply(f,self.mrid,self.backend,exp,val,label=None) )
+
+
+    def predict(self,exp,label=None,type=False):
+        [r.predict(exp,label=None) for r in self.local_ripls]
+        
+        @interactive
+        def f(mrid,backend,exp,label=None):
+            mripl=mripls[mrid]
+            if backend=='puma':
+                return [r.predict(exp,label=None) for r in mripl['puma']]
+            else:
+                return pickle_safe([r.predict(exp,label=None) for r in mripl['lite']])
+
+        return self.lst_flatten( self.dview.apply(f,self.mrid,self.backend,exp,label=None) )
+
+
+
+    def infer(self,params,block=True):
+        if isinstance(params,int):
+            self.total_transitions += params
+        else:
+            self.total_transitions += params['transitions']
+            
+        [r.infer(params) for r in self.local_ripls]
+
+        @interactive
+        def f(mrid,backend,params):
+            return [r.infer(params) for r in mripls[mrid][backend] ]
+
+        if block:
+            return self.lst_flatten( self.dview.apply_sync(f,self.mrid,self.backend,params) )
+        else:
+            return self.lst_flatten( self.dview.apply_async(f,self.mrid,self.backend,params) )
+
+
+    def report(self,label_or_did,**kwargs):
+        [r.report(label_or_did,**kwargs) for r in self.local_ripls]
+        
+        @interactive
+        def f(mrid,backend,label_or_did,**kwargs):
+            mripl=mripls[mrid]
+            if backend=='puma':
+                return [r.report(label_or_did,**kwargs) for r in mripl['puma']]
+            else:
+                return pickle_safe([r.report(label_or_did,**kwargs) for r in mripl['lite']])
+  
+        return self.lst_flatten( self.dview.apply(f,self.mrid,self.backend,label_or_did,**kwargs) )
+
+
+    def forget(self,label_or_did):
+        [r.forget(label_or_did) for r in self.local_ripls]
+        @interactive
+        def f(mrid,backend,label_or_did):
+            return [r.forget(label_or_did) for r in mripls[mrid][backend]]
+        return self.lst_flatten( self.dview.apply(f,self.mrid,self.backend,label_or_did) )
+
+
+    def continuous_inference_status(self):
+        self.local_ripl.continuous_inference_status()
+        @interactive
+        def f(mrid):
+            return [ripl.continuous_inference_status() for ripl in mripls[mrid]]
+        return self.lst_flatten( self.dview.apply(f, self.mrid) )
+
+    def start_continuous_inference(self, params=None):
+        self.local_ripl.start_continuous_inference(params)
+        @interactive
+        def f(params, mrid):
+            return [ripl.start_continuous_inference(params) for ripl in mripls[mrid]]
+        return self.lst_flatten( self.dview.apply(f, params, self.mrid) )
+
+    def stop_continuous_inference(self):
+        self.local_ripl.stop_continuous_inference()
+        @interactive
+        def f(mrid):
+            return [ripl.stop_continuous_inference() for ripl in mripls[mrid]]
+        return self.lst_flatten( self.dview.apply(f, self.mrid) )
+
+
+    def execute_program(self,  program_string, params=None):
+        ## FIXME: [clear] could appear anywhere
+        if program_string.split()[0].startswith('[clear]'):
+            self.total_transitions = 0
+            
+        [r.execute_program(program_string, params) for r in self.local_ripls]
+
+        @interactive
+        def f(mrid,backend,program_string, params ):
+            mripl=mripls[mrid]
+            if backend=='puma':
+                return [r.execute_program(program_string, params) for r in mripl['puma']]
+            else:
+                return pickle_safe([r.execute_program(program_string,params) for r in mripl['lite']])
+  
+        out_execute= self.lst_flatten( self.dview.apply(f,self.mrid,self.backend,program_string,params) )
+
+
+        @interactive
+        def reset_seeds(mrid,backend):
+            ripls=mripls[mrid][backend]
+            seeds=mripls[mrid]['seeds']
+            [r.set_seed(seeds[i]) for i,r in enumerate(ripls)]
+        
+        out_seeds=self.dview.apply(reset_seeds,self.mrid,self.backend)
+        
+        return out_execute
+
+
+    def get_global_logscore(self):
+        self.local_ripl.get_global_logscore()
+        @interactive
+        def f(mrid):
+            return [ripl.get_global_logscore() for ripl in mripls[mrid]]
+        return self.lst_flatten( self.dview.apply(f,self.mrid) )
+
+    
+    def sample(self,exp,type=False):
+        
+        self.local_ripl.sample(exp,type)
+        @interactive
+        def f(exp,type,mrid):
+               return [ripl.sample(exp,type) for ripl in mripls[mrid] ]
+               
+        if self.lite:
+            @interactive
+            def f(exp,type,mrid):
+                out = [ripl.sample(exp,type) for ripl in mripls[mrid] ]
+                try:
+                    pickle.dumps(out)
+                    return out
+                except:
+                    return ['sp' for ripl in mripls[mrid] ]
+        return self.lst_flatten( self.dview.apply(f,exp,type,self.mrid) )
+
+
+    def list_directives(self,type=False):
+
+        self.local_ripl.list_directives(type)
+        @interactive
+        def f(type,mrid):
+               return [ripl.list_directives(type) for ripl in mripls[mrid] ]
+               
+        if self.lite:
+            @interactive
+            def f(type,mrid):
+                out = [ripl.list_directives(type) for ripl in mripls[mrid] ]
+                try:
+                    pickle.dumps(out)
+                    return out
+                except:
+
+
+                    return str(out)
+
+
+        return if_lst_flatten( self.dview.apply(f,type,self.mrid) )
+               
+    def add_ripls(self,no_new_ripls,new_seeds=None):
+        'Add no_new_ripls ripls by mapping a copy_ripl function across engines'
+        assert(type(no_new_ripls)==int and no_new_ripls>0)
+
+        # could instead check this for each engine we map to
+        pids_with_ripls = [ripl['pid'] for ripl in self.ripls_location]
+        if any([pid not in pids_with_ripls for pid in self.pids]):
+            print 'Error: some engines have no ripl, add_ripls failed'
+            return None
+
+        if not(new_seeds):
+            # want to ensure that new seeds are different from all existing seeds
+            next = max(self.seeds) + 1
+            new_seeds = range( next, next+no_new_ripls )
+            @interactive
+            def add_ripl_engine(seed,mrid):
+            # load the di_list from an existing ripl from ripls
+            # we only set_seed after having loaded, so all ripls
+            # created by a call to add ripls may have same starting values
+                ripls=mripls[mrid]; seeds=seeds_lists[mrid]
+                ripls.append( copy_ripl(ripls[0]) ) # ripls[0] must be present
+                ripls[-1].set_seed(seed)
+                seeds.append(seed)
+                import os;   pid = os.getpid();
+                print 'Engine %i created ripl %i' % (pid,seed)
+            
+        self.dview.map(add_ripl_engine,new_seeds,[self.mrid]*no_new_ripls)
+        self.update_ripls_info()
+        print self.display_ripls()
+    
+    def display_ripls(self):
+        s= sorted(self.ripls_location,key=lambda x:x['pid'])
+        ##FIXME improve output
+        key = ['(pid, index, seed)'] 
+        lst = key + [(d['pid'],d['index'],d['seed']) for d in s]
+        #[ ('pid:',pid,' seeds:', d['seed']) for pid in self.pids for d
+        return lst
+
+    def update_ripls_info(self):
+        'nb: reassigns attributes that store state of pool of ripls'
+        @interactive
+        def get_info(mrid):
+            import os; pid=os.getpid()
+            
+            return [ {'pid':pid, 'index':i, 'seed':mripls[mrid]['seeds'][i],
+                      'ripl':str(v)  }  for i,v in enumerate( mripls[mrid]['puma'] ) ]
+        self.ripls_location = self.lst_flatten( self.dview.apply(get_info,self.mrid) )
+        self.no_ripls = len(self.ripls_location)
+        self.seeds = [ripl['seed'] for ripl in self.ripls_location]
+
+        
+    def remove_ripls(self,no_rm_ripls):
+        'map over the engines to remove a ripl if an engine has >1'
+        no_removed = 0
+
+        @interactive
+        def check_remove(x,mrid):
+            ripls = mripls[mrid]
+            if len(ripls) >= 2:
+                ripls.pop()
+                return 1
+            else:
+                return 0
+       
+        while no_removed < no_rm_ripls:
+            result = self.dview.map(check_remove,[1]*no_rm_ripls, ([self.mrid]*no_rm_ripls))
+            no_removed += len(result)
+
+        ## FIXME should also remove seeds
+        self.update_ripls_info()
+        print self.display_ripls()
+
+    
+
 
 class MRipl():
     
@@ -135,9 +527,13 @@ class MRipl():
         #self.seeds = map(int,(list(np.random.randint(1,10**3,self.no_ripls)))) ##FIXME set np seed in advance for reproduce
         self.total_transitions = 0
         
-        self.cli = Client() if not(client) else client
+        self.cli = Client() if not(client) else client # REMOVE
         self.dview = self.cli[:]
         self.dview.block = True
+        
+        # FIXME if we push anything with same name, the pushed thing should take precedence
+        self.dview.execute('from venture.venturemagics.ip_parallel import *')
+        
         def p_getpids(): import os; return os.getpid()
         self.pids = self.dview.apply(p_getpids)
       
@@ -146,16 +542,17 @@ class MRipl():
         else:
             self.dview.execute('from venture.shortcuts import make_lite_church_prime_ripl as make_ripl')
         
-        # import as plt for all plotting (note: user may need to have opened
-        # IPNB in inline mode for everything to work -- include in examples)
+        # import plt for plotting 
         self.dview.execute('import matplotlib.pylab as plt')
+        self.dview.execute('import numpy as np')
         self.dview.execute('import pickle')
         self.dview.execute('%pylab inline --no-import-all')
-        #self.dview.execute('%pylab inline
+        
+        # these should overwrite the * import of ip_parallel (we could also alter names)
         self.dview.push(copy_ripl_dict)
         self.dview.execute(make_mripl_string)
        
-       
+    
         self.mrid = self.dview.pull('no_mripls')[0] - 1  # all engines should return same number
         name = 'mripl' if not(name) else name
         self.name_mrid = '%s_%i' % (name,self.mrid)
@@ -194,7 +591,19 @@ class MRipl():
             [ripls[i].set_seed(seeds[i]) for i in range(len(ripls))]
 
         return  self.dview.apply(f,self.mrid) 
+
+
+    def test_assume(self,sym,exp,**kwargs):
+        self.local_ripl.assume(sym,exp,**kwargs)
+        
+        @interactive
+        def f(mrid,backend,sym,exp,**kwargs):
+            outs =[ [ripl.assume(sym,exp,**kwargs) for ripl in mripls[mrid]] for mripls in backends]
+            return outs[0] if backend=='puma' else pickle_safe(outs[1])
+
+        return self.lst_flatten( self.dview.apply(f,self.backend,self_mrid,sym,exp,**kwargs) )
     
+
     def assume(self,sym,exp,**kwargs):
         self.local_ripl.assume(sym,exp,**kwargs)
         
@@ -210,7 +619,7 @@ class MRipl():
                     pickle.dumps(out)
                     return out
                 except:
-                    return [None for ripl in mripls[mrid] ]
+                    return ['sp' for ripl in mripls[mrid] ]
 
         return self.lst_flatten( self.dview.apply(f,sym,exp,self.mrid,**kwargs) )
         
@@ -228,7 +637,7 @@ class MRipl():
                     pickle.dumps(out)
                     return out
                 except:
-                    return [None for ripl in mripls[mrid] ]
+                    return ['sp' for ripl in mripls[mrid] ]
                 
         return self.lst_flatten( self.dview.apply(f,exp,val,label,self.mrid) )
     
@@ -245,11 +654,11 @@ class MRipl():
                     pickle.dumps(out)
                     return out
                 except:
-                    return [None for ripl in mripls[mrid] ]
+                    return ['sp' for ripl in mripls[mrid] ]
         
         return self.lst_flatten( self.dview.apply(f,exp,label,type,self.mrid) )
 
-    def infer(self,params,block=False):
+    def infer(self,params,block=True):
         if isinstance(params,int):
             self.total_transitions += params
         else:
@@ -278,7 +687,7 @@ class MRipl():
                     pickle.dumps(out)
                     return out
                 except:
-                    return [None for ripl in mripls[mrid] ]
+                    return ['sp' for ripl in mripls[mrid] ]
         return self.lst_flatten( self.dview.apply(f,label_or_did,self.mrid, **kwargs) )
 
     def forget(self,label_or_did):
@@ -288,12 +697,35 @@ class MRipl():
             return [ripl.forget(label_or_did) for ripl in mripls[mrid]]
         return self.lst_flatten( self.dview.apply(f,label_or_did,self.mrid) )
 
-    def execute_program(self,  program_string, params=None):
 
+    def continuous_inference_status(self):
+        self.local_ripl.continuous_inference_status()
+        @interactive
+        def f(mrid):
+            return [ripl.continuous_inference_status() for ripl in mripls[mrid]]
+        return self.lst_flatten( self.dview.apply(f, self.mrid) )
+
+    def start_continuous_inference(self, params=None):
+        self.local_ripl.start_continuous_inference(params)
+        @interactive
+        def f(params, mrid):
+            return [ripl.start_continuous_inference(params) for ripl in mripls[mrid]]
+        return self.lst_flatten( self.dview.apply(f, params, self.mrid) )
+
+    def stop_continuous_inference(self):
+        self.local_ripl.stop_continuous_inference()
+        @interactive
+        def f(mrid):
+            return [ripl.stop_continuous_inference() for ripl in mripls[mrid]]
+        return self.lst_flatten( self.dview.apply(f, self.mrid) )
+
+
+    def execute_program(self,  program_string, params=None):
+        
+        ## FIXME: [clear] could appear anywhere
         if program_string.split()[0].startswith('[clear]'):
-            self.clear()
-            if len(program_string.split()) > 1:
-                self.execute_program( ' '.join(program_string.split()[1:]) )
+            self.total_transitions = 0
+            
 
         self.local_ripl.execute_program( program_string, params )
 
@@ -309,12 +741,11 @@ class MRipl():
                     pickle.dumps(out)
                     return out
                 except:
-                    return [None for ripl in mripls[mrid] ]
-                    
+                    return str(out)
                 
-        out_execute=self.lst_flatten( self.dview.apply(f, program_string, params,self.mrid) )
+        out_execute=if_lst_flatten( self.dview.apply(f, program_string, params,self.mrid) )
 
-        @interactive  ## FIXME: this is pasted from self.clear() and should be properly abstracted
+        @interactive ## FIXME:pasted from self.clear and should be properly abstracted
         def reset_seeds(mrid):
             ripls=mripls[mrid]; seeds=seeds_lists[mrid]
             [ripls[i].set_seed(seeds[i]) for i in range(len(ripls))]
@@ -331,7 +762,6 @@ class MRipl():
         return self.lst_flatten( self.dview.apply(f,self.mrid) )
 
     
-
     def sample(self,exp,type=False):
         
         self.local_ripl.sample(exp,type)
@@ -347,8 +777,9 @@ class MRipl():
                     pickle.dumps(out)
                     return out
                 except:
-                    return [None for ripl in mripls[mrid] ]
+                    return ['sp' for ripl in mripls[mrid] ]
         return self.lst_flatten( self.dview.apply(f,exp,type,self.mrid) )
+
 
     def list_directives(self,type=False):
 
@@ -356,7 +787,21 @@ class MRipl():
         @interactive
         def f(type,mrid):
                return [ripl.list_directives(type) for ripl in mripls[mrid] ]
-        return self.lst_flatten( self.dview.apply(f,type,self.mrid) )
+               
+        if self.lite:
+            @interactive
+            def f(type,mrid):
+                out = [ripl.list_directives(type) for ripl in mripls[mrid] ]
+                try:
+                    pickle.dumps(out)
+                    return out
+                except:
+
+
+                    return str(out)
+
+
+        return if_lst_flatten( self.dview.apply(f,type,self.mrid) )
                
     def add_ripls(self,no_new_ripls,new_seeds=None):
         'Add no_new_ripls ripls by mapping a copy_ripl function across engines'
@@ -431,25 +876,87 @@ class MRipl():
         print self.display_ripls()
 
     
-    def snapshot(self,did_labels_list=[], exp_list=[], plot=False,
-                 scatter=False, logscore=False, plot_range=None,
-                 plot_past_values=[]):
-        '''input lists of dids_labels and expressions and return values from all ripls and
-        (optional) histograms, scatterplots.'''
-
+    def snapshot(self,did_labels_list=[], exp_list=[],
+                 plot=False, scatter=False, plot_range=None,
+                 logscore=False, plot_past_values=[],
+                 sample_populations=None, repeat=None, predict=False):
+                
+        '''Input: lists of dids_labels and expressions.
+           Output: values from each ripl, (optional) plots.''' 
+        
         
         if not(isinstance(did_labels_list,list)): did_labels_list = [did_labels_list]
         if not(isinstance(exp_list,list)): exp_list = [exp_list]
         
         values = { did_label:self.report(did_label) for did_label in did_labels_list}
         
-        values.update( { exp:self.sample(exp) for exp in exp_list } )
-        
+        if not(predict):
+            values.update( { exp:self.sample(exp) for exp in exp_list } )
+        else:
+            values.update( { exp:self.predict(exp) for exp in exp_list } )
+            
         if logscore: values['global_logscore']= self.get_global_logscore()
         
         out = {'values':values,
                'total_transitions':self.total_transitions,
                'ripls_info': self.ripls_location }
+
+
+        if sample_populations:
+            if isinstance(sample_populations,int):
+                no_groups,pop_size = sample_populations,100
+            else:
+                no_groups,pop_size = sample_populations
+            exp = exp_list[0]
+
+            
+            if not(predict):
+                all_ripls = [self.sample(exp) for j in range(pop_size)]
+            else:
+                all_ripls = [self.predict(exp,label='sp%i'%j) for j in range(pop_size)]
+                [self.forget('sp%i'%j) for j in range(pop_size)]
+            ## FIXME could be much faster by fixing ripls first
+            indices = np.random.randint(0,self.no_ripls,no_groups)
+
+            some_ripls= np.array([np.array(samp)[indices] for samp in all_ripls ])
+            #p1=some_ripls[:,0] ...
+            #some_ripls = [r for count,r in enumerate(all_ripls) if count in indices]
+            out['values'][exp] = some_ripls
+
+            if plot:
+                fig,ax=plt.subplots(1,2,figsize=(14,4),sharex=True,sharey=False)
+                f=self.lst_flatten(some_ripls)
+                xr=np.linspace(min(f),max(f),80)
+                lim = some_ripls.shape[1]
+                for col in range(lim):
+                    ax[0].hist(some_ripls[:,col],bins=20,normed=False,histtype='stepfilled')
+                    
+                    #ax[1].hist(some_ripls[:,col], bins=20,
+                     #          histtype='stepfilled',alpha=1-(col/float(lim)) )
+
+                    ax[1].plot(xr,gaussian_kde(some_ripls[:,col])(xr))
+                ax[0].set_ylim((0,.66*pop_size))
+                ## FIXME: make ylim for ax[0] some sensible thing, like 1.5 times max bar height
+                ax[0].set_title('Sample populations: %s (population size= %i)' % (exp,pop_size))
+                ax[1].set_title('Sample populations: %s (population size= %i)' % (exp,pop_size))
+                out['figs']=fig
+                
+        if repeat:
+            exp=exp_list[0]
+            if not(predict):
+                r_values = lst_flatten([self.sample(exp) for repeats in range(repeat)])
+            else:
+                r_values = lst_flatten([self.predict(exp) for repeats in range(repeat)])
+            out['values'][exp] = r_values
+            if plot:
+                fig,ax=plt.subplots(figsize=(5,3))
+                ax.hist(r_values,bins=20,normed=True,color='m')
+                xr=np.linspace(min(r_values),max(r_values),40)
+                ax.plot(xr,gaussian_kde(r_values)(xr),c='black',lw=2)
+                ax.set_title('Predictive distribution: %s (repeats= %i)' % (exp,repeat))
+                out['figs'] = fig
+                                   
+                                   
 
         if plot_past_values:
             if not(exp_list) and not(did_labels_list):
@@ -460,16 +967,23 @@ class MRipl():
             list_vals = [ past_out['values'].values()[0] for past_out in plot_past_values]
             if no_exp==0: list_vals.append( out['values'].values()[0] )
             
-            fig,ax=plt.subplots(figsize=(5,3))
-            [ ax.hist( past_vals, normed=True, label='%i'%count) for count,past_vals in enumerate(list_vals) ]
-            ax.legend()
-            ax.set_title('Hist: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
-            if plot_range: ax.set_xlim(plot_range)
+            fig,ax=plt.subplots(1,2,figsize=(14,3.5),sharex=True)
+            f=self.lst_flatten(list_vals)
+            xr=np.linspace(min(f),max(f),80)
+            [ ax[0].hist( past_vals, normed=True, label='%i'%count) for count,past_vals in enumerate(list_vals) ]
+            [ ax[1].plot(xr,gaussian_kde(past_vals)(xr), label='%i'%count) for count,past_vals in enumerate(list_vals) ]
+            [ ax[i].legend(loc='upper left',ncol=len(list_vals)) for i in range(2)]
+            ax[0].set_title('Hist: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
+            if plot_range: [ax[i].set_xlim(plot_range) for i in range(2)]
             
             out['figs'] = fig
             return out
             
-        if plot or scatter: out['figs'] = self.plot(out,plot1d=plot,scatter=scatter,plot_range=plot_range)
+
+        if (plot or scatter) and not(sample_populations) and not(repeat):
+            out['figs'] = self.plot(out,plot1d=plot,scatter=scatter,plot_range=plot_range)
+
+
 
         return out
 
@@ -690,7 +1204,6 @@ def mr_map(line, cell):
     # wrong set of engines. (Could let the dview come from the mripl - so 
     # no extra input argument needed).
     ip = get_ipython()
-    #ip.run_cell_magic("px","","%pylab inline") #--no-import-all;%pylab inline") # not sure if this is needed or works
     
     assert len(str(line).split()) >= 2, 'Error. Syntax: %%mr_map mripl_name proc_name [optional: store_variable_name] '
     # get inputs
@@ -702,7 +1215,6 @@ def mr_map(line, cell):
         except: pass
     mripl = eval(mripl_name,globals(),ip.user_ns) ## FIXME ensure this works
     mrid = mripl.mrid
-
 
     # optionally update the local_ripl (for debugging), must include var_name
     if len(str(line).split()) > 4:
@@ -810,68 +1322,240 @@ except:
 
 
 
+library_string='''
+[assume zeros (lambda (n) (if (= n 0) (list) (pair 0 (zeros (minus n 1)))))]
+[assume ones (lambda (n) (if (= n 0) (list) (pair 1 (ones (minus n 1)))))]         [assume is_nil (lambda (lst) (= lst (list)) ) ]
+[assume map (lambda (f lst) (if (is_nil lst) (list) (pair (f (first lst)) (map f (rest lst))) ) ) ]  
+[assume repeat (lambda (th n) (if (= n 0) (list) (pair (th) (repeat th (- n 1) ) ) ) ) ]
+[assume srange (lambda (b e s) (if (gte b e) (list) (pair b (srange (+ b s) e s) ) ) ) ]
+[assume range (lambda (n) (srange 0 n 1) ) ]
+[assume append (lambda (lst x) (if (is_nil lst) (list x) (pair (first lst) (append (rest lst) x) ) ) )]
+[assume cat (lambda (xs ys) (if (is_nil ys) xs (cat (append xs (first ys)) (rest ys) ) ) )]
+[assume fold (lambda (f l el) (if (is_nil l) el(f (first l) (fold f (rest l) el) ) ) ) ]
+[assume suml (lambda (xs) (fold + xs 0) )]
+[assume prodl (lambda (xs) (fold * xs 1) ) ]
+'''
+lite_addendum='''
+[assume nil (list)]
+'''
+
+def test_ripls(print_lib=False):
+    vs=[make_lite_church_prime_ripl(), make_church_prime_ripl()]
+    [v.execute_program(library_string) for v in vs]
+    vs[0].execute_program(lite_addendum)
+    return vs
 
 
-## Use examples: to be moved to dedicated example scripts
+## Utility functions for working with MRipls
 
-def sp(no_ripls=2):    
-    v = MRipl(no_ripls,lite
-=True)
-    v.assume('r','(normal 0 30)',label='r')
-    v.assume('s','(normal 0 30)',label='s')
-    v.assume('w1','(normal (+ r s) 5.)',label='w1')
-    v.observe('w1','50.')
-    v.assume('w2','(normal (+ r s) 6.)',label='w2')
-    v.observe('w2','50.')
-    return v
+def display_directives(ripl_mripl,instruction='observe'):
+    ## FIXME add replace with dict of symbls
+    v=ripl_mripl
+    mr=1  if isinstance(v,MRipl) else 0
+    di_list = v.local_ripl.list_directives() if mr else v.list_directives()
 
-def crp(no_ripls=2):
-    prog='''
-    [assume alpha (uniform_continuous .9 1)]
-    [assume crp (make_crp alpha) ]
-    [assume z (mem (lambda (i) (crp) ) ) ]
-    [assume mu (mem (lambda (z dim) (normal 0 30) ) ) ] 
-    [assume sig (mem (lambda (z dim) (uniform_continuous .1 1) ) ) ]
-    [assume x (mem (lambda (i dim) (normal (mu (z i) dim) (sig (z i) dim)))  ) ]'''
-    v=make_church_prime_ripl()
-    v.execute_program(prog)
-    n=100
-    xs = [v.predict('(x ' + str(i) + ' ' +str(j) +')') for i in range(n) for j in range(2) ]
-    obs = [v.observe('(x ' + str(i) + ' ' +str(j) +')', str(xs[i*(j+1)]) ) for i in range(n) for j in range(2) ]
-    x=np.array(xs)[range(0,len(xs),2)]
-    y=np.array(xs)[range(1,len(xs),2)]
-    return prog,v,xs,x,y
+    instruction_list = []
+    for di in di_list:
+        if di['instruction']==instruction:
+            instruction_list.append( directive_to_string(di) )
+            print directive_to_string(di)
+    return instruction_list
+
+def directive_to_string(d):
+    ## FIXME: replace symbols
+    if d['instruction']=='assume':
+        return '[assume %s %s]' %( d['symbol'], build_exp(d['expression']) ) 
+    elif d['instruction']=='observe':
+        return '[observe %s %s]' %( build_exp(d['expression']), d['value']) 
+    elif d['instruction']=='predict':
+        return '[predict %s %s]' % build_exp(d['expression'])
 
 
-
-
-prog2='''
-
-[assume nps (list (quote bob) (quote time) (quote space) (quote truth) (quote alice) (quote fate) (quote man) (quote beast) (quote nature) (quote he) (quote she) (quote cynthia) (quote zeus) ) ]
-[assume np (lambda () (lookup nps (uniform_discrete 0 (len nps)) ) ) ]
-[assume uni_simplex (lambda (n) (map_list (lambda (x) (div 1 n)) (zeros n) ) ) ]
-[assume np2 (lambda () (lookup nps (categorical (simplex (uni_simplex (len nps) ) ) ) ) ) ]
-[assume npz (repeat np 3) ]
-[assume alpha (uniform_continuous .9 1)]
-[assume crp (make_crp alpha) ]
-[assume z (mem (lambda (i) (crp) ) ) ]
-[assume s (pair (np) (vp) ) ]
-[assume ptype (mem (lambda (z) (s))) ]
-[assume noise (lambda (p) (if (flip .1) 
-                                (pair (first p) (pair (rest p) (rest p) ) )
-                                (if (flip .2) 
-                                   (pair (first p) (pair (adv) (rest p) ) ) 
-                                   p ) ) ) ]
-[assume x (mem (lambda (i) (noise (ptype (z i) ) ) ) )]'''
-
-
-
-
-
-
-
-
-
-
+## MRipl Regression Utilities:
+###will all be imported to engines via the 'from ip_para import *' instruction for ripls
         
+def if_lst_flatten(l):
+    if type(l[0])==list: return [el for subl in l for el in subl]
+    return l
 
+def heatplot(n2array,nbins=100):
+    """Input is an nx2 array, returns xi,yi,zi for colormesh""" 
+    x, y = n2array.T
+    k = kde.gaussian_kde(n2array.T)
+    xi, yi = np.mgrid[x.min():x.max():nbins*1j, y.min():y.max():nbins*1j]
+    zi = k(np.vstack([xi.flatten(), yi.flatten()]))
+    # plot ax.pcolormesh(xi, yi, zi.reshape(xi.shape))
+    return (xi, yi, zi.reshape(xi.shape))
+
+def get_name(r_mr):
+    'Input is ripl or mripl, out name string via "model_name" ripl variable'
+    mr= 1 if isinstance(r_mr,MRipl) else 0
+    # try:
+    #     r_mr.dview; mr=1
+    # except:
+    #     mr=0
+    di_l = r_mr.list_directives()[0] if mr else r_mr.list_directives()
+    if 'model_name' in str(di_l):
+        try:
+            n = r_mr.sample('model_name')[0] if mr else r_mr.sample('model_name')
+            return n
+        except: pass
+    else:
+        return 'anon model'
+
+
+def plot_conditional(ripl,data=[],x_range=[],number_xs=40,number_reps=30, return_fig=False,figsize=(16,3.5)):
+    ##FIXME we should predict and forget for pivot and maybe everything
+    
+    name=get_name(ripl)
+
+    # find data, set x-interval on which to sample f(x)
+    
+    # if data==[]: try: data=ripl_plotting_data; except: pass
+    if data:
+        d_xs,d_ys = zip(*data)
+        if not x_range: x_range = (min(d_xs)-1,max(d_xs)+1)
+    
+    if not x_range: x_range = (-3,3)
+    xr = np.linspace(x_range[0],x_range[1],number_xs)
+    
+    # sample f on xr and add noise (if noise is a float)
+    f_xr = [ripl.sample('(f %f)' % x) for x in xr]
+    if "'symbol': 'noise'" in str(ripl.list_directives()):
+        noise=ripl.sample('noise')
+        fixed_noise = isinstance(noise,float)
+        if fixed_noise:
+            f_u = [fx+noise for fx in f_xr]; f_l = [fx-noise for fx in f_xr]
+    
+    # sample (y_x x) for x in xr and compute 1sd intervals
+    xys=[]; ymean=[]; ystd=[]
+    for x in xr:
+        x_y = [ripl.sample('(y_x %f)' % x) for r in range(number_reps)]        
+        ymean.append( np.mean(x_y) )
+        ystd.append( np.abs( np.std(x_y) ) )
+        xys.extend( [(x,y) for y in x_y] )
+    
+    xs,ys = zip(*xys)
+    ymean = np.array(ymean); ystd = np.array(ystd)
+    y_u = ymean+ystd; y_l = ymean - ystd
+    if not fixed_noise:
+        f_u = y_u ; f_l = y_l
+
+    # Plotting
+    fig,ax = plt.subplots(1,3,figsize=figsize,sharex=True,sharey=True)
+    
+    # plot data and f with noise
+    if data:
+        ax[0].scatter(d_xs,d_ys,label='Data')
+        ax[0].legend()
+    
+    ax[0].plot(xr, f_xr, 'k', color='#CC4F1B')
+    ax[0].fill_between(xr,f_l,f_u,alpha=0.5,edgecolor='#CC4F1B',facecolor='#FF9848')
+    ax[0].set_title('Ripl: f (+- 1sd noise) w/ data [name: %s]' % name )
+
+    ax[1].scatter(xs,ys,alpha=0.7,s=5,facecolor='0.6', lw = 0)
+    ax[1].plot(xr, ymean, 'k', alpha=.9,color='m',linewidth=1)
+    ax[1].plot(xr, y_l, 'k', alpha=.8, color='m',linewidth=.5)
+    ax[1].plot(xr, y_u, 'k', alpha=.8,color='m',linewidth=.5)
+    ax[1].set_title('Ripl: Samples from P(y/X=x), w/ mean +- 1sd [name: %s]' % name )
+        
+    xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
+    ax[2].pcolormesh(xi, yi, zi)
+    ax[2].set_title('Ripl: GKDE P(y/X=x) [name: %s]' % name )
+    
+    fig.tight_layout()
+    plt.show()
+
+    my_fig = fig if return_fig else None
+    return {'f':(xr,f_xr),'xs,ys':(xs,ys),'fig':my_fig}
+
+
+
+
+def lst_plot_conditional(ripl_lst,engine_limit=0,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=(16,3.5)):
+    if engine_limit:
+        return [plot_conditional(v,data,x_range,number_xs,number_reps) for i,v in enumerate(ripl_lst) if i<engine_limit]
+    else:
+        return [plot_conditional(v,data,x_range,number_xs,number_reps) for i,v in enumerate(ripl_lst)]
+
+def mr_plot_conditional(mr,plot=True,limit=0,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=(16,3.5)):
+    # need to be careful of data: can send with string but maybe better to push the variable and 
+    # and send the variable name, instead of potentially long string
+    store_id = np.random.randint(10**8)
+    no_engines = len(mr.cli.ids)
+    engine_limit = int(np.ceil(limit/float(no_engines))) if limit else 0
+    
+    ## FIXME BACKEND
+    s1 = 'plotcond_outs_%i = ' % store_id
+    s2 = 'lst_plot_conditional(mripls[%i],engine_limit=%i,data=%s,x_range=%s,number_xs=%i,number_reps=%i,figsize=%s)' %(mr.mrid,
+                                      engine_limit,str(data),str(x_range),number_xs,number_reps,str(figsize) )
+    
+    # dview.execute wouldn't do the inlining because it doesn't return
+    if plot:
+        try:
+            ip=get_ipython()
+            ip.run_cell_magic("px",'',s1+s2)
+        except:
+            pass
+    else:
+        mr.dview.execute(s1+s2)
+    outs = if_lst_flatten( mr.dview.pull('plotcond_outs_%i' % store_id) )                                                                     
+    return outs
+
+
+
+
+def predictive(mripl,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=(16,3.5),return_fig=False ):
+    mr = mripl
+    name=get_name(mr)
+    
+    if data:
+        d_xs,d_ys = zip(*data)
+        x_range = (min(d_xs)-1,max(d_xs)+1)
+        if not x_range: x_range = (min(d_xs)-1,max(d_xs)+1)
+    
+    if not x_range: x_range = (-3,3)
+        
+    xr = np.linspace(x_range[0],x_range[1],number_xs)
+    
+    list_out=mr_plot_conditional(mr,plot=False,limit=6,data=data,x_range=x_range,number_xs=number_xs,number_reps=1)
+    fs = [ ripl_out['f'] for ripl_out in list_out]
+    
+    ## get y_xs from ripls and compute 1sd intervals
+    xys=[]; ymean=[]; ystd=[]
+    for x in xr:
+        # we get number_reps predicts from each ripl in mr
+        x_y=if_lst_flatten([mr.sample('(y_x %f)' % x) for r in range(number_reps)])   
+        ymean.append( np.mean(x_y) )
+        ystd.append( np.abs( np.std(x_y) ) )
+        xys.extend( [(x,y) for y in x_y] )
+    
+    xs,ys = zip(*xys)
+    ymean = np.array(ymean); ystd = np.array(ystd)
+    y_u = ymean+ystd; y_l = ymean-ystd
+    
+     # Plotting
+    fig,ax = plt.subplots(1,3,figsize=figsize,sharex=True,sharey=True)
+
+    if data: [ax[col].scatter(d_xs,d_ys,label='Data') for col in [0,1]]
+    # sampled fs from mripl
+    [ax[0].plot(xr,f_xr,alpha=.8,linewidth=.5) for xr,f_xr in fs]
+    if data: ax[0].legend()
+    ax[0].set_title('MR: Sampled fs w/ data [name: %s] ' % name )
+    
+    ax[1].scatter(xs,ys,alpha=0.5,s=5,facecolor='0.6', lw = 0)
+    ax[1].plot(xr, ymean, 'k', alpha=.9,color='m',linewidth=1)
+    ax[1].plot(xr, y_l, 'k', alpha=.8, color='m',linewidth=.5)
+    ax[1].plot(xr, y_u, 'k', alpha=.8,color='m',linewidth=.5)
+    ax[1].set_title('MR: Samples from P(y/X=x), w/ mean +- 1sd [name: %s] ' % name )
+    if data: ax[1].legend()
+        
+    xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
+    ax[2].pcolormesh(xi, yi, zi)
+    ax[2].set_title('MR: GKDE P(y/X=x) [name: %s] ' % name )
+
+    [ax[i].set_xlim(x_range[0],x_range[1]) for i in range(3)]
+    
+    fig.tight_layout()
+    
+    return xs,ys

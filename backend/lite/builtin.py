@@ -10,6 +10,7 @@ import continuous
 import dstructures
 import csp
 import crp
+import cmvn
 import msp
 import hmm
 import conditionals
@@ -23,7 +24,7 @@ import env
 # pylint: disable=no-member
 
 def builtInValues():
-  return { "true" : v.VentureBool(True), "false" : v.VentureBool(False) }
+  return { "true" : v.VentureBool(True), "false" : v.VentureBool(False), "nil" : v.VentureNil() }
 
 def no_request(output): return VentureSP(NullRequestPSP(), output)
 
@@ -148,7 +149,6 @@ def builtInSPsList():
            [ "second", deterministic_typed(lambda p: p[1].first, [v.PairType()], v.AnyType(),
                                            "%s returns the first component of the second component of its argument") ],
 
-           [ "map_list",VentureSP(dstructures.MapListRequestPSP(),dstructures.MapListOutputPSP()) ],
 
            [ "array", deterministic(lambda *args: v.VentureArray(np.array(args)),
                                     sim_grad=lambda args, direction: [direction], # TODO Is this actually right?
@@ -190,15 +190,18 @@ def builtInSPsList():
            [ "scope_include",no_request(scope.ScopeIncludeOutputPSP()) ],
 
            [ "binomial", binaryNumS(discrete.BinomialOutputPSP()) ],
-           [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
-           [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
+           [ "flip", typed_nr(discrete.FlipOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
+           [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.NumberType()], v.NumberType(), min_req_args=0) ],
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
 
+           [ "uniform_discrete",binaryNumS(discrete.UniformDiscreteOutputPSP()) ],
+           [ "poisson",unaryNumS(discrete.PoissonOutputPSP()) ],
+                      
            [ "normal",binaryNumS(continuous.NormalOutputPSP()) ],
            [ "uniform_continuous",binaryNumS(continuous.UniformOutputPSP()) ],
            [ "beta",binaryNumS(continuous.BetaOutputPSP()) ],
            [ "gamma",binaryNumS(continuous.GammaOutputPSP()) ],
-           [ "student_t",unaryNumS(continuous.StudentTOutputPSP()) ],
+           [ "student_t",typed_nr(continuous.StudentTOutputPSP(),[v.NumberType(),v.NumberType(),v.NumberType()], v.NumberType(), min_req_args=1 ) ],
            [ "inv_gamma",binaryNumS(continuous.InvGammaOutputPSP()) ],
 
            [ "multivariate_normal", typed_nr(continuous.MVNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.MatrixType()], v.HomogeneousArrayType(v.NumberType())) ],
@@ -215,7 +218,8 @@ def builtInSPsList():
            [ "make_sym_dir_mult",typed_nr(dirichlet.MakerCSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], SPType([], v.AnyType()), min_req_args=2) ], # Saying AnyType here requires the underlying psp to emit a VentureValue.
            [ "make_uc_sym_dir_mult",typed_nr(dirichlet.MakerUSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], SPType([], v.AnyType()), min_req_args=2) ],
 
-           [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType()], SPType([], v.NumberType())) ],
+           [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType(),v.NumberType()], SPType([], v.NumberType()), min_req_args = 1) ],
+           [ "make_cmvn",typed_nr(cmvn.MakeCMVNOutputPSP(), [v.HomogeneousArrayType(v.NumberType()),v.NumberType(),v.NumberType(),v.MatrixType()], SPType([], SPType([], v.MatrixType()))) ],           
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.NumberType()], v.NumberType())) ],
   ]

@@ -1,7 +1,9 @@
 #include "sps/betabernoulli.h"
-#include "sprecord.h"
-#include "gsl/gsl_sf_gamma.h"
 
+#include "utils.h"
+#include "sprecord.h"
+
+#include "gsl/gsl_sf_gamma.h"
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include "sps/numerical_helpers.h"
@@ -10,7 +12,7 @@
 
 VentureValuePtr MakeBetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  assert(args->operandValues.size() == 2); // TODO throw an error once exceptions work
+  checkArgsLength("make_beta_bernoulli", args, 2);
   
   double alpha = args->operandValues[0]->getDouble();
   double beta = args->operandValues[1]->getDouble();

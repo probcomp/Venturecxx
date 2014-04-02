@@ -42,3 +42,7 @@ def checkSimplex(form):
 
 def testSimplexSize():
   assert get_ripl().predict("(size (simplex 0.3 0.7))") == 2
+
+def testSimplexEq():
+  assert get_ripl().predict("(= (simplex 0.5 0.5) (simplex 0.5 0.5))")
+  assert not get_ripl().predict("(= (simplex 0.5 0.5) (simplex 0.4 0.6))")

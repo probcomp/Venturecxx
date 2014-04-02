@@ -129,6 +129,7 @@ struct VentureSimplex : VentureValue
 
   size_t hash() const;
   string toString() const;
+  boost::python::dict toPython(Trace * trace) const;
   Simplex ps;
 };
 

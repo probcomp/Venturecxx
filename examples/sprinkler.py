@@ -42,9 +42,9 @@ if __name__ == '__main__':
   # history = model.runFromConditional(50, verbose=True, infer=blockInfer, name="blockMH")
   # history.plot(fmt='png')
 
-  model = Sprinkler(shortcuts.make_church_prime_ripl())
-  history2 = model.runFromConditional(20, verbose=True, name="defaultMH-CXX")
+  model = Sprinkler(shortcuts.make_puma_church_prime_ripl())
+  history2 = model.runFromConditional(20, verbose=True, name="defaultMH-Puma")
   history2.plot(fmt='png')
 
-  history3 = historyOverlay("sprinkler", [("Lite", history1), ("CXX", history2)])
+  history3 = historyOverlay("sprinkler", [("Lite", history1), ("Puma", history2)])
   history3.plot(fmt='png')

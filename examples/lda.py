@@ -56,6 +56,6 @@ if __name__ == '__main__':
     #    print "Running setting " + str(run_count) + " of 8"
     #    print params
     #    return LDA(ripl, params).computeJointKL(20, 20, verbose=True)
-    #histories = produceHistories(parameters, runner)
+    #histories = productMap(parameters, runner)
     #
     #plotAsymptotics(parameters, histories, 'sweep_time', fmt='png', aggregate=True)

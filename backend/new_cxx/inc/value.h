@@ -17,7 +17,7 @@ struct HashVentureValuePtr;
 struct VentureValuePtrsEqual;
 
 template <typename T>
-struct VentureValuePtrMap : boost::unordered_map<VentureValuePtr, T, HashVentureValuePtr, VentureValuePtrsEqual> {};
+class VentureValuePtrMap : public boost::unordered_map<VentureValuePtr, T, HashVentureValuePtr, VentureValuePtrsEqual> {};
 
 struct SPAux;
 struct Trace;

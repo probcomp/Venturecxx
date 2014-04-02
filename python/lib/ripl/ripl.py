@@ -46,7 +46,13 @@ class Ripl():
             raise VentureException('invalid_mode',
                     "Mode {} is not implemented by this RIPL".format(mode))
 
-
+    ############################################
+    # Backend
+    ############################################
+    
+    def backend(self):
+        return self.sivm.core_sivm.engine.name
+    
     ############################################
     # Execution
     ############################################
@@ -225,8 +231,7 @@ class Ripl():
     # TODO Correctly default block choice?
     def parseInferParams(self, params):
         if params is None:
-            return {"transitions": 1, "kernel": "mh",
-                        "scope":"default", "block":"one"}
+            return {"kernel":"rejection","scope":"default","block":"all","transitions":1}
         if isinstance(params, int):
             return {"transitions": params, "kernel": "mh",
                         "scope":"default", "block":"one"}
@@ -389,6 +394,8 @@ class Ripl():
         return args['expression'], arg_ranges['expression'][0]
 
 def _strip_types(value):
-    ans = value['value']
-    if isinstance(ans,list): return [_strip_types(v) for v in ans]
-    else: return ans
+    if isinstance(value, dict):
+        ans = value['value']
+        if isinstance(ans,list): return [_strip_types(v) for v in ans]
+        else: return ans
+    else: return value

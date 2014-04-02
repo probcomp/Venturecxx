@@ -68,6 +68,7 @@ map<string,SP*> initBuiltInSPs()
   m["categorical"] = new SP(new NullRequestPSP(), new CategoricalOutputPSP());
   m["symmetric_dirichlet"] = new SP(new NullRequestPSP(), new SymmetricDirichletOutputPSP());
   m["dirichlet"] = new SP(new NullRequestPSP(), new DirichletOutputPSP());
+  m["poisson"] = new SP(new NullRequestPSP(), new PoissonOutputPSP());
 
   /* Conditiionals */
   m["branch"] = new SP(new BranchRequestPSP(), new ESRRefOutputPSP());

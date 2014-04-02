@@ -64,6 +64,8 @@ class TestParserUtilsAtoms(ParserTestCase):
                 r(0,2,3.0))
         self.run_test( "-.3",
                 r(0,3,-.3))
+        self.run_test( "-.3e-2",
+                r(0,6,-.3e-2))
         self.run_test( "moo",
                 None)
 

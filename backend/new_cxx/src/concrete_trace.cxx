@@ -9,13 +9,7 @@
 #include "sp.h"
 #include "db.h"
 #include "sps/scope.h"
-#include <cmath>
-#include <cfloat>
-#include <cassert>
-
-#include <iostream>
-using std::cout;
-using std::endl;
+#include "math.h"
 
 /* Constructor */
 
@@ -85,7 +79,11 @@ void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID blo
 }
 
 void ConcreteTrace::registerConstrainedChoice(Node * node) {
-  assert(constrainedChoices.count(node) == 0);
+  if (constrainedChoices.count(node) > 0)
+  {
+    throw "Cannot constrain the same random choice twice.";
+  }
+  
   constrainedChoices.insert(node);
   unregisterUnconstrainedChoice(node);
 }

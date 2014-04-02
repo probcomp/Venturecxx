@@ -45,6 +45,7 @@ struct SPAux
   virtual ~SPAux() {}
   // TODO stupid and may make bugs hard to find
   virtual shared_ptr<SPAux> clone() { return shared_ptr<SPAux>(new SPAux()); } 
+  virtual boost::python::object toPython(Trace * trace) const;
 };
 
 struct SP
@@ -62,7 +63,7 @@ struct SP
   virtual bool hasAEKernel() const { return false; }
   virtual void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const;
   
-  virtual boost::python::dict toPython(shared_ptr<SPAux> spAux) const;
+  virtual boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
 };
 
 #endif

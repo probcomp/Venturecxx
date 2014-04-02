@@ -78,7 +78,7 @@ def symbol_token(blacklist_symbols=None, whitelist_symbols=None, symbol_map=None
 #
 # evaluates to a python float
 def number_token():
-    number = lw(Regex(r'\b(-?\d+\.?\d*)|(-?\d*\.?\d+)\b'))
+    number = lw(Regex(r'[+-]?((\d+(\.\d*)?)|(\.\d+))([eE][+-]?\d+)?'))
     def process_number(s, loc, toks):
         return [{"loc":toks[0]['loc'], "value":float(toks[0]['value'])}]
     number.setParseAction(process_number)

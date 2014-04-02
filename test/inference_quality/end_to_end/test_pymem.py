@@ -32,8 +32,8 @@ def loadPYMem(ripl):
   ((lambda (augmented_proc crp)
      (lambda () (augmented_proc (crp))))
    (mem (lambda (table) (base_dist)))
-   (make_crp alpha)))
-""") # TODO Why did this test used to say (make_crp alpha d)?  What's d?
+   (make_crp alpha d)))
+""")
 
 def observeCategories(ripl,counts):
   for i in range(len(counts)):

@@ -1,10 +1,11 @@
 #include "sps/msp.h"
 #include "sprecord.h"
 #include "env.h"
+#include "utils.h"
 
 VentureValuePtr MakeMSPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  assert(args->operandValues.size() == 1); // TODO throw an error once exceptions work
+  checkArgsLength("mem", args, 1);
   return VentureValuePtr(new VentureSPRecord(new SP(new MSPRequestPSP(args->operandNodes[0]), new ESRRefOutputPSP())));
 }
 
@@ -29,7 +30,7 @@ VentureValuePtr MSPRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
   }
   
   shared_ptr<VentureEnvironment> empty(new VentureEnvironment());
-  empty->addBinding(shared_ptr<VentureSymbol>(new VentureSymbol("memoizedSP")),sharedOperatorNode);
+  empty->addBinding("memoizedSP",sharedOperatorNode);
   
   vector<ESR> esrs;
   esrs.push_back(ESR(VentureValuePtr(new VentureArray(args->operandValues)),VentureValuePtr(new VentureArray(exp)),empty));

@@ -105,30 +105,3 @@ class TestListExtended(object):
   def testMapOverListOfSPs(self):
     eq_(self.ripl.predict("(vmap_list (lambda (f) (f 1)) (list sin cos (lambda (x) (+ (* (sin x) (sin x)) (* (cos x) (cos x))))))"), [ sin(1), cos(1), 1])
 
-class TestMapListExtended(object):
-  _multiprocess_can_split_ = True
-  def setup(self):
-    raise SkipTest("map_list silly and not supported by puma")
-    self.ripl = get_ripl()
-
-    self.ripl.assume("x","(list 3.0 2.0 1.0)")
-    self.ripl.assume("f","(lambda (x) (times x x x))")
-    self.ripl.assume("y","(map_list f x)")
-
-  def testFirst1(self):
-    assert self.ripl.predict("(first y)") == 27.0
-
-  def testLookup1(self):
-    assert self.ripl.predict("(lookup y 1)") == 8.0
-
-  def testLookup2(self):
-    assert self.ripl.predict("(lookup (rest y) 1)") == 1.0
-
-  def testIsPair3(self):
-    assert self.ripl.predict("(is_pair y)")
-
-  def testSize1(self):
-    assert self.ripl.predict("(size y)") == 3
-
-  def testMapOverListOfSPs(self):
-    eq_(self.ripl.predict("(map_list (lambda (f) (f 1)) (list sin cos (lambda (x) (+ (* (sin x) (sin x)) (* (cos x) (cos x))))))"), [ sin(1), cos(1), 1])

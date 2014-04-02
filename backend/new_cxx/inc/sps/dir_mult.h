@@ -12,6 +12,7 @@ struct DirMultSPAux : SPAux
   DirMultSPAux(int n) : counts(n, 0) {}
   vector<int> counts;
   shared_ptr<SPAux> clone();
+  boost::python::object toPython(Trace * trace) const;
 };
 
 // Collapsed Symmetric
@@ -20,6 +21,16 @@ struct MakeSymDirMultOutputPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
+};
+
+struct SymDirMultSP : SP
+{
+  SymDirMultSP(double alpha, size_t n);
+  boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
+  
+  // for toPython
+  double alpha;
+  size_t n;
 };
 
 struct SymDirMultOutputPSP : RandomPSP

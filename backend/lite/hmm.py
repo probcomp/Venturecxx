@@ -46,6 +46,7 @@ class UncollapsedHMMSP(VentureSP):
 
   def constructSPAux(self): return HMMSPAux()
   def constructLatentDB(self): return {} # { n => x_n }
+  def show(self,spaux): return spaux.xs,spaux.os
 
   # lsr: the index of the observation needed
   def simulateLatents(self,aux,lsr,shouldRestore,latentDB):

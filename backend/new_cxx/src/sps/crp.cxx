@@ -16,13 +16,20 @@
 // (cannot use a type with a comma)
 typedef pair<uint32_t,uint32_t> tableCountPair;
 
+boost::python::object CRPSPAux::toPython(Trace * trace) const
+{
+  return toPythonDict(trace, tableCounts);
+}
+
 // Maker
 VentureValuePtr MakeCRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("make_crp", args, 1, 2);
+  
   double alpha = args->operandValues[0]->getDouble();
   double d = 0;
-
-  if (args->operandValues.size() > 1) { d = args->operandValues[1]->getDouble(); }
+  
+  if (args->operandValues.size() == 2) { d = args->operandValues[1]->getDouble(); }
 
   return VentureValuePtr(new VentureSPRecord(new CRPSP(alpha, d),new CRPSPAux()));
 }
@@ -31,15 +38,13 @@ VentureValuePtr MakeCRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
 
 CRPSP::CRPSP(double alpha, double d) : SP(new NullRequestPSP(), new CRPOutputPSP(alpha, d)), alpha(alpha), d(d) {}
 
-boost::python::dict CRPSP::toPython(shared_ptr<SPAux> spAux) const
+boost::python::dict CRPSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) const
 {
   boost::python::dict crp;
   crp["type"] = "crp";
   crp["alpha"] = alpha;
   crp["d"] = d;
-  shared_ptr<CRPSPAux> crpSPAux = dynamic_pointer_cast<CRPSPAux>(spAux);
-  assert(crpSPAux);
-  crp["counts"] = toPythonDict(crpSPAux->tableCounts);
+  crp["counts"] = spAux->toPython(trace);
   
   boost::python::dict value;
   value["type"] = "sp";
@@ -50,6 +55,8 @@ boost::python::dict CRPSP::toPython(shared_ptr<SPAux> spAux) const
 
 VentureValuePtr CRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("crp", args, 0);  
+  
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);
 

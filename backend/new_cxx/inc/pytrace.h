@@ -25,7 +25,7 @@ struct PyTrace
   void observe(DirectiveID did,boost::python::object valueExp);
   void unobserve(DirectiveID did);
 
-  void bindInGlobalEnv(string sym, DirectiveID did);
+  void bindInGlobalEnv(const string& sym, DirectiveID did);
 
   boost::python::object extractPythonValue(DirectiveID did);
 

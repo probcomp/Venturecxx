@@ -31,7 +31,8 @@ class VentureValue(object):
   # def __add__(self, other), and also __radd__, __neg__, __sub__,
   # __mul__, __rmul__, and dot
 
-  def asStackDict(self): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
+  def asStackDict(self, _trace): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
+
   @staticmethod
   def fromStackDict(thing):
     if isinstance(thing, list):
@@ -70,7 +71,9 @@ class VentureNumber(VentureValue):
     else:
       return "VentureNumber(uninitialized)"
   def getNumber(self): return self.number
-  def asStackDict(self): return {"type":"number","value":self.number}
+  def getBool(self): return self.number
+    
+  def asStackDict(self, _trace): return {"type":"number","value":self.number}
   @staticmethod
   def fromStackDict(thing): return VentureNumber(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.number, other.number)
@@ -108,10 +111,30 @@ class VentureNumber(VentureValue):
 
 def stupidCompare(thing, other):
   # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
-  # strings don't have __cmp__ either?
+  # strings don't have __cmp__ either? or lists?
   if thing < other: return -1
   elif thing > other: return 1
   else: return 0
+
+def lexicographicBoxedCompare(thing, other):
+  if len(thing) < len(other): return -1
+  if len(thing) > len(other): return 1
+
+  # else same length
+  for x,y in zip(thing,other):
+    if x.compare(y) != 0: return x.compare(y)
+
+  return 0
+
+def lexicographicUnboxedCompare(thing, other):
+  if len(thing) < len(other): return -1
+  if len(thing) > len(other): return 1
+
+  # else same length
+  for x,y in zip(thing,other):
+    if stupidCompare(x,y) != 0: return stupidCompare(x,y)
+
+  return 0
 
 class VentureAtom(VentureValue):
   def __init__(self,atom):
@@ -121,7 +144,7 @@ class VentureAtom(VentureValue):
   def getNumber(self): return self.atom
   def getAtom(self): return self.atom
   def getBool(self): return self.atom
-  def asStackDict(self): return {"type":"atom","value":self.atom}
+  def asStackDict(self, _trace): return {"type":"atom","value":self.atom}
   @staticmethod
   def fromStackDict(thing): return VentureAtom(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.atom, other.atom)
@@ -138,7 +161,7 @@ class VentureBool(VentureValue):
     # trials as well as dispatching on them.  Or should flip and
     # bernoulli be different SPs?
     return self.boolean
-  def asStackDict(self): return {"type":"boolean","value":self.boolean}
+  def asStackDict(self, _trace): return {"type":"boolean","value":self.boolean}
   @staticmethod
   def fromStackDict(thing): return VentureBool(thing["value"])
   def compareSameType(self, other):
@@ -149,7 +172,7 @@ class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
   def __repr__(self): return "Symbol(%s)" % self.symbol
   def getSymbol(self): return self.symbol
-  def asStackDict(self): return {"type":"symbol","value":self.symbol}
+  def asStackDict(self, _trace): return {"type":"symbol","value":self.symbol}
   @staticmethod
   def fromStackDict(thing): return VentureSymbol(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
@@ -171,10 +194,14 @@ interface here is compatible with one possible path."""
       return [elt_type.asPython(v) for v in self.array]
   def asPythonList(self, elt_type=None):
     return self.getArray(elt_type)
-  def asStackDict(self):
+
+  def compareSameType(self, other):
+    return lexicographicBoxedCompare(self.array, other.array)
+      
+  def asStackDict(self,trace):
     # TODO Are venture arrays reflected as lists to the stack?
     # TODO Are stack lists lists, or are they themselves type tagged?
-    return {"type":"list","value":[v.asStackDict() for v in self.array]}
+    return {"type":"list","value":[v.asStackDict(trace) for v in self.array]}
   @staticmethod
   def fromStackDict(thing):
     return VentureArray([VentureValue.fromStackDict(v) for v in thing["value"]])
@@ -226,7 +253,7 @@ class VentureNil(VentureValue):
   def compareSameType(self, _): return 0 # All Nils are equal
   def __hash__(self): return 0
   def asPythonList(self, _elt_type=None): return []
-  def asStackDict(self): return {"type":"list", "value":[]}
+  def asStackDict(self, _trace): return {"type":"list", "value":[]}
   @staticmethod
   def fromStackDict(_): return VentureNil()
   def size(self): return 0
@@ -243,10 +270,10 @@ class VenturePair(VentureValue):
       return [elt_type.asPython(self.first)] + self.rest.asPythonList(elt_type)
     else:
       return [self.first] + self.rest.asPythonList()
-  def asStackDict(self):
+  def asStackDict(self,trace):
     # TODO Venture pairs should be usable to build structures other
     # than proper lists.  But then, what are their types?
-    return {"type":"list", "value":[v.asStackDict() for v in self.asPythonList()]}
+    return {"type":"list", "value":[v.asStackDict(trace) for v in self.asPythonList()]}
   @staticmethod
   def fromStackDict(_): raise Exception("Type clash!")
   def compareSameType(self, other):
@@ -284,13 +311,9 @@ supposed to sum to 1, but we are not checking that."""
     # The Python ordering is lexicographic first, then by length, but
     # I think we want lower-d simplexes to compare less than higher-d
     # ones regardless of the point.
-    lencmp = len(self.simplex).__cmp__(len(other.simplex))
-    if lencmp != 0:
-      return lencmp
-    else:
-      return self.simplex.__cmp__(other.simplex)
+    return lexicographicUnboxedCompare(self.simplex, other.simplex)
   def __hash__(self): return hash(self.simplex)
-  def asStackDict(self):
+  def asStackDict(self, _trace):
     # TODO As what type to reflect simplex points to the stack?
     return {"type":"simplex", "value":self.simplex}
   @staticmethod
@@ -305,7 +328,7 @@ supposed to sum to 1, but we are not checking that."""
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
   def getDict(self): return self.dict
-  def asStackDict(self):
+  def asStackDict(self, _trace):
     # TODO Difficult to reflect as a Python dict because the keys
     # would presumably need to be converted to stack dicts too, which
     # is a problem because they need to be hashable.
@@ -326,7 +349,7 @@ class VentureMatrix(VentureValue):
     # TODO Are numpy matrices comparable?
     return self.matrix.__cmp__(other.matrix)
   def __hash__(self): return hash(self.matrix)
-  def asStackDict(self):
+  def asStackDict(self, _trace):
     return {"type":"matrix", "value":self.matrix}
   @staticmethod
   def fromStackDict(thing): return VentureMatrix(thing["value"])
@@ -363,7 +386,9 @@ class VentureMatrix(VentureValue):
 
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
-  def asStackDict(self): return {"type":"SP","value":self}
+  def asStackDict(self,trace):
+    return {"type":"sp","value":trace.madeSPAt(self.makerNode).show(trace.madeSPAuxAt(self.makerNode))}
+  
   @staticmethod
   def fromStackDict(thing): return thing["value"]
   # SPRefs are intentionally not comparable until we decide otherwise
