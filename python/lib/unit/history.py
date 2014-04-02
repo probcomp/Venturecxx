@@ -138,8 +138,9 @@ class Run(object):
     """Data from a single run of a model.  A History is effectively a set
 of Runs with the same label and parameters (but represented
 differently)."""
-    def __init__(self, label='empty_run', parameters=None, data={}):
+    def __init__(self, label='empty_run', parameters=None, data=None):
         if parameters is None: parameters = {}
+        if data is None: data = {}
         self.label = label # string
         self.parameters = parameters # :: {string: a}
         self.namedSeries = {}
