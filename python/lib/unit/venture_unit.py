@@ -290,6 +290,16 @@ class VentureUnit(object):
 
     # Run inference conditioned on data generated from the prior.
     def runConditionedFromPrior(self, sweeps, runs=3, verbose=False, profile=False):
+        (data, prior_run) = self.generateDataFromPrior(sweeps, verbose=verbose)
+        history = self.runFromConditional(sweeps, data=data, runs=runs, verbose=verbose, profile=profile)
+        history.addRun(prior_run)
+        history.label = 'run_conditioned_from_prior'
+        return history
+
+    # The "sweeps" argument specifies the number of times to repeat
+    # the values collected from the prior, so that they are parallel
+    # to the samples one intends to compare against them.
+    def generateDataFromPrior(self, sweeps, verbose=False):
         if verbose:
             print 'Generating data from prior'
 
@@ -307,11 +317,7 @@ class VentureUnit(object):
         prior_run.addSeries('logscore', Series('prior', [logscore]*sweeps, hist=False))
         for (symbol, value) in assumedValues.iteritems():
             prior_run.addSeries(symbol, Series('prior', [parseValue(value)]*sweeps))
-
-        history = self.runFromConditional(sweeps, data=data, runs=runs, verbose=verbose, profile=profile)
-        history.addRun(prior_run)
-        history.label = 'run_conditioned_from_prior'
-        return history
+        return (data, prior_run)
 
 # Reads the profile data from the ripl.
 # Returns a map from (random choice) addresses to info objects.
