@@ -193,15 +193,17 @@ def showParameters(parameters):
 
     plt.text(0, 1, text, transform=plt.axes().transAxes, va='top', size='small', linespacing=1.0)
 
+def seriesBounds(seriesList):
+    vmin = min([min(series.values) for series in seriesList])
+    vmax = max([max(series.values) for series in seriesList])
+    offset = 0.1 * max([(vmax - vmin), 1.0])
+    return (vmin - offset, vmax + offset)
+
 def setYBounds(seriesList, ybounds=None):
     if ybounds is None:
-        ymin = min([min(series.values) for series in seriesList])
-        ymax = max([max(series.values) for series in seriesList])
-
-        offset = 0.1 * max([(ymax - ymin), 1.0])
-
+        (ylow, yhigh) = seriesBounds(seriesList)
         if not any([any([np.isinf(v) for v in series.values]) for series in seriesList]):
-            plt.ylim([ymin - offset, ymax + offset])
+            plt.ylim([ylow, yhigh])
     else:
         [ylow,yhigh] = ybounds # Silly pylint not noticing case on maybe type pylint:disable=unpacking-non-sequence
         plt.ylim([ylow,yhigh])
@@ -230,11 +232,23 @@ def scatterPlotSeries(name1, seriesList1, name2, seriesList2, subtitle="", **kwa
     _plotPrettily(_doScatterPlot, name, [seriesList1, seriesList2], title="Scatter of %s\n%s" % (name, subtitle),
                   filesuffix='scatter', xlabel=name1, ylabel=name2, **kwargs)
 
-def _doScatterPlot(data, ybounds=None):
+def _doScatterPlot(data, style=' o', ybounds=None, contour_func=None):
     xSeries, ySeries = data
     for (xs, ys) in zip(xSeries, ySeries):
-        plt.plot(xs.values, ys.values, ' o', label=xs.label) # Assume ys labels are the same
+        plt.plot(xs.values, ys.values, style, label=xs.label) # Assume ys labels are the same
     setYBounds(ySeries, ybounds)
+    if contour_func is not None:
+        [xmin, xmax] = seriesBounds(xSeries)
+        [ymin, ymax] = seriesBounds(ySeries)
+        plotContours(xmin, xmax, ymin, ymax, contour_func)
+
+def plotContours(xmin, xmax, ymin, ymax, contour_func):
+    delta = 0.125
+    x = np.arange(xmin, xmax, delta)
+    y = np.arange(ymin, ymax, delta)
+    X, Y = np.meshgrid(x, y)
+    Z = np.vectorize(contour_func)(X,Y)
+    plt.contour(X, Y, Z)
 
 def _plotPrettily(f, name, data, title="", parameters=None, filesuffix='',
                   fmt='pdf', directory='.', xlabel=None, ylabel=None, show=False, save=True, **kwargs):
@@ -352,7 +366,7 @@ def plotAsymptotics(parameters, histories, seriesName, fmt='pdf', directory=None
                 fig.savefig(directory + filename.replace(' ', '_') + '_asymptotics.' + fmt, format=fmt)
 
 
-def legend_outside(ax=None, bbox_to_anchor=(0.5, -.10), loc='upper center',
+def legend_outside(ax=None, bbox_to_anchor=(0.5, -.05), loc='upper center',
                    ncol=None, label_cmp=None):
     # labels must be set in original plot call: plot(..., label=label)
     if ax is None:

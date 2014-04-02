@@ -1,3 +1,4 @@
+import numbers
 from abc import ABCMeta, abstractmethod
 from sp import VentureSP
 from value import VentureValue
@@ -12,6 +13,7 @@ class LKernel(object):
   def weight(self, _trace, _newValue, _oldValue, _args): return 0
   def reverseWeight(self,trace,oldValue,args):
     return self.weight(trace,oldValue,None,args)
+  def gradientOfReverseWeight(self, _trace, _value, args): return (0, [0 for _ in args.operandValues])
   def weightBound(self, _trace, _newValue, _oldValue, _args):
     # An upper bound on the value of weight over the variation
     # possible by changing the values of everything in the arguments
@@ -32,15 +34,18 @@ class DefaultAAALKernel(LKernel):
     return self.makerPSP.madeSpLogDensityOfCountsBound(args.madeSPAux)
 
 class DeterministicLKernel(LKernel):
-  # TODO sp => psp
-  # (it is called correctly, just incorrect here)
-  def __init__(self,sp,value):
-    self.sp = sp
+  def __init__(self,psp,value):
+    self.psp = psp
     self.value = value
     assert isinstance(value, VentureValue)
 
   def simulate(self,trace,oldValue,args): return self.value
-  def weight(self, _trace, newValue, _oldValue, args): return self.sp.logDensity(newValue,args)
+  def weight(self, _trace, newValue, _oldValue, args):
+    answer = self.psp.logDensity(newValue,args)
+    assert isinstance(answer, numbers.Number)
+    return answer
+  def gradientOfReverseWeight(self, _trace, newValue, args):
+    return self.psp.gradientOfLogDensity(newValue, args.operandValues)
 
 ######## Variational #########
 
@@ -65,7 +70,9 @@ class DefaultVariationalLKernel(VariationalLKernel):
     return w
 
   def gradientOfLogDensity(self, value, _args):
-    return self.psp.gradientOfLogDensity(value, self.parameters)
+    # Ignore the derivative of the value because we do not care about it
+    (_, grad) = self.psp.gradientOfLogDensity(value, self.parameters)
+    return grad
 
   def updateParameters(self,gradient,gain,stepSize):
     # TODO hacky numerical stuff
