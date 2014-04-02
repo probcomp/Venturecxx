@@ -192,9 +192,11 @@ class VentureUnit(object):
             step = get_entropy_info()['unconstrained_random_choices']
             if infer is None:
                 self.ripl.infer(step)
+            # TODO Incoming infer string or procedure may touch more
+            # than "step" choices; how to count sweeps right?
+            elif isinstance(infer, str):
+                self.ripl.infer(infer)
             else:
-                # TODO Incoming infer procedure may touch more than
-                # "step" choices; how to count sweeps right?
                 infer(self.ripl, step)
             iterations += step
 
