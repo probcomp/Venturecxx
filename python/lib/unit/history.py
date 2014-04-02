@@ -81,27 +81,21 @@ typically also tracked."""
     # Plots one series of interest, offering greater control over the
     # configuration of the plot.
     # TODO Carefully spec which names are available to plot.
-    def plotOneSeries(self, name, directory=None, **kwargs):
-        # TODO Is it ok for a method to have the same name as a global
-        # function in Python?
+    def plotOneSeries(self, name, **kwargs):
+        self._plotOne(plotSeries, name, **kwargs)
+
+    def _plotOne(self, f, name, directory=None, **kwargs):
         if directory == None:
             directory = self.defaultDirectory()
         ensure_directory(directory)
         if name in self.nameToSeries:
-            plotSeries(name, self.nameToSeries[name], subtitle=self.label,
-                       parameters=self.parameters, directory=directory, **kwargs)
+            f(name, self.nameToSeries[name], subtitle=self.label,
+              parameters=self.parameters, directory=directory, **kwargs)
         else:
             raise Exception("Cannot plot non-existent series %s" % name)
 
-    def plotOneHistogram(self, name, directory=None, **kwargs):
-        if directory == None:
-            directory = self.defaultDirectory()
-        ensure_directory(directory)
-        if name in self.nameToSeries:
-            plotHistogram(name, self.nameToSeries[name], subtitle=self.label,
-                          parameters=self.parameters, directory=directory, **kwargs)
-        else:
-            raise Exception("Cannot histogram non-existent series %s" % name)
+    def plotOneHistogram(self, name, **kwargs):
+        self._plotOne(plotHistogram, name, **kwargs)
 
     def save(self, directory=None):
         if directory == None:
