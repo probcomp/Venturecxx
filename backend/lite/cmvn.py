@@ -51,9 +51,10 @@ class CMVNSPAux(object):
     self.N = 0
     self.STotal = np.mat(np.zeros((d,d)))
     self.xTotal = np.mat(np.zeros((d,1)))
+    self.d = d
 
   def copy(self):
-    aux = CMVNSPAux()
+    aux = CMVNSPAux(self.d)
     aux.N = self.N
     aux.STotal = self.STotal
     aux.xTotal = self.xTotal
