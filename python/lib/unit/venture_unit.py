@@ -84,6 +84,13 @@ class VentureUnit(object):
                 assumeToDirective[symbol] = symbol
         return assumeToDirective
 
+    def _assumesFromRipl(self):
+        assumeToDirective = {}
+        for directive in self.ripl.list_directives(type=True):
+            if directive["instruction"] == "assume" and record(directive["value"]):
+                assumeToDirective[directive["symbol"]] = directive["directive_id"]
+        return assumeToDirective
+
     def _loadObservesAsPredicts(self, track=-1, prune=True):
         predictToDirective = {}
         for (index, (expression, _)) in enumerate(self.observes):
@@ -216,6 +223,10 @@ class VentureUnit(object):
     def runFromJointOnce(self, track=5, **kwargs):
         (assumeToDirective, predictToDirective) = self.loadModelWithPredicts(track)
         return self._collectSamples(assumeToDirective, predictToDirective, **kwargs)
+
+    def collectStateSequence(self, **kwargs):
+        assumeToDirective = self._assumesFromRipl()
+        return self._collectSamples(assumeToDirective, {}, **kwargs)
 
     def _collectSamples(self, assumeToDirective, predictToDirective, sweeps=100, label=None, verbose=False, infer=None):
         answer = Run(label, self.parameters)
