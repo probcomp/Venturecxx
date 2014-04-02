@@ -297,22 +297,20 @@ class VentureUnit(object):
 
         data = [self.ripl.report(predictToDirective[index], type=True) for index in range(len(self.observes))]
 
+        prior_run = Run('run_conditioned_from_prior', self.parameters)
         assumedValues = {}
         for (symbol, directive) in assumeToDirective.iteritems():
             value = self.ripl.report(directive, type=True)
             if record(value):
                 assumedValues[symbol] = value
-
         logscore = self.ripl.get_global_logscore()
+        prior_run.addSeries('logscore', Series('prior', [logscore]*sweeps, hist=False))
+        for (symbol, value) in assumedValues.iteritems():
+            prior_run.addSeries(symbol, Series('prior', [parseValue(value)]*sweeps))
 
         history = self.runFromConditional(sweeps, data=data, runs=runs, verbose=verbose, profile=profile)
-
-        history.addSeries('logscore', 'prior', [logscore]*sweeps, hist=False)
-        for (symbol, value) in assumedValues.iteritems():
-            history.addSeries(symbol, 'prior', [parseValue(value)]*sweeps)
-
+        history.addRun(prior_run)
         history.label = 'run_conditioned_from_prior'
-
         return history
 
 # Reads the profile data from the ripl.
