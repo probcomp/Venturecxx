@@ -13,9 +13,6 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 import scipy.stats
 import numpy as np
@@ -31,7 +28,7 @@ class HMCDemo(u.VentureUnit):
 [ASSUME xout (if (< x 0)
     (normal x 1)
     (normal x 2))]
-[ASSUME out (multivariate_normal (array xout y) (matrix (list (list 1 3) (list 3 1))))]
+[ASSUME out (multivariate_normal (array xout y) (matrix (list (list 1 0.5) (list 0.5 1))))]
 """
     commands = [command_str.split("]")[0].split(" ", 1) for command_str in program.strip().split("[ASSUME ") if command_str]
     for (var, exp) in commands:
@@ -50,14 +47,14 @@ def plot_contours(xs, ys, func):
   y = np.arange(ymin, ymax, delta)
   X, Y = np.meshgrid(x, y)
   Z = np.vectorize(func)(X,Y)
+  import matplotlib
+  matplotlib.use('Agg')
+  import matplotlib.pyplot as plt
   plt.contour(X, Y, Z)
 
-observes_made = False
-
 def make_pic(name, inf_prog):
-  global observes_made
   def infer(ripl, _ct):
-    global observes_made
+    observes_made = any(directive["instruction"] == "observe" for directive in ripl.list_directives())
     if not observes_made:
       # TODO This is a hack around there being no good way to observe
       # datastructures right now.
@@ -66,26 +63,15 @@ def make_pic(name, inf_prog):
       observes_made = True
     ripl.infer(inf_prog)
   model = HMCDemo(shortcuts.Lite().make_church_prime_ripl())
-  observes_made = False
-  history = model.runFromConditional(200, runs=1, verbose=True, name=name, infer=infer)
-  xs = history.nameToSeries["x"][0].values
-  ys = history.nameToSeries["y"][0].values
-  plt.figure()
-  plt.clf()
-  plt.title("%s trajectory" % name)
-  plt.xlabel("x")
-  plt.ylabel("y")
-  plt.plot(xs, ys, '.', label=inf_prog)
-  # for (i, (x, y)) in enumerate(zip(xs, ys)):
-  #   plt.text(x, y, i)
-  # TODO Plotting the contours would require integrating out the intermediate normal, which I do not wish to do now.
-  # plot_contours(xs, ys, lambda x, y: scipy.stats.norm.pdf(x, loc=0, scale=3) * scipy.stats.norm.pdf(y, loc=0, scale=2))
-  u.legend_outside()
-  u.savefig_legend_outside("%s-demo.png" % name)
-  print "Figure saved in %s-demo.png" % name
+  history = model.runFromConditional(70, runs=3, verbose=True, name=name, infer=infer)
+  return history
 
 if __name__ == '__main__':
   # TODO To compare rejection sampling, would need to define logDensityBound for MVNormalOutputPSP
   # make_pic("rej", "(rejection default all 1)")
-  make_pic("hmc", "(hmc param all 0.05 20 1)")
-  make_pic("mh", "(mh default all 10)")
+  h1 = make_pic("hmc", "(hmc param all 0.1 20 1)")
+  # h1.quickScatter("x", "y", style="-")
+  h2 = make_pic("mh", "(mh default all 10)")
+  u.historyOverlay("demo", [("hmc", h1), ("mh", h2)]).quickScatter("x", "y")
+  # TODO Plotting the contours would require integrating out the intermediate normal, which I do not wish to do now.
+  # plot_contours(xs, ys, lambda x, y: scipy.stats.norm.pdf(x, loc=0, scale=3) * scipy.stats.norm.pdf(y, loc=0, scale=2))
