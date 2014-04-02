@@ -34,6 +34,64 @@ def checkMVGaussSmoke(infer):
   cdf = stats.norm(loc=1, scale=1).cdf
   return reportKnownContinuous(cdf, predictions, "N(1,1)")
 
+def testForceBrush1():
+  yield checkForceBrush1, "(mh default one 2)"
+  yield checkForceBrush1, "(hmc default one 0.05 20 10)"
+
+@statisticalTest
+def checkForceBrush1(infer):
+  ripl = get_ripl()
+  ripl.assume("x", "(normal 0 1)")
+  ripl.predict("(if (< x 100) (normal x 1) (normal 100 1))")
+  predictions = collectSamples(ripl,2,infer=infer)
+  cdf = stats.norm(loc=0, scale=math.sqrt(2)).cdf
+  return reportKnownContinuous(cdf, predictions, "N(0,sqrt(2))")
+
+def testForceBrush2():
+  yield checkForceBrush2, "(mh default one 5)"
+  yield checkForceBrush2, "(hmc default one 0.05 20 10)"
+
+@statisticalTest
+def checkForceBrush2(infer):
+  ripl = get_ripl()
+  ripl.assume("x", "(normal 0 1)")
+  ripl.predict("(if (< x 0) (normal 0 1) (normal 100 1))")
+  predictions = collectSamples(ripl,2,infer=infer)
+  cdf = lambda x: 0.5*stats.norm(loc=0, scale=1).cdf(x) + 0.5*stats.norm(loc=100, scale=1).cdf(x)
+  return reportKnownContinuous(cdf, predictions, "N(0,1)/2 + N(100,1)/2")
+
+@statisticalTest
+def testForceBrush3():
+  ripl = get_ripl()
+  ripl.assume("x", "(normal 0 1)")
+  ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
+  preds_mh = collectSamples(ripl, 2, "(mh default one 10)")
+  ripl.sivm.core_sivm.engine.reset()
+  preds_hmc = collectSamples(ripl, 2, infer="(hmc default one 0.1 20 10)")
+  return reportSameContinuous(preds_mh, preds_hmc)
+
+@statisticalTest
+def testForceBrush4():
+  ripl = get_ripl()
+  ripl.assume("x", "(normal 0 1)")
+  ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
+  ripl.predict("(normal y 1)")
+  preds_mh = collectSamples(ripl, 3, infer="(mh default one 10)")
+  ripl.sivm.core_sivm.engine.reset()
+  preds_hmc = collectSamples(ripl, 3, infer="(hmc default one 0.1 20 10)")
+  return reportSameContinuous(preds_mh, preds_hmc)
+
+@statisticalTest
+def testForceBrush5():
+  ripl = get_ripl()
+  ripl.assume("x", "(normal 0 1)")
+  ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
+  ripl.observe("y", 8)
+  preds_mh = collectSamples(ripl, 1, infer="(mh default one 10)")
+  ripl.sivm.core_sivm.engine.reset()
+  preds_hmc = collectSamples(ripl, 1, infer="(hmc default one 0.1 20 10)")
+  return reportSameContinuous(preds_mh, preds_hmc)
+
 @statisticalTest
 def testMoreElaborate():
   """Confirm that HMC still works in the presence of brush.  Do not,
@@ -63,7 +121,8 @@ def testMoreElaborate():
   v = [{"type": "real", "value": 0}, {"type": "real", "value": 0}]
   ripl.sivm.execute_instruction({"instruction":"observe","expression":"out","value":{"type":"list","value":v}})
 
-  preds_mh = collectSamples(ripl, 1)
+  preds_mh = collectSamples(ripl, 1, infer="(mh default one 10)")
   ripl.sivm.core_sivm.engine.reset()
-  preds_hmc = collectSamples(ripl, 1, infer="(hmc param all 0.01 20 2)")
+  preds_hmc = collectSamples(ripl, 1, infer="(hmc param all 0.1 20 10)")
+  print [preds_mh, preds_hmc]
   return reportSameContinuous(preds_mh, preds_hmc)
