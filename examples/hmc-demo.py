@@ -23,8 +23,8 @@ import venture.unit as u
 class HMCDemo(u.VentureUnit):
   def makeAssumes(self):
     program = """
-[ASSUME x (scope_include (quote param) 0 (uniform_continuous -10 10))]
-[ASSUME y (scope_include (quote param) 1 (uniform_continuous -10 10))]
+[ASSUME x (scope_include (quote param) 0 (uniform_continuous -4 4))]
+[ASSUME y (scope_include (quote param) 1 (uniform_continuous -4 4))]
 [ASSUME xout (if (< x 0)
     (normal x 1)
     (normal x 2))]
@@ -37,20 +37,16 @@ class HMCDemo(u.VentureUnit):
   def makeObserves(self):
     pass
 
-def plot_contours(xs, ys, func):
-  xmin = min(xs)
-  xmax = max(xs)
-  ymin = min(ys)
-  ymax = max(ys)
-  delta = 0.25
-  x = np.arange(xmin, xmax, delta)
-  y = np.arange(ymin, ymax, delta)
-  X, Y = np.meshgrid(x, y)
-  Z = np.vectorize(func)(X,Y)
-  import matplotlib
-  matplotlib.use('Agg')
-  import matplotlib.pyplot as plt
-  plt.contour(X, Y, Z)
+# int_R pdf(xout|x) pdf([0,0]|[xout, y])
+def true_pdf(x, y):
+  cov = np.matrix([[1, 0.5], [0.5, 1]])
+  scale = 1 if x < 0 else 2
+  import scipy.integrate as integrate
+  from venture.lite.utils import logDensityMVNormal
+  def postprop(xout):
+    return scipy.stats.norm.pdf(xout, loc=x, scale=scale) * logDensityMVNormal([0,0], np.array([xout,y]), cov)
+  (ans,_) = integrate.quad(postprop, x-4, x+4)
+  return ans
 
 def make_pic(name, inf_prog):
   def infer(ripl, _ct):
@@ -71,7 +67,7 @@ if __name__ == '__main__':
   # make_pic("rej", "(rejection default all 1)")
   h1 = make_pic("hmc", "(hmc param all 0.1 20 1)")
   # h1.quickScatter("x", "y", style="-")
-  h2 = make_pic("mh", "(mh default all 10)")
-  u.historyOverlay("demo", [("hmc", h1), ("mh", h2)]).quickScatter("x", "y")
+  h2 = make_pic("mh", "(mh default one 10)")
+  u.historyOverlay("demo", [("hmc", h1), ("mh", h2)]).quickScatter("x", "y", contour_func=true_pdf)
   # TODO Plotting the contours would require integrating out the intermediate normal, which I do not wish to do now.
   # plot_contours(xs, ys, lambda x, y: scipy.stats.norm.pdf(x, loc=0, scale=3) * scipy.stats.norm.pdf(y, loc=0, scale=2))
