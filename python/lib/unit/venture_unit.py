@@ -233,7 +233,7 @@ class VentureUnit(object):
 
             # FIXME: use timeit module for better precision
             start = time.time()
-            iterations = self.sweep(infer)
+            iterations = self.sweep(infer=infer)
             end = time.time()
 
             sweepTimes.append(end-start)
@@ -288,8 +288,10 @@ class VentureUnit(object):
 
         assumeToDirective = self._loadAssumes()
         self._loadObserves(data)
+        predictToDirective = {}
 
         assumedValues = {symbol : [] for symbol in assumeToDirective}
+        predictedValues = {index: [] for index in predictToDirective}
 
         sweepTimes = []
         sweepIters = []
@@ -309,6 +311,7 @@ class VentureUnit(object):
             logscores.append(self.ripl.get_global_logscore())
 
             self.updateValues(assumedValues, assumeToDirective)
+            self.updateValues(predictedValues, predictToDirective)
 
         answer.addSeries('sweep time (s)', Series(label, sweepTimes))
         answer.addSeries('sweep_iters', Series(label, sweepIters))
@@ -316,6 +319,9 @@ class VentureUnit(object):
 
         for (symbol, values) in assumedValues.iteritems():
             answer.addSeries(symbol, Series(label, map(parseValue, values)))
+
+        for (index, values) in predictedValues.iteritems():
+            answer.addSeries(self.nameObserve(index), Series(label, map(parseValue, values)))
 
         return answer
 
