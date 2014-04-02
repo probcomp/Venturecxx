@@ -230,10 +230,10 @@ def scatterPlotSeries(name1, seriesList1, name2, seriesList2, subtitle="", **kwa
     _plotPrettily(_doScatterPlot, name, [seriesList1, seriesList2], title="Scatter of %s\n%s" % (name, subtitle),
                   filesuffix='scatter', xlabel=name1, ylabel=name2, **kwargs)
 
-def _doScatterPlot(data, ybounds=None):
+def _doScatterPlot(data, style=' o', ybounds=None):
     xSeries, ySeries = data
     for (xs, ys) in zip(xSeries, ySeries):
-        plt.plot(xs.values, ys.values, ' o', label=xs.label) # Assume ys labels are the same
+        plt.plot(xs.values, ys.values, style, label=xs.label) # Assume ys labels are the same
     setYBounds(ySeries, ybounds)
 
 def _plotPrettily(f, name, data, title="", parameters=None, filesuffix='',
