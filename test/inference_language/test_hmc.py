@@ -65,7 +65,7 @@ def testForceBrush3():
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
-  preds_mh = collectSamples(ripl, 2, "(mh default one 10)")
+  preds_mh = collectSamples(ripl, 2, infer="(mh default one 10)")
   ripl.sivm.core_sivm.engine.reset()
   preds_hmc = collectSamples(ripl, 2, infer="(hmc default one 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
