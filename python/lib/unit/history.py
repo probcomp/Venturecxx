@@ -352,7 +352,7 @@ def plotAsymptotics(parameters, histories, seriesName, fmt='pdf', directory=None
                 fig.savefig(directory + filename.replace(' ', '_') + '_asymptotics.' + fmt, format=fmt)
 
 
-def legend_outside(ax=None, bbox_to_anchor=(0.5, -.10), loc='upper center',
+def legend_outside(ax=None, bbox_to_anchor=(0.5, -.05), loc='upper center',
                    ncol=None, label_cmp=None):
     # labels must be set in original plot call: plot(..., label=label)
     if ax is None:
