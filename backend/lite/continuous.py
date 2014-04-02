@@ -64,6 +64,8 @@ class NormalOutputPSP(RandomPSP):
 
   def simulate(self,args): return self.simulateNumeric(args.operandValues)
   def gradientOfSimulate(self, args, value, direction):
+    # Reverse engineering the behavior of scipy.stats.norm.rvs
+    # suggests this gradient is correct.
     (mu, sigma) = args.operandValues
     deviation = (value - mu) / sigma
     return [direction*1, direction*deviation]
