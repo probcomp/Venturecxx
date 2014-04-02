@@ -10,7 +10,6 @@ from scaffold import constructScaffold
 from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
 from utils import simulateCategorical, cartesianProduct, logaddexp
-from value import NumberType
 from nose.tools import assert_almost_equal # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 import copy
 
@@ -515,8 +514,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
       try:
         random.setstate(pyr_state)
         npr.set_state(numpyr_state)
-        vs = values # [NumberType().asVentureValue(v) for v in values]
-        registerDeterministicLKernels(trace, scaffold, pnodes, vs)
+        registerDeterministicLKernels(trace, scaffold, pnodes, values)
         answer = regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
       finally:
         random.setstate(cur_pyr_state)
@@ -534,10 +532,9 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     start_grad = [-self.rhoDB.getPartial(pnode) for pnode in pnodes]
 
     # Smashes the trace but leaves it a torus
-    (proposed_vs, end_K) = self.evolve(grad, currentValues, start_grad, momenta)
+    (proposed_values, end_K) = self.evolve(grad, currentValues, start_grad, momenta)
     assertTorus(scaffold)
 
-    proposed_values = proposed_vs # [NumberType().asVentureValue(v) for v in proposed_vs]
     registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
     xiWeight = fixed_regen(proposed_values) # Mutates the trace
     # The weight arithmetic is given by the Hamiltonian being
@@ -556,7 +553,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
   def evolve(self, grad_U, start_q, start_grad_q, start_p):
     epsilon = self.epsilon
     num_steps = self.num_steps
-    q = start_q # [NumberType().asPython(qi) for qi in start_q]
+    q = start_q
     # The initial momentum half-step
     dpdt = start_grad_q
     p = [pi - dpdti * (epsilon / 2.0) for (pi, dpdti) in zip(start_p, dpdt)]
