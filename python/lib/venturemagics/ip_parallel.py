@@ -879,7 +879,8 @@ class MRipl():
     def snapshot(self,did_labels_list=[], exp_list=[],
                  plot=False, scatter=False, plot_range=None,
                  logscore=False, plot_past_values=[],
-                 sample_populations=None, repeat=None, predict=False):
+                 sample_populations=None, repeat=None, predict=False,
+                 plot_yrange=False):
                 
         '''Input: lists of dids_labels and expressions.
            Output: values from each ripl, (optional) plots.''' 
@@ -975,6 +976,8 @@ class MRipl():
             [ ax[i].legend(loc='upper left',ncol=len(list_vals)) for i in range(2)]
             ax[0].set_title('Hist: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
             if plot_range: [ax[i].set_xlim(plot_range) for i in range(2)]
+            if plot_yrange: ax[0].set_ylim(plot_yrange) for i in range(2)
+                        
             
             out['figs'] = fig
             return out
