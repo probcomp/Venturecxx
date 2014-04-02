@@ -224,9 +224,15 @@ class VentureUnit(object):
         (assumeToDirective, predictToDirective) = self.loadModelWithPredicts(track)
         return self._collectSamples(assumeToDirective, predictToDirective, **kwargs)
 
-    def collectStateSequence(self, **kwargs):
+    # Returns a History reflecting exactly one Run.
+    def collectStateSequence(self, name=None, profile=False, **kwargs):
         assumeToDirective = self._assumesFromRipl()
-        return self._collectSamples(assumeToDirective, {}, **kwargs)
+        tag = 'run_from_conditional' if name is None else name + '_run_from_conditional'
+        history = History(tag, self.parameters)
+        history.addRun(self._collectSamples(assumeToDirective, {}, **kwargs))
+        if profile:
+            history.profile = Profile(self.ripl)
+        return history
 
     def _collectSamples(self, assumeToDirective, predictToDirective, sweeps=100, label=None, verbose=False, infer=None):
         answer = Run(label, self.parameters)
