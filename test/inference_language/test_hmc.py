@@ -124,5 +124,4 @@ def testMoreElaborate():
   preds_mh = collectSamples(ripl, 1, infer="(mh default one 10)")
   ripl.sivm.core_sivm.engine.reset()
   preds_hmc = collectSamples(ripl, 1, infer="(hmc param all 0.1 20 10)")
-  print [preds_mh, preds_hmc]
   return reportSameContinuous(preds_mh, preds_hmc)
