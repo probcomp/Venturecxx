@@ -103,6 +103,16 @@ typically also tracked."""
     def quickHistogram(self, name, **kwargs):
         self._plotOne(plotHistogram, name, save=False, show=True, **kwargs)
 
+    def quickScatter(self, name1, name2, **kwargs):
+        if name1 in self.nameToSeries and name2 in self.nameToSeries:
+            scatterPlotSeries(name1, self.nameToSeries[name1], name2, self.nameToSeries[name2],
+                              subtitle=self.label, parameters=self.parameters, save=False, show=True, **kwargs)
+        else:
+            if name1 not in self.nameToSeries:
+                raise Exception("Cannot plot non-existent series %s" % name1)
+            else:
+                raise Exception("Cannot plot non-existent series %s" % name2)
+
     def save(self, directory=None):
         if directory == None:
             directory = self.defaultDirectory()
@@ -215,7 +225,18 @@ def _doPlotHistogram(seriesList, bins=20):
     # FIXME: choose a better bin size
     plt.hist([series.values for series in seriesList], bins=bins, label=[series.label for series in seriesList])
 
-def _plotPrettily(f, name, seriesList, title="", parameters=None, filesuffix='',
+def scatterPlotSeries(name1, seriesList1, name2, seriesList2, subtitle="", **kwargs):
+    name = "%s vs %s" % (name2, name1)
+    _plotPrettily(_doScatterPlot, name, [seriesList1, seriesList2], title="Scatter of %s\n%s" % (name, subtitle),
+                  filesuffix='scatter', xlabel=name1, ylabel=name2, **kwargs)
+
+def _doScatterPlot(data, ybounds=None):
+    xSeries, ySeries = data
+    for (xs, ys) in zip(xSeries, ySeries):
+        plt.plot(xs.values, ys.values, label=xs.label) # Assume ys labels are the same
+    setYBounds(ySeries, ybounds)
+
+def _plotPrettily(f, name, data, title="", parameters=None, filesuffix='',
                   fmt='pdf', directory='.', xlabel=None, ylabel=None, show=False, save=True, **kwargs):
     plt.figure()
     plt.clf()
@@ -229,7 +250,7 @@ def _plotPrettily(f, name, seriesList, title="", parameters=None, filesuffix='',
     if parameters is not None:
         showParameters(parameters)
 
-    f(seriesList, **kwargs)
+    f(data, **kwargs)
 
     legend_outside()
 
