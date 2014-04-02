@@ -205,10 +205,9 @@ def plotSeries(name, seriesList, subtitle="", parameters=None,
 
     for series in seriesList:
         plt.plot(series.xvals(), series.values, label=series.label)
-
-    legend_outside()
     setYBounds(seriesList, ybounds)
 
+    legend_outside()
     filename = directory + name.replace(' ', '_') + '_series.' + fmt
     savefig_legend_outside(filename)
 
@@ -227,8 +226,8 @@ def plotHistogram(name, seriesList, subtitle="", parameters=None,
 
     # FIXME: choose a better bin size
     plt.hist([series.values for series in seriesList], bins=bins, label=[series.label for series in seriesList])
-    legend_outside()
 
+    legend_outside()
     filename = directory + name.replace(' ', '_') + '_hist.' + fmt
     savefig_legend_outside(filename)
 
