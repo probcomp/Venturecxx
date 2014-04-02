@@ -289,9 +289,9 @@ class VentureUnit(object):
         return self._collectSamples(assumeToDirective, {}, **kwargs)
 
     # Run inference conditioned on data generated from the prior.
-    def runConditionedFromPrior(self, sweeps, runs=3, verbose=False, profile=False):
+    def runConditionedFromPrior(self, sweeps, verbose=False, **kwargs):
         (data, prior_run) = self.generateDataFromPrior(sweeps, verbose=verbose)
-        history = self.runFromConditional(sweeps, data=data, runs=runs, verbose=verbose, profile=profile)
+        history = self.runFromConditional(sweeps, data=data, verbose=verbose, **kwargs)
         history.addRun(prior_run)
         history.label = 'run_conditioned_from_prior'
         return history
