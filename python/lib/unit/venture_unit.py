@@ -216,9 +216,12 @@ class VentureUnit(object):
         tag = 'run_from_joint' if name is None else name + '_run_from_joint'
         return self._runRepeatedly(self.runFromJointOnce, tag, sweeps=sweeps, **kwargs)
 
-    def runFromJointOnce(self, sweeps=100, label=None, track=5, verbose=False, infer=None):
-        answer = Run(label, self.parameters)
+    def runFromJointOnce(self, track=5, **kwargs):
         (assumeToDirective, predictToDirective) = self.loadModelWithPredicts(track)
+        return self._collectSamples(assumeToDirective, predictToDirective, **kwargs)
+
+    def _collectSamples(self, assumeToDirective, predictToDirective, sweeps=100, label=None, verbose=False, infer=None):
+        answer = Run(label, self.parameters)
 
         assumedValues = {symbol : [] for symbol in assumeToDirective}
         predictedValues = {index: [] for index in predictToDirective}
@@ -282,49 +285,11 @@ class VentureUnit(object):
         tag = 'run_from_conditional' if name is None else name + '_run_from_conditional'
         return self._runRepeatedly(self.runFromConditionalOnce, tag, sweeps=sweeps, **kwargs)
 
-    def runFromConditionalOnce(self, sweeps=100, data=None, label=None, verbose=False, infer=None):
-        answer = Run(label, self.parameters)
+    def runFromConditionalOnce(self, data=None, **kwargs):
         self.ripl.clear()
-
         assumeToDirective = self._loadAssumes()
         self._loadObserves(data)
-        predictToDirective = {}
-
-        assumedValues = {symbol : [] for symbol in assumeToDirective}
-        predictedValues = {index: [] for index in predictToDirective}
-
-        sweepTimes = []
-        sweepIters = []
-        logscores = []
-
-        for sweep in range(sweeps):
-            if verbose:
-                print "Running sweep " + str(sweep) + " of " + str(sweeps)
-
-            # FIXME: use timeit module for better precision
-            start = time.time()
-            iterations = self.sweep(infer=infer)
-            end = time.time()
-
-            sweepTimes.append(end-start)
-            sweepIters.append(iterations)
-            logscores.append(self.ripl.get_global_logscore())
-
-            self.updateValues(assumedValues, assumeToDirective)
-            self.updateValues(predictedValues, predictToDirective)
-
-        answer.addSeries('sweep time (s)', Series(label, sweepTimes))
-        answer.addSeries('sweep_iters', Series(label, sweepIters))
-        answer.addSeries('logscore', Series(label, logscores))
-
-        for (symbol, values) in assumedValues.iteritems():
-            answer.addSeries(symbol, Series(label, map(parseValue, values)))
-
-        for (index, values) in predictedValues.iteritems():
-            answer.addSeries(self.nameObserve(index), Series(label, map(parseValue, values)))
-
-        return answer
-
+        return self._collectSamples(assumeToDirective, {}, **kwargs)
 
     # Run inference conditioned on data generated from the prior.
     def runConditionedFromPrior(self, sweeps, runs=3, verbose=False, profile=False):
