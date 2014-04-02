@@ -26,8 +26,8 @@ class HMCDemo(u.VentureUnit):
 [ASSUME x (scope_include (quote param) 0 (uniform_continuous -4 4))]
 [ASSUME y (scope_include (quote param) 1 (uniform_continuous -4 4))]
 [ASSUME xout (if (< x 0)
-    (normal x 1)
-    (normal x 2))]
+    (normal x 0.5)
+    (normal x 4))]
 [ASSUME out (multivariate_normal (array xout y) (matrix (list (list 1 0.5) (list 0.5 1))))]
 """
     commands = [command_str.split("]")[0].split(" ", 1) for command_str in program.strip().split("[ASSUME ") if command_str]
@@ -40,12 +40,12 @@ class HMCDemo(u.VentureUnit):
 # int_R pdf(xout|x) pdf([0,0]|[xout, y])
 def true_pdf(x, y):
   cov = np.matrix([[1, 0.5], [0.5, 1]])
-  scale = 1 if x < 0 else 2
+  scale = 0.5 if x < 0 else 4
   import scipy.integrate as integrate
   from venture.lite.utils import logDensityMVNormal
   def postprop(xout):
     return scipy.stats.norm.pdf(xout, loc=x, scale=scale) * logDensityMVNormal([0,0], np.array([xout,y]), cov)
-  (ans,_) = integrate.quad(postprop, x-4, x+4)
+  (ans,_) = integrate.quad(postprop, x-4*scale, x+4*scale)
   return ans
 
 def make_pic(name, inf_prog):
