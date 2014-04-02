@@ -28,7 +28,7 @@ def checkMVGaussSmoke(infer):
   """Confirm that projecting a multivariate Gaussian to one dimension
   results in a univariate Gaussian."""
   ripl = get_ripl()
-  ripl.assume("vec", "(multivariate_normal (array 1 2) (matrix (list (list 1 2) (list 2 1))))")
+  ripl.assume("vec", "(multivariate_normal (array 1 2) (matrix (list (list 1 0.5) (list 0.5 1))))")
   ripl.assume("x", "(lookup vec 0)")
   predictions = collectSamples(ripl,2,infer=infer)
   cdf = stats.norm(loc=1, scale=1).cdf
@@ -51,7 +51,7 @@ def testMoreElaborate():
 (if (< x 0)
     (normal x 1)
     (normal x 2))""")
-  ripl.assume("out", "(multivariate_normal (array xout y) (matrix (list (list 1 3) (list 3 1))))")
+  ripl.assume("out", "(multivariate_normal (array xout y) (matrix (list (list 1 0.5) (list 0.5 1))))")
   # TODO Unexpectedly serious problem: how to observe a data structure?
   # Can't observe coordinatewise because observe is not flexible
   # enough.  For this to work we would need observations of splits.
