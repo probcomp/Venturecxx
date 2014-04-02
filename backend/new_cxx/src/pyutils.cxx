@@ -6,15 +6,35 @@
 using std::cout;
 using std::endl;
 
-VentureValuePtr parseValue(boost::python::dict d)
+VentureValuePtr parseSimplex(boost::python::dict d)
 {
-  if (d["type"] == "boolean") { return shared_ptr<VentureBool>(new VentureBool(boost::python::extract<bool>(d["value"]))); }
-  else if (d["type"] == "number") { return shared_ptr<VentureNumber>(new VentureNumber(boost::python::extract<double>(d["value"]))); }
-  else if (d["type"] == "symbol") { return shared_ptr<VentureSymbol>(new VentureSymbol(boost::python::extract<string>(d["value"]))); }
-  else if (d["type"] == "atom") { return shared_ptr<VentureAtom>(new VentureAtom(boost::python::extract<uint32_t>(d["value"]))); }
-  else { assert(false); }
+  boost::python::extract<boost::python::list> getList(d["value"]);
+  if (!getList.check()) { throw "Simplex point must be a list."; }
+  
+  boost::python::list l = getList();
+  
+  boost::python::ssize_t len = boost::python::len(l);
+  Simplex s;
+  
+  for (boost::python::ssize_t i = 0; i < len; ++i)
+  {
+    s.push_back(boost::python::extract<double>(l[i]));
+  }
+  
+  return VentureValuePtr(new VentureSimplex(s));
 }
 
+VentureValuePtr parseValue(boost::python::dict d)
+{
+  string type = boost::python::extract<string>(d["type"]);
+
+  if (type == "boolean") { return shared_ptr<VentureBool>(new VentureBool(boost::python::extract<bool>(d["value"]))); }
+  else if (type == "number") { return shared_ptr<VentureNumber>(new VentureNumber(boost::python::extract<double>(d["value"]))); }
+  else if (type == "symbol") { return shared_ptr<VentureSymbol>(new VentureSymbol(boost::python::extract<string>(d["value"]))); }
+  else if (type == "atom") { return shared_ptr<VentureAtom>(new VentureAtom(boost::python::extract<uint32_t>(d["value"]))); }
+  else if (type == "simplex") { return parseSimplex(d); }
+  else { throw "Unknown type '" + type + "'"; }
+}
 
 VentureValuePtr parseExpression(boost::python::object o)
 {
@@ -30,7 +50,7 @@ VentureValuePtr parseExpression(boost::python::object o)
   
   boost::python::ssize_t L = boost::python::len(l);
   
-  for(boost::python::ssize_t i=0; i<L; i++)
+  for(boost::python::ssize_t i=0; i<L; ++i)
   {
     exp.push_back(parseExpression(l[i]));
   }
