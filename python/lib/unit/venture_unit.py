@@ -281,10 +281,7 @@ class VentureUnit(object):
         answer = Run(label, self.parameters)
         self.ripl.clear()
 
-        assumeToDirective = {}
-        for (symbol, expression) in self.assumes:
-            value = self.ripl.assume(symbol, expression, symbol, type=True)
-            if record(value): assumeToDirective[symbol] = symbol
+        assumeToDirective = self._loadAssumes()
 
         for (index, (expression, literal)) in enumerate(self.observes):
             datum = literal if data is None else data[index]
