@@ -191,23 +191,9 @@ def setYBounds(seriesList, ybounds=None):
         plt.ylim([ylow,yhigh])
 
 # Plots a set of series.
-def plotSeries(name, seriesList, subtitle="", parameters=None,
-               fmt='pdf', directory='.', xlabel='Sweep', ylabel=None, ybounds=None):
-    plt.figure()
-    plt.clf()
-    plt.title('Series for ' + name + '\n' + subtitle)
-    plt.xlabel(xlabel)
-    if ylabel is None:
-        ylabel = name
-    plt.ylabel(ylabel)
-    if parameters is not None:
-        showParameters(parameters)
-
-    _doPlotSeries(seriesList, ybounds=ybounds)
-
-    legend_outside()
-    filename = directory + name.replace(' ', '_') + '_series.' + fmt
-    savefig_legend_outside(filename)
+def plotSeries(name, seriesList, subtitle="", xlabel='Sweep', **kwargs):
+    _plotPrettily(_doPlotSeries, name, seriesList, title='Series for ' + name + '\n' + subtitle,
+                  filesuffix='series', xlabel=xlabel, **kwargs)
 
 def _doPlotSeries(seriesList, ybounds=None):
     for series in seriesList:
@@ -215,27 +201,33 @@ def _doPlotSeries(seriesList, ybounds=None):
     setYBounds(seriesList, ybounds)
 
 # Plots histograms for a set of series.
-def plotHistogram(name, seriesList, subtitle="", parameters=None,
-                  fmt='pdf', directory='.', xlabel=None, ylabel='Frequency', bins=20):
-    plt.figure()
-    plt.clf()
-    plt.title('Histogram of ' + name + '\n' + subtitle)
-    if xlabel is None:
-        xlabel = name
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    if parameters is not None:
-        showParameters(parameters)
-
-    _doPlotHistogram(seriesList, bins=bins)
-
-    legend_outside()
-    filename = directory + name.replace(' ', '_') + '_hist.' + fmt
-    savefig_legend_outside(filename)
+def plotHistogram(name, seriesList, subtitle="", ylabel='Frequency', **kwargs):
+    _plotPrettily(_doPlotHistogram, name, seriesList, title='Histogram of ' + name + '\n' + subtitle,
+                  filesuffix='hist', ylabel=ylabel, **kwargs)
 
 def _doPlotHistogram(seriesList, bins=20):
     # FIXME: choose a better bin size
     plt.hist([series.values for series in seriesList], bins=bins, label=[series.label for series in seriesList])
+
+def _plotPrettily(f, name, seriesList, title="", parameters=None, filesuffix='',
+                  fmt='pdf', directory='.', xlabel=None, ylabel=None, **kwargs):
+    plt.figure()
+    plt.clf()
+    plt.title(title)
+    if xlabel is None:
+        xlabel = name
+    plt.xlabel(xlabel)
+    if ylabel is None:
+        ylabel = name
+    plt.ylabel(ylabel)
+    if parameters is not None:
+        showParameters(parameters)
+
+    f(seriesList, **kwargs)
+
+    legend_outside()
+    filename = directory + name.replace(' ', '_') + '_' + filesuffix + '.' + fmt
+    savefig_legend_outside(filename)
 
 from collections import namedtuple
 from matplotlib import cm
