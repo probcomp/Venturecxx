@@ -143,6 +143,7 @@ class VentureUnit(object):
 
     # Provides independent samples from the joint distribution (observes turned into predicts).
     # A random subset of the predicts are tracked along with the assumed variables.
+    # Returns a History object that always represents exactly one Run.
     def sampleFromJoint(self, samples, track=5, verbose=False, name=None):
         assumedValues = {}
         for (symbol, _) in self.assumes:
