@@ -229,7 +229,7 @@ class VentureUnit(object):
         assumeToDirective = self._assumesFromRipl()
         tag = 'run_from_conditional' if name is None else name + '_run_from_conditional'
         history = History(tag, self.parameters)
-        history.addRun(self._collectSamples(assumeToDirective, {}, **kwargs))
+        history.addRun(self._collectSamples(assumeToDirective, {}, label="interactive", **kwargs))
         if profile:
             history.profile = Profile(self.ripl)
         return history
