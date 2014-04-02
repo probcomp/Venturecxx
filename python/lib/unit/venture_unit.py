@@ -289,13 +289,11 @@ class VentureUnit(object):
         assumeToDirective = self._loadAssumes()
         self._loadObserves(data)
 
+        assumedValues = {symbol : [] for symbol in assumeToDirective}
+
         sweepTimes = []
         sweepIters = []
         logscores = []
-
-        assumedValues = {}
-        for symbol in assumeToDirective:
-          assumedValues[symbol] = []
 
         for sweep in range(sweeps):
             if verbose:
