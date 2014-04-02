@@ -2,6 +2,7 @@ import numpy.random as npr
 import math
 import scipy.special as ss
 import numpy as np
+import numpy.linalg as npla
 
 def extendedLog(x): return math.log(x) if x > 0 else float("-inf")
 
@@ -47,3 +48,8 @@ def logaddexp(items):
   "Apparently this was added to scipy in a later version than the one installed on my machine.  Sigh."
   the_max = max(items)
   return the_max + math.log(sum(math.exp(item - the_max) for item in items))
+
+def logDensityMVNormal(x, mu, sigma):
+  answer =  -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
+            -.5*len(sigma)*np.log(np.pi)-.5*np.log(abs(npla.det(sigma)))
+  return answer[0,0]
