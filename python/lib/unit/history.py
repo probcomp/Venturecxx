@@ -203,13 +203,16 @@ def plotSeries(name, seriesList, subtitle="", parameters=None,
     if parameters is not None:
         showParameters(parameters)
 
-    for series in seriesList:
-        plt.plot(series.xvals(), series.values, label=series.label)
-    setYBounds(seriesList, ybounds)
+    _doPlotSeries(seriesList, ybounds=ybounds)
 
     legend_outside()
     filename = directory + name.replace(' ', '_') + '_series.' + fmt
     savefig_legend_outside(filename)
+
+def _doPlotSeries(seriesList, ybounds=None):
+    for series in seriesList:
+        plt.plot(series.xvals(), series.values, label=series.label)
+    setYBounds(seriesList, ybounds)
 
 # Plots histograms for a set of series.
 def plotHistogram(name, seriesList, subtitle="", parameters=None,
@@ -224,12 +227,15 @@ def plotHistogram(name, seriesList, subtitle="", parameters=None,
     if parameters is not None:
         showParameters(parameters)
 
-    # FIXME: choose a better bin size
-    plt.hist([series.values for series in seriesList], bins=bins, label=[series.label for series in seriesList])
+    _doPlotHistogram(seriesList, bins=bins)
 
     legend_outside()
     filename = directory + name.replace(' ', '_') + '_hist.' + fmt
     savefig_legend_outside(filename)
+
+def _doPlotHistogram(seriesList, bins=20):
+    # FIXME: choose a better bin size
+    plt.hist([series.values for series in seriesList], bins=bins, label=[series.label for series in seriesList])
 
 from collections import namedtuple
 from matplotlib import cm
