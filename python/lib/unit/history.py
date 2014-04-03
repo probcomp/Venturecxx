@@ -29,9 +29,17 @@ typically also tracked."""
         self.nameToSeries = {} # :: {string: [Series]} the list is over multiple runs
 
     def addSeries(self, name, label, values, hist=True):
+        self._addSeries(name, Series(label, values, hist))
+
+    def _addSeries(self, name, series):
         if name not in self.nameToSeries:
             self.nameToSeries[name] = []
-        self.nameToSeries[name].append(Series(label, values, hist))
+        self.nameToSeries[name].append(series)
+
+    def addRun(self, run):
+        assert run.parameters == self.parameters # Require compatible metadata
+        for (name, series) in run.namedSeries.iteritems():
+            self._addSeries(name, series)
 
     # Returns the average over all series with the given name.
     def averageValue(self, seriesName):
@@ -73,27 +81,37 @@ typically also tracked."""
     # Plots one series of interest, offering greater control over the
     # configuration of the plot.
     # TODO Carefully spec which names are available to plot.
-    def plotOneSeries(self, name, directory=None, **kwargs):
-        # TODO Is it ok for a method to have the same name as a global
-        # function in Python?
+    def plotOneSeries(self, name, **kwargs):
+        self._plotOne(plotSeries, name, **kwargs)
+
+    def quickPlot(self, name, **kwargs):
+        self._plotOne(plotSeries, name, save=False, show=True, **kwargs)
+
+    def _plotOne(self, f, name, directory=None, **kwargs):
         if directory == None:
             directory = self.defaultDirectory()
         ensure_directory(directory)
         if name in self.nameToSeries:
-            plotSeries(name, self.nameToSeries[name], subtitle=self.label,
-                       parameters=self.parameters, directory=directory, **kwargs)
+            f(name, self.nameToSeries[name], subtitle=self.label,
+              parameters=self.parameters, directory=directory, **kwargs)
         else:
             raise Exception("Cannot plot non-existent series %s" % name)
 
-    def plotOneHistogram(self, name, directory=None, **kwargs):
-        if directory == None:
-            directory = self.defaultDirectory()
-        ensure_directory(directory)
-        if name in self.nameToSeries:
-            plotHistogram(name, self.nameToSeries[name], subtitle=self.label,
-                          parameters=self.parameters, directory=directory, **kwargs)
+    def plotOneHistogram(self, name, **kwargs):
+        self._plotOne(plotHistogram, name, **kwargs)
+
+    def quickHistogram(self, name, **kwargs):
+        self._plotOne(plotHistogram, name, save=False, show=True, **kwargs)
+
+    def quickScatter(self, name1, name2, **kwargs):
+        if name1 in self.nameToSeries and name2 in self.nameToSeries:
+            scatterPlotSeries(name1, self.nameToSeries[name1], name2, self.nameToSeries[name2],
+                              subtitle=self.label, parameters=self.parameters, save=False, show=True, **kwargs)
         else:
-            raise Exception("Cannot histogram non-existent series %s" % name)
+            if name1 not in self.nameToSeries:
+                raise Exception("Cannot plot non-existent series %s" % name1)
+            else:
+                raise Exception("Cannot plot non-existent series %s" % name2)
 
     def save(self, directory=None):
         if directory == None:
@@ -126,13 +144,30 @@ def historyOverlay(name, named_hists):
                 answer.addSeries(seriesname, subname + "_" + subseries.label, subseries.values, subseries.hist)
     return answer
 
+class Run(object):
+    """Data from a single run of a model.  A History is effectively a set
+of Runs with the same label and parameters (but represented
+differently)."""
+    def __init__(self, label='empty_run', parameters=None, data=None):
+        if parameters is None: parameters = {}
+        if data is None: data = {}
+        self.label = label # string
+        self.parameters = parameters # :: {string: a}
+        self.namedSeries = {}
+        for (name, series) in data.iteritems():
+            self.namedSeries[name] = series
+
+    def addSeries(self, name, series):
+        self.namedSeries[name] = series
+
 # aggregates values for one variable over the course of a run
 class Series(object):
-    def __init__(self, label, values, hist, xvals=None):
-        self.label = label
-        self.values = values
-        self.hist = hist
-        self._xvals = xvals
+    def __init__(self, label, values, hist=True, xvals=None):
+        self.label = label   # string
+        self.values = values # [a]
+        # Boolean indicating whether this series is meant to be histogrammed
+        self.hist = hist     # Appears to be unused TODO remove?
+        self._xvals = xvals  # Maybe [Number] the ordinate values to plot at
 
     def xvals(self):
         if self._xvals is not None:
@@ -158,25 +193,70 @@ def showParameters(parameters):
 
     plt.text(0, 1, text, transform=plt.axes().transAxes, va='top', size='small', linespacing=1.0)
 
+def seriesBounds(seriesList):
+    vmin = min([min(series.values) for series in seriesList])
+    vmax = max([max(series.values) for series in seriesList])
+    offset = 0.1 * max([(vmax - vmin), 1.0])
+    return (vmin - offset, vmax + offset)
+
 def setYBounds(seriesList, ybounds=None):
     if ybounds is None:
-        ymin = min([min(series.values) for series in seriesList])
-        ymax = max([max(series.values) for series in seriesList])
-
-        offset = 0.1 * max([(ymax - ymin), 1.0])
-
+        (ylow, yhigh) = seriesBounds(seriesList)
         if not any([any([np.isinf(v) for v in series.values]) for series in seriesList]):
-            plt.ylim([ymin - offset, ymax + offset])
+            plt.ylim([ylow, yhigh])
     else:
         [ylow,yhigh] = ybounds # Silly pylint not noticing case on maybe type pylint:disable=unpacking-non-sequence
         plt.ylim([ylow,yhigh])
 
 # Plots a set of series.
-def plotSeries(name, seriesList, subtitle="", parameters=None,
-               fmt='pdf', directory='.', xlabel='Sweep', ylabel=None, ybounds=None):
+def plotSeries(name, seriesList, subtitle="", xlabel='Sweep', **kwargs):
+    _plotPrettily(_doPlotSeries, name, seriesList, title='Series for ' + name + '\n' + subtitle,
+                  filesuffix='series', xlabel=xlabel, **kwargs)
+
+def _doPlotSeries(seriesList, ybounds=None):
+    for series in seriesList:
+        plt.plot(series.xvals(), series.values, label=series.label)
+    setYBounds(seriesList, ybounds)
+
+# Plots histograms for a set of series.
+def plotHistogram(name, seriesList, subtitle="", ylabel='Frequency', **kwargs):
+    _plotPrettily(_doPlotHistogram, name, seriesList, title='Histogram of ' + name + '\n' + subtitle,
+                  filesuffix='hist', ylabel=ylabel, **kwargs)
+
+def _doPlotHistogram(seriesList, bins=20):
+    # FIXME: choose a better bin size
+    plt.hist([series.values for series in seriesList], bins=bins, label=[series.label for series in seriesList])
+
+def scatterPlotSeries(name1, seriesList1, name2, seriesList2, subtitle="", **kwargs):
+    name = "%s vs %s" % (name2, name1)
+    _plotPrettily(_doScatterPlot, name, [seriesList1, seriesList2], title="Scatter of %s\n%s" % (name, subtitle),
+                  filesuffix='scatter', xlabel=name1, ylabel=name2, **kwargs)
+
+def _doScatterPlot(data, style=' o', ybounds=None, contour_func=None):
+    xSeries, ySeries = data
+    for (xs, ys) in zip(xSeries, ySeries):
+        plt.plot(xs.values, ys.values, style, label=xs.label) # Assume ys labels are the same
+    setYBounds(ySeries, ybounds)
+    if contour_func is not None:
+        [xmin, xmax] = seriesBounds(xSeries)
+        [ymin, ymax] = seriesBounds(ySeries)
+        plotContours(xmin, xmax, ymin, ymax, contour_func)
+
+def plotContours(xmin, xmax, ymin, ymax, contour_func):
+    delta = 0.125
+    x = np.arange(xmin, xmax, delta)
+    y = np.arange(ymin, ymax, delta)
+    X, Y = np.meshgrid(x, y)
+    Z = np.vectorize(contour_func)(X,Y)
+    plt.contour(X, Y, Z)
+
+def _plotPrettily(f, name, data, title="", parameters=None, filesuffix='',
+                  fmt='pdf', directory='.', xlabel=None, ylabel=None, show=False, save=True, **kwargs):
     plt.figure()
     plt.clf()
-    plt.title('Series for ' + name + '\n' + subtitle)
+    plt.title(title)
+    if xlabel is None:
+        xlabel = name
     plt.xlabel(xlabel)
     if ylabel is None:
         ylabel = name
@@ -184,34 +264,15 @@ def plotSeries(name, seriesList, subtitle="", parameters=None,
     if parameters is not None:
         showParameters(parameters)
 
-    for series in seriesList:
-        plt.plot(series.xvals(), series.values, label=series.label)
+    f(data, **kwargs)
 
     legend_outside()
-    setYBounds(seriesList, ybounds)
 
-    filename = directory + name.replace(' ', '_') + '_series.' + fmt
-    savefig_legend_outside(filename)
-
-# Plots histograms for a set of series.
-def plotHistogram(name, seriesList, subtitle="", parameters=None,
-                  fmt='pdf', directory='.', xlabel=None, ylabel='Frequency', bins=20):
-    plt.figure()
-    plt.clf()
-    plt.title('Histogram of ' + name + '\n' + subtitle)
-    if xlabel is None:
-        xlabel = name
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    if parameters is not None:
-        showParameters(parameters)
-
-    # FIXME: choose a better bin size
-    plt.hist([series.values for series in seriesList], bins=bins, label=[series.label for series in seriesList])
-    legend_outside()
-
-    filename = directory + name.replace(' ', '_') + '_hist.' + fmt
-    savefig_legend_outside(filename)
+    if save:
+        filename = directory + name.replace(' ', '_') + '_' + filesuffix + '.' + fmt
+        savefig_legend_outside(filename)
+    if show:
+        plt.show()
 
 from collections import namedtuple
 from matplotlib import cm
@@ -305,7 +366,7 @@ def plotAsymptotics(parameters, histories, seriesName, fmt='pdf', directory=None
                 fig.savefig(directory + filename.replace(' ', '_') + '_asymptotics.' + fmt, format=fmt)
 
 
-def legend_outside(ax=None, bbox_to_anchor=(0.5, -.10), loc='upper center',
+def legend_outside(ax=None, bbox_to_anchor=(0.5, -.05), loc='upper center',
                    ncol=None, label_cmp=None):
     # labels must be set in original plot call: plot(..., label=label)
     if ax is None:
