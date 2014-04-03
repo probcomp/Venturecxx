@@ -977,11 +977,11 @@ class MRipl():
 
             
             for count,past_vals in enumerate(list_vals):
-                label='Pr [0]' if count==0 else 'Post [%i]'%count
+                label='Pr [0]' if count==0 else 'Po [%i]'%count
                 ax[0].hist( past_vals,bins=20,normed=True,label=label)
                 
             for count,past_vals in enumerate(list_vals):
-                label='Pr [0]' if count==0 else 'Post [%i]'%count
+                label='Pr [0]' if count==0 else 'Po [%i]'%count
                 ax[1].plot(xr,gaussian_kde(past_vals)(xr), label=label)
                     
             [ ax[i].legend(loc='upper left',ncol=len(list_vals)) for i in range(2)]
