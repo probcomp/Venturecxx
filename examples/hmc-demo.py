@@ -63,5 +63,3 @@ if __name__ == '__main__':
   # h1.quickScatter("x", "y", style="-")
   h2 = make_pic("mh", "(mh default one 10)")
   u.historyOverlay("demo", [("hmc", h1), ("mh", h2)]).quickScatter("x", "y", contour_func=true_pdf)
-  # TODO Plotting the contours would require integrating out the intermediate normal, which I do not wish to do now.
-  # plot_contours(xs, ys, lambda x, y: scipy.stats.norm.pdf(x, loc=0, scale=3) * scipy.stats.norm.pdf(y, loc=0, scale=2))

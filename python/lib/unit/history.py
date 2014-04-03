@@ -232,7 +232,7 @@ def scatterPlotSeries(name1, seriesList1, name2, seriesList2, subtitle="", **kwa
     _plotPrettily(_doScatterPlot, name, [seriesList1, seriesList2], title="Scatter of %s\n%s" % (name, subtitle),
                   filesuffix='scatter', xlabel=name1, ylabel=name2, **kwargs)
 
-def _doScatterPlot(data, style=' o', ybounds=None, contour_func=None):
+def _doScatterPlot(data, style=' o', ybounds=None, contour_func=None, contour_delta=0.125):
     xSeries, ySeries = data
     for (xs, ys) in zip(xSeries, ySeries):
         plt.plot(xs.values, ys.values, style, label=xs.label) # Assume ys labels are the same
@@ -240,12 +240,11 @@ def _doScatterPlot(data, style=' o', ybounds=None, contour_func=None):
     if contour_func is not None:
         [xmin, xmax] = seriesBounds(xSeries)
         [ymin, ymax] = seriesBounds(ySeries)
-        plotContours(xmin, xmax, ymin, ymax, contour_func)
+        plotContours(xmin, xmax, ymin, ymax, contour_func, contour_delta)
 
-def plotContours(xmin, xmax, ymin, ymax, contour_func):
-    delta = 0.125
-    x = np.arange(xmin, xmax, delta)
-    y = np.arange(ymin, ymax, delta)
+def plotContours(xmin, xmax, ymin, ymax, contour_func, contour_delta):
+    x = np.arange(xmin, xmax, contour_delta)
+    y = np.arange(ymin, ymax, contour_delta)
     X, Y = np.meshgrid(x, y)
     Z = np.vectorize(contour_func)(X,Y)
     plt.contour(X, Y, Z)
