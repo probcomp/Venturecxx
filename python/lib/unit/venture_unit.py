@@ -16,15 +16,15 @@
 import time
 import random
 import numpy as np
+from venture.ripl.ripl import _strip_types
 
 from history import History, Run, Series
 
 # whether to record a value returned from the ripl
 def record(value):
-    return value['type'] in {'boolean', 'real', 'number', 'atom', 'count', 'probability', 'smoothed_count'}
+    return value['type'] in {'boolean', 'real', 'number', 'atom', 'count', 'array'}
 
-def parseValue(value):
-    return value['value']
+parseValue = _strip_types
 
 # VentureUnit is an experimental harness for developing, debugging and profiling Venture programs.
 class VentureUnit(object):
@@ -51,7 +51,7 @@ class VentureUnit(object):
     def clear(self):
         self.assumes = []
         self.observes = []
-
+    
     # Initializes parameters, generates the model, and prepares the ripl.
     def __init__(self, ripl, parameters=None):
         if parameters is None: parameters = {}
@@ -201,7 +201,8 @@ class VentureUnit(object):
             iterations += step
 
         return iterations
-
+    
+    # TODO: run in parallel?
     def _runRepeatedly(self, f, tag, runs=3, verbose=False, profile=False, **kwargs):
         history = History(tag, self.parameters)
 
@@ -300,7 +301,7 @@ class VentureUnit(object):
     def runFromConditional(self, sweeps, name=None, **kwargs):
         tag = 'run_from_conditional' if name is None else name + '_run_from_conditional'
         return self._runRepeatedly(self.runFromConditionalOnce, tag, sweeps=sweeps, **kwargs)
-
+  
     def runFromConditionalOnce(self, data=None, **kwargs):
         self.ripl.clear()
         assumeToDirective = self._loadAssumes()
@@ -393,7 +394,7 @@ import math
 
 # Approximates the KL divergence between samples from two distributions.
 # 'reference' is the "true" distribution
-# 'approx' is an approximation of 'reference'
+# 'approx' is an approximation to 'reference'
 def computeKL(reference, approx, numbins=20):
 
     # smooths out a probability distribution function
