@@ -35,7 +35,8 @@ class HMCDemo(u.VentureUnit):
       self.assume(var, exp)
 
   def makeObserves(self):
-    pass
+    v = [{"type": "real", "value": 0}, {"type": "real", "value": 0}]
+    self.observe("out", {"type":"list","value":v})
 
 # int_R pdf(xout|x) pdf([0,0]|[xout, y])
 def true_pdf(x, y):
@@ -50,13 +51,6 @@ def true_pdf(x, y):
 
 def make_pic(name, inf_prog):
   def infer(ripl, _ct):
-    observes_made = any(directive["instruction"] == "observe" for directive in ripl.list_directives())
-    if not observes_made:
-      # TODO This is a hack around there being no good way to observe
-      # datastructures right now.
-      v = [{"type": "real", "value": 0}, {"type": "real", "value": 0}]
-      ripl.sivm.execute_instruction({"instruction":"observe","expression":"out","value":{"type":"list","value":v}})
-      observes_made = True
     ripl.infer(inf_prog)
   model = HMCDemo(shortcuts.Lite().make_church_prime_ripl())
   history = model.runFromConditional(70, runs=3, verbose=True, name=name, infer=infer)
