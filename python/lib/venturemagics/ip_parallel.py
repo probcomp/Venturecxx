@@ -974,6 +974,7 @@ class MRipl():
             fig,ax=plt.subplots(1,2,figsize=(14,3.5),sharex=True)
             f=self.lst_flatten(list_vals)
             xr=np.linspace(min(f),max(f),80)
+            
             for count,past_vals in enumerate(list_vals):
                 label='Pr [0]' if count==0 else 'Post [%i]'%count
                 if len(past_vals)==2:
@@ -981,7 +982,7 @@ class MRipl():
                 else:
                     alpha = 1
                 
-                ax[0].hist( past_vals, histtype='stepfilled', alpha=alpha, label=label)
+                ax[0].hist( past_vals,bins=20,normed=True, histtype='stepfilled', alpha=alpha, label=label)
                 ax[1].plot(xr,gaussian_kde(past_vals)(xr),alpha=alpha, label=label)
                     
             [ ax[i].legend(loc='upper left',ncol=len(list_vals)) for i in range(2)]
