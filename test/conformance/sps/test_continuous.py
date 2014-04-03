@@ -15,7 +15,7 @@ def testMVGaussPrior():
   results in a univariate Gaussian."""
   if config["get_ripl"] != "lite": raise SkipTest("Multivariate normal only implemented in Lite.  Issue: https://app.asana.com/0/11248128922035/11407880007718")
   ripl = get_ripl()
-  ripl.assume("vec", "(multivariate_normal (array 1 2) (matrix (list (list 1 2) (list 2 1))))")
+  ripl.assume("vec", "(multivariate_normal (array 1 2) (matrix (list (list 1 0.5) (list 0.5 1))))")
   ripl.predict("(lookup vec 0)")
 
   predictions = collectSamples(ripl, 2)
