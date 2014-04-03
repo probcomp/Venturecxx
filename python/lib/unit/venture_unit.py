@@ -22,7 +22,7 @@ from history import History, Run, Series
 
 # whether to record a value returned from the ripl
 def record(value):
-    return value['type'] in {'boolean', 'real', 'number', 'atom', 'count', 'array'}
+    return value['type'] in {'boolean', 'real', 'number', 'atom', 'count', 'array', 'simplex'}
 
 parseValue = _strip_types
 
