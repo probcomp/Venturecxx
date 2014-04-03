@@ -50,10 +50,8 @@ def true_pdf(x, y):
   return ans
 
 def make_pic(name, inf_prog):
-  def infer(ripl, _ct):
-    ripl.infer(inf_prog)
   model = HMCDemo(shortcuts.Lite().make_church_prime_ripl())
-  history = model.runFromConditional(70, runs=3, verbose=True, name=name, infer=infer)
+  history = model.runFromConditional(70, runs=3, verbose=True, name=name, infer=inf_prog)
   return history
 
 if __name__ == '__main__':
