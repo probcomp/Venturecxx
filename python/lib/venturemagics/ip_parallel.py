@@ -974,20 +974,20 @@ class MRipl():
             fig,ax=plt.subplots(1,2,figsize=(14,3.5),sharex=True)
             f=self.lst_flatten(list_vals)
             xr=np.linspace(min(f),max(f),80)
+
             
             for count,past_vals in enumerate(list_vals):
                 label='Pr [0]' if count==0 else 'Post [%i]'%count
-                if len(past_vals)==2:
-                    alpha=.5 if count==0 else 1
-                else:
-                    alpha = 1
+                ax[0].hist( past_vals,bins=20,normed=True,label=label)
                 
-                ax[0].hist( past_vals,bins=20,normed=True, histtype='stepfilled', alpha=alpha, label=label)
-                ax[1].plot(xr,gaussian_kde(past_vals)(xr),alpha=alpha, label=label)
+            for count,past_vals in enumerate(list_vals):
+                label='Pr [0]' if count==0 else 'Post [%i]'%count
+                ax[1].plot(xr,gaussian_kde(past_vals)(xr), label=label)
                     
             [ ax[i].legend(loc='upper left',ncol=len(list_vals)) for i in range(2)]
-            ax[0].set_title('Hist: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
-
+            ax[0].set_title('Past values hist: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
+            ax[1].set_title('GKDE: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
+            
             if plot_range:
                 [ax[i].set_xlim(plot_range) for i in range(2)]
                 if len(plot_range)>2: ax[0].set_ylim(plot_range[2],plot_range[3])
