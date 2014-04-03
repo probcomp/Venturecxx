@@ -203,8 +203,6 @@ class PSP(object):
   def childrenCanAAA(self): return False
   def getAAALKernel(self): return DefaultAAALKernel(self)
 
-  def makesHSRs(self): return False
-
   def hasVariationalLKernel(self): return False
   def getVariationalLKernel(self,args): return DefaultVariationalLKernel(self, args)
 
@@ -272,7 +270,6 @@ class TypedPSP(PSP):
   def getAAALKernel(self):
     return TypedLKernel(self.psp.getAAALKernel(), self.f_type)
 
-  def makesHSRs(self): return self.psp.makeHSRs()
   def canEnumerate(self): return self.psp.canEnumerate()
 
   def hasVariationalLKernel(self): return self.psp.hasVariationalLKernel()
