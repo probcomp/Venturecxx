@@ -989,7 +989,7 @@ class MRipl():
             ax[1].set_title('GKDE: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
             
             if plot_range:
-                [ax[i].set_xlim(plot_range) for i in range(2)]
+                [ax[i].set_xlim(plot_range[:2]) for i in range(2)]
                 if len(plot_range)>2: ax[0].set_ylim(plot_range[2],plot_range[3])
                         
             
