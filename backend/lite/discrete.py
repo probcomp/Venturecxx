@@ -3,7 +3,7 @@ import math
 import scipy
 import scipy.special
 from utils import extendedLog, simulateCategorical, logDensityCategorical
-from psp import PSP, NullRequestPSP, RandomPSP, TypedPSP
+from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import VentureSP, SPAux, SPType
 from lkernel import LKernel
 from value import VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
@@ -125,7 +125,7 @@ class BetaBernoulliSP(VentureSP):
   def show(self,spaux): return spaux.cts()
     
 
-class MakerCBetaBernoulliOutputPSP(PSP):
+class MakerCBetaBernoulliOutputPSP(DeterministicPSP):
   def childrenCanAAA(self): return True
 
   def simulate(self,args):

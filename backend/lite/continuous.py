@@ -105,6 +105,9 @@ class UniformOutputPSP(RandomPSP):
 
   def simulate(self,args): return self.simulateNumeric(*args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+  def gradientOfLogDensity(self, _, arg_list):
+    spread = 1.0/(arg_list[1]-arg_list[0])
+    return (0, [-spread, spread])
   def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 
   def description(self,name):

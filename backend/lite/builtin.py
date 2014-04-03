@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 from sp import VentureSP, SPType
-from psp import NullRequestPSP, ESRRefOutputPSP, PSP, TypedPSP
+from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP
 
 import discrete
 import dirichlet
@@ -34,7 +34,7 @@ def typed_nr(output, args_types, return_type, **kwargs):
   return no_request(TypedPSP(output, SPType(args_types, return_type, **kwargs)))
 
 def func_psp(f, descr=None, sim_grad=None):
-  class FunctionPSP(PSP):
+  class FunctionPSP(DeterministicPSP):
     def __init__(self, descr):
       self.descr = descr
       self.sim_grad = sim_grad

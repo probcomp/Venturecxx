@@ -1,10 +1,8 @@
-from psp import PSP
-from request import Request,ESR
-from env import VentureEnvironment
+from psp import DeterministicPSP
 import value as v
 
 ### Dicts
-class DictOutputPSP(PSP):
+class DictOutputPSP(DeterministicPSP):
   def simulate(self,args):
     keys = args.operandValues[0].asPythonList()
     vals = args.operandValues[1].asPythonList()

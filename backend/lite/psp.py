@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from utils import override
 from lkernel import DefaultAAALKernel,DefaultVariationalLKernel,LKernel
 from request import Request
 
@@ -85,15 +86,13 @@ class PSP(object):
     """
     raise Exception("Cannot compute simulation gradient of %s", type(self))
 
-  ### The implementations below are good defaults for deterministic PSPs
-
   def isRandom(self):
     """Return whether this PSP is stochastic or not.  This is important
     because only nodes whose operators are random PSPs can be
     principal.
 
     """
-    return False
+    raise Exception("Do not know whether %s is random", type(self))
 
   def canAbsorb(self, _trace, _appNode, _parentNode):
     """Return whether this PSP, which is the operator of the given
@@ -107,7 +106,7 @@ class PSP(object):
     claiming to absorb changes to both of them simultaneously.
 
     """
-    return False
+    raise Exception("Do not know whether %s can absorb", type(self))
 
   def logDensity(self, _value, _args):
     """Return the log-density of simulating the given value from the given args.
@@ -122,9 +121,9 @@ class PSP(object):
     Implementing this method is not strictly necessary for a valid
     PSP, but is very helpful for many purposes if the density
     information is available.  See also canAbsorb."""
-    return 0
+    raise Exception("Cannot compute log density of %s", type(self))
 
-  def gradientOfLogDensity(self, _value, arg_list):
+  def gradientOfLogDensity(self, _value, _arg_list):
     """Return the gradient of this PSP's logDensity function.  This method
     is needed only for gradient-based methods (currently Hamiltonian
     Monte Carlo and Meanfield).
@@ -134,7 +133,7 @@ class PSP(object):
     The gradient should be returned as a 2-tuple of the partial
     derivative with respect to the value and a list of the partial
     derivatives with respect to the arguments."""
-    return (0, [0 for _ in arg_list])
+    raise Exception("Cannot compute gradient of log density of %s", type(self))
 
   def logDensityBound(self, _value, _args):
     """Return an upper bound on the possible log density of this PSP
@@ -155,7 +154,7 @@ class PSP(object):
     bound, and in this case do not try to absorb at this node when
     doing rejection sampling?  Or should that be a separate method
     called logDensityBounded?"""
-    return 0
+    raise Exception("Cannot compute log density bound of %s", type(self))
 
   def incorporate(self,value,args):
     """Register that an application of this PSP produced the given value
@@ -212,30 +211,56 @@ class PSP(object):
   def madeSpLogDensityOfCountsBound(self, _aux):
     raise Exception("Cannot rejection sample AAA procedure with unbounded log density of counts")
 
-class NullRequestPSP(PSP):
+class DeterministicPSP(PSP):
+  """Provides good default implementations of PSP methods for deterministic PSPs."""
+  __metaclass__ = ABCMeta
+  @abstractmethod
+  def simulate(self,args): pass
+
+  @override(PSP)
+  def isRandom(self): return False
+  @override(PSP)
+  def canAbsorb(self, _trace, _appNode, _parentNode): return False
+  @override(PSP)
+  def logDensity(self, _value, _args): return 0
+  @override(PSP)
+  def gradientOfLogDensity(self, _value, arg_list):
+    return (0, [0 for _ in arg_list])
+  @override(PSP)
+  def logDensityBound(self, _value, _args): return 0
+
+class NullRequestPSP(DeterministicPSP):
+  @override(DeterministicPSP)
   def simulate(self,args): return Request()
+  @override(PSP)
   def gradientOfSimulate(self, args, _value, _direction): return [0 for _ in args.operandValues]
+  @override(DeterministicPSP)
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
 
-class ESRRefOutputPSP(PSP):
+class ESRRefOutputPSP(DeterministicPSP):
+  @override(DeterministicPSP)
   def simulate(self,args):
     assert len(args.esrNodes) ==  1
     return args.esrValues[0]
 
+  @override(PSP)
   def gradientOfSimulate(self, args, _value, direction):
     return [0 for _ in args.operandValues] + [direction]
 
+  @override(DeterministicPSP)
   def canAbsorb(self,trace,appNode,parentNode):
     return parentNode != trace.esrParentsAt(appNode)[0] and parentNode != appNode.requestNode
 
 class RandomPSP(PSP):
+  """Provides good default implementations of (two) PSP methods for stochastic PSPs."""
   __metaclass__ = ABCMeta
   @abstractmethod
   def simulate(self,args): pass
+
+  @override(PSP)
   def isRandom(self): return True
+  @override(PSP)
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
-  def logDensityBound(self, _value, _args):
-    raise Exception("Cannot rejection sample psp %s %s with unbounded likelihood" % (type(self), self.description("psp")))
 
 class TypedPSP(PSP):
   def __init__(self, psp, f_type):

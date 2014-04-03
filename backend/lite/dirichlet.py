@@ -5,7 +5,7 @@ import numpy.random as npr
 
 from lkernel import LKernel
 from sp import VentureSP, SPAux, SPType
-from psp import PSP, NullRequestPSP, RandomPSP, TypedPSP
+from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from utils import simulateCategorical, logDensityCategorical, simulateDirichlet, logDensityDirichlet
 from value import AnyType, VentureAtom
 
@@ -62,7 +62,7 @@ class DirMultSP(VentureSP):
 
 #### Collapsed dirichlet multinomial
 
-class MakerCDirMultOutputPSP(PSP):
+class MakerCDirMultOutputPSP(DeterministicPSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     os = args.operandValues[1] if len(args.operandValues) > 1 else [VentureAtom(i) for i in range(len(alpha))]
@@ -167,7 +167,7 @@ class UDirMultOutputPSP(RandomPSP):
 
 #### Collapsed symmetric dirichlet multinomial
 
-class MakerCSymDirMultOutputPSP(PSP):
+class MakerCSymDirMultOutputPSP(DeterministicPSP):
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureAtom(i) for i in range(n)]

@@ -1,4 +1,4 @@
-from psp import PSP, NullRequestPSP, RandomPSP, TypedPSP
+from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import VentureSP, SPType
 import math
 import scipy.special
@@ -25,7 +25,7 @@ class CRPSP(VentureSP):
   def constructSPAux(self): return CRPSPAux()
   def show(self,spaux): return spaux.tableCounts
     
-class MakeCRPOutputPSP(PSP):
+class MakeCRPOutputPSP(DeterministicPSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     d = args.operandValues[1] if len(args.operandValues) == 2 else 0
