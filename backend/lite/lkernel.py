@@ -1,3 +1,4 @@
+import copy
 import numbers
 from abc import ABCMeta, abstractmethod
 from sp import VentureSP
@@ -45,7 +46,7 @@ class DeterministicLKernel(LKernel):
     assert isinstance(answer, numbers.Number)
     return answer
   def gradientOfReverseWeight(self, _trace, newValue, args):
-    return self.psp.gradientOfLogDensity(newValue, args.operandValues)
+    return self.psp.gradientOfLogDensity(newValue, args)
 
 ######## Variational #########
 
@@ -69,9 +70,11 @@ class DefaultVariationalLKernel(VariationalLKernel):
     assert not math.isinf(w) and not math.isnan(w)
     return w
 
-  def gradientOfLogDensity(self, value, _args):
+  def gradientOfLogDensity(self, value, args):
+    new_args = copy.copy(args)
+    new_args.operandValues = self.parameters
     # Ignore the derivative of the value because we do not care about it
-    (_, grad) = self.psp.gradientOfLogDensity(value, self.parameters)
+    (_, grad) = self.psp.gradientOfLogDensity(value, new_args)
     return grad
 
   def updateParameters(self,gradient,gain,stepSize):

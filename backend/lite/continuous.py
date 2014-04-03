@@ -33,7 +33,7 @@ class MVNormalOutputPSP(RandomPSP):
     return logDensityMVNormal(x, mu, sigma)
 
   def gradientOfLogDensity(self, x, args):
-    (mu, sigma) = (np.array(args[0]), args[1])
+    (mu, sigma) = self.__parse_args__(args)
     isigma = npla.inv(sigma)
     xvar = np.dot(x-mu, np.transpose(x-mu))
     gradX = -np.dot(isigma, np.transpose(x-mu))
@@ -78,9 +78,9 @@ class NormalOutputPSP(RandomPSP):
   def hasVariationalLKernel(self): return True
   def getParameterScopes(self): return ["REAL","POSITIVE_REAL"]
 
-  def gradientOfLogDensity(self,x,params):
-    mu = params[0]
-    sigma = params[1]
+  def gradientOfLogDensity(self,x,args):
+    mu = args.operandValues[0]
+    sigma = args.operandValues[1]
 
     gradX = -(x - mu) / (math.pow(sigma,2))
     gradMu = (x - mu) / (math.pow(sigma,2))
@@ -105,8 +105,8 @@ class UniformOutputPSP(RandomPSP):
 
   def simulate(self,args): return self.simulateNumeric(*args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
-  def gradientOfLogDensity(self, _, arg_list):
-    spread = 1.0/(arg_list[1]-arg_list[0])
+  def gradientOfLogDensity(self, _, args):
+    spread = 1.0/(args.operandValues[1]-args.operandValues[0])
     return (0, [-spread, spread])
   def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 

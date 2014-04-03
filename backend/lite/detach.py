@@ -37,8 +37,7 @@ def detach(trace, node, scaffold, omegaDB, compute_gradient = False):
   weight = psp.logDensity(gvalue,args)
   if compute_gradient:
     # Ignore the partial derivative of the value because the value is fixed
-    # TODO Should this take the whole args?  Should it take the esr parents into account?
-    (_, grad) = psp.gradientOfLogDensity(gvalue, args.operandValues)
+    (_, grad) = psp.gradientOfLogDensity(gvalue, args)
     omegaDB.addPartials(args.operandNodes, grad)
   weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
   return weight

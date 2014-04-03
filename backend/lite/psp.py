@@ -123,12 +123,10 @@ class PSP(object):
     information is available.  See also canAbsorb."""
     raise Exception("Cannot compute log density of %s", type(self))
 
-  def gradientOfLogDensity(self, _value, _arg_list):
+  def gradientOfLogDensity(self, _value, _args):
     """Return the gradient of this PSP's logDensity function.  This method
     is needed only for gradient-based methods (currently Hamiltonian
     Monte Carlo and Meanfield).
-
-    TODO convert the arg_list argument into a proper args struct.
 
     The gradient should be returned as a 2-tuple of the partial
     derivative with respect to the value and a list of the partial
@@ -224,8 +222,8 @@ class DeterministicPSP(PSP):
   @override(PSP)
   def logDensity(self, _value, _args): return 0
   @override(PSP)
-  def gradientOfLogDensity(self, _value, arg_list):
-    return (0, [0 for _ in arg_list])
+  def gradientOfLogDensity(self, _value, args):
+    return (0, [0 for _ in args.operandValues])
   @override(PSP)
   def logDensityBound(self, _value, _args): return 0
 
@@ -274,8 +272,7 @@ class TypedPSP(PSP):
   def logDensity(self,value,args):
     return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def gradientOfLogDensity(self, value, args):
-    # TODO maybe this should take an args object
-    (dvalue, dargs) = self.psp.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_arg_list(args))
+    (dvalue, dargs) = self.psp.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
     return (self.f_type.wrap_return(dvalue), self.f_type.wrap_arg_list(dargs))
   def logDensityBound(self, value, args):
     return self.psp.logDensityBound(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
