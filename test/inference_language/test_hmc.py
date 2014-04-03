@@ -8,7 +8,7 @@ from venture.test.config import get_ripl, collectSamples
 @statisticalTest
 def testNormalWithObserve1():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
-  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite")
+  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.observe("(normal a 1.0)", 14.0)
@@ -20,6 +20,7 @@ def testNormalWithObserve1():
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
 
 def testMVGaussSmoke():
+  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   yield checkMVGaussSmoke, "(mh default one 1)"
   yield checkMVGaussSmoke, "(hmc default one 0.05 20 10)"
 
@@ -35,6 +36,7 @@ def checkMVGaussSmoke(infer):
   return reportKnownContinuous(cdf, predictions, "N(1,1)")
 
 def testForceBrush1():
+  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   yield checkForceBrush1, "(mh default one 2)"
   yield checkForceBrush1, "(hmc default one 0.05 20 10)"
 
@@ -48,6 +50,7 @@ def checkForceBrush1(infer):
   return reportKnownContinuous(cdf, predictions, "N(0,sqrt(2))")
 
 def testForceBrush2():
+  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   yield checkForceBrush2, "(mh default one 5)"
   yield checkForceBrush2, "(hmc default one 0.05 20 10)"
 
@@ -62,6 +65,7 @@ def checkForceBrush2(infer):
 
 @statisticalTest
 def testForceBrush3():
+  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
@@ -72,6 +76,7 @@ def testForceBrush3():
 
 @statisticalTest
 def testForceBrush4():
+  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
@@ -83,6 +88,7 @@ def testForceBrush4():
 
 @statisticalTest
 def testForceBrush5():
+  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
@@ -97,6 +103,7 @@ def testMoreElaborate():
   """Confirm that HMC still works in the presence of brush.  Do not,
   however, mess with the possibility that the principal nodes that HMC
   operates over may themselves be in the brush."""
+  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   ripl = get_ripl()
   ripl.assume("x", "(scope_include (quote param) 0 (uniform_continuous -10 10))")
   ripl.assume("y", "(scope_include (quote param) 1 (uniform_continuous -10 10))")
