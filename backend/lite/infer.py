@@ -522,6 +522,58 @@ class MAPOperator(InPlaceOperator):
 
 #### Hamiltonian Monte Carlo
 
+class GradientOfRegen(object):
+  """An applicable object, calling which computes minus the gradient
+  of regeneration along the given scaffold.  Also permits performing
+  one final such regeneration without computing the gradient.  The
+  value of this class is that it supports repeated regenerations (and
+  gradient computations), and that it preserves the randomness across
+  said regenerations (enabling gradient methods to be applied
+  sensibly)."""
+
+  # Much disastrous hackery is necessary to implement this because
+  # both regen and detach mutate the scaffold (!) and regen depends
+  # upon the scaffold having been detached along.  However, each new
+  # regen potentially creates new brush, which has to be traversed by
+  # the following corresponding detach in order to compute the
+  # gradient.  So if I am going to detach and regen repeatedly, I need
+  # to pass the scaffolds from one to the next and rebuild them
+  # properly.
+  def __init__(self, trace, scaffold):
+    self.trace = trace
+    self.scaffold = scaffold
+    self.pyr_state = random.getstate()
+    self.numpyr_state = npr.get_state()
+
+  def __call__(self, values):
+    """Returns minus the gradient of the weight of regenerating along
+    an (implicit) scaffold starting with the given values.  Smashes
+    the trace, but leaves it a torus.  Assumes there are no delta
+    kernels around."""
+    # TODO Assert that no delta kernels are requested?
+    self.fixed_regen(values)
+    pnodes = self.scaffold.getPrincipalNodes()
+    new_scaffold = constructScaffold(self.trace, [pnodes])
+    registerDeterministicLKernels(self.trace, new_scaffold, pnodes, values)
+    (_, rhoDB) = detachAndExtract(self.trace, new_scaffold.border[0], new_scaffold, True)
+    self.scaffold = new_scaffold
+    # The potential function we want is - log (density)
+    return [-rhoDB.getPartial(pnode) for pnode in pnodes]
+
+  def fixed_regen(self, values):
+    # Ensure repeatability of randomness
+    cur_pyr_state = random.getstate()
+    cur_numpyr_state = npr.get_state()
+    try:
+      random.setstate(self.pyr_state)
+      npr.set_state(self.numpyr_state)
+      registerDeterministicLKernels(self.trace, self.scaffold, self.scaffold.getPrincipalNodes(), values)
+      answer = regenAndAttach(self.trace, self.scaffold.border[0], self.scaffold, False, OmegaDB(), {})
+    finally:
+      random.setstate(cur_pyr_state)
+      npr.set_state(cur_numpyr_state)
+    return answer
+
 class HamiltonianMonteCarloOperator(InPlaceOperator):
 
   def __init__(self, epsilon, L):
@@ -546,7 +598,6 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
   # detach mutates the trace as it goes, so there will be some
   # machinations (perhaps I should use particles?)
 
-  # TODO Permit HMC on principal nodes of type other than VentureNumber
   def propose(self, trace, scaffold):
     pnodes = scaffold.getPrincipalNodes()
     currentValues = getCurrentValues(trace,pnodes)
@@ -555,35 +606,10 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
     rhoWeight = self.prepare(trace, scaffold, True) # Gradient is in self.rhoDB
 
-    # TODO regen and detach may not return the weight I want if there
-    # are delta kernels.  Then again, there should not be any delta
-    # kernels.
-
-    pyr_state = random.getstate()
-    numpyr_state = npr.get_state()
-
     momenta = self.sampleMomenta(currentValues)
     start_K = self.kinetic(momenta)
 
-    def fixed_regen(values):
-      # Ensure repeatability of randomness
-      cur_pyr_state = random.getstate()
-      cur_numpyr_state = npr.get_state()
-      try:
-        random.setstate(pyr_state)
-        npr.set_state(numpyr_state)
-        registerDeterministicLKernels(trace, scaffold, pnodes, values)
-        answer = regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
-      finally:
-        random.setstate(cur_pyr_state)
-        npr.set_state(cur_numpyr_state)
-      return answer
-
-    def grad(values):
-      fixed_regen(values)
-      (_, rhoDB) = detachAndExtract(trace, scaffold.border[0], scaffold, True)
-      # The potential function we want is - log (density)
-      return [-rhoDB.getPartial(pnode) for pnode in pnodes]
+    grad = GradientOfRegen(trace, scaffold)
 
     # Might as well save a gradient computation, since the initial
     # detach does it
@@ -591,10 +617,9 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
 
     # Smashes the trace but leaves it a torus
     (proposed_values, end_K) = self.evolve(grad, currentValues, start_grad, momenta)
-    assertTorus(scaffold)
 
     registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
-    xiWeight = fixed_regen(proposed_values) # Mutates the trace
+    xiWeight = grad.fixed_regen(proposed_values) # Mutates the trace
     # The weight arithmetic is given by the Hamiltonian being
     # -weight + kinetic(momenta)
     return (trace, xiWeight - rhoWeight + start_K - end_K)
