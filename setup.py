@@ -16,6 +16,7 @@
 #!/usr/bin/python
 
 from distutils.core import setup, Extension
+from distutils import sysconfig
 import os
 import sys
 
@@ -31,8 +32,12 @@ import sys
 #print(src_files)
 
 ON_LINUX = 'linux' in sys.platform
+ON_MAC = 'darwin' in sys.platform
+
 if ON_LINUX:
-    os.environ['CC'] = 'ccache gcc'
+    os.environ['CC'] = 'ccache gcc '
+if ON_MAC:
+    os.environ['CC'] = 'ccache gcc-4.8'
 
 src_files = [
     "src/value.cxx",
@@ -165,15 +170,26 @@ if "COMPILE_CXX_BACKEND" in os.environ:
 else:
     print "Skipping old CXX backend. To include it, set the flag COMPILE_CXX_BACKEND"
 
-puma = Extension("venture.puma.libtrace",
-    define_macros = [('MAJOR_VERSION', '0'),
-                     ('MINOR_VERSION', '1'),
-                     ('REVISION', '1')],
-    libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],
-    extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC"],
-    #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
-    include_dirs = puma_inc_dirs,
-    sources = puma_src_files)
+if ON_LINUX:
+    puma = Extension("venture.puma.libtrace",
+        define_macros = [('MAJOR_VERSION', '0'),
+                         ('MINOR_VERSION', '1'),
+                         ('REVISION', '1')],
+        libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],        
+        extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC"],
+        #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
+        include_dirs = puma_inc_dirs,
+        sources = puma_src_files)
+if ON_MAC:
+    puma = Extension("venture.puma.libtrace",
+        define_macros = [('MAJOR_VERSION', '0'),
+                         ('MINOR_VERSION', '1'),
+                         ('REVISION', '1')],
+        libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread-mt'],        
+        extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC"],
+        #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
+        include_dirs = puma_inc_dirs,
+        sources = puma_src_files)
 
 if "SKIP_PUMA_BACKEND" in os.environ:
     print "Skipping Puma backend because SKIP_PUMA_BACKEND is %s" % os.environ["SKIP_PUMA_BACKEND"]
@@ -192,7 +208,10 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     # FIXME: this is probably not the best way to do this
     # I could find no other way to override the extra flags
     # from the python makefile's CFLAGS and OPTS variables
-    self.compiler_so = ["ccache", "gcc"]
+    if ON_LINUX:
+        self.compiler_so = ["ccache", "gcc"]
+    if ON_MAC:
+        self.compiler_so = ["ccache", "gcc-4.8"]
 
     # parallel code
     N=2 # number of parallel compilations
@@ -206,6 +225,7 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     return objects
 import distutils.ccompiler
 distutils.ccompiler.CCompiler.compile=parallelCCompile
+
 
 setup (
     name = 'Venture CXX',
