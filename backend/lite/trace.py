@@ -6,7 +6,7 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
-from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator
+from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
@@ -343,6 +343,9 @@ class Trace(object):
           mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
         else:
           mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
+      elif params["kernel"] == "map":
+        assert params["with_mutation"]
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MAPOperator(params["rate"], int(params["steps"])))
       elif params["kernel"] == "rejection":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),RejectionOperator())
