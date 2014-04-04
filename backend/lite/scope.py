@@ -1,7 +1,8 @@
-from psp import PSP
+from psp import DeterministicPSP
 
-class ScopeIncludeOutputPSP(PSP):
+class ScopeIncludeOutputPSP(DeterministicPSP):
   def simulate(self,args): return args.operandValues[2]
+  def gradientOfSimulate(self, _args, _value, direction): return [0, 0, direction]
   def canAbsorb(self, _trace, appNode, parentNode): return parentNode != appNode.operandNodes[2]
   
   def description(self,name):

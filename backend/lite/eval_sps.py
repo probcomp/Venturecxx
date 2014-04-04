@@ -1,9 +1,9 @@
-from psp import PSP
+from psp import DeterministicPSP
 from env import VentureEnvironment
 from request import Request,ESR
 import value as v
 
-class EvalRequestPSP(PSP):
+class EvalRequestPSP(DeterministicPSP):
   def simulate(self,args):
     exp = v.ExpressionType().asPython(args.operandValues[0])
     env = args.operandValues[1]
@@ -11,7 +11,7 @@ class EvalRequestPSP(PSP):
   def description(self,name):
     return "%s :: <SP <exp> <env> -> <object>>\n  Evaluates the given expression in the given environment and returns the result.  Is itself deterministic, but the given expression may involve a stochasitc computation." % name
 
-class ExtendEnvOutputPSP(PSP):
+class ExtendEnvOutputPSP(DeterministicPSP):
   def simulate(self,args): 
     env = args.operandValues[0]
     sym = args.operandValues[1].getSymbol()

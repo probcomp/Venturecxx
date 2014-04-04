@@ -1,10 +1,10 @@
-from psp import PSP, TypedPSP
+from psp import DeterministicPSP, TypedPSP
 from request import Request,ESR
 from sp import SPType
 import value as v
 
 # TODO This is used very little because the stack expands if to biplex.  Flush?
-class BranchRequestPSP(PSP):
+class BranchRequestPSP(DeterministicPSP):
   def simulate(self,args): 
 #    print "branchRequest::simulate()"
     assert not args.operandValues[0] is None

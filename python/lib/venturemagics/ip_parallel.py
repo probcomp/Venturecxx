@@ -876,10 +876,12 @@ class MRipl():
         print self.display_ripls()
 
     
-    def snapshot(self,did_labels_list=[], exp_list=[],
+    def snapshot(self,exp_list=[],did_labels_list=[],
                  plot=False, scatter=False, plot_range=None,
-                 logscore=False, plot_past_values=[],
-                 sample_populations=None, repeat=None, predict=False):
+                 plot_past_values=[],
+                 sample_populations=None, repeat=None,
+                 predict=False,logscore=False):
+                 
                 
         '''Input: lists of dids_labels and expressions.
            Output: values from each ripl, (optional) plots.''' 
@@ -963,6 +965,8 @@ class MRipl():
                 no_exp=1; exp_list=['']
             else:
                 no_exp=0
+            if not isinstance(plot_past_values,list):
+                plot_past_values = [plot_past_values]
 
             list_vals = [ past_out['values'].values()[0] for past_out in plot_past_values]
             if no_exp==0: list_vals.append( out['values'].values()[0] )
@@ -970,11 +974,24 @@ class MRipl():
             fig,ax=plt.subplots(1,2,figsize=(14,3.5),sharex=True)
             f=self.lst_flatten(list_vals)
             xr=np.linspace(min(f),max(f),80)
-            [ ax[0].hist( past_vals, normed=True, label='%i'%count) for count,past_vals in enumerate(list_vals) ]
-            [ ax[1].plot(xr,gaussian_kde(past_vals)(xr), label='%i'%count) for count,past_vals in enumerate(list_vals) ]
+
+            
+            for count,past_vals in enumerate(list_vals):
+                label='Pr [0]' if count==0 else 'Po [%i]'%count
+                ax[0].hist( past_vals,bins=20,normed=True,label=label)
+                
+            for count,past_vals in enumerate(list_vals):
+                label='Pr [0]' if count==0 else 'Po [%i]'%count
+                ax[1].plot(xr,gaussian_kde(past_vals)(xr), label=label)
+                    
             [ ax[i].legend(loc='upper left',ncol=len(list_vals)) for i in range(2)]
-            ax[0].set_title('Hist: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
-            if plot_range: [ax[i].set_xlim(plot_range) for i in range(2)]
+            ax[0].set_title('Past values hist: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
+            ax[1].set_title('GKDE: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
+            
+            if plot_range:
+                [ax[i].set_xlim(plot_range[:2]) for i in range(2)]
+                if len(plot_range)>2: ax[0].set_ylim(plot_range[2],plot_range[3])
+                        
             
             out['figs'] = fig
             return out

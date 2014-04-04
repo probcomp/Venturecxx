@@ -1,10 +1,10 @@
-from psp import PSP, ESRRefOutputPSP
+from psp import DeterministicPSP, ESRRefOutputPSP
 from sp import VentureSP
 from env import VentureEnvironment
 from request import Request,ESR
 
 
-class MakeMSPOutputPSP(PSP):
+class MakeMSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
     sharedOperatorNode = args.operandNodes[0]
     return VentureSP(MSPRequestPSP(sharedOperatorNode),ESRRefOutputPSP())
@@ -12,7 +12,7 @@ class MakeMSPOutputPSP(PSP):
   def description(self,name):
     return "%s :: <SP <SP a ... -> b> -> <SP a ... -> b>>\n  Returns the stochastically memoized version of the input SP." % name
 
-class MSPRequestPSP(PSP):
+class MSPRequestPSP(DeterministicPSP):
   def __init__(self,sharedOperatorNode): self.sharedOperatorNode = sharedOperatorNode
   def simulate(self,args): 
     id = str(args.operandValues)

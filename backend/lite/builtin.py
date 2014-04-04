@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 from sp import VentureSP, SPType
-from psp import NullRequestPSP, ESRRefOutputPSP, PSP, TypedPSP
+from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP
 
 import discrete
 import dirichlet
@@ -33,20 +33,28 @@ def esr_output(request): return VentureSP(request, ESRRefOutputPSP())
 def typed_nr(output, args_types, return_type, **kwargs):
   return no_request(TypedPSP(output, SPType(args_types, return_type, **kwargs)))
 
-def func_psp(f, descr=None):
-  class FunctionPSP(PSP):
+def func_psp(f, descr=None, sim_grad=None):
+  class FunctionPSP(DeterministicPSP):
     def __init__(self, descr):
       self.descr = descr
+      self.sim_grad = sim_grad
       if self.descr is None:
         self.descr = "deterministic %s"
     def simulate(self,args):
       return f(args)
+    def gradientOfSimulate(self, args, _value, direction):
+      # Don't need the value if the function is deterministic, because
+      # it consumes no randomness.
+      if self.sim_grad:
+        return self.sim_grad(args, direction)
+      else:
+        raise Exception("Cannot compute simulation gradient of %s", self.descr)
     def description(self,name):
       return self.descr % name
   return FunctionPSP(descr)
 
-def typed_func_psp(f, args_types, return_type, descr=None, **kwargs):
-  return TypedPSP(func_psp(f, descr), SPType(args_types, return_type, **kwargs))
+def typed_func_psp(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
+  return TypedPSP(func_psp(f, descr, sim_grad), SPType(args_types, return_type, **kwargs))
 
 def typed_func(*args, **kwargs):
   return no_request(typed_func_psp(*args, **kwargs))
@@ -54,26 +62,19 @@ def typed_func(*args, **kwargs):
 # TODO This should actually be named to distinguish it from the
 # previous version, which accepts the whole args object (where this
 # one splats the operand values).
-def deterministic_psp(f, descr=None):
-  class DeterministicPSP(PSP):
-    def __init__(self, descr):
-      self.descr = descr
-      if self.descr is None:
-        self.descr = "deterministic %s"
-    def simulate(self,args):
-      return f(*args.operandValues)
-    def description(self,name):
-      return self.descr % name
-  return DeterministicPSP(descr)
+def deterministic_psp(f, descr=None, sim_grad=None):
+  def new_grad(args, direction):
+    return sim_grad(args.operandValues, direction)
+  return func_psp(lambda args: f(*args.operandValues), descr, sim_grad=(new_grad if sim_grad else None))
 
-def deterministic_typed_psp(f, args_types, return_type, descr=None, **kwargs):
-  return TypedPSP(deterministic_psp(f, descr), SPType(args_types, return_type, **kwargs))
+def deterministic_typed_psp(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
+  return TypedPSP(deterministic_psp(f, descr, sim_grad), SPType(args_types, return_type, **kwargs))
 
-def deterministic(f, descr=None):
-  return no_request(deterministic_psp(f, descr))
+def deterministic(f, descr=None, sim_grad=None):
+  return no_request(deterministic_psp(f, descr, sim_grad))
 
-def deterministic_typed(f, args_types, return_type, descr=None, **kwargs):
-  return typed_nr(deterministic_psp(f, descr), args_types, return_type, **kwargs)
+def deterministic_typed(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
+  return typed_nr(deterministic_psp(f, descr, sim_grad), args_types, return_type, **kwargs)
 
 def binaryNum(f, descr=None):
   return deterministic_typed(f, [v.NumberType(), v.NumberType()], v.NumberType(), descr=descr)
@@ -87,8 +88,8 @@ def unaryNum(f, descr=None):
 def unaryNumS(f):
   return typed_nr(f, [v.NumberType()], v.NumberType())
 
-def naryNum(f, descr=None):
-  return deterministic_typed(f, [v.NumberType()], v.NumberType(), variadic=True, descr=descr)
+def naryNum(f, sim_grad=None, descr=None):
+  return deterministic_typed(f, [v.NumberType()], v.NumberType(), variadic=True, sim_grad=sim_grad, descr=descr)
 
 def type_test(t):
   return deterministic(lambda thing: v.VentureBool(thing in t),
@@ -96,7 +97,8 @@ def type_test(t):
 
 def builtInSPsList():
   return [ [ "plus",  naryNum(lambda *args: sum(args),
-                              "%s returns the sum of all its arguments") ],
+                              sim_grad=lambda args, direction: [direction for _ in args],
+                              descr="%s returns the sum of all its arguments") ],
            [ "minus", binaryNum(lambda x,y: x - y,
                                 "%s returns the difference between its first and second arguments") ],
            [ "times", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1),
@@ -110,7 +112,8 @@ def builtInSPsList():
            [ "gte",   deterministic(lambda x,y: v.VentureBool(x.compare(y) >= 0),
                                     "%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares greater than or equal to its second") ],
            [ "lt",    deterministic(lambda x,y: v.VentureBool(x.compare(y) <  0),
-                                    "%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares less than its second") ],
+                                    sim_grad=lambda args, direction: [0 for _ in args],
+                                    descr="%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares less than its second") ],
            [ "lte",   deterministic(lambda x,y: v.VentureBool(x.compare(y) <= 0),
                                     "%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares less than or equal to its second") ],
            # Only makes sense with VentureAtom/VentureNumber distinction
@@ -148,7 +151,8 @@ def builtInSPsList():
 
 
            [ "array", deterministic(lambda *args: v.VentureArray(np.array(args)),
-                                    "%s :: <SP <object> ... -> <array>>\nReturns an array initialized with its arguments") ],
+                                    sim_grad=lambda args, direction: [direction], # TODO Is this actually right?
+                                    descr="%s :: <SP <object> ... -> <array>>\nReturns an array initialized with its arguments") ],
            [ "is_array", type_test(v.ArrayType()) ],
            [ "dict", no_request(dstructures.DictOutputPSP()) ],
            [ "is_dict", type_test(v.DictType()) ],
@@ -160,6 +164,7 @@ def builtInSPsList():
            [ "is_simplex", type_test(v.SimplexType()) ],
 
            [ "lookup", deterministic(lambda xs, x: xs.lookup(x),
+                                     sim_grad=lambda args, direction: [args[0].lookup_grad(args[1], direction), 0],
                                      descr="%s :: <SP <mapping k v> k -> v>\nLooks the given key up in the given mapping and returns the result.  It is an error if the key is not in the mapping.  Lists and arrays are viewed as mappings from indices to the corresponding elements.") ],
            [ "contains", deterministic(lambda xs, x: v.VentureBool(xs.contains(x)),
                                        "%s :: <SP <mapping k v> k -> <bool>>\nReports whether the given key appears in the given mapping or not.") ],
@@ -168,6 +173,7 @@ def builtInSPsList():
 
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),
+                                           sim_grad=lambda args, direc: [0, direc, 0] if args[0] else [0, 0, direc],
                                            descr="%s returns either its first or second argument.")],
            [ "make_csp", no_request(csp.MakeCSPOutputPSP()) ],
 
@@ -197,6 +203,8 @@ def builtInSPsList():
            [ "gamma",binaryNumS(continuous.GammaOutputPSP()) ],
            [ "student_t",typed_nr(continuous.StudentTOutputPSP(),[v.NumberType(),v.NumberType(),v.NumberType()], v.NumberType(), min_req_args=1 ) ],
            [ "inv_gamma",binaryNumS(continuous.InvGammaOutputPSP()) ],
+
+           [ "multivariate_normal", typed_nr(continuous.MVNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.MatrixType()], v.HomogeneousArrayType(v.NumberType())) ],
 
            [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], SPType([], v.BoolType())) ],
            [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], SPType([], v.BoolType())) ],

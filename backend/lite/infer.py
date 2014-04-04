@@ -1,6 +1,8 @@
 import random
+import numpy.random as npr
 import math
-from consistency import assertTorus,assertTrace,assertSameScaffolds
+import scipy.stats
+from consistency import assertTorus,assertTrace
 from omegadb import OmegaDB
 from regen import regenAndAttach
 from detach import detachAndExtract
@@ -20,16 +22,16 @@ def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
   rhoMix = indexer.logDensityOfIndex(trace,index)
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
-  # This is necessary for the non-mutating versions
-  proposedTrace,logAlpha = operator.propose(trace,index) 
+  # Returning the trace is necessary for the non-mutating versions
+  proposedTrace,logAlpha = operator.propose(trace,index)
   xiMix = indexer.logDensityOfIndex(proposedTrace,index)
 
   alpha = xiMix + logAlpha - rhoMix
   if math.log(random.random()) < alpha:
-#    sys.stdout.write("<accept>")
+#    sys.stdout.write(".")
     operator.accept() # May mutate trace
   else:
-#    sys.stdout.write("<reject>")
+#    sys.stdout.write("!")
     operator.reject() # May mutate trace
 
 class BlockScaffoldIndexer(object):
@@ -53,12 +55,12 @@ class BlockScaffoldIndexer(object):
 
 
 class InPlaceOperator(object):
-  def prepare(self, trace, scaffold):
+  def prepare(self, trace, scaffold, compute_gradient = False):
     """Record the trace and scaffold for accepting or rejecting later;
     detach along the scaffold and return the weight thereof."""
     self.trace = trace
     self.scaffold = scaffold
-    rhoWeight,self.rhoDB = detachAndExtract(trace, scaffold.border[0], scaffold)
+    rhoWeight,self.rhoDB = detachAndExtract(trace, scaffold.border[0], scaffold, compute_gradient)
     assertTorus(scaffold)
     return rhoWeight
 
@@ -178,7 +180,7 @@ class MeanfieldOperator(object):
     xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),{})
     return trace,xiWeight - rhoWeight
 
-  def accept(self): 
+  def accept(self):
     if self.delegate is None:
       pass
     else:
@@ -265,7 +267,7 @@ class EnumerativeGibbsOperator(object):
     assertTorus(self.scaffold)
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
 
-      
+
 #### PGibbs
 
 # Construct ancestor path backwards
@@ -285,7 +287,7 @@ def restoreAncestorPath(trace,border,scaffold,omegaDBs,t,path):
 
 # detach the rest of the particle
 def detachRest(trace,border,scaffold,t):
-  for i in reversed(range(t)): 
+  for i in reversed(range(t)):
     detachAndExtract(trace,border[i],scaffold)
 
 
@@ -301,7 +303,7 @@ class PGibbsOperator(object):
     self.scaffold = scaffold
 
     assertTrace(self.trace,self.scaffold)
-  
+
     self.T = len(self.scaffold.border)
     T = self.T
     P = self.P
@@ -386,13 +388,13 @@ class ParticlePGibbsOperator(object):
     self.scaffold = scaffold
 
     assertTrace(self.trace,self.scaffold)
-  
+
     self.T = len(self.scaffold.border)
     T = self.T
     P = self.P
 
 #    assert T == 1 # TODO temporary
-    rhoDBs = [None for t in range(T)]    
+    rhoDBs = [None for t in range(T)]
     rhoWeights = [None for t in range(T)]
 
     for t in reversed(range(T)):
@@ -402,10 +404,10 @@ class ParticlePGibbsOperator(object):
 
     particles = [Particle(trace) for p in range(P+1)]
     self.particles = particles
-    
+
     particleWeights = [None for p in range(P+1)]
 
-    
+
     # Simulate and calculate initial xiWeights
 
     for p in range(P):
@@ -413,7 +415,7 @@ class ParticlePGibbsOperator(object):
 
     particleWeights[P] = regenAndAttach(particles[P],scaffold.border[0],scaffold,True,rhoDBs[0],{})
     assert_almost_equal(particleWeights[P],rhoWeights[0])
-          
+
 #   for every time step,
     for t in range(1,T):
       newParticles = [None for p in range(P+1)]
@@ -453,8 +455,124 @@ class ParticlePGibbsOperator(object):
 
   def accept(self):
     self.particles[self.finalIndex].commit()
-    assertTrace(self.trace,self.scaffold)    
-    
+    assertTrace(self.trace,self.scaffold)
+
   def reject(self):
     self.particles[-1].commit()
     assertTrace(self.trace,self.scaffold)
+
+
+#### Hamiltonian Monte Carlo
+
+class HamiltonianMonteCarloOperator(InPlaceOperator):
+
+  def __init__(self, epsilon, L):
+    self.epsilon = epsilon
+    self.num_steps = L
+
+  # Notionally, I want to do Hamiltonian Monte Carlo on the potential
+  # given by this function:
+  #   def potential(values):
+  #     registerDeterministicLKernels(trace,scaffold,pnodes,values)
+  #     return -regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
+  #
+  # The trouble, of course, is that I need the gradient of this to
+  # actually do HMC.
+  #
+  # I don't trust any of Python's extant AD libraries to get this
+  # right, so I'm going to do it by implementing one level of reverse
+  # mode AD myself.  Fortunately, the trace acts like a tape already.
+  # Unfortunately, regen constitutes the forward phase but has no
+  # reverse phase.  Fortunately, detach traverses the trace in the
+  # proper order so can compute the reverse phase.  Unfortunately,
+  # detach mutates the trace as it goes, so there will be some
+  # machinations (perhaps I should use particles?)
+
+  # TODO Permit HMC on principal nodes of type other than VentureNumber
+  def propose(self, trace, scaffold):
+    pnodes = scaffold.getPrincipalNodes()
+    currentValues = getCurrentValues(trace,pnodes)
+
+    # So the initial detach will get the gradient right
+    registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
+    rhoWeight = self.prepare(trace, scaffold, True) # Gradient is in self.rhoDB
+
+    # TODO regen and detach may not return the weight I want if there
+    # are delta kernels.  Then again, there should not be any delta
+    # kernels.
+
+    pyr_state = random.getstate()
+    numpyr_state = npr.get_state()
+
+    momenta = self.sampleMomenta(currentValues)
+    start_K = self.kinetic(momenta)
+
+    def fixed_regen(values):
+      # Ensure repeatability of randomness
+      cur_pyr_state = random.getstate()
+      cur_numpyr_state = npr.get_state()
+      try:
+        random.setstate(pyr_state)
+        npr.set_state(numpyr_state)
+        registerDeterministicLKernels(trace, scaffold, pnodes, values)
+        answer = regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
+      finally:
+        random.setstate(cur_pyr_state)
+        npr.set_state(cur_numpyr_state)
+      return answer
+
+    def grad(values):
+      fixed_regen(values)
+      (_, rhoDB) = detachAndExtract(trace, scaffold.border[0], scaffold, True)
+      # The potential function we want is - log (density)
+      return [-rhoDB.getPartial(pnode) for pnode in pnodes]
+
+    # Might as well save a gradient computation, since the initial
+    # detach does it
+    start_grad = [-self.rhoDB.getPartial(pnode) for pnode in pnodes]
+
+    # Smashes the trace but leaves it a torus
+    (proposed_values, end_K) = self.evolve(grad, currentValues, start_grad, momenta)
+    assertTorus(scaffold)
+
+    registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
+    xiWeight = fixed_regen(proposed_values) # Mutates the trace
+    # The weight arithmetic is given by the Hamiltonian being
+    # -weight + kinetic(momenta)
+    return (trace, xiWeight - rhoWeight + start_K - end_K)
+
+  def sampleMomenta(self, currentValues):
+    def sample_normal(_):
+      return scipy.stats.norm.rvs(loc=0, scale=1)
+    return [v.map_real(sample_normal) for v in currentValues]
+  def kinetic(self, momenta):
+    # This is the log density of sampling these momenta, up to an
+    # additive constant
+    return sum([m.dot(m) for m in momenta]) / 2.0
+
+  def evolve(self, grad_U, start_q, start_grad_q, start_p):
+    epsilon = self.epsilon
+    num_steps = self.num_steps
+    q = start_q
+    # The initial momentum half-step
+    dpdt = start_grad_q
+    p = [pi - dpdti * (epsilon / 2.0) for (pi, dpdti) in zip(start_p, dpdt)]
+
+    for i in range(npr.randint(int(num_steps))+1):
+      # Position step
+      q = [qi + pi * epsilon for (qi, pi) in zip(q,p)]
+
+      # Momentum step, except at the end
+      if i < num_steps - 1:
+        dpdt = grad_U(q)
+        p = [pi - dpdti * epsilon for (pi, dpdti) in zip(p, dpdt)]
+
+    # The final momentum half-step
+    dpdt = grad_U(q)
+    p = [pi - dpdti * (epsilon / 2.0) for (pi, dpdti) in zip(p, dpdt)]
+
+    # Negate momenta at the end to make the proposal symmetric
+    # (irrelevant if the kinetic energy function is symmetric)
+    p = [-pi for pi in p]
+
+    return q, self.kinetic(p)

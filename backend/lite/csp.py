@@ -1,10 +1,10 @@
-from psp import PSP, ESRRefOutputPSP
+from psp import DeterministicPSP, ESRRefOutputPSP
 from sp import VentureSP
 from env import VentureEnvironment
 from request import Request,ESR
 import value as v
 
-class CSPRequestPSP(PSP):
+class CSPRequestPSP(DeterministicPSP):
   def __init__(self,ids,exp,env):
     self.ids = ids
     self.exp = exp
@@ -15,9 +15,15 @@ class CSPRequestPSP(PSP):
     extendedEnv = VentureEnvironment(self.env,self.ids,args.operandNodes)
     return Request([ESR(args.node,self.exp,extendedEnv)])
 
+  def gradientOfSimulate(self, args, _value, _direction):
+    # TODO Collect derivatives with respect to constants in the body
+    # of the lambda and pass them through the constructor to whoever
+    # came up with those constants.
+    return [0 for _ in args.operandValues]
+
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
 
-class MakeCSPOutputPSP(PSP):
+class MakeCSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
     ids = args.operandValues[0].getArray(v.SymbolType())
     exp = v.ExpressionType().asPython(args.operandValues[1])

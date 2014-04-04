@@ -17,7 +17,7 @@ def testNormalWithObserve1():
 
   predictions = collectSamples(ripl,1,infer="(slice default one 50)")
   cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(1.5))")
+  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
 
 @statisticalTest
 def testNormalWithObserve2a():

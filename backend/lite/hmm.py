@@ -1,5 +1,5 @@
 from sp import VentureSP, SPAux, SPType
-from psp import PSP, RandomPSP, TypedPSP
+from psp import DeterministicPSP, RandomPSP, TypedPSP
 from request import Request
 import numpy as np
 import numpy.random as npr
@@ -24,7 +24,7 @@ class HMMSPAux(SPAux):
     ans.os = {k:copy(v) for (k,v) in self.os.iteritems()}
     return ans
 
-class MakeUncollapsedHMMOutputPSP(PSP):
+class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
   def simulate(self,args):
     (p0,T,O) = args.operandValues
     # p0 comes in as a simplex but needs to become a 1-row matrix
@@ -123,7 +123,7 @@ class UncollapsedHMMOutputPSP(RandomPSP):
     del args.spaux.os[n][args.spaux.os[n].index(value)]
     if not args.spaux.os[n]: del args.spaux.os[n]
 
-class UncollapsedHMMRequestPSP(PSP):
+class UncollapsedHMMRequestPSP(DeterministicPSP):
   def simulate(self,args): return Request([],[int(args.operandValues[0])])
 
 

@@ -1,6 +1,15 @@
+import numbers
 import scipy.stats
 import scipy.special
 import math
+import numpy.random as npr
+import numpy.linalg as npla
+import numpy as np
+from utils import logDensityMVNormal
+
+# For some reason, pylint can never find numpy members (presumably metaprogramming).
+# pylint: disable=no-member
+
 from psp import RandomPSP
 from lkernel import LKernel
 
@@ -15,6 +24,29 @@ class NormalDriftKernel(LKernel):
     term3 = self.epsilon * nu
     return term1 + term2 + term3
                                                         
+class MVNormalOutputPSP(RandomPSP):
+  def simulate(self, args):
+    return npr.multivariate_normal(*self.__parse_args__(args))
+
+  def logDensity(self, x, args):
+    (mu, sigma) = self.__parse_args__(args)
+    return logDensityMVNormal(x, mu, sigma)
+
+  def gradientOfLogDensity(self, x, args):
+    (mu, sigma) = self.__parse_args__(args)
+    isigma = npla.inv(sigma)
+    xvar = np.dot(x-mu, np.transpose(x-mu))
+    gradX = -np.dot(isigma, np.transpose(x-mu))
+    gradMu = np.dot(isigma, np.transpose(x-mu))
+    gradSigma = .5*np.dot(np.dot(isigma, xvar),isigma)-.5*isigma
+    return np.array(gradX)[0].tolist(), [np.array(gradMu)[0].tolist(), gradSigma]
+
+  def description(self,name):
+    return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name
+
+  def __parse_args__(self, args):
+    return (np.array(args.operandValues[0]), args.operandValues[1])
+
 class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,params): return scipy.stats.norm.rvs(*params)
@@ -31,6 +63,12 @@ class NormalOutputPSP(RandomPSP):
       raise Exception("Cannot rejection sample psp with unbounded likelihood")
 
   def simulate(self,args): return self.simulateNumeric(args.operandValues)
+  def gradientOfSimulate(self, args, value, direction):
+    # Reverse engineering the behavior of scipy.stats.norm.rvs
+    # suggests this gradient is correct.
+    (mu, sigma) = args.operandValues
+    deviation = (value - mu) / sigma
+    return [direction*1, direction*deviation]
   def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues)
   def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 
@@ -40,15 +78,16 @@ class NormalOutputPSP(RandomPSP):
   def hasVariationalLKernel(self): return True
   def getParameterScopes(self): return ["REAL","POSITIVE_REAL"]
 
-  def gradientOfLogDensity(self,x,params):
-    mu = params[0]
-    sigma = params[1]
+  def gradientOfLogDensity(self,x,args):
+    mu = args.operandValues[0]
+    sigma = args.operandValues[1]
 
+    gradX = -(x - mu) / (math.pow(sigma,2))
     gradMu = (x - mu) / (math.pow(sigma,2))
     gradSigma = (math.pow(x - mu,2) - math.pow(sigma,2)) / math.pow(sigma,3)
     # for positive sigma, d(log density)/d(sigma) is <=> zero
     # when math.pow(x - mu,2) <=> math.pow(sigma,2) respectively
-    return [gradMu,gradSigma]
+    return (gradX,[gradMu,gradSigma])
 
   def description(self,name):
     return "  (%s mu sigma) samples a normal distribution with mean mu and standard deviation sigma." % name
@@ -66,6 +105,9 @@ class UniformOutputPSP(RandomPSP):
 
   def simulate(self,args): return self.simulateNumeric(*args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+  def gradientOfLogDensity(self, _, args):
+    spread = 1.0/(args.operandValues[1]-args.operandValues[0])
+    return (0, [-spread, spread])
   def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 
   def description(self,name):

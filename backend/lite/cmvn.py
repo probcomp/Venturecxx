@@ -1,4 +1,4 @@
-from psp import PSP, NullRequestPSP, RandomPSP, TypedPSP
+from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import VentureSP, SPType
 import math
 import scipy.special
@@ -51,9 +51,10 @@ class CMVNSPAux(object):
     self.N = 0
     self.STotal = np.mat(np.zeros((d,d)))
     self.xTotal = np.mat(np.zeros((d,1)))
+    self.d = d
 
   def copy(self):
-    aux = CMVNSPAux()
+    aux = CMVNSPAux(self.d)
     aux.N = self.N
     aux.STotal = self.STotal
     aux.xTotal = self.xTotal
@@ -66,7 +67,7 @@ class CMVNSP(VentureSP):
   def constructSPAux(self): return CMVNSPAux(self.d)
   def show(self,spaux): return (spaux.xTotal,spaux.STotal,spaux.N)
 
-class MakeCMVNOutputPSP(PSP):
+class MakeCMVNOutputPSP(DeterministicPSP):
   def simulate(self,args):
     (m0,k0,v0,S0) = args.operandValues
     m0 = np.mat(m0).transpose()
