@@ -610,13 +610,13 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
 
   def evolve(self, grad_U, start_q, start_grad_q, start_p):
     epsilon = self.epsilon
-    num_steps = self.num_steps
+    num_steps = npr.randint(int(self.num_steps))+1
     q = start_q
     # The initial momentum half-step
     dpdt = start_grad_q
     p = [pi - dpdti * (epsilon / 2.0) for (pi, dpdti) in zip(start_p, dpdt)]
 
-    for i in range(npr.randint(int(num_steps))+1):
+    for i in range(num_steps):
       # Position step
       q = [qi + pi * epsilon for (qi, pi) in zip(q,p)]
 
