@@ -159,7 +159,7 @@ class VentureUnit(object):
 
         for i in range(samples):
             if verbose:
-                print "Generating sample " + str(i) + " of " + str(samples)
+                print "Generating sample " + str(i+1) + " of " + str(samples)
 
             (assumeToDirective, predictToDirective) = self.loadModelWithPredicts(track)
 
@@ -208,7 +208,7 @@ class VentureUnit(object):
 
         for run in range(runs):
             if verbose:
-                print "Starting run " + str(run) + " of " + str(runs)
+                print "Starting run " + str(run+1) + " of " + str(runs)
             res = f(label="run %s" % run, verbose=verbose, **kwargs)
             history.addRun(res)
 
@@ -249,7 +249,7 @@ class VentureUnit(object):
 
         for sweep in range(sweeps):
             if verbose:
-                print "Running sweep " + str(sweep) + " of " + str(sweeps)
+                print "Running sweep " + str(sweep+1) + " of " + str(sweeps)
 
             # FIXME: use timeit module for better precision
             start = time.time()
