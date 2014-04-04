@@ -481,7 +481,7 @@ class MAPOperator(InPlaceOperator):
 
     # Might as well save a gradient computation, since the initial
     # detach does it
-    start_grad = [-self.rhoDB.getPartial(pnode) for pnode in pnodes]
+    start_grad = [self.rhoDB.getPartial(pnode) for pnode in pnodes]
 
     # Smashes the trace but leaves it a torus
     proposed_values = self.evolve(grad, currentValues, start_grad)
@@ -501,7 +501,7 @@ class MAPOperator(InPlaceOperator):
 #### Hamiltonian Monte Carlo
 
 class GradientOfRegen(object):
-  """An applicable object, calling which computes minus the gradient
+  """An applicable object, calling which computes the gradient
   of regeneration along the given scaffold.  Also permits performing
   one final such regeneration without computing the gradient.  The
   value of this class is that it supports repeated regenerations (and
@@ -536,7 +536,7 @@ class GradientOfRegen(object):
     (_, rhoDB) = detachAndExtract(self.trace, new_scaffold.border[0], new_scaffold, True)
     self.scaffold = new_scaffold
     # The potential function we want is - log (density)
-    return [-rhoDB.getPartial(pnode) for pnode in pnodes]
+    return [rhoDB.getPartial(pnode) for pnode in pnodes]
 
   def fixed_regen(self, values):
     # Ensure repeatability of randomness
@@ -588,13 +588,16 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     start_K = self.kinetic(momenta)
 
     grad = GradientOfRegen(trace, scaffold)
+    def grad_potential(values):
+      # The potential function we want is - log density
+      return [-dx for dx in grad(values)]
 
     # Might as well save a gradient computation, since the initial
     # detach does it
-    start_grad = [-self.rhoDB.getPartial(pnode) for pnode in pnodes]
+    start_grad_pot = [-self.rhoDB.getPartial(pnode) for pnode in pnodes]
 
     # Smashes the trace but leaves it a torus
-    (proposed_values, end_K) = self.evolve(grad, currentValues, start_grad, momenta)
+    (proposed_values, end_K) = self.evolve(grad_potential, currentValues, start_grad_pot, momenta)
 
     registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
     xiWeight = grad.fixed_regen(proposed_values) # Mutates the trace
