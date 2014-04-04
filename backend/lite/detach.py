@@ -85,6 +85,10 @@ def unevalFamily(trace, node, scaffold, omegaDB, compute_gradient = False):
   weight = 0
   if isinstance(node,ConstantNode): pass
   elif isinstance(node,LookupNode):
+    assert len(trace.parentsAt(node)) == 1
+    if compute_gradient:
+      for p in trace.parentsAt(node):
+        omegaDB.addPartial(p, omegaDB.getPartial(node)) # d/dx is 1 for a lookup node
     trace.disconnectLookup(node)
     trace.setValueAt(node,None)
     weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
