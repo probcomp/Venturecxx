@@ -151,7 +151,7 @@ def builtInSPsList():
 
 
            [ "array", deterministic(lambda *args: v.VentureArray(np.array(args)),
-                                    sim_grad=lambda args, direction: [direction], # TODO Is this actually right?
+                                    sim_grad=lambda args, direction: direction.getArray(),
                                     descr="%s :: <SP <object> ... -> <array>>\nReturns an array initialized with its arguments") ],
            [ "is_array", type_test(v.ArrayType()) ],
            [ "dict", no_request(dstructures.DictOutputPSP()) ],
