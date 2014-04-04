@@ -477,28 +477,7 @@ class MAPOperator(InPlaceOperator):
     registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
     _rhoWeight = self.prepare(trace, scaffold, True) # Gradient is in self.rhoDB
 
-    pyr_state = random.getstate()
-    numpyr_state = npr.get_state()
-
-    def fixed_regen(values):
-      # Ensure repeatability of randomness
-      cur_pyr_state = random.getstate()
-      cur_numpyr_state = npr.get_state()
-      try:
-        random.setstate(pyr_state)
-        npr.set_state(numpyr_state)
-        registerDeterministicLKernels(trace, scaffold, pnodes, values)
-        answer = regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
-      finally:
-        random.setstate(cur_pyr_state)
-        npr.set_state(cur_numpyr_state)
-      return answer
-
-    def grad(values):
-      fixed_regen(values)
-      (_, rhoDB) = detachAndExtract(trace, scaffold.border[0], scaffold, True)
-      # The potential function we want is - log (density)
-      return [-rhoDB.getPartial(pnode) for pnode in pnodes]
+    grad = GradientOfRegen(trace, scaffold)
 
     # Might as well save a gradient computation, since the initial
     # detach does it
@@ -506,10 +485,9 @@ class MAPOperator(InPlaceOperator):
 
     # Smashes the trace but leaves it a torus
     proposed_values = self.evolve(grad, currentValues, start_grad)
-    assertTorus(scaffold)
 
     registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
-    _xiWeight = fixed_regen(proposed_values) # Mutates the trace
+    _xiWeight = grad.fixed_regen(proposed_values) # Mutates the trace
     return (trace, 1000) # It's MAP -- try to force acceptance
 
   def evolve(self, grad, values, start_grad):
