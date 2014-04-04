@@ -48,10 +48,10 @@ if __name__ == '__main__':
     
     data, prior = model.generateDataFromPrior(iters, verbose=True)
     
-    infer_mh = "(mh default one 1050)"
+    infer_mh = "(mh default one 600)"
     history_mh = model.runFromConditional(iters,runs=runs,verbose=True,data=data, infer=infer_mh)
     
-    infer_slice = "(cycle ((slice 0 one 100) (mh 1 one 100)) 10)"
+    infer_slice = "(cycle ((slice 0 one 1) (mh 1 one 2)) 200)"
     history_slice = model.runFromConditional(iters,runs=runs,verbose=True,data=data, infer=infer_slice)
     
     history_both = historyOverlay("demo", [("mh", history_mh), ("slice", history_slice)])
