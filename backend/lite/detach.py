@@ -38,7 +38,7 @@ def detach(trace, node, scaffold, omegaDB, compute_gradient = False):
   if compute_gradient:
     # Ignore the partial derivative of the value because the value is fixed
     (_, grad) = psp.gradientOfLogDensity(gvalue, args)
-    omegaDB.addPartials(args.operandNodes, grad)
+    omegaDB.addPartials(args.operandNodes + trace.esrParentsAt(node), grad)
   weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
   return weight
 
@@ -85,6 +85,10 @@ def unevalFamily(trace, node, scaffold, omegaDB, compute_gradient = False):
   weight = 0
   if isinstance(node,ConstantNode): pass
   elif isinstance(node,LookupNode):
+    assert len(trace.parentsAt(node)) == 1
+    if compute_gradient:
+      for p in trace.parentsAt(node):
+        omegaDB.addPartial(p, omegaDB.getPartial(node)) # d/dx is 1 for a lookup node
     trace.disconnectLookup(node)
     trace.setValueAt(node,None)
     weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
@@ -141,7 +145,7 @@ def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
     # Don't need to compute the simulation gradient if the parents are
     # not in the DRG or brush.
     grad = psp.gradientOfSimulate(args, omegaDB.getValue(node), omegaDB.getPartial(node))
-    omegaDB.addPartials(trace.parentsAt(node), grad)
+    omegaDB.addPartials(args.operandNodes + trace.esrParentsAt(node), grad)
 
   return weight
 

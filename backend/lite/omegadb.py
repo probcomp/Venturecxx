@@ -31,6 +31,7 @@ class OmegaDB(object):
     self.spFamilyDBs[(sp,id)] = esrParent
 
   def addPartials(self, nodes, partials):
+    assert len(nodes) == len(partials)
     for (n, p) in zip(nodes, partials):
       self.addPartial(n, p)
 

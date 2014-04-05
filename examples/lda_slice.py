@@ -9,12 +9,15 @@ class LDA(VentureUnit):
         self.assume("alpha_document_topic", "(scope_include 0 0 (gamma 1.0 2.0))")
         self.assume("alpha_topic_word", "(scope_include 0 1 (gamma 1.0 2.0))")
         self.assume("new_doc","(lambda () (make_sym_dir_mult alpha_document_topic no_topics))")
-        self.assume("documents","(array (new_doc) (new_doc) (new_doc) (new_doc) (new_doc) (new_doc) (new_doc) (new_doc) )" )
+        
+        self.assume("get_doc", "(mem (lambda (doc) (new_doc)))")
+        #self.assume("documents","(array (new_doc) (new_doc) (new_doc) (new_doc) (new_doc) (new_doc) (new_doc) (new_doc) )" )
 
         self.assume("new_topic","(lambda () (make_sym_dir_mult alpha_topic_word size_vocab))")
-        self.assume("topics","(array (new_topic) (new_topic) (new_topic) (new_topic) )" )
-        self.assume("get_word", "(scope_include 1 0 (mem (lambda (doc_ind word_ind) ((lookup topics ((lookup documents doc_ind) ))) )) )")
-
+        
+        self.assume("get_topic", "(mem (lambda (topic) (new_topic)))")
+        #self.assume("topics","(array (new_topic) (new_topic) (new_topic) (new_topic) )" )
+        self.assume("get_word", "(scope_include 1 0 (mem (lambda (doc_ind word_ind) ((get_topic ((get_doc doc_ind) ))) )) )")
 
     def makeObserves(self):
         D = self.parameters['no_documents']
@@ -28,7 +31,7 @@ class LDA(VentureUnit):
 if __name__ == '__main__':
     ripl = shortcuts.make_puma_church_prime_ripl()
 
-    parameters = {'size_vocab': 30, 'doc_length': 50, 'no_documents': 8, 'no_topics': 4}
+    parameters = {'size_vocab': 30, 'doc_length': 20, 'no_documents': 15, 'no_topics': 4}
     #'alpha_w_prior': '.4', 'alpha_t_prior': '.4'
     #parameters = {'no_topics' : 4, 'size_vocab' : 10, 'no_documents' : 5, 'no_words' : 20}
     #data = [0] * ( parameters['no_documents'] * parameters['no_words'])
@@ -43,14 +46,14 @@ if __name__ == '__main__':
     iters = 50
     runs = 2
     
-    #data, prior = model.generateDataFromPrior(iters, verbose=True)
+    data, prior = model.generateDataFromPrior(iters, verbose=True)
     
-    infer_mh = "(mh default one 1050)"
+    infer_mh = "(mh default one 600)"
     history_mh = model.runFromConditional(iters,runs=runs,verbose=True,data=data, infer=infer_mh)
     
-    infer_slice = "(cycle ((slice 0 one 5) (mh 1 one 100)) 10)"
+    infer_slice = "(cycle ((slice 0 one 1) (mh 1 one 2)) 200)"
     history_slice = model.runFromConditional(iters,runs=runs,verbose=True,data=data, infer=infer_slice)
     
     history_both = historyOverlay("demo", [("mh", history_mh), ("slice", history_slice)])
-    #history_both.addRun(prior)
+    history_both.addRun(prior)
     history_both.quickPlot("logscore")

@@ -151,7 +151,7 @@ def builtInSPsList():
 
 
            [ "array", deterministic(lambda *args: v.VentureArray(np.array(args)),
-                                    sim_grad=lambda args, direction: [direction], # TODO Is this actually right?
+                                    sim_grad=lambda args, direction: direction.getArray(),
                                     descr="%s :: <SP <object> ... -> <array>>\nReturns an array initialized with its arguments") ],
            [ "is_array", type_test(v.ArrayType()) ],
            [ "dict", no_request(dstructures.DictOutputPSP()) ],
@@ -174,7 +174,7 @@ def builtInSPsList():
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),
                                            sim_grad=lambda args, direc: [0, direc, 0] if args[0] else [0, 0, direc],
-                                           descr="%s returns either its first or second argument.")],
+                                           descr="%s returns either its second or third argument.")],
            [ "make_csp", no_request(csp.MakeCSPOutputPSP()) ],
 
            [ "get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType(),
