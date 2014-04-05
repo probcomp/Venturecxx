@@ -61,3 +61,11 @@ if __name__ == '__main__':
   # h1.quickScatter("x", "y", style="-")
   h2 = make_pic("mh", "(mh default one 10)")
   u.historyOverlay("demo", [("hmc", h1), ("mh", h2)]).quickScatter("x", "y", contour_func=true_pdf)
+
+
+
+
+
+
+
+

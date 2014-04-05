@@ -129,27 +129,35 @@ def setup_mripls():
     dv=cli[:]
     dv.execute('mripls=[]; no_mripls=0')
 
-
-
+#if __name__ == '__main__':
+#    setup_mripls()
 
 class MRipl2():
     
-    def __init__(self,no_ripls,backend='puma',no_local_ripls=1,output='remote',verbose=False):
+    def __init__(self,no_ripls,backend='puma',no_local_ripls=1,output='remote',
+                 seeds=None,verbose=False):
+        'seeds={"local":lst_seeds,"remote":lst_seeds}'
+        
         self.backend = backend
-        self.output = output
+        assert output in ['remote','local','both']
+        self.output = output   
+        self.local_mode = True if no_ripls==0 else False
 
         ## initialize remote ripls
         self.cli = Client()
         self.no_engines = len(self.cli.ids)
         self.no_ripls_per_engine = int(np.ceil(no_ripls/float(self.no_engines)))
-        self.no_ripls = self.no_engines * self.no_ripls_per_engine # PRINT ME
-        self.seeds = range(self.no_ripls)  # seeds deterministic for reproducibility
+        self.no_ripls = self.no_engines * self.no_ripls_per_engine 
+        if seeds: assert  len(seeds['local'])==no_local_ripls and len(seeds['remote'])==no_ripls
+        self.seeds = range(self.no_ripls) if not seeds else seeds['remote']
+        
+        # seed are deterministic by default. we reinstate original seeds on CLEAR
         self.dview = self.cli[:]
-        self.dview.block = True
+        self.dview.block = True   # consider again async for infer
 
         # initialize local ripls
         self.no_local_ripls=no_local_ripls
-        self.local_seeds = range(self.no_local_ripls)
+        self.local_seeds = range(self.no_local_ripls) if not seeds else seeds['local']  # seeds deterministic for reproducibility
         if backend=='puma':
             self.local_ripls = [make_puma_church_prime_ripl() for i in range(self.no_local_ripls)]
         else:
@@ -167,6 +175,7 @@ class MRipl2():
         self.mrid = self.dview.pull('no_mripls')[0] # id is index into mripls list
         self.dview.push({'no_mripls':self.mrid+1})
         
+        # function that creates ripls, using ripls_per_engine attribute we send to engines
         @interactive
         def make_mripl_proc(no_ripls_per_engine):
             k=no_ripls_per_engine
@@ -174,7 +183,6 @@ class MRipl2():
                            'puma':[make_puma_church_prime_ripl() for i in range(k)],
                            'seeds':[]})
             
-
         self.dview.apply(make_mripl_proc,self.no_ripls_per_engine)
          
         @interactive
@@ -185,6 +193,7 @@ class MRipl2():
                 ripls = mripl[backend]
                 [ripl.set_seed(mripl['seeds'][i]) for i,ripl in enumerate(ripls)]
 
+        # divide seeds between engines and then set them across ripls in order
         for i in range(self.no_engines):
             engine_view = self.cli[i]
             start = i*self.no_ripls_per_engine
@@ -192,6 +201,8 @@ class MRipl2():
             print 'seeds-for_eng',seeds_for_engine
             engine_view.apply(set_engine_seeds,self.mrid,seeds_for_engine)
         
+        # invariant
+        assert self.seeds==self.lst_flatten(self.dview.apply(lambda mrid:mripls[mrid]['seeds'],self.mrid))
     
         # these should overwrite the * import of ip_parallel (we could also alter names)
         self.dview.push(copy_ripl_dict)
@@ -229,7 +240,7 @@ class MRipl2():
             di_string = '\n'.join(di_string_lst)
         print di_string
         
-        # clear, otherwise, when we switch back to a backend
+        # CLEAR ripls: otherwise when we switch back to a backend
         # we would redefine some variables
         @interactive
         def send_ripls_di_string(mrid,backend,di_string):
@@ -254,9 +265,41 @@ class MRipl2():
         return  self.dview.apply(f,self.mrid,self.backend) 
 
 
+    def mr_apply(self,local_out,f,*args,**kwargs):
+        if self.local_mode: return local_out
+        def arg_printer(*args,**kwargs):
+            for arg in args: print 'nonkword:',arg
+            for key,val in kwargs: print 'kword',key,val
+            return
+        # all remote apply's have to pick a mrid and backend
+        arg_printer(*args,**kwargs)
+        remote_out = self.lst_flatten( self.dview.apply(f,self.mrid,self.backend,*args,**kwargs) )
+            
+        if self.output=='local':
+            return local_out
+        elif self.output=='remote':
+            return remote_out
+        else:
+            return (local,remote)
+            
+    def tassume(self,sym,exp,**kwargs):
+        local_out = [r.assume(sym,exp,**kwargs) for r in self.local_ripls]
+        
+        @interactive
+        def f(mrid,backend,sym,exp,**kwargs):
+            mripl=mripls[mrid]
+            if backend=='puma':
+                return [r.assume(sym,exp,**kwargs) for r in mripl['puma']]
+            else:
+                return pickle_safe([r.assume(sym,exp,**kwargs) for r in mripl['lite']])
+
+        
+        return self.mr_apply(local_out,f,sym,exp,**kwargs)
+        
+
 
     def assume(self,sym,exp,**kwargs):
-        [r.assume(sym,exp,**kwargs) for r in self.local_ripls]
+        local_out = [r.assume(sym,exp,**kwargs) for r in self.local_ripls]
         
         @interactive
         def f(mrid,backend,sym,exp,**kwargs):
@@ -267,7 +310,9 @@ class MRipl2():
                 return pickle_safe([r.assume(sym,exp,**kwargs) for r in mripl['lite']])
 
         return self.lst_flatten( self.dview.apply(f,self.mrid,self.backend,sym,exp,**kwargs) )
-    
+        # args = 
+        #return self.mr_apply(local_out,f,sym,exp,**kwargs)
+        # so mr_apply gets 
 
     def observe(self,exp,val,label=None):
         [r.observe(exp,val,label=None) for r in self.local_ripls]
