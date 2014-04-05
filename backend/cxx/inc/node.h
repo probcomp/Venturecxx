@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <unordered_set>
 #include <stdint.h>
 #include <cassert>
 
@@ -63,7 +64,7 @@ struct Node
 
   bool isActive{false};
 
-  set<Node*> children{};
+  unordered_set<Node*> children{};
   uint32_t numRequests{0};
 
   VentureValue * observedValue{nullptr};
@@ -79,6 +80,8 @@ struct Node
   Node * outputNode{nullptr};
   bool isConstrained{false};
   bool spOwnsValue{true};
+
+  VentureValue * expression{nullptr};
 
   SPAux * madeSPAux{nullptr}; // owner
 

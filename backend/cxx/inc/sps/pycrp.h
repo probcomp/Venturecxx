@@ -3,6 +3,7 @@
 
 #include "sp.h"
 #include "spaux.h"
+#include <unordered_map>
 /* Bayesian non-parametric distributions. */
 
 
@@ -11,7 +12,7 @@ struct PitmanYorCRPSPAux : SPAux
   uint32_t nextIndex{0};
   uint32_t numCustomers{0};
   uint32_t numTables{0};
-  map<uint32_t,uint32_t> tableCounts;
+  unordered_map<uint32_t,uint32_t> tableCounts;
 };
 
 struct MakePitmanYorCRPSP : SP

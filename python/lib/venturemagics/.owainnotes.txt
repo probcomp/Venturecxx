@@ -1,0 +1,109 @@
+# #Python Freenode:#Python (channel), minrk or min_rk
+
+
+
+#TODO 1
+#- connect to EC2 and create some convenience features for doing so
+# - ask about the namespace issues for multiripls
+
+# test waiting on infer, test interactive mode, where an engine or ripl dies and you recover
+
+# - too many methods, find some way to structure better.
+
+# TODO 2
+# 1. make display work and plot with discrete and cts inputs. 
+#   so the crp example (maybe with ellipsoids). 
+#     -- should add snapshot (with total transitions), as display will depend on it.
+
+# 2. probes and scatter?
+
+# - better type mathod
+
+# - work out  
+
+# 3. have the local ripl be optional
+
+#4. map function should intercept infers to update total-transitions?
+
+# 5. add all directives
+
+# 7. want the user to be able to specify a cluster (a Client() output
+# object).
+# 8. async should be an option for plotting as you might have lots
+# of infers as part of your code, or you might easily (in interaction)
+# write somethign that causes crashes. (blocking is enemy of 
+# interactive development)
+
+# 9. In Master: clear shouldn't destroy the seed (delegate new seed after clear)
+
+# 10. continuous inference
+
+
+
+
+# Notes on Parallel IPython
+
+# Questions
+# 1. How exactly to enable user to purge data from a process
+# and to shutdown processes. Should we allow one engine
+# to fail and still get results back from others (vs. just
+# having to restart the whole thing again). 
+
+# 2. Basic design idea: only wait on infer. Everything else
+# is synchronous. Do we need to give user the option of 
+# making everything asynchronous?
+
+# If not: we could set blocking and then have everything 
+# be blocking by default (map not map_sync). 
+
+# For infer, we override by running apply_async. We get
+# back an async object.  
+
+# if infer is async, need to think about what if someone combines them
+# someone does a %v cell magic and it has (infer 10) in it. 
+# might need an infer to finish before the predict. so if 
+# waiting for an infer to fnish, what will predict do?
+
+# looks life v.predict(1000) waits for v.infer(1000) to finish. is this
+# a general rule, that one command will wait for the other? presumably
+# otherwise semantics wouldn't work out. 
+#  a=v.infer(100000);b= v.predict('100000000000000')
+
+
+# q: what to do when one or two engines segfault? engines die. how 
+# can we recover. engines won't start again. how to properly kill the engines?
+
+# cool stuff: interactive_wait. maybe what we want for stuff involving inference
+# cool stuff:  %px from IPython.parallel import bind_kernel; bind_kernel()
+#           %px %qtconsole
+
+
+
+# seems we can use magic commands in a %px
+# and so the engines are running ipython
+# --though they don't get the ipy_ripl (why not?)
+
+# question of what happens when you push a function to them
+# functions can't be mutated, so a pointer to a function
+# should be the same as copying the function, apart from 
+# the issue of the enclosing env. so: the function you
+# push is like a copy, it doesn't maintain the closure
+# (makes sense, coz we can't send across functions with closures)
+
+#e.g. s='local'; f=lambda:s; dv.push({'f':f}); %px f() = error (no s var)
+
+
+
+
+
+on the mr_magic:
+## Consider Version where we use execute instead of %px
+    # one way: define function locally and sent it to all ripls
+    #f_name = f_name_parens[:f_name_parens.find('(')]
+    #res1 = v.dview.apply_sync(lambda:[func(r) for r in ripls])
+    
+    # second way: run all the code, which could include various 
+    # defines and imports needed for the function, across all engines
+    # then execute code that maps the defined function across all ripls
+    # in an engine and pull out the resulting object (should be something
+    # one can pull).

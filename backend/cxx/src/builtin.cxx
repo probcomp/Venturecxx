@@ -61,6 +61,7 @@ map<string,SP *> initBuiltInSPs()
     {"times", new TimesSP},
     {"div", new DivideSP},
     {"power", new PowerSP},
+    {"pow", new PowerSP},
     {"eq", new EqualSP},
     {"gt", new GreaterThanSP},
     {"lt", new LessThanSP},
@@ -96,13 +97,16 @@ map<string,SP *> initBuiltInSPs()
     {"map_list", new MapListSP},
 
     // vectors
-    {"make_vector", new MakeVectorSP},
-    {"vector_lookup", new VectorLookupSP},
+    {"simplex", new MakeVectorSP},
+    {"array", new MakeVectorSP},
+    {"array_lookup", new VectorLookupSP},
 
     // maps
-    {"make_map", new MakeMapSP},
-    {"map_contains", new MapContainsSP},
-    {"map_lookup", new MapLookupSP},
+    {"dict", new MakeMapSP},
+    {"contains", new MapContainsSP},
+    {"dict_lookup", new MapLookupSP},
+
+    {"lookup", new GenericLookupSP},
     
     // booleans
     {"and", new BoolAndSP},
@@ -152,7 +156,7 @@ map<string,SP *> initBuiltInSPs()
     {"make_csp", new MakeCSP},
 
     // with shared ESRs
-    {"mem", new MSPMakerSP},
+    {"mem", new MakeMSP},
   };
 }
 

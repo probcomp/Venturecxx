@@ -191,7 +191,7 @@ double Trace::unapplyPSP(Node * node,
   assert(node->isValid());
   assert(node->sp()->isValid());
 
-
+  double weight = 0;
 
   if (node->nodeType == NodeType::OUTPUT && node->sp()->isESRReference) 
   { 
@@ -203,7 +203,7 @@ double Trace::unapplyPSP(Node * node,
   
   assert(node->getValue()->isValid());
 
-  if (node->nodeType == NodeType::REQUEST) { unevalRequests(node,scaffold,omegaDB); }
+  if (node->nodeType == NodeType::REQUEST) { weight += unevalRequests(node,scaffold,omegaDB); }
   if (node->sp()->isRandom(node->nodeType)) { 
     unregisterRandomChoice(node); 
   }
@@ -212,7 +212,7 @@ double Trace::unapplyPSP(Node * node,
   { teardownMadeSP(node,scaffold && scaffold->isAAA(node),omegaDB); }
 
   SP * sp = node->sp();
-  double weight = 0;
+
 
   sp->remove(node->getValue(),node);
 

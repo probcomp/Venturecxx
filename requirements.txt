@@ -1,8 +1,17 @@
+# Venture
 pyparsing>=1.5.7
 flask>=0.10
 requests>=1.2
 
-# vmodule
+# nose
+nose-testconfig
+nose-ignore-docstring
+nose-cov
+
+# VentureUnit
 numpy
 distribute>=0.7.3
 matplotlib
+
+# IPython Magics
+ipython>=0.13

@@ -16,16 +16,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from pyparsing import Literal,CaselessLiteral,Regex,Word,Combine,Group,Optional,\
-    ZeroOrMore,OneOrMore,Forward,nums,alphas,FollowedBy,Empty,ParseException,\
-    Keyword, CaselessKeyword, MatchFirst
-import re
+from pyparsing import Literal,ZeroOrMore,Forward
 from venture.parser import utils
-import json
 
 
-
-class ChurchPrimeParser():
+class ChurchPrimeParser(object):
     def __init__(self):
 
         m = {'+':'add', '-':'sub', '*':'mul', '/':'div', '<':'lt',

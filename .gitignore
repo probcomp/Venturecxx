@@ -4,11 +4,14 @@ env.d
 # python
 *.pyc
 
-# CMake files
-CMakeCache.txt
-CMakeFiles
-cmake_install.cmake
-Makefile
-
 # gedit temp files
 *~
+
+htmlcov
+.coverage
+.coverage.*
+
+# dev/testing
+dump
+a.out
+

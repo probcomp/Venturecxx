@@ -16,9 +16,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from venture.ripl import utils
 from venture.exception import VentureException
-
+import utils as u
 
 class Ripl():
     def __init__(self,sivm,parsers):
@@ -47,7 +46,13 @@ class Ripl():
             raise VentureException('invalid_mode',
                     "Mode {} is not implemented by this RIPL".format(mode))
 
-
+    ############################################
+    # Backend
+    ############################################
+    
+    def backend(self):
+        return self.sivm.core_sivm.engine.name
+    
     ############################################
     # Execution
     ############################################
@@ -155,7 +160,7 @@ class Ripl():
             s = self._cur_parser().get_instruction_string('labeled_assume')
             d = {'symbol':name, 'expression':expression, 'label':label}
         value = self.execute_instruction(s,d)['value']
-        return value if type else value['value']
+        return value if type else _strip_types(value)
 
     def predict(self, expression, label=None, type=False):
         if label==None:
@@ -165,7 +170,7 @@ class Ripl():
             s = self._cur_parser().get_instruction_string('labeled_predict')
             d = {'expression':expression, 'label':label}
         value = self.execute_instruction(s,d)['value']
-        return value if type else value['value']
+        return value if type else _strip_types(value)
 
     def observe(self, expression, value, label=None):
         if label==None:
@@ -181,7 +186,8 @@ class Ripl():
     # Core
     ############################################
 
-    def configure(self, options={}):
+    def configure(self, options=None):
+        if options is None: options = {}
         p = self._cur_parser()
         s = p.get_instruction_string('configure')
         d = {'options':options}
@@ -219,16 +225,28 @@ class Ripl():
             s = self._cur_parser().get_instruction_string('labeled_report')
             d = {'label':label_or_did}
         value = self.execute_instruction(s,d)['value']
-        return value if type else value['value']
+        return value if type else _strip_types(value)
 
-    def infer(self, transitions, kernel="mh", use_global_scaffold=False):
+    # takes params and turns them into the proper dict
+    # TODO Correctly default block choice?
+    def parseInferParams(self, params):
+        if params is None:
+            return {"kernel":"rejection","scope":"default","block":"all","transitions":1}
+        if isinstance(params, int):
+            return {"transitions": params, "kernel": "mh",
+                        "scope":"default", "block":"one"}
+        elif isinstance(params, str):
+            return u.expToDict(u.parse(params))
+        elif isinstance(params, dict):
+            return params
+        else: raise TypeError("Unknown params: " + str(params))
+        
+    def infer(self, params):
         s = self._cur_parser().get_instruction_string('infer')
-        self.execute_instruction(s, {'params': {"transitions": transitions,
-            "kernel": kernel, "use_global_scaffold": use_global_scaffold}})
+        self.execute_instruction(s, {'params': self.parseInferParams(params)})
 
     def clear(self):
         s = self._cur_parser().get_instruction_string('clear')
-        d = {}
         self.execute_instruction(s,{})
         return None
 
@@ -244,8 +262,15 @@ class Ripl():
             # modified to add value to each directive
             # FIXME: is this correct behavior?
             for directive in directives:
-                value = self.report(directive['directive_id'], type)
-                directive['value'] = value
+                inst = { 'instruction':'report',
+                         'directive_id':directive['directive_id'],
+                         }
+                # Going around the string synthesis and parsing makes
+                # the demos acceptably fast (time for the venture
+                # server to respond to /list_directives improves by
+                # 5-10x, depending on the number of directives).
+                value = self.sivm.core_sivm.execute_instruction(inst)['value']
+                directive['value'] = value if type else _strip_types(value)
             return directives
 
     def get_directive(self, label_or_did):
@@ -267,16 +292,15 @@ class Ripl():
         s = self._cur_parser().get_instruction_string('sample')
         d = {'expression':expression}
         value = self.execute_instruction(s,d)['value']
-        return value if type else value['value']
+        return value if type else _strip_types(value)
     
     def continuous_inference_status(self):
         s = self._cur_parser().get_instruction_string('continuous_inference_status')
         return self.execute_instruction(s)
 
-    def start_continuous_inference(self, kernel="mh", use_global_scaffold=False):
+    def start_continuous_inference(self, params=None):
         s = self._cur_parser().get_instruction_string('start_continuous_inference')
-        self.execute_instruction(s, {'params':
-            {"kernel": kernel, "use_global_scaffold": use_global_scaffold}})
+        self.execute_instruction(s, {'params': self.parseInferParams(params)})
         return None
 
     def stop_continuous_inference(self):
@@ -309,7 +333,8 @@ class Ripl():
     # Profiler methods (stubs)
     ############################################
     
-    def profiler_configure(self, options={}):
+    def profiler_configure(self, options=None):
+        if options is None: options = {}
         s = self._cur_parser().get_instruction_string('profiler_configure')
         d = {'options': options}
         return self.execute_instruction(s, d)['options']
@@ -329,7 +354,7 @@ class Ripl():
         return None
     
     # insert a random choice into the profiler
-    def profiler_make_random_choice():
+    def profiler_make_random_choice(self):
         import random
         address = random.randrange(1 << 16)
         trials = random.randrange(1, 1000)
@@ -342,16 +367,16 @@ class Ripl():
         
         return address
     
-    def profiler_list_random_choices():
+    def profiler_list_random_choices(self):
         return self.random_choices
     
-    def profiler_address_to_source_code_location(address):
+    def profiler_address_to_source_code_location(self,address):
         return address
     
-    def profiler_get_acceptance_rate(address):
+    def profiler_get_acceptance_rate(self,address):
         return self.address_to_acceptance_rate[address]
     
-    def profiler_get_proposal_time(address):
+    def profiler_get_proposal_time(self,address):
         return self.address_to_proposal_time[address]
     
     ############################################
@@ -368,3 +393,9 @@ class Ripl():
         args, arg_ranges = p.split_instruction(text)
         return args['expression'], arg_ranges['expression'][0]
 
+def _strip_types(value):
+    if isinstance(value, dict):
+        ans = value['value']
+        if isinstance(ans,list): return [_strip_types(v) for v in ans]
+        else: return ans
+    else: return value

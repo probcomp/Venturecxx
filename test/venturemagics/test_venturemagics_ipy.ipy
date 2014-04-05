@@ -1,0 +1,32 @@
+## Tests for Venturemagics2.py (IPython Form)
+
+from venture.venturemagics.venturemagics import *
+
+# output of directive is first arg of %v output
+a,_ = %v [predict (+ 1.0 2.0)]
+assert(a==3.0)
+
+# ripl should persist 
+%v [assume x1 1.0]
+b,_ = %v [predict x1]
+assert(b==1.0)
+
+# ripl can be directly called
+ipy_ripl.infer(10)
+ipy_ripl.assume('x5','(beta 1 1)')
+assert(True==ipy_ripl.predict('true'))
+assert(ipy_ripl.predict('x5')>0)
+
+# print '3ipy, before cell'
+# ## test cell magic
+# cell='''
+# %%v
+# [assume cellx 10.0]
+# [predict cellx]'''
+
+# ip = get_ipython()
+# ip.run_cell(cell)
+
+# assert(ipy_ripl.predict('cellx')==10.0)
+
+

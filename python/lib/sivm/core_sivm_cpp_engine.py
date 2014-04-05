@@ -146,13 +146,13 @@ class CoreSivmCppEngine(object):
             val = self.engine.infer(iterations)
         return {}
 
-    def _do_clear(self,instruction):
+    def _do_clear(self,_):
         utils.require_state(self.state,'default')
         self.engine.clear()
         self.observe_dict = {}
         return {}
 
-    def _do_rollback(self,instruction):
+    def _do_rollback(self,_):
         utils.require_state(self.state,'exception','paused')
         #rollback not implemented in C++
         self.state = 'default'
@@ -175,24 +175,24 @@ class CoreSivmCppEngine(object):
                 raise
         return {"logscore":0}
 
-    def _do_get_global_logscore(self,instruction):
+    def _do_get_global_logscore(self,_):
         utils.require_state(self.state,'default')
         l = self.engine.logscore()
         return {"logscore":l}
         
-    def _do_start_continuous_inference(self,instruction):
+    def _do_start_continuous_inference(self,_):
         utils.require_state(self.state,'default')
         with self._catch_engine_error():
             self.engine.start_continuous_inference()
         return {}
 
-    def _do_stop_continuous_inference(self,instruction):
+    def _do_stop_continuous_inference(self,_):
         utils.require_state(self.state,'default')
         with self._catch_engine_error():
             self.engine.stop_continuous_inference()
         return {}
 
-    def _do_continuous_inference_status(self,instruction):
+    def _do_continuous_inference_status(self,_):
         utils.require_state(self.state,'default')
         with self._catch_engine_error():
             return {'running':self.engine.continuous_inference_status()}

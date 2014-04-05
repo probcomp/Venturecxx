@@ -10,7 +10,7 @@
 
 struct BranchSP : SP
 {
-  BranchSP()
+  BranchSP(): SP("branch")
     {
       makesESRs = true;
       isESRReference = true;
@@ -23,7 +23,7 @@ struct BranchSP : SP
 
 struct BiplexSP : SP
 {
-
+  BiplexSP(): SP("biplex") {}
   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
   void flushOutput(VentureValue * value) const override;
 

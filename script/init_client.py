@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-from venture.shortcuts import *
+from venture.shortcuts import make_ripl_rest_client
 
 port = 8082
 if len(sys.argv) > 1:
@@ -26,3 +26,4 @@ if len(sys.argv) > 1:
 url = "http://127.0.0.1:{0}".format(port)
 print "Connecting to RIPL Server at {0}".format(url)
 ripl = make_ripl_rest_client(url)
+print "Venture RIPL handle in `ripl' variable"

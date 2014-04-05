@@ -18,8 +18,6 @@
 
 from venture.exception import VentureException
 from venture.sivm import utils
-import json
-import re
 import copy
 
 
@@ -197,11 +195,11 @@ class VentureSivm(object):
                 utils.validate_symbol)
         if exists==False and label in self.label_dict:
             raise VentureException('invalid_argument',
-                    'Label "{}" is already assigned to a different directive.',
+                    'Label "{}" is already assigned to a different directive.'.format(label),
                     argument='label')
         if exists==True and label not in self.label_dict:
             raise VentureException('invalid_argument',
-                    'Label "{}" does not exist.',
+                    'Label "{}" does not exist.'.format(label),
                     argument='label')
         return label
 
@@ -248,7 +246,7 @@ class VentureSivm(object):
             #tmp['instruction'] = 'labeled_' + tmp['instruction']
         return tmp
     
-    def _do_list_directives(self, instruction):
+    def _do_list_directives(self, _):
         return { "directives" : [self.get_directive(did) for did in self.directive_dict.keys()] }
     
     def _do_get_directive(self, instruction):
@@ -275,11 +273,14 @@ class VentureSivm(object):
                 "value" : val,
                 }
         o1 = self._call_core_sivm_instruction(inst1)
-        inst2 = {
+        inst2 = { "instruction" : "infer",
+                  "params" : { "transitions" : 0 } }
+        self._call_core_sivm_instruction(inst2)
+        inst3 = {
                 "instruction" : "forget",
                 "directive_id" : o1['directive_id'],
                 }
-        o2 = self._call_core_sivm_instruction(inst2)
+        self._call_core_sivm_instruction(inst3)
         return {}
     
     def _do_sample(self, instruction):
@@ -294,7 +295,7 @@ class VentureSivm(object):
                 "instruction" : "forget",
                 "directive_id" : o1['directive_id'],
                 }
-        o2 = self._call_core_sivm_instruction(inst2)
+        self._call_core_sivm_instruction(inst2)
         return {"value":o1['value']}
     
     # not used anymore?
@@ -312,13 +313,13 @@ class VentureSivm(object):
                 "continuous_inference_enable" : self._continuous_inference_enabled(),
                 }}
     
-    def _do_get_current_exception(self, instruction):
+    def _do_get_current_exception(self, _):
         utils.require_state(self.state,'exception','paused')
         return {
                 'exception': copy.deepcopy(self.current_exception),
                 }
     
-    def _do_get_state(self, instruction):
+    def _do_get_state(self, _):
         return {
                 'state': self.state,
                 }
@@ -335,7 +336,7 @@ class VentureSivm(object):
         self._call_core_sivm_instruction(instruction)
         return {}
     
-    def _do_debugger_list_breakpoints(self, instruction):
+    def _do_debugger_list_breakpoints(self, _):
         return {
                 "breakpoints" : copy.deepcopy(self.breakpoint_dict.values()),
                 }

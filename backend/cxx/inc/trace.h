@@ -3,8 +3,10 @@
 
 #include <vector>
 #include <map>
-#include <map>
+#include <unordered_map>
+#include <set>
 #include <string>
+#include <functional>
 
 #include <gsl/gsl_rng.h>
 #include <boost/python/object.hpp>
@@ -62,7 +64,7 @@ struct Trace
 
   vector<Node *> getRandomChoices(); // used by kernels
 
-  map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
+  unordered_map<size_t,pair<Node*,VentureValue*> > ventureFamilies;
 
 
 //  map<size_t,Node*> definiteFamilies;
@@ -204,14 +206,21 @@ struct Trace
   VentureEnvironment * primitivesEnv;
   VentureEnvironment * globalEnv;
   
-  map<Node *, uint32_t> rcToIndex;
+  unordered_map<Node *, uint32_t> rcToIndex;
   vector<Node *> randomChoices;
 
-  map<Node *, uint32_t> ccToIndex;
+  unordered_map<Node *, uint32_t> ccToIndex;
   vector<Node *> constrainedChoices;
 
   // Bool is TRUE for detach
   map<pair<string,bool>,uint32_t> callCounts;
+
+  //////////////////////////////////////////
+//  void forEachNode(function<void(Node *)> f);
+//  void forEachEdge(function<void(Edge *)> f);
+  set<Node *> findSPFamilyRoots();
+
+
 };
 
 

@@ -30,7 +30,7 @@ void Scaffold::addResamplingNode(queue<pair<Node *, bool> > & q, Node * node)
   for (Node * child : node->children) { q.emplace(child,false); }
 }
 
-Scaffold::Scaffold(set<Node *> principalNodes)
+Scaffold::Scaffold(set<Node *> principalNodes): principalNodes(principalNodes)
 {
   /* TODO extended SCAFFOLD */
   assembleERG(principalNodes);

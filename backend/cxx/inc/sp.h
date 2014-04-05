@@ -27,6 +27,9 @@ enum class ParameterScope;
    so it should be considered an abstract class. */
 struct SP
 {
+  SP() {}
+  SP(string name): name(name) {}
+
 /* Simulate */
   VentureValue * simulate(Node * node, gsl_rng * rng) const;
   virtual VentureValue * simulateRequest(Node * node, gsl_rng * rng) const { return nullptr; }

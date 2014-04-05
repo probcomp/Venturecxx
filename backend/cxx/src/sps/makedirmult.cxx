@@ -27,9 +27,11 @@
 VentureValue * MakeDirMultSP::simulateOutput(Node * node, gsl_rng * rng) const
 {
   vector<double> alphaVector;
-  for (Node * operandNode : node->operandNodes)
+  VentureVector * vec = dynamic_cast<VentureVector *>(node->operandNodes[0]->getValue());
+  assert(vec);
+  for (VentureValue * x : vec->xs)
   {
-    VentureNumber * alpha_i = dynamic_cast<VentureNumber *>(operandNode->getValue());
+    VentureNumber * alpha_i = dynamic_cast<VentureNumber *>(x);
     assert(alpha_i);
     alphaVector.push_back(alpha_i->x);
   }
@@ -43,7 +45,7 @@ double DirMultSP::logDensityOfCounts(SPAux * generic_spaux) const
   assert(spaux);
 
   auto N = boost::accumulate(spaux->counts, 0);
-  double A = boost::accumulate(alphaVector, 0);
+  double A = boost::accumulate(alphaVector, 0.0);
 
   double x = gsl_sf_lngamma(A) - gsl_sf_lngamma(N + A);
   for (size_t i = 0; i < alphaVector.size(); ++i)
