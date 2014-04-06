@@ -13,8 +13,6 @@ mk_p_ripl = make_puma_church_prime_ripl
 
 ### IPython Parallel Magics
 
-# special cases of lite vs. puma: infer, list_directives (get from local_ripl instead)
-
 
 # Utility functions for working with ipcluster
 
@@ -22,7 +20,7 @@ def clear_all_engines():
     'Clears the namespaces of all IPython remote processes'
     cli = Client()
     cli.clear(block=True)
-    #setup_mripls() ##### FIXME CHANGE THIS
+    erase_initialize_mripls() ## FIXME
 
 def shutdown():
     cli = Client(); cli.shutdown()
@@ -88,46 +86,18 @@ def copy_ripl(ripl,seed=None):
 copy_ripl_dict = {'build_exp':build_exp,
                   'run_py_directive':run_py_directive,'copy_ripl':copy_ripl}
 
-# function for creating a list of ripls for each mripl
-make_mripl_string='''
-try:
-    mripls.append([]); no_mripls += 1; seeds_lists.append([])
-except:
-    mripls=[ [], ]; no_mripls=1; seeds_lists = [ [], ]'''
-
-@interactive
-def make_mripl_func():
-    try:
-        mripls.append([]); no_mripls += 1; seeds_lists.append([])
-    except:
-        mripls=[ [], ]; no_mripls=1; seeds_lists = [ [], ]
-
 
 ## MRIPL CLASS
 
-# Create MRipls. Multiple MRipls can be created, sharing the same engines.
-# Each engine has a list 'mripl', each element of which is a list 'ripl'
-# containing ripls for that mripl. So the mripls are all being run in a
-# single namespace on each remote engine.
 
-# The user will mostly interact with an
-# mripl via directives like 'mripl.assume(...)', which is applied to each
-# ripl of that mripl (across all engines). However, the mripl.dview 
-# attribute is a direct-view on the engines and allows the user to 
-# execute arbitrary code across the engines, including altering the state
-# of other mripls. (The user can also do this via %px). 
+def erase_initialize_mripls():
+    try:
+        cli=Client()
+        dv=cli[:]
+        dv.execute('mripls=[]; no_mripls=0')
+    except:
+        print 'Failed to initialize. Try >ipcluster'
 
-# (We can consider ways of making the data of an mripl accessible only
-# via the mripl object in the user namespace). 
-
-def setup_mripls():
-    'Create an mripls list on each engine'
-    cli=Client()
-    dv=cli[:]
-    dv.execute('mripls=[]; no_mripls=0')
-
-#if __name__ == '__main__':
-#    setup_mripls()
 
 class MRipl2():
     
@@ -139,6 +109,7 @@ class MRipl2():
         assert output in ['remote','local','both']
         self.output = output   
         self.local_mode = True if no_ripls==0 else False
+        ip=get_ipython(); print 0,ip.run_line_magic("px", 'mripls')
 
         ## initialize remote ripls
         self.cli = Client()
@@ -151,6 +122,8 @@ class MRipl2():
         # seed are deterministic by default. we reinstate original seeds on CLEAR
         self.dview = self.cli[:]
         self.dview.block = True   # consider again async for infer
+
+        ip=get_ipython(); print 1,ip.run_line_magic("px", 'mripls')
 
         # initialize local ripls
         self.no_local_ripls=no_local_ripls
@@ -171,6 +144,8 @@ class MRipl2():
 
         self.mrid = self.dview.pull('no_mripls')[0] # id is index into mripls list
         self.dview.push({'no_mripls':self.mrid+1})
+
+        ip=get_ipython(); print 2,ip.run_line_magic("px", 'mripls')
         
         # function that creates ripls, using ripls_per_engine attribute we send to engines
         @interactive
@@ -181,6 +156,7 @@ class MRipl2():
                            'seeds':[]})
             
         self.dview.apply(make_mripl_proc,self.no_ripls_per_engine)
+        ip=get_ipython(); print 3,ip.run_line_magic("px", 'mripls')
          
         @interactive
         def set_engine_seeds(mrid,seeds_for_engine):
@@ -198,10 +174,16 @@ class MRipl2():
             engine_view.apply(set_engine_seeds,self.mrid,seeds_for_engine)
         
         # invariant
-        assert self.seeds==self.lst_flatten(self.dview.apply(lambda mrid:mripls[mrid]['seeds'],self.mrid))
+        try:
+            self.dview.execute('st=str(mripls)')
+            print self.dview['st']
+        except:
+            pass
+        #assert self.seeds==self.lst_flatten(self.dview.apply(lambda mrid:mripls[mrid]['seeds'],self.mrid))
     
+
         # these should overwrite the * import of ip_parallel (we could also alter names)
-        self.dview.push(copy_ripl_dict)
+        #self.dview.push(copy_ripl_dict)
 
         #initialize no_transitions
         self.total_transitions = 0
@@ -248,7 +230,6 @@ class MRipl2():
 
         self.dview.apply(send_ripls_di_string,self.mrid,self.backend,di_string)
 
-        
 
     def clear(self):
         self.total_transitions = 0
@@ -281,11 +262,11 @@ class MRipl2():
 
     def mr_apply(self,local_out,f,*args,**kwargs):
         if self.local_mode: return local_out
-        def arg_printer(*args,**kwargs):
-            for arg in args: print 'nonkword:',arg
-            for key,val in kwargs: print 'kword',key,val
-            return
-        arg_printer(*args,**kwargs)
+        # def arg_printer(*args,**kwargs):
+        #     for arg in args: print 'nonkword:',arg
+        #     for key,val in kwargs: print 'kword',key,val
+        #     return
+        # arg_printer(*args,**kwargs)
 
         # all remote apply's have to pick a mrid and backend
 
@@ -333,6 +314,19 @@ class MRipl2():
         return self.mr_apply(local_out,f,exp,label=label,type=type)
 
 
+    def sample(self,exp,type=False):
+        local_out = [r.sample(exp,type=type) for r in self.local_ripls]
+        
+        @interactive
+        def f(mrid,backend,exp,type=False):
+            mripl=mripls[mrid]
+            out = [r.sample(exp,type=type) for r in mripl[backend]]
+            return backend_filter(backend,out)
+
+        return self.mr_apply(local_out,f,exp,type=type)
+
+
+
     def infer(self,params,block=True):
         if isinstance(params,int):
             self.total_transitions += params
@@ -372,11 +366,12 @@ class MRipl2():
 
 
     def forget(self,label_or_did):
-        [r.forget(label_or_did) for r in self.local_ripls]
+        local_out = [r.forget(label_or_did) for r in self.local_ripls]
         @interactive
         def f(mrid,backend,label_or_did):
             return [r.forget(label_or_did) for r in mripls[mrid][backend]]
-        return self.lst_flatten( self.dview.apply(f,self.mrid,self.backend,label_or_did) )
+            
+        return self.mr_apply(local_out,f,label_or_did)
 
 
     def continuous_inference_status(self):
@@ -422,30 +417,13 @@ class MRipl2():
 
 
     def get_global_logscore(self):
-        self.local_ripl.get_global_logscore()
-        @interactive
-        def f(mrid):
-            return [ripl.get_global_logscore() for ripl in mripls[mrid]]
-        return self.lst_flatten( self.dview.apply(f,self.mrid) )
+        local_out = [r.get_global_logscore() for r in self.local_ripls]
 
-    
-    def sample(self,exp,type=False):
-        
-        self.local_ripl.sample(exp,type)
         @interactive
-        def f(exp,type,mrid):
-               return [ripl.sample(exp,type) for ripl in mripls[mrid] ]
-               
-        if self.lite:
-            @interactive
-            def f(exp,type,mrid):
-                out = [ripl.sample(exp,type) for ripl in mripls[mrid] ]
-                try:
-                    pickle.dumps(out)
-                    return out
-                except:
-                    return ['sp' for ripl in mripls[mrid] ]
-        return self.lst_flatten( self.dview.apply(f,exp,type,self.mrid) )
+        def f(mrid,backend):
+            return [r.get_global_logscore() for r in mripls[mrid][backend]]
+
+        return self.mr_apply(local_out,f)
 
 
     def list_directives(self,type=False): return self.local_ripls[0].list_directives(type=type) 
@@ -490,8 +468,7 @@ class MRipl2():
         def get_info(mrid,backend):
             import os; pid=os.getpid()
             mripl=mripls[mrid]
-            seeds = mripl['seeds']
-            # FIXME add get_seed
+            seeds = mripl['seeds'] # FIXME add get_seed
             ripl_prints = [str(r) for r in mripl[backend]]
             return [(pid,seed,ripl_print) for seed,ripl_print in zip(seeds,ripl_prints) ]
                    
@@ -530,6 +507,26 @@ class MRipl2():
 
 
 
+
+
+
+
+
+
+
+# function for creating a list of ripls for each mripl
+make_mripl_string='''
+try:
+    mripls.append([]); no_mripls += 1; seeds_lists.append([])
+except:
+    mripls=[ [], ]; no_mripls=1; seeds_lists = [ [], ]'''
+
+@interactive
+def make_mripl_func():
+    try:
+        mripls.append([]); no_mripls += 1; seeds_lists.append([])
+    except:
+        mripls=[ [], ]; no_mripls=1; seeds_lists = [ [], ]
 
 
 
@@ -1661,3 +1658,20 @@ def predictive(mripl,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=
     fig.tight_layout()
     
     return xs,ys
+
+
+####### OLD DOCSTRING (still mostly applies)
+# Create MRipls. Multiple MRipls can be created, sharing the same engines.
+# Each engine has a list 'mripl', each element of which is a list 'ripl'
+# containing ripls for that mripl. So the mripls are all being run in a
+# single namespace on each remote engine.
+
+# The user will mostly interact with an
+# mripl via directives like 'mripl.assume(...)', which is applied to each
+# ripl of that mripl (across all engines). However, the mripl.dview 
+# attribute is a direct-view on the engines and allows the user to 
+# execute arbitrary code across the engines, including altering the state
+# of other mripls. (The user can also do this via %px). 
+
+# (We can consider ways of making the data of an mripl accessible only
+# via the mripl object in the user namespace). 
