@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+
 module Utils (module Utils, module Unique) where
 
 import Debug.Trace

@@ -59,10 +59,10 @@ library
                        TypeSynonymInstances, ExistentialQuantification, RecordWildCards
   
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.5 && <4.6, containers >=0.4 && <0.5,
-                       lens >=3.10 && <3.11, pretty >=1.1 && <1.2,
-                       MonadRandom >=0.1 && <0.2, transformers >=0.3 && <0.4,
-                       math-functions >=0.1 && <0.2, mtl, mmorph
+  build-depends:       base >=4.5 && <5, containers >=0.4 && <1,
+                       lens >=3.10 && <4, pretty >=1.1 && <2,
+                       MonadRandom >=0.1 && <1, transformers >=0.3 && <1,
+                       math-functions >=0.1 && <1, mtl, mmorph
   
   -- Directories containing source files.
   -- hs-source-dirs:      
@@ -75,8 +75,8 @@ library
 Test-suite tests
   Type:                exitcode-stdio-1.0
   Main-is:             VentureTest.hs
-  build-depends:       base >=4.5, containers >=0.4 && <0.5,
-                       lens >=3.10 && <3.11, pretty >=1.1 && <1.2,
-                       MonadRandom >=0.1 && <0.2, transformers >=0.3 && <0.4,
-                       math-functions >=0.1 && <0.2, mtl, mmorph, HUnit
+  build-depends:       base >=4.5, containers >=0.4 && <1,
+                       lens >=3.10 && <4, pretty >=1.1 && <2,
+                       MonadRandom >=0.1 && <1, transformers >=0.3 && <1,
+                       math-functions >=0.1 && <1, mtl, mmorph, HUnit
   Ghc-options:         -Wall -fno-warn-name-shadowing

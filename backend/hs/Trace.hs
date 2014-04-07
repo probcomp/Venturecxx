@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts, TemplateHaskell, TypeSynonymInstances, FlexibleInstances, ExistentialQuantification, RecordWildCards, TupleSections #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Trace where
 
