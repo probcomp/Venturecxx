@@ -6,6 +6,7 @@ from IPython.parallel import Client
 from nose.tools import with_setup
 
 from venture.venturemagics.ip_parallel import *
+execfile('ip_parallel.py')
 
 def mk_ripl(backend):
     if backend=='puma': return mk_p_ripl()
@@ -108,11 +109,46 @@ def testAll_IP():
         #assert( vv.report(1) == ( [3.] * no_rips ) )
         print '... passed'
 
+
+    def testBackendSwitch():
+        # test backend switching
+        clear_all_engines(); print 'BackendSwitch'
+        for backend in ['puma','lite']:
+            v=MRipl2(4,backend=backend)
+            v.assume('mu','(normal 0 2)')
+            [v.observe('(normal mu .5)','3') for i in range(20)]
+            v.infer(300)
+            out1 = np.mean(v.sample('mu'))
+            s='lite' if backend=='puma' else 'puma'
+            v.switch_backend(s)
+            v.infer(300)
+            out2 = np.mean(v.sample('mu'))
+            assert .5 > abs(out1 - out2)
+            
+        # start puma, switch to lite, switch back, re-do inference
+        clear_all_engines()
+        v=MRipl2(5,backend='puma')
+        v.assume('mean','(binomial 10 .3)')
+        [v.observe('(poisson mean)','3') for i in range(20)]
+        v.infer(300)
+        out1 = np.mean(v.sample('mean'))
+        assert .5 > abs(out1 - 3)
+        v.switch_backend('lite')
+        v.infer(300)
+        out2 = np.mean(v.sample('mean'))
+        assert .5 > abs(out1 - out2)
+        v.switch_backend('puma')
+        v.infer(300)
+        out3 = np.mean(v.sample('mean'))
+        assert round(out1)==round(out3)
+
+
     def testDirectives():
         ## TEST DIRECTIVES
-        clear_all_engines();print 'IP_directives  '
+        print 'IP_directives  '
         
         for backend in ['puma','lite']:
+            clear_all_engines()
             if backend=='lite':
                 lite=1
             else:
@@ -179,11 +215,6 @@ def testAll_IP():
             log = [r.get_global_logscore() for r in vs]
             if not(lite): assert log[1] in log[0]
             if not(lite): v.local_ripls[0].get_global_logscore() in log[0], 'get_global_log'
-
-            [r.clear() for r in vs]
-            ld = [r.list_directives() for r in vs] + [v.local_ripls[0].list_directives() ]
-            if not(lite): assert ld==[ [[],[]], [], [] ], 'clear_listdir'
-            # 2 is number of ripls in v (above)
 
             [r.clear() for r in vs]
             prog = '[assume x 1]'
@@ -287,13 +318,16 @@ def testAll_IP():
             assert v.snapshot('y')['values']['y'] == ([3.]*no_rips)
             assert v.snapshot('y')['total_transitions'] == 0
             assert len(v.snapshot('y')['ripls_info']) == no_rips
+            clear_all_engines()
             print '... passed'
+
 
     def testMulti():
-        if not(no_poisson):
-            clear_all_engines();print 'IP_multi  '
-            no_rips = 4; no_mrips=2;
-            vs = [MRipl(no_rips,lite=lite) for i in range(no_mrips) ]
+        clear_all_engines()
+        print 'IP_multi  '
+        no_rips = 4; no_mrips=2;
+        for backend in ['puma','lite']:
+            vs = [MRipl2(no_rips,backend=backend) for i in range(no_mrips) ]
 
             #test mrids unique
             assert len(set([v.mrid for v in vs]) ) == len(vs)
@@ -305,120 +339,43 @@ def testAll_IP():
             # test clear
             [v.clear() for v in vs]
             assert all([v.total_transitions== 0 for v in vs])
-            assert  [v.list_directives() == [ [] ] * no_rips for v in vs]
-
-            ls = [v.predict('3') for v in vs]
-            assert all( [ ls[0]==i for i in ls] )
-
-            ls = [v.predict('(poisson 10)') for v in vs]
-            assert all( [ set(ls[0])==set(i) for i in ls] ) # because seeds the same
-
+            assert  [v.list_directives() == [ ]  for v in vs]
+            
+            # test inference gives same results for mripls with same seeds
             [v.clear() for v in vs]
             [v.assume('x','(normal 0 1)',label='x') for v in vs]
             [v.observe('(normal x .1)','2.',label='obs') for v in vs]
             [v.infer(100) for v in vs]
             ls=[v.report('x') for v in vs]
-            assert all( [ set(ls[0])==set(i) for i in ls] ) # because seeds the same
+            if backend=='puma':
+                assert all( [ set(ls[0])==set(i) for i in ls] ) # because seeds the same
+            clear_all_engines()
             print '... passed'
 
-        else:
-            clear_all_engines();print 'IP_multi  '
-            no_rips = 4; no_mrips=2;
-            vs = [MRipl(no_rips,lite=lite) for i in range(no_mrips) ]
-
-            #test mrids unique
-            assert len(set([v.mrid for v in vs]) ) == len(vs)
-
-            # test with different models
-            [v.assume('x',str(i)) for v,i in zip(vs,[0,1]) ]
-            assert all([v.sample('x') == ([i]*no_rips) for v,i in zip(vs,[0,1]) ] )
-
-            # test clear
-            [v.clear() for v in vs]
-            assert all([v.total_transitions== 0 for v in vs])
-            assert  [v.list_directives() == [ [] ] * no_rips for v in vs]
-
-            ls = [v.predict('3') for v in vs]
-            assert all( [ ls[0]==i for i in ls] )
-
-            ls = [v.predict('(binomial 10 .5)') for v in vs]
-            ##FIXME: deal with problem of seeds not being same for lite
-            if not(lite): assert all( [ set(ls[0])==set(i) for i in ls] ) # because seeds the same
-
-            [v.clear() for v in vs]
-            [v.assume('x','(normal 0 1)',label='x') for v in vs]
-            [v.observe('(normal x .1)','2.',label='obs') for v in vs]
-            [v.infer(100) for v in vs]
-            ls=[v.report('x') for v in vs]
-            if not(lite): assert all( [ set(ls[0])==set(i) for i in ls] ) # because seeds the same
-            print '... passed'
-
-
-    def testMrMap():
-        if not(no_poisson):
-            clear_all_engines();print 'IP_map  '
-            no_rips = 4
-            v = MRipl(no_rips,lite=lite)
+        
+    def testMrApplyProc():
+        clear_all_engines();print 'IP_MrApplyProc'
+        no_rips = 4
+        for backend in ['puma','lite']:
+            v = MRipl2(no_rips,backend=backend)
             def f(ripl):
                 import numpy
                 ys = numpy.power([1, 2, 3, 4],2)
                 return [ripl.predict(str(y)) for y in ys]
-            out_dict = mr_map_f(v,f)
-            assert out_dict['info']['mripl'] == v.name_mrid
-            assert all( np.array( out_dict['out'][0] ) == np.power([1, 2, 3, 4],2) )
+            out_apply = mr_apply_proc(v,'all',f)
+            assert all( np.array( out_apply[0] ) == np.power([1, 2, 3, 4],2) )
 
-            # compare using map to get poisson from all ripls, vs. using normal diretive
+            # compare using map to get poisson from all ripls, vs. using normal directive
             v.clear()
             def g(ripl):
                 mean = 10
                 return ripl.predict('(poisson %i)' % mean)
-            out_dict2 = mr_map_f(v,g)
-            assert out_dict2['info']['mripl'] == v.name_mrid
+            out_apply2 = mr_apply_proc(v,'all',g)
 
-            vv=MRipl(no_rips); mean = 10
+            vv=MRipl2(no_rips,backend=backend); mean = 10
             vv_out = vv.predict('(poisson %i)' % mean)
-            assert out_dict2['out'] == vv_out
-
-            ## interaction with add_ripls
-            v.clear()
-            v.add_ripls(2)
-            out_dict3 = mr_map_f(v,g)
-            # new seeds the same as old
-            assert set(out_dict2['out']).issubset( set(out_dict3['out']) ) 
-
-
-        else:
-            clear_all_engines();print 'IP_map  '
-            no_rips = 4
-            v = MRipl(no_rips,lite=lite)
-            def f(ripl):
-                import numpy
-                ys = numpy.power([1, 2, 3, 4],2)
-                return [ripl.predict(str(y)) for y in ys]
-            out_dict = mr_map_f(v,f)
-            assert out_dict['info']['mripl'] == v.name_mrid
-            assert all( np.array( out_dict['out'][0] ) == np.power([1, 2, 3, 4],2) )
-
-            # compare using map to get poisson from all ripls, vs. using normal diretive
-            v.clear()
-            def g(ripl):
-                mean = 10
-                return ripl.predict('(binomial %i 0.5)' % mean)
-            out_dict2 = mr_map_f(v,g)
-            assert out_dict2['info']['mripl'] == v.name_mrid
-
-            vv=MRipl(no_rips,lite=lite); mean = 10
-            vv_out = vv.predict('(binomial %i 0.5)' % mean)
-            assert out_dict2['out'] == vv_out
-
-            ## interaction with add_ripls
-            v.clear()
-            v.add_ripls(2)
-            out_dict3 = mr_map_f(v,g)
-            ## FIXME reinstate
-            # new seeds the same as old
-            if not(lite): assert set(out_dict2['out']).issubset( set(out_dict3['out']) ) 
-
+            assert out_apply2 == vv_out
+            clear_all_engines()
             print '... passed'
 
     
@@ -440,6 +397,6 @@ def testAll_IP():
         
     #tests = [ testParaUtils, testMrMap, testMulti, testSnapshot, testDirectives, testContinuous, testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
     erase_initialize_mripls()
-    tests = [testDirectives]
+    tests = [testDirectives,testMrApplyProc,testMulti,testBackendSwitch]
     [t() for t in tests]
     print 'passed all tests for ip_parallel'

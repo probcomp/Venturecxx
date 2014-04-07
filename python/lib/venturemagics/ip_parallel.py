@@ -89,11 +89,13 @@ copy_ripl_dict = {'build_exp':build_exp,
 
 ## MRIPL CLASS
 
+global_client_for_mripls = 0
 
 def erase_initialize_mripls():
     try:
-        cli=Client()
-        dv=cli[:]
+        global global_client_for_mripls
+        global_client_for_mripls=Client()
+        dv=global_client_for_mripls[:]
         dv.execute('mripls=[]; no_mripls=0')
     except:
         print 'Failed to initialize. Try >ipcluster'
@@ -109,10 +111,9 @@ class MRipl2():
         assert output in ['remote','local','both']
         self.output = output   
         self.local_mode = True if no_ripls==0 else False
-        ip=get_ipython(); print 0,ip.run_line_magic("px", 'mripls')
 
         ## initialize remote ripls
-        self.cli = Client()
+        self.cli = global_client_for_mripls
         self.no_engines = len(self.cli.ids)
         self.no_ripls_per_engine = int(np.ceil(no_ripls/float(self.no_engines)))
         self.no_ripls = self.no_engines * self.no_ripls_per_engine 
@@ -123,12 +124,10 @@ class MRipl2():
         self.dview = self.cli[:]
         self.dview.block = True   # consider again async for infer
 
-        ip=get_ipython(); print 1,ip.run_line_magic("px", 'mripls')
-
         # initialize local ripls
         self.no_local_ripls=no_local_ripls
         self.local_seeds = range(self.no_local_ripls) if not seeds else seeds['local']  # seeds deterministic for reproducibility
-        if backend=='puma':
+        if self.backend=='puma':
             self.local_ripls = [make_puma_church_prime_ripl() for i in range(self.no_local_ripls)]
         else:
             self.local_ripls = [make_lite_church_prime_ripl() for i in range(self.no_local_ripls)]
@@ -145,7 +144,6 @@ class MRipl2():
         self.mrid = self.dview.pull('no_mripls')[0] # id is index into mripls list
         self.dview.push({'no_mripls':self.mrid+1})
 
-        ip=get_ipython(); print 2,ip.run_line_magic("px", 'mripls')
         
         # function that creates ripls, using ripls_per_engine attribute we send to engines
         @interactive
@@ -156,7 +154,6 @@ class MRipl2():
                            'seeds':[]})
             
         self.dview.apply(make_mripl_proc,self.no_ripls_per_engine)
-        ip=get_ipython(); print 3,ip.run_line_magic("px", 'mripls')
          
         @interactive
         def set_engine_seeds(mrid,seeds_for_engine):
@@ -174,12 +171,7 @@ class MRipl2():
             engine_view.apply(set_engine_seeds,self.mrid,seeds_for_engine)
         
         # invariant
-        try:
-            self.dview.execute('st=str(mripls)')
-            print self.dview['st']
-        except:
-            pass
-        #assert self.seeds==self.lst_flatten(self.dview.apply(lambda mrid:mripls[mrid]['seeds'],self.mrid))
+        assert self.seeds==self.lst_flatten(self.dview.apply(lambda mrid:mripls[mrid]['seeds'],self.mrid))
     
 
         # these should overwrite the * import of ip_parallel (we could also alter names)
@@ -197,13 +189,7 @@ class MRipl2():
     
     def lst_flatten(self,l): return [el for subl in l for el in subl]
 
-    def output_mode(self,local,remote):
-        if self.output=='local':
-            return local
-        elif self.output=='remote':
-            return remote
-        else:
-            return (local,remote)
+ 
 
     def switch_backend(self,backend):
         'Clears ripls for new backend and resets transition count'
@@ -231,21 +217,38 @@ class MRipl2():
         self.dview.apply(send_ripls_di_string,self.mrid,self.backend,di_string)
 
 
+    def output_mode(self,local,remote):
+        if self.output=='local':
+            return local
+        elif self.output=='remote':
+            return remote
+        else:
+            return (local,remote)
+
+
+    def mr_apply(self,local_out,f,*args,**kwargs):
+        if self.local_mode: return local_out
+
+        # all remote apply's have to pick a mrid and backend
+        remote_out = self.lst_flatten( self.dview.apply(f,self.mrid,self.backend,*args,**kwargs) )        
+        return self.output_mode(local_out,remote_out)
+        
+
     def clear(self):
         self.total_transitions = 0
+        if self.verbose: print 'CLEAR: mripl.total_transitions=0 and seeds reset'
         local_out = [r.clear() for r in self.local_ripls]
-        if local_mode:
-            self.reset_seeds
+        if self.local_mode:
+            self.reset_seeds()
             return local_out
 
         @interactive
         def f(mrid,backend):
             return [r.clear() for r in mripls[mrid][backend]]
         
-        remote_out=self.mr_apply(f)
+        apply_out=self.mr_apply(local_out,f)
         self.reset_seeds() # otherwise all seeds the same
-
-        return self.output_mode(local_out,remote_out)
+        return apply_out
         
 
     def reset_seeds(self):
@@ -260,20 +263,6 @@ class MRipl2():
         return self.dview.apply(f,self.mrid,self.backend) 
 
 
-    def mr_apply(self,local_out,f,*args,**kwargs):
-        if self.local_mode: return local_out
-        # def arg_printer(*args,**kwargs):
-        #     for arg in args: print 'nonkword:',arg
-        #     for key,val in kwargs: print 'kword',key,val
-        #     return
-        # arg_printer(*args,**kwargs)
-
-        # all remote apply's have to pick a mrid and backend
-
-        remote_out = self.lst_flatten( self.dview.apply(f,self.mrid,self.backend,*args,**kwargs) )
-        
-        return self.output_mode(local_out,remote_out)
-        
 
 ## FIXME: careful about shadowing kword args correctly
             
@@ -324,7 +313,6 @@ class MRipl2():
             return backend_filter(backend,out)
 
         return self.mr_apply(local_out,f,exp,type=type)
-
 
 
     def infer(self,params,block=True):
