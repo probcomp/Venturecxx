@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Engine where
 
@@ -23,6 +24,22 @@ makeLenses ''Engine
 empty :: Engine m
 empty = Engine Toplevel T.empty
 
+-- I don't know whether this type signature is as general as possible,
+-- but it compiles.
+runOn :: (Monad m) => Simple Lens s a -> StateT a m r -> StateT s m r
+runOn lens action = do
+  value <- use lens
+  (result, value') <- lift $ runStateT action value
+  lens .= value'
+  return result
+
+execOn :: (Monad m) => Simple Lens s a -> StateT a m r -> StateT s m ()
+execOn lens action = do
+  value <- use lens
+  value' <- lift $ execStateT action value
+  lens .= value'
+  return ()
+
 assume :: (MonadRandom m) => String -> Exp -> StateT Env (StateT (Trace m) m) ()
 assume var exp = do
   -- TODO This implementation of assume does not permit recursive
@@ -31,6 +48,15 @@ assume var exp = do
   env <- get
   address <- lift $ eval exp env
   modify $ Frame (M.fromList [(var, address)])
+
+assume' :: (MonadRandom m) => String -> Exp -> (StateT (Engine m) m) ()
+assume' var exp = do
+  -- TODO This implementation of assume does not permit recursive
+  -- functions, because of insufficient indirection to the
+  -- environment.
+  (Engine e _) <- get
+  address <- trace `runOn` (eval exp e)
+  env %= Frame (M.fromList [(var, address)])
 
 -- Evaluate the expression in the environment (building appropriate
 -- structure in the trace), and then constrain its value to the given
@@ -52,8 +78,18 @@ observe exp v = do
   -- address it here.
   lift $ constrain address v
 
+observe' :: (MonadRandom m) => Exp -> Value -> (StateT (Engine m) m) ()
+observe' exp v = do
+  (Engine e _) <- get
+  address <- trace `runOn` (eval exp e)
+  trace `execOn` (constrain address v)
+
 predict :: (MonadRandom m) => Exp -> ReaderT Env (StateT (Trace m) m) Address
 predict exp = do
   env <- ask
   lift $ eval exp env
 
+predict' :: (MonadRandom m) => Exp -> (StateT (Engine m) m) Address
+predict' exp = do
+  (Engine e _) <- get
+  trace `runOn` (eval exp e)
