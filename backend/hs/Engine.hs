@@ -3,16 +3,19 @@
 
 module Engine where
 
+import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import Control.Monad.Reader
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Control.Lens  -- from cabal install lens
 
+import Utils
 import Language hiding (Exp, Value, Env)
 import Trace hiding (empty)
 import qualified Trace as T
 import Regen
+import SP
 
 data Engine m =
     Engine { _env :: Env
@@ -93,3 +96,17 @@ predict' :: (MonadRandom m) => Exp -> (StateT (Engine m) m) Address
 predict' exp = do
   (Engine e _) <- get
   trace `runOn` (eval exp e)
+
+data Directive = Assume String Exp
+               | Observe Exp Value
+               | Predict Exp
+
+-- Returns the list of addresses the model wants watched
+execute :: (MonadRandom m) => [Directive] -> StateT (Trace m) m [Address]
+execute ds = evalStateT (do
+  modifyM initializeBuiltins
+  liftM catMaybes $ mapM executeOne ds) Toplevel where
+    -- executeOne :: Directive -> StateT Env (StateT (Trace m) m) (Maybe Address)
+    executeOne (Assume s e) = assume s e >> return Nothing
+    executeOne (Observe e v) = get >>= lift . runReaderT (observe e v) >> return Nothing
+    executeOne (Predict e) = get >>= lift . runReaderT (predict e) >>= return . Just

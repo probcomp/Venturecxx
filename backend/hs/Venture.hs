@@ -1,32 +1,15 @@
 module Venture where
 
 import Debug.Trace
-import Data.Maybe hiding (fromJust)
 import Control.Monad.Reader
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 
 import Language hiding (Exp, Value, Env)
 import Trace
-import SP
 import Utils
 import Inference
 import Engine hiding (empty)
-
-data Directive = Assume String Exp
-               | Observe Exp Value
-               | Predict Exp
-
--- Returns the list of addresses the model wants watched
-execute :: (MonadRandom m) => [Directive] -> StateT (Trace m) m [Address]
-execute ds = evalStateT (do
-  modifyM initializeBuiltins
-  liftM catMaybes $ mapM executeOne ds) Toplevel where
-    -- executeOne :: Directive -> StateT Env (StateT (Trace m) m) (Maybe Address)
-    executeOne (Assume s e) = assume s e >> return Nothing
-    executeOne (Observe e v) = get >>= lift . runReaderT (observe e v) >> return Nothing
-    executeOne (Predict e) = get >>= lift . runReaderT (predict e) >>= return . Just
-
 
 watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Trace m) m [Value]
 watching_infer address ct = replicateM ct (do
