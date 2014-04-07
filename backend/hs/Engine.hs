@@ -27,6 +27,10 @@ makeLenses ''Engine
 empty :: Engine m
 empty = Engine Toplevel T.empty
 
+initial :: (MonadRandom m) => Engine m
+initial = Engine e t where
+  (e, t) = runState (initializeBuiltins Toplevel) T.empty
+
 -- I don't know whether this type signature is as general as possible,
 -- but it compiles.
 runOn :: (Monad m) => Simple Lens s a -> StateT a m r -> StateT s m r
@@ -100,6 +104,16 @@ predict' exp = do
 data Directive = Assume String Exp
                | Observe Exp Value
                | Predict Exp
+
+-- Return Just the address of the directive if it's a predict, otherwise Nothing
+executeDirective :: (MonadRandom m) => Directive -> StateT (Engine m) m (Maybe Address)
+executeDirective (Assume s e) = assume' s e >> return Nothing
+executeDirective (Observe e v) = observe' e v >> return Nothing
+executeDirective (Predict e) = predict' e >>= return . Just
+
+-- Returns the list of addresses the model wants watched (to wit, the predicts)
+execute' :: (MonadRandom m) => [Directive] -> StateT (Engine m) m [Address]
+execute' ds = liftM catMaybes $ mapM executeDirective ds
 
 -- Returns the list of addresses the model wants watched
 execute :: (MonadRandom m) => [Directive] -> StateT (Trace m) m [Address]
