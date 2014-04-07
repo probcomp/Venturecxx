@@ -8,14 +8,7 @@ import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Language hiding (Exp, Value, Env)
 import Trace
 import Utils
-import Inference
 import Engine hiding (empty)
-
-watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Trace m) m [Value]
-watching_infer address ct = replicateM ct (do
-  modifyM $ metropolis_hastings principal_node_mh
-  gets $ fromJust "Value was not restored by inference" . valueOf
-         . fromJust "Address became invalid after inference" . (lookupNode address))
 
 -- Expects the directives to contain exactly one Predict
 simulation :: (MonadRandom m) => Int -> [Directive] -> StateT (Trace m) m [Value]

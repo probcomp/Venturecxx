@@ -16,6 +16,7 @@ import Trace hiding (empty)
 import qualified Trace as T
 import Regen
 import SP
+import Inference
 
 data Engine m =
     Engine { _env :: Env
@@ -124,3 +125,9 @@ execute ds = evalStateT (do
     executeOne (Assume s e) = assume s e >> return Nothing
     executeOne (Observe e v) = get >>= lift . runReaderT (observe e v) >> return Nothing
     executeOne (Predict e) = get >>= lift . runReaderT (predict e) >>= return . Just
+
+watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Trace m) m [Value]
+watching_infer address ct = replicateM ct (do
+  modifyM $ metropolis_hastings principal_node_mh
+  gets $ fromJust "Value was not restored by inference" . valueOf
+         . fromJust "Address became invalid after inference" . (lookupNode address))
