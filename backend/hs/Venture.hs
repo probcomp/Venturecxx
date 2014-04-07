@@ -11,7 +11,7 @@ import Trace
 import SP
 import Utils
 import Inference
-import Engine
+import Engine hiding (empty)
 
 data Directive = Assume String Exp
                | Observe Exp Value

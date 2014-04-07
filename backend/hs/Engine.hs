@@ -6,8 +6,14 @@ import Control.Monad.Trans.State.Lazy
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 
 import Language hiding (Exp, Value, Env)
-import Trace
+import Trace hiding (empty)
+import qualified Trace as T
 import Regen
+
+data Engine m = Engine Env (Trace m)
+
+empty :: Engine m
+empty = Engine Toplevel T.empty
 
 assume :: (MonadRandom m) => String -> Exp -> StateT Env (StateT (Trace m) m) ()
 assume var exp = do
