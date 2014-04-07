@@ -1,16 +1,24 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Engine where
 
 import qualified Data.Map as M
 import Control.Monad.Reader
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
+import Control.Lens  -- from cabal install lens
 
 import Language hiding (Exp, Value, Env)
 import Trace hiding (empty)
 import qualified Trace as T
 import Regen
 
-data Engine m = Engine Env (Trace m)
+data Engine m =
+    Engine { _env :: Env
+           , _trace :: (Trace m)
+           }
+
+makeLenses ''Engine
 
 empty :: Engine m
 empty = Engine Toplevel T.empty
