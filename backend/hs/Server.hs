@@ -10,10 +10,10 @@
 -- - Overview http://www.yesodweb.com/book/web-application-interface
 -- - Network.Wai package http://hackage.haskell.org/package/wai-2.1.0.1/docs/Network-Wai.html
 
+import qualified Data.Map as M
 import Network.Wai
 import Network.HTTP.Types (status200, status500)
 import Network.Wai.Handler.Warp (run)
-import qualified Data.ByteString.Lazy.Char8 as B
 
 import Data.Aeson
 
@@ -28,8 +28,13 @@ off_the_wire r = do
     Left err -> return $ Left err
     Right args -> return $ Right (method, args)
 
+-- This is meant to be interpreted by the client as a VentureException
+-- containing the error message.  The parallel code is
+-- python/lib/server/utils.py RestServer
 error_response :: String -> Response
-error_response err = responseLBS status500 [("Content-Type", "text/plain")] $ B.pack err
+error_response err = responseLBS status500 [("Content-Type", "text/plain")] $ encode json where
+  json :: M.Map String String
+  json = M.fromList [("exception", "fatal"), ("message", err)]
 
 application :: Request -> IO Response
 application r = do
