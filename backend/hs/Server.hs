@@ -14,6 +14,7 @@ import qualified Data.Map as M
 import Network.Wai
 import Network.HTTP.Types (status200, status500)
 import Network.Wai.Handler.Warp (run)
+import Data.Text (unpack)
 
 import Data.Aeson
 
@@ -22,11 +23,18 @@ import Data.Aeson
 -- arguments.
 off_the_wire :: Request -> IO (Either String (String, [String]))
 off_the_wire r = do
-  let method = show $ pathInfo r
+  let method = parse_method r
   body <- lazyRequestBody r
   case eitherDecode body of
     Left err -> return $ Left err
-    Right args -> return $ Right (method, args)
+    Right args -> case method of
+                    Nothing -> return $ Left $ "Cannot parse method from path " ++ (show $ pathInfo r)
+                    (Just m) -> return $ Right (m, args)
+
+parse_method :: Request -> Maybe String
+parse_method r = parse $ pathInfo r where
+  parse [method] = Just $ unpack method
+  parse _ = Nothing
 
 -- This is meant to be interpreted by the client as a VentureException
 -- containing the error message.  The parallel code is

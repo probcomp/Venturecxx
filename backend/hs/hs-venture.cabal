@@ -89,6 +89,6 @@ executable venture-server
                        MonadRandom >=0.1 && <1, transformers >=0.3 && <1,
                        math-functions >=0.1 && <1, mtl, mmorph, warp >=2,
                        http-types >=0.8, wai >=2, bytestring >=0.10,
-                       aeson >=0.7
+                       aeson >=0.7, text >=0.11
   default-language:    Haskell2010
   Ghc-options:         -Wall -fno-warn-name-shadowing
