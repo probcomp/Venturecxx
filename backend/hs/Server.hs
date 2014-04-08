@@ -28,11 +28,14 @@ off_the_wire r = do
     Left err -> return $ Left err
     Right args -> return $ Right (method, args)
 
+error_response :: String -> Response
+error_response err = responseLBS status500 [("Content-Type", "text/plain")] $ B.pack err
+
 application :: Request -> IO Response
 application r = do
   parsed <- off_the_wire r
   case parsed of
-    Left err -> return $ responseLBS status500 [("Content-Type", "text/plain")] $ B.pack err
+    Left err -> return $ error_response err
     Right (method, args) -> do
                   putStrLn $ method
                   putStrLn $ show $ args
