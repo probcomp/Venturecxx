@@ -11,7 +11,7 @@
 -- - Network.Wai package http://hackage.haskell.org/package/wai-2.1.0.1/docs/Network-Wai.html
 
 import Network.Wai
-import Network.HTTP.Types (status200)
+import Network.HTTP.Types (status200, status500)
 import Network.Wai.Handler.Warp (run)
 import qualified Data.ByteString.Lazy.Char8 as B
 
@@ -30,11 +30,13 @@ off_the_wire r = do
 
 application :: Request -> IO Response
 application r = do
-  putStrLn $ show $ pathInfo r
-  putStrLn $ show $ queryString r
-  body <- lazyRequestBody r
-  B.putStrLn body
-  return $ responseLBS status200 [("Content-Type", "text/plain")] "Hello World"
+  parsed <- off_the_wire r
+  case parsed of
+    Left err -> return $ responseLBS status500 [("Content-Type", "text/plain")] $ B.pack err
+    Right (method, args) -> do
+                  putStrLn $ method
+                  putStrLn $ show $ args
+                  return $ responseLBS status200 [("Content-Type", "text/plain")] "Hello World"
 
 main :: IO ()
 main = do
