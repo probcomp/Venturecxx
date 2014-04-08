@@ -32,6 +32,11 @@ initial :: (MonadRandom m) => Engine m
 initial = Engine e t where
   (e, t) = runState (initializeBuiltins Toplevel) T.empty
 
+lookupValue :: Address -> Engine m -> Value
+lookupValue a (Engine _ t) =
+    fromJust "No value at address" $ valueOf
+    $ fromJust "Invalid address" $ lookupNode a t
+
 -- I don't know whether this type signature is as general as possible,
 -- but it compiles.
 runOn :: (Monad m) => Simple Lens s a -> StateT a m r -> StateT s m r
@@ -48,7 +53,7 @@ execOn lens action = do
   lens .= value'
   return ()
 
-assume :: (MonadRandom m) => String -> Exp -> (StateT (Engine m) m) ()
+assume :: (MonadRandom m) => String -> Exp -> (StateT (Engine m) m) Address
 assume var exp = do
   -- TODO This implementation of assume does not permit recursive
   -- functions, because of insufficient indirection to the
@@ -56,6 +61,7 @@ assume var exp = do
   (Engine e _) <- get
   address <- trace `runOn` (eval exp e)
   env %= Frame (M.fromList [(var, address)])
+  return address
 
 -- Evaluate the expression in the environment (building appropriate
 -- structure in the trace), and then constrain its value to the given
@@ -105,3 +111,15 @@ watching_infer' address ct = replicateM ct (do
 
 watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Engine m) m [Value]
 watching_infer address ct = trace `runOn` (watching_infer' address ct)
+
+runDirective' :: (MonadRandom m) => Directive -> StateT (Engine m) m (Maybe Address)
+runDirective' (Assume s e) = assume s e >>= return . Just
+runDirective' (Observe e v) = observe e v >> return Nothing
+runDirective' (Predict e) = predict e >>= return . Just
+
+runDirective :: (MonadRandom m) => Directive -> StateT (Engine m) m (Maybe Value)
+runDirective d = do
+  addr <- runDirective' d
+  case addr of
+    Nothing -> return Nothing
+    Just a -> gets (Just . (lookupValue a))
