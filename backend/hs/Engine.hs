@@ -48,8 +48,8 @@ execOn lens action = do
   lens .= value'
   return ()
 
-assume' :: (MonadRandom m) => String -> Exp -> (StateT (Engine m) m) ()
-assume' var exp = do
+assume :: (MonadRandom m) => String -> Exp -> (StateT (Engine m) m) ()
+assume var exp = do
   -- TODO This implementation of assume does not permit recursive
   -- functions, because of insufficient indirection to the
   -- environment.
@@ -62,8 +62,8 @@ assume' var exp = do
 -- value (up to chasing down references until a random choice is
 -- found).  The constraining appears to consist only in removing that
 -- node from the list of random choices.
-observe' :: (MonadRandom m) => Exp -> Value -> (StateT (Engine m) m) ()
-observe' exp v = do
+observe :: (MonadRandom m) => Exp -> Value -> (StateT (Engine m) m) ()
+observe exp v = do
   (Engine e _) <- get
   address <- trace `runOn` (eval exp e)
   -- TODO What should happen if one observes a value that had
@@ -77,8 +77,8 @@ observe' exp v = do
   -- address it here.
   trace `execOn` (constrain address v)
 
-predict' :: (MonadRandom m) => Exp -> (StateT (Engine m) m) Address
-predict' exp = do
+predict :: (MonadRandom m) => Exp -> (StateT (Engine m) m) Address
+predict exp = do
   (Engine e _) <- get
   trace `runOn` (eval exp e)
 
@@ -88,19 +88,19 @@ data Directive = Assume String Exp
 
 -- Return Just the address of the directive if it's a predict, otherwise Nothing
 executeDirective :: (MonadRandom m) => Directive -> StateT (Engine m) m (Maybe Address)
-executeDirective (Assume s e) = assume' s e >> return Nothing
-executeDirective (Observe e v) = observe' e v >> return Nothing
-executeDirective (Predict e) = predict' e >>= return . Just
+executeDirective (Assume s e) = assume s e >> return Nothing
+executeDirective (Observe e v) = observe e v >> return Nothing
+executeDirective (Predict e) = predict e >>= return . Just
 
 -- Returns the list of addresses the model wants watched (to wit, the predicts)
-execute' :: (MonadRandom m) => [Directive] -> StateT (Engine m) m [Address]
-execute' ds = liftM catMaybes $ mapM executeDirective ds
+execute :: (MonadRandom m) => [Directive] -> StateT (Engine m) m [Address]
+execute ds = liftM catMaybes $ mapM executeDirective ds
 
-watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Trace m) m [Value]
-watching_infer address ct = replicateM ct (do
+watching_infer' :: (MonadRandom m) => Address -> Int -> StateT (Trace m) m [Value]
+watching_infer' address ct = replicateM ct (do
   modifyM $ metropolis_hastings principal_node_mh
   gets $ fromJust "Value was not restored by inference" . valueOf
          . fromJust "Address became invalid after inference" . (lookupNode address))
 
-watching_infer' :: (MonadRandom m) => Address -> Int -> StateT (Engine m) m [Value]
-watching_infer' address ct = trace `runOn` (watching_infer address ct)
+watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Engine m) m [Value]
+watching_infer address ct = trace `runOn` (watching_infer' address ct)

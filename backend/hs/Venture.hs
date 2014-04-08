@@ -13,8 +13,8 @@ import Engine hiding (empty)
 -- Expects the directives to contain exactly one Predict
 simulation :: (MonadRandom m) => Int -> [Directive] -> StateT (Engine m) m [Value]
 simulation ct ds = do
-  target <- liftM head (execute' ds)
-  watching_infer' target ct
+  target <- liftM head (execute ds)
+  watching_infer target ct
 
 venture_main :: (MonadRandom m) => Int -> [Directive] -> m [Value]
 venture_main ct ds = do
