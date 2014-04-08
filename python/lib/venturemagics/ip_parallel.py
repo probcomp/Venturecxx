@@ -14,17 +14,26 @@ mk_p_ripl = make_puma_church_prime_ripl
 ### IPython Parallel Magics
 
 
-# Utility functions for working with ipcluster
+# Utility functions for working with ipcluster and mripl
 
-def clear_all_engines():
-    'Clears the namespaces of all IPython remote processes'
-    cli = Client()
-    cli.clear(block=True)
-    erase_initialize_mripls() ## FIXME
-
-def shutdown():
-    cli = Client(); cli.shutdown()
-
+def erase_initialize_mripls(client=None,no_erase=False):
+    '''Clear engine namespaces and initialize with mripls list. Optionally specify
+    a pre-existing client object. With "no_erase", only clear and initialize if
+    mripls list and counter are not present in engines.'''
+    
+    if not client: client=Client(); print "Created new Client"
+    if no_erase:
+        try: # mripl vars already present: return client object
+            client[:]['no_mripls']
+        except:
+            client[:].execute('mripls=[]; no_mripls=0')
+        return client
+    else:
+        client.clear()
+        print 'Cleared engine namespaces and created "mripls"'
+        client[:].execute('mripls=[]; no_mripls=0')
+        return client
+    
 def start_engines(no_engines,sleeptime=10):
     start = subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines,'&'])
     time.sleep(sleeptime)
@@ -33,6 +42,18 @@ def stop_engines():
     stop=subprocess.Popen(['ipcluster', 'stop'])
     stop.wait()
 
+
+def create_new_global_client():
+    '''Create new client and dview on it, possibly after closing old one.
+    On creating new client, initialize mripls.'''
+    try:
+        global global_client_for_mripls
+        if global_client_for_mripls: global_client_for_mripls.close()
+        global_client_for_mripls=Client()
+        erase_initialize_mripls()
+    except:
+        pass
+        
 
 ### Functions needed for the MRipl Class (could be added to scope of the class definition)
 
@@ -89,31 +110,40 @@ copy_ripl_dict = {'build_exp':build_exp,
 
 ## MRIPL CLASS
 
-global_client_for_mripls = 0
-
-def erase_initialize_mripls():
-    try:
-        global global_client_for_mripls
-        global_client_for_mripls=Client()
-        dv=global_client_for_mripls[:]
-        dv.execute('mripls=[]; no_mripls=0')
-    except:
-        print 'Failed to initialize. Try >ipcluster'
-
 
 class MRipl2():
     
     def __init__(self,no_ripls,backend='puma',no_local_ripls=1,output='remote',local_mode=False,
-                 seeds=None,verbose=False):
+                 seeds=None,verbose=False,client=None):
         'seeds={"local":lst_seeds,"remote":lst_seeds}'
         
         self.backend = backend
         assert output in ['remote','local','both']
         self.output = output   
-        self.local_mode = True if no_ripls==0 else False
+        self.local_mode = local_mode 
+        self.total_transitions = 0
+        self.verbose = verbose
+
+# initialize local ripls
+        assert no_local_ripls > 0
+        self.no_local_ripls=no_local_ripls
+        self.local_seeds = range(self.no_local_ripls) if not seeds else seeds['local']  # seeds deterministic for reproducibility
+        if self.backend=='puma':
+            self.local_ripls = [make_puma_church_prime_ripl() for i in range(self.no_local_ripls)]
+        else:
+            self.local_ripls = [make_lite_church_prime_ripl() for i in range(self.no_local_ripls)]
+
+        [v.set_seed(i) for (v,i) in zip(self.local_ripls,self.local_seeds) ]
+        if self.local_mode: return
 
         ## initialize remote ripls
-        self.cli = global_client_for_mripls
+        self.cli = Client(); self.dview=self.cli[:]
+        try:
+            self.dview['no_mripls']
+        except:
+            self.dview.execute('mripls=[]; no_mripls=0')
+            print 'Created new "mripls" list'
+
         self.no_engines = len(self.cli.ids)
         self.no_ripls_per_engine = int(np.ceil(no_ripls/float(self.no_engines)))
         self.no_ripls = self.no_engines * self.no_ripls_per_engine 
@@ -123,16 +153,6 @@ class MRipl2():
         # seed are deterministic by default. we reinstate original seeds on CLEAR
         self.dview = self.cli[:]
         self.dview.block = True   # consider again async for infer
-
-        # initialize local ripls
-        self.no_local_ripls=no_local_ripls
-        self.local_seeds = range(self.no_local_ripls) if not seeds else seeds['local']  # seeds deterministic for reproducibility
-        if self.backend=='puma':
-            self.local_ripls = [make_puma_church_prime_ripl() for i in range(self.no_local_ripls)]
-        else:
-            self.local_ripls = [make_lite_church_prime_ripl() for i in range(self.no_local_ripls)]
-
-        [v.set_seed(i) for (v,i) in zip(self.local_ripls,self.local_seeds) ]
         
         # Imports for remote ripls
         self.dview.execute('from venture.venturemagics.ip_parallel import *') # FIXME namespace issues
@@ -173,19 +193,16 @@ class MRipl2():
         # invariant
         assert self.seeds==self.lst_flatten(self.dview.apply(lambda mrid:mripls[mrid]['seeds'],self.mrid))
     
-
         # these should overwrite the * import of ip_parallel (we could also alter names)
         #self.dview.push(copy_ripl_dict)
-
-        #initialize no_transitions
-        self.total_transitions = 0
-
-        ## Extract info from engines and ripls
-        #self.update_ripls_info()
         
-        self.verbose = verbose
         if self.verbose: print self.ripls_info()
-        
+
+ 
+    def __del__(self):
+        if not self.local_mode:
+            print '__del__ is closing client'
+            self.cli.close()
     
     def lst_flatten(self,l): return [el for subl in l for el in subl]
 
@@ -487,14 +504,6 @@ class MRipl2():
         print self.display_ripls()
 
     
-
-
-
-
-
-
-
-
 
 
 

@@ -40,83 +40,36 @@ def testAll_IP():
     def testBuildexp():
         pass
 
-    def testCopyFunction():
-        print 'IP_COPY'
-        clear_all_engines()
-    # test for copy_ripl funtion
-        myv = mk_ripl()
-        myv.assume('x','(beta 1 1)'); myv.observe('(normal x 1)','5'); myv.predict('(flip)')
-        assert [build_exp(di['expression']) for di in myv.list_directives() ] ==  [build_exp(di['expression']) for di in copy_ripl(myv).list_directives() ]
-        print '...passed'
+    def bino_model(v):
+            v.assume('x','(binomial 20 .5)') 
+            [v.observe(' (poisson x)', '7.') for i in range(20) ]
+            v.infer(300)
+            return v.predict('x')
 
-    def testParallelCopyFunction():
-    # test for parallel use of copy_ripl_string
+    def testLocalMode():
+        name='testLocalMode'
+        print 'start ', name
+        for backend in ['puma','lite']:
+            vl=MRipl2(0,backend=backend,no_local_ripls=2,local_mode=True)
+            out1 = bino_model(vl)
+            assert len(out1)==vl.no_local_ripls==2
+            assert 2 > abs(np.mean(out1) - 7)
 
-        cli = Client(); dv = cli[:]; dv.block=True
-        dv.push(copy_ripl_dict)
-        if not(lite):
-            dv.execute('from venture.shortcuts import make_church_prime_ripl as mk_ripl')
-        else:
-            dv.execute('from venture.shortcuts import make_lite_church_prime_ripl as mk_ripl')
-        dv.execute('v=mk_ripl()')
-        dv.execute('v.set_seed(1)')
-        dv.execute("v.assume('x','(beta 1 1)'); v.observe('(normal x 1)','5'); v.predict('(flip)')" )
-        dv.execute("v2 = copy_ripl(v,seed=1)" )
-        dv.execute("true_assert = [build_exp(di['expression']) for di in v.list_directives() ] ==  [build_exp(di['expression']) for di in copy_ripl(v).list_directives() ]")
-        assert all(dv['true_assert'])
-        print '... passed'
-
-    ## TEST adding and removing ripls and pulling info about ripls to mripl
-
-    def testAddRemoveSize():
-        clear_all_engines();print 'IP_addremove  '
-        no_rips = 4
-        vv=MRipl(no_rips,lite=lite)
-
-        def check_size(mr,no_rips):
-            survey = mr.dview.apply(lambda mrid: len(mripls[mrid]), mr.mrid)
-            pred = len(mr.predict('(+ 1 1)'))
-
-            sizes = [mr.no_ripls, len(mr.seeds),
-                     len(mr.ripls_location), sum(survey), pred]
-            return sizes == ( [no_rips]*len(sizes) )
-
-        assert(check_size(vv,no_rips))
-
-        no_rips += 2
-        vv.add_ripls(2)
-        assert(check_size(vv,no_rips))
-
-        no_rips -= 2
-        vv.remove_ripls(2)
-        assert(check_size(vv,no_rips))
-        print '... passed'
-
-    def testCopyRipl():
-        # create rips, add an assume. add some rips. get some reports
-        # and see if reports are all the same. 
-        clear_all_engines();print 'IP_copy  '
-        no_rips = 4
-        vv = MRipl(no_rips,lite=lite)
-        vv.assume('x','3.')
-
-        no_rips += 3
-        vv.add_ripls(3)
-        assert( vv.report(1) == ( [3.]*no_rips ) )
-        no_rips -= 6
-        vv.remove_ripls(6)
-        ## FIXME fails because remove_ripls will preserve one ripl per engine
-        #assert( vv.report(1) == ( [3.] * no_rips ) )
-        print '... passed'
-
+            vr=MRipl2(2,backend=backend,no_local_ripls=1,local_mode=False)
+            out2 = bino_model(vr)
+            if backend=='puma': assert all(np.array(out1)==np.array(out2))
+            assert 2 > abs(np.mean(out1) - np.mean(out2))
+        print 'passed %s' % name
 
     def testBackendSwitch():
-        # test backend switching
-        clear_all_engines(); print 'BackendSwitch'
+        name='testBackendSwitch'
+        print 'start ', name
+        cli=1#erase_initialize_mripls()
+
         for backend in ['puma','lite']:
-            v=MRipl2(4,backend=backend)
+            v=MRipl2(2,backend=backend,client=cli)
             v.assume('mu','(normal 0 2)')
-            [v.observe('(normal mu .5)','3') for i in range(20)]
+            [v.observe('(normal mu .5)','3') for i in range(15)]
             v.infer(300)
             out1 = np.mean(v.sample('mu'))
             s='lite' if backend=='puma' else 'puma'
@@ -126,10 +79,9 @@ def testAll_IP():
             assert .5 > abs(out1 - out2)
             
         # start puma, switch to lite, switch back, re-do inference
-        clear_all_engines()
-        v=MRipl2(5,backend='puma')
+        v=MRipl2(2,backend='puma',client=cli)
         v.assume('mean','(binomial 10 .3)')
-        [v.observe('(poisson mean)','3') for i in range(20)]
+        [v.observe('(poisson mean)','3.') for i in range(15)]
         v.infer(300)
         out1 = np.mean(v.sample('mean'))
         assert .5 > abs(out1 - 3)
@@ -142,19 +94,22 @@ def testAll_IP():
         out3 = np.mean(v.sample('mean'))
         assert round(out1)==round(out3)
 
+        333; print 'passed %s' % name
+
 
     def testDirectives():
-        ## TEST DIRECTIVES
-        print 'IP_directives  '
-        
+        name='testDirectives'
+        print 'start ', name
+        #        cli=erase_initialize_mripls()
+        cli=1
+
         for backend in ['puma','lite']:
-            clear_all_engines()
             if backend=='lite':
                 lite=1
             else:
                 lite=0
 
-            v = MRipl2(2,backend=backend)
+            v = MRipl2(2,backend=backend,client=cli)
             test_v = mk_ripl(backend); test_v.set_seed(0)
             ls_x = v.assume('x','(uniform_continuous 0 1000)')
             test_x = test_v.assume('x','(uniform_continuous 0 1000)')
@@ -189,7 +144,7 @@ def testAll_IP():
             if not(lite): assert( not( v.no_ripls>10 and np.mean(test_x3) > 50) ) # may be too tight
 
             # test sp values
-            clear_all_engines(); v=MRipl2(2,backend=backend)
+            v=MRipl2(2,backend=backend,client=cli)
             v.assume('f','(lambda()(33))')
             v.assume('hof','(lambda() (lambda()(+ 1 3)) )')
             v.predict('(hof)')
@@ -199,7 +154,7 @@ def testAll_IP():
             v.observe('(h)','true')
 
         ## other directives
-            clear_all_engines(); v=MRipl2(2,backend=backend)
+            v=MRipl2(2,backend=backend,client=cli)
             test_v = mk_ripl(backend); test_v.set_seed(0)
             vs = [v, test_v]
             [r.assume('x','(normal 0 1)') for r in vs]
@@ -220,7 +175,9 @@ def testAll_IP():
             prog = '[assume x 1]'
             ex = [r.execute_program(prog) for r in vs]
             if not(lite): assert ex[0][0] == ex[0][1] == ex[1]
-            print '... passed'
+
+            333; print 'passed %s' % name
+
 
     def testContinuous():
         clear_all_engines();print 'IP_continuous  '
@@ -254,6 +211,8 @@ def testAll_IP():
         assert all(not s['running'] for s in status), 'continuous_stop'
 
         print '... passed'
+
+
 
     def testSnapshot():
         print 'IP_snap  '
@@ -323,11 +282,14 @@ def testAll_IP():
 
 
     def testMulti():
-        clear_all_engines()
-        print 'IP_multi  '
+        name='testMulti'
+        print 'start ', name
+        #cli=erase_initialize_mripls()
+        cli=1
+        
         no_rips = 4; no_mrips=2;
         for backend in ['puma','lite']:
-            vs = [MRipl2(no_rips,backend=backend) for i in range(no_mrips) ]
+            vs = [MRipl2(no_rips,backend=backend,client=cli) for i in range(no_mrips) ]
 
             #test mrids unique
             assert len(set([v.mrid for v in vs]) ) == len(vs)
@@ -349,15 +311,17 @@ def testAll_IP():
             ls=[v.report('x') for v in vs]
             if backend=='puma':
                 assert all( [ set(ls[0])==set(i) for i in ls] ) # because seeds the same
-            clear_all_engines()
-            print '... passed'
+            333; print 'passed %s' % name
 
         
     def testMrApplyProc():
-        clear_all_engines();print 'IP_MrApplyProc'
+        name='testMrApplyProc'
+        print 'start ', name
+        #cli=erase_initialize_mripls()
+        cli=1
         no_rips = 4
         for backend in ['puma','lite']:
-            v = MRipl2(no_rips,backend=backend)
+            v = MRipl2(no_rips,backend=backend,client=cli)
             def f(ripl):
                 import numpy
                 ys = numpy.power([1, 2, 3, 4],2)
@@ -372,10 +336,10 @@ def testAll_IP():
                 return ripl.predict('(poisson %i)' % mean)
             out_apply2 = mr_apply_proc(v,'all',g)
 
-            vv=MRipl2(no_rips,backend=backend); mean = 10
+            vv=MRipl2(no_rips,backend=backend,client=cli); mean = 10
             vv_out = vv.predict('(poisson %i)' % mean)
             assert out_apply2 == vv_out
-            clear_all_engines()
+            
             print '... passed'
 
     
@@ -396,7 +360,8 @@ def testAll_IP():
         
         
     #tests = [ testParaUtils, testMrMap, testMulti, testSnapshot, testDirectives, testContinuous, testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
-    erase_initialize_mripls()
+    #erase_initialize_mripls()
     tests = [testDirectives,testMrApplyProc,testMulti,testBackendSwitch]
+    tests=[         testLocalMode]
     [t() for t in tests]
     print 'passed all tests for ip_parallel'
