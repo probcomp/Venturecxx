@@ -171,7 +171,7 @@ function InitializeDemo() {
         ripl.assume('b','(normal 0.0 1.0)');
         ripl.assume('f','(lambda (x) (+ a (* b x)))');
         
-        ripl.assume('noise', model_variables.infer_noise ? '(inv_gamma 1.0 1.0)' : '1.0')
+        ripl.assume('noise', model_variables.infer_noise ? '(sqrt (inv_gamma 2.0 1.0))' : '1.0')
         
         if (model_variables.use_outliers) {
             ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (f (normal x noise))) (if (is_outlier obs_id) 100 noise)))');
@@ -220,7 +220,7 @@ function InitializeDemo() {
         ripl.assume('clean_func','(lambda (x) (+ a0_c0 (* alpha (clean_func_poly x)) (* (- 1 alpha) (clean_func_fourier x))))');
 
         /* For observations */
-        ripl.assume('noise','(inv_gamma 1.0 1.0)');
+        ripl.assume('noise','(sqrt (inv_gamma 2.0 1.0))');
         ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (clean_func (normal x noise))) (if (is_outlier obs_id) outlier_sigma noise)))');
     };
     
@@ -655,7 +655,7 @@ function InitializeDemo() {
     var RunDemo = function() {
         document.getElementById(model_variables.model_type).checked = true;
         ripl.get_directives_continuously(
-            [[50, 
+            [[100, 
             RenderAll,
             []]] // empty list means get all directives
         );
