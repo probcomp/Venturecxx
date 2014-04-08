@@ -16,6 +16,8 @@ import Network.HTTP.Types (status200, status500)
 import Network.Wai.Handler.Warp (run)
 import Data.Text (unpack)
 import Data.Aeson
+import Control.Concurrent.MVar
+import Control.Monad.State.Lazy
 
 import Engine hiding (execute)
 
@@ -45,27 +47,40 @@ error_response err = responseLBS status500 [("Content-Type", "text/plain")] $ en
   json :: M.Map String String
   json = M.fromList [("exception", "fatal"), ("message", err)]
 
-application :: Request -> IO Response
-application r = do
+application :: MVar (Engine IO) -> Request -> IO Response
+application engineMVar r = do
   parsed <- off_the_wire r
   case parsed of
     Left err -> return $ error_response err
-    Right (method, args) -> execute method args
+    Right (method, args) -> execute engineMVar method args
 
 interpret :: String -> [String] -> Either String Directive
 interpret "assume" [var, expr] = undefined
 interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
 interpret m _ = Left $ "Unknown directive " ++ m
 
-execute :: String -> [String] -> IO Response
-execute method args =
+execute :: MVar (Engine IO) -> String -> [String] -> IO Response
+execute engineMVar method args =
   case interpret method args of
     Left err -> return $ error_response err
     Right d -> do
       putStrLn $ show d
+      value <- onMVar engineMVar $ runDirective d
       return $ responseLBS status200 [("Content-Type", "text/plain")] "Hello World"
+
+-- Execute the given state action on the contents of the given MVar,
+-- put the answer back, and return the result of the action.
+-- The extraction and return are not atomic unless the current thread
+-- is the only producer.
+onMVar :: MVar a -> (StateT a IO b) -> IO b
+onMVar var act = do
+  a <- takeMVar var
+  (b, a') <- runStateT act a
+  putMVar var a'
+  return b
 
 main :: IO ()
 main = do
+  engineMVar <- newMVar initial
   putStrLn "Venture listening on 3000"
-  run 3000 application
+  run 3000 (application engineMVar)
