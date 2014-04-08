@@ -11,15 +11,15 @@ import Utils
 import Engine hiding (empty)
 
 -- Expects the directives to contain exactly one Predict
-simulation :: (MonadRandom m) => Int -> [Directive] -> StateT (Trace m) m [Value]
+simulation :: (MonadRandom m) => Int -> [Directive] -> StateT (Engine m) m [Value]
 simulation ct ds = do
-  target <- liftM head (execute ds)
-  watching_infer target ct
+  target <- liftM head (execute' ds)
+  watching_infer' target ct
 
 venture_main :: (MonadRandom m) => Int -> [Directive] -> m [Value]
 venture_main ct ds = do
-    (vs,t) <- runStateT (simulation ct ds) empty
-    return $ traceShow (pp t) vs where
+  vs <- evalStateT (simulation ct ds) initial
+  return $ vs
 
 v_if :: Exp -> Exp -> Exp -> Exp
 v_if p c a = App (App (Var "select") [p, (Lam [] c), (Lam [] a)]) []
