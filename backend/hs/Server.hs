@@ -13,8 +13,9 @@
 import Network.Wai
 import Network.HTTP.Types (status200)
 import Network.Wai.Handler.Warp (run)
-import qualified Data.ByteString.Lazy as B
+import qualified Data.ByteString.Lazy.Char8 as B
 
+application :: Request -> IO Response
 application r = do
   putStrLn $ show $ pathInfo r
   putStrLn $ show $ queryString r
@@ -22,6 +23,7 @@ application r = do
   B.putStrLn body
   return $ responseLBS status200 [("Content-Type", "text/plain")] "Hello World"
 
+main :: IO ()
 main = do
   putStrLn "Venture listening on 3000"
   run 3000 application
