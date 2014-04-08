@@ -50,8 +50,8 @@ application r = do
   case parsed of
     Left err -> return $ error_response err
     Right (method, args) -> do
-                  putStrLn $ method
-                  putStrLn $ show $ args
+                  putStrLn method
+                  putStrLn $ show args
                   return $ responseLBS status200 [("Content-Type", "text/plain")] "Hello World"
 
 main :: IO ()
