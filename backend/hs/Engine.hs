@@ -131,3 +131,6 @@ watching_infer address ct = replicateM ct (do
   modifyM $ metropolis_hastings principal_node_mh
   gets $ fromJust "Value was not restored by inference" . valueOf
          . fromJust "Address became invalid after inference" . (lookupNode address))
+
+watching_infer' :: (MonadRandom m) => Address -> Int -> StateT (Engine m) m [Value]
+watching_infer' address ct = trace `runOn` (watching_infer address ct)
