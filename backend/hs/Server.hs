@@ -15,8 +15,9 @@ import Network.Wai
 import Network.HTTP.Types (status200, status500)
 import Network.Wai.Handler.Warp (run)
 import Data.Text (unpack)
-
 import Data.Aeson
+
+import Engine hiding (execute)
 
 -- The Venture wire protocol is to request a url whose path is the
 -- method name and put in the body a list of strings to use for
@@ -49,10 +50,20 @@ application r = do
   parsed <- off_the_wire r
   case parsed of
     Left err -> return $ error_response err
-    Right (method, args) -> do
-                  putStrLn method
-                  putStrLn $ show args
-                  return $ responseLBS status200 [("Content-Type", "text/plain")] "Hello World"
+    Right (method, args) -> execute method args
+
+interpret :: String -> [String] -> Either String Directive
+interpret "assume" [var, expr] = undefined
+interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
+interpret m _ = Left $ "Unknown directive " ++ m
+
+execute :: String -> [String] -> IO Response
+execute method args =
+  case interpret method args of
+    Left err -> return $ error_response err
+    Right d -> do
+      putStrLn $ show d
+      return $ responseLBS status200 [("Content-Type", "text/plain")] "Hello World"
 
 main :: IO ()
 main = do

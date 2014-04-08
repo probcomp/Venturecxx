@@ -85,6 +85,7 @@ predict exp = do
 data Directive = Assume String Exp
                | Observe Exp Value
                | Predict Exp
+  deriving Show
 
 -- Return Just the address of the directive if it's a predict, otherwise Nothing
 executeDirective :: (MonadRandom m) => Directive -> StateT (Engine m) m (Maybe Address)
