@@ -48,15 +48,6 @@ execOn lens action = do
   lens .= value'
   return ()
 
-assume :: (MonadRandom m) => String -> Exp -> StateT Env (StateT (Trace m) m) ()
-assume var exp = do
-  -- TODO This implementation of assume does not permit recursive
-  -- functions, because of insufficient indirection to the
-  -- environment.
-  env <- get
-  address <- lift $ eval exp env
-  modify $ Frame (M.fromList [(var, address)])
-
 assume' :: (MonadRandom m) => String -> Exp -> (StateT (Engine m) m) ()
 assume' var exp = do
   -- TODO This implementation of assume does not permit recursive
@@ -71,10 +62,10 @@ assume' var exp = do
 -- value (up to chasing down references until a random choice is
 -- found).  The constraining appears to consist only in removing that
 -- node from the list of random choices.
-observe :: (MonadRandom m) => Exp -> Value -> ReaderT Env (StateT (Trace m) m) ()
-observe exp v = do
-  env <- ask
-  address <- lift $ eval exp env
+observe' :: (MonadRandom m) => Exp -> Value -> (StateT (Engine m) m) ()
+observe' exp v = do
+  (Engine e _) <- get
+  address <- trace `runOn` (eval exp e)
   -- TODO What should happen if one observes a value that had
   -- (deterministic) consequences, e.g.
   -- (assume x (normal 1 1))
@@ -84,18 +75,7 @@ observe exp v = do
   -- from which it in fact has no way to recover.  As of the present
   -- writing, Venturecxx has this limitation as well, so I will not
   -- address it here.
-  lift $ constrain address v
-
-observe' :: (MonadRandom m) => Exp -> Value -> (StateT (Engine m) m) ()
-observe' exp v = do
-  (Engine e _) <- get
-  address <- trace `runOn` (eval exp e)
   trace `execOn` (constrain address v)
-
-predict :: (MonadRandom m) => Exp -> ReaderT Env (StateT (Trace m) m) Address
-predict exp = do
-  env <- ask
-  lift $ eval exp env
 
 predict' :: (MonadRandom m) => Exp -> (StateT (Engine m) m) Address
 predict' exp = do
@@ -115,16 +95,6 @@ executeDirective (Predict e) = predict' e >>= return . Just
 -- Returns the list of addresses the model wants watched (to wit, the predicts)
 execute' :: (MonadRandom m) => [Directive] -> StateT (Engine m) m [Address]
 execute' ds = liftM catMaybes $ mapM executeDirective ds
-
--- Returns the list of addresses the model wants watched
-execute :: (MonadRandom m) => [Directive] -> StateT (Trace m) m [Address]
-execute ds = evalStateT (do
-  modifyM initializeBuiltins
-  liftM catMaybes $ mapM executeOne ds) Toplevel where
-    -- executeOne :: Directive -> StateT Env (StateT (Trace m) m) (Maybe Address)
-    executeOne (Assume s e) = assume s e >> return Nothing
-    executeOne (Observe e v) = get >>= lift . runReaderT (observe e v) >> return Nothing
-    executeOne (Predict e) = get >>= lift . runReaderT (predict e) >>= return . Just
 
 watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Trace m) m [Value]
 watching_infer address ct = replicateM ct (do
