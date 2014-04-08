@@ -68,33 +68,27 @@ def testAll_IP():
 
         for backend in ['puma','lite']:
             v=MRipl2(2,backend=backend,client=cli)
-            v.assume('mu','(normal 0 2)')
-            [v.observe('(normal mu .5)','3') for i in range(15)]
-            v.infer(300)
-            out1 = np.mean(v.sample('mu'))
+            out1 = np.mean(bino_model(v))
             s='lite' if backend=='puma' else 'puma'
             v.switch_backend(s)
             v.infer(300)
-            out2 = np.mean(v.sample('mu'))
-            assert .5 > abs(out1 - out2)
+            out2 = np.mean(v.predict('x'))
+            assert 2 > abs(out1 - out2)
             
         # start puma, switch to lite, switch back, re-do inference
         v=MRipl2(2,backend='puma',client=cli)
-        v.assume('mean','(binomial 10 .3)')
-        [v.observe('(poisson mean)','3.') for i in range(15)]
-        v.infer(300)
-        out1 = np.mean(v.sample('mean'))
-        assert .5 > abs(out1 - 3)
+        out1 = np.mean(bino_model(v))
+        assert 2 > abs(out1 - 7.)
         v.switch_backend('lite')
         v.infer(300)
-        out2 = np.mean(v.sample('mean'))
-        assert .5 > abs(out1 - out2)
+        out2 = np.mean(v.predict('x'))
+        assert 2 > abs(out1 - out2)
         v.switch_backend('puma')
         v.infer(300)
-        out3 = np.mean(v.sample('mean'))
+        out3 = np.mean(v.predict('x'))
         assert round(out1)==round(out3)
 
-        333; print 'passed %s' % name
+        print 'passed %s' % name
 
 
     def testDirectives():

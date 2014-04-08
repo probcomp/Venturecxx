@@ -436,6 +436,10 @@ class MRipl2():
                
     def add_ripls(self,no_new_ripls,new_seeds=None):
         'Add no_new_ripls ripls by mapping a copy_ripl function across engines'
+        
+
+        
+
         assert(type(no_new_ripls)==int and no_new_ripls>0)
 
         # could instead check this for each engine we map to
@@ -481,6 +485,7 @@ class MRipl2():
         
         return self.output_mode(local_out,remote_out)
 
+
         
     def remove_ripls(self,no_rm_ripls):
         'map over the engines to remove a ripl if an engine has >1'
@@ -504,6 +509,234 @@ class MRipl2():
         print self.display_ripls()
 
     
+
+    def snapshot(self,exp_list=[],did_labels_list=[],
+                 plot=False, scatter=False, plot_range=None,
+                 plot_past_values=[],
+                 sample_populations=None, repeat=None,
+                 predict=True,logscore=False):
+                 
+        '''Input: lists of dids_labels and expressions (evaled in order)
+           Output: values from each ripl, (optional) plots.''' 
+
+        # sample_populations, repeat need thunks
+        # sample pop needs a pair
+        
+        
+        if not(isinstance(did_labels_list,(list,tuple))): did_labels_list = [did_labels_list]
+        if not(isinstance(exp_list,(list,tuple))): exp_list = [exp_list]
+        
+        values = { did_label:self.report(did_label) for did_label in did_labels_list}
+
+        if not(predict):
+            v={ exp:self.sample(exp) for exp in exp_list }
+        else:
+            v={ exp: self.predict(exp,label='snapvals_%i' %i) for i,exp in enumerate(exp_list)}
+            [self.forget('snapvals_%i'%i ) for i,exp in enumerate(exp_list)]
+
+        values.update(v )
+
+        if logscore: values['global_logscore']= self.get_global_logscore()
+        
+        out = {'values':values, 'total_transitions':self.total_transitions,
+               'ripls_info': self.ripls_info }
+
+        ## PLOT: need to do with 'both' case
+        if (plot or scatter) and not(sample_populations) and not(repeat):
+            out['figs'] = self.plot(out,plot1d=plot,scatter=scatter,plot_range=plot_range)
+
+
+        # PLAN: think about non-cts case of sample populations. think about doing
+        # sample populations for correlations, by doing a number of subplots
+        # need to type check the options and maybe have some better abstraction
+        # somehow. abstract them as functions so they have local variables.
+        # 
+
+        if sample_populations:
+            assert len(exp_list)==1
+            exp = exp_list[0]
+            try:
+                self.sample(exp)
+            except:
+                print 'Exp=%s for "sample_populations" raised exception.'%exp
+                
+            no_groups,pop_size = sample_populations
+
+            def pred_repeat_forget(r,exp,pop_size):
+                vals=[r.predict(exp,label='snapsp_%i'%j) for j in range(pop_size)]
+                [r.forget('snapsp_%i'%j) for j in range(pop_size)]
+                return vals
+ 
+            out_map = np.array(mr_apply_proc(self,no_groups,pred_repeat_forget,exp,pop_size))
+
+            out['values'][exp] = out_map
+
+            
+            if plot:
+                out_map = out_map.T
+                fig,ax=plt.subplots(1,2,figsize=(14,4),sharex=True,sharey=False)
+                all_vals=self.lst_flatten(out_map)
+                xr=np.linspace(min(all_vals),max(all_vals),80)
+                
+                for col in range(no_groups):
+                    ax[0].hist(out_map[:,col],bins=20,alpha=.4,normed=False,histtype='stepfilled')
+                    
+                    #ax[1].hist(out_map[:,col], bins=20,
+                     #          histtype='stepfilled',alpha=1-(col/float(lim)) )
+                    ax[1].plot(xr,gaussian_kde(out_map[:,col])(xr))
+                ax[0].set_ylim((0,.66*pop_size))
+                ## FIXME: make ylim for ax[0] some sensible thing, like 1.5 times max bar height
+                ax[0].set_title('Sample populations: %s (population size= %i)' % (exp,pop_size))
+                ax[1].set_title('Sample populations: %s (population size= %i)' % (exp,pop_size))
+                out['figs']=fig
+                
+
+        if repeat:
+            exp=exp_list[0]
+            if not(predict):
+                r_values = lst_flatten([self.sample(exp) for repeats in range(repeat)])
+            else:
+                r_values = lst_flatten([self.predict(exp) for repeats in range(repeat)])
+                # add forgets
+
+
+            out['values'][exp] = r_values
+            if plot:
+                fig,ax=plt.subplots(figsize=(5,3))
+                ax.hist(r_values,bins=20,normed=True,color='m')
+                xr=np.linspace(min(r_values),max(r_values),40)
+                ax.plot(xr,gaussian_kde(r_values)(xr),c='black',lw=2)
+                ax.set_title('Predictive distribution: %s (repeats= %i)' % (exp,repeat))
+                out['figs'] = fig
+                                   
+                                   
+        if plot_past_values:
+            if not(exp_list) and not(did_labels_list):
+                no_exp=1; exp_list=['']
+            else:
+                no_exp=0
+            if not isinstance(plot_past_values,list):
+                plot_past_values = [plot_past_values]
+
+            list_vals = [ past_out['values'].values()[0] for past_out in plot_past_values]
+            if no_exp==0: list_vals.append( out['values'].values()[0] )
+            
+            fig,ax=plt.subplots(1,2,figsize=(14,3.5),sharex=True)
+            f=self.lst_flatten(list_vals)
+            xr=np.linspace(min(f),max(f),80)
+
+            
+            for count,past_vals in enumerate(list_vals):
+                label='Pr [0]' if count==0 else 'Po [%i]'%count
+                ax[0].hist( past_vals,bins=20,normed=True,label=label)
+                
+            for count,past_vals in enumerate(list_vals):
+                label='Pr [0]' if count==0 else 'Po [%i]'%count
+                ax[1].plot(xr,gaussian_kde(past_vals)(xr), label=label)
+                    
+            [ ax[i].legend(loc='upper left',ncol=len(list_vals)) for i in range(2)]
+            ax[0].set_title('Past values hist: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
+            ax[1].set_title('GKDE: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
+            
+            if plot_range:
+                [ax[i].set_xlim(plot_range[:2]) for i in range(2)]
+                if len(plot_range)>2: ax[0].set_ylim(plot_range[2],plot_range[3])
+            
+            out['figs'] = fig
+            return out
+            
+        return out
+
+
+    def type_list(self,lst):
+        'find the type of a list of values, if there is a single type'
+        if any([type(lst[0])!=type(i) for i in lst]):
+            return 'mixed'
+            ## give user a warning and tell them if you cast or leave out some data
+        elif isinstance(lst[0],float):
+            return 'float'
+        elif isinstance(lst[0],int):
+            return 'int'
+        elif isinstance(lst[0],bool):
+            return 'bool'
+        elif isinstance(lst[0],str):
+            return 'string'
+        else:
+            return 'other'
+
+        
+    def plot(self,snapshot,plot1d=True,scatter=False,plot_range=None):
+        '''Takes input from snapshot, checks type of values and plots accordingly.
+        Plots are inlined on IPNB and output as figure objects.'''
+        
+        ## list of lists, values as an optional argument
+        figs = []
+        values = snapshot['values']
+        no_trans = snapshot['total_transitions']
+        no_ripls = self.no_ripls
+        
+        if plot1d:
+            for label,vals in values.items():
+                var_type = self.type_list(vals)
+
+                if var_type =='float':
+                    try:
+                        kd=gaussian_kde(vals)(np.linspace(min(vals),max(vals),400))
+                        kde=1
+                    except:
+                        kde=0
+                    if kde:
+                        fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(9,2))
+
+                        xr = np.linspace(min(vals),max(vals),400) 
+                        ax[0].plot(xr,gaussian_kde(vals)(xr))
+                        ax[0].set_title('GKDE: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
+
+                        ax[1].hist(vals)
+                        ax[1].set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
+                        [a.set_xlabel('Exp: %s' % str(label)) for a in ax]
+
+                        if plot_range:
+                            [ax[myax].set_xlim(plot_range) for myax in range(2)]
+
+                    else:
+                        fig,ax = plt.subplots(figsize=(4,2))
+                        ax.hist(vals)
+                        ax.set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
+                        ax.set_xlabel('Exp: %s' % str(label))
+                        if plot_range:
+                            [ax[myax].set_xlim(plot_range) for myax in range(2)]
+                        
+
+                elif var_type =='int':
+                    fig,ax = plt.subplots()
+                    ax.hist(vals)
+                    ax.set_xlabel = 'Variable %s' % str(label)
+                    ax.set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
+
+                elif var_type =='bool':
+                    ax.hist(vals)
+                elif var_type =='string':
+                    pass
+                else:
+                    print 'cant plot this type of data' ##FIXME, shouldnt add fig to figs
+                fig.tight_layout()
+                figs.append(fig)
+
+            
+        if scatter:
+            label0,vals0 = values.items()[0]
+            label1,vals1 = values.items()[1]
+            fig, ax  = plt.subplots(figsize=(4,2))
+            ax.scatter(vals0,vals1)
+            ax.set_xlabel(label0); ax.set_ylabel(label1)
+            ax.set_title('%s vs. %s (transitions: %i, ripls: %i)' % (str(label0),str(label1),
+                                                                    no_trans, no_ripls) )
+            figs.append(fig)
+        
+        return figs
+
+
 
 
 
@@ -770,6 +1003,7 @@ class MRipl():
         
         return out_execute
 
+
     def get_global_logscore(self):
         self.local_ripl.get_global_logscore()
         @interactive
@@ -933,7 +1167,7 @@ class MRipl():
             else:
                 all_ripls = [self.predict(exp,label='sp%i'%j) for j in range(pop_size)]
                 [self.forget('sp%i'%j) for j in range(pop_size)]
-            ## FIXME could be much faster by fixing ripls first
+            
             indices = np.random.randint(0,self.no_ripls,no_groups)
 
             some_ripls= np.array([np.array(samp)[indices] for samp in all_ripls ])
@@ -1288,7 +1522,7 @@ def mr_apply_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
         no_ripls = mripl.no_ripls
         no_local_ripls = mripl.no_local_ripls
 
-    local_out = [proc(r,*proc_args,**proc_kwargs) for ind,r in enumerate(mripl.local_ripls) if ind<no_local_ripls]
+    local_out=[proc(r,*proc_args,**proc_kwargs) for ind,r in enumerate(mripl.local_ripls) if ind<no_ripls]
 
     if mripl.local_mode: return local_out
 
