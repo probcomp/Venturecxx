@@ -15,10 +15,13 @@ import Network.Wai
 import Network.HTTP.Types (status200, status500)
 import Network.Wai.Handler.Warp (run)
 import Data.Text (unpack)
-import Data.Aeson
+import Data.Aeson hiding (Value, Number)
 import Control.Concurrent.MVar
 import Control.Monad.State.Lazy
+import qualified Data.ByteString.Lazy as B
 
+import Language hiding (Value)
+import Trace
 import Engine hiding (execute)
 
 -- The Venture wire protocol is to request a url whose path is the
@@ -66,7 +69,19 @@ execute engineMVar method args =
     Right d -> do
       putStrLn $ show d
       value <- onMVar engineMVar $ runDirective d
-      return $ responseLBS status200 [("Content-Type", "text/plain")] "Hello World"
+      return $ responseLBS status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
+
+encodeMaybeValue :: Maybe Value -> B.ByteString
+encodeMaybeValue Nothing = "null"
+encodeMaybeValue (Just v) = encodeValue v
+
+encodeValue :: Value -> B.ByteString
+encodeValue (Number x) = encode x
+encodeValue (Symbol s) = encode s
+encodeValue (List vs) = "[" `B.append` (B.intercalate ", " $ map encodeValue vs) `B.append` "]"
+encodeValue (Procedure p) = "An SP"
+encodeValue (Boolean True) = "true"
+encodeValue (Boolean False) = "false"
 
 -- Execute the given state action on the contents of the given MVar,
 -- put the answer back, and return the result of the action.
