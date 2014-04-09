@@ -191,7 +191,9 @@ class MRipl2():
             engine_view.apply(set_engine_seeds,self.mrid,seeds_for_engine)
         
         # invariant
-        assert self.seeds==self.lst_flatten(self.dview.apply(lambda mrid:mripls[mrid]['seeds'],self.mrid))
+        @interactive
+        def get_seeds(mrid): return mripls[mrid]['seeds']
+        assert self.seeds==self.lst_flatten(self.dview.apply(get_seeds,self.mrid))
     
         # these should overwrite the * import of ip_parallel (we could also alter names)
         #self.dview.push(copy_ripl_dict)
@@ -557,6 +559,7 @@ class MRipl2():
             return self.plot_past_values(exp_list, out, plot_past_values,
                                          plot_range=plot_range)
 
+        # logscore current must go after plot_past_values to avoid errors
         if logscore: out['values']['global_logscore']= self.get_global_logscore()
         
         if plot or scatter:
@@ -607,11 +610,15 @@ class MRipl2():
             all_vals=self.lst_flatten(mrmap_values)
             xr=np.linspace(min(all_vals),max(all_vals),80)
 
+            hist_counts = []
             for col in range(no_groups):
-                ax[0].hist(mrmap_values[:,col],bins=20,alpha=.4,normed=False,histtype='stepfilled')
+                hist_out = ax[0].hist(mrmap_values[:,col],
+                                      bins=20, alpha=.4, normed=False, histtype='stepfilled')
+                hist_counts.append( hist_out[0])
                 ax[1].plot(xr,gaussian_kde(mrmap_values[:,col])(xr))
-            ax[0].set_ylim((0,.66*pop_size))
-            ## FIXME: make ylim for ax[0] some sensible thing, like 1.5 times max bar height
+
+            max_hist_count = np.max(hist_counts)
+            ax[0].set_ylim( (0, 1.1*max_hist_count) )
             
             ax[0].set_title('Sample populations: %s (population size= %i)' % (exp,pop_size))
             ax[1].set_title('GKDE: %s (population size= %i)' % (exp,pop_size))
@@ -625,8 +632,12 @@ class MRipl2():
 
 
     def plot_past_values(self, exp_list, out, past_values_list,plot_range):
-            
-        current_vals = out['values'].values()[0] if exp_list else None
+        if exp_list:
+            current_vals = out['values'].values()[0] # note conflict with logscore
+            exp_name  = exp_list[0]
+        else:
+            curent_vals = None
+            exp_name = past_values_list[0]['values'].keys()[0]
 
         assert isinstance(past_values_list,(list,tuple))
 
@@ -639,15 +650,15 @@ class MRipl2():
 
         for count,past_vals in enumerate(list_vals):
             label='Pr [0]' if count==0 else 'Po [%i]'%count
-            alpha = .9 - .1*(len(list_vals) - count )
-            ax[0].hist( past_vals, bins=20, c='g',alpha=alpha,
+            alpha = .9 - .2*(len(list_vals) - count )
+            ax[0].hist( past_vals, bins=20,alpha=alpha,
                         normed=True,label=label)
-            ax[1].plot(xr,gaussian_kde(past_vals)(xr), c='g',
+            ax[1].plot(xr,gaussian_kde(past_vals)(xr),
                        alpha=alpha, label=label)
 
         [ ax[i].legend(loc='upper left',ncol=len(list_vals)) for i in range(2)]
-        ax[0].set_title('Past values hist: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
-        ax[1].set_title('GKDE: %s (ripls= %i)' % (exp_list[0],self.no_ripls) )
+        ax[0].set_title('Past values hist: %s (ripls= %i)' % (exp_name,self.no_ripls) )
+        ax[1].set_title('GKDE: %s (ripls= %i)' % (exp_name,self.no_ripls) )
 
         if plot_range:
             [ax[i].set_xlim(plot_range[0]) for i in range(2)]
