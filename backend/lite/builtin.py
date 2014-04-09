@@ -95,6 +95,10 @@ def type_test(t):
   return deterministic(lambda thing: v.VentureBool(thing in t),
                        "%s :: <SP <object> -> <bool>>\nReturns true iff its argument is a " + t.name())
 
+def grad_times(args, direction):
+  assert len(args) == 2, "Gradient only available for binary multiply"
+  return [direction*args[1], direction*args[0]]
+
 def builtInSPsList():
   return [ [ "plus",  naryNum(lambda *args: sum(args),
                               sim_grad=lambda args, direction: [direction for _ in args],
@@ -102,7 +106,8 @@ def builtInSPsList():
            [ "minus", binaryNum(lambda x,y: x - y,
                                 "%s returns the difference between its first and second arguments") ],
            [ "times", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1),
-                              "%s returns the product of all its arguments") ],
+                              sim_grad=grad_times,
+                              descr="%s returns the product of all its arguments") ],           
            [ "div",   binaryNum(lambda x,y: x / y,
                                 "%s returns the quotient of its first argument by its second") ],
            [ "eq",    deterministic(lambda x,y: v.VentureBool(x.compare(y) == 0),
