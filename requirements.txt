@@ -14,4 +14,7 @@ distribute>=0.7.3
 matplotlib
 
 # IPython Magics
-ipython>=0.13
+ipython>=1.2
+
+# lite
+scipy>=0.13
