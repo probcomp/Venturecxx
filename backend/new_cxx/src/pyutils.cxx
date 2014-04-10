@@ -24,6 +24,24 @@ VentureValuePtr parseSimplex(boost::python::dict d)
   return VentureValuePtr(new VentureSimplex(s));
 }
 
+VentureValuePtr parseArray(boost::python::dict d)
+{
+  boost::python::extract<boost::python::list> getList(d["value"]);
+  if (!getList.check()) { throw "Array must be a list."; }
+  
+  boost::python::list l = getList();
+  
+  boost::python::ssize_t len = boost::python::len(l);
+  vector<VentureValuePtr> v;
+  
+  for (boost::python::ssize_t i = 0; i < len; ++i)
+  {
+    v.push_back(parseValue(boost::python::extract<boost::python::dict>(l[i])));
+  }
+  
+  return VentureValuePtr(new VentureArray(v));
+}
+
 VentureValuePtr parseValue(boost::python::dict d)
 {
   string type = boost::python::extract<string>(d["type"]);
@@ -33,6 +51,7 @@ VentureValuePtr parseValue(boost::python::dict d)
   else if (type == "symbol") { return shared_ptr<VentureSymbol>(new VentureSymbol(boost::python::extract<string>(d["value"]))); }
   else if (type == "atom") { return shared_ptr<VentureAtom>(new VentureAtom(boost::python::extract<uint32_t>(d["value"]))); }
   else if (type == "simplex") { return parseSimplex(d); }
+  else if (type == "array") { return parseArray(d); }
   else { throw "Unknown type '" + type + "'"; }
 }
 
