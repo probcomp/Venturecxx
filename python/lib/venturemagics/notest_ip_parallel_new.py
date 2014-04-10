@@ -5,8 +5,8 @@ import numpy as np
 from IPython.parallel import Client
 from nose.tools import with_setup
 
-from venture.venturemagics.ip_parallel import *
-execfile('ip_parallel.py')
+from venture.venturemagics.ip_parallel2 import *
+execfile('ip_parallel2.py')
 
 def mk_ripl(backend):
     if backend=='puma': return mk_p_ripl()
@@ -41,9 +41,9 @@ def testAll_IP():
         pass
 
     def bino_model(v):
-            v.assume('x','(binomial 20 .5)') 
-            [v.observe(' (poisson x)', '7.') for i in range(20) ]
-            v.infer(300)
+            v.assume('x','(binomial 5 .5)') 
+            [v.observe(' (poisson x)', '1.') for i in range(10) ]
+            v.infer(150)
             return v.predict('x')
 
     def testLocalMode():
@@ -53,7 +53,7 @@ def testAll_IP():
             vl=MRipl2(0,backend=backend,no_local_ripls=2,local_mode=True)
             out1 = bino_model(vl)
             assert len(out1)==vl.no_local_ripls==2
-            assert 2 > abs(np.mean(out1) - 7)
+            assert 2 > abs(np.mean(out1) - 1)
 
             vr=MRipl2(2,backend=backend,no_local_ripls=1,local_mode=False)
             out2 = bino_model(vr)
@@ -71,22 +71,22 @@ def testAll_IP():
             out1 = np.mean(bino_model(v))
             s='lite' if backend=='puma' else 'puma'
             v.switch_backend(s)
-            v.infer(300)
+            v.infer(150)
             out2 = np.mean(v.predict('x'))
             assert 2 > abs(out1 - out2)
             
         # start puma, switch to lite, switch back, re-do inference
         v=MRipl2(2,backend='puma',client=cli)
         out1 = np.mean(bino_model(v))
-        assert 2 > abs(out1 - 7.)
+        assert 2 > abs(out1 - 1.)
         v.switch_backend('lite')
-        v.infer(300)
+        v.infer(150)
         out2 = np.mean(v.predict('x'))
         assert 2 > abs(out1 - out2)
         v.switch_backend('puma')
-        v.infer(300)
+        v.infer(150)
         out3 = np.mean(v.predict('x'))
-        assert round(out1)==round(out3)
+        assert 2 > abs(out1 - out3) # not same, because seeds not reset
 
         print 'passed %s' % name
 
@@ -94,16 +94,14 @@ def testAll_IP():
     def testDirectives():
         name='testDirectives'
         print 'start ', name
-        #        cli=erase_initialize_mripls()
-        cli=1
-
+            
         for backend in ['puma','lite']:
             if backend=='lite':
                 lite=1
             else:
                 lite=0
 
-            v = MRipl2(2,backend=backend,client=cli)
+            v = MRipl2(2,backend=backend)
             test_v = mk_ripl(backend); test_v.set_seed(0)
             ls_x = v.assume('x','(uniform_continuous 0 1000)')
             test_x = test_v.assume('x','(uniform_continuous 0 1000)')
@@ -127,8 +125,6 @@ def testAll_IP():
             assert( np.round(local_x2) in np.round(ls_x2) )
             if not(lite): assert( np.mean(test_x2) < np.mean(test_x) )
             if not(lite): assert( not( v.no_ripls>10 and np.mean(test_x2) > 50) ) # may be too tight
-
-
             ls_x3=v.predict('(normal x .1)')
             test_x3 = test_v.predict('(normal x .1)')
             local_x3 = v.local_ripls[0].predict('(normal x .1)')
@@ -138,7 +134,7 @@ def testAll_IP():
             if not(lite): assert( not( v.no_ripls>10 and np.mean(test_x3) > 50) ) # may be too tight
 
             # test sp values
-            v=MRipl2(2,backend=backend,client=cli)
+            v=MRipl2(2,backend=backend)
             v.assume('f','(lambda()(33))')
             v.assume('hof','(lambda() (lambda()(+ 1 3)) )')
             v.predict('(hof)')
@@ -148,7 +144,7 @@ def testAll_IP():
             v.observe('(h)','true')
 
         ## other directives
-            v=MRipl2(2,backend=backend,client=cli)
+            v=MRipl2(2,backend=backend)
             test_v = mk_ripl(backend); test_v.set_seed(0)
             vs = [v, test_v]
             [r.assume('x','(normal 0 1)') for r in vs]
@@ -170,108 +166,108 @@ def testAll_IP():
             ex = [r.execute_program(prog) for r in vs]
             if not(lite): assert ex[0][0] == ex[0][1] == ex[1]
 
-            333; print 'passed %s' % name
+            print 'passed %s' % name
 
 
-    def testContinuous():
-        clear_all_engines();print 'IP_continuous  '
-
-        v = MRipl(2,lite=lite)
-        test_v = mk_ripl(); test_v.set_seed(0)
-
-        for r in [v, test_v]:
-            r.clear()
-            r.assume('x', '(uniform_continuous 0 1000)')
-        pred1 = v.predict('x') + [test_v.predict('x')]
-
-        for r in [v, test_v]:
-            r.start_continuous_inference()
-        time.sleep(1.0)
-        pred2 = v.predict('x') + [test_v.predict('x')]
-        assert pred1[0] != pred2[0] and pred1[1] != pred2[1], 'continuous_infer'
-
-        for r in [v, test_v]:
-            r.observe('(normal x 10)', '-10')
-        time.sleep(1.0)
-        pred3 = v.predict('x') + [test_v.predict('x')]
-        assert pred3[0] < pred2[0] and pred3[1] < pred2[1], 'continuous_observation'
-
-        status = v.continuous_inference_status() + [test_v.continuous_inference_status()]
-        assert all(s['running'] for s in status), 'continuous_status'
-
-        for r in [v, test_v]:
-            r.stop_continuous_inference()
-        status = v.continuous_inference_status() + [test_v.continuous_inference_status()]
-        assert all(not s['running'] for s in status), 'continuous_stop'
-
-        print '... passed'
-
-
-
+    
     def testSnapshot():
         print 'IP_snap  '
-        def model():
-            clear_all_engines()
-            v=MRipl(2,lite=lite)
-            v.assume('p','(beta 1 1)')
-            [v.observe('(flip p)','true') for i in range(4)]
-            return v
-        v=model()
-        log1 = v.get_global_logscore()  # expectation log(.5)
-        snap1 = v.snapshot(did_labels_list=[],
-                   plot=False,scatter=False,logscore=True)
-        snap2 = v.snapshot(did_labels_list=[1],
-                   plot=False,scatter=False,logscore=True)
-        log2 = snap1['values']['global_logscore']
-        log3 = snap2['values']['global_logscore']
-        assert all(np.round(log1) == np.round(log2))
-        assert all(np.round(log1) == np.round(log3))
 
-        v.infer(30)
-        log4 = v.get_global_logscore()
-        snap3 = v.snapshot(did_labels_list=[],
-                   plot=False,scatter=False,logscore=True)
-        log5 = snap3['values']['global_logscore']
-        assert all(np.round(log4) == np.round(log5))
-
-        # now compare probes
-        v=model()
-        p_log=v.probes(logscore=True,no_transitions=30,no_probes=2)['series']
-        assert all(np.round(log1)==np.round(p_log[0]))
-        assert all(np.round(log4)==np.round(p_log[1]))
+        # sample populations
+        bkends =['puma','lite']
+        outp = ['remote','local']
+        l_mode = [False]
+        params=[(b,o,l) for b in bkends for o in outp for l in l_mode]
         
-        clear_all_engines()
-        
-
-        if not(no_poisson):
+        for (b,o,l) in params:
+            # snapshot == sample
+            v=MRipl2(2,backend=b,output=o, local_mode=l)
+            v.assume('x','(binomial 10 .999)')
+            out1 = v.sample('x')
+            out2 = v.snapshot('x')['values']['x']
+            assert out2 == out1
             
-            v=MRipl(4,lite=lite)
-            v.assume('x','(poisson 10)',label='x')
-            v.assume('y','3.',label='y')
-            seeds_poisson = [15.,4.,9.,11.] #precomputed
-            s=v.snapshot('x'); xs = s['values']['x']
-            vals = [ xs[ripl['seed']] for ripl in s['ripls_info'] ]
-            assert seeds_poisson == vals
+            # sample_pop == repeated samples
+            exp = '(normal x .001)'
+            out3 = v.snapshot(exp,sample_populations=(2,30))
+            out3 = out3['values'][exp]
+            out4 = [v.sample(exp) for rep in range(30)]
+            assert .2 > abs(np.mean(out3) - np.mean(out4))
+            assert .1 > abs(np.std(out3) - np.std(out4))
+            
+            # repeat == repeated samples flattened
+            out5 = v.snapshot(exp,repeat=30)
+            assert .2 > abs(np.mean(out5) - np.mean(out3))
+            
+            v.snapshot('x',plot=True)
 
-            assert v.snapshot('y')['values']['y'] == ([3.]*4)
-            assert v.snapshot('y')['total_transitions'] == 0
-            assert len(v.snapshot('y')['ripls_info']) == 4
-            print '...passed'
-        else: 
-            clear_all_engines()
-            no_rips=2
-            v=MRipl(no_rips,lite=lite)
-            v.assume('x','(binomial 10 .5)',label='x')
-            v.assume('y','3.',label='y')
-            seeds_poisson = [15.,4.,9.,11.] #precomputed
-            s=v.snapshot('x'); xs = s['values']['x']
-            vals = [ xs[ripl['seed']] for ripl in s['ripls_info'] ]
-            if not(no_poisson): assert seeds_poisson == vals
+# other tests for snapshot: need to do repeat,plot_past_vals,
+# wed like to do some tests of plotting, but that's harder
+#
 
-            assert v.snapshot('y')['values']['y'] == ([3.]*no_rips)
-            assert v.snapshot('y')['total_transitions'] == 0
-            assert len(v.snapshot('y')['ripls_info']) == no_rips
-            clear_all_engines()
+
+        # def model():
+        #     clear_all_engines()
+        #     v=MRipl(2,lite=lite)
+        #     v.assume('p','(beta 1 1)')
+        #     [v.observe('(flip p)','true') for i in range(4)]
+        #     return v
+        # v=model()
+        # log1 = v.get_global_logscore()  # expectation log(.5)
+        # snap1 = v.snapshot(did_labels_list=[],
+        #            plot=False,scatter=False,logscore=True)
+        # snap2 = v.snapshot(did_labels_list=[1],
+        #            plot=False,scatter=False,logscore=True)
+        # log2 = snap1['values']['global_logscore']
+        # log3 = snap2['values']['global_logscore']
+        # assert all(np.round(log1) == np.round(log2))
+        # assert all(np.round(log1) == np.round(log3))
+
+        # v.infer(30)
+        # log4 = v.get_global_logscore()
+        # snap3 = v.snapshot(did_labels_list=[],
+        #            plot=False,scatter=False,logscore=True)
+        # log5 = snap3['values']['global_logscore']
+        # assert all(np.round(log4) == np.round(log5))
+
+        # # now compare probes
+        # v=model()
+        # p_log=v.probes(logscore=True,no_transitions=30,no_probes=2)['series']
+        # assert all(np.round(log1)==np.round(p_log[0]))
+        # assert all(np.round(log4)==np.round(p_log[1]))
+        
+        # clear_all_engines()
+        
+
+        # if not(no_poisson):
+            
+        #     v=MRipl(4,lite=lite)
+        #     v.assume('x','(poisson 10)',label='x')
+        #     v.assume('y','3.',label='y')
+        #     seeds_poisson = [15.,4.,9.,11.] #precomputed
+        #     s=v.snapshot('x'); xs = s['values']['x']
+        #     vals = [ xs[ripl['seed']] for ripl in s['ripls_info'] ]
+        #     assert seeds_poisson == vals
+
+        #     assert v.snapshot('y')['values']['y'] == ([3.]*4)
+        #     assert v.snapshot('y')['total_transitions'] == 0
+        #     assert len(v.snapshot('y')['ripls_info']) == 4
+        #     print '...passed'
+        # else: 
+        #     clear_all_engines()
+        #     no_rips=2
+        #     v=MRipl(no_rips,lite=lite)
+        #     v.assume('x','(binomial 10 .5)',label='x')
+        #     v.assume('y','3.',label='y')
+        #     seeds_poisson = [15.,4.,9.,11.] #precomputed
+        #     s=v.snapshot('x'); xs = s['values']['x']
+        #     vals = [ xs[ripl['seed']] for ripl in s['ripls_info'] ]
+        #     if not(no_poisson): assert seeds_poisson == vals
+
+        #     assert v.snapshot('y')['values']['y'] == ([3.]*no_rips)
+        #     assert v.snapshot('y')['total_transitions'] == 0
+        #     assert len(v.snapshot('y')['ripls_info']) == no_rips
+        #     clear_all_engines()
             print '... passed'
 
 
@@ -283,7 +279,7 @@ def testAll_IP():
         
         no_rips = 4; no_mrips=2;
         for backend in ['puma','lite']:
-            vs = [MRipl2(no_rips,backend=backend,client=cli) for i in range(no_mrips) ]
+            vs = [MRipl2(no_rips,backend=backend) for i in range(no_mrips) ]
 
             #test mrids unique
             assert len(set([v.mrid for v in vs]) ) == len(vs)
@@ -305,22 +301,22 @@ def testAll_IP():
             ls=[v.report('x') for v in vs]
             if backend=='puma':
                 assert all( [ set(ls[0])==set(i) for i in ls] ) # because seeds the same
-            333; print 'passed %s' % name
+            print 'passed %s' % name
 
         
-    def testMrApplyProc():
-        name='testMrApplyProc'
+    def testMrMap():
+        name='testMrMap'
         print 'start ', name
         #cli=erase_initialize_mripls()
         cli=1
         no_rips = 4
         for backend in ['puma','lite']:
-            v = MRipl2(no_rips,backend=backend,client=cli)
+            v = MRipl2(no_rips,backend=backend)
             def f(ripl):
                 import numpy
                 ys = numpy.power([1, 2, 3, 4],2)
                 return [ripl.predict(str(y)) for y in ys]
-            out_apply = mr_apply_proc(v,'all',f)
+            out_apply = mr_map_proc(v,'all',f)
             assert all( np.array( out_apply[0] ) == np.power([1, 2, 3, 4],2) )
 
             # compare using map to get poisson from all ripls, vs. using normal directive
@@ -328,9 +324,9 @@ def testAll_IP():
             def g(ripl):
                 mean = 10
                 return ripl.predict('(poisson %i)' % mean)
-            out_apply2 = mr_apply_proc(v,'all',g)
+            out_apply2 = mr_map_proc(v,'all',g)
 
-            vv=MRipl2(no_rips,backend=backend,client=cli); mean = 10
+            vv=MRipl2(no_rips,backend=backend); mean = 10
             vv_out = vv.predict('(poisson %i)' % mean)
             assert out_apply2 == vv_out
             
@@ -355,7 +351,17 @@ def testAll_IP():
         
     #tests = [ testParaUtils, testMrMap, testMulti, testSnapshot, testDirectives, testContinuous, testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
     #erase_initialize_mripls()
-    tests = [testDirectives,testMrApplyProc,testMulti,testBackendSwitch]
-    tests=[         testLocalMode]
+    tests = [testDirectives,testSnapshot,testMrApplyProc,testMulti,testBackendSwitch]
+    tests=[testSnapshot]
     [t() for t in tests]
     print 'passed all tests for ip_parallel'
+
+
+
+
+
+
+
+
+
+
