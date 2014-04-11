@@ -15,6 +15,7 @@ matplotlib
 
 # IPython Magics
 ipython>=1.2
+pyzmq
 
 # lite
 scipy>=0.13
