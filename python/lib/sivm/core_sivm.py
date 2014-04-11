@@ -55,7 +55,7 @@ class CoreSivm(object):
         sym = utils.validate_arg(instruction,'symbol',
                 utils.validate_symbol)
         did, val = self.engine.assume(sym,exp)
-        return {"directive_id":did, "value":_parse_value(val)}
+        return {"directive_id":did, "value":val}
 
     def _do_observe(self,instruction):
         utils.require_state(self.state,'default')
@@ -72,7 +72,7 @@ class CoreSivm(object):
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         did, val = self.engine.predict(exp)
-        return {"directive_id":did, "value":_parse_value(val)}
+        return {"directive_id":did, "value":val}
 
     def _do_configure(self,instruction):
         utils.require_state(self.state,'default')
@@ -111,7 +111,7 @@ class CoreSivm(object):
             return {"value":copy.deepcopy(self.observe_dict[did]['value'])}
         else:
             val = self.engine.report_value(did)
-            return {"value":_parse_value(val)}
+            return {"value":val}
 
     def _do_infer(self,instruction):
         utils.require_state(self.state,'default')
@@ -143,12 +143,7 @@ class CoreSivm(object):
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_nonnegative_integer)
         if did not in self.observe_dict:
-            try:
-                val = self.engine.report_value(did)
-            except Exception as e:
-                if e.message == 'Attempt to report value for non-existent directive.':
-                    raise VentureException('invalid_argument',e.message,argument='directive_id')
-                raise
+            val = self.engine.report_value(did)
         return {"logscore":0}
 
     def _do_get_global_logscore(self,_):
@@ -220,5 +215,3 @@ def _modify_symbol(s):
     #       which the boost python wrappings can't convert
     return {"type": "symbol", "value": str(s)}
 
-def _parse_value(val):
-    return val
