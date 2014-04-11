@@ -43,8 +43,8 @@ def loadEnvironments(ripl):
 (lambda ()
   (list
     (dict 
-      (array (quote bernoulli) (quote normal) (quote plus) (quote times) (quote branch))
-      (array (make_ref bernoulli) (make_ref normal) (make_ref plus) (make_ref times) (make_ref branch)))))
+      (array (quote bernoulli) (quote normal) (quote add) (quote mul) (quote branch))
+      (array (make_ref bernoulli) (make_ref normal) (make_ref add) (make_ref mul) (make_ref branch)))))
 """)
 
   ripl.assume("extend_env","""
@@ -125,7 +125,7 @@ def testIncrementalEvaluator1b():
   "Extremely basic test"
   ripl = get_ripl()
   loadAll(ripl)
-  ripl.assume("expr","(list (make_ref plus) (make_ref 1) (make_ref 1))")
+  ripl.assume("expr","(list (make_ref add) (make_ref 1) (make_ref 1))")
   ripl.assume("env","(incremental_initial_environment)")
   ripl.predict("(incremental_eval expr env)",label="pid")
   assert_equal(ripl.report("pid"),2)
@@ -159,7 +159,7 @@ def testIncrementalEvaluator2():
 
   loadAll(ripl)
   
-  ripl.assume("genBinaryOp","(lambda () (if (flip) (quote plus) (quote times)))")
+  ripl.assume("genBinaryOp","(lambda () (if (flip) (quote add) (quote mul)))")
   ripl.assume("genLeaf","(lambda () (normal 4 3))")
   ripl.assume("genVar","(lambda (x) x)")
 
@@ -185,9 +185,9 @@ def testIncrementalEvaluator2():
 """)
   ripl.assume("g","(lambda (z) (normal (f z) noise))")
 
-  ripl.assume("square","(lambda (x) (times x x))")
+  ripl.assume("square","(lambda (x) (mul x x))")
   X = 10
-  predictStr = "(plus "
+  predictStr = "(add "
   for x in range(X): predictStr += "(square (- (f %d) %d))" % (x,computeF(x))
   predictStr += ")"
   ripl.predict(predictStr,label="pid")

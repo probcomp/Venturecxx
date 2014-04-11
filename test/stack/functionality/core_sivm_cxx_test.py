@@ -65,12 +65,12 @@ class TestCoreSivm(unittest.TestCase):
 
     def test_modify_symbol(self):
         v = 'add'
-        s = {'type': 'symbol', 'value': 'plus'}
+        s = {'type': 'symbol', 'value': 'add'}
         self.assertEqual(module._modify_symbol(v),s)
 
     def test_modify_expression(self):
         v = ['sub',{"type":"real","value":2},'a']
-        s = [{'type': 'symbol', 'value': 'minus'},{"type":"number","value":2},{'type': 'symbol', 'value': 'a'}]
+        s = [{'type': 'symbol', 'value': 'sub'},{"type":"number","value":2},{'type': 'symbol', 'value': 'a'}]
         self.assertEqual(module._modify_expression(v),s)
 
     def test_assume(self):

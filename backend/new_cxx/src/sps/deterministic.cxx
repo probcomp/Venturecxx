@@ -5,7 +5,7 @@
 #include <iostream>
 using std::cout;
 using std::endl;
-VentureValuePtr PlusOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr AddOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   double sum = 0;
   for (size_t i = 0; i < args->operandValues.size(); ++i)
@@ -15,13 +15,13 @@ VentureValuePtr PlusOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
   return shared_ptr<VentureNumber>(new VentureNumber(sum));
 }
 
-VentureValuePtr MinusOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr SubOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("minus", args, 2);
   return shared_ptr<VentureNumber>(new VentureNumber(args->operandValues[0]->getDouble() - args->operandValues[1]->getDouble()));
 }
 
-VentureValuePtr TimesOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr MulOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   double prod = 1;
   for (size_t i = 0; i < args->operandValues.size(); ++i)

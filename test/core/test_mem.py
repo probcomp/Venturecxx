@@ -55,7 +55,7 @@ def testMem2():
   ripl.assume("w","(f 2)")
   ripl.assume("z","(f 2)")
   ripl.assume("q","(categorical (simplex 0.1 0.9) (array 1 2))")
-  ripl.predict('(plus x y w z q)',label="pid")
+  ripl.predict('(add x y w z q)',label="pid")
 
   predictions = collectSamples(ripl,"pid")
   # TODO This test can be strengthened by computing more of the ratios in the answer
@@ -70,13 +70,13 @@ def testMem3():
   "Same as testMem3 but with booby traps"
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
-  ripl.assume("g","((lambda () (mem (lambda (y) (f (plus y 1))))))")
+  ripl.assume("g","((lambda () (mem (lambda (y) (f (add y 1))))))")
   ripl.assume("x","(f ((if (bernoulli 0.5) (lambda () 1) (lambda () 1))))")
   ripl.assume("y","(g ((lambda () 0)))")
   ripl.assume("w","((lambda () (f 2)))")
   ripl.assume("z","(g 1)")
   ripl.assume("q","(categorical (simplex 0.1 0.9) (array 1 2))")
-  ripl.predict('(plus x y w z q)')
+  ripl.predict('(add x y w z q)')
 
   predictions = collectSamples(ripl,8)
   # TODO This test can be strengthened by computing more of the ratios in the answer
@@ -93,10 +93,10 @@ def testMem4():
 (lambda (sticks k)
   (if (bernoulli (sticks k))
       k
-      (pick_a_stick sticks (plus k 1))))
+      (pick_a_stick sticks (add k 1))))
 """)
   ripl.assume("d","(uniform_continuous 0.4 0.41)")
-  ripl.assume("f","(mem (lambda (k) (beta 1.0 (times k d))))")
+  ripl.assume("f","(mem (lambda (k) (beta 1.0 (mul k d))))")
   ripl.assume("g","(lambda () (pick_a_stick f 1))")
   ripl.predict("(g)")
   ripl.infer(40)

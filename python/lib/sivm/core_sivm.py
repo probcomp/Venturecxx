@@ -209,14 +209,14 @@ def _modify_value(ob):
     return ob
 
 _symbol_map = { 
-    "add" : 'plus', 
-    "sub" : 'minus', 
-    "mul" : 'times',
-    "symmetric_dirichlet_multinomial_make" : "make_sym_dir_mult",
+#    "add" : 'plus', 
+#    "sub" : 'minus', 
+#    "mul" : 'times',
+#    "symmetric_dirichlet_multinomial_make" : "make_sym_dir_mult",
     "condition_erp" : "biplex", 
-    "crp_make" : "make_crp",
-    "dirichlet_multinomial_make" : "make_dir_mult",
-    "beta_bernoulli_make" : "make_beta_bernoulli",
+#    "crp_make" : "make_crp",
+#    "dirichlet_multinomial_make" : "make_dir_mult",
+#    "beta_bernoulli_make" : "make_beta_bernoulli",
 }
 
 for s in ["lt", "gt", "lte", "gte"]:
