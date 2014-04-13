@@ -737,15 +737,21 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
 
 
 def venture(line, cell):
+    'args: r_mr_name [,no_ripls_output]'
+    ##FIXME: we should recursively extract value when assigning to 'values'
     mripl_name =  str(line).split()[0]
+    if len(str(line).split())>1:
+        limit = str(line).split()[1]
+    else:
+        limit = 5
     mripl = eval(mripl_name,globals(),ip.user_ns)
     out = mripl.execute_program(str(cell))
     
-    if isinstance(mripl,MRipl):
+    if isinstance(mripl,MRipl2):
         try:
             values = [[d['value']['value'] for d in ripl_out] for ripl_out in out ]
             for i,val in enumerate(values):
-                if i<5:
+                if i<limit:
                     print 'Ripl %i of %i: '%(i,mripl.no_ripls), val
                 if i==5: print '...'
         except:
@@ -757,7 +763,7 @@ def venture(line, cell):
         except:
             pass
 
-    return None  ##FIXME: maybe some values should be output
+    return None  
     
 
 ## Register the cell magic for IPython use
@@ -838,10 +844,6 @@ def heatplot(n2array,nbins=100):
 def get_name(r_mr):
     'Input is ripl or mripl, out name string via "model_name" ripl variable'
     mr= 1 if isinstance(r_mr,MRipl) else 0
-    # try:
-    #     r_mr.dview; mr=1
-    # except:
-    #     mr=0
     di_l = r_mr.list_directives()
     if 'model_name' in str(di_l):
         try:
