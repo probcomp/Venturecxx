@@ -46,7 +46,7 @@ def bino_model(v):
         return v.predict('x')
 
 
-def compareSpeed():
+def compareSpeed(no_engines=4):
     'Compare speed with different backends and local/remote mode'
     name='compareSpeed'
     print 'Start %s'%name
@@ -62,7 +62,7 @@ def compareSpeed():
         times = []
         for reps in range(3):
             start = time.time()
-            v=MRipl2(4,no_local_ripls=4,backend=b,output=o, local_mode=l)
+            v=MRipl2(no_engines,no_local_ripls=no_engines,backend=b,output=o, local_mode=l)
             out = bino_model(v)
             assert  2 > abs(np.mean(out) - 1)
 
