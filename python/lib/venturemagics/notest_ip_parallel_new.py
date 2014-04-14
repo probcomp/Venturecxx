@@ -6,7 +6,7 @@ from IPython.parallel import Client
 from nose.tools import with_setup
 
 from venture.venturemagics.ip_parallel_new import *
-execfile('ip_parallel_new.py')
+
 
 def mk_ripl(backend):
     if backend=='puma': return mk_p_ripl()

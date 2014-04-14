@@ -13,6 +13,8 @@ mk_p_ripl = make_puma_church_prime_ripl
 
 ### IPython Parallel Magics
 
+### FIXME: mripl2 references and imports toip_parallel_new vs. ip_parallel
+
 
 # Utility functions for working with ipcluster and mripl
 
@@ -141,7 +143,7 @@ class MRipl2():
         self.dview.block = True   # FIXME reconsider async infer
         
         # Imports for remote ripls
-        self.dview.execute('from venture.venturemagics.ip_parallel import *')
+        self.dview.execute('from venture.venturemagics.ip_parallel_new import *')
         # FIXME namespace issues
         self.dview.execute('%pylab inline --no-import-all')
         
