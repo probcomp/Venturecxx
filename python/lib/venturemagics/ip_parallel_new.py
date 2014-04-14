@@ -115,6 +115,8 @@ class MRipl2():
         # initialize local ripls
         assert no_local_ripls > 0
         self.no_local_ripls=no_local_ripls
+        if self.local_mode:
+            self.no_ripls=self.no_local_ripls
         self.local_seeds = range(self.no_local_ripls) if not seeds else seeds['local']  
         if self.backend=='puma':
             self.local_ripls = [make_puma_church_prime_ripl() for i in range(self.no_local_ripls)]

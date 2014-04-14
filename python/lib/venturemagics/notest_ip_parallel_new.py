@@ -6,7 +6,7 @@ from IPython.parallel import Client
 from nose.tools import with_setup
 
 from venture.venturemagics.ip_parallel_new import *
-
+#execfile('ip_parallel_new.py')
 
 def mk_ripl(backend):
     if backend=='puma': return mk_p_ripl()
@@ -339,7 +339,7 @@ def testMrMap():
 
     for (b,o,l) in params:
   
-        v=MRipl2(4,backend=b,output=o, local_mode=l)
+        v=MRipl2(4,no_local_ripls=4,backend=b,output=o, local_mode=l)
         
         # no args, no limit (proc does import)
         def f(ripl):
@@ -352,7 +352,7 @@ def testMrMap():
         def g(ripl,x,exponent=1):
             return ripl.predict(str( x**exponent) )
         out_apply = mr_map_proc(v,2,g,4,exponent=2)
-        assert len(out_apply) ==2 and all( 16. == np.array(out_apply) )
+        assert len(out_apply)==2 and all( 16. == np.array(out_apply) )
     
         print name, 'passed'
 
