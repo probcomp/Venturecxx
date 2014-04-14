@@ -4,17 +4,17 @@
 #include "psp.h"
 #include "args.h"
 
-struct PlusOutputPSP : PSP
+struct AddOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
-struct MinusOutputPSP : PSP
+struct SubOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
-struct TimesOutputPSP : PSP
+struct MulOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };

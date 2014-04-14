@@ -150,7 +150,7 @@ puma_inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/', 'inc/Eigen']
 puma_inc_dirs = ["backend/new_cxx/" + d for d in puma_inc_dirs]
 
 ext_modules = []
-packages=["venture","venture.sivm","venture.ripl",
+packages=["venture","venture.sivm","venture.ripl", "venture.engine",
           "venture.parser","venture.server","venture.shortcuts",
           "venture.unit", "venture.test", "venture.cxx", "venture.puma", "venture.lite",
           "venture.venturemagics"]

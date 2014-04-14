@@ -35,15 +35,15 @@ def desugar_expression(exp):
         if exp[0] == 'if':
             if len(exp) != 4:
                 raise VentureException('parse','"if" statement requires 3 arguments',expression_index=[])
-            return [['condition_erp',dsw(exp,1),['lambda',[],dsw(exp,2)],['lambda',[],dsw(exp,3)]]]
+            return [['biplex',dsw(exp,1),['lambda',[],dsw(exp,2)],['lambda',[],dsw(exp,3)]]]
         if exp[0] == 'and':
             if len(exp) != 3:
                 raise VentureException('parse','"and" statement requires 2 arguments',expression_index=[])
-            return [['condition_erp',dsw(exp,1),['lambda',[],dsw(exp,2)],['lambda',[],{"type":"boolean", "value":False}]]]
+            return [['biplex',dsw(exp,1),['lambda',[],dsw(exp,2)],['lambda',[],{"type":"boolean", "value":False}]]]
         if exp[0] == 'or':
             if len(exp) != 3:
                 raise VentureException('parse','"or" statement requires 2 arguments',expression_index=[])
-            return [['condition_erp',dsw(exp,1),['lambda',[],{"type":"boolean", "value":True}],['lambda',[],dsw(exp,2)]]]
+            return [['biplex',dsw(exp,1),['lambda',[],{"type":"boolean", "value":True}],['lambda',[],dsw(exp,2)]]]
         if exp[0] == 'let':
             if len(exp) != 3:
                 raise VentureException('parse','"let" statement requires 2 arguments',expression_index=[])

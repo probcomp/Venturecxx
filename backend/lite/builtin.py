@@ -100,12 +100,12 @@ def grad_times(args, direction):
   return [direction*args[1], direction*args[0]]
 
 def builtInSPsList():
-  return [ [ "plus",  naryNum(lambda *args: sum(args),
+  return [ [ "add",  naryNum(lambda *args: sum(args),
                               sim_grad=lambda args, direction: [direction for _ in args],
                               descr="%s returns the sum of all its arguments") ],
-           [ "minus", binaryNum(lambda x,y: x - y,
+           [ "sub", binaryNum(lambda x,y: x - y,
                                 "%s returns the difference between its first and second arguments") ],
-           [ "times", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1),
+           [ "mul", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1),
                               sim_grad=grad_times,
                               descr="%s returns the product of all its arguments") ],           
            [ "div",   binaryNum(lambda x,y: x / y,

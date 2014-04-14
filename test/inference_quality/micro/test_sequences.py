@@ -12,7 +12,7 @@ def testVentureNormalHMM1():
 (mem (lambda (i)
   (if (eq i 0)
     (normal 0.0 1.0)
-    (normal (f (minus i 1)) 1.0))))
+    (normal (f (- i 1)) 1.0))))
 """)
   ripl.assume("g","""
 (mem (lambda (i)
@@ -55,7 +55,7 @@ def testVentureBinaryHMM1():
 (mem (lambda (i)
   (if (eq i 0)
     (bernoulli 0.5)
-    (if (f (minus i 1))
+    (if (f (- i 1))
       (bernoulli 0.7)
       (bernoulli 0.3)))))
 """)

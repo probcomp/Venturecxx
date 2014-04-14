@@ -233,8 +233,7 @@ class Ripl():
         if params is None:
             return {"kernel":"rejection","scope":"default","block":"all","transitions":1}
         if isinstance(params, int):
-            return {"transitions": params, "kernel": "mh",
-                        "scope":"default", "block":"one"}
+            return {"transitions": params, "kernel": "mh", "scope":"default", "block":"one"}
         elif isinstance(params, str):
             return u.expToDict(u.parse(params))
         elif isinstance(params, dict):

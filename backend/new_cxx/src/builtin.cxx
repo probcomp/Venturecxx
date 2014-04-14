@@ -29,9 +29,9 @@ map<string,SP*> initBuiltInSPs()
   map<string,SP*> m;
 
   /* Deterministic SPs */
-  m["plus"] = new SP(new NullRequestPSP(), new PlusOutputPSP());
-  m["minus"] = new SP(new NullRequestPSP(), new MinusOutputPSP());
-  m["times"] = new SP(new NullRequestPSP(), new TimesOutputPSP());
+  m["add"] = new SP(new NullRequestPSP(), new AddOutputPSP());
+  m["sub"] = new SP(new NullRequestPSP(), new SubOutputPSP());
+  m["mul"] = new SP(new NullRequestPSP(), new MulOutputPSP());
   m["div"] = new SP(new NullRequestPSP(), new DivOutputPSP());
   m["eq"] = new SP(new NullRequestPSP(), new EqOutputPSP());
   m["gt"] = new SP(new NullRequestPSP(), new GtOutputPSP());
