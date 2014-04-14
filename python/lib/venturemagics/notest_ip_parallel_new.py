@@ -46,9 +46,9 @@ def bino_model(v):
         return v.predict('x')
 
 
-def CompareSpeed():
+def compareSpeed():
     'Compare speed with different backends and local/remote mode'
-    name='testSpeed'
+    name='compareSpeed'
     print 'Start %s'%name
 
     bkends =['puma','lite']
@@ -87,7 +87,7 @@ def CompareSpeed():
             if r[0][:2]==l[0][:2]:
                 print 'Remote %s %.2f' %(str(r[0]),r[1])
                 print 'Local %s %.2f' %(str(l[0]),l[1])
-                print 'Ratio %.2f' % r[1]/l[1]
+                print 'Ratio %.2f' % (r[1]/l[1])
                 print '--------'
         
     return sorted_times
