@@ -722,7 +722,7 @@ def lst_flatten(l): return [el for subl in l for el in subl]
 def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     '''Push procedure into engine namespaces. Use execute to map across ripls.
     if no_ripls==0 or 'all', then maps across all'''
-    if no_ripls==0 or no_ripls=='all':
+    if no_ripls==0 or no_ripls=='all' or no_ripls>mripl.no_ripls:
         no_ripls = mripl.no_ripls
         no_local_ripls = mripl.no_local_ripls
 
@@ -754,14 +754,18 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
 
 
 def mr_map_array(mripl,proc,proc_args_list):
-
+    '''For each arg in proc_args_list, execute proc(ripl,arg) for
+    a ripl in mripl. Args are spread between engines and results
+    are returned along with ripl's (pid,seed,arg).'''
+    
+    ##FIXME: could add support for kwargs
     #if and(proc_args_lst,proc_kwargs_lst):
     #    assert len(proc_args_lst)==len(proc_kwargs_lst)
         
     no_args = len(proc_args_list)
+    assert no_args <= mripl.no_ripls, 'More arguments than ripls'
 
     local_out=[proc(r,proc_args_list[i]) for i,r in enumerate(mripl.local_ripls) if i<no_args]
-
     if mripl.local_mode: return local_out
     
     no_args_per_engine = int(np.ceil(no_args/float(mripl.no_engines)))
@@ -785,9 +789,10 @@ def mr_map_array(mripl,proc,proc_args_list):
         def f(mrid,backend,eng_args):
             import os
             for i,r in enumerate(mripls[mrid][backend]):
-                id_args = (os.getpid(), mripls[mrid]['seeds'][i], eng_args[i]),
-                outs=ar_proc(r,eng_args[i])
-                array_out.append((id_args,outs))
+                if i<per_eng:
+                    id_args = (os.getpid(), mripls[mrid]['seeds'][i], eng_args[i]),
+                    outs=ar_proc(r,eng_args[i])
+                    array_out.append((id_args,outs))
             return None
 
         engine_view.apply_sync(f,mripl.mrid,mripl.backend,eng_args)
@@ -809,7 +814,7 @@ def venture(line, cell):
     ##FIXME: we should recursively extract value when assigning to 'values'
     mripl_name =  str(line).split()[0]
     if len(str(line).split())>1:
-        limit = str(line).split()[1]
+        limit = int(str(line).split()[1])
     else:
         limit = 5
     mripl = eval(mripl_name,globals(),ip.user_ns)
