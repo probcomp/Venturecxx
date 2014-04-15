@@ -523,9 +523,23 @@ class MRipl2():
             vals=[r.predict(exp,label='snapsp_%i'%j) for j in range(pop_size)]
             [r.forget('snapsp_%i'%j) for j in range(pop_size)]
             return vals
+
+        def fast_pred_repeat_forget(r,exp,pop_size):
+            # if 'repeat9999' in r.list_directives(): don't define, else define
+            rand_id = np.random.randint(10**9)
+            r.assume('repeat%s'%rand_id,
+                     '(lambda (th n) (if (= n 0) (list) (pair (th) (repeat%s th (- n 1) ) ) ) ) '%rand_id,
+                     label='repeat%s'%rand_id)
+            vals=r.predict('(repeat%s (lambda () %s ) %i)'%(rand_id,exp,pop_size),label='snapshot%s'%rand_id)
+            
+            r.forget('snapshot%s'%rand_id)
+            return vals
         
         mrmap_values = mr_map_proc(self, no_groups,
                                 pred_repeat_forget, exp, pop_size)
+
+        mrmap_values2 = mr_map_proc(self, no_groups,
+                                fast_pred_repeat_forget, exp, pop_size)
 
         if flatten: mrmap_values = self.lst_flatten(mrmap_values)
 
@@ -736,6 +750,56 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
 
     remote_out = lst_flatten( mripl.dview['apply_out'] )
     ## FIXME should we slice this to 'no_ripls'?
+    return mripl.output_mode(local_out,remote_out)
+
+
+def mr_map_array(mripl,proc,proc_args_list):
+
+    #if and(proc_args_lst,proc_kwargs_lst):
+    #    assert len(proc_args_lst)==len(proc_kwargs_lst)
+        
+    no_args = len(proc_args_list)
+
+    local_out=[proc(r,proc_args_list[i]) for i,r in enumerate(mripl.local_ripls) if i<no_args]
+
+    if mripl.local_mode: return local_out
+    
+    no_args_per_engine = int(np.ceil(no_args/float(mripl.no_engines)))
+                    
+    extra_ripls = no_args_per_engine - no_args
+    proc_args_list = proc_args_list + [proc_args_list[-1]]*extra_ripls
+
+    for i in range(mripl.no_engines):
+        engine_view = mripl.cli[i]
+        start=i*no_args_per_engine
+        eng_args = proc_args_list[start:start+no_args_per_engine]
+        engine_view.push({'ar_proc':interactive(proc),
+                          'eng_args':eng_args,
+                          'per_eng':len(eng_args)})
+        #s1='array_out='
+        #s2="[{'id_args':(os.pid, mripls[%i]['seeds'][i], eng_args[i]), 'outs':ar_proc(r,eng_args[i]) } for i,r in enumerate(mripls[%i]['%s']) if i<per_eng ]"%(mripl.mrid,mripl.mrid,mripl.backend)
+        #engine_view.execute(s1+s2)
+        
+        engine_view.push({'array_out':[]})
+        @interactive
+        def f(mrid,backend,eng_args):
+            import os
+            for i,r in enumerate(mripls[mrid][backend]):
+                id_args = (os.getpid(), mripls[mrid]['seeds'][i], eng_args[i]),
+                outs=ar_proc(r,eng_args[i])
+                array_out.append((id_args,outs))
+            return None
+
+        engine_view.apply_sync(f,mripl.mrid,mripl.backend,eng_args)
+        
+    try: 
+        ip=get_ipython()
+        ip.run_cell_magic("px",'','pass') # display any figs inline
+    except:
+        pass
+
+    remote_out = (('pid','seed','arg'),lst_flatten( mripl.dview['array_out'] ) )
+
     return mripl.output_mode(local_out,remote_out)
 
 
