@@ -62,7 +62,7 @@ def compareSpeed(no_engines=4):
         times = []
         for reps in range(3):
             start = time.time()
-            v=MRipl2(no_engines,no_local_ripls=no_engines,backend=b,output=o, local_mode=l)
+            v=MRipl(no_engines,no_local_ripls=no_engines,backend=b,output=o, local_mode=l)
             out = bino_model(v)
             assert  2 > abs(np.mean(out) - 1)
 
@@ -97,12 +97,12 @@ def testLocalMode():
     name='testLocalMode'
     print 'start ', name
     for backend in ['puma','lite']:
-        vl=MRipl2(0,backend=backend,no_local_ripls=2,local_mode=True)
+        vl=MRipl(0,backend=backend,no_local_ripls=2,local_mode=True)
         out1 = bino_model(vl)
         assert len(out1)==vl.no_local_ripls==2
         assert 2 > abs(np.mean(out1) - 1)
 
-        vr=MRipl2(2,backend=backend,no_local_ripls=1,local_mode=False)
+        vr=MRipl(2,backend=backend,no_local_ripls=1,local_mode=False)
         out2 = bino_model(vr)
         if backend=='puma': assert all(np.array(out1)==np.array(out2))
         assert 2 > abs(np.mean(out1) - np.mean(out2))
@@ -115,7 +115,7 @@ def testBackendSwitch():
     cli=1#erase_initialize_mripls()
 
     for backend in ['puma','lite']:
-        v=MRipl2(2,backend=backend,client=cli)
+        v=MRipl(2,backend=backend,client=cli)
         out1 = np.mean(bino_model(v))
         s='lite' if backend=='puma' else 'puma'
         v.switch_backend(s)
@@ -124,7 +124,7 @@ def testBackendSwitch():
         assert 2 > abs(out1 - out2)
 
     # start puma, switch to lite, switch back, re-do inference
-    v=MRipl2(2,backend='puma',client=cli)
+    v=MRipl(2,backend='puma',client=cli)
     out1 = np.mean(bino_model(v))
     assert 2 > abs(out1 - 1.)
     v.switch_backend('lite')
@@ -149,7 +149,7 @@ def testDirectives():
         else:
             lite=0
 
-        v = MRipl2(2,backend=backend)
+        v = MRipl(2,backend=backend)
         test_v = mk_ripl(backend); test_v.set_seed(0)
         ls_x = v.assume('x','(uniform_continuous 0 1000)')
         test_x = test_v.assume('x','(uniform_continuous 0 1000)')
@@ -182,7 +182,7 @@ def testDirectives():
         if not(lite): assert( not( v.no_ripls>10 and np.mean(test_x3) > 50) ) # may be too tight
 
         # test sp values
-        v=MRipl2(2,backend=backend)
+        v=MRipl(2,backend=backend)
         v.assume('f','(lambda()(33))')
         v.assume('hof','(lambda() (lambda()(+ 1 3)) )')
         v.predict('(hof)')
@@ -192,7 +192,7 @@ def testDirectives():
         v.observe('(h)','true')
 
     ## other directives
-        v=MRipl2(2,backend=backend)
+        v=MRipl(2,backend=backend)
         test_v = mk_ripl(backend); test_v.set_seed(0)
         vs = [v, test_v]
         [r.assume('x','(normal 0 1)') for r in vs]
@@ -231,7 +231,7 @@ def testTransitionsCount():
 
     for (b,o,l) in params:
         # basic test
-        v=MRipl2(2,backend=b,output=o, local_mode=l)
+        v=MRipl(2,backend=b,output=o, local_mode=l)
         assert v.total_transitions == 0
         v.assume('x','(student_t 4)')
         v.observe('(normal x 1)','2.')
@@ -267,7 +267,7 @@ def testSnapshot():
 
     for (b,o,l) in params:
         # snapshot == sample
-        v=MRipl2(2,backend=b,output=o, local_mode=l)
+        v=MRipl(2,backend=b,output=o, local_mode=l)
         v.assume('x','(binomial 10 .999)')
         out1 = v.sample('x')
         out2 = v.snapshot('x')['values']['x']
@@ -303,7 +303,7 @@ def testMulti():
 
     no_rips = 4; no_mrips=2;
     for backend in ['puma','lite']:
-        vs = [MRipl2(no_rips,backend=backend) for i in range(no_mrips) ]
+        vs = [MRipl(no_rips,backend=backend) for i in range(no_mrips) ]
 
         #test mrids unique
         assert len(set([v.mrid for v in vs]) ) == len(vs)
@@ -334,12 +334,12 @@ def testMrMap():
 
     bkends =['puma','lite']
     outp = ['remote','local']
-    l_mode = [True,False] # not al local_mode
+    l_mode = [True,False] 
     params=[(b,o,l) for b in bkends for o in outp for l in l_mode]
 
     for (b,o,l) in params:
   
-        v=MRipl2(4,no_local_ripls=4,backend=b,output=o, local_mode=l)
+        v=MRipl(4,no_local_ripls=4,backend=b,output=o, local_mode=l)
         
         # no args, no limit (proc does import)
         def f(ripl):
@@ -370,7 +370,9 @@ def testMrMap():
         assert 10 in values and 20 in values and 30 in values
         assert len(values) >= 3
 
-        print name, 'passed'
+    print name, 'passed'
+
+
 def testParaUtils():
     print 'testParaUtils'
     clear_all_engines()
