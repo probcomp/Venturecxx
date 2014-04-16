@@ -753,9 +753,7 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     s2='[map_proc(r,*map_args,**map_kwargs) for i,r in enumerate(mripls[%i]["%s"]) if i<%i]' % (mripl.mrid,
                                                                                                 mripl.backend,per_eng)
     mripl.dview.execute(s1+s2)
-    # ex_out=mripl.dview.execute(s1+s2,block=None)
-    # ex_out.get()
-    # ex_out.display_outputs()    
+    # ex_out=mripl.dview.execute(s1+s2,block=None); ex_out.get() # ex_out.display_outputs()    
     
     ipython_inline()
 
@@ -809,7 +807,6 @@ def mr_map_array(mripl,proc,proc_args_list):
 
         engine_view.apply_sync(f,mripl.mrid,mripl.backend,eng_args)
 
-        
     ipython_inline()
     remote_out = (('pid','seed','arg'),lst_flatten( mripl.dview['array_out'] ) )
 
@@ -853,7 +850,6 @@ try:
     ip.register_magic_function(venture, "cell")
 except:
     print 'no ipython'
-
 
 
 library_string='''

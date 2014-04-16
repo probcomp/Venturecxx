@@ -6,7 +6,7 @@ from IPython.parallel import Client
 from nose.tools import with_setup
 
 from venture.venturemagics.ip_parallel import *
-execfile('ip_parallel.py')
+
 
 def mk_ripl(backend):
     if backend=='puma': return mk_p_ripl()
@@ -33,7 +33,6 @@ def teardown_function():
     stop_engines()
 
 
-
 @with_setup(setup_function,teardown_function)
 def testAll_IP():
     def testBuildexp():
@@ -52,31 +51,30 @@ def compareSpeed(no_engines=4):
     print 'Start %s'%name
 
     bkends =['puma','lite']
-    outp = ['remote','local']
     l_mode = [True,False]
-    params=[(b,o,l) for b in bkends for o in outp for l in l_mode]
+    params=[(b,l) for b in bkends for l in l_mode]
 
     m_times = []
 
-    for (b,o,l) in params:
+    for (b,l) in params:
         times = []
         for reps in range(3):
             start = time.time()
-            v=MRipl(no_engines,no_local_ripls=no_engines,backend=b,output=o, local_mode=l)
+            v=MRipl(no_engines,no_local_ripls=no_engines,backend=b,output='remote', local_mode=l)
             out = bino_model(v)
             assert  2 > abs(np.mean(out) - 1)
 
             v.assume('y','(normal 5 5)')
             [v.observe('(if (flip) (normal y 1) (normal y 5))','10.') for rep in range(6)]
-            v.infer(100)
+            v.infer(75)
             out1 = v.sample('y')
             assert 5 > abs(np.mean(out1) - 10.)
             times.append( time.time() - start )
 
-        m_times.append( ( (b,o,l), np.mean(times) ) )
+        m_times.append( ( (b,l), np.mean(times) ) )
 
     sorted_times = sorted(m_times,key=lambda pair: pair[1])
-    print '(backend,output,local_mode?), mean of 3 time.time in secs)'
+    print '(backend,local_mode?), mean of 3 time.time in secs)'
     for pair in sorted_times:
         print pair[0],'%.2f'%pair[1]
     
@@ -84,7 +82,7 @@ def compareSpeed(no_engines=4):
     local = [pair for pair in sorted_times if True in pair[0]]
     for r in remotes:
         for l in local:
-            if r[0][:2]==l[0][:2]:
+            if r[0][:1]==l[0][:1]:
                 print 'Remote %s %.2f' %(str(r[0]),r[1])
                 print 'Local %s %.2f' %(str(l[0]),l[1])
                 print 'Ratio %.2f' % (r[1]/l[1])
@@ -387,7 +385,7 @@ def testParaUtils():
 
 
         
-tests1 = [testDirectives,testMulti,testBackendSwitch]
+tests1 = [testLocalMode,testDirectives,testMulti,testBackendSwitch]
 tests2=[testSnapshot,testTransitionsCount,testMrMap]
 #[t() for t in tests]
 #print 'passed all tests for ip_parallel'
