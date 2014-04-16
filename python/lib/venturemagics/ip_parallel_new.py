@@ -918,16 +918,12 @@ def heatplot(n2array,nbins=100):
     return (xi, yi, zi.reshape(xi.shape))
 
 def get_name(r_mr):
-    'Input is ripl or mripl, out name string via "model_name" ripl variable'
-    mr= 1 if isinstance(r_mr,MRipl) else 0
+    'Input: ripl or mripl. Output: name string via "model_name" ripl variable'
     di_l = r_mr.list_directives()
     if 'model_name' in str(di_l):
-        try:
-            n = r_mr.sample('model_name')[0] if mr else r_mr.sample('model_name')
-            return n
-        except: pass
-    else:
-        return 'anon model'
+        for di in di_l:
+            if di['symbol']=='model_name': return di['value']
+    return 'anon model'
 
 
 def plot_conditional(ripl,data=[],x_range=[],number_xs=40,number_reps=30, return_fig=False,figsize=(16,3.5)):
