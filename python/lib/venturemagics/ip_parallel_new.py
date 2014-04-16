@@ -721,7 +721,7 @@ def lst_flatten(l): return [el for subl in l for el in subl]
 
 def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     '''Push procedure into engine namespaces. Use execute to map across ripls.
-    if no_ripls==0 or 'all', then maps across all'''
+    if no_ripls==0, 'all' or >mripl.no_ripls, then maps across all'''
     if no_ripls==0 or no_ripls=='all' or no_ripls>mripl.no_ripls:
         no_ripls = mripl.no_ripls
         no_local_ripls = mripl.no_local_ripls
@@ -804,7 +804,7 @@ def mr_map_array(mripl,proc,proc_args_list):
         pass
 
     remote_out = (('pid','seed','arg'),lst_flatten( mripl.dview['array_out'] ) )
-
+    print remote_out
     return mripl.output_mode(local_out,remote_out)
 
 

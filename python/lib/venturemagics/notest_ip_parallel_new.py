@@ -345,28 +345,28 @@ def testMrMap():
         def f(ripl):
             import numpy as np
             return ripl.predict(str( np.power(4,2)))
-        out_apply = mr_map_proc(v,'all',f)
-        assert all( 16. == np.array(out_apply) )
+        out = mr_map_proc(v,'all',f)
+        assert all( 16. == np.array(out) )
 
         # args,kwargs,limit
         def g(ripl,x,exponent=1):
             return ripl.predict(str( x**exponent) )
-        out_apply = mr_map_proc(v,2,g,4,exponent=2)
-        assert len(out_apply)==2 and all( 16. == np.array(out_apply) )
+        out = mr_map_proc(v,2,g,4,exponent=2)
+        assert len(out)==2 and all( 16. == np.array(out) )
     
         # mr_map_array
         def h(ripl,x): return ripl.predict(str(x))
-        out_array = mr_map_array(v,h,[10,20])
-        values = [pair[1] for pair in out_array[1]]
+        out = mr_map_array(v,h,[10,20])
+        values = [pair[1] for pair in out[1]]
         assert values==[10,20]
     
         # unbalanced no_ripls
-        out_apply = mr_map_proc(v,3,f)
-        assert all( 16. == np.array(out_apply) )
-        assert len(out_apply) >= 3
+        out = mr_map_proc(v,3,f)
+        assert all( 16. == np.array(out) )
+        assert len(out) >= 3
 
-        out_apply = mr_map_array(v,h,[10,20,30])
-        values = [pair[1] for pair in out_array[1]]
+        out = mr_map_array(v,h,[10,20,30])
+        values = [pair[1] for pair in out[1]]
         assert 10 in values and 20 in values and 30 in values
         assert len(values) >= 3
 
