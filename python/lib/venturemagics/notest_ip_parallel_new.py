@@ -5,8 +5,8 @@ import numpy as np
 from IPython.parallel import Client
 from nose.tools import with_setup
 
-from venture.venturemagics.ip_parallel_new import *
-execfile('ip_parallel_new.py')
+from venture.venturemagics.ip_parallel import *
+execfile('ip_parallel.py')
 
 def mk_ripl(backend):
     if backend=='puma': return mk_p_ripl()
@@ -115,7 +115,7 @@ def testBackendSwitch():
     cli=1#erase_initialize_mripls()
 
     for backend in ['puma','lite']:
-        v=MRipl(2,backend=backend,client=cli)
+        v=MRipl(2,backend=backend)
         out1 = np.mean(bino_model(v))
         s='lite' if backend=='puma' else 'puma'
         v.switch_backend(s)
@@ -124,7 +124,7 @@ def testBackendSwitch():
         assert 2 > abs(out1 - out2)
 
     # start puma, switch to lite, switch back, re-do inference
-    v=MRipl(2,backend='puma',client=cli)
+    v=MRipl(2,backend='puma')
     out1 = np.mean(bino_model(v))
     assert 2 > abs(out1 - 1.)
     v.switch_backend('lite')
@@ -380,17 +380,15 @@ def testParaUtils():
     v.assume('model_name','(quote kolmogorov)')
     name1 = get_name(v)
     def store_name(ripl): return get_name(ripl)
-    names = mr_map_proc(v,store_name)['out']
+    names = mr_map_proc(v,store_name)
     assert name1==names[0]=='kolmogorov'
 
     print '... passed'
 
 
         
-    #tests = [ testParaUtils, testMrMap, testMulti, testSnapshot, testDirectives, testContinuous, testCopyRipl,testAddRemoveSize,testParallelCopyFunction,testCopyFunction]
-    #erase_initialize_mripls()
-tests = [testDirectives,testSnapshot,testMrMap,testMulti,testBackendSwitch]
-tests=[testSnapshot,testTransitionsCount,testMrMap]
+tests1 = [testDirectives,testMulti,testBackendSwitch]
+tests2=[testSnapshot,testTransitionsCount,testMrMap]
 #[t() for t in tests]
 #print 'passed all tests for ip_parallel'
 
