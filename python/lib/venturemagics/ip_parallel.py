@@ -778,7 +778,7 @@ def mr_map_array(mripl,proc,proc_args_list):
         for i,r in enumerate(mripl.local_ripls):
             if i<no_args:
                 id_args = (mripl.local_seeds[i],proc_args_list[i])
-                outs = proc(r,proc_args_list[i])
+                outs = proc(r,*proc_args_list[i])
                 local_out.append( (id_args,outs))
         return ( ('seed','arg'),local_out )
               
@@ -801,7 +801,7 @@ def mr_map_array(mripl,proc,proc_args_list):
             for i,r in enumerate(mripls[mrid][backend]):
                 if i<per_eng:
                     id_args = (os.getpid(), mripls[mrid]['seeds'][i], eng_args[i]),
-                    outs=ar_proc(r,eng_args[i])
+                    outs=ar_proc(r,*eng_args[i])
                     array_out.append((id_args,outs))
             return None
 
