@@ -4,7 +4,7 @@ import scipy
 import scipy.special
 import numpy.random as npr
 from utils import simulateCategorical, logDensityCategorical, simulateDirichlet, logDensityDirichlet
-from psp import PSP, NullRequestPSP, RandomPSP
+from psp import PSP, NullRequestPSP, DeterministicPSP
 from sp import VentureSP,SPAux
 from value import VentureBool, VentureNumber, VentureSymbol
 from lkernel import LKernel
@@ -53,10 +53,7 @@ class SimulatorSP(VentureSP):
     self.port = port
   def constructSPAux(self): return SimulatorSPAux(self.path_to_folder, self.seed, self.port)
 
-class MakeSimulatorOutputPSP(PSP):
-  def isRandom(self):
-    return False
-  
+class MakeSimulatorOutputPSP(DeterministicPSP):
   def simulate(self,args):
     path_to_folder = args.operandValues[0]
     seed = args.operandValues[1]
@@ -69,9 +66,7 @@ class MakeSimulatorOutputPSP(PSP):
 
 
 
-class SimulatorOutputPSP(PSP):
-  def isRandom(self): return False
-  
+class SimulatorOutputPSP(DeterministicPSP):
   def simulate(self,args):
     spaux = args.spaux
     seed = spaux.seed
