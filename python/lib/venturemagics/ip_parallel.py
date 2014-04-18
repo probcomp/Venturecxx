@@ -609,7 +609,7 @@ class MRipl():
 
         for count,past_vals in enumerate(list_vals):
             label='Pr [0]' if count==0 else 'Po [%i]'%count
-            alpha = .9 - .2*(len(list_vals) - count )
+            alpha = .9 - .1*(len(list_vals) - count )
             ax[0].hist( past_vals, bins=20,alpha=alpha,
                         normed=True,label=label)
             ax[1].plot(xr,gaussian_kde(past_vals)(xr),
