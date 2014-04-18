@@ -29,6 +29,26 @@ class FlipOutputPSP(RandomPSP):
   def description(self,name):
     return "  (%s p) returns true with probability p and false otherwise.  If omitted, p is taken to be 0.5." % name
 
+class LogFlipOutputPSP(RandomPSP):
+  def simulate(self,args):
+    p = math.exp(-args.operandValues[0])
+    return random.random() < p
+    
+  def logDensity(self,val,args):
+    p = args.operandValues[0] if args.operandValues else 0.5
+    if val: return p
+    else: return extendedLog(1 - math.exp(-p))
+
+  def logDensityBound(self, _x, _args): return 0
+
+  def enumerateValues(self,args):
+    p = args.operandValues[0]
+    if p == 0: return [True]
+    else: return [True,False]
+
+  def description(self,name):
+    return "  (%s p) returns true with probability exp(-p) and false otherwise." % name
+    
 class BernoulliOutputPSP(RandomPSP):
   def simulate(self,args):
     p = args.operandValues[0] if args.operandValues else 0.5
