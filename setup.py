@@ -234,9 +234,9 @@ setup (
     url = 'TBA',
     long_description = 'TBA.',
     packages = packages,
-    package_dir={"venture":"python/lib/", "venture.test":"test/",
+    package_dir={"venture":"python/lib", "venture.test":"test",
                  "venture.cxx":"backend/cxx",
-        "venture.puma":"backend/new_cxx/", "venture.lite":"backend/lite/"},
+        "venture.puma":"backend/new_cxx", "venture.lite":"backend/lite"},
     ext_modules = ext_modules,
     scripts = ['script/venture']
 )
