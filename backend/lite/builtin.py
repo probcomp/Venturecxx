@@ -18,6 +18,7 @@ import scope
 import eval_sps
 import value as v
 import env
+import simulator
 
 # The types in the value module are generated programmatically, so
 # pylint doesn't find out about them.
@@ -227,6 +228,8 @@ def builtInSPsList():
            [ "make_cmvn",typed_nr(cmvn.MakeCMVNOutputPSP(), [v.HomogeneousArrayType(v.NumberType()),v.NumberType(),v.NumberType(),v.MatrixType()], SPType([], SPType([], v.MatrixType()))) ],           
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.NumberType()], v.NumberType())) ],
+           
+           [ "make_simulator", SP(NullRequestPSP(), simulator.MakeSimulatorOutputPSP()) ],
   ]
 
 def builtInSPs():
