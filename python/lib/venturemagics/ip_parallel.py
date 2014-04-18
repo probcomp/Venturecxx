@@ -759,7 +759,7 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
 
     remote_out = lst_flatten( mripl.dview['apply_out'] )
     
-    return remote_out ## FIXME should we slice this to 'no_ripls'?
+    return remote_out[:no_ripls] ## FIXME should we slice this to 'no_ripls'?
 
 
 def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True):
@@ -851,7 +851,7 @@ def venture(line, cell):
             for i,val in enumerate(values):
                 if i<limit:
                     print 'Ripl %i of %i: '%(i,mripl.no_ripls), val
-                if i==5: print '...'
+                if i==limit: print '...'
         except:
             pass
     else:
