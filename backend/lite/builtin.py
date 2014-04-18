@@ -130,6 +130,7 @@ def builtInSPsList():
            [ "sin", unaryNum(math.sin, "Returns the %s of its argument") ],
            [ "cos", unaryNum(math.cos, "Returns the %s of its argument") ],
            [ "tan", unaryNum(math.tan, "Returns the %s of its argument") ],
+           [ "atan", unaryNum(math.atan, "Returns the %s of its argument") ],
            [ "hypot", binaryNum(math.hypot, "Returns the %s of its arguments") ],
            [ "exp", unaryNum(math.exp, "Returns the %s of its argument") ],
            [ "log", unaryNum(math.log, "Returns the %s of its argument") ],
