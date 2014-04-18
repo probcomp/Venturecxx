@@ -229,7 +229,7 @@ def builtInSPsList():
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.NumberType()], v.NumberType())) ],
            
-           [ "make_simulator", SP(NullRequestPSP(), simulator.MakeSimulatorOutputPSP()) ],
+           [ "make_simulator", VentureSP(NullRequestPSP(), simulator.MakeSimulatorOutputPSP()) ],
   ]
 
 def builtInSPs():

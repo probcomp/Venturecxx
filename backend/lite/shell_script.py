@@ -25,7 +25,7 @@ def testSimulator1():
 """)
 
   ripl.assume("get_distance","(mem (lambda (t) (sim (quote distance) (get_emission t))))")
-  for t in range(T): ripl.observe("(flip (exp (minus 0 (get_distance " + str(t) +"))))","true")
+  for t in range(T): ripl.observe("(log_flip (get_distance %d))" % t,"true")
   #ripl.infer({"kernel":"pgibbs","scope":0,"block":"ordered","particles":50,"with_mutation":False, "transitions":2})
   ripl.infer({"kernel":"mh","scope":0,"block":"one","transitions":5})
   

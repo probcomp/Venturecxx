@@ -6,6 +6,7 @@ import numpy.random as npr
 from utils import simulateCategorical, logDensityCategorical, simulateDirichlet, logDensityDirichlet
 from psp import PSP, NullRequestPSP, RandomPSP
 from sp import VentureSP,SPAux
+from value import VentureBool, VentureNumber, VentureSymbol
 from lkernel import LKernel
 from nose.tools import assert_equal,assert_greater_equal
 import copy
@@ -16,20 +17,20 @@ import pdb
 
 class SimulatorSPAux(SPAux):
   def __init__(self, path_to_folder, seed, port, h = None, old_parid = 0):
-    self.seed = str(seed) #"201403070"
-    self.path_to_folder = path_to_folder
-    self.port = port
+    self.seed = str(seed.getNumber()) #"201403070"
+    self.path_to_folder = path_to_folder.getSymbol()  
+    self.port = int(port.getNumber())
     print port
     if h is None:
       print h
       print port
       print path_to_folder
       #self.h = win32com.client.DispatchEx('matlab.application')
-      self.h = Wormhole(int(port))
+      self.h = Wormhole(self.port)
       #make temp state a string in self.state_file
       self.h.execute("seed ="+self.seed) #need to change this for a new run (FIXIT later)
       self.h.execute("rng(seed)")
-      self.h.execute(r"cd C:\Shell_runs\Shell_reformulated_"+str(int(port))+"\Matlab_code") #C:\Shell_runs\Shell_reformulated_5001\Matlab_code
+      self.h.execute(r"cd C:\Shell_runs\Shell_reformulated_"+str(self.port)+"\Matlab_code") #C:\Shell_runs\Shell_reformulated_5001\Matlab_code
       self.h.execute("save('temp_state')")	 
       #pdb.set_trace()
     else:
@@ -53,6 +54,9 @@ class SimulatorSP(VentureSP):
   def constructSPAux(self): return SimulatorSPAux(self.path_to_folder, self.seed, self.port)
 
 class MakeSimulatorOutputPSP(PSP):
+  def isRandom(self):
+    return False
+  
   def simulate(self,args):
     path_to_folder = args.operandValues[0]
     seed = args.operandValues[1]
@@ -66,17 +70,18 @@ class MakeSimulatorOutputPSP(PSP):
 
 
 class SimulatorOutputPSP(PSP):
-  def isRandom(self): return True
+  def isRandom(self): return False
+  
   def simulate(self,args):
     spaux = args.spaux
     seed = spaux.seed
-    methodname = args.operandValues[0]
+    methodname = args.operandValues[0].getSymbol()
     print "----",methodname, spaux.old_parid, spaux.new_parid
     if methodname == "simulate":
-      # args = ("simulate",params::VentureVector{VentureNumber}
-      params = args.operandValues[1]
+      # args = ("simulate",params::VentureVector{VentureNumber}      
+      params = [v.getNumber() for v in args.operandValues[1].getArray()]
       print params
-      iter_num = args.operandValues[2]
+      iter_num = args.operandValues[2].getNumber()
       f1=open('./'+seed, 'a')
       f1.write(str(iter_num) + ' ')
       print 'iter_num', str(iter_num)
@@ -84,8 +89,8 @@ class SimulatorOutputPSP(PSP):
       f1=open('./testfile', 'a')
       f1.write(expression + '\n')
       spaux.h.execute(expression)
-      return True
-        
+      return VentureBool(True)
+    
     elif methodname == "initialize":
       # args = ("initialize")
       expression = "initialize(" + spaux.state_file_address + ")";
@@ -93,14 +98,14 @@ class SimulatorOutputPSP(PSP):
       f1=open('./testfile', 'a')
       f1.write(expression + '\n')
       spaux.h.execute(expression) 
-      return True;
+      return VentureBool(True)
 
     elif methodname == "emit":
       expression = "emit(" + spaux.state_file_address + ",'" + str(spaux.new_parid) +"')";
       f1=open('./testfile', 'a')
       f1.write(expression + '\n')
       spaux.h.execute(expression)
-      return True;
+      return VentureBool(True)
       
     elif methodname == "distance":
       expression = "[real_error, error, total_size] = distance(" + spaux.state_file_address + ",'" + str(spaux.new_parid) +"')";
@@ -116,7 +121,7 @@ class SimulatorOutputPSP(PSP):
       f1=open('./'+seed, 'a')
       f1.write(' '+ str(computed_distance) + ' ' + str(error[0][0]) + ' ' + str(total_size[0][0]) + '\n')
       print computed_distance
-      return computed_distance;
+      return VentureNumber(computed_distance)
 
     else:
       raise Exception ('unknown method name')
