@@ -595,7 +595,7 @@ class MRipl():
             current_vals = out['values'].values()[0] # note conflict with logscore
             exp_name  = exp_list[0]
         else:
-            curent_vals = None
+            current_vals = None
             exp_name = past_values_list[0]['values'].keys()[0]
 
         assert isinstance(past_values_list,(list,tuple))
