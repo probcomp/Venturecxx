@@ -762,13 +762,27 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     return remote_out ## FIXME should we slice this to 'no_ripls'?
 
 
-def mr_map_array(mripl,proc,proc_args_list):
-    '''For each arg in proc_args_list, execute proc(ripl,arg) for
-    a ripl in mripl. Args are spread between engines and results
-    are returned along with ripl's (pid,seed,arg).'''
+def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True):
+    '''Execute proc(ripl[i],*proc_args_list[i][0],**proc_args_list[i][1])
+    across ripls in mripl.
+
+    proc_args_list = [ [ list_args_i, dict_kwargs_i ],   ], i= 0 to no_args
+
+    where no_args <= mripl.no_ripls.
+
+
+    Examples:
+    v=MRipl(2)
+    def f(ripl,x,y): return ripl.sample('(+ %f %f)'%(x,y))
+    proc_args_list = [ [10,20], [100,200] ]
+    mr_map_array(v,f,proc_args_list)[1] == [30,300] 
+
+
+    def f(ripl,x,y=1): return ripl.sample('(+ %f %f)'%(x,y))
+    proc_args_list = [  [ [10],{'y':10} ],  [ [30],{} ] ]
+    mr_map_array(v,f,proc_args_list,no_kwargs=False)[1] == [20,31] 
+    '''
     
-    ##FIXME: could add support for kwargs
-        
     no_args = len(proc_args_list)
     assert no_args <= mripl.no_ripls, 'More arguments than ripls'
     
@@ -778,7 +792,10 @@ def mr_map_array(mripl,proc,proc_args_list):
         for i,r in enumerate(mripl.local_ripls):
             if i<no_args:
                 id_args = (mripl.local_seeds[i],proc_args_list[i])
-                outs = proc(r,*proc_args_list[i])
+                if no_kwargs:
+                    outs = proc(r,*proc_args_list[i])
+                else:
+                    outs = proc(r,*proc_args_list[i][0],**proc_args_list[i][1])
                 local_out.append( (id_args,outs))
         return ( ('seed','arg'),local_out )
               
@@ -796,16 +813,19 @@ def mr_map_array(mripl,proc,proc_args_list):
         engine_view.push({'array_out':[]})
 
         @interactive
-        def f(mrid,backend,eng_args):
+        def f(mrid,backend,eng_args,no_kwargs):
             import os
             for i,r in enumerate(mripls[mrid][backend]):
                 if i<per_eng:
                     id_args = (os.getpid(), mripls[mrid]['seeds'][i], eng_args[i]),
-                    outs=ar_proc(r,*eng_args[i])
+                    if no_kwargs:
+                        outs =ar_proc(r,*eng_args[i])
+                    else:
+                        outs=ar_proc(r,*eng_args[i][0],**eng_args[i][1])
                     array_out.append((id_args,outs))
             return None
 
-        engine_view.apply_sync(f,mripl.mrid,mripl.backend,eng_args)
+        engine_view.apply_sync(f,mripl.mrid,mripl.backend,eng_args,no_kwargs)
 
     ipython_inline()
     remote_out = (('pid','seed','arg'),lst_flatten( mripl.dview['array_out'] ) )

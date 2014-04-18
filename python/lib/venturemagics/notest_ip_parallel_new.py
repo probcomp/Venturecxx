@@ -352,18 +352,25 @@ def testMrMap():
         out = mr_map_proc(v,2,g,4,exponent=2)
         assert len(out)==2 and all( 16. == np.array(out) )
     
-        # mr_map_array
+        # mr_map_array no_kwargs
         def h(ripl,x): return ripl.predict(str(x))
-        out = mr_map_array(v,h,[10,20])
+        out = mr_map_array(v,h,[[10],[20]],no_kwargs=True)
         values = [pair[1] for pair in out[1]]
         assert values==[10,20]
+
+        # mr_map_array kwargs
+        def foo(ripl,x,y=1): return ripl.sample('(+ %f %f)'%(x,y))
+        proc_args_list = [  [ [10],{'y':10} ],  [ [30],{} ] ]
+        out = mr_map_array(v,foo,proc_args_list,no_kwargs=False)
+        values = [pair[1] for pair in out[1]]
+        assert values==[20,31]
     
         # unbalanced no_ripls
         out = mr_map_proc(v,3,f)
         assert all( 16. == np.array(out) )
         assert len(out) >= 3
 
-        out = mr_map_array(v,h,[10,20,30])
+        out = mr_map_array(v,h,[[10],[20],[30]],no_kwargs=True)
         values = [pair[1] for pair in out[1]]
         assert 10 in values and 20 in values and 30 in values
         assert len(values) >= 3
