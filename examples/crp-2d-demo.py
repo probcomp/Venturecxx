@@ -1,19 +1,16 @@
-import_s = ['from venture import shortcuts',
-            'from venture.unit import VentureUnit, historyOverlay',
-            'from venture.sivm import VentureSivm',
-            'from venture import ripl',
-            'import scipy.io as sio',
-            'import numpy as np',
-            'import numpy.random as rd',
-            'import argparse',
-            'import sys',
-            'import time',
-            'from IPython.parallel import Client',
-            'import matplotlib.pyplot as plt',
-            'import matplotlib.mlab as mlab']
-
-for code_s in import_s:
-  exec code_s
+from venture import shortcuts
+from venture.unit import VentureUnit, historyOverlay
+from venture.sivm import VentureSivm
+from venture import ripl
+import scipy.io as sio
+import numpy as np
+import numpy.random as rd
+import argparse
+import sys
+import time
+from IPython.parallel import Client
+import matplotlib.pyplot as plt
+import matplotlib.mlab as mlab
 
 def toVentureArray(array, token='array'):
   return '(%s %s)'%(token, ' '.join(['%.20f'%(x) for x in array]))
