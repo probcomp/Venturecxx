@@ -7,11 +7,14 @@ import matplotlib.pylab as plt
 from scipy.stats import kde
 gaussian_kde = kde.gaussian_kde
 import subprocess,time,pickle
-make_church_prime_ripl = make_puma_church_prime_ripl
 mk_l_ripl = make_lite_church_prime_ripl
 mk_p_ripl = make_puma_church_prime_ripl
 
 ### IPython Parallel Magics
+
+# TODO:
+# doc_strings, check the outputs of functions, make mr_map_array work on lower no. engines
+
 
 
 # Utility functions for working with ipcluster and mripl
@@ -731,7 +734,7 @@ def ipython_inline():
 def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     '''Push procedure into engine namespaces. Use execute to map across ripls.
     if no_ripls==0, 'all' or >mripl.no_ripls, then maps across all.
-    Maps proc local ripls IFF in local_mode or if output is local.'''
+    Maps proc across local ripls IFF in local_mode or mripl.output=="local".'''
 
     ## FIXME: by default should map over local ripls, while optionally suppressing stdout. 
     if no_ripls==0 or no_ripls=='all' or no_ripls>mripl.no_ripls:
@@ -740,20 +743,24 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
 
     # map across local ripls
     if mripl.output=='local' or mripl.local_mode:
-        local_out=[proc(r,*proc_args,**proc_kwargs) for ind,r in enumerate(mripl.local_ripls) if ind<no_ripls]
+        local_out=[proc(r,*proc_args,**proc_kwargs) for i,r in enumerate(mripl.local_ripls) if i<no_ripls]
         return local_out
 
     # map across remote ripls
     mripl.dview.push({'map_proc':interactive(proc),'map_args':proc_args,
                       'map_kwargs':proc_kwargs})
 
-    per_eng = int(np.ceil(no_ripls/float(mripl.no_engines)))
+    if no_ripls < mripl.no_engines:
+        map_view = mripl.cli[:no_ripls]
+        per_eng = 1
+        mripl.dview.execute('apply_out=None')
+    else:
+        per_eng = int(np.ceil(no_ripls/float(mripl.no_engines)))
     
     s1='apply_out='
     s2='[map_proc(r,*map_args,**map_kwargs) for i,r in enumerate(mripls[%i]["%s"]) if i<%i]' % (mripl.mrid,
                                                                                                 mripl.backend,per_eng)
-    mripl.dview.execute(s1+s2)
-    # ex_out=mripl.dview.execute(s1+s2,block=None); ex_out.get() # ex_out.display_outputs()    
+    mripl.dview.execute(s1+s2)  
     
     ipython_inline()
 
@@ -782,6 +789,9 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True):
     proc_args_list = [  [ [10],{'y':10} ],  [ [30],{} ] ]
     mr_map_array(v,f,proc_args_list,no_kwargs=False)[1] == [20,31] 
     '''
+
+
+    ##FIXME should support limiting the number of ripls to < no_engines
     
     no_args = len(proc_args_list)
     assert no_args <= mripl.no_ripls, 'More arguments than ripls'
@@ -890,7 +900,7 @@ lite_addendum='''
 '''
 
 def test_ripls(print_lib=False):
-    vs=[make_lite_church_prime_ripl(), make_church_prime_ripl()]
+    vs=[mk_l_ripl(),mk_p_ripl()]
     [v.execute_program(library_string) for v in vs]
     vs[0].execute_program(lite_addendum)
     return vs
