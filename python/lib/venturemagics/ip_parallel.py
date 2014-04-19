@@ -456,7 +456,7 @@ class MRipl():
                  plot=False, scatter=False, plot_range=None,
                  plot_past_values=[],
                  sample_populations=None, repeat=None,
-                 predict=True,logscore=False, ordered_labels=None):
+                 predict=True,logscore=False, order_plots=True):
                  
         '''Input: lists of dids_labels and expressions (evaled in order)
            Output: values from each ripl, (optional) plots.''' 
@@ -508,6 +508,7 @@ class MRipl():
         if logscore: out['values']['global_logscore']= self.get_global_logscore()
         
         if plot or scatter:
+            ordered_labels = exp_list if order_plots else None
             out['figs'] = self.plot(out,scatter=scatter,plot_range=plot_range,
                     ordered_labels=ordered_labels)
 
