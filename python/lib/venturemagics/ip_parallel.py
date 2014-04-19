@@ -456,7 +456,7 @@ class MRipl():
                  plot=False, scatter=False, plot_range=None,
                  plot_past_values=[],
                  sample_populations=None, repeat=None,
-                 predict=True,logscore=False):
+                 predict=True,logscore=False, ordered_labels=None):
                  
         '''Input: lists of dids_labels and expressions (evaled in order)
            Output: values from each ripl, (optional) plots.''' 
@@ -508,7 +508,8 @@ class MRipl():
         if logscore: out['values']['global_logscore']= self.get_global_logscore()
         
         if plot or scatter:
-            out['figs'] = self.plot(out,scatter=scatter,plot_range=plot_range)
+            out['figs'] = self.plot(out,scatter=scatter,plot_range=plot_range,
+                    ordered_labels=ordered_labels)
 
 
         return out
@@ -644,7 +645,7 @@ class MRipl():
             return 'other'
 
         
-    def plot(self,snapshot,scatter=False,plot_range=None):
+    def plot(self,snapshot,scatter=False,plot_range=None, ordered_labels=None):
         '''Takes input from snapshot, checks type of values and plots accordingly.
         Plots are inlined on IPNB and output as figure objects.'''
         
@@ -674,7 +675,8 @@ class MRipl():
         no_ripls = self.no_ripls if self.output=='remote' else self.no_local_ripls
                 
         # loop over label,val from snapshot and plot subplot of kde and hist
-        for label,vals in values.items():
+        labels = ordered_labels or values.keys()
+        for label, vals in [(label, values[label]) for label in labels]:
             var_type = self.type_list(vals)
 
             if var_type =='float':
