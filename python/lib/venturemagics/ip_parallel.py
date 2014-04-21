@@ -14,6 +14,8 @@ mk_p_ripl = make_puma_church_prime_ripl
 
 # TODO:
 # doc_strings, check the outputs of functions, make mr_map_array work on lower no. engines
+# get rid of use of interactive on certain utility funcs
+# if it breaks use outside MRIPL
 
 
 
@@ -62,6 +64,7 @@ def mk_picklable(out_lst):
         return out_lst
     except:
         return map(str,out_lst)
+
 
 # functions that copy ripls by batch-loading directives that are constructed from directives_list
 @interactive
@@ -121,6 +124,8 @@ class MRipl():
         local_mode : see above
         no_ripls : see above
         no_local_ripls : see above
+        local_ripls : list
+           List of local ripls. 
         seeds : list
            List of remote seeds. These are divided between the engines such that
            Engine 0 gets seeds[0:k], Engine 1 gets seeds[k:2*k], where k is the
@@ -779,9 +784,10 @@ class MRipl():
 
 
         
-## Functions defined on MRipl objects 
+### Functions defined on MRipl objects 
 
 
+# Utility functions for mr_map functions
 def lst_flatten(l): return [el for subl in l for el in subl]
 
 def ipython_inline():
@@ -995,7 +1001,10 @@ def directive_to_string(d):
 
 
 ## MRipl Regression Utilities:
-###will all be imported to engines via the 'from ip_para import *' instruction for ripls
+# these are imported to engines via 'from ip_parallel import *' instruction for ripls
+# note that we don't need plot condition here
+# we can put it in regression utils, and let heatplot etc be defined
+# inside its local scope. 
         
 def if_lst_flatten(l):
     if type(l[0])==list: return [el for subl in l for el in subl]
@@ -1096,7 +1105,10 @@ def predictive(mripl,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=
         
     xr = np.linspace(x_range[0],x_range[1],number_xs)
     
-    list_out=mr_plot_conditional(mr,plot=False,limit=6,data=data,x_range=x_range,number_xs=number_xs,number_reps=1)
+    ## FIXME: this bit is deprecated
+    list_out=mr_map_proc(mr,min(mr.no_ripls,6),
+                         data=data,x_range=x_range,number_xs=number_xs,
+                         number_reps=1)
     fs = [ ripl_out['f'] for ripl_out in list_out]
     
     ## get y_xs from ripls and compute 1sd intervals
