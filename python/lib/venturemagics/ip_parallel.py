@@ -406,7 +406,7 @@ class MRipl():
 
         local_out = [r.infer(params) for r in self.local_ripls]
         if self.local_mode: return local_out
-net
+
         @interactive
         def f(mrid,backend,params):
             return [r.infer(params) for r in mripls[mrid][backend] ]
