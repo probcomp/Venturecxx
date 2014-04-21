@@ -21,8 +21,8 @@ mk_p_ripl = make_puma_church_prime_ripl
 
 def erase_initialize_mripls(client=None,no_erase=False):
     '''Clear engine namespaces and initialize with mripls list. Optionally specify
-    a pre-existing client object. With "no_erase", only clear and initialize if
-    mripls list and counter are not present in engines.'''
+    a pre-existing client object. If *no_erase* then will only clear and
+    initialize if mripls list and counter are not present in engines.'''
     
     if not client: client=Client(); print "Created new Client"
     if no_erase:
@@ -33,7 +33,7 @@ def erase_initialize_mripls(client=None,no_erase=False):
         return client
     else:
         client.clear()
-        print 'Cleared engine namespaces and created "mripls"'
+        print 'Cleared engine namespaces and created new empty list "mripls"'
         client[:].execute('mripls=[]; no_mripls=0')
         return client
     
@@ -80,7 +80,69 @@ class MRipl():
     
     def __init__(self,no_ripls,backend='puma',no_local_ripls=1,output='remote',local_mode=False,
                  seeds=None,verbose=False):
-        'seeds={"local":lst_seeds,"remote":lst_seeds}'
+        '''
+        MRipl(no_ripls,backend='puma',no_local_ripls=1,output='remote',local_mode=False,seeds=None,verbose=False)
+
+        Create an Mripl. Will fail unless an IPCluster is already running
+        or *local_model*=True.
+
+
+        Arguments for Constructor
+        ------------------------
+
+        no_ripls : int
+           Lower bound on number of remote ripls. 
+           Actual number of ripls will be no_engines*ceil(no_ripls/no_engines)
+        backend : 'puma' or 'lite'
+           Set backend for both local and remote ripls. Can be switched later using
+           self.switch_backend method at the cost of resetting inference.
+        no_local_ripls : int => 1
+           Number of local ripls. These ripls are accessed via the attribute
+           self.local_ripls.
+        output : 'remote','local','both'
+           Unless local_mode=True, all directives are applied to both local and
+           remote ripls. This parameter sets whether the output for an mripl
+           directive comes from local, remote or both sets of ripls. 
+        local_mode : bool
+           If False, all directives are applied to both local and remote ripls.
+           If True, directives are only applied locally. Thus no IPCluster needs
+           to be running to work with Mripl objects.
+        seeds : {"local":list,"remote":list}'
+           Allows the seeds local and remote ripls to be set. Lists must be
+           length specified by no_local_ripls and no_ripls. If None, seeds
+           are set to range(no_local_ripls) and range(no_ripls) respectively.
+        verbose : bool
+          If True, prints information on state of Mripl and ripl inference.
+
+        Attributes
+        ----------
+        backend : see above
+        output : see above
+        local_mode : see above
+        no_ripls : see above
+        no_local_ripls : see above
+        seeds : list
+           List of remote seeds. These are divided between the engines such that
+           Engine 0 gets seeds[0:k], Engine 1 gets seeds[k:2*k], where k is the
+           ceil(no_ripls/no_engines).
+        local_seeds : list
+           Local seeds.
+        cli : Client
+           Client object for remote engines.
+        dview : DirectView
+           View on all engines. Blocking is set to True.
+        no_engines : int
+           len(self.cli.ids)
+        no_ripls_per_engine : int
+           = ceil(no_ripls/no_engines).
+        mrid : int
+           Mripl id, used as index into the mripls list on the remote engines.
+           We need this because the mripls list will store ripls for multiple
+           distinct Mripls. 
+       no_transitions : int
+           Records number of inference transitions. Won't record transitions
+           specified via mr_map_proc and mr_map_array. 
+        '''
         
         self.backend = backend
         assert output in ['remote','local','both']
@@ -344,7 +406,7 @@ class MRipl():
 
         local_out = [r.infer(params) for r in self.local_ripls]
         if self.local_mode: return local_out
-
+net
         @interactive
         def f(mrid,backend,params):
             return [r.infer(params) for r in mripls[mrid][backend] ]
@@ -766,7 +828,7 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
 
     remote_out = lst_flatten( mripl.dview['apply_out'] )
     
-    return remote_out[:no_ripls] ## FIXME should we slice this to 'no_ripls'?
+    return remote_out[:no_ripls] 
 
 
 def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True):
