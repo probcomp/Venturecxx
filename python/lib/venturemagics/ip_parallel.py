@@ -1105,8 +1105,8 @@ def predictive(mripl,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=
         
     xr = np.linspace(x_range[0],x_range[1],number_xs)
     
-    ## FIXME: this bit is deprecated
-    list_out=mr_map_proc(mr,min(mr.no_ripls,6),
+                        
+    list_out=mr_map_proc(mr,min(mr.no_ripls,6),plot_conditional,
                          data=data,x_range=x_range,number_xs=number_xs,
                          number_reps=1)
     fs = [ ripl_out['f'] for ripl_out in list_out]
