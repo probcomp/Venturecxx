@@ -35,9 +35,9 @@ class LogFlipOutputPSP(RandomPSP):
     return random.random() < p
     
   def logDensity(self,val,args):
-    p = args.operandValues[0] if args.operandValues else 0.5
-    if val: return p
-    else: return extendedLog(1 - math.exp(-p))
+    log_p = -args.operandValues[0]
+    if val: return log_p
+    else: return extendedLog(1 - math.exp(log_p))
 
   def logDensityBound(self, _x, _args): return 0
 
