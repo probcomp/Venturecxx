@@ -524,7 +524,7 @@ class GradientOfRegen(object):
     self.numpyr_state = npr.get_state()
 
   def __call__(self, values):
-    """Returns minus the gradient of the weight of regenerating along
+    """Returns the gradient of the weight of regenerating along
     an (implicit) scaffold starting with the given values.  Smashes
     the trace, but leaves it a torus.  Assumes there are no delta
     kernels around."""
@@ -535,7 +535,6 @@ class GradientOfRegen(object):
     registerDeterministicLKernels(self.trace, new_scaffold, pnodes, values)
     (_, rhoDB) = detachAndExtract(self.trace, new_scaffold.border[0], new_scaffold, True)
     self.scaffold = new_scaffold
-    # The potential function we want is - log (density)
     return [rhoDB.getPartial(pnode) for pnode in pnodes]
 
   def fixed_regen(self, values):
