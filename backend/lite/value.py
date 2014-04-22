@@ -429,7 +429,7 @@ class VentureType(object):
     else:
       return self.asPython(vthing) # Function will be added by inheritance pylint:disable=no-member
   def distribution(self, base, **kwargs):
-    return base(self.name()[1:-2], **kwargs) # Strip the angle brackets
+    return base(self.name()[1:-1], **kwargs) # Strip the angle brackets
 
 # TODO Is there any way to make these guys be proper singleton
 # objects?
