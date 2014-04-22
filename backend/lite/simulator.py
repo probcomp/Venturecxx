@@ -15,11 +15,12 @@ from Wormhole import Wormhole
 import uuid
 import pdb 
 
+"""
 class SimulatorSPAux(SPAux):
   def __init__(self, path_to_folder, seed, port, h = None, old_parid = 0):
-    self.seed = str(seed.getNumber()) #"201403070"
-    self.path_to_folder = path_to_folder.getSymbol()  
-    self.port = int(port.getNumber())
+    self.seed = seed #"201403070"
+    self.path_to_folder = path_to_folder
+    self.port = port
     print port
     if h is None:
       print h
@@ -28,7 +29,7 @@ class SimulatorSPAux(SPAux):
       #self.h = win32com.client.DispatchEx('matlab.application')
       self.h = Wormhole(self.port)
       #make temp state a string in self.state_file
-      self.h.execute("seed ="+self.seed) #need to change this for a new run (FIXIT later)
+      self.h.execute("seed ="+str(self.seed)) #need to change this for a new run (FIXIT later)
       self.h.execute("rng(seed)")
       self.h.execute(r"cd C:\Shell_runs\Shell_reformulated_"+str(self.port)+"\Matlab_code") #C:\Shell_runs\Shell_reformulated_5001\Matlab_code
       self.h.execute("save('temp_state')")	 
@@ -46,19 +47,25 @@ class SimulatorSPAux(SPAux):
 
 
 class SimulatorSP(VentureSP):
-  def __init__(self,requestPSP,outputPSP, path_to_folder, seed, port):
+  def __init__(self,requestPSP,outputPSP, seed, port):
     super(SimulatorSP,self).__init__(requestPSP,outputPSP)
-    self.path_to_folder = path_to_folder 
     self.seed = seed
     self.port = port
-  def constructSPAux(self): return SimulatorSPAux(self.path_to_folder, self.seed, self.port)
+  #def constructSPAux(self): return SimulatorSPAux(self.path_to_folder, self.seed, self.port)
+"""
 
 class MakeSimulatorOutputPSP(DeterministicPSP):
   def simulate(self,args):
-    path_to_folder = args.operandValues[0]
-    seed = args.operandValues[1]
-    port = args.operandValues[2]
-    return SimulatorSP(NullRequestPSP(),SimulatorOutputPSP(),path_to_folder, seed, port)
+    #path_to_folder = args.operandValues[0].getSymbol()
+    seed = str(int(args.operandValues[0].getNumber()))
+    port = int(args.operandValues[1].getNumber())
+    
+    matlab = Wormhole(port)
+    matlab.execute("seed ="+seed) #need to change this for a new run (FIXIT later)
+    matlab.execute("rng(seed)")
+    matlab.execute(r"cd C:\Shell_cleaned_05182014\Shell_reformulated_"+str(port)+"\Matlab_code") #C:\Shell_runs\Shell_reformulated_5001\Matlab_code
+    
+    return VentureSP(NullRequestPSP(),SimulatorOutputPSP(seed, port, matlab))
 
   #def description(self,name): #FIXME ARDAVAN
    # raise Exception ("not implemented") 
@@ -67,53 +74,59 @@ class MakeSimulatorOutputPSP(DeterministicPSP):
 
 
 class SimulatorOutputPSP(DeterministicPSP):
+  def __init__(self, seed, port, matlab):
+    self.seed = seed
+    self.port = port
+    self.matlab = matlab
+
   def simulate(self,args):
-    spaux = args.spaux
-    seed = spaux.seed
+    #spaux = args.spaux
+    #seed = spaux.seed
     methodname = args.operandValues[0].getSymbol()
-    print "----",methodname, spaux.old_parid, spaux.new_parid
+    print "----",methodname
     if methodname == "simulate":
       # args = ("simulate",params::VentureVector{VentureNumber}      
-      params = [v.getNumber() for v in args.operandValues[1].getArray()]
-      print params
-      iter_num = args.operandValues[2].getNumber()
-      f1=open('./'+seed, 'a')
-      f1.write(str(iter_num) + ' ')
-      print 'iter_num', str(iter_num)
-      expression = "simulate(" + spaux.state_file_address + ",'" + str(spaux.old_parid) + "','" + str(spaux.new_parid) + "'," + str(params) +","+ str(iter_num)+")";
+      old_file_id = int(args.operandValues[1].getNumber())
+      params = [v.getNumber() for v in args.operandValues[2].getArray()]
+      print old_file_id, params
+      
+      expression = "[return_id] = simulate('" + self.seed + "','" + str(old_file_id) + "'," + str(params) + ");"
       f1=open('./testfile', 'a')
       f1.write(expression + '\n')
-      spaux.h.execute(expression)
-      return VentureBool(True)
+      self.matlab.execute(expression)
+      return VentureNumber(self.matlab.get("return_id")[0][0])
     
     elif methodname == "initialize":
       # args = ("initialize")
-      expression = "initialize(" + spaux.state_file_address + ")";
+      expression = "[return_id] = initialize('" + self.seed + "');"
       print expression
       f1=open('./testfile', 'a')
       f1.write(expression + '\n')
-      spaux.h.execute(expression) 
-      return VentureBool(True)
+      self.matlab.execute(expression)
+      return_id = self.matlab.get("return_id")[0][0]
+      #import pdb; pdb.set_trace()
+      return VentureNumber(return_id)
 
     elif methodname == "emit":
-      expression = "emit(" + spaux.state_file_address + ",'" + str(spaux.new_parid) +"')";
+      file_id = int(args.operandValues[1].getNumber())
+      expression = "[return_id] = emit('" + self.seed + "','" + str(file_id) +"');"
       f1=open('./testfile', 'a')
       f1.write(expression + '\n')
-      spaux.h.execute(expression)
-      return VentureBool(True)
+      self.matlab.execute(expression)
+      return VentureNumber(self.matlab.get("return_id")[0][0])
       
     elif methodname == "distance":
-      expression = "[real_error, error, total_size] = distance(" + spaux.state_file_address + ",'" + str(spaux.new_parid) +"')";
+      obs_file_id = int(args.operandValues[1].getNumber())
+      expression = "[real_error, error, total_size, new_file_id] = distance('" + self.seed + "','" + str(obs_file_id) + "');"
       f1=open('./testfile', 'a')
       f1.write(expression + '\n')
-      computed_distance = spaux.h.execute(expression)
-      #computed_distance = computed_distance.replace("ans =", "")
-      computed_distance = spaux.h.get("real_error")
+      self.matlab.execute(expression)
+      computed_distance = self.matlab.get("real_error")[0][0]
       print computed_distance
       computed_distance = -1 * float(computed_distance)
-      error = -1 * spaux.h.get("error") 
-      total_size = spaux.h.get("total_size")
-      f1=open('./'+seed, 'a')
+      error = -1 * self.matlab.get("error") 
+      total_size = self.matlab.get("total_size")
+      f1=open('./'+self.seed, 'a')
       f1.write(' '+ str(computed_distance) + ' ' + str(error[0][0]) + ' ' + str(total_size[0][0]) + '\n')
       print computed_distance
       return VentureNumber(computed_distance)
