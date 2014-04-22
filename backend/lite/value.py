@@ -64,7 +64,7 @@ class VentureValue(object):
 class VentureNumber(VentureValue):
   def __init__(self,number):
     assert isinstance(number, Number)
-    self.number = number
+    self.number = float(number)
   def __repr__(self):
     if hasattr(self, "number"):
       return "VentureNumber(%s)" % self.number
