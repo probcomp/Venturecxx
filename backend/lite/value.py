@@ -428,6 +428,8 @@ class VentureType(object):
       return None
     else:
       return self.asPython(vthing) # Function will be added by inheritance pylint:disable=no-member
+  def distribution(self, base, **kwargs):
+    return base(self.name()[1:-2], **kwargs) # Strip the angle brackets
 
 # TODO Is there any way to make these guys be proper singleton
 # objects?
@@ -463,6 +465,8 @@ class NilType(VentureType):
     # TODO Throw an error if not nil?
     return []
   def name(self): return "()"
+  def distribution(self, base, **kwargs):
+    return base("nil", **kwargs)
 
 class ListType(VentureType):
   """A Venture list is either a VentureNil or a VenturePair whose
@@ -555,6 +559,9 @@ class HomogeneousArrayType(VentureType):
   def asPython(self, vthing):
     return vthing.getArray(self.subtype)
   def name(self): return "<array %s>" % self.subtype.name()
+  def distribution(self, base, **kwargs):
+    # TODO Is this splitting what I want?
+    return base("array", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
 
 class RequestType(VentureType):
   """A type object for Venture's Requests.  Requests are not Venture

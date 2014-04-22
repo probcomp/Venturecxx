@@ -58,7 +58,7 @@ class DefaultRandomVentureValue(object):
     if elt_dist is None:
       elt_dist = DefaultRandomVentureValue("any") # TODO reuse class of self
     return v.pythonListToVentureList(*[elt_dist.generate(**kwargs) for _ in range(length)])
-  def any(self, size=None, **kwargs):
+  def object(self, size=None, **kwargs):
     if size is None:
       size = npr.randint(0, 30)
     if size == 0:
