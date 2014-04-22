@@ -13,3 +13,5 @@ class ESR(object):
     self.block = block
     self.subBlock = subBlock
 
+  def __repr__(self):
+    return "ESR(%s, %s, %s, %s, %s)" % (self.id, self.exp, self.env, self.block, self.subBlock)
