@@ -138,7 +138,7 @@ def lexicographicUnboxedCompare(thing, other):
   return 0
 
 def sequenceHash(seq):
-  return reduce(lambda res, item: res * 37 + item, [hash(i) for i in seq])
+  return reduce(lambda res, item: res * 37 + item, [hash(i) for i in seq], 1)
 
 class VentureAtom(VentureValue):
   def __init__(self,atom):
