@@ -309,7 +309,7 @@ class VentureSimplex(VentureValue):
 supposed to sum to 1, but we are not checking that."""
   def __init__(self,simplex): self.simplex = simplex
   def __repr__(self):
-    return "VentureArray(%s)" % self.simplex
+    return "VentureSimplex(%s)" % self.simplex
   def getSimplex(self): return self.simplex
   def compareSameType(self, other):
     # The Python ordering is lexicographic first, then by length, but
