@@ -464,6 +464,7 @@ class NilType(VentureType):
   def asPython(self, _vthing):
     # TODO Throw an error if not nil?
     return []
+  def __contains__(self, vthing): return isinstance(vthing, VentureNil)
   def name(self): return "()"
   def distribution(self, base, **kwargs):
     return base("nil", **kwargs)
@@ -482,6 +483,8 @@ data List = Nil | Pair Any List
     return pythonListToVentureList(*thing)
   def asPython(self, thing):
     return thing.asPythonList()
+  def __contains__(self, vthing):
+    return isinstance(vthing, VenturePair) or isinstance(vthing, VentureNil)
   def name(self): return "<list>"
 
 class ExpressionType(VentureType):
@@ -546,6 +549,7 @@ class AnyType(VentureType):
   def asPython(self, thing):
     assert isinstance(thing, VentureValue)
     return thing
+  def __contains__(self, vthing): return isinstance(vthing, VentureValue)
   def name(self):
     if self.type_name is None:
       return "<object>"
