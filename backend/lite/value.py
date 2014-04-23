@@ -5,9 +5,11 @@ https://docs.google.com/document/d/1URnJh5hNJ___-dwzIpca5Y2h-Mku1n5zjpGCiFBcUHM/
 """
 from abc import ABCMeta
 from numbers import Number
-from request import Request # TODO Pull that file in here?
 import numpy as np
 import hashlib
+
+from request import Request # TODO Pull that file in here?
+from exception import VentureValueError
 
 # TODO Define reasonable __str__ and/or __repr__ methods for all the
 # values and all the types.
@@ -210,6 +212,10 @@ interface here is compatible with one possible path."""
   def fromStackDict(thing):
     return VentureArray([VentureValue.fromStackDict(v) for v in thing["value"]])
   def lookup(self, index):
+    try:
+      index = index.getNumber()
+    except Exception: # TODO Make the type error error more specfic and catch it here
+      raise VentureValueError("Looking up non-number %r in an array" % index)
     return self.array[int(index.getNumber())]
   def lookup_grad(self, index, direction):
     return VentureArray([direction if i == index else 0 for (_,i) in enumerate(self.array)])
@@ -288,7 +294,10 @@ class VenturePair(VentureValue):
     else: return self.rest.compare(other.rest)
   # TODO Define a sensible hash function
   def lookup(self, index):
-    ind = index.getNumber()
+    try:
+      ind = index.getNumber()
+    except Exception: # TODO Make the type error error more specfic and catch it here
+      raise VentureValueError("Looking up non-number %r in an array" % index)
     if ind < 1: # Equivalent to truncating for positive floats
       return self.first
     else:
