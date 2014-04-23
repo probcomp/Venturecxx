@@ -208,7 +208,9 @@ def builtInSPsList():
            [ "extend_environment", typed_nr(eval_sps.ExtendEnvOutputPSP(),
                                             [env.EnvironmentType(), v.SymbolType(), v.AnyType()],
                                             env.EnvironmentType()) ],
-           [ "eval",VentureSP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()) ],
+           [ "eval",esr_output(TypedPSP(eval_sps.EvalRequestPSP(),
+                                        SPType([v.ExpressionType(), env.EnvironmentType()],
+                                               v.RequestType("<object>")))) ],
 
            [ "mem",no_request(msp.MakeMSPOutputPSP()) ],
 
