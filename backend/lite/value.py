@@ -7,6 +7,7 @@ from abc import ABCMeta
 from numbers import Number
 from request import Request # TODO Pull that file in here?
 import numpy as np
+import hashlib
 
 # TODO Define reasonable __str__ and/or __repr__ methods for all the
 # values and all the types.
@@ -135,6 +136,9 @@ def lexicographicUnboxedCompare(thing, other):
     if stupidCompare(x,y) != 0: return stupidCompare(x,y)
 
   return 0
+
+def sequenceHash(seq):
+  return reduce(lambda res, item: res * 37 + item, [hash(i) for i in seq])
 
 class VentureAtom(VentureValue):
   def __init__(self,atom):
@@ -316,7 +320,8 @@ supposed to sum to 1, but we are not checking that."""
     # I think we want lower-d simplexes to compare less than higher-d
     # ones regardless of the point.
     return lexicographicUnboxedCompare(self.simplex, other.simplex)
-  def __hash__(self): return hash(self.simplex)
+  def __hash__(self):
+    return sequenceHash(self.simplex)
   def asStackDict(self, _trace):
     # TODO As what type to reflect simplex points to the stack?
     return {"type":"simplex", "value":self.simplex}
@@ -351,7 +356,10 @@ class VentureMatrix(VentureValue):
   def getMatrix(self): return self.matrix
   def compareSameType(self, other):
     return lexicographicUnboxedCompare(self.matrix, other.matrix)
-  def __hash__(self): return hash(self.matrix)
+  def __hash__(self):
+    # From http://stackoverflow.com/questions/5386694/fast-way-to-hash-numpy-objects-for-caching
+    b = self.matrix.view(np.uint8)
+    return hash(hashlib.sha1(b).hexdigest())
   def asStackDict(self, _trace):
     return {"type":"matrix", "value":self.matrix}
   @staticmethod
