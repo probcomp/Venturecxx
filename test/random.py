@@ -44,8 +44,15 @@ class DefaultRandomVentureValue(object):
     return v.VentureSimplex(normalizeList(npr.uniform(-10, 10, length)))
   def dict(self, **_kwargs):
     raise Exception("Can't synthesize dicts yet")
-  def mapping(self, **_kwargs):
-    raise Exception("Can't synthesize mappings yet")
+  def mapping(self, **kwargs):
+    # TODO Only synthesize a mapping of a type that is compatible with
+    # the intended keys (i.e., no arrays with symbol keys).
+    # For that, I need to capture the non-independence between the
+    # types of different arguments to the same procedure.
+    # TODO Be willing to synthesize dicts and environments
+    # kind = npr.choice(["dict", "list", "array", "environment"])
+    kind = npr.choice(["list", "array"])
+    return getattr(self, kind)(**kwargs)
   def matrix(self, length=None, **_kwargs):
     if length is None:
       length = npr.randint(0, 10)
