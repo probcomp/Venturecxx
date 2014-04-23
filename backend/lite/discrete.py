@@ -91,7 +91,8 @@ class CategoricalOutputPSP(RandomPSP):
 
 class UniformDiscreteOutputPSP(RandomPSP):
   def simulate(self,args):
-    if args.operandValues[1] <= args.operandValues[0]: raise Exception("uniform_discrete called on invalid range (%d,%d)" % (args.operandValues[0],args.operandValues[1]))
+    if args.operandValues[1] <= args.operandValues[0]:
+      raise VentureValueError("uniform_discrete called on invalid range (%d,%d)" % (args.operandValues[0],args.operandValues[1]))
     return random.randrange(*args.operandValues)
 
   def logDensity(self,val,args):
