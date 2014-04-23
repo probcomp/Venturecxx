@@ -112,41 +112,6 @@ On OSX with Macports, run
     ./global_install_osx_macports.sh
 
 
-
-Local Installation (Ubuntu)
----------------------------------
-
-In order to install locally, download and install python "virtualenv" onto your computer. https://pypi.python.org/pypi/virtualenv
-
-Create a new virtual environment to install the requirements:
-
-    virtualenv env.d
-    source env.d/bin/activate
-    pip install -r requirements.txt
-
-Install to your virtual environment (:
-
-    python setup.py install
-
-System-Wide Installation (OSX)
-------------------------------
-
-First install any remaining requirements
-
-    sudo pip install -r requirements.txt
-
-On Linux, install by typing
-
-    sudo python setup.py install
-
-On OSX, using homebrew, run the helper script
-
-    sudo ./install_osx_homebrew.sh
-
-If using macports, run
-
-    sudo ./install_osx_macports.sh
-
 Local Installation
 ------------------
 
