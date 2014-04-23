@@ -205,7 +205,9 @@ def builtInSPsList():
            [ "get_empty_environment", typed_func(lambda args: env.VentureEnvironment(), [], env.EnvironmentType(),
                                                  descr="%s returns the empty environment") ],
            [ "is_environment", type_test(env.EnvironmentType()) ],
-           [ "extend_environment",no_request(eval_sps.ExtendEnvOutputPSP()) ],
+           [ "extend_environment", typed_nr(eval_sps.ExtendEnvOutputPSP(),
+                                            [env.EnvironmentType(), v.SymbolType(), v.AnyType()],
+                                            env.EnvironmentType()) ],
            [ "eval",VentureSP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()) ],
 
            [ "mem",no_request(msp.MakeMSPOutputPSP()) ],
