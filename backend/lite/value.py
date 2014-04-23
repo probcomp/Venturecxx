@@ -572,7 +572,7 @@ class HomogeneousListType(VentureType):
   def asVentureValue(self, thing):
     return pythonListToVentureList(*[self.subtype.asVentureValue(t) for t in thing])
   def asPython(self, vthing):
-    return [self.subtype.asPython(v) for v in vthing.asPythonList()]
+    return vthing.asPythonList(self.subtype)
   def __contains__(self, vthing):
     return vthing in ListType and all([v in self.subtype for v in vthing.asPythonList()])
   def name(self): return "<list %s>" % self.subtype.name()
