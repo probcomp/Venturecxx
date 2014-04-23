@@ -148,8 +148,8 @@ def builtInSPsList():
            [ "is_symbol", type_test(v.SymbolType()) ],
            [ "is_atom", type_test(v.AtomType()) ],
 
-           [ "list", deterministic(v.pythonListToVentureList,
-                                   "%s :: <SP <object> ... -> <list>>\nReturns the list of its arguments") ],
+           [ "list", deterministic_typed(lambda *args: args, [v.AnyType()], v.ListType(), variadic=True,
+                                         descr="%s returns the list of its arguments") ],
            [ "pair", deterministic(v.VenturePair,
                                    "%s :: <SP <object> <object> -> <pair>>\nReturns the pair whose first component is the first argument and whose second component is the second argument") ],
            [ "is_pair", type_test(v.PairType()) ],
