@@ -213,10 +213,10 @@ interface here is compatible with one possible path."""
     return VentureArray([VentureValue.fromStackDict(v) for v in thing["value"]])
   def lookup(self, index):
     try:
-      index = index.getNumber()
+      ind = index.getNumber()
     except Exception: # TODO Make the type error error more specfic and catch it here
       raise VentureValueError("Looking up non-number %r in an array" % index)
-    return self.array[int(index.getNumber())]
+    return self.array[int(ind)]
   def lookup_grad(self, index, direction):
     return VentureArray([direction if i == index else 0 for (_,i) in enumerate(self.array)])
   def contains(self, obj):
