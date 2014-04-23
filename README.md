@@ -22,8 +22,8 @@ package would not impose.  In particular, documentation is sparse and
 the user interface is unforgiving.  Often, the only way to learn
 what's going on will be to ask us or to read the source code.
 
-Dependencies
-------------
+Dependencies (Ubuntu)
+---------------------
 
 Here is what we install on a clean Ubuntu 12.04 (or higher).
 
@@ -36,17 +36,87 @@ Here is what we install on a clean Ubuntu 12.04 (or higher).
     # Also pulls in required external libraries
     sudo apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython
 
-Installation to global environment
-----------------------------------
+Dependencies (OSX, Homebrew)
+----------------------------
+
+Here is what we install on a clean Mac OS X 10.9 (or higher).
+    # Install Packet Manager "Homebrew"
+    http://brew.sh/
+
+    # Install g++-4.8 using homebrew.
+    # see this thread: http://apple.stackexchange.com/questions/38222/how-do-i-install-gcc-via-homebrew
+    brew install gcc48
+    
+    # Install libraries using homebrew
+    brew install python ccache
+    brew install --without-python boost
+    
+    # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
+    # Also pulls in required external libraries
+    sudo apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython
+
+Dependencies (OSX, macports)
+----------------------------
+
+For macports installation instructions see: [https://www.macports.org/install.php](https://www.macports.org/install.php)
+
+```
+# System dependencies
+sudo port install \
+    gcc_select gcc48 ccache \
+    python_select python27 \
+    pip_select py27-pip \
+    virtualenv_select virtualenv \
+    boost gsl
+```
+
+```
+# [Optional] Python dependencies
+sudo port install \
+    py27-flask \
+    py27-ipython \
+    py27-matplotlib \
+    py27-numpy \
+    py27-parsing \
+    py27-requests \
+    py27-scipy \
+    py27-zmq \
+```
+
+Macports allows side-by-side installation of multiple versions of gcc, python, ipython, etc. In order to set the default versions of each of these, do
+
+    sudo port select gcc mp-gcc48
+    sudo port select python python27
+    sudo port select ipython ipython27
+    sudo port select pip pip27
+    sudo port select virtualenv virtualenv27
+
+
+System-Wide Installation
+------------------------
+
+Install any remaining dependencies by doing
 
     sudo pip install -r requirements.txt
+
+On Linux systems now simply do
+
     sudo python setup.py install
 
-Installation to local environment
+On OSX with Homebrew, run the helper script
+
+    ./global_install_osx_homebrew.sh
+
+On OSX with Macports, run
+
+    ./global_install_osx_macports.sh
+
+
+
+Local Installation (Ubuntu)
 ---------------------------------
 
-Download and install python "virtualenv" onto your computer.
-https://pypi.python.org/pypi/virtualenv
+In order to install locally, download and install python "virtualenv" onto your computer. https://pypi.python.org/pypi/virtualenv
 
 Create a new virtual environment to install the requirements:
 
@@ -54,9 +124,60 @@ Create a new virtual environment to install the requirements:
     source env.d/bin/activate
     pip install -r requirements.txt
 
-Installation into your virtual environment:
+Install to your virtual environment (:
 
     python setup.py install
+
+System-Wide Installation (OSX)
+------------------------------
+
+First install any remaining requirements
+
+    sudo pip install -r requirements.txt
+
+On Linux, install by typing
+
+    sudo python setup.py install
+
+On OSX, using homebrew, run the helper script
+
+    sudo ./install_osx_homebrew.sh
+
+If using macports, run
+
+    sudo ./install_osx_macports.sh
+
+Local Installation
+------------------
+
+In order to install locally, download and install python "virtualenv" onto your computer. [https://pypi.python.org/pypi/virtualenv](https://pypi.python.org/pypi/virtualenv)
+
+Create a new virtual environment to install the requirements:
+
+    virtualenv env.d
+
+If Python dependencies were pre-installed these can be used by typing 
+
+    virtualenv --system-site-packages env.d
+
+Activate the environment, and install any remaining dependencies
+
+    source env.d/bin/activate
+    pip install -r requirements.txt
+
+On Linux, now install by typing
+
+    python setup.py install
+
+On OSX, using Homebrew, run the helper script
+
+    ./install_osx_homebrew.sh
+
+If using macports, run
+
+    ./install_osx_macports.sh
+
+
 
 Checking that your installation was successful
 ----------------------------------------------
