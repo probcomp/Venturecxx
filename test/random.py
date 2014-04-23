@@ -44,6 +44,8 @@ class DefaultRandomVentureValue(object):
     return v.VentureSimplex(normalizeList(npr.uniform(-10, 10, length)))
   def dict(self, **_kwargs):
     raise Exception("Can't synthesize dicts yet")
+  def mapping(self, **_kwargs):
+    raise Exception("Can't synthesize mappings yet")
   def matrix(self, length=None, **_kwargs):
     if length is None:
       length = npr.randint(0, 10)

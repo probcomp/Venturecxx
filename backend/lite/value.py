@@ -608,6 +608,27 @@ class HomogeneousDictType(VentureType):
     return base("dict", key_dist=self.keytype.distribution(base, **kwargs),
                 val_dist=self.valtype.distribution(base, **kwargs), **kwargs)
 
+class HomogeneousMappingType(VentureType):
+  """Type objects for all Venture mappings.  Dicts are the only fully
+  generic mappings, but Venture also treats arrays and lists as
+  mappings from integers to values, and environments as mappings from
+  symbols to values.  This type is purely advisory and does not do any
+  conversion."""
+  def __init__(self, keytype, valtype):
+    assert isinstance(keytype, VentureType)
+    assert isinstance(valtype, VentureType)
+    self.keytype = keytype
+    self.valtype = valtype
+  def asVentureValue(self, thing):
+    return thing
+  def asPython(self, vthing):
+    return vthing
+  def name(self): return "<mapping %s %s>" % (self.keytype.name(), self.valtype.name())
+  def distribution(self, base, **kwargs):
+    # TODO Is this splitting what I want?
+    return base("mapping", key_dist=self.keytype.distribution(base, **kwargs),
+                val_dist=self.valtype.distribution(base, **kwargs), **kwargs)
+
 class RequestType(VentureType):
   """A type object for Venture's Requests.  Requests are not Venture
   values in the strict sense, and reflection is not permitted on them.
