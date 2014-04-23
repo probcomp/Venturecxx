@@ -212,7 +212,9 @@ def builtInSPsList():
                                         SPType([v.ExpressionType(), env.EnvironmentType()],
                                                v.RequestType("<object>")))) ],
 
-           [ "mem",no_request(msp.MakeMSPOutputPSP()) ],
+           [ "mem",typed_nr(msp.MakeMSPOutputPSP(),
+                            [SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)],
+                            SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)) ],
 
            [ "scope_include",no_request(scope.ScopeIncludeOutputPSP()) ],
 
