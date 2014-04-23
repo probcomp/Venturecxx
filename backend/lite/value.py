@@ -642,7 +642,7 @@ class HomogeneousDictType(VentureType):
   def asPython(self, vthing):
     return dict([(self.keytype.asPython(key), self.valtype.asPython(val)) for (key, val) in vthing.getDict().iteritems()])
   def __contains__(self, vthing):
-    return isinstance(vthing, VentureDict) and all([k in self.keytype and v in self.valtype for (k,v) in vthing.getDict()])
+    return isinstance(vthing, VentureDict) and all([k in self.keytype and v in self.valtype for (k,v) in vthing.getDict().iteritems()])
   def name(self): return "<dict %s %s>" % (self.keytype.name(), self.valtype.name())
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
