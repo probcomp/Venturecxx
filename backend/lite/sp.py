@@ -61,6 +61,8 @@ how to wrap and unwrap individual values or Args objects.  This is
 used in the implementation of TypedPSP and TypedLKernel."""
   def asVentureValue(self, thing): return thing
   def asPython(self, vthing): return vthing
+  def distribution(self, _base, **_kwargs):
+    return None
   def __contains__(self, vthing): return isinstance(vthing, VentureSP)
 
   def __init__(self, args_types, return_type, variadic=False, min_req_args=None):

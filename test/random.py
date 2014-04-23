@@ -82,10 +82,14 @@ class DefaultRandomVentureValue(object):
 
 def random_args_list(sp_type):
   if not sp_type.variadic:
-    return [t.distribution(DefaultRandomVentureValue).generate() for t in sp_type.args_types]
+    dists = [t.distribution(DefaultRandomVentureValue) for t in sp_type.args_types]
   else:
     length = npr.randint(0, 10)
-    return [sp_type.args_types[0].distribution(DefaultRandomVentureValue).generate() for _ in range(length)]
+    dists = [sp_type.args_types[0].distribution(DefaultRandomVentureValue) for _ in range(length)]
+  if any([d is None for d in dists]):
+    return None
+  else:
+    return [d.generate() for d in dists]
 
 def sp_random_args_list(sp):
   return random_args_list(sp.venture_type())
