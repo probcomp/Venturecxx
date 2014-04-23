@@ -588,6 +588,26 @@ class HomogeneousArrayType(VentureType):
     # TODO Is this splitting what I want?
     return base("array", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
 
+class HomogeneousDictType(VentureType):
+  """Type objects for homogeneous dicts.  Right now, the homogeneity
+  is not captured in the implementation, in that on the Venture side
+  such data is still stored as heterogenous Venture dicts.  This type
+  does, however, encapsulate the necessary wrapping and unwrapping."""
+  def __init__(self, keytype, valtype):
+    assert isinstance(keytype, VentureType)
+    assert isinstance(valtype, VentureType)
+    self.keytype = keytype
+    self.valtype = valtype
+  def asVentureValue(self, thing):
+    return VentureDict(dict([(self.keytype.asVentureValue(key), self.valtype.asVentureValue(val)) for (key, val) in thing.iteritems]))
+  def asPython(self, vthing):
+    return dict([(self.keytype.asPython(key), self.valtype.asPython(val)) for (key, val) in vthing.getDict().iteritems])
+  def name(self): return "<dict %s %s>" % (self.keytype.name(), self.valtype.name())
+  def distribution(self, base, **kwargs):
+    # TODO Is this splitting what I want?
+    return base("dict", key_dist=self.keytype.distribution(base, **kwargs),
+                val_dist=self.valtype.distribution(base, **kwargs), **kwargs)
+
 class RequestType(VentureType):
   """A type object for Venture's Requests.  Requests are not Venture
   values in the strict sense, and reflection is not permitted on them.
