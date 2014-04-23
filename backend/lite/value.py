@@ -169,7 +169,7 @@ class VentureBool(VentureValue):
   @staticmethod
   def fromStackDict(thing): return VentureBool(thing["value"])
   def compareSameType(self, other):
-    return self.boolean.__cmp__(other.boolean)
+    return stupidCompare(self.boolean, other.boolean)
   def __hash__(self): return hash(self.boolean)
 
 class VentureSymbol(VentureValue):
