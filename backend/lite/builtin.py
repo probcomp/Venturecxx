@@ -196,7 +196,9 @@ def builtInSPsList():
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),
                                            sim_grad=lambda args, direc: [0, direc, 0] if args[0] else [0, 0, direc],
                                            descr="%s returns either its second or third argument.")],
-           [ "make_csp", no_request(csp.MakeCSPOutputPSP()) ],
+           [ "make_csp", typed_nr(csp.MakeCSPOutputPSP(),
+                                  [v.HomogeneousArrayType(v.SymbolType()), v.ExpressionType()],
+                                  v.AnyType("a compound SP")) ],
 
            [ "get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType(),
                                                    descr="%s returns the lexical environment of its invocation site") ],

@@ -25,8 +25,8 @@ class CSPRequestPSP(DeterministicPSP):
 
 class MakeCSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
-    ids = args.operandValues[0].getArray(v.SymbolType())
-    exp = v.ExpressionType().asPython(args.operandValues[1])
+    ids = args.operandValues[0]
+    exp = args.operandValues[1]
     return VentureSP(CSPRequestPSP(ids,exp,args.env),ESRRefOutputPSP())
 
   def description(self,name):
