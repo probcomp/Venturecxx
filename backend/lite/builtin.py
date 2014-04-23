@@ -91,12 +91,16 @@ def unaryNumS(f):
 def naryNum(f, sim_grad=None, descr=None):
   return deterministic_typed(f, [v.NumberType()], v.NumberType(), variadic=True, sim_grad=sim_grad, descr=descr)
 
+def zero_gradient(args, _direction):
+  return [0 for _ in args]
+
 def binaryPred(f, descr=None):
-  return deterministic_typed(f, [v.AnyType(), v.AnyType()], v.BoolType(), sim_grad=lambda args, direction: [0 for _ in args], descr=descr)
+  return deterministic_typed(f, [v.AnyType(), v.AnyType()], v.BoolType(), sim_grad=zero_gradient, descr=descr)
 
 def type_test(t):
-  return deterministic(lambda thing: v.VentureBool(thing in t),
-                       "%s :: <SP <object> -> <bool>>\nReturns true iff its argument is a " + t.name())
+  return deterministic_typed(lambda thing: thing in t, [v.AnyType()], v.BoolType(),
+                             sim_grad = zero_gradient,
+                             descr="%s returns true iff its argument is a " + t.name())
 
 def grad_times(args, direction):
   assert len(args) == 2, "Gradient only available for binary multiply"
