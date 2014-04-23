@@ -5,6 +5,7 @@ import numpy.random as npr
 from venture.lite import value as v
 from venture.lite.utils import normalizeList
 from venture.lite import env as env
+from venture.lite.psp import NullRequestPSP
 
 class DefaultRandomVentureValue(object):
   def __init__(self, method, **kwargs):
@@ -94,9 +95,19 @@ def random_args_list(sp_type):
 def sp_random_args_list(sp):
   return random_args_list(sp.venture_type())
 
-if __name__ == "__main__":
+class BogusArgs(object):
+  def __init__(self, args):
+    self.operandValues = args
+    self.isOutput = True
+    self.esrValues = []
+
+def main():
   from venture.lite.builtin import builtInSPsList
   for (name,sp) in builtInSPsList():
     print name
-    print sp_random_args_list(sp)
+    args = sp_random_args_list(sp)
+    print args
+    if isinstance(sp.requestPSP, NullRequestPSP):
+      assert sp.outputPSP.simulate(BogusArgs(args)) in sp.venture_type().return_type
 
+if __name__ == "__main__": main()
