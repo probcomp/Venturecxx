@@ -91,6 +91,9 @@ def unaryNumS(f):
 def naryNum(f, sim_grad=None, descr=None):
   return deterministic_typed(f, [v.NumberType()], v.NumberType(), variadic=True, sim_grad=sim_grad, descr=descr)
 
+def binaryPred(f, descr=None):
+  return deterministic_typed(f, [v.AnyType(), v.AnyType()], v.BoolType(), sim_grad=lambda args, direction: [0 for _ in args], descr=descr)
+
 def type_test(t):
   return deterministic(lambda thing: v.VentureBool(thing in t),
                        "%s :: <SP <object> -> <bool>>\nReturns true iff its argument is a " + t.name())
@@ -110,17 +113,16 @@ def builtInSPsList():
                               descr="%s returns the product of all its arguments") ],           
            [ "div",   binaryNum(lambda x,y: x / y,
                                 "%s returns the quotient of its first argument by its second") ],
-           [ "eq",    deterministic(lambda x,y: v.VentureBool(x.compare(y) == 0),
-                                    "%s :: <SP <object> <object> -> <bool>>\nCompares its two arguments for equality") ],
-           [ "gt",    deterministic(lambda x,y: v.VentureBool(x.compare(y) >  0),
-                                    "%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares greater than its second") ],
-           [ "gte",   deterministic(lambda x,y: v.VentureBool(x.compare(y) >= 0),
-                                    "%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares greater than or equal to its second") ],
-           [ "lt",    deterministic(lambda x,y: v.VentureBool(x.compare(y) <  0),
-                                    sim_grad=lambda args, direction: [0 for _ in args],
-                                    descr="%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares less than its second") ],
-           [ "lte",   deterministic(lambda x,y: v.VentureBool(x.compare(y) <= 0),
-                                    "%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares less than or equal to its second") ],
+           [ "eq",    binaryPred(lambda x,y: x.compare(y) == 0,
+                                 descr="%s compares its two arguments for equality") ],
+           [ "gt",    binaryPred(lambda x,y: x.compare(y) >  0,
+                                 descr="%s returns true if its first argument compares greater than its second") ],
+           [ "gte",   binaryPred(lambda x,y: x.compare(y) >= 0,
+                                 descr="%s returns true if its first argument compares greater than or equal to its second") ],
+           [ "lt",    binaryPred(lambda x,y: x.compare(y) <  0,
+                                 descr="%s returns true if its first argument compares less than its second") ],
+           [ "lte",   binaryPred(lambda x,y: x.compare(y) <= 0,
+                                 descr="%s returns true if its first argument compares less than or equal to its second") ],
            # Only makes sense with VentureAtom/VentureNumber distinction
            [ "real",  deterministic_typed(lambda x:x, [v.AtomType()], v.NumberType(),
                                           "%s returns the identity of its argument atom as a number") ],
