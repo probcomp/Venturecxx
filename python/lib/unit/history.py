@@ -6,6 +6,9 @@ import numpy as np
 
 from utils import cartesianProduct, makeIterable
 
+def plot(value):
+    return value['type'] in {'boolean', 'real', 'number', 'atom', 'count'}
+
 class History(object):
     """Aggregates data collected from a typical Venture experiment.
 
@@ -27,13 +30,15 @@ typically also tracked."""
         self.label = label # :: string
         self.parameters = parameters # :: {string: a}  the model parameters leading to the data stored here
         self.nameToSeries = {} # :: {string: [Series]} the list is over multiple runs
+        self.nameToType = {}
 
-    def addSeries(self, name, label, values, hist=True):
+    def addSeries(self, name, type, label, values, hist=True):
         self._addSeries(name, Series(label, values, hist))
 
     def _addSeries(self, name, series):
         if name not in self.nameToSeries:
             self.nameToSeries[name] = []
+            self.nameToType[name] = type
         self.nameToSeries[name].append(series)
 
     def addRun(self, run):
