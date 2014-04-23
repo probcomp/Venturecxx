@@ -264,6 +264,8 @@ class VenturePair(VentureValue):
     assert isinstance(rest, VentureValue)
     self.first = first
     self.rest = rest
+  def __repr__(self):
+    return "VenturePair(%r %r)" % (self.first, self.rest)
   def getPair(self): return (self.first,self.rest)
   def asPythonList(self, elt_type=None):
     if elt_type is not None:
@@ -306,6 +308,8 @@ class VentureSimplex(VentureValue):
   """Simplexes are homogeneous floating point arrays.  They are also
 supposed to sum to 1, but we are not checking that."""
   def __init__(self,simplex): self.simplex = simplex
+  def __repr__(self):
+    return "VentureArray(%s)" % self.simplex
   def getSimplex(self): return self.simplex
   def compareSameType(self, other):
     # The Python ordering is lexicographic first, then by length, but
