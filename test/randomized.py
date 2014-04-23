@@ -111,17 +111,25 @@ def main():
   from venture.lite.builtin import builtInSPsList
   for (name,sp) in builtInSPsList():
     print name
-    args = sp_random_args_list(sp)
-    print args
-    if args is not None and isinstance(sp.requestPSP, NullRequestPSP):
-      try:
-        answer = sp.outputPSP.simulate(BogusArgs(args))
-        appropriate = True
-      except ValueError:
-        appropriate = False
-      except VentureValueError:
-        appropriate = False
+    if isinstance(sp.requestPSP, NullRequestPSP):
+      appropriate = False
+      count = 0
+      answer = None
+      while not appropriate and count < 10:
+        count += 1
+        args = sp_random_args_list(sp)
+        if args is None:
+          continue
+        try:
+          answer = sp.outputPSP.simulate(BogusArgs(args))
+          appropriate = True
+        except ValueError:
+          appropriate = False
+        except VentureValueError:
+          appropriate = False
       if appropriate:
         assert answer in sp.venture_type().return_type
+      else:
+        print "Could not find appropriate args"
 
 if __name__ == "__main__": main()
