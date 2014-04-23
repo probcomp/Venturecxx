@@ -216,7 +216,10 @@ def builtInSPsList():
                             [SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)],
                             SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)) ],
 
-           [ "scope_include",no_request(scope.ScopeIncludeOutputPSP()) ],
+           [ "scope_include",typed_nr(scope.ScopeIncludeOutputPSP(),
+                                      # These are not really any type, but the actual PSP doesn't care.
+                                      [v.AnyType("<scope>"), v.AnyType("<block>"), v.AnyType()],
+                                      v.AnyType()) ],
 
            [ "binomial", binaryNumS(discrete.BinomialOutputPSP()) ],
            [ "flip", typed_nr(discrete.FlipOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],

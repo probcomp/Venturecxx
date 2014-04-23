@@ -11,4 +11,4 @@ class ScopeIncludeOutputPSP(DeterministicPSP):
   
   @override(DeterministicPSP)
   def description(self,name):
-    return "%s :: <SP <scope> <block> <object> -> <object>>\n  Returns its third argument unchanged at runtime, but tags the subexpression creating the object as being within the given scope and block." % name
+    return "%s returns its third argument unchanged at runtime, but tags the subexpression creating the object as being within the given scope and block." % name
