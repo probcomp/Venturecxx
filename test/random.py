@@ -108,6 +108,12 @@ def main():
     args = sp_random_args_list(sp)
     print args
     if isinstance(sp.requestPSP, NullRequestPSP):
-      assert sp.outputPSP.simulate(BogusArgs(args)) in sp.venture_type().return_type
+      try:
+        answer = sp.outputPSP.simulate(BogusArgs(args))
+        appropriate = True
+      except ValueError:
+        appropriate = False
+      if appropriate:
+        assert answer in sp.venture_type().return_type
 
 if __name__ == "__main__": main()
