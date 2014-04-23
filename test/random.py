@@ -4,6 +4,7 @@
 import numpy.random as npr
 from venture.lite import value as v
 from venture.lite.utils import normalizeList
+from venture.lite import env as env
 
 class DefaultRandomVentureValue(object):
   def __init__(self, method, **kwargs):
@@ -60,7 +61,8 @@ class DefaultRandomVentureValue(object):
   def sp(self, **_kwargs):
     raise Exception("Can't synthesize SPs")
   def environment(self, **_kwargs):
-    raise Exception("Can't synthesize environments yet")
+    # TODO Implement a more interesting distribution on environments
+    return env.VentureEnvironment()
   def list(self, length=None, elt_dist=None, **kwargs):
     if length is None:
       length = npr.randint(0, 10)
