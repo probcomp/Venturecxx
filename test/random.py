@@ -111,7 +111,7 @@ def main():
     print name
     args = sp_random_args_list(sp)
     print args
-    if isinstance(sp.requestPSP, NullRequestPSP):
+    if args is not None and isinstance(sp.requestPSP, NullRequestPSP):
       try:
         answer = sp.outputPSP.simulate(BogusArgs(args))
         appropriate = True
