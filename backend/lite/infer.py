@@ -389,7 +389,7 @@ class ParticlePGibbsOperator(object):
 
     assertTrace(self.trace,self.scaffold)
 
-    print map(len, scaffold.border)
+    #print map(len, scaffold.border)
 
     self.T = len(self.scaffold.border)
     T = self.T
