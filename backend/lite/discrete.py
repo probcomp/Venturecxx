@@ -7,6 +7,7 @@ from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import VentureSP, SPAux, SPType
 from lkernel import LKernel
 from value import VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
+from exception import VentureValueError
 
 class FlipOutputPSP(RandomPSP):
   def simulate(self,args):
@@ -75,6 +76,8 @@ class CategoricalOutputPSP(RandomPSP):
     if len(args.operandValues) == 1: # Default values to choose from
       return simulateCategorical(args.operandValues[0], [VentureAtom(i) for i in range(len(args.operandValues[0]))])
     else:
+      if not len(args.operandValues[0]) == len(args.operandValues[1]):
+        raise VentureValueError("Categorical passed different length arguments.")
       return simulateCategorical(*args.operandValues)
 
   def logDensity(self,val,args):
