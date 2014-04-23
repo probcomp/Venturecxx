@@ -86,7 +86,7 @@ class VentureUnit(object):
                 assumeToDirective[directive["symbol"]] = directive["directive_id"]
         return assumeToDirective
 
-    def _loadObservesAsPredicts(self, track=0):
+    def _loadObservesAsPredicts(self, track=0, prune=False):
         predictToDirective = {}
         for (index, (expression, _)) in enumerate(self.observes):
             #print("self.ripl.predict('%s', label='%d')" % (expression, index))
@@ -276,6 +276,7 @@ class VentureUnit(object):
 
         for (name, seriesList) in inferredHistory.nameToSeries.iteritems():
             if name not in sampledHistory.nameToSeries: continue
+            if sampledHistory.nameToType[name] not in {'number'}: continue
 
             for inferredSeries in seriesList:
                 sampledSeries = sampledHistory.nameToSeries[name][0]
