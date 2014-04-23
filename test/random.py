@@ -32,14 +32,16 @@ class DefaultRandomVentureValue(object):
     return v.VentureArray([elt_dist.generate(**kwargs) for _ in range(length)])
   def nil(self, **_kwargs):
     return v.VentureNil()
-  def pair(self, size=None, elt_dist=None, **kwargs):
+  def pair(self, size=None, first_dist=None, second_dist=None, **kwargs):
     if size is None:
       size = npr.randint(0, 30)
     left_size = npr.randint(0, size+1)
-    if elt_dist is None:
-      elt_dist = DefaultRandomVentureValue("object") # TODO reuse class of self
-    return v.VenturePair((elt_dist.generate(size=left_size, **kwargs),
-                          elt_dist.generate(size=size-left_size, **kwargs)))
+    if first_dist is None:
+      first_dist = DefaultRandomVentureValue("object") # TODO reuse class of self
+    if second_dist is None:
+      second_dist = DefaultRandomVentureValue("object") # TODO reuse class of self
+    return v.VenturePair((first_dist.generate(size=left_size, **kwargs),
+                          second_dist.generate(size=size-left_size, **kwargs)))
   def simplex(self, length=None, **_kwargs):
     if length is None:
       length = npr.randint(0, 10)

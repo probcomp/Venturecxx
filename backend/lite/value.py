@@ -455,7 +455,7 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "Matrix"]:
+for typestring in ["Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))
@@ -471,6 +471,26 @@ class NilType(VentureType):
   def name(self): return "()"
   def distribution(self, base, **kwargs):
     return base("nil", **kwargs)
+
+class PairType(VentureType):
+  def __init__(self, first_type=None, second_type=None):
+    # TODO Do I want to do automatic conversions if the types are
+    # given, or not?
+    self.first_type = first_type
+    self.second_type = second_type
+  def asVentureValue(self, thing): return VenturePair(thing)
+  def asPython(self, vthing): return vthing.getPair()
+  def __contains__(self, vthing): return isinstance(vthing, VenturePair)
+  def name(self):
+    if self.first_type is None and self.second_type is None:
+      return "<pair>"
+    first_name = self.first_type.name() if self.first_type else "<object>"
+    second_name = self.second_type.name() if self.second_type else "<object>"
+    return "<pair %s %s>" % (first_name, second_name)
+  def distribution(self, base, **kwargs):
+    first_dist = self.first_type.distribution(base, **kwargs) if self.first_type else None
+    second_dist = self.second_type.distribution(base, **kwargs) if self.second_type else None
+    return base("pair", first_dist=first_dist, second_dist=second_dist, **kwargs)
 
 class ListType(VentureType):
   """A Venture list is either a VentureNil or a VenturePair whose
