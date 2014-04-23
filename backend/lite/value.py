@@ -570,6 +570,8 @@ class HomogeneousListType(VentureType):
     return pythonListToVentureList(*[self.subtype.asVentureValue(t) for t in thing])
   def asPython(self, vthing):
     return [self.subtype.asPython(v) for v in vthing.asPythonList()]
+  def __contains__(self, vthing):
+    return vthing in ListType and all([v in self.subtype for v in vthing.asPythonList()])
   def name(self): return "<list %s>" % self.subtype.name()
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
@@ -587,6 +589,8 @@ class HomogeneousArrayType(VentureType):
     return VentureArray(thing, self.subtype)
   def asPython(self, vthing):
     return vthing.getArray(self.subtype)
+  def __contains__(self, vthing):
+    return isinstance(vthing, VentureArray) and all([v in self.subtype for v in vthing.getArray()])
   def name(self): return "<array %s>" % self.subtype.name()
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
@@ -606,6 +610,8 @@ class HomogeneousDictType(VentureType):
     return VentureDict(dict([(self.keytype.asVentureValue(key), self.valtype.asVentureValue(val)) for (key, val) in thing.iteritems()]))
   def asPython(self, vthing):
     return dict([(self.keytype.asPython(key), self.valtype.asPython(val)) for (key, val) in vthing.getDict().iteritems()])
+  def __contains__(self, vthing):
+    return isinstance(vthing, VentureDict) and all([k in self.keytype and v in self.valtype for (k,v) in vthing.getdict()])
   def name(self): return "<dict %s %s>" % (self.keytype.name(), self.valtype.name())
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
