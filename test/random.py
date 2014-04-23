@@ -36,8 +36,8 @@ class DefaultRandomVentureValue(object):
     left_size = npr.randint(0, size+1)
     if elt_dist is None:
       elt_dist = DefaultRandomVentureValue("object") # TODO reuse class of self
-    return v.VenturePair(elt_dist.generate(size=left_size, **kwargs),
-                         elt_dist.generate(size=size-left_size, **kwargs))
+    return v.VenturePair((elt_dist.generate(size=left_size, **kwargs),
+                          elt_dist.generate(size=size-left_size, **kwargs)))
   def simplex(self, length=None, **_kwargs):
     if length is None:
       length = npr.randint(0, 10)

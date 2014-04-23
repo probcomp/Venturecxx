@@ -259,7 +259,7 @@ class VentureNil(VentureValue):
   def size(self): return 0
 
 class VenturePair(VentureValue):
-  def __init__(self,first,rest):
+  def __init__(self,(first,rest)):
     assert isinstance(first, VentureValue)
     assert isinstance(rest, VentureValue)
     self.first = first
@@ -300,7 +300,7 @@ class VenturePair(VentureValue):
     return 1 + self.rest.size()
 
 def pythonListToVentureList(*l):
-  return reduce(lambda t, h: VenturePair(h, t), reversed(l), VentureNil())
+  return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
 
 class VentureSimplex(VentureValue):
   """Simplexes are homogeneous floating point arrays.  They are also

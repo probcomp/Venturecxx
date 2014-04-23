@@ -150,8 +150,8 @@ def builtInSPsList():
 
            [ "list", deterministic_typed(lambda *args: args, [v.AnyType()], v.ListType(), variadic=True,
                                          descr="%s returns the list of its arguments") ],
-           [ "pair", deterministic(v.VenturePair,
-                                   "%s :: <SP <object> <object> -> <pair>>\nReturns the pair whose first component is the first argument and whose second component is the second argument") ],
+           [ "pair", deterministic_typed(lambda a,d: (a,d), [v.AnyType(), v.AnyType()], v.PairType(),
+                                         descr="%s returns the pair whose first component is the first argument and whose second component is the second argument") ],
            [ "is_pair", type_test(v.PairType()) ],
            [ "first", deterministic_typed(lambda p: p[0], [v.PairType()], v.AnyType(),
                                           "%s returns the first component of its argument pair") ],
