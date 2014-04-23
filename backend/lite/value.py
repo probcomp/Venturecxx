@@ -487,7 +487,7 @@ data List = Nil | Pair Any List
   def asPython(self, thing):
     return thing.asPythonList()
   def __contains__(self, vthing):
-    return isinstance(vthing, VenturePair) or isinstance(vthing, VentureNil)
+    return isinstance(vthing, VentureNil) or (isinstance(vthing, VenturePair) and vthing.rest in self)
   def name(self): return "<list>"
 
 class ExpressionType(VentureType):
