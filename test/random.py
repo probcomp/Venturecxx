@@ -83,7 +83,7 @@ def random_args_list(sp_type):
     return [sp_type.args_types[0].distribution(DefaultRandomVentureValue).generate() for _ in range(length)]
 
 def sp_random_args_list(sp):
-  return random_args_list(sp.outputPSP.f_type)
+  return random_args_list(sp.venture_type())
 
 if __name__ == "__main__":
   from venture.lite.builtin import builtInSPsList

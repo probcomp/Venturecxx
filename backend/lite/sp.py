@@ -44,6 +44,11 @@ class VentureSP(VentureValue):
     if candidate:
       return candidate
     return name
+  def venture_type(self):
+    if hasattr(self.outputPSP, "f_type"):
+      return self.outputPSP.f_type
+    else:
+      return self.requestPSP.f_type
   # VentureSPs are intentionally not comparable until we decide
   # otherwise
 
