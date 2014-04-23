@@ -2,7 +2,7 @@ from venture.shortcuts import *
 from venture.unit import VentureUnit
 from subprocess import call
 
-T = 3
+T = 10
 seed = 3
 port = 5013
 ripl = make_lite_church_prime_ripl()
@@ -54,13 +54,13 @@ def run():
     
     logscores.append([])
     for i in range(t):
-      ripl.infer("(mh 0 one %d)" % 2)
+      ripl.infer("(mh 0 one %d)" % 10)
       garbageCollect()
       logscores[-1].append(ripl.get_global_logscore())
   
   return logscores
 
-runs = [run() for i in range(2)]
+runs = [run() for i in range(10)]
 
 import pickle
 pickle.dump(runs, open("smh_logscores", "wb"))
