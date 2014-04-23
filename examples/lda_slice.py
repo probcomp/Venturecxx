@@ -17,7 +17,7 @@ class LDA(VentureUnit):
         
         self.assume("get_topic", "(mem (lambda (topic) (new_topic)))")
         #self.assume("topics","(array (new_topic) (new_topic) (new_topic) (new_topic) )" )
-        self.assume("get_word", "(scope_include 1 0 (mem (lambda (doc_ind word_ind) ((get_topic ((get_doc doc_ind) ))) )) )")
+        self.assume("get_word", "(mem (lambda (doc_ind word_ind) ((get_topic ((get_doc doc_ind) ))) ))")
 
     def makeObserves(self):
         D = self.parameters['no_documents']
@@ -31,7 +31,7 @@ class LDA(VentureUnit):
 if __name__ == '__main__':
     ripl = shortcuts.make_puma_church_prime_ripl()
 
-    parameters = {'size_vocab': 30, 'doc_length': 20, 'no_documents': 15, 'no_topics': 4}
+    parameters = {'size_vocab': 30, 'doc_length': 40, 'no_documents': 15, 'no_topics': 4}
     #'alpha_w_prior': '.4', 'alpha_t_prior': '.4'
     #parameters = {'no_topics' : 4, 'size_vocab' : 10, 'no_documents' : 5, 'no_words' : 20}
     #data = [0] * ( parameters['no_documents'] * parameters['no_words'])
@@ -48,10 +48,10 @@ if __name__ == '__main__':
     
     data, prior = model.generateDataFromPrior(iters, verbose=True)
     
-    infer_mh = "(mh default one 600)"
+    infer_mh = "(mh default one 620)"
     history_mh = model.runFromConditional(iters,runs=runs,verbose=True,data=data, infer=infer_mh)
     
-    infer_slice = "(cycle ((slice 0 one 1) (mh 1 one 2)) 200)"
+    infer_slice = "(cycle ((slice 0 one 20) (mh default one 600)) 1)"
     history_slice = model.runFromConditional(iters,runs=runs,verbose=True,data=data, infer=infer_slice)
     
     history_both = historyOverlay("demo", [("mh", history_mh), ("slice", history_slice)])
