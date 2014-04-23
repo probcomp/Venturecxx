@@ -538,13 +538,38 @@ data Expression = Bool | Number | Atom | Symbol | Array Expression
 
 class AnyType(VentureType):
   """The type object to use for parametric types -- does no conversion."""
+  def __init__(self, type_name=None):
+    self.type_name = type_name
   def asVentureValue(self, thing):
     assert isinstance(thing, VentureValue)
     return thing
   def asPython(self, thing):
     assert isinstance(thing, VentureValue)
     return thing
-  def name(self): return "<object>"
+  def name(self):
+    if self.type_name is None:
+      return "<object>"
+    else:
+      return self.type_name
+  def distribution(self, base, **kwargs):
+    return base("object", **kwargs)
+
+class HomogeneousListType(VentureType):
+  """Type objects for homogeneous lists.  Right now, the homogeneity
+  is not captured in the implementation, in that on the Venture side
+  such data is still stored as heterogenous Venture lists.  This type
+  does, however, encapsulate the necessary wrapping and unwrapping."""
+  def __init__(self, subtype):
+    assert isinstance(subtype, VentureType)
+    self.subtype = subtype
+  def asVentureValue(self, thing):
+    return pythonListToVentureList(*[self.subtype.asVentureValue(t) for t in thing])
+  def asPython(self, vthing):
+    return [self.subtype.asPython(v) for v in vthing.asPythonList()]
+  def name(self): return "<list %s>" % self.subtype.name()
+  def distribution(self, base, **kwargs):
+    # TODO Is this splitting what I want?
+    return base("list", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
 
 class HomogeneousArrayType(VentureType):
   """Type objects for homogeneous arrays.  Right now, the homogeneity
