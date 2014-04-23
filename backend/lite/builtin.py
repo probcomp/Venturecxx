@@ -161,9 +161,9 @@ def builtInSPsList():
                                            "%s returns the first component of the second component of its argument") ],
 
 
-           [ "array", deterministic(lambda *args: v.VentureArray(np.array(args)),
-                                    sim_grad=lambda args, direction: direction.getArray(),
-                                    descr="%s :: <SP <object> ... -> <array>>\nReturns an array initialized with its arguments") ],
+           [ "array", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
+                                          sim_grad=lambda args, direction: direction.getArray(),
+                                          descr="%s returns an array initialized with its arguments") ],
            [ "is_array", type_test(v.ArrayType()) ],
            [ "dict", no_request(dstructures.DictOutputPSP()) ],
            [ "is_dict", type_test(v.DictType()) ],
