@@ -58,13 +58,13 @@ class DefaultRandomVentureValue(object):
     if elt_dist is None:
       elt_dist = DefaultRandomVentureValue("object") # TODO reuse class of self
     return v.pythonListToVentureList(*[elt_dist.generate(**kwargs) for _ in range(length)])
-  def object(self, size=None, **kwargs):
-    if size is None:
-      size = npr.randint(0, 30)
-    if size == 0:
+  def object(self, depth=None, **kwargs):
+    if depth is None:
+      depth = npr.randint(0, 5)
+    if depth == 0:
       return getattr(self, npr.choice(["number", "atom", "bool", "symbol", "nil"]))(**kwargs)
     else:
-      return getattr(self, npr.choice(["array", "pair", "simplex", "matrix", "list"]))(size=size-1, **kwargs)
+      return getattr(self, npr.choice(["array", "pair", "simplex", "matrix", "list"]))(depth=depth-1, **kwargs)
 
 def random_args_list(sp_type):
   return [t.distribution(DefaultRandomVentureValue).generate() for t in sp_type.args_types]
