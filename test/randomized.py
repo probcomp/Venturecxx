@@ -6,6 +6,7 @@ from venture.lite import value as v
 from venture.lite.utils import normalizeList
 from venture.lite import env as env
 from venture.lite.psp import NullRequestPSP
+from venture.lite.exception import VentureValueError
 
 class DefaultRandomVentureValue(object):
   def __init__(self, method, **kwargs):
@@ -117,6 +118,8 @@ def main():
         answer = sp.outputPSP.simulate(BogusArgs(args))
         appropriate = True
       except ValueError:
+        appropriate = False
+      except VentureValueError:
         appropriate = False
       if appropriate:
         assert answer in sp.venture_type().return_type
