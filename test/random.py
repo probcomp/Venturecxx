@@ -67,7 +67,11 @@ class DefaultRandomVentureValue(object):
       return getattr(self, npr.choice(["array", "pair", "simplex", "matrix", "list"]))(depth=depth-1, **kwargs)
 
 def random_args_list(sp_type):
-  return [t.distribution(DefaultRandomVentureValue).generate() for t in sp_type.args_types]
+  if not sp_type.variadic:
+    return [t.distribution(DefaultRandomVentureValue).generate() for t in sp_type.args_types]
+  else:
+    length = npr.randint(0, 10)
+    return [sp_type.args_types[0].distribution(DefaultRandomVentureValue).generate() for _ in range(length)]
 
 def sp_random_args_list(sp):
   return random_args_list(sp.outputPSP.f_type)
