@@ -84,7 +84,7 @@ class TestListExtended(object):
 """)
 
     self.ripl.assume("x","(list 3.0 2.0 1.0)")
-    self.ripl.assume("f","(lambda (x) (times x x x))")
+    self.ripl.assume("f","(lambda (x) (* x x x))")
     self.ripl.assume("y","(vmap_list f x)")
 
   def testFirst1(self):

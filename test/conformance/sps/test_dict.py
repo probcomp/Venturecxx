@@ -33,7 +33,7 @@ def testDict1():
   ripl.assume("x","(bernoulli 1.0)")
   ripl.assume("d","""(dict (array (quote x) (quote y))
                            (array (normal 0.0 1.0) (normal 10.0 1.0)))""")
-  ripl.predict("""(normal (plus
+  ripl.predict("""(normal (+
                            (lookup d (quote x))
                            (lookup d (quote y))
                            (lookup d (quote y)))

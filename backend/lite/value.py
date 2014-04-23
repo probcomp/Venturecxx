@@ -64,7 +64,7 @@ class VentureValue(object):
 class VentureNumber(VentureValue):
   def __init__(self,number):
     assert isinstance(number, Number)
-    self.number = number
+    self.number = float(number)
   def __repr__(self):
     if hasattr(self, "number"):
       return "VentureNumber(%s)" % self.number
@@ -450,7 +450,7 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "Matrix", "SP"]:
+for typestring in ["Atom", "Bool", "Symbol", "Array", "Pair", "Simplex", "Dict", "Matrix"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))

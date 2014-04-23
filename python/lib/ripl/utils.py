@@ -209,6 +209,9 @@ def expToDict(exp):
   elif tag == "hmc":
     assert len(exp) == 6
     return {"kernel":"hmc","scope":exp[1],"block":exp[2],"epsilon":exp[3],"L":exp[4],"transitions":exp[5]}
+  elif tag == "map":
+    assert len(exp) == 6
+    return {"kernel":"map","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":exp[4],"transitions":exp[5]}
   elif tag == "latents":
     assert len(exp) == 4
     return {"kernel":"latents","scope":exp[1],"block":exp[2],"transitions":exp[3]}

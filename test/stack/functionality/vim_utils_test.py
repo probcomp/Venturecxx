@@ -37,8 +37,8 @@ class TestSivmUtils(unittest.TestCase):
 
     def test_desugar_expression_if(self):
         a = ['if','a','b',['if','c','d','e']]
-        b = [['condition_erp','a',['lambda',[],'b'],['lambda',[],
-                [['condition_erp','c',['lambda',[],'d'],['lambda',[],'e']]]]]]
+        b = [['biplex','a',['lambda',[],'b'],['lambda',[],
+                [['biplex','c',['lambda',[],'d'],['lambda',[],'e']]]]]]
         self.assertEqual(utils.desugar_expression(a),b)
     def test_desugar_expression_if_failure(self):
         a = ['if','a','b',['if',['if'],'d','e']]
@@ -51,17 +51,17 @@ class TestSivmUtils(unittest.TestCase):
 
     def test_desugar_expression_and(self):
         a = ['and','a','b']
-        b = [['condition_erp','a',['lambda',[],'b'],['lambda', [], {"type":"boolean","value":False}]]]
+        b = [['biplex','a',['lambda',[],'b'],['lambda', [], {"type":"boolean","value":False}]]]
         self.assertEqual(utils.desugar_expression(a),b)
     
     def test_desugar_expression_nested(self):
         a = [['and','a','b']]
-        b = [[['condition_erp','a',['lambda',[],'b'],['lambda', [], {"type":"boolean","value":False}]]]]
+        b = [[['biplex','a',['lambda',[],'b'],['lambda', [], {"type":"boolean","value":False}]]]]
         self.assertEqual(utils.desugar_expression(a),b)
 
     def test_desugar_expression_or(self):
         a = ['or','a','b']
-        b = [['condition_erp','a',['lambda', [], {"type":"boolean","value":True}],['lambda',[],'b']]]
+        b = [['biplex','a',['lambda', [], {"type":"boolean","value":True}],['lambda',[],'b']]]
         self.assertEqual(utils.desugar_expression(a),b)
 
     def test_desugar_expression_let_1(self):

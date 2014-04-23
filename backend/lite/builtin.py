@@ -95,14 +95,19 @@ def type_test(t):
   return deterministic(lambda thing: v.VentureBool(thing in t),
                        "%s :: <SP <object> -> <bool>>\nReturns true iff its argument is a " + t.name())
 
+def grad_times(args, direction):
+  assert len(args) == 2, "Gradient only available for binary multiply"
+  return [direction*args[1], direction*args[0]]
+
 def builtInSPsList():
-  return [ [ "plus",  naryNum(lambda *args: sum(args),
+  return [ [ "add",  naryNum(lambda *args: sum(args),
                               sim_grad=lambda args, direction: [direction for _ in args],
                               descr="%s returns the sum of all its arguments") ],
-           [ "minus", binaryNum(lambda x,y: x - y,
+           [ "sub", binaryNum(lambda x,y: x - y,
                                 "%s returns the difference between its first and second arguments") ],
-           [ "times", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1),
-                              "%s returns the product of all its arguments") ],
+           [ "mul", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1),
+                              sim_grad=grad_times,
+                              descr="%s returns the product of all its arguments") ],           
            [ "div",   binaryNum(lambda x,y: x / y,
                                 "%s returns the quotient of its first argument by its second") ],
            [ "eq",    deterministic(lambda x,y: v.VentureBool(x.compare(y) == 0),
@@ -151,7 +156,7 @@ def builtInSPsList():
 
 
            [ "array", deterministic(lambda *args: v.VentureArray(np.array(args)),
-                                    sim_grad=lambda args, direction: [direction], # TODO Is this actually right?
+                                    sim_grad=lambda args, direction: direction.getArray(),
                                     descr="%s :: <SP <object> ... -> <array>>\nReturns an array initialized with its arguments") ],
            [ "is_array", type_test(v.ArrayType()) ],
            [ "dict", no_request(dstructures.DictOutputPSP()) ],
@@ -174,7 +179,7 @@ def builtInSPsList():
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),
                                            sim_grad=lambda args, direc: [0, direc, 0] if args[0] else [0, 0, direc],
-                                           descr="%s returns either its first or second argument.")],
+                                           descr="%s returns either its second or third argument.")],
            [ "make_csp", no_request(csp.MakeCSPOutputPSP()) ],
 
            [ "get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType(),
@@ -205,7 +210,9 @@ def builtInSPsList():
            [ "inv_gamma",binaryNumS(continuous.InvGammaOutputPSP()) ],
 
            [ "multivariate_normal", typed_nr(continuous.MVNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.MatrixType()], v.HomogeneousArrayType(v.NumberType())) ],
-
+           [ "inv_wishart", typed_nr(continuous.InverseWishartPSP(), [v.MatrixType(), v.NumberType()], v.MatrixType())],
+           [ "wishart", typed_nr(continuous.WishartPSP(), [v.MatrixType(), v.NumberType()], v.MatrixType())],
+           
            [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], SPType([], v.BoolType())) ],
            [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], SPType([], v.BoolType())) ],
 
@@ -218,7 +225,7 @@ def builtInSPsList():
            [ "make_sym_dir_mult",typed_nr(dirichlet.MakerCSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], SPType([], v.AnyType()), min_req_args=2) ], # Saying AnyType here requires the underlying psp to emit a VentureValue.
            [ "make_uc_sym_dir_mult",typed_nr(dirichlet.MakerUSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], SPType([], v.AnyType()), min_req_args=2) ],
 
-           [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType(),v.NumberType()], SPType([], v.NumberType()), min_req_args = 1) ],
+           [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType(),v.NumberType()], SPType([], v.AtomType()), min_req_args = 1) ],
            [ "make_cmvn",typed_nr(cmvn.MakeCMVNOutputPSP(), [v.HomogeneousArrayType(v.NumberType()),v.NumberType(),v.NumberType(),v.MatrixType()], SPType([], SPType([], v.MatrixType()))) ],           
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.NumberType()], v.NumberType())) ],
