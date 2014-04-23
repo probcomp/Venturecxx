@@ -346,8 +346,7 @@ class VentureMatrix(VentureValue):
   def __init__(self,matrix): self.matrix = matrix
   def getMatrix(self): return self.matrix
   def compareSameType(self, other):
-    # TODO Are numpy matrices comparable?
-    return self.matrix.__cmp__(other.matrix)
+    return lexicographicUnboxedCompare(self.matrix, other.matrix)
   def __hash__(self): return hash(self.matrix)
   def asStackDict(self, _trace):
     return {"type":"matrix", "value":self.matrix}
