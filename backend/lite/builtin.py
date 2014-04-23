@@ -7,7 +7,6 @@ from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP
 import discrete
 import dirichlet
 import continuous
-import dstructures
 import csp
 import crp
 import cmvn
@@ -165,7 +164,10 @@ def builtInSPsList():
                                           sim_grad=lambda args, direction: direction.getArray(),
                                           descr="%s returns an array initialized with its arguments") ],
            [ "is_array", type_test(v.ArrayType()) ],
-           [ "dict", no_request(dstructures.DictOutputPSP()) ],
+           [ "dict", deterministic_typed(lambda keys, vals: dict(zip(keys, vals)),
+                                         [v.HomogeneousListType(v.AnyType("k")), v.HomogeneousListType(v.AnyType("v"))],
+                                         v.HomogeneousDictType(v.AnyType("k"), v.AnyType("v")),
+                                         descr="%s returns the dictionary mapping the given keys to their respective given values.  It is an error if the given lists are not the same length.") ],
            [ "is_dict", type_test(v.DictType()) ],
            [ "matrix", deterministic(lambda rows: v.VentureMatrix(np.mat([[val.getNumber() for val in row.asPythonList()] for row in rows.asPythonList()])),
                                      "%s :: <SP <list <list a>> -> <matrix a>>\nReturns a matrix formed from the given list of rows.  It is an error if the given list is not rectangular.") ],
