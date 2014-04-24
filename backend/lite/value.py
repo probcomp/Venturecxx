@@ -216,7 +216,7 @@ interface here is compatible with one possible path."""
       ind = index.getNumber()
     except Exception: # TODO Make the type error error more specfic and catch it here
       raise VentureValueError("Looking up non-number %r in an array" % index)
-    if int(ind) < len(self.array):
+    if 0 <= int(ind) and int(ind) < len(self.array):
       return self.array[int(ind)]
     else:
       raise VentureValueError("Index out of bounds: %s" % index)
