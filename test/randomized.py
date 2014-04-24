@@ -93,9 +93,6 @@ def random_args_list(sp_type):
   else:
     return [d.generate() for d in dists]
 
-def sp_random_args_list(sp):
-  return random_args_list(sp.venture_type())
-
 class BogusArgs(object):
   def __init__(self, args):
     # TODO Do I want to try to synthesize an actual real random valid Args object?
@@ -105,6 +102,6 @@ class BogusArgs(object):
     self.esrValues = []
     self.env = env.VentureEnvironment()
 
-def random_args_for_sp(sp):
-  answer = sp_random_args_list(sp)
+def random_args_for_sp(sp_type):
+  answer = random_args_list(sp_type)
   return BogusArgs(answer) if answer is not None else None
