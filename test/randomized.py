@@ -5,8 +5,6 @@ import numpy.random as npr
 from venture.lite import value as v
 from venture.lite.utils import normalizeList
 from venture.lite import env as env
-from venture.lite.psp import NullRequestPSP
-from venture.lite.exception import VentureValueError
 
 class DefaultRandomVentureValue(object):
   def __init__(self, method, **kwargs):
@@ -107,29 +105,6 @@ class BogusArgs(object):
     self.esrValues = []
     self.env = env.VentureEnvironment()
 
-def main():
-  from venture.lite.builtin import builtInSPsList
-  for (name,sp) in builtInSPsList():
-    print name
-    if isinstance(sp.requestPSP, NullRequestPSP):
-      app_ct = 0
-      answer = None
-      for _ in range(20):
-        args = sp_random_args_list(sp)
-        if args is None:
-          continue
-        try:
-          answer = sp.outputPSP.simulate(BogusArgs(args))
-          appropriate = True
-          app_ct += 1
-        except ValueError:
-          appropriate = False
-        except VentureValueError:
-          appropriate = False
-        if appropriate:
-          assert answer in sp.venture_type().return_type
-      if app_ct == 0:
-        print "Could not find appropriate args"
-      print app_ct
-
-if __name__ == "__main__": main()
+def random_args_for_sp(sp):
+  answer = sp_random_args_list(sp)
+  return BogusArgs(answer) if answer is not None else None
