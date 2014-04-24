@@ -112,24 +112,24 @@ def main():
   for (name,sp) in builtInSPsList():
     print name
     if isinstance(sp.requestPSP, NullRequestPSP):
-      appropriate = False
-      count = 0
+      app_ct = 0
       answer = None
-      while not appropriate and count < 10:
-        count += 1
+      for _ in range(20):
         args = sp_random_args_list(sp)
         if args is None:
           continue
         try:
           answer = sp.outputPSP.simulate(BogusArgs(args))
           appropriate = True
+          app_ct += 1
         except ValueError:
           appropriate = False
         except VentureValueError:
           appropriate = False
-      if appropriate:
-        assert answer in sp.venture_type().return_type
-      else:
+        if appropriate:
+          assert answer in sp.venture_type().return_type
+      if app_ct == 0:
         print "Could not find appropriate args"
+      print app_ct
 
 if __name__ == "__main__": main()
