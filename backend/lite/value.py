@@ -216,7 +216,10 @@ interface here is compatible with one possible path."""
       ind = index.getNumber()
     except Exception: # TODO Make the type error error more specfic and catch it here
       raise VentureValueError("Looking up non-number %r in an array" % index)
-    return self.array[int(ind)]
+    if int(ind) < len(self.array):
+      return self.array[int(ind)]
+    else:
+      raise VentureValueError("Index out of bounds: %s" % index)
   def lookup_grad(self, index, direction):
     return VentureArray([direction if i == index else 0 for (_,i) in enumerate(self.array)])
   def contains(self, obj):
@@ -266,6 +269,8 @@ class VentureNil(VentureValue):
   def asStackDict(self, _trace): return {"type":"list", "value":[]}
   @staticmethod
   def fromStackDict(_): return VentureNil()
+  def lookup(self, index):
+    raise VentureValueError("Index out of bounds: too long by %s" % index)
   def size(self): return 0
 
 class VenturePair(VentureValue):
