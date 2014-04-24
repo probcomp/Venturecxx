@@ -22,7 +22,7 @@ def propTypeCorrect(name, sp):
     raise SkipTest("Could not find appropriate args for %s" % name)
 
 def helpPropTypeCorrect(sp, the_type):
-  args = r.random_args_for_sp(the_type)
+  args = r.random_args_for_sp(sp, the_type)
   if args is None:
     return False # Not appropriate arguments
   answer = sp.outputPSP.simulate(args)
