@@ -53,7 +53,8 @@ Here is what we install on a clean Mac OS X 10.9 (or higher).
     
     # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
     # Also pulls in required external libraries
-    sudo apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython
+	sudo brew install ipython
+    sudo pip install pyparsing flask numpy matplotlib scipyn
 
 Dependencies (OSX, macports)
 ----------------------------
