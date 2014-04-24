@@ -271,7 +271,7 @@ class VentureNil(VentureValue):
   def fromStackDict(_): return VentureNil()
   def lookup(self, index):
     raise VentureValueError("Index out of bounds: too long by %s" % index)
-  def contains(self, obj): return False
+  def contains(self, _obj): return False
   def size(self): return 0
 
 class VenturePair(VentureValue):
