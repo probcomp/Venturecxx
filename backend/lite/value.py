@@ -9,7 +9,7 @@ import numpy as np
 import hashlib
 
 from request import Request # TODO Pull that file in here?
-from exception import VentureValueError
+from exception import VentureValueError, VentureTypeError
 
 # TODO Define reasonable __str__ and/or __repr__ methods for all the
 # values and all the types.
@@ -17,17 +17,17 @@ from exception import VentureValueError
 class VentureValue(object):
   __metaclass__ = ABCMeta
 
-  def getNumber(self): raise Exception("Cannot convert %s to number" % type(self))
-  def getAtom(self): raise Exception("Cannot convert %s to atom" % type(self))
-  def getBool(self): raise Exception("Cannot convert %s to bool" % type(self))
-  def getSymbol(self): raise Exception("Cannot convert %s to symbol" % type(self))
-  def getArray(self, _elt_type=None): raise Exception("Cannot convert %s to array" % type(self))
-  def getPair(self): raise Exception("Cannot convert %s to pair" % type(self))
-  def getSimplex(self): raise Exception("Cannot convert %s to simplex" % type(self))
-  def getDict(self): raise Exception("Cannot convert %s to dict" % type(self))
-  def getMatrix(self): raise Exception("Cannot convert %s to matrix" % type(self))
-  def getSP(self): raise Exception("Cannot convert %s to sp" % type(self))
-  def getEnvironment(self): raise Exception("Cannot convert %s to environment" % type(self))
+  def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
+  def getAtom(self): raise VentureTypeError("Cannot convert %s to atom" % type(self))
+  def getBool(self): raise VentureTypeError("Cannot convert %s to bool" % type(self))
+  def getSymbol(self): raise VentureTypeError("Cannot convert %s to symbol" % type(self))
+  def getArray(self, _elt_type=None): raise VentureTypeError("Cannot convert %s to array" % type(self))
+  def getPair(self): raise VentureTypeError("Cannot convert %s to pair" % type(self))
+  def getSimplex(self): raise VentureTypeError("Cannot convert %s to simplex" % type(self))
+  def getDict(self): raise VentureTypeError("Cannot convert %s to dict" % type(self))
+  def getMatrix(self): raise VentureTypeError("Cannot convert %s to matrix" % type(self))
+  def getSP(self): raise VentureTypeError("Cannot convert %s to sp" % type(self))
+  def getEnvironment(self): raise VentureTypeError("Cannot convert %s to environment" % type(self))
 
   # Some Venture value types form a natural vector space over reals,
   # so overload addition, subtraction, and multiplication by scalars.
@@ -54,9 +54,9 @@ class VentureValue(object):
   def compareSameType(self, _): raise Exception("Cannot compare %s" % type(self))
   def equal(self, other): return self.compare(other) == 0
 
-  def lookup(self, _): raise Exception("Cannot look things up in %s" % type(self))
-  def contains(self, _): raise Exception("Cannot look for things in %s" % type(self))
-  def length(self): raise Exception("Cannot measure length of %s" % type(self))
+  def lookup(self, _): raise VentureTypeError("Cannot look things up in %s" % type(self))
+  def contains(self, _): raise VentureTypeError("Cannot look for things in %s" % type(self))
+  def length(self): raise VentureTypeError("Cannot measure length of %s" % type(self))
 
   def __eq__(self, other):
     if isinstance(other, VentureValue):
@@ -214,7 +214,7 @@ interface here is compatible with one possible path."""
   def lookup(self, index):
     try:
       ind = index.getNumber()
-    except Exception: # TODO Make the type error error more specfic and catch it here
+    except VentureTypeError:
       raise VentureValueError("Looking up non-number %r in an array" % index)
     if 0 <= int(ind) and int(ind) < len(self.array):
       return self.array[int(ind)]
@@ -302,7 +302,7 @@ class VenturePair(VentureValue):
   def lookup(self, index):
     try:
       ind = index.getNumber()
-    except Exception: # TODO Make the type error error more specfic and catch it here
+    except VentureTypeError:
       raise VentureValueError("Looking up non-number %r in an array" % index)
     if ind < 1: # Equivalent to truncating for positive floats
       return self.first
