@@ -46,7 +46,7 @@ if __name__ == '__main__':
     #history = model.runConditionedFromPrior(50, verbose=True)
     #history = model.runFromJoint(50, verbose=True)
     #history = model.sampleFromJoint(20, verbose=True)
-    sample_hist, infer_hist, klHistory = model.computeJointKL(200, 50, verbose=True)
+    sample_hist, infer_hist, klHistory = model.computeJointKL(20, 10, verbose=True)
     #history = model.runFromConditional(50)
     klHistory.plot(fmt='png')
     
