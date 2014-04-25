@@ -1,3 +1,4 @@
+from numbers import Number
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 from venture.ripl import Ripl
@@ -31,7 +32,7 @@ def testIf3():
   eq_(1, ripl.predict("(if true z y)"))
 
 def testFlip1():
-  assert isinstance(get_ripl().predict("(bernoulli 0.5)"), int)
+  assert isinstance(get_ripl().predict("(bernoulli 0.5)"), Number)
 
 @statisticalTest
 def testFlip2():

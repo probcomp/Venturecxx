@@ -76,3 +76,20 @@ def checkPGibbsDynamicScope1(mutate):
   predictions = collectSamples(ripl,"pid",infer=infer)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
+
+def testFunnyHMM():
+  ripl = get_ripl()
+  
+  ripl.assume("hypers", "(mem (lambda (t) (scope_include 0 t (normal 0 1))))")
+  ripl.assume("init", "0")
+  ripl.assume("next", "(lambda (state delta) (+ state delta))")
+  ripl.assume("get_state",
+    """(mem (lambda (t)
+          (if (= t 0) init
+            (next (get_state (- t 1)) (hypers t)))))""")
+  ripl.assume("obs", "(mem (lambda (t) (normal (get_state t) 1)))")
+  
+  for t in range(1, 5):
+    ripl.observe("(obs %d)" % t, t)
+  
+  ripl.infer({"kernel":"pgibbs","transitions":2,"scope":0,"block":"ordered","particles":3, "with_mutation":False})

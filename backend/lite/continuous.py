@@ -4,6 +4,7 @@ import scipy.special
 import math
 import numpy.random as npr
 import numpy.linalg as npla
+import scipy.special as spsp
 import numpy as np
 from utils import logDensityMVNormal
 
@@ -23,6 +24,8 @@ class NormalDriftKernel(LKernel):
     term2 = math.sqrt(1 - (self.epsilon * self.epsilon)) * (oldValue - mu)
     term3 = self.epsilon * nu
     return term1 + term2 + term3
+
+
                                                         
 class MVNormalOutputPSP(RandomPSP):
   def simulate(self, args):
@@ -35,7 +38,7 @@ class MVNormalOutputPSP(RandomPSP):
   def gradientOfLogDensity(self, x, args):
     (mu, sigma) = self.__parse_args__(args)
     isigma = npla.inv(sigma)
-    xvar = np.dot(x-mu, np.transpose(x-mu))
+    xvar = np.dot(np.transpose(np.matrix(x-mu)), np.matrix(x-mu))
     gradX = -np.dot(isigma, np.transpose(x-mu))
     gradMu = np.dot(isigma, np.transpose(x-mu))
     gradSigma = .5*np.dot(np.dot(isigma, xvar),isigma)-.5*isigma
@@ -43,6 +46,111 @@ class MVNormalOutputPSP(RandomPSP):
 
   def description(self,name):
     return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name
+
+  def __parse_args__(self, args):
+    return (np.array(args.operandValues[0]), args.operandValues[1])
+
+class InverseWishartPSP(RandomPSP):
+  def simulate(self, args):
+    (lmbda, dof) = self.__parse_args__(args)
+    n = lmbda.shape[0]
+    chol = np.linalg.cholesky(lmbda)
+
+    if (dof <= 81+n) and (dof == np.round(dof)):
+        x = np.random.randn(dof,n)
+    else:
+        x = np.diag(np.sqrt(stats.chi2.rvs(dof-(np.arange(n)))))
+        x[np.triu_indices_from(x,1)] = np.random.randn(n*(n-1)/2)
+    R = np.linalg.qr(x,'r')
+    T = scipy.linalg.solve_triangular(R.T,chol.T).T
+    return np.matrix(np.dot(T,T.T))
+
+  def logDensity(self, x, args):
+    (lmbda, dof) = self.__parse_args__(args)
+    p = len(lmbda)
+    log_density =  dof/2*(np.log(npla.det(lmbda))-p*np.log(2))-spsp.multigammaln(dof*.5, p) \
+        +(-.5*(dof+p+1))*np.log(npla.det(x))-.5*np.trace(np.dot(lmbda, npla.inv(x)))
+    return log_density
+
+  '''
+  based on the following wikipedia page:
+    http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+    http://en.wikipedia.org/wiki/Multivariate_gamma_function
+    http://en.wikipedia.org/wiki/Matrix_calculus
+  '''
+  def gradientOfLogDensity(self, X, args):
+    (lmbda, dof) = self.__parse_args__(args)
+    p = len(lmbda)
+    invX = npla.inv(X)
+    invLmbda = npla.inv(lmbda)
+    gradX = -.5*(dof+p+1)*invX+.5*np.dot(invX, np.dot(lmbda, invX))
+    gradLmbda = .5*dof*invLmbda-.5*invX
+    gradDof = .5*np.log(npla.det(lmbda))-.5*np.log(npla.det(X))-.5*p*np.log(2)
+    for i in range(p):
+      gradDof = gradDof-.5*spsp.psi(.5*(dof-i))
+    return gradX, [gradLmbda, gradDof]
+
+  def description(self,name):
+    return "  (%s scale_matrix degree_of_freedeom) samples a positive definite matrix according to the given inverse wishart distribution " % name
+
+  def __parse_args__(self, args):
+    return (np.array(args.operandValues[0]), args.operandValues[1])
+
+
+class WishartPSP(RandomPSP):
+  '''
+    Returns a sample from the Wishart distn, conjugate prior for precision matrices.
+  ''' 
+  def simulate(self, args):
+    (sigma, dof) = self.__parse_args__(args)
+    n = sigma.shape[0]
+    chol = np.linalg.cholesky(sigma)
+
+    # use matlab's heuristic for choosing between the two different sampling schemes
+    if (dof <= 81+n) and (dof == round(dof)):
+        # direct
+        X = np.dot(chol,np.random.normal(size=(n,dof)))
+    else:
+        A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(0,n),size=n)))
+        A[np.tri(n,k=-1,dtype=bool)] = np.random.normal(size=(n*(n-1)/2.))
+        X = np.dot(chol,A)
+    return np.matrix(np.dot(X,X.T))
+
+
+  def logDensity(self, X, args):
+    (sigma, dof) = self.__parse_args__(args)
+    invSigma = npla.inv(sigma)
+    p = len(sigma)
+    log_density =  -.5*dof*(np.log(npla.det(sigma))+p*np.log(2))-spsp.multigammaln(dof*.5, p) \
+          +.5*(dof-p-1)*np.log(npla.det(X))-.5*np.trace(np.dot(invSigma, X))
+    return log_density
+
+  '''
+  based on the following wikipedia page:
+    http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+    http://en.wikipedia.org/wiki/Multivariate_gamma_function
+    http://en.wikipedia.org/wiki/Matrix_calculus
+  '''
+  def gradientOfLogDensity(self, X, args):
+    (sigma, dof) = self.__parse_args__(args)
+    p = len(sigma)
+    invX = npla.inv(X)
+    invSigma = npla.inv(sigma)
+    # print 'invSigma', invSigma
+    gradX = .5*(dof-p-1)*invX-.5*invSigma
+    # print 'X', X
+    # print 'invX', invX
+    # print 'invSigma', invSigma
+    # print 'gradX', gradX
+    # assert (gradX==np.transpose(gradX)).all()
+    gradSigma = -.5*invSigma+.5*np.dot(invSigma, np.dot(X, invSigma))
+    gradDof = .5*np.log(npla.det(X))-.5*p*np.log(2)-.5*np.log(npla.det(sigma))
+    for i in range(p):
+      gradDof = gradDof-.5*spsp.psi(.5*(dof-i))
+    return gradX, [gradSigma, gradDof]
+
+  def description(self,name):
+    return "  (%s scale_matrix degree_of_freedeom) samples a positive definite matrix according to the given inverse wishart distribution " % name
 
   def __parse_args__(self, args):
     return (np.array(args.operandValues[0]), args.operandValues[1])
@@ -91,6 +199,9 @@ class NormalOutputPSP(RandomPSP):
 
   def description(self,name):
     return "  (%s mu sigma) samples a normal distribution with mean mu and standard deviation sigma." % name
+
+
+
 
 class UniformOutputPSP(RandomPSP):
   # TODO don't need to be class methods

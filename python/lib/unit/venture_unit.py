@@ -20,10 +20,6 @@ from venture.ripl.ripl import _strip_types
 
 from history import History, Run, Series
 
-# whether to record a value returned from the ripl
-def record(value):
-    return value['type'] in {'boolean', 'real', 'number', 'atom', 'count', 'array', 'simplex'}
-
 parseValue = _strip_types
 
 # VentureUnit is an experimental harness for developing, debugging and profiling Venture programs.
@@ -80,32 +76,29 @@ class VentureUnit(object):
             except VentureException as e:
                 print expression
                 raise e
-            if (not prune) or record(value):
-                assumeToDirective[symbol] = symbol
+            assumeToDirective[symbol] = symbol
         return assumeToDirective
 
     def _assumesFromRipl(self):
         assumeToDirective = {}
         for directive in self.ripl.list_directives(type=True):
-            if directive["instruction"] == "assume" and record(directive["value"]):
+            if directive["instruction"] == "assume":
                 assumeToDirective[directive["symbol"]] = directive["directive_id"]
         return assumeToDirective
 
-    def _loadObservesAsPredicts(self, track=-1, prune=True):
+    def _loadObservesAsPredicts(self, track=0, prune=False):
         predictToDirective = {}
         for (index, (expression, _)) in enumerate(self.observes):
             #print("self.ripl.predict('%s', label='%d')" % (expression, index))
             label = 'observe_%d' % index
             value = self.ripl.predict(expression, label=label, type=True)
-            if (not prune) or record(value):
-                predictToDirective[index] = label
+            predictToDirective[index] = label
 
         # choose a random subset to track; by default all are tracked
-        if track >= 0:
-            track = min(track, len(predictToDirective))
-            # FIXME: need predictable behavior from RNG
-            random.seed(self.parameters['venture_random_seed'])
-            predictToDirective = dict(random.sample(predictToDirective.items(), track))
+        track = min(track, len(predictToDirective))
+        # FIXME: need predictable behavior from RNG
+        random.seed(self.parameters['venture_random_seed'])
+        predictToDirective = dict(random.sample(predictToDirective.items(), track))
 
         return predictToDirective
 
@@ -139,10 +132,7 @@ class VentureUnit(object):
                     values.append(value)
                 else: # directive has returned a different type; discard the series
                     del keyedValues[key]
-            elif record(value):
-                values.append(value)
-            else: # directive has returned a non-scalar type; discard the series
-                del keyedValues[key]
+            values.append(value)
 
     # Gives a name to an observe directive.
     def nameObserve(self, index):
@@ -159,7 +149,7 @@ class VentureUnit(object):
 
         for i in range(samples):
             if verbose:
-                print "Generating sample " + str(i) + " of " + str(samples)
+                print "Generating sample " + str(i+1) + " of " + str(samples)
 
             (assumeToDirective, predictToDirective) = self.loadModelWithPredicts(track)
 
@@ -171,13 +161,13 @@ class VentureUnit(object):
         tag = 'sample_from_joint' if name is None else name + '_sample_from_joint'
         history = History(tag, self.parameters)
 
-        history.addSeries('logscore', 'i.i.d.', logscores)
+        history.addSeries('logscore', 'number', 'i.i.d.', logscores)
 
         for (symbol, values) in assumedValues.iteritems():
-            history.addSeries(symbol, 'i.i.d.', map(parseValue, values))
+            history.addSeries(symbol, values[0]['type'], 'i.i.d.', map(parseValue, values))
 
         for (index, values) in predictedValues.iteritems():
-            history.addSeries(self.nameObserve(index), 'i.i.d.', map(parseValue, values))
+            history.addSeries(self.nameObserve(index), values[0]['type'], 'i.i.d.', map(parseValue, values))
 
         return history
 
@@ -208,7 +198,7 @@ class VentureUnit(object):
 
         for run in range(runs):
             if verbose:
-                print "Starting run " + str(run) + " of " + str(runs)
+                print "Starting run " + str(run+1) + " of " + str(runs)
             res = f(label="run %s" % run, verbose=verbose, **kwargs)
             history.addRun(res)
 
@@ -249,7 +239,7 @@ class VentureUnit(object):
 
         for sweep in range(sweeps):
             if verbose:
-                print "Running sweep " + str(sweep) + " of " + str(sweeps)
+                print "Running sweep " + str(sweep+1) + " of " + str(sweeps)
 
             # FIXME: use timeit module for better precision
             start = time.time()
@@ -263,15 +253,15 @@ class VentureUnit(object):
             self.updateValues(assumedValues, assumeToDirective)
             self.updateValues(predictedValues, predictToDirective)
 
-        answer.addSeries('sweep time (s)', Series(label, sweepTimes))
-        answer.addSeries('sweep_iters', Series(label, sweepIters))
-        answer.addSeries('logscore', Series(label, logscores))
+        answer.addSeries('sweep time (s)', 'count', Series(label, sweepTimes))
+        answer.addSeries('sweep_iters', 'count', Series(label, sweepIters))
+        answer.addSeries('logscore', 'number', Series(label, logscores))
 
         for (symbol, values) in assumedValues.iteritems():
-            answer.addSeries(symbol, Series(label, map(parseValue, values)))
+            answer.addSeries(symbol, values[0]['type'], Series(label, map(parseValue, values)))
 
         for (index, values) in predictedValues.iteritems():
-            answer.addSeries(self.nameObserve(index), Series(label, map(parseValue, values)))
+            answer.addSeries(self.nameObserve(index), values[0]['type'], Series(label, map(parseValue, values)))
 
         return answer
 
@@ -286,13 +276,14 @@ class VentureUnit(object):
 
         for (name, seriesList) in inferredHistory.nameToSeries.iteritems():
             if name not in sampledHistory.nameToSeries: continue
+            if sampledHistory.nameToType[name] not in {'number'}: continue
 
             for inferredSeries in seriesList:
                 sampledSeries = sampledHistory.nameToSeries[name][0]
 
                 klValues = [computeKL(sampledSeries.values, inferredSeries.values[:index+1]) for index in range(sweeps)]
 
-                klHistory.addSeries('KL_' + name, inferredSeries.label, klValues, hist=False)
+                klHistory.addSeries('KL_' + name, 'number', inferredSeries.label, klValues, hist=False)
 
         return (sampledHistory, inferredHistory, klHistory)
 
@@ -331,12 +322,11 @@ class VentureUnit(object):
         assumedValues = {}
         for (symbol, directive) in assumeToDirective.iteritems():
             value = self.ripl.report(directive, type=True)
-            if record(value):
-                assumedValues[symbol] = value
+            assumedValues[symbol] = value
         logscore = self.ripl.get_global_logscore()
-        prior_run.addSeries('logscore', Series('prior', [logscore]*sweeps, hist=False))
+        prior_run.addSeries('logscore', 'number', Series('prior', [logscore]*sweeps, hist=False))
         for (symbol, value) in assumedValues.iteritems():
-            prior_run.addSeries(symbol, Series('prior', [parseValue(value)]*sweeps))
+            prior_run.addSeries(symbol, value['type'], Series('prior', [parseValue(value)]*sweeps))
         return (data, prior_run)
 
 # Reads the profile data from the ripl.
