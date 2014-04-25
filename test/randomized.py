@@ -1,108 +1,77 @@
-"""Random Venture values and programs.
-"""
+"""A vaguely QuickCheck-inspired randomized testing framework for properties about Venture."""
 
-import numpy.random as npr
-from venture.lite import value as v
-from venture.lite.utils import normalizeList
-from venture.lite import env as env
+from nose import SkipTest
 
-class DefaultRandomVentureValue(object):
-  def __init__(self, method, **kwargs):
-    self.method = method
-    self.kwargs = kwargs
-  def generate(self, **kwargs):
-    return getattr(self, self.method)(**(dict(self.kwargs.items() + kwargs.items())))
-  def number(self, **_kwargs):
-    return v.VentureNumber(npr.uniform(-10, 10))
-  def atom(self, **_kwargs):
-    return v.VentureAtom(npr.randint(-10, 11)) # Open at the top
-  def bool(self, **_kwargs):
-    return v.VentureBool(npr.choice([False, True]))
-  def symbol(self, length=None, **_kwargs):
-    if length is None:
-      length = npr.randint(0, 10)
-    alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    return v.VentureSymbol(''.join(npr.choice(list(alphabet), length)))
-  def array(self, length=None, elt_dist=None, **kwargs):
-    if length is None:
-      length = npr.randint(0, 10)
-    if elt_dist is None:
-      elt_dist = DefaultRandomVentureValue("object") # TODO reuse class of self
-    return v.VentureArray([elt_dist.generate(**kwargs) for _ in range(length)])
-  def nil(self, **_kwargs):
-    return v.VentureNil()
-  def pair(self, size=None, first_dist=None, second_dist=None, **kwargs):
-    if size is None:
-      size = npr.randint(0, 30)
-    left_size = npr.randint(0, size+1)
-    if first_dist is None:
-      first_dist = DefaultRandomVentureValue("object") # TODO reuse class of self
-    if second_dist is None:
-      second_dist = DefaultRandomVentureValue("object") # TODO reuse class of self
-    return v.VenturePair((first_dist.generate(size=left_size, **kwargs),
-                          second_dist.generate(size=size-left_size, **kwargs)))
-  def simplex(self, length=None, **_kwargs):
-    if length is None:
-      length = npr.randint(0, 10)
-    return v.VentureSimplex(normalizeList(npr.uniform(0, 1, length)))
-  def dict(self, **_kwargs):
-    raise Exception("Can't synthesize dicts yet")
-  def mapping(self, **kwargs):
-    # TODO Only synthesize a mapping of a type that is compatible with
-    # the intended keys (i.e., no arrays with symbol keys).
-    # For that, I need to capture the non-independence between the
-    # types of different arguments to the same procedure.
-    # TODO Be willing to synthesize dicts and environments
-    # kind = npr.choice(["dict", "list", "array", "environment"])
-    kind = npr.choice(["list", "array"])
-    return getattr(self, kind)(**kwargs)
-  def matrix(self, length=None, **_kwargs):
-    if length is None:
-      length = npr.randint(0, 10)
-    return v.VentureMatrix(npr.uniform(-10, 10, (length, length))) # Square matrices
-  def sp(self, **_kwargs):
-    raise Exception("Can't synthesize SPs")
-  def environment(self, **_kwargs):
-    # TODO Implement a more interesting distribution on environments
-    return env.VentureEnvironment()
-  def list(self, length=None, elt_dist=None, **kwargs):
-    if length is None:
-      length = npr.randint(0, 10)
-    if elt_dist is None:
-      elt_dist = DefaultRandomVentureValue("object") # TODO reuse class of self
-    return v.pythonListToVentureList(*[elt_dist.generate(**kwargs) for _ in range(length)])
-  def exp(self, **_kwargs):
-    # TODO Synthesizing interesting expressions is the fun part!
-    return self.list(length=0)
-  def object(self, depth=None, **kwargs):
-    if depth is None:
-      depth = npr.randint(0, 5)
-    if depth == 0:
-      return getattr(self, npr.choice(["number", "atom", "bool", "symbol", "nil"]))(**kwargs)
+from venture.test import random_values as r
+from venture.lite.exception import VentureValueError
+from venture.lite.sp import SPType
+from venture.lite.value import VentureType
+
+class ArgumentsNotAppropriate(Exception):
+  """Thrown by a property that is to be randomly checked when the
+suggested inputs are not appropriate (even though they were type-correct)."""
+
+def synthesize_for(type_):
+  """Synthesizes a bunch of VentureValues according to the given type.
+If the type is a VentureType, makes one of those.  If the type is a
+list, makes that many things of those types, recursively."""
+  if isinstance(type_, VentureType):
+    dist = type_.distribution(r.DefaultRandomVentureValue)
+    if dist is not None:
+      return dist.generate()
     else:
-      return getattr(self, npr.choice(["array", "pair", "simplex", "matrix", "list"]))(depth=depth-1, **kwargs)
-
-def random_args_list(sp_type):
-  if not sp_type.variadic:
-    dists = [t.distribution(DefaultRandomVentureValue) for t in sp_type.args_types]
+      raise ArgumentsNotAppropriate("Cannot generate arguments for %s" % type_)
   else:
-    length = npr.randint(0, 10)
-    dists = [sp_type.args_types[0].distribution(DefaultRandomVentureValue) for _ in range(length)]
-  if any([d is None for d in dists]):
-    return None
+    return [synthesize_for(t) for t in type_]
+
+def checkTypedProperty(prop, type_, *args, **kwargs):
+  """Checks a property, given a description of the argument to pass it.
+
+  Will repeatedly call the property with:
+  1. An object matching the given type in the first position
+  2. All the additional given positional and keyword in subsequent
+     positions.
+
+  If the property completes successfully it is taken to have passed.
+  If the property raises ArgumentsNotAppropriate, that test is ignored.
+  If too many tests are thrown out, the test is taken as a skip
+    (because the distribution on random inputs is not precise enough).
+  If the property raises SkipTest, the test is aborted as a skip.
+  If the property raises any other exception, it is taken to have
+    failed, and the offending generated argument is communicated as a
+    counter-example.
+  """
+  app_ct = 0
+  for _ in range(20):
+    try:
+      synth_args = synthesize_for(type_)
+      prop(synth_args, *args, **kwargs)
+      app_ct += 1
+    except ArgumentsNotAppropriate: continue
+    except SkipTest: raise
+    except Exception:
+      # Reraise the exception with a reasonable backtrace, per
+      # http://nedbatchelder.com/blog/200711/rethrowing_exceptions_in_python.html
+      import sys
+      info = sys.exc_info()
+      raise Exception("%s led to %s" % (synth_args, info[1])), None, info[2]
+  if app_ct == 0:
+    raise SkipTest("Could not find appropriate args for %s" % prop)
+
+def carefully(f, *args, **kwargs):
+  """Calls f with the given arguments, converting ValueError and
+VentureValueError into ArgumentsNotAppropriate."""
+  try:
+    return f(*args, **kwargs)
+  except ValueError, e: raise ArgumentsNotAppropriate(e)
+  except VentureValueError, e: raise ArgumentsNotAppropriate(e)
+
+def fully_uncurried_sp_type(sp_type):
+  """Returns a list of arguments lists to pass to the given SP, in
+order, to get a return type that is not an SP."""
+  if not isinstance(sp_type, SPType):
+    return []
   else:
-    return [d.generate() for d in dists]
+    return [sp_type.args_types] + fully_uncurried_sp_type(sp_type.return_type)
 
-class BogusArgs(object):
-  def __init__(self, args, aux):
-    # TODO Do I want to try to synthesize an actual real random valid Args object?
-    self.operandValues = args
-    self.operandNodes = [None for _ in args]
-    self.isOutput = True
-    self.esrValues = []
-    self.env = env.VentureEnvironment()
-    self.spaux = aux
 
-def random_args_for_sp(sp, sp_type):
-  answer = random_args_list(sp_type)
-  return BogusArgs(answer, sp.constructSPAux()) if answer is not None else None
