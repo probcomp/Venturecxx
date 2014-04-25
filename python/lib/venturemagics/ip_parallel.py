@@ -1000,6 +1000,17 @@ def directive_to_string(d):
         return '[predict %s]' % build_exp(d['expression'])
 
 
+def directive_split(d):
+    ## FIXME: replace symbols
+    if d['instruction']=='assume':
+        return (d['symbol'], build_exp(d['expression']) ) 
+    elif d['instruction']=='observe':
+        return (build_exp(d['expression']), d['value']) 
+    elif d['instruction']=='predict':
+        return build_exp(d['expression'])
+
+
+
 ## MRipl Regression Utilities:
 # these are imported to engines via 'from ip_parallel import *' instruction for ripls
 # note that we don't need plot condition here
