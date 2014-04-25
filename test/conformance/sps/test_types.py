@@ -80,6 +80,8 @@ def checkTypedProperty(prop, type_, *args, **kwargs):
       app_ct += 1
     except ArgumentsNotAppropriate: continue
     except Exception:
+      # Reraise the exception with a reasonable backtrace, per
+      # http://nedbatchelder.com/blog/200711/rethrowing_exceptions_in_python.html
       import sys
       info = sys.exc_info()
       print args
