@@ -120,3 +120,20 @@ def helpPropTypeCorrect2(args_lists, sp, type_):
     answer = carefully(sp.outputPSP.simulate, args)
     assert answer in type_.return_type
     helpPropTypeCorrect2(args_lists[1:], answer, type_.return_type)
+
+def testRandomMark2():
+  for (name,sp) in builtInSPsList():
+    if isinstance(sp.requestPSP, NullRequestPSP):
+      yield propRandomAnnotated2, name, sp
+
+def propRandomAnnotated2(name, sp):
+  checkTypedProperty(helpPropRandomAnnotated2, sp.venture_type().args_types, name, sp)
+
+def helpPropRandomAnnotated2(args_list, name, sp):
+  args = r.BogusArgs(args_list, sp.constructSPAux())
+  answer = carefully(sp.outputPSP.simulate, args)
+  if not sp.outputPSP.isRandom():
+    for _ in range(5):
+      eq_(answer, carefully(sp.outputPSP.simulate, args))
+  else:
+    raise SkipTest("%s claims to be random" % name)
