@@ -100,10 +100,23 @@ def testTypes2():
     if isinstance(sp.requestPSP, NullRequestPSP):
       yield propTypeCorrect2, name, sp
 
-def propTypeCorrect2(_name, sp):
-  checkTypedProperty(helpPropTypeCorrect2, sp.venture_type().args_types, sp)
+def fully_uncurried_sp_type(sp_type):
+  """Returns a list of arguments lists to pass to the given SP, in
+order, to get a return type that is not an SP."""
+  if not isinstance(sp_type, SPType):
+    return []
+  else:
+    return [sp_type.args_types] + fully_uncurried_sp_type(sp_type.return_type)
 
-def helpPropTypeCorrect2(args_list, sp):
-  args = r.BogusArgs(args_list, sp.constructSPAux())
-  answer = carefully(sp.outputPSP.simulate, args)
-  assert answer in sp.venture_type().return_type
+def propTypeCorrect2(_name, sp):
+  type_ = sp.venture_type()
+  checkTypedProperty(helpPropTypeCorrect2, fully_uncurried_sp_type(type_), sp, type_)
+
+def helpPropTypeCorrect2(args_lists, sp, type_):
+  if len(args_lists) == 0:
+    pass # OK
+  else:
+    args = r.BogusArgs(args_lists[0], sp.constructSPAux())
+    answer = carefully(sp.outputPSP.simulate, args)
+    assert answer in type_.return_type
+    helpPropTypeCorrect2(args_lists[1:], answer, type_.return_type)
