@@ -56,6 +56,11 @@ def logaddexp(items):
   the_max = max(items)
   return the_max + math.log(sum(math.exp(item - the_max) for item in items))
 
+def sampleLogCategorical(logs):
+  "Samples from an unnormalized categorical distribution given in logspace."
+  the_max = max(logs)
+  return simulateCategorical([math.exp(log - the_max) for log in logs])
+
 def logDensityMVNormal(x, mu, sigma):
   answer =  -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
             -.5*len(sigma)*np.log(np.pi)-.5*np.log(abs(npla.det(sigma)))
