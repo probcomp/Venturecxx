@@ -79,13 +79,13 @@ def checkTypedProperty(prop, type_, *args, **kwargs):
       prop(synth_args, *args, **kwargs)
       app_ct += 1
     except ArgumentsNotAppropriate: continue
+    except SkipTest: raise
     except Exception:
       # Reraise the exception with a reasonable backtrace, per
       # http://nedbatchelder.com/blog/200711/rethrowing_exceptions_in_python.html
       import sys
       info = sys.exc_info()
-      print args
-      raise info[1], None, info[2]
+      raise Exception("%s led to %s" % (synth_args, info[1])), None, info[2]
   if app_ct == 0:
     raise SkipTest("Could not find appropriate args for %s" % prop)
 
