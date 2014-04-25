@@ -10,24 +10,27 @@ def testTypes():
     if isinstance(sp.requestPSP, NullRequestPSP):
       yield propTypeCorrect, name, sp
 
-def propTypeCorrect(name, sp):
-  app_ct = 0
-  for _ in range(20):
+def appropriate_arguments(sp, type_, budget=20):
+  for _ in range(budget):
+    args = r.random_args_for_sp(sp, type_)
+    if args is None: continue
     try:
-      if helpPropTypeCorrect(sp, sp.venture_type()):
-        app_ct += 1
-    except ValueError: pass
-    except VentureValueError: pass
+      answer = sp.outputPSP.simulate(args)
+      yield args, answer
+    except ValueError: continue
+    except VentureValueError: continue
+
+def propTypeCorrect(name, sp):
+  type_ = sp.venture_type()
+  app_ct = 0
+  for (_, answer) in appropriate_arguments(sp, type_):
+    app_ct += 1
+    helpPropTypeCorrect(answer, type_.return_type)
   if app_ct == 0:
     raise SkipTest("Could not find appropriate args for %s" % name)
 
-def helpPropTypeCorrect(sp, the_type):
-  args = r.random_args_for_sp(sp, the_type)
-  if args is None:
-    return False # Not appropriate arguments
-  answer = sp.outputPSP.simulate(args)
-  assert answer in the_type.return_type
-  if isinstance(the_type.return_type, SPType):
-    return helpPropTypeCorrect(answer, the_type.return_type)
-  else:
-    return True
+def helpPropTypeCorrect(answer, type_):
+  assert answer in type_
+  if isinstance(type_, SPType):
+    for (_, ans2) in appropriate_arguments(answer, type_, budget=1):
+      helpPropTypeCorrect(ans2, type_.return_type)
