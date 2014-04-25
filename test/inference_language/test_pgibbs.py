@@ -89,7 +89,7 @@ def testFunnyHMM():
             (next (get_state (- t 1)) (hypers t)))))""")
   ripl.assume("obs", "(mem (lambda (t) (normal (get_state t) 1)))")
   
-  for t in range(5):
+  for t in range(1, 5):
     ripl.observe("(obs %d)" % t, t)
   
   ripl.infer({"kernel":"pgibbs","transitions":2,"scope":0,"block":"ordered","particles":3, "with_mutation":False})
