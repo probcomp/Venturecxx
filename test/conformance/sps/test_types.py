@@ -62,6 +62,9 @@ class ArgumentsNotAppropriate(Exception):
 suggested inputs are not appropriate (even though they were type-correct)."""
 
 def synthesize_for(type_):
+  """Synthesizes a bunch of VentureValues according to the given type.
+If the type is a VentureType, makes one of those.  If the type is a
+list, makes that many things of those types, recursively."""
   if isinstance(type_, VentureType):
     dist = type_.distribution(r.DefaultRandomVentureValue)
     if dist is not None:
@@ -72,6 +75,22 @@ def synthesize_for(type_):
     return [synthesize_for(t) for t in type_]
 
 def checkTypedProperty(prop, type_, *args, **kwargs):
+  """Checks a property, given a description of the argument to pass it.
+
+  Will repeatedly call the property with:
+  1. An object matching the given type in the first position
+  2. All the additional given positional and keyword in subsequent
+     positions.
+
+  If the property completes successfully it is taken to have passed.
+  If the property raises ArgumentsNotAppropriate, that test is ignored.
+  If too many tests are thrown out, the test is taken as a skip
+    (because the distribution on random inputs is not precise enough).
+  If the property raises SkipTest, the test is aborted as a skip.
+  If the property raises any other exception, it is taken to have
+    failed, and the offending generated argument is communicated as a
+    counter-example.
+  """
   app_ct = 0
   for _ in range(20):
     try:
@@ -90,6 +109,8 @@ def checkTypedProperty(prop, type_, *args, **kwargs):
     raise SkipTest("Could not find appropriate args for %s" % prop)
 
 def carefully(f, *args, **kwargs):
+  """Calls f with the given arguments, converting ValueError and
+VentureValueError into ArgumentsNotAppropriate."""
   try:
     return f(*args, **kwargs)
   except ValueError, e: raise ArgumentsNotAppropriate(e)
