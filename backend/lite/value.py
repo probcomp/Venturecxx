@@ -292,7 +292,11 @@ class VenturePair(VentureValue):
     self.first = first
     self.rest = rest
   def __repr__(self):
-    return "VenturePair(%r %r)" % (self.first, self.rest)
+    (list_, tail) = self.asPossiblyImproperList()
+    if tail is None:
+      return "VentureList(%r)" % list_
+    else:
+      return "VentureList(%r . %r)" % (list_, tail)
   def getPair(self): return (self.first,self.rest)
   def asPythonList(self, elt_type=None):
     if elt_type is not None:
@@ -303,6 +307,14 @@ class VenturePair(VentureValue):
     # TODO Venture pairs should be usable to build structures other
     # than proper lists.  But then, what are their types?
     return {"type":"list", "value":[v.asStackDict(trace) for v in self.asPythonList()]}
+  def asPossiblyImproperList(self):
+    if isinstance(self.rest, VenturePair):
+      (sublist, tail) = self.rest.asPossiblyImproperList()
+      return ([self.first] + sublist, tail)
+    elif isinstance(self.rest, VentureNil):
+      return ([self.first], None)
+    else:
+      return ([self.first], self.rest)
   @staticmethod
   def fromStackDict(_): raise Exception("Type clash!")
   def compareSameType(self, other):
