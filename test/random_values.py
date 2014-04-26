@@ -81,28 +81,3 @@ class DefaultRandomVentureValue(object):
       return getattr(self, npr.choice(["number", "atom", "bool", "symbol", "nil"]))(**kwargs)
     else:
       return getattr(self, npr.choice(["array", "pair", "simplex", "matrix", "list"]))(depth=depth-1, **kwargs)
-
-def random_args_list(sp_type):
-  if not sp_type.variadic:
-    dists = [t.distribution(DefaultRandomVentureValue) for t in sp_type.args_types]
-  else:
-    length = npr.randint(0, 10)
-    dists = [sp_type.args_types[0].distribution(DefaultRandomVentureValue) for _ in range(length)]
-  if any([d is None for d in dists]):
-    return None
-  else:
-    return [d.generate() for d in dists]
-
-class BogusArgs(object):
-  def __init__(self, args, aux):
-    # TODO Do I want to try to synthesize an actual real random valid Args object?
-    self.operandValues = args
-    self.operandNodes = [None for _ in args]
-    self.isOutput = True
-    self.esrValues = []
-    self.env = env.VentureEnvironment()
-    self.spaux = aux
-
-def random_args_for_sp(sp, sp_type):
-  answer = random_args_list(sp_type)
-  return BogusArgs(answer, sp.constructSPAux()) if answer is not None else None

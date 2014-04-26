@@ -7,6 +7,7 @@ from venture.test import random_values as r
 from venture.lite.exception import VentureValueError
 from venture.lite.sp import SPType
 from venture.lite.value import VentureType
+from venture.lite import env as env
 
 class ArgumentsNotAppropriate(Exception):
   """Thrown by a property that is to be randomly checked when the
@@ -87,4 +88,12 @@ not an SP.
   else:
     return [sp_args_type(sp_type)] + fully_uncurried_sp_type(sp_type.return_type)
 
-
+class BogusArgs(object):
+  def __init__(self, args, aux):
+    # TODO Do I want to try to synthesize an actual real random valid Args object?
+    self.operandValues = args
+    self.operandNodes = [None for _ in args]
+    self.isOutput = True
+    self.esrValues = []
+    self.env = env.VentureEnvironment()
+    self.spaux = aux

@@ -1,5 +1,4 @@
 from venture.lite.builtin import builtInSPsList
-from venture.test import random_values as r
 from venture.test.randomized import *
 from venture.lite.psp import NullRequestPSP
 from nose import SkipTest
@@ -18,7 +17,7 @@ def propTypeCorrect(args_lists, sp, type_):
   if len(args_lists) == 0:
     pass # OK
   else:
-    args = r.BogusArgs(args_lists[0], sp.constructSPAux())
+    args = BogusArgs(args_lists[0], sp.constructSPAux())
     answer = carefully(sp.outputPSP.simulate, args)
     assert answer in type_.return_type
     propTypeCorrect(args_lists[1:], answer, type_.return_type)
@@ -32,7 +31,7 @@ def checkRandomAnnotated(name, sp):
   checkTypedProperty(propRandomAnnotated, sp_args_type(sp.venture_type()), name, sp)
 
 def propRandomAnnotated(args_list, name, sp):
-  args = r.BogusArgs(args_list, sp.constructSPAux())
+  args = BogusArgs(args_list, sp.constructSPAux())
   answer = carefully(sp.outputPSP.simulate, args)
   if not sp.outputPSP.isRandom():
     for _ in range(5):
