@@ -17,6 +17,11 @@ mk_p_ripl = make_puma_church_prime_ripl
 # get rid of use of interactive on certain utility funcs
 # if it breaks use outside MRIPL
 
+# move regression stuff to regression utils
+# IMP: implement set_seeds
+# make private methods private
+# check for 'if varname' where varname=None by default
+
 
 
 # Utility functions for working with ipcluster and mripl
