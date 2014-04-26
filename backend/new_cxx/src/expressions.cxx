@@ -1,7 +1,7 @@
 #include "expressions.h"
 #include "values.h"
 
-bool isVariable(VentureValuePtr exp) { return dynamic_pointer_cast<VentureSymbol>(exp); }
+bool isVariable(VentureValuePtr exp) { return dynamic_pointer_cast<VentureSymbol>(exp) != NULL; }
 bool isSelfEvaluating(VentureValuePtr exp) { return !exp->hasArray(); }
 bool isQuotation(VentureValuePtr exp)
 { 

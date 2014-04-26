@@ -118,6 +118,15 @@ boost::python::dict VentureVector::toPython() const
   return value;
 }
 
+boost::python::dict VentureMatrix::toPython() const 
+{
+  boost::python::dict value;
+  value["type"] = "matrix";
+  boost::python::list l;
+  for (VentureVector * x : xs) {l.append(x->toPython()); }
+  value["value"] = l;
+  return value;
+}
 
 boost::python::dict VentureSP::toPython() const
 { 
@@ -189,6 +198,24 @@ size_t VentureVector::toHash() const
   return seed;
 }
 
+void VentureMatrix::destroyParts() 
+{
+  for(VentureVector * x : xs) 
+  {
+    deepDelete(x);
+  }
+}
+
+size_t VentureMatrix::toHash() const 
+{
+  size_t seed = 0;
+  for (VentureVector * x : xs) {
+    boost::hash_combine(seed, x->toHash());
+  }
+  return seed;
+}
+
+
 bool VentureBool::equals(const VentureValue * & other) const
 {
   const VentureBool * vb = dynamic_cast<const VentureBool*>(other);
@@ -229,12 +256,24 @@ bool VentureAtom::equals(const VentureValue * & other) const
 
 bool VentureVector::equals(const VentureValue * & other) const
 {
+  // sanity check: dynamic_cast would return null if it's a bad cast.
   const VentureVector * vv = dynamic_cast<const VentureVector*>(other);
   if (vv->xs.size() != xs.size()) { return false; }
   for (size_t i = 0; i < xs.size(); ++i)
   {
     const VentureValue * v = dynamic_cast<const VentureValue*>(vv->xs[i]);
     if (!xs[i]->equals(v)) { return false; }
+  }
+  return true;
+}
+
+bool VentureMatrix::equals(const VentureValue * & other) const 
+{
+  const VentureMatrix * vv = dynamic_cast<const VentureMatrix*>(other);
+  if (vv == NULL || vv->xs.size() != xs.size()) return false;
+  for(size_t i = 0; i < xs.size(); i++) {
+    const VentureValue * v = dynamic_cast<const VentureValue*>(vv->xs[i]);
+    if(!xs[i]->equals(v)) return false;
   }
   return true;
 }
