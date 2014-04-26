@@ -214,7 +214,29 @@ class MRipl():
                            'seeds':[]})
             
         self.dview.apply(make_mripl_proc,self.no_ripls_per_engine)
-         
+
+        self.remote_set_seeds(self.seeds)
+        
+      
+        # invariant
+        @interactive
+        def get_seeds(mrid): return mripls[mrid]['seeds']
+        assert self.seeds==self.lst_flatten(self.dview.apply(get_seeds,self.mrid))
+
+        
+        if self.verbose: print self.ripls_info()
+
+
+
+## MRIPL METHODS FOR CONTROLLING REMOTE ENGINES/BACKEND
+ 
+##FIXME: need to be able to set local seeds via public method
+    def remote_set_seeds(self,seeds):
+        '''Set seeds for remote engines. Input: list of seeds of length
+        self.no_mripls. Seeds distributed in order:
+         (eng_id0,ripl_ind0), (eng_id0,ripl_id1), ... (eng_id1,ripl_id0), ...'''
+        self.seeds = seeds
+        
         @interactive
         def set_engine_seeds(mrid,seeds_for_engine):
             mripl=mripls[mrid]
@@ -227,20 +249,11 @@ class MRipl():
         for i in range(self.no_engines):
             engine_view = self.cli[i]
             start = i*self.no_ripls_per_engine
-            seeds_for_engine = self.seeds[start:start+self.no_ripls_per_engine]
+            seeds_for_engine = seeds[start:start+self.no_ripls_per_engine]
             engine_view.apply(set_engine_seeds,self.mrid,seeds_for_engine)
-        
-        # invariant
-        @interactive
-        def get_seeds(mrid): return mripls[mrid]['seeds']
-        assert self.seeds==self.lst_flatten(self.dview.apply(get_seeds,self.mrid))
 
-        
-        if self.verbose: print self.ripls_info()
+        return
 
-
-
-## MRIPL METHODS FOR CONTROLLING REMOTE ENGINES/BACKEND
 
     def __del__(self):
         if not self.local_mode:
@@ -264,7 +277,7 @@ class MRipl():
         def f(mrid,backend):
             seeds=mripls[mrid]['seeds']
             [r.set_seed(seed) for r,seed in zip(mripls[mrid][backend],seeds)]
-        return self.dview.apply(f,self.mrid,self.backend) 
+        return self.dview.apply(f,self.mrid,self.backend)
 
 
     def switch_backend(self,backend):
