@@ -1,5 +1,6 @@
 """A vaguely QuickCheck-inspired randomized testing framework for properties about Venture."""
 
+import numpy.random as npr
 from nose import SkipTest
 
 from venture.test import random_values as r
@@ -66,12 +67,24 @@ VentureValueError into ArgumentsNotAppropriate."""
   except ValueError, e: raise ArgumentsNotAppropriate(e)
   except VentureValueError, e: raise ArgumentsNotAppropriate(e)
 
+def sp_args_type(sp_type):
+  """Returns a list representing the types of arguments that may be
+passed to the given SP."""
+  if not sp_type.variadic:
+    return sp_type.args_types
+  else:
+    length = npr.randint(0, 10)
+    return [sp_type.args_types[0] for _ in range(length)]
+
 def fully_uncurried_sp_type(sp_type):
-  """Returns a list of arguments lists to pass to the given SP, in
-order, to get a return type that is not an SP."""
+  """Returns a list of argument list types representing arguments that
+may be passed to the given SP, in order, to get a return type that is
+not an SP.
+
+  """
   if not isinstance(sp_type, SPType):
     return []
   else:
-    return [sp_type.args_types] + fully_uncurried_sp_type(sp_type.return_type)
+    return [sp_args_type(sp_type)] + fully_uncurried_sp_type(sp_type.return_type)
 
 

@@ -29,7 +29,7 @@ def testRandomMark():
       yield checkRandomAnnotated, name, sp
 
 def checkRandomAnnotated(name, sp):
-  checkTypedProperty(propRandomAnnotated, sp.venture_type().args_types, name, sp)
+  checkTypedProperty(propRandomAnnotated, sp_args_type(sp.venture_type()), name, sp)
 
 def propRandomAnnotated(args_list, name, sp):
   args = r.BogusArgs(args_list, sp.constructSPAux())
