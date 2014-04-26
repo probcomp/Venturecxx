@@ -1,5 +1,5 @@
 from venture.lite.builtin import builtInSPsList
-from venture.test.randomized import *
+from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
 from nose import SkipTest
 from nose.tools import eq_
