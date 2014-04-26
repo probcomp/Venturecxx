@@ -135,20 +135,22 @@ def lexicographicUnboxedCompare(thing, other):
 
   # else same length
   for x,y in zip(thing,other):
-    import collections
-    x_iterable = isinstance(x, collections.Iterable)
-    y_iterable = isinstance(y, collections.Iterable)
-    if not x_iterable and not y_iterable:
-      if stupidCompare(x,y) != 0: return stupidCompare(x,y)
-    elif not x_iterable and y_iterable:
-      return -1
-    elif x_iterable and not y_iterable:
-      return 1
-    else:
-      sub_ans = lexicographicUnboxedCompare(x, y)
-      if sub_ans != 0: return sub_ans
+    if stupidCompare(x,y) != 0: return stupidCompare(x,y)
 
   return 0
+
+def lexicographicMatrixCompare(thing, other):
+  shape_cmp = lexicographicUnboxedCompare(np.shape(thing), np.shape(other))
+  if not shape_cmp == 0: return shape_cmp
+
+  # else shame shape
+  if np.array_equal(thing, other): return 0
+  # Hack for finding the first discrepant element, via
+  # http://stackoverflow.com/questions/432112/is-there-a-numpy-function-to-return-the-first-index-of-something-in-an-array
+  diffs = thing - other
+  diff_indexes = np.nonzero(diffs)
+  first_diff = diffs[diff_indexes[0][0]][diff_indexes[0][0]]
+  return stupidCompare(first_diff, 0)
 
 def sequenceHash(seq):
   return reduce(lambda res, item: res * 37 + item, [hash(i) for i in seq], 1)
@@ -393,7 +395,7 @@ class VentureMatrix(VentureValue):
   def __init__(self,matrix): self.matrix = matrix
   def getMatrix(self): return self.matrix
   def compareSameType(self, other):
-    return lexicographicUnboxedCompare(self.matrix, other.matrix)
+    return lexicographicMatrixCompare(self.matrix, other.matrix)
   def __hash__(self):
     # From http://stackoverflow.com/questions/5386694/fast-way-to-hash-numpy-objects-for-caching
     b = self.matrix.view(np.uint8)
