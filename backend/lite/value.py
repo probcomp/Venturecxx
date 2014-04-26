@@ -135,7 +135,18 @@ def lexicographicUnboxedCompare(thing, other):
 
   # else same length
   for x,y in zip(thing,other):
-    if stupidCompare(x,y) != 0: return stupidCompare(x,y)
+    import collections
+    x_iterable = isinstance(x, collections.Iterable)
+    y_iterable = isinstance(y, collections.Iterable)
+    if not x_iterable and not y_iterable:
+      if stupidCompare(x,y) != 0: return stupidCompare(x,y)
+    elif not x_iterable and y_iterable:
+      return -1
+    elif x_iterable and not y_iterable:
+      return 1
+    else:
+      sub_ans = lexicographicUnboxedCompare(x, y)
+      if sub_ans != 0: return sub_ans
 
   return 0
 
