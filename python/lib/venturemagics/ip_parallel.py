@@ -235,6 +235,7 @@ class MRipl():
         '''Set seeds for remote engines. Input: list of seeds of length
         self.no_mripls. Seeds distributed in order:
          (eng_id0,ripl_ind0), (eng_id0,ripl_id1), ... (eng_id1,ripl_id0), ...'''
+        assert len(seeds)==self.no_ripls
         self.seeds = seeds
         
         @interactive
