@@ -171,34 +171,8 @@ class Serializer(object):
 
             return obj
 
-## temporary testing code
+def serialize_trace(trace):
+    return Serializer().serialize_trace(trace)
 
-def test_serialize():
-    from venture.shortcuts import make_lite_church_prime_ripl
-    v = make_lite_church_prime_ripl()
-    v.assume('is_tricky', '(flip 0.2)')
-    v.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
-    v.assume('flip_coin', '(mem (lambda (x) (flip theta)))')
-    for i in range(10):
-        v.observe('(flip_coin {})'.format(i), 'true')
-
-    v.infer(100)
-    results = []
-    results.append(v.predict('is_tricky'))
-
-    trace = v.sivm.core_sivm.engine.trace
-    serialized = Serializer().serialize_trace(trace)
-    newtrace = Serializer().deserialize_trace(serialized)
-    v.sivm.core_sivm.engine.trace = newtrace
-    results.append(v.predict('is_tricky'))
-
-    for i in range(10, 20):
-        v.observe('(flip_coin {})'.format(i), 'false')
-    v.infer(100)
-    results.append(v.predict('is_tricky'))
-
-    print results
-    return v, trace, serialized, newtrace
-
-if __name__ == '__main__':
-    v, trace, serialized, newtrace = test_serialize()
+def deserialize_trace(serialized):
+    return Serializer().deserialize_trace(serialized)
