@@ -170,7 +170,7 @@ class MRipl():
 
         mk_ripl = mk_p_ripl if self.backend=='puma' else mk_l_ripl
         self.local_ripls=[mk_ripl() for i in range(self.no_local_ripls)]
-        [v.set_seed(i) for (v,i) in zip(self.local_ripls,self.local_seeds) ]
+        self.mr_set_seeds(local_seeds=self.local_seeds)
         if self.local_mode: return
 
 
@@ -215,7 +215,7 @@ class MRipl():
             
         self.dview.apply(make_mripl_proc,self.no_ripls_per_engine)
 
-        self.remote_set_seeds(self.seeds)
+        self.mr_set_seeds(self.seeds)
         
       
         # invariant
@@ -230,13 +230,27 @@ class MRipl():
 
 ## MRIPL METHODS FOR CONTROLLING REMOTE ENGINES/BACKEND
  
-##FIXME: need to be able to set local seeds via public method
-    def remote_set_seeds(self,seeds):
+
+    def mr_set_seeds(self,seeds=None,remote_seeds=None,local_seeds=None):
         '''Set seeds for remote engines. Input: list of seeds of length
         self.no_mripls. Seeds distributed in order:
          (eng_id0,ripl_ind0), (eng_id0,ripl_id1), ... (eng_id1,ripl_id0), ...'''
-        assert len(seeds)==self.no_ripls
-        self.seeds = seeds
+        if seeds is not None:
+            if self.local_mode:
+                local_seeds = seeds
+            else:
+                remote_seeds = seeds
+                
+        if local_seeds is not None:
+            assert len(local_seeds)==self.no_local_ripls
+            self.local_seeds = local_seeds
+            [v.set_seed(i) for (v,i) in zip(self.local_ripls,self.local_seeds)]
+        if self.local_mode: return
+            
+        if remote_seeds is None: return    
+
+        assert len(remote_seeds)==self.no_ripls
+        self.seeds = remote_seeds
         
         @interactive
         def set_engine_seeds(mrid,seeds_for_engine):
@@ -250,7 +264,7 @@ class MRipl():
         for i in range(self.no_engines):
             engine_view = self.cli[i]
             start = i*self.no_ripls_per_engine
-            seeds_for_engine = seeds[start:start+self.no_ripls_per_engine]
+            seeds_for_engine = self.seeds[start:start+self.no_ripls_per_engine]
             engine_view.apply(set_engine_seeds,self.mrid,seeds_for_engine)
 
         return
@@ -518,7 +532,8 @@ class MRipl():
         return self.mr_apply(local_out,f)
 
 
-    def list_directives(self,type=False): return self.local_ripls[0].list_directives(type=type) 
+    def list_directives(self,type=False): return self.local_ripls[0].list_directives(type=type)
+    ## FIXME: need to serialize directives list
 
                
     ## MRIPL CONVENIENCE FEATURES: INFO AND SNAPSHOT
