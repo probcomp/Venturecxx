@@ -998,7 +998,7 @@ def display_directives(ripl_mripl,instruction='observe'):
     ## FIXME: add did and labels
     v=ripl_mripl
     mr=1  if isinstance(v,MRipl) else 0
-    di_list = v.local_ripl.list_directives() if mr else v.list_directives()
+    di_list = v.local_ripls[0].list_directives() if mr else v.list_directives()
 
     instruction_list = []
     for di in di_list:
