@@ -856,14 +856,13 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     return remote_out[:no_ripls] 
 
 
-def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True):
+def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
     '''Execute proc(ripl[i],*proc_args_list[i][0],**proc_args_list[i][1])
     across ripls in mripl.
 
     proc_args_list = [ [ list_args_i, dict_kwargs_i ],   ], i= 0 to no_args
 
     where no_args <= mripl.no_ripls.
-
 
     Examples:
     v=MRipl(2)
@@ -876,8 +875,6 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True):
     proc_args_list = [  [ [10],{'y':10} ],  [ [30],{} ] ]
     mr_map_array(v,f,proc_args_list,no_kwargs=False)[1] == [20,31] 
     '''
-
-
     ##FIXME should support limiting the number of ripls to < no_engines
     
     no_args = len(proc_args_list)
@@ -894,7 +891,7 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True):
                 else:
                     outs = proc(r,*proc_args_list[i][0],**proc_args_list[i][1])
                 local_out.append( (id_args,outs))
-        return ( ('seed','arg'),local_out )
+        return ( ('seed','arg'),local_out ) if id_info_out else local_out
               
     # map across remote ripls
     no_args_per_engine = int(np.ceil(no_args/float(mripl.no_engines)))
@@ -925,9 +922,10 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True):
         engine_view.apply_sync(f,mripl.mrid,mripl.backend,eng_args,no_kwargs)
 
     ipython_inline()
-    remote_out = (('pid','seed','arg'),lst_flatten( mripl.dview['array_out'] ) )
+    id_remote_out = (('pid','seed','arg'),lst_flatten( mripl.dview['array_out'] ) )
+    remote_out = [outs for id_args,outs in id_remote_out[1]]
 
-    return remote_out
+    return id_remote_out if id_info_out else remote_out
 
 
 
