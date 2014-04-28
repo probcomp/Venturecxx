@@ -3,6 +3,7 @@ from venture.test.randomized import * # Importing many things, which are closely
 from venture.lite.psp import NullRequestPSP
 from nose import SkipTest
 from nose.tools import eq_
+from venture.lite.sp import VentureSP
 
 def testTypes():
   for (name,sp) in builtInSPsList():
@@ -22,19 +23,31 @@ def propTypeCorrect(args_lists, sp, type_):
     assert answer in type_.return_type
     propTypeCorrect(args_lists[1:], answer, type_.return_type)
 
-def testRandomMark():
+def testDeterministic():
   for (name,sp) in builtInSPsList():
     if isinstance(sp.requestPSP, NullRequestPSP):
-      yield checkRandomAnnotated, name, sp
+      if not sp.outputPSP.isRandom():
+        yield checkDeterministic, name, sp
 
-def checkRandomAnnotated(name, sp):
-  checkTypedProperty(propRandomAnnotated, sp_args_type(sp.venture_type()), name, sp)
+def checkDeterministic(name, sp):
+  checkTypedProperty(propDeterministic, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
-def propRandomAnnotated(args_list, name, sp):
-  args = BogusArgs(args_list, sp.constructSPAux())
+def propDeterministic(args_lists, name, sp):
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
   answer = carefully(sp.outputPSP.simulate, args)
-  if not sp.outputPSP.isRandom():
+  if isinstance(answer, VentureSP):
+    if isinstance(answer.requestPSP, NullRequestPSP):
+      if not answer.outputPSP.isRandom():
+        args2 = BogusArgs(args_lists[1], answer.constructSPAux())
+        ans2 = carefully(answer.outputPSP.simulate, args2)
+        for _ in range(5):
+          new_ans = carefully(sp.outputPSP.simulate, args)
+          new_ans2 = carefully(new_ans.outputPSP.simulate, args2)
+          eq_(ans2, new_ans2)
+      else:
+        raise SkipTest("Putatively deterministic sp %s returned a random SP" % name)
+    else:
+      raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
+  else:
     for _ in range(5):
       eq_(answer, carefully(sp.outputPSP.simulate, args))
-  else:
-    raise SkipTest("%s claims to be random" % name)
