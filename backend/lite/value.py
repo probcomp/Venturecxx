@@ -391,6 +391,8 @@ class VentureDict(VentureValue):
     return {"type":"dict", "value":self}
   @staticmethod
   def fromStackDict(thing): return thing["value"]
+  def equalSameType(self, other):
+    return len(set(self.dict.iteritems()) ^ set(other.dict.iteritems())) == 0
   def lookup(self, key):
     return self.dict[key]
   def contains(self, key):
