@@ -52,7 +52,14 @@ class VentureValue(object):
     if venture_types.index(st) < venture_types.index(ot) : return -1
     else: return 1 # We already checked for equality
   def compareSameType(self, _): raise Exception("Cannot compare %s" % type(self))
-  def equal(self, other): return self.compare(other) == 0
+  def equal(self, other):
+    st = type(self)
+    ot = type(other)
+    if st == ot:
+      return self.equalSameType(other)
+    else:
+      return False
+  def equalSameType(self, other): return self.compareSameType(other) == 0
 
   def lookup(self, _): raise VentureTypeError("Cannot look things up in %s" % type(self))
   def contains(self, _): raise VentureTypeError("Cannot look for things in %s" % type(self))

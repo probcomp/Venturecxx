@@ -32,6 +32,14 @@ class VentureEnvironment(VentureValue):
   @staticmethod
   def fromStackDict(thing): return thing["value"]
 
+  def equalSameType(self, other):
+    # This compares node identities, not their contents.  This is as
+    # it should be, because nodes can mutate.
+    if self.frame == other.frame:
+      return (self.outerEnv is None and other.outerEnv is None) or \
+        self.outerEnv.equalSameType(other.outerEnv)
+    else: return False
+
   def lookup(self, key):
     return self.findSymbol(key.getSymbol())
   # TODO Define contains to check whether the symbol is there (without throwing exceptions)
