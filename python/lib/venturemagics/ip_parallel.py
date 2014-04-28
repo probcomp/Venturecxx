@@ -86,8 +86,8 @@ def build_exp(exp):
 
 class MRipl():
     
-    def __init__(self,no_ripls,backend='puma',no_local_ripls=1,output='remote',local_mode=False,
-                 seeds=None,verbose=False):
+    def __init__(self, no_ripls, backend='puma', no_local_ripls=None,
+                 output='remote',local_mode=False,seeds=None,verbose=False):
         '''
         MRipl(no_ripls,backend='puma',no_local_ripls=1,output='remote',local_mode=False,seeds=None,verbose=False)
 
@@ -162,8 +162,11 @@ class MRipl():
         self.verbose = verbose
 
         # initialize local ripls
-        assert no_local_ripls > 0
-        self.no_local_ripls=no_local_ripls
+        if no_local_ripls is None:
+            self.no_local_ripls = no_ripls if self.local_mode else 1
+        else:
+            self.no_local_ripls=no_local_ripls
+
         if self.local_mode:
             self.no_ripls=self.no_local_ripls
         self.local_seeds = range(self.no_local_ripls) if not seeds else seeds['local']  
@@ -171,7 +174,10 @@ class MRipl():
         mk_ripl = mk_p_ripl if self.backend=='puma' else mk_l_ripl
         self.local_ripls=[mk_ripl() for i in range(self.no_local_ripls)]
         self.mr_set_seeds(local_seeds=self.local_seeds)
-        if self.local_mode: return
+        if self.local_mode:
+            self.seeds = self.local_seeds
+            return
+
 
 
         ## initialize remote ripls
@@ -897,6 +903,7 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
     
     # map across local ripls
     if mripl.output=='local' or mripl.local_mode:
+        id_local_out=[]
         local_out=[]
         for i,r in enumerate(mripl.local_ripls):
             if i<no_args:
@@ -905,8 +912,9 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
                     outs = proc(r,*proc_args_list[i])
                 else:
                     outs = proc(r,*proc_args_list[i][0],**proc_args_list[i][1])
-                local_out.append( (id_args,outs))
-        return ( ('seed','arg'),local_out ) if id_info_out else local_out
+                local_out.append( outs )
+                id_local_out.append( (id_args,outs))
+        return id_local_out if id_info_out else local_out
               
     # map across remote ripls
     no_args_per_engine = int(np.ceil(no_args/float(mripl.no_engines)))
