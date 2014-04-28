@@ -7,6 +7,7 @@ import numpy.linalg as npla
 import scipy.special as spsp
 import numpy as np
 from utils import logDensityMVNormal
+from exception import VentureValueError
 
 # For some reason, pylint can never find numpy members (presumably metaprogramming).
 # pylint: disable=no-member
@@ -54,12 +55,16 @@ class InverseWishartPSP(RandomPSP):
   def simulate(self, args):
     (lmbda, dof) = self.__parse_args__(args)
     n = lmbda.shape[0]
-    chol = np.linalg.cholesky(lmbda)
+
+    try:
+      chol = np.linalg.cholesky(lmbda)
+    except np.linalg.linalg.LinAlgError, e:
+      raise VentureValueError(e)
 
     if (dof <= 81+n) and (dof == np.round(dof)):
         x = np.random.randn(dof,n)
     else:
-        x = np.diag(np.sqrt(stats.chi2.rvs(dof-(np.arange(n)))))
+        x = np.diag(np.sqrt(scipy.stats.chi2.rvs(dof-(np.arange(n)))))
         x[np.triu_indices_from(x,1)] = np.random.randn(n*(n-1)/2)
     R = np.linalg.qr(x,'r')
     T = scipy.linalg.solve_triangular(R.T,chol.T).T
@@ -104,7 +109,10 @@ class WishartPSP(RandomPSP):
   def simulate(self, args):
     (sigma, dof) = self.__parse_args__(args)
     n = sigma.shape[0]
-    chol = np.linalg.cholesky(sigma)
+    try:
+      chol = np.linalg.cholesky(sigma)
+    except np.linalg.linalg.LinAlgError, e:
+      raise VentureValueError(e)
 
     # use matlab's heuristic for choosing between the two different sampling schemes
     if (dof <= 81+n) and (dof == round(dof)):

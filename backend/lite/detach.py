@@ -1,7 +1,7 @@
 from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
 from omegadb import OmegaDB
 from value import SPRef
-from scope import ScopeIncludeOutputPSP
+from scope import isScopeIncludeOutputPSP
 from sp import VentureSP
 
 def detachAndExtract(trace, border, scaffold, compute_gradient = False):
@@ -119,7 +119,7 @@ def teardownMadeSP(trace,node,isAAA):
 
 def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
   psp,args = trace.pspAt(node),trace.argsAt(node)
-  if isinstance(psp,ScopeIncludeOutputPSP):
+  if isScopeIncludeOutputPSP(psp):
     scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
     blockNode = node.operandNodes[2]
     trace.unregisterRandomChoiceInScope(scope,block,blockNode)

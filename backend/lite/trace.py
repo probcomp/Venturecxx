@@ -11,7 +11,7 @@ from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
 from nose.tools import assert_is_not_none # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
-from scope import ScopeIncludeOutputPSP
+from scope import isScopeIncludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
@@ -247,7 +247,7 @@ class Trace(object):
     self.addRandomChoicesInBlock(scope,block,pnodes,node.operatorNode)
 
     for i,operandNode in enumerate(node.operandNodes):
-      if i == 2 and isinstance(self.pspAt(node),ScopeIncludeOutputPSP):
+      if i == 2 and isScopeIncludeOutputPSP(self.pspAt(node)):
         (new_scope,new_block,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
         (new_scope,new_block) = self._normalizeEvaluatedScopeAndBlock(new_scope, new_block)
         if scope != new_scope or block == new_block: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
@@ -295,7 +295,7 @@ class Trace(object):
       else:
         # Could happen if this method is called on a torus, e.g. for rejection sampling
         raise MissingEsrParentError()
-    elif isinstance(self.pspAt(node),ScopeIncludeOutputPSP):
+    elif isScopeIncludeOutputPSP(self.pspAt(node)):
       return self.getOutermostNonReferenceApplication(node.operandNodes[2])
     else: return node
 
