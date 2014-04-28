@@ -12,7 +12,10 @@ function abort_on_error () {
     fi
 }
 
-lite_multiprocess="--processes=4 --process-timeout=1200"
+# TODO Reenable Lite multiprocessing after we figure out why it was
+# causing tester processes to hang.
+lite_multiprocess=""
+# lite_multiprocess="--processes=4 --process-timeout=1200"
 
 # Attempts to abstract this better failed due to bash's impossible
 # quoting mechanisms.
