@@ -12,12 +12,14 @@ function abort_on_error () {
     fi
 }
 
+lite_multiprocess="--processes=4 --process-timeout=1200"
+
 # Attempts to abstract this better failed due to bash's impossible
 # quoting mechanisms.
 function test_inference_program_in_lite() {
     infer=$1
-    echo nosetests --processes=4 --process-timeout=1200 -c inference-quality.cfg --attr=\'!slow\' --tc=get_ripl:lite --tc=ignore_inference_quality:true --tc=infer:"\"$infer\""
-    nosetests --processes=4 --process-timeout=1200 -c inference-quality.cfg --attr='!slow' --tc=get_ripl:lite --tc=ignore_inference_quality:true --tc=infer:"$infer"
+    echo nosetests $lite_multiprocess -c inference-quality.cfg --attr=\'!slow\' --tc=get_ripl:lite --tc=ignore_inference_quality:true --tc=infer:"\"$infer\""
+    nosetests $lite_multiprocess -c inference-quality.cfg --attr='!slow' --tc=get_ripl:lite --tc=ignore_inference_quality:true --tc=infer:"$infer"
     abort_on_error "$infer in Lite"
 }
 
@@ -28,8 +30,8 @@ function test_inference_program_in_puma() {
     abort_on_error "$infer in Puma"
 }
 
-echo nosetests --processes=4 --process-timeout=1200 -c crashes.cfg --tc=get_ripl:lite
-nosetests --processes=4 --process-timeout=1200 -c crashes.cfg --tc=get_ripl:lite
+echo nosetests $lite_multiprocess -c crashes.cfg --tc=get_ripl:lite
+nosetests $lite_multiprocess -c crashes.cfg --tc=get_ripl:lite
 abort_on_error "(mh default one 3) in Lite"
 
 # TODO Reenable multiprocessing for puma, after nose is made robust to
