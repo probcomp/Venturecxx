@@ -17,6 +17,11 @@ mk_p_ripl = make_puma_church_prime_ripl
 # get rid of use of interactive on certain utility funcs
 # if it breaks use outside MRIPL
 
+# move regression stuff to regression utils
+# IMP: implement set_seeds
+# make private methods private
+# check for 'if varname' where varname=None by default
+
 
 
 # Utility functions for working with ipcluster and mripl
@@ -81,8 +86,8 @@ def build_exp(exp):
 
 class MRipl():
     
-    def __init__(self,no_ripls,backend='puma',no_local_ripls=1,output='remote',local_mode=False,
-                 seeds=None,verbose=False):
+    def __init__(self, no_ripls, backend='puma', no_local_ripls=None,
+                 output='remote',local_mode=False,seeds=None,verbose=False):
         '''
         MRipl(no_ripls,backend='puma',no_local_ripls=1,output='remote',local_mode=False,seeds=None,verbose=False)
 
@@ -157,16 +162,22 @@ class MRipl():
         self.verbose = verbose
 
         # initialize local ripls
-        assert no_local_ripls > 0
-        self.no_local_ripls=no_local_ripls
+        if no_local_ripls is None:
+            self.no_local_ripls = no_ripls if self.local_mode else 1
+        else:
+            self.no_local_ripls=no_local_ripls
+
         if self.local_mode:
             self.no_ripls=self.no_local_ripls
         self.local_seeds = range(self.no_local_ripls) if not seeds else seeds['local']  
 
         mk_ripl = mk_p_ripl if self.backend=='puma' else mk_l_ripl
         self.local_ripls=[mk_ripl() for i in range(self.no_local_ripls)]
-        [v.set_seed(i) for (v,i) in zip(self.local_ripls,self.local_seeds) ]
-        if self.local_mode: return
+        self.mr_set_seeds(local_seeds=self.local_seeds)
+        if self.local_mode:
+            self.seeds = self.local_seeds
+            return
+
 
 
         ## initialize remote ripls
@@ -209,7 +220,44 @@ class MRipl():
                            'seeds':[]})
             
         self.dview.apply(make_mripl_proc,self.no_ripls_per_engine)
-         
+
+        self.mr_set_seeds(self.seeds)
+        
+      
+        # invariant
+        @interactive
+        def get_seeds(mrid): return mripls[mrid]['seeds']
+        assert self.seeds==self.lst_flatten(self.dview.apply(get_seeds,self.mrid))
+
+        
+        if self.verbose: print self.ripls_info()
+
+
+
+## MRIPL METHODS FOR CONTROLLING REMOTE ENGINES/BACKEND
+ 
+
+    def mr_set_seeds(self,seeds=None,remote_seeds=None,local_seeds=None):
+        '''Set seeds for remote engines. Input: list of seeds of length
+        self.no_mripls. Seeds distributed in order:
+         (eng_id0,ripl_ind0), (eng_id0,ripl_id1), ... (eng_id1,ripl_id0), ...'''
+        if seeds is not None:
+            if self.local_mode:
+                local_seeds = seeds
+            else:
+                remote_seeds = seeds
+                
+        if local_seeds is not None:
+            assert len(local_seeds)==self.no_local_ripls
+            self.local_seeds = local_seeds
+            [v.set_seed(i) for (v,i) in zip(self.local_ripls,self.local_seeds)]
+        if self.local_mode: return
+            
+        if remote_seeds is None: return    
+
+        assert len(remote_seeds)==self.no_ripls
+        self.seeds = remote_seeds
+        
         @interactive
         def set_engine_seeds(mrid,seeds_for_engine):
             mripl=mripls[mrid]
@@ -224,18 +272,9 @@ class MRipl():
             start = i*self.no_ripls_per_engine
             seeds_for_engine = self.seeds[start:start+self.no_ripls_per_engine]
             engine_view.apply(set_engine_seeds,self.mrid,seeds_for_engine)
-        
-        # invariant
-        @interactive
-        def get_seeds(mrid): return mripls[mrid]['seeds']
-        assert self.seeds==self.lst_flatten(self.dview.apply(get_seeds,self.mrid))
 
-        
-        if self.verbose: print self.ripls_info()
+        return
 
-
-
-## MRIPL METHODS FOR CONTROLLING REMOTE ENGINES/BACKEND
 
     def __del__(self):
         if not self.local_mode:
@@ -259,7 +298,7 @@ class MRipl():
         def f(mrid,backend):
             seeds=mripls[mrid]['seeds']
             [r.set_seed(seed) for r,seed in zip(mripls[mrid][backend],seeds)]
-        return self.dview.apply(f,self.mrid,self.backend) 
+        return self.dview.apply(f,self.mrid,self.backend)
 
 
     def switch_backend(self,backend):
@@ -499,7 +538,8 @@ class MRipl():
         return self.mr_apply(local_out,f)
 
 
-    def list_directives(self,type=False): return self.local_ripls[0].list_directives(type=type) 
+    def list_directives(self,type=False): return self.local_ripls[0].list_directives(type=type)
+    ## FIXME: need to serialize directives list
 
                
     ## MRIPL CONVENIENCE FEATURES: INFO AND SNAPSHOT
@@ -837,14 +877,13 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     return remote_out[:no_ripls] 
 
 
-def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True):
+def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
     '''Execute proc(ripl[i],*proc_args_list[i][0],**proc_args_list[i][1])
     across ripls in mripl.
 
     proc_args_list = [ [ list_args_i, dict_kwargs_i ],   ], i= 0 to no_args
 
     where no_args <= mripl.no_ripls.
-
 
     Examples:
     v=MRipl(2)
@@ -857,8 +896,6 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True):
     proc_args_list = [  [ [10],{'y':10} ],  [ [30],{} ] ]
     mr_map_array(v,f,proc_args_list,no_kwargs=False)[1] == [20,31] 
     '''
-
-
     ##FIXME should support limiting the number of ripls to < no_engines
     
     no_args = len(proc_args_list)
@@ -866,6 +903,7 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True):
     
     # map across local ripls
     if mripl.output=='local' or mripl.local_mode:
+        id_local_out=[]
         local_out=[]
         for i,r in enumerate(mripl.local_ripls):
             if i<no_args:
@@ -874,8 +912,9 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True):
                     outs = proc(r,*proc_args_list[i])
                 else:
                     outs = proc(r,*proc_args_list[i][0],**proc_args_list[i][1])
-                local_out.append( (id_args,outs))
-        return ( ('seed','arg'),local_out )
+                local_out.append( outs )
+                id_local_out.append( (id_args,outs))
+        return id_local_out if id_info_out else local_out
               
     # map across remote ripls
     no_args_per_engine = int(np.ceil(no_args/float(mripl.no_engines)))
@@ -906,9 +945,10 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True):
         engine_view.apply_sync(f,mripl.mrid,mripl.backend,eng_args,no_kwargs)
 
     ipython_inline()
-    remote_out = (('pid','seed','arg'),lst_flatten( mripl.dview['array_out'] ) )
+    id_remote_out = (('pid','seed','arg'),lst_flatten( mripl.dview['array_out'] ) )
+    remote_out = [outs for id_args,outs in id_remote_out[1]]
 
-    return remote_out
+    return id_remote_out if id_info_out else remote_out
 
 
 
@@ -981,7 +1021,7 @@ def display_directives(ripl_mripl,instruction='observe'):
     ## FIXME: add did and labels
     v=ripl_mripl
     mr=1  if isinstance(v,MRipl) else 0
-    di_list = v.local_ripl.list_directives() if mr else v.list_directives()
+    di_list = v.local_ripls[0].list_directives() if mr else v.list_directives()
 
     instruction_list = []
     for di in di_list:
