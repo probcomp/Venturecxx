@@ -15,6 +15,8 @@ def checkTypeCorrect(_name, sp):
   checkTypedProperty(propTypeCorrect, fully_uncurried_sp_type(type_), sp, type_)
 
 def propTypeCorrect(args_lists, sp, type_):
+  """Check that the successive return values of the given SP (when
+applied fully uncurried) match the expected types."""
   if len(args_lists) == 0:
     pass # OK
   else:
@@ -33,6 +35,8 @@ def checkDeterministic(name, sp):
   checkTypedProperty(propDeterministic, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
 def propDeterministic(args_lists, name, sp):
+  """Check that the given SP returns the same answer every time (applied
+fully uncurried)."""
   args = BogusArgs(args_lists[0], sp.constructSPAux())
   answer = carefully(sp.outputPSP.simulate, args)
   if isinstance(answer, VentureSP):
