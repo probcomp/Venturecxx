@@ -51,3 +51,29 @@ def propDeterministic(args_lists, name, sp):
   else:
     for _ in range(5):
       eq_(answer, carefully(sp.outputPSP.simulate, args))
+
+def testRandom():
+  for (name,sp) in builtInSPsList():
+    if isinstance(sp.requestPSP, NullRequestPSP):
+      if sp.outputPSP.isRandom():
+        yield checkRandom, name, sp
+
+def checkRandom(_name, sp):
+  # I want the name to appear in the nose arg list
+  checkTypedProperty(propRandom, fully_uncurried_sp_type(sp.venture_type()), sp)
+
+def evaluate_fully_uncurried(sp, args_lists):
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+  answer = carefully(sp.outputPSP.simulate, args)
+  if len(args_lists) == 1:
+    return answer
+  else:
+    return evaluate_fully_uncurried(answer, args_lists[1:])
+
+def propRandom(args_lists, sp):
+  answer = evaluate_fully_uncurried(sp, args_lists)
+  for _ in range(10):
+    ans2 = evaluate_fully_uncurried(sp, args_lists)
+    if not ans2 == answer:
+      return True
+  assert False, "Result turned out the same every time"
