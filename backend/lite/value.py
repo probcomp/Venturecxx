@@ -18,6 +18,7 @@ class VentureValue(object):
   __metaclass__ = ABCMeta
 
   def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
+  def getCount(self): raise VentureTypeError("Cannot convert %s to count" % type(self))
   def getProbability(self): raise VentureTypeError("Cannot convert %s to probability" % type(self))
   def getAtom(self): raise VentureTypeError("Cannot convert %s to atom" % type(self))
   def getBool(self): raise VentureTypeError("Cannot convert %s to bool" % type(self))
@@ -82,6 +83,11 @@ class VentureNumber(VentureValue):
     else:
       return "VentureNumber(uninitialized)"
   def getNumber(self): return self.number
+  def getCount(self):
+    if 0 <= self.number:
+      return int(self.number)
+    else: # TODO Do what?  Clip to 0?  Raise?
+      raise VentureTypeError("Count out of range %s" % self.number)
   def getProbability(self):
     if 0 <= self.number and self.number <= 1:
       return self.number
@@ -124,6 +130,21 @@ class VentureNumber(VentureValue):
     return self.number * other.number
   def map_real(self, f):
     return VentureNumber(f(self.number))
+
+class VentureCount(VentureNumber):
+  def __init__(self, number):
+    assert isinstance(number, Number)
+    assert 0 <= number
+    self.number = int(number)
+  def __repr__(self):
+    if hasattr(self, "number"):
+      return "VentureCount(%s)" % self.number
+    else:
+      return "VentureCount(uninitialized)"
+  # TODO Think about the relationship to VentureNumber on other operations
+  # TODO Notably, probabilities are not a useful vector space, but
+  # their tangents are (and consequently, the tangents of
+  # probabilities are not probabilities).
 
 class VentureProbability(VentureNumber):
   def __init__(self, number):
