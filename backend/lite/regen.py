@@ -5,7 +5,7 @@ from sp import VentureSP
 from psp import NullRequestPSP
 from value import SPRef
 from lkernel import VariationalLKernel
-from scope import ScopeIncludeOutputPSP
+from scope import isScopeIncludeOutputPSP
 
 def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
@@ -155,7 +155,7 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
   if isinstance(newValue,VentureSP): processMadeSP(trace,node,scaffold.isAAA(node))
   if psp.isRandom(): trace.registerRandomChoice(node)
-  if isinstance(psp,ScopeIncludeOutputPSP):
+  if isScopeIncludeOutputPSP(psp):
     scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
     blockNode = node.operandNodes[2]
     trace.registerRandomChoiceInScope(scope,block,blockNode)

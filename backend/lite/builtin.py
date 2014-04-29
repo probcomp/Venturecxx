@@ -7,7 +7,6 @@ from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP
 import discrete
 import dirichlet
 import continuous
-import dstructures
 import csp
 import crp
 import cmvn
@@ -91,9 +90,16 @@ def unaryNumS(f):
 def naryNum(f, sim_grad=None, descr=None):
   return deterministic_typed(f, [v.NumberType()], v.NumberType(), variadic=True, sim_grad=sim_grad, descr=descr)
 
+def zero_gradient(args, _direction):
+  return [0 for _ in args]
+
+def binaryPred(f, descr=None):
+  return deterministic_typed(f, [v.AnyType(), v.AnyType()], v.BoolType(), sim_grad=zero_gradient, descr=descr)
+
 def type_test(t):
-  return deterministic(lambda thing: v.VentureBool(thing in t),
-                       "%s :: <SP <object> -> <bool>>\nReturns true iff its argument is a " + t.name())
+  return deterministic_typed(lambda thing: thing in t, [v.AnyType()], v.BoolType(),
+                             sim_grad = zero_gradient,
+                             descr="%s returns true iff its argument is a " + t.name())
 
 def grad_times(args, direction):
   assert len(args) == 2, "Gradient only available for binary multiply"
@@ -110,17 +116,16 @@ def builtInSPsList():
                               descr="%s returns the product of all its arguments") ],           
            [ "div",   binaryNum(lambda x,y: x / y,
                                 "%s returns the quotient of its first argument by its second") ],
-           [ "eq",    deterministic(lambda x,y: v.VentureBool(x.compare(y) == 0),
-                                    "%s :: <SP <object> <object> -> <bool>>\nCompares its two arguments for equality") ],
-           [ "gt",    deterministic(lambda x,y: v.VentureBool(x.compare(y) >  0),
-                                    "%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares greater than its second") ],
-           [ "gte",   deterministic(lambda x,y: v.VentureBool(x.compare(y) >= 0),
-                                    "%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares greater than or equal to its second") ],
-           [ "lt",    deterministic(lambda x,y: v.VentureBool(x.compare(y) <  0),
-                                    sim_grad=lambda args, direction: [0 for _ in args],
-                                    descr="%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares less than its second") ],
-           [ "lte",   deterministic(lambda x,y: v.VentureBool(x.compare(y) <= 0),
-                                    "%s :: <SP <object> <object> -> <bool>>\nReturns true if its first argument compares less than or equal to its second") ],
+           [ "eq",    binaryPred(lambda x,y: x.compare(y) == 0,
+                                 descr="%s compares its two arguments for equality") ],
+           [ "gt",    binaryPred(lambda x,y: x.compare(y) >  0,
+                                 descr="%s returns true if its first argument compares greater than its second") ],
+           [ "gte",   binaryPred(lambda x,y: x.compare(y) >= 0,
+                                 descr="%s returns true if its first argument compares greater than or equal to its second") ],
+           [ "lt",    binaryPred(lambda x,y: x.compare(y) <  0,
+                                 descr="%s returns true if its first argument compares less than its second") ],
+           [ "lte",   binaryPred(lambda x,y: x.compare(y) <= 0,
+                                 descr="%s returns true if its first argument compares less than or equal to its second") ],
            # Only makes sense with VentureAtom/VentureNumber distinction
            [ "real",  deterministic_typed(lambda x:x, [v.AtomType()], v.NumberType(),
                                           "%s returns the identity of its argument atom as a number") ],
@@ -142,57 +147,79 @@ def builtInSPsList():
            [ "is_symbol", type_test(v.SymbolType()) ],
            [ "is_atom", type_test(v.AtomType()) ],
 
-           [ "list", deterministic(v.pythonListToVentureList,
-                                   "%s :: <SP <object> ... -> <list>>\nReturns the list of its arguments") ],
-           [ "pair", deterministic(v.VenturePair,
-                                   "%s :: <SP <object> <object> -> <pair>>\nReturns the pair whose first component is the first argument and whose second component is the second argument") ],
+           [ "list", deterministic_typed(lambda *args: args, [v.AnyType()], v.ListType(), variadic=True,
+                                         descr="%s returns the list of its arguments") ],
+           [ "pair", deterministic_typed(lambda a,d: (a,d), [v.AnyType(), v.AnyType()], v.PairType(),
+                                         descr="%s returns the pair whose first component is the first argument and whose second component is the second argument") ],
            [ "is_pair", type_test(v.PairType()) ],
            [ "first", deterministic_typed(lambda p: p[0], [v.PairType()], v.AnyType(),
                                           "%s returns the first component of its argument pair") ],
            [ "rest", deterministic_typed(lambda p: p[1], [v.PairType()], v.AnyType(),
                                          "%s returns the second component of its argument pair") ],
-           [ "second", deterministic_typed(lambda p: p[1].first, [v.PairType()], v.AnyType(),
+           [ "second", deterministic_typed(lambda p: p[1].first, [v.PairType(second_type=v.PairType())], v.AnyType(),
                                            "%s returns the first component of the second component of its argument") ],
 
 
-           [ "array", deterministic(lambda *args: v.VentureArray(np.array(args)),
-                                    sim_grad=lambda args, direction: direction.getArray(),
-                                    descr="%s :: <SP <object> ... -> <array>>\nReturns an array initialized with its arguments") ],
+           [ "array", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
+                                          sim_grad=lambda args, direction: direction.getArray(),
+                                          descr="%s returns an array initialized with its arguments") ],
            [ "is_array", type_test(v.ArrayType()) ],
-           [ "dict", no_request(dstructures.DictOutputPSP()) ],
+           [ "dict", deterministic_typed(lambda keys, vals: dict(zip(keys, vals)),
+                                         [v.HomogeneousListType(v.AnyType("k")), v.HomogeneousListType(v.AnyType("v"))],
+                                         v.HomogeneousDictType(v.AnyType("k"), v.AnyType("v")),
+                                         descr="%s returns the dictionary mapping the given keys to their respective given values.  It is an error if the given lists are not the same length.") ],
            [ "is_dict", type_test(v.DictType()) ],
-           [ "matrix", deterministic(lambda rows: v.VentureMatrix(np.mat([[val.getNumber() for val in row.asPythonList()] for row in rows.asPythonList()])),
-                                     "%s :: <SP <list <list a>> -> <matrix a>>\nReturns a matrix formed from the given list of rows.  It is an error if the given list is not rectangular.") ],
+           [ "matrix", deterministic_typed(np.mat,
+                                           [v.HomogeneousListType(v.HomogeneousListType(v.NumberType()))],
+                                           v.MatrixType(),
+                                           "%s returns a matrix formed from the given list of rows.  It is an error if the given list is not rectangular.") ],
            [ "is_matrix", type_test(v.MatrixType()) ],
            [ "simplex", deterministic_typed(lambda *nums: np.array(nums), [v.NumberType()], v.SimplexType(), variadic=True,
                                             descr="%s returns the simplex point given by its argument coordinates.") ],
            [ "is_simplex", type_test(v.SimplexType()) ],
 
-           [ "lookup", deterministic(lambda xs, x: xs.lookup(x),
-                                     sim_grad=lambda args, direction: [args[0].lookup_grad(args[1], direction), 0],
-                                     descr="%s :: <SP <mapping k v> k -> v>\nLooks the given key up in the given mapping and returns the result.  It is an error if the key is not in the mapping.  Lists and arrays are viewed as mappings from indices to the corresponding elements.") ],
-           [ "contains", deterministic(lambda xs, x: v.VentureBool(xs.contains(x)),
-                                       "%s :: <SP <mapping k v> k -> <bool>>\nReports whether the given key appears in the given mapping or not.") ],
-           [ "size", deterministic(lambda xs: v.VentureNumber(xs.size()),
-                                   "%s :: <SP <collection> -> <number>>\nReturns the number of elements in the given collection") ],
+           [ "lookup", deterministic_typed(lambda xs, x: xs.lookup(x),
+                                           [v.HomogeneousMappingType(v.AnyType("k"), v.AnyType("v")), v.AnyType("k")],
+                                           v.AnyType("v"),
+                                           sim_grad=lambda args, direction: [args[0].lookup_grad(args[1], direction), 0],
+                                           descr="%s looks the given key up in the given mapping and returns the result.  It is an error if the key is not in the mapping.  Lists and arrays are viewed as mappings from indices to the corresponding elements.  Environments are viewed as mappings from symbols to their values.") ],
+           [ "contains", deterministic_typed(lambda xs, x: xs.contains(x),
+                                             [v.HomogeneousMappingType(v.AnyType("k"), v.AnyType("v")), v.AnyType("k")],
+                                             v.BoolType(),
+                                             descr="%s reports whether the given key appears in the given mapping or not.") ],
+           [ "size", deterministic_typed(lambda xs: xs.size(),
+                                         [v.HomogeneousMappingType(v.AnyType("k"), v.AnyType("v"))],
+                                         v.NumberType(),
+                                         "%s returns the number of elements in the given collection (lists and arrays work too)") ],
 
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),
                                            sim_grad=lambda args, direc: [0, direc, 0] if args[0] else [0, 0, direc],
                                            descr="%s returns either its second or third argument.")],
-           [ "make_csp", no_request(csp.MakeCSPOutputPSP()) ],
+           [ "make_csp", typed_nr(csp.MakeCSPOutputPSP(),
+                                  [v.HomogeneousArrayType(v.SymbolType()), v.ExpressionType()],
+                                  v.AnyType("a compound SP")) ],
 
            [ "get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType(),
                                                    descr="%s returns the lexical environment of its invocation site") ],
            [ "get_empty_environment", typed_func(lambda args: env.VentureEnvironment(), [], env.EnvironmentType(),
                                                  descr="%s returns the empty environment") ],
            [ "is_environment", type_test(env.EnvironmentType()) ],
-           [ "extend_environment",no_request(eval_sps.ExtendEnvOutputPSP()) ],
-           [ "eval",VentureSP(eval_sps.EvalRequestPSP(),ESRRefOutputPSP()) ],
+           [ "extend_environment", typed_nr(eval_sps.ExtendEnvOutputPSP(),
+                                            [env.EnvironmentType(), v.SymbolType(), v.AnyType()],
+                                            env.EnvironmentType()) ],
+           [ "eval",esr_output(TypedPSP(eval_sps.EvalRequestPSP(),
+                                        SPType([v.ExpressionType(), env.EnvironmentType()],
+                                               v.RequestType("<object>")))) ],
 
-           [ "mem",no_request(msp.MakeMSPOutputPSP()) ],
+           [ "mem",typed_nr(msp.MakeMSPOutputPSP(),
+                            [SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)],
+                            SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)) ],
 
-           [ "scope_include",no_request(scope.ScopeIncludeOutputPSP()) ],
+           [ "scope_include",typed_nr(scope.ScopeIncludeOutputPSP(),
+                                      # These are type-restricted in Venture, but the actual PSP doesn't care.
+                                      [v.AnyType("<scope>"), v.AnyType("<block>"), v.AnyType()],
+                                      v.AnyType()) ],
 
            [ "binomial", binaryNumS(discrete.BinomialOutputPSP()) ],
            [ "flip", typed_nr(discrete.FlipOutputPSP(), [v.NumberType()], v.BoolType(), min_req_args=0) ],
@@ -226,7 +253,9 @@ def builtInSPsList():
            [ "make_uc_sym_dir_mult",typed_nr(dirichlet.MakerUSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], SPType([], v.AnyType()), min_req_args=2) ],
 
            [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType(),v.NumberType()], SPType([], v.AtomType()), min_req_args = 1) ],
-           [ "make_cmvn",typed_nr(cmvn.MakeCMVNOutputPSP(), [v.HomogeneousArrayType(v.NumberType()),v.NumberType(),v.NumberType(),v.MatrixType()], SPType([], SPType([], v.MatrixType()))) ],           
+           [ "make_cmvn",typed_nr(cmvn.MakeCMVNOutputPSP(),
+                                  [v.HomogeneousArrayType(v.NumberType()),v.NumberType(),v.NumberType(),v.MatrixType()],
+                                  SPType([], v.MatrixType())) ],
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.NumberType()], v.NumberType())) ],
   ]
