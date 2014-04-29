@@ -77,10 +77,12 @@ def evaluate_fully_uncurried(sp, args_lists):
 
 def propRandom(args_listss, sp):
   """Check that the given SP is random on at least one set of arguments."""
+  answers = []
   for args_lists in args_listss:
     answer = evaluate_fully_uncurried(sp, args_lists)
+    answers.append(answer)
     for _ in range(10):
       ans2 = evaluate_fully_uncurried(sp, args_lists)
       if not ans2 == answer:
         return True
-  assert False, "Result turned out the same every time"
+  assert False, "SP deterministically returned %s (parallel to arguments)" % answers
