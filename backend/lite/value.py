@@ -533,7 +533,7 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix"]:
+for typestring in ["Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))

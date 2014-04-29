@@ -14,6 +14,8 @@ class DefaultRandomVentureValue(object):
     return getattr(self, self.method)(**(dict(self.kwargs.items() + kwargs.items())))
   def number(self, **_kwargs):
     return v.VentureNumber(npr.uniform(-10, 10))
+  def probability(self, **_kwargs):
+    return v.VentureProbability(npr.uniform(0, 1))
   def atom(self, **_kwargs):
     return v.VentureAtom(npr.randint(-10, 11)) # Open at the top
   def bool(self, **_kwargs):
