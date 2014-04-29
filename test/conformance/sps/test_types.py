@@ -79,10 +79,21 @@ def propRandom(args_listss, sp):
   """Check that the given SP is random on at least one set of arguments."""
   answers = []
   for args_lists in args_listss:
-    answer = evaluate_fully_uncurried(sp, args_lists)
-    answers.append(answer)
-    for _ in range(10):
-      ans2 = evaluate_fully_uncurried(sp, args_lists)
-      if not ans2 == answer:
-        return True
+    try:
+      answer = evaluate_fully_uncurried(sp, args_lists)
+      answers.append(answer)
+      for _ in range(10):
+        ans2 = evaluate_fully_uncurried(sp, args_lists)
+        if not ans2 == answer:
+          return True
+    except ArgumentsNotAppropriate:
+      # This complication serves the purpose of not decreasing the
+      # acceptance rate of the search of appropriate arguments to the
+      # SP, while allowing the SP to redeem its claims of randomness
+      # on additional arguments if they are available.
+      if answers == []:
+        raise
+      else:
+        answers.append("Inappropriate arguments")
+        continue
   assert False, "SP deterministically returned %s (parallel to arguments)" % answers
