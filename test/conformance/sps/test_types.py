@@ -59,8 +59,9 @@ def testRandom():
         yield checkRandom, name, sp
 
 def checkRandom(_name, sp):
-  # I want the name to appear in the nose arg list
-  checkTypedProperty(propRandom, fully_uncurried_sp_type(sp.venture_type()), sp)
+  # I take the name because I want it to appear in the nose arg list
+  args_type = fully_uncurried_sp_type(sp.venture_type())
+  checkTypedProperty(propRandom, [args_type for _ in range(5)] , sp)
 
 def evaluate_fully_uncurried(sp, args_lists):
   args = BogusArgs(args_lists[0], sp.constructSPAux())
@@ -70,10 +71,12 @@ def evaluate_fully_uncurried(sp, args_lists):
   else:
     return evaluate_fully_uncurried(answer, args_lists[1:])
 
-def propRandom(args_lists, sp):
-  answer = evaluate_fully_uncurried(sp, args_lists)
-  for _ in range(10):
-    ans2 = evaluate_fully_uncurried(sp, args_lists)
-    if not ans2 == answer:
-      return True
+def propRandom(args_listss, sp):
+  """Check that the given SP is random on at least one set of arguments."""
+  for args_lists in args_listss:
+    answer = evaluate_fully_uncurried(sp, args_lists)
+    for _ in range(10):
+      ans2 = evaluate_fully_uncurried(sp, args_lists)
+      if not ans2 == answer:
+        return True
   assert False, "Result turned out the same every time"
