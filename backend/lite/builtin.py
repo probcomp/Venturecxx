@@ -221,7 +221,7 @@ def builtInSPsList():
                                       [v.AnyType("<scope>"), v.AnyType("<block>"), v.AnyType()],
                                       v.AnyType()) ],
 
-           [ "binomial", binaryNumS(discrete.BinomialOutputPSP()) ],
+           [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [v.CountType(), v.ProbabilityType()], v.CountType()) ],
            [ "flip", typed_nr(discrete.FlipOutputPSP(), [v.ProbabilityType()], v.BoolType(), min_req_args=0) ],
            [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.NumberType(), min_req_args=0) ],
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
