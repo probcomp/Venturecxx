@@ -239,7 +239,6 @@ class Ripl():
         elif isinstance(params, dict):
             return params
         else:
-          import pdb; pdb.set_trace()
           raise TypeError("Unknown params: " + str(params))
         
     def infer(self, params):
