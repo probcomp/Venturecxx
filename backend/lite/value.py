@@ -18,6 +18,7 @@ class VentureValue(object):
   __metaclass__ = ABCMeta
 
   def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
+  def getProbability(self): raise VentureTypeError("Cannot convert %s to probability" % type(self))
   def getAtom(self): raise VentureTypeError("Cannot convert %s to atom" % type(self))
   def getBool(self): raise VentureTypeError("Cannot convert %s to bool" % type(self))
   def getSymbol(self): raise VentureTypeError("Cannot convert %s to symbol" % type(self))
@@ -81,6 +82,11 @@ class VentureNumber(VentureValue):
     else:
       return "VentureNumber(uninitialized)"
   def getNumber(self): return self.number
+  def getProbability(self):
+    if 0 <= self.number and self.number <= 1:
+      return self.number
+    else: # TODO Do what?  Clip to [0,1]?  Raise?
+      raise VentureTypeError("Probability out of range %s" % self.number)
   def getBool(self): return self.number
     
   def asStackDict(self, _trace): return {"type":"number","value":self.number}
@@ -118,6 +124,21 @@ class VentureNumber(VentureValue):
     return self.number * other.number
   def map_real(self, f):
     return VentureNumber(f(self.number))
+
+class VentureProbability(VentureNumber):
+  def __init__(self, number):
+    assert isinstance(number, Number)
+    assert 0 <= number and number <= 1
+    self.number = float(number)
+  def __repr__(self):
+    if hasattr(self, "number"):
+      return "VentureProbability(%s)" % self.number
+    else:
+      return "VentureProbability(uninitialized)"
+  # TODO Think about the relationship to VentureNumber on other operations
+  # TODO Notably, probabilities are not a useful vector space, but
+  # their tangents are (and consequently, the tangents of
+  # probabilities are not probabilities).
 
 def stupidCompare(thing, other):
   # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
