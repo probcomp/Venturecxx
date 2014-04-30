@@ -227,14 +227,14 @@ def builtInSPsList():
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
 
            [ "uniform_discrete",binaryNumS(discrete.UniformDiscreteOutputPSP()) ],
-           [ "poisson",unaryNumS(discrete.PoissonOutputPSP()) ],
+           [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [v.PositiveType()], v.CountType()) ],
                       
-           [ "normal",binaryNumS(continuous.NormalOutputPSP()) ],
+           [ "normal", typed_nr(continuous.NormalOutputPSP(), [v.NumberType(), v.PositiveType()], v.NumberType()) ], # TODO Sigma is really non-negative
            [ "uniform_continuous",binaryNumS(continuous.UniformOutputPSP()) ],
-           [ "beta",binaryNumS(continuous.BetaOutputPSP()) ],
-           [ "gamma",binaryNumS(continuous.GammaOutputPSP()) ],
-           [ "student_t",typed_nr(continuous.StudentTOutputPSP(),[v.NumberType(),v.NumberType(),v.NumberType()], v.NumberType(), min_req_args=1 ) ],
-           [ "inv_gamma",binaryNumS(continuous.InvGammaOutputPSP()) ],
+           [ "beta", typed_nr(continuous.BetaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.ProbabilityType()) ],
+           [ "gamma", typed_nr(continuous.GammaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.PositiveType()) ],
+           [ "student_t", typed_nr(continuous.StudentTOutputPSP(), [v.PositiveType(), v.NumberType(), v.NumberType()], v.NumberType(), min_req_args=1 ) ],
+           [ "inv_gamma", typed_nr(continuous.InvGammaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.PositiveType()) ],
 
            [ "multivariate_normal", typed_nr(continuous.MVNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.MatrixType()], v.HomogeneousArrayType(v.NumberType())) ],
            [ "inv_wishart", typed_nr(continuous.InverseWishartPSP(), [v.MatrixType(), v.NumberType()], v.MatrixType())],
@@ -243,14 +243,14 @@ def builtInSPsList():
            [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], SPType([], v.BoolType())) ],
            [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], SPType([], v.BoolType())) ],
 
-           [ "dirichlet",typed_nr(dirichlet.DirichletOutputPSP(), [v.HomogeneousArrayType(v.NumberType())], v.SimplexType()) ],
+           [ "dirichlet",typed_nr(dirichlet.DirichletOutputPSP(), [v.HomogeneousArrayType(v.PositiveType())], v.SimplexType()) ],
            [ "symmetric_dirichlet",typed_nr(dirichlet.SymmetricDirichletOutputPSP(), [v.PositiveType(), v.CountType()], v.SimplexType()) ],
 
-           [ "make_dir_mult",typed_nr(dirichlet.MakerCDirMultOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.ArrayType()], SPType([], v.AnyType()), min_req_args=1) ],
-           [ "make_uc_dir_mult",typed_nr(dirichlet.MakerUDirMultOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.ArrayType()], SPType([], v.AnyType()), min_req_args=1) ],
+           [ "make_dir_mult",typed_nr(dirichlet.MakerCDirMultOutputPSP(), [v.HomogeneousArrayType(v.PositiveType()), v.ArrayType()], SPType([], v.AnyType()), min_req_args=1) ],
+           [ "make_uc_dir_mult",typed_nr(dirichlet.MakerUDirMultOutputPSP(), [v.HomogeneousArrayType(v.PositiveType()), v.ArrayType()], SPType([], v.AnyType()), min_req_args=1) ],
 
-           [ "make_sym_dir_mult",typed_nr(dirichlet.MakerCSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], SPType([], v.AnyType()), min_req_args=2) ], # Saying AnyType here requires the underlying psp to emit a VentureValue.
-           [ "make_uc_sym_dir_mult",typed_nr(dirichlet.MakerUSymDirMultOutputPSP(), [v.NumberType(), v.NumberType(), v.ArrayType()], SPType([], v.AnyType()), min_req_args=2) ],
+           [ "make_sym_dir_mult",typed_nr(dirichlet.MakerCSymDirMultOutputPSP(), [v.PositiveType(), v.CountType(), v.ArrayType()], SPType([], v.AnyType()), min_req_args=2) ], # Saying AnyType here requires the underlying psp to emit a VentureValue.
+           [ "make_uc_sym_dir_mult",typed_nr(dirichlet.MakerUSymDirMultOutputPSP(), [v.PositiveType(), v.CountType(), v.ArrayType()], SPType([], v.AnyType()), min_req_args=2) ],
 
            [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType(),v.NumberType()], SPType([], v.AtomType()), min_req_args = 1) ],
            [ "make_cmvn",typed_nr(cmvn.MakeCMVNOutputPSP(),
