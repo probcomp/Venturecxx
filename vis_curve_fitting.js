@@ -671,7 +671,7 @@ function InitializeDemo() {
         document.getElementById(model_variables.model_type).checked = true;
         document.getElementById("clear_ripl").onclick = ForgetPoints;
         ripl.get_directives_continuously(
-            [[100, 
+            [[75, 
             RenderAll,
             []]] // empty list means get all directives
         );
