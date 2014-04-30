@@ -18,7 +18,7 @@ class NoSPRefError(Exception): pass
 # TODO Sane exception hierarchy?
 # TODO Defined in a sane place, instead of "earliest place in the import graph where it is referenced"?
 
-def mxiMH(trace,indexer,operator):
+def mixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
   rhoMix = indexer.logDensityOfIndex(trace,index)
   # May mutate trace and possibly operator, proposedTrace is the mutated trace

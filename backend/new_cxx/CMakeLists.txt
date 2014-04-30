@@ -4,6 +4,11 @@ PROJECT (Venture)
 include_directories("inc")
 add_subdirectory("src")
 
+
+IF("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+set(CMAKE_PREFIX_PATH /opt/local ${CMAKE_PREFIX_PATH})
+ENDIF()
+
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules) 
 FIND_PACKAGE(GSL REQUIRED)
 include_directories(${GSL_INCLUDE_DIRS} ${GSLCBLAS_INCLUDE_DIRS})
@@ -43,7 +48,7 @@ ELSE()
   MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")
 ENDIF()
 
-ADD_LIBRARY(pumatrace SHARED
+ADD_LIBRARY(trace SHARED
     src/pyutils.cxx
     src/args.cxx
     src/value.cxx
@@ -82,17 +87,18 @@ ADD_LIBRARY(pumatrace SHARED
     src/gkernels/mh.cxx
     src/gkernels/pgibbs.cxx
     src/gkernels/slice.cxx
+	src/gkernels/hmc.cxx
     src/expressions.cxx
+	src/gkernel.cxx
     src/indexer.cxx
     src/mixmh.cxx
     src/particle.cxx
     src/psp.cxx
     src/consistency.cxx
     src/pytrace.cxx
-
 )
 
-target_link_libraries(pumatrace
+target_link_libraries(trace
   ${LIBS}
   ${Boost_LIBRARIES}
   ${PYTHON_LIBRARIES}
@@ -105,3 +111,11 @@ target_link_libraries(testPMap
   ${Boost_LIBRARIES}
   ${PYTHON_LIBRARIES}
 )
+
+IF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+
+add_custom_command ( OUTPUT stdout.txt
+					COMMAND mv libpumatrace.dylib libpumatrace.so 
+					WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} )
+
+ENDIF()

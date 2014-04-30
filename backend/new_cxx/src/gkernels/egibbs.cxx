@@ -11,17 +11,6 @@
 #include <math.h>
 #include <boost/foreach.hpp>
 
-void registerDeterministicLKernels(ConcreteTrace * trace,
-  shared_ptr<Scaffold> scaffold,
-  const vector<ApplicationNode*>& applicationNodes,
-  const vector<VentureValuePtr>& values)
-{
-  for (size_t i = 0; i < applicationNodes.size(); ++i)
-  {
-    scaffold->lkernels[applicationNodes[i]] =
-      shared_ptr<DeterministicLKernel>(new DeterministicLKernel(values[i], trace->getPSP(applicationNodes[i])));
-  }
-}
 
 pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold)
 {

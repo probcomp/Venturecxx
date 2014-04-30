@@ -13,7 +13,6 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-from venture.engine import engine
 from libtrace import Trace
 
 class Engine(engine.Engine):
