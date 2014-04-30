@@ -19,6 +19,7 @@ class VentureValue(object):
 
   def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getCount(self): raise VentureTypeError("Cannot convert %s to count" % type(self))
+  def getPositive(self): raise VentureTypeError("Cannot convert %s to positive" % type(self))
   def getProbability(self): raise VentureTypeError("Cannot convert %s to probability" % type(self))
   def getAtom(self): raise VentureTypeError("Cannot convert %s to atom" % type(self))
   def getBool(self): raise VentureTypeError("Cannot convert %s to bool" % type(self))
@@ -145,6 +146,23 @@ class VentureCount(VentureNumber):
   # TODO Notably, probabilities are not a useful vector space, but
   # their tangents are (and consequently, the tangents of
   # probabilities are not probabilities).
+
+class VenturePositive(VentureNumber):
+  def __init__(self, number):
+    assert isinstance(number, Number)
+    assert 0 < number
+    self.number = float(number)
+  def __repr__(self):
+    if hasattr(self, "number"):
+      return "VenturePositive(%s)" % self.number
+    else:
+      return "VenturePositive(uninitialized)"
+  # TODO Think about the relationship to VentureNumber on other operations
+  # TODO Notably, probabilities are not a useful vector space, but
+  # their tangents are (and consequently, the tangents of
+  # probabilities are not probabilities).
+
+# TODO Define VentureNonNegative, from which VentureProbability can inherit
 
 class VentureProbability(VentureNumber):
   def __init__(self, number):
