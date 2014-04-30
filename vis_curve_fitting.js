@@ -34,7 +34,7 @@ function InitializeDemo() {
         };
 
         this.indexOfClick = function(click) {
-            for (var i = 0; i < clicks.length; i++) {
+            for (var i = 0; i < clicks.length; ++i) {
                 if (clickEquals(clicks[i],click)) {
                     return i;
                 }
@@ -44,7 +44,7 @@ function InitializeDemo() {
 
         this.uniqueF = function() {
             var unique = [];
-            for (var i = 0; i < clicks.length; i++) {
+            for (var i = 0; i < clicks.length; ++i) {
                 if (this.indexOfClick(unique,clicks[i]) === -1) {
                     unique.push(clicks[i]);
                 }
@@ -139,12 +139,12 @@ function InitializeDemo() {
     /* Will be a map from OBS_ID -> POINT, where POINT contains the Raphael objects
      * corresponding to a single point. */
     var local_points = {};
-
+    
     var DirectiveLoadedCallback = function() {
         num_directives_loaded++;
         $("#loading-status").html("Demo is loading... <b>" + num_directives_loaded + '</b> directive(s) have been already loaded.');
     };
-
+    
     var AllDirectivesLoadedCallback = function() {
         $("#loading-status").html("Demo loaded successfully!");
         $("#loading-status").remove();
@@ -238,7 +238,7 @@ function InitializeDemo() {
     var UpdateVentureCode = function(directives) {
         var venture_code_str = "<b>Venture code:</b><br>";
 
-        for (i = 0; i < directives.length; i++) {
+        for (i = 0; i < directives.length; ++i) {
             venture_code_str += directiveToString(directives[i]) + '<br/>';
         }
 
@@ -257,7 +257,7 @@ function InitializeDemo() {
     };
     
     var UpdateModelVariables = function(directives) {
-        for(var i = 0; i < directives.length; i++) {
+        for(var i = 0; i < directives.length; ++i) {
             var dir = directives[i];
             if(dir.instruction === "assume") {
                 if(dir.symbol in model_variables) {
@@ -379,6 +379,15 @@ function InitializeDemo() {
         delete local_points[obs_id];
     };
     
+    var ForgetPoints = function() {
+        for (obs_id in points) {
+            p = points[obs_id];
+            for (var i = 0; i < p.dids.length; ++i) {
+                ripl.forget(p.dids[i]);
+            }
+        }
+    };
+    
     var DrawPoint = function(local_point, point) {
         color = point.outlier ? "gray" : "red";
         
@@ -457,7 +466,7 @@ function InitializeDemo() {
             
             /* Forget a point if it has been clicked on. */
             if (obs_id in points_to_forget) {
-                for (var i = 0; i < p.dids.length; i++) {
+                for (var i = 0; i < p.dids.length; ++i) {
                     ripl.forget(p.dids[i]);
                 }
             }
@@ -632,18 +641,20 @@ function InitializeDemo() {
         <table><tr><td style="vertical-align: top;">\
         <div id="div_for_plots" style="background-color: white; width: 420px; height: 420px;"></div>\
         <br>\
-        <label for="show_curves"><input type="checkbox" id="show_curves" name="show_curves" checked>Show Curves</label>\
+        <label><input type="checkbox" id="show_curves" name="show_curves" checked>Show Curves</label>\
+        <br>\
+        <button type="button" id="clear_ripl">Clear RIPL</button>\
         <br><br>\
         Based on the Venture probabilistic programming language\
         </td><td>&nbsp;&nbsp;&nbsp;</td>\
         <td style="vertical-align: top;">\
         <table width="100%" height="120px">\
         <tr>\
-        <label for="simple"><input type="radio" name="model_type" id="simple" value="simple">Simple Model</label>\
-        <label for="advanced"><input type="radio" name="model_type" id="advanced" value="advanced">Advanced Model</label>\
+        <label><input type="radio" name="model_type" id="simple" value="simple">Simple Model</label>\
+        <label><input type="radio" name="model_type" id="advanced" value="advanced">Advanced Model</label>\
         <br>\
-        <label for="use_outliers"><input type="checkbox" id="use_outliers" name="use_outliers">Use Outliers</label>\
-        <label for="infer_noise"><input type="checkbox" id="infer_noise" name="infer_noise">Infer Noise</label>\
+        <label><input type="checkbox" id="use_outliers" name="use_outliers">Use Outliers</label>\
+        <label><input type="checkbox" id="infer_noise" name="infer_noise">Infer Noise</label>\
         <br><br>\
         <div id="venture_code"></div>\
         </tr>\
@@ -654,6 +665,7 @@ function InitializeDemo() {
 
     var RunDemo = function() {
         document.getElementById(model_variables.model_type).checked = true;
+        document.getElementById("clear_ripl").onclick = ForgetPoints;
         ripl.get_directives_continuously(
             [[100, 
             RenderAll,
