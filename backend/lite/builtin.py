@@ -174,7 +174,7 @@ def builtInSPsList():
                                            v.MatrixType(),
                                            "%s returns a matrix formed from the given list of rows.  It is an error if the given list is not rectangular.") ],
            [ "is_matrix", type_test(v.MatrixType()) ],
-           [ "simplex", deterministic_typed(lambda *nums: np.array(nums), [v.NumberType()], v.SimplexType(), variadic=True,
+           [ "simplex", deterministic_typed(lambda *nums: np.array(nums), [v.ProbabilityType()], v.SimplexType(), variadic=True,
                                             descr="%s returns the simplex point given by its argument coordinates.") ],
            [ "is_simplex", type_test(v.SimplexType()) ],
 
