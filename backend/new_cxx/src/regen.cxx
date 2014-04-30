@@ -19,11 +19,11 @@ using std::cout;
 using std::endl;
 
 double regenAndAttach(Trace * trace,
-		      const vector<Node*> & border,
-		      shared_ptr<Scaffold> scaffold,
-		      bool shouldRestore,
-		      shared_ptr<DB> db,
-		      shared_ptr<map<Node*,Gradient> > gradients)
+                      const vector<Node*> & border,
+                      shared_ptr<Scaffold> scaffold,
+                      bool shouldRestore,
+                      shared_ptr<DB> db,
+                      shared_ptr<map<Node*,Gradient> > gradients)
 {
   double weight = 0;
   map<Node*,VentureValuePtr> constraintsToPropagate;
@@ -42,7 +42,7 @@ double regenAndAttach(Trace * trace,
       if (trace->isObservation(node))
       {
         OutputNode * outputNode = trace->getOutermostNonRefAppNode(node);
-	      weight += constrain(trace,outputNode,trace->getObservedValue(node));
+              weight += constrain(trace,outputNode,trace->getObservedValue(node));
         constraintsToPropagate[outputNode] = trace->getObservedValue(node);
       }
     }
@@ -55,8 +55,8 @@ double regenAndAttach(Trace * trace,
     Node * node = iter1->first;
     set<Node*> children = trace->getChildren(node);
     for (set<Node*>::iterator iter2 = children.begin();
-	 iter2 != children.end();
-	 ++iter2)
+         iter2 != children.end();
+         ++iter2)
     {
       propagateConstraint(trace,*iter2,iter1->second);
     }
@@ -66,8 +66,8 @@ double regenAndAttach(Trace * trace,
 
 
 double constrain(Trace * trace,
-		 OutputNode * node,
-		 VentureValuePtr value)
+                 OutputNode * node,
+                 VentureValuePtr value)
 {
   shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
   shared_ptr<Args> args = trace->getArgs(node);
@@ -82,8 +82,8 @@ double constrain(Trace * trace,
 
 
 void propagateConstraint(Trace * trace,
-			 Node * node,
-			 VentureValuePtr value)
+                         Node * node,
+                         VentureValuePtr value)
 {
   LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
   RequestNode * requestNode = dynamic_cast<RequestNode*>(node);
@@ -112,11 +112,11 @@ void propagateConstraint(Trace * trace,
 
 
 double attach(Trace * trace,
-	      ApplicationNode * node,
-	      shared_ptr<Scaffold> scaffold,
-	      bool shouldRestore,
-	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
+              ApplicationNode * node,
+              shared_ptr<Scaffold> scaffold,
+              bool shouldRestore,
+              shared_ptr<DB> db,
+              shared_ptr<map<Node*,Gradient> > gradients)
 {
   //cout << "attach(" << node << ")" << endl;
 
@@ -131,11 +131,11 @@ double attach(Trace * trace,
 
 
 double regen(Trace * trace,
-	      Node * node,
-	      shared_ptr<Scaffold> scaffold,
-	      bool shouldRestore,
-	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
+              Node * node,
+              shared_ptr<Scaffold> scaffold,
+              bool shouldRestore,
+              shared_ptr<DB> db,
+              shared_ptr<map<Node*,Gradient> > gradients)
 { 
   //cout << "regenOuter(" << node << ")" << endl;
   double weight = 0;
@@ -156,7 +156,7 @@ double regen(Trace * trace,
       }
       else
       {
-	assert(outputNode);
+        assert(outputNode);
         weight += applyPSP(trace,outputNode,scaffold,shouldRestore,db,gradients);
       }
     }
@@ -173,11 +173,11 @@ double regen(Trace * trace,
 }
 
 double regenParents(Trace * trace,
-	      Node * node,
-	      shared_ptr<Scaffold> scaffold,
-	      bool shouldRestore,
-	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
+              Node * node,
+              shared_ptr<Scaffold> scaffold,
+              bool shouldRestore,
+              shared_ptr<DB> db,
+              shared_ptr<map<Node*,Gradient> > gradients)
 {
   double weight = 0;
   for (size_t i = 0; i < node->definiteParents.size(); ++i) { weight += regen(trace,node->definiteParents[i],scaffold,shouldRestore,db,gradients); }
@@ -185,11 +185,11 @@ double regenParents(Trace * trace,
 }
 
 double regenESRParents(Trace * trace,
-	      Node * node,
-	      shared_ptr<Scaffold> scaffold,
-	      bool shouldRestore,
-	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
+              Node * node,
+              shared_ptr<Scaffold> scaffold,
+              bool shouldRestore,
+              shared_ptr<DB> db,
+              shared_ptr<map<Node*,Gradient> > gradients)
 {
   double weight = 0;
   vector<RootOfFamily> esrRoots = trace->getESRParents(node);
@@ -198,11 +198,11 @@ double regenESRParents(Trace * trace,
 }
 
 pair<double,Node*> evalFamily(Trace * trace,
-			      VentureValuePtr exp,
-			      shared_ptr<VentureEnvironment> env,
-			      shared_ptr<Scaffold> scaffold,
-			      shared_ptr<DB> db,
-			      shared_ptr<map<Node*,Gradient> > gradients)
+                              VentureValuePtr exp,
+                              shared_ptr<VentureEnvironment> env,
+                              shared_ptr<Scaffold> scaffold,
+                              shared_ptr<DB> db,
+                              shared_ptr<map<Node*,Gradient> > gradients)
 {
   if (isVariable(exp))
   {
@@ -243,12 +243,12 @@ pair<double,Node*> evalFamily(Trace * trace,
 }
 
 double apply(Trace * trace,
-	      RequestNode * requestNode,
-	     OutputNode * outputNode,
-	      shared_ptr<Scaffold> scaffold,
-	      bool shouldRestore,
-	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
+              RequestNode * requestNode,
+             OutputNode * outputNode,
+              shared_ptr<Scaffold> scaffold,
+              bool shouldRestore,
+              shared_ptr<DB> db,
+              shared_ptr<map<Node*,Gradient> > gradients)
 {
   double weight = applyPSP(trace,requestNode,scaffold,shouldRestore,db,gradients);
   weight += evalRequests(trace,requestNode,scaffold,shouldRestore,db,gradients);
@@ -285,11 +285,11 @@ void processMadeSP(Trace * trace, Node * makerNode, bool isAAA, bool shouldResto
 }
 
 double applyPSP(Trace * trace,
-	      ApplicationNode * node,
-	      shared_ptr<Scaffold> scaffold,
-	      bool shouldRestore,
-	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
+              ApplicationNode * node,
+              shared_ptr<Scaffold> scaffold,
+              bool shouldRestore,
+              shared_ptr<DB> db,
+              shared_ptr<map<Node*,Gradient> > gradients)
 {
   //cout << "applyPSP(" << node << ")" << endl;
   double weight = 0;
@@ -308,12 +308,16 @@ double applyPSP(Trace * trace,
     else { newValue = k->simulate(trace,oldValue,args,trace->getRNG()); }
 
     weight += k->weight(trace,newValue,oldValue,args);
+    /*
+      These lines were causing problems, due to a mismatch between vector<double>
+      and double in the gradientOfLogDensity. Puma doesn't actually have variational
+      though, so I'm commenting these out for now.
+      
     shared_ptr<VariationalLKernel> vk = dynamic_pointer_cast<VariationalLKernel>(k);
-    if (vk) 
-      { 
-	assert(gradients);
-	gradients->insert(make_pair(node,vk->gradientOfLogDensity(newValue,args))); 
-      }
+    if (vk) { 
+      assert(gradients);
+      gradients->insert(make_pair(node,vk->gradientOfLogDensity(newValue,args))); 
+    }*/
   }
   else
   {
@@ -342,11 +346,11 @@ double applyPSP(Trace * trace,
 
 
 double evalRequests(Trace * trace,
-	      RequestNode * requestNode,
-	      shared_ptr<Scaffold> scaffold,
-	      bool shouldRestore,
-	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients)
+              RequestNode * requestNode,
+              shared_ptr<Scaffold> scaffold,
+              bool shouldRestore,
+              shared_ptr<DB> db,
+              shared_ptr<map<Node*,Gradient> > gradients)
 {
   //cout << "evalRequests(" << requestNode << "," << requestNode->outputNode << ")" << endl;
 
@@ -367,9 +371,9 @@ double evalRequests(Trace * trace,
       }
       else
       {
-      	pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,db,gradients);
+              pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,db,gradients);
         weight += p.first;
-      	esrRoot = shared_ptr<Node>(p.second);
+              esrRoot = shared_ptr<Node>(p.second);
       }
       trace->registerMadeSPFamily(trace->getOperatorSPMakerNode(requestNode),esr.id,esrRoot);
     }
@@ -398,10 +402,10 @@ double evalRequests(Trace * trace,
 
 
 double restore(Trace * trace,
-	       Node * node,
-	       shared_ptr<Scaffold> scaffold,
-	       shared_ptr<DB> db,
-	       shared_ptr<map<Node*,Gradient> > gradients) 
+               Node * node,
+               shared_ptr<Scaffold> scaffold,
+               shared_ptr<DB> db,
+               shared_ptr<map<Node*,Gradient> > gradients) 
 {
   //cout << "restore(" << node << ")" << endl;
 

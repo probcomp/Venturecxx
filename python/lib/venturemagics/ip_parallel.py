@@ -251,7 +251,9 @@ class MRipl():
             assert len(local_seeds)==self.no_local_ripls
             self.local_seeds = local_seeds
             [v.set_seed(i) for (v,i) in zip(self.local_ripls,self.local_seeds)]
-        if self.local_mode: return
+        if self.local_mode:
+            self.seeds = self.local_seeds
+            return
             
         if remote_seeds is None: return    
 
@@ -844,15 +846,14 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     if no_ripls==0, 'all' or >mripl.no_ripls, then maps across all.
     Maps proc across local ripls IFF in local_mode or mripl.output=="local".'''
 
-    ## FIXME: by default should map over local ripls, while optionally suppressing stdout. 
+    ## FIXME: should be able to supress stdout from local_ripls when in remote mode
     if no_ripls==0 or no_ripls=='all' or no_ripls>mripl.no_ripls:
         no_ripls = mripl.no_ripls
         no_local_ripls = mripl.no_local_ripls
 
     # map across local ripls
-    if mripl.output=='local' or mripl.local_mode:
-        local_out=[proc(r,*proc_args,**proc_kwargs) for i,r in enumerate(mripl.local_ripls) if i<no_ripls]
-        return local_out
+    local_out=[proc(r,*proc_args,**proc_kwargs) for i,r in enumerate(mripl.local_ripls) if i<no_ripls]
+    if mripl.local_mode: return local_out
 
     # map across remote ripls
     mripl.dview.push({'map_proc':interactive(proc),'map_args':proc_args,
@@ -874,15 +875,12 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
 
     remote_out = lst_flatten( mripl.dview['apply_out'] )
     
-    return remote_out[:no_ripls] 
+    return remote_out[:no_ripls] if mripl.output=='remote' else local_out 
 
 
 def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
-    '''Execute proc(ripl[i],*proc_args_list[i][0],**proc_args_list[i][1])
-    across ripls in mripl.
-
+    '''REDO DOCTSTRING
     proc_args_list = [ [ list_args_i, dict_kwargs_i ],   ], i= 0 to no_args
-
     where no_args <= mripl.no_ripls.
 
     Examples:
@@ -890,7 +888,6 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
     def f(ripl,x,y): return ripl.sample('(+ %f %f)'%(x,y))
     proc_args_list = [ [10,20], [100,200] ]
     mr_map_array(v,f,proc_args_list)[1] == [30,300] 
-
 
     def f(ripl,x,y=1): return ripl.sample('(+ %f %f)'%(x,y))
     proc_args_list = [  [ [10],{'y':10} ],  [ [30],{} ] ]
@@ -902,19 +899,19 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
     assert no_args <= mripl.no_ripls, 'More arguments than ripls'
     
     # map across local ripls
-    if mripl.output=='local' or mripl.local_mode:
-        id_local_out=[]
-        local_out=[]
-        for i,r in enumerate(mripl.local_ripls):
-            if i<no_args:
-                id_args = (mripl.local_seeds[i],proc_args_list[i])
-                if no_kwargs:
-                    outs = proc(r,*proc_args_list[i])
-                else:
-                    outs = proc(r,*proc_args_list[i][0],**proc_args_list[i][1])
-                local_out.append( outs )
-                id_local_out.append( (id_args,outs))
-        return id_local_out if id_info_out else local_out
+    id_local_out=[]
+    local_out=[]
+    for i,r in enumerate(mripl.local_ripls):
+        if i<no_args:
+            id_args = (mripl.local_seeds[i],proc_args_list[i])
+            if no_kwargs:
+                outs = proc(r,*proc_args_list[i])
+            else:
+                outs = proc(r,*proc_args_list[i][0],**proc_args_list[i][1])
+            local_out.append( outs )
+            id_local_out.append( (id_args,outs))
+    local_out = id_local_out if id_info_out else local_out
+    if mripl.local_mode: return local_out
               
     # map across remote ripls
     no_args_per_engine = int(np.ceil(no_args/float(mripl.no_engines)))
@@ -947,8 +944,9 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
     ipython_inline()
     id_remote_out = (('pid','seed','arg'),lst_flatten( mripl.dview['array_out'] ) )
     remote_out = [outs for id_args,outs in id_remote_out[1]]
+    remote_out = remote_out if not id_info_out else id_remote_out
 
-    return id_remote_out if id_info_out else remote_out
+    return remote_out if mripl.output=='remote' else local_out 
 
 
 

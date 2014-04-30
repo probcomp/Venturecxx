@@ -111,6 +111,19 @@ double PyTrace::getGlobalLogScore()
 
 uint32_t PyTrace::numUnconstrainedChoices() { return trace->numUnconstrainedChoices(); }
 
+VentureValuePtr getParam(const string& name, const boost::python::dict& params)
+{
+  boost::python::extract<string> getSymbol(params[name]);
+  boost::python::extract<int> getInt(params[name]);
+  boost::python::extract<double> getDouble(params[name]);
+  boost::python::extract<bool> getBool(params[name]);
+  if (getSymbol.check()) { return VentureValuePtr(new VentureSymbol(getSymbol())); }
+  else if (getInt.check()) { return VentureValuePtr(new VentureNumber(getInt())); }
+  else if (getDouble.check()) { return VentureValuePtr(new VentureNumber(getDouble())); }
+  else if (getBool.check()) { return VentureValuePtr(new VentureBool(getBool())); }
+  throw "Invalid parameter '" + name + "' in infer instruction.";
+}
+
 // parses params and does inference
 struct Inferer
 {
@@ -119,36 +132,11 @@ struct Inferer
   ScopeID scope;
   BlockID block;
   shared_ptr<ScaffoldIndexer> scaffoldIndexer;
-  
-  void getBlockAndScope(boost::python::dict& params)
-  {
-    /* TODO HACK accept strings or integers as scopes/blocks */
-    boost::python::extract<string> getScopeSymbol(params["scope"]);
-    boost::python::extract<int> getScopeInt(params["scope"]);
-    boost::python::extract<double> getScopeDouble(params["scope"]);
-    boost::python::extract<bool> getScopeBool(params["scope"]);
-    if (getScopeSymbol.check()) { scope = VentureValuePtr(new VentureSymbol(getScopeSymbol())); }
-    else if (getScopeInt.check()) { scope = VentureValuePtr(new VentureNumber(getScopeInt())); }
-    else if (getScopeDouble.check()) { scope = VentureValuePtr(new VentureNumber(getScopeDouble())); }
-    else if (getScopeBool.check()) { scope = VentureValuePtr(new VentureBool(getScopeBool())); }
-    assert(scope);
-    //  cout << "scope: " << scope->toPython() << endl;
-
-    boost::python::extract<string> getBlockSymbol(params["block"]);
-    boost::python::extract<int> getBlockInt(params["block"]);
-    boost::python::extract<double> getBlockDouble(params["block"]);
-    boost::python::extract<bool> getBlockBool(params["block"]);
-    if (getBlockSymbol.check()) { block = VentureValuePtr(new VentureSymbol(getBlockSymbol())); }
-    else if (getBlockInt.check()) { block = VentureValuePtr(new VentureNumber(getBlockInt())); }
-    else if (getBlockDouble.check()) { block = VentureValuePtr(new VentureNumber(getBlockDouble())); }
-    else if (getBlockBool.check()) { block = VentureValuePtr(new VentureBool(getBlockBool())); }
-    assert(block);
-  }
+  size_t transitions;
   
   Inferer(shared_ptr<ConcreteTrace> trace, boost::python::dict params) : trace(trace)
   {
     string kernel = boost::python::extract<string>(params["kernel"]);
-    getBlockAndScope(params);
     if (kernel == "mh")
     {
       gKernel = shared_ptr<GKernel>(new MHGKernel);
@@ -159,7 +147,8 @@ struct Inferer
     }
     else if (kernel == "pgibbs")
     {
-      gKernel = shared_ptr<GKernel>(new PGibbsGKernel(3));
+      size_t particles = boost::python::extract<size_t>(params["particles"]);
+      gKernel = shared_ptr<GKernel>(new PGibbsGKernel(particles));
     }
     else if (kernel == "gibbs")
     {
@@ -175,22 +164,29 @@ struct Inferer
       gKernel = shared_ptr<GKernel>(new MHGKernel);
     }
     
+    scope = getParam("scope", params);
+    block = getParam("block", params);
     scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+    
+    transitions = boost::python::extract<size_t>(params["transitions"]);
   }
   
   void infer()
   {
     if (trace->numUnconstrainedChoices() == 0) { return; }
     
-    mixMH(trace.get(), scaffoldIndexer, gKernel);
-
-    for (set<Node*>::iterator iter = trace->arbitraryErgodicKernels.begin();
-      iter != trace->arbitraryErgodicKernels.end();
-      ++iter)
+    for (int i = 0; i < transitions; ++i)
     {
-      OutputNode * node = dynamic_cast<OutputNode*>(*iter);
-      assert(node);
-      trace->getMadeSP(node)->AEInfer(trace->getMadeSPAux(node),trace->getArgs(node),trace->getRNG());
+      mixMH(trace.get(), scaffoldIndexer, gKernel);
+
+      for (set<Node*>::iterator iter = trace->arbitraryErgodicKernels.begin();
+        iter != trace->arbitraryErgodicKernels.end();
+        ++iter)
+      {
+        OutputNode * node = dynamic_cast<OutputNode*>(*iter);
+        assert(node);
+        trace->getMadeSP(node)->AEInfer(trace->getMadeSPAux(node),trace->getArgs(node),trace->getRNG());
+      }
     }
   }
 };
@@ -198,14 +194,10 @@ struct Inferer
 // TODO URGENT placeholder
 void PyTrace::infer(boost::python::dict params) 
 { 
-  Inferer inferer(trace, params);
-  
   trace->makeConsistent();
   
-  size_t numTransitions = boost::python::extract<size_t>(params["transitions"]);
-
-  for (size_t i = 0; i < numTransitions; ++i)
-    { inferer.infer(); }
+  Inferer inferer(trace, params);
+  inferer.infer();
 }
 
 boost::python::dict PyTrace::continuous_inference_status()
