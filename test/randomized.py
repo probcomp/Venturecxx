@@ -58,7 +58,7 @@ def checkTypedProperty(prop, type_, *args, **kwargs):
       # http://nedbatchelder.com/blog/200711/rethrowing_exceptions_in_python.html
       import sys
       info = sys.exc_info()
-      raise Exception("%s led to %s" % (synth_args, info[1])), None, info[2]
+      raise info[0]("%s led to %s" % (synth_args, info[1])), None, info[2]
   if app_ct == 0:
     raise SkipTest("Could not find appropriate args for %s" % prop)
 
