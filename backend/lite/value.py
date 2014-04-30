@@ -89,6 +89,11 @@ class VentureNumber(VentureValue):
       return int(self.number)
     else: # TODO Do what?  Clip to 0?  Raise?
       raise VentureTypeError("Count out of range %s" % self.number)
+  def getPositive(self):
+    if 0 < self.number:
+      return self.number
+    else: # TODO Do what?  Can't even clip to 0!
+      raise VentureTypeError("Not positive %s" % self.number)
   def getProbability(self):
     if 0 <= self.number and self.number <= 1:
       return self.number
@@ -572,7 +577,7 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Count", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix"]:
+for typestring in ["Count", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))
