@@ -411,6 +411,10 @@ function InitializeDemo() {
             changed = true;
         }
         
+        var simple = model_type === "simple";
+        document.getElementById("use_outliers").disabled = !simple;
+        document.getElementById("infer_noise").disabled = !simple;
+        
         if (model_variables.use_outliers != use_outliers) {
             model_variables.use_outliers = use_outliers;
             changed = true;
