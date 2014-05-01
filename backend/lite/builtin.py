@@ -163,6 +163,11 @@ def builtInSPsList():
            [ "array", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
                                           sim_grad=lambda args, direction: direction.getArray(),
                                           descr="%s returns an array initialized with its arguments") ],
+
+           [ "vector", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
+                                          sim_grad=lambda args, direction: direction.getArray(),
+                                          descr="%s currently a pseudonym for array") ],
+
            [ "is_array", type_test(v.ArrayType()) ],
            [ "dict", deterministic_typed(lambda keys, vals: dict(zip(keys, vals)),
                                          [v.HomogeneousListType(v.AnyType("k")), v.HomogeneousListType(v.AnyType("v"))],
