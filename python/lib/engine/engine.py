@@ -182,4 +182,17 @@ class Engine(object):
   def stop_continuous_inference(self):
     self.trace.stop_continuous_inference()
 
+  def save(self, fname, extra=None):
+    if extra is None:
+      extra = {}
+    extra['directives'] = self.directives
+    extra['directiveCounter'] = self.directiveCounter
+    return self.trace.save(fname, extra)
+
+  def load(self, fname):
+    self.trace, extra = self.Trace.load(fname)
+    self.directives = extra['directives']
+    self.directiveCounter = extra['directiveCounter']
+    return extra
+
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling

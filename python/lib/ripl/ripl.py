@@ -330,6 +330,16 @@ class Ripl():
         return self.execute_instruction(s,{})['logscore']
 
     ############################################
+    # Serialization
+    ############################################
+
+    def save(self, fname):
+        return self.sivm.core_sivm.engine.save(fname)
+
+    def load(self, fname):
+        return self.sivm.core_sivm.engine.load(fname)
+
+    ############################################
     # Profiler methods (stubs)
     ############################################
     

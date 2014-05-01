@@ -353,6 +353,16 @@ class Trace(object):
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
+  def save(self, fname, extra):
+    from serialize import save_trace
+    save_trace(self, extra, fname)
+
+  @staticmethod
+  def load(fname):
+    from serialize import load_trace
+    trace, extra = load_trace(fname)
+    return trace, extra
+
   def get_seed(self):
     # TODO Trace does not support seed control because it uses
     # Python's native randomness.
