@@ -96,6 +96,11 @@ class Engine(object):
     self.directiveCounter = 0
     self.directives = {}
     self.trace = self.Trace()
+    # Frobnicate the trace's random seed because Trace() resets the
+    # RNG seed from the current time, which sucks if one calls this
+    # method often.
+    import random
+    self.set_seed(random.randint(1,2**32-1))
 
   # Blow away the trace and rebuild one from the directives.  The goal
   # is to resample from the prior.  May have the unfortunate effect of
