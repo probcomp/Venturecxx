@@ -9,6 +9,8 @@ from csp import CSPRequestPSP
 from msp import MSPRequestPSP
 from smap import SMap
 
+import json
+
 class Placeholder(object):
     """An object that can be instantiated before knowing what type it should be."""
     pass
@@ -68,7 +70,7 @@ class Serializer(object):
         }
 
     def serialize(self, obj):
-        if isinstance(obj, (bool, int, long, float, str, unicode, type(None))):
+        if isinstance(obj, (bool, int, long, float, str, type(None))):
             return obj
         elif isinstance(obj, list):
             return [self.serialize(o) for o in obj]
@@ -131,8 +133,12 @@ class Serializer(object):
         return deserialized_root
 
     def deserialize(self, data):
-        if isinstance(data, (bool, int, long, float, str, unicode, type(None))):
+        if isinstance(data, (bool, int, long, float, str, type(None))):
             return data
+        elif isinstance(data, unicode):
+            ## json returns unicode strings; convert them back to str
+            ## TODO: are actual unicode strings used anywhere?
+            return data.encode('utf-8')
         elif isinstance(data, list):
             return [self.deserialize(o) for o in data]
         else:
@@ -171,8 +177,13 @@ class Serializer(object):
 
             return obj
 
-def serialize_trace(trace):
-    return Serializer().serialize_trace(trace)
+def save_trace(trace, fname):
+    obj = Serializer().serialize_trace(trace)
+    with open(fname, 'w') as fp:
+        json.dump(obj, fp)
 
-def deserialize_trace(serialized):
-    return Serializer().deserialize_trace(serialized)
+def load_trace(fname):
+    with open(fname) as fp:
+        obj = json.load(fp)
+    trace = Serializer().deserialize_trace(obj)
+    return trace

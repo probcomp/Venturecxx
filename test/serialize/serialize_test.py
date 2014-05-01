@@ -1,6 +1,6 @@
 import unittest
 
-from venture.lite import serialize
+from venture.lite.serialize import Serializer
 from venture.shortcuts import make_lite_church_prime_ripl
 
 class TestSerialize(unittest.TestCase):
@@ -17,8 +17,8 @@ class TestSerialize(unittest.TestCase):
         result1 = v.predict('is_tricky')
 
         trace = v.sivm.core_sivm.engine.trace
-        serialized = serialize.serialize_trace(trace)
-        newtrace = serialize.deserialize_trace(serialized)
+        serialized = Serializer().serialize_trace(trace)
+        newtrace = Serializer().deserialize_trace(serialized)
         v.sivm.core_sivm.engine.trace = newtrace
         result2 = v.predict('is_tricky')
 
