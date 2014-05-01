@@ -11,7 +11,6 @@ def testGamma1():
   ripl.predict("(gamma a b)")
 
   predictions = collectSamples(ripl,3)
-  # TODO What, actually, is the mean of (gamma (gamma 10 10) (gamma 10 10))?
-  # It's pretty clear that it's not 1.
-  return reportKnownMean(10/9.0, predictions)
+  # Mean is E[(gamma 10 10)] * E[(inv_gamma 10 10)] = 1 * 10/9
+  return reportKnownMean(10.0/9.0, predictions)
 

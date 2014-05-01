@@ -5,7 +5,7 @@
 #include <boost/foreach.hpp>
 
 #include "utils.h"
-
+#include "numerical_helpers.h"
 
 
 VentureValuePtr FlipOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
@@ -168,15 +168,6 @@ double DirichletOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> arg
   BOOST_FOREACH(VentureValuePtr v , vs) { xs.push_back(v->getDouble()); }
   Simplex theta = value->getSimplex();
   return gsl_ran_dirichlet_lnpdf(xs.size(),&xs[0],&theta[0]);
-}
-
-//LogLikelihoods, from Yura's Utilities.cpp
-double PoissonDistributionLogLikelihood(int sampled_value_count, double lambda) {
-  //l^k * e^{-l} / k!
-  double loglikelihood = sampled_value_count * log(lambda);
-  loglikelihood -= gsl_sf_lnfact(sampled_value_count);
-  loglikelihood -= lambda;
-  return loglikelihood;
 }
 
 /* Poisson */

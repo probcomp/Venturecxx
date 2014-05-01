@@ -23,5 +23,3 @@ def testPoisson2():
   predictions = collectSamples(ripl,"pid")
   return reportKnownMean(5,predictions)
   
-  
-
