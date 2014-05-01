@@ -13,7 +13,7 @@ VentureValuePtr SimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
 
 VentureValuePtr IsSimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureSimplex>(args->operandValues[0])));
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureSimplex>(args->operandValues[0]) != NULL));
 }
 
 
@@ -49,7 +49,7 @@ VentureValuePtr DictOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
 
 VentureValuePtr IsDictOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureDictionary>(args->operandValues[0])));
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureDictionary>(args->operandValues[0]) != NULL));
 }
 
 
@@ -74,7 +74,7 @@ VentureValuePtr PrependOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
 
 VentureValuePtr IsArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureArray>(args->operandValues[0])));
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureArray>(args->operandValues[0]) != NULL));
 }
 
 
@@ -87,7 +87,7 @@ VentureValuePtr PairOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
 
 VentureValuePtr IsPairOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VenturePair>(args->operandValues[0])));
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VenturePair>(args->operandValues[0]) != NULL));
 }
 
 

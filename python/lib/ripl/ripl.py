@@ -234,13 +234,14 @@ class Ripl():
             return {"kernel":"rejection","scope":"default","block":"all","transitions":1}
         if isinstance(params, int):
             return {"transitions": params, "kernel": "mh", "scope":"default", "block":"one"}
-        elif isinstance(params, str):
+        elif isinstance(params, basestring):
             return u.expToDict(u.parse(params))
         elif isinstance(params, dict):
             return params
-        else: raise TypeError("Unknown params: " + str(params))
+        else:
+          raise TypeError("Unknown params: " + str(params))
         
-    def infer(self, params):
+    def infer(self, params=None):
         s = self._cur_parser().get_instruction_string('infer')
         self.execute_instruction(s, {'params': self.parseInferParams(params)})
 

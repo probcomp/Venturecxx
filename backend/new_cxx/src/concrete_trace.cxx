@@ -11,11 +11,15 @@
 #include "sps/scope.h"
 #include "math.h"
 
+#include <sys/time.h>
+
 /* Constructor */
 
 ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937))
 {
-  gsl_rng_set (rng,time(NULL));
+  timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  gsl_rng_set (rng,ts.tv_nsec);
 
   vector<shared_ptr<VentureSymbol> > syms;
   vector<Node*> nodes;

@@ -35,7 +35,7 @@ class VentureSP(VentureValue):
   def simulateLatents(self,spaux,lsr,shouldRestore,latentDB): pass
   def detachLatents(self,spaux,lsr,latentDB): pass
   def hasAEKernel(self): return False
-  def show(self,spaux): return "unknown spAux"
+  def show(self, _spaux): return "unknown spAux"
   def description(self,name):
     candidate = self.outputPSP.description(name)
     if candidate:
@@ -44,6 +44,11 @@ class VentureSP(VentureValue):
     if candidate:
       return candidate
     return name
+  def venture_type(self):
+    if hasattr(self.outputPSP, "f_type"):
+      return self.outputPSP.f_type
+    else:
+      return self.requestPSP.f_type
   # VentureSPs are intentionally not comparable until we decide
   # otherwise
 
@@ -56,6 +61,8 @@ how to wrap and unwrap individual values or Args objects.  This is
 used in the implementation of TypedPSP and TypedLKernel."""
   def asVentureValue(self, thing): return thing
   def asPython(self, vthing): return vthing
+  def distribution(self, _base, **_kwargs):
+    return None
   def __contains__(self, vthing): return isinstance(vthing, VentureSP)
 
   def __init__(self, args_types, return_type, variadic=False, min_req_args=None):

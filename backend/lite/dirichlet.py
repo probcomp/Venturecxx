@@ -8,6 +8,7 @@ from sp import VentureSP, SPAux, SPType
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from utils import simulateCategorical, logDensityCategorical, simulateDirichlet, logDensityDirichlet
 from value import AnyType, VentureAtom
+from exception import VentureValueError
 
 #### Directly sampling simplexes
 
@@ -66,6 +67,8 @@ class MakerCDirMultOutputPSP(DeterministicPSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     os = args.operandValues[1] if len(args.operandValues) > 1 else [VentureAtom(i) for i in range(len(alpha))]
+    if not len(os) == len(alpha):
+      raise VentureValueError("Set of objets to choose from is the wrong length")
     output = TypedPSP(CDirMultOutputPSP(alpha,os), SPType([], AnyType()))
     return DirMultSP(NullRequestPSP(),output,len(alpha))
 
@@ -118,6 +121,8 @@ class MakerUDirMultOutputPSP(RandomPSP):
     alpha = args.operandValues[0]
     n = len(alpha)
     os = args.operandValues[1] if len(args.operandValues) > 1 else [VentureAtom(i) for i in range(n)]
+    if not len(os) == n:
+      raise VentureValueError("Set of objets to choose from is the wrong length")
     theta = npr.dirichlet(alpha)
     output = TypedPSP(UDirMultOutputPSP(theta,os), SPType([], AnyType()))
     return DirMultSP(NullRequestPSP(),output,n)
@@ -171,6 +176,8 @@ class MakerCSymDirMultOutputPSP(DeterministicPSP):
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureAtom(i) for i in range(n)]
+    if not len(os) == n:
+      raise VentureValueError("Set of objets to choose from is the wrong length")
     output = TypedPSP(CSymDirMultOutputPSP(alpha,n,os), SPType([], AnyType()))
     return DirMultSP(NullRequestPSP(),output,n)
 
@@ -241,6 +248,8 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureAtom(i) for i in range(n)]
+    if not len(os) == n:
+      raise VentureValueError("Set of objets to choose from is the wrong length")
     theta = npr.dirichlet([alpha for _ in range(n)])
     output = TypedPSP(USymDirMultOutputPSP(theta,os), SPType([], AnyType()))
     return DirMultSP(NullRequestPSP(),output,n)

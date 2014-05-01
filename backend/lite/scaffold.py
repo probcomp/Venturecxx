@@ -79,11 +79,13 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
 
   while q:
     node,isPrincipal,parentNode = q.pop()
-    if node in drg and not node in aaa: pass
+    if node in drg and not node in aaa:
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
     elif isinstance(node,LookupNode) or node.operatorNode in drg:
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
     # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
-    elif node in aaa: pass 
+    elif node in aaa:
+      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)      
     elif (not isPrincipal) and trace.pspAt(node).canAbsorb(trace,node,parentNode):
       addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i)
     elif trace.pspAt(node).childrenCanAAA(): 

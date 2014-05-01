@@ -16,7 +16,7 @@
 from venture.exception import VentureException
 from venture.lite.utils import simulateCategorical
 
-# Thin wrapper around cxx Trace
+# Thin wrapper around Trace
 # TODO: merge with CoreSivm?
 
 class Engine(object):
@@ -122,32 +122,25 @@ class Engine(object):
     else:
       assert False, "Unkown directive type found %r" % directive
 
-  # This could be parameterized to call different inference programs.
   def infer(self,params=None):
     if params is None:
       params = {}
-    if 'transitions' not in params:
-      params['transitions'] = 1
-    else:
-      # FIXME: Kludge. If removed, test_infer (in
-      # python/test/ripl_test.py) fails, and if params are printed,
-      # you'll see a float for the number of transitions
-      params['transitions'] = int(params['transitions'])
+    self.set_default_params(params)
     
-    if "kernel" in params and params['kernel'] == "cycle":
+    if params['kernel'] == "cycle":
       if 'subkernels' not in params:
         raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
       for n in range(params["transitions"]):
         for k in params["subkernels"]:
           self.infer(k)
-    elif "kernel" in params and params["kernel"] == "mixture":
+    elif params["kernel"] == "mixture":
       for n in range(params["transitions"]):
         self.infer(simulateCategorical(params["weights"], params["subkernels"]))
     else: # A primitive infer expression
-      self.set_default_params(params)
+      #import pdb; pdb.set_trace()
       self.trace.infer(params)
   
-  # TODO place all inference param parsing in one place
+  # TODO put all inference param parsing in one place
   def set_default_params(self,params):
     if 'kernel' not in params:
       params['kernel'] = 'mh'
@@ -157,7 +150,17 @@ class Engine(object):
       params['block'] = "one"
     if 'with_mutation' not in params:
       params['with_mutation'] = True
-
+    if 'transitions' not in params:
+      params['transitions'] = 1
+    else:
+      # FIXME: Kludge. If removed, test_infer (in
+      # python/test/ripl_test.py) fails, and if params are printed,
+      # you'll see a float for the number of transitions
+      params['transitions'] = int(params['transitions'])
+    
+    if "particles" in params:
+      params["particles"] = int(params["particles"])
+  
   def logscore(self): return self.trace.getGlobalLogScore()
 
   def get_entropy_info(self):

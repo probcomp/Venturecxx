@@ -7,5 +7,5 @@ double InvGammaDistributionLogLikelihood(double sampled_value, double alpha, dou
 double BetaDistributionLogLikelihood(double sampled_value, double alpha, double beta);
 double ChiSquaredDistributionLogLikelihood(double sampled_value, double nu);
 double InvChiSquaredDistributionLogLikelihood(double sampled_value, double nu);
-
+double PoissonDistributionLogLikelihood(int sampled_value_count, double lambda);
 #endif

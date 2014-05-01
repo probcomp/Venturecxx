@@ -6,6 +6,9 @@ import numpy as np
 
 from utils import cartesianProduct, makeIterable
 
+def plot(type):
+    return type in {'boolean', 'real', 'number', 'atom', 'count'}
+
 class History(object):
     """Aggregates data collected from a typical Venture experiment.
 
@@ -27,19 +30,21 @@ typically also tracked."""
         self.label = label # :: string
         self.parameters = parameters # :: {string: a}  the model parameters leading to the data stored here
         self.nameToSeries = {} # :: {string: [Series]} the list is over multiple runs
+        self.nameToType = {}
 
-    def addSeries(self, name, label, values, hist=True):
-        self._addSeries(name, Series(label, values, hist))
+    def addSeries(self, name, type, label, values, hist=True):
+        self._addSeries(name, type, Series(label, values, hist))
 
-    def _addSeries(self, name, series):
+    def _addSeries(self, name, type, series):
         if name not in self.nameToSeries:
             self.nameToSeries[name] = []
+            self.nameToType[name] = type
         self.nameToSeries[name].append(series)
 
     def addRun(self, run):
         assert run.parameters == self.parameters # Require compatible metadata
         for (name, series) in run.namedSeries.iteritems():
-            self._addSeries(name, series)
+            self._addSeries(name, run.nameToType[name], series)
 
     # Returns the average over all series with the given name.
     def averageValue(self, seriesName):
@@ -62,8 +67,9 @@ typically also tracked."""
         ensure_directory(directory)
 
         for name in self.nameToSeries:
-            self.plotOneSeries(name, fmt=fmt, directory=directory)
-            self.plotOneHistogram(name, fmt=fmt, directory=directory)
+            if plot(self.nameToType[name]):
+                self.plotOneSeries(name, fmt=fmt, directory=directory)
+                self.plotOneHistogram(name, fmt=fmt, directory=directory)
 
         # TODO There is a better way to expose computed series like
         # this: make the nameToSeries lookup be a method that does
@@ -156,8 +162,11 @@ differently)."""
         self.namedSeries = {}
         for (name, series) in data.iteritems():
             self.namedSeries[name] = series
+        self.nameToType = {}
 
-    def addSeries(self, name, series):
+    #TODO Store the type somewhere
+    def addSeries(self, name, type, series):
+        self.nameToType[name] = type
         self.namedSeries[name] = series
 
 # aggregates values for one variable over the course of a run

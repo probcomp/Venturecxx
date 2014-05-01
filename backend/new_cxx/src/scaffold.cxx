@@ -274,7 +274,7 @@ tuple<set<Node*>,set<Node*>,set<Node*> > removeBrush(set<Node*> & cDRG,
   // assert(intersection.empty());
   /* END DEBUG */
 
-  return make_tuple(drg,absorbing,aaa);
+  return tuple<set<Node*>,set<Node*>,set<Node*> >(drg,absorbing,aaa);
 }
 
 bool hasChildInAorD(ConcreteTrace * trace,

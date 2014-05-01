@@ -9,7 +9,7 @@ from detach import detachAndExtract
 from scaffold import constructScaffold
 from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
-from utils import simulateCategorical, cartesianProduct, logaddexp
+from utils import sampleLogCategorical, cartesianProduct, logaddexp
 from nose.tools import assert_almost_equal # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 import copy
 
@@ -246,7 +246,7 @@ class EnumerativeGibbsOperator(object):
       regenAndAttach(self.finalParticle,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
     else:
       # Now sample a NEW particle in proportion to its weight
-      finalIndex = simulateCategorical([math.exp(w) for w in xiWeights])
+      finalIndex = sampleLogCategorical(xiWeights)
       self.finalParticle = xiParticles[finalIndex]
       alpha = self._compute_alpha(rhoWeight, xiWeights, finalIndex)
     return self.finalParticle,alpha
@@ -332,7 +332,7 @@ class PGibbsOperator(object):
       # Sample new particle and propagate
       for p in range(P):
         extendedWeights = xiWeights + [rhoWeights[t-1]]
-        ancestorIndices[t][p] = simulateCategorical([math.exp(w) for w in extendedWeights])
+        ancestorIndices[t][p] = sampleLogCategorical(extendedWeights)
         path = constructAncestorPath(ancestorIndices,t,p)
         restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,t,path)
         regenAndAttach(trace,self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
@@ -341,7 +341,7 @@ class PGibbsOperator(object):
       xiWeights = newWeights
 
     # Now sample a NEW particle in proportion to its weight
-    finalIndex = simulateCategorical([math.exp(w) for w in xiWeights])
+    finalIndex = sampleLogCategorical(xiWeights)
 
     path = constructAncestorPath(ancestorIndices,T-1,finalIndex) + [finalIndex]
     assert len(path) == T
@@ -389,6 +389,8 @@ class ParticlePGibbsOperator(object):
 
     assertTrace(self.trace,self.scaffold)
 
+    #print map(len, scaffold.border)
+
     self.T = len(self.scaffold.border)
     T = self.T
     P = self.P
@@ -422,7 +424,7 @@ class ParticlePGibbsOperator(object):
       newParticleWeights = [None for p in range(P+1)]
       # Sample new particle and propagate
       for p in range(P):
-        parent = simulateCategorical([math.exp(w) for w in particleWeights])
+        parent = sampleLogCategorical(particleWeights)
         newParticles[p] = Particle(particles[parent])
         newParticleWeights[p] = regenAndAttach(newParticles[p],self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
       newParticles[P] = Particle(particles[P])
@@ -432,7 +434,7 @@ class ParticlePGibbsOperator(object):
       particleWeights = newParticleWeights
 
     # Now sample a NEW particle in proportion to its weight
-    finalIndex = simulateCategorical([math.exp(w) for w in particleWeights[0:-1]])
+    finalIndex = sampleLogCategorical(particleWeights[0:-1])
     assert finalIndex < P
 
     self.finalIndex = finalIndex
@@ -524,7 +526,7 @@ class GradientOfRegen(object):
     self.numpyr_state = npr.get_state()
 
   def __call__(self, values):
-    """Returns minus the gradient of the weight of regenerating along
+    """Returns the gradient of the weight of regenerating along
     an (implicit) scaffold starting with the given values.  Smashes
     the trace, but leaves it a torus.  Assumes there are no delta
     kernels around."""
@@ -535,7 +537,6 @@ class GradientOfRegen(object):
     registerDeterministicLKernels(self.trace, new_scaffold, pnodes, values)
     (_, rhoDB) = detachAndExtract(self.trace, new_scaffold.border[0], new_scaffold, True)
     self.scaffold = new_scaffold
-    # The potential function we want is - log (density)
     return [rhoDB.getPartial(pnode) for pnode in pnodes]
 
   def fixed_regen(self, values):
