@@ -241,7 +241,7 @@ class Ripl():
         else:
           raise TypeError("Unknown params: " + str(params))
         
-    def infer(self, params):
+    def infer(self, params=None):
         s = self._cur_parser().get_instruction_string('infer')
         self.execute_instruction(s, {'params': self.parseInferParams(params)})
 
@@ -328,6 +328,21 @@ class Ripl():
     def get_global_logscore(self):
         s = self._cur_parser().get_instruction_string('get_global_logscore')
         return self.execute_instruction(s,{})['logscore']
+
+    ############################################
+    # Serialization
+    ############################################
+
+    def save(self, fname):
+        extra = {}
+        extra['directive_id_to_string'] = self.directive_id_to_string
+        extra['directive_id_to_mode'] = self.directive_id_to_mode
+        return self.sivm.save(fname, extra)
+
+    def load(self, fname):
+        extra = self.sivm.load(fname)
+        self.directive_id_to_string = extra['directive_id_to_string']
+        self.directive_id_to_mode = extra['directive_id_to_mode']
 
     ############################################
     # Profiler methods (stubs)

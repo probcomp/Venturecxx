@@ -73,3 +73,17 @@ double InvChiSquaredDistributionLogLikelihood(double sampled_value, double nu) {
   if (!isfinite(loglikelihood)) { loglikelihood = -DBL_MAX; }
   return loglikelihood;
 }
+
+// Discrete
+double PoissonDistributionLogLikelihood(int sampled_value_count, double lambda) {
+  //l^k * e^{-l} / k!
+  double loglikelihood = 0.0;
+  if (sampled_value_count > 0)
+  {
+    loglikelihood = sampled_value_count * log(lambda);
+    loglikelihood -= gsl_sf_lnfact(sampled_value_count);
+  }
+  loglikelihood -= lambda;
+  return loglikelihood;
+}
+

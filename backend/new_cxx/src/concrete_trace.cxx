@@ -11,6 +11,8 @@
 #include "sps/scope.h"
 #include "math.h"
 
+#include <time.h>
+
 /* Constructor */
 
 ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937))

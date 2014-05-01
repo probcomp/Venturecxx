@@ -97,6 +97,15 @@ double InverseChiSquaredDistributionLogLikelihood(double sampled_value, double n
   return loglikelihood;
 }
 
+// /* MVNormal */
+// VentureValue * MVNormal::simulateOutput(Node* node, gsl_rng * rng) const 
+// {
+//   vector<Node *> & operands = node->operandNodes;
+//   VentureNumber * vmu = dynamic_cast<VentureNumber *>(operands[0]->getValue());
+//   VentureNumber * vsigma = dynamic_cast<VentureNumber *>(operands[1]->getValue());  
+// }
+
+
 /* Normal */
 VentureValue * NormalSP::simulateOutput(Node * node, gsl_rng * rng)  const
 {
