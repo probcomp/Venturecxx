@@ -77,6 +77,27 @@ class VentureSivm(object):
         self.breakpoint_dict = {}
 
     ###############################
+    # Serialization
+    ###############################
+
+    def save(self, fname, extra=None):
+        if extra is None:
+            extra = {}
+        extra['label_dict'] = self.label_dict
+        extra['did_dict'] = self.did_dict
+        extra['directive_dict'] = self.directive_dict
+        extra['breakpoint_dict'] = self.breakpoint_dict
+        return self.core_sivm.save(fname, extra)
+
+    def load(self, fname):
+        extra = self.core_sivm.load(fname)
+        self.label_dict = extra['label_dict']
+        self.did_dict = extra['did_dict']
+        self.directive_dict = extra['directive_dict']
+        self.breakpoint_dict = extra['breakpoint_dict']
+        return extra
+
+    ###############################
     # Sugars/desugars
     # for the CoreSivm instructions
     ###############################

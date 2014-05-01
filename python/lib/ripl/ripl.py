@@ -337,10 +337,10 @@ class Ripl():
         extra = {}
         extra['directive_id_to_string'] = self.directive_id_to_string
         extra['directive_id_to_mode'] = self.directive_id_to_mode
-        return self.sivm.core_sivm.engine.save(fname, extra)
+        return self.sivm.save(fname, extra)
 
     def load(self, fname):
-        extra = self.sivm.core_sivm.engine.load(fname)
+        extra = self.sivm.load(fname)
         self.directive_id_to_string = extra['directive_id_to_string']
         self.directive_id_to_mode = extra['directive_id_to_mode']
 

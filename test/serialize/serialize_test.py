@@ -11,7 +11,7 @@ class TestSerialize(unittest.TestCase):
         v.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
         v.assume('flip_coin', '(mem (lambda (x) (flip theta)))')
         for i in range(10):
-            v.observe('(flip_coin {})'.format(i), 'true')
+            v.observe('(flip_coin {})'.format(i), 'true', label='y{}'.format(i))
 
         v.infer(10)
         result1 = v.predict('is_tricky')
@@ -26,8 +26,8 @@ class TestSerialize(unittest.TestCase):
         self.assertTrue(isinstance(newtrace, type(trace)))
         self.assertEqual(result1, result2)
 
-        for i in range(10, 20):
-            v.observe('(flip_coin {})'.format(i), 'false')
+        for i in range(10):
+            v.forget('y{}'.format(i))
         v.infer(10)
         v.predict('is_tricky')
 
@@ -37,7 +37,7 @@ class TestSerialize(unittest.TestCase):
         v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
         v1.assume('flip_coin', '(mem (lambda (x) (flip theta)))')
         for i in range(10):
-            v1.observe('(flip_coin {})'.format(i), 'true')
+            v1.observe('(flip_coin {})'.format(i), 'true', label='y{}'.format(i))
 
         v1.infer(10)
         result1 = v1.predict('is_tricky')
@@ -54,7 +54,7 @@ class TestSerialize(unittest.TestCase):
         text2 = v2.get_text(1)
         self.assertEqual(text1, text2)
 
-        for i in range(10, 20):
-            v2.observe('(flip_coin {})'.format(i), 'false')
+        for i in range(10):
+            v2.forget('y{}'.format(i))
         v2.infer(10)
         v2.predict('is_tricky')
