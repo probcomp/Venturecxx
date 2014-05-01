@@ -13,6 +13,7 @@
 #include "sps/hmm.h"
 #include "sps/matrix.h"
 #include "sps/msp.h"
+#include "sps/mvn.h"
 #include "sps/scope.h"
 
 map<string,VentureValuePtr> initBuiltInValues() 
@@ -60,6 +61,8 @@ map<string,SP*> initBuiltInSPs()
   m["chi_sq"] = new SP(new NullRequestPSP(), new ChiSquaredPSP());
   m["inv_chi_sq"] = new SP(new NullRequestPSP(), new InvChiSquaredPSP());
 
+  m["multivariate_normal"] = new SP(new NullRequestPSP(), new MVNormalPSP());
+
   /* Discrete SPs */
   m["bernoulli"] = new SP(new NullRequestPSP(), new BernoulliOutputPSP());
   m["flip"] = new SP(new NullRequestPSP(), new FlipOutputPSP());
@@ -87,6 +90,8 @@ map<string,SP*> initBuiltInSPs()
   /* Matrices */
   m["matrix"] = new SP(new NullRequestPSP(), new MatrixOutputPSP());
   m["is_matrix"] = new SP(new NullRequestPSP(), new IsMatrixOutputPSP());
+  m["vector"] = new SP(new NullRequestPSP(), new VectorOutputPSP());
+  m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
 
   /* Scoping */
   m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());

@@ -76,4 +76,4 @@ int rmvt(const gsl_rng *r, const int n, const gsl_vector *location, const gsl_ma
 double dmvt(const int n, const gsl_vector *x, const gsl_vector *locationn, const gsl_matrix *scale, const int dof);
 
 
-#endif /* MVNORM_H_ */
+#endif

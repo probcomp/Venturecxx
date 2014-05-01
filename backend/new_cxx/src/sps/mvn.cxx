@@ -30,49 +30,57 @@
 
 using std::isfinite;
 
+/* TODO we continually convert back and forth from Eigen to GSL here. It is ridiculous!
+   We have two options: change the code to sample directly to use Eigen instead of GSL,
+   or change Eigen to GSL everywhere. */
+
 VentureValuePtr MVNormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
   checkArgsLength("normal", args, 2);
-  MatrixXd mu = args->operandValues[0]->getVector(); // Matrix?
+
+  VectorXd mu = args->operandValues[0]->getVector();
+  int n = mu.size(); // size may be wrong
+  shared_ptr<gsl_vector> gsl_mu(gsl_vector_alloc(n)); 
+  for (int i = 0; i < n; ++i) { gsl_vector_set(gsl_mu.get(),i,mu(i)); }
+
   MatrixXd sigma = args->operandValues[1]->getMatrix();
-  gsl_vector * x = gsl_vector_alloc(n);
-  
-  rmvnorm(rng, mu., const gsl_vector *mean, const gsl_matrix *var, gsl_vector *result){
-
-  return VentureValuePtr(new VentureNumber(x));
-}
-
-double MVNormalPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng)  const
-{
-  double x = gsl_ran_gaussian(rng, args[1]) + args[0];
-  if (!isfinite(x))
-  {
-    cout << "Normal(" << args[0] << ", " << args[1] << ") = " << x << endl;
+  shared_ptr<gsl_matrix> gsl_sigma(gsl_matrix_alloc(n,n));
+  for (int i = 0; i < n; ++i) {
+    for (int j = 0; j < n; ++j) { 
+      gsl_matrix_set(gsl_sigma.get(),i,j,sigma(i,j));
+    }
   }
-  assert(isfinite(x));
-  return x;
+
+  shared_ptr<gsl_vector> gsl_x(gsl_vector_alloc(n)); // output
+  
+  rmvnorm(rng, n, gsl_mu.get(), gsl_sigma.get(), gsl_x.get());
+
+  VectorXd x(n);
+  for (int i = 0; i < n; ++i) { x(i) = gsl_vector_get(gsl_x.get(),i); }
+
+  return VentureValuePtr(new VentureVector(x));
 }
+
 
 double MVNormalPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  double mu = args->operandValues[0]->getDouble();
-  double sigma = args->operandValues[1]->getDouble();
-  double x = value->getDouble();
+  VectorXd mu = args->operandValues[0]->getVector();
+  int n = mu.size(); // size may be wrong
+  shared_ptr<gsl_vector> gsl_mu(gsl_vector_alloc(n)); 
+  for (int i = 0; i < n; ++i) { gsl_vector_set(gsl_mu.get(),i,mu(i)); }
 
-  return NormalDistributionLogLikelihood(x, mu, sigma);
-}
-
-double MVNormalPSP::logDensityNumeric(double output, const vector<double> & args) const
-{
-  assert(isfinite(args[0]));
-  assert(isfinite(args[1]));
-  assert(isfinite(output));
-  assert(args[1] > 0);
-  double ld = NormalDistributionLogLikelihood(output, args[0], args[1]);
-  if (!isfinite(ld))
-  {
-    cout << "Normal(" << args[0] << ", " << args[1] << ") = " << output << " <" << ld << ">" << endl;
+  MatrixXd sigma = args->operandValues[1]->getMatrix();
+  shared_ptr<gsl_matrix> gsl_sigma(gsl_matrix_alloc(n,n));
+  for (int i = 0; i < n; ++i) {
+    for (int j = 0; j < n; ++j) { 
+      gsl_matrix_set(gsl_sigma.get(),i,j,sigma(i,j));
+    }
   }
-  assert(isfinite(ld));
-  return ld;
+
+  shared_ptr<gsl_vector> gsl_x(gsl_vector_alloc(n)); // output
+  VectorXd x = value->getVector();
+  for (int i = 0; i < n; ++i) { gsl_vector_set(gsl_x.get(),i,x[i]); }
+
+  return dmvnorm(n, gsl_x.get(), gsl_mu.get(), gsl_sigma.get());
 }
+
