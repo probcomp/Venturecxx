@@ -1077,7 +1077,7 @@ def get_name(r_mr):
     return 'anon model'
 
 
-def plot_conditional(ripl,data=[],x_range=[],number_xs=40,number_reps=30, return_fig=False,figsize=(16,3.5)):
+def plot_conditional(ripl,data=[],x_range=[],number_xs=40,number_reps=30, return_fig=False,figsize=(16,3.5),plot=True):
     ##FIXME we should predict and forget for pivot and maybe everything
     
     name=get_name(ripl)
@@ -1112,31 +1112,34 @@ def plot_conditional(ripl,data=[],x_range=[],number_xs=40,number_reps=30, return
         f_u = y_u ; f_l = y_l
 
     # Plotting
-    fig,ax = plt.subplots(1,3,figsize=figsize,sharex=True,sharey=True)
-    
-    # plot data and f with noise
-    if data:
-        ax[0].scatter(d_xs,d_ys,label='Data')
-        ax[0].legend()
-    
-    ax[0].plot(xr, f_xr, 'k', color='#CC4F1B')
-    ax[0].fill_between(xr,f_l,f_u,alpha=0.5,edgecolor='#CC4F1B',facecolor='#FF9848')
-    ax[0].set_title('Ripl: f (+- 1sd noise) w/ data [name: %s]' % name )
+    my_fig = None
+    if plot:
+        fig,ax = plt.subplots(1,3,figsize=figsize,sharex=True,sharey=True)
 
-    ax[1].scatter(xs,ys,alpha=0.7,s=5,facecolor='0.6', lw = 0)
-    ax[1].plot(xr, ymean, 'k', alpha=.9,color='m',linewidth=1)
-    ax[1].plot(xr, y_l, 'k', alpha=.8, color='m',linewidth=.5)
-    ax[1].plot(xr, y_u, 'k', alpha=.8,color='m',linewidth=.5)
-    ax[1].set_title('Ripl: Samples from P(y/X=x), w/ mean +- 1sd [name: %s]' % name )
-        
-    xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
-    ax[2].pcolormesh(xi, yi, zi)
-    ax[2].set_title('Ripl: GKDE P(y/X=x) [name: %s]' % name )
-    
-    fig.tight_layout()
+        # plot data and f with noise
+        if data:
+            ax[0].scatter(d_xs,d_ys,label='Data')
+            ax[0].legend()
+
+        ax[0].plot(xr, f_xr, 'k', color='#CC4F1B')
+        ax[0].fill_between(xr, f_l, f_u, alpha=0.5,
+                           edgecolor='#CC4F1B',facecolor='#FF9848')
+        ax[0].set_title('Ripl: f (+- 1sd noise) w/ data [name: %s]' % name )
+
+        ax[1].scatter(xs,ys,alpha=0.7,s=5,facecolor='0.6', lw = 0)
+        ax[1].plot(xr, ymean, 'k', alpha=.9,color='m',linewidth=1)
+        ax[1].plot(xr, y_l, 'k', alpha=.8, color='m',linewidth=.5)
+        ax[1].plot(xr, y_u, 'k', alpha=.8,color='m',linewidth=.5)
+        ax[1].set_title('Ripl: Samples from P(y/X=x), w/ mean +- 1sd [name: %s]' % name )
+
+        xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
+        ax[2].pcolormesh(xi, yi, zi)
+        ax[2].set_title('Ripl: GKDE P(y/X=x) [name: %s]' % name )
+
+        fig.tight_layout()
     #plt.show()  #FIXME: uncommenting leads to notebook not inlining images. why?
+        my_fig = fig if return_fig else None
 
-    my_fig = fig if return_fig else None
     return {'f':(xr,f_xr),'xs,ys':(xs,ys),'fig':my_fig}
 
 
@@ -1157,7 +1160,7 @@ def predictive(mripl,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=
                         
     list_out=mr_map_proc(mr,min(mr.no_ripls,6),plot_conditional,
                          data=data,x_range=x_range,number_xs=number_xs,
-                         number_reps=1)
+                         number_reps=1,plot=False)
     fs = [ ripl_out['f'] for ripl_out in list_out]
     
     ## get y_xs from ripls and compute 1sd intervals
