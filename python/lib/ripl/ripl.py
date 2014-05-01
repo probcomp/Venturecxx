@@ -241,7 +241,7 @@ class Ripl():
         else:
           raise TypeError("Unknown params: " + str(params))
         
-    def infer(self, params):
+    def infer(self, params=None):
         s = self._cur_parser().get_instruction_string('infer')
         self.execute_instruction(s, {'params': self.parseInferParams(params)})
 
