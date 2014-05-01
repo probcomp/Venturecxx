@@ -104,7 +104,7 @@ puma_src_files = [
 
     "src/env.cxx",
     "src/expressions.cxx",
-
+    "src/gkernel.cxx",
     "src/indexer.cxx",
     "src/lkernel.cxx",
     "src/mixmh.cxx",
@@ -126,7 +126,8 @@ puma_src_files = [
     "src/gkernels/mh.cxx",
     "src/gkernels/pgibbs.cxx",
     "src/gkernels/egibbs.cxx",
-    "src/gkernels/slice.cxx",    
+    "src/gkernels/slice.cxx",
+    "src/gkernels/hmc.cxx",
 
     "src/sps/betabernoulli.cxx",
     "src/sps/conditional.cxx",
@@ -171,7 +172,7 @@ else:
     print "Skipping old CXX backend. To include it, set the flag COMPILE_CXX_BACKEND"
 
 if ON_LINUX:
-    puma = Extension("venture.puma.libtrace",
+    puma = Extension("venture.puma.libpumatrace",
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
@@ -181,7 +182,7 @@ if ON_LINUX:
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
 if ON_MAC:
-    puma = Extension("venture.puma.libtrace",
+    puma = Extension("venture.puma.libpumatrace",
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],

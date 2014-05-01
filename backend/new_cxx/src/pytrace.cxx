@@ -244,7 +244,7 @@ void translateCStringException(const char* err) {
   PyErr_SetString(PyExc_RuntimeError, err);
 }
 
-BOOST_PYTHON_MODULE(libtrace)
+BOOST_PYTHON_MODULE(libpumatrace)
 {
   using namespace boost::python;
   

@@ -8,6 +8,7 @@
 #include "concrete_trace.h"
 #include "args.h"
 #include "lkernel.h"
+#include "gkernel.h"
 #include <math.h>
 #include <boost/foreach.hpp>
 
