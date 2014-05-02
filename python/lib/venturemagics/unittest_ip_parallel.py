@@ -45,7 +45,7 @@ def bino_model(v):
         return v.predict('x')
 
 
-def compareSpeed(no_ripls=4):
+def compareSpeed(no_ripls=4,infer_steps=75):
     'Compare speed with different backends and local/remote mode'
     name='compareSpeed'
     print 'Start %s'%name
@@ -66,7 +66,7 @@ def compareSpeed(no_ripls=4):
 
             v.assume('y','(normal 5 5)')
             [v.observe('(if (flip) (normal y 1) (normal y 5))','10.') for rep in range(6)]
-            v.infer(75)
+            v.infer(infer_steps)
             out1 = v.sample('y')
             assert 5 > abs(np.mean(out1) - 10.)
             times.append( time.time() - start )
