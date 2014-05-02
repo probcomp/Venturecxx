@@ -110,6 +110,7 @@ map<string,SP*> initBuiltInSPs()
   m["is_dict"] = new SP(new NullRequestPSP(), new IsDictOutputPSP());
   m["array"] = new SP(new NullRequestPSP(), new ArrayOutputPSP());
   m["prepend"] = new SP(new NullRequestPSP(), new PrependOutputPSP());
+  m["append"] = new SP(new NullRequestPSP(), new AppendOutputPSP());
   m["is_array"] = new SP(new NullRequestPSP(), new IsArrayOutputPSP());
   m["pair"] = new SP(new NullRequestPSP(), new PairOutputPSP());
   m["is_pair"] = new SP(new NullRequestPSP(), new IsPairOutputPSP());

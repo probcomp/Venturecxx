@@ -70,7 +70,12 @@ VentureValuePtr PrependOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
   return VentureValuePtr(new VentureArray(v));
 }
 
-
+VentureValuePtr AppendOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  vector<VentureValuePtr> v(args->operandValues[0]->getArray());
+  v.push_back(args->operandValues[1]);
+  return VentureValuePtr(new VentureArray(v));
+}
 
 VentureValuePtr IsArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
