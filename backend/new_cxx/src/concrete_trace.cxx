@@ -407,7 +407,7 @@ void ConcreteTrace::makeConsistent()
     shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(appNode))->getPSP(appNode);
     scaffold->lkernels[appNode] = shared_ptr<DeterministicLKernel>(new DeterministicLKernel(iter->second,psp));
     double xiWeight = regenAndAttach(this,scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),shared_ptr<map<Node*,Gradient> >());
-    if (std::isinf(xiWeight)) { assert(false); throw "Unable to propagate constraint"; }
+    if (std::isinf(xiWeight)) { throw "Unable to propagate constraint"; }
     observeNode(iter->first,iter->second);
     constrain(this,appNode,getObservedValue(iter->first));
   }
