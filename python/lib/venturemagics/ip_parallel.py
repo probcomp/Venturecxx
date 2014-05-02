@@ -33,10 +33,11 @@ def erase_initialize_mripls(client=None,no_erase=False):
     
     if not client: client=Client(); print "Created new Client"
     if no_erase:
-        try: # mripl vars already present: return client object
-            client[:]['no_mripls']
-        except:
-            client[:].execute('mripls=[]; no_mripls=0')
+        dview = client[:]
+        mripls_defined = lambda: 'no_mripls' in globals()
+        if not all(dview.apply(mripls_defined).get()):
+            dview.execute('mripls=[]; no_mripls=0')
+            pass
         return client
     else:
         client.clear()
@@ -182,9 +183,8 @@ class MRipl():
 
         ## initialize remote ripls
         self.cli = Client(); self.dview=self.cli[:]
-        try:
-            self.dview['no_mripls']
-        except:
+        mripls_defined = lambda: 'no_mripls' in globals()
+        if not all(self.dview.apply(mripls_defined).get()):
             self.dview.execute('mripls=[]; no_mripls=0')
             print 'Created new "mripls" list'
 
