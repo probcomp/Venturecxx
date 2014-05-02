@@ -47,6 +47,8 @@ def checkTypedProperty(prop, type_, *args, **kwargs):
   for _ in range(20):
     try:
       synth_args = synthesize_for(type_)
+    except ArgumentsNotAppropriate: continue
+    try:
       prop(synth_args, *args, **kwargs)
       app_ct += 1
     except ArgumentsNotAppropriate: continue

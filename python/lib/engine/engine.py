@@ -96,6 +96,11 @@ class Engine(object):
     self.directiveCounter = 0
     self.directives = {}
     self.trace = self.Trace()
+    # Frobnicate the trace's random seed because Trace() resets the
+    # RNG seed from the current time, which sucks if one calls this
+    # method often.
+    import random
+    self.set_seed(random.randint(1,2**32-1))
 
   # Blow away the trace and rebuild one from the directives.  The goal
   # is to resample from the prior.  May have the unfortunate effect of
@@ -181,5 +186,18 @@ class Engine(object):
 
   def stop_continuous_inference(self):
     self.trace.stop_continuous_inference()
+
+  def save(self, fname, extra=None):
+    if extra is None:
+      extra = {}
+    extra['directives'] = self.directives
+    extra['directiveCounter'] = self.directiveCounter
+    return self.trace.save(fname, extra)
+
+  def load(self, fname):
+    self.trace, extra = self.Trace.load(fname)
+    self.directives = extra['directives']
+    self.directiveCounter = extra['directiveCounter']
+    return extra
 
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling

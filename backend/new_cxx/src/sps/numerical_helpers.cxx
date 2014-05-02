@@ -80,7 +80,7 @@ double PoissonDistributionLogLikelihood(int sampled_value_count, double lambda) 
   double loglikelihood = 0.0;
   if (sampled_value_count > 0)
   {
-    loglikelihood -= sampled_value_count * log(lambda);
+    loglikelihood = sampled_value_count * log(lambda);
     loglikelihood -= gsl_sf_lnfact(sampled_value_count);
   }
   loglikelihood -= lambda;

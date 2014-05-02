@@ -44,6 +44,21 @@ class CoreSivm(object):
         return f(instruction)
 
     ###############################
+    # Serialization
+    ###############################
+
+    def save(self, fname, extra=None):
+        if extra is None:
+            extra = {}
+        extra['observe_dict'] = self.observe_dict
+        return self.engine.save(fname, extra)
+
+    def load(self, fname):
+        extra = self.engine.load(fname)
+        self.observe_dict = extra['observe_dict']
+        return extra
+
+    ###############################
     # Instruction implementations
     ###############################
 
