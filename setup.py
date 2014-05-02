@@ -142,6 +142,8 @@ puma_src_files = [
     "src/sps/hmm.cxx",
     "src/sps/matrix.cxx",
     "src/sps/msp.cxx",
+    "src/sps/mvn.cxx",
+    "src/sps/silva_mvn.cxx",    
     "src/sps/numerical_helpers.cxx",
     "src/sps/scope.cxx",
 ]

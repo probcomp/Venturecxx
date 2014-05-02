@@ -8,6 +8,7 @@
 #include "db.h"
 
 using Eigen::MatrixXd;
+using Eigen::VectorXd;
 
 struct HMMSPAux : SPAux
 {
