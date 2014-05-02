@@ -288,6 +288,31 @@ boost::python::dict VentureArray::toPython(Trace * trace) const
   return value;
 }
 
+boost::python::dict VentureVector::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "vector";
+  boost::python::list l;
+  for (size_t i = 0; i < v.size(); ++i) { l.append(v(i)); }
+  value["value"] = l;
+  return value;
+}
+
+boost::python::dict VentureMatrix::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "matrix";
+  boost::python::list l;
+  for (size_t i = 0; i < m.rows(); ++i)
+  {
+    boost::python::list row;
+    for (size_t j = 0; j < m.cols(); ++j) { row.append(m(i, j)); }
+    l.append(row);
+  }
+  value["value"] = l;
+  return value;
+}
+
 boost::python::dict VentureSimplex::toPython(Trace * trace) const
 {
   boost::python::dict value;
