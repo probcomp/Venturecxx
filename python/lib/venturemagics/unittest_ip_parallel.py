@@ -40,7 +40,7 @@ def testAll_IP():
 
 def bino_model(v):
         v.assume('x','(binomial 5 .5)') 
-        [v.observe(' (poisson x)', '1.') for i in range(10) ]
+        [v.observe(' (poisson (+ x 1))', '1.') for i in range(10) ]
         v.infer(150)
         return v.predict('x')
 
