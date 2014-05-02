@@ -240,6 +240,7 @@ string VenturePair::toString() const { return "VenturePair (" + car->toString() 
 string VentureSimplex::toString() const { return "VentureSimplex";}
 string VentureDictionary::toString() const { return "VentureDictionary";}
 string VentureMatrix::toString() const { return "VentureMatrix";}
+string VentureVector::toString() const { return "VentureVector";}
 string VentureRequest::toString() const { return "VentureRequest";}
 string VentureNode::toString() const { return "VentureNode";}
 string VentureID::toString() const { return "VentureID";}
