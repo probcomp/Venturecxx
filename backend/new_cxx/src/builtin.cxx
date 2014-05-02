@@ -92,6 +92,7 @@ map<string,SP*> initBuiltInSPs()
   /* Matrices */
   m["matrix"] = new SP(new NullRequestPSP(), new MatrixOutputPSP());
   m["is_matrix"] = new SP(new NullRequestPSP(), new IsMatrixOutputPSP());
+  m["id_matrix"] = new SP(new NullRequestPSP(), new IdentityMatrixOutputPSP());
   m["vector"] = new SP(new NullRequestPSP(), new VectorOutputPSP());
   m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
 
