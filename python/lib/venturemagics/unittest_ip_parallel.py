@@ -74,15 +74,17 @@ def compareSpeed(no_engines=4):
         m_times.append( ( (b,l), np.mean(times) ) )
 
     sorted_times = sorted(m_times,key=lambda pair: pair[1])
-    print '(backend,local_mode?), mean of 3 time.time in secs)'
-    for pair in sorted_times:
-        print pair[0],'%.2f'%pair[1]
+    print '\ncompareSpeed Results (sorted from fastest to slowest)\n'
+    print '(backend,local_mode?), mean of 3 time.time() calls in secs)\n'
+    for count,pair in enumerate(sorted_times):
+        print '%i:'%count, pair[0], '   %.2f'%pair[1]
     
     remotes = [pair for pair in sorted_times if False in pair[0]]
     local = [pair for pair in sorted_times if True in pair[0]]
     for r in remotes:
         for l in local:
             if r[0][:1]==l[0][:1]:
+                print '\nRemote vs. Local Ratio:'
                 print 'Remote %s %.2f' %(str(r[0]),r[1])
                 print 'Local %s %.2f' %(str(l[0]),l[1])
                 print 'Ratio %.2f' % (r[1]/l[1])
