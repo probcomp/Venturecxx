@@ -45,12 +45,12 @@ def bino_model(v):
         return v.predict('x')
 
 
-def compareSpeed(no_ripls=4,infer_steps=75):
+def compareSpeed(no_ripls=4,infer_steps=75,backends=('puma','lite')):
     'Compare speed with different backends and local/remote mode'
     name='compareSpeed'
     print 'Start %s'%name
 
-    bkends =['puma','lite']
+    bkends = backends
     l_mode = [True,False]
     params=[(b,l) for b in bkends for l in l_mode]
 
