@@ -59,17 +59,17 @@ def compareSpeed(no_ripls=4,infer_steps=75,backends=('puma','lite')):
     for (b,l) in params:
         times = []
         for reps in range(3):
-            start = time.time()
             v=MRipl(no_ripls,backend=b,output='remote',local_mode=l)
             out = bino_model(v)
             assert  2 > abs(np.mean(out) - 1)
 
             v.assume('y','(normal 5 5)')
             [v.observe('(if (flip) (normal y 1) (normal y 5))','10.') for rep in range(6)]
+            start = time.time()
             v.infer(infer_steps)
+            times.append( time.time() - start )
             out1 = v.sample('y')
             assert 5 > abs(np.mean(out1) - 10.)
-            times.append( time.time() - start )
 
         m_times.append( ( (b,l), np.mean(times) ) )
 
