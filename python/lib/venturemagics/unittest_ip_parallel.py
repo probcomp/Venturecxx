@@ -45,20 +45,20 @@ def bino_model(v):
         return v.predict('x')
 
 
-def compareSpeed(no_ripls=4,infer_steps=75,backends=('puma','lite')):
+def compareSpeed(no_ripls=4,infer_steps=75,backends=('puma','lite'),
+        l_mode=(True,False), N_times=3):
     'Compare speed with different backends and local/remote mode'
     name='compareSpeed'
     print 'Start %s'%name
 
     bkends = backends
-    l_mode = [True,False]
     params=[(b,l) for b in bkends for l in l_mode]
 
     m_times = []
 
     for (b,l) in params:
         times = []
-        for reps in range(3):
+        for reps in range(N_times):
             v=MRipl(no_ripls,backend=b,output='remote',local_mode=l)
             out = bino_model(v)
             assert  2 > abs(np.mean(out) - 1)
@@ -75,7 +75,7 @@ def compareSpeed(no_ripls=4,infer_steps=75,backends=('puma','lite')):
 
     sorted_times = sorted(m_times,key=lambda pair: pair[1])
     print '\ncompareSpeed Results (sorted from fastest to slowest)\n'
-    print '(backend,local_mode?), mean of 3 time.time() calls in secs)\n'
+    print '(backend,local_mode?), mean of %s time.time() calls in secs)\n' % N_times
     for count,pair in enumerate(sorted_times):
         print '%i:'%count, pair[0], '   %.2f'%pair[1]
     
