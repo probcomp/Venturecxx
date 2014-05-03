@@ -182,6 +182,13 @@ class Ripl():
         self.execute_instruction(s,d)
         return None
 
+    def bulk_observe(self, proc_expression, iterable, label=None):
+        ret_vals = []
+        for i,(args, val) in enumerate(iterable):
+          expr = "(" + proc_expression + " " + " ".join([str(a) for a in args]) + ")"
+          ret_vals.append(self.observe(expr,val,label+str(i)))
+        return ret_vals
+
     ############################################
     # Core
     ############################################
