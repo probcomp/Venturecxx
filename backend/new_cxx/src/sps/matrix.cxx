@@ -42,6 +42,13 @@ VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   return VentureValuePtr(new VentureMatrix(M));
 }
 
+VentureValuePtr IdentityMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  int dim = args->operandValues[0]->getInt();
+  
+  return VentureValuePtr(new VentureMatrix(MatrixXd::Identity(dim, dim)));
+}
+
 VentureValuePtr IsMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureMatrix>(args->operandValues[0]) != NULL));

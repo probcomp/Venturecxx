@@ -92,6 +92,7 @@ map<string,SP*> initBuiltInSPs()
   /* Matrices */
   m["matrix"] = new SP(new NullRequestPSP(), new MatrixOutputPSP());
   m["is_matrix"] = new SP(new NullRequestPSP(), new IsMatrixOutputPSP());
+  m["id_matrix"] = new SP(new NullRequestPSP(), new IdentityMatrixOutputPSP());
   m["vector"] = new SP(new NullRequestPSP(), new VectorOutputPSP());
   m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
 
@@ -109,6 +110,7 @@ map<string,SP*> initBuiltInSPs()
   m["is_dict"] = new SP(new NullRequestPSP(), new IsDictOutputPSP());
   m["array"] = new SP(new NullRequestPSP(), new ArrayOutputPSP());
   m["prepend"] = new SP(new NullRequestPSP(), new PrependOutputPSP());
+  m["append"] = new SP(new NullRequestPSP(), new AppendOutputPSP());
   m["is_array"] = new SP(new NullRequestPSP(), new IsArrayOutputPSP());
   m["pair"] = new SP(new NullRequestPSP(), new PairOutputPSP());
   m["is_pair"] = new SP(new NullRequestPSP(), new IsPairOutputPSP());

@@ -217,8 +217,8 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
         self.compiler_so = ["ccache", "gcc-4.8"]
 
     # parallel code
-    N=2 # number of parallel compilations
-    import multiprocessing.pool
+    import multiprocessing, multiprocessing.pool
+    N=multiprocessing.cpu_count() # number of parallel compilations
     def _single_compile(obj):
         try: src, ext = build[obj]
         except KeyError: return
