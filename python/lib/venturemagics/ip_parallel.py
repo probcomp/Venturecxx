@@ -450,20 +450,20 @@ class MRipl():
             if self.verbose: print 'total transitions: ',self.no_transitions
         ##FIXME: add cases for inference programming
 
-        local_out = [r.infer(params) for r in self.local_ripls]
-        if self.local_mode: return local_out
-
-        @interactive
-        def f(mrid,backend,params):
-            return [r.infer(params) for r in mripls[mrid][backend] ]
-        
-        if block:
-            remote_out= self.lst_flatten( self.dview.apply_sync(f,self.mrid,self.backend,params) )
+        local_out, remote_out = None, None
+        if self.local_mode:
+            local_out = [r.infer(params) for r in self.local_ripls]
         else:
-            remote_out = self.lst_flatten( self.dview.apply_async(f,self.mrid,self.backend,params) )
-
-
-        return self.output_mode(local_out,remote_out)
+            @interactive
+            def f(mrid,backend,params):
+                return [r.infer(params) for r in mripls[mrid][backend] ]
+            apply_func = None
+            if block:
+                apply_func = self.dview.apply_sync
+            else:
+                apply_func = self.dview.apply_async
+            remote_out = self.lst_flatten(apply_func(f,self.mrid,self.backend,params))
+        return self.output_mode(local_out, remote_out)
         
         
 
