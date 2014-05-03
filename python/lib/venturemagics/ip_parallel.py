@@ -78,7 +78,10 @@ def build_exp(exp):
     if type(exp)==str:
         return exp
     elif type(exp)==dict:
-        return str(exp['value'])
+        if exp['type']=='atom':
+            return 'atom<%i>'%exp['value']
+        else:
+            return str(exp['value'])
     else:
         return '('+ ' '.join(map(build_exp,exp)) + ')'
 
