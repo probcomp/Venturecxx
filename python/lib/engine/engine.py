@@ -100,7 +100,7 @@ class Engine(object):
     # RNG seed from the current time, which sucks if one calls this
     # method often.
     import random
-    self.set_seed(random.randint(1,2**32-1))
+    self.set_seed(random.randint(1,2**31-1))
 
   # Blow away the trace and rebuild one from the directives.  The goal
   # is to resample from the prior.  May have the unfortunate effect of
@@ -114,7 +114,7 @@ class Engine(object):
     # RNG seed from the current time, which sucks if one calls this
     # method often.
     import random
-    self.set_seed(random.randint(1,2**32-1))
+    self.set_seed(random.randint(1,2**31-1))
     [self.replay(dir) for (_,dir) in worklist]
 
   def replay(self,directive):
