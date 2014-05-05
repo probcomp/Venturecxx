@@ -6,9 +6,6 @@ import numpy as np
 
 from utils import cartesianProduct, makeIterable
 
-def plot(type):
-    return type in {'boolean', 'real', 'number', 'atom', 'count'}
-
 class History(object):
     """Aggregates data collected from a typical Venture experiment.
 
@@ -30,21 +27,35 @@ typically also tracked."""
         self.label = label # :: string
         self.parameters = parameters # :: {string: a}  the model parameters leading to the data stored here
         self.nameToSeries = {} # :: {string: [Series]} the list is over multiple runs
-        self.nameToType = {}
+        self.data = [] ## FIXME: have no attribute if empty
+        
 
-    def addSeries(self, name, type, label, values, hist=True):
-        self._addSeries(name, type, Series(label, values, hist))
+    def addSeries(self, name, label, values, hist=True):
+        self._addSeries(name, Series(label, values, hist))
 
-    def _addSeries(self, name, type, series):
+    def _addSeries(self, name, series):
         if name not in self.nameToSeries:
             self.nameToSeries[name] = []
-            self.nameToType[name] = type
         self.nameToSeries[name].append(series)
 
     def addRun(self, run):
         assert run.parameters == self.parameters # Require compatible metadata
         for (name, series) in run.namedSeries.iteritems():
-            self._addSeries(name, run.nameToType[name], series)
+            self._addSeries(name, series)
+    
+    def addData(self, data):
+        'Extend list of data. Input: data::[(exp,literal)]'
+        self.data.extend(data)
+
+    def addGroundTruth(self,groundTruth,totalSamples):
+        '::{name:value},int'
+        self.groundTruth = groundTruth
+        for exp,value in self.groundTruth.iteritems():
+            if isinstance(value,dict):
+                value = value['value']
+            values=[value]*totalSamples # pad out with totalSamples for plotting
+            self.addSeries(exp,'Ground truth',values)
+        
 
     # Returns the average over all series with the given name.
     def averageValue(self, seriesName):
@@ -67,9 +78,8 @@ typically also tracked."""
         ensure_directory(directory)
 
         for name in self.nameToSeries:
-            if plot(self.nameToType[name]):
-                self.plotOneSeries(name, fmt=fmt, directory=directory)
-                self.plotOneHistogram(name, fmt=fmt, directory=directory)
+            self.plotOneSeries(name, fmt=fmt, directory=directory)
+            self.plotOneHistogram(name, fmt=fmt, directory=directory)
 
         # TODO There is a better way to expose computed series like
         # this: make the nameToSeries lookup be a method that does
@@ -162,11 +172,8 @@ differently)."""
         self.namedSeries = {}
         for (name, series) in data.iteritems():
             self.namedSeries[name] = series
-        self.nameToType = {}
 
-    #TODO Store the type somewhere
-    def addSeries(self, name, type, series):
-        self.nameToType[name] = type
+    def addSeries(self, name, series):
         self.namedSeries[name] = series
 
 # aggregates values for one variable over the course of a run
