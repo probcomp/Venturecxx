@@ -18,9 +18,6 @@
 
 from venture.exception import VentureException
 import re
-import json
-import copy
-
 
 def is_valid_symbol(s):
     if not isinstance(s,basestring):
@@ -246,7 +243,6 @@ def validate_dict(s):
 def validate_value(ob):
     try:
         validate_symbol(ob['type']) #validate the type
-        json.dumps(ob['value']) #validate the json
     except Exception as e:
         raise VentureException('parse',
                 'Invalid literal value. {}'.format(e.message),
