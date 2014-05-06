@@ -229,7 +229,7 @@ def builtInSPsList():
            [ "uniform_discrete",binaryNumS(discrete.UniformDiscreteOutputPSP()) ],
            [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [v.PositiveType()], v.CountType()) ],
                       
-           [ "normal", typed_nr(continuous.NormalOutputPSP(), [v.NumberType(), v.PositiveType()], v.NumberType()) ], # TODO Sigma is really non-negative
+           [ "normal", typed_nr(continuous.NormalOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ], # TODO Sigma is really non-zero, but negative is OK by scaling
            [ "uniform_continuous",binaryNumS(continuous.UniformOutputPSP()) ],
            [ "beta", typed_nr(continuous.BetaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.ProbabilityType()) ],
            [ "gamma", typed_nr(continuous.GammaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.PositiveType()) ],
