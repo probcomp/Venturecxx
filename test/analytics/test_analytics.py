@@ -1,4 +1,4 @@
-from venture.venturemagics.ip_parallel import mk_p_ripl,mk_l_ripl
+from venture.venturemagics.ip_parallel import mk_p_ripl
 from venture.unit import *
 import numpy as np
 
@@ -10,15 +10,17 @@ def testAnalytics():
     # we use *add*,etc. because Analytics converts to Python values.
     v=mk_p_ripl()
     assumes=[('p','(beta 1.0 1.0)')] 
-    observes=[('(flip p)',True) for i in range(15)] 
-    [v.assume(sym,exp) for sym,exp in assumes]
-    [v.observe(exp,literal) for exp,literal in observes]
+    observes=[('(flip p)',True) for _ in range(15)]
+    for sym,exp in assumes:
+        v.assume(sym,exp)
+    for exp,literal in observes:
+        v.observe(exp,literal)
     queryExps = ['(add (bernoulli p) (bernoulli p))']
     
     # run inference
     totalSamples=400
     inferredPValues = []
-    for i in range(totalSamples):
+    for _ in range(totalSamples):
         v.infer(5)
         inferredPValues.append(v.report(1))
     
