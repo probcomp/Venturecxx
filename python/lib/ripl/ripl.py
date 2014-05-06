@@ -183,6 +183,53 @@ class Ripl():
         return None
 
     def bulk_observe(self, proc_expression, iterable, label=None):
+        """Observe a dataset.
+
+Syntax:
+ripl.bulk_observe("<expr>", <iterable>)
+
+- The expr must evaluate to a (presumably stochastic) Venture
+  procedure.  We expect in typical usage expr would just look up a
+  recent assume.
+
+- The <iterable> is a Python iterable each of whose elements must be a
+  tuple of a list of valid Venture values and a Venture value: ([a], b)
+
+- There is not Venture syntax for this; it is accessible only when
+  using Venture as a library.
+
+Semantics:
+
+- As to its effect on the distribution over traces, this is equivalent
+  to looping over the contents of the given iterable, calling
+  ripl.observe on each element as ripl.observe("(<expr> $tuple[0])",
+  tuple[1]). In other words, the first component of each element of
+  the iterable gives the arguments to the procedure given by <expr>,
+  and the second component gives the value to observe.
+
+- The ripl method returns a list of directive ids, which correspond to
+  the individual observes thus generated.
+
+Open issues:
+
+- If the <expr> is itself stochastic, it is unspecified whether we
+  notionally evaluate it once per bulk_observe or once per data item.
+
+- This is not the same as directly observing sufficient statistics
+  only.
+
+- It is currently not possible to forget the whole bulk_observe at
+  once.
+
+- Currently, list_directives will not respect the nesting structure of
+  observations implied by bulk_observe.  How can we improve this? Do
+  we represent the bulk_observe as one directive? If so, we can hardly
+  return a useful representation of the iterable representing the data
+  set. If not, we will hardly win anything because list_directives
+  will generate all those silly per-datapoint observes (every time
+  it's called!)
+
+        """
         ret_vals = []
         for i,(args, val) in enumerate(iterable):
           expr = "(" + proc_expression + " " + " ".join([str(a) for a in args]) + ")"
