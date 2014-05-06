@@ -67,6 +67,11 @@ class Ripl():
         try: # execute instruction, and handle possible exception
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
+            # TODO This error reporting is broken for ripl methods,
+            # because the computed text chunks refer to the synthetic
+            # instruction string instead of the actual data the caller
+            # passed.
+
             # all exceptions raised by the Sivm get augmented with a
             # text index (which defaults to the entire instruction)
             e.data['text_index'] = [0,len(instruction_string)-1]
