@@ -2,7 +2,7 @@ from venture.venturemagics.ip_parallel import mk_p_ripl,mk_l_ripl
 from venture.unit import *
 import numpy as np
 
-execfile('/home/owainevans/Venturecxx/python/lib/unit/venture_unit.py')
+
 
 def testAnalytics():
     
@@ -16,7 +16,7 @@ def testAnalytics():
     queryExps = ['(add (bernoulli p) (bernoulli p))']
     
     # run inference
-    totalSamples=100
+    totalSamples=1000
     inferredPValues = []
     for i in range(totalSamples):
         v.infer(5)
@@ -52,32 +52,3 @@ def testAnalytics():
     assert np.sum(queryValues) > len(queryValues) 
 
     return 
-    
-# load ripl with model and observes
-# we use *add*,etc. because Analytics converts to Python values.
-v=mk_p_ripl()
-assumes=[('p','(beta 1.0 1.0)')] 
-observes=[('(flip p)',True) for i in range(15)] 
-[v.assume(sym,exp) for sym,exp in assumes]
-[v.observe(exp,literal) for exp,literal in observes]
-queryExps = ['(add (bernoulli p) (bernoulli p))']
-
-# run inference
-totalSamples=10
-inferredPValues = []
-for i in range(totalSamples):
-    v.infer(5)
-    inferredPValues.append(v.report(1))
-
-# load model to Analytics and test __init__
-model = Analytics(v,queryExps=queryExps)
-assert model.backend==v.backend()
-assert model.assumes==assumes
-assert model.observes==observes
-assert model.queryExps==queryExps
-
-
-## Run inference in Analytics
-
-# test history
-history,outRipl = model.runFromConditional(totalSamples,runs=1)
