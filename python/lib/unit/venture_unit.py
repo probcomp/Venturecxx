@@ -526,7 +526,7 @@ class Analytics(object):
         # sweeps are given just for plotting the data on time series
 
         # FIXME this method will block certain types of data via *record*
-        typed_datasets = [self.generateDataFromPrior(1)[0] for reps in range(no_datasets)]
+        typed_datasets = [self.generateDataFromPrior(1)[0] for _ in range(no_datasets)]
         datasets = [[datum['value'] for datum in dataset] for dataset in typed_datasets]
         
         histories = []
