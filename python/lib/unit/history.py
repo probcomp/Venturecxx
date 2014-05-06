@@ -164,8 +164,8 @@ def loadHistory(filename):
 # TODO Parameters have to agree for now
 # FIXME does nameToType work with histOverlay?
 def historyOverlay(name, named_hists):
-  ''':: string -> [(string,History)] -> History containing all those
-  time series overlaid'''  
+    ''':: string -> [(string,History)] -> History containing all those
+    time series overlaid'''  
     answer = History(label=name, parameters=named_hists[0][1].parameters)
     for (subname,subhist) in named_hists:
         for (seriesname,seriesSet) in subhist.nameToSeries.iteritems():
