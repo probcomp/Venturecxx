@@ -210,6 +210,7 @@ def _modify_expression(expression):
         return map(_modify_expression, expression)
     if isinstance(expression, dict):
         return _modify_value(expression)
+    return expression
 
 def _modify_value(ob):
     if ob['type'] in {'count', 'real'}:
