@@ -9,6 +9,7 @@ from utils import cartesianProduct, makeIterable
 def plot(type):
     return type in {'boolean', 'real', 'number', 'atom', 'count'}
 
+
 class History(object):
     """Aggregates data collected from a typical Venture experiment.
 
@@ -30,8 +31,11 @@ typically also tracked."""
         self.label = label # :: string
         self.parameters = parameters # :: {string: a}  the model parameters leading to the data stored here
         self.nameToSeries = {} # :: {string: [Series]} the list is over multiple runs
+        self.data = [] ## FIXME: have no attribute if empty
+
         self.nameToType = {}
 
+        
     def addSeries(self, name, type, label, values, hist=True):
         self._addSeries(name, type, Series(label, values, hist))
 
@@ -45,6 +49,22 @@ typically also tracked."""
         assert run.parameters == self.parameters # Require compatible metadata
         for (name, series) in run.namedSeries.iteritems():
             self._addSeries(name, run.nameToType[name], series)
+
+    
+    def addData(self, data):
+        'Extend list of data. Input: data::[(exp,literal)]'
+        self.data.extend(data)
+
+    def addGroundTruth(self,groundTruth,totalSamples):
+        '::{name:value},int'
+        self.groundTruth = groundTruth
+        # FIXME do with parseValue
+        for exp,value in self.groundTruth.iteritems():
+            type = value['type']
+            value = value['value']
+            values=[value]*totalSamples # pad out with totalSamples for plotting
+            self.addSeries(exp,type,'Ground truth',values)
+        
 
     # Returns the average over all series with the given name.
     def averageValue(self, seriesName):
@@ -142,6 +162,7 @@ def loadHistory(filename):
 
 # :: string -> [(string,History)] -> History containing all those time series overlaid
 # TODO Parameters have to agree for now
+# FIXME does nameToType work with histOverlay?
 def historyOverlay(name, named_hists):
     answer = History(label=name, parameters=named_hists[0][1].parameters)
     for (subname,subhist) in named_hists:
@@ -400,3 +421,4 @@ def savefig_legend_outside(filename, ax=None, bbox_inches='tight'):
                   bbox_inches=bbox_inches,
                   )
     return
+
