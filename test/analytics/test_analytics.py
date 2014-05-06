@@ -16,7 +16,7 @@ def testAnalytics():
     queryExps = ['(add (bernoulli p) (bernoulli p))']
     
     # run inference
-    totalSamples=1000
+    totalSamples=400
     inferredPValues = []
     for i in range(totalSamples):
         v.infer(5)
@@ -44,8 +44,8 @@ def testAnalytics():
     
     # test inference (FIXME: add stats test with (beta 1 16))
     analyticsPValues = history.nameToSeries['p'][0].values
-    assert .05 > abs(np.mean(inferredPValues) - np.mean(analyticsPValues))
-    assert .01 > abs(np.var(inferredPValues) - np.var(analyticsPValues))
+    assert .1 > abs(np.mean(inferredPValues) - np.mean(analyticsPValues))
+    assert .04 > abs(np.var(inferredPValues) - np.var(analyticsPValues))
 
     # (add (bernoulli p) (bernoulli p)) = 1,2 with high probability
     queryValues = history.nameToSeries[queryExps[0]][0].values
