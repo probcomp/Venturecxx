@@ -291,5 +291,4 @@ def validate_arg(instruction,arg,validator,modifier=lambda x: x,required=True,wr
                     'Invalid argument {}. {}'.format(arg, str(e)),
                     argument=arg)
         raise
-    v = modifier(copy.deepcopy(v))
-    return v
+    return modifier(v)

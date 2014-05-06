@@ -213,9 +213,13 @@ def _modify_expression(expression):
 
 def _modify_value(ob):
     if ob['type'] in {'count', 'real'}:
-        ob['type'] = 'number'
+        ans = copy.copy(ob)
+        ans['type'] = 'number'
+        return ans
     elif ob['type'] == 'atom':
-        ob['value'] = int(ob['value'])
+        ans = copy.copy(ob)
+        ans['value'] = int(ob['value'])
+        return ans
     return ob
 
 _symbol_map = {}
