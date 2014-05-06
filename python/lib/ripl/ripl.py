@@ -66,8 +66,7 @@ class Ripl():
         parsed_instruction = p.parse_instruction(instruction_string)
         # calculate the positions of the arguments
         args, arg_ranges = p.split_instruction(instruction_string)
-        try:
-            # execute instruction, and handle possible exception
+        try: # execute instruction, and handle possible exception
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
             # all exceptions raised by the Sivm get augmented with a
@@ -82,10 +81,8 @@ class Ripl():
                     offset = arg_ranges['expression'][0]
                     text_index = [x + offset for x in text_index]
                 except VentureException as e2:
-                    if e2.exception == 'no_text_index':
-                        text_index = None
-                    else:
-                        raise
+                    if e2.exception == 'no_text_index': text_index = None
+                    else: raise
                 e.data['text_index'] = text_index
             # in case of invalid argument exception, the text index
             # refers to the argument's location in the string
