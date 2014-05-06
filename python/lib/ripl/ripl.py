@@ -57,11 +57,13 @@ class Ripl():
     # Execution
     ############################################
 
-    def execute_instruction(self, instruction_string, params=None):
+    def execute_instruction(self, instruction, params=None):
         p = self._cur_parser()
         # perform parameter substitution if necessary
         if params != None:
-            instruction_string = self.substitute_params(instruction_string,params)
+            instruction_string = self.substitute_params(instruction,params)
+        else:
+            instruction_string = instruction
         # parse instruction
         parsed_instruction = p.parse_instruction(instruction_string)
         try: # execute instruction, and handle possible exception
