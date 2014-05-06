@@ -15,6 +15,8 @@ def checkTypeCorrect(_name, sp):
   checkTypedProperty(propTypeCorrect, fully_uncurried_sp_type(type_), sp, type_)
 
 def propTypeCorrect(args_lists, sp, type_):
+  """Check that the successive return values of the given SP (when
+applied fully uncurried) match the expected types."""
   if len(args_lists) == 0:
     pass # OK
   else:
@@ -33,6 +35,8 @@ def checkDeterministic(name, sp):
   checkTypedProperty(propDeterministic, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
 def propDeterministic(args_lists, name, sp):
+  """Check that the given SP returns the same answer every time (applied
+fully uncurried)."""
   args = BogusArgs(args_lists[0], sp.constructSPAux())
   answer = carefully(sp.outputPSP.simulate, args)
   if isinstance(answer, VentureSP):
@@ -51,3 +55,45 @@ def propDeterministic(args_lists, name, sp):
   else:
     for _ in range(5):
       eq_(answer, carefully(sp.outputPSP.simulate, args))
+
+def testRandom():
+  for (name,sp) in builtInSPsList():
+    if isinstance(sp.requestPSP, NullRequestPSP):
+      if sp.outputPSP.isRandom():
+        yield checkRandom, name, sp
+
+def checkRandom(_name, sp):
+  # I take the name because I want it to appear in the nose arg list
+  args_type = fully_uncurried_sp_type(sp.venture_type())
+  checkTypedProperty(propRandom, [args_type for _ in range(5)] , sp)
+
+def evaluate_fully_uncurried(sp, args_lists):
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+  answer = carefully(sp.outputPSP.simulate, args)
+  if len(args_lists) == 1:
+    return answer
+  else:
+    return evaluate_fully_uncurried(answer, args_lists[1:])
+
+def propRandom(args_listss, sp):
+  """Check that the given SP is random on at least one set of arguments."""
+  answers = []
+  for args_lists in args_listss:
+    try:
+      answer = evaluate_fully_uncurried(sp, args_lists)
+      answers.append(answer)
+      for _ in range(10):
+        ans2 = evaluate_fully_uncurried(sp, args_lists)
+        if not ans2 == answer:
+          return True
+    except ArgumentsNotAppropriate:
+      # This complication serves the purpose of not decreasing the
+      # acceptance rate of the search of appropriate arguments to the
+      # SP, while allowing the SP to redeem its claims of randomness
+      # on additional arguments if they are available.
+      if answers == []:
+        raise
+      else:
+        answers.append("Inappropriate arguments")
+        continue
+  assert False, "SP deterministically returned %s (parallel to arguments)" % answers
