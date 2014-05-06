@@ -160,16 +160,20 @@ def ensure_directory(directory):
 def loadHistory(filename):
     return pickle.load(open(filename))
 
-# :: string -> [(string,History)] -> History containing all those time series overlaid
+# 
 # TODO Parameters have to agree for now
 # FIXME does nameToType work with histOverlay?
 def historyOverlay(name, named_hists):
+  ''':: string -> [(string,History)] -> History containing all those
+  time series overlaid'''  
     answer = History(label=name, parameters=named_hists[0][1].parameters)
     for (subname,subhist) in named_hists:
         for (seriesname,seriesSet) in subhist.nameToSeries.iteritems():
+            seriesType = subhist.nameToType[seriesname]
             for subseries in seriesSet:
-                answer.addSeries(seriesname, subname + "_" + subseries.label, subseries.values, subseries.hist)
+                answer.addSeries(seriesname,seriesType, subname + "_" + subseries.label, subseries.values, subseries.hist)
     return answer
+
 
 class Run(object):
     """Data from a single run of a model.  A History is effectively a set
