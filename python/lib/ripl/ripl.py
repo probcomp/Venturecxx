@@ -64,8 +64,6 @@ class Ripl():
             instruction_string = self.substitute_params(instruction_string,params)
         # parse instruction
         parsed_instruction = p.parse_instruction(instruction_string)
-        # calculate the positions of the arguments
-        args, arg_ranges = p.split_instruction(instruction_string)
         try: # execute instruction, and handle possible exception
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
@@ -75,6 +73,8 @@ class Ripl():
             # in the case of a parse exception, the text_index gets narrowed
             # down to the exact expression/atom that caused the error
             if e.exception == 'parse':
+                # calculate the positions of the arguments
+                args, arg_ranges = p.split_instruction(instruction_string)
                 try:
                     text_index = self._cur_parser().expression_index_to_text_index(
                             args['expression'], e.data['expression_index'])
@@ -87,6 +87,8 @@ class Ripl():
             # in case of invalid argument exception, the text index
             # refers to the argument's location in the string
             if e.exception == 'invalid_argument':
+                # calculate the positions of the arguments
+                args, arg_ranges = p.split_instruction(instruction_string)
                 arg = e.data['argument']
                 #import pdb; pdb.set_trace()
                 text_index = arg_ranges[arg]
