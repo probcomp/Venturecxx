@@ -371,3 +371,57 @@ class VentureSivm(object):
                     argument='breakpoint_id')
         return {"breakpoint":copy.deepcopy(self.breakpoint_dict[bid])}
 
+
+    ###############################
+    # Convenience wrappers some popular core instructions
+    # urrently supported wrappers: assume,observe,predict,forget,report,infer,force,sample
+    ###############################
+
+    def assume(self, name, expression, label=None):
+        if label==None:
+            d = {'instruction': 'assume', 'symbol':name, 'expression':expression}
+        else:
+            d = {'instruction': 'labeled_assume', 'symbol':name, 'expression':expression,'label':label}
+        return self.execute_instruction(d)
+
+    def predict(self, expression, label=None):
+        if label==None:
+            d = {'instruction': 'predict', 'expression':expression}
+        else:
+            d = {'instruction': 'labeled_predict', 'expression':expression,'label':label}
+        return self.execute_instruction(d)
+
+    def observe(self, expression, value, label=None):
+        if label==None:
+            d = {'instruction': 'observe', 'expression':expression, 'value':value}
+        else:
+            d = {'instruction': 'labeled_observe', 'expression':expression, 'value':value, 'label':label}
+        return self.execute_instruction(d)
+
+    def forget(self, label_or_did):
+        if isinstance(label_or_did,int):
+            d = {'instruction':'forget','directive_id':label_or_did}
+        else:
+            d = {'instruction':'labeled_forget','label':label_or_did}
+        return self.execute_instruction(d)
+
+    def report(self, label_or_did):
+        if isinstance(label_or_did,int):
+            d = {'instruction':'report','directive_id':label_or_did}
+        else:
+            d = {'instruction':'labeled_report','label':label_or_did}
+        return self.execute_instruction(d)
+
+    def infer(self, params=None):
+        d = {'instruction':'infer','params':params}
+        return self.execute_instruction(d)
+
+    def force(self, expression, value):
+        d = {'instruction':'force','expression':expression, 'value':value}
+        return self.execute_instruction(d)
+
+    def sample(self, expression):
+        d = {'instruction':'sample','expression':expression}
+        return self.execute_instruction(d)
+
+
