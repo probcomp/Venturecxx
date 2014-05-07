@@ -175,13 +175,11 @@ class Ripl():
                 return self._ensure_parsed_expression(value)
             elif key in ["directive_id", "seed", "inference_timeout"]:
                 return self._ensure_parsed_number(value)
-            elif key == "options":
-                return self._ensure_parsed_dict(value)
-            elif key in ["symbol", "label"]:
+            elif key in ["options", "params"]:
+                # Do not support partially parsed options or param
+                # hashes, since they have too many possible key types
                 return value
-            elif key == "params":
-                # Do not support partially parsed param hashes, since
-                # they have too many possible key types
+            elif key in ["symbol", "label"]:
                 return value
             elif key == "value":
                 # I believe values are a subset of expressions
@@ -417,35 +415,28 @@ Open issues:
         return self.execute_instruction(partially_parsed={'instruction':'continuous_inference_status'})
 
     def start_continuous_inference(self, params=None):
-        s = self._cur_parser().get_instruction_string('start_continuous_inference')
-        self.execute_instruction(s, {'params': self.parseInferParams(params)})
+        self.execute_instruction(partially_parsed={'instruction':'start_continuous_inference', 'params': self.parseInferParams(params)})
         return None
 
     def stop_continuous_inference(self):
-        s = self._cur_parser().get_instruction_string('stop_continuous_inference')
-        self.execute_instruction(s)
+        self.execute_instruction(partially_parsed={'instruction':'stop_continuous_inference'})
         return None
 
     def get_current_exception(self):
-        s = self._cur_parser().get_instruction_string('get_current_exception')
-        return self.execute_instruction(s,{})['exception']
+        return self.execute_instruction(partially_parsed={'instruction':'get_current_exception'})['exception']
 
     def get_state(self):
-        s = self._cur_parser().get_instruction_string('get_state')
-        return self.execute_instruction(s,{})['state']
+        return self.execute_instruction(partially_parsed={'instruction':'get_state'})['state']
 
     def get_logscore(self, label_or_did):
         if isinstance(label_or_did,int):
-            s = self._cur_parser().get_instruction_string('get_logscore')
-            d = {'directive_id':label_or_did}
+            i = {'instruction':'get_logscore', 'directive_id':label_or_did}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_get_logscore')
-            d = {'label':label_or_did}
-        return self.execute_instruction(s,d)['logscore']
+            i = {'instruction':'labeled_get_logscore', 'label':label_or_did}
+        return self.execute_instruction(partially_parsed=i)['logscore']
 
     def get_global_logscore(self):
-        s = self._cur_parser().get_instruction_string('get_global_logscore')
-        return self.execute_instruction(s,{})['logscore']
+        return self.execute_instruction(partially_parsed={'instruction':'get_global_logscore'})['logscore']
 
     ############################################
     # Serialization
@@ -468,9 +459,8 @@ Open issues:
     
     def profiler_configure(self, options=None):
         if options is None: options = {}
-        s = self._cur_parser().get_instruction_string('profiler_configure')
-        d = {'options': options}
-        return self.execute_instruction(s, d)['options']
+        i = {'instruction': 'profiler_configure', 'options': options}
+        return self.execute_instruction(partially_parsed=i)['options']
     
     def profiler_enable(self):
         self.profiler_configure({'profiler_enabled': True})
