@@ -113,6 +113,11 @@ class ChurchPrimeParser(object):
         self.program = utils.make_program_parser(self.instruction)
         self.instruction_strings = utils.make_instruction_strings(instruction_list,antipatterns)
 
+    # NOTE:
+    # the following is copy-pasted to the venture_script_parser
+    # the two code fragments should be manually kept in sync until
+    # the directive syntax is finalized (then code refactor can happen)
+
     def get_instruction_string(self,instruction_type):
         return self.instruction_strings[instruction_type]
 
