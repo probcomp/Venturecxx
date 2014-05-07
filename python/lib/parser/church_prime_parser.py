@@ -128,6 +128,13 @@ class ChurchPrimeParser(object):
         return utils.simplify_instruction_parse_tree(
                 utils.apply_parser(self.instruction, instruction_string)[0])
 
+    def parse_expression(self, expression_string):
+        return utils.simplify_expression_parse_tree(
+            utils.apply_parser(self.expression, expression_string)[0])
+
+    def parse_number(self, number_string):
+        return utils.apply_parser(self.literal, number_string)[0]
+        
     def split_program(self, s):
         locs = utils.split_program_parse_tree(
                 utils.apply_parser(self.program, s)[0])

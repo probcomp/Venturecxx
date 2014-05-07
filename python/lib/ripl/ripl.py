@@ -16,6 +16,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import numbers
 from venture.exception import VentureException
 import utils as u
 
@@ -57,15 +58,19 @@ class Ripl():
     # Execution
     ############################################
 
-    def execute_instruction(self, instruction, params=None):
+    def execute_instruction(self, instruction=None, params=None, partially_parsed=None):
         p = self._cur_parser()
         # perform parameter substitution if necessary
-        if params != None:
-            instruction_string = self.substitute_params(instruction,params)
+        if partially_parsed is None:
+            if params != None:
+                instruction_string = self.substitute_params(instruction,params)
+            else:
+                instruction_string = instruction
+                # parse instruction
+            parsed_instruction = p.parse_instruction(instruction_string)
         else:
-            instruction_string = instruction
-        # parse instruction
-        parsed_instruction = p.parse_instruction(instruction_string)
+            parsed_instruction = self._ensure_parsed(partially_parsed)
+            instruction_string = self._unparse(parsed_instruction)
         try: # execute instruction, and handle possible exception
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
@@ -142,6 +147,56 @@ class Ripl():
             return [self.directive_id_to_mode[directive_id], self.directive_id_to_string[directive_id]]
         return None
 
+    def _ensure_parsed(self, partially_parsed_instruction):
+        if isinstance(partially_parsed_instruction, str):
+            return self._cur_parser().parse_instruction(partially_parsed_instruction)
+        elif isinstance(partially_parsed_instruction, dict):
+            return self._ensure_parsed_dict(partially_parsed_instruction)
+        else:
+            raise Exception("Unknown form of partially parsed instruction %s" % partially_parsed_instruction)
+
+    def _ensure_parsed_dict(self, partial_dict):
+        def by_key(key, value):
+            if key == "instruction":
+                return value
+            elif key == "expression":
+                return self._ensure_parsed_expression(value)
+            elif key in ["directive_id", "seed", "inference_timeout"]:
+                return self._ensure_parsed_number(value)
+            elif key == "options":
+                return self._ensure_parsed_dict(value)
+            elif key in ["symbol", "label"]:
+                return value
+            elif key == "value":
+                # I believe values are a subset of expressions
+                return self._ensure_parsed_expression(value)
+            else:
+                raise Exception("Unknown instruction field %s in %s" % (key, partial_dict))
+        return dict([(key, by_key(key, value)) for key, value in partial_dict.iteritems()])
+
+    def _ensure_parsed_expression(self, expr):
+        if isinstance(expr, str):
+            return self._cur_parser().parse_expression(expr)
+        elif isinstance(expr, list):
+            return [self._ensure_parsed_expression(e) for e in expr]
+        elif isinstance(expr, dict):
+            # A literal value as a stack dict.  These are all assumed
+            # fully parsed.
+            return expr
+        else:
+            raise Exception("Unknown partially parsed expression type %s" % expr)
+
+    def _ensure_parsed_number(self, number):
+        if isinstance(number, numbers.Number):
+            return number
+        elif isinstance(number, str):
+            return self._cur_parser().parse_number(number)
+        else:
+            raise Exception("Unknown number format %s" % number)
+
+    def _unparse(self, _instruction):
+        return None # TODO Really unparse
+
     def character_index_to_expression_index(self, directive_id, character_index):
         p = self._cur_parser()
         expression, offset = self._extract_expression(directive_id)
@@ -160,12 +215,12 @@ class Ripl():
 
     def assume(self, name, expression, label=None, type=False):
         if label==None:
-            s = self._cur_parser().get_instruction_string('assume')
-            d = {'symbol':name, 'expression':expression}
+            partially_parsed = { 'instruction': 'assume',
+                                 'symbol':name, 'expression':expression}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_assume')
-            d = {'symbol':name, 'expression':expression, 'label':label}
-        value = self.execute_instruction(s,d)['value']
+            partially_parsed = { 'instruction': 'labeled_assume',
+                                 'symbol':name, 'expression':expression, 'label':label}
+        value = self.execute_instruction(partially_parsed=partially_parsed)['value']
         return value if type else _strip_types(value)
 
     def predict(self, expression, label=None, type=False):
