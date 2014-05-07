@@ -171,7 +171,8 @@ def historyOverlay(name, named_hists):
         for (seriesname,seriesSet) in subhist.nameToSeries.iteritems():
             seriesType = subhist.nameToType[seriesname]
             for subseries in seriesSet:
-                answer.addSeries(seriesname,seriesType, subname + "_" + subseries.label, subseries.values, subseries.hist)
+                answer.addSeries(seriesname,seriesType,
+                                 subname+"_"+subseries.label, subseries.values, hist=subseries.hist)
     return answer
 
 
