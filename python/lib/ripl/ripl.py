@@ -269,6 +269,18 @@ class Ripl():
         return None
 
     def bulk_observe(self, exp, items, label=None):
+        """Observe many evaluations of an expression.
+
+Syntax:
+ripl.bulk_observe("<expr>", <iterable>)
+
+Semantics:
+Operationally equivalent to
+  for x in iterable:
+    ripl.observe("<expr>", x)
+but appreciably faster.  See also open considerations and details of
+the semantics in ripl.observe_dataset
+"""
         ret_vals = []
         parsed = self._ensure_parsed_expression(exp)
         for i, val in enumerate(items):
@@ -276,7 +288,7 @@ class Ripl():
         return ret_vals
 
     def observe_dataset(self, proc_expression, iterable, label=None):
-        """Observe a dataset (general form).
+        """Observe a general dataset.
 
 Syntax:
 ripl.observe_dataset("<expr>", <iterable>)
@@ -288,7 +300,7 @@ ripl.observe_dataset("<expr>", <iterable>)
 - The <iterable> is a Python iterable each of whose elements must be a
   tuple of a list of valid Venture values and a Venture value: ([a], b)
 
-- There is not Venture syntax for this; it is accessible only when
+- There is no Venture syntax for this; it is accessible only when
   using Venture as a library.
 
 Semantics:
