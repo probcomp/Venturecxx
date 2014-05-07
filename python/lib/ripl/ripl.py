@@ -74,41 +74,7 @@ class Ripl():
         try: # execute instruction, and handle possible exception
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
-            # TODO This error reporting is broken for ripl methods,
-            # because the computed text chunks refer to the synthetic
-            # instruction string instead of the actual data the caller
-            # passed.
-
-            # all exceptions raised by the Sivm get augmented with a
-            # text index (which defaults to the entire instruction)
-            e.data['text_index'] = [0,len(instruction_string)-1]
-            # in the case of a parse exception, the text_index gets narrowed
-            # down to the exact expression/atom that caused the error
-            if e.exception == 'parse':
-                # calculate the positions of the arguments
-                args, arg_ranges = p.split_instruction(instruction_string)
-                try:
-                    text_index = self._cur_parser().expression_index_to_text_index(
-                            args['expression'], e.data['expression_index'])
-                    offset = arg_ranges['expression'][0]
-                    text_index = [x + offset for x in text_index]
-                except VentureException as e2:
-                    if e2.exception == 'no_text_index': text_index = None
-                    else: raise
-                e.data['text_index'] = text_index
-            # in case of invalid argument exception, the text index
-            # refers to the argument's location in the string
-            if e.exception == 'invalid_argument':
-                # calculate the positions of the arguments
-                args, arg_ranges = p.split_instruction(instruction_string)
-                arg = e.data['argument']
-                #import pdb; pdb.set_trace()
-                text_index = arg_ranges[arg]
-                e.data['text_index'] = text_index
-            a = e.data['text_index'][0]
-            b = e.data['text_index'][1]+1
-            e.data['text_snippet'] = instruction_string[a:b]
-            raise
+            self._raise_annotated_error(e, instruction_string)
         # if directive, then save the text string
         if parsed_instruction['instruction'] in ['assume','observe',
                 'predict','labeled_assume','labeled_observe','labeled_predict']:
@@ -116,6 +82,44 @@ class Ripl():
             self.directive_id_to_string[did] = instruction_string
             self.directive_id_to_mode[did] = self.mode
         return ret_value
+
+    def _raise_annotated_error(self, e, instruction_string):
+        # TODO This error reporting is broken for ripl methods,
+        # because the computed text chunks refer to the synthetic
+        # instruction string instead of the actual data the caller
+        # passed.
+
+        p = self._cur_parser()
+        # all exceptions raised by the Sivm get augmented with a
+        # text index (which defaults to the entire instruction)
+        e.data['text_index'] = [0,len(instruction_string)-1]
+        # in the case of a parse exception, the text_index gets narrowed
+        # down to the exact expression/atom that caused the error
+        if e.exception == 'parse':
+            # calculate the positions of the arguments
+            args, arg_ranges = p.split_instruction(instruction_string)
+            try:
+                text_index = self._cur_parser().expression_index_to_text_index(
+                        args['expression'], e.data['expression_index'])
+                offset = arg_ranges['expression'][0]
+                text_index = [x + offset for x in text_index]
+            except VentureException as e2:
+                if e2.exception == 'no_text_index': text_index = None
+                else: raise
+            e.data['text_index'] = text_index
+        # in case of invalid argument exception, the text index
+        # refers to the argument's location in the string
+        if e.exception == 'invalid_argument':
+            # calculate the positions of the arguments
+            args, arg_ranges = p.split_instruction(instruction_string)
+            arg = e.data['argument']
+            #import pdb; pdb.set_trace()
+            text_index = arg_ranges[arg]
+            e.data['text_index'] = text_index
+        a = e.data['text_index'][0]
+        b = e.data['text_index'][1]+1
+        e.data['text_snippet'] = instruction_string[a:b]
+        raise
 
 
     def execute_program(self, program_string, params=None):
