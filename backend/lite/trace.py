@@ -7,6 +7,7 @@ from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
 from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator
+from yutian_mh import yutianMixMH,YutianMHOperator,YutianBlockScaffoldIndexer
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
@@ -329,6 +330,9 @@ class Trace(object):
       if params["kernel"] == "mh":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MHOperator())
+      elif params["kernel"] == "yutian_mh":
+        assert params["with_mutation"]
+        yutianMixMH(self,YutianBlockScaffoldIndexer(params["scope"],params["block"]),YutianMHOperator())
       elif params["kernel"] == "meanfield":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MeanfieldOperator(params["steps"],0.0001))
