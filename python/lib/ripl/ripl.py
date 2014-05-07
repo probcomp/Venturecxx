@@ -311,8 +311,8 @@ Open issues:
         """
         ret_vals = []
         for i,(args, val) in enumerate(iterable):
-          expr = "(" + proc_expression + " " + " ".join([str(a) for a in args]) + ")"
-          ret_vals.append(self.observe(expr,val,label+str(i)))
+          expr = [proc_expression] + args
+          ret_vals.append(self.observe(expr,val,label+"_"+str(i)))
         return ret_vals
 
     ############################################
