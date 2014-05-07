@@ -132,6 +132,17 @@ class ChurchPrimeParser(object):
         return utils.simplify_expression_parse_tree(
             utils.apply_parser(self.expression, expression_string)[0])
 
+    def unparse_expression(self, expression):
+        if isinstance(expression, dict):
+            # Should be a leaf value
+            return utils.value_to_string(expression)
+        elif isinstance(expression, basestring): # Symbol
+            return expression
+        elif isinstance(expression, list):
+            return '(' + ' '.join([self.unparse_expression(e) for e in expression]) + ')'
+        else:
+            raise Exception("Don't know how to unparse %s" % expression)
+
     def parse_number(self, number_string):
         return utils.apply_parser(self.literal, number_string)[0]
         

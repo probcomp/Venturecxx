@@ -196,12 +196,19 @@ class Ripl():
         else:
             raise Exception("Unknown number format %s" % number)
 
-    def _unparse(self, _instruction):
-        return None # TODO actually unparse
+    def _unparse(self, instruction):
         # The following doesn't quite work, because substitute_params doesn't
         # unparse expressions.
-        # template = self._cur_parser().get_instruction_string(instruction['instruction'])
-        # return self.substitute_params(template, instruction)
+        template = self._cur_parser().get_instruction_string(instruction['instruction'])
+        def unparse_by_key(key, val):
+            if key == "expression":
+                return self._cur_parser().unparse_expression(val)
+            else:
+                # The standard unparsings should take care of it
+                return val
+        def unparse_dict(d):
+            return dict([(key, unparse_by_key(key, val)) for key, val in d.iteritems()])
+        return self.substitute_params(template, unparse_dict(instruction))
 
     def character_index_to_expression_index(self, directive_id, character_index):
         p = self._cur_parser()
