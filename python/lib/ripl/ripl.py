@@ -217,32 +217,27 @@ class Ripl():
 
     def assume(self, name, expression, label=None, type=False):
         if label==None:
-            partially_parsed = { 'instruction': 'assume',
-                                 'symbol':name, 'expression':expression}
+            i = {'instruction':'assume', 'symbol':name, 'expression':expression}
         else:
-            partially_parsed = { 'instruction': 'labeled_assume',
-                                 'symbol':name, 'expression':expression, 'label':label}
-        value = self.execute_instruction(partially_parsed=partially_parsed)['value']
+            i = {'instruction':'labeled_assume',
+                  'symbol':name, 'expression':expression, 'label':label}
+        value = self.execute_instruction(partially_parsed=i)['value']
         return value if type else _strip_types(value)
 
     def predict(self, expression, label=None, type=False):
         if label==None:
-            s = self._cur_parser().get_instruction_string('predict')
-            d = {'expression':expression}
+            i = {'instruction':'predict', 'expression':expression}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_predict')
-            d = {'expression':expression, 'label':label}
-        value = self.execute_instruction(s,d)['value']
+            i = {'instruction':'labeled_predict', 'expression':expression, 'label':label}
+        value = self.execute_instruction(partially_parsed=i)['value']
         return value if type else _strip_types(value)
 
     def observe(self, expression, value, label=None):
         if label==None:
-            s = self._cur_parser().get_instruction_string('observe')
-            d = {'expression':expression, 'value':value}
+            i = {'instruction':'observe', 'expression':expression, 'value':value}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_observe')
-            d = {'expression':expression, 'value':value, 'label':label}
-        self.execute_instruction(s,d)
+            i = {'instruction':'labeled_observe', 'expression':expression, 'value':value, 'label':label}
+        self.execute_instruction(partially_parsed=i)
         return None
 
     def bulk_observe(self, proc_expression, iterable, label=None):
