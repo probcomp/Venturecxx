@@ -454,6 +454,9 @@ class VentureScriptParser(object):
         return utils.simplify_expression_parse_tree(
             utils.apply_parser(self.expression, expression_string)[0])
 
+    def unparse_expression(self, _expression):
+        return None # TODO What is the syntax to unparse to?
+
     def parse_number(self, number_string):
         return utils.apply_parser(self.literal, number_string)[0]
 
