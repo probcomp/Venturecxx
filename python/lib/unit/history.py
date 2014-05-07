@@ -63,7 +63,7 @@ typically also tracked."""
             type = value['type']
             value = value['value']
             values=[value]*totalSamples # pad out with totalSamples for plotting
-            self.addSeries(exp,type,'Ground truth',values)
+            self.addSeries(exp,type,'Ground_truth',values)
         
 
     # Returns the average over all series with the given name.
@@ -171,7 +171,8 @@ def historyOverlay(name, named_hists):
         for (seriesname,seriesSet) in subhist.nameToSeries.iteritems():
             seriesType = subhist.nameToType[seriesname]
             for subseries in seriesSet:
-                answer.addSeries(seriesname,seriesType, subname + "_" + subseries.label, subseries.values, subseries.hist)
+                answer.addSeries(seriesname,seriesType,
+                                 subname+"_"+subseries.label, subseries.values, hist=subseries.hist)
     return answer
 
 
@@ -249,7 +250,11 @@ def plotSeries(name, seriesList, subtitle="", xlabel='Sweep', **kwargs):
 
 def _doPlotSeries(seriesList, ybounds=None):
     for series in seriesList:
-        plt.plot(series.xvals(), series.values, label=series.label)
+        if 'ground_truth' in series.label.lower():
+            plt.plot(series.xvals(), series.values,linestyle=':',
+                     markersize=6, label=series.label)
+        else:
+            plt.plot(series.xvals(), series.values, label=series.label)
     setYBounds(seriesList, ybounds)
 
 # Plots histograms for a set of series.
@@ -269,8 +274,10 @@ def scatterPlotSeries(name1, seriesList1, name2, seriesList2, subtitle="", **kwa
 def _doScatterPlot(data, style=' o', ybounds=None, contour_func=None, contour_delta=0.125):
     xSeries, ySeries = data
     for (xs, ys) in zip(xSeries, ySeries):
-        plt.plot(xs.values, ys.values, style, label=xs.label) # Assume ys labels are the same
-    setYBounds(ySeries, ybounds)
+        plt.plot(xs.values, ys.values, #style,
+                 lw=0,markersize=.4,
+                 label=xs.label) # Assume ys labels are the same
+        setYBounds(ySeries, ybounds)
     if contour_func is not None:
         [xmin, xmax] = seriesBounds(xSeries)
         [ymin, ymax] = seriesBounds(ySeries)

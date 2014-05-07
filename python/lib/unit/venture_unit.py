@@ -446,18 +446,18 @@ class Analytics(object):
             self.updateValues(predictedValues,keyToDirective=predictToDirective)
             self.updateValues(queryExpsValues,keyToDirective=None)
             
-        answer.addSeries('sweep time (s)', 'count', Series(label, sweepTimes))
-        answer.addSeries('sweep_iters', 'count', Series(label, sweepIters))
-        answer.addSeries('logscore', 'number', Series(label, logscores))
+        answer._addSeries('sweep time (s)', 'count', Series(label, sweepTimes))
+        answer._addSeries('sweep_iters', 'count', Series(label, sweepIters))
+        answer._addSeries('logscore', 'number', Series(label, logscores))
 
         for (symbol, values) in assumedValues.iteritems():
-            answer.addSeries(symbol, values[0]['type'], Series(label, map(parseValue, values)))
+            answer._addSeries(symbol, values[0]['type'], Series(label, map(parseValue, values)))
 
         for (index, values) in predictedValues.iteritems():
-            answer.addSeries(self.nameObserve(index), values[0]['type'], Series(label, map(parseValue, values)))
+            answer._addSeries(self.nameObserve(index), values[0]['type'], Series(label, map(parseValue, values)))
 
         for (exp, values) in queryExpsValues.iteritems():
-            answer.addSeries(exp,values[0]['type'], Series(label, map(parseValue, values)))
+            answer._addSeries(exp,values[0]['type'], Series(label, map(parseValue, values)))
 
         return answer
 
@@ -579,8 +579,7 @@ class Analytics(object):
             queryExpsValues[exp] = value
                 
         logscore = self.ripl.get_global_logscore()
-        prior_run.addSeries('logscore','number', Series('prior',
-                                               [logscore]*sweeps, hist=False))
+        prior_run.addSeries('logscore','number',[logscore]*sweeps,hist=False)
         
         groundTruth = assumedValues.copy() # store groundTruth as {exp:value}
         groundTruth.update(queryExpsValues.copy())
