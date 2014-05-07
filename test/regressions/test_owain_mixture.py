@@ -23,7 +23,8 @@ def testOwainMixture():
   for i in range(10,20):
     ripl.observe('(x %i)'%i,'%f' % 3)
     ripl.infer(10)
-    [ripl.predict('(y %i)'%i) for r in range(20) ]  
+    for _ in range(20):
+      ripl.predict(["y", i])
 
   ripl.infer(100)
   
@@ -51,6 +52,7 @@ def testOwainMixture():
   for i in range(10,20):
     ripl.observe('(x %i)'%i,'%f' % 3)
     ripl.infer(10)
-    [ripl.predict('(y %i)'%i) for r in range(20) ]  
+    for _ in range(20):
+      ripl.predict(["y", i])
 
   ripl.infer(100)

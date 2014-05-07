@@ -1,9 +1,9 @@
 from venture.venturemagics.ip_parallel import mk_p_ripl
 from venture.unit import *
 import numpy as np
+from nose.plugins.attrib import attr
 
-
-
+@attr('slow')
 def testAnalytics():
     
     # load ripl with model and observes
