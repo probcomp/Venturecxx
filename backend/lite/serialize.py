@@ -2,7 +2,7 @@ from trace import Trace
 from env import VentureEnvironment
 from node import Node, ConstantNode, LookupNode, RequestNode, OutputNode
 from request import Request, ESR
-from value import VentureNumber, VentureAtom, VentureBool, VentureSymbol, VentureArray, VentureNil, VenturePair, VentureSimplex, VentureDict, VentureMatrix, SPRef
+from value import VentureNumber, VentureProbability, VentureCount, VenturePositive, VentureAtom, VentureBool, VentureSymbol, VentureArray, VentureNil, VenturePair, VentureSimplex, VentureDict, VentureMatrix, SPRef
 from sp import VentureSP, SPAux, SPFamilies
 from psp import NullRequestPSP, ESRRefOutputPSP
 from csp import CSPRequestPSP
@@ -23,6 +23,9 @@ serializable_types = [
     OutputNode,
     VentureEnvironment,
     VentureNumber,
+    VentureProbability,
+    VentureCount,
+    VenturePositive,
     VentureAtom,
     VentureBool,
     VentureSymbol,
