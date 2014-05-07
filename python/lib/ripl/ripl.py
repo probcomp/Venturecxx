@@ -71,8 +71,13 @@ class Ripl():
             instruction_string_thunk = lambda : instruction_string
         else:
             parsed_instruction = self._ensure_parsed(partially_parsed)
-            instruction_string = self._unparse(parsed_instruction)
-            instruction_string_thunk = lambda : instruction_string
+            box = [None]
+            def instruction_string_thunk():
+                # Silly Python, not letting me mutate variables from
+                # an enclosing scope.
+                if box[0] is None:
+                    box[0] = self._unparse(parsed_instruction)
+                return box[0]
         try: # execute instruction, and handle possible exception
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
@@ -204,8 +209,6 @@ class Ripl():
             raise Exception("Unknown number format %s" % number)
 
     def _unparse(self, instruction):
-        # The following doesn't quite work, because substitute_params doesn't
-        # unparse expressions.
         template = self._cur_parser().get_instruction_string(instruction['instruction'])
         def unparse_by_key(key, val):
             if key == "expression":
