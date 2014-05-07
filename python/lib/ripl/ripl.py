@@ -376,57 +376,45 @@ Open issues:
         self.execute_instruction(partially_parsed={'instruction':'infer', 'params': self.parseInferParams(params)})
 
     def clear(self):
-        s = self._cur_parser().get_instruction_string('clear')
-        self.execute_instruction(s,{})
+        self.execute_instruction(partially_parsed={'instruction':'clear'})
         return None
 
     def rollback(self):
-        s = self._cur_parser().get_instruction_string('rollback')
-        self.execute_instruction(s,{})
+        self.execute_instruction(partially_parsed={'instruction':'rollback'})
         return None
 
     def list_directives(self, type=False):
         with self.sivm._pause_continuous_inference():
-            s = self._cur_parser().get_instruction_string('list_directives')
-            directives = self.execute_instruction(s,{})['directives']
+            directives = self.execute_instruction(partially_parsed={'instruction':'list_directives'})['directives']
             # modified to add value to each directive
             # FIXME: is this correct behavior?
             for directive in directives:
                 inst = { 'instruction':'report',
                          'directive_id':directive['directive_id'],
                          }
-                # Going around the string synthesis and parsing makes
-                # the demos acceptably fast (time for the venture
-                # server to respond to /list_directives improves by
-                # 5-10x, depending on the number of directives).
-                value = self.sivm.core_sivm.execute_instruction(inst)['value']
+                value = self.execute_instruction(partially_parsed=inst)['value']
                 directive['value'] = value if type else _strip_types(value)
             return directives
 
     def get_directive(self, label_or_did):
         if isinstance(label_or_did,int):
-            s = self._cur_parser().get_instruction_string('get_directive')
-            d = {'directive_id':label_or_did}
+            i = {'instruction':'get_directive', 'directive_id':label_or_did}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_get_directive')
-            d = {'label':label_or_did}
-        return self.execute_instruction(s,d)['directive']
+            i = {'instruction':'labeled_get_directive', 'label':label_or_did}
+        return self.execute_instruction(partially_parsed=i)['directive']
 
     def force(self, expression, value):
-        s = self._cur_parser().get_instruction_string('force')
-        d = {'expression':expression, 'value':value}
-        self.execute_instruction(s,d)
+        i = {'instruction':'force', 'expression':expression, 'value':value}
+        self.execute_instruction(partially_parsed=i)
         return None
 
     def sample(self, expression, type=False):
-        s = self._cur_parser().get_instruction_string('sample')
-        d = {'expression':expression}
-        value = self.execute_instruction(s,d)['value']
+        i = {'instruction':'sample', 'expression':expression}
+        value = self.execute_instruction(partially_parsed=i)['value']
         return value if type else _strip_types(value)
     
     def continuous_inference_status(self):
-        s = self._cur_parser().get_instruction_string('continuous_inference_status')
-        return self.execute_instruction(s)
+        return self.execute_instruction(partially_parsed={'instruction':'continuous_inference_status'})
 
     def start_continuous_inference(self, params=None):
         s = self._cur_parser().get_instruction_string('start_continuous_inference')
