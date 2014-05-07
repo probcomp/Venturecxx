@@ -68,18 +68,21 @@ class Ripl():
                 instruction_string = instruction
                 # parse instruction
             parsed_instruction = p.parse_instruction(instruction_string)
+            instruction_string_thunk = lambda : instruction_string
         else:
             parsed_instruction = self._ensure_parsed(partially_parsed)
             instruction_string = self._unparse(parsed_instruction)
+            instruction_string_thunk = lambda : instruction_string
         try: # execute instruction, and handle possible exception
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
+            instruction_string = instruction_string_thunk()
             self._raise_annotated_error(e, instruction_string)
         # if directive, then save the text string
         if parsed_instruction['instruction'] in ['assume','observe',
                 'predict','labeled_assume','labeled_observe','labeled_predict']:
             did = ret_value['directive_id']
-            self.directive_id_to_string[did] = instruction_string
+            self.directive_id_to_string[did] = instruction_string_thunk
             self.directive_id_to_mode[did] = self.mode
         return ret_value
 
@@ -148,7 +151,7 @@ class Ripl():
 
     def get_text(self,directive_id):
         if directive_id in self.directive_id_to_mode:
-            return [self.directive_id_to_mode[directive_id], self.directive_id_to_string[directive_id]]
+            return [self.directive_id_to_mode[directive_id], self.directive_id_to_string[directive_id]()]
         return None
 
     def _ensure_parsed(self, partially_parsed_instruction):
@@ -529,7 +532,7 @@ Open issues:
         return self.parsers[self.mode]
 
     def _extract_expression(self,directive_id):
-        text = self.directive_id_to_string[directive_id]
+        text = self.directive_id_to_string[directive_id]()
         mode = self.directive_id_to_mode[directive_id]
         p = self.parsers[mode]
         args, arg_ranges = p.split_instruction(text)
