@@ -183,6 +183,8 @@ class Ripl():
             # A literal value as a stack dict.  These are all assumed
             # fully parsed.
             return expr
+        elif isinstance(expr, numbers.Number):
+            return {'type':'number', 'value':expr}
         else:
             raise Exception("Unknown partially parsed expression type %s" % expr)
 
