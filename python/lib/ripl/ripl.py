@@ -58,10 +58,10 @@ class Ripl():
     # Execution
     ############################################
 
-    def execute_instruction(self, instruction=None, params=None, partially_parsed=None):
+    def execute_instruction(self, instruction=None, params=None):
         p = self._cur_parser()
         # perform parameter substitution if necessary
-        if partially_parsed is None:
+        if isinstance(instruction, basestring):
             if params != None:
                 instruction_string = self.substitute_params(instruction,params)
             else:
@@ -70,7 +70,7 @@ class Ripl():
             parsed_instruction = p.parse_instruction(instruction_string)
             instruction_string_thunk = lambda : instruction_string
         else:
-            parsed_instruction = self._ensure_parsed(partially_parsed)
+            parsed_instruction = self._ensure_parsed(instruction)
             box = [None]
             def instruction_string_thunk():
                 # Silly Python, not letting me mutate variables from
@@ -244,7 +244,7 @@ class Ripl():
         else:
             i = {'instruction':'labeled_assume',
                   'symbol':name, 'expression':expression, 'label':label}
-        value = self.execute_instruction(partially_parsed=i)['value']
+        value = self.execute_instruction(i)['value']
         return value if type else _strip_types(value)
 
     def predict(self, expression, label=None, type=False):
@@ -252,7 +252,7 @@ class Ripl():
             i = {'instruction':'predict', 'expression':expression}
         else:
             i = {'instruction':'labeled_predict', 'expression':expression, 'label':label}
-        value = self.execute_instruction(partially_parsed=i)['value']
+        value = self.execute_instruction(i)['value']
         return value if type else _strip_types(value)
 
     def observe(self, expression, value, label=None):
@@ -260,7 +260,7 @@ class Ripl():
             i = {'instruction':'observe', 'expression':expression, 'value':value}
         else:
             i = {'instruction':'labeled_observe', 'expression':expression, 'value':value, 'label':label}
-        self.execute_instruction(partially_parsed=i)
+        self.execute_instruction(i)
         return None
 
     def bulk_observe(self, proc_expression, iterable, label=None):
@@ -324,7 +324,7 @@ Open issues:
     def configure(self, options=None):
         if options is None: options = {}
         i = {'instruction':'configure', 'options':options}
-        return self.execute_instruction(partially_parsed=i)['options']
+        return self.execute_instruction(i)['options']
     
     def get_seed(self):
         return self.configure()['seed']
@@ -345,7 +345,7 @@ Open issues:
             i = {'instruction':'forget', 'directive_id':label_or_did}
         else:
             i = {'instruction':'labeled_forget', 'label':label_or_did}
-        self.execute_instruction(partially_parsed=i)
+        self.execute_instruction(i)
         return None
 
     def report(self, label_or_did, type=False):
@@ -353,7 +353,7 @@ Open issues:
             i = {'instruction':'report', 'directive_id':label_or_did}
         else:
             i = {'instruction':'labeled_report', 'label':label_or_did}
-        value = self.execute_instruction(partially_parsed=i)['value']
+        value = self.execute_instruction(i)['value']
         return value if type else _strip_types(value)
 
     # takes params and turns them into the proper dict
@@ -371,26 +371,26 @@ Open issues:
           raise TypeError("Unknown params: " + str(params))
         
     def infer(self, params=None):
-        self.execute_instruction(partially_parsed={'instruction':'infer', 'params': self.parseInferParams(params)})
+        self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
 
     def clear(self):
-        self.execute_instruction(partially_parsed={'instruction':'clear'})
+        self.execute_instruction({'instruction':'clear'})
         return None
 
     def rollback(self):
-        self.execute_instruction(partially_parsed={'instruction':'rollback'})
+        self.execute_instruction({'instruction':'rollback'})
         return None
 
     def list_directives(self, type=False):
         with self.sivm._pause_continuous_inference():
-            directives = self.execute_instruction(partially_parsed={'instruction':'list_directives'})['directives']
+            directives = self.execute_instruction({'instruction':'list_directives'})['directives']
             # modified to add value to each directive
             # FIXME: is this correct behavior?
             for directive in directives:
                 inst = { 'instruction':'report',
                          'directive_id':directive['directive_id'],
                          }
-                value = self.execute_instruction(partially_parsed=inst)['value']
+                value = self.execute_instruction(inst)['value']
                 directive['value'] = value if type else _strip_types(value)
             return directives
 
@@ -399,44 +399,44 @@ Open issues:
             i = {'instruction':'get_directive', 'directive_id':label_or_did}
         else:
             i = {'instruction':'labeled_get_directive', 'label':label_or_did}
-        return self.execute_instruction(partially_parsed=i)['directive']
+        return self.execute_instruction(i)['directive']
 
     def force(self, expression, value):
         i = {'instruction':'force', 'expression':expression, 'value':value}
-        self.execute_instruction(partially_parsed=i)
+        self.execute_instruction(i)
         return None
 
     def sample(self, expression, type=False):
         i = {'instruction':'sample', 'expression':expression}
-        value = self.execute_instruction(partially_parsed=i)['value']
+        value = self.execute_instruction(i)['value']
         return value if type else _strip_types(value)
     
     def continuous_inference_status(self):
-        return self.execute_instruction(partially_parsed={'instruction':'continuous_inference_status'})
+        return self.execute_instruction({'instruction':'continuous_inference_status'})
 
     def start_continuous_inference(self, params=None):
-        self.execute_instruction(partially_parsed={'instruction':'start_continuous_inference', 'params': self.parseInferParams(params)})
+        self.execute_instruction({'instruction':'start_continuous_inference', 'params': self.parseInferParams(params)})
         return None
 
     def stop_continuous_inference(self):
-        self.execute_instruction(partially_parsed={'instruction':'stop_continuous_inference'})
+        self.execute_instruction({'instruction':'stop_continuous_inference'})
         return None
 
     def get_current_exception(self):
-        return self.execute_instruction(partially_parsed={'instruction':'get_current_exception'})['exception']
+        return self.execute_instruction({'instruction':'get_current_exception'})['exception']
 
     def get_state(self):
-        return self.execute_instruction(partially_parsed={'instruction':'get_state'})['state']
+        return self.execute_instruction({'instruction':'get_state'})['state']
 
     def get_logscore(self, label_or_did):
         if isinstance(label_or_did,int):
             i = {'instruction':'get_logscore', 'directive_id':label_or_did}
         else:
             i = {'instruction':'labeled_get_logscore', 'label':label_or_did}
-        return self.execute_instruction(partially_parsed=i)['logscore']
+        return self.execute_instruction(i)['logscore']
 
     def get_global_logscore(self):
-        return self.execute_instruction(partially_parsed={'instruction':'get_global_logscore'})['logscore']
+        return self.execute_instruction({'instruction':'get_global_logscore'})['logscore']
 
     ############################################
     # Serialization
@@ -460,7 +460,7 @@ Open issues:
     def profiler_configure(self, options=None):
         if options is None: options = {}
         i = {'instruction': 'profiler_configure', 'options': options}
-        return self.execute_instruction(partially_parsed=i)['options']
+        return self.execute_instruction(i)['options']
     
     def profiler_enable(self):
         self.profiler_configure({'profiler_enabled': True})
