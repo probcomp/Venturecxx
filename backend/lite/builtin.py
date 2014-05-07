@@ -245,8 +245,8 @@ def builtInSPsList():
            [ "inv_wishart", typed_nr(continuous.InverseWishartPSP(), [v.MatrixType(), v.NumberType()], v.MatrixType())],
            [ "wishart", typed_nr(continuous.WishartPSP(), [v.MatrixType(), v.NumberType()], v.MatrixType())],
            
-           [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], SPType([], v.BoolType())) ],
-           [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.NumberType(), v.NumberType()], SPType([], v.BoolType())) ],
+           [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.PositiveType(), v.PositiveType()], SPType([], v.BoolType())) ],
+           [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.PositiveType(), v.PositiveType()], SPType([], v.BoolType())) ],
 
            [ "dirichlet",typed_nr(dirichlet.DirichletOutputPSP(), [v.HomogeneousArrayType(v.PositiveType())], v.SimplexType()) ],
            [ "symmetric_dirichlet",typed_nr(dirichlet.SymmetricDirichletOutputPSP(), [v.PositiveType(), v.CountType()], v.SimplexType()) ],
