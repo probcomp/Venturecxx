@@ -6,7 +6,8 @@ from nose import SkipTest
 from venture.test.config import get_ripl, collectSamples, collect_iid_samples, defaultKernel
 
 def mean(xs): return sum(xs) / float(len(xs))
-    
+
+@attr("slow")    
 def testCRPMixSimple1():
   """Makes sure basic clustering model behaves reasonably"""
   ripl = get_ripl()
