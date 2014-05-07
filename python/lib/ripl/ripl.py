@@ -275,11 +275,11 @@ class Ripl():
           ret_vals.append(self.observe(parsed,val,label+"_"+str(i) if label is not None else None))
         return ret_vals
 
-    def bulk_observe_proc(self, proc_expression, iterable, label=None):
+    def observe_dataset(self, proc_expression, iterable, label=None):
         """Observe a dataset (general form).
 
 Syntax:
-ripl.bulk_observe("<expr>", <iterable>)
+ripl.observe_dataset("<expr>", <iterable>)
 
 - The expr must evaluate to a (presumably stochastic) Venture
   procedure.  We expect in typical usage expr would just look up a
@@ -324,9 +324,10 @@ Open issues:
 
         """
         ret_vals = []
-        for i,(args, val) in enumerate(iterable):
-          expr = [proc_expression] + args
-          ret_vals.append(self.observe(expr,val,label+"_"+str(i)))
+        parsed = self._ensure_parsed_expression(proc_expression)
+        for i, (args, val) in enumerate(iterable):
+          expr = [parsed] + args
+          ret_vals.append(self.observe(expr,val,label+"_"+str(i) if label is not None else None))
         return ret_vals
 
     ############################################
