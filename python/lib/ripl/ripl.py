@@ -148,7 +148,7 @@ class Ripl():
         return None
 
     def _ensure_parsed(self, partially_parsed_instruction):
-        if isinstance(partially_parsed_instruction, str):
+        if isinstance(partially_parsed_instruction, basestring):
             return self._cur_parser().parse_instruction(partially_parsed_instruction)
         elif isinstance(partially_parsed_instruction, dict):
             return self._ensure_parsed_dict(partially_parsed_instruction)
@@ -175,7 +175,7 @@ class Ripl():
         return dict([(key, by_key(key, value)) for key, value in partial_dict.iteritems()])
 
     def _ensure_parsed_expression(self, expr):
-        if isinstance(expr, str):
+        if isinstance(expr, basestring):
             return self._cur_parser().parse_expression(expr)
         elif isinstance(expr, list):
             return [self._ensure_parsed_expression(e) for e in expr]
@@ -189,7 +189,7 @@ class Ripl():
     def _ensure_parsed_number(self, number):
         if isinstance(number, numbers.Number):
             return number
-        elif isinstance(number, str):
+        elif isinstance(number, basestring):
             return self._cur_parser().parse_number(number)
         else:
             raise Exception("Unknown number format %s" % number)
