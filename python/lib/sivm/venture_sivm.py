@@ -60,7 +60,8 @@ class VentureSivm(object):
             if instruction_type in self._extra_instructions:
                 f = getattr(self,'_do_'+instruction_type)
                 return f(instruction)
-            return self._call_core_sivm_instruction(instruction)
+            response = self._call_core_sivm_instruction(instruction)
+            return response
 
     ###############################
     # Reset stuffs
@@ -374,7 +375,8 @@ class VentureSivm(object):
 
     ###############################
     # Convenience wrappers some popular core instructions
-    # urrently supported wrappers: assume,observe,predict,forget,report,infer,force,sample
+    # Currently supported wrappers: 
+    # assume,observe,predict,forget,report,infer,force,sample,list_directives
     ###############################
 
     def assume(self, name, expression, label=None):
@@ -424,4 +426,4 @@ class VentureSivm(object):
         d = {'instruction':'sample','expression':expression}
         return self.execute_instruction(d)
 
-
+    def list_directives(self): return self.execute_instruction({'instruction':'list_directives'})
