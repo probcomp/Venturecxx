@@ -272,11 +272,13 @@ def scatterPlotSeries(name1, seriesList1, name2, seriesList2, subtitle="", **kwa
                   filesuffix='scatter', xlabel=name1, ylabel=name2, **kwargs)
 
 def _doScatterPlot(data, style=' o', ybounds=None, contour_func=None, contour_delta=0.125):
+    ## FIXME: correct this
     xSeries, ySeries = data
     for (xs, ys) in zip(xSeries, ySeries):
-        plt.plot(xs.values, ys.values, #style,
-                 lw=0,markersize=.4,
-                 label=xs.label) # Assume ys labels are the same
+        plt.plot(xs.values, ys.values, style,label=xs.label) # Assume ys labels are the same
+                 #marker='+',
+                 #lw=.2,markersize=.4,
+                 
         setYBounds(ySeries, ybounds)
     if contour_func is not None:
         [xmin, xmax] = seriesBounds(xSeries)
