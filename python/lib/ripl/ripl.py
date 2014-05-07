@@ -68,34 +68,27 @@ class Ripl():
                 instruction_string = instruction
                 # parse instruction
             parsed_instruction = p.parse_instruction(instruction_string)
-            instruction_string_thunk = lambda : instruction_string
         else:
             parsed_instruction = self._ensure_parsed(instruction)
-            box = [None]
-            def instruction_string_thunk():
-                # Silly Python, not letting me mutate variables from
-                # an enclosing scope.
-                if box[0] is None:
-                    box[0] = self._unparse(parsed_instruction)
-                return box[0]
+            instruction_string = parsed_instruction # Will be unparsed on use
         try: # execute instruction, and handle possible exception
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
-            instruction_string = instruction_string_thunk()
             self._raise_annotated_error(e, instruction_string)
         # if directive, then save the text string
         if parsed_instruction['instruction'] in ['assume','observe',
                 'predict','labeled_assume','labeled_observe','labeled_predict']:
             did = ret_value['directive_id']
-            self.directive_id_to_string_thunk[did] = instruction_string_thunk
+            self.directive_id_to_string_thunk[did] = instruction_string
             self.directive_id_to_mode[did] = self.mode
         return ret_value
 
-    def _raise_annotated_error(self, e, instruction_string):
+    def _raise_annotated_error(self, e, instruction):
         # TODO This error reporting is broken for ripl methods,
         # because the computed text chunks refer to the synthetic
         # instruction string instead of the actual data the caller
         # passed.
+        instruction_string = self._ensure_unparsed(instruction)
 
         p = self._cur_parser()
         # all exceptions raised by the Sivm get augmented with a
@@ -156,8 +149,14 @@ class Ripl():
 
     def get_text(self,directive_id):
         if directive_id in self.directive_id_to_mode:
-            return [self.directive_id_to_mode[directive_id], self.directive_id_to_string_thunk[directive_id]()]
+            return [self.directive_id_to_mode[directive_id], self._get_raw_text(directive_id)]
         return None
+
+    def _get_raw_text(self, directive_id):
+        candidate = self.directive_id_to_string_thunk[directive_id]
+        candidate = self._ensure_unparsed(candidate)
+        self.directive_id_to_string_thunk[directive_id] = candidate
+        return candidate
 
     def _ensure_parsed(self, partially_parsed_instruction):
         if isinstance(partially_parsed_instruction, basestring):
@@ -221,6 +220,12 @@ class Ripl():
         def unparse_dict(d):
             return dict([(key, unparse_by_key(key, val)) for key, val in d.iteritems()])
         return self.substitute_params(template, unparse_dict(instruction))
+
+    def _ensure_unparsed(self, instruction):
+        if isinstance(instruction, basestring):
+            return instruction
+        else:
+            return self._unparse(instruction)
 
     def character_index_to_expression_index(self, directive_id, character_index):
         p = self._cur_parser()
@@ -510,7 +515,7 @@ Open issues:
         return self.parsers[self.mode]
 
     def _extract_expression(self,directive_id):
-        text = self.directive_id_to_string_thunk[directive_id]()
+        text = self._get_raw_text(directive_id)
         mode = self.directive_id_to_mode[directive_id]
         p = self.parsers[mode]
         args, arg_ranges = p.split_instruction(text)
