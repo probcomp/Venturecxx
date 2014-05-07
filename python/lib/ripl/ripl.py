@@ -179,6 +179,10 @@ class Ripl():
                 return self._ensure_parsed_dict(value)
             elif key in ["symbol", "label"]:
                 return value
+            elif key == "params":
+                # Do not support partially parsed param hashes, since
+                # they have too many possible key types
+                return value
             elif key == "value":
                 # I believe values are a subset of expressions
                 return self._ensure_parsed_expression(value)
@@ -321,10 +325,8 @@ Open issues:
 
     def configure(self, options=None):
         if options is None: options = {}
-        p = self._cur_parser()
-        s = p.get_instruction_string('configure')
-        d = {'options':options}
-        return self.execute_instruction(s,d)['options']
+        i = {'instruction':'configure', 'options':options}
+        return self.execute_instruction(partially_parsed=i)['options']
     
     def get_seed(self):
         return self.configure()['seed']
@@ -342,22 +344,18 @@ Open issues:
     
     def forget(self, label_or_did):
         if isinstance(label_or_did,int):
-            s = self._cur_parser().get_instruction_string('forget')
-            d = {'directive_id':label_or_did}
+            i = {'instruction':'forget', 'directive_id':label_or_did}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_forget')
-            d = {'label':label_or_did}
-        self.execute_instruction(s,d)
+            i = {'instruction':'labeled_forget', 'label':label_or_did}
+        self.execute_instruction(partially_parsed=i)
         return None
 
     def report(self, label_or_did, type=False):
         if isinstance(label_or_did,int):
-            s = self._cur_parser().get_instruction_string('report')
-            d = {'directive_id':label_or_did}
+            i = {'instruction':'report', 'directive_id':label_or_did}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_report')
-            d = {'label':label_or_did}
-        value = self.execute_instruction(s,d)['value']
+            i = {'instruction':'labeled_report', 'label':label_or_did}
+        value = self.execute_instruction(partially_parsed=i)['value']
         return value if type else _strip_types(value)
 
     # takes params and turns them into the proper dict
@@ -375,8 +373,7 @@ Open issues:
           raise TypeError("Unknown params: " + str(params))
         
     def infer(self, params=None):
-        s = self._cur_parser().get_instruction_string('infer')
-        self.execute_instruction(s, {'params': self.parseInferParams(params)})
+        self.execute_instruction(partially_parsed={'instruction':'infer', 'params': self.parseInferParams(params)})
 
     def clear(self):
         s = self._cur_parser().get_instruction_string('clear')
