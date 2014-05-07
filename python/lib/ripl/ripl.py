@@ -24,7 +24,7 @@ class Ripl():
     def __init__(self,sivm,parsers):
         self.sivm = sivm
         self.parsers = parsers
-        self.directive_id_to_string = {}
+        self.directive_id_to_string_thunk = {}
         self.directive_id_to_mode = {}
         self.mode = parsers.keys()[0]
 
@@ -82,7 +82,7 @@ class Ripl():
         if parsed_instruction['instruction'] in ['assume','observe',
                 'predict','labeled_assume','labeled_observe','labeled_predict']:
             did = ret_value['directive_id']
-            self.directive_id_to_string[did] = instruction_string_thunk
+            self.directive_id_to_string_thunk[did] = instruction_string_thunk
             self.directive_id_to_mode[did] = self.mode
         return ret_value
 
@@ -151,7 +151,7 @@ class Ripl():
 
     def get_text(self,directive_id):
         if directive_id in self.directive_id_to_mode:
-            return [self.directive_id_to_mode[directive_id], self.directive_id_to_string[directive_id]()]
+            return [self.directive_id_to_mode[directive_id], self.directive_id_to_string_thunk[directive_id]()]
         return None
 
     def _ensure_parsed(self, partially_parsed_instruction):
@@ -465,13 +465,13 @@ Open issues:
 
     def save(self, fname):
         extra = {}
-        extra['directive_id_to_string'] = self.directive_id_to_string
+        extra['directive_id_to_string_thunk'] = self.directive_id_to_string_thunk
         extra['directive_id_to_mode'] = self.directive_id_to_mode
         return self.sivm.save(fname, extra)
 
     def load(self, fname):
         extra = self.sivm.load(fname)
-        self.directive_id_to_string = extra['directive_id_to_string']
+        self.directive_id_to_string_thunk = extra['directive_id_to_string_thunk']
         self.directive_id_to_mode = extra['directive_id_to_mode']
 
     ############################################
@@ -532,7 +532,7 @@ Open issues:
         return self.parsers[self.mode]
 
     def _extract_expression(self,directive_id):
-        text = self.directive_id_to_string[directive_id]()
+        text = self.directive_id_to_string_thunk[directive_id]()
         mode = self.directive_id_to_mode[directive_id]
         p = self.parsers[mode]
         args, arg_ranges = p.split_instruction(text)
