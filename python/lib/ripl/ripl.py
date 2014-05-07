@@ -63,23 +63,23 @@ class Ripl():
         # perform parameter substitution if necessary
         if isinstance(instruction, basestring):
             if params != None:
-                instruction_string = self.substitute_params(instruction,params)
+                stringable_instruction = self.substitute_params(instruction,params)
             else:
-                instruction_string = instruction
+                stringable_instruction = instruction
                 # parse instruction
-            parsed_instruction = p.parse_instruction(instruction_string)
+            parsed_instruction = p.parse_instruction(stringable_instruction)
         else:
             parsed_instruction = self._ensure_parsed(instruction)
-            instruction_string = parsed_instruction # Will be unparsed on use
+            stringable_instruction = parsed_instruction # Will be unparsed on use
         try: # execute instruction, and handle possible exception
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
-            self._raise_annotated_error(e, instruction_string)
+            self._raise_annotated_error(e, stringable_instruction)
         # if directive, then save the text string
         if parsed_instruction['instruction'] in ['assume','observe',
                 'predict','labeled_assume','labeled_observe','labeled_predict']:
             did = ret_value['directive_id']
-            self.directive_id_to_stringable_instruction[did] = instruction_string
+            self.directive_id_to_stringable_instruction[did] = stringable_instruction
             self.directive_id_to_mode[did] = self.mode
         return ret_value
 
