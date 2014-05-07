@@ -197,7 +197,11 @@ class Ripl():
             raise Exception("Unknown number format %s" % number)
 
     def _unparse(self, _instruction):
-        return None # TODO Really unparse
+        return None # TODO actually unparse
+        # The following doesn't quite work, because substitute_params doesn't
+        # unparse expressions.
+        # template = self._cur_parser().get_instruction_string(instruction['instruction'])
+        # return self.substitute_params(template, instruction)
 
     def character_index_to_expression_index(self, directive_id, character_index):
         p = self._cur_parser()
