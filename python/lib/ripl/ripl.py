@@ -268,8 +268,15 @@ class Ripl():
         self.execute_instruction(i)
         return None
 
-    def bulk_observe(self, proc_expression, iterable, label=None):
-        """Observe a dataset.
+    def bulk_observe(self, exp, items, label=None):
+        ret_vals = []
+        parsed = self._ensure_parsed_expression(exp)
+        for i, val in enumerate(items):
+          ret_vals.append(self.observe(parsed,val,label+"_"+str(i) if label is not None else None))
+        return ret_vals
+
+    def bulk_observe_proc(self, proc_expression, iterable, label=None):
+        """Observe a dataset (general form).
 
 Syntax:
 ripl.bulk_observe("<expr>", <iterable>)
