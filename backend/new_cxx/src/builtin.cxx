@@ -102,6 +102,7 @@ map<string,SP*> initBuiltInSPs()
   /* Data structures */
   m["simplex"] = new SP(new NullRequestPSP(), new SimplexOutputPSP());
   m["is_simplex"] = new SP(new NullRequestPSP(), new IsSimplexOutputPSP());
+  m["to_simplex"] = new SP(new NullRequestPSP(), new ToSimplexOutputPSP());
 
   m["lookup"] = new SP(new NullRequestPSP(), new LookupOutputPSP());
   m["contains"] = new SP(new NullRequestPSP(), new ContainsOutputPSP());
