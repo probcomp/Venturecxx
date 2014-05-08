@@ -24,6 +24,16 @@ struct DivOutputPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
+struct IntDivOutputPSP : PSP
+{ 
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
+struct IntModOutputPSP : PSP
+{ 
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
 struct EqOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;

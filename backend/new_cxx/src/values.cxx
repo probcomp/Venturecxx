@@ -266,6 +266,7 @@ string VenturePair::toString() const { return "VenturePair (" + car->toString() 
 string VentureSimplex::toString() const { return "VentureSimplex";}
 string VentureDictionary::toString() const { return "VentureDictionary";}
 string VentureMatrix::toString() const { return "VentureMatrix";}
+string VentureVector::toString() const { return "VentureVector";}
 string VentureRequest::toString() const { return "VentureRequest";}
 string VentureNode::toString() const { return "VentureNode";}
 string VentureID::toString() const { return "VentureID";}
@@ -309,6 +310,31 @@ boost::python::dict VentureArray::toPython(Trace * trace) const
   value["type"] = "array";
   boost::python::list l;
   for (size_t i = 0; i < xs.size(); ++i) { l.append(xs[i]->toPython(trace)); }
+  value["value"] = l;
+  return value;
+}
+
+boost::python::dict VentureVector::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "vector";
+  boost::python::list l;
+  for (size_t i = 0; i < v.size(); ++i) { l.append(v(i)); }
+  value["value"] = l;
+  return value;
+}
+
+boost::python::dict VentureMatrix::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "matrix";
+  boost::python::list l;
+  for (size_t i = 0; i < m.rows(); ++i)
+  {
+    boost::python::list row;
+    for (size_t j = 0; j < m.cols(); ++j) { row.append(m(i, j)); }
+    l.append(row);
+  }
   value["value"] = l;
   return value;
 }

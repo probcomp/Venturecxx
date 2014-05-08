@@ -69,6 +69,8 @@ struct VentureValue
   
   virtual const Simplex& getSimplex() const;
   virtual const VentureValuePtrMap<VentureValuePtr>& getDictionary() const;
+
+  virtual VectorXd getVector() const;
   virtual MatrixXd getMatrix() const;
   
   virtual const vector<ESR>& getESRs() const;

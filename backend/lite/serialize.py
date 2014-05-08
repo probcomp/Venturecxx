@@ -2,12 +2,14 @@ from trace import Trace
 from env import VentureEnvironment
 from node import Node, ConstantNode, LookupNode, RequestNode, OutputNode
 from request import Request, ESR
-from value import VentureNumber, VentureAtom, VentureBool, VentureSymbol, VentureArray, VentureNil, VenturePair, VentureSimplex, VentureDict, VentureMatrix, SPRef
+from value import VentureNumber, VentureProbability, VentureCount, VenturePositive, VentureAtom, VentureBool, VentureSymbol, VentureArray, VentureNil, VenturePair, VentureSimplex, VentureDict, VentureMatrix, SPRef
 from sp import VentureSP, SPAux, SPFamilies
 from psp import NullRequestPSP, ESRRefOutputPSP
 from csp import CSPRequestPSP
 from msp import MSPRequestPSP
 from smap import SMap
+
+import json
 
 class Placeholder(object):
     """An object that can be instantiated before knowing what type it should be."""
@@ -21,6 +23,9 @@ serializable_types = [
     OutputNode,
     VentureEnvironment,
     VentureNumber,
+    VentureProbability,
+    VentureCount,
+    VenturePositive,
     VentureAtom,
     VentureBool,
     VentureSymbol,
@@ -48,7 +53,7 @@ str_to_type = dict((t.__name__, t) for t in serializable_types)
 class Serializer(object):
     """Serializer and deserializer for Trace objects."""
 
-    def serialize_trace(self, root):
+    def serialize_trace(self, root, extra):
         """Serialize a Trace object."""
 
         ## set up data structures for handling reference cycles
@@ -61,14 +66,16 @@ class Serializer(object):
 
         ## serialize recursively
         serialized_root = self.serialize(root)
+        serialized_extra = self.serialize(extra)
         return {
             'root': serialized_root,
             'objects': self.obj_data,
+            'extra': serialized_extra,
             'version': '0.1'
         }
 
     def serialize(self, obj):
-        if isinstance(obj, (bool, int, long, float, str, unicode, type(None))):
+        if isinstance(obj, (bool, int, long, float, str, type(None))):
             return obj
         elif isinstance(obj, list):
             return [self.serialize(o) for o in obj]
@@ -127,12 +134,17 @@ class Serializer(object):
         for name, node in Trace().globalEnv.outerEnv.frame.iteritems():
             self.id_to_obj['builtin:' + name] = node.madeSP
 
-        deserialized_root = self.deserialize(data['root'])
-        return deserialized_root
+        root = self.deserialize(data['root'])
+        extra = self.deserialize(data['extra'])
+        return root, extra
 
     def deserialize(self, data):
-        if isinstance(data, (bool, int, long, float, str, unicode, type(None))):
+        if isinstance(data, (bool, int, long, float, str, type(None))):
             return data
+        elif isinstance(data, unicode):
+            ## json returns unicode strings; convert them back to str
+            ## TODO: are actual unicode strings used anywhere?
+            return data.encode('utf-8')
         elif isinstance(data, list):
             return [self.deserialize(o) for o in data]
         else:
@@ -171,8 +183,13 @@ class Serializer(object):
 
             return obj
 
-def serialize_trace(trace):
-    return Serializer().serialize_trace(trace)
+def save_trace(trace, extra, fname):
+    obj = Serializer().serialize_trace(trace, extra)
+    with open(fname, 'w') as fp:
+        json.dump(obj, fp)
 
-def deserialize_trace(serialized):
-    return Serializer().deserialize_trace(serialized)
+def load_trace(fname):
+    with open(fname) as fp:
+        obj = json.load(fp)
+    trace, extra = Serializer().deserialize_trace(obj)
+    return trace, extra

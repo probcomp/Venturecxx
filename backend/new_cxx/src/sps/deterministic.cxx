@@ -38,6 +38,18 @@ VentureValuePtr DivOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
   return shared_ptr<VentureNumber>(new VentureNumber(args->operandValues[0]->getDouble() / args->operandValues[1]->getDouble()));
 }
 
+VentureValuePtr IntDivOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("integer divide", args, 2);
+  return shared_ptr<VentureNumber>(new VentureNumber(args->operandValues[0]->getInt() / args->operandValues[1]->getInt()));
+}
+
+VentureValuePtr IntModOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("integer mod", args, 2);
+  return shared_ptr<VentureNumber>(new VentureNumber(args->operandValues[0]->getInt() % args->operandValues[1]->getInt()));
+}
+
 VentureValuePtr EqOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("equals", args, 2);

@@ -1,4 +1,8 @@
 #include "sps/matrix.h"
+#include "Eigen/Dense"
+
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
 
 VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
@@ -38,7 +42,37 @@ VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   return VentureValuePtr(new VentureMatrix(M));
 }
 
+VentureValuePtr IdentityMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  int dim = args->operandValues[0]->getInt();
+  
+  return VentureValuePtr(new VentureMatrix(MatrixXd::Identity(dim, dim)));
+}
+
 VentureValuePtr IsMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureMatrix>(args->operandValues[0]) != NULL));
+}
+
+
+
+////////////// Vector
+
+VentureValuePtr VectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  vector<VentureValuePtr> row = args->operandValues;
+
+  if (row.size() == 0) { return VentureValuePtr(new VentureVector(VectorXd())); }
+  else
+  {
+    VectorXd v(row.size());
+
+    for (size_t i = 0; i < row.size(); ++i) { v(i) = row[i]->getDouble(); }
+    return VentureValuePtr(new VentureVector(v));
+  }
+}
+
+VentureValuePtr IsVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureVector>(args->operandValues[0])));
 }

@@ -18,7 +18,6 @@ mk_p_ripl = make_puma_church_prime_ripl
 # if it breaks use outside MRIPL
 
 # move regression stuff to regression utils
-# IMP: implement set_seeds
 # make private methods private
 # check for 'if varname' where varname=None by default
 
@@ -78,7 +77,10 @@ def build_exp(exp):
     if type(exp)==str:
         return exp
     elif type(exp)==dict:
-        return str(exp['value'])
+        if exp['type']=='atom':
+            return 'atom<%i>'%exp['value']
+        else:
+            return str(exp['value'])
     else:
         return '('+ ' '.join(map(build_exp,exp)) + ')'
 
@@ -988,28 +990,28 @@ except:
     print 'no ipython'
 
 
-library_string='''
-[assume zeros (lambda (n) (if (= n 0) (list) (pair 0 (zeros (minus n 1)))))]
-[assume ones (lambda (n) (if (= n 0) (list) (pair 1 (ones (minus n 1)))))]         [assume is_nil (lambda (lst) (= lst (list)) ) ]
-[assume map (lambda (f lst) (if (is_nil lst) (list) (pair (f (first lst)) (map f (rest lst))) ) ) ]  
-[assume repeat (lambda (th n) (if (= n 0) (list) (pair (th) (repeat th (- n 1) ) ) ) ) ]
-[assume srange (lambda (b e s) (if (gte b e) (list) (pair b (srange (+ b s) e s) ) ) ) ]
-[assume range (lambda (n) (srange 0 n 1) ) ]
-[assume append (lambda (lst x) (if (is_nil lst) (list x) (pair (first lst) (append (rest lst) x) ) ) )]
-[assume cat (lambda (xs ys) (if (is_nil ys) xs (cat (append xs (first ys)) (rest ys) ) ) )]
-[assume fold (lambda (f l el) (if (is_nil l) el(f (first l) (fold f (rest l) el) ) ) ) ]
-[assume suml (lambda (xs) (fold + xs 0) )]
-[assume prodl (lambda (xs) (fold * xs 1) ) ]
-'''
-lite_addendum='''
-[assume nil (list)]
-'''
+# library_string='''
+# [assume zeros (lambda (n) (if (= n 0) (list) (pair 0 (zeros (minus n 1)))))]
+# [assume ones (lambda (n) (if (= n 0) (list) (pair 1 (ones (minus n 1)))))]         [assume is_nil (lambda (lst) (= lst (list)) ) ]
+# [assume map (lambda (f lst) (if (is_nil lst) (list) (pair (f (first lst)) (map f (rest lst))) ) ) ]  
+# [assume repeat (lambda (th n) (if (= n 0) (list) (pair (th) (repeat th (- n 1) ) ) ) ) ]
+# [assume srange (lambda (b e s) (if (gte b e) (list) (pair b (srange (+ b s) e s) ) ) ) ]
+# [assume range (lambda (n) (srange 0 n 1) ) ]
+# [assume append (lambda (lst x) (if (is_nil lst) (list x) (pair (first lst) (append (rest lst) x) ) ) )]
+# [assume cat (lambda (xs ys) (if (is_nil ys) xs (cat (append xs (first ys)) (rest ys) ) ) )]
+# [assume fold (lambda (f l el) (if (is_nil l) el(f (first l) (fold f (rest l) el) ) ) ) ]
+# [assume suml (lambda (xs) (fold + xs 0) )]
+# [assume prodl (lambda (xs) (fold * xs 1) ) ]
+# '''
+# lite_addendum='''
+# [assume nil (list)]
+# '''
 
-def test_ripls(print_lib=False):
-    vs=[mk_l_ripl(),mk_p_ripl()]
-    [v.execute_program(library_string) for v in vs]
-    vs[0].execute_program(lite_addendum)
-    return vs
+# def test_ripls(print_lib=False):
+#     vs=[mk_l_ripl(),mk_p_ripl()]
+#     [v.execute_program(library_string) for v in vs]
+#     vs[0].execute_program(lite_addendum)
+#     return vs
 
 
 ## Utility functions for working with MRipls
@@ -1203,18 +1205,3 @@ def predictive(mripl,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=
     return xs,ys
 
 
-####### OLD DOCSTRING (still mostly applies)
-# Create MRipls. Multiple MRipls can be created, sharing the same engines.
-# Each engine has a list 'mripl', each element of which is a list 'ripl'
-# containing ripls for that mripl. So the mripls are all being run in a
-# single namespace on each remote engine.
-
-# The user will mostly interact with an
-# mripl via directives like 'mripl.assume(...)', which is applied to each
-# ripl of that mripl (across all engines). However, the mripl.dview 
-# attribute is a direct-view on the engines and allows the user to 
-# execute arbitrary code across the engines, including altering the state
-# of other mripls. (The user can also do this via %px). 
-
-# (We can consider ways of making the data of an mripl accessible only
-# via the mripl object in the user namespace). 

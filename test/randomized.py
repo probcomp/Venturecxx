@@ -36,17 +36,22 @@ def checkTypedProperty(prop, type_, *args, **kwargs):
 
   If the property completes successfully it is taken to have passed.
   If the property raises ArgumentsNotAppropriate, that test is ignored.
+  - This amounts to refining the distribution on possible inputs by
+    rejection sampling.
   If too many tests are thrown out, the test is taken as a skip
     (because the distribution on random inputs is not precise enough).
   If the property raises SkipTest, the test is aborted as a skip.
   If the property raises any other exception, it is taken to have
     failed, and the offending generated argument is communicated as a
     counter-example.
+
   """
   app_ct = 0
   for _ in range(20):
     try:
       synth_args = synthesize_for(type_)
+    except ArgumentsNotAppropriate: continue
+    try:
       prop(synth_args, *args, **kwargs)
       app_ct += 1
     except ArgumentsNotAppropriate: continue
@@ -56,7 +61,7 @@ def checkTypedProperty(prop, type_, *args, **kwargs):
       # http://nedbatchelder.com/blog/200711/rethrowing_exceptions_in_python.html
       import sys
       info = sys.exc_info()
-      raise Exception("%s led to %s" % (synth_args, info[1])), None, info[2]
+      raise info[0]("%s led to %s" % (synth_args, info[1])), None, info[2]
   if app_ct == 0:
     raise SkipTest("Could not find appropriate args for %s" % prop)
 

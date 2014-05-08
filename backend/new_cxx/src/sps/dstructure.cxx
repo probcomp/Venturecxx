@@ -1,6 +1,8 @@
 #include "sps/dstructure.h"
 #include "values.h"
 
+#include <boost/foreach.hpp>
+
 VentureValuePtr SimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   Simplex s;
@@ -10,6 +12,26 @@ VentureValuePtr SimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
   }
   return VentureValuePtr(new VentureSimplex(s));
 }
+
+VentureValuePtr ToSimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  Simplex s;
+  double sum = 0;
+  
+  BOOST_FOREACH(VentureValuePtr v, args->operandValues[0]->getArray())
+  {
+    s.push_back(v->getDouble());
+    sum += s.back();
+  }
+  
+  for (size_t i = 0; i < s.size(); ++i)
+  {
+    s[i] /= sum;
+  }
+  
+  return VentureValuePtr(new VentureSimplex(s));
+}
+
 
 VentureValuePtr IsSimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
@@ -70,7 +92,12 @@ VentureValuePtr PrependOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
   return VentureValuePtr(new VentureArray(v));
 }
 
-
+VentureValuePtr AppendOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  vector<VentureValuePtr> v(args->operandValues[0]->getArray());
+  v.push_back(args->operandValues[1]);
+  return VentureValuePtr(new VentureArray(v));
+}
 
 VentureValuePtr IsArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {

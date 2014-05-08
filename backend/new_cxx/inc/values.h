@@ -4,6 +4,7 @@
 #include "srs.h"
 #include "value.h"
 
+
 struct VentureNumber : VentureValue
 {
   VentureNumber(double x): x(x) {}
@@ -165,7 +166,18 @@ struct VentureMatrix : VentureValue
   VentureMatrix(const Eigen::MatrixXd & m): m(m) {}
   MatrixXd getMatrix() const { return m; }
   string toString() const;
+  boost::python::dict toPython(Trace * trace) const;
   MatrixXd m;
+};
+
+struct VentureVector : VentureValue
+{
+  VentureVector(const Eigen::VectorXd & v): v(v) {}
+  VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureNumber(v(index->getInt()))); }
+  VectorXd getVector() const { return v; }
+  string toString() const;
+  boost::python::dict toPython(Trace * trace) const;
+  VectorXd v;
 };
 
 struct VentureRequest : VentureValue
