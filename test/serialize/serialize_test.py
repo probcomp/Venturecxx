@@ -58,3 +58,34 @@ class TestSerialize(unittest.TestCase):
             v2.forget('y{}'.format(i))
         v2.infer(10)
         v2.predict('is_tricky')
+
+    def _test_serialize_program(self, execute_program, do_predict):
+        v1 = make_lite_church_prime_ripl()
+        execute_program(v1)
+
+        v1.infer(10)
+        v1.save('/tmp/serialized.ripl')
+
+        v2 = make_lite_church_prime_ripl()
+        v2.load('/tmp/serialized.ripl')
+
+        r1 = do_predict(v1)
+        r2 = do_predict(v2)
+        self.assertEqual(r1, r2)
+
+    def test_serialize_aaa(self):
+        def execute_program1(v):
+            v.assume('f', '(make_beta_bernoulli 10.0 10.0)')
+            v.predict('(f)')
+            for _ in range(20):
+                v.observe('(f)', 'true')
+        def execute_program2(v):
+            v.assume('a', '(normal 10.0 1.0)')
+            v.assume('f', '(make_beta_bernoulli a a)')
+            v.predict('(f)')
+            for _ in range(20):
+                v.observe('(f)', 'true')
+        def do_predict(v):
+            return v.predict('(f)')
+        self._test_serialize_program(execute_program1, do_predict)
+        self._test_serialize_program(execute_program2, do_predict)
