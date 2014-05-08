@@ -12,8 +12,31 @@ mk_p_ripl = make_puma_church_prime_ripl
 
 ### IPython Parallel Magics
 
+# REFACTORING TO DEAL WITH SLOWDOWN DUE TO LOCAL RIPL
+# 1. If we want to have 0 local ripls as default, we can 
+#  have following structure for a method
+
+# def local_f(): return [proc(v) for v in localripls]
+
+# def remote_f(ripl,mrid,..) return [f(mapped on remoted ripls)]
+
+# if self.local_mode: return local_f()
+# elif not_debug: return dview.apply(remote_f)
+# else return local_f(),dview.apply(remote_f)
+
+# note: might be able to simply each (esp. local) with decorators.
+
+# constructor:
+# default is for only working with remotes. local_mode is only
+# with local. then debug mode gives default of one local, with
+# more as specified optionally. 
+
+# testing
+# default to local_mode if trying client fails. (if you choose
+# local mode, you don't bother checking). 
+
+
 # TODO:
-# doc_strings, check the outputs of functions, make mr_map_array work on lower no. engines
 # get rid of use of interactive on certain utility funcs
 # if it breaks use outside MRIPL
 
@@ -322,7 +345,7 @@ class MRipl():
         if self.local_mode:
             self.reset_seeds(); return
             
-        # CLEAR ripls: else when switching back to a backend
+        # Clear ripls: else when switching back to a backend
         # we would redefine some variables
         @interactive
         def send_ripls_di_string(mrid,backend,di_string):
@@ -334,7 +357,7 @@ class MRipl():
         self.reset_seeds()
 
 
-    def add_ripls(self,new_remote_ripls=0,new_local_ripls=0):
+    def _add_ripls(self,new_remote_ripls=0,new_local_ripls=0):
         'Add ripls with same directives as existing ripls.'
 
         di_string = self.mk_directives_string(self.local_ripls[0])
@@ -357,7 +380,7 @@ class MRipl():
             return
 
 
-    def output_mode(self,local,remote):
+    def _output_mode(self,local,remote):
         if self.output=='local':
             return local
         elif self.output=='remote':
@@ -371,7 +394,7 @@ class MRipl():
 
         # all remote apply's have to pick a mrid and backend
         remote_out = self.lst_flatten( self.dview.apply(f,self.mrid,self.backend,*args,**kwargs) )        
-        return self.output_mode(local_out,remote_out)
+        return self._output_mode(local_out,remote_out)
         
 
 
@@ -452,8 +475,10 @@ class MRipl():
             if self.verbose: print 'total transitions: ',self.no_transitions
         ##FIXME: add cases for inference programming
 
-        local_out = [r.infer(params) for r in self.local_ripls]
-        if self.local_mode: return local_out
+        if self.local_mode:
+            return [r.infer(params) for r in self.local_ripls]
+        else:
+            local_out = [None] * self.no_local_ripls
 
         @interactive
         def f(mrid,backend,params):
@@ -465,7 +490,7 @@ class MRipl():
             remote_out = self.lst_flatten( self.dview.apply_async(f,self.mrid,self.backend,params) )
 
 
-        return self.output_mode(local_out,remote_out)
+        return self._output_mode(local_out,remote_out)
         
         
 
@@ -542,7 +567,8 @@ class MRipl():
         return self.mr_apply(local_out,f)
 
 
-    def list_directives(self,type=False): return self.local_ripls[0].list_directives(type=type)
+    def list_directives(self,type=False):
+        return self.local_ripls[0].list_directives(type=type)
     ## FIXME: need to serialize directives list
 
                
@@ -562,7 +588,7 @@ class MRipl():
                    
         remote_out = self.lst_flatten( self.dview.apply(get_info,self.mrid,self.backend) )
         
-        return self.output_mode(local_out,remote_out)
+        return self._output_mode(local_out,remote_out)
 
 
 
