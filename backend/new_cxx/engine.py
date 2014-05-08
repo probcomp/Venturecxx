@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from venture.engine import engine
-from libpumatrace import Trace
+from libtrace import Trace
 
 class Engine(engine.Engine):
 

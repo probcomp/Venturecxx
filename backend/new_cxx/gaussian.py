@@ -17,8 +17,8 @@ print 'p_z = ', sum(z_list)/float(len(z_list))
 
 '''
 
-# ripl = shortcuts.make_puma_church_prime_ripl()
-ripl = shortcuts.Lite().make_church_prime_ripl()
+ripl = shortcuts.make_puma_church_prime_ripl()
+#ripl = shortcuts.Lite().make_church_prime_ripl()
 ripl.assume("x", "(normal 0 10)")
 ripl.assume("y", "(normal x 1)")
 ripl.observe("y", 10)

@@ -40,7 +40,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 #  IF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
 #    MESSAGE(FATAL_ERROR "g++ version 4.8 is required!")
 #  ENDIF()
-  ADD_DEFINITIONS("-std=c++11" "-Wall" "-g" "-O0" "-fPIC")
+  ADD_DEFINITIONS("-std=c++11" "-Wall" "-g" "-O0" "-fPIC" "-Wno-deprecated-register" "-Wno-overloaded-virtual")
 ELSE("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message("Found clang++ version" ${CMAKE_CXX_COMPILER_VERSION})
 	ADD_DEFINITIONS("-std=c++11" "-g" "-O3" "-fPIC" "-Wno-deprecated-register" "-Wno-overloaded-virtual")
@@ -76,6 +76,7 @@ ADD_LIBRARY(trace SHARED
     src/sps/discrete.cxx
     src/sps/dstructure.cxx
     src/sps/hmm.cxx
+	src/sps/mvn.cxx
     src/sps/eval.cxx
     src/sps/matrix.cxx
     src/sps/msp.cxx
@@ -106,16 +107,8 @@ target_link_libraries(trace
 )
 
 add_executable(testPMap src/test_pmap.cxx)
-add_executable(test src/test.cpp)
 
 target_link_libraries(testPMap
-  ${LIBS}
-  ${Boost_LIBRARIES}
-  ${PYTHON_LIBRARIES}
-)
-
-target_link_libraries(test
-  trace
   ${LIBS}
   ${Boost_LIBRARIES}
   ${PYTHON_LIBRARIES}
