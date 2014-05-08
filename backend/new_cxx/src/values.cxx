@@ -284,7 +284,7 @@ boost::python::dict VentureArray::toPython(Trace * trace) const
   value["type"] = "array";
   boost::python::list l;
   for (size_t i = 0; i < xs.size(); ++i) { l.append(xs[i]->toPython(trace)); }
-  value["value"] = l;
+  value["value"] = boost::python::tuple(l);
   return value;
 }
 
