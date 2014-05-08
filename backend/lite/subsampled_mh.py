@@ -190,7 +190,7 @@ def assignBorderSequnce(border,indexAssignments,numIndices):
 
 ##################################################################
 
-def yutianMixMH(trace,indexer,operator):
+def SubsampledMixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
   rhoMix = indexer.logDensityOfIndex(trace,index)
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
@@ -207,7 +207,7 @@ def yutianMixMH(trace,indexer,operator):
     operator.reject() # May mutate trace
 
 
-class YutianBlockScaffoldIndexer(object):
+class SubsampledBlockScaffoldIndexer(object):
   def __init__(self,scope,block):
     if scope == "default" and not (block == "all" or block == "one" or block == "ordered"):
         raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
@@ -242,10 +242,10 @@ class InPlaceOperator(object):
     assertTorus(self.scaffold)
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
 
-#### Yutian_MH Operator
+#### Subsampled_MH Operator
 #### Resampling from the prior
 
-class YutianMHOperator(InPlaceOperator):
+class SubsampledMHOperator(InPlaceOperator):
   def propose(self, trace, scaffold):
     rhoWeight = self.prepare(trace, scaffold)
     xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,self.rhoDB,{})
