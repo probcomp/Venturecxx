@@ -12,6 +12,25 @@ using std::endl;
 
 shared_ptr<LKernel> const PSP::getAAALKernel() { return shared_ptr<LKernel>(new DefaultAAALKernel(this)); }
 
+pair<VentureValuePtr, vector<VentureValuePtr>> PSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args)  const{
+	vector<VentureValuePtr> grad;
+	for(VentureValuePtr arg : args->operandValues) {
+		grad.push_back(VentureNumber::makeValue(0));
+	}
+	return make_pair(VentureNumber::makeValue(0), grad); 
+}
+
+vector<VentureValuePtr> PSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
+  vector<VentureValuePtr> grad;
+  for(auto value : args->operandValues) {
+    grad.push_back(VentureNumber::makeValue(0));
+  }
+  vector<VentureValuePtr> directions = direction->getArray();
+  grad.insert(grad.end(), directions.begin(), directions.end());
+  return grad;
+}
+
+
 VentureValuePtr NullRequestPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   return shared_ptr<VentureRequest>(new VentureRequest(vector<ESR>(),vector<shared_ptr<LSR> >()));
@@ -34,3 +53,4 @@ bool ESRRefOutputPSP::canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,
   if (outputNode && parentNode == outputNode->requestNode) { return false; }
   return true;
 }
+

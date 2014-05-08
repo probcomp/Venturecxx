@@ -19,7 +19,11 @@ struct NormalPSP : RandomPSP
 
   bool isContinuous() const { return true; }
 
+   pair<VentureValuePtr, vector<VentureValuePtr>> 
+   gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) const;
 
+   vector<VentureValuePtr> gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const;
+   string toString() const {return "NormalPSP"; }
 };
 
 struct GammaPSP : RandomPSP

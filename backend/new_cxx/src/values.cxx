@@ -9,7 +9,26 @@ using boost::lexical_cast;
 /* TODO the constness in this file is incorrect, but I don't understand it well enough 
    yet, so I figure I will just play make-the-compiler-happy when the time comes.
 */
-   
+VentureValuePtr VentureNumber::makeValue(double x) {
+  return VentureValuePtr(new VentureNumber(x));
+}
+
+VentureValuePtr VentureArray::makeValue(const VentureValuePtrVector & xs) {
+  return VentureValuePtr(new VentureArray(xs));
+}
+
+VentureValuePtr VentureArray::makeOnes(size_t length) {
+  VentureValuePtrVector v;
+  for(size_t i = 0; i < length; i++) {
+    v.push_back(VentureNumber::makeValue(0));
+  }
+  return VentureValuePtr(new VentureArray(v));
+}
+
+VentureValuePtr VentureArray::makeZeros(size_t length) {
+  return VentureArray::makeOnes(length)*VentureNumber::makeValue(0.0);
+}
+
 bool VentureNumber::equalsSameType(const VentureValuePtr & other) const
 {
   shared_ptr<VentureNumber> other_v = dynamic_pointer_cast<VentureNumber>(other);
@@ -234,7 +253,14 @@ string VentureNumber::toString() const { return "VentureNumber " + lexical_cast<
 string VentureAtom::toString() const { return "VentureAtom " + lexical_cast<string>(n);}
 string VentureBool::toString() const { return "VentureBool " + lexical_cast<string>(b);}
 string VentureSymbol::toString() const { return "VentureSymbol " + s;}
-string VentureArray::toString() const { return "VentureArray";}
+string VentureArray::toString() const { 
+  string str = "[";
+  for(VentureValuePtr x : xs) {
+    str += x->toString()+" ";
+  }
+  str += "]";
+  return "VentureArray\t"+str;
+}
 string VentureNil::toString() const { return "VentureNil";}
 string VenturePair::toString() const { return "VenturePair (" + car->toString() + ", " + cdr->toString() + ")";}
 string VentureSimplex::toString() const { return "VentureSimplex";}
@@ -360,4 +386,67 @@ vector<VentureValuePtr> VenturePair::getArray() const
   vector<VentureValuePtr> answer = v->getArray();
   answer.insert(answer.begin(), getFirst());
   return answer;
+}
+
+VentureValuePtr VentureNumber::operator+(const VentureValuePtr & rhs) const {
+  const shared_ptr<VentureNumber> rhsVal = dynamic_pointer_cast<VentureNumber>(rhs);
+  assert(rhsVal != NULL);
+  return VentureValuePtr(new VentureNumber(this->x+rhsVal->x));
+}
+
+VentureValuePtr VentureArray::operator+(const VentureValuePtr & rhs) const {
+  const shared_ptr<VentureArray> rhsVal = dynamic_pointer_cast<VentureArray>(rhs);
+  assert(rhsVal != NULL);
+  const vector<VentureValuePtr> rhsVector = rhsVal->getArray();
+  vector<VentureValuePtr> newVector;
+  assert(rhsVector.size() == this->xs.size());
+  for(int i = 0; i < rhsVector.size(); i++) {
+    newVector.push_back(rhsVector[i]+xs[i]);
+  }
+  return VentureValuePtr(new VentureArray(newVector));
+}
+
+VentureValuePtr VentureNumber::operator-(const VentureValuePtr & rhs) const {
+  const shared_ptr<VentureNumber> rhsVal = dynamic_pointer_cast<VentureNumber>(rhs);
+  assert(rhsVal != NULL);
+  return VentureValuePtr(new VentureNumber(this->x-rhsVal->x));
+}
+
+VentureValuePtr VentureArray::operator-(const VentureValuePtr & rhs) const {
+  const shared_ptr<VentureArray> rhsVal = dynamic_pointer_cast<VentureArray>(rhs);
+  assert(rhsVal != NULL);
+  const vector<VentureValuePtr> rhsVector = rhsVal->getArray();
+  vector<VentureValuePtr> newVector;
+  assert(rhsVector.size() == this->xs.size());
+  for(int i = 0; i < rhsVector.size(); i++) {
+    newVector.push_back(rhsVector[i]-xs[i]);
+  }
+  return VentureValuePtr(new VentureArray(newVector));
+}
+
+VentureValuePtr VentureNumber::operator*(const VentureValuePtr & rhs) const {
+  const shared_ptr<VentureNumber> rhsVal = dynamic_pointer_cast<VentureNumber>(rhs);
+  assert(rhsVal != NULL);
+  return VentureValuePtr(new VentureNumber(this->x*rhsVal->x));
+}
+
+VentureValuePtr VentureArray::operator*(const VentureValuePtr & rhs) const {
+  const shared_ptr<VentureNumber> rhsVal = dynamic_pointer_cast<VentureNumber>(rhs);
+  if(rhsVal != NULL) { // product by a number.
+    vector<VentureValuePtr> newVector;
+    for(int i = 0; i < xs.size(); i++) {
+      newVector.push_back(xs[i]*rhsVal);
+    }
+    return VentureValuePtr(new VentureArray(newVector));  
+  }
+  const shared_ptr<VentureArray> rhsArray = dynamic_pointer_cast<VentureArray>(rhs); 
+  if(rhsArray != NULL) { // product by a vector.
+    const vector<VentureValuePtr> rhsVector = rhsArray->getArray();
+    vector<VentureValuePtr> newVector;
+    for(int i = 0; i < rhsVector.size(); i++) {
+      newVector.push_back(rhsVector[i]+xs[i]);
+    }
+    return VentureValuePtr(new VentureArray(newVector));  
+  }
+  throw "other implementation of operator * not supported.";
 }

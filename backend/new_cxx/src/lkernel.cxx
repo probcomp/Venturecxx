@@ -27,3 +27,8 @@ double DeterministicLKernel::weight(Trace * trace,VentureValuePtr newValue,Ventu
 {
   return psp->logDensity(newValue,args);
 }
+
+pair<VentureValuePtr, vector<VentureValuePtr>> 
+DeterministicLKernel::gradientOfReverseWeight(Trace * trace, VentureValuePtr value, shared_ptr<Args> args) {
+	return this->psp->gradientOfLogDensity(value, args);
+}

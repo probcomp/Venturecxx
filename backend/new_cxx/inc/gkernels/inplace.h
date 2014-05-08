@@ -18,5 +18,10 @@ public:
 
   void accept();
   void reject();
+
+protected:
+  ConcreteTrace * trace;
+  shared_ptr<Scaffold> scaffold;
+  shared_ptr<DB> rhoDB;
 };
 #endif

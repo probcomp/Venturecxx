@@ -1,88 +1,68 @@
 #include "gkernels/map.h"
+#include "gkernels/hmc.h"
 #include "concrete_trace.h"
 #include "scaffold.h"
 #include "db.h"
+#include "node.h"
 #include "regen.h"
 #include "detach.h"
 #include "consistency.h"
 #include <ctime>
 
+#include <boost/foreach.hpp>
+
 using std::function;
 using std::pair;
 
-MAPGKernel::MAPGKernel() 
-:rng(gsl_rng_alloc(gsl_rng_mt19937)), seed(time(NULL)) {
-  gsl_rng_set(rng.get(),seed);
+MAPGKernel::MAPGKernel(double epsilon, int steps)  
+:epsilon(new VentureNumber(epsilon)), steps(new VentureNumber(steps)) {
 }
 
 pair<Trace*,double> MAPGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold)
 {
   this->trace = trace;
   this->scaffold = scaffold;
-  /* detach and extract */
-  registerDeterministicLKernels(trace, scaffold, applicationNodes, currentValues);
-  pair<double,shared_ptr<DB> > p = detachAndExtract(trace,scaffold->border[0],scaffold);
-  double rhoWeight = p.first;
-  rhoDB = p.second;
-  assertTorus(scaffold);
-  // get principle nodes as application nodes.
   set<Node*> pNodes = scaffold->getPrincipalNodes();
   vector<ApplicationNode*> applicationNodes;
   BOOST_FOREACH(Node * node, pNodes)
   {
     ApplicationNode * applicationNode = dynamic_cast<ApplicationNode*>(node);
-    assert(applicationNode);
-    assert(!scaffold->isResampling(applicationNode->operatorNode));
     applicationNodes.push_back(applicationNode);
+    // cout << "old node " << node << endl;
   }
-  vector<VentureValuePtr> currentValues;
-  // get current values of application nodes.
-  vector<vector<VentureValuePtr> > possibleValues;
-  BOOST_FOREACH(ApplicationNode * node, applicationNodes)
-  {
-    currentValues.push_back(trace->getValue(node));
-  }
-  /* evolve */
-  vector<double> momenta = this.sampleMomenta(currentValues);
-  double start_K = this.kinetic(momenta);
-  GradientPotential grad_u = this.gradientOfRegen(trace, scaffold);
-  // FIXME: save gradient.
-  // vector<Gradient> start_grad_pot = [rhoDB.getPartial()]
-  pair<vector<double>, double> particle = this.evolve(grad_u, currentValues, start_grad_pot, momenta);
-  const vector<double>& proposedValues = particle.first;
-  const double end_K = particle.second;
-  registerDeterministicLKernels(trace, scaffold, applicationNodes, proposedValues);
-  // double xiWeight = grad.fixed_regen(proposed_values) # Mutates the trace
-
-  /* regen and attach */
+  // cout << "num pnodes " << applicationNodes.size() << endl;
+  vector<VentureValuePtr> currentValues = trace->getCurrentValues(pNodes);
+  // cout << "current values " << toString(currentValues);
+  /* detach and extract */
   registerDeterministicLKernels(trace, scaffold, applicationNodes, currentValues);
-  double xiWeight = regenAndAttach(trace,scaffold->border[0],scaffold,false,rhoDB,shared_ptr<map<Node*,Gradient> >());
-
-  return make_pair(trace,xiWeight - rhoWeight + start_K - end_K);
-}
-
-vector<double> MAPGKernel::sampleMomenta(vector<VentureValuePtr> currentValues)  {
-  vetor<double> momenta;
-  for(VentureValuePtr value : currentValues) {
-    momenta.append(value.getDouble());
+  double rhoWeight = this->prepare(trace, scaffold, true);
+  GradientOfRegen grad(trace, scaffold);
+  vector<VentureValuePtr> start_grad;
+  // cout << "start_grad" << toString(start_grad);
+  for(Node * pNode : pNodes) {
+    start_grad.push_back(this->rhoDB->getPartial(pNode));
   }
-  return momenta;
+  vector<VentureValuePtr> proposed = this->evolve(grad, currentValues, start_grad);
+  registerDeterministicLKernels(trace, scaffold, applicationNodes, proposed);
+  cout << "proposed " << toString(proposed) << endl;
+  double xiWeight = grad.fixed_regen(proposed);
+  return make_pair(trace, 1000); // force accept. 
 }
 
-double MAPGKernel::kinectic(const vector<double>& momenta) const {
-  double kin = 0;
-  for(const double& m : momenta) {
-    kin += m*m;
+vector<VentureValuePtr> MAPGKernel::evolve(GradientOfRegen& grad, vector<VentureValuePtr>& currentValues, const vector<VentureValuePtr>& start_grad) {
+  shared_ptr<VentureArray> xs(new VentureArray(currentValues));
+  shared_ptr<VentureArray> dxs(new VentureArray(start_grad));
+  for(int i = 0; i < this->steps->getInt(); i++) {
+    xs = dynamic_pointer_cast<VentureArray>(xs+dxs*this->epsilon);
+    assert(xs != NULL);
+    dxs = shared_ptr<VentureArray>(new VentureArray(grad(xs->getArray())));
+    // cout << "gradient " << toString(dxs) << endl;
+    // cout << "xs " << toString(xs) << endl;
+    // cout << "dxs*epsilon" << toString(dxs*this->epsilon) << endl;
+    // cout << "xs+dxs*epsilon" << toString(xs+dxs*this->epsilon) << endl;
+    assert(dxs != NULL);
   }
-  return kin*0.5;
-}
-
-GradientPotential 
-MAPGKernel::gradientOfRegen(ConcreteTrace* trace, shared_ptr<Scaffold> scaffold) {
-  return [](const vector<double>& values) {
-    vector<double> gradient;
-    return gradient;
-  };
+  return xs->getArray();
 }
 
 

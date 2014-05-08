@@ -10,6 +10,29 @@
 #include <boost/python/dict.hpp>
 #include <boost/unordered_map.hpp>
 
+
+#ifdef __MACH__  // OS X does not have clock_gettime, use clock_get_time
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
+
+inline struct timespec get_clock_time() {
+  struct timespec ts;
+  #ifdef __MACH__ 
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    ts.tv_sec = mts.tv_sec;
+    ts.tv_nsec = mts.tv_nsec;
+  #else
+    clock_gettime(CLOCK_REALTIME, &ts);
+  #endif
+  return ts;
+}
+
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -70,7 +93,11 @@ struct VentureValue
   
   virtual string toString() const { return "Unknown VentureValue"; };
 
+  /* arithmetics */
   virtual bool operator<(const VentureValuePtr & rhs) const;
+  virtual VentureValuePtr operator+(const VentureValuePtr & rhs) const;
+  virtual VentureValuePtr operator-(const VentureValuePtr & rhs) const;
+  virtual VentureValuePtr operator*(const VentureValuePtr & rhs) const;
   virtual bool ltSameType(const VentureValuePtr & rhs) const;
 };
 
@@ -82,6 +109,19 @@ inline bool operator< (const VentureValuePtr& lhs, const VentureValuePtr& rhs){ 
 inline bool operator> (const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return  operator< (rhs,lhs);}
 inline bool operator<=(const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return !operator> (lhs,rhs);}
 inline bool operator>=(const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return !operator< (lhs,rhs);}
+inline VentureValuePtr operator+(const VentureValuePtr& lhs, const VentureValuePtr& rhs) {return lhs->operator+(rhs);}
+inline VentureValuePtr operator-(const VentureValuePtr& lhs, const VentureValuePtr& rhs) {return lhs->operator-(rhs);}
+inline VentureValuePtr operator*(const VentureValuePtr& lhs, const VentureValuePtr& rhs) {return lhs->operator*(rhs);} 
+inline string toString(const VentureValuePtr& value) {return value->toString(); }
+inline string toString(const vector<VentureValuePtr>& values) {
+  string str = "<vector> [";
+  for(VentureValuePtr value : values) {
+    str += value->toString()+" ";
+  }
+  str += "]";
+  return str;
+}
+
 
 /* for unordered map */
 struct VentureValuePtrsEqual

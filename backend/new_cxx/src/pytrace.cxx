@@ -14,6 +14,8 @@
 #include "gkernels/pgibbs.h"
 #include "gkernels/egibbs.h"
 #include "gkernels/slice.h"
+#include "gkernels/map.h"
+#include "gkernels/hmc.h"
 
 #include <boost/python/exception_translator.hpp>
 
@@ -158,6 +160,21 @@ struct Inferer
     {
       gKernel = shared_ptr<GKernel>(new SliceGKernel);
     }
+    else if (kernel == "map" || kernel == "hmc")  
+    {
+      double epsilon = 0.02;
+      if(params.has_key("rate")) {
+        epsilon = boost::python::extract<double>(params["rate"]);
+      }
+      double steps = 3;
+      if(params.has_key("steps")) {
+        steps = boost::python::extract<double>(params["steps"]);
+      }
+      if(kernel == "map")
+        gKernel = shared_ptr<GKernel>(new MAPGKernel(epsilon, steps));
+      else if(kernel == "hmc")
+        gKernel = shared_ptr<GKernel>(new HMCGKernel(epsilon, steps));
+    }
     else
     {
       cout << "\n***Kernel '" << kernel << "' not supported. Using MH instead.***" << endl;
@@ -244,7 +261,7 @@ void translateCStringException(const char* err) {
   PyErr_SetString(PyExc_RuntimeError, err);
 }
 
-BOOST_PYTHON_MODULE(libpumatrace)
+BOOST_PYTHON_MODULE(libtrace)
 {
   using namespace boost::python;
   

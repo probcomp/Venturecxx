@@ -7,6 +7,8 @@
 struct VentureNumber : VentureValue
 {
   VentureNumber(double x): x(x) {}
+  VentureValuePtrVector getArray() const { return VentureValuePtrVector({VentureNumber::makeValue(x)}); }
+  static VentureValuePtr makeValue(double x); // factory.
   bool hasDouble() const { return true; }
   double getDouble() const { return x; }
   bool hasInt() const { return false; }
@@ -17,6 +19,9 @@ struct VentureNumber : VentureValue
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
+  VentureValuePtr operator+(const VentureValuePtr & rhs) const;
+  VentureValuePtr operator-(const VentureValuePtr & rhs) const;
+  VentureValuePtr operator*(const VentureValuePtr & rhs) const;
   double x;
 };
 
@@ -68,8 +73,11 @@ struct VentureSymbol : VentureValue
 
 struct VentureArray : VentureValue
 {
-  VentureArray(const vector<VentureValuePtr> & xs): xs(xs) {}
-  vector<VentureValuePtr> getArray() const { return xs; }
+  VentureArray(const VentureValuePtrVector & xs): xs(xs) {}
+  VentureValuePtrVector getArray() const { return xs; }
+  static VentureValuePtr makeValue(const VentureValuePtrVector & xs);
+  static VentureValuePtr makeOnes(size_t length);
+  static VentureValuePtr makeZeros(size_t length);
   VentureValuePtr lookup(VentureValuePtr index) const { return xs[index->getInt()]; }
   int size() const { return xs.size(); }
   boost::python::dict toPython(Trace * trace) const;
@@ -79,7 +87,10 @@ struct VentureArray : VentureValue
   bool hasArray() const { return true; }
   size_t hash() const;
   string toString() const;
-  vector<VentureValuePtr> xs;
+  VentureValuePtrVector xs;
+  VentureValuePtr operator+(const VentureValuePtr & rhs) const;
+  VentureValuePtr operator-(const VentureValuePtr & rhs) const;
+  VentureValuePtr operator*(const VentureValuePtr & rhs) const;
 };
 
 struct VentureNil : VentureValue
@@ -91,7 +102,7 @@ struct VentureNil : VentureValue
   bool ltSameType(const VentureValuePtr & other) const;
 
   bool hasArray() const { return true; }
-  vector<VentureValuePtr> getArray() const { return vector<VentureValuePtr>(); }
+  VentureValuePtrVector getArray() const { return VentureValuePtrVector(); }
 
   size_t hash() const;
   string toString() const;
@@ -108,7 +119,7 @@ struct VenturePair : VentureValue
   bool ltSameType(const VentureValuePtr & other) const;
 
   bool hasArray() const { return true; }
-  vector<VentureValuePtr> getArray() const;
+  VentureValuePtrVector getArray() const;
 
   size_t hash() const;
   string toString() const;

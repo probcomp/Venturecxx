@@ -12,7 +12,7 @@
 using std::cout;
 using std::endl;
 
-pair<double,shared_ptr<DB> > detachAndExtract(ConcreteTrace * trace,const vector<Node*> & border,shared_ptr<Scaffold> scaffold)
+pair<double,shared_ptr<DB> > detachAndExtract(ConcreteTrace * trace,const vector<Node*> & border,shared_ptr<Scaffold> scaffold, bool compute_gradient)
 {
   double weight = 0;
   shared_ptr<DB> db(new DB());
@@ -25,15 +25,15 @@ pair<double,shared_ptr<DB> > detachAndExtract(ConcreteTrace * trace,const vector
     {
       ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
       assert(appNode);
-      weight += detach(trace,appNode,scaffold,db);
+      weight += detach(trace,appNode,scaffold,db, compute_gradient);
     }
     else
     {
       if (trace->isObservation(node))
       {
-	weight += unconstrain(trace,trace->getOutermostNonRefAppNode(node)); 
+	      weight += unconstrain(trace,trace->getOutermostNonRefAppNode(node)); 
       }
-      weight += extract(trace,node,scaffold,db);
+      weight += extract(trace,node,scaffold,db, compute_gradient);
     }
   }
   return make_pair(weight,db);
@@ -53,9 +53,9 @@ double unconstrain(ConcreteTrace * trace,OutputNode * node)
   return weight;
 }
 
-double detach(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double detach(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db, bool compute_gradient)
 {
-  //cout << "detach(" << node << ")" << endl;
+  // cout << "detach(" << node << ")" << endl;
   
   shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
   shared_ptr<Args> args = trace->getArgs(node);
@@ -63,24 +63,37 @@ double detach(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> 
 
   psp->unincorporate(groundValue,args);
   double weight = psp->logDensity(groundValue,args);
-  weight += extractParents(trace,node,scaffold,db);
+  if(compute_gradient) {
+    vector<shared_ptr<Node> > parents_esr = trace->getESRParents(node);
+    vector<Node*> parents;
+    for(shared_ptr<Node> node : parents_esr) {
+      parents.push_back(node.get());
+    }
+    parents.insert(parents.end(), args->operandNodes.begin(), args->operandNodes.end());
+    pair<VentureValuePtr, vector<VentureValuePtr> > grad = psp->gradientOfLogDensity(groundValue, args);
+    // cout << "detach partial 1: " << endl;
+    // cout << psp->toString() << endl;
+    // cout << "grad " << toString(grad.second) << endl;
+    db->addPartials(parents, grad.second);
+  }
+  weight += extractParents(trace,node,scaffold,db, compute_gradient);
   return weight;
 }
 
 
-double extractParents(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double extractParents(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db, bool compute_gradient)
 {
-  double weight = extractESRParents(trace,node,scaffold,db);
+  double weight = extractESRParents(trace,node,scaffold,db, compute_gradient);
   for (vector<Node*>::reverse_iterator defParentIter = node->definiteParents.rbegin();
        defParentIter != node->definiteParents.rend();
        ++defParentIter)
   {
-    weight += extract(trace,*defParentIter,scaffold,db);
+    weight += extract(trace,*defParentIter,scaffold,db, compute_gradient);
   }
   return weight;
 }
 
-double extractESRParents(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double extractESRParents(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db, bool compute_gradient)
 {
   double weight = 0;
   vector<RootOfFamily> esrParents = trace->getESRParents(node);
@@ -88,12 +101,12 @@ double extractESRParents(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> 
        esrParentIter != esrParents.rend();
        ++esrParentIter)
   {
-    weight += extract(trace,esrParentIter->get(),scaffold,db);
+    weight += extract(trace,esrParentIter->get(),scaffold,db, compute_gradient);
   }
   return weight;
 }
 
-double extract(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double extract(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db, bool compute_gradient)
 {
   //cout << "extractOuter(" << node << ")" << endl;
   double weight = 0;
@@ -102,7 +115,7 @@ double extract(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,s
   shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
   if (spRef && spRef->makerNode != node && scaffold->isAAA(spRef->makerNode))
   {
-    weight += extract(trace,spRef->makerNode,scaffold,db);
+    weight += extract(trace,spRef->makerNode,scaffold,db, compute_gradient);
   }
 
   if (scaffold->isResampling(node))
@@ -115,24 +128,31 @@ double extract(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,s
       LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
       RequestNode * requestNode = dynamic_cast<RequestNode*>(node);
       OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
-      if (lookupNode) { trace->clearValue(lookupNode); }
+      if (lookupNode) { 
+        trace->clearValue(lookupNode); 
+        if(compute_gradient) { // d/dx is 1 for a lookup node.
+          for(Node* p : node->definiteParents) {
+            db->addPartial(p, db->getPartial(node));
+          }
+        }
+      }
       else if (requestNode) 
       { 
-        weight += unevalRequests(trace,requestNode,scaffold,db);
-        weight += unapplyPSP(trace,requestNode,scaffold,db);
+        weight += unevalRequests(trace,requestNode,scaffold,db, compute_gradient);
+        weight += unapplyPSP(trace,requestNode,scaffold,db, compute_gradient);
       }
       else
       {
-	assert(outputNode);
-        weight += unapplyPSP(trace,outputNode,scaffold,db);
+	      assert(outputNode);
+        weight += unapplyPSP(trace,outputNode,scaffold,db,compute_gradient);
       }
-      weight += extractParents(trace,node,scaffold,db);
+      weight += extractParents(trace,node,scaffold,db,compute_gradient);
     }
   }
   return weight;
 }
 
-double unevalFamily(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double unevalFamily(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db, bool compute_gradient)
 {
   //cout << "unevalFamily(" << node << ")" << endl;
   double weight = 0;
@@ -144,31 +164,36 @@ double unevalFamily(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaff
   if (constantNode) { }
   else if (lookupNode)
   {
+    if(compute_gradient) {
+      for(Node* p : node->definiteParents) {
+        db->addPartial(p, db->getPartial(node));
+      }
+    }
     trace->disconnectLookup(lookupNode);
     trace->clearValue(lookupNode);
-    weight += extractParents(trace,lookupNode,scaffold,db);
+    weight += extractParents(trace,lookupNode,scaffold,db, compute_gradient);
   }
   else
   {
     assert(outputNode);
-    weight += unapply(trace,outputNode,scaffold,db);
+    weight += unapply(trace,outputNode,scaffold,db, compute_gradient);
     for (vector<Node*>::reverse_iterator operandNodeIter = outputNode->operandNodes.rbegin();
 	 operandNodeIter != outputNode->operandNodes.rend();
 	 ++operandNodeIter)
     {
-      weight += unevalFamily(trace,*operandNodeIter,scaffold,db);
+      weight += unevalFamily(trace,*operandNodeIter,scaffold,db, compute_gradient);
     }
-    weight += unevalFamily(trace,outputNode->operatorNode,scaffold,db);
+    weight += unevalFamily(trace,outputNode->operatorNode,scaffold,db, compute_gradient);
   }
   return weight;
 }
 
-double unapply(ConcreteTrace * trace,OutputNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double unapply(ConcreteTrace * trace,OutputNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db, bool compute_gradient)
 {
-  double weight = unapplyPSP(trace,node,scaffold,db);
-  weight += extractESRParents(trace,node,scaffold,db);
-  weight += unevalRequests(trace,node->requestNode,scaffold,db);
-  weight += unapplyPSP(trace,node->requestNode,scaffold,db);
+  double weight = unapplyPSP(trace,node,scaffold,db, compute_gradient);
+  weight += extractESRParents(trace,node,scaffold,db, compute_gradient);
+  weight += unevalRequests(trace,node->requestNode,scaffold,db, compute_gradient);
+  weight += unapplyPSP(trace,node->requestNode,scaffold,db, compute_gradient);
   return weight;
 }
 
@@ -190,7 +215,7 @@ void teardownMadeSP(ConcreteTrace * trace,Node * makerNode,bool isAAA,shared_ptr
   trace->destroyMadeSPRecord(makerNode);
 }
 
-double unapplyPSP(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double unapplyPSP(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db, bool compute_gradient)
 {
   //cout << "unapplyPSP(" << node << ")" << endl;
   shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
@@ -214,16 +239,38 @@ double unapplyPSP(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffo
 
   double weight = 0;
   psp->unincorporate(value,args);
-  if (scaffold->hasLKernel(node)) { weight += scaffold->getLKernel(node)->reverseWeight(trace,value,args); }
+  if (scaffold->hasLKernel(node)) { 
+    weight += scaffold->getLKernel(node)->reverseWeight(trace,value,args); 
+    if(compute_gradient) {
+      pair<VentureValuePtr, vector<VentureValuePtr> > grad = scaffold->getLKernel(node)->gradientOfReverseWeight(trace, trace->getValue(node), args);
+      db->addPartial(node, grad.first);
+      // cout << "partial 2: " << endl;
+      // cout << "grad " << toString(grad.second) << endl;
+      db->addPartials(args->operandNodes, grad.second);
+    }
+  }
   db->registerValue(node,value);
-
   trace->clearValue(node);
 
+  if(compute_gradient) {
+    for(Node* p : node->definiteParents) {
+      if(scaffold->isResampling(p) || scaffold->isBrush(p)) {
+        // cout << "psp type " << psp->toString() << endl;
+        vector<VentureValuePtr> grads = psp->gradientOfSimulate(args, db->getValue(node), db->getPartial(node));
+        vector<Node*> parents(args->operandNodes);
+        vector<shared_ptr<Node> > parents_esr = trace->getESRParents(node);
+        for(shared_ptr<Node> node : parents_esr) 
+          parents.push_back(node.get());
+        // cout << "partial 3: " << endl;
+        db->addPartials(parents, grads);
+      }
+    }
+  }
   return weight;
 }
 
 
-double unevalRequests(ConcreteTrace * trace,RequestNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
+double unevalRequests(ConcreteTrace * trace,RequestNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db, bool compute_gradient)
 {
   //cout << "unevalRequests(" << node << ")" << endl;
 
@@ -255,7 +302,7 @@ double unevalRequests(ConcreteTrace * trace,RequestNode * node,shared_ptr<Scaffo
     {
       trace->unregisterMadeSPFamily(trace->getOperatorSPMakerNode(node),esrIter->id);
       db->registerSPFamily(trace->getMadeSP(trace->getOperatorSPMakerNode(node)),esrIter->id,esrRoot);
-      weight += unevalFamily(trace,esrRoot.get(),scaffold,db);
+      weight += unevalFamily(trace,esrRoot.get(),scaffold,db, compute_gradient);
     }
   }
   return weight;

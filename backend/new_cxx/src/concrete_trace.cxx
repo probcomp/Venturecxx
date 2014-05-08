@@ -12,13 +12,14 @@
 #include "math.h"
 
 #include <sys/time.h>
+#include <time.h>
+#include <boost/foreach.hpp>
 
 /* Constructor */
 
 ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937))
 {
-  timespec ts;
-  clock_gettime(CLOCK_REALTIME, &ts);
+  timespec ts = get_clock_time();
   gsl_rng_set (rng,ts.tv_nsec);
 
   vector<shared_ptr<VentureSymbol> > syms;
@@ -179,7 +180,28 @@ void ConcreteTrace::removeChild(Node * node, Node * child)
 
 /* Primitive getters */
 gsl_rng * ConcreteTrace::getRNG() { return rng; }
-VentureValuePtr ConcreteTrace::getValue(Node * node) { assert(values[node]); return values[node]; }
+VentureValuePtr ConcreteTrace::getValue(Node * node)  { 
+  assert(values[node]); 
+  return values[node]; 
+}
+
+vector<VentureValuePtr> ConcreteTrace::getCurrentValues(const set<Node*> pNodes)  {
+  vector<Node*> applicationNodes;
+  BOOST_FOREACH(Node * node, pNodes)
+  {
+    ApplicationNode * applicationNode = dynamic_cast<ApplicationNode*>(node);
+    applicationNodes.push_back(applicationNode);
+  }
+  vector<VentureValuePtr> currentValues;
+  // get current values of application nodes.
+  vector<vector<VentureValuePtr> > possibleValues;
+  BOOST_FOREACH(Node * node, applicationNodes)
+  {
+    currentValues.push_back(this->getValue(node));
+  }
+  return currentValues;
+}
+
 shared_ptr<SP> ConcreteTrace::getMadeSP(Node * makerNode)
 {
   shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);

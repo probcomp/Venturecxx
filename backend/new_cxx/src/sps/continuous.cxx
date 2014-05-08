@@ -18,6 +18,7 @@
 #include "sps/continuous.h"
 #include "sps/numerical_helpers.h"
 #include "args.h"
+#include "value.h"
 #include "values.h"
 #include "utils.h"
 
@@ -78,6 +79,29 @@ double NormalPSP::logDensityNumeric(double output, const vector<double> & args) 
   return ld;
 }
 
+pair<VentureValuePtr, vector<VentureValuePtr>> 
+NormalPSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) const {
+  double mu = args->operandValues[0]->getDouble();
+  double sigma = args->operandValues[1]->getDouble();
+  double xd = x->getDouble();
+  double gradX = 0-(xd-mu)/pow(sigma, 2);
+  double gradMu = (xd-mu)/pow(sigma, 2);
+  double gradSigma = (pow(xd-mu, 2)-pow(sigma, 2))/pow(sigma, 3);
+  // cout << "normal psp gradient " << gradMu << ", " << gradSigma << endl;
+  return make_pair(VentureValuePtr(new VentureNumber(gradX)), 
+                  vector<VentureValuePtr>({VentureValuePtr(new VentureNumber(gradMu)), 
+                                           VentureValuePtr(new VentureNumber(gradSigma))}));
+}
+
+vector<VentureValuePtr> NormalPSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
+  double mu = args->operandValues[0]->getDouble();
+  double sigma = args->operandValues[1]->getDouble();
+  double v = value->getDouble();
+  double deviation = (v-mu)/sigma;
+  vector<VentureValuePtr> d = direction->getArray();
+  return vector<VentureValuePtr>({d[0], d[0]*VentureValuePtr(new VentureNumber(deviation))});
+}
+
 /*
 vector<ParameterScope> NormalPSP::getParameterScopes() const
 {
@@ -100,6 +124,7 @@ vector<double> NormalPSP::gradientOfLogDensity(double output,
   ret.push_back(gradSigma);
   return ret;
 }
+
 
 /* Gamma */
 VentureValuePtr GammaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const

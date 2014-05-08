@@ -43,6 +43,7 @@ void Scaffold::decRegenCount(Node * node)
 
 bool Scaffold::isResampling(Node * node) { return regenCounts.count(node); }
 bool Scaffold::isAbsorbing(Node * node) { return absorbing.count(node); }
+bool Scaffold::isBrush(Node * node) { return brush.count(node);}
 bool Scaffold::isAAA(Node * node) { return aaa.count(node); }
 bool Scaffold::hasLKernel(Node * node) { return lkernels.count(node); }
 shared_ptr<LKernel> Scaffold::getLKernel(Node * node) 

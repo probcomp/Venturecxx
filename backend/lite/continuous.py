@@ -185,6 +185,7 @@ class NormalOutputPSP(RandomPSP):
     (mu, sigma) = args.operandValues
     deviation = (value - mu) / sigma
     return [direction*1, direction*deviation]
+    
   def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues)
   def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 

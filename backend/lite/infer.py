@@ -487,7 +487,7 @@ class MAPOperator(InPlaceOperator):
 
     # Smashes the trace but leaves it a torus
     proposed_values = self.evolve(grad, currentValues, start_grad)
-
+    
     registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
     _xiWeight = grad.fixed_regen(proposed_values) # Mutates the trace
     return (trace, 1000) # It's MAP -- try to force acceptance
@@ -537,6 +537,7 @@ class GradientOfRegen(object):
     registerDeterministicLKernels(self.trace, new_scaffold, pnodes, values)
     (_, rhoDB) = detachAndExtract(self.trace, new_scaffold.border[0], new_scaffold, True)
     self.scaffold = new_scaffold
+    
     return [rhoDB.getPartial(pnode) for pnode in pnodes]
 
   def fixed_regen(self, values):

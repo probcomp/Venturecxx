@@ -1,4 +1,6 @@
 #include "db.h"
+#include "value.h"
+#include "values.h"
 
 bool DB::hasValue(Node * node) { return values.count(node); }
 
@@ -55,4 +57,35 @@ void DB::registerMadeSPAux(Node * makerNode, shared_ptr<SPAux> spAux)
 {
   assert(!spAuxs.count(makerNode));
   spAuxs[makerNode] = spAux;
+}
+
+void DB::addPartials(vector<Node*>& nodes, vector<VentureValuePtr>& partials) {
+  assert(nodes.size() == partials.size());
+  for(size_t i = 0; i < nodes.size(); i++) {
+    Node* node = nodes[i];
+    VentureValuePtr partial = partials[i];
+    this->addPartial(node, partial);
+  }
+}
+
+void DB::addPartial(Node* node, VentureValuePtr partial) {
+  if(this->partials.count(node)) {
+    this->partials[node] = this->partials[node]+partial;
+  }else{
+    this->partials[node] = partial;
+  }
+}
+
+VentureValuePtr DB::getPartial(Node* node) {
+  if(this->partials.count(node) == 0) 
+    this->partials[node] = VentureValuePtr(new VentureNumber(0));
+  return this->partials[node];
+}
+
+vector<VentureValuePtr> DB::getPartials(const vector<Node*>& nodes) {
+  vector<VentureValuePtr> res;
+  for(Node* node : nodes) {
+    res.push_back(getPartial(node));
+  }
+  return res;
 }

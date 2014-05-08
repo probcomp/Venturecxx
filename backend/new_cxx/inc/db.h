@@ -27,9 +27,15 @@ struct DB
   shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
   void registerMadeSPAux(Node * makerNode, shared_ptr<SPAux> spAux);
 
+  void addPartials(vector<Node*>& nodes, vector<VentureValuePtr>& partials);
+  void addPartial(Node* node, VentureValuePtr partial);
+  VentureValuePtr getPartial(Node* node);
+  vector<VentureValuePtr> getPartials(const vector<Node*>& nodes);
+
 private:
   map<Node*,shared_ptr<LatentDB> > latentDBs;
   map<Node*,VentureValuePtr> values;
+  map<Node*,VentureValuePtr> partials;
   map<shared_ptr<SP>,map<FamilyID,RootOfFamily> > spFamilyDBs;
   map<Node*,shared_ptr<SPAux> > spAuxs;
 };

@@ -2,13 +2,16 @@
 #define LKERNEL_H
 
 #include "types.h"
+#include "values.h"
 #include <gsl/gsl_rng.h>
+#include "args.h"
 
 struct Trace;
 struct Args;
 struct PSP;
 struct SP;
 struct SPAux;
+
 
 struct LKernel
 {
@@ -17,6 +20,14 @@ struct LKernel
   virtual double reverseWeight(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args) 
     { 
       return weight(trace,oldValue,shared_ptr<VentureValue>(),args);
+    }
+  virtual std::pair<VentureValuePtr, vector<VentureValuePtr>> gradientOfReverseWeight(Trace * trace, VentureValuePtr value, shared_ptr<Args> args) 
+    {
+      vector<VentureValuePtr> gradients;
+      for(auto ptr : args->operandValues) {
+        gradients.push_back(VentureValuePtr(new VentureNumber(0)));
+      }
+      return make_pair(VentureValuePtr(new VentureNumber(0)), gradients);
     }
   virtual bool isIndependent() const { return true; }
 };
@@ -39,10 +50,9 @@ struct DeterministicLKernel : LKernel
 
   VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng);
   double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args);
-
+  std::pair<VentureValuePtr, vector<VentureValuePtr>> gradientOfReverseWeight(Trace * trace, VentureValuePtr value, shared_ptr<Args> args);
   VentureValuePtr value;
   shared_ptr<PSP> psp;
-  
 };
 
 struct VariationalLKernel : LKernel

@@ -40,6 +40,7 @@ struct Scaffold
   void decRegenCount(Node * node);
   bool isResampling(Node * node);
   bool isAbsorbing(Node * node);
+  bool isBrush(Node * node);
   bool isAAA(Node * node);
   bool hasLKernel(Node * node);
   shared_ptr<LKernel> getLKernel(Node * node);
@@ -50,6 +51,7 @@ struct Scaffold
   map<Node*,int> regenCounts;
   set<Node*> absorbing;
   set<Node*> aaa;
+  set<Node*> brush;
   vector<vector<Node *> > border;
   map<Node*,shared_ptr<LKernel> > lkernels;
 

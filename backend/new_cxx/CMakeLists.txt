@@ -43,7 +43,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
   ADD_DEFINITIONS("-std=c++11" "-Wall" "-g" "-O0" "-fPIC")
 ELSE("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message("Found clang++ version" ${CMAKE_CXX_COMPILER_VERSION})
-	ADD_DEFINITIONS("-std=c++11" "-Wall" "-g" "-O3" "-fPIC" "-Wno-deprecated-register" "-Wno-overloaded-virtual")
+	ADD_DEFINITIONS("-std=c++11" "-g" "-O3" "-fPIC" "-Wno-deprecated-register" "-Wno-overloaded-virtual")
 ELSE()
   MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")
 ENDIF()
@@ -82,11 +82,13 @@ ADD_LIBRARY(trace SHARED
     src/sps/msp.cxx
     src/sps/numerical_helpers.cxx
     src/sps/scope.cxx
+	src/gkernels/inplace.cxx
     src/gkernels/egibbs.cxx
     src/gkernels/func_mh.cxx
     src/gkernels/mh.cxx
     src/gkernels/pgibbs.cxx
     src/gkernels/slice.cxx
+	src/gkernels/map.cxx
 	src/gkernels/hmc.cxx
     src/expressions.cxx
 	src/gkernel.cxx
@@ -105,8 +107,16 @@ target_link_libraries(trace
 )
 
 add_executable(testPMap src/test_pmap.cxx)
+add_executable(test src/test.cpp)
 
 target_link_libraries(testPMap
+  ${LIBS}
+  ${Boost_LIBRARIES}
+  ${PYTHON_LIBRARIES}
+)
+
+target_link_libraries(test
+  trace
   ${LIBS}
   ${Boost_LIBRARIES}
   ${PYTHON_LIBRARIES}

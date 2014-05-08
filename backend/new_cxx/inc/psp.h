@@ -35,28 +35,38 @@ struct PSP
   virtual bool hasDeltaKernel() const { return false; }
   virtual shared_ptr<LKernel> getDeltaKernel() const { assert(false); return shared_ptr<LKernel>(); }
 
+  virtual pair<VentureValuePtr, vector<VentureValuePtr>> gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) const;
+  virtual vector<VentureValuePtr> gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const;
+
   /* For slice sampling */
   virtual bool isContinuous() const { return false; }
   virtual double getSupportLowerBound() const { return -FLT_MAX; }
   virtual double getSupportUpperBound() const { return FLT_MAX; }
+
+  /* information in strings */
+  virtual string toString() const {return "PSP"; }
 };
+
 
 struct NullRequestPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args,gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const { return true; }
+  string toString() const {return "NullRequestPSP"; }
 };
 
 struct ESRRefOutputPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args,gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const;
+  string toString() const {return "ESRRefOutputPSP"; }
 };
 
 struct RandomPSP : PSP
 {
   bool isRandom() const { return true; }
   bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const { return true; }
+  string toString() const {return "RandomPSP"; }
 };
 
 #endif

@@ -26,6 +26,7 @@ struct Node;
 
 typedef int DirectiveID;
 typedef shared_ptr<VentureValue> VentureValuePtr;
+typedef vector<VentureValuePtr> VentureValuePtrVector;
 typedef VentureValuePtr ScopeID;
 typedef VentureValuePtr BlockID;
 typedef VentureValuePtr FamilyID;

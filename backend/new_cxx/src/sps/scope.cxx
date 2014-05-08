@@ -10,3 +10,7 @@ bool ScopeIncludeOutputPSP::canAbsorb(ConcreteTrace * trace,ApplicationNode * ap
 {
   return parentNode != appNode->operandNodes[2];
 }
+
+vector<VentureValuePtr> ScopeIncludeOutputPSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
+  return {VentureNumber::makeValue(0), VentureNumber::makeValue(0), direction};
+}

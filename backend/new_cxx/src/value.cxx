@@ -75,6 +75,18 @@ bool VentureValue::operator<(const VentureValuePtr & rhs) const
   else { return ltSameType(rhs); }
 }
 
+VentureValuePtr VentureValue::operator+(const VentureValuePtr & rhs) const {
+  throw "not implemented.";
+}
+
+VentureValuePtr VentureValue::operator-(const VentureValuePtr & rhs) const {
+  throw "not implemented.";
+}
+
+VentureValuePtr VentureValue::operator*(const VentureValuePtr & rhs) const {
+  throw "not implemented.";
+}
+
 bool VentureValue::ltSameType(const VentureValuePtr & rhs) const { assert(false); }
 
 
