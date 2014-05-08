@@ -3,6 +3,8 @@ import math
 from consistency import assertTorus
 from regen import regenAndAttach
 from detach import detachAndExtract
+from node import LookupNode, RequestNode, OutputNode
+from value import SPRef
 
 class Scaffold(object):
   def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None,brush=None):
