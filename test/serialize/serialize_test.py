@@ -9,9 +9,9 @@ class TestSerialize(unittest.TestCase):
         v = make_lite_church_prime_ripl()
         v.assume('is_tricky', '(flip 0.2)')
         v.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
-        v.assume('flip_coin', '(mem (lambda (x) (flip theta)))')
+        v.assume('flip_coin', '(lambda () (flip theta))')
         for i in range(10):
-            v.observe('(flip_coin {})'.format(i), 'true', label='y{}'.format(i))
+            v.observe('(flip_coin)', 'true', label='y{}'.format(i))
 
         v.infer(10)
         result1 = v.predict('is_tricky')
@@ -35,9 +35,9 @@ class TestSerialize(unittest.TestCase):
         v1 = make_lite_church_prime_ripl()
         v1.assume('is_tricky', '(flip 0.2)')
         v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
-        v1.assume('flip_coin', '(mem (lambda (x) (flip theta)))')
+        v1.assume('flip_coin', '(lambda () (flip theta))')
         for i in range(10):
-            v1.observe('(flip_coin {})'.format(i), 'true', label='y{}'.format(i))
+            v1.observe('(flip_coin)', 'true', label='y{}'.format(i))
 
         v1.infer(10)
         result1 = v1.predict('is_tricky')
@@ -72,6 +72,16 @@ class TestSerialize(unittest.TestCase):
         r1 = do_predict(v1)
         r2 = do_predict(v2)
         self.assertEqual(r1, r2)
+
+    def test_serialize_mem(self):
+        def execute_program(v):
+            v.assume('theta', '(beta 1.0 1.0)')
+            v.assume('f', '(mem (lambda (x) (flip theta)))')
+            v.predict('(f (flip))')
+            for _ in range(10):
+                v.observe('(f (flip))', 'true')
+        def do_predict(v):
+            return v.predict('(f)')
 
     def test_serialize_aaa(self):
         def execute_program1(v):
