@@ -1,4 +1,3 @@
-
 from IPython.parallel import Client
 from IPython.parallel.util import interactive
 from venture.shortcuts import make_puma_church_prime_ripl
@@ -19,7 +18,6 @@ mk_p_ripl = make_puma_church_prime_ripl
 # if it breaks use outside MRIPL
 
 # move regression stuff to regression utils
-# IMP: implement set_seeds
 # make private methods private
 # check for 'if varname' where varname=None by default
 

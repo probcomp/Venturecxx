@@ -49,7 +49,7 @@ def testAnalytics():
     assert .1 > abs(np.mean(inferredPValues) - np.mean(analyticsPValues))
     assert .04 > abs(np.var(inferredPValues) - np.var(analyticsPValues))
 
-    # (add (bernoulli p) (bernoulli p)) = 1,2 with high probability
+    # (add (bernoulli p) (bernoulli p)) in [1,2] with high probability
     queryValues = history.nameToSeries[queryExps[0]][0].values
     assert np.sum(queryValues) > len(queryValues) 
 

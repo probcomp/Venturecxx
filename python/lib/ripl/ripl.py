@@ -268,11 +268,30 @@ class Ripl():
         self.execute_instruction(i)
         return None
 
-    def bulk_observe(self, proc_expression, iterable, label=None):
-        """Observe a dataset.
+    def bulk_observe(self, exp, items, label=None):
+        """Observe many evaluations of an expression.
 
 Syntax:
 ripl.bulk_observe("<expr>", <iterable>)
+
+Semantics:
+Operationally equivalent to
+  for x in iterable:
+    ripl.observe("<expr>", x)
+but appreciably faster.  See also open considerations and details of
+the semantics in ripl.observe_dataset
+"""
+        ret_vals = []
+        parsed = self._ensure_parsed_expression(exp)
+        for i, val in enumerate(items):
+          ret_vals.append(self.observe(parsed,val,label+"_"+str(i) if label is not None else None))
+        return ret_vals
+
+    def observe_dataset(self, proc_expression, iterable, label=None):
+        """Observe a general dataset.
+
+Syntax:
+ripl.observe_dataset("<expr>", <iterable>)
 
 - The expr must evaluate to a (presumably stochastic) Venture
   procedure.  We expect in typical usage expr would just look up a
@@ -281,7 +300,7 @@ ripl.bulk_observe("<expr>", <iterable>)
 - The <iterable> is a Python iterable each of whose elements must be a
   tuple of a list of valid Venture values and a Venture value: ([a], b)
 
-- There is not Venture syntax for this; it is accessible only when
+- There is no Venture syntax for this; it is accessible only when
   using Venture as a library.
 
 Semantics:
@@ -317,9 +336,10 @@ Open issues:
 
         """
         ret_vals = []
-        for i,(args, val) in enumerate(iterable):
-          expr = [proc_expression] + args
-          ret_vals.append(self.observe(expr,val,label+"_"+str(i)))
+        parsed = self._ensure_parsed_expression(proc_expression)
+        for i, (args, val) in enumerate(iterable):
+          expr = [parsed] + args
+          ret_vals.append(self.observe(expr,val,label+"_"+str(i) if label is not None else None))
         return ret_vals
 
     ############################################
