@@ -74,5 +74,5 @@ VentureValuePtr VectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
 
 VentureValuePtr IsVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureVector>(args->operandValues[0])));
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureVector>(args->operandValues[0]) != NULL));
 }

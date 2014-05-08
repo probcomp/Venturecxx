@@ -66,7 +66,6 @@ ADD_LIBRARY(trace SHARED
     src/sp.cxx
     src/sprecord.cxx
     src/scaffold.cxx
-    src/sps/csp.cxx
     src/sps/betabernoulli.cxx
     src/sps/conditional.cxx
     src/sps/continuous.cxx
