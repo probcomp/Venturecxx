@@ -18,6 +18,7 @@ from scaffold import constructScaffold
 from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
+from venture.lite.serialize import Serializer
 import random
 import numpy.random
 
@@ -395,3 +396,13 @@ class Trace(object):
   def addNewChildren(self,node,newChildren):
     for child in newChildren:
       node.children.add(child)
+
+################## Placeholder until we write a deep-copy or use particles
+
+  def clone(self):
+    serialized = Serializer().serialize_trace(self, None)
+    newTrace, _ = Serializer().deserialize_trace(serialized)
+    return newTrace
+
+
+    
