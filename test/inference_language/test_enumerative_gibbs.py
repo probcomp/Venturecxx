@@ -23,6 +23,15 @@ def testEnumerativeGibbsGotcha():
   ripl.infer({"kernel":"gibbs"})
   ripl.infer({"kernel":"gibbs", "scope":"default", "block":"all"})
 
+def testEnumerativeGibbsSimple():
+  """Regression"""
+  ripl = get_ripl()
+  ripl.assume("x","(flip 0.1)",label="pid")
+  ripl.observe("(flip (if x .9 .1))","true")
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs"})
+  ans = [(False,.5),(True,.5)]
+  return reportKnownDiscrete(ans, predictions)
+
 @statisticalTest
 def testEnumerativeGibbsXOR1():
   """Tests that an XOR chain mixes with enumerative gibbs.
