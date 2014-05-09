@@ -23,8 +23,9 @@ def testEnumerativeGibbsGotcha():
   ripl.infer({"kernel":"gibbs"})
   ripl.infer({"kernel":"gibbs", "scope":"default", "block":"all"})
 
-def testEnumerativeGibbsSimple():
-  """Regression"""
+@statisticalTest
+def testEnumerativeGibbsBoostThrash():
+  """Enumerating two choices with the same posterior probability should not thrash"""
   ripl = get_ripl()
   ripl.assume("x","(flip 0.1)",label="pid")
   ripl.observe("(flip (if x .9 .1))","true")
