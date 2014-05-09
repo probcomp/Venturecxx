@@ -16,12 +16,26 @@
 import time, random
 import numpy as np
 from venture.ripl.ripl import _strip_types
-from venture.venturemagics.ip_parallel import build_exp,mk_p_ripl,mk_l_ripl
-from venture.venturemagics.ip_parallel import *  ## FIXME
+from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl
 from IPython.parallel.util import interactive
 from history import History, Run, Series, historyOverlay
 
 parseValue = _strip_types
+
+
+
+def build_exp(exp):
+    'Take expression from directive_list and build the Lisp string'
+    if type(exp)==str:
+        return exp
+    elif type(exp)==dict:
+        if exp['type']=='atom':
+            return 'atom<%i>'%exp['value']
+        else:
+            return str(exp['value'])
+    else:
+        return '('+ ' '.join(map(build_exp,exp)) + ')'
+
 
 def directive_split(d):
     'Splits directive from *list_directives* into components'
@@ -459,8 +473,7 @@ class Analytics(object):
 
     def _collectSamples(self, assumeToDirective, predictToDirective, sweeps=100, label=None, verbose=False, infer=None, force=None):
         answer = Run(label, self.parameters)
-        print 'answer run object dict',answer.__dict__
-        print 'answer module,', answer.__module__
+        
 
         assumedValues = {symbol : [] for symbol in assumeToDirective}
         predictedValues = {index: [] for index in predictToDirective}
@@ -561,7 +574,8 @@ class Analytics(object):
         if force is not None:
             for symbol,value in force.iteritems():
                 self.ripl.force(symbol,value)
-            print 'RFC: force, list_dir', self.ripl.list_directives()
+            #print 'RFC: force, list_dir \n',
+            #print self.ripl.list_directives()[0]
             
         
         # note: we loadObserves, but predictToDirective arg = {}
@@ -600,7 +614,6 @@ class Analytics(object):
         
         (data, groundTruth) = self.generateDataFromPrior(sweeps, verbose=verbose)
 
-        print 'rCFP data groundTruth',data,groundTruth
         history,ripl = self.runFromConditional(sweeps, data=data, verbose=verbose, **kwargs)
         history.addGroundTruth(groundTruth,sweeps) #sweeps vs. totalSamples
         history.label = 'run_conditioned_from_prior'

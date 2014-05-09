@@ -94,6 +94,7 @@ def mk_picklable(out_lst):
 
 
 # functions that copy ripls by batch-loading directives that are constructed from directives_list
+## FIXME: remove interactive?
 @interactive
 def build_exp(exp):
     'Take expression from directive_list and build the Lisp string'
