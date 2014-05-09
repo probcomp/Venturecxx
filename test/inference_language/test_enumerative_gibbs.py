@@ -15,6 +15,16 @@ def testEnumerativeGibbsBasic1():
   ans = [(True,.5),(False,.5)]
   return reportKnownDiscrete(ans, predictions)
 
+@statisticalTest
+def testEnumerativeGibbsBasic2():
+  """Enumerating two choices with almost the same posterior probability should mix well"""
+  ripl = get_ripl()
+  ripl.assume("x","(flip 0.1)",label="pid")
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs"})
+  ans = [(False,.9),(True,.1)]
+  return reportKnownDiscrete(ans, predictions)
+
+
 def testEnumerativeGibbsGotcha():
   """Enumeration should not break on things that look like they're in the support but aren't"""
   ripl = get_ripl()
@@ -24,7 +34,7 @@ def testEnumerativeGibbsGotcha():
   ripl.infer({"kernel":"gibbs", "scope":"default", "block":"all"})
 
 @statisticalTest
-def testEnumerativeGibbsBoostThrash():
+def testEnumerativeGibbsBoostThrashExact():
   """Enumerating two choices with the same posterior probability should not thrash"""
   ripl = get_ripl()
   ripl.assume("x","(flip 0.1)",label="pid")
@@ -32,6 +42,17 @@ def testEnumerativeGibbsBoostThrash():
   predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs"})
   ans = [(False,.5),(True,.5)]
   return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+def testEnumerativeGibbsBoostThrashClose():
+  """Enumerating two choices with almost the same posterior probability should mix well"""
+  ripl = get_ripl()
+  ripl.assume("x","(flip 0.1)",label="pid")
+  ripl.observe("(flip (if x .91 .09))","true")
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs"})
+  ans = [(False,.471),(True,.529)]
+  return reportKnownDiscrete(ans, predictions)
+
 
 @statisticalTest
 def testEnumerativeGibbsXOR1():
