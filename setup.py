@@ -174,7 +174,7 @@ else:
     print "Skipping old CXX backend. To include it, set the flag COMPILE_CXX_BACKEND"
 
 if ON_LINUX:
-    puma = Extension("venture.puma.libpumatrace",
+    puma = Extension("venture.puma.libtrace",
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
@@ -184,7 +184,7 @@ if ON_LINUX:
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
 if ON_MAC:
-    puma = Extension("venture.puma.libpumatrace",
+    puma = Extension("venture.puma.libtrace",
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
