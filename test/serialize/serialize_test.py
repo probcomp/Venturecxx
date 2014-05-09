@@ -1,4 +1,5 @@
 import unittest
+from nose import SkipTest
 
 from venture.lite.serialize import Serializer
 from venture.shortcuts import make_lite_church_prime_ripl
@@ -84,6 +85,7 @@ class TestSerialize(unittest.TestCase):
             return v.predict('(f)')
 
     def test_serialize_aaa(self):
+        raise SkipTest("Can't serialize custom SPs. Issue: https://app.asana.com/0/9277419963067/12193842156120")
         def execute_program1(v):
             v.assume('f', '(make_beta_bernoulli 10.0 10.0)')
             v.predict('(f)')
@@ -101,6 +103,7 @@ class TestSerialize(unittest.TestCase):
         self._test_serialize_program(execute_program2, do_predict)
 
     def test_serialize_latents(self):
+        raise SkipTest("Can't serialize custom SPs. Issue: https://app.asana.com/0/9277419963067/12193842156120")
         def execute_program(v):
             v.assume('f','''\
 (make_lazy_hmm
