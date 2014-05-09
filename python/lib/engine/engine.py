@@ -24,9 +24,14 @@ class Engine(object):
   def __init__(self, name="phony", Trace=None):
     self.name = name
     self.Trace = Trace
-    self.trace = Trace()
+    self.traces = [Trace()]
+    self.weights = [0]
     self.directiveCounter = 0
     self.directives = {}
+
+  def getDistinguishedTrace(self): 
+    assert self.traces
+    return self.traces[0]
 
   def nextBaseAddr(self):
     self.directiveCounter += 1
@@ -45,32 +50,37 @@ class Engine(object):
     baseAddr = self.nextBaseAddr()
 
     exp = self.desugarLambda(datum)
-    self.trace.eval(baseAddr,exp)
-    self.trace.bindInGlobalEnv(id,baseAddr)
+
+    for trace in self.traces:
+      trace.eval(baseAddr,exp)
+      trace.bindInGlobalEnv(id,baseAddr)
 
     self.directives[self.directiveCounter] = ["assume",id,datum]
 
-    return (self.directiveCounter,self.trace.extractValue(baseAddr))
+    return (self.directiveCounter,self.getDistinguishedTrace().extractValue(baseAddr))
 
   def predict(self,datum):
     baseAddr = self.nextBaseAddr()
-    self.trace.eval(baseAddr,self.desugarLambda(datum))
+    for trace in self.traces:
+      trace.eval(baseAddr,self.desugarLambda(datum))
 
     self.directives[self.directiveCounter] = ["predict",datum]
 
-    return (self.directiveCounter,self.trace.extractValue(baseAddr))
+    return (self.directiveCounter,self.getDistinguishedTrace().extractValue(baseAddr))
 
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
-    self.trace.eval(baseAddr,self.desugarLambda(datum))
-    logDensity = self.trace.observe(baseAddr,val)
 
-    # TODO check for -infinity? Throw an exception?
-    if logDensity == float("-inf"):
-      raise VentureException("invalid_constraint", "Observe failed to constrain",
-                             expression=datum, value=val)
+    for trace in self.traces:
+      trace.eval(baseAddr,self.desugarLambda(datum))
+      logDensity = trace.observe(baseAddr,val)
+
+      # TODO check for -infinity? Throw an exception?
+      if logDensity == float("-inf"):
+        raise VentureException("invalid_constraint", "Observe failed to constrain",
+                               expression=datum, value=val)
+
     self.directives[self.directiveCounter] = ["observe",datum,val]
-
     return self.directiveCounter
 
   def forget(self,directiveId):
@@ -81,21 +91,25 @@ class Engine(object):
     if directive[0] == "assume":
       raise VentureException("invalid_argument", "Cannot forget an ASSUME directive",
                              argument="directive_id", directive_id=directiveId)
-    if directive[0] == "observe": self.trace.unobserve(directiveId)
-    self.trace.uneval(directiveId)
+
+    for trace in self.traces:
+      if directive[0] == "observe": trace.unobserve(directiveId)
+      trace.uneval(directiveId)
+
     del self.directives[directiveId]
 
   def report_value(self,directiveId):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot report a non-existent directive id",
                              argument=directiveId)
-    return self.trace.extractValue(directiveId)
+    return self.getDistinguishedTrace().extractValue(directiveId)
 
   def clear(self):
     del self.trace
     self.directiveCounter = 0
     self.directives = {}
-    self.trace = self.Trace()
+    self.traces = [Trace()]
+    self.weights = [1]
     # Frobnicate the trace's random seed because Trace() resets the
     # RNG seed from the current time, which sucks if one calls this
     # method often.
@@ -132,6 +146,20 @@ class Engine(object):
       params = {}
     self.set_default_params(params)
     
+    if params['instruction'] == "resample":
+      P = params['particles']
+      newTraces = [None for p in range(P)]
+      for p in range(P):
+        parent = sampleLogCategorical(self.weights) # will need to include or rewrite
+        newTraces[p] = self.traces[parent].clone()
+      self.traces = newTraces
+      self.weights = [0 for p in range(P)]
+
+    elif params['instruction'] == "incorporate":
+      
+
+    
+
     if params['kernel'] == "cycle":
       if 'subkernels' not in params:
         raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
