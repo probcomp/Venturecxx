@@ -6,8 +6,6 @@ from testconfig import config
 @statisticalTest
 def testEnumerativeGibbsBasic1():
   """Basic sanity test"""
-  if not config["should_reset"] and not config["num_transitions_per_sample"] % 2:
-    raise SkipTest("EnumerativeGibbsBasic needs either reset or an odd # of transitions per sample")
   ripl = get_ripl()
   ripl.predict("(bernoulli)",label="pid")
 
@@ -23,15 +21,28 @@ def testEnumerativeGibbsGotcha():
   ripl.infer({"kernel":"gibbs"})
   ripl.infer({"kernel":"gibbs", "scope":"default", "block":"all"})
 
+@statisticalTest
 def testEnumerativeGibbsSimple():
   """Regression"""
   ripl = get_ripl()
   ripl.assume("x","(flip 0.1)",label="pid")
   ripl.observe("(flip (if x .9 .1))","true")
-  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs"})
+  predictions = collectSamples(ripl,"pid",infer="(gibbs default one 1)")
   ans = [(False,.5),(True,.5)]
   return reportKnownDiscrete(ans, predictions)
 
+@statisticalTest
+def testEnumerativeGibbsCategorical1():
+  """Tests mixing when the prior is far from the posterior."""
+  ripl = get_ripl()
+  ripl.assume('x', '(categorical (simplex 0.1 0.9) (array 0 1))', label="pid")
+  #ripl.assume('x', '(flip 0.1)', label="pid")
+  ripl.observe('(flip (if (= x 0) 0.9 0.1))', "true")
+  
+  predictions = collectSamples(ripl, "pid", infer="(gibbs default one 1)")
+  ans = [(False, .5), (True, .5)]
+  return reportKnownDiscrete(ans, predictions)
+  
 @statisticalTest
 def testEnumerativeGibbsXOR1():
   """Tests that an XOR chain mixes with enumerative gibbs.
