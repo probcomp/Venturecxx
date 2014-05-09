@@ -99,3 +99,22 @@ class TestSerialize(unittest.TestCase):
             return v.predict('(f)')
         self._test_serialize_program(execute_program1, do_predict)
         self._test_serialize_program(execute_program2, do_predict)
+
+    def test_serialize_latents(self):
+        def execute_program(v):
+            v.assume('f','''\
+(make_lazy_hmm
+ (simplex 0.5 0.5)
+ (matrix (array (array 0.7 0.3)
+               (array 0.3 0.7)))
+ (matrix (array (array 0.9 0.2)
+               (array 0.1 0.8))))
+''')
+            v.observe('(f 1)', 'atom<0>')
+            v.observe('(f 2)', 'atom<0>')
+            v.observe('(f 3)', 'atom<1>')
+            v.observe('(f 4)', 'atom<0>')
+            v.observe('(f 5)', 'atom<0>')
+        def do_predict(v):
+            return v.predict('(f 6)')
+        self._test_serialize_program(execute_program, do_predict)
