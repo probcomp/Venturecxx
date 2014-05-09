@@ -204,7 +204,6 @@ class MRipl():
             return
 
 
-
         ## initialize remote ripls
         self.cli = Client(); self.dview=self.cli[:]
         try:
@@ -221,7 +220,7 @@ class MRipl():
         
         # seed are deterministic by default. we reinstate original seeds on CLEAR
         self.dview = self.cli[:]
-        self.dview.block = True   # FIXME reconsider async infer
+        self.dview.block = True   
         
         # Imports for remote ripls
         self.dview.execute('from venture.venturemagics.ip_parallel import *')
@@ -514,27 +513,38 @@ class MRipl():
             
         return self.mr_apply(local_out,f,label_or_did)
 
+    def force(self,expression,value):
+        ##FIXME add unit test
+        local_out = [r.force(expression,value) for r in self.local_ripls]
+        @interactive
+        def f(mrid,backend,label_or_did):
+            return [r.force(expression,value) for r in mripls[mrid][backend]]
+            
+        return self.mr_apply(local_out,f,expression,value)
 
-    def continuous_inference_status(self):
+        
+    ## FIXME: need to be rewritten
+    def _continuous_inference_status(self):
         self.local_ripl.continuous_inference_status()
         @interactive
         def f(mrid):
             return [ripl.continuous_inference_status() for ripl in mripls[mrid]]
         return self.lst_flatten( self.dview.apply(f, self.mrid) )
 
-    def start_continuous_inference(self, params=None):
+    def _start_continuous_inference(self, params=None):
         self.local_ripl.start_continuous_inference(params)
         @interactive
         def f(params, mrid):
             return [ripl.start_continuous_inference(params) for ripl in mripls[mrid]]
         return self.lst_flatten( self.dview.apply(f, params, self.mrid) )
 
-    def stop_continuous_inference(self):
+    def _stop_continuous_inference(self):
         self.local_ripl.stop_continuous_inference()
         @interactive
         def f(mrid):
             return [ripl.stop_continuous_inference() for ripl in mripls[mrid]]
         return self.lst_flatten( self.dview.apply(f, self.mrid) )
+    ## END FIXME
 
 
     def execute_program(self,program_string,params=None):
@@ -572,6 +582,7 @@ class MRipl():
     ## FIXME: need to serialize directives list
 
                
+
     ## MRIPL CONVENIENCE FEATURES: INFO AND SNAPSHOT
     
     def ripls_info(self):
@@ -592,22 +603,30 @@ class MRipl():
 
 
 
-    def snapshot(self,exp_list=[],did_labels_list=[],
+    def snapshot(self,exp_list=(),did_labels_list=(),
                  plot=False, scatter=False, plot_range=None,
-                 plot_past_values=[],
+                 plot_past_values=(),
                  sample_populations=None, repeat=None,
                  predict=True,logscore=False):
                  
         '''Input: lists of dids_labels and expressions (evaled in order)
            Output: values from each ripl, (optional) plots.''' 
         
-        # sample_populations, repeat need non-det exps (not thunks)
-        # sample pop needs a pair
-        # plot past vals takes list of snapshot outputs and plots first var in values
-        # (so exp_list and did list could be empty)
+        # *sample_populations*, *repeat*:
+        # exp in exp_list should be any non-deterministic expressions.
+        # sample_populations :: (int,int),
+        # plot_past_values :: list of snapshot outputs (exp used in first variable)
         
-        if isinstance(did_labels_list,(int,str)): did_labels_list = [did_labels_list]
-        if isinstance(exp_list,str): exp_list = [exp_list]
+        if isinstance(did_labels_list,(int,str)):
+            did_labels_list = [did_labels_list]
+        else:
+            did_labels_list = list(did_labels_list)
+        if isinstance(exp_list,str):
+            exp_list = [exp_list]
+        else:
+            exp_list = list(exp_list)
+
+        plot_past_values = list(plot_past_values)
 
         if plot_range: # test plot_range == (xrange[,yrange])
             pr=plot_range; l=len(pr)
@@ -880,8 +899,11 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
         no_local_ripls = mripl.no_local_ripls
 
     # map across local ripls
-    local_out=[proc(r,*proc_args,**proc_kwargs) for i,r in enumerate(mripl.local_ripls) if i<no_ripls]
-    if mripl.local_mode: return local_out
+    if mripl.local_mode: 
+        local_out=[proc(r,*proc_args,**proc_kwargs) for i,r in enumerate(mripl.local_ripls) if i<no_ripls]
+        return local_out
+    else:
+        local_out = [None]*no_ripls
 
     # map across remote ripls
     mripl.dview.push({'map_proc':interactive(proc),'map_args':proc_args,
@@ -927,19 +949,21 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
     assert no_args <= mripl.no_ripls, 'More arguments than ripls'
     
     # map across local ripls
-    id_local_out=[]
-    local_out=[]
-    for i,r in enumerate(mripl.local_ripls):
-        if i<no_args:
-            id_args = (mripl.local_seeds[i],proc_args_list[i])
-            if no_kwargs:
-                outs = proc(r,*proc_args_list[i])
-            else:
-                outs = proc(r,*proc_args_list[i][0],**proc_args_list[i][1])
-            local_out.append( outs )
-            id_local_out.append( (id_args,outs))
-    local_out = id_local_out if id_info_out else local_out
-    if mripl.local_mode: return local_out
+    if mripl.local_mode:
+        id_local_out=[]; local_out=[]
+        for i,r in enumerate(mripl.local_ripls):
+            if i<no_args:
+                id_args = (mripl.local_seeds[i],proc_args_list[i])
+                if no_kwargs:
+                    outs = proc(r,*proc_args_list[i])
+                else:
+                    outs = proc(r,*proc_args_list[i][0],**proc_args_list[i][1])
+                local_out.append( outs )
+                id_local_out.append( (id_args,outs))
+        local_out = id_local_out if id_info_out else local_out
+        return local_out
+    else:
+        local_out = [None]*no_args
               
     # map across remote ripls
     no_args_per_engine = int(np.ceil(no_args/float(mripl.no_engines)))

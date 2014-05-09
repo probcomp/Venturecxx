@@ -52,8 +52,12 @@ typically also tracked."""
 
     
     def addData(self, data):
-        'Extend list of data. Input: data::[(exp,literal)]'
+        'Extend list of data. Input: data::[(exp,value)]'
         self.data.extend(data)
+
+    def addDataSet(self,dataset):
+        'Input: dataset :: [(exp,value)]'
+        self.data.append(dataset)
 
     def addGroundTruth(self,groundTruth,totalSamples):
         '''Add Series to self.nameToValues for true parameter values.
@@ -67,12 +71,19 @@ typically also tracked."""
             type = value['type']
             value = value['value'] # FIXME do with parseValue
             values=[value]*totalSamples # pad out with totalSamples for plotting
-            self.addSeries(exp,type,'Ground_truth',values)
+            self.addSeries(exp,type,'groundtruth',values)
+
+        ## FIXME GroundTruth Series must be removed from snapshots
         
 
     def averageValue(self, seriesName):
         'Returns the average over all series with the given name.'
-        return np.mean([np.mean(series.values) for series in self.nameToSeries[seriesName]])
+        flatSeries = []
+        for series in self.nameToSeries[seriesName]:
+            if 'groundtruth' not in series.label.lower():
+                flatSeries.extend(series.values)
+        return np.mean(flatSeries)
+
 
     # default directory for plots, created from parameters
     def defaultDirectory(self):
@@ -195,6 +206,9 @@ def historyOverlay(name, named_hists):
                 answer.addSeries( seriesname, seriesType,
                                   subname+"_"+subseries.label,
                                   subseries.values, hist=subseries.hist)
+        
+    for (subname,subhist) in named_hists:
+        answer.addDataset(subhist.data)
     return answer
 
 
@@ -272,7 +286,7 @@ def plotSeries(name, seriesList, subtitle="", xlabel='Sweep', **kwargs):
 
 def _doPlotSeries(seriesList, ybounds=None):
     for series in seriesList:
-        if 'ground_truth' in series.label.lower():
+        if series.label and 'groundtruth' in series.label.lower():
             plt.plot(series.xvals(), series.values,linestyle=':',
                      markersize=6, label=series.label)
         else:
