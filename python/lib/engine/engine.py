@@ -110,15 +110,7 @@ class Engine(object):
   def reset(self):
     worklist = sorted(self.directives.iteritems())
     self.clear()
-<<<<<<< HEAD
-    # Frobnicate the trace's random seed because Trace() resets the
-    # RNG seed from the current time, which sucks if one calls this
-    # method often.
-    import random
-    self.set_seed(random.randint(1,2**31-1))
     [self.replay(dir) for (_,dir) in worklist]
-=======
->>>>>>> 1a5eace... Removed redundant rng resetting.
 
   def replay(self,directive):
     if directive[0] == "assume":
