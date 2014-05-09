@@ -192,7 +192,7 @@ def assignBorderSequnce(border,indexAssignments,numIndices):
 
 ##################################################################
 
-def SubsampledMixMH(trace,indexer,operator):
+def subsampledMixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
   rhoMix = indexer.logDensityOfIndex(trace,index)
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
