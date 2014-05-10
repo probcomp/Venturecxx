@@ -59,7 +59,7 @@ def testEnumerativeGibbsCategorical1():
   ripl.assume('x', '(categorical (simplex 0.1 0.9) (array 0 1))', label="pid")
   ripl.observe('(flip (if (= x 0) 0.9 0.1))', "true")
   
-  predictions = collectSamples(ripl, "pid", infer="(gibbs default one 1)")
+  predictions = collectSamples(ripl, "pid", infer="(gibbs default all 1)")
   ans = [(False, .5), (True, .5)]
   return reportKnownDiscrete(ans, predictions)
   
