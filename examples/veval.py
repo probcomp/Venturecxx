@@ -297,7 +297,7 @@ def computeIncrementalScaffolds(p,n,k):
   for x in range(k): ripl.predict("(g %d)" % x)
 
 #  print extractValue(ripl.report("exp"))
-  sizes = ripl.sivm.core_sivm.engine.trace.scaffold_sizes()
+  sizes = ripl.sivm.core_sivm.engine.getDistinguishedTrace().scaffold_sizes()
   return [sum(zones) for zones in sizes]
 
 def computeConcreteScaffolds(p,n,k):
@@ -335,7 +335,7 @@ def computeConcreteScaffolds(p,n,k):
   for x in range(k): ripl.predict("(g %d)" % x)
 
 #  print extractValue(ripl.report("exp"))
-  sizes = ripl.sivm.core_sivm.engine.trace.scaffold_sizes()
+  sizes = ripl.sivm.core_sivm.engine.getDistinguishedTrace().scaffold_sizes()
   return [sum(zones) for zones in sizes]
 
 def computeBuiltinScaffolds(p,n,k):
@@ -372,7 +372,7 @@ def computeBuiltinScaffolds(p,n,k):
   for x in range(k): ripl.predict("(g %d)" % x)
 
 #  print extractValue(ripl.report("exp"))
-  sizes = ripl.sivm.core_sivm.engine.trace.scaffold_sizes()
+  sizes = ripl.sivm.core_sivm.engine.getDistinguishedTrace().scaffold_sizes()
   return [sum(zones) for zones in sizes]
 
 

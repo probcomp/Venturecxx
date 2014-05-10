@@ -113,7 +113,7 @@ struct ConcreteTrace : Trace
   void addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node);
 
   bool scopeHasEntropy(ScopeID scope); 
-  void makeConsistent();
+  double makeConsistent();
 
   int numUnconstrainedChoices();
 

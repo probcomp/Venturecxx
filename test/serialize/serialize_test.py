@@ -20,7 +20,10 @@ class TestSerialize(unittest.TestCase):
         trace = v.sivm.core_sivm.engine.getDistinguishedTrace()
         serialized = Serializer().serialize_trace(trace, None)
         newtrace, _ = Serializer().deserialize_trace(serialized)
-        v.sivm.core_sivm.engine.trace = newtrace
+        # TODO this is awkward
+        # if it were an acceptable thing to do in general, we might have
+        # setDistinguishedTrace(newtrace)
+        v.sivm.core_sivm.engine.traces[0] = newtrace
         result2 = v.predict('is_tricky')
 
         self.assertTrue(isinstance(serialized, dict))
