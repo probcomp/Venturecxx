@@ -18,7 +18,6 @@ from scaffold import constructScaffold
 from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
-from venture.lite.serialize import Serializer
 import random
 import numpy.random
 
@@ -274,18 +273,22 @@ class Trace(object):
     self.unpropagatedObservations[node] = self.unboxValue(val)
 
   def makeConsistent(self):
+    weight = 0
     for node,val in self.unpropagatedObservations.iteritems():
       appNode = self.getOutermostNonReferenceApplication(node)
 #      print "PROPAGATE",node,appNode
       scaffold = constructScaffold(self,[set([appNode])])
-      detachAndExtract(self,scaffold.border[0],scaffold)
+      rhoWeight,_ = detachAndExtract(self,scaffold.border[0],scaffold)
       assertTorus(scaffold)
       scaffold.lkernels[appNode] = DeterministicLKernel(self.pspAt(appNode),val)
       xiWeight = regenAndAttach(self,scaffold.border[0],scaffold,False,OmegaDB(),{})
       if xiWeight == float("-inf"): raise Exception("Unable to propagate constraint")
       node.observe(val)
       constrain(self,appNode,node.observedValue)
+      weight += xiWeight
+      weight -= rhoWeight
     self.unpropagatedObservations.clear()
+    return weight
 
   def getOutermostNonReferenceApplication(self,node):
     if isinstance(node,LookupNode): return self.getOutermostNonReferenceApplication(node.sourceNode)
@@ -320,8 +323,8 @@ class Trace(object):
 
   # params is a dict with keys "kernel", "scope", "block",
   # "transitions" (the latter should be named "repeats").
+
   def infer(self,params):
-    self.makeConsistent()
     if not self.scopeHasEntropy(params["scope"]):
       return
     for _ in range(params["transitions"]):
@@ -395,12 +398,6 @@ class Trace(object):
     for child in newChildren:
       node.children.add(child)
 
-################## Placeholder until we write a deep-copy or use particles
-
-  def clone(self):
-    serialized = Serializer().serialize_trace(self, None)
-    newTrace, _ = Serializer().deserialize_trace(serialized)
-    return newTrace
 
 
     

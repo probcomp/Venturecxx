@@ -17,7 +17,7 @@ class TestSerialize(unittest.TestCase):
         v.infer(10)
         result1 = v.predict('is_tricky')
 
-        trace = v.sivm.core_sivm.engine.trace
+        trace = v.sivm.core_sivm.engine.getDistinguishedTrace()
         serialized = Serializer().serialize_trace(trace, None)
         newtrace, _ = Serializer().deserialize_trace(serialized)
         v.sivm.core_sivm.engine.trace = newtrace

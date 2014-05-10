@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from venture.exception import VentureException
 from venture.lite.utils import simulateCategorical
+from venture.lite.serialize import Serializer
 
 # Thin wrapper around Trace
 # TODO: merge with CoreSivm?
@@ -105,10 +106,10 @@ class Engine(object):
     return self.getDistinguishedTrace().extractValue(directiveId)
 
   def clear(self):
-    del self.trace
+    for trace in self.traces: del trace
     self.directiveCounter = 0
     self.directives = {}
-    self.traces = [Trace()]
+    self.traces = [self.Trace()]
     self.weights = [1]
     # Frobnicate the trace's random seed because Trace() resets the
     # RNG seed from the current time, which sucks if one calls this
@@ -136,26 +137,33 @@ class Engine(object):
     else:
       assert False, "Unkown directive type found %r" % directive
 
+  def clone(self,trace):
+    serialized = Serializer().serialize_trace(trace, None)
+    newTrace, _ = Serializer().deserialize_trace(serialized)
+    return newTrace
+
+  def incorporate(self):
+    for i,trace in enumerate(self.traces):
+      self.weights[i] += trace.makeConsistent()
+
   def infer(self,params=None):
     if params is None:
       params = {}
     self.set_default_params(params)
-    
-    if params['instruction'] == "resample":
+
+    self.incorporate()    
+    if 'instruction' in params and params['instruction'] == "resample":
       P = params['particles']
       newTraces = [None for p in range(P)]
       for p in range(P):
         parent = sampleLogCategorical(self.weights) # will need to include or rewrite
-        newTraces[p] = self.traces[parent].clone()
+        newTraces[p] = self.clone(self.traces[parent])
       self.traces = newTraces
       self.weights = [0 for p in range(P)]
 
-    elif params['instruction'] == "incorporate":
-      
+    elif 'instruction' in params and params['instruction'] == "incorporate": pass
 
-    
-
-    if params['kernel'] == "cycle":
+    elif params['kernel'] == "cycle":
       if 'subkernels' not in params:
         raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
       for n in range(params["transitions"]):
@@ -166,7 +174,7 @@ class Engine(object):
         self.infer(simulateCategorical(params["weights"], params["subkernels"]))
     else: # A primitive infer expression
       #import pdb; pdb.set_trace()
-      self.trace.infer(params)
+      for trace in self.traces: trace.infer(params)
   
   # TODO put all inference param parsing in one place
   def set_default_params(self,params):
@@ -189,36 +197,36 @@ class Engine(object):
     if "particles" in params:
       params["particles"] = int(params["particles"])
   
-  def logscore(self): return self.trace.getGlobalLogScore()
+  def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
 
   def get_entropy_info(self):
-    return { 'unconstrained_random_choices' : self.trace.numRandomChoices() }
+    return { 'unconstrained_random_choices' : self.getDistinguishedTrace().numRandomChoices() }
 
   def get_seed(self):
-    return self.trace.get_seed()
+    return self.getDistinguishedTrace().get_seed() # TODO is this what we want?
 
   def set_seed(self, seed):
-    self.trace.set_seed(seed)
+    self.getDistinguishedTrace().set_seed(seed) # TODO is this what we want?
 
   def continuous_inference_status(self):
-    return self.trace.continuous_inference_status()
+    return self.getDistinguishedTrace().continuous_inference_status() # awkward
 
   def start_continuous_inference(self, params):
     self.set_default_params(params)
-    self.trace.start_continuous_inference(params)
+    for trace in self.traces: trace.start_continuous_inference(params)
 
   def stop_continuous_inference(self):
-    self.trace.stop_continuous_inference()
+    for trace in self.traces: trace.stop_continuous_inference()
 
   def save(self, fname, extra=None):
     if extra is None:
       extra = {}
     extra['directives'] = self.directives
     extra['directiveCounter'] = self.directiveCounter
-    return self.trace.save(fname, extra)
+    return self.getDistinguishedTrace().save(fname, extra)
 
   def load(self, fname):
-    self.trace, extra = self.Trace.load(fname)
+    self.trace, extra = self.getDistinguishedTrace().load(fname)
     self.directives = extra['directives']
     self.directiveCounter = extra['directiveCounter']
     return extra
