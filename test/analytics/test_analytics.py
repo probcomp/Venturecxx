@@ -57,12 +57,13 @@ def testAnalytics(totalSamples=400):
     return 
 
 
-def generateMRiplParams(backends=('puma','lite'),no_ripls=(2,3)):
-    try:
-        v=MRipl(2)
-        modes=(True,False)
-    except:
-        modes=(False,)
+def generateMRiplParams(backends=('puma','lite'),no_ripls=(2,3),modes=None):
+    if modes is None:
+        try:
+            v=MRipl(2)
+            modes=(True,False)
+        except:
+            modes=(False,)
     params = [(n,b,m) for n in no_ripls for b in backends for m in modes]
     return params
 
@@ -117,7 +118,8 @@ def _testBasicMRipl(mripl):
     
 
 def testBasicMRipl():
-    for (no_ripls,backend,mode) in generateMRiplParams():
+    params = generateMRiplParams(backends=('puma',),modes=(False,) )
+    for (no_ripls,backend,mode) in params:
         _testBasicMRipl( MRipl(no_ripls,backend=backend,local_mode=mode) )
     return
 
@@ -127,5 +129,11 @@ def quickTests():
     testAnalytics(totalSamples=50)
     _testBasicMRipl( MRipl(2) )
     return
-    
+
+def slowTests():
+    testAnalytics()
+    for (no_ripls,backend,mode) in generateMRiplParams():
+        _testBasicMRipl( MRipl(no_ripls,backend=backend,local_mode=mode) )
+    return
+
     
