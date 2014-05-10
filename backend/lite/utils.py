@@ -31,8 +31,12 @@ def logDensityCategorical(val,ps,os=None):
   # TODO This should work for Venture Values while the comparison is
   # done by identity and in the absence of observations; do I want to
   # override the Python magic methods for VentureValues?
-  p = ps[os.index(val)]
-  assert os.count(val) == 1
+  p = None
+  for i in range(len(os)): 
+    if os[i] == val: 
+      p = ps[i]; 
+      break
+  assert p
   return math.log(p)
 
 def simulateDirichlet(alpha): return npr.dirichlet(alpha)

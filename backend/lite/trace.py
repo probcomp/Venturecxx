@@ -318,10 +318,8 @@ class Trace(object):
 
   def continuous_inference_status(self): return {"running" : False}
 
-  # params is a hash with keys "kernel", "scope", "block",
-  # "transitions" (the latter should be named "repeats").  Right now,
-  # "kernel" must be one of "mh" or "meanfield", and "transitions"
-  # must be an integer.
+  # params is a dict with keys "kernel", "scope", "block",
+  # "transitions" (the latter should be named "repeats").
   def infer(self,params):
     self.makeConsistent()
     if not self.scopeHasEntropy(params["scope"]):
@@ -337,7 +335,7 @@ class Trace(object):
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),HamiltonianMonteCarloOperator(params["epsilon"], params["L"]))
       elif params["kernel"] == "gibbs":
-        assert params["with_mutation"]
+        #assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
       elif params["kernel"] == "pgibbs":
         if params["with_mutation"]:
