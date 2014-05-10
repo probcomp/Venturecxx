@@ -53,7 +53,7 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   registerDeterministicLKernels(trace, scaffold, applicationNodes, currentValues);
   pair<double, shared_ptr<DB> > rhoWeightAndDB = detachAndExtract(trace,scaffold->border[0],scaffold);
   //double rhoWeight = rhoWeightAndDB.first;
-  //rhoDB = rhoWeightAndDB.second;
+  rhoDB = rhoWeightAndDB.second;
   assertTorus(scaffold);
   
   shared_ptr<map<Node*,Gradient> > nullGradients;
