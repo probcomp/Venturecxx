@@ -16,12 +16,22 @@
 import time, random
 import numpy as np
 from venture.ripl.ripl import _strip_types
-from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl
+from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl,mr_map_proc
+from venture.venturemagics.ip_parallel import * ## FIXME:
 from IPython.parallel.util import interactive
 from history import History, Run, Series, historyOverlay
-
 parseValue = _strip_types
 
+## possible addition
+# analytics mutates the ripl you give as input.
+# assumes and observes are extracted as before.
+# runFromConditionalOnce: you just do the infer.
+# assumes can be recorded in the same way.
+
+# this way, simple mripl map would allow us 
+# to output mripl without need for serializing ripls.
+
+# [for run from prior, you need to reload assumes.]
 
 
 def build_exp(exp):
@@ -152,7 +162,7 @@ class Analytics(object):
         assert not(assumes is None and observes is not None),'No *observes* without *assumes*.'
 
         if isinstance(ripl_mripl,MRipl):
-            ripl=ripl_mripl.local_ripls[0] # could just 
+            ripl=ripl_mripl.local_ripls[0] # only needed because of set_seed
             self.mripl = True
         else:
             ripl = ripl_mripl
@@ -194,7 +204,8 @@ class Analytics(object):
             [self.mripl.observe(exp,lit) for exp,lit in self.observes]
 
             self.backend = self.mripl.backend
-            self.mripl.dview.execute('from venture.unit import Analytics')
+            if self.mripl.local_mode is False:
+                self.mripl.dview.execute('from venture.unit import Analytics')
             self.updateQueryExps()
         
 
@@ -216,7 +227,7 @@ class Analytics(object):
         if newQueryExps is not None:
             self.queryExps.extend( newQueryExps )
         # always update mripl engines with whatever is current self.queryExps
-        if self.mripl:
+        if self.mripl and self.mripl.local_mode is False:
             self.mripl.dview.push({'queryExps':self.queryExps})
 
     def switchBackend(self,newBackend):
@@ -395,6 +406,8 @@ class Analytics(object):
 
     # iterates until (approximately) all random choices have been resampled
     def sweep(self,infer=None):
+        
+
         iterations = 0
 
         #FIXME: use a profiler method here
@@ -404,8 +417,8 @@ class Analytics(object):
             step = get_entropy_info()['unconstrained_random_choices']
             if infer is None:
                 self.ripl.infer(step)
-            # TODO Incoming infer string or procedure may touch more
-            # than "step" choices; how to count sweeps right?
+            
+                
             elif isinstance(infer, str):
                 self.ripl.infer(infer)
             else:
@@ -418,20 +431,28 @@ class Analytics(object):
     def _runRepeatedly(self, f, tag, runs=3, verbose=False, profile=False,
                        **kwargs):
         history = History(tag, self.parameters)
+        
 
         if self.mripl:
             # note: sendf builds Analytics model from ripl. this requires
             # ripl to already have assumes and observes (which was done in
             # __init__).We could also send the assumes,observes as lists with f.
-            def sendf(ripl,fname,**kwargs):
+            def sendf(ripl,fname,queryExps,**kwargs):
                 riplID = str( np.mod(int(hash(ripl)),10**4) )
                 model = Analytics(ripl,queryExps=queryExps)
-                result = getattr(model,fname)(label='ripl hash: %s'%riplID,
+                result = getattr(model,fname)(label='ripl: %s'%riplID,
                                               **kwargs)
                 return result
 
-            results=mr_map_proc(self.mripl,runs,sendf,f.__name__,**kwargs)
-            [history.addRun(res) for res in results]
+            repeats = int(np.ceil(runs / float(self.mripl.no_ripls)))
+            results = []
+            for count in range(repeats):
+                r=mr_map_proc(self.mripl,'all',sendf,f.__name__, self.queryExps,
+                              **kwargs)
+                results.extend(r)
+            
+            [history.addRun(res) for res in results[:runs] ]
+
             return history
 
         
@@ -574,9 +595,6 @@ class Analytics(object):
         if force is not None:
             for symbol,value in force.iteritems():
                 self.ripl.force(symbol,value)
-            #print 'RFC: force, list_dir \n',
-            #print self.ripl.list_directives()[0]
-            
         
         # note: we loadObserves, but predictToDirective arg = {}
         # so we are not collecting sample of the observes here. 
@@ -589,17 +607,17 @@ class Analytics(object):
         force={}
         
         for symbol,_ in self.assumes:
-            value = v.sample(symbol)[randRipl]
+            value = self.mripl.sample(symbol)[randRipl]
             if isinstance(value,(int,float)): force[symbol]=value
 
-        def fromPrior(r,sweeps,force=None,**kwargs):
+        def fromPrior(r,sweeps,queryExps,force=None,**kwargs):
             model = Analytics(r,queryExps=queryExps)
             h,_ = model.runConditionedFromPrior(sweeps, force=force,
                                                 runs=1,**kwargs)
             return h
             
         histories = mr_map_proc(self.mripl, noDatasets, fromPrior,
-                                sweeps, force=None, **kwargs)
+                                sweeps, self.queryExps,force=None, **kwargs)
         
         pairs = zip(['Ripl%i'%i for i in range(noDatasets)],histories)
         historyOV = historyOverlay('testFromPrior',pairs)

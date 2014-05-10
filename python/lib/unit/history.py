@@ -55,7 +55,7 @@ typically also tracked."""
         'Extend list of data. Input: data::[(exp,value)]'
         self.data.extend(data)
 
-    def addDataSet(self,dataset):
+    def addDataset(self,dataset):
         'Input: dataset :: [(exp,value)]'
         self.data.append(dataset)
 
@@ -344,7 +344,8 @@ def _plotPrettily(f, name, data, title="", parameters=None, filesuffix='',
 
     f(data, **kwargs)
 
-    legend_outside()
+    #legend_outside()
+    plt.legend(loc='best')
 
     if save:
         ensure_directory(directory)

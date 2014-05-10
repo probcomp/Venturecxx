@@ -1,4 +1,4 @@
-from venture.venturemagics.ip_parallel import mk_p_ripl
+from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl
 from venture.unit import *
 import numpy as np
 from nose.plugins.attrib import attr
@@ -31,7 +31,6 @@ def testAnalytics():
     assert model.observes==observes
     assert model.queryExps==queryExps
 
-    
     ## Run inference in Analytics
 
     # test history
@@ -54,3 +53,76 @@ def testAnalytics():
     assert np.sum(queryValues) > len(queryValues) 
 
     return 
+
+
+def generateMRiplParams(backends=('puma','lite'),no_ripls=(2,3)):
+    try:
+        v=MRipl(2)
+        modes=(True,False)
+    except:
+        modes=(False,)
+    params = [(n,b,m) for n in no_ripls for b in backends for m in modes]
+    return params
+
+def _testBasicMRipl(mripl):
+    v=mripl
+    v.assume('mu','(normal 0 2)')
+    num_obs = 8
+    [v.observe('(normal mu .05)','1.') for _ in range(num_obs)]
+    queryExps = ['(pow mu 2)']
+    model = Analytics(v,queryExps=queryExps)
+
+    # test outMRipl- currently will be unmutated because of how inference works
+
+    # test History
+    snapshot=lambda lstSeries,i: [s[i] for s in lstSeries]
+
+    def testHistory(trueMu,history):
+        lstMuValues = [s.values for s in history.nameToSeries['mu']]
+
+        # final samples close to trueMu
+        assert .5 > abs( np.mean(snapshot(lstMuValues,-1)) - trueMu)
+        assert .6 > abs( np.std(snapshot(lstMuValues,-1)) )
+
+        # mean over all samples close to trueMu
+        assert .4 > abs(np.mean(lstMuValues)-trueMu)
+
+        # test queryExps, i.e. mu^2
+        lstQueryValues = [s.values for s in history.nameToSeries[queryExps[0]]]
+        assert .001 > abs(np.mean(lstQueryValues - (np.array(lstMuValues)**2)) )
+    ## test: runFromConditional
+    totalSamples = 100
+    runs = 2
+    historyRFC,outMRipl = model.runFromConditional(totalSamples,runs=runs)
+    testHistory(1,historyRFC)
+
+    ## test: runConditionedFromPrior
+    totalSamples = 140
+    runs = 3
+    historyRCP,_ = model.runConditionedFromPrior(totalSamples,runs=runs)
+    trueMu = historyRCP.groundTruth['mu']['value']
+    testHistory(trueMu,historyRCP)
+
+    ## test: testFromPrior
+    totalSamples = 40
+    noDatasets = 5
+    historyOV,_ = model.testFromPrior(noDatasets,totalSamples)
+    lstMuValues = [s.values for s in historyOV.nameToSeries['mu']]
+     # final samples close to prior on mu
+    print abs( np.mean(snapshot(lstMuValues,-1) ) )
+    print abs( np.std(snapshot(lstMuValues,-1)) - 2. )
+    assert .8 > abs( np.mean(snapshot(lstMuValues,-1) ) )
+    assert 1 > abs( np.std(snapshot(lstMuValues,-1)) - 2. )
+    
+
+def testBasicMRipl():
+    for (no_ripls,backend,mode) in generateMRiplParams():
+        _testBasicMRipl( MRipl(no_ripls,backend=backend,local_mode=mode) )
+    return
+
+
+
+    
+    
+    
+    
