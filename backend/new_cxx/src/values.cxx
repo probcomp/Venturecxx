@@ -284,7 +284,7 @@ boost::python::dict VentureArray::toPython(Trace * trace) const
   value["type"] = "array";
   boost::python::list l;
   for (size_t i = 0; i < xs.size(); ++i) { l.append(xs[i]->toPython(trace)); }
-  value["value"] = l;
+  value["value"] = boost::python::tuple(l);
   return value;
 }
 
@@ -293,7 +293,7 @@ boost::python::dict VentureVector::toPython(Trace * trace) const
   boost::python::dict value;
   value["type"] = "vector";
   boost::python::list l;
-  for (size_t i = 0; i < v.size(); ++i) { l.append(v(i)); }
+  for (int i = 0; i < v.size(); ++i) { l.append(v(i)); }
   value["value"] = l;
   return value;
 }
@@ -303,10 +303,10 @@ boost::python::dict VentureMatrix::toPython(Trace * trace) const
   boost::python::dict value;
   value["type"] = "matrix";
   boost::python::list l;
-  for (size_t i = 0; i < m.rows(); ++i)
+  for (int i = 0; i < m.rows(); ++i)
   {
     boost::python::list row;
-    for (size_t j = 0; j < m.cols(); ++j) { row.append(m(i, j)); }
+    for (int j = 0; j < m.cols(); ++j) { row.append(m(i, j)); }
     l.append(row);
   }
   value["value"] = l;

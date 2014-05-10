@@ -194,8 +194,6 @@ struct Inferer
 // TODO URGENT placeholder
 void PyTrace::infer(boost::python::dict params) 
 { 
-  trace->makeConsistent();
-  
   Inferer inferer(trace, params);
   inferer.infer();
 }
@@ -244,6 +242,11 @@ void translateCStringException(const char* err) {
   PyErr_SetString(PyExc_RuntimeError, err);
 }
 
+double PyTrace::makeConsistent()
+{
+  return trace->makeConsistent();
+}
+
 BOOST_PYTHON_MODULE(libpumatrace)
 {
   using namespace boost::python;
@@ -263,6 +266,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
     .def("infer", &PyTrace::infer)
+    .def("makeConsistent", &PyTrace::makeConsistent)
     .def("continuous_inference_status", &PyTrace::continuous_inference_status)
     .def("start_continuous_inference", &PyTrace::start_continuous_inference)
     .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)

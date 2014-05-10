@@ -85,7 +85,12 @@ class CategoricalOutputPSP(RandomPSP):
       return logDensityCategorical(val, args.operandValues[0], [VentureAtom(i) for i in range(len(args.operandValues[0]))])
     else:
       return logDensityCategorical(val,*args.operandValues)
-
+  
+  def enumerateValues(self,args):
+    indexes = [i for i, p in enumerate(args.operandValues[0]) if p > 0]
+    if len(args.operandValues) == 1: return indexes
+    else: return [args.operandValues[1][i] for i in indexes]
+  
   def description(self,name):
     return "  (%s weights objects) samples a categorical with the given weights.  In the one argument case, returns the index of the chosen option as an atom; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % name
 
