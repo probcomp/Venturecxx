@@ -1,13 +1,15 @@
 import math
 import scipy.stats as stats
 from nose import SkipTest
+from testconfig import config
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, defaultKernel
 
 
 @statisticalTest
 def testBasicParticleFilter():
-"""Poorly designed and poorly written test, which nonetheless provides a semblance of a sanity test for particle filtering"""
+  """Poorly designed and poorly written test, which nonetheless provides a semblance of a sanity test for particle filtering"""
+  if config["get_ripl"] != "lite": raise SkipTest("Clone only implemented in lite")
   ripl = get_ripl()
   P = 50
   ripl.assume("f","""
