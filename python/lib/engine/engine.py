@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from venture.exception import VentureException
-from venture.lite.utils import simulateCategorical
+from venture.lite.utils import simulateCategorical, sampleLogCategorical
 from venture.lite.serialize import Serializer
 
 # Thin wrapper around Trace
