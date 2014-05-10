@@ -1,7 +1,11 @@
 from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl
 from venture.unit import *
 import numpy as np
+import scipy.stats
+
 from nose.plugins.attrib import attr
+from venture.test.stats import statisticalTest, reportKnownContinuous
+
 
 @attr('slow')
 def testAnalytics(totalSamples=400):
@@ -125,15 +129,76 @@ def testBasicMRipl():
 
 
 
+
+def sampleFromJointHistory():
+    v=mk_p_ripl() 
+    v.assume('mu','(normal 10 .01)')
+    v.observe('(normal mu .01)','10')
+    model = Analytics(v)
+    samples = 50
+    return  model.sampleFromJoint(samples)
+    
+#@statisticalTest
+def testSampleFromJointAssume():
+    history = sampleFromJointHistory()
+    muSamples = history.nameToSeries['mu'][0].values
+    res= reportKnownContinuous( scipy.stats.norm(loc=10,scale=.01).cdf,
+                                  muSamples, descr='testSampleFromJointAssume')
+    assert res.pval > .01
+    return res
+#@statisticalTest    
+def testSampleFromJointObserve():
+    history = sampleFromJointHistory()
+    nameObs= [k for k in history.nameToSeries.keys() if 'obs' in k][0]
+    obsSamples = history.nameToSeries[nameObs][0].values
+    res= reportKnownContinuous( scipy.stats.norm(loc=10,scale=.014).cdf,
+                                  obsSamples, descr='testSampleFromJointObserve')
+    assert res.pval > .01
+    return res
+
+#@statisticaltest
+#@MRIPLtest
+def _testMRiplSampleFromJoint():
+    params = generateMRiplParams(backends=('puma','lite'),modes=(True,False))
+    results = []
+    
+    for (no_ripls, backend, mode) in params:
+        mriplMode = 'local' if mode is False else 'remote'
+        v=MRipl(no_ripls,backend=backend,local_mode=mode)
+        v.assume('mu','(normal 10 .01)')
+        v.observe('(normal mu .01)','10')
+        model = Analytics(v)
+        samples = 25
+        history = model.sampleFromJoint(samples,mriplMode=mriplMode)
+        muSamples = history.nameToSeries['mu'][0].values
+        resMu= reportKnownContinuous( scipy.stats.norm(loc=10,scale=.01).cdf,
+                                      muSamples, descr='testMRiplSFJ')
+        assert resMu.pval > .01
+        results.append(resMu)
+
+    return results
+
+
+
 def quickTests():
     testAnalytics(totalSamples=50)
+
     _testBasicMRipl( MRipl(2) )
+    
+    testSampleFromJointAssume()
+    testSampleFromJointObserve()
+    _testMRiplSampleFromJoint()
     return
 
 def slowTests():
     testAnalytics()
+
     for (no_ripls,backend,mode) in generateMRiplParams():
         _testBasicMRipl( MRipl(no_ripls,backend=backend,local_mode=mode) )
+
+    testSampleFromJointAssume()
+    testSampleFromJointObserve()
+    _testMRiplSampleFromJoint()
     return
 
     

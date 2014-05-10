@@ -338,71 +338,84 @@ class Analytics(object):
     # Sample iid from joint distribution (observes turned into predicts).
     # A random subset of predicts, assumes, and queryExps are tracked.
     # Returns a History object that represents exactly one Run.
-    def sampleFromJoint(self, samples, track=5, verbose=False, name=None):
-        assumedValues = {symbol:  [] for (symbol, _) in self.assumes}
-        predictedValues = {index: [] for index in range(len(self.observes))}
-        queryExpsValues = {exp: [] for exp in self.queryExps}
+    def sampleFromJoint(self, samples, track=5, verbose=False, name=None,
+                        mriplMode='local'):
 
-        logscores = []
+        local_mode=True if mriplMode is 'local' else False
 
-        for i in range(samples):
-            if verbose:
-                print "Generating sample " + str(i+1) + " of " + str(samples)
-
-            (assumeToDirective, predictToDirective) = self.loadModelWithPredicts(track)
-            # loadModelWith... clears the ripl, adds assumes and then observes
-            # as predicts.
-            logscores.append(self.ripl.get_global_logscore())
-
-            self.updateValues(assumedValues,keyToDirective=assumeToDirective)
-            self.updateValues(predictedValues,keyToDirective=predictToDirective)
-            self.updateValues(queryExpsValues, keyToDirective=None)
-
-        # #Alternative that avoids dids
-        # indToLabel=lambda ind:'observe_%i'%ind
-        # mk_ripl=mk_p_ripl if self.backend=='puma' else mk_l_ripl
-        # n_assumes=len(self.assumes)
-        # rangeAssumes=range(1,1+n_assumes)
+        def mriplSample():
+            assumedValues={}
+            predictedValues={}
+            queryExpsValues={}
         
-        # aValues = {sym:[] for sym,_ in self.assumes}
-        # observeLabel=[indToLabel(i) for i,_ in enumerate(self.observes)] 
-        # pValues={name:[] for name in observeLabel}
+            v = MRipl(samples, backend=self.backend, local_mode=local_mode)
+            [v.assume(sym,exp) for sym,exp in self.assumes]
 
-        # qValues = {exp:[] for exp,_ in self.queryExps}
-        # print zip(self.observes,observeLabel)
-        
-        # for i in range(samples):
-        #     v=mk_ripl()
-        #     v.set_seed(i)
-        #     [v.assume(sym,exp) for sym,exp in self.assumes]
+            rangeAssumes=range(1,1+len(self.assumes))
+            observeLabels=[self.nameObserve(i) for i,_ in enumerate(self.observes)]
             
-        #     for (exp,_),name in zip(self.observes,observeLabel):
-        #         v.predict(exp,label=name)
+            for (exp,_),name in zip(self.observes,observeLabels):
+                v.predict(exp,label=name)
                 
-        #     for did, (sym,_) in zip( rangeAssumes,self.assumes):
-        #         aValues[sym].append( v.report(did,type=True) )
-        #     for name in observeLabel:
-        #         pValues[name].append( v.report(name,type=True) )
-        #     for exp in self.queryExps:
-        #         qValues[exp].append( v.sample(exp,type=True) )
-        
+            for did, (sym,_) in zip( rangeAssumes,self.assumes):
+                assumedValues[sym] = v.report(did,type=True)
+            for name in observeLabels:
+                predictedValues[name] = v.report(name,type=True)
+            for exp in self.queryExps:
+                queryExpsValues[exp] = v.sample(exp,type=True)
+
+            logscores=v.get_global_logscore()
+
+            return assumedValues,predictedValues,queryExpsValues,logscores
+            
+
+        def riplSample():
+            assumedValues = {symbol:  [] for (symbol, _) in self.assumes}
+            predictedValues = {index: [] for index in range(len(self.observes))}
+            queryExpsValues = {exp: [] for exp in self.queryExps}
+            logscores = []
+            for i in range(samples):
+                if verbose:
+                    print "Generating sample " + str(i+1) + " of " + str(samples)
+
+                (assumeToDirective,predictToDirective) = self.loadModelWithPredicts(track)
+                logscores.append(self.ripl.get_global_logscore())
+
+                self.updateValues(assumedValues,keyToDirective=assumeToDirective)
+                self.updateValues(predictedValues,keyToDirective=predictToDirective)
+                self.updateValues(queryExpsValues, keyToDirective=None)
+
+            return assumedValues,predictedValues,queryExpsValues,logscores
+
 
         tag = 'sample_from_joint' if name is None else name + '_sample_from_joint'
         history = History(tag, self.parameters)
+        out = mriplSample() if self.mripl else riplSample()
 
-        history.addSeries('logscore','number', 'i.i.d.', logscores)
+        assumedValues,predictedValues,queryExpsValues,logscores = out
+        
+        if self.mripl:
+            for (name,values) in predictedValues.iteritems():
+                parsedValues = map(parseValue, values)
+                history.addSeries(name,values[0]['type'],'iid',parsedValues)
+        else:
+            for (index, values) in predictedValues.iteritems():
+                name = self.nameObserve(index)
+                parsedValues = map(parseValue, values)
+                history.addSeries(name,values[0]['type'],'iid',parsedValues)
+            
         
         for (symbol, values) in assumedValues.iteritems():
             history.addSeries(symbol,values[0]['type'], 'i.i.d.', map(parseValue, values))
-
-        for (index, values) in predictedValues.iteritems():
-            history.addSeries(self.nameObserve(index),values[0]['type'], 'i.i.d.',
-                              map(parseValue, values))
-
+        
         for (exp, values) in queryExpsValues.iteritems():
             history.addSeries(exp,values[0]['type'], 'i.i.d.', map(parseValue, values))
 
+        history.addSeries('logscore','number', 'i.i.d.', logscores)
+
         return history
+
+
 
     # iterates until (approximately) all random choices have been resampled
     def sweep(self,infer=None):
