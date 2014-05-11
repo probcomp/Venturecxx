@@ -440,7 +440,7 @@ class Analytics(object):
                        **kwargs):
         history = History(tag, self.parameters)
         
-        if self.mripl:
+        if self.mripl: ## FIXME funcname
             # FIXME sendf builds Analytics model from ripl. this requires
             # ripl to already have assumes and observes (which was done in
             # __init__).We could also send the assumes,observes as lists with f.
