@@ -63,4 +63,4 @@ def observe_datum(ripl, (observe_str, value), verbose=False):
 
 def first_non_none(*args):
     my_or = lambda x, y: x if x is not None else y
-    return reduce(my_or, *args)
+    return reduce(my_or, args)
