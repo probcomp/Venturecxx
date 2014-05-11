@@ -24,9 +24,22 @@ def enforce_min_value(arr, min_value=None, new_min=0):
         pass
     return arr
 
+def except_wrap(f):
+    def wrapped(*args, **kwargs):
+        ret_val = None
+        try:
+            ret_val = f(*args, **kwargs)
+            pass
+        except Exception as e:
+            print e
+            pass
+        return ret_val
+    return wrapped
+
 is_cmap = lambda x: isinstance(x, matplotlib.colors.LinearSegmentedColormap)
 cms = filter(is_cmap, cm.__dict__.values())
 count = 0
+@except_wrap
 def do_kde2d(x, y, min_value=None, new_figure=True, *args, **kwargs):
     global count
     which_cm = cms[count % len(cms)]
