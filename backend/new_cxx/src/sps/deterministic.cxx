@@ -102,6 +102,13 @@ VentureValuePtr TanOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 }
 
 
+VentureValuePtr AtanOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("atan", args, 1);
+  return shared_ptr<VentureNumber>(new VentureNumber(atan(args->operandValues[0]->getDouble())));
+}
+
+
 VentureValuePtr HypotOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("hypot", args, 2);

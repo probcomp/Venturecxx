@@ -43,6 +43,7 @@ map<string,SP*> initBuiltInSPs()
   m["sin"] = new SP(new NullRequestPSP(), new SinOutputPSP());
   m["cos"] = new SP(new NullRequestPSP(), new CosOutputPSP());
   m["tan"] = new SP(new NullRequestPSP(), new TanOutputPSP());
+  m["atan"] = new SP(new NullRequestPSP(), new AtanOutputPSP());
   m["hypot"] = new SP(new NullRequestPSP(), new HypotOutputPSP());
   m["exp"] = new SP(new NullRequestPSP(), new ExpOutputPSP());
   m["log"] = new SP(new NullRequestPSP(), new LogOutputPSP());

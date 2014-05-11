@@ -74,6 +74,11 @@ struct TanOutputPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
+struct AtanOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
 struct HypotOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
