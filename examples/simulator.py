@@ -5,10 +5,10 @@ from venture.venturemagics.ip_parallel import MRipl
 
 
 class Simulator(object):
-    def __init__(self, program, observe_list, sample_list,
+    def __init__(self, program, observe_strs_list, sample_strs_list,
             N_mripls, backend, N_infer):
-        self.observe_list = observe_list
-        self.sample_list = sample_list
+        self.observe_strs_list = observe_strs_list
+        self.sample_strs_list = sample_strs_list
         self.mripl = MRipl(N_mripls, backend=backend)
         self.next_i = 0
         self.N_infer = N_infer
@@ -29,8 +29,8 @@ class Simulator(object):
         return samples
 
     def _get_next_observe_and_sample_str(self):
-        observe_str = self.observe_list[self.next_i]
-        sample_str = self.sample_list[self.next_i]
+        observe_str = self.observe_strs_list[self.next_i]
+        sample_str = self.sample_strs_list[self.next_i]
         self.next_i += 1
         return observe_str, sample_str
 
