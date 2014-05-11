@@ -1,3 +1,4 @@
+import operator
 import functools
 #
 from venture.venturemagics.ip_parallel import MRipl
