@@ -58,7 +58,7 @@ def directive_split(d):
         return build_exp(d['expression'])
         
 def record(value):
-    'Return ripl value if type is in approved list. SPs are not returned.'
+    'Return ripl value if type is in approved set. SPs are not returned.'
     return value['type'] in {'boolean', 'real', 'number', 'atom', 'count', 'array', 'simplex'}
 
 
@@ -341,7 +341,7 @@ class Analytics(object):
     def sampleFromJoint(self, samples, track=5, verbose=False, name=None,
                         mriplMode='local'):
 
-        local_mode=True if mriplMode is 'local' else False
+        local_mode=True if mriplMode is 'local' else False ##FIXME
 
         def mriplSample():
             assumedValues={}
@@ -419,18 +419,13 @@ class Analytics(object):
 
     # iterates until (approximately) all random choices have been resampled
     def sweep(self,infer=None):
-        
-
         iterations = 0
-
-        #FIXME: use a profiler method here
         get_entropy_info = self.ripl.sivm.core_sivm.engine.get_entropy_info
 
         while iterations < get_entropy_info()['unconstrained_random_choices']:
             step = get_entropy_info()['unconstrained_random_choices']
             if infer is None:
                 self.ripl.infer(step)
-            
                 
             elif isinstance(infer, str):
                 self.ripl.infer(infer)
@@ -445,11 +440,11 @@ class Analytics(object):
                        **kwargs):
         history = History(tag, self.parameters)
         
-
         if self.mripl:
-            # note: sendf builds Analytics model from ripl. this requires
+            # FIXME sendf builds Analytics model from ripl. this requires
             # ripl to already have assumes and observes (which was done in
             # __init__).We could also send the assumes,observes as lists with f.
+            # note: we can't update assumes/observes unless we send them along!
             def sendf(ripl,fname,queryExps,**kwargs):
                 riplID = str( np.mod(int(hash(ripl)),10**4) )
                 model = Analytics(ripl,queryExps=queryExps)
@@ -469,6 +464,7 @@ class Analytics(object):
             return history
 
         
+
         for run in range(runs):
             if verbose:
                 print "Starting run " + str(run) + " of " + str(runs)
@@ -680,8 +676,6 @@ class Analytics(object):
         return (data, groundTruth)
 
 
-
-
     # Computes the KL divergence on i.i.d. samples from the prior and inference on the joint.
     # Returns the sampled history, inferred history, and history of KL divergences.
     def computeJointKL(self, sweeps, samples, track=5, runs=3, verbose=False, name=None, infer=None):
@@ -707,6 +701,123 @@ class Analytics(object):
                 klHistory.addSeries('KL_' + name,'number', inferredSeries.label, klValues, hist=False)
 
         return (sampledHistory, inferredHistory, klHistory)
+
+
+
+    def geweke(self,samples,infer=None,plot=True):
+        forwardHistory = self.sampleFromJoint(samples)
+        inferHistory = self.runFromJoint(samples,infer=infer)
+        hs = (forwardHistory,inferHistory)
+        stats,fig = compareSampleDicts(hs,('fwd','infer'),plot=plot)
+        
+        return stats
+
+
+
+
+
+
+
+from venture.test.stats import reportSameContinuous
+
+def qqPlotAll(dicts,labels):
+    # FIXME do interpolation where samples mismatched
+    exps = intersectKeys(dicts)
+    fig,ax = plt.subplots( len(exps),2,figsize=(12,4*len(exps)) )
+    
+    for i,exp in enumerate(exps):
+        s1,s2 = (dicts[0][exp],dicts[1][exp])
+        assert len(s1)==len(s2)
+
+        def makeHists(ax):
+            ax.hist(s1,bins=20,alpha=0.7,color='r',label=labels[0])
+            ax.hist(s2,bins=20,alpha=0.4,color='y',label=labels[1])
+            ax.legend()
+            ax.set_title('Histogram: %s'%exp)
+
+        def makeQQ(ax):
+            ax.scatter(sorted(s1),sorted(s2),s=4,lw=0)
+            ax.set_xlabel(labels[0])
+            ax.set_ylabel(labels[1])
+            ax.set_title('QQ Plot %s'%exp)
+            xr = np.linspace(min(s1),max(s1),30)
+            ax.plot(xr,xr)
+            
+        if len(exps)==1:
+            makeHists(ax[0])
+            makeQQ(ax[1])
+        else:
+            makeHists(ax[i,0])
+            makeQQ(ax[i,1])
+
+    fig.tight_layout()
+    return fig
+
+
+def filterScalar(dct):
+    'Remove non-scalars from {exp:values}'
+    scalar=lambda x:isinstance(x,(float,int))
+    scalarDct={}
+    for exp,values in dct.items():
+        if all(map(scalar,values)):
+            scalarDct[exp]=values
+    return scalarDct
+
+def intersectKeys(dicts):
+    return  tuple(set(dicts[0].keys()).intersection(dicts[1].keys()))
+
+def compareSampleDicts(dicts_hists,labels,plot=False):
+    '''Input: dicts_hists :: ({exp:values}) | (History)
+     where the first Series in History is used as values. History's are
+     converted to dicts.''' 
+
+    if not isinstance(dicts_hists[0],dict):
+        dicts = [historyNameToValues(h,seriesInd=0) for h in dicts_hists]
+    else:
+        dicts = dicts_hists
+        
+    dicts = map(filterScalar,dicts) # could skip for Analytics
+        
+    stats = (np.mean,np.median,np.std,len) # FIXME stderr
+    stats_dict = {}
+    print 'compareSampleDicts: %s vs. %s \n'%(labels[0],labels[1])
+    
+
+    for exp in intersectKeys(dicts):
+        stats_dict[exp] = []
+        for dict_i,label_i in zip(dicts,labels):
+            samples=dict_i[exp]
+            s_stats = tuple([s(samples) for s in stats])
+            stats_dict[exp].append(s_stats)
+            print '\nDict: %s. Exp: %s'%(label_i,exp)
+            print 'Mean, median, std, N = %.3f  %.3f  %.3f  %i'%s_stats
+
+        testResult=reportSameContinuous(dicts[0][exp],dicts[1][exp])
+        print 'KS SameContinuous:', '  '.join(testResult.report.split('\n')[-2:])
+        stats_dict[exp].append( testResult )
+        
+    fig = qqPlotAll(dicts,labels) if plot else None
+    
+    return stats_dict,fig
+
+
+##### HISTORY UTILS
+def historyNameToValues(history,seriesInd=0,flatten=False):
+    ''':: History -> {name:values}. Default is to take first series.
+    If flatten then we combine all.'''
+    nameToValues={}
+    for name,listSeries in history.nameToSeries.items():
+        if flatten:
+            values = [el for series in listSeries for el in series.values]
+        else:
+            values = listSeries[seriesInd].values
+        nameToValues[name]=values
+    return nameToValues
+
+
+
+
+
 
 
 
