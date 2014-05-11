@@ -7,7 +7,6 @@ import time
 import math
 #
 from simulator import Simulator
-from venture.venturemagics.ip_parallel import MRipl
 
 
 # In[ ]:
@@ -224,5 +223,3 @@ for step_i in range(N_steps):
     print 'step_i=%s took %s seconds' % (step_i, delta)
     samples_list.append(samples_i)
     pass
-
-
