@@ -18,10 +18,7 @@ class Simulator(object):
         pass
 
     def step(self, N_infer=None):
-        if N_infer is None:
-            N_infer = self.N_infer
-            pass
-        #
+        N_infer = first_non_none(N_infer, self.N_infer)
         observe_strs, sample_strs = self._get_next_observe_and_sample_str()
         self._observe(observe_strs)
         self._infer(N_infer)
@@ -56,9 +53,14 @@ class Simulator(object):
 def printif(boolean, to_print):
     if boolean:
         print to_print
+        pass
     return
 
 def observe_datum(ripl, (observe_str, value), verbose=False):
     print_str = "ripl.observe(%s, %s)" % (observe_str, value)
     printif(verbose, print_str)
     return ripl.observe(observe_str, value)
+
+def first_non_none(*args):
+    my_or = lambda x, y: x if x is not None else y
+    return reduce(my_or, *args)
