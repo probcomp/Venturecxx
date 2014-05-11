@@ -12,8 +12,8 @@ from simulator import Simulator
 # In[ ]:
 
 # inference settings
-N_mripls = 64
-N_infer = 200
+N_mripls = 4
+N_infer = 100
 backend = 'lite'
 
 # simulation settings
@@ -21,7 +21,7 @@ Y_L = 100
 velocity = 100
 X_L = 200
 X_0 = 0
-N_steps = 5
+N_steps = 6
 
 
 # In[ ]:
@@ -223,3 +223,10 @@ for step_i in range(N_steps):
     print 'step_i=%s took %s seconds' % (step_i, delta)
     samples_list.append(samples_i)
     pass
+
+import numpy
+import scene_plot_utils as spu
+_samples_list = map(lambda x: numpy.array(x)[0, :, :], samples_list)
+_samples_list = numpy.array(_samples_list)[:, :, 1:].tolist()
+fig, kde_rets = spu.plot_scene(_samples_list, [(X_L, Y_L)],
+        min_value=('dynamic', 5))
