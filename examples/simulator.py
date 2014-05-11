@@ -39,7 +39,7 @@ class Simulator(object):
         return map(_observe_datum, observe_strs)
 
     def _infer(self, N_infer):
-        v.infer(N_infer)
+        self.mripl.infer(N_infer)
         pass
 
     def _sample(self, sample_strs):
