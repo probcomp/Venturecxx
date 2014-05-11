@@ -228,5 +228,5 @@ import numpy
 import scene_plot_utils as spu
 _samples_list = map(lambda x: numpy.array(x)[0, :, :], samples_list)
 _samples_list = numpy.array(_samples_list)[:, :, 1:].tolist()
-fig, kde_rets = spu.plot_scene(_samples_list, [(X_L, Y_L)],
+fig = spu.plot_scene(_samples_list, [(X_L, Y_L)],
         min_value=('dynamic', 5))
