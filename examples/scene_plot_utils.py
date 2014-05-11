@@ -18,7 +18,18 @@ def do_hist2d(x, y, new_figure=True):
     fig = get_figure(new_figure)
     return pylab.hist2d(x, y, norm=LogNorm())
 
+def arbitrate_min_value(arr, min_value):
+    if isinstance(min_value, (list, tuple)):
+        if min_value[0] == 'dynamic':
+            min_value = numpy.percentile(arr, min_value[1])
+            pass
+        else:
+            print "error: unknonw min_value: %s" % str(min_value)
+            pass
+        pass
+    return min_value
 def enforce_min_value(arr, min_value=None, new_min=0):
+    min_value = arbitrate_min_value(arr, min_value)
     if min_value is not None:
         arr[arr<min_value] = new_min
         pass
