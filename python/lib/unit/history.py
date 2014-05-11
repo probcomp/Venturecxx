@@ -46,7 +46,8 @@ typically also tracked."""
         self.nameToSeries[name].append(series)
 
     def addRun(self, run):
-        assert run.parameters == self.parameters # Require compatible metadata
+        #assert run.parameters == self.parameters
+        ## don't want different seeds to preventing adding runs
         for (name, series) in run.namedSeries.iteritems():
             self._addSeries(name, run.nameToType[name], series)
 
@@ -71,7 +72,7 @@ typically also tracked."""
             type = value['type']
             value = value['value'] # FIXME do with parseValue
             values=[value]*totalSamples # pad out with totalSamples for plotting
-            self.addSeries(exp,type,'groundtruth',values)
+            self.addSeries(exp,type,'gTruth',values)
 
         ## FIXME GroundTruth Series must be removed from snapshots
         
@@ -80,7 +81,7 @@ typically also tracked."""
         'Returns the average over all series with the given name.'
         flatSeries = []
         for series in self.nameToSeries[seriesName]:
-            if 'groundtruth' not in series.label.lower():
+            if 'gtruth' not in series.label.lower():
                 flatSeries.extend(series.values)
         return np.mean(flatSeries)
 
@@ -286,7 +287,7 @@ def plotSeries(name, seriesList, subtitle="", xlabel='Sweep', **kwargs):
 
 def _doPlotSeries(seriesList, ybounds=None):
     for series in seriesList:
-        if series.label and 'groundtruth' in series.label.lower():
+        if series.label and 'gtruth' in series.label.lower():
             plt.plot(series.xvals(), series.values,linestyle=':',
                      markersize=6, label=series.label)
         else:
@@ -344,8 +345,8 @@ def _plotPrettily(f, name, data, title="", parameters=None, filesuffix='',
 
     f(data, **kwargs)
 
-    #legend_outside()
-    plt.legend(loc='best')
+    legend_outside()
+    #plt.legend(loc='best')
 
     if save:
         ensure_directory(directory)
@@ -460,7 +461,8 @@ def legend_outside(ax=None, bbox_to_anchor=(0.5, -.05), loc='upper center',
         labels = sorted(labels, cmp=label_cmp)
     handles = [label_to_handle[label] for label in labels]
     if ncol is None:
-        ncol = min(len(labels), 3)
+        ncol = min(len(labels), 6)
+        
     ax.legend(handles, labels, loc=loc, ncol=ncol,
               bbox_to_anchor=bbox_to_anchor, prop={"size":14})
     return
