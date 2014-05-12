@@ -777,9 +777,11 @@ def filterDict(d,keep=(),ignore=()):
 def plotSnapshot(history,name,probe=-1):
     allSnapshots = historyToSnapshots(history)
     snap = allSnapshots[name][probe]
-    title = 'name_snap_%i'%probe
+    title = 'Histogram: '+ name+'_snapshot_%i'%probe
     fig,ax = plt.subplots(figsize = (4,3))
     ax.hist(snap,bins=20,alpha=0.8,color='c')
+    ax.set_xlabel(name)
+    ax.set_ylabel('frequency')
     ax.set_title(title)
     return snap,fig
 
