@@ -83,14 +83,17 @@ VentureValuePtr parseDict(boost::python::object value)
 
 VentureValuePtr fromPython(boost::python::object o)
 {
-  boost::python::extract<bool> b(o);
-  if (b.check()) { return VentureValuePtr(new VentureBool(b)); }
+  boost::python::extract<string> s(o);
+  if (s.check()) { return VentureValuePtr(new VentureSymbol(s)); }
+  
+  boost::python::extract<int> i(o);
+  if (i.check()) { return VentureValuePtr(new VentureNumber(i)); }
   
   boost::python::extract<double> d(o);
   if (d.check()) { return VentureValuePtr(new VentureNumber(d)); }
 
-  boost::python::extract<string> s(o);
-  if (s.check()) { return VentureValuePtr(new VentureSymbol(s)); }
+  boost::python::extract<bool> b(o);
+  if (b.check()) { return VentureValuePtr(new VentureBool(b)); }
 
   boost::python::extract<boost::python::list> l(o);
   if (l.check()) { return parseList(l); }
