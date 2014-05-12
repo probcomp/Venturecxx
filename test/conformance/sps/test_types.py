@@ -63,7 +63,7 @@ fully uncurried)."""
 def testRandom():
   for (name,sp) in relevantSPs():
     if sp.outputPSP.isRandom():
-      if not name in ["make_uc_dir_mult", "categorical"]:
+      if not name in ["make_uc_dir_mult", "categorical", "make_uc_sym_dir_mult"]:
         yield checkRandom, name, sp
 
 def checkRandom(_name, sp):
