@@ -3,7 +3,9 @@
 #include "Eigen/Dense"
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
+#include <sstream>   
 
+using std::stringstream;
 using boost::lexical_cast;
 
 /* TODO the constness in this file is incorrect, but I don't understand it well enough 
@@ -17,12 +19,26 @@ VentureValuePtr VentureArray::makeValue(const VentureValuePtrVector & xs) {
   return VentureValuePtr(new VentureArray(xs));
 }
 
+VentureValuePtr VentureVector::makeValue(const VectorXd & xs) {
+  return VentureValuePtr(new VentureVector(xs));
+}
+
 VentureValuePtr VentureArray::makeOnes(size_t length) {
   VentureValuePtrVector v;
   for(size_t i = 0; i < length; i++) {
     v.push_back(VentureNumber::makeValue(0));
   }
   return VentureValuePtr(new VentureArray(v));
+}
+
+VectorXd VentureArray::getVector() const { 
+  VectorXd res(xs.size());
+  for(int i = 0; i < xs.size(); i++) {
+    shared_ptr<VentureNumber> v = dynamic_pointer_cast<VentureNumber>(xs[i]);
+    assert(v != NULL);
+    res[i] = v->getDouble();
+  }
+  return res;
 }
 
 VentureValuePtr VentureArray::makeZeros(size_t length) {
@@ -266,7 +282,15 @@ string VenturePair::toString() const { return "VenturePair (" + car->toString() 
 string VentureSimplex::toString() const { return "VentureSimplex";}
 string VentureDictionary::toString() const { return "VentureDictionary";}
 string VentureMatrix::toString() const { return "VentureMatrix";}
-string VentureVector::toString() const { return "VentureVector";}
+string VentureVector::toString() const { 
+  stringstream str;
+  str << "[";
+  for(int i = 0; i < v.size(); i++) {
+    str << v(i) << " ";
+  }
+  str << "]";
+  return "VentureVector\t"+str.str();
+}
 string VentureRequest::toString() const { return "VentureRequest";}
 string VentureNode::toString() const { return "VentureNode";}
 string VentureID::toString() const { return "VentureID";}
@@ -415,6 +439,7 @@ vector<VentureValuePtr> VenturePair::getArray() const
 }
 
 VentureValuePtr VentureNumber::operator+(const VentureValuePtr & rhs) const {
+  cout << ::toString(rhs) << endl;
   const shared_ptr<VentureNumber> rhsVal = dynamic_pointer_cast<VentureNumber>(rhs);
   assert(rhsVal != NULL);
   return VentureValuePtr(new VentureNumber(this->x+rhsVal->x));
@@ -430,6 +455,17 @@ VentureValuePtr VentureArray::operator+(const VentureValuePtr & rhs) const {
     newVector.push_back(rhsVector[i]+xs[i]);
   }
   return VentureValuePtr(new VentureArray(newVector));
+}
+
+VentureValuePtr VentureVector::operator+(const VentureValuePtr & rhs) const {
+  const shared_ptr<VentureVector> rhsVal = dynamic_pointer_cast<VentureVector>(rhs);
+  assert(rhsVal != NULL);
+  assert(this->v.size() == rhsVal->v.size());
+  VectorXd x(v.size());
+  for (int i = 0; i < v.size(); ++i) { 
+    x(i) = v(i)+rhsVal->v(i);
+  }
+  return VentureVector::makeValue(x);
 }
 
 VentureValuePtr VentureNumber::operator-(const VentureValuePtr & rhs) const {
@@ -448,6 +484,17 @@ VentureValuePtr VentureArray::operator-(const VentureValuePtr & rhs) const {
     newVector.push_back(rhsVector[i]-xs[i]);
   }
   return VentureValuePtr(new VentureArray(newVector));
+}
+
+VentureValuePtr VentureVector::operator-(const VentureValuePtr & rhs) const {
+  const shared_ptr<VentureVector> rhsVal = dynamic_pointer_cast<VentureVector>(rhs);
+  assert(rhsVal != NULL);
+  assert(this->v.size() == rhsVal->v.size());
+  VectorXd x(v.size());
+  for (int i = 0; i < v.size(); ++i) { 
+    x(i) = v(i)-rhsVal->v(i);
+  }
+  return VentureVector::makeValue(x);
 }
 
 VentureValuePtr VentureNumber::operator*(const VentureValuePtr & rhs) const {
@@ -475,4 +522,23 @@ VentureValuePtr VentureArray::operator*(const VentureValuePtr & rhs) const {
     return VentureValuePtr(new VentureArray(newVector));  
   }
   throw "other implementation of operator * not supported.";
+}
+
+VentureValuePtr VentureVector::operator*(const VentureValuePtr & rhs) const {
+  const shared_ptr<VentureNumber> rhsValNum = dynamic_pointer_cast<VentureNumber>(rhs);
+  if(rhsValNum != NULL) { // product by a number.
+    VectorXd x(v.size());
+    for(int i = 0; i < v.size(); i++) {
+      x(i) = v(i)*rhsValNum->getDouble();
+    }
+    return VentureVector::makeValue(x);  
+  }
+  const shared_ptr<VentureVector> rhsVal = dynamic_pointer_cast<VentureVector>(rhs);
+  assert(rhsVal != NULL);
+  assert(this->v.size() == rhsVal->v.size());
+  VectorXd x(v.size());
+  for (int i = 0; i < v.size(); ++i) { 
+    x(i) = v(i)*rhsVal->v(i);
+  }
+  return VentureVector::makeValue(x);
 }

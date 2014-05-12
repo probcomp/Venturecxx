@@ -26,7 +26,6 @@ class NormalDriftKernel(LKernel):
     term3 = self.epsilon * nu
     return term1 + term2 + term3
 
-
                                                         
 class MVNormalOutputPSP(RandomPSP):
   def simulate(self, args):
@@ -162,6 +161,8 @@ class WishartPSP(RandomPSP):
 
   def __parse_args__(self, args):
     return (np.array(args.operandValues[0]), args.operandValues[1])
+
+
 
 class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods

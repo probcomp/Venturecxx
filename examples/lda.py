@@ -39,7 +39,7 @@ class LDA(VentureUnit):
 
 
 if __name__ == '__main__':
-    ripl = shortcuts.make_church_prime_ripl()
+    ripl = shortcuts.make_lite_church_prime_ripl()
     parameters = {'topics' : 4, 'vocab' : 10, 'documents' : 8, 'words_per_document' : 12}
 
     model = LDA(ripl, parameters)

@@ -26,6 +26,7 @@ VentureValuePtr MakeSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng
 
 SymDirMultSP::SymDirMultSP(double alpha, size_t n) : SP(new NullRequestPSP(), new SymDirMultOutputPSP(alpha, n)), alpha(alpha), n(n) {}
 
+
 boost::python::dict SymDirMultSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) const
 {
   boost::python::dict symDirMult;
@@ -37,6 +38,22 @@ boost::python::dict SymDirMultSP::toPython(Trace * trace, shared_ptr<SPAux> spAu
   boost::python::dict value;
   value["type"] = "sp";
   value["value"] = symDirMult;
+  
+  return value;
+}
+
+boost::python::dict UCSymDirMultSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) const 
+{
+  boost::python::dict unsymDirMult;
+  shared_ptr<UCDirMultSPAux> aux = dynamic_pointer_cast<UCDirMultSPAux>(spAux);
+  unsymDirMult["type"] = "uc_sym_dir_mult";
+  unsymDirMult["theta"] = aux->theta;
+  unsymDirMult["n"] = aux->counts.size();
+  unsymDirMult["counts"] = aux->toPython(trace);
+  
+  boost::python::dict value;
+  value["type"] = "sp";
+  value["value"] = unsymDirMult;
   
   return value;
 }

@@ -254,12 +254,21 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
     output = TypedPSP(USymDirMultOutputPSP(theta,os), SPType([], AnyType()))
     return DirMultSP(NullRequestPSP(),output,n)
 
+  def gradientOfLogDensity(self, x, args):
+    (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
+    theta = x.outputPSP.psp.theta
+    gradAlpha = sum([np.log(t) for t in theta])
+    gradTheta = [alpha/t for t in theta]
+    return (np.array(gradTheta), [gradAlpha, 0])
+    
   def logDensity(self,value,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     assert isinstance(value, DirMultSP)
     assert isinstance(value.outputPSP, TypedPSP)
     assert isinstance(value.outputPSP.psp, USymDirMultOutputPSP)
     return logDensityDirichlet(value.outputPSP.psp.theta, [alpha for _ in range(n)])
+
+  
 
   def description(self,name):
     return "  %s is an uncollapsed symmetric variant of make_dir_mult." % name
@@ -296,3 +305,5 @@ class USymDirMultOutputPSP(RandomPSP):
     index = self.os.index(val)
     args.spaux.os[index] -= 1
     assert_greater_equal(min(args.spaux.os),0)
+
+

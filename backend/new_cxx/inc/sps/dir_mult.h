@@ -89,7 +89,8 @@ struct MakeUCSymDirMultOutputPSP : RandomPSP
 struct UCSymDirMultSP : SP
 {
   UCSymDirMultSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
-
+  boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
+  
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const;
 };

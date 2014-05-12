@@ -77,6 +77,7 @@ ADD_LIBRARY(trace SHARED
     src/sps/dstructure.cxx
     src/sps/hmm.cxx
 	src/sps/mvn.cxx
+	src/sps/silva_mvn.cxx
     src/sps/eval.cxx
     src/sps/matrix.cxx
     src/sps/msp.cxx

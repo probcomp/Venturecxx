@@ -345,6 +345,7 @@ interface here is compatible with one possible path."""
   def __repr__(self):
     return "VentureArray(%s)" % self.array
 
+
 class VentureNil(VentureValue):
   def __init__(self): pass
   def __repr__(self): return "Nil"

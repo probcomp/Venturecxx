@@ -84,3 +84,11 @@ double MVNormalPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  co
   return dmvnorm(n, gsl_x.get(), gsl_mu.get(), gsl_sigma.get());
 }
 
+pair<VentureValuePtr, vector<VentureValuePtr>> MVNormalPSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) const {
+  VectorXd mu = args->operandValues[0]->getVector();
+  MatrixXd sigma = args->operandValues[1]->getMatrix();
+  // TODO: 
+
+  return make_pair(x, vector<VentureValuePtr>({args->operandValues[0], args->operandValues[1]}));
+}
+

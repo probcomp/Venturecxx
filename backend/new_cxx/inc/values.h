@@ -76,6 +76,7 @@ struct VentureArray : VentureValue
 {
   VentureArray(const VentureValuePtrVector & xs): xs(xs) {}
   VentureValuePtrVector getArray() const { return xs; }
+  VectorXd getVector() const;
   static VentureValuePtr makeValue(const VentureValuePtrVector & xs);
   static VentureValuePtr makeOnes(size_t length);
   static VentureValuePtr makeZeros(size_t length);
@@ -87,8 +88,8 @@ struct VentureArray : VentureValue
 
   bool hasArray() const { return true; }
   size_t hash() const;
-  string toString() const;
   VentureValuePtrVector xs;
+  string toString() const;
   VentureValuePtr operator+(const VentureValuePtr & rhs) const;
   VentureValuePtr operator-(const VentureValuePtr & rhs) const;
   VentureValuePtr operator*(const VentureValuePtr & rhs) const;
@@ -173,11 +174,15 @@ struct VentureMatrix : VentureValue
 struct VentureVector : VentureValue
 {
   VentureVector(const Eigen::VectorXd & v): v(v) {}
+  static VentureValuePtr makeValue(const VectorXd & xs);
   VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureNumber(v(index->getInt()))); }
   VectorXd getVector() const { return v; }
-  string toString() const;
   boost::python::dict toPython(Trace * trace) const;
   VectorXd v;
+  string toString() const;
+  VentureValuePtr operator+(const VentureValuePtr & rhs) const;
+  VentureValuePtr operator-(const VentureValuePtr & rhs) const;
+  VentureValuePtr operator*(const VentureValuePtr & rhs) const;
 };
 
 struct VentureRequest : VentureValue
