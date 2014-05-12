@@ -100,20 +100,20 @@ def _testBasicMRipl(mripl):
     ## test: runFromConditional
     totalSamples = 150
     runs = 2
-    historyRFC,outMRipl = model.runFromConditional(totalSamples,runs=runs)
+    historyRFC = model.runFromConditional(totalSamples,runs=runs)
     testHistory(1,historyRFC)
 
     ## test: runConditionedFromPrior
     totalSamples = 140
     runs = 3
-    historyRCP,_ = model.runConditionedFromPrior(totalSamples,runs=runs)
+    historyRCP = model.runConditionedFromPrior(totalSamples,runs=runs)
     trueMu = historyRCP.groundTruth['mu']['value']
     testHistory(trueMu,historyRCP)
 
     ## test: testFromPrior
     totalSamples = 40
     noDatasets = 5
-    historyOV,_ = model.testFromPrior(noDatasets,totalSamples)
+    historyOV = model.testFromPrior(noDatasets,totalSamples)
     lstMuValues = [s.values for s in historyOV.nameToSeries['mu']]
      # final samples close to prior on mu
     

@@ -336,16 +336,15 @@ class Analytics(object):
     # A random subset of predicts, assumes, and queryExps are tracked.
     # Returns a History object that represents exactly one Run.
     def sampleFromJoint(self, samples, track=5, verbose=False, name=None,
-                        mriplMode='local'):
-
-        local_mode=True if mriplMode is 'local' else False ##FIXME
-
+                        mriplMode=False):
+        'If self.mripl, samples come from MRipl(samples,local_mode=mriplMode).'
+        
         def mriplSample():
             assumedValues={}
             predictedValues={}
             queryExpsValues={}
         
-            v = MRipl(samples, backend=self.backend, local_mode=local_mode)
+            v = MRipl(samples, backend=self.backend, local_mode=mriplMode)
             [v.assume(sym,exp) for sym,exp in self.assumes]
 
             rangeAssumes=range(1,1+len(self.assumes))
@@ -438,9 +437,8 @@ class Analytics(object):
         history = History(tag, self.parameters)
         
         if self.mripl:
-
-            v = MRipl(runs,backend=self.backend,
-                               local_mode=self.mripl.local_mode)
+            v = MRipl(runs,backend=self.backend,local_mode=self.mripl.local_mode)
+            
             def sendf(ripl,fname,modelTuple,**kwargs):
                 seed = ripl.sample('(uniform_discrete 0 (pow 10 5))') ## FIXME HACK
                 params=dict(venture_random_seed=seed)
@@ -450,34 +448,19 @@ class Analytics(object):
                 return getattr(model,fname)(label='seed:%s'%seed,**kwargs)
                 
             modelTuple=(self.assumes,self.observes,self.queryExps)
-            results = mr_map_proc(v, 'all', sendf, f.func_name,
-                                modelTuple,**kwargs)
+            results = mr_map_proc(v,'all',sendf, f.func_name, modelTuple,**kwargs)
 
             [history.addRun(r) for r in results[:runs] ]
 
             return history
-            # def sendf(ripl,fname,queryExp,**kwargs):
-            #     riplID = str( np.mod(int(hash(ripl)),10**4) )
-            #     model = Analytics(ripl,queryExps=queryExps)
-            #     result = getattr(model,fname)(label='ripl: %s'%riplID,
-            #                                   **kwargs)
-            #     return result
-            # repeats = int(np.ceil(runs / float(self.mripl.no_ripls)))
-            # results = []
-            # for count in range(repeats):
-            #     r=mr_map_proc(self.mripl,'all',sendf,f.__name__, self.queryExps,
-            #                   **kwargs)
-            #     results.extend(r)
-            # [history.addRun(res) for res in results[:runs] ]
-            # return history
-
+    
+        # single ripl
         for run in range(runs):
             if verbose:
                 print "Starting run " + str(run) + " of " + str(runs)
 
             res = f(label="run %s" % run, verbose=verbose, **kwargs)
             history.addRun(res)
-        
         
         if profile:
             history.profile = Profile(self.ripl)
@@ -589,17 +572,13 @@ class Analytics(object):
                                       tag, data=data, sweeps=sweeps, **kwargs)
         ## FIXME ensure observe values are parsed (not typed)
 
-        if data is not None: # data specified by user or by other Analytics methods
-            ## FIXME: data have types if we call from conditionedFromPrior
-            # but not if user calls. Does this lead to any problems?
+        if data is not None:
             data = [(exp,datum) for (exp,_),datum in zip(self.observes,data)]
         else:
             data = self.observes
         history.addData(data)
 
-        out=(history,self.ripl) if not self.mripl else (history,self.mripl)
-
-        return out
+        return (history,self.ripl) if not self.mripl else history
   
 
     def runFromConditionalOnce(self, data=None, force=None, **kwargs):
@@ -614,6 +593,7 @@ class Analytics(object):
         # note: we loadObserves, but predictToDirective arg = {}
         # so we are not collecting sample of the observes here. 
         return self._collectSamples(assumeToDirective, {}, **kwargs)
+
 
 
     def testFromPrior(self,noDatasets,sweeps,**kwargs):
@@ -637,7 +617,7 @@ class Analytics(object):
         pairs = zip(['Ripl%i'%i for i in range(noDatasets)],histories)
         historyOV = historyOverlay('testFromPrior',pairs)
         
-        return historyOV, self.mripl
+        return historyOV
             
                                         
 
@@ -647,12 +627,13 @@ class Analytics(object):
         
         (data, groundTruth) = self.generateDataFromPrior(sweeps, verbose=verbose)
 
-        history,ripl = self.runFromConditional(sweeps, data=data, verbose=verbose, **kwargs)
+        out = self.runFromConditional(sweeps, data=data, verbose=verbose, **kwargs)
+        history = out if isinstance(out,History) else out[0]
         history.addGroundTruth(groundTruth,sweeps) #sweeps vs. totalSamples
         history.label = 'run_conditioned_from_prior'
-        
-        out=(history,self.ripl) if not self.mripl else (history,self.mripl)
-        return out
+
+        return (history,self.ripl) if not self.mripl else history
+
 
     # The "sweeps" argument specifies the number of times to repeat
     # the values collected from the prior, so that they are parallel
@@ -710,7 +691,8 @@ class Analytics(object):
 
 
 
-    def gewekeTest(self,samples,infer=None,plot=True):
+    def gewekeTest(self,samples,infer=None,plot=True,names=None,
+                   compareObserves=False):
         forwardHistory = self.sampleFromJoint(samples)
         inferHistory = self.runFromJoint(samples,infer=infer)
 
@@ -720,11 +702,21 @@ class Analytics(object):
         samples from inference (*observes* changed to *predicts*)\n'''
         print '-------------\n'
         
+        # convert history objects
         hs = (forwardHistory,inferHistory)
         labels=('Forward iid','Inference')
-        stats,fig = compareSampleDicts(hs,labels,plot=plot)
+        dicts = map(historyNameToValues,hs)
+
+        if compareObserves is False:
+            names = dicts[0].keys()
+            obsKeys = [n for n in names if 'observe' in n]
+            dicts=[filterDict(d,ignore=obsKeys) for d in dicts]
+            compareStats,fig = compareSampleDicts(dicts,labels,plot=plot)
+
+        else:
+            compareStats,fig = compareSampleDicts(hs,labels,plot=plot)
         
-        return stats
+        return forwardHistory,inferHistory,compareStats
 
 
 
@@ -743,6 +735,14 @@ def historyToSnapshots(history):
         arrayValues = np.array( [s.values for s in listSeries] )
         snapshots[name] = map(list,arrayValues.T) 
     return snapshots
+
+
+def filterDict(d,keep=(),ignore=()):
+    'returns shallow copy of dictionary d, filtered on keys'
+    if keep:
+        return dict([(k,v) for k,v in d.items() if k in keep])
+    else:
+        return dict([(k,v) for k,v in d.items() if k not in ignore])
 
 
 def compareSnapshots(history,names=None,probes=None):
@@ -778,7 +778,7 @@ def compareSnapshots(history,names=None,probes=None):
 
 
 def qqPlotAll(dicts,labels):
-    # FIXME do interpolation where samples mismatched
+    # FIXME do interpolation where samples have different lengths
     exps = intersectKeys(dicts)
     fig,ax = plt.subplots( len(exps),2,figsize=(12,4*len(exps)) )
     
@@ -820,13 +820,14 @@ def filterScalar(dct):
             scalarDct[exp]=values
     return scalarDct
 
+
 def intersectKeys(dicts):
     return tuple(set(dicts[0].keys()).intersection(set(dicts[1].keys())))
 
 def compareSampleDicts(dicts_hists,labels,plot=False):
     '''Input: dicts_hists :: ({exp:values}) | (History)
      where the first Series in History is used as values. History objects
-     are converted to dicts. Flatten History first to include all Series.''' 
+     are converted to dicts. Flatten History to include all Series.''' 
 
     if not isinstance(dicts_hists[0],dict):
         dicts = [historyNameToValues(h,seriesInd=0) for h in dicts_hists]
@@ -863,7 +864,6 @@ def compareSampleDicts(dicts_hists,labels,plot=False):
     return stats_dict,fig
 
 
-##### HISTORY UTILS
 def historyNameToValues(history,seriesInd=0,flatten=False):
     ''':: History -> {name:values}. Default is to take first series.
     If flatten then we combine all.'''
