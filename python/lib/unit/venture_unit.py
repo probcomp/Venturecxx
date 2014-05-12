@@ -438,10 +438,10 @@ class Analytics(object):
     
   
     def _runRepeatedly(self, f, tag, runs=3, verbose=False, profile=False,
-                       **kwargs):
+                       useMRipl=True,**kwargs):
         history = History(tag, self.parameters)
         
-        if self.mripl:
+        if self.mripl and useMRipl:
             v = MRipl(runs,backend=self.backend,local_mode=self.mripl.local_mode)
             
             def sendf(ripl,fname,modelTuple,**kwargs):
@@ -495,7 +495,7 @@ class Analytics(object):
             history.profile = Profile(self.ripl)
         return history
 
-    def _collectSamples(self, assumeToDirective, predictToDirective, sweeps=100, label=None, verbose=False, infer=None, force=None):
+    def _collectSamples(self, assumeToDirective, predictToDirective, sweeps=100, label=None, verbose=False, infer=None, force=None, **kwargs):
         answer = Run(label, self.parameters)
         
 
@@ -697,16 +697,20 @@ class Analytics(object):
 
 
 
-    def gewekeTest(self,samples,infer=None,plot=True,names=None,track=5,
-                   compareObserves=False,useMRipl=False):
-        '''Geweke-style Test. Tracks and records all assumes, observes,
-           and queryExpressions in history. Argument *compareObserves*
-           specifies whether observes are analyzed. If optional *names* is given,
-           only those names from nameToHistory are analyzed.'''
-        forwardHistory = self.sampleFromJoint(samples, track=track,
-                                              mriplTrackObserves=compareObserves,
-                                              useMRipl=useMRipl)
-        inferHistory = self.runFromJoint(samples,infer=infer,runs=1)
+    def gewekeTest(self, samples, infer=None, plot=True, track=5, names=None,
+                   useMRipl=False, mriplTrackObserves=False, compareObserves=False):
+        '''Geweke-style Test. Use *names* to only analyse samples for names.
+           Use *compareObserves* to specify whether to analyse observes. '''
+
+        if useMRipl:
+            fh= self.sampleFromJoint(samples,mriplTrackObserves=mriplTrackObserves,
+                                     useMRipl=True)
+            ih= self.runFromJoint(samples, infer=infer, runs=1, useMRipl=True)
+        else:
+            fh = self.sampleFromJoint(samples, track=track, useMRipl=False)
+            ih = self.runFromJoint(samples, track=track, infer=infer, runs=1, useMRipl=False)
+            
+        forwardHistory,inferHistory = fh,ih
         ## FIXME: should be able to take multiple runs and flatten them
         #  inferHistory = flattenRuns(inferHistory)
 
@@ -763,13 +767,21 @@ def historyToSnapshots(history):
 
 def filterDict(d,keep=(),ignore=()):
     '''Shallow copy of dictionary d filtered on keys.
-       If *keep* nonempty, keep items in keep.
-       If *keep* empty, keep items not in ignore.'''
+       If *keep* nonempty copy its members. Else: copy items not in *ignore*'''
     assert isinstance(keep,(tuple,list))
     if keep:
         return dict([(k,v) for k,v in d.items() if k in keep])
     else:
         return dict([(k,v) for k,v in d.items() if k not in ignore])
+
+def plotSnapshot(history,name,probe=-1):
+    allSnapshots = historyToSnapshots(history)
+    snap = allSnapshots[name][probe]
+    title = 'name_snap_%i'%probe
+    fig,ax = plt.subplots(figsize = (4,3))
+    ax.hist(snap,bins=20,alpha=0.8,color='c')
+    ax.set_title(title)
+    return snap,fig
 
 
 def compareSnapshots(history,names=None,probes=None):

@@ -6,10 +6,8 @@ import scipy.stats
 from nose.plugins.attrib import attr
 from venture.test.stats import statisticalTest, reportKnownContinuous
 
-
 @attr('slow')
 def testAnalytics(totalSamples=400):
-    
     # load ripl with model and observes
     # we use *add*,etc. because Analytics converts to Python values.
     v=mk_p_ripl()
@@ -22,7 +20,6 @@ def testAnalytics(totalSamples=400):
     queryExps = ['(add (bernoulli p) (bernoulli p))']
     
     # run inference
-    
     inferredPValues = []
     for _ in range(totalSamples):
         v.infer(5)
@@ -36,7 +33,6 @@ def testAnalytics(totalSamples=400):
     assert model.queryExps==queryExps
 
     ## Run inference in Analytics
-
     # test history
     history,outRipl = model.runFromConditional(totalSamples,runs=1)
     assert history.data == observes
@@ -60,7 +56,6 @@ def testAnalytics(totalSamples=400):
 
     return 
 
-
 def generateMRiplParams(backends=('puma','lite'),no_ripls=(2,3),modes=None):
     if modes is None:
         try:
@@ -70,7 +65,6 @@ def generateMRiplParams(backends=('puma','lite'),no_ripls=(2,3),modes=None):
             modes=(False,)
     params = [(n,b,m) for n in no_ripls for b in backends for m in modes]
     return params
-
 
 def _testBasicMRipl(mripl):
     v=mripl
@@ -119,7 +113,6 @@ def _testBasicMRipl(mripl):
      # final samples close to prior on mu
     assert 5 > abs(np.mean(snapshot(lstMuValues,-1)))
     
-    
 
 def testBasicMRipl():
     'Test MRipl in local mode with puma and lite'
@@ -129,8 +122,8 @@ def testBasicMRipl():
     return
 
 
-
-def sampleFromJointHistory():
+#### TEST RIPL SAMPLE FROM JOINT (FIXME currently failing)
+def _sampleFromJointHistory():
     v=mk_p_ripl() 
     v.assume('mu','(normal 10 .01)')
     v.observe('(normal mu .01)','10')
@@ -140,7 +133,7 @@ def sampleFromJointHistory():
     
 #@statisticalTest
 def testSampleFromJointAssume():
-    history = sampleFromJointHistory()
+    history = _sampleFromJointHistory()
     muSamples = history.nameToSeries['mu'][0].values
     res= reportKnownContinuous( scipy.stats.norm(loc=10,scale=.01).cdf,
                                   muSamples, descr='testSampleFromJointAssume')
@@ -148,7 +141,7 @@ def testSampleFromJointAssume():
     return res
 #@statisticalTest    
 def testSampleFromJointObserve():
-    history = sampleFromJointHistory()
+    history = _sampleFromJointHistory()
     nameObs= [k for k in history.nameToSeries.keys() if 'obs' in k][0]
     obsSamples = history.nameToSeries[nameObs][0].values
     res= reportKnownContinuous( scipy.stats.norm(loc=10,scale=.014).cdf,
@@ -156,20 +149,20 @@ def testSampleFromJointObserve():
     #assert res.pval > .01
     return res
 
+
 #@statisticaltest
-#@MRIPLtest
 def _testMRiplSampleFromJoint():
     params = generateMRiplParams(backends=('puma','lite'),modes=(True,False))
     results = []
     
     for (no_ripls, backend, mode) in params:
-        mriplMode = 'local' if mode is False else 'remote'
+
         v=MRipl(no_ripls,backend=backend,local_mode=mode)
         v.assume('mu','(normal 10 .01)')
         v.observe('(normal mu .01)','10')
         model = Analytics(v)
         samples = 25
-        history = model.sampleFromJoint(samples,mriplMode=mriplMode)
+        history = model.sampleFromJoint(samples,useMRipl=True)
         muSamples = history.nameToSeries['mu'][0].values
         resMu= reportKnownContinuous( scipy.stats.norm(loc=10,scale=.01).cdf,
                                       muSamples, descr='testMRiplSFJ')
@@ -178,7 +171,65 @@ def _testMRiplSampleFromJoint():
 
     return results
 
+#@statisticaltest
+## FIXME: why do we fail remote runFromJoint?
+def _testMRiplRunFromJoint(samples=500,runs=2):
+    params = generateMRiplParams(no_ripls=(2,), backends=('puma',),#'lite'),
+                                 modes=(True,False))
+    results = []
+    
+    for (no_ripls, backend, mode) in params:
+        v=MRipl(no_ripls,backend=backend,local_mode=mode)
+        v.assume('mu','(normal 0 30)')
+        v.observe('(normal mu 200)','0')
+        model = Analytics(v)
+        history = model.runFromJoint(samples,runs=runs,useMRipl=True)
+        muSamples=[]
+        for r in range(runs):
+            muSamples.extend(history.nameToSeries['mu'][r].values)
+        
+        resMu= reportKnownContinuous( scipy.stats.norm(loc=0,scale=30).cdf,
+                                      muSamples, descr='testMRiplIFJ')
+        #assert resMu.pval > .01
+        results.append(resMu)
+    
+    print 'pvals:',map(lambda x:x.pval,results)
+    return results
 
+
+def testCompareSampleDicts():
+    v=mk_p_ripl() 
+    v.assume('mu','(normal 10 .01)')
+    v.observe('(normal mu .01)','10')
+    model = Analytics(v)
+    samples=20
+    h,_ = model.runFromConditional(samples,runs=2) 
+    dicts = [{'mu':h.nameToSeries['mu'][i].values} for i in range(2)]
+    stats,_ = compareSampleDicts(dicts,('',''),plot=False)
+    assert stats['mu'][-1].pval > .01
+
+
+def testGewekeTest():
+    params = generateMRiplParams(no_ripls=(2,3), backends=('puma','lite'),
+                                 modes=(True,))  ## ONLY LOCAL
+    results = []
+    
+    for (no_ripls, backend, mode) in params:
+        v=MRipl(no_ripls,backend=backend,local_mode=mode)
+        v.assume('mu','(normal 0 30)')
+        v.observe('(normal mu 200)','0')
+        model = Analytics(v)
+        fwd,inf,_=model.gewekeTest(50,plot=False,useMRipl=True)
+        muSamples= [h.nameToSeries['mu'][0].values for h in [fwd,inf] ]
+
+        res = reportKnownContinuous( scipy.stats.norm(loc=0,scale=30).cdf,
+                                      muSamples[0], descr='testGeweke')
+        assert res.pval > .01
+        results.append(res)
+
+    return results
+
+    
 
 def quickTests():
     testAnalytics(totalSamples=50)
@@ -188,7 +239,11 @@ def quickTests():
     testSampleFromJointAssume()
     testSampleFromJointObserve()
     _testMRiplSampleFromJoint()
+    _testMRiplRunFromJoint(samples=100)
+    testCompareSampleDicts()
+    testGewekeTest()
     return
+
 
 def slowTests():
     testAnalytics()
@@ -199,6 +254,10 @@ def slowTests():
     testSampleFromJointAssume()
     testSampleFromJointObserve()
     _testMRiplSampleFromJoint()
+    _testMRiplRunFromJoint()
+    testCompareSampleDicts()
+    testGewekeTest()
+
     return
 
     
