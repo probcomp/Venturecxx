@@ -3,6 +3,7 @@ from venture.unit import *
 import numpy as np
 import scipy.stats
 
+from nose import SkipTest
 from nose.plugins.attrib import attr
 from venture.test.stats import statisticalTest, reportKnownContinuous
 
