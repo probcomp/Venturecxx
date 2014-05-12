@@ -174,11 +174,8 @@ if ON_LINUX:
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
-        
-		libraries = ['gsl', 'gslcblas', 'm', 'boost_python', 'boost_system', 'boost_thread'],        
-        
-		library_dirs = ['/usr/local/lib/'],
-		extra_compile_args = ["-std=c++11", "-g", "-O3", "-fPIC", "-Wno-deprecated-register", "-Wno-overloaded-virtual"],
+        libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],
+        extra_compile_args = ["-std=c++11", "-fPIC"],
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
