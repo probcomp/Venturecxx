@@ -247,6 +247,11 @@ double PyTrace::makeConsistent()
   return trace->makeConsistent();
 }
 
+int PyTrace::numNodesInBlock(boost::python::object scope, boost::python::object block)
+{
+  return trace->getNodesInBlock(fromPython(scope), fromPython(block)).size();
+}
+
 BOOST_PYTHON_MODULE(libpumatrace)
 {
   using namespace boost::python;
@@ -267,6 +272,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("unobserve", &PyTrace::unobserve)
     .def("infer", &PyTrace::infer)
     .def("makeConsistent", &PyTrace::makeConsistent)
+    .def("numNodesInBlock", &PyTrace::numNodesInBlock)
     .def("continuous_inference_status", &PyTrace::continuous_inference_status)
     .def("start_continuous_inference", &PyTrace::start_continuous_inference)
     .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)
