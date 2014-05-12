@@ -226,7 +226,7 @@ class Trace(object):
     return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
 
 
-  def numNodesInBlock(self,scope,block): return len(getNodesInBlock(scope,block))
+  def numNodesInBlock(self,scope,block): return len(self.getNodesInBlock(scope,block))
 
   def getNodesInBlock(self,scope,block):
     nodes = self.scopes[scope][block]

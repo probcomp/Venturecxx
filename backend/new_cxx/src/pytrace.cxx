@@ -111,19 +111,6 @@ double PyTrace::getGlobalLogScore()
 
 uint32_t PyTrace::numUnconstrainedChoices() { return trace->numUnconstrainedChoices(); }
 
-VentureValuePtr getParam(const string& name, const boost::python::dict& params)
-{
-  boost::python::extract<string> getSymbol(params[name]);
-  boost::python::extract<int> getInt(params[name]);
-  boost::python::extract<double> getDouble(params[name]);
-  boost::python::extract<bool> getBool(params[name]);
-  if (getSymbol.check()) { return VentureValuePtr(new VentureSymbol(getSymbol())); }
-  else if (getInt.check()) { return VentureValuePtr(new VentureNumber(getInt())); }
-  else if (getDouble.check()) { return VentureValuePtr(new VentureNumber(getDouble())); }
-  else if (getBool.check()) { return VentureValuePtr(new VentureBool(getBool())); }
-  throw "Invalid parameter '" + name + "' in infer instruction.";
-}
-
 // parses params and does inference
 struct Inferer
 {
@@ -164,8 +151,8 @@ struct Inferer
       gKernel = shared_ptr<GKernel>(new MHGKernel);
     }
     
-    scope = getParam("scope", params);
-    block = getParam("block", params);
+    scope = fromPython(params["scope"]);
+    block = fromPython(params["block"]);
     scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
     
     transitions = boost::python::extract<size_t>(params["transitions"]);
