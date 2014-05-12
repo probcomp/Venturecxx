@@ -222,8 +222,14 @@ class Trace(object):
   def getAllNodesInScope(self,scope):
     return set.union(*[self.getNodesInBlock(scope,block) for block in self.scopes[scope].keys()])
 
-  def getOrderedSetsInScope(self,scope):
-    return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
+  def getOrderedSetsInScope(self,scope,interval=None):
+    if interval is None:
+      return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
+    else:
+      blocks = [b for b in self.scopes[scope].keys() if b.compare(interval[0]) >= 0 if b.compare(interval[1]) <= 0]
+      return [self.getNodesInBlock(scope,block) for block in sorted(blocks)]
+
+  def numNodesInBlock(self,scope,block): return len(self.getNodesInBlock(scope,block))
 
   def getNodesInBlock(self,scope,block):
     nodes = self.scopes[scope][block]

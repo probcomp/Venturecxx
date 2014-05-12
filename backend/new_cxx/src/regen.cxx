@@ -126,6 +126,15 @@ double attach(Trace * trace,
   VentureValuePtr groundValue = trace->getGroundValue(node);
   weight += psp->logDensity(groundValue,args);
   psp->incorporate(groundValue,args);
+
+  if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+  {
+    ScopeID scope = trace->getValue(node->operandNodes[0]);
+    BlockID block = trace->getValue(node->operandNodes[1]);
+    Node * blockNode = node->operandNodes[2];
+    trace->registerUnconstrainedChoiceInScope(scope,block,blockNode);
+  }    
+
   return weight;
 }
 

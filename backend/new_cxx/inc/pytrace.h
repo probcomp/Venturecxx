@@ -37,6 +37,9 @@ struct PyTrace
 
   double makeConsistent();
 
+  // for testing
+  int numNodesInBlock(boost::python::object scope, boost::python::object block);
+
   void infer(boost::python::dict params);
   
   boost::python::dict continuous_inference_status();

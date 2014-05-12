@@ -63,8 +63,8 @@ void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
   assert(unconstrainedChoices.count(node) == 0);
   unconstrainedChoices.insert(node);
   registerUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
-				     shared_ptr<VentureNode>(new VentureNode(node)),
-				     node);
+                     shared_ptr<VentureNode>(new VentureNode(node)),
+                     node);
 }
 
 void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
@@ -100,8 +100,8 @@ void ConcreteTrace::unregisterAEKernel(Node * node)
 
 void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
   unregisterUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
-				       shared_ptr<VentureNode>(new VentureNode(node)),
-				       node);
+                       shared_ptr<VentureNode>(new VentureNode(node)),
+                       node);
   assert(unconstrainedChoices.count(node) == 1);
   unconstrainedChoices.erase(node);
 }
@@ -375,7 +375,15 @@ void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,
       BlockID new_block = getValue(outputNode->operandNodes[1]);
       if (!scope->equals(new_scope) || block->equals(new_block))
       {
-    	addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
+        addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
+      }
+    }
+    else if (i == 1 && dynamic_pointer_cast<ScopeExcludeOutputPSP>(psp))
+    {
+      ScopeID new_scope = getValue(outputNode->operandNodes[0]);
+      if (!scope->equals(new_scope))
+      {
+        addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
       }
     }
     else

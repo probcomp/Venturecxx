@@ -45,6 +45,8 @@ class BlockScaffoldIndexer(object):
     if self.block == "one": return constructScaffold(trace,[trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))])
     elif self.block == "all": return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
     elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
+    elif type(self.block) is list and self.block[0] == "ordered": 
+      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope),self.block[1:])
     else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])
 
   def logDensityOfIndex(self,trace,_):
@@ -417,13 +419,13 @@ class ParticlePGibbsOperator(object):
     self.finalIndex = finalIndex
     self.particles = particles
 
-    # TODO need to return a trace as well
     return particles[finalIndex],self._compute_alpha(particleWeights, finalIndex)
 
   def _compute_alpha(self, particleWeights, finalIndex):
     # Remove the weight of the chosen xi from the list instead of
     # trying to subtract in logspace to prevent catastrophic
-    # cancellation like the non-functional case
+    # cancellation (for the same reason as
+    # PGibbsOperator._compute_alpha)
     particleWeightsNoXi = copy.copy(particleWeights)
     particleWeightsNoXi.pop(finalIndex)
 
