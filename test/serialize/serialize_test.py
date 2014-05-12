@@ -36,7 +36,6 @@ class TestSerialize(unittest.TestCase):
         v.predict('is_tricky')
 
     def test_serialize_ripl(self):
-        raise SkipTest("Exception: Cannot find symbol is_tricky")
         v1 = make_lite_church_prime_ripl()
         v1.assume('is_tricky', '(flip 0.2)')
         v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
