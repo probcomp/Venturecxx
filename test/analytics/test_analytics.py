@@ -71,6 +71,7 @@ def generateMRiplParams(backends=('puma','lite'),no_ripls=(2,3),modes=None):
     params = [(n,b,m) for n in no_ripls for b in backends for m in modes]
     return params
 
+
 def _testBasicMRipl(mripl):
     v=mripl
     v.assume('mu','(normal 0 2)')
@@ -99,34 +100,33 @@ def _testBasicMRipl(mripl):
         assert .001 > abs(np.mean(lstQueryValues - (np.array(lstMuValues)**2)) )
     ## test: runFromConditional
     totalSamples = 150
-    runs = 2
-    historyRFC = model.runFromConditional(totalSamples,runs=runs)
+    runs = 1
+    historyRFC,_ = model.runFromConditional(totalSamples,runs=runs)
     testHistory(1,historyRFC)
 
     ## test: runConditionedFromPrior
     totalSamples = 140
-    runs = 3
-    historyRCP = model.runConditionedFromPrior(totalSamples,runs=runs)
+    runs = 2
+    historyRCP,_ = model.runConditionedFromPrior(totalSamples,runs=runs)
     trueMu = historyRCP.groundTruth['mu']['value']
     testHistory(trueMu,historyRCP)
 
     ## test: testFromPrior
-    totalSamples = 40
-    noDatasets = 5
-    historyOV = model.testFromPrior(noDatasets,totalSamples)
+    totalSamples = 30
+    noDatasets = 2
+    historyOV,_ = model.testFromPrior(noDatasets,totalSamples)
     lstMuValues = [s.values for s in historyOV.nameToSeries['mu']]
      # final samples close to prior on mu
+    assert 5 > abs(np.mean(snapshot(lstMuValues,-1)))
     
-    assert 2 > abs( np.mean(snapshot(lstMuValues,-1) ) )
-    assert 2 > abs( np.std(snapshot(lstMuValues,-1)) - 2. )
     
 
 def testBasicMRipl():
-    params = generateMRiplParams(backends=('puma',),modes=(False,) )
+    'Test MRipl in local mode with puma and lite'
+    params = generateMRiplParams(no_ripls=(2,),backends=('puma','lite'),modes=(False,) )
     for (no_ripls,backend,mode) in params:
         _testBasicMRipl( MRipl(no_ripls,backend=backend,local_mode=mode) )
     return
-
 
 
 

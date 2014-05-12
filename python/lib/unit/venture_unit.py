@@ -160,6 +160,7 @@ class Analytics(object):
             FIXME explain'''
  
         assert not(assumes is None and observes is not None),'No *observes* without *assumes*.'
+        assert queryExps is None or isinstance(queryExps,(list,tuple))
 
         if isinstance(ripl_mripl,MRipl):
             ripl=ripl_mripl.local_ripls[0] # only needed because of set_seed
@@ -168,6 +169,7 @@ class Analytics(object):
             ripl = ripl_mripl
             self.mripl = False
         
+
         # make fresh ripl with same backend as input ripl
         self.backend = ripl.backend()
         self.ripl = mk_p_ripl() if self.backend=='puma' else mk_l_ripl()
@@ -192,6 +194,7 @@ class Analytics(object):
             self.ripl.set_seed(self.parameters['venture_random_seed'])
         else:
             self.parameters['venture_random_seed'] = 1 ## UNKNOWN SEED
+
 
         # make fresh mripl with same backend as input mripl
         if self.mripl:
@@ -238,11 +241,6 @@ class Analytics(object):
 
     def _clearRipl(self):
         self.ripl.clear()
-        # if self.backend=='lite':
-        #     self.ripl=mk_l_ripl()
-        #     self.ripl.set_seed(self.parameters['venture_random_seed'])
-        # else:
-        #     self.ripl.clear()
 
     def _loadAssumes(self, prune=True):
         
@@ -336,20 +334,27 @@ class Analytics(object):
     # A random subset of predicts, assumes, and queryExps are tracked.
     # Returns a History object that represents exactly one Run.
     def sampleFromJoint(self, samples, track=5, verbose=False, name=None,
-                        mriplMode=False):
-        'If self.mripl, samples come from MRipl(samples,local_mode=mriplMode).'
+                        mriplLocalMode=True, mriplTrackObserves=False,
+                        useMRipl=False):
+        '''If self.mripl and useMRipl, samples come from a big MRipl:
+        MRipl(samples,local_mode=mriplLocalMode). MRipl runs in local_mode
+        by default for speed. Set *mriplTrackObserves* to True to record
+        observes. If self.mripl is False, loop over a single ripl, tracking
+        *track* random observes.'''
         
         def mriplSample():
             assumedValues={}
             predictedValues={}
             queryExpsValues={}
         
-            v = MRipl(samples, backend=self.backend, local_mode=mriplMode)
+            v = MRipl(samples, backend=self.backend, local_mode=mriplLocalMode)
             [v.assume(sym,exp) for sym,exp in self.assumes]
 
             rangeAssumes=range(1,1+len(self.assumes))
             observeLabels=[self.nameObserve(i) for i,_ in enumerate(self.observes)]
-            
+            if mriplTrackObserves is False:
+                observeLabel = []
+
             for (exp,_),name in zip(self.observes,observeLabels):
                 v.predict(exp,label=name)
                 
@@ -386,7 +391,7 @@ class Analytics(object):
 
         tag = 'sample_from_joint' if name is None else name + '_sample_from_joint'
         history = History(tag, self.parameters)
-        out = mriplSample() if self.mripl else riplSample()
+        out = mriplSample() if self.mripl and useMRipl else riplSample()
 
         assumedValues,predictedValues,queryExpsValues,logscores = out
         
@@ -578,7 +583,7 @@ class Analytics(object):
             data = self.observes
         history.addData(data)
 
-        return (history,self.ripl) if not self.mripl else history
+        return (history,self.ripl) if not self.mripl else (history,self.mripl)
   
 
     def runFromConditionalOnce(self, data=None, force=None, **kwargs):
@@ -617,7 +622,7 @@ class Analytics(object):
         pairs = zip(['Ripl%i'%i for i in range(noDatasets)],histories)
         historyOV = historyOverlay('testFromPrior',pairs)
         
-        return historyOV
+        return historyOV, self.mripl
             
                                         
 
@@ -627,12 +632,13 @@ class Analytics(object):
         
         (data, groundTruth) = self.generateDataFromPrior(sweeps, verbose=verbose)
 
-        out = self.runFromConditional(sweeps, data=data, verbose=verbose, **kwargs)
-        history = out if isinstance(out,History) else out[0]
+        history,_ = self.runFromConditional(sweeps, data=data, verbose=verbose, **kwargs)
         history.addGroundTruth(groundTruth,sweeps) #sweeps vs. totalSamples
         history.label = 'run_conditioned_from_prior'
 
-        return (history,self.ripl) if not self.mripl else history
+        return (history,self.ripl) if not self.mripl else (history,self.mripl)
+
+
 
 
     # The "sweeps" argument specifies the number of times to repeat
@@ -691,10 +697,18 @@ class Analytics(object):
 
 
 
-    def gewekeTest(self,samples,infer=None,plot=True,names=None,
-                   compareObserves=False):
-        forwardHistory = self.sampleFromJoint(samples)
-        inferHistory = self.runFromJoint(samples,infer=infer)
+    def gewekeTest(self,samples,infer=None,plot=True,names=None,track=5,
+                   compareObserves=False,useMRipl=False):
+        '''Geweke-style Test. Tracks and records all assumes, observes,
+           and queryExpressions in history. Argument *compareObserves*
+           specifies whether observes are analyzed. If optional *names* is given,
+           only those names from nameToHistory are analyzed.'''
+        forwardHistory = self.sampleFromJoint(samples, track=track,
+                                              mriplTrackObserves=compareObserves,
+                                              useMRipl=useMRipl)
+        inferHistory = self.runFromJoint(samples,infer=infer,runs=1)
+        ## FIXME: should be able to take multiple runs and flatten them
+        #  inferHistory = flattenRuns(inferHistory)
 
         print 'Geweke-style Test of Inference: \n'
         print '''
@@ -707,14 +721,16 @@ class Analytics(object):
         labels=('Forward iid','Inference')
         dicts = map(historyNameToValues,hs)
 
+        # filter on observes and names
         if compareObserves is False:
             names = dicts[0].keys()
-            obsKeys = [n for n in names if 'observe' in n]
+            obsKeys = [n for n in names if 'observe' in str(n)]
             dicts=[filterDict(d,ignore=obsKeys) for d in dicts]
-            compareStats,fig = compareSampleDicts(dicts,labels,plot=plot)
 
-        else:
-            compareStats,fig = compareSampleDicts(hs,labels,plot=plot)
+        if names is not None:
+            dicts=[filterDict(d,keep=names) for d in dicts]
+            
+        compareStats,fig = compareSampleDicts(dicts,labels,plot=plot)
         
         return forwardHistory,inferHistory,compareStats
 
@@ -722,6 +738,14 @@ class Analytics(object):
 
 from venture.test.stats import reportSameContinuous
 import scipy.stats
+
+def flattenRuns(history):
+    for name,listSeries in history.nameToSeries.iteritems():
+        label = listSeries[0].label
+        hist=  listSeries[0].hist
+        values = [e for series in listSeries for e in series.values]
+        listSeries = [Series(label,values,hist=hist)]
+        
 
 def historyToSnapshots(history):
     '''output = {name:[ snapshot_i ] }, where snapshot_i
@@ -738,7 +762,10 @@ def historyToSnapshots(history):
 
 
 def filterDict(d,keep=(),ignore=()):
-    'returns shallow copy of dictionary d, filtered on keys'
+    '''Shallow copy of dictionary d filtered on keys.
+       If *keep* nonempty, keep items in keep.
+       If *keep* empty, keep items not in ignore.'''
+    assert isinstance(keep,(tuple,list))
     if keep:
         return dict([(k,v) for k,v in d.items() if k in keep])
     else:
@@ -762,17 +789,16 @@ def compareSnapshots(history,names=None,probes=None):
 
     # restrict to names
     if names is not None:
-        ignore = [k for k in allSnapshots.keys() if k not in names]
+        filterSnapshots = filterDict(allSnapshots,keep=names)
     else:
-        ignore = []
+        filterSnapshots = allSnapshots
 
     snapshotDicts=({},{})
-    for name,snapshots in allSnapshots.iteritems():
-        if name not in ignore:
-            for d,probe in zip(snapshotDicts,probes):
-                d[name]=snapshots[probe]
+    for name,snapshots in filterSnapshots.iteritems():
+        for d,probe in zip(snapshotDicts,probes):
+            d[name]=snapshots[probe]
 
-    labels =[history.label+': '+'snap %i'%i for i in probes]
+    labels =[history.label+'_'+'snap_%i'%i for i in probes]
     return compareSampleDicts(snapshotDicts,labels,plot=True)
 
 
