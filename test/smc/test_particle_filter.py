@@ -8,10 +8,10 @@ from venture.test.config import get_ripl, collectSamples, defaultKernel
 
 @statisticalTest
 def testBasicParticleFilter():
-  """Poorly designed and poorly written test, which nonetheless provides a semblance of a sanity test for particle filtering"""
+  """A sanity test for particle filtering"""
   if config["get_ripl"] != "lite": raise SkipTest("Clone only implemented in lite")
   ripl = get_ripl()
-  P = 50
+  P = 60
   ripl.assume("f","""
 (mem (lambda (i)
   (if (eq i 0)
@@ -28,17 +28,18 @@ def testBasicParticleFilter():
     (bernoulli 0.1))))
 """)
 
-  ripl.sivm.core_sivm.engine.infer({'instruction':'resample','particles':P})
+  ripl.infer("(resample %d)" % P)
   ripl.observe("(g 1)",False)
-  ripl.sivm.core_sivm.engine.infer({'instruction':'resample','particles':P})
+  ripl.infer("(resample %d)" % P)
   ripl.observe("(g 2)",False)
-  ripl.sivm.core_sivm.engine.infer({'instruction':'resample','particles':P})
+  ripl.infer("(resample %d)" % P)
   ripl.observe("(g 3)",True)
-  ripl.sivm.core_sivm.engine.infer({'instruction':'resample','particles':P})
+  ripl.infer("(resample %d)" % P)
   ripl.observe("(g 4)",False)
-  ripl.sivm.core_sivm.engine.infer({'instruction':'resample','particles':P})
+  ripl.infer("(resample %d)" % P)
   ripl.observe("(g 5)",False)
-  ripl.sivm.core_sivm.engine.infer({'instruction':'resample','particles':P})
+  ripl.infer("(incorporate)") # not necessary, just testing that it doesn't crash
+  ripl.infer("(resample 1)")
   ripl.predict("(g 6)")
   
   predictions = [trace.extractValue(8)['value'] for trace in ripl.sivm.core_sivm.engine.traces]

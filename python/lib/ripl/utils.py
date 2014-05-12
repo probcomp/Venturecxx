@@ -241,6 +241,12 @@ def expToDict(exp):
     assert type(exp[1]) is list
     subkernels = [expToDict(e) for e in exp[1]]
     return {"kernel":"cycle","subkernels":subkernels,"transitions":exp[2]}
+  elif tag == "resample":
+    assert(len(exp) == 2)
+    return {"command":"resample","particles":exp[1]}
+  elif tag == "incorporate":
+    assert(len(exp) == 1)
+    return {"command":"incorporate"}
   else:
     raise Exception("Cannot parse infer instruction")
 
@@ -250,12 +256,16 @@ def testHandInspect():
   k3 = "(meanfield 11 22 33 44)"
   k4 = "(latents 11 22 33)"
   k5 = "(rejection 11 22 33)"
+  k6 = "(resample 11)"
+  k7 = "(incorporate)"
 
   print k1,expToDict(parse(k1))
   print k2,expToDict(parse(k2))
   print k3,expToDict(parse(k3))
   print k4,expToDict(parse(k4))
   print k5,expToDict(parse(k5))
+  print k6,expToDict(parse(k4))
+  print k7,expToDict(parse(k5))
   print "----------------------"
   print expToDict(parse("(cycle (%s %s) 100)" % (k1,k2)))
   print expToDict(parse("(mixture (.1 %s .9 %s) 100)" % (k1,k2)))
