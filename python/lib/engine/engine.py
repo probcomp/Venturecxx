@@ -152,7 +152,7 @@ class Engine(object):
     self.set_default_params(params)
 
     self.incorporate()    
-    if 'instruction' in params and params['instruction'] == "resample":
+    if 'command' in params and params['command'] == "resample":
       P = params['particles']
       newTraces = [None for p in range(P)]
       for p in range(P):
@@ -161,7 +161,7 @@ class Engine(object):
       self.traces = newTraces
       self.weights = [0 for p in range(P)]
 
-    elif 'instruction' in params and params['instruction'] == "incorporate": pass
+    elif 'command' in params and params['command'] == "incorporate": pass
 
     elif params['kernel'] == "cycle":
       if 'subkernels' not in params:

@@ -225,6 +225,9 @@ class Trace(object):
   def getOrderedSetsInScope(self,scope):
     return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
 
+
+  def numNodesInBlock(self,scope,block): return len(self.getNodesInBlock(scope,block))
+
   def getNodesInBlock(self,scope,block):
     nodes = self.scopes[scope][block]
     if scope == "default": return nodes
