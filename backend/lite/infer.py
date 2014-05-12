@@ -424,7 +424,8 @@ class ParticlePGibbsOperator(object):
   def _compute_alpha(self, particleWeights, finalIndex):
     # Remove the weight of the chosen xi from the list instead of
     # trying to subtract in logspace to prevent catastrophic
-    # cancellation like the non-functional case
+    # cancellation (for the same reason as
+    # PGibbsOperator._compute_alpha)
     particleWeightsNoXi = copy.copy(particleWeights)
     particleWeightsNoXi.pop(finalIndex)
 
