@@ -100,6 +100,7 @@ map<string,SP*> initBuiltInSPs()
 
   /* Scoping */
   m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
+  m["scope_exclude"] = new SP(new NullRequestPSP(), new ScopeExcludeOutputPSP());
 
   /* Data structures */
   m["simplex"] = new SP(new NullRequestPSP(), new SimplexOutputPSP());
