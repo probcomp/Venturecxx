@@ -122,11 +122,11 @@ def _testBasicMRipl(mripl):
     
 
 def testBasicMRipl():
+    raise SkipTest("IOError: [Errno 2] No such file or directory: u'/home/vlad/.config/ipython/profile_default/security/ipcontroller-client.json'")
     params = generateMRiplParams(backends=('puma',),modes=(False,) )
     for (no_ripls,backend,mode) in params:
         _testBasicMRipl( MRipl(no_ripls,backend=backend,local_mode=mode) )
     return
-
 
 
 
