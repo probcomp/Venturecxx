@@ -144,6 +144,12 @@ VentureValuePtr IsSymbolOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
   return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureSymbol>(args->operandValues[0]) != NULL));
 }
 
+VentureValuePtr ToAtomOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("to_atom", args, 1);
+  return VentureValuePtr(new VentureAtom(args->operandValues[0]->getInt()));
+}
+
 VentureValuePtr IsAtomOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("is_atom", args, 1);
