@@ -211,13 +211,13 @@ def nodeLabelDict(nodes, trace):
         if inv_env_dict.has_key(node):
             label = inv_env_dict[node]
         elif isinstance(node, OutputNode):
-            label = 'Output' #: ' + str(node.value)
+            label = 'O' # 'Output' #: ' + str(node.value)
         elif isinstance(node, RequestNode):
-            label = 'Request' #: ' + str(node.value)
+            label = 'R' # 'Request' #: ' + str(node.value)
         elif isinstance(node, LookupNode):
-            label = 'Lookup'
+            label = 'L' # 'Lookup'
         elif isinstance(node, ConstantNode):
-            label = 'Constant'
+            label = 'C' # 'Constant'
         else:
             label = '' # str(node.value)
         label_dict[node] = label
@@ -274,19 +274,18 @@ def traveseScaffold(trace, scaffold):
 
     return G
 
-def drawScaffold(trace, scaffold):
+def drawScaffoldGraph(trace, G):
     from venture.lite.node import Node
     from venture.lite.value import VentureNumber, SPRef
     from venture.lite.request import Request
 
-    color_map = {'principal': 'r',
-                 'drg':       'y',
-                 'border':    'b',
-                 'brush':     'g',
-                 'aaa':       'm',
-                 'other':    'k'}
-
-    G = traveseScaffold(trace, scaffold)
+    color_map = {'principal': 'red',
+                 'drg':       'yellow',
+                 'border':    'blue',
+                 'brush':     'green',
+                 'aaa':       'magenta',
+                 'to_subsample': 'cyan',
+                 'other':     'gray'}
 
     labels = nodeLabelDict(G.nodes(), trace)
 
@@ -298,9 +297,23 @@ def drawScaffold(trace, scaffold):
                      labels=labels)
 #                     labels={node:node.value for node in G.nodes_iter()})
 
+def markAbsorbingToSubsample(trace,G,scope_to_subsample):
+  nodes_in_scope = trace.getAllNodesInScope(scope_to_subsample)
+  for (node,data) in G.nodes_iter(True):
+    if node in nodes_in_scope:
+      assert data['type'] == 'border'
+      data['type'] = 'to_subsample'
+
 def drawScaffoldKernel(trace,indexer):
   index = indexer.sampleIndex(trace)
-  drawScaffold(trace, index)
+  G = traveseScaffold(trace, index)
+  drawScaffoldGraph(trace, G)
+
+def drawSubsampledScaffoldKernel(trace,indexer,scope_to_subsample):
+  index = indexer.sampleIndex(trace)
+  G = traveseScaffold(trace,index)
+  markAbsorbingToSubsample(trace,G,scope_to_subsample)
+  drawScaffoldGraph(trace,G)
 
 def subsampledMixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
