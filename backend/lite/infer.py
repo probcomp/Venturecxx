@@ -45,6 +45,8 @@ class BlockScaffoldIndexer(object):
     if self.block == "one": return constructScaffold(trace,[trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))])
     elif self.block == "all": return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
     elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
+    elif type(self.block) is list and self.block[0] == "ordered": 
+      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope),self.block[1:])
     else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])
 
   def logDensityOfIndex(self,trace,_):

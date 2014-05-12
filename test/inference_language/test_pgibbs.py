@@ -2,6 +2,8 @@ import math
 import scipy.stats as stats
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, collectSamples, ignore_inference_quality
+from nose import SkipTest
+from testconfig import config
 
 def testPGibbsBlockingMHHMM1():
   yield checkPGibbsBlockingMHHMM1, True
@@ -77,6 +79,39 @@ def checkPGibbsDynamicScope1(mutate):
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
 
+@statisticalTest
+def testPGibbsDynamicScopeInterval():
+  ripl = get_ripl()
+  if config["get_ripl"] != "lite": raise SkipTest("Ordered scopes with interval only in lite")  
+
+  ripl.assume("transition_fn", "(lambda (x) (normal x 1.0))")
+  ripl.assume("observation_fn", "(lambda (y) (normal y 1.0))")
+
+  ripl.assume("initial_state_fn", "(lambda () (normal 0.0 1.0))")
+  ripl.assume("f","""
+(mem (lambda (t)
+  (scope_include 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
+""")  
+
+  ripl.assume("g","(mem (lambda (t) (observation_fn (f t))))")
+
+  ripl.observe("(g 0)",1.0)
+  ripl.observe("(g 1)",2.0)
+  ripl.observe("(g 2)",3.0)
+  ripl.observe("(g 3)",4.0)
+  ripl.observe("(g 4)",5.0)
+
+  ripl.predict("(f 4)","pid")
+
+  P = 3 if ignore_inference_quality() else 8
+  T = 2 if ignore_inference_quality() else 10
+
+  infer = "(cycle ((pgibbs 0 (ordered 0 3) %d %d) (pgibbs 0 (ordered 1 4) %d %d)) 1)" % (P,P,T,T)
+
+  predictions = collectSamples(ripl,"pid",infer=infer)
+  cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
+  return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
+
 def testFunnyHMM():
   ripl = get_ripl()
   
@@ -93,3 +128,4 @@ def testFunnyHMM():
     ripl.observe("(obs %d)" % t, t)
   
   ripl.infer({"kernel":"pgibbs","transitions":2,"scope":0,"block":"ordered","particles":3, "with_mutation":False})
+
