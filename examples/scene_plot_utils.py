@@ -47,14 +47,7 @@ def except_wrap(f):
         return ret_val
     return wrapped
 
-is_cmap = lambda x: isinstance(x, matplotlib.colors.LinearSegmentedColormap)
-cms = filter(is_cmap, cm.__dict__.values())
-count = 0
-@except_wrap
-def do_kde2d(x, y, min_value=None, new_figure=True, *args, **kwargs):
-    global count
-    which_cm = cms[count % len(cms)]
-    count += 1
+def xy_to_Z(x, y, min_value=None):
     x, y = map(numpy.array, [x, y])
     xmin, xmax = x.min(), x.max()
     ymin, ymax = y.min(), y.max()
@@ -64,10 +57,20 @@ def do_kde2d(x, y, min_value=None, new_figure=True, *args, **kwargs):
     kernel = gaussian_kde(values)
     Z = numpy.reshape(kernel(positions).T, X.shape)
     Z = enforce_min_value(Z, min_value)
-    #
+    extent = [xmin, xmax, ymin, ymax]
+    return Z, extent
+
+is_cmap = lambda x: isinstance(x, matplotlib.colors.LinearSegmentedColormap)
+cms = filter(is_cmap, cm.__dict__.values())
+count = 0
+@except_wrap
+def do_kde2d(x, y, min_value=None, new_figure=True, *args, **kwargs):
+    global count
+    which_cm = cms[count % len(cms)]
+    count += 1
+    Z, extent = xy_to_Z(x, y, min_value)
     fig = get_figure(new_figure)
     ax = fig.add_subplot(111)
-    extent = [xmin, xmax, ymin, ymax]
     ax.imshow(numpy.rot90(Z), extent=extent, norm=LogNorm(),
             cmap=which_cm)
     ax.plot(x, y, 'k.', markersize=2)
