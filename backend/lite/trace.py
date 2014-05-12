@@ -7,7 +7,7 @@ from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
 from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator
-from subsampled_mh import subsampledMixMH,SubsampledMHOperator,SubsampledBlockScaffoldIndexer
+from subsampled_mh import drawScaffoldKernel,subsampledMixMH,SubsampledMHOperator,SubsampledBlockScaffoldIndexer
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
@@ -330,6 +330,8 @@ class Trace(object):
       if params["kernel"] == "mh":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MHOperator())
+      elif params["kernel"] == "draw_scaffold":
+        drawScaffoldKernel(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"]))
       elif params["kernel"] == "subsampled_mh":
         assert params["with_mutation"]
         subsampledMixMH(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"]),SubsampledMHOperator())
