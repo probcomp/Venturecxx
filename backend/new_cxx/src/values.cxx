@@ -234,7 +234,18 @@ string VentureNumber::toString() const { return "VentureNumber " + lexical_cast<
 string VentureAtom::toString() const { return "VentureAtom " + lexical_cast<string>(n);}
 string VentureBool::toString() const { return "VentureBool " + lexical_cast<string>(b);}
 string VentureSymbol::toString() const { return "VentureSymbol " + s;}
-string VentureArray::toString() const { return "VentureArray";}
+string VentureArray::toString() const 
+{ 
+  string s = "VentureArray [";
+  for (int i = 0; i < xs.size(); ++i)
+    {
+      s += xs[i]->toString();
+      s += " ";
+    }
+  s += "]";
+  return s;
+}
+
 string VentureNil::toString() const { return "VentureNil";}
 string VenturePair::toString() const { return "VenturePair (" + car->toString() + ", " + cdr->toString() + ")";}
 string VentureSimplex::toString() const { return "VentureSimplex";}
