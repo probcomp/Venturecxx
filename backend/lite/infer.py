@@ -419,7 +419,6 @@ class ParticlePGibbsOperator(object):
     self.finalIndex = finalIndex
     self.particles = particles
 
-    # TODO need to return a trace as well
     return particles[finalIndex],self._compute_alpha(particleWeights, finalIndex)
 
   def _compute_alpha(self, particleWeights, finalIndex):

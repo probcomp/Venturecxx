@@ -9,7 +9,10 @@ from lkernel import LKernel
 from value import VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 from exception import VentureValueError
 
-class FlipOutputPSP(RandomPSP):
+class DiscretePSP(RandomPSP):
+  def logDensityBound(self, _x, _args): return 0
+
+class FlipOutputPSP(DiscretePSP):
   def simulate(self,args):
     p = args.operandValues[0] if args.operandValues else 0.5
     return random.random() < p
@@ -19,8 +22,6 @@ class FlipOutputPSP(RandomPSP):
     if val: return extendedLog(p)
     else: return extendedLog(1 - p)
 
-  def logDensityBound(self, _x, _args): return 0
-
   def enumerateValues(self,args):
     p = args.operandValues[0] if args.operandValues else 0.5
     if p == 1: return [True]
@@ -30,7 +31,7 @@ class FlipOutputPSP(RandomPSP):
   def description(self,name):
     return "  (%s p) returns true with probability p and false otherwise.  If omitted, p is taken to be 0.5." % name
 
-class BernoulliOutputPSP(RandomPSP):
+class BernoulliOutputPSP(DiscretePSP):
   def simulate(self,args):
     p = args.operandValues[0] if args.operandValues else 0.5
     return int(random.random() < p)
@@ -40,8 +41,6 @@ class BernoulliOutputPSP(RandomPSP):
     if val: return extendedLog(p)
     else: return extendedLog(1 - p)
 
-  def logDensityBound(self, _x, _args): return 0
-
   def enumerateValues(self,args):
     p = args.operandValues[0] if args.operandValues else 0.5
     if p == 1: return [True]
@@ -51,7 +50,7 @@ class BernoulliOutputPSP(RandomPSP):
   def description(self,name):
     return "  (%s p) returns true with probability p and false otherwise.  If omitted, p is taken to be 0.5." % name
 
-class BinomialOutputPSP(RandomPSP):
+class BinomialOutputPSP(DiscretePSP):
   def simulate(self,args):
     (n,p) = args.operandValues
     return scipy.stats.binom.rvs(n,p)
@@ -70,7 +69,7 @@ class BinomialOutputPSP(RandomPSP):
     return "  (%s n p) simulates flipping n Bernoulli trials independently with probability p and returns the total number of successes." % name
 
 
-class CategoricalOutputPSP(RandomPSP):
+class CategoricalOutputPSP(DiscretePSP):
   # (categorical ps outputs)
   def simulate(self,args):
     if len(args.operandValues) == 1: # Default values to choose from
@@ -94,7 +93,7 @@ class CategoricalOutputPSP(RandomPSP):
   def description(self,name):
     return "  (%s weights objects) samples a categorical with the given weights.  In the one argument case, returns the index of the chosen option as an atom; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % name
 
-class UniformDiscreteOutputPSP(RandomPSP):
+class UniformDiscreteOutputPSP(DiscretePSP):
   def simulate(self,args):
     if args.operandValues[1] <= args.operandValues[0]:
       raise VentureValueError("uniform_discrete called on invalid range (%d,%d)" % (args.operandValues[0],args.operandValues[1]))
@@ -108,7 +107,7 @@ class UniformDiscreteOutputPSP(RandomPSP):
   def description(self,name):
     return "  (%s start end) samples a uniform discrete on the (start, start + 1, ..., end - 1)" % name
 
-class PoissonOutputPSP(RandomPSP):
+class PoissonOutputPSP(DiscretePSP):
   def simulate(self,args): return scipy.stats.poisson.rvs(args.operandValues[0])
   def logDensity(self,val,args): return scipy.stats.poisson.logpmf(val,args.operandValues[0])
   def description(self,name):
@@ -146,7 +145,7 @@ class MakerCBetaBernoulliOutputPSP(DeterministicPSP):
   def description(self,name):
     return "  (%s alpha beta) returns a collapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false).  While this procedure itself is deterministic, the returned sampler is stochastic." % name
 
-class CBetaBernoulliOutputPSP(RandomPSP):
+class CBetaBernoulliOutputPSP(DiscretePSP):
   def __init__(self,alpha,beta):
     assert isinstance(alpha, float)
     assert isinstance(beta, float)
@@ -191,7 +190,7 @@ class CBetaBernoulliOutputPSP(RandomPSP):
 
 #### Uncollapsed AAA Beta Bernoulli
 
-class MakerUBetaBernoulliOutputPSP(RandomPSP):
+class MakerUBetaBernoulliOutputPSP(DiscretePSP):
   def childrenCanAAA(self): return True
   def getAAALKernel(self): return UBetaBernoulliAAALKernel()
 
@@ -224,7 +223,7 @@ class UBetaBernoulliAAALKernel(LKernel):
 
   def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
 
-class UBetaBernoulliOutputPSP(RandomPSP):
+class UBetaBernoulliOutputPSP(DiscretePSP):
   def __init__(self,weight):
     self.weight = weight
 
