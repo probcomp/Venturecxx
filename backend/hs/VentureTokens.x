@@ -1,5 +1,5 @@
 {
-module VentureTokens (tokenize, Token(..), Alex(..), runAlex) where
+module VentureTokens where
 }
 
 %wrapper "monad"
