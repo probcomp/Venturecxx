@@ -37,7 +37,7 @@ Syms : { [] }
 {
 
 parseError :: T.Token -> T.Alex a
-parseError t = T.Alex (\T.AlexState {T.alex_pos = (T.AlexPn _ line col)} -> Left $ "Parse error at " ++ show line ++ ":" ++ show col)
+parseError t = T.Alex (\T.AlexState {T.alex_pos = (T.AlexPn _ line col)} -> Left $ "Parse error at " ++ show line ++ ":" ++ show col ++ " on token " ++ show t)
 
 -- parse :: String -> Exp v -- except v is constrained
 parse s = case T.runAlex s $ parseHelp of
