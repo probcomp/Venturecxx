@@ -18,8 +18,7 @@ void registerDeterministicLKernels(ConcreteTrace * trace,
 {
   for (size_t i = 0; i < applicationNodes.size(); ++i)
   {
-    scaffold->lkernels[applicationNodes[i]] =
-      shared_ptr<DeterministicLKernel>(new DeterministicLKernel(values[i], trace->getPSP(applicationNodes[i])));
+    trace->registerLKernel(scaffold,applicationNodes[i],shared_ptr<DeterministicLKernel>(new DeterministicLKernel(values[i], trace->getPSP(applicationNodes[i]))));
   }
 }
 

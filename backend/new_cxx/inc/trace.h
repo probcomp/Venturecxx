@@ -13,6 +13,7 @@
 
 struct Node;
 struct SPRef;
+struct LKernel;
 
 struct Trace 
 {
@@ -45,6 +46,8 @@ struct Trace
   virtual void reconnectLookup(LookupNode * lookupNode) =0;
   virtual void incNumRequests(RootOfFamily root) =0;
   virtual void incRegenCount(shared_ptr<Scaffold> scaffold,Node * node) =0;
+  virtual void registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel) =0;
+  virtual shared_ptr<LKernel> getLKernel(shared_ptr<Scaffold> scaffold, Node * node) =0;
   virtual void addChild(Node * node, Node * child) =0;
 
   /* Detach mutations */  
