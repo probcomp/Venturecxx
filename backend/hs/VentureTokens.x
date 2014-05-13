@@ -41,4 +41,13 @@ tokenize :: (Token -> Alex a) -> Alex a
 tokenize cont = do
     token <- alexMonadScan
     cont token
+
+tokenize2 :: Alex [Token]
+tokenize2 = do
+  token <- alexMonadScan
+  case token of
+    Eof -> return []
+    t -> do
+      ts <- tokenize2
+      return $ t:ts
 }
