@@ -5,13 +5,13 @@
 #include "consistency.h"
 #include "regen.h"
 #include "db.h"
-#include "concrete_trace.h"
+#include "trace.h"
 #include "args.h"
 #include "lkernel.h"
 #include <math.h>
 #include <boost/foreach.hpp>
 
-void registerDeterministicLKernels(ConcreteTrace * trace,
+void registerDeterministicLKernels(Trace * trace,
   shared_ptr<Scaffold> scaffold,
   const vector<ApplicationNode*>& applicationNodes,
   const vector<VentureValuePtr>& values)

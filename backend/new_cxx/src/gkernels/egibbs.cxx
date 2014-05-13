@@ -64,8 +64,8 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
 
   BOOST_FOREACH(vector<VentureValuePtr> valueTuple, valueTuples)
   {
-    registerDeterministicLKernels(trace, scaffold, applicationNodes, valueTuple);
     shared_ptr<Particle> particle(new Particle(trace));
+    registerDeterministicLKernels(particle.get(), scaffold, applicationNodes, valueTuple);
     particles.push_back(particle);
     
     double xiWeight =

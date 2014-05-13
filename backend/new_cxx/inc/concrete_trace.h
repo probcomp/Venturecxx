@@ -62,9 +62,6 @@ struct ConcreteTrace : Trace
   bool isMakerNode(Node * node);
   bool isConstrained(Node * node);
   bool isObservation(Node * node);
-
-  /* Derived Getters */
-  shared_ptr<PSP> getPSP(ApplicationNode * node);
   
   /* Primitive Setters */
   void setValue(Node * node, VentureValuePtr value);

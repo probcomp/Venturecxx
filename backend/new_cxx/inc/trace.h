@@ -78,6 +78,7 @@ struct Trace
   virtual Node * getOperatorSPMakerNode(ApplicationNode * node);
   virtual vector<Node*> getParents(Node * node);
   virtual shared_ptr<Args> getArgs(ApplicationNode * node);
+  virtual shared_ptr<PSP> getPSP(ApplicationNode * node);
 
   /* Primitive setters */
   virtual void setValue(Node * node, VentureValuePtr value) =0;
