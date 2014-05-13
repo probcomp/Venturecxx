@@ -102,6 +102,7 @@ struct ConcreteTrace : Trace
   int numBlocksInScope(ScopeID scope);
   set<Node*> getAllNodesInScope(ScopeID scope);
     
+  vector<set<Node*> > getOrderedSetsInScopeAndRange(ScopeID scope,BlockID minBlock,BlockID maxBlock);
   vector<set<Node*> > getOrderedSetsInScope(ScopeID scope);
 
   // TODO Vlad: read this carefully. The default scope is handled differently than the other scopes.
@@ -139,7 +140,7 @@ struct ConcreteTrace : Trace
 
   map<DirectiveID,RootOfFamily> families;
 
-  VentureValuePtrMap<SamplableMap<BlockID,set<Node*> > > scopes;
+  VentureValuePtrMap<SamplableMap<set<Node*> > > scopes;
 
   map<Node*, vector<RootOfFamily> > esrRoots;
   map<RootOfFamily, int> numRequests;

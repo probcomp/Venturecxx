@@ -82,7 +82,6 @@ def checkPGibbsDynamicScope1(mutate):
 @statisticalTest
 def testPGibbsDynamicScopeInterval():
   ripl = get_ripl()
-  if config["get_ripl"] != "lite": raise SkipTest("Ordered scopes with interval only in lite")  
 
   ripl.assume("transition_fn", "(lambda (x) (normal x 1.0))")
   ripl.assume("observation_fn", "(lambda (y) (normal y 1.0))")
@@ -106,7 +105,7 @@ def testPGibbsDynamicScopeInterval():
   P = 3 if ignore_inference_quality() else 8
   T = 2 if ignore_inference_quality() else 10
 
-  infer = "(cycle ((pgibbs 0 (ordered 0 3) %d %d) (pgibbs 0 (ordered 1 4) %d %d)) 1)" % (P,P,T,T)
+  infer = "(cycle ((pgibbs 0 (ordered_range 0 3) %d %d) (pgibbs 0 (ordered_range 1 4) %d %d)) 1)" % (P,P,T,T)
 
   predictions = collectSamples(ripl,"pid",infer=infer)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
