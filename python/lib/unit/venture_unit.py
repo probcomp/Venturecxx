@@ -744,15 +744,23 @@ from venture.test.stats import reportSameContinuous
 import scipy.stats
 
 def flattenRuns(history):
+    '''Copy values from each series into one (flat) series and
+       create new History'''
+    newHistory = History(history.label,history.parameters)
     for name,listSeries in history.nameToSeries.iteritems():
-        label = listSeries[0].label
-        hist=  listSeries[0].hist
-        values = [e for series in listSeries for e in series.values]
-        listSeries = [Series(label,values,hist=hist)]
-        
+        label = 'flattened_'+listSeries[0].label+'...'
+        hist = listSeries[0].hist
+        type = history.nameToType[name]
+        flatValues = [el for series in listSeries for el in series.values]
+        newHistory.addSeries(name,type,label,flatValues,hist=hist)
+    return newHistory
+
 
 def historyToSnapshots(history):
-    '''output = {name:[ snapshot_i ] }, where snapshot_i
+    '''
+    Snapshot of values across series for each time-step.
+    Created by copying scalar values from nameToSeries.
+    Output = {name:[ snapshot_i ] }, where snapshot_i
     is [series.value[i] for series in nameToSeries[name]]''' 
     snapshots={}
     # always ignore sweep time for snapshots

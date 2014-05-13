@@ -37,6 +37,14 @@ mk_p_ripl = make_puma_church_prime_ripl
 
 
 # TODO:
+
+# cheat sheet explaining local_mode, mr_map_proc, mr_map_array
+# move local_out to debug mode
+# 
+# make mr_map_proc a method.
+
+# 
+
 # get rid of use of interactive on certain utility funcs
 # if it breaks use outside MRIPL
 
@@ -44,6 +52,7 @@ mk_p_ripl = make_puma_church_prime_ripl
 # make private methods private
 # check for 'if varname' where varname=None by default
 
+# unit_tests on nose and compliant with alexey framework
 
 
 # Utility functions for working with ipcluster and mripl
@@ -888,6 +897,48 @@ def ipython_inline():
         ip.run_cell_magic("px",'','pass') # display any figs inline
     except:
         pass
+
+def map_proc(self,no_ripls,proc,*proc_args,**proc_kwargs):
+    '''Push procedure into engine namespaces. Use execute to map across ripls.
+    if no_ripls==0, 'all' or >mripl.no_ripls, then maps across all.
+    Maps proc across local ripls IFF in local_mode or mripl.output=="local".'''
+
+    ## FIXME: should be able to supress stdout from local_ripls when in remote mode
+    if no_ripls==0 or no_ripls=='all' or no_ripls>mripl.no_ripls:
+        no_ripls = mripl.no_ripls
+        no_local_ripls = mripl.no_local_ripls
+
+    # map across local ripls
+    if mripl.local_mode: 
+        local_out=[proc(r,*proc_args,**proc_kwargs) for i,r in enumerate(mripl.local_ripls) if i<no_ripls]
+        return local_out
+    else:
+        local_out = [None]*no_ripls
+
+    # map across remote ripls
+    mripl.dview.push({'map_proc':interactive(proc),'map_args':proc_args,
+                      'map_kwargs':proc_kwargs})
+
+    if no_ripls < mripl.no_engines:
+        map_view = mripl.cli[:no_ripls]
+        per_eng = 1
+        mripl.dview.execute('apply_out=None')
+    else:
+        per_eng = int(np.ceil(no_ripls/float(mripl.no_engines)))
+    
+    s1='apply_out='
+    s2='[map_proc(r,*map_args,**map_kwargs) for i,r in enumerate(mripls[%i]["%s"]) if i<%i]' % (mripl.mrid,
+                                                                                                mripl.backend,per_eng)
+    mripl.dview.execute(s1+s2)  
+    
+    ipython_inline()
+
+    remote_out = lst_flatten( mripl.dview['apply_out'] )
+    
+    return remote_out[:no_ripls] if mripl.output=='remote' else local_out
+
+
+
 
 def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     '''Push procedure into engine namespaces. Use execute to map across ripls.
