@@ -6,7 +6,7 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
-from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator
+from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,ParticleGibbsAncestralOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
@@ -328,6 +328,7 @@ class Trace(object):
   # "transitions" (the latter should be named "repeats").
 
   def infer(self,params):
+    print "[debug]", params
     if not self.scopeHasEntropy(params["scope"]):
       return
     for _ in range(params["transitions"]):
@@ -345,9 +346,21 @@ class Trace(object):
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
       elif params["kernel"] == "pgibbs":
         if params["with_mutation"]:
-          mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
+          mixMH(self,
+            BlockScaffoldIndexer(params["scope"],params["block"]),
+            PGibbsOperator(int(params["particles"])))
         else:
           mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
+      elif params["kernel"] == "pgas":
+        if params["with_mutation"]:
+          raise NotImplementedError
+          #mixMH(self,
+          #  BlockScaffoldIndexer(params["scope"], params["block"]),
+          #  PGibbsAncestralOperator(int(params["particles"])))
+        else:
+          mixMH(self,
+            BlockScaffoldIndexer(params["scope"],params["block"]),
+            ParticleGibbsAncestralOperator(int(params["particles"])))
       elif params["kernel"] == "map":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MAPOperator(params["rate"], int(params["steps"])))

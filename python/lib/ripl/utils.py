@@ -206,6 +206,9 @@ def expToDict(exp):
   elif tag == "func-pgibbs":
     assert len(exp) == 5
     return {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":False}
+  elif tag == "func-pgibbs-ancestral":
+    assert len(exp) == 5
+    return {"kernel":"pgas","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":False}
   elif tag == "meanfield":
     assert len(exp) == 5
     return {"kernel":"meanfield","scope":exp[1],"block":exp[2],"steps":exp[3],"transitions":exp[4]}

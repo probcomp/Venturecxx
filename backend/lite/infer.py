@@ -285,7 +285,7 @@ class PGibbsOperator(object):
     T = self.T
     P = self.P
 
-    rhoWeights = [None for t in range(T)]
+    retainedWeights = [None for t in range(T)]
     omegaDBs = [[None for p in range(P+1)] for t in range(T)]
     ancestorIndices = [[None for p in range(P)] + [P] for t in range(T)]
 
@@ -293,7 +293,7 @@ class PGibbsOperator(object):
     self.ancestorIndices = ancestorIndices
 
     for t in reversed(range(T)):
-      (rhoWeights[t],omegaDBs[t][P]) = detachAndExtract(trace,scaffold.border[t],scaffold)
+      (retainedWeights[t],omegaDBs[t][P]) = detachAndExtract(trace,scaffold.border[t],scaffold)
 
     assertTorus(scaffold)
     xiWeights = [None for p in range(P)]
@@ -308,7 +308,7 @@ class PGibbsOperator(object):
       newWeights = [None for p in range(P)]
       # Sample new particle and propagate
       for p in range(P):
-        extendedWeights = xiWeights + [rhoWeights[t-1]]
+        extendedWeights = xiWeights + [retainedWeights[t-1]]
         ancestorIndices[t][p] = sampleLogCategorical(extendedWeights)
         path = constructAncestorPath(ancestorIndices,t,p)
         restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,t,path)
@@ -325,7 +325,7 @@ class PGibbsOperator(object):
     restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,T,path)
     assertTrace(self.trace,self.scaffold)
 
-    return trace,self._compute_alpha(rhoWeights[T-1], xiWeights, finalIndex)
+    return trace,self._compute_alpha(retainedWeights[T-1], xiWeights, finalIndex)
 
   def _compute_alpha(self, rhoWeight, xiWeights, finalIndex):
     # Remove the weight of the chosen xi from the list instead of
@@ -374,10 +374,10 @@ class ParticlePGibbsOperator(object):
 
 #    assert T == 1 # TODO temporary
     rhoDBs = [None for t in range(T)]
-    rhoWeights = [None for t in range(T)]
+    retainedWeights = [None for t in range(T)]
 
     for t in reversed(range(T)):
-      rhoWeights[t],rhoDBs[t] = detachAndExtract(trace,scaffold.border[t],scaffold)
+      retainedWeights[t],rhoDBs[t] = detachAndExtract(trace,scaffold.border[t],scaffold)
 
     assertTorus(scaffold)
 
@@ -393,7 +393,7 @@ class ParticlePGibbsOperator(object):
       particleWeights[p] = regenAndAttach(particles[p],scaffold.border[0],scaffold,False,OmegaDB(),{})
 
     particleWeights[P] = regenAndAttach(particles[P],scaffold.border[0],scaffold,True,rhoDBs[0],{})
-    assert_almost_equal(particleWeights[P],rhoWeights[0])
+    assert_almost_equal(particleWeights[P],retainedWeights[0])
 
 #   for every time step,
     for t in range(1,T):
@@ -406,7 +406,7 @@ class ParticlePGibbsOperator(object):
         newParticleWeights[p] = regenAndAttach(newParticles[p],self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
       newParticles[P] = Particle(particles[P])
       newParticleWeights[P] = regenAndAttach(newParticles[P],self.scaffold.border[t],self.scaffold,True,rhoDBs[t],{})
-      assert_almost_equal(newParticleWeights[P],rhoWeights[t])
+      assert_almost_equal(newParticleWeights[P],retainedWeights[t])
       particles = newParticles
       particleWeights = newParticleWeights
 
@@ -439,6 +439,97 @@ class ParticlePGibbsOperator(object):
     self.particles[-1].commit()
     assertTrace(self.trace,self.scaffold)
 
+class ParticleGibbsAncestralOperator(object):
+  def __init__(self,P):
+    self.P = P
+
+  def propose(self, trace, scaffold):
+    from particle import Particle
+    self.trace = trace
+    self.scaffold = scaffold
+    assertTrace(self.trace, self.scaffold)
+    # get number of generations from scaffold
+    self.T = len(self.scaffold.border)
+    T = self.T
+    # number of particles
+    P = self.P
+    # extract retained particle
+    retainedDBs = [None for t in range(T)]
+    retainedWeights = [None for t in range(T)]
+    for t in reversed(range(T)):
+      retainedWeights[t], retainedDBs[t] = detachAndExtract(self.trace, scaffold.border[t],scaffold)
+    assertTorus(scaffold)
+    # initialize particles
+    particles = [Particle(trace) for p in range(P+1)]
+    self.particles = particles
+    particleWeights = [None for p in range(P+1)]
+    # run first generation of each proposal (sampling from prior)
+    for p in range(P):
+      particleWeights[p] = regenAndAttach(particles[p],
+                            scaffold.border[0], scaffold, 
+                            False, OmegaDB(), {})
+    # advance retained particle (conditioned on DB)
+    particleWeights[P] = regenAndAttach(particles[P],
+                            scaffold.border[0], scaffold,
+                            True,retainedDBs[0],{})
+    assert_almost_equal(particleWeights[P], retainedWeights[0])
+    # run remaining generations
+    for t in range(1, T):
+      # sample proposal particles
+      newParticles = [None for p in range(P+1)]
+      newParticleWeights = [None for p in range(P+1)]
+      for p in range(P):
+        # sample ancestors according to weight
+        parent = sampleLogCategorical(particleWeights)
+        newParticles[p] = Particle(particles[parent])
+        # sample next generation
+        newParticleWeights[p] = regenAndAttach(newParticles[p],
+                                  self.scaffold.border[t], self.scaffold,
+                                  False, OmegaDB(), {})
+      # calculate ancestral resampling weights
+      ancestralWeights = [w for w in particleWeights]
+      newRetainedParticles = [Particle(p) for p in particles]
+      for p in range(P+1):
+        # run future generations, reusing random choices in DB where possible
+        for f in range(t, T):
+          ancestralWeights[p] += regenAndAttach(newRetainedParticles[p],
+                                    self.scaffold.border[f], self.scaffold, 
+                                    True, retainedDBs[f], {})
+      # sample new retained particle
+      p = sampleLogCategorical(ancestralWeights)
+      newRetainedParticles[p].commit()
+      assertTrace(self.trace, self.scaffold)
+      # extract new DBs and weights
+      for i in reversed(range(T)):
+        retainedWeights[i], retainedDBs[i] = detachAndExtract(self.trace, 
+                                                scaffold.border[i], scaffold)
+      assertTorus(scaffold)
+      # retained DBs and weights for preceding generations are now invalid
+      # TODO: verify these are no longer needed
+      retainedWeights[:t] = None
+      retainedDBs[:t] = None
+      # update retained particle and weight
+      newParticleWeights[P] = regenAndAttach(trace,
+                                self.scaffold.border[t], self.scaffold,
+                                True, retainedDBs[t], {})
+      newParticles[P] = trace
+      assert_almost_equal(newParticleWeights[P], retainedWeights[t])
+      # update particle set
+      particles = newParticles
+      particleWeights = newParticleWeights
+    # resample retained particle (according to weight)
+    p = sampleLogCategorical(particleWeights)
+    self.finalIndex = finalIndex
+    self.particles = particles
+    # return new retained particle and acceptance ratio
+    return particles[finalIndex], 0.0
+
+  def accept(self):
+    self.particles[self.finalIndex].commit()
+    assertTrace(self.trace,self.scaffold)
+
+  def reject(self):
+      raise NotImplementedError
 
 #### Gradient ascent to max a-posteriori
 
