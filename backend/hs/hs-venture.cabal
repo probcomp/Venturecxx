@@ -84,6 +84,7 @@ Test-suite tests
 
 executable venture-server
   main-is:             Server.hs
+  other-modules:       VentureTokens
   build-depends:       base >=4.5 && <5, containers >=0.4 && <1,
                        lens >=3.10 && <4, pretty >=1.1 && <2,
                        MonadRandom >=0.1 && <1, transformers >=0.3 && <1,
