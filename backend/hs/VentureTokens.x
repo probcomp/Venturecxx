@@ -4,9 +4,10 @@ module VentureTokens where
 
 %wrapper "monad"
 
-$digit = [0-9]
+$digit = 0-9
 $alpha = [a-zA-Z]
 @signed = [\+\-]? $digit+
+$nonwhite = . # $white
 
 tokens :-
 
@@ -14,12 +15,12 @@ tokens :-
   \(        { axch_token (\s -> Open) }
   \)        { axch_token (\s -> Close) }
 
-  [\+\-]?$digit*\.$digit+(e@signed)? { axch_token (\s -> Float $ read s) }
-  [\+\-]?$digit+\.$digit*(e@signed)? { axch_token (\s -> Float $ read s) }
+  [\+\-]? $digit* \. $digit+ ("e" @signed)? { axch_token (\s -> Float $ read s) }
+  [\+\-]? $digit+ \. $digit* ("e" @signed)? { axch_token (\s -> Float $ read s) }
 
   @signed  { axch_token (\s -> Int $ read s) }
 
-  $alpha[^ ]* { axch_token (\s -> Symbol s) }
+  $alpha $nonwhite* { axch_token (\s -> Symbol s) }
 
 {
 data Token
@@ -32,7 +33,7 @@ data Token
   deriving Show
 
 axch_token :: (String -> Token) -> AlexInput -> Int -> Alex Token
-axch_token f (_, _, _, s) len = return $ f s
+axch_token f (_, _, _, s) len = return $ f $ take len s
 
 alexEOF :: Alex Token
 alexEOF = return Eof
