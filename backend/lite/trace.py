@@ -358,11 +358,22 @@ class Trace(object):
       elif params["kernel"] == "gibbs":
         #assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
+
+      # [FIXME] egregrious style, but expedient. The stack is such a mess anyway, it's hard to do anything with good style that
+      # doesn't begin by destroying the stack.
       elif params["kernel"] == "pgibbs":
-        if params["with_mutation"]:
-          mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
+        if params["block"] == "ordered":
+          if params["with_mutation"]:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
+          else:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
         else:
-          mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
+          assert params["block"] == "ordered_range"
+          if params["with_mutation"]:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),PGibbsOperator(int(params["particles"])))
+          else:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),ParticlePGibbsOperator(int(params["particles"])))
+          
       elif params["kernel"] == "map":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MAPOperator(params["rate"], int(params["steps"])))

@@ -35,26 +35,28 @@ def mixMH(trace,indexer,operator):
     operator.reject() # May mutate trace
 
 class BlockScaffoldIndexer(object):
-  def __init__(self,scope,block):
+  def __init__(self,scope,block,interval=None):
     if scope == "default" and not (block == "all" or block == "one" or block == "ordered"):
         raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
     self.scope = scope
     self.block = block
+    self.interval = interval
 
   def sampleIndex(self,trace):
     if self.block == "one": return constructScaffold(trace,[trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))])
     elif self.block == "all": return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
     elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
-    elif type(self.block) is list and self.block[0] == "ordered": 
-      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope),self.block[1:])
+    elif self.block == "ordered_range": 
+      assert(self.interval)
+      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope),self.interval)
     else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])
 
   def logDensityOfIndex(self,trace,_):
     if self.block == "one": return trace.logDensityOfBlock(self.scope)
     elif self.block == "all": return 0
     elif self.block == "ordered": return 0
+    elif self.block == "ordered_range": return 0
     else: return 0
-
 
 class InPlaceOperator(object):
   def prepare(self, trace, scaffold, compute_gradient = False):
