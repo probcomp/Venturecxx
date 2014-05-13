@@ -27,7 +27,7 @@ class ScopeExcludeOutputPSP(DeterministicPSP):
   
   @override(DeterministicPSP)
   def description(self,name):
-    return "%s returns its third argument unchanged at runtime, but tags the subexpression creating the object as being within the given scope and block." % name
+    return "%s returns its second argument unchanged at runtime, but tags the subexpression creating the object as being outside the given scope." % name
 
 def isScopeExcludeOutputPSP(thing):
   return isinstance(thing, ScopeExcludeOutputPSP) or \

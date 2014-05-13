@@ -157,7 +157,7 @@ struct Inferer
     scope = fromPython(params["scope"]);
     block = fromPython(params["block"]);
 
-    if (block->getSymbol() == "ordered_range")
+    if (block->hasSymbol() && block->getSymbol() == "ordered_range")
       {
 	VentureValuePtr minBlock = fromPython(params["min_block"]);
 	VentureValuePtr maxBlock = fromPython(params["max_block"]);

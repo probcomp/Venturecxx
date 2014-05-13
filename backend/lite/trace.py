@@ -265,7 +265,7 @@ class Trace(object):
         (new_scope,new_block,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
         (new_scope,new_block) = self._normalizeEvaluatedScopeAndBlock(new_scope, new_block)
         if scope != new_scope or block == new_block: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
-      if i == 1 and isScopeExcludeOutputPSP(self.pspAt(node)):
+      elif i == 1 and isScopeExcludeOutputPSP(self.pspAt(node)):
         (excluded_scope,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
         excluded_scope = self._normalizeEvaluatedScope(excluded_scope)
         if scope != excluded_scope: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
@@ -362,17 +362,16 @@ class Trace(object):
       # [FIXME] egregrious style, but expedient. The stack is such a mess anyway, it's hard to do anything with good style that
       # doesn't begin by destroying the stack.
       elif params["kernel"] == "pgibbs":
-        if params["block"] == "ordered":
-          if params["with_mutation"]:
-            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
-          else:
-            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
-        else:
-          assert params["block"] == "ordered_range"
+        if params["block"] == "ordered_range":
           if params["with_mutation"]:
             mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),PGibbsOperator(int(params["particles"])))
           else:
             mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),ParticlePGibbsOperator(int(params["particles"])))
+        else:
+          if params["with_mutation"]:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
+          else:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
           
       elif params["kernel"] == "map":
         assert params["with_mutation"]

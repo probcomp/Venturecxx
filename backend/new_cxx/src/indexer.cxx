@@ -16,7 +16,6 @@ shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(ConcreteTrace * trace) const
       vector<set<Node*> > setsOfPNodes;
       setsOfPNodes.push_back(trace->getNodesInBlock(scope,actualBlock));
       shared_ptr<Scaffold> scaffold = constructScaffold(trace,setsOfPNodes,false);
-      cout << scaffold->showSizes() << endl;
       return scaffold;
     }
   else if (block->hasSymbol() && block->getSymbol() == "all")
