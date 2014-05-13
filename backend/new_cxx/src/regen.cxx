@@ -220,7 +220,7 @@ pair<double,Node*> evalFamily(Trace * trace,
     Node * sourceNode = env->lookupSymbol(symbol);
     weight = regen(trace,sourceNode,scaffold,false,db,gradients);
 
-    return make_pair(weight,trace->createLookupNode(sourceNode));
+    return make_pair(weight,trace->createLookupNode(sourceNode,exp));
   }
   else if (isSelfEvaluating(exp)) { return make_pair(0,trace->createConstantNode(exp)); }
   else if (isQuotation(exp)) { return make_pair(0,trace->createConstantNode(textOfQuotation(exp))); }
@@ -245,7 +245,7 @@ pair<double,Node*> evalFamily(Trace * trace,
       operandNodes.push_back(p.second);
     }
 
-    pair<RequestNode*,OutputNode*> appNodes = trace->createApplicationNodes(operatorNode,operandNodes,env);
+    pair<RequestNode*,OutputNode*> appNodes = trace->createApplicationNodes(operatorNode,operandNodes,env,exp);
     weight += apply(trace,appNodes.first,appNodes.second,scaffold,false,db,gradients);
     return make_pair(weight,appNodes.second);
   }

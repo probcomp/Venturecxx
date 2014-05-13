@@ -6,14 +6,14 @@
 
 ConstantNode * Trace::createConstantNode(VentureValuePtr value)
 {
-  ConstantNode * constantNode = new ConstantNode();
+  ConstantNode * constantNode = new ConstantNode(value);
   setValue(constantNode, value);
   return constantNode;
 }
 
-LookupNode * Trace::createLookupNode(Node * sourceNode)
+LookupNode * Trace::createLookupNode(Node * sourceNode,VentureValuePtr sym)
 {
-  LookupNode * lookupNode = new LookupNode(sourceNode);
+  LookupNode * lookupNode = new LookupNode(sourceNode,sym);
   setValue(lookupNode,getValue(sourceNode));
   //cout << "createLookupNode(" << sourceNode << "," << lookupNode << ")";
   addChild(sourceNode,lookupNode);
@@ -21,10 +21,10 @@ LookupNode * Trace::createLookupNode(Node * sourceNode)
 }
 
 
-pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env)
+pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp)
 {
   RequestNode * requestNode = new RequestNode(operatorNode, operandNodes, env);
-  OutputNode * outputNode = new OutputNode(operatorNode, operandNodes, requestNode, env);
+  OutputNode * outputNode = new OutputNode(operatorNode, operandNodes, requestNode, env, exp);
 
   //cout << "createApplicationNodes(" << operatorNode << "," << requestNode << ")";
   

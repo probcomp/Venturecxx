@@ -37,6 +37,8 @@ struct PyTrace
 
   double makeConsistent();
 
+  boost::python::list dotTrace(bool colorIgnored);
+
   // for testing
   int numNodesInBlock(boost::python::object scope, boost::python::object block);
 

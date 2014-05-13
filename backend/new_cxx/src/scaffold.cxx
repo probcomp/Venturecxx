@@ -79,7 +79,7 @@ shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<No
   map<Node*,int> regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush);
   map<Node*,shared_ptr<LKernel> > lkernels = loadKernels(trace,drg,aaa,false);
   vector<vector<Node *> > borderSequence = assignBorderSequnce(border,indexAssignments,setsOfPNodes.size());
-  return shared_ptr<Scaffold>(new Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels));
+  return shared_ptr<Scaffold>(new Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush));
 }
 
 
