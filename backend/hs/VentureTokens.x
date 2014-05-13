@@ -1,8 +1,8 @@
 {
-module VentureTokens (tokenize, Token(..)) where
+module VentureTokens (tokenize, Token(..), Alex(..), runAlex) where
 }
 
-%wrapper "basic"
+%wrapper "monad"
 
 $digit = [0-9]
 $alpha = [a-zA-Z]
@@ -11,15 +11,15 @@ $alpha = [a-zA-Z]
 tokens :-
 
   $white+  ;
-  \(        { \s -> Open }
-  \)        { \s -> Close }
+  \(        { axch_token (\s -> Open) }
+  \)        { axch_token (\s -> Close) }
 
-  [\+\-]?$digit*\.$digit+(e@signed)? { \s -> Float $ read s }
-  [\+\-]?$digit+\.$digit*(e@signed)? { \s -> Float $ read s }
+  [\+\-]?$digit*\.$digit+(e@signed)? { axch_token (\s -> Float $ read s) }
+  [\+\-]?$digit+\.$digit*(e@signed)? { axch_token (\s -> Float $ read s) }
 
-  @signed  { \s -> Int $ read s }
+  @signed  { axch_token (\s -> Int $ read s) }
 
-  $alpha[^ ]* { \s -> Symbol s }
+  $alpha[^ ]* { axch_token (\s -> Symbol s) }
 
 {
 data Token
@@ -28,6 +28,17 @@ data Token
     | Float Double
     | Int Integer
     | Symbol String
+    | Eof
+  deriving Show
 
-tokenize = alexScanTokens
+axch_token :: (String -> Token) -> AlexInput -> Int -> Alex Token
+axch_token f (_, _, _, s) len = return $ f s
+
+alexEOF :: Alex Token
+alexEOF = return Eof
+
+tokenize :: (Token -> Alex a) -> Alex a
+tokenize cont = do
+    token <- alexMonadScan
+    cont token
 }

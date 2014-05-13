@@ -24,7 +24,6 @@ import Language hiding (Value)
 import Trace
 import Engine hiding (execute)
 import qualified VentureGrammar as G
-import qualified VentureTokens as T
 
 -- The Venture wire protocol is to request a url whose path is the
 -- method name and put in the body a list of strings to use for
@@ -60,7 +59,7 @@ application engineMVar r = do
     Right (method, args) -> execute engineMVar method args
 
 interpret :: String -> [String] -> Either String Directive
-interpret "assume" [var, expr] = Right $ Assume var $ G.parse $ T.tokenize expr
+interpret "assume" [var, expr] = Right $ Assume var $ G.parse expr
 interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
 interpret m _ = Left $ "Unknown directive " ++ m
 

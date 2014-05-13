@@ -3,11 +3,14 @@ module VentureGrammar(parse) where
 
 import qualified VentureTokens as T
 import Language
+
 }
 
-%name parse
+%name parseHelp
 %tokentype { T.Token }
 %error { parseError }
+%monad { T.Alex }
+%lexer { T.tokenize } { T.Eof }
 
 %token
   '('  { T.Open }
@@ -32,6 +35,12 @@ Syms : { [] }
      | Syms sym { $2 : $1 }
 
 {
-parseError :: [T.Token] -> a
-parseError _ = error "Parse error"
+
+-- parseError :: [T.Token] -> a
+parseError ts = fail $ "Parse error " ++ show ts
+
+-- parse :: String -> Exp v -- except v is constrained
+parse s = case T.runAlex s $ parseHelp of
+            Left err -> error err
+            Right e -> e
 }
