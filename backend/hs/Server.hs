@@ -23,6 +23,7 @@ import qualified Data.ByteString.Lazy as B
 import Language hiding (Value)
 import Trace
 import Engine hiding (execute)
+import VentureGrammar
 
 -- The Venture wire protocol is to request a url whose path is the
 -- method name and put in the body a list of strings to use for

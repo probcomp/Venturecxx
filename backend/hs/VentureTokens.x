@@ -1,5 +1,5 @@
 {
-module VentureTokens (tokenize) where
+module VentureTokens (tokenize, Token(..)) where
 }
 
 %wrapper "basic"

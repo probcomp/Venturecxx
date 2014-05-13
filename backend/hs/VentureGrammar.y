@@ -1,20 +1,21 @@
 {
 module VentureGrammar(parse) where
 
-import VentureTokens
+import qualified VentureTokens as T
+import Language
 }
 
 %name parse
-%tokentype { Token }
+%tokentype { T.Token }
 %error { parseError }
 
 %token
-  '('  { Open }
-  ')'  { Close }
-  int  { Int $$ }
-  flo  { Float $$ }
-  lam  { Symbol "lambda" }
-  sym  { Symbol $$ }
+  '('  { T.Open }
+  ')'  { T.Close }
+  int  { T.Int $$ }
+  flo  { T.Float $$ }
+  lam  { T.Symbol "lambda" }
+  sym  { T.Symbol $$ }
 
 %%
 
@@ -31,6 +32,6 @@ Syms : { [] }
      | Syms sym { $2 : $1 }
 
 {
-parseError :: [Token] -> a
+parseError :: [T.Token] -> a
 parseError _ = error "Parse error"
 }

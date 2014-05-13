@@ -84,12 +84,12 @@ Test-suite tests
 
 executable venture-server
   main-is:             Server.hs
-  other-modules:       VentureTokens
+  other-modules:       VentureTokens, VentureGrammar
   build-depends:       base >=4.5 && <5, containers >=0.4 && <1,
                        lens >=3.10 && <4, pretty >=1.1 && <2,
                        MonadRandom >=0.1 && <1, transformers >=0.3 && <1,
                        math-functions >=0.1 && <1, mtl, mmorph, warp >=2,
                        http-types >=0.8, wai >=2, bytestring >=0.10,
-                       aeson >=0.7, text >=0.11
+                       aeson >=0.7, text >=0.11, array >=0.4
   default-language:    Haskell2010
   Ghc-options:         -Wall -fno-warn-name-shadowing
