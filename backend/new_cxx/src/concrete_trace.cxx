@@ -330,16 +330,25 @@ set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope)
   return all;
 }
 
+vector<set<Node*> > ConcreteTrace::getOrderedSetsInScopeAndRange(ScopeID scope,BlockID minBlock,BlockID maxBlock)
+{
+  vector<set<Node*> > ordered;
+  vector<BlockID> sortedBlocks = scopes[scope].getOrderedKeysInRange(minBlock,maxBlock);
+  for (size_t i = 0; i < sortedBlocks.size(); ++ i)
+    {
+      set<Node*> nodesInBlock = getNodesInBlock(scope,sortedBlocks[i]);
+      ordered.push_back(nodesInBlock);
+    }
+  return ordered;
+}
     
 vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope) 
 { 
   vector<set<Node*> > ordered;
-  
-  for (vector<pair<BlockID,set<Node*> > >::iterator iter = scopes[scope].a.begin();
-       iter != scopes[scope].a.end();
-       ++iter)
+  vector<BlockID> sortedBlocks = scopes[scope].getOrderedKeys();
+  for (size_t i = 0; i < sortedBlocks.size(); ++ i)
     {
-      set<Node*> nodesInBlock = getNodesInBlock(scope,iter->first);
+      set<Node*> nodesInBlock = getNodesInBlock(scope,sortedBlocks[i]);
       ordered.push_back(nodesInBlock);
     }
   return ordered;

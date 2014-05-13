@@ -46,6 +46,26 @@ struct SamplableMap
       assert(d.size() == a.size());
     }
 
+  // [FIXME] slow and awkward
+  // URGENT won't compile because of incomprehensible syntax errors
+  vector<K> getOrderedKeys(int i, int j)
+  {
+    set<K> keys;
+    for (size_t i = 0; i < a.size(); ++i) { keys.insert(a[i].first); }
+    vector<K> orderedKeys(keys.begin(),keys.end());
+    return orderedKeys;
+  }
+
+  vector<K> getOrderedKeysInRange(const K & min, const K & max)
+  {
+    set<K> keys;
+    for (size_t i = 0; i < a.size(); ++i)
+      {
+  	if (a[i].first <= max && a[i].first >= min) { keys.insert(a[i].first); }
+      }
+    return vector<K>(keys.begin(),keys.end());
+  }
+
 
   size_t count(const K& k) const { assert(false); }
   size_t size() const { return a.size(); }

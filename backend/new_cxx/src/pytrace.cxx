@@ -156,7 +156,17 @@ struct Inferer
     
     scope = fromPython(params["scope"]);
     block = fromPython(params["block"]);
-    scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+
+    if (block->getSymbol() == "ordered_range")
+      {
+	VentureValuePtr minBlock = fromPython(params["min_block"]);
+	VentureValuePtr maxBlock = fromPython(params["max_block"]);
+	scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block,minBlock,maxBlock));
+      }
+    else
+      {
+	scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+      }
     
     transitions = boost::python::extract<size_t>(params["transitions"]);
   }
