@@ -7,7 +7,7 @@ module VentureTokens where
 $digit = 0-9
 $alpha = [a-zA-Z]
 @signed = [\+\-]? $digit+
-$nonwhite = . # $white
+$nonsymbol = . # [$white \( \)]
 
 tokens :-
 
@@ -20,7 +20,7 @@ tokens :-
 
   @signed  { axch_token (\s -> Int $ read s) }
 
-  $alpha $nonwhite* { axch_token (\s -> Symbol s) }
+  $alpha $nonsymbol* { axch_token (\s -> Symbol s) }
 
 {
 data Token
