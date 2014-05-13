@@ -19,18 +19,20 @@ struct Scaffold
 {
   Scaffold() {}
   Scaffold(const vector<set<Node*> > & setsOfPNodes,
-    const map<Node*,int> & regenCounts,
-    const set<Node*> & absorbing,
-    const set<Node*> & aaa,
-    const vector<vector<Node *> > & border,
-    const map<Node*,shared_ptr<LKernel> > & lkernels):
-    setsOfPNodes(setsOfPNodes),
+	   const map<Node*,int> & regenCounts,
+	   const set<Node*> & absorbing,
+	   const set<Node*> & aaa,
+	   const vector<vector<Node *> > & border,
+	   const map<Node*,shared_ptr<LKernel> > & lkernels,
+	   const set<Node*> & brush):
+  setsOfPNodes(setsOfPNodes),
     regenCounts(regenCounts),
     absorbing(absorbing),
     aaa(aaa),
     border(border),
-    lkernels(lkernels)
-    {}
+    lkernels(lkernels),
+    brush(brush)
+          {}
   
 
   set<Node *> getPrincipalNodes();
@@ -52,6 +54,7 @@ struct Scaffold
   set<Node*> aaa;
   vector<vector<Node *> > border;
   map<Node*,shared_ptr<LKernel> > lkernels;
+  set<Node*> brush;
 
 };
 
