@@ -237,7 +237,7 @@ string VentureSymbol::toString() const { return "VentureSymbol " + s;}
 string VentureArray::toString() const 
 { 
   string s = "VentureArray [";
-  for (int i = 0; i < xs.size(); ++i)
+  for (size_t i = 0; i < xs.size(); ++i)
     {
       s += xs[i]->toString();
       s += " ";
@@ -266,7 +266,7 @@ string VentureSymbol::asExpression() const { return s;}
 string VentureArray::asExpression() const 
 { 
   string s = "(";
-  for (int i = 0; i < xs.size(); ++i)
+  for (size_t i = 0; i < xs.size(); ++i)
     {
       s += xs[i]->asExpression();
       if (i + 1 < xs.size()) { s += " "; }
@@ -279,7 +279,7 @@ string VentureNil::asExpression() const { return "nil";}
 string VenturePair::asExpression() const { return "[" + car->asExpression() + " . " + cdr->asExpression() + "]";}
 string VentureSimplex::asExpression() const { 
   string s = "(";
-  for (int i = 0; i < ps.size(); ++i)
+  for (size_t i = 0; i < ps.size(); ++i)
     {
       s += lexical_cast<string>(ps[i]);
       if (i + 1 < ps.size()) { s += " "; }
