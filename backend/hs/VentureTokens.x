@@ -8,6 +8,7 @@ $digit = 0-9
 $alpha = [a-zA-Z]
 @signed = [\+\-]? $digit+
 $nonsymbol = . # [$white \( \)]
+$operchar = [\+\-\*\/]
 
 tokens :-
 
@@ -21,6 +22,7 @@ tokens :-
   @signed  { axch_token (\s -> Int $ read s) }
 
   $alpha $nonsymbol* { axch_token (\s -> Symbol s) }
+  $operchar+         { axch_token (\s -> Symbol s) }
 
 {
 data Token
