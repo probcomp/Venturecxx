@@ -660,7 +660,7 @@ In Haskell type notation:
 data Expression = Bool | Number | Atom | Symbol | Array Expression
 """
   def asVentureValue(self, thing):
-    if isinstance(thing, bool):
+    if isinstance(thing, bool) or isinstance(thing, np.bool_):
       return VentureBool(thing)
     if isinstance(thing, Number):
       return VentureNumber(thing)
