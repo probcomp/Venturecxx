@@ -170,4 +170,9 @@ class ChurchPrimeParser(object):
 
     @staticmethod
     def instance():
-        return ChurchPrimeParser()
+        global the_parser
+        if the_parser is None:
+            the_parser = ChurchPrimeParser()
+        return the_parser
+
+the_parser = None
