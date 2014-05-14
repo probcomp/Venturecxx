@@ -1,8 +1,10 @@
+from nose import SkipTest
+from nose.tools import eq_
+
+from venture.test.config import get_ripl
 from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
-from nose import SkipTest
-from nose.tools import eq_
 from venture.lite.sp import VentureSP
 
 def relevantSPs():
@@ -101,3 +103,32 @@ def propRandom(args_listss, sp):
         answers.append("Inappropriate arguments")
         continue
   assert False, "SP deterministically returned %s (parallel to arguments)" % answers
+
+def testRiplSimulate():
+  for (name,sp) in relevantSPs():
+    if not sp.outputPSP.isRandom():
+      yield checkRiplAgreesWithDeterministicSimulate, name, sp
+
+def checkRiplAgreesWithDeterministicSimulate(name, sp):
+  checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
+
+def propRiplAgreesWithDeterministicSimulate(args_lists, name, sp):
+  """Check that the given SP produces the same answer directly and
+through a ripl (applied fully uncurried)."""
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+  answer = carefully(sp.outputPSP.simulate, args)
+  if isinstance(answer, VentureSP):
+    if isinstance(answer.requestPSP, NullRequestPSP):
+      if not answer.outputPSP.isRandom():
+        args2 = BogusArgs(args_lists[1], answer.constructSPAux())
+        ans2 = carefully(answer.outputPSP.simulate, args2)
+        inner = [name] + [["quote", v.asStackDict(None)] for v in args_lists[0]]
+        expr = [inner] + [["quote", v.asStackDict(None)] for v in args_lists[1]]
+        eq_(ans2, carefully(get_ripl().predict, expr))
+      else:
+        raise SkipTest("Putatively deterministic sp %s returned a random SP" % name)
+    else:
+      raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
+  else:
+    expr = [name] + [["quote", v.asStackDict(None)] for v in args_lists[0]]
+    eq_(answer.asStackDict(None)["value"], carefully(get_ripl().predict, expr))
