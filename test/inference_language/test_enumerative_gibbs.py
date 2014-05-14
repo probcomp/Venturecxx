@@ -15,7 +15,7 @@ def testEnumerativeGibbsBasic1():
 
 @statisticalTest
 def testEnumerativeGibbsBasic2():
-  """Enumerating two choices with almost the same posterior probability should mix well"""
+  """Basic sanity test"""
   ripl = get_ripl()
   ripl.assume("x","(flip 0.1)",label="pid")
   predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs"})

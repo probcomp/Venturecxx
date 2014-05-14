@@ -13,16 +13,17 @@
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
-shared_ptr<map<Node*,Gradient> > nullGradients;
-
-void doGibbs(ConcreteTrace * trace, shared_ptr<Scaffold> scaffold, vector<ApplicationNode*>& applicationNodes, size_t i, vector<vector<VentureValuePtr> >& valueTuples, shared_ptr<Particle>* particles, vector<double>& xiWeights)
+class EGibbsWorker
 {
-  shared_ptr<Particle> particle(new Particle(trace));
-  registerDeterministicLKernels(particle.get(), scaffold, applicationNodes, valueTuples[i]);
-  
-  particles[i] = particle;
-  xiWeights[i] = regenAndAttach(particle.get(),scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),nullGradients);
-}
+public:
+  void doEGibbs(shared_ptr<Particle> particle, shared_ptr<Scaffold> scaffold, vector<ApplicationNode*>& applicationNodes, vector<VentureValuePtr> & valueTuple,int i)
+  {
+    registerDeterministicLKernels(particle.get(), scaffold, applicationNodes, valueTuple);
+    weight = regenAndAttach(particle.get(),scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),nullGradients);
+  }
+  shared_ptr<map<Node*,Gradient> > nullGradients;
+  double weight;
+};
 
 pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold)
 {
@@ -44,18 +45,12 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   }
   
   // compute the cartesian product of all possible values
-  vector<VentureValuePtr> currentValues;
-
   vector<vector<VentureValuePtr> > possibleValues;
   BOOST_FOREACH(ApplicationNode * node, applicationNodes)
   {
-    currentValues.push_back(trace->getValue(node));
-    
     shared_ptr<PSP> psp = trace->getPSP(node);
-    
     shared_ptr<Args> args = trace->getArgs(node);
     assert(psp->canEnumerateValues(args));
-    
     possibleValues.push_back(psp->enumerateValues(args));
   }
   
@@ -68,28 +63,31 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   assertTorus(scaffold);
   
   // regen all possible values
-  shared_ptr<Particle>* particles = new shared_ptr<Particle>[numValues];
-  vector<double> xiWeights(numValues, 0);
+  vector<shared_ptr<Particle> > particles;
+  vector<double> xiWeights;
   vector<boost::thread*> threads;
+  vector<EGibbsWorker*> workers;
+
+  for (size_t i = 0; i < numValues; ++i)
+  {
+    particles.push_back(shared_ptr<Particle>(new Particle(trace)));
+    workers.push_back(new EGibbsWorker());
+    boost::function<void()> th_func = boost::bind(&EGibbsWorker::doEGibbs,workers[i],particles[i], scaffold, applicationNodes, valueTuples[i],i);
+    threads.push_back(new boost::thread(th_func));
+  }
   
   for (size_t i = 0; i < numValues; ++i)
   {
-    threads.push_back(new boost::thread(doGibbs, trace, scaffold, applicationNodes, i, valueTuples, particles, xiWeights));
-    //doGibbs(trace, scaffold, applicationNodes, i, valueTuples, particles, xiWeights);
-  }
-  
-  for (size_t i = 0; i < threads.size(); ++i)
-  {
     threads[i]->join();
+    xiWeights.push_back(workers[i]->weight);
+    delete workers[i];
     delete threads[i];
   }
-  
+
   // sample exactly from the posterior
   size_t finalIndex = sampleCategorical(mapExpUptoMultConstant(xiWeights), trace->getRNG());
   finalParticle = particles[finalIndex];
   
-  delete [] particles;
-
   return make_pair(finalParticle.get(),0);
 }
 
