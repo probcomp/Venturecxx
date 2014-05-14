@@ -13,15 +13,18 @@
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
-class EGibbsWorker
+struct EGibbsWorker
 {
-public:
-  void doEGibbs(shared_ptr<Particle> particle, shared_ptr<Scaffold> scaffold, vector<ApplicationNode*>& applicationNodes, vector<VentureValuePtr> & valueTuple,int i)
+  EGibbsWorker(ConcreteTrace * trace): trace(trace) {}
+  void doEGibbs(shared_ptr<Scaffold> scaffold, vector<ApplicationNode*>& applicationNodes, vector<VentureValuePtr> & valueTuple)
   {
+    particle = shared_ptr<Particle>(new Particle(trace));
     registerDeterministicLKernels(particle.get(), scaffold, applicationNodes, valueTuple);
     weight = regenAndAttach(particle.get(),scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),nullGradients);
   }
+  ConcreteTrace * trace;
   shared_ptr<map<Node*,Gradient> > nullGradients;
+  shared_ptr<Particle> particle;
   double weight;
 };
 
@@ -63,23 +66,23 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   assertTorus(scaffold);
   
   // regen all possible values
-  vector<shared_ptr<Particle> > particles;
-  vector<double> xiWeights;
-  vector<boost::thread*> threads;
-  vector<EGibbsWorker*> workers;
+  vector<shared_ptr<Particle> > particles(numValues);
+  vector<double> xiWeights(numValues);
+  vector<boost::thread*> threads(numValues);
+  vector<EGibbsWorker*> workers(numValues);
 
   for (size_t i = 0; i < numValues; ++i)
   {
-    particles.push_back(shared_ptr<Particle>(new Particle(trace)));
-    workers.push_back(new EGibbsWorker());
-    boost::function<void()> th_func = boost::bind(&EGibbsWorker::doEGibbs,workers[i],particles[i], scaffold, applicationNodes, valueTuples[i],i);
-    threads.push_back(new boost::thread(th_func));
+    workers[i] = new EGibbsWorker(trace);
+    boost::function<void()> th_func = boost::bind(&EGibbsWorker::doEGibbs,workers[i],scaffold, applicationNodes, valueTuples[i]);
+    threads[i] = new boost::thread(th_func);
   }
   
   for (size_t i = 0; i < numValues; ++i)
   {
     threads[i]->join();
-    xiWeights.push_back(workers[i]->weight);
+    xiWeights[i] = workers[i]->weight;
+    particles[i] = workers[i]->particle;
     delete workers[i];
     delete threads[i];
   }
