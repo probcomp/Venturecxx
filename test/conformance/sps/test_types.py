@@ -6,6 +6,7 @@ from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSP
+from venture.lite.value import AnyType
 
 def relevantSPs():
   for (name,sp) in builtInSPsList():
@@ -132,3 +133,10 @@ through a ripl (applied fully uncurried)."""
   else:
     expr = [name] + [["quote", v.asStackDict(None)] for v in args_lists[0]]
     eq_(answer.asStackDict(None)["value"], carefully(get_ripl().predict, expr))
+
+def testExpressionFor():
+  checkTypedProperty(propExpressionWorks, AnyType())
+
+def propExpressionWorks(value):
+  expr = value.expressionFor()
+  eq_(value, carefully(get_ripl().predict, expr))

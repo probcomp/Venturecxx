@@ -136,6 +136,7 @@ class VentureNumber(VentureValue):
     return self.number * other.number
   def map_real(self, f):
     return VentureNumber(f(self.number))
+  def expressionFor(self): return self.number
 
 class VentureCount(VentureNumber):
   def __init__(self, number):
@@ -240,6 +241,7 @@ class VentureAtom(VentureValue):
   def fromStackDict(thing): return VentureAtom(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.atom, other.atom)
   def __hash__(self): return hash(self.atom)
+  def expressionFor(self): return self # TODO Is this right?
 
 class VentureBool(VentureValue):
   def __init__(self,boolean):
@@ -258,6 +260,7 @@ class VentureBool(VentureValue):
   def compareSameType(self, other):
     return stupidCompare(self.boolean, other.boolean)
   def __hash__(self): return hash(self.boolean)
+  def expressionFor(self): return self.boolean
 
 class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
@@ -268,6 +271,7 @@ class VentureSymbol(VentureValue):
   def fromStackDict(thing): return VentureSymbol(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
   def __hash__(self): return hash(self.symbol)
+  def expressionFor(self): return ["quote", self.symbol]
 
 class VentureArray(VentureValue):
   """Venture arrays are heterogeneous, with O(1) access and O(n) copy.
@@ -344,6 +348,8 @@ interface here is compatible with one possible path."""
     return VentureArray([x.map_real(f) for x in self.array])
   def __repr__(self):
     return "VentureArray(%s)" % self.array
+  def expressionFor(self):
+    return ["array"] + [v.expressionFor() for v in self.array]
 
 class VentureNil(VentureValue):
   def __init__(self): pass
@@ -358,6 +364,8 @@ class VentureNil(VentureValue):
     raise VentureValueError("Index out of bounds: too long by %s" % index)
   def contains(self, _obj): return False
   def size(self): return 0
+  def expressionFor(self):
+    return ["list"]
 
 class VenturePair(VentureValue):
   def __init__(self,(first,rest)):
@@ -422,6 +430,8 @@ class VenturePair(VentureValue):
       return self.rest.contains(obj)
   def size(self): # Really, length
     return 1 + self.rest.size()
+  def expressionFor(self):
+    return ["pair", self.first.expressionFor(), self.rest.expressionFor()]
 
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
@@ -451,6 +461,8 @@ supposed to sum to 1, but we are not checking that."""
     # Homogeneous; TODO make it return False instead of exploding for non-numeric objects.
     return obj.getNumber() in self.simplex
   def size(self): return len(self.simplex)
+  def expressionFor(self):
+    return ["simplex"] + self.simplex
 
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
@@ -469,6 +481,10 @@ class VentureDict(VentureValue):
   def contains(self, key):
     return key in self.dict
   def size(self): return len(self.dict)
+  def expressionFor(self):
+    (keys, vals) = zip(*self.dict.iteritems())
+    return ["dict", ["list"] + [k.expressionFor() for k in keys],
+            ["list"] + [v.expressionFor() for v in vals]]
 
 # 2D array of numbers backed by a numpy matrix object
 class VentureMatrix(VentureValue):
@@ -514,6 +530,8 @@ class VentureMatrix(VentureValue):
     return np.sum(np.multiply(self.matrix, other.matrix))
   def map_real(self, f):
     return VentureMatrix(np.vectorize(f)(self.matrix))
+  def expressionFor(self):
+    return ["matrix", ["list"] + [["list"] + [v for v in row] for row in self.matrix]]
 
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
