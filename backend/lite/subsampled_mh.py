@@ -289,7 +289,7 @@ def drawScaffoldGraph(trace, G):
 
     labels = nodeLabelDict(G.nodes(), trace)
 
-    plt.figure(figsize=(20,20))
+#    plt.figure(figsize=(20,20))
     pos=nx.graphviz_layout(G,prog='dot')
 #    pos=nx.spring_layout(G)
     nx.draw_networkx(G, pos=pos, with_labels=True,
