@@ -11,7 +11,18 @@
 #include "gkernel.h"
 #include <math.h>
 #include <boost/foreach.hpp>
+#include <boost/thread.hpp>
 
+shared_ptr<map<Node*,Gradient> > nullGradients;
+
+void doGibbs(ConcreteTrace * trace, shared_ptr<Scaffold> scaffold, vector<ApplicationNode*>& applicationNodes, size_t i, vector<vector<VentureValuePtr> >& valueTuples, shared_ptr<Particle>* particles, vector<double>& xiWeights)
+{
+  shared_ptr<Particle> particle(new Particle(trace));
+  registerDeterministicLKernels(particle.get(), scaffold, applicationNodes, valueTuples[i]);
+  
+  particles[i] = particle;
+  xiWeights[i] = regenAndAttach(particle.get(),scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),nullGradients);
+}
 
 pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold)
 {
@@ -47,35 +58,37 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
     
     possibleValues.push_back(psp->enumerateValues(args));
   }
+  
   vector<vector<VentureValuePtr> > valueTuples = cartesianProduct(possibleValues);
+  size_t numValues = valueTuples.size();
 
   // detach and extract from the principal nodes
-  registerDeterministicLKernels(trace, scaffold, applicationNodes, currentValues);
-  pair<double, shared_ptr<DB> > rhoWeightAndDB = detachAndExtract(trace,scaffold->border[0],scaffold);
-  //double rhoWeight = rhoWeightAndDB.first;
-  rhoDB = rhoWeightAndDB.second;
+  //registerDeterministicLKernels(trace, scaffold, applicationNodes, currentValues);
+  detachAndExtract(trace,scaffold->border[0],scaffold);
   assertTorus(scaffold);
   
-  shared_ptr<map<Node*,Gradient> > nullGradients;
-  
   // regen all possible values
-  vector<shared_ptr<Particle> > particles;
-  vector<double> xiWeights;
-
-  BOOST_FOREACH(vector<VentureValuePtr> valueTuple, valueTuples)
+  shared_ptr<Particle>* particles = new shared_ptr<Particle>[numValues];
+  vector<double> xiWeights(numValues, 0);
+  vector<boost::thread*> threads;
+  
+  for (size_t i = 0; i < numValues; ++i)
   {
-    shared_ptr<Particle> particle(new Particle(trace));
-    registerDeterministicLKernels(particle.get(), scaffold, applicationNodes, valueTuple);
-    particles.push_back(particle);
-    
-    double xiWeight =
-      regenAndAttach(particle.get(),scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),nullGradients);
-    xiWeights.push_back(xiWeight);
+    threads.push_back(new boost::thread(doGibbs, trace, scaffold, applicationNodes, i, valueTuples, particles, xiWeights));
+    //doGibbs(trace, scaffold, applicationNodes, i, valueTuples, particles, xiWeights);
+  }
+  
+  for (size_t i = 0; i < threads.size(); ++i)
+  {
+    threads[i]->join();
+    delete threads[i];
   }
   
   // sample exactly from the posterior
   size_t finalIndex = sampleCategorical(mapExpUptoMultConstant(xiWeights), trace->getRNG());
   finalParticle = particles[finalIndex];
+  
+  delete [] particles;
 
   return make_pair(finalParticle.get(),0);
 }
