@@ -56,7 +56,7 @@ shared_ptr<LKernel> Scaffold::getLKernel(Node * node)
 string Scaffold::showSizes()
 {
   string p = "(";
-  return p + boost::lexical_cast<string>(regenCounts.size()) + "," + boost::lexical_cast<string>(absorbing.size()) + "," + boost::lexical_cast<string>(aaa.size()) + "," + boost::lexical_cast<string>(border[0].size()) + ")";
+  return p + boost::lexical_cast<string>(regenCounts.size()) + "," + boost::lexical_cast<string>(absorbing.size()) + "," + boost::lexical_cast<string>(aaa.size()) + "," + boost::lexical_cast<string>(border[0].size()) + "," + boost::lexical_cast<string>(brush.size()) + ")";
 }
 
 
