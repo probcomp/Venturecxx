@@ -241,7 +241,7 @@ class VentureAtom(VentureValue):
   def fromStackDict(thing): return VentureAtom(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.atom, other.atom)
   def __hash__(self): return hash(self.atom)
-  def expressionFor(self): return self # TODO Is this right?
+  def expressionFor(self): return ["quote", self] # TODO Is this right?
 
 class VentureBool(VentureValue):
   def __init__(self,boolean):
@@ -260,7 +260,7 @@ class VentureBool(VentureValue):
   def compareSameType(self, other):
     return stupidCompare(self.boolean, other.boolean)
   def __hash__(self): return hash(self.boolean)
-  def expressionFor(self): return self.boolean
+  def expressionFor(self): return "true" if self.boolean else "false"
 
 class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol

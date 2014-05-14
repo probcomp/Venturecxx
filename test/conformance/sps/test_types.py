@@ -139,4 +139,9 @@ def testExpressionFor():
 
 def propExpressionWorks(value):
   expr = value.expressionFor()
-  eq_(value, carefully(get_ripl().predict, expr))
+  eq_(value, carefully(eval_in_ripl, expr))
+
+def eval_in_ripl(expr):
+  ripl = get_ripl()
+  ripl.predict(expr)
+  return ripl.sivm.core_sivm.engine.report_raw(1)

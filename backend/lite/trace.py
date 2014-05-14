@@ -286,6 +286,8 @@ class Trace(object):
 
   def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
 
+  def extractRaw(self,id): return self.valueAt(self.families[id])
+
   def observe(self,id,val):
     node = self.families[id]
     self.unpropagatedObservations[node] = self.unboxValue(val)
