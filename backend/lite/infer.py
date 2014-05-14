@@ -35,24 +35,28 @@ def mixMH(trace,indexer,operator):
     operator.reject() # May mutate trace
 
 class BlockScaffoldIndexer(object):
-  def __init__(self,scope,block):
+  def __init__(self,scope,block,interval=None):
     if scope == "default" and not (block == "all" or block == "one" or block == "ordered"):
         raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
     self.scope = scope
     self.block = block
+    self.interval = interval
 
   def sampleIndex(self,trace):
     if self.block == "one": return constructScaffold(trace,[trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))])
     elif self.block == "all": return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
     elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
+    elif self.block == "ordered_range": 
+      assert(self.interval)
+      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope),self.interval)
     else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])
 
   def logDensityOfIndex(self,trace,_):
     if self.block == "one": return trace.logDensityOfBlock(self.scope)
     elif self.block == "all": return 0
     elif self.block == "ordered": return 0
+    elif self.block == "ordered_range": return 0
     else: return 0
-
 
 class InPlaceOperator(object):
   def prepare(self, trace, scaffold, compute_gradient = False):
@@ -216,56 +220,33 @@ class EnumerativeGibbsOperator(object):
   def propose(self,trace,scaffold):
     from particle import Particle
 
-    self.trace = trace
-    self.scaffold = scaffold
-    assertTrace(self.trace,self.scaffold)
+    assertTrace(trace,scaffold)
 
     pnodes = scaffold.getPrincipalNodes()
     currentValues = getCurrentValues(trace,pnodes)
     allSetsOfValues = getCartesianProductOfEnumeratedValues(trace,pnodes)
     registerDeterministicLKernels(trace,scaffold,pnodes,currentValues)
 
-    rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
-    assert isinstance(self.rhoDB,OmegaDB)
+    detachAndExtract(trace,scaffold.border[0],scaffold)
     assertTorus(scaffold)
     xiWeights = []
     xiParticles = []
 
     for p in range(len(allSetsOfValues)):
       newValues = allSetsOfValues[p]
-      if newValues == currentValues: continue
       xiParticle = Particle(trace)
       assertTorus(scaffold)
       registerDeterministicLKernels(trace,scaffold,pnodes,newValues)
       xiParticles.append(xiParticle)
       xiWeights.append(regenAndAttach(xiParticle,scaffold.border[0],scaffold,False,OmegaDB(),{}))
 
-    alpha = 0
-    if len(xiWeights) == 0:
-      self.finalParticle = Particle(trace)
-      regenAndAttach(self.finalParticle,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
-    else:
-      # Now sample a NEW particle in proportion to its weight
-      finalIndex = sampleLogCategorical(xiWeights)
-      self.finalParticle = xiParticles[finalIndex]
-      alpha = self._compute_alpha(rhoWeight, xiWeights, finalIndex)
-    return self.finalParticle,alpha
-
-  def _compute_alpha(self, rhoWeight, xiWeights, finalIndex):
-    # TODO This is the same as _compute_alpha in PGibbsOperator.  Abstract.
-    otherXiWeightsWithRho = copy.copy(xiWeights)
-    otherXiWeightsWithRho.pop(finalIndex)
-    otherXiWeightsWithRho.append(rhoWeight)
-
-    weightMinusXi = logaddexp(otherXiWeightsWithRho)
-    weightMinusRho = logaddexp(xiWeights)
-    return weightMinusRho - weightMinusXi
+    # Now sample a NEW particle in proportion to its weight
+    finalIndex = sampleLogCategorical(xiWeights)
+    self.finalParticle = xiParticles[finalIndex]
+    return self.finalParticle,0
 
   def accept(self): self.finalParticle.commit()
-  def reject(self):
-    # TODO This is the same as the MHOperator rejection -- abstract
-    assertTorus(self.scaffold)
-    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
+  def reject(self): assert(False)
 
 
 #### PGibbs
@@ -440,13 +421,13 @@ class ParticlePGibbsOperator(object):
     self.finalIndex = finalIndex
     self.particles = particles
 
-    # TODO need to return a trace as well
     return particles[finalIndex],self._compute_alpha(particleWeights, finalIndex)
 
   def _compute_alpha(self, particleWeights, finalIndex):
     # Remove the weight of the chosen xi from the list instead of
     # trying to subtract in logspace to prevent catastrophic
-    # cancellation like the non-functional case
+    # cancellation (for the same reason as
+    # PGibbsOperator._compute_alpha)
     particleWeightsNoXi = copy.copy(particleWeights)
     particleWeightsNoXi.pop(finalIndex)
 

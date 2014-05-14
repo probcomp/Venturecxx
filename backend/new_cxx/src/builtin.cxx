@@ -51,6 +51,8 @@ map<string,SP*> initBuiltInSPs()
   m["sqrt"] = new SP(new NullRequestPSP(), new SqrtOutputPSP());
   m["not"] = new SP(new NullRequestPSP(), new NotOutputPSP());
   m["is_symbol"] = new SP(new NullRequestPSP(), new IsSymbolOutputPSP());
+  
+  m["to_atom"] = new SP(new NullRequestPSP(), new ToAtomOutputPSP());
   m["is_atom"] = new SP(new NullRequestPSP(), new IsAtomOutputPSP());
   
   /* Continuous SPs */
@@ -98,10 +100,12 @@ map<string,SP*> initBuiltInSPs()
 
   /* Scoping */
   m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
+  m["scope_exclude"] = new SP(new NullRequestPSP(), new ScopeExcludeOutputPSP());
 
   /* Data structures */
   m["simplex"] = new SP(new NullRequestPSP(), new SimplexOutputPSP());
   m["is_simplex"] = new SP(new NullRequestPSP(), new IsSimplexOutputPSP());
+  m["to_simplex"] = new SP(new NullRequestPSP(), new ToSimplexOutputPSP());
 
   m["lookup"] = new SP(new NullRequestPSP(), new LookupOutputPSP());
   m["contains"] = new SP(new NullRequestPSP(), new ContainsOutputPSP());

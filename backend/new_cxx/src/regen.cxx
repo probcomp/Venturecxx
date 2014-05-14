@@ -126,6 +126,15 @@ double attach(Trace * trace,
   VentureValuePtr groundValue = trace->getGroundValue(node);
   weight += psp->logDensity(groundValue,args);
   psp->incorporate(groundValue,args);
+
+  if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+  {
+    ScopeID scope = trace->getValue(node->operandNodes[0]);
+    BlockID block = trace->getValue(node->operandNodes[1]);
+    Node * blockNode = node->operandNodes[2];
+    trace->registerUnconstrainedChoiceInScope(scope,block,blockNode);
+  }    
+
   return weight;
 }
 
@@ -211,7 +220,7 @@ pair<double,Node*> evalFamily(Trace * trace,
     Node * sourceNode = env->lookupSymbol(symbol);
     weight = regen(trace,sourceNode,scaffold,false,db,gradients);
 
-    return make_pair(weight,trace->createLookupNode(sourceNode));
+    return make_pair(weight,trace->createLookupNode(sourceNode,exp));
   }
   else if (isSelfEvaluating(exp)) { return make_pair(0,trace->createConstantNode(exp)); }
   else if (isQuotation(exp)) { return make_pair(0,trace->createConstantNode(textOfQuotation(exp))); }
@@ -236,7 +245,7 @@ pair<double,Node*> evalFamily(Trace * trace,
       operandNodes.push_back(p.second);
     }
 
-    pair<RequestNode*,OutputNode*> appNodes = trace->createApplicationNodes(operatorNode,operandNodes,env);
+    pair<RequestNode*,OutputNode*> appNodes = trace->createApplicationNodes(operatorNode,operandNodes,env,exp);
     weight += apply(trace,appNodes.first,appNodes.second,scaffold,false,db,gradients);
     return make_pair(weight,appNodes.second);
   }
@@ -301,9 +310,9 @@ double applyPSP(Trace * trace,
 
   if (db->hasValue(node)) { oldValue = db->getValue(node); }
 
-  if (scaffold->hasLKernel(node))
+  if (trace->hasLKernel(scaffold,node))
   {
-    shared_ptr<LKernel> k = scaffold->getLKernel(node);
+    shared_ptr<LKernel> k = trace->getLKernel(scaffold,node);
     if (shouldRestore) { newValue = oldValue; }
     else { newValue = k->simulate(trace,oldValue,args,trace->getRNG()); }
 

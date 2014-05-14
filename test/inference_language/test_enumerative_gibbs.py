@@ -6,14 +6,22 @@ from testconfig import config
 @statisticalTest
 def testEnumerativeGibbsBasic1():
   """Basic sanity test"""
-  if not config["should_reset"] and not config["num_transitions_per_sample"] % 2:
-    raise SkipTest("EnumerativeGibbsBasic needs either reset or an odd # of transitions per sample")
   ripl = get_ripl()
   ripl.predict("(bernoulli)",label="pid")
 
   predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs","with_mutation":True})
   ans = [(True,.5),(False,.5)]
   return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+def testEnumerativeGibbsBasic2():
+  """Enumerating two choices with almost the same posterior probability should mix well"""
+  ripl = get_ripl()
+  ripl.assume("x","(flip 0.1)",label="pid")
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs"})
+  ans = [(False,.9),(True,.1)]
+  return reportKnownDiscrete(ans, predictions)
+
 
 def testEnumerativeGibbsGotcha():
   """Enumeration should not break on things that look like they're in the support but aren't"""
@@ -23,6 +31,38 @@ def testEnumerativeGibbsGotcha():
   ripl.infer({"kernel":"gibbs"})
   ripl.infer({"kernel":"gibbs", "scope":"default", "block":"all"})
 
+
+@statisticalTest
+def testEnumerativeGibbsBoostThrashExact():
+  """Enumerating two choices with the same posterior probability should not thrash"""
+  ripl = get_ripl()
+  ripl.assume("x","(flip 0.1)",label="pid")
+  ripl.observe("(flip (if x .9 .1))","true")
+  predictions = collectSamples(ripl,"pid",infer="(gibbs default one 1)")
+  ans = [(False,.5),(True,.5)]
+  return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+def testEnumerativeGibbsBoostThrashClose():
+  """Enumerating two choices with almost the same posterior probability should mix well"""
+  ripl = get_ripl()
+  ripl.assume("x","(flip 0.1)",label="pid")
+  ripl.observe("(flip (if x .91 .09))","true")
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs"})
+  ans = [(False,.471),(True,.529)]
+  return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+def testEnumerativeGibbsCategorical1():
+  """Tests mixing when the prior is far from the posterior."""
+  ripl = get_ripl()
+  ripl.assume('x', '(categorical (simplex 0.1 0.9) (array 0 1))', label="pid")
+  ripl.observe('(flip (if (= x 0) 0.9 0.1))', "true")
+  
+  predictions = collectSamples(ripl, "pid", infer="(gibbs default all 1)")
+  ans = [(False, .5), (True, .5)]
+  return reportKnownDiscrete(ans, predictions)
+  
 @statisticalTest
 def testEnumerativeGibbsXOR1():
   """Tests that an XOR chain mixes with enumerative gibbs.

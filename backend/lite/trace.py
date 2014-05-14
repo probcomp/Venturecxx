@@ -12,7 +12,7 @@ from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
 from nose.tools import assert_is_not_none # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
-from scope import isScopeIncludeOutputPSP
+from scope import isScopeIncludeOutputPSP, isScopeExcludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
@@ -69,6 +69,14 @@ class Trace(object):
     assert not scope == "default" or len(self.scopes[scope][block]) == 0
     if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
     if len(self.scopes[scope]) == 0: del self.scopes[scope]
+
+  # [FIXME] repetitive, but not sure why these exist at all
+  def _normalizeEvaluatedScope(self, scope):
+    if scope == "default": return scope
+    else:
+      assert isinstance(scope, VentureValue)
+      if isinstance(scope, VentureSymbol): return scope.getSymbol()
+      else: return scope.getNumber()
 
   def _normalizeEvaluatedScopeAndBlock(self, scope, block):
     if scope == "default":
@@ -223,8 +231,14 @@ class Trace(object):
   def getAllNodesInScope(self,scope):
     return set.union(*[self.getNodesInBlock(scope,block) for block in self.scopes[scope].keys()])
 
-  def getOrderedSetsInScope(self,scope):
-    return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
+  def getOrderedSetsInScope(self,scope,interval=None):
+    if interval is None:
+      return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
+    else:
+      blocks = [b for b in self.scopes[scope].keys() if b.compare(interval[0]) >= 0 if b.compare(interval[1]) <= 0]
+      return [self.getNodesInBlock(scope,block) for block in sorted(blocks)]
+
+  def numNodesInBlock(self,scope,block): return len(self.getNodesInBlock(scope,block))
 
   def getNodesInBlock(self,scope,block):
     nodes = self.scopes[scope][block]
@@ -252,6 +266,10 @@ class Trace(object):
         (new_scope,new_block,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
         (new_scope,new_block) = self._normalizeEvaluatedScopeAndBlock(new_scope, new_block)
         if scope != new_scope or block == new_block: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
+      elif i == 1 and isScopeExcludeOutputPSP(self.pspAt(node)):
+        (excluded_scope,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
+        excluded_scope = self._normalizeEvaluatedScope(excluded_scope)
+        if scope != excluded_scope: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
       else:
         self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
 
@@ -274,18 +292,22 @@ class Trace(object):
     self.unpropagatedObservations[node] = self.unboxValue(val)
 
   def makeConsistent(self):
+    weight = 0
     for node,val in self.unpropagatedObservations.iteritems():
       appNode = self.getOutermostNonReferenceApplication(node)
 #      print "PROPAGATE",node,appNode
       scaffold = constructScaffold(self,[set([appNode])])
-      detachAndExtract(self,scaffold.border[0],scaffold)
+      rhoWeight,_ = detachAndExtract(self,scaffold.border[0],scaffold)
       assertTorus(scaffold)
       scaffold.lkernels[appNode] = DeterministicLKernel(self.pspAt(appNode),val)
       xiWeight = regenAndAttach(self,scaffold.border[0],scaffold,False,OmegaDB(),{})
       if xiWeight == float("-inf"): raise Exception("Unable to propagate constraint")
       node.observe(val)
       constrain(self,appNode,node.observedValue)
+      weight += xiWeight
+      weight -= rhoWeight
     self.unpropagatedObservations.clear()
+    return weight
 
   def getOutermostNonReferenceApplication(self,node):
     if isinstance(node,LookupNode): return self.getOutermostNonReferenceApplication(node.sourceNode)
@@ -318,12 +340,10 @@ class Trace(object):
 
   def continuous_inference_status(self): return {"running" : False}
 
-  # params is a hash with keys "kernel", "scope", "block",
-  # "transitions" (the latter should be named "repeats").  Right now,
-  # "kernel" must be one of "mh" or "meanfield", and "transitions"
-  # must be an integer.
+  # params is a dict with keys "kernel", "scope", "block",
+  # "transitions" (the latter should be named "repeats").
+
   def infer(self,params):
-    self.makeConsistent()
     if not self.scopeHasEntropy(params["scope"]):
       return
     for _ in range(params["transitions"]):
@@ -344,13 +364,23 @@ class Trace(object):
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),HamiltonianMonteCarloOperator(params["epsilon"], params["L"]))
       elif params["kernel"] == "gibbs":
-        assert params["with_mutation"]
+        #assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
+
+      # [FIXME] egregrious style, but expedient. The stack is such a mess anyway, it's hard to do anything with good style that
+      # doesn't begin by destroying the stack.
       elif params["kernel"] == "pgibbs":
-        if params["with_mutation"]:
-          mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
+        if params["block"] == "ordered_range":
+          if params["with_mutation"]:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),PGibbsOperator(int(params["particles"])))
+          else:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),ParticlePGibbsOperator(int(params["particles"])))
         else:
-          mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
+          if params["with_mutation"]:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
+          else:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
+          
       elif params["kernel"] == "map":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MAPOperator(params["rate"], int(params["steps"])))
@@ -403,3 +433,7 @@ class Trace(object):
   def addNewChildren(self,node,newChildren):
     for child in newChildren:
       node.children.add(child)
+
+
+
+    

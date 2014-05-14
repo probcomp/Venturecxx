@@ -109,10 +109,14 @@ struct IsSymbolOutputPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
-struct IsAtomOutputPSP : PSP
+struct ToAtomOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
+struct IsAtomOutputPSP : PSP
+{ 
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
 
 #endif

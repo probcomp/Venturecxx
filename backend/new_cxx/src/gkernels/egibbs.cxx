@@ -35,8 +35,6 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   // compute the cartesian product of all possible values
   vector<VentureValuePtr> currentValues;
 
-
-
   vector<vector<VentureValuePtr> > possibleValues;
   BOOST_FOREACH(ApplicationNode * node, applicationNodes)
   {
@@ -54,7 +52,7 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   // detach and extract from the principal nodes
   registerDeterministicLKernels(trace, scaffold, applicationNodes, currentValues);
   pair<double, shared_ptr<DB> > rhoWeightAndDB = detachAndExtract(trace,scaffold->border[0],scaffold);
-  double rhoWeight = rhoWeightAndDB.first;
+  //double rhoWeight = rhoWeightAndDB.first;
   rhoDB = rhoWeightAndDB.second;
   assertTorus(scaffold);
   
@@ -64,44 +62,22 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   vector<shared_ptr<Particle> > particles;
   vector<double> xiWeights;
 
-  int numSameValues = 0;
   BOOST_FOREACH(vector<VentureValuePtr> valueTuple, valueTuples)
   {
-    // TODO skip currentValues
-    if (VentureValuePtr(new VentureArray(valueTuple))->equals(VentureValuePtr(new VentureArray(currentValues)))) { numSameValues++; continue; }
-    registerDeterministicLKernels(trace, scaffold, applicationNodes, valueTuple);
     shared_ptr<Particle> particle(new Particle(trace));
+    registerDeterministicLKernels(particle.get(), scaffold, applicationNodes, valueTuple);
     particles.push_back(particle);
     
     double xiWeight =
       regenAndAttach(particle.get(),scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),nullGradients);
     xiWeights.push_back(xiWeight);
   }
-  assert(numSameValues == 1);
-
-  double alpha = 0;
-  if (xiWeights.empty())
-    {
-      shared_ptr<Particle> rhoParticle(new Particle(trace));
-      regenAndAttach(rhoParticle.get(),scaffold->border[0],scaffold,true,rhoDB,shared_ptr<map<Node*,Gradient> >());
-      finalParticle = rhoParticle;
-    }
-  else
-    {
-      // sample a new particle
-      size_t finalIndex = sampleCategorical(mapExpUptoMultConstant(xiWeights), trace->getRNG());
-      finalParticle = particles[finalIndex];
   
-      // compute the acceptance ratio
-      vector<double> otherXiWeightsWithRho = xiWeights;
-      otherXiWeightsWithRho[finalIndex] = rhoWeight;
+  // sample exactly from the posterior
+  size_t finalIndex = sampleCategorical(mapExpUptoMultConstant(xiWeights), trace->getRNG());
+  finalParticle = particles[finalIndex];
 
-      double weightMinusXi = logaddexp(otherXiWeightsWithRho);
-      double weightMinusRho = logaddexp(xiWeights);
-      alpha = weightMinusRho - weightMinusXi;
-    }
-
-  return make_pair(finalParticle.get(),alpha);
+  return make_pair(finalParticle.get(),0);
 }
 
 void EnumerativeGibbsGKernel::accept()
@@ -112,6 +88,7 @@ void EnumerativeGibbsGKernel::accept()
 
 void EnumerativeGibbsGKernel::reject()
 {
+  assert(false); // should never reject
   regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,shared_ptr<map<Node*,Gradient> >());
   // assertTrace(self.trace,self.scaffold)
 }

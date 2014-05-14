@@ -16,6 +16,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import numbers
 from venture.exception import VentureException
 import utils as u
 
@@ -23,7 +24,7 @@ class Ripl():
     def __init__(self,sivm,parsers):
         self.sivm = sivm
         self.parsers = parsers
-        self.directive_id_to_string = {}
+        self.directive_id_to_stringable_instruction = {}
         self.directive_id_to_mode = {}
         self.mode = parsers.keys()[0]
 
@@ -57,54 +58,69 @@ class Ripl():
     # Execution
     ############################################
 
-    def execute_instruction(self, instruction_string, params=None):
+    def execute_instruction(self, instruction=None, params=None):
         p = self._cur_parser()
         # perform parameter substitution if necessary
-        if params != None:
-            instruction_string = self.substitute_params(instruction_string,params)
-        # parse instruction
-        parsed_instruction = p.parse_instruction(instruction_string)
-        # calculate the positions of the arguments
-        args, arg_ranges = p.split_instruction(instruction_string)
-        try:
-            # execute instruction, and handle possible exception
+        if isinstance(instruction, basestring):
+            if params != None:
+                stringable_instruction = self.substitute_params(instruction,params)
+            else:
+                stringable_instruction = instruction
+                # parse instruction
+            parsed_instruction = p.parse_instruction(stringable_instruction)
+        else:
+            parsed_instruction = self._ensure_parsed(instruction)
+            stringable_instruction = parsed_instruction # Will be unparsed on use
+        try: # execute instruction, and handle possible exception
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
-            # all exceptions raised by the Sivm get augmented with a
-            # text index (which defaults to the entire instruction)
-            e.data['text_index'] = [0,len(instruction_string)-1]
-            # in the case of a parse exception, the text_index gets narrowed
-            # down to the exact expression/atom that caused the error
-            if e.exception == 'parse':
-                try:
-                    text_index = self._cur_parser().expression_index_to_text_index(
-                            args['expression'], e.data['expression_index'])
-                    offset = arg_ranges['expression'][0]
-                    text_index = [x + offset for x in text_index]
-                except VentureException as e2:
-                    if e2.exception == 'no_text_index':
-                        text_index = None
-                    else:
-                        raise
-                e.data['text_index'] = text_index
-            # in case of invalid argument exception, the text index
-            # refers to the argument's location in the string
-            if e.exception == 'invalid_argument':
-                arg = e.data['argument']
-                #import pdb; pdb.set_trace()
-                text_index = arg_ranges[arg]
-                e.data['text_index'] = text_index
-            a = e.data['text_index'][0]
-            b = e.data['text_index'][1]+1
-            e.data['text_snippet'] = instruction_string[a:b]
-            raise
+            self._raise_annotated_error(e, stringable_instruction)
         # if directive, then save the text string
         if parsed_instruction['instruction'] in ['assume','observe',
                 'predict','labeled_assume','labeled_observe','labeled_predict']:
             did = ret_value['directive_id']
-            self.directive_id_to_string[did] = instruction_string
+            self.directive_id_to_stringable_instruction[did] = stringable_instruction
             self.directive_id_to_mode[did] = self.mode
         return ret_value
+
+    def _raise_annotated_error(self, e, instruction):
+        # TODO This error reporting is broken for ripl methods,
+        # because the computed text chunks refer to the synthetic
+        # instruction string instead of the actual data the caller
+        # passed.
+        instruction_string = self._ensure_unparsed(instruction)
+
+        p = self._cur_parser()
+        # all exceptions raised by the Sivm get augmented with a
+        # text index (which defaults to the entire instruction)
+        e.data['text_index'] = [0,len(instruction_string)-1]
+        # in the case of a parse exception, the text_index gets narrowed
+        # down to the exact expression/atom that caused the error
+        if e.exception == 'parse':
+            # calculate the positions of the arguments
+            args, arg_ranges = p.split_instruction(instruction_string)
+            try:
+                text_index = self._cur_parser().expression_index_to_text_index(
+                        args['expression'], e.data['expression_index'])
+                offset = arg_ranges['expression'][0]
+                text_index = [x + offset for x in text_index]
+            except VentureException as e2:
+                if e2.exception == 'no_text_index': text_index = None
+                else: raise
+            e.data['text_index'] = text_index
+        # in case of invalid argument exception, the text index
+        # refers to the argument's location in the string
+        if e.exception == 'invalid_argument':
+            # calculate the positions of the arguments
+            args, arg_ranges = p.split_instruction(instruction_string)
+            arg = e.data['argument']
+            #import pdb; pdb.set_trace()
+            text_index = arg_ranges[arg]
+            e.data['text_index'] = text_index
+        a = e.data['text_index'][0]
+        b = e.data['text_index'][1]+1
+        e.data['text_snippet'] = instruction_string[a:b]
+        raise
 
 
     def execute_program(self, program_string, params=None):
@@ -133,8 +149,83 @@ class Ripl():
 
     def get_text(self,directive_id):
         if directive_id in self.directive_id_to_mode:
-            return [self.directive_id_to_mode[directive_id], self.directive_id_to_string[directive_id]]
+            return [self.directive_id_to_mode[directive_id], self._get_raw_text(directive_id)]
         return None
+
+    def _get_raw_text(self, directive_id):
+        candidate = self.directive_id_to_stringable_instruction[directive_id]
+        candidate = self._ensure_unparsed(candidate)
+        self.directive_id_to_stringable_instruction[directive_id] = candidate
+        return candidate
+
+    def _ensure_parsed(self, partially_parsed_instruction):
+        if isinstance(partially_parsed_instruction, basestring):
+            return self._cur_parser().parse_instruction(partially_parsed_instruction)
+        elif isinstance(partially_parsed_instruction, dict):
+            return self._ensure_parsed_dict(partially_parsed_instruction)
+        else:
+            raise Exception("Unknown form of partially parsed instruction %s" % partially_parsed_instruction)
+
+    def _ensure_parsed_dict(self, partial_dict):
+        def by_key(key, value):
+            if key == "instruction":
+                return value
+            elif key == "expression":
+                return self._ensure_parsed_expression(value)
+            elif key in ["directive_id", "seed", "inference_timeout"]:
+                return self._ensure_parsed_number(value)
+            elif key in ["options", "params"]:
+                # Do not support partially parsed options or param
+                # hashes, since they have too many possible key types
+                return value
+            elif key in ["symbol", "label"]:
+                return value
+            elif key == "value":
+                # I believe values are a subset of expressions
+                return self._ensure_parsed_expression(value)
+            else:
+                raise Exception("Unknown instruction field %s in %s" % (key, partial_dict))
+        return dict([(key, by_key(key, value)) for key, value in partial_dict.iteritems()])
+
+    def _ensure_parsed_expression(self, expr):
+        if isinstance(expr, basestring):
+            return self._cur_parser().parse_expression(expr)
+        elif isinstance(expr, list):
+            return [self._ensure_parsed_expression(e) for e in expr]
+        elif isinstance(expr, dict):
+            # A literal value as a stack dict.  These are all assumed
+            # fully parsed.
+            return expr
+        elif isinstance(expr, numbers.Number):
+            return {'type':'number', 'value':expr}
+        else:
+            raise Exception("Unknown partially parsed expression type %s" % expr)
+
+    def _ensure_parsed_number(self, number):
+        if isinstance(number, numbers.Number):
+            return number
+        elif isinstance(number, basestring):
+            return self._cur_parser().parse_number(number)
+        else:
+            raise Exception("Unknown number format %s" % number)
+
+    def _unparse(self, instruction):
+        template = self._cur_parser().get_instruction_string(instruction['instruction'])
+        def unparse_by_key(key, val):
+            if key == "expression":
+                return self._cur_parser().unparse_expression(val)
+            else:
+                # The standard unparsings should take care of it
+                return val
+        def unparse_dict(d):
+            return dict([(key, unparse_by_key(key, val)) for key, val in d.iteritems()])
+        return self.substitute_params(template, unparse_dict(instruction))
+
+    def _ensure_unparsed(self, instruction):
+        if isinstance(instruction, basestring):
+            return instruction
+        else:
+            return self._unparse(instruction)
 
     def character_index_to_expression_index(self, directive_id, character_index):
         p = self._cur_parser()
@@ -154,39 +245,101 @@ class Ripl():
 
     def assume(self, name, expression, label=None, type=False):
         if label==None:
-            s = self._cur_parser().get_instruction_string('assume')
-            d = {'symbol':name, 'expression':expression}
+            i = {'instruction':'assume', 'symbol':name, 'expression':expression}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_assume')
-            d = {'symbol':name, 'expression':expression, 'label':label}
-        value = self.execute_instruction(s,d)['value']
+            i = {'instruction':'labeled_assume',
+                  'symbol':name, 'expression':expression, 'label':label}
+        value = self.execute_instruction(i)['value']
         return value if type else _strip_types(value)
 
     def predict(self, expression, label=None, type=False):
         if label==None:
-            s = self._cur_parser().get_instruction_string('predict')
-            d = {'expression':expression}
+            i = {'instruction':'predict', 'expression':expression}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_predict')
-            d = {'expression':expression, 'label':label}
-        value = self.execute_instruction(s,d)['value']
+            i = {'instruction':'labeled_predict', 'expression':expression, 'label':label}
+        value = self.execute_instruction(i)['value']
         return value if type else _strip_types(value)
 
     def observe(self, expression, value, label=None):
         if label==None:
-            s = self._cur_parser().get_instruction_string('observe')
-            d = {'expression':expression, 'value':value}
+            i = {'instruction':'observe', 'expression':expression, 'value':value}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_observe')
-            d = {'expression':expression, 'value':value, 'label':label}
-        self.execute_instruction(s,d)
+            i = {'instruction':'labeled_observe', 'expression':expression, 'value':value, 'label':label}
+        self.execute_instruction(i)
         return None
 
-    def bulk_observe(self, proc_expression, iterable, label=None):
+    def bulk_observe(self, exp, items, label=None):
+        """Observe many evaluations of an expression.
+
+Syntax:
+ripl.bulk_observe("<expr>", <iterable>)
+
+Semantics:
+Operationally equivalent to
+  for x in iterable:
+    ripl.observe("<expr>", x)
+but appreciably faster.  See also open considerations and details of
+the semantics in ripl.observe_dataset
+"""
         ret_vals = []
-        for i,(args, val) in enumerate(iterable):
-          expr = "(" + proc_expression + " " + " ".join([str(a) for a in args]) + ")"
-          ret_vals.append(self.observe(expr,val,label+str(i)))
+        parsed = self._ensure_parsed_expression(exp)
+        for i, val in enumerate(items):
+          ret_vals.append(self.observe(parsed,val,label+"_"+str(i) if label is not None else None))
+        return ret_vals
+
+    def observe_dataset(self, proc_expression, iterable, label=None):
+        """Observe a general dataset.
+
+Syntax:
+ripl.observe_dataset("<expr>", <iterable>)
+
+- The expr must evaluate to a (presumably stochastic) Venture
+  procedure.  We expect in typical usage expr would just look up a
+  recent assume.
+
+- The <iterable> is a Python iterable each of whose elements must be a
+  tuple of a list of valid Venture values and a Venture value: ([a], b)
+
+- There is no Venture syntax for this; it is accessible only when
+  using Venture as a library.
+
+Semantics:
+
+- As to its effect on the distribution over traces, this is equivalent
+  to looping over the contents of the given iterable, calling
+  ripl.observe on each element as ripl.observe("(<expr> $tuple[0])",
+  tuple[1]). In other words, the first component of each element of
+  the iterable gives the arguments to the procedure given by <expr>,
+  and the second component gives the value to observe.
+
+- The ripl method returns a list of directive ids, which correspond to
+  the individual observes thus generated.
+
+Open issues:
+
+- If the <expr> is itself stochastic, it is unspecified whether we
+  notionally evaluate it once per bulk_observe or once per data item.
+
+- This is not the same as directly observing sufficient statistics
+  only.
+
+- It is currently not possible to forget the whole bulk_observe at
+  once.
+
+- Currently, list_directives will not respect the nesting structure of
+  observations implied by bulk_observe.  How can we improve this? Do
+  we represent the bulk_observe as one directive? If so, we can hardly
+  return a useful representation of the iterable representing the data
+  set. If not, we will hardly win anything because list_directives
+  will generate all those silly per-datapoint observes (every time
+  it's called!)
+
+        """
+        ret_vals = []
+        parsed = self._ensure_parsed_expression(proc_expression)
+        for i, (args, val) in enumerate(iterable):
+          expr = [parsed] + args
+          ret_vals.append(self.observe(expr,val,label+"_"+str(i) if label is not None else None))
         return ret_vals
 
     ############################################
@@ -195,10 +348,8 @@ class Ripl():
 
     def configure(self, options=None):
         if options is None: options = {}
-        p = self._cur_parser()
-        s = p.get_instruction_string('configure')
-        d = {'options':options}
-        return self.execute_instruction(s,d)['options']
+        i = {'instruction':'configure', 'options':options}
+        return self.execute_instruction(i)['options']
     
     def get_seed(self):
         return self.configure()['seed']
@@ -216,22 +367,18 @@ class Ripl():
     
     def forget(self, label_or_did):
         if isinstance(label_or_did,int):
-            s = self._cur_parser().get_instruction_string('forget')
-            d = {'directive_id':label_or_did}
+            i = {'instruction':'forget', 'directive_id':label_or_did}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_forget')
-            d = {'label':label_or_did}
-        self.execute_instruction(s,d)
+            i = {'instruction':'labeled_forget', 'label':label_or_did}
+        self.execute_instruction(i)
         return None
 
     def report(self, label_or_did, type=False):
         if isinstance(label_or_did,int):
-            s = self._cur_parser().get_instruction_string('report')
-            d = {'directive_id':label_or_did}
+            i = {'instruction':'report', 'directive_id':label_or_did}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_report')
-            d = {'label':label_or_did}
-        value = self.execute_instruction(s,d)['value']
+            i = {'instruction':'labeled_report', 'label':label_or_did}
+        value = self.execute_instruction(i)['value']
         return value if type else _strip_types(value)
 
     # takes params and turns them into the proper dict
@@ -249,92 +396,72 @@ class Ripl():
           raise TypeError("Unknown params: " + str(params))
         
     def infer(self, params=None):
-        s = self._cur_parser().get_instruction_string('infer')
-        self.execute_instruction(s, {'params': self.parseInferParams(params)})
+        self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
 
     def clear(self):
-        s = self._cur_parser().get_instruction_string('clear')
-        self.execute_instruction(s,{})
+        self.execute_instruction({'instruction':'clear'})
         return None
 
     def rollback(self):
-        s = self._cur_parser().get_instruction_string('rollback')
-        self.execute_instruction(s,{})
+        self.execute_instruction({'instruction':'rollback'})
         return None
 
     def list_directives(self, type=False):
         with self.sivm._pause_continuous_inference():
-            s = self._cur_parser().get_instruction_string('list_directives')
-            directives = self.execute_instruction(s,{})['directives']
+            directives = self.execute_instruction({'instruction':'list_directives'})['directives']
             # modified to add value to each directive
             # FIXME: is this correct behavior?
             for directive in directives:
                 inst = { 'instruction':'report',
                          'directive_id':directive['directive_id'],
                          }
-                # Going around the string synthesis and parsing makes
-                # the demos acceptably fast (time for the venture
-                # server to respond to /list_directives improves by
-                # 5-10x, depending on the number of directives).
-                value = self.sivm.core_sivm.execute_instruction(inst)['value']
+                value = self.execute_instruction(inst)['value']
                 directive['value'] = value if type else _strip_types(value)
             return directives
 
     def get_directive(self, label_or_did):
         if isinstance(label_or_did,int):
-            s = self._cur_parser().get_instruction_string('get_directive')
-            d = {'directive_id':label_or_did}
+            i = {'instruction':'get_directive', 'directive_id':label_or_did}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_get_directive')
-            d = {'label':label_or_did}
-        return self.execute_instruction(s,d)['directive']
+            i = {'instruction':'labeled_get_directive', 'label':label_or_did}
+        return self.execute_instruction(i)['directive']
 
     def force(self, expression, value):
-        s = self._cur_parser().get_instruction_string('force')
-        d = {'expression':expression, 'value':value}
-        self.execute_instruction(s,d)
+        i = {'instruction':'force', 'expression':expression, 'value':value}
+        self.execute_instruction(i)
         return None
 
     def sample(self, expression, type=False):
-        s = self._cur_parser().get_instruction_string('sample')
-        d = {'expression':expression}
-        value = self.execute_instruction(s,d)['value']
+        i = {'instruction':'sample', 'expression':expression}
+        value = self.execute_instruction(i)['value']
         return value if type else _strip_types(value)
     
     def continuous_inference_status(self):
-        s = self._cur_parser().get_instruction_string('continuous_inference_status')
-        return self.execute_instruction(s)
+        return self.execute_instruction({'instruction':'continuous_inference_status'})
 
     def start_continuous_inference(self, params=None):
-        s = self._cur_parser().get_instruction_string('start_continuous_inference')
-        self.execute_instruction(s, {'params': self.parseInferParams(params)})
+        self.execute_instruction({'instruction':'start_continuous_inference', 'params': self.parseInferParams(params)})
         return None
 
     def stop_continuous_inference(self):
-        s = self._cur_parser().get_instruction_string('stop_continuous_inference')
-        self.execute_instruction(s)
+        self.execute_instruction({'instruction':'stop_continuous_inference'})
         return None
 
     def get_current_exception(self):
-        s = self._cur_parser().get_instruction_string('get_current_exception')
-        return self.execute_instruction(s,{})['exception']
+        return self.execute_instruction({'instruction':'get_current_exception'})['exception']
 
     def get_state(self):
-        s = self._cur_parser().get_instruction_string('get_state')
-        return self.execute_instruction(s,{})['state']
+        return self.execute_instruction({'instruction':'get_state'})['state']
 
     def get_logscore(self, label_or_did):
         if isinstance(label_or_did,int):
-            s = self._cur_parser().get_instruction_string('get_logscore')
-            d = {'directive_id':label_or_did}
+            i = {'instruction':'get_logscore', 'directive_id':label_or_did}
         else:
-            s = self._cur_parser().get_instruction_string('labeled_get_logscore')
-            d = {'label':label_or_did}
-        return self.execute_instruction(s,d)['logscore']
+            i = {'instruction':'labeled_get_logscore', 'label':label_or_did}
+        return self.execute_instruction(i)['logscore']
 
     def get_global_logscore(self):
-        s = self._cur_parser().get_instruction_string('get_global_logscore')
-        return self.execute_instruction(s,{})['logscore']
+        return self.execute_instruction({'instruction':'get_global_logscore'})['logscore']
 
     ############################################
     # Serialization
@@ -342,13 +469,13 @@ class Ripl():
 
     def save(self, fname):
         extra = {}
-        extra['directive_id_to_string'] = self.directive_id_to_string
+        extra['directive_id_to_stringable_instruction'] = self.directive_id_to_stringable_instruction
         extra['directive_id_to_mode'] = self.directive_id_to_mode
         return self.sivm.save(fname, extra)
 
     def load(self, fname):
         extra = self.sivm.load(fname)
-        self.directive_id_to_string = extra['directive_id_to_string']
+        self.directive_id_to_stringable_instruction = extra['directive_id_to_stringable_instruction']
         self.directive_id_to_mode = extra['directive_id_to_mode']
 
     ############################################
@@ -357,9 +484,8 @@ class Ripl():
     
     def profiler_configure(self, options=None):
         if options is None: options = {}
-        s = self._cur_parser().get_instruction_string('profiler_configure')
-        d = {'options': options}
-        return self.execute_instruction(s, d)['options']
+        i = {'instruction': 'profiler_configure', 'options': options}
+        return self.execute_instruction(i)['options']
     
     def profiler_enable(self):
         self.profiler_configure({'profiler_enabled': True})
@@ -409,7 +535,7 @@ class Ripl():
         return self.parsers[self.mode]
 
     def _extract_expression(self,directive_id):
-        text = self.directive_id_to_string[directive_id]
+        text = self._get_raw_text(directive_id)
         mode = self.directive_id_to_mode[directive_id]
         p = self.parsers[mode]
         args, arg_ranges = p.split_instruction(text)

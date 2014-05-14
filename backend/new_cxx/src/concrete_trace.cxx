@@ -63,8 +63,8 @@ void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
   assert(unconstrainedChoices.count(node) == 0);
   unconstrainedChoices.insert(node);
   registerUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
-				     shared_ptr<VentureNode>(new VentureNode(node)),
-				     node);
+                     shared_ptr<VentureNode>(new VentureNode(node)),
+                     node);
 }
 
 void ConcreteTrace::registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node) 
@@ -100,8 +100,8 @@ void ConcreteTrace::unregisterAEKernel(Node * node)
 
 void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
   unregisterUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
-				       shared_ptr<VentureNode>(new VentureNode(node)),
-				       node);
+                       shared_ptr<VentureNode>(new VentureNode(node)),
+                       node);
   assert(unconstrainedChoices.count(node) == 1);
   unconstrainedChoices.erase(node);
 }
@@ -140,6 +140,11 @@ void ConcreteTrace::reconnectLookup(LookupNode * lookupNode)
 
 void ConcreteTrace::incNumRequests(RootOfFamily root) { numRequests[root]++; }
 void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
+
+bool ConcreteTrace::hasLKernel(shared_ptr<Scaffold> scaffold, Node * node) { return scaffold->hasLKernel(node); }
+void ConcreteTrace::registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel) { scaffold->registerLKernel(node,lkernel); }
+shared_ptr<LKernel> ConcreteTrace::getLKernel(shared_ptr<Scaffold> scaffold,Node * node) { return scaffold->getLKernel(node); }
+
 void ConcreteTrace::addChild(Node * node, Node * child) 
 {
   assert(node->children.count(child) == 0);
@@ -177,7 +182,13 @@ void ConcreteTrace::removeChild(Node * node, Node * child)
 
 /* Primitive getters */
 gsl_rng * ConcreteTrace::getRNG() { return rng; }
-VentureValuePtr ConcreteTrace::getValue(Node * node) { assert(values[node]); return values[node]; }
+
+VentureValuePtr ConcreteTrace::getValue(Node * node) 
+{ 
+  assert(values[node]); 
+  return values[node]; 
+}
+
 shared_ptr<SP> ConcreteTrace::getMadeSP(Node * makerNode)
 {
   shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
@@ -212,15 +223,12 @@ bool ConcreteTrace::isMakerNode(Node * node) { return madeSPRecords.count(node);
 bool ConcreteTrace::isConstrained(Node * node) { return constrainedChoices.count(node); }
 bool ConcreteTrace::isObservation(Node * node) { return observedValues.count(node); }
 
-/* Derived Getters */
-shared_ptr<PSP> ConcreteTrace::getPSP(ApplicationNode * node)
-{
-  return getMadeSP(getOperatorSPMakerNode(node))->getPSP(node);
-}
-
 /* Primitive Setters */
 void ConcreteTrace::setValue(Node * node, VentureValuePtr value) 
-{ assert(value); values[node] = value; }
+{ 
+  assert(value); 
+  values[node] = value; 
+}
 
 void ConcreteTrace::clearValue(Node * node) { values.erase(node); }
 
@@ -321,16 +329,25 @@ set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope)
   return all;
 }
 
+vector<set<Node*> > ConcreteTrace::getOrderedSetsInScopeAndRange(ScopeID scope,BlockID minBlock,BlockID maxBlock)
+{
+  vector<set<Node*> > ordered;
+  vector<BlockID> sortedBlocks = scopes[scope].getOrderedKeysInRange(minBlock,maxBlock);
+  for (size_t i = 0; i < sortedBlocks.size(); ++ i)
+    {
+      set<Node*> nodesInBlock = getNodesInBlock(scope,sortedBlocks[i]);
+      ordered.push_back(nodesInBlock);
+    }
+  return ordered;
+}
     
 vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope) 
 { 
   vector<set<Node*> > ordered;
-  
-  for (vector<pair<BlockID,set<Node*> > >::iterator iter = scopes[scope].a.begin();
-       iter != scopes[scope].a.end();
-       ++iter)
+  vector<BlockID> sortedBlocks = scopes[scope].getOrderedKeys();
+  for (size_t i = 0; i < sortedBlocks.size(); ++ i)
     {
-      set<Node*> nodesInBlock = getNodesInBlock(scope,iter->first);
+      set<Node*> nodesInBlock = getNodesInBlock(scope,sortedBlocks[i]);
       ordered.push_back(nodesInBlock);
     }
   return ordered;
@@ -375,7 +392,15 @@ void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,
       BlockID new_block = getValue(outputNode->operandNodes[1]);
       if (!scope->equals(new_scope) || block->equals(new_block))
       {
-    	addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
+        addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
+      }
+    }
+    else if (i == 1 && dynamic_pointer_cast<ScopeExcludeOutputPSP>(psp))
+    {
+      ScopeID new_scope = getValue(outputNode->operandNodes[0]);
+      if (!scope->equals(new_scope))
+      {
+        addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
       }
     }
     else
@@ -390,8 +415,9 @@ bool ConcreteTrace::scopeHasEntropy(ScopeID scope)
   return scopes.count(scope) && numBlocksInScope(scope) > 0; 
 }
 
-void ConcreteTrace::makeConsistent() 
+double ConcreteTrace::makeConsistent() 
 {
+  double weight = 0;
   for (map<Node*,VentureValuePtr>::iterator iter = unpropagatedObservations.begin();
        iter != unpropagatedObservations.end();
        ++iter)
@@ -402,7 +428,8 @@ void ConcreteTrace::makeConsistent()
     pnodes.insert(appNode);
     setsOfPNodes.push_back(pnodes);
     shared_ptr<Scaffold> scaffold = constructScaffold(this,setsOfPNodes,false);
-    detachAndExtract(this,scaffold->border[0],scaffold);
+    pair<double,shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
+    double rhoWeight = p.first;
     assertTorus(scaffold);
     shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(appNode))->getPSP(appNode);
     scaffold->lkernels[appNode] = shared_ptr<DeterministicLKernel>(new DeterministicLKernel(iter->second,psp));
@@ -410,8 +437,10 @@ void ConcreteTrace::makeConsistent()
     if (std::isinf(xiWeight)) { throw "Unable to propagate constraint"; }
     observeNode(iter->first,iter->second);
     constrain(this,appNode,getObservedValue(iter->first));
+    weight = weight + xiWeight - rhoWeight;
   }
   unpropagatedObservations.clear();
+  return weight;
 }
 
 int ConcreteTrace::numUnconstrainedChoices() { return unconstrainedChoices.size(); }

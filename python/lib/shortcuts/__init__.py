@@ -132,6 +132,9 @@ def make_ripl_rest_client(base_url):
 def val(t,v):
     return {"type":t,"value":v}
 
+def symbol(s):
+    return val("symbol", s)
+
 def number(v):
     return val("number",v)
 

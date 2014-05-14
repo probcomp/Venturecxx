@@ -18,6 +18,9 @@ class VentureValue(object):
   __metaclass__ = ABCMeta
 
   def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
+  def getCount(self): raise VentureTypeError("Cannot convert %s to count" % type(self))
+  def getPositive(self): raise VentureTypeError("Cannot convert %s to positive" % type(self))
+  def getProbability(self): raise VentureTypeError("Cannot convert %s to probability" % type(self))
   def getAtom(self): raise VentureTypeError("Cannot convert %s to atom" % type(self))
   def getBool(self): raise VentureTypeError("Cannot convert %s to bool" % type(self))
   def getSymbol(self): raise VentureTypeError("Cannot convert %s to symbol" % type(self))
@@ -81,6 +84,21 @@ class VentureNumber(VentureValue):
     else:
       return "VentureNumber(uninitialized)"
   def getNumber(self): return self.number
+  def getCount(self):
+    if 0 <= self.number:
+      return int(self.number)
+    else: # TODO Do what?  Clip to 0?  Raise?
+      raise VentureTypeError("Count out of range %s" % self.number)
+  def getPositive(self):
+    if 0 < self.number:
+      return self.number
+    else: # TODO Do what?  Can't even clip to 0!
+      raise VentureTypeError("Not positive %s" % self.number)
+  def getProbability(self):
+    if 0 <= self.number and self.number <= 1:
+      return self.number
+    else: # TODO Do what?  Clip to [0,1]?  Raise?
+      raise VentureTypeError("Probability out of range %s" % self.number)
   def getBool(self): return self.number
     
   def asStackDict(self, _trace): return {"type":"number","value":self.number}
@@ -118,6 +136,53 @@ class VentureNumber(VentureValue):
     return self.number * other.number
   def map_real(self, f):
     return VentureNumber(f(self.number))
+
+class VentureCount(VentureNumber):
+  def __init__(self, number):
+    assert isinstance(number, Number)
+    assert 0 <= number
+    self.number = int(number)
+  def __repr__(self):
+    if hasattr(self, "number"):
+      return "VentureCount(%s)" % self.number
+    else:
+      return "VentureCount(uninitialized)"
+  # TODO Think about the relationship to VentureNumber on other operations
+  # TODO Notably, probabilities are not a useful vector space, but
+  # their tangents are (and consequently, the tangents of
+  # probabilities are not probabilities).
+
+class VenturePositive(VentureNumber):
+  def __init__(self, number):
+    assert isinstance(number, Number)
+    assert 0 < number
+    self.number = float(number)
+  def __repr__(self):
+    if hasattr(self, "number"):
+      return "VenturePositive(%s)" % self.number
+    else:
+      return "VenturePositive(uninitialized)"
+  # TODO Think about the relationship to VentureNumber on other operations
+  # TODO Notably, probabilities are not a useful vector space, but
+  # their tangents are (and consequently, the tangents of
+  # probabilities are not probabilities).
+
+# TODO Define VentureNonNegative, from which VentureProbability can inherit
+
+class VentureProbability(VentureNumber):
+  def __init__(self, number):
+    assert isinstance(number, Number)
+    assert 0 <= number and number <= 1
+    self.number = float(number)
+  def __repr__(self):
+    if hasattr(self, "number"):
+      return "VentureProbability(%s)" % self.number
+    else:
+      return "VentureProbability(uninitialized)"
+  # TODO Think about the relationship to VentureNumber on other operations
+  # TODO Notably, probabilities are not a useful vector space, but
+  # their tangents are (and consequently, the tangents of
+  # probabilities are not probabilities).
 
 def stupidCompare(thing, other):
   # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
@@ -512,7 +577,7 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix"]:
+for typestring in ["Count", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))

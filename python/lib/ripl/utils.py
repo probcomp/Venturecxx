@@ -194,12 +194,24 @@ def expToDict(exp):
   elif tag == "func-mh":
     assert len(exp) == 4
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
+  elif tag == "gibbs":
+    assert len(exp) == 4
+    return {"kernel":"gibbs","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
   elif tag == "slice":
     assert len(exp) == 4
     return {"kernel":"slice","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":True}
+
+  # [FIXME] expedient hack for now to allow windowing with pgibbs. 
   elif tag == "pgibbs":
     assert len(exp) == 5
-    return {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":True}
+    if type(exp[2]) is list:
+      assert(exp[2][0] == "ordered_range")
+      return {"kernel":"pgibbs","scope":exp[1],"block":"ordered_range",
+              "min_block":exp[2][1],"max_block":exp[2][2],
+              "particles":exp[3],"transitions":exp[4],"with_mutation":True}
+    else: 
+      return {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":True}
+
   elif tag == "func-pgibbs":
     assert len(exp) == 5
     return {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":False}
@@ -238,6 +250,12 @@ def expToDict(exp):
     assert type(exp[1]) is list
     subkernels = [expToDict(e) for e in exp[1]]
     return {"kernel":"cycle","subkernels":subkernels,"transitions":exp[2]}
+  elif tag == "resample":
+    assert(len(exp) == 2)
+    return {"command":"resample","particles":exp[1]}
+  elif tag == "incorporate":
+    assert(len(exp) == 1)
+    return {"command":"incorporate"}
   else:
     raise Exception("Cannot parse infer instruction")
 
@@ -247,12 +265,16 @@ def testHandInspect():
   k3 = "(meanfield 11 22 33 44)"
   k4 = "(latents 11 22 33)"
   k5 = "(rejection 11 22 33)"
+  k6 = "(resample 11)"
+  k7 = "(incorporate)"
 
   print k1,expToDict(parse(k1))
   print k2,expToDict(parse(k2))
   print k3,expToDict(parse(k3))
   print k4,expToDict(parse(k4))
   print k5,expToDict(parse(k5))
+  print k6,expToDict(parse(k4))
+  print k7,expToDict(parse(k5))
   print "----------------------"
   print expToDict(parse("(cycle (%s %s) 100)" % (k1,k2)))
   print expToDict(parse("(mixture (.1 %s .9 %s) 100)" % (k1,k2)))

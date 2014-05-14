@@ -114,6 +114,7 @@ puma_src_files = [
     "src/pytrace.cxx",
     "src/pyutils.cxx",
     "src/regen.cxx",
+    "src/render.cxx",
     "src/scaffold.cxx",
     "src/sp.cxx",
     "src/sprecord.cxx",
@@ -158,7 +159,7 @@ packages=["venture","venture.sivm","venture.ripl", "venture.engine",
           "venture.unit", "venture.test", "venture.cxx", "venture.puma", "venture.lite",
           "venture.venturemagics"]
 
-cxx = Extension("venture.cxx.libtrace",
+cxx = Extension("venture.cxx.libpumatrace",
     define_macros = [('MAJOR_VERSION', '0'),
                      ('MINOR_VERSION', '1'),
                      ('REVISION', '1')],
@@ -184,7 +185,7 @@ if ON_LINUX:
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
 if ON_MAC:
-    puma = Extension("venture.puma.libpumatrace",
+    puma = Extension("venture.puma.libtrace",
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],

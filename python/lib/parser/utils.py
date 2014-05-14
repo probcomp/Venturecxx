@@ -37,7 +37,7 @@ def lw(thingy):
     # be a ParserElement that returns a single
     # string at toks[0]
     x = MatchFirst([thingy]).leaveWhitespace()
-    def process_x_token(s, loc, toks):
+    def process_x_token(_s, loc, toks):
         if isinstance(toks[0], basestring):
             return [{'loc':[loc, loc+len(toks[0])-1], "value":toks[0]}]
         raise VentureException('fatal', 'The lw wrapper only accepts string-valued'
@@ -66,7 +66,7 @@ def symbol_token(blacklist_symbols=None, whitelist_symbols=None, symbol_map=None
         symbol = lw(And(blacklist_toks).suppress() + MatchFirst([regex] + whitelist_toks))
     else:
         symbol = lw(MatchFirst([regex] + whitelist_toks))
-    def process_symbol(s, loc, toks):
+    def process_symbol(_s, _loc, toks):
         tok = toks[0]['value']
         if tok in symbol_map:
             tok = symbol_map[tok]
@@ -79,7 +79,7 @@ def symbol_token(blacklist_symbols=None, whitelist_symbols=None, symbol_map=None
 # evaluates to a python float
 def number_token():
     number = lw(Regex(r'[+-]?((\d+(\.\d*)?)|(\.\d+))([eE][+-]?\d+)?'))
-    def process_number(s, loc, toks):
+    def process_number(_s, _loc, toks):
         return [{"loc":toks[0]['loc'], "value":float(toks[0]['value'])}]
     number.setParseAction(process_number)
     return number
@@ -89,7 +89,7 @@ def number_token():
 # evaluates to a python integer
 def integer_token():
     integer = lw(Regex(r'\b\d+\b'))
-    def process_integer(s, loc, toks):
+    def process_integer(_s, _loc, toks):
         return [{"loc":toks[0]['loc'], "value":int(toks[0]['value'])}]
     integer.setParseAction(process_integer)
     return integer
@@ -101,7 +101,7 @@ def string_token():
     # string = lw(Regex(r'"(?:[^"\\]|\\"|\\\\|\\/|\\r|\\b|\\n|\\t|\\f|\\[0-7]{3})*"'))
     # match more strings to produce helpful error message
     string = lw(Regex(r'(?<!\w>)"(?:[^"\\]|\\.)*"(?!\w)'))
-    def process_string(s, loc, toks):
+    def process_string(s, _loc, toks):
         s = toks[0]['value']
         s = s[1:-1]
         s = s.replace(r'\n','\n')
@@ -144,7 +144,7 @@ def string_token():
 #
 # evaluates to a python None
 def null_token():
-    def process_null(s, loc, toks):
+    def process_null(_s, _loc, toks):
         return [{"loc":toks[0]['loc'], "value":None}]
     null = lw(Keyword('null'))
     null.setParseAction(process_null)
@@ -154,7 +154,7 @@ def null_token():
 #
 # evaluates to a python boolean
 def boolean_token():
-    def process_boolean(s, loc, toks):
+    def process_boolean(_s, _loc, toks):
         n = toks[0]['value'] == 'true'
         return [{"loc":toks[0]['loc'], "value":n}]
     boolean = lw(Keyword('true') | Keyword('false'))
@@ -178,7 +178,7 @@ def json_value_token():
                     lw(Literal(',')) + json_value
                 )
             ) + lw(Literal(']'))
-    def process_json_list(s, loc, toks):
+    def process_json_list(_s, _loc, toks):
         v = [x['value'] for x in toks[1:-1:2]]
         l = combine_locs(toks)
         return [{"loc":l, "value":v}]
@@ -191,7 +191,7 @@ def json_value_token():
                     lw(Literal(':')) + json_value
                 )
             ) + lw(Literal('}'))
-    def process_json_object(s, loc, toks):
+    def process_json_object(_s, _loc, toks):
         v = dict(zip(*(iter(x['value'] for x in toks[1:-1:2]),)*2))
         l = combine_locs(toks)
         return [{"loc":l, "value":v}]
@@ -200,7 +200,7 @@ def json_value_token():
     #json_value
     json_value << (string | number | boolean |
             null | json_list | json_object)
-    def process_json_value(s, loc, toks):
+    def process_json_value(_s, _loc, toks):
         return [toks[0]]
     json_value.setParseAction(process_json_value)
 
@@ -213,7 +213,7 @@ def json_value_token():
 # forbid type_name in ('boolean', 'number') to preserve bijection
 def value_token():
     value = symbol_token() + lw(Literal('<')) + json_value_token() + lw(Literal('>'))
-    def process_value(s, loc, toks):
+    def process_value(_s, loc, toks):
         if toks[0]['value'] in ('number', 'boolean'):
             raise VentureException("text_parse",
                 "Not allowed to construct a " + toks[0]['value'] + " value. " +
@@ -228,7 +228,7 @@ def value_token():
 #
 # evalutes to a literal number value: {"type":"number", "value":s}
 def number_literal_token():
-    def process_number_literal(s, loc, toks):
+    def process_number_literal(_s, _loc, toks):
         v = {'type':'number', 'value':float(toks[0]['value'])}
         l = toks[0]['loc']
         return [{"loc":l, "value":v}]
@@ -240,7 +240,7 @@ def number_literal_token():
 #
 # evalutes to a literal boolean value: {"type":"boolean", "value":s}
 def boolean_literal_token():
-    def process_boolean_literal(s, loc, toks):
+    def process_boolean_literal(_s, _loc, toks):
         v = {'type':'boolean', 'value':toks[0]['value']}
         l = toks[0]['loc']
         return [{"loc":l, "value":v}]
@@ -253,7 +253,7 @@ def boolean_literal_token():
 # evaluates a json data type
 def literal_token():
     literal = boolean_literal_token() | number_literal_token() | value_token()
-    def process_literal(s, loc, toks):
+    def process_literal(_s, _loc, toks):
         return [toks[0]]
     literal.setParseAction(process_literal)
     return literal
@@ -386,7 +386,7 @@ def get_expression_index(parse_tree, text_index):
 
 def inst(keyword, instruction):
     k = lw(CaselessKeyword(keyword))
-    def process_k(s, loc, toks):
+    def process_k(_s, _loc, toks):
         return [{'loc':toks[0]['loc'], "value":instruction}]
     k.setParseAction(process_k)
     return k
@@ -425,7 +425,7 @@ def make_instruction(patterns, instruction, syntax, defaults=None):
         pattern.append(lw(Literal(tok)))
         optional.append(False)
     pattern = And(pattern)
-    def process_pattern(s, loc, toks):
+    def process_pattern(_s, _loc, toks):
         v = {}
         l = combine_locs([x for x in toks if x != None])
         for tok, m, o in zip(toks, mapping, optional):
@@ -469,7 +469,7 @@ def make_instruction_strings(instruction_list,antipatterns,escape='%'):
 
 def make_program_parser(instruction):
     program = OneOrMore(instruction)
-    def process_program(s, loc, toks):
+    def process_program(_s, _loc, toks):
         v = list(toks)
         l = combine_locs(toks)
         return [{'loc':l, "value":v}]

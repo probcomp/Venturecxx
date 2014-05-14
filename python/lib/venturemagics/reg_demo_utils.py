@@ -2,8 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from venture.venturemagics.ip_parallel import *; 
 lite=False; 
-mk_l_ripl = make_lite_church_prime_ripl; mk_p_ripl = make_puma_church_prime_ripl
-vs = test_ripls()
 
 
 simple_fourier_model='''
