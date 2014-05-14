@@ -29,8 +29,8 @@ class TestRipl(unittest.TestCase):
         self.core_sivm = get_core_sivm()
         self.core_sivm.execute_instruction({"instruction":"clear"})
         self.venture_sivm = VentureSivm(self.core_sivm)
-        parser1 = ChurchPrimeParser()
-        parser2 = VentureScriptParser()
+        parser1 = ChurchPrimeParser.instance()
+        parser2 = VentureScriptParser.instance()
         self.ripl = Ripl(self.venture_sivm,
                 {"church_prime":parser1,
                     "church_prime_2":parser1,
