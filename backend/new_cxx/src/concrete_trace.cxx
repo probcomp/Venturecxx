@@ -140,6 +140,11 @@ void ConcreteTrace::reconnectLookup(LookupNode * lookupNode)
 
 void ConcreteTrace::incNumRequests(RootOfFamily root) { numRequests[root]++; }
 void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
+
+bool ConcreteTrace::hasLKernel(shared_ptr<Scaffold> scaffold, Node * node) { return scaffold->hasLKernel(node); }
+void ConcreteTrace::registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel) { scaffold->registerLKernel(node,lkernel); }
+shared_ptr<LKernel> ConcreteTrace::getLKernel(shared_ptr<Scaffold> scaffold,Node * node) { return scaffold->getLKernel(node); }
+
 void ConcreteTrace::addChild(Node * node, Node * child) 
 {
   assert(node->children.count(child) == 0);
@@ -177,7 +182,13 @@ void ConcreteTrace::removeChild(Node * node, Node * child)
 
 /* Primitive getters */
 gsl_rng * ConcreteTrace::getRNG() { return rng; }
-VentureValuePtr ConcreteTrace::getValue(Node * node) { assert(values[node]); return values[node]; }
+
+VentureValuePtr ConcreteTrace::getValue(Node * node) 
+{ 
+  assert(values[node]); 
+  return values[node]; 
+}
+
 shared_ptr<SP> ConcreteTrace::getMadeSP(Node * makerNode)
 {
   shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
@@ -212,15 +223,12 @@ bool ConcreteTrace::isMakerNode(Node * node) { return madeSPRecords.count(node);
 bool ConcreteTrace::isConstrained(Node * node) { return constrainedChoices.count(node); }
 bool ConcreteTrace::isObservation(Node * node) { return observedValues.count(node); }
 
-/* Derived Getters */
-shared_ptr<PSP> ConcreteTrace::getPSP(ApplicationNode * node)
-{
-  return getMadeSP(getOperatorSPMakerNode(node))->getPSP(node);
-}
-
 /* Primitive Setters */
 void ConcreteTrace::setValue(Node * node, VentureValuePtr value) 
-{ assert(value); values[node] = value; }
+{ 
+  assert(value); 
+  values[node] = value; 
+}
 
 void ConcreteTrace::clearValue(Node * node) { values.erase(node); }
 
@@ -321,16 +329,25 @@ set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope)
   return all;
 }
 
+vector<set<Node*> > ConcreteTrace::getOrderedSetsInScopeAndRange(ScopeID scope,BlockID minBlock,BlockID maxBlock)
+{
+  vector<set<Node*> > ordered;
+  vector<BlockID> sortedBlocks = scopes[scope].getOrderedKeysInRange(minBlock,maxBlock);
+  for (size_t i = 0; i < sortedBlocks.size(); ++ i)
+    {
+      set<Node*> nodesInBlock = getNodesInBlock(scope,sortedBlocks[i]);
+      ordered.push_back(nodesInBlock);
+    }
+  return ordered;
+}
     
 vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope) 
 { 
   vector<set<Node*> > ordered;
-  
-  for (vector<pair<BlockID,set<Node*> > >::iterator iter = scopes[scope].a.begin();
-       iter != scopes[scope].a.end();
-       ++iter)
+  vector<BlockID> sortedBlocks = scopes[scope].getOrderedKeys();
+  for (size_t i = 0; i < sortedBlocks.size(); ++ i)
     {
-      set<Node*> nodesInBlock = getNodesInBlock(scope,iter->first);
+      set<Node*> nodesInBlock = getNodesInBlock(scope,sortedBlocks[i]);
       ordered.push_back(nodesInBlock);
     }
   return ordered;

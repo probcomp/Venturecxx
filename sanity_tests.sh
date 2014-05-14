@@ -14,5 +14,5 @@ function abort_on_error () {
 
 # Actually run the tests
 echo "This may take several minutes"
-nosetests -c crashes.cfg
+nosetests -c crashes.cfg --tc=get_ripl:$1
 abort_on_error "engine self-checking"

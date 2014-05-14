@@ -167,3 +167,12 @@ class ChurchPrimeParser(object):
     def expression_index_to_text_index(self, expression_string, expression_index):
         parse_tree = utils.apply_parser(self.expression, expression_string)[0]
         return utils.get_text_index(parse_tree, expression_index)
+
+    @staticmethod
+    def instance():
+        global the_parser
+        if the_parser is None:
+            the_parser = ChurchPrimeParser()
+        return the_parser
+
+the_parser = None

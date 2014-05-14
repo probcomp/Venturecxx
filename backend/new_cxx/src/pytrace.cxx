@@ -1,5 +1,7 @@
 #include "pytrace.h"
 #include "regen.h"
+#include "render.h"
+#include "scaffold.h"
 #include "detach.h"
 #include "concrete_trace.h"
 #include "db.h"
@@ -14,6 +16,7 @@
 #include "gkernels/pgibbs.h"
 #include "gkernels/egibbs.h"
 #include "gkernels/slice.h"
+#include <boost/foreach.hpp>
 
 #include <boost/python/exception_translator.hpp>
 
@@ -153,7 +156,17 @@ struct Inferer
     
     scope = fromPython(params["scope"]);
     block = fromPython(params["block"]);
-    scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+
+    if (block->hasSymbol() && block->getSymbol() == "ordered_range")
+      {
+	VentureValuePtr minBlock = fromPython(params["min_block"]);
+	VentureValuePtr maxBlock = fromPython(params["max_block"]);
+	scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block,minBlock,maxBlock));
+      }
+    else
+      {
+	scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+      }
     
     transitions = boost::python::extract<size_t>(params["transitions"]);
   }
@@ -239,6 +252,59 @@ int PyTrace::numNodesInBlock(boost::python::object scope, boost::python::object 
   return trace->getNodesInBlock(fromPython(scope), fromPython(block)).size();
 }
 
+boost::python::list PyTrace::dotTrace(bool colorIgnored)
+{
+  boost::python::list dots;
+  Renderer r;
+
+  r.dotTrace(trace,shared_ptr<Scaffold>(),false,colorIgnored);
+  dots.append(r.dot);
+  r.dotTrace(trace,shared_ptr<Scaffold>(),true,colorIgnored);
+  dots.append(r.dot);
+
+  set<Node *> ucs = trace->unconstrainedChoices;
+  BOOST_FOREACH (Node * pNode, ucs)
+    {
+      set<Node*> pNodes;
+      pNodes.insert(pNode);
+      vector<set<Node*> > pNodesSequence;
+      pNodesSequence.push_back(pNodes);
+
+      shared_ptr<Scaffold> scaffold = constructScaffold(trace.get(),pNodesSequence,false);
+      r.dotTrace(trace,scaffold,false,colorIgnored);
+      dots.append(r.dot);
+      r.dotTrace(trace,scaffold,true,colorIgnored);
+      dots.append(r.dot);
+      cout << "detaching..." << flush;
+      pair<double,shared_ptr<DB> > p = detachAndExtract(trace.get(),scaffold->border[0],scaffold);
+      cout << "done" << endl;
+      r.dotTrace(trace,scaffold,false,colorIgnored);
+      dots.append(r.dot);
+      r.dotTrace(trace,scaffold,true,colorIgnored);
+      dots.append(r.dot);
+
+      cout << "restoring..." << flush;
+      regenAndAttach(trace.get(),scaffold->border[0],scaffold,true,p.second,shared_ptr<map<Node*,Gradient> >());
+      cout << "done" << endl;
+    }
+
+  return dots;
+}
+
+boost::python::list PyTrace::numFamilies()
+{
+  boost::python::list xs;
+  xs.append(trace->families.size());
+  for (map<Node*, shared_ptr<VentureSPRecord> >::iterator iter = trace->madeSPRecords.begin();
+       iter != trace->madeSPRecords.end();
+       ++iter)
+    {
+      if (iter->second->spFamilies->families.size()) { xs.append(iter->second->spFamilies->families.size()); }
+    }
+  return xs;
+}
+
+
 BOOST_PYTHON_MODULE(libpumatrace)
 {
   using namespace boost::python;
@@ -258,8 +324,10 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
     .def("infer", &PyTrace::infer)
+    .def("dot_trace", &PyTrace::dotTrace)
     .def("makeConsistent", &PyTrace::makeConsistent)
     .def("numNodesInBlock", &PyTrace::numNodesInBlock)
+    .def("numFamilies", &PyTrace::numFamilies)
     .def("continuous_inference_status", &PyTrace::continuous_inference_status)
     .def("start_continuous_inference", &PyTrace::start_continuous_inference)
     .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)

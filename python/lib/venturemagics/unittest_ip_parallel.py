@@ -6,7 +6,7 @@ from IPython.parallel import Client
 from nose.tools import with_setup
 
 from venture.venturemagics.ip_parallel import *
-
+execfile('/home/owainevans/Venturecxx/python/lib/venturemagics/ip_parallel.py')
 
 def mk_ripl(backend):
     if backend=='puma': return mk_p_ripl()
@@ -333,48 +333,57 @@ def testMrMap():
     print 'start ', name
 
     bkends =['puma','lite']
-    outp = ['remote','local']
+    outp = ['remote']
     l_mode = [True,False] 
     params=[(b,o,l) for b in bkends for o in outp for l in l_mode]
 
     for (b,o,l) in params:
   
-        v=MRipl(4,no_local_ripls=4,backend=b,output=o, local_mode=l)
+        v=MRipl(4,no_local_ripls=4, backend=b,output=o, local_mode=l)
         
         # no args, no limit (proc does import)
         def f(ripl):
             import numpy as np
             return ripl.predict(str( np.power(4,2)))
         out = mr_map_proc(v,'all',f)
+        out = v.map_proc('all',f)
         assert all( 16. == np.array(out) )
 
         # args,kwargs,limit
         def g(ripl,x,exponent=1):
             return ripl.predict(str( x**exponent) )
         out = mr_map_proc(v,2,g,4,exponent=2)
+        out = v.map_proc(2,g,4,exponent=2)
         assert len(out)==2 and all( 16. == np.array(out) )
     
         # mr_map_array no_kwargs
         def h(ripl,x): return ripl.predict(str(x))
         values = mr_map_array(v,h,[[10],[20]],no_kwargs=True)
+        values = v.map_proc_list(h,[[10],[20]],only_p_args=True)
+
         assert values==[10,20]
 
         # mr_map_array kwargs
         def foo(ripl,x,y=1): return ripl.sample('(+ %f %f)'%(x,y))
         proc_args_list = [  [ [10],{'y':10} ],  [ [30],{} ] ]
         values = mr_map_array(v,foo,proc_args_list,no_kwargs=False)
+        values = v.map_proc_list(foo,proc_args_list,only_p_args=False)
+
         assert values==[20,31]
     
         # unbalanced no_ripls
         out = mr_map_proc(v,3,f)
+        out = v.map_proc(3,f)
         assert all( 16. == np.array(out) )
         assert len(out) >= 3
 
         values = mr_map_array(v,h,[[10],[20],[30]],no_kwargs=True)
+        values = v.map_proc_list(h,[[10],[20],[30]],only_p_args=True)
+
         assert 10 in values and 20 in values and 30 in values
         assert len(values) >= 3
 
-    print name, 'passed'
+    
 
 
 def testParaUtils():
