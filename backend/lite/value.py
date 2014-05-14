@@ -377,10 +377,12 @@ class VenturePair(VentureValue):
       return [elt_type.asPython(self.first)] + self.rest.asPythonList(elt_type)
     else:
       return [self.first] + self.rest.asPythonList()
-  def asStackDict(self,trace):
-    # TODO Venture pairs should be usable to build structures other
-    # than proper lists.  But then, what are their types?
-    return {"type":"list", "value":[v.asStackDict(trace) for v in self.asPythonList()]}
+  def asStackDict(self, _trace):
+    (list_, tail) = self.asPossiblyImproperList()
+    if tail is None:
+      return {"type":"list", "value":list_}
+    else:
+      return {"type":"improper_list", "value": self}
   def asPossiblyImproperList(self):
     if isinstance(self.rest, VenturePair):
       (sublist, tail) = self.rest.asPossiblyImproperList()
@@ -390,7 +392,11 @@ class VenturePair(VentureValue):
     else:
       return ([self.first], self.rest)
   @staticmethod
-  def fromStackDict(_): raise Exception("Type clash!")
+  def fromStackDict(thing):
+    if thing["type"] == "improper_list":
+      return thing["value"]
+    else:
+      raise Exception("Type clash!")
   def compareSameType(self, other):
     fstcmp = self.first.compare(other.first)
     if fstcmp != 0: return fstcmp
@@ -533,6 +539,7 @@ stackable_types = {
   "boolean": VentureBool,
   "symbol": VentureSymbol,
   "list": VentureArray, # TODO Or should this be a linked list?  Should there be an array type?
+  "improper_list": VenturePair,
   "simplex": VentureSimplex,
   "dict": VentureDict,
   "matrix": VentureMatrix,
