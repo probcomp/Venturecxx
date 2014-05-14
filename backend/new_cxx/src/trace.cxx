@@ -42,7 +42,11 @@ pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode
   return make_pair(requestNode, outputNode);
 }
 
-/* Derived getters */
+/* Derived Getters */
+shared_ptr<PSP> Trace::getPSP(ApplicationNode * node)
+{
+  return getMadeSP(getOperatorSPMakerNode(node))->getPSP(node);
+}
 
 VentureValuePtr Trace::getGroundValue(Node * node)
 {

@@ -44,6 +44,7 @@ struct Scaffold
   bool isAbsorbing(Node * node);
   bool isAAA(Node * node);
   bool hasLKernel(Node * node);
+  void registerLKernel(Node * node,shared_ptr<LKernel> lkernel);
   shared_ptr<LKernel> getLKernel(Node * node);
   string showSizes();
 

@@ -140,6 +140,11 @@ void ConcreteTrace::reconnectLookup(LookupNode * lookupNode)
 
 void ConcreteTrace::incNumRequests(RootOfFamily root) { numRequests[root]++; }
 void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
+
+bool ConcreteTrace::hasLKernel(shared_ptr<Scaffold> scaffold, Node * node) { return scaffold->hasLKernel(node); }
+void ConcreteTrace::registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel) { scaffold->registerLKernel(node,lkernel); }
+shared_ptr<LKernel> ConcreteTrace::getLKernel(shared_ptr<Scaffold> scaffold,Node * node) { return scaffold->getLKernel(node); }
+
 void ConcreteTrace::addChild(Node * node, Node * child) 
 {
   assert(node->children.count(child) == 0);
@@ -217,12 +222,6 @@ VentureValuePtr ConcreteTrace::getObservedValue(Node * node) { return observedVa
 bool ConcreteTrace::isMakerNode(Node * node) { return madeSPRecords.count(node); }
 bool ConcreteTrace::isConstrained(Node * node) { return constrainedChoices.count(node); }
 bool ConcreteTrace::isObservation(Node * node) { return observedValues.count(node); }
-
-/* Derived Getters */
-shared_ptr<PSP> ConcreteTrace::getPSP(ApplicationNode * node)
-{
-  return getMadeSP(getOperatorSPMakerNode(node))->getPSP(node);
-}
 
 /* Primitive Setters */
 void ConcreteTrace::setValue(Node * node, VentureValuePtr value) 

@@ -32,6 +32,11 @@ struct ConcreteTrace : Trace
   void reconnectLookup(LookupNode * lookupNode);
   void incNumRequests(RootOfFamily root);
   void incRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
+
+  bool hasLKernel(shared_ptr<Scaffold> scaffold, Node * node);
+  void registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel);
+  shared_ptr<LKernel> getLKernel(shared_ptr<Scaffold> scaffold,Node * node);
+
   void addChild(Node * node, Node * child);
 
   /* Detach mutations */  
@@ -59,9 +64,6 @@ struct ConcreteTrace : Trace
   bool isMakerNode(Node * node);
   bool isConstrained(Node * node);
   bool isObservation(Node * node);
-
-  /* Derived Getters */
-  shared_ptr<PSP> getPSP(ApplicationNode * node);
   
   /* Primitive Setters */
   void setValue(Node * node, VentureValuePtr value);
