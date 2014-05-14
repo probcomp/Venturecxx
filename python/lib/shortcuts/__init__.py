@@ -23,12 +23,12 @@ class Backend(object):
     def make_venture_sivm(self):
         return sivm.VentureSivm(self.make_core_sivm())
     def make_church_prime_ripl(self):
-        return ripl.Ripl(self.make_venture_sivm(), {"church_prime":parser.ChurchPrimeParser()})
+        return ripl.Ripl(self.make_venture_sivm(), {"church_prime":parser.ChurchPrimeParser.instance()})
     def make_venture_script_ripl(self):
         return ripl.Ripl(self.make_venture_sivm(), {"venture_script":parser.VentureScriptParser()})
     def make_combined_ripl(self):
         v = self.make_venture_sivm()
-        parser1 = parser.ChurchPrimeParser()
+        parser1 = parser.ChurchPrimeParser.instance()
         parser2 = parser.VentureScriptParser()
         r = ripl.Ripl(v,{"church_prime":parser1, "venture_script":parser2})
         r.set_mode("church_prime")
@@ -88,22 +88,22 @@ def make_venture_sivm():
 
 def make_church_prime_ripl():
     v = make_venture_sivm()
-    parser1 = parser.ChurchPrimeParser()
+    parser1 = parser.ChurchPrimeParser.instance()
     return ripl.Ripl(v,{"church_prime":parser1})
 
 def make_cxx_church_prime_ripl():
     v = make_venture_cxx_sivm()
-    parser1 = parser.ChurchPrimeParser()
+    parser1 = parser.ChurchPrimeParser.instance()
     return ripl.Ripl(v,{"church_prime":parser1})
 
 def make_lite_church_prime_ripl():
     v = make_venture_lite_sivm()
-    parser1 = parser.ChurchPrimeParser()
+    parser1 = parser.ChurchPrimeParser.instance()
     return ripl.Ripl(v,{"church_prime":parser1})
 
 def make_puma_church_prime_ripl():
     v = make_venture_puma_sivm()
-    parser1 = parser.ChurchPrimeParser()
+    parser1 = parser.ChurchPrimeParser.instance()
     return ripl.Ripl(v,{"church_prime":parser1})
 
 def make_venture_script_ripl():
@@ -113,7 +113,7 @@ def make_venture_script_ripl():
 
 def make_combined_ripl():
     v = make_venture_sivm()
-    parser1 = parser.ChurchPrimeParser()
+    parser1 = parser.ChurchPrimeParser.instance()
     parser2 = parser.VentureScriptParser()
     r = ripl.Ripl(v,{"church_prime":parser1, "venture_script":parser2})
     r.set_mode("church_prime")
