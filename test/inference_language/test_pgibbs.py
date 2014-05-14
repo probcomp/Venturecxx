@@ -1,10 +1,29 @@
 import math
 import scipy.stats as stats
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, ignore_inference_quality
 from nose import SkipTest
 from testconfig import config
 
+@statisticalTest
+def testPGibbsBasic1():
+  """Basic sanity test"""
+  ripl = get_ripl()
+  ripl.predict("(bernoulli)",label="pid")
+
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"pgibbs","particles":2})
+  ans = [(True,.5),(False,.5)]
+  return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+def testPGibbsBasic2():
+  """Basic sanity test"""
+  ripl = get_ripl()
+  ripl.assume("x","(flip 0.1)",label="pid")
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"pgibbs","particles":2})
+  ans = [(False,.9),(True,.1)]
+  return reportKnownDiscrete(ans, predictions)
+ 
 def testPGibbsBlockingMHHMM1():
   yield checkPGibbsBlockingMHHMM1, True
   yield checkPGibbsBlockingMHHMM1, False
