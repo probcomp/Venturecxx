@@ -291,6 +291,18 @@ boost::python::list PyTrace::dotTrace(bool colorIgnored)
   return dots;
 }
 
+boost::python::list PyTrace::numFamilies()
+{
+  boost::python::list xs;
+  xs.append(trace->families.size());
+  for (map<Node*, shared_ptr<VentureSPRecord> >::iterator iter = trace->madeSPRecords.begin();
+       iter != trace->madeSPRecords.end();
+       ++iter)
+    {
+      if (iter->second->spFamilies->families.size()) { xs.append(iter->second->spFamilies->families.size()); }
+    }
+  return xs;
+}
 
 
 BOOST_PYTHON_MODULE(libpumatrace)
@@ -315,6 +327,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("dot_trace", &PyTrace::dotTrace)
     .def("makeConsistent", &PyTrace::makeConsistent)
     .def("numNodesInBlock", &PyTrace::numNodesInBlock)
+    .def("numFamilies", &PyTrace::numFamilies)
     .def("continuous_inference_status", &PyTrace::continuous_inference_status)
     .def("start_continuous_inference", &PyTrace::start_continuous_inference)
     .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)
