@@ -36,14 +36,8 @@ Particle::Particle(shared_ptr<Particle> outerParticle):
       iter != outerParticle->madeSPAuxs.end();
       ++iter)
     {
-      if (iter->second)
-	{
-	  madeSPAuxs[iter->first] = iter->second->clone();
-	}
-      else 
-	{
-	  madeSPAuxs[iter->first] = shared_ptr<SPAux>();
-	}
+      if (iter->second) { madeSPAuxs[iter->first] = iter->second->clone(); }
+      else { madeSPAuxs[iter->first] = shared_ptr<SPAux>(); }
     }
   }
 

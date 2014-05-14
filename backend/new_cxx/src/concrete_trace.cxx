@@ -212,12 +212,21 @@ shared_ptr<VentureSPRecord> ConcreteTrace::getMadeSPRecord(Node * makerNode)
   assert(madeSPRecords.count(makerNode));
   return madeSPRecords[makerNode]; 
 }
-vector<RootOfFamily> ConcreteTrace::getESRParents(Node * node) { return esrRoots[node]; }
+vector<RootOfFamily> ConcreteTrace::getESRParents(Node * node) 
+{ 
+  if (esrRoots.count(node)) { return esrRoots[node]; } 
+  else { return vector<RootOfFamily>(); }
+}
+
 set<Node*> ConcreteTrace::getChildren(Node * node) { return node->children; }
-int ConcreteTrace::getNumRequests(RootOfFamily root) { return numRequests[root]; }
+int ConcreteTrace::getNumRequests(RootOfFamily root) 
+{ 
+  if (numRequests.count(root)) { return numRequests[root]; } 
+  else { return 0; }
+}
 int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { return scaffold->getRegenCount(node); }
 
-VentureValuePtr ConcreteTrace::getObservedValue(Node * node) { return observedValues[node]; }
+VentureValuePtr ConcreteTrace::getObservedValue(Node * node) { assert(observedValues.count(node)); return observedValues[node]; }
 
 bool ConcreteTrace::isMakerNode(Node * node) { return madeSPRecords.count(node); }
 bool ConcreteTrace::isConstrained(Node * node) { return constrainedChoices.count(node); }
