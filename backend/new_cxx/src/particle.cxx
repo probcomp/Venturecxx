@@ -127,6 +127,13 @@ void Particle::incRegenCount(shared_ptr<Scaffold> scaffold,Node * node)
   regenCounts = regenCounts.insert(node,regenCounts.lookup(node) + 1);
 }
 
+
+bool Particle::hasLKernel(shared_ptr<Scaffold> scaffold, Node * node)
+{
+  if (lkernels.contains(node)) { return true; }
+  else { return baseTrace->hasLKernel(scaffold,node); }
+}
+
 void Particle::registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel)
 {
   lkernels = lkernels.insert(node,lkernel);

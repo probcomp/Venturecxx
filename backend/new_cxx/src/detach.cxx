@@ -222,7 +222,7 @@ double unapplyPSP(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffo
 
   double weight = 0;
   psp->unincorporate(value,args);
-  if (scaffold->hasLKernel(node)) { weight += scaffold->getLKernel(node)->reverseWeight(trace,value,args); }
+  if (trace->hasLKernel(scaffold,node)) { weight += trace->getLKernel(scaffold,node)->reverseWeight(trace,value,args); }
   db->registerValue(node,value);
 
   trace->clearValue(node);

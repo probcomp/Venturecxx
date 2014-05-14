@@ -140,6 +140,8 @@ void ConcreteTrace::reconnectLookup(LookupNode * lookupNode)
 
 void ConcreteTrace::incNumRequests(RootOfFamily root) { numRequests[root]++; }
 void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
+
+bool ConcreteTrace::hasLKernel(shared_ptr<Scaffold> scaffold, Node * node) { return scaffold->hasLKernel(node); }
 void ConcreteTrace::registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel) { scaffold->registerLKernel(node,lkernel); }
 shared_ptr<LKernel> ConcreteTrace::getLKernel(shared_ptr<Scaffold> scaffold,Node * node) { return scaffold->getLKernel(node); }
 

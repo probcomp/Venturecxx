@@ -310,9 +310,9 @@ double applyPSP(Trace * trace,
 
   if (db->hasValue(node)) { oldValue = db->getValue(node); }
 
-  if (scaffold->hasLKernel(node))
+  if (trace->hasLKernel(scaffold,node))
   {
-    shared_ptr<LKernel> k = scaffold->getLKernel(node);
+    shared_ptr<LKernel> k = trace->getLKernel(scaffold,node);
     if (shouldRestore) { newValue = oldValue; }
     else { newValue = k->simulate(trace,oldValue,args,trace->getRNG()); }
 
