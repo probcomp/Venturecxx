@@ -18,6 +18,7 @@ struct VentureNumber : VentureValue
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
+  string asExpression() const;
   double x;
 };
 
@@ -36,6 +37,7 @@ struct VentureAtom : VentureValue
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
+  string asExpression() const;
   int n;
 };
 
@@ -50,6 +52,7 @@ struct VentureBool : VentureValue
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
+  string asExpression() const;
   bool b;
 };
 
@@ -64,6 +67,7 @@ struct VentureSymbol : VentureValue
   boost::python::dict toPython(Trace * trace) const;
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
   string s;
 };
 
@@ -80,6 +84,7 @@ struct VentureArray : VentureValue
   bool hasArray() const { return true; }
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
   vector<VentureValuePtr> xs;
 };
 
@@ -96,6 +101,7 @@ struct VentureNil : VentureValue
 
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
   boost::python::dict toPython(Trace * trace) const;
 };
 
@@ -113,6 +119,7 @@ struct VenturePair : VentureValue
 
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
   boost::python::dict toPython(Trace * trace) const;
   int size() const { return 1 + getRest()->size(); }
   VentureValuePtr car;
@@ -130,6 +137,7 @@ struct VentureSimplex : VentureValue
 
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
   boost::python::dict toPython(Trace * trace) const;
   Simplex ps;
 };

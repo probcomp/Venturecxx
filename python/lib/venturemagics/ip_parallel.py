@@ -37,6 +37,14 @@ mk_p_ripl = make_puma_church_prime_ripl
 
 
 # TODO:
+
+# cheat sheet explaining local_mode, mr_map_proc, mr_map_array
+# move local_out to debug mode
+# 
+# make mr_map_proc a method.
+
+# 
+
 # get rid of use of interactive on certain utility funcs
 # if it breaks use outside MRIPL
 
@@ -44,6 +52,7 @@ mk_p_ripl = make_puma_church_prime_ripl
 # make private methods private
 # check for 'if varname' where varname=None by default
 
+# unit_tests on nose and compliant with alexey framework
 
 
 # Utility functions for working with ipcluster and mripl
@@ -603,6 +612,113 @@ class MRipl():
         return self._output_mode(local_out,remote_out)
 
 
+# TODO: refactor as special case of map_proc_list
+    def map_proc(self,no_ripls,proc,*proc_args,**proc_kwargs):
+        '''Push procedure into engine namespaces. Use execute to map across ripls.
+        if no_ripls==0 or 'all' or >mripl.no_ripls, then maps across all.
+        Maps proc across local ripls IFF in local_mode.'''
+
+        if no_ripls==0 or no_ripls=='all' or no_ripls>self.no_ripls:
+            no_ripls = self.no_ripls
+            
+        # map across local ripls
+        if self.local_mode: 
+            local_out=[proc(r,*proc_args,**proc_kwargs) for i,r in enumerate(self.local_ripls) if i<no_ripls]
+            return local_out
+        else:
+            local_out = [None]*no_ripls
+
+        # map across remote ripls
+        self.dview.push({'mapped_proc':interactive(proc),'map_args':proc_args,
+                          'map_kwargs':proc_kwargs})
+
+        if no_ripls < self.no_engines:
+            map_view = self.cli[:no_ripls]
+            per_eng = 1
+            self.dview.execute('apply_out=None')
+        else:
+            per_eng = int(np.ceil(no_ripls/float(self.no_engines)))
+
+        s1='apply_out='
+        s2='[mapped_proc(r,*map_args,**map_kwargs) for i,r in enumerate(mripls[%i]["%s"]) if i<%i]' % (self.mrid,
+                                                                                                    self.backend,per_eng)
+        self.dview.execute(s1+s2)  
+        ipython_inline()
+        remote_out = lst_flatten( self.dview['apply_out'] )
+
+        return remote_out[:no_ripls] if self.output=='remote' else local_out
+
+    def map_proc_list(self, proc, proc_args_list, only_p_args=True):
+        '''
+        proc_args_list = [ [ arg_i0, arg_i1, ..., arg_ik  ], ...,  ]
+        where k is the # positional args for proc and i=0 to # calls to proc.
+
+        # calls to proc == len(proc_args_list) <= self.no_ripls
+
+        For kwargs: set only_p_args=False and then
+        proc_args_list = [ ( p_args_list, kwargs_dict) ].
+
+        To find which args went to which engines (for last application of method):
+            %px eng_args
+        These can be matched to seeds via self.ripls_info.
+
+        Examples:
+        v=MRipl(2)
+        def f(ripl,x,y): return ripl.sample('(+ %f %f)'%(x,y))
+
+        proc_args_list = [ [10,20], [100,200] ]
+        v.map_proc_list(f,proc_args_list) 
+        Out: [30,300] 
+
+        def f(ripl,x,y=1): return ripl.sample('(+ %f %f)'%(x,y))
+
+        proc_args_list = [  [ [10],{'y':10} ],  [ [30],{} ] ]
+        v.map_proc_list(f,proc_args_list,only_p_args=False)
+        Out: [20,31] 
+        '''
+
+        no_args = len(proc_args_list)
+        assert 0 < no_args <= self.no_ripls, 'Either 0 argumentss or more arguments than ripls.'
+
+        # map across local ripls (TODO? include: (self.local_seeds[i],proc_args_list[i]))
+        if self.local_mode:
+            arg_ripl = zip(proc_args_list, self.local_ripls[:no_args])
+            if only_p_args:
+                local_out = [proc(r,*args) for args,r in arg_ripl]
+            else:
+                local_out = [proc(r,*args,**kwargs) for (args,kwargs),r in arg_ripl]
+            return local_out
+        else:
+            local_out = [None]*no_args
+
+        # map across remote ripls
+        no_args_per_engine = int(np.ceil(no_args/float(self.no_engines)))
+        
+        for i in range(self.no_engines):
+            start=i*no_args_per_engine
+            eng_args = proc_args_list[start: start + no_args_per_engine]
+            if not eng_args: break
+            eng_view = self.cli[i]
+            eng_view.push({'mapped_proc_l':interactive(proc),'eng_args':eng_args})
+            eng_view.push({'list_out':[]})
+
+            @interactive
+            def f(mrid,backend,eng_args,only_p_args):
+                 arg_ripl = zip(eng_args, mripls[mrid][backend][:len(eng_args)])
+                 if only_p_args:
+                     list_out.extend( [mapped_proc_l(r,*args) for args,r in arg_ripl] )
+                 else:
+                     list_out.extend( [mapped_proc_l(r,*args,**kwargs) for (args,kwargs),r in arg_ripl] )
+
+            eng_view.apply_sync(f,self.mrid,self.backend,eng_args,only_p_args)
+
+        ipython_inline()
+        remote_out = lst_flatten( self.dview['list_out'] ) 
+
+        return remote_out if self.output=='remote' else local_out 
+
+
+
 
     def snapshot(self,exp_list=(),did_labels_list=(),
                  plot=False, scatter=False, plot_range=None,
@@ -889,6 +1005,10 @@ def ipython_inline():
     except:
         pass
 
+
+
+
+
 def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     '''Push procedure into engine namespaces. Use execute to map across ripls.
     if no_ripls==0, 'all' or >mripl.no_ripls, then maps across all.
@@ -929,23 +1049,12 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     return remote_out[:no_ripls] if mripl.output=='remote' else local_out 
 
 
+
+
+
+
 def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
-    '''REDO DOCTSTRING
-    proc_args_list = [ [ list_args_i, dict_kwargs_i ],   ], i= 0 to no_args
-    where no_args <= mripl.no_ripls.
 
-    Examples:
-    v=MRipl(2)
-    def f(ripl,x,y): return ripl.sample('(+ %f %f)'%(x,y))
-    proc_args_list = [ [10,20], [100,200] ]
-    mr_map_array(v,f,proc_args_list)[1] == [30,300] 
-
-    def f(ripl,x,y=1): return ripl.sample('(+ %f %f)'%(x,y))
-    proc_args_list = [  [ [10],{'y':10} ],  [ [30],{} ] ]
-    mr_map_array(v,f,proc_args_list,no_kwargs=False)[1] == [20,31] 
-    '''
-    ##FIXME should support limiting the number of ripls to < no_engines
-    
     no_args = len(proc_args_list)
     assert no_args <= mripl.no_ripls, 'More arguments than ripls'
     

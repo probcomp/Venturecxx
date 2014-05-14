@@ -114,6 +114,7 @@ puma_src_files = [
     "src/pytrace.cxx",
     "src/pyutils.cxx",
     "src/regen.cxx",
+    "src/render.cxx",
     "src/scaffold.cxx",
     "src/sp.cxx",
     "src/sprecord.cxx",

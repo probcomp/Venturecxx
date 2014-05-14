@@ -43,6 +43,7 @@ VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { assert(false
 bool VentureValue::contains(VentureValuePtr index) const { assert(false); }
 int VentureValue::size() const { assert(false); }
 
+string VentureValue::asExpression() const { return toString(); }
 
 boost::python::dict VentureValue::toPython(Trace * trace) const
 { 
