@@ -28,6 +28,9 @@ class NormalDriftKernel(LKernel):
 
                                                         
 class MVNormalOutputPSP(RandomPSP):
+  def __init__(self):
+    self.sigma = None
+
   def simulate(self, args):
     return npr.multivariate_normal(*self.__parse_args__(args))
 
@@ -37,7 +40,13 @@ class MVNormalOutputPSP(RandomPSP):
 
   def gradientOfLogDensity(self, x, args):
     (mu, sigma) = self.__parse_args__(args)
-    isigma = npla.inv(sigma)
+    if sigma is self.sigma:
+	  print 'hit'
+	  isigma = self.isigma
+    else:
+      isigma = npla.inv(sigma)
+      self.sigma = sigma
+      self.isigma = isigma
     xvar = np.dot(np.transpose(np.matrix(x-mu)), np.matrix(x-mu))
     gradX = -np.dot(isigma, np.transpose(x-mu))
     gradMu = np.dot(isigma, np.transpose(x-mu))

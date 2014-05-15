@@ -35,7 +35,7 @@ ON_LINUX = 'linux' in sys.platform
 ON_MAC = 'darwin' in sys.platform
 
 if ON_LINUX:
-    os.environ['CC'] = 'ccache gcc-4.8 '
+    os.environ['CC'] = 'ccache gcc '
 if ON_MAC:
     os.environ['CC'] = 'ccache clang '
 
@@ -115,7 +115,6 @@ puma_src_files = [
     'src/sps/conditional.cxx',
     'src/sps/continuous.cxx',
     'src/sps/crp.cxx',
-	'src/sps/mvn.cxx',
     'src/sps/deterministic.cxx',
     'src/sps/dir_mult.cxx',
     'src/sps/discrete.cxx',
@@ -174,8 +173,8 @@ if ON_LINUX:
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
-        libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],
-        extra_compile_args = ["-std=c++11", "-fPIC"],
+        libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],        
+        extra_compile_args = ["-std=c++11" "-g" "-O3" "-fPIC" "-Wno-deprecated-register" "-Wno-overloaded-virtual"],
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
@@ -184,7 +183,7 @@ if ON_MAC:
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
-        libraries = ['gsl', 'gslcblas', 'm', 'boost_python', 'boost_system', 'boost_thread-mt'],        
+        libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread-mt'],        
         extra_compile_args = ["-std=c++11", "-g", "-O3", "-fPIC", "-Wno-deprecated-register", "-Wno-overloaded-virtual"],
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
@@ -208,14 +207,13 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     # I could find no other way to override the extra flags
     # from the python makefile's CFLAGS and OPTS variables
     if ON_LINUX:
-        self.compiler_so = ["ccache", "gcc-4.8"]
+        self.compiler_so = ["ccache", "gcc"]
     if ON_MAC:
         self.compiler_so = ["ccache", "clang"]
 
     # parallel code
     import multiprocessing, multiprocessing.pool
-    #N=multiprocessing.cpu_count() # number of parallel compilations
-    N=1
+    N=multiprocessing.cpu_count() # number of parallel compilations
     def _single_compile(obj):
         try: src, ext = build[obj]
         except KeyError: return
