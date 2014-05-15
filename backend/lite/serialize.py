@@ -81,11 +81,10 @@ class Serializer(object):
                 self.obj_data.append(None)
 
             ## attempt to use the object's serialize method if available
-            ## fallback: just get the __dict__
             if hasattr(obj, 'serialize'):
                 serialized = obj.serialize(self)
             else:
-                serialized = dict((k, self.serialize(v)) for (k, v) in obj.__dict__.iteritems())
+                serialized = self.serialize_default(obj)
             data = {'_type': type_to_str[type(obj)], '_value': serialized}
 
             if should_make_ref:
@@ -94,6 +93,10 @@ class Serializer(object):
                 return {'_type': 'ref', '_value': i}
             else:
                 return data
+
+    def serialize_default(self, obj):
+        ## fallback serialization method: just get the __dict__
+        return dict((k, self.serialize(v)) for (k, v) in obj.__dict__.iteritems())
 
     def deserialize_trace(self, data):
         """Deserialize a serialized trace, producing a Trace object."""
@@ -154,13 +157,16 @@ class Serializer(object):
             obj.__class__ = cls
 
             ## attempt to use the object's deserialize method if available
-            ## fallback: just set the __dict__
             if hasattr(cls, 'deserialize'):
                 obj.deserialize(self, data['_value'])
             else:
-                obj.__dict__ = dict((k, self.deserialize(v)) for (k, v) in data['_value'].iteritems())
+                self.deserialize_default(obj, data['_value'])
 
             return obj
+
+    def deserialize_default(self, obj, value):
+        ## fallback deserialization method: just set the __dict__
+        obj.__dict__ = dict((k, self.deserialize(v)) for (k, v) in value.iteritems())
 
 def save_trace(trace, extra, fname):
     obj = Serializer().serialize_trace(trace, extra)
