@@ -15,9 +15,7 @@ using std::function;
 using std::pair;
 
 HMCGKernel::HMCGKernel(double epsilon, int steps) 
-:rng(gsl_rng_alloc(gsl_rng_mt19937)), seed(time(NULL)), 
- epsilon(new VentureNumber(epsilon)), steps(new VentureNumber(steps)) {
-  gsl_rng_set(rng,seed);
+:epsilon(new VentureNumber(epsilon)), steps(new VentureNumber(steps)) {
 }
 
 pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold)
@@ -43,8 +41,8 @@ pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffol
 
   /* evolve */
   VentureValuePtr start_q = VentureArray::makeValue(currentValues);
-  VentureValuePtr momenta = this->sampleMomenta(start_q);
-  VentureValuePtr start_grad_pot = VentureArray::makeValue(this->rhoDB->getPartials(allNodes));
+  VentureValuePtr momenta = this->sampleMomenta(start_q, trace->getRNG());
+  VentureValuePtr start_grad_pot = VentureArray::makeValue(this->rhoDB->getPartials(allNodes))->neg();
 
   double start_K = this->kinetic(momenta);
   GradientOfRegen grad(trace, scaffold);
@@ -62,7 +60,7 @@ pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffol
   return make_pair(trace,xiWeight - rhoWeight + start_K - end_K);
 }
 
-VentureValuePtr HMCGKernel::sampleMomenta(VentureValuePtr currentValues) const {
+VentureValuePtr HMCGKernel::sampleMomenta(VentureValuePtr currentValues, gsl_rng * rng) const {
   vector<VentureValuePtr> momenta;
   BOOST_FOREACH(VentureValuePtr value, currentValues->getArray()) {
     shared_ptr<VentureNumber> valueNumber = dynamic_pointer_cast<VentureNumber>(value);
@@ -116,7 +114,8 @@ HMCGKernel::evolve(GradientOfRegen& grad, const VentureValuePtr& start_q, const 
   // cout << "grad*half = " << toString(start_grad_q*half) << endl;
   for(int si = 0; si < numSteps; si++) {
     q = q+p*epsilon;
-    dpdt = VentureArray::makeValue(grad(q->getArray()));
+    dpdt = VentureArray::makeValue(grad(q->getArray()))->neg();
+    // cout << "q " << toString(q) << ", dptdt " << toString(dpdt) << endl;
     p = p-dpdt*epsilon;
     // cout << "2x" << endl;
   }

@@ -554,7 +554,7 @@ VentureValuePtr VentureArray::operator*(const VentureValuePtr & rhs) const {
     const vector<VentureValuePtr> rhsVector = rhsArray->getArray();
     vector<VentureValuePtr> newVector;
     for(int i = 0; i < rhsVector.size(); i++) {
-      newVector.push_back(rhsVector[i]+xs[i]);
+      newVector.push_back(rhsVector[i]*xs[i]);
     }
     return VentureValuePtr(new VentureArray(newVector));  
   }

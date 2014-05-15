@@ -34,11 +34,9 @@ public:
   pair<VentureValuePtr, double> evolve(GradientOfRegen& grad, const VentureValuePtr& start_q, const VentureValuePtr& start_grad_q, 
                       const VentureValuePtr& start_p);
   double kinetic(const VentureValuePtr momenta) const;
-  VentureValuePtr sampleMomenta(VentureValuePtr currentValues) const;
+  VentureValuePtr sampleMomenta(VentureValuePtr currentValues, gsl_rng * rng) const;
 
  private:
-  unsigned int seed;
-  gsl_rng * rng;
   VentureValuePtr epsilon;
   VentureValuePtr steps;
 };

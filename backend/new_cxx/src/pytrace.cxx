@@ -24,7 +24,6 @@ PyTrace::~PyTrace() {}
 
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
 {
-  cout << "1" << endl;
   VentureValuePtr exp = parseExpression(object);
   pair<double,Node*> p = evalFamily(trace.get(),
 				    exp,
@@ -35,7 +34,6 @@ void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
   assert(p.first == 0);
   assert(!trace->families.count(did));
   trace->families[did] = shared_ptr<Node>(p.second);
-  cout << "2" << endl;
 }
 
 void PyTrace::unevalDirectiveID(DirectiveID did) 
@@ -164,14 +162,22 @@ struct Inferer
     }
     else if (kernel == "map" || kernel == "hmc")  
     {
-      double epsilon = 0.02;
-      if(params.has_key("rate")) {
-        epsilon = boost::python::extract<double>(params["rate"]);
-      }
-      double steps = 3;
-      if(params.has_key("steps")) {
-        steps = boost::python::extract<double>(params["steps"]);
-      }
+      // boost::python::list keys = params.keys();
+      // boost::python::object o;
+      // while(o = keys.pop()) {
+      //   string str = boost::python::extract<string>(o);
+      //   cout << str << endl;
+      // }
+      double epsilon;
+      if(params.has_key("epsilon")) {
+        epsilon = boost::python::extract<double>(params["epsilon"]);
+      }else
+        throw "hmc error: no stepsize defined.";
+      double steps;
+      if(params.has_key("L")) {
+        steps = boost::python::extract<double>(params["L"]);
+      }else
+        throw "hmc error: no leapfrog steps defined.";
       if(kernel == "map")
         gKernel = shared_ptr<GKernel>(new MAPGKernel(epsilon, steps));
       else if(kernel == "hmc")
