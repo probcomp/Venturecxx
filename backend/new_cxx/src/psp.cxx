@@ -26,8 +26,6 @@ vector<VentureValuePtr> PSP::gradientOfSimulate(const shared_ptr<Args> args, con
   BOOST_FOREACH(VentureValuePtr value, args->operandValues) {
     grad.push_back(VentureNumber::makeValue(0));
   }
-  vector<VentureValuePtr> directions = direction->getArray();
-  grad.insert(grad.end(), directions.begin(), directions.end());
   return grad;
 }
 
@@ -35,6 +33,14 @@ vector<VentureValuePtr> PSP::gradientOfSimulate(const shared_ptr<Args> args, con
 VentureValuePtr NullRequestPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   return shared_ptr<VentureRequest>(new VentureRequest(vector<ESR>(),vector<shared_ptr<LSR> >()));
+}
+
+vector<VentureValuePtr> NullRequestPSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
+  vector<VentureValuePtr> grad;
+  BOOST_FOREACH(VentureValuePtr value, args->operandValues) {
+    grad.push_back(VentureNumber::makeValue(0));
+  }
+  return grad;
 }
 
 
@@ -55,3 +61,12 @@ bool ESRRefOutputPSP::canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,
   return true;
 }
 
+vector<VentureValuePtr> ESRRefOutputPSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
+  vector<VentureValuePtr> grad;
+  BOOST_FOREACH(VentureValuePtr value, args->operandValues) {
+    grad.push_back(VentureNumber::makeValue(0));
+  }
+  vector<VentureValuePtr> directions = direction->getArray();
+  grad.insert(grad.end(), directions.begin(), directions.end());
+  return grad;
+}

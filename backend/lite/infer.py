@@ -600,9 +600,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     start_grad_pot = [-self.rhoDB.getPartial(pnode) for pnode in pnodes]
 
     # Smashes the trace but leaves it a torus
-    print 'start', currentValues, 'start_K', start_K
     (proposed_values, end_K) = self.evolve(grad_potential, currentValues, start_grad_pot, momenta)
-    print 'end', proposed_values, 'end_K', end_K
     registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
     xiWeight = grad.fixed_regen(proposed_values) # Mutates the trace
     # The weight arithmetic is given by the Hamiltonian being
