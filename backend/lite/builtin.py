@@ -248,7 +248,7 @@ def builtInSPsList():
 
            [ "multivariate_normal", typed_nr(continuous.MVNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.MatrixType()], v.HomogeneousArrayType(v.NumberType())) ],
            [ "inv_wishart", typed_nr(continuous.InverseWishartPSP(), [v.MatrixType(), v.NumberType()], v.MatrixType())],
-           [ "wishart", typed_nr(continuous.WishartPSP(), [v.MatrixType(), v.NumberType()], v.MatrixType())],
+           [ "wishart", typed_nr(continuous.WishartPSP(), [v.SymmetricMatrixType(), v.PositiveType()], v.SymmetricMatrixType())],
            
            [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.PositiveType(), v.PositiveType()], SPType([], v.BoolType())) ],
            [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.PositiveType(), v.PositiveType()], SPType([], v.BoolType())) ],
