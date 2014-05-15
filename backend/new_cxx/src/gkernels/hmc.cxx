@@ -11,7 +11,6 @@
 #include <boost/foreach.hpp>
 #include <boost/assign/list_of.hpp>
 
-using std::function;
 using std::pair;
 
 HMCGKernel::HMCGKernel(double epsilon, int steps) 

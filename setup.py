@@ -114,6 +114,7 @@ puma_src_files = [
     'src/sps/betabernoulli.cxx',
     'src/sps/conditional.cxx',
     'src/sps/continuous.cxx',
+	'src/sps/mvn.cxx',
     'src/sps/crp.cxx',
     'src/sps/deterministic.cxx',
     'src/sps/dir_mult.cxx',
@@ -174,7 +175,7 @@ if ON_LINUX:
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
         libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],        
-        extra_compile_args = ["-std=c++11" "-g" "-O3" "-fPIC" "-Wno-deprecated-register" "-Wno-overloaded-virtual"],
+        extra_compile_args = ["-g", "-O0", "-fPIC", "-Wno-deprecated-register", "-Wno-overloaded-virtual", "-L/usr/lib/"],
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
@@ -184,7 +185,7 @@ if ON_MAC:
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
         libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread-mt'],        
-        extra_compile_args = ["-std=c++11", "-g", "-O3", "-fPIC", "-Wno-deprecated-register", "-Wno-overloaded-virtual"],
+        extra_compile_args = ["-g", "-O3", "-fPIC", "-Wno-deprecated-register", "-Wno-overloaded-virtual"],
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)

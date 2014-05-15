@@ -11,7 +11,6 @@
 
 #include <boost/foreach.hpp>
 
-using std::function;
 using std::pair;
 
 MAPGKernel::MAPGKernel(double epsilon, int steps)  

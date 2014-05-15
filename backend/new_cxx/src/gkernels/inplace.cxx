@@ -7,7 +7,6 @@
 #include "consistency.h"
 #include <ctime>
 
-using std::function;
 using std::pair;
 
 InPlaceGKernel::InPlaceGKernel() {
