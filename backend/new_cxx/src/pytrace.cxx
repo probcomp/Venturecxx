@@ -24,6 +24,7 @@ PyTrace::~PyTrace() {}
 
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
 {
+  cout << "1" << endl;
   VentureValuePtr exp = parseExpression(object);
   pair<double,Node*> p = evalFamily(trace.get(),
 				    exp,
@@ -34,6 +35,7 @@ void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
   assert(p.first == 0);
   assert(!trace->families.count(did));
   trace->families[did] = shared_ptr<Node>(p.second);
+  cout << "2" << endl;
 }
 
 void PyTrace::unevalDirectiveID(DirectiveID did) 

@@ -20,6 +20,7 @@ MAPGKernel::MAPGKernel(double epsilon, int steps)
 
 pair<Trace*,double> MAPGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold)
 {
+  cout << "map" << endl;
   this->trace = trace;
   this->scaffold = scaffold;
   set<Node*> pNodes = scaffold->getPrincipalNodes();

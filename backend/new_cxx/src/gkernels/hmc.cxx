@@ -65,7 +65,18 @@ pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffol
 VentureValuePtr HMCGKernel::sampleMomenta(VentureValuePtr currentValues) const {
   vector<VentureValuePtr> momenta;
   BOOST_FOREACH(VentureValuePtr value, currentValues->getArray()) {
-    momenta.push_back(VentureNumber::makeValue(gsl_ran_gaussian(rng, 1)));
+    shared_ptr<VentureNumber> valueNumber = dynamic_pointer_cast<VentureNumber>(value);
+    if(valueNumber != NULL) {
+      momenta.push_back(VentureNumber::makeValue(gsl_ran_gaussian(rng, 1)));
+      continue;
+    }
+    shared_ptr<VentureVector> valueVector = dynamic_pointer_cast<VentureVector>(value);
+    if(valueVector != NULL) {
+      VectorXd momentVector(valueVector->v.size());
+      for(int si = 0; si < valueVector->v.size(); si++) momentVector[si] = gsl_ran_gaussian(rng, 1);
+      momenta.push_back(VentureVector::makeValue(momentVector));      
+      continue;
+    }
   }
   return VentureArray::makeValue(momenta);
 }
@@ -73,7 +84,16 @@ VentureValuePtr HMCGKernel::sampleMomenta(VentureValuePtr currentValues) const {
 double HMCGKernel::kinetic(const VentureValuePtr momenta) const {
   double kin = 0;
   BOOST_FOREACH(const VentureValuePtr m, momenta->getArray()) {
-    kin += m->getDouble()*m->getDouble();
+    shared_ptr<VentureNumber> valueNumber = dynamic_pointer_cast<VentureNumber>(m);
+    if(valueNumber != NULL) {
+      kin += m->getDouble()*m->getDouble();
+      continue;
+    }
+    shared_ptr<VentureVector> valueVector = dynamic_pointer_cast<VentureVector>(m);
+    if(valueVector != NULL) {
+      for(int si = 0; si < valueVector->v.size(); si++) kin += valueVector->v[si]*valueVector->v[si];
+      continue;
+    }
   }
   return kin*0.5;
 }
@@ -88,14 +108,22 @@ HMCGKernel::evolve(GradientOfRegen& grad, const VentureValuePtr& start_q, const 
   const VentureValuePtr half = VentureNumber::makeValue(epsilon->getDouble()*.5);
   VentureValuePtr q = start_q;
   VentureValuePtr dpdt = start_grad_q;
+  // cout << "start p = " << toString(start_p) << endl;
+  // cout << "grad = " << toString(start_grad_q) << endl;
+  // cout << "half = " << toString(half) << endl;
+  // cout << "grad*half = " << toString(start_grad_q*half) << endl;
   VentureValuePtr p = start_p-(start_grad_q*half);
+  // cout << "grad*half = " << toString(start_grad_q*half) << endl;
   for(int si = 0; si < numSteps; si++) {
     q = q+p*epsilon;
     dpdt = VentureArray::makeValue(grad(q->getArray()));
     p = p-dpdt*epsilon;
+    // cout << "2x" << endl;
   }
   p = p+dpdt*half;
-  p = VentureArray::makeZeros(p->getArray().size())-p;
+  // Negate momenta at the end to make the proposal symmetric
+  // (irrelevant if the kinetic energy function is symmetric)
+  p = p->neg();
   return make_pair(q, kinetic(p));
 }
 

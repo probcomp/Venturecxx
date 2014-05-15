@@ -23,6 +23,7 @@ struct VentureNumber : VentureValue
   VentureValuePtr operator+(const VentureValuePtr & rhs) const;
   VentureValuePtr operator-(const VentureValuePtr & rhs) const;
   VentureValuePtr operator*(const VentureValuePtr & rhs) const;
+  VentureValuePtr neg() const;
   double x;
 };
 
@@ -93,6 +94,7 @@ struct VentureArray : VentureValue
   VentureValuePtr operator+(const VentureValuePtr & rhs) const;
   VentureValuePtr operator-(const VentureValuePtr & rhs) const;
   VentureValuePtr operator*(const VentureValuePtr & rhs) const;
+  VentureValuePtr neg() const;
 };
 
 struct VentureNil : VentureValue
@@ -170,6 +172,10 @@ struct VentureMatrix : VentureValue
   string toString() const;
   boost::python::dict toPython(Trace * trace) const;
   MatrixXd m;
+  VentureValuePtr operator+(const VentureValuePtr & rhs) const;
+  VentureValuePtr operator-(const VentureValuePtr & rhs) const;
+  VentureValuePtr operator*(const VentureValuePtr & rhs) const; // pointwise product.
+  VentureValuePtr neg() const;
 };
 
 struct VentureVector : VentureValue
@@ -184,6 +190,7 @@ struct VentureVector : VentureValue
   VentureValuePtr operator+(const VentureValuePtr & rhs) const;
   VentureValuePtr operator-(const VentureValuePtr & rhs) const;
   VentureValuePtr operator*(const VentureValuePtr & rhs) const;
+  VentureValuePtr neg() const;
 };
 
 struct VentureRequest : VentureValue

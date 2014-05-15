@@ -100,6 +100,7 @@ struct VentureValue
   virtual VentureValuePtr operator+(const VentureValuePtr & rhs) const;
   virtual VentureValuePtr operator-(const VentureValuePtr & rhs) const;
   virtual VentureValuePtr operator*(const VentureValuePtr & rhs) const;
+  virtual VentureValuePtr neg() const;
   virtual bool ltSameType(const VentureValuePtr & rhs) const;
 };
 

@@ -89,6 +89,10 @@ VentureValuePtr VentureValue::operator*(const VentureValuePtr & rhs) const {
   throw "not implemented.";
 }
 
+VentureValuePtr VentureValue::neg() const {
+  throw "not implemented.";
+}
+
 bool VentureValue::ltSameType(const VentureValuePtr & rhs) const { assert(false); }
 
 

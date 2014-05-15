@@ -87,7 +87,7 @@ double MVNormalPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  co
 
 pair<VentureValuePtr, vector<VentureValuePtr> > MVNormalPSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) {
   MatrixXd mu = args->operandValues[0]->getVector();
-  if(this->sigma != args->operandValues[1]) { // cache miss.
+  if(this->sigma.get() != args->operandValues[1].get()) { // cache miss.
     this->sigma = args->operandValues[1];
     this->isigma = sigma->getMatrix().inverse();
   }
