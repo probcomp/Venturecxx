@@ -1,14 +1,21 @@
 from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl
 from venture.unit import *
 import numpy as np
-import scipy.stats
+import scipy.stats as stats
 
 from nose import SkipTest
 from nose.plugins.attrib import attr
 from venture.test.stats import statisticalTest, reportKnownContinuous
 
+from venture.test.config import get_ripl,get_mripl,collectSamples
+from testconfig import config
+
+from nose.tools import assert_equal, assert_almost_equal
+
+
+
 @attr('slow')
-def testAnalytics(totalSamples=400):
+def _testAnalytics(totalSamples=400):
     # load ripl with model and observes
     # we use *add*,etc. because Analytics converts to Python values.
     
@@ -138,7 +145,7 @@ def _sampleFromJointHistory():
 def testSampleFromJointAssume():
     history = _sampleFromJointHistory()
     muSamples = history.nameToSeries['mu'][0].values
-    res= reportKnownContinuous( scipy.stats.norm(loc=10,scale=.01).cdf,
+    res= reportKnownContinuous(stats.norm(loc=10,scale=.01).cdf,
                                   muSamples, descr='testSampleFromJointAssume')
     #assert res.pval > .01
     return res
@@ -147,7 +154,7 @@ def testSampleFromJointObserve():
     history = _sampleFromJointHistory()
     nameObs= [k for k in history.nameToSeries.keys() if 'obs' in k][0]
     obsSamples = history.nameToSeries[nameObs][0].values
-    res= reportKnownContinuous( scipy.stats.norm(loc=10,scale=.014).cdf,
+    res= reportKnownContinuous( stats.norm(loc=10,scale=.014).cdf,
                                   obsSamples, descr='testSampleFromJointObserve')
     #assert res.pval > .01
     return res
@@ -167,7 +174,7 @@ def _testMRiplSampleFromJoint():
         samples = 25
         history = model.sampleFromJoint(samples,useMRipl=True)
         muSamples = history.nameToSeries['mu'][0].values
-        resMu= reportKnownContinuous( scipy.stats.norm(loc=10,scale=.01).cdf,
+        resMu= reportKnownContinuous( stats.norm(loc=10,scale=.01).cdf,
                                       muSamples, descr='testMRiplSFJ')
         #assert resMu.pval > .01
         results.append(resMu)
@@ -191,7 +198,7 @@ def _testMRiplRunFromJoint(samples=500,runs=2):
         for r in range(runs):
             muSamples.extend(history.nameToSeries['mu'][r].values)
         
-        resMu= reportKnownContinuous( scipy.stats.norm(loc=0,scale=30).cdf,
+        resMu= reportKnownContinuous( stats.norm(loc=0,scale=30).cdf,
                                       muSamples, descr='testMRiplIFJ')
         #assert resMu.pval > .01
         results.append(resMu)
@@ -212,7 +219,9 @@ def testCompareSampleDicts():
     assert stats['mu'][-1].pval > .01
 
 
-def testGewekeTest():
+
+## FIXME resinstate geweks
+def _testGewekeTest():
     params = generateMRiplParams(no_ripls=(2,3), backends=('puma','lite'),
                                  modes=(True,))  ## ONLY LOCAL
     results = []
@@ -225,7 +234,7 @@ def testGewekeTest():
         fwd,inf,_=model.gewekeTest(50,plot=False,useMRipl=True)
         muSamples= [h.nameToSeries['mu'][0].values for h in [fwd,inf] ]
 
-        res = reportKnownContinuous( scipy.stats.norm(loc=0,scale=30).cdf,
+        res = reportKnownContinuous( stats.norm(loc=0,scale=30).cdf,
                                       muSamples[0], descr='testGeweke')
         assert res.pval > .01
         results.append(res)
