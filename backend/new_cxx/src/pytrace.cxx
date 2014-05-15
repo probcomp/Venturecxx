@@ -138,11 +138,13 @@ struct Inferer
     else if (kernel == "pgibbs")
     {
       size_t particles = boost::python::extract<size_t>(params["particles"]);
-      gKernel = shared_ptr<GKernel>(new PGibbsGKernel(particles));
+      bool inParallel  = boost::python::extract<bool>(params["in_parallel"]);
+      gKernel = shared_ptr<GKernel>(new PGibbsGKernel(particles,inParallel));
     }
     else if (kernel == "gibbs")
     {
-      gKernel = shared_ptr<GKernel>(new EnumerativeGibbsGKernel);
+      bool inParallel  = boost::python::extract<bool>(params["in_parallel"]);
+      gKernel = shared_ptr<GKernel>(new EnumerativeGibbsGKernel(inParallel));
     }
     else if (kernel == "slice")
     {

@@ -67,6 +67,7 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
     workers[p] = new PGibbsWorker(scaffold);
     boost::function<void()> th_func = boost::bind(&PGibbsWorker::doPGibbsInitial,workers[p],trace);
     threads[p] = new boost::thread(th_func);
+    if (!inParallel) { threads[p]->join(); }
   }
   
   particles[numNewParticles] = shared_ptr<Particle>(new Particle(trace));
@@ -75,6 +76,7 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
 
   for (size_t p = 0; p < numNewParticles; ++p)
   {
+    if (inParallel) { threads[p]->join(); }
     threads[p]->join();
     particles[p] = workers[p]->particle;
     particleWeights[p] = workers[p]->weight;
@@ -97,6 +99,7 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
 	workers[p] = new PGibbsWorker(scaffold);
 	boost::function<void()> th_func = boost::bind(&PGibbsWorker::doPGibbsPropagate,workers[p],particles,sums,trace->getRNG(),borderGroup);
 	threads[p] = new boost::thread(th_func);
+	if (!inParallel) { threads[p]->join(); }
       }
     
     newParticles[numNewParticles] = shared_ptr<Particle>(new Particle(particles[numNewParticles]));
@@ -106,7 +109,7 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
 
     for (size_t p = 0; p < numNewParticles; ++p)
       {
-	threads[p]->join();
+	if (inParallel) { threads[p]->join(); }
 	newParticles[p] = workers[p]->particle;
 	newParticleWeights[p] = workers[p]->weight;
 	delete workers[p];

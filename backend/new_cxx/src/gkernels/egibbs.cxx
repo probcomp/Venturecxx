@@ -76,11 +76,12 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
     workers[i] = new EGibbsWorker(trace);
     boost::function<void()> th_func = boost::bind(&EGibbsWorker::doEGibbs,workers[i],scaffold, applicationNodes, valueTuples[i]);
     threads[i] = new boost::thread(th_func);
+    if (!inParallel) { threads[i]->join(); }
   }
   
   for (size_t i = 0; i < numValues; ++i)
   {
-    threads[i]->join();
+    if (inParallel) { threads[i]->join(); }
     xiWeights[i] = workers[i]->weight;
     particles[i] = workers[i]->particle;
     delete workers[i];
