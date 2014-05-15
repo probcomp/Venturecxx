@@ -30,6 +30,7 @@ class VentureValue(object):
   def getSimplex(self): raise VentureTypeError("Cannot convert %s to simplex" % type(self))
   def getDict(self): raise VentureTypeError("Cannot convert %s to dict" % type(self))
   def getMatrix(self): raise VentureTypeError("Cannot convert %s to matrix" % type(self))
+  def getSymmetricMatrix(self): raise VentureTypeError("Cannot convert %s to symmetric matrix" % type(self))
   def getSP(self): raise VentureTypeError("Cannot convert %s to sp" % type(self))
   def getEnvironment(self): raise VentureTypeError("Cannot convert %s to environment" % type(self))
 
@@ -482,6 +483,11 @@ class VentureDict(VentureValue):
 class VentureMatrix(VentureValue):
   def __init__(self,matrix): self.matrix = matrix
   def getMatrix(self): return self.matrix
+  def getSymmetricMatrix(self):
+    if matrixIsSymmetric(self.matrix):
+      return self.matrix
+    else:
+      raise VentureTypeError("Matrix is not symmetric %s" % self.matrix)
   def compareSameType(self, other):
     return lexicographicMatrixCompare(self.matrix, other.matrix)
   def __hash__(self):
@@ -522,6 +528,15 @@ class VentureMatrix(VentureValue):
     return np.sum(np.multiply(self.matrix, other.matrix))
   def map_real(self, f):
     return VentureMatrix(np.vectorize(f)(self.matrix))
+
+@serialize.register
+class VentureSymmetricMatrix(VentureMatrix):
+  def __init__(self, matrix):
+    self.matrix = matrix
+    assert matrixIsSymmetric(matrix)
+
+def matrixIsSymmetric(matrix):
+  (matrix.transpose() == matrix).all()
 
 @serialize.register
 class SPRef(VentureValue):
@@ -592,7 +607,7 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Count", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix"]:
+for typestring in ["Count", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))
