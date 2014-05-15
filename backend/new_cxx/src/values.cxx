@@ -370,7 +370,7 @@ boost::python::dict VentureDictionary::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "dict";
-  value["value"] = toPythonDict(trace, dict);
+  value["value"] = "opaque";
   return value;
 }
 
@@ -408,6 +408,14 @@ VentureValuePtr VenturePair::lookup(VentureValuePtr index) const
   if (index->getInt() == 0) { return car; }
   else { return cdr->lookup(VentureValuePtr(new VentureAtom(index->getInt() - 1))); }
 }
+
+VentureValuePtr VentureDictionary::lookup(VentureValuePtr index) const
+{
+  if (dict.count(index)) { return dict.at(index); }
+  
+  throw "Key " + index->toString() + " not found in VentureDictionary.";
+}
+
 
 ////////////  
 MatrixXd VentureSimplex::getMatrix() const
