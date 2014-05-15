@@ -9,7 +9,7 @@
 #include <boost/python/object.hpp>
 #include <boost/python/dict.hpp>
 #include <boost/unordered_map.hpp>
-
+#include <boost/foreach.hpp>
 
 #ifdef __MACH__  // OS X does not have clock_gettime, use clock_get_time
 #include <mach/clock.h>
@@ -117,7 +117,7 @@ inline VentureValuePtr operator*(const VentureValuePtr& lhs, const VentureValueP
 inline string toString(const VentureValuePtr& value) {return value->toString(); }
 inline string toString(const vector<VentureValuePtr>& values) {
   string str = "<vector> [";
-  for(VentureValuePtr value : values) {
+  BOOST_FOREACH(VentureValuePtr value, values) {
     str += value->toString()+" ";
   }
   str += "]";

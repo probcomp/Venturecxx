@@ -6,15 +6,16 @@
 #include "lkernel.h"
 
 #include <iostream>
+#include <boost/foreach.hpp>
 
 using std::cout;
 using std::endl;
 
 shared_ptr<LKernel> const PSP::getAAALKernel() { return shared_ptr<LKernel>(new DefaultAAALKernel(this)); }
 
-pair<VentureValuePtr, vector<VentureValuePtr>> PSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args)  const{
+pair<VentureValuePtr, vector<VentureValuePtr> > PSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args)  const{
 	vector<VentureValuePtr> grad;
-	for(VentureValuePtr arg : args->operandValues) {
+	BOOST_FOREACH(VentureValuePtr arg,  args->operandValues) {
 		grad.push_back(VentureNumber::makeValue(0));
 	}
 	return make_pair(VentureNumber::makeValue(0), grad); 
@@ -22,7 +23,7 @@ pair<VentureValuePtr, vector<VentureValuePtr>> PSP::gradientOfLogDensity(const V
 
 vector<VentureValuePtr> PSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
   vector<VentureValuePtr> grad;
-  for(auto value : args->operandValues) {
+  BOOST_FOREACH(VentureValuePtr value, args->operandValues) {
     grad.push_back(VentureNumber::makeValue(0));
   }
   vector<VentureValuePtr> directions = direction->getArray();

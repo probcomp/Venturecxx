@@ -1,5 +1,6 @@
 #include "sps/scope.h"
 #include "node.h"
+#include <boost/assign/list_of.hpp>
 
 VentureValuePtr ScopeIncludeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
@@ -12,5 +13,5 @@ bool ScopeIncludeOutputPSP::canAbsorb(ConcreteTrace * trace,ApplicationNode * ap
 }
 
 vector<VentureValuePtr> ScopeIncludeOutputPSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
-  return {VentureNumber::makeValue(0), VentureNumber::makeValue(0), direction};
+  return boost::assign::list_of(VentureNumber::makeValue(0))(VentureNumber::makeValue(0))(direction);
 }

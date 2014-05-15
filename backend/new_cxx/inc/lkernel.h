@@ -5,6 +5,7 @@
 #include "values.h"
 #include <gsl/gsl_rng.h>
 #include "args.h"
+#include <boost/foreach.hpp>
 
 struct Trace;
 struct Args;
@@ -21,10 +22,10 @@ struct LKernel
     { 
       return weight(trace,oldValue,shared_ptr<VentureValue>(),args);
     }
-  virtual std::pair<VentureValuePtr, vector<VentureValuePtr>> gradientOfReverseWeight(Trace * trace, VentureValuePtr value, shared_ptr<Args> args) 
+  virtual std::pair<VentureValuePtr, vector<VentureValuePtr> > gradientOfReverseWeight(Trace * trace, VentureValuePtr value, shared_ptr<Args> args) 
     {
       vector<VentureValuePtr> gradients;
-      for(auto ptr : args->operandValues) {
+      BOOST_FOREACH(VentureValuePtr ptr, args->operandValues) {
         gradients.push_back(VentureValuePtr(new VentureNumber(0)));
       }
       return make_pair(VentureValuePtr(new VentureNumber(0)), gradients);
@@ -50,7 +51,7 @@ struct DeterministicLKernel : LKernel
 
   VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng);
   double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args);
-  std::pair<VentureValuePtr, vector<VentureValuePtr>> gradientOfReverseWeight(Trace * trace, VentureValuePtr value, shared_ptr<Args> args);
+  std::pair<VentureValuePtr, vector<VentureValuePtr> > gradientOfReverseWeight(Trace * trace, VentureValuePtr value, shared_ptr<Args> args);
   VentureValuePtr value;
   shared_ptr<PSP> psp;
 };

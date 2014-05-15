@@ -8,7 +8,7 @@
 struct VentureNumber : VentureValue
 {
   VentureNumber(double x): x(x) {}
-  VentureValuePtrVector getArray() const { return VentureValuePtrVector({VentureNumber::makeValue(x)}); }
+  VentureValuePtrVector getArray() const;
   static VentureValuePtr makeValue(double x); // factory.
   bool hasDouble() const { return true; }
   double getDouble() const { return x; }

@@ -11,6 +11,12 @@ using boost::lexical_cast;
 /* TODO the constness in this file is incorrect, but I don't understand it well enough 
    yet, so I figure I will just play make-the-compiler-happy when the time comes.
 */
+VentureValuePtrVector VentureNumber::getArray() const { 
+  VentureValuePtrVector array;
+  array.push_back(VentureNumber::makeValue(x));
+  return array;
+}
+
 VentureValuePtr VentureNumber::makeValue(double x) {
   return VentureValuePtr(new VentureNumber(x));
 }
@@ -271,7 +277,7 @@ string VentureBool::toString() const { return "VentureBool " + lexical_cast<stri
 string VentureSymbol::toString() const { return "VentureSymbol " + s;}
 string VentureArray::toString() const { 
   string str = "[";
-  for(VentureValuePtr x : xs) {
+  BOOST_FOREACH(VentureValuePtr x, xs) {
     str += x->toString()+" ";
   }
   str += "]";
@@ -439,7 +445,6 @@ vector<VentureValuePtr> VenturePair::getArray() const
 }
 
 VentureValuePtr VentureNumber::operator+(const VentureValuePtr & rhs) const {
-  cout << ::toString(rhs) << endl;
   const shared_ptr<VentureNumber> rhsVal = dynamic_pointer_cast<VentureNumber>(rhs);
   assert(rhsVal != NULL);
   return VentureValuePtr(new VentureNumber(this->x+rhsVal->x));

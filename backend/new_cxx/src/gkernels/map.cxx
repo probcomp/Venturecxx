@@ -39,7 +39,7 @@ pair<Trace*,double> MAPGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffol
   GradientOfRegen grad(trace, scaffold);
   vector<VentureValuePtr> start_grad;
   // cout << "start_grad" << toString(start_grad);
-  for(Node * pNode : pNodes) {
+  BOOST_FOREACH(Node * pNode, pNodes) {
     start_grad.push_back(this->rhoDB->getPartial(pNode));
   }
   vector<VentureValuePtr> proposed = this->evolve(grad, currentValues, start_grad);

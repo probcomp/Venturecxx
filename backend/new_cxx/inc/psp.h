@@ -35,7 +35,7 @@ struct PSP
   virtual bool hasDeltaKernel() const { return false; }
   virtual shared_ptr<LKernel> getDeltaKernel() const { assert(false); return shared_ptr<LKernel>(); }
 
-  virtual pair<VentureValuePtr, vector<VentureValuePtr>> gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) const;
+  virtual pair<VentureValuePtr, vector<VentureValuePtr> > gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) const;
   virtual vector<VentureValuePtr> gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const;
 
   /* For slice sampling */

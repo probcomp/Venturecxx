@@ -9,6 +9,7 @@
 #include <ctime>
 
 #include <boost/foreach.hpp>
+#include <boost/assign/list_of.hpp>
 
 using std::function;
 using std::pair;
@@ -63,7 +64,7 @@ pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffol
 
 VentureValuePtr HMCGKernel::sampleMomenta(VentureValuePtr currentValues) const {
   vector<VentureValuePtr> momenta;
-  for(VentureValuePtr value : currentValues->getArray()) {
+  BOOST_FOREACH(VentureValuePtr value, currentValues->getArray()) {
     momenta.push_back(VentureNumber::makeValue(gsl_ran_gaussian(rng, 1)));
   }
   return VentureArray::makeValue(momenta);
@@ -71,7 +72,7 @@ VentureValuePtr HMCGKernel::sampleMomenta(VentureValuePtr currentValues) const {
 
 double HMCGKernel::kinetic(const VentureValuePtr momenta) const {
   double kin = 0;
-  for(const VentureValuePtr m : momenta->getArray()) {
+  BOOST_FOREACH(const VentureValuePtr m, momenta->getArray()) {
     kin += m->getDouble()*m->getDouble();
   }
   return kin*0.5;
@@ -125,12 +126,13 @@ VentureValuePtrVector GradientOfRegen::operator()(const VentureValuePtrVector& v
     ApplicationNode * applicationNode = dynamic_cast<ApplicationNode*>(node);
     applicationNodes.push_back(applicationNode);
   }
-  shared_ptr<Scaffold> new_scaffold = constructScaffold(this->trace, {pNodes}, false);
+  vector<set<Node* > > pNodeVec = boost::assign::list_of(pNodes);
+  shared_ptr<Scaffold> new_scaffold = constructScaffold(this->trace, pNodeVec, false);
   registerDeterministicLKernels(trace, new_scaffold, applicationNodes, values); 
   pair<double,shared_ptr<DB> > p = detachAndExtract(trace,new_scaffold->border[0],new_scaffold,true);
   this->scaffold = new_scaffold;
   VentureValuePtrVector result;
-  for(Node * node : pNodes) {
+  BOOST_FOREACH(Node * node, pNodes) {
     result.push_back(p.second->getPartial(node));
   }
   return result;
