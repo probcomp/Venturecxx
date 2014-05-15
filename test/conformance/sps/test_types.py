@@ -105,6 +105,18 @@ def propRandom(args_listss, sp):
         continue
   assert False, "SP deterministically returned %s (parallel to arguments)" % answers
 
+def testExpressionFor():
+  checkTypedProperty(propExpressionWorks, AnyType())
+
+def propExpressionWorks(value):
+  expr = value.expressionFor()
+  assert value.equal(carefully(eval_in_ripl, expr))
+
+def eval_in_ripl(expr):
+  ripl = get_ripl()
+  ripl.predict(expr)
+  return ripl.sivm.core_sivm.engine.report_raw(1)
+
 def testRiplSimulate():
   for (name,sp) in relevantSPs():
     if not sp.outputPSP.isRandom():
@@ -133,15 +145,3 @@ through a ripl (applied fully uncurried)."""
   else:
     expr = [name] + [v.expressionFor() for v in args_lists[0]]
     assert answer.equal(carefully(eval_in_ripl, expr))
-
-def testExpressionFor():
-  checkTypedProperty(propExpressionWorks, AnyType())
-
-def propExpressionWorks(value):
-  expr = value.expressionFor()
-  assert value.equal(carefully(eval_in_ripl, expr))
-
-def eval_in_ripl(expr):
-  ripl = get_ripl()
-  ripl.predict(expr)
-  return ripl.sivm.core_sivm.engine.report_raw(1)
