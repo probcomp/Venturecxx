@@ -18,9 +18,11 @@ from scaffold import constructScaffold
 from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
+from serialize import register, save_trace, load_trace
 import random
 import numpy.random
 
+@register
 class Trace(object):
   def __init__(self):
 
@@ -384,12 +386,10 @@ class Trace(object):
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
   def save(self, fname, extra):
-    from serialize import save_trace
     save_trace(self, extra, fname)
 
   @staticmethod
   def load(fname):
-    from serialize import load_trace
     trace, extra = load_trace(fname)
     return trace, extra
 

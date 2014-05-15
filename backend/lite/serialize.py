@@ -1,4 +1,3 @@
-from trace import Trace
 from env import VentureEnvironment
 from node import Node, ConstantNode, LookupNode, RequestNode, OutputNode
 from request import Request, ESR
@@ -17,7 +16,6 @@ class Placeholder(object):
     pass
 
 serializable_types = [
-    Trace,
     ConstantNode,
     LookupNode,
     RequestNode,
@@ -151,6 +149,7 @@ class Serializer(object):
             self.id_to_obj[i] = obj
 
         ## add built-in SP specially
+        from trace import Trace
         for name, node in Trace().globalEnv.outerEnv.frame.iteritems():
             self.id_to_obj['builtin:' + name] = node.madeSP
 
