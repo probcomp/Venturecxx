@@ -156,7 +156,7 @@ class Serializer(object):
             ## attempt to use the object's deserialize method if available
             ## fallback: just set the __dict__
             if hasattr(cls, 'deserialize'):
-                obj.deserialize(self)
+                obj.deserialize(self, data['_value'])
             else:
                 obj.__dict__ = dict((k, self.deserialize(v)) for (k, v) in data['_value'].iteritems())
 
