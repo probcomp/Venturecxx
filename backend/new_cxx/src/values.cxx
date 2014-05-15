@@ -29,6 +29,10 @@ VentureValuePtr VentureVector::makeValue(const VectorXd & xs) {
   return VentureValuePtr(new VentureVector(xs));
 }
 
+VentureValuePtr VentureMatrix::makeValue(const MatrixXd & xs) {
+  return VentureValuePtr(new VentureMatrix(xs));
+}
+
 VentureValuePtr VentureArray::makeOnes(size_t length) {
   VentureValuePtrVector v;
   for(size_t i = 0; i < length; i++) {

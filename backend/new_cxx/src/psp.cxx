@@ -13,7 +13,7 @@ using std::endl;
 
 shared_ptr<LKernel> const PSP::getAAALKernel() { return shared_ptr<LKernel>(new DefaultAAALKernel(this)); }
 
-pair<VentureValuePtr, vector<VentureValuePtr> > PSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args)  const{
+pair<VentureValuePtr, vector<VentureValuePtr> > PSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) {
 	vector<VentureValuePtr> grad;
 	BOOST_FOREACH(VentureValuePtr arg,  args->operandValues) {
 		grad.push_back(VentureNumber::makeValue(0));

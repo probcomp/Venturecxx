@@ -165,6 +165,7 @@ struct VentureDictionary : VentureValue
 struct VentureMatrix : VentureValue
 {
   VentureMatrix(const Eigen::MatrixXd & m): m(m) {}
+  static VentureValuePtr makeValue(const MatrixXd & xs);
   MatrixXd getMatrix() const { return m; }
   string toString() const;
   boost::python::dict toPython(Trace * trace) const;

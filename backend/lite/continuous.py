@@ -41,8 +41,7 @@ class MVNormalOutputPSP(RandomPSP):
   def gradientOfLogDensity(self, x, args):
     (mu, sigma) = self.__parse_args__(args)
     if sigma is self.sigma:
-	  print 'hit'
-	  isigma = self.isigma
+	    isigma = self.isigma
     else:
       isigma = npla.inv(sigma)
       self.sigma = sigma

@@ -9,6 +9,8 @@
 #include "sps/scope.h"
 #include <iostream>
 
+#include <boost/foreach.hpp>
+
 using std::cout;
 using std::endl;
 
@@ -66,7 +68,7 @@ double detach(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> 
   if(compute_gradient) {
     vector<shared_ptr<Node> > parents_esr = trace->getESRParents(node);
     vector<Node*> parents;
-    for(shared_ptr<Node> node : parents_esr) {
+    BOOST_FOREACH(shared_ptr<Node> node, parents_esr) {
       parents.push_back(node.get());
     }
     parents.insert(parents.end(), args->operandNodes.begin(), args->operandNodes.end());
@@ -131,7 +133,7 @@ double extract(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,s
       if (lookupNode) { 
         trace->clearValue(lookupNode); 
         if(compute_gradient) { // d/dx is 1 for a lookup node.
-          for(Node* p : node->definiteParents) {
+          BOOST_FOREACH(Node* p, node->definiteParents) {
             db->addPartial(p, db->getPartial(node));
           }
         }
@@ -165,7 +167,7 @@ double unevalFamily(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaff
   else if (lookupNode)
   {
     if(compute_gradient) {
-      for(Node* p : node->definiteParents) {
+      BOOST_FOREACH(Node* p, node->definiteParents) {
         db->addPartial(p, db->getPartial(node));
       }
     }
@@ -253,13 +255,13 @@ double unapplyPSP(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffo
   trace->clearValue(node);
 
   if(compute_gradient) {
-    for(Node* p : node->definiteParents) {
+    BOOST_FOREACH(Node* p, node->definiteParents) {
       if(scaffold->isResampling(p) || scaffold->isBrush(p)) {
         // cout << "psp type " << psp->toString() << endl;
         vector<VentureValuePtr> grads = psp->gradientOfSimulate(args, db->getValue(node), db->getPartial(node));
         vector<Node*> parents(args->operandNodes);
         vector<shared_ptr<Node> > parents_esr = trace->getESRParents(node);
-        for(shared_ptr<Node> node : parents_esr) 
+        BOOST_FOREACH(shared_ptr<Node> node, parents_esr) 
           parents.push_back(node.get());
         // cout << "partial 3: " << endl;
         db->addPartials(parents, grads);

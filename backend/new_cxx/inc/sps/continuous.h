@@ -15,12 +15,12 @@ struct NormalPSP : RandomPSP
 
   //vector<ParameterScope> getParameterScopes() const;
   vector<double> gradientOfLogDensity(double ,
-				      const vector<double> & arguments) const;
+				      const vector<double> & arguments) ;
 
   bool isContinuous() const { return true; }
 
    pair<VentureValuePtr, vector<VentureValuePtr> > 
-   gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) const;
+   gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args);
 
    vector<VentureValuePtr> gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const;
    string toString() const {return "NormalPSP"; }

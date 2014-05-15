@@ -2,6 +2,8 @@
 #include "value.h"
 #include "values.h"
 
+#include <boost/foreach.hpp>
+
 bool DB::hasValue(Node * node) { return values.count(node); }
 
 VentureValuePtr DB::getValue(Node * node)
@@ -84,7 +86,7 @@ VentureValuePtr DB::getPartial(Node* node) {
 
 vector<VentureValuePtr> DB::getPartials(const vector<Node*>& nodes) {
   vector<VentureValuePtr> res;
-  for(Node* node : nodes) {
+  BOOST_FOREACH(Node* node, nodes) {
     res.push_back(getPartial(node));
   }
   return res;

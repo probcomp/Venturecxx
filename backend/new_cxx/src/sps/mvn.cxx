@@ -85,11 +85,19 @@ double MVNormalPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  co
   return dmvnorm(n, gsl_x.get(), gsl_mu.get(), gsl_sigma.get());
 }
 
-pair<VentureValuePtr, vector<VentureValuePtr> > MVNormalPSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) const {
-  VectorXd mu = args->operandValues[0]->getVector();
-  MatrixXd sigma = args->operandValues[1]->getMatrix();
-  // TODO: 
-  vector<VentureValuePtr> gradParam = boost::assign::list_of(args->operandValues[0])(args->operandValues[1])m;
-  return make_pair(x, gradParam);
+pair<VentureValuePtr, vector<VentureValuePtr> > MVNormalPSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) {
+  MatrixXd mu = args->operandValues[0]->getVector();
+  if(this->sigma != args->operandValues[1]) { // cache miss.
+    this->sigma = args->operandValues[1];
+    this->isigma = sigma->getMatrix().inverse();
+  }
+  MatrixXd xb = x->getVector();
+  MatrixXd xvar = (xb-mu)*(xb-mu).transpose();
+  VectorXd gradX = this->isigma*(mu-xb);
+  VectorXd gradMu = this->isigma*(xb-mu);
+  MatrixXd gradSigma = isigma*xvar*isigma*0.5-isigma*0.5;
+  vector<VentureValuePtr> gradParam = boost::assign::list_of(VentureVector::makeValue(gradMu))
+                                      (VentureMatrix::makeValue(gradSigma));
+  return make_pair(VentureVector::makeValue(gradX), gradParam);
 }
 

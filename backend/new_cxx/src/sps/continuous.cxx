@@ -82,7 +82,7 @@ double NormalPSP::logDensityNumeric(double output, const vector<double> & args) 
 }
 
 pair<VentureValuePtr, vector<VentureValuePtr> > 
-NormalPSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) const {
+NormalPSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) {
   double mu = args->operandValues[0]->getDouble();
   double sigma = args->operandValues[1]->getDouble();
   double xd = x->getDouble();
@@ -112,7 +112,7 @@ vector<ParameterScope> NormalPSP::getParameterScopes() const
 */
 
 vector<double> NormalPSP::gradientOfLogDensity(double output,
-					      const vector<double> & arguments) const
+					      const vector<double> & arguments) 
 {
   double mu = arguments[0];
   double sigma = arguments[1];
