@@ -536,7 +536,7 @@ class VentureSymmetricMatrix(VentureMatrix):
     assert matrixIsSymmetric(matrix)
 
 def matrixIsSymmetric(matrix):
-  (matrix.transpose() == matrix).all()
+  return (matrix.transpose() == matrix).all()
 
 @serialize.register
 class SPRef(VentureValue):
