@@ -148,7 +148,7 @@ struct VentureDictionary : VentureValue
   VentureDictionary(const VentureValuePtrMap<VentureValuePtr> & dict): dict(dict) {}
   const VentureValuePtrMap<VentureValuePtr>& getDictionary() const { return dict; }
 
-  VentureValuePtr lookup(VentureValuePtr index) const { return dict.at(index); }
+  VentureValuePtr lookup(VentureValuePtr index) const;
   bool contains(VentureValuePtr index) const { return dict.count(index); }
   int size() const { return dict.size(); }
 

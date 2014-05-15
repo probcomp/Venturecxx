@@ -361,7 +361,8 @@ class Trace(object):
         #assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
 
-      # [FIXME] egregrious style, but expedient. The stack is such a mess anyway, it's hard to do anything with good style that
+      # [FIXME] egregrious style, but expedient. The stack is such a
+      # mess anyway, it's hard to do anything with good style that
       # doesn't begin by destroying the stack.
       elif params["kernel"] == "pgibbs":
         if params["block"] == "ordered_range":
