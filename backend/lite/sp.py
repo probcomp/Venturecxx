@@ -21,10 +21,22 @@ class SPFamilies(object):
 
   def copy(self):
     return SPFamilies(self.families.copy())
+
+  def serialize(self, s):
+    return s.serialize_default(self)
+
+  def deserialize(self, s, data):
+    return s.deserialize_default(self, data)
   
 @serialize.register
 class SPAux(object):
   def copy(self): return SPAux()
+
+  def serialize(self, s):
+    return {}
+
+  def deserialize(self, s, _):
+    pass
 
 @serialize.register
 class VentureSP(VentureValue):
@@ -58,6 +70,16 @@ class VentureSP(VentureValue):
 
   # for serialization
   cyclic = True
+
+  def serialize(self, s):
+    ret = {}
+    ret['requestPSP'] = s.serialize(self.requestPSP)
+    ret['outputPSP'] = s.serialize(self.outputPSP)
+    return ret
+
+  def deserialize(self, s, data):
+    self.requestPSP = s.deserialize(data['requestPSP'])
+    self.outputPSP = s.deserialize(data['outputPSP'])
 
 registerVentureType(VentureSP)
 
