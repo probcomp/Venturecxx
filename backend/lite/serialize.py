@@ -10,6 +10,7 @@ from msp import MSPRequestPSP
 from smap import SMap
 
 import json
+import warnings
 
 class Placeholder(object):
     """An object that can be instantiated before knowing what type it should be."""
@@ -49,6 +50,25 @@ serializable_types = [
 
 type_to_str = dict((t, t.__name__) for t in serializable_types)
 str_to_type = dict((t.__name__, t) for t in serializable_types)
+
+def register(cls):
+    """Register a Python class (e.g. a custom SP) with the serializer."""
+
+    if not isinstance(cls, type):
+        raise TypeError("serialize.register() argument must be a class")
+
+    if not hasattr(cls, 'serialize'):
+        warnings.warn("Class does not define serialize() method, using fallback implementation",
+                      stacklevel=2)
+    if not hasattr(cls, 'deserialize'):
+        warnings.warn("Class does not define deserialize() method, using fallback implementation",
+                      stacklevel=2)
+
+    type_to_str[cls] = cls.__name__
+    str_to_type[cls.__name__] = cls
+
+    # return the class so that this can be used as a decorator
+    return cls
 
 class Serializer(object):
     """Serializer and deserializer for Trace objects."""
