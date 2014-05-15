@@ -48,6 +48,13 @@ serializable_types = [
 
 type_to_str = dict((t, t.__name__) for t in serializable_types)
 str_to_type = dict((t.__name__, t) for t in serializable_types)
+cyclic_types = [
+    Node,
+    VentureEnvironment,
+    VentureSP
+]
+for t in cyclic_types:
+    t.cyclic = True
 
 def register(cls):
     """Register a Python class (e.g. a custom SP) with the serializer."""
@@ -110,7 +117,7 @@ class Serializer(object):
             assert type(obj) in type_to_str, "Can't serialize {0}".format(repr(obj))
 
             ## some objects should be stored by reference, in case of shared objects and cycles
-            should_make_ref = isinstance(obj, (Node, VentureEnvironment, VentureSP))
+            should_make_ref = getattr(obj, 'cyclic', False)
             if should_make_ref:
                 ## check if seen already
                 if obj in self.obj_to_id:
