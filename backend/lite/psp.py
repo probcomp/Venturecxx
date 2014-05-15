@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from utils import override
 from lkernel import DefaultAAALKernel,DefaultVariationalLKernel,LKernel
 from request import Request
+import serialize
 
 class PSP(object):
   """A Primitive Stochastic Procedure.
@@ -235,6 +236,7 @@ class NullRequestPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
 
+@serialize.register
 class ESRRefOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def simulate(self,args):

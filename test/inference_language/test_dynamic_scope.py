@@ -67,9 +67,13 @@ def testDynamicScope8():
 
 def testScopeExclude1():
   ripl = get_ripl()
-  if config["get_ripl"] != "puma": raise SkipTest("scope_exclude only in puma")
-  
-  ripl.assume("x", "(scope_exclude 0 (flip))")
-  ripl.predict("(scope_include 0 0 x)")
+  ripl.assume("f", "(mem (lambda (x) (scope_exclude 0 (bernoulli))))")
+  ripl.predict("(scope_include 0 0 (+ (f 0) (f 1) (f 2) (f 3)))")
   assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0, 0), 0)
+
+def testScopeExcludeBaseline():
+  ripl = get_ripl()
+  ripl.assume("f", "(mem (lambda (x) (bernoulli)))")
+  ripl.predict("(scope_include 0 0 (+ (f 0) (f 1) (f 2) (f 3)))")
+  assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0, 0), 4)
 

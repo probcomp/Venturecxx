@@ -196,6 +196,8 @@ class Engine(object):
     
     if "particles" in params:
       params["particles"] = int(params["particles"])
+    if "in_parallel" not in params:
+      params['in_parallel'] = True
   
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
 
@@ -226,7 +228,8 @@ class Engine(object):
     return self.getDistinguishedTrace().save(fname, extra)
 
   def load(self, fname):
-    self.trace, extra = self.getDistinguishedTrace().load(fname)
+    trace, extra = self.Trace.load(fname)
+    self.traces = [trace]
     self.directives = extra['directives']
     self.directiveCounter = extra['directiveCounter']
     return extra

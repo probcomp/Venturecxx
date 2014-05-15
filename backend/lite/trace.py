@@ -11,16 +11,18 @@ from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
 from nose.tools import assert_is_not_none # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
-from scope import isScopeIncludeOutputPSP
+from scope import isScopeIncludeOutputPSP, isScopeExcludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
 from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
+import serialize
 import random
 import numpy.random
 
+@serialize.register
 class Trace(object):
   def __init__(self):
 
@@ -68,6 +70,14 @@ class Trace(object):
     assert not scope == "default" or len(self.scopes[scope][block]) == 0
     if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
     if len(self.scopes[scope]) == 0: del self.scopes[scope]
+
+  # [FIXME] repetitive, but not sure why these exist at all
+  def _normalizeEvaluatedScope(self, scope):
+    if scope == "default": return scope
+    else:
+      assert isinstance(scope, VentureValue)
+      if isinstance(scope, VentureSymbol): return scope.getSymbol()
+      else: return scope.getNumber()
 
   def _normalizeEvaluatedScopeAndBlock(self, scope, block):
     if scope == "default":
@@ -222,9 +232,12 @@ class Trace(object):
   def getAllNodesInScope(self,scope):
     return set.union(*[self.getNodesInBlock(scope,block) for block in self.scopes[scope].keys()])
 
-  def getOrderedSetsInScope(self,scope):
-    return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
-
+  def getOrderedSetsInScope(self,scope,interval=None):
+    if interval is None:
+      return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
+    else:
+      blocks = [b for b in self.scopes[scope].keys() if b.compare(interval[0]) >= 0 if b.compare(interval[1]) <= 0]
+      return [self.getNodesInBlock(scope,block) for block in sorted(blocks)]
 
   def numNodesInBlock(self,scope,block): return len(self.getNodesInBlock(scope,block))
 
@@ -254,6 +267,10 @@ class Trace(object):
         (new_scope,new_block,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
         (new_scope,new_block) = self._normalizeEvaluatedScopeAndBlock(new_scope, new_block)
         if scope != new_scope or block == new_block: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
+      elif i == 1 and isScopeExcludeOutputPSP(self.pspAt(node)):
+        (excluded_scope,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
+        excluded_scope = self._normalizeEvaluatedScope(excluded_scope)
+        if scope != excluded_scope: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
       else:
         self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
 
@@ -344,13 +361,21 @@ class Trace(object):
       elif params["kernel"] == "gibbs":
         #assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
+
+      # [FIXME] egregrious style, but expedient. The stack is such a
+      # mess anyway, it's hard to do anything with good style that
+      # doesn't begin by destroying the stack.
       elif params["kernel"] == "pgibbs":
-        if params["with_mutation"]:
-          mixMH(self,
-            BlockScaffoldIndexer(params["scope"],params["block"]),
-            PGibbsOperator(int(params["particles"])))
+        if params["block"] == "ordered_range":
+          if params["with_mutation"]:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),PGibbsOperator(int(params["particles"])))
+          else:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),ParticlePGibbsOperator(int(params["particles"])))
         else:
-          mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
+          if params["with_mutation"]:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
+          else:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
       elif params["kernel"] == "pgas":
         if params["with_mutation"]:
           raise NotImplementedError
@@ -372,13 +397,11 @@ class Trace(object):
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
   def save(self, fname, extra):
-    from serialize import save_trace
-    save_trace(self, extra, fname)
+    serialize.save_trace(self, extra, fname)
 
   @staticmethod
   def load(fname):
-    from serialize import load_trace
-    trace, extra = load_trace(fname)
+    trace, extra = serialize.load_trace(fname)
     return trace, extra
 
   def get_seed(self):

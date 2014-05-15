@@ -10,6 +10,7 @@ import hashlib
 
 from request import Request # TODO Pull that file in here?
 from exception import VentureValueError, VentureTypeError
+import serialize
 
 # TODO Define reasonable __str__ and/or __repr__ methods for all the
 # values and all the types.
@@ -29,6 +30,7 @@ class VentureValue(object):
   def getSimplex(self): raise VentureTypeError("Cannot convert %s to simplex" % type(self))
   def getDict(self): raise VentureTypeError("Cannot convert %s to dict" % type(self))
   def getMatrix(self): raise VentureTypeError("Cannot convert %s to matrix" % type(self))
+  def getSymmetricMatrix(self): raise VentureTypeError("Cannot convert %s to symmetric matrix" % type(self))
   def getSP(self): raise VentureTypeError("Cannot convert %s to sp" % type(self))
   def getEnvironment(self): raise VentureTypeError("Cannot convert %s to environment" % type(self))
 
@@ -74,6 +76,7 @@ class VentureValue(object):
     else:
       return False
 
+@serialize.register
 class VentureNumber(VentureValue):
   def __init__(self,number):
     assert isinstance(number, Number)
@@ -137,6 +140,7 @@ class VentureNumber(VentureValue):
   def map_real(self, f):
     return VentureNumber(f(self.number))
 
+@serialize.register
 class VentureCount(VentureNumber):
   def __init__(self, number):
     assert isinstance(number, Number)
@@ -152,6 +156,7 @@ class VentureCount(VentureNumber):
   # their tangents are (and consequently, the tangents of
   # probabilities are not probabilities).
 
+@serialize.register
 class VenturePositive(VentureNumber):
   def __init__(self, number):
     assert isinstance(number, Number)
@@ -169,6 +174,7 @@ class VenturePositive(VentureNumber):
 
 # TODO Define VentureNonNegative, from which VentureProbability can inherit
 
+@serialize.register
 class VentureProbability(VentureNumber):
   def __init__(self, number):
     assert isinstance(number, Number)
@@ -227,6 +233,7 @@ def lexicographicMatrixCompare(thing, other):
 def sequenceHash(seq):
   return reduce(lambda res, item: res * 37 + item, [hash(i) for i in seq], 1)
 
+@serialize.register
 class VentureAtom(VentureValue):
   def __init__(self,atom):
     assert isinstance(atom, Number)
@@ -241,6 +248,7 @@ class VentureAtom(VentureValue):
   def compareSameType(self, other): return stupidCompare(self.atom, other.atom)
   def __hash__(self): return hash(self.atom)
 
+@serialize.register
 class VentureBool(VentureValue):
   def __init__(self,boolean):
     assert isinstance(boolean, bool) or isinstance(boolean, np.bool_)
@@ -259,6 +267,7 @@ class VentureBool(VentureValue):
     return stupidCompare(self.boolean, other.boolean)
   def __hash__(self): return hash(self.boolean)
 
+@serialize.register
 class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
   def __repr__(self): return "Symbol(%s)" % self.symbol
@@ -269,6 +278,7 @@ class VentureSymbol(VentureValue):
   def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
   def __hash__(self): return hash(self.symbol)
 
+@serialize.register
 class VentureArray(VentureValue):
   """Venture arrays are heterogeneous, with O(1) access and O(n) copy.
 Venture does not yet implement homogeneous packed arrays, but the
@@ -345,6 +355,7 @@ interface here is compatible with one possible path."""
   def __repr__(self):
     return "VentureArray(%s)" % self.array
 
+@serialize.register
 class VentureNil(VentureValue):
   def __init__(self): pass
   def __repr__(self): return "Nil"
@@ -359,6 +370,7 @@ class VentureNil(VentureValue):
   def contains(self, _obj): return False
   def size(self): return 0
 
+@serialize.register
 class VenturePair(VentureValue):
   def __init__(self,(first,rest)):
     assert isinstance(first, VentureValue)
@@ -420,6 +432,7 @@ class VenturePair(VentureValue):
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
 
+@serialize.register
 class VentureSimplex(VentureValue):
   """Simplexes are homogeneous floating point arrays.  They are also
 supposed to sum to 1, but we are not checking that."""
@@ -446,6 +459,7 @@ supposed to sum to 1, but we are not checking that."""
     return obj.getNumber() in self.simplex
   def size(self): return len(self.simplex)
 
+@serialize.register
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
   def getDict(self): return self.dict
@@ -465,9 +479,15 @@ class VentureDict(VentureValue):
   def size(self): return len(self.dict)
 
 # 2D array of numbers backed by a numpy matrix object
+@serialize.register
 class VentureMatrix(VentureValue):
   def __init__(self,matrix): self.matrix = matrix
   def getMatrix(self): return self.matrix
+  def getSymmetricMatrix(self):
+    if matrixIsSymmetric(self.matrix):
+      return self.matrix
+    else:
+      raise VentureTypeError("Matrix is not symmetric %s" % self.matrix)
   def compareSameType(self, other):
     return lexicographicMatrixCompare(self.matrix, other.matrix)
   def __hash__(self):
@@ -509,6 +529,16 @@ class VentureMatrix(VentureValue):
   def map_real(self, f):
     return VentureMatrix(np.vectorize(f)(self.matrix))
 
+@serialize.register
+class VentureSymmetricMatrix(VentureMatrix):
+  def __init__(self, matrix):
+    self.matrix = matrix
+    assert matrixIsSymmetric(matrix)
+
+def matrixIsSymmetric(matrix):
+  (matrix.transpose() == matrix).all()
+
+@serialize.register
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
   def asStackDict(self,trace):
@@ -577,7 +607,7 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Count", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix"]:
+for typestring in ["Count", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))

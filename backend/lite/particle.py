@@ -204,7 +204,7 @@ class Particle(Trace):
 
     for (node,madeSP) in self.madeSPs.iteritems(): self.base.setMadeSPAt(node,madeSP)
 
-        
+    
           
     for (node,esrParents) in self.esrParents.iteritems(): self.base.setEsrParentsAt(node,esrParents)
     for (node,numRequests) in self.numRequests.iteritems(): self.base.setNumRequestsAt(node,numRequests)
@@ -212,6 +212,13 @@ class Particle(Trace):
     for (node,newChildren) in self.newChildren.iteritems(): self.base.addNewChildren(node,newChildren)
 
     for (node,spaux) in self.madeSPAuxs.iteritems(): self.base.setMadeSPAuxAt(node,spaux)
+
+  # untested
+  def transferRegenCounts(self,scaffold):
+    for node in self.regenCounts:
+      assert node in scaffold.regenCounts
+      scaffold.regenCounts[node] = self.regenCounts.lookup(node)
+
 
 ################### Methods that should never be called on particles
   def unregisterFamilyAt(self,node,esrId): raise Exception("Should not be called on a particle")

@@ -234,9 +234,22 @@ string VentureNumber::toString() const { return "VentureNumber " + lexical_cast<
 string VentureAtom::toString() const { return "VentureAtom " + lexical_cast<string>(n);}
 string VentureBool::toString() const { return "VentureBool " + lexical_cast<string>(b);}
 string VentureSymbol::toString() const { return "VentureSymbol " + s;}
-string VentureArray::toString() const { return "VentureArray";}
+string VentureArray::toString() const 
+{ 
+  string s = "VentureArray [";
+  for (size_t i = 0; i < xs.size(); ++i)
+    {
+      s += xs[i]->toString();
+      s += " ";
+    }
+  s += "]";
+  return s;
+}
+
 string VentureNil::toString() const { return "VentureNil";}
 string VenturePair::toString() const { return "VenturePair (" + car->toString() + ", " + cdr->toString() + ")";}
+
+
 string VentureSimplex::toString() const { return "VentureSimplex";}
 string VentureDictionary::toString() const { return "VentureDictionary";}
 string VentureMatrix::toString() const { return "VentureMatrix";}
@@ -244,6 +257,36 @@ string VentureVector::toString() const { return "VentureVector";}
 string VentureRequest::toString() const { return "VentureRequest";}
 string VentureNode::toString() const { return "VentureNode";}
 string VentureID::toString() const { return "VentureID";}
+
+/* asExpression */
+string VentureNumber::asExpression() const { return lexical_cast<string>(x);}
+string VentureAtom::asExpression() const { return lexical_cast<string>(n);}
+string VentureBool::asExpression() const { return lexical_cast<string>(b);}
+string VentureSymbol::asExpression() const { return s;}
+string VentureArray::asExpression() const 
+{ 
+  string s = "(";
+  for (size_t i = 0; i < xs.size(); ++i)
+    {
+      s += xs[i]->asExpression();
+      if (i + 1 < xs.size()) { s += " "; }
+    }
+  s += ")";
+  return s;
+}
+
+string VentureNil::asExpression() const { return "nil";}
+string VenturePair::asExpression() const { return "[" + car->asExpression() + " . " + cdr->asExpression() + "]";}
+string VentureSimplex::asExpression() const { 
+  string s = "(";
+  for (size_t i = 0; i < ps.size(); ++i)
+    {
+      s += lexical_cast<string>(ps[i]);
+      if (i + 1 < ps.size()) { s += " "; }
+    }
+  s += ")";
+  return s;
+}
 
 /* toPython methods */
 
@@ -327,7 +370,7 @@ boost::python::dict VentureDictionary::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "dict";
-  value["value"] = toPythonDict(trace, dict);
+  value["value"] = "opaque";
   return value;
 }
 
@@ -365,6 +408,14 @@ VentureValuePtr VenturePair::lookup(VentureValuePtr index) const
   if (index->getInt() == 0) { return car; }
   else { return cdr->lookup(VentureValuePtr(new VentureAtom(index->getInt() - 1))); }
 }
+
+VentureValuePtr VentureDictionary::lookup(VentureValuePtr index) const
+{
+  if (dict.count(index)) { return dict.at(index); }
+  
+  throw "Key " + index->toString() + " not found in VentureDictionary.";
+}
+
 
 ////////////  
 MatrixXd VentureSimplex::getMatrix() const
