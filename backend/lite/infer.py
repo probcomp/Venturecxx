@@ -19,20 +19,23 @@ class NoSPRefError(Exception): pass
 # TODO Defined in a sane place, instead of "earliest place in the import graph where it is referenced"?
 
 def mixMH(trace,indexer,operator):
-  index = indexer.sampleIndex(trace)
-  rhoMix = indexer.logDensityOfIndex(trace,index)
-  # May mutate trace and possibly operator, proposedTrace is the mutated trace
-  # Returning the trace is necessary for the non-mutating versions
-  proposedTrace,logAlpha = operator.propose(trace,index)
-  xiMix = indexer.logDensityOfIndex(proposedTrace,index)
-
-  alpha = xiMix + logAlpha - rhoMix
-  if math.log(random.random()) < alpha:
-#    sys.stdout.write(".")
-    operator.accept() # May mutate trace
+  if isinstance(operator, ParticleGibbsAncestralOperator):
+    operator.transition(trace, indexer)
   else:
-#    sys.stdout.write("!")
-    operator.reject() # May mutate trace
+    index = indexer.sampleIndex(trace)
+    rhoMix = indexer.logDensityOfIndex(trace,index)
+    # May mutate trace and possibly operator, proposedTrace is the mutated trace
+    # Returning the trace is necessary for the non-mutating versions
+    proposedTrace,logAlpha = operator.propose(trace,index)
+    xiMix = indexer.logDensityOfIndex(proposedTrace,index)
+
+    alpha = xiMix + logAlpha - rhoMix
+    if math.log(random.random()) < alpha:
+  #    sys.stdout.write(".")
+      operator.accept() # May mutate trace
+    else:
+  #    sys.stdout.write("!")
+      operator.reject() # May mutate trace
 
 class BlockScaffoldIndexer(object):
   def __init__(self,scope,block,interval=None):
@@ -448,10 +451,10 @@ class ParticleGibbsAncestralOperator(object):
   def __init__(self,P):
     self.P = P
 
-  def propose(self, trace, scaffold):
+  def trace(self, trace, indexer):
     from particle import Particle
     self.trace = trace
-    self.scaffold = scaffold
+    self.scaffold = indexer.sampleIndex(self.trace)
     assertTrace(self.trace, self.scaffold)
     # get number of generations from scaffold
     self.T = len(self.scaffold.border)
@@ -503,6 +506,7 @@ class ParticleGibbsAncestralOperator(object):
       # sample new retained particle
       p = sampleLogCategorical(ancestralWeights)
       newRetainedParticles[p].commit()
+      self.scaffold = indexer.sampleIndex(self.trace)
       assertTrace(self.trace, self.scaffold)
       # extract new DBs and weights
       for i in reversed(range(T)):
