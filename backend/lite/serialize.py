@@ -1,13 +1,3 @@
-from env import VentureEnvironment
-from node import Node, ConstantNode, LookupNode, RequestNode, OutputNode
-from request import Request, ESR
-from value import VentureNumber, VentureProbability, VentureCount, VenturePositive, VentureAtom, VentureBool, VentureSymbol, VentureArray, VentureNil, VenturePair, VentureSimplex, VentureDict, VentureMatrix, SPRef
-from sp import VentureSP, SPAux, SPFamilies
-from psp import NullRequestPSP, ESRRefOutputPSP
-from csp import CSPRequestPSP
-from msp import MSPRequestPSP
-from smap import SMap
-
 import json
 import warnings
 
@@ -15,46 +5,8 @@ class Placeholder(object):
     """An object that can be instantiated before knowing what type it should be."""
     pass
 
-serializable_types = [
-    ConstantNode,
-    LookupNode,
-    RequestNode,
-    OutputNode,
-    VentureEnvironment,
-    VentureNumber,
-    VentureProbability,
-    VentureCount,
-    VenturePositive,
-    VentureAtom,
-    VentureBool,
-    VentureSymbol,
-    VentureArray,
-    VentureNil,
-    VenturePair,
-    VentureSimplex,
-    VentureDict,
-    VentureMatrix,
-    VentureSP,
-    SPRef,
-    SPAux,
-    SPFamilies,
-    Request,
-    ESR,
-    CSPRequestPSP,
-    MSPRequestPSP,
-    ESRRefOutputPSP,
-    SMap
-]
-
-type_to_str = dict((t, t.__name__) for t in serializable_types)
-str_to_type = dict((t.__name__, t) for t in serializable_types)
-cyclic_types = [
-    Node,
-    VentureEnvironment,
-    VentureSP
-]
-for t in cyclic_types:
-    t.cyclic = True
+type_to_str = {}
+str_to_type = {}
 
 def register(cls):
     """Register a Python class (e.g. a custom SP) with the serializer."""

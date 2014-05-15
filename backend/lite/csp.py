@@ -3,7 +3,9 @@ from sp import VentureSP
 from env import VentureEnvironment
 from request import Request,ESR
 import value as v
+import serialize
 
+@serialize.register
 class CSPRequestPSP(DeterministicPSP):
   def __init__(self,ids,exp,env):
     self.ids = ids

@@ -1,7 +1,9 @@
 from value import VentureValue, registerVentureType, VentureType
 from abc import ABCMeta
 import copy
+import serialize
 
+@serialize.register
 class SPFamilies(object):
   def __init__(self, families=None):
     if families:
@@ -20,9 +22,11 @@ class SPFamilies(object):
   def copy(self):
     return SPFamilies(self.families.copy())
   
+@serialize.register
 class SPAux(object):
   def copy(self): return SPAux()
 
+@serialize.register
 class VentureSP(VentureValue):
   __metaclass__ = ABCMeta
 
@@ -51,6 +55,9 @@ class VentureSP(VentureValue):
       return self.requestPSP.f_type
   # VentureSPs are intentionally not comparable until we decide
   # otherwise
+
+  # for serialization
+  cyclic = True
 
 registerVentureType(VentureSP)
 
