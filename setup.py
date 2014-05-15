@@ -36,8 +36,8 @@ ON_MAC = 'darwin' in sys.platform
 
 if ON_LINUX:
     os.environ['CC'] = 'ccache gcc '
-# if ON_MAC:
-#     os.environ['CC'] = 'ccache gcc-4.8'
+if ON_MAC:
+    os.environ['CC'] = 'ccache gcc-4.8'
 
 src_files = [
     "src/value.cxx",
@@ -114,6 +114,7 @@ puma_src_files = [
     "src/pytrace.cxx",
     "src/pyutils.cxx",
     "src/regen.cxx",
+    "src/render.cxx",
     "src/scaffold.cxx",
     "src/sp.cxx",
     "src/sprecord.cxx",
@@ -184,7 +185,7 @@ if ON_LINUX:
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
 if ON_MAC:
-    puma = Extension("venture.puma.libpumatrace",
+    puma = Extension("venture.puma.libtrace",
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
@@ -213,8 +214,8 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     # from the python makefile's CFLAGS and OPTS variables
     if ON_LINUX:
         self.compiler_so = ["ccache", "gcc"]
-    #if ON_MAC:
-    #    self.compiler_so = ["ccache", "gcc-4.8"]
+    if ON_MAC:
+        self.compiler_so = ["ccache", "gcc-4.8"]
 
     # parallel code
     import multiprocessing, multiprocessing.pool
