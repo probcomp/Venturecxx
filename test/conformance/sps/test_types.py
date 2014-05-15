@@ -123,16 +123,16 @@ through a ripl (applied fully uncurried)."""
       if not answer.outputPSP.isRandom():
         args2 = BogusArgs(args_lists[1], answer.constructSPAux())
         ans2 = carefully(answer.outputPSP.simulate, args2)
-        inner = [name] + [["quote", v.asStackDict(None)] for v in args_lists[0]]
-        expr = [inner] + [["quote", v.asStackDict(None)] for v in args_lists[1]]
-        eq_(ans2, carefully(get_ripl().predict, expr))
+        inner = [name] + [v.expressionFor() for v in args_lists[0]]
+        expr = [inner] + [v.expressionFor() for v in args_lists[1]]
+        assert ans2.equal(carefully(eval_in_ripl, expr))
       else:
         raise SkipTest("Putatively deterministic sp %s returned a random SP" % name)
     else:
       raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
   else:
-    expr = [name] + [["quote", v.asStackDict(None)] for v in args_lists[0]]
-    eq_(answer.asStackDict(None)["value"], carefully(get_ripl().predict, expr))
+    expr = [name] + [v.expressionFor() for v in args_lists[0]]
+    assert answer.equal(carefully(eval_in_ripl, expr))
 
 def testExpressionFor():
   checkTypedProperty(propExpressionWorks, AnyType())
