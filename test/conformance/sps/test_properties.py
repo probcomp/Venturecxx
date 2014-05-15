@@ -8,6 +8,12 @@ from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSP
 from venture.lite.value import AnyType
 
+def testEquality():
+  checkTypedProperty(propEquality, AnyType())
+
+def propEquality(value):
+  assert value.equal(value)
+
 def relevantSPs():
   for (name,sp) in builtInSPsList():
     if isinstance(sp.requestPSP, NullRequestPSP):
