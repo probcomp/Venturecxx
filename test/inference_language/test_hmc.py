@@ -127,3 +127,19 @@ def testMoreElaborate():
   ripl.sivm.core_sivm.engine.reset()
   preds_hmc = collectSamples(ripl, 1, infer="(hmc param all 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
+
+@statisticalTest
+def testMoveMatrix():
+  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
+  ripl = get_ripl()
+  ripl.assume("mu", "(array 0 0)")
+  ripl.assume("scale", "(matrix (list (list 2 1) (list 1 2)))")
+  ripl.assume("sigma", "(wishart scale 4)")
+  ripl.assume("out", "(multivariate_normal mu sigma)")
+  v = [{"type": "real", "value": 1}, {"type": "real", "value": 1}]
+  ripl.sivm.execute_instruction({"instruction":"observe","expression":"out","value":{"type":"list","value":v}})
+
+  preds_mh = collectSamples(ripl, 3, infer="(mh default one 30)")
+  ripl.sivm.core_sivm.engine.reset()
+  preds_hmc = collectSamples(ripl, 3, infer="(hmc default all 0.1 20 10)")
+  return reportSameContinuous(preds_mh, preds_hmc)
