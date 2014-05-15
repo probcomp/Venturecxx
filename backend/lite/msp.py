@@ -2,6 +2,7 @@ from psp import DeterministicPSP, ESRRefOutputPSP
 from sp import VentureSP
 from env import VentureEnvironment
 from request import Request,ESR
+import serialize
 
 
 class MakeMSPOutputPSP(DeterministicPSP):
@@ -12,6 +13,7 @@ class MakeMSPOutputPSP(DeterministicPSP):
   def description(self,name):
     return "%s returns the stochastically memoized version of the input SP." % name
 
+@serialize.register
 class MSPRequestPSP(DeterministicPSP):
   def __init__(self,sharedOperatorNode): self.sharedOperatorNode = sharedOperatorNode
   def simulate(self,args): 
