@@ -225,7 +225,7 @@ def lexicographicMatrixCompare(thing, other):
   if np.array_equal(thing, other): return 0
   # Hack for finding the first discrepant element, via
   # http://stackoverflow.com/questions/432112/is-there-a-numpy-function-to-return-the-first-index-of-something-in-an-array
-  diffs = thing - other
+  diffs = np.array(thing - other)
   diff_indexes = np.nonzero(diffs)
   first_diff = diffs[diff_indexes[0][0]][diff_indexes[0][0]]
   return stupidCompare(first_diff, 0)
