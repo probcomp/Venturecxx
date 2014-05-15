@@ -174,7 +174,7 @@ def builtInSPsList():
                                          v.HomogeneousDictType(v.AnyType("k"), v.AnyType("v")),
                                          descr="%s returns the dictionary mapping the given keys to their respective given values.  It is an error if the given lists are not the same length.") ],
            [ "is_dict", type_test(v.DictType()) ],
-           [ "matrix", deterministic_typed(np.mat,
+           [ "matrix", deterministic_typed(np.array,
                                            [v.HomogeneousListType(v.HomogeneousListType(v.NumberType()))],
                                            v.MatrixType(),
                                            "%s returns a matrix formed from the given list of rows.  It is an error if the given list is not rectangular.") ],
