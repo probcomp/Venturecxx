@@ -43,7 +43,7 @@ class MVNormalOutputPSP(RandomPSP):
     gradX = -np.dot(isigma, np.transpose(x-mu))
     gradMu = np.dot(isigma, np.transpose(x-mu))
     gradSigma = .5*np.dot(np.dot(isigma, xvar),isigma)-.5*isigma
-    return np.array(gradX)[0].tolist(), [np.array(gradMu)[0].tolist(), gradSigma]
+    return np.array(gradX).tolist(), [np.array(gradMu).tolist(), gradSigma]
 
   def description(self,name):
     return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name

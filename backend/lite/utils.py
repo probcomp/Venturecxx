@@ -68,4 +68,4 @@ def sampleLogCategorical(logs):
 def logDensityMVNormal(x, mu, sigma):
   answer =  -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
             -.5*len(sigma)*np.log(np.pi)-.5*np.log(abs(npla.det(sigma)))
-  return answer[0,0]
+  return answer

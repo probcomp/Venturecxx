@@ -10,7 +10,8 @@ from exception import VentureValueError
 
 def npSampleVector(pVec): return np.mat(npr.multinomial(1,np.array(pVec)[0,:]))
 def npIndexOfOne(pVec): return np.where(pVec[0] == 1)[1][0,0]
-def npMakeDiag(colvec): return np.diag(np.array(colvec)[:,0])
+def npMakeDiag(colvec):
+  return np.diag(np.array(colvec))
 def npNormalizeVector(vec): return vec / np.sum(vec)
 
 class HMMSPAux(SPAux):
@@ -82,10 +83,10 @@ class UncollapsedHMMSP(VentureSP):
     # forward sampling
     fs = [self.p0]
     for i in range(1,len(aux.xs)):
-      f = fs[i-1] * self.T
+      f = np.dot(fs[i-1], self.T)
       if i in aux.os:
-        for o in aux.os[i]: 
-          f = f * npMakeDiag(self.O[:,o])
+        for o in aux.os[i]:
+          f = np.dot(f, npMakeDiag(self.O[:,o]))
         
       fs.append(npNormalizeVector(f))
 
