@@ -5,22 +5,30 @@ from venture.test.config import get_ripl, collectSamples, ignore_inference_quali
 from nose import SkipTest
 from testconfig import config
 
-@statisticalTest
 def testPGibbsBasic1():
+  yield checkPGibbsBasic1, False
+  yield checkPGibbsBasic1, True
+
+@statisticalTest
+def checkPGibbsBasic1(in_parallel):
   """Basic sanity test"""
   ripl = get_ripl()
   ripl.predict("(bernoulli)",label="pid")
 
-  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"pgibbs","particles":2})
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"pgibbs","particles":2,"in_parallel":in_parallel})
   ans = [(True,.5),(False,.5)]
   return reportKnownDiscrete(ans, predictions)
 
-@statisticalTest
 def testPGibbsBasic2():
+  yield checkPGibbsBasic2, False
+  yield checkPGibbsBasic2, True
+
+@statisticalTest
+def checkPGibbsBasic2(in_parallel):
   """Basic sanity test"""
   ripl = get_ripl()
   ripl.assume("x","(flip 0.1)",label="pid")
-  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"pgibbs","particles":2})
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"pgibbs","particles":2,"in_parallel":in_parallel})
   ans = [(False,.9),(True,.1)]
   return reportKnownDiscrete(ans, predictions)
  
@@ -131,6 +139,10 @@ def testPGibbsDynamicScopeInterval():
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
 
 def testFunnyHMM():
+  yield checkFunnyHMM, False
+  yield checkFunnyHMM, True
+
+def checkFunnyHMM(in_parallel):
   ripl = get_ripl()
   
   ripl.assume("hypers", "(mem (lambda (t) (scope_include 0 t (normal 0 1))))")
@@ -145,5 +157,5 @@ def testFunnyHMM():
   for t in range(1, 5):
     ripl.observe("(obs %d)" % t, t)
   
-  ripl.infer({"kernel":"pgibbs","transitions":2,"scope":0,"block":"ordered","particles":3, "with_mutation":False})
+  ripl.infer({"kernel":"pgibbs","transitions":2,"scope":0,"block":"ordered","particles":3, "with_mutation":False, "in_parallel":in_parallel})
 
