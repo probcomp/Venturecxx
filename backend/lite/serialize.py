@@ -114,7 +114,7 @@ class Serializer(object):
         self.id_to_obj = {}
         for i, obj_dict in enumerate(data['objects']):
             obj = Placeholder()
-            obj._data = obj_dict
+            obj.data = obj_dict
             self.id_to_obj[i] = obj
 
         ## add built-in SP specially
@@ -136,8 +136,8 @@ class Serializer(object):
         elif isinstance(data, list):
             return [self.deserialize(o) for o in data]
         else:
-            assert isinstance(data, dict), "Unrecognized object {0}".format(repr(obj))
-            assert '_type' in data, "_type missing from {0}".format(repr(obj))
+            assert isinstance(data, dict), "Unrecognized object {0}".format(repr(data))
+            assert '_type' in data, "_type missing from {0}".format(repr(data))
         if data['_type'] == 'tuple':
             return tuple(self.deserialize(o) for o in data['_value'])
         elif data['_type'] == 'set':
@@ -150,11 +150,11 @@ class Serializer(object):
             ## if it's a ref, look up the real object
             if data['_type'] == 'ref':
                 obj = self.id_to_obj[data['_value']]
-                try:
+                if isinstance(obj, Placeholder):
                     ## get the data dict we attached to the placeholder object earlier
-                    data = obj._data
-                    del obj._data
-                except AttributeError:
+                    data = obj.data
+                    del obj.data
+                else:
                     ## already deserialized, just return the object
                     return obj
             else:
@@ -165,8 +165,8 @@ class Serializer(object):
             obj.__class__ = cls
 
             ## attempt to use the object's deserialize method if available
-            if hasattr(cls, 'deserialize'):
-                obj.deserialize(self, data['_value'])
+            if hasattr(obj, 'deserialize'):
+                obj.deserialize(self, data['_value']) # pylint: disable=maybe-no-member
             else:
                 self.deserialize_default(obj, data['_value'])
 
