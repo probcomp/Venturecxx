@@ -3,11 +3,11 @@
 
 #include "types.h"
 
-class Step { virtual ~Step(); };
-class OperatorStep : Step {};
-class OperandStep : Step { int index; };
-class RequesterStep : Step {}; // From the output node to the request node
-class ESRStep : Step { FamilyID index; }
+struct Step { virtual ~Step(){} };
+struct OperatorStep : Step {};
+struct OperandStep : Step { OperandStep(int index) : index(index){} int index; };
+struct RequesterStep : Step {}; // From the output node to the request node
+struct ESRStep : Step { ESRStep(FamilyID index) : index(index){} FamilyID index; };
 
 struct TraceAddress
 {

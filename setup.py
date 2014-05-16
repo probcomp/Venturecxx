@@ -119,6 +119,7 @@ puma_src_files = [
     "src/sp.cxx",
     "src/sprecord.cxx",
     "src/trace.cxx",
+    "src/trace_address.cxx",
     "src/utils.cxx",
     "src/value.cxx",
     "src/values.cxx",

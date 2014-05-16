@@ -1,4 +1,4 @@
-#include "trace_address_h"
+#include "trace_address.h"
 
 TraceAddress::TraceAddress(shared_ptr<TraceAddress> previous, Step last) : previous(previous), last(last) {}
 
@@ -24,6 +24,6 @@ shared_ptr<TraceAddress> makeRequesterAddress(shared_ptr<TraceAddress> self)
 
 shared_ptr<TraceAddress> makeESRAddress(shared_ptr<TraceAddress> self, FamilyID index)
 {
-  return extendAddress(self, ESRStep(FamilyID));
+  return extendAddress(self, ESRStep(index));
 }
 
