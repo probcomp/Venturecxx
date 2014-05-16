@@ -143,7 +143,11 @@ def builtInSPsList():
 
            [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType(),
                                         "%s returns the logical negation of its argument") ],
-
+           [ "dot_product", deterministic_typed(np.dot, [v.HomogeneousArrayType(v.NumberType()), v.HomogeneousArrayType(v.NumberType())], v.NumberType(),
+                                                descr="%s returns the dot product of its arguments") ],
+           [ "scalar_product", deterministic_typed(lambda x,y: x * np.array(y), [v.NumberType(), v.HomogeneousArrayType(v.NumberType())],
+                                                   v.HomogeneousArrayType(v.NumberType()),
+                                                   descr="%s returns the scalar product between the first scalar argument and the second array argument") ],
            [ "is_symbol", type_test(v.SymbolType()) ],
            [ "is_atom", type_test(v.AtomType()) ],
 
@@ -163,6 +167,12 @@ def builtInSPsList():
            [ "array", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
                                           sim_grad=lambda args, direction: direction.getArray(),
                                           descr="%s returns an array initialized with its arguments") ],
+           [ "cat_array", deterministic_typed(lambda *args: np.concatenate(args), [v.ArrayType()], v.ArrayType(), variadic=True,
+                                              descr="%s concates its arguments") ],
+           [ "ones_array", deterministic_typed(np.ones, [v.NumberType()], v.HomogeneousArrayType(v.NumberType()),
+                                               descr="%s returns an array of ones with the number given by its argument") ],
+           [ "zeros_array", deterministic_typed(np.zeros, [v.NumberType()], v.HomogeneousArrayType(v.NumberType()),
+                                                descr="%s returns an array of zeros with the number given by its argument") ],
 
            [ "vector", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
                                           sim_grad=lambda args, direction: direction.getArray(),
@@ -177,7 +187,11 @@ def builtInSPsList():
            [ "matrix", deterministic_typed(np.mat,
                                            [v.HomogeneousListType(v.HomogeneousListType(v.NumberType()))],
                                            v.MatrixType(),
-                                           "%s returns a matrix formed from the given list of rows.  It is an error if the given list is not rectangular.") ],
+                                           "%s returns a diagonal matrix formed from the given list.") ],
+           [ "diagonal_matrix", deterministic_typed(np.diag,
+                                           [v.HomogeneousListType(v.NumberType())],
+                                           v.MatrixType(),
+                                           "%s returns a diagonal matrix formed from the given list.") ],
            [ "is_matrix", type_test(v.MatrixType()) ],
            [ "simplex", deterministic_typed(lambda *nums: np.array(nums), [v.ProbabilityType()], v.SimplexType(), variadic=True,
                                             descr="%s returns the simplex point given by its argument coordinates.") ],

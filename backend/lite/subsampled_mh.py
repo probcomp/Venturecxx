@@ -271,10 +271,9 @@ def traveseScaffold(trace, scaffold):
             G.add_edge(parent, node, type = 'regular')
 
         # TODO Add dotted arrow from request node to esrparent?
-
     return G
 
-def drawScaffoldGraph(trace, G):
+def drawScaffoldGraph(trace, G, labels=None):
     from venture.lite.node import Node
     from venture.lite.value import VentureNumber, SPRef
     from venture.lite.request import Request
@@ -287,7 +286,8 @@ def drawScaffoldGraph(trace, G):
                  'to_subsample': 'cyan',
                  'other':     'gray'}
 
-    labels = nodeLabelDict(G.nodes(), trace)
+    if labels is None:
+        labels = nodeLabelDict(G.nodes(), trace)
 
 #    plt.figure(figsize=(20,20))
     pos=nx.graphviz_layout(G,prog='dot')
@@ -298,22 +298,81 @@ def drawScaffoldGraph(trace, G):
 #                     labels={node:node.value for node in G.nodes_iter()})
 
 def markAbsorbingToSubsample(trace,G,scope_to_subsample):
-  nodes_in_scope = trace.getAllNodesInScope(scope_to_subsample)
-  for (node,data) in G.nodes_iter(True):
-    if node in nodes_in_scope:
-      assert data['type'] == 'border'
-      data['type'] = 'to_subsample'
+    nodes_in_scope = trace.getAllNodesInScope(scope_to_subsample)
+    for (node,data) in G.nodes_iter(True):
+        if node in nodes_in_scope:
+            assert data['type'] == 'border'
+            data['type'] = 'to_subsample'
 
 def drawScaffoldKernel(trace,indexer):
   index = indexer.sampleIndex(trace)
   G = traveseScaffold(trace, index)
   drawScaffoldGraph(trace, G)
 
+def markSourceBlock(trace,scaffold_nodes,node,block,source_block_dict):
+    propagate = False
+    if node in source_block_dict:
+        cur_source_block = source_block_dict[node]
+        if block == cur_source_block or cur_source_block == 'global':
+            return
+        else:
+            block = 'global'
+
+    source_block_dict[node] = block
+    for parent in trace.parentsAt(node):
+        if parent in scaffold_nodes:
+            markSourceBlock(trace,scaffold_nodes,parent,block,source_block_dict)
+    for esrParent in trace.esrParentsAt(node):
+        if esrParent in scaffold_nodes:
+            markSourceBlock(trace,scaffold_nodes,esrParent,block,source_block_dict)
+
+def partitionScaffold(trace,scaffold,scope_to_subsample):
+    border_nodes = set([node for node_list in scaffold.border for node in node_list])
+    scaffold_nodes = border_nodes | set(scaffold.regenCounts.keys()) | scaffold.brush
+
+    # Start from scope_to_subsample, reverse the graph.
+    borders_in_block = {} # block:{border_nodes}
+    source_block_dict = {} # node:block
+
+    blocks = trace.scopes[scope_to_subsample].keys()
+    for block in blocks:
+        nodes_in_block = trace.getNodesInBlock(scope_to_subsample,block) & scaffold_nodes
+        borders_in_block[block] = nodes_in_block & border_nodes
+        for node in borders_in_block[block]:
+            markSourceBlock(trace,scaffold_nodes,node,block,source_block_dict)
+
+    block = 'global'
+    borders_in_block[block] = set()
+    for node in scaffold_nodes - set(source_block_dict.keys()):
+        source_block_dict[node] = block
+        if node in border_nodes:
+                borders_in_block[block].add(node)
+
+    return borders_in_block,source_block_dict
+
 def drawSubsampledScaffoldKernel(trace,indexer,scope_to_subsample):
   index = indexer.sampleIndex(trace)
+
+  # DEBUG
+  trace.scaffold = index
+
+  borders_in_block,source_block_dict = partitionScaffold(trace,index,scope_to_subsample)
+
   G = traveseScaffold(trace,index)
+
+  for (node,data) in G.nodes_iter(True):
+      if data['type'] != 'other':
+          assert node in source_block_dict
+
+  for (block,block_nodes) in borders_in_block.iteritems():
+      for node in block_nodes:
+        assert source_block_dict[node] == block
+
+  # DEBUG
+  trace.G = G
+
   markAbsorbingToSubsample(trace,G,scope_to_subsample)
-  drawScaffoldGraph(trace,G)
+  drawScaffoldGraph(trace,G,labels=source_block_dict)
 
 def subsampledMixMH(trace,indexer,operator):
   index = indexer.sampleIndex(trace)
