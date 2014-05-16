@@ -121,7 +121,7 @@ def testMoreElaborate():
   # substitution (!) is not flexible enough.
   # ripl.observe("out", [0, 0])
   v = [{"type": "real", "value": 0}, {"type": "real", "value": 0}]
-  ripl.sivm.execute_instruction({"instruction":"observe","expression":"out","value":{"type":"list","value":v}})
+  ripl.observe("out", {"type":"list","value":v})
 
   preds_mh = collectSamples(ripl, 1, infer="(mh default one 10)")
   ripl.sivm.core_sivm.engine.reset()
@@ -136,7 +136,7 @@ def testMoveMatrix():
   ripl.assume("sigma", "(wishart scale 4)")
   ripl.assume("out", "(multivariate_normal mu sigma)")
   v = [{"type": "real", "value": 1}, {"type": "real", "value": 1}]
-  ripl.sivm.execute_instruction({"instruction":"observe","expression":"out","value":{"type":"list","value":v}})
+  ripl.observe("out", {"type":"list","value":v})
 
   preds_mh = collectSamples(ripl, 3, infer="(mh default one 30)")
   ripl.sivm.core_sivm.engine.reset()
