@@ -534,6 +534,9 @@ class VentureSymmetricMatrix(VentureMatrix):
   def __init__(self, matrix):
     self.matrix = matrix
     assert matrixIsSymmetric(matrix)
+  def map_real(self, f):
+    candidate = np.vectorize(f)(self.matrix)
+    return VentureSymmetricMatrix( (candidate + candidate.T)/2 )
 
 def matrixIsSymmetric(matrix):
   return np.allclose(matrix.transpose(), matrix)
