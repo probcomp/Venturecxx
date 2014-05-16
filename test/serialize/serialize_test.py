@@ -105,7 +105,6 @@ class TestSerialize(unittest.TestCase):
         self._test_serialize_program(execute_program2, do_predict)
 
     def test_serialize_latents(self):
-        raise SkipTest("Can't serialize custom SPs. Issue: https://app.asana.com/0/9277419963067/12193842156120")
         def execute_program(v):
             v.assume('f','''\
 (make_lazy_hmm

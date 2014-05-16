@@ -1,6 +1,8 @@
 import json
 import warnings
 
+import numpy as np
+
 class Placeholder(object):
     """An object that can be instantiated before knowing what type it should be."""
     pass
@@ -66,6 +68,10 @@ class Serializer(object):
         elif isinstance(obj, dict):
             value = [(self.serialize(k), self.serialize(v)) for (k, v) in obj.iteritems()]
             return {'_type': 'dict', '_value': value}
+        elif isinstance(obj, np.ndarray):
+            # TODO: do something more compatible with Puma
+            value = obj.dumps().encode('base64')
+            return {'_type': 'array', '_value': value}
         else:
             assert type(obj) in type_to_str, "Can't serialize {0}".format(repr(obj))
 
@@ -138,6 +144,8 @@ class Serializer(object):
             return set(self.deserialize(o) for o in data['_value'])
         elif data['_type'] == 'dict':
             return dict((self.deserialize(k), self.deserialize(v)) for (k, v) in data['_value'])
+        elif data['_type'] == 'array':
+            return np.loads(data['_value'].decode('base64'))
         else:
             ## if it's a ref, look up the real object
             if data['_type'] == 'ref':
