@@ -101,6 +101,36 @@ vector<double> NormalPSP::gradientOfLogDensity(double output,
   return ret;
 }
 
+/* Pose */
+VentureValuePtr PosePSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+{
+  checkArgsLength("pose", args, 0);
+
+
+  double x = gsl_ran_flat(rng, 0.0, 1.0);
+  double y = gsl_ran_flat(rng, 0.0, 1.0);
+  double z = gsl_ran_flat(rng, 0.0, 1.0);
+  cout << "PosePSP::simulate" << endl;
+
+  VentureValuePtr l(new VentureNil());
+  VentureValuePtr vx = shared_ptr<VentureValue>(new VentureNumber(x));
+  VentureValuePtr vy = shared_ptr<VentureValue>(new VentureNumber(y));
+  VentureValuePtr vz = shared_ptr<VentureValue>(new VentureNumber(z));
+  l = VentureValuePtr(new VenturePair(vx, l));
+  l = VentureValuePtr(new VenturePair(vy, l));
+  l = VentureValuePtr(new VenturePair(vz, l));
+  return l;
+}
+
+double PosePSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+{
+  cout << "PosePSP::logDensity" << endl;
+  double a = value->getFirst()->getDouble();
+  double b = value->getRest()->getFirst()->getDouble();
+  double c = value->getRest()->getRest()->getFirst()->getDouble();
+  return a * b * c;
+}
+
 /* Gamma */
 VentureValuePtr GammaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {

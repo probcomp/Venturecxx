@@ -56,6 +56,7 @@ map<string,SP*> initBuiltInSPs()
   /* Continuous SPs */
   m["normal"] = new SP(new NullRequestPSP(), new NormalPSP());
   m["gamma"] = new SP(new NullRequestPSP(), new GammaPSP());
+  m["pose"] = new SP(new NullRequestPSP(), new PosePSP());
   m["inv_gamma"] = new SP(new NullRequestPSP(), new InvGammaPSP());
   m["uniform_continuous"] = new SP(new NullRequestPSP(), new UniformContinuousPSP());
   m["beta"] = new SP(new NullRequestPSP(), new BetaPSP());
