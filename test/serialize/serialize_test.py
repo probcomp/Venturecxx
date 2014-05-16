@@ -1,14 +1,17 @@
 import unittest
 from nose import SkipTest
+from testconfig import config
 
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
-from venture.test.config import get_ripl, collectStateSequence
+from venture.test.config import get_ripl, collectStateSequence, defaultKernel
 
 from venture.lite.serialize import Serializer
 
 class TestSerialize(unittest.TestCase):
 
     def test_serialize(self):
+        if config['get_ripl'] == 'puma':
+            raise SkipTest("Can't serialize Puma traces. Issue: https://app.asana.com/0/9277419963067/12193842156124")
         v = get_ripl()
         v.assume('is_tricky', '(flip 0.2)')
         v.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
@@ -29,6 +32,8 @@ class TestSerialize(unittest.TestCase):
         self.assertEqual(result1, result2)
 
     def test_serialize_ripl(self):
+        if config['get_ripl'] == 'puma':
+            raise SkipTest("Can't serialize Puma traces. Issue: https://app.asana.com/0/9277419963067/12193842156124")
         v1 = get_ripl()
         v1.assume('is_tricky', '(flip 0.2)')
         v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
@@ -52,6 +57,8 @@ class TestSerialize(unittest.TestCase):
 
     @statisticalTest
     def test_serialize_forget(self):
+        if config['get_ripl'] == 'puma':
+            raise SkipTest("Can't serialize Puma traces. Issue: https://app.asana.com/0/9277419963067/12193842156124")
         v1 = get_ripl()
         v1.assume('is_tricky', '(flip 0.2)')
         v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
@@ -76,6 +83,8 @@ class TestSerialize(unittest.TestCase):
 
     @statisticalTest
     def _test_serialize_program(self, program, label):
+        if config['get_ripl'] == 'puma':
+            raise SkipTest("Can't serialize Puma traces. Issue: https://app.asana.com/0/9277419963067/12193842156124")
         v1 = get_ripl()
         program(v1)
 
@@ -93,12 +102,14 @@ class TestSerialize(unittest.TestCase):
         def program(v):
             v.assume('coin', '(mem (lambda (x) (beta 1.0 1.0)))')
             v.assume('flip_coin', '(lambda (x) (flip (coin x)))')
-            for i in range(10):
+            for _ in range(10):
                 v.observe('(flip_coin 0)', 'true')
             v.predict('(flip_coin 0)', label='pid')
         self._test_serialize_program(program, 'pid')
 
     def test_serialize_aaa(self):
+        if defaultKernel() == "rejection":
+            raise SkipTest("Cannot rejection sample AAA procedure with unbounded log density of ocounts")
         def make_program(maker, hyper):
             def program(v):
                 v.assume('a', hyper)
