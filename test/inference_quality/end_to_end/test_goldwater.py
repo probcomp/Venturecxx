@@ -1,10 +1,13 @@
-from venture.test.config import get_ripl, default_num_transitions_per_sample
+from nose import SkipTest
 import itertools
 from nose.plugins.attrib import attr
+from venture.test.config import get_ripl, default_num_transitions_per_sample, defaultKernel
 
 @attr("slow")
 def testGoldwater1():
   """Fairly complicated program. Just checks to make sure it runs without crashing."""
+  if not defaultKernel() == "mh":
+    raise SkipTest("This one ignores the default kernel anyway, and is very slow")
   ripl = get_ripl()
 
   brent = ["catanddog", "dogandcat", "birdandcat","dogandbird","birdcatdog"]
@@ -67,4 +70,4 @@ def testGoldwater1():
       ripl.predict("(sample_symbol %d %d)" %(i, j))
       ripl.observe("(noisy_true (eq (sample_symbol %d %d) atom<%d>) noise)" %(i, j,d[str(brent[i][j])]), "true")
 
-  ripl.infer(N * 10) # TODO Make this an actual inference quality test.
+  ripl.infer(N) # TODO Make this an actual inference quality test.
