@@ -8,8 +8,8 @@ struct VentureEnvironment;
 struct Node
 {
   Node(VentureValuePtr exp): exp(exp) {}
-  vector<Node*> definiteParents; // TODO should be an iterator
-  set<Node*> children; // particle stores NEW children
+  vector<AddrPtr> definiteParents; // TODO should be an iterator
+  set<AddrPtr> children; // particle stores NEW children
   virtual ~Node() {}
   VentureValuePtr exp;
 };
@@ -21,15 +21,15 @@ struct ConstantNode : Node
 
 struct LookupNode : Node 
 { 
-  LookupNode(Node * sourceNode, VentureValuePtr exp);
-  Node * sourceNode;
+  LookupNode(AddrPtr sourceNode, VentureValuePtr exp);
+  AddrPtr sourceNode;
 };
 
 struct ApplicationNode : Node
 {
-  ApplicationNode(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp);
-  Node * operatorNode;
-  vector<Node *> operandNodes;
+  ApplicationNode(AddrPtr operatorNode, const vector<AddrPtr>& operandNodes, const shared_ptr<VentureEnvironment>& env, VentureValuePtr exp);
+  AddrPtr operatorNode;
+  vector<AddrPtr> operandNodes;
   shared_ptr<VentureEnvironment> env;
 };
 
@@ -37,14 +37,14 @@ struct OutputNode;
 
 struct RequestNode : ApplicationNode
 {
-  RequestNode(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env);
-  OutputNode * outputNode;
+  RequestNode(AddrPtr operatorNode, const vector<AddrPtr>& operandNodes, const shared_ptr<VentureEnvironment>& env);
+  AddrPtr outputNode;
 };
 
 struct OutputNode : ApplicationNode
 {
-  OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp);
-  RequestNode * requestNode;
+  OutputNode(AddrPtr operatorNode, const vector<AddrPtr>& operandNodes, AddrPtr requestNode, const shared_ptr<VentureEnvironment>& env, VentureValuePtr exp);
+  AddrPtr requestNode;
   ~OutputNode();
 };
 
