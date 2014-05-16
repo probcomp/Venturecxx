@@ -20,7 +20,10 @@
 
 #include <boost/python/exception_translator.hpp>
 
-PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false) {}
+PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false)
+{
+  trace->initialize();
+}
 PyTrace::~PyTrace() {}
 
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
