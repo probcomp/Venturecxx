@@ -102,15 +102,15 @@ vector<double> NormalPSP::gradientOfLogDensity(double output,
 }
 
 /* Pose */
-VentureValuePtr PosePSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+VentureValuePtr SimulateMotionPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  checkArgsLength("pose", args, 0);
+  checkArgsLength("simulate_motion", args, 3);
 
 
   double x = gsl_ran_flat(rng, 0.0, 1.0);
   double y = gsl_ran_flat(rng, 0.0, 1.0);
   double heading = gsl_ran_flat(rng, -M_PI, M_PI);
-  cout << "PosePSP::simulate" << endl;
+  cout << "SimulateMotionPSP::simulate" << endl;
 
   VentureValuePtr l(new VentureNil());
   VentureValuePtr vx = shared_ptr<VentureValue>(new VentureNumber(x));
@@ -122,9 +122,9 @@ VentureValuePtr PosePSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
   return l;
 }
 
-double PosePSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  cout << "PosePSP::logDensity" << endl;
+  cout << "SimulateMotionPSP::logDensity" << endl;
   double x = value->getFirst()->getDouble();
   double y = value->getRest()->getFirst()->getDouble();
   double heading = value->getRest()->getRest()->getFirst()->getDouble();
