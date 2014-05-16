@@ -157,10 +157,11 @@ VentureValuePtr SimulateMotionPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
 
 double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  double x = value->getFirst()->getDouble();
-  double y = value->getRest()->getFirst()->getDouble();
-  double heading = value->getRest()->getRest()->getFirst()->getDouble();
-  return x * y;
+//  double x = value->getFirst()->getDouble();
+//  double y = value->getRest()->getFirst()->getDouble();
+//  double heading = value->getRest()->getRest()->getFirst()->getDouble();
+//  return x * y;
+  return 1.0;
 }
 
 VentureValuePtr SimulateGPSPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
@@ -184,10 +185,11 @@ VentureValuePtr SimulateGPSPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  
 
 double SimulateGPSPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  double x = value->getFirst()->getDouble();
-  double y = value->getRest()->getFirst()->getDouble();
-  double heading = value->getRest()->getRest()->getFirst()->getDouble();
-  return x * y;
+//  double x = value->getFirst()->getDouble();
+//  double y = value->getRest()->getFirst()->getDouble();
+//  double heading = value->getRest()->getRest()->getFirst()->getDouble();
+//  return x * y;
+    return 1.0;
 }
 
 VentureValuePtr SimulateMapPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
