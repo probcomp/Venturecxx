@@ -492,6 +492,8 @@ class VentureMatrix(VentureValue):
   def getMatrix(self): return self.matrix
   def compareSameType(self, other):
     return lexicographicMatrixCompare(self.matrix, other.matrix)
+  def __repr__(self):
+    return "VentureMatrix(%s)" % self.matrix
   def __hash__(self):
     # From http://stackoverflow.com/questions/5386694/fast-way-to-hash-numpy-objects-for-caching
     b = self.matrix.view(np.uint8)
