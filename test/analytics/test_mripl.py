@@ -1,4 +1,4 @@
-import time,os,subprocess
+import time,subprocess
 import numpy as np
 import scipy.stats as stats
 from IPython.parallel import Client
@@ -10,7 +10,7 @@ from venture.test.config import get_ripl, get_mripl
 from testconfig import config
 
 from venture.venturemagics.ip_parallel import *
-#execfile('/home/owainevans/Venturecxx/python/lib/venturemagics/ip_parallel.py')
+
 
 def setup_function():
     print 'START SETUP'
@@ -34,8 +34,8 @@ def teardown_function():
 
 
 ## TOGGLE REMOTE MODE
-LOCALMODE=True
-def get_mripl(no_ripls=2,**kwargs): return MRipl(no_ripls,local_mode=LOCALMODE)
+#LOCALMODE=True
+#def get_mripl(no_ripls=2,**kwargs): return MRipl(no_ripls,local_mode=LOCALMODE)
 
 
 def localRunFunctions():    
@@ -46,9 +46,11 @@ def localRunFunctions():
             tests.append( v )
     [t() for t in tests]
 
+
 def testDirectivesAssume():
     'assume,report,predict,sample,observe'
     v=get_mripl(no_ripls=4)
+    print 'LOCAL MODE == ',v.local_mode
 
     # test assume,report,predict,sample
     outAssume = v.assume("x","(poisson 50)",label="x")
@@ -69,23 +71,22 @@ def testDirectivesAssume():
 
 def testDirectivesExecute():
     "execute_program, force"
-    vs=[get_mripl(no_ripls=3) for _ in range(2)]
-    [v.mr_set_seeds(range(3)) for v in vs]
-
-    prog = """
-    [ASSUME x (poisson 50)]
-    [OBSERVE (normal x 1) 55.]
-    [PREDICT x ] """
-
-    vs[0].execute_program(prog)
-    eq_( vs[0].report(3), vs[0].report(1) )
+    v = get_mripl(no_ripls=3)
     
-    vs[1].assume('x','(poisson 50)')
-    eq_( vs[0].report(1), vs[1].report(1) )
-
-    vs[0].force('x','10')
-    eq_( vs[0].report(1), [10]*3)
-    eq_( vs[0].report(3), [10]*3)
+    prog = """
+    [ASSUME x (+ 1 (* 0 (poisson 50)) )]
+    [PREDICT x ]
+    [ASSUME y (poisson 50) ]
+    [OBSERVE (normal x 1) 55.]
+    """
+    v.execute_program(prog)
+    eq_( v.report(2), v.report(1) )
+    
+    assert v.report(3) >=  0
+    eq_(v.report(4)[0],55)
+    
+    v.force('y','10')
+    eq_( v.report(3)[0], 10)
 
 @statisticalTest
 def testDirectivesInfer1():
@@ -139,6 +140,7 @@ def testDirectivesListDirectives():
 @statisticalTest
 def testSeeds():
     # seeds can be set via constructor or self.mr_set_seeds
+
     ## TODO skip using constructor till code is stable
     #v=get_mripl(no_ripls=8,seeds=dict(local=range(1),remote=range(8)))
     #eq_(v.seeds,range(8))
@@ -159,19 +161,20 @@ def testSeeds():
 def testMultiMRipls():
     'Create multiple mripls that share the same engine namespaces'
     vs=[get_mripl(no_ripls=2) for _ in range(2)]
-    if vs[0].local_mode is True:
+    if vs[0].local_mode is False:
         assert vs[0].mrid != vs[1].mrid     # distinct mripl ids
 
     [v.mr_set_seeds(range(2)) for v in vs]
     outs = [v.sample('(poisson 20)') for v in vs]
-    eq_(outs[0],outs[1])
+    if vs[0].backend is 'puma':
+        eq_(outs[0],outs[1])
 
     outs = [v.assume('x','%i'%i) for i,v in zip(range(2),vs)]
     assert outs[0] != outs[1]
     
     vs[0].clear()
     vs = [vs[0],get_mripl(no_ripls=3)] # trigger del for vs[1]
-    if vs[0].local_mode is True:
+    if vs[0].local_mode is False:
         assert vs[0].mrid != vs[1].mrid     # distinct mripl ids
 
 
@@ -223,19 +226,18 @@ def testMapProc():
         assert all( [pairs[0]==pair for pair in pairs] )
 
 
-
 @statisticalTest
 def testBackendSwitch():
     v=get_mripl(no_ripls=30)
     new,old = ('puma','lite') if v.backend is 'lite' else ('lite','puma')
-    v.assume('x','(normal 1 1)')
+    v.assume('x','(normal 200 .1)')
     v.switch_backend(new)
-    assert v.report(1)[0] > 0
+    assert v.report(1)[0] > 100
 
     v.switch_backend(old)
-    assert v.report(1)[0] > 0
+    assert v.report(1)[0] > 100
 
-    cdf = stats.norm(loc=1,scale=1).cdf
+    cdf = stats.norm(loc=200,scale=.1).cdf
     return reportKnownContinuous(cdf,v.report(1))
 
 def testTransitionsCount():
@@ -257,67 +259,30 @@ def testTransitionsCount():
     eq_( v.total_transitions, 21)
 
 
-
 def testSnapshot():
-
     # snapshot == sample
-    v=MRipl(2,backend=b,output=o, local_mode=l)
+    v=get_mripl(no_ripls=2)
     v.assume('x','(binomial 10 .999)')
-    out1 = v.sample('x')
-    out2 = v.snapshot('x')['values']['x']
-    assert out2 == out1
+    eq_(v.sample('x'),v.snapshot('x')['values']['x'])
 
-    # sample_pop == repeated samples
-    exp = '(normal x .001)'
-    out3 = v.snapshot(exp,sample_populations=(2,30))
-    out3 = out3['values'][exp]
-    out4 = [v.sample(exp) for rep in range(30)]
-    assert .2 > abs(np.mean(out3) - np.mean(out4))
-    assert .1 > abs(np.std(out3) - np.std(out4))
+    # sample_pop == repeated samples TODO
+    #eq_(v.snapshot('x',sample_populations=(2,4))['values']['x'],
+    #    [v.report(1) for _ in range(4)])
+    
 
-    # repeat == repeated samples flattened
-    out5 = v.snapshot(exp,repeat=30)['values'][exp]
-    assert .2 > abs(np.mean(out5) - np.mean(out3))
+def testMRiplUtils():
+    'mk_directives_string, build_exp, directive_to_string'
+    v=get_ripl()
+    v.assume('x','(/ 10. 5.)') # x==2
+    v.assume('f','(lambda () (* x 1))') # (f)==2
+    v.observe('(normal x 1)','2')   
+    v.predict('(+ x 0)') # ==2
+    v.predict('(f)')    # ==2
+    di_string = mk_directives_string(v)
+    v.clear()
+    v.execute_program(di_string)
+    [eq_(v.report(i),2) for i in [1,3,4,5]]
 
-    # logscore
-    v.infer(10)
-    log1 = v.get_global_logscore()
-    log2 = v.snapshot(logscore=1)['values']['global_logscore']
-    assert all(.01 > np.abs(np.array(log1)-np.array(log2)))
-
-
-
-def testMulti():
-    name='testMulti'
-    print 'start ', name
-    #cli=erase_initialize_mripls()
-    cli=1
-
-    no_rips = 4; no_mrips=2;
-    for backend in ['puma','lite']:
-        vs = [MRipl(no_rips,backend=backend) for i in range(no_mrips) ]
-
-        #test mrids unique
-        assert len(set([v.mrid for v in vs]) ) == len(vs)
-
-        # test with different models
-        [v.assume('x',str(i)) for v,i in zip(vs,[0,1]) ]
-        assert all([v.sample('x') == ([i]*no_rips) for v,i in zip(vs,[0,1]) ] )
-
-        # test clear
-        [v.clear() for v in vs]
-        assert all([v.total_transitions== 0 for v in vs])
-        assert  [v.list_directives() == [ ]  for v in vs]
-
-        # test inference gives same results for mripls with same seeds
-        [v.clear() for v in vs]
-        [v.assume('x','(normal 0 1)',label='x') for v in vs]
-        [v.observe('(normal x .1)','2.',label='obs') for v in vs]
-        [v.infer(100) for v in vs]
-        ls=[v.report('x') for v in vs]
-        if backend=='puma':
-            assert all( [ set(ls[0])==set(i) for i in ls] ) # because seeds the same
-        print 'passed %s' % name
 
 
 

@@ -109,20 +109,6 @@ def mk_picklable(out_lst):
         return map(str,out_lst)
 
 
-# functions that copy ripls by batch-loading directives that are constructed from directives_list
-## FIXME: remove interactive?
-@interactive
-def build_exp(exp):
-    'Take expression from directive_list and build the Lisp string'
-    if type(exp)==str:
-        return exp
-    elif type(exp)==dict:
-        if exp['type']=='atom':
-            return 'atom<%i>'%exp['value']
-        else:
-            return str(exp['value'])
-    else:
-        return '('+ ' '.join(map(build_exp,exp)) + ')'
 
 ## MRIPL CLASS
 
@@ -227,7 +213,7 @@ class MRipl():
             self.dview['no_mripls']
         except:
             self.dview.execute('mripls=[]; no_mripls=0')
-            print 'Created new "mripls" list'
+            print "New list *mripls* created on remote engines."
 
         self.no_engines = len(self.cli.ids)
         self.no_ripls_per_engine = int(np.ceil(no_ripls/float(self.no_engines)))
@@ -241,14 +227,12 @@ class MRipl():
         
         # Imports for remote ripls
         self.dview.execute('from venture.venturemagics.ip_parallel import *')
-        # FIXME namespace issues
         self.dview.execute('%pylab inline --no-import-all')
         
         def p_getpids(): import os; return os.getpid()
         self.pids = self.dview.apply(p_getpids)
 
-        self.mrid = self.dview.pull('no_mripls')[0]
-        # id is index into mripls list
+        self.mrid = self.dview.pull('no_mripls')[0] # id is index into mripls list
         self.dview.push({'no_mripls':self.mrid+1})
 
         
@@ -326,13 +310,8 @@ class MRipl():
             self.cli.close()
     
     
-    
-    def mk_directives_string(self,ripl):
-        di_string_lst = [directive_to_string(di) for di in ripl.list_directives() ]
-        return '\n'.join(di_string_lst)
-    
     def reset_seeds(self):
-        'Assumes that set_seed has no output'
+        'Set seeds back to seeds specified in constructuor'
         [r.set_seed(seed) for r,seed in zip(self.local_ripls,self.local_seeds)]
         if self.local_mode: return
 
@@ -349,7 +328,7 @@ class MRipl():
         self.backend = backend
         self.total_transitions = 0
         
-        di_string = self.mk_directives_string(self.local_ripls[0])
+        di_string = mk_directives_string(self.local_ripls[0])
         if not(di_string):
             print 'No directives.'; return None
 
@@ -375,7 +354,7 @@ class MRipl():
     def _add_ripls(self,new_remote_ripls=0,new_local_ripls=0):
         'Add ripls with same directives as existing ripls.'
 
-        di_string = self.mk_directives_string(self.local_ripls[0])
+        di_string = mk_directives_string(self.local_ripls[0])
         if not(di_string_lst):
             print 'No directives.'; return None
 
@@ -1011,6 +990,45 @@ def ipython_inline():
     except:
         pass
 
+def mk_directives_string(ripl):
+        di_string_lst = [directive_to_string(di) for di in ripl.list_directives() ]
+        return '\n'.join(di_string_lst)
+
+def display_directives(ripl_mripl,instruction='observe'):
+    ## FIXME add replace with dict of symbls
+    ## FIXME: add did and labels
+    v=ripl_mripl
+    mr=1  if isinstance(v,MRipl) else 0
+    di_list = v.local_ripls[0].list_directives() if mr else v.list_directives()
+
+    instruction_list = []
+    for di in di_list:
+        if di['instruction']==instruction:
+            instruction_list.append( directive_to_string(di) )
+            print directive_to_string(di)
+    return instruction_list
+
+def directive_to_string(d):
+    ## FIXME: replace symbols
+    if d['instruction']=='assume':
+        return '[assume %s %s]' %( d['symbol'], build_exp(d['expression']) ) 
+    elif d['instruction']=='observe':
+        return '[observe %s %s]' %( build_exp(d['expression']), d['value']) 
+    elif d['instruction']=='predict':
+        return '[predict %s]' % build_exp(d['expression'])
+
+def build_exp(exp):
+    'Take expression from directive_list and build the Lisp string'
+    if type(exp)==str:
+        return exp
+    elif type(exp)==dict:
+        if exp['type']=='atom':
+            return 'atom<%i>'%exp['value']
+        else:
+            return str(exp['value'])
+    else:
+        return '('+ ' '.join(map(build_exp,exp)) + ')'
+
 
 
 ### Functions defined on MRipl objects 
@@ -1145,7 +1163,6 @@ def venture(line, cell):
 
     return None  
     
-
 ## Register the cell magic for IPython use
 try:
     ip = get_ipython()
@@ -1167,51 +1184,8 @@ except:
 # [assume suml (lambda (xs) (fold + xs 0) )]
 # [assume prodl (lambda (xs) (fold * xs 1) ) ]
 # '''
-# lite_addendum='''
-# [assume nil (list)]
-# '''
-
-# def test_ripls(print_lib=False):
-#     vs=[mk_l_ripl(),mk_p_ripl()]
-#     [v.execute_program(library_string) for v in vs]
-#     vs[0].execute_program(lite_addendum)
-#     return vs
 
 
-## Utility functions for working with MRipls
-
-def display_directives(ripl_mripl,instruction='observe'):
-    ## FIXME add replace with dict of symbls
-    ## FIXME: add did and labels
-    v=ripl_mripl
-    mr=1  if isinstance(v,MRipl) else 0
-    di_list = v.local_ripls[0].list_directives() if mr else v.list_directives()
-
-    instruction_list = []
-    for di in di_list:
-        if di['instruction']==instruction:
-            instruction_list.append( directive_to_string(di) )
-            print directive_to_string(di)
-    return instruction_list
-
-def directive_to_string(d):
-    ## FIXME: replace symbols
-    if d['instruction']=='assume':
-        return '[assume %s %s]' %( d['symbol'], build_exp(d['expression']) ) 
-    elif d['instruction']=='observe':
-        return '[observe %s %s]' %( build_exp(d['expression']), d['value']) 
-    elif d['instruction']=='predict':
-        return '[predict %s]' % build_exp(d['expression'])
-
-
-def directive_split(d):
-    ## FIXME: replace symbols
-    if d['instruction']=='assume':
-        return (d['symbol'], build_exp(d['expression']) ) 
-    elif d['instruction']=='observe':
-        return (build_exp(d['expression']), d['value']) 
-    elif d['instruction']=='predict':
-        return build_exp(d['expression'])
 
 
 
