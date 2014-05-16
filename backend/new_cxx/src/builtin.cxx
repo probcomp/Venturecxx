@@ -57,6 +57,7 @@ map<string,SP*> initBuiltInSPs()
   m["normal"] = new SP(new NullRequestPSP(), new NormalPSP());
   m["gamma"] = new SP(new NullRequestPSP(), new GammaPSP());
   m["simulate_motion"] = new SP(new NullRequestPSP(), new SimulateMotionPSP());
+  m["simulate_observation"] = new SP(new NullRequestPSP(), new SimulateObservationPSP());
   m["inv_gamma"] = new SP(new NullRequestPSP(), new InvGammaPSP());
   m["uniform_continuous"] = new SP(new NullRequestPSP(), new UniformContinuousPSP());
   m["beta"] = new SP(new NullRequestPSP(), new BetaPSP());

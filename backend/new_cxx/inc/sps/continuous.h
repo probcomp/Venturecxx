@@ -22,6 +22,12 @@ struct NormalPSP : RandomPSP
 
 };
 
+struct SimulateObservationPSP : RandomPSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+};
+
 struct SimulateMotionPSP : RandomPSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;

@@ -101,7 +101,43 @@ vector<double> NormalPSP::gradientOfLogDensity(double output,
   return ret;
 }
 
-/* Pose */
+VentureValuePtr SimulateObservationPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+{
+  checkArgsLength("simulate_observation", args, 2);
+
+
+  cout << "SimulateObservationPSP::simulate" << endl;
+
+  int N_values = 361;
+  VentureValuePtr laser_observation(new VentureNil());
+  VentureValuePtr laser_range(new VentureNil());
+  VentureValuePtr laser_intensity(new VentureNil());
+  for(int i=0; i<N_values; i++) {
+      double x = gsl_ran_flat(rng, 0.0, 1.0);
+      VentureValuePtr vx = shared_ptr<VentureValue>(new VentureNumber(x));
+      laser_range = VentureValuePtr(new VenturePair(vx, laser_range));
+  }
+  for(int i=0; i<N_values; i++) {
+      double x = gsl_ran_flat(rng, 0.0, 1.0);
+      VentureValuePtr vx = shared_ptr<VentureValue>(new VentureNumber(x));
+      laser_intensity = VentureValuePtr(new VenturePair(vx, laser_intensity));
+  }
+  VentureValuePtr _laser_intensity(new VentureNil());
+  _laser_intensity = VentureValuePtr(new VenturePair(laser_intensity, _laser_intensity));
+  VentureValuePtr _laser_range(new VentureNil());
+  _laser_range = VentureValuePtr(new VenturePair(laser_range, _laser_range));
+  laser_observation = VentureValuePtr(new VenturePair(laser_range, laser_observation));
+  laser_observation = VentureValuePtr(new VenturePair(laser_intensity, laser_observation));
+  return laser_observation;
+
+}
+
+double SimulateObservationPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+{
+  cout << "SimulateObservationPSP::logDensity" << endl;
+  return 1.0;
+}
+
 VentureValuePtr SimulateMotionPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
   checkArgsLength("simulate_motion", args, 3);
