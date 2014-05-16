@@ -57,7 +57,7 @@ map<string,SP*> initBuiltInSPs()
   m["normal"] = new SP(new NullRequestPSP(), new NormalPSP());
   m["gamma"] = new SP(new NullRequestPSP(), new GammaPSP());
   m["simulate_motion"] = new SP(new NullRequestPSP(), new SimulateMotionPSP());
-  m["simulate_observation"] = new SP(new NullRequestPSP(), new SimulateObservationPSP());
+  m["simulate_laser"] = new SP(new NullRequestPSP(), new SimulateLaserPSP());
   m["simulate_gps"] = new SP(new NullRequestPSP(), new SimulateGPSPSP());
   m["simulate_map"] = new SP(new NullRequestPSP(), new SimulateMapPSP());
   m["inv_gamma"] = new SP(new NullRequestPSP(), new InvGammaPSP());

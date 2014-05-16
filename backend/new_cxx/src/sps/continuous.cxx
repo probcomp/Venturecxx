@@ -101,9 +101,9 @@ vector<double> NormalPSP::gradientOfLogDensity(double output,
   return ret;
 }
 
-VentureValuePtr SimulateObservationPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+VentureValuePtr SimulateLaserPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  checkArgsLength("simulate_observation", args, 2);
+  checkArgsLength("simulate_laser", args, 2);
 
 
 
@@ -131,7 +131,7 @@ VentureValuePtr SimulateObservationPSP::simulate(shared_ptr<Args> args, gsl_rng 
 
 }
 
-double SimulateObservationPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double SimulateLaserPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
   return 1.0;
 }
