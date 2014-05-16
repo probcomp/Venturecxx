@@ -95,6 +95,7 @@ class Trace(object):
         return (scope.getNumber(), block.getNumber())
 
   def registerConstrainedChoice(self,node):
+    assert node not in self.ccs, "Cannot observe the same choice more than once"
     self.ccs.add(node)
     self.unregisterRandomChoice(node)
 
