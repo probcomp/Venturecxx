@@ -106,7 +106,6 @@ VentureValuePtr SimulateObservationPSP::simulate(shared_ptr<Args> args, gsl_rng 
   checkArgsLength("simulate_observation", args, 2);
 
 
-  cout << "SimulateObservationPSP::simulate" << endl;
 
   int N_values = 361;
   VentureValuePtr laser_observation(new VentureNil());
@@ -134,7 +133,6 @@ VentureValuePtr SimulateObservationPSP::simulate(shared_ptr<Args> args, gsl_rng 
 
 double SimulateObservationPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  cout << "SimulateObservationPSP::logDensity" << endl;
   return 1.0;
 }
 
@@ -146,7 +144,6 @@ VentureValuePtr SimulateMotionPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
   double x = gsl_ran_flat(rng, 0.0, 1.0);
   double y = gsl_ran_flat(rng, 0.0, 1.0);
   double heading = gsl_ran_flat(rng, -M_PI, M_PI);
-  cout << "SimulateMotionPSP::simulate" << endl;
 
   VentureValuePtr l(new VentureNil());
   VentureValuePtr vx = shared_ptr<VentureValue>(new VentureNumber(x));
@@ -160,7 +157,6 @@ VentureValuePtr SimulateMotionPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
 
 double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  cout << "SimulateMotionPSP::logDensity" << endl;
   double x = value->getFirst()->getDouble();
   double y = value->getRest()->getFirst()->getDouble();
   double heading = value->getRest()->getRest()->getFirst()->getDouble();
@@ -175,7 +171,6 @@ VentureValuePtr SimulateGPSPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  
   double x = gsl_ran_flat(rng, 0.0, 1.0);
   double y = gsl_ran_flat(rng, 0.0, 1.0);
   double heading = gsl_ran_flat(rng, -M_PI, M_PI);
-  cout << "SimulateGPSPSP::simulate" << endl;
 
   VentureValuePtr l(new VentureNil());
   VentureValuePtr vx = shared_ptr<VentureValue>(new VentureNumber(x));
@@ -189,7 +184,6 @@ VentureValuePtr SimulateGPSPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  
 
 double SimulateGPSPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  cout << "SimulateGPSPSP::logDensity" << endl;
   double x = value->getFirst()->getDouble();
   double y = value->getRest()->getFirst()->getDouble();
   double heading = value->getRest()->getRest()->getFirst()->getDouble();
@@ -202,7 +196,6 @@ VentureValuePtr SimulateMapPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  
 
   int num_landmarks = gsl_ran_poisson(rng, 1.0);
   num_landmarks = num_landmarks > 0 ? num_landmarks : 1;
-  cout << "SimulateMapPSP::simulate" << endl;
 
   VentureValuePtr map(new VentureNil());
   for(int i=0; i<num_landmarks; i++) {
@@ -220,7 +213,6 @@ VentureValuePtr SimulateMapPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  
 
 double SimulateMapPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  cout << "SimulateMapPSP::logDensity" << endl;
   return 1.0;
 }
 
