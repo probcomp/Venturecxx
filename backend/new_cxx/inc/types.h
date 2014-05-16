@@ -23,6 +23,7 @@ using std::flush;
 
 struct VentureValue;
 struct Node;
+struct TraceAddress;
 
 typedef int DirectiveID;
 typedef shared_ptr<VentureValue> VentureValuePtr;
@@ -32,6 +33,7 @@ typedef VentureValuePtr FamilyID;
 typedef shared_ptr<Node> RootOfFamily;
 typedef vector<double> Simplex;
 typedef vector<double> Gradient;
+typedef shared_ptr<TraceAddress> AddrPtr;
 
 /* TODO I keep oscillating on these. 
    One convention could be to only use this shortcut for VentureValuePtr.

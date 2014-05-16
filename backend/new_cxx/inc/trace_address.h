@@ -13,15 +13,44 @@ struct ESRStep : Step { ESRStep(FamilyID index) : index(index){} FamilyID index;
 struct TraceAddress
 {
   TraceAddress(Step last);
-  TraceAddress(shared_ptr<TraceAddress> previous, Step last);
-  shared_ptr<TraceAddress> previous;
+  TraceAddress(AddrPtr previous, Step last);
+  AddrPtr previous;
   Step last;
+  size_t hash() const;
 };
 
-shared_ptr<TraceAddress> makeDefiniteFamilyAddress(DirectiveID index);
-shared_ptr<TraceAddress> makeOperatorAddress(shared_ptr<TraceAddress> self);
-shared_ptr<TraceAddress> makeOperandAddress(shared_ptr<TraceAddress> self, int index);
-shared_ptr<TraceAddress> makeRequesterAddress(shared_ptr<TraceAddress> self);
-shared_ptr<TraceAddress> makeESRAddress(shared_ptr<TraceAddress> self, FamilyID index);
+AddrPtr makeDefiniteFamilyAddress(DirectiveID index);
+AddrPtr makeOperatorAddress(AddrPtr self);
+AddrPtr makeOperandAddress(AddrPtr self, int index);
+AddrPtr makeRequesterAddress(AddrPtr self);
+AddrPtr makeESRAddress(AddrPtr self, FamilyID index);
+
+/* for unordered map */
+struct AddrPtrsEqual
+{
+  bool operator() (const AddrPtr& a, const AddrPtr& b) const
+  {
+    return a == b;
+  }
+};
+
+struct HashAddrPtr
+{
+  size_t operator() (const AddrPtr& a) const
+  {
+    return a->hash();
+  }
+};
+
+struct AddrPtrsLess
+{
+  bool operator() (const AddrPtr& a, const AddrPtr& b) const
+  {
+    return a < b;
+  }
+};
+
+template <typename T>
+class AddrPtrMap : public boost::unordered_map<AddrPtr, T, HashAddrPtr, AddrPtrsEqual> {};
 
 #endif

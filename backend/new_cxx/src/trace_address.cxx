@@ -1,34 +1,34 @@
 #include "trace_address.h"
 
 TraceAddress::TraceAddress(Step last) : last(last) {}
-TraceAddress::TraceAddress(shared_ptr<TraceAddress> previous, Step last) : previous(previous), last(last) {}
+TraceAddress::TraceAddress(AddrPtr previous, Step last) : previous(previous), last(last) {}
 
-shared_ptr<TraceAddress> extendAddress(shared_ptr<TraceAddress> self, Step last)
+AddrPtr extendAddress(AddrPtr self, Step last)
 {
-  return shared_ptr<TraceAddress>(new TraceAddress(self, last));
+  return AddrPtr(new TraceAddress(self, last));
 }
 
-shared_ptr<TraceAddress> makeDefiniteFamilyAddress(DirectiveID index)
+AddrPtr makeDefiniteFamilyAddress(DirectiveID index)
 {
-  return shared_ptr<TraceAddress>(new TraceAddress(DefiniteFamilyStep(index)));
+  return AddrPtr(new TraceAddress(DefiniteFamilyStep(index)));
 }
 
-shared_ptr<TraceAddress> makeOperatorAddress(shared_ptr<TraceAddress> self)
+AddrPtr makeOperatorAddress(AddrPtr self)
 {
   return extendAddress(self, OperatorStep());
 }
   
-shared_ptr<TraceAddress> makeOperandAddress(shared_ptr<TraceAddress> self, int index)
+AddrPtr makeOperandAddress(AddrPtr self, int index)
 {
   return extendAddress(self, OperandStep(index));
 }
 
-shared_ptr<TraceAddress> makeRequesterAddress(shared_ptr<TraceAddress> self)
+AddrPtr makeRequesterAddress(AddrPtr self)
 {
   return extendAddress(self, RequesterStep());
 }
 
-shared_ptr<TraceAddress> makeESRAddress(shared_ptr<TraceAddress> self, FamilyID index)
+AddrPtr makeESRAddress(AddrPtr self, FamilyID index)
 {
   return extendAddress(self, ESRStep(index));
 }
