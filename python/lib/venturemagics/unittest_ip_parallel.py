@@ -40,17 +40,17 @@ def testAll_IP():
 
 def bino_model(v):
         v.assume('x','(binomial 5 .5)') 
-        [v.observe(' (poisson x)', '1.') for i in range(10) ]
+        [v.observe(' (poisson (+ x 1))', '1.') for i in range(10) ]
         v.infer(150)
         return v.predict('x')
 
 
-def compareSpeed(no_engines=4):
+def compareSpeed(no_ripls=4,infer_steps=75,backends=('puma','lite')):
     'Compare speed with different backends and local/remote mode'
     name='compareSpeed'
     print 'Start %s'%name
 
-    bkends =['puma','lite']
+    bkends = backends
     l_mode = [True,False]
     params=[(b,l) for b in bkends for l in l_mode]
 
@@ -60,13 +60,13 @@ def compareSpeed(no_engines=4):
         times = []
         for reps in range(3):
             start = time.time()
-            v=MRipl(no_engines,no_local_ripls=no_engines,backend=b,output='remote', local_mode=l)
+            v=MRipl(no_ripls,backend=b,output='remote',local_mode=l)
             out = bino_model(v)
             assert  2 > abs(np.mean(out) - 1)
 
             v.assume('y','(normal 5 5)')
             [v.observe('(if (flip) (normal y 1) (normal y 5))','10.') for rep in range(6)]
-            v.infer(75)
+            v.infer(infer_steps)
             out1 = v.sample('y')
             assert 5 > abs(np.mean(out1) - 10.)
             times.append( time.time() - start )
@@ -74,15 +74,17 @@ def compareSpeed(no_engines=4):
         m_times.append( ( (b,l), np.mean(times) ) )
 
     sorted_times = sorted(m_times,key=lambda pair: pair[1])
-    print '(backend,local_mode?), mean of 3 time.time in secs)'
-    for pair in sorted_times:
-        print pair[0],'%.2f'%pair[1]
+    print '\ncompareSpeed Results (sorted from fastest to slowest)\n'
+    print '(backend,local_mode?), mean of 3 time.time() calls in secs)\n'
+    for count,pair in enumerate(sorted_times):
+        print '%i:'%count, pair[0], '   %.2f'%pair[1]
     
     remotes = [pair for pair in sorted_times if False in pair[0]]
     local = [pair for pair in sorted_times if True in pair[0]]
     for r in remotes:
         for l in local:
             if r[0][:1]==l[0][:1]:
+                print '\nRemote vs. Local Ratio:'
                 print 'Remote %s %.2f' %(str(r[0]),r[1])
                 print 'Local %s %.2f' %(str(l[0]),l[1])
                 print 'Ratio %.2f' % (r[1]/l[1])

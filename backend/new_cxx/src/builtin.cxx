@@ -13,6 +13,7 @@
 #include "sps/hmm.h"
 #include "sps/matrix.h"
 #include "sps/msp.h"
+#include "sps/mvn.h"
 #include "sps/scope.h"
 
 map<string,VentureValuePtr> initBuiltInValues() 
@@ -67,6 +68,8 @@ map<string,SP*> initBuiltInSPs()
   m["chi_sq"] = new SP(new NullRequestPSP(), new ChiSquaredPSP());
   m["inv_chi_sq"] = new SP(new NullRequestPSP(), new InvChiSquaredPSP());
 
+  m["multivariate_normal"] = new SP(new NullRequestPSP(), new MVNormalPSP());
+
   /* Discrete SPs */
   m["bernoulli"] = new SP(new NullRequestPSP(), new BernoulliOutputPSP());
   m["flip"] = new SP(new NullRequestPSP(), new FlipOutputPSP());
@@ -94,6 +97,9 @@ map<string,SP*> initBuiltInSPs()
   /* Matrices */
   m["matrix"] = new SP(new NullRequestPSP(), new MatrixOutputPSP());
   m["is_matrix"] = new SP(new NullRequestPSP(), new IsMatrixOutputPSP());
+  m["id_matrix"] = new SP(new NullRequestPSP(), new IdentityMatrixOutputPSP());
+  m["vector"] = new SP(new NullRequestPSP(), new VectorOutputPSP());
+  m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
 
   /* Scoping */
   m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
@@ -101,6 +107,7 @@ map<string,SP*> initBuiltInSPs()
   /* Data structures */
   m["simplex"] = new SP(new NullRequestPSP(), new SimplexOutputPSP());
   m["is_simplex"] = new SP(new NullRequestPSP(), new IsSimplexOutputPSP());
+  m["to_simplex"] = new SP(new NullRequestPSP(), new ToSimplexOutputPSP());
 
   m["lookup"] = new SP(new NullRequestPSP(), new LookupOutputPSP());
   m["contains"] = new SP(new NullRequestPSP(), new ContainsOutputPSP());
@@ -109,6 +116,7 @@ map<string,SP*> initBuiltInSPs()
   m["is_dict"] = new SP(new NullRequestPSP(), new IsDictOutputPSP());
   m["array"] = new SP(new NullRequestPSP(), new ArrayOutputPSP());
   m["prepend"] = new SP(new NullRequestPSP(), new PrependOutputPSP());
+  m["append"] = new SP(new NullRequestPSP(), new AppendOutputPSP());
   m["is_array"] = new SP(new NullRequestPSP(), new IsArrayOutputPSP());
   m["pair"] = new SP(new NullRequestPSP(), new PairOutputPSP());
   m["is_pair"] = new SP(new NullRequestPSP(), new IsPairOutputPSP());

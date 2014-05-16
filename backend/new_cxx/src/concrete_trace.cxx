@@ -390,8 +390,9 @@ bool ConcreteTrace::scopeHasEntropy(ScopeID scope)
   return scopes.count(scope) && numBlocksInScope(scope) > 0; 
 }
 
-void ConcreteTrace::makeConsistent() 
+double ConcreteTrace::makeConsistent() 
 {
+  double weight = 0;
   for (map<Node*,VentureValuePtr>::iterator iter = unpropagatedObservations.begin();
        iter != unpropagatedObservations.end();
        ++iter)
@@ -402,16 +403,19 @@ void ConcreteTrace::makeConsistent()
     pnodes.insert(appNode);
     setsOfPNodes.push_back(pnodes);
     shared_ptr<Scaffold> scaffold = constructScaffold(this,setsOfPNodes,false);
-    detachAndExtract(this,scaffold->border[0],scaffold);
+    pair<double,shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
+    double rhoWeight = p.first;
     assertTorus(scaffold);
     shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(appNode))->getPSP(appNode);
     scaffold->lkernels[appNode] = shared_ptr<DeterministicLKernel>(new DeterministicLKernel(iter->second,psp));
     double xiWeight = regenAndAttach(this,scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),shared_ptr<map<Node*,Gradient> >());
-    if (std::isinf(xiWeight)) { assert(false); throw "Unable to propagate constraint"; }
+    if (std::isinf(xiWeight)) { throw "Unable to propagate constraint"; }
     observeNode(iter->first,iter->second);
     constrain(this,appNode,getObservedValue(iter->first));
+    weight = weight + xiWeight - rhoWeight;
   }
   unpropagatedObservations.clear();
+  return weight;
 }
 
 int ConcreteTrace::numUnconstrainedChoices() { return unconstrainedChoices.size(); }

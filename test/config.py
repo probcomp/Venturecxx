@@ -90,3 +90,4 @@ def defaultInfer():
 
 def defaultKernel():
   return defaultInfer()["kernel"]
+

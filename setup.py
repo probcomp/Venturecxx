@@ -142,6 +142,8 @@ puma_src_files = [
     "src/sps/hmm.cxx",
     "src/sps/matrix.cxx",
     "src/sps/msp.cxx",
+    "src/sps/mvn.cxx",
+    "src/sps/silva_mvn.cxx",    
     "src/sps/numerical_helpers.cxx",
     "src/sps/scope.cxx",
 ]
@@ -156,7 +158,7 @@ packages=["venture","venture.sivm","venture.ripl", "venture.engine",
           "venture.unit", "venture.test", "venture.cxx", "venture.puma", "venture.lite",
           "venture.venturemagics"]
 
-cxx = Extension("venture.cxx.libtrace",
+cxx = Extension("venture.cxx.libpumatrace",
     define_macros = [('MAJOR_VERSION', '0'),
                      ('MINOR_VERSION', '1'),
                      ('REVISION', '1')],
@@ -182,7 +184,7 @@ if ON_LINUX:
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
 if ON_MAC:
-    puma = Extension("venture.puma.libpumatrace",
+    puma = Extension("venture.puma.libtrace",
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
@@ -215,8 +217,8 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
         self.compiler_so = ["ccache", "gcc-4.8"]
 
     # parallel code
-    N=2 # number of parallel compilations
-    import multiprocessing.pool
+    import multiprocessing, multiprocessing.pool
+    N=multiprocessing.cpu_count() # number of parallel compilations
     def _single_compile(obj):
         try: src, ext = build[obj]
         except KeyError: return
