@@ -10,7 +10,7 @@ struct Node
   Node(VentureValuePtr exp): exp(exp) {}
   vector<Node*> definiteParents; // TODO should be an iterator
   set<Node*> children; // particle stores NEW children
-  virtual ~Node() {} // TODO destroy family
+  virtual ~Node() {}
   VentureValuePtr exp;
 };
 
