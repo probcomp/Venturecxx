@@ -2,15 +2,12 @@ import time,os,subprocess
 import numpy as np
 import scipy.stats as stats
 from IPython.parallel import Client
-from nose.tools import with_setup
-
-from nose.tools import eq_,assert_equal,assert_almost_equal
+from nose.tools import with_setup, eq_,assert_equal,assert_almost_equal
 from nose import SkipTest
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, get_mripl
 from testconfig import config
-
 
 from venture.venturemagics.ip_parallel import *
 #execfile('/home/owainevans/Venturecxx/python/lib/venturemagics/ip_parallel.py')
@@ -39,7 +36,7 @@ def teardown_function():
 
 
 
-def testDirectives1():
+def testDirectivesAssume():
     'assume,report,predict,sample,observe'
     v=get_mripl(no_ripls=4)
 
@@ -61,7 +58,7 @@ def testDirectives1():
     eq_( map(int,outAssume), map(int,v.report(1)) )
     return
 
-def testDirectives2():
+def testDirectivesExecute():
     "execute_program, force"
     vs=[get_mripl(no_ripls=3) for _ in range(2)]
 
@@ -81,7 +78,7 @@ def testDirectives2():
     eq_( v[0].report(3), 10)
 
 @statisticalTest
-def testDirectives3():
+def testDirectivesInfer1():
     'infer'
     v=get_mripl(no_ripls=20)
     samples = v.assume('x','(normal 1 1)')
@@ -91,14 +88,42 @@ def testDirectives3():
     return reportKnownContinuous(cdf,samples,"N(1,1)")
 
 @statisticalTest
-def testDirectives4():
-    'forget'
+def testDirectivesInfer2():
+    'inference program'
     v=get_mripl(no_ripls=20)
     samples = v.assume('x','(normal 1 1)')
-    v.infer(5)
+    [v.infer(params='(mh default one 1)') for _ in range(5)]
     samples.extend(v.report(1))
     cdf = stats.norm(loc=1, scale=1).cdf
     return reportKnownContinuous(cdf,samples,"N(1,1)")
+
+@statisticalTest
+def testDirectivesForget():
+    'forget'
+    v=get_mripl(no_ripls=8)
+    v.assume('x','(normal 1 10)')
+    v.observe('(normal x .1)','1')
+    v.infer(20)
+    v.forget(2)
+    v.infer(20)
+    samples = v.report(1)
+    cdf = stats.norm(loc=1, scale=10).cdf
+    return reportKnownContinuous(cdf,samples,"N(1,10)")
+    
+
+def testDirectivesListDirectives():
+    'list_directives'
+    no_ripls=4
+    v=get_mripl(no_ripls=no_ripls)
+    v.assume('x','(* 2 10)')
+    out = v.list_directives()
+    # either list_di outputs list of list_directives
+    if len(out)==no_ripls: 
+        di_list = out[0]
+    else:
+        di_list = out   # or just outputs single list
+    eq_(di_list[0]['symbol'],'x')
+    eq_(di_list[0]['value'],20.)
     
 
     
@@ -120,8 +145,69 @@ def testSeeds():
     return reportKnownContinuous(cdf,samples,"N(1,1)")
     
     
+def testMultiMRipls():
+    
+    vs=[get_mripl(no_ripls=2)) for _ in range(2)]
+    assert vs[0].mrid != vs[1].mrid     # distinct mripl ids
 
+    [v.mr_set_seeds(range(2)) for _ in vs]
+    outs = [v.sample('(poisson 20)') for v in vs]
+    eq_(outs[0],outs[1])
 
+    outs = [v.assume('x','%i'%i) for i,v in zip(range(2),vs)]
+    assert outs[0] != outs[1]
+    
+    cleared_v = vs[0].clear()
+    vs = [cleared_v,get_mripl(no_mripls=3)] # trigger del for vs[1]
+    assert vs[0].mrid != vs[1].mrid     # distinct mripl ids
+
+def testMrMap():
+        v=get_mripl(no_ripls=4)
+        
+        # no args, no limit (proc does import)
+        def f(ripl):
+            import numpy as np
+            return ripl.predict(str( np.power(4,2)))
+        out = v.map_proc('all',f)
+        assert all( 16. == np.array(out) )
+
+        # args,kwargs,limit
+        def g(ripl,x,exponent=1):
+            return ripl.predict(str( x**exponent) )
+        out = v.map_proc(2, g, 4, exponent=2)
+        assert len(out)==2 and all( 16. == np.array(out) )
+    
+        # map_proc_list no_kwargs
+        def h(ripl,x): return ripl.predict(str(x))
+        values = v.map_proc_list(h,[[10],[20]],only_p_args=True)
+        eq_(values,[10,20])
+
+        # map_proc_list kwargs
+        def foo(ripl,x,y=1): return ripl.sample('(+ %f %f)'%(x,y))
+        proc_args_list = [  [ [10],{'y':10} ],  [ [30],{} ] ]
+        values = v.map_proc_list(foo,proc_args_list,only_p_args=False)
+        eq_( values, [20,31])
+    
+        # unbalanced no_ripls
+        out = v.map_proc(3,f)
+        assert all( 16. == np.array(out) )
+        assert len(out) == 3
+        
+        values = v.map_proc_list(h,[[10],[20],[30]],only_p_args=True)
+        assert 10 in values and 20 in values and 30 in values
+        assert len(values) >= 3
+
+        # use interactive to access remote engine namespaces
+        # use fact that ip_parallel is imported to engines
+        if v.local_mode is False:
+            def f(ripl):
+                mripl = MRipl(2,local_mode=True)
+                mripl.mr_set_seeds(range(2))
+                return mripl.sample('(poisson 20)')
+            pairs = v.map_proc('all',f)
+            pairs = [map(int,pair) for pair in pairs]
+            assert all( [pairs[0]==pair for pair in pairs] )
+    
 
 
 

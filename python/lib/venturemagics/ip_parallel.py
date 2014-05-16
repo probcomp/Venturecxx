@@ -316,7 +316,7 @@ class MRipl():
             seeds_for_engine = self.seeds[start:start+self.no_ripls_per_engine]
             engine_view.apply(set_engine_seeds,self.mrid,seeds_for_engine)
 
-        return
+        
 
 
     def __del__(self):
@@ -325,8 +325,7 @@ class MRipl():
                 print '__del__ is closing client for mripl with mrid %i' % self.mrid
             self.cli.close()
     
-    def lst_flatten(self,l): return [el for subl in l for el in subl]
-
+    
     
     def mk_directives_string(self,ripl):
         di_string_lst = [directive_to_string(di) for di in ripl.list_directives() ]
@@ -409,7 +408,7 @@ class MRipl():
         if self.local_mode: return local_out
 
         # all remote apply's have to pick a mrid and backend
-        remote_out = self.lst_flatten( self.dview.apply(f,self.mrid,self.backend,*args,**kwargs) )        
+        remote_out = lst_flatten( self.dview.apply(f,self.mrid,self.backend,*args,**kwargs) )        
         return self._output_mode(local_out,remote_out)
         
 
@@ -480,16 +479,21 @@ class MRipl():
             return backend_filter(backend,out)
 
         return self.mr_apply(local_out,f,exp,type=type)
+    
+
+    def _update_transitions(self,params):
+        if isinstance(params,int):
+            self.total_transitions += params
+        elif isinstance(params,dict) and 'transitions' in params:
+            self.total_transitions += params['transitions']
+        else:
+            self.total_transitions += 1
+
+        if self.verbose: print 'total transitions: ',self.no_transitions
 
 
     def infer(self,params,block=True):
-        if isinstance(params,int):
-            self.total_transitions += params
-            if self.verbose: print 'total transitions: ',self.no_transitions
-        elif 'transitions' in params:
-            self.total_transitions += params['transitions']
-            if self.verbose: print 'total transitions: ',self.no_transitions
-        ##FIXME: add cases for inference programming
+        _update_transitions(params)
 
         if self.local_mode:
             return [r.infer(params) for r in self.local_ripls]
@@ -501,9 +505,9 @@ class MRipl():
             return [r.infer(params) for r in mripls[mrid][backend] ]
         
         if block:
-            remote_out= self.lst_flatten( self.dview.apply_sync(f,self.mrid,self.backend,params) )
+            remote_out= lst_flatten( self.dview.apply_sync(f,self.mrid,self.backend,params) )
         else:
-            remote_out = self.lst_flatten( self.dview.apply_async(f,self.mrid,self.backend,params) )
+            remote_out = lst_flatten( self.dview.apply_async(f,self.mrid,self.backend,params) )
 
 
         return self._output_mode(local_out,remote_out)
@@ -546,21 +550,21 @@ class MRipl():
         @interactive
         def f(mrid):
             return [ripl.continuous_inference_status() for ripl in mripls[mrid]]
-        return self.lst_flatten( self.dview.apply(f, self.mrid) )
+        return lst_flatten( self.dview.apply(f, self.mrid) )
 
     def _start_continuous_inference(self, params=None):
         self.local_ripl.start_continuous_inference(params)
         @interactive
         def f(params, mrid):
             return [ripl.start_continuous_inference(params) for ripl in mripls[mrid]]
-        return self.lst_flatten( self.dview.apply(f, params, self.mrid) )
+        return lst_flatten( self.dview.apply(f, params, self.mrid) )
 
     def _stop_continuous_inference(self):
         self.local_ripl.stop_continuous_inference()
         @interactive
         def f(mrid):
             return [ripl.stop_continuous_inference() for ripl in mripls[mrid]]
-        return self.lst_flatten( self.dview.apply(f, self.mrid) )
+        return lst_flatten( self.dview.apply(f, self.mrid) )
     ## END FIXME
 
 
@@ -614,7 +618,7 @@ class MRipl():
             ripl_prints = [str(r) for r in mripl[backend]]
             return [(pid,seed,ripl_print) for seed,ripl_print in zip(seeds,ripl_prints) ]
                    
-        remote_out = self.lst_flatten( self.dview.apply(get_info,self.mrid,self.backend) )
+        remote_out = lst_flatten( self.dview.apply(get_info,self.mrid,self.backend) )
         
         return self._output_mode(local_out,remote_out)
 
@@ -827,7 +831,7 @@ class MRipl():
 
         #mrmap_values2 = mr_map_proc(self, no_groups,fast_pred_repeat_forget, exp, pop_size)
 
-        if flatten: mrmap_values = self.lst_flatten(mrmap_values)
+        if flatten: mrmap_values = lst_flatten(mrmap_values)
 
         out['values'][exp]=mrmap_values
         
@@ -849,7 +853,7 @@ class MRipl():
         if plot and not flatten: # Random populations
             mrmap_values = np.array(mrmap_values).T
             fig,ax=plt.subplots(1,2,figsize=(14,4),sharex=True,sharey=False)
-            all_vals=self.lst_flatten(mrmap_values)
+            all_vals=lst_flatten(mrmap_values)
             xr=np.linspace(min(all_vals),max(all_vals),80)
 
             hist_counts = []
@@ -887,7 +891,7 @@ class MRipl():
         if current_vals: list_vals.append( current_vals ) 
 
         fig,ax=plt.subplots(1,2,figsize=(14,3.5),sharex=True)
-        all_vals=self.lst_flatten(list_vals)
+        all_vals=lst_flatten(list_vals)
         xr=np.linspace(min(all_vals),max(all_vals),50)
 
         for count,past_vals in enumerate(list_vals):
@@ -931,7 +935,6 @@ class MRipl():
         '''Takes input from snapshot, checks type of values and plots accordingly.
         Plots are inlined on IPNB and output as figure objects.'''
         
-
         def draw_hist(vals,label,ax,plot_range=None):
             ax.hist(vals)
             ax.set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
@@ -948,7 +951,6 @@ class MRipl():
             if plot_range:
                 ax.set_xlim(plot_range)                 
                 if len(plot_range)==2: ax.set_ylim(plot_range[1])
-
         
         # setup variables for plot
         figs = []
@@ -995,12 +997,9 @@ class MRipl():
 
 
 
-
         
-### Functions defined on MRipl objects 
 
-
-# Utility functions for mr_map functions
+# Utility functions for mripl and other functions
 def lst_flatten(l): return [el for subl in l for el in subl]
 
 def ipython_inline():
@@ -1014,7 +1013,7 @@ def ipython_inline():
 
 
 
-
+### Functions defined on MRipl objects 
 
 def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     '''Push procedure into engine namespaces. Use execute to map across ripls.
@@ -1054,8 +1053,6 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     remote_out = lst_flatten( mripl.dview['apply_out'] )
     
     return remote_out[:no_ripls] if mripl.output=='remote' else local_out 
-
-
 
 
 
