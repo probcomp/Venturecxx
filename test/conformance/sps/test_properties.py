@@ -116,7 +116,8 @@ def testExpressionFor():
 
 def propExpressionWorks(value):
   expr = value.expressionFor()
-  assert value.equal(carefully(eval_in_ripl, expr))
+  result = carefully(eval_in_ripl, expr)
+  assert value.equal(result)
 
 def eval_in_ripl(expr):
   ripl = get_ripl()
