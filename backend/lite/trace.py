@@ -345,7 +345,6 @@ class Trace(object):
   # "transitions" (the latter should be named "repeats").
 
   def infer(self,params):
-    print "[debug]", params
     if not self.scopeHasEntropy(params["scope"]):
       return
     for _ in range(params["transitions"]):
