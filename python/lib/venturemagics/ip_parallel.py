@@ -268,7 +268,7 @@ class MRipl():
         # invariant
         @interactive
         def get_seeds(mrid): return mripls[mrid]['seeds']
-        assert self.seeds==self.lst_flatten(self.dview.apply(get_seeds,self.mrid))
+        assert self.seeds==lst_flatten(self.dview.apply(get_seeds,self.mrid))
 
         
         if self.verbose: print self.ripls_info()
@@ -493,7 +493,7 @@ class MRipl():
 
 
     def infer(self,params,block=True):
-        _update_transitions(params)
+        self._update_transitions(params)
 
         if self.local_mode:
             return [r.infer(params) for r in self.local_ripls]
@@ -538,7 +538,7 @@ class MRipl():
         ##FIXME why pickling error
         local_out = [r.force(expression,value) for r in self.local_ripls]
         @interactive
-        def f(mrid,backend,label_or_did):
+        def f(mrid,backend,expression,value):
             [r.force(expression,value) for r in mripls[mrid][backend]]
             return None
         return self.mr_apply(local_out,f,expression,value)

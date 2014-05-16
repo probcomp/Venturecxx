@@ -33,6 +33,19 @@ def teardown_function():
     stop_engines()
 
 
+## TOGGLE REMOTE MODE
+LOCALMODE=True
+def get_mripl(no_ripls=2,**kwargs): return MRipl(no_ripls,local_mode=LOCALMODE)
+
+
+def localRunFunctions():    
+    tests = []
+    for k,v in globals().iteritems():
+        if hasattr(v,'__call__') and k.startswith('test'):
+            print k,v
+            tests.append( v )
+    [t() for t in tests]
+
 def testDirectivesAssume():
     'assume,report,predict,sample,observe'
     v=get_mripl(no_ripls=4)
@@ -57,6 +70,7 @@ def testDirectivesAssume():
 def testDirectivesExecute():
     "execute_program, force"
     vs=[get_mripl(no_ripls=3) for _ in range(2)]
+    [v.mr_set_seeds(range(3)) for v in vs]
 
     prog = """
     [ASSUME x (poisson 50)]
@@ -145,18 +159,20 @@ def testSeeds():
 def testMultiMRipls():
     'Create multiple mripls that share the same engine namespaces'
     vs=[get_mripl(no_ripls=2) for _ in range(2)]
-    assert vs[0].mrid != vs[1].mrid     # distinct mripl ids
+    if vs[0].local_mode is True:
+        assert vs[0].mrid != vs[1].mrid     # distinct mripl ids
 
-    [v.mr_set_seeds(range(2)) for _ in vs]
+    [v.mr_set_seeds(range(2)) for v in vs]
     outs = [v.sample('(poisson 20)') for v in vs]
     eq_(outs[0],outs[1])
 
     outs = [v.assume('x','%i'%i) for i,v in zip(range(2),vs)]
     assert outs[0] != outs[1]
     
-    cleared_v = vs[0].clear()
-    vs = [cleared_v,get_mripl(no_ripls=3)] # trigger del for vs[1]
-    assert vs[0].mrid != vs[1].mrid     # distinct mripl ids
+    vs[0].clear()
+    vs = [vs[0],get_mripl(no_ripls=3)] # trigger del for vs[1]
+    if vs[0].local_mode is True:
+        assert vs[0].mrid != vs[1].mrid     # distinct mripl ids
 
 
 def testMapProc():
@@ -206,7 +222,6 @@ def testMapProc():
         pairs = [map(int,pair) for pair in pairs]
         assert all( [pairs[0]==pair for pair in pairs] )
 
- 
 
 
 @statisticalTest
@@ -220,7 +235,7 @@ def testBackendSwitch():
     v.switch_backend(old)
     assert v.report(1)[0] > 0
 
-    cdf = stats.normal(loc=1,scale=1).cdf
+    cdf = stats.norm(loc=1,scale=1).cdf
     return reportKnownContinuous(cdf,v.report(1))
 
 def testTransitionsCount():

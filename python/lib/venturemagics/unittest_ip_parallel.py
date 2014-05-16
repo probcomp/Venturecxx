@@ -147,10 +147,10 @@ def testSeeds():
     
 def testMultiMRipls():
     
-    vs=[get_mripl(no_ripls=2)) for _ in range(2)]
+    vs=[get_mripl(no_ripls=2) for _ in range(2)]
     assert vs[0].mrid != vs[1].mrid     # distinct mripl ids
 
-    [v.mr_set_seeds(range(2)) for _ in vs]
+    [v.mr_set_seeds(range(2)) for v in vs]
     outs = [v.sample('(poisson 20)') for v in vs]
     eq_(outs[0],outs[1])
 
