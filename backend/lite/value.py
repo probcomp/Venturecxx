@@ -478,10 +478,10 @@ class VentureDict(VentureValue):
     return key in self.dict
   def size(self): return len(self.dict)
 
-# 2D array of numbers backed by a numpy matrix object
+# 2D array of numbers backed by a numpy array object
 @serialize.register
 class VentureMatrix(VentureValue):
-  def __init__(self,matrix): self.matrix = matrix
+  def __init__(self,matrix): self.matrix = np.array(matrix)
   def getMatrix(self): return self.matrix
   def getSymmetricMatrix(self):
     if matrixIsSymmetric(self.matrix):
