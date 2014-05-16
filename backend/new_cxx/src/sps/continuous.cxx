@@ -109,26 +109,26 @@ VentureValuePtr PosePSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 
   double x = gsl_ran_flat(rng, 0.0, 1.0);
   double y = gsl_ran_flat(rng, 0.0, 1.0);
-  double z = gsl_ran_flat(rng, 0.0, 1.0);
+  double heading = gsl_ran_flat(rng, -M_PI, M_PI);
   cout << "PosePSP::simulate" << endl;
 
   VentureValuePtr l(new VentureNil());
   VentureValuePtr vx = shared_ptr<VentureValue>(new VentureNumber(x));
   VentureValuePtr vy = shared_ptr<VentureValue>(new VentureNumber(y));
-  VentureValuePtr vz = shared_ptr<VentureValue>(new VentureNumber(z));
+  VentureValuePtr vheading = shared_ptr<VentureValue>(new VentureNumber(heading));
   l = VentureValuePtr(new VenturePair(vx, l));
   l = VentureValuePtr(new VenturePair(vy, l));
-  l = VentureValuePtr(new VenturePair(vz, l));
+  l = VentureValuePtr(new VenturePair(vheading, l));
   return l;
 }
 
 double PosePSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
   cout << "PosePSP::logDensity" << endl;
-  double a = value->getFirst()->getDouble();
-  double b = value->getRest()->getFirst()->getDouble();
-  double c = value->getRest()->getRest()->getFirst()->getDouble();
-  return a * b * c;
+  double x = value->getFirst()->getDouble();
+  double y = value->getRest()->getFirst()->getDouble();
+  double heading = value->getRest()->getRest()->getFirst()->getDouble();
+  return x * y;
 }
 
 /* Gamma */
