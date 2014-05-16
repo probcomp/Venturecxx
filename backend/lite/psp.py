@@ -275,7 +275,7 @@ class TypedPSP(PSP):
     return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def gradientOfLogDensity(self, value, args):
     (dvalue, dargs) = self.psp.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
-    return (self.f_type.wrap_return(dvalue), self.f_type.wrap_arg_list(dargs))
+    return (self.f_type.gradient_type().wrap_return(dvalue), self.f_type.gradient_type().wrap_arg_list(dargs))
   def logDensityBound(self, value, args):
     return self.psp.logDensityBound(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def incorporate(self,value,args):
