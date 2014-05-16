@@ -80,3 +80,20 @@ def testMVN2b():
   predictions = collectSamples(ripl,"pid")
   cdf = lambda x: stats.norm.cdf(x,loc=12,scale=math.sqrt(0.5))
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(.5))")
+
+@statisticalTest
+def testMVN3():
+  "Check that MVN is observable"
+  ripl = get_ripl()
+
+  ripl.assume("mu","(vector 0 0)")
+  ripl.assume("sigma","(matrix (array (array 1.0 0.0) (array 0.0 1.0)))")
+  ripl.assume("x","(multivariate_normal mu sigma)")
+  ripl.assume("y","(multivariate_normal x sigma)")
+  v = [{"type": "real", "value": 2}, {"type": "real", "value": 2}]
+  ripl.observe("y",{"type":"list","value":v})
+  ripl.predict("(lookup x 0)",label="pid")
+
+  predictions = collectSamples(ripl,"pid")
+  cdf = lambda x: stats.norm.cdf(x,loc=1,scale=math.sqrt(0.5))
+  return reportKnownContinuous(cdf, predictions, "N(1,sqrt(.5))")
