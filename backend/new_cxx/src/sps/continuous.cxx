@@ -166,7 +166,7 @@ double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
 
 VentureValuePtr SimulateGPSPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  checkArgsLength("simulate_gps", args, 2);
+  checkArgsLength("simulate_gps", args, 1);
 
 
   double x = gsl_ran_flat(rng, 0.0, 1.0);
