@@ -142,7 +142,7 @@ def testConstrainAVar5a():
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
   ripl.predict("(normal x 0.0001)")
   ripl.observe("(if (f) x y)", 3.0)
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50})
+  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50,"in_parallel":False})
 
 @raises(Exception)
 def testConstrainAVar5b():
@@ -156,7 +156,7 @@ def testConstrainAVar5b():
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
   ripl.predict("(if (f) (normal x 0.0001) (normal y 0.0001))")
   ripl.observe("(if (f) x y)", 3.0)
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50})
+  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50,"in_parallel":False})
 
 @raises(Exception)
 def testConstrainAVar6a():
@@ -170,7 +170,7 @@ def testConstrainAVar6a():
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
   ripl.predict("(if (< (normal x 1.0) 3) x y)")
   ripl.observe("(if (f) x y)", 3.0)
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50})
+  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50,"in_parallel":False})
 
 @raises(Exception)
 def testConstrainAVar6b():
@@ -184,7 +184,7 @@ def testConstrainAVar6b():
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
   ripl.observe("(if (f) x y)", 3.0)
   ripl.predict("(if (< (normal x 1.0) 3) x y)")
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50})
+  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50,"in_parallel":False})
 
 @raises(Exception)
 def testConstrainWithAPredict1():
@@ -201,7 +201,7 @@ def testConstrainWithAPredict1():
   ripl.assume("op4","(if (op3) op2 op1)")
   ripl.predict("(op4)")
   ripl.observe("(op4)",True)
-  collectSamples(ripl,"pid")
+  collectSamples(ripl,"pid",infer_merge={"in_parallel":False})
 
 
 @statisticalTest

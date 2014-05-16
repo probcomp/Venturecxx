@@ -8,6 +8,7 @@ from sp import VentureSP, SPAux, SPType
 from lkernel import LKernel
 from value import VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 from exception import VentureValueError
+import serialize
 
 class DiscretePSP(RandomPSP):
   def logDensityBound(self, _x, _args): return 0
@@ -115,6 +116,7 @@ class PoissonOutputPSP(DiscretePSP):
 
 
 #### Collapsed Beta Bernoulli
+@serialize.register
 class BetaBernoulliSPAux(SPAux):
   def __init__(self):
     self.yes = 0.0
@@ -128,10 +130,30 @@ class BetaBernoulliSPAux(SPAux):
 
   def cts(self): return [self.yes,self.no]
 
+  def serialize(self, s):
+    ret = {}
+    ret['yes'] = self.yes
+    ret['no'] = self.no
+    return ret
+
+  def deserialize(self, s, value):
+    self.yes = value['yes']
+    self.no = value['no']
+
+@serialize.register
 class BetaBernoulliSP(VentureSP):
   def constructSPAux(self): return BetaBernoulliSPAux()
   def show(self,spaux): return spaux.cts()
-    
+
+  def serialize(self, s):
+    assert isinstance(self.requestPSP, NullRequestPSP)
+    assert isinstance(self.outputPSP, TypedPSP)
+    assert self.outputPSP.f_type.names() == SPType([], BoolType()).names()
+    return s.serialize(self.outputPSP.psp)
+
+  def deserialize(self, s, value):
+    self.requestPSP = NullRequestPSP()
+    self.outputPSP = TypedPSP(s.deserialize(value), SPType([], BoolType()))
 
 class MakerCBetaBernoulliOutputPSP(DeterministicPSP):
   def childrenCanAAA(self): return True
@@ -145,6 +167,7 @@ class MakerCBetaBernoulliOutputPSP(DeterministicPSP):
   def description(self,name):
     return "  (%s alpha beta) returns a collapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false).  While this procedure itself is deterministic, the returned sampler is stochastic." % name
 
+@serialize.register
 class CBetaBernoulliOutputPSP(DiscretePSP):
   def __init__(self,alpha,beta):
     assert isinstance(alpha, float)
@@ -188,6 +211,16 @@ class CBetaBernoulliOutputPSP(DiscretePSP):
     denominator = scipy.special.betaln(self.alpha,self.beta)
     return math.log(numCombinations) + numerator - denominator
 
+  def serialize(self, s):
+    ret = {}
+    ret['alpha'] = self.alpha
+    ret['beta'] = self.beta
+    return ret
+
+  def deserialize(self, s, data):
+    self.alpha = data['alpha']
+    self.beta = data['beta']
+
 #### Uncollapsed AAA Beta Bernoulli
 
 class MakerUBetaBernoulliOutputPSP(DiscretePSP):
@@ -223,6 +256,7 @@ class UBetaBernoulliAAALKernel(LKernel):
 
   def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
 
+@serialize.register
 class UBetaBernoulliOutputPSP(DiscretePSP):
   def __init__(self,weight):
     self.weight = weight
@@ -248,3 +282,11 @@ class UBetaBernoulliOutputPSP(DiscretePSP):
       return math.log(self.weight)
     else:
       return math.log(1-self.weight)
+
+  def serialize(self, s):
+    ret = {}
+    ret['weight'] = self.weight
+    return ret
+
+  def deserialize(self, s, data):
+    self.weight = data['weight']

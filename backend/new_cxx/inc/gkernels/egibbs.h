@@ -11,6 +11,7 @@ struct Particle;
 /* enumerative Gibbs */
 struct EnumerativeGibbsGKernel : GKernel
 {
+ EnumerativeGibbsGKernel(bool inParallel): inParallel(inParallel) {}
   pair<Trace*,double> propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold);
   void accept();
   void reject();
@@ -23,5 +24,7 @@ struct EnumerativeGibbsGKernel : GKernel
   
   /* The particle chosen by propose(). */
   shared_ptr<Particle> finalParticle;
+
+  bool inParallel;
 };
 #endif

@@ -1,14 +1,12 @@
 Overview
 ========
 
-This document is meant to be normative, and therefore changes only by
-unanimous consent (except re: availability of new tools, etc).  If you
-disagree with something you see here, please raise it.
+If you disagree with a suggestion you see here, please bring it up
+rather than silently not following it.
 
 - We use [Asana](http://asana.com) to coordinate tasks.
 
-- We are trying out [Flowdock](https://www.flowdock.com/app/mit-probcomp/main) for persistent group chat.
-  As of early February 2014, the jury is in deliberations.
+- We use [Flowdock](https://www.flowdock.com/app/mit-probcomp/main) for persistent group chat.
 
 - We use [nosetests](https://nose.readthedocs.org/en/latest/) for running the test suite.
 
@@ -59,7 +57,7 @@ Test Suite Configuration
   inference programs.  This takes a while.
 
 - You can select the backend against which to run the suite like this:
-  `nosetests -c inference-quality.cfg --tc=get_ripl:cxx`
+  `nosetests -c inference-quality.cfg --tc=get_ripl:puma`
   (the default is `lite`).
 
 - `nosetests -c performance.cfg` checks for performance issues.
@@ -73,7 +71,9 @@ Test Suite Configuration
   plugin:
   `--processes=[NUM] --process-timeout=[SECONDS]`
   Note that the timeout is essentially for the whole suite rather than
-  per test.
+  per test.  This facility has caused no end of problems, so the
+  continuous build now parallelizes across builds rather than within
+  them.
 
 - The test suite can be sliced by test/group in the usual way.
 
