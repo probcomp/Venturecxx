@@ -102,7 +102,7 @@ class TestSerialize(unittest.TestCase):
         def program(v):
             v.assume('coin', '(mem (lambda (x) (beta 1.0 1.0)))')
             v.assume('flip_coin', '(lambda (x) (flip (coin x)))')
-            for i in range(10):
+            for _ in range(10):
                 v.observe('(flip_coin 0)', 'true')
             v.predict('(flip_coin 0)', label='pid')
         self._test_serialize_program(program, 'pid')
