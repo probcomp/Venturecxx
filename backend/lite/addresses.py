@@ -1,4 +1,4 @@
-from node import LookupNode, OutputNode
+from venture.lite.node import LookupNode, OutputNode
 
 def compute_addresses(trace):
     """Compute node addresses for all nodes in a trace."""
@@ -51,9 +51,12 @@ def test_are_addresses_consistent():
     # compute addresses after new observations are made
     for i in range(10):
         v.observe('(flip_coin {})'.format(i), 'true')
-        # this doesn't currently work because the code above assumes esrParents are consistent.
-        # v.observe('(flip_coin (flip))'.format(i), 'true')
     v.infer(0)
+    addresses += [compute_addresses(v.sivm.core_sivm.engine.getDistinguishedTrace())]
+
+    # this doesn't currently work because the code above assumes esrParents are consistent.
+    for i in range(10):
+        v.predict('(flip_coin (uniform_discrete 10 12))')
     addresses += [compute_addresses(v.sivm.core_sivm.engine.getDistinguishedTrace())]
 
     # compute addresses after inference on the new observations
