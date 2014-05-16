@@ -136,11 +136,11 @@ struct ConcreteTrace : Trace
   set<Node*> constrainedChoices;
   set<Node*> arbitraryErgodicKernels;
 
-  map<Node*,VentureValuePtr> unpropagatedObservations;
+  map<Node*, VentureValuePtr> unpropagatedObservations;
 
-  map<OutputNode*,shared_ptr<SPAux> > aaaMadeSPAuxs;
+  map<OutputNode*, shared_ptr<SPAux> > aaaMadeSPAuxs;
 
-  map<DirectiveID,RootOfFamily> families;
+  map<DirectiveID, RootOfFamily> families;
 
   VentureValuePtrMap<SamplableMap<set<Node*> > > scopes;
 
@@ -148,8 +148,8 @@ struct ConcreteTrace : Trace
   map<RootOfFamily, int> numRequests;
   map<Node*, shared_ptr<VentureSPRecord> > madeSPRecords;
 
-  map<Node*,VentureValuePtr> values;
-  map<Node*,VentureValuePtr> observedValues;
+  map<Node*, VentureValuePtr> values;
+  map<Node*, VentureValuePtr> observedValues;
 
 };
 
