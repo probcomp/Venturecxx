@@ -131,8 +131,6 @@ used in the implementation of TypedPSP and TypedLKernel."""
     def to_grad_type(type_):
       if isinstance(type_, ProbabilityType) or isinstance(type_, PositiveType):
         return NumberType()
-      elif isinstance(type_, SymmetricMatrixType):
-        return MatrixType()
       else:
         return type_
     return SPType([to_grad_type(t) for t in self.args_types], to_grad_type(self.return_type), self.variadic, self.min_req_args)

@@ -534,6 +534,37 @@ class VentureSymmetricMatrix(VentureMatrix):
   def __init__(self, matrix):
     self.matrix = matrix
     assert matrixIsSymmetric(matrix)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    if isinstance(other, VentureSymmetricMatrix):
+      return VentureSymmetricMatrix(self.matrix + other.matrix)
+    else:
+      return VentureMatrix(self.matrix + other.matrix)
+  def __radd__(self, other):
+    if other == 0:
+      return self
+    if isinstance(other, VentureSymmetricMatrix):
+      return VentureSymmetricMatrix(other.matrix + self.matrix)
+    else:
+      return VentureMatrix(other.matrix + self.matrix)
+  def __neg__(self):
+    return VentureSymmetricMatrix(-self.matrix)
+  def __sub__(self, other):
+    if other == 0:
+      return self
+    if isinstance(other, VentureSymmetricMatrix):
+      return VentureSymmetricMatrix(self.matrix - other.matrix)
+    else:
+      return VentureMatrix(self.matrix - other.matrix)
+  def __mul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureSymmetricMatrix(self.matrix * other)
+  def __rmul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureSymmetricMatrix(other * self.matrix)
   def map_real(self, f):
     candidate = np.vectorize(f)(self.matrix)
     return VentureSymmetricMatrix( (candidate + candidate.T)/2 )
