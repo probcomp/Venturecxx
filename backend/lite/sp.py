@@ -1,4 +1,4 @@
-from value import VentureValue, registerVentureType, VentureType
+from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType
 from abc import ABCMeta
 import copy
 import serialize
@@ -126,3 +126,11 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def name(self):
     """A default name for when there is only room for one name."""
     return self._name_for_fixed_arity(self.args_types)
+
+  def gradient_type(self):
+    def to_grad_type(type_):
+      if isinstance(type_, ProbabilityType) or isinstance(type_, PositiveType):
+        return NumberType()
+      else:
+        return type_
+    return SPType([to_grad_type(t) for t in self.args_types], to_grad_type(self.return_type), self.variadic, self.min_req_args)

@@ -39,7 +39,7 @@ class MVNormalOutputPSP(RandomPSP):
   def gradientOfLogDensity(self, x, args):
     (mu, sigma) = self.__parse_args__(args)
     isigma = npla.inv(sigma)
-    xvar = np.dot(np.transpose(np.matrix(x-mu)), np.matrix(x-mu))
+    xvar = np.dot(x-mu, x-mu)
     gradX = -np.dot(isigma, np.transpose(x-mu))
     gradMu = np.dot(isigma, np.transpose(x-mu))
     gradSigma = .5*np.dot(np.dot(isigma, xvar),isigma)-.5*isigma
@@ -49,7 +49,7 @@ class MVNormalOutputPSP(RandomPSP):
     return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name
 
   def __parse_args__(self, args):
-    return (np.array(args.operandValues[0]), args.operandValues[1])
+    return (np.array(args.operandValues[0]), np.array(args.operandValues[1]))
 
 class InverseWishartPSP(RandomPSP):
   def simulate(self, args):

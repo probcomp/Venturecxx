@@ -478,10 +478,10 @@ class VentureDict(VentureValue):
     return key in self.dict
   def size(self): return len(self.dict)
 
-# 2D array of numbers backed by a numpy matrix object
+# 2D array of numbers backed by a numpy array object
 @serialize.register
 class VentureMatrix(VentureValue):
-  def __init__(self,matrix): self.matrix = matrix
+  def __init__(self,matrix): self.matrix = np.array(matrix)
   def getMatrix(self): return self.matrix
   def getSymmetricMatrix(self):
     if matrixIsSymmetric(self.matrix):
@@ -534,9 +534,43 @@ class VentureSymmetricMatrix(VentureMatrix):
   def __init__(self, matrix):
     self.matrix = matrix
     assert matrixIsSymmetric(matrix)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    if isinstance(other, VentureSymmetricMatrix):
+      return VentureSymmetricMatrix(self.matrix + other.matrix)
+    else:
+      return VentureMatrix(self.matrix + other.matrix)
+  def __radd__(self, other):
+    if other == 0:
+      return self
+    if isinstance(other, VentureSymmetricMatrix):
+      return VentureSymmetricMatrix(other.matrix + self.matrix)
+    else:
+      return VentureMatrix(other.matrix + self.matrix)
+  def __neg__(self):
+    return VentureSymmetricMatrix(-self.matrix)
+  def __sub__(self, other):
+    if other == 0:
+      return self
+    if isinstance(other, VentureSymmetricMatrix):
+      return VentureSymmetricMatrix(self.matrix - other.matrix)
+    else:
+      return VentureMatrix(self.matrix - other.matrix)
+  def __mul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureSymmetricMatrix(self.matrix * other)
+  def __rmul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureSymmetricMatrix(other * self.matrix)
+  def map_real(self, f):
+    candidate = np.vectorize(f)(self.matrix)
+    return VentureSymmetricMatrix( (candidate + candidate.T)/2 )
 
 def matrixIsSymmetric(matrix):
-  return (matrix.transpose() == matrix).all()
+  return np.allclose(matrix.transpose(), matrix)
 
 @serialize.register
 class SPRef(VentureValue):
