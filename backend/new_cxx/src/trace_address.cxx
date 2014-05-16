@@ -1,10 +1,16 @@
 #include "trace_address.h"
 
+TraceAddress::TraceAddress(Step last) : last(last) {}
 TraceAddress::TraceAddress(shared_ptr<TraceAddress> previous, Step last) : previous(previous), last(last) {}
 
 shared_ptr<TraceAddress> extendAddress(shared_ptr<TraceAddress> self, Step last)
 {
   return shared_ptr<TraceAddress>(new TraceAddress(self, last));
+}
+
+shared_ptr<TraceAddress> makeDefiniteFamilyAddress(DirectiveID index)
+{
+  return shared_ptr<TraceAddress>(new TraceAddress(DefiniteFamilyStep(index)));
 }
 
 shared_ptr<TraceAddress> makeOperatorAddress(shared_ptr<TraceAddress> self)
