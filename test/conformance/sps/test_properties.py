@@ -17,7 +17,7 @@ def propEquality(value):
 def relevantSPs():
   for (name,sp) in builtInSPsList():
     if isinstance(sp.requestPSP, NullRequestPSP):
-      if not name in ["wishart", "inv_wishart"]:
+      if name not in []: # Placeholder for selecting SPs to do or not do
         yield name, sp
 
 def testTypes():

@@ -38,15 +38,22 @@ mk_p_ripl = make_puma_church_prime_ripl
 
 # TODO:
 
+# optional default inference program for mripl
+# v.plot or quickplot for unit things. 
+# v.plot('x',**plottingkwargs) = v.snapshot(exp_list=['x'],plot=True,**kwargs)
+
 # cheat sheet explaining local_mode, mr_map_proc, mr_map_array
 # move local_out to debug mode
 # 
-# make mr_map_proc a method.
 
 # 
 
-# get rid of use of interactive on certain utility funcs
-# if it breaks use outside MRIPL
+# get rid of use of interactive on certain utility funcs:
+# we use util funcs to pull out directives for copying.
+# but as long as all these are imported from ip_paral
+# across engines, we shouldn't need to use interactive.
+# (and any time we want to send such a function to the ripls
+# we can either use dview.execute, or wrap in interactive.
 
 # move regression stuff to regression utils
 # make private methods private
@@ -524,12 +531,12 @@ class MRipl():
         return self.mr_apply(local_out,f,label_or_did)
 
     def force(self,expression,value):
-        ##FIXME add unit test
+        ##FIXME why pickling error
         local_out = [r.force(expression,value) for r in self.local_ripls]
         @interactive
         def f(mrid,backend,label_or_did):
-            return [r.force(expression,value) for r in mripls[mrid][backend]]
-            
+            [r.force(expression,value) for r in mripls[mrid][backend]]
+            return None
         return self.mr_apply(local_out,f,expression,value)
 
         

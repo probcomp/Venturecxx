@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from utils import override
 from lkernel import DefaultAAALKernel,DefaultVariationalLKernel,LKernel
 from request import Request
+import serialize
 
 class PSP(object):
   """A Primitive Stochastic Procedure.
@@ -235,6 +236,7 @@ class NullRequestPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
 
+@serialize.register
 class ESRRefOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def simulate(self,args):
@@ -273,7 +275,7 @@ class TypedPSP(PSP):
     return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def gradientOfLogDensity(self, value, args):
     (dvalue, dargs) = self.psp.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
-    return (self.f_type.wrap_return(dvalue), self.f_type.wrap_arg_list(dargs))
+    return (self.f_type.gradient_type().wrap_return(dvalue), self.f_type.gradient_type().wrap_arg_list(dargs))
   def logDensityBound(self, value, args):
     return self.psp.logDensityBound(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def incorporate(self,value,args):

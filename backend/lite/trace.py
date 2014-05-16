@@ -18,9 +18,11 @@ from scaffold import constructScaffold
 from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
+import serialize
 import random
 import numpy.random
 
+@serialize.register
 class Trace(object):
   def __init__(self):
 
@@ -361,7 +363,8 @@ class Trace(object):
         #assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
 
-      # [FIXME] egregrious style, but expedient. The stack is such a mess anyway, it's hard to do anything with good style that
+      # [FIXME] egregrious style, but expedient. The stack is such a
+      # mess anyway, it's hard to do anything with good style that
       # doesn't begin by destroying the stack.
       elif params["kernel"] == "pgibbs":
         if params["block"] == "ordered_range":
@@ -386,13 +389,11 @@ class Trace(object):
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
   def save(self, fname, extra):
-    from serialize import save_trace
-    save_trace(self, extra, fname)
+    serialize.save_trace(self, extra, fname)
 
   @staticmethod
   def load(fname):
-    from serialize import load_trace
-    trace, extra = load_trace(fname)
+    trace, extra = serialize.load_trace(fname)
     return trace, extra
 
   def get_seed(self):

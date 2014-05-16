@@ -1,16 +1,21 @@
-from venture.shortcuts import make_puma_church_prime_ripl as mk_p_ripl
-from venture.shortcuts import make_lite_church_prime_ripl as mk_l_ripl
 import time,os,subprocess
 import numpy as np
+import scipy.stats as stats
 from IPython.parallel import Client
 from nose.tools import with_setup
 
-from venture.venturemagics.ip_parallel import *
-execfile('/home/owainevans/Venturecxx/python/lib/venturemagics/ip_parallel.py')
+from nose.tools import eq_,assert_equal,assert_almost_equal
+from nose import SkipTest
 
-def mk_ripl(backend):
-    if backend=='puma': return mk_p_ripl()
-    return mk_l_ripl()
+from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import get_ripl, get_mripl
+from testconfig import config
+
+
+from venture.venturemagics.ip_parallel import *
+#execfile('/home/owainevans/Venturecxx/python/lib/venturemagics/ip_parallel.py')
+
+
 
 def setup_function():
     print 'START SETUP'
@@ -33,10 +38,92 @@ def teardown_function():
     stop_engines()
 
 
-@with_setup(setup_function,teardown_function)
-def testAll_IP():
-    def testBuildexp():
-        pass
+
+def testDirectives1():
+    'assume,report,predict,sample,observe'
+    v=get_mripl(no_ripls=4)
+
+    # test assume,report,predict,sample
+    outAssume = v.assume("x","(poisson 50)",label="x")
+    outs = [v.report(1), v.report("x"), v.sample("x"), v.predict("x")]
+    typed = v.report(1,type=True)
+    outs.append( [ type_value["value"] for type_value in typed] )
+    
+    outAssume= map(int,outAssumes)
+    outs = map(int,outs)
+    [eq_(outAssume,out) for out in outs]
+
+    # test observe
+    v.clear()
+    outAssume = v.assume("x","(normal 1 1)",label="x")
+    v.observe("(normal x 1)","2",label="obs")
+    [assert_almost_equal(out,2) for out in v.report("obs")]
+    eq_( map(int,outAssume), map(int,v.report(1)) )
+    return
+
+def testDirectives2():
+    "execute_program, force"
+    vs=[get_mripl(no_ripls=3) for _ in range(2)]
+
+    prog = """
+    [ASSUME x (poisson 50)]
+    [OBSERVE (normal x 1) 55.]
+    [PREDICT x ] """
+
+    v[0].execute_program(prog)
+    eq_( v[0].report(3), v[0].report(1) )
+    
+    v[1].assume('x','(poisson 50)')
+    eq_( v[0].report(1), v[1].report(1) )
+
+    v[0].force('x','10')
+    eq_( v[0].report(1), 10)
+    eq_( v[0].report(3), 10)
+
+@statisticalTest
+def testDirectives3():
+    'infer'
+    v=get_mripl(no_ripls=20)
+    samples = v.assume('x','(normal 1 1)')
+    v.infer(5)
+    samples.extend(v.report(1))
+    cdf = stats.norm(loc=1, scale=1).cdf
+    return reportKnownContinuous(cdf,samples,"N(1,1)")
+
+@statisticalTest
+def testDirectives4():
+    'forget'
+    v=get_mripl(no_ripls=20)
+    samples = v.assume('x','(normal 1 1)')
+    v.infer(5)
+    samples.extend(v.report(1))
+    cdf = stats.norm(loc=1, scale=1).cdf
+    return reportKnownContinuous(cdf,samples,"N(1,1)")
+    
+
+    
+@statisticalTest
+def testSeeds():
+    # seeds can be set via constructor or self.mr_set_seeds
+    v=get_mripl(no_ripls=8,seeds=range(8))
+    eq_(v.seeds,range(8))
+
+    v.mr_set_seeds(range(10,18))
+    eq_(v.seeds,range(10,18))
+
+    # initial seeds are distinct and stay distinct after self.clear
+    v=get_mripl(no_ripls=8) 
+    samples = v.sample("(normal 1 1)")
+    v.clear()
+    samples.extend( v.sample("(normal 1 1)") )
+    cdf = stats.norm(loc=1,scale=1).cdf
+    return reportKnownContinuous(cdf,samples,"N(1,1)")
+    
+    
+
+
+
+
 
 def bino_model(v):
         v.assume('x','(binomial 5 .5)') 

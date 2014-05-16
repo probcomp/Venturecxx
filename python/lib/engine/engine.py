@@ -203,6 +203,8 @@ class Engine(object):
     
     if "particles" in params:
       params["particles"] = int(params["particles"])
+    if "in_parallel" not in params:
+      params['in_parallel'] = True
   
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
 
