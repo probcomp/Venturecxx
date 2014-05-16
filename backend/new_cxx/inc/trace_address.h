@@ -11,7 +11,14 @@ class ESRStep : Step { FamilyID index; }
 
 struct TraceAddress
 {
-  vector<Step> path;
+  TraceAddress(shared_ptr<TraceAddress> previous, Step last);
+  shared_ptr<TraceAddress> previous;
+  Step last;
 };
+
+shared_ptr<TraceAddress> makeOperatorAddress(shared_ptr<TraceAddress> self);
+shared_ptr<TraceAddress> makeOperandAddress(shared_ptr<TraceAddress> self, int index);
+shared_ptr<TraceAddress> makeRequesterAddress(shared_ptr<TraceAddress> self);
+shared_ptr<TraceAddress> makeESRAddress(shared_ptr<TraceAddress> self, FamilyID index);
 
 #endif
