@@ -29,7 +29,7 @@ def testIncorporateDoesNotCrash():
 
   ripl.infer("(resample %d)" % P)
   ripl.observe("(g 1)",False)
-  ripl.infer("(incorporate)") # not necessary, just testing that it doesn't crash
+  ripl.infer("(incorporate)")
 
 
 @statisticalTest
