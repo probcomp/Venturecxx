@@ -3,6 +3,7 @@
 The design currently lives at
 https://docs.google.com/document/d/1URnJh5hNJ___-dwzIpca5Y2h-Mku1n5zjpGCiFBcUHM/edit
 """
+import operator
 from abc import ABCMeta
 from numbers import Number
 import numpy as np
@@ -219,6 +220,9 @@ def lexicographicUnboxedCompare(thing, other):
   return 0
 
 def lexicographicMatrixCompare(thing, other):
+  ct_thing = reduce(operator.mul, np.shape(thing), 1)
+  ct_other = reduce(operator.mul, np.shape(other), 1)
+  if ct_thing == 0 and ct_other == 0: return 0
   shape_cmp = lexicographicUnboxedCompare(np.shape(thing), np.shape(other))
   if not shape_cmp == 0: return shape_cmp
 
