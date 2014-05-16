@@ -3,7 +3,7 @@ from nose import SkipTest
 from testconfig import config
 
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
-from venture.test.config import get_ripl, collectStateSequence
+from venture.test.config import get_ripl, collectStateSequence, defaultKernel
 
 from venture.lite.serialize import Serializer
 
@@ -108,6 +108,8 @@ class TestSerialize(unittest.TestCase):
         self._test_serialize_program(program, 'pid')
 
     def test_serialize_aaa(self):
+        if defaultKernel() == "rejection":
+            raise SkipTest("Cannot rejection sample AAA procedure with unbounded log density of ocounts")
         def make_program(maker, hyper):
             def program(v):
                 v.assume('a', hyper)
