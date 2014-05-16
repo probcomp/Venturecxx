@@ -152,7 +152,7 @@ class Engine(object):
     self.set_default_params(params)
 
     self.incorporate()    
-    if 'instruction' in params and params['instruction'] == "resample":
+    if 'command' in params and params['command'] == "resample":
       P = params['particles']
       newTraces = [None for p in range(P)]
       for p in range(P):
@@ -161,7 +161,7 @@ class Engine(object):
       self.traces = newTraces
       self.weights = [0 for p in range(P)]
 
-    elif 'instruction' in params and params['instruction'] == "incorporate": pass
+    elif 'command' in params and params['command'] == "incorporate": pass
 
     elif params['kernel'] == "cycle":
       if 'subkernels' not in params:
@@ -196,6 +196,8 @@ class Engine(object):
     
     if "particles" in params:
       params["particles"] = int(params["particles"])
+    if "in_parallel" not in params:
+      params['in_parallel'] = True
   
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
 
@@ -226,7 +228,8 @@ class Engine(object):
     return self.getDistinguishedTrace().save(fname, extra)
 
   def load(self, fname):
-    self.trace, extra = self.getDistinguishedTrace().load(fname)
+    trace, extra = self.Trace.load(fname)
+    self.traces = [trace]
     self.directives = extra['directives']
     self.directiveCounter = extra['directiveCounter']
     return extra

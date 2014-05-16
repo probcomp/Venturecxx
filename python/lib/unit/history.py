@@ -3,6 +3,7 @@ import cPickle as pickle
 import os
 import copy
 import numpy as np
+import random
 
 from utils import cartesianProduct, makeIterable
 
@@ -39,6 +40,25 @@ typically also tracked."""
     def addSeries(self, name, type, label, values, hist=True):
         self._addSeries(name, type, Series(label, values, hist))
 
+    def sampleRuns(self,numSamples):
+        '''Returns new History with pointers to *numSamples* randomly
+        sampled Runs from self'''
+        h = History( label = self.label+'_sampled', parameters=self.parameters)
+    
+        noRuns = len(self.nameToSeries.items()[0][1])
+        indices = random.sample(xrange(noRuns),numSamples)
+
+        for name,listSeries in self.nameToSeries.iteritems():
+            type = self.nameToType[name]
+            subList = [listSeries[i] for i in indices]
+            for s in subList:
+                h.addSeries(name, type, s.label, s.values, hist=s.hist)
+
+        ## FIXME: addData and addGroundTruth (generally COPY HISTORY)
+        return h
+ 
+
+
     def _addSeries(self, name, type, series):
         if name not in self.nameToSeries:
             self.nameToSeries[name] = []
@@ -46,7 +66,8 @@ typically also tracked."""
         self.nameToSeries[name].append(series)
 
     def addRun(self, run):
-        assert run.parameters == self.parameters # Require compatible metadata
+        #assert run.parameters == self.parameters
+        ## don't want different seeds to preventing adding runs
         for (name, series) in run.namedSeries.iteritems():
             self._addSeries(name, run.nameToType[name], series)
 
@@ -71,7 +92,7 @@ typically also tracked."""
             type = value['type']
             value = value['value'] # FIXME do with parseValue
             values=[value]*totalSamples # pad out with totalSamples for plotting
-            self.addSeries(exp,type,'groundtruth',values)
+            self.addSeries(exp,type,'gTruth',values)
 
         ## FIXME GroundTruth Series must be removed from snapshots
         
@@ -80,7 +101,7 @@ typically also tracked."""
         'Returns the average over all series with the given name.'
         flatSeries = []
         for series in self.nameToSeries[seriesName]:
-            if 'groundtruth' not in series.label.lower():
+            if 'gtruth' not in series.label.lower():
                 flatSeries.extend(series.values)
         return np.mean(flatSeries)
 
@@ -284,9 +305,9 @@ def plotSeries(name, seriesList, subtitle="", xlabel='Sweep', **kwargs):
     _plotPrettily(_doPlotSeries, name, seriesList, title='Series for ' + name + '\n' + subtitle,
                   filesuffix='series', xlabel=xlabel, **kwargs)
 
-def _doPlotSeries(seriesList, ybounds=None):
+def _doPlotSeries(seriesList, ybounds=None,**kwargs):
     for series in seriesList:
-        if series.label and 'groundtruth' in series.label.lower():
+        if series.label and 'gtruth' in series.label.lower():
             plt.plot(series.xvals(), series.values,linestyle=':',
                      markersize=6, label=series.label)
         else:
@@ -344,8 +365,8 @@ def _plotPrettily(f, name, data, title="", parameters=None, filesuffix='',
 
     f(data, **kwargs)
 
-    #legend_outside()
-    plt.legend(loc='best')
+    legend_outside(**kwargs)
+    
 
     if save:
         ensure_directory(directory)
@@ -449,20 +470,28 @@ def plotAsymptotics(parameters, histories, seriesName, fmt='pdf', directory=None
 
 
 def legend_outside(ax=None, bbox_to_anchor=(0.5, -.05), loc='upper center',
-                   ncol=None, label_cmp=None):
+                   ncol=None, label_cmp=None, limitLegend=8,**kwargs):
     # labels must be set in original plot call: plot(..., label=label)
     if ax is None:
         ax = pylab.gca()
     handles, labels = ax.get_legend_handles_labels()
-    label_to_handle = dict(zip(labels, handles))
+    
+    if len(handles)>limitLegend:
+        title='(%i data-series of %i not shown on legend)'%( (len(handles)-limitLegend),len(handles) )
+    else:
+        title = None
+
+    label_to_handle = dict(zip(labels, handles)[:limitLegend])
     labels = label_to_handle.keys()
     if label_cmp is not None:
         labels = sorted(labels, cmp=label_cmp)
     handles = [label_to_handle[label] for label in labels]
     if ncol is None:
-        ncol = min(len(labels), 3)
-    ax.legend(handles, labels, loc=loc, ncol=ncol,
-              bbox_to_anchor=bbox_to_anchor, prop={"size":14})
+        ncol = min(len(labels), 4)
+
+
+    ax.legend(handles, labels, loc=loc, ncol=ncol, title=title,
+              bbox_to_anchor=bbox_to_anchor, prop={"size":10})
     return
 
 def savefig_legend_outside(filename, ax=None, bbox_inches='tight'):

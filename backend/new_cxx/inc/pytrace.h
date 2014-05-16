@@ -37,6 +37,12 @@ struct PyTrace
 
   double makeConsistent();
 
+  boost::python::list dotTrace(bool colorIgnored);
+
+  // for testing
+  int numNodesInBlock(boost::python::object scope, boost::python::object block);
+  boost::python::list numFamilies();
+
   void infer(boost::python::dict params);
   
   boost::python::dict continuous_inference_status();

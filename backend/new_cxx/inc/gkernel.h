@@ -19,7 +19,7 @@ struct GKernel
 };
 
 
-void registerDeterministicLKernels(ConcreteTrace * trace,
+void registerDeterministicLKernels(Trace * trace,
   shared_ptr<Scaffold> scaffold,
   const vector<ApplicationNode*>& applicationNodes,
   const vector<VentureValuePtr>& values);
