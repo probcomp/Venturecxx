@@ -88,7 +88,6 @@ class TestSerialize(unittest.TestCase):
             return v.predict('(f)')
 
     def test_serialize_aaa(self):
-        raise SkipTest("Can't serialize custom SPs. Issue: https://app.asana.com/0/9277419963067/12193842156120")
         def execute_program1(v):
             v.assume('f', '(make_beta_bernoulli 10.0 10.0)')
             v.predict('(f)')
