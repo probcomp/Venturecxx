@@ -196,6 +196,34 @@ double SimulateGPSPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) 
   return x * y;
 }
 
+VentureValuePtr SimulateMapPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+{
+  checkArgsLength("simulate_map", args, 0);
+
+  int num_landmarks = gsl_ran_poisson(rng, 1.0);
+  num_landmarks = num_landmarks > 0 ? num_landmarks : 1;
+  cout << "SimulateMapPSP::simulate" << endl;
+
+  VentureValuePtr map(new VentureNil());
+  for(int i=0; i<num_landmarks; i++) {
+      VentureValuePtr landmark(new VentureNil());
+      double x = gsl_ran_flat(rng, 0.0, 1.0);
+      VentureValuePtr vx = shared_ptr<VentureValue>(new VentureNumber(x));
+      double y = gsl_ran_flat(rng, 0.0, 1.0);
+      VentureValuePtr vy = shared_ptr<VentureValue>(new VentureNumber(y));
+      landmark = VentureValuePtr(new VenturePair(vx, landmark));
+      landmark = VentureValuePtr(new VenturePair(vy, landmark));
+      map = VentureValuePtr(new VenturePair(landmark, map));
+  }
+  return map;
+}
+
+double SimulateMapPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+{
+  cout << "SimulateMapPSP::logDensity" << endl;
+  return 1.0;
+}
+
 /* Gamma */
 VentureValuePtr GammaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
