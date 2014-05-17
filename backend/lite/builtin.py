@@ -17,7 +17,6 @@ import scope
 import eval_sps
 import value as v
 import env
-import captcha
 
 # The types in the value module are generated programmatically, so
 # pylint doesn't find out about them.
@@ -274,11 +273,6 @@ def builtInSPsList():
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.NumberType()], v.NumberType())) ],
 
-           [ "render_glyph", deterministic_typed(captcha.render_glyph,[v.NumberType() for i in range(7)] + [v.BoolType()], v.ForeignBlobType())],
-           [ "blur", deterministic_typed(captcha.blur,[v.ForeignBlobType(),v.NumberType()],v.ForeignBlobType())],
-           [ "composite", deterministic_typed(captcha.composite,[v.NumberType(),v.NumberType(),v.HomogeneousListType(v.ForeignBlobType())],v.ForeignBlobType())],
-           [ "save_image", deterministic_typed(captcha.save_image,[v.ForeignBlobType(),v.NumberType()],v.BoolType()) ],
-           [ "is_stochastic_match", typed_nr(discrete.is_stochastic_match(),[v.ForeignBlobType(),v.NumberType()],v.BoolType())],
 
   ]
 
