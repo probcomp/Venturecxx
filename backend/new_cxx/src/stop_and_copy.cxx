@@ -1,5 +1,6 @@
 #include <boost/foreach.hpp>
 #include "concrete_trace.h"
+#include "env.h"
 
 // Deep-copying concrete traces by analogy with the stop-and-copy
 // garbage collection algorithm.
@@ -21,6 +22,18 @@ set<T*> copy_set(set<T*> s, ForwardingMap forward)
   return answer;
 }
 
+template <typename K, typename V>
+map<K*, V> copy_map_k(map<K*, V> m, ForwardingMap forward)
+{
+  map<K*, V> answer = map<K*, V>();
+  typename map<K*, V>::const_iterator itr;
+  for(itr = m.begin(); itr != m.end(); ++itr)
+  {
+    answer[(*itr).first->copy_help(forward)] = (*itr).second;
+  }
+  return answer;
+}
+
 shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
 {
   shared_ptr<ConcreteTrace> answer = shared_ptr<ConcreteTrace>(new ConcreteTrace);
@@ -28,7 +41,7 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
   answer->unconstrainedChoices = copy_set(this->unconstrainedChoices, forward);
   answer->constrainedChoices = copy_set(this->constrainedChoices, forward);
   answer->arbitraryErgodicKernels = copy_set(this->arbitraryErgodicKernels, forward);
-  answer->unpropagatedObservations = copy_map(this->unpropagatedObservations, forward);
+  answer->unpropagatedObservations = copy_map_k(this->unpropagatedObservations, forward);
   // ...
   return answer;
 }
