@@ -14,6 +14,7 @@ using persistent::PSet;
 struct ConcreteTrace : Trace
 {
   ConcreteTrace();
+  void initialize();
 
   /* Registering metadata */
   void registerAEKernel(Node * node);
@@ -150,6 +151,9 @@ struct ConcreteTrace : Trace
 
   map<Node*,VentureValuePtr> values;
   map<Node*,VentureValuePtr> observedValues;
+
+  shared_ptr<ConcreteTrace> stop_and_copy();
+  shared_ptr<ConcreteTrace> copy_help(ForwardingMap forward);
 
 };
 
