@@ -1,6 +1,7 @@
 #include <boost/foreach.hpp>
 #include "concrete_trace.h"
 #include "env.h"
+#include "sps/csp.h"
 
 // Deep-copying concrete traces by analogy with the stop-and-copy
 // garbage collection algorithm.
@@ -251,6 +252,7 @@ SP* SP::copy_help(ForwardingMap forward)
     return (SP*)forward[this];
   } else {
     SP* answer = new SP(*this);
+    forward[this] = answer;
     answer->requestPSP = copy_shared(this->requestPSP, forward);
     answer->outputPSP = copy_shared(this->outputPSP, forward);
     return answer;
@@ -264,9 +266,23 @@ VentureSPRecord* VentureSPRecord::copy_help(ForwardingMap forward)
     return (VentureSPRecord*)forward[this];
   } else {
     VentureSPRecord* answer = new VentureSPRecord(*this);
+    forward[this] = answer;
     answer->sp = copy_shared(this->sp, forward);
     answer->spAux = copy_shared(this->spAux, forward);
     answer->spFamilies = copy_shared(this->spFamilies, forward);
+    return answer;
+  }
+}
+
+CSPRequestPSP* CSPRequestPSP::copy_help(ForwardingMap forward)
+{
+  if (forward.count(this) > 0)
+  {
+    return (CSPRequestPSP*)forward[this];
+  } else {
+    CSPRequestPSP* answer = new CSPRequestPSP(*this);
+    forward[this] = answer;
+    answer->environment = copy_shared(this->environment, forward);
     return answer;
   }
 }
