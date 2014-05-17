@@ -151,7 +151,7 @@ def builtInSPsList():
            [ "list", deterministic_typed(lambda *args: args, [v.AnyType()], v.ListType(), variadic=True,
                                          descr="%s returns the list of its arguments") ],
 
-           [ "range", deterministic_typed(lambda start, end: range(int(start),int(end)), [v.NumberType()], v.ListType(), variadic=True,
+           [ "range", deterministic_typed(lambda start, end: range(int(start),int(end)), [v.NumberType(),v.NumberType()], v.HomogeneousListType(v.NumberType()),
                                          descr="%s returns the range(start,end)") ],
 
            [ "pair", deterministic_typed(lambda a,d: (a,d), [v.AnyType(), v.AnyType()], v.PairType(),
