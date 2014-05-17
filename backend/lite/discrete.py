@@ -113,8 +113,10 @@ class UniformDiscreteOutputPSP(DiscretePSP):
 
   def logDensity(self,val,args):
     a,b = args.operandValues
-    if a <= output and output < b: return -math.log(b-a)
+    if a <= val and val < b: return -math.log(b-a)
     else: return extendedLog(0.0)
+
+  def enumerateValues(self,args): return range(*[int(x) for x in args.operandValues])
 
   def description(self,name):
     return "  (%s start end) samples a uniform discrete on the (start, start + 1, ..., end - 1)" % name
