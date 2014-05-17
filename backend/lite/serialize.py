@@ -16,13 +16,13 @@ def register(cls):
     if not isinstance(cls, type):
         raise TypeError("serialize.register() argument must be a class")
 
-    msg = "Class does not define {0}, using fallback implementation"
-    if not hasattr(cls, 'serialize') and not hasattr(cls, 'deserialize'):
-        warnings.warn(msg.format("serialize() or deserialize()"), stacklevel=2)
-    elif not hasattr(cls, 'serialize'):
-        warnings.warn(msg.format("serialize()"), stacklevel=2)
-    elif not hasattr(cls, 'deserialize'):
-        warnings.warn(msg.format("deserialize()"), stacklevel=2)
+    # msg = "Class does not define {0}, using fallback implementation"
+    # if not hasattr(cls, 'serialize') and not hasattr(cls, 'deserialize'):
+    #     warnings.warn(msg.format("serialize() or deserialize()"), stacklevel=2)
+    # elif not hasattr(cls, 'serialize'):
+    #     warnings.warn(msg.format("serialize()"), stacklevel=2)
+    # elif not hasattr(cls, 'deserialize'):
+    #     warnings.warn(msg.format("deserialize()"), stacklevel=2)
 
     type_to_str[cls] = cls.__name__
     str_to_type[cls.__name__] = cls
