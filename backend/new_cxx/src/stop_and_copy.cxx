@@ -241,8 +241,21 @@ OutputNode* OutputNode::copy_help(ForwardingMap forward)
 }
 
 /*********************************************************************\
-|* SP Records                                                        *|
+|* SP Things                                                         *|
 \*********************************************************************/
+
+SP* SP::copy_help(ForwardingMap forward)
+{
+  if (forward.count(this) > 0)
+  {
+    return (SP*)forward[this];
+  } else {
+    SP* answer = new SP(*this);
+    answer->requestPSP = copy_shared(this->requestPSP, forward);
+    answer->outputPSP = copy_shared(this->outputPSP, forward);
+    return answer;
+  }
+}
 
 VentureSPRecord* VentureSPRecord::copy_help(ForwardingMap forward)
 {

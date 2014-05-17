@@ -39,6 +39,8 @@ struct PSP
   virtual bool isContinuous() const { return false; }
   virtual double getSupportLowerBound() const { return -FLT_MAX; }
   virtual double getSupportUpperBound() const { return FLT_MAX; }
+
+  virtual PSP* copy_help(ForwardingMap m);
 };
 
 struct NullRequestPSP : PSP
