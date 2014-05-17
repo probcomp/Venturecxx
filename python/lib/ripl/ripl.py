@@ -544,6 +544,6 @@ Open issues:
 def _strip_types(value):
     if isinstance(value, dict):
         ans = value['value']
-        if isinstance(ans,(list, tuple)): return [_strip_types(v) for v in ans]
+        if isinstance(ans,list): return [_strip_types(v) for v in ans]
         else: return ans
     else: return value
