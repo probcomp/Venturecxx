@@ -58,6 +58,36 @@ map<K*, shared_ptr<V> > copy_map_kv(map<K*, shared_ptr<V> > m, ForwardingMap for
   return answer;
 }
 
+typedef SamplableMap<set<Node*> > BlocksMap;
+BlocksMap copy_blocks_map(BlocksMap m, ForwardingMap forward)
+{
+  BlocksMap answer = BlocksMap();
+  for(typename vector<pair<VentureValuePtr,set<Node*> > >::const_iterator itr = m.a.begin();
+      itr != m.a.end(); ++itr)
+  {
+    answer.a.push_back( pair<VentureValuePtr,set<Node*> >((*itr).first,
+                                                          copy_set((*itr).second, forward)));
+  }
+  for(typename VentureValuePtrMap<int>::const_iterator itr = m.d.begin();
+      itr != m.d.end(); ++itr)
+  {
+    answer.d[(*itr).first] = (*itr).second;
+  }
+  return answer;
+}
+
+typedef VentureValuePtrMap<SamplableMap<set<Node*> > > ScopesMap;
+ScopesMap copy_scopes_map(ScopesMap m, ForwardingMap forward)
+{
+  ScopesMap answer = ScopesMap();
+  typename ScopesMap::const_iterator itr;
+  for(itr = m.begin(); itr != m.end(); ++itr)
+  {
+    answer[(*itr).first] = copy_blocks_map((*itr).second, forward);
+  }
+  return answer;
+}
+
 shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
 {
   shared_ptr<ConcreteTrace> answer = shared_ptr<ConcreteTrace>(new ConcreteTrace);
