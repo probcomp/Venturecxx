@@ -155,8 +155,8 @@ void UBetaBernoulliOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Arg
 }
 
 // Auxs
-shared_ptr<SPAux> BetaBernoulliSPAux::clone() { return shared_ptr<SPAux>(new BetaBernoulliSPAux(*this)); }
-shared_ptr<SPAux> UBetaBernoulliSPAux::clone() { return shared_ptr<SPAux>(new UBetaBernoulliSPAux(*this)); }
+SPAux* BetaBernoulliSPAux::copy_help(ForwardingMap m)  { return new BetaBernoulliSPAux(*this);  }
+SPAux* UBetaBernoulliSPAux::copy_help(ForwardingMap m) { return new UBetaBernoulliSPAux(*this); }
 
 
 

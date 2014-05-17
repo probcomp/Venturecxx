@@ -43,9 +43,12 @@ struct SPFamilies
 struct SPAux
 {
   virtual ~SPAux() {}
-  // TODO stupid and may make bugs hard to find
-  virtual shared_ptr<SPAux> clone() { return shared_ptr<SPAux>(new SPAux()); } 
+  shared_ptr<SPAux> clone() {
+    return shared_ptr<SPAux>(this->copy_help(ForwardingMap()));
+  }
   virtual boost::python::object toPython(Trace * trace) const;
+  // TODO stupid and may make bugs hard to find
+  virtual SPAux* copy_help(ForwardingMap m) { return new SPAux(); }
 };
 
 struct SP

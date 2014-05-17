@@ -11,7 +11,7 @@ struct DirMultSPAux : SPAux
 {
   DirMultSPAux(int n) : counts(n, 0) {}
   vector<int> counts;
-  shared_ptr<SPAux> clone();
+  SPAux* copy_help(ForwardingMap m);
   boost::python::object toPython(Trace * trace) const;
 };
 
@@ -75,7 +75,7 @@ private:
 struct UCDirMultSPAux : DirMultSPAux
 {
   UCDirMultSPAux(int n): DirMultSPAux(n), theta(n,0) {}
-  shared_ptr<SPAux> clone();
+  SPAux* copy_help(ForwardingMap m);
   vector<double> theta;
 };
 
