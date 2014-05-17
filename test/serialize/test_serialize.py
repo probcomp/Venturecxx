@@ -111,6 +111,26 @@ def test_serialize_closure():
     v.predict('(flip_coin)', label='pid')
     _test_serialize_program(v, 'pid')
 
+def test_serialize_recursion():
+    if config['get_ripl'] == 'puma':
+        raise SkipTest("Can't serialize Puma traces. Issue: https://app.asana.com/0/9277419963067/12193842156124")
+    v = get_ripl()
+    v.assume('f', '''
+(mem (lambda (x)
+  (normal
+    (if (= x 0) 0
+      (f (- x 1)))
+    1)))
+''')
+    v.predict('(f 20)')
+    try:
+        # just make sure this doesn't crash
+        v.save('/tmp/serialized.ripl')
+        v.load('/tmp/serialized.ripl')
+    except RuntimeError as e:
+        assert 'maximum recursion depth exceeded' not in e.message
+        raise
+
 def test_serialize_aaa():
     def check_beta_bernoulli(maker):
         if maker == "make_beta_bernoulli" and defaultKernel() == "rejection":
