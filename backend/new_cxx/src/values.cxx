@@ -623,3 +623,7 @@ VentureValuePtr VentureMatrix::neg() const {
   }
   return VentureMatrix::makeValue(x);
 }
+
+double VentureBool::getDouble() const {
+  return (double)b;
+}

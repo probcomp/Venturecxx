@@ -50,6 +50,7 @@ struct VentureBool : VentureValue
   VentureBool(bool b): b(b) {}
   bool isBool() const { return true; }
   bool getBool() const { return b; }
+  double getDouble() const;
   bool equalsSameType(const VentureValuePtr & other) const;
   bool ltSameType(const VentureValuePtr & other) const;
 
