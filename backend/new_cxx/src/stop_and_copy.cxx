@@ -134,7 +134,7 @@ map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(map<K*, vector<shared_ptr<V>
 shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
 {
   shared_ptr<ConcreteTrace> answer = shared_ptr<ConcreteTrace>(new ConcreteTrace);
-  answer->globalEnvironment = this->globalEnvironment->copy_help(forward);
+  answer->globalEnvironment = copy_shared(this->globalEnvironment, forward);
   answer->unconstrainedChoices = copy_set(this->unconstrainedChoices, forward);
   answer->constrainedChoices = copy_set(this->constrainedChoices, forward);
   answer->arbitraryErgodicKernels = copy_set(this->arbitraryErgodicKernels, forward);
@@ -145,7 +145,7 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
   answer->esrRoots = copy_map_k_vectorv(this->esrRoots, forward);
   answer->numRequests = copy_map_shared_k(this->numRequests, forward);
   answer->madeSPRecords = copy_map_kv(this->madeSPRecords, forward);
-  answer->values = copy_map_kv(this->values, forward);
-  answer->observedValues = copy_map_kv(this->observedValues, forward);
+  answer->values = copy_map_k(this->values, forward);
+  answer->observedValues = copy_map_k(this->observedValues, forward);
   return answer;
 }
