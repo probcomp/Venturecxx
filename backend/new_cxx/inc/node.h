@@ -12,17 +12,20 @@ struct Node
   set<Node*> children; // particle stores NEW children
   virtual ~Node() {} // TODO destroy family
   VentureValuePtr exp;
+  virtual Node* copy_help(ForwardingMap m);
 };
 
 struct ConstantNode : Node 
 {
- ConstantNode(VentureValuePtr exp): Node(exp) {}
+  ConstantNode(VentureValuePtr exp): Node(exp) {}
+  ConstantNode* copy_help(ForwardingMap m);
 };
 
 struct LookupNode : Node 
 { 
   LookupNode(Node * sourceNode, VentureValuePtr exp);
   Node * sourceNode;
+  LookupNode* copy_help(ForwardingMap m);
 };
 
 struct ApplicationNode : Node
@@ -39,6 +42,7 @@ struct RequestNode : ApplicationNode
 {
   RequestNode(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env);
   OutputNode * outputNode;
+  RequestNode* copy_help(ForwardingMap m);
 };
 
 struct OutputNode : ApplicationNode
@@ -46,6 +50,7 @@ struct OutputNode : ApplicationNode
   OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp);
   RequestNode * requestNode;
   ~OutputNode();
+  OutputNode* copy_help(ForwardingMap m);
 };
 
 #endif
