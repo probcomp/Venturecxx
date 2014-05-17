@@ -106,7 +106,7 @@ VentureValuePtr ConcatOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   checkArgsLength("append", args, 2);
   vector<VentureValuePtr> v1(args->operandValues[0]->getArray());
   const vector<VentureValuePtr>& v2 = args->operandValues[1]->getArray();
-  v1.insert(v1.begin(), v2.begin(), v2.end());
+  v1.insert(v1.end(), v2.begin(), v2.end());
   return VentureValuePtr(new VentureArray(v1));
 }
 
