@@ -60,7 +60,19 @@ map<shared_ptr<K>, V> copy_map_shared_k(map<shared_ptr<K>, V> m, ForwardingMap f
 }
 
 template <typename K, typename V>
-map<K, shared_ptr<V> > copy_map_v(map<K, shared_ptr<V> > m, ForwardingMap forward)
+map<K, V*> copy_map_v(map<K, V*> m, ForwardingMap forward)
+{
+  map<K, V*> answer = map<K, V*>();
+  typename map<K, V*>::const_iterator itr;
+  for(itr = m.begin(); itr != m.end(); ++itr)
+  {
+    answer[(*itr).first] = (*itr).second->copy_help(forward);
+  }
+  return answer;
+}
+
+template <typename K, typename V>
+map<K, shared_ptr<V> > copy_map_shared_v(map<K, shared_ptr<V> > m, ForwardingMap forward)
 {
   map<K, shared_ptr<V> > answer = map<K, shared_ptr<V> >();
   typename map<K, shared_ptr<V> >::const_iterator itr;
@@ -160,7 +172,7 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
   answer->arbitraryErgodicKernels = copy_set(this->arbitraryErgodicKernels, forward);
   answer->unpropagatedObservations = copy_map_k(this->unpropagatedObservations, forward);
   answer->aaaMadeSPAuxs = copy_map_kv(this->aaaMadeSPAuxs, forward);
-  answer->families = copy_map_v(this->families, forward);
+  answer->families = copy_map_shared_v(this->families, forward);
   answer->scopes = copy_scopes_map(this->scopes, forward);
   answer->esrRoots = copy_map_k_vectorv(this->esrRoots, forward);
   answer->numRequests = copy_map_shared_k(this->numRequests, forward);
@@ -283,6 +295,24 @@ CSPRequestPSP* CSPRequestPSP::copy_help(ForwardingMap forward)
     CSPRequestPSP* answer = new CSPRequestPSP(*this);
     forward[this] = answer;
     answer->environment = copy_shared(this->environment, forward);
+    return answer;
+  }
+}
+
+/*********************************************************************\
+|* Environments                                                      *|
+\*********************************************************************/
+
+VentureEnvironment* VentureEnvironment::copy_help(ForwardingMap forward)
+{
+  if (forward.count(this) > 0)
+  {
+    return (VentureEnvironment*)forward[this];
+  } else {
+    VentureEnvironment* answer = new VentureEnvironment(*this);
+    forward[this] = answer;
+    answer->outerEnv = copy_shared(this->outerEnv, forward);
+    answer->frame = copy_map_v(this->frame, forward);
     return answer;
   }
 }
