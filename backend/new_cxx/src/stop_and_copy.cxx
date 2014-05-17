@@ -126,6 +126,18 @@ ScopesMap copy_scopes_map(ScopesMap m, ForwardingMap forward)
 }
 
 template <typename V>
+VentureValuePtrMap<shared_ptr<V> > copy_vvptr_map_shared_v(VentureValuePtrMap<shared_ptr<V> > m, ForwardingMap forward)
+{
+  VentureValuePtrMap<shared_ptr<V> > answer = VentureValuePtrMap<shared_ptr<V> >();
+  typename VentureValuePtrMap<shared_ptr<V> >::const_iterator itr;
+  for(itr = m.begin(); itr != m.end(); ++itr)
+  {
+    answer[(*itr).first] = copy_shared((*itr).second, forward);
+  }
+  return answer;
+}
+
+template <typename V>
 vector<V*> copy_vector(vector<V*> v, ForwardingMap forward)
 {
   vector<V*> answer = vector<V*>();
@@ -282,6 +294,19 @@ VentureSPRecord* VentureSPRecord::copy_help(ForwardingMap forward)
     answer->sp = copy_shared(this->sp, forward);
     answer->spAux = copy_shared(this->spAux, forward);
     answer->spFamilies = copy_shared(this->spFamilies, forward);
+    return answer;
+  }
+}
+
+SPFamilies* SPFamilies::copy_help(ForwardingMap forward)
+{
+  if (forward.count(this) > 0)
+  {
+    return (SPFamilies*)forward[this];
+  } else {
+    SPFamilies* answer = new SPFamilies(*this);
+    forward[this] = answer;
+    answer->families = copy_vvptr_map_shared_v(this->families, forward);
     return answer;
   }
 }
