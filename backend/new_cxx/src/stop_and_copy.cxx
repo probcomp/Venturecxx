@@ -35,6 +35,18 @@ map<K*, V> copy_map_k(map<K*, V> m, ForwardingMap forward)
 }
 
 template <typename K, typename V>
+map<K, shared_ptr<V> > copy_map_v(map<K, shared_ptr<V> > m, ForwardingMap forward)
+{
+  map<K, shared_ptr<V> > answer = map<K, shared_ptr<V> >();
+  typename map<K, shared_ptr<V> >::const_iterator itr;
+  for(itr = m.begin(); itr != m.end(); ++itr)
+  {
+    answer[(*itr).first] = (*itr).second->copy_help(forward);
+  }
+  return answer;
+}
+
+template <typename K, typename V>
 map<K*, shared_ptr<V> > copy_map_kv(map<K*, shared_ptr<V> > m, ForwardingMap forward)
 {
   map<K*, shared_ptr<V> > answer = map<K*, shared_ptr<V> >();
@@ -55,6 +67,7 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
   answer->arbitraryErgodicKernels = copy_set(this->arbitraryErgodicKernels, forward);
   answer->unpropagatedObservations = copy_map_k(this->unpropagatedObservations, forward);
   answer->aaaMadeSPAuxs = copy_map_kv(this->aaaMadeSPAuxs, forward);
+  answer->families = copy_map_v(this->families, forward);
   // ...
   return answer;
 }
