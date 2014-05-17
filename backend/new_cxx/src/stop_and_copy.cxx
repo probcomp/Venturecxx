@@ -109,7 +109,18 @@ ScopesMap copy_scopes_map(ScopesMap m, ForwardingMap forward)
 }
 
 template <typename V>
-vector<shared_ptr<V> > copy_vector(vector<shared_ptr<V> > v, ForwardingMap forward)
+vector<V*> copy_vector(vector<V*> v, ForwardingMap forward)
+{
+  vector<V*> answer = vector<V*>();
+  BOOST_FOREACH(V* val, v)
+    {
+      answer.push_back(val->copy_help(forward));
+    }
+  return answer;
+}
+
+template <typename V>
+vector<shared_ptr<V> > copy_vector_shared(vector<shared_ptr<V> > v, ForwardingMap forward)
 {
   vector<shared_ptr<V> > answer = vector<shared_ptr<V> >();
   BOOST_FOREACH(shared_ptr<V> val, v)
@@ -126,7 +137,7 @@ map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(map<K*, vector<shared_ptr<V>
   typename map<K*, vector<shared_ptr<V> > >::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first->copy_help(forward)] = copy_vector((*itr).second, forward);
+    answer[(*itr).first->copy_help(forward)] = copy_vector_shared((*itr).second, forward);
   }
   return answer;
 }
@@ -148,4 +159,18 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
   answer->values = copy_map_k(this->values, forward);
   answer->observedValues = copy_map_k(this->observedValues, forward);
   return answer;
+}
+
+ConstantNode* ConstantNode::copy_help(ForwardingMap forward)
+{
+  if (forward.count(this) > 0)
+  {
+    return (ConstantNode*)forward[this];
+  } else {
+    ConstantNode* answer = new ConstantNode(this->exp);
+    forward[this] = answer;
+    answer->definiteParents = copy_vector(this->definiteParents, forward);
+    answer->children = copy_set(this->children, forward);
+    return answer;
+  }
 }
