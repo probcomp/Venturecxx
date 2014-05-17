@@ -12,6 +12,14 @@ shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy()
 }
 
 template <typename T>
+shared_ptr<T> copy_shared(shared_ptr<T> v, ForwardingMap forward)
+{
+  // TODO Make sure that any given raw pointer gets at most one shared
+  // pointer made out of it
+  return shared_ptr<T>(v->copy_help(forward));
+}
+
+template <typename T>
 set<T*> copy_set(set<T*> s, ForwardingMap forward)
 {
   set<T*> answer = set<T*>();
@@ -41,7 +49,7 @@ map<shared_ptr<K>, V> copy_map_shared_k(map<shared_ptr<K>, V> m, ForwardingMap f
   typename map<shared_ptr<K>, V>::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first->copy_help(forward)] = (*itr).second;
+    answer[copy_shared((*itr).first, forward)] = (*itr).second;
   }
   return answer;
 }
@@ -53,7 +61,7 @@ map<K, shared_ptr<V> > copy_map_v(map<K, shared_ptr<V> > m, ForwardingMap forwar
   typename map<K, shared_ptr<V> >::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first] = (*itr).second->copy_help(forward);
+    answer[(*itr).first] = copy_shared((*itr).second, forward);
   }
   return answer;
 }
@@ -65,7 +73,7 @@ map<K*, shared_ptr<V> > copy_map_kv(map<K*, shared_ptr<V> > m, ForwardingMap for
   typename map<K*, shared_ptr<V> >::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first->copy_help(forward)] = (*itr).second->copy_help(forward);
+    answer[(*itr).first->copy_help(forward)] = copy_shared((*itr).second, forward);
   }
   return answer;
 }
@@ -106,7 +114,7 @@ vector<shared_ptr<V> > copy_vector(vector<shared_ptr<V> > v, ForwardingMap forwa
   vector<shared_ptr<V> > answer = vector<shared_ptr<V> >();
   BOOST_FOREACH(shared_ptr<V> val, v)
     {
-      answer.push_back(val->copy_help(forward));
+      answer.push_back(copy_shared(val, forward));
     }
   return answer;
 }
