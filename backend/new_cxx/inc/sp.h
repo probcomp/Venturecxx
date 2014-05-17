@@ -38,6 +38,7 @@ struct SPFamilies
   RootOfFamily getRootOfFamily(FamilyID id);
   void registerFamily(FamilyID id,RootOfFamily root);
   void unregisterFamily(FamilyID id);
+  SPFamilies* copy_help(ForwardingMap m);
 };
 
 struct SPAux
@@ -67,6 +68,7 @@ struct SP
   virtual void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const;
   
   virtual boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
+  virtual SP* copy_help(ForwardingMap m);
 };
 
 #endif

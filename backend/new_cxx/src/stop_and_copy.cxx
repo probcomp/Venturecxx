@@ -11,6 +11,10 @@ shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy()
   return this->copy_help(forward);
 }
 
+/*********************************************************************\
+|* Generic                                                           *|
+\*********************************************************************/
+
 template <typename T>
 shared_ptr<T> copy_shared(shared_ptr<T> v, ForwardingMap forward)
 {
@@ -142,6 +146,10 @@ map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(map<K*, vector<shared_ptr<V>
   return answer;
 }
 
+/*********************************************************************\
+|* Concrete Traces                                                   *|
+\*********************************************************************/
+
 shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
 {
   shared_ptr<ConcreteTrace> answer = shared_ptr<ConcreteTrace>(new ConcreteTrace);
@@ -160,6 +168,10 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
   answer->observedValues = copy_map_k(this->observedValues, forward);
   return answer;
 }
+
+/*********************************************************************\
+|* Nodes                                                             *|
+\*********************************************************************/
 
 // The following looks ripe for some macrology (especially the if),
 // but I don't want to go there.
@@ -224,6 +236,24 @@ OutputNode* OutputNode::copy_help(ForwardingMap forward)
     answer->env = copy_shared(this->env, forward);
     answer->definiteParents = copy_vector(this->definiteParents, forward);
     answer->children = copy_set(this->children, forward);
+    return answer;
+  }
+}
+
+/*********************************************************************\
+|* SP Records                                                        *|
+\*********************************************************************/
+
+VentureSPRecord* VentureSPRecord::copy_help(ForwardingMap forward)
+{
+  if (forward.count(this) > 0)
+  {
+    return (VentureSPRecord*)forward[this];
+  } else {
+    VentureSPRecord* answer = new VentureSPRecord(*this);
+    answer->sp = copy_shared(this->sp, forward);
+    answer->spAux = copy_shared(this->spAux, forward);
+    answer->spFamilies = copy_shared(this->spFamilies, forward);
     return answer;
   }
 }
