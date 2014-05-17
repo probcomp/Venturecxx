@@ -88,6 +88,29 @@ ScopesMap copy_scopes_map(ScopesMap m, ForwardingMap forward)
   return answer;
 }
 
+template <typename V>
+vector<shared_ptr<V> > copy_vector(vector<shared_ptr<V> > v, ForwardingMap forward)
+{
+  vector<shared_ptr<V> > answer = vector<shared_ptr<V> >();
+  BOOST_FOREACH(shared_ptr<V> val, v)
+    {
+      answer.push_back(val->copy_help(forward));
+    }
+  return answer;
+}
+
+template <typename K, typename V>
+map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(map<K*, vector<shared_ptr<V> > > m, ForwardingMap forward)
+{
+  map<K*, vector<shared_ptr<V> > > answer = map<K*, vector<shared_ptr<V> > >();
+  typename map<K*, vector<shared_ptr<V> > >::const_iterator itr;
+  for(itr = m.begin(); itr != m.end(); ++itr)
+  {
+    answer[(*itr).first->copy_help(forward)] = copy_vector((*itr).second, forward);
+  }
+  return answer;
+}
+
 shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
 {
   shared_ptr<ConcreteTrace> answer = shared_ptr<ConcreteTrace>(new ConcreteTrace);
@@ -98,6 +121,8 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
   answer->unpropagatedObservations = copy_map_k(this->unpropagatedObservations, forward);
   answer->aaaMadeSPAuxs = copy_map_kv(this->aaaMadeSPAuxs, forward);
   answer->families = copy_map_v(this->families, forward);
+  answer->scopes = copy_scopes_map(this->scopes, forward);
+  answer->esrRoots = copy_map_k_vectorv(this->esrRoots, forward);
   // ...
   return answer;
 }
