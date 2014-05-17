@@ -16,13 +16,13 @@ def register(cls):
     if not isinstance(cls, type):
         raise TypeError("serialize.register() argument must be a class")
 
-    msg = "Class does not define {0}, using fallback implementation"
-    if not hasattr(cls, 'serialize') and not hasattr(cls, 'deserialize'):
-        warnings.warn(msg.format("serialize() or deserialize()"), stacklevel=2)
-    elif not hasattr(cls, 'serialize'):
-        warnings.warn(msg.format("serialize()"), stacklevel=2)
-    elif not hasattr(cls, 'deserialize'):
-        warnings.warn(msg.format("deserialize()"), stacklevel=2)
+    # msg = "Class does not define {0}, using fallback implementation"
+    # if not hasattr(cls, 'serialize') and not hasattr(cls, 'deserialize'):
+    #     warnings.warn(msg.format("serialize() or deserialize()"), stacklevel=2)
+    # elif not hasattr(cls, 'serialize'):
+    #     warnings.warn(msg.format("serialize()"), stacklevel=2)
+    # elif not hasattr(cls, 'deserialize'):
+    #     warnings.warn(msg.format("deserialize()"), stacklevel=2)
 
     type_to_str[cls] = cls.__name__
     str_to_type[cls.__name__] = cls
@@ -37,6 +37,7 @@ class Serializer(object):
         """Serialize a Trace object."""
 
         ## set up data structures for handling reference cycles
+        self.queue = []
         self.obj_data = []
         self.obj_to_id = {}
 
@@ -46,6 +47,8 @@ class Serializer(object):
 
         ## serialize recursively
         serialized_root = self.serialize(root)
+        for obj in self.queue:
+            self.obj_data.append(self.serialize(obj, should_make_ref=False))
         serialized_extra = self.serialize(extra)
         return {
             'root': serialized_root,
@@ -54,7 +57,7 @@ class Serializer(object):
             'version': '0.1'
         }
 
-    def serialize(self, obj):
+    def serialize(self, obj, should_make_ref=True):
         if isinstance(obj, (bool, int, long, float, str, type(None))):
             return obj
         elif isinstance(obj, list):
@@ -76,15 +79,16 @@ class Serializer(object):
             assert type(obj) in type_to_str, "Can't serialize {0}".format(repr(obj))
 
             ## some objects should be stored by reference, in case of shared objects and cycles
-            should_make_ref = getattr(obj, 'cyclic', False)
-            if should_make_ref:
+            if should_make_ref and getattr(obj, 'cyclic', False):
                 ## check if seen already
                 if obj in self.obj_to_id:
                     return {'_type': 'ref', '_value': self.obj_to_id[obj]}
-                ## generate a new id and append a placeholder to the obj_data array
-                i = len(self.obj_data)
+                ## generate a new id and append the object to the queue
+                ## return a reference to the index of the object in the queue
+                i = len(self.queue)
                 self.obj_to_id[obj] = i
-                self.obj_data.append(None)
+                self.queue.append(obj)
+                return {'_type': 'ref', '_value': i}
 
             ## attempt to use the object's serialize method if available
             if hasattr(obj, 'serialize'):
@@ -92,13 +96,7 @@ class Serializer(object):
             else:
                 serialized = self.serialize_default(obj)
             data = {'_type': type_to_str[type(obj)], '_value': serialized}
-
-            if should_make_ref:
-                ## store the actual data in the obj_data array and return the index instead
-                self.obj_data[i] = data
-                return {'_type': 'ref', '_value': i}
-            else:
-                return data
+            return data
 
     def serialize_default(self, obj):
         ## fallback serialization method: just get the __dict__
@@ -112,10 +110,11 @@ class Serializer(object):
         ## create placeholder object references so that we can rebuild cycles
         ## attach to each placeholder object the data dict that goes with it
         self.id_to_obj = {}
+        self.queue = []
         for i, obj_dict in enumerate(data['objects']):
             obj = Placeholder()
-            obj.data = obj_dict
             self.id_to_obj[i] = obj
+            self.queue.append((obj_dict, obj))
 
         ## add built-in SP specially
         from trace import Trace
@@ -123,10 +122,12 @@ class Serializer(object):
             self.id_to_obj['builtin:' + name] = node.madeSP
 
         root = self.deserialize(data['root'])
+        for (obj_dict, obj) in self.queue:
+            self.deserialize(obj_dict, obj)
         extra = self.deserialize(data['extra'])
         return root, extra
 
-    def deserialize(self, data):
+    def deserialize(self, data, obj=None):
         if isinstance(data, (bool, int, long, float, str, type(None))):
             return data
         elif isinstance(data, unicode):
@@ -150,18 +151,13 @@ class Serializer(object):
             ## if it's a ref, look up the real object
             if data['_type'] == 'ref':
                 obj = self.id_to_obj[data['_value']]
-                if isinstance(obj, Placeholder):
-                    ## get the data dict we attached to the placeholder object earlier
-                    data = obj.data
-                    del obj.data
-                else:
-                    ## already deserialized, just return the object
-                    return obj
-            else:
-                obj = Placeholder()
+                return obj
 
-            assert data['_type'] in str_to_type, "Can't deserialize {0}".format(repr(obj))
+            assert data['_type'] in str_to_type, "Can't deserialize {0}".format(repr(data))
             cls = str_to_type[data['_type']]
+
+            if obj is None:
+                obj = Placeholder()
             obj.__class__ = cls
 
             ## attempt to use the object's deserialize method if available
