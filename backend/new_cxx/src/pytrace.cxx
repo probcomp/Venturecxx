@@ -20,7 +20,7 @@
 
 #include <boost/python/exception_translator.hpp>
 
-PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false) {}
+PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false), continuous_inference_thread(NULL) {}
 PyTrace::~PyTrace() {}
 
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
@@ -232,6 +232,7 @@ void PyTrace::stop_continuous_inference() {
     continuous_inference_running = false;
     continuous_inference_thread->join();
     delete continuous_inference_thread;
+    continuous_inference_thread = NULL;
   }
 }
 
