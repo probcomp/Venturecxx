@@ -10,6 +10,17 @@ from value import VentureAtom, BoolType # BoolType is metaprogrammed pylint:disa
 from exception import VentureValueError
 import serialize
 
+import captcha
+class is_stochastic_match(RandomPSP):
+  def simulate(self,args):
+    return True
+    
+  def logDensity(self,val,args):
+    return captcha.stochastic_comparer(args)
+
+  def description(self,name):
+    return "(%s <number>) -> <bool>\n(%s) -> <bool>" % (name,name)
+
 class DiscretePSP(RandomPSP):
   def logDensityBound(self, _x, _args): return 0
 

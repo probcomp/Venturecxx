@@ -17,6 +17,7 @@ import scope
 import eval_sps
 import value as v
 import env
+import captcha
 
 # The types in the value module are generated programmatically, so
 # pylint doesn't find out about them.
@@ -149,6 +150,10 @@ def builtInSPsList():
 
            [ "list", deterministic_typed(lambda *args: args, [v.AnyType()], v.ListType(), variadic=True,
                                          descr="%s returns the list of its arguments") ],
+
+           [ "range", deterministic_typed(lambda start, end: range(int(start),int(end)), [v.NumberType()], v.ListType(), variadic=True,
+                                         descr="%s returns the range(start,end)") ],
+
            [ "pair", deterministic_typed(lambda a,d: (a,d), [v.AnyType(), v.AnyType()], v.PairType(),
                                          descr="%s returns the pair whose first component is the first argument and whose second component is the second argument") ],
            [ "is_pair", type_test(v.PairType()) ],
@@ -268,6 +273,13 @@ def builtInSPsList():
                                   SPType([], v.MatrixType())) ],
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.NumberType()], v.NumberType())) ],
+
+           [ "render_glyph", deterministic_typed(captcha.render_glyph,[v.NumberType() for i in range(7)] + [v.BoolType()], v.ForeignBlobType())],
+           [ "blur", deterministic_typed(captcha.blur,[v.ForeignBlobType(),v.NumberType()],v.ForeignBlobType())],
+           [ "composite", deterministic_typed(captcha.composite,[v.NumberType(),v.NumberType(),v.HomogeneousListType(v.ForeignBlobType())],v.ForeignBlobType())],
+           [ "save_image", deterministic(captcha.save_image),[v.ForeignBlobType(),v.NumberType()],v.BoolType() ],
+           [ "is_stochastic_match", typed_nr(discrete.is_stochastic_match(),[v.ForeignBlobType(),v.NumberType()],v.BoolType())],
+
   ]
 
 def builtInSPs():
