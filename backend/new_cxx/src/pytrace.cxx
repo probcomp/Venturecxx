@@ -193,8 +193,7 @@ struct Inferer
   }
 };
 
-// TODO URGENT placeholder
-void PyTrace::infer(boost::python::dict params) 
+void PyTrace::infer(boost::python::dict params)
 { 
   Inferer inferer(trace, params);
   inferer.infer();
