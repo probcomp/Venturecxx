@@ -32,6 +32,7 @@ class VentureValue(object):
   def getMatrix(self): raise VentureTypeError("Cannot convert %s to matrix" % type(self))
   def getSymmetricMatrix(self): raise VentureTypeError("Cannot convert %s to symmetric matrix" % type(self))
   def getSP(self): raise VentureTypeError("Cannot convert %s to sp" % type(self))
+  def getForeignBlob(self): raise VentureTypeError("Cannot convert %s to foreign blob" % type(self))
   def getEnvironment(self): raise VentureTypeError("Cannot convert %s to environment" % type(self))
 
   # Some Venture value types form a natural vector space over reals,
@@ -580,6 +581,7 @@ class VentureForeignBlob(VentureValue):
     return {"type":"blob", "value":self.datum}
   @staticmethod
   def fromStackDict(thing): return VentureForeignBlob(thing["value"])
+  def getForeignBlob(self): return self.datum
 
 @serialize.register
 class SPRef(VentureValue):
