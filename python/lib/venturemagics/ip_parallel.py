@@ -719,9 +719,6 @@ class MRipl():
         '''Input: lists of dids_labels and expressions (evaled in order)
            Output: values from each ripl, (optional) plots.''' 
         
-        # *sample_populations*, *repeat*:
-        # exp in exp_list should be any non-deterministic expressions.
-        # sample_populations :: (int,int),
         # plot_past_values :: list of snapshot outputs (exp used in first variable)
         
         if isinstance(did_labels_list,(int,str)):
@@ -745,12 +742,13 @@ class MRipl():
 
         # special options: (return before basic snapshot)
         if sample_populations:
-            return self._sample_populations(exp_list,out,sample_populations,plot=plot,
-                                           plot_range=plot_range)
+            return self._sample_populations(exp_list,out,sample_populations,
+                                            plot=plot, plot_range=plot_range)
         elif repeat: 
             no_groups = self.no_local_ripls if self.output=='local' else self.no_ripls
             return self._sample_populations(exp_list, out, (no_groups,repeat),
-                                           flatten=True, plot=plot,plot_range=plot_range)
+                                            flatten=True, plot=plot,
+                                            plot_range=plot_range)
 
             
         # basic snapshot
@@ -799,6 +797,12 @@ class MRipl():
         assert len(exp_list)==1, 'len(exp_list) != 1'
         exp = exp_list[0]
         no_groups,pop_size = groups_popsize
+
+        ## maybe keep this for cases involving memoization
+        def pred_repeat_forget(r,exp,pop_size):
+            vals=[r.predict(exp,label='snapsp_%i'%j) for j in range(pop_size)]
+            [r.forget('snapsp_%i'%j) for j in range(pop_size)]
+            return vals
 
         def batch_sample(ripl,exp,pop_size):
             lst_string = '(list '+ ' '.join([exp]*pop_size) + ')'
