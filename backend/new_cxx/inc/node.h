@@ -12,7 +12,7 @@ struct Node
   set<Node*> children; // particle stores NEW children
   virtual ~Node() {} // TODO destroy family
   VentureValuePtr exp;
-  virtual Node* copy_help(ForwardingMap m);
+  virtual Node* copy_help(ForwardingMap m) =0;
 };
 
 struct ConstantNode : Node 

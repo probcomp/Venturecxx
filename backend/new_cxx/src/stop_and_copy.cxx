@@ -161,6 +161,8 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
   return answer;
 }
 
+// The following looks ripe for some macrology (especially the if),
+// but I don't want to go there.
 ConstantNode* ConstantNode::copy_help(ForwardingMap forward)
 {
   if (forward.count(this) > 0)
@@ -169,6 +171,57 @@ ConstantNode* ConstantNode::copy_help(ForwardingMap forward)
   } else {
     ConstantNode* answer = new ConstantNode(this->exp);
     forward[this] = answer;
+    answer->definiteParents = copy_vector(this->definiteParents, forward);
+    answer->children = copy_set(this->children, forward);
+    return answer;
+  }
+}
+
+LookupNode* LookupNode::copy_help(ForwardingMap forward)
+{
+  if (forward.count(this) > 0)
+  {
+    return (LookupNode*)forward[this];
+  } else {
+    LookupNode* answer = new LookupNode(*this);
+    forward[this] = answer;
+    answer->sourceNode = this->sourceNode->copy_help(forward);
+    answer->definiteParents = copy_vector(this->definiteParents, forward);
+    answer->children = copy_set(this->children, forward);
+    return answer;
+  }
+}
+
+RequestNode* RequestNode::copy_help(ForwardingMap forward)
+{
+  if (forward.count(this) > 0)
+  {
+    return (RequestNode*)forward[this];
+  } else {
+    RequestNode* answer = new RequestNode(*this);
+    forward[this] = answer;
+    answer->outputNode = this->outputNode->copy_help(forward);
+    answer->operatorNode = this->operatorNode->copy_help(forward);
+    answer->operandNodes = copy_vector(this->operandNodes, forward);
+    answer->env = copy_shared(this->env, forward);
+    answer->definiteParents = copy_vector(this->definiteParents, forward);
+    answer->children = copy_set(this->children, forward);
+    return answer;
+  }
+}
+
+OutputNode* OutputNode::copy_help(ForwardingMap forward)
+{
+  if (forward.count(this) > 0)
+  {
+    return (OutputNode*)forward[this];
+  } else {
+    OutputNode* answer = new OutputNode(*this);
+    forward[this] = answer;
+    answer->requestNode = this->requestNode->copy_help(forward);
+    answer->operatorNode = this->operatorNode->copy_help(forward);
+    answer->operandNodes = copy_vector(this->operandNodes, forward);
+    answer->env = copy_shared(this->env, forward);
     answer->definiteParents = copy_vector(this->definiteParents, forward);
     answer->children = copy_set(this->children, forward);
     return answer;
