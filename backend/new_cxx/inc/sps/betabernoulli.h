@@ -9,7 +9,7 @@
 // Collapsed SPAux
 struct BetaBernoulliSPAux : SPAux
 {
- BetaBernoulliSPAux(): heads(0), tails(0) {}
+  BetaBernoulliSPAux(): heads(0), tails(0) {}
   shared_ptr<SPAux> clone();
 
   int heads;
@@ -25,7 +25,7 @@ struct MakeBetaBernoulliOutputPSP : PSP
 
 struct BetaBernoulliOutputPSP : RandomPSP
 {
- BetaBernoulliOutputPSP(double alpha, double beta) : alpha(alpha), beta(beta) {}
+  BetaBernoulliOutputPSP(double alpha, double beta) : alpha(alpha), beta(beta) {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
@@ -42,7 +42,7 @@ private:
 // Uncollapsed SPAux
 struct UBetaBernoulliSPAux : BetaBernoulliSPAux
 {
- UBetaBernoulliSPAux(double p): BetaBernoulliSPAux(), p(p) {}
+  UBetaBernoulliSPAux(double p): BetaBernoulliSPAux(), p(p) {}
   shared_ptr<SPAux> clone();
 
   double p;
