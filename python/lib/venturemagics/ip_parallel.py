@@ -1010,15 +1010,15 @@ def mk_directives_string(ripl):
         return '\n'.join(di_string_lst)
 
 def display_directives(ripl_mripl,instruction='observe'):
-    ## FIXME add replace with dict of symbls
     ## FIXME: add did and labels
-    v=ripl_mripl
-    mr=1  if isinstance(v,MRipl) else 0
-    di_list = v.local_ripls[0].list_directives() if mr else v.list_directives()
-
+    #v=ripl_mripl
+    #mr=1  if isinstance(v,MRipl) else 0
+    #di_list = v.local_ripls[0].list_directives() if mr else v.list_directives()
+    
+    di_list = ripl_mripl.list_directives()
     instruction_list = []
     for di in di_list:
-        if di['instruction']==instruction:
+        if di['instruction'] in instruction.lower():
             instruction_list.append( directive_to_string(di) )
             print directive_to_string(di)
     return instruction_list
