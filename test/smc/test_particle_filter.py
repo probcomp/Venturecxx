@@ -3,7 +3,7 @@ import scipy.stats as stats
 from nose import SkipTest
 from testconfig import config
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, defaultKernel
+from venture.test.config import get_ripl, defaultKernel, default_num_samples
 import sys
 from nose.plugins.attrib import attr
 
@@ -59,7 +59,7 @@ def testBasicParticleFilter1(P = 30):
   if config["get_ripl"] != "lite": raise SkipTest("Clone only implemented in lite")
   if defaultKernel() != "mh": raise SkipTest("Doesn't depend on kernel, only run it for mh")
 
-  N = config["num_samples"]
+  N = default_num_samples()
   predictions = []
 
   os = zip(range(1,6),[False,False,True,False,False])
@@ -102,7 +102,7 @@ def testBasicParticleFilter2(P = 30):
   """A sanity test for particle filtering"""
   if config["get_ripl"] != "lite": raise SkipTest("Clone only implemented in lite")
 
-  N = config["num_samples"]
+  N = default_num_samples()
   predictions = []
 
   os = zip(range(0,5),[1,2,3,4,5])
