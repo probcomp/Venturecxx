@@ -40,7 +40,11 @@ shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy()
 template <typename T>
 shared_ptr<T> copy_shared(shared_ptr<T> v, ForwardingMap* forward)
 {
-  if (forward->shared_ptrs.count(v.get()) > 0)
+  if (v.get() == 0)
+  {
+    return v;
+  }
+  else if (forward->shared_ptrs.count(v.get()) > 0)
   {
     // Make sure that any given raw pointer gets at most one shared
     // pointer made out of it
