@@ -1,6 +1,7 @@
 import numpy
 #
 from simulator import Simulator
+import slamutils
 from venture.shortcuts import make_puma_church_prime_ripl
 
 
@@ -65,11 +66,41 @@ program_assumes = """
 program = program_constants + program_utils + program_assumes
 
 
-ripl = make_puma_church_prime_ripl()
-ripl.execute_program(program)
-
 get_pose = lambda i: ripl.predict('(get_pose %s)' % i)
 get_control = lambda i: ripl.predict('(get_control %s)' % i)
+observe_control = lambda (i, control): ripl.observe('(get_control %s)' % i,
+        _convert(control))
+def read_data(dataset_name='5_eight'):
+    import os
+    base_dir = '/home/dlovell/Desktop/PPAML/CP1-Quad-Rotor/data/automobile/'
+    dirname = os.path.join(base_dir, dataset_name, 'data')
+    landmark_filename = 'obstacles.csv'
+    control_filename = 'ground/slam_control.csv'
+    gps_filename = 'ground/slam_gps.csv'
+    sensor_filename = 'slam_sensor.csv'
+    control_index_col = 'Time_VS'
+    gps_index_col = 'TimeGPS'
+    gps_to_target = dict(GPSLat='y', GPSLon='x', Orientation='heading')
+    #
+    gps_frame = slamutils.read_frame(gps_filename, dirname=dirname,
+            index_col=gps_index_col, colname_map=gps_to_target)
+    control_frame = slamutils.read_frame(control_filename, dirname=dirname,
+            index_col=control_index_col)
+    initial_state = slamutils.get_initial_state(gps_frame)
+    return gps_frame, control_frame, initial_state
+def _convert_real(val):
+    return {"type":"real","value":val}
+def _convert_list(val):
+    return {"type":"vector","value":map(_convert, val)}
+def _convert(val):
+    is_list = isinstance(val, (list, tuple))
+    val = _convert_list(val) if is_list else _convert_real(val)
+    return val
+gps_frame, control_frame, initial_state = read_data()
+
+
+ripl = make_puma_church_prime_ripl()
+ripl.execute_program(program)
 world = ripl.predict('(get_map)')
 poses = numpy.array(map(get_pose, range(N_steps)))
 controls = numpy.array(map(get_control, range(N_steps)))
