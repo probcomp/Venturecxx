@@ -95,7 +95,7 @@ double HMCGKernel::kinetic(const VentureValuePtr momenta) const {
 pair<VentureValuePtr, double> 
 HMCGKernel::evolve(GradientOfRegen& grad, const VentureValuePtr& start_q, const VentureValuePtr& start_grad_q, 
                       const VentureValuePtr& start_p) {
-  cout << "HMC evolve" << endl;
+  // cout << "HMC evolve" << endl;
   // int numSteps = int(gsl_rng_uniform(rng)*steps->getDouble())+1;
   int numSteps = steps->getDouble();
   // cout << "num steps " << numSteps << endl;
