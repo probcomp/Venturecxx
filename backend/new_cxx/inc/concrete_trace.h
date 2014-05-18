@@ -95,7 +95,8 @@ struct ConcreteTrace : Trace
   bool containsMadeSPFamily(Node * makerNode, FamilyID id);
   RootOfFamily getMadeSPFamilyRoot(Node * makerNode, FamilyID id);
 
-
+  void freezeDirectiveID(DirectiveID did);
+  void freezeOutputNode(OutputNode * outputNode);
 
   /* New in ConcreteTrace */
 

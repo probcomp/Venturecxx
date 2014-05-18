@@ -45,6 +45,7 @@ struct OutputNode : ApplicationNode
 {
   OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp);
   RequestNode * requestNode;
+  bool isFrozen;
   ~OutputNode();
 };
 
