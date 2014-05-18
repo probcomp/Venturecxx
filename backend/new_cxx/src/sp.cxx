@@ -22,6 +22,12 @@ void SPFamilies::unregisterFamily(FamilyID id)
   families.erase(id);
 }
 
+shared_ptr<SPAux> SPAux::clone()
+{
+  ForwardingMap m = ForwardingMap();
+  return shared_ptr<SPAux>(this->copy_help(&m));
+}
+
 shared_ptr<LatentDB> SP::constructLatentDB() const { return shared_ptr<LatentDB>(); }
 
 SP::SP(PSP * requestPSP, PSP * outputPSP) :

@@ -153,7 +153,7 @@ struct ConcreteTrace : Trace
   map<Node*,VentureValuePtr> observedValues;
 
   shared_ptr<ConcreteTrace> stop_and_copy();
-  shared_ptr<ConcreteTrace> copy_help(ForwardingMap forward);
+  shared_ptr<ConcreteTrace> copy_help(ForwardingMap* forward);
 
 };
 

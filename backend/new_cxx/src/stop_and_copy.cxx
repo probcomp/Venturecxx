@@ -19,7 +19,7 @@ shared_ptr<PyTrace> PyTrace::stop_and_copy()
 shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy()
 {
   ForwardingMap forward = map<void*, void*>();
-  return this->copy_help(forward);
+  return this->copy_help(&forward);
 }
 
 /*********************************************************************\
@@ -27,7 +27,7 @@ shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy()
 \*********************************************************************/
 
 template <typename T>
-shared_ptr<T> copy_shared(shared_ptr<T> v, ForwardingMap forward)
+shared_ptr<T> copy_shared(shared_ptr<T> v, ForwardingMap* forward)
 {
   // TODO Make sure that any given raw pointer gets at most one shared
   // pointer made out of it
@@ -35,7 +35,7 @@ shared_ptr<T> copy_shared(shared_ptr<T> v, ForwardingMap forward)
 }
 
 template <typename T>
-set<T*> copy_set(set<T*> s, ForwardingMap forward)
+set<T*> copy_set(set<T*> s, ForwardingMap* forward)
 {
   set<T*> answer = set<T*>();
   BOOST_FOREACH(T* obj, s)
@@ -46,7 +46,7 @@ set<T*> copy_set(set<T*> s, ForwardingMap forward)
 }
 
 template <typename K, typename V>
-map<K*, V> copy_map_k(map<K*, V> m, ForwardingMap forward)
+map<K*, V> copy_map_k(map<K*, V> m, ForwardingMap* forward)
 {
   map<K*, V> answer = map<K*, V>();
   typename map<K*, V>::const_iterator itr;
@@ -58,7 +58,7 @@ map<K*, V> copy_map_k(map<K*, V> m, ForwardingMap forward)
 }
 
 template <typename K, typename V>
-map<shared_ptr<K>, V> copy_map_shared_k(map<shared_ptr<K>, V> m, ForwardingMap forward)
+map<shared_ptr<K>, V> copy_map_shared_k(map<shared_ptr<K>, V> m, ForwardingMap* forward)
 {
   map<shared_ptr<K>, V> answer = map<shared_ptr<K>, V>();
   typename map<shared_ptr<K>, V>::const_iterator itr;
@@ -70,7 +70,7 @@ map<shared_ptr<K>, V> copy_map_shared_k(map<shared_ptr<K>, V> m, ForwardingMap f
 }
 
 template <typename K, typename V>
-map<K, V*> copy_map_v(map<K, V*> m, ForwardingMap forward)
+map<K, V*> copy_map_v(map<K, V*> m, ForwardingMap* forward)
 {
   map<K, V*> answer = map<K, V*>();
   typename map<K, V*>::const_iterator itr;
@@ -82,7 +82,7 @@ map<K, V*> copy_map_v(map<K, V*> m, ForwardingMap forward)
 }
 
 template <typename K, typename V>
-map<K, shared_ptr<V> > copy_map_shared_v(map<K, shared_ptr<V> > m, ForwardingMap forward)
+map<K, shared_ptr<V> > copy_map_shared_v(map<K, shared_ptr<V> > m, ForwardingMap* forward)
 {
   map<K, shared_ptr<V> > answer = map<K, shared_ptr<V> >();
   typename map<K, shared_ptr<V> >::const_iterator itr;
@@ -94,7 +94,7 @@ map<K, shared_ptr<V> > copy_map_shared_v(map<K, shared_ptr<V> > m, ForwardingMap
 }
 
 template <typename K, typename V>
-map<K*, shared_ptr<V> > copy_map_kv(map<K*, shared_ptr<V> > m, ForwardingMap forward)
+map<K*, shared_ptr<V> > copy_map_kv(map<K*, shared_ptr<V> > m, ForwardingMap* forward)
 {
   map<K*, shared_ptr<V> > answer = map<K*, shared_ptr<V> >();
   typename map<K*, shared_ptr<V> >::const_iterator itr;
@@ -106,7 +106,7 @@ map<K*, shared_ptr<V> > copy_map_kv(map<K*, shared_ptr<V> > m, ForwardingMap for
 }
 
 typedef SamplableMap<set<Node*> > BlocksMap;
-BlocksMap copy_blocks_map(BlocksMap m, ForwardingMap forward)
+BlocksMap copy_blocks_map(BlocksMap m, ForwardingMap* forward)
 {
   BlocksMap answer = BlocksMap();
   for(typename vector<pair<VentureValuePtr,set<Node*> > >::const_iterator itr = m.a.begin();
@@ -124,7 +124,7 @@ BlocksMap copy_blocks_map(BlocksMap m, ForwardingMap forward)
 }
 
 typedef VentureValuePtrMap<SamplableMap<set<Node*> > > ScopesMap;
-ScopesMap copy_scopes_map(ScopesMap m, ForwardingMap forward)
+ScopesMap copy_scopes_map(ScopesMap m, ForwardingMap* forward)
 {
   ScopesMap answer = ScopesMap();
   typename ScopesMap::const_iterator itr;
@@ -136,7 +136,7 @@ ScopesMap copy_scopes_map(ScopesMap m, ForwardingMap forward)
 }
 
 template <typename V>
-VentureValuePtrMap<shared_ptr<V> > copy_vvptr_map_shared_v(VentureValuePtrMap<shared_ptr<V> > m, ForwardingMap forward)
+VentureValuePtrMap<shared_ptr<V> > copy_vvptr_map_shared_v(VentureValuePtrMap<shared_ptr<V> > m, ForwardingMap* forward)
 {
   VentureValuePtrMap<shared_ptr<V> > answer = VentureValuePtrMap<shared_ptr<V> >();
   typename VentureValuePtrMap<shared_ptr<V> >::const_iterator itr;
@@ -148,7 +148,7 @@ VentureValuePtrMap<shared_ptr<V> > copy_vvptr_map_shared_v(VentureValuePtrMap<sh
 }
 
 template <typename V>
-vector<V*> copy_vector(vector<V*> v, ForwardingMap forward)
+vector<V*> copy_vector(vector<V*> v, ForwardingMap* forward)
 {
   vector<V*> answer = vector<V*>();
   BOOST_FOREACH(V* val, v)
@@ -159,7 +159,7 @@ vector<V*> copy_vector(vector<V*> v, ForwardingMap forward)
 }
 
 template <typename V>
-vector<shared_ptr<V> > copy_vector_shared(vector<shared_ptr<V> > v, ForwardingMap forward)
+vector<shared_ptr<V> > copy_vector_shared(vector<shared_ptr<V> > v, ForwardingMap* forward)
 {
   vector<shared_ptr<V> > answer = vector<shared_ptr<V> >();
   BOOST_FOREACH(shared_ptr<V> val, v)
@@ -170,7 +170,7 @@ vector<shared_ptr<V> > copy_vector_shared(vector<shared_ptr<V> > v, ForwardingMa
 }
 
 template <typename K, typename V>
-map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(map<K*, vector<shared_ptr<V> > > m, ForwardingMap forward)
+map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(map<K*, vector<shared_ptr<V> > > m, ForwardingMap* forward)
 {
   map<K*, vector<shared_ptr<V> > > answer = map<K*, vector<shared_ptr<V> > >();
   typename map<K*, vector<shared_ptr<V> > >::const_iterator itr;
@@ -185,7 +185,7 @@ map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(map<K*, vector<shared_ptr<V>
 |* Concrete Traces                                                   *|
 \*********************************************************************/
 
-shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
+shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap* forward)
 {
   shared_ptr<ConcreteTrace> answer = shared_ptr<ConcreteTrace>(new ConcreteTrace);
   answer->globalEnvironment = copy_shared(this->globalEnvironment, forward);
@@ -210,28 +210,28 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap forward)
 
 // The following looks ripe for some macrology (especially the if),
 // but I don't want to go there.
-ConstantNode* ConstantNode::copy_help(ForwardingMap forward)
+ConstantNode* ConstantNode::copy_help(ForwardingMap* forward)
 {
-  if (forward.count(this) > 0)
+  if (forward->count(this) > 0)
   {
-    return (ConstantNode*)forward[this];
+    return (ConstantNode*)(*forward)[this];
   } else {
     ConstantNode* answer = new ConstantNode(this->exp);
-    forward[this] = answer;
+    (*forward)[this] = answer;
     answer->definiteParents = copy_vector(this->definiteParents, forward);
     answer->children = copy_set(this->children, forward);
     return answer;
   }
 }
 
-LookupNode* LookupNode::copy_help(ForwardingMap forward)
+LookupNode* LookupNode::copy_help(ForwardingMap* forward)
 {
-  if (forward.count(this) > 0)
+  if (forward->count(this) > 0)
   {
-    return (LookupNode*)forward[this];
+    return (LookupNode*)(*forward)[this];
   } else {
     LookupNode* answer = new LookupNode(*this);
-    forward[this] = answer;
+    (*forward)[this] = answer;
     answer->sourceNode = this->sourceNode->copy_help(forward);
     answer->definiteParents = copy_vector(this->definiteParents, forward);
     answer->children = copy_set(this->children, forward);
@@ -239,14 +239,14 @@ LookupNode* LookupNode::copy_help(ForwardingMap forward)
   }
 }
 
-RequestNode* RequestNode::copy_help(ForwardingMap forward)
+RequestNode* RequestNode::copy_help(ForwardingMap* forward)
 {
-  if (forward.count(this) > 0)
+  if (forward->count(this) > 0)
   {
-    return (RequestNode*)forward[this];
+    return (RequestNode*)(*forward)[this];
   } else {
     RequestNode* answer = new RequestNode(*this);
-    forward[this] = answer;
+    (*forward)[this] = answer;
     answer->outputNode = this->outputNode->copy_help(forward);
     answer->operatorNode = this->operatorNode->copy_help(forward);
     answer->operandNodes = copy_vector(this->operandNodes, forward);
@@ -257,14 +257,14 @@ RequestNode* RequestNode::copy_help(ForwardingMap forward)
   }
 }
 
-OutputNode* OutputNode::copy_help(ForwardingMap forward)
+OutputNode* OutputNode::copy_help(ForwardingMap* forward)
 {
-  if (forward.count(this) > 0)
+  if (forward->count(this) > 0)
   {
-    return (OutputNode*)forward[this];
+    return (OutputNode*)(*forward)[this];
   } else {
     OutputNode* answer = new OutputNode(*this);
-    forward[this] = answer;
+    (*forward)[this] = answer;
     answer->requestNode = this->requestNode->copy_help(forward);
     answer->operatorNode = this->operatorNode->copy_help(forward);
     answer->operandNodes = copy_vector(this->operandNodes, forward);
@@ -279,28 +279,28 @@ OutputNode* OutputNode::copy_help(ForwardingMap forward)
 |* SP Things                                                         *|
 \*********************************************************************/
 
-SP* SP::copy_help(ForwardingMap forward)
+SP* SP::copy_help(ForwardingMap* forward)
 {
-  if (forward.count(this) > 0)
+  if (forward->count(this) > 0)
   {
-    return (SP*)forward[this];
+    return (SP*)(*forward)[this];
   } else {
     SP* answer = new SP(*this);
-    forward[this] = answer;
+    (*forward)[this] = answer;
     answer->requestPSP = copy_shared(this->requestPSP, forward);
     answer->outputPSP = copy_shared(this->outputPSP, forward);
     return answer;
   }
 }
 
-VentureSPRecord* VentureSPRecord::copy_help(ForwardingMap forward)
+VentureSPRecord* VentureSPRecord::copy_help(ForwardingMap* forward)
 {
-  if (forward.count(this) > 0)
+  if (forward->count(this) > 0)
   {
-    return (VentureSPRecord*)forward[this];
+    return (VentureSPRecord*)(*forward)[this];
   } else {
     VentureSPRecord* answer = new VentureSPRecord(*this);
-    forward[this] = answer;
+    (*forward)[this] = answer;
     answer->sp = copy_shared(this->sp, forward);
     answer->spAux = copy_shared(this->spAux, forward);
     answer->spFamilies = copy_shared(this->spFamilies, forward);
@@ -308,27 +308,27 @@ VentureSPRecord* VentureSPRecord::copy_help(ForwardingMap forward)
   }
 }
 
-SPFamilies* SPFamilies::copy_help(ForwardingMap forward)
+SPFamilies* SPFamilies::copy_help(ForwardingMap* forward)
 {
-  if (forward.count(this) > 0)
+  if (forward->count(this) > 0)
   {
-    return (SPFamilies*)forward[this];
+    return (SPFamilies*)(*forward)[this];
   } else {
     SPFamilies* answer = new SPFamilies(*this);
-    forward[this] = answer;
+    (*forward)[this] = answer;
     answer->families = copy_vvptr_map_shared_v(this->families, forward);
     return answer;
   }
 }
 
-CSPRequestPSP* CSPRequestPSP::copy_help(ForwardingMap forward)
+CSPRequestPSP* CSPRequestPSP::copy_help(ForwardingMap* forward)
 {
-  if (forward.count(this) > 0)
+  if (forward->count(this) > 0)
   {
-    return (CSPRequestPSP*)forward[this];
+    return (CSPRequestPSP*)(*forward)[this];
   } else {
     CSPRequestPSP* answer = new CSPRequestPSP(*this);
-    forward[this] = answer;
+    (*forward)[this] = answer;
     answer->environment = copy_shared(this->environment, forward);
     return answer;
   }
@@ -338,14 +338,14 @@ CSPRequestPSP* CSPRequestPSP::copy_help(ForwardingMap forward)
 |* Environments                                                      *|
 \*********************************************************************/
 
-VentureEnvironment* VentureEnvironment::copy_help(ForwardingMap forward)
+VentureEnvironment* VentureEnvironment::copy_help(ForwardingMap* forward)
 {
-  if (forward.count(this) > 0)
+  if (forward->count(this) > 0)
   {
-    return (VentureEnvironment*)forward[this];
+    return (VentureEnvironment*)(*forward)[this];
   } else {
     VentureEnvironment* answer = new VentureEnvironment(*this);
-    forward[this] = answer;
+    (*forward)[this] = answer;
     answer->outerEnv = copy_shared(this->outerEnv, forward);
     answer->frame = copy_map_v(this->frame, forward);
     return answer;

@@ -24,7 +24,7 @@ struct VentureSPRecord : VentureValue
   boost::python::dict toPython(ConcreteTrace * trace) const;
   string toString() const;
 
-  VentureSPRecord* copy_help(ForwardingMap m);
+  VentureSPRecord* copy_help(ForwardingMap* m);
 };
 
 

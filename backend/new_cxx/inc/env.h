@@ -23,7 +23,7 @@ struct VentureEnvironment : VentureValue
   shared_ptr<VentureEnvironment> outerEnv;
   map<string,Node*> frame;
 
-  VentureEnvironment* copy_help(ForwardingMap m);
+  VentureEnvironment* copy_help(ForwardingMap* m);
 };
 
 #endif

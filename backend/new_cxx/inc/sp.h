@@ -38,18 +38,16 @@ struct SPFamilies
   RootOfFamily getRootOfFamily(FamilyID id);
   void registerFamily(FamilyID id,RootOfFamily root);
   void unregisterFamily(FamilyID id);
-  SPFamilies* copy_help(ForwardingMap m);
+  SPFamilies* copy_help(ForwardingMap* m);
 };
 
 struct SPAux
 {
   virtual ~SPAux() {}
-  shared_ptr<SPAux> clone() {
-    return shared_ptr<SPAux>(this->copy_help(ForwardingMap()));
-  }
+  shared_ptr<SPAux> clone();
   virtual boost::python::object toPython(Trace * trace) const;
   // TODO stupid and may make bugs hard to find
-  virtual SPAux* copy_help(ForwardingMap m) { return new SPAux(); }
+  virtual SPAux* copy_help(ForwardingMap* m) { return new SPAux(); }
 };
 
 struct SP
@@ -68,7 +66,7 @@ struct SP
   virtual void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const;
   
   virtual boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
-  virtual SP* copy_help(ForwardingMap m);
+  virtual SP* copy_help(ForwardingMap* m);
 };
 
 #endif

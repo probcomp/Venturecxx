@@ -326,4 +326,4 @@ VectorXd normalizedVectorXd(VectorXd & v)
   return newVector;
 }
 
-SPAux* HMMSPAux::copy_help(ForwardingMap m) { return new HMMSPAux(*this); }
+SPAux* HMMSPAux::copy_help(ForwardingMap* m) { return new HMMSPAux(*this); }
