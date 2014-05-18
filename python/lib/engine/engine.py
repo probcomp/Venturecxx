@@ -137,11 +137,6 @@ class Engine(object):
     else:
       assert False, "Unkown directive type found %r" % directive
 
-  def clone(self,trace):
-    serialized = Serializer().serialize_trace(trace, None)
-    newTrace, _ = Serializer().deserialize_trace(serialized)
-    return newTrace
-
   def incorporate(self):
     for i,trace in enumerate(self.traces):
       self.weights[i] += trace.makeConsistent()
@@ -157,7 +152,7 @@ class Engine(object):
       newTraces = [None for p in range(P)]
       for p in range(P):
         parent = sampleLogCategorical(self.weights) # will need to include or rewrite
-        newTraces[p] = self.clone(self.traces[parent])
+        newTraces[p] = self.traces[parent].stop_and_copy()
       self.traces = newTraces
       self.weights = [0 for p in range(P)]
 
