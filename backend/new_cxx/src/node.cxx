@@ -15,7 +15,7 @@ RequestNode::RequestNode(Node * operatorNode, const vector<Node*>& operandNodes,
   ApplicationNode(operatorNode,operandNodes,env,VentureValuePtr(new VentureNil))
   { }
 
-vector<Node*> RequestNode::definiteParents()
+vector<Node*> RequestNode::getDefiniteParents()
 {
   vector<Node*> dps;
   dps.push_back(operatorNode);
@@ -28,7 +28,7 @@ OutputNode::OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, R
   requestNode(requestNode),
   isFrozen(false) {}
 
-vector<Node*> OutputNode::definiteParents()
+vector<Node*> OutputNode::getDefiniteParents()
 {
   vector<Node*> dps;
   dps.push_back(operatorNode);

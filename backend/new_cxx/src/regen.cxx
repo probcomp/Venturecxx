@@ -189,7 +189,7 @@ double regenParents(Trace * trace,
               shared_ptr<map<Node*,Gradient> > gradients)
 {
   double weight = 0;
-  vector<Node*> definiteParents = node->definiteParents();
+  vector<Node*> definiteParents = node->getDefiniteParents();
   for (size_t i = 0; i < definiteParents.size(); ++i) { weight += regen(trace,definiteParents[i],scaffold,shouldRestore,db,gradients); }
   return weight + regenESRParents(trace,node,scaffold,shouldRestore,db,gradients);
 }

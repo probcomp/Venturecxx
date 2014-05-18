@@ -8,7 +8,7 @@ struct VentureEnvironment;
 struct Node
 {
   Node(VentureValuePtr exp): exp(exp) {}
-  virtual vector<Node*> definiteParents() { return vector<Node*>(); } // TODO should be an iterator
+  virtual vector<Node*> getDefiniteParents() { return vector<Node*>(); } // TODO should be an iterator
   set<Node*> children; // particle stores NEW children
   virtual ~Node() {} // TODO destroy family
   VentureValuePtr exp;
@@ -22,7 +22,7 @@ struct ConstantNode : Node
 struct LookupNode : Node 
 { 
   LookupNode(Node * sourceNode, VentureValuePtr exp);
-  vector<Node*> definiteParents() { vector<Node*> dps; dps.push_back(sourceNode); return dps; }
+  vector<Node*> getDefiniteParents() { vector<Node*> dps; dps.push_back(sourceNode); return dps; }
   Node * sourceNode;
 };
 
@@ -39,14 +39,14 @@ struct OutputNode;
 struct RequestNode : ApplicationNode
 {
   RequestNode(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env);
-  vector<Node*> definiteParents();
+  vector<Node*> getDefiniteParents();
   OutputNode * outputNode;
 };
 
 struct OutputNode : ApplicationNode
 {
   OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp);
-  vector<Node*> definiteParents();
+  vector<Node*> getDefiniteParents();
   RequestNode * requestNode;
   bool isFrozen;
   ~OutputNode();
