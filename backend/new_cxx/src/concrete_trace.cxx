@@ -492,7 +492,6 @@ void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
   outputNode->operandNodes.clear();
   outputNode->operatorNode = NULL;
 
-  outputNode->definiteParents.clear();
 }
 
 ConcreteTrace::~ConcreteTrace() { gsl_rng_free(rng); }
