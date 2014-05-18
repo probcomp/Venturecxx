@@ -160,7 +160,7 @@ packages=["venture","venture.sivm","venture.ripl", "venture.engine",
           "venture.unit", "venture.test", "venture.cxx", "venture.puma", "venture.lite",
           "venture.venturemagics"]
 
-cxx = Extension("venture.cxx.libpumatrace",
+cxx = Extension("venture.cxx.libtrace",
     define_macros = [('MAJOR_VERSION', '0'),
                      ('MINOR_VERSION', '1'),
                      ('REVISION', '1')],
