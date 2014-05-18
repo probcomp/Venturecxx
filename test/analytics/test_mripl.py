@@ -205,6 +205,12 @@ def testMapProc():
     values = v.map_proc_list(foo,proc_args_list,only_p_args=False)
     eq_( values, [20,31])
 
+    # map_proc_list empty args (single engine)
+    def setf(ripl,y=1): return {int(ripl.sample('333')), y}
+    proc_args_list = [ [[], dict(y=10)]  ]
+    values = v.map_proc_list(setf,proc_args_list,only_p_args=False)
+    eq_( values, [ {333,10} ] )
+                             
     # unbalanced no_ripls
     out = v.map_proc(3,f)
     assert all( 16. == np.array(out) )
