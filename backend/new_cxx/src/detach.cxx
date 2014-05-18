@@ -73,9 +73,9 @@ double detach(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> 
     }
     parents.insert(parents.end(), args->operandNodes.begin(), args->operandNodes.end());
     pair<VentureValuePtr, vector<VentureValuePtr> > grad = psp->gradientOfLogDensity(groundValue, args);
-    // cout << "detach partial 1: " << endl;
-    // cout << psp->toString() << endl;
-    // cout << "grad " << toString(grad.second) << endl;
+    cout << "detach partial 1: " << endl;
+    cout << psp->toString() << endl;
+    cout << "grad " << toString(grad.second) << endl;
     db->addPartials(parents, grad.second);
   }
   weight += extractParents(trace,node,scaffold,db, compute_gradient);
