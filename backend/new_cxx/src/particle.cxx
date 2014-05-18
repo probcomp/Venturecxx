@@ -36,14 +36,8 @@ Particle::Particle(shared_ptr<Particle> outerParticle):
       iter != outerParticle->madeSPAuxs.end();
       ++iter)
     {
-      if (iter->second)
-	{
-	  madeSPAuxs[iter->first] = iter->second->clone();
-	}
-      else 
-	{
-	  madeSPAuxs[iter->first] = shared_ptr<SPAux>();
-	}
+      if (iter->second) { madeSPAuxs[iter->first] = iter->second->clone(); }
+      else { madeSPAuxs[iter->first] = shared_ptr<SPAux>(); }
     }
   }
 
@@ -126,6 +120,25 @@ void Particle::incRegenCount(shared_ptr<Scaffold> scaffold,Node * node)
   if (!regenCounts.contains(node)) { regenCounts = regenCounts.insert(node,0); }
   regenCounts = regenCounts.insert(node,regenCounts.lookup(node) + 1);
 }
+
+
+bool Particle::hasLKernel(shared_ptr<Scaffold> scaffold, Node * node)
+{
+  if (lkernels.contains(node)) { return true; }
+  else { return baseTrace->hasLKernel(scaffold,node); }
+}
+
+void Particle::registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel)
+{
+  lkernels = lkernels.insert(node,lkernel);
+}
+
+shared_ptr<LKernel> Particle::getLKernel(shared_ptr<Scaffold> scaffold,Node * node)
+{
+  if (lkernels.contains(node)) { return lkernels.lookup(node); }
+  else { return baseTrace->getLKernel(scaffold,node); }
+}
+
 
 void Particle::addChild(Node * node, Node * child) 
 { 

@@ -10,5 +10,9 @@ struct ScopeIncludeOutputPSP : PSP
   bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const;
 };
   
-
+struct ScopeExcludeOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const;
+};
 #endif

@@ -3,7 +3,9 @@ from sp import VentureSP
 from env import VentureEnvironment
 from request import Request,ESR
 import value as v
+import serialize
 
+@serialize.register
 class CSPRequestPSP(DeterministicPSP):
   def __init__(self,ids,exp,env):
     self.ids = ids
@@ -22,6 +24,18 @@ class CSPRequestPSP(DeterministicPSP):
     return [0 for _ in args.operandValues]
 
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
+
+  def serialize(self, s):
+    ret = {}
+    ret['ids'] = [s.serialize(id) for id in self.ids]
+    ret['exp'] = s.serialize(self.exp)
+    ret['env'] = s.serialize(self.env)
+    return ret
+
+  def deserialize(self, s, value):
+    self.ids = [s.deserialize(id) for id in value['ids']]
+    self.exp = s.deserialize(value['exp'])
+    self.env = s.deserialize(value['env'])
 
 class MakeCSPOutputPSP(DeterministicPSP):
   def simulate(self,args):

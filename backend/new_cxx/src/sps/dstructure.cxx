@@ -1,6 +1,6 @@
 #include "sps/dstructure.h"
 #include "values.h"
-
+#include "utils.h"
 #include <boost/foreach.hpp>
 
 VentureValuePtr SimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -64,7 +64,7 @@ VentureValuePtr DictOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
   VentureValuePtrMap<VentureValuePtr> d;
   vector<VentureValuePtr> syms = args->operandValues[0]->getArray();
   vector<VentureValuePtr> vals = args->operandValues[1]->getArray();
-  assert(syms.size() == vals.size());
+  if(syms.size() != vals.size()) throw "Dict must take equal numbers of keys and values.";
   for (size_t i = 0; i < syms.size(); ++i) { d[syms[i]] = vals[i]; }
   return VentureValuePtr(new VentureDictionary(d));
 }
@@ -85,6 +85,7 @@ VentureValuePtr ArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) c
 
 VentureValuePtr PrependOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("prepend", args, 2);
   vector<VentureValuePtr> v;
   v.push_back(args->operandValues[0]);
   vector<VentureValuePtr> old = args->operandValues[1]->getArray();
@@ -94,13 +95,24 @@ VentureValuePtr PrependOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
 
 VentureValuePtr AppendOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("concat", args, 2);
   vector<VentureValuePtr> v(args->operandValues[0]->getArray());
   v.push_back(args->operandValues[1]);
   return VentureValuePtr(new VentureArray(v));
 }
 
+VentureValuePtr ConcatOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("append", args, 2);
+  vector<VentureValuePtr> v1(args->operandValues[0]->getArray());
+  const vector<VentureValuePtr>& v2 = args->operandValues[1]->getArray();
+  v1.insert(v1.end(), v2.begin(), v2.end());
+  return VentureValuePtr(new VentureArray(v1));
+}
+
 VentureValuePtr IsArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("is_array", args, 1);
   return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureArray>(args->operandValues[0]) != NULL));
 }
 

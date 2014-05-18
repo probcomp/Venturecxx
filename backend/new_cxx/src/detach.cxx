@@ -63,6 +63,14 @@ double detach(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> 
   shared_ptr<Args> args = trace->getArgs(node);
   VentureValuePtr groundValue = trace->getGroundValue(node);
 
+  if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+  {
+    ScopeID scope = trace->getValue(node->operandNodes[0]);
+    BlockID block = trace->getValue(node->operandNodes[1]);
+    Node * blockNode = node->operandNodes[2];
+    trace->unregisterUnconstrainedChoiceInScope(scope,block,blockNode);
+  }    
+
   psp->unincorporate(groundValue,args);
   double weight = psp->logDensity(groundValue,args);
   if(compute_gradient) {

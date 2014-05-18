@@ -126,6 +126,38 @@ double CategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> 
   else { return logDensityCategorical(value,args->operandValues[0]->getSimplex(),args->operandValues[1]->getArray()); }
 }
 
+vector<VentureValuePtr> CategoricalOutputPSP::enumerateValues(shared_ptr<Args> args) const
+{
+  const Simplex& s = args->operandValues[0]->getSimplex();
+  
+  vector<VentureValuePtr> vs;
+  
+  if (args->operandValues.size() == 1)
+  {
+    for (size_t i = 0; i < s.size(); ++i)
+    {
+      if (s[i] > 0)
+      {
+        vs.push_back(VentureValuePtr(new VentureAtom(i)));
+      }
+    }
+  }
+  else
+  {
+    const vector<VentureValuePtr>& os = args->operandValues[1]->getArray();
+    
+    for (size_t i = 0; i < s.size(); ++i)
+    {
+      if (s[i] > 0)
+      {
+        vs.push_back(os[i]);
+      }
+    }
+  }
+  
+  return vs;
+}
+
 VentureValuePtr SymmetricDirichletOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const 
 { 
   checkArgsLength("symmetric_dirichlet", args, 2);

@@ -10,6 +10,7 @@ import hashlib
 
 from request import Request # TODO Pull that file in here?
 from exception import VentureValueError, VentureTypeError
+import serialize
 
 # TODO Define reasonable __str__ and/or __repr__ methods for all the
 # values and all the types.
@@ -29,7 +30,9 @@ class VentureValue(object):
   def getSimplex(self): raise VentureTypeError("Cannot convert %s to simplex" % type(self))
   def getDict(self): raise VentureTypeError("Cannot convert %s to dict" % type(self))
   def getMatrix(self): raise VentureTypeError("Cannot convert %s to matrix" % type(self))
+  def getSymmetricMatrix(self): raise VentureTypeError("Cannot convert %s to symmetric matrix" % type(self))
   def getSP(self): raise VentureTypeError("Cannot convert %s to sp" % type(self))
+  def getForeignBlob(self): raise VentureTypeError("Cannot convert %s to foreign blob" % type(self))
   def getEnvironment(self): raise VentureTypeError("Cannot convert %s to environment" % type(self))
 
   # Some Venture value types form a natural vector space over reals,
@@ -74,6 +77,7 @@ class VentureValue(object):
     else:
       return False
 
+@serialize.register
 class VentureNumber(VentureValue):
   def __init__(self,number):
     assert isinstance(number, Number)
@@ -137,6 +141,7 @@ class VentureNumber(VentureValue):
   def map_real(self, f):
     return VentureNumber(f(self.number))
 
+@serialize.register
 class VentureCount(VentureNumber):
   def __init__(self, number):
     assert isinstance(number, Number)
@@ -152,6 +157,7 @@ class VentureCount(VentureNumber):
   # their tangents are (and consequently, the tangents of
   # probabilities are not probabilities).
 
+@serialize.register
 class VenturePositive(VentureNumber):
   def __init__(self, number):
     assert isinstance(number, Number)
@@ -169,6 +175,7 @@ class VenturePositive(VentureNumber):
 
 # TODO Define VentureNonNegative, from which VentureProbability can inherit
 
+@serialize.register
 class VentureProbability(VentureNumber):
   def __init__(self, number):
     assert isinstance(number, Number)
@@ -219,7 +226,7 @@ def lexicographicMatrixCompare(thing, other):
   if np.array_equal(thing, other): return 0
   # Hack for finding the first discrepant element, via
   # http://stackoverflow.com/questions/432112/is-there-a-numpy-function-to-return-the-first-index-of-something-in-an-array
-  diffs = thing - other
+  diffs = np.array(thing - other)
   diff_indexes = np.nonzero(diffs)
   first_diff = diffs[diff_indexes[0][0]][diff_indexes[0][0]]
   return stupidCompare(first_diff, 0)
@@ -227,6 +234,7 @@ def lexicographicMatrixCompare(thing, other):
 def sequenceHash(seq):
   return reduce(lambda res, item: res * 37 + item, [hash(i) for i in seq], 1)
 
+@serialize.register
 class VentureAtom(VentureValue):
   def __init__(self,atom):
     assert isinstance(atom, Number)
@@ -241,6 +249,7 @@ class VentureAtom(VentureValue):
   def compareSameType(self, other): return stupidCompare(self.atom, other.atom)
   def __hash__(self): return hash(self.atom)
 
+@serialize.register
 class VentureBool(VentureValue):
   def __init__(self,boolean):
     assert isinstance(boolean, bool) or isinstance(boolean, np.bool_)
@@ -259,6 +268,7 @@ class VentureBool(VentureValue):
     return stupidCompare(self.boolean, other.boolean)
   def __hash__(self): return hash(self.boolean)
 
+@serialize.register
 class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
   def __repr__(self): return "Symbol(%s)" % self.symbol
@@ -269,6 +279,7 @@ class VentureSymbol(VentureValue):
   def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
   def __hash__(self): return hash(self.symbol)
 
+@serialize.register
 class VentureArray(VentureValue):
   """Venture arrays are heterogeneous, with O(1) access and O(n) copy.
 Venture does not yet implement homogeneous packed arrays, but the
@@ -345,7 +356,7 @@ interface here is compatible with one possible path."""
   def __repr__(self):
     return "VentureArray(%s)" % self.array
 
-
+@serialize.register
 class VentureNil(VentureValue):
   def __init__(self): pass
   def __repr__(self): return "Nil"
@@ -360,6 +371,7 @@ class VentureNil(VentureValue):
   def contains(self, _obj): return False
   def size(self): return 0
 
+@serialize.register
 class VenturePair(VentureValue):
   def __init__(self,(first,rest)):
     assert isinstance(first, VentureValue)
@@ -421,6 +433,7 @@ class VenturePair(VentureValue):
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
 
+@serialize.register
 class VentureSimplex(VentureValue):
   """Simplexes are homogeneous floating point arrays.  They are also
 supposed to sum to 1, but we are not checking that."""
@@ -447,6 +460,7 @@ supposed to sum to 1, but we are not checking that."""
     return obj.getNumber() in self.simplex
   def size(self): return len(self.simplex)
 
+@serialize.register
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
   def getDict(self): return self.dict
@@ -465,10 +479,16 @@ class VentureDict(VentureValue):
     return key in self.dict
   def size(self): return len(self.dict)
 
-# 2D array of numbers backed by a numpy matrix object
+# 2D array of numbers backed by a numpy array object
+@serialize.register
 class VentureMatrix(VentureValue):
-  def __init__(self,matrix): self.matrix = matrix
+  def __init__(self,matrix): self.matrix = np.array(matrix)
   def getMatrix(self): return self.matrix
+  def getSymmetricMatrix(self):
+    if matrixIsSymmetric(self.matrix):
+      return self.matrix
+    else:
+      raise VentureTypeError("Matrix is not symmetric %s" % self.matrix)
   def compareSameType(self, other):
     return lexicographicMatrixCompare(self.matrix, other.matrix)
   def __hash__(self):
@@ -510,6 +530,60 @@ class VentureMatrix(VentureValue):
   def map_real(self, f):
     return VentureMatrix(np.vectorize(f)(self.matrix))
 
+@serialize.register
+class VentureSymmetricMatrix(VentureMatrix):
+  def __init__(self, matrix):
+    self.matrix = matrix
+    assert matrixIsSymmetric(matrix)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    if isinstance(other, VentureSymmetricMatrix):
+      return VentureSymmetricMatrix(self.matrix + other.matrix)
+    else:
+      return VentureMatrix(self.matrix + other.matrix)
+  def __radd__(self, other):
+    if other == 0:
+      return self
+    if isinstance(other, VentureSymmetricMatrix):
+      return VentureSymmetricMatrix(other.matrix + self.matrix)
+    else:
+      return VentureMatrix(other.matrix + self.matrix)
+  def __neg__(self):
+    return VentureSymmetricMatrix(-self.matrix)
+  def __sub__(self, other):
+    if other == 0:
+      return self
+    if isinstance(other, VentureSymmetricMatrix):
+      return VentureSymmetricMatrix(self.matrix - other.matrix)
+    else:
+      return VentureMatrix(self.matrix - other.matrix)
+  def __mul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureSymmetricMatrix(self.matrix * other)
+  def __rmul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureSymmetricMatrix(other * self.matrix)
+  def map_real(self, f):
+    candidate = np.vectorize(f)(self.matrix)
+    return VentureSymmetricMatrix( (candidate + candidate.T)/2 )
+
+def matrixIsSymmetric(matrix):
+  return np.allclose(matrix.transpose(), matrix)
+
+class VentureForeignBlob(VentureValue):
+  # TODO Think about the interaction of foreign blobs with trace
+  # copying and serialization
+  def __init__(self, datum): self.datum = datum
+  def asStackDict(self, _trace):
+    return {"type":"blob", "value":self.datum}
+  @staticmethod
+  def fromStackDict(thing): return VentureForeignBlob(thing["value"])
+  def getForeignBlob(self): return self.datum
+
+@serialize.register
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
   def asStackDict(self,trace):
@@ -533,11 +607,13 @@ stackable_types = {
   "atom": VentureAtom,
   "boolean": VentureBool,
   "symbol": VentureSymbol,
+  "vector": VentureArray, # TODO Or should this be a linked list?  Should there be an array type?
   "list": VentureArray, # TODO Or should this be a linked list?  Should there be an array type?
   "simplex": VentureSimplex,
   "dict": VentureDict,
   "matrix": VentureMatrix,
   "SP": SPRef, # As opposed to VentureSP?
+  "blob": VentureForeignBlob,
   }
 
 def registerVentureType(t, name = None):
@@ -578,7 +654,7 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Count", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix"]:
+for typestring in ["Count", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix", "ForeignBlob"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))

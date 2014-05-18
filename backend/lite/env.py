@@ -1,8 +1,10 @@
 from value import VentureValue, registerVentureType, standard_venture_type
+import serialize
 
 # Environments store Python strings for the symbols, not Venture
 # symbol objects.  This is a choice, but whichever way it is made it
 # should be consistent.
+@serialize.register
 class VentureEnvironment(VentureValue):
   def __init__(self,outerEnv=None,ids=None,nodes=None):
     self.outerEnv = outerEnv
@@ -43,6 +45,9 @@ class VentureEnvironment(VentureValue):
   def lookup(self, key):
     return self.findSymbol(key.getSymbol())
   # TODO Define contains to check whether the symbol is there (without throwing exceptions)
+
+  # for serialization
+  cyclic = True
 
 registerVentureType(VentureEnvironment, "environment")
 # Exec is appropriate for metaprogramming

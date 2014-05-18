@@ -1,5 +1,7 @@
 import random
+import serialize
 
+@serialize.register
 class SMap(object):
   def __init__(self):
     self.d = {}

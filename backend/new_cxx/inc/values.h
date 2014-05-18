@@ -24,6 +24,7 @@ struct VentureNumber : VentureValue
   VentureValuePtr operator-(const VentureValuePtr & rhs) const;
   VentureValuePtr operator*(const VentureValuePtr & rhs) const;
   VentureValuePtr neg() const;
+  string asExpression() const;
   double x;
 };
 
@@ -32,7 +33,7 @@ struct VentureAtom : VentureValue
   VentureAtom(int n): n(n) {}
   bool hasDouble() const { return true; }
   double getDouble() const { return n; }
-  bool hasInt() const { return false; }
+  bool hasInt() const { return true; }
   long getInt() const { return n; }
   int getAtom() const { return n; }
   bool getBool() const { return n; }
@@ -42,6 +43,7 @@ struct VentureAtom : VentureValue
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
+  string asExpression() const;
   int n;
 };
 
@@ -57,6 +59,7 @@ struct VentureBool : VentureValue
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
+  string asExpression() const;
   bool b;
 };
 
@@ -71,6 +74,7 @@ struct VentureSymbol : VentureValue
   boost::python::dict toPython(Trace * trace) const;
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
   string s;
 };
 
@@ -96,6 +100,8 @@ struct VentureArray : VentureValue
   VentureValuePtr operator-(const VentureValuePtr & rhs) const;
   VentureValuePtr operator*(const VentureValuePtr & rhs) const;
   VentureValuePtr neg() const;
+  string asExpression() const;
+  vector<VentureValuePtr> xs;
 };
 
 struct VentureNil : VentureValue
@@ -111,6 +117,7 @@ struct VentureNil : VentureValue
 
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
   boost::python::dict toPython(Trace * trace) const;
 };
 
@@ -128,6 +135,7 @@ struct VenturePair : VentureValue
 
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
   boost::python::dict toPython(Trace * trace) const;
   int size() const { return 1 + getRest()->size(); }
   VentureValuePtr car;
@@ -145,6 +153,7 @@ struct VentureSimplex : VentureValue
 
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
   boost::python::dict toPython(Trace * trace) const;
   Simplex ps;
 };
@@ -155,7 +164,7 @@ struct VentureDictionary : VentureValue
   VentureDictionary(const VentureValuePtrMap<VentureValuePtr> & dict): dict(dict) {}
   const VentureValuePtrMap<VentureValuePtr>& getDictionary() const { return dict; }
 
-  VentureValuePtr lookup(VentureValuePtr index) const { return dict.at(index); }
+  VentureValuePtr lookup(VentureValuePtr index) const;
   bool contains(VentureValuePtr index) const { return dict.count(index); }
   int size() const { return dict.size(); }
 
