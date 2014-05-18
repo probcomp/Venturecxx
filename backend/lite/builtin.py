@@ -188,7 +188,7 @@ def builtInSPsList():
                                            [v.HomogeneousListType(v.HomogeneousListType(v.NumberType()))],
                                            v.MatrixType(),
                                            "%s returns a matrix formed from the given list of rows.  It is an error if the given list is not rectangular.") ],
-           [ "diagonal_matrix", deterministic_typed(np.diag,
+           [ "diagonal_matrix", deterministic_typed(lambda x: np.mat(np.diag(x)),
                                            [v.HomogeneousListType(v.NumberType())],
                                            v.MatrixType(),
                                            "%s returns a diagonal matrix formed from the given list.") ],
