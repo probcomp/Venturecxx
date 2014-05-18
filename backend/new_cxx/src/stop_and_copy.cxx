@@ -18,11 +18,11 @@ void*& ForwardingMap::operator[] (void* k)
   return pointers[k];
 }
 
-shared_ptr<PyTrace> PyTrace::stop_and_copy()
+PyTrace* PyTrace::stop_and_copy()
 {
   assert(!this->continuous_inference_running);
   assert(!this->continuous_inference_thread);
-  shared_ptr<PyTrace> answer = shared_ptr<PyTrace>(new PyTrace(*this));
+  PyTrace* answer = new PyTrace(*this);
   answer->trace = this->trace->stop_and_copy();
   return answer;
 }

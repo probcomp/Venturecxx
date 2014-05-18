@@ -49,7 +49,7 @@ struct PyTrace
   void start_continuous_inference(boost::python::dict params);
   void stop_continuous_inference();
 
-  shared_ptr<PyTrace> stop_and_copy();
+  PyTrace* stop_and_copy();
 
 private:
   shared_ptr<ConcreteTrace> trace;

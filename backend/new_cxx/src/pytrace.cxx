@@ -336,7 +336,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("continuous_inference_status", &PyTrace::continuous_inference_status)
     .def("start_continuous_inference", &PyTrace::start_continuous_inference)
     .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)
-    .def("stop_and_copy", &PyTrace::stop_and_copy)
+    .def("stop_and_copy", &PyTrace::stop_and_copy, return_value_policy<manage_new_object>())
     ;
 };
 
