@@ -690,39 +690,37 @@ class MRipl():
         # map across remote ripls
         no_args_per_engine = int(np.ceil(no_args/float(self.no_engines)))
         remote_out = []
-        self.dview.push(dict(prints=[]))
         for i in range(self.no_engines):
             start=i*no_args_per_engine
             eng_args = proc_args_list[start: start + no_args_per_engine]
-            print i,no_args_per_engine,eng_args
             if not eng_args: break
             eng_view = self.cli[i]
-            eng_view.push({'proc_l':interactive(proc),'eng_args':eng_args})
+            eng_view.push({'mapped_proc_l':interactive(proc),'eng_args':eng_args})
             eng_view.push({'list_out':[]})
-            
-            s1= 'eng_ripls= mripls[%i][%s][:len(eng_args)]'%(self.mrid,self.backend)
-            eng_view.execute(s1)
-            
-            @interactive
-            def f1():
-                out = [proc_l(r,*args) for r,args in zip(eng_ripls,eng_args)]
-                list_out.extend(out)
 
             @interactive
-            def f2(): # for kwargs
-                r_args = zip(eng_ripls,eng_args)
-                out = [proc_l(r,*args,**kwargs) for r,(args,kwargs) in r_args]
-                list_out.extend(out)
-            f = f1 if only_p_args else f2    
-            eng_view.apply_sync(f1)
+            def f(mrid,backend,eng_args,only_p_args):
+                 arg_ripl = zip(eng_args, mripls[mrid][backend][:len(eng_args)])
+                 if only_p_args:
+                     list_out.extend( [mapped_proc_l(r,*args) for args,r in arg_ripl] )
+                 else:
+                     list_out.extend( [mapped_proc_l(r,*args,**kwargs) for (args,kwargs),r in arg_ripl] )
 
-            remote_out.extend( eng_view['list_out'] ) #instead of flatten
-
+            eng_view.apply_sync(f,self.mrid,self.backend,eng_args,only_p_args)
+            remote_out.extend(eng_view['list_out'])
+            # NB: eng_args pushed but not needed. ALT VERSION
+            # s1= 'eng_ripls= mripls[%i][%s][:len(eng_args)]'%(self.mrid,
+            # eng_view.execute(s1)
+            # @interactive
+            # def f1():
+            #     out = [proc_l(r,*args) for r,args in zip(eng_ripls,eng_args)]
+            #     list_out.extend(out)
         ipython_inline()
-
-        assert len(remote_out) == no_args
-
+        
         return remote_out if self.output=='remote' else local_out 
+            
+        
+
 
 
 
