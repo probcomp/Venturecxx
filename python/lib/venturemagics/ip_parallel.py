@@ -719,9 +719,6 @@ class MRipl():
         '''Input: lists of dids_labels and expressions (evaled in order)
            Output: values from each ripl, (optional) plots.''' 
         
-        # *sample_populations*, *repeat*:
-        # exp in exp_list should be any non-deterministic expressions.
-        # sample_populations :: (int,int),
         # plot_past_values :: list of snapshot outputs (exp used in first variable)
         
         if isinstance(did_labels_list,(int,str)):
@@ -745,12 +742,13 @@ class MRipl():
 
         # special options: (return before basic snapshot)
         if sample_populations:
-            return self.sample_populations(exp_list,out,sample_populations,plot=plot,
-                                           plot_range=plot_range)
+            return self._sample_populations(exp_list,out,sample_populations,
+                                            plot=plot, plot_range=plot_range)
         elif repeat: 
             no_groups = self.no_local_ripls if self.output=='local' else self.no_ripls
-            return self.sample_populations(exp_list, out, (no_groups,repeat),
-                                           flatten=True, plot=plot,plot_range=plot_range)
+            return self._sample_populations(exp_list, out, (no_groups,repeat),
+                                            flatten=True, plot=plot,
+                                            plot_range=plot_range)
 
             
         # basic snapshot
@@ -774,41 +772,43 @@ class MRipl():
         if logscore: out['values']['global_logscore']= self.get_global_logscore()
         
         if plot or scatter:
-            out['figs'] = self.plot(out,scatter=scatter,plot_range=plot_range)
+            out['figs'] = self._plot(out,scatter=scatter,plot_range=plot_range)
 
 
         return out
 
     
-
-    def sample_populations(self,exp_list,out,groups_popsize,flatten=False,plot=False,plot_range=None):
-        # PLAN: think about non-cts case of sample populations. think about doing
+    def sample_populations(self,exp,no_groups,population_size,plot_range=None):
+        '''Input *exp* will be repeatedly sampled from (*population_size* times)
+           for each group in *no_groups*. The expression *exp* should be
+           stochastic.
+        
+           Example:
+           mripl.assume('mean','(normal 0 100)')
+           mripl.sample_populations('(normal mean 1)',4,30)'''
+        return self.snapshot(exp_list = (exp,), plot=True,
+                             sample_populations=(no_groups,population_size),
+                             plot_range=plot_range)
+        
+    def _sample_populations(self,exp_list,out,groups_popsize,flatten=False,plot=False,plot_range=None):
+        # TODO: think about non-cts case of sample populations. think about doing
         # sample populations for correlations
         if self.local_mode: assert False, 'Local mode'
-        assert len(exp_list)==1, 'len(exp_list)!=1'
+        assert len(exp_list)==1, 'len(exp_list) != 1'
         exp = exp_list[0]
         no_groups,pop_size = groups_popsize
 
+        ## maybe keep this for cases involving memoization
         def pred_repeat_forget(r,exp,pop_size):
             vals=[r.predict(exp,label='snapsp_%i'%j) for j in range(pop_size)]
             [r.forget('snapsp_%i'%j) for j in range(pop_size)]
             return vals
 
-        def fast_pred_repeat_forget(r,exp,pop_size):
-            # if 'repeat9999' in r.list_directives(): don't define, else define
-            rand_id = np.random.randint(10**9)
-            r.assume('repeat%s'%rand_id,
-                     '(lambda (th n) (if (= n 0) (list) (pair (th) (repeat%s th (- n 1) ) ) ) ) '%rand_id,
-                     label='repeat%s'%rand_id)
-            vals=r.predict('(repeat%s (lambda () %s ) %i)'%(rand_id,exp,pop_size),label='snapshot%s'%rand_id)
-            
-            r.forget('snapshot%s'%rand_id)
-            return vals
-        
-        mrmap_values = mr_map_proc(self, no_groups,
-                                pred_repeat_forget, exp, pop_size)
+        def batch_sample(ripl,exp,pop_size):
+            lst_string = '(list '+ ' '.join([exp]*pop_size) + ')'
+            return ripl.sample(lst_string)
 
-        #mrmap_values2 = mr_map_proc(self, no_groups,fast_pred_repeat_forget, exp, pop_size)
+        mrmap_values = self.map_proc(no_groups,batch_sample,exp,pop_size)
 
         if flatten: mrmap_values = lst_flatten(mrmap_values)
 
@@ -910,12 +910,12 @@ class MRipl():
             return 'other'
 
         
-    def plot(self,snapshot,scatter=False,plot_range=None):
+    def _plot(self,snapshot,scatter=False,plot_range=None):
         '''Takes input from snapshot, checks type of values and plots accordingly.
         Plots are inlined on IPNB and output as figure objects.'''
         
         def draw_hist(vals,label,ax,plot_range=None):
-            ax.hist(vals)
+            ax.hist(vals,alpha=.8)
             ax.set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
             ax.set_xlabel('Exp: %s' % str(label))
             if plot_range:
@@ -950,16 +950,15 @@ class MRipl():
                     fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(9,2))
                     draw_hist(vals,label,ax[0],plot_range=plot_range)
                     draw_kde(vals,label,ax[1],plot_range=plot_range)
+                    figs.append(fig)
                 else:
                     fig,ax = plt.subplots(figsize=(4,2))
                     draw_hist(vals,label,ax,plot_range=plot_range)
-
+                    figs.append(fig)
             elif var_type in 'int':
                 fig,ax = plt.subplots()
                 draw_hist(vals,label,ax,plot_range=plot_range)
-
-            fig.tight_layout()
-            figs.append(fig)
+                figs.append(fig)
 
             
         if scatter:
@@ -971,7 +970,8 @@ class MRipl():
             ax.set_title('%s vs. %s (transitions: %i, ripls: %i)' % (str(label0),str(label1),
                                                                     no_trans, no_ripls) )
             figs.append(fig)
-        
+
+        if len(figs)>0: [f.tight_layout() for f in figs]
         return figs
 
 
