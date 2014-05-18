@@ -337,7 +337,7 @@ void PyTrace::freeze(DirectiveID did)
 }
 
 
-BOOST_PYTHON_MODULE(libpumatrace)
+BOOST_PYTHON_MODULE(libtrace)
 {
   using namespace boost::python;
   
