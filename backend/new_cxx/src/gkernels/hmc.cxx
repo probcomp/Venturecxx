@@ -31,18 +31,14 @@ pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffol
     // cout << "old node " << node << endl;
     allNodes.push_back(node);
   }
-  // cout << "num pnodes " << applicationNodes.size() << endl;
   vector<VentureValuePtr> currentValues = trace->getCurrentValues(pNodes);
-  // cout << "current values " << toString(currentValues);
   /* detach and extract */
   registerDeterministicLKernels(trace, scaffold, applicationNodes, currentValues);
   double rhoWeight = this->prepare(trace, scaffold, true);
-
   /* evolve */
   VentureValuePtr start_q = VentureArray::makeValue(currentValues);
   VentureValuePtr momenta = this->sampleMomenta(start_q, trace->getRNG());
   VentureValuePtr start_grad_pot = VentureArray::makeValue(this->rhoDB->getPartials(allNodes))->neg();
-
   double start_K = this->kinetic(momenta);
   GradientOfRegen grad(trace, scaffold);
   
@@ -99,6 +95,7 @@ double HMCGKernel::kinetic(const VentureValuePtr momenta) const {
 pair<VentureValuePtr, double> 
 HMCGKernel::evolve(GradientOfRegen& grad, const VentureValuePtr& start_q, const VentureValuePtr& start_grad_q, 
                       const VentureValuePtr& start_p) {
+  cout << "HMC evolve" << endl;
   // int numSteps = int(gsl_rng_uniform(rng)*steps->getDouble())+1;
   int numSteps = steps->getDouble();
   // cout << "num steps " << numSteps << endl;

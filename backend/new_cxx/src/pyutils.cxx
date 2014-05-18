@@ -46,11 +46,11 @@ VentureValuePtr parseValue(boost::python::dict d)
 {
   string type = boost::python::extract<string>(d["type"]);
   if (type == "boolean") { return shared_ptr<VentureBool>(new VentureBool(boost::python::extract<bool>(d["value"]))); }
-  else if (type == "number") { return shared_ptr<VentureNumber>(new VentureNumber(boost::python::extract<double>(d["value"]))); }
+  else if (type == "number" || type == "real") { return shared_ptr<VentureNumber>(new VentureNumber(boost::python::extract<double>(d["value"]))); }
   else if (type == "symbol") { return shared_ptr<VentureSymbol>(new VentureSymbol(boost::python::extract<string>(d["value"]))); }
   else if (type == "atom") { return shared_ptr<VentureAtom>(new VentureAtom(boost::python::extract<uint32_t>(d["value"]))); }
   else if (type == "simplex") { return parseSimplex(d); }
-  else if (type == "array") {return parseArray(d); }
+  else if (type == "array" || type == "list") {return parseArray(d); }
   else { throw "Unknown type '" + type + "'"; }
 }
 
