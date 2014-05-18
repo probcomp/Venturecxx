@@ -389,10 +389,10 @@ void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
   if (!outputNode) { return; }
   shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
-  if (psp->isRandom()) { pnodes.insert(outputNode); }
+  if (psp->isRandom() && !isConstrained(outputNode)) { pnodes.insert(outputNode); }
   RequestNode * requestNode = outputNode->requestNode;
   shared_ptr<PSP> requestPSP = getMadeSP(getOperatorSPMakerNode(requestNode))->getPSP(requestNode);
-  if (requestPSP->isRandom()) { pnodes.insert(requestNode); }
+  if (requestPSP->isRandom() && !isConstrained(requestNode)) { pnodes.insert(requestNode); }
 
   const vector<ESR>& esrs = getValue(requestNode)->getESRs();
   Node * makerNode = getOperatorSPMakerNode(requestNode);
