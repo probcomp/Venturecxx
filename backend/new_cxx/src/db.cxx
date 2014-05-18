@@ -72,8 +72,6 @@ void DB::addPartials(vector<Node*>& nodes, vector<VentureValuePtr>& partials) {
 
 void DB::addPartial(Node* node, VentureValuePtr partial) {
   if(this->partials.count(node)) {
-    cout << ::toString(this->partials[node]) << endl;
-    cout << ::toString(partial) << endl;
     this->partials[node] = this->partials[node]+partial;
   }else{
     this->partials[node] = partial;

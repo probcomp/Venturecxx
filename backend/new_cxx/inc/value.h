@@ -119,7 +119,7 @@ inline VentureValuePtr operator-(const VentureValuePtr& lhs, const VentureValueP
 inline VentureValuePtr operator*(const VentureValuePtr& lhs, const VentureValuePtr& rhs) {return lhs->operator*(rhs);} 
 inline string toString(const VentureValuePtr& value) {return value->toString(); }
 inline string toString(const vector<VentureValuePtr>& values) {
-  string str = "<vector> [";
+  string str = "[";
   BOOST_FOREACH(VentureValuePtr value, values) {
     str += value->toString()+" ";
   }
