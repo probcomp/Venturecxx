@@ -226,8 +226,8 @@ def testCompareSampleDicts():
     samples=20
     h,_ = model.runFromConditional(samples,runs=2) 
     dicts = [{'mu':h.nameToSeries['mu'][i].values} for i in range(2)]
-    stats,_ = compareSampleDicts(dicts,('',''),plot=False)
-    assert stats['mu'][-1].pval > .01
+    cReport = compareSampleDicts(dicts,('',''),plot=False)
+    assert cReport.statsDict['mu']['KSSameContinuous'].pval > .01
 
 
 

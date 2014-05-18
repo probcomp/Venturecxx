@@ -449,7 +449,7 @@ class Analytics(object):
                 params=dict(venture_random_seed=seed)
                 assumes,observes,queries = modelTuple
                 model = Analytics(ripl,assumes=assumes,observes=observes,
-                                  queryExps=queries)
+                                  queryExps=queries,parameters=params)
                 return getattr(model,fname)(label='seed:%s'%seed,**kwargs)
                 
             modelTuple=(self.assumes,self.observes,self.queryExps)
@@ -470,7 +470,6 @@ class Analytics(object):
         if profile:
             history.profile = Profile(self.ripl)
         return history
-
     
 
     # Runs inference on the joint distribution (observes turned into predicts).
@@ -714,11 +713,6 @@ class Analytics(object):
         ## FIXME: should be able to take multiple runs and flatten them
         #  inferHistory = flattenRuns(inferHistory)
 
-        print 'Geweke-style Test of Inference: \n'
-        print '''
-        Compare iid (forward) samples from joint to dependent
-        samples from inference (*observes* changed to *predicts*)\n'''
-        print '-------------\n'
         
         # convert history objects
         hs = (forwardHistory,inferHistory)
@@ -734,9 +728,16 @@ class Analytics(object):
         if names is not None:
             dicts=[filterDict(d,keep=names) for d in dicts]
             
-        compareStats,fig = compareSampleDicts(dicts,labels,plot=plot)
+        compareReport = compareSampleDicts(dicts,labels,plot=plot)
         
-        return forwardHistory,inferHistory,compareStats
+        gewekeStr='''
+        Geweke-style Test of Inference:
+        Compare iid (forward) samples from joint to dependent
+        samples from inference (*observes* changed to *predicts*)
+        -------------\n\n'''
+        compareReport.reportString = gewekeStr + compareReport.reportString
+        
+        return forwardHistory,inferHistory,compareReport
 
 
 
@@ -872,6 +873,18 @@ def filterScalar(dct):
 def intersectKeys(dicts):
     return tuple(set(dicts[0].keys()).intersection(set(dicts[1].keys())))
 
+
+class CompareSamplesReport(object):
+    def __init__(self,labels,reportString=None,statsDict=None,compareFig=None):
+        self.labels = labels
+        if reportString:
+            self.reportString = reportString
+        if statsDict:
+            self.statsDict = statsDict
+        if compareFig:
+            self.compareFig = compareFig
+    
+
 def compareSampleDicts(dicts_hists,labels,plot=False):
     '''Input: dicts_hists :: ({exp:values}) | (History)
      where the first Series in History is used as values. History objects
@@ -887,29 +900,28 @@ def compareSampleDicts(dicts_hists,labels,plot=False):
     
     stats = (np.mean,scipy.stats.sem,np.median,len)
     statsString = ' '.join(['mean','sem','med','N'])
-    stats_dict = {}
-    print 'compareSampleDicts: %s vs. %s \n'%(labels[0],labels[1])
+    statsDict = {}
+    report = ['compareSampleDicts: %s vs. %s \n'%(labels[0],labels[1])]
     
     for exp in intersectKeys(dicts):
-        print '\n---------'
-        print 'Name:  %s'%exp
-        stats_dict[exp] = []
+        report.append( '\n---------\n Name:  %s \n'%exp )
+        statsDict[exp] = {}
         
         for dict_i,label_i in zip(dicts,labels):
             samples=dict_i[exp]
             s_stats = tuple([s(samples) for s in stats])
-            stats_dict[exp].append(s_stats)
+            statsDict[exp]['stats: '+statsString]=s_stats
             labelStr='%s : %s ='%(label_i,statsString)
-            print labelStr+'  %.3f  %.3f  %.3f  %i'%s_stats
-
+            report.append( labelStr+'  %.3f  %.3f  %.3f  %i\n'%s_stats )
 
         testResult=reportSameContinuous(dicts[0][exp],dicts[1][exp])
-        print 'KS Test:   ', '  '.join(testResult.report.split('\n')[-2:])
-        stats_dict[exp].append( testResult )
+        ksOut='KS Test:   '+ '  '.join(testResult.report.split('\n')[-2:])
+        report.append( ksOut )
+        statsDict[exp]['KSSameContinuous']=testResult
         
-    fig = qqPlotAll(dicts,labels) if plot else None
-    
-    return stats_dict,fig
+    repSt = ' '.join(report)
+    compareFig = qqPlotAll(dicts,labels) if plot else None
+    return CompareSamplesReport(labels,repSt,statsDict,compareFig)
 
 
 def historyNameToValues(history,seriesInd=0,flatten=False):
