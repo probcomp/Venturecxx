@@ -219,3 +219,34 @@ def testConstrainWithAPredict2():
   predictions = collectSamples(ripl,"pid")
   return reportKnownMean(50, predictions) # will divide by 0 if there is no sample variance
 
+@statisticalTest
+def testConstrainInAScope1():
+  """At some point, constrain did not remove choices from scopes besides the default scope"""
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
+
+  ripl = get_ripl()
+
+  ripl.assume("x","(scope_include 0 0 (normal 0 1))")
+  ripl.observe("x","1")
+  ripl.predict("(normal x 1)")
+
+  ripl.infer("(mh 0 0 10)")
+
+@statisticalTest
+def testConstrainInAScope2():
+  """Particles need to override some of the relevant methods as well"""
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
+
+  ripl = get_ripl()
+
+  ripl.assume("x","(scope_include 0 0 (if (flip) (normal 0 1) (normal 0 1)))")
+  ripl.observe("x","1")
+  ripl.predict("(normal x 1)")
+
+  ripl.infer("(pgibbs 0 0 5 5)")
+  
+
+
+
