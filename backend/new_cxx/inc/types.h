@@ -23,6 +23,7 @@ using std::flush;
 
 struct VentureValue;
 struct Node;
+struct ForwardingMap;
 
 typedef int DirectiveID;
 typedef shared_ptr<VentureValue> VentureValuePtr;
@@ -40,7 +41,5 @@ typedef vector<double> Gradient;
 
 //typedef shared_ptr<VentureSP> VentureSPPtr;
 //typedef shared_ptr<VentureEnvironment> VentureEnvironmentPtr;
-
-typedef map<void*, void*> ForwardingMap;
 
 #endif

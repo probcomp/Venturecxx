@@ -3,9 +3,20 @@
 #include "env.h"
 #include "sps/csp.h"
 #include "pytrace.h"
+#include "stop-and-copy.h"
 
 // Deep-copying concrete traces by analogy with the stop-and-copy
 // garbage collection algorithm.
+
+size_t ForwardingMap::count(void* k) const
+{
+  return pointers.count(k);
+}
+
+void*& ForwardingMap::operator[] (void* k)
+{
+  return pointers[k];
+}
 
 shared_ptr<PyTrace> PyTrace::stop_and_copy()
 {
@@ -18,7 +29,7 @@ shared_ptr<PyTrace> PyTrace::stop_and_copy()
 
 shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy()
 {
-  ForwardingMap forward = map<void*, void*>();
+  ForwardingMap forward = ForwardingMap();
   return this->copy_help(&forward);
 }
 
