@@ -607,7 +607,8 @@ stackable_types = {
   "atom": VentureAtom,
   "boolean": VentureBool,
   "symbol": VentureSymbol,
-  "vector": VentureArray, # TODO Or should this be a linked list?  Should there be an array type?
+  "vector": VentureArray,
+  "array": VentureArray,
   "list": VentureArray, # TODO Or should this be a linked list?  Should there be an array type?
   "simplex": VentureSimplex,
   "dict": VentureDict,
