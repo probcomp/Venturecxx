@@ -81,6 +81,17 @@ set<T*> copy_set(set<T*> s, ForwardingMap* forward)
   return answer;
 }
 
+template <typename T>
+set<shared_ptr<T> > copy_set_shared(set<shared_ptr<T> > s, ForwardingMap* forward)
+{
+  set<shared_ptr<T> > answer = set<shared_ptr<T> >();
+  BOOST_FOREACH(shared_ptr<T> obj, s)
+  {
+    answer.insert(copy_shared(obj, forward));
+  }
+  return answer;
+}
+
 template <typename K, typename V>
 map<K*, V> copy_map_k(map<K*, V> m, ForwardingMap* forward)
 {
@@ -237,6 +248,7 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap* forward)
   answer->madeSPRecords = copy_map_kv(this->madeSPRecords, forward);
   answer->values = copy_map_k(this->values, forward);
   answer->observedValues = copy_map_k(this->observedValues, forward);
+  answer->builtInNodes = copy_set_shared(this->builtInNodes, forward);
   return answer;
 }
 
