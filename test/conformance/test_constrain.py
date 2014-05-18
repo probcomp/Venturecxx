@@ -232,7 +232,7 @@ def testConstrainInAScope1():
 
   ripl.infer("(mh 0 0 10)")
 
-def testConstrainInAScope2():
+def testConstrainInAScope2brush():
   """Particles need to override some of the relevant methods as well"""
   if defaultKernel() == "rejection":
     raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
@@ -241,7 +241,20 @@ def testConstrainInAScope2():
 
   ripl.assume("x","(scope_include 0 0 (if (flip) (normal 0 1) (normal 0 1)))")
   ripl.observe("x","1")
-  ripl.predict("(normal x 1)")
+  ripl.predict("(+ x 1)")
+
+  ripl.infer("(mh 0 0 20)")
+
+def testConstrainInAScope2particles():
+  """Particles need to override some of the relevant methods as well"""
+  if defaultKernel() == "rejection":
+    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
+
+  ripl = get_ripl()
+
+  ripl.assume("x","(scope_include 0 0 (if (flip) (normal 0 1) (normal 0 1)))")
+  ripl.observe("x","1")
+  ripl.predict("(+ x 1)")
 
   ripl.infer("(pgibbs 0 0 5 5)")
   
