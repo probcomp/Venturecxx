@@ -40,9 +40,23 @@ shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy()
 template <typename T>
 shared_ptr<T> copy_shared(shared_ptr<T> v, ForwardingMap* forward)
 {
-  // TODO Make sure that any given raw pointer gets at most one shared
-  // pointer made out of it
-  return shared_ptr<T>(v->copy_help(forward));
+  if (forward->shared_ptrs.count(v.get()) > 0)
+  {
+    // Make sure that any given raw pointer gets at most one shared
+    // pointer made out of it
+    return static_pointer_cast<T> (forward->shared_ptrs[v.get()]);
+  }
+  else if (forward->count(v.get()) > 0)
+  {
+    shared_ptr<T> answer = shared_ptr<T>( (T*)(*forward)[v.get()] );
+    forward->shared_ptrs[v.get()] = answer;
+    return answer;
+  } else {
+    // Mutate the forwarding map by copying the underlying object ...
+    v->copy_help(forward);
+    // and try again, this time finding the raw pointer in the map.
+    return copy_shared(v, forward);
+  }
 }
 
 template <typename T>
