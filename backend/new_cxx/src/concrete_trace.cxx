@@ -12,6 +12,7 @@
 #include "math.h"
 
 #include <time.h>
+#include <boost/foreach.hpp>
 
 /* Constructor */
 
@@ -364,7 +365,11 @@ vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope)
 
 set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block) 
 { 
-  assert(scopes[scope].contains(block));
+  if(!scopes[scope].contains(block))
+  {
+    throw "scope " + scope->toString() + " does not contain block " + block->toString();
+  }
+  
   set<Node * > nodes = scopes[scope].get(block);
   if (dynamic_pointer_cast<VentureSymbol>(scope) && scope->getSymbol() == "default") { return nodes; }
   set<Node *> pnodes;
