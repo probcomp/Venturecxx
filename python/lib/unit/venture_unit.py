@@ -18,7 +18,7 @@ import numpy as np
 from venture.ripl.ripl import _strip_types
 from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl,mr_map_proc
 from venture.venturemagics.ip_parallel import * ## FIXME:
-from IPython.parallel.util import interactive
+
 from history import History, Run, Series, historyOverlay
 parseValue = _strip_types
 
