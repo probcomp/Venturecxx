@@ -19,6 +19,8 @@ struct GradientOfRegen {
 
   ConcreteTrace * trace;
   shared_ptr<Scaffold> scaffold;
+
+  shared_ptr<gsl_rng> rngstate;
 };
 
 

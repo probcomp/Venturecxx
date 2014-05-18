@@ -69,6 +69,7 @@ struct ConcreteTrace : Trace
   bool isObservation(Node * node);
   
   /* Primitive Setters */
+  void setRNG(gsl_rng * rng);
   void setValue(Node * node, VentureValuePtr value);
   void clearValue(Node * node);
 

@@ -253,6 +253,12 @@ bool ConcreteTrace::isConstrained(Node * node) { return constrainedChoices.count
 bool ConcreteTrace::isObservation(Node * node) { return observedValues.count(node); }
 
 /* Primitive Setters */
+void ConcreteTrace::setRNG(gsl_rng * rng) 
+{
+  gsl_rng_free(this->rng);
+  this->rng = gsl_rng_clone(rng);
+}
+
 void ConcreteTrace::setValue(Node * node, VentureValuePtr value) 
 { 
   assert(value); 
