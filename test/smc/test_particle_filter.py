@@ -11,7 +11,6 @@ sys.setrecursionlimit(10000)
 
 def testIncorporateDoesNotCrash():
   """A sanity test for stack handling of incorporate"""
-  if config["get_ripl"] != "lite": raise SkipTest("Clone only implemented in lite")
   if defaultKernel() != "mh": raise SkipTest("Doesn't depend on kernel, only run it for mh")
 
   ripl = get_ripl()
@@ -56,7 +55,6 @@ def initBasicPFripl1():
 @attr("slow")
 def testBasicParticleFilter1(P = 30):
   """A sanity test for particle filtering"""
-  if config["get_ripl"] != "lite": raise SkipTest("Clone only implemented in lite")
   if defaultKernel() != "mh": raise SkipTest("Doesn't depend on kernel, only run it for mh")
 
   N = default_num_samples()
@@ -100,7 +98,7 @@ def initBasicPFripl2():
 @attr("slow")
 def testBasicParticleFilter2(P = 30):
   """A sanity test for particle filtering"""
-  if config["get_ripl"] != "lite": raise SkipTest("Clone only implemented in lite")
+  if defaultKernel() != "mh": raise SkipTest("Doesn't depend on kernel, only run it for mh")
 
   N = default_num_samples()
   predictions = []
