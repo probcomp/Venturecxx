@@ -34,6 +34,7 @@ ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937))
     ConstantNode * node = createConstantNode(iter->second);
     syms.push_back(sym);
     nodes.push_back(node);
+    builtInNodes.insert(shared_ptr<Node>(node));
   }
 
   for (map<string,SP *>::iterator iter = builtInSPs.begin();
@@ -46,6 +47,7 @@ ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937))
     assert(dynamic_pointer_cast<VentureSPRef>(getValue(node)));
     syms.push_back(sym);
     nodes.push_back(node);
+    builtInNodes.insert(shared_ptr<Node>(node));
   }
 
   globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(shared_ptr<VentureEnvironment>(),syms,nodes));
@@ -467,3 +469,30 @@ bool ConcreteTrace::hasAAAMadeSPAux(OutputNode * makerNode) { return aaaMadeSPAu
 void ConcreteTrace::discardAAAMadeSPAux(OutputNode * makerNode) { assert(aaaMadeSPAuxs.count(makerNode)); aaaMadeSPAuxs.erase(makerNode); }
 void ConcreteTrace::registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux) { aaaMadeSPAuxs[makerNode] = spAux; }
 shared_ptr<SPAux> ConcreteTrace::getAAAMadeSPAux(OutputNode * makerNode) { return aaaMadeSPAuxs[makerNode]; }
+
+
+void ConcreteTrace::freezeDirectiveID(DirectiveID did)
+{
+  RootOfFamily root = families[did];
+  OutputNode * outputNode = dynamic_cast<OutputNode*>(root.get());
+  assert(outputNode);
+  freezeOutputNode(outputNode);
+}
+
+void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
+{
+  unevalFamily(this,outputNode,shared_ptr<Scaffold>(new Scaffold()),shared_ptr<DB>(new DB()));
+  outputNode->isFrozen = true; // this is never looked at
+    
+  delete outputNode->requestNode;
+  for (size_t i = 0; i < outputNode->operandNodes.size(); ++i) { delete outputNode->operandNodes[i]; }
+  delete outputNode->operatorNode;
+
+  outputNode->requestNode = NULL;
+  outputNode->operandNodes.clear();
+  outputNode->operatorNode = NULL;
+
+  outputNode->definiteParents.clear();
+}
+
+ConcreteTrace::~ConcreteTrace() { gsl_rng_free(rng); }

@@ -14,6 +14,7 @@ using persistent::PSet;
 struct ConcreteTrace : Trace
 {
   ConcreteTrace();
+  ~ConcreteTrace();
 
   /* Registering metadata */
   void registerAEKernel(Node * node);
@@ -95,7 +96,8 @@ struct ConcreteTrace : Trace
   bool containsMadeSPFamily(Node * makerNode, FamilyID id);
   RootOfFamily getMadeSPFamilyRoot(Node * makerNode, FamilyID id);
 
-
+  void freezeDirectiveID(DirectiveID did);
+  void freezeOutputNode(OutputNode * outputNode);
 
   /* New in ConcreteTrace */
 
@@ -151,6 +153,7 @@ struct ConcreteTrace : Trace
   map<Node*,VentureValuePtr> values;
   map<Node*,VentureValuePtr> observedValues;
 
+  set<shared_ptr<Node> > builtInNodes; // hack for simple garbage collection
 };
 
 #endif

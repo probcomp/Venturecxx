@@ -306,6 +306,11 @@ boost::python::list PyTrace::numFamilies()
   return xs;
 }
 
+void PyTrace::freeze(DirectiveID did) 
+{
+  trace->freezeDirectiveID(did);
+}
+
 
 BOOST_PYTHON_MODULE(libpumatrace)
 {
@@ -330,6 +335,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("makeConsistent", &PyTrace::makeConsistent)
     .def("numNodesInBlock", &PyTrace::numNodesInBlock)
     .def("numFamilies", &PyTrace::numFamilies)
+    .def("freeze", &PyTrace::freeze)
     .def("continuous_inference_status", &PyTrace::continuous_inference_status)
     .def("start_continuous_inference", &PyTrace::start_continuous_inference)
     .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)
