@@ -136,32 +136,143 @@ double SimulateLaserPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args
   return 1.0;
 }
 
-VentureValuePtr SimulateMotionPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
-{
-  checkArgsLength("simulate_motion", args, 3);
+double measured_to_vehicle_center(double forward_velocity, double steering_angle,
+        double vehicle_h, double vehicle_L) {
+    double divisor = 1 - (vehicle_h / vehicle_L) * tan(steering_angle);
+    return forward_velocity / divisor;
+}
+
+double get_angular_displacement(double dt, double center_velocity,
+        double steering_angle, double vehicle_L) {
+    return dt * center_velocity / vehicle_L * tan(steering_angle);
+}
+
+void get_dx_dy(double dt, double center_velocity, double angular_displacement,
+        double heading, double vehicle_a, double vehicle_b,
+        double& dx, double& dy) {
+    double sin_heading = sin(heading);
+    double cos_heading = cos(heading);
+    //
+    double dx_base = dt * center_velocity * cos_heading;
+    double dx_adjustment = -1 * angular_displacement * (vehicle_a * sin_heading + vehicle_b * cos_heading);
+    dx = dx_base + dx_adjustment;
+    //
+    double dy_base = dt * center_velocity * sin_heading;
+    double dy_adjustment = angular_displacement * (vehicle_a * cos_heading - vehicle_b * sin_heading);
+    dy = dy_base + dy_adjustment;
+    return;
+}
+
+double normalize_heading(double heading) {
+    // FIXME: account for large angle changes?
+    // not really, since motion model is probably no good in that regime anyways
+    if(heading > M_PI) {
+        heading -= 2 * M_PI;
+    } else if(heading < -M_PI) {
+        heading += 2 * M_PI;
+    }
+    return heading;
+}
+
+void simulate_motion(double dt, vector<VentureValuePtr> pose,
+        vector<VentureValuePtr> control, vector<VentureValuePtr> vehicle_params,
+        double& dx, double& dy, double& angular_displacement) {
+  double heading = pose[2]->getDouble();
+  //
+  double forward_velocity = control[0]->getDouble();
+  double steering_angle = control[1]->getDouble();
+  //
+  double vehicle_a = vehicle_params[0]->getDouble();
+  double vehicle_b = vehicle_params[1]->getDouble();
+  double vehicle_h = vehicle_params[2]->getDouble();
+  double vehicle_L = vehicle_params[3]->getDouble();
 
 
-  double x = gsl_ran_flat(rng, 0.0, 1.0);
-  double y = gsl_ran_flat(rng, 0.0, 1.0);
-  double heading = gsl_ran_flat(rng, -M_PI, M_PI);
+  double center_velocity = measured_to_vehicle_center(forward_velocity,
+          steering_angle, vehicle_h, vehicle_L);
+  angular_displacement = get_angular_displacement(dt, center_velocity,
+          steering_angle, vehicle_L);
+  get_dx_dy(dt, center_velocity, angular_displacement, heading,
+          vehicle_a, vehicle_b, dx, dy);
+  return;
+}
 
+double xy_noise_size = .01;
+double heading_noise_size = .01;
+void add_noise(double& dx, double& dy, double& angular_displacement, gsl_rng * rng) {
+  // TODO: better noise model
+  double x_noise = 1 + gsl_ran_flat(rng, -xy_noise_size, xy_noise_size);
+  double y_noise = 1 + gsl_ran_flat(rng, -xy_noise_size, xy_noise_size);
+  double heading_noise = 1 + gsl_ran_flat(rng, -heading_noise_size, heading_noise_size);
+  dx *= x_noise;
+  dy *= y_noise;
+  angular_displacement *= heading_noise;
+  return;
+}
+
+VentureValuePtr package_new_pose(double x, double y, double heading) {
+    cout << "new pose: (" << x << ", " << y << ", " << heading << ")" << endl;
   VentureValuePtr l(new VentureNil());
   VentureValuePtr vx = shared_ptr<VentureValue>(new VentureNumber(x));
   VentureValuePtr vy = shared_ptr<VentureValue>(new VentureNumber(y));
   VentureValuePtr vheading = shared_ptr<VentureValue>(new VentureNumber(heading));
-  l = VentureValuePtr(new VenturePair(vx, l));
-  l = VentureValuePtr(new VenturePair(vy, l));
   l = VentureValuePtr(new VenturePair(vheading, l));
+  l = VentureValuePtr(new VenturePair(vy, l));
+  l = VentureValuePtr(new VenturePair(vx, l));
   return l;
+}
+
+VentureValuePtr update_pose(vector<VentureValuePtr> pose,
+        double dx, double dy, double angular_displacement) {
+  double x = pose[0]->getDouble() + dx;
+  double y = pose[1]->getDouble() + dy;
+  double heading = normalize_heading(pose[2]->getDouble() + angular_displacement);
+  return package_new_pose(x, y, heading);
+}
+
+VentureValuePtr SimulateMotionPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+{
+  checkArgsLength("SimulateMotionPSP::simulate", args, 4);
+  double dt = args->operandValues[0]->getDouble();
+  vector<VentureValuePtr> pose = args->operandValues[1]->getArray();
+  vector<VentureValuePtr> control = args->operandValues[2]->getArray();
+  vector<VentureValuePtr> vehicle_params = args->operandValues[3]->getArray();
+
+  double dx, dy, angular_displacement;
+  simulate_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement);
+  //cout << "before noise: (" << dx << ", " << dy << ", " << angular_displacement << ")" << endl;
+  add_noise(dx, dy, angular_displacement, rng);
+  cout << "after noise: (" << dx << ", " << dy << ", " << angular_displacement << ")" << endl;
+  return update_pose(pose, dx, dy, angular_displacement);
+}
+
+void diff_poses(vector<VentureValuePtr> pose0, vector<VentureValuePtr> pose1,
+        double& x_diff, double& y_diff, double& heading_diff) {
+    x_diff = pose0[0]->getDouble() - pose1[0]->getDouble();
+    y_diff = pose0[1]->getDouble() - pose1[1]->getDouble();
+    heading_diff = pose0[2]->getDouble() - pose1[2]->getDouble();
+    return;
 }
 
 double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-//  double x = value->getFirst()->getDouble();
-//  double y = value->getRest()->getFirst()->getDouble();
-//  double heading = value->getRest()->getRest()->getFirst()->getDouble();
-//  return x * y;
-  return 1.0;
+  checkArgsLength("SimulateMotionPSP::logDensity", args, 4);
+  double dt = args->operandValues[0]->getDouble();
+  vector<VentureValuePtr> pose = args->operandValues[1]->getArray();
+  vector<VentureValuePtr> control = args->operandValues[2]->getArray();
+  vector<VentureValuePtr> vehicle_params = args->operandValues[3]->getArray();
+  vector<VentureValuePtr> out_pose = value->getArray();
+
+  double x_diff, y_diff, heading_diff;
+  diff_poses(pose, out_pose, x_diff, y_diff, heading_diff);
+  double dx, dy, angular_displacement;
+  simulate_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement);
+
+  // FIXME: force this to match add_noise
+  bool in_x_bound = abs(dx / x_diff - 1) < xy_noise_size;
+  bool in_y_bound = abs(dy / y_diff - 1) < heading_noise_size;
+  bool in_heading_bound = abs(angular_displacement / heading_diff - 1) < heading_noise_size;
+  return in_x_bound * in_y_bound * in_heading_bound;
 }
 
 VentureValuePtr SimulateGPSPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
