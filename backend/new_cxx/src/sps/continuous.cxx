@@ -211,7 +211,6 @@ void add_noise(double& dx, double& dy, double& angular_displacement, gsl_rng * r
 }
 
 VentureValuePtr package_new_pose(double x, double y, double heading) {
-    cout << "new pose: (" << x << ", " << y << ", " << heading << ")" << endl;
   VentureValuePtr l(new VentureNil());
   VentureValuePtr vx = shared_ptr<VentureValue>(new VentureNumber(x));
   VentureValuePtr vy = shared_ptr<VentureValue>(new VentureNumber(y));
@@ -240,9 +239,7 @@ VentureValuePtr SimulateMotionPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
 
   double dx, dy, angular_displacement;
   simulate_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement);
-  //cout << "before noise: (" << dx << ", " << dy << ", " << angular_displacement << ")" << endl;
   add_noise(dx, dy, angular_displacement, rng);
-  cout << "after noise: (" << dx << ", " << dy << ", " << angular_displacement << ")" << endl;
   return update_pose(pose, dx, dy, angular_displacement);
 }
 
