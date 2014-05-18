@@ -57,8 +57,6 @@ struct Scaffold
   set<Node*> brush;
   vector<vector<Node *> > border;
   map<Node*,shared_ptr<LKernel> > lkernels;
-  set<Node*> brush;
-
 };
 
 

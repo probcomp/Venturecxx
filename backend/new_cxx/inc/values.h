@@ -101,7 +101,6 @@ struct VentureArray : VentureValue
   VentureValuePtr operator*(const VentureValuePtr & rhs) const;
   VentureValuePtr neg() const;
   string asExpression() const;
-  vector<VentureValuePtr> xs;
 };
 
 struct VentureNil : VentureValue

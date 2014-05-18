@@ -10,13 +10,13 @@ struct ConcreteTrace;
 struct Node;
 struct Scaffold;
 
-using namespace std;
+// using namespace std;
 
 enum EdgeType { OP,ARG,LOOKUP,ESR_PARENT,REQUEST_TO_OUTPUT,REQUEST };
 
 struct Edge
 {
-Edge(Node * start, Node * end, enum EdgeType edgeType):
+  Edge(Node * start, Node * end, enum EdgeType edgeType):
   start(start), end(end), edgeType(edgeType) {}
 
   Node * start;
