@@ -2,9 +2,19 @@
 #include "concrete_trace.h"
 #include "env.h"
 #include "sps/csp.h"
+#include "pytrace.h"
 
 // Deep-copying concrete traces by analogy with the stop-and-copy
 // garbage collection algorithm.
+
+shared_ptr<PyTrace> PyTrace::stop_and_copy()
+{
+  assert(!this->continuous_inference_running);
+  assert(!this->continuous_inference_thread);
+  shared_ptr<PyTrace> answer = shared_ptr<PyTrace>(new PyTrace(*this));
+  answer->trace = this->trace->stop_and_copy();
+  return answer;
+}
 
 shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy()
 {
