@@ -64,7 +64,7 @@ def testBasicParticleFilter1(P = 30):
 
   os = zip(range(1,6),[False,False,True,False,False])
 
-  for n in range(N):
+  for _ in range(N):
     ripl = initBasicPFripl1()
     for t,val in os:
       ripl.infer("(resample %d)" % P)
@@ -107,7 +107,7 @@ def testBasicParticleFilter2(P = 30):
 
   os = zip(range(0,5),[1,2,3,4,5])
 
-  for n in range(N):
+  for _ in range(N):
     ripl = initBasicPFripl2()
     for t,val in os:
       ripl.infer("(resample %d)" % P)
