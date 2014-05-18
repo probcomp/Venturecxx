@@ -33,6 +33,7 @@ ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937))
     ConstantNode * node = createConstantNode(iter->second);
     syms.push_back(sym);
     nodes.push_back(node);
+    builtInNodes.insert(shared_ptr<Node>(node));
   }
 
   for (map<string,SP *>::iterator iter = builtInSPs.begin();
@@ -45,6 +46,7 @@ ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937))
     assert(dynamic_pointer_cast<VentureSPRef>(getValue(node)));
     syms.push_back(sym);
     nodes.push_back(node);
+    builtInNodes.insert(shared_ptr<Node>(node));
   }
 
   globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(shared_ptr<VentureEnvironment>(),syms,nodes));
@@ -487,3 +489,5 @@ void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
 
   outputNode->definiteParents.clear();
 }
+
+ConcreteTrace::~ConcreteTrace() { gsl_rng_free(rng); }

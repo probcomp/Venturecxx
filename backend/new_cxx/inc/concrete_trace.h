@@ -14,6 +14,7 @@ using persistent::PSet;
 struct ConcreteTrace : Trace
 {
   ConcreteTrace();
+  ~ConcreteTrace();
 
   /* Registering metadata */
   void registerAEKernel(Node * node);
@@ -152,6 +153,7 @@ struct ConcreteTrace : Trace
   map<Node*,VentureValuePtr> values;
   map<Node*,VentureValuePtr> observedValues;
 
+  set<shared_ptr<Node> > builtInNodes; // hack for simple garbage collection
 };
 
 #endif
