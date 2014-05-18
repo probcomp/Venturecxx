@@ -51,8 +51,8 @@ class Trace(object):
     self.rcs.add(node)
     self.registerRandomChoiceInScope("default",node,node)
 
-  def registerRandomChoiceInScope(self,scope,block,node):
-    (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
+  def registerRandomChoiceInScope(self,scope,block,node,unboxed=False):
+    if not unboxed: (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if not scope in self.scopes: self.scopes[scope] = SMap()
     if not block in self.scopes[scope]: self.scopes[scope][block] = set()
     assert not node in self.scopes[scope][block]

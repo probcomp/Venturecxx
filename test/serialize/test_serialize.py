@@ -112,6 +112,8 @@ def test_serialize_closure():
     _test_serialize_program(v, 'pid')
 
 def test_serialize_recursion():
+    if config['get_ripl'] == 'puma':
+        raise SkipTest("Can't serialize Puma traces. Issue: https://app.asana.com/0/9277419963067/12193842156124")
     v = get_ripl()
     v.assume('f', '''
 (mem (lambda (x)

@@ -24,7 +24,8 @@ RequestNode::RequestNode(Node * operatorNode, const vector<Node*>& operandNodes,
 
 OutputNode::OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp) :
   ApplicationNode(operatorNode,operandNodes,env,exp),
-  requestNode(requestNode)
+  requestNode(requestNode),
+  isFrozen(false)
 {
   definiteParents.push_back(requestNode);
 }

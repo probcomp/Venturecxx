@@ -20,7 +20,7 @@
 
 #include <boost/python/exception_translator.hpp>
 
-PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false) {}
+PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false), continuous_inference_thread(NULL) {}
 PyTrace::~PyTrace() {}
 
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
@@ -193,8 +193,7 @@ struct Inferer
   }
 };
 
-// TODO URGENT placeholder
-void PyTrace::infer(boost::python::dict params) 
+void PyTrace::infer(boost::python::dict params)
 { 
   Inferer inferer(trace, params);
   inferer.infer();
@@ -233,6 +232,7 @@ void PyTrace::stop_continuous_inference() {
     continuous_inference_running = false;
     continuous_inference_thread->join();
     delete continuous_inference_thread;
+    continuous_inference_thread = NULL;
   }
 }
 
@@ -306,6 +306,11 @@ boost::python::list PyTrace::numFamilies()
   return xs;
 }
 
+void PyTrace::freeze(DirectiveID did) 
+{
+  trace->freezeDirectiveID(did);
+}
+
 
 BOOST_PYTHON_MODULE(libpumatrace)
 {
@@ -330,6 +335,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("makeConsistent", &PyTrace::makeConsistent)
     .def("numNodesInBlock", &PyTrace::numNodesInBlock)
     .def("numFamilies", &PyTrace::numFamilies)
+    .def("freeze", &PyTrace::freeze)
     .def("continuous_inference_status", &PyTrace::continuous_inference_status)
     .def("start_continuous_inference", &PyTrace::start_continuous_inference)
     .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)
