@@ -216,9 +216,9 @@ VentureValuePtr package_new_pose(double x, double y, double heading) {
   VentureValuePtr vx = shared_ptr<VentureValue>(new VentureNumber(x));
   VentureValuePtr vy = shared_ptr<VentureValue>(new VentureNumber(y));
   VentureValuePtr vheading = shared_ptr<VentureValue>(new VentureNumber(heading));
-  l = VentureValuePtr(new VenturePair(vx, l));
-  l = VentureValuePtr(new VenturePair(vy, l));
   l = VentureValuePtr(new VenturePair(vheading, l));
+  l = VentureValuePtr(new VenturePair(vy, l));
+  l = VentureValuePtr(new VenturePair(vx, l));
   return l;
 }
 
