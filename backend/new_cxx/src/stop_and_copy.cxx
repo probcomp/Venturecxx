@@ -56,10 +56,17 @@ shared_ptr<T> copy_shared(shared_ptr<T> v, ForwardingMap* forward)
     forward->shared_ptrs[v.get()] = answer;
     return answer;
   } else {
-    // Mutate the forwarding map by copying the underlying object ...
-    v->copy_help(forward);
-    // and try again, this time finding the raw pointer in the map.
-    return copy_shared(v, forward);
+    T* result = v->copy_help(forward);
+    if (result == v.get())
+    {
+      // No copying was needed
+      return v;
+    } else {
+      // The forwarding map was mutated by copying the underlying object
+      // so try again, this time finding the raw pointer in the map.
+      assert(forward->count(v.get()) > 0);
+      return copy_shared(v, forward);
+    }
   }
 }
 
