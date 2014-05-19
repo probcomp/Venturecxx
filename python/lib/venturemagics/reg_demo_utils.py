@@ -184,6 +184,19 @@ from scipy.stats import kde
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 def generate_data(n,xparams=None,yparams=None,sin_quad=True):
     'loc,scale = xparams, w0,w1,w2,omega,theta = yparams'
     if xparams:

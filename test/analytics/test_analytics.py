@@ -13,36 +13,76 @@ from testconfig import config
 from nose.tools import eq_, assert_equal, assert_almost_equal
 
 
-# def _testLoad(ripl_mripl):
-#     v=ripl_mripl
-#     assumes=[('p','(beta 1.0 1.0)')] 
-#     observes=[('(flip p)',True) for _ in range(2)]
-#     queryExps =  ['(add (bernoulli p) (bernoulli p))'] # exps must be in python form
-#     [v.assume(sym,exp) for sym,exp in assumes]
-#     [v.observe(exp,literal) for exp,literal in observes]
-#     model = Analytics(v,queryExps=queryExps)
+def betaModel(ripl):
+    assumes=[('p','(beta 1.0 1.0)')] 
+    observes=[('(flip p)',True) for _ in range(2)]
+    queryExps =  ['(add (bernoulli p) (bernoulli p))'] # exps in python form
+    [ripl.assume(sym,exp) for sym,exp in assumes]
+    [ripl.observe(exp,literal) for exp,literal in observes]
+    return ripl,assumes,observes,queryExps
+
+def _testLoadModel(ripl_mripl):
+    v=ripl_mripl
+    vBackend = v.backend if isinstance(v,MRipl) else v.backend()
     
-#     vBackend = v.backend if isinstance(v,MRipl) else v.backend()
+    v,assumes,observes,queryExps = betaModel(v)
+    model = Analytics(v,queryExps=queryExps)
+    
+    def attributesMatch():
+        eq_( model.backend,vBackend )
+        eq_( model.assumes,assumes )
+        eq_( model.observes,observes )
+        eq_( model.queryExps,queryExps )
+    attributesMatch() # assumes extracted from ripl_mripl
 
-#     def attributesMatch():
-#         eq_( model.backend,vBackend )
-#         eq_( model.assumes,assumes )
-#         eq_( model.observes,observes )
-#         eq_( model.queryExps,queryExps )
-#     attributesMatch()
+    v.clear()   # now assumes given as kwarg
+    model = Analytics(v,assumes=assumes,observes=observes,queryExps=queryExps)
+    attributesMatch()
 
-#     v.clear()
-#     model = Analytics(v,assumes=assumes,observes=observes,queryExps=queryExps)
-#     attributesMatch()
+def testLoad():
+    yield _testLoadModel, get_ripl()
+    yield _testLoadModel, get_mripl(no_ripls=3)
+    
 
-# def _testHistory(ripl_mripl):
-#     v=ripl_mripl
+def _testHistory(ripl_mripl):
+    v=ripl_mripl
+    v,assumes,observes,queryExps = betaModel(v)
+    samples = 5
+    model = Analytics(v,queryExps=queryExps)
+    history,_ = model.runFromConditional(samples,runs=1)
+    eq_(history.data,observes)
+    assert all( [sym in history.nameToSeries for sym,_ in assumes] )
+    assert all( [exp in history.nameToSeries for exp in queryExps] )
+    averageP = np.mean( history.nameToSeries['p'][0].values )
+    assert_almost_equal(averageP,history.averageValue('p'))
+    
+def testHistory():
+    yield _testHistory, get_ripl()
+    yield _testHistory, get_mripl(no_ripls=3)
 
-# def testLoadRipl():
-#     _testLoad(get_ripl())
+def _testRuns(ripl_mripl):
+    v=ripl_mripl
+    v.assume('x','(normal 0 100)')
+    v.observe('(normal x 100)','0')
+    queryExps = ('(* x 2)',)
+    samples = 20
+    runsList = [2,3,7]
+    model = Analytics(v,queryExps=queryExps)
 
-# def testLoadMRipl():
-#     _testLoad(get_mripl(no_ripls=3))
+    almost_eq=lambda x,y: abs(x-y) < .00001
+
+    for no_runs in runsList:
+        history,_ = model.runFromConditional(samples,runs=no_runs)
+        eq_( len(history.nameToSeries['x']), no_runs)
+
+        for exp in ('x', queryExps[0]):
+            arValues = np.array([s.values for s in history.nameToSeries[exp]])
+            assert all(np.var(arValues,axis=0) > .0001) # var across runs time t
+            assert all(np.var(arValues,axis=1) > .000001) # var within runs 
+
+def testRuns():
+    yield _testRuns, get_ripl()
+    yield _testRuns, get_mripl(no_ripls=3)
 
 # def _testInferRuns(ripl_mripl):
 #     v=ripl_mripl
@@ -226,8 +266,8 @@ def testCompareSampleDicts():
     samples=20
     h,_ = model.runFromConditional(samples,runs=2) 
     dicts = [{'mu':h.nameToSeries['mu'][i].values} for i in range(2)]
-    stats,_ = compareSampleDicts(dicts,('',''),plot=False)
-    assert stats['mu'][-1].pval > .01
+    cReport = compareSampleDicts(dicts,('',''),plot=False)
+    assert cReport.statsDict['mu']['KSSameContinuous'].pval > .01
 
 
 
@@ -254,33 +294,38 @@ def _testGewekeTest():
 
     
 
-def quickTests():
-    testAnalytics(totalSamples=50)
+# def quickTests():
+#     testAnalytics(totalSamples=50)
 
-    _testBasicMRipl( MRipl(2) )
+#     _testBasicMRipl( MRipl(2) )
     
-    testSampleFromJointAssume()
-    testSampleFromJointObserve()
-    _testMRiplSampleFromJoint()
-    _testMRiplRunFromJoint(samples=100)
-    testCompareSampleDicts()
-    testGewekeTest()
-    return
+#     testSampleFromJointAssume()
+#     testSampleFromJointObserve()
+#     _testMRiplSampleFromJoint()
+#     _testMRiplRunFromJoint(samples=100)
+#     testCompareSampleDicts()
+#     testGewekeTest()
+#     return
 
 
-def slowTests():
-    testAnalytics()
+# def slowTests():
+#     testAnalytics()
 
-    for (no_ripls,backend,mode) in generateMRiplParams():
-        _testBasicMRipl( MRipl(no_ripls,backend=backend,local_mode=mode) )
+#     for (no_ripls,backend,mode) in generateMRiplParams():
+#         _testBasicMRipl( MRipl(no_ripls,backend=backend,local_mode=mode) )
 
-    testSampleFromJointAssume()
-    testSampleFromJointObserve()
-    _testMRiplSampleFromJoint()
-    _testMRiplRunFromJoint()
-    testCompareSampleDicts()
-    testGewekeTest()
+#     testSampleFromJointAssume()
+#     testSampleFromJointObserve()
+#     _testMRiplSampleFromJoint()
+#     _testMRiplRunFromJoint()
+#     testCompareSampleDicts()
+#     testGewekeTest()
 
-    return
+#     return
 
     
+
+
+
+
+
