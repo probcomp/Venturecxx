@@ -143,25 +143,7 @@ function InitializeDemo() {
     };
     
     var UpdateVentureCode = function(directives) {
-        var venture_code_str = "<b>Venture code:</b><br>";
-        
-        for (i = 0; i < directives.length; i++) {
-            venture_code_str += directiveToString(directives[i]) + '<br/>';
-        }
-        
-        //venture_code_str = venture_code_str.replace(/ /g, "&nbsp;");
-        //venture_code_str = venture_code_str.replace(/\(if/g, "(<font color='#0000FF'>if</font>");
-        //venture_code_str = venture_code_str.replace(/\(/g, "<font color='#0080D5'>(</font>");
-        //venture_code_str = venture_code_str.replace(/\)/g, "<font color='#0080D5'>)</font>");
-        
-        //venture_code_str = venture_code_str.replace(/lambda/g, "<font color='#0000FF'>lambda</font>");
-        //venture_code_str = venture_code_str.replace(/list/g, "<font color='#0000FF'>list</font>");
-        //venture_code_str = venture_code_str.replace(/\>=/g, "<font color='#0000FF'>>=</font>");
-        //venture_code_str = venture_code_str.replace(/\+/g, "<font color='#0000FF'>+</font>");
-        //venture_code_str = venture_code_str.replace(/\*/g, "<font color='#0000FF'>*</font>");
-        
-        venture_code_str = "<font face='Courier New' size='2'>" + venture_code_str + "</font>";
-        $("#venture_code").html(venture_code_str);
+        $("#venture_code").html(VentureCodeHTML(directives));
     };
     
     var UpdateModelVariables = function(directives) {

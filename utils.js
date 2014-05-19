@@ -25,3 +25,27 @@ function directiveToString(directive) {
     directive_str += "]";
     return directive_str;
 }
+
+blacklist = ['demo_id', 'model_type', 'use_outliers', 'infer_noise', 'outlier_prob', 'outlier_sigma'];
+
+function isExtraneous(directive) {
+    if (directive.instruction === "predict") return true;
+    if (directive.instruction === "assume") {
+        return blacklist.indexOf(directive.symbol) >= 0;
+    }
+    return false;
+}
+
+function VentureCodeHTML(directives) {
+    var venture_code_str = "<b>Venture code:</b><br>";
+
+    for (i = 0; i < directives.length; ++i) {
+        if(!isExtraneous(directives[i])) {
+            venture_code_str += directiveToString(directives[i]) + '<br/>';
+        }
+    }
+    
+    venture_code_str = "<font face='Courier New' size='2'>" + venture_code_str + "</font>";
+    return venture_code_str;
+}
+
