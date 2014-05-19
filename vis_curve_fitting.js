@@ -632,7 +632,7 @@ function InitializeDemo() {
         <br>\
         <button type="button" id="clear_ripl">Clear RIPL</button>\
         <br><br>\
-        Based on the Venture probabilistic programming language\
+        Powered by the Venture probabilistic programming language\
         </td><td>&nbsp;&nbsp;&nbsp;</td>\
         <td style="vertical-align: top;">\
         <table width="100%" height="120px">\
