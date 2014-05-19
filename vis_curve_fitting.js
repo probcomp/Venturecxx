@@ -75,7 +75,7 @@ function InitializeDemo() {
     var num_directives_loaded = 0;
 
     /* A unique ID for each observation. */
-    var next_obs_id = LargeRandomInt();
+    var next_obs_id = 0; // LargeRandomInt();
     var GetNextObsID = function() {
         id = next_obs_id;
         next_obs_id++;
@@ -204,7 +204,7 @@ function InitializeDemo() {
         ripl.assume('c3','(make_coefficient 3 0.01)');
         ripl.assume('c4','(make_coefficient 4 0.001)');
         
-        ripl.assume('clean_func_poly','(lambda (x) (+ (* c1 (pow x 1.0)) (* c2 (pow x 2.0)) (* c3 (pow x 3.0)) (* c4 (pow x 4.0))))');
+        ripl.assume('clean_poly','(lambda (x) (+ (* c1 (pow x 1.0)) (* c2 (pow x 2.0)) (* c3 (pow x 3.0)) (* c4 (pow x 4.0))))');
         
         /* Fourier */
         ripl.assume('pi','3.14159');
@@ -212,12 +212,12 @@ function InitializeDemo() {
         ripl.assume('fourier_omega','(uniform_continuous 0 pi)');
         ripl.assume('fourier_theta1','(uniform_continuous (- 0 pi) pi)');
 
-        ripl.assume('clean_func_fourier','(lambda (x) (* fourier_a1 (sin (+ (* fourier_omega x) fourier_theta1))))');
+        ripl.assume('clean_fourier','(lambda (x) (* fourier_a1 (sin (+ (* fourier_omega x) fourier_theta1))))');
 
         /* For combination polynomial and Fourier */
         ripl.assume('poly_fourier_mode','(uniform_discrete 0 3)');
         ripl.assume('alpha','(if (= poly_fourier_mode 0) 1 (if (= poly_fourier_mode 1) 0 (beta 1 1)))');
-        ripl.assume('clean_func','(lambda (x) (+ a0_c0 (* alpha (clean_func_poly x)) (* (- 1 alpha) (clean_func_fourier x))))');
+        ripl.assume('clean_func','(lambda (x) (+ a0_c0 (* alpha (clean_poly x)) (* (- 1 alpha) (clean_fourier x))))');
 
         /* For observations */
         ripl.assume('noise','(sqrt (inv_gamma 2.0 1.0))');
