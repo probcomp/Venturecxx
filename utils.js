@@ -19,7 +19,7 @@ function directiveToString(directive) {
     directive_str += exprToString(directive.expression);
     
     if (directive.instruction === "observe") {
-        directive_str += " " + directive.value;
+        directive_str += " " + directive.value.toFixed(2);
     }
     
     directive_str += "]";
