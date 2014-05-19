@@ -64,23 +64,25 @@ def _testRuns(ripl_mripl):
     v=ripl_mripl
     v.assume('x','(normal 0 100)')
     v.observe('(normal x 100)','0')
+    queryExps = ('(* x 2)',)
     samples = 20
     runsList = [2,3,7]
-    model = Analytics(v)
+    model = Analytics(v,queryExps=queryExps)
 
     almost_eq=lambda x,y: abs(x-y) < .00001
 
     for no_runs in runsList:
         history,_ = model.runFromConditional(samples,runs=no_runs)
         eq_( len(history.nameToSeries['x']), no_runs)
-        
-        arValues = np.array([s.values for s in history.nameToSeries['x']])
-        assert all(np.var(arValues,axis=0) > .0001) # var across runs time t
-        assert all(np.var(arValues,axis=1) > .000001) # var within runs 
 
-        histories.append(history)
-        
-    
+        for exp in ('x', queryExps[0]):
+            arValues = np.array([s.values for s in history.nameToSeries[exp]])
+            assert all(np.var(arValues,axis=0) > .0001) # var across runs time t
+            assert all(np.var(arValues,axis=1) > .000001) # var within runs 
+
+def testRuns():
+    yield _testRuns, get_ripl()
+    yield _testRuns, get_mripl(no_ripls=3)
 
 # def _testInferRuns(ripl_mripl):
 #     v=ripl_mripl
