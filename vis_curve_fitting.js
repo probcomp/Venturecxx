@@ -640,7 +640,7 @@ function InitializeDemo() {
         <label><input type="radio" name="model_type" id="simple" value="simple">Simple Model</label>\
         <label><input type="radio" name="model_type" id="advanced" value="advanced">Advanced Model</label>\
         <br>\
-        <label><input type="checkbox" id="use_outliers" name="use_outliers">Use Outliers</label>\
+        <label><input type="checkbox" id="use_outliers" name="use_outliers">Infer Outliers</label>\
         <label><input type="checkbox" id="infer_noise" name="infer_noise">Infer Noise</label>\
         <br><br>\
         <div id="venture_code"></div>\
