@@ -177,7 +177,7 @@ ScopesMap copy_scopes_map(ScopesMap m, ForwardingMap* forward)
   typename ScopesMap::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first] = copy_blocks_map((*itr).second, forward);
+    answer[copy_shared((*itr).first, forward)] = copy_blocks_map((*itr).second, forward);
   }
   return answer;
 }
@@ -189,7 +189,7 @@ VentureValuePtrMap<shared_ptr<V> > copy_vvptr_map_shared_v(VentureValuePtrMap<sh
   typename VentureValuePtrMap<shared_ptr<V> >::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first] = copy_shared((*itr).second, forward);
+    answer[copy_shared((*itr).first, forward)] = copy_shared((*itr).second, forward);
   }
   return answer;
 }
@@ -239,15 +239,15 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap* forward)
   answer->unconstrainedChoices = copy_set(this->unconstrainedChoices, forward);
   answer->constrainedChoices = copy_set(this->constrainedChoices, forward);
   answer->arbitraryErgodicKernels = copy_set(this->arbitraryErgodicKernels, forward);
-  answer->unpropagatedObservations = copy_map_k(this->unpropagatedObservations, forward);
+  answer->unpropagatedObservations = copy_map_kv(this->unpropagatedObservations, forward);
   answer->aaaMadeSPAuxs = copy_map_kv(this->aaaMadeSPAuxs, forward);
   answer->families = copy_map_shared_v(this->families, forward);
   answer->scopes = copy_scopes_map(this->scopes, forward);
   answer->esrRoots = copy_map_k_vectorv(this->esrRoots, forward);
   answer->numRequests = copy_map_shared_k(this->numRequests, forward);
   answer->madeSPRecords = copy_map_kv(this->madeSPRecords, forward);
-  answer->values = copy_map_k(this->values, forward);
-  answer->observedValues = copy_map_k(this->observedValues, forward);
+  answer->values = copy_map_kv(this->values, forward);
+  answer->observedValues = copy_map_kv(this->observedValues, forward);
   answer->builtInNodes = copy_set_shared(this->builtInNodes, forward);
   return answer;
 }
