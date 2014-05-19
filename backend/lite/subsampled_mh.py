@@ -7,6 +7,9 @@ from node import LookupNode, RequestNode, OutputNode
 from value import SPRef
 from matplotlib import pyplot as plt
 import networkx as nx
+from scope import isScopeIncludeOutputPSP
+import numpy as np
+import scipy.stats as stats
 
 class Scaffold(object):
   def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None,brush=None):
@@ -45,6 +48,29 @@ class Scaffold(object):
     print "borders: " + str(self.border)
     print "lkernels: " + str(self.lkernels)
 
+def constructScaffoldGlobalSection(trace,setsOfPNodes,sym_node,useDeltaKernels = False):
+  cDRG,cAbsorbing,cAAA = set(),set(),set()
+  indexAssignments = {}
+  assert isinstance(setsOfPNodes,list)
+  for i in range(len(setsOfPNodes)):
+    assert isinstance(setsOfPNodes[i],set)
+    extendCandidateScaffoldGlobalSection(trace,setsOfPNodes[i],sym_node,cDRG,cAbsorbing,cAAA,indexAssignments,i)
+
+  brush = findBrush(trace,cDRG)
+  drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
+  border = findBorder(trace,drg,absorbing,aaa)
+  assert sym_node in border
+  assert sym_node in drg
+  regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
+  regenCounts[sym_node] = 1
+  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels)
+  borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
+  scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
+  scaffold.sym_node = sym_node
+  scaffold.local_children = list(trace.childrenAt(sym_node))
+  scaffold.N = len(scaffold.local_children)
+  return scaffold
+
 def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
   cDRG,cAbsorbing,cAAA = set(),set(),set()
   indexAssignments = {}
@@ -60,6 +86,28 @@ def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
   lkernels = loadKernels(trace,drg,aaa,useDeltaKernels)
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
   return Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
+
+def extendCandidateScaffoldGlobalSection(trace,pnodes,sym_node,drg,absorbing,aaa,indexAssignments,i):
+  q = [(pnode,True,None) for pnode in pnodes]
+
+  while q:
+    node,isPrincipal,parentNode = q.pop()
+    if node is sym_node:
+      drg.add(node)
+      indexAssignments[node] = i
+    elif node in drg and not node in aaa:
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
+    elif isinstance(node,LookupNode) or node.operatorNode in drg:
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
+    # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
+    elif node in aaa:
+      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
+    elif (not isPrincipal) and trace.pspAt(node).canAbsorb(trace,node,parentNode):
+      addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i)
+    elif trace.pspAt(node).childrenCanAAA():
+      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
+    else:
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
 
 def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
   q = [(pnode,True,None) for pnode in pnodes]
@@ -353,9 +401,6 @@ def partitionScaffold(trace,scaffold,scope_to_subsample):
 def drawSubsampledScaffoldKernel(trace,indexer,scope_to_subsample):
   index = indexer.sampleIndex(trace)
 
-  # DEBUG
-  trace.scaffold = index
-
   borders_in_block,source_block_dict = partitionScaffold(trace,index,scope_to_subsample)
 
   G = traveseScaffold(trace,index)
@@ -368,30 +413,144 @@ def drawSubsampledScaffoldKernel(trace,indexer,scope_to_subsample):
       for node in block_nodes:
         assert source_block_dict[node] == block
 
-  # DEBUG
-  trace.G = G
-
   markAbsorbingToSubsample(trace,G,scope_to_subsample)
   drawScaffoldGraph(trace,G,labels=source_block_dict)
 
-def subsampledMixMH(trace,indexer,operator):
-  index = indexer.sampleIndex(trace)
-  rhoMix = indexer.logDensityOfIndex(trace,index)
+
+def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
+  # Assumptions:
+  #   1. Single principal node.
+  #   2. P -> Output with isScopeIncludeOutputPSP and symbol: sym -> N outgoing lookup nodes.
+  #   3. All outgoing nodes are treated equally.
+  #   4. No randomness in the local sections.
+  #   5. LKernel is not used in local sections.
+
+  # Sample u.
+  log_u = math.log(random.random())
+
+  # Construct the global section with border at the given symbol.
+  global_index = indexer.sampleGlobalIndex(trace)
+  N = float(global_index.N)
+  assert(N >= Nbatch * k0)
+  perm_local_chidren = np.random.permutation(global_index.local_children)
+
+  global_rhoMix = indexer.logDensityOfGlobalIndex(trace,global_index)
+  # Propose variables in the global section.
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
   # Returning the trace is necessary for the non-mutating versions
-  proposedTrace,logAlpha = operator.propose(trace,index)
-  xiMix = indexer.logDensityOfIndex(proposedTrace,index)
+  proposedGlobalTrace,logGlobalAlpha = operator.propose(trace,global_index)
+  global_xiMix = indexer.logDensityOfGlobalIndex(trace,global_index)
 
-  alpha = xiMix + logAlpha - rhoMix
-  if math.log(random.random()) < alpha:
+  alpha = global_xiMix + logGlobalAlpha - global_rhoMix
+  mu_0 = (log_u - alpha) / N
+
+  # Sequentially do until termination condition is met.
+  mx = 0.0  # Mean of mllh.
+  mx2 = 0.0 # Mean of mllh^2.
+  k = 0.0   # Index of minibatch.
+  n = 0.0   # Number of processed local variables.
+  accept = None
+  while n < N:
+    # Process k'th subset of local variables subsampled w/o replacement.
+    n_start = n
+    n_end = min(n + Nbatch, N)
+    cum_dllh = 0
+    for i in xrange(int(n_start), int(n_end)):
+      # Construct a local scaffold section.
+      local_scaffold = indexer.sampleLocalIndex(trace,perm_local_chidren[i])
+      # Compute diff of log-likelihood for i'th local variable.
+      dllh = operator.evalOneLocalSection(trace, local_scaffold)
+      cum_dllh += dllh
+    # Compute mllh for k
+    size_batch = n_end - n_start
+    mllh = cum_dllh / size_batch
+
+    # Update mx, mx2, k, n
+    mx  = (size_batch * mllh        + n * mx ) / n_end
+    mx2 = (size_batch * mllh * mllh + n * mx2) / n_end
+    k += 1
+    n = n_end
+
+    if k < k0:
+      # Do not run testing for the first k0 minibatches.
+      continue
+
+    if n == N:
+      accept = mx >= mu_0
+      break
+    else:
+      # Compute estimated standard deviation sx.
+      # For the last minibatch 1 - n / N = 0.
+      sx = np.sqrt((1 - n / N) * (mx2 - mx * mx) / (k - 1))
+      # Compute q: p-value
+      q = stats.t.cdf((mx - mu_0) / sx, k - 1) # p-value
+      if q <= epsilon:
+        accept = False
+        break
+      elif q >= 1 - epsilon:
+        accept = True;
+        break
+
+  assert(accept is not None)
+
+  if accept:
 #    sys.stdout.write(".")
+    # TODO
     operator.accept() # May mutate trace
   else:
 #    sys.stdout.write("!")
+    # TODO
     operator.reject() # May mutate trace
 
+  if indexer.block != "all" and trace.numBlocksInScope(indexer.scope) > 1:
+    # If every transition may sample a different block, the O(N) has to be called at every transition.
+    operator.makeConsistent(trace,indexer)
 
 class SubsampledBlockScaffoldIndexer(object):
+  def __init__(self,scope,block,sym):
+    if scope == "default" and not (block == "all" or block == "one" or block == "ordered"):
+        raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
+    self.scope = scope
+    self.block = block
+    self.sym   = sym
+
+  def sampleGlobalIndex(self,trace):
+    if self.block == "one": setsOfPNodes = [trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))]
+    elif self.block == "all": setsOfPNodes = [trace.getAllNodesInScope(self.scope)]
+    elif self.block == "ordered": setsOfPNodes = trace.getOrderedSetsInScope(self.scope)
+    else: setsOfPNodes = [trace.getNodesInBlock(self.scope,self.block)]
+
+    # Assumption 1. Single principal node.
+    assert len(setsOfPNodes) == 1
+    assert len(setsOfPNodes[0]) == 1
+    pnode = next(iter(setsOfPNodes[0]))
+
+    # Find the node with the given symbol as the border between the global and local sections.
+    self.sym_node = trace.globalEnv.findSymbol(self.sym)
+
+    # Assumption 2. P -> Output with isScopeIncludeOutputPSP and symbol: sym -> N outgoing lookup nodes.
+    assert isScopeIncludeOutputPSP(trace.pspAt(self.sym_node))
+    assert trace.getOutermostNonReferenceApplication(self.sym_node) is pnode
+
+    index = constructScaffoldGlobalSection(trace,[trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))],self.sym_node)
+
+    # Nodes in the border: 1 request node and 1 output node with symbol: sym.
+    assert(len(index.border) == 1 and len(index.border[0]) == 2)
+
+    return index
+
+  def sampleLocalIndex(self,trace,local_child):
+    assert(isinstance(local_child, LookupNode))
+    setsOfPNodes = [set([local_child])]
+    return constructScaffold(trace,setsOfPNodes)
+
+  def logDensityOfGlobalIndex(self,trace,_):
+    if self.block == "one": return trace.logDensityOfBlock(self.scope)
+    elif self.block == "all": return 0
+    elif self.block == "ordered": return 0
+    else: return 0
+
+class SubsampledBlockScaffoldIndexer_old(object):
   def __init__(self,scope,block):
     if scope == "default" and not (block == "all" or block == "one" or block == "ordered"):
         raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
@@ -409,6 +568,51 @@ class SubsampledBlockScaffoldIndexer(object):
     elif self.block == "all": return 0
     elif self.block == "ordered": return 0
     else: return 0
+
+class SubsampledInPlaceOperator(object):
+  def prepare(self, trace, global_scaffold, compute_gradient = False):
+    """Record the trace and scaffold for accepting or rejecting later;
+    detach along the scaffold and return the weight thereof."""
+    self.trace = trace
+    self.global_scaffold = global_scaffold
+    rhoWeight,self.global_rhoDB = detachAndExtract(trace, global_scaffold.border[0], global_scaffold, compute_gradient)
+    # Assume there is only two variable extracted including sym_node.
+    assert(len(self.global_rhoDB.values) == 2 and self.global_rhoDB.hasValueFor(self.global_scaffold.sym_node))
+    assertTorus(self.global_scaffold)
+    return rhoWeight
+
+  def evalOneLocalSection(self, trace, local_scaffold, compute_gradient = False):
+    # Detach and extract
+    _,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold, compute_gradient)
+    # Regen and attach with the old value
+    proposed_value = trace.valueAt(self.global_scaffold.sym_node)
+    trace.setValueAt(self.global_scaffold.sym_node, self.global_rhoDB.getValue(self.global_scaffold.sym_node))
+    regenAndAttach(trace,local_scaffold.border[0],local_scaffold,False,local_rhoDB,{})
+
+    # Detach and extract
+    rhoWeight,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold, compute_gradient)
+
+    # Regen and attach with the new value
+    trace.setValueAt(self.global_scaffold.sym_node, proposed_value)
+    xiWeight = regenAndAttach(trace,local_scaffold.border[0],local_scaffold,False,local_rhoDB,{})
+    return xiWeight - rhoWeight
+
+  def accept(self): pass
+  def reject(self):
+    # Only restore the global section.
+    detachAndExtract(self.trace,self.global_scaffold.border[0],self.global_scaffold)
+    assertTorus(self.global_scaffold)
+    regenAndAttach(self.trace,self.global_scaffold.border[0],self.global_scaffold,True,self.global_rhoDB,{})
+
+  def makeConsistent(self,trace,indexer):
+    # Go through every local child and do extra and regen.
+    # This is to be called at the end of a number of transitions.
+    if not hasattr(self, "global_scaffold"):
+      self.global_scaffold = indexer.sampleGlobalIndex(trace)
+    for local_child in self.global_scaffold.local_children:
+      local_scaffold = indexer.sampleLocalIndex(trace,local_child)
+      _,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold)
+      regenAndAttach(trace,local_scaffold.border[0],local_scaffold,False,local_rhoDB,{})
 
 class InPlaceOperator(object):
   def prepare(self, trace, scaffold, compute_gradient = False):
@@ -429,9 +633,11 @@ class InPlaceOperator(object):
 #### Subsampled_MH Operator
 #### Resampling from the prior
 
-class SubsampledMHOperator(InPlaceOperator):
-  def propose(self, trace, scaffold):
-    rhoWeight = self.prepare(trace, scaffold)
-    xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,self.rhoDB,{})
+class SubsampledMHOperator(SubsampledInPlaceOperator):
+  def propose(self, trace, global_scaffold):
+    rhoWeight = self.prepare(trace, global_scaffold)
+    xiWeight = regenAndAttach(trace,global_scaffold.border[0],global_scaffold,False,self.global_rhoDB,{})
     return trace, xiWeight - rhoWeight
+
+
 

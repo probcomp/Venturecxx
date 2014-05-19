@@ -351,12 +351,12 @@ class Trace(object):
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MHOperator())
       elif params["kernel"] == "draw_scaffold":
-        drawScaffoldKernel(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"]))
+        drawScaffoldKernel(self,BlockScaffoldIndexer(params["scope"],params["block"]))
       elif params["kernel"] == "draw_subsampled_scaffold":
-        drawSubsampledScaffoldKernel(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"]),params["scope_to_subsample"])
+        drawSubsampledScaffoldKernel(self,BlockScaffoldIndexer(params["scope"],params["block"]),params["scope_to_subsample"])
       elif params["kernel"] == "subsampled_mh":
         assert params["with_mutation"]
-        subsampledMixMH(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"]),SubsampledMHOperator())
+        subsampledMixMH(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["scope_symbol"]),SubsampledMHOperator(), params["Nbatch"], params["k0"], params["epsilon"])
       elif params["kernel"] == "meanfield":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MeanfieldOperator(params["steps"],0.0001))
@@ -390,6 +390,12 @@ class Trace(object):
       else: raise Exception("INFER (%s) MH is not implemented" % params["kernel"])
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
+
+    # At the end of multiple transitions.
+    if params["kernel"] == "subsampled_mh" and \
+        (params["block"] == "all" or numBlocksInScope(indexer.scope) == 2):
+      # O(N) operation.
+      SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["scope_symbol"]))
 
   def save(self, fname, extra):
     from serialize import save_trace
