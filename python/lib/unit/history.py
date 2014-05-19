@@ -164,7 +164,7 @@ typically also tracked."""
            ylabel :: string
            limitLegend :: int
              Limit how many series are listed on the legend. (To limit
-             how many series are plotted, use 
+             how many series are plotted, use self.sampleRuns).
         
            '''
         self._plotOne(plotSeries, name, save=False, show=True, **kwargs)

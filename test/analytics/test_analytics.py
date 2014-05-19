@@ -69,8 +69,6 @@ def _testRuns(ripl_mripl):
     runsList = [2,3,7]
     model = Analytics(v,queryExps=queryExps)
 
-    almost_eq=lambda x,y: abs(x-y) < .00001
-
     for no_runs in runsList:
         history,_ = model.runFromConditional(samples,runs=no_runs)
         eq_( len(history.nameToSeries['x']), no_runs)
@@ -83,6 +81,37 @@ def _testRuns(ripl_mripl):
 def testRuns():
     yield _testRuns, get_ripl()
     yield _testRuns, get_mripl(no_ripls=3)
+
+@statisticalTest
+def _testInfer(ripl_mripl,conditional_prior):
+    v,_,_,_= betaModel( ripl_mripl ) 
+    samples = 10
+    runs = 20
+    model = Analytics(v)
+    def lastSnapshot(history):
+        return [series.values[-1] for series in history.nameToSeries['p']]
+
+    if conditional_prior == 'conditional':
+        history,_ = model.runFromConditional(samples,runs=runs)
+        cdf = stats.beta(3,1).cdf
+    else:
+        history,_ = model.runConditionedFromPrior(samples,runs=runs)
+        dataValues = [typeVal['value'] for exp,typeVal in history.data] 
+        noHeads = sum(dataValues)
+        noTails = len(dataValues) - noHeads
+        cdf = stats.beta(1+noHeads,1+noTails).cdf
+        # will include gtruth (but it won't affect test)
+        
+    return reportKnownContinuous(cdf,lastSnapshot(history))                                 
+                                     
+def testRunFromConditionalInfer():
+    yield _testInfer, get_ripl(), 'conditional'
+    yield _testInfer, get_mripl(no_ripls=5), 'conditional'
+
+    yield _testInfer, get_ripl(), 'prior'
+    yield _testInfer, get_mripl(no_ripls=5), 'prior'
+    
+
 
 # def _testInferRuns(ripl_mripl):
 #     v=ripl_mripl
