@@ -452,7 +452,7 @@ function InitializeDemo() {
                 <div id="div_for_plots" style="background-color: white; width: 420px; height: 420px;"></div>\
                 <br>\
                 <div>\
-                <div class="btn-group">\
+<!--                <div class="btn-group">\
                     <button class="btn btn-danger">Engine Status</button>\
                     <button class="btn btn-danger dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>\
                     <ul class="dropdown-menu">\
@@ -463,7 +463,7 @@ function InitializeDemo() {
                 </div>\
                 <br>\
           <a href="http://www.yuraperov.com/MIT.PCP/demo.html">Return to the list of demos.</a>\
-          <br><br>\
+-->          <br><br>\
                 Based on the Venture probabilistic programming language\
               </td><td>&nbsp;&nbsp;&nbsp;</td>\
               <td style="vertical-align: top;">\
