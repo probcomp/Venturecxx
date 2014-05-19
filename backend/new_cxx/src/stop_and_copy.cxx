@@ -266,6 +266,7 @@ ConstantNode* ConstantNode::copy_help(ForwardingMap* forward)
   } else {
     ConstantNode* answer = new ConstantNode(this->exp);
     (*forward)[this] = answer;
+    answer->exp = copy_shared(this->exp, forward);
     answer->definiteParents = copy_vector(this->definiteParents, forward);
     answer->children = copy_set(this->children, forward);
     return answer;
@@ -280,6 +281,7 @@ LookupNode* LookupNode::copy_help(ForwardingMap* forward)
   } else {
     LookupNode* answer = new LookupNode(*this);
     (*forward)[this] = answer;
+    answer->exp = copy_shared(this->exp, forward);
     answer->sourceNode = this->sourceNode->copy_help(forward);
     answer->definiteParents = copy_vector(this->definiteParents, forward);
     answer->children = copy_set(this->children, forward);
@@ -295,6 +297,7 @@ RequestNode* RequestNode::copy_help(ForwardingMap* forward)
   } else {
     RequestNode* answer = new RequestNode(*this);
     (*forward)[this] = answer;
+    answer->exp = copy_shared(this->exp, forward);
     answer->outputNode = this->outputNode->copy_help(forward);
     answer->operatorNode = this->operatorNode->copy_help(forward);
     answer->operandNodes = copy_vector(this->operandNodes, forward);
@@ -313,6 +316,7 @@ OutputNode* OutputNode::copy_help(ForwardingMap* forward)
   } else {
     OutputNode* answer = new OutputNode(*this);
     (*forward)[this] = answer;
+    answer->exp = copy_shared(this->exp, forward);
     answer->requestNode = this->requestNode->copy_help(forward);
     answer->operatorNode = this->operatorNode->copy_help(forward);
     answer->operandNodes = copy_vector(this->operandNodes, forward);
@@ -377,6 +381,7 @@ CSPRequestPSP* CSPRequestPSP::copy_help(ForwardingMap* forward)
   } else {
     CSPRequestPSP* answer = new CSPRequestPSP(*this);
     (*forward)[this] = answer;
+    answer->expression = copy_shared(this->expression, forward);
     answer->environment = copy_shared(this->environment, forward);
     return answer;
   }
