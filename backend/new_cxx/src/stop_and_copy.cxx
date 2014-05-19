@@ -345,6 +345,19 @@ SP* SP::copy_help(ForwardingMap* forward)
   }
 }
 
+VentureSPRef* VentureSPRef::copy_help(ForwardingMap* forward)
+{
+  if (forward->count(this) > 0)
+  {
+    return (VentureSPRef*)(*forward)[this];
+  } else {
+    VentureSPRef* answer = new VentureSPRef(*this);
+    (*forward)[this] = answer;
+    answer->makerNode = this->makerNode->copy_help(forward);
+    return answer;
+  }
+}
+
 VentureSPRecord* VentureSPRecord::copy_help(ForwardingMap* forward)
 {
   if (forward->count(this) > 0)

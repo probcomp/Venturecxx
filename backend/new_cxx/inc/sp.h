@@ -26,6 +26,7 @@ struct VentureSPRef : VentureValue
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
 
+  VentureSPRef* copy_help(ForwardingMap* m);
 };
 
 struct SPFamilies
