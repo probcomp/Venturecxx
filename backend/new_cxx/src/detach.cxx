@@ -79,8 +79,9 @@ double detach(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> 
 double extractParents(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
   double weight = extractESRParents(trace,node,scaffold,db);
-  for (vector<Node*>::reverse_iterator defParentIter = node->definiteParents.rbegin();
-       defParentIter != node->definiteParents.rend();
+  vector<Node*> definiteParents = node->getDefiniteParents();
+  for (vector<Node*>::reverse_iterator defParentIter = definiteParents.rbegin();
+       defParentIter != definiteParents.rend();
        ++defParentIter)
   {
     weight += extract(trace,*defParentIter,scaffold,db);
