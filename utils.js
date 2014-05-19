@@ -23,6 +23,10 @@ function directiveToString(directive) {
     }
     
     directive_str += "]";
+    directive_str = directive_str.replace(/add/g, "+")
+    directive_str = directive_str.replace(/sub/g, "-")
+    directive_str = directive_str.replace(/mul/g, "*")
+    directive_str = directive_str.replace(/div/g, "/")
     return directive_str;
 }
 
