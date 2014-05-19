@@ -123,11 +123,11 @@ function InitializeDemo() {
         /* Model metadata */
         ripl.assume('demo_id', demo_id, 'demo_id');
         
-        ripl.assume('crp_alpha', "(gamma 1.0 1.0)");
+        ripl.assume('crp_alpha', "(gamma 1.0 3.0)");
         ripl.assume('cluster_crp', "(make_crp crp_alpha)");
         
         ripl.assume('cv_shape', 4.0)
-        ripl.assume('cv_scale', "(inv_gamma 1.0 1.0)")
+        ripl.assume('cv_scale', "(inv_gamma 1.0 15.0)")
         
         ripl.assume('get_cluster_mean', "(mem (lambda (cluster dim) (uniform_continuous -10.0 10.0)))");
         ripl.assume('get_cluster_variance', "(mem (lambda (cluster dim) (inv_gamma cv_shape cv_scale)))");
@@ -434,7 +434,7 @@ function InitializeDemo() {
                 <div id="div_for_plots" style="background-color: white; width: 420px; height: 420px;"></div>\
                 <br>\
                 <div>\
-                <div class="btn-group">\
+<!--                <div class="btn-group">\
                     <button class="btn btn-danger">Engine Status</button>\
                     <button class="btn btn-danger dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>\
                     <ul class="dropdown-menu">\
@@ -445,7 +445,7 @@ function InitializeDemo() {
                 </div>\
                 <br>\
           <a href="http://www.yuraperov.com/MIT.PCP/demo.html">Return to the list of demos.</a>\
-          <br><br>\
+-->          <br><br>\
                 Based on the Venture probabilistic programming language\
               </td><td>&nbsp;&nbsp;&nbsp;</td>\
               <td style="vertical-align: top;">\
