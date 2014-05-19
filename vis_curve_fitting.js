@@ -168,7 +168,7 @@ function InitializeDemo() {
 
         /* Linear */
         ripl.assume('a','(normal 0.0 10.0)');
-        ripl.assume('b','(normal 0.0 1.0)');
+        ripl.assume('b','(normal 0.0 3.0)');
         ripl.assume('f','(lambda (x) (+ a (* b x)))');
         
         ripl.assume('noise', model_variables.infer_noise ? '(sqrt (inv_gamma 2.0 1.0))' : '1.0')
@@ -199,7 +199,7 @@ function InitializeDemo() {
         /* Polynomial */
         ripl.assume('poly_order','(uniform_discrete 0 5)');
         ripl.assume('make_coefficient','(lambda (degree value) (if (>= poly_order degree) (normal 0.0 value) 0))');
-        ripl.assume('c1','(make_coefficient 1 1.0)');
+        ripl.assume('c1','(make_coefficient 1 3.0)');
         ripl.assume('c2','(make_coefficient 2 0.1)');
         ripl.assume('c3','(make_coefficient 3 0.01)');
         ripl.assume('c4','(make_coefficient 4 0.001)');
