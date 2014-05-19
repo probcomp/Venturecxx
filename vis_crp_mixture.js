@@ -123,11 +123,11 @@ function InitializeDemo() {
         /* Model metadata */
         ripl.assume('demo_id', demo_id, 'demo_id');
         
-        ripl.assume('crp_alpha', "(gamma 1.0 1.0)");
+        ripl.assume('crp_alpha', "(gamma 1.0 3.0)");
         ripl.assume('cluster_crp', "(make_crp crp_alpha)");
         
         ripl.assume('cv_shape', 4.0)
-        ripl.assume('cv_scale', "(inv_gamma 1.0 1.0)")
+        ripl.assume('cv_scale', "(inv_gamma 1.0 15.0)")
         
         ripl.assume('get_cluster_mean', "(mem (lambda (cluster dim) (uniform_continuous -10.0 10.0)))");
         ripl.assume('get_cluster_variance', "(mem (lambda (cluster dim) (inv_gamma cv_shape cv_scale)))");
