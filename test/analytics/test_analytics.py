@@ -21,6 +21,14 @@ def betaModel(ripl):
     [ripl.observe(exp,literal) for exp,literal in observes]
     return ripl,assumes,observes,queryExps
 
+def normalModel(ripl):
+    assumes = [ ('x','(normal 0 100)') ]
+    observes = [ ('(normal x 100)','0') ]
+    queryExps = [ ('(* x 2)',) ]
+    [ripl.assume(sym,exp) for sym,exp in assumes]
+    [ripl.observe(exp,literal) for exp,literal in observes]
+    return ripl,assumes,observes,queryExps
+
 def _testLoadModel(ripl_mripl):
     v=ripl_mripl
     vBackend = v.backend if isinstance(v,MRipl) else v.backend()
@@ -61,10 +69,7 @@ def testHistory():
     yield _testHistory, get_mripl(no_ripls=3)
 
 def _testRuns(ripl_mripl):
-    v=ripl_mripl
-    v.assume('x','(normal 0 100)')
-    v.observe('(normal x 100)','0')
-    queryExps = ('(* x 2)',)
+    v,assumes,observes,queryExps = normalModel( ripl_mripl )
     samples = 20
     runsList = [2,3,7]
     model = Analytics(v,queryExps=queryExps)
@@ -110,6 +115,10 @@ def testRunFromConditionalInfer():
 
     yield _testInfer, get_ripl(), 'prior'
     yield _testInfer, get_mripl(no_ripls=5), 'prior'
+
+
+def _testSampleFromJoint(ripl_mripl):
+    pass
     
 
 
