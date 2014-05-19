@@ -526,7 +526,7 @@ function InitializeDemo() {
         if (directives.length == 0) {
             // fresh Venture instance
             LoadModel();
-            ripl.start_continuous_inference();
+            ripl.start_continuous_inference("(mh default one 10)");
             RunDemo();
         } else if (directives[0].symbol === "demo_id" && directives[0].value === demo_id) {
             RunDemo();
