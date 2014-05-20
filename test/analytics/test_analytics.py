@@ -88,19 +88,21 @@ def testRuns():
     yield _testRuns, get_mripl(no_ripls=3)
 
 @statisticalTest
-def _testInfer(ripl_mripl,conditional_prior):
+def _testInfer(ripl_mripl,conditional_prior,inferProg):
     v,_,_,_= betaModel( ripl_mripl ) 
-    samples = 10
+    samples = 40
     runs = 20
     model = Analytics(v)
     def lastSnapshot(history):
         return [series.values[-1] for series in history.nameToSeries['p']]
 
     if conditional_prior == 'conditional':
-        history,_ = model.runFromConditional(samples,runs=runs)
+        history,_ = model.runFromConditional(samples,runs=runs,
+                                             infer=inferProg)
         cdf = stats.beta(3,1).cdf
     else:
-        history,_ = model.runConditionedFromPrior(samples,runs=runs)
+        history,_ = model.runConditionedFromPrior(samples,runs=runs,
+                                                  infer=inferProg)
         dataValues = [typeVal['value'] for exp,typeVal in history.data] 
         noHeads = sum(dataValues)
         noTails = len(dataValues) - noHeads
@@ -110,12 +112,17 @@ def _testInfer(ripl_mripl,conditional_prior):
     return reportKnownContinuous(cdf,lastSnapshot(history))                                 
                                      
 def testRunFromConditionalInfer():
-    yield _testInfer, get_ripl(), 'conditional'
-    yield _testInfer, get_mripl(no_ripls=5), 'conditional'
+    riplThunks = (get_ripl, lambda: get_mripl(no_ripls=3))
+    cond_prior = ('conditional','prior')
+    #k1 = {"transitions":1,"kernel":"mh","scope":"default","block":"all"}
+    k1 = '(mh default one 1)'
+    k2 = '(mh default one 2)'
+    infProgs = ( None, k1,'(cycle (%s %s) 1)'%(k1,k2) )  
 
-    yield _testInfer, get_ripl(), 'prior'
-    yield _testInfer, get_mripl(no_ripls=5), 'prior'
+    params = [(r,c,i) for r in riplThunks for c in cond_prior for i in infProgs]
 
+    for r,c,i in params:
+        yield _testInfer, r(), c, i
 
 def _testSampleFromJoint(ripl_mripl,useMRipl):
     v,assumes,observes,queryExps = normalModel( ripl_mripl )
@@ -127,7 +134,7 @@ def _testSampleFromJoint(ripl_mripl,useMRipl):
     return reportKnownContinuous(cdf,xSamples)
     
 def testSampleFromJoint():
-    riplThunks = (get_ripl, lambda: get_mripl(no_ripls=5))
+    riplThunks = (get_ripl, lambda: get_mripl(no_ripls=3))
     for r in riplThunks:
         for useMRipl in (True,False):
             yield _testSampleFromJoint, r(), useMRipl

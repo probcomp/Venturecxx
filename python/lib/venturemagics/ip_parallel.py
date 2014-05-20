@@ -107,11 +107,10 @@ def mk_picklable(out_lst):
 
 class MRipl():
     
-    def __init__(self, no_ripls,backend='puma',local_mode=False,
+    def __init__(self, no_ripls, backend='puma',local_mode=False,
                  seeds=None, debug_mode=False):
-## FIXME:
-# DEBUG MODE should probably run inference 
 
+# TODO DEBUG MODE should probably run inference 
         '''
         MRipl(no_ripls,backend='puma',no_local_ripls=1,output='remote',local_mode=False,seeds=None,verbose=False)
 
@@ -177,7 +176,7 @@ class MRipl():
         assert not (local_mode and debug_mode), 'Local_mode must be False for debug_mode.'
         
         # set local vs. remote mode
-        if not local_mode:
+        if local_mode is False:
             try:
                 self.cli=Client()
                 self.local_mode = False
@@ -190,7 +189,7 @@ class MRipl():
 
 
         # initialize local ripls
-        if local_mode:
+        if self.local_mode is True:
             self.no_local_ripls = no_ripls
             self.no_ripls = self.no_local_ripls
         elif debug_mode:
