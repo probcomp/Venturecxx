@@ -448,7 +448,7 @@ function InitializeDemo() {
                 <br>\
           <a href="http://www.yuraperov.com/MIT.PCP/demo.html">Return to the list of demos.</a>\
 -->          <br><br>\
-                Based on the Venture probabilistic programming language\
+                Powered by the Venture probabilistic programming language\
               </td><td>&nbsp;&nbsp;&nbsp;</td>\
               <td style="vertical-align: top;">\
                 <div id="venture_code"></div>\
