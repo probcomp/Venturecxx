@@ -425,14 +425,10 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
   #   4. No randomness in the local sections.
   #   5. LKernel is not used in local sections.
 
-  # Sample u.
-  log_u = math.log(random.random())
-
   # Construct the global section with border at the given symbol.
   global_index = indexer.sampleGlobalIndex(trace)
   N = float(global_index.N)
   assert(N >= Nbatch * k0)
-  perm_local_chidren = np.random.permutation(global_index.local_children)
 
   global_rhoMix = indexer.logDensityOfGlobalIndex(trace,global_index)
   # Propose variables in the global section.
@@ -441,10 +437,16 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
   proposedGlobalTrace,logGlobalAlpha = operator.propose(trace,global_index)
   global_xiMix = indexer.logDensityOfGlobalIndex(trace,global_index)
 
+  # Sample u.
+  log_u = math.log(random.random())
+
   alpha = global_xiMix + logGlobalAlpha - global_rhoMix
   mu_0 = (log_u - alpha) / N
 
   # Sequentially do until termination condition is met.
+
+  perm_local_chidren = np.random.permutation(global_index.local_children)
+
   mx = 0.0  # Mean of mllh.
   mx2 = 0.0 # Mean of mllh^2.
   k = 0.0   # Index of minibatch.
@@ -471,7 +473,7 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
     k += 1
     n = n_end
 
-    if k < k0:
+    if k < k0 and n < N:
       # Do not run testing for the first k0 minibatches.
       continue
 
@@ -492,7 +494,6 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
         break
 
   assert(accept is not None)
-
   if accept:
 #    sys.stdout.write(".")
     # TODO

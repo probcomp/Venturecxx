@@ -54,7 +54,8 @@ Commands for modeling:
 Commands for inference:
 
  infer ct [kernel] [global?]  Run inference synchronously for ct steps
-   `kernel' must be one of mh (default), pgibbs, gibbs, or meanfield
+   `kernel' must be one of mh (default), pgibbs, gibbs, meanfield, or
+     subsampled_mh
    `global?', if present, requests use of global scaffolds
      (not available for the gibbs kernel)
  start-ci [kernel] [global?]  Start continuous inference
@@ -191,6 +192,9 @@ def expToDict(exp):
   if tag == "mh":
     assert len(exp) == 4
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":True}
+  elif tag == "subsampled_mh":
+    assert len(exp) == 8
+    return {"kernel":"subsampled_mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"scope_symbol":exp[4],"Nbatch":exp[5],"k0":exp[6],"epsilon":exp[7],"with_mutation":True}
   elif tag == "func-mh":
     assert len(exp) == 4
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
@@ -267,6 +271,7 @@ def testHandInspect():
   k5 = "(rejection 11 22 33)"
   k6 = "(resample 11)"
   k7 = "(incorporate)"
+  k8 = "(subsampled_mh 11 22 33 44 55 66 77)"
 
   print k1,expToDict(parse(k1))
   print k2,expToDict(parse(k2))
@@ -275,6 +280,7 @@ def testHandInspect():
   print k5,expToDict(parse(k5))
   print k6,expToDict(parse(k4))
   print k7,expToDict(parse(k5))
+  print k8,expToDict(parse(k8))
   print "----------------------"
   print expToDict(parse("(cycle (%s %s) 100)" % (k1,k2)))
   print expToDict(parse("(mixture (.1 %s .9 %s) 100)" % (k1,k2)))

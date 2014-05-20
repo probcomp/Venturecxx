@@ -393,7 +393,7 @@ class Trace(object):
 
     # At the end of multiple transitions.
     if params["kernel"] == "subsampled_mh" and \
-        (params["block"] == "all" or numBlocksInScope(indexer.scope) == 2):
+        (params["block"] == "all" or self.numBlocksInScope(params["scope"]) == 1):
       # O(N) operation.
       SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["scope_symbol"]))
 
