@@ -191,9 +191,11 @@ function InitializeDemo() {
         ripl.assume('model_type', '(quote advanced)', 'model_type'); 
         
         /* Outliers */
-        ripl.assume('outlier_prob','(uniform_continuous 0.001 0.3)'); //(beta 1 3)?
-        ripl.assume('outlier_sigma','(uniform_continuous 0.001 100)'); //why random?
-        ripl.assume('is_outlier','(mem (lambda (obs_id) (flip outlier_prob)))');
+        if (model_variables.use_outliers) {
+            ripl.assume('outlier_prob','(uniform_continuous 0.001 0.3)'); //(beta 1 3)?
+            ripl.assume('outlier_sigma','(uniform_continuous 0.001 100)'); //why random?
+            ripl.assume('is_outlier','(mem (lambda (obs_id) (flip outlier_prob)))');
+        }
         
         /* Shared */
         ripl.assume('a0_c0','(normal 0.0 10.0)');
@@ -222,8 +224,12 @@ function InitializeDemo() {
         ripl.assume('clean_func','(lambda (x) (+ a0_c0 (* alpha (clean_poly x)) (* (- 1 alpha) (clean_fourier x))))');
 
         /* For observations */
-        ripl.assume('noise','(sqrt (inv_gamma 2.0 1.0))');
-        ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (clean_func (normal x noise))) (if (is_outlier obs_id) outlier_sigma noise)))');
+        ripl.assume('noise', model_variables.infer_noise ? '(sqrt (inv_gamma 2.0 1.0))' : '1.0');
+        if (model_variables.use_outliers) {
+            ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (clean_func (normal x noise))) (if (is_outlier obs_id) outlier_sigma noise)))');
+        } else {
+            ripl.assume('obs_fn','(lambda (obs_id x) (normal (clean_func (normal x noise)) noise))');
+        }
     };
     
     var modelLoaders = {simple: LoadSimpleModel, advanced: LoadAdvancedModel};
@@ -354,7 +360,7 @@ function InitializeDemo() {
         
         ripl.predict(x, obs_str + '_x');
         ripl.observe('(obs_fn ' + obs_id + ' ' + x + ')', y, obs_str + '_y');
-        if (model_variables.model_type == "simple" && !model_variables.use_outliers) {
+        if (!model_variables.use_outliers) {
             ripl.predict('false', obs_str + '_outlier');
         } else {
             ripl.predict('(is_outlier ' + obs_id + ')', obs_str + '_outlier');
@@ -400,8 +406,6 @@ function InitializeDemo() {
         }
         
         var simple = model_type === "simple";
-        document.getElementById("use_outliers").disabled = !simple;
-        document.getElementById("infer_noise").disabled = !simple;
         
         if (model_variables.use_outliers != use_outliers) {
             model_variables.use_outliers = use_outliers;
