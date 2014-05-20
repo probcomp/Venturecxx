@@ -152,7 +152,7 @@ struct Inferer
     {
       gKernel = shared_ptr<GKernel>(new SliceGKernel);
     }
-    else if (kernel == "map" || kernel == "hmc")  
+    else if (kernel == "map" || kernel == "hmc" || kernel == "map_nestorov")  
     {
       // boost::python::list keys = params.keys();
       // boost::python::object o;
@@ -161,22 +161,38 @@ struct Inferer
       //   cout << str << endl;
       // }
       double epsilon;
-      if(params.has_key("epsilon")) {
+      if(params.has_key("epsilon")) 
+      {
         epsilon = boost::python::extract<double>(params["epsilon"]);
-      }else if(params.has_key("rate")) {
+      }
+      else if(params.has_key("rate")) 
+      {
         epsilon = boost::python::extract<double>(params["rate"]);
-      }else
+      }
+      else
         throw "hmc error: no stepsize defined.";
       double steps;
-      if(params.has_key("L")) {
+      if(params.has_key("L")) 
+      {
         steps = boost::python::extract<double>(params["L"]);
-      }else if(params.has_key("steps")) {
+      }
+      else if(params.has_key("steps")) 
+      {
         steps = boost::python::extract<double>(params["steps"]);
       }else
         throw "hmc error: no leapfrog steps defined.";
-      if(kernel == "map")
-        gKernel = shared_ptr<GKernel>(new MAPGKernel(epsilon, steps));
-      else if(kernel == "hmc")
+      bool nestorov;
+      if(kernel == "map") 
+      {
+        if(params.has_key("nestorov")) 
+        {
+          nestorov = boost::python::extract<bool>(params["nestorov"]);
+        }else
+        {
+          throw "map error : no nestorov option specified.";
+        }
+        gKernel = shared_ptr<GKernel>(new MAPGKernel(epsilon, steps, nestorov));
+      }else if(kernel == "hmc")
         gKernel = shared_ptr<GKernel>(new HMCGKernel(epsilon, steps));
     }
     else

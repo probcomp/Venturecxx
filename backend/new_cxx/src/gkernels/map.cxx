@@ -13,8 +13,8 @@
 
 using std::pair;
 
-MAPGKernel::MAPGKernel(double epsilon, int steps)  
-:epsilon(new VentureNumber(epsilon)), steps(new VentureNumber(steps)) {
+MAPGKernel::MAPGKernel(double epsilon, int steps, bool use_nestorov)  
+:epsilon(new VentureNumber(epsilon)), steps(new VentureNumber(steps)), use_nestorov(use_nestorov) {
 }
 
 pair<Trace*,double> MAPGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold)
@@ -48,10 +48,18 @@ pair<Trace*,double> MAPGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffol
 }
 
 vector<VentureValuePtr> MAPGKernel::evolve(GradientOfRegen& grad, vector<VentureValuePtr>& currentValues, const vector<VentureValuePtr>& start_grad) {
-  shared_ptr<VentureArray> xs(new VentureArray(currentValues));
-  shared_ptr<VentureArray> dxs(new VentureArray(start_grad));
+  VentureValuePtr xs = VentureArray::makeValue(currentValues);
+  VentureValuePtr dxs = VentureArray::makeValue(start_grad);
+  VentureValuePtr prev_xs;
+  VentureValuePtr y;
   for(int i = 0; i < this->steps->getInt(); i++) {
-    xs = dynamic_pointer_cast<VentureArray>(xs+dxs*this->epsilon);
+    if(!use_nestorov || i == 0) {
+      y = xs;
+    }else{
+      y = xs+(xs-prev_xs)*VentureNumber::makeValue((double)(i-1)/(double)(i+2));
+    }
+    prev_xs = xs;
+    xs = y+dxs*this->epsilon;
     assert(xs != NULL);
     dxs = shared_ptr<VentureArray>(new VentureArray(grad(xs->getArray())));
     // cout << "epsilon" << toString(this->epsilon) << endl;
