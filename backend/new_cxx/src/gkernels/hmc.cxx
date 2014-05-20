@@ -156,6 +156,7 @@ VentureValuePtrVector GradientOfRegen::operator()(const VentureValuePtrVector& v
   VentureValuePtrVector result;
   BOOST_FOREACH(Node * node, pNodes) {
     result.push_back(p.second->getPartial(node));
+    cout << "p.second" << p.second->getPartial(node) << endl;
   }
   return result;
 }
