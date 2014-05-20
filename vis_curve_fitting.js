@@ -410,7 +410,8 @@ function InitializeDemo() {
         }
         
         var simple = model_type === "simple";
-        
+        document.getElementById("show_scopes").disabled = simple;
+
         if (model_variables.use_outliers != use_outliers) {
             model_variables.use_outliers = use_outliers;
             changed = true;
