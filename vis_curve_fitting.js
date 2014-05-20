@@ -151,6 +151,7 @@ function InitializeDemo() {
     var AllDirectivesLoadedCallback = function() {
         $("#loading-status").html("Demo loaded successfully!");
         $("#loading-status").remove();
+        ripl.start_continuous_inference(inference_program);
         ripl.register_a_request_processed_callback(function () {});
     };
     
@@ -239,7 +240,7 @@ function InitializeDemo() {
     var LoadModel = function() {
         num_directives_loaded = 0;
         ripl.register_a_request_processed_callback(DirectiveLoadedCallback);
-        
+        ripl.stop_continuous_inference();
         modelLoaders[model_variables.model_type]();
 
         ripl.register_all_requests_processed_callback(AllDirectivesLoadedCallback);
@@ -692,7 +693,6 @@ function InitializeDemo() {
         if (directives.length === 0) {
             // fresh Venture instance
             LoadModel();
-            ripl.start_continuous_inference(inference_program);
             RunDemo();
         } else if (directives[0].symbol == "demo_id" && directives[0].value == demo_id) {
             UpdateModelVariables(directives);
