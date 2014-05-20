@@ -24,7 +24,7 @@ def betaModel(ripl):
 def normalModel(ripl):
     assumes = [ ('x','(normal 0 100)') ]
     observes = [ ('(normal x 100)','0') ]
-    queryExps = [ ('(* x 2)',) ]
+    queryExps = ('(* x 2)',)
     [ripl.assume(sym,exp) for sym,exp in assumes]
     [ripl.observe(exp,literal) for exp,literal in observes]
     return ripl,assumes,observes,queryExps
@@ -73,7 +73,7 @@ def _testRuns(ripl_mripl):
     samples = 20
     runsList = [2,3,7]
     model = Analytics(v,queryExps=queryExps)
-
+    
     for no_runs in runsList:
         history,_ = model.runFromConditional(samples,runs=no_runs)
         eq_( len(history.nameToSeries['x']), no_runs)
@@ -117,9 +117,21 @@ def testRunFromConditionalInfer():
     yield _testInfer, get_mripl(no_ripls=5), 'prior'
 
 
-def _testSampleFromJoint(ripl_mripl):
-    pass
+def _testSampleFromJoint(ripl_mripl,useMRipl):
+    v,assumes,observes,queryExps = normalModel( ripl_mripl )
+    samples = 30
+    model = Analytics(v,queryExps=queryExps)
+    hist = model.sampleFromJoint(samples, useMRipl=useMRipl)
+    xSamples = hist.nameToSeries['x'][0].values
+    cdf = stats.norm(loc=0,scale=100).cdf
+    return reportKnownContinuous(cdf,xSamples)
     
+def testSampleFromJoint():
+    riplThunks = (get_ripl, lambda: get_mripl(no_ripls=5))
+    for r in riplThunks:
+        for useMRipl in (True,False):
+            yield _testSampleFromJoint, r(), useMRipl
+
 
 
 # def _testInferRuns(ripl_mripl):
