@@ -49,7 +49,6 @@ function VentureCodeHTML(directives) {
         }
     }
     
-    venture_code_str = "<font face='Courier New' size='2'>" + venture_code_str + "</font>";
     return venture_code_str;
 }
 

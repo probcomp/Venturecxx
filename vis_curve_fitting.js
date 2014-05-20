@@ -4,6 +4,8 @@ function InitializeDemo() {
 
     var demo_id = 2;
 
+    var inference_program = "(mh default one 10)"
+
     /* This is awkward because it looks like an array but requires some subtleties,
      * like calling .length() instead of .length. This is all because javascript
      * doesn't seem to have a deep equals. It used to be just some click-list methods,
@@ -236,7 +238,10 @@ function InitializeDemo() {
     };
     
     var UpdateVentureCode = function(directives) {
-        $("#venture_code").html(VentureCodeHTML(directives));
+        code = VentureCodeHTML(directives);
+        code += "[infer (loop " + inference_program + ")]";
+        code = "<font face='Courier New' size='2'>" + code + "</font>";
+        $("#venture_code").html(code);
     };
     
     var UpdateModelVariables = function(directives) {
@@ -668,7 +673,7 @@ function InitializeDemo() {
         if (directives.length === 0) {
             // fresh Venture instance
             LoadModel();
-            ripl.start_continuous_inference("(mh default one 10)");
+            ripl.start_continuous_inference(inference_program);
             RunDemo();
         } else if (directives[0].symbol == "demo_id" && directives[0].value == demo_id) {
             UpdateModelVariables(directives);
