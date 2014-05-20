@@ -247,7 +247,6 @@ function InitializeDemo() {
     };
     
     var UpdateVentureCode = function(directives) {
-        console.log(getShowScopes());
         code = VentureCodeHTML(directives, getShowScopes());
         code += "[infer (loop " + inference_program + ")]";
         code = "<font face='Courier New' size='2'>" + code + "</font>";
@@ -427,6 +426,23 @@ function InitializeDemo() {
             model_variables.show_scopes = show_scopes;
             changed = true;
         }
+
+        var old_inf_prog = inference_program;
+        if ( getEnumRequested() &&  getSliceRequested()) {
+            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1) (slice params one 1)) 1)";
+        }
+        if (!getEnumRequested() &&  getSliceRequested()) {
+            inference_program = "(cycle ((mh default one 5) (slice params one 1)) 1)";
+        }
+        if ( getEnumRequested() && !getSliceRequested()) {
+            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1)) 1)";
+        }
+        if (!getEnumRequested() && !getSliceRequested()) {
+            inference_program = "(mh default one 10)";
+        }
+        if (old_inf_prog != inference_program) {
+            changed = true;
+        }
         
         return changed;
     };
@@ -555,6 +571,14 @@ function InitializeDemo() {
         return document.getElementById("show_scopes").checked;
     };
     
+    var getEnumRequested = function() {
+        return document.getElementById("enum").checked;
+    };
+    
+    var getSliceRequested = function() {
+        return document.getElementById("slice").checked;
+    };
+    
     var LinearCurve = function() {
         var curve = function(x) {
             return model_variables.a + model_variables.b * x;
@@ -669,6 +693,9 @@ function InitializeDemo() {
         <label><input type="checkbox" id="show_scopes" name="show_scopes">Display inference hints</label>\
         <br><br>\
         <div id="venture_code"></div>\
+        <br>\
+        <label><input type="checkbox" name="enum" id="enum" value="enum">Enumerate structure</label>\
+        <label><input type="checkbox" name="slice" id="slice" value="slice">Slice sample parameters</label>\
         </tr>\
         </table>\
         <br>\
