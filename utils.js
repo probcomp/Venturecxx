@@ -1,7 +1,11 @@
 function exprToString(expr) {
     //console.log(typeof expr);
     if (expr instanceof Array) {
-        return "(" + expr.map(exprToString).join(" ") + ")";
+        if (expr[0] === "scope_include") {
+            return exprToString(expr[3]);
+        } else {
+            return "(" + expr.map(exprToString).join(" ") + ")";
+        }
     } else if (typeof expr === "string") {
         return expr;
     } else {
