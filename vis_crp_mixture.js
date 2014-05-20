@@ -73,7 +73,7 @@ function InitializeDemo() {
     var num_directives_loaded = 0;
     
     /* A unique ID for each observation. */
-    var next_obs_id = LargeRandomInt();
+    var next_obs_id = 0; //LargeRandomInt();
     var GetNextObsID = function() {
         id = next_obs_id;
         next_obs_id++;
