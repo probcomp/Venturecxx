@@ -221,9 +221,6 @@ def testConstrainWithAPredict2():
 
 def testConstrainInAScope1():
   """At some point, constrain did not remove choices from scopes besides the default scope"""
-  if defaultKernel() == "rejection":
-    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
-
   ripl = get_ripl()
 
   ripl.assume("x","(scope_include 0 0 (normal 0 1))")
@@ -234,9 +231,6 @@ def testConstrainInAScope1():
 
 def testConstrainInAScope2brush():
   """Particles need to override some of the relevant methods as well"""
-  if defaultKernel() == "rejection":
-    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
-
   ripl = get_ripl()
 
   ripl.assume("x","(scope_include 0 0 (if (flip) (normal 0 1) (normal 0 1)))")
@@ -247,9 +241,6 @@ def testConstrainInAScope2brush():
 
 def testConstrainInAScope2particles():
   """Particles need to override some of the relevant methods as well"""
-  if defaultKernel() == "rejection":
-    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
-
   ripl = get_ripl()
 
   ripl.assume("x","(scope_include 0 0 (if (flip) (normal 0 1) (normal 0 1)))")
