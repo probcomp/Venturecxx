@@ -44,7 +44,7 @@ pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffol
   
   pair<VentureValuePtr, double> particle = this->evolve(grad, start_q, start_grad_pot, momenta);
 
-  // cout << "new particle " << toString(particle.first->getArray()) << endl;
+  cout << "new particle " << toString(particle.first->getArray()) << endl;
   double end_K = particle.second;
   VentureValuePtrVector proposed = particle.first->getArray();
   registerDeterministicLKernels(trace, scaffold, applicationNodes, proposed);
@@ -156,7 +156,6 @@ VentureValuePtrVector GradientOfRegen::operator()(const VentureValuePtrVector& v
   VentureValuePtrVector result;
   BOOST_FOREACH(Node * node, pNodes) {
     result.push_back(p.second->getPartial(node));
-    cout << "p.second" << p.second->getPartial(node) << endl;
   }
   return result;
 }

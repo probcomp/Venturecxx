@@ -263,7 +263,7 @@ double unapplyPSP(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffo
   trace->clearValue(node);
 
   if(compute_gradient) {
-    BOOST_FOREACH(Node* p, node->definiteParents) {
+    BOOST_FOREACH(Node* p, trace->getParents(node)) {
       if(scaffold->isResampling(p) || scaffold->isBrush(p)) {
         vector<VentureValuePtr> grads = psp->gradientOfSimulate(args, db->getValue(node), db->getPartial(node));
         vector<Node*> parents(args->operandNodes);

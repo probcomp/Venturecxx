@@ -101,7 +101,7 @@ vector<VentureValuePtr> NormalPSP::gradientOfSimulate(const shared_ptr<Args> arg
   double v = value->getDouble();
   double deviation = (v-mu)/sigma;
   vector<VentureValuePtr> d = direction->getArray();
-  return boost::assign::list_of(direction)(d[0]*VentureValuePtr(new VentureNumber(deviation)));
+  return boost::assign::list_of(d[0])(d[0]*VentureValuePtr(new VentureNumber(deviation)));
 }
 
 /*
