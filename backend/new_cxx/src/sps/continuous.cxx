@@ -274,30 +274,31 @@ double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
 
 VentureValuePtr SimulateGPSPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  checkArgsLength("simulate_gps", args, 1);
+  checkArgsLength("SimulateGPSPSP::simulate", args, 1);
+  vector<VentureValuePtr> pose = args->operandValues[0]->getArray();
 
+  double dx = gsl_ran_gaussian(rng, 1.0);
+  double dy = gsl_ran_gaussian(rng, 1.0);
+  double dheading = gsl_ran_gaussian(rng, 0.1);
 
-  double x = gsl_ran_flat(rng, 0.0, 1.0);
-  double y = gsl_ran_flat(rng, 0.0, 1.0);
-  double heading = gsl_ran_flat(rng, -M_PI, M_PI);
-
-  VentureValuePtr l(new VentureNil());
-  VentureValuePtr vx = shared_ptr<VentureValue>(new VentureNumber(x));
-  VentureValuePtr vy = shared_ptr<VentureValue>(new VentureNumber(y));
-  VentureValuePtr vheading = shared_ptr<VentureValue>(new VentureNumber(heading));
-  l = VentureValuePtr(new VenturePair(vx, l));
-  l = VentureValuePtr(new VenturePair(vy, l));
-  l = VentureValuePtr(new VenturePair(vheading, l));
-  return l;
+  return update_pose(pose, dx, dy, dheading);
 }
 
 double SimulateGPSPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-//  double x = value->getFirst()->getDouble();
-//  double y = value->getRest()->getFirst()->getDouble();
-//  double heading = value->getRest()->getRest()->getFirst()->getDouble();
-//  return x * y;
-    return 1.0;
+  checkArgsLength("SimulateGPSPSP::logDensity", args, 1);
+  vector<VentureValuePtr> pose = args->operandValues[0]->getArray();
+  vector<VentureValuePtr> gps_pose;
+  gps_pose.push_back(value->lookup(VentureValuePtr(new VentureNumber(0))));
+  gps_pose.push_back(value->lookup(VentureValuePtr(new VentureNumber(1))));
+  gps_pose.push_back(value->lookup(VentureValuePtr(new VentureNumber(2))));
+
+  double x_diff, y_diff, heading_diff;
+  diff_poses(pose, gps_pose, x_diff, y_diff, heading_diff);
+  double x_diff_likelihood = NormalDistributionLogLikelihood(x_diff, 0, 1.0);
+  double y_diff_likelihood = NormalDistributionLogLikelihood(y_diff, 0, 1.0);
+  double heading_diff_likelihood = NormalDistributionLogLikelihood(heading_diff, 0, 0.1);
+  return x_diff_likelihood * y_diff_likelihood * heading_diff_likelihood;
 }
 
 VentureValuePtr SimulateMapPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
