@@ -438,3 +438,14 @@ vector<VentureValuePtr> VenturePair::getArray() const
   answer.insert(answer.begin(), getFirst());
   return answer;
 }
+
+vector<VentureValuePtr> VentureVector::getArray() const
+{
+  vector<VentureValuePtr> xs;
+  for(int i = 0; i < v.size(); ++i)
+  {
+    xs.push_back(VentureValuePtr(new VentureNumber(v(i))));
+  }
+  return xs;
+}
+

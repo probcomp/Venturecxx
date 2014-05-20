@@ -172,6 +172,8 @@ struct VentureVector : VentureValue
   VentureVector(const Eigen::VectorXd & v): v(v) {}
   VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureNumber(v(index->getInt()))); }
   VectorXd getVector() const { return v; }
+  bool hasArray() const { return true; }
+  vector<VentureValuePtr> getArray() const;
   string toString() const;
   boost::python::dict toPython(Trace * trace) const;
   VectorXd v;
