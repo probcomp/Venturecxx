@@ -100,6 +100,7 @@ function InitializeDemo() {
         model_type: "simple",
         infer_noise: false,
         use_outliers: false,
+        show_scopes: false,
         noise: 0.1,
 
         /* Simple */
@@ -162,6 +163,7 @@ function InitializeDemo() {
         ripl.assume('model_type', '(quote simple)', 'model_type');
         ripl.assume('use_outliers', "" + model_variables.use_outliers, 'use_outliers');
         ripl.assume('infer_noise', "" + model_variables.infer_noise, 'infer_noise');
+        ripl.assume('show_scopes', "" + model_variables.show_scopes, 'show_scopes');
         
         if (model_variables.use_outliers) {
             ripl.assume('outlier_prob','(uniform_continuous 0.001 0.3)'); //(beta 1 3)?
@@ -219,7 +221,7 @@ function InitializeDemo() {
         ripl.assume('clean_fourier','(lambda (x) (* fourier_a1 (sin (+ (* fourier_omega x) fourier_theta1))))');
 
         /* For combination polynomial and Fourier */
-        ripl.assume('poly_fourier_mode','(uniform_discrete 0 3)');
+        ripl.assume('poly_fourier_mode','(scope_include (quote mode) 0 (uniform_discrete 0 3))');
         ripl.assume('alpha','(if (= poly_fourier_mode 0) 1 (if (= poly_fourier_mode 1) 0 (beta 1 1)))');
         ripl.assume('clean_func','(lambda (x) (+ a0_c0 (* alpha (clean_poly x)) (* (- 1 alpha) (clean_fourier x))))');
 
@@ -244,7 +246,8 @@ function InitializeDemo() {
     };
     
     var UpdateVentureCode = function(directives) {
-        code = VentureCodeHTML(directives);
+        console.log(getShowScopes());
+        code = VentureCodeHTML(directives, getShowScopes());
         code += "[infer (loop " + inference_program + ")]";
         code = "<font face='Courier New' size='2'>" + code + "</font>";
         $("#venture_code").html(code);
@@ -397,6 +400,7 @@ function InitializeDemo() {
         var model_type = getModelType();
         var use_outliers = getUseOutliers();
         var infer_noise = getInferNoise();
+        var show_scopes = getShowScopes();
         
         var changed = false;
         
@@ -414,6 +418,11 @@ function InitializeDemo() {
         
         if (model_variables.infer_noise != infer_noise) {
             model_variables.infer_noise = infer_noise;
+            changed = true;
+        }
+
+        if (model_variables.show_scopes != show_scopes) {
+            model_variables.show_scopes = show_scopes;
             changed = true;
         }
         
@@ -539,6 +548,10 @@ function InitializeDemo() {
     var getInferNoise = function() {
         return document.getElementById("infer_noise").checked;
     };
+
+    var getShowScopes = function() {
+        return document.getElementById("show_scopes").checked;
+    };
     
     var LinearCurve = function() {
         var curve = function(x) {
@@ -651,6 +664,7 @@ function InitializeDemo() {
         <br>\
         <label><input type="checkbox" id="use_outliers" name="use_outliers">Infer Outliers</label>\
         <label><input type="checkbox" id="infer_noise" name="infer_noise">Infer Noise</label>\
+        <label><input type="checkbox" id="show_scopes" name="show_scopes">Display inference hints</label>\
         <br><br>\
         <div id="venture_code"></div>\
         </tr>\

@@ -143,7 +143,7 @@ function InitializeDemo() {
     };
     
     var UpdateVentureCode = function(directives) {
-        code = VentureCodeHTML(directives);
+        code = VentureCodeHTML(directives, false);
         code = "<font face='Courier New' size='2'>" + code + "</font>";
         $("#venture_code").html(code);
     };
