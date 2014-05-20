@@ -253,7 +253,19 @@ string VenturePair::toString() const { return "VenturePair (" + car->toString() 
 string VentureSimplex::toString() const { return "VentureSimplex";}
 string VentureDictionary::toString() const { return "VentureDictionary";}
 string VentureMatrix::toString() const { return "VentureMatrix";}
-string VentureVector::toString() const { return "VentureVector";}
+
+string VentureVector::toString() const
+{
+  string s = "VentureVector [";
+  for (int i = 0; i < v.size(); ++i)
+    {
+      s += lexical_cast<string>(v(i));
+      s += " ";
+    }
+  s += "]";
+  return s;
+}
+
 string VentureRequest::toString() const { return "VentureRequest";}
 string VentureNode::toString() const { return "VentureNode";}
 string VentureID::toString() const { return "VentureID";}
