@@ -2,7 +2,7 @@ from nose.tools import eq_
 from nose import SkipTest
 import scipy.stats as stats
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, defaultKernel
 import math
 from testconfig import config
 
@@ -84,6 +84,8 @@ def testMVN2b():
 @statisticalTest
 def testMVN3():
   "Check that MVN is observable"
+  if defaultKernel() == "rejection":
+    raise SkipTest("MVN has no log density bound")
   ripl = get_ripl()
 
   ripl.assume("mu","(vector 0 0)")

@@ -10,60 +10,168 @@ from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl,get_mripl,collectSamples
 from testconfig import config
 
-from nose.tools import assert_equal, assert_almost_equal
+from nose.tools import eq_, assert_equal, assert_almost_equal
 
 
-
-@attr('slow')
-def _testAnalytics(totalSamples=400):
-    # load ripl with model and observes
-    # we use *add*,etc. because Analytics converts to Python values.
-    
-    v=mk_p_ripl()
+def betaModel(ripl):
     assumes=[('p','(beta 1.0 1.0)')] 
-    observes=[('(flip p)',True) for _ in range(15)]
-    for sym,exp in assumes:
-        v.assume(sym,exp)
-    for exp,literal in observes:
-        v.observe(exp,literal)
-    queryExps = ['(add (bernoulli p) (bernoulli p))']
+    observes=[('(flip p)',True) for _ in range(2)]
+    queryExps =  ['(add (bernoulli p) (bernoulli p))'] # exps in python form
+    [ripl.assume(sym,exp) for sym,exp in assumes]
+    [ripl.observe(exp,literal) for exp,literal in observes]
+    return ripl,assumes,observes,queryExps
+
+def normalModel(ripl):
+    assumes = [ ('x','(normal 0 100)') ]
+    observes = [ ('(normal x 100)','0') ]
+    queryExps = ('(* x 2)',)
+    [ripl.assume(sym,exp) for sym,exp in assumes]
+    [ripl.observe(exp,literal) for exp,literal in observes]
+    return ripl,assumes,observes,queryExps
+
+def _testLoadModel(ripl_mripl):
+    v=ripl_mripl
+    vBackend = v.backend if isinstance(v,MRipl) else v.backend()
     
-    # run inference
-    inferredPValues = []
-    for _ in range(totalSamples):
-        v.infer(5)
-        inferredPValues.append(v.report(1))
-    
-    # load model to Analytics and test __init__
+    v,assumes,observes,queryExps = betaModel(v)
     model = Analytics(v,queryExps=queryExps)
-    assert model.backend==v.backend()
-    assert model.assumes==assumes
-    assert model.observes==observes
-    assert model.queryExps==queryExps
-
-    ## Run inference in Analytics
-    # test history
-    history,outRipl = model.runFromConditional(totalSamples,runs=1)
-    assert history.data == observes
-    assert [sym in history.nameToSeries for sym,_ in assumes]
-    assert [exp in history.nameToSeries for exp in queryExps]
     
-    # test outRipl: should be similar to v
-    assert outRipl.backend()==v.backend()
-    if totalSamples >= 400:
-        assert .5 > abs(outRipl.report(1) - v.report(1)) # inferred p's are close
+    def attributesMatch():
+        eq_( model.backend,vBackend )
+        eq_( model.assumes,assumes )
+        eq_( model.observes,observes )
+        eq_( model.queryExps,queryExps )
+    attributesMatch() # assumes extracted from ripl_mripl
+
+    v.clear()   # now assumes given as kwarg
+    model = Analytics(v,assumes=assumes,observes=observes,queryExps=queryExps)
+    attributesMatch()
+
+def testLoad():
+    yield _testLoadModel, get_ripl()
+    yield _testLoadModel, get_mripl(no_ripls=3)
     
-    # test inference (FIXME: add stats test with (beta 1 16))
-    analyticsPValues = history.nameToSeries['p'][0].values
-    if totalSamples >= 400:
-        assert .1 > abs(np.mean(inferredPValues) - np.mean(analyticsPValues))
-        assert .04 > abs(np.var(inferredPValues) - np.var(analyticsPValues))
 
-    # (add (bernoulli p) (bernoulli p)) in [1,2] with high probability
-    queryValues = history.nameToSeries[queryExps[0]][0].values
-    assert np.sum(queryValues) > len(queryValues) 
+def _testHistory(ripl_mripl):
+    v=ripl_mripl
+    v,assumes,observes,queryExps = betaModel(v)
+    samples = 5
+    model = Analytics(v,queryExps=queryExps)
+    history,_ = model.runFromConditional(samples,runs=1)
+    eq_(history.data,observes)
+    assert all( [sym in history.nameToSeries for sym,_ in assumes] )
+    assert all( [exp in history.nameToSeries for exp in queryExps] )
+    averageP = np.mean( history.nameToSeries['p'][0].values )
+    assert_almost_equal(averageP,history.averageValue('p'))
+    
+def testHistory():
+    yield _testHistory, get_ripl()
+    yield _testHistory, get_mripl(no_ripls=3)
 
-    return 
+def _testRuns(ripl_mripl):
+    v,assumes,observes,queryExps = normalModel( ripl_mripl )
+    samples = 20
+    runsList = [2,3,7]
+    model = Analytics(v,queryExps=queryExps)
+    
+    for no_runs in runsList:
+        history,_ = model.runFromConditional(samples,runs=no_runs)
+        eq_( len(history.nameToSeries['x']), no_runs)
+
+        for exp in ('x', queryExps[0]):
+            arValues = np.array([s.values for s in history.nameToSeries[exp]])
+            assert all(np.var(arValues,axis=0) > .0001) # var across runs time t
+            assert all(np.var(arValues,axis=1) > .000001) # var within runs 
+
+def testRuns():
+    yield _testRuns, get_ripl()
+    yield _testRuns, get_mripl(no_ripls=3)
+
+@statisticalTest
+def _testInfer(ripl_mripl,conditional_prior,inferProg):
+    v,_,_,_= betaModel( ripl_mripl ) 
+    samples = 40
+    runs = 20
+    model = Analytics(v)
+    def lastSnapshot(history):
+        return [series.values[-1] for series in history.nameToSeries['p']]
+
+    if conditional_prior == 'conditional':
+        history,_ = model.runFromConditional(samples,runs=runs,
+                                             infer=inferProg)
+        cdf = stats.beta(3,1).cdf
+    else:
+        history,_ = model.runConditionedFromPrior(samples,runs=runs,
+                                                  infer=inferProg)
+        dataValues = [typeVal['value'] for exp,typeVal in history.data] 
+        noHeads = sum(dataValues)
+        noTails = len(dataValues) - noHeads
+        cdf = stats.beta(1+noHeads,1+noTails).cdf
+        # will include gtruth (but it won't affect test)
+        
+    return reportKnownContinuous(cdf,lastSnapshot(history))                                 
+                                     
+def testRunFromConditionalInfer():
+    riplThunks = (get_ripl, lambda: get_mripl(no_ripls=3))
+    cond_prior = ('conditional','prior')
+    #k1 = {"transitions":1,"kernel":"mh","scope":"default","block":"all"}
+    k1 = '(mh default one 1)'
+    k2 = '(mh default one 2)'
+    infProgs = ( None, k1,'(cycle (%s %s) 1)'%(k1,k2) )  
+
+    params = [(r,c,i) for r in riplThunks for c in cond_prior for i in infProgs]
+
+    for r,c,i in params:
+        yield _testInfer, r(), c, i
+
+def _testSampleFromJoint(ripl_mripl,useMRipl):
+    v,assumes,observes,queryExps = normalModel( ripl_mripl )
+    samples = 30
+    model = Analytics(v,queryExps=queryExps)
+    hist = model.sampleFromJoint(samples, useMRipl=useMRipl)
+    xSamples = hist.nameToSeries['x'][0].values
+    cdf = stats.norm(loc=0,scale=100).cdf
+    return reportKnownContinuous(cdf,xSamples)
+    
+def testSampleFromJoint():
+    riplThunks = (get_ripl, lambda: get_mripl(no_ripls=3))
+    for r in riplThunks:
+        for useMRipl in (True,False):
+            yield _testSampleFromJoint, r(), useMRipl
+
+
+
+# def _testInferRuns(ripl_mripl):
+#     v=ripl_mripl
+#     v.assume('x','(normal 1 1)')
+#     queryExps = ['(pow x 2)']
+#     model = Analytics(v,queryExps=queryExps)
+#     history,outRipl = model.runFromConditional(20,runs=10)
+    
+# def oldAnalytics()
+#     ## Run inference in Analytics
+#     # test history
+#     history,outRipl = model.runFromConditional(totalSamples,runs=1)
+#     assert history.data == observes
+#     assert [sym in history.nameToSeries for sym,_ in assumes]
+#     assert [exp in history.nameToSeries for exp in queryExps]
+    
+#     # test outRipl: should be similar to v
+#     assert outRipl.backend()==v.backend()
+#     if totalSamples >= 400:
+#         assert .5 > abs(outRipl.report(1) - v.report(1)) # inferred p's are close
+    
+#     # test inference (FIXME: add stats test with (beta 1 16))
+#     analyticsPValues = history.nameToSeries['p'][0].values
+#     if totalSamples >= 400:
+#         assert .1 > abs(np.mean(inferredPValues) - np.mean(analyticsPValues))
+#         assert .04 > abs(np.var(inferredPValues) - np.var(analyticsPValues))
+
+#     # (add (bernoulli p) (bernoulli p)) in [1,2] with high probability
+#     queryValues = history.nameToSeries[queryExps[0]][0].values
+#     assert np.sum(queryValues) > len(queryValues) 
+
+#     return 
 
 def generateMRiplParams(backends=('puma','lite'),no_ripls=(2,3),modes=None):
     if modes is None:
@@ -215,8 +323,8 @@ def testCompareSampleDicts():
     samples=20
     h,_ = model.runFromConditional(samples,runs=2) 
     dicts = [{'mu':h.nameToSeries['mu'][i].values} for i in range(2)]
-    stats,_ = compareSampleDicts(dicts,('',''),plot=False)
-    assert stats['mu'][-1].pval > .01
+    cReport = compareSampleDicts(dicts,('',''),plot=False)
+    assert cReport.statsDict['mu']['KSSameContinuous'].pval > .01
 
 
 
@@ -243,33 +351,38 @@ def _testGewekeTest():
 
     
 
-def quickTests():
-    testAnalytics(totalSamples=50)
+# def quickTests():
+#     testAnalytics(totalSamples=50)
 
-    _testBasicMRipl( MRipl(2) )
+#     _testBasicMRipl( MRipl(2) )
     
-    testSampleFromJointAssume()
-    testSampleFromJointObserve()
-    _testMRiplSampleFromJoint()
-    _testMRiplRunFromJoint(samples=100)
-    testCompareSampleDicts()
-    testGewekeTest()
-    return
+#     testSampleFromJointAssume()
+#     testSampleFromJointObserve()
+#     _testMRiplSampleFromJoint()
+#     _testMRiplRunFromJoint(samples=100)
+#     testCompareSampleDicts()
+#     testGewekeTest()
+#     return
 
 
-def slowTests():
-    testAnalytics()
+# def slowTests():
+#     testAnalytics()
 
-    for (no_ripls,backend,mode) in generateMRiplParams():
-        _testBasicMRipl( MRipl(no_ripls,backend=backend,local_mode=mode) )
+#     for (no_ripls,backend,mode) in generateMRiplParams():
+#         _testBasicMRipl( MRipl(no_ripls,backend=backend,local_mode=mode) )
 
-    testSampleFromJointAssume()
-    testSampleFromJointObserve()
-    _testMRiplSampleFromJoint()
-    _testMRiplRunFromJoint()
-    testCompareSampleDicts()
-    testGewekeTest()
+#     testSampleFromJointAssume()
+#     testSampleFromJointObserve()
+#     _testMRiplSampleFromJoint()
+#     _testMRiplRunFromJoint()
+#     testCompareSampleDicts()
+#     testGewekeTest()
 
-    return
+#     return
 
     
+
+
+
+
+

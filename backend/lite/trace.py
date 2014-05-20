@@ -51,8 +51,8 @@ class Trace(object):
     self.rcs.add(node)
     self.registerRandomChoiceInScope("default",node,node)
 
-  def registerRandomChoiceInScope(self,scope,block,node):
-    (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
+  def registerRandomChoiceInScope(self,scope,block,node,unboxed=False):
+    if not unboxed: (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if not scope in self.scopes: self.scopes[scope] = SMap()
     if not block in self.scopes[scope]: self.scopes[scope][block] = set()
     assert not node in self.scopes[scope][block]
@@ -253,10 +253,10 @@ class Trace(object):
   def addRandomChoicesInBlock(self,scope,block,pnodes,node):
     if not isinstance(node,OutputNode): return
 
-    if self.pspAt(node).isRandom(): pnodes.add(node)
+    if self.pspAt(node).isRandom() and not node in self.ccs: pnodes.add(node)
 
     requestNode = node.requestNode
-    if self.pspAt(requestNode).isRandom(): pnodes.add(requestNode)
+    if self.pspAt(requestNode).isRandom() and not requestNode in self.ccs: pnodes.add(requestNode)
 
     for esr in self.valueAt(node.requestNode).esrs:
       self.addRandomChoicesInBlock(scope,block,pnodes,self.spFamilyAt(requestNode,esr.id))
