@@ -1,6 +1,7 @@
 #include "sps/deterministic.h"
 #include "utils.h"
 #include <cmath>
+#include <boost/foreach.hpp>
 
 #include <iostream>
 using std::cout;
@@ -14,6 +15,18 @@ VentureValuePtr AddOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
   }
   return shared_ptr<VentureNumber>(new VentureNumber(sum));
 }
+
+vector<VentureValuePtr> AddOutputPSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
+  vector<VentureValuePtr> grad;
+  shared_ptr<VentureNumber> direction_number = dynamic_pointer_cast<VentureNumber>(direction);
+  assert(direction_number != NULL);
+  BOOST_FOREACH(VentureValuePtr val, args->operandValues) 
+  {
+    grad.push_back(VentureNumber::makeValue(direction_number->getDouble()));
+  }
+  return grad;
+}
+
 
 VentureValuePtr SubOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
@@ -31,6 +44,15 @@ VentureValuePtr MulOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
   return shared_ptr<VentureNumber>(new VentureNumber(prod));
 }
 
+vector<VentureValuePtr> MulOutputPSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
+  assert(args->operandValues.size() == 2);
+  shared_ptr<VentureNumber> direction_number = dynamic_pointer_cast<VentureNumber>(direction);
+  assert(direction_number != NULL);
+  vector<VentureValuePtr> grad;
+  grad.push_back(VentureNumber::makeValue(direction_number->getDouble()*args->operandValues[1]->getDouble()));
+  grad.push_back(VentureNumber::makeValue(direction_number->getDouble()*args->operandValues[0]->getDouble()));
+  return grad;
+}
 
 VentureValuePtr DivOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {

@@ -7,21 +7,27 @@
 struct AddOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  vector<VentureValuePtr> gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const;
+  string toString() const {return "AddOutputPSP"; }
 };
 
 struct SubOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  string toString() const {return "SubOutputPSP"; }
 };
 
 struct MulOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  vector<VentureValuePtr> gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const;
+  string toString() const {return "MulOutputPSP"; }
 };
 
 struct DivOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  string toString() const {return "DivOutputPSP"; }
 };
 
 struct IntDivOutputPSP : PSP

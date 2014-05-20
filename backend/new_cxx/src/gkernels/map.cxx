@@ -19,7 +19,6 @@ MAPGKernel::MAPGKernel(double epsilon, int steps)
 
 pair<Trace*,double> MAPGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold)
 {
-  cout << "map" << endl;
   this->trace = trace;
   this->scaffold = scaffold;
   set<Node*> pNodes = scaffold->getPrincipalNodes();
@@ -44,7 +43,6 @@ pair<Trace*,double> MAPGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffol
   }
   vector<VentureValuePtr> proposed = this->evolve(grad, currentValues, start_grad);
   registerDeterministicLKernels(trace, scaffold, applicationNodes, proposed);
-  cout << "proposed " << toString(proposed) << endl;
   double xiWeight = grad.fixed_regen(proposed);
   return make_pair(trace, 1000); // force accept. 
 }
@@ -56,7 +54,7 @@ vector<VentureValuePtr> MAPGKernel::evolve(GradientOfRegen& grad, vector<Venture
     xs = dynamic_pointer_cast<VentureArray>(xs+dxs*this->epsilon);
     assert(xs != NULL);
     dxs = shared_ptr<VentureArray>(new VentureArray(grad(xs->getArray())));
-    // cout << "gradient " << toString(dxs) << endl;
+    cout << "gradient " << toString(dxs) << endl;
     // cout << "xs " << toString(xs) << endl;
     // cout << "dxs*epsilon" << toString(dxs*this->epsilon) << endl;
     // cout << "xs+dxs*epsilon" << toString(xs+dxs*this->epsilon) << endl;

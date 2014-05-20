@@ -163,11 +163,15 @@ struct Inferer
       double epsilon;
       if(params.has_key("epsilon")) {
         epsilon = boost::python::extract<double>(params["epsilon"]);
+      }else if(params.has_key("rate")) {
+        epsilon = boost::python::extract<double>(params["rate"]);
       }else
         throw "hmc error: no stepsize defined.";
       double steps;
       if(params.has_key("L")) {
         steps = boost::python::extract<double>(params["L"]);
+      }else if(params.has_key("steps")) {
+        steps = boost::python::extract<double>(params["steps"]);
       }else
         throw "hmc error: no leapfrog steps defined.";
       if(kernel == "map")
