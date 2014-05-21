@@ -106,6 +106,7 @@ puma_src_files = [
     'src/detach.cxx',
     'src/lkernel.cxx',
     'src/utils.cxx',
+    'src/render.cxx',
     'src/db.cxx',
     'src/sp.cxx',
     'src/sprecord.cxx',
