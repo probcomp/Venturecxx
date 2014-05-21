@@ -410,8 +410,8 @@ function InitializeDemo() {
         }
         
         var simple = model_type === "simple";
-        document.getElementById("show_scopes").disabled = simple;
-        document.getElementById("slice").disabled = simple;
+        // document.getElementById("show_scopes").disabled = simple;
+        // document.getElementById("slice").disabled = simple;
 
         if (model_variables.use_outliers != use_outliers) {
             model_variables.use_outliers = use_outliers;
@@ -569,7 +569,7 @@ function InitializeDemo() {
     };
 
     var getShowScopes = function() {
-        return document.getElementById("show_scopes").checked;
+        return false; // document.getElementById("show_scopes").checked;
     };
     
     var getEnumRequested = function() {
@@ -577,7 +577,7 @@ function InitializeDemo() {
     };
     
     var getSliceRequested = function() {
-        return document.getElementById("slice").checked;
+        return false; // document.getElementById("slice").checked;
     };
     
     var LinearCurve = function() {
@@ -691,12 +691,12 @@ function InitializeDemo() {
         <br>\
         <label><input type="checkbox" id="use_outliers" name="use_outliers">Infer Outliers</label>\
         <label><input type="checkbox" id="infer_noise" name="infer_noise">Infer Noise</label>\
-        <label><input type="checkbox" id="show_scopes" name="show_scopes">Display inference hints</label>\
+<!--        <label><input type="checkbox" id="show_scopes" name="show_scopes">Display inference hints</label> -->\
         <br><br>\
         <div id="venture_code"></div>\
         <br>\
-<!--        <label><input type="checkbox" name="enum" id="enum" value="enum">Enumerate structure</label> -->\
-        <label><input type="checkbox" name="slice" id="slice" value="slice">Slice sample parameters</label>\
+<!--        <label><input type="checkbox" name="enum" id="enum" value="enum">Enumerate structure</label>\
+        <label><input type="checkbox" name="slice" id="slice" value="slice">Slice sample parameters</label> -->\
         </tr>\
         </table>\
         <br>\
