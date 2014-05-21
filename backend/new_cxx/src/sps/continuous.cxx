@@ -201,9 +201,9 @@ double xy_noise_size = .01;
 double heading_noise_size = .01;
 void add_noise(double& dx, double& dy, double& angular_displacement, gsl_rng * rng) {
   // TODO: better noise model
-  double x_noise = 1 + gsl_ran_flat(rng, -xy_noise_size, xy_noise_size);
-  double y_noise = 1 + gsl_ran_flat(rng, -xy_noise_size, xy_noise_size);
-  double heading_noise = 1 + gsl_ran_flat(rng, -heading_noise_size, heading_noise_size);
+  double x_noise = 1 + gsl_ran_gaussian(rng, xy_noise_size);
+  double y_noise = 1 + gsl_ran_gaussian(rng, xy_noise_size);
+  double heading_noise = 1 + gsl_ran_gaussian(rng, heading_noise_size);
   dx *= x_noise;
   dy *= y_noise;
   angular_displacement *= heading_noise;
@@ -268,16 +268,18 @@ double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
   vector<VentureValuePtr> vehicle_params = args->operandValues[3]->getArray();
   vector<VentureValuePtr> out_pose = value->getArray();
 
-  double x_diff, y_diff, heading_diff;
-  diff_poses(pose, out_pose, x_diff, y_diff, heading_diff);
+  // dead reckon
   double dx, dy, angular_displacement;
   simulate_deterministic_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement);
-
-  // FIXME: force this to match add_noise
-  bool in_x_bound = abs(dx / x_diff - 1) < xy_noise_size;
-  bool in_y_bound = abs(dy / y_diff - 1) < heading_noise_size;
-  bool in_heading_bound = abs(angular_displacement / heading_diff - 1) < heading_noise_size;
-  return in_x_bound * in_y_bound * in_heading_bound;
+  vector<VentureValuePtr> forward_pose = update_pose(pose, dx, dy, angular_displacement);
+  // determine error from dead reckoning
+  double x_diff, y_diff, heading_diff;
+  diff_poses(forward_pose, out_pose, x_diff, y_diff, heading_diff);
+  // score
+  double x_diff_likelihood = NormalDistributionLogLikelihood(x_diff, 0, xy_noise_size);
+  double y_diff_likelihood = NormalDistributionLogLikelihood(y_diff, 0, xy_noise_size);
+  double heading_diff_likelihood = NormalDistributionLogLikelihood(heading_diff, 0, heading_noise_size);
+  return x_diff_likelihood * y_diff_likelihood * heading_diff_likelihood;
 }
 
 VentureValuePtr SimulateGPSPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
