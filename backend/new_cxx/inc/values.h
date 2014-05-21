@@ -193,6 +193,7 @@ struct VentureVector : VentureValue
   static VentureValuePtr makeValue(const VectorXd & xs);
   VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureNumber(v(index->getInt()))); }
   VectorXd getVector() const { return v; }
+  VentureValuePtrVector getArray() const;
   boost::python::dict toPython(Trace * trace) const;
   VectorXd v;
   string toString() const;

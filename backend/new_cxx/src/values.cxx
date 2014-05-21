@@ -502,6 +502,13 @@ vector<VentureValuePtr> VenturePair::getArray() const
   return answer;
 }
 
+VentureValuePtrVector VentureVector::getArray() const 
+{
+  vector<VentureValuePtr> res;
+  res.push_back(VentureVector::makeValue(v));
+  return res;
+}
+
 VentureValuePtr VentureNumber::operator+(const VentureValuePtr & rhs) const {
   const shared_ptr<VentureNumber> rhsVal = dynamic_pointer_cast<VentureNumber>(rhs);
   if(rhsVal != NULL)
