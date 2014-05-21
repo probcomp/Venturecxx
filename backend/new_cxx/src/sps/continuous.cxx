@@ -197,13 +197,13 @@ void simulate_deterministic_motion(double dt, vector<VentureValuePtr> pose,
   return;
 }
 
-double xy_noise_size = .01;
-double heading_noise_size = .01;
+double motion_xy_noise_std = .01;
+double motion_heading_noise_std = .01;
 void add_noise(double& dx, double& dy, double& angular_displacement, gsl_rng * rng) {
   // TODO: better noise model
-  double x_noise = 1 + gsl_ran_gaussian(rng, xy_noise_size);
-  double y_noise = 1 + gsl_ran_gaussian(rng, xy_noise_size);
-  double heading_noise = 1 + gsl_ran_gaussian(rng, heading_noise_size);
+  double x_noise = 1 + gsl_ran_gaussian(rng, motion_xy_noise_std);
+  double y_noise = 1 + gsl_ran_gaussian(rng, motion_xy_noise_std);
+  double heading_noise = 1 + gsl_ran_gaussian(rng, motion_heading_noise_std);
   dx *= x_noise;
   dy *= y_noise;
   angular_displacement *= heading_noise;
@@ -276,20 +276,22 @@ double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
   double x_diff, y_diff, heading_diff;
   diff_poses(forward_pose, out_pose, x_diff, y_diff, heading_diff);
   // score
-  double x_diff_likelihood = NormalDistributionLogLikelihood(x_diff, 0, xy_noise_size);
-  double y_diff_likelihood = NormalDistributionLogLikelihood(y_diff, 0, xy_noise_size);
-  double heading_diff_likelihood = NormalDistributionLogLikelihood(heading_diff, 0, heading_noise_size);
+  double x_diff_likelihood = NormalDistributionLogLikelihood(x_diff, 0, motion_xy_noise_std);
+  double y_diff_likelihood = NormalDistributionLogLikelihood(y_diff, 0, motion_xy_noise_std);
+  double heading_diff_likelihood = NormalDistributionLogLikelihood(heading_diff, 0, motion_heading_noise_std);
   return x_diff_likelihood * y_diff_likelihood * heading_diff_likelihood;
 }
 
+double gps_xy_noise_std = .1;
+double gps_heading_noise_std = .01;
 VentureValuePtr SimulateGPSPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
   checkArgsLength("SimulateGPSPSP::simulate", args, 1);
   vector<VentureValuePtr> pose = args->operandValues[0]->getArray();
 
-  double dx = gsl_ran_gaussian(rng, 1.0);
-  double dy = gsl_ran_gaussian(rng, 1.0);
-  double dheading = gsl_ran_gaussian(rng, 0.1);
+  double dx = gsl_ran_gaussian(rng, gps_xy_noise_std);
+  double dy = gsl_ran_gaussian(rng, gps_xy_noise_std);
+  double dheading = gsl_ran_gaussian(rng, gps_heading_noise_std);
 
   return update_pose(pose, dx, dy, dheading);
 }
@@ -302,9 +304,9 @@ double SimulateGPSPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) 
 
   double x_diff, y_diff, heading_diff;
   diff_poses(pose, gps_pose, x_diff, y_diff, heading_diff);
-  double x_diff_likelihood = NormalDistributionLogLikelihood(x_diff, 0, 1.0);
-  double y_diff_likelihood = NormalDistributionLogLikelihood(y_diff, 0, 1.0);
-  double heading_diff_likelihood = NormalDistributionLogLikelihood(heading_diff, 0, 0.1);
+  double x_diff_likelihood = NormalDistributionLogLikelihood(x_diff, 0, gps_xy_noise_std);
+  double y_diff_likelihood = NormalDistributionLogLikelihood(y_diff, 0, gps_xy_noise_std);
+  double heading_diff_likelihood = NormalDistributionLogLikelihood(heading_diff, 0, gps_heading_noise_std);
   return x_diff_likelihood * y_diff_likelihood * heading_diff_likelihood;
 }
 
