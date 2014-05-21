@@ -176,7 +176,7 @@ if ON_LINUX:
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
         libraries = ['gsl', 'gslcblas', 'boost_python',
-		'boost_system','boost_thread','boost_signals','boost_thread-mt','rt'],
+		'boost_system','boost_thread','boost_signals','boost_thread','rt'],
         extra_compile_args = ["-g", "-O0", "-fPIC", "-Wno-deprecated-register", "-Wno-overloaded-virtual", "-L/usr/lib/"],
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
