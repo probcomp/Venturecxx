@@ -199,7 +199,7 @@ void simulate_deterministic_motion(double dt, vector<VentureValuePtr> pose,
 
 double motion_xy_noise_std = .01;
 double motion_heading_noise_std = .01;
-void add_noise(double& dx, double& dy, double& angular_displacement, gsl_rng * rng) {
+void add_fractional_noise(double& dx, double& dy, double& angular_displacement, gsl_rng * rng) {
   // TODO: better noise model
   double x_noise = 1 + gsl_ran_gaussian(rng, motion_xy_noise_std);
   double y_noise = 1 + gsl_ran_gaussian(rng, motion_xy_noise_std);
@@ -213,9 +213,8 @@ void add_noise(double& dx, double& dy, double& angular_displacement, gsl_rng * r
 void simulate_noisy_motion(double dt, vector<VentureValuePtr> pose,
         vector<VentureValuePtr> control, vector<VentureValuePtr> vehicle_params,
         double& dx, double& dy, double& angular_displacement, gsl_rng * rng) {
-  double dx, dy, angular_displacement;
   simulate_deterministic_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement);
-  add_noise(dx, dy, angular_displacement, rng);
+  add_fractional_noise(dx, dy, angular_displacement, rng);
   return;
 }
 
@@ -247,7 +246,7 @@ VentureValuePtr SimulateMotionPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
   vector<VentureValuePtr> vehicle_params = args->operandValues[3]->getArray();
 
   double dx, dy, angular_displacement;
-  simulate_noisy_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement);
+  simulate_noisy_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement, rng);
   return update_pose(pose, dx, dy, angular_displacement);
 }
 
@@ -271,7 +270,7 @@ double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
   // dead reckon
   double dx, dy, angular_displacement;
   simulate_deterministic_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement);
-  vector<VentureValuePtr> forward_pose = update_pose(pose, dx, dy, angular_displacement);
+  vector<VentureValuePtr> forward_pose = update_pose(pose, dx, dy, angular_displacement)->getArray();
   // determine error from dead reckoning
   double x_diff, y_diff, heading_diff;
   diff_poses(forward_pose, out_pose, x_diff, y_diff, heading_diff);
