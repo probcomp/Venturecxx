@@ -174,7 +174,7 @@ double normalize_heading(double heading) {
     return heading;
 }
 
-void simulate_motion(double dt, vector<VentureValuePtr> pose,
+void simulate_deterministic_motion(double dt, vector<VentureValuePtr> pose,
         vector<VentureValuePtr> control, vector<VentureValuePtr> vehicle_params,
         double& dx, double& dy, double& angular_displacement) {
   double heading = pose[2]->getDouble();
@@ -210,6 +210,15 @@ void add_noise(double& dx, double& dy, double& angular_displacement, gsl_rng * r
   return;
 }
 
+void simulate_noisy_motion(double dt, vector<VentureValuePtr> pose,
+        vector<VentureValuePtr> control, vector<VentureValuePtr> vehicle_params,
+        double& dx, double& dy, double& angular_displacement, gsl_rng * rng) {
+  double dx, dy, angular_displacement;
+  simulate_deterministic_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement);
+  add_noise(dx, dy, angular_displacement, rng);
+  return;
+}
+
 VentureValuePtr package_new_pose(double x, double y, double heading) {
   VentureValuePtr l(new VentureNil());
   VentureValuePtr vx = shared_ptr<VentureValue>(new VentureNumber(x));
@@ -238,8 +247,7 @@ VentureValuePtr SimulateMotionPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
   vector<VentureValuePtr> vehicle_params = args->operandValues[3]->getArray();
 
   double dx, dy, angular_displacement;
-  simulate_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement);
-  add_noise(dx, dy, angular_displacement, rng);
+  simulate_noisy_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement);
   return update_pose(pose, dx, dy, angular_displacement);
 }
 
@@ -263,7 +271,7 @@ double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
   double x_diff, y_diff, heading_diff;
   diff_poses(pose, out_pose, x_diff, y_diff, heading_diff);
   double dx, dy, angular_displacement;
-  simulate_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement);
+  simulate_deterministic_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement);
 
   // FIXME: force this to match add_noise
   bool in_x_bound = abs(dx / x_diff - 1) < xy_noise_size;
