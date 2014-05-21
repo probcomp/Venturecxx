@@ -288,10 +288,7 @@ double SimulateGPSPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) 
 {
   checkArgsLength("SimulateGPSPSP::logDensity", args, 1);
   vector<VentureValuePtr> pose = args->operandValues[0]->getArray();
-  vector<VentureValuePtr> gps_pose;
-  gps_pose.push_back(value->lookup(VentureValuePtr(new VentureNumber(0))));
-  gps_pose.push_back(value->lookup(VentureValuePtr(new VentureNumber(1))));
-  gps_pose.push_back(value->lookup(VentureValuePtr(new VentureNumber(2))));
+  vector<VentureValuePtr> gps_pose = value->getArray();
 
   double x_diff, y_diff, heading_diff;
   diff_poses(pose, gps_pose, x_diff, y_diff, heading_diff);
