@@ -231,8 +231,11 @@ def expToDict(exp):
     assert len(exp) == 6
     return {"kernel":"hmc","scope":exp[1],"block":exp[2],"epsilon":exp[3],"L":exp[4],"transitions":exp[5]}
   elif tag == "map":
-    assert len(exp) == 6
-    return {"kernel":"map","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":exp[4],"transitions":exp[5]}
+    assert len(exp) <= 7 and len(exp) >= 6
+    if(len(exp) == 6):
+      return {"kernel":"map","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":exp[4],"nestorov":False,"transitions":exp[5]}
+    else:
+      return {"kernel":"map","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":exp[4],"nestorov":exp[5], "transitions":exp[6]}
   elif tag == "latents":
     assert len(exp) == 4
     return {"kernel":"latents","scope":exp[1],"block":exp[2],"transitions":exp[3]}
