@@ -8,7 +8,7 @@ vehicle_h = 0
 vehicle_L = 0.257717
 
 
-epsilon = .32 * 2 ** 0
+epsilon = .1 * 2 ** -2
 N_predicts = 100
 N_infer = 100
 
@@ -26,13 +26,11 @@ def _convert(val):
 program = """
 
 [assume controls (list (list 0 0)
-                       (list 10 0)
-                       (list 10 0)
-                       (list 10 0)
-                       (list 10 0)
-                       (list 10 0)
-                       (list 10 0)
-                       (list 10 0))]
+                       (list .1 .0)
+                       (list .1 .0)
+                       (list .1 .0)
+                       (list .1 .0)
+                       (list .1 0))]
 
 [assume get_control (lambda (t) (lookup controls t))]
 
@@ -52,22 +50,29 @@ ripl0 = make_puma_church_prime_ripl()
 ripl0.execute_program(program)
 ripl0.infer(N_infer)
 get_predict = lambda x: ripl0.predict('(get_pose %s)' % x)
-predicts0 = numpy.array(map(get_predict, [5] * N_predicts))
+predicts0 = numpy.array(map(get_predict, [4] * N_predicts))
 
 ripl1 = make_puma_church_prime_ripl()
 ripl1.execute_program(program)
-ripl1.observe('(simulate_gps (get_pose 1))', _convert((0, 0, 0)))
-ripl1.observe('(simulate_gps (get_pose 2))', _convert((10+epsilon, 0, 0)))
-ripl1.observe('(simulate_gps (get_pose 3))', _convert((20+epsilon, 0, 0)))
-ripl1.observe('(simulate_gps (get_pose 4))', _convert((30+epsilon, 0, 0)))
-ripl1.observe('(simulate_gps (get_pose 5))', _convert((40+epsilon, 0, 0)))
+heading = .01
+ripl1.observe('(simulate_gps (get_pose 1))', _convert((0, 0, heading)))
+ripl1.observe('(simulate_gps (get_pose 2))', _convert((.1+epsilon, 0, heading)))
+ripl1.observe('(simulate_gps (get_pose 3))', _convert((.2+epsilon, 0, heading)))
+ripl1.observe('(simulate_gps (get_pose 4))', _convert((.3+epsilon, 0, heading)))
+ripl1.observe('(simulate_gps (get_pose 5))', _convert((.4+epsilon, 0, heading)))
 ripl1.infer(N_infer)
 ripl1.infer('(mh default one %s)' % N_infer)
 get_predict = lambda x: ripl1.predict('(get_pose %s)' % x)
-predicts1 = numpy.array(map(get_predict, [5] * N_predicts))
+predicts1 = numpy.array(map(get_predict, [4] * N_predicts))
 
 print 'predicts0.mean(axis=0):'
 print predicts0.mean(axis=0)
 
 print 'predicts1.mean(axis=0):'
 print predicts1.mean(axis=0)
+
+import pylab
+pylab.ion()
+pylab.show()
+pylab.hist(predicts0[:, 0])
+pylab.hist(predicts1[:, 0])
