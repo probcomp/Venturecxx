@@ -573,7 +573,7 @@ function InitializeDemo() {
     };
     
     var getEnumRequested = function() {
-        return document.getElementById("enum").checked;
+        return false; // document.getElementById("enum").checked;
     };
     
     var getSliceRequested = function() {
@@ -695,7 +695,7 @@ function InitializeDemo() {
         <br><br>\
         <div id="venture_code"></div>\
         <br>\
-        <label><input type="checkbox" name="enum" id="enum" value="enum">Enumerate structure</label>\
+<!--        <label><input type="checkbox" name="enum" id="enum" value="enum">Enumerate structure</label> -->\
         <label><input type="checkbox" name="slice" id="slice" value="slice">Slice sample parameters</label>\
         </tr>\
         </table>\
