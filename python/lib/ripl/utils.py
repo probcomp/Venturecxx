@@ -190,11 +190,18 @@ def expToDict(exp):
     return {"transitions": exp}
   tag = exp[0]
   if tag == "mh":
-    assert len(exp) == 4
-    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":True}
+    assert len(exp) >= 4 and len(exp) <= 6
+    useDeltaKernels = exp[4].lower() == "true" if len(exp) > 4 else False
+    deltaKernelArgs = exp[5] if len(exp) > 5 else None
+    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],
+            "useDeltaKernels":useDeltaKernels,"deltaKernelArgs":deltaKernelArgs,"with_mutation":True}
   elif tag == "subsampled_mh":
-    assert len(exp) == 8
-    return {"kernel":"subsampled_mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"scope_symbol":exp[4],"Nbatch":exp[5],"k0":exp[6],"epsilon":exp[7],"with_mutation":True}
+    assert len(exp) >= 8 and len(exp) <= 10
+    useDeltaKernels = exp[8].lower() == "true" if len(exp) > 8 else False
+    deltaKernelArgs = exp[9] if len(exp) > 9 else None
+    return {"kernel":"subsampled_mh","scope":exp[1],"block":exp[2],"transitions":exp[3],
+            "scope_symbol":exp[4],"Nbatch":exp[5],"k0":exp[6],"epsilon":exp[7],
+            "useDeltaKernels":useDeltaKernels,"deltaKernelArgs":deltaKernelArgs,"with_mutation":True}
   elif tag == "func-mh":
     assert len(exp) == 4
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
@@ -272,6 +279,7 @@ def testHandInspect():
   k6 = "(resample 11)"
   k7 = "(incorporate)"
   k8 = "(subsampled_mh 11 22 33 44 55 66 77)"
+  k9 = "(subsampled_mh 11 22 33 44 55 66 77 88 99)"
 
   print k1,expToDict(parse(k1))
   print k2,expToDict(parse(k2))
@@ -281,6 +289,7 @@ def testHandInspect():
   print k6,expToDict(parse(k4))
   print k7,expToDict(parse(k5))
   print k8,expToDict(parse(k8))
+  print k9,expToDict(parse(k9))
   print "----------------------"
   print expToDict(parse("(cycle (%s %s) 100)" % (k1,k2)))
   print expToDict(parse("(mixture (.1 %s .9 %s) 100)" % (k1,k2)))

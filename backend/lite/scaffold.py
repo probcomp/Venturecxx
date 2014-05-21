@@ -38,7 +38,7 @@ class Scaffold(object):
     print "borders: " + str(self.border)
     print "lkernels: " + str(self.lkernels)
 
-def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
+def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArgs = None):
   cDRG,cAbsorbing,cAAA = set(),set(),set()
   indexAssignments = {}
   assert isinstance(setsOfPNodes,list)
@@ -50,7 +50,7 @@ def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
   drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
   border = findBorder(trace,drg,absorbing,aaa)
   regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
-  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels)
+  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
   return Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
 
@@ -169,7 +169,7 @@ def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
 
   return regenCounts
 
-def loadKernels(trace,drg,aaa,useDeltaKernels):
+def loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs):
   lkernels = { node : trace.pspAt(node).getAAALKernel() for node in aaa}
   if useDeltaKernels:
     for node in drg - aaa:
@@ -177,7 +177,7 @@ def loadKernels(trace,drg,aaa,useDeltaKernels):
       if node.operatorNode in drg: continue
       for o in node.operandNodes:
         if o in drg: continue
-      if trace.pspAt(node).hasDeltaKernel(): lkernels[node] = trace.pspAt(node).getDeltaKernel()
+      if trace.pspAt(node).hasDeltaKernel(): lkernels[node] = trace.pspAt(node).getDeltaKernel(deltaKernelArgs)
   return lkernels
 
 def assignBorderSequnce(border,indexAssignments,numIndices):

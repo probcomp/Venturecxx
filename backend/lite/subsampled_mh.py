@@ -48,7 +48,7 @@ class Scaffold(object):
     print "borders: " + str(self.border)
     print "lkernels: " + str(self.lkernels)
 
-def constructScaffoldGlobalSection(trace,setsOfPNodes,sym_node,useDeltaKernels = False):
+def constructScaffoldGlobalSection(trace,setsOfPNodes,sym_node,useDeltaKernels = False, deltaKernelArgs = None):
   cDRG,cAbsorbing,cAAA = set(),set(),set()
   indexAssignments = {}
   assert isinstance(setsOfPNodes,list)
@@ -63,7 +63,7 @@ def constructScaffoldGlobalSection(trace,setsOfPNodes,sym_node,useDeltaKernels =
   assert sym_node in drg
   regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
   regenCounts[sym_node] = 1
-  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels)
+  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
   scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
   scaffold.sym_node = sym_node
@@ -71,7 +71,7 @@ def constructScaffoldGlobalSection(trace,setsOfPNodes,sym_node,useDeltaKernels =
   scaffold.N = len(scaffold.local_children)
   return scaffold
 
-def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
+def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArgs = None):
   cDRG,cAbsorbing,cAAA = set(),set(),set()
   indexAssignments = {}
   assert isinstance(setsOfPNodes,list)
@@ -83,7 +83,7 @@ def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
   drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
   border = findBorder(trace,drg,absorbing,aaa)
   regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
-  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels)
+  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
   return Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
 
@@ -222,7 +222,7 @@ def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
 
   return regenCounts
 
-def loadKernels(trace,drg,aaa,useDeltaKernels):
+def loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs):
   lkernels = { node : trace.pspAt(node).getAAALKernel() for node in aaa}
   if useDeltaKernels:
     for node in drg - aaa:
@@ -230,7 +230,7 @@ def loadKernels(trace,drg,aaa,useDeltaKernels):
       if node.operatorNode in drg: continue
       for o in node.operandNodes:
         if o in drg: continue
-      if trace.pspAt(node).hasDeltaKernel(): lkernels[node] = trace.pspAt(node).getDeltaKernel()
+      if trace.pspAt(node).hasDeltaKernel(): lkernels[node] = trace.pspAt(node).getDeltaKernel(deltaKernelArgs)
   return lkernels
 
 def assignBorderSequnce(border,indexAssignments,numIndices):
@@ -508,12 +508,14 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
     operator.makeConsistent(trace,indexer)
 
 class SubsampledBlockScaffoldIndexer(object):
-  def __init__(self,scope,block,sym):
+  def __init__(self,scope,block,sym,useDeltaKernels = False,deltaKernelArgs = None):
     if scope == "default" and not (block == "all" or block == "one" or block == "ordered"):
         raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
     self.scope = scope
     self.block = block
     self.sym   = sym
+    self.useDeltaKernels = useDeltaKernels
+    self.deltaKernelArgs = deltaKernelArgs
 
   def sampleGlobalIndex(self,trace):
     if self.block == "one": setsOfPNodes = [trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))]
@@ -533,7 +535,7 @@ class SubsampledBlockScaffoldIndexer(object):
     assert isScopeIncludeOutputPSP(trace.pspAt(self.sym_node))
     assert trace.getOutermostNonReferenceApplication(self.sym_node) is pnode
 
-    index = constructScaffoldGlobalSection(trace,[trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))],self.sym_node)
+    index = constructScaffoldGlobalSection(trace,[trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))],self.sym_node,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs)
 
     # Nodes in the border: 1 request node and 1 output node with symbol: sym.
     assert(len(index.border) == 1 and len(index.border[0]) == 2)
@@ -546,25 +548,6 @@ class SubsampledBlockScaffoldIndexer(object):
     return constructScaffold(trace,setsOfPNodes)
 
   def logDensityOfGlobalIndex(self,trace,_):
-    if self.block == "one": return trace.logDensityOfBlock(self.scope)
-    elif self.block == "all": return 0
-    elif self.block == "ordered": return 0
-    else: return 0
-
-class SubsampledBlockScaffoldIndexer_old(object):
-  def __init__(self,scope,block):
-    if scope == "default" and not (block == "all" or block == "one" or block == "ordered"):
-        raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
-    self.scope = scope
-    self.block = block
-
-  def sampleIndex(self,trace):
-    if self.block == "one": return constructScaffold(trace,[trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))])
-    elif self.block == "all": return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
-    elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
-    else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])
-
-  def logDensityOfIndex(self,trace,_):
     if self.block == "one": return trace.logDensityOfBlock(self.scope)
     elif self.block == "all": return 0
     elif self.block == "ordered": return 0

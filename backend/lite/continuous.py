@@ -7,6 +7,7 @@ import numpy.linalg as npla
 import scipy.special as spsp
 import numpy as np
 from utils import logDensityMVNormal
+from utils import override
 from exception import VentureValueError
 
 # For some reason, pylint can never find numpy members (presumably metaprogramming).
@@ -26,8 +27,21 @@ class NormalDriftKernel(LKernel):
     term3 = self.epsilon * nu
     return term1 + term2 + term3
 
+class MVNormalRandomWalkKernel(LKernel):
+  def __init__(self,epsilon = 0.7):
+    self.epsilon = epsilon if epsilon is not None else 0.7
 
-                                                        
+  def simulate(self,trace,oldValue,args):
+    (mu, _) = MVNormalOutputPSP.__parse_args__(args)
+    nu = scipy.stats.norm.rvs(0,self.epsilon,mu.shape)
+    return oldValue + nu
+
+  @override(LKernel)
+  def weight(self, _trace, _newValue, _oldValue, _args):
+    # log P(_newValue --> _oldValue) == log P(_oldValue --> _newValue)
+    (mu, sigma) = MVNormalOutputPSP.__parse_args__(_args)
+    return logDensityMVNormal(_newValue, mu, sigma)
+
 class MVNormalOutputPSP(RandomPSP):
   def simulate(self, args):
     return npr.multivariate_normal(*self.__parse_args__(args))
@@ -45,10 +59,14 @@ class MVNormalOutputPSP(RandomPSP):
     gradSigma = .5*np.dot(np.dot(isigma, xvar),isigma)-.5*isigma
     return np.array(gradX)[0].tolist(), [np.array(gradMu)[0].tolist(), gradSigma]
 
+  def hasDeltaKernel(self): return True
+  def getDeltaKernel(self,*args): return MVNormalRandomWalkKernel(*args)
+
   def description(self,name):
     return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name
 
-  def __parse_args__(self, args):
+  @staticmethod
+  def __parse_args__(args):
     return (np.array(args.operandValues[0]), args.operandValues[1])
 
 class InverseWishartPSP(RandomPSP):
@@ -105,7 +123,7 @@ class InverseWishartPSP(RandomPSP):
 class WishartPSP(RandomPSP):
   '''
     Returns a sample from the Wishart distn, conjugate prior for precision matrices.
-  ''' 
+  '''
   def simulate(self, args):
     (sigma, dof) = self.__parse_args__(args)
     n = sigma.shape[0]
@@ -189,7 +207,7 @@ class NormalOutputPSP(RandomPSP):
   def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 
   def hasDeltaKernel(self): return False # have each gkernel control whether it is delta or not
-  def getDeltaKernel(self): return NormalDriftKernel()
+  def getDeltaKernel(self,args): return NormalDriftKernel(args)
 
   def hasVariationalLKernel(self): return True
   def getParameterScopes(self): return ["REAL","POSITIVE_REAL"]
