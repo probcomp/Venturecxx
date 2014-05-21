@@ -17,6 +17,12 @@ VentureValuePtrVector VentureNumber::getArray() const {
   return array;
 }
 
+VentureValuePtrVector VentureMatrix::getArray() const { 
+  VentureValuePtrVector array;
+  array.push_back(VentureMatrix::makeValue(m));
+  return array;
+}
+
 VentureValuePtr VentureNumber::makeValue(double x) {
   return VentureValuePtr(new VentureNumber(x));
 }
@@ -686,15 +692,31 @@ VentureValuePtr VentureVector::operator*(const VentureValuePtr & rhs) const {
 
 VentureValuePtr VentureMatrix::operator*(const VentureValuePtr & rhs) const {
   const shared_ptr<VentureMatrix> rhsVal = dynamic_pointer_cast<VentureMatrix>(rhs);
-  assert(rhsVal != NULL);
-  assert(this->m.size() == rhsVal->m.size());
-  MatrixXd x(m.rows(), m.cols());
-  for (int i = 0; i < m.rows(); ++i) { 
-    for(int j = 0; j < m.cols(); ++j) {
-      x(i,j) = m(i,j)*rhsVal->m(i,j);
+  if(rhsVal != NULL) 
+  {
+    assert(this->m.size() == rhsVal->m.size());
+    MatrixXd x(m.rows(), m.cols());
+    for(size_t i = 0; i < m.rows(); ++i) { 
+      for(size_t j = 0; j < m.cols(); ++j) {
+        x(i,j) = m(i,j)*rhsVal->m(i,j);
+      }
     }
+    return VentureMatrix::makeValue(x);
   }
-  return VentureMatrix::makeValue(x);
+  const shared_ptr<VentureNumber> rhsNumber = dynamic_pointer_cast<VentureNumber>(rhs);
+  if(rhsNumber != NULL) 
+  {
+    MatrixXd x(m.rows(), m.cols());
+    for(size_t i = 0; i < m.rows(); i++)
+    {
+      for(size_t j = 0; j < m.cols(); j++) 
+      {
+        x(i,j) = m(i,j)*rhsNumber->getDouble();
+      }
+    }
+    return VentureMatrix::makeValue(x);
+  }
+  assert(false);
 }
 
 VentureValuePtr VentureNumber::neg() const {

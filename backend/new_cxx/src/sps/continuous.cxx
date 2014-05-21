@@ -25,6 +25,9 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_sf.h>
+#include "Eigen/Dense"
+#include "Eigen/LU"
+#include "Eigen/Cholesky"
 #include <cmath>
 #include <cfloat>
 
@@ -325,3 +328,78 @@ double InvChiSquaredPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args
   double x = value->getDouble();
   return InvChiSquaredDistributionLogLikelihood(x,nu);
 }
+
+VentureValuePtr WishartPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const 
+{
+  MatrixXd sigma = args->operandValues[0]->getMatrix();
+  size_t dof = size_t(args->operandValues[1]->getDouble());
+  MatrixXd c = Eigen::LLT<MatrixXd>(sigma).matrixL();
+  size_t n = sigma.rows();
+  MatrixXd X;
+  if (dof <= 81+n && dof == int(dof))
+  {
+    MatrixXd randm(n, dof);
+    for(size_t i = 0; i < n; i++) 
+    {
+      for(size_t j = 0; j < dof; j++) 
+      {
+        randm(i,j) = gsl_ran_gaussian(rng, 1);
+      }
+    }
+    X = c*randm;
+  }
+  else
+  {
+    MatrixXd A(n,n);
+    for(size_t i = 0; i < n; i++) 
+    {
+      A(i,i) = sqrt(gsl_ran_chisq(rng, dof-i));
+      for(size_t j = 0; j < i; j++) 
+      {
+        A(i,j) = gsl_ran_gaussian(rng, 1);
+      }
+    }
+    X = c*A;
+  }
+  return VentureMatrix::makeValue(X*X.transpose());
+}
+
+double WishartPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const 
+{
+  MatrixXd sigma = args->operandValues[0]->getMatrix();
+  MatrixXd invSigma = sigma.inverse();
+  MatrixXd X = value->getMatrix();
+  size_t dof = size_t(args->operandValues[1]->getDouble());
+  size_t n = sigma.rows();
+  double multigammaln = n*(n-1)/4.0*log(M_PI);
+  for(int j = 1; j <= n; j++ )  // compute multivariate gamma function.
+  {
+    multigammaln += lgamma(dof*.5+(1-j)/2.0);
+  }
+  return 0-0.5*dof*(log(sigma.determinant())+n*log(2))-multigammaln 
+        +0.5*(dof-n-1)*log(X.determinant())-0.5*(invSigma*X).trace();
+}
+
+
+pair<VentureValuePtr, vector<VentureValuePtr> > 
+   WishartPSP::gradientOfLogDensity(const VentureValuePtr value, const shared_ptr<Args> args) 
+{
+  MatrixXd sigma = args->operandValues[0]->getMatrix();
+  MatrixXd invSigma = sigma.inverse();
+  MatrixXd X = value->getMatrix();
+  MatrixXd invX = X.inverse();
+  size_t dof = size_t(args->operandValues[1]->getDouble());
+  size_t n = sigma.rows();
+  MatrixXd gradX = invX*(dof-n-1)*0.5-invSigma*0.5;
+  MatrixXd gradSigma = -invSigma*0.5+invSigma*X*invSigma*0.5;
+  double gradDof = 0.5*log(X.determinant())-0.5*n*log(2)-0.5*sigma.determinant();
+  for(int i = 0; i < n; i++)
+  {
+    gradDof -= 0.5*gsl_sf_psi(0.5*(dof-i));
+  }
+  vector<VentureValuePtr> gradParam;
+  gradParam.push_back(VentureMatrix::makeValue(gradSigma));
+  gradParam.push_back(VentureNumber::makeValue(gradDof));
+  return make_pair(VentureMatrix::makeValue(gradX), gradParam);
+}
+

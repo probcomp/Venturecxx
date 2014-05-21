@@ -179,6 +179,7 @@ struct VentureMatrix : VentureValue
   static VentureValuePtr makeValue(const MatrixXd & xs);
   MatrixXd getMatrix() const { return m; }
   string toString() const;
+  VentureValuePtrVector getArray() const;
   boost::python::dict toPython(Trace * trace) const;
   MatrixXd m;
   VentureValuePtr operator+(const VentureValuePtr & rhs) const;

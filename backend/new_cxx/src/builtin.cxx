@@ -66,6 +66,7 @@ map<string,SP*> initBuiltInSPs()
   m["inv_chi_sq"] = new SP(new NullRequestPSP(), new InvChiSquaredPSP());
 
   m["multivariate_normal"] = new SP(new NullRequestPSP(), new MVNormalPSP());
+  m["wishart"] = new SP(new NullRequestPSP(), new WishartPSP());
 
   /* Discrete SPs */
   m["bernoulli"] = new SP(new NullRequestPSP(), new BernoulliOutputPSP());

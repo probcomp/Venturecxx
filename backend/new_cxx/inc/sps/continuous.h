@@ -105,5 +105,16 @@ struct InvChiSquaredPSP : RandomPSP
 
 };
 
+struct WishartPSP : RandomPSP 
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  pair<VentureValuePtr, vector<VentureValuePtr> > 
+   gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args);
+
+  bool isContinuous() const { return true; }
+  double getSupportLowerBound() const { return 0; }  
+};
+
 
 #endif
