@@ -17,6 +17,12 @@ VentureValuePtrVector VentureNumber::getArray() const {
   return array;
 }
 
+VentureValuePtrVector VentureMatrix::getArray() const { 
+  VentureValuePtrVector array;
+  array.push_back(VentureMatrix::makeValue(m));
+  return array;
+}
+
 VentureValuePtr VentureNumber::makeValue(double x) {
   return VentureValuePtr(new VentureNumber(x));
 }
@@ -279,19 +285,35 @@ string VentureNumber::toString() const { return "VentureNumber " + lexical_cast<
 string VentureAtom::toString() const { return "VentureAtom " + lexical_cast<string>(n);}
 string VentureBool::toString() const { return "VentureBool " + lexical_cast<string>(b);}
 string VentureSymbol::toString() const { return "VentureSymbol " + s;}
-string VentureArray::toString() const { 
-  string str = "[";
-  BOOST_FOREACH(VentureValuePtr x, xs) {
-    str += x->toString()+" ";
-  }
-  str += "]";
-  return "VentureArray\t"+str;
+string VentureArray::toString() const 
+{ 
+  string s = "VentureArray [";
+  for (size_t i = 0; i < xs.size(); ++i)
+    {
+      s += xs[i]->toString();
+      s += " ";
+    }
+  s += "]";
+  return s;
 }
+
 string VentureNil::toString() const { return "VentureNil";}
 string VenturePair::toString() const { return "VenturePair (" + car->toString() + ", " + cdr->toString() + ")";}
+
+
 string VentureSimplex::toString() const { return "VentureSimplex";}
 string VentureDictionary::toString() const { return "VentureDictionary";}
-string VentureMatrix::toString() const { return "VentureMatrix";}
+string VentureMatrix::toString() const { 
+  stringstream str;
+  str << "VentureMatrix (" << m.rows() << "," << m.cols() << ")" << endl;
+  for(int i = 0; i < m.rows(); i++) {
+    for(int j = 0; j < m.cols(); j++) {
+      str << m(i,j) << " ";
+    }
+    str << endl;
+  }
+  return str.str();
+}
 string VentureVector::toString() const { 
   stringstream str;
   str << "[";
@@ -304,6 +326,36 @@ string VentureVector::toString() const {
 string VentureRequest::toString() const { return "VentureRequest";}
 string VentureNode::toString() const { return "VentureNode";}
 string VentureID::toString() const { return "VentureID";}
+
+/* asExpression */
+string VentureNumber::asExpression() const { return lexical_cast<string>(x);}
+string VentureAtom::asExpression() const { return lexical_cast<string>(n);}
+string VentureBool::asExpression() const { return lexical_cast<string>(b);}
+string VentureSymbol::asExpression() const { return s;}
+string VentureArray::asExpression() const 
+{ 
+  string s = "(";
+  for (size_t i = 0; i < xs.size(); ++i)
+    {
+      s += xs[i]->asExpression();
+      if (i + 1 < xs.size()) { s += " "; }
+    }
+  s += ")";
+  return s;
+}
+
+string VentureNil::asExpression() const { return "nil";}
+string VenturePair::asExpression() const { return "[" + car->asExpression() + " . " + cdr->asExpression() + "]";}
+string VentureSimplex::asExpression() const { 
+  string s = "(";
+  for (size_t i = 0; i < ps.size(); ++i)
+    {
+      s += lexical_cast<string>(ps[i]);
+      if (i + 1 < ps.size()) { s += " "; }
+    }
+  s += ")";
+  return s;
+}
 
 /* toPython methods */
 
@@ -353,7 +405,7 @@ boost::python::dict VentureVector::toPython(Trace * trace) const
   boost::python::dict value;
   value["type"] = "vector";
   boost::python::list l;
-  for (size_t i = 0; i < v.size(); ++i) { l.append(v(i)); }
+  for (int i = 0; i < v.size(); ++i) { l.append(v(i)); }
   value["value"] = l;
   return value;
 }
@@ -363,10 +415,10 @@ boost::python::dict VentureMatrix::toPython(Trace * trace) const
   boost::python::dict value;
   value["type"] = "matrix";
   boost::python::list l;
-  for (size_t i = 0; i < m.rows(); ++i)
+  for (int i = 0; i < m.rows(); ++i)
   {
     boost::python::list row;
-    for (size_t j = 0; j < m.cols(); ++j) { row.append(m(i, j)); }
+    for (int j = 0; j < m.cols(); ++j) { row.append(m(i, j)); }
     l.append(row);
   }
   value["value"] = l;
@@ -387,7 +439,7 @@ boost::python::dict VentureDictionary::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "dict";
-  value["value"] = toPythonDict(trace, dict);
+  value["value"] = "opaque";
   return value;
 }
 
@@ -426,6 +478,14 @@ VentureValuePtr VenturePair::lookup(VentureValuePtr index) const
   else { return cdr->lookup(VentureValuePtr(new VentureAtom(index->getInt() - 1))); }
 }
 
+VentureValuePtr VentureDictionary::lookup(VentureValuePtr index) const
+{
+  if (dict.count(index)) { return dict.at(index); }
+  
+  throw "Key " + index->toString() + " not found in VentureDictionary.";
+}
+
+
 ////////////  
 MatrixXd VentureSimplex::getMatrix() const
 {
@@ -448,10 +508,37 @@ vector<VentureValuePtr> VenturePair::getArray() const
   return answer;
 }
 
+VentureValuePtrVector VentureVector::getArray() const 
+{
+  vector<VentureValuePtr> res;
+  res.push_back(VentureVector::makeValue(v));
+  return res;
+}
+
 VentureValuePtr VentureNumber::operator+(const VentureValuePtr & rhs) const {
   const shared_ptr<VentureNumber> rhsVal = dynamic_pointer_cast<VentureNumber>(rhs);
-  assert(rhsVal != NULL);
-  return VentureValuePtr(new VentureNumber(this->x+rhsVal->x));
+  if(rhsVal != NULL)
+    return VentureValuePtr(new VentureNumber(this->x+rhsVal->x));
+  const shared_ptr<VentureVector> rhsValVector = dynamic_pointer_cast<VentureVector>(rhs);
+  if(rhsValVector != NULL) {
+    VectorXd x(rhsValVector->v.size());
+    for(int i = 0; i < rhsValVector->v.size(); ++i) {
+      x(i) = rhsValVector->v(i)+this->x;
+    }
+    return VentureVector::makeValue(x);
+  }
+  const shared_ptr<VentureMatrix> rhsValMatrix = dynamic_pointer_cast<VentureMatrix>(rhs);
+  if(rhsValMatrix != NULL) {
+    const MatrixXd& m = rhsValMatrix->m;
+    MatrixXd x(m.rows(), m.cols());
+    for (int i = 0; i < m.rows(); ++i) { 
+      for(int j = 0; j < m.cols(); ++j) {
+        x(i,j) = m(i,j)+this->x;
+      }
+    }
+    return VentureMatrix::makeValue(x);
+  }
+  throw "error: VentureNumber cannot add with "+::toString(rhs);
 }
 
 VentureValuePtr VentureArray::operator+(const VentureValuePtr & rhs) const {
@@ -467,27 +554,49 @@ VentureValuePtr VentureArray::operator+(const VentureValuePtr & rhs) const {
 }
 
 VentureValuePtr VentureVector::operator+(const VentureValuePtr & rhs) const {
-  const shared_ptr<VentureVector> rhsVal = dynamic_pointer_cast<VentureVector>(rhs);
-  assert(rhsVal != NULL);
-  assert(this->v.size() == rhsVal->v.size());
-  VectorXd x(v.size());
-  for (int i = 0; i < v.size(); ++i) { 
-    x(i) = v(i)+rhsVal->v(i);
+  const shared_ptr<VentureNumber> rhsValNumber = dynamic_pointer_cast<VentureNumber>(rhs);
+  if(rhsValNumber != NULL) { // product by a number.
+    VectorXd x(v.size());
+    for(int i = 0; i < v.size(); ++i) {
+      x(i) = v(i)+rhsValNumber->getDouble();
+    }
+    return VentureVector::makeValue(x);
   }
-  return VentureVector::makeValue(x);
+  const shared_ptr<VentureVector> rhsVal = dynamic_pointer_cast<VentureVector>(rhs);
+  if(rhsVal != NULL) {
+    assert(this->v.size() == rhsVal->v.size());
+    VectorXd x(v.size());
+    for (int i = 0; i < v.size(); ++i) { 
+      x(i) = v(i)+rhsVal->v(i);
+    }
+    return VentureVector::makeValue(x);
+  }
+  assert(rhsVal != NULL);
 }
 
 VentureValuePtr VentureMatrix::operator+(const VentureValuePtr & rhs) const {
   const shared_ptr<VentureMatrix> rhsVal = dynamic_pointer_cast<VentureMatrix>(rhs);
-  assert(rhsVal != NULL);
-  assert(this->m.size() == rhsVal->m.size());
-  VectorXd x(m.rows(), m.cols());
-  for (int i = 0; i < m.rows(); ++i) { 
-    for(int j = 0; j < m.cols(); ++j) {
-      x(i,j) = m(i,j)+rhsVal->m(i,j);
+  if(rhsVal != NULL) { // add with another matrix.
+    assert(this->m.size() == rhsVal->m.size());
+    MatrixXd x(m.rows(), m.cols());
+    for (int i = 0; i < m.rows(); ++i) { 
+      for(int j = 0; j < m.cols(); ++j) {
+        x(i,j) = m(i,j)+rhsVal->m(i,j);
+      }
     }
+    return VentureMatrix::makeValue(x);
   }
-  return VentureMatrix::makeValue(x);
+  const shared_ptr<VentureNumber> rhsValNumber = dynamic_pointer_cast<VentureNumber>(rhs);
+  if(rhsValNumber != NULL) {
+    MatrixXd x(m.rows(), m.cols());
+    for (int i = 0; i < m.rows(); ++i) { 
+      for(int j = 0; j < m.cols(); ++j) {
+        x(i,j) = m(i,j)+rhsValNumber->getDouble();
+      }
+    }
+    return VentureMatrix::makeValue(x);
+  }
+  assert(false);
 }
 
 VentureValuePtr VentureNumber::operator-(const VentureValuePtr & rhs) const {
@@ -525,7 +634,7 @@ VentureValuePtr VentureMatrix::operator-(const VentureValuePtr & rhs) const {
   const shared_ptr<VentureMatrix> rhsVal = dynamic_pointer_cast<VentureMatrix>(rhs);
   assert(rhsVal != NULL);
   assert(this->m.size() == rhsVal->m.size());
-  VectorXd x(m.rows(), m.cols());
+  MatrixXd x(m.rows(), m.cols());
   for (int i = 0; i < m.rows(); ++i) { 
     for(int j = 0; j < m.cols(); ++j) {
       x(i,j) = m(i,j)-rhsVal->m(i,j);
@@ -583,15 +692,31 @@ VentureValuePtr VentureVector::operator*(const VentureValuePtr & rhs) const {
 
 VentureValuePtr VentureMatrix::operator*(const VentureValuePtr & rhs) const {
   const shared_ptr<VentureMatrix> rhsVal = dynamic_pointer_cast<VentureMatrix>(rhs);
-  assert(rhsVal != NULL);
-  assert(this->m.size() == rhsVal->m.size());
-  VectorXd x(m.rows(), m.cols());
-  for (int i = 0; i < m.rows(); ++i) { 
-    for(int j = 0; j < m.cols(); ++j) {
-      x(i,j) = m(i,j)*rhsVal->m(i,j);
+  if(rhsVal != NULL) 
+  {
+    assert(this->m.size() == rhsVal->m.size());
+    MatrixXd x(m.rows(), m.cols());
+    for(size_t i = 0; i < m.rows(); ++i) { 
+      for(size_t j = 0; j < m.cols(); ++j) {
+        x(i,j) = m(i,j)*rhsVal->m(i,j);
+      }
     }
+    return VentureMatrix::makeValue(x);
   }
-  return VentureMatrix::makeValue(x);
+  const shared_ptr<VentureNumber> rhsNumber = dynamic_pointer_cast<VentureNumber>(rhs);
+  if(rhsNumber != NULL) 
+  {
+    MatrixXd x(m.rows(), m.cols());
+    for(size_t i = 0; i < m.rows(); i++)
+    {
+      for(size_t j = 0; j < m.cols(); j++) 
+      {
+        x(i,j) = m(i,j)*rhsNumber->getDouble();
+      }
+    }
+    return VentureMatrix::makeValue(x);
+  }
+  assert(false);
 }
 
 VentureValuePtr VentureNumber::neg() const {
@@ -622,4 +747,8 @@ VentureValuePtr VentureMatrix::neg() const {
     }
   }
   return VentureMatrix::makeValue(x);
+}
+
+double VentureBool::getDouble() const {
+  return (double)b;
 }

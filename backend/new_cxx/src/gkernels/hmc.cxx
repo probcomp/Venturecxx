@@ -31,30 +31,24 @@ pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffol
     // cout << "old node " << node << endl;
     allNodes.push_back(node);
   }
-  // cout << "num pnodes " << applicationNodes.size() << endl;
   vector<VentureValuePtr> currentValues = trace->getCurrentValues(pNodes);
-  // cout << "current values " << toString(currentValues);
   /* detach and extract */
   registerDeterministicLKernels(trace, scaffold, applicationNodes, currentValues);
   double rhoWeight = this->prepare(trace, scaffold, true);
-
   /* evolve */
   VentureValuePtr start_q = VentureArray::makeValue(currentValues);
   VentureValuePtr momenta = this->sampleMomenta(start_q, trace->getRNG());
   VentureValuePtr start_grad_pot = VentureArray::makeValue(this->rhoDB->getPartials(allNodes))->neg();
-
   double start_K = this->kinetic(momenta);
   GradientOfRegen grad(trace, scaffold);
   
   pair<VentureValuePtr, double> particle = this->evolve(grad, start_q, start_grad_pot, momenta);
 
-  // cout << "new particle " << toString(particle.first->getArray()) << endl;
   double end_K = particle.second;
   VentureValuePtrVector proposed = particle.first->getArray();
   registerDeterministicLKernels(trace, scaffold, applicationNodes, proposed);
   
   double xiWeight = grad.fixed_regen(proposed) ;
-  // cout << "proposed " << toString(proposed) << endl;  
 
   return make_pair(trace,xiWeight - rhoWeight + start_K - end_K);
 }
@@ -99,7 +93,8 @@ double HMCGKernel::kinetic(const VentureValuePtr momenta) const {
 pair<VentureValuePtr, double> 
 HMCGKernel::evolve(GradientOfRegen& grad, const VentureValuePtr& start_q, const VentureValuePtr& start_grad_q, 
                       const VentureValuePtr& start_p) {
-  // int numSteps = int(gsl_rng_uniform(rng)*steps->getDouble())+1;
+  // cout << "HMC evolve" << endl;
+  // int numSteps = int(gsl_rng_uniform(grad.trace->getRNG())*steps->getDouble())+1;
   int numSteps = steps->getDouble();
   // cout << "num steps " << numSteps << endl;
   const VentureValuePtr half = VentureNumber::makeValue(epsilon->getDouble()*.5);
@@ -138,7 +133,7 @@ void HMCGKernel::reject()
 
 
 GradientOfRegen::GradientOfRegen(ConcreteTrace * trace, shared_ptr<Scaffold> scaffold) 
-:trace(trace), scaffold(scaffold) {
+:trace(trace), scaffold(scaffold), rngstate(gsl_rng_clone(trace->getRNG())) {
 
 }
 
@@ -165,7 +160,8 @@ VentureValuePtrVector GradientOfRegen::operator()(const VentureValuePtrVector& v
 }
 
 double GradientOfRegen::fixed_regen(const VentureValuePtrVector& values) {
-  // should we save state of RNG?
+  shared_ptr<gsl_rng> curr_rngstate = shared_ptr<gsl_rng>(gsl_rng_clone(trace->getRNG()));
+  trace->setRNG(rngstate.get());
   set<Node*> pNodes = scaffold->getPrincipalNodes();
   vector<ApplicationNode*> applicationNodes;
   BOOST_FOREACH(Node * node, pNodes)
@@ -174,6 +170,8 @@ double GradientOfRegen::fixed_regen(const VentureValuePtrVector& values) {
     applicationNodes.push_back(applicationNode);
   }
   registerDeterministicLKernels(trace, scaffold, applicationNodes, values);
-  return regenAndAttach(trace, scaffold->border[0], scaffold, false, shared_ptr<DB>(new DB()), shared_ptr<map<Node*,Gradient> >());
+  double ret = regenAndAttach(trace, scaffold->border[0], scaffold, false, shared_ptr<DB>(new DB()), shared_ptr<map<Node*,Gradient> >());
+  trace->setRNG(curr_rngstate.get());
+  return ret;
 }
 

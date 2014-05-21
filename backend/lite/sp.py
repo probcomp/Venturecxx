@@ -1,7 +1,9 @@
-from value import VentureValue, registerVentureType, VentureType
+from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType
 from abc import ABCMeta
 import copy
+import serialize
 
+@serialize.register
 class SPFamilies(object):
   def __init__(self, families=None):
     if families:
@@ -19,10 +21,24 @@ class SPFamilies(object):
 
   def copy(self):
     return SPFamilies(self.families.copy())
+
+  def serialize(self, s):
+    return s.serialize_default(self)
+
+  def deserialize(self, s, data):
+    return s.deserialize_default(self, data)
   
+@serialize.register
 class SPAux(object):
   def copy(self): return SPAux()
 
+  def serialize(self, s):
+    return {}
+
+  def deserialize(self, s, _):
+    pass
+
+@serialize.register
 class VentureSP(VentureValue):
   __metaclass__ = ABCMeta
 
@@ -51,6 +67,19 @@ class VentureSP(VentureValue):
       return self.requestPSP.f_type
   # VentureSPs are intentionally not comparable until we decide
   # otherwise
+
+  # for serialization
+  cyclic = True
+
+  def serialize(self, s):
+    ret = {}
+    ret['requestPSP'] = s.serialize(self.requestPSP)
+    ret['outputPSP'] = s.serialize(self.outputPSP)
+    return ret
+
+  def deserialize(self, s, data):
+    self.requestPSP = s.deserialize(data['requestPSP'])
+    self.outputPSP = s.deserialize(data['outputPSP'])
 
 registerVentureType(VentureSP)
 
@@ -119,3 +148,11 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def name(self):
     """A default name for when there is only room for one name."""
     return self._name_for_fixed_arity(self.args_types)
+
+  def gradient_type(self):
+    def to_grad_type(type_):
+      if isinstance(type_, ProbabilityType) or isinstance(type_, PositiveType):
+        return NumberType()
+      else:
+        return type_
+    return SPType([to_grad_type(t) for t in self.args_types], to_grad_type(self.return_type), self.variadic, self.min_req_args)

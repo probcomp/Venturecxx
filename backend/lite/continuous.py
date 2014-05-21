@@ -26,6 +26,7 @@ class NormalDriftKernel(LKernel):
     term3 = self.epsilon * nu
     return term1 + term2 + term3
 
+
                                                         
 class MVNormalOutputPSP(RandomPSP):
   def __init__(self):
@@ -56,7 +57,7 @@ class MVNormalOutputPSP(RandomPSP):
     return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name
 
   def __parse_args__(self, args):
-    return (np.array(args.operandValues[0]), args.operandValues[1])
+    return (np.array(args.operandValues[0]), np.array(args.operandValues[1]))
 
 class InverseWishartPSP(RandomPSP):
   def simulate(self, args):
@@ -169,8 +170,6 @@ class WishartPSP(RandomPSP):
 
   def __parse_args__(self, args):
     return (np.array(args.operandValues[0]), args.operandValues[1])
-
-
 
 class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods

@@ -51,6 +51,8 @@ map<string,SP*> initBuiltInSPs()
   m["sqrt"] = new SP(new NullRequestPSP(), new SqrtOutputPSP());
   m["not"] = new SP(new NullRequestPSP(), new NotOutputPSP());
   m["is_symbol"] = new SP(new NullRequestPSP(), new IsSymbolOutputPSP());
+  
+  m["to_atom"] = new SP(new NullRequestPSP(), new ToAtomOutputPSP());
   m["is_atom"] = new SP(new NullRequestPSP(), new IsAtomOutputPSP());
   
   /* Continuous SPs */
@@ -64,6 +66,7 @@ map<string,SP*> initBuiltInSPs()
   m["inv_chi_sq"] = new SP(new NullRequestPSP(), new InvChiSquaredPSP());
 
   m["multivariate_normal"] = new SP(new NullRequestPSP(), new MVNormalPSP());
+  m["wishart"] = new SP(new NullRequestPSP(), new WishartPSP());
 
   /* Discrete SPs */
   m["bernoulli"] = new SP(new NullRequestPSP(), new BernoulliOutputPSP());
@@ -98,6 +101,7 @@ map<string,SP*> initBuiltInSPs()
 
   /* Scoping */
   m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
+  m["scope_exclude"] = new SP(new NullRequestPSP(), new ScopeExcludeOutputPSP());
 
   /* Data structures */
   m["simplex"] = new SP(new NullRequestPSP(), new SimplexOutputPSP());
@@ -112,6 +116,7 @@ map<string,SP*> initBuiltInSPs()
   m["array"] = new SP(new NullRequestPSP(), new ArrayOutputPSP());
   m["prepend"] = new SP(new NullRequestPSP(), new PrependOutputPSP());
   m["append"] = new SP(new NullRequestPSP(), new AppendOutputPSP());
+  m["concat"] = new SP(new NullRequestPSP(), new ConcatOutputPSP());
   m["is_array"] = new SP(new NullRequestPSP(), new IsArrayOutputPSP());
   m["pair"] = new SP(new NullRequestPSP(), new PairOutputPSP());
   m["is_pair"] = new SP(new NullRequestPSP(), new IsPairOutputPSP());

@@ -4,11 +4,23 @@ from venture.lite.psp import NullRequestPSP
 from nose import SkipTest
 from nose.tools import eq_
 from venture.lite.sp import VentureSP
+from venture.lite.value import AnyType
 
-def testTypes():
+def testEquality():
+  checkTypedProperty(propEquality, AnyType())
+
+def propEquality(value):
+  assert value.equal(value)
+
+def relevantSPs():
   for (name,sp) in builtInSPsList():
     if isinstance(sp.requestPSP, NullRequestPSP):
-      yield checkTypeCorrect, name, sp
+      if name not in []: # Placeholder for selecting SPs to do or not do
+        yield name, sp
+
+def testTypes():
+  for (name,sp) in relevantSPs():
+    yield checkTypeCorrect, name, sp
 
 def checkTypeCorrect(_name, sp):
   type_ = sp.venture_type()
@@ -26,10 +38,9 @@ applied fully uncurried) match the expected types."""
     propTypeCorrect(args_lists[1:], answer, type_.return_type)
 
 def testDeterministic():
-  for (name,sp) in builtInSPsList():
-    if isinstance(sp.requestPSP, NullRequestPSP):
-      if not sp.outputPSP.isRandom():
-        yield checkDeterministic, name, sp
+  for (name,sp) in relevantSPs():
+    if not sp.outputPSP.isRandom():
+      yield checkDeterministic, name, sp
 
 def checkDeterministic(name, sp):
   checkTypedProperty(propDeterministic, fully_uncurried_sp_type(sp.venture_type()), name, sp)
@@ -57,9 +68,9 @@ fully uncurried)."""
       eq_(answer, carefully(sp.outputPSP.simulate, args))
 
 def testRandom():
-  for (name,sp) in builtInSPsList():
-    if isinstance(sp.requestPSP, NullRequestPSP):
-      if sp.outputPSP.isRandom():
+  for (name,sp) in relevantSPs():
+    if sp.outputPSP.isRandom():
+      if not name in ["make_uc_dir_mult", "categorical", "make_uc_sym_dir_mult"]:
         yield checkRandom, name, sp
 
 def checkRandom(_name, sp):

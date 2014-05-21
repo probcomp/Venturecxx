@@ -14,7 +14,7 @@ struct DB;
 class MAPGKernel : public GKernel, public InPlaceGKernel
 {
 public:
-  MAPGKernel(double epsilon, int steps);
+  MAPGKernel(double epsilon, int steps, bool use_nestorov = false);
 
   pair<Trace*,double> propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold);
   vector<VentureValuePtr> evolve(GradientOfRegen& grad, vector<VentureValuePtr>& currentValues, const vector<VentureValuePtr>& start_grad);
@@ -27,5 +27,6 @@ public:
   
   VentureValuePtr epsilon;
   VentureValuePtr steps;
+  bool use_nestorov;
 };
 #endif

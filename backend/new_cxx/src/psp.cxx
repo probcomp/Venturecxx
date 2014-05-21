@@ -14,19 +14,11 @@ using std::endl;
 shared_ptr<LKernel> const PSP::getAAALKernel() { return shared_ptr<LKernel>(new DefaultAAALKernel(this)); }
 
 pair<VentureValuePtr, vector<VentureValuePtr> > PSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) {
-	vector<VentureValuePtr> grad;
-	BOOST_FOREACH(VentureValuePtr arg,  args->operandValues) {
-		grad.push_back(VentureNumber::makeValue(0));
-	}
-	return make_pair(VentureNumber::makeValue(0), grad); 
+  throw "error: the log of density function of "+this->toString()+" is not implemented.";
 }
 
 vector<VentureValuePtr> PSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
-  vector<VentureValuePtr> grad;
-  BOOST_FOREACH(VentureValuePtr value, args->operandValues) {
-    grad.push_back(VentureNumber::makeValue(0));
-  }
-  return grad;
+  throw "error: the gradient of simulate of "+this->toString()+" is not implemented.";
 }
 
 
@@ -43,6 +35,13 @@ vector<VentureValuePtr> NullRequestPSP::gradientOfSimulate(const shared_ptr<Args
   return grad;
 }
 
+pair<VentureValuePtr, vector<VentureValuePtr> > NullRequestPSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) {
+  vector<VentureValuePtr> grad;
+  BOOST_FOREACH(VentureValuePtr arg,  args->operandValues) {
+    grad.push_back(VentureNumber::makeValue(0));
+  }
+  return make_pair(VentureNumber::makeValue(0), grad); 
+}
 
 VentureValuePtr ESRRefOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
@@ -69,4 +68,12 @@ vector<VentureValuePtr> ESRRefOutputPSP::gradientOfSimulate(const shared_ptr<Arg
   vector<VentureValuePtr> directions = direction->getArray();
   grad.insert(grad.end(), directions.begin(), directions.end());
   return grad;
+}
+
+pair<VentureValuePtr, vector<VentureValuePtr> > ESRRefOutputPSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) {
+  vector<VentureValuePtr> grad;
+  BOOST_FOREACH(VentureValuePtr arg,  args->operandValues) {
+    grad.push_back(VentureNumber::makeValue(0));
+  }
+  return make_pair(VentureNumber::makeValue(0), grad); 
 }

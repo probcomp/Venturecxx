@@ -54,6 +54,7 @@ struct NullRequestPSP : PSP
   bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const { return true; }
   string toString() const {return "NullRequestPSP"; }
   vector<VentureValuePtr> gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const;
+  pair<VentureValuePtr, vector<VentureValuePtr> > gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args);
 };
 
 struct ESRRefOutputPSP : PSP
@@ -62,6 +63,7 @@ struct ESRRefOutputPSP : PSP
   bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const;
   string toString() const {return "ESRRefOutputPSP"; }
   vector<VentureValuePtr> gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const;
+  pair<VentureValuePtr, vector<VentureValuePtr> > gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args);
 };
 
 struct RandomPSP : PSP

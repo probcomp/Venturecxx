@@ -11,6 +11,7 @@ struct MVNormalPSP : RandomPSP
 
   VentureValuePtr sigma;
   MatrixXd isigma;
+  string toString() const {return "MVNormalPSP"; }
 };
 
 #endif

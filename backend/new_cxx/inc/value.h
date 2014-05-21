@@ -60,6 +60,8 @@ struct VentureValue
   virtual bool hasSymbol() const;
   virtual const string & getSymbol() const;
 
+  virtual string asExpression() const;
+
   virtual bool hasArray() const { return false; }
   virtual vector<VentureValuePtr> getArray() const;
   virtual bool isNil() const { return false; }
@@ -117,7 +119,7 @@ inline VentureValuePtr operator-(const VentureValuePtr& lhs, const VentureValueP
 inline VentureValuePtr operator*(const VentureValuePtr& lhs, const VentureValuePtr& rhs) {return lhs->operator*(rhs);} 
 inline string toString(const VentureValuePtr& value) {return value->toString(); }
 inline string toString(const vector<VentureValuePtr>& values) {
-  string str = "<vector> [";
+  string str = "[";
   BOOST_FOREACH(VentureValuePtr value, values) {
     str += value->toString()+" ";
   }

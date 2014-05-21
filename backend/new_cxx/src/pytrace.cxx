@@ -1,5 +1,7 @@
 #include "pytrace.h"
 #include "regen.h"
+#include "render.h"
+#include "scaffold.h"
 #include "detach.h"
 #include "concrete_trace.h"
 #include "db.h"
@@ -14,12 +16,13 @@
 #include "gkernels/pgibbs.h"
 #include "gkernels/egibbs.h"
 #include "gkernels/slice.h"
+#include <boost/foreach.hpp>
 #include "gkernels/map.h"
 #include "gkernels/hmc.h"
 
 #include <boost/python/exception_translator.hpp>
 
-PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false) {}
+PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false), continuous_inference_thread(NULL) {}
 PyTrace::~PyTrace() {}
 
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
@@ -113,19 +116,6 @@ double PyTrace::getGlobalLogScore()
 
 uint32_t PyTrace::numUnconstrainedChoices() { return trace->numUnconstrainedChoices(); }
 
-VentureValuePtr getParam(const string& name, const boost::python::dict& params)
-{
-  boost::python::extract<string> getSymbol(params[name]);
-  boost::python::extract<int> getInt(params[name]);
-  boost::python::extract<double> getDouble(params[name]);
-  boost::python::extract<bool> getBool(params[name]);
-  if (getSymbol.check()) { return VentureValuePtr(new VentureSymbol(getSymbol())); }
-  else if (getInt.check()) { return VentureValuePtr(new VentureNumber(getInt())); }
-  else if (getDouble.check()) { return VentureValuePtr(new VentureNumber(getDouble())); }
-  else if (getBool.check()) { return VentureValuePtr(new VentureBool(getBool())); }
-  throw "Invalid parameter '" + name + "' in infer instruction.";
-}
-
 // parses params and does inference
 struct Inferer
 {
@@ -150,17 +140,19 @@ struct Inferer
     else if (kernel == "pgibbs")
     {
       size_t particles = boost::python::extract<size_t>(params["particles"]);
-      gKernel = shared_ptr<GKernel>(new PGibbsGKernel(particles));
+      bool inParallel  = boost::python::extract<bool>(params["in_parallel"]);
+      gKernel = shared_ptr<GKernel>(new PGibbsGKernel(particles,inParallel));
     }
     else if (kernel == "gibbs")
     {
-      gKernel = shared_ptr<GKernel>(new EnumerativeGibbsGKernel);
+      bool inParallel  = boost::python::extract<bool>(params["in_parallel"]);
+      gKernel = shared_ptr<GKernel>(new EnumerativeGibbsGKernel(inParallel));
     }
     else if (kernel == "slice")
     {
       gKernel = shared_ptr<GKernel>(new SliceGKernel);
     }
-    else if (kernel == "map" || kernel == "hmc")  
+    else if (kernel == "map" || kernel == "hmc" || kernel == "map_nestorov")  
     {
       // boost::python::list keys = params.keys();
       // boost::python::object o;
@@ -169,18 +161,38 @@ struct Inferer
       //   cout << str << endl;
       // }
       double epsilon;
-      if(params.has_key("epsilon")) {
+      if(params.has_key("epsilon")) 
+      {
         epsilon = boost::python::extract<double>(params["epsilon"]);
-      }else
+      }
+      else if(params.has_key("rate")) 
+      {
+        epsilon = boost::python::extract<double>(params["rate"]);
+      }
+      else
         throw "hmc error: no stepsize defined.";
       double steps;
-      if(params.has_key("L")) {
+      if(params.has_key("L")) 
+      {
         steps = boost::python::extract<double>(params["L"]);
+      }
+      else if(params.has_key("steps")) 
+      {
+        steps = boost::python::extract<double>(params["steps"]);
       }else
         throw "hmc error: no leapfrog steps defined.";
-      if(kernel == "map")
-        gKernel = shared_ptr<GKernel>(new MAPGKernel(epsilon, steps));
-      else if(kernel == "hmc")
+      bool nestorov;
+      if(kernel == "map") 
+      {
+        if(params.has_key("nestorov")) 
+        {
+          nestorov = boost::python::extract<bool>(params["nestorov"]);
+        }else
+        {
+          throw "map error : no nestorov option specified.";
+        }
+        gKernel = shared_ptr<GKernel>(new MAPGKernel(epsilon, steps, nestorov));
+      }else if(kernel == "hmc")
         gKernel = shared_ptr<GKernel>(new HMCGKernel(epsilon, steps));
     }
     else
@@ -189,9 +201,19 @@ struct Inferer
       gKernel = shared_ptr<GKernel>(new MHGKernel);
     }
     
-    scope = getParam("scope", params);
-    block = getParam("block", params);
-    scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+    scope = fromPython(params["scope"]);
+    block = fromPython(params["block"]);
+
+    if (block->hasSymbol() && block->getSymbol() == "ordered_range")
+      {
+	VentureValuePtr minBlock = fromPython(params["min_block"]);
+	VentureValuePtr maxBlock = fromPython(params["max_block"]);
+	scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block,minBlock,maxBlock));
+      }
+    else
+      {
+	scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+      }
     
     transitions = boost::python::extract<size_t>(params["transitions"]);
   }
@@ -216,11 +238,8 @@ struct Inferer
   }
 };
 
-// TODO URGENT placeholder
-void PyTrace::infer(boost::python::dict params) 
+void PyTrace::infer(boost::python::dict params)
 { 
-  trace->makeConsistent();
-  
   Inferer inferer(trace, params);
   inferer.infer();
 }
@@ -258,6 +277,7 @@ void PyTrace::stop_continuous_inference() {
     continuous_inference_running = false;
     continuous_inference_thread->join();
     delete continuous_inference_thread;
+    continuous_inference_thread = NULL;
   }
 }
 
@@ -268,6 +288,74 @@ void translateStringException(const string& err) {
 void translateCStringException(const char* err) {
   PyErr_SetString(PyExc_RuntimeError, err);
 }
+
+double PyTrace::makeConsistent()
+{
+  return trace->makeConsistent();
+}
+
+int PyTrace::numNodesInBlock(boost::python::object scope, boost::python::object block)
+{
+  return trace->getNodesInBlock(fromPython(scope), fromPython(block)).size();
+}
+
+boost::python::list PyTrace::dotTrace(bool colorIgnored)
+{
+  boost::python::list dots;
+  Renderer r;
+
+  r.dotTrace(trace,shared_ptr<Scaffold>(),false,colorIgnored);
+  dots.append(r.dot);
+  r.dotTrace(trace,shared_ptr<Scaffold>(),true,colorIgnored);
+  dots.append(r.dot);
+
+  set<Node *> ucs = trace->unconstrainedChoices;
+  BOOST_FOREACH (Node * pNode, ucs)
+    {
+      set<Node*> pNodes;
+      pNodes.insert(pNode);
+      vector<set<Node*> > pNodesSequence;
+      pNodesSequence.push_back(pNodes);
+
+      shared_ptr<Scaffold> scaffold = constructScaffold(trace.get(),pNodesSequence,false);
+      r.dotTrace(trace,scaffold,false,colorIgnored);
+      dots.append(r.dot);
+      r.dotTrace(trace,scaffold,true,colorIgnored);
+      dots.append(r.dot);
+      cout << "detaching..." << flush;
+      pair<double,shared_ptr<DB> > p = detachAndExtract(trace.get(),scaffold->border[0],scaffold);
+      cout << "done" << endl;
+      r.dotTrace(trace,scaffold,false,colorIgnored);
+      dots.append(r.dot);
+      r.dotTrace(trace,scaffold,true,colorIgnored);
+      dots.append(r.dot);
+
+      cout << "restoring..." << flush;
+      regenAndAttach(trace.get(),scaffold->border[0],scaffold,true,p.second,shared_ptr<map<Node*,Gradient> >());
+      cout << "done" << endl;
+    }
+
+  return dots;
+}
+
+boost::python::list PyTrace::numFamilies()
+{
+  boost::python::list xs;
+  xs.append(trace->families.size());
+  for (map<Node*, shared_ptr<VentureSPRecord> >::iterator iter = trace->madeSPRecords.begin();
+       iter != trace->madeSPRecords.end();
+       ++iter)
+    {
+      if (iter->second->spFamilies->families.size()) { xs.append(iter->second->spFamilies->families.size()); }
+    }
+  return xs;
+}
+
+void PyTrace::freeze(DirectiveID did) 
+{
+  trace->freezeDirectiveID(did);
+}
+
 
 BOOST_PYTHON_MODULE(libtrace)
 {
@@ -288,6 +376,11 @@ BOOST_PYTHON_MODULE(libtrace)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
     .def("infer", &PyTrace::infer)
+    .def("dot_trace", &PyTrace::dotTrace)
+    .def("makeConsistent", &PyTrace::makeConsistent)
+    .def("numNodesInBlock", &PyTrace::numNodesInBlock)
+    .def("numFamilies", &PyTrace::numFamilies)
+    .def("freeze", &PyTrace::freeze)
     .def("continuous_inference_status", &PyTrace::continuous_inference_status)
     .def("start_continuous_inference", &PyTrace::start_continuous_inference)
     .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)

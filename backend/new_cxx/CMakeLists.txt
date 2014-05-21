@@ -50,6 +50,7 @@ ENDIF()
 
 ADD_LIBRARY(trace SHARED
     src/pyutils.cxx
+    src/render.cxx
     src/args.cxx
     src/value.cxx
     src/values.cxx

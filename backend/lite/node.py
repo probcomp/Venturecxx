@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from value import VentureValue, ExpressionType
 from request import Request
+import serialize
 
 class Node(object):
   __metaclass__ = ABCMeta
@@ -28,6 +29,11 @@ class Node(object):
   @abstractmethod
   def definiteParents(self): pass
 
+  # for serialization
+  cyclic = True
+
+
+@serialize.register
 class ConstantNode(Node):
   def __init__(self,value):
     super(ConstantNode,self).__init__()
@@ -42,6 +48,7 @@ class ConstantNode(Node):
   def definiteParents(self): return []
 
 
+@serialize.register
 class LookupNode(Node):
   def __init__(self,sourceNode):
     super(LookupNode,self).__init__()
@@ -59,6 +66,7 @@ class ApplicationNode(Node):
     self.operandNodes = operandNodes
 
 
+@serialize.register
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
     super(RequestNode,self).__init__(operatorNode, operandNodes)
@@ -75,6 +83,7 @@ class RequestNode(ApplicationNode):
     return value is None or isinstance(value, Request)
 
 
+@serialize.register
 class OutputNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,requestNode,env):
     super(OutputNode,self).__init__(operatorNode, operandNodes)

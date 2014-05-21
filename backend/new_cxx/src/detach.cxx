@@ -63,6 +63,14 @@ double detach(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> 
   shared_ptr<Args> args = trace->getArgs(node);
   VentureValuePtr groundValue = trace->getGroundValue(node);
 
+  if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+  {
+    ScopeID scope = trace->getValue(node->operandNodes[0]);
+    BlockID block = trace->getValue(node->operandNodes[1]);
+    Node * blockNode = node->operandNodes[2];
+    trace->unregisterUnconstrainedChoiceInScope(scope,block,blockNode);
+  }    
+
   psp->unincorporate(groundValue,args);
   double weight = psp->logDensity(groundValue,args);
   if(compute_gradient) {
@@ -255,15 +263,14 @@ double unapplyPSP(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffo
   trace->clearValue(node);
 
   if(compute_gradient) {
-    BOOST_FOREACH(Node* p, node->definiteParents) {
+    BOOST_FOREACH(Node* p, trace->getParents(node)) {
       if(scaffold->isResampling(p) || scaffold->isBrush(p)) {
-        // cout << "psp type " << psp->toString() << endl;
         vector<VentureValuePtr> grads = psp->gradientOfSimulate(args, db->getValue(node), db->getPartial(node));
         vector<Node*> parents(args->operandNodes);
         vector<shared_ptr<Node> > parents_esr = trace->getESRParents(node);
         BOOST_FOREACH(shared_ptr<Node> node, parents_esr) 
           parents.push_back(node.get());
-        // cout << "partial 3: " << endl;
+        // cout << "partial 3: " << toString(grads[0]) << endl;
         db->addPartials(parents, grads);
       }
     }
