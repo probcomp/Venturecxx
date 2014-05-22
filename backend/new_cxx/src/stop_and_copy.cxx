@@ -2,6 +2,7 @@
 #include "concrete_trace.h"
 #include "env.h"
 #include "sps/csp.h"
+#include "sps/msp.h"
 #include "pytrace.h"
 #include "stop-and-copy.h"
 
@@ -392,6 +393,19 @@ CSPRequestPSP* CSPRequestPSP::copy_help(ForwardingMap* forward)
     (*forward)[this] = answer;
     answer->expression = copy_shared(this->expression, forward);
     answer->environment = copy_shared(this->environment, forward);
+    return answer;
+  }
+}
+
+MSPRequestPSP* MSPRequestPSP::copy_help(ForwardingMap* forward)
+{
+  if (forward->count(this) > 0)
+  {
+    return (MSPRequestPSP*)(*forward)[this];
+  } else {
+    MSPRequestPSP* answer = new MSPRequestPSP(*this);
+    (*forward)[this] = answer;
+    answer->sharedOperatorNode = this->sharedOperatorNode->copy_help(forward);
     return answer;
   }
 }
