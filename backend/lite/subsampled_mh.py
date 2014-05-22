@@ -48,26 +48,27 @@ class Scaffold(object):
     print "borders: " + str(self.border)
     print "lkernels: " + str(self.lkernels)
 
-def constructScaffoldGlobalSection(trace,setsOfPNodes,sym_node,useDeltaKernels = False, deltaKernelArgs = None):
+def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels = False, deltaKernelArgs = None):
   cDRG,cAbsorbing,cAAA = set(),set(),set()
   indexAssignments = {}
   assert isinstance(setsOfPNodes,list)
   for i in range(len(setsOfPNodes)):
     assert isinstance(setsOfPNodes[i],set)
-    extendCandidateScaffoldGlobalSection(trace,setsOfPNodes[i],sym_node,cDRG,cAbsorbing,cAAA,indexAssignments,i)
+    extendCandidateScaffoldGlobalSection(trace,setsOfPNodes[i],globalBorder,cDRG,cAbsorbing,cAAA,indexAssignments,i)
 
   brush = findBrush(trace,cDRG)
   drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
   border = findBorder(trace,drg,absorbing,aaa)
-  assert sym_node in border
-  assert sym_node in drg
   regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
-  regenCounts[sym_node] = 1
+  if globalBorder is not None:
+    assert globalBorder in border
+    assert globalBorder in drg
+    regenCounts[globalBorder] = 1
   lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
   scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
-  scaffold.sym_node = sym_node
-  scaffold.local_children = list(trace.childrenAt(sym_node))
+  scaffold.globalBorder = globalBorder
+  scaffold.local_children = list(trace.childrenAt(globalBorder)) if globalBorder is not None else []
   scaffold.N = len(scaffold.local_children)
   return scaffold
 
@@ -87,12 +88,12 @@ def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArg
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
   return Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
 
-def extendCandidateScaffoldGlobalSection(trace,pnodes,sym_node,drg,absorbing,aaa,indexAssignments,i):
+def extendCandidateScaffoldGlobalSection(trace,pnodes,globalBorder,drg,absorbing,aaa,indexAssignments,i):
   q = [(pnode,True,None) for pnode in pnodes]
 
   while q:
     node,isPrincipal,parentNode = q.pop()
-    if node is sym_node:
+    if node is globalBorder and globalBorder is not None:
       drg.add(node)
       indexAssignments[node] = i
     elif node in drg and not node in aaa:
@@ -420,15 +421,13 @@ def drawSubsampledScaffoldKernel(trace,indexer,scope_to_subsample):
 def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
   # Assumptions:
   #   1. Single principal node.
-  #   2. P -> Output with isScopeIncludeOutputPSP and symbol: sym -> N outgoing lookup nodes.
+  #   2. P -> single path (single lookup node or output node) -> N outgoing lookup or output nodes.
   #   3. All outgoing nodes are treated equally.
   #   4. No randomness in the local sections.
   #   5. LKernel is not used in local sections.
 
-  # Construct the global section with border at the given symbol.
+  # Construct the global section with a globalBorder node or None.
   global_index = indexer.sampleGlobalIndex(trace)
-  N = float(global_index.N)
-  assert(N >= Nbatch * k0)
 
   global_rhoMix = indexer.logDensityOfGlobalIndex(trace,global_index)
   # Propose variables in the global section.
@@ -441,59 +440,66 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
   log_u = math.log(random.random())
 
   alpha = global_xiMix + logGlobalAlpha - global_rhoMix
-  mu_0 = (log_u - alpha) / N
 
-  # Sequentially do until termination condition is met.
+  N = float(global_index.N)
+  if N == 0:
+    # No local sections. Regular MH.
+    accept = alpha > log_u
+  else:
+    # Austerity MH.
+    assert(N >= Nbatch * k0)
 
-  perm_local_chidren = np.random.permutation(global_index.local_children)
+    mu_0 = (log_u - alpha) / N
+    perm_local_chidren = np.random.permutation(global_index.local_children)
 
-  mx = 0.0  # Mean of mllh.
-  mx2 = 0.0 # Mean of mllh^2.
-  k = 0.0   # Index of minibatch.
-  n = 0.0   # Number of processed local variables.
-  accept = None
-  while n < N:
-    # Process k'th subset of local variables subsampled w/o replacement.
-    n_start = n
-    n_end = min(n + Nbatch, N)
-    cum_dllh = 0
-    for i in xrange(int(n_start), int(n_end)):
-      # Construct a local scaffold section.
-      local_scaffold = indexer.sampleLocalIndex(trace,perm_local_chidren[i])
-      # Compute diff of log-likelihood for i'th local variable.
-      dllh = operator.evalOneLocalSection(trace, local_scaffold)
-      cum_dllh += dllh
-    # Compute mllh for k
-    size_batch = n_end - n_start
-    mllh = cum_dllh / size_batch
+    # Sequentially do until termination condition is met.
+    mx = 0.0  # Mean of mllh.
+    mx2 = 0.0 # Mean of mllh^2.
+    k = 0.0   # Index of minibatch.
+    n = 0.0   # Number of processed local variables.
+    accept = None
+    while n < N:
+      # Process k'th subset of local variables subsampled w/o replacement.
+      n_start = n
+      n_end = min(n + Nbatch, N)
+      cum_dllh = 0
+      for i in xrange(int(n_start), int(n_end)):
+        # Construct a local scaffold section.
+        local_scaffold = indexer.sampleLocalIndex(trace,perm_local_chidren[i])
+        # Compute diff of log-likelihood for i'th local variable.
+        dllh = operator.evalOneLocalSection(trace, local_scaffold)
+        cum_dllh += dllh
+      # Compute mllh for k
+      size_batch = n_end - n_start
+      mllh = cum_dllh / size_batch
 
-    # Update mx, mx2, k, n
-    mx  = (size_batch * mllh        + n * mx ) / n_end
-    mx2 = (size_batch * mllh * mllh + n * mx2) / n_end
-    k += 1
-    n = n_end
+      # Update mx, mx2, k, n
+      mx  = (size_batch * mllh        + n * mx ) / n_end
+      mx2 = (size_batch * mllh * mllh + n * mx2) / n_end
+      k += 1
+      n = n_end
 
-    if k < k0 and n < N:
-      # Do not run testing for the first k0 minibatches.
-      continue
+      if k < k0 and n < N:
+        # Do not run testing for the first k0 minibatches.
+        continue
 
-    if n == N:
-      accept = mx >= mu_0
-      break
-    else:
-      # Compute estimated standard deviation sx.
-      # For the last minibatch 1 - n / N = 0.
-      sx = np.sqrt((1 - n / N) * (mx2 - mx * mx) / (k - 1))
-      # Compute q: p-value
-      q = stats.t.cdf((mx - mu_0) / sx, k - 1) # p-value
-      if q <= epsilon:
-        accept = False
+      if n == N:
+        accept = mx >= mu_0
         break
-      elif q >= 1 - epsilon:
-        accept = True;
-        break
+      else:
+        # Compute estimated standard deviation sx.
+        # For the last minibatch 1 - n / N = 0.
+        sx = np.sqrt((1 - n / N) * (mx2 - mx * mx) / (k - 1))
+        # Compute q: p-value
+        q = stats.t.cdf((mx - mu_0) / sx, k - 1) # p-value
+        if q <= epsilon:
+          accept = False
+          break
+        elif q >= 1 - epsilon:
+          accept = True;
+          break
+    assert(accept is not None)
 
-  assert(accept is not None)
   if accept:
 #    sys.stdout.write(".")
     # TODO
@@ -508,12 +514,11 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
     operator.makeConsistent(trace,indexer)
 
 class SubsampledBlockScaffoldIndexer(object):
-  def __init__(self,scope,block,sym,useDeltaKernels = False,deltaKernelArgs = None):
+  def __init__(self,scope,block,useDeltaKernels = False,deltaKernelArgs = None):
     if scope == "default" and not (block == "all" or block == "one" or block == "ordered"):
         raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
     self.scope = scope
     self.block = block
-    self.sym   = sym
     self.useDeltaKernels = useDeltaKernels
     self.deltaKernelArgs = deltaKernelArgs
 
@@ -528,22 +533,32 @@ class SubsampledBlockScaffoldIndexer(object):
     assert len(setsOfPNodes[0]) == 1
     pnode = next(iter(setsOfPNodes[0]))
 
-    # Find the node with the given symbol as the border between the global and local sections.
-    self.sym_node = trace.globalEnv.findSymbol(self.sym)
+    # Assumption 2. P -> single path (single lookup node or output node) -> N outgoing lookup or output nodes.
+    node = pnode
+    globalBorder = None
+    while True:
+      children = trace.childrenAt(node)
+      if len(children) == 0:
+        break
+      numLONode = 0
+      for child in children:
+        if isinstance(child, LookupNode) or isinstance(child, OutputNode):
+          numLONode += 1
+          nextNode = child
+          if numLONode > 1:
+            break
+      if numLONode > 1:
+        globalBorder = node
+        break
+      node = nextNode
+    self.globalBorder = globalBorder
 
-    # Assumption 2. P -> Output with isScopeIncludeOutputPSP and symbol: sym -> N outgoing lookup nodes.
-    assert isScopeIncludeOutputPSP(trace.pspAt(self.sym_node))
-    assert trace.getOutermostNonReferenceApplication(self.sym_node) is pnode
-
-    index = constructScaffoldGlobalSection(trace,[trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))],self.sym_node,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs)
-
-    # Nodes in the border: 1 request node and 1 output node with symbol: sym.
-    assert(len(index.border) == 1 and len(index.border[0]) == 2)
+    index = constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs)
 
     return index
 
   def sampleLocalIndex(self,trace,local_child):
-    assert(isinstance(local_child, LookupNode))
+    assert(isinstance(local_child, LookupNode) or isinstance(local_child, OutputNode))
     setsOfPNodes = [set([local_child])]
     return constructScaffold(trace,setsOfPNodes)
 
@@ -560,24 +575,23 @@ class SubsampledInPlaceOperator(object):
     self.trace = trace
     self.global_scaffold = global_scaffold
     rhoWeight,self.global_rhoDB = detachAndExtract(trace, global_scaffold.border[0], global_scaffold, compute_gradient)
-    # Assume there is only two variable extracted including sym_node.
-    assert(len(self.global_rhoDB.values) == 2 and self.global_rhoDB.hasValueFor(self.global_scaffold.sym_node))
     assertTorus(self.global_scaffold)
     return rhoWeight
 
   def evalOneLocalSection(self, trace, local_scaffold, compute_gradient = False):
+    assert(self.global_scaffold.globalBorder is not None)
     # Detach and extract
     _,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold, compute_gradient)
     # Regen and attach with the old value
-    proposed_value = trace.valueAt(self.global_scaffold.sym_node)
-    trace.setValueAt(self.global_scaffold.sym_node, self.global_rhoDB.getValue(self.global_scaffold.sym_node))
+    proposed_value = trace.valueAt(self.global_scaffold.globalBorder)
+    trace.setValueAt(self.global_scaffold.globalBorder, self.global_rhoDB.getValue(self.global_scaffold.globalBorder))
     regenAndAttach(trace,local_scaffold.border[0],local_scaffold,False,local_rhoDB,{})
 
     # Detach and extract
     rhoWeight,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold, compute_gradient)
 
     # Regen and attach with the new value
-    trace.setValueAt(self.global_scaffold.sym_node, proposed_value)
+    trace.setValueAt(self.global_scaffold.globalBorder, proposed_value)
     xiWeight = regenAndAttach(trace,local_scaffold.border[0],local_scaffold,False,local_rhoDB,{})
     return xiWeight - rhoWeight
 

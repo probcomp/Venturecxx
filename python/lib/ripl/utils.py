@@ -196,11 +196,11 @@ def expToDict(exp):
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],
             "useDeltaKernels":useDeltaKernels,"deltaKernelArgs":deltaKernelArgs,"with_mutation":True}
   elif tag == "subsampled_mh":
-    assert len(exp) >= 8 and len(exp) <= 10
-    useDeltaKernels = exp[8].lower() == "true" if len(exp) > 8 else False
-    deltaKernelArgs = exp[9] if len(exp) > 9 else None
+    assert len(exp) >= 7 and len(exp) <= 9
+    useDeltaKernels = exp[7].lower() == "true" if len(exp) > 7 else False
+    deltaKernelArgs = exp[8] if len(exp) > 8 else None
     return {"kernel":"subsampled_mh","scope":exp[1],"block":exp[2],"transitions":exp[3],
-            "scope_symbol":exp[4],"Nbatch":exp[5],"k0":exp[6],"epsilon":exp[7],
+            "Nbatch":exp[4],"k0":exp[5],"epsilon":exp[6],
             "useDeltaKernels":useDeltaKernels,"deltaKernelArgs":deltaKernelArgs,"with_mutation":True}
   elif tag == "func-mh":
     assert len(exp) == 4
