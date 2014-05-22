@@ -125,7 +125,8 @@ class Engine(object):
   def reset(self):
     worklist = sorted(self.directives.iteritems())
     self.clear()
-    [self.replay(dir) for (_,dir) in worklist]
+    for (_,dir) in worklist:
+      self.replay(dir)
 
   def replay(self,directive):
     if directive[0] == "assume":
@@ -163,11 +164,11 @@ class Engine(object):
     elif params['kernel'] == "cycle":
       if 'subkernels' not in params:
         raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
-      for n in range(params["transitions"]):
+      for _ in range(params["transitions"]):
         for k in params["subkernels"]:
           self.infer(k)
     elif params["kernel"] == "mixture":
-      for n in range(params["transitions"]):
+      for _ in range(params["transitions"]):
         self.infer(simulateCategorical(params["weights"], params["subkernels"]))
     else: # A primitive infer expression
       #import pdb; pdb.set_trace()
