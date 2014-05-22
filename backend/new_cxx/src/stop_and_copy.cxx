@@ -17,7 +17,10 @@
 // The contract is that copy_help must copy the object it is called
 // on, translating all Venture objects inside according to the given
 // forwarding map, and insert a forwarding pointer from this to the
-// result.  A typical implementation looks like
+// result.  The caller owns both the ForwardingMap* and the returned
+// Foo*.
+//
+// A typical implementation looks like
 //
 //   Foo* answer = new Foo(this);
 //   (*forward)[this] = answer;
