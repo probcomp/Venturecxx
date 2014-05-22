@@ -197,9 +197,8 @@ void simulate_deterministic_motion(double dt, vector<VentureValuePtr> pose,
   return;
 }
 
-double motion_xy_noise_std = .01;
-double motion_heading_noise_std = .01;
-void add_fractional_noise(double& dx, double& dy, double& angular_displacement, gsl_rng * rng) {
+void add_fractional_noise(double motion_xy_noise_std, double motion_heading_noise_std,
+        double& dx, double& dy, double& angular_displacement, gsl_rng * rng) {
   // TODO: better noise model
   double x_noise = 1 + gsl_ran_gaussian(rng, motion_xy_noise_std);
   double y_noise = 1 + gsl_ran_gaussian(rng, motion_xy_noise_std);
@@ -210,11 +209,13 @@ void add_fractional_noise(double& dx, double& dy, double& angular_displacement, 
   return;
 }
 
-void simulate_noisy_motion(double dt, vector<VentureValuePtr> pose,
+void simulate_noisy_motion(double motion_xy_noise_std, double motion_heading_noise_std,
+        double dt, vector<VentureValuePtr> pose,
         vector<VentureValuePtr> control, vector<VentureValuePtr> vehicle_params,
         double& dx, double& dy, double& angular_displacement, gsl_rng * rng) {
   simulate_deterministic_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement);
-  add_fractional_noise(dx, dy, angular_displacement, rng);
+  add_fractional_noise(motion_xy_noise_std, motion_heading_noise_std,
+          dx, dy, angular_displacement, rng);
   return;
 }
 
@@ -239,14 +240,17 @@ VentureValuePtr update_pose(vector<VentureValuePtr> pose,
 
 VentureValuePtr SimulateMotionPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  checkArgsLength("SimulateMotionPSP::simulate", args, 4);
+  checkArgsLength("SimulateMotionPSP::simulate", args, 6);
   double dt = args->operandValues[0]->getDouble();
   vector<VentureValuePtr> pose = args->operandValues[1]->getArray();
   vector<VentureValuePtr> control = args->operandValues[2]->getArray();
   vector<VentureValuePtr> vehicle_params = args->operandValues[3]->getArray();
+  double motion_xy_noise_std = args->operandValues[4]->getDouble();
+  double motion_heading_noise_std = args->operandValues[5]->getDouble();
 
   double dx, dy, angular_displacement;
-  simulate_noisy_motion(dt, pose, control, vehicle_params, dx, dy, angular_displacement, rng);
+  simulate_noisy_motion(motion_xy_noise_std, motion_heading_noise_std,
+          dt, pose, control, vehicle_params, dx, dy, angular_displacement, rng);
   return update_pose(pose, dx, dy, angular_displacement);
 }
 
@@ -260,11 +264,13 @@ void diff_poses(vector<VentureValuePtr> pose0, vector<VentureValuePtr> pose1,
 
 double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  checkArgsLength("SimulateMotionPSP::logDensity", args, 4);
+  checkArgsLength("SimulateMotionPSP::logDensity", args, 6);
   double dt = args->operandValues[0]->getDouble();
   vector<VentureValuePtr> pose = args->operandValues[1]->getArray();
   vector<VentureValuePtr> control = args->operandValues[2]->getArray();
   vector<VentureValuePtr> vehicle_params = args->operandValues[3]->getArray();
+  double motion_xy_noise_std = args->operandValues[4]->getDouble();
+  double motion_heading_noise_std = args->operandValues[5]->getDouble();
   vector<VentureValuePtr> out_pose = value->getArray();
 
   // dead reckon
@@ -281,12 +287,12 @@ double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
   return x_diff_likelihood + y_diff_likelihood + heading_diff_likelihood;
 }
 
-double gps_xy_noise_std = .1;
-double gps_heading_noise_std = .01;
 VentureValuePtr SimulateGPSPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  checkArgsLength("SimulateGPSPSP::simulate", args, 1);
+  checkArgsLength("SimulateGPSPSP::simulate", args, 3);
   vector<VentureValuePtr> pose = args->operandValues[0]->getArray();
+  double gps_xy_noise_std = args->operandValues[1]->getDouble();
+  double gps_heading_noise_std = args->operandValues[2]->getDouble();
 
   double dx = gsl_ran_gaussian(rng, gps_xy_noise_std);
   double dy = gsl_ran_gaussian(rng, gps_xy_noise_std);
@@ -297,8 +303,10 @@ VentureValuePtr SimulateGPSPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  
 
 double SimulateGPSPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
-  checkArgsLength("SimulateGPSPSP::logDensity", args, 1);
+  checkArgsLength("SimulateGPSPSP::logDensity", args, 3);
   vector<VentureValuePtr> pose = args->operandValues[0]->getArray();
+  double gps_xy_noise_std = args->operandValues[1]->getDouble();
+  double gps_heading_noise_std = args->operandValues[2]->getDouble();
   vector<VentureValuePtr> gps_pose = value->getArray();
 
   double x_diff, y_diff, heading_diff;
