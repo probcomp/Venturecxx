@@ -118,6 +118,7 @@ puma_src_files = [
     "src/scaffold.cxx",
     "src/sp.cxx",
     "src/sprecord.cxx",
+    "src/stop_and_copy.cxx",
     "src/trace.cxx",
     "src/utils.cxx",
     "src/value.cxx",
