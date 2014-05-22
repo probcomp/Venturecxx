@@ -404,7 +404,7 @@ MSPRequestPSP* MSPRequestPSP::copy_help(ForwardingMap* forward)
 }
 
 /*********************************************************************\
-|* Environments                                                      *|
+|* Values                                                            *|
 \*********************************************************************/
 
 VentureEnvironment* VentureEnvironment::copy_help(ForwardingMap* forward)
@@ -413,5 +413,38 @@ VentureEnvironment* VentureEnvironment::copy_help(ForwardingMap* forward)
   (*forward)[this] = answer;
   answer->outerEnv = copy_shared(this->outerEnv, forward);
   answer->frame = copy_map_v(this->frame, forward);
+  return answer;
+}
+
+VentureArray* VentureArray::copy_help(ForwardingMap* forward)
+{
+  VentureArray* answer = new VentureArray(*this);
+  (*forward)[this] = answer;
+  answer->xs = copy_vector_shared(this->xs, forward);
+  return answer;
+}
+
+VenturePair* VenturePair::copy_help(ForwardingMap* forward)
+{
+  VenturePair* answer = new VenturePair(*this);
+  (*forward)[this] = answer;
+  answer->car = copy_shared(this->car, forward);
+  answer->cdr = copy_shared(this->cdr, forward);
+  return answer;
+}
+
+VentureDictionary* VentureDictionary::copy_help(ForwardingMap* forward)
+{
+  VentureDictionary* answer = new VentureDictionary(*this);
+  (*forward)[this] = answer;
+  answer->dict = copy_vvptr_map_shared_v(this->dict, forward);
+  return answer;
+}
+
+VentureNode* VentureNode::copy_help(ForwardingMap* forward)
+{
+  VentureNode* answer = new VentureNode(*this);
+  (*forward)[this] = answer;
+  answer->node = copy_pointer(this->node, forward);
   return answer;
 }
