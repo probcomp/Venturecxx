@@ -207,9 +207,9 @@ function InitializeDemo() {
         ripl.assume('poly_order','(scope_include (quote structure) 0 (uniform_discrete 0 5))');
         ripl.assume('make_coefficient','(lambda (degree value) (if (>= poly_order degree) (scope_include (quote params) (+ 2 degree) (normal 0.0 value)) 0))');
         ripl.assume('c1','(make_coefficient 1 3.0)');
-        ripl.assume('c2','(make_coefficient 2 0.1)');
-        ripl.assume('c3','(make_coefficient 3 0.01)');
-        ripl.assume('c4','(make_coefficient 4 0.001)');
+        ripl.assume('c2','(make_coefficient 2 1.0)');
+        ripl.assume('c3','(make_coefficient 3 0.3)');
+        ripl.assume('c4','(make_coefficient 4 0.1)');
         
         ripl.assume('clean_poly','(lambda (x) (+ (* c1 (pow x 1.0)) (* c2 (pow x 2.0)) (* c3 (pow x 3.0)) (* c4 (pow x 4.0))))');
         
