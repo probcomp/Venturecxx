@@ -298,3 +298,32 @@ double InvChiSquaredPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args
   double x = value->getDouble();
   return InvChiSquaredDistributionLogLikelihood(x,nu);
 }
+
+VentureValuePtr ApproximateBinomialPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("approx_binomial", args, 2);
+
+  double n = args->operandValues[0]->getDouble();
+  double p = args->operandValues[1]->getDouble();
+  
+  double mean = n * p;
+  double sigma = sqrt(n * (p - p * p));
+  
+  double x = gsl_ran_gaussian(rng, sigma) + mean;
+  if (x < 0) { x = 0; }
+  
+  return VentureValuePtr(new VentureNumber(x));
+}
+ 
+double ApproximateBinomialPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+{
+  double n = args->operandValues[0]->getDouble();
+  double p = args->operandValues[1]->getDouble();
+  
+  double mean = n * p;
+  double sigma = sqrt(n * (p - p * p));
+  
+  double x = value->getDouble();
+  
+  return NormalDistributionLogLikelihood(x,mean,sigma);
+}

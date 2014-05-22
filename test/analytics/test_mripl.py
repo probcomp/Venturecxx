@@ -47,6 +47,16 @@ def localRunFunctions():
     [t() for t in tests]
 
 
+def testInitSwitchLocal():
+    'if no engines are running, should switch to local'
+    try:
+        v=MRipl(2)
+        if v.local_mode is True:
+            eq_(v.no_local_ripls,v.no_ripls)
+    except:
+        print 'Exception caused by doing "try" on Client"'
+
+
 def testDirectivesAssume():
     'assume,report,predict,sample,observe'
     v=get_mripl(no_ripls=4)
