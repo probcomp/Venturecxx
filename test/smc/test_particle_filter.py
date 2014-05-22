@@ -3,7 +3,7 @@ import scipy.stats as stats
 from nose import SkipTest
 from testconfig import config
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, defaultKernel
+from venture.test.config import get_ripl, defaultKernel, default_num_samples
 import sys
 from nose.plugins.attrib import attr
 
@@ -11,7 +11,6 @@ sys.setrecursionlimit(10000)
 
 def testIncorporateDoesNotCrash():
   """A sanity test for stack handling of incorporate"""
-  if config["get_ripl"] != "lite": raise SkipTest("Clone only implemented in lite")
   if defaultKernel() != "mh": raise SkipTest("Doesn't depend on kernel, only run it for mh")
 
   ripl = get_ripl()
@@ -56,15 +55,14 @@ def initBasicPFripl1():
 @attr("slow")
 def testBasicParticleFilter1(P = 30):
   """A sanity test for particle filtering"""
-  if config["get_ripl"] != "lite": raise SkipTest("Clone only implemented in lite")
   if defaultKernel() != "mh": raise SkipTest("Doesn't depend on kernel, only run it for mh")
 
-  N = config["num_samples"]
+  N = default_num_samples()
   predictions = []
 
   os = zip(range(1,6),[False,False,True,False,False])
 
-  for n in range(N):
+  for _ in range(N):
     ripl = initBasicPFripl1()
     for t,val in os:
       ripl.infer("(resample %d)" % P)
@@ -100,14 +98,14 @@ def initBasicPFripl2():
 @attr("slow")
 def testBasicParticleFilter2(P = 30):
   """A sanity test for particle filtering"""
-  if config["get_ripl"] != "lite": raise SkipTest("Clone only implemented in lite")
+  if defaultKernel() != "mh": raise SkipTest("Doesn't depend on kernel, only run it for mh")
 
-  N = config["num_samples"]
+  N = default_num_samples()
   predictions = []
 
   os = zip(range(0,5),[1,2,3,4,5])
 
-  for n in range(N):
+  for _ in range(N):
     ripl = initBasicPFripl2()
     for t,val in os:
       ripl.infer("(resample %d)" % P)

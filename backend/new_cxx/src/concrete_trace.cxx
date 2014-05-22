@@ -16,7 +16,9 @@
 
 /* Constructor */
 
-ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937))
+ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937)) {}
+
+void ConcreteTrace::initialize()
 {
   gsl_rng_set (rng,time(NULL));
 
