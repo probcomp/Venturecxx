@@ -284,6 +284,8 @@ double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
   vector<VentureValuePtr> vehicle_params = args->operandValues[3]->getArray();
   double fractional_xy_noise_std = args->operandValues[4]->getDouble();
   double fractional_heading_noise_std = args->operandValues[5]->getDouble();
+  double additive_xy_noise_std = args->operandValues[6]->getDouble();
+  double additive_heading_noise_std = args->operandValues[7]->getDouble();
   vector<VentureValuePtr> out_pose = value->getArray();
 
   // dead reckon
@@ -294,9 +296,15 @@ double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
   double x_diff, y_diff, heading_diff;
   diff_poses(forward_pose, out_pose, x_diff, y_diff, heading_diff);
   // score
-  double x_diff_likelihood = NormalDistributionLogLikelihood(x_diff, 0, fractional_xy_noise_std);
-  double y_diff_likelihood = NormalDistributionLogLikelihood(y_diff, 0, fractional_xy_noise_std);
-  double heading_diff_likelihood = NormalDistributionLogLikelihood(heading_diff, 0, fractional_heading_noise_std);
+  double x_noise_std = sqrt(pow(x_diff * fractional_xy_noise_std, 2) +
+          pow(additive_xy_noise_std, 2));
+  double y_noise_std = sqrt(pow(y_diff * fractional_xy_noise_std, 2) +
+          pow(additive_xy_noise_std, 2));
+  double heading_noise_std = sqrt(pow(heading_diff * fractional_heading_noise_std, 2) +
+          pow(additive_heading_noise_std, 2));
+  double x_diff_likelihood = NormalDistributionLogLikelihood(x_diff, 0, x_noise_std);
+  double y_diff_likelihood = NormalDistributionLogLikelihood(y_diff, 0, y_noise_std);
+  double heading_diff_likelihood = NormalDistributionLogLikelihood(heading_diff, 0, heading_noise_std);
   return x_diff_likelihood + y_diff_likelihood + heading_diff_likelihood;
 }
 
