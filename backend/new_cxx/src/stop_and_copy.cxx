@@ -39,6 +39,24 @@ shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy()
 \*********************************************************************/
 
 template <typename T>
+T* copy_pointer(T* v, ForwardingMap* forward)
+{
+  if (forward->count(v) > 0) {
+    return (T*)forward[v];
+  } else {
+    T* answer = dynamic_cast<T>(v->copy_help(forward));
+    assert(answer);
+    if (answer != v)
+    { // Should put an appropriate forwarding pointer in the
+      // forwarding map.
+      assert(forward->count(v) > 0);
+      assert(answer == forward[v]);
+    } // Otherwise no copying was needed
+    return answer;
+  }
+}
+
+template <typename T>
 shared_ptr<T> copy_shared(shared_ptr<T> v, ForwardingMap* forward)
 {
   if (v.get() == 0)
