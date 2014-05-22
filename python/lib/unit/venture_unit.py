@@ -417,12 +417,30 @@ class Analytics(object):
         return history
 
 
+    def _runInfer(self,infer=None,stepSize=1):
+        if infer is None:
+            self.ripl.infer(stepSize)
+
+        elif isinstance(infer, str):
+            self.ripl.infer(infer)
+        else:
+            infer(self.ripl, stepSize)
+        
 
     # iterates until (approximately) all random choices have been resampled
-    def sweep(self,infer=None):
+    def sweep(self,infer=None,**kwargs):
+        noSweep = kwargs.get('noSweep',None)
+        stepSize = kwargs.get('stepSize',1)
+        if noSweep:
+            self._runInfer(infer,stepSize)
+            return stepSize
+        
         iterations = 0
         get_entropy_info = self.ripl.sivm.core_sivm.engine.get_entropy_info
 
+        # if # unconstrainted_random_choices stays fixed after infer(step)
+        # then we do #iterations=#u_r_c. if #u_r_c grows after infer, we do
+        # another step (with larger stepsize) and repeat. 
         while iterations < get_entropy_info()['unconstrained_random_choices']:
             step = get_entropy_info()['unconstrained_random_choices']
             if infer is None:
@@ -508,11 +526,11 @@ class Analytics(object):
 
         for sweep in range(sweeps):
             if verbose:
-                print "Running sweep " + str(sweep+1) + " of " + str(sweeps)
+                print "Running sweep " + str(sweep+1) + " of " + sweeps
 
             # FIXME: use timeit module for better precision
             start = time.time()
-            iterations = self.sweep(infer=infer)
+            iterations = self.sweep(infer=infer, **kwargs)
             end = time.time()
 
             sweepTimes.append(end-start)
@@ -539,7 +557,7 @@ class Analytics(object):
         return answer
 
 
-    def runFromConditional(self, sweeps, name=None, data=None, **kwargs):
+    def runFromConditional(self, sweeps, name=None, data=None,**kwargs):
         '''Runs inference on the model conditioned on data.
            By default data is values of self.observes.
 
@@ -548,6 +566,10 @@ class Analytics(object):
            sweeps :: int
                Total number of iterations of inference program. Values are
                recorded after every sweep.
+           noSweeps :: bool
+               If True, run inference without attempting to hit all variables
+               before recording. Use optional *stepSize* argument to specify
+               numbers of steps between recording. 
            runs :: int
                Number of parallel chains for inference. Default=3.
            infer :: string | function on ripl
@@ -558,7 +580,7 @@ class Analytics(object):
                List of values that replace values in self.observes for this
                inference run only.
            verbose :: bool
-               Print when initiating runs and sweeps.
+               Display start of runs and sweeps.
 
            Returns
            -------
