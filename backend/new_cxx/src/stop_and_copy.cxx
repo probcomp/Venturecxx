@@ -42,15 +42,15 @@ template <typename T>
 T* copy_pointer(T* v, ForwardingMap* forward)
 {
   if (forward->count(v) > 0) {
-    return (T*)forward[v];
+    return (T*)(*forward)[v];
   } else {
-    T* answer = dynamic_cast<T>(v->copy_help(forward));
+    T* answer = dynamic_cast<T*>(v->copy_help(forward));
     assert(answer);
     if (answer != v)
     { // Should put an appropriate forwarding pointer in the
       // forwarding map.
       assert(forward->count(v) > 0);
-      assert(answer == forward[v]);
+      assert(answer == (*forward)[v]);
     } // Otherwise no copying was needed
     return answer;
   }
@@ -75,7 +75,7 @@ shared_ptr<T> copy_shared(shared_ptr<T> v, ForwardingMap* forward)
     forward->shared_ptrs[v.get()] = answer;
     return answer;
   } else {
-    T* result = v->copy_help(forward);
+    T* result = copy_pointer(v.get(), forward);
     if (result == v.get())
     {
       // No copying was needed
