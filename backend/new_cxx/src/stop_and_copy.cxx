@@ -9,6 +9,31 @@
 // Deep-copying concrete traces by analogy with the stop-and-copy
 // garbage collection algorithm.
 
+// This implementation relies on all reachable Venture objects
+// correctly implementing a copy_help method of type
+//
+//   Foo* Foo::copy_help(ForwardingMap* forward)
+//
+// The contract is that copy_help must copy the object it is called
+// on, translating all Venture objects inside according to the given
+// forwarding map, and insert a forwarding pointer from this to the
+// result.  A typical implementation looks like
+//
+//   Foo* answer = new Foo(this);
+//   (*forward)[this] = answer;
+//   ... // copy fields
+//   return answer;
+//
+// Note that the forwarding map needs to be mutated before recursively
+// copying the fields, to break reference cycles.  This file contains
+// copy_help implementations for almost all current Venture objects,
+// as well as a bunch of utilities for copying various standard types
+// (like sets, shared_pointers, etc).  Use copy_pointer to copy raw
+// pointers rather than calling their copy_help methods directly,
+// because copy_pointer encapsulates the cycle-breaking at the heart
+// of the algorithm (and calls the object's copy_help method only if
+// needed).
+
 size_t ForwardingMap::count(void* k) const
 {
   return pointers.count(k);
