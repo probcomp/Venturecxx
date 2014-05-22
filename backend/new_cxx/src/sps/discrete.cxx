@@ -93,6 +93,23 @@ double UniformDiscreteOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Ar
   return log(gsl_ran_flat_pdf(sample,lower,upper));
 }
 
+vector<VentureValuePtr> UniformDiscreteOutputPSP::enumerateValues(shared_ptr<Args> args) const
+{
+  checkArgsLength("uniform_discrete", args, 2);
+
+  long lower = args->operandValues[0]->getInt();
+  long upper = args->operandValues[1]->getInt();
+
+  vector<VentureValuePtr> vs;
+
+  for (long index = lower; index <= upper; index++) // TODO Fencepost error?
+  {
+    vs.push_back(shared_ptr<VentureValue>(new VentureNumber(index)));
+  }
+  return vs;
+}
+
+
 VentureValuePtr BinomialOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   checkArgsLength("binomial", args, 2);
