@@ -3,32 +3,40 @@
 
 LookupNode::LookupNode(Node * sourceNode,VentureValuePtr exp) :
   Node(exp),
-  sourceNode(sourceNode)
-  {
-    definiteParents.push_back(sourceNode);
-  }
+  sourceNode(sourceNode) {}
 
 ApplicationNode::ApplicationNode(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp) :
   Node(exp),
   operatorNode(operatorNode),
   operandNodes(operandNodes),
-  env(env)
-{
-  definiteParents.push_back(operatorNode);
-  for (size_t i = 0; i < operandNodes.size(); ++i) { definiteParents.push_back(operandNodes[i]); }
-}
+  env(env) {}
 
 RequestNode::RequestNode(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env) :
   ApplicationNode(operatorNode,operandNodes,env,VentureValuePtr(new VentureNil))
   { }
 
+vector<Node*> RequestNode::getDefiniteParents()
+{
+  vector<Node*> dps;
+  dps.push_back(operatorNode);
+  dps.insert(dps.end(),operandNodes.begin(),operandNodes.end());
+  return dps;
+}
+
 OutputNode::OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp) :
   ApplicationNode(operatorNode,operandNodes,env,exp),
   requestNode(requestNode),
-  isFrozen(false)
+  isFrozen(false) {}
+
+vector<Node*> OutputNode::getDefiniteParents()
 {
-  definiteParents.push_back(requestNode);
+  vector<Node*> dps;
+  dps.push_back(operatorNode);
+  dps.insert(dps.end(),operandNodes.begin(),operandNodes.end());
+  dps.push_back(requestNode);
+  return dps;
 }
+
 
 OutputNode::~OutputNode()
 {

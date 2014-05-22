@@ -68,7 +68,7 @@ Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
 
 vector<Node*> Trace::getParents(Node * node)
 {
-  vector<Node*> parents = node->definiteParents;
+  vector<Node*> parents = node->getDefiniteParents();
   if (dynamic_cast<OutputNode*>(node)) 
   {
     vector<RootOfFamily> esrRoots = getESRParents(node);

@@ -199,7 +199,7 @@ def expToDict(exp):
   elif tag == "gibbs":
     assert 4 <= len(exp) and len(exp) <= 5
     ans = {"kernel":"gibbs","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
-    if len(exp) == 6:
+    if len(exp) == 5:
       ans["in_parallel"] = exp[4]
     return ans
   elif tag == "slice":

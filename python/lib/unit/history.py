@@ -162,6 +162,10 @@ typically also tracked."""
              String in nameToSeries.keys() and either model.assumes
              or model.queryExps.
            ylabel :: string
+           limitLegend :: int
+             Limit how many series are listed on the legend. (To limit
+             how many series are plotted, use self.sampleRuns).
+        
            '''
         self._plotOne(plotSeries, name, save=False, show=True, **kwargs)
 
@@ -482,6 +486,12 @@ def legend_outside(ax=None, bbox_to_anchor=(0.5, -.05), loc='upper center',
         title = None
 
     label_to_handle = dict(zip(labels, handles)[:limitLegend])
+
+    # always include groundTruth on legend
+    for label,handle in zip(labels,handles):
+        if 'gtruth' in label.lower():
+            label_to_handle[label] = handle
+
     labels = label_to_handle.keys()
     if label_cmp is not None:
         labels = sorted(labels, cmp=label_cmp)

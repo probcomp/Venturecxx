@@ -18,7 +18,7 @@ import numpy as np
 from venture.ripl.ripl import _strip_types
 from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl,mr_map_proc
 from venture.venturemagics.ip_parallel import * ## FIXME:
-from IPython.parallel.util import interactive
+
 from history import History, Run, Series, historyOverlay
 parseValue = _strip_types
 
@@ -417,12 +417,30 @@ class Analytics(object):
         return history
 
 
+    def _runInfer(self,infer=None,stepSize=1):
+        if infer is None:
+            self.ripl.infer(stepSize)
+
+        elif isinstance(infer, str):
+            self.ripl.infer(infer)
+        else:
+            infer(self.ripl, stepSize)
+        
 
     # iterates until (approximately) all random choices have been resampled
-    def sweep(self,infer=None):
+    def sweep(self,infer=None,**kwargs):
+        simpleInfer = kwargs.get('simpleInfer',None)
+        stepSize = kwargs.get('stepSize',1)
+        if simpleInfer:
+            self._runInfer(infer,stepSize)
+            return stepSize
+        
         iterations = 0
         get_entropy_info = self.ripl.sivm.core_sivm.engine.get_entropy_info
 
+        # if # unconstrainted_random_choices stays fixed after infer(step)
+        # then we do #iterations=#u_r_c. if #u_r_c grows after infer, we do
+        # another step (with larger stepsize) and repeat. 
         while iterations < get_entropy_info()['unconstrained_random_choices']:
             step = get_entropy_info()['unconstrained_random_choices']
             if infer is None:
@@ -449,7 +467,7 @@ class Analytics(object):
                 params=dict(venture_random_seed=seed)
                 assumes,observes,queries = modelTuple
                 model = Analytics(ripl,assumes=assumes,observes=observes,
-                                  queryExps=queries)
+                                  queryExps=queries,parameters=params)
                 return getattr(model,fname)(label='seed:%s'%seed,**kwargs)
                 
             modelTuple=(self.assumes,self.observes,self.queryExps)
@@ -470,7 +488,6 @@ class Analytics(object):
         if profile:
             history.profile = Profile(self.ripl)
         return history
-
     
 
     # Runs inference on the joint distribution (observes turned into predicts).
@@ -509,11 +526,11 @@ class Analytics(object):
 
         for sweep in range(sweeps):
             if verbose:
-                print "Running sweep " + str(sweep+1) + " of " + str(sweeps)
+                print "Running sweep " + str(sweep+1) + " of " + sweeps
 
             # FIXME: use timeit module for better precision
             start = time.time()
-            iterations = self.sweep(infer=infer)
+            iterations = self.sweep(infer=infer, **kwargs)
             end = time.time()
 
             sweepTimes.append(end-start)
@@ -540,16 +557,33 @@ class Analytics(object):
         return answer
 
 
-    def runFromConditional(self, sweeps, name=None, data=None, **kwargs):
+    def runFromConditional(self, sweeps, name=None, data=None,**kwargs):
         '''Runs inference on the model conditioned on data.
            By default data is values of self.observes.
+
+           To avoid using the *sweep* method for inference, set
+           *simpleInfer* to True. This will record after
+           each call to your inference program. (You can thin the number
+           of samples recorded using the *transitions* argument for the 
+           inference program).
+
+           Example:
+           > m.runFromConditional(100,infer='(mh default one 5)',simpleInfer=True)
+
+           This will collect 100 samples with 5 MH transitions between samples.
+
+
 
            Arguments
            ---------
            sweeps :: int
                Total number of iterations of inference program. Values are
                recorded after every sweep.
-           runs :: int
+           simpleInfer :: bool [optional]
+               If True, run inference without attempting to hit all variables
+               before recording. Use optional *stepSize* argument to specify
+               numbers of steps between recording. 
+           runs :: int  [optional]
                Number of parallel chains for inference. Default=3.
            infer :: string | function on ripl
                Inference program.
@@ -559,7 +593,7 @@ class Analytics(object):
                List of values that replace values in self.observes for this
                inference run only.
            verbose :: bool
-               Print when initiating runs and sweeps.
+               Display start of runs and sweeps.
 
            Returns
            -------
@@ -714,11 +748,6 @@ class Analytics(object):
         ## FIXME: should be able to take multiple runs and flatten them
         #  inferHistory = flattenRuns(inferHistory)
 
-        print 'Geweke-style Test of Inference: \n'
-        print '''
-        Compare iid (forward) samples from joint to dependent
-        samples from inference (*observes* changed to *predicts*)\n'''
-        print '-------------\n'
         
         # convert history objects
         hs = (forwardHistory,inferHistory)
@@ -734,9 +763,16 @@ class Analytics(object):
         if names is not None:
             dicts=[filterDict(d,keep=names) for d in dicts]
             
-        compareStats,fig = compareSampleDicts(dicts,labels,plot=plot)
+        compareReport = compareSampleDicts(dicts,labels,plot=plot)
         
-        return forwardHistory,inferHistory,compareStats
+        gewekeStr='''
+        Geweke-style Test of Inference:
+        Compare iid (forward) samples from joint to dependent
+        samples from inference (*observes* changed to *predicts*)
+        -------------\n\n'''
+        compareReport.reportString = gewekeStr + compareReport.reportString
+        
+        return forwardHistory,inferHistory,compareReport
 
 
 
@@ -872,6 +908,18 @@ def filterScalar(dct):
 def intersectKeys(dicts):
     return tuple(set(dicts[0].keys()).intersection(set(dicts[1].keys())))
 
+
+class CompareSamplesReport(object):
+    def __init__(self,labels,reportString=None,statsDict=None,compareFig=None):
+        self.labels = labels
+        if reportString:
+            self.reportString = reportString
+        if statsDict:
+            self.statsDict = statsDict
+        if compareFig:
+            self.compareFig = compareFig
+    
+
 def compareSampleDicts(dicts_hists,labels,plot=False):
     '''Input: dicts_hists :: ({exp:values}) | (History)
      where the first Series in History is used as values. History objects
@@ -887,29 +935,28 @@ def compareSampleDicts(dicts_hists,labels,plot=False):
     
     stats = (np.mean,scipy.stats.sem,np.median,len)
     statsString = ' '.join(['mean','sem','med','N'])
-    stats_dict = {}
-    print 'compareSampleDicts: %s vs. %s \n'%(labels[0],labels[1])
+    statsDict = {}
+    report = ['compareSampleDicts: %s vs. %s \n'%(labels[0],labels[1])]
     
     for exp in intersectKeys(dicts):
-        print '\n---------'
-        print 'Name:  %s'%exp
-        stats_dict[exp] = []
+        report.append( '\n---------\n Name:  %s \n'%exp )
+        statsDict[exp] = {}
         
         for dict_i,label_i in zip(dicts,labels):
             samples=dict_i[exp]
             s_stats = tuple([s(samples) for s in stats])
-            stats_dict[exp].append(s_stats)
+            statsDict[exp]['stats: '+statsString]=s_stats
             labelStr='%s : %s ='%(label_i,statsString)
-            print labelStr+'  %.3f  %.3f  %.3f  %i'%s_stats
-
+            report.append( labelStr+'  %.3f  %.3f  %.3f  %i\n'%s_stats )
 
         testResult=reportSameContinuous(dicts[0][exp],dicts[1][exp])
-        print 'KS Test:   ', '  '.join(testResult.report.split('\n')[-2:])
-        stats_dict[exp].append( testResult )
+        ksOut='KS Test:   '+ '  '.join(testResult.report.split('\n')[-2:])
+        report.append( ksOut )
+        statsDict[exp]['KSSameContinuous']=testResult
         
-    fig = qqPlotAll(dicts,labels) if plot else None
-    
-    return stats_dict,fig
+    repSt = ' '.join(report)
+    compareFig = qqPlotAll(dicts,labels) if plot else None
+    return CompareSamplesReport(labels,repSt,statsDict,compareFig)
 
 
 def historyNameToValues(history,seriesInd=0,flatten=False):

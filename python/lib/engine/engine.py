@@ -193,6 +193,13 @@ class Engine(object):
       params["particles"] = int(params["particles"])
     if "in_parallel" not in params:
       params['in_parallel'] = True
+    if params['kernel'] in ['cycle', 'mixture']:
+      if 'subkernels' not in params:
+        params['subkernels'] = []
+      if params['kernel'] == 'mixture' and 'weights' not in params:
+        params['weights'] = [1 for _ in params['subkernels']]
+      for p in params['subkernels']:
+        self.set_default_params(p)
   
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
 
