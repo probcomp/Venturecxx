@@ -267,7 +267,6 @@ ConstantNode* ConstantNode::copy_help(ForwardingMap* forward)
     ConstantNode* answer = new ConstantNode(this->exp);
     (*forward)[this] = answer;
     answer->exp = copy_shared(this->exp, forward);
-    answer->definiteParents = copy_vector(this->definiteParents, forward);
     answer->children = copy_set(this->children, forward);
     return answer;
   }
@@ -283,7 +282,6 @@ LookupNode* LookupNode::copy_help(ForwardingMap* forward)
     (*forward)[this] = answer;
     answer->exp = copy_shared(this->exp, forward);
     answer->sourceNode = this->sourceNode->copy_help(forward);
-    answer->definiteParents = copy_vector(this->definiteParents, forward);
     answer->children = copy_set(this->children, forward);
     return answer;
   }
@@ -302,7 +300,6 @@ RequestNode* RequestNode::copy_help(ForwardingMap* forward)
     answer->operatorNode = this->operatorNode->copy_help(forward);
     answer->operandNodes = copy_vector(this->operandNodes, forward);
     answer->env = copy_shared(this->env, forward);
-    answer->definiteParents = copy_vector(this->definiteParents, forward);
     answer->children = copy_set(this->children, forward);
     return answer;
   }
@@ -321,7 +318,6 @@ OutputNode* OutputNode::copy_help(ForwardingMap* forward)
     answer->operatorNode = this->operatorNode->copy_help(forward);
     answer->operandNodes = copy_vector(this->operandNodes, forward);
     answer->env = copy_shared(this->env, forward);
-    answer->definiteParents = copy_vector(this->definiteParents, forward);
     answer->children = copy_set(this->children, forward);
     return answer;
   }
