@@ -4,7 +4,7 @@ function exprToString(expr, display_scopes) {
         if (expr[0] === "scope_include" && !display_scopes) {
             return exprToString(expr[3]);
         } else {
-            return "(" + expr.map(exprToString).join(" ") + ")";
+            return "(" + expr.map(function (e) { return exprToString(e, display_scopes) }).join(" ") + ")";
         }
     } else if (typeof expr === "string") {
         return expr;
