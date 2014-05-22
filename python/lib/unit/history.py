@@ -40,25 +40,6 @@ typically also tracked."""
     def addSeries(self, name, type, label, values, hist=True):
         self._addSeries(name, type, Series(label, values, hist))
 
-    def sampleRuns(self,numSamples):
-        '''Returns new History with pointers to *numSamples* randomly
-        sampled Runs from self'''
-        h = History( label = self.label+'_sampled', parameters=self.parameters)
-    
-        noRuns = len(self.nameToSeries.items()[0][1])
-        indices = random.sample(xrange(noRuns),numSamples)
-
-        for name,listSeries in self.nameToSeries.iteritems():
-            type = self.nameToType[name]
-            subList = [listSeries[i] for i in indices]
-            for s in subList:
-                h.addSeries(name, type, s.label, s.values, hist=s.hist)
-
-        ## FIXME: addData and addGroundTruth (generally COPY HISTORY)
-        return h
- 
-
-
     def _addSeries(self, name, type, series):
         if name not in self.nameToSeries:
             self.nameToSeries[name] = []
@@ -71,7 +52,6 @@ typically also tracked."""
         for (name, series) in run.namedSeries.iteritems():
             self._addSeries(name, run.nameToType[name], series)
 
-    
     def addData(self, data):
         'Extend list of data. Input: data::[(exp,value)]'
         self.data.extend(data)
@@ -96,6 +76,23 @@ typically also tracked."""
 
         ## FIXME GroundTruth Series must be removed from snapshots
         
+    def sampleRuns(self,numSamples):
+        '''Returns new History with pointers to *numSamples* randomly
+        sampled Runs from self'''
+        newHistory=History(label= self.label+'_sampled', parameters=self.parameters)
+    
+        noRuns = len(self.nameToSeries.items()[0][1])
+        indices = random.sample(xrange(noRuns),numSamples)
+
+        for name,listSeries in self.nameToSeries.iteritems():
+            type = self.nameToType[name]
+            subList = [listSeries[i] for i in indices]
+            for s in subList:
+                newHistory.addSeries(name, type, s.label, s.values, hist=s.hist)
+
+        ## FIXME: addData and addGroundTruth (generally COPY HISTORY)
+        return newHistory
+
 
     def averageValue(self, seriesName):
         'Returns the average over all series with the given name.'
@@ -105,6 +102,32 @@ typically also tracked."""
                 flatSeries.extend(series.values)
         return np.mean(flatSeries)
 
+    def compareSnapshots(self,names=None, probes=None):
+    '''
+    Compare samples across runs at two different probe points
+    in History. Defaults to comparing all names and probes =
+    (midPoint,lastPoint).'''
+    
+        allSnapshots = historyToSnapshots(self)
+        samples = len(allSnapshots.items()[0][1])
+
+        # restrict to probes
+        probes = (int(.5*samples),-1) if probes is None else probes
+        assert len(probes)==2
+
+        # restrict to names
+        if names is not None:
+            filterSnapshots = filterDict(allSnapshots,keep=names)
+        else:
+            filterSnapshots = allSnapshots
+
+        snapshotDicts=({},{})
+        for name,snapshots in filterSnapshots.iteritems():
+            for snapshotDict,probe in zip(snapshotDicts,probes):
+                snapshotDict[name]=snapshots[probe]
+
+        labels =[self.label+'_'+'snap_%i'%i for i in probes]
+        return compareSampleDicts(snapshotDicts,labels,plot=True)
 
     # default directory for plots, created from parameters
     def defaultDirectory(self):
