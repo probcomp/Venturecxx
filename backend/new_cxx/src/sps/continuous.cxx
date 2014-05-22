@@ -278,7 +278,7 @@ double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
   double x_diff_likelihood = NormalDistributionLogLikelihood(x_diff, 0, motion_xy_noise_std);
   double y_diff_likelihood = NormalDistributionLogLikelihood(y_diff, 0, motion_xy_noise_std);
   double heading_diff_likelihood = NormalDistributionLogLikelihood(heading_diff, 0, motion_heading_noise_std);
-  return x_diff_likelihood * y_diff_likelihood * heading_diff_likelihood;
+  return x_diff_likelihood + y_diff_likelihood + heading_diff_likelihood;
 }
 
 double gps_xy_noise_std = .1;
@@ -306,7 +306,8 @@ double SimulateGPSPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) 
   double x_diff_likelihood = NormalDistributionLogLikelihood(x_diff, 0, gps_xy_noise_std);
   double y_diff_likelihood = NormalDistributionLogLikelihood(y_diff, 0, gps_xy_noise_std);
   double heading_diff_likelihood = NormalDistributionLogLikelihood(heading_diff, 0, gps_heading_noise_std);
-  return x_diff_likelihood * y_diff_likelihood * heading_diff_likelihood;
+  double log_density = x_diff_likelihood + y_diff_likelihood + heading_diff_likelihood;
+  return log_density;
 }
 
 VentureValuePtr SimulateMapPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
