@@ -411,6 +411,7 @@ function InitializeDemo() {
         
         var simple = model_type === "simple";
         document.getElementById("show_scopes").disabled = simple;
+        document.getElementById("enum").disabled = simple;
         document.getElementById("slice").disabled = simple;
 
         if (model_variables.use_outliers != use_outliers) {
