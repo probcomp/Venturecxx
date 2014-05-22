@@ -13,9 +13,10 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+import random
+
 from venture.exception import VentureException
 from venture.lite.utils import simulateCategorical, sampleLogCategorical
-from venture.lite.serialize import Serializer
 
 # Thin wrapper around Trace
 # TODO: merge with CoreSivm?
@@ -114,7 +115,6 @@ class Engine(object):
     # Frobnicate the trace's random seed because Trace() resets the
     # RNG seed from the current time, which sucks if one calls this
     # method often.
-    import random
     self.set_seed(random.randint(1,2**31-1))
 
   # Blow away the trace and rebuild one from the directives.  The goal
@@ -125,7 +125,8 @@ class Engine(object):
   def reset(self):
     worklist = sorted(self.directives.iteritems())
     self.clear()
-    [self.replay(dir) for (_,dir) in worklist]
+    for (_,dir) in worklist:
+      self.replay(dir)
 
   def replay(self,directive):
     if directive[0] == "assume":
@@ -153,6 +154,8 @@ class Engine(object):
       for p in range(P):
         parent = sampleLogCategorical(self.weights) # will need to include or rewrite
         newTraces[p] = self.traces[parent].stop_and_copy()
+        if self.name != "lite":
+          newTraces[p].set_seed(random.randint(1,2**31-1))
       self.traces = newTraces
       self.weights = [0 for p in range(P)]
 
@@ -161,11 +164,11 @@ class Engine(object):
     elif params['kernel'] == "cycle":
       if 'subkernels' not in params:
         raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
-      for n in range(params["transitions"]):
+      for _ in range(params["transitions"]):
         for k in params["subkernels"]:
           self.infer(k)
     elif params["kernel"] == "mixture":
-      for n in range(params["transitions"]):
+      for _ in range(params["transitions"]):
         self.infer(simulateCategorical(params["weights"], params["subkernels"]))
     else: # A primitive infer expression
       #import pdb; pdb.set_trace()

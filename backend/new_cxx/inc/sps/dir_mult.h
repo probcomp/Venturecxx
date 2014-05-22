@@ -29,8 +29,8 @@ struct SymDirMultSP : SP
   boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
   
   // for toPython
-  double alpha;
-  size_t n;
+  const double alpha;
+  const size_t n;
 };
 
 struct SymDirMultOutputPSP : RandomPSP
@@ -45,8 +45,8 @@ struct SymDirMultOutputPSP : RandomPSP
   double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
 
 private:
-  double alpha;
-  size_t n;
+  const double alpha;
+  const size_t n;
 };
 
 // Collapsed Asymmetric
@@ -68,7 +68,7 @@ struct DirMultOutputPSP : RandomPSP
   double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
 
 private:
-  vector<double> alpha;
+  const vector<double> alpha;
 };
 
 // Uncollapsed SPAux
@@ -104,7 +104,7 @@ struct UCSymDirMultOutputPSP : RandomPSP
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
 private:
-  size_t n;
+  const size_t n;
 };
 
 // Uncollapsed Asymmetric
@@ -132,7 +132,7 @@ struct UCDirMultOutputPSP : RandomPSP
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
 private:
-  size_t n;
+  const size_t n;
 };
 
 

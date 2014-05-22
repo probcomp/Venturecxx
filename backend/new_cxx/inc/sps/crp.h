@@ -30,7 +30,7 @@ struct CRPSP : SP
   boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
   
   // for toPython
-  double alpha, d;
+  const double alpha, d;
 };
 
 struct CRPOutputPSP : RandomPSP
@@ -45,8 +45,8 @@ struct CRPOutputPSP : RandomPSP
   double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
 
  private:
-  double alpha;
-  double d;
+  const double alpha;
+  const double d;
 };
 
 #endif

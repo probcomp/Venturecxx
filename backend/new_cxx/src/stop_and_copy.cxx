@@ -9,6 +9,34 @@
 // Deep-copying concrete traces by analogy with the stop-and-copy
 // garbage collection algorithm.
 
+// This implementation relies on all reachable Venture objects
+// correctly implementing a copy_help method of type
+//
+//   Foo* Foo::copy_help(ForwardingMap* forward)
+//
+// The contract is that copy_help must copy the object it is called
+// on, translating all Venture objects inside according to the given
+// forwarding map, and insert a forwarding pointer from this to the
+// result.  The caller owns both the ForwardingMap* and the returned
+// Foo*.
+//
+// A typical implementation looks like
+//
+//   Foo* answer = new Foo(this);
+//   (*forward)[this] = answer;
+//   ... // copy fields
+//   return answer;
+//
+// Note that the forwarding map needs to be mutated before recursively
+// copying the fields, to break reference cycles.  This file contains
+// copy_help implementations for almost all current Venture objects,
+// as well as a bunch of utilities for copying various standard types
+// (like sets, shared_pointers, etc).  Use copy_pointer to copy raw
+// pointers rather than calling their copy_help methods directly,
+// because copy_pointer encapsulates the cycle-breaking at the heart
+// of the algorithm (and calls the object's copy_help method only if
+// needed).
+
 size_t ForwardingMap::count(void* k) const
 {
   return pointers.count(k);
@@ -39,6 +67,24 @@ shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy()
 \*********************************************************************/
 
 template <typename T>
+T* copy_pointer(T* v, ForwardingMap* forward)
+{
+  if (forward->count(v) > 0) {
+    return (T*)(*forward)[v];
+  } else {
+    T* answer = dynamic_cast<T*>(v->copy_help(forward));
+    assert(answer);
+    if (answer != v)
+    { // Should put an appropriate forwarding pointer in the
+      // forwarding map.
+      assert(forward->count(v) > 0);
+      assert(answer == (*forward)[v]);
+    } // Otherwise no copying was needed
+    return answer;
+  }
+}
+
+template <typename T>
 shared_ptr<T> copy_shared(shared_ptr<T> v, ForwardingMap* forward)
 {
   if (v.get() == 0)
@@ -57,7 +103,7 @@ shared_ptr<T> copy_shared(shared_ptr<T> v, ForwardingMap* forward)
     forward->shared_ptrs[v.get()] = answer;
     return answer;
   } else {
-    T* result = v->copy_help(forward);
+    T* result = copy_pointer(v.get(), forward);
     if (result == v.get())
     {
       // No copying was needed
@@ -77,7 +123,7 @@ set<T*> copy_set(set<T*> s, ForwardingMap* forward)
   set<T*> answer = set<T*>();
   BOOST_FOREACH(T* obj, s)
   {
-    answer.insert(obj->copy_help(forward));
+    answer.insert(copy_pointer(obj, forward));
   }
   return answer;
 }
@@ -100,7 +146,7 @@ map<K*, V> copy_map_k(map<K*, V> m, ForwardingMap* forward)
   typename map<K*, V>::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first->copy_help(forward)] = (*itr).second;
+    answer[copy_pointer((*itr).first, forward)] = (*itr).second;
   }
   return answer;
 }
@@ -124,7 +170,7 @@ map<K, V*> copy_map_v(map<K, V*> m, ForwardingMap* forward)
   typename map<K, V*>::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first] = (*itr).second->copy_help(forward);
+    answer[(*itr).first] = copy_pointer((*itr).second, forward);
   }
   return answer;
 }
@@ -148,7 +194,7 @@ map<K*, shared_ptr<V> > copy_map_kv(map<K*, shared_ptr<V> > m, ForwardingMap* fo
   typename map<K*, shared_ptr<V> >::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first->copy_help(forward)] = copy_shared((*itr).second, forward);
+    answer[copy_pointer((*itr).first, forward)] = copy_shared((*itr).second, forward);
   }
   return answer;
 }
@@ -201,7 +247,7 @@ vector<V*> copy_vector(vector<V*> v, ForwardingMap* forward)
   vector<V*> answer = vector<V*>();
   BOOST_FOREACH(V* val, v)
     {
-      answer.push_back(val->copy_help(forward));
+      answer.push_back(copy_pointer(val, forward));
     }
   return answer;
 }
@@ -224,7 +270,7 @@ map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(map<K*, vector<shared_ptr<V>
   typename map<K*, vector<shared_ptr<V> > >::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first->copy_help(forward)] = copy_vector_shared((*itr).second, forward);
+    answer[copy_pointer((*itr).first, forward)] = copy_vector_shared((*itr).second, forward);
   }
   return answer;
 }
@@ -261,67 +307,47 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap* forward)
 // but I don't want to go there.
 ConstantNode* ConstantNode::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (ConstantNode*)(*forward)[this];
-  } else {
-    ConstantNode* answer = new ConstantNode(this->exp);
-    (*forward)[this] = answer;
-    answer->exp = copy_shared(this->exp, forward);
-    answer->children = copy_set(this->children, forward);
-    return answer;
-  }
+  ConstantNode* answer = new ConstantNode(this->exp);
+  (*forward)[this] = answer;
+  answer->exp = copy_shared(this->exp, forward);
+  answer->children = copy_set(this->children, forward);
+  return answer;
 }
 
 LookupNode* LookupNode::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (LookupNode*)(*forward)[this];
-  } else {
-    LookupNode* answer = new LookupNode(*this);
-    (*forward)[this] = answer;
-    answer->exp = copy_shared(this->exp, forward);
-    answer->sourceNode = this->sourceNode->copy_help(forward);
-    answer->children = copy_set(this->children, forward);
-    return answer;
-  }
+  LookupNode* answer = new LookupNode(*this);
+  (*forward)[this] = answer;
+  answer->exp = copy_shared(this->exp, forward);
+  answer->sourceNode = copy_pointer(this->sourceNode, forward);
+  answer->children = copy_set(this->children, forward);
+  return answer;
 }
 
 RequestNode* RequestNode::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (RequestNode*)(*forward)[this];
-  } else {
-    RequestNode* answer = new RequestNode(*this);
-    (*forward)[this] = answer;
-    answer->exp = copy_shared(this->exp, forward);
-    answer->outputNode = this->outputNode->copy_help(forward);
-    answer->operatorNode = this->operatorNode->copy_help(forward);
-    answer->operandNodes = copy_vector(this->operandNodes, forward);
-    answer->env = copy_shared(this->env, forward);
-    answer->children = copy_set(this->children, forward);
-    return answer;
-  }
+  RequestNode* answer = new RequestNode(*this);
+  (*forward)[this] = answer;
+  answer->exp = copy_shared(this->exp, forward);
+  answer->outputNode = copy_pointer(this->outputNode, forward);
+  answer->operatorNode = copy_pointer(this->operatorNode, forward);
+  answer->operandNodes = copy_vector(this->operandNodes, forward);
+  answer->env = copy_shared(this->env, forward);
+  answer->children = copy_set(this->children, forward);
+  return answer;
 }
 
 OutputNode* OutputNode::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (OutputNode*)(*forward)[this];
-  } else {
-    OutputNode* answer = new OutputNode(*this);
-    (*forward)[this] = answer;
-    answer->exp = copy_shared(this->exp, forward);
-    answer->requestNode = this->requestNode->copy_help(forward);
-    answer->operatorNode = this->operatorNode->copy_help(forward);
-    answer->operandNodes = copy_vector(this->operandNodes, forward);
-    answer->env = copy_shared(this->env, forward);
-    answer->children = copy_set(this->children, forward);
-    return answer;
-  }
+  OutputNode* answer = new OutputNode(*this);
+  (*forward)[this] = answer;
+  answer->exp = copy_shared(this->exp, forward);
+  answer->requestNode = copy_pointer(this->requestNode, forward);
+  answer->operatorNode = copy_pointer(this->operatorNode, forward);
+  answer->operandNodes = copy_vector(this->operandNodes, forward);
+  answer->env = copy_shared(this->env, forward);
+  answer->children = copy_set(this->children, forward);
+  return answer;
 }
 
 /*********************************************************************\
@@ -330,100 +356,98 @@ OutputNode* OutputNode::copy_help(ForwardingMap* forward)
 
 SP* SP::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (SP*)(*forward)[this];
-  } else {
-    SP* answer = new SP(*this);
-    (*forward)[this] = answer;
-    answer->requestPSP = copy_shared(this->requestPSP, forward);
-    answer->outputPSP = copy_shared(this->outputPSP, forward);
-    return answer;
-  }
+  SP* answer = new SP(*this);
+  (*forward)[this] = answer;
+  answer->requestPSP = copy_shared(this->requestPSP, forward);
+  answer->outputPSP = copy_shared(this->outputPSP, forward);
+  return answer;
 }
 
 VentureSPRef* VentureSPRef::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (VentureSPRef*)(*forward)[this];
-  } else {
-    VentureSPRef* answer = new VentureSPRef(*this);
-    (*forward)[this] = answer;
-    answer->makerNode = this->makerNode->copy_help(forward);
-    return answer;
-  }
+  VentureSPRef* answer = new VentureSPRef(*this);
+  (*forward)[this] = answer;
+  answer->makerNode = copy_pointer(this->makerNode, forward);
+  return answer;
 }
 
 VentureSPRecord* VentureSPRecord::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (VentureSPRecord*)(*forward)[this];
-  } else {
-    VentureSPRecord* answer = new VentureSPRecord(*this);
-    (*forward)[this] = answer;
-    answer->sp = copy_shared(this->sp, forward);
-    answer->spAux = copy_shared(this->spAux, forward);
-    answer->spFamilies = copy_shared(this->spFamilies, forward);
-    return answer;
-  }
+  VentureSPRecord* answer = new VentureSPRecord(*this);
+  (*forward)[this] = answer;
+  answer->sp = copy_shared(this->sp, forward);
+  answer->spAux = copy_shared(this->spAux, forward);
+  answer->spFamilies = copy_shared(this->spFamilies, forward);
+  return answer;
 }
 
 SPFamilies* SPFamilies::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (SPFamilies*)(*forward)[this];
-  } else {
-    SPFamilies* answer = new SPFamilies(*this);
-    (*forward)[this] = answer;
-    answer->families = copy_vvptr_map_shared_v(this->families, forward);
-    return answer;
-  }
+  SPFamilies* answer = new SPFamilies(*this);
+  (*forward)[this] = answer;
+  answer->families = copy_vvptr_map_shared_v(this->families, forward);
+  return answer;
 }
 
 CSPRequestPSP* CSPRequestPSP::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (CSPRequestPSP*)(*forward)[this];
-  } else {
-    CSPRequestPSP* answer = new CSPRequestPSP(*this);
-    (*forward)[this] = answer;
-    answer->expression = copy_shared(this->expression, forward);
-    answer->environment = copy_shared(this->environment, forward);
-    return answer;
-  }
+  CSPRequestPSP* answer = new CSPRequestPSP(*this);
+  (*forward)[this] = answer;
+  answer->expression = copy_shared(this->expression, forward);
+  answer->environment = copy_shared(this->environment, forward);
+  return answer;
 }
 
 MSPRequestPSP* MSPRequestPSP::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (MSPRequestPSP*)(*forward)[this];
-  } else {
-    MSPRequestPSP* answer = new MSPRequestPSP(*this);
-    (*forward)[this] = answer;
-    answer->sharedOperatorNode = this->sharedOperatorNode->copy_help(forward);
-    return answer;
-  }
+  MSPRequestPSP* answer = new MSPRequestPSP(*this);
+  (*forward)[this] = answer;
+  answer->sharedOperatorNode = copy_pointer(this->sharedOperatorNode, forward);
+  return answer;
 }
 
 /*********************************************************************\
-|* Environments                                                      *|
+|* Values                                                            *|
 \*********************************************************************/
 
 VentureEnvironment* VentureEnvironment::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (VentureEnvironment*)(*forward)[this];
-  } else {
-    VentureEnvironment* answer = new VentureEnvironment(*this);
-    (*forward)[this] = answer;
-    answer->outerEnv = copy_shared(this->outerEnv, forward);
-    answer->frame = copy_map_v(this->frame, forward);
-    return answer;
-  }
+  VentureEnvironment* answer = new VentureEnvironment(*this);
+  (*forward)[this] = answer;
+  answer->outerEnv = copy_shared(this->outerEnv, forward);
+  answer->frame = copy_map_v(this->frame, forward);
+  return answer;
+}
+
+VentureArray* VentureArray::copy_help(ForwardingMap* forward)
+{
+  VentureArray* answer = new VentureArray(*this);
+  (*forward)[this] = answer;
+  answer->xs = copy_vector_shared(this->xs, forward);
+  return answer;
+}
+
+VenturePair* VenturePair::copy_help(ForwardingMap* forward)
+{
+  VenturePair* answer = new VenturePair(*this);
+  (*forward)[this] = answer;
+  answer->car = copy_shared(this->car, forward);
+  answer->cdr = copy_shared(this->cdr, forward);
+  return answer;
+}
+
+VentureDictionary* VentureDictionary::copy_help(ForwardingMap* forward)
+{
+  VentureDictionary* answer = new VentureDictionary(*this);
+  (*forward)[this] = answer;
+  answer->dict = copy_vvptr_map_shared_v(this->dict, forward);
+  return answer;
+}
+
+VentureNode* VentureNode::copy_help(ForwardingMap* forward)
+{
+  VentureNode* answer = new VentureNode(*this);
+  (*forward)[this] = answer;
+  answer->node = copy_pointer(this->node, forward);
+  return answer;
 }
