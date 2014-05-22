@@ -35,8 +35,8 @@ struct BetaBernoulliOutputPSP : RandomPSP
   double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
 
 private:
-  double alpha;
-  double beta;
+  const double alpha;
+  const double beta;
 };
 
 // Uncollapsed SPAux

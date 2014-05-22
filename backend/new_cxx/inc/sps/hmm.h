@@ -50,9 +50,9 @@ struct UncollapsedHMMSP : SP
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const;
 
-  MatrixXd p0;
-  MatrixXd T;
-  MatrixXd O;
+  const MatrixXd p0;
+  const MatrixXd T;
+  const MatrixXd O;
 };
 
 
@@ -64,7 +64,7 @@ struct UncollapsedHMMOutputPSP : RandomPSP
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
-  MatrixXd O;
+  const MatrixXd O;
 };
 
 struct UncollapsedHMMRequestPSP : PSP
