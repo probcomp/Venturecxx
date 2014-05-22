@@ -95,7 +95,7 @@ set<T*> copy_set(set<T*> s, ForwardingMap* forward)
   set<T*> answer = set<T*>();
   BOOST_FOREACH(T* obj, s)
   {
-    answer.insert(obj->copy_help(forward));
+    answer.insert(copy_pointer(obj, forward));
   }
   return answer;
 }
@@ -118,7 +118,7 @@ map<K*, V> copy_map_k(map<K*, V> m, ForwardingMap* forward)
   typename map<K*, V>::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first->copy_help(forward)] = (*itr).second;
+    answer[copy_pointer((*itr).first, forward)] = (*itr).second;
   }
   return answer;
 }
@@ -142,7 +142,7 @@ map<K, V*> copy_map_v(map<K, V*> m, ForwardingMap* forward)
   typename map<K, V*>::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first] = (*itr).second->copy_help(forward);
+    answer[(*itr).first] = copy_pointer((*itr).second, forward);
   }
   return answer;
 }
@@ -166,7 +166,7 @@ map<K*, shared_ptr<V> > copy_map_kv(map<K*, shared_ptr<V> > m, ForwardingMap* fo
   typename map<K*, shared_ptr<V> >::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first->copy_help(forward)] = copy_shared((*itr).second, forward);
+    answer[copy_pointer((*itr).first, forward)] = copy_shared((*itr).second, forward);
   }
   return answer;
 }
@@ -219,7 +219,7 @@ vector<V*> copy_vector(vector<V*> v, ForwardingMap* forward)
   vector<V*> answer = vector<V*>();
   BOOST_FOREACH(V* val, v)
     {
-      answer.push_back(val->copy_help(forward));
+      answer.push_back(copy_pointer(val, forward));
     }
   return answer;
 }
@@ -242,7 +242,7 @@ map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(map<K*, vector<shared_ptr<V>
   typename map<K*, vector<shared_ptr<V> > >::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[(*itr).first->copy_help(forward)] = copy_vector_shared((*itr).second, forward);
+    answer[copy_pointer((*itr).first, forward)] = copy_vector_shared((*itr).second, forward);
   }
   return answer;
 }
@@ -300,7 +300,7 @@ LookupNode* LookupNode::copy_help(ForwardingMap* forward)
     LookupNode* answer = new LookupNode(*this);
     (*forward)[this] = answer;
     answer->exp = copy_shared(this->exp, forward);
-    answer->sourceNode = this->sourceNode->copy_help(forward);
+    answer->sourceNode = copy_pointer(this->sourceNode, forward);
     answer->children = copy_set(this->children, forward);
     return answer;
   }
@@ -315,8 +315,8 @@ RequestNode* RequestNode::copy_help(ForwardingMap* forward)
     RequestNode* answer = new RequestNode(*this);
     (*forward)[this] = answer;
     answer->exp = copy_shared(this->exp, forward);
-    answer->outputNode = this->outputNode->copy_help(forward);
-    answer->operatorNode = this->operatorNode->copy_help(forward);
+    answer->outputNode = copy_pointer(this->outputNode, forward);
+    answer->operatorNode = copy_pointer(this->operatorNode, forward);
     answer->operandNodes = copy_vector(this->operandNodes, forward);
     answer->env = copy_shared(this->env, forward);
     answer->children = copy_set(this->children, forward);
@@ -333,8 +333,8 @@ OutputNode* OutputNode::copy_help(ForwardingMap* forward)
     OutputNode* answer = new OutputNode(*this);
     (*forward)[this] = answer;
     answer->exp = copy_shared(this->exp, forward);
-    answer->requestNode = this->requestNode->copy_help(forward);
-    answer->operatorNode = this->operatorNode->copy_help(forward);
+    answer->requestNode = copy_pointer(this->requestNode, forward);
+    answer->operatorNode = copy_pointer(this->operatorNode, forward);
     answer->operandNodes = copy_vector(this->operandNodes, forward);
     answer->env = copy_shared(this->env, forward);
     answer->children = copy_set(this->children, forward);
@@ -368,7 +368,7 @@ VentureSPRef* VentureSPRef::copy_help(ForwardingMap* forward)
   } else {
     VentureSPRef* answer = new VentureSPRef(*this);
     (*forward)[this] = answer;
-    answer->makerNode = this->makerNode->copy_help(forward);
+    answer->makerNode = copy_pointer(this->makerNode, forward);
     return answer;
   }
 }
@@ -423,7 +423,7 @@ MSPRequestPSP* MSPRequestPSP::copy_help(ForwardingMap* forward)
   } else {
     MSPRequestPSP* answer = new MSPRequestPSP(*this);
     (*forward)[this] = answer;
-    answer->sharedOperatorNode = this->sharedOperatorNode->copy_help(forward);
+    answer->sharedOperatorNode = copy_pointer(this->sharedOperatorNode, forward);
     return answer;
   }
 }
