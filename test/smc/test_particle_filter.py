@@ -53,8 +53,8 @@ def initBasicPFripl1():
 
 @statisticalTest
 @attr("slow")
-def testBasicParticleFilter1(P = 30):
-  """A sanity test for particle filtering"""
+def testBasicParticleFilter1(P = 10):
+  """A sanity test for particle filtering (discrete)"""
   if defaultKernel() != "mh": raise SkipTest("Doesn't depend on kernel, only run it for mh")
 
   N = default_num_samples()
@@ -96,8 +96,8 @@ def initBasicPFripl2():
 
 @statisticalTest
 @attr("slow")
-def testBasicParticleFilter2(P = 30):
-  """A sanity test for particle filtering"""
+def testBasicParticleFilter2(P = 10):
+  """A sanity test for particle filtering (continuous)"""
   if defaultKernel() != "mh": raise SkipTest("Doesn't depend on kernel, only run it for mh")
 
   N = default_num_samples()
