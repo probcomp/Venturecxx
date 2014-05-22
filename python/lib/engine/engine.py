@@ -13,9 +13,10 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+import random
+
 from venture.exception import VentureException
 from venture.lite.utils import simulateCategorical, sampleLogCategorical
-from venture.lite.serialize import Serializer
 
 # Thin wrapper around Trace
 # TODO: merge with CoreSivm?
@@ -114,7 +115,6 @@ class Engine(object):
     # Frobnicate the trace's random seed because Trace() resets the
     # RNG seed from the current time, which sucks if one calls this
     # method often.
-    import random
     self.set_seed(random.randint(1,2**31-1))
 
   # Blow away the trace and rebuild one from the directives.  The goal
@@ -153,6 +153,8 @@ class Engine(object):
       for p in range(P):
         parent = sampleLogCategorical(self.weights) # will need to include or rewrite
         newTraces[p] = self.traces[parent].stop_and_copy()
+        if self.name != "lite":
+          newTraces[p].set_seed(random.randint(1,2**31-1))
       self.traces = newTraces
       self.weights = [0 for p in range(P)]
 
