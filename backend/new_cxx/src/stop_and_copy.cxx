@@ -279,67 +279,47 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap* forward)
 // but I don't want to go there.
 ConstantNode* ConstantNode::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (ConstantNode*)(*forward)[this];
-  } else {
-    ConstantNode* answer = new ConstantNode(this->exp);
-    (*forward)[this] = answer;
-    answer->exp = copy_shared(this->exp, forward);
-    answer->children = copy_set(this->children, forward);
-    return answer;
-  }
+  ConstantNode* answer = new ConstantNode(this->exp);
+  (*forward)[this] = answer;
+  answer->exp = copy_shared(this->exp, forward);
+  answer->children = copy_set(this->children, forward);
+  return answer;
 }
 
 LookupNode* LookupNode::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (LookupNode*)(*forward)[this];
-  } else {
-    LookupNode* answer = new LookupNode(*this);
-    (*forward)[this] = answer;
-    answer->exp = copy_shared(this->exp, forward);
-    answer->sourceNode = copy_pointer(this->sourceNode, forward);
-    answer->children = copy_set(this->children, forward);
-    return answer;
-  }
+  LookupNode* answer = new LookupNode(*this);
+  (*forward)[this] = answer;
+  answer->exp = copy_shared(this->exp, forward);
+  answer->sourceNode = copy_pointer(this->sourceNode, forward);
+  answer->children = copy_set(this->children, forward);
+  return answer;
 }
 
 RequestNode* RequestNode::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (RequestNode*)(*forward)[this];
-  } else {
-    RequestNode* answer = new RequestNode(*this);
-    (*forward)[this] = answer;
-    answer->exp = copy_shared(this->exp, forward);
-    answer->outputNode = copy_pointer(this->outputNode, forward);
-    answer->operatorNode = copy_pointer(this->operatorNode, forward);
-    answer->operandNodes = copy_vector(this->operandNodes, forward);
-    answer->env = copy_shared(this->env, forward);
-    answer->children = copy_set(this->children, forward);
-    return answer;
-  }
+  RequestNode* answer = new RequestNode(*this);
+  (*forward)[this] = answer;
+  answer->exp = copy_shared(this->exp, forward);
+  answer->outputNode = copy_pointer(this->outputNode, forward);
+  answer->operatorNode = copy_pointer(this->operatorNode, forward);
+  answer->operandNodes = copy_vector(this->operandNodes, forward);
+  answer->env = copy_shared(this->env, forward);
+  answer->children = copy_set(this->children, forward);
+  return answer;
 }
 
 OutputNode* OutputNode::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (OutputNode*)(*forward)[this];
-  } else {
-    OutputNode* answer = new OutputNode(*this);
-    (*forward)[this] = answer;
-    answer->exp = copy_shared(this->exp, forward);
-    answer->requestNode = copy_pointer(this->requestNode, forward);
-    answer->operatorNode = copy_pointer(this->operatorNode, forward);
-    answer->operandNodes = copy_vector(this->operandNodes, forward);
-    answer->env = copy_shared(this->env, forward);
-    answer->children = copy_set(this->children, forward);
-    return answer;
-  }
+  OutputNode* answer = new OutputNode(*this);
+  (*forward)[this] = answer;
+  answer->exp = copy_shared(this->exp, forward);
+  answer->requestNode = copy_pointer(this->requestNode, forward);
+  answer->operatorNode = copy_pointer(this->operatorNode, forward);
+  answer->operandNodes = copy_vector(this->operandNodes, forward);
+  answer->env = copy_shared(this->env, forward);
+  answer->children = copy_set(this->children, forward);
+  return answer;
 }
 
 /*********************************************************************\
@@ -348,84 +328,54 @@ OutputNode* OutputNode::copy_help(ForwardingMap* forward)
 
 SP* SP::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (SP*)(*forward)[this];
-  } else {
-    SP* answer = new SP(*this);
-    (*forward)[this] = answer;
-    answer->requestPSP = copy_shared(this->requestPSP, forward);
-    answer->outputPSP = copy_shared(this->outputPSP, forward);
-    return answer;
-  }
+  SP* answer = new SP(*this);
+  (*forward)[this] = answer;
+  answer->requestPSP = copy_shared(this->requestPSP, forward);
+  answer->outputPSP = copy_shared(this->outputPSP, forward);
+  return answer;
 }
 
 VentureSPRef* VentureSPRef::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (VentureSPRef*)(*forward)[this];
-  } else {
-    VentureSPRef* answer = new VentureSPRef(*this);
-    (*forward)[this] = answer;
-    answer->makerNode = copy_pointer(this->makerNode, forward);
-    return answer;
-  }
+  VentureSPRef* answer = new VentureSPRef(*this);
+  (*forward)[this] = answer;
+  answer->makerNode = copy_pointer(this->makerNode, forward);
+  return answer;
 }
 
 VentureSPRecord* VentureSPRecord::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (VentureSPRecord*)(*forward)[this];
-  } else {
-    VentureSPRecord* answer = new VentureSPRecord(*this);
-    (*forward)[this] = answer;
-    answer->sp = copy_shared(this->sp, forward);
-    answer->spAux = copy_shared(this->spAux, forward);
-    answer->spFamilies = copy_shared(this->spFamilies, forward);
-    return answer;
-  }
+  VentureSPRecord* answer = new VentureSPRecord(*this);
+  (*forward)[this] = answer;
+  answer->sp = copy_shared(this->sp, forward);
+  answer->spAux = copy_shared(this->spAux, forward);
+  answer->spFamilies = copy_shared(this->spFamilies, forward);
+  return answer;
 }
 
 SPFamilies* SPFamilies::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (SPFamilies*)(*forward)[this];
-  } else {
-    SPFamilies* answer = new SPFamilies(*this);
-    (*forward)[this] = answer;
-    answer->families = copy_vvptr_map_shared_v(this->families, forward);
-    return answer;
-  }
+  SPFamilies* answer = new SPFamilies(*this);
+  (*forward)[this] = answer;
+  answer->families = copy_vvptr_map_shared_v(this->families, forward);
+  return answer;
 }
 
 CSPRequestPSP* CSPRequestPSP::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (CSPRequestPSP*)(*forward)[this];
-  } else {
-    CSPRequestPSP* answer = new CSPRequestPSP(*this);
-    (*forward)[this] = answer;
-    answer->expression = copy_shared(this->expression, forward);
-    answer->environment = copy_shared(this->environment, forward);
-    return answer;
-  }
+  CSPRequestPSP* answer = new CSPRequestPSP(*this);
+  (*forward)[this] = answer;
+  answer->expression = copy_shared(this->expression, forward);
+  answer->environment = copy_shared(this->environment, forward);
+  return answer;
 }
 
 MSPRequestPSP* MSPRequestPSP::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (MSPRequestPSP*)(*forward)[this];
-  } else {
-    MSPRequestPSP* answer = new MSPRequestPSP(*this);
-    (*forward)[this] = answer;
-    answer->sharedOperatorNode = copy_pointer(this->sharedOperatorNode, forward);
-    return answer;
-  }
+  MSPRequestPSP* answer = new MSPRequestPSP(*this);
+  (*forward)[this] = answer;
+  answer->sharedOperatorNode = copy_pointer(this->sharedOperatorNode, forward);
+  return answer;
 }
 
 /*********************************************************************\
@@ -434,14 +384,9 @@ MSPRequestPSP* MSPRequestPSP::copy_help(ForwardingMap* forward)
 
 VentureEnvironment* VentureEnvironment::copy_help(ForwardingMap* forward)
 {
-  if (forward->count(this) > 0)
-  {
-    return (VentureEnvironment*)(*forward)[this];
-  } else {
-    VentureEnvironment* answer = new VentureEnvironment(*this);
-    (*forward)[this] = answer;
-    answer->outerEnv = copy_shared(this->outerEnv, forward);
-    answer->frame = copy_map_v(this->frame, forward);
-    return answer;
-  }
+  VentureEnvironment* answer = new VentureEnvironment(*this);
+  (*forward)[this] = answer;
+  answer->outerEnv = copy_shared(this->outerEnv, forward);
+  answer->frame = copy_map_v(this->frame, forward);
+  return answer;
 }
