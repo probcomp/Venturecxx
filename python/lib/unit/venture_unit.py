@@ -429,9 +429,9 @@ class Analytics(object):
 
     # iterates until (approximately) all random choices have been resampled
     def sweep(self,infer=None,**kwargs):
-        noSweep = kwargs.get('noSweep',None)
+        simpleInfer = kwargs.get('simpleInfer',None)
         stepSize = kwargs.get('stepSize',1)
-        if noSweep:
+        if simpleInfer:
             self._runInfer(infer,stepSize)
             return stepSize
         
@@ -561,16 +561,29 @@ class Analytics(object):
         '''Runs inference on the model conditioned on data.
            By default data is values of self.observes.
 
+           To avoid using the *sweep* method for inference, set
+           *simpleInfer* to True. This will record after
+           each call to your inference program. (You can thin the number
+           of samples recorded using the *transitions* argument for the 
+           inference program).
+
+           Example:
+           > m.runFromConditional(100,infer='(mh default one 5)',simpleInfer=True)
+
+           This will collect 100 samples with 5 MH transitions between samples.
+
+
+
            Arguments
            ---------
            sweeps :: int
                Total number of iterations of inference program. Values are
                recorded after every sweep.
-           noSweeps :: bool
+           simpleInfer :: bool [optional]
                If True, run inference without attempting to hit all variables
                before recording. Use optional *stepSize* argument to specify
                numbers of steps between recording. 
-           runs :: int
+           runs :: int  [optional]
                Number of parallel chains for inference. Default=3.
            infer :: string | function on ripl
                Inference program.

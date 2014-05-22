@@ -13,6 +13,7 @@ from testconfig import config
 from nose.tools import eq_, assert_equal, assert_almost_equal
 
 
+## Functions used by tests
 def betaModel(ripl):
     assumes=[('p','(beta 1.0 1.0)')] 
     observes=[('(flip p)',True) for _ in range(2)]
@@ -29,6 +30,11 @@ def normalModel(ripl):
     [ripl.observe(exp,literal) for exp,literal in observes]
     return ripl,assumes,observes,queryExps
 
+def snapshot_t(history,name,t):
+    return [series.values[t] for series in history.nameToSeries[name]]
+
+
+## Tests
 def _testLoadModel(ripl_mripl):
     v=ripl_mripl
     vBackend = v.backend if isinstance(v,MRipl) else v.backend()
@@ -87,14 +93,15 @@ def testRuns():
     yield _testRuns, get_ripl()
     yield _testRuns, get_mripl(no_ripls=3)
 
+
+
+
 @statisticalTest
 def _testInfer(ripl_mripl,conditional_prior,inferProg):
     v,_,_,_= betaModel( ripl_mripl ) 
     samples = 40
     runs = 20
     model = Analytics(v)
-    def lastSnapshot(history):
-        return [series.values[-1] for series in history.nameToSeries['p']]
 
     if conditional_prior == 'conditional':
         history,_ = model.runFromConditional(samples,runs=runs,
@@ -109,7 +116,7 @@ def _testInfer(ripl_mripl,conditional_prior,inferProg):
         cdf = stats.beta(1+noHeads,1+noTails).cdf
         # will include gtruth (but it won't affect test)
         
-    return reportKnownContinuous(cdf,lastSnapshot(history))                                 
+    return reportKnownContinuous(cdf,snapshot_t(history,'p',-1))                                 
                                      
 def testRunFromConditionalInfer():
     riplThunks = (get_ripl, lambda: get_mripl(no_ripls=3))
@@ -124,6 +131,8 @@ def testRunFromConditionalInfer():
     for r,c,i in params:
         yield _testInfer, r(), c, i
 
+
+@statisticalTest        
 def _testSampleFromJoint(ripl_mripl,useMRipl):
     v,assumes,observes,queryExps = normalModel( ripl_mripl )
     samples = 30
@@ -139,7 +148,14 @@ def testSampleFromJoint():
         for useMRipl in (True,False):
             yield _testSampleFromJoint, r(), useMRipl
 
+def _testRunFromJoint(ripl_mripl,inferProg):
+    v,assume,_,queryExps = normalModel( ripl_mripl)
+    model = Analytics(v,queryExps=queryExps)
 
+    # variation across runs
+    hist = model.runFromJoint(10, runs=30, infer=inferProg)
+    xSamples = 
+    
 
 # def _testInferRuns(ripl_mripl):
 #     v=ripl_mripl
