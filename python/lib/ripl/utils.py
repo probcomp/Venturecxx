@@ -142,7 +142,7 @@ def run_venture_console(ripl):
           print ripl.report(int(content))
         else:
           print "Sorry, unknown directive."
-    except Exception, err:
+    except Exception: # pylint:disable=broad-except
       print "Your query has generated an error:"
       traceback.print_exc()
 
@@ -209,7 +209,7 @@ def expToDict(exp):
   elif tag == "pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
     if type(exp[2]) is list:
-      assert(exp[2][0] == "ordered_range")
+      assert exp[2][0] == "ordered_range"
       ans = {"kernel":"pgibbs","scope":exp[1],"block":"ordered_range",
             "min_block":exp[2][1],"max_block":exp[2][2],
             "particles":exp[3],"transitions":exp[4],"with_mutation":True}

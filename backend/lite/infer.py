@@ -47,7 +47,7 @@ class BlockScaffoldIndexer(object):
     elif self.block == "all": return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
     elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
     elif self.block == "ordered_range": 
-      assert(self.interval)
+      assert self.interval
       return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope),self.interval)
     else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])
 
@@ -246,7 +246,7 @@ class EnumerativeGibbsOperator(object):
     return self.finalParticle,0
 
   def accept(self): self.finalParticle.commit()
-  def reject(self): assert(False)
+  def reject(self): assert False
 
 
 #### PGibbs
@@ -460,7 +460,7 @@ class MAPOperator(InPlaceOperator):
     registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
     _rhoWeight = self.prepare(trace, scaffold, True) # Gradient is in self.rhoDB
 
-    grad = GradientOfRegen(trace, scaffold)
+    grad = GradientOfRegen(trace, scaffold, pnodes)
 
     # Might as well save a gradient computation, since the initial
     # detach does it
@@ -500,9 +500,12 @@ class GradientOfRegen(object):
   # gradient.  So if I am going to detach and regen repeatedly, I need
   # to pass the scaffolds from one to the next and rebuild them
   # properly.
-  def __init__(self, trace, scaffold):
+  def __init__(self, trace, scaffold, pnodes):
     self.trace = trace
     self.scaffold = scaffold
+    # Pass and store the pnodes because their order matters, and the
+    # scaffold has them as a set
+    self.pnodes = pnodes
     self.pyr_state = random.getstate()
     self.numpyr_state = npr.get_state()
 
@@ -513,12 +516,11 @@ class GradientOfRegen(object):
     kernels around."""
     # TODO Assert that no delta kernels are requested?
     self.fixed_regen(values)
-    pnodes = self.scaffold.getPrincipalNodes()
-    new_scaffold = constructScaffold(self.trace, [pnodes])
-    registerDeterministicLKernels(self.trace, new_scaffold, pnodes, values)
+    new_scaffold = constructScaffold(self.trace, [set(self.pnodes)])
+    registerDeterministicLKernels(self.trace, new_scaffold, self.pnodes, values)
     (_, rhoDB) = detachAndExtract(self.trace, new_scaffold.border[0], new_scaffold, True)
     self.scaffold = new_scaffold
-    return [rhoDB.getPartial(pnode) for pnode in pnodes]
+    return [rhoDB.getPartial(pnode) for pnode in self.pnodes]
 
   def fixed_regen(self, values):
     # Ensure repeatability of randomness
@@ -527,7 +529,7 @@ class GradientOfRegen(object):
     try:
       random.setstate(self.pyr_state)
       npr.set_state(self.numpyr_state)
-      registerDeterministicLKernels(self.trace, self.scaffold, self.scaffold.getPrincipalNodes(), values)
+      registerDeterministicLKernels(self.trace, self.scaffold, self.pnodes, values)
       answer = regenAndAttach(self.trace, self.scaffold.border[0], self.scaffold, False, OmegaDB(), {})
     finally:
       random.setstate(cur_pyr_state)
@@ -569,7 +571,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     momenta = self.sampleMomenta(currentValues)
     start_K = self.kinetic(momenta)
 
-    grad = GradientOfRegen(trace, scaffold)
+    grad = GradientOfRegen(trace, scaffold, pnodes)
     def grad_potential(values):
       # The potential function we want is - log density
       return [-dx for dx in grad(values)]
