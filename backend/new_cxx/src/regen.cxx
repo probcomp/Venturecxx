@@ -380,9 +380,9 @@ double evalRequests(Trace * trace,
       }
       else
       {
-              pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,db,gradients);
+        pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,db,gradients);
         weight += p.first;
-              esrRoot = shared_ptr<Node>(p.second);
+        esrRoot = shared_ptr<Node>(p.second);
       }
       trace->registerMadeSPFamily(trace->getOperatorSPMakerNode(requestNode),esr.id,esrRoot);
     }

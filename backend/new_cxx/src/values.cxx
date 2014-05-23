@@ -3,6 +3,7 @@
 #include "Eigen/Dense"
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
+#include <cmath>
 #include <sstream>   
 
 using std::stringstream;
@@ -11,6 +12,69 @@ using boost::lexical_cast;
 /* TODO the constness in this file is incorrect, but I don't understand it well enough 
    yet, so I figure I will just play make-the-compiler-happy when the time comes.
 */
+VentureSymmetricMatrix::VentureSymmetricMatrix(const Eigen::MatrixXd & m)
+:VentureMatrix(m)
+{
+  // first check if symmetric matrix.
+  assert(m.rows() == m.cols());
+  for(size_t i = 0; i < m.rows(); i++) 
+  {
+    for(size_t j = i+1; j < m.cols(); j++) 
+    {
+      if(fabs(m(i,j)-m(j,i)) > 1e-8)
+      {
+        cout << this->toString() << endl;
+        throw "failed to initiate a symmetric matrix from an asymmetric one.";
+      }
+    }
+  }
+
+}
+
+VentureValuePtr VentureNumber::map_real(boost::function<double ()> func)
+{
+  return VentureNumber::makeValue(func());
+}
+
+
+VentureValuePtr VentureVector::map_real(boost::function<double ()> func)
+{
+  VectorXd x = v;
+  for(size_t i = 0; i < x.size(); i++) 
+  {
+    x(i) = func();
+  }
+  return VentureVector::makeValue(x);
+}
+
+
+VentureValuePtr VentureMatrix::map_real(boost::function<double ()> func) 
+{
+  MatrixXd x = m;
+  for(size_t i = 0; i < x.rows(); i++)
+  {
+    for(size_t j = 0; j < x.cols(); j++) 
+    {
+      x(i,j) = func();
+    }
+  }
+  return VentureMatrix::makeValue(x);
+}
+
+VentureValuePtr VentureSymmetricMatrix::map_real(boost::function<double ()> func) 
+{
+  MatrixXd x = m;
+  for(size_t i = 0; i < x.rows(); i++)
+  {
+    for(size_t j = i; j < x.cols(); j++) 
+    {
+      x(i,j) = func();
+      x(j,i) = x(i,j);
+    }
+  }
+  return VentureSymmetricMatrix::makeValue(x);
+}
+
 VentureValuePtrVector VentureNumber::getArray() const { 
   VentureValuePtrVector array;
   array.push_back(VentureNumber::makeValue(x));
@@ -37,6 +101,10 @@ VentureValuePtr VentureVector::makeValue(const VectorXd & xs) {
 
 VentureValuePtr VentureMatrix::makeValue(const MatrixXd & xs) {
   return VentureValuePtr(new VentureMatrix(xs));
+}
+
+VentureValuePtr VentureSymmetricMatrix::makeValue(const MatrixXd & xs) {
+  return VentureValuePtr(new VentureSymmetricMatrix(xs));
 }
 
 VentureValuePtr VentureArray::makeOnes(size_t length) {
@@ -599,6 +667,22 @@ VentureValuePtr VentureMatrix::operator+(const VentureValuePtr & rhs) const {
   assert(false);
 }
 
+VentureValuePtr VentureSymmetricMatrix::operator+(const VentureValuePtr & rhs) const {
+  return VentureSymmetricMatrix::makeValue(VentureMatrix::operator+(rhs)->getMatrix());
+}
+
+VentureValuePtr VentureSymmetricMatrix::operator-(const VentureValuePtr & rhs) const {
+  return VentureSymmetricMatrix::makeValue(VentureMatrix::operator-(rhs)->getMatrix());
+}
+
+VentureValuePtr VentureSymmetricMatrix::operator*(const VentureValuePtr & rhs) const {
+  return VentureSymmetricMatrix::makeValue(VentureMatrix::operator*(rhs)->getMatrix());
+}
+
+VentureValuePtr VentureSymmetricMatrix::neg() const {
+  return VentureSymmetricMatrix::makeValue(VentureMatrix::neg()->getMatrix());
+}
+
 VentureValuePtr VentureNumber::operator-(const VentureValuePtr & rhs) const {
   const shared_ptr<VentureNumber> rhsVal = dynamic_pointer_cast<VentureNumber>(rhs);
   assert(rhsVal != NULL);
@@ -740,7 +824,7 @@ VentureValuePtr VentureArray::neg() const {
 }
 
 VentureValuePtr VentureMatrix::neg() const {
-  VectorXd x(m.rows(), m.cols());
+  MatrixXd x(m.rows(), m.cols());
   for (int i = 0; i < m.rows(); ++i) { 
     for(int j = 0; j < m.cols(); ++j) {
       x(i,j) = 0-m(i,j);

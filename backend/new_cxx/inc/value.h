@@ -10,6 +10,7 @@
 #include <boost/python/dict.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/foreach.hpp>
+#include <boost/function.hpp>
 
 #ifdef __MACH__  // OS X does not have clock_gettime, use clock_get_time
 #include <mach/clock.h>
@@ -104,6 +105,7 @@ struct VentureValue
   virtual VentureValuePtr operator*(const VentureValuePtr & rhs) const;
   virtual VentureValuePtr neg() const;
   virtual bool ltSameType(const VentureValuePtr & rhs) const;
+  virtual VentureValuePtr map_real(boost::function<double ()> func) {throw "not implemented."; }
 };
 
 

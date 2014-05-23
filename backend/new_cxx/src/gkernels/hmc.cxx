@@ -10,6 +10,8 @@
 
 #include <boost/foreach.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 
 using std::pair;
 
@@ -35,9 +37,12 @@ pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffol
   /* detach and extract */
   registerDeterministicLKernels(trace, scaffold, applicationNodes, currentValues);
   double rhoWeight = this->prepare(trace, scaffold, true);
+  
   /* evolve */
   VentureValuePtr start_q = VentureArray::makeValue(currentValues);
+
   VentureValuePtr momenta = this->sampleMomenta(start_q, trace->getRNG());
+  // cout << "momenta " << toString(momenta) << endl;
   VentureValuePtr start_grad_pot = VentureArray::makeValue(this->rhoDB->getPartials(allNodes))->neg();
   double start_K = this->kinetic(momenta);
   GradientOfRegen grad(trace, scaffold);
@@ -49,25 +54,39 @@ pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffol
   registerDeterministicLKernels(trace, scaffold, applicationNodes, proposed);
   
   double xiWeight = grad.fixed_regen(proposed) ;
-
   return make_pair(trace,xiWeight - rhoWeight + start_K - end_K);
 }
 
 VentureValuePtr HMCGKernel::sampleMomenta(VentureValuePtr currentValues, gsl_rng * rng) const {
   vector<VentureValuePtr> momenta;
   BOOST_FOREACH(VentureValuePtr value, currentValues->getArray()) {
-    shared_ptr<VentureNumber> valueNumber = dynamic_pointer_cast<VentureNumber>(value);
-    if(valueNumber != NULL) {
-      momenta.push_back(VentureNumber::makeValue(gsl_ran_gaussian(rng, 1)));
-      continue;
-    }
-    shared_ptr<VentureVector> valueVector = dynamic_pointer_cast<VentureVector>(value);
-    if(valueVector != NULL) {
-      VectorXd momentVector(valueVector->v.size());
-      for(int si = 0; si < valueVector->v.size(); si++) momentVector[si] = gsl_ran_gaussian(rng, 1);
-      momenta.push_back(VentureVector::makeValue(momentVector));      
-      continue;
-    }
+    momenta.push_back(value->map_real(boost::bind(&gsl_ran_gaussian, rng, 1)));
+
+    // shared_ptr<VentureNumber> valueNumber = dynamic_pointer_cast<VentureNumber>(value);
+    // if(valueNumber != NULL) {
+    //   // momenta.push_back(VentureNumber::makeValue(gsl_ran_gaussian(rng, 1)));
+    //   momenta.push_back(value->map_real(boost::bind(&gsl_ran_gaussian, rng, 1)));
+    //   continue;
+    // }
+    // shared_ptr<VentureVector> valueVector = dynamic_pointer_cast<VentureVector>(value);
+    // if(valueVector != NULL) {
+    //   VectorXd momentVector(valueVector->v.size());
+    //   for(int si = 0; si < valueVector->v.size(); si++) momentVector[si] = gsl_ran_gaussian(rng, 1);
+    //   momenta.push_back(VentureVector::makeValue(momentVector));      
+    //   continue;
+    // }
+    // shared_ptr<VentureSymmetricMatrix> valueSymmetricMatrix = dynamic_pointer_cast<VentureSymmetricMatrix>(value);
+    // if(valueSymmetricMatrix != NULL) 
+    // {
+    //   momenta.push_back(value->map_real(boost::bind(&gsl_ran_gaussian, rng, 1)));
+    //   continue;
+    // }
+    // shared_ptr<VentureMatrix> valueMatrix = dynamic_pointer_cast<VentureMatrix>(value);
+    // if(valueMatrix != NULL) 
+    // {
+    //   momenta.push_back(value->map_real(boost::bind(&gsl_ran_gaussian, rng, 1)));
+    //   continue;
+    // }
   }
   return VentureArray::makeValue(momenta);
 }
@@ -82,7 +101,18 @@ double HMCGKernel::kinetic(const VentureValuePtr momenta) const {
     }
     shared_ptr<VentureVector> valueVector = dynamic_pointer_cast<VentureVector>(m);
     if(valueVector != NULL) {
-      for(int si = 0; si < valueVector->v.size(); si++) kin += valueVector->v[si]*valueVector->v[si];
+      for(size_t si = 0; si < valueVector->v.size(); si++) kin += valueVector->v[si]*valueVector->v[si];
+      continue;
+    }
+    shared_ptr<VentureMatrix> valueMatrix = dynamic_pointer_cast<VentureMatrix>(m);
+    if(valueVector != NULL) {
+      for(size_t si = 0; si < valueMatrix->m.rows(); si++) 
+      {
+        for(size_t sj = 0; sj < valueMatrix->m.cols(); sj++)
+        {
+          kin += valueMatrix->m(si,sj)*valueMatrix->m(si,sj);
+        }
+      }
       continue;
     }
   }

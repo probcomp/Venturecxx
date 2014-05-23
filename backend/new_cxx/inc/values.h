@@ -23,6 +23,7 @@ struct VentureNumber : VentureValue
   VentureValuePtr operator+(const VentureValuePtr & rhs) const;
   VentureValuePtr operator-(const VentureValuePtr & rhs) const;
   VentureValuePtr operator*(const VentureValuePtr & rhs) const;
+  VentureValuePtr map_real(boost::function<double ()> func);
   VentureValuePtr neg() const;
   string asExpression() const;
   double x;
@@ -186,6 +187,18 @@ struct VentureMatrix : VentureValue
   VentureValuePtr operator-(const VentureValuePtr & rhs) const;
   VentureValuePtr operator*(const VentureValuePtr & rhs) const; // pointwise product.
   VentureValuePtr neg() const;
+  VentureValuePtr map_real(boost::function<double ()> func);
+};
+
+struct VentureSymmetricMatrix : VentureMatrix 
+{
+  VentureSymmetricMatrix(const Eigen::MatrixXd & m);
+  VentureValuePtr operator+(const VentureValuePtr & rhs) const;
+  VentureValuePtr operator-(const VentureValuePtr & rhs) const;
+  VentureValuePtr operator*(const VentureValuePtr & rhs) const; // pointwise product.
+  VentureValuePtr neg() const;
+  static VentureValuePtr makeValue(const MatrixXd & xs);
+  VentureValuePtr map_real(boost::function<double ()> func);
 };
 
 struct VentureVector : VentureValue
@@ -201,6 +214,7 @@ struct VentureVector : VentureValue
   VentureValuePtr operator+(const VentureValuePtr & rhs) const;
   VentureValuePtr operator-(const VentureValuePtr & rhs) const;
   VentureValuePtr operator*(const VentureValuePtr & rhs) const;
+  VentureValuePtr map_real(boost::function<double ()> func);
   VentureValuePtr neg() const;
 };
 

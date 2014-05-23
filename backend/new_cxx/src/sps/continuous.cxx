@@ -361,7 +361,7 @@ VentureValuePtr WishartPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
     }
     X = c*A;
   }
-  return VentureMatrix::makeValue(X*X.transpose());
+  return VentureSymmetricMatrix::makeValue(X*X.transpose());
 }
 
 double WishartPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const 
