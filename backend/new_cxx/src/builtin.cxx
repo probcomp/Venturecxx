@@ -69,6 +69,7 @@ map<string,SP*> initBuiltInSPs()
   m["student_t"] = new SP(new NullRequestPSP(), new StudentTPSP());
   m["chi_sq"] = new SP(new NullRequestPSP(), new ChiSquaredPSP());
   m["inv_chi_sq"] = new SP(new NullRequestPSP(), new InvChiSquaredPSP());
+  m["approx_binomial"] = new SP(new NullRequestPSP(), new ApproximateBinomialPSP());
 
   m["multivariate_normal"] = new SP(new NullRequestPSP(), new MVNormalPSP());
 
