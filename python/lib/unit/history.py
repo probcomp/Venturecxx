@@ -103,33 +103,6 @@ typically also tracked."""
                 flatSeries.extend(series.values)
         return np.mean(flatSeries)
 
-    def compareSnapshots(self,names=None, probes=None):
-    '''
-    Compare samples across runs at two different probe points
-    in History. Defaults to comparing all names and probes =
-    (midPoint,lastPoint).'''
-    
-        allSnapshots = historyToSnapshots(self)
-        samples = len(allSnapshots.items()[0][1])
-
-        # restrict to probes
-        probes = (int(.5*samples),-1) if probes is None else probes
-        assert len(probes)==2
-
-        # restrict to names
-        if names is not None:
-            filterSnapshots = filterDict(allSnapshots,keep=names)
-        else:
-            filterSnapshots = allSnapshots
-
-        snapshotDicts=({},{})
-        for name,snapshots in filterSnapshots.iteritems():
-            for snapshotDict,probe in zip(snapshotDicts,probes):
-                snapshotDict[name]=snapshots[probe]
-
-        labels =[self.label+'_'+'snap_%i'%i for i in probes]
-        return compareSampleDicts(snapshotDicts,labels,plot=True)
-
     def historyToSnapshots(self):
         '''
         Snapshot of values across series for each time-step.
