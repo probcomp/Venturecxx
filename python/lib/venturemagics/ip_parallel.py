@@ -422,18 +422,6 @@ class MRipl():
         
 
     def observe(self,exp,val,label=None):
-        def _wrap_real(val):
-            return {"type":"real","value":val}
-        def _wrap(val):
-            if isinstance(val, (list, tuple)):
-                val = {"type":"vector","value":map(_wrap, val)}
-                pass
-            else:
-                val = _wrap_real(val)
-                pass
-            return val
-        # print 'MRipl.observe(%s, %s)' % tuple(map(str, [exp, val]))
-        val = _wrap(val)
         local_out = [r.observe(exp,val,label=label) for r in self.local_ripls]
         
         @interactive
