@@ -47,7 +47,7 @@ class BlockScaffoldIndexer(object):
     elif self.block == "all": return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
     elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
     elif self.block == "ordered_range": 
-      assert(self.interval)
+      assert self.interval
       return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope),self.interval)
     else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])
 
@@ -246,7 +246,7 @@ class EnumerativeGibbsOperator(object):
     return self.finalParticle,0
 
   def accept(self): self.finalParticle.commit()
-  def reject(self): assert(False)
+  def reject(self): assert False
 
 
 #### PGibbs
