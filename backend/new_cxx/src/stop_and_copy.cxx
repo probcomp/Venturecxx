@@ -224,7 +224,8 @@ ScopesMap copy_scopes_map(ScopesMap m, ForwardingMap* forward)
   typename ScopesMap::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[copy_shared((*itr).first, forward)] = copy_blocks_map((*itr).second, forward);
+    SamplableMap<std::set<Node*> > explictly_typed = copy_blocks_map((*itr).second, forward);
+    answer[copy_shared((*itr).first, forward)] = explictly_typed;
   }
   return answer;
 }
