@@ -103,6 +103,11 @@ predicts1 = numpy.array(map(get_predict1, range(N_steps)))
 
 pylab.figure()
 for run_idx in range(predicts0.shape[1]):
-    pylab.plot(predicts0[:, run_idx, 0], predicts0[:, run_idx, 1], 'r-x')
+    pylab.plot(predicts0[:, run_idx, 0], predicts0[:, run_idx, 1], 'r-x',
+            alpha=0.2)
+    pass
 for run_idx in range(predicts1.shape[1]):
-    pylab.plot(predicts1[:, run_idx, 0], predicts1[:, run_idx, 1], 'r-x')
+    pylab.plot(predicts1[:, run_idx, 0], predicts1[:, run_idx, 1], 'g-x',
+            alpha=0.2)
+    pass
+pylab.savefig('vehicle_justs_gps.png')
