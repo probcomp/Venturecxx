@@ -30,6 +30,7 @@ gps_heading = 0
 gen_gps = lambda t: _convert((constant_velocity * t, 0, gps_heading))
 #
 N_mripls = 4
+N_particles = 30
 backend = 'puma'
 N_infer = 200
 N_steps = 10
@@ -93,13 +94,15 @@ ripl1.execute_program(program)
 for t in range(1, N_steps):
     ripl1.observe('(simulate_gps (get_pose %s) .1 .1)' % t, gen_gps(t))
     pass
-ripl1.infer(N_infer)
-ripl1.infer('(mh default one %s)' % N_infer)
-ripl1.infer('(pgibbs default ordered 3 %s)' % N_infer)
+#ripl1.infer(N_infer)
+#ripl1.infer('(mh default one %s)' % N_infer)
+ripl1.infer('(pgibbs default ordered %s %s)' % (N_particles, N_infer))
 get_predict1 = functools.partial(get_predict, ripl1)
 predicts1 = numpy.array(map(get_predict1, range(N_steps)))
 
 
 pylab.figure()
-pylab.plot(predicts0[:, 0], predicts0[:, 1], 'r-x')
-pylab.plot(predicts1[:, 0], predicts1[:, 1], 'g-x')
+for run_idx in range(predicts0.shape[1]):
+    pylab.plot(predicts0[:, run_idx, 0], predicts0[:, run_idx, 1], 'r-x')
+for run_idx in range(predicts1.shape[1]):
+    pylab.plot(predicts1[:, run_idx, 0], predicts1[:, run_idx, 1], 'r-x')
