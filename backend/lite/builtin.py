@@ -140,6 +140,10 @@ def builtInSPsList():
            [ "log", unaryNum(math.log, "Returns the %s of its argument") ],
            [ "pow", binaryNum(math.pow, "%s returns its first argument raised to the power of its second argument") ],
            [ "sqrt", unaryNum(math.sqrt, "Returns the %s of its argument") ],
+           [ "logistic", unaryNum(lambda x: 1/(1+math.exp(-x)), "Returns the %s of its argument") ],
+           [ "linear_logistic", deterministic_typed(lambda w,x: 1/(1+math.exp(-(w[0] + np.dot(w[1:], x)))),
+                                                    [v.HomogeneousArrayType(v.NumberType()), v.HomogeneousArrayType(v.NumberType())], v.NumberType(),
+                                                    descr="%s returns the output of logistic regression with weight and input") ],
 
            [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType(),
                                         "%s returns the logical negation of its argument") ],

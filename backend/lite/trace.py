@@ -357,6 +357,9 @@ class Trace(object):
       elif params["kernel"] == "subsampled_mh":
         assert params["with_mutation"]
         subsampledMixMH(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["useDeltaKernels"],params["deltaKernelArgs"]),SubsampledMHOperator(), params["Nbatch"], params["k0"], params["epsilon"])
+      elif params["kernel"] == "subsampled_mh_make_consistent":
+        assert params["with_mutation"]
+        SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["useDeltaKernels"],params["deltaKernelArgs"]))
       elif params["kernel"] == "meanfield":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MeanfieldOperator(params["steps"],0.0001))
@@ -392,10 +395,14 @@ class Trace(object):
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
     # At the end of multiple transitions.
-    if params["kernel"] == "subsampled_mh" and \
-        (params["block"] == "all" or self.numBlocksInScope(params["scope"]) == 1):
-      # O(N) operation.
-      SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["useDeltaKernels"],params["deltaKernelArgs"]))
+    #
+    # DEBUG
+    # Call this function manually. This is for DEBUG purpose.
+    #
+    #if params["kernel"] == "subsampled_mh" and \
+    #    (params["block"] == "all" or self.numBlocksInScope(params["scope"]) == 1):
+    #  # O(N) operation.
+    #  SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["useDeltaKernels"],params["deltaKernelArgs"]))
 
   def save(self, fname, extra):
     from serialize import save_trace
