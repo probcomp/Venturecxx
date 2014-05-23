@@ -1,5 +1,6 @@
 from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl
 from venture.unit import *
+
 import numpy as np
 import scipy.stats as stats
 from itertools import product
@@ -206,6 +207,33 @@ def testCompareSampleDicts():
         yield _testCompareSampleDicts,sameDistributionValue
 
 
+@statisticalTest
+def _testCompareSnapshots(riplThunk):
+    v,assumes,observes,queryExps = betaModel(riplThunk())
+    samples = 20
+    model = Analytics(v,queryExps=queryExps)
+    history,_ = model.runFromConditional(samples,runs=10)
+    # two final snapshots should be very similar in distribution
+    report = history.compareSnapshots(probes = (-2,-1))
+    return report.statsDict['p']['KSSameContinuous']
+
+def testCompareSnapshots():    
+    riplThunks = (get_ripl, lambda: get_mripl(no_ripls=4))
+    for riplThunk in riplThunks:
+        yield _testCompareSnapshots, riplThunk
+
+def _testForce(riplThunk):
+    v = riplThunk()
+    [v.assume('x%i'%i,'(normal 0 100)') for i in range(5)]
+    [v.observe('(normal (+ x0 x1) 30)',100.) for _ in range(4)]
+    model = Analytics(v)
+    samples = 50
+    inferProg = '(mh default one 1)'
+    fdict = dict( [('x%i'%i,0) for i in range(5)] )
+    history,_ = model.runFromConditional(samples,runs=5,simpleInfer=True,
+                                         infer=inferProg,force=fdict)
+    return history
+    
 
 ## FIXME resinstate geweks
 def _testGewekeTest():

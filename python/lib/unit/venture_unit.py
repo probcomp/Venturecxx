@@ -19,7 +19,8 @@ from venture.ripl.ripl import _strip_types
 from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl,mr_map_proc
 from venture.venturemagics.ip_parallel import * ## FIXME:
 
-from history import History, Run, Series, historyOverlay
+from history import History, Run, Series, historyOverlay,compareSampleDicts,filterDict,historyNameToValues
+
 parseValue = _strip_types
 
 ## possible addition
@@ -776,169 +777,9 @@ class Analytics(object):
 
 
 
-from venture.test.stats import reportSameContinuous
-import scipy.stats
-
-def flattenRuns(history):
-    '''Copy values from each series into one (flat) series and
-       create new History'''
-    newHistory = History(history.label,history.parameters)
-    for name,listSeries in history.nameToSeries.iteritems():
-        label = 'flattened_'+listSeries[0].label+'...'
-        hist = listSeries[0].hist
-        type = history.nameToType[name]
-        flatValues = [el for series in listSeries for el in series.values]
-        newHistory.addSeries(name,type,label,flatValues,hist=hist)
-    return newHistory
 
 
-def historyToSnapshots(history):
-    '''
-    Snapshot of values across series for each time-step.
-    Created by copying scalar values from nameToSeries.
-    Output = {name:[ snapshot_i ] }, where snapshot_i
-    is [series.value[i] for series in nameToSeries[name]]''' 
-    snapshots={}
-    # always ignore sweep time for snapshots
-    ignore=('sweep time','sweep_iters')
-    for name,listSeries in history.nameToSeries.iteritems():
-        if any([s in name.lower() for s in ignore]):
-            continue
-        arrayValues = np.array( [s.values for s in listSeries] )
-        snapshots[name] = map(list,arrayValues.T) 
-    return snapshots
 
-
-def filterDict(d,keep=(),ignore=()):
-    '''Shallow copy of dictionary d filtered on keys.
-       If *keep* nonempty copy its members. Else: copy items not in *ignore*'''
-    assert isinstance(keep,(tuple,list))
-    if keep:
-        return dict([(k,v) for k,v in d.items() if k in keep])
-    else:
-        return dict([(k,v) for k,v in d.items() if k not in ignore])
-
-def plotSnapshot(history,name,probe=-1):
-    allSnapshots = historyToSnapshots(history)
-    snap = allSnapshots[name][probe]
-    title = 'Histogram: '+ name+'_snapshot_%i'%probe
-    fig,ax = plt.subplots(figsize = (4,3))
-    ax.hist(snap,bins=20,alpha=0.8,color='c')
-    ax.set_xlabel(name)
-    ax.set_ylabel('frequency')
-    ax.set_title(title)
-    return snap,fig
-
-
-def qqPlotAll(dicts,labels):
-    # FIXME do interpolation where samples have different lengths
-    exps = intersectKeys(dicts)
-    fig,ax = plt.subplots( len(exps),2,figsize=(12,4*len(exps)) )
-    
-    for i,exp in enumerate(exps):
-        s1,s2 = (dicts[0][exp],dicts[1][exp])
-        assert len(s1)==len(s2)
-
-        def makeHists(ax):
-            ax.hist(s1,bins=20,alpha=0.8,color='b',label=labels[0])
-            ax.hist(s2,bins=20,alpha=0.6,color='y',label=labels[1])
-            ax.legend()
-            ax.set_title('Histogram: %s'%exp)
-
-        def makeQQ(ax):
-            ax.scatter(sorted(s1),sorted(s2),s=4,lw=0)
-            ax.set_xlabel(labels[0])
-            ax.set_ylabel(labels[1])
-            ax.set_title('QQ Plot %s'%exp)
-            xr = np.linspace(min(s1),max(s1),30)
-            ax.plot(xr,xr)
-            
-        if len(exps)==1:
-            makeHists(ax[0])
-            makeQQ(ax[1])
-        else:
-            makeHists(ax[i,0])
-            makeQQ(ax[i,1])
-
-    fig.tight_layout()
-    return fig
-
-
-def filterScalar(dct):
-    'Remove non-scalars from {exp:values}'
-    scalar=lambda x:isinstance(x,(float,int))
-    scalarDct={}
-    for exp,values in dct.items():
-        if all(map(scalar,values)):
-            scalarDct[exp]=values
-    return scalarDct
-
-
-def intersectKeys(dicts):
-    return tuple(set(dicts[0].keys()).intersection(set(dicts[1].keys())))
-
-
-class CompareSamplesReport(object):
-    def __init__(self,labels,reportString=None,statsDict=None,compareFig=None):
-        self.labels = labels
-        if reportString:
-            self.reportString = reportString
-        if statsDict:
-            self.statsDict = statsDict
-        if compareFig:
-            self.compareFig = compareFig
-    
-
-def compareSampleDicts(dicts_hists,labels,plot=False):
-    '''Input: dicts_hists :: ({exp:values}) | (History)
-     where the first Series in History is used as values. History objects
-     are converted to dicts. Flatten History to include all Series.''' 
-
-    if not isinstance(dicts_hists[0],dict):
-        dicts = [historyNameToValues(h,seriesInd=0) for h in dicts_hists]
-    else:
-        dicts = dicts_hists
-        
-    dicts = map(filterScalar,dicts) # could skip for Analytics
-        
-    
-    stats = (np.mean,scipy.stats.sem,np.median,len)
-    statsString = ' '.join(['mean','sem','med','N'])
-    statsDict = {}
-    report = ['compareSampleDicts: %s vs. %s \n'%(labels[0],labels[1])]
-    
-    for exp in intersectKeys(dicts):
-        report.append( '\n---------\n Name:  %s \n'%exp )
-        statsDict[exp] = {}
-        
-        for dict_i,label_i in zip(dicts,labels):
-            samples=dict_i[exp]
-            s_stats = tuple([s(samples) for s in stats])
-            statsDict[exp]['stats: '+statsString]=s_stats
-            labelStr='%s : %s ='%(label_i,statsString)
-            report.append( labelStr+'  %.3f  %.3f  %.3f  %i\n'%s_stats )
-
-        testResult=reportSameContinuous(dicts[0][exp],dicts[1][exp])
-        ksOut='KS Test:   '+ '  '.join(testResult.report.split('\n')[-2:])
-        report.append( ksOut )
-        statsDict[exp]['KSSameContinuous']=testResult
-        
-    repSt = ' '.join(report)
-    compareFig = qqPlotAll(dicts,labels) if plot else None
-    return CompareSamplesReport(labels,repSt,statsDict,compareFig)
-
-
-def historyNameToValues(history,seriesInd=0,flatten=False):
-    ''':: History -> {name:values}. Default is to take first series.
-    If flatten then we combine all.'''
-    nameToValues={}
-    for name,listSeries in history.nameToSeries.items():
-        if flatten:
-            values = [el for series in listSeries for el in series.values]
-        else:
-            values = listSeries[seriesInd].values
-        nameToValues[name]=values
-    return nameToValues
 
 
 
