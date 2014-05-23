@@ -103,10 +103,10 @@ typically also tracked."""
         return np.mean(flatSeries)
 
     def compareSnapshots(self,names=None, probes=None):
-    '''
-    Compare samples across runs at two different probe points
-    in History. Defaults to comparing all names and probes =
-    (midPoint,lastPoint).'''
+        '''
+        Compare samples across runs at two different probe points
+        in History. Defaults to comparing all names and probes =
+        (midPoint,lastPoint).'''
     
         allSnapshots = historyToSnapshots(self)
         samples = len(allSnapshots.items()[0][1])

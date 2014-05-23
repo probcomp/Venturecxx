@@ -205,7 +205,20 @@ def testCompareSampleDicts():
     for sameDistributionValue in sameDistribution:
         yield _testCompareSampleDicts,sameDistributionValue
 
+@statisticalTest
+def _testCompareSnapshots(riplThunk):
+    v,assumes,observes,queryExps = betaModel(riplThunk())
+    samples = 20
+    model = Analytics(v,queryExps=queryExps)
+    history,_ = model.runFromConditional(samples,runs=10)
+    # two final snapshots should be very similar in distribution
+    report = history.compareSnapshots(probes = (-2,-1))
+    return report.statsDict['p']['KSSameContinuous']
 
+def testCompareSnapshots():    
+    riplThunks = (get_ripl, lambda: get_mripl(no_ripls=4))
+    for riplThunk in riplThunks:
+        yield _testCompareSnapshots, riplThunk
 
 ## FIXME resinstate geweks
 def _testGewekeTest():
