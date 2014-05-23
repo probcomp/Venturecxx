@@ -37,6 +37,7 @@ struct vvpm {
 };
 
 // Solution: cover the cases we actually use with specific typedefs.
+typedef boost::unordered_map<VentureValuePtr, int, HashVentureValuePtr, VentureValuePtrsEqual> MapVVPtrInt;
 typedef boost::unordered_map<VentureValuePtr, VentureValuePtr, HashVentureValuePtr, VentureValuePtrsEqual> MapVVPtrVVPtr;
 typedef boost::unordered_map<VentureValuePtr, RootOfFamily, HashVentureValuePtr, VentureValuePtrsEqual> MapVVPtrRootOfFamily;
 

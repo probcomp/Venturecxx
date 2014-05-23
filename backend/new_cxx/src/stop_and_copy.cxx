@@ -209,7 +209,7 @@ BlocksMap copy_blocks_map(BlocksMap m, ForwardingMap* forward)
     answer.a.push_back( pair<VentureValuePtr,set<Node*> >((*itr).first,
                                                           copy_set((*itr).second, forward)));
   }
-  for(typename VentureValuePtrMap<int>::const_iterator itr = m.d.begin();
+  for(typename MapVVPtrInt::const_iterator itr = m.d.begin();
       itr != m.d.end(); ++itr)
   {
     answer.d[(*itr).first] = (*itr).second;
