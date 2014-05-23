@@ -32,9 +32,9 @@ struct VentureSPRef : VentureValue
 struct SPFamilies
 {
   SPFamilies() {}
-  SPFamilies(const VentureValuePtrMap<RootOfFamily> & families): families(families) {}
+  SPFamilies(const MapVVPtrRootOfFamily & families): families(families) {}
 
-  VentureValuePtrMap<RootOfFamily> families;
+  MapVVPtrRootOfFamily families;
   bool containsFamily(FamilyID id);
   RootOfFamily getRootOfFamily(FamilyID id);
   void registerFamily(FamilyID id,RootOfFamily root);
