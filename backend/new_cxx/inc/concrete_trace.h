@@ -145,7 +145,7 @@ struct ConcreteTrace : Trace
 
   map<DirectiveID,RootOfFamily> families;
 
-  VentureValuePtrMap<SamplableMap<set<Node*> > > scopes;
+  ScopesMap scopes;
 
   map<Node*, vector<RootOfFamily> > esrRoots;
   map<RootOfFamily, int> numRequests;
