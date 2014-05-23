@@ -32,8 +32,8 @@ struct VentureValuePtrsEqual;
 // namespace, but there are some problems with using this in other
 // templates.
 template <typename T>
-struct vvpm {
-  typedef typename boost::unordered_map<VentureValuePtr, T, HashVentureValuePtr, VentureValuePtrsEqual> VentureValuePtrMap;
+struct VentureValuePtrMap {
+  typedef typename boost::unordered_map<VentureValuePtr, T, HashVentureValuePtr, VentureValuePtrsEqual> Type;
 };
 
 // Solution: cover the cases we actually use with specific typedefs.
