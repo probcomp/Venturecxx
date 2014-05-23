@@ -223,12 +223,16 @@ def testCompareSnapshots():
         yield _testCompareSnapshots, riplThunk
 
 def _testForce(riplThunk):
-    v = normalModel( riplThunk() )
+    v = riplThunk()
+    [v.assume('x%i'%i,'(normal 0 100)') for i in range(5)]
+    [v.observe('(normal (+ x0 x1) 30)',100.) for _ in range(4)]
     model = Analytics(v)
-    samples = 10
+    samples = 50
     inferProg = '(mh default one 1)'
-    history,_ = model.runFromConditional(samples,runs=2,simpleInfer=True)
-    
+    fdict = dict( [('x%i'%i,0) for i in range(5)] )
+    history,_ = model.runFromConditional(samples,runs=5,simpleInfer=True,
+                                         infer=inferProg,force=fdict)
+    return history
     
 
 ## FIXME resinstate geweks
