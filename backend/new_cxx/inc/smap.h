@@ -86,6 +86,7 @@ struct SamplableMap
   
 };
 
+typedef boost::unordered_map<VentureValuePtr, SamplableMap<set<Node*> >, HashVentureValuePtr, VentureValuePtrsEqual> ScopesMap;
 
 
 #endif

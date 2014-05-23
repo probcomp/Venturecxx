@@ -147,8 +147,8 @@ struct VentureSimplex : VentureValue
 struct VentureDictionary : VentureValue
 {
   // TODO need a special type with special hash/equality function.
-  VentureDictionary(const VentureValuePtrMap<VentureValuePtr> & dict): dict(dict) {}
-  const VentureValuePtrMap<VentureValuePtr>& getDictionary() const { return dict; }
+  VentureDictionary(const MapVVPtrVVPtr & dict): dict(dict) {}
+  const MapVVPtrVVPtr& getDictionary() const { return dict; }
 
   VentureValuePtr lookup(VentureValuePtr index) const;
   bool contains(VentureValuePtr index) const { return dict.count(index); }
@@ -157,7 +157,7 @@ struct VentureDictionary : VentureValue
 
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
-  VentureValuePtrMap<VentureValuePtr> dict;
+  MapVVPtrVVPtr dict;
   VentureDictionary* copy_help(ForwardingMap* m);
 };
 

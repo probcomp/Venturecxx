@@ -217,7 +217,6 @@ BlocksMap copy_blocks_map(BlocksMap m, ForwardingMap* forward)
   return answer;
 }
 
-typedef VentureValuePtrMap<SamplableMap<set<Node*> > > ScopesMap;
 ScopesMap copy_scopes_map(ScopesMap m, ForwardingMap* forward)
 {
   ScopesMap answer = ScopesMap();
@@ -231,10 +230,10 @@ ScopesMap copy_scopes_map(ScopesMap m, ForwardingMap* forward)
 }
 
 template <typename V>
-VentureValuePtrMap<shared_ptr<V> > copy_vvptr_map_shared_v(VentureValuePtrMap<shared_ptr<V> > m, ForwardingMap* forward)
+boost::unordered_map<VentureValuePtr, V, HashVentureValuePtr, VentureValuePtrsEqual> copy_vvptr_map_shared_v(boost::unordered_map<VentureValuePtr, V, HashVentureValuePtr, VentureValuePtrsEqual> m, ForwardingMap* forward)
 {
-  VentureValuePtrMap<shared_ptr<V> > answer = VentureValuePtrMap<shared_ptr<V> >();
-  typename VentureValuePtrMap<shared_ptr<V> >::const_iterator itr;
+  boost::unordered_map<VentureValuePtr, V, HashVentureValuePtr, VentureValuePtrsEqual> answer = boost::unordered_map<VentureValuePtr, V, HashVentureValuePtr, VentureValuePtrsEqual>();
+  typename boost::unordered_map<VentureValuePtr, V, HashVentureValuePtr, VentureValuePtrsEqual>::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
     answer[copy_shared((*itr).first, forward)] = copy_shared((*itr).second, forward);

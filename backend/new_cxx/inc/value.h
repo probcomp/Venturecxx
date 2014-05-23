@@ -16,8 +16,29 @@ using Eigen::VectorXd;
 struct HashVentureValuePtr;
 struct VentureValuePtrsEqual;
 
+// Problem: C++ does not admit templated type aliases.
+// We would have wanted one for clarity and keystrokes:
+//   template <typename T>
+//   typedef public boost::unordered_map<VentureValuePtr, T, HashVentureValuePtr, VentureValuePtrsEqual> VentureValuePtrMap;
+// but that requires C++11.
+
+// Using an empty inherited class is not so good; in particular, the
+// assignment operator we get (either by inheritance or
+// autogeneration, who knows?) does not seem to work right.
 template <typename T>
 class VentureValuePtrMap : public boost::unordered_map<VentureValuePtr, T, HashVentureValuePtr, VentureValuePtrsEqual> {};
+
+// We can cover the general case by using a templated struct as a
+// namespace, but there are some problems with using this in other
+// templates.
+template <typename T>
+struct vvpm {
+  typedef typename boost::unordered_map<VentureValuePtr, T, HashVentureValuePtr, VentureValuePtrsEqual> VentureValuePtrMap;
+};
+
+// Solution: cover the cases we actually use with specific typedefs.
+typedef boost::unordered_map<VentureValuePtr, VentureValuePtr, HashVentureValuePtr, VentureValuePtrsEqual> MapVVPtrVVPtr;
+typedef boost::unordered_map<VentureValuePtr, RootOfFamily, HashVentureValuePtr, VentureValuePtrsEqual> MapVVPtrRootOfFamily;
 
 struct SPAux;
 struct Trace;
@@ -47,7 +68,7 @@ struct VentureValue
   virtual const VentureValuePtr& getRest() const;
   
   virtual const Simplex& getSimplex() const;
-  virtual const VentureValuePtrMap<VentureValuePtr>& getDictionary() const;
+  virtual const MapVVPtrVVPtr& getDictionary() const;
 
   virtual VectorXd getVector() const;
   virtual MatrixXd getMatrix() const;
