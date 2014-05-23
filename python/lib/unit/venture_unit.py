@@ -830,37 +830,6 @@ def plotSnapshot(history,name,probe=-1):
     return snap,fig
 
 
-def compareSnapshots(history,names=None,probes=None):
-    '''
-    Compare samples across runs at two different probe points
-    in History. Defaults to comparing all names and probes=
-    (midPoint,lastPoint).'''
-    
-    allSnapshots = historyToSnapshots(history)
-    samples = len(allSnapshots.items()[0][1])
-
-    # restrict to probes
-    if probes is None:
-        probes = (int(round(.5*samples)),-1)
-    else:
-        assert len(probes)==2
-
-    # restrict to names
-    if names is not None:
-        filterSnapshots = filterDict(allSnapshots,keep=names)
-    else:
-        filterSnapshots = allSnapshots
-
-    snapshotDicts=({},{})
-    for name,snapshots in filterSnapshots.iteritems():
-        for d,probe in zip(snapshotDicts,probes):
-            d[name]=snapshots[probe]
-
-    labels =[history.label+'_'+'snap_%i'%i for i in probes]
-    return compareSampleDicts(snapshotDicts,labels,plot=True)
-
-
-
 def qqPlotAll(dicts,labels):
     # FIXME do interpolation where samples have different lengths
     exps = intersectKeys(dicts)
