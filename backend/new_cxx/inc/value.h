@@ -25,8 +25,8 @@ struct VentureValuePtrsEqual;
 // Using an empty inherited class is not so good; in particular, the
 // assignment operator we get (either by inheritance or
 // autogeneration, who knows?) does not seem to work right.
-template <typename T>
-class VentureValuePtrMap : public boost::unordered_map<VentureValuePtr, T, HashVentureValuePtr, VentureValuePtrsEqual> {};
+// template <typename T>
+// class VentureValuePtrMap : public boost::unordered_map<VentureValuePtr, T, HashVentureValuePtr, VentureValuePtrsEqual> {};
 
 // We can cover the general case by using a templated struct as a
 // namespace, but there are some problems with using this in other
