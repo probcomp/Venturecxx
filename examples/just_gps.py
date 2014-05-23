@@ -26,12 +26,12 @@ vehicle_L = 0.257717
 #
 constant_velocity = .1
 constant_steering = 0
-gps_heading = .1
+gps_heading = 0
 gen_gps = lambda t: _convert((constant_velocity * t, 0, gps_heading))
 #
 N_mripls = 4
 backend = 'puma'
-N_infer = 100
+N_infer = 200
 N_steps = 10
 predict_which = 0
 
@@ -57,7 +57,7 @@ program_assumes = """
 
 [assume fractional_heading_error_std (gamma 1.0 100.0)]
 
-[assume additive_xy_error_std (gamma 1.0 1.0)]
+[assume additive_xy_error_std (gamma 1.0 100.0)]
 
 [assume additive_heading_error_std (gamma 1.0 100.0)]
 
