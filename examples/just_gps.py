@@ -10,6 +10,7 @@ import pandas
 #
 import slamutils
 from venture.venturemagics.ip_parallel import MRipl
+from venture.shortcuts import make_puma_church_prime_ripl
 
 
 # settings/constants
@@ -30,7 +31,7 @@ N_mripls = 2
 N_particles = 16
 backend = 'puma'
 N_infer = 50
-N_steps = 1000
+N_steps = 100
 simulate_gps_str = '(simulate_gps (get_pose %s) %s %s)' % ('%s',
         gps_xy_additive_noise_std, gps_heading_additive_noise_std)
 base_filename = 'vehicle_just_gps'
@@ -58,8 +59,14 @@ _predict_pose = lambda ripl, x: ripl.predict('(get_pose %s)' % x)
 gen_infer_str = lambda N_particles, N_infer: \
         '(pgibbs default ordered %s %s)' % (N_particles, N_infer)
 #
-def gen_ripl():
-    ripl = MRipl(N_mripls, set_no_engines=N_mripls, backend=backend)
+def gen_ripl(use_mripl=True):
+    ripl = None
+    if use_mripl:
+        ripl = MRipl(N_mripls, set_no_engines=N_mripls, backend=backend)
+        pass
+    else:
+        ripl = make_puma_church_prime_ripl()
+        pass
     ripl.execute_program(program)
     return ripl
 def predict_from_ripl(ripl, N_steps):
@@ -71,10 +78,19 @@ def sample_from_prior(N_steps, N_particles, N_infer):
     ripl.infer(infer_str)
     return predict_from_ripl(ripl, N_steps)
 #
+def _plot_run(run, color):
+    pylab.plot(run[:, 0], run[:, 1], '-x', color=color, alpha=0.2)
+    pass
 def _plot(samples, color='r'):
-    for run_idx in range(samples.shape[1]):
-        pylab.plot(samples[:, run_idx, 0], samples[:, run_idx, 1],
-                '-x', color=color, alpha=0.2)
+    is_mripl = len(samples.shape) == 3
+    if is_mripl:
+        for run_idx in range(samples.shape[1]):
+            run = samples[:, run_idx, :]
+            _plot_run(run, color)
+            pass
+        pass
+    else:
+        _plot_run(samples, color)
         pass
     return
 def plot(from_prior, from_posterior, filename=None):
