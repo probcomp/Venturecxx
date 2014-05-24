@@ -20,16 +20,20 @@ def betaModel(ripl):
     assumes=[('p','(beta 1.0 1.0)')] 
     observes=[('(flip p)',True) for _ in range(2)]
     queryExps =  ['(add (bernoulli p) (bernoulli p))'] # exps in python form
-    [ripl.assume(sym,exp) for sym,exp in assumes]
-    [ripl.observe(exp,literal) for exp,literal in observes]
+    for sym,exp in assumes:
+        ripl.assume(sym,exp)
+    for exp,literal in observes:
+        ripl.observe(exp,literal)
     return ripl,assumes,observes,queryExps
 
 def normalModel(ripl):
     assumes = [ ('x','(normal 0 100)') ]
     observes = [ ('(normal x 100)','0') ]
     queryExps = ('(* x 2)',)
-    [ripl.assume(sym,exp) for sym,exp in assumes]
-    [ripl.observe(exp,literal) for exp,literal in observes]
+    for sym,exp in assumes:
+        ripl.assume(sym,exp)
+    for exp,literal in observes:
+        ripl.observe(exp,literal)
     xPriorCdf = stats.norm(0,100).cdf
     return ripl,assumes,observes,queryExps,xPriorCdf
 
@@ -81,7 +85,7 @@ def testLoadModelHistory():
 
     
 def _testRuns(riplThunk):
-    v,assumes,observes,queryExps,_ = normalModel( riplThunk() )
+    v,_,_,queryExps,_ = normalModel( riplThunk() )
     samples = 20
     runsList = [2,3,7]
     model = Analytics(v,queryExps=queryExps)
@@ -115,7 +119,7 @@ def _testInfer(riplThunk,conditional_prior,inferProg):
     else:
         history,_ = model.runConditionedFromPrior(samples,runs=runs,
                                                   infer=inferProg)
-        dataValues = [typeVal['value'] for exp,typeVal in history.data] 
+        dataValues = [typeVal['value'] for _,typeVal in history.data] 
         noHeads = sum(dataValues)
         noTails = len(dataValues) - noHeads
         cdf = stats.beta(1+noHeads,1+noTails).cdf
@@ -139,8 +143,8 @@ def testRunFromConditionalInfer():
 @statisticalTest        
 def _testSampleFromJoint(riplThunk,useMRipl):
     if riplThunk.func_name in 'get_ripl' or useMRipl is False:
-        raise SkipTest, 'Bug with seeds for ripls'
-    v,assumes,observes,queryExps,xPriorCdf = normalModel( riplThunk() )
+        raise SkipTest('Bug with seeds for ripls')
+    v,_,_,queryExps,xPriorCdf = normalModel( riplThunk() )
     samples = 30
     model = Analytics(v,queryExps=queryExps)
     history = model.sampleFromJoint(samples, useMRipl=useMRipl)
@@ -158,8 +162,8 @@ def testSampleFromJoint():
 @statisticalTest        
 def _testRunFromJoint1(riplThunk,inferProg):
     if riplThunk.func_name in 'get_ripl':
-        raise SkipTest,'Same bug as samplefromjoint with identical ripl seeds'
-    v,assume,_,queryExps,xPriorCdf = normalModel( riplThunk() )
+        raise SkipTest('Same bug as samplefromjoint with identical ripl seeds')
+    v,_,_,queryExps,xPriorCdf = normalModel( riplThunk() )
     model = Analytics(v,queryExps=queryExps)
     # variation across runs
     history = model.runFromJoint(1, runs=30, infer=inferProg)
@@ -167,7 +171,7 @@ def _testRunFromJoint1(riplThunk,inferProg):
 
 @statisticalTest        
 def _testRunFromJoint2(riplThunk,inferProg):
-    v,assume,_,queryExps,xPriorCdf = normalModel( riplThunk() )
+    v,_,_,queryExps,xPriorCdf = normalModel( riplThunk() )
     model = Analytics(v,queryExps=queryExps)
 
     # variation over single runs
@@ -209,7 +213,7 @@ def testCompareSampleDicts():
 
 @statisticalTest
 def _testCompareSnapshots(riplThunk):
-    v,assumes,observes,queryExps = betaModel(riplThunk())
+    v,_,_,queryExps = betaModel(riplThunk())
     samples = 20
     model = Analytics(v,queryExps=queryExps)
     history,_ = model.runFromConditional(samples,runs=10)
@@ -224,8 +228,10 @@ def testCompareSnapshots():
 
 def _testForce(riplThunk):
     v = riplThunk()
-    [v.assume('x%i'%i,'(normal 0 100)') for i in range(5)]
-    [v.observe('(normal (+ x0 x1) 30)',100.) for _ in range(4)]
+    for i in range(5):
+        v.assume('x%i'%i,'(normal 0 100)')
+    for _ in range(4):
+        v.observe('(normal (+ x0 x1) 30)',100.)
     model = Analytics(v)
     samples = 50
     inferProg = '(mh default one 1)'
