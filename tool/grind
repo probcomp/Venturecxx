@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ -z $1 ]; then
+    echo "Usage: grind <python script name>"
+    exit 1
+fi
+
+valgrind --leak-check=full --tool=memcheck --suppressions=backend/new_cxx/valgrind-python.supp python $1
