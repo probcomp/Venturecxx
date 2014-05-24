@@ -33,7 +33,7 @@ typically also tracked."""
         self.label = label # :: string
         self.parameters = parameters # :: {string: a}  the model parameters leading to the data stored here
         self.nameToSeries = {} # :: {string: [Series]} the list is over multiple runs
-        self.data = [] ## FIXME: have no attribute if empty
+        self.data = [] 
 
         self.nameToType = {}
 
@@ -120,7 +120,7 @@ typically also tracked."""
         return snapshots
 
 
-    def compareSnapshots(self,names=None, probes=None):
+    def compareSnapshots(self, names=None, probes=None):
         '''
         Compare samples across runs at two different probe points
         in History. Defaults to comparing all names and probes =
@@ -369,7 +369,7 @@ def compareSampleDicts(dicts_hists,labels,plot=False):
     dicts = map(filterScalar,dicts) # could skip for Analytics
     
     stats = (np.mean,scipy.stats.sem,np.median,len)
-    statsString = ' '.join(['mean','sem','med','N'])
+    statsString = ' '.join(['mean','std_err','median','N'])
     statsDict = {}
     report = ['compareSampleDicts: %s vs. %s \n'%(labels[0],labels[1])]
     
