@@ -450,8 +450,6 @@
    Memcheck:Cond
    fun:PyObject_GC_Del
    ...
-   fun:PyImport_ImportModuleLevel
-   ...
 }
 
 {
@@ -466,6 +464,13 @@
 {
    Invalid read of size 4
    Memcheck:Addr4
+   fun:PyObject_GC_Del
+   ...
+}
+
+{
+   Use of uninitialised value of size 8
+   Memcheck:Value8
    fun:PyObject_GC_Del
    ...
 }
@@ -507,11 +512,37 @@
 }
 
 {
+   Conditional jump or move depends on uninitialised value(s)
+   Memcheck:Cond
+   ...
+   fun:PyAST_Compile
+   fun:PyRun_StringFlags
+   ...
+}
+
+{
+   Use of uninitialised value of size 8
+   Memcheck:Value8
+   ...
+   fun:PyAST_Compile
+   fun:PyRun_StringFlags
+   ...
+}
+
+{
    Invalid read of size 4
    Memcheck:Addr4
    ...
    fun:PyEval_EvalCode
    fun:PyImport_ExecCodeModuleEx
+   ...
+}
+
+{
+   Invalid read of size 4
+   Memcheck:Addr4
+   ...
+   fun:_PyString_Resize
    ...
 }
 
@@ -554,6 +585,8 @@
    fun:(below main)
 }
 
+### Leak suppressions added by axch
+
 {
    Some random putative Python leak
    Memcheck:Leak
@@ -581,5 +614,17 @@
    ...
    fun:_PyObject_GC_Resize
    fun:PyFrame_New
+   ...
+}
+
+{
+   Some random putative Python leak
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:PyString_FromStringAndSize
+   ...
+   fun:PyEval_EvalCode
+   fun:PyImport_ExecCodeModuleEx
    ...
 }
