@@ -533,14 +533,21 @@
    Invalid read of size 4
    Memcheck:Addr4
    ...
-   fun:PyEval_EvalCode
-   fun:PyImport_ExecCodeModuleEx
+   fun:_PyString_Resize
    ...
 }
 
 {
-   Invalid read of size 4
-   Memcheck:Addr4
+   Conditional jump or move depends on uninitialised value(s)
+   Memcheck:Cond
+   ...
+   fun:_PyString_Resize
+   ...
+}
+
+{
+   Use of uninitialised value of size 8
+   Memcheck:Value8
    ...
    fun:_PyString_Resize
    ...
