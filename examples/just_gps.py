@@ -27,11 +27,12 @@ initial_state = (0, 0, 0)
 gps_xy_additive_noise_std = 0.1
 gps_heading_additive_noise_std = 0.005
 # inference
+use_mripl = False
 N_mripls = 2
 N_particles = 16
 backend = 'puma'
-N_infer = 50
-N_steps = 100
+N_infer = 5
+N_steps = 1000
 simulate_gps_str = '(simulate_gps (get_pose %s) %s %s)' % ('%s',
         gps_xy_additive_noise_std, gps_heading_additive_noise_std)
 base_filename = 'vehicle_just_gps'
@@ -59,7 +60,7 @@ _predict_pose = lambda ripl, x: ripl.predict('(get_pose %s)' % x)
 gen_infer_str = lambda N_particles, N_infer: \
         '(pgibbs default ordered %s %s)' % (N_particles, N_infer)
 #
-def gen_ripl(use_mripl=True):
+def gen_ripl(use_mripl):
     ripl = None
     if use_mripl:
         ripl = MRipl(N_mripls, set_no_engines=N_mripls, backend=backend)
@@ -72,8 +73,8 @@ def gen_ripl(use_mripl=True):
 def predict_from_ripl(ripl, N_steps):
     predict_pose = functools.partial(_predict_pose, ripl)
     return numpy.array(map(predict_pose, range(N_steps)))
-def sample_from_prior(N_steps, N_particles, N_infer):
-    ripl = gen_ripl()
+def sample_from_prior(N_steps, N_particles, N_infer, use_mripl=True):
+    ripl = gen_ripl(use_mripl)
     infer_str = gen_infer_str(N_particles, N_infer)
     ripl.infer(infer_str)
     return predict_from_ripl(ripl, N_steps)
@@ -168,11 +169,11 @@ program = program_constants + program_assumes
 
 # ripl with NO observes
 with Timer('sample_from_prior') as t:
-    from_prior = sample_from_prior(N_steps, N_particles, N_infer)
+    from_prior = sample_from_prior(N_steps, N_particles, N_infer, use_mripl)
     pass
 # ripl with observes
 with Timer('ripl setup and observations') as t:
-    posterior_ripl = gen_ripl()
+    posterior_ripl = gen_ripl(use_mripl)
     observe_gps = functools.partial(_observe_gps, posterior_ripl)
     map(observe_gps, range(1, N_steps))
     pass
