@@ -58,7 +58,7 @@ gen_infer_str = lambda N_particles, N_infer: \
         '(pgibbs default ordered %s %s)' % (N_particles, N_infer)
 #
 def gen_ripl():
-    ripl = MRipl(N_mripls, backend=backend)
+    ripl = MRipl(N_mripls, set_no_engines=N_mripls, backend=backend)
     ripl.execute_program(program)
     return ripl
 def predict_from_ripl(ripl, N_steps):
