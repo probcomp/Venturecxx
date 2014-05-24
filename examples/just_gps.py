@@ -25,11 +25,11 @@ initial_state = (0, 0, 0)
 gps_xy_additive_noise_std = 0.1
 gps_heading_additive_noise_std = 0.005
 # inference
-N_mripls = 64
-N_particles = 32
+N_mripls = 2
+N_particles = 16
 backend = 'puma'
-N_infer = 1000
-N_steps = 10
+N_infer = 100
+N_steps = 1000
 simulate_gps_str = '(simulate_gps (get_pose %s) %s %s)' % ('%s',
         gps_xy_additive_noise_std, gps_heading_additive_noise_std)
 base_filename = 'vehicle_just_gps'
@@ -82,6 +82,7 @@ def plot(from_prior, from_posterior, filename=None):
     _plot(from_prior, color='r')
     _plot(from_posterior, color='g')
     pylab.savefig(filename)
+    pylab.close()
     return
 
 
@@ -147,7 +148,7 @@ filename = base_filename + '_' + ('%04d' % 0) + '.png'
 from_posterior = predict_from_ripl(posterior_ripl, N_steps)
 plot(from_prior, from_posterior, filename)
 #
-step_by = 80
+step_by = 10
 infer_str = gen_infer_str(N_particles, step_by)
 print infer_str
 for idx in range(1, N_infer / step_by + 1):
