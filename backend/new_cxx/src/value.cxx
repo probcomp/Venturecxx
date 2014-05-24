@@ -27,7 +27,7 @@ const VentureValuePtr& VentureValue::getFirst() const { cannotConvertType(this,"
 const VentureValuePtr& VentureValue::getRest() const { cannotConvertType(this,"pair"); assert(false); throw "no return"; }
   
 const Simplex& VentureValue::getSimplex() const { cannotConvertType(this,"simplex"); assert(false); throw "no return"; }
-const VentureValuePtrMap<VentureValuePtr>& VentureValue::getDictionary() const { cannotConvertType(this,"dictionary"); assert(false); throw "no return"; }
+const MapVVPtrVVPtr& VentureValue::getDictionary() const { cannotConvertType(this,"dictionary"); assert(false); throw "no return"; }
 VectorXd VentureValue::getVector() const { cannotConvertType(this,"vector"); assert(false); throw "no return"; }
 
 MatrixXd VentureValue::getMatrix() const { cannotConvertType(this,"matrix"); assert(false); throw "no return"; }

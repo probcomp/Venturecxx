@@ -387,6 +387,11 @@ class Trace(object):
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
+  def stop_and_copy(self):
+    serialized = serialize.Serializer().serialize_trace(self, None)
+    newTrace, _ = serialize.Serializer().deserialize_trace(serialized)
+    return newTrace
+
   def save(self, fname, extra):
     serialize.save_trace(self, extra, fname)
 

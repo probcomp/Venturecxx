@@ -11,7 +11,9 @@ class Scaffold(object):
     self.lkernels = lkernels if lkernels else {} # {Node:LKernel}
     self.brush = brush if brush else set() # Set Node
 
-  def getPrincipalNodes(self): return set.union(*self.setsOfPNodes)
+  def getPrincipalNodes(self):
+    # Return a list so that repeated traversals have the same order
+    return [n for n in set.union(*self.setsOfPNodes)]
   def getRegenCount(self,node): return self.regenCounts[node]
   def incrementRegenCount(self,node): self.regenCounts[node] += 1
   def decrementRegenCount(self,node): self.regenCounts[node] -= 1
