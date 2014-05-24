@@ -103,7 +103,6 @@ typically also tracked."""
                 flatSeries.extend(series.values)
         return np.mean(flatSeries)
 
-
     def historyToSnapshots(self):
         '''
         Snapshot of values across series for each time-step.

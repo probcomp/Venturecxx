@@ -87,7 +87,7 @@ VentureValuePtr parseDict(boost::python::object value)
   boost::python::list keys = d.keys();
   boost::python::list vals = d.values();
 
-  VentureValuePtrMap<VentureValuePtr> m;
+  MapVVPtrVVPtr m;
   
   for (boost::python::ssize_t i = 0; i < len; ++i)
   {

@@ -20,7 +20,10 @@
 
 #include <boost/python/exception_translator.hpp>
 
-PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false), continuous_inference_thread(NULL) {}
+PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false), continuous_inference_thread(NULL)
+{
+  trace->initialize();
+}
 PyTrace::~PyTrace() {}
 
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
@@ -371,5 +374,6 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("continuous_inference_status", &PyTrace::continuous_inference_status)
     .def("start_continuous_inference", &PyTrace::start_continuous_inference)
     .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)
+    .def("stop_and_copy", &PyTrace::stop_and_copy, return_value_policy<manage_new_object>())
     ;
 };

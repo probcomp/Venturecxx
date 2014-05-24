@@ -61,7 +61,7 @@ VentureValuePtr SizeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
 
 VentureValuePtr DictOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  VentureValuePtrMap<VentureValuePtr> d;
+  MapVVPtrVVPtr d;
   vector<VentureValuePtr> syms = args->operandValues[0]->getArray();
   vector<VentureValuePtr> vals = args->operandValues[1]->getArray();
   if(syms.size() != vals.size()) throw "Dict must take equal numbers of keys and values.";
