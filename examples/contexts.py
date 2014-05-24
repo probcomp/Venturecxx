@@ -8,7 +8,7 @@ class Timer(object):
         self.start, self.stop, self.elapsed = None, None, None
         return
     def __str__(self):
-        self_str = '%s took %s seconds' % (self.task, self.elapsed)
+        self_str = '%s took %.1f seconds' % (self.task, self.elapsed)
         return self_str
     def __enter__(self):
         self.start = time.time()
@@ -43,6 +43,18 @@ def get_usage(which_usage='memory', since=0.0):
     parsed = parse_proc_status(status_str, which_usage)
     return process_parsed_proc_status(parsed) - since
 #
+def get_short_size(size):
+    size = int(size)
+    gb = size / 2 ** 30
+    if gb > 0:
+        return '%sGB' % gb
+    mb = size / 2 ** 20
+    if mb > 0:
+        return '%sMB' % mb
+    kb = size / 2 ** 10
+    if kb > 0:
+        return '%sKB' % kb
+    return '%s B' % size
 class MemoryContext(object):
     def __init__(self, task='task', which_usage='memory'):
         self.task = task
@@ -50,8 +62,9 @@ class MemoryContext(object):
         self.start_usage, self.stop_usage, self.delta = None, None, None
         return
     def __str__(self):
-        self_str = '%s used %s memory (which_usage=%s)'
-        self_str %= (self.task, self.delta, self.which_usage)
+        short_size = get_short_size(self.delta)
+        self_str = '%s used %s (which_usage=%s)'
+        self_str %= (self.task, short_size, self.which_usage)
         return self_str
     def get_usage(self):
         return get_usage(self.which_usage)
