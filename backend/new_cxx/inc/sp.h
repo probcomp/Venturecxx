@@ -68,6 +68,7 @@ struct SP
   
   virtual boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
   virtual SP* copy_help(ForwardingMap* m);
+  virtual ~SP() {}
 };
 
 #endif

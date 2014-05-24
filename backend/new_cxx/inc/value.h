@@ -100,6 +100,8 @@ struct VentureValue
   virtual bool ltSameType(const VentureValuePtr & rhs) const;
 
   virtual VentureValue* copy_help(ForwardingMap* m) { return this; }
+
+  virtual ~VentureValue() {}
 };
 
 
