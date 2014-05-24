@@ -203,5 +203,5 @@ for idx in range(1, N_infer / step_by + 1):
         with Timer(task) as t:
             plot(from_prior, from_posterior, filename)
             pass
-        pas
+        pass
     pass
