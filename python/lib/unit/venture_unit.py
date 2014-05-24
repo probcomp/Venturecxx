@@ -529,7 +529,7 @@ class Analytics(object):
 
         for sweep in range(sweeps):
             if verbose:
-                print "Running sweep " + str(sweep+1) + " of " + sweeps
+                print "Running sweep " + str(sweep+1) + " of " + str(sweeps)
 
             # FIXME: use timeit module for better precision
             start = time.time()
