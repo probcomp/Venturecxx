@@ -44,17 +44,15 @@ def get_usage(which_usage='memory', since=0.0):
     return process_parsed_proc_status(parsed) - since
 #
 def get_short_size(size):
-    size = int(size)
-    gb = size / 2 ** 30
-    if gb > 0:
-        return '%sGB' % gb
-    mb = size / 2 ** 20
-    if mb > 0:
-        return '%sMB' % mb
-    kb = size / 2 ** 10
-    if kb > 0:
-        return '%sKB' % kb
-    return '%s B' % size
+    div_pow_2 = lambda pow_2: size / 2 ** pow_2
+    gb, mb, kb = map(div_pow_2, [30, 20, 10])
+    if int(gb) > 0:
+        return '%.1fGB' % gb
+    if int(mb) > 0:
+        return '%.1fMB' % mb
+    if int(kb) > 0:
+        return '%.1fKB' % kb
+    return '%s B' % int(size)
 class MemoryContext(object):
     def __init__(self, task='task', which_usage='memory'):
         self.task = task
