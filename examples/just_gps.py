@@ -64,8 +64,11 @@ def observe_N_gps(ripl, N):
     map(observe_gps, range(1, N))
     return
 _predict_pose = lambda ripl, x: ripl.predict('(get_pose %s)' % x)
-gen_infer_str = lambda N_particles, N_infer: \
-        '(pgibbs default ordered %s %s)' % (N_particles, N_infer)
+def gen_infer_str(N_particles, N_infer):
+    hypers = '(mh hypers one 3)'
+    state = '(pgibbs state ordered %s 1)' % N_particles
+    infer_str =  '(cycle (%s %s) %s)' % (hypers, state, N_infer)
+    return infer_str
 #
 def gen_ripl(use_mripl):
     ripl = None
@@ -140,29 +143,37 @@ program_constants = """
 
 program_assumes = """
 
-[assume fractional_xy_error_std (gamma 1.0 100.0)]
+[assume fractional_xy_error_std (scope_include (quote hypers)
+                                               0
+                                               (gamma 1.0 100.0))]
 
-[assume fractional_heading_error_std (gamma 1.0 100.0)]
+[assume fractional_heading_error_std (scope_include (quote hypers)
+                                                    1
+                                                    (gamma 1.0 100.0))]
 
-[assume additive_xy_error_std (gamma 1.0 100.0)]
+[assume additive_xy_error_std (scope_include (quote hypers)
+                                             2
+                                             (gamma 1.0 100.0))]
 
-[assume additive_heading_error_std (gamma 1.0 100.0)]
+[assume additive_heading_error_std (scope_include (quote hypers)
+                                                  3
+                                                  (gamma 1.0 100.0))]
 
-[assume initial_pose (list (uniform_continuous -1 1)
-                           (uniform_continuous -1 1)
-                           (uniform_continuous -1 1))]
+[assume initial_pose (scope_include (quote state) 0 (list (uniform_continuous -1 1)
+                                                          (uniform_continuous -1 1)
+                                                          (uniform_continuous -1 1)))]
 
 [assume get_pose (mem (lambda (t)
   (if (= t 0) initial_pose
-              (simulate_motion 1
-                               (get_pose (- t 1))
-                               constant_control
-                               vehicle_params
-                               fractional_xy_error_std
-                               fractional_heading_error_std
-                               additive_xy_error_std
-                               additive_heading_error_std
-                               ))))]
+              (scope_include (quote state) t (simulate_motion 1
+                                             (get_pose (- t 1))
+                                             constant_control
+                                             vehicle_params
+                                             fractional_xy_error_std
+                                             fractional_heading_error_std
+                                             additive_xy_error_std
+                                             additive_heading_error_std
+                                             )))))]
 
 """
 
