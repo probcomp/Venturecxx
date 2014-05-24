@@ -28,11 +28,11 @@ gps_heading_additive_noise_std = 0.005
 N_mripls = 64
 N_particles = 32
 backend = 'puma'
-N_infer = 100
+N_infer = 1000
 N_steps = 10
 simulate_gps_str = '(simulate_gps (get_pose %s) %s %s)' % ('%s',
         gps_xy_additive_noise_std, gps_heading_additive_noise_std)
-base_filename = 'vehicle_justs_gps'
+base_filename = 'vehicle_just_gps'
 
 # helpers
 def gen_gps(t):
@@ -64,9 +64,9 @@ def gen_ripl():
 def predict_from_ripl(ripl, N_steps):
     predict_pose = functools.partial(_predict_pose, ripl)
     return numpy.array(map(predict_pose, range(N_steps)))
-def sample_from_prior(N_steps, N_infer):
+def sample_from_prior(N_steps, N_particles, N_infer):
     ripl = gen_ripl()
-    infer_str = gen_infer_str(N_steps, N_infer)
+    infer_str = gen_infer_str(N_particles, N_infer)
     ripl.infer(infer_str)
     return predict_from_ripl(ripl, N_steps)
 #
@@ -136,7 +136,7 @@ program = program_constants + program_assumes
 
 
 # ripl with NO observes
-from_prior = sample_from_prior(N_steps, N_infer)
+from_prior = sample_from_prior(N_steps, N_particles, N_infer)
 
 # ripl with observes
 posterior_ripl = gen_ripl()
@@ -147,13 +147,15 @@ filename = base_filename + '_' + ('%04d' % 0) + '.png'
 from_posterior = predict_from_ripl(posterior_ripl, N_steps)
 plot(from_prior, from_posterior, filename)
 #
-step_by = 1
+step_by = 80
+infer_str = gen_infer_str(N_particles, step_by)
+print infer_str
 for idx in range(1, N_infer / step_by + 1):
-    infer_str = gen_infer_str(N_steps, step_by)
-    print infer_str
     posterior_ripl.infer(infer_str)
     from_posterior = predict_from_ripl(posterior_ripl, N_steps)
-    filename = base_filename + '_' + ('%04d' % idx * step_by) + '.png'
+    filename = base_filename + \
+            '_' + ('%04d' % idx) + \
+            '.png'
     print filename
     plot(from_prior, from_posterior, filename)
     pass
