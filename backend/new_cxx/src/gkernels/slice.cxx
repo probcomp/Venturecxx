@@ -9,7 +9,7 @@
 #include "concrete_trace.h"
 #include "db.h"
 #include "consistency.h"
-#include <gsl/gsl_rng.h>
+#include "rng.h"
 
 double SliceGKernel::computeLogDensity(double x)
 {
@@ -17,8 +17,8 @@ double SliceGKernel::computeLogDensity(double x)
   trace->registerLKernel(scaffold,node,shared_ptr<LKernel>(new DeterministicLKernel(VentureValuePtr(new VentureNumber(x)),psp)));
   
   /* The density is with respect to fixed entropy */
-  shared_ptr<gsl_rng> rng(gsl_rng_alloc(gsl_rng_mt19937));
-  gsl_rng_set (rng.get(),seed);
+  shared_ptr<RNGbox> rng(new RNGbox(gsl_rng_mt19937));
+  rng->set_seed(seed);
 
   shared_ptr<Particle> p = shared_ptr<Particle>(new Particle(trace,rng));
 
