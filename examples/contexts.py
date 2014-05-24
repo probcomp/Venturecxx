@@ -22,7 +22,7 @@ class Timer(object):
 
 
 # http://stackoverflow.com/a/938800
-scale_str_lookup = dict(kB=1024.0,mb=1024.0*1024.0)
+scale_str_lookup = dict(kb=1024.0,mb=1024.0*1024.0)
 key_lookup = dict(memory='VmSize:', resident='VmRSS:', stacksize='VmStk:')
 #
 def read_proc_status(pid=None):
@@ -37,7 +37,7 @@ def parse_proc_status(status_str, which_usage):
     usage_start = status_str.index(key_lookup[which_usage])
     return status_str[usage_start:].split(None, 3)
 def process_parsed_proc_status(parsed):
-    return float(parsed[1]) * scale_str_lookup[parsed[2]]
+    return float(parsed[1]) * scale_str_lookup[parsed[2].lower()]
 def get_usage(which_usage='memory', since=0.0):
     status_str = read_proc_status()
     parsed = parse_proc_status(status_str, which_usage)
