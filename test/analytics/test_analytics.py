@@ -127,6 +127,8 @@ def _testInfer(riplThunk,conditional_prior,inferProg):
 
     return reportKnownContinuous(cdf,snapshot_t(history,'p',-1))
 
+
+@attr("slow")
 def testRunFromConditionalInfer():
     riplThunks = get_ripl, lambda: get_mripl(no_ripls=2)
     cond_prior = 'conditional', 'prior'
