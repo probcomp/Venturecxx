@@ -443,4 +443,71 @@
    fun:SHA1_Update
 }
 
+### Additions by axch
 
+{
+   Conditional jump or move depends on uninitialised value(s)
+   Memcheck:Cond
+   fun:PyObject_GC_Del
+   ...
+   fun:PyImport_ImportModuleLevel
+   ...
+   fun:PyEval_CallObjectWithKeywords
+   fun:PyEval_EvalFrameEx
+   fun:PyEval_EvalCodeEx
+   fun:PyEval_EvalCode
+}
+
+{
+   Use of uninitialised value of size 8
+   Memcheck:Value8
+   fun:PyObject_GC_Del
+   ...
+   fun:PyImport_ImportModuleLevel
+   ...
+   fun:PyEval_CallObjectWithKeywords
+   fun:PyEval_EvalFrameEx
+   fun:PyEval_EvalCodeEx
+   fun:PyEval_EvalCode
+}
+
+{
+   Invalid read of size 4
+   Memcheck:Addr4
+   fun:PyObject_GC_Del
+   ...
+   fun:PyImport_ImportModuleLevel
+   ...
+   fun:PyEval_CallObjectWithKeywords
+   fun:PyEval_EvalFrameEx
+   fun:PyEval_EvalCodeEx
+   fun:PyEval_EvalCode
+}
+
+{
+   Invalid read of size 4
+   Memcheck:Addr4
+   fun:PyObject_GC_Del
+   ...
+   fun:Py_Finalize
+   fun:Py_Main
+   fun:(below main)
+}
+
+{
+   Invalid read of size 4
+   Memcheck:Addr4
+   ...
+   fun:PyAST_Compile
+   fun:PyRun_StringFlags
+   ...
+}
+
+{
+   Invalid read of size 4
+   Memcheck:Addr4
+   fun:PyGrammar_RemoveAccelerators
+   fun:Py_Finalize
+   fun:Py_Main
+   fun:(below main)
+}
