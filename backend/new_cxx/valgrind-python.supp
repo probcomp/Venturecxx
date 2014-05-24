@@ -452,10 +452,6 @@
    ...
    fun:PyImport_ImportModuleLevel
    ...
-   fun:PyEval_CallObjectWithKeywords
-   fun:PyEval_EvalFrameEx
-   fun:PyEval_EvalCodeEx
-   fun:PyEval_EvalCode
 }
 
 {
@@ -465,10 +461,6 @@
    ...
    fun:PyImport_ImportModuleLevel
    ...
-   fun:PyEval_CallObjectWithKeywords
-   fun:PyEval_EvalFrameEx
-   fun:PyEval_EvalCodeEx
-   fun:PyEval_EvalCode
 }
 
 {
