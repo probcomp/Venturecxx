@@ -59,6 +59,10 @@ def _convert(val):
     return val
 _observe_gps = lambda ripl, t: \
         ripl.observe(simulate_gps_str % t, _convert(gen_gps(t)))
+def observe_N_gps(ripl, N):
+    observe_gps = functools.partial(_observe_gps, ripl)
+    map(observe_gps, range(1, N))
+    return
 _predict_pose = lambda ripl, x: ripl.predict('(get_pose %s)' % x)
 gen_infer_str = lambda N_particles, N_infer: \
         '(pgibbs default ordered %s %s)' % (N_particles, N_infer)
@@ -105,6 +109,14 @@ def plot(from_prior, from_posterior, filename=None):
     pylab.savefig(filename)
     pylab.close()
     return
+#
+def measure_time_and_memory(task, func, *args, **kwargs):
+    with MemoryContext(task) as mc:
+        with Timer(task) as t:
+            out = func(*args, **kwargs)
+            pass
+        pass
+    return mc, t, out
 
 
 # generate deadreckoning (ground truth for these purposes)
@@ -158,92 +170,48 @@ program = program_constants + program_assumes
 
 
 task = 'prior ripl setup'
-with MemoryContext(task) as mc:
-    with Timer(task) as t:
-        prior_ripl = gen_ripl(use_mripl)
-        pass
-    pass
+mc, t, prior_ripl = measure_time_and_memory(task, gen_ripl, use_mripl)
 #
 task = 'prior predict_from_ripl before infer'
-with MemoryContext(task) as mc:
-    with Timer(task) as t:
-        from_prior = predict_from_ripl(prior_ripl, N_steps)
-        pass
-    pass
+mc, t, from_prior = measure_time_and_memory(task, predict_from_ripl, prior_ripl, N_steps)
 #
 infer_str = gen_infer_str(N_particles, N_infer)
 task = infer_str
-with MemoryContext(task) as mc:
-    with Timer(task) as t:
-        prior_ripl.infer(infer_str)
-        pass
-    pass
+mc, t, out = measure_time_and_memory(task, prior_ripl.infer, infer_str)
+#
 task = 'prior predict_from_ripl *AFTER* infer'
-with MemoryContext(task) as mc:
-    with Timer(task) as t:
-        from_prior = predict_from_ripl(prior_ripl, N_steps)
-        pass
-    pass
+mc, t, from_prior = measure_time_and_memory(task, predict_from_ripl, prior_ripl, N_steps)
+
 
 # ripl with NO observes
 task = 'sample_from_prior'
-with MemoryContext(task) as mc:
-    with Timer(task) as t:
-        from_prior = sample_from_prior(N_steps, N_particles, N_infer, use_mripl)
-        pass
-    pass
+mc, t, from_prior = measure_time_and_memory(task, sample_from_prior, N_steps, N_particles, N_infer, use_mripl)
 
 
 # ripl with observes
 task = 'posterior ripl setup'
-with MemoryContext(task) as mc:
-    with Timer(task) as t:
-        posterior_ripl = gen_ripl(use_mripl)
-        pass
-    pass
+mc, t, posterior_ripl = measure_time_and_memory(task, gen_ripl, use_mripl)
 #
 task = 'posterior ripl observes'
-with MemoryContext(task) as mc:
-    with Timer(task) as t:
-        observe_gps = functools.partial(_observe_gps, posterior_ripl)
-        map(observe_gps, range(1, N_steps))
-        pass
-    pass
+mc, t, out = measure_time_and_memory(task, observe_N_gps, posterior_ripl, N_steps)
 #
 task = 'posterior predict_from_ripl before infer'
-with MemoryContext(task) as mc:
-    with Timer(task) as t:
-        from_posterior = predict_from_ripl(posterior_ripl, N_steps)
-        pass
-    pass
+mc, t, from_posterior = measure_time_and_memory(task, predict_from_ripl, posterior_ripl, N_steps)
+#
 filename = gen_filename(0)
 task = 'plot posterior predict_from_ripl before infer'
-with MemoryContext(task) as mc:
-    with Timer(task) as t:
-        plot(from_prior, from_posterior, filename)
-        pass
-    pass
+mc, t, out = measure_time_and_memory(task, plot, from_prior, from_posterior, filename)
 #
 step_by = 1
 infer_str = gen_infer_str(N_particles, step_by)
 for idx in range(1, N_infer / step_by + 1):
     task = infer_str
-    with MemoryContext(task) as mc:
-        with Timer(task) as t:
-            posterior_ripl.infer(infer_str)
-            pass
-        pass
+    mc, t, out = measure_time_and_memory(task, posterior_ripl.infer, infer_str)
+    #
     task = 'posterior predict_from_ripl'
-    with MemoryContext(task) as mc:
-        with Timer(task) as t:
-            from_posterior = predict_from_ripl(posterior_ripl, N_steps)
-            pass
-        pass
+    mc, t, from_posterior = measure_time_and_memory(task, predict_from_ripl, posterior_ripl, N_steps)
+    #
     filename = gen_filename(idx)
     task = 'plotting %s' % filename
-    with MemoryContext(task) as mc:
-        with Timer(task) as t:
-            plot(from_prior, from_posterior, filename)
-            pass
-        pass
+    mc, t, out = measure_time_and_memory(task, plot, from_prior, from_posterior, filename)
     pass
