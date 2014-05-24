@@ -206,8 +206,6 @@ def testCompareSampleDicts():
     for sameDistributionValue in sameDistribution:
         yield _testCompareSampleDicts,sameDistributionValue
 
-    for test,riplThunk,infProg in params:
-        yield test, riplThunk, infProg
 
 @statisticalTest
 def _testCompareSnapshots(riplThunk):
