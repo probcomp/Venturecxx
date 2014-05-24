@@ -16,11 +16,11 @@
 
 /* Constructor */
 
-ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937)) {}
+ConcreteTrace::ConcreteTrace(): Trace(), rng(shared_ptr<RNGbox>(new RNGbox(gsl_rng_mt19937))) {}
 
 void ConcreteTrace::initialize()
 {
-  gsl_rng_set (rng,time(NULL));
+  rng->set_seed(time(NULL));
 
   vector<shared_ptr<VentureSymbol> > syms;
   vector<Node*> nodes;
@@ -186,7 +186,7 @@ void ConcreteTrace::removeChild(Node * node, Node * child)
 }
 
 /* Primitive getters */
-gsl_rng * ConcreteTrace::getRNG() { return rng; }
+gsl_rng * ConcreteTrace::getRNG() { return rng->get_rng(); }
 
 VentureValuePtr ConcreteTrace::getValue(Node * node) 
 { 
@@ -320,7 +320,11 @@ RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
 
 /* New in ConcreteTrace */
 
-BlockID ConcreteTrace::sampleBlock(ScopeID scope) { assert(scopes.count(scope)); return scopes[scope].sampleKeyUniformly(rng); }
+BlockID ConcreteTrace::sampleBlock(ScopeID scope)
+{
+  assert(scopes.count(scope));
+  return scopes[scope].sampleKeyUniformly(getRNG());
+}
 
 //vector<BlockID> ConcreteTrace::blocksInScope(ScopeID scope) { assert(false); }
 int ConcreteTrace::numBlocksInScope(ScopeID scope) 
@@ -495,5 +499,3 @@ void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
   outputNode->operatorNode = NULL;
 
 }
-
-ConcreteTrace::~ConcreteTrace() { gsl_rng_free(rng); }

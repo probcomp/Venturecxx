@@ -7,6 +7,7 @@
 #include "value.h"
 #include "pmap.hpp"
 #include "pset.hpp"
+#include "rng.h"
 
 using persistent::PMap;
 using persistent::PSet;
@@ -15,7 +16,6 @@ struct ConcreteTrace : Trace
 {
   ConcreteTrace();
   void initialize();
-  ~ConcreteTrace();
 
   /* Registering metadata */
   void registerAEKernel(Node * node);
@@ -131,7 +131,7 @@ struct ConcreteTrace : Trace
   void registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux);
   shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode);
 
-  gsl_rng * rng;
+  shared_ptr<RNGbox> rng;
 
   shared_ptr<VentureEnvironment> globalEnvironment;
 
