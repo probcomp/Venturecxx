@@ -54,7 +54,7 @@ def get_short_size(size):
         return '%.1fKB' % kb
     return '%s B' % int(size)
 class MemoryContext(object):
-    def __init__(self, task='task', which_usage='memory'):
+    def __init__(self, task='task', which_usage='resident'):
         self.task = task
         self.which_usage = which_usage
         self.start_usage, self.stop_usage, self.delta = None, None, None
