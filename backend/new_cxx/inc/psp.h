@@ -41,6 +41,8 @@ struct PSP
   virtual double getSupportUpperBound() const { return FLT_MAX; }
 
   virtual PSP* copy_help(ForwardingMap* m) { return this; }
+
+  virtual ~PSP() {}
 };
 
 struct NullRequestPSP : PSP
