@@ -1,5 +1,6 @@
 import random
 import functools
+import time
 #
 import numpy
 import pylab
@@ -28,7 +29,7 @@ gps_heading_additive_noise_std = 0.005
 N_mripls = 2
 N_particles = 16
 backend = 'puma'
-N_infer = 100
+N_infer = 50
 N_steps = 1000
 simulate_gps_str = '(simulate_gps (get_pose %s) %s %s)' % ('%s',
         gps_xy_additive_noise_std, gps_heading_additive_noise_std)
@@ -84,6 +85,19 @@ def plot(from_prior, from_posterior, filename=None):
     pylab.savefig(filename)
     pylab.close()
     return
+class Timer(object):
+    def __init__(self, task='task'):
+        self.task = task
+        return
+    def __enter__(self):
+        self.start = time.time()
+        return self
+    def __exit__(self, *args):
+        self.elapsed = time.time() - self.start
+        print '%s took %s seconds' % (self.task, self.elapsed)
+        return
+    pass
+
 
 
 # generate deadreckoning (ground truth for these purposes)
@@ -137,27 +151,35 @@ program = program_constants + program_assumes
 
 
 # ripl with NO observes
-from_prior = sample_from_prior(N_steps, N_particles, N_infer)
-
+with Timer('sample_from_prior') as t:
+    from_prior = sample_from_prior(N_steps, N_particles, N_infer)
+    pass
 # ripl with observes
-posterior_ripl = gen_ripl()
-observe_gps = functools.partial(_observe_gps, posterior_ripl)
-map(observe_gps, range(1, N_steps))
+with Timer('ripl setup and observations') as t:
+    posterior_ripl = gen_ripl()
+    observe_gps = functools.partial(_observe_gps, posterior_ripl)
+    map(observe_gps, range(1, N_steps))
+    pass
 #
-filename = base_filename + '_' + ('%04d' % 0) + '.png'
-from_posterior = predict_from_ripl(posterior_ripl, N_steps)
-plot(from_prior, from_posterior, filename)
-#
-step_by = 10
-infer_str = gen_infer_str(N_particles, step_by)
-print infer_str
-for idx in range(1, N_infer / step_by + 1):
-    posterior_ripl.infer(infer_str)
+with Timer('predict_from_ripl before infer') as t:
+    filename = base_filename + '_' + ('%04d' % 0) + '.png'
     from_posterior = predict_from_ripl(posterior_ripl, N_steps)
+    plot(from_prior, from_posterior, filename)
+    pass
+#
+step_by = 1
+infer_str = gen_infer_str(N_particles, step_by)
+for idx in range(1, N_infer / step_by + 1):
+    with Timer(infer_str) as t:
+        posterior_ripl.infer(infer_str)
+        pass
+    with Timer('predict_from_ripl') as t:
+        from_posterior = predict_from_ripl(posterior_ripl, N_steps)
+        pass
     filename = base_filename + \
             '_' + ('%04d' % idx) + \
             '.png'
-    print filename
-    plot(from_prior, from_posterior, filename)
+    with Timer('plotting %s' % filename) as t:
+        plot(from_prior, from_posterior, filename)
+        pass
     pass
-
