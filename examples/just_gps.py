@@ -83,10 +83,8 @@ def gen_ripl(use_mripl):
 def predict_from_ripl(ripl, N_steps):
     predict_pose = functools.partial(_predict_pose, ripl)
     return numpy.array(map(predict_pose, range(N_steps)))
-def sample_from_prior(N_steps, N_particles, N_infer, use_mripl=True):
+def sample_from_prior(N_steps, use_mripl=True):
     ripl = gen_ripl(use_mripl)
-    infer_str = gen_infer_str(N_particles, N_infer)
-    ripl.infer(infer_str)
     return predict_from_ripl(ripl, N_steps)
 #
 def _plot_run(run, color):
@@ -180,23 +178,9 @@ program_assumes = """
 program = program_constants + program_assumes
 
 
-task = 'prior ripl setup'
-mc, t, prior_ripl = measure_time_and_memory(task, gen_ripl, use_mripl)
-#
-task = 'prior predict_from_ripl before infer'
-mc, t, from_prior = measure_time_and_memory(task, predict_from_ripl, prior_ripl, N_steps)
-#
-infer_str = gen_infer_str(N_particles, N_infer)
-task = infer_str
-mc, t, out = measure_time_and_memory(task, prior_ripl.infer, infer_str)
-#
-task = 'prior predict_from_ripl *AFTER* infer'
-mc, t, from_prior = measure_time_and_memory(task, predict_from_ripl, prior_ripl, N_steps)
-
-
 # ripl with NO observes
 task = 'sample_from_prior'
-mc, t, from_prior = measure_time_and_memory(task, sample_from_prior, N_steps, N_particles, N_infer, use_mripl)
+mc, t, from_prior = measure_time_and_memory(task, sample_from_prior, N_steps, use_mripl)
 
 
 # ripl with observes
