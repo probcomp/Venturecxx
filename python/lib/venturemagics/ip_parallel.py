@@ -31,24 +31,13 @@ mk_p_ripl = make_puma_church_prime_ripl
 # with local. then debug mode gives default of one local, with
 # more as specified optionally. 
 
-# testing
-# default to local_mode if trying client fails. (if you choose
-# local mode, you don't bother checking). 
-
 
 # TODO:
-
 # optional default inference program for mripl
-# v.plot or quickplot for unit things. 
 # v.plot('x',**plottingkwargs) = v.snapshot(exp_list=['x'],plot=True,**kwargs)
-
-
 # move local_out to debug mode
-# 
-
-
 # move regression stuff to regression utils
-# make private methods private
+
 
 
 
@@ -108,11 +97,11 @@ def mk_picklable(out_lst):
 class MRipl():
     
     def __init__(self, no_ripls, backend='puma',local_mode=False,
-                 seeds=None, debug_mode=False):
+                 seeds=None, debug_mode=False, set_no_engines=None):
 
 # TODO DEBUG MODE should probably run inference 
         '''
-        MRipl(no_ripls,backend='puma',no_local_ripls=1,output='remote',local_mode=False,seeds=None,verbose=False)
+        MRipl(no_ripls,backend='puma',local_mode=False,seeds=None,debug_mode=False)
 
         Create an Mripl. Will fail unless an IPCluster is already running
         or *local_model*=True.
@@ -126,16 +115,14 @@ class MRipl():
            Actual number of ripls will be no_engines*ceil(no_ripls/no_engines)
         backend : 'puma' or 'lite'
            Set backend for both local and remote ripls. Can be switched later using
-           self.switch_backend method at the cost of resetting inference.
+           self.switch_backend method (resets inference).
         local_mode : bool
            If False, all directives are applied to both local and remote ripls.
            If True, directives are only applied locally. Thus no IPCluster needs
            to be running to work with Mripl objects.
         seeds : list
            Set ripl seeds to seeds[:no_ripls]. If None, ripl seeds are range[:no_ripls].
-        verbose : bool
-          If True, prints information on state of Mripl and ripl inference.
-
+        
         Attributes
         ----------
         backend : see above
@@ -212,20 +199,29 @@ class MRipl():
 
 
         ## initialize remote ripls
-        self.dview=self.cli[:]
+        if set_no_engines is not None:
+            assert set_no_engines <= len(self.cli.ids), 'Not enough ipcluster engines'
+            self.no_engines = set_no_engines
+            self.dview = self.cli[:set_no_engines]
+        else:
+            self.no_engines = len(self.cli.ids)
+            self.dview=self.cli[:]
+            
         try:
             self.dview['no_mripls']
         except:
             self.dview.execute('mripls=[]; no_mripls=0')
             print "New list *mripls* created on remote engines."
 
-        self.no_engines = len(self.cli.ids)
         self.no_ripls_per_engine = int(np.ceil(no_ripls/float(self.no_engines)))
-        self.no_ripls = self.no_engines * self.no_ripls_per_engine 
+        self.no_ripls = self.no_engines * self.no_ripls_per_engine
+        s='MRipl has %i ripls and %i ripl(s) per engine'%(self.no_ripls,
+                                                        self.no_ripls_per_engine)
+        print s
+
 
         self.seeds = range(self.no_ripls) if not seeds else seeds[:self.no_ripls]
-        
-        self.dview = self.cli[:]
+
         self.dview.block = True   
         
         # Imports for remote ripls: needed for creating ripls on engines

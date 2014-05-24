@@ -17,7 +17,7 @@ import time, random
 import numpy as np
 from venture.ripl.ripl import _strip_types
 from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl,mr_map_proc
-from venture.venturemagics.ip_parallel import * ## FIXME:
+from venture.venturemagics.ip_parallel import * #FIXME
 
 from history import History, Run, Series, historyOverlay,compareSampleDicts,filterDict,historyNameToValues
 
@@ -232,6 +232,7 @@ class Analytics(object):
         if self.mripl and self.mripl.local_mode is False:
             self.mripl.dview.push({'queryExps':self.queryExps})
 
+
     def switchBackend(self,newBackend):
         'Switch backend while maintaining assumes and observes'
         ## FIXME make mripl compatible via mripl.switch_backends
@@ -340,7 +341,7 @@ class Analytics(object):
         '''If self.mripl and useMRipl, samples come from a big MRipl:
         MRipl(samples,local_mode=mriplLocalMode). MRipl runs in local_mode
         by default for speed. Set *mriplTrackObserves* to True to record
-        observes. If self.mripl is False, loop over a single ripl, tracking
+        observes. If self.mripl is False, loops over a single ripl, tracking
         *track* random observes.'''
         
         def mriplSample():
@@ -439,7 +440,7 @@ class Analytics(object):
         iterations = 0
         get_entropy_info = self.ripl.sivm.core_sivm.engine.get_entropy_info
 
-        # if # unconstrainted_random_choices stays fixed after infer(step)
+        # if #unconstrainted_random_choices stays fixed after infer(step)
         # then we do #iterations=#u_r_c. if #u_r_c grows after infer, we do
         # another step (with larger stepsize) and repeat. 
         while iterations < get_entropy_info()['unconstrained_random_choices']:
@@ -455,6 +456,7 @@ class Analytics(object):
 
         return iterations
     
+
   
     def _runRepeatedly(self, f, tag, runs=3, verbose=False, profile=False,
                        useMRipl=True,**kwargs):
@@ -574,7 +576,6 @@ class Analytics(object):
            This will collect 100 samples with 5 MH transitions between samples.
 
 
-
            Arguments
            ---------
            sweeps :: int
@@ -665,7 +666,7 @@ class Analytics(object):
     def runConditionedFromPrior(self, sweeps, verbose=False, **kwargs):
         ## FIXME: add docstring describing groundtruth and outputting ripl.
         
-        (data, groundTruth) = self.generateDataFromPrior(sweeps, verbose=verbose)
+        (data, groundTruth) = self.generateDataFromPrior(verbose=verbose)
 
         history,_ = self.runFromConditional(sweeps, data=data, verbose=verbose, **kwargs)
         history.addGroundTruth(groundTruth,sweeps) #sweeps vs. totalSamples
@@ -675,11 +676,7 @@ class Analytics(object):
 
 
 
-
-    # The "sweeps" argument specifies the number of times to repeat
-    # the values collected from the prior, so that they are parallel
-    # to the samples one intends to compare against them.
-    def generateDataFromPrior(self, sweeps, verbose=False):
+    def generateDataFromPrior(self, verbose=False):
         if verbose:
             print 'Generating data from prior'
 
@@ -749,7 +746,6 @@ class Analytics(object):
         ## FIXME: should be able to take multiple runs and flatten them
         #  inferHistory = flattenRuns(inferHistory)
 
-        
         # convert history objects
         hs = (forwardHistory,inferHistory)
         labels=('Forward iid','Inference')
@@ -774,15 +770,6 @@ class Analytics(object):
         compareReport.reportString = gewekeStr + compareReport.reportString
         
         return forwardHistory,inferHistory,compareReport
-
-
-
-
-
-
-
-
-
 
 
 
