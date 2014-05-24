@@ -37,6 +37,8 @@ N_steps = 4000
 simulate_gps_str = '(simulate_gps (get_pose %s) %s %s)' % ('%s',
         gps_xy_additive_noise_std, gps_heading_additive_noise_std)
 base_filename = 'vehicle_just_gps'
+gen_filename = lambda idx: base_filename + '_' + ('%04d' % idx) + '.png'
+
 
 # helpers
 def gen_gps(t):
@@ -155,6 +157,34 @@ program_assumes = """
 program = program_constants + program_assumes
 
 
+task = 'prior ripl setup'
+with MemoryContext(task) as mc:
+    with Timer(task) as t:
+        prior_ripl = gen_ripl(use_mripl)
+        pass
+    pass
+#
+task = 'prior predict_from_ripl before infer'
+with MemoryContext(task) as mc:
+    with Timer(task) as t:
+        from_prior = predict_from_ripl(prior_ripl, N_steps)
+        pass
+    pass
+#
+infer_str = gen_infer_str(N_particles, N_infer)
+task = infer_str
+with MemoryContext(task) as mc:
+    with Timer(task) as t:
+        prior_ripl.infer(infer_str)
+        pass
+    pass
+task = 'prior predict_from_ripl *AFTER* infer'
+with MemoryContext(task) as mc:
+    with Timer(task) as t:
+        from_prior = predict_from_ripl(prior_ripl, N_steps)
+        pass
+    pass
+
 # ripl with NO observes
 task = 'sample_from_prior'
 with MemoryContext(task) as mc:
@@ -162,28 +192,40 @@ with MemoryContext(task) as mc:
         from_prior = sample_from_prior(N_steps, N_particles, N_infer, use_mripl)
         pass
     pass
+
+
 # ripl with observes
-task = 'ripl setup and observations'
+task = 'posterior ripl setup'
 with MemoryContext(task) as mc:
     with Timer(task) as t:
         posterior_ripl = gen_ripl(use_mripl)
+        pass
+    pass
+#
+task = 'posterior ripl observes'
+with MemoryContext(task) as mc:
+    with Timer(task) as t:
         observe_gps = functools.partial(_observe_gps, posterior_ripl)
         map(observe_gps, range(1, N_steps))
         pass
     pass
 #
-task = 'predict_from_ripl before infer'
+task = 'posterior predict_from_ripl before infer'
 with MemoryContext(task) as mc:
     with Timer(task) as t:
-        filename = base_filename + '_' + ('%04d' % 0) + '.png'
         from_posterior = predict_from_ripl(posterior_ripl, N_steps)
+        pass
+    pass
+filename = gen_filename(0)
+task = 'plot posterior predict_from_ripl before infer'
+with MemoryContext(task) as mc:
+    with Timer(task) as t:
         plot(from_prior, from_posterior, filename)
         pass
     pass
 #
 step_by = 1
 infer_str = gen_infer_str(N_particles, step_by)
-gen_filename = lambda idx: base_filename + '_' + ('%04d' % idx) + '.png'
 for idx in range(1, N_infer / step_by + 1):
     task = infer_str
     with MemoryContext(task) as mc:
@@ -191,7 +233,7 @@ for idx in range(1, N_infer / step_by + 1):
             posterior_ripl.infer(infer_str)
             pass
         pass
-    task = 'predict_from_ripl'
+    task = 'posterior predict_from_ripl'
     with MemoryContext(task) as mc:
         with Timer(task) as t:
             from_posterior = predict_from_ripl(posterior_ripl, N_steps)
