@@ -132,6 +132,7 @@ vector<double> NormalPSP::gradientOfLogDensity(double output,
 
 
 /* Gamma */
+
 VentureValuePtr GammaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
   checkArgsLength("gamma", args, 2);
@@ -149,6 +150,23 @@ double GammaPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
   double b = args->operandValues[1]->getDouble();
   double x = value->getDouble();
   return GammaDistributionLogLikelihood(x, a, b);
+}
+
+pair<VentureValuePtr, vector<VentureValuePtr> > 
+GammaPSP::gradientOfLogDensity(const VentureValuePtr value, const shared_ptr<Args> args) 
+{
+  double a = args->operandValues[0]->getDouble();
+  double b = args->operandValues[1]->getDouble();
+  double x = value->getDouble();
+  double grad_a = log(x)+b/a-gsl_sf_psi(a);
+  cout << "a" << a << "b" << b << "x" << x << endl;
+  double grad_b = log(a)-x;
+  double grad_x = (a-1)/x-b;
+  cout << "grad_a " << grad_a << "grad_b " << grad_b << "grad_x " << grad_x << endl;
+  vector<VentureValuePtr> gradParam;
+  gradParam.push_back(VentureNumber::makeValue(grad_a));
+  gradParam.push_back(VentureNumber::makeValue(grad_b));
+  return make_pair(VentureNumber::makeValue(grad_x), gradParam);
 }
 
 /* Inv Gamma */

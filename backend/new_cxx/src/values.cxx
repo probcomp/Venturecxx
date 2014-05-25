@@ -21,7 +21,7 @@ VentureSymmetricMatrix::VentureSymmetricMatrix(const Eigen::MatrixXd & m)
   {
     for(size_t j = i+1; j < m.cols(); j++) 
     {
-      if(fabs(m(i,j)-m(j,i)) > 1e-8)
+      if(fabs(m(i,j)-m(j,i)) > 1e-8*fabs(m(i,j)))
       {
         cout << this->toString() << endl;
         throw "failed to initiate a symmetric matrix from an asymmetric one.";
