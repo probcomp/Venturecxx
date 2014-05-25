@@ -218,7 +218,7 @@ shared_ptr<VentureSPRecord> ConcreteTrace::getMadeSPRecord(Node * makerNode)
   return madeSPRecords[makerNode]; 
 }
 vector<RootOfFamily> ConcreteTrace::getESRParents(Node * node) 
-{ 
+{
   if (esrRoots.count(node)) { return esrRoots[node]; } 
   else { return vector<RootOfFamily>(); }
 }
