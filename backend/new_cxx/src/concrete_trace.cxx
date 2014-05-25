@@ -514,4 +514,67 @@ void ConcreteTrace::seekInconsistencies()
       cout << "Warning: found family with zero requests: " << (*itr).first << " " << (*itr).first->exp << endl;
     }
   }
+  set<Node*> walkedNodes = allNodes();
+  BOOST_FOREACH(Node* n, walkedNodes)
+  {
+    if (values.count(n) < 1)
+    {
+      cout << "Warning: found node with no value: " << n << endl;
+    }
+  }
+}
+
+vector<Node*> familyParents(Node* node)
+{
+  vector<Node*> answer;
+  if (dynamic_cast<ConstantNode*>(node)) { return vector<Node*>(); }
+  if (dynamic_cast<LookupNode*>(node)) { return vector<Node*>(); }
+  if (dynamic_cast<OutputNode*>(node))
+  {
+    answer.push_back(dynamic_cast<OutputNode*>(node)->requestNode);
+    // The operator and operands will get picked up when traversing
+    // the requester node
+  }
+  if (dynamic_cast<RequestNode*>(node))
+  {
+    RequestNode* n = dynamic_cast<RequestNode*>(node);
+    answer.push_back(n->operatorNode);
+    answer.insert(answer.end(), n->operandNodes.begin(), n->operandNodes.end());
+  }
+  return answer;
+}
+
+void addNodes(Node* root, set<Node*>& answer)
+{
+  if (root == NULL) { return; }
+  assert(answer.count(root) == 0);
+  answer.insert(root);
+  BOOST_FOREACH(Node* p, familyParents(root))
+  {
+    addNodes(p, answer);
+  }
+}
+
+set<Node*> ConcreteTrace::allNodes()
+{
+  set<Node*> answer;
+  BOOST_FOREACH(shared_ptr<Node> node, builtInNodes)
+  {
+    assert(dynamic_cast<ConstantNode*>(node.get()));
+    assert(answer.count(node.get()) == 0);
+    answer.insert(node.get());
+  }
+  typedef pair<DirectiveID, RootOfFamily> family_map_entry;
+  BOOST_FOREACH(family_map_entry fam, families)
+  {
+    Node* root(fam.second.get());
+    addNodes(root, answer);
+  }
+  typedef pair<RootOfFamily, int> num_request_map_entry;
+  BOOST_FOREACH(num_request_map_entry fam, numRequests)
+  {
+    Node* root(fam.first.get());
+    addNodes(root, answer);
+  }
+  return answer;
 }

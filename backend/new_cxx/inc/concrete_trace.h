@@ -160,6 +160,9 @@ struct ConcreteTrace : Trace
   map<Node*,VentureValuePtr> observedValues;
 
   set<shared_ptr<Node> > builtInNodes; // hack for simple garbage collection
+
+  private:
+  set<Node*> allNodes();
 };
 
 #endif
