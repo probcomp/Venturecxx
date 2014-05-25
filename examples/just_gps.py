@@ -77,10 +77,17 @@ def observe_N_control(ripl, N):
         ripl.observe('(dt %s)' % i, .25)
         pass
     return map(observe_control, range(1, N))
-def gen_infer_str(N_particles, N_infer):
+def gen_infer_str(N_particles, N_infer, only=None):
     hypers = '(mh hypers one 3)'
-    state = '(pgibbs state ordered %s 1)' % N_particles
-    infer_str =  '(cycle (%s %s) %s)' % (hypers, state, N_infer)
+    # state = '(pgibbs state ordered %s 1)' % N_particles
+    state = '(mh state all 1)'
+    if only == 'hypers':
+        state = ''
+        pass
+    elif only == 'state':
+        hypers = ''
+        pass
+    infer_str = '(cycle (%s %s) %s)' % (hypers, state, N_infer)
     return infer_str
 #
 def gen_ripl(use_mripl):
@@ -248,8 +255,12 @@ task = 'plot posterior predict_from_ripl before infer'
 mc, t, out = measure_time_and_memory(task, plot, from_prior, from_posterior, filename)
 #
 step_by = 1
-infer_str = gen_infer_str(N_particles, step_by)
 for idx in range(1, N_infer / step_by + 1):
+    infer_str = gen_infer_str(N_particles, step_by, only='hypers')
+    task = infer_str
+    mc, t, out = measure_time_and_memory(task, posterior_ripl.infer, infer_str)
+    #
+    infer_str = gen_infer_str(N_particles, step_by, only='state')
     task = infer_str
     mc, t, out = measure_time_and_memory(task, posterior_ripl.infer, infer_str)
     #
