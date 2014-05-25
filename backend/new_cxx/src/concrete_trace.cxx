@@ -502,3 +502,15 @@ void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
   outputNode->operatorNode = NULL;
 
 }
+
+void ConcreteTrace::seekInconsistencies()
+{
+  cout << "Seeking inconsistencies" << endl;
+  for(typename map<RootOfFamily, int>::const_iterator itr = numRequests.begin(); itr != numRequests.end(); ++itr)
+  {
+    if ((*itr).second == 0)
+    {
+      cout << "Warning: found family with zero requests:" << (*itr).first << (*itr).first->exp << endl;
+    }
+  }
+}

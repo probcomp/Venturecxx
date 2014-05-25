@@ -305,6 +305,7 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap* forward)
   answer->values = copy_map_kv(this->values, forward);
   answer->observedValues = copy_map_kv(this->observedValues, forward);
   answer->builtInNodes = copy_set_shared(this->builtInNodes, forward);
+  answer->seekInconsistencies();
   return answer;
 }
 

@@ -131,6 +131,11 @@ struct ConcreteTrace : Trace
   void registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux);
   shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode);
 
+  shared_ptr<ConcreteTrace> stop_and_copy();
+  shared_ptr<ConcreteTrace> copy_help(ForwardingMap* forward);
+
+  void seekInconsistencies();
+
   shared_ptr<RNGbox> rng;
 
   shared_ptr<VentureEnvironment> globalEnvironment;
@@ -155,9 +160,6 @@ struct ConcreteTrace : Trace
   map<Node*,VentureValuePtr> observedValues;
 
   set<shared_ptr<Node> > builtInNodes; // hack for simple garbage collection
-
-  shared_ptr<ConcreteTrace> stop_and_copy();
-  shared_ptr<ConcreteTrace> copy_help(ForwardingMap* forward);
 };
 
 #endif
