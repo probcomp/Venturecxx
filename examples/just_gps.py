@@ -158,6 +158,18 @@ program_hypers = """
                                                   3
                                                   (gamma 1.0 100.0))]
 
+[assume velocity_gamma_rate (scope_include (quote (hypers))
+                                           4
+                                           (gamma 1.0 1.0))]
+
+[assume steering_mean (scope_include (quote (hypers))
+                                     5
+                                     (gamma 1.0 100.0))]
+
+[assume steering_std (scope_include (quote (hypers))
+                                    6
+                                    (gamma 1.0 100.0))]
+
 """
 
 program_control_generation = """
@@ -178,8 +190,8 @@ program_control_generation = """
 [assume get_control_i (scope_include (quote state) -2
   (mem (lambda (i coord)
     (if (= coord 0)
-        (gamma 1 1)
-        (gamma 1 100)
+        (gamma 1.0 velocity_gamma_rate)
+        (normal steering_mean steering_std)
         ))))]
 
 [assume get_control_at_t (lambda (t)
