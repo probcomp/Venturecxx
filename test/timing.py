@@ -6,9 +6,7 @@ from nose.tools import assert_greater, assert_less
 # input (to wit, f(n)() takes An + B time to run, and A is decidedly
 # nonzero).
 def assertLinearTime(f, verbose=False):
-  times = timings(f)
-  if verbose:
-    print times
+  times = timings(f, verbose=verbose)
   (base_n,base_t) = times[0]
   norm_times = [(n - base_n, t - base_t) for (n,t) in times[1:]]
   # The notion is that the ratios of delta t to delta n should neither
@@ -25,9 +23,7 @@ def assertLinearTime(f, verbose=False):
 # Checks that the runtime of the unary function f(n)() does not depend
 # on its input.
 def assertConstantTime(f, verbose=False):
-  times = timings(f)
-  if verbose:
-    print times
+  times = timings(f, verbose=verbose)
   (base_n,base_t) = times[0]
   norm_times = [(n - base_n, t - base_t) for (n,t) in times[1:]]
   # The notion is that the ratios of delta t to delta n should neither
@@ -50,7 +46,7 @@ def assertConstantTime(f, verbose=False):
 # - the whole process doesn't take too long
 # - the produced values are useful for assessing the thunk's
 #   asymptotic runtime.
-def timings(f):
+def timings(f, verbose=False):
   def try_next(n):
     return int(math.floor(min(2*n,max(1.2*n, n+5))))
   def stop(duration, sample_ct):
@@ -67,11 +63,16 @@ def timings(f):
   while not stop(now - start_time, len(answer)):
     n = try_next(n)
     thunk = f(n)
+    if verbose:
+      print "Trying %s" % n
     start = time.clock()
     thunk()
     end = time.clock()
     answer.append((n,end - start))
     now = end
+  if verbose:
+    for (n, t) in answer:
+      print "%s took %s s" % (n, t)
   return answer
 
 # :: (Integer -> (() -> a)) -> (Integer,Time)
