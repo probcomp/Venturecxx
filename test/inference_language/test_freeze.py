@@ -33,11 +33,15 @@ def testFreezeSanityCheck2():
   eq_(engine.getDistinguishedTrace().numNodesInBlock(0,0),1)
 
 def testFreezeSanityCheck3():
+  """Check that a frozen value no longer changes under inference, even
+though unfrozen ones do."""
   if config["get_ripl"] != "puma": raise SkipTest("Freeze only implemented in puma")
   ripl = get_ripl()
   ripl.assume("x", "(normal 0.0 1.0)")
   ripl.assume("y", "(normal 0.0 1.0)")
   xval = ripl.sample("x")
+  yval = ripl.sample("y")
   ripl.freeze(1)
   ripl.infer(100)
   eq_(xval, ripl.sample("x"))
+  assert not yval == ripl.sample("x")
