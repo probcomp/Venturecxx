@@ -74,6 +74,7 @@ map<string,SP*> initBuiltInSPs()
   m["uniform_discrete"] = new SP(new NullRequestPSP(), new UniformDiscreteOutputPSP());
   m["binomial"] = new SP(new NullRequestPSP(), new BinomialOutputPSP());
   m["categorical"] = new SP(new NullRequestPSP(), new CategoricalOutputPSP());
+  m["log_categorical"] = new SP(new NullRequestPSP(), new LogCategoricalOutputPSP());
   m["symmetric_dirichlet"] = new SP(new NullRequestPSP(), new SymmetricDirichletOutputPSP());
   m["dirichlet"] = new SP(new NullRequestPSP(), new DirichletOutputPSP());
   m["poisson"] = new SP(new NullRequestPSP(), new PoissonOutputPSP());

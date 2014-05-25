@@ -93,6 +93,13 @@ Simplex normalizeVector(const vector<double> & xs)
   return ps;
 }
 
+size_t findVVPtr(VentureValuePtr val, const vector<VentureValuePtr>& vec)
+{
+  for (size_t i = 0; i < vec.size(); ++i)
+    { if (vec[i]->equals(val)) { return i; } }
+  return vec.size();
+}
+
 VentureValuePtr simulateCategorical(const Simplex & ps, gsl_rng * rng)
 {
   vector<VentureValuePtr> os;
