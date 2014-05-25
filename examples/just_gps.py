@@ -99,7 +99,7 @@ def _plot(samples, color='r'):
         return samples[:, i, :]
     is_mripl = len(samples.shape) == 3
     if is_mripl:
-        map(_plot_run, range(samples.shape[1]))
+        map(_plot_run, map(get_run_i, range(samples.shape[1])))
         pass
     else:
         _plot_run(samples)
