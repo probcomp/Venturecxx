@@ -100,6 +100,14 @@ class Engine(object):
 
     del self.directives[directiveId]
 
+  def freeze(self,directiveId):
+    if directiveId not in self.directives:
+      raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",
+                             argument="directive_id", directive_id=directiveId)
+    # TODO Record frozen state for reset?
+    for trace in self.traces:
+      trace.freeze(directiveId)
+
   def report_value(self,directiveId):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot report a non-existent directive id",

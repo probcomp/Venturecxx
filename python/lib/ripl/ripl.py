@@ -373,6 +373,14 @@ Open issues:
         self.execute_instruction(i)
         return None
 
+    def freeze(self, label_or_did):
+        if isinstance(label_or_did,int):
+            i = {'instruction':'freeze', 'directive_id':label_or_did}
+        else:
+            i = {'instruction':'labeled_freeze', 'label':label_or_did}
+        self.execute_instruction(i)
+        return None
+
     def report(self, label_or_did, type=False):
         if isinstance(label_or_did,int):
             i = {'instruction':'report', 'directive_id':label_or_did}

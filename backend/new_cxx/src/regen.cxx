@@ -381,9 +381,9 @@ double evalRequests(Trace * trace,
       }
       else
       {
-              pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,db,gradients);
+        pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,db,gradients);
         weight += p.first;
-              esrRoot = shared_ptr<Node>(p.second);
+        esrRoot = shared_ptr<Node>(p.second);
       }
       trace->registerMadeSPFamily(trace->getOperatorSPMakerNode(requestNode),esr.id,esrRoot);
     }
@@ -424,7 +424,10 @@ double restore(Trace * trace,
   LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
 
-  if (constantNode) {  }
+  if (constantNode)
+  {
+    trace->setValue(constantNode, constantNode->exp);
+  }
   else if (lookupNode) 
   { 
     weight += regenParents(trace,lookupNode,scaffold,true,db,gradients);

@@ -69,7 +69,12 @@ shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy()
 template <typename T>
 T* copy_pointer(T* v, ForwardingMap* forward)
 {
-  if (forward->count(v) > 0) {
+  if (v == NULL)
+  {
+    return v;
+  }
+  if (forward->count(v) > 0)
+  {
     return (T*)(*forward)[v];
   } else {
     T* answer = dynamic_cast<T*>(v->copy_help(forward));
@@ -270,7 +275,11 @@ map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(map<K*, vector<shared_ptr<V>
   typename map<K*, vector<shared_ptr<V> > >::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[copy_pointer((*itr).first, forward)] = copy_vector_shared((*itr).second, forward);
+    if (!((*itr).second.empty()))
+    { // Avoid inserting empty entries; their keys may be stale, and
+      // they get auto-generated if needed.
+      answer[copy_pointer((*itr).first, forward)] = copy_vector_shared((*itr).second, forward);
+    }
   }
   return answer;
 }
@@ -296,6 +305,7 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap* forward)
   answer->values = copy_map_kv(this->values, forward);
   answer->observedValues = copy_map_kv(this->observedValues, forward);
   answer->builtInNodes = copy_set_shared(this->builtInNodes, forward);
+  answer->seekInconsistencies();
   return answer;
 }
 

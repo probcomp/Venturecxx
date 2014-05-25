@@ -33,7 +33,7 @@ class CoreSivm(object):
         self.profiler_enabled = False
     
     _implemented_instructions = {"assume","observe","predict",
-            "configure","forget","report","infer",
+            "configure","forget","freeze","report","infer",
             "clear","rollback","get_logscore","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
             "continuous_inference_status", "profiler_configure"}
@@ -116,6 +116,13 @@ class CoreSivm(object):
             if e.message == 'There is no such directive.':
                 raise VentureException('invalid_argument',e.message,argument='directive_id')
             raise
+        return {}
+
+    def _do_freeze(self,instruction):
+        utils.require_state(self.state,'default')
+        did = utils.validate_arg(instruction,'directive_id',
+                utils.validate_nonnegative_integer)
+        self.engine.freeze(did)
         return {}
 
     def _do_report(self,instruction):

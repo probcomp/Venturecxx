@@ -176,6 +176,7 @@ void ConcreteTrace::decNumRequests(RootOfFamily root)
 { 
   assert(numRequests.count(root));
   numRequests[root]--;
+  if (numRequests[root] == 0) { numRequests.erase(root); }
 }
 
 void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
@@ -218,7 +219,7 @@ shared_ptr<VentureSPRecord> ConcreteTrace::getMadeSPRecord(Node * makerNode)
   return madeSPRecords[makerNode]; 
 }
 vector<RootOfFamily> ConcreteTrace::getESRParents(Node * node) 
-{ 
+{
   if (esrRoots.count(node)) { return esrRoots[node]; } 
   else { return vector<RootOfFamily>(); }
 }
@@ -487,9 +488,12 @@ void ConcreteTrace::freezeDirectiveID(DirectiveID did)
 
 void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
 {
+  VentureValuePtr curVal = getValue(outputNode);
   unevalFamily(this,outputNode,shared_ptr<Scaffold>(new Scaffold()),shared_ptr<DB>(new DB()));
   outputNode->isFrozen = true; // this is never looked at
-    
+  outputNode->exp = curVal; // Get rid of the former expression; seems harmless and should save memory (and copying)
+  setValue(outputNode, curVal);
+
   delete outputNode->requestNode;
   for (size_t i = 0; i < outputNode->operandNodes.size(); ++i) { delete outputNode->operandNodes[i]; }
   delete outputNode->operatorNode;
@@ -498,4 +502,16 @@ void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
   outputNode->operandNodes.clear();
   outputNode->operatorNode = NULL;
 
+}
+
+void ConcreteTrace::seekInconsistencies()
+{
+  cout << "Seeking inconsistencies" << endl;
+  for(typename map<RootOfFamily, int>::const_iterator itr = numRequests.begin(); itr != numRequests.end(); ++itr)
+  {
+    if ((*itr).second == 0)
+    {
+      cout << "Warning: found family with zero requests: " << (*itr).first << " " << (*itr).first->exp << endl;
+    }
+  }
 }
