@@ -32,4 +32,12 @@ def testFreezeSanityCheck2():
   ripl.freeze(2)
   eq_(engine.getDistinguishedTrace().numNodesInBlock(0,0),1)
 
-
+def testFreezeSanityCheck3():
+  if config["get_ripl"] != "puma": raise SkipTest("Freeze only implemented in puma")
+  ripl = get_ripl()
+  ripl.assume("x", "(normal 0.0 1.0)")
+  ripl.assume("y", "(normal 0.0 1.0)")
+  xval = ripl.sample("x")
+  ripl.freeze(1)
+  ripl.infer(100)
+  eq_(xval, ripl.sample("x"))
