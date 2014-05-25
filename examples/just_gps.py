@@ -36,8 +36,6 @@ N_infer = 5
 N_steps = 4000
 simulate_gps_str = '(simulate_gps (get_pose %s) %s %s)' % ('%s',
         gps_xy_additive_noise_std, gps_heading_additive_noise_std)
-base_filename = 'vehicle_just_gps'
-gen_filename = lambda idx: base_filename + '_' + ('%04d' % idx) + '.png'
 
 
 # helpers
@@ -107,7 +105,9 @@ def sample_from_prior(N_steps, use_mripl=True):
     ripl = gen_ripl(use_mripl)
     return predict_from_ripl(ripl, N_steps)
 #
-def plot(from_prior, from_posterior, filename=None):
+base_filename = 'vehicle_just_gps'
+gen_filename = lambda idx: base_filename + '_' + ('%04d' % idx) + '.png'
+def plot(from_posterior, from_prior=None, filename=None):
     def _plot(samples, color='r'):
         def _plot_run(run):
             return pylab.plot(run[:, 0], run[:, 1], '-x', color=color, alpha=0.2)
@@ -123,8 +123,10 @@ def plot(from_prior, from_posterior, filename=None):
         return
     filename = filename if filename is not None else base_filename + '.png'
     pylab.figure()
-    _plot(from_prior, color='r')
     _plot(from_posterior, color='g')
+    if from_prior is not None:
+        _plot(from_prior, color='r')
+        pass
     pylab.savefig(filename)
     pylab.close()
     return
@@ -252,7 +254,7 @@ mc, t, from_posterior = measure_time_and_memory(task, predict_from_ripl, posteri
 #
 filename = gen_filename(0)
 task = 'plot posterior predict_from_ripl before infer'
-mc, t, out = measure_time_and_memory(task, plot, from_prior, from_posterior, filename)
+mc, t, out = measure_time_and_memory(task, plot, from_posterior, from_prior, filename)
 #
 step_by = 1
 for idx in range(1, N_infer / step_by + 1):
@@ -269,5 +271,5 @@ for idx in range(1, N_infer / step_by + 1):
     #
     filename = gen_filename(idx)
     task = 'plotting %s' % filename
-    mc, t, out = measure_time_and_memory(task, plot, from_prior, from_posterior, filename)
+    mc, t, out = measure_time_and_memory(task, plot, from_posterior, from_prior, filename)
     pass
