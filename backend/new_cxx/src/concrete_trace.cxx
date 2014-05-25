@@ -487,9 +487,11 @@ void ConcreteTrace::freezeDirectiveID(DirectiveID did)
 
 void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
 {
+  VentureValuePtr curVal = getValue(outputNode);
   unevalFamily(this,outputNode,shared_ptr<Scaffold>(new Scaffold()),shared_ptr<DB>(new DB()));
   outputNode->isFrozen = true; // this is never looked at
-    
+  setValue(outputNode, curVal);
+
   delete outputNode->requestNode;
   for (size_t i = 0; i < outputNode->operandNodes.size(); ++i) { delete outputNode->operandNodes[i]; }
   delete outputNode->operatorNode;
