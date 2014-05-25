@@ -490,6 +490,7 @@ void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
   VentureValuePtr curVal = getValue(outputNode);
   unevalFamily(this,outputNode,shared_ptr<Scaffold>(new Scaffold()),shared_ptr<DB>(new DB()));
   outputNode->isFrozen = true; // this is never looked at
+  outputNode->exp = curVal; // Get rid of the former expression; seems harmless and should save memory (and copying)
   setValue(outputNode, curVal);
 
   delete outputNode->requestNode;
