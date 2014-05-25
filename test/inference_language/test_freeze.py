@@ -14,7 +14,7 @@ def testFreezeSanityCheck1():
   engine = ripl.sivm.core_sivm.engine
   eq_(engine.get_entropy_info()["unconstrained_random_choices"],6)
 
-  engine.getDistinguishedTrace().freeze(2)
+  ripl.freeze(2)
   eq_(engine.get_entropy_info()["unconstrained_random_choices"],1)
 
 def testFreezeSanityCheck2():
@@ -29,7 +29,7 @@ def testFreezeSanityCheck2():
   engine = ripl.sivm.core_sivm.engine
   eq_(engine.getDistinguishedTrace().numNodesInBlock(0,0),6)
 
-  engine.getDistinguishedTrace().freeze(2)
+  ripl.freeze(2)
   eq_(engine.getDistinguishedTrace().numNodesInBlock(0,0),1)
 
 
