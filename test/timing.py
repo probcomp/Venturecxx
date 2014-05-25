@@ -5,8 +5,8 @@ from nose.tools import assert_greater, assert_less
 # Checks that the runtime of the unary function f(n)() is affine in its
 # input (to wit, f(n)() takes An + B time to run, and A is decidedly
 # nonzero).
-def assertLinearTime(f, verbose=False):
-  times = timings(f, verbose=verbose)
+def assertLinearTime(f, **kwargs):
+  times = timings(f, **kwargs)
   (base_n,base_t) = times[0]
   norm_times = [(n - base_n, t - base_t) for (n,t) in times[1:]]
   # The notion is that the ratios of delta t to delta n should neither
@@ -22,8 +22,8 @@ def assertLinearTime(f, verbose=False):
 
 # Checks that the runtime of the unary function f(n)() does not depend
 # on its input.
-def assertConstantTime(f, verbose=False):
-  times = timings(f, verbose=verbose)
+def assertConstantTime(f, **kwargs):
+  times = timings(f, **kwargs)
   (base_n,base_t) = times[0]
   norm_times = [(n - base_n, t - base_t) for (n,t) in times[1:]]
   # The notion is that the ratios of delta t to delta n should neither
@@ -46,12 +46,11 @@ def assertConstantTime(f, verbose=False):
 # - the whole process doesn't take too long
 # - the produced values are useful for assessing the thunk's
 #   asymptotic runtime.
-def timings(f, verbose=False):
+def timings(f, verbose=False, acceptable_duration=10, desired_sample_ct=20):
   def try_next(n):
     return int(math.floor(min(2*n,max(1.2*n, n+5))))
   def stop(duration, sample_ct):
-    acceptable_duration = 10 # seconds
-    desired_sample_ct = 20
+    # acceptable_duration is in seconds
     if duration > acceptable_duration and sample_ct > 0.5 * desired_sample_ct:
       return True
     if duration > 0.5 * acceptable_duration and sample_ct > desired_sample_ct:
