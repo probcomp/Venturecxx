@@ -511,7 +511,7 @@ void ConcreteTrace::seekInconsistencies()
   {
     if ((*itr).second == 0)
     {
-      cout << "Warning: found family with zero requests:" << (*itr).first << (*itr).first->exp << endl;
+      cout << "Warning: found family with zero requests: " << (*itr).first << " " << (*itr).first->exp << endl;
     }
   }
 }
