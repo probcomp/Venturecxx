@@ -206,13 +206,13 @@ BlocksMap copy_blocks_map(BlocksMap m, ForwardingMap* forward)
   for(typename vector<pair<VentureValuePtr,set<Node*> > >::const_iterator itr = m.a.begin();
       itr != m.a.end(); ++itr)
   {
-    answer.a.push_back( pair<VentureValuePtr,set<Node*> >((*itr).first,
+    answer.a.push_back( pair<VentureValuePtr,set<Node*> >(copy_shared((*itr).first, forward),
                                                           copy_set((*itr).second, forward)));
   }
   for(typename MapVVPtrInt::const_iterator itr = m.d.begin();
       itr != m.d.end(); ++itr)
   {
-    answer.d[(*itr).first] = (*itr).second;
+    answer.d[copy_shared((*itr).first, forward)] = (*itr).second;
   }
   return answer;
 }

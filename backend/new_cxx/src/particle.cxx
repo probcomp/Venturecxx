@@ -3,7 +3,7 @@
 #include <boost/foreach.hpp>
 
 Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
-Particle::Particle(ConcreteTrace * outerTrace, shared_ptr<gsl_rng> rng): 
+Particle::Particle(ConcreteTrace * outerTrace, shared_ptr<RNGbox> rng):
   baseTrace(outerTrace),
   rng(rng) { }
 
@@ -150,7 +150,7 @@ void Particle::addChild(Node * node, Node * child)
 /* Primitive getters */
 gsl_rng * Particle::getRNG() 
 {
-  if (rng) { return rng.get(); }
+  if (rng) { return rng->get_rng(); }
   else { return baseTrace->getRNG(); }
 }
 
