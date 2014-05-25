@@ -424,9 +424,9 @@ double restore(Trace * trace,
   LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
 
-  if (constantNode)
+  if (constantNode || (outputNode && outputNode->isFrozen))
   {
-    trace->setValue(constantNode, constantNode->exp);
+    trace->setValue(node, node->exp);
   }
   else if (lookupNode) 
   { 
