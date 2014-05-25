@@ -24,7 +24,7 @@ vehicle_L = 0.257717
 # simulation/control
 constant_velocity = .1
 constant_steering = 0
-initial_state = (0, 0, 0)
+initial_pose = (0, 0, 0)
 gps_xy_additive_noise_std = 0.1
 gps_heading_additive_noise_std = 0.005
 # inference
@@ -41,15 +41,23 @@ gen_filename = lambda idx: base_filename + '_' + ('%04d' % idx) + '.png'
 
 
 # helpers
-def gen_gps(t):
-    true_pose = deadreckon.ix[t].reindex(['x', 'y', 'heading']).values
-    noise = (
-            random.gauss(0, gps_xy_additive_noise_std),
-            random.gauss(0, gps_xy_additive_noise_std),
-            random.gauss(0, gps_heading_additive_noise_std),
-            )
-    return (true_pose + noise).tolist()
+def gen_deadreckon(initial_pose):
+    gen_control = lambda t: (constant_velocity, constant_steering)
+    controls = map(gen_control, range(N_steps))
+    control_columns = ['Velocity', 'Steering']
+    control_frame = pandas.DataFrame(controls, columns=control_columns)
+    deadreckon = slamutils.DeadReckoning(initial_pose, control_frame)
+    return deadreckon, control_frame
+deadreckon, control_frame = gen_deadreckon(initial_pose)
 def observe_N_gps(ripl, N):
+    def gen_gps(t):
+        true_pose = deadreckon.ix[t].reindex(['x', 'y', 'heading']).values
+        noise = (
+                random.gauss(0, gps_xy_additive_noise_std),
+                random.gauss(0, gps_xy_additive_noise_std),
+                random.gauss(0, gps_heading_additive_noise_std),
+                )
+        return (true_pose + noise).tolist()
     def observe_gps(t):
         def _convert(val):
             def _convert_real(val):
@@ -92,20 +100,20 @@ def sample_from_prior(N_steps, use_mripl=True):
     ripl = gen_ripl(use_mripl)
     return predict_from_ripl(ripl, N_steps)
 #
-def _plot(samples, color='r'):
-    def _plot_run(run):
-        return pylab.plot(run[:, 0], run[:, 1], '-x', color=color, alpha=0.2)
-    def get_run_i(i):
-        return samples[:, i, :]
-    is_mripl = len(samples.shape) == 3
-    if is_mripl:
-        map(_plot_run, map(get_run_i, range(samples.shape[1])))
-        pass
-    else:
-        _plot_run(samples)
-        pass
-    return
 def plot(from_prior, from_posterior, filename=None):
+    def _plot(samples, color='r'):
+        def _plot_run(run):
+            return pylab.plot(run[:, 0], run[:, 1], '-x', color=color, alpha=0.2)
+        def get_run_i(i):
+            return samples[:, i, :]
+        is_mripl = len(samples.shape) == 3
+        if is_mripl:
+            map(_plot_run, map(get_run_i, range(samples.shape[1])))
+            pass
+        else:
+            _plot_run(samples)
+            pass
+        return
     filename = filename if filename is not None else base_filename + '.png'
     pylab.figure()
     _plot(from_prior, color='r')
@@ -122,13 +130,6 @@ def measure_time_and_memory(task, func, *args, **kwargs):
         pass
     return mc, t, out
 
-
-# generate deadreckoning (ground truth for these purposes)
-gen_control = lambda t: (constant_velocity, constant_steering)
-controls = map(gen_control, range(N_steps))
-control_columns = ['Velocity', 'Steering']
-control_frame = pandas.DataFrame(controls, columns=control_columns)
-deadreckon = slamutils.DeadReckoning(initial_state, control_frame)
 
 
 program_constants = """
