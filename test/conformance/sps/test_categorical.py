@@ -1,3 +1,5 @@
+from testconfig import config
+from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
 from nose.tools import eq_
@@ -40,12 +42,14 @@ def testCategoricalDefault1():
 @statisticalTest
 def testLogCategoricalAbsorb():
   "A simple test that checks the interface of log categorical and its simulate and log density methods"
+  if config["get_ripl"] != "puma":
+    raise SkipTest("log categorical only implemented in Puma")
   ripl = get_ripl()
 
   ripl.assume("x","(simplex (log .1) (log .9))")
   ripl.assume("y","(simplex (log .55) (log .45))")
   ripl.assume("b","(flip)",label="b")
-  ripl.observe("(categorical (if b x y) (array 10 100))","100")
+  ripl.observe("(log_categorical (if b x y) (array 10 100))","100")
 
   predictions = collectSamples(ripl,"b")
   ans = [(False,0.333),(True,0.667)]
