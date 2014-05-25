@@ -507,11 +507,12 @@ void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
 void ConcreteTrace::seekInconsistencies()
 {
   cout << "Seeking inconsistencies" << endl;
-  for(typename map<RootOfFamily, int>::const_iterator itr = numRequests.begin(); itr != numRequests.end(); ++itr)
+  typedef pair<RootOfFamily,int> countpair;
+  BOOST_FOREACH(countpair p, numRequests)
   {
-    if ((*itr).second == 0)
+    if (p.second == 0)
     {
-      cout << "Warning: found family with zero requests: " << (*itr).first << " " << (*itr).first->exp << endl;
+      cout << "Warning: found family with zero requests: " << p.first << " " << p.first->exp << endl;
     }
   }
   set<Node*> walkedNodes = allNodes();
