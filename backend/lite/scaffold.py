@@ -1,5 +1,8 @@
-from node import LookupNode, RequestNode, OutputNode
+from node import ConstantNode, LookupNode, RequestNode, OutputNode
 from value import SPRef
+from omegadb import OmegaDB
+from detach import unapplyPSP
+from regen import applyPSP
 
 class Scaffold(object):
   def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None,brush=None):
@@ -38,21 +41,110 @@ class Scaffold(object):
     print "borders: " + str(self.border)
     print "lkernels: " + str(self.lkernels)
 
-def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArgs = None):
-  cDRG,cAbsorbing,cAAA = set(),set(),set()
-  indexAssignments = {}
-  assert isinstance(setsOfPNodes,list)
-  for i in range(len(setsOfPNodes)):
-    assert isinstance(setsOfPNodes[i],set)
-    extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i)
+"""
+When subsampled_mh is called, there will exist broken deterministic relationships in the trace.
+For example, in the program:
+[assume mu (normal 0 1)]
+[assume x (lambda () (normal mu 1))]
+[observe (x) 0.1]
+[observe (x) 0.2]
+...
+N observations
+...
+After mu is updated. If a subsampled scaffold only include the first n observations,
+the lookup nodes for mu in the remaining N-n observations will have a stale value.
+At a second call to infer, these inconsistency may cause a problem.
 
-  brush = findBrush(trace,cDRG)
-  drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
-  border = findBorder(trace,drg,absorbing,aaa)
-  regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
-  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
-  borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
-  return Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
+updateValuesAtScaffold updates all the nodes in a newly constructed scaffold by
+calling updateValueAtNode for each node. The main idea is that:
+Assume all the random output nodes have the latest values and the problem is in
+the nodes with determnistic dependency on their parents.
+For every node that cannot absorb, update the value of all its parents, and then
+unapplyPSP and apply PSP. For a request node, compare its old Request with the new
+request. If they are different, unevalRequests and evalRequests to generate new
+ESRs. When a new ESR is generated, return True. Otherwise return false.
+"""
+def updateValuesAtScaffold(trace,scaffold,updatedNodes,useDeltaKernels,deltaKernelArgs):
+  # for every node in the scaffold (resampling, brush, border) update values.
+  # return true if any node gets a new value.
+  hasNewEsr = False
+  for node in scaffold.brush:
+    hasNewEsr |= updateValueAtNode(trace, node, updatedNodes,useDeltaKernels,deltaKernelArgs)
+  for node in scaffold.regenCounts.keys():
+    hasNewEsr |= updateValueAtNode(trace, node, updatedNodes,useDeltaKernels,deltaKernelArgs)
+  for borderList in scaffold.border:
+    for node in borderList:
+      hasNewEsr |= updateValueAtNode(trace, node, updatedNodes,useDeltaKernels,deltaKernelArgs)
+  return hasNewEsr
+
+def updateValueAtNode(trace, node, updatedNodes,useDeltaKernels,deltaKernelArgs):
+  # Return True if a new value is assigned.
+  if node in updatedNodes:
+    return False
+
+  hasNewEsr = False
+  if isinstance(node, ConstantNode):
+    pass
+  elif isinstance(node, LookupNode):
+    hasNewEsr |= updateValueAtNode(trace, node.sourceNode, updatedNodes,useDeltaKernels,deltaKernelArgs)
+    trace.setValueAt(node, trace.valueAt(node.sourceNode))
+  else: # Application Node.
+    psp = trace.pspAt(node)
+    canAbsorb = True
+    for parent in trace.parentsAt(node):
+      canAbsorb &= psp.canAbsorb(trace, node, parent)
+    if not canAbsorb:
+      # psp can not absorb for all the paretns
+      for parent in trace.definiteParentsAt(node):
+        hasNewEsr |= updateValueAtNode(trace, parent, updatedNodes,useDeltaKernels,deltaKernelArgs)
+
+      # Update esrParent value after update the value of the request node.
+      if isinstance(node, OutputNode):
+        for esrParent in trace.esrParentsAt(node):
+          hasNewEsr |= updateValueAtNode(trace, esrParent, updatedNodes,useDeltaKernels,deltaKernelArgs)
+
+      # Regen value.
+      scaffold = Scaffold()
+      omegaDB = OmegaDB()
+      if isinstance(node, RequestNode):
+        # FIXME: only checked the value of esrs (in string)
+        # FIXME: psp is unapplied before unevalRequests, and the args of psp may not be the same as they were used for applyPSP. Problem for AAA?
+        old_request = trace.valueAt(node)
+        old_request_str = str(old_request.esrs)
+        unapplyPSP(trace, node, scaffold, omegaDB)
+        applyPSP(trace,node,scaffold,False,omegaDB,{})
+        new_request = trace.valueAt(node)
+        new_request_str = str(new_request.esrs)
+        if old_request_str != new_request_str:
+            unevalRequests(trace, node, scaffold, omegaDB, compute_gradient)
+            evalRequests(trace,requestNode,scaffold,shouldRestore,omegaDB,gradients)
+            hasNewEsr |= True
+      else: # OutputNode
+        unapplyPSP(trace, node, scaffold, omegaDB)
+        applyPSP(trace,node,scaffold,False,omegaDB,{})
+
+  updatedNodes.add(node)
+  return hasNewEsr
+
+def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False, updatedNodes = set()):
+  while True:
+    cDRG,cAbsorbing,cAAA = set(),set(),set()
+    indexAssignments = {}
+    assert isinstance(setsOfPNodes,list)
+    for i in range(len(setsOfPNodes)):
+      assert isinstance(setsOfPNodes[i],set)
+      extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i)
+
+    brush = findBrush(trace,cDRG)
+    drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
+    border = findBorder(trace,drg,absorbing,aaa)
+    regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
+    lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
+    borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
+    scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
+    if not updateValue or not updateValuesAtScaffold(trace,scaffold,updatedNodes,useDeltaKernels,deltaKernelArgs):
+      break
+  return scaffold
 
 def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i):
   if node in absorbing: absorbing.remove(node)

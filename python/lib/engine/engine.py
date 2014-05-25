@@ -188,15 +188,17 @@ class Engine(object):
       params['with_mutation'] = True
     if 'transitions' not in params:
       params['transitions'] = 1
-    if 'useDeltaKernels' not in params:
-      params['useDeltaKernels'] = False
-    if 'deltaKernelArgs' not in params:
-      params['deltaKernelArgs'] = None
     else:
       # FIXME: Kludge. If removed, test_infer (in
       # python/test/ripl_test.py) fails, and if params are printed,
       # you'll see a float for the number of transitions
       params['transitions'] = int(params['transitions'])
+    if 'useDeltaKernels' not in params:
+      params['useDeltaKernels'] = False
+    if 'deltaKernelArgs' not in params:
+      params['deltaKernelArgs'] = None
+    if 'updateValue' not in params:
+      params['updateValue'] = False
     
     if "particles" in params:
       params["particles"] = int(params["particles"])

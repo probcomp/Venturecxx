@@ -349,14 +349,14 @@ class Trace(object):
     for _ in range(params["transitions"]):
       if params["kernel"] == "mh":
         assert params["with_mutation"]
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],useDeltaKernels=params["useDeltaKernels"],deltaKernelArgs=params["deltaKernelArgs"]),MHOperator())
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],useDeltaKernels=params["useDeltaKernels"],deltaKernelArgs=params["deltaKernelArgs"],updateValue=params["updateValue"]),MHOperator())
       elif params["kernel"] == "draw_scaffold":
         drawScaffoldKernel(self,BlockScaffoldIndexer(params["scope"],params["block"]))
       elif params["kernel"] == "draw_subsampled_scaffold":
         drawSubsampledScaffoldKernel(self,BlockScaffoldIndexer(params["scope"],params["block"]),params["scope_to_subsample"])
       elif params["kernel"] == "subsampled_mh":
         assert params["with_mutation"]
-        subsampledMixMH(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["useDeltaKernels"],params["deltaKernelArgs"]),SubsampledMHOperator(), params["Nbatch"], params["k0"], params["epsilon"])
+        subsampledMixMH(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["useDeltaKernels"],params["deltaKernelArgs"],updateValue=params["updateValue"]),SubsampledMHOperator(), params["Nbatch"], params["k0"], params["epsilon"])
       elif params["kernel"] == "subsampled_mh_make_consistent":
         assert params["with_mutation"]
         SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["useDeltaKernels"],params["deltaKernelArgs"]))
@@ -402,7 +402,7 @@ class Trace(object):
     #if params["kernel"] == "subsampled_mh" and \
     #    (params["block"] == "all" or self.numBlocksInScope(params["scope"]) == 1):
     #  # O(N) operation.
-    #  SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["useDeltaKernels"],params["deltaKernelArgs"]))
+    #  SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["useDeltaKernels"],params["deltaKernelArgs"],updateValue=params["updateValue"]))
 
   def save(self, fname, extra):
     from serialize import save_trace
