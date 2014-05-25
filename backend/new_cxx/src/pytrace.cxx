@@ -204,7 +204,7 @@ struct Inferer
 
   void inferCycle()
   {
-    for (int i = 0; i < subkernels.size(); i++)
+    for (size_t i = 0; i < subkernels.size(); i++)
     {
       subkernels[i]->infer();
     }
