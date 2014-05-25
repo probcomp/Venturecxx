@@ -518,7 +518,6 @@ set<K> keySet(map<K, V> m)
 }
 void ConcreteTrace::seekInconsistencies()
 {
-  cout << "Seeking inconsistencies" << endl;
   typedef pair<RootOfFamily,int> countpair;
   BOOST_FOREACH(countpair p, numRequests)
   {
@@ -582,6 +581,17 @@ void ConcreteTrace::seekInconsistencies()
     if (walkedNodes.count(n) < 1)
     {
       cout << "Warning: found dangling madeSPRecord entry: " << n << endl;
+    } else {
+      if (!dynamic_pointer_cast<VentureSPRef>(values[n]).get())
+      {
+        cout << "Warning: found node " << n << " with madeSPRecord entry but non-SPRef value " << values[n] << endl;
+      } else {
+        shared_ptr<VentureSPRef> spref(dynamic_pointer_cast<VentureSPRef>(values[n]));
+        if (!(spref->makerNode == n))
+        {
+          cout << "Warning: found maker node " << n << " whose value is not a self-link" << endl;
+        }
+      }
     }
   }
   BOOST_FOREACH(Node* n, keySet(values))
