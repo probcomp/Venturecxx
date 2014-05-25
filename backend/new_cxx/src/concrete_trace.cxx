@@ -504,6 +504,18 @@ void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
 
 }
 
+template <typename K, typename V>
+set<K> keySet(map<K, V> m)
+{
+  set<K> answer;
+  pair<K, V> me;
+  BOOST_FOREACH(me, m)
+  {
+    answer.insert(me.first);
+  }
+  return answer;
+
+}
 void ConcreteTrace::seekInconsistencies()
 {
   cout << "Seeking inconsistencies" << endl;
@@ -521,6 +533,69 @@ void ConcreteTrace::seekInconsistencies()
     if (values.count(n) < 1)
     {
       cout << "Warning: found node with no value: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, unconstrainedChoices)
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling unconstrainedChoice entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, constrainedChoices)
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling constrainedChoice entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, arbitraryErgodicKernels)
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling arbitraryErgodicKernel entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, keySet(unpropagatedObservations))
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling unpropagatedObservation entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, keySet(aaaMadeSPAuxs))
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling aaaMadeSPAux entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, keySet(esrRoots))
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling esrRoot entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, keySet(madeSPRecords))
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling madeSPRecord entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, keySet(values))
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling value entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, keySet(observedValues))
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling observedValue entry: " << n << endl;
     }
   }
 }
