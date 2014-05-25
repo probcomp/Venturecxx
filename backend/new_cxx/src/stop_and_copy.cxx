@@ -275,7 +275,11 @@ map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(map<K*, vector<shared_ptr<V>
   typename map<K*, vector<shared_ptr<V> > >::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
-    answer[copy_pointer((*itr).first, forward)] = copy_vector_shared((*itr).second, forward);
+    if (!((*itr).second.empty()))
+    { // Avoid inserting empty entries; their keys may be stale, and
+      // they get auto-generated if needed.
+      answer[copy_pointer((*itr).first, forward)] = copy_vector_shared((*itr).second, forward);
+    }
   }
   return answer;
 }
