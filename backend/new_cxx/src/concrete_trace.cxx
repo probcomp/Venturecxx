@@ -176,6 +176,7 @@ void ConcreteTrace::decNumRequests(RootOfFamily root)
 { 
   assert(numRequests.count(root));
   numRequests[root]--;
+  if (numRequests[root] == 0) { numRequests.erase(root); }
 }
 
 void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
