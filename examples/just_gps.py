@@ -107,6 +107,7 @@ def sample_from_prior(N_steps, use_mripl=True):
 #
 base_filename = 'vehicle_just_gps'
 gen_filename = lambda idx: base_filename + '_' + ('%04d' % idx) + '.png'
+# avconv -y -r 4 -b 1800 -i vehicle_just_gps_%4d.png movie.mp4
 def plot(from_posterior, from_prior=None, filename=None):
     def _plot(samples, color='r'):
         def _plot_run(run):
