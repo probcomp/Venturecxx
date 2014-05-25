@@ -5,8 +5,10 @@ from nose.tools import assert_greater, assert_less
 # Checks that the runtime of the unary function f(n)() is affine in its
 # input (to wit, f(n)() takes An + B time to run, and A is decidedly
 # nonzero).
-def assertLinearTime(f):
+def assertLinearTime(f, verbose=False):
   times = timings(f)
+  if verbose:
+    print times
   (base_n,base_t) = times[0]
   norm_times = [(n - base_n, t - base_t) for (n,t) in times[1:]]
   # The notion is that the ratios of delta t to delta n should neither
@@ -22,8 +24,10 @@ def assertLinearTime(f):
 
 # Checks that the runtime of the unary function f(n)() does not depend
 # on its input.
-def assertConstantTime(f):
+def assertConstantTime(f, verbose=False):
   times = timings(f)
+  if verbose:
+    print times
   (base_n,base_t) = times[0]
   norm_times = [(n - base_n, t - base_t) for (n,t) in times[1:]]
   # The notion is that the ratios of delta t to delta n should neither
@@ -92,8 +96,10 @@ def min_measurable_input(f):
 
 
 ################# Temporary Hacks
-def assertNLogNTime(f,slack=2):
+def assertNLogNTime(f, slack=2, verbose=False):
   times = timings(f)
+  if verbose:
+    print times
   while times[0][0] <= 1:
     # This case would cause the below to throw a divide by zero
     times = times[1:]
