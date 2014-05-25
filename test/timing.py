@@ -51,9 +51,10 @@ def timings(f, verbose=False):
     return int(math.floor(min(2*n,max(1.2*n, n+5))))
   def stop(duration, sample_ct):
     acceptable_duration = 10 # seconds
-    if duration > acceptable_duration and sample_ct > 10:
+    desired_sample_ct = 20
+    if duration > acceptable_duration and sample_ct > 0.5 * desired_sample_ct:
       return True
-    if duration > 0.5 * acceptable_duration and sample_ct > 20:
+    if duration > 0.5 * acceptable_duration and sample_ct > desired_sample_ct:
       return True
     return False
   start_time = time.clock()
