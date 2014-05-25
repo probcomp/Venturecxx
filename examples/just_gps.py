@@ -49,21 +49,26 @@ def gen_gps(t):
             random.gauss(0, gps_heading_additive_noise_std),
             )
     return (true_pose + noise).tolist()
-def observe_gps(ripl, t):
-    def _convert(val):
-        def _convert_real(val):
-            return {"type":"real","value":val}
-        def _convert_list(val):
-            return {"type":"vector","value":map(_convert, val)}
-        is_list = isinstance(val, (list, tuple))
-        return _convert_list(val) if is_list else _convert_real(val)
-    _simulate_gps_str = simulate_gps_str % t
-    converted = _convert(gen_gps(t))
-    return ripl.observe(_simulate_gps_str, converted)
 def observe_N_gps(ripl, N):
-    _observe_gps = functools.partial(observe_gps, ripl)
-    map(_observe_gps, range(1, N))
-    return
+    def observe_gps(t):
+        def _convert(val):
+            def _convert_real(val):
+                return {"type":"real","value":val}
+            def _convert_list(val):
+                return {"type":"vector","value":map(_convert, val)}
+            is_list = isinstance(val, (list, tuple))
+            return _convert_list(val) if is_list else _convert_real(val)
+        _simulate_gps_str = simulate_gps_str % t
+        converted = _convert(gen_gps(t))
+        return ripl.observe(_simulate_gps_str, converted)
+    return map(observe_gps, range(1, N))
+def observe_N_control(ripl, N):
+    def observe_control(i):
+        ripl.observe('(get_control_i %s 0)' % i, constant_velocity)
+        ripl.observe('(get_control_i %s 1)' % i, constant_steering)
+        ripl.observe('(dt %s)' % i, .25)
+        pass
+    return map(observe_control, range(1, N))
 def gen_infer_str(N_particles, N_infer):
     hypers = '(mh hypers one 3)'
     state = '(pgibbs state ordered %s 1)' % N_particles
@@ -216,8 +221,11 @@ mc, t, from_prior = measure_time_and_memory(task, sample_from_prior, N_steps, us
 task = 'posterior ripl setup'
 mc, t, posterior_ripl = measure_time_and_memory(task, gen_ripl, use_mripl)
 #
-task = 'posterior ripl observes'
+task = 'posterior ripl gps observes'
 mc, t, out = measure_time_and_memory(task, observe_N_gps, posterior_ripl, N_steps)
+#
+task = 'posterior ripl control observes'
+mc, t, out = measure_time_and_memory(task, observe_N_control, posterior_ripl, N_steps)
 #
 task = 'posterior predict_from_ripl before infer'
 mc, t, from_posterior = measure_time_and_memory(task, predict_from_ripl, posterior_ripl, N_steps)
