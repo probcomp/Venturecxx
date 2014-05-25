@@ -124,10 +124,13 @@ def plot(from_posterior, from_prior=None, filename=None):
         return
     filename = filename if filename is not None else base_filename + '.png'
     pylab.figure()
-    _plot(from_posterior, color='g')
     if from_prior is not None:
+        pylab.subplot(211)
         _plot(from_prior, color='r')
+        _plot(from_posterior, color='g')
+        pylab.subplot(212)
         pass
+    _plot(from_posterior, color='g')
     pylab.savefig(filename)
     pylab.close()
     return
