@@ -72,6 +72,11 @@ void PyTrace::bindInGlobalEnv(const string& sym, DirectiveID did)
   trace->globalEnvironment->addBinding(sym,trace->families[did].get());
 }
 
+void PyTrace::unbindInGlobalEnv(const string& sym)
+{
+  trace->globalEnvironment->removeBinding(sym);
+}
+
 boost::python::object PyTrace::extractPythonValue(DirectiveID did)
 {
   assert(trace->families.count(did));
@@ -358,6 +363,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("eval", &PyTrace::evalExpression)
     .def("uneval", &PyTrace::unevalDirectiveID)
     .def("bindInGlobalEnv", &PyTrace::bindInGlobalEnv)
+    .def("unbindInGlobalEnv", &PyTrace::unbindInGlobalEnv)
     .def("extractValue", &PyTrace::extractPythonValue)
     .def("set_seed", &PyTrace::setSeed)
     .def("get_seed", &PyTrace::getSeed)

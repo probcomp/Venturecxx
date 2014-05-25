@@ -19,6 +19,12 @@ class VentureEnvironment(VentureValue):
     assert not sym in self.frame
     self.frame[sym] = val
 
+  def removeBinding(self,sym):
+    assert isinstance(sym, str)
+    if sym in self.frame: del self.frame[sym]
+    elif not self.outerEnv: raise Exception("Cannot unbind unbound symbol %s" % sym)
+    else: self.outerEnv.removeBinding(sym)
+
   def findSymbol(self,sym):
     if sym in self.frame: return self.frame[sym]
     elif not self.outerEnv: raise Exception("Cannot find symbol %s" % sym)

@@ -90,13 +90,10 @@ class Engine(object):
       raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
                              argument="directive_id", directive_id=directiveId)
     directive = self.directives[directiveId]
-    if directive[0] == "assume":
-      raise VentureException("invalid_argument", "Cannot forget an ASSUME directive",
-                             argument="directive_id", directive_id=directiveId)
-
     for trace in self.traces:
       if directive[0] == "observe": trace.unobserve(directiveId)
       trace.uneval(directiveId)
+      if directive[0] == "assume": trace.unbindInGlobalEnv(directive[1])
 
     del self.directives[directiveId]
 

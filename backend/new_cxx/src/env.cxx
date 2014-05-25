@@ -29,6 +29,21 @@ void VentureEnvironment::addBinding(const string& sym, Node * node)
   frame[sym] = node;
 }
 
+void VentureEnvironment::removeBinding(const string& sym)
+{
+  if (frame.count(sym))
+  {
+    frame.erase(sym);
+  } else if (outerEnv.get() == NULL)
+  {
+    throw "Cannot unbind unbound symbol '" + sym + "'";
+  }
+  else
+  {
+    return outerEnv->removeBinding(sym);
+  }
+}
+
 Node * VentureEnvironment::lookupSymbol(shared_ptr<VentureSymbol> sym)
 {
   return lookupSymbol(sym->s);

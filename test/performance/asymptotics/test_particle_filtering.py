@@ -25,8 +25,10 @@ def testHMMParticleAsymptotics1():
         if m > 0:
           ripl.freeze("st%s" % (m-1))
           ripl.forget("obs%d" % (m-1))
+        if m > 1:
+          ripl.forget("st%s" % (m-2))
         ripl.infer("(resample %s)" % num_particles)
 
     return do_filter
 
-  timing.assertLinearTime(particulate)
+  timing.assertLinearTime(particulate, verbose=True, acceptable_duration=300, desired_sample_ct=40)

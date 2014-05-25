@@ -190,7 +190,7 @@ void ConcreteTrace::removeChild(Node * node, Node * child)
 gsl_rng * ConcreteTrace::getRNG() { return rng->get_rng(); }
 
 VentureValuePtr ConcreteTrace::getValue(Node * node) 
-{ 
+{
   assert(values[node]); 
   return values[node]; 
 }
