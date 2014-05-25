@@ -130,14 +130,12 @@ program_constants = """
 
 [assume vehicle_params (list %s %s %s %s)]
 
-[assume constant_control (list %s %s)]
-
 """ % (
         vehicle_a, vehicle_b, vehicle_h, vehicle_L,
-        constant_velocity, constant_steering,
+        #constant_velocity, constant_steering,
         )
 
-program_assumes = """
+program_hypers = """
 
 [assume fractional_xy_error_std (scope_include (quote hypers)
                                                0
@@ -155,6 +153,39 @@ program_assumes = """
                                                   3
                                                   (gamma 1.0 100.0))]
 
+"""
+
+program_control_generation = """
+
+[assume dt (scope_include (quote state) -1
+  (mem (lambda (i) (uniform_continuous 0 100))))]
+
+[assume get_ith_timestamp (mem (lambda (i)
+  (if (= i 0) 0
+              (+ (get_ith_timestamp (- i 1)) (dt i)))))]
+
+[assume get_more_recent_index (lambda (t i)
+  (if (> (get_ith_timestamp i) t) i
+                                  (get_more_recent_index t (+ i 1))))]
+
+[assume get_last_index_at_t (lambda (t) (- (get_more_recent_index t 0) 1))]
+
+[assume get_control_i (scope_include (quote state) -2
+  (mem (lambda (i coord)
+    (if (= coord 0)
+        (gamma 1 1)
+        (gamma 1 100)
+        ))))]
+
+[assume get_control_at_t (lambda (t)
+  (list (get_control_i (get_last_index_at_t t) 0)
+        (get_control_i (get_last_index_at_t t) 1)
+        ))]
+
+"""
+
+program_assumes = """
+
 [assume initial_pose (scope_include (quote state) 0 (list (uniform_continuous -1 1)
                                                           (uniform_continuous -1 1)
                                                           (uniform_continuous -1 1)))]
@@ -163,7 +194,7 @@ program_assumes = """
   (if (= t 0) initial_pose
               (scope_include (quote state) t (simulate_motion 1
                                              (get_pose (- t 1))
-                                             constant_control
+                                             (get_control_at_t t)
                                              vehicle_params
                                              fractional_xy_error_std
                                              fractional_heading_error_std
@@ -173,7 +204,7 @@ program_assumes = """
 
 """
 
-program = program_constants + program_assumes
+program = program_constants + program_hypers + program_control_generation + program_assumes
 
 
 # ripl with NO observes
