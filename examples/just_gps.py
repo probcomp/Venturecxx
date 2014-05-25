@@ -49,21 +49,21 @@ def gen_gps(t):
             random.gauss(0, gps_heading_additive_noise_std),
             )
     return (true_pose + noise).tolist()
-def _convert_real(val):
-    return {"type":"real","value":val}
-def _convert_list(val):
-    return {"type":"vector","value":map(_convert, val)}
-def _convert(val):
-    is_list = isinstance(val, (list, tuple))
-    val = _convert_list(val) if is_list else _convert_real(val)
-    return val
-_observe_gps = lambda ripl, t: \
-        ripl.observe(simulate_gps_str % t, _convert(gen_gps(t)))
+def observe_gps(ripl, t):
+    def _convert(val):
+        def _convert_real(val):
+            return {"type":"real","value":val}
+        def _convert_list(val):
+            return {"type":"vector","value":map(_convert, val)}
+        is_list = isinstance(val, (list, tuple))
+        return _convert_list(val) if is_list else _convert_real(val)
+    _simulate_gps_str = simulate_gps_str % t
+    converted = _convert(gen_gps(t))
+    return ripl.observe(_simulate_gps_str, converted)
 def observe_N_gps(ripl, N):
-    observe_gps = functools.partial(_observe_gps, ripl)
-    map(observe_gps, range(1, N))
+    _observe_gps = functools.partial(observe_gps, ripl)
+    map(_observe_gps, range(1, N))
     return
-_predict_pose = lambda ripl, x: ripl.predict('(get_pose %s)' % x)
 def gen_infer_str(N_particles, N_infer):
     hypers = '(mh hypers one 3)'
     state = '(pgibbs state ordered %s 1)' % N_particles
@@ -81,25 +81,23 @@ def gen_ripl(use_mripl):
     ripl.execute_program(program)
     return ripl
 def predict_from_ripl(ripl, N_steps):
-    predict_pose = functools.partial(_predict_pose, ripl)
+    predict_pose = lambda x: ripl.predict('(get_pose %s)' % x)
     return numpy.array(map(predict_pose, range(N_steps)))
 def sample_from_prior(N_steps, use_mripl=True):
     ripl = gen_ripl(use_mripl)
     return predict_from_ripl(ripl, N_steps)
 #
-def _plot_run(run, color):
-    pylab.plot(run[:, 0], run[:, 1], '-x', color=color, alpha=0.2)
-    pass
 def _plot(samples, color='r'):
+    def _plot_run(run):
+        return pylab.plot(run[:, 0], run[:, 1], '-x', color=color, alpha=0.2)
+    def get_run_i(i):
+        return samples[:, i, :]
     is_mripl = len(samples.shape) == 3
     if is_mripl:
-        for run_idx in range(samples.shape[1]):
-            run = samples[:, run_idx, :]
-            _plot_run(run, color)
-            pass
+        map(_plot_run, range(samples.shape[1]))
         pass
     else:
-        _plot_run(samples, color)
+        _plot_run(samples)
         pass
     return
 def plot(from_prior, from_posterior, filename=None):
