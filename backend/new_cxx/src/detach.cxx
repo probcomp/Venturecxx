@@ -150,7 +150,10 @@ double unevalFamily(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaff
   ConstantNode * constantNode = dynamic_cast<ConstantNode*>(node);
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
 
-  if (constantNode) { }
+  if (constantNode)
+  {
+    trace->clearValue(constantNode);
+  }
   else if (lookupNode)
   {
     trace->disconnectLookup(lookupNode);

@@ -424,7 +424,10 @@ double restore(Trace * trace,
   LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
 
-  if (constantNode) {  }
+  if (constantNode)
+  {
+    trace->setValue(constantNode, constantNode->exp);
+  }
   else if (lookupNode) 
   { 
     weight += regenParents(trace,lookupNode,scaffold,true,db,gradients);
