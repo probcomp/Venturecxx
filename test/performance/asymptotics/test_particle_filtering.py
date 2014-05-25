@@ -21,9 +21,10 @@ def testHMMParticleAsymptotics1():
           ripl.assume("state_0", "(normal 0.0 1.0)", label="st0")
         else:
           ripl.assume("state_%d" % m, "(normal state_%d 1.0)" % (m-1), label="st%s" % m)
-        ripl.observe("(normal state_%d 1.0)" % m, newValue)
+        ripl.observe("(normal state_%d 1.0)" % m, newValue, label="obs%d" % m)
         if m > 0:
           ripl.freeze("st%s" % (m-1))
+          ripl.forget("obs%d" % (m-1))
         ripl.infer("(resample %s)" % num_particles)
 
     return do_filter
