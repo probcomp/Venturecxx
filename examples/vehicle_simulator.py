@@ -97,9 +97,6 @@ if __name__ == '__main__':
     base_dir = '/home/dlovell/Desktop/PPAML/CP1-Quad-Rotor/data/automobile/'
     dirname = os.path.join(base_dir, dataset_name, 'data', 'noisy')
     #
-    program = '[assume var 1]'
-    N_mripls=2
-    backend='puma'
-    N_infer=3
-    simulator = create_vehicle_simulator(dirname, program, N_mripls, backend,
-            N_infer, N_timesteps=10)
+    import vehicle_program as vp
+    simulator = create_vehicle_simulator(dirname, vp.program, vp.N_mripls,
+            vp.backend, vp.N_infer, N_timesteps=10)
