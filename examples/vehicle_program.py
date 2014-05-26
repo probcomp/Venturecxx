@@ -55,7 +55,7 @@ program_control_generation = """
 
 [assume steering_mean (scope_include (quote (control))
                                      5
-                                     (gamma 1.0 100.0))]
+                                     (normal 0 .1))]
 
 [assume steering_std (scope_include (quote (control))
                                     6
