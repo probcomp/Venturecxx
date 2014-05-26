@@ -60,7 +60,7 @@ class Trace(object):
     assert not scope == "default" or len(self.scopes[scope][block]) == 1
 
   def unregisterRandomChoice(self,node):
-    assert node in self.rcs
+    assert node in self.rcs, "Most likely attempting to constrain a non-random choice; check observes relevant for node: " + node.describe(self)
     self.rcs.remove(node)
     self.unregisterRandomChoiceInScope("default",node,node)
 
