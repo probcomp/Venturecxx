@@ -16,9 +16,9 @@ backend = 'puma'
 N_infer = 5
 N_steps = 4000
 #
-simulate_gps_str = '(simulate_gps (get_pose %s) %s %s)' % ('%s',
+simulate_gps_str = '(simulate_gps (get_pose_at_t %s) %s %s)' % ('%s',
         gps_xy_additive_noise_std, gps_heading_additive_noise_std)
-sample_pose_str = '(get_pose %s)'
+sample_pose_str = '(get_pose_at_t %s)'
 
 
 program_constants = """
@@ -100,11 +100,11 @@ program_assumes = """
                                                           (uniform_continuous -1 1)
                                                           (uniform_continuous -1 1)))]
 
-[assume get_pose (mem (lambda (t)
+[assume get_pose_at_t (mem (lambda (t)
   (if (<= t 0) initial_pose
               (scope_include (quote state) t (simulate_motion
                                              (get_dt_since_last_control t)
-                                             (get_pose (get_last_control_t_at_t t))
+                                             (get_pose_at_t (get_last_control_t_at_t t))
                                              (get_control_at_t t)
                                              vehicle_params
                                              fractional_xy_error_std
