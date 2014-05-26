@@ -61,12 +61,12 @@ program_control_generation = """
                                     6
                                     (gamma 1.0 100.0))]
 
-[assume dt (scope_include (quote state) -1
+[assume get_dt_i (scope_include (quote state) -1
   (mem (lambda (i) (uniform_continuous 0 100))))]
 
 [assume get_ith_timestamp (mem (lambda (i)
   (if (= i 0) 0
-              (+ (get_ith_timestamp (- i 1)) (dt i)))))]
+              (+ (get_ith_timestamp (- i 1)) (get_dt_i i)))))]
 
 [assume get_more_recent_index (lambda (t i)
   (if (> (get_ith_timestamp i) t) i

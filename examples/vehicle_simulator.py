@@ -49,7 +49,7 @@ def create_control_observes(control_frame):
         return [
                 ('(get_control_i %s 0)' % i, control_xs.Velocity),
                 ('(get_control_i %s 1)' % i, control_xs.Steering),
-                ('(dt %s)' % i, dt),
+                ('(get_dt_i %s)' % i, dt),
                 ]
     dts = numpy.diff(list(control_frame.index))
     return [
