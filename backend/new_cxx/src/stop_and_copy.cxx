@@ -47,7 +47,7 @@ void*& ForwardingMap::operator[] (const void* k)
   return pointers[k];
 }
 
-PyTrace* PyTrace::stop_and_copy()
+PyTrace* PyTrace::stop_and_copy() const
 {
   assert(!this->continuous_inference_running);
   assert(!this->continuous_inference_thread);
@@ -56,7 +56,7 @@ PyTrace* PyTrace::stop_and_copy()
   return answer;
 }
 
-shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy()
+shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy() const
 {
   ForwardingMap forward = ForwardingMap();
   return this->copy_help(&forward);
@@ -288,7 +288,7 @@ map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(const map<K*, vector<shared_
 |* Concrete Traces                                                   *|
 \*********************************************************************/
 
-shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap* forward)
+shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap* forward) const
 {
   shared_ptr<ConcreteTrace> answer = shared_ptr<ConcreteTrace>(new ConcreteTrace);
   answer->globalEnvironment = copy_shared(this->globalEnvironment, forward);

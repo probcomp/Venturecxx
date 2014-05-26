@@ -52,7 +52,7 @@ struct PyTrace
 
   void freeze(DirectiveID did);
 
-  PyTrace* stop_and_copy();
+  PyTrace* stop_and_copy() const;
 private:
   shared_ptr<ConcreteTrace> trace;
   

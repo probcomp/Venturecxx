@@ -131,8 +131,8 @@ struct ConcreteTrace : Trace
   void registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux);
   shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode);
 
-  shared_ptr<ConcreteTrace> stop_and_copy();
-  shared_ptr<ConcreteTrace> copy_help(ForwardingMap* forward);
+  shared_ptr<ConcreteTrace> stop_and_copy() const;
+  shared_ptr<ConcreteTrace> copy_help(ForwardingMap* forward) const;
 
   void seekInconsistencies();
 
