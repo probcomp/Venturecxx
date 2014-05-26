@@ -15,8 +15,10 @@ N_particles = 16
 backend = 'puma'
 N_infer = 5
 N_steps = 4000
+#
 simulate_gps_str = '(simulate_gps (get_pose %s) %s %s)' % ('%s',
         gps_xy_additive_noise_std, gps_heading_additive_noise_std)
+sample_pose_str = '(get_pose %s)'
 
 
 program_constants = """

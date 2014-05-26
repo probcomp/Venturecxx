@@ -5,6 +5,7 @@ import numpy
 import pandas
 #
 from simulator import Simulator
+import vehicle_program as vp
 
 
 def read_frame(filename, dirname='', index_col=None, colname_map=None):
@@ -36,8 +37,7 @@ def create_gps_observes(gps_frame):
         return _convert_list(val) if is_list else _convert_real(val)
     def gps_xs_to_observe_tuple(gps_xs):
         time_as_float = gps_xs.name
-        observe_str = '(simulate_gps (get_pose %s) %s %s)'
-        observe_str %= (time_as_float, .1, .1)
+        observe_str = vp.simulate_gps_str % time_as_float
         observe_val = (gps_xs.x, gps_xs.y, gps_xs.heading)
         observe_val = _convert(observe_val)
         return ((observe_str, observe_val), )
@@ -58,7 +58,7 @@ def create_control_observes(control_frame):
             ]
 
 def create_sample_strs(ts):
-    create_sample_str = lambda t: ('(get_pose %s)' % t,)
+    create_sample_str = lambda t: (vp.sample_pose_str % t,)
     return map(create_sample_str, ts)
 
 def create_observe_sample_strs_lists(gps_frame, control_frame, N_timesteps=None):
@@ -96,6 +96,6 @@ if __name__ == '__main__':
     base_dir = '/home/dlovell/Desktop/PPAML/CP1-Quad-Rotor/data/automobile/'
     dirname = os.path.join(base_dir, dataset_name, 'data', 'noisy')
     #
-    import vehicle_program as vp
     simulator = create_vehicle_simulator(dirname, vp.program, vp.N_mripls,
             vp.backend, vp.N_infer, N_timesteps=10)
+    # simulator.step()
