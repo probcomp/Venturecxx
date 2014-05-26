@@ -1,8 +1,10 @@
 import math
 import numpy as np
+import numpy.random as npr
 
 from sp import VentureSP, SPType
-from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP
+from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP, RandomPSP
+import value
 
 import discrete
 import dirichlet
@@ -104,6 +106,102 @@ def type_test(t):
 def grad_times(args, direction):
   assert len(args) == 2, "Gradient only available for binary multiply"
   return [direction*args[1], direction*args[0]]
+
+class SimulateLaserPSP(RandomPSP):
+
+    def get_normals(self, pose, slam_map, range_noise, intensity_noise):
+        # returns ([(mu_range_0, sig_range_0), ..., (mu_range_k, sig_range_k)],
+        #          [(mu_intensity_0, sig_intensity_0), ...])
+                   
+        # suitable for sampling as well as density evaluation
+        def distance(x1, y1, x2, y2):
+            return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+
+        def reading(landmark, pose, theta):
+            for j in range(100):
+                dist = float(j) / 100.0
+                x = dist * math.cos(theta) + pose[0]
+                y = dist * math.sin(theta) + pose[1]
+                if distance(landmark[0], landmark[1], x, y) < 0.05: #we have a hit
+                    return dist
+            return 1.0
+        
+        def get_intersection_range(landmark, pose, theta, landmark_radius=0.5, lidar_max_range=0.4):
+          """
+          Check if the given landmark intersects with the given pose. If yes, returns the distance.
+          If no, returns None.
+          """
+          
+          d_x = landmark[0] - pose[0]
+          d_y = landmark[1] - pose[1]
+          angle = pose[2] + theta
+          
+          l = d_x * np.cos(theta) + d_y * np.sin(theta)
+          n = d_x * -1 * np.sin(theta) + d_y * np.cos(theta)
+          
+          if n > landmark_radius:
+            return None
+
+          if l - np.sqrt(landmark_radius ** 2 - n ** 2) < lidar_max_range:
+            # we have an intersection
+            # FIXME: could do math to localize more precisely; for now we just use the raw distance
+            # if circles are small enough (or laser is noisy enough) this will not cause a problem
+            return np.sqrt( d_x ** 2 + d_y ** 2)
+          
+        ranges = []
+        intensities = []
+        out = (ranges, intensities)
+        
+        for i in range(360):
+          theta = (2.0 * math.pi * float(i) / 360.0) + pose[2]
+          mu_range = 100.0
+          mu_intensity = 0.0
+          for landmark in slam_map:
+            dist = get_intersection_range(landmark, pose, theta)
+
+            # alternative to get_intersection_range; too slow, but useful as a test case
+            #dist = reading(landmark, pose, theta)
+
+            # FIXME: adjust to use real threshold from actual problem
+            if dist < 0:
+              dist = 1.0
+
+            ranges.append((dist, range_noise))
+            if dist < 1.0:
+              intensities.append((1.0, intensity_noise))
+            else:
+              intensities.append((0.0, intensity_noise))
+              
+        return out
+        
+    def __parse_args__(self, args):
+        return (args.operandValues[0], args.operandValues[1], args.operandValues[2], args.operandValues[3])
+
+    def simulate(self, args):
+        (pose, slam_map, range_noise, intensity_noise) = self.__parse_args__(args)
+        (ranges, intensities) = self.get_normals(pose, slam_map, range_noise, intensity_noise)
+        
+        out = []
+        for (r, i) in zip(ranges, intensities):
+            out.append((npr.normal(r[0], r[1]), npr.normal(i[0], i[1])))
+            
+        return out
+
+    def logDensity(self, x, args):
+        (pose, slam_map, range_noise, intensity_noise) = self.__parse_args__(args)
+        (ranges, intensities) = self.get_normals(pose, slam_map, range_noise, intensity_noise)
+
+        def log_normal_density(x, mu, sigma):
+            return np.log( 1.0 / (sigma * np.sqrt(2 * np.pi)) * np.exp( - (x - mu)**2 / (2 * sigma**2) ) )
+
+        out = 0.0
+        for (r, i, obs) in zip(ranges, intensities, x):
+            obs_r = obs[0]
+            obs_i = obs[1]
+            out += log_normal_density(obs_r, r[0], r[1])
+            out += log_normal_density(obs_i, i[0], i[1])
+        
+        return out
 
 def builtInSPsList():
   return [ [ "add",  naryNum(lambda *args: sum(args),
@@ -269,6 +367,13 @@ def builtInSPsList():
                                   SPType([], v.MatrixType())) ],
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.NumberType()], v.NumberType())) ],
+           [ "simulate_laser",                 typed_nr(SimulateLaserPSP(),
+                         [value.HomogeneousListType(value.NumberType()), #pose is (x y theta)
+                          value.HomogeneousListType(value.HomogeneousListType(value.NumberType())), #map is ((x1 y1) (x2 y2) ...)
+                          value.NumberType(), #range noise
+                          value.NumberType()], #intensity noise
+                         value.HomogeneousListType(value.HomogeneousListType(value.NumberType())) ) ] #((range intensity) ...))
+
   ]
 
 def builtInSPs():
