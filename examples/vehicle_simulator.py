@@ -58,8 +58,8 @@ def create_control_observes(control_frame):
             ]
 
 def create_sample_strs(ts):
-    get_sample_str = lambda t: '(get_pose %s)' % t
-    return map(get_sample_str, ts)
+    create_sample_str = lambda t: ('(get_pose %s)' % t,)
+    return map(create_sample_str, ts)
 
 def create_observe_sample_strs_lists(gps_frame, control_frame, N_timesteps=None):
     def interleave_observes(*args):
