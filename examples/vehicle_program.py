@@ -6,9 +6,6 @@ vehicle_b = 0.0500507
 vehicle_h = 0
 vehicle_L = 0.257717
 # simulation/control
-constant_velocity = .1
-constant_steering = 0
-initial_pose = (0, 0, 0)
 gps_xy_additive_noise_std = 0.1
 gps_heading_additive_noise_std = 0.005
 # inference
