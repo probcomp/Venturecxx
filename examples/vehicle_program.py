@@ -89,6 +89,9 @@ program_control_generation = """
 [assume get_last_control_t_at_t (lambda (t)
   (get_ith_timestamp (get_last_index_at_t t)))]
 
+[assume get_dt_since_last_control (lambda (t)
+  (- t (get_ith_timestamp (get_last_index_at_t t))))]
+
 """
 
 program_assumes = """
@@ -99,7 +102,8 @@ program_assumes = """
 
 [assume get_pose (mem (lambda (t)
   (if (= t 0) initial_pose
-              (scope_include (quote state) t (simulate_motion 1
+              (scope_include (quote state) t (simulate_motion
+                                             (get_dt_since_last_control t)
                                              (get_pose (get_last_control_t_at_t t))
                                              (get_control_at_t t)
                                              vehicle_params
