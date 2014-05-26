@@ -39,7 +39,7 @@ class Simulator(object):
 
     def _infer(self, N_infer):
         hypers = '(mh hypers one %s)' % N_infer
-        state = '(mh state all %s)' % N_infer
+        state = '(mh state one %s)' % N_infer
         #
         print "infering: %s" % hypers
         self.mripl.infer(hypers)
