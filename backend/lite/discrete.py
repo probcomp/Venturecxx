@@ -23,7 +23,7 @@ class FlipOutputPSP(DiscretePSP):
     if val: return extendedLog(p)
     else: return extendedLog(1 - p)
 
-  def enumerateValues(self,args):
+  def enumerateValues(self,args): 
     p = args.operandValues[0] if args.operandValues else 0.5
     if p == 1: return [True]
     elif p == 0: return [False]

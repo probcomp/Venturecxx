@@ -479,7 +479,7 @@ class MAPOperator(InPlaceOperator):
     for _ in range(self.steps):
       xs = [x + dx*self.epsilon for (x,dx) in zip(xs, dxs)]
       dxs = grad(xs)
-      print xs
+      print dxs
     return xs
 
 #### Hamiltonian Monte Carlo

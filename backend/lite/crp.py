@@ -60,7 +60,10 @@ class CRPOutputPSP(RandomPSP):
   # def gradientOfLogDensity(self, value, args):
   #   aux = args.spaux
   #   if index in aux.tableCounts:
-      
+  def enumerateValues(self,args):
+    aux = args.spaux
+    curr = aux.tableCounts.keys()
+    return curr+[len(curr)+1]
 
   def incorporate(self,index,args):
     aux = args.spaux
