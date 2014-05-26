@@ -36,9 +36,8 @@ def create_gps_observes(gps_frame):
         return _convert_list(val) if is_list else _convert_real(val)
     def gps_xs_to_observe_tuple(gps_xs):
         time_as_float = gps_xs.name
-        # FIXME: inject gps noise values
-        observe_str = '(simulate_gps (get_pose %s) %s %s)' % (time_as_float, .1,
-                .1)
+        observe_str = '(simulate_gps (get_pose %s) %s %s)'
+        observe_str %= (time_as_float, .1, .1)
         observe_val = (gps_xs.x, gps_xs.y, gps_xs.heading)
         observe_val = _convert(observe_val)
         return ((observe_str, observe_val), )
