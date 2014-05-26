@@ -98,4 +98,7 @@ if __name__ == '__main__':
     #
     simulator = create_vehicle_simulator(dirname, vp.program, vp.N_mripls,
             vp.backend, vp.N_infer, N_timesteps=10)
-    # simulator.step()
+    simulator.step()
+    simulator.step()
+    simulator.step()
+    simulator.step()
