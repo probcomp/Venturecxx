@@ -16,9 +16,9 @@ backend = 'puma'
 N_infer = 5
 N_steps = 4000
 #
-simulate_gps_str = '(simulate_gps (get_pose_at_t %s) %s %s)' % ('%s',
-        gps_xy_additive_noise_std, gps_heading_additive_noise_std)
-sample_pose_str = '(get_pose_at_t %s)'
+simulate_gps_substitution = ('%s', gps_xy_additive_noise_std, gps_heading_additive_noise_std)
+simulate_gps_str = '(simulate_gps (get_pose_i %s) %s %s)' % simulate_gps_substitution
+sample_pose_str = '(get_pose_i %s)'
 
 
 program_constants = """
@@ -61,36 +61,19 @@ program_control_generation = """
                                     6
                                     (gamma 1.0 100.0))]
 
-[assume get_dt_i (scope_include (quote state) -1
-  (mem (lambda (i) (uniform_continuous 0 100))))]
+[assume get_dt_i (mem (lambda (i) (uniform_continuous 0 100))]
 
-[assume get_ith_timestamp (mem (lambda (i)
-  (if (= i 0) 0
-              (+ (get_ith_timestamp (- i 1)) (get_dt_i i)))))]
-
-[assume get_more_recent_index (lambda (t i)
-  (if (> (get_ith_timestamp i) t) i
-                                  (get_more_recent_index t (+ i 1))))]
-
-[assume get_last_index_at_t (lambda (t) (- (get_more_recent_index t 0) 1))]
-
-[assume get_control_i (scope_include (quote state) -2
+[assume _get_control_i (scope_include (quote state) 1000002
   (mem (lambda (i coord)
     (if (= coord 0)
         (gamma 1.0 velocity_gamma_rate)
         (normal steering_mean steering_std)
         ))))]
 
-[assume get_control_at_t (lambda (t)
-  (list (get_control_i (get_last_index_at_t t) 0)
-        (get_control_i (get_last_index_at_t t) 1)
+[assume get_control_i (lambda (t)
+  (list (_get_control_i i 0)
+        (_get_control_i i 1)
         ))]
-
-[assume get_last_control_t_at_t (lambda (t)
-  (get_ith_timestamp (get_last_index_at_t t)))]
-
-[assume get_dt_since_last_control (lambda (t)
-  (- t (get_ith_timestamp (get_last_index_at_t t))))]
 
 """
 
@@ -100,18 +83,17 @@ program_assumes = """
                                                           (uniform_continuous -1 1)
                                                           (uniform_continuous -1 1)))]
 
-[assume get_pose_at_t (mem (lambda (t)
-  (if (<= t 0) initial_pose
-              (scope_include (quote state) t (simulate_motion
-                                             (get_dt_since_last_control t)
-                                             (get_pose_at_t (get_last_control_t_at_t t))
-                                             (get_control_at_t t)
-                                             vehicle_params
-                                             fractional_xy_error_std
-                                             fractional_heading_error_std
-                                             additive_xy_error_std
-                                             additive_heading_error_std
-                                             )))))]
+[assume get_pose_i (mem (lambda (i)
+  (if (= i 0) initial_pose
+              (scope_include (quote state) i (simulate_motion (get_dt_i (- i 1))
+                                                              (get_pose_i (- i 1))
+                                                              (get_control_i (- i 1))
+                                                              vehicle_params
+                                                              fractional_xy_error_std
+                                                              fractional_heading_error_std
+                                                              additive_xy_error_std
+                                                              additive_heading_error_std
+                                                              )))))]
 
 """
 
