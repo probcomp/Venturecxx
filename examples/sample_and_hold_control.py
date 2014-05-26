@@ -122,12 +122,15 @@ to_predict = get_predicts(N_steps)
 
 ripl = make_puma_church_prime_ripl()
 ripl.execute_program(program)
-predicted = map(predict, to_predict)
-map(print_predicted, zip(to_predict, predicted))
-print
-map(lambda x: ripl.observe(*x), to_observe)
-N_infer = 20
-ripl.infer('(mh default all %s)' % N_infer)
-predicted = map(predict, to_predict)
-map(print_predicted, zip(to_predict, predicted))
-print
+pre_predicted = []
+post_predicted = []
+for step_i, (_to_observe, _to_predict) in enumerate(zip(to_observe, to_predict)):
+    pre_predicted.append(predict(_to_predict))
+    print_predicted((_to_predict, pre_predicted[-1]))
+    ripl.observe(*_to_observe)
+    N_infer = 5
+    ripl.infer('(mh default all %s)' % N_infer)
+    post_predicted.append(predict(_to_predict))
+    print_predicted((_to_predict, post_predicted[-1]))
+    print
+    pass
