@@ -34,8 +34,6 @@ N_particles = 16
 backend = 'puma'
 N_infer = 5
 N_steps = 4000
-simulate_gps_str = '(simulate_gps (get_pose %s) %s %s)' % ('%s',
-        gps_xy_additive_noise_std, gps_heading_additive_noise_std)
 
 
 # helpers
@@ -64,16 +62,26 @@ def observe_N_gps(ripl, N):
                 return {"type":"vector","value":map(_convert, val)}
             is_list = isinstance(val, (list, tuple))
             return _convert_list(val) if is_list else _convert_real(val)
-        _simulate_gps_str = simulate_gps_str % t
-        converted = _convert(gen_gps(t))
-        return ripl.observe(_simulate_gps_str, converted)
+        simulate_gps_str = '(simulate_gps (get_pose %s) %s %s)'
+        simulate_gps_str %= (t, gps_xy_additive_noise_std,
+                gps_heading_additive_noise_std)
+        def observe(observe_str, observe_val):
+            print 'observing (%s, %s)' % (observe_str, observe_val)
+            return ripl.observe(observe_str, _convert(observe_val))
+        observe_val = gen_gps(t)
+        return observe(simulate_gps_str, observe_val)
     return map(observe_gps, range(1, N))
 def observe_N_control(ripl, N):
+    def observe((observe_str, observe_val)):
+        print 'observing (%s, %s)' % (observe_str, observe_val)
+        return ripl.observe(observe_str, observe_val)
     def observe_control(i):
-        ripl.observe('(get_control_i %s 0)' % i, constant_velocity)
-        ripl.observe('(get_control_i %s 1)' % i, constant_steering)
-        ripl.observe('(dt %s)' % i, .25)
-        pass
+        observe_tuples = [
+                ('(get_control_i %s 0)' % i, constant_velocity),
+                ('(get_control_i %s 1)' % i, constant_steering),
+                ('(dt %s)' % i, .25),
+                ]
+        return map(observe, observe_tuples)
     return map(observe_control, range(1, N))
 def gen_infer_str(N_particles, N_infer, only=None):
     hypers = '(mh hypers one 3)'
