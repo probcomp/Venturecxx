@@ -3,10 +3,10 @@
 
 struct ForwardingMap
 {
-  map<void*, void*> pointers;
-  map<void*, shared_ptr<void> > shared_ptrs;
-  size_t count(void* k) const;
-  void*& operator[] (void* k);
+  map<const void*, void*> pointers;
+  map<const void*, shared_ptr<void> > shared_ptrs;
+  size_t count(const void* k) const;
+  void*& operator[] (const void* k);
 };
 
 #endif

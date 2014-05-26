@@ -99,7 +99,7 @@ struct VentureValue
   virtual bool operator<(const VentureValuePtr & rhs) const;
   virtual bool ltSameType(const VentureValuePtr & rhs) const;
 
-  virtual VentureValue* copy_help(ForwardingMap* m) { return this; }
+  virtual VentureValue* copy_help(ForwardingMap* m) const { return const_cast<VentureValue*>(this); }
 
   virtual ~VentureValue() {}
 };
