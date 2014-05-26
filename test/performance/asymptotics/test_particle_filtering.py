@@ -1,3 +1,5 @@
+from testconfig import config
+from nose import SkipTest
 from venture.test.config import get_ripl
 import venture.test.timing as timing
 import scipy.stats
@@ -9,6 +11,8 @@ from nose.plugins.attrib import attr
 
 @attr('slow')
 def testHMMParticleAsymptotics1():
+  if config["get_ripl"] != "puma":
+    raise SkipTest("freeze only implemented in Puma")
   num_particles = 5
   def particulate(num_steps):
     ripl = get_ripl()

@@ -10,7 +10,7 @@
 struct BetaBernoulliSPAux : SPAux
 {
   BetaBernoulliSPAux(): heads(0), tails(0) {}
-  SPAux* copy_help(ForwardingMap* m);
+  SPAux* copy_help(ForwardingMap* m) const;
 
   int heads;
   int tails;
@@ -43,7 +43,7 @@ private:
 struct UBetaBernoulliSPAux : BetaBernoulliSPAux
 {
   UBetaBernoulliSPAux(double p): BetaBernoulliSPAux(), p(p) {}
-  SPAux* copy_help(ForwardingMap* m);
+  SPAux* copy_help(ForwardingMap* m) const;
 
   double p;
 };
