@@ -33,6 +33,7 @@ class Simulator(object):
         return observe_str, sample_str
 
     def _observe(self, observe_strs):
+        print 'observing: %s' % observe_strs
         _observe_datum = functools.partial(observe_datum, self.mripl)
         return map(_observe_datum, observe_strs)
 
@@ -42,6 +43,7 @@ class Simulator(object):
 
     def _sample(self, sample_strs):
         munge_sample = lambda sample: reduce(operator.add, zip(*sample))
+        print 'sampling: %s' % sample_strs
         raw_samples = map(self.mripl.sample, sample_strs)
         samples = map(munge_sample, raw_samples)
         return samples
