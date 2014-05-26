@@ -51,11 +51,13 @@ def create_control_observes(control_frame):
                 ('(get_control_i %s 1)' % i, control_xs.Steering),
                 ('(get_dt_i %s)' % i, dt),
                 ]
-    dts = numpy.diff(list(control_frame.index))
-    return [
+    first_dt = control_frame.index[0]
+    dts = numpy.append([first_dt], numpy.diff(list(control_frame.index)))
+    ret_list = [
             (t, single_control_to_observe_tuples(dt, i, control_xs))
             for (i, (dt, (t, control_xs))) in enumerate(zip(dts, control_frame.iterrows()))
             ]
+    return ret_list
 
 def create_sample_strs(ts):
     create_sample_str = lambda t: (vp.sample_pose_str % t,)
