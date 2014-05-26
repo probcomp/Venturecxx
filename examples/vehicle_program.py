@@ -101,7 +101,7 @@ program_assumes = """
                                                           (uniform_continuous -1 1)))]
 
 [assume get_pose (mem (lambda (t)
-  (if (= t 0) initial_pose
+  (if (<= t 0) initial_pose
               (scope_include (quote state) t (simulate_motion
                                              (get_dt_since_last_control t)
                                              (get_pose (get_last_control_t_at_t t))
