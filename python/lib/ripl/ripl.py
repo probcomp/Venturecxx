@@ -199,7 +199,7 @@ class Ripl():
         elif isinstance(expr, numbers.Number):
             return {'type':'number', 'value':expr}
         else:
-            raise Exception("Unknown partially parsed expression type %s" % expr)
+            raise Exception("Unknown partially parsed expression type %s" % str(expr))
 
     def _ensure_parsed_number(self, number):
         if isinstance(number, numbers.Number):
