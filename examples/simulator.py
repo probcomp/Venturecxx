@@ -5,6 +5,7 @@ from venture.venturemagics.ip_parallel import MRipl
 
 
 class Simulator(object):
+    # where to run diagnostics?
     def __init__(self, program, observe_strs_list, sample_strs_list,
             N_mripls, backend, N_infer):
         self.observe_strs_list = observe_strs_list
