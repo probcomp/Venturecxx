@@ -286,7 +286,7 @@ class Trace(object):
     (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),OmegaDB(),{})
 
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
-  def unbindInGlobalEnv(self,sym,id): self.globalEnv.removeBinding(sym)
+  def unbindInGlobalEnv(self,sym): self.globalEnv.removeBinding(sym)
 
   def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
 
