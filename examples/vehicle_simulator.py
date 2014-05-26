@@ -87,15 +87,20 @@ def create_vehicle_simulator(dirname, program, N_mripls, backend,
     return simulator
 
 if __name__ == '__main__':
+    base_dir = '/home/dlovell/Desktop/PPAML/CP1-Quad-Rotor/data/automobile/'
     import argparse
     parser = argparse.ArgumentParser()
+    parser.add_argument('--base_dir', type=str, default=base_dir)
     parser.add_argument('--dataset_name', type=str, default='5_eight')
+    parser.add_argument('--ground', action='store_true')
     args = parser.parse_args()
-    #
+    base_dir = args.base_dir
     dataset_name = args.dataset_name
-    base_dir = '/home/dlovell/Desktop/PPAML/CP1-Quad-Rotor/data/automobile/'
-    dirname = os.path.join(base_dir, dataset_name, 'data', 'noisy')
+    use_noisy = not args.ground
+    which_data = 'noisy' if use_noisy else 'ground'
     #
+    dirname = os.path.join(base_dir, dataset_name, 'data', which_data)
+    import pdb; pdb.set_trace()
     simulator = create_vehicle_simulator(dirname, vp.program, vp.N_mripls,
             vp.backend, vp.N_infer, N_timesteps=10)
     simulator.step()
