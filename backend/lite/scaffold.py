@@ -64,6 +64,8 @@ unapplyPSP and apply PSP. For a request node, compare its old Request with the n
 request. If they are different, unevalRequests and evalRequests to generate new
 ESRs. When a new ESR is generated, return True. Otherwise return false.
 """
+#FIXME(Yutian): At regen phase in proposal, value should also be updated. This will
+#involve changing the regen method.
 def updateValuesAtScaffold(trace,scaffold,updatedNodes,useDeltaKernels,deltaKernelArgs):
   # for every node in the scaffold (resampling, brush, border) update values.
   # return true if any node gets a new value.
