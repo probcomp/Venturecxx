@@ -29,6 +29,11 @@ class Node(object):
   @abstractmethod
   def definiteParents(self): pass
 
+  def describe(self, trace): 
+    """
+    Use node.describe(trace) to produce potentially useful Python values that can identify the content (and perhaps also location) of nodes for error reporting.
+    """
+    return ""
   # for serialization
   cyclic = True
 
@@ -93,6 +98,7 @@ class OutputNode(ApplicationNode):
   def definiteParents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]
   def parents(self): return self.definiteParents() + self.esrParents
 
+  def describe(self, trace): return "OutputPSP: " + str(self.operatorNode.value.asStackDict(trace))
 
 class Args(object):
   def __init__(self,trace,node):

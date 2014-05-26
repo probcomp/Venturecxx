@@ -13,7 +13,7 @@ class CSPRequestPSP(DeterministicPSP):
     self.env = env
 
   def simulate(self,args):
-    assert len(self.ids) == len(args.operandNodes)
+    assert len(self.ids) == len(args.operandNodes), "Invalid number of arguments for application of compound with body " + str(self.exp)
     extendedEnv = VentureEnvironment(self.env,self.ids,args.operandNodes)
     return Request([ESR(args.node,self.exp,extendedEnv)])
 
