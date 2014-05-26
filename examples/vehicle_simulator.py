@@ -104,7 +104,8 @@ if __name__ == '__main__':
     dirname = os.path.join(base_dir, dataset_name, 'data', which_data)
     simulator = create_vehicle_simulator(dirname, vp.program, vp.N_mripls,
             vp.backend, vp.N_infer, N_timesteps=10)
-    print simulator.step()
-    print simulator.step()
-    print simulator.step()
-    print simulator.step()
+    for _i in range(4):
+        print _i
+        print simulator.step()
+        pass
+    pass
