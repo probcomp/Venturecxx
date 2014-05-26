@@ -38,7 +38,17 @@ class Simulator(object):
         return map(_observe_datum, observe_strs)
 
     def _infer(self, N_infer):
-        self.mripl.infer(N_infer)
+        hypers = '(mh hypers one %s)' % N_infer
+        state = '(mh state all %s)' % N_infer
+        #
+        print "infering: %s" % hypers
+        self.mripl.infer(hypers)
+        print "done infering: %s" % hypers
+        #
+        print "infering: %s" % state
+        self.mripl.infer(state)
+        print "done infering: %s" % state
+        # self.mripl.infer(N_infer)
         pass
 
     def _sample(self, sample_strs):
