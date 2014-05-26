@@ -100,15 +100,18 @@ import operator
 N_steps = 30
 def get_predicts(N_steps):
     return reduce(operator.add, map(create_venture_strs, range(N_steps)))
+dts = [.1, .1, 1, .5, .2] + [.1] * N_steps
 def create_observes(i):
     venture_strs = create_venture_strs(i)
-    dt = .1
+    dt = dts[i]
     velocity = 1
+    steering = 0
+    gps_obs = (sum(dts[:i])*velocity, 0, 0)
     return [
             (venture_strs[0], dt),
             (venture_strs[1], velocity),
-            (venture_strs[2], 0),
-            (venture_strs[3], _wrap((i*dt*velocity, 0, 0))),
+            (venture_strs[2], steering),
+            (venture_strs[3], _wrap(gps_obs)),
             ]
 def get_observes(N_steps):
     return reduce(operator.add, map(create_observes, range(N_steps)))
