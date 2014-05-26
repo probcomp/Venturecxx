@@ -100,7 +100,6 @@ if __name__ == '__main__':
     which_data = 'noisy' if use_noisy else 'ground'
     #
     dirname = os.path.join(base_dir, dataset_name, 'data', which_data)
-    import pdb; pdb.set_trace()
     simulator = create_vehicle_simulator(dirname, vp.program, vp.N_mripls,
             vp.backend, vp.N_infer, N_timesteps=10)
     simulator.step()
