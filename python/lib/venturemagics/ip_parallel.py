@@ -178,7 +178,7 @@ class MRipl():
            Mripl id, used as index into the mripls list on the remote engines.
            We need this because the mripls list will store ripls for multiple
            distinct Mripls. 
-       no_transitions : int
+       total_transitions : int
            Records number of inference transitions. Won't record transitions
            specified via mr_map_proc and mr_map_array. 
         '''
@@ -436,7 +436,7 @@ class MRipl():
                 pass
             return val
         # print 'MRipl.observe(%s, %s)' % tuple(map(str, [exp, val]))
-        val = _wrap(val)
+        # val = _wrap(val)
         local_out = [r.observe(exp,val,label=label) for r in self.local_ripls]
         
         @interactive
