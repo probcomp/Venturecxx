@@ -23,6 +23,7 @@ using std::flush;
 
 struct VentureValue;
 struct Node;
+struct ForwardingMap;
 
 typedef int DirectiveID;
 typedef shared_ptr<VentureValue> VentureValuePtr;

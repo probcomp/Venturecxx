@@ -14,6 +14,8 @@ using persistent::PSet;
 struct ConcreteTrace : Trace
 {
   ConcreteTrace();
+  void initialize();
+  ~ConcreteTrace();
 
   /* Registering metadata */
   void registerAEKernel(Node * node);
@@ -95,7 +97,8 @@ struct ConcreteTrace : Trace
   bool containsMadeSPFamily(Node * makerNode, FamilyID id);
   RootOfFamily getMadeSPFamilyRoot(Node * makerNode, FamilyID id);
 
-
+  void freezeDirectiveID(DirectiveID did);
+  void freezeOutputNode(OutputNode * outputNode);
 
   /* New in ConcreteTrace */
 
@@ -142,7 +145,7 @@ struct ConcreteTrace : Trace
 
   map<DirectiveID,RootOfFamily> families;
 
-  VentureValuePtrMap<SamplableMap<set<Node*> > > scopes;
+  ScopesMap scopes;
 
   map<Node*, vector<RootOfFamily> > esrRoots;
   map<RootOfFamily, int> numRequests;
@@ -151,6 +154,10 @@ struct ConcreteTrace : Trace
   map<Node*,VentureValuePtr> values;
   map<Node*,VentureValuePtr> observedValues;
 
+  set<shared_ptr<Node> > builtInNodes; // hack for simple garbage collection
+
+  shared_ptr<ConcreteTrace> stop_and_copy();
+  shared_ptr<ConcreteTrace> copy_help(ForwardingMap* forward);
 };
 
 #endif

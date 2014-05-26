@@ -12,10 +12,13 @@
 #include "math.h"
 
 #include <time.h>
+#include <boost/foreach.hpp>
 
 /* Constructor */
 
-ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937))
+ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937)) {}
+
+void ConcreteTrace::initialize()
 {
   gsl_rng_set (rng,time(NULL));
 
@@ -33,6 +36,7 @@ ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937))
     ConstantNode * node = createConstantNode(iter->second);
     syms.push_back(sym);
     nodes.push_back(node);
+    builtInNodes.insert(shared_ptr<Node>(node));
   }
 
   for (map<string,SP *>::iterator iter = builtInSPs.begin();
@@ -45,6 +49,7 @@ ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937))
     assert(dynamic_pointer_cast<VentureSPRef>(getValue(node)));
     syms.push_back(sym);
     nodes.push_back(node);
+    builtInNodes.insert(shared_ptr<Node>(node));
   }
 
   globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(shared_ptr<VentureEnvironment>(),syms,nodes));
@@ -364,7 +369,11 @@ vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope)
 
 set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block) 
 { 
-  assert(scopes[scope].contains(block));
+  if(!scopes[scope].contains(block))
+  {
+    throw "scope " + scope->toString() + " does not contain block " + block->toString();
+  }
+  
   set<Node * > nodes = scopes[scope].get(block);
   if (dynamic_pointer_cast<VentureSymbol>(scope) && scope->getSymbol() == "default") { return nodes; }
   set<Node *> pnodes;
@@ -382,10 +391,10 @@ void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
   if (!outputNode) { return; }
   shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
-  if (psp->isRandom()) { pnodes.insert(outputNode); }
+  if (psp->isRandom() && !isConstrained(outputNode)) { pnodes.insert(outputNode); }
   RequestNode * requestNode = outputNode->requestNode;
   shared_ptr<PSP> requestPSP = getMadeSP(getOperatorSPMakerNode(requestNode))->getPSP(requestNode);
-  if (requestPSP->isRandom()) { pnodes.insert(requestNode); }
+  if (requestPSP->isRandom() && !isConstrained(requestNode)) { pnodes.insert(requestNode); }
 
   const vector<ESR>& esrs = getValue(requestNode)->getESRs();
   Node * makerNode = getOperatorSPMakerNode(requestNode);
@@ -462,3 +471,29 @@ bool ConcreteTrace::hasAAAMadeSPAux(OutputNode * makerNode) { return aaaMadeSPAu
 void ConcreteTrace::discardAAAMadeSPAux(OutputNode * makerNode) { assert(aaaMadeSPAuxs.count(makerNode)); aaaMadeSPAuxs.erase(makerNode); }
 void ConcreteTrace::registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux) { aaaMadeSPAuxs[makerNode] = spAux; }
 shared_ptr<SPAux> ConcreteTrace::getAAAMadeSPAux(OutputNode * makerNode) { return aaaMadeSPAuxs[makerNode]; }
+
+
+void ConcreteTrace::freezeDirectiveID(DirectiveID did)
+{
+  RootOfFamily root = families[did];
+  OutputNode * outputNode = dynamic_cast<OutputNode*>(root.get());
+  assert(outputNode);
+  freezeOutputNode(outputNode);
+}
+
+void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
+{
+  unevalFamily(this,outputNode,shared_ptr<Scaffold>(new Scaffold()),shared_ptr<DB>(new DB()));
+  outputNode->isFrozen = true; // this is never looked at
+    
+  delete outputNode->requestNode;
+  for (size_t i = 0; i < outputNode->operandNodes.size(); ++i) { delete outputNode->operandNodes[i]; }
+  delete outputNode->operatorNode;
+
+  outputNode->requestNode = NULL;
+  outputNode->operandNodes.clear();
+  outputNode->operatorNode = NULL;
+
+}
+
+ConcreteTrace::~ConcreteTrace() { gsl_rng_free(rng); }

@@ -49,6 +49,9 @@ struct PyTrace
   void start_continuous_inference(boost::python::dict params);
   void stop_continuous_inference();
 
+  void freeze(DirectiveID did);
+
+  PyTrace* stop_and_copy();
 private:
   shared_ptr<ConcreteTrace> trace;
   

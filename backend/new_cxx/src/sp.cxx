@@ -2,6 +2,7 @@
 #include "node.h"
 #include "psp.h"
 #include "concrete_trace.h"
+#include "stop-and-copy.h"
 
 bool SPFamilies::containsFamily(FamilyID id)  { return families.count(id); }
 RootOfFamily SPFamilies::getRootOfFamily(FamilyID id) 
@@ -20,6 +21,12 @@ void SPFamilies::unregisterFamily(FamilyID id)
 {
   assert(families.count(id));
   families.erase(id);
+}
+
+shared_ptr<SPAux> SPAux::clone()
+{
+  ForwardingMap m = ForwardingMap();
+  return shared_ptr<SPAux>(this->copy_help(&m));
 }
 
 shared_ptr<LatentDB> SP::constructLatentDB() const { return shared_ptr<LatentDB>(); }

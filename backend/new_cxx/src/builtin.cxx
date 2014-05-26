@@ -69,6 +69,7 @@ map<string,SP*> initBuiltInSPs()
   m["student_t"] = new SP(new NullRequestPSP(), new StudentTPSP());
   m["chi_sq"] = new SP(new NullRequestPSP(), new ChiSquaredPSP());
   m["inv_chi_sq"] = new SP(new NullRequestPSP(), new InvChiSquaredPSP());
+  m["approx_binomial"] = new SP(new NullRequestPSP(), new ApproximateBinomialPSP());
 
   m["multivariate_normal"] = new SP(new NullRequestPSP(), new MVNormalPSP());
 
@@ -120,6 +121,7 @@ map<string,SP*> initBuiltInSPs()
   m["array"] = new SP(new NullRequestPSP(), new ArrayOutputPSP());
   m["prepend"] = new SP(new NullRequestPSP(), new PrependOutputPSP());
   m["append"] = new SP(new NullRequestPSP(), new AppendOutputPSP());
+  m["concat"] = new SP(new NullRequestPSP(), new ConcatOutputPSP());
   m["is_array"] = new SP(new NullRequestPSP(), new IsArrayOutputPSP());
   m["pair"] = new SP(new NullRequestPSP(), new PairOutputPSP());
   m["is_pair"] = new SP(new NullRequestPSP(), new IsPairOutputPSP());

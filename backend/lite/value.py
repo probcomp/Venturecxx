@@ -32,6 +32,7 @@ class VentureValue(object):
   def getMatrix(self): raise VentureTypeError("Cannot convert %s to matrix" % type(self))
   def getSymmetricMatrix(self): raise VentureTypeError("Cannot convert %s to symmetric matrix" % type(self))
   def getSP(self): raise VentureTypeError("Cannot convert %s to sp" % type(self))
+  def getForeignBlob(self): raise VentureTypeError("Cannot convert %s to foreign blob" % type(self))
   def getEnvironment(self): raise VentureTypeError("Cannot convert %s to environment" % type(self))
 
   # Some Venture value types form a natural vector space over reals,
@@ -572,6 +573,16 @@ class VentureSymmetricMatrix(VentureMatrix):
 def matrixIsSymmetric(matrix):
   return np.allclose(matrix.transpose(), matrix)
 
+class VentureForeignBlob(VentureValue):
+  # TODO Think about the interaction of foreign blobs with trace
+  # copying and serialization
+  def __init__(self, datum): self.datum = datum
+  def asStackDict(self, _trace):
+    return {"type":"blob", "value":self.datum}
+  @staticmethod
+  def fromStackDict(thing): return VentureForeignBlob(thing["value"])
+  def getForeignBlob(self): return self.datum
+
 @serialize.register
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
@@ -596,12 +607,14 @@ stackable_types = {
   "atom": VentureAtom,
   "boolean": VentureBool,
   "symbol": VentureSymbol,
-  "vector": VentureArray, # TODO Or should this be a linked list?  Should there be an array type?
+  "vector": VentureArray,
+  "array": VentureArray,
   "list": VentureArray, # TODO Or should this be a linked list?  Should there be an array type?
   "simplex": VentureSimplex,
   "dict": VentureDict,
   "matrix": VentureMatrix,
   "SP": SPRef, # As opposed to VentureSP?
+  "blob": VentureForeignBlob,
   }
 
 def registerVentureType(t, name = None):
@@ -642,7 +655,7 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Count", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
+for typestring in ["Count", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix", "ForeignBlob"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))

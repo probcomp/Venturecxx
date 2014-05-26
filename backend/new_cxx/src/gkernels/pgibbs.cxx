@@ -64,30 +64,30 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
     {
       vector<boost::thread*> threads(numNewParticles);
       for (size_t p = 0; p < numNewParticles; ++p)
-	{
-	  workers[p] = shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
-	  boost::function<void()> th_func = boost::bind(&PGibbsWorker::doPGibbsInitial,workers[p],trace);
-	  threads[p] = new boost::thread(th_func);
-	}
+        {
+          workers[p] = shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
+          boost::function<void()> th_func = boost::bind(&PGibbsWorker::doPGibbsInitial,workers[p],trace);
+          threads[p] = new boost::thread(th_func);
+        }
       for (size_t p = 0; p < numNewParticles; ++p) 
-	{ 
-	  threads[p]->join(); 
-	  particles[p] = workers[p]->particle;
-	  particleWeights[p] = workers[p]->weight;
+        { 
+          threads[p]->join(); 
+          particles[p] = workers[p]->particle;
+          particleWeights[p] = workers[p]->weight;
 
-	  delete threads[p];
-	}
+          delete threads[p];
+        }
     }
   else 
     { 
       for (size_t p = 0; p < numNewParticles; ++p)
-	{
-	  workers[p] = shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
-	  workers[p]->doPGibbsInitial(trace);
-	  particles[p] = workers[p]->particle;
-	  particleWeights[p] = workers[p]->weight;
+        {
+          workers[p] = shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
+          workers[p]->doPGibbsInitial(trace);
+          particles[p] = workers[p]->particle;
+          particleWeights[p] = workers[p]->weight;
 
-	}
+        }
     }
   particles[numNewParticles] = shared_ptr<Particle>(new Particle(trace));
   particleWeights[numNewParticles] =
@@ -104,35 +104,42 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
       vector<double> sums = computePartialSums(mapExpUptoMultConstant(particleWeights));
 
       if (inParallel)
-	{
-	  vector<boost::thread*> threads(numNewParticles);
-	  for (size_t p = 0; p < numNewParticles; ++p)
-	    {
-	      workers[p] = shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
-	      boost::function<void()> th_func = boost::bind(&PGibbsWorker::doPGibbsPropagate,workers[p],particles,sums,trace->getRNG(),borderGroup);
-	      threads[p] = new boost::thread(th_func);
-	    }
-	  for (size_t p = 0; p < numNewParticles; ++p) 
-	    { 
-	      threads[p]->join();
-	      newParticles[p] = workers[p]->particle;
-	      newParticleWeights[p] = workers[p]->weight;
-	      delete threads[p];
-	    }
-	}
+        {
+          vector<boost::thread*> threads(numNewParticles);
+          for (size_t p = 0; p < numNewParticles; ++p)
+            {
+              workers[p] = shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
+              boost::function<void()> th_func = boost::bind(&PGibbsWorker::doPGibbsPropagate,workers[p],particles,sums,trace->getRNG(),borderGroup);
+              threads[p] = new boost::thread(th_func);
+            }
+          
+          newParticles[numNewParticles] = shared_ptr<Particle>(new Particle(particles[numNewParticles]));
+          newParticleWeights[numNewParticles] =
+            regenAndAttach(newParticles[numNewParticles].get(),scaffold->border[borderGroup],scaffold,true,rhoDBs[borderGroup],nullGradients);
+
+          
+          for (size_t p = 0; p < numNewParticles; ++p) 
+            { 
+              threads[p]->join();
+              newParticles[p] = workers[p]->particle;
+              newParticleWeights[p] = workers[p]->weight;
+              delete threads[p];
+            }
+        }
       else 
-	{ 
-	  for (size_t p = 0; p < numNewParticles; ++p)
-	    {
-	      workers[p] = shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
-	      workers[p]->doPGibbsPropagate(particles,sums,trace->getRNG(),borderGroup);
-	      newParticles[p] = workers[p]->particle;
-	      newParticleWeights[p] = workers[p]->weight;
-	    }
-	}
-      newParticles[numNewParticles] = shared_ptr<Particle>(new Particle(particles[numNewParticles]));
-      newParticleWeights[numNewParticles] =
-	regenAndAttach(newParticles[numNewParticles].get(),scaffold->border[borderGroup],scaffold,true,rhoDBs[borderGroup],nullGradients);
+        { 
+          for (size_t p = 0; p < numNewParticles; ++p)
+            {
+              workers[p] = shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
+              workers[p]->doPGibbsPropagate(particles,sums,trace->getRNG(),borderGroup);
+              newParticles[p] = workers[p]->particle;
+              newParticleWeights[p] = workers[p]->weight;
+            }
+            
+            newParticles[numNewParticles] = shared_ptr<Particle>(new Particle(particles[numNewParticles]));
+            newParticleWeights[numNewParticles] =
+              regenAndAttach(newParticles[numNewParticles].get(),scaffold->border[borderGroup],scaffold,true,rhoDBs[borderGroup],nullGradients);
+        }
       // assert_almost_equal(newParticleWeights[P],rhoWeights[t])
 
       particles = newParticles;
