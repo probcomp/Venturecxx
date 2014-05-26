@@ -97,7 +97,7 @@ def create_venture_strs(i):
             ('(get_pose_i %s)' % i),
             ]
 import operator
-N_steps = 30
+N_steps = 10
 def get_predicts(N_steps):
     return reduce(operator.add, map(create_venture_strs, range(N_steps)))
 dts = [.1, .1, 1, .5, .2] + [.1] * N_steps
@@ -126,7 +126,8 @@ predicted = map(predict, to_predict)
 map(print_predicted, zip(to_predict, predicted))
 print
 map(lambda x: ripl.observe(*x), to_observe)
-ripl.infer('(mh default all 4)')
+N_infer = 20
+ripl.infer('(mh default all %s)' % N_infer)
 predicted = map(predict, to_predict)
 map(print_predicted, zip(to_predict, predicted))
 print
