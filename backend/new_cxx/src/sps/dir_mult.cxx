@@ -441,5 +441,5 @@ void UCDirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> ar
 }
 
 // Aux clones
-SPAux* DirMultSPAux::copy_help(ForwardingMap* m) { return new DirMultSPAux(*this); }
-SPAux* UCDirMultSPAux::copy_help(ForwardingMap* m) { return new UCDirMultSPAux(*this); }
+SPAux* DirMultSPAux::copy_help(ForwardingMap* m) const { return new DirMultSPAux(*this); }
+SPAux* UCDirMultSPAux::copy_help(ForwardingMap* m) const { return new UCDirMultSPAux(*this); }
