@@ -6,9 +6,6 @@ vehicle_b = 0.0500507
 vehicle_h = 0
 vehicle_L = 0.257717
 # simulation/control
-constant_velocity = .1
-constant_steering = 0
-initial_pose = (0, 0, 0)
 gps_xy_additive_noise_std = 0.1
 gps_heading_additive_noise_std = 0.005
 # inference
@@ -18,8 +15,10 @@ N_particles = 16
 backend = 'puma'
 N_infer = 5
 N_steps = 4000
+#
 simulate_gps_str = '(simulate_gps (get_pose %s) %s %s)' % ('%s',
         gps_xy_additive_noise_std, gps_heading_additive_noise_std)
+sample_pose_str = '(get_pose %s)'
 
 
 program_constants = """
@@ -56,7 +55,7 @@ program_control_generation = """
 
 [assume steering_mean (scope_include (quote (control))
                                      5
-                                     (gamma 1.0 100.0))]
+                                     (normal 0 .1))]
 
 [assume steering_std (scope_include (quote (control))
                                     6
@@ -87,6 +86,12 @@ program_control_generation = """
         (get_control_i (get_last_index_at_t t) 1)
         ))]
 
+[assume get_last_control_t_at_t (lambda (t)
+  (get_ith_timestamp (get_last_index_at_t t)))]
+
+[assume get_dt_since_last_control (lambda (t)
+  (- t (get_ith_timestamp (get_last_index_at_t t))))]
+
 """
 
 program_assumes = """
@@ -97,8 +102,9 @@ program_assumes = """
 
 [assume get_pose (mem (lambda (t)
   (if (= t 0) initial_pose
-              (scope_include (quote state) t (simulate_motion 1
-                                             (get_pose (- t 1))
+              (scope_include (quote state) t (simulate_motion
+                                             (get_dt_since_last_control t)
+                                             (get_pose (get_last_control_t_at_t t))
                                              (get_control_at_t t)
                                              vehicle_params
                                              fractional_xy_error_std
