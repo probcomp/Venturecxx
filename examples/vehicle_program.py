@@ -19,6 +19,7 @@ N_steps = 4000
 simulate_gps_substitution = ('%s', gps_xy_additive_noise_std, gps_heading_additive_noise_std)
 simulate_gps_str = '(simulate_gps (get_pose_i %s) %s %s)' % simulate_gps_substitution
 sample_pose_str = '(get_pose_i %s)'
+sample_dt_str = '(get_dt_i %s)'
 get_control_str = '(_get_control_i %s %s)'
 infer_hypers_str = '(mh hypers one %s)' % N_infer
 infer_state_str = '(mh state one %s)' % N_infer
