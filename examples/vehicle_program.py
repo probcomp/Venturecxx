@@ -56,7 +56,6 @@ def get_assume(string, value):
     return '[assume %s %s]' % (string, value)
 def do_assume(ripl, string, value):
     program = get_assume(string, value)
-    print program
     return ripl.execute_program(program)
 def do_assume_dt(ripl, i, dt):
     string = dt_name_str % i
