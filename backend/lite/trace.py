@@ -410,8 +410,12 @@ class Trace(object):
       random.seed(seed)
       numpy.random.seed(seed)
 
+  def getDirectiveLogScore(self,id):
+    assert id in self.families
+    node = self.families[id]
+    return self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node))
+
   def getGlobalLogScore(self):
-    # TODO Get the constrained nodes too
     return sum([self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node)) for node in self.rcs.union(self.ccs)])
 
   #### Helpers (shouldn't be class methods)

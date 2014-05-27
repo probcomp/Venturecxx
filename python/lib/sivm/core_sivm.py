@@ -157,16 +157,10 @@ class CoreSivm(object):
         return {}
 
     def _do_get_logscore(self,instruction):
-        #TODO: this implementation is a phony
-        # it has the same args + state requirements as report,
-        # so that code was copy/pasted here just to verify
-        # that the directive exists for testing purposes
         utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_nonnegative_integer)
-        if did not in self.observe_dict:
-            val = self.engine.report_value(did)
-        return {"logscore":0}
+        return {"logscore":self.engine.get_logscore(did)}
 
     def _do_get_global_logscore(self,_):
         utils.require_state(self.state,'default')

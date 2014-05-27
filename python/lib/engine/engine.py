@@ -209,6 +209,7 @@ class Engine(object):
       for p in params['subkernels']:
         self.set_default_params(p)
   
+  def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
 
   def get_entropy_info(self):

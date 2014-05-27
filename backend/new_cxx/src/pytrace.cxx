@@ -95,6 +95,22 @@ size_t PyTrace::getSeed() {
   return 0;
 }
 
+// TODO Should getDirectiveLogScore compute something about all the
+// nodes in the family or just the top one?
+double PyTrace::getDirectiveLogScore(DirectiveID did)
+{
+  assert(trace->families.count(did));
+  RootOfFamily root = trace->families[did];
+  ApplicationNode * node = dynamic_cast<ApplicationNode*>(root.get());
+  if (node != NULL)
+  {
+    shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
+    shared_ptr<Args> args = trace->getArgs(node);
+    return psp->logDensity(trace->getValue(node),args);
+  } else {
+    return 0; // Is zero really the right logscore for non-application directives?
+  }
+}
 
 double PyTrace::getGlobalLogScore() 
 {
@@ -368,6 +384,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("set_seed", &PyTrace::setSeed)
     .def("get_seed", &PyTrace::getSeed)
     .def("numRandomChoices", &PyTrace::numUnconstrainedChoices)
+    .def("getDirectiveLogScore", &PyTrace::getDirectiveLogScore)
     .def("getGlobalLogScore", &PyTrace::getGlobalLogScore)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
