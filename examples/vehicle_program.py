@@ -36,8 +36,10 @@ get_observe_gps_str = lambda i: """
   (simulate_gps pose_%s gps_xy_noise_std gps_heading_noise_std)
 """ % (i, i)
 # ORDER: do_assume_dt, do_assume_control, do_assume_pose, do_observe_gps
+def get_assume(string, value):
+    return '[assume %s %s]' % (string, value)
 def do_assume(ripl, string, value):
-    program = '[assume %s %s]' % (string, value)
+    program = get_assume(string, value)
     return ripl.execute_program(program)
 def do_assume_dt(ripl, i, dt):
     string = dt_name_str % i
