@@ -101,7 +101,9 @@ class Engine(object):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",
                              argument="directive_id", directive_id=directiveId)
-    # TODO Record frozen state for reset?
+    # TODO Record frozen state for reset?  What if the replay is done
+    # with a different number of particles than the original?  Where
+    # do the extra values come from?
     for trace in self.traces:
       trace.freeze(directiveId)
 
