@@ -261,8 +261,10 @@ if __name__ == '__main__':
     dirname = os.path.join(base_dir, dataset_name, 'data', which_data)
     simulator = create_vehicle_simulator(dirname, vp.program, vp.N_mripls,
             vp.backend, vp.infer_args)
+    samples = []
     for _i in range(40):
         print _i
-        print simulator.step()
+        _samples_i = simulator.step(N=1)
+        samples += map(lambda x: numpy.array(x).T, _samples_i)
         pass
     pass
