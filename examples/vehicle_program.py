@@ -75,7 +75,7 @@ program_control_generation = """
         (normal steering_mean steering_std)
         ))))]
 
-[assume get_control_i (lambda (t)
+[assume get_control_i (lambda (i)
   (list (_get_control_i i 0)
         (_get_control_i i 1)
         ))]
