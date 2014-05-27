@@ -15,8 +15,18 @@ N_infer = 5
 
 # assume/observe helpers
 dt_name_str = 'dt_%s'
+random_dt_value_str = """
+(scope_include (quote %s) 0
+  (gamma 1.0 1.0))
+"""
 control_name_str = 'control_%s'
 control_value_str = '(list %s %s)'
+random_control_value_str = """
+(scope_include (quote %s) 0
+  (list (uniform_continuous -100 100)
+        (uniform_continuous -3.14 3.14)
+        ))
+"""
 pose_name_str = 'pose_%s'
 get_pose_value_str = lambda i: """
 (scope_include (quote %s) 0
@@ -30,6 +40,13 @@ get_pose_value_str = lambda i: """
                    additive_heading_error_std
                    ))
 """ % (i, i-1, i-1, i-1)
+random_pose_value_str = """
+(scope_include (quote %s) 0
+  (list (uniform_continuous -100 100)
+        (uniform_continuous -100 100)
+        (uniform_continuous -3.14 3.14)
+        ))
+"""
 get_observe_gps_str = lambda i: """
 (scope_include (quote %s) 0
   (simulate_gps pose_%s gps_xy_noise_std gps_heading_noise_std)
@@ -98,14 +115,10 @@ program_parameters = """
 
 """
 
-program_assumes = """
-
-[assume pose_0 (scope_include (quote 0) 0
-  (list (uniform_continuous -100 100)
-        (uniform_continuous -100 100)
-        (uniform_continuous -3.14 3.14)
-        ))]
-
-"""
+program_assumes = '\n'.join([
+    get_assume(dt_name_str % 0, random_dt_value_str % 0),
+    get_assume(pose_name_str % 0, random_pose_value_str % 0),
+    get_assume(control_name_str % 0, random_control_value_str % 0),
+    ])
 
 program = program_constants + program_parameters + program_assumes
