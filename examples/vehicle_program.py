@@ -54,17 +54,11 @@ program_hypers = """
 
 program_control_generation = """
 
-[assume velocity_gamma_rate (scope_include (quote (control))
-                                           4
-                                           (gamma 1.0 1.0))]
+[assume velocity_gamma_rate (gamma 1.0 1.0)]
 
-[assume steering_mean (scope_include (quote (control))
-                                     5
-                                     (normal 0 .1))]
+[assume steering_mean (normal 0 .1)]
 
-[assume steering_std (scope_include (quote (control))
-                                    6
-                                    (gamma 1.0 100.0))]
+[assume steering_std (gamma 1.0 100.0)]
 
 [assume get_dt_i (mem (lambda (i) (uniform_continuous 0 100)))]
 
