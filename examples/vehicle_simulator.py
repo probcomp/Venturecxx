@@ -235,13 +235,13 @@ def create_observe_sample_strs_lists(gps_frame, control_frame, N_timesteps=None)
     return observe_strs_list, sample_strs_list
 
 def create_vehicle_simulator(dirname, program, N_mripls, backend,
-        N_infer, N_timesteps=None):
+        infer_args, N_timesteps=None):
     gps_frame, control_frame, laser_frame, sensor_frame = read_frames(dirname)
     observe_strs_list, sample_strs_list = create_observe_sample_strs_lists(
             gps_frame, control_frame, N_timesteps)
     # create/pass diagnostics functions?
     simulator = Simulator(program, observe_strs_list, sample_strs_list,
-            N_mripls, backend, N_infer)
+            N_mripls, backend, infer_args)
     return simulator
 
 if __name__ == '__main__':
@@ -259,8 +259,8 @@ if __name__ == '__main__':
     #
     dirname = os.path.join(base_dir, dataset_name, 'data', which_data)
     simulator = create_vehicle_simulator(dirname, vp.program, vp.N_mripls,
-            vp.backend, vp.N_infer, N_timesteps=10)
-    for _i in range(4):
+            vp.backend, vp.infer_args, N_timesteps=10)
+    for _i in range(40):
         print _i
         print simulator.step()
         pass

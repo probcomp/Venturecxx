@@ -7,22 +7,22 @@ from venture.venturemagics.ip_parallel import MRipl
 class Simulator(object):
     # where to run diagnostics?
     def __init__(self, program, observe_strs_list, sample_strs_list,
-            N_mripls, backend, N_infer):
+            N_mripls, backend, infer_args):
         self.observe_strs_list = observe_strs_list
         self.sample_strs_list = sample_strs_list
         self.mripl = MRipl(N_mripls, backend=backend)
         self.next_i = 0
-        self.N_infer = N_infer
+        self.infer_args = infer_args
         self.program = program
         #
         self.mripl.execute_program(self.program)
         pass
 
-    def step(self, N_infer=None):
-        N_infer = first_non_none(N_infer, self.N_infer)
+    def step(self, infer_args=None):
+        infer_args = first_non_none(infer_args, self.infer_args)
         observe_strs, sample_strs = self._get_next_observe_and_sample_str()
         self._observe(observe_strs)
-        self._infer(N_infer)
+        self._infer(infer_args)
         samples = self._sample(sample_strs)
         return samples
 
