@@ -18,10 +18,14 @@ class Simulator(object):
         self.mripl.execute_program(self.program)
         pass
 
-    def step(self, infer_args=None):
+    def step(self, infer_args=None, N=1):
         infer_args = first_non_none(infer_args, self.infer_args)
-        observe_strs, sample_strs = self._get_next_observe_and_sample_str()
-        self._observe(observe_strs)
+        sample_strs = []
+        for _idx in range(N):
+            observe_strs, _sample_strs = self._get_next_observe_and_sample_str()
+            self._observe(observe_strs)
+            sample_strs += _sample_strs
+            pass
         self._infer(infer_args)
         samples = self._sample(sample_strs)
         return samples
