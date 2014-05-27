@@ -7,6 +7,8 @@ import pandas
 from simulator import Simulator
 import vehicle_program as vp
 
+import venture.lite.builtin
+import venture.test.randomized
 
 def read_frame(filename, dirname='', index_col=None, colname_map=None):
     full_filename = os.path.join(dirname, filename)
@@ -19,13 +21,135 @@ def read_frame(filename, dirname='', index_col=None, colname_map=None):
 gps_to_target = dict(GPSLat='y', GPSLon='x', Orientation='heading')
 gps_frame_config = dict(filename='slam_gps.csv', index_col='TimeGPS',
         colname_map=gps_to_target)
+
 control_frame_config = dict(filename='slam_control.csv', index_col='Time_VS')
 laser_frame_config = dict(filename='slam_laser.csv', index_col='TimeLaser')
-def read_frames(dirname):
+
+# echo gps to ground truth for the case where we are running with ground truth
+ground_config = dict(filename='slam_gps.csv', index_col='TimeGPS', colname_map=gps_to_target)
+
+def read_frames(dirname, read_ground = False):
     gps_frame = read_frame(dirname=dirname, **gps_frame_config)
     control_frame = read_frame(dirname=dirname, **control_frame_config)
     laser_frame = read_frame(dirname=dirname, **laser_frame_config)
-    return gps_frame, control_frame, laser_frame
+
+    if read_ground:
+        ground_frame = read_frame(dirname = dirname + "../ground/", **ground_config)
+    else:
+        ground_frame = None
+
+    return gps_frame, control_frame, laser_frame, ground_frame
+
+def uniformize(control_frame, gps_frame, laser_frame, ground_frame, max_frame):
+    out_control = [[0, 0, 0]]
+    out_gps = [None]
+    out_laser = [None]
+    out_ground = [None]
+    out_dt = [[0]]
+    
+    t = 0
+    i = 0
+    
+    total = len(control_frame) + len(gps_frame) + len(laser_frame) + len(ground_frame)
+    print "Total potential frames: " + str(total)
+    print "Max desired frame: " + str(max_frame)
+    processed = 0
+
+    cur_control = 0
+    cur_gps = 0
+    cur_laser = 0
+    cur_ground = 0
+    
+    while processed < total and processed < max_frame:
+        print "Uniformizing frame: " + str(processed)
+        
+        t_control = control_frame.index[cur_control]
+        r_control = control_frame.ix[t_control]
+        
+        t_gps     = gps_frame.index[cur_gps]
+        r_gps     = gps_frame.ix[t_gps]
+        
+        t_laser   = laser_frame.index[cur_laser]
+        r_laser   = laser_frame.ix[t_laser]
+        
+        t_ground  = ground_frame.index[cur_ground]
+        r_ground  = ground_frame.ix[t_ground]
+        
+        min_t = min([t_control, t_gps, t_laser, t_ground])
+        out_val = None
+        last_ground = [0, 0, 0]
+
+        # pick the next value to work on by timestep and add
+        # it, breaking ties arbitrarily (note: we expect gps
+        # and ground to be tied, at least right now, unless
+        # the added noise is added to the time as well as the
+        # result)
+
+        if t_control <= min_t:
+            out_control.append([r_control['Velocity'], r_control['Steering']])
+            out_gps.append(None)
+            out_laser.append(None)
+            out_ground.append(last_ground)
+            
+            out_val = " control: " + str(out_control[-1])
+            
+            cur_control += 1
+        elif t_gps <= min_t:
+            out_gps.append([r_gps['x'], r_gps['y'], r_gps['heading']])
+            out_control.append(out_control[-1])
+            out_laser.append(None)
+            
+            out_ground.append(last_ground) # FIXME: this means we will have dts of 0. is that OK? or do we just assume gps and ground are the same from get-go
+            # FIXME: make sure orientation can be used later
+            
+            out_val = " gps: " + str(out_gps[-1])
+            
+            cur_gps += 1
+        elif t_laser <= min_t:
+            # laser_frame format: 'Laser' x 360, 'Intensity' x 360 are keys; first is TimeLaser, should be skipped
+            range_values = list(laser_frame[laser_frame.columns[0:361]].irow(cur_laser).values)
+            intensity_values = list(laser_frame[laser_frame.columns[362:]].irow(cur_laser).values)
+            cur_laser += 1
+
+            out_control.append(out_control[-1])
+            out_laser.append(zip(range_values, intensity_values))
+            out_gps.append(None)
+            out_ground.append(last_ground)
+            
+            out_val = " laser: " + str(out_laser[-1][:3]) + "..."
+            
+        elif t_ground <= min_t:
+            out_ground.append([r_ground['x'], r_ground['y'], r_ground['heading']])
+            cur_ground += 1
+            out_control.append(out_control[-1])
+            out_laser.append(None)
+            out_gps.append(None) # FIXME: see doubling/dts of 0 issue
+            
+            out_val = " ground: " + str(out_ground[-1])
+            last_ground = out_ground[-1]
+
+        print "t: " + str(min_t) + out_val
+            
+        # increment i and update t and increment processed
+        i += 1
+        dt = min_t - t
+        t = min_t
+        processed += 1
+        print "(i, dt, t, processed): " + str((i, dt, t, processed))
+
+        # special case constructing dt_frame: if we're greater than 0, do it, otherwise placeholder
+        if i == 0:
+            out_dt.append(0)
+        else:
+            out_dt.append(dt)
+
+    return out_control, out_gps, out_laser, out_ground, out_dt
+
+def raw_simulate_laser(pose, slam_map):
+    laser = venture.lite.builtin.SimulateLaserPSP()
+    args = venture.test.randomized.BogusArgs([pose, slam_map, 0.1, 0.1], None)
+    laser_data = laser.simulate(args)
+    return laser_data
 
 def create_gps_observes(gps_frame):
     def _convert(val):
@@ -78,7 +202,7 @@ def create_observe_sample_strs_lists(gps_frame, control_frame, N_timesteps=None)
 
 def create_vehicle_simulator(dirname, program, N_mripls, backend,
         N_infer, N_timesteps=None):
-    gps_frame, control_frame, laser_frame = read_frames(dirname)
+    gps_frame, control_frame, laser_frame, ground_frame = read_frames(dirname)
     observe_strs_list, sample_strs_list = create_observe_sample_strs_lists(
             gps_frame, control_frame, N_timesteps)
     # create/pass diagnostics functions?
