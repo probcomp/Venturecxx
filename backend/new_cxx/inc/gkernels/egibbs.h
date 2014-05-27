@@ -35,6 +35,7 @@ struct EnumerativeGibbsGKernel : GKernel
 
 struct EnumerativeMAPGKernel : EnumerativeGibbsGKernel
 {
+  EnumerativeMAPGKernel(bool inParallel): EnumerativeGibbsGKernel(inParallel) {}
   shared_ptr<Particle> selectParticle(const vector<shared_ptr<Particle> >& particles,
                                       const vector<double>& particleWeights,
                                       ConcreteTrace* trace) const;

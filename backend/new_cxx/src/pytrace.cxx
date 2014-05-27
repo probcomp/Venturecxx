@@ -173,6 +173,11 @@ struct Inferer
       bool inParallel  = boost::python::extract<bool>(params["in_parallel"]);
       gKernel = shared_ptr<GKernel>(new EnumerativeGibbsGKernel(inParallel));
     }
+    else if (kernel == "emap")
+    {
+      bool inParallel  = boost::python::extract<bool>(params["in_parallel"]);
+      gKernel = shared_ptr<GKernel>(new EnumerativeMAPGKernel(inParallel));
+    }
     else if (kernel == "slice")
     {
       gKernel = shared_ptr<GKernel>(new SliceGKernel);
