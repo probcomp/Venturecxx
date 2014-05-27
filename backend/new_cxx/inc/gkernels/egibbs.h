@@ -32,4 +32,12 @@ struct EnumerativeGibbsGKernel : GKernel
                                               const vector<double>& particleWeights,
                                               ConcreteTrace* trace) const;
 };
+
+struct EnumerativeMAPGKernel : EnumerativeGibbsGKernel
+{
+  shared_ptr<Particle> selectParticle(const vector<shared_ptr<Particle> >& particles,
+                                      const vector<double>& particleWeights,
+                                      ConcreteTrace* trace) const;
+
+};
 #endif

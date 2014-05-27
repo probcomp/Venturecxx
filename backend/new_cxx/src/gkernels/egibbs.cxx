@@ -120,3 +120,17 @@ shared_ptr<Particle> EnumerativeGibbsGKernel::selectParticle(const vector<shared
   size_t finalIndex = sampleCategorical(mapExpUptoMultConstant(particleWeights), trace->getRNG());
   return particles[finalIndex];
 }
+
+shared_ptr<Particle> EnumerativeMAPGKernel::selectParticle(const vector<shared_ptr<Particle> >& particles,
+                                                           const vector<double>& particleWeights,
+                                                           ConcreteTrace* trace) const
+{
+  // Deterministically choose the posterior maximum
+  int max_i = -1;
+  double max = -FLT_MAX;
+  for (size_t i = 0; i < particleWeights.size(); i++)
+  {
+    if (particleWeights[i] > max) { max_i = i; max = particleWeights[i]; }
+  }
+  return particles[max_i];
+}
