@@ -19,6 +19,16 @@ def insert_dts(frame):
     frame['dt'] = dts
     return frame
 
+def insert_i(frame):
+    frame = frame.copy()
+    _is = numpy.arange(len(list(frame.index)))
+    has_t_0 = frame.index[0] == 0
+    if not has_t_0:
+        _is += 1
+        pass
+    frame['i'] = _is
+    return frame
+
 laser_sensor = 3
 def postprocess_sensor_frame(frame):
     frame = frame.copy()
@@ -71,6 +81,7 @@ def propagate_left(left_frame, right_frame):
 def combine_frames(control_frame, gps_frame):
     frame = propagate_left(control_frame, gps_frame)
     frame = insert_dts(frame)
+    frame = insert_i(frame)
     return frame
 def xs_to_control_observes(i, xs):
     observes = []
