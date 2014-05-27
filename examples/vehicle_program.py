@@ -11,7 +11,6 @@ N_mripls = 2
 N_particles = 16
 backend = 'puma'
 N_infer = 5
-N_steps = 4000
 
 
 # assume/observe helpers
