@@ -126,7 +126,7 @@ class SimulateLaserPSP(RandomPSP):
                     return dist
             return 1.0
         
-        def get_intersection_range(landmark, pose, theta, landmark_radius=0.5, lidar_max_range=0.4):
+        def get_intersection_range(landmark, pose, theta, landmark_radius=0.05, lidar_max_range=0.4):
           """
           Check if the given landmark intersects with the given pose. If yes, returns the distance.
           If no, returns None.
@@ -136,13 +136,17 @@ class SimulateLaserPSP(RandomPSP):
           d_y = landmark[1] - pose[1]
           angle = pose[2] + theta
           
-          l = d_x * np.cos(theta) + d_y * np.sin(theta)
-          n = d_x * -1 * np.sin(theta) + d_y * np.cos(theta)
+          l = d_x * np.cos(angle) + d_y * np.sin(angle)
+          n = d_x * -1 * np.sin(angle) + d_y * np.cos(angle)
           
-          if n > landmark_radius:
+          if np.abs(n) > landmark_radius:
             return None
 
-          if l - np.sqrt(landmark_radius ** 2 - n ** 2) < lidar_max_range:
+          parallel_dist = float(np.sqrt(landmark_radius ** 2 - n ** 2))
+
+          #print "DEBUG: %f %f %f" % (landmark_radius, n, parallel_dist)
+
+          if l - parallel_dist < lidar_max_range:
             # we have an intersection
             # FIXME: could do math to localize more precisely; for now we just use the raw distance
             # if circles are small enough (or laser is noisy enough) this will not cause a problem
