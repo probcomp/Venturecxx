@@ -32,10 +32,8 @@ class LDA(VentureUnit):
     def makeObserves(self):
         D = self.parameters['documents']
         N = self.parameters['words_per_document']
-        if isinstance(N, int):
-            N = [N] * D
         for doc in range(D):
-            for pos in range(N[doc]):
+            for pos in range(N):
                 self.observe("(get_word %d %d)" % (doc, pos), "atom<%d>" % 0)
         return
 
