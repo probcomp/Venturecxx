@@ -95,10 +95,7 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
     }
   }
 
-  // sample exactly from the posterior
-  size_t finalIndex = sampleCategorical(mapExpUptoMultConstant(particleWeights), trace->getRNG());
-  finalParticle = particles[finalIndex];
-
+  finalParticle = selectParticle(particles, particleWeights, trace);
   return make_pair(finalParticle.get(),0);
 }
 
@@ -113,4 +110,13 @@ void EnumerativeGibbsGKernel::reject()
   assert(false); // should never reject
   regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,shared_ptr<map<Node*,Gradient> >());
   // assertTrace(self.trace,self.scaffold)
+}
+
+shared_ptr<Particle> EnumerativeGibbsGKernel::selectParticle(const vector<shared_ptr<Particle> >& particles,
+                                                             const vector<double>& particleWeights,
+                                                             ConcreteTrace* trace) const
+{
+  // sample exactly from the posterior
+  size_t finalIndex = sampleCategorical(mapExpUptoMultConstant(particleWeights), trace->getRNG());
+  return particles[finalIndex];
 }
