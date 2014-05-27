@@ -49,7 +49,9 @@ for ts, row in combined_frame.head(max_rows).iterrows():
     for _i in range(int(row.i))[-5:]:
         mripl.infer(vp.get_infer_args(_i)[1])
         pass
-    predicted = mripl.predict(vp.pose_name_str % row.i)
+    prediction = mripl.predict(vp.pose_name_str % row.i)
+    print prediction
+    predictions.append(prediction)
     pass
 
 
