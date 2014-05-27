@@ -49,13 +49,15 @@ def create_control_observes(control_frame):
         return [
                 ('(get_control_i %s 0)' % i, control_xs.Velocity),
                 ('(get_control_i %s 1)' % i, control_xs.Steering),
-                ('(dt %s)' % i, dt),
+                ('(get_dt_i %s)' % i, dt),
                 ]
-    dts = numpy.diff(list(control_frame.index))
-    return [
+    first_dt = control_frame.index[0]
+    dts = numpy.append([first_dt], numpy.diff(list(control_frame.index)))
+    ret_list = [
             (t, single_control_to_observe_tuples(dt, i, control_xs))
             for (i, (dt, (t, control_xs))) in enumerate(zip(dts, control_frame.iterrows()))
             ]
+    return ret_list
 
 def create_sample_strs(ts):
     create_sample_str = lambda t: (vp.sample_pose_str % t,)
@@ -102,7 +104,8 @@ if __name__ == '__main__':
     dirname = os.path.join(base_dir, dataset_name, 'data', which_data)
     simulator = create_vehicle_simulator(dirname, vp.program, vp.N_mripls,
             vp.backend, vp.N_infer, N_timesteps=10)
-    simulator.step()
-    simulator.step()
-    simulator.step()
-    simulator.step()
+    for _i in range(4):
+        print _i
+        print simulator.step()
+        pass
+    pass
