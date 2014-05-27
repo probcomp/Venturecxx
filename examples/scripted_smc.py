@@ -31,10 +31,8 @@ mripl = MRipl(4, backend='puma')
 mripl.execute_program(vp.program)
 
 max_rows = 40
-for _i, (ts, row) in enumerate(combined_frame.iterrows()):
-    if _i >= max_rows:
-        break
-    print ts, row
+predictions = []
+for ts, row in combined_frame.head(max_rows).iterrows():
     vp.do_assume_dt(mripl, row.i, row.dt)
     if not numpy.isnan(row.Velocity):
         vp.do_assume_control(mripl, row.i, row.Velocity, row.Steering)
