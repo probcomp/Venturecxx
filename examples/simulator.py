@@ -7,22 +7,26 @@ from venture.venturemagics.ip_parallel import MRipl
 class Simulator(object):
     # where to run diagnostics?
     def __init__(self, program, observe_strs_list, sample_strs_list,
-            N_mripls, backend, N_infer):
+            N_mripls, backend, infer_args):
         self.observe_strs_list = observe_strs_list
         self.sample_strs_list = sample_strs_list
         self.mripl = MRipl(N_mripls, backend=backend)
         self.next_i = 0
-        self.N_infer = N_infer
+        self.infer_args = infer_args
         self.program = program
         #
         self.mripl.execute_program(self.program)
         pass
 
-    def step(self, N_infer=None):
-        N_infer = first_non_none(N_infer, self.N_infer)
-        observe_strs, sample_strs = self._get_next_observe_and_sample_str()
-        self._observe(observe_strs)
-        self._infer(N_infer)
+    def step(self, infer_args=None, N=1):
+        infer_args = first_non_none(infer_args, self.infer_args)
+        sample_strs = []
+        for _idx in range(N):
+            observe_strs, _sample_strs = self._get_next_observe_and_sample_str()
+            self._observe(observe_strs)
+            sample_strs += _sample_strs
+            pass
+        self._infer(infer_args)
         samples = self._sample(sample_strs)
         return samples
 
@@ -37,22 +41,19 @@ class Simulator(object):
         _observe_datum = functools.partial(observe_datum, self.mripl)
         return map(_observe_datum, observe_strs)
 
-    def _infer(self, N_infer):
-        hypers = '(mh hypers one %s)' % N_infer
-        state = '(mh state one %s)' % N_infer
-        #
-        print "infering: %s" % hypers
-        self.mripl.infer(hypers)
-        print "done infering: %s" % hypers
-        #
-        print "infering: %s" % state
-        self.mripl.infer(state)
-        print "done infering: %s" % state
-        # self.mripl.infer(N_infer)
-        pass
+    def _infer(self, infer_args):
+        if not isinstance(infer_args, (list, tuple)):
+            infer_args = [infer_args]
+            pass
+        def _do_infer(infer_arg):
+            print "infering: %s" % infer_arg
+            ret_val = self.mripl.infer(infer_arg)
+            print "done infering: %s" % infer_arg
+            return ret_val
+        return map(_do_infer, infer_args)
 
     def _sample(self, sample_strs):
-        munge_sample = lambda sample: reduce(operator.add, zip(*sample))
+        munge_sample = lambda sample: zip(*sample)
         print 'sampling: %s' % sample_strs
         raw_samples = map(self.mripl.sample, sample_strs)
         samples = map(munge_sample, raw_samples)
