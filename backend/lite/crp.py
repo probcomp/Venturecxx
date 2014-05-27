@@ -24,7 +24,7 @@ class CRPSPAux(object):
 class CRPSP(VentureSP):
   def constructSPAux(self): return CRPSPAux()
   def show(self,spaux): return spaux.tableCounts
-    
+
 class MakeCRPOutputPSP(DeterministicPSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
@@ -60,7 +60,12 @@ class CRPOutputPSP(RandomPSP):
   # def gradientOfLogDensity(self, value, args):
   #   aux = args.spaux
   #   if index in aux.tableCounts:
-      
+
+  def enumerateValues(self,args):
+    aux = args.spaux
+    old_indices = [i for i in aux.tableCounts]
+    indices = old_indices + [aux.nextIndex]
+    return indices
 
   def incorporate(self,index,args):
     aux = args.spaux
@@ -76,10 +81,10 @@ class CRPOutputPSP(RandomPSP):
     aux = args.spaux
     aux.numCustomers -= 1
     aux.tableCounts[index] -= 1
-    if aux.tableCounts[index] == 0: 
+    if aux.tableCounts[index] == 0:
       aux.numTables -= 1
       del aux.tableCounts[index]
-        
+
   def logDensityOfCounts(self,aux):
     term1 = scipy.special.gammaln(self.alpha) - scipy.special.gammaln(self.alpha + aux.numCustomers)
     term2 = aux.numTables + math.log(self.alpha + (aux.numTables * self.d))
