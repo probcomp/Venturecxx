@@ -59,9 +59,11 @@ class RestServer(Flask):
                         ret_value = obj_function(*args)
                         return self._json_response(ret_value,200)
                     except VentureException as e:
+                        print e
                         return self._json_response(e.to_json_object(),500)
                     except Exception as e:
                         ve = VentureException('fatal',str(e))
+                        print ve
                         return self._json_response(ve.to_json_object(),500)
                 return f
             f = mk_closure(name)

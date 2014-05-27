@@ -143,7 +143,7 @@ def run_venture_console(ripl):
           print ripl.report(int(content))
         else:
           print "Sorry, unknown directive."
-    except Exception, err:
+    except Exception: # pylint:disable=broad-except
       print "Your query has generated an error:"
       traceback.print_exc()
 
@@ -179,6 +179,8 @@ def atom(token):
   except ValueError:
     try: return float(token)
     except ValueError:
+      if token.lower() == "true": return True
+      if token.lower() == "false": return False
       return str(token)
 
 def unparse(exp):
@@ -208,26 +210,39 @@ def expToDict(exp):
     assert len(exp) == 4
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
   elif tag == "gibbs":
-    assert len(exp) == 4
-    return {"kernel":"gibbs","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
+    assert 4 <= len(exp) and len(exp) <= 5
+    ans = {"kernel":"gibbs","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
+    if len(exp) == 5:
+      ans["in_parallel"] = exp[4]
+    return ans
+  elif tag == "emap":
+    assert 4 <= len(exp) and len(exp) <= 5
+    ans = {"kernel":"emap","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
+    if len(exp) == 5:
+      ans["in_parallel"] = exp[4]
+    return ans
   elif tag == "slice":
     assert len(exp) == 4
     return {"kernel":"slice","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":True}
-
   # [FIXME] expedient hack for now to allow windowing with pgibbs. 
   elif tag == "pgibbs":
-    assert len(exp) == 5
+    assert 5 <= len(exp) and len(exp) <= 6
     if type(exp[2]) is list:
-      assert(exp[2][0] == "ordered_range")
-      return {"kernel":"pgibbs","scope":exp[1],"block":"ordered_range",
-              "min_block":exp[2][1],"max_block":exp[2][2],
-              "particles":exp[3],"transitions":exp[4],"with_mutation":True}
+      assert exp[2][0] == "ordered_range"
+      ans = {"kernel":"pgibbs","scope":exp[1],"block":"ordered_range",
+            "min_block":exp[2][1],"max_block":exp[2][2],
+            "particles":exp[3],"transitions":exp[4],"with_mutation":True}
     else: 
-      return {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":True}
-
+      ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":True}
+    if len(exp) == 6:
+      ans["in_parallel"] = exp[5]
+    return ans
   elif tag == "func-pgibbs":
-    assert len(exp) == 5
-    return {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":False}
+    assert 5 <= len(exp) and len(exp) <= 6
+    ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":False}
+    if len(exp) == 6:
+      ans["in_parallel"] = exp[5]
+    return ans
   elif tag == "meanfield":
     assert len(exp) == 5
     return {"kernel":"meanfield","scope":exp[1],"block":exp[2],"steps":exp[3],"transitions":exp[4]}
@@ -264,10 +279,10 @@ def expToDict(exp):
     subkernels = [expToDict(e) for e in exp[1]]
     return {"kernel":"cycle","subkernels":subkernels,"transitions":exp[2]}
   elif tag == "resample":
-    assert(len(exp) == 2)
+    assert len(exp) == 2
     return {"command":"resample","particles":exp[1]}
   elif tag == "incorporate":
-    assert(len(exp) == 1)
+    assert len(exp) == 1
     return {"command":"incorporate"}
   else:
     raise Exception("Cannot parse infer instruction")

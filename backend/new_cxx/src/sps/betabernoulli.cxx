@@ -13,10 +13,10 @@
 VentureValuePtr MakeBetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("make_beta_bernoulli", args, 2);
-  
+
   double alpha = args->operandValues[0]->getDouble();
   double beta = args->operandValues[1]->getDouble();
-  
+
   PSP * requestPSP = new NullRequestPSP();
   PSP * outputPSP = new BetaBernoulliOutputPSP(alpha, beta);
   return VentureValuePtr(new VentureSPRecord(new SP(requestPSP,outputPSP),new BetaBernoulliSPAux()));
@@ -56,7 +56,7 @@ void BetaBernoulliOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args
   else { aux->tails--; }
 }
 
-double BetaBernoulliOutputPSP::logDensityOfCounts(shared_ptr<SPAux> aux) const 
+double BetaBernoulliOutputPSP::logDensityOfCounts(shared_ptr<SPAux> aux) const
 {
   shared_ptr<BetaBernoulliSPAux> spAux = dynamic_pointer_cast<BetaBernoulliSPAux>(aux);
 
@@ -96,7 +96,7 @@ double MakeUBetaBernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr
 
   double alpha = args->operandValues[0]->getDouble();
   double beta = args->operandValues[1]->getDouble();
-  
+
   shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(value);
   assert(spRecord);
   shared_ptr<UBetaBernoulliSPAux> spAux = dynamic_pointer_cast<UBetaBernoulliSPAux>(spRecord->spAux);
@@ -107,8 +107,8 @@ double MakeUBetaBernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr
 
 // Uncollapsed SP
 
-void UBetaBernoulliSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const 
-{ 
+void UBetaBernoulliSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const
+{
   assert(args->operandValues.size() == 2);
   shared_ptr<UBetaBernoulliSPAux> aux = dynamic_pointer_cast<UBetaBernoulliSPAux>(spAux);
 
@@ -155,13 +155,5 @@ void UBetaBernoulliOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Arg
 }
 
 // Auxs
-shared_ptr<SPAux> BetaBernoulliSPAux::clone() { return shared_ptr<SPAux>(new BetaBernoulliSPAux(*this)); }
-shared_ptr<SPAux> UBetaBernoulliSPAux::clone() { return shared_ptr<SPAux>(new UBetaBernoulliSPAux(*this)); }
-
-
-
-
-
-
-
-
+SPAux* BetaBernoulliSPAux::copy_help(ForwardingMap* m) const  { return new BetaBernoulliSPAux(*this);  }
+SPAux* UBetaBernoulliSPAux::copy_help(ForwardingMap* m) const { return new UBetaBernoulliSPAux(*this); }

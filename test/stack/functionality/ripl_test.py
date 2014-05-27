@@ -179,9 +179,8 @@ class TestRipl(unittest.TestCase):
             self.ripl.forget(ret_value['directive_id'])
         #labeled forget
         self.ripl.assume('a','(uniform_continuous 0 1)', 'moo')
-        # assumes can't be forgotten
-        with self.assertRaises(VentureException):
-            self.ripl.forget('moo')
+        # assumes can be forgotten
+        self.ripl.forget('moo')
 
     def test_report(self):
         #normal report

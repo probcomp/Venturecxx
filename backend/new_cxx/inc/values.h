@@ -86,6 +86,7 @@ struct VentureArray : VentureValue
   string toString() const;
   string asExpression() const;
   vector<VentureValuePtr> xs;
+  VentureArray* copy_help(ForwardingMap* m) const;
 };
 
 struct VentureNil : VentureValue
@@ -124,6 +125,7 @@ struct VenturePair : VentureValue
   int size() const { return 1 + getRest()->size(); }
   VentureValuePtr car;
   VentureValuePtr cdr;
+  VenturePair* copy_help(ForwardingMap* m) const;
 };
 
 struct VentureSimplex : VentureValue
@@ -145,17 +147,18 @@ struct VentureSimplex : VentureValue
 struct VentureDictionary : VentureValue
 {
   // TODO need a special type with special hash/equality function.
-  VentureDictionary(const VentureValuePtrMap<VentureValuePtr> & dict): dict(dict) {}
-  const VentureValuePtrMap<VentureValuePtr>& getDictionary() const { return dict; }
+  VentureDictionary(const MapVVPtrVVPtr & dict): dict(dict) {}
+  const MapVVPtrVVPtr& getDictionary() const { return dict; }
 
-  VentureValuePtr lookup(VentureValuePtr index) const { return dict.at(index); }
+  VentureValuePtr lookup(VentureValuePtr index) const;
   bool contains(VentureValuePtr index) const { return dict.count(index); }
   int size() const { return dict.size(); }
 
 
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
-  VentureValuePtrMap<VentureValuePtr> dict;
+  MapVVPtrVVPtr dict;
+  VentureDictionary* copy_help(ForwardingMap* m) const;
 };
 
 struct VentureMatrix : VentureValue
@@ -172,6 +175,8 @@ struct VentureVector : VentureValue
   VentureVector(const Eigen::VectorXd & v): v(v) {}
   VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureNumber(v(index->getInt()))); }
   VectorXd getVector() const { return v; }
+  bool hasArray() const { return true; }
+  vector<VentureValuePtr> getArray() const;
   string toString() const;
   boost::python::dict toPython(Trace * trace) const;
   VectorXd v;
@@ -205,6 +210,7 @@ struct VentureNode : VentureValue
   string toString() const;
   size_t hash() const;
   Node * node;
+  VentureNode* copy_help(ForwardingMap* m) const;
 };
 
 /* Use the memory location as a unique hash. */

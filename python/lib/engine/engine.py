@@ -13,9 +13,10 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+import random
+
 from venture.exception import VentureException
 from venture.lite.utils import simulateCategorical, sampleLogCategorical
-from venture.lite.serialize import Serializer
 
 # Thin wrapper around Trace
 # TODO: merge with CoreSivm?
@@ -89,15 +90,22 @@ class Engine(object):
       raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
                              argument="directive_id", directive_id=directiveId)
     directive = self.directives[directiveId]
-    if directive[0] == "assume":
-      raise VentureException("invalid_argument", "Cannot forget an ASSUME directive",
-                             argument="directive_id", directive_id=directiveId)
-
     for trace in self.traces:
       if directive[0] == "observe": trace.unobserve(directiveId)
       trace.uneval(directiveId)
+      if directive[0] == "assume": trace.unbindInGlobalEnv(directive[1])
 
     del self.directives[directiveId]
+
+  def freeze(self,directiveId):
+    if directiveId not in self.directives:
+      raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",
+                             argument="directive_id", directive_id=directiveId)
+    # TODO Record frozen state for reinit_inference_problem?  What if
+    # the replay is done with a different number of particles than the
+    # original?  Where do the extra values come from?
+    for trace in self.traces:
+      trace.freeze(directiveId)
 
   def report_value(self,directiveId):
     if directiveId not in self.directives:
@@ -111,21 +119,28 @@ class Engine(object):
     self.directives = {}
     self.traces = [self.Trace()]
     self.weights = [1]
+    self.ensure_rng_seeded_decently()
+
+  def ensure_rng_seeded_decently(self):
     # Frobnicate the trace's random seed because Trace() resets the
     # RNG seed from the current time, which sucks if one calls this
     # method often.
-    import random
     self.set_seed(random.randint(1,2**31-1))
 
-  # Blow away the trace and rebuild one from the directives.  The goal
-  # is to resample from the prior.  May have the unfortunate effect of
-  # renumbering the directives, if some had been forgotten.
-  # Note: This is not the same "reset" as appears in the Venture SIVM
-  # instruction set.
-  def reset(self):
+  # TODO There should also be capture_inference_problem and
+  # restore_inference_problem (Analytics seems to use something like
+  # it)
+  def reinit_inference_problem(self, num_particles=None):
+    """Blow away all the traces and rebuild from the stored directives.
+
+The goal is to resample from the prior.  May have the unfortunate
+effect of renumbering the directives, if some had been forgotten."""
     worklist = sorted(self.directives.iteritems())
     self.clear()
-    [self.replay(dir) for (_,dir) in worklist]
+    if num_particles is not None:
+      self.infer("(resample %d)" % num_particles)
+    for (_,dir) in worklist:
+      self.replay(dir)
 
   def replay(self,directive):
     if directive[0] == "assume":
@@ -136,11 +151,6 @@ class Engine(object):
       self.predict(directive[1])
     else:
       assert False, "Unkown directive type found %r" % directive
-
-  def clone(self,trace):
-    serialized = Serializer().serialize_trace(trace, None)
-    newTrace, _ = Serializer().deserialize_trace(serialized)
-    return newTrace
 
   def incorporate(self):
     for i,trace in enumerate(self.traces):
@@ -157,7 +167,9 @@ class Engine(object):
       newTraces = [None for p in range(P)]
       for p in range(P):
         parent = sampleLogCategorical(self.weights) # will need to include or rewrite
-        newTraces[p] = self.clone(self.traces[parent])
+        newTraces[p] = self.traces[parent].stop_and_copy()
+        if self.name != "lite":
+          newTraces[p].set_seed(random.randint(1,2**31-1))
       self.traces = newTraces
       self.weights = [0 for p in range(P)]
 
@@ -166,11 +178,11 @@ class Engine(object):
     elif params['kernel'] == "cycle":
       if 'subkernels' not in params:
         raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
-      for n in range(params["transitions"]):
+      for _ in range(params["transitions"]):
         for k in params["subkernels"]:
           self.infer(k)
     elif params["kernel"] == "mixture":
-      for n in range(params["transitions"]):
+      for _ in range(params["transitions"]):
         self.infer(simulateCategorical(params["weights"], params["subkernels"]))
     else: # A primitive infer expression
       #import pdb; pdb.set_trace()
@@ -202,7 +214,17 @@ class Engine(object):
     
     if "particles" in params:
       params["particles"] = int(params["particles"])
+    if "in_parallel" not in params:
+      params['in_parallel'] = True
+    if params['kernel'] in ['cycle', 'mixture']:
+      if 'subkernels' not in params:
+        params['subkernels'] = []
+      if params['kernel'] == 'mixture' and 'weights' not in params:
+        params['weights'] = [1 for _ in params['subkernels']]
+      for p in params['subkernels']:
+        self.set_default_params(p)
   
+  def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
 
   def get_entropy_info(self):

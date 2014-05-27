@@ -15,6 +15,7 @@ struct CSPRequestPSP : PSP
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const { return true; }
+  CSPRequestPSP* copy_help(ForwardingMap* m) const;
 
 private:
   vector<string> symbols;

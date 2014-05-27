@@ -17,11 +17,14 @@ struct VentureEnvironment : VentureValue
 		     const vector<Node*> & nodes);
 
   void addBinding(const string& sym,Node * node);
+  void removeBinding(const string& sym);
   Node * lookupSymbol(shared_ptr<VentureSymbol> sym);
   Node * lookupSymbol(const string& sym);
 
   shared_ptr<VentureEnvironment> outerEnv;
   map<string,Node*> frame;
+
+  VentureEnvironment* copy_help(ForwardingMap* m) const;
 };
 
 #endif

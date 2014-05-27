@@ -71,6 +71,7 @@ class Particle(Trace):
 
   def registerRandomChoiceInScope(self,scope,block,node):
     assert block is not None
+    (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if not scope in self.scopes: self.scopes = self.scopes.insert(scope,PMap())
     if not block in self.scopes.lookup(scope): self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.insert(block,PSet()))
     self.scopes = self.scopes.adjust(scope,lambda blocks: blocks.adjust(block,lambda pnodes: pnodes.insert(node)))
@@ -192,7 +193,7 @@ class Particle(Trace):
     for (scope,blocks) in self.scopes.iteritems():
       for (block,pnodes) in blocks.iteritems():
         for pnode in pnodes:
-          self.base.registerRandomChoiceInScope(scope,block,pnode)
+          self.base.registerRandomChoiceInScope(scope,block,pnode,unboxed=True)
 
     # note that we do not call registerConstrainedChoice() because it in turn calls unregisterRandomChoice()
     for node in self.ccs: self.base.registerConstrainedChoice(node)

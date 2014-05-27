@@ -19,9 +19,11 @@ from scaffold import constructScaffold
 from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
+import serialize
 import random
 import numpy.random
 
+@serialize.register
 class Trace(object):
   def __init__(self):
 
@@ -50,8 +52,8 @@ class Trace(object):
     self.rcs.add(node)
     self.registerRandomChoiceInScope("default",node,node)
 
-  def registerRandomChoiceInScope(self,scope,block,node):
-    (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
+  def registerRandomChoiceInScope(self,scope,block,node,unboxed=False):
+    if not unboxed: (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if not scope in self.scopes: self.scopes[scope] = SMap()
     if not block in self.scopes[scope]: self.scopes[scope][block] = set()
     assert not node in self.scopes[scope][block]
@@ -94,6 +96,7 @@ class Trace(object):
         return (scope.getNumber(), block.getNumber())
 
   def registerConstrainedChoice(self,node):
+    assert node not in self.ccs, "Cannot observe the same choice more than once"
     self.ccs.add(node)
     self.unregisterRandomChoice(node)
 
@@ -251,10 +254,10 @@ class Trace(object):
   def addRandomChoicesInBlock(self,scope,block,pnodes,node):
     if not isinstance(node,OutputNode): return
 
-    if self.pspAt(node).isRandom(): pnodes.add(node)
+    if self.pspAt(node).isRandom() and not node in self.ccs: pnodes.add(node)
 
     requestNode = node.requestNode
-    if self.pspAt(requestNode).isRandom(): pnodes.add(requestNode)
+    if self.pspAt(requestNode).isRandom() and not requestNode in self.ccs: pnodes.add(requestNode)
 
     for esr in self.valueAt(node.requestNode).esrs:
       self.addRandomChoicesInBlock(scope,block,pnodes,self.spFamilyAt(requestNode,esr.id))
@@ -284,6 +287,7 @@ class Trace(object):
     (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),OmegaDB(),{})
 
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
+  def unbindInGlobalEnv(self,sym): self.globalEnv.removeBinding(sym)
 
   def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
 
@@ -370,7 +374,8 @@ class Trace(object):
         #assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
 
-      # [FIXME] egregrious style, but expedient. The stack is such a mess anyway, it's hard to do anything with good style that
+      # [FIXME] egregrious style, but expedient. The stack is such a
+      # mess anyway, it's hard to do anything with good style that
       # doesn't begin by destroying the stack.
       elif params["kernel"] == "pgibbs":
         if params["block"] == "ordered_range":
@@ -404,14 +409,17 @@ class Trace(object):
     #  # O(N) operation.
     #  SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["useDeltaKernels"],params["deltaKernelArgs"],updateValue=params["updateValue"]))
 
+  def stop_and_copy(self):
+    serialized = serialize.Serializer().serialize_trace(self, None)
+    newTrace, _ = serialize.Serializer().deserialize_trace(serialized)
+    return newTrace
+
   def save(self, fname, extra):
-    from serialize import save_trace
-    save_trace(self, extra, fname)
+    serialize.save_trace(self, extra, fname)
 
   @staticmethod
   def load(fname):
-    from serialize import load_trace
-    trace, extra = load_trace(fname)
+    trace, extra = serialize.load_trace(fname)
     return trace, extra
 
   def get_seed(self):
@@ -423,8 +431,12 @@ class Trace(object):
       random.seed(seed)
       numpy.random.seed(seed)
 
+  def getDirectiveLogScore(self,id):
+    assert id in self.families
+    node = self.families[id]
+    return self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node))
+
   def getGlobalLogScore(self):
-    # TODO Get the constrained nodes too
     return sum([self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node)) for node in self.rcs.union(self.ccs)])
 
   #### Helpers (shouldn't be class methods)

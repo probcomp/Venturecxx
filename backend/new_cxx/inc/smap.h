@@ -13,7 +13,7 @@ using std::endl;
 template <typename V>
 struct SamplableMap
 {
-  VentureValuePtrMap<int> d;
+  MapVVPtrInt d;
   vector<pair<VentureValuePtr,V> > a;
 
   V & get(VentureValuePtr k) 
@@ -86,6 +86,7 @@ struct SamplableMap
   
 };
 
+typedef boost::unordered_map<VentureValuePtr, SamplableMap<set<Node*> >, HashVentureValuePtr, VentureValuePtrsEqual> ScopesMap;
 
 
 #endif

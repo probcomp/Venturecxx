@@ -76,7 +76,7 @@ void Renderer::dotSPFamilies()
        ++iter1)
     {
       shared_ptr<SPFamilies> spFamilies = iter1->second->spFamilies;
-      for (VentureValuePtrMap<RootOfFamily>::iterator iter2  = spFamilies->families.begin();
+      for (MapVVPtrRootOfFamily::iterator iter2  = spFamilies->families.begin();
 	   iter2 != spFamilies->families.end();
 	   ++iter2)
 	{
@@ -244,7 +244,7 @@ void Renderer::dotEdges()
        ++iter1)
     {
       shared_ptr<SPFamilies> spFamilies = iter1->second->spFamilies;
-      for (VentureValuePtrMap<RootOfFamily>::iterator iter2  = spFamilies->families.begin();
+      for (MapVVPtrRootOfFamily::iterator iter2  = spFamilies->families.begin();
 	   iter2 != spFamilies->families.end();
 	   ++iter2)
 	{

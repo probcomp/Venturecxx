@@ -1,6 +1,7 @@
 from testconfig import config
 import venture.shortcuts as s
 import venture.ripl.utils as u
+import venture.venturemagics.ip_parallel as ip_parallel
 
 def yes_like(thing):
   if isinstance(thing, str):
@@ -46,6 +47,14 @@ def default_num_transitions_per_sample():
 def get_ripl():
   return s.backend(config["get_ripl"]).make_church_prime_ripl()
 
+def get_mripl(no_ripls=2,local_mode=None,**kwargs):
+   # NB: there is also global "get_mripl_backend" for having special-case backend
+   # for mripl
+  backend = config["get_ripl"]
+  local_mode = config["get_mripl_local_mode"] if local_mode is None else local_mode
+  return ip_parallel.MRipl(no_ripls,backend=backend,local_mode=local_mode,**kwargs)
+  
+
 def get_core_sivm():
   return s.backend(config["get_ripl"]).make_core_sivm()
 
@@ -79,7 +88,7 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None,infer_merge=None):
     # tests, presumably by avoiding the parser.
     ripl.sivm.core_sivm.engine.infer(infer)
     predictions.append(ripl.report(address))
-    if iid: ripl.sivm.core_sivm.engine.reset()
+    if iid: ripl.sivm.core_sivm.engine.reinit_inference_problem()
   return predictions
 
 def defaultInfer():

@@ -142,7 +142,7 @@ def testConstrainAVar5a():
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
   ripl.predict("(normal x 0.0001)")
   ripl.observe("(if (f) x y)", 3.0)
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50})
+  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50,"in_parallel":False})
 
 @raises(Exception)
 def testConstrainAVar5b():
@@ -156,7 +156,7 @@ def testConstrainAVar5b():
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
   ripl.predict("(if (f) (normal x 0.0001) (normal y 0.0001))")
   ripl.observe("(if (f) x y)", 3.0)
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50})
+  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50,"in_parallel":False})
 
 @raises(Exception)
 def testConstrainAVar6a():
@@ -170,7 +170,7 @@ def testConstrainAVar6a():
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
   ripl.predict("(if (< (normal x 1.0) 3) x y)")
   ripl.observe("(if (f) x y)", 3.0)
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50})
+  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50,"in_parallel":False})
 
 @raises(Exception)
 def testConstrainAVar6b():
@@ -184,7 +184,7 @@ def testConstrainAVar6b():
   ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
   ripl.observe("(if (f) x y)", 3.0)
   ripl.predict("(if (< (normal x 1.0) 3) x y)")
-  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50})
+  collectSamples(ripl,"pid",infer_merge={"scope":0,"block":0,"transitions":50,"in_parallel":False})
 
 @raises(Exception)
 def testConstrainWithAPredict1():
@@ -201,7 +201,7 @@ def testConstrainWithAPredict1():
   ripl.assume("op4","(if (op3) op2 op1)")
   ripl.predict("(op4)")
   ripl.observe("(op4)",True)
-  collectSamples(ripl,"pid")
+  collectSamples(ripl,"pid",infer_merge={"in_parallel":False})
 
 
 @statisticalTest
@@ -218,4 +218,37 @@ def testConstrainWithAPredict2():
   ripl.predict("(* (f) 100)",label="pid")
   predictions = collectSamples(ripl,"pid")
   return reportKnownMean(50, predictions) # will divide by 0 if there is no sample variance
+
+def testConstrainInAScope1():
+  """At some point, constrain did not remove choices from scopes besides the default scope"""
+  ripl = get_ripl()
+
+  ripl.assume("x","(scope_include 0 0 (normal 0 1))")
+  ripl.observe("x","1")
+  ripl.predict("(normal x 1)")
+
+  ripl.infer("(mh 0 0 10)")
+
+def testConstrainInAScope2brush():
+  """Particles need to override some of the relevant methods as well"""
+  ripl = get_ripl()
+
+  ripl.assume("x","(scope_include 0 0 (if (flip) (normal 0 1) (normal 0 1)))")
+  ripl.observe("x","1")
+  ripl.predict("(+ x 1)")
+
+  ripl.infer("(mh 0 0 20)")
+
+def testConstrainInAScope2particles():
+  """Particles need to override some of the relevant methods as well"""
+  ripl = get_ripl()
+
+  ripl.assume("x","(scope_include 0 0 (if (flip) (normal 0 1) (normal 0 1)))")
+  ripl.observe("x","1")
+  ripl.predict("(+ x 1)")
+
+  ripl.infer("(pgibbs 0 0 5 5)")
+  
+
+
 

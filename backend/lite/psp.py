@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from utils import override
 from lkernel import DefaultAAALKernel,DefaultVariationalLKernel,LKernel
 from request import Request
+import serialize
 
 class PSP(object):
   """A Primitive Stochastic Procedure.
@@ -209,6 +210,20 @@ class PSP(object):
   def madeSpLogDensityOfCountsBound(self, _aux):
     raise Exception("Cannot rejection sample AAA procedure with unbounded log density of counts")
 
+  def serialize(self, s):
+    """Return a JSON-serializable object representing any persistent state
+    associated with this PSP.
+
+    """
+    raise Exception("Cannot serialize %s" % type(self))
+
+  def deserialize(self, s, data):
+    """Take a JSON-serializable object returned by serialize() and use it
+    to initialize this PSP.
+
+    """
+    raise Exception("Cannot deserialize %s" % type(self))
+
 class DeterministicPSP(PSP):
   """Provides good default implementations of PSP methods for deterministic PSPs."""
   __metaclass__ = ABCMeta
@@ -227,6 +242,7 @@ class DeterministicPSP(PSP):
   @override(PSP)
   def logDensityBound(self, _value, _args): return 0
 
+@serialize.register
 class NullRequestPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def simulate(self,args): return Request()
@@ -234,7 +250,12 @@ class NullRequestPSP(DeterministicPSP):
   def gradientOfSimulate(self, args, _value, _direction): return [0 for _ in args.operandValues]
   @override(DeterministicPSP)
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
+  @override(PSP)
+  def serialize(self, s): return {}
+  @override(PSP)
+  def deserialize(self, s, _): pass
 
+@serialize.register
 class ESRRefOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def simulate(self,args):
@@ -248,6 +269,12 @@ class ESRRefOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def canAbsorb(self,trace,appNode,parentNode):
     return parentNode != trace.esrParentsAt(appNode)[0] and parentNode != appNode.requestNode
+
+  @override(PSP)
+  def serialize(self, s): return {}
+
+  @override(PSP)
+  def deserialize(self, s, _): pass
 
 class RandomPSP(PSP):
   """Provides good default implementations of (two) PSP methods for stochastic PSPs."""
@@ -273,7 +300,7 @@ class TypedPSP(PSP):
     return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def gradientOfLogDensity(self, value, args):
     (dvalue, dargs) = self.psp.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
-    return (self.f_type.wrap_return(dvalue), self.f_type.wrap_arg_list(dargs))
+    return (self.f_type.gradient_type().wrap_return(dvalue), self.f_type.gradient_type().wrap_arg_list(dargs))
   def logDensityBound(self, value, args):
     return self.psp.logDensityBound(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def incorporate(self,value,args):

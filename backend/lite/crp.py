@@ -90,3 +90,9 @@ class CRPOutputPSP(RandomPSP):
     term2 = aux.numTables + math.log(self.alpha + (aux.numTables * self.d))
     term3 = sum([scipy.special.gammaln(aux.tableCounts[index] - self.d) for index in aux.tableCounts])
     return term1 + term2 + term3
+
+  def enumerateValues(self,args):
+    aux = args.spaux
+    old_indices = [i for i in aux.tableCounts]
+    indices = old_indices + [aux.nextIndex]
+    return indices
