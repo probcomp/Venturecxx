@@ -101,9 +101,9 @@ class Engine(object):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",
                              argument="directive_id", directive_id=directiveId)
-    # TODO Record frozen state for reset?  What if the replay is done
-    # with a different number of particles than the original?  Where
-    # do the extra values come from?
+    # TODO Record frozen state for reinit_inference_problem?  What if
+    # the replay is done with a different number of particles than the
+    # original?  Where do the extra values come from?
     for trace in self.traces:
       trace.freeze(directiveId)
 
@@ -127,12 +127,14 @@ class Engine(object):
     # method often.
     self.set_seed(random.randint(1,2**31-1))
 
-  # Blow away the trace and rebuild one from the directives.  The goal
-  # is to resample from the prior.  May have the unfortunate effect of
-  # renumbering the directives, if some had been forgotten.
-  # Note: This is not the same "reset" as appears in the Venture SIVM
-  # instruction set.
-  def reset(self, num_particles=None):
+  # TODO There should also be capture_inference_problem and
+  # restore_inference_problem (Analytics seems to use something like
+  # it)
+  def reinit_inference_problem(self, num_particles=None):
+    """Blow away all the traces and rebuild from the stored directives.
+
+The goal is to resample from the prior.  May have the unfortunate
+effect of renumbering the directives, if some had been forgotten."""
     worklist = sorted(self.directives.iteritems())
     self.clear()
     if num_particles is not None:
