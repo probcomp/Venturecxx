@@ -66,7 +66,7 @@ program_control_generation = """
                                     6
                                     (gamma 1.0 100.0))]
 
-[assume get_dt_i (mem (lambda (i) (uniform_continuous 0 100))]
+[assume get_dt_i (mem (lambda (i) (uniform_continuous 0 100)))]
 
 [assume _get_control_i (scope_include (quote state) 1000002
   (mem (lambda (i coord)
