@@ -220,6 +220,8 @@ class MRipl():
                                                         self.no_ripls_per_engine)
         print s
 
+        print "testing..."
+
 
         self.seeds = range(self.no_ripls) if not seeds else seeds[:self.no_ripls]
 
@@ -297,11 +299,11 @@ class MRipl():
         
 
     def __del__(self):
-        if not self.local_mode:
-            if self.verbose:
-                print '__del__ is closing client for mripl with mrid %i' % self.mrid
-            self.cli.close()
-    
+        #if not self.local_mode:
+        #    if self.verbose:
+        #        print '__del__ is closing client for mripl with mrid %i' % self.mrid
+        #    self.cli.close()
+        pass
     
     def reset_seeds(self):
         'Set seeds back to seeds specified in constructuor'
@@ -473,7 +475,7 @@ class MRipl():
         else:
             self.total_transitions += 1
 
-        if self.verbose: print 'total transitions: ',self.no_transitions
+        if self.verbose: print 'total transitions: ',self.total_transitions
 
 
     def infer(self,params,block=True):
@@ -961,7 +963,10 @@ class MRipl():
         no_ripls = self.no_ripls if self.output=='remote' else self.no_local_ripls
                 
         # loop over label,val from snapshot and plot subplot of kde and hist
-        labels = ordered_labels or values.keys()
+        # labels = ordered_labels or values.keys()
+        
+        labels = values.keys()
+
         for label, vals in [(label, values[label]) for label in labels]:
             var_type = self.type_list(vals)
 
@@ -989,7 +994,7 @@ class MRipl():
             label0,vals0 = values.items()[0]
             label1,vals1 = values.items()[1]
             fig, ax  = plt.subplots(figsize=(4,2))
-            ax.scatter(vals0,vals1)
+            ax.scatter(vals0[0],vals1[0])
             ax.set_xlabel(label0); ax.set_ylabel(label1)
             ax.set_title('%s vs. %s (transitions: %i, ripls: %i)' % (str(label0),str(label1),
                                                                     no_trans, no_ripls) )
