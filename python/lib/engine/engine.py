@@ -132,9 +132,11 @@ class Engine(object):
   # renumbering the directives, if some had been forgotten.
   # Note: This is not the same "reset" as appears in the Venture SIVM
   # instruction set.
-  def reset(self):
+  def reset(self, num_particles=None):
     worklist = sorted(self.directives.iteritems())
     self.clear()
+    if num_particles is not None:
+      self.infer("(resample %d)" % num_particles)
     for (_,dir) in worklist:
       self.replay(dir)
 
