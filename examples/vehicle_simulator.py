@@ -68,12 +68,6 @@ def _convert(val):
         return {"type":"vector","value":map(_convert, val)}
     is_list = isinstance(val, (list, tuple))
     return _convert_list(val) if is_list else _convert_real(val)
-def generate_observes_for_gps_at_t(t, i, gps_frame):
-    xs = my_xs(gps_frame, t)
-    observe_str = vp.simulate_gps_str % i
-    observe_val = _convert((xs.x, xs.y, xs.heading))
-    observes = [(observe_str, observe_val), ]
-    return observes
 def propagate_left(left_frame, right_frame):
     padded = left_frame.join(right_frame, how='outer').fillna(method='pad')
     padded = padded.reindex(columns=left_frame.columns)
@@ -83,6 +77,12 @@ def combine_frames(control_frame, gps_frame):
     frame = insert_dts(frame)
     frame = insert_i(frame)
     return frame
+
+def create_sample_strs(_is):
+    create_sample_str = lambda i: (vp.pose_name_str % i,)
+    return map(create_sample_str, _is)
+
+
 def xs_to_control_observes(i, xs):
     observes = []
     if not numpy.isnan(xs.Velocity):
@@ -101,22 +101,11 @@ def xs_to_gps_observes(i, xs):
 def xs_to_dt_observes(i, xs):
     observes = [(vp.sample_dt_str % i, xs.dt), ]
     return observes
-def xs_to_all_observes((i, (t, xs))):
-    control_observes = xs_to_control_observes(i, xs)
-    gps_observes = xs_to_gps_observes(i, xs)
-    dt_observes = xs_to_dt_observes(i, xs)
-    all_observes = control_observes + gps_observes + dt_observes
-    return all_observes
 def frames_to_all_observes(control_frame, gps_frame):
     combined = combine_frames(control_frame, gps_frame)
     ts = list(combined.index)
     all_observes = map(xs_to_all_observes, enumerate(combined.iterrows()))
     return all_observes, ts
-
-def create_sample_strs(ts):
-    _is = range(len(ts))
-    create_sample_str = lambda i: (vp.sample_pose_str % i,)
-    return map(create_sample_str, _is)
 
 def create_observe_sample_strs_lists(gps_frame, control_frame, N_timesteps=None):
     observe_strs_list, ts = frames_to_all_observes(control_frame, gps_frame)
