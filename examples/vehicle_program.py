@@ -5,9 +5,6 @@ vehicle_a = 0.299541
 vehicle_b = 0.0500507
 vehicle_h = 0
 vehicle_L = 0.257717
-# simulation/control
-gps_xy_additive_noise_std = 0.1
-gps_heading_additive_noise_std = 0.005
 # inference
 use_mripl = False
 N_mripls = 2
@@ -16,8 +13,7 @@ backend = 'puma'
 N_infer = 5
 N_steps = 4000
 #
-simulate_gps_substitution = ('%s', gps_xy_additive_noise_std, gps_heading_additive_noise_std)
-simulate_gps_str = '(simulate_gps (get_pose_i %s) %s %s)' % simulate_gps_substitution
+simulate_gps_str = '(simulate_gps (get_pose_i %s) gps_xy_noise_std gps_heading_noise_std)'
 sample_pose_str = '(get_pose_i %s)'
 sample_dt_str = '(get_dt_i %s)'
 get_control_str = '(_get_control_i %s %s)'
@@ -49,6 +45,14 @@ program_hypers = """
 [assume additive_heading_error_std (scope_include (quote hypers)
                                                   3
                                                   (gamma 1.0 100.0))]
+
+[assume gps_xy_noise_std (scope_include (quote hypers)
+                                        4
+                                        (gamma 1.0 10.0))]
+
+[assume gps_heading_noise_std (scope_include (quote hypers)
+                                             5
+                                             (gamma 1.0 100.0))]
 
 """
 
