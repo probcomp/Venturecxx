@@ -8,12 +8,27 @@ from simulator import Simulator
 import vehicle_program as vp
 
 
-def read_frame(filename, dirname='', index_col=None, colname_map=None):
+def make_frame_dts(frame):
+    first_dt = frame.index[0]
+    return numpy.append([first_dt], numpy.diff(list(frame.index)))
+
+laser_sensor = 3
+def postprocess_sensor_frame(frame):
+    frame = frame.copy()
+    frame = frame[frame.Sensor!=laser_sensor]
+    dts = make_frame_dts(frame)
+    frame['dt'] = dts
+    return frame
+
+def read_frame(filename, dirname='', index_col=None, colname_map=None,
+        postprocess_func=None):
     full_filename = os.path.join(dirname, filename)
     frame = pandas.read_csv(full_filename, index_col=index_col)
     if colname_map is not None:
         frame = frame.rename(columns=colname_map)
         pass
+    if postprocess_func is not None:
+        frame = postprocess_func(frame)
     return frame
 
 gps_to_target = dict(GPSLat='y', GPSLon='x', Orientation='heading')
@@ -21,11 +36,15 @@ gps_frame_config = dict(filename='slam_gps.csv', index_col='TimeGPS',
         colname_map=gps_to_target)
 control_frame_config = dict(filename='slam_control.csv', index_col='Time_VS')
 laser_frame_config = dict(filename='slam_laser.csv', index_col='TimeLaser')
+sensor_frame_config = dict(filename='slam_sensor.csv', index_col='Time',
+        postprocess_func=postprocess_sensor_frame)
 def read_frames(dirname):
     gps_frame = read_frame(dirname=dirname, **gps_frame_config)
     control_frame = read_frame(dirname=dirname, **control_frame_config)
     laser_frame = read_frame(dirname=dirname, **laser_frame_config)
-    return gps_frame, control_frame, laser_frame
+    sensor_frame = read_frame(dirname=dirname, **sensor_frame_config)
+    return gps_frame, control_frame, laser_frame, sensor_frame
+
 
 def create_gps_observes(gps_frame):
     def _convert(val):
@@ -80,7 +99,7 @@ def create_observe_sample_strs_lists(gps_frame, control_frame, N_timesteps=None)
 
 def create_vehicle_simulator(dirname, program, N_mripls, backend,
         N_infer, N_timesteps=None):
-    gps_frame, control_frame, laser_frame = read_frames(dirname)
+    gps_frame, control_frame, laser_frame, sensor_frame = read_frames(dirname)
     observe_strs_list, sample_strs_list = create_observe_sample_strs_lists(
             gps_frame, control_frame, N_timesteps)
     # create/pass diagnostics functions?
