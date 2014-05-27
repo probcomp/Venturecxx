@@ -78,9 +78,10 @@ program_control_generation = """
 
 program_assumes = """
 
-[assume initial_pose (scope_include (quote state) 0 (list (uniform_continuous -1 1)
-                                                          (uniform_continuous -1 1)
-                                                          (uniform_continuous -1 1)))]
+[assume initial_pose (scope_include (quote state) 0 (list (uniform_continuous -100 100)
+                                                          (uniform_continuous -100 100)
+                                                          (uniform_continuous -3.14 3.14)
+                                                          ))]
 
 [assume get_pose_i (mem (lambda (i)
   (if (= i 0) initial_pose
