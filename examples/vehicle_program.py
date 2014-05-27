@@ -62,12 +62,12 @@ program_control_generation = """
 
 [assume get_dt_i (mem (lambda (i) (uniform_continuous 0 100)))]
 
-[assume _get_control_i (scope_include (quote state) 1000002
+[assume _get_control_i
   (mem (lambda (i coord)
     (if (= coord 0)
         (normal .1 velocity_gamma_rate)
         (normal steering_mean steering_std)
-        ))))]
+        )))]
 
 [assume get_control_i (lambda (i)
   (list (_get_control_i i 0)
