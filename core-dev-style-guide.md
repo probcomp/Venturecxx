@@ -134,8 +134,8 @@ Pylint
   - If you feel that a particular style constraint is too strict or
     inappropriate in general, let's discuss it.
 
-Debugging C++
--------------
+Debugging C++ in GDB
+--------------------
 
 One way to run the Puma backend through Python under GDB is to create
 a file named `Venturecxx/.gdbinit` with content like
@@ -152,3 +152,11 @@ add-auto-load-safe-path /home/axch/work/pcp/Venturecxx/.gdbinit
 ```
 
 to one's `~/.gdbinit`.  With that ready, just run `gdb`.
+
+Checking C++ with Valgrind
+--------------------------
+
+We have a Valgrind suppressions file for problems that are (apprently)
+caused by Python rather than our code: `backend/new_cxx/valgrind-python.supp`.
+
+Check out the `tool/grind` script for an example of how to use it.
