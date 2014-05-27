@@ -10,7 +10,9 @@ import vehicle_program as vp
 
 def make_frame_dts(frame):
     first_dt = frame.index[0]
-    return numpy.append([first_dt], numpy.diff(list(frame.index)))
+    dts = numpy.append([first_dt], numpy.diff(list(frame.index)))
+    dts = map(lambda x: round(x, 6), dts)
+    return dts
 
 def insert_dts(frame):
     frame = frame.copy()
@@ -134,6 +136,44 @@ def generate_all_observes(sensor_frame, control_frame, gps_frame):
         pass
     return all_observes
 
+def propagate_left(left_frame, right_frame):
+    padded = left_frame.join(right_frame, how='outer').fillna(method='pad')
+    padded = padded.reindex(columns=left_frame.columns)
+    return padded.join(right_frame)
+def combine_frames(control_frame, gps_frame):
+    frame = propagate_left(control_frame, gps_frame)
+    frame = insert_dts(frame)
+    return frame
+def xs_to_control_observes(i, xs):
+    observes = []
+    if not numpy.isnan(xs.Velocity):
+        observes = [
+                    (vp.get_control_str % (i, 0), xs.Velocity),
+                    (vp.get_control_str % (i, 1), xs.Steering),
+                    ]
+    return observes
+def xs_to_gps_observes(i, xs):
+    observes = []
+    if not numpy.isnan(xs.x):
+        observe_str = vp.simulate_gps_str % i
+        observe_val = _convert((xs.x, xs.y, xs.heading))
+        observes = [(observe_str, observe_val), ]
+    return observes
+def xs_to_dt_observes(i, xs):
+    observes = [(vp.sample_dt_str % i, round(xs.dt, 6)), ]
+    return observes
+def xs_to_all_observes((i, (t, xs))):
+    control_observes = xs_to_control_observes(i, xs)
+    gps_observes = xs_to_gps_observes(i, xs)
+    dt_observes = xs_to_dt_observes(i, xs)
+    all_observes = control_observes + gps_observes + dt_observes
+    return all_observes
+def frames_to_all_observes(control_frame, gps_frame):
+    combined = combine_frames(control_frame, gps_frame)
+    combined.index = map(lambda x: round(x, 6), list(combined.index))
+    ts = list(combined.index)
+    all_observes = map(xs_to_all_observes, enumerate(combined.iterrows()))
+    return all_observes, ts
 
 
 def create_gps_observes(gps_frame):
@@ -172,7 +212,7 @@ def create_sample_strs(ts):
     create_sample_str = lambda t: (vp.sample_pose_str % t,)
     return map(create_sample_str, ts)
 
-def create_observe_sample_strs_lists(gps_frame, control_frame, N_timesteps=None):
+def bak_create_observe_sample_strs_lists(gps_frame, control_frame, N_timesteps=None):
     def interleave_observes(*args):
         all_observes = reduce(operator.add, map(list, args))
         my_cmp = lambda x, y: cmp(x[0], y[0])
@@ -182,6 +222,13 @@ def create_observe_sample_strs_lists(gps_frame, control_frame, N_timesteps=None)
     gps_observes = create_gps_observes(gps_frame)
     control_observes = create_control_observes(control_frame)
     ts, observe_strs_list = interleave_observes(control_observes, gps_observes)
+    sample_strs_list = create_sample_strs(ts)
+    observe_strs_list, sample_strs_list = \
+            observe_strs_list[:N_timesteps], sample_strs_list[:N_timesteps]
+    return observe_strs_list, sample_strs_list
+
+def create_observe_sample_strs_lists(gps_frame, control_frame, N_timesteps=None):
+    observe_strs_list, ts = frames_to_all_observes(control_frame, gps_frame)
     sample_strs_list = create_sample_strs(ts)
     observe_strs_list, sample_strs_list = \
             observe_strs_list[:N_timesteps], sample_strs_list[:N_timesteps]
