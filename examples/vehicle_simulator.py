@@ -11,7 +11,6 @@ import vehicle_program as vp
 def make_frame_dts(frame):
     first_dt = frame.index[0]
     dts = numpy.append([first_dt], numpy.diff(list(frame.index)))
-    dts = map(lambda x: round(x, 6), dts)
     return dts
 
 def insert_dts(frame):
@@ -89,7 +88,7 @@ def xs_to_gps_observes(i, xs):
         observes = [(observe_str, observe_val), ]
     return observes
 def xs_to_dt_observes(i, xs):
-    observes = [(vp.sample_dt_str % i, round(xs.dt, 6)), ]
+    observes = [(vp.sample_dt_str % i, xs.dt), ]
     return observes
 def xs_to_all_observes((i, (t, xs))):
     control_observes = xs_to_control_observes(i, xs)
@@ -99,7 +98,6 @@ def xs_to_all_observes((i, (t, xs))):
     return all_observes
 def frames_to_all_observes(control_frame, gps_frame):
     combined = combine_frames(control_frame, gps_frame)
-    combined.index = map(lambda x: round(x, 6), list(combined.index))
     ts = list(combined.index)
     all_observes = map(xs_to_all_observes, enumerate(combined.iterrows()))
     return all_observes, ts
