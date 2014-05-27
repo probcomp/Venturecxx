@@ -39,7 +39,7 @@ class Simulator(object):
 
     def _infer(self, infer_args):
         if not isinstance(infer_args, (list, tuple)):
-            infer_args = list(infer_args)
+            infer_args = [infer_args]
             pass
         def _do_infer(infer_arg):
             print "infering: %s" % infer_arg
