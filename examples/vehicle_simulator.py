@@ -260,7 +260,7 @@ if __name__ == '__main__':
     #
     dirname = os.path.join(base_dir, dataset_name, 'data', which_data)
     simulator = create_vehicle_simulator(dirname, vp.program, vp.N_mripls,
-            vp.backend, vp.infer_args, N_timesteps=10)
+            vp.backend, vp.infer_args)
     for _i in range(40):
         print _i
         print simulator.step()
