@@ -209,8 +209,9 @@ def create_control_observes(control_frame):
     return ret_list
 
 def create_sample_strs(ts):
-    create_sample_str = lambda t: (vp.sample_pose_str % t,)
-    return map(create_sample_str, ts)
+    _is = range(len(ts))
+    create_sample_str = lambda i: (vp.sample_pose_str % i,)
+    return map(create_sample_str, _is)
 
 def bak_create_observe_sample_strs_lists(gps_frame, control_frame, N_timesteps=None):
     def interleave_observes(*args):
