@@ -461,6 +461,12 @@ Open issues:
     def get_state(self):
         return self.execute_instruction({'instruction':'get_state'})['state']
 
+    def reinit_inference_problem(self, num_particles=None):
+        # TODO Adapt to renumbering of directives by the engine (or
+        # change the engine not to do that)
+        # TODO Go through the actual stack?
+        self.sivm.core_sivm.engine.reinit_inference_problem(num_particles)
+
     def get_logscore(self, label_or_did):
         if isinstance(label_or_did,int):
             i = {'instruction':'get_logscore', 'directive_id':label_or_did}
