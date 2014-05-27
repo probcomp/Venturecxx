@@ -1,5 +1,6 @@
 import vehicle_program as vp
 from venture.shortcuts import make_puma_church_prime_ripl
+from venture.venturemagics.ip_parallel import MRipl
 
 
 # vehicle
@@ -97,9 +98,9 @@ def create_venture_strs(i):
             ('(get_pose_i %s)' % i),
             ]
 import operator
-N_steps = 10
+N_steps = 20
 def get_predicts(N_steps):
-    return reduce(operator.add, map(create_venture_strs, range(N_steps)))
+    return map(create_venture_strs, range(N_steps))
 dts = [.1, .1, 1, .5, .2] + [.1] * N_steps
 def create_observes(i):
     venture_strs = create_venture_strs(i)
@@ -114,23 +115,38 @@ def create_observes(i):
             (venture_strs[3], _wrap(gps_obs)),
             ]
 def get_observes(N_steps):
-    return reduce(operator.add, map(create_observes, range(N_steps)))
+    return map(create_observes, range(N_steps))
 
-to_observe = get_observes(N_steps)
-to_predict = get_predicts(N_steps)
+to_observes = get_observes(N_steps)
+to_predicts = get_predicts(N_steps)
 
 
-ripl = make_puma_church_prime_ripl()
+N_mripls, backend = 8, 'puma'
+ripl = MRipl(N_mripls, backend=backend)
 ripl.execute_program(program)
 pre_predicted = []
 post_predicted = []
-for step_i, (_to_observe, _to_predict) in enumerate(zip(to_observe, to_predict)):
-    pre_predicted.append(predict(_to_predict))
-    print_predicted((_to_predict, pre_predicted[-1]))
-    ripl.observe(*_to_observe)
-    N_infer = 5
+for step_i, (to_observe, to_predict) in enumerate(zip(to_observes, to_predicts)):
+    pre_predicted.append(map(predict, to_predict))
+    print_predicted((to_predict, pre_predicted[-1]))
+    #
+    for el in to_observe:
+        ripl.observe(*el)
+        pass
+    N_infer = 40
     ripl.infer('(mh default all %s)' % N_infer)
-    post_predicted.append(predict(_to_predict))
-    print_predicted((_to_predict, post_predicted[-1]))
+    #
+    post_predicted.append(map(predict, to_predict))
+    print_predicted((to_predict, post_predicted[-1]))
     print
     pass
+
+
+import numpy
+take_mean = lambda el: numpy.array(el[-1]).mean(axis=0)
+means = numpy.array(map(take_mean, post_predicted))
+generative_means = numpy.append([0], numpy.cumsum(dts)[:N_steps])
+
+print generative_means
+print means
+print numpy.array(zip(means[:, 0], generative_means))
