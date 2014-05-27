@@ -119,6 +119,9 @@ class Engine(object):
     self.directives = {}
     self.traces = [self.Trace()]
     self.weights = [1]
+    self.ensure_rng_seeded_decently()
+
+  def ensure_rng_seeded_decently(self):
     # Frobnicate the trace's random seed because Trace() resets the
     # RNG seed from the current time, which sucks if one calls this
     # method often.
