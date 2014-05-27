@@ -65,7 +65,7 @@ program_control_generation = """
 [assume _get_control_i (scope_include (quote state) 1000002
   (mem (lambda (i coord)
     (if (= coord 0)
-        (gamma 1.0 velocity_gamma_rate)
+        (normal .1 velocity_gamma_rate)
         (normal steering_mean steering_std)
         ))))]
 
