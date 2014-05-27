@@ -134,10 +134,21 @@ Pylint
   - If you feel that a particular style constraint is too strict or
     inappropriate in general, let's discuss it.
 
+Debugging C++
+-------------
 
+One way to run the Puma backend through Python under GDB is to create
+a file named `Venturecxx/.gdbinit` with content like
 
+```
+target exec python
+run /usr/bin/nosetests [params]
+```
 
+In order for this to work, it may be necessary to add a line like
 
+```
+add-auto-load-safe-path /home/axch/work/pcp/Venturecxx/.gdbinit
+```
 
-
-
+to one's `~/.gdbinit`.  With that ready, just run `gdb`.
