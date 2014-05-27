@@ -37,19 +37,16 @@ class Simulator(object):
         _observe_datum = functools.partial(observe_datum, self.mripl)
         return map(_observe_datum, observe_strs)
 
-    def _infer(self, N_infer):
-        hypers = '(mh hypers one %s)' % N_infer
-        state = '(mh state one %s)' % N_infer
-        #
-        print "infering: %s" % hypers
-        self.mripl.infer(hypers)
-        print "done infering: %s" % hypers
-        #
-        print "infering: %s" % state
-        self.mripl.infer(state)
-        print "done infering: %s" % state
-        # self.mripl.infer(N_infer)
-        pass
+    def _infer(self, infer_args):
+        if not isinstance(infer_args, (list, tuple)):
+            infer_args = list(infer_args)
+            pass
+        def _do_infer(infer_arg):
+            print "infering: %s" % infer_arg
+            ret_val = self.mripl.infer(infer_arg)
+            print "done infering: %s" % infer_arg
+            return ret_val
+        return map(_do_infer, infer_args)
 
     def _sample(self, sample_strs):
         munge_sample = lambda sample: reduce(operator.add, zip(*sample))
