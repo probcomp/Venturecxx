@@ -4,14 +4,14 @@ import math
 import scipy.special
 import scipy.stats
 from utils import simulateCategorical
-from value import AtomType, ArrayType, MatrixType # The type names are metaprogrammed pylint: disable=no-name-in-module
+from value import AtomType, ArrayType, HomogeneousArrayType, NumberType # The type names are metaprogrammed pylint: disable=no-name-in-module
 import numpy as np
 import pdb
 
 def mvtLogDensity(x,mu,Sigma,v):
   p = np.size(x)
-  pterm1 = gammaln(float(v + p) / 2)
-  nterm1 = gammaln(float(v) / 2)
+  pterm1 = scipy.special.gammaln(float(v + p) / 2)
+  nterm1 = scipy.special.gammaln(float(v) / 2)
   nterm2 = (float(p)/2) * math.log(v * math.pi)
   nterm3 = (float(1)/2) * np.linalg.slogdet(Sigma)[1] 
   nterm4 = (float(v + p)/2) * math.log(1 + (float(1)/v) * (x - mu).T * np.linalg.inv(Sigma) * (x - mu))
@@ -73,7 +73,7 @@ class MakeCMVNOutputPSP(DeterministicPSP):
     m0 = np.mat(m0).transpose()
 
     d = np.size(m0)
-    output = TypedPSP(CMVNOutputPSP(d,m0,k0,v0,S0), SPType([], MatrixType()))
+    output = TypedPSP(CMVNOutputPSP(d,m0,k0,v0,S0), SPType([], HomogeneousArrayType(NumberType())))
     return CMVNSP(NullRequestPSP(),output,d)
     
   def childrenCanAAA(self): return True
@@ -108,20 +108,21 @@ class CMVNOutputPSP(RandomPSP):
     (mN,kN,vN,SN) = self.updatedParams(args.spaux)
     params = self.mvtParams(mN,kN,vN,SN)
     x = mvtSample(*params)
-    return x
+    return np.squeeze(np.array(x))
 
   def logDensity(self,x,args):
+    x = np.mat(x).reshape((self.d,1))
     (mN,kN,vN,SN) = self.updatedParams(args.spaux)
     return mvtLogDensity(x, *self.mvtParams(mN,kN,vN,SN))
 
   def incorporate(self,x,args):
-    x = np.mat(x)
+    x = np.mat(x).reshape((self.d,1))
     args.spaux.N += 1
     args.spaux.xTotal += x
     args.spaux.STotal += x * x.T
 
   def unincorporate(self,x,args):
-    x = np.mat(x)
+    x = np.mat(x).reshape((self.d,1))
     args.spaux.N -= 1
     args.spaux.xTotal -= x
     args.spaux.STotal -= x * x.T

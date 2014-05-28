@@ -193,16 +193,16 @@ def expToDict(exp):
   tag = exp[0]
   if tag == "mh":
     assert len(exp) >= 4 and len(exp) <= 7
-    useDeltaKernels = exp[4].lower() == "true" if len(exp) > 4 else False
+    useDeltaKernels = exp[4] if len(exp) > 4 else False
     deltaKernelArgs = exp[5] if len(exp) > 5 else None
-    updateValue = exp[6].lower() == "true" if len(exp) > 6 else None
+    updateValue = exp[6] if len(exp) > 6 else None
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],
             "useDeltaKernels":useDeltaKernels,"deltaKernelArgs":deltaKernelArgs,"updateValue":updateValue,"with_mutation":True}
   elif tag == "subsampled_mh":
     assert len(exp) >= 7 and len(exp) <= 10
-    useDeltaKernels = exp[7].lower() == "true" if len(exp) > 7 else False
+    useDeltaKernels = exp[7] if len(exp) > 7 else False
     deltaKernelArgs = exp[8] if len(exp) > 8 else None
-    updateValue = exp[9].lower() == "true" if len(exp) > 9 else None
+    updateValue = exp[9] if len(exp) > 9 else None
     return {"kernel":"subsampled_mh","scope":exp[1],"block":exp[2],"transitions":exp[3],
             "Nbatch":exp[4],"k0":exp[5],"epsilon":exp[6],
             "useDeltaKernels":useDeltaKernels,"deltaKernelArgs":deltaKernelArgs,"updateValue":updateValue,"with_mutation":True}
