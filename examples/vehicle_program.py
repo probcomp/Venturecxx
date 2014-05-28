@@ -52,11 +52,10 @@ get_observe_gps_str = lambda i: """
   (simulate_gps pose_%d gps_xy_noise_std gps_heading_noise_std))
 """ % (i, i)
 # ORDER: do_assume_dt, do_assume_control, do_assume_pose, do_observe_gps
-def get_assume(string, value):
+def get_assume_as_program(string, value):
     return '[assume %s %s]' % (string, value)
 def do_assume(ripl, string, value):
-    program = get_assume(string, value)
-    return ripl.execute_program(program)
+    return ripl.assume(string, value, label=string)
 def do_assume_dt(ripl, i, dt):
     string = dt_name_str % i
     value = dt
@@ -73,8 +72,9 @@ def do_assume_pose(ripl, i):
     string = pose_name_str % i
     value = get_pose_value_str(i)
     return do_assume(ripl, string, value)
-def do_observe(ripl, string, value):
-    return ripl.observe(string, value)
+def do_observe(ripl, string, value, label=None):
+    label = string if label is None else label
+    return ripl.observe(string, value, label=label)
 def do_observe_gps(ripl, i, gps_value):
     def _wrap(val):
         def _wrap_real(val):
@@ -85,7 +85,8 @@ def do_observe_gps(ripl, i, gps_value):
         return _wrap_list(val) if is_list else _wrap_real(val)
     string = get_observe_gps_str(i)
     value = _wrap(gps_value)
-    return do_observe(ripl, string, value)
+    label = 'gps_%d' % i
+    return do_observe(ripl, string, value, label=label)
 # infer helpers
 infer_parameters_str = '(mh parameters one %d)' % N_infer
 infer_state_str = '(mh %s all %d)' % ('%d', N_infer)
@@ -127,9 +128,9 @@ program_parameters = """
 """
 
 program_assumes = '\n'.join([
-    get_assume(dt_name_str % 0, random_dt_value_str % 0),
-    get_assume(pose_name_str % 0, random_pose_value_str % 0),
-    get_assume(control_name_str % 0, random_control_value_str % 0),
+    get_assume_as_program(dt_name_str % 0, random_dt_value_str % 0),
+    get_assume_as_program(pose_name_str % 0, random_pose_value_str % 0),
+    get_assume_as_program(control_name_str % 0, random_control_value_str % 0),
     ])
 
 program = program_constants + program_parameters + program_assumes
