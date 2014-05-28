@@ -49,7 +49,7 @@ random_pose_value_str = """
 """
 get_observe_gps_str = lambda i: """
 (scope_include (quote %d) 0
-  (simulate_gps pose_%d gps_xy_noise_std gps_heading_noise_std))
+  (simulate_gps pose_%d gps_xy_error_std gps_heading_error_std))
 """ % (i, i)
 # ORDER: do_assume_dt, do_assume_control, do_assume_pose, do_observe_gps
 def get_assume_as_program(string, value):
@@ -117,11 +117,11 @@ program_parameters = """
                                                   3
                                                   (gamma 1.0 100.0))]
 
-[assume gps_xy_noise_std (scope_include (quote parameters)
+[assume gps_xy_error_std (scope_include (quote parameters)
                                         4
                                         (gamma 1.0 10.0))]
 
-[assume gps_heading_noise_std (scope_include (quote parameters)
+[assume gps_heading_error_std (scope_include (quote parameters)
                                              5
                                              (gamma 1.0 100.0))]
 
