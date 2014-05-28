@@ -26,34 +26,47 @@ def read_combined_frame():
     combined_frame = vs.combine_frames(control_frame, gps_frame)
     return combined_frame
 
+def get_row_iter(frame, N_rows=None):
+    row_iter = None
+    if N_rows is not None:
+        row_iter = frame.head(N_rows).iterrows()
+        pass
+    else:
+        row_iter = frame.iterrows()
+        pass
+    return row_iter
+
 
 combined_frame = read_combined_frame()
 mripl = MRipl(no_ripls=64, backend='puma')
 mripl.execute_program(vp.program)
-
-max_rows = 20
+#
+N_rows = 30
 predictions = []
-for ts, row in combined_frame.head(max_rows).iterrows():
-    with Timer('row %s' % row.i) as t:
-        vp.do_assume_dt(mripl, row.i, row.dt)
-        if not numpy.isnan(row.Velocity):
-            vp.do_assume_control(mripl, row.i, row.Velocity, row.Steering)
+times = []
+with Timer('all rows') as t_outer:
+    for ts, row in get_row_iter(combined_frame, N_rows):
+        with Timer('row %s' % row.i) as t_inner:
+            vp.do_assume_dt(mripl, row.i, row.dt)
+            if not numpy.isnan(row.Velocity):
+                vp.do_assume_control(mripl, row.i, row.Velocity, row.Steering)
+                pass
+            else:
+                vp.do_assume_random_control(mripl, row.i)
+                pass
+            vp.do_assume_pose(mripl, row.i)
+            if not numpy.isnan(row.x):
+                vp.do_observe_gps(mripl, row.i, (row.x, row.y, row.heading))
+                pass
+            # do infers
+            mripl.infer(vp.get_infer_args(row.i)[0])
+            for _i in range(int(row.i))[-5:]:
+                mripl.infer(vp.get_infer_args(_i)[1])
+                pass
+            prediction = mripl.predict(vp.pose_name_str % row.i)
+            predictions.append(prediction)
             pass
-        else:
-            vp.do_assume_random_control(mripl, row.i)
-            pass
-        vp.do_assume_pose(mripl, row.i)
-        if not numpy.isnan(row.x):
-            vp.do_observe_gps(mripl, row.i, (row.x, row.y, row.heading))
-            pass
-        # do infers
-        mripl.infer(vp.get_infer_args(row.i)[0])
-        for _i in range(int(row.i))[-5:]:
-            mripl.infer(vp.get_infer_args(_i)[1])
-            pass
-        prediction = mripl.predict(vp.pose_name_str % row.i)
-        predictions.append(prediction)
+        times.append(t_inner.elapsed)
         pass
-    pass
 
 
