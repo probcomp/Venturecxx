@@ -190,7 +190,7 @@ if ON_MAC:
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
-        libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread-mt'],        
+        libraries = ['gsl', 'gslcblas', 'boost_python-mt', 'boost_system-mt', 'boost_thread-mt'],        
         extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC"],
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,

@@ -49,8 +49,31 @@ Here is what we install on a clean Mac OS X 10.9 (or higher).
     
     # Install libraries using homebrew
     brew install python ccache
-    brew install --without-python boost
     
+The tricky step is installing the correct version of the Boost library. The current Homebrew version of Boost is 1.55, but the puma backend breaks if Venture is built under this version. Instead, Boost 1.49 must be installed. These instructions assume that no versions of Boost are currently installed. If 1.55 and 1.49 are already installed on the machine, simply follow the instructions in part 1 of this thread: <http://stackoverflow.com/questions/3987683/homebrew-install-specific-version-of-formula> to switch to version 1.49.
+    
+    # First, install the current version
+    brew install --without-python boost
+    # Install an old version of gcc; Boost 1.49 breaks with clang on OS X 10.9
+    brew install apple-gcc42
+    # Install the old Boost
+    brew tap homebrew/versions             
+    brew install boost149 --cc=gcc-4.2
+    # Symlink boost 1.49 into boost folder, switch versions
+    ln -s /usr/local/Cellar/boost149/1.49.0/ /usr/local/Cellar/boost/1.49.0
+    brew switch boost 1.49.0
+    
+With this version of Boost in place, simply call the install script in the Venturecxx directory:
+
+	./install_osx_homebrew.sh
+	
+If desired, clean up by removing symlinks and switching back to default Boost:
+
+	brew switch boost 1.55.0_1
+	rm /usr/local/Cellar/boost/1.49.0
+
+Finally, Python dependendencies:
+
     # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
     # Also pulls in required external libraries
 	sudo brew install ipython
