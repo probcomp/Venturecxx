@@ -15,8 +15,8 @@ def logGenGamma(d,x):
 
 def mvtLogDensity(x,mu,Sigma,v):
   p = np.size(x)
-  pterm1 = scipy.special.gammaln(float(v + p) / 2)
-  nterm1 = scipy.special.gammaln(float(v) / 2)
+  pterm1 = gammaln(float(v + p) / 2)
+  nterm1 = gammaln(float(v) / 2)
   nterm2 = (float(p)/2) * math.log(v * math.pi)
   nterm3 = (float(1)/2) * np.linalg.slogdet(Sigma)[1] 
   nterm4 = (float(v + p)/2) * math.log(1 + (float(1)/v) * (x - mu).T * np.linalg.inv(Sigma) * (x - mu))
