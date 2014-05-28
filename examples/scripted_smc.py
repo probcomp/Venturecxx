@@ -6,6 +6,7 @@ import numpy
 from venture.venturemagics.ip_parallel import MRipl
 import vehicle_program as vp
 import vehicle_simulator as vs
+from contexts import Timer
 
 
 def read_combined_frame():
@@ -27,31 +28,32 @@ def read_combined_frame():
 
 
 combined_frame = read_combined_frame()
-mripl = MRipl(4, backend='puma')
+mripl = MRipl(no_ripls=64, backend='puma')
 mripl.execute_program(vp.program)
 
-max_rows = 40
+max_rows = 20
 predictions = []
 for ts, row in combined_frame.head(max_rows).iterrows():
-    vp.do_assume_dt(mripl, row.i, row.dt)
-    if not numpy.isnan(row.Velocity):
-        vp.do_assume_control(mripl, row.i, row.Velocity, row.Steering)
+    with Timer('row %s' % row.i) as t:
+        vp.do_assume_dt(mripl, row.i, row.dt)
+        if not numpy.isnan(row.Velocity):
+            vp.do_assume_control(mripl, row.i, row.Velocity, row.Steering)
+            pass
+        else:
+            vp.do_assume_random_control(mripl, row.i)
+            pass
+        vp.do_assume_pose(mripl, row.i)
+        if not numpy.isnan(row.x):
+            vp.do_observe_gps(mripl, row.i, (row.x, row.y, row.heading))
+            pass
+        # do infers
+        mripl.infer(vp.get_infer_args(row.i)[0])
+        for _i in range(int(row.i))[-5:]:
+            mripl.infer(vp.get_infer_args(_i)[1])
+            pass
+        prediction = mripl.predict(vp.pose_name_str % row.i)
+        predictions.append(prediction)
         pass
-    else:
-        vp.do_assume_random_control(mripl, row.i)
-        pass
-    vp.do_assume_pose(mripl, row.i)
-    if not numpy.isnan(row.x):
-        vp.do_observe_gps(mripl, row.i, (row.x, row.y, row.heading))
-        pass
-    # do infers
-    mripl.infer(vp.get_infer_args(row.i)[0])
-    for _i in range(int(row.i))[-5:]:
-        mripl.infer(vp.get_infer_args(_i)[1])
-        pass
-    prediction = mripl.predict(vp.pose_name_str % row.i)
-    print prediction
-    predictions.append(prediction)
     pass
 
 
