@@ -1,5 +1,5 @@
 from venture.test.stats import statisticalTest, reportKnownMean
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, defaultKernel
 from nose import SkipTest
 from testconfig import config
 
@@ -46,6 +46,7 @@ def testCMVN2D_mu2():
 @statisticalTest  
 def testCMVN2D_AAA():
   if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")
+  if defaultKernel() == "rejection": raise SkipTest("Cannot rejection sample cmvn AAA")
   
   ripl = get_ripl()
   ripl.assume("m0","(array (normal 5.0 0.0001) (normal 5.0 0.0001))")
