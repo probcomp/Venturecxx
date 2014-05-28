@@ -61,8 +61,8 @@ class CMVNSPAux(object):
   def copy(self):
     aux = CMVNSPAux(self.d)
     aux.N = self.N
-    aux.STotal = self.STotal
-    aux.xTotal = self.xTotal
+    aux.STotal = np.copy(self.STotal)
+    aux.xTotal = np.copy(self.xTotal)
     return aux
 
 class CMVNSP(VentureSP):
