@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ -z $1 ]; then
+    echo "Usage: grind python <script name> or grind nosetests <options>"
+    echo "Note: can also pass valgrind options like --leak-check=full before the executable"
+    exit 1
+fi
+
+valgrind --tool=memcheck --suppressions=backend/new_cxx/valgrind-python.supp $@

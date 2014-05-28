@@ -90,15 +90,22 @@ class Engine(object):
       raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
                              argument="directive_id", directive_id=directiveId)
     directive = self.directives[directiveId]
-    if directive[0] == "assume":
-      raise VentureException("invalid_argument", "Cannot forget an ASSUME directive",
-                             argument="directive_id", directive_id=directiveId)
-
     for trace in self.traces:
       if directive[0] == "observe": trace.unobserve(directiveId)
       trace.uneval(directiveId)
+      if directive[0] == "assume": trace.unbindInGlobalEnv(directive[1])
 
     del self.directives[directiveId]
+
+  def freeze(self,directiveId):
+    if directiveId not in self.directives:
+      raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",
+                             argument="directive_id", directive_id=directiveId)
+    # TODO Record frozen state for reinit_inference_problem?  What if
+    # the replay is done with a different number of particles than the
+    # original?  Where do the extra values come from?
+    for trace in self.traces:
+      trace.freeze(directiveId)
 
   def report_value(self,directiveId):
     if directiveId not in self.directives:
@@ -112,19 +119,26 @@ class Engine(object):
     self.directives = {}
     self.traces = [self.Trace()]
     self.weights = [1]
+    self.ensure_rng_seeded_decently()
+
+  def ensure_rng_seeded_decently(self):
     # Frobnicate the trace's random seed because Trace() resets the
     # RNG seed from the current time, which sucks if one calls this
     # method often.
     self.set_seed(random.randint(1,2**31-1))
 
-  # Blow away the trace and rebuild one from the directives.  The goal
-  # is to resample from the prior.  May have the unfortunate effect of
-  # renumbering the directives, if some had been forgotten.
-  # Note: This is not the same "reset" as appears in the Venture SIVM
-  # instruction set.
-  def reset(self):
+  # TODO There should also be capture_inference_problem and
+  # restore_inference_problem (Analytics seems to use something like
+  # it)
+  def reinit_inference_problem(self, num_particles=None):
+    """Blow away all the traces and rebuild from the stored directives.
+
+The goal is to resample from the prior.  May have the unfortunate
+effect of renumbering the directives, if some had been forgotten."""
     worklist = sorted(self.directives.iteritems())
     self.clear()
+    if num_particles is not None:
+      self.infer("(resample %d)" % num_particles)
     for (_,dir) in worklist:
       self.replay(dir)
 
@@ -204,6 +218,7 @@ class Engine(object):
       for p in params['subkernels']:
         self.set_default_params(p)
   
+  def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
 
   def get_entropy_info(self):

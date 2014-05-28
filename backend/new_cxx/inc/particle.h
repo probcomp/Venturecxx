@@ -6,6 +6,7 @@
 #include "smap.h"
 #include "value.h"
 
+#include "rng.h"
 #include "pset.hpp"
 #include "pmap.hpp"
 
@@ -15,7 +16,7 @@ using persistent::PSet;
 struct Particle : Trace
 {
   Particle(ConcreteTrace * outerTrace);
-  Particle(ConcreteTrace * outerTrace, shared_ptr<gsl_rng> rng);
+  Particle(ConcreteTrace * outerTrace, shared_ptr<RNGbox> rng);
   Particle(shared_ptr<Particle> outerParticle);
 
 /* Methods */
@@ -148,7 +149,7 @@ struct Particle : Trace
   map<Node*, shared_ptr<SPAux> > madeSPAuxs;
 
   /* (optional) rng override */
-  shared_ptr<gsl_rng> rng;
+  shared_ptr<RNGbox> rng;
 };
 
 

@@ -286,6 +286,7 @@ class Trace(object):
     (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),OmegaDB(),{})
 
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
+  def unbindInGlobalEnv(self,sym): self.globalEnv.removeBinding(sym)
 
   def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
 
@@ -409,8 +410,12 @@ class Trace(object):
       random.seed(seed)
       numpy.random.seed(seed)
 
+  def getDirectiveLogScore(self,id):
+    assert id in self.families
+    node = self.families[id]
+    return self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node))
+
   def getGlobalLogScore(self):
-    # TODO Get the constrained nodes too
     return sum([self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node)) for node in self.rcs.union(self.ccs)])
 
   #### Helpers (shouldn't be class methods)

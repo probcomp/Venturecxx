@@ -72,6 +72,11 @@ void PyTrace::bindInGlobalEnv(const string& sym, DirectiveID did)
   trace->globalEnvironment->addBinding(sym,trace->families[did].get());
 }
 
+void PyTrace::unbindInGlobalEnv(const string& sym)
+{
+  trace->globalEnvironment->removeBinding(sym);
+}
+
 boost::python::object PyTrace::extractPythonValue(DirectiveID did)
 {
   assert(trace->families.count(did));
@@ -90,6 +95,22 @@ size_t PyTrace::getSeed() {
   return 0;
 }
 
+// TODO Should getDirectiveLogScore compute something about all the
+// nodes in the family or just the top one?
+double PyTrace::getDirectiveLogScore(DirectiveID did)
+{
+  assert(trace->families.count(did));
+  RootOfFamily root = trace->families[did];
+  ApplicationNode * node = dynamic_cast<ApplicationNode*>(root.get());
+  if (node != NULL)
+  {
+    shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
+    shared_ptr<Args> args = trace->getArgs(node);
+    return psp->logDensity(trace->getValue(node),args);
+  } else {
+    return 0; // Is zero really the right logscore for non-application directives?
+  }
+}
 
 double PyTrace::getGlobalLogScore() 
 {
@@ -152,6 +173,11 @@ struct Inferer
       bool inParallel  = boost::python::extract<bool>(params["in_parallel"]);
       gKernel = shared_ptr<GKernel>(new EnumerativeGibbsGKernel(inParallel));
     }
+    else if (kernel == "emap")
+    {
+      bool inParallel  = boost::python::extract<bool>(params["in_parallel"]);
+      gKernel = shared_ptr<GKernel>(new EnumerativeMAPGKernel(inParallel));
+    }
     else if (kernel == "slice")
     {
       gKernel = shared_ptr<GKernel>(new SliceGKernel);
@@ -204,7 +230,7 @@ struct Inferer
 
   void inferCycle()
   {
-    for (int i = 0; i < subkernels.size(); i++)
+    for (size_t i = 0; i < subkernels.size(); i++)
     {
       subkernels[i]->infer();
     }
@@ -358,10 +384,12 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("eval", &PyTrace::evalExpression)
     .def("uneval", &PyTrace::unevalDirectiveID)
     .def("bindInGlobalEnv", &PyTrace::bindInGlobalEnv)
+    .def("unbindInGlobalEnv", &PyTrace::unbindInGlobalEnv)
     .def("extractValue", &PyTrace::extractPythonValue)
     .def("set_seed", &PyTrace::setSeed)
     .def("get_seed", &PyTrace::getSeed)
     .def("numRandomChoices", &PyTrace::numUnconstrainedChoices)
+    .def("getDirectiveLogScore", &PyTrace::getDirectiveLogScore)
     .def("getGlobalLogScore", &PyTrace::getGlobalLogScore)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)

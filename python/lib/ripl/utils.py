@@ -202,6 +202,12 @@ def expToDict(exp):
     if len(exp) == 5:
       ans["in_parallel"] = exp[4]
     return ans
+  elif tag == "emap":
+    assert 4 <= len(exp) and len(exp) <= 5
+    ans = {"kernel":"emap","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
+    if len(exp) == 5:
+      ans["in_parallel"] = exp[4]
+    return ans
   elif tag == "slice":
     assert len(exp) == 4
     return {"kernel":"slice","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":True}

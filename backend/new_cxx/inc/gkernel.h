@@ -15,7 +15,8 @@ struct GKernel
 
   virtual void accept() =0;
   virtual void reject() =0;
-  
+
+  virtual ~GKernel() {}
 };
 
 

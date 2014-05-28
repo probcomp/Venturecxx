@@ -26,12 +26,14 @@ struct PyTrace
   void unobserve(DirectiveID did);
 
   void bindInGlobalEnv(const string& sym, DirectiveID did);
+  void unbindInGlobalEnv(const string& sym);
 
   boost::python::object extractPythonValue(DirectiveID did);
 
   void setSeed(size_t seed);
   size_t getSeed();
 
+  double getDirectiveLogScore(DirectiveID did);
   double getGlobalLogScore();
   uint32_t numUnconstrainedChoices();
 
@@ -51,7 +53,7 @@ struct PyTrace
 
   void freeze(DirectiveID did);
 
-  PyTrace* stop_and_copy();
+  PyTrace* stop_and_copy() const;
 private:
   shared_ptr<ConcreteTrace> trace;
   

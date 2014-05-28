@@ -88,7 +88,7 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None,infer_merge=None):
     # tests, presumably by avoiding the parser.
     ripl.sivm.core_sivm.engine.infer(infer)
     predictions.append(ripl.report(address))
-    if iid: ripl.sivm.core_sivm.engine.reset()
+    if iid: ripl.sivm.core_sivm.engine.reinit_inference_problem()
   return predictions
 
 def defaultInfer():

@@ -186,7 +186,7 @@ if ON_LINUX:
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
 if ON_MAC:
-    puma = Extension("venture.puma.libtrace",
+    puma = Extension("venture.puma.libpumatrace",
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],

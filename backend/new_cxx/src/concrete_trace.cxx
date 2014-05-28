@@ -16,11 +16,11 @@
 
 /* Constructor */
 
-ConcreteTrace::ConcreteTrace(): Trace(), rng(gsl_rng_alloc(gsl_rng_mt19937)) {}
+ConcreteTrace::ConcreteTrace(): Trace(), rng(shared_ptr<RNGbox>(new RNGbox(gsl_rng_mt19937))) {}
 
 void ConcreteTrace::initialize()
 {
-  gsl_rng_set (rng,time(NULL));
+  rng->set_seed(time(NULL));
 
   vector<shared_ptr<VentureSymbol> > syms;
   vector<Node*> nodes;
@@ -176,6 +176,7 @@ void ConcreteTrace::decNumRequests(RootOfFamily root)
 { 
   assert(numRequests.count(root));
   numRequests[root]--;
+  if (numRequests[root] == 0) { numRequests.erase(root); }
 }
 
 void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
@@ -186,10 +187,10 @@ void ConcreteTrace::removeChild(Node * node, Node * child)
 }
 
 /* Primitive getters */
-gsl_rng * ConcreteTrace::getRNG() { return rng; }
+gsl_rng * ConcreteTrace::getRNG() { return rng->get_rng(); }
 
 VentureValuePtr ConcreteTrace::getValue(Node * node) 
-{ 
+{
   assert(values[node]); 
   return values[node]; 
 }
@@ -218,7 +219,7 @@ shared_ptr<VentureSPRecord> ConcreteTrace::getMadeSPRecord(Node * makerNode)
   return madeSPRecords[makerNode]; 
 }
 vector<RootOfFamily> ConcreteTrace::getESRParents(Node * node) 
-{ 
+{
   if (esrRoots.count(node)) { return esrRoots[node]; } 
   else { return vector<RootOfFamily>(); }
 }
@@ -320,7 +321,11 @@ RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
 
 /* New in ConcreteTrace */
 
-BlockID ConcreteTrace::sampleBlock(ScopeID scope) { assert(scopes.count(scope)); return scopes[scope].sampleKeyUniformly(rng); }
+BlockID ConcreteTrace::sampleBlock(ScopeID scope)
+{
+  assert(scopes.count(scope));
+  return scopes[scope].sampleKeyUniformly(getRNG());
+}
 
 //vector<BlockID> ConcreteTrace::blocksInScope(ScopeID scope) { assert(false); }
 int ConcreteTrace::numBlocksInScope(ScopeID scope) 
@@ -483,9 +488,12 @@ void ConcreteTrace::freezeDirectiveID(DirectiveID did)
 
 void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
 {
+  VentureValuePtr curVal = getValue(outputNode);
   unevalFamily(this,outputNode,shared_ptr<Scaffold>(new Scaffold()),shared_ptr<DB>(new DB()));
-  outputNode->isFrozen = true; // this is never looked at
-    
+  outputNode->isFrozen = true;
+  outputNode->exp = curVal; // Get rid of the former expression; seems harmless and should save memory (and copying)
+  setValue(outputNode, curVal);
+
   delete outputNode->requestNode;
   for (size_t i = 0; i < outputNode->operandNodes.size(); ++i) { delete outputNode->operandNodes[i]; }
   delete outputNode->operatorNode;
@@ -496,4 +504,163 @@ void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
 
 }
 
-ConcreteTrace::~ConcreteTrace() { gsl_rng_free(rng); }
+template <typename K, typename V>
+set<K> keySet(map<K, V> m)
+{
+  set<K> answer;
+  pair<K, V> me;
+  BOOST_FOREACH(me, m)
+  {
+    answer.insert(me.first);
+  }
+  return answer;
+
+}
+void ConcreteTrace::seekInconsistencies()
+{
+  typedef pair<RootOfFamily,int> countpair;
+  BOOST_FOREACH(countpair p, numRequests)
+  {
+    if (p.second == 0)
+    {
+      cout << "Warning: found family with zero requests: " << p.first << " " << p.first->exp << endl;
+    }
+  }
+  set<Node*> walkedNodes = allNodes();
+  BOOST_FOREACH(Node* n, walkedNodes)
+  {
+    if (values.count(n) < 1)
+    {
+      cout << "Warning: found node with no value: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, unconstrainedChoices)
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling unconstrainedChoice entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, constrainedChoices)
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling constrainedChoice entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, arbitraryErgodicKernels)
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling arbitraryErgodicKernel entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, keySet(unpropagatedObservations))
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling unpropagatedObservation entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, keySet(aaaMadeSPAuxs))
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling aaaMadeSPAux entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, keySet(esrRoots))
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling esrRoot entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, keySet(madeSPRecords))
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling madeSPRecord entry: " << n << endl;
+    } else {
+      if (!dynamic_pointer_cast<VentureSPRef>(values[n]).get())
+      {
+        cout << "Warning: found node " << n << " with madeSPRecord entry but non-SPRef value " << values[n] << endl;
+      } else {
+        shared_ptr<VentureSPRef> spref(dynamic_pointer_cast<VentureSPRef>(values[n]));
+        if (!(spref->makerNode == n))
+        {
+          cout << "Warning: found maker node " << n << " whose value is not a self-link" << endl;
+        }
+      }
+    }
+  }
+  BOOST_FOREACH(Node* n, keySet(values))
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling value entry: " << n << endl;
+    }
+  }
+  BOOST_FOREACH(Node* n, keySet(observedValues))
+  {
+    if (walkedNodes.count(n) < 1)
+    {
+      cout << "Warning: found dangling observedValue entry: " << n << endl;
+    }
+  }
+}
+
+vector<Node*> familyParents(Node* node)
+{
+  vector<Node*> answer;
+  if (dynamic_cast<ConstantNode*>(node)) { return vector<Node*>(); }
+  if (dynamic_cast<LookupNode*>(node)) { return vector<Node*>(); }
+  if (dynamic_cast<OutputNode*>(node))
+  {
+    answer.push_back(dynamic_cast<OutputNode*>(node)->requestNode);
+    // The operator and operands will get picked up when traversing
+    // the requester node
+  }
+  if (dynamic_cast<RequestNode*>(node))
+  {
+    RequestNode* n = dynamic_cast<RequestNode*>(node);
+    answer.push_back(n->operatorNode);
+    answer.insert(answer.end(), n->operandNodes.begin(), n->operandNodes.end());
+  }
+  return answer;
+}
+
+void addNodes(Node* root, set<Node*>& answer)
+{
+  if (root == NULL) { return; }
+  assert(answer.count(root) == 0);
+  answer.insert(root);
+  BOOST_FOREACH(Node* p, familyParents(root))
+  {
+    addNodes(p, answer);
+  }
+}
+
+set<Node*> ConcreteTrace::allNodes()
+{
+  set<Node*> answer;
+  BOOST_FOREACH(shared_ptr<Node> node, builtInNodes)
+  {
+    assert(dynamic_cast<ConstantNode*>(node.get()));
+    assert(answer.count(node.get()) == 0);
+    answer.insert(node.get());
+  }
+  typedef pair<DirectiveID, RootOfFamily> family_map_entry;
+  BOOST_FOREACH(family_map_entry fam, families)
+  {
+    Node* root(fam.second.get());
+    addNodes(root, answer);
+  }
+  typedef pair<RootOfFamily, int> num_request_map_entry;
+  BOOST_FOREACH(num_request_map_entry fam, numRequests)
+  {
+    Node* root(fam.first.get());
+    addNodes(root, answer);
+  }
+  return answer;
+}

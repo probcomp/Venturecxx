@@ -86,7 +86,7 @@ struct VentureArray : VentureValue
   string toString() const;
   string asExpression() const;
   vector<VentureValuePtr> xs;
-  VentureArray* copy_help(ForwardingMap* m);
+  VentureArray* copy_help(ForwardingMap* m) const;
 };
 
 struct VentureNil : VentureValue
@@ -125,7 +125,7 @@ struct VenturePair : VentureValue
   int size() const { return 1 + getRest()->size(); }
   VentureValuePtr car;
   VentureValuePtr cdr;
-  VenturePair* copy_help(ForwardingMap* m);
+  VenturePair* copy_help(ForwardingMap* m) const;
 };
 
 struct VentureSimplex : VentureValue
@@ -158,7 +158,7 @@ struct VentureDictionary : VentureValue
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
   MapVVPtrVVPtr dict;
-  VentureDictionary* copy_help(ForwardingMap* m);
+  VentureDictionary* copy_help(ForwardingMap* m) const;
 };
 
 struct VentureMatrix : VentureValue
@@ -210,7 +210,7 @@ struct VentureNode : VentureValue
   string toString() const;
   size_t hash() const;
   Node * node;
-  VentureNode* copy_help(ForwardingMap* m);
+  VentureNode* copy_help(ForwardingMap* m) const;
 };
 
 /* Use the memory location as a unique hash. */
