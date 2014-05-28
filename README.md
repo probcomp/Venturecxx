@@ -174,8 +174,9 @@ Getting Started
     [examples](http://probcomp.csail.mit.edu/venture/library-examples.html)
     for inspiration.
 
--   You can find two advanced examples in the `examples/` directory.
-    These rely on VentureUnit (included), an experimental inference
+-   You can find two advanced examples in the `examples/`
+    directory---`examples/lda.py` and `examples/crosscat.py` These
+    rely on VentureUnit (included), an experimental inference
     visualization wrapper using Venture as a library.
 
 
