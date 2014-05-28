@@ -190,15 +190,16 @@ Getting Started
 
 -   Venture as a library in Python:
 
-        python -i -c 'from venture import shortcuts; ripl = shortcuts.make_church_prime_ripl()'
+        python -i -c 'from venture import shortcuts; ripl = shortcuts.Puma().make_church_prime_ripl()'
 
     Using Venture as a library allows you to drive it
     programmatically.  You might like to peruse the
     [examples](http://probcomp.csail.mit.edu/venture/library-examples.html)
     for inspiration.
 
--   You can find two advanced examples in the `examples/` directory.
-    These rely on VentureUnit (included), an experimental inference
+-   You can find two advanced examples in the `examples/`
+    directory---`examples/lda.py` and `examples/crosscat.py` These
+    rely on VentureUnit (included), an experimental inference
     visualization wrapper using Venture as a library.
 
 

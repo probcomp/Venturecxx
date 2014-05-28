@@ -42,6 +42,25 @@ def testCMVN2D_mu2():
   mu2 = [p[1] for p in predictions]
 
   return reportKnownMean(5, mu2)
+
+@statisticalTest  
+def testCMVN2D_AAA():
+  if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")
+  
+  ripl = get_ripl()
+  ripl.assume("m0","(array (normal 5.0 0.0001) (normal 5.0 0.0001))")
+  ripl.assume("k0","7.0")
+  ripl.assume("v0","11.0")
+  ripl.assume("S0","(matrix (array (array 13.0 0.0) (array 0.0 13.0)))")
+  ripl.assume("f","(make_cmvn m0 k0 v0 S0)")
+
+  ripl.predict("(f)",label="pid")
+
+  predictions = collectSamples(ripl,"pid")
+
+  mu2 = [p[1] for p in predictions]
+
+  return reportKnownMean(5, mu2)
   
 
   # Variance is not being tested
