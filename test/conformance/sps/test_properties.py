@@ -126,8 +126,15 @@ def eval_in_ripl(expr):
 
 def testRiplSimulate():
   for (name,sp) in relevantSPs():
-    if not sp.outputPSP.isRandom():
-      yield checkRiplAgreesWithDeterministicSimulate, name, sp
+    if name not in ["scope_include", # Because scope_include is
+                                     # misannotated as to the true
+                                     # permissible types of scopes and
+                                     # blocks
+                    "get_current_environment", # Because BogusArgs gives a bogus environment
+                    "extend_environment", # Because BogusArgs gives a bogus environment
+                  ]:
+      if not sp.outputPSP.isRandom():
+        yield checkRiplAgreesWithDeterministicSimulate, name, sp
 
 def checkRiplAgreesWithDeterministicSimulate(name, sp):
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
