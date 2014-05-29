@@ -492,6 +492,7 @@ def makeDensityFunction(trace,scaffold,psp,pnode):
   from particle import Particle
   def f(x):
     scaffold.lkernels[pnode] = DeterministicLKernel(psp,VentureNumber(x))
+    # The particle is a way to regen without clobbering the underlying trace
     return math.exp(regenAndAttach(Particle(trace),scaffold.border[0],scaffold,False,OmegaDB(),{}))
   return f
   
