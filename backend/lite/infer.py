@@ -9,7 +9,7 @@ from detach import detachAndExtract
 from scaffold import constructScaffold
 from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
-from utils import sampleLogCategorical, cartesianProduct, logaddexp
+from utils import sampleLogCategorical, cartesianProduct, logaddexp, FixedRandomness
 from nose.tools import assert_almost_equal # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 from value import VentureNumber
 import copy
@@ -590,8 +590,7 @@ class GradientOfRegen(object):
     # Pass and store the pnodes because their order matters, and the
     # scaffold has them as a set
     self.pnodes = pnodes
-    self.pyr_state = random.getstate()
-    self.numpyr_state = npr.get_state()
+    self.fixed_randomness = FixedRandomness()
 
   def __call__(self, values):
     """Returns the gradient of the weight of regenerating along
@@ -608,17 +607,9 @@ class GradientOfRegen(object):
 
   def fixed_regen(self, values):
     # Ensure repeatability of randomness
-    cur_pyr_state = random.getstate()
-    cur_numpyr_state = npr.get_state()
-    try:
-      random.setstate(self.pyr_state)
-      npr.set_state(self.numpyr_state)
+    with self.fixed_randomness:
       registerDeterministicLKernels(self.trace, self.scaffold, self.pnodes, values)
-      answer = regenAndAttach(self.trace, self.scaffold.border[0], self.scaffold, False, OmegaDB(), {})
-    finally:
-      random.setstate(cur_pyr_state)
-      npr.set_state(cur_numpyr_state)
-    return answer
+      return regenAndAttach(self.trace, self.scaffold.border[0], self.scaffold, False, OmegaDB(), {})
 
 class HamiltonianMonteCarloOperator(InPlaceOperator):
 
