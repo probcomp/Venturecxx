@@ -1,3 +1,6 @@
+import serialize
+
+@serialize.register
 class Request(object):
   def __init__(self,esrs=None,lsrs=None):
     if esrs is None: esrs = []
@@ -5,6 +8,7 @@ class Request(object):
     self.esrs = esrs
     self.lsrs = lsrs
 
+@serialize.register
 class ESR(object):
   def __init__(self,id,exp,env,block=None,subBlock=None):
     self.id = id
@@ -13,3 +17,5 @@ class ESR(object):
     self.block = block
     self.subBlock = subBlock
 
+  def __repr__(self):
+    return "ESR(%s, %s, %s, %s, %s)" % (self.id, self.exp, self.env, self.block, self.subBlock)

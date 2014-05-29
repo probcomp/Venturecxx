@@ -1,7 +1,9 @@
-from value import VentureValue, registerVentureType, VentureType
+from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType
 from abc import ABCMeta
 import copy
+import serialize
 
+@serialize.register
 class SPFamilies(object):
   def __init__(self, families=None):
     if families:
@@ -19,10 +21,24 @@ class SPFamilies(object):
 
   def copy(self):
     return SPFamilies(self.families.copy())
+
+  def serialize(self, s):
+    return s.serialize_default(self)
+
+  def deserialize(self, s, data):
+    return s.deserialize_default(self, data)
   
+@serialize.register
 class SPAux(object):
   def copy(self): return SPAux()
 
+  def serialize(self, s):
+    return {}
+
+  def deserialize(self, s, _):
+    pass
+
+@serialize.register
 class VentureSP(VentureValue):
   __metaclass__ = ABCMeta
 
@@ -35,6 +51,7 @@ class VentureSP(VentureValue):
   def simulateLatents(self,spaux,lsr,shouldRestore,latentDB): pass
   def detachLatents(self,spaux,lsr,latentDB): pass
   def hasAEKernel(self): return False
+  def show(self, _spaux): return "unknown spAux"
   def description(self,name):
     candidate = self.outputPSP.description(name)
     if candidate:
@@ -43,8 +60,26 @@ class VentureSP(VentureValue):
     if candidate:
       return candidate
     return name
+  def venture_type(self):
+    if hasattr(self.outputPSP, "f_type"):
+      return self.outputPSP.f_type
+    else:
+      return self.requestPSP.f_type
   # VentureSPs are intentionally not comparable until we decide
   # otherwise
+
+  # for serialization
+  cyclic = True
+
+  def serialize(self, s):
+    ret = {}
+    ret['requestPSP'] = s.serialize(self.requestPSP)
+    ret['outputPSP'] = s.serialize(self.outputPSP)
+    return ret
+
+  def deserialize(self, s, data):
+    self.requestPSP = s.deserialize(data['requestPSP'])
+    self.outputPSP = s.deserialize(data['outputPSP'])
 
 registerVentureType(VentureSP)
 
@@ -55,6 +90,8 @@ how to wrap and unwrap individual values or Args objects.  This is
 used in the implementation of TypedPSP and TypedLKernel."""
   def asVentureValue(self, thing): return thing
   def asPython(self, vthing): return vthing
+  def distribution(self, _base, **_kwargs):
+    return None
   def __contains__(self, vthing): return isinstance(vthing, VentureSP)
 
   def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
@@ -77,14 +114,26 @@ used in the implementation of TypedPSP and TypedLKernel."""
     if args.isOutput:
       assert not args.esrValues # TODO Later support outputs that have non-latent requesters
     answer = copy.copy(args)
-    if not self.variadic:
-      assert len(args.operandValues) >= self.min_req_args
-      assert len(args.operandValues) <= len(self.args_types)
-      # v could be None when computing log density bounds for a torus
-      answer.operandValues = [self.args_types[i].asPythonNoneable(v) for (i,v) in enumerate(args.operandValues)]
-    else:
-      answer.operandValues = [self.args_types[0].asPythonNoneable(v) for v in args.operandValues]
+    answer.operandValues = self.unwrap_arg_list(args.operandValues)
     return answer
+
+  def unwrap_arg_list(self, lst):
+    if not self.variadic:
+      assert len(lst) >= self.min_req_args
+      assert len(lst) <= len(self.args_types)
+      # v could be None when computing log density bounds for a torus
+      return [self.args_types[i].asPythonNoneable(v) for (i,v) in enumerate(lst)]
+    else:
+      return [self.args_types[0].asPythonNoneable(v) for v in lst]
+
+  def wrap_arg_list(self, lst):
+    if not self.variadic:
+      assert len(lst) >= self.min_req_args
+      assert len(lst) <= len(self.args_types)
+      # v could be None when computing log density bounds for a torus
+      return [self.args_types[i].asVentureValue(v) for (i,v) in enumerate(lst)]
+    else:
+      return [self.args_types[0].asVentureValue(v) for v in lst]
 
   def _name_for_fixed_arity(self, args_types):
     args_spec = " ".join([t.name() for t in args_types])
@@ -99,3 +148,11 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def name(self):
     """A default name for when there is only room for one name."""
     return self._name_for_fixed_arity(self.args_types)
+
+  def gradient_type(self):
+    def to_grad_type(type_):
+      if isinstance(type_, ProbabilityType) or isinstance(type_, PositiveType):
+        return NumberType()
+      else:
+        return type_
+    return SPType([to_grad_type(t) for t in self.args_types], to_grad_type(self.return_type), self.variadic, self.min_req_args)

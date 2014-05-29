@@ -80,8 +80,8 @@ def testNormalWithObserve3():
   # Posterior for a is normal with mean 34/3, precision 3/2 (variance 2/3)
   ripl.predict("""
 (if (lt a 100.0)
-  (normal (plus a b) 1.0)
-  (normal (times a b) 1.0))
+  (normal (+ a b) 1.0)
+  (normal (* a b) 1.0))
 """)
 
   predictions = collectSamples(ripl,4,infer="mixes_slowly")
@@ -111,12 +111,13 @@ def testStudentT1():
 
 @statisticalTest
 def testStudentT2():
-  "Simple program involving simulating from a student_t"
+  "Simple program involving simulating from a student_t, with basic testing of loc and shape params"
   ripl = get_ripl()
-  ripl.assume("a", "(student_t 1.0)")
+  ripl.assume("x", "(student_t 1.0 3 2)")
+  ripl.assume("a", "(/ (- x 3) 2)")
   ripl.observe("(normal a 1.0)", 3.0)
-  ripl.predict("(normal a 1.0)")
-  predictions = collectSamples(ripl,3,infer="mixes_slowly")
+  ripl.predict("(normal a 1.0)",label="pid")
+  predictions = collectSamples(ripl,"pid",infer="mixes_slowly")
 
   # Posterior of a is proprtional to
   def postprop(a):
@@ -187,7 +188,7 @@ def testGeometric1():
   "Geometric written with bernoullis and ifs, with absorbing at the condition."
   ripl = get_ripl()
   ripl.assume("p","(if (flip) 0.5 0.5)")
-  ripl.assume("geo","(lambda (p) (if (bernoulli p) 1 (plus 1 (geo p))))")
+  ripl.assume("geo","(lambda (p) (if (bernoulli p) 1 (+ 1 (geo p))))")
   ripl.predict("(geo p)",label="pid")
 
   predictions = collectSamples(ripl,"pid")

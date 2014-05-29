@@ -43,7 +43,7 @@ class TestVentureScriptParserAtoms(ParserTestCase):
     _multiprocess_can_split_ = True
 
     def setUp(self):
-        self.p = VentureScriptParser()
+        self.p = VentureScriptParser.instance()
 
     def test_collapse_identity(self):
         # "((a+b))"
@@ -528,7 +528,7 @@ class TestVentureScriptParserAtoms(ParserTestCase):
 
 class TestVentureScriptParser(ParserTestCase):
     def setUp(self):
-        self.p = VentureScriptParser()
+        self.p = VentureScriptParser.instance()
 
     def test_parse_instruction(self):
         output = self.p.parse_instruction('assume a = b(c,d)')
@@ -594,7 +594,7 @@ class TestVentureScriptParser(ParserTestCase):
 
 class TestInstructions(ParserTestCase):
     def setUp(self):
-        self.p = VentureScriptParser()
+        self.p = VentureScriptParser.instance()
         self.expression = self.p.instruction
 
 

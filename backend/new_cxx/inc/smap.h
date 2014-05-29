@@ -10,20 +10,20 @@
 using std::cout;
 using std::endl;
 
-template <typename K,typename V>
+template <typename V>
 struct SamplableMap
 {
-  VentureValuePtrMap<int> d;
-  vector<pair<K,V> > a;
+  MapVVPtrInt d;
+  vector<pair<VentureValuePtr,V> > a;
 
-  V & get(K k) 
+  V & get(VentureValuePtr k) 
     {       
       assert(size() > 0);
       assert(d.count(k));
       V & v = a[d[k]].second; 
       return v;
     }
-  void set(K k,V v) 
+  void set(VentureValuePtr k,V v) 
     { 
       assert(!d.count(k));
       d[k] = a.size();
@@ -31,12 +31,12 @@ struct SamplableMap
       assert(size() > 0);
     }
 
-  void erase(const K & k) 
+  void erase(const VentureValuePtr & k) 
     {
       assert(d.count(k));
       int index = d[k];
       int lastIndex = a.size() - 1;
-      pair<K,V> lastPair = a[lastIndex];
+      pair<VentureValuePtr,V> lastPair = a[lastIndex];
 
       d[lastPair.first] = index;
       a[index] = lastPair;
@@ -46,12 +46,35 @@ struct SamplableMap
       assert(d.size() == a.size());
     }
 
+  // [FIXME] slow and awkward
+  // URGENT won't compile because of incomprehensible syntax errors
+  vector<VentureValuePtr> getOrderedKeys()
+  {
+    std::set<VentureValuePtr,VentureValuePtrsLess> keys;
+    for (size_t i = 0; i < a.size(); ++i) { keys.insert(a[i].first); }
+    vector<VentureValuePtr> orderedKeys(keys.begin(),keys.end());
+    return orderedKeys;
+  }
 
-  size_t count(const K& k) const { assert(false); }
+  vector<VentureValuePtr> getOrderedKeysInRange(const VentureValuePtr & min, const VentureValuePtr & max)
+  {
+    std::set<VentureValuePtr,VentureValuePtrsLess> keys;
+    for (size_t i = 0; i < a.size(); ++i)
+      {
+  	if (a[i].first <= max && a[i].first >= min) 
+	  { 
+	    keys.insert(a[i].first); 
+	  }
+      }
+    return vector<VentureValuePtr>(keys.begin(),keys.end());
+  }
+
+
+  size_t count(const VentureValuePtr& k) const { assert(false); }
   size_t size() const { return a.size(); }
-  bool contains(K k) { return d.count(k); }
+  bool contains(VentureValuePtr k) { return d.count(k); }
 
-  K & sampleKeyUniformly(gsl_rng * rng) 
+  VentureValuePtr & sampleKeyUniformly(gsl_rng * rng) 
     { 
       assert(size() > 0);
       int index = gsl_rng_uniform_int(rng, size());
@@ -63,6 +86,7 @@ struct SamplableMap
   
 };
 
+typedef boost::unordered_map<VentureValuePtr, SamplableMap<set<Node*> >, HashVentureValuePtr, VentureValuePtrsEqual> ScopesMap;
 
 
 #endif

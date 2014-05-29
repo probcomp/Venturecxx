@@ -1,17 +1,21 @@
 from sp import VentureSP, SPAux, SPType
-from psp import PSP, RandomPSP, TypedPSP
+from psp import DeterministicPSP, RandomPSP, TypedPSP
 from request import Request
 import numpy as np
 import numpy.random as npr
 import math
 from copy import copy
 from value import NumberType, RequestType
+from exception import VentureValueError
+import serialize
 
 def npSampleVector(pVec): return np.mat(npr.multinomial(1,np.array(pVec)[0,:]))
 def npIndexOfOne(pVec): return np.where(pVec[0] == 1)[1][0,0]
-def npMakeDiag(colvec): return np.diag(np.array(colvec)[:,0])
+def npMakeDiag(colvec):
+  return np.diag(np.array(colvec))
 def npNormalizeVector(vec): return vec / np.sum(vec)
 
+@serialize.register
 class HMMSPAux(SPAux):
   def __init__(self):
     super(HMMSPAux,self).__init__()
@@ -24,7 +28,13 @@ class HMMSPAux(SPAux):
     ans.os = {k:copy(v) for (k,v) in self.os.iteritems()}
     return ans
 
-class MakeUncollapsedHMMOutputPSP(PSP):
+  def serialize(self, s):
+    return s.serialize_default(self)
+
+  def deserialize(self, s, data):
+    s.deserialize_default(self, data)
+
+class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
   def simulate(self,args):
     (p0,T,O) = args.operandValues
     # p0 comes in as a simplex but needs to become a 1-row matrix
@@ -35,6 +45,7 @@ class MakeUncollapsedHMMOutputPSP(PSP):
   def description(self, _name):
     return "  Discrete-state HMM of unbounded length with discrete observations.  The inputs are the probability distribution of the first state, the transition matrix, and the observation matrix.  It is an error if the dimensionalities do not line up.  Returns observations from the HMM encoded as a stochastic procedure that takes the time step and samples a new observation at that time step."
 
+@serialize.register
 class UncollapsedHMMSP(VentureSP):
   def __init__(self,p0,T,O):
     req = TypedPSP(UncollapsedHMMRequestPSP(), SPType([NumberType()], RequestType()))
@@ -46,6 +57,7 @@ class UncollapsedHMMSP(VentureSP):
 
   def constructSPAux(self): return HMMSPAux()
   def constructLatentDB(self): return {} # { n => x_n }
+  def show(self,spaux): return spaux.xs,spaux.os
 
   # lsr: the index of the observation needed
   def simulateLatents(self,aux,lsr,shouldRestore,latentDB):
@@ -80,10 +92,10 @@ class UncollapsedHMMSP(VentureSP):
     # forward sampling
     fs = [self.p0]
     for i in range(1,len(aux.xs)):
-      f = fs[i-1] * self.T
+      f = np.dot(fs[i-1], self.T)
       if i in aux.os:
-        for o in aux.os[i]: 
-          f = f * npMakeDiag(self.O[:,o])
+        for o in aux.os[i]:
+          f = np.dot(f, npMakeDiag(self.O[:,o]))
         
       fs.append(npNormalizeVector(f))
 
@@ -95,6 +107,19 @@ class UncollapsedHMMSP(VentureSP):
       gamma = npNormalizeVector(fs[i] * T_i)
       aux.xs[i] = npSampleVector(gamma)
 
+  def serialize(self, s):
+    ret = {}
+    ret['p0'] = s.serialize(self.p0)
+    ret['T'] = s.serialize(self.T)
+    ret['O'] = s.serialize(self.O)
+    return ret
+
+  def deserialize(self, s, data):
+    p0 = s.deserialize(data['p0'])
+    T = s.deserialize(data['T'])
+    O = s.deserialize(data['O'])
+    self.__init__(p0, T, O)
+
 
 class UncollapsedHMMOutputPSP(RandomPSP):
 
@@ -104,7 +129,10 @@ class UncollapsedHMMOutputPSP(RandomPSP):
 
   def simulate(self,args): 
     n = int(args.operandValues[0])
-    return npIndexOfOne(npSampleVector(args.spaux.xs[n] * self.O))
+    if 0 <= n and n < len(args.spaux.xs):
+      return npIndexOfOne(npSampleVector(args.spaux.xs[n] * self.O))
+    else:
+      raise VentureValueError("Index out of bounds %s" % n)
 
   def logDensity(self,value,args):
     n = int(args.operandValues[0])
@@ -122,7 +150,7 @@ class UncollapsedHMMOutputPSP(RandomPSP):
     del args.spaux.os[n][args.spaux.os[n].index(value)]
     if not args.spaux.os[n]: del args.spaux.os[n]
 
-class UncollapsedHMMRequestPSP(PSP):
+class UncollapsedHMMRequestPSP(DeterministicPSP):
   def simulate(self,args): return Request([],[int(args.operandValues[0])])
 
 

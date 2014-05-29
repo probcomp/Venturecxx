@@ -4,6 +4,7 @@
 #include "srs.h"
 #include "value.h"
 
+
 struct VentureNumber : VentureValue
 {
   VentureNumber(double x): x(x) {}
@@ -17,6 +18,7 @@ struct VentureNumber : VentureValue
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
+  string asExpression() const;
   double x;
 };
 
@@ -25,7 +27,7 @@ struct VentureAtom : VentureValue
   VentureAtom(int n): n(n) {}
   bool hasDouble() const { return true; }
   double getDouble() const { return n; }
-  bool hasInt() const { return false; }
+  bool hasInt() const { return true; }
   long getInt() const { return n; }
   int getAtom() const { return n; }
   bool getBool() const { return n; }
@@ -35,6 +37,7 @@ struct VentureAtom : VentureValue
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
+  string asExpression() const;
   int n;
 };
 
@@ -49,6 +52,7 @@ struct VentureBool : VentureValue
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
+  string asExpression() const;
   bool b;
 };
 
@@ -63,6 +67,7 @@ struct VentureSymbol : VentureValue
   boost::python::dict toPython(Trace * trace) const;
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
   string s;
 };
 
@@ -79,7 +84,9 @@ struct VentureArray : VentureValue
   bool hasArray() const { return true; }
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
   vector<VentureValuePtr> xs;
+  VentureArray* copy_help(ForwardingMap* m) const;
 };
 
 struct VentureNil : VentureValue
@@ -95,6 +102,7 @@ struct VentureNil : VentureValue
 
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
   boost::python::dict toPython(Trace * trace) const;
 };
 
@@ -112,10 +120,12 @@ struct VenturePair : VentureValue
 
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
   boost::python::dict toPython(Trace * trace) const;
   int size() const { return 1 + getRest()->size(); }
   VentureValuePtr car;
   VentureValuePtr cdr;
+  VenturePair* copy_help(ForwardingMap* m) const;
 };
 
 struct VentureSimplex : VentureValue
@@ -129,23 +139,26 @@ struct VentureSimplex : VentureValue
 
   size_t hash() const;
   string toString() const;
+  string asExpression() const;
+  boost::python::dict toPython(Trace * trace) const;
   Simplex ps;
 };
 
 struct VentureDictionary : VentureValue
 {
   // TODO need a special type with special hash/equality function.
-  VentureDictionary(const VentureValuePtrMap<VentureValuePtr> & dict): dict(dict) {}
-  const VentureValuePtrMap<VentureValuePtr>& getDictionary() const { return dict; }
+  VentureDictionary(const MapVVPtrVVPtr & dict): dict(dict) {}
+  const MapVVPtrVVPtr& getDictionary() const { return dict; }
 
-  VentureValuePtr lookup(VentureValuePtr index) const { return dict.at(index); }
+  VentureValuePtr lookup(VentureValuePtr index) const;
   bool contains(VentureValuePtr index) const { return dict.count(index); }
   int size() const { return dict.size(); }
 
 
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
-  VentureValuePtrMap<VentureValuePtr> dict;
+  MapVVPtrVVPtr dict;
+  VentureDictionary* copy_help(ForwardingMap* m) const;
 };
 
 struct VentureMatrix : VentureValue
@@ -153,7 +166,20 @@ struct VentureMatrix : VentureValue
   VentureMatrix(const Eigen::MatrixXd & m): m(m) {}
   MatrixXd getMatrix() const { return m; }
   string toString() const;
+  boost::python::dict toPython(Trace * trace) const;
   MatrixXd m;
+};
+
+struct VentureVector : VentureValue
+{
+  VentureVector(const Eigen::VectorXd & v): v(v) {}
+  VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureNumber(v(index->getInt()))); }
+  VectorXd getVector() const { return v; }
+  bool hasArray() const { return true; }
+  vector<VentureValuePtr> getArray() const;
+  string toString() const;
+  boost::python::dict toPython(Trace * trace) const;
+  VectorXd v;
 };
 
 struct VentureRequest : VentureValue
@@ -184,6 +210,7 @@ struct VentureNode : VentureValue
   string toString() const;
   size_t hash() const;
   Node * node;
+  VentureNode* copy_help(ForwardingMap* m) const;
 };
 
 /* Use the memory location as a unique hash. */

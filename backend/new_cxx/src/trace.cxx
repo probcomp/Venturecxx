@@ -6,14 +6,14 @@
 
 ConstantNode * Trace::createConstantNode(VentureValuePtr value)
 {
-  ConstantNode * constantNode = new ConstantNode();
+  ConstantNode * constantNode = new ConstantNode(value);
   setValue(constantNode, value);
   return constantNode;
 }
 
-LookupNode * Trace::createLookupNode(Node * sourceNode)
+LookupNode * Trace::createLookupNode(Node * sourceNode,VentureValuePtr sym)
 {
-  LookupNode * lookupNode = new LookupNode(sourceNode);
+  LookupNode * lookupNode = new LookupNode(sourceNode,sym);
   setValue(lookupNode,getValue(sourceNode));
   //cout << "createLookupNode(" << sourceNode << "," << lookupNode << ")";
   addChild(sourceNode,lookupNode);
@@ -21,10 +21,10 @@ LookupNode * Trace::createLookupNode(Node * sourceNode)
 }
 
 
-pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env)
+pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp)
 {
   RequestNode * requestNode = new RequestNode(operatorNode, operandNodes, env);
-  OutputNode * outputNode = new OutputNode(operatorNode, operandNodes, requestNode, env);
+  OutputNode * outputNode = new OutputNode(operatorNode, operandNodes, requestNode, env, exp);
 
   //cout << "createApplicationNodes(" << operatorNode << "," << requestNode << ")";
   
@@ -42,7 +42,11 @@ pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode
   return make_pair(requestNode, outputNode);
 }
 
-/* Derived getters */
+/* Derived Getters */
+shared_ptr<PSP> Trace::getPSP(ApplicationNode * node)
+{
+  return getMadeSP(getOperatorSPMakerNode(node))->getPSP(node);
+}
 
 VentureValuePtr Trace::getGroundValue(Node * node)
 {
@@ -64,7 +68,7 @@ Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
 
 vector<Node*> Trace::getParents(Node * node)
 {
-  vector<Node*> parents = node->definiteParents;
+  vector<Node*> parents = node->getDefiniteParents();
   if (dynamic_cast<OutputNode*>(node)) 
   {
     vector<RootOfFamily> esrRoots = getESRParents(node);
@@ -82,19 +86,28 @@ shared_ptr<Args> Trace::getArgs(ApplicationNode * node) { return shared_ptr<Args
 ///////// misc
 OutputNode * Trace::getOutermostNonRefAppNode(Node * node)
 {
+  if (dynamic_cast<ConstantNode*>(node)) { throw "Cannot constrain a deterministic value."; }
   LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
   if (lookupNode) { return getOutermostNonRefAppNode(lookupNode->sourceNode); }
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
   assert(outputNode);
-  if (dynamic_pointer_cast<ESRRefOutputPSP>(getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)))
+  
+  shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
+  
+  if (dynamic_pointer_cast<ESRRefOutputPSP>(psp))
   { 
+    assert(getESRParents(outputNode).size() == 1);
     return getOutermostNonRefAppNode(getESRParents(outputNode)[0].get());
   }
-  else if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)))
+  else if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
   { 
     return getOutermostNonRefAppNode(outputNode->operandNodes[2]);
   }
-  else { return outputNode; }
+  else
+  {
+    if(!psp->isRandom()) { throw "Cannot constrain a deterministic value."; }
+    return outputNode;
+  }
 }
 
 

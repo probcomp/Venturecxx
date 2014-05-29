@@ -30,12 +30,12 @@ class VentureSivm(object):
 
     # list of all instructions supported by venture sivm
     _extra_instructions = {'labeled_assume','labeled_observe',
-            'labeled_predict','labeled_forget','labeled_report', 'labeled_get_logscore',
+            'labeled_predict','labeled_forget','labeled_freeze','labeled_report', 'labeled_get_logscore',
             'list_directives','get_directive','labeled_get_directive',
             'force','sample','get_current_exception',
             'get_state', 'reset', 'debugger_list_breakpoints','debugger_get_breakpoint'}
     _core_instructions = {"assume","observe","predict",
-            "configure","forget","report","infer","start_continuous_inference",
+            "configure","forget","freeze","report","infer","start_continuous_inference",
             "stop_continuous_inference","continuous_inference_status",
             "clear","rollback","get_directive_logscore","get_global_logscore",
             "debugger_configure","debugger_list_random_choices", "debugger_clear",
@@ -60,7 +60,8 @@ class VentureSivm(object):
             if instruction_type in self._extra_instructions:
                 f = getattr(self,'_do_'+instruction_type)
                 return f(instruction)
-            return self._call_core_sivm_instruction(instruction)
+            response = self._call_core_sivm_instruction(instruction)
+            return response
 
     ###############################
     # Reset stuffs
@@ -75,6 +76,27 @@ class VentureSivm(object):
 
     def _debugger_clear(self):
         self.breakpoint_dict = {}
+
+    ###############################
+    # Serialization
+    ###############################
+
+    def save(self, fname, extra=None):
+        if extra is None:
+            extra = {}
+        extra['label_dict'] = self.label_dict
+        extra['did_dict'] = self.did_dict
+        extra['directive_dict'] = self.directive_dict
+        extra['breakpoint_dict'] = self.breakpoint_dict
+        return self.core_sivm.save(fname, extra)
+
+    def load(self, fname):
+        extra = self.core_sivm.load(fname)
+        self.label_dict = extra['label_dict']
+        self.did_dict = extra['did_dict']
+        self.directive_dict = extra['directive_dict']
+        self.breakpoint_dict = extra['breakpoint_dict']
+        return extra
 
     ###############################
     # Sugars/desugars
@@ -223,7 +245,7 @@ class VentureSivm(object):
     _do_labeled_predict = _do_labeled_directive    
     
     def _do_labeled_operation(self, instruction):
-        label = self._validate_label(instruction, exists=True)
+        self._validate_label(instruction, exists=True)
         tmp = instruction.copy()
         tmp['instruction'] = instruction['instruction'][len('labeled_'):]
         tmp['directive_id'] = self.label_dict[instruction['label']]
@@ -231,6 +253,7 @@ class VentureSivm(object):
         return self._call_core_sivm_instruction(tmp)        
     
     _do_labeled_forget = _do_labeled_operation
+    _do_labeled_freeze = _do_labeled_operation
     _do_labeled_report = _do_labeled_operation
     _do_labeled_get_logscore = _do_labeled_operation
 
@@ -350,3 +373,58 @@ class VentureSivm(object):
                     argument='breakpoint_id')
         return {"breakpoint":copy.deepcopy(self.breakpoint_dict[bid])}
 
+
+    ###############################
+    # Convenience wrappers some popular core instructions
+    # Currently supported wrappers: 
+    # assume,observe,predict,forget,report,infer,force,sample,list_directives
+    ###############################
+
+    def assume(self, name, expression, label=None):
+        if label==None:
+            d = {'instruction': 'assume', 'symbol':name, 'expression':expression}
+        else:
+            d = {'instruction': 'labeled_assume', 'symbol':name, 'expression':expression,'label':label}
+        return self.execute_instruction(d)
+
+    def predict(self, expression, label=None):
+        if label==None:
+            d = {'instruction': 'predict', 'expression':expression}
+        else:
+            d = {'instruction': 'labeled_predict', 'expression':expression,'label':label}
+        return self.execute_instruction(d)
+
+    def observe(self, expression, value, label=None):
+        if label==None:
+            d = {'instruction': 'observe', 'expression':expression, 'value':value}
+        else:
+            d = {'instruction': 'labeled_observe', 'expression':expression, 'value':value, 'label':label}
+        return self.execute_instruction(d)
+
+    def forget(self, label_or_did):
+        if isinstance(label_or_did,int):
+            d = {'instruction':'forget','directive_id':label_or_did}
+        else:
+            d = {'instruction':'labeled_forget','label':label_or_did}
+        return self.execute_instruction(d)
+
+    def report(self, label_or_did):
+        if isinstance(label_or_did,int):
+            d = {'instruction':'report','directive_id':label_or_did}
+        else:
+            d = {'instruction':'labeled_report','label':label_or_did}
+        return self.execute_instruction(d)
+
+    def infer(self, params=None):
+        d = {'instruction':'infer','params':params}
+        return self.execute_instruction(d)
+
+    def force(self, expression, value):
+        d = {'instruction':'force','expression':expression, 'value':value}
+        return self.execute_instruction(d)
+
+    def sample(self, expression):
+        d = {'instruction':'sample','expression':expression}
+        return self.execute_instruction(d)
+
+    def list_directives(self): return self.execute_instruction({'instruction':'list_directives'})

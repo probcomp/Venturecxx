@@ -18,9 +18,6 @@
 
 from venture.exception import VentureException
 import re
-import json
-import copy
-
 
 def is_valid_symbol(s):
     if not isinstance(s,basestring):
@@ -35,15 +32,15 @@ def desugar_expression(exp):
         if exp[0] == 'if':
             if len(exp) != 4:
                 raise VentureException('parse','"if" statement requires 3 arguments',expression_index=[])
-            return [['condition_erp',dsw(exp,1),['lambda',[],dsw(exp,2)],['lambda',[],dsw(exp,3)]]]
+            return [['biplex',dsw(exp,1),['lambda',[],dsw(exp,2)],['lambda',[],dsw(exp,3)]]]
         if exp[0] == 'and':
             if len(exp) != 3:
                 raise VentureException('parse','"and" statement requires 2 arguments',expression_index=[])
-            return [['condition_erp',dsw(exp,1),['lambda',[],dsw(exp,2)],['lambda',[],{"type":"boolean", "value":False}]]]
+            return [['biplex',dsw(exp,1),['lambda',[],dsw(exp,2)],['lambda',[],{"type":"boolean", "value":False}]]]
         if exp[0] == 'or':
             if len(exp) != 3:
                 raise VentureException('parse','"or" statement requires 2 arguments',expression_index=[])
-            return [['condition_erp',dsw(exp,1),['lambda',[],{"type":"boolean", "value":True}],['lambda',[],dsw(exp,2)]]]
+            return [['biplex',dsw(exp,1),['lambda',[],{"type":"boolean", "value":True}],['lambda',[],dsw(exp,2)]]]
         if exp[0] == 'let':
             if len(exp) != 3:
                 raise VentureException('parse','"let" statement requires 2 arguments',expression_index=[])
@@ -246,7 +243,6 @@ def validate_dict(s):
 def validate_value(ob):
     try:
         validate_symbol(ob['type']) #validate the type
-        json.dumps(ob['value']) #validate the json
     except Exception as e:
         raise VentureException('parse',
                 'Invalid literal value. {}'.format(e.message),
@@ -291,5 +287,4 @@ def validate_arg(instruction,arg,validator,modifier=lambda x: x,required=True,wr
                     'Invalid argument {}. {}'.format(arg, str(e)),
                     argument=arg)
         raise
-    v = modifier(copy.deepcopy(v))
-    return v
+    return modifier(v)

@@ -1,17 +1,14 @@
 #include "value.h"
-#include <iostream>
 #include "values.h"
 #include "sp.h"
 #include "sprecord.h"
 #include "env.h"
-using std::cout;
-using std::endl;
+#include <boost/lexical_cast.hpp>
 
 int getValueTypeRank(const VentureValue * v);
 void cannotConvertType(const VentureValue * obj, string target)
 {
-  cout << "Cannot convert " << obj->toString() << " to [" + target + "]" << endl;
-  assert(false);
+  throw "Cannot convert " + obj->toString() + " to [" + target + "]";
 }
 
 bool VentureValue::hasDouble() const { return false; }
@@ -30,7 +27,9 @@ const VentureValuePtr& VentureValue::getFirst() const { cannotConvertType(this,"
 const VentureValuePtr& VentureValue::getRest() const { cannotConvertType(this,"pair"); assert(false); throw "no return"; }
   
 const Simplex& VentureValue::getSimplex() const { cannotConvertType(this,"simplex"); assert(false); throw "no return"; }
-const VentureValuePtrMap<VentureValuePtr>& VentureValue::getDictionary() const { cannotConvertType(this,"dictionary"); assert(false); throw "no return"; }
+const MapVVPtrVVPtr& VentureValue::getDictionary() const { cannotConvertType(this,"dictionary"); assert(false); throw "no return"; }
+VectorXd VentureValue::getVector() const { cannotConvertType(this,"vector"); assert(false); throw "no return"; }
+
 MatrixXd VentureValue::getMatrix() const { cannotConvertType(this,"matrix"); assert(false); throw "no return"; }
 
 const vector<ESR>& VentureValue::getESRs() const { cannotConvertType(this,"requests"); assert(false); throw "no return"; }
@@ -44,12 +43,13 @@ VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { assert(false
 bool VentureValue::contains(VentureValuePtr index) const { assert(false); }
 int VentureValue::size() const { assert(false); }
 
+string VentureValue::asExpression() const { return toString(); }
 
 boost::python::dict VentureValue::toPython(Trace * trace) const
 { 
   boost::python::dict value;
   value["type"] = "unknown";
-  value["value"] = boost::python::object(false);
+  value["value"] = "opaque";
   return value;
 }
 

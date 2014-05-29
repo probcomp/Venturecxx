@@ -1,8 +1,37 @@
 import math
 import scipy.stats as stats
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, ignore_inference_quality
+from nose import SkipTest
+from testconfig import config
 
+def testPGibbsBasic1():
+  yield checkPGibbsBasic1, False
+  yield checkPGibbsBasic1, True
+
+@statisticalTest
+def checkPGibbsBasic1(in_parallel):
+  """Basic sanity test"""
+  ripl = get_ripl()
+  ripl.predict("(bernoulli)",label="pid")
+
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"pgibbs","particles":2,"in_parallel":in_parallel})
+  ans = [(True,.5),(False,.5)]
+  return reportKnownDiscrete(ans, predictions)
+
+def testPGibbsBasic2():
+  yield checkPGibbsBasic2, False
+  yield checkPGibbsBasic2, True
+
+@statisticalTest
+def checkPGibbsBasic2(in_parallel):
+  """Basic sanity test"""
+  ripl = get_ripl()
+  ripl.assume("x","(flip 0.1)",label="pid")
+  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"pgibbs","particles":2,"in_parallel":in_parallel})
+  ans = [(False,.9),(True,.1)]
+  return reportKnownDiscrete(ans, predictions)
+ 
 def testPGibbsBlockingMHHMM1():
   yield checkPGibbsBlockingMHHMM1, True
   yield checkPGibbsBlockingMHHMM1, False
@@ -76,3 +105,57 @@ def checkPGibbsDynamicScope1(mutate):
   predictions = collectSamples(ripl,"pid",infer=infer)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
+
+@statisticalTest
+def testPGibbsDynamicScopeInterval():
+  ripl = get_ripl()
+
+  ripl.assume("transition_fn", "(lambda (x) (normal x 1.0))")
+  ripl.assume("observation_fn", "(lambda (y) (normal y 1.0))")
+
+  ripl.assume("initial_state_fn", "(lambda () (normal 0.0 1.0))")
+  ripl.assume("f","""
+(mem (lambda (t)
+  (scope_include 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
+""")  
+
+  ripl.assume("g","(mem (lambda (t) (observation_fn (f t))))")
+
+  ripl.observe("(g 0)",1.0)
+  ripl.observe("(g 1)",2.0)
+  ripl.observe("(g 2)",3.0)
+  ripl.observe("(g 3)",4.0)
+  ripl.observe("(g 4)",5.0)
+
+  ripl.predict("(f 4)","pid")
+
+  P = 3 if ignore_inference_quality() else 8
+  T = 2 if ignore_inference_quality() else 10
+
+  infer = "(cycle ((pgibbs 0 (ordered_range 0 3) %d %d) (pgibbs 0 (ordered_range 1 4) %d %d)) 1)" % (P,P,T,T)
+
+  predictions = collectSamples(ripl,"pid",infer=infer)
+  cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
+  return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
+
+def testFunnyHMM():
+  yield checkFunnyHMM, False
+  yield checkFunnyHMM, True
+
+def checkFunnyHMM(in_parallel):
+  ripl = get_ripl()
+  
+  ripl.assume("hypers", "(mem (lambda (t) (scope_include 0 t (normal 0 1))))")
+  ripl.assume("init", "0")
+  ripl.assume("next", "(lambda (state delta) (+ state delta))")
+  ripl.assume("get_state",
+    """(mem (lambda (t)
+          (if (= t 0) init
+            (next (get_state (- t 1)) (hypers t)))))""")
+  ripl.assume("obs", "(mem (lambda (t) (normal (get_state t) 1)))")
+  
+  for t in range(1, 5):
+    ripl.observe("(obs %d)" % t, t)
+  
+  ripl.infer({"kernel":"pgibbs","transitions":2,"scope":0,"block":"ordered","particles":3, "with_mutation":False, "in_parallel":in_parallel})
+

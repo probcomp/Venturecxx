@@ -6,21 +6,23 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
-from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, SliceOperator
+from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator, SliceOperator
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
 from nose.tools import assert_is_not_none # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
-from scope import ScopeIncludeOutputPSP
+from scope import isScopeIncludeOutputPSP, isScopeExcludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
 from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
+import serialize
 import random
 import numpy.random
 
+@serialize.register
 class Trace(object):
   def __init__(self):
 
@@ -49,8 +51,8 @@ class Trace(object):
     self.rcs.add(node)
     self.registerRandomChoiceInScope("default",node,node)
 
-  def registerRandomChoiceInScope(self,scope,block,node):
-    (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
+  def registerRandomChoiceInScope(self,scope,block,node,unboxed=False):
+    if not unboxed: (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if not scope in self.scopes: self.scopes[scope] = SMap()
     if not block in self.scopes[scope]: self.scopes[scope][block] = set()
     assert not node in self.scopes[scope][block]
@@ -69,6 +71,14 @@ class Trace(object):
     if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
     if len(self.scopes[scope]) == 0: del self.scopes[scope]
 
+  # [FIXME] repetitive, but not sure why these exist at all
+  def _normalizeEvaluatedScope(self, scope):
+    if scope == "default": return scope
+    else:
+      assert isinstance(scope, VentureValue)
+      if isinstance(scope, VentureSymbol): return scope.getSymbol()
+      else: return scope.getNumber()
+
   def _normalizeEvaluatedScopeAndBlock(self, scope, block):
     if scope == "default":
       assert isinstance(block, Node)
@@ -85,6 +95,7 @@ class Trace(object):
         return (scope.getNumber(), block.getNumber())
 
   def registerConstrainedChoice(self,node):
+    assert node not in self.ccs, "Cannot observe the same choice more than once"
     self.ccs.add(node)
     self.unregisterRandomChoice(node)
 
@@ -222,8 +233,14 @@ class Trace(object):
   def getAllNodesInScope(self,scope):
     return set.union(*[self.getNodesInBlock(scope,block) for block in self.scopes[scope].keys()])
 
-  def getOrderedSetsInScope(self,scope):
-    return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
+  def getOrderedSetsInScope(self,scope,interval=None):
+    if interval is None:
+      return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
+    else:
+      blocks = [b for b in self.scopes[scope].keys() if b.compare(interval[0]) >= 0 if b.compare(interval[1]) <= 0]
+      return [self.getNodesInBlock(scope,block) for block in sorted(blocks)]
+
+  def numNodesInBlock(self,scope,block): return len(self.getNodesInBlock(scope,block))
 
   def getNodesInBlock(self,scope,block):
     nodes = self.scopes[scope][block]
@@ -236,10 +253,10 @@ class Trace(object):
   def addRandomChoicesInBlock(self,scope,block,pnodes,node):
     if not isinstance(node,OutputNode): return
 
-    if self.pspAt(node).isRandom(): pnodes.add(node)
+    if self.pspAt(node).isRandom() and not node in self.ccs: pnodes.add(node)
 
     requestNode = node.requestNode
-    if self.pspAt(requestNode).isRandom(): pnodes.add(requestNode)
+    if self.pspAt(requestNode).isRandom() and not requestNode in self.ccs: pnodes.add(requestNode)
 
     for esr in self.valueAt(node.requestNode).esrs:
       self.addRandomChoicesInBlock(scope,block,pnodes,self.spFamilyAt(requestNode,esr.id))
@@ -247,10 +264,14 @@ class Trace(object):
     self.addRandomChoicesInBlock(scope,block,pnodes,node.operatorNode)
 
     for i,operandNode in enumerate(node.operandNodes):
-      if i == 2 and isinstance(self.pspAt(node),ScopeIncludeOutputPSP):
+      if i == 2 and isScopeIncludeOutputPSP(self.pspAt(node)):
         (new_scope,new_block,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
         (new_scope,new_block) = self._normalizeEvaluatedScopeAndBlock(new_scope, new_block)
         if scope != new_scope or block == new_block: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
+      elif i == 1 and isScopeExcludeOutputPSP(self.pspAt(node)):
+        (excluded_scope,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
+        excluded_scope = self._normalizeEvaluatedScope(excluded_scope)
+        if scope != excluded_scope: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
       else:
         self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
 
@@ -265,6 +286,7 @@ class Trace(object):
     (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),OmegaDB(),{})
 
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
+  def unbindInGlobalEnv(self,sym): self.globalEnv.removeBinding(sym)
 
   def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
 
@@ -273,18 +295,22 @@ class Trace(object):
     self.unpropagatedObservations[node] = self.unboxValue(val)
 
   def makeConsistent(self):
+    weight = 0
     for node,val in self.unpropagatedObservations.iteritems():
       appNode = self.getOutermostNonReferenceApplication(node)
 #      print "PROPAGATE",node,appNode
       scaffold = constructScaffold(self,[set([appNode])])
-      detachAndExtract(self,scaffold.border[0],scaffold)
+      rhoWeight,_ = detachAndExtract(self,scaffold.border[0],scaffold)
       assertTorus(scaffold)
       scaffold.lkernels[appNode] = DeterministicLKernel(self.pspAt(appNode),val)
       xiWeight = regenAndAttach(self,scaffold.border[0],scaffold,False,OmegaDB(),{})
       if xiWeight == float("-inf"): raise Exception("Unable to propagate constraint")
       node.observe(val)
       constrain(self,appNode,node.observedValue)
+      weight += xiWeight
+      weight -= rhoWeight
     self.unpropagatedObservations.clear()
+    return weight
 
   def getOutermostNonReferenceApplication(self,node):
     if isinstance(node,LookupNode): return self.getOutermostNonReferenceApplication(node.sourceNode)
@@ -295,7 +321,7 @@ class Trace(object):
       else:
         # Could happen if this method is called on a torus, e.g. for rejection sampling
         raise MissingEsrParentError()
-    elif isinstance(self.pspAt(node),ScopeIncludeOutputPSP):
+    elif isScopeIncludeOutputPSP(self.pspAt(node)):
       return self.getOutermostNonReferenceApplication(node.operandNodes[2])
     else: return node
 
@@ -317,12 +343,10 @@ class Trace(object):
 
   def continuous_inference_status(self): return {"running" : False}
 
-  # params is a hash with keys "kernel", "scope", "block",
-  # "transitions" (the latter should be named "repeats").  Right now,
-  # "kernel" must be one of "mh" or "meanfield", and "transitions"
-  # must be an integer.
+  # params is a dict with keys "kernel", "scope", "block",
+  # "transitions" (the latter should be named "repeats").
+
   def infer(self,params):
-    self.makeConsistent()
     if not self.scopeHasEntropy(params["scope"]):
       return
     for _ in range(params["transitions"]):
@@ -331,23 +355,52 @@ class Trace(object):
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MHOperator())
       elif params["kernel"] == "meanfield":
         assert params["with_mutation"]
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MeanfieldOperator(10,0.0001))
-      elif params["kernel"] == "gibbs":
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MeanfieldOperator(params["steps"],0.0001))
+      elif params["kernel"] == "hmc":
         assert params["with_mutation"]
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),HamiltonianMonteCarloOperator(params["epsilon"], params["L"]))
+      elif params["kernel"] == "gibbs":
+        #assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
       elif params["kernel"] == "slice":
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),SliceOperator())
+      # [FIXME] egregrious style, but expedient. The stack is such a
+      # mess anyway, it's hard to do anything with good style that
+      # doesn't begin by destroying the stack.
       elif params["kernel"] == "pgibbs":
-        if params["with_mutation"]:
-          mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
+        if params["block"] == "ordered_range":
+          if params["with_mutation"]:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),PGibbsOperator(int(params["particles"])))
+          else:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),ParticlePGibbsOperator(int(params["particles"])))
         else:
-          mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
+          if params["with_mutation"]:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
+          else:
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
+          
+      elif params["kernel"] == "map":
+        assert params["with_mutation"]
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MAPOperator(params["rate"], int(params["steps"])))
       elif params["kernel"] == "rejection":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),RejectionOperator())
-      else: raise Exception("INFER (%s) MH is implemented" % params["kernel"])
+      else: raise Exception("INFER (%s) MH is not implemented" % params["kernel"])
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
+
+  def stop_and_copy(self):
+    serialized = serialize.Serializer().serialize_trace(self, None)
+    newTrace, _ = serialize.Serializer().deserialize_trace(serialized)
+    return newTrace
+
+  def save(self, fname, extra):
+    serialize.save_trace(self, extra, fname)
+
+  @staticmethod
+  def load(fname):
+    trace, extra = serialize.load_trace(fname)
+    return trace, extra
 
   def get_seed(self):
     # TODO Trace does not support seed control because it uses
@@ -358,15 +411,19 @@ class Trace(object):
       random.seed(seed)
       numpy.random.seed(seed)
 
+  def getDirectiveLogScore(self,id):
+    assert id in self.families
+    node = self.families[id]
+    return self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node))
+
   def getGlobalLogScore(self):
-    # TODO Get the constrained nodes too
     return sum([self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node)) for node in self.rcs.union(self.ccs)])
 
   #### Helpers (shouldn't be class methods)
 
   # TODO temporary, probably need an extra layer of boxing for VentureValues
   # as in CXX
-  def boxValue(self,val): return val.asStackDict()
+  def boxValue(self,val): return val.asStackDict(self)
   def unboxValue(self,val): return VentureValue.fromStackDict(val)
   def unboxExpression(self,exp):
     return ExpressionType().asPython(VentureValue.fromStackDict(exp))
@@ -381,3 +438,7 @@ class Trace(object):
   def addNewChildren(self,node,newChildren):
     for child in newChildren:
       node.children.add(child)
+
+
+
+    

@@ -7,24 +7,45 @@
 
 #include<boost/range/numeric.hpp>
 
+boost::python::object DirMultSPAux::toPython(Trace * trace) const
+{
+  return toPythonList(trace, counts);
+}
+
 // Collapsed Symmetric
 
 /* MakeSymDirMultOutputPSP */
 VentureValuePtr MakeSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  assert(args->operandValues.size() == 2); // TODO throw an error once exceptions work
+  checkArgsLength("make_sym_dir_mult", args, 2);
   
   double alpha = args->operandValues[0]->getDouble();
   int n = args->operandValues[1]->getInt();
+  return VentureValuePtr(new VentureSPRecord(new SymDirMultSP(alpha, n),new DirMultSPAux(n)));
+}
+
+SymDirMultSP::SymDirMultSP(double alpha, size_t n) : SP(new NullRequestPSP(), new SymDirMultOutputPSP(alpha, n)), alpha(alpha), n(n) {}
+
+boost::python::dict SymDirMultSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) const
+{
+  boost::python::dict symDirMult;
+  symDirMult["type"] = "sym_dir_mult";
+  symDirMult["alpha"] = alpha;
+  symDirMult["n"] = n;
+  symDirMult["counts"] = spAux->toPython(trace);
   
-  PSP * requestPSP = new NullRequestPSP();
-  PSP * outputPSP = new SymDirMultOutputPSP(alpha, n);
-  return VentureValuePtr(new VentureSPRecord(new SP(requestPSP,outputPSP),new DirMultSPAux(n)));
+  boost::python::dict value;
+  value["type"] = "sp";
+  value["value"] = symDirMult;
+  
+  return value;
 }
 
 /* SymDirMultOutputPSP */
 VentureValuePtr SymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("sym_dir_mult", args, 0);
+
   shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(args->spAux);
   assert(aux);
   assert(aux->counts.size() == n);
@@ -96,29 +117,25 @@ double SymDirMultOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
 /* MakeDirMultOutputPSP */
 VentureValuePtr MakeDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  assert(args->operandValues.size() == 1); // TODO throw an error once exceptions work
+  checkArgsLength("make_dir_mult", args, 1);
   
-  shared_ptr<VentureArray> alphaArray = dynamic_pointer_cast<VentureArray>(args->operandValues[0]);
-  assert(alphaArray);
-  
-  size_t n = alphaArray->xs.size();
   vector<double> alpha;
-  alpha.reserve(n);
-  
-  for (size_t i = 0; i < n; ++i)
+  BOOST_FOREACH(VentureValuePtr v, args->operandValues[0]->getArray())
   {
-    alpha.push_back(alphaArray->xs[i]->getDouble());
+    alpha.push_back(v->getDouble());
   }
   
   PSP * requestPSP = new NullRequestPSP();
   PSP * outputPSP = new DirMultOutputPSP(alpha);
   
-  return VentureValuePtr(new VentureSPRecord(new SP(requestPSP,outputPSP),new DirMultSPAux(n)));
+  return VentureValuePtr(new VentureSPRecord(new SP(requestPSP,outputPSP),new DirMultSPAux(alpha.size())));
 }
 
 /* DirMultOutputPSP */
 VentureValuePtr DirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("dir_mult", args, 0);
+
   shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(args->spAux);
   assert(aux);
   assert(aux->counts.size() == alpha.size());
@@ -186,12 +203,13 @@ double DirMultOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
   return x;
 }
 
-////////////////// Uncollapsed
+// Uncollapsed
 
 VentureValuePtr MakeUCSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  assert(args->operandValues.size() == 2); // TODO optional 3rd argument
-  
+  // TODO optional 3rd argument
+  checkArgsLength("make_uc_sym_dir_mult", args, 2);
+
   double alpha = args->operandValues[0]->getDouble();
   int n = args->operandValues[1]->getInt();
   
@@ -210,7 +228,8 @@ VentureValuePtr MakeUCSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_r
 
 double MakeUCSymDirMultOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
 {
-  assert(args->operandValues.size() == 2); // TODO optional 3rd argument
+  checkArgsLength("make_uc_sym_dir_mult", args, 2);
+  
   double alpha = args->operandValues[0]->getDouble();
   int n = args->operandValues[1]->getInt();
 
@@ -302,21 +321,21 @@ void UCSymDirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args>
 
 VentureValuePtr MakeUCDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  assert(args->operandValues.size() == 1); // TODO optional 2nd argument
-  
-  shared_ptr<VentureArray> alphaArray = dynamic_pointer_cast<VentureArray>(args->operandValues[0]);
-  assert(alphaArray);
-  size_t n = alphaArray->xs.size();
+  // TODO optional 2nd argument
+  checkArgsLength("make_uc_dir_mult", args, 1);
+
+  const vector<VentureValuePtr>& alphaArray = args->operandValues[0]->getArray();
+  size_t n = alphaArray.size();
+
+  double* alphaVector = new double[n];
+  for (size_t i = 0; i < n; ++i)
+  {
+    alphaVector[i] = alphaArray[i]->getDouble();
+  }
   
   PSP * requestPSP = new NullRequestPSP();
   PSP * outputPSP = new UCDirMultOutputPSP(n);
   SP * sp = new UCDirMultSP(requestPSP,outputPSP);
-
-  double *alphaVector = new double[n];
-  for (size_t i = 0; i < n; ++i)
-  {
-    alphaVector[i] = alphaArray->xs[i]->getDouble();
-  }
   
   UCDirMultSPAux * spAux = new UCDirMultSPAux(n);
 
@@ -329,8 +348,9 @@ VentureValuePtr MakeUCDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng 
 
 double MakeUCDirMultOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
 {
-  assert(args->operandValues.size() == 1); // TODO optional 2nd argument
-  
+  // TODO optional 2nd argument
+  checkArgsLength("make_uc_dir_mult", args, 1);
+
   shared_ptr<VentureArray> alphaArray = dynamic_pointer_cast<VentureArray>(args->operandValues[0]);
   assert(alphaArray);
   size_t n = alphaArray->xs.size();
@@ -372,6 +392,8 @@ void UCDirMultSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng
 
 VentureValuePtr UCDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("uc_dir_mult", args, 0);
+
   shared_ptr<UCDirMultSPAux> aux = dynamic_pointer_cast<UCDirMultSPAux>(args->spAux);
   assert(aux);
   assert(aux->counts.size() == n);
@@ -419,5 +441,5 @@ void UCDirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> ar
 }
 
 // Aux clones
-shared_ptr<SPAux> DirMultSPAux::clone() { return shared_ptr<SPAux>(new DirMultSPAux(*this)); }
-shared_ptr<SPAux> UCDirMultSPAux::clone() { return shared_ptr<SPAux>(new UCDirMultSPAux(*this)); }
+SPAux* DirMultSPAux::copy_help(ForwardingMap* m) const { return new DirMultSPAux(*this); }
+SPAux* UCDirMultSPAux::copy_help(ForwardingMap* m) const { return new UCDirMultSPAux(*this); }

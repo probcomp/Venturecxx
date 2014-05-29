@@ -1,4 +1,5 @@
 #include "values.h"
+#include "utils.h"
 #include "Eigen/Dense"
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
@@ -67,7 +68,7 @@ bool VentureSimplex::equalsSameType(const VentureValuePtr & other) const
   shared_ptr<VentureSimplex> other_v = dynamic_pointer_cast<VentureSimplex>(other);
   assert(other_v);
   if (ps.size() != other_v->ps.size()) { return false; }
-  for (size_t i = 0; i < ps.size(); ++i) { if (!ps[i] == other_v->ps[i]) { return false; } }
+  for (size_t i = 0; i < ps.size(); ++i) { if (ps[i] != other_v->ps[i]) { return false; } }
   return true;
 }
 
@@ -233,15 +234,71 @@ string VentureNumber::toString() const { return "VentureNumber " + lexical_cast<
 string VentureAtom::toString() const { return "VentureAtom " + lexical_cast<string>(n);}
 string VentureBool::toString() const { return "VentureBool " + lexical_cast<string>(b);}
 string VentureSymbol::toString() const { return "VentureSymbol " + s;}
-string VentureArray::toString() const { return "VentureArray";}
+string VentureArray::toString() const 
+{ 
+  string s = "VentureArray [";
+  for (size_t i = 0; i < xs.size(); ++i)
+    {
+      s += xs[i]->toString();
+      s += " ";
+    }
+  s += "]";
+  return s;
+}
+
 string VentureNil::toString() const { return "VentureNil";}
 string VenturePair::toString() const { return "VenturePair (" + car->toString() + ", " + cdr->toString() + ")";}
+
+
 string VentureSimplex::toString() const { return "VentureSimplex";}
 string VentureDictionary::toString() const { return "VentureDictionary";}
 string VentureMatrix::toString() const { return "VentureMatrix";}
+
+string VentureVector::toString() const
+{
+  string s = "VentureVector [";
+  for (int i = 0; i < v.size(); ++i)
+    {
+      s += lexical_cast<string>(v(i));
+      s += " ";
+    }
+  s += "]";
+  return s;
+}
+
 string VentureRequest::toString() const { return "VentureRequest";}
 string VentureNode::toString() const { return "VentureNode";}
 string VentureID::toString() const { return "VentureID";}
+
+/* asExpression */
+string VentureNumber::asExpression() const { return lexical_cast<string>(x);}
+string VentureAtom::asExpression() const { return lexical_cast<string>(n);}
+string VentureBool::asExpression() const { return lexical_cast<string>(b);}
+string VentureSymbol::asExpression() const { return s;}
+string VentureArray::asExpression() const 
+{ 
+  string s = "(";
+  for (size_t i = 0; i < xs.size(); ++i)
+    {
+      s += xs[i]->asExpression();
+      if (i + 1 < xs.size()) { s += " "; }
+    }
+  s += ")";
+  return s;
+}
+
+string VentureNil::asExpression() const { return "nil";}
+string VenturePair::asExpression() const { return "[" + car->asExpression() + " . " + cdr->asExpression() + "]";}
+string VentureSimplex::asExpression() const { 
+  string s = "(";
+  for (size_t i = 0; i < ps.size(); ++i)
+    {
+      s += lexical_cast<string>(ps[i]);
+      if (i + 1 < ps.size()) { s += " "; }
+    }
+  s += ")";
+  return s;
+}
 
 /* toPython methods */
 
@@ -286,11 +343,46 @@ boost::python::dict VentureArray::toPython(Trace * trace) const
   return value;
 }
 
+boost::python::dict VentureVector::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "vector";
+  boost::python::list l;
+  for (int i = 0; i < v.size(); ++i) { l.append(v(i)); }
+  value["value"] = l;
+  return value;
+}
+
+boost::python::dict VentureMatrix::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "matrix";
+  boost::python::list l;
+  for (int i = 0; i < m.rows(); ++i)
+  {
+    boost::python::list row;
+    for (int j = 0; j < m.cols(); ++j) { row.append(m(i, j)); }
+    l.append(row);
+  }
+  value["value"] = l;
+  return value;
+}
+
+boost::python::dict VentureSimplex::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "simplex";
+  boost::python::list l;
+  for (size_t i = 0; i < ps.size(); ++i) { l.append(ps[i]); }
+  value["value"] = l;
+  return value;
+}
+
 boost::python::dict VentureDictionary::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "dict";
-  value["value"] = boost::python::object(false); // TODO
+  value["value"] = "opaque";
   return value;
 }
 
@@ -329,6 +421,14 @@ VentureValuePtr VenturePair::lookup(VentureValuePtr index) const
   else { return cdr->lookup(VentureValuePtr(new VentureAtom(index->getInt() - 1))); }
 }
 
+VentureValuePtr VentureDictionary::lookup(VentureValuePtr index) const
+{
+  if (dict.count(index)) { return dict.at(index); }
+  
+  throw "Key " + index->toString() + " not found in VentureDictionary.";
+}
+
+
 ////////////  
 MatrixXd VentureSimplex::getMatrix() const
 {
@@ -350,3 +450,14 @@ vector<VentureValuePtr> VenturePair::getArray() const
   answer.insert(answer.begin(), getFirst());
   return answer;
 }
+
+vector<VentureValuePtr> VentureVector::getArray() const
+{
+  vector<VentureValuePtr> xs;
+  for(int i = 0; i < v.size(); ++i)
+  {
+    xs.push_back(VentureValuePtr(new VentureNumber(v(i))));
+  }
+  return xs;
+}
+

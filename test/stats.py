@@ -4,6 +4,7 @@ import numpy as np
 import nose.tools as nose
 from testconfig import config
 from venture.test.config import ignore_inference_quality
+import sys
 
 def normalizeList(seq):
   denom = sum(seq)
@@ -50,7 +51,11 @@ def repeatTest(func, *args):
     return result
   else:
     print "Retrying suspicious test"
-    results = [result] + [func(*args) for _ in range(1,5)]
+    def trial():
+      answer = func(*args)
+      sys.stdout.write(".")
+      return answer
+    results = [result] + [trial() for _ in range(1,5)]
     pval = fisherMethod([r.pval for r in results])
     report = "Test failing consistently\n"
     report += "\n".join([r.report for r in results])

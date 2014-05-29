@@ -2,6 +2,15 @@ import numpy.random as npr
 import math
 import scipy.special as ss
 import numpy as np
+import numpy.linalg as npla
+import numbers
+
+# This one is from http://stackoverflow.com/questions/1167617/in-python-how-do-i-indicate-im-overriding-a-method
+def override(interface_class):
+  def overrider(method):
+    assert method.__name__ in dir(interface_class)
+    return method
+  return overrider
 
 def extendedLog(x): return math.log(x) if x > 0 else float("-inf")
 
@@ -23,8 +32,12 @@ def logDensityCategorical(val,ps,os=None):
   # TODO This should work for Venture Values while the comparison is
   # done by identity and in the absence of observations; do I want to
   # override the Python magic methods for VentureValues?
-  p = ps[os.index(val)]
-  assert os.count(val) == 1
+  p = None
+  for i in range(len(os)): 
+    if os[i] == val: 
+      p = ps[i]; 
+      break
+  assert p
   return math.log(p)
 
 def simulateDirichlet(alpha): return npr.dirichlet(alpha)
@@ -47,3 +60,16 @@ def logaddexp(items):
   "Apparently this was added to scipy in a later version than the one installed on my machine.  Sigh."
   the_max = max(items)
   return the_max + math.log(sum(math.exp(item - the_max) for item in items))
+
+def sampleLogCategorical(logs):
+  "Samples from an unnormalized categorical distribution given in logspace."
+  the_max = max(logs)
+  return simulateCategorical([math.exp(log - the_max) for log in logs])
+
+def logDensityMVNormal(x, mu, sigma):
+  answer =  -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
+            -.5*len(sigma)*np.log(np.pi)-.5*np.log(abs(npla.det(sigma)))
+  if isinstance(answer, numbers.Number):
+    return answer
+  else:
+    return answer[0,0]

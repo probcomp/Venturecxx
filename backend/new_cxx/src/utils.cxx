@@ -1,9 +1,11 @@
 #include "utils.h"
-#include <cmath>
 
 #include "types.h"
 #include "values.h"
+
+#include <cmath>
 #include <gsl/gsl_randist.h>
+#include <boost/lexical_cast.hpp>
 
 vector<double> mapExpUptoMultConstant(const vector<double>& xs)
 {
@@ -91,6 +93,13 @@ Simplex normalizeVector(const vector<double> & xs)
   return ps;
 }
 
+size_t findVVPtr(VentureValuePtr val, const vector<VentureValuePtr>& vec)
+{
+  for (size_t i = 0; i < vec.size(); ++i)
+    { if (vec[i]->equals(val)) { return i; } }
+  return vec.size();
+}
+
 VentureValuePtr simulateCategorical(const Simplex & ps, gsl_rng * rng)
 {
   vector<VentureValuePtr> os;
@@ -119,5 +128,51 @@ double logDensityCategorical(VentureValuePtr val, const Simplex & xs,const vecto
   Simplex ps = normalizeVector(xs);
   for (size_t i = 0; i < os.size(); ++i) { if (os[i]->equals(val)) { return log(ps[i]); } }
   assert(false);
+}
+
+// needs to go in the cxx, for an explanation see
+// http://stackoverflow.com/questions/4445654/multiple-definition-of-template-specialization-when-using-different-objects
+template <>
+boost::python::object toPython<VentureValuePtr>(Trace * trace, const VentureValuePtr& v)
+{
+  return v->toPython(trace);
+}
+
+template <>
+boost::python::object toPython<uint32_t>(Trace * trace, const uint32_t& st)
+{
+  boost::python::dict dict;
+  dict["type"] = "number";
+  dict["value"] = st;
+  return dict;
+}
+
+template <>
+boost::python::object toPython<double>(Trace * trace, const double& st)
+{
+  boost::python::dict dict;
+  dict["type"] = "number";
+  dict["value"] = st;
+  return dict;
+}
+
+using boost::lexical_cast;
+
+void checkArgsLength(const string& sp, const shared_ptr<Args> args, size_t expected)
+{
+  size_t length = args->operandValues.size();
+  if (length != expected)
+  {
+    throw sp + " expects " + lexical_cast<string>(expected) + " arguments, not " + lexical_cast<string>(length);
+  }
+}
+
+void checkArgsLength(const string& sp, const shared_ptr<Args> args, size_t lower, size_t upper)
+{
+  size_t length = args->operandValues.size();
+  if (length < lower || length > upper)
+  {
+    throw sp + " expects between " + lexical_cast<string>(lower) + " and " + lexical_cast<string>(upper) + " arguments, not " + lexical_cast<string>(length);
+  }
 }
 

@@ -7,6 +7,7 @@
 #include "value.h"
 #include "pmap.hpp"
 #include "pset.hpp"
+#include "rng.h"
 
 using persistent::PMap;
 using persistent::PSet;
@@ -14,6 +15,7 @@ using persistent::PSet;
 struct ConcreteTrace : Trace
 {
   ConcreteTrace();
+  void initialize();
 
   /* Registering metadata */
   void registerAEKernel(Node * node);
@@ -32,6 +34,11 @@ struct ConcreteTrace : Trace
   void reconnectLookup(LookupNode * lookupNode);
   void incNumRequests(RootOfFamily root);
   void incRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
+
+  bool hasLKernel(shared_ptr<Scaffold> scaffold, Node * node);
+  void registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel);
+  shared_ptr<LKernel> getLKernel(shared_ptr<Scaffold> scaffold,Node * node);
+
   void addChild(Node * node, Node * child);
 
   /* Detach mutations */  
@@ -59,15 +66,14 @@ struct ConcreteTrace : Trace
   bool isMakerNode(Node * node);
   bool isConstrained(Node * node);
   bool isObservation(Node * node);
-
-  /* Derived Getters */
-  shared_ptr<PSP> getPSP(ApplicationNode * node);
   
   /* Primitive Setters */
   void setValue(Node * node, VentureValuePtr value);
   void clearValue(Node * node);
 
+  void unobserveNode(Node * node);
   void observeNode(Node * node,VentureValuePtr value);
+
 
   void setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord);
   void destroyMadeSPRecord(Node * makerNode);
@@ -91,7 +97,8 @@ struct ConcreteTrace : Trace
   bool containsMadeSPFamily(Node * makerNode, FamilyID id);
   RootOfFamily getMadeSPFamilyRoot(Node * makerNode, FamilyID id);
 
-
+  void freezeDirectiveID(DirectiveID did);
+  void freezeOutputNode(OutputNode * outputNode);
 
   /* New in ConcreteTrace */
 
@@ -100,6 +107,7 @@ struct ConcreteTrace : Trace
   int numBlocksInScope(ScopeID scope);
   set<Node*> getAllNodesInScope(ScopeID scope);
     
+  vector<set<Node*> > getOrderedSetsInScopeAndRange(ScopeID scope,BlockID minBlock,BlockID maxBlock);
   vector<set<Node*> > getOrderedSetsInScope(ScopeID scope);
 
   // TODO Vlad: read this carefully. The default scope is handled differently than the other scopes.
@@ -111,7 +119,7 @@ struct ConcreteTrace : Trace
   void addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node);
 
   bool scopeHasEntropy(ScopeID scope); 
-  void makeConsistent();
+  double makeConsistent();
 
   int numUnconstrainedChoices();
 
@@ -123,7 +131,12 @@ struct ConcreteTrace : Trace
   void registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux);
   shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode);
 
-  gsl_rng * rng;
+  shared_ptr<ConcreteTrace> stop_and_copy() const;
+  shared_ptr<ConcreteTrace> copy_help(ForwardingMap* forward) const;
+
+  void seekInconsistencies();
+
+  shared_ptr<RNGbox> rng;
 
   shared_ptr<VentureEnvironment> globalEnvironment;
 
@@ -137,7 +150,7 @@ struct ConcreteTrace : Trace
 
   map<DirectiveID,RootOfFamily> families;
 
-  VentureValuePtrMap<SamplableMap<BlockID,set<Node*> > > scopes;
+  ScopesMap scopes;
 
   map<Node*, vector<RootOfFamily> > esrRoots;
   map<RootOfFamily, int> numRequests;
@@ -146,6 +159,10 @@ struct ConcreteTrace : Trace
   map<Node*,VentureValuePtr> values;
   map<Node*,VentureValuePtr> observedValues;
 
+  set<shared_ptr<Node> > builtInNodes; // hack for simple garbage collection
+
+  private:
+  set<Node*> allNodes();
 };
 
 #endif

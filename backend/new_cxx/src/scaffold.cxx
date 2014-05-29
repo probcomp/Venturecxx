@@ -4,11 +4,21 @@
 #include "sp.h"
 #include <algorithm>
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 
 set<Node *> Scaffold::getPrincipalNodes() 
 { 
   assert(setsOfPNodes.size() == 1);
   return setsOfPNodes[0];
+}
+
+Node * Scaffold::getPrincipalNode()
+{
+  assert(setsOfPNodes.size() == 1);
+  assert(setsOfPNodes[0].size() == 1);
+  BOOST_FOREACH(Node * pnode , setsOfPNodes[0]) { return pnode; }
+  assert(false);
+  return NULL;
 }
 
 int Scaffold::getRegenCount(Node * node) 
@@ -35,6 +45,8 @@ bool Scaffold::isResampling(Node * node) { return regenCounts.count(node); }
 bool Scaffold::isAbsorbing(Node * node) { return absorbing.count(node); }
 bool Scaffold::isAAA(Node * node) { return aaa.count(node); }
 bool Scaffold::hasLKernel(Node * node) { return lkernels.count(node); }
+void Scaffold::registerLKernel(Node * node,shared_ptr<LKernel> lkernel) { lkernels[node] = lkernel; }
+
 shared_ptr<LKernel> Scaffold::getLKernel(Node * node) 
 {
   assert(lkernels.count(node));
@@ -44,7 +56,7 @@ shared_ptr<LKernel> Scaffold::getLKernel(Node * node)
 string Scaffold::showSizes()
 {
   string p = "(";
-  return p + boost::lexical_cast<string>(regenCounts.size()) + "," + boost::lexical_cast<string>(absorbing.size()) + "," + boost::lexical_cast<string>(aaa.size()) + "," + boost::lexical_cast<string>(border[0].size()) + ")";
+  return p + boost::lexical_cast<string>(regenCounts.size()) + "," + boost::lexical_cast<string>(absorbing.size()) + "," + boost::lexical_cast<string>(aaa.size()) + "," + boost::lexical_cast<string>(border[0].size()) + "," + boost::lexical_cast<string>(brush.size()) + ")";
 }
 
 
@@ -69,7 +81,7 @@ shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<No
   map<Node*,int> regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush);
   map<Node*,shared_ptr<LKernel> > lkernels = loadKernels(trace,drg,aaa,false);
   vector<vector<Node *> > borderSequence = assignBorderSequnce(border,indexAssignments,setsOfPNodes.size());
-  return shared_ptr<Scaffold>(new Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels));
+  return shared_ptr<Scaffold>(new Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush));
 }
 
 
@@ -264,7 +276,7 @@ tuple<set<Node*>,set<Node*>,set<Node*> > removeBrush(set<Node*> & cDRG,
   // assert(intersection.empty());
   /* END DEBUG */
 
-  return make_tuple(drg,absorbing,aaa);
+  return tuple<set<Node*>,set<Node*>,set<Node*> >(drg,absorbing,aaa);
 }
 
 bool hasChildInAorD(ConcreteTrace * trace,

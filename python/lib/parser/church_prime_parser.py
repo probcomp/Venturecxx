@@ -113,6 +113,11 @@ class ChurchPrimeParser(object):
         self.program = utils.make_program_parser(self.instruction)
         self.instruction_strings = utils.make_instruction_strings(instruction_list,antipatterns)
 
+    # NOTE:
+    # the following is copy-pasted to the venture_script_parser
+    # the two code fragments should be manually kept in sync until
+    # the directive syntax is finalized (then code refactor can happen)
+
     def get_instruction_string(self,instruction_type):
         return self.instruction_strings[instruction_type]
 
@@ -123,6 +128,24 @@ class ChurchPrimeParser(object):
         return utils.simplify_instruction_parse_tree(
                 utils.apply_parser(self.instruction, instruction_string)[0])
 
+    def parse_expression(self, expression_string):
+        return utils.simplify_expression_parse_tree(
+            utils.apply_parser(self.expression, expression_string)[0])
+
+    def unparse_expression(self, expression):
+        if isinstance(expression, dict):
+            # Should be a leaf value
+            return utils.value_to_string(expression)
+        elif isinstance(expression, basestring): # Symbol
+            return expression
+        elif isinstance(expression, list):
+            return '(' + ' '.join([self.unparse_expression(e) for e in expression]) + ')'
+        else:
+            raise Exception("Don't know how to unparse %s" % expression)
+
+    def parse_number(self, number_string):
+        return utils.apply_parser(self.literal, number_string)[0]
+        
     def split_program(self, s):
         locs = utils.split_program_parse_tree(
                 utils.apply_parser(self.program, s)[0])
@@ -144,3 +167,12 @@ class ChurchPrimeParser(object):
     def expression_index_to_text_index(self, expression_string, expression_index):
         parse_tree = utils.apply_parser(self.expression, expression_string)[0]
         return utils.get_text_index(parse_tree, expression_index)
+
+    @staticmethod
+    def instance():
+        global the_parser
+        if the_parser is None:
+            the_parser = ChurchPrimeParser()
+        return the_parser
+
+the_parser = None

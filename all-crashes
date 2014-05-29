@@ -12,13 +12,18 @@ function abort_on_error () {
     fi
 }
 
+# TODO Reenable Lite multiprocessing after we figure out why it was
+# causing tester processes to hang.
+lite_multiprocess=""
+# lite_multiprocess="--processes=4 --process-timeout=1200"
+
 # Attempts to abstract this better failed due to bash's impossible
 # quoting mechanisms.
-function test_inference_program() {
+function test_inference_program_in_lite() {
     infer=$1
-    echo nosetests --processes=4 --process-timeout=1200 -c inference-quality.cfg --attr=\'!slow\' --tc=ignore_inference_quality:true --tc=infer:"\"$infer\""
-    nosetests --processes=4 --process-timeout=1200 -c inference-quality.cfg --attr='!slow' --tc=ignore_inference_quality:true --tc=infer:"$infer"
-    abort_on_error "$infer"
+    echo nosetests $lite_multiprocess -c inference-quality.cfg --attr=\'!slow\' --tc=get_ripl:lite --tc=ignore_inference_quality:true --tc=infer:"\"$infer\""
+    nosetests $lite_multiprocess -c inference-quality.cfg --attr='!slow' --tc=get_ripl:lite --tc=ignore_inference_quality:true --tc=infer:"$infer"
+    abort_on_error "$infer in Lite"
 }
 
 function test_inference_program_in_puma() {
@@ -28,9 +33,9 @@ function test_inference_program_in_puma() {
     abort_on_error "$infer in Puma"
 }
 
-echo nosetests --processes=4 --process-timeout=1200 -c crashes.cfg
-nosetests --processes=4 --process-timeout=1200 -c crashes.cfg
-abort_on_error "(mh default one 3)"
+echo nosetests $lite_multiprocess -c crashes.cfg --tc=get_ripl:lite
+nosetests $lite_multiprocess -c crashes.cfg --tc=get_ripl:lite
+abort_on_error "(mh default one 3) in Lite"
 
 # TODO Reenable multiprocessing for puma, after nose is made robust to
 # worker processes blowing up.
@@ -38,10 +43,10 @@ echo nosetests -c crashes.cfg --tc=get_ripl:puma
 nosetests -c crashes.cfg --tc=get_ripl:puma
 abort_on_error "(mh default one 3) in Puma"
 
-test_inference_program "(rejection default all 1)"
-test_inference_program "(func-pgibbs default ordered 3 3)"
-test_inference_program "(pgibbs default ordered 3 3)"
-test_inference_program "(meanfield default one 3 3)"
+test_inference_program_in_lite "(rejection default all 1)"
+test_inference_program_in_lite "(func-pgibbs default ordered 3 3)"
+test_inference_program_in_lite "(pgibbs default ordered 3 3)"
+test_inference_program_in_lite "(meanfield default one 3 3)"
 
 test_inference_program_in_puma "(func-mh default one 3)"
 test_inference_program_in_puma "(func-pgibbs default ordered 3 3)"
