@@ -488,12 +488,13 @@ def sampleInterval(f,x0,y,w,L,R):
     if x1 < x0: L = x1
     else: R = x1
 
-def makeDensityFunction(trace,scaffold,psp,pnode):
+def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
   from particle import Particle
   def f(x):
-    scaffold.lkernels[pnode] = DeterministicLKernel(psp,VentureNumber(x))
-    # The particle is a way to regen without clobbering the underlying trace
-    return math.exp(regenAndAttach(Particle(trace),scaffold.border[0],scaffold,False,OmegaDB(),{}))
+    with fixed_randomness:
+      scaffold.lkernels[pnode] = DeterministicLKernel(psp,VentureNumber(x))
+      # The particle is a way to regen without clobbering the underlying trace
+      return math.exp(regenAndAttach(Particle(trace),scaffold.border[0],scaffold,False,OmegaDB(),{}))
   return f
   
 class SliceOperator(object):
@@ -511,7 +512,7 @@ class SliceOperator(object):
     rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
     assertTorus(scaffold)
 
-    f = makeDensityFunction(trace,scaffold,psp,pnode)
+    f = makeDensityFunction(trace,scaffold,psp,pnode,FixedRandomness())
     y = random.uniform(0,f(currentValue))
     w = .5
     m = 100
