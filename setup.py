@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from distutils.core import setup, Extension
 from distutils import sysconfig
