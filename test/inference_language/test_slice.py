@@ -1,11 +1,14 @@
 import math
 import scipy.stats as stats
+from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, defaultKernel
 
 @statisticalTest
 def testSliceBasic1():
   "Basic sanity test for slice"
+  if defaultKernel() != "mh":
+    raise SkipTest("Tests the Slice kernel, do not repeat for alternative kernels")
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)",label="pid")
   predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"slice"})
@@ -15,6 +18,8 @@ def testSliceBasic1():
 @statisticalTest
 def testSliceNormalWithObserve1():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
+  if defaultKernel() != "mh":
+    raise SkipTest("Tests the Slice kernel, do not repeat for alternative kernels")
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)",label="pid")
   ripl.observe("(normal a 1.0)", 14.0)
@@ -28,6 +33,8 @@ def testSliceNormalWithObserve1():
 @statisticalTest
 def testSliceNormalWithObserve2a():
   "Checks the posterior distribution on a Gaussian given an unlikely observation.  The difference between this and 1 is an extra predict, which apparently has a deleterious effect on mixing."
+  if defaultKernel() != "mh":
+    raise SkipTest("Tests the Slice kernel, do not repeat for alternative kernels")
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.observe("(normal a 1.0)", 14.0)
@@ -41,6 +48,8 @@ def testSliceNormalWithObserve2a():
 @statisticalTest
 def testSliceNormalWithObserve2b():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
+  if defaultKernel() != "mh":
+    raise SkipTest("Tests the Slice kernel, do not repeat for alternative kernels")
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.observe("(normal a 1.0)", 14.0)
@@ -54,6 +63,8 @@ def testSliceNormalWithObserve2b():
 @statisticalTest
 def testSliceStudentT1():
   "Simple program involving simulating from a student_t"
+  if defaultKernel() != "mh":
+    raise SkipTest("Tests the Slice kernel, do not repeat for alternative kernels")
   ripl = get_ripl()
   ripl.assume("a", "(student_t 1.0)")
   ripl.observe("(normal a 1.0)", 3.0)
@@ -73,6 +84,8 @@ def testSliceStudentT1():
 @statisticalTest
 def testSliceStudentT2():
   "Simple program involving simulating from a student_t"
+  if defaultKernel() != "mh":
+    raise SkipTest("Tests the Slice kernel, do not repeat for alternative kernels")
   ripl = get_ripl()
   ripl.assume("a", "(student_t 1.0)")
   ripl.observe("(normal a 1.0)", 3.0)
