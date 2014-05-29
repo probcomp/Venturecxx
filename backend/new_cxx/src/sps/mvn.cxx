@@ -38,7 +38,6 @@ using std::isfinite;
 VentureValuePtr MVNormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
   checkArgsLength("normal", args, 2);
-
   VectorXd mu = args->operandValues[0]->getVector();
   int n = mu.size(); // size may be wrong
   shared_ptr<gsl_vector> gsl_mu(gsl_vector_alloc(n)); 

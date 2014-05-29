@@ -177,3 +177,15 @@ VentureValuePtr IsAtomOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   checkArgsLength("is_atom", args, 1);
   return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureAtom>(args->operandValues[0]) != NULL));
 }
+
+VentureValuePtr ToRealOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("to_real", args, 1);
+  return VentureNumber::makeValue(args->operandValues[0]->getDouble());
+}
+
+VentureValuePtr IsRealOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("is_real", args, 1);
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureNumber>(args->operandValues[0]) != NULL));
+}

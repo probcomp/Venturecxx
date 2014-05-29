@@ -91,6 +91,10 @@ VentureValuePtr VentureNumber::makeValue(double x) {
   return VentureValuePtr(new VentureNumber(x));
 }
 
+VentureValuePtr VentureAtom::makeValue(int x) {
+  return VentureValuePtr(new VentureAtom(x));
+}
+
 VentureValuePtr VentureArray::makeValue(const VentureValuePtrVector & xs) {
   return VentureValuePtr(new VentureArray(xs));
 }

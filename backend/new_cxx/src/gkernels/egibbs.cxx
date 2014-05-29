@@ -46,7 +46,9 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
     assert(!scaffold->isResampling(applicationNode->operatorNode));
     applicationNodes.push_back(applicationNode);
   }
-  
+  vector<VentureValuePtr> currentValues = trace->getCurrentValues(pNodes);
+  registerDeterministicLKernels(trace, scaffold, applicationNodes, currentValues);
+
   // compute the cartesian product of all possible values
   vector<vector<VentureValuePtr> > possibleValues;
   BOOST_FOREACH(ApplicationNode * node, applicationNodes)
@@ -61,7 +63,6 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   size_t numValues = valueTuples.size();
 
   // detach and extract from the principal nodes
-  //registerDeterministicLKernels(trace, scaffold, applicationNodes, currentValues);
   detachAndExtract(trace,scaffold->border[0],scaffold);
   assertTorus(scaffold);
   
@@ -69,6 +70,7 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
   vector<shared_ptr<Particle> > particles(numValues);
   vector<double> particleWeights(numValues);
   vector<shared_ptr<EGibbsWorker> > workers(numValues);
+  inParallel = 0; // debug.
   if (inParallel)
     {
       vector<boost::thread*> threads(numValues);
@@ -96,23 +98,19 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,share
 	  particleWeights[p] = workers[p]->weight;
 	}
     }
-
   // sample exactly from the posterior
   size_t finalIndex = sampleCategorical(mapExpUptoMultConstant(particleWeights), trace->getRNG());
   finalParticle = particles[finalIndex];
-  
   return make_pair(finalParticle.get(),0);
 }
 
 void EnumerativeGibbsGKernel::accept()
 {
   finalParticle->commit();
-  // assertTrace(self.trace,self.scaffold)    
 }
 
 void EnumerativeGibbsGKernel::reject()
 {
   assert(false); // should never reject
   regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,shared_ptr<map<Node*,Gradient> >());
-  // assertTrace(self.trace,self.scaffold)
 }

@@ -52,6 +52,8 @@ map<string,SP*> initBuiltInSPs()
   m["not"] = new SP(new NullRequestPSP(), new NotOutputPSP());
   m["is_symbol"] = new SP(new NullRequestPSP(), new IsSymbolOutputPSP());
   
+  m["real"] = new SP(new NullRequestPSP(), new ToRealOutputPSP);
+
   m["to_atom"] = new SP(new NullRequestPSP(), new ToAtomOutputPSP());
   m["is_atom"] = new SP(new NullRequestPSP(), new IsAtomOutputPSP());
   

@@ -1,5 +1,6 @@
 #include "sps/crp.h"
 #include "value.h"
+#include "values.h"
 #include "args.h"
 #include "sp.h"
 #include "sprecord.h"
@@ -148,4 +149,20 @@ double CRPOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
   return sum;
 }
 
+vector<VentureValuePtr> CRPOutputPSP::enumerateValues(shared_ptr<Args> args) const 
+{
+  checkArgsLength("crp", args, 0);  
+  
+  shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
+  assert(aux);
+
+  vector<uint32_t> tables; 
+  vector<VentureValuePtr> values; 
+  BOOST_FOREACH(tableCountPair p, aux->tableCounts)
+  {
+    values.push_back(VentureAtom::makeValue(p.first));
+  }
+  values.push_back(VentureAtom::makeValue(aux->tableCounts.size()+1));
+  return values;
+}
 

@@ -32,6 +32,7 @@ struct VentureNumber : VentureValue
 struct VentureAtom : VentureValue
 {
   VentureAtom(int n): n(n) {}
+  static VentureValuePtr makeValue(int x); // factory.
   bool hasDouble() const { return true; }
   double getDouble() const { return n; }
   bool hasInt() const { return true; }
