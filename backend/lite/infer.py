@@ -445,7 +445,7 @@ class ParticlePGibbsOperator(object):
     self.particles[-1].commit()
     assertTrace(self.trace,self.scaffold)
 
-############### Slice
+#### Slice
     
 # "stepping out" procedure
 # See "Slice Sampling" (Neal 2000) p11 for details
