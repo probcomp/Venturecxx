@@ -6,7 +6,7 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
-from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator
+from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator, SliceOperator
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
@@ -362,7 +362,8 @@ class Trace(object):
       elif params["kernel"] == "gibbs":
         #assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
-
+      elif params["kernel"] == "slice":
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),SliceOperator())
       # [FIXME] egregrious style, but expedient. The stack is such a
       # mess anyway, it's hard to do anything with good style that
       # doesn't begin by destroying the stack.
