@@ -15,7 +15,7 @@ def propEquality(value):
   assert value.equal(value)
 
 def relevantSPs():
-  for (name,sp) in builtInSPsList():
+  for (name,sp) in builtInSPsList:
     if isinstance(sp.requestPSP, NullRequestPSP):
       if name not in []: # Placeholder for selecting SPs to do or not do
         yield name, sp
