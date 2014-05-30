@@ -101,7 +101,7 @@ double PyTrace::getDirectiveLogScore(DirectiveID did)
 {
   assert(trace->families.count(did));
   RootOfFamily root = trace->families[did];
-  ApplicationNode * node = dynamic_cast<ApplicationNode*>(root.get());
+  ApplicationNode * node = dynamic_cast<ApplicationNode*>(trace->getOutermostNonRefAppNode(root.get()));
   if (node != NULL)
   {
     shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
