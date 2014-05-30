@@ -306,7 +306,8 @@ interface here is compatible with one possible path."""
 
   def compareSameType(self, other):
     return lexicographicBoxedCompare(self.array, other.array)
-      
+  def __hash__(self): return sequenceHash(self.array)
+
   def asStackDict(self,trace):
     # TODO Are venture arrays reflected as lists to the stack?
     # TODO Are stack lists lists, or are they themselves type tagged?
@@ -425,7 +426,8 @@ class VenturePair(VentureValue):
     fstcmp = self.first.compare(other.first)
     if fstcmp != 0: return fstcmp
     else: return self.rest.compare(other.rest)
-  # TODO Define a sensible hash function
+  def __hash__(self):
+    return hash(self.first) + 37*hash(self.rest)
   def lookup(self, index):
     try:
       ind = index.getNumber()
