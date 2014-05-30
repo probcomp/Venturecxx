@@ -149,7 +149,7 @@ through a ripl (applied fully uncurried)."""
       if not answer.outputPSP.isRandom():
         args2 = BogusArgs(args_lists[1], answer.constructSPAux())
         ans2 = carefully(answer.outputPSP.simulate, args2)
-        inner = [name] + [v.expressionFor() for v in args_lists[0]]
+        inner = [{"type":"symbol", "value":name}] + [v.expressionFor() for v in args_lists[0]]
         expr = [inner] + [v.expressionFor() for v in args_lists[1]]
         assert ans2.equal(carefully(eval_in_ripl, expr))
       else:
@@ -157,5 +157,5 @@ through a ripl (applied fully uncurried)."""
     else:
       raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
   else:
-    expr = [name] + [v.expressionFor() for v in args_lists[0]]
+    expr = [{"type":"symbol", "value":name}] + [v.expressionFor() for v in args_lists[0]]
     assert answer.equal(carefully(eval_in_ripl, expr))

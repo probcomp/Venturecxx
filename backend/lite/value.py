@@ -272,7 +272,8 @@ class VentureBool(VentureValue):
   def compareSameType(self, other):
     return stupidCompare(self.boolean, other.boolean)
   def __hash__(self): return hash(self.boolean)
-  def expressionFor(self): return "true" if self.boolean else "false"
+  def expressionFor(self):
+    return {"type":"symbol", "value":"true"} if self.boolean else {"type":"symbol", "value":"false"}
 
 @serialize.register
 class VentureSymbol(VentureValue):
@@ -284,7 +285,7 @@ class VentureSymbol(VentureValue):
   def fromStackDict(thing): return VentureSymbol(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
   def __hash__(self): return hash(self.symbol)
-  def expressionFor(self): return [{"type":"symbol", "value":"quote"}, self.symbol]
+  def expressionFor(self): return [{"type":"symbol", "value":"quote"}, self.asStackDict(None)]
 
 @serialize.register
 class VentureArray(VentureValue):
