@@ -252,7 +252,7 @@ class VentureAtom(VentureValue):
   def fromStackDict(thing): return VentureAtom(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.atom, other.atom)
   def __hash__(self): return hash(self.atom)
-  def expressionFor(self): return ["quote", self] # TODO Is this right?
+  def expressionFor(self): return [{"type":"symbol", "value":"quote"}, self] # TODO Is this right?
 
 @serialize.register
 class VentureBool(VentureValue):
@@ -284,7 +284,7 @@ class VentureSymbol(VentureValue):
   def fromStackDict(thing): return VentureSymbol(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
   def __hash__(self): return hash(self.symbol)
-  def expressionFor(self): return ["quote", self.symbol]
+  def expressionFor(self): return [{"type":"symbol", "value":"quote"}, self.symbol]
 
 @serialize.register
 class VentureArray(VentureValue):
@@ -364,7 +364,7 @@ interface here is compatible with one possible path."""
   def __repr__(self):
     return "VentureArray(%s)" % self.array
   def expressionFor(self):
-    return ["array"] + [v.expressionFor() for v in self.array]
+    return [{"type":"symbol", "value":"array"}] + [v.expressionFor() for v in self.array]
 
 @serialize.register
 class VentureNil(VentureValue):
@@ -381,7 +381,7 @@ class VentureNil(VentureValue):
   def contains(self, _obj): return False
   def size(self): return 0
   def expressionFor(self):
-    return ["list"]
+    return [{"type":"symbol", "value":"list"}]
 
 @serialize.register
 class VenturePair(VentureValue):
@@ -449,7 +449,7 @@ class VenturePair(VentureValue):
   def size(self): # Really, length
     return 1 + self.rest.size()
   def expressionFor(self):
-    return ["pair", self.first.expressionFor(), self.rest.expressionFor()]
+    return [{"type":"symbol", "value":"pair"}, self.first.expressionFor(), self.rest.expressionFor()]
 
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
@@ -481,7 +481,7 @@ supposed to sum to 1, but we are not checking that."""
     return obj.getNumber() in self.simplex
   def size(self): return len(self.simplex)
   def expressionFor(self):
-    return ["simplex"] + self.simplex
+    return [{"type":"symbol", "value":"simplex"}] + self.simplex
 
 @serialize.register
 class VentureDict(VentureValue):
@@ -503,8 +503,9 @@ class VentureDict(VentureValue):
   def size(self): return len(self.dict)
   def expressionFor(self):
     (keys, vals) = zip(*self.dict.iteritems())
-    return ["dict", ["list"] + [k.expressionFor() for k in keys],
-            ["list"] + [v.expressionFor() for v in vals]]
+    return [{"type":"symbol", "value":"dict"},
+            [{"type":"symbol", "value":"list"}] + [k.expressionFor() for k in keys],
+            [{"type":"symbol", "value":"list"}] + [v.expressionFor() for v in vals]]
 
 # 2D array of numbers backed by a numpy array object
 @serialize.register
@@ -559,7 +560,8 @@ class VentureMatrix(VentureValue):
   def map_real(self, f):
     return VentureMatrix(np.vectorize(f)(self.matrix))
   def expressionFor(self):
-    return ["matrix", ["list"] + [["list"] + [v for v in row] for row in self.matrix]]
+    return [{"type":"symbol", "value":"matrix"},
+            [{"type":"symbol", "value":"list"}] + [[{"type":"symbol", "value":"list"}] + [v for v in row] for row in self.matrix]]
 
 @serialize.register
 class VentureSymmetricMatrix(VentureMatrix):
