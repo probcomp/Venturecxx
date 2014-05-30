@@ -65,7 +65,7 @@ class InPlaceOperator(object):
     detach along the scaffold and return the weight thereof."""
     self.trace = trace
     self.scaffold = scaffold
-    rhoWeight,self.rhoDB = detachAndExtract(trace, scaffold.border[0], scaffold, compute_gradient)
+    rhoWeight,self.rhoDB = detachAndExtract(trace, scaffold.border[0], scaffold, compute_gradient = compute_gradient)
     assertTorus(scaffold)
     return rhoWeight
 
@@ -634,7 +634,7 @@ class GradientOfRegen(object):
     self.fixed_regen(values)
     new_scaffold = constructScaffold(self.trace, [set(self.pnodes)])
     registerDeterministicLKernels(self.trace, new_scaffold, self.pnodes, values)
-    (_, rhoDB) = detachAndExtract(self.trace, new_scaffold.border[0], new_scaffold, True)
+    (_, rhoDB) = detachAndExtract(self.trace, new_scaffold.border[0], new_scaffold, compute_gradient = True)
     self.scaffold = new_scaffold
     return [rhoDB.getPartial(pnode) for pnode in self.pnodes]
 
