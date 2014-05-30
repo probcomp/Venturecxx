@@ -372,7 +372,7 @@ class Trace(object):
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),HamiltonianMonteCarloOperator(params["epsilon"], params["L"]))
       elif params["kernel"] == "gibbs":
         #assert params["with_mutation"]
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],updateValue=params["updateValue"]),EnumerativeGibbsOperator())
       elif params["kernel"] == "slice":
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),SliceOperator())
       # [FIXME] egregrious style, but expedient. The stack is such a

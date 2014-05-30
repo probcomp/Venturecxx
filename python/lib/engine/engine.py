@@ -31,7 +31,7 @@ class Engine(object):
     self.directiveCounter = 0
     self.directives = {}
 
-  def getDistinguishedTrace(self): 
+  def getDistinguishedTrace(self):
     assert self.traces
     return self.traces[0]
 
@@ -161,7 +161,7 @@ effect of renumbering the directives, if some had been forgotten."""
       params = {}
     self.set_default_params(params)
 
-    self.incorporate()    
+    self.incorporate()
     if 'command' in params and params['command'] == "resample":
       P = params['particles']
       newTraces = [None for p in range(P)]
@@ -187,7 +187,7 @@ effect of renumbering the directives, if some had been forgotten."""
     else: # A primitive infer expression
       #import pdb; pdb.set_trace()
       for trace in self.traces: trace.infer(params)
-  
+
   # TODO put all inference param parsing in one place
   def set_default_params(self,params):
     if 'kernel' not in params:
@@ -211,7 +211,7 @@ effect of renumbering the directives, if some had been forgotten."""
       params['deltaKernelArgs'] = None
     if 'updateValue' not in params:
       params['updateValue'] = False
-    
+
     if "particles" in params:
       params["particles"] = int(params["particles"])
     if "in_parallel" not in params:
@@ -223,7 +223,7 @@ effect of renumbering the directives, if some had been forgotten."""
         params['weights'] = [1 for _ in params['subkernels']]
       for p in params['subkernels']:
         self.set_default_params(p)
-  
+
   def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
 

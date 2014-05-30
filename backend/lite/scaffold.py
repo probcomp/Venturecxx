@@ -103,7 +103,8 @@ def updateValueAtNode(trace, node, updatedNodes,useDeltaKernels,deltaKernelArgs)
     canAbsorb = True
     for parent in trace.parentsAt(node):
       canAbsorb &= psp.canAbsorb(trace, node, parent)
-    if not canAbsorb:
+    # Assume AAA node is always updated
+    if not canAbsorb and not psp.childrenCanAAA():
       # psp can not absorb for all the paretns
       for parent in trace.definiteParentsAt(node):
         hasNewEsr |= updateValueAtNode(trace, parent, updatedNodes,useDeltaKernels,deltaKernelArgs)
@@ -114,29 +115,64 @@ def updateValueAtNode(trace, node, updatedNodes,useDeltaKernels,deltaKernelArgs)
           hasNewEsr |= updateValueAtNode(trace, esrParent, updatedNodes,useDeltaKernels,deltaKernelArgs)
 
       # Regen value.
-      scaffold = Scaffold()
-      omegaDB = OmegaDB()
       if isinstance(node, RequestNode):
         # FIXME: only checked the value of esrs (in string)
         # FIXME: psp is unapplied before unevalRequests, and the args of psp may not be the same as they were used for applyPSP. Problem for AAA?
-        old_request = trace.valueAt(node)
-        old_request_str = str(old_request.esrs)
-        unapplyPSP(trace, node, scaffold, omegaDB)
-        applyPSP(trace,node,scaffold,False,omegaDB,{})
-        new_request = trace.valueAt(node)
-        new_request_str = str(new_request.esrs)
-        if old_request_str != new_request_str:
-            unevalRequests(trace, node, scaffold, omegaDB, compute_gradient)
-            evalRequests(trace,requestNode,scaffold,shouldRestore,omegaDB,gradients)
-            hasNewEsr |= True
+        #DEBUG
+        #print "Regen request node", psp
+
+        #scaffold = Scaffold()
+        #omegaDB = OmegaDB()
+        #old_request = trace.valueAt(node)
+        ##DEBUG
+        #spf = trace.spFamiliesAt(node)
+        #for esr in old_request.esrs:
+        #  if esr.id not in spf.families:
+        #    print "strange"
+
+        #unapplyPSP(trace, node, scaffold, omegaDB)
+        #applyPSP(trace,node,scaffold,False,omegaDB,{})
+        #new_request = trace.valueAt(node)
+
+        ##DEBUG
+        #spf = trace.spFamiliesAt(node)
+        #for esr in new_request.esrs:
+        #  if esr.id not in spf.families:
+        #    print "strange"
+
+        #eq_request = len(old_request.esrs) == len(new_request.esrs)
+        #if eq_request:
+        #  for i in range(len(old_request.esrs)):
+        #    if not old_request.esrs[i].id == new_request.esrs[i].id:
+        #      eq_request = False
+        #      break
+        #if not eq_request:
+        #  #DEBUG
+        #  old_request_str = str(old_request.esrs)
+        #  new_request_str = str(new_request.esrs)
+        #  print "not equal request", old_request_str, new_request_str
+        #  trace.setValueAt(node, old_request)
+        #  unevalRequests(trace, node, scaffold, omegaDB, compute_gradient)
+        #  trace.setValueAt(node, new_request)
+        #  evalRequests(trace,requestNode,scaffold,shouldRestore,omegaDB,gradients)
+        #  hasNewEsr |= True
+        pass
       else: # OutputNode
-        unapplyPSP(trace, node, scaffold, omegaDB)
-        applyPSP(trace,node,scaffold,False,omegaDB,{})
+        if not isinstance(trace.valueAt(node), SPRef):
+          #DEBUG
+          scaffold = Scaffold()
+          omegaDB = OmegaDB()
+          oldValue = trace.valueAt(node)
+          unapplyPSP(trace, node, scaffold, omegaDB)
+          applyPSP(trace,node,scaffold,False,omegaDB,{})
+          print "Regen output node", oldValue, trace.valueAt(node), psp
 
   updatedNodes.add(node)
   return hasNewEsr
 
-def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False, updatedNodes = set()):
+def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False, updatedNodes = None):
+  if updatedNodes is None:
+    updatedNodes = set()
   while True:
     cDRG,cAbsorbing,cAAA = set(),set(),set()
     indexAssignments = {}

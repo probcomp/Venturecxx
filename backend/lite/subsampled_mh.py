@@ -12,7 +12,9 @@ import numpy as np
 import scipy.stats as stats
 from scaffold import Scaffold, constructScaffold, updateValuesAtScaffold
 
-def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False, updatedNodes = set()):
+def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False, updatedNodes = None):
+  if updatedNodes is None:
+    updatedNodes = set()
   while True:
     cDRG,cAbsorbing,cAAA = set(),set(),set()
     indexAssignments = {}
@@ -399,8 +401,6 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
     accept = alpha > log_u
   else:
     # Austerity MH.
-    assert(N >= Nbatch * k0)
-
     mu_0 = (log_u - alpha) / N
     perm_local_chidren = np.random.permutation(global_index.local_children)
 
@@ -514,7 +514,8 @@ class SubsampledBlockScaffoldIndexer(object):
   def sampleLocalIndex(self,trace,local_child):
     assert(isinstance(local_child, LookupNode) or isinstance(local_child, OutputNode))
     setsOfPNodes = [set([local_child])]
-    return constructScaffold(trace,setsOfPNodes,updateValue=self.updateValue,updatedNodes=self.updatedNodes)
+    # Set updateValue = False because we'll do detachAndExtract manually.
+    return constructScaffold(trace,setsOfPNodes,updateValue=False)
 
   def logDensityOfGlobalIndex(self,trace,_):
     if self.block == "one": return trace.logDensityOfBlock(self.scope)
