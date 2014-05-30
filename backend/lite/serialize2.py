@@ -23,24 +23,24 @@ class OrderedOmegaDB(OmegaDB):
     def getValue(self, node):
         if super(OrderedOmegaDB, self).hasValueFor(node):
             return super(OrderedOmegaDB, self).getValue(node)
-        value = self.stack.pop()
-        if isinstance(value, (Request, SPRef, VentureEnvironment)):
-            # reconstruct requests and environments,
-            # since they contain pointers to nodes
-            psp = pspAt(node)
-            if psp.isRandom():
+        psp = pspAt(node)
+        if psp.isRandom():
+            value = self.stack.pop()
+            if isinstance(value, (Request, SPRef, VentureEnvironment)):
                 raise Exception("Cannot restore a randomly constructed %s" % type(value))
+            return value
+        else:
+            # resimulate deterministic PSPs
+            # TODO: is it better to store deterministic values or to resimulate?
             args = argsAt(node)
             return psp.simulate(args)
-        else:
-            return value
     def extractValue(self, node, value):
         super(OrderedOmegaDB, self).extractValue(node, value)
-        if isinstance(value, (Request, SPRef, VentureEnvironment)):
-            psp = pspAt(node)
-            if psp.isRandom():
+        psp = pspAt(node)
+        if psp.isRandom():
+            if isinstance(value, (Request, SPRef, VentureEnvironment)):
                 raise Exception("Cannot restore a randomly constructed %s" % type(value))
-        self.stack.append(value)
+            self.stack.append(value)
 
 def topo_sort(trace, nodes):
     nodes = set(nodes)
