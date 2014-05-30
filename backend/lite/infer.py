@@ -449,7 +449,7 @@ class ParticlePGibbsOperator(object):
     
 # "stepping out" procedure
 # See "Slice Sampling" (Neal 2000) p11 for details
-def findInterval(f,x0,y,w,m):
+def findInterval(f,x0,logy,w,m):
   U = random.random()  
   L = x0 - w * U
   R = L + w
@@ -465,8 +465,9 @@ def findInterval(f,x0,y,w,m):
     iterJ += 1
     if iterJ == maxIters: raise Exception("Cannot find interval for slice")
     fl = f(L)
-    # print "Expanding down from L", L, "f(L)", fl, "y", y
-    if y >= fl: break
+    # print "Expanding down from L", L, "f(L)", fl, "logy", logy
+    if logy >= fl: break
+    if math.isnan(fl): break
     L = L - w
     J = J - 1
 
@@ -475,14 +476,15 @@ def findInterval(f,x0,y,w,m):
     iterK += 1
     if iterK == maxIters: raise Exception("Cannot find interval for slice")
     fr = f(R)
-    # print "Expanding up from R", R, "f(R)", fr, "y", y
-    if y >= fr: break
+    # print "Expanding up from R", R, "f(R)", fr, "logy", logy
+    if logy >= fr: break
+    if math.isnan(fr): break
     R = R + w
     K = K - 1
 
   return L,R
 
-def sampleInterval(f,x0,y,L,R):
+def sampleInterval(f,x0,logy,L,R):
   maxIters = 10000
   it = 0
   while True:
@@ -491,8 +493,8 @@ def sampleInterval(f,x0,y,L,R):
     U = random.random()
     x1 = L + U * (R - L)
     fx1 = f(x1)
-    # print "Slicing at x1", x1, "f(x1)", fx1, "y", y, "L", L, "R", R
-    if y <= fx1: return x1
+    # print "Slicing at x1", x1, "f(x1)", fx1, "logy", logy, "L", L, "R", R
+    if logy <= fx1: return x1
     if x1 < x0: L = x1
     else: R = x1
 
@@ -502,7 +504,7 @@ def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
     with fixed_randomness:
       scaffold.lkernels[pnode] = DeterministicLKernel(psp,VentureNumber(x))
       # The particle is a way to regen without clobbering the underlying trace
-      return math.exp(regenAndAttach(Particle(trace),scaffold.border[0],scaffold,False,OmegaDB(),{}))
+      return regenAndAttach(Particle(trace),scaffold.border[0],scaffold,False,OmegaDB(),{})
   return f
   
 class SliceOperator(object):
@@ -521,12 +523,12 @@ class SliceOperator(object):
     assertTorus(scaffold)
 
     f = makeDensityFunction(trace,scaffold,psp,pnode,FixedRandomness())
-    y = random.uniform(0,f(currentValue))
+    logy = f(currentValue) + math.log(random.uniform(0,1))
     w = .5
     m = 100
     # print "Slicing with x0", currentValue, "w", w, "m", m
-    L,R = findInterval(f,currentValue,y,w,m)
-    proposedValue = sampleInterval(f,currentValue,y,L,R)
+    L,R = findInterval(f,currentValue,logy,w,m)
+    proposedValue = sampleInterval(f,currentValue,logy,L,R)
     proposedVValue = VentureNumber(proposedValue)
     scaffold.lkernels[pnode] = DeterministicLKernel(psp,proposedVValue)
     
