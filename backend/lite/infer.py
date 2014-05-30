@@ -476,7 +476,7 @@ def findInterval(f,x0,y,w,m):
 
   return L,R
 
-def sampleInterval(f,x0,y,w,L,R):
+def sampleInterval(f,x0,y,L,R):
   maxIters = 10000
   it = 0
   while True:
@@ -517,7 +517,7 @@ class SliceOperator(object):
     w = .5
     m = 100
     L,R = findInterval(f,currentValue,y,w,m)
-    proposedValue = sampleInterval(f,currentValue,y,w,L,R)
+    proposedValue = sampleInterval(f,currentValue,y,L,R)
     proposedVValue = VentureNumber(proposedValue)
     scaffold.lkernels[pnode] = DeterministicLKernel(psp,proposedVValue)
     
