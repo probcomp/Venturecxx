@@ -4,9 +4,9 @@ from venture.lite.request import Request
 from venture.lite.value import SPRef
 from venture.lite.env import VentureEnvironment
 from venture.lite.omegadb import OmegaDB
-from venture.lite.scaffold import constructScaffold
-from venture.lite.detach import detachAndExtract
-from venture.lite.regen import regenAndAttach
+from venture.lite.scaffold import Scaffold, constructScaffold
+from venture.lite.detach import detachAndExtract, unevalFamily
+from venture.lite.regen import regenAndAttach, evalFamily, restore
 from venture.lite.consistency import assertTrace, assertTorus
 
 # dummy trace, for the convenience methods
@@ -87,6 +87,7 @@ def ser_deser(engine):
     engine.directiveCounter = directiveCounter
     new_trace = engine.getDistinguishedTrace()
     new_trace.makeConsistent()
+    old_trace.makeConsistent()
 
     old_scaffold = constructScaffold(old_trace, [old_trace.getAllNodesInScope('default')])
     new_scaffold = constructScaffold(new_trace, [new_trace.getAllNodesInScope('default')])
@@ -100,6 +101,50 @@ def ser_deser(engine):
     _ = regenAndAttach(old_trace, old_border, old_scaffold, True, oldDB, {})
     # _ = regenAndAttach(new_trace, new_border, new_scaffold, True, newDB, {})
     _ = regenAndAttach(new_trace, new_border, new_scaffold, True, oldDB, {})
+
+    return engine
+
+def ser_deser(engine):
+    old_trace = engine.getDistinguishedTrace()
+    directives = engine.directives
+    directiveCounter = engine.directiveCounter
+
+    old_trace.makeConsistent()
+    omegaDB = OrderedOmegaDB()
+    scaffold = Scaffold()
+
+    for did, directive in sorted(directives.items(), reverse=True):
+        if directive[0] == "observe":
+            old_trace.unobserve(did)
+            old_trace.families[did].isObservation = False
+        unevalFamily(old_trace, old_trace.families[did], scaffold, omegaDB)
+
+    for did, directive in sorted(directives.items()):
+        restore(old_trace, old_trace.families[did], scaffold, omegaDB, {})
+        if directive[0] == "observe":
+            old_trace.observe(did, directive[2])
+
+    engine = Engine()
+    engine.directives = directives
+    engine.directiveCounter = directiveCounter
+    new_trace = engine.getDistinguishedTrace()
+
+    def evalHelper(did, datum):
+        exp = new_trace.unboxExpression(engine.desugarLambda(datum))
+        _, new_trace.families[did] = evalFamily(new_trace, exp, new_trace.globalEnv, scaffold, True, omegaDB, {})
+
+    for did, directive in sorted(directives.items()):
+        if directive[0] == "assume":
+            name, datum = directive[1], directive[2]
+            evalHelper(did, datum)
+            new_trace.bindInGlobalEnv(name, did)
+        elif directive[0] == "observe":
+            datum, val = directive[1], directive[2]
+            evalHelper(did, datum)
+            new_trace.observe(did, val)
+        elif directive[0] == "predict":
+            datum = directive[1]
+            evalHelper(did, datum)
 
     return engine
 
