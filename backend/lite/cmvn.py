@@ -18,7 +18,7 @@ def mvtLogDensity(x,mu,Sigma,v):
   pterm1 = gammaln(float(v + p) / 2)
   nterm1 = gammaln(float(v) / 2)
   nterm2 = (float(p)/2) * math.log(v * math.pi)
-  nterm3 = (float(1)/2) * np.linalg.slogdet(Sigma)[1] 
+  nterm3 = (float(1)/2) * np.linalg.slogdet(Sigma)[1]
   nterm4 = (float(v + p)/2) * math.log(1 + (float(1)/v) * (x - mu).T * np.linalg.inv(Sigma) * (x - mu))
   return pterm1 - (nterm1 + nterm2 + nterm3 + nterm4)
 
@@ -59,11 +59,8 @@ class CMVNSPAux(object):
     self.d = d
 
   def copy(self):
-    aux = CMVNSPAux(self.d)
-    aux.N = self.N
-    aux.STotal = self.STotal
-    aux.xTotal = self.xTotal
-    return aux
+    from copy import deepcopy
+    return deepcopy(self)
 
 class CMVNSP(VentureSP):
   def __init__(self,requestPSP,outputPSP,d):
@@ -80,7 +77,7 @@ class MakeCMVNOutputPSP(DeterministicPSP):
     d = np.size(m0)
     output = TypedPSP(CMVNOutputPSP(d,m0,k0,v0,S0), SPType([], HomogeneousArrayType(NumberType())))
     return CMVNSP(NullRequestPSP(),output,d)
-    
+
   def childrenCanAAA(self): return True
 
   def description(self,name):
@@ -100,9 +97,9 @@ class CMVNOutputPSP(RandomPSP):
     kN = self.k0 + spaux.N
     vN = self.v0 + spaux.N
     SN = self.S0 + spaux.STotal + (self.k0 * self.m0 * self.m0.T) - (kN * mN * mN.T)
-    
+
     return (mN,kN,vN,SN)
-  
+
   def mvtParams(self,mN,kN,vN,SN):
     mArg = mN
     SArg = (float(kN + 1) / (kN * (vN - self.d + 1))) * SN

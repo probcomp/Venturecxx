@@ -5,6 +5,7 @@ import scipy.special
 import scipy.stats
 from utils import simulateCategorical
 from value import AtomType # The type names are metaprogrammed pylint: disable=no-name-in-module
+from copy import deepcopy
 
 class CRPSPAux(object):
   def __init__(self):
@@ -15,7 +16,7 @@ class CRPSPAux(object):
 
   def copy(self):
     crp = CRPSPAux()
-    crp.tableCounts = self.tableCounts
+    crp.tableCounts = deepcopy(self.tableCounts)
     crp.nextIndex = self.nextIndex
     crp.numTables = self.numTables
     crp.numCustomers = self.numCustomers
