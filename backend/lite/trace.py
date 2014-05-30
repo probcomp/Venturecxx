@@ -415,7 +415,7 @@ class Trace(object):
 
   def getDirectiveLogScore(self,id):
     assert id in self.families
-    node = self.families[id]
+    node = self.getOutermostNonReferenceApplication(self.families[id])
     return self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node))
 
   def getGlobalLogScore(self):
