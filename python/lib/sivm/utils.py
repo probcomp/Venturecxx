@@ -17,6 +17,7 @@
 # -*- coding: utf-8 -*-
 
 from venture.exception import VentureException
+from venture.lite.value import VentureValue
 import re
 
 def is_valid_symbol(s):
@@ -224,7 +225,9 @@ def validate_expression(expression):
     if isinstance(expression, dict):
         validate_value(expression)
         return expression
-    raise VentureException('parse','Expression token must be a string, list, or dict.',expression_index=[])
+    if isinstance(expression, VentureValue):
+        return expression
+    raise VentureException('parse','Expression token must be a string, list, dict, or venture value.',expression_index=[])
 
 def validate_symbol(s):
     if not is_valid_symbol(s):
