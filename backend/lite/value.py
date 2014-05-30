@@ -4,7 +4,6 @@ The design currently lives at
 https://docs.google.com/document/d/1URnJh5hNJ___-dwzIpca5Y2h-Mku1n5zjpGCiFBcUHM/edit
 """
 import operator
-from abc import ABCMeta
 from numbers import Number
 import numpy as np
 import hashlib
@@ -17,8 +16,6 @@ import serialize
 # values and all the types.
 
 class VentureValue(object):
-  __metaclass__ = ABCMeta
-
   def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getCount(self): raise VentureTypeError("Cannot convert %s to count" % type(self))
   def getPositive(self): raise VentureTypeError("Cannot convert %s to positive" % type(self))

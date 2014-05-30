@@ -1,10 +1,8 @@
-from abc import ABCMeta, abstractmethod
 from value import VentureValue, ExpressionType
 from request import Request
 import serialize
 
 class Node(object):
-  __metaclass__ = ABCMeta
   def __init__(self):
     self.value = None
     self.children = set()
@@ -26,8 +24,8 @@ class Node(object):
     return value is None or isinstance(value, VentureValue)
 
   def parents(self): return self.definiteParents()
-  @abstractmethod
-  def definiteParents(self): pass
+  def definiteParents(self):
+    raise Exception("Cannot compute the definite parents of an abstract node.")
 
   # for serialization
   cyclic = True
@@ -58,8 +56,6 @@ class LookupNode(Node):
 
 
 class ApplicationNode(Node):
-  __metaclass__ = ABCMeta
-
   def __init__(self, operatorNode, operandNodes):
     super(ApplicationNode, self).__init__()
     self.operatorNode = operatorNode
