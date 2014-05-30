@@ -1,5 +1,6 @@
 from nose import SkipTest
 from nose.tools import eq_
+from testconfig import config
 
 from venture.test.config import get_ripl
 from venture.lite.builtin import builtInSPsList
@@ -112,6 +113,7 @@ def propRandom(args_listss, sp):
   assert False, "SP deterministically returned %s (parallel to arguments)" % answers
 
 def testExpressionFor():
+  if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
   checkTypedProperty(propExpressionWorks, AnyType())
 
 def propExpressionWorks(value):
@@ -125,6 +127,7 @@ def eval_in_ripl(expr):
   return ripl.sivm.core_sivm.engine.report_raw(1)
 
 def testRiplSimulate():
+  if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
   for (name,sp) in relevantSPs():
     if name not in ["scope_include", # Because scope_include is
                                      # misannotated as to the true
