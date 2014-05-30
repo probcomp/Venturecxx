@@ -1,26 +1,46 @@
 from venture.lite.engine import Engine
+from venture.lite.trace import Trace
+from venture.lite.request import Request
+from venture.lite.value import SPRef
+from venture.lite.env import VentureEnvironment
 from venture.lite.omegadb import OmegaDB
 from venture.lite.scaffold import constructScaffold
 from venture.lite.detach import detachAndExtract
 from venture.lite.regen import regenAndAttach
 from venture.lite.consistency import assertTrace, assertTorus
 
-class StackDB(OmegaDB):
+# dummy trace, for the convenience methods
+trace = object.__new__(Trace)
+pspAt = trace.pspAt
+argsAt = trace.argsAt
+
+class OrderedOmegaDB(OmegaDB):
     def __init__(self):
-        super(StackDB, self).__init__()
-        self.values = []
+        super(OrderedOmegaDB, self).__init__()
+        self.stack = []
     def hasValueFor(self, node):
         return True
     def getValue(self, node):
-        return self.values.pop()
+        if super(OrderedOmegaDB, self).hasValueFor(node):
+            return super(OrderedOmegaDB, self).getValue(node)
+        value = self.stack.pop()
+        if isinstance(value, (Request, SPRef, VentureEnvironment)):
+            # reconstruct requests and environments,
+            # since they contain pointers to nodes
+            psp = pspAt(node)
+            if psp.isRandom():
+                raise Exception("Cannot restore a randomly constructed %s" % type(value))
+            args = argsAt(node)
+            return psp.simulate(args)
+        else:
+            return value
     def extractValue(self, node, value):
-        self.values.append(value)
-    def hasESRParent(self, sp, id):
-        return False
-    def getESRParent(self, sp, id):
-        return None
-    def registerSPFamily(self, sp, id, esrParent):
-        pass
+        super(OrderedOmegaDB, self).extractValue(node, value)
+        if isinstance(value, (Request, SPRef, VentureEnvironment)):
+            psp = pspAt(node)
+            if psp.isRandom():
+                raise Exception("Cannot restore a randomly constructed %s" % type(value))
+        self.stack.append(value)
 
 def topo_sort(trace, nodes):
     nodes = set(nodes)
@@ -46,7 +66,7 @@ def ser_deser(engine):
     scaffold = constructScaffold(trace, [trace.getAllNodesInScope('default')])
     assertTrace(trace, scaffold)
 
-    _, omegaDB = detachAndExtract(trace, scaffold.border[0], scaffold, omegaDB = StackDB())
+    _, omegaDB = detachAndExtract(trace, scaffold.border[0], scaffold, omegaDB = OrderedOmegaDB())
     assertTorus(scaffold)
 
     _ = regenAndAttach(trace, scaffold.border[0], scaffold, True, omegaDB, {})
@@ -74,10 +94,10 @@ def ser_deser(engine):
     old_border = topo_sort(old_trace, old_scaffold.border[0])
     new_border = topo_sort(new_trace, new_scaffold.border[0])
 
-    _, oldDB = detachAndExtract(old_trace, old_border, old_scaffold, omegaDB = StackDB())
+    _, oldDB = detachAndExtract(old_trace, old_border, old_scaffold, omegaDB = OrderedOmegaDB())
     _, newDB = detachAndExtract(new_trace, new_border, new_scaffold)
 
-    # _ = regenAndAttach(old_trace, old_border, old_scaffold, True, oldDB, {})
+    _ = regenAndAttach(old_trace, old_border, old_scaffold, True, oldDB, {})
     # _ = regenAndAttach(new_trace, new_border, new_scaffold, True, newDB, {})
     _ = regenAndAttach(new_trace, new_border, new_scaffold, True, oldDB, {})
 
