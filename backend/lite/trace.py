@@ -95,7 +95,7 @@ class Trace(object):
         return (scope.getNumber(), block.getNumber())
 
   def registerConstrainedChoice(self,node):
-    assert node not in self.ccs, "Cannot observe the same choice more than once"
+    assert node not in self.ccs, "Cannot constrain the same random choice twice."
     self.ccs.add(node)
     self.unregisterRandomChoice(node)
 
@@ -315,6 +315,7 @@ class Trace(object):
     return weight
 
   def getOutermostNonReferenceApplication(self,node):
+    if isinstance(node,ConstantNode): raise Exception("Cannot constrain a deterministic value.")
     if isinstance(node,LookupNode): return self.getOutermostNonReferenceApplication(node.sourceNode)
     assert isinstance(node,OutputNode)
     if isinstance(self.pspAt(node),ESRRefOutputPSP):
@@ -325,6 +326,8 @@ class Trace(object):
         raise MissingEsrParentError()
     elif isScopeIncludeOutputPSP(self.pspAt(node)):
       return self.getOutermostNonReferenceApplication(node.operandNodes[2])
+    elif not self.pspAt(node).isRandom():
+      raise Exception("Cannot constrain a deterministic value.")
     else: return node
 
   def unobserve(self,id):
