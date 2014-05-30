@@ -492,7 +492,7 @@ def sampleInterval(f,x0,y,L,R):
     x1 = L + U * (R - L)
     fx1 = f(x1)
     # print "Slicing at x1", x1, "f(x1)", fx1, "y", y, "L", L, "R", R
-    if y < fx1: return x1
+    if y <= fx1: return x1
     if x1 < x0: L = x1
     else: R = x1
 
