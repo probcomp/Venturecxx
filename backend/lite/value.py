@@ -401,10 +401,10 @@ class VenturePair(VentureValue):
       return [elt_type.asPython(self.first)] + self.rest.asPythonList(elt_type)
     else:
       return [self.first] + self.rest.asPythonList()
-  def asStackDict(self, _trace):
+  def asStackDict(self, trace):
     (list_, tail) = self.asPossiblyImproperList()
     if tail is None:
-      return {"type":"list", "value":list_}
+      return {"type":"list", "value":[v.asStackDict(trace) for v in list_]}
     else:
       return {"type":"improper_list", "value": self}
   def asPossiblyImproperList(self):
