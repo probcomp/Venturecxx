@@ -84,15 +84,14 @@ def get_meshgrid(dt, pose, control, motion_params_dict, N_grid=40):
     predicted_mean = predicted.mean(axis=0)
     predicted_std = predicted.std(axis=0)
     _X, _Y, _heading = map(_get_linspace, zip(predicted_mean, predicted_std))
-    _Z_arg_tuples = itertools.product(_X, _Y)
+    const_heading = predicted_mean[2]
+    _Z_arg_tuples = itertools.product(_X, _Y, [const_heading])
     X, Y = numpy.meshgrid(_X, _Y)
-    return X, Y, _Z_arg_tuples
+    return X, Y, const_heading, _Z_arg_tuples
 
 def get_log_density(dt, start_pose, control, motion_params_dict, N_grid):
     predict_motion_str = get_predict_motion_str(dt, start_pose, control)
     program = get_program(motion_params_dict)
-    X, Y, _Z_arg_tuples = get_meshgrid(dt, start_pose, control,
-            motion_params_dict, N_grid)
     ripl = make_puma_church_prime_ripl()
     def _convert(val):
         def _convert_real(val):
@@ -104,15 +103,15 @@ def get_log_density(dt, start_pose, control, motion_params_dict, N_grid):
     def get_logscore_motion(stop_pose):
         ripl.clear()
         ripl.execute_program(program)
-        # FIXME: hard coding heading = 0 here
-        stop_pose = list(stop_pose) + [0]
         ripl.observe(predict_motion_str, _convert(stop_pose))
         ripl.infer('(incorporate)')
         return ripl.get_global_logscore()
     #
+    X, Y, const_heading, _Z_arg_tuples = get_meshgrid(dt, start_pose, control,
+            motion_params_dict, N_grid)
     log_density = map(get_logscore_motion, _Z_arg_tuples)
     log_density = numpy.array(log_density).reshape((N_grid, N_grid))
-    return X, Y, log_density
+    return X, Y, const_heading, log_density
 
 def plot_log_density(X, Y, Z):
     import pylab
@@ -126,11 +125,25 @@ def plot_log_density(X, Y, Z):
             rstride=1, cstride=1, cmap=cm.coolwarm,
             linewidth=0, antialiased=False)
     fig.colorbar(surf, shrink=0.5, aspect=5)
+    pylab.xlabel('X')
+    pylab.ylabel('Y')
     return
+
 
 motion_params_dict = get_motion_params_dict(
     additive_xy_error_std = 0.0001,
     additive_heading_error_std = 0.0001,
     )
-X, Y, log_density = get_log_density(.1, (0, 0, 0), (1, 0), motion_params_dict, 20)
-plot_log_density(X, Y, log_density)
+dt = .1
+control = (1, 0)
+N_grid = 10
+start_poses = [
+        (0, 0, 0),
+        (0, 0, numpy.pi / 2),
+        (0, 0, numpy.pi / 4),
+        ]
+for start_pose in start_poses:
+    X, Y, const_heading, log_density = get_log_density(dt, start_pose, control,
+            motion_params_dict, N_grid)
+    plot_log_density(X, Y, log_density)
+    pass
