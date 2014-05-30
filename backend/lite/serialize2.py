@@ -21,6 +21,25 @@ class StackDB(OmegaDB):
     def registerSPFamily(self, sp, id, esrParent):
         self.spFamilyDBs.append(esrParent)
 
+def topo_sort(trace, nodes):
+    nodes = set(nodes)
+    ret = []
+    stack = []
+    seen = set()
+    for _, root in sorted(trace.families.items()):
+        stack.append(root)
+    while stack:
+        node = stack.pop()
+        if node in seen:
+            continue
+        seen.add(node)
+        for parent in node.parents():
+            stack.append(parent)
+        if node in nodes:
+            ret.append(node)
+    assert len(ret) == len(nodes)
+    return ret
+
 def ser_deser(engine):
     trace = engine.getDistinguishedTrace()
     scaffold = constructScaffold(trace, [trace.getAllNodesInScope('default')])
@@ -46,16 +65,20 @@ def ser_deser(engine):
         engine.replay(directive)
     engine.directiveCounter = directiveCounter
     new_trace = engine.getDistinguishedTrace()
+    new_trace.makeConsistent()
 
     old_scaffold = constructScaffold(old_trace, [old_trace.getAllNodesInScope('default')])
     new_scaffold = constructScaffold(new_trace, [new_trace.getAllNodesInScope('default')])
 
-    _, oldDB = detachAndExtract(old_trace, old_scaffold.border[0], old_scaffold, omegaDB = StackDB())
-    _, newDB = detachAndExtract(new_trace, new_scaffold.border[0], new_scaffold)
+    old_border = topo_sort(old_trace, old_scaffold.border[0])
+    new_border = topo_sort(new_trace, new_scaffold.border[0])
 
-    # _ = regenAndAttach(old_trace, old_scaffold.border[0], old_scaffold, True, oldDB, {})
-    # _ = regenAndAttach(new_trace, new_scaffold.border[0], new_scaffold, True, newDB, {})
-    _ = regenAndAttach(new_trace, new_scaffold.border[0], new_scaffold, True, oldDB, {})
+    _, oldDB = detachAndExtract(old_trace, old_border, old_scaffold, omegaDB = StackDB())
+    _, newDB = detachAndExtract(new_trace, new_border, new_scaffold)
+
+    # _ = regenAndAttach(old_trace, old_border, old_scaffold, True, oldDB, {})
+    # _ = regenAndAttach(new_trace, new_border, new_scaffold, True, newDB, {})
+    _ = regenAndAttach(new_trace, new_border, new_scaffold, True, oldDB, {})
 
     return engine
 
