@@ -9,17 +9,18 @@ class StackDB(OmegaDB):
     def __init__(self):
         super(StackDB, self).__init__()
         self.values = []
-        self.spFamilyDBs = []
     def hasValueFor(self, node):
         return True
     def getValue(self, node):
         return self.values.pop()
     def extractValue(self, node, value):
         self.values.append(value)
+    def hasESRParent(self, sp, id):
+        return False
     def getESRParent(self, sp, id):
-        return self.spFamilyDBs.pop()
+        return None
     def registerSPFamily(self, sp, id, esrParent):
-        self.spFamilyDBs.append(esrParent)
+        pass
 
 def topo_sort(trace, nodes):
     nodes = set(nodes)
