@@ -9,8 +9,9 @@ from detach import detachAndExtract
 from scaffold import constructScaffold
 from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
-from utils import sampleLogCategorical, cartesianProduct, logaddexp
+from utils import sampleLogCategorical, cartesianProduct, logaddexp, FixedRandomness
 from nose.tools import assert_almost_equal # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
+from value import VentureNumber
 import copy
 
 class MissingEsrParentError(Exception): pass
@@ -447,6 +448,91 @@ class ParticlePGibbsOperator(object):
     self.particles[-1].commit()
     assertTrace(self.trace,self.scaffold)
 
+#### Slice
+    
+# "stepping out" procedure
+# See "Slice Sampling" (Neal 2000) p11 for details
+def findInterval(f,x0,y,w,m):
+  U = random.random()  
+  L = x0 - w * U
+  R = L + w
+
+  V = random.random()
+  J = math.floor(m * V)
+  K = (m - 1) - J
+
+  maxIters = 10000
+  
+  iterJ = 0
+  while J > 0 and y < f(L):
+    iterJ += 1
+    if iterJ == maxIters: raise Exception("Cannot find interval for slice")
+    L = L - w
+    J = J - 1
+
+  iterK = 0    
+  while K > 0 and y < f(R):
+    iterK += 1
+    if iterK == maxIters: raise Exception("Cannot find interval for slice")
+    R = R + w
+    K = K - 1
+
+  return L,R
+
+def sampleInterval(f,x0,y,w,L,R):
+  maxIters = 10000
+  it = 0
+  while True:
+    it += 1
+    if it == maxIters: raise Exception("Cannot sample interval for slice")
+    U = random.random()
+    x1 = L + U * (R - L)
+    if y < f(x1): return x1
+    if x1 < x0: L = x1
+    else: R = x1
+
+def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
+  from particle import Particle
+  def f(x):
+    with fixed_randomness:
+      scaffold.lkernels[pnode] = DeterministicLKernel(psp,VentureNumber(x))
+      # The particle is a way to regen without clobbering the underlying trace
+      return math.exp(regenAndAttach(Particle(trace),scaffold.border[0],scaffold,False,OmegaDB(),{}))
+  return f
+  
+class SliceOperator(object):
+
+  def propose(self,trace,scaffold):
+    self.trace = trace
+    self.scaffold = scaffold
+
+    pnode = scaffold.getPNode()
+    psp = trace.pspAt(pnode)
+    currentVValue = trace.valueAt(pnode)
+    currentValue = currentVValue.getNumber()
+    scaffold.lkernels[pnode] = DeterministicLKernel(psp,currentVValue)
+
+    rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
+    assertTorus(scaffold)
+
+    f = makeDensityFunction(trace,scaffold,psp,pnode,FixedRandomness())
+    y = random.uniform(0,f(currentValue))
+    w = .5
+    m = 100
+    L,R = findInterval(f,currentValue,y,w,m)
+    proposedValue = sampleInterval(f,currentValue,y,w,L,R)
+    proposedVValue = VentureNumber(proposedValue)
+    scaffold.lkernels[pnode] = DeterministicLKernel(psp,proposedVValue)
+    
+    xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,self.rhoDB,{})
+    return trace,xiWeight - rhoWeight
+
+  def accept(self): pass
+  def reject(self):
+    detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
+    assertTorus(self.scaffold)
+    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
+
 
 #### Gradient ascent to max a-posteriori
 
@@ -509,8 +595,7 @@ class GradientOfRegen(object):
     # Pass and store the pnodes because their order matters, and the
     # scaffold has them as a set
     self.pnodes = pnodes
-    self.pyr_state = random.getstate()
-    self.numpyr_state = npr.get_state()
+    self.fixed_randomness = FixedRandomness()
 
   def __call__(self, values):
     """Returns the gradient of the weight of regenerating along
@@ -527,17 +612,9 @@ class GradientOfRegen(object):
 
   def fixed_regen(self, values):
     # Ensure repeatability of randomness
-    cur_pyr_state = random.getstate()
-    cur_numpyr_state = npr.get_state()
-    try:
-      random.setstate(self.pyr_state)
-      npr.set_state(self.numpyr_state)
+    with self.fixed_randomness:
       registerDeterministicLKernels(self.trace, self.scaffold, self.pnodes, values)
-      answer = regenAndAttach(self.trace, self.scaffold.border[0], self.scaffold, False, OmegaDB(), {})
-    finally:
-      random.setstate(cur_pyr_state)
-      npr.set_state(cur_numpyr_state)
-    return answer
+      return regenAndAttach(self.trace, self.scaffold.border[0], self.scaffold, False, OmegaDB(), {})
 
 class HamiltonianMonteCarloOperator(InPlaceOperator):
 

@@ -59,8 +59,11 @@ class CMVNSPAux(object):
     self.d = d
 
   def copy(self):
-    from copy import deepcopy
-    return deepcopy(self)
+    aux = CMVNSPAux(self.d)
+    aux.N = self.N
+    aux.STotal = np.copy(self.STotal)
+    aux.xTotal = np.copy(self.xTotal)
+    return aux
 
 class CMVNSP(VentureSP):
   def __init__(self,requestPSP,outputPSP,d):

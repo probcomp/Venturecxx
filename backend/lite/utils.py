@@ -1,3 +1,4 @@
+import random
 import numpy.random as npr
 import math
 import scipy.special as ss
@@ -73,3 +74,26 @@ def logDensityMVNormal(x, mu, sigma):
     return answer
   else:
     return answer[0,0]
+
+class FixedRandomness(object):
+  """A Python context manager for executing (stochastic) code repeatably
+against fixed randomness.
+
+  Caveat: If the underlying code attempts to monkey with the state of
+  the random number generator (other than by calling it) that
+  monkeying will be suppressed, and not propagated to its caller. """
+
+  def __init__(self):
+    self.pyr_state = random.getstate()
+    self.numpyr_state = npr.get_state()
+
+  def __enter__(self):
+    self.cur_pyr_state = random.getstate()
+    self.cur_numpyr_state = npr.get_state()
+    random.setstate(self.pyr_state)
+    npr.set_state(self.numpyr_state)
+
+  def __exit__(self, _type, _value, _backtrace):
+    random.setstate(self.cur_pyr_state)
+    npr.set_state(self.cur_numpyr_state)
+    return False # Do not suppress any thrown exception
