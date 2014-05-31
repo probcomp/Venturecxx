@@ -37,6 +37,6 @@ def count_poses(poses):
     return Counter(map(tuple, poses))
 
 ripl = get_ripl()
-poses = sample_new_poses(ripl, 100)
+poses = numpy.array(sample_new_poses(ripl, 100))
 counter = count_poses(poses)
 print '\n'.join(map(str, counter.iteritems()))
