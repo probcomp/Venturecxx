@@ -162,10 +162,10 @@ def updateValueAtNode(trace, node, updatedNodes,useDeltaKernels,deltaKernelArgs)
           #DEBUG
           scaffold = Scaffold()
           omegaDB = OmegaDB()
-          oldValue = trace.valueAt(node)
+          #oldValue = trace.valueAt(node)
           unapplyPSP(trace, node, scaffold, omegaDB)
           applyPSP(trace,node,scaffold,False,omegaDB,{})
-          print "Regen output node", oldValue, trace.valueAt(node), psp
+          #print "Regen output node", oldValue, trace.valueAt(node), psp
 
   updatedNodes.add(node)
   return hasNewEsr
