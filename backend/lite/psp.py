@@ -1,4 +1,3 @@
-from abc import ABCMeta, abstractmethod
 from utils import override
 from lkernel import DefaultAAALKernel,DefaultVariationalLKernel,LKernel
 from request import Request
@@ -41,12 +40,10 @@ class PSP(object):
   additional contextual information that can be useful for special
   PSPs.  See node.py for the definition of Args.
   """
-  __metaclass__ = ABCMeta
 
-  @abstractmethod
-  def simulate(self,args):
+  def simulate(self, _args):
     """Simulate this process with the given parameters and return the result."""
-    pass
+    raise Exception("Simulate not implemented!")
 
   def gradientOfSimulate(self, _args, _value, _direction):
     """Return the gradient of this PSP's simulation function.  This method
@@ -210,14 +207,14 @@ class PSP(object):
   def madeSpLogDensityOfCountsBound(self, _aux):
     raise Exception("Cannot rejection sample AAA procedure with unbounded log density of counts")
 
-  def serialize(self, s):
+  def serialize(self, _s):
     """Return a JSON-serializable object representing any persistent state
     associated with this PSP.
 
     """
     raise Exception("Cannot serialize %s" % type(self))
 
-  def deserialize(self, s, data):
+  def deserialize(self, _s, _data):
     """Take a JSON-serializable object returned by serialize() and use it
     to initialize this PSP.
 
@@ -226,10 +223,6 @@ class PSP(object):
 
 class DeterministicPSP(PSP):
   """Provides good default implementations of PSP methods for deterministic PSPs."""
-  __metaclass__ = ABCMeta
-  @abstractmethod
-  def simulate(self,args): pass
-
   @override(PSP)
   def isRandom(self): return False
   @override(PSP)
@@ -245,13 +238,13 @@ class DeterministicPSP(PSP):
 @serialize.register
 class NullRequestPSP(DeterministicPSP):
   @override(DeterministicPSP)
-  def simulate(self,args): return Request()
+  def simulate(self, _args): return Request()
   @override(PSP)
   def gradientOfSimulate(self, args, _value, _direction): return [0 for _ in args.operandValues]
   @override(DeterministicPSP)
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
   @override(PSP)
-  def serialize(self, s): return {}
+  def serialize(self, _s): return {}
   @override(PSP)
   def deserialize(self, s, _): pass
 
@@ -271,17 +264,13 @@ class ESRRefOutputPSP(DeterministicPSP):
     return parentNode != trace.esrParentsAt(appNode)[0] and parentNode != appNode.requestNode
 
   @override(PSP)
-  def serialize(self, s): return {}
+  def serialize(self, _s): return {}
 
   @override(PSP)
   def deserialize(self, s, _): pass
 
 class RandomPSP(PSP):
   """Provides good default implementations of (two) PSP methods for stochastic PSPs."""
-  __metaclass__ = ABCMeta
-  @abstractmethod
-  def simulate(self,args): pass
-
   @override(PSP)
   def isRandom(self): return True
   @override(PSP)

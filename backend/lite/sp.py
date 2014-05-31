@@ -1,5 +1,4 @@
 from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType
-from abc import ABCMeta
 import copy
 import serialize
 
@@ -40,8 +39,6 @@ class SPAux(object):
 
 @serialize.register
 class VentureSP(VentureValue):
-  __metaclass__ = ABCMeta
-
   def __init__(self,requestPSP,outputPSP):
     self.requestPSP = requestPSP
     self.outputPSP = outputPSP

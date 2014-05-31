@@ -113,6 +113,13 @@ class Engine(object):
                              argument=directiveId)
     return self.getDistinguishedTrace().extractValue(directiveId)
 
+  def report_raw(self,directiveId):
+    if directiveId not in self.directives:
+      raise VentureException("invalid_argument",
+                             "Cannot report raw value of a non-existent directive id",
+                             argument=directiveId)
+    return self.getDistinguishedTrace().extractRaw(directiveId)
+
   def clear(self):
     for trace in self.traces: del trace
     self.directiveCounter = 0

@@ -18,6 +18,7 @@
 
 import numbers
 from venture.exception import VentureException
+from venture.lite.value import VentureValue
 import utils as u
 
 class Ripl():
@@ -198,6 +199,9 @@ class Ripl():
             return expr
         elif isinstance(expr, numbers.Number):
             return {'type':'number', 'value':expr}
+        elif isinstance(expr, VentureValue):
+            # A literal value as a Venture Value
+            return expr.asStackDict(None)
         else:
             raise Exception("Unknown partially parsed expression type %s" % expr)
 

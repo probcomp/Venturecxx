@@ -105,15 +105,15 @@ def grad_times(args, direction):
   assert len(args) == 2, "Gradient only available for binary multiply"
   return [direction*args[1], direction*args[0]]
 
-def builtInSPsList():
-  return [ [ "add",  naryNum(lambda *args: sum(args),
-                              sim_grad=lambda args, direction: [direction for _ in args],
-                              descr="%s returns the sum of all its arguments") ],
+builtInSPsList = [
+           [ "add",  naryNum(lambda *args: sum(args),
+                             sim_grad=lambda args, direction: [direction for _ in args],
+                             descr="%s returns the sum of all its arguments") ],
            [ "sub", binaryNum(lambda x,y: x - y,
                                 "%s returns the difference between its first and second arguments") ],
            [ "mul", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1),
                               sim_grad=grad_times,
-                              descr="%s returns the product of all its arguments") ],           
+                              descr="%s returns the product of all its arguments") ],
            [ "div",   binaryNum(lambda x,y: x / y,
                                 "%s returns the quotient of its first argument by its second") ],
            [ "eq",    binaryPred(lambda x,y: x.compare(y) == 0,
@@ -256,7 +256,7 @@ def builtInSPsList():
 
            [ "uniform_discrete",binaryNumS(discrete.UniformDiscreteOutputPSP()) ],
            [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [v.PositiveType()], v.CountType()) ],
-                      
+
            [ "normal", typed_nr(continuous.NormalOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ], # TODO Sigma is really non-zero, but negative is OK by scaling
            [ "uniform_continuous",binaryNumS(continuous.UniformOutputPSP()) ],
            [ "beta", typed_nr(continuous.BetaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.ProbabilityType()) ],
@@ -267,7 +267,7 @@ def builtInSPsList():
            [ "multivariate_normal", typed_nr(continuous.MVNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.SymmetricMatrixType()], v.HomogeneousArrayType(v.NumberType())) ],
            [ "inv_wishart", typed_nr(continuous.InverseWishartPSP(), [v.SymmetricMatrixType(), v.PositiveType()], v.SymmetricMatrixType())],
            [ "wishart", typed_nr(continuous.WishartPSP(), [v.SymmetricMatrixType(), v.PositiveType()], v.SymmetricMatrixType())],
-           
+
            [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.PositiveType(), v.PositiveType()], SPType([], v.BoolType())) ],
            [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.PositiveType(), v.PositiveType()], SPType([], v.BoolType())) ],
 
@@ -286,7 +286,7 @@ def builtInSPsList():
                                   SPType([], v.HomogeneousArrayType(v.NumberType()))) ],
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.NumberType()], v.NumberType())) ],
-  ]
+]
 
 def builtInSPs():
-  return dict(builtInSPsList())
+  return dict(builtInSPsList)

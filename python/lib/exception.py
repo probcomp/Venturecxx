@@ -18,7 +18,10 @@
 
 
 class VentureException(Exception):
-    def __init__(self, exception, message, **kwargs):
+    def __init__(self, exception, message=None, **kwargs):
+        if message is None: # Only one argument version
+            message = exception
+            exception = ""
         self.exception = exception
         self.message = message
         self.data = kwargs

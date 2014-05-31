@@ -3,7 +3,7 @@
 The design currently lives at
 https://docs.google.com/document/d/1URnJh5hNJ___-dwzIpca5Y2h-Mku1n5zjpGCiFBcUHM/edit
 """
-from abc import ABCMeta
+import operator
 from numbers import Number
 import numpy as np
 import hashlib
@@ -16,8 +16,6 @@ import serialize
 # values and all the types.
 
 class VentureValue(object):
-  __metaclass__ = ABCMeta
-
   def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getCount(self): raise VentureTypeError("Cannot convert %s to count" % type(self))
   def getPositive(self): raise VentureTypeError("Cannot convert %s to positive" % type(self))
@@ -140,6 +138,7 @@ class VentureNumber(VentureValue):
     return self.number * other.number
   def map_real(self, f):
     return VentureNumber(f(self.number))
+  def expressionFor(self): return self.number
 
 @serialize.register
 class VentureCount(VentureNumber):
@@ -219,6 +218,9 @@ def lexicographicUnboxedCompare(thing, other):
   return 0
 
 def lexicographicMatrixCompare(thing, other):
+  ct_thing = reduce(operator.mul, np.shape(thing), 1)
+  ct_other = reduce(operator.mul, np.shape(other), 1)
+  if ct_thing == 0 and ct_other == 0: return 0
   shape_cmp = lexicographicUnboxedCompare(np.shape(thing), np.shape(other))
   if not shape_cmp == 0: return shape_cmp
 
@@ -248,6 +250,7 @@ class VentureAtom(VentureValue):
   def fromStackDict(thing): return VentureAtom(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.atom, other.atom)
   def __hash__(self): return hash(self.atom)
+  def expressionFor(self): return [{"type":"symbol", "value":"quote"}, self] # TODO Is this right?
 
 @serialize.register
 class VentureBool(VentureValue):
@@ -267,6 +270,8 @@ class VentureBool(VentureValue):
   def compareSameType(self, other):
     return stupidCompare(self.boolean, other.boolean)
   def __hash__(self): return hash(self.boolean)
+  def expressionFor(self):
+    return {"type":"symbol", "value":"true"} if self.boolean else {"type":"symbol", "value":"false"}
 
 @serialize.register
 class VentureSymbol(VentureValue):
@@ -278,6 +283,7 @@ class VentureSymbol(VentureValue):
   def fromStackDict(thing): return VentureSymbol(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
   def __hash__(self): return hash(self.symbol)
+  def expressionFor(self): return [{"type":"symbol", "value":"quote"}, self.asStackDict(None)]
 
 @serialize.register
 class VentureArray(VentureValue):
@@ -299,7 +305,8 @@ interface here is compatible with one possible path."""
 
   def compareSameType(self, other):
     return lexicographicBoxedCompare(self.array, other.array)
-      
+  def __hash__(self): return sequenceHash(self.array)
+
   def asStackDict(self,trace):
     # TODO Are venture arrays reflected as lists to the stack?
     # TODO Are stack lists lists, or are they themselves type tagged?
@@ -355,6 +362,8 @@ interface here is compatible with one possible path."""
     return VentureArray([x.map_real(f) for x in self.array])
   def __repr__(self):
     return "VentureArray(%s)" % self.array
+  def expressionFor(self):
+    return [{"type":"symbol", "value":"array"}] + [v.expressionFor() for v in self.array]
 
 @serialize.register
 class VentureNil(VentureValue):
@@ -370,6 +379,8 @@ class VentureNil(VentureValue):
     raise VentureValueError("Index out of bounds: too long by %s" % index)
   def contains(self, _obj): return False
   def size(self): return 0
+  def expressionFor(self):
+    return [{"type":"symbol", "value":"list"}]
 
 @serialize.register
 class VenturePair(VentureValue):
@@ -390,10 +401,12 @@ class VenturePair(VentureValue):
       return [elt_type.asPython(self.first)] + self.rest.asPythonList(elt_type)
     else:
       return [self.first] + self.rest.asPythonList()
-  def asStackDict(self,trace):
-    # TODO Venture pairs should be usable to build structures other
-    # than proper lists.  But then, what are their types?
-    return {"type":"list", "value":[v.asStackDict(trace) for v in self.asPythonList()]}
+  def asStackDict(self, trace):
+    (list_, tail) = self.asPossiblyImproperList()
+    if tail is None:
+      return {"type":"list", "value":[v.asStackDict(trace) for v in list_]}
+    else:
+      return {"type":"improper_list", "value": self}
   def asPossiblyImproperList(self):
     if isinstance(self.rest, VenturePair):
       (sublist, tail) = self.rest.asPossiblyImproperList()
@@ -403,12 +416,17 @@ class VenturePair(VentureValue):
     else:
       return ([self.first], self.rest)
   @staticmethod
-  def fromStackDict(_): raise Exception("Type clash!")
+  def fromStackDict(thing):
+    if thing["type"] == "improper_list":
+      return thing["value"]
+    else:
+      raise Exception("Type clash!")
   def compareSameType(self, other):
     fstcmp = self.first.compare(other.first)
     if fstcmp != 0: return fstcmp
     else: return self.rest.compare(other.rest)
-  # TODO Define a sensible hash function
+  def __hash__(self):
+    return hash(self.first) + 37*hash(self.rest)
   def lookup(self, index):
     try:
       ind = index.getNumber()
@@ -429,6 +447,8 @@ class VenturePair(VentureValue):
       return self.rest.contains(obj)
   def size(self): # Really, length
     return 1 + self.rest.size()
+  def expressionFor(self):
+    return [{"type":"symbol", "value":"pair"}, self.first.expressionFor(), self.rest.expressionFor()]
 
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
@@ -459,6 +479,8 @@ supposed to sum to 1, but we are not checking that."""
     # Homogeneous; TODO make it return False instead of exploding for non-numeric objects.
     return obj.getNumber() in self.simplex
   def size(self): return len(self.simplex)
+  def expressionFor(self):
+    return [{"type":"symbol", "value":"simplex"}] + self.simplex
 
 @serialize.register
 class VentureDict(VentureValue):
@@ -478,6 +500,11 @@ class VentureDict(VentureValue):
   def contains(self, key):
     return key in self.dict
   def size(self): return len(self.dict)
+  def expressionFor(self):
+    (keys, vals) = zip(*self.dict.iteritems())
+    return [{"type":"symbol", "value":"dict"},
+            [{"type":"symbol", "value":"list"}] + [k.expressionFor() for k in keys],
+            [{"type":"symbol", "value":"list"}] + [v.expressionFor() for v in vals]]
 
 # 2D array of numbers backed by a numpy array object
 @serialize.register
@@ -491,6 +518,8 @@ class VentureMatrix(VentureValue):
       raise VentureTypeError("Matrix is not symmetric %s" % self.matrix)
   def compareSameType(self, other):
     return lexicographicMatrixCompare(self.matrix, other.matrix)
+  def __repr__(self):
+    return "VentureMatrix(%s)" % self.matrix
   def __hash__(self):
     # From http://stackoverflow.com/questions/5386694/fast-way-to-hash-numpy-objects-for-caching
     b = self.matrix.view(np.uint8)
@@ -529,6 +558,9 @@ class VentureMatrix(VentureValue):
     return np.sum(np.multiply(self.matrix, other.matrix))
   def map_real(self, f):
     return VentureMatrix(np.vectorize(f)(self.matrix))
+  def expressionFor(self):
+    return [{"type":"symbol", "value":"matrix"},
+            [{"type":"symbol", "value":"list"}] + [[{"type":"symbol", "value":"list"}] + [v for v in row] for row in self.matrix]]
 
 @serialize.register
 class VentureSymmetricMatrix(VentureMatrix):
@@ -610,6 +642,7 @@ stackable_types = {
   "vector": VentureArray,
   "array": VentureArray,
   "list": VentureArray, # TODO Or should this be a linked list?  Should there be an array type?
+  "improper_list": VenturePair,
   "simplex": VentureSimplex,
   "dict": VentureDict,
   "matrix": VentureMatrix,
@@ -731,7 +764,7 @@ In Haskell type notation:
 data Expression = Bool | Number | Atom | Symbol | Array Expression
 """
   def asVentureValue(self, thing):
-    if isinstance(thing, bool):
+    if isinstance(thing, bool) or isinstance(thing, np.bool_):
       return VentureBool(thing)
     if isinstance(thing, Number):
       return VentureNumber(thing)
