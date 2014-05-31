@@ -23,16 +23,33 @@ from history import History, Run, Series, historyOverlay,compareSampleDicts,filt
 
 parseValue = _strip_types
 
-## possible addition
-# analytics mutates the ripl you give as input.
-# assumes and observes are extracted as before.
-# runFromConditionalOnce: you just do the infer.
-# assumes can be recorded in the same way.
+# PLAN:
+# mode where input ripl is mutated by Analytics
 
-# this way, simple mripl map would allow us 
-# to output mripl without need for serializing ripls.
+# benefits:
+# 1. can add observes,assumes,infers at any time without 
+# going through analytics and then return to analytics object
+# for more extensive inference/plotting etc.
 
-# [for run from prior, you need to reload assumes.]
+# 2. after lots of inference, get back your mripl/ripl for more interaction.
+
+# 3. simplify using analytics with custom interleaving of observe/infer:
+#    e.g.
+# for t in enumerate(observes):
+#     model.updateObseves(observes[t])
+#     history[t] = model.runFromConditional(infer=InferProg)
+# then on final one you get the mripl back
+
+# to implement this:
+# currently we generate an mripl for runFromConditional. instead we should
+# should just map runFromCond across the ripls (letting the runs be determined
+# by the number of ripls). simplest version would avoid all the load/reload 
+# of assumes/observes stuff. we need that for runConditionedFromPrior, but one would simplify
+# run from conditional by isolating it from that code (with v little cost).
+# 1. input mripl (assumes/observes are extracted and stored)
+# 2.you can updateObserves/queryexps/assumes as needed
+# 3.runFromCond map_procs analytics runOnceFromCond onto each ripl in self.mripl and runs over combined
+# 4.output history and pointer to self.mripl
 
 
 def build_exp(exp):
