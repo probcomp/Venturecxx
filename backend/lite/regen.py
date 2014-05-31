@@ -17,7 +17,7 @@ def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
     else:
       weight += regen(trace,node,scaffold,shouldRestore,omegaDB,gradients)
       if node.isObservation:
-        appNode = trace.getOutermostNonReferenceApplication(node)
+        appNode = trace.getConstrainableNode(node)
         weight += constrain(trace,appNode,node.observedValue)
         constraintsToPropagate[appNode] = node.observedValue
   for node,value in constraintsToPropagate.iteritems():

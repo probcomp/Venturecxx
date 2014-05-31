@@ -299,7 +299,7 @@ class Trace(object):
   def makeConsistent(self):
     weight = 0
     for node,val in self.unpropagatedObservations.iteritems():
-      appNode = self.getOutermostNonReferenceApplication(node)
+      appNode = self.getConstrainableNode(node)
 #      print "PROPAGATE",node,appNode
       scaffold = constructScaffold(self,[set([appNode])])
       rhoWeight,_ = detachAndExtract(self,scaffold.border[0],scaffold)
@@ -314,25 +314,30 @@ class Trace(object):
     self.unpropagatedObservations.clear()
     return weight
 
-  def getOutermostNonReferenceApplication(self,node):
-    if isinstance(node,ConstantNode): raise Exception("Cannot constrain a deterministic value.")
-    if isinstance(node,LookupNode): return self.getOutermostNonReferenceApplication(node.sourceNode)
+  def getConstrainableNode(self, node):
+    candidate = self.getOutermostNonReferenceNode(node)
+    if isinstance(candidate,ConstantNode): raise Exception("Cannot constrain a constant value.")
+    if not self.pspAt(candidate).isRandom():
+      raise Exception("Cannot constrain a deterministic value.")
+    return candidate
+
+  def getOutermostNonReferenceNode(self,node):
+    if isinstance(node,ConstantNode): return node
+    if isinstance(node,LookupNode): return self.getOutermostNonReferenceNode(node.sourceNode)
     assert isinstance(node,OutputNode)
     if isinstance(self.pspAt(node),ESRRefOutputPSP):
       if self.esrParentsAt(node):
-        return self.getOutermostNonReferenceApplication(self.esrParentsAt(node)[0])
+        return self.getOutermostNonReferenceNode(self.esrParentsAt(node)[0])
       else:
         # Could happen if this method is called on a torus, e.g. for rejection sampling
         raise MissingEsrParentError()
     elif isScopeIncludeOutputPSP(self.pspAt(node)):
-      return self.getOutermostNonReferenceApplication(node.operandNodes[2])
-    elif not self.pspAt(node).isRandom():
-      raise Exception("Cannot constrain a deterministic value.")
+      return self.getOutermostNonReferenceNode(node.operandNodes[2])
     else: return node
 
   def unobserve(self,id):
     node = self.families[id]
-    appNode = self.getOutermostNonReferenceApplication(node)
+    appNode = self.getConstrainableNode(node)
     if node.isObservation: unconstrain(self,appNode)
     else:
       assert node in self.unpropagatedObservations
@@ -418,7 +423,7 @@ class Trace(object):
 
   def getDirectiveLogScore(self,id):
     assert id in self.families
-    node = self.getOutermostNonReferenceApplication(self.families[id])
+    node = self.getOutermostNonReferenceNode(self.families[id])
     return self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node))
 
   def getGlobalLogScore(self):

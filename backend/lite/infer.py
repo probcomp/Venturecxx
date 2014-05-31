@@ -104,7 +104,7 @@ def computeRejectionBound(trace, scaffold, border):
       logBound += logBoundAt(node)
     elif node.isObservation:
       try:
-        appNode = trace.getOutermostNonReferenceApplication(node)
+        appNode = trace.getConstrainableNode(node)
         logBound += logBoundAt(appNode)
       except MissingEsrParentError:
         raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
