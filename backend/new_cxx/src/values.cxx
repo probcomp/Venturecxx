@@ -119,6 +119,12 @@ VentureValuePtr VentureArray::makeOnes(size_t length) {
   return VentureValuePtr(new VentureArray(v));
 }
 
+VectorXd VentureNumber::getVector() const {
+  VectorXd res(1);
+  res(0) = this->x;
+  return res;
+}
+
 VectorXd VentureArray::getVector() const { 
   VectorXd res(xs.size());
   for(int i = 0; i < xs.size(); i++) {
@@ -732,9 +738,15 @@ VentureValuePtr VentureMatrix::operator-(const VentureValuePtr & rhs) const {
 }
 
 VentureValuePtr VentureNumber::operator*(const VentureValuePtr & rhs) const {
-  const shared_ptr<VentureNumber> rhsVal = dynamic_pointer_cast<VentureNumber>(rhs);
-  assert(rhsVal != NULL);
-  return VentureValuePtr(new VentureNumber(this->x*rhsVal->x));
+  if(isinstance<VentureNumber>(rhs)) 
+  {
+    const shared_ptr<VentureNumber> rhsVal = dynamic_pointer_cast<VentureNumber>(rhs);
+    return VentureValuePtr(new VentureNumber(this->x*rhsVal->x));
+  }
+  else if(isinstance<VentureVector>(rhs)) 
+  {
+    return rhs*VentureNumber::makeValue(this->x);
+  }
 }
 
 VentureValuePtr VentureArray::operator*(const VentureValuePtr & rhs) const {

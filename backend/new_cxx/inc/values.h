@@ -15,6 +15,7 @@ struct VentureNumber : VentureValue
   bool hasInt() const { return false; }
   long getInt() const { return static_cast<int>(x); }
   bool getBool() const { return x; }
+  VectorXd getVector() const;
   bool equalsSameType(const VentureValuePtr & other) const;
   bool ltSameType(const VentureValuePtr & other) const;
   size_t hash() const;
@@ -260,5 +261,8 @@ struct VentureID : VentureValue
   size_t hash() const;
   string toString() const;
 };
+
+template<typename T>
+bool isinstance(VentureValuePtr v) {return dynamic_pointer_cast<T>(v) != NULL;}
 
 #endif

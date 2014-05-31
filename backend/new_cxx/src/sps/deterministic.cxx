@@ -1,5 +1,6 @@
 #include "sps/deterministic.h"
 #include "utils.h"
+#include "values.h"
 #include <cmath>
 #include <boost/foreach.hpp>
 
@@ -8,23 +9,55 @@ using std::cout;
 using std::endl;
 VentureValuePtr AddOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  double sum = 0;
+  VentureValuePtr sum = VentureNumber::makeValue(0);
   for (size_t i = 0; i < args->operandValues.size(); ++i)
   {
-    sum += args->operandValues[i]->getDouble();
+    sum = sum+args->operandValues[i];
   }
-  return shared_ptr<VentureNumber>(new VentureNumber(sum));
+  return sum;
 }
 
 vector<VentureValuePtr> AddOutputPSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
   vector<VentureValuePtr> grad;
-  shared_ptr<VentureNumber> direction_number = dynamic_pointer_cast<VentureNumber>(direction);
-  assert(direction_number != NULL);
-  BOOST_FOREACH(VentureValuePtr val, args->operandValues) 
+  if(isinstance<VentureNumber>(direction))
   {
-    grad.push_back(VentureNumber::makeValue(direction_number->getDouble()));
+    shared_ptr<VentureNumber> direction_number = dynamic_pointer_cast<VentureNumber>(direction);
+    assert(direction_number != NULL);
+    BOOST_FOREACH(VentureValuePtr val, args->operandValues) 
+    {
+      grad.push_back(VentureNumber::makeValue(direction_number->getDouble()));
+    }
+    return grad;
+  } 
+  else if(isinstance<VentureVector>(direction))
+  {
+    VectorXd direction_vector = dynamic_pointer_cast<VentureVector>(direction)->getVector();
+    double sum = 0;
+    for(size_t i = 0; i < direction_vector.size(); i++) 
+    {
+      sum += direction_vector(i);
+    }
+    BOOST_FOREACH(VentureValuePtr val, args->operandValues)
+    {
+      if(isinstance<VentureNumber>(val))
+      {
+        grad.push_back(VentureNumber::makeValue(sum));
+      }
+      else if(isinstance<VentureVector>(val))
+      {
+        grad.push_back(VentureVector::makeValue(direction_vector));
+      }
+      else
+      {
+        assert(false);
+      }
+    }
+    return grad;
   }
-  return grad;
+  else
+  {
+    throw "unrecognized arg type for gradientOfSimulate of AddOutputPSP";
+  }
 }
 
 
@@ -36,22 +69,52 @@ VentureValuePtr SubOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 
 VentureValuePtr MulOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  double prod = 1;
+  VentureValuePtr prod = VentureNumber::makeValue(1);
   for (size_t i = 0; i < args->operandValues.size(); ++i)
   {
-    prod *= args->operandValues[i]->getDouble();
+    prod = prod*args->operandValues[i];
   }
-  return shared_ptr<VentureNumber>(new VentureNumber(prod));
+  return prod;
 }
 
 vector<VentureValuePtr> MulOutputPSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
   assert(args->operandValues.size() == 2);
-  shared_ptr<VentureNumber> direction_number = dynamic_pointer_cast<VentureNumber>(direction);
-  assert(direction_number != NULL);
   vector<VentureValuePtr> grad;
-  grad.push_back(VentureNumber::makeValue(direction_number->getDouble()*args->operandValues[1]->getDouble()));
-  grad.push_back(VentureNumber::makeValue(direction_number->getDouble()*args->operandValues[0]->getDouble()));
-  return grad;
+  if(isinstance<VentureNumber>(direction))
+  {
+    shared_ptr<VentureNumber> direction_number = dynamic_pointer_cast<VentureNumber>(direction);
+    assert(direction_number != NULL);
+    grad.push_back(VentureNumber::makeValue(direction_number->getDouble()*args->operandValues[1]->getDouble()));
+    grad.push_back(VentureNumber::makeValue(direction_number->getDouble()*args->operandValues[0]->getDouble()));
+    return grad;
+  }
+  else if(isinstance<VentureVector>(direction))
+  {
+    VectorXd direction_vector = dynamic_pointer_cast<VentureVector>(direction)->getVector();
+    if(isinstance<VentureNumber>(args->operandValues[0]) && isinstance<VentureVector>(args->operandValues[1]))
+    {
+      double first = args->operandValues[0]->getDouble();
+      VectorXd second = args->operandValues[1]->getVector();
+      grad.push_back(VentureNumber::makeValue(direction_vector.dot(second)));
+      grad.push_back(VentureVector::makeValue(direction_vector*first));
+    }
+    else if(isinstance<VentureNumber>(args->operandValues[1]) && isinstance<VentureVector>(args->operandValues[0]))
+    {
+      double second = args->operandValues[1]->getDouble();
+      VectorXd first = args->operandValues[0]->getVector();
+      grad.push_back(VentureVector::makeValue(direction_vector*second));
+      grad.push_back(VentureNumber::makeValue(direction_vector.dot(first)));
+    }
+    else
+    {
+      assert(false);
+    }
+    return grad;
+  }
+  else
+  {
+    throw "unrecognized arg type for gradientOfSimulate of MulOutputPSP";
+  }  
 }
 
 VentureValuePtr DivOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
