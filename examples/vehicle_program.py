@@ -22,14 +22,14 @@ random_dt_value_str = """
 control_name_str = 'control_%d'
 control_value_str = '(list %s %s)'
 random_control_value_str = """
-(scope_include (quote %d) 0
+(scope_include (quote %d) 1
   (list (uniform_continuous -100 100)
         (uniform_continuous -3.14 3.14)
         ))
 """
 pose_name_str = 'pose_%d'
 get_pose_value_str = lambda i: """
-(scope_include (quote %d) 0
+(scope_include (quote %d) 2
   (simulate_motion dt_%d
                    pose_%d
                    control_%d
@@ -41,14 +41,14 @@ get_pose_value_str = lambda i: """
                    ))
 """ % (i, i-1, i-1, i-1)
 random_pose_value_str = """
-(scope_include (quote %d) 0
+(scope_include (quote %d) 2
   (list (uniform_continuous -100 100)
         (uniform_continuous -100 100)
         (uniform_continuous -3.14 3.14)
         ))
 """
 get_observe_gps_str = lambda i: """
-(scope_include (quote %d) 0
+(scope_include (quote %d) 3
   (simulate_gps pose_%d gps_xy_error_std gps_heading_error_std))
 """ % (i, i)
 # ORDER: do_assume_dt, do_assume_control, do_assume_pose, do_observe_gps
