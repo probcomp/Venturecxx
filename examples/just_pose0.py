@@ -22,11 +22,12 @@ def get_ripl():
     ripl.observe('(normal (lookup pose_0 1) 0.1)', 1.563)
     ripl.observe('(normal (lookup pose_0 2) 0.1)', -.000112)
     ripl.infer('(incorporate)')
-    out = ripl.infer('(mh default all 100)')
-    #out = ripl.infer('(mh latents all 100)')
+    #out = ripl.infer('(mh 0 2 100)')
+    out = ripl.infer('(mh default one 100)')
     return ripl
 
 def sample_new_pose(ripl):
+    #out = ripl.infer('(mh 0 2 100)')
     out = ripl.infer('(mh default one 100)')
     return ripl.predict('pose_0')
 
@@ -40,3 +41,4 @@ ripl = get_ripl()
 poses = numpy.array(sample_new_poses(ripl, 100))
 counter = count_poses(poses)
 print '\n'.join(map(str, counter.iteritems()))
+print Counter(counter.values())
