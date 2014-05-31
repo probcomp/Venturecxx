@@ -83,7 +83,7 @@ def infer_N_history(ripl, _i, N_history):
     return
 N_history = 13
 N_hypers_profile = 31
-def process_row(ripl, row):
+def process_row(ripl, row, predictions=None):
     # dt
     vp.do_assume_dt(ripl, row.i, row.dt)
     # control
@@ -107,18 +107,19 @@ def process_row(ripl, row):
         pass
     infer_N_history(ripl, row.i, N_history)
     prediction = ripl.predict(vp.pose_name_str % row.i)
+    if predictions is not None:
+        predictions.append(prediction)
+        pass
     return prediction
 
 
 if False:
-    predictions = []
     times = []
     N_rows = 13
     with Timer('all rows') as t_outer:
         for ts, row in get_row_iter(combined_frame, N_rows):
             with Timer('row %s' % row.i) as t_inner:
-                prediction = process_row(ripl, row)
-                predictions.append(prediction)
+                prediction = process_row(ripl, row, predictions)
                 pass
             times.append(t_inner.elapsed)
             pass
@@ -133,5 +134,3 @@ if False:
 #process_row(ripl, combined_frame.irow(1))
 #out = map(ripl.infer, vp.get_infer_args(1))
 #inspect_vars(ripl, 1)
-
-
