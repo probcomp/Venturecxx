@@ -7,113 +7,128 @@ import shelve
 from venture.shortcuts import make_lite_church_prime_ripl
 make_ripl = make_lite_church_prime_ripl
 
-##########################################
-#### Parameters
+def main():
+  ##########################################
+  #### Parameters
 
-# Data
-data_source = "mnist" # "mnist" # "synthetic"
+  ## Data
+  data_source = "mnist" # "mnist" # "synthetic"
 
-# Parameters for sampling
-T = 10000
-Tthin = 1
-Nsamples = (T + Tthin - 1) / Tthin
+  ## Load data
+  if data_source == "synthetic":
 
-Tsave = 100
+    ##### Synthetic Data
+    D = 2
+    N = 100
+    w = np.random.normal(0, np.sqrt(0.1), D + 1).tolist()
+    X = np.random.normal(0, 1, [N, D])
+    f = X.dot(w[1:]) + w[0]
+    y = np.random.random(N) < 1 / (1 + np.exp(-f))
+    X = X.tolist()
+    y = y.tolist()
 
-# Proposal
-sig_prop = 0.01
+  elif data_source == "mnist":
 
-# Austerity
-Nbatch = 600
-k0 = 3
-epsilon = 0.01
+    ##### MNIST Data
+    from load_data import loadData
+    data_file = 'data/input/mnist_D50_7_9.mat'
+    N, D, X, y = loadData(data_file)
+    print "N:", N, "D:", D
 
-use_austerity = True
-tag_austerity = "submh" if use_austerity else "mh"
 
-# bayeslr_mnist_mh or bayeslr_mnist_submh
-tag = "_".join(["bayeslr", data_source, tag_austerity])
+  ## Sampler
+  T = 10000
+  Tthin = 1
+  Nsamples = (T + Tthin - 1) / Tthin
 
-stage_file = 'data/output/bayeslr/stage_'+tag
-result_file = 'data/output/bayeslr/result_'+tag
+  Tsave = 100
 
-##########################################
-#### Initialization
-v = make_ripl()
+  # Proposal
+  sig_prop = 0.01
 
-if data_source == "synthetic":
+  # Austerity
+  Nbatch = 600
+  k0 = 3
+  epsilon = 0.5 # 0.01
 
-  ##### Synthetic Data
-  D = 2
-  N = 100
-  w = np.random.normal(0, np.sqrt(0.1), D + 1).tolist()
-  X = np.random.normal(0, 1, [N, D])
-  f = X.dot(w[1:]) + w[0]
-  y = np.random.random(N) < 1 / (1 + np.exp(-f))
-  X = X.tolist()
-  y = y.tolist()
+  use_austerity = True
+  tag_austerity = "submh_%.2f" % epsilon if use_austerity else "mh"
 
-elif data_source == "mnist":
+  # bayeslr_mnist_mh or bayeslr_mnist_submh
+  tag = "_".join(["bayeslr", data_source, tag_austerity])
 
-  ##### Load MNIST Data
-  from load_data import loadData
-  data_file = 'data/input/mnist_D50_7_9.mat'
-  N, D, X, y = loadData(data_file)
-  print "N:", N, "D:", D
+  stage_file = 'data/output/bayeslr/stage_'+tag
+  result_file = 'data/output/bayeslr/result_'+tag
 
-prog = """
-[clear]
-[assume D %d]
-[assume mu (zeros_array (+ D 1))]
-[assume Sigma (diagonal_matrix (scalar_product (sqrt 0.1) (ones_array (+ D 1))))]
-[assume w (scope_include (quote w) 0 (multivariate_normal mu Sigma))]
-[assume y_x (lambda (x) (bernoulli (linear_logistic w x)))]
-""" % D
-v.execute_program(prog);
+  ##########################################
+  #### Initialization
+  prog = """
+  [clear]
+  [assume D %d]
+  [assume mu (zeros_array (+ D 1))]
+  [assume Sigma (diagonal_matrix (scalar_product (sqrt 0.1) (ones_array (+ D 1))))]
+  [assume w (scope_include (quote w) 0 (multivariate_normal mu Sigma))]
+  [assume y_x (lambda (x) (bernoulli (linear_logistic w x)))]
+  """ % D
+  v = make_ripl()
+  v.execute_program(prog);
 
-# Load observations.
-tic = time.clock()
-for n in xrange(N):
-  if (n + 1) % round(N / 10) == 0:
-    print "Processing %d/%d observations." % (n + 1, N)
-  v.observe('(scope_include (quote y) %d (y_x (array %s)))' \
-            % (n, ' '.join(['%f' % x for x in X[n]])), y[n])
-t_obs = time.clock() - tic
-print "It takes", t_obs, "seconds to load observations."
+  ## Load observations.
+  tic = time.clock()
+  for n in xrange(N):
+    if (n + 1) % round(N / 10) == 0:
+      print "Processing %d/%d observations." % (n + 1, N)
+    v.observe('(scope_include (quote y) %d (y_x (array %s)))' \
+              % (n, ' '.join(['%f' % x for x in X[n]])), y[n])
+  t_obs = time.clock() - tic
+  print "It takes", t_obs, "seconds to load observations."
 
-rst = {'ts': list(),
-       'ws': list()}
+  rst = {'ts': list(),
+         'ws': list()}
 
-##########################################
-#### Run and Record
+  ##########################################
+  #### Run and Record
 
-t_start = time.clock()
-for i in xrange(Nsamples):
-  print i, "/", Nsamples, "time:", time.clock() - t_start
+  v.infer('(mh w all 1)') # First iteration to run engine.incorporate whose running time is excluded from record.
 
-  if not use_austerity:
-    v.infer('(mh w all %d true %s)' % (Tthin, repr(sig_prop)))
-  else:
-    v.infer('(subsampled_mh w all %d %d %d %s true %s)' % (Tthin, Nbatch, k0, repr(epsilon), repr(sig_prop)))
+  t_start = time.clock()
+  for i in xrange(Nsamples):
+    print i, "/", Nsamples, "time:", time.clock() - t_start
 
-  rst['ts'].append(time.clock() - t_start)
-  rst['ws'].append(v.sample('w'))
-  if (i + 1) % Tsave == 0:
+    # Run inference.
+    if not use_austerity:
+      v.infer('(mh w all %d true %s)' % (Tthin, repr(sig_prop)))
+    else:
+      v.infer('(subsampled_mh w all %d %d %d %s true %s)' % (Tthin, Nbatch, k0, repr(epsilon), repr(sig_prop)))
+
+    # Record.
+    rst['ts'].append(time.clock() - t_start)
+    rst['ws'].append(v.sample('w'))
+
+    # Save temporary results.
+    if (i + 1) % Tsave == 0:
+      scipy.io.savemat(stage_file, rst)
+
+  # If savemat is not called at the last iteration, call it now.
+  if Nsamples % Tsave != 0:
     scipy.io.savemat(stage_file, rst)
 
-#plot(rst['ts'], [w[0] for w in rst['ws']], 'x-')
+  ## Plotting.
+  #plot(rst['ts'], [w[0] for w in rst['ws']], 'x-')
 
-# Save workspace
-my_shelf = shelve.open(result_file,'n') # 'n' for new
-for key in dir():
-  if key == 'my_shelf' or key == 'v':
-    continue
-  try:
-    my_shelf[key] = globals()[key]
-  except TypeError:
-    #
-    # __builtins__, my_shelf, and imported modules can not be shelved.
-    #
-    print('Not shelved: {0}'.format(key))
-my_shelf.close()
+  ##########################################
+  #### Save workspace
+  from cPickle import PicklingError
+  my_shelf = shelve.open(result_file,'n') # 'n' for new
+  for key in dir():
+    try:
+      my_shelf[key] = locals()[key]
+    except (TypeError, PicklingError):
+      #
+      # __builtins__, my_shelf, and imported modules can not be shelved.
+      #
+      print('Not shelved: {0}'.format(key))
+  my_shelf.close()
 
+if __name__ == '__main__':
+  main()
