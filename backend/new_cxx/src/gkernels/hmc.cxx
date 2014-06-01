@@ -15,8 +15,8 @@
 
 using std::pair;
 
-HMCGKernel::HMCGKernel(double epsilon, int steps) 
-:epsilon(new VentureNumber(epsilon)), steps(new VentureNumber(steps)) {
+HMCGKernel::HMCGKernel(double epsilon, int steps, double mass) 
+:epsilon(new VentureNumber(epsilon)), steps(new VentureNumber(steps)), mass(mass) {
 }
 
 pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold)
@@ -60,33 +60,7 @@ pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffol
 VentureValuePtr HMCGKernel::sampleMomenta(VentureValuePtr currentValues, gsl_rng * rng) const {
   vector<VentureValuePtr> momenta;
   BOOST_FOREACH(VentureValuePtr value, currentValues->getArray()) {
-    momenta.push_back(value->map_real(boost::bind(&gsl_ran_gaussian, rng, 1)));
-
-    // shared_ptr<VentureNumber> valueNumber = dynamic_pointer_cast<VentureNumber>(value);
-    // if(valueNumber != NULL) {
-    //   // momenta.push_back(VentureNumber::makeValue(gsl_ran_gaussian(rng, 1)));
-    //   momenta.push_back(value->map_real(boost::bind(&gsl_ran_gaussian, rng, 1)));
-    //   continue;
-    // }
-    // shared_ptr<VentureVector> valueVector = dynamic_pointer_cast<VentureVector>(value);
-    // if(valueVector != NULL) {
-    //   VectorXd momentVector(valueVector->v.size());
-    //   for(int si = 0; si < valueVector->v.size(); si++) momentVector[si] = gsl_ran_gaussian(rng, 1);
-    //   momenta.push_back(VentureVector::makeValue(momentVector));      
-    //   continue;
-    // }
-    // shared_ptr<VentureSymmetricMatrix> valueSymmetricMatrix = dynamic_pointer_cast<VentureSymmetricMatrix>(value);
-    // if(valueSymmetricMatrix != NULL) 
-    // {
-    //   momenta.push_back(value->map_real(boost::bind(&gsl_ran_gaussian, rng, 1)));
-    //   continue;
-    // }
-    // shared_ptr<VentureMatrix> valueMatrix = dynamic_pointer_cast<VentureMatrix>(value);
-    // if(valueMatrix != NULL) 
-    // {
-    //   momenta.push_back(value->map_real(boost::bind(&gsl_ran_gaussian, rng, 1)));
-    //   continue;
-    // }
+    momenta.push_back(value->map_real(boost::bind(&gsl_ran_gaussian, rng, 1))*VentureNumber::makeValue(mass));
   }
   return VentureArray::makeValue(momenta);
 }
@@ -116,7 +90,7 @@ double HMCGKernel::kinetic(const VentureValuePtr momenta) const {
       continue;
     }
   }
-  return kin*0.5;
+  return kin*0.5/mass;
 }
 
 
@@ -128,6 +102,7 @@ HMCGKernel::evolve(GradientOfRegen& grad, const VentureValuePtr& start_q, const 
   int numSteps = steps->getDouble();
   // cout << "num steps " << numSteps << endl;
   const VentureValuePtr half = VentureNumber::makeValue(epsilon->getDouble()*.5);
+  const VentureValuePtr mass_step = VentureNumber::makeValue(epsilon->getDouble()*mass);
   VentureValuePtr q = start_q;
   VentureValuePtr dpdt = start_grad_q;
   // cout << "start p = " << toString(start_p) << endl;
@@ -137,7 +112,7 @@ HMCGKernel::evolve(GradientOfRegen& grad, const VentureValuePtr& start_q, const 
   VentureValuePtr p = start_p-(start_grad_q*half);
   // cout << "grad*half = " << toString(start_grad_q*half) << endl;
   for(int si = 0; si < numSteps; si++) {
-    q = q+p*epsilon;
+    q = q+p*mass_step;
     dpdt = VentureArray::makeValue(grad(q->getArray()))->neg();
     // cout << "q " << toString(q) << ", dptdt " << toString(dpdt) << endl;
     p = p-dpdt*epsilon;

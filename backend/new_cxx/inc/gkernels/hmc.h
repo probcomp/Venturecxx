@@ -28,7 +28,7 @@ struct GradientOfRegen {
 class HMCGKernel : public GKernel, public InPlaceGKernel
 {
 public:
-  HMCGKernel(double epsilon, int steps);
+  HMCGKernel(double epsilon, int steps, double mass = 1);
 
   pair<Trace*,double> propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold);
   void accept();
@@ -41,6 +41,7 @@ public:
  private:
   VentureValuePtr epsilon;
   VentureValuePtr steps;
+  double mass;
 };
 
 #endif

@@ -193,7 +193,14 @@ struct Inferer
         }
         gKernel = shared_ptr<GKernel>(new MAPGKernel(epsilon, steps, nestorov));
       }else if(kernel == "hmc")
-        gKernel = shared_ptr<GKernel>(new HMCGKernel(epsilon, steps));
+      {
+        double mass = 1;
+        if(params.has_key("mass"))
+        {
+          mass = boost::python::extract<double>(params["mass"]);
+        }
+        gKernel = shared_ptr<GKernel>(new HMCGKernel(epsilon, steps, mass));
+      }
     }
     else
     {
