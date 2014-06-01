@@ -14,22 +14,21 @@ N_infer = 50
 
 
 # assume/observe helpers
-dt_name_str = 'dt_%d'
-random_dt_value_str = """
-(scope_include (quote %d) 0
-  (gamma 1.0 1.0))
-"""
-control_name_str = 'control_%d'
-control_value_str = '(list %s %s)'
-random_control_value_str = """
-(scope_include (quote %d) 1
-  (list (uniform_continuous -100 100)
-        (uniform_continuous -3.14 3.14)
-        ))
-"""
-pose_name_str = 'pose_%d'
+get_dt_name_str = lambda i: 'dt_%d' % i
+get_random_dt_value_str = lambda i: """
+(scope_include %d 0 (gamma 1.0 1.0))
+""" % i
+get_control_name_str = lambda i: 'control_%d' % i
+get_control_value_str = lambda i, j: '(list %s %s)' % (i, j)
+get_random_control_value_str = lambda i: """
+(list
+  (scope_include %d 0 (uniform_continuous -10 10))
+  (scope_include %d 1 (uniform_continuous -3.14 3.14))
+  )
+""" % (i, i)
+get_pose_name_str = lambda i: 'pose_%d' % i
 get_pose_value_str = lambda i: """
-(scope_include (quote %d) 2
+(scope_include %d 2
   (simulate_motion dt_%d
                    pose_%d
                    control_%d
@@ -40,15 +39,15 @@ get_pose_value_str = lambda i: """
                    additive_heading_error_std
                    ))
 """ % (i, i-1, i-1, i-1)
-random_pose_value_str = """
-(scope_include (quote %d) 2
-  (list (uniform_continuous -100 100)
-        (uniform_continuous -100 100)
-        (uniform_continuous -3.14 3.14)
-        ))
-"""
+get_random_pose_value_str = lambda i: """
+(list
+  (scope_include %d 3 (uniform_continuous -10 10))
+  (scope_include %d 4 (uniform_continuous -10 10))
+  (scope_include %d 5 (uniform_continuous -3.14 3.14))
+  )
+""" % (i, i, i)
 get_observe_gps_str = lambda i: """
-(scope_include (quote %d) 3
+(scope_include %d 6
   (simulate_gps pose_%d gps_xy_error_std gps_heading_error_std))
 """ % (i, i)
 # ORDER: do_assume_dt, do_assume_control, do_assume_pose, do_observe_gps
@@ -60,19 +59,19 @@ def get_assume_as_program(string, value, scope_block_str=None):
 def do_assume(ripl, string, value):
     return ripl.assume(string, value, label=string)
 def do_assume_dt(ripl, i, dt):
-    string = dt_name_str % i
+    string = get_dt_name_str(i)
     value = dt
     return do_assume(ripl, string, value)
 def do_assume_control(ripl, i, velocity, steering):
-    string = control_name_str % i
-    value = control_value_str % (velocity, steering)
+    string = get_control_name_str(i)
+    value = get_control_value_str(velocity, steering)
     return do_assume(ripl, string, value)
 def do_assume_random_control(ripl, i):
-    string = control_name_str % i
-    value = random_control_value_str % i
+    string = get_control_name_str(i)
+    value = get_random_control_value_str(i)
     return do_assume(ripl, string, value)
 def do_assume_pose(ripl, i):
-    string = pose_name_str % i
+    string = get_pose_name_str(i)
     value = get_pose_value_str(i)
     return do_assume(ripl, string, value)
 def do_observe(ripl, string, value, label=None):
@@ -131,9 +130,9 @@ program_parameters = """
 """
 
 program_assumes = '\n'.join([
-    get_assume_as_program(dt_name_str % 0, random_dt_value_str % 0),
-    get_assume_as_program(pose_name_str % 0, random_pose_value_str % 0),
-    get_assume_as_program(control_name_str % 0, random_control_value_str % 0),
+    get_assume_as_program(get_dt_name_str(0), get_random_dt_value_str(0)),
+    get_assume_as_program(get_pose_name_str(0), get_random_pose_value_str(0)),
+    get_assume_as_program(get_control_name_str(0), get_random_control_value_str(0)),
     ])
 
 program = program_constants + program_parameters + program_assumes
