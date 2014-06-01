@@ -25,18 +25,19 @@ def main():
     y = np.random.random(N) < 1 / (1 + np.exp(-f))
     X = X.tolist()
     y = y.tolist()
+    print "N:", N, "Ntst:", Ntst, "D:", D
   elif data_source == "mnist":
     ##### MNIST Data
     from load_data import loadData
     data_file = 'data/input/mnist_D50_7_9.mat'
-    N, D, X, y, _, _, _ = loadData(data_file)
-    print "N:", N, "D:", D
+    N, D, X, y, Ntst, Xtst, ytst = loadData(data_file)
+    print "N:", N, "Ntst:", Ntst, "D:", D
   elif data_source == "mnist_mini":
     ##### MNIST Data
     from load_data import loadData
     data_file = 'data/input/mnist_D50_7_9_mini.mat'
-    N, D, X, y, _, _, _ = loadData(data_file)
-    print "N:", N, "D:", D
+    N, D, X, y, Ntst, Xtst, ytst = loadData(data_file)
+    print "N:", N, "Ntst:", Ntst, "D:", D
 
 
   ## Model
@@ -57,6 +58,8 @@ def main():
   Tthin = 1
   Nsamples = (T + Tthin - 1) / Tthin
 
+  Tpred = 10
+
   Tsave = 100
 
   # Proposal
@@ -72,12 +75,12 @@ def main():
 
   # Number of Gibbs steps for z every iteration
   if use_austerity:
-    step_z = round(N / 100)
+    step_z = round((N + Ntst) / 100)
   else:
-    step_z = round(N / 100) # N
+    step_z = round((N + Ntst) / 100)
 
   # jointdplr_mnist_mh or jointdplr_mnist_submh
-  tag = "_".join(["jointdplr", data_source, tag_austerity])
+  tag = "_".join(["jointdplr_test", data_source, tag_austerity])
 
   stage_file = 'data/output/jointdplr/stage_'+tag
   result_file = 'data/output/jointdplr/result_'+tag
@@ -115,6 +118,17 @@ def main():
     v.observe('(y %d (array %s))' % (n, ' '.join(repr(x) for x in X[n])), y[n])
   t_obs = time.clock() - tic
   print "It takes", t_obs, "seconds to load observations."
+
+  ## Load test cases.
+  tic = time.clock()
+  for n in xrange(N, N + Ntst):
+    v.observe('(x %d)' % n, \
+              {'type': 'list', \
+               'value': [{'type': 'real', 'value': x} for x in Xtst[n - N]]})
+    v.predict('(scope_include (quote y_tst) %d (y %d (array %s)))' \
+              % (n - N, n, ' '.join(repr(x) for x in Xtst[n - N])))
+  t_tst = time.clock() - tic
+  print "It takes", t_tst, "seconds to load test cases."
 
   ## Find CRP node
   trace = v.sivm.core_sivm.engine.getDistinguishedTrace()

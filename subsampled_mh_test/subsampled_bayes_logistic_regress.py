@@ -32,7 +32,7 @@ def main():
     ##### MNIST Data
     from load_data import loadData
     data_file = 'data/input/mnist_D50_7_9.mat'
-    N, D, X, y = loadData(data_file)
+    N, D, X, y, _, _, _ = loadData(data_file)
     print "N:", N, "D:", D
 
 
