@@ -71,8 +71,7 @@ ripl.observe('(normal gps_heading_error_std 0.01)', 0)
 ripl.observe('(normal (lookup pose_0 0) 0.1)', combined_frame.irow(0).x)
 ripl.observe('(normal (lookup pose_0 1) 0.1)', combined_frame.irow(0).y)
 ripl.observe('(normal (lookup pose_0 2) 0.1)', combined_frame.irow(0).heading)
-out = ripl.infer('(mh default all 100)')
-out = ripl.infer('(mh latents all 100)')
+out = ripl.infer('(mh default one 100)')
 
 
 def infer_N_history(ripl, _i, N_history):
