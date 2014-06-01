@@ -15,6 +15,10 @@ program = """
 """
 
 
+# infer_string = '(mh 0 0 100)'
+infer_string = '(mh default one 100)'
+
+
 def get_ripl():
     ripl = make_puma_church_prime_ripl()
     ripl.execute_program(program)
@@ -22,13 +26,11 @@ def get_ripl():
     ripl.observe('(normal (lookup pose_0 1) 0.1)', 1.563)
     ripl.observe('(normal (lookup pose_0 2) 0.1)', -.000112)
     ripl.infer('(incorporate)')
-    #out = ripl.infer('(mh 0 2 100)')
-    out = ripl.infer('(mh default one 100)')
+    out = ripl.infer(infer_string)
     return ripl
 
 def sample_new_pose(ripl):
-    #out = ripl.infer('(mh 0 2 100)')
-    out = ripl.infer('(mh default one 100)')
+    out = ripl.infer(infer_string)
     return ripl.predict('pose_0')
 
 def sample_new_poses(ripl, N):
