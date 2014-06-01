@@ -37,7 +37,8 @@ def main():
 
 
   ## Sampler
-  T = 10000
+  time_max = 1e5
+  T = 100000
   Tthin = 1
   Nsamples = (T + Tthin - 1) / Tthin
 
@@ -55,7 +56,7 @@ def main():
   tag_austerity = "submh_%.2f" % epsilon if use_austerity else "mh"
 
   # bayeslr_mnist_mh or bayeslr_mnist_submh
-  tag = "_".join(["bayeslr", data_source, tag_austerity])
+  tag = "_".join(["bayeslr_Time1e5", data_source, tag_austerity])
 
   stage_file = 'data/output/bayeslr/stage_'+tag
   result_file = 'data/output/bayeslr/result_'+tag
@@ -92,9 +93,8 @@ def main():
   v.infer('(mh w all 1)') # First iteration to run engine.incorporate whose running time is excluded from record.
 
   t_start = time.clock()
+  i_save = -1
   for i in xrange(Nsamples):
-    print i, "/", Nsamples, "time:", time.clock() - t_start
-
     # Run inference.
     if not use_austerity:
       v.infer('(mh w all %d true %s)' % (Tthin, repr(sig_prop)))
@@ -108,9 +108,15 @@ def main():
     # Save temporary results.
     if (i + 1) % Tsave == 0:
       scipy.io.savemat(stage_file, rst)
+      i_save = i
+
+    time_run = time.clock() - t_start
+    print i, "/", Nsamples, "time:", time_run
+    if time_run > time_max:
+      break
 
   # If savemat is not called at the last iteration, call it now.
-  if Nsamples % Tsave != 0:
+  if i_save != i:
     scipy.io.savemat(stage_file, rst)
 
   ## Plotting.
