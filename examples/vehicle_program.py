@@ -16,7 +16,7 @@ N_infer = 50
 # assume/observe helpers
 get_dt_name_str = lambda i: 'dt_%d' % i
 get_random_dt_value_str = lambda i: """
-(scope_include %d 0 (gamma 1.0 1.0))
+(scope_include %d 0 (gamma 1.0 100.0))
 """ % i
 get_control_name_str = lambda i: 'control_%d' % i
 get_control_value_str = lambda i, j: '(list %s %s)' % (i, j)
