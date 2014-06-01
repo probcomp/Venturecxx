@@ -106,7 +106,7 @@ def process_row(ripl, row, predictions=None):
         ripl.infer(vp.get_infer_args(row.i)[0])
         pass
     infer_N_history(ripl, row.i, N_history)
-    prediction = ripl.predict(vp.pose_name_str % row.i)
+    prediction = ripl.predict(vp.get_pose_name_str(row.i))
     if predictions is not None:
         predictions.append(prediction)
         pass
