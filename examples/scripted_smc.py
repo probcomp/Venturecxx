@@ -114,6 +114,7 @@ def process_row(ripl, row, predictions=None):
 
 
 if False:
+    predictions = []
     times = []
     N_rows = 13
     with Timer('all rows') as t_outer:
