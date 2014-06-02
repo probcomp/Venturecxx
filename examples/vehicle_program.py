@@ -6,11 +6,11 @@ vehicle_b = 0.0500507
 vehicle_h = 0
 vehicle_L = 0.257717
 # inference
-use_mripl = False
+use_mripl = True
 N_mripls = 2
 N_particles = 16
 backend = 'puma'
-N_infer = 50
+N_infer = 100
 
 
 # assume/observe helpers
@@ -90,9 +90,13 @@ def do_observe_gps(ripl, i, gps_value):
     label = 'gps_%d' % i
     return do_observe(ripl, string, value, label=label)
 # infer helpers
-infer_parameters_str = '(mh parameters one %d)' % N_infer
-infer_state_str = '(cycle ((mh %s one 1) (mh default one 1)) %d)' % ('%d', N_infer)
-get_infer_args = lambda i: [infer_parameters_str, infer_state_str % i]
+infer_parameters_str = '(mh parameters one %d)'
+infer_state_str = '(cycle ((mh %d one 1) (mh default one 1)) %d)'
+def get_infer_args(i, N=N_infer, hypers=True):
+    if hypers:
+        return [infer_parameters_str % N, infer_state_str % (i, N)]
+    else:
+        return [infer_state_str % (i, N)]
 
 
 program_constants = """

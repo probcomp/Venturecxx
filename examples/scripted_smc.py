@@ -26,6 +26,7 @@ def read_combined_frame():
     gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(dirname)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
     return combined_frame
+
 def get_row_iter(frame, N_rows=None):
     row_iter = None
     if N_rows is not None:
@@ -35,6 +36,7 @@ def get_row_iter(frame, N_rows=None):
         row_iter = frame.iterrows()
         pass
     return row_iter
+
 inspect_parameters_str = ' '.join([
     'additive_xy_error_std',
     'additive_heading_error_std',
@@ -65,35 +67,23 @@ def inspect_vars(ripl, _i=None):
     print
     pass
 
-
-combined_frame = read_combined_frame()
-ripl = MRipl(no_ripls=64, backend='puma')
-#ripl = make_puma_church_prime_ripl()
-ripl.execute_program(vp.program)
-ripl.observe('(normal gps_xy_error_std 0.01)', 0)
-ripl.observe('(normal gps_heading_error_std 0.01)', 0)
-ripl.observe('(normal (lookup pose_0 0) 0.1)', combined_frame.irow(0).x)
-ripl.observe('(normal (lookup pose_0 1) 0.1)', combined_frame.irow(0).y)
-ripl.observe('(normal (lookup pose_0 2) 0.1)', combined_frame.irow(0).heading)
-for _i in range(10):
-    out = ripl.infer(vp.infer_state_str % 0)
-    pass
-
-def infer_N_history(ripl, _i, N_history):
+def infer_N_history(ripl, _i, N_history, N_infer=vp.N_infer, hypers=True):
     _is = range(int(_i))[-N_history:]
-    for _i in _is:
-        ripl.infer(vp.get_infer_args(_i)[1])
-        pass
+    map(ripl.infer, vp.get_infer_args(_is[0], N_infer, hypers))
+    helper = lambda i: map(ripl.infer, vp.get_infer_args(i, N_infer, hypers=False))
+    out = map(helper, _is[1:])
     return
-N_history = 13
+
 N_hypers_profile = 31
+N_history_gps = 13
+N_history_not_gps = 2
 def process_row(ripl, row, predictions=None, verbose=True):
     is_control_row = not numpy.isnan(row.Velocity)
     is_gps_row = not numpy.isnan(row.x)
     is_infer_hypers_row = row.i < N_hypers_profile
     #
     vp.do_assume_dt(ripl, row.i, row.dt)
-    if is_control_row
+    if is_control_row:
         vp.do_assume_control(ripl, row.i, row.Velocity, row.Steering)
         pass
     else:
@@ -103,15 +93,9 @@ def process_row(ripl, row, predictions=None, verbose=True):
     if is_gps_row:
         vp.do_observe_gps(ripl, row.i, (row.x, row.y, row.heading))
         pass
-    if is_infer_hypers_row:
-        ripl.infer(vp.get_infer_args(row.i)[0])
-        pass
-    infer_N_history(ripl, row.i, N_history)
-    if row.i < 4:
-        for _i in range(9):
-            infer_N_history(ripl, row.i, N_history)
-            pass
-        pass
+    N_infer = 1000 if row.i < 4 else vp.N_infer
+    N_history = N_history_gps if is_gps_row else N_history_not_gps
+    infer_N_history(ripl, row.i, N_history, N_infer, hypers=is_infer_hypers_row)
     prediction = ripl.predict(vp.get_pose_name_str(row.i))
     if predictions is not None:
         predictions.append(prediction)
@@ -121,6 +105,27 @@ def process_row(ripl, row, predictions=None, verbose=True):
         pass
     return prediction
 
+def get_ripl(program, combined_frame, N_mripls, backend, use_mripl):
+    ripl = None
+    if use_mripl:
+        ripl = MRipl(no_ripls=N_mripls, backend=backend)
+        pass
+    else:
+        ripl = make_puma_church_prime_ripl()
+        pass
+    ripl.execute_program(program)
+    ripl.observe('(normal gps_xy_error_std 0.01)', 0)
+    ripl.observe('(normal gps_heading_error_std 0.01)', 0)
+    ripl.observe('(normal (lookup pose_0 0) 0.1)', combined_frame.irow(0).x)
+    ripl.observe('(normal (lookup pose_0 1) 0.1)', combined_frame.irow(0).y)
+    ripl.observe('(normal (lookup pose_0 2) 0.1)', combined_frame.irow(0).heading)
+    out = map(ripl.infer, vp.get_infer_args(0, 1000, False))
+    return ripl
+
+
+combined_frame = read_combined_frame()
+ripl = get_ripl(vp.program, combined_frame, vp.N_mripls, vp.backend,
+        vp.use_mripl)
 
 predictions = []
 times = []
@@ -157,6 +162,7 @@ else:
     print
 
 # map(lambda x: inspect_vars(ripl, x), range(N_rows))
+# sorted(zip(ripl.get_global_logscore(), ripl.predict('pose_%d' % row.i)), cmp=lambda x, y: cmp(x[0], y[0]))
 
 #process_row(ripl, combined_frame.irow(0))
 #out = map(ripl.infer, vp.get_infer_args(0))
