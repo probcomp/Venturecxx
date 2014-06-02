@@ -75,8 +75,8 @@ def infer_N_history(ripl, _i, N_history, N_infer=vp.N_infer, hypers=True):
     return
 
 N_hypers_profile = 31
-N_history_gps = 13
-N_history_not_gps = 2
+N_history_gps = 12
+N_history_not_gps = 1
 def process_row(ripl, row, predictions=None, verbose=True):
     is_control_row = not numpy.isnan(row.Velocity)
     is_gps_row = not numpy.isnan(row.x)
