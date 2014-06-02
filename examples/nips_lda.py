@@ -93,8 +93,14 @@ if __name__ == '__main__':
         ]
         data = ["atom<%d>" % x for doc in docs for x in doc]
         parameters = {'topics': 4, 'vocab': 30, 'documents': 8,
-                      'doc_length': 25}
+                      'doc_length': 50}
         iters = len(data)
+    elif corpus == 'prior':
+        data = None
+        parameters = {'topics': int(sys.argv[2]), 'vocab': int(sys.argv[3]),
+                      'documents': int(sys.argv[4]),
+                      'doc_length': int(sys.argv[5])}
+        iters = parameters['documents'] * parameters['doc_length']
     elif corpus.startswith('nips'):
         n_docs = corpus[4:]
         mat = scipy.io.loadmat(os.path.join(os.path.dirname(__file__), 'nips_1-17.mat'))
@@ -111,7 +117,7 @@ if __name__ == '__main__':
             doc_words.append(np.repeat(inds, cts))
             doc_lengths.append(np.sum(cts))
         data = ["atom<%d>" % d for d in np.concatenate(doc_words)]
-        parameters = {'topics': min(300, n_docs),
+        parameters = {'topics': int(sys.argv[2]),
                       'vocab': n_words, 'documents': n_docs,
                       'doc_length': doc_lengths}
         iters = counts.sum()
@@ -120,4 +126,7 @@ if __name__ == '__main__':
     model = LDA(ripl, parameters)
 
     infer = "(cycle ((slice 0 one 20) (mh default one %d)) 1)" % iters
-    history, ripl = model.runFromConditional(200, verbose=True, data=data, infer=infer)
+    if corpus == 'prior':
+        history, ripl = model.runConditionedFromPrior(200, verbose=True, infer=infer)
+    else:
+        history, ripl = model.runFromConditional(200, verbose=True, data=data, infer=infer)
