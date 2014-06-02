@@ -34,7 +34,7 @@ def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKerne
     lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
     borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
     scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
-    if not updateValue or not updateValuesAtScaffold(trace,scaffold,updatedNodes,useDeltaKernels,deltaKernelArgs):
+    if not updateValue or not updateValuesAtScaffold(trace,scaffold,updatedNodes):
       break
 
   scaffold.globalBorder = globalBorder
@@ -451,6 +451,7 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
           accept = True;
           break
     assert(accept is not None)
+    print n, N, float(n) / N
 
   if accept:
 #    sys.stdout.write(".")
@@ -461,9 +462,9 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
     # TODO
     operator.reject() # May mutate trace
 
-  if indexer.block != "all" and trace.numBlocksInScope(indexer.scope) > 1:
-    # If every transition may sample a different block, the O(N) has to be called at every transition.
-    operator.makeConsistent(trace,indexer)
+  #if indexer.block != "all" and trace.numBlocksInScope(indexer.scope) > 1:
+  #  # If every transition may sample a different block, the O(N) has to be called at every transition.
+  #  operator.makeConsistent(trace,indexer)
 
 class SubsampledBlockScaffoldIndexer(object):
   def __init__(self,scope,block,useDeltaKernels=False,deltaKernelArgs=None,updateValue=False):
@@ -507,7 +508,7 @@ class SubsampledBlockScaffoldIndexer(object):
       node = nextNode
     self.globalBorder = globalBorder
 
-    index = constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValue=self.updateValue,updatedNodes=self.updatedNodes)
+    index = constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValue=False,updatedNodes=self.updatedNodes)
 
     return index
 
@@ -534,19 +535,26 @@ class SubsampledInPlaceOperator(object):
     return rhoWeight
 
   def evalOneLocalSection(self, trace, local_scaffold, compute_gradient = False):
-    assert(self.global_scaffold.globalBorder is not None)
-    # Detach and extract
-    _,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold, compute_gradient)
-    # Regen and attach with the old value
-    proposed_value = trace.valueAt(self.global_scaffold.globalBorder)
-    trace.setValueAt(self.global_scaffold.globalBorder, self.global_rhoDB.getValue(self.global_scaffold.globalBorder))
-    regenAndAttach(trace,local_scaffold.border[0],local_scaffold,False,local_rhoDB,{})
+    globalBorder = self.global_scaffold.globalBorder
+    assert(globalBorder is not None)
+    ## Detach and extract
+    #_,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold, compute_gradient)
+    ## Regen and attach with the old value
+    #proposed_value = trace.valueAt(self.global_scaffold.globalBorder)
+    #trace.setValueAt(globalBorder, self.global_rhoDB.getValue(globalBorder))
+    #regenAndAttach(trace,local_scaffold.border[0],local_scaffold,False,local_rhoDB,{})
+
+    # Update with the old value.
+    proposed_value = trace.valueAt(globalBorder)
+    trace.setValueAt(globalBorder, self.global_rhoDB.getValue(globalBorder))
+    updatedNodes = set([globalBorder])
+    updateValuesAtScaffold(trace,local_scaffold,updatedNodes)
 
     # Detach and extract
     rhoWeight,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold, compute_gradient)
 
     # Regen and attach with the new value
-    trace.setValueAt(self.global_scaffold.globalBorder, proposed_value)
+    trace.setValueAt(globalBorder, proposed_value)
     xiWeight = regenAndAttach(trace,local_scaffold.border[0],local_scaffold,False,local_rhoDB,{})
     return xiWeight - rhoWeight
 

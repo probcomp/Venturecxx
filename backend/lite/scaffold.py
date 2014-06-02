@@ -74,101 +74,148 @@ ESRs. When a new ESR is generated, return True. Otherwise return false.
 """
 #FIXME(Yutian): At regen phase in proposal, value should also be updated. This will
 #involve changing the regen method.
-def updateValuesAtScaffold(trace,scaffold,updatedNodes,useDeltaKernels,deltaKernelArgs):
+def updateValuesAtScaffold(trace,scaffold,updatedNodes):
   # for every node in the scaffold (resampling, brush, border) update values.
   # return true if any node gets a new value.
   hasNewEsr = False
-  for node in scaffold.brush:
-    hasNewEsr |= updateValueAtNode(trace, node, updatedNodes,useDeltaKernels,deltaKernelArgs)
-  for node in scaffold.regenCounts.keys():
-    hasNewEsr |= updateValueAtNode(trace, node, updatedNodes,useDeltaKernels,deltaKernelArgs)
-  for borderList in scaffold.border:
-    for node in borderList:
-      hasNewEsr |= updateValueAtNode(trace, node, updatedNodes,useDeltaKernels,deltaKernelArgs)
+  #for node in scaffold.brush:
+  #  hasNewEsr |= updateValueAtNode(trace, scaffold, node, updatedNodes)
+  for node in scaffold.regenCounts:
+    hasNewEsr |= updateValueAtNode(trace, scaffold, node, updatedNodes)
+  #for borderList in scaffold.border:
+  #  for node in borderList:
+  #    hasNewEsr |= updateValueAtNode(trace, scaffold, node, updatedNodes)
+
   return hasNewEsr
 
-def updateValueAtNode(trace, node, updatedNodes,useDeltaKernels,deltaKernelArgs):
+def updateValueAtNode(trace, scaffold, node, updatedNodes):
   # Return True if a new value is assigned.
   if node in updatedNodes:
     return False
 
+  # Strong assumption! Only consider resampling nodes in the scaffold.
+  if not scaffold.isResampling(node):
+    return False
+
   hasNewEsr = False
   if isinstance(node, ConstantNode):
-    pass
+    return False
   elif isinstance(node, LookupNode):
-    hasNewEsr |= updateValueAtNode(trace, node.sourceNode, updatedNodes,useDeltaKernels,deltaKernelArgs)
+    hasNewEsr |= updateValueAtNode(trace, scaffold, node.sourceNode, updatedNodes)
     trace.setValueAt(node, trace.valueAt(node.sourceNode))
-  else: # Application Node.
+  elif isinstance(node, RequestNode):
+    return False
+  else: # OutputNode.
+    # Assume SPRef and AAA nodes are always updated.
     psp = trace.pspAt(node)
+    if isinstance(trace.valueAt(node), SPRef) or psp.childrenCanAAA():
+      pass
+
     canAbsorb = True
     for parent in trace.parentsAt(node):
-      canAbsorb &= psp.canAbsorb(trace, node, parent)
+      if not psp.canAbsorb(trace, node, parent):
+        hasNewEsr |= updateValueAtNode(trace, scaffold, parent, updatedNodes)
+        canAbsorb = False
+
     # Assume AAA node is always updated
-    if not canAbsorb and not psp.childrenCanAAA():
-      # psp can not absorb for all the paretns
-      for parent in trace.definiteParentsAt(node):
-        hasNewEsr |= updateValueAtNode(trace, parent, updatedNodes,useDeltaKernels,deltaKernelArgs)
+    if not canAbsorb:
+      #DEBUG
+      #scaffold = Scaffold()
+      #omegaDB = OmegaDB()
+      #oldValue = trace.valueAt(node)
+      # DEBUG
+      #unapplyPSP(trace, node, scaffold, omegaDB)
+      #applyPSP(trace,node,scaffold,False,omegaDB,{})
+      updateValue(trace, node)
+      #print "Regen output node", oldValue, trace.valueAt(node), psp
 
-      # Update esrParent value after update the value of the request node.
-      if isinstance(node, OutputNode):
-        for esrParent in trace.esrParentsAt(node):
-          hasNewEsr |= updateValueAtNode(trace, esrParent, updatedNodes,useDeltaKernels,deltaKernelArgs)
+  #hasNewEsr = False
+  #if isinstance(node, ConstantNode):
+  #  pass
+  #elif isinstance(node, LookupNode):
+  #  hasNewEsr |= updateValueAtNode(trace, scaffold, node.sourceNode, updatedNodes)
+  #  trace.setValueAt(node, trace.valueAt(node.sourceNode))
+  #else: # Application Node.
+  #  psp = trace.pspAt(node)
+  #  canAbsorb = True
+  #  for parent in trace.parentsAt(node):
+  #    canAbsorb &= psp.canAbsorb(trace, node, parent)
+  #  # Assume AAA node is always updated
+  #  if not canAbsorb and not psp.childrenCanAAA():
+  #    # psp can not absorb for all the paretns
+  #    for parent in trace.definiteParentsAt(node):
+  #      hasNewEsr |= updateValueAtNode(trace, scaffold, parent, updatedNodes)
 
-      # Regen value.
-      if isinstance(node, RequestNode):
-        # FIXME: only checked the value of esrs (in string)
-        # FIXME: psp is unapplied before unevalRequests, and the args of psp may not be the same as they were used for applyPSP. Problem for AAA?
-        #DEBUG
-        #print "Regen request node", psp
+  #    # Update esrParent value after update the value of the request node.
+  #    if isinstance(node, OutputNode):
+  #      for esrParent in trace.esrParentsAt(node):
+  #        hasNewEsr |= updateValueAtNode(trace, scaffold, esrParent, updatedNodes)
 
-        #scaffold = Scaffold()
-        #omegaDB = OmegaDB()
-        #old_request = trace.valueAt(node)
-        ##DEBUG
-        #spf = trace.spFamiliesAt(node)
-        #for esr in old_request.esrs:
-        #  if esr.id not in spf.families:
-        #    print "strange"
+  #    # Regen value.
+  #    if isinstance(node, RequestNode):
+  #      # FIXME: only checked the value of esrs (in string)
+  #      # FIXME: psp is unapplied before unevalRequests, and the args of psp may not be the same as they were used for applyPSP. Problem for AAA?
+  #      #DEBUG
+  #      #print "Regen request node", psp
 
-        #unapplyPSP(trace, node, scaffold, omegaDB)
-        #applyPSP(trace,node,scaffold,False,omegaDB,{})
-        #new_request = trace.valueAt(node)
+  #      #scaffold = Scaffold()
+  #      #omegaDB = OmegaDB()
+  #      #old_request = trace.valueAt(node)
+  #      ##DEBUG
+  #      #spf = trace.spFamiliesAt(node)
+  #      #for esr in old_request.esrs:
+  #      #  if esr.id not in spf.families:
+  #      #    print "strange"
 
-        ##DEBUG
-        #spf = trace.spFamiliesAt(node)
-        #for esr in new_request.esrs:
-        #  if esr.id not in spf.families:
-        #    print "strange"
+  #      #unapplyPSP(trace, node, scaffold, omegaDB)
+  #      #applyPSP(trace,node,scaffold,False,omegaDB,{})
+  #      #new_request = trace.valueAt(node)
 
-        #eq_request = len(old_request.esrs) == len(new_request.esrs)
-        #if eq_request:
-        #  for i in range(len(old_request.esrs)):
-        #    if not old_request.esrs[i].id == new_request.esrs[i].id:
-        #      eq_request = False
-        #      break
-        #if not eq_request:
-        #  #DEBUG
-        #  old_request_str = str(old_request.esrs)
-        #  new_request_str = str(new_request.esrs)
-        #  print "not equal request", old_request_str, new_request_str
-        #  trace.setValueAt(node, old_request)
-        #  unevalRequests(trace, node, scaffold, omegaDB, compute_gradient)
-        #  trace.setValueAt(node, new_request)
-        #  evalRequests(trace,requestNode,scaffold,shouldRestore,omegaDB,gradients)
-        #  hasNewEsr |= True
-        pass
-      else: # OutputNode
-        if not isinstance(trace.valueAt(node), SPRef):
-          #DEBUG
-          scaffold = Scaffold()
-          omegaDB = OmegaDB()
-          #oldValue = trace.valueAt(node)
-          unapplyPSP(trace, node, scaffold, omegaDB)
-          applyPSP(trace,node,scaffold,False,omegaDB,{})
-          #print "Regen output node", oldValue, trace.valueAt(node), psp
+  #      ##DEBUG
+  #      #spf = trace.spFamiliesAt(node)
+  #      #for esr in new_request.esrs:
+  #      #  if esr.id not in spf.families:
+  #      #    print "strange"
+
+  #      #eq_request = len(old_request.esrs) == len(new_request.esrs)
+  #      #if eq_request:
+  #      #  for i in range(len(old_request.esrs)):
+  #      #    if not old_request.esrs[i].id == new_request.esrs[i].id:
+  #      #      eq_request = False
+  #      #      break
+  #      #if not eq_request:
+  #      #  #DEBUG
+  #      #  old_request_str = str(old_request.esrs)
+  #      #  new_request_str = str(new_request.esrs)
+  #      #  print "not equal request", old_request_str, new_request_str
+  #      #  trace.setValueAt(node, old_request)
+  #      #  unevalRequests(trace, node, scaffold, omegaDB, compute_gradient)
+  #      #  trace.setValueAt(node, new_request)
+  #      #  evalRequests(trace,requestNode,scaffold,shouldRestore,omegaDB,gradients)
+  #      #  hasNewEsr |= True
+  #      pass
+  #    else: # OutputNode
+  #      if not isinstance(trace.valueAt(node), SPRef):
+  #        #DEBUG
+  #        scaffold = Scaffold()
+  #        omegaDB = OmegaDB()
+  #        #oldValue = trace.valueAt(node)
+  #        # DEBUG
+  #        #unapplyPSP(trace, node, scaffold, omegaDB)
+  #        #applyPSP(trace,node,scaffold,False,omegaDB,{})
+  #        updateValue(trace, node, scaffold, omegaDB)
+  #        #print "Regen output node", oldValue, trace.valueAt(node), psp
 
   updatedNodes.add(node)
   return hasNewEsr
+
+# DEBUG, for cprofiler only
+def updateValue(trace, node):
+  scaffold = Scaffold()
+  omegaDB = OmegaDB()
+  unapplyPSP(trace, node, scaffold, omegaDB)
+  applyPSP(trace,node,scaffold,False,omegaDB,{})
+
 
 def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False, updatedNodes = None):
   if updatedNodes is None:
@@ -188,7 +235,7 @@ def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArg
     lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
     borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
     scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
-    if not updateValue or not updateValuesAtScaffold(trace,scaffold,updatedNodes,useDeltaKernels,deltaKernelArgs):
+    if not updateValue or not updateValuesAtScaffold(trace,scaffold,updatedNodes):
       break
   return scaffold
 
