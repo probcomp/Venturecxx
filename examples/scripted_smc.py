@@ -81,6 +81,8 @@ def process_row(ripl, row, predictions=None, verbose=True):
     is_control_row = not numpy.isnan(row.Velocity)
     is_gps_row = not numpy.isnan(row.x)
     is_infer_hypers_row = row.i < N_hypers_profile
+    N_history = N_history_gps if is_gps_row else N_history_not_gps
+    N_infer = 1000 if row.i < 4 else vp.N_infer
     #
     vp.do_assume_dt(ripl, row.i, row.dt)
     if is_control_row:
@@ -93,8 +95,6 @@ def process_row(ripl, row, predictions=None, verbose=True):
     if is_gps_row:
         vp.do_observe_gps(ripl, row.i, (row.x, row.y, row.heading))
         pass
-    N_infer = 1000 if row.i < 4 else vp.N_infer
-    N_history = N_history_gps if is_gps_row else N_history_not_gps
     infer_N_history(ripl, row.i, N_history, N_infer, hypers=is_infer_hypers_row)
     prediction = ripl.predict(vp.get_pose_name_str(row.i))
     if predictions is not None:
@@ -126,21 +126,18 @@ def get_ripl(program, combined_frame, N_mripls, backend, use_mripl):
 combined_frame = read_combined_frame()
 ripl = get_ripl(vp.program, combined_frame, vp.N_mripls, vp.backend,
         vp.use_mripl)
-
 predictions = []
 times = []
-if True:
-    N_rows = 24
-    with Timer('all rows') as t_outer:
-        for ts, row in get_row_iter(combined_frame, N_rows):
-            with Timer('row %s' % row.i) as t_inner:
-                prediction = process_row(ripl, row, predictions)
-                pass
-            times.append(t_inner.elapsed)
-            pass
+N_rows = 24
+for ts, row in get_row_iter(combined_frame, N_rows):
+    with Timer('row %s' % row.i) as t:
+        prediction = process_row(ripl, row, predictions)
         pass
+    times.append(t.elapsed)
     pass
-else:
+
+
+if False:
     out = ripl.infer('(mh default one 100)')
     inspect_vars(ripl, 0)
     print "Done 0"
@@ -161,9 +158,14 @@ else:
     print "Done 2"
     print
 
-# map(lambda x: inspect_vars(ripl, x), range(N_rows))
-# sorted(zip(ripl.get_global_logscore(), ripl.predict('pose_%d' % row.i)), cmp=lambda x, y: cmp(x[0], y[0]))
 
+logscores = ripl.get_global_logscore()
+final_poses = ripl.predict('pose_%d' % row.i)
+cmp_on_logscore = lambda x, y: cmp(x[0], y[0])
+logscores_and_poses = sorted(zip(logscores, final_poses), cmp=cmp_on_logscore)
+
+
+# map(lambda x: inspect_vars(ripl, x), range(N_rows))
 #process_row(ripl, combined_frame.irow(0))
 #out = map(ripl.infer, vp.get_infer_args(0))
 #inspect_vars(ripl, 0)
