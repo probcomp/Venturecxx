@@ -99,6 +99,46 @@ def plot_scene(samples_list, landmarks=(), min_value=None, new_figure=True,
     map(plot_landmark, landmarks)
     return fig
 
+def plot_ellipse(x, y, a, b, N_points=100):
+    thetas = numpy.linspace(0, 2 * numpy.pi + .01, N_points)
+    r = a * b / numpy.sqrt(
+            (b * numpy.cos(thetas)) ** 2
+            + (a * numpy.sin(thetas)) ** 2)
+    x = r * numpy.cos(thetas)
+    y = r * numpy.sin(thetas)
+    pylab.plot(x, y)
+
+def plot_beam_dist(x, y, theta, std):
+    def plot_beam(x, y, theta):
+        x_prime = x + numpy.cos(theta)
+        y_prime = y + numpy.sin(theta)
+        pylab.plot([x, x_prime], [y, y_prime])
+        return
+    def plot_arc(_x, _y, start_theta, end_theta, N_points=100):
+        thetas = numpy.linspace(start_theta, end_theta, N_points)
+        x = _x + numpy.cos(thetas)
+        y = _y + numpy.sin(thetas)
+        pylab.plot(x, y)
+        return
+    plot_beam(x, y, theta)
+    plot_beam(x, y, theta - std)
+    plot_beam(x, y, theta + std)
+    plot_arc(x, y, theta - std, theta + std)
+    return
+
+def plot_scene_scatter(x, y, heading):
+    x_mean, x_std = x.mean(), x.std()
+    y_mean, y_std = y.mean(), y.std()
+    heading_mean, heading_std = heading.mean(), heading.std()
+    #
+    pylab.figure()
+    pylab.scatter(x, y)
+    pylab.plot(x_mean, y_mean, 'rx', markersize=10, markeredgewidth=5)
+    plot_ellipse(x_mean, y_mean, x_std, y_std)
+    plot_beam_dist(x_mean, y_mean, heading_mean, heading_std)
+    pylab.gca().set_aspect(1)
+    return
+
 
 if __name__ == '__main__':
     def gen_random_data(N_samples, *args, **kwargs):
