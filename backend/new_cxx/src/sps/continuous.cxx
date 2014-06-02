@@ -275,6 +275,26 @@ void diff_poses(vector<VentureValuePtr> pose0, vector<VentureValuePtr> pose1,
     return;
 }
 
+int repeat_motion_count = 0;
+double last_motion_x, last_motion_y, last_motion_z;
+void print_motion_pose(VentureValuePtr _pose) {
+  vector<VentureValuePtr> pose = _pose->getArray();
+  double x = pose[0]->getDouble();
+  double y = pose[1]->getDouble();
+  double z = pose[2]->getDouble();
+  repeat_motion_count++;
+  bool is_changed = x != last_motion_x || y != last_motion_y || z != last_motion_z;
+  if(is_changed) {
+	  cout << "motion_pose (repeats=" << repeat_motion_count << "): (";
+	  cout << last_motion_x << ", " << last_motion_y << ", " << last_motion_z << ")";
+	  cout << endl;
+	  repeat_motion_count = 0;
+  } else {
+  }
+  last_motion_x = x;
+  last_motion_y = y;
+  last_motion_z = z;
+}
 double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
   checkArgsLength("SimulateMotionPSP::logDensity", args, 8);
@@ -287,6 +307,7 @@ double SimulateMotionPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
   double additive_xy_noise_std = args->operandValues[6]->getDouble();
   double additive_heading_noise_std = args->operandValues[7]->getDouble();
   vector<VentureValuePtr> out_pose = value->getArray();
+  //print_motion_pose(value);
 
   // dead reckon
   double dx, dy, angular_displacement;
@@ -321,6 +342,26 @@ VentureValuePtr SimulateGPSPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  
   return update_pose(pose, dx, dy, dheading);
 }
 
+int repeat_gps_count = 0;
+double last_gps_x, last_gps_y, last_gps_z;
+void print_gps_pose(VentureValuePtr _pose) {
+  vector<VentureValuePtr> pose = _pose->getArray();
+  double x = pose[0]->getDouble();
+  double y = pose[1]->getDouble();
+  double z = pose[2]->getDouble();
+  repeat_gps_count++;
+  bool is_changed = x != last_gps_x || y != last_gps_y || z != last_gps_z;
+  if(is_changed) {
+	  cout << "gps_pose (repeats=" << repeat_gps_count << "): (";
+	  cout << last_gps_x << ", " << last_gps_y << ", " << last_gps_z << ")";
+	  cout << endl;
+	  repeat_gps_count = 0;
+  } else {
+  }
+  last_gps_x = x;
+  last_gps_y = y;
+  last_gps_z = z;
+}
 double SimulateGPSPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
   checkArgsLength("SimulateGPSPSP::logDensity", args, 3);
@@ -328,6 +369,7 @@ double SimulateGPSPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) 
   double additive_xy_noise_std = args->operandValues[1]->getDouble();
   double additive_heading_noise_std = args->operandValues[2]->getDouble();
   vector<VentureValuePtr> gps_pose = value->getArray();
+  //print_gps_pose(value);
 
   double x_diff, y_diff, heading_diff;
   diff_poses(pose, gps_pose, x_diff, y_diff, heading_diff);
