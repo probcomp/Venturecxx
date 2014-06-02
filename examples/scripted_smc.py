@@ -67,16 +67,17 @@ def inspect_vars(ripl, _i=None):
 
 
 combined_frame = read_combined_frame()
-#ripl = MRipl(no_ripls=64, backend='puma')
-ripl = make_puma_church_prime_ripl()
+ripl = MRipl(no_ripls=64, backend='puma')
+#ripl = make_puma_church_prime_ripl()
 ripl.execute_program(vp.program)
 ripl.observe('(normal gps_xy_error_std 0.01)', 0)
 ripl.observe('(normal gps_heading_error_std 0.01)', 0)
 ripl.observe('(normal (lookup pose_0 0) 0.1)', combined_frame.irow(0).x)
 ripl.observe('(normal (lookup pose_0 1) 0.1)', combined_frame.irow(0).y)
 ripl.observe('(normal (lookup pose_0 2) 0.1)', combined_frame.irow(0).heading)
-out = ripl.infer('(mh default one 100)')
-
+for _i in range(10):
+    out = ripl.infer(vp.infer_state_str % 0)
+    pass
 
 def infer_N_history(ripl, _i, N_history):
     _is = range(int(_i))[-N_history:]
@@ -86,40 +87,45 @@ def infer_N_history(ripl, _i, N_history):
     return
 N_history = 13
 N_hypers_profile = 31
-def process_row(ripl, row, predictions=None):
-    # dt
+def process_row(ripl, row, predictions=None, verbose=True):
+    is_control_row = not numpy.isnan(row.Velocity)
+    is_gps_row = not numpy.isnan(row.x)
+    is_infer_hypers_row = row.i < N_hypers_profile
+    #
     vp.do_assume_dt(ripl, row.i, row.dt)
-    # control
-    if not numpy.isnan(row.Velocity):
+    if is_control_row
         vp.do_assume_control(ripl, row.i, row.Velocity, row.Steering)
         pass
     else:
         vp.do_assume_random_control(ripl, row.i)
-        ripl.observe('(normal (lookup control_%d 0) 0.1)' % row.i, 0)
-        ripl.observe('(normal (lookup control_%d 1) 0.1)' % row.i, 0)
         pass
-    # pose
     vp.do_assume_pose(ripl, row.i)
-    # gps
-    if not numpy.isnan(row.x):
+    if is_gps_row:
         vp.do_observe_gps(ripl, row.i, (row.x, row.y, row.heading))
         pass
-    # do infers
-    if row.i < N_hypers_profile:
+    if is_infer_hypers_row:
         ripl.infer(vp.get_infer_args(row.i)[0])
         pass
     infer_N_history(ripl, row.i, N_history)
+    if row.i < 4:
+        for _i in range(9):
+            infer_N_history(ripl, row.i, N_history)
+            pass
+        pass
     prediction = ripl.predict(vp.get_pose_name_str(row.i))
     if predictions is not None:
         predictions.append(prediction)
         pass
+    if verbose:
+        inspect_vars(ripl, row.i)
+        pass
     return prediction
 
 
-if False:
-    predictions = []
-    times = []
-    N_rows = 13
+predictions = []
+times = []
+if True:
+    N_rows = 24
     with Timer('all rows') as t_outer:
         for ts, row in get_row_iter(combined_frame, N_rows):
             with Timer('row %s' % row.i) as t_inner:
@@ -128,8 +134,29 @@ if False:
             times.append(t_inner.elapsed)
             pass
         pass
+    pass
+else:
+    out = ripl.infer('(mh default one 100)')
+    inspect_vars(ripl, 0)
+    print "Done 0"
+    print
+    #
+    row = combined_frame.irow(0)
+    prediction = process_row(ripl, row, predictions)
+    inspect_vars(ripl, 0)
+    inspect_vars(ripl, 1)
+    print "Done 1"
+    print
+    #
+    row = combined_frame.irow(1)
+    prediction = process_row(ripl, row, predictions)
+    inspect_vars(ripl, 0)
+    inspect_vars(ripl, 1)
+    inspect_vars(ripl, 2)
+    print "Done 2"
+    print
 
-    map(lambda x: inspect_vars(ripl, x), range(N_rows))
+# map(lambda x: inspect_vars(ripl, x), range(N_rows))
 
 #process_row(ripl, combined_frame.irow(0))
 #out = map(ripl.infer, vp.get_infer_args(0))
