@@ -34,6 +34,8 @@ Here is what we install on a clean Ubuntu 12.04 (or higher).
 
     # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
     # Also pulls in required external libraries
+    # HOWEVER, version skew problems have been reported if installing
+    # python-numpy and python-scipy via apt-get
     sudo apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython
 
 Dependencies (OSX, Homebrew)
