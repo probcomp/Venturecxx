@@ -226,7 +226,7 @@ class UniformOutputPSP(RandomPSP):
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
   def gradientOfLogDensity(self, _, args):
     spread = 1.0/(args.operandValues[1]-args.operandValues[0])
-    return (0, [-spread, spread])
+    return (0, [spread, -spread])
   def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 
   def description(self,name):
