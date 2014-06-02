@@ -44,21 +44,25 @@ inspect_parameters_str = ' '.join([
     'gps_heading_error_std',
     ])
 def inspect_vars(ripl, _i=None):
-    predict_mean = lambda x: numpy.array(ripl.predict(x)).mean(axis=0)
-    predict_std = lambda x: numpy.array(ripl.predict(x)).std(axis=0)
+    get_mean = lambda x: x if len(x.shape) == 1 else x.mean(axis=0)
+    get_std = lambda x: x if len(x.shape) == 1 else x.std(axis=0)
     if _i is None:
         _i = row.i
         pass
     predict_str_and_func = [
-            ('pose_%d' % _i, predict_mean),
-            ('pose_%d' % _i, predict_std),
-            ('control_%d' % _i, predict_mean),
-            ('(list %s)' % inspect_parameters_str, predict_mean),
+            ('pose_%d' % _i, get_mean),
+            ('pose_%d' % _i, get_std),
+            ('control_%d' % _i, get_mean),
+            ('(list %s)' % inspect_parameters_str, get_mean),
+            ('(list %s)' % inspect_parameters_str, get_std),
             ]
     for predict_str, func in predict_str_and_func:
+        value = numpy.array(ripl.predict(predict_str))
+        func_value = func(value)
         print predict_str
-        print func(predict_str)
+        print func_value
         pass
+    print
     pass
 
 
