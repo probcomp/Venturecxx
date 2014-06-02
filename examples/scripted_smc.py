@@ -108,7 +108,7 @@ def process_row(ripl, row, predictions=None, verbose=True):
 def get_ripl(program, combined_frame, N_mripls, backend, use_mripl):
     ripl = None
     if use_mripl:
-        ripl = MRipl(no_ripls=N_mripls, backend=backend)
+        ripl = MRipl(no_ripls=N_mripls, backend=backend, set_no_engines=N_mripls)
         pass
     else:
         ripl = make_puma_church_prime_ripl()
