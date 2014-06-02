@@ -104,8 +104,8 @@ def plot_ellipse(x, y, a, b, N_points=100):
     r = a * b / numpy.sqrt(
             (b * numpy.cos(thetas)) ** 2
             + (a * numpy.sin(thetas)) ** 2)
-    x = r * numpy.cos(thetas)
-    y = r * numpy.sin(thetas)
+    x = x + r * numpy.cos(thetas)
+    y = y + r * numpy.sin(thetas)
     pylab.plot(x, y)
 
 def plot_beam_dist(x, y, theta, std):
