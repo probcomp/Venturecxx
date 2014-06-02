@@ -82,7 +82,7 @@ def process_row(ripl, row, predictions=None, verbose=True):
     is_gps_row = not numpy.isnan(row.x)
     is_infer_hypers_row = row.i < N_hypers_profile
     N_history = N_history_gps if is_gps_row else N_history_not_gps
-    N_infer = 1000 if row.i < 4 else vp.N_infer
+    N_infer = 1000 if (row.i < 4) or is_gps_row else vp.N_infer
     #
     vp.do_assume_dt(ripl, row.i, row.dt)
     if is_control_row:
