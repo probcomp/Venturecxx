@@ -7,12 +7,17 @@ import shelve
 from venture.shortcuts import make_lite_church_prime_ripl
 make_ripl = make_lite_church_prime_ripl
 
-def main():
+def main(data_source_, epsilon_):
   ##########################################
   #### Parameters
 
+  print "data_source:", data_source_
+  print "epsilon:", epsilon_
+
+  return
+
   ## Data
-  data_source = "mnist" # "mnist" # "synthetic"
+  data_source = data_source_ # "mnist" # "synthetic"
 
   ## Load data
   if data_source == "synthetic":
@@ -50,13 +55,13 @@ def main():
   # Austerity
   Nbatch = 600
   k0 = 3
-  epsilon = 0.5 # 0.01
+  epsilon = epsilon_
 
-  use_austerity = True
+  use_austerity = epsilon != 0 # False # True
   tag_austerity = "submh_%.2f" % epsilon if use_austerity else "mh"
 
   # bayeslr_mnist_mh or bayeslr_mnist_submh
-  tag = "_".join(["bayeslr_Time1e5", data_source, tag_austerity])
+  tag = "_".join(["bayeslr_fast_Time5e5", data_source, tag_austerity])
 
   stage_file = 'data/output/bayeslr/stage_'+tag
   result_file = 'data/output/bayeslr/result_'+tag
@@ -137,4 +142,10 @@ def main():
   my_shelf.close()
 
 if __name__ == '__main__':
-  main()
+  import argparse
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--data', dest='data_source_', default='mnist', help='data file')
+  parser.add_argument('--eps',dest='epsilon_', default=0.0, type=float, help='Epsilon')
+  args = vars(parser.parse_args())
+  main(**args)
+
