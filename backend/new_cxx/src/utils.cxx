@@ -20,7 +20,7 @@ vector<double> mapExpUptoMultConstant(const vector<double>& xs)
   return ps;
 }
 
-double logaddexp(const vector<double>& xs)
+double logSumExp(const vector<double>& xs)
 {
   double sum = 0;
   if (xs.empty()) { return sum; }

@@ -187,9 +187,16 @@ VentureValuePtr LogCategoricalOutputPSP::simulate(shared_ptr<Args> args,gsl_rng 
 
 double LogCategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const 
 { 
-  checkArgsLength("categorical", args, 1, 2);
-  if (args->operandValues.size() == 1) { return args->operandValues[0]->getSimplex()[value->getInt()]; }
-  else { return args->operandValues[0]->getSimplex()[findVVPtr(value,args->operandValues[1]->getArray())]; }
+  checkArgsLength("log_categorical", args, 1, 2);
+  
+  const vector<double> ps = args->operandValues[0]->getSimplex();
+  double logscore = 0;
+  
+  if (args->operandValues.size() == 1) { logscore = ps[value->getInt()]; }
+  else { logscore = ps[findVVPtr(value,args->operandValues[1]->getArray())]; }
+  
+  logscore -= logSumExp(ps);
+  return logscore;
 }
 
 vector<VentureValuePtr> LogCategoricalOutputPSP::enumerateValues(shared_ptr<Args> args) const
