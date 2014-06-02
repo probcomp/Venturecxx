@@ -122,54 +122,62 @@ def get_ripl(program, combined_frame, N_mripls, backend, use_mripl):
     out = map(ripl.infer, vp.get_infer_args(0, 1000, False))
     return ripl
 
+def get_predicted_pose_names(ripl):
+    directives = ripl.list_directives()
+    predict_filter = lambda directive: directive['instruction'] == 'predict'
+    predict_directives = filter(predict_filter, directives)
+    def is_pose_directive(directive):
+        expression = directive['expression']
+        return isinstance(expression, str) and expression.startswith('pose_')
+    predict_pose_directives = filter(is_pose_directive, predict_directives)
+    get_expression = lambda directive: directive['expression']
+    predicted_poses = list(set(map(get_expression, predict_pose_directives)))
+    return predicted_poses
+
+def plot_pose_names(ripl, pose_names, prefix='', suffix=''):
+    def plot_pose_name(pose_name):
+        import scene_plot_utils as spu
+        import pylab
+        poses = ripl.predict(pose_name)
+        x, y, heading = map(numpy.array, zip(*poses))
+        spu.plot_scene_scatter(x, y, heading)
+        pylab.gca().set_xlim((-.5, 1.5))
+        pylab.gca().set_ylim((1.4, 2.0))
+        pylab.savefig(prefix + pose_name + suffix + '.png')
+        pylab.close()
+        return
+    map(plot_pose_name, pose_names)
+    return
+
+def generate_pose_names(_is):
+    generate_pose_name = lambda i: 'pose_' + str(i)
+    return map(generate_pose_name, _is)
+
+def get_logscores_and_poses(ripl, row_i):
+    logscores = ripl.get_global_logscore()
+    final_poses = ripl.predict('pose_%d' % row_i)
+    cmp_on_logscore = lambda x, y: cmp(x[0], y[0])
+    logscores_and_poses = sorted(zip(logscores, final_poses), cmp=cmp_on_logscore)
+    return logscores_and_poses
+
 
 combined_frame = read_combined_frame()
 ripl = get_ripl(vp.program, combined_frame, vp.N_mripls, vp.backend,
         vp.use_mripl)
 predictions = []
 times = []
-N_rows = 24
-for ts, row in get_row_iter(combined_frame, N_rows):
-    with Timer('row %s' % row.i) as t:
-        prediction = process_row(ripl, row, predictions)
+N_rows = 80
+#ripl.infer('(resample 4)')
+row_is = range(N_rows)
+for row_i in row_is:
+    with Timer('row %s' % row_i) as t:
+        prediction = process_row(ripl, combined_frame.irow(row_i), predictions)
         pass
     times.append(t.elapsed)
     pass
 
-
-if False:
-    out = ripl.infer('(mh default one 100)')
-    inspect_vars(ripl, 0)
-    print "Done 0"
-    print
-    #
-    row = combined_frame.irow(0)
-    prediction = process_row(ripl, row, predictions)
-    inspect_vars(ripl, 0)
-    inspect_vars(ripl, 1)
-    print "Done 1"
-    print
-    #
-    row = combined_frame.irow(1)
-    prediction = process_row(ripl, row, predictions)
-    inspect_vars(ripl, 0)
-    inspect_vars(ripl, 1)
-    inspect_vars(ripl, 2)
-    print "Done 2"
-    print
-
-
-logscores = ripl.get_global_logscore()
-final_poses = ripl.predict('pose_%d' % row.i)
-cmp_on_logscore = lambda x, y: cmp(x[0], y[0])
-logscores_and_poses = sorted(zip(logscores, final_poses), cmp=cmp_on_logscore)
-
-
+#pose_names = get_predicted_pose_names(ripl)
+pose_names = generate_pose_names(row_is)
+plot_pose_names(ripl, pose_names, prefix ='N_infer_100_')
 # map(lambda x: inspect_vars(ripl, x), range(N_rows))
 #process_row(ripl, combined_frame.irow(0))
-#out = map(ripl.infer, vp.get_infer_args(0))
-#inspect_vars(ripl, 0)
-#
-#process_row(ripl, combined_frame.irow(1))
-#out = map(ripl.infer, vp.get_infer_args(1))
-#inspect_vars(ripl, 1)
