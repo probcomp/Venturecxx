@@ -91,7 +91,7 @@ def do_observe_gps(ripl, i, gps_value):
     return do_observe(ripl, string, value, label=label)
 # infer helpers
 infer_parameters_str = '(mh parameters one %d)' % N_infer
-infer_state_str = '(mh %s all %d)' % ('%d', N_infer)
+infer_state_str = '(cycle ((mh %s one 1) (mh default one 1)) %d)' % ('%d', N_infer)
 get_infer_args = lambda i: [infer_parameters_str, infer_state_str % i]
 
 
