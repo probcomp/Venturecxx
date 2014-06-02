@@ -22,8 +22,8 @@ get_control_name_str = lambda i: 'control_%d' % i
 get_control_value_str = lambda i, j: '(list %s %s)' % (i, j)
 get_random_control_value_str = lambda i: """
 (list
-  (scope_include %d 0 (uniform_continuous -10 10))
-  (scope_include %d 1 (uniform_continuous -3.14 3.14))
+  (scope_include %d 0 (uniform_continuous -.01 .2))
+  (scope_include %d 1 (uniform_continuous -.314 .314))
   )
 """ % (i, i)
 get_pose_name_str = lambda i: 'pose_%d' % i
