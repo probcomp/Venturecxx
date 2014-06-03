@@ -1,6 +1,4 @@
-import numbers
 import scipy.stats
-import scipy.special
 import math
 import numpy.random as npr
 import numpy.linalg as npla
@@ -18,7 +16,7 @@ from lkernel import LKernel
 class NormalDriftKernel(LKernel):
   def __init__(self,epsilon = 0.7): self.epsilon = epsilon
 
-  def simulate(self,trace,oldValue,args):
+  def simulate(self, _trace, oldValue, args):
     mu,sigma = args.operandValues
     nu = scipy.stats.norm.rvs(0,sigma)
     term1 = mu
@@ -77,13 +75,13 @@ class InverseWishartPSP(RandomPSP):
         +(-.5*(dof+p+1))*np.log(npla.det(x))-.5*np.trace(np.dot(lmbda, npla.inv(x)))
     return log_density
 
-  '''
-  based on the following wikipedia page:
-    http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
-    http://en.wikipedia.org/wiki/Multivariate_gamma_function
-    http://en.wikipedia.org/wiki/Matrix_calculus
-  '''
   def gradientOfLogDensity(self, X, args):
+    '''
+    based on the following wikipedia page:
+      http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+      http://en.wikipedia.org/wiki/Multivariate_gamma_function
+      http://en.wikipedia.org/wiki/Matrix_calculus
+    '''
     (lmbda, dof) = self.__parse_args__(args)
     p = len(lmbda)
     invX = npla.inv(X)
@@ -133,13 +131,13 @@ class WishartPSP(RandomPSP):
           +.5*(dof-p-1)*np.log(npla.det(X))-.5*np.trace(np.dot(invSigma, X))
     return log_density
 
-  '''
-  based on the following wikipedia page:
-    http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
-    http://en.wikipedia.org/wiki/Multivariate_gamma_function
-    http://en.wikipedia.org/wiki/Matrix_calculus
-  '''
   def gradientOfLogDensity(self, X, args):
+    '''
+    based on the following wikipedia page:
+      http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+      http://en.wikipedia.org/wiki/Multivariate_gamma_function
+      http://en.wikipedia.org/wiki/Matrix_calculus
+    '''
     (sigma, dof) = self.__parse_args__(args)
     p = len(sigma)
     invX = npla.inv(X)
