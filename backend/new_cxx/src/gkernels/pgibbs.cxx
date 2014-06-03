@@ -162,8 +162,8 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaf
   vector<double> particleWeightsNoXi = particleWeights;
   particleWeightsNoXi.erase(particleWeightsNoXi.begin() + finalIndex);
 
-  double weightMinusXi = logaddexp(particleWeightsNoXi);
-  double weightMinusRho = logaddexp(particleWeightsNoRho);
+  double weightMinusXi = logSumExp(particleWeightsNoXi);
+  double weightMinusRho = logSumExp(particleWeightsNoRho);
   double alpha = weightMinusRho - weightMinusXi;
   
   return make_pair(finalParticle.get(),alpha);

@@ -174,6 +174,7 @@ struct VentureVector : VentureValue
 {
   VentureVector(const Eigen::VectorXd & v): v(v) {}
   VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureNumber(v(index->getInt()))); }
+  int size() const { return v.size(); }
   VectorXd getVector() const { return v; }
   bool hasArray() const { return true; }
   vector<VentureValuePtr> getArray() const;
