@@ -519,9 +519,12 @@ class Analytics(object):
             history.profile = Profile(self.ripl)
         return history
 
-    def _collectSamples(self, assumeToDirective, predictToDirective, sweeps=100, label=None, verbose=False, infer=None, force=None, **kwargs):
+    def _collectSamples(self, assumeToDirective=None, predictToDirective=None, sweeps=100, label=None, verbose=False, infer=None, force=None, **kwargs):
+        if assumeToDirective is None:
+            assumeToDirective = self._assumesFromRipl()
+        if predictToDirective is None:
+            predictToDirective = {}
         answer = Run(label, self.parameters)
-        
 
         assumedValues = {symbol : [] for symbol in assumeToDirective}
         predictedValues = {index: [] for index in predictToDirective}
