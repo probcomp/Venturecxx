@@ -52,7 +52,9 @@ void ConcreteTrace::initialize()
     builtInNodes.insert(shared_ptr<Node>(node));
   }
 
-  globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(shared_ptr<VentureEnvironment>(),syms,nodes));
+  shared_ptr<VentureEnvironment> globalFrame (new VentureEnvironment(shared_ptr<VentureEnvironment>(),syms,nodes));
+  // New frame so users can shadow globals
+  globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(globalFrame));
 }
 
 
