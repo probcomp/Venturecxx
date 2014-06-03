@@ -95,14 +95,18 @@ def process_row(ripl, row, predictions=None, verbose=True):
     if is_gps_row:
         vp.do_observe_gps(ripl, row.i, (row.x, row.y, row.heading))
         pass
-    infer_N_history(ripl, row.i, N_history, N_infer, hypers=is_infer_hypers_row)
-    prediction = ripl.predict(vp.get_pose_name_str(row.i))
-    if predictions is not None:
-        predictions.append(prediction)
+    if is_gps_row:
+        infer_N_history(ripl, row.i, N_history, N_infer, hypers=is_infer_hypers_row)
         pass
-    if verbose:
-        inspect_vars(ripl, row.i)
-        pass
+    prediction = None
+    if is_gps_row:
+        prediction = ripl.predict(vp.get_pose_name_str(row.i))
+        if predictions is not None:
+            predictions.append(prediction)
+            pass
+        if verbose:
+            inspect_vars(ripl, row.i)
+            pass
     return prediction
 
 def get_ripl(program, combined_frame, N_mripls, backend, use_mripl):
