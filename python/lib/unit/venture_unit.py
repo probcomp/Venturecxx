@@ -219,8 +219,8 @@ class Analytics(object):
             self.mripl = MRipl(ripl_mripl.no_ripls,
                                backend = ripl_mripl.backend,
                                local_mode = ripl_mripl.local_mode)
-            [self.mripl.assume(sym,exp) for sym,exp in self.assumes]
-            [self.mripl.observe(exp,lit) for exp,lit in self.observes]
+            for sym,exp in self.assumes: self.mripl.assume(sym,exp)
+            for exp,lit in self.observes: self.mripl.observe(exp,lit)
 
             self.backend = self.mripl.backend
             if self.mripl.local_mode is False:
@@ -367,7 +367,7 @@ class Analytics(object):
             queryExpsValues={}
         
             v = MRipl(samples, backend=self.backend, local_mode=mriplLocalMode)
-            [v.assume(sym,exp) for sym,exp in self.assumes]
+            for sym,exp in self.assumes: v.assume(sym,exp)
 
             rangeAssumes=range(1,1+len(self.assumes))
             observeLabels=[self.nameObserve(i) for i,_ in enumerate(self.observes)]
@@ -493,7 +493,7 @@ class Analytics(object):
             modelTuple=(self.assumes,self.observes,self.queryExps)
             results = mr_map_proc(v,'all',sendf, f.func_name, modelTuple,**kwargs)
 
-            [history.addRun(r) for r in results[:runs] ]
+            for r in results[:runs]: history.addRun(r)
 
             return history
     
