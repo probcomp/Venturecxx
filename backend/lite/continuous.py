@@ -4,7 +4,7 @@ import numpy.random as npr
 import numpy.linalg as npla
 import scipy.special as spsp
 import numpy as np
-from utils import logDensityMVNormal
+from utils import logDensityMVNormal, numpy_force_number
 from exception import VentureValueError
 
 # For some reason, pylint can never find numpy members (presumably metaprogramming).
@@ -42,6 +42,16 @@ class MVNormalOutputPSP(RandomPSP):
     gradMu = np.dot(isigma, np.transpose(x-mu))
     gradSigma = .5*np.dot(np.dot(isigma, xvar),isigma)-.5*isigma
     return np.array(gradX).tolist(), [np.array(gradMu).tolist(), gradSigma]
+
+  def logDensityBound(self, x, args):
+    (mu, sigma) = self.__parse_args__(args)
+    if sigma is not None:
+      # The maximum is obtained when x = mu
+      return numpy_force_number(-.5*len(sigma)*np.log(np.pi)-.5*np.log(abs(npla.det(sigma))))
+    elif x is not None and mu is not None:
+      raise Exception("TODO: Find an analytical form for the maximum of the log density of MVNormal for fixed x, mu, but varying sigma")
+    else:
+      raise Exception("Cannot rejection sample psp with unbounded likelihood")
 
   def description(self,name):
     return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name

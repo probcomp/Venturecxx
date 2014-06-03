@@ -67,13 +67,16 @@ def sampleLogCategorical(logs):
   the_max = max(logs)
   return simulateCategorical([math.exp(log - the_max) for log in logs])
 
-def logDensityMVNormal(x, mu, sigma):
-  answer =  -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
-            -.5*len(sigma)*np.log(np.pi)-.5*np.log(abs(npla.det(sigma)))
+def numpy_force_number(answer):
   if isinstance(answer, numbers.Number):
     return answer
   else:
     return answer[0,0]
+
+def logDensityMVNormal(x, mu, sigma):
+  answer =  -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
+            -.5*len(sigma)*np.log(np.pi)-.5*np.log(abs(npla.det(sigma)))
+  return numpy_force_number(answer)
 
 class FixedRandomness(object):
   """A Python context manager for executing (stochastic) code repeatably
