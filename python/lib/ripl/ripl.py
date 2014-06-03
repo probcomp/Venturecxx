@@ -75,7 +75,13 @@ class Ripl():
         try: # execute instruction, and handle possible exception
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
-            self._raise_annotated_error(e, stringable_instruction)
+            import sys
+            info = sys.exc_info()
+            try:
+                self._raise_annotated_error(e, stringable_instruction)
+            except Exception as e2:
+                print "Trying to annotate an exception led to %r" % e2
+                raise e, None, info[2]
         # if directive, then save the text string
         if parsed_instruction['instruction'] in ['assume','observe',
                 'predict','labeled_assume','labeled_observe','labeled_predict']:
