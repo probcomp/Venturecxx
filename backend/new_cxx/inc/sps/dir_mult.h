@@ -42,6 +42,9 @@ struct SymDirMultOutputPSP : RandomPSP
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+
   double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
 
 private:
@@ -64,6 +67,9 @@ struct DirMultOutputPSP : RandomPSP
   double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
 
   double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
 
@@ -103,6 +109,9 @@ struct UCSymDirMultOutputPSP : RandomPSP
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+
 private:
   const size_t n;
 };
@@ -130,6 +139,9 @@ struct UCDirMultOutputPSP : RandomPSP
   double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
 
 private:
   const size_t n;

@@ -102,6 +102,9 @@ class CDirMultOutputPSP(RandomPSP):
     args.spaux.os[index] -= 1
     assert_greater_equal(min(args.spaux.os),0)
         
+  def enumerateValues(self,args):
+    return self.os
+
   def logDensityOfCounts(self,aux):
     assert isinstance(aux,DirMultSPAux)
     N = sum(aux.os)
@@ -170,6 +173,9 @@ class UDirMultOutputPSP(RandomPSP):
     args.spaux.os[index] -= 1
     assert_greater_equal(min(args.spaux.os),0)
 
+  def enumerateValues(self,args):
+    return self.os
+
 #### Collapsed symmetric dirichlet multinomial
 
 class MakerCSymDirMultOutputPSP(DeterministicPSP):
@@ -230,6 +236,9 @@ class CSymDirMultOutputPSP(RandomPSP):
     args.spaux.os[index] -= 1
     assert_greater_equal(min(args.spaux.os),0)
         
+  def enumerateValues(self,args):
+    return self.os
+
   def logDensityOfCounts(self,aux):
     N = sum(aux.os)
     A = self.alpha * self.n
@@ -296,3 +305,6 @@ class USymDirMultOutputPSP(RandomPSP):
     index = self.os.index(val)
     args.spaux.os[index] -= 1
     assert_greater_equal(min(args.spaux.os),0)
+
+  def enumerateValues(self,args):
+    return self.os
