@@ -141,8 +141,8 @@ def plot_pose_names(ripl, pose_names, prefix='', suffix=''):
         poses = ripl.predict(pose_name)
         x, y, heading = map(numpy.array, zip(*poses))
         spu.plot_scene_scatter(x, y, heading)
-        pylab.gca().set_xlim((-.5, 1.5))
-        pylab.gca().set_ylim((1.4, 2.0))
+        pylab.gca().set_xlim((-2.5, 2.5))
+        pylab.gca().set_ylim((-5.0, 2.0))
         pylab.savefig(prefix + pose_name + suffix + '.png')
         pylab.close()
         return
