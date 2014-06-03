@@ -391,12 +391,12 @@ class Trace(object):
       elif params["kernel"] == "pgibbs":
         if params["block"] == "ordered_range":
           if params["with_mutation"]:
-            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),PGibbsOperator(int(params["particles"])))
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"]),updateValue=params["updateValue"]),PGibbsOperator(int(params["particles"])))
           else:
             mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),ParticlePGibbsOperator(int(params["particles"])))
         else:
           if params["with_mutation"]:
-            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
+            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],updateValue=params["updateValue"]),PGibbsOperator(int(params["particles"])))
           else:
             mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
           
