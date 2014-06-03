@@ -75,39 +75,31 @@ def infer_N_history(ripl, _i, N_history, N_infer=vp.N_infer, hypers=True):
     return
 
 N_hypers_profile = 31
-N_history_gps = 12
+N_history_gps = 1
 N_history_not_gps = 1
+to_assumes = []
 def process_row(ripl, row, predictions=None, verbose=True):
     is_control_row = not numpy.isnan(row.Velocity)
     is_gps_row = not numpy.isnan(row.x)
     is_infer_hypers_row = row.i < N_hypers_profile
     N_history = N_history_gps if is_gps_row else N_history_not_gps
-    N_infer = 1000 if (row.i < 4) or is_gps_row else vp.N_infer
+    N_infer = 1000 if (row.i < 4) or is_gps_row else 20
     #
-    vp.do_assume_dt(ripl, row.i, row.dt)
-    if is_control_row:
-        vp.do_assume_control(ripl, row.i, row.Velocity, row.Steering)
-        pass
-    else:
-        vp.do_assume_random_control(ripl, row.i)
-        pass
-    vp.do_assume_pose(ripl, row.i)
+    global to_assumes
+    to_assume = vp.get_assume_dt(row.i, row.dt)
+    to_assumes.append(to_assume)
+    to_assume = vp.get_assume_control(row.i, row.Velocity, row.Steering)
+    to_assumes.append(to_assume)
+    to_assume = vp.get_assume_pose(row.i)
+    to_assumes.append(to_assume)
     if is_gps_row:
+        to_assume_str = '\n'.join(to_assumes)
+        to_assumes = []
+        ripl.execute_program(to_assume_str)
         vp.do_observe_gps(ripl, row.i, (row.x, row.y, row.heading))
-        pass
-    if is_gps_row:
         infer_N_history(ripl, row.i, N_history, N_infer, hypers=is_infer_hypers_row)
         pass
-    prediction = None
-    if is_gps_row:
-        prediction = ripl.predict(vp.get_pose_name_str(row.i))
-        if predictions is not None:
-            predictions.append(prediction)
-            pass
-        if verbose:
-            inspect_vars(ripl, row.i)
-            pass
-    return prediction
+    return
 
 def get_ripl(program, combined_frame, N_mripls, backend, use_mripl):
     ripl = None
@@ -126,31 +118,31 @@ def get_ripl(program, combined_frame, N_mripls, backend, use_mripl):
     out = map(ripl.infer, vp.get_infer_args(0, 1000, False))
     return ripl
 
-def get_predicted_pose_names(ripl):
-    directives = ripl.list_directives()
-    predict_filter = lambda directive: directive['instruction'] == 'predict'
-    predict_directives = filter(predict_filter, directives)
-    def is_pose_directive(directive):
+def get_prefixed_expressions(ripl, prefix, instruction='predict'):
+    is_this_instruction = lambda directive: directive['instruction'] == instruction
+    def is_prefixed_directive(directive):
         expression = directive['expression']
-        return isinstance(expression, str) and expression.startswith('pose_')
-    predict_pose_directives = filter(is_pose_directive, predict_directives)
+        return isinstance(expression, str) and expression.startswith(prefix)
     get_expression = lambda directive: directive['expression']
-    predicted_poses = list(set(map(get_expression, predict_pose_directives)))
-    return predicted_poses
+    #
+    directives = ripl.list_directives()
+    filtered_directives = filter(is_this_instruction, directives)
+    prefixed_directives = filter(is_prefixed_directive, filtered_directives)
+    prefixed_expressions = map(get_expression, prefixed_directives)
+    return list(set(prefixed_expressions))
 
-def plot_pose_names(ripl, pose_names, prefix='', suffix=''):
-    def plot_pose_name(pose_name):
+def plot_poses(pose_dict):
+    def plot_pose((figname, pose)):
         import scene_plot_utils as spu
         import pylab
-        poses = ripl.predict(pose_name)
-        x, y, heading = map(numpy.array, zip(*poses))
+        x, y, heading = map(numpy.array, zip(*pose))
         spu.plot_scene_scatter(x, y, heading)
         pylab.gca().set_xlim((-2.5, 2.5))
         pylab.gca().set_ylim((-5.0, 2.0))
-        pylab.savefig(prefix + pose_name + suffix + '.png')
+        pylab.savefig(figname)
         pylab.close()
         return
-    map(plot_pose_name, pose_names)
+    map(plot_pose, pose_dict.iteritems())
     return
 
 def generate_pose_names(_is):
@@ -180,7 +172,13 @@ for row_i in row_is:
     pass
 
 #pose_names = get_predicted_pose_names(ripl)
-pose_names = generate_pose_names(row_is)
-plot_pose_names(ripl, pose_names, prefix ='N_infer_100_')
+temp = combined_frame.head(N_rows)
+_is = temp[~numpy.isnan(temp.x)].i
+pose_names = generate_pose_names(_is)
+poses = map(ripl.predict, pose_names)
+override_pose_names = generate_pose_names(range(len(pose_names)))
+override_pose_names = ['blocked_' + x for x in override_pose_names]
+pose_dict = dict(zip(override_pose_names, poses))
+plot_poses(pose_dict)
 # map(lambda x: inspect_vars(ripl, x), range(N_rows))
 #process_row(ripl, combined_frame.irow(0))

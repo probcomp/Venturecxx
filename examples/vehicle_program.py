@@ -1,3 +1,6 @@
+import numpy
+
+
 # settings/constants
 #
 # vehicle
@@ -7,7 +10,7 @@ vehicle_h = 0
 vehicle_L = 0.257717
 # inference
 use_mripl = True
-N_mripls = 64
+N_mripls = 4
 N_particles = 16
 backend = 'puma'
 N_infer = 100
@@ -62,10 +65,25 @@ def do_assume_dt(ripl, i, dt):
     string = get_dt_name_str(i)
     value = dt
     return do_assume(ripl, string, value)
+def get_assume_dt(i, dt):
+    string = get_dt_name_str(i)
+    value = dt
+    return get_assume_as_program(string, value)
 def do_assume_control(ripl, i, velocity, steering):
     string = get_control_name_str(i)
     value = get_control_value_str(velocity, steering)
     return do_assume(ripl, string, value)
+def get_assume_control(i, velocity, steering):
+    is_control_row = not numpy.isnan(velocity)
+    if is_control_row:
+        string = get_control_name_str(i)
+        value = get_control_value_str(velocity, steering)
+        pass
+    else:
+        string = get_control_name_str(i)
+        value = get_random_control_value_str(i)
+        pass
+    return get_assume_as_program(string, value)
 def do_assume_random_control(ripl, i):
     string = get_control_name_str(i)
     value = get_random_control_value_str(i)
@@ -74,6 +92,10 @@ def do_assume_pose(ripl, i):
     string = get_pose_name_str(i)
     value = get_pose_value_str(i)
     return do_assume(ripl, string, value)
+def get_assume_pose(i):
+    string = get_pose_name_str(i)
+    value = get_pose_value_str(i)
+    return get_assume_as_program(string, value)
 def do_observe(ripl, string, value, label=None):
     label = string if label is None else label
     return ripl.observe(string, value, label=label)
