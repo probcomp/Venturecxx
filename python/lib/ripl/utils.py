@@ -228,7 +228,7 @@ def expToDict(exp):
     return {"kernel":"slice","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":True}
   # [FIXME] expedient hack for now to allow windowing with pgibbs. 
   elif tag == "pgibbs":
-    assert 5 <= len(exp) and len(exp) <= 6
+    assert 5 <= len(exp) and len(exp) <= 7
     if type(exp[2]) is list:
       assert exp[2][0] == "ordered_range"
       ans = {"kernel":"pgibbs","scope":exp[1],"block":"ordered_range",
@@ -236,8 +236,10 @@ def expToDict(exp):
             "particles":exp[3],"transitions":exp[4],"with_mutation":True}
     else: 
       ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":True}
-    if len(exp) == 6:
+    if len(exp) >= 6:
       ans["in_parallel"] = exp[5]
+    if len(exp) >= 7:
+      ans["updateValue"] = exp[6]
     return ans
   elif tag == "func-pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
