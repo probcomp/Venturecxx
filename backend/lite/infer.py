@@ -578,6 +578,25 @@ class MAPOperator(InPlaceOperator):
       dxs = grad(xs)
     return xs
 
+class NesterovAcceleratedGradientAscentOperator(MAPOperator):
+  def step_lam(self, lam):
+    return (1 + math.sqrt(1 + 4 * lam * lam))/2
+  def gamma(self, lam):
+    return (1 - lam) / self.step_lam(lam)
+  def evolve(self, grad, values, start_grad):
+    # This formula is from
+    # http://blogs.princeton.edu/imabandit/2013/04/01/acceleratedgradientdescent/
+    xs = values
+    ys = xs
+    dxs = start_grad
+    lam = 1
+    for _ in range(self.steps):
+      gam = self.gamma(lam)
+      new_ys = [x + dx*self.epsilon for (x,dx) in zip(xs, dxs)]
+      new_xs = [old_y * gam + new_y * (1-gam) for (old_y, new_y) in zip(ys, new_ys)]
+      (xs, ys, dxs, lam) = (new_ys, new_ys, grad(new_xs), self.step_lam(lam))
+    return xs
+
 #### Hamiltonian Monte Carlo
 
 class GradientOfRegen(object):
