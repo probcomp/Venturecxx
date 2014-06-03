@@ -25,7 +25,7 @@ class NormalDriftKernel(LKernel):
     return term1 + term2 + term3
 
 
-                                                        
+
 class MVNormalOutputPSP(RandomPSP):
   def simulate(self, args):
     return npr.multivariate_normal(*self.__parse_args__(args))
@@ -113,7 +113,7 @@ class InverseWishartPSP(RandomPSP):
 class WishartPSP(RandomPSP):
   '''
     Returns a sample from the Wishart distn, conjugate prior for precision matrices.
-  ''' 
+  '''
   def simulate(self, args):
     (sigma, dof) = self.__parse_args__(args)
     n = sigma.shape[0]
