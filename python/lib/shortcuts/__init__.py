@@ -60,49 +60,26 @@ def backend(name = "puma"):
         return Puma()
     raise Exception("Unknown backend %s" % name)
 
-def make_core_cxx_sivm():
-    from venture.cxx import engine
-    return sivm.CoreSivm(engine.Engine())
-
-def make_core_lite_sivm():
-    from venture.lite import engine
-    return sivm.CoreSivm(engine.Engine())
-
-def make_core_puma_sivm():
-    from venture.puma import engine
-    return sivm.CoreSivm(engine.Engine())
+for (prefix, suffix) in [("make_core_", "sivm"),
+                         ("make_venture_", "sivm"),
+                         ("make_", "church_prime_ripl"),
+                         ("make_", "venture_script_ripl"),
+                         ("make_", "combined_ripl")]:
+    for backend_name in ["lite", "puma", "cxx"]:
+        method = prefix + suffix
+        function = prefix + backend_name + "_" + suffix
+        string = """
+def %s():
+  return backend("%s").%s()
+""" % (function, backend_name, method)
+        exec(string) # Your complaints about metaprogramming do not fall upon deaf ears, pylint: disable=exec-used
 
 make_core_sivm = make_core_puma_sivm
-
-def make_venture_cxx_sivm():
-    return sivm.VentureSivm(make_core_cxx_sivm())
-
-def make_venture_lite_sivm():
-    return sivm.VentureSivm(make_core_lite_sivm())
-
-def make_venture_puma_sivm():
-    return sivm.VentureSivm(make_core_puma_sivm())
-
 def make_venture_sivm():
     return sivm.VentureSivm(make_core_sivm())
 
 def make_church_prime_ripl():
     v = make_venture_sivm()
-    parser1 = parser.ChurchPrimeParser.instance()
-    return ripl.Ripl(v,{"church_prime":parser1})
-
-def make_cxx_church_prime_ripl():
-    v = make_venture_cxx_sivm()
-    parser1 = parser.ChurchPrimeParser.instance()
-    return ripl.Ripl(v,{"church_prime":parser1})
-
-def make_lite_church_prime_ripl():
-    v = make_venture_lite_sivm()
-    parser1 = parser.ChurchPrimeParser.instance()
-    return ripl.Ripl(v,{"church_prime":parser1})
-
-def make_puma_church_prime_ripl():
-    v = make_venture_puma_sivm()
     parser1 = parser.ChurchPrimeParser.instance()
     return ripl.Ripl(v,{"church_prime":parser1})
 
@@ -125,7 +102,6 @@ def make_ripl_rest_server():
 
 def make_ripl_rest_client(base_url):
     return ripl.RiplRestClient(base_url)
-
 
 # value shortcuts
 
