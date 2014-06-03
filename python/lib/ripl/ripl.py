@@ -487,6 +487,11 @@ Open issues:
     def get_global_logscore(self):
         return self.execute_instruction({'instruction':'get_global_logscore'})['logscore']
 
+    def bind_foreign_sp(self, name, sp):
+        # TODO Remember this somehow?  Is it storable for copies and
+        # rebuilds of the ripl, etc?
+        self.sivm.core_sivm.engine.bind_foreign_sp(name, sp)
+
     ############################################
     # Serialization
     ############################################

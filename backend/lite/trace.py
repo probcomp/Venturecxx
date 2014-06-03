@@ -30,10 +30,7 @@ class Trace(object):
     for name,val in builtInValues().iteritems():
       self.globalEnv.addBinding(name,ConstantNode(val))
     for name,sp in builtInSPs().iteritems():
-      spNode = self.createConstantNode(sp)
-      processMadeSP(self,spNode,False)
-      assert isinstance(self.valueAt(spNode), SPRef)
-      self.globalEnv.addBinding(name,spNode)
+      self.bindPrimitiveSP(name, sp)
     self.globalEnv = VentureEnvironment(self.globalEnv) # New frame so users can shadow globals
 
     self.rcs = set()
@@ -42,6 +39,12 @@ class Trace(object):
     self.unpropagatedObservations = {} # {node:val}
     self.families = {}
     self.scopes = {} # :: {scope-name:smap{block-id:set(node)}}
+
+  def bindPrimitiveSP(self, name, sp):
+    spNode = self.createConstantNode(sp)
+    processMadeSP(self,spNode,False)
+    assert isinstance(self.valueAt(spNode), SPRef)
+    self.globalEnv.addBinding(name,spNode)
 
   def registerAEKernel(self,node): self.aes.add(node)
   def unregisterAEKernel(self,node): self.aes.remove(node)
