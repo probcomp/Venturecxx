@@ -14,8 +14,6 @@ def main(data_source_, epsilon_):
   print "data_source:", data_source_
   print "epsilon:", epsilon_
 
-  return
-
   ## Data
   data_source = data_source_ # "mnist" # "synthetic"
 
@@ -42,8 +40,8 @@ def main(data_source_, epsilon_):
 
 
   ## Sampler
-  time_max = 1e5
-  T = 100000
+  time_max = 5e5
+  T = 1000000
   Tthin = 1
   Nsamples = (T + Tthin - 1) / Tthin
 
@@ -53,7 +51,7 @@ def main(data_source_, epsilon_):
   sig_prop = 0.01
 
   # Austerity
-  Nbatch = 600
+  Nbatch = 100 # 600
   k0 = 3
   epsilon = epsilon_
 
@@ -61,7 +59,7 @@ def main(data_source_, epsilon_):
   tag_austerity = "submh_%.2f" % epsilon if use_austerity else "mh"
 
   # bayeslr_mnist_mh or bayeslr_mnist_submh
-  tag = "_".join(["bayeslr_fast_Time5e5", data_source, tag_austerity])
+  tag = "_".join(["bayeslr_fast_m100_Time5e5", data_source, tag_austerity])
 
   stage_file = 'data/output/bayeslr/stage_'+tag
   result_file = 'data/output/bayeslr/result_'+tag
