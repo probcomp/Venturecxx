@@ -566,8 +566,8 @@ class MAPOperator(InPlaceOperator):
     # Smashes the trace but leaves it a torus
     proposed_values = self.evolve(grad, currentValues, start_grad)
 
-    registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
-    _xiWeight = grad.fixed_regen(proposed_values) # Mutates the trace
+    _xiWeight = grad.regen(proposed_values) # Mutates the trace
+
     return (trace, 1000) # It's MAP -- try to force acceptance
 
   def evolve(self, grad, values, start_grad):
