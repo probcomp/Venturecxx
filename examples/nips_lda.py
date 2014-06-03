@@ -28,6 +28,85 @@ class LDA(VentureUnit):
                 self.observe("(get_word %d %d)" % (doc, pos), "atom<%d>" % 0)
         return
 
+    def makeQueryExps(self):
+        D = self.parameters['documents']
+        T = self.parameters['topics']
+        for i in range(D):
+            self.queryExp("(get_document_topic_sampler %d)" % i)
+        for i in range(T):
+            self.queryExp("(get_topic_word_sampler atom<%d>)" % i)
+
+def unzip_dict(d):
+    keys, valss = zip(*d.items())
+    for vals in zip(*valss):
+        yield dict(zip(keys, vals))
+
+def normalize_counts(dir_mult):
+    alpha = dir_mult['alpha']
+    n = dir_mult['n']
+    counts = dir_mult['counts']
+    total = sum(counts)
+    return [(c + alpha) / (total + n * alpha) for c in counts]
+
+def predicted_document_word_matrices(history):
+    D = history.parameters['documents']
+    T = history.parameters['topics']
+    document_topic_exps = ["(get_document_topic_sampler %d)" % i for i in range(D)]
+    topic_word_exps = ["(get_topic_word_sampler atom<%d>)" % i for i in range(T)]
+    series = {}
+    for name in document_topic_exps + topic_word_exps:
+        series[name] = history.nameToSeries[name]
+    ret = []
+    for run in unzip_dict(series):
+        run_ret = []
+        for value_dict in unzip_dict(dict((n, s.values) for (n, s) in run.items())):
+            document_topic_matrix = [normalize_counts(value_dict[name]) for name in document_topic_exps]
+            topic_word_matrix = [normalize_counts(value_dict[name]) for name in topic_word_exps]
+            document_word_matrix = np.dot(document_topic_matrix, topic_word_matrix)
+            run_ret.append(document_word_matrix)
+        label = next(run.itervalues()).label
+        ret.append((label, run_ret))
+    return ret
+
+def actual_document_word_matrix(history):
+    D = history.parameters['documents']
+    N = history.parameters['doc_length']
+    W = history.parameters['vocab']
+    if isinstance(N, int):
+        N = [N] * D
+    counts = np.zeros((D, W))
+    offset = 0
+    for doc in range(D):
+        for pos in range(N[doc]):
+            datum = history.data[offset][1]
+            if isinstance(datum, str):
+                assert datum.startswith('atom<') and datum.endswith('>')
+                word = int(datum[5:-1])
+            else:
+                assert isinstance(datum, dict) and datum['type'] == 'atom'
+                word = datum['value']
+            counts[doc, word] += 1
+            offset += 1
+    return counts
+
+def add_diagnostics(history):
+    N = history.parameters['doc_length']
+    if isinstance(N, list):
+        N = np.transpose([N])
+    actual = actual_document_word_matrix(history)
+    predictions = predicted_document_word_matrices(history)
+    for label, run in predictions:
+        errors = []
+        sqerrs = []
+        logscores = []
+        for predicted in run:
+            logscores.append(np.sum(actual * np.log(predicted)))
+            errors.append(np.mean(np.abs(actual/N - predicted)))
+            sqerrs.append(np.mean(np.square(actual/N - predicted)))
+        history.addSeries('predictive logscore', 'number', label, logscores)
+        history.addSeries('predictive mean error', 'number', label, errors)
+        history.addSeries('predictive squared error', 'number', label, sqerrs)
+
 if __name__ == '__main__':
     import sys
     try:
@@ -130,3 +209,5 @@ if __name__ == '__main__':
         history, ripl = model.runConditionedFromPrior(200, verbose=True, infer=infer)
     else:
         history, ripl = model.runFromConditional(200, verbose=True, data=data, infer=infer)
+
+    add_diagnostics(history)
