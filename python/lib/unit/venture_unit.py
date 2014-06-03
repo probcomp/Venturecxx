@@ -52,19 +52,6 @@ parseValue = _strip_types
 # 4.output history and pointer to self.mripl
 
 
-def build_exp(exp):
-    'Take expression from directive_list and build the Lisp string'
-    if type(exp)==str:
-        return exp
-    elif type(exp)==dict:
-        if exp['type']=='atom':
-            return 'atom<%i>'%exp['value']
-        else:
-            return str(exp['value'])
-    else:
-        return '('+ ' '.join(map(build_exp,exp)) + ')'
-
-
 def directive_split(d):
     'Splits directive from *list_directives* into components'
     ## FIXME: replace Python values with strings for Venture.
