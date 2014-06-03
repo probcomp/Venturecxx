@@ -36,7 +36,7 @@ def logDensityCategorical(val,ps,os=None):
   p = None
   for i in range(len(os)): 
     if os[i] == val: 
-      p = ps[i]; 
+      p = ps[i]
       break
   assert p
   return math.log(p)
