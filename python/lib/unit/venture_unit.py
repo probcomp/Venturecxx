@@ -83,6 +83,7 @@ class VentureUnit(object):
     parameters = {}
     assumes = []
     observes = []
+    queryExps = []
 
     # Register an assume.
     def assume(self, symbol, expression):
@@ -97,6 +98,12 @@ class VentureUnit(object):
 
     # Override to constrain model on data.
     def makeObserves(self): pass
+
+    # Register a queryExp.
+    def queryExp(self, expression):
+        self.queryExps.append(expression)
+
+    def makeQueryExps(self): pass
 
     # Masquerade as a ripl.
     def clear(self):
@@ -121,10 +128,13 @@ class VentureUnit(object):
 
         self.observes = []
         self.makeObserves()
+
+        self.queryExps = []
+        self.makeQueryExps()
         
         self.analyticsArgs = (self.ripl,)
         self.analyticsKwargs = dict(assumes=self.assumes, observes=self.observes,
-                           parameters=self.parameters)
+                           parameters=self.parameters, queryExps=self.queryExps)
 
     def getAnalytics(self,mripl=None,mutateRipl=False):
         '''Create Analytics object from assumes, observes and parameters.
