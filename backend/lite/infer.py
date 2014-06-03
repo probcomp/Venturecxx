@@ -621,8 +621,12 @@ class GradientOfRegen(object):
   def fixed_regen(self, values):
     # Ensure repeatability of randomness
     with self.fixed_randomness:
-      registerDeterministicLKernels(self.trace, self.scaffold, self.pnodes, values)
-      return regenAndAttach(self.trace, self.scaffold.border[0], self.scaffold, False, OmegaDB(), {})
+      return self.regen(values)
+
+  def regen(self, values):
+    registerDeterministicLKernels(self.trace, self.scaffold, self.pnodes, values)
+    return regenAndAttach(self.trace, self.scaffold.border[0], self.scaffold, False, OmegaDB(), {})
+
 
 class HamiltonianMonteCarloOperator(InPlaceOperator):
 
