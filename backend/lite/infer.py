@@ -675,8 +675,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     # Smashes the trace but leaves it a torus
     (proposed_values, end_K) = self.evolve(grad_potential, currentValues, start_grad_pot, momenta)
 
-    registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
-    xiWeight = grad.fixed_regen(proposed_values) # Mutates the trace
+    xiWeight = grad.regen(proposed_values) # Mutates the trace
     # The weight arithmetic is given by the Hamiltonian being
     # -weight + kinetic(momenta)
     return (trace, xiWeight - rhoWeight + start_K - end_K)
