@@ -166,8 +166,7 @@ ripl = get_ripl(vp.program, combined_frame, vp.N_mripls, vp.backend,
         vp.use_mripl)
 predictions = []
 times = []
-N_rows = 80
-#ripl.infer('(resample 4)')
+N_rows = 640
 row_is = range(N_rows)
 for row_i in row_is:
     with Timer('row %s' % row_i) as t:
