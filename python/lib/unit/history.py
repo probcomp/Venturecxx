@@ -37,6 +37,14 @@ typically also tracked."""
 
         self.nameToType = {}
 
+    @staticmethod
+    def fromRuns(runs):
+        if len(runs) == 0:
+            return History()
+        else:
+            answer = History(runs[0].label, runs[0].parameters)
+            for r in runs: answer.addRun(r)
+            return answer
         
     def addSeries(self, name, type, label, values, hist=True):
         self._addSeries(name, type, Series(label, values, hist))
