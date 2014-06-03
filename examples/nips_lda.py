@@ -10,11 +10,11 @@ class LDA(VentureUnit):
     def makeAssumes(self):
         self.assume("topics", self.parameters['topics'])
         self.assume("vocab", self.parameters['vocab'])
-        self.assume("alpha_document_topic", "(scope_include 0 0 (gamma 1.0 1.0))")
-        self.assume("alpha_topic_word", "(scope_include 0 1 (gamma 1.0 1.0))")
+        self.assume("alpha_document_topic", "(scope_include 0 0 (gamma 1.0 topics))")
+        self.assume("alpha_topic_word", "(scope_include 0 1 (gamma 1.0 vocab))")
         self.assume("get_document_topic_sampler", "(mem (lambda (doc) (make_sym_dir_mult alpha_document_topic topics)))")
         self.assume("get_topic_word_sampler", "(mem (lambda (topic) (make_sym_dir_mult alpha_topic_word vocab)))")
-        self.assume("get_word", "(mem (lambda (doc pos) ((get_topic_word_sampler ((get_document_topic_sampler doc))))))")
+        self.assume("get_word", "(mem (lambda (doc pos) ((get_topic_word_sampler (scope_include 1 (+ pos (* 1000000 doc)) ((get_document_topic_sampler doc)))))))")
         return
 
     def makeObserves(self):
@@ -204,7 +204,7 @@ if __name__ == '__main__':
     ripl = shortcuts.make_church_prime_ripl()
     model = LDA(ripl, parameters)
 
-    infer = "(cycle ((slice 0 one 20) (mh default one %d)) 1)" % iters
+    infer = "(cycle ((mh 0 one 2) (gibbs 1 one %d)) 1)" % iters
     if corpus == 'prior':
         history, ripl = model.runConditionedFromPrior(200, verbose=True, infer=infer)
     else:
