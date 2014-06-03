@@ -20,3 +20,14 @@ def loadData(data_file):
   Xtst = Xtst.tolist()
   Ytst = Ytst.tolist()
   return N, D, X, Y, Ntst, Xtst, Ytst
+
+
+def loadSVData(data_file):
+  import scipy.io
+  data = scipy.io.loadmat(data_file)
+
+  X = data['X'].squeeze()
+  X = X.tolist()
+  N = len(X)
+
+  return N, X

@@ -11,7 +11,7 @@ fi
 
 eps=$1
 
-tag=bayeslr_fast_Time5e5_mnist
+tag=bayeslr_fast_m100_Time5e5_mnist
 
 cmd="unbuffer python subsampled_bayes_logistic_regress.py --data mnist --eps ${eps} | tee data/output/bayeslr/logs/${tag}_eps${eps}.log"
 

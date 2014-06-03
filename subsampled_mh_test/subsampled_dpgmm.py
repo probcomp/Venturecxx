@@ -7,12 +7,11 @@ import shelve
 from venture.shortcuts import make_lite_church_prime_ripl
 make_ripl = make_lite_church_prime_ripl
 
-def main(data_source_, epsilon_):
+def main(data_source_):
   ##########################################
   #### Parameters
 
   print "data_source:", data_source_
-  print "epsilon:", epsilon_
 
   ## Data
   data_source = data_source_ # "mnist" # "mnist_mini" # "synthetic" # "circle"
@@ -56,14 +55,16 @@ def main(data_source_, epsilon_):
     from load_data import loadData
     data_file = 'data/input/circle_data.mat'
     N, D, X, y, Ntst, Xtst, ytst = loadData(data_file)
+
+    # DEBUG
+    N = 1000
+
     print "N:", N, "Ntst:", Ntst, "D:", D
   else:
     assert False
 
 
   ## Model
-  # Hyper-param for w
-  Sigma_w = np.sqrt(0.1)
   # Hyper-param for the conjugate prior of mu_x
   m0 = np.zeros(D) # \mu_0 # Not used in venture
   k0 = 5 # m
@@ -71,7 +72,7 @@ def main(data_source_, epsilon_):
   v0 = D + 5 # n_0, must be larger than D
   S0 = np.eye(D) * v0 # Psi # Not used in venture
   # Hyper-param for the Gamma prior of the CRP concentration
-  a_alpha = 1
+  a_alpha = 3 # 1
   b_alpha = 1
 
   ## Sampler
@@ -80,41 +81,26 @@ def main(data_source_, epsilon_):
   Tthin = 1
   Nsamples = (T + Tthin - 1) / Tthin
 
-  Tpred = 100
+  Tzs = 100
 
   Tsave = 100
 
-  # Proposal
-  sig_prop = 0.01
-
-  # Austerity
-  Nbatch = 50
-  k0 = 3
-  epsilon = epsilon_
-
-  use_austerity = epsilon != 0 # False # True
-  tag_austerity = "submh_%.2f" % epsilon if use_austerity else "mh"
-
   # Number of Gibbs steps for z every iteration
-  if use_austerity:
-    step_z = round(N / 100)
-  else:
-    step_z = round(N / 100)
-  step_z = max(1, step_z)
+  #step_z = round(N / 100)
+  # DEBUG
+  step_z = 100
 
   # jointdplr_mnist_mh or jointdplr_mnist_submh
-  tag = "_".join(["jointdplr_test", data_source, tag_austerity])
+  tag = "_".join(["dpgmm", data_source])
 
-  stage_file = 'data/output/jointdplr/stage_'+tag
-  result_file = 'data/output/jointdplr/result_'+tag
+  stage_file = 'data/output/dpgmm/stage_'+tag
+  result_file = 'data/output/dpgmm/result_'+tag
 
   ##########################################
   #### Initialization
   prog = """
   [clear]
   [assume D {D}]
-  [assume mu_w (zeros_array (+ D 1))]
-  [assume Sigma_w (diagonal_matrix (scalar_product {Sigma_w!r} (ones_array (+ D 1))))]
   [assume m0 (zeros_array D)]
   [assume k0 {k0}]
   [assume v0 {v0}]
@@ -122,11 +108,9 @@ def main(data_source_, epsilon_):
   [assume alpha (scope_include (quote alpha) 0 (gamma {a_alpha!r} {b_alpha!r}))]
   [assume crp (make_crp alpha)]
   [assume z (mem (lambda (i) (scope_include (quote z) i (crp))))]
-  [assume w (mem (lambda (z) (scope_include (quote w) z (multivariate_normal mu_w Sigma_w))))]
   [assume cmvn (mem (lambda (z) (make_cmvn m0 k0 v0 S0)))]
   [assume x (lambda (i) ((cmvn (z i))))]
-  [assume y (lambda (i x) (bernoulli (linear_logistic (w (z i)) x)))]
-  """.format(D = D, Sigma_w = Sigma_w, k0 = k0, v0 = v0, a_alpha = a_alpha, b_alpha = b_alpha)
+  """.format(D = D, k0 = k0, v0 = v0, a_alpha = a_alpha, b_alpha = b_alpha)
   v = make_ripl()
   v.execute_program(prog);
 
@@ -138,24 +122,26 @@ def main(data_source_, epsilon_):
     v.observe('(x %d)' % n, \
               {'type': 'list', \
                'value': [{'type': 'real', 'value': x} for x in X[n]]})
-    v.observe('(y %d (array %s))' % (n, ' '.join(repr(x) for x in X[n])), y[n])
   t_obs = time.clock() - tic
   print "It takes", t_obs, "seconds to load observations."
 
-  ## Find CRP node
+  ## Find CRP node and CMVN node
   trace = v.sivm.core_sivm.engine.getDistinguishedTrace()
   crpNode = trace.globalEnv.findSymbol('crp')
   #wNode = trace.globalEnv.findSymbol('w')
   tableCounts = trace.madeSPAuxAt(crpNode).tableCounts
   tables = tableCounts.keys()
 
+  cmvnNode = trace.globalEnv.findSymbol('cmvn')
+
   rst = {'ts': list(),
          'alphas': list(),
          'zCounts': list(),
-         'ws': list(),
-         'iters_pred': list(),
-         'ts_pred': list(),
-         'ys_pred': list()}
+         'cmvnN': list(),
+         'cmvnXTotal': list(),
+         'cmvnSTotal': list(),
+         'ts_zs': list(),
+         'zs': list()}
 
   ##########################################
   #### Run and Record
@@ -167,20 +153,7 @@ def main(data_source_, epsilon_):
   i_save = -1
   for i in xrange(Nsamples):
     # Run inference.
-    if not use_austerity:
-      infer_str = '(cycle (' + \
-          ' '.join(['(mh w {z} 1 true {sig_prop})'.format(\
-              z = z, sig_prop = sig_prop) for z in tables]) + ' ' + \
-          '(gibbs z one {step_z}) (mh alpha all 1)) {Tthin})'.format(\
-              step_z = step_z, Tthin = Tthin)
-    else:
-      infer_str = '(cycle (' + ' '.join([\
-          '(subsampled_mh w {z} 1 {Nbatch} {k0} {epsilon} true {sig_prop} true)'.format(\
-              z = z, Nbatch = Nbatch, k0 = k0, epsilon = epsilon, \
-              sig_prop = sig_prop) for z in tables]) + ' ' + \
-          '(gibbs z one {step_z} true true) (mh alpha all 1)) {Tthin})'.format(\
-              step_z = step_z, Tthin = Tthin)
-
+    infer_str = '(cycle ((gibbs z one {step_z}) (mh alpha all 1)) {Tthin})'.format(step_z = step_z, Tthin = Tthin)
     v.infer(infer_str)
 
     # Find z partition.
@@ -192,27 +165,28 @@ def main(data_source_, epsilon_):
     rst['alphas'].append(v.sample('alpha'))
     zCountsTable = [[z, count] for z,count in sorted(tableCounts.iteritems())]
     rst['zCounts'].append(zCountsTable)
-    rst['ws'].append([np.array(v.sample('(w {z})'.format(z=z[0]))) for z in zCountsTable])
 
-    # Do prediction.
-    if (i + 1) % Tpred == 0:
-      print "Predicting..."
+    # Save CMNV Statistics
+    families = cmvnNode.madeSPFamilies.families
+    cmvnN = list()
+    cmvnXTotal = list()
+    cmvnSTotal = list()
+    for z,count in sorted(tableCounts.iteritems()):
+      aux = trace.valueAt(families['[Atom(%d)]' % z]).makerNode.madeSPAux.copy()
+      cmvnN.append(aux.N)
+      cmvnXTotal.append(aux.xTotal)
+      cmvnSTotal.append(aux.STotal)
+    rst['cmvnN'].append(cmvnN)
+    rst['cmvnXTotal'].append(cmvnXTotal)
+    rst['cmvnSTotal'].append(cmvnSTotal)
+
+    # Save zs.
+    if (i + 1) % Tzs == 0:
+      print "Saving zs..."
       tic = time.clock()
-      y_pred = list()
-      for n in xrange(N, N + Ntst):
-        v.observe('(x %d)' % n, \
-                  {'type': 'list', \
-                   'value': [{'type': 'real', 'value': x} for x in Xtst[n - N]]}, \
-                  label='to_forget')
-        v.infer('(gibbs z %d 1)' % n)
-        y_pred.append(v.sample('(y %d (array %s))' % (n, ' '.join(repr(x) for x in Xtst[n - N]))))
-        v.forget('to_forget')
-      t_pred_cum += time.clock() - tic
-
-      # More record.
-      rst['iters_pred'].append(i)
-      rst['ts_pred'].append(t_pred_cum)
-      rst['ys_pred'].append(y_pred)
+      zs = [next(iter(trace.scopes['z'][n])).value.atom for n in xrange(N)]
+      rst['ts_zs'].append(i)
+      rst['zs'].append(zs)
 
     # Save temporary results.
     if (i + 1) % Tsave == 0:
@@ -238,6 +212,14 @@ def main(data_source_, epsilon_):
 
   ##########################################
   #### Save workspace
+  families = cmvnNode.madeSPFamilies.families
+  auxDict = {}
+  for (zStr, n) in families.iteritems():
+    z = int(zStr[6:-2])
+    aux = trace.valueAt(n).makerNode.madeSPAux.copy()
+    auxDict[z] = aux
+    print z, aux
+
   from cPickle import PicklingError
   my_shelf = shelve.open(result_file,'n') # 'n' for new
   for key in dir():
@@ -254,7 +236,6 @@ if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
   parser.add_argument('--data', dest='data_source_', default='circle', help='data file')
-  parser.add_argument('--eps',dest='epsilon_', default=0.0, type=float, help='Epsilon')
   args = vars(parser.parse_args())
   main(**args)
 
