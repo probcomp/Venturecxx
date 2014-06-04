@@ -151,14 +151,16 @@ def plot_pose((figname, (pose, clean_gps_pose))):
         spu.plot_scene_scatter(x, y, heading, clean_gps_pose)
         pylab.gca().set_xlim(xlim)
         pylab.gca().set_ylim(ylim)
-        pylab.draw()
         pylab.savefig(figname)
         pylab.close()
         pass
     return
 
 def plot_poses(pose_dict):
-    map(plot_pose, pose_dict.iteritems())
+    import multiprocessing
+    pool = multiprocessing.Pool()
+    #map(plot_pose, pose_dict.iteritems())
+    pool.map(plot_pose, pose_dict.iteritems())
     return
 
 def generate_pose_names(_is):
@@ -188,7 +190,7 @@ ripl = get_ripl(vp.program, combined_frame, vp.N_mripls, vp.backend,
 predictions = []
 times = []
 N_rows = len(combined_frame)
-N_rows = 100
+N_rows = 1000
 row_is = range(N_rows)
 gps_is = []
 for row_i in row_is:
