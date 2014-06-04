@@ -160,8 +160,8 @@ def plot_pose((figname, (pose, clean_gps_pose))):
 def plot_poses(pose_dict):
     pool = multiprocessing.Pool()
     with Timer('all plots') as t:
-        #map(plot_pose, pose_dict.iteritems())
-        pool.map(plot_pose, pose_dict.iteritems())
+        map(plot_pose, pose_dict.iteritems())
+        #pool.map(plot_pose, pose_dict.iteritems())
         pass
     return
 
