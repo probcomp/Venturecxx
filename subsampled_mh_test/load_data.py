@@ -22,7 +22,7 @@ def loadData(data_file):
   return N, D, X, Y, Ntst, Xtst, Ytst
 
 
-def loadSVData(data_file):
+def loadSeqData(data_file):
   import scipy.io
   data = scipy.io.loadmat(data_file)
 

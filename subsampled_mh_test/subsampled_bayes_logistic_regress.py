@@ -39,6 +39,16 @@ def main(data_source_, epsilon_):
     print "N:", N, "D:", D
 
 
+  elif data_source == "four_cluster":
+
+    ##### One cluster in four_cluster_data2
+    from load_data import loadData
+    data_file = 'data/input/four_cluster_data2_one.mat'
+    N, D, X, y, _, _, _ = loadData(data_file)
+
+    print "N:", N, "D:", D
+
+
   ## Sampler
   time_max = 5e5
   T = 1000000
