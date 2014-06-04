@@ -89,6 +89,8 @@ against fixed randomness.
   def __init__(self):
     self.pyr_state = random.getstate()
     self.numpyr_state = npr.get_state()
+    random.jumpahead(random.randint(1,2**31-1))
+    npr.seed(random.randint(1,2**31-1))
 
   def __enter__(self):
     self.cur_pyr_state = random.getstate()
