@@ -1,23 +1,26 @@
 import os
 import argparse
 import collections
+import multiprocessing
 #
 import numpy
+import pylab
 #
 from venture.venturemagics.ip_parallel import MRipl
 from venture.shortcuts import make_puma_church_prime_ripl
+import scene_plot_utils as spu
 import vehicle_program as vp
 import vehicle_simulator as vs
 from contexts import Timer
 
-_xlim = (-2.5, 2.5)
-_ylim = (-5.0, 2.0)
-_xlim = (-10, 10)
-_ylim = (-10, 10)
-get_default_lim = lambda: (_xlim, _ylim)
+
+get_default_lim = lambda: ((-10, 10),(-10, 10))
 lim_lookup = collections.defaultdict(get_default_lim, {
-    '5_eight':((-2.5, 2.5),(-5.0, 2.0)),
     '1_straight':((-7.0, 5.0),(-1.0, 1.0)),
+    '2_bend':((-7.0, 1.0),(-1.0, 6.0)),
+    '3_bend':((-7.0, 5.0),(-3.0, 1.0)),
+    '4_circle':((-4.0, 4.0),(-4.0, 4.0)),
+    '5_eight':((-2.5, 2.5),(-5.0, 2.0)),
     })
 def read_combined_frame():
     base_dir = '/home/dlovell/Desktop/PPAML/CP1-Quad-Rotor/data/automobile/'
@@ -35,8 +38,7 @@ def read_combined_frame():
     gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(dirname)
     clean_gps_frame = vs.read_frame(dirname=dirname, **vs.gps_frame_config)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
-    xlim, ylim = lim_lookup[dataset_name]
-    return combined_frame, clean_gps_frame, xlim, ylim
+    return combined_frame, clean_gps_frame, dataset_name
 
 def get_row_iter(frame, N_rows=None):
     row_iter = None
@@ -89,7 +91,7 @@ N_hypers_profile = 80
 N_history_gps = 13
 N_history_not_gps = 1
 to_assumes = []
-def process_row(ripl, row, predictions=None, verbose=True):
+def process_row(ripl, row):
     is_control_row = not numpy.isnan(row.Velocity)
     is_gps_row = not numpy.isnan(row.x)
     is_infer_hypers_row = row.i < N_hypers_profile
@@ -142,9 +144,6 @@ def get_prefixed_expressions(ripl, prefix, instruction='predict'):
     prefixed_expressions = map(get_expression, prefixed_directives)
     return list(set(prefixed_expressions))
 
-
-import scene_plot_utils as spu
-import pylab
 def plot_pose((figname, (pose, clean_gps_pose))):
     with Timer(figname) as t:
         x, y, heading = map(numpy.array, zip(*pose))
@@ -157,10 +156,11 @@ def plot_pose((figname, (pose, clean_gps_pose))):
     return
 
 def plot_poses(pose_dict):
-    import multiprocessing
     pool = multiprocessing.Pool()
-    #map(plot_pose, pose_dict.iteritems())
-    pool.map(plot_pose, pose_dict.iteritems())
+    with Timer('all plots') as t:
+        #map(plot_pose, pose_dict.iteritems())
+        pool.map(plot_pose, pose_dict.iteritems())
+        pass
     return
 
 def generate_pose_names(_is):
@@ -184,31 +184,37 @@ def get_clean_gps_poses(_is, combined_frame, clean_gps_frame):
     return clean_gps_poses
 
 
-combined_frame, clean_gps_frame, xlim, ylim = read_combined_frame()
+combined_frame, clean_gps_frame, dataset_name = read_combined_frame()
+xlim, ylim = lim_lookup[dataset_name]
 ripl = get_ripl(vp.program, combined_frame, vp.N_mripls, vp.backend,
         vp.use_mripl)
-predictions = []
+#
 times = []
-N_rows = len(combined_frame)
-row_is = range(N_rows)
+row_is = range(len(combined_frame))
 gps_is = []
 for row_i in row_is:
     with Timer('row %s' % row_i) as t:
-        _i = process_row(ripl, combined_frame.irow(row_i), predictions)
+        _i = process_row(ripl, combined_frame.irow(row_i))
         gps_is.append(_i)
         pass
     times.append(t.elapsed)
     pass
+print 'all rows took %d seconds (%s per timestep)' % (sum(times), sum(times) / len(times))
 
 
 #pose_names = get_predicted_pose_names(ripl)
 gps_is = map(int, filter(None, gps_is))
 pose_names = generate_pose_names(gps_is)
-poses = map(ripl.predict, pose_names)
+with Timer('predicts') as t:
+    poses = map(ripl.predict, pose_names)
+    pass
+# generate plots
 override_pose_names = generate_pose_names(range(len(pose_names)))
-override_pose_names = ['blocked_' + x for x in override_pose_names]
+override_pose_names = [dataset_name + '_' + x for x in override_pose_names]
 clean_gps_poses = get_clean_gps_poses(gps_is, combined_frame, clean_gps_frame)
 pose_dict = dict(zip(override_pose_names, zip(poses, clean_gps_poses)))
 plot_poses(pose_dict)
-# map(lambda x: inspect_vars(ripl, x), range(N_rows))
-#process_row(ripl, combined_frame.irow(0))
+# generate movie
+mp4_name = dataset_name + '.mp4'
+template_str = dataset_name + '_pose_%1d.png'
+os.system('avconv -y -r 60 -b 1800 -i %s %s' % (template_str, mp4_name))
