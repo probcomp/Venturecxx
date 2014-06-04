@@ -13,7 +13,7 @@ def main(data_source_, epsilon_, N_):
 
   print "data_source:", data_source_
   print "epsilon:", epsilon_
-  print "N:", N_
+  print "N_:", N_
 
   rand_seed = 101
 
@@ -367,7 +367,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--data', dest='data_source_', default='four_cluster', help='data file')
   parser.add_argument('--eps',dest='epsilon_', default=0.0, type=float, help='Epsilon')
-  parser.add_argument('--N',dest='N_', default=0, type=float, help='N')
+  parser.add_argument('--N',dest='N_', default=0, type=int, help='N')
   args = vars(parser.parse_args())
   main(**args)
 

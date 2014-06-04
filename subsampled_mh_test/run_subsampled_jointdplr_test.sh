@@ -11,9 +11,9 @@ fi
 
 eps=$1
 
-tag=jointdplr_test_N1000
+tag=jointdplr_test_four_cluster
 
-cmd="unbuffer python subsampled_jointdplr_test.py --data mnist --eps ${eps} | tee data/output/jointdplr/logs/${tag}_eps${eps}.log"
+cmd="unbuffer python subsampled_jointdplr_test.py --data four_cluster --eps ${eps} | tee data/output/jointdplr/logs/${tag}_eps${eps}.log"
 
 echo "$cmd"
 eval "$cmd"

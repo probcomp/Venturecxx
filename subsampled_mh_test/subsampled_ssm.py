@@ -7,41 +7,46 @@ import shelve
 from venture.shortcuts import make_lite_church_prime_ripl
 make_ripl = make_lite_church_prime_ripl
 
-def main(data_source_, epsilon_):
+def main(data_source_, epsilon_, N_):
   ##########################################
   #### Parameters
 
   print "data_source:", data_source_
   print "epsilon:", epsilon_
+  print "N_:", N_
+
+  rand_seed = 101
 
   ## Data
-  data_source = data_source_ # "sv"
+  data_source = data_source_ # "ssm"
 
   ## Load data
-  if data_source == "sv":
-    ##### SV Data
+  if data_source == "ssm":
+    ##### SSM Data
     from load_data import loadSeqData
-    data_file = 'data/input/sv.mat'
+    data_file = 'data/input/ssm.mat'
     N, X = loadSeqData(data_file)
-    #DEBUG
-    N = 100
     print "N:", N
   else:
     assert False
 
+  if N_ != 0:
+    N = min(N, N_)
+    print "N:", N
+  tag_N = "N%d" % N
 
   ## Model
-  # Hyper-param for mu
-  std_mu = 0.1;
-
-  # Hyper-param for phi
-  a_phi = 100;
-  b_phi = 1;
-
   # Hyper-param for sig
+  # sig = gamma(al_sig, bt_sig)
   al_sig = 1;
-  bt_sig = 100;
+  bt_sig = 1;
 
+  sig_noise = 0.1;
+
+  b = 1.1;
+
+  # Prior for a is Unim[0,1]
+  #a = rand;
 
   ## Sampler
   time_max = 1e5
@@ -50,14 +55,14 @@ def main(data_source_, epsilon_):
   Nsamples = (T + Tthin - 1) / Tthin
 
   P = 3
-  Tglobal = P
+  step_a = P
 
-  Th = 10 # 100
+  Th = 100
 
-  Tsave = 10 # 100
+  Tsave = 100
 
   # Austerity
-  Nbatch = 50
+  Nbatch = 30
   k0 = 3
   epsilon = epsilon_
 
@@ -65,29 +70,25 @@ def main(data_source_, epsilon_):
   tag_austerity = "submh_%.2f" % epsilon if use_austerity else "mh"
 
   # jointdplr_mnist_mh or jointdplr_mnist_submh
-  tag = "_".join(["sv_test", data_source, tag_austerity])
+  tag = "_".join(["ssm", data_source, tag_N, tag_austerity])
 
-  stage_file = 'data/output/sv/stage_'+tag
-  result_file = 'data/output/sv/result_'+tag
+  stage_file = 'data/output/ssm/stage_'+tag
+  result_file = 'data/output/ssm/result_'+tag
 
   ##########################################
   #### Initialization
   prog = """
   [clear]
-  [assume mu (scope_include (quote mu) 0 (normal 0 {std_mu}))]
-  [assume phi (scope_include (quote phi) 0 (beta {a_phi} {b_phi}))]
+  [assume a (scope_include (quote a) 0 (uniform_continuous 0 1))]
   [assume sig (scope_include (quote sig) 0 (gamma {al_sig} {bt_sig}))]
-  [assume mu_i (mem (lambda (i) mu))]
+  [assume a_i (mem (lambda (i) a))]
   [assume h (mem (lambda (i) (scope_include (quote h) i (
-      if (<= i 0)
-          (normal (mu_i i) sig)
-          (normal (+ (mu_i i)
-                     (* phi
-                        (- (h (- i 1))
-                           (mu_i i))))
-                  sig)))))]
-  [assume x (lambda (i) (normal 0 (exp (/ (h i) 2))))]
-  """.format(std_mu = std_mu, a_phi = a_phi, b_phi = b_phi, al_sig = al_sig, bt_sig = bt_sig)
+        if (<= i 0) 0
+            (normal (min (/ (+ (h (- i 1)) 1.0) (+ (a_i i) 1.0))
+                         (/ (- (h (- i 1)) {b}) (- (a_i i) {b})))
+                    sig)))))]
+  [assume x (lambda (i) (normal (pow (h i) 2) {sig_noise}))]
+  """.format(b = b, al_sig = al_sig, bt_sig = bt_sig, sig_noise = sig_noise)
   v = make_ripl()
   v.execute_program(prog);
 
@@ -103,8 +104,7 @@ def main(data_source_, epsilon_):
   trace = v.sivm.core_sivm.engine.getDistinguishedTrace()
 
   rst = {'ts': list(),
-         'mu': list(),
-         'phi': list(),
+         'a': list(),
          'sig': list(),
          'iters_h': list(),
          'ts_h': list(),
@@ -113,38 +113,44 @@ def main(data_source_, epsilon_):
   ##########################################
   #### Run and Record
 
-  v.infer('(mh mu all 1)') # First iteration to run engine.incorporate whose running time is excluded from record.
+  v.infer('(mh a all 1)') # First iteration to run engine.incorporate whose running time is excluded from record.
 
   t_start = time.clock()
   t_h_cum = 0
   i_save = -1
+  t_a = 0.0
+  t_h = 0.0
   for i in xrange(Nsamples):
     # Run inference.
+
+    step_a = max(1, round(float(t_h) / t_a * step_a)) if t_a > 0 else 1
+    print "t_a:", t_a, "t_h:", t_h, "step_a:", step_a
+
+    # PGibbs for h
     if not use_austerity:
-      # PGibbs for h
       infer_str = '(pgibbs h ordered {P} 1)'.format(P = P)
-      v.infer(infer_str)
-
-      # Global variables.
-      infer_str = '(cycle ((mh mu 0 1) (mh phi 0 1) (mh sig 0 1)) {Tglobal})'.format(Tglobal = Tglobal)
-      v.infer(infer_str)
     else:
-      # PGibbs for h
       infer_str = '(pgibbs h ordered {P} 1 true true)'.format(P = P)
-      v.infer(infer_str)
 
-      # Global variables.
+    t_sample_start = time.clock()
+    v.infer(infer_str)
+    t_h = time.clock() - t_sample_start
+
+    # Global variables.
+    if not use_austerity:
+      infer_str = '(cycle ((mh a 0 1) (mh sig 0 1)) {step_a})'.format(step_a = step_a)
+    else:
       infer_str = ('(cycle ( ' + \
-                   '(subsampled_mh mu  0 1 {Nbatch} {k0} {epsilon}) ' + \
-                   '(subsampled_mh phi 0 1 {Nbatch} {k0} {epsilon}) ' + \
-                   '(subsampled_mh sig 0 1 {Nbatch} {k0} {epsilon})) {Tglobal})').format(
-                    Nbatch = Nbatch, k0 = k0, epsilon = epsilon, Tglobal = Tglobal)
-      v.infer(infer_str)
+                   '(subsampled_mh a   0 1 {Nbatch} {k0} {epsilon}) ' + \
+                   '(subsampled_mh sig 0 1 {Nbatch} {k0} {epsilon})) {step_a})').format(
+                    Nbatch = Nbatch, k0 = k0, epsilon = epsilon, step_a = step_a)
+    t_sample_start = time.clock()
+    v.infer(infer_str)
+    t_a = time.clock() - t_sample_start
 
     # Record.
     rst['ts'].append(time.clock() - t_start - t_h_cum)
-    rst['mu'].append(next(iter(trace.scopes['mu'][0])).value.number)
-    rst['phi'].append(next(iter(trace.scopes['phi'][0])).value.number)
+    rst['a'].append(next(iter(trace.scopes['a'][0])).value.number)
     rst['sig'].append(next(iter(trace.scopes['sig'][0])).value.number)
 
     # Record h.
@@ -190,8 +196,9 @@ def main(data_source_, epsilon_):
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
-  parser.add_argument('--data', dest='data_source_', default='sv', help='data file')
+  parser.add_argument('--data', dest='data_source_', default='ssm', help='data file')
   parser.add_argument('--eps',dest='epsilon_', default=0.0, type=float, help='Epsilon')
+  parser.add_argument('--N',dest='N_', default=0, type=int, help='N')
   args = vars(parser.parse_args())
   main(**args)
 
