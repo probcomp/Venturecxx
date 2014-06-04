@@ -18,7 +18,7 @@ get_default_lim = lambda: ((-10, 10),(-10, 10))
 lim_lookup = collections.defaultdict(get_default_lim, {
     '1_straight':((-7.0, 5.0),(-1.0, 1.0)),
     '2_bend':((-7.0, 1.0),(-1.0, 6.0)),
-    '3_curvy':((-7.0, 5.0),(-3.0, 1.0)),
+    #'3_curvy':((-7.0, 5.0),(-3.0, 1.0)),
     '4_circle':((-4.0, 4.0),(-4.0, 4.0)),
     '5_eight':((-2.5, 2.5),(-5.0, 2.0)),
     })
@@ -35,8 +35,9 @@ def read_combined_frame():
     which_data = 'noisy' if use_noisy else 'ground'
     #
     dirname = os.path.join(base_dir, dataset_name, 'data', which_data)
+    clean_dirname = os.path.join(base_dir, dataset_name, 'data', 'ground')
     gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(dirname)
-    clean_gps_frame = vs.read_frame(dirname=dirname, **vs.gps_frame_config)
+    clean_gps_frame = vs.read_frame(dirname=clean_dirname, **vs.gps_frame_config)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
     return combined_frame, clean_gps_frame, dataset_name
 
@@ -185,7 +186,18 @@ def get_clean_gps_poses(_is, combined_frame, clean_gps_frame):
 
 
 combined_frame, clean_gps_frame, dataset_name = read_combined_frame()
-xlim, ylim = lim_lookup[dataset_name]
+def get_lims(clean_gps_frame):
+    min_xs = clean_gps_frame.min()
+    max_xs = clean_gps_frame.max()
+    min_x, max_x = min_xs.x, max_xs.x
+    min_y, max_y = min_xs.y, max_xs.y
+    delta_x = (max_x - min_x) * .05
+    delta_y = (max_y - min_y) * .05
+    xlim = (min_x - delta_x, max_x + delta_x)
+    ylim = (min_y - delta_y, max_y + delta_y)
+    return xlim, ylim
+
+xlim, ylim = get_lims(clean_gps_frame)
 ripl = get_ripl(vp.program, combined_frame, vp.N_mripls, vp.backend,
         vp.use_mripl)
 #
