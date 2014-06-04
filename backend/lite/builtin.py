@@ -116,6 +116,8 @@ builtInSPsList = [
                               descr="%s returns the product of all its arguments") ],
            [ "div",   binaryNum(lambda x,y: x / y,
                                 "%s returns the quotient of its first argument by its second") ],
+           [ "min",   binaryNum(min,
+                                "%s returns the min of its arguments") ],
            [ "eq",    binaryPred(lambda x,y: x.compare(y) == 0,
                                  descr="%s compares its two arguments for equality") ],
            [ "gt",    binaryPred(lambda x,y: x.compare(y) >  0,

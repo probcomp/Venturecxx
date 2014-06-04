@@ -7,12 +7,15 @@ import shelve
 from venture.shortcuts import make_lite_church_prime_ripl
 make_ripl = make_lite_church_prime_ripl
 
-def main(data_source_, epsilon_):
+def main(data_source_, epsilon_, N_):
   ##########################################
   #### Parameters
 
   print "data_source:", data_source_
   print "epsilon:", epsilon_
+  print "N:", N_
+
+  rand_seed = 101
 
   ## Data
   data_source = data_source_ # "mnist" # "mnist_mini" # "synthetic" # "circle"
@@ -69,6 +72,11 @@ def main(data_source_, epsilon_):
   else:
     assert False
 
+  if N_ != 0:
+    N = min(N, N_)
+    print "N:", N
+  tag_N = "N%d" % N
+
   ytst = np.array(ytst)
 
   ## Model
@@ -97,10 +105,12 @@ def main(data_source_, epsilon_):
   Tsave = 100
 
   # Proposal
-  sig_prop = 0.1
+  sig_prop = 0.2
+  print "sig_prop:", sig_prop
 
   # Austerity
   Nbatch = 10
+  print "Nbatch:", Nbatch
   k0 = 3
   epsilon = epsilon_
 
@@ -116,7 +126,7 @@ def main(data_source_, epsilon_):
   step_z = max(1, step_z)
 
   # jointdplr_mnist_mh or jointdplr_mnist_submh
-  tag = "_".join(["jointdplr_test_N1000", data_source, tag_austerity])
+  tag = "_".join(["jointdplr_test", data_source, tag_N, tag_austerity])
 
   stage_file = 'data/output/jointdplr/stage_'+tag
   result_file = 'data/output/jointdplr/result_'+tag
@@ -141,6 +151,7 @@ def main(data_source_, epsilon_):
   [assume y (lambda (i x) (bernoulli (linear_logistic (w (z i)) x)))]
   """.format(D = D, Sigma_w = Sigma_w, k0 = k0, v0 = v0, a_alpha = a_alpha, b_alpha = b_alpha)
   v = make_ripl()
+  v.set_seed(rand_seed)
   v.execute_program(prog);
 
   ##########################################
@@ -160,8 +171,9 @@ def main(data_source_, epsilon_):
     v.infer('(gibbs z %d 1)' %n)
 
     if (n + 1) % 100 == 0:
-      for _ in range(10):
-        v.infer('(pgibbs z one 100 3)')
+      v.infer('(pgibbs z one 3 100)')
+      #for _ in range(10):
+        #v.infer('(pgibbs z one 3 100)')
         #v.infer('(gibbs z one 100)')
         #v.infer('(mh alpha all 1)')
 
@@ -221,14 +233,15 @@ def main(data_source_, epsilon_):
   t_start = time.clock()
   t_pred_cum = 0
   i_save = -1
-  t_w = 0
-  t_z = 0
+  t_w = 0.0
+  t_z = 0.0
   for i in xrange(Nsamples):
     # Run inference.
 
     # Sample w.
-    step_w = max(1, round(float(t_z) / t_w)) if t_w > 0 else 1
-    print "t_w:", t_w, "t_z:", t_z, "Step_w:", step_w
+    #step_w = max(1, round(float(t_z) / t_w)) if t_w > 0 else 1
+    step_w = 1
+    print "t_w:", t_w, "t_z:", t_z, "Step_z:", step_z
     if not use_austerity:
       infer_str = '(cycle (' + \
           ' '.join(['(mh w {z} 1 true {sig_prop})'.format(\
@@ -246,6 +259,7 @@ def main(data_source_, epsilon_):
 
 
     # Sample z and alpha
+    step_z = max(1, round(float(t_w) / t_z * step_z)) if t_z > 0 else 1
     if not use_austerity:
       infer_str = '(cycle (' + \
                   '(gibbs z one {step_z}) (mh alpha all 1)) {Tthin})'.format(\
@@ -267,7 +281,12 @@ def main(data_source_, epsilon_):
     rst['alphas'].append(v.sample('alpha'))
     zCountsTable = [[z, count] for z,count in sorted(tableCounts.iteritems())]
     rst['zCounts'].append(zCountsTable)
-    rst['ws'].append([np.array(v.sample('(w {z})'.format(z=z[0]))) for z in zCountsTable])
+
+    ws = list()
+    for z in zCountsTable:
+      va = next(iter(trace.scopes['w'][z[0]])).value
+      ws.append(np.array([vn.number for vn in va.array]))
+    rst['ws'].append(ws)
 
     # Save CMNV Statistics
     families = cmvnNode.madeSPFamilies.families
@@ -352,6 +371,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--data', dest='data_source_', default='four_cluster', help='data file')
   parser.add_argument('--eps',dest='epsilon_', default=0.0, type=float, help='Epsilon')
+  parser.add_argument('--N',dest='N_', default=0, type=float, help='N')
   args = vars(parser.parse_args())
   main(**args)
 
