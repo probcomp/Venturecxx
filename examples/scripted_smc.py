@@ -190,7 +190,6 @@ ripl = get_ripl(vp.program, combined_frame, vp.N_mripls, vp.backend,
 predictions = []
 times = []
 N_rows = len(combined_frame)
-N_rows = 1000
 row_is = range(N_rows)
 gps_is = []
 for row_i in row_is:
@@ -201,7 +200,6 @@ for row_i in row_is:
     times.append(t.elapsed)
     pass
 
-# clean_gps_frame.ix[combined_frame[combined_frame.i==1].index[0]]
 
 #pose_names = get_predicted_pose_names(ripl)
 gps_is = map(int, filter(None, gps_is))
