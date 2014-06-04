@@ -504,6 +504,7 @@ def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
     with fixed_randomness:
       scaffold.lkernels[pnode] = DeterministicLKernel(psp,VentureNumber(x))
       # The particle is a way to regen without clobbering the underlying trace
+      # TODO Do repeated regens along the same scaffold actually work?
       return regenAndAttach(Particle(trace),scaffold.border[0],scaffold,False,OmegaDB(),{})
   return f
   
