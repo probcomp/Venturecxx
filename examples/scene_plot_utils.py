@@ -134,7 +134,7 @@ def plot_scene_scatter(x, y, heading, clean_gps_pose=None):
     pylab.figure()
     pylab.scatter(x, y)
     pylab.plot(x_mean, y_mean, 'rx', markersize=10, markeredgewidth=5)
-    if clean_gps_pose is not None and False:
+    if clean_gps_pose is not None:
         clean_x, clean_y, clean_heading = clean_gps_pose
         pylab.plot(clean_x, clean_y, 'go', markersize=10, markeredgewidth=5)
         plot_beam(clean_x, clean_y, clean_heading)
