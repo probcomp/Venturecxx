@@ -194,6 +194,8 @@ def get_lims(clean_gps_frame):
     min_y, max_y = min_xs.y, max_xs.y
     delta_x = (max_x - min_x) * .05
     delta_y = (max_y - min_y) * .05
+    delta_x = max(delta_x, .5)
+    delta_y = max(delta_y, .5)
     xlim = (min_x - delta_x, max_x + delta_x)
     ylim = (min_y - delta_y, max_y + delta_y)
     return xlim, ylim
