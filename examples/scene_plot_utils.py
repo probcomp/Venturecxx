@@ -108,12 +108,12 @@ def plot_ellipse(x, y, a, b, N_points=100):
     y = y + r * numpy.sin(thetas)
     pylab.plot(x, y)
 
+def plot_beam(x, y, theta):
+    x_prime = x + numpy.cos(theta)
+    y_prime = y + numpy.sin(theta)
+    pylab.plot([x, x_prime], [y, y_prime])
+    return
 def plot_beam_dist(x, y, theta, std):
-    def plot_beam(x, y, theta):
-        x_prime = x + numpy.cos(theta)
-        y_prime = y + numpy.sin(theta)
-        pylab.plot([x, x_prime], [y, y_prime])
-        return
     def plot_arc(_x, _y, start_theta, end_theta, N_points=100):
         thetas = numpy.linspace(start_theta, end_theta, N_points)
         x = _x + numpy.cos(thetas)
@@ -126,7 +126,7 @@ def plot_beam_dist(x, y, theta, std):
     plot_arc(x, y, theta - std, theta + std)
     return
 
-def plot_scene_scatter(x, y, heading):
+def plot_scene_scatter(x, y, heading, clean_gps_pose=None):
     x_mean, x_std = x.mean(), x.std()
     y_mean, y_std = y.mean(), y.std()
     heading_mean, heading_std = heading.mean(), heading.std()
@@ -134,6 +134,11 @@ def plot_scene_scatter(x, y, heading):
     pylab.figure()
     pylab.scatter(x, y)
     pylab.plot(x_mean, y_mean, 'rx', markersize=10, markeredgewidth=5)
+    if clean_gps_pose is not None and False:
+        clean_x, clean_y, clean_heading = clean_gps_pose
+        pylab.plot(clean_x, clean_y, 'go', markersize=10, markeredgewidth=5)
+        plot_beam(clean_x, clean_y, clean_heading)
+        pass
     plot_ellipse(x_mean, y_mean, x_std, y_std)
     plot_beam_dist(x_mean, y_mean, heading_mean, heading_std)
     pylab.gca().set_aspect(1)

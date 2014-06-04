@@ -1,5 +1,6 @@
 import os
 import argparse
+import collections
 #
 import numpy
 #
@@ -9,7 +10,15 @@ import vehicle_program as vp
 import vehicle_simulator as vs
 from contexts import Timer
 
-
+_xlim = (-2.5, 2.5)
+_ylim = (-5.0, 2.0)
+_xlim = (-10, 10)
+_ylim = (-10, 10)
+get_default_lim = lambda: (_xlim, _ylim)
+lim_lookup = collections.defaultdict(get_default_lim, {
+    '5_eight':((-2.5, 2.5),(-5.0, 2.0)),
+    '1_straight':((-7.0, 5.0),(-1.0, 1.0)),
+    })
 def read_combined_frame():
     base_dir = '/home/dlovell/Desktop/PPAML/CP1-Quad-Rotor/data/automobile/'
     parser = argparse.ArgumentParser()
@@ -24,8 +33,10 @@ def read_combined_frame():
     #
     dirname = os.path.join(base_dir, dataset_name, 'data', which_data)
     gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(dirname)
+    clean_gps_frame = vs.read_frame(dirname=dirname, **vs.gps_frame_config)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
-    return combined_frame
+    xlim, ylim = lim_lookup[dataset_name]
+    return combined_frame, clean_gps_frame, xlim, ylim
 
 def get_row_iter(frame, N_rows=None):
     row_iter = None
@@ -74,8 +85,8 @@ def infer_N_history(ripl, _i, N_history, N_infer=vp.N_infer, hypers=True):
     out = map(helper, _is[1:])
     return
 
-N_hypers_profile = 31
-N_history_gps = 1
+N_hypers_profile = 80
+N_history_gps = 13
 N_history_not_gps = 1
 to_assumes = []
 def process_row(ripl, row, predictions=None, verbose=True):
@@ -83,7 +94,7 @@ def process_row(ripl, row, predictions=None, verbose=True):
     is_gps_row = not numpy.isnan(row.x)
     is_infer_hypers_row = row.i < N_hypers_profile
     N_history = N_history_gps if is_gps_row else N_history_not_gps
-    N_infer = 1000 if (row.i < 4) or is_gps_row else 20
+    N_infer = 30 if (row.i < 4) or is_gps_row else 20
     #
     global to_assumes
     to_assume = vp.get_assume_dt(row.i, row.dt)
@@ -99,7 +110,7 @@ def process_row(ripl, row, predictions=None, verbose=True):
         vp.do_observe_gps(ripl, row.i, (row.x, row.y, row.heading))
         infer_N_history(ripl, row.i, N_history, N_infer, hypers=is_infer_hypers_row)
         pass
-    return
+    return row.i if is_gps_row else None
 
 def get_ripl(program, combined_frame, N_mripls, backend, use_mripl):
     ripl = None
@@ -131,17 +142,22 @@ def get_prefixed_expressions(ripl, prefix, instruction='predict'):
     prefixed_expressions = map(get_expression, prefixed_directives)
     return list(set(prefixed_expressions))
 
-def plot_poses(pose_dict):
-    def plot_pose((figname, pose)):
-        import scene_plot_utils as spu
-        import pylab
+
+import scene_plot_utils as spu
+import pylab
+def plot_pose((figname, (pose, clean_gps_pose))):
+    with Timer(figname) as t:
         x, y, heading = map(numpy.array, zip(*pose))
-        spu.plot_scene_scatter(x, y, heading)
-        pylab.gca().set_xlim((-2.5, 2.5))
-        pylab.gca().set_ylim((-5.0, 2.0))
+        spu.plot_scene_scatter(x, y, heading, clean_gps_pose)
+        pylab.gca().set_xlim(xlim)
+        pylab.gca().set_ylim(ylim)
+        pylab.draw()
         pylab.savefig(figname)
         pylab.close()
-        return
+        pass
+    return
+
+def plot_poses(pose_dict):
     map(plot_pose, pose_dict.iteritems())
     return
 
@@ -156,29 +172,43 @@ def get_logscores_and_poses(ripl, row_i):
     logscores_and_poses = sorted(zip(logscores, final_poses), cmp=cmp_on_logscore)
     return logscores_and_poses
 
+def get_clean_gps_poses(_is, combined_frame, clean_gps_frame):
+    def get_clean_gps_pose(_ix):
+        xs = clean_gps_frame.ix[_ix]
+        return (xs.x, xs.y, xs.heading)
+    i_to_ix = dict(zip(combined_frame.i, combined_frame.index))
+    indices = map(i_to_ix.get, _is)
+    clean_gps_poses = map(get_clean_gps_pose, indices)
+    return clean_gps_poses
 
-combined_frame = read_combined_frame()
+
+combined_frame, clean_gps_frame, xlim, ylim = read_combined_frame()
 ripl = get_ripl(vp.program, combined_frame, vp.N_mripls, vp.backend,
         vp.use_mripl)
 predictions = []
 times = []
-N_rows = 640
+N_rows = len(combined_frame)
+N_rows = 100
 row_is = range(N_rows)
+gps_is = []
 for row_i in row_is:
     with Timer('row %s' % row_i) as t:
-        prediction = process_row(ripl, combined_frame.irow(row_i), predictions)
+        _i = process_row(ripl, combined_frame.irow(row_i), predictions)
+        gps_is.append(_i)
         pass
     times.append(t.elapsed)
     pass
 
+# clean_gps_frame.ix[combined_frame[combined_frame.i==1].index[0]]
+
 #pose_names = get_predicted_pose_names(ripl)
-temp = combined_frame.head(N_rows)
-_is = temp[~numpy.isnan(temp.x)].i
-pose_names = generate_pose_names(_is)
+gps_is = map(int, filter(None, gps_is))
+pose_names = generate_pose_names(gps_is)
 poses = map(ripl.predict, pose_names)
 override_pose_names = generate_pose_names(range(len(pose_names)))
 override_pose_names = ['blocked_' + x for x in override_pose_names]
-pose_dict = dict(zip(override_pose_names, poses))
+clean_gps_poses = get_clean_gps_poses(gps_is, combined_frame, clean_gps_frame)
+pose_dict = dict(zip(override_pose_names, zip(poses, clean_gps_poses)))
 plot_poses(pose_dict)
 # map(lambda x: inspect_vars(ripl, x), range(N_rows))
 #process_row(ripl, combined_frame.irow(0))
