@@ -203,8 +203,7 @@ ripl = get_ripl(vp.program, combined_frame, vp.N_mripls, vp.backend,
         vp.use_mripl)
 #
 times = []
-# row_is = range(len(combined_frame))
-row_is = range(100)
+row_is = range(len(combined_frame))
 gps_is = []
 for row_i in row_is:
     with Timer('row %s' % row_i) as t:
@@ -232,5 +231,3 @@ plot_poses(pose_dict)
 mp4_name = dataset_name + '.mp4'
 template_str = dataset_name + '_pose_%1d.png'
 os.system('avconv -y -r 60 -b 1800 -i %s %s' % (template_str, mp4_name))
-
-print '\n'.join(map(str, map(lambda x: numpy.array(x).mean(axis=0), poses)))
