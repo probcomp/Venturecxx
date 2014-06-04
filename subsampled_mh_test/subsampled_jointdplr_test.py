@@ -64,10 +64,6 @@ def main(data_source_, epsilon_, N_):
     from load_data import loadData
     data_file = 'data/input/four_cluster_data2.mat'
     N, D, X, y, Ntst, Xtst, ytst = loadData(data_file)
-
-    # DEBUG
-    N = 1000
-
     print "N:", N, "Ntst:", Ntst, "D:", D
   else:
     assert False
