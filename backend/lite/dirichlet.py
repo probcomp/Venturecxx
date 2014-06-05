@@ -53,12 +53,25 @@ class DirMultSPAux(SPAux):
     return DirMultSPAux(os = copy.copy(self.os))
 
 class DirMultSP(VentureSP):
-  def __init__(self,requestPSP,outputPSP,n):
+  def __init__(self,requestPSP,outputPSP,alpha,n):
     super(DirMultSP,self).__init__(requestPSP,outputPSP)
+    self.alpha = alpha
     self.n = n
 
   def constructSPAux(self): return DirMultSPAux(n=self.n)
-  def show(self,spaux): return spaux.os
+  def show(self,spaux):
+    types = {
+      CDirMultOutputPSP: 'dir_mult',
+      UDirMultOutputPSP: 'uc_dir_mult',
+      CSymDirMultOutputPSP: 'sym_dir_mult',
+      USymDirMultOutputPSP: 'uc_sym_dir_mult'
+    }
+    return {
+      'type': types[type(self.outputPSP.psp)],
+      'alpha': self.alpha,
+      'n': self.n,
+      'counts': spaux.os
+    }
     
 
 #### Collapsed dirichlet multinomial
@@ -70,7 +83,7 @@ class MakerCDirMultOutputPSP(DeterministicPSP):
     if not len(os) == len(alpha):
       raise VentureValueError("Set of objets to choose from is the wrong length")
     output = TypedPSP(CDirMultOutputPSP(alpha,os), SPType([], AnyType()))
-    return DirMultSP(NullRequestPSP(),output,len(alpha))
+    return DirMultSP(NullRequestPSP(),output,alpha,len(alpha))
 
   def childrenCanAAA(self): return True
 
@@ -128,7 +141,7 @@ class MakerUDirMultOutputPSP(RandomPSP):
       raise VentureValueError("Set of objets to choose from is the wrong length")
     theta = npr.dirichlet(alpha)
     output = TypedPSP(UDirMultOutputPSP(theta,os), SPType([], AnyType()))
-    return DirMultSP(NullRequestPSP(),output,n)
+    return DirMultSP(NullRequestPSP(),output,alpha,n)
 
   def logDensity(self,value,args):
     alpha = args.operandValues[0]
@@ -148,7 +161,7 @@ class UDirMultAAALKernel(LKernel):
     counts = [count + a for (count,a) in zip(args.madeSPAux.os,alpha)]
     newTheta = npr.dirichlet(counts)
     output = TypedPSP(UDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
-    return DirMultSP(NullRequestPSP(),output,len(alpha))
+    return DirMultSP(NullRequestPSP(),output,alpha,len(alpha))
 
   def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
 
@@ -185,7 +198,7 @@ class MakerCSymDirMultOutputPSP(DeterministicPSP):
     if not len(os) == n:
       raise VentureValueError("Set of objets to choose from is the wrong length")
     output = TypedPSP(CSymDirMultOutputPSP(alpha,n,os), SPType([], AnyType()))
-    return DirMultSP(NullRequestPSP(),output,n)
+    return DirMultSP(NullRequestPSP(),output,alpha,n)
 
   def childrenCanAAA(self): return True
 
@@ -261,7 +274,7 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
       raise VentureValueError("Set of objets to choose from is the wrong length")
     theta = npr.dirichlet([alpha for _ in range(n)])
     output = TypedPSP(USymDirMultOutputPSP(theta,os), SPType([], AnyType()))
-    return DirMultSP(NullRequestPSP(),output,n)
+    return DirMultSP(NullRequestPSP(),output,alpha,n)
 
   def logDensity(self,value,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
@@ -281,7 +294,7 @@ class USymDirMultAAALKernel(LKernel):
     counts = [count + alpha for count in args.madeSPAux.os]
     newTheta = npr.dirichlet(counts)
     output = TypedPSP(USymDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
-    return DirMultSP(NullRequestPSP(),output,n)
+    return DirMultSP(NullRequestPSP(),output,alpha,n)
 
   def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
 
