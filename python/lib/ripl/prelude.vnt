@@ -1,0 +1,107 @@
+; Venture library functions
+
+; TODO: many of these functions do their work by converting vectors and arrays
+; to lists and back. Right now, we can't tell vectors from arrays so I
+; just convert everything back to an array. This could break things, should
+; be fixed when vectors and arrays can be told apart.
+
+; check if a list is empty
+; Parameters
+;   v : list, vector, or array
+[assume is_empty 
+  (lambda (v) 
+    (if (= (size v) 0) 
+      true
+      false))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Convert between arrays, lists, and vectors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Convert an array or vector to a list
+; Parameters
+;   v : vector or array
+[assume to_list 
+  (lambda (v) 
+    (_to_list_helper v 0 (size v)))]
+
+; Helper for the above
+[assume _to_list_helper 
+  (lambda (v idx n) 
+    (if (= idx n) 
+      (list) 
+      (pair 
+        (lookup v idx) 
+        (_to_list_helper v (+ 1 idx) n))))]
+
+; Convert a list to an array
+; Parameters
+;   v : list
+[assume to_array 
+  (lambda (v) 
+    (eval 
+      (pair (quote array) v) 
+      (get_current_environment)))]
+
+; Convert a list to a vector
+; Parameters
+;   v : list
+[assume to_vector
+  (lambda (v) 
+    (eval 
+      (pair (quote vector) v) 
+      (get_current_environment)))]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Support for functional programming
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Map function over elements of array
+; TODO: allow to map over arbitrary number of arrays. Not possible currently.
+; Parameters
+;   f : function
+;   v : list, vector, or array
+[assume map
+  (lambda (f v)
+    (if (is_pair v)
+      (_map_helper f v)
+      (to_array (_map_helper f (to_list v)))))]
+
+; Helper for the above; acts on lists
+[assume _map_helper 
+  (lambda (f v) 
+    (if (is_empty v) 
+      (list) 
+      (pair 
+        (f (first v)) 
+        (map f (rest v)))))]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Assemble arrays, lists, vectors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Appends the second (scalar) argument to the first
+; Parameters
+;   v : list, array, or vector
+;   x : scalar to be appended
+[assume append
+  (lambda (v x)
+    (if (is_pair v)
+      (_append_helper v x)
+      (to_array (_append_helper (to_list v) x))))]
+
+; Helper for the above
+[assume _append_helper 
+  (lambda (v x) 
+    (if (is_empty v) 
+      (list x) 
+      (pair 
+        (first v) 
+        (append (rest v) x))))]
+
+; Concatenates two lists, arrays, or vectors
+; Parameters
+;   
+

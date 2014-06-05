@@ -20,6 +20,7 @@ import numbers
 from venture.exception import VentureException
 from venture.lite.value import VentureValue
 import utils as u
+import re
 
 class Ripl():
     def __init__(self,sivm,parsers):
@@ -28,6 +29,7 @@ class Ripl():
         self.directive_id_to_stringable_instruction = {}
         self.directive_id_to_mode = {}
         self.mode = parsers.keys()[0]
+        self.prelude_path = 'prelude.vnt'
 
 
 
@@ -555,7 +557,20 @@ Open issues:
     
     def profiler_get_proposal_time(self,address):
         return self.address_to_proposal_time[address]
-    
+
+    ############################################
+    # Library
+    ############################################
+    def load_prelude(self):
+        '''
+        Load the library of Venture helper functions
+        '''
+        with open(self.prelude_path) as f:
+            prog = f.readlines()
+        prog = ''.join(x for x in prog if not re.match('^;', x))
+        _ = self.execute_program(prog)
+        
+
     ############################################
     # Private methods
     ############################################
