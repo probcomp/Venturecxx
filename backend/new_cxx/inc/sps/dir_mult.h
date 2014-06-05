@@ -9,8 +9,9 @@
 // Collapsed SPAux
 struct DirMultSPAux : SPAux
 {
-  DirMultSPAux(int n) : counts(n, 0) {}
+  DirMultSPAux(int n) : counts(n, 0), total(0) {}
   vector<int> counts;
+  int total;
   SPAux* copy_help(ForwardingMap* m) const;
   boost::python::object toPython(Trace * trace) const;
 };
@@ -61,7 +62,7 @@ struct MakeDirMultOutputPSP : PSP
 
 struct DirMultOutputPSP : RandomPSP
 {
-  DirMultOutputPSP(const vector<double>& alpha) : alpha(alpha) {}
+  DirMultOutputPSP(const vector<double>& alpha, double total) : alpha(alpha), total(total) {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
@@ -75,6 +76,7 @@ struct DirMultOutputPSP : RandomPSP
 
 private:
   const vector<double> alpha;
+  const double total;
 };
 
 // Uncollapsed SPAux
