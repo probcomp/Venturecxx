@@ -66,16 +66,17 @@ def main(data_source_, epsilon_, N_):
   Tthin = 1
   Nsamples = (T + Tthin - 1) / Tthin
 
-  P = 5
-  pLen = 100
-  step_a = P
+  P = 10
+  pLen = 10
+  step_h = 1
+  step_a = 1
 
-  Th = 1
+  Th = 20
 
-  Tsave = 1
+  Tsave = 10
 
   # Austerity
-  Nbatch = 5
+  Nbatch = 30
   k0 = 3
   epsilon = epsilon_
 
@@ -117,6 +118,8 @@ def main(data_source_, epsilon_, N_):
   trace = v.sivm.core_sivm.engine.getDistinguishedTrace()
 
   rst = {'ts': list(),
+         'ts_sampa': list(),
+         'ts_samph': list(),
          'a': list(),
          'sig': list(),
          'iters_h': list(),
@@ -133,11 +136,24 @@ def main(data_source_, epsilon_, N_):
   i_save = -1
   t_a = 0.0
   t_h = 0.0
+  t_sampa = 0.0
+  t_samph = 0.0
   for i in xrange(Nsamples):
     # Run inference.
 
-    step_a = max(1, round(float(t_h) / t_a * step_a)) if t_a > 0 else 1
-    print "t_a:", t_a, "t_h:", t_h, "step_a:", step_a
+    if t_h == 0:
+      t_h = 1
+      t_a = 1
+    else:
+      avg_t_h = t_h / float(step_h)
+      avg_t_a = t_a / float(step_a)
+      if avg_t_h > avg_t_a:
+        step_h = 1
+        step_a = max(1, round(avg_t_h / avg_t_a))
+      else:
+        step_a = 1
+        step_h = max(1, round(avg_t_a / avg_t_h))
+    print "t_a:", t_a, "t_h:", t_h, "step_a:", step_a, "step_h:", step_h
 
     # PGibbs for h
     start = np.random.randint(N - pLen + 1)
@@ -152,6 +168,7 @@ def main(data_source_, epsilon_, N_):
     t_sample_start = time.clock()
     v.infer(infer_str)
     t_h = time.clock() - t_sample_start
+    t_samph += t_h
 
     # Global variables.
     if not use_austerity:
@@ -164,9 +181,12 @@ def main(data_source_, epsilon_, N_):
     t_sample_start = time.clock()
     v.infer(infer_str)
     t_a = time.clock() - t_sample_start
+    t_sampa += t_a
 
     # Record.
     rst['ts'].append(time.clock() - t_start - t_h_cum)
+    rst['ts_sampa'].append(t_sampa)
+    rst['ts_samph'].append(t_samph)
     rst['a'].append(next(iter(trace.scopes['a'][0])).value.number)
     rst['sig'].append(next(iter(trace.scopes['sig'][0])).value.number)
     print "a:", rst['a'][-1], "sig:", rst['sig'][-1]
