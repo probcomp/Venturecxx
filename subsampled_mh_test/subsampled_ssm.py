@@ -139,6 +139,7 @@ def main(data_source_, epsilon_, N_):
   t_h = 0.0
   t_sampa = 0.0
   t_samph = 0.0
+  start = 1
   for i in xrange(Nsamples):
     # Run inference.
 
@@ -157,14 +158,17 @@ def main(data_source_, epsilon_, N_):
     print "t_a:", t_a, "t_h:", t_h, "step_a:", step_a, "step_h:", step_h
 
     # PGibbs for h
-    start = np.random.randint(N - pLen + 1)
-    end = start + pLen - 1
+    #start = np.random.randint(N - pLen + 1)
+    end = min(N-1, start + pLen - 1)
     if not use_austerity:
       #infer_str = '(pgibbs h ordered {P} 1)'.format(P = P)
       infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1)'.format(start = start, end = end, P = P)
     else:
       #infer_str = '(pgibbs h ordered {P} 1 true true)'.format(P = P)
       infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1 true true)'.format(start = start, end = end, P = P)
+    start += pLen
+    if start >= N:
+      start = 1
 
     t_sample_start = time.clock()
     v.infer(infer_str)
