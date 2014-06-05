@@ -104,6 +104,7 @@ def main(data_source_, epsilon_, N_):
   [assume x (lambda (i) (normal (pow (h i) 2) {sig_noise}))]
   """.format(b = b, al_sig = al_sig, bt_sig = bt_sig, sig_noise = sig_noise)
   v = make_ripl()
+  v.set_seed(rand_seed)
   v.execute_program(prog);
 
   ## Load observations.
