@@ -39,6 +39,12 @@ def main(data_source_, epsilon_, N_):
     data_file = 'data/input/ssm3.mat'
     N, X, sig_noise = loadSSMData(data_file)
     print "N:", N, "sig_noise:", sig_noise
+  elif data_source == "ssm4":
+    ##### SSM Data
+    from load_data import loadSSMData
+    data_file = 'data/input/ssm4.mat'
+    N, X, sig_noise = loadSSMData(data_file)
+    print "N:", N, "sig_noise:", sig_noise
   else:
     assert False
 
@@ -76,18 +82,20 @@ def main(data_source_, epsilon_, N_):
   Tsave = 10
 
   # Austerity
-  Nbatch = 30
+  Nbatch = 100
   k0 = 3
   epsilon = epsilon_
 
   use_austerity = epsilon != 0 # False # True
-  tag_austerity = "submh_%.2f" % epsilon if use_austerity else "mh"
+  tag_austerity = "submh_%.3f" % epsilon if use_austerity else "mh"
 
   # jointdplr_mnist_mh or jointdplr_mnist_submh
   tag = "_".join(["ssm", data_source, tag_N, tag_austerity])
 
   stage_file = 'data/output/ssm/stage_'+tag
   result_file = 'data/output/ssm/result_'+tag
+  print "stage_file:", stage_file
+  print "result_file:", result_file
 
   ##########################################
   #### Initialization
@@ -132,6 +140,28 @@ def main(data_source_, epsilon_, N_):
 
   v.infer('(mh a all 1)') # First iteration to run engine.incorporate whose running time is excluded from record.
 
+
+  # Run one sweep
+  print "Running the first sweep"
+  start = 1
+  tic = time.clock()
+  while True:
+    if (start - 1) % round(N / 10) == 0:
+      print "Sampling %d/%d h's." % (start, N)
+
+    end = min(N-1, start + pLen - 1)
+    if not use_austerity:
+      #infer_str = '(pgibbs h ordered {P} 1)'.format(P = P)
+      infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h})'.format(start = start, end = end, P = P, step_h = step_h)
+    else:
+      #infer_str = '(pgibbs h ordered {P} 1 true true)'.format(P = P)
+      infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h} true true)'.format(start = start, end = end, P = P, step_h = step_h)
+    start += pLen
+    if start >= N:
+      break
+  t_firstsweep = time.clock() - tic
+  print "It takes", t_obs, "seconds to run the first sweep."
+
   t_start = time.clock()
   t_h_cum = 0
   i_save = -1
@@ -142,6 +172,7 @@ def main(data_source_, epsilon_, N_):
   avg_t_a = 0.0
   avg_t_h = 0.0
   start = 1
+
   for i in xrange(Nsamples):
     # Run inference.
 
