@@ -188,7 +188,10 @@ def runApproach2():
   '''
   Run approach 2 as outlined in the document
   '''
+  pass
 
+def runApproach3():
+  pass
 
 
 approaches = dict(random_walk = runRandomWalk,
