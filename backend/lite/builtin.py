@@ -115,6 +115,15 @@ def careful_exp(x):
     if x > 0: return float("inf")
     else: return float("-inf")
 
+def grad_list(args, direction):
+  if direction == 0:
+    return [0 for _ in args]
+  else:
+    (list_, tail) = direction.asPossiblyImproperList()
+    assert tail is None or tail == 0
+    tails = [0 for _ in range(len(args) - len(list_))]
+    return list_ + tails
+
 builtInSPsList = [
            [ "add",  naryNum(lambda *args: sum(args),
                              sim_grad=lambda args, direction: [direction for _ in args],
@@ -160,6 +169,7 @@ builtInSPsList = [
            [ "is_atom", type_test(v.AtomType()) ],
 
            [ "list", deterministic_typed(lambda *args: args, [v.AnyType()], v.ListType(), variadic=True,
+                                         sim_grad=grad_list,
                                          descr="%s returns the list of its arguments") ],
            [ "pair", deterministic_typed(lambda a,d: (a,d), [v.AnyType(), v.AnyType()], v.PairType(),
                                          descr="%s returns the pair whose first component is the first argument and whose second component is the second argument") ],
