@@ -43,5 +43,10 @@ class MakeCSPOutputPSP(DeterministicPSP):
     exp = args.operandValues[1]
     return VentureSP(CSPRequestPSP(ids,exp,args.env),ESRRefOutputPSP())
 
+  def gradientOfSimulate(self, args, _value, _direction):
+    # A lambda is a constant.  I may need to do some plumbing here,
+    # depending on how I want to handle closed-over values.
+    return [0 for _ in args.operandValues]
+
   def description(self,name):
     return "%s\n  Used internally in the implementation of compound procedures." % name
