@@ -75,8 +75,8 @@ def deterministic(f, descr=None, sim_grad=None):
 def deterministic_typed(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
   return typed_nr(deterministic_psp(f, descr, sim_grad), args_types, return_type, **kwargs)
 
-def binaryNum(f, descr=None):
-  return deterministic_typed(f, [v.NumberType(), v.NumberType()], v.NumberType(), descr=descr)
+def binaryNum(f, sim_grad=None, descr=None):
+  return deterministic_typed(f, [v.NumberType(), v.NumberType()], v.NumberType(), sim_grad=sim_grad, descr=descr)
 
 def binaryNumS(output):
   return typed_nr(output, [v.NumberType(), v.NumberType()], v.NumberType())
@@ -105,6 +105,9 @@ def grad_times(args, direction):
   assert len(args) == 2, "Gradient only available for binary multiply"
   return [direction*args[1], direction*args[0]]
 
+def grad_div(args, direction):
+  return [direction * (1 / args[1]), direction * (- args[0] / (args[1] * args[1]))]
+
 def careful_exp(x):
   try:
     return math.exp(x)
@@ -122,7 +125,8 @@ builtInSPsList = [
                               sim_grad=grad_times,
                               descr="%s returns the product of all its arguments") ],
            [ "div",   binaryNum(lambda x,y: x / y,
-                                "%s returns the quotient of its first argument by its second") ],
+                                sim_grad=grad_div,
+                                descr="%s returns the quotient of its first argument by its second") ],
            [ "eq",    binaryPred(lambda x,y: x.compare(y) == 0,
                                  descr="%s compares its two arguments for equality") ],
            [ "gt",    binaryPred(lambda x,y: x.compare(y) >  0,
