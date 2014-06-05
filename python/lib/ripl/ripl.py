@@ -21,6 +21,7 @@ from venture.exception import VentureException
 from venture.lite.value import VentureValue
 import utils as u
 import re
+from os import path
 
 class Ripl():
     def __init__(self,sivm,parsers):
@@ -565,6 +566,8 @@ Open issues:
         '''
         Load the library of Venture helper functions
         '''
+        # fix this tomorrow
+        # prelude_path = 
         with open(self.prelude_path) as f:
             prog = f.readlines()
         prog = ''.join(x for x in prog if not re.match('^;', x))

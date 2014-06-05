@@ -25,7 +25,7 @@
   (lambda (v) 
     (_to_list_helper v 0 (size v)))]
 
-; Helper for the above
+; Helper for the above. Needed because no letrec in Venture.
 [assume _to_list_helper 
   (lambda (v idx n) 
     (if (= idx n) 
@@ -76,6 +76,21 @@
       (pair 
         (f (first v)) 
         (map f (rest v)))))]
+
+; Fold (i.e. reduce) 
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Vector / matrix ops
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(assume dot)
+
+
+
+
+(assume scalar_mul)
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
