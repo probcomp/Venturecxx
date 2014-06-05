@@ -31,3 +31,16 @@ def loadSeqData(data_file):
   N = len(X)
 
   return N, X
+
+
+def loadSSMData(data_file):
+  import scipy.io
+  data = scipy.io.loadmat(data_file)
+
+  X = data['X'].squeeze()
+  X = X.tolist()
+  N = len(X)
+
+  sig_noise = float(data['sig_noise'])
+
+  return N, X, sig_noise

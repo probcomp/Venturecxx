@@ -8,7 +8,7 @@ N = 1;
 al_sig = 1;
 bt_sig = 100;
 
-sig_noise = 0.05;
+sig_noise = 0.001; % 0.05;
 
 b = 1.1;
 

@@ -23,16 +23,22 @@ def main(data_source_, epsilon_, N_):
   ## Load data
   if data_source == "ssm":
     ##### SSM Data
-    from load_data import loadSeqData
+    from load_data import loadSSMData
     data_file = 'data/input/ssm.mat'
-    N, X = loadSeqData(data_file)
-    print "N:", N
+    N, X, sig_noise = loadSSMData(data_file)
+    print "N:", N, "sig_noise:", sig_noise
   elif data_source == "ssm2":
     ##### SSM Data
-    from load_data import loadSeqData
+    from load_data import loadSSMData
     data_file = 'data/input/ssm2.mat'
-    N, X = loadSeqData(data_file)
-    print "N:", N
+    N, X, sig_noise = loadSSMData(data_file)
+    print "N:", N, "sig_noise:", sig_noise
+  elif data_source == "ssm3":
+    ##### SSM Data
+    from load_data import loadSSMData
+    data_file = 'data/input/ssm3.mat'
+    N, X, sig_noise = loadSSMData(data_file)
+    print "N:", N, "sig_noise:", sig_noise
   else:
     assert False
 
@@ -47,7 +53,7 @@ def main(data_source_, epsilon_, N_):
   al_sig = 1;
   bt_sig = 10;
 
-  sig_noise = 0.05;
+  #sig_noise = 0.05;
 
   b = 1.1;
 
@@ -64,9 +70,9 @@ def main(data_source_, epsilon_, N_):
   pLen = 100
   step_a = P
 
-  Th = 10
+  Th = 1
 
-  Tsave = 10
+  Tsave = 1
 
   # Austerity
   Nbatch = 5
@@ -77,7 +83,7 @@ def main(data_source_, epsilon_, N_):
   tag_austerity = "submh_%.2f" % epsilon if use_austerity else "mh"
 
   # jointdplr_mnist_mh or jointdplr_mnist_submh
-  tag = "_".join(["ssm", data_source, tag_N, tag_austerity])
+  tag = "_".join(["ssm_tmp", data_source, tag_N, tag_austerity])
 
   stage_file = 'data/output/ssm/stage_'+tag
   result_file = 'data/output/ssm/result_'+tag
@@ -134,7 +140,7 @@ def main(data_source_, epsilon_, N_):
     print "t_a:", t_a, "t_h:", t_h, "step_a:", step_a
 
     # PGibbs for h
-    start = np.randdom.randint(N - pLen + 1)
+    start = np.random.randint(N - pLen + 1)
     end = start + pLen - 1
     if not use_austerity:
       #infer_str = '(pgibbs h ordered {P} 1)'.format(P = P)

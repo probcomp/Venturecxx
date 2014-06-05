@@ -3,17 +3,18 @@
 #num_epss=${#epss[@]}
 #eps=${epss[idx_eps]}
 
-if [[ $# == 0 ]]; then
-  echo "Missing argument: eps"
+if [[ $# < 2 ]]; then
+  echo "Missing argument: data eps"
   exit 1
 fi
 
 
-eps=$1
+data=$1
+eps=$2
 
-tag=ssm_ssm2
+tag=ssm_${data}_tmp_eps${eps}
 
-cmd="unbuffer python subsampled_ssm.py --data ssm2 --eps ${eps} | tee data/output/ssm/logs/${tag}_eps${eps}.log"
+cmd="unbuffer python subsampled_ssm.py --data ${data} --eps ${eps} | tee data/output/ssm/logs/${tag}.log"
 
 echo "$cmd"
 eval "$cmd"
