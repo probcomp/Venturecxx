@@ -134,12 +134,12 @@ combined_frame, gps_frame = read_combined_frame(input_dirname)
 ripl = get_ripl(vp.program, combined_frame, vp.N_mripls, vp.backend,
         vp.use_mripl)
 #
-N_rows = 100
+N_rows = combined_frame[combined_frame.index < 10.1].shape[0]
 _gps_is = process_frame(ripl, combined_frame.head(N_rows))
 poses = get_poses(ripl, _gps_is)
-#
-gps_is = combined_frame.reindex(gps_frame.index).i
-N_gps = len(gps_is)
-poses = numpy.vstack([poses, numpy.zeros((N_gps-len(poses),3))])
+##
+#gps_is = combined_frame.reindex(gps_frame.index).i
+#N_gps = len(gps_is)
+#poses = numpy.vstack([poses, numpy.zeros((N_gps-len(poses),3))])
 #
 write_output(poses, gps_frame, output_dirname)
