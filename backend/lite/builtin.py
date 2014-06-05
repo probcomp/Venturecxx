@@ -81,8 +81,8 @@ def binaryNum(f, sim_grad=None, descr=None):
 def binaryNumS(output):
   return typed_nr(output, [v.NumberType(), v.NumberType()], v.NumberType())
 
-def unaryNum(f, descr=None):
-  return deterministic_typed(f, [v.NumberType()], v.NumberType(), descr=descr)
+def unaryNum(f, sim_grad=None, descr=None):
+  return deterministic_typed(f, [v.NumberType()], v.NumberType(), sim_grad=sim_grad, descr=descr)
 
 def unaryNumS(f):
   return typed_nr(f, [v.NumberType()], v.NumberType())
@@ -120,7 +120,8 @@ builtInSPsList = [
                              sim_grad=lambda args, direction: [direction for _ in args],
                              descr="%s returns the sum of all its arguments") ],
            [ "sub", binaryNum(lambda x,y: x - y,
-                                "%s returns the difference between its first and second arguments") ],
+                              sim_grad=lambda args, direction: [direction, -direction],
+                              descr="%s returns the difference between its first and second arguments") ],
            [ "mul", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1),
                               sim_grad=grad_times,
                               descr="%s returns the product of all its arguments") ],
@@ -147,7 +148,7 @@ builtInSPsList = [
            [ "cos", unaryNum(math.cos, "Returns the %s of its argument") ],
            [ "tan", unaryNum(math.tan, "Returns the %s of its argument") ],
            [ "hypot", binaryNum(math.hypot, "Returns the %s of its arguments") ],
-           [ "exp", unaryNum(careful_exp, "Returns the %s of its argument") ],
+           [ "exp", unaryNum(careful_exp, sim_grad=lambda args, direction: [direction * careful_exp(args[0])], descr="Returns the %s of its argument") ],
            [ "log", unaryNum(math.log, "Returns the %s of its argument") ],
            [ "pow", binaryNum(math.pow, "%s returns its first argument raised to the power of its second argument") ],
            [ "sqrt", unaryNum(math.sqrt, "Returns the %s of its argument") ],
