@@ -12,8 +12,10 @@ import numpy.random as npr
 from contexts import Timer
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--base_dir', type=str, default=None)
-parser.add_argument('--dataset_name', type=str, default='5_eight')
+parser.add_argument('input_dir', type=str)
+parser.add_argument('output_dir', type=str)
+parser.add_argument('--clean_dir', type=str, default=None)
+parser.add_argument('--dataset_name', type=str, default='')
 parser.add_argument('--ground', action='store_true')
 parser.add_argument('--version', default='random_walk')
 parser.add_argument('--plot', action='store_true')
@@ -23,7 +25,6 @@ args = parser.parse_args()
 
 # Read and pre-process the data.
 def read_combined_frame():
-    base_dir = args.base_dir
     dataset_name = args.dataset_name
     use_noisy = not args.ground
     which_data = 'noisy' if use_noisy else 'ground'
@@ -32,11 +33,7 @@ def read_combined_frame():
     clean_gps_frame_config = dict(filename='slam_gps.csv', index_col='TimeGPS',
         colname_map=gps_to_clean_gps)
     
-    dirname = os.path.join(base_dir, dataset_name, 'data', which_data)
-    clean_dirname = os.path.join(base_dir, dataset_name, 'data', 'ground')
-    gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(dirname)
-    clean_gps_frame = vs.read_frame(dirname=clean_dirname, **clean_gps_frame_config)
-
+    gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(args.input_dir)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
     slength = len(combined_frame['i'])
     empty = [np.nan for i in range(slength)]
@@ -44,11 +41,13 @@ def read_combined_frame():
     combined_frame['clean_y'] = empty
     combined_frame['clean_heading'] = empty
     
-    for i in range(len(clean_gps_frame)):
-        combined_frame.ix[clean_gps_frame.irow(i).name,'clean_x'] = clean_gps_frame.irow(i)['clean_x']
-        combined_frame.ix[clean_gps_frame.irow(i).name,'clean_y'] = clean_gps_frame.irow(i)['clean_y']
-        combined_frame.ix[clean_gps_frame.irow(i).name,'clean_heading'] = clean_gps_frame.irow(i)['clean_heading']
-          
+    clean_gps_frame = None
+    if args.clean_dir is not None:
+        clean_gps_frame = vs.read_frame(dirname=args.clean_dir, **clean_gps_frame_config)
+        for i in range(len(clean_gps_frame)):
+            combined_frame.ix[clean_gps_frame.irow(i).name,'clean_x'] = clean_gps_frame.irow(i)['clean_x']
+            combined_frame.ix[clean_gps_frame.irow(i).name,'clean_y'] = clean_gps_frame.irow(i)['clean_y']
+            combined_frame.ix[clean_gps_frame.irow(i).name,'clean_heading'] = clean_gps_frame.irow(i)['clean_heading']
     return combined_frame, clean_gps_frame, dataset_name
 
 # Plot samples along with the ground truth.
@@ -190,7 +189,7 @@ def writeCSV(filename, cols, rows):
       f.write(','.join(map(str, row)) + '\n')
 
 out_rows = approach()
-out_file = 'output_%s/slam_out_path.csv' % args.dataset_name
+out_file = '%s/slam_out_path.csv' % args.output_dir
 ensure(out_file)
 writeCSV(out_file, out_cols, out_rows)
 
@@ -198,7 +197,7 @@ print "Wrote output to " + out_file
 
 landmarks_cols = ['SLAMBeaconX','SLAMBeaconY']
 landmarks_rows = [(0, 0)]
-landmarks_file = 'output_%s/slam_out_landmarks.csv' % args.dataset_name
+landmarks_file = '%s/slam_out_landmarks.csv' % args.output_dir
 writeCSV(landmarks_file, landmarks_cols, landmarks_rows)
 
 print "Wrote landmarks to " + landmarks_file
