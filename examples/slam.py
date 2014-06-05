@@ -28,7 +28,7 @@ def read_combined_frame(input_dirname):
     gps_frame, control_frame, laser_frame, sensor_frame = \
             vs.read_frames(input_dirname)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
-    return combined_frame
+    return combined_frame, gps_frame
 
 def infer_N_history(ripl, _i, N_history, N_infer=vp.N_infer, hypers=True):
     _is = range(int(_i))[-N_history:]
@@ -65,12 +65,14 @@ def process_row(ripl, row):
     return row.i if is_gps_row else None
 
 def process_frame(ripl, frame):
-    row_is = []
+    gps_is = []
     for _, row in frame.iterrows():
         row_i = process_row(ripl, row)
-        row_is.append(row_i)
+        gps_is.append(row_i)
         pass
-    return max(filter(None, row_is))
+    gps_is = filter(None, gps_is)
+    gps_is = map(int, gps_is)
+    return gps_is
 
 def get_ripl(program, combined_frame, N_mripls, backend, use_mripl):
     ripl = None
@@ -104,15 +106,15 @@ def get_pose_names(ripl):
     pose_names = map(get_symbol, pose_directives)
     return pose_names
 
-def get_poses(ripl):
-    pose_names = get_pose_names(ripl)
+def get_poses(ripl, gps_is):
+    pose_names = generate_pose_names(gps_is)
     poses = map(ripl.predict, pose_names)
     poses = map(lambda x: numpy.array(x).mean(axis=0), poses)
     poses = numpy.array(poses)
     return poses
 
-def write_output(poses, combined_frame, output_dirname):
-    poses, ts = zip(*zip(poses, combined_frame.T))
+def write_output(poses, gps_frame, output_dirname):
+    poses, ts = zip(*zip(poses, gps_frame.T))
     poses = numpy.array(poses)[:, :2]
     column_names = 'SLAMLat', 'SLAMLon'
     frame = pandas.DataFrame(poses, index=ts, columns=column_names)
@@ -127,11 +129,16 @@ def write_output(poses, combined_frame, output_dirname):
     return
 
 input_dirname, output_dirname = parse_args()
-combined_frame = read_combined_frame(input_dirname)
+combined_frame, gps_frame = read_combined_frame(input_dirname)
 ripl = get_ripl(vp.program, combined_frame, vp.N_mripls, vp.backend,
         vp.use_mripl)
 #
 N_rows = 100
-process_frame(ripl, combined_frame.head(N_rows))
-poses = get_poses(ripl)
-write_output(poses, combined_frame, output_dirname)
+_gps_is = process_frame(ripl, combined_frame.head(N_rows))
+poses = get_poses(ripl, _gps_is)
+#
+gps_is = combined_frame.reindex(gps_frame.index).i
+N_gps = len(gps_is)
+poses = numpy.vstack([poses, numpy.zeros((N_gps-len(poses),3))])
+#
+write_output(poses, gps_frame, output_dirname)
