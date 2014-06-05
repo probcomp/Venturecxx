@@ -2,7 +2,7 @@ function [X, h, a, sig, sig_noise, b] = make_ssm_data(a, sig)
 
 % rng('default')
 
-T = 1e3;
+T = 1e4;
 N = 1;
 
 al_sig = 1;

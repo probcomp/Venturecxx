@@ -84,7 +84,7 @@ def main(data_source_, epsilon_, N_):
   tag_austerity = "submh_%.2f" % epsilon if use_austerity else "mh"
 
   # jointdplr_mnist_mh or jointdplr_mnist_submh
-  tag = "_".join(["ssm_tmp", data_source, tag_N, tag_austerity])
+  tag = "_".join(["ssm", data_source, tag_N, tag_austerity])
 
   stage_file = 'data/output/ssm/stage_'+tag
   result_file = 'data/output/ssm/result_'+tag
@@ -139,6 +139,8 @@ def main(data_source_, epsilon_, N_):
   t_h = 0.0
   t_sampa = 0.0
   t_samph = 0.0
+  avg_t_a = 0.0
+  avg_t_h = 0.0
   start = 1
   for i in xrange(Nsamples):
     # Run inference.
@@ -155,17 +157,17 @@ def main(data_source_, epsilon_, N_):
       else:
         step_a = 1
         step_h = max(1, round(avg_t_a / avg_t_h))
-    print "t_a:", t_a, "t_h:", t_h, "step_a:", step_a, "step_h:", step_h
+    print "avg_t_a:", avg_t_a, "avg_t_h:", avg_t_h, "t_a:", t_a, "t_h:", t_h, "step_a:", step_a, "step_h:", step_h
 
     # PGibbs for h
     #start = np.random.randint(N - pLen + 1)
     end = min(N-1, start + pLen - 1)
     if not use_austerity:
       #infer_str = '(pgibbs h ordered {P} 1)'.format(P = P)
-      infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1)'.format(start = start, end = end, P = P)
+      infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h})'.format(start = start, end = end, P = P, step_h = step_h)
     else:
       #infer_str = '(pgibbs h ordered {P} 1 true true)'.format(P = P)
-      infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1 true true)'.format(start = start, end = end, P = P)
+      infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h} true true)'.format(start = start, end = end, P = P, step_h = step_h)
     start += pLen
     if start >= N:
       start = 1
