@@ -52,19 +52,6 @@ parseValue = _strip_types
 # 4.output history and pointer to self.mripl
 
 
-def build_exp(exp):
-    'Take expression from directive_list and build the Lisp string'
-    if type(exp)==str:
-        return exp
-    elif type(exp)==dict:
-        if exp['type']=='atom':
-            return 'atom<%i>'%exp['value']
-        else:
-            return str(exp['value'])
-    else:
-        return '('+ ' '.join(map(build_exp,exp)) + ')'
-
-
 def directive_split(d):
     'Splits directive from *list_directives* into components'
     ## FIXME: replace Python values with strings for Venture.
@@ -219,8 +206,8 @@ class Analytics(object):
             self.mripl = MRipl(ripl_mripl.no_ripls,
                                backend = ripl_mripl.backend,
                                local_mode = ripl_mripl.local_mode)
-            [self.mripl.assume(sym,exp) for sym,exp in self.assumes]
-            [self.mripl.observe(exp,lit) for exp,lit in self.observes]
+            for sym,exp in self.assumes: self.mripl.assume(sym,exp)
+            for exp,lit in self.observes: self.mripl.observe(exp,lit)
 
             self.backend = self.mripl.backend
             if self.mripl.local_mode is False:
@@ -367,7 +354,7 @@ class Analytics(object):
             queryExpsValues={}
         
             v = MRipl(samples, backend=self.backend, local_mode=mriplLocalMode)
-            [v.assume(sym,exp) for sym,exp in self.assumes]
+            for sym,exp in self.assumes: v.assume(sym,exp)
 
             rangeAssumes=range(1,1+len(self.assumes))
             observeLabels=[self.nameObserve(i) for i,_ in enumerate(self.observes)]
@@ -493,7 +480,7 @@ class Analytics(object):
             modelTuple=(self.assumes,self.observes,self.queryExps)
             results = mr_map_proc(v,'all',sendf, f.func_name, modelTuple,**kwargs)
 
-            [history.addRun(r) for r in results[:runs] ]
+            for r in results[:runs]: history.addRun(r)
 
             return history
     
@@ -532,9 +519,12 @@ class Analytics(object):
             history.profile = Profile(self.ripl)
         return history
 
-    def _collectSamples(self, assumeToDirective, predictToDirective, sweeps=100, label=None, verbose=False, infer=None, force=None, **kwargs):
+    def _collectSamples(self, assumeToDirective=None, predictToDirective=None, sweeps=100, label=None, verbose=False, infer=None, force=None, **kwargs):
+        if assumeToDirective is None:
+            assumeToDirective = self._assumesFromRipl()
+        if predictToDirective is None:
+            predictToDirective = {}
         answer = Run(label, self.parameters)
-        
 
         assumedValues = {symbol : [] for symbol in assumeToDirective}
         predictedValues = {index: [] for index in predictToDirective}

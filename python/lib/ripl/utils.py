@@ -256,6 +256,9 @@ def expToDict(exp):
   elif tag == "map":
     assert len(exp) == 6
     return {"kernel":"map","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":exp[4],"transitions":exp[5]}
+  elif tag == "nesterov":
+    assert len(exp) == 6
+    return {"kernel":"nesterov","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":exp[4],"transitions":exp[5]}
   elif tag == "latents":
     assert len(exp) == 4
     return {"kernel":"latents","scope":exp[1],"block":exp[2],"transitions":exp[3]}

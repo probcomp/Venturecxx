@@ -507,6 +507,7 @@ def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
     with fixed_randomness:
       scaffold.lkernels[pnode] = DeterministicLKernel(psp,VentureNumber(x))
       # The particle is a way to regen without clobbering the underlying trace
+      # TODO Do repeated regens along the same scaffold actually work?
       return regenAndAttach(Particle(trace),scaffold.border[0],scaffold,False,OmegaDB(),{})
   return f
   
@@ -569,8 +570,8 @@ class MAPOperator(InPlaceOperator):
     # Smashes the trace but leaves it a torus
     proposed_values = self.evolve(grad, currentValues, start_grad)
 
-    registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
-    _xiWeight = grad.fixed_regen(proposed_values) # Mutates the trace
+    _xiWeight = grad.regen(proposed_values) # Mutates the trace
+
     return (trace, 1000) # It's MAP -- try to force acceptance
 
   def evolve(self, grad, values, start_grad):
@@ -579,6 +580,25 @@ class MAPOperator(InPlaceOperator):
     for _ in range(self.steps):
       xs = [x + dx*self.epsilon for (x,dx) in zip(xs, dxs)]
       dxs = grad(xs)
+    return xs
+
+class NesterovAcceleratedGradientAscentOperator(MAPOperator):
+  def step_lam(self, lam):
+    return (1 + math.sqrt(1 + 4 * lam * lam))/2
+  def gamma(self, lam):
+    return (1 - lam) / self.step_lam(lam)
+  def evolve(self, grad, values, start_grad):
+    # This formula is from
+    # http://blogs.princeton.edu/imabandit/2013/04/01/acceleratedgradientdescent/
+    xs = values
+    ys = xs
+    dxs = start_grad
+    lam = 1
+    for _ in range(self.steps):
+      gam = self.gamma(lam)
+      new_ys = [x + dx*self.epsilon for (x,dx) in zip(xs, dxs)]
+      new_xs = [old_y * gam + new_y * (1-gam) for (old_y, new_y) in zip(ys, new_ys)]
+      (xs, ys, dxs, lam) = (new_ys, new_ys, grad(new_xs), self.step_lam(lam))
     return xs
 
 #### Hamiltonian Monte Carlo
@@ -624,8 +644,12 @@ class GradientOfRegen(object):
   def fixed_regen(self, values):
     # Ensure repeatability of randomness
     with self.fixed_randomness:
-      registerDeterministicLKernels(self.trace, self.scaffold, self.pnodes, values)
-      return regenAndAttach(self.trace, self.scaffold.border[0], self.scaffold, False, OmegaDB(), {})
+      return self.regen(values)
+
+  def regen(self, values):
+    registerDeterministicLKernels(self.trace, self.scaffold, self.pnodes, values)
+    return regenAndAttach(self.trace, self.scaffold.border[0], self.scaffold, False, OmegaDB(), {})
+
 
 class HamiltonianMonteCarloOperator(InPlaceOperator):
 
@@ -674,8 +698,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     # Smashes the trace but leaves it a torus
     (proposed_values, end_K) = self.evolve(grad_potential, currentValues, start_grad_pot, momenta)
 
-    registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
-    xiWeight = grad.fixed_regen(proposed_values) # Mutates the trace
+    xiWeight = grad.regen(proposed_values) # Mutates the trace
     # The weight arithmetic is given by the Hamiltonian being
     # -weight + kinetic(momenta)
     return (trace, xiWeight - rhoWeight + start_K - end_K)

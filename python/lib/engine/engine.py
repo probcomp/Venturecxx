@@ -134,6 +134,11 @@ class Engine(object):
     # method often.
     self.set_seed(random.randint(1,2**31-1))
 
+  # TODO Is bind_foreign_sp a directive or something like that?
+  def bind_foreign_sp(self, name, sp):
+    for trace in self.traces:
+      trace.bindPrimitiveSP(name, sp)
+
   # TODO There should also be capture_inference_problem and
   # restore_inference_problem (Analytics seems to use something like
   # it)

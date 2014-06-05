@@ -1,11 +1,10 @@
-import numbers
 import scipy.stats
-import scipy.special
 import math
 import numpy.random as npr
 import numpy.linalg as npla
 import scipy.special as spsp
 import numpy as np
+from utils import logDensityMVNormal, numpy_force_number
 from utils import logDensityMVNormal
 from utils import override
 from exception import VentureValueError
@@ -19,7 +18,7 @@ from lkernel import LKernel
 class NormalDriftKernel(LKernel):
   def __init__(self,epsilon = 0.7): self.epsilon = epsilon
 
-  def simulate(self,trace,oldValue,args):
+  def simulate(self, _trace, oldValue, args):
     mu,sigma = args.operandValues
     nu = scipy.stats.norm.rvs(0,sigma)
     term1 = mu
@@ -62,6 +61,16 @@ class MVNormalOutputPSP(RandomPSP):
   def hasDeltaKernel(self): return True
   def getDeltaKernel(self,*args): return MVNormalRandomWalkKernel(*args)
 
+  def logDensityBound(self, x, args):
+    (mu, sigma) = self.__parse_args__(args)
+    if sigma is not None:
+      # The maximum is obtained when x = mu
+      return numpy_force_number(-.5*len(sigma)*np.log(np.pi)-.5*np.log(abs(npla.det(sigma))))
+    elif x is not None and mu is not None:
+      raise Exception("TODO: Find an analytical form for the maximum of the log density of MVNormal for fixed x, mu, but varying sigma")
+    else:
+      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+
   def description(self,name):
     return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name
 
@@ -95,13 +104,13 @@ class InverseWishartPSP(RandomPSP):
         +(-.5*(dof+p+1))*np.log(npla.det(x))-.5*np.trace(np.dot(lmbda, npla.inv(x)))
     return log_density
 
-  '''
-  based on the following wikipedia page:
-    http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
-    http://en.wikipedia.org/wiki/Multivariate_gamma_function
-    http://en.wikipedia.org/wiki/Matrix_calculus
-  '''
   def gradientOfLogDensity(self, X, args):
+    '''
+    based on the following wikipedia page:
+      http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+      http://en.wikipedia.org/wiki/Multivariate_gamma_function
+      http://en.wikipedia.org/wiki/Matrix_calculus
+    '''
     (lmbda, dof) = self.__parse_args__(args)
     p = len(lmbda)
     invX = npla.inv(X)
@@ -151,13 +160,13 @@ class WishartPSP(RandomPSP):
           +.5*(dof-p-1)*np.log(npla.det(X))-.5*np.trace(np.dot(invSigma, X))
     return log_density
 
-  '''
-  based on the following wikipedia page:
-    http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
-    http://en.wikipedia.org/wiki/Multivariate_gamma_function
-    http://en.wikipedia.org/wiki/Matrix_calculus
-  '''
   def gradientOfLogDensity(self, X, args):
+    '''
+    based on the following wikipedia page:
+      http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+      http://en.wikipedia.org/wiki/Multivariate_gamma_function
+      http://en.wikipedia.org/wiki/Matrix_calculus
+    '''
     (sigma, dof) = self.__parse_args__(args)
     p = len(sigma)
     invX = npla.inv(X)

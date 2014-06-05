@@ -8,6 +8,7 @@ from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
 from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator, SliceOperator
 from subsampled_mh import drawScaffoldKernel,drawSubsampledScaffoldKernel,subsampledMixMH,SubsampledMHOperator,SubsampledBlockScaffoldIndexer
+from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator, SliceOperator, NesterovAcceleratedGradientAscentOperator
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
@@ -31,10 +32,7 @@ class Trace(object):
     for name,val in builtInValues().iteritems():
       self.globalEnv.addBinding(name,ConstantNode(val))
     for name,sp in builtInSPs().iteritems():
-      spNode = self.createConstantNode(sp)
-      processMadeSP(self,spNode,False)
-      assert isinstance(self.valueAt(spNode), SPRef)
-      self.globalEnv.addBinding(name,spNode)
+      self.bindPrimitiveSP(name, sp)
     self.globalEnv = VentureEnvironment(self.globalEnv) # New frame so users can shadow globals
 
     self.rcs = set()
@@ -43,6 +41,12 @@ class Trace(object):
     self.unpropagatedObservations = {} # {node:val}
     self.families = {}
     self.scopes = {} # :: {scope-name:smap{block-id:set(node)}}
+
+  def bindPrimitiveSP(self, name, sp):
+    spNode = self.createConstantNode(sp)
+    processMadeSP(self,spNode,False)
+    assert isinstance(self.valueAt(spNode), SPRef)
+    self.globalEnv.addBinding(name,spNode)
 
   def registerAEKernel(self,node): self.aes.add(node)
   def unregisterAEKernel(self,node): self.aes.remove(node)
@@ -238,7 +242,7 @@ class Trace(object):
     if interval is None:
       return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
     else:
-      blocks = [b for b in self.scopes[scope].keys() if b.compare(interval[0]) >= 0 if b.compare(interval[1]) <= 0]
+      blocks = [b for b in self.scopes[scope].keys() if b >= interval[0] if b <= interval[1]]
       return [self.getNodesInBlock(scope,block) for block in sorted(blocks)]
 
   def numNodesInBlock(self,scope,block): return len(self.getNodesInBlock(scope,block))
@@ -403,6 +407,9 @@ class Trace(object):
       elif params["kernel"] == "map":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MAPOperator(params["rate"], int(params["steps"])))
+      elif params["kernel"] == "nesterov":
+        assert params["with_mutation"]
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),NesterovAcceleratedGradientAscentOperator(params["rate"], int(params["steps"])))
       elif params["kernel"] == "rejection":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),RejectionOperator())
