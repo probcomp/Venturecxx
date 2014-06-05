@@ -30,6 +30,13 @@ struct DivOutputPSP : PSP
   string toString() const {return "DivOutputPSP"; }
 };
 
+struct LogisticOutputPSP : PSP
+{ 
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  vector<VentureValuePtr> gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const;
+  string toString() const {return "LogisticOutputPSP"; }
+};
+
 struct IntDivOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;

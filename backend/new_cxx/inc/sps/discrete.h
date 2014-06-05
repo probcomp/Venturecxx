@@ -12,6 +12,8 @@ struct FlipOutputPSP : RandomPSP
   bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
   vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
 
+  pair<VentureValuePtr, vector<VentureValuePtr> > 
+  gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args);
 };
 
 struct BernoulliOutputPSP : RandomPSP

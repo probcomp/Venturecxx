@@ -158,11 +158,9 @@ GammaPSP::gradientOfLogDensity(const VentureValuePtr value, const shared_ptr<Arg
   double a = args->operandValues[0]->getDouble();
   double b = args->operandValues[1]->getDouble();
   double x = value->getDouble();
-  double grad_a = log(x)+b/a-gsl_sf_psi(a);
-  cout << "a" << a << "b" << b << "x" << x << endl;
-  double grad_b = log(a)-x;
+  double grad_a = log(x)+log(b)-gsl_sf_psi(a);
+  double grad_b = a/b-x;
   double grad_x = (a-1)/x-b;
-  cout << "grad_a " << grad_a << "grad_b " << grad_b << "grad_x " << grad_x << endl;
   vector<VentureValuePtr> gradParam;
   gradParam.push_back(VentureNumber::makeValue(grad_a));
   gradParam.push_back(VentureNumber::makeValue(grad_b));

@@ -102,7 +102,7 @@ HMCGKernel::evolve(GradientOfRegen& grad, const VentureValuePtr& start_q, const 
   int numSteps = steps->getDouble();
   // cout << "num steps " << numSteps << endl;
   const VentureValuePtr half = VentureNumber::makeValue(epsilon->getDouble()*.5);
-  const VentureValuePtr mass_step = VentureNumber::makeValue(epsilon->getDouble()*mass);
+  const VentureValuePtr mass_step = VentureNumber::makeValue(epsilon->getDouble()/mass);
   VentureValuePtr q = start_q;
   VentureValuePtr dpdt = start_grad_q;
   // cout << "start p = " << toString(start_p) << endl;

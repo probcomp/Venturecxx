@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "numerical_helpers.h"
 
+#include <boost/assign/list_of.hpp>
 
 VentureValuePtr FlipOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
@@ -25,6 +26,15 @@ double FlipOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) c
 
   if (value->getBool()) { return log(p); }
   else { return log(1 - p); }
+}
+
+pair<VentureValuePtr, vector<VentureValuePtr> > 
+FlipOutputPSP::gradientOfLogDensity(const VentureValuePtr x, const shared_ptr<Args> args) {
+  double weight = args->operandValues[0]->getDouble();
+  double xd = x->getDouble();
+  double gradWeight = xd/weight-(1-xd)/(1-weight);
+  vector<VentureValuePtr> gradientOfParam = boost::assign::list_of(VentureValuePtr(new VentureNumber(gradWeight)));
+  return make_pair(VentureValuePtr(new VentureNumber(0)), gradientOfParam);
 }
 
 vector<VentureValuePtr> FlipOutputPSP::enumerateValues(shared_ptr<Args> args) const

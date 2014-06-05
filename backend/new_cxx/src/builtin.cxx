@@ -34,6 +34,7 @@ map<string,SP*> initBuiltInSPs()
   m["sub"] = new SP(new NullRequestPSP(), new SubOutputPSP());
   m["mul"] = new SP(new NullRequestPSP(), new MulOutputPSP());
   m["div"] = new SP(new NullRequestPSP(), new DivOutputPSP());
+  m["logistic"] = new SP(new NullRequestPSP(), new LogisticOutputPSP());
   m["int_div"] = new SP(new NullRequestPSP(), new IntDivOutputPSP());
   m["int_mod"] = new SP(new NullRequestPSP(), new IntModOutputPSP());
   m["eq"] = new SP(new NullRequestPSP(), new EqOutputPSP());

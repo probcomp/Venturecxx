@@ -123,6 +123,31 @@ VentureValuePtr DivOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
   return shared_ptr<VentureNumber>(new VentureNumber(args->operandValues[0]->getDouble() / args->operandValues[1]->getDouble()));
 }
 
+VentureValuePtr LogisticOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("logistic", args, 2);
+  VectorXd w = dynamic_pointer_cast<VentureVector>(args->operandValues[0])->getVector();
+  VectorXd x = dynamic_pointer_cast<VentureVector>(args->operandValues[1])->getVector();
+  double z = 1.0/(1+exp(0-w.dot(x)));
+  if(z >= 1-1e-8)
+    z = z-1e-8;
+  else if(z <= 1e-8)
+    z = z+1e-8;
+  return VentureNumber::makeValue(z);
+}
+
+vector<VentureValuePtr> LogisticOutputPSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const
+{
+  checkArgsLength("logistic", args, 2);
+  VectorXd w = dynamic_pointer_cast<VentureVector>(args->operandValues[0])->getVector();
+  VectorXd x = dynamic_pointer_cast<VentureVector>(args->operandValues[1])->getVector();
+  double z = 1.0/(1+exp(0-w.dot(x)));
+  vector<VentureValuePtr> grad;
+  grad.push_back(VentureVector::makeValue(x*(z*(1-z))));
+  grad.push_back(VentureVector::makeValue(w*(z*(1-z))));
+  return grad;
+}
+
 VentureValuePtr IntDivOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("integer divide", args, 2);
