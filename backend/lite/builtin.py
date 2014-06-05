@@ -165,11 +165,13 @@ builtInSPsList = [
                                          descr="%s returns the pair whose first component is the first argument and whose second component is the second argument") ],
            [ "is_pair", type_test(v.PairType()) ],
            [ "first", deterministic_typed(lambda p: p[0], [v.PairType()], v.AnyType(),
-                                          "%s returns the first component of its argument pair") ],
+                                          sim_grad=lambda args, direction: [v.VenturePair((direction, 0))],
+                                          descr="%s returns the first component of its argument pair") ],
            [ "rest", deterministic_typed(lambda p: p[1], [v.PairType()], v.AnyType(),
-                                         "%s returns the second component of its argument pair") ],
+                                         sim_grad=lambda args, direction: [v.VenturePair((0, direction))],
+                                         descr="%s returns the second component of its argument pair") ],
            [ "second", deterministic_typed(lambda p: p[1].first, [v.PairType(second_type=v.PairType())], v.AnyType(),
-                                           "%s returns the first component of the second component of its argument") ],
+                                           descr="%s returns the first component of the second component of its argument") ],
 
 
            [ "array", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
