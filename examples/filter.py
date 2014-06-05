@@ -171,7 +171,7 @@ for row_i in row_is:
                 
                 ripl.observe("(normal x %f)" % noisy_gps_stds['x'], noisy_gps_x)
                 ripl.observe("(normal y %f)" % noisy_gps_stds['y'], noisy_gps_y)
-                ripl.observe("(normal heading %f)" % noisy_gps_stds['heading'], noisy_gps_heading)
+                #ripl.observe("(normal heading %f)" % noisy_gps_stds['heading'], noisy_gps_heading)
             
             ripl.infer("(incorporate)")
             ripl.infer("(slice default one 20)")
