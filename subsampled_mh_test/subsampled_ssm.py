@@ -27,6 +27,12 @@ def main(data_source_, epsilon_, N_):
     data_file = 'data/input/ssm.mat'
     N, X = loadSeqData(data_file)
     print "N:", N
+  elif data_source == "ssm2":
+    ##### SSM Data
+    from load_data import loadSeqData
+    data_file = 'data/input/ssm2.mat'
+    N, X = loadSeqData(data_file)
+    print "N:", N
   else:
     assert False
 
@@ -39,9 +45,9 @@ def main(data_source_, epsilon_, N_):
   # Hyper-param for sig
   # sig = gamma(al_sig, bt_sig)
   al_sig = 1;
-  bt_sig = 1;
+  bt_sig = 10;
 
-  sig_noise = 0.1;
+  sig_noise = 0.05;
 
   b = 1.1;
 
@@ -54,15 +60,15 @@ def main(data_source_, epsilon_, N_):
   Tthin = 1
   Nsamples = (T + Tthin - 1) / Tthin
 
-  P = 3
+  P = 5
   step_a = P
 
-  Th = 100
+  Th = 10
 
-  Tsave = 100
+  Tsave = 10
 
   # Austerity
-  Nbatch = 30
+  Nbatch = 5
   k0 = 3
   epsilon = epsilon_
 
@@ -152,6 +158,7 @@ def main(data_source_, epsilon_, N_):
     rst['ts'].append(time.clock() - t_start - t_h_cum)
     rst['a'].append(next(iter(trace.scopes['a'][0])).value.number)
     rst['sig'].append(next(iter(trace.scopes['sig'][0])).value.number)
+    print "a:", rst['a'][-1], "sig:", rst['sig'][-1]
 
     # Record h.
     if (i + 1) % Th == 0:

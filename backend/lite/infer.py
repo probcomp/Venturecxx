@@ -52,7 +52,7 @@ class BlockScaffoldIndexer(object):
     elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope),useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValue=self.updateValue)
     elif self.block == "ordered_range": 
       assert self.interval
-      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope),self.interval,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValue=self.updateValue)
+      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope,self.interval),useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValue=self.updateValue)
     else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)],useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValue=self.updateValue)
 
   def logDensityOfIndex(self,trace,_):
