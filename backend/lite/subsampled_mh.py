@@ -299,6 +299,11 @@ def drawScaffoldGraph(trace, G, labels=None):
                      node_color=[color_map[data['type']] for (_,data) in G.nodes_iter(True)],
                      labels=labels)
 #                     labels={node:node.value for node in G.nodes_iter()})
+    # DEBUG
+    trace.G = G
+    trace.labels = labels
+    trace.cm = color_map
+    trace.pos = pos
 
 def markAbsorbingToSubsample(trace,G,scope_to_subsample):
     nodes_in_scope = trace.getAllNodesInScope(scope_to_subsample)
