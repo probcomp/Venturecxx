@@ -14,6 +14,7 @@ from contexts import Timer
 parser = argparse.ArgumentParser()
 parser.add_argument('input_dir', type=str)
 parser.add_argument('output_dir', type=str)
+parser.add_argument('--max_time', type=float, default=None)
 parser.add_argument('--clean_dir', type=str, default=None)
 parser.add_argument('--dataset_name', type=str, default='')
 parser.add_argument('--ground', action='store_true')
@@ -40,6 +41,8 @@ def read_combined_frame():
     combined_frame['clean_x'] = empty
     combined_frame['clean_y'] = empty
     combined_frame['clean_heading'] = empty
+    if args.max_time is not None:
+        combined_frame = combined_frame[combined_frame.index < args.max_time]
     
     clean_gps_frame = None
     if args.clean_dir is not None:
