@@ -2,6 +2,7 @@ import copy
 from nose.tools import assert_greater_equal # assert_greater_equal is metaprogrammed pylint:disable=no-name-in-module
 import scipy.special
 import numpy.random as npr
+import math
 
 from lkernel import LKernel
 from sp import VentureSP, SPAux, SPType
@@ -44,8 +45,11 @@ class DirMultSPAux(SPAux):
   def __init__(self,n=None,os=None):
     if os is not None: 
       self.os = os
+      self.total = sum(os)
       assert_greater_equal(min(self.os),0)
-    elif n is not None: self.os = [0.0 for _ in range(n)]
+    elif n is not None:
+      self.os = [0.0 for _ in range(n)]
+      self.total = 0
     else: raise Exception("Must pass 'n' or 'os' to DirMultSPAux")
 
   def copy(self): 
@@ -93,26 +97,32 @@ class MakerCDirMultOutputPSP(DeterministicPSP):
 class CDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,os):
     self.alpha = alpha
+    self.total = sum(alpha)
     self.os = os
+    self.index = dict((val, i) for (i, val) in enumerate(os))
 
   def simulate(self,args):
     counts = [count + alpha for (count,alpha) in zip(args.spaux.os,self.alpha)]
     return simulateCategorical(counts,self.os)
       
   def logDensity(self,val,args):
-    counts = [count + alpha for (count,alpha) in zip(args.spaux.os,self.alpha)]
-    return logDensityCategorical(val,counts,self.os)
+    index = self.index[val]
+    num = args.spaux.os[index] + self.alpha[index]
+    denom = args.spaux.total + self.total
+    return math.log(num/denom)
 
   def incorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     assert_greater_equal(min(args.spaux.os),0)
-    index = self.os.index(val)
+    index = self.index[val]
     args.spaux.os[index] += 1
+    args.spaux.total += 1
     
   def unincorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
-    index = self.os.index(val)
+    index = self.index[val]
     args.spaux.os[index] -= 1
+    args.spaux.total -= 1
     assert_greater_equal(min(args.spaux.os),0)
         
   def enumerateValues(self,args):
@@ -120,8 +130,8 @@ class CDirMultOutputPSP(RandomPSP):
 
   def logDensityOfCounts(self,aux):
     assert isinstance(aux,DirMultSPAux)
-    N = sum(aux.os)
-    A = sum(self.alpha)
+    N = aux.total
+    A = self.total
 
     term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N + A)
     term2 = sum([scipy.special.gammaln(alpha + count) - scipy.special.gammaln(alpha) for (alpha,count) in zip(self.alpha,aux.os)])
@@ -228,32 +238,37 @@ class CSymDirMultOutputPSP(RandomPSP):
     self.alpha = alpha
     self.n = n
     self.os = os
+    self.index = dict((val, i) for (i, val) in enumerate(os))
 
   def simulate(self,args):
     counts = [count + self.alpha for count in args.spaux.os]
     return simulateCategorical(counts,self.os)
       
   def logDensity(self,val,args):
-    counts = [count + self.alpha for count in args.spaux.os]
-    return logDensityCategorical(val,counts,self.os)
+    index = self.index[val]
+    num = args.spaux.os[index] + self.alpha
+    denom = args.spaux.total + self.alpha * self.n
+    return math.log(num/denom)
 
   def incorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     assert_greater_equal(min(args.spaux.os),0)
-    index = self.os.index(val)
+    index = self.index[val]
     args.spaux.os[index] += 1
+    args.spaux.total += 1
     
   def unincorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
-    index = self.os.index(val)
+    index = self.index[val]
     args.spaux.os[index] -= 1
+    args.spaux.total -= 1
     assert_greater_equal(min(args.spaux.os),0)
         
   def enumerateValues(self,args):
     return self.os
 
   def logDensityOfCounts(self,aux):
-    N = sum(aux.os)
+    N = aux.total
     A = self.alpha * self.n
 
     term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N + A)
