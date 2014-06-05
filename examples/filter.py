@@ -17,6 +17,8 @@ parser.add_argument('--dataset_name', type=str, default='5_eight')
 parser.add_argument('--ground', action='store_true')
 parser.add_argument('--version', default='random_walk')
 parser.add_argument('--plot', action='store_true')
+parser.add_argument('--frames', type=int, default=100000)
+parser.add_argument('--samples', type=int, default=10)
 args = parser.parse_args()
 
 # Read and pre-process the data.
@@ -80,13 +82,13 @@ def runRandomWalk():
   import venture.shortcuts
   ripl = venture.shortcuts.make_church_prime_ripl()
 
-  row_num = min(100, len(combined_frame))
+  row_num = min(args.frames, len(combined_frame))
   print "Using %d row" % row_num
   row_is = range(row_num)
 
   gps_frame_count = 0
 
-  N_samples = 1
+  N_samples = args.samples
   print "Generating %d samples per time step" % N_samples
 
   times = []
