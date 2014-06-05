@@ -117,7 +117,12 @@ def write_output(poses, combined_frame, output_dirname):
     column_names = 'SLAMLat', 'SLAMLon'
     frame = pandas.DataFrame(poses, index=ts, columns=column_names)
     frame.index.name = 'SLAMGPSTime'
-    frame.to_csv(os.path.join(output_dirname, 'output.csv'))
+    filename = os.path.join(output_dirname, 'slam_out_path.csv')
+    frame.to_csv(filename)
+    #
+    landmark_frame = pandas.DataFrame([[0, 0]], columns=['SLAMBeaconX', 'SLAMBeaconY'])
+    filename = os.path.join(output_dirname, 'slam_out_landmarks.csv')
+    landmark_frame.to_csv(filename, index=False)
     # fixme
     return
 
