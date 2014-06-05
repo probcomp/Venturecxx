@@ -115,7 +115,8 @@ def get_poses(ripl, gps_is):
 
 def write_output(poses, gps_frame, output_dirname):
     poses, ts = zip(*zip(poses, gps_frame.T))
-    poses = numpy.array(poses)[:, :2]
+    # futz with ordering: y, x
+    poses = numpy.array(poses)[:, [1, 0]]
     column_names = 'SLAMLat', 'SLAMLon'
     frame = pandas.DataFrame(poses, index=ts, columns=column_names)
     frame.index.name = 'SLAMGPSTime'
