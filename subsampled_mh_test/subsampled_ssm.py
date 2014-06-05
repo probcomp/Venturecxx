@@ -61,6 +61,7 @@ def main(data_source_, epsilon_, N_):
   Nsamples = (T + Tthin - 1) / Tthin
 
   P = 5
+  pLen = 100
   step_a = P
 
   Th = 10
@@ -133,10 +134,14 @@ def main(data_source_, epsilon_, N_):
     print "t_a:", t_a, "t_h:", t_h, "step_a:", step_a
 
     # PGibbs for h
+    start = np.randdom.randint(N - pLen + 1)
+    end = start + pLen - 1
     if not use_austerity:
-      infer_str = '(pgibbs h ordered {P} 1)'.format(P = P)
+      #infer_str = '(pgibbs h ordered {P} 1)'.format(P = P)
+      infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1)'.format(start = start, end = end, P = P)
     else:
-      infer_str = '(pgibbs h ordered {P} 1 true true)'.format(P = P)
+      #infer_str = '(pgibbs h ordered {P} 1 true true)'.format(P = P)
+      infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1 true true)'.format(start = start, end = end, P = P)
 
     t_sample_start = time.clock()
     v.infer(infer_str)
@@ -203,7 +208,7 @@ def main(data_source_, epsilon_, N_):
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
-  parser.add_argument('--data', dest='data_source_', default='ssm', help='data file')
+  parser.add_argument('--data', dest='data_source_', default='ssm2', help='data file')
   parser.add_argument('--eps',dest='epsilon_', default=0.0, type=float, help='Epsilon')
   parser.add_argument('--N',dest='N_', default=0, type=int, help='N')
   args = vars(parser.parse_args())
