@@ -567,8 +567,8 @@ Open issues:
         Load the library of Venture helper functions
         '''
         # fix this tomorrow
-        # prelude_path = 
-        with open(self.prelude_path) as f:
+        prelude_path = path.join(path.dirname(__file__), self.prelude_path)
+        with open(prelude_path) as f:
             prog = f.readlines()
         prog = ''.join(x for x in prog if not re.match('^;', x))
         _ = self.execute_program(prog)

@@ -65,28 +65,53 @@
 [assume map
   (lambda (f v)
     (if (is_pair v)
-      (_map_helper f v)
-      (to_array (_map_helper f (to_list v)))))]
+      (_map_list f v)
+      (to_array (_map_list f (to_list v)))))]
 
-; Helper for the above; acts on lists
-[assume _map_helper 
+; Map for lists (same args as above)
+[assume _map_list
   (lambda (f v) 
     (if (is_empty v) 
       (list) 
       (pair 
         (f (first v)) 
-        (map f (rest v)))))]
+        (_map_list f (rest v)))))]
 
-; Fold (i.e. reduce) 
+; Reduce (mirrors functionality here: http://srfi.schemers.org/srfi-1/srfi-1.html)
+; Parameters
+;   f : function
+;   v : list, vector, or array
+;   identity : identity value for the funciont f
+[assume reduce
+  (lambda (f v identity)
+    (if (is_pair v)
+      (_reduce_list f v identity)
+      (to_array (_reduce_list f (to_list v) identity))))]
 
+; Reduce for lists (same args as above)
+[assume _reduce_list
+  (lambda (f v identity)
+    (if (is_empty v)
+      identity
+      (f (first v) (_reduce_list f (rest v) identity))))]
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Vector / matrix ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(assume dot)
+[assume dot
+  (lambda (x y)
+    (if (is_pair x)
+      (_dot_list x y)
+      (to_array (_dot_list (to_list x) (to_list y)))))]
 
-
+[assume _dot_list
+  (lambda (x y)
+    (if (is_empty x)
+      0
+      (+
+        (* (first x) (first y))
+        (dot (rest x) (rest y)))))]
 
 
 (assume scalar_mul)
@@ -104,17 +129,17 @@
 [assume append
   (lambda (v x)
     (if (is_pair v)
-      (_append_helper v x)
-      (to_array (_append_helper (to_list v) x))))]
+      (_append_list v x)
+      (to_array (_append_list(to_list v) x))))]
 
 ; Helper for the above
-[assume _append_helper 
+[assume _append_list
   (lambda (v x) 
     (if (is_empty v) 
       (list x) 
       (pair 
         (first v) 
-        (append (rest v) x))))]
+        (_append_list (rest v) x))))]
 
 ; Concatenates two lists, arrays, or vectors
 ; Parameters
