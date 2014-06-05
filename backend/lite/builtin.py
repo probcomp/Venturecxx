@@ -105,6 +105,13 @@ def grad_times(args, direction):
   assert len(args) == 2, "Gradient only available for binary multiply"
   return [direction*args[1], direction*args[0]]
 
+def careful_exp(x):
+  try:
+    return math.exp(x)
+  except OverflowError:
+    if x > 0: return float("inf")
+    else: return float("-inf")
+
 builtInSPsList = [
            [ "add",  naryNum(lambda *args: sum(args),
                              sim_grad=lambda args, direction: [direction for _ in args],
@@ -136,7 +143,7 @@ builtInSPsList = [
            [ "cos", unaryNum(math.cos, "Returns the %s of its argument") ],
            [ "tan", unaryNum(math.tan, "Returns the %s of its argument") ],
            [ "hypot", binaryNum(math.hypot, "Returns the %s of its arguments") ],
-           [ "exp", unaryNum(math.exp, "Returns the %s of its argument") ],
+           [ "exp", unaryNum(careful_exp, "Returns the %s of its argument") ],
            [ "log", unaryNum(math.log, "Returns the %s of its argument") ],
            [ "pow", binaryNum(math.pow, "%s returns its first argument raised to the power of its second argument") ],
            [ "sqrt", unaryNum(math.sqrt, "Returns the %s of its argument") ],
@@ -232,7 +239,7 @@ builtInSPsList = [
                                       v.AnyType()) ],
 
            [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [v.CountType(), v.ProbabilityType()], v.CountType()) ],
-           [ "flip", typed_nr(discrete.FlipOutputPSP(), [v.ProbabilityType()], v.BoolType(), min_req_args=0) ],
+           [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.BoolType(), min_req_args=0) ],
            [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.NumberType(), min_req_args=0) ],
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
 

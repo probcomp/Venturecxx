@@ -13,29 +13,10 @@ import serialize
 class DiscretePSP(RandomPSP):
   def logDensityBound(self, _x, _args): return 0
 
-class FlipOutputPSP(DiscretePSP):
-  def simulate(self,args):
-    p = args.operandValues[0] if args.operandValues else 0.5
-    return random.random() < p
-    
-  def logDensity(self,val,args):
-    p = args.operandValues[0] if args.operandValues else 0.5
-    if val: return extendedLog(p)
-    else: return extendedLog(1 - p)
-
-  def enumerateValues(self,args):
-    p = args.operandValues[0] if args.operandValues else 0.5
-    if p == 1: return [True]
-    elif p == 0: return [False]
-    else: return [True,False]
-
-  def description(self,name):
-    return "  (%s p) returns true with probability p and false otherwise.  If omitted, p is taken to be 0.5." % name
-
 class BernoulliOutputPSP(DiscretePSP):
   def simulate(self,args):
     p = args.operandValues[0] if args.operandValues else 0.5
-    return int(random.random() < p)
+    return random.random() < p
     
   def logDensity(self,val,args):
     p = args.operandValues[0] if args.operandValues else 0.5
