@@ -1,5 +1,5 @@
 import matplotlib
-import pylab
+from matplotlib import pyplot as plt
 import argparse
 import os
 
@@ -10,6 +10,9 @@ import numpy as np
 import numpy.random as npr
 
 from contexts import Timer
+
+from IPython.core.debugger import Pdb
+import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument('input_dir', type=str)
@@ -23,6 +26,9 @@ parser.add_argument('--plot', action='store_true')
 parser.add_argument('--frames', type=int, default=100000)
 parser.add_argument('--samples', type=int, default=10)
 args = parser.parse_args()
+
+def set_trace():
+  Pdb(color_scheme='LightBG').set_trace(sys._getframe().f_back)
 
 # Read and pre-process the data.
 def read_combined_frame():
@@ -56,15 +62,17 @@ def read_combined_frame():
 # Plot samples along with the ground truth.
 def plot_pose(figname, xlim, ylim, xs=None, ys=None, headings=None, clean_gps_pose=None):
     with Timer(figname) as t:
+        # set_trace()
         spu.plot_scene_scatter(xs, ys, headings, clean_gps_pose)
-        pylab.gca().set_xlim(xlim)
-        pylab.gca().set_ylim(ylim)
-        pylab.savefig(figname)
-        pylab.close()
+        plt.xlim(xlim)
+        plt.ylim(ylim)
+        plt.savefig(figname, format = 'pdf')
+        plt.close()
         pass
     return
 
 print "Loading data"
+# set_trace()
 combined_frame, clean_gps_frame, dataset_name = read_combined_frame()
 
 xlim = (-10, 10)
@@ -161,7 +169,7 @@ def runRandomWalk():
           if not np.isnan(combined_frame_row['x']):
               gps_frame_count += 1
               if args.plot:
-                plot_pose(dataset_name + "_raw_%s.png" % gps_frame_count, xlim, ylim, xs=xs, ys=ys, headings=headings, clean_gps_pose=clean_gps)
+                plot_pose(dataset_name + "_raw_%s.pdf" % gps_frame_count, xlim, ylim, xs=xs, ys=ys, headings=headings, clean_gps_pose=clean_gps)
               out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
       
       times.append(t.elapsed)
@@ -176,8 +184,16 @@ def runRandomWalk():
   
   return out_rows
 
+def runApproach2():
+  '''
+  Run approach 2 as outlined in the document
+  '''
 
-approaches = dict(random_walk = runRandomWalk)
+
+
+approaches = dict(random_walk = runRandomWalk,
+                  version_2 = runApproach2,
+                  version_3 = runApproach3)
 approach = approaches[args.version]
 
 def ensure(path):
@@ -190,6 +206,7 @@ def writeCSV(filename, cols, rows):
     f.write(','.join(cols) + '\n')
     for row in rows:
       f.write(','.join(map(str, row)) + '\n')
+
 
 out_rows = approach()
 out_file = '%s/slam_out_path.csv' % args.output_dir
