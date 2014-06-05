@@ -10,7 +10,7 @@ vehicle_h = 0
 vehicle_L = 0.257717
 # inference
 use_mripl = True
-N_mripls = 4
+N_mripls = 64
 N_particles = 16
 backend = 'puma'
 N_infer = 100
