@@ -15,7 +15,7 @@ import vehicle_simulator as vs
 from contexts import Timer
 
 
-def parse_args():
+def parse_args(args_override=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('input_dir', type=str)
     parser.add_argument('output_dir', type=str)
@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument('--frames', type=int, default=100000)
     parser.add_argument('--samples', type=int, default=10)
     parser.add_argument('--window_size', type=int, default=10)
-    args = parser.parse_args()
+    args = parser.parse_args(args_override)
     return args
 
 def set_trace():
