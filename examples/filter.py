@@ -259,7 +259,8 @@ def runApproach2():
                 print 'infer_str: %s' % infer_str
                 # ripl.infer("(slice default one 50)")
                 ripl.infer(infer_str)
-                ripl.infer('(mh parameters one 1000)')
+                if T < 100:
+                    ripl.infer('(mh parameters one 1000)')
             else:
                 infer_on_scope = lambda T: "(%s %i one 50)" % ('mh', T-1)
                 infer_str = infer_on_scope(T)
