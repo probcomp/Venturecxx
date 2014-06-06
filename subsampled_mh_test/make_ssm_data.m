@@ -39,7 +39,18 @@ figure(2)
 plot(1 : T * N, X(:) - h(:).^2, 'x', 1 : T * N, h(:).^2, 'x')
 
 figure(3)
-plot(reshape(h(1:end-1,:), (T-1)*N, 1), reshape(h(2:end,:), (T-1)*N, 1), 'x')
+plot(reshape(h(1:end-1,:), (T-1)*N, 1), reshape(h(2:end,:), (T-1)*N, 1), 'x', ...
+     [-1, a], [0, 1], 'g', [b, a], [0, 1], 'g', ...
+     [a,a], [0,1], 'k--', [-1,a], [1,1], 'k--')
+ls = findobj(gca, 'type', 'line');
+for i = 1 : length(ls)
+  set(ls(i), 'linewidth', 2)
+end
+xlabel('h_t')
+set(gca,'fontsize',20)
+xlabel('h_t')
+xlabel('h_{t-1}')
+ylabel('h_t')
 %plot(h(1:end-1),h(2:end),'x',[-1, a], [0, 1], [b, a], [0, 1]);
 
 end

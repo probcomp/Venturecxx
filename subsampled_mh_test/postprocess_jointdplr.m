@@ -60,7 +60,8 @@
 load data/input/four_cluster_data2.mat X Xtst Y Ytst
 
 % Load results.
-epss = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.5];
+% epss = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.5];
+epss = [0, 0.01, 0.05, 0.1, 0.3];
 Nepss = length(epss);
 rst_file_prefix = 'data/output/jointdplr/stage_jointdplr_test_four_cluster_N10000';
 fprintf('Loading results...\n')
@@ -102,7 +103,7 @@ figure
 cm = hsv(length(rsts));
 legend_str = cell(Nepss, 1);
 for i = 1 : Nepss
-  plot(rsts(i).ts(100:100:end), rsts(i).avg_acc, 'color', cm(i,:)); hold on
+  plot(rsts(i).ts(100:100:end)/3600, rsts(i).avg_acc, 'color', cm(i,:), 'linewidth', 2); hold on
 %   legend_str{i} = sprintf('\\epsilon = %.2f, T = %d', epss(i), length(rsts(i).ts));
   legend_str{i} = sprintf('\\epsilon = %.2f', epss(i));
   fprintf('i: %d, tables: %d\n', i, size(rsts(i).zCounts{end},1))
@@ -112,17 +113,17 @@ hold off
 set(gca, 'fontSize', 14)
 legend(legend_str)
 set(gca, 'fontSize', 20)
-xlabel('Time (second)');
+xlabel('Time (hour)');
 ylabel('Average Accuracy');
 
 % Prediction.
 figure
 plot(X(1,Y==0), X(2,Y==0), 'rx', X(1,Y==1), X(2,Y==1), 'gx')
 
-i = 6;
+i = find(epss == 0.3);
 figure
-Yp = rsts(i).ys_pred(:,end)';
-% Yp = mean(rsts(i).ys_pred, 2)' > 0.5;
+% Yp = rsts(i).ys_pred(:,end)';
+Yp = mean(rsts(i).ys_pred, 2)' > 0.5;
 plot(Xtst(1, Yp == 0 & Ytst == 0), Xtst(2,Yp == 0 & Ytst == 0), 'rx', ...
   Xtst(1, Yp == 1 & Ytst == 1), Xtst(2,  Yp == 1 & Ytst == 1), 'gx', ...
   Xtst(1, Yp == 0 & Ytst == 1), Xtst(2,  Yp == 0 & Ytst == 1), 'kx', ...
@@ -131,10 +132,10 @@ plot(Xtst(1, Yp == 0 & Ytst == 0), Xtst(2,Yp == 0 & Ytst == 0), 'rx', ...
 
 %%
 
-d = 3;
-w = zeros(length(ws), 3);
-for i = 1 : length(ws)
-  idx = find(double(zCounts{i}(:,1)) == d);
-  w(i,:) = ws{i}(idx,:);
-end
+% d = 3;
+% w = zeros(length(ws), 3);
+% for i = 1 : length(ws)
+%   idx = find(double(zCounts{i}(:,1)) == d);
+%   w(i,:) = ws{i}(idx,:);
+% end
 

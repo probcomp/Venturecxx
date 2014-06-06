@@ -50,3 +50,11 @@ legend(legend_str)
 set(gca, 'fontSize', 20)
 xlabel('Time (hour)');
 ylabel('Log (Risk)');
+
+%% Compute prediction 
+% p_pred = zeros(size(ld.Ytst));
+% for i = 1 : length(ld.Ytst)
+%   p_pred(i) = mean(1 ./ (1 + exp(-(ws * [1;ld.Xtst_pca(:,i)]))));
+% end
+
+
