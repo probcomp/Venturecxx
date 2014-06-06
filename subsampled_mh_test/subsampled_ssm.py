@@ -125,11 +125,10 @@ def main(data_source_, epsilon_, N_):
     if (n + 1) % 10 == 0:
       start = max(1, n - 9)
       end = n
-      step_h = 1
       if not use_austerity:
-        infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h})'.format(start = start, end = end, P = P, step_h = step_h)
+        infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1)'.format(start = start, end = end, P = P)
       else:
-        infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h} true true)'.format(start = start, end = end, P = P, step_h = step_h)
+        infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1 true true)'.format(start = start, end = end, P = P)
       v.infer(infer_str)
 
   t_obs = time.clock() - tic
@@ -204,19 +203,20 @@ def main(data_source_, epsilon_, N_):
 
     # PGibbs for h
     #start = np.random.randint(N - pLen + 1)
-    end = min(N-1, start + pLen - 1)
-    if not use_austerity:
-      #infer_str = '(pgibbs h ordered {P} 1)'.format(P = P)
-      infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h})'.format(start = start, end = end, P = P, step_h = step_h)
-    else:
-      #infer_str = '(pgibbs h ordered {P} 1 true true)'.format(P = P)
-      infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h} true true)'.format(start = start, end = end, P = P, step_h = step_h)
-    start += pLen
-    if start >= N:
-      start = 1
-
     t_sample_start = time.clock()
-    v.infer(infer_str)
+    for _ in step_h:
+      end = min(N-1, start + pLen - 1)
+      if not use_austerity:
+        #infer_str = '(pgibbs h ordered {P} 1)'.format(P = P)
+        infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1)'.format(start = start, end = end, P = P)
+      else:
+        #infer_str = '(pgibbs h ordered {P} 1 true true)'.format(P = P)
+        infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1 true true)'.format(start = start, end = end, P = P)
+      start += pLen
+      if start >= N:
+        start = 1
+
+      v.infer(infer_str)
     t_h = time.clock() - t_sample_start
     t_samph += t_h
 
