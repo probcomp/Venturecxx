@@ -245,7 +245,21 @@ def runApproach2():
                 ripl.observe("(normal y%i noisy_gps_y_std)"%T, noisy_gps_y, label="y_data%i"%T)
                 #ripl.observe("(normal heading %f)" % noisy_gps_stds['heading'], noisy_gps_heading)
 
-                ripl.infer("(slice default one 50)")
+                def get_infer_str(T, k, type='mh'):
+                    infer_on_scope = lambda T: "(%s %i one 50)" % (type, T)
+                    Ts = range(T)[-k+1:]
+                    infer_on_scopes = map(infer_on_scope, Ts)
+                    forward_infer = ' '.join(infer_on_scopes)
+                    backward_infer = ' '.join(infer_on_scopes[::-1])
+                    make_cycle = lambda infer_strs, N: "(cycle (%s) %i)" % (' '.join(infer_strs), N)
+                    infer_strs = (backward_infer, forward_infer)
+                    cycle_on_Ts = make_cycle(infer_strs, 1)
+                    return cycle_on_Ts
+                infer_str = get_infer_str(T, k)
+                print 'infer_str: %s' % infer_str
+                # ripl.infer("(slice default one 50)")
+                ripl.infer(infer_str)
+                ripl.infer('(mh parameters one 1000)')
 
             xs.append(float(ripl.sample("x%i"%T)))
             ys.append(float(ripl.sample("y%i"%T)))
