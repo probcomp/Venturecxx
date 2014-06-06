@@ -51,6 +51,9 @@ def read_combined_frame():
         combined_frame = combined_frame.truncate(after=args.max_time)
         clean_gps_frame = clean_gps_frame.truncate(after=args.max_time)
 
+    combined_frame = combined_frame.head(args.frames)
+    clean_gps_frame = clean_gps_frame.head(args.frames)
+
     return combined_frame, clean_gps_frame
 
 # Plot samples along with the ground truth.
@@ -91,7 +94,7 @@ def runRandomWalk():
 
     ripl = venture.shortcuts.make_church_prime_ripl()
 
-    row_num = min(args.frames, len(combined_frame))
+    row_num = len(combined_frame)
     print "Using %d row" % row_num
     row_is = range(row_num)
 
@@ -177,7 +180,7 @@ def runApproach2():
   
     ripl = venture.shortcuts.make_church_prime_ripl()
 
-    row_num = min(args.frames, len(combined_frame))
+    row_num = len(combined_frame)
     print "Using %d row" % row_num
     row_is = range(row_num)
 
