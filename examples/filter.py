@@ -223,7 +223,7 @@ def runApproach2():
                     ripl.freeze("lx%i"%(T-k+1))
                     ripl.freeze("ly%i"%(T-k+1))
                     # forget the observations if they exist
-                    if not np.isnan(combined_frame.irow(T-k+1)['x'])
+                    if not np.isnan(combined_frame.irow(T-k+1)['x']):
                         ripl.forget("x_data%i"%(T-k+1))
                         ripl.forget("y_data%i"%(T-k+1))
 
@@ -231,7 +231,7 @@ def runApproach2():
                     ripl.forget("lx%i"%(T-k))
                     ripl.forget("ly%i"%(T-k))
 
-                print ripl.list_directives()[-5:],'\n'
+                # print ripl.list_directives()[-5:],'\n'
 
             # we have noisy gps observations, let's condition on them!
             if not np.isnan(combined_frame_row['x']):
@@ -273,7 +273,7 @@ def runApproach2():
         # Make the mp4 movie.
         mp4_name = dataset_name + '.mp4'
         template_str = dataset_name + '_raw_%1d.png'
-        os.system('avconv -y -r 15 -b 1800 -i %s %s' % (template_str, mp4_name))
+        os.system('avconv -y -r 15 -i %s %s' % (template_str, mp4_name))
   
     return out_rows
 
