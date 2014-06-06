@@ -271,7 +271,118 @@ def runApproach2():
     return out_rows
 
 def runApproach3():
-    pass
+    '''
+    run approach 3 as outlined in doc
+    '''
+    # Parameters for the random walk prior with Gaussian steps.
+    k = args.window_size
+    ripl = venture.shortcuts.make_church_prime_ripl()
+    print "Using %d row" % len(combined_frame)
+    N_samples = args.samples
+    print "Generating %d samples per time step" % N_samples
+
+    times = []
+    out_rows = []
+    gps_frame_count = 0
+    for T, (_T, combined_frame_row) in enumerate(combined_frame.iterrows()):
+        with Timer('row %s' % T) as t:
+            clean_gps = get_clean_gps(combined_frame_row)
+            xs = []
+            ys = []
+            headings = []
+            x_datas = []
+            y_datas = []
+
+            if T is 0:
+                # assumes on model parameters; put them in their own scope
+                ripl.assume("noisy_gps_x_std", "(gamma 1 20)")
+                ripl.assume("noisy_gps_y_std", "(gamma 1 20)")
+                ripl.assume("noisy_motion_heading_std", "(gamma 1 1)")
+                ripl.assume("noisy_motion_x_std", "(gamma 1 1)")
+                ripl.assume("noisy_motion_y_std", "(gamma 1 1)")
+
+                # intial position
+                ripl.assume("x0", "(normal 0 1)", label="lx0")
+                ripl.assume("y0", "(normal 0 1)", label="ly0")
+                # initial heading
+                ripl.assume("heading0", "(uniform_continuous -3.14 3.14)",
+                            label = "lh0")
+
+            else:
+                # grab steering, velocity, heading
+                control_steer = combined_frame_row['Steering']
+                if np.isnan(control_steer): control_steer = 0
+                control_velocity = combined_frame_row['Velocity']
+                if np.isnan(control_velocity): control_velocity = 0
+                dt = combined_frame_row['dt']
+                # assume heading
+                heading_assume = ('(normal (+ (* %f %f) heading%i) noisy_motion_heading_std)' 
+                                  % (dt, control_steer, T-1))
+                ripl.assume("heading%i"%T, heading_assume, "lh%i"%T)
+                # x and y
+                linearized_offset = dt * control_velocity
+                x_assume = ('(normal (+ (* %f (cos heading%i))) noisy_motion_x_std)' 
+                            % (linearized_offset, T-1))
+                ripl.assume("x%i"%T, x_assume, "lx%i"%T)
+                y_assume = ('(normal (+ (* %f (sin heading%i))) noisy_motion_y_std)' 
+                            % (linearized_offset, T-1))
+                ripl.assume("y%i"%T, y_assume, "ly%i"%T)
+
+                if T >= (k - 1):
+                    ripl.freeze("lx%i"%(T-k+1))
+                    ripl.freeze("ly%i"%(T-k+1))
+                    ripl.freeze("lh%i"%(T-k+1))
+                    # forget the observations if they exist
+                    if not np.isnan(combined_frame.irow(T-k+1)['x']):
+                        ripl.forget("x_data%i"%(T-k+1))
+                        ripl.forget("y_data%i"%(T-k+1))
+
+                if T >= k:
+                    ripl.forget("lx%i"%(T-k))
+                    ripl.forget("ly%i"%(T-k))
+                    ripl.forget("lh%i"%(T-k))
+
+                # print ripl.list_directives()[-5:],'\n'
+
+            # we have noisy gps observations, let's condition on them!
+            if not np.isnan(combined_frame_row['x']):
+                noisy_gps_x = combined_frame_row['x']
+                noisy_gps_y = combined_frame_row['y']
+                noisy_gps_heading = combined_frame_row['heading']
+                print 'time: ',T
+                print "NOISY: " + str((noisy_gps_x, noisy_gps_y, noisy_gps_heading))
+
+                ripl.observe("(normal x%i noisy_gps_x_std)"%T, noisy_gps_x, label="x_data%i"%T )
+                ripl.observe("(normal y%i noisy_gps_y_std)"%T, noisy_gps_y, label="y_data%i"%T)
+                #ripl.observe("(normal heading %f)" % noisy_gps_stds['heading'], noisy_gps_heading)
+
+                ripl.infer("(slice default one 50)")
+
+            xs.append(float(ripl.sample("x%i"%T)))
+            ys.append(float(ripl.sample("y%i"%T)))
+            headings.append(float(ripl.sample("heading%i"%T)))
+
+            xs = np.array(xs)
+            ys = np.array(ys)
+            headings = np.array(headings)
+
+            print '\n xs:',xs,'ys',ys,'\n'
+
+            # if the frame has gps signal, plot it
+            if not np.isnan(combined_frame_row['x']):
+                gps_frame_count += 1
+                if args.plot:
+                    filename = dataset_name + "_raw_%s.png" % gps_frame_count
+                    plot_pose(filename, xlim, ylim, xs=xs, ys=ys,
+                              headings=headings, clean_gps_pose=clean_gps)
+                out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
+      
+        times.append(t.elapsed)
+
+    if args.plot:
+        make_movie(dataset_name)
+
+    return out_rows
 
 
 if __name__ == '__main__':
