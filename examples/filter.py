@@ -79,10 +79,25 @@ def ensure(path):
         os.makedirs(path)
 
 def writeCSV(filename, cols, rows):
+    ensure(filename)
     with open(filename, 'w') as f:
         f.write(','.join(cols) + '\n')
         for row in rows:
             f.write(','.join(map(str, row)) + '\n')
+
+def write_landmarks_file(output_dir, landmarks_data=((0,0),)):
+    landmarks_file = '%s/slam_out_landmarks.csv' % output_dir
+    landmarks_cols = ['SLAMBeaconX','SLAMBeaconY']
+    writeCSV(landmarks_file, landmarks_cols, landmarks_data)
+    print "Wrote landmarks data to " + landmarks_file
+    return
+
+def write_path_file(output_dir, path_data):
+    filename = '%s/slam_out_path.csv' % output_dir
+    column_names = ['SLAMGPSTime', 'SLAMLat', 'SLAMLon']
+    writeCSV(filename, column_names, path_data)
+    print "Wrote path data to " + filename
+    return
 
 def get_clean_gps(row):
     return (row['clean_x'], row['clean_y'], row['clean_heading'])
@@ -411,35 +426,22 @@ def runApproach3():
 
 if __name__ == '__main__':
     args = parse_args()
-    print "Loading data"
     # set_trace()
     dataset_name = args.dataset_name
+
+    print "Loading data"
     combined_frame = read_combined_frame(args)
 
     xlim = (-10, 10)
     ylim = (-5, 5)
-    #xlim, ylim = get_lims(clean_gps_frame)
-
     print "Set plot limits: " + str((xlim, ylim))
-
-    out_cols = ['SLAMGPSTime', 'SLAMLat', 'SLAMLon']
-
 
     approaches = dict(random_walk = runRandomWalk,
                       version_2 = runApproach2,
                       version_3 = runApproach3)
     approach = approaches[args.version]
-
     out_rows, ripl = approach()
-    out_file = '%s/slam_out_path.csv' % args.output_dir
-    ensure(out_file)
-    writeCSV(out_file, out_cols, out_rows)
 
-    print "Wrote output to " + out_file
-
-    landmarks_cols = ['SLAMBeaconX','SLAMBeaconY']
-    landmarks_rows = [(0, 0)]
-    landmarks_file = '%s/slam_out_landmarks.csv' % args.output_dir
-    writeCSV(landmarks_file, landmarks_cols, landmarks_rows)
-
-    print "Wrote landmarks to " + landmarks_file
+    write_path_file(args.output_dir, out_rows)
+    landmarks_data=((0,0),)
+    write_landmarks_file(args.output_dir, landmarks_data)
