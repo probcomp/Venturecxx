@@ -1,4 +1,5 @@
 import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import argparse
 import os
@@ -37,27 +38,21 @@ def read_combined_frame():
     use_noisy = not args.ground
     which_data = 'noisy' if use_noisy else 'ground'
     
+    gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(args.input_dir)
+    combined_frame = vs.combine_frames(control_frame, gps_frame)
+
     gps_to_clean_gps = dict(GPSLat='clean_y', GPSLon='clean_x', Orientation='clean_heading')
     clean_gps_frame_config = dict(filename='slam_gps.csv', index_col='TimeGPS',
         colname_map=gps_to_clean_gps)
-    
-    gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(args.input_dir)
-    combined_frame = vs.combine_frames(control_frame, gps_frame)
-    slength = len(combined_frame['i'])
-    empty = [np.nan for i in range(slength)]
-    combined_frame['clean_x'] = empty
-    combined_frame['clean_y'] = empty
-    combined_frame['clean_heading'] = empty
-    if args.max_time is not None:
-        combined_frame = combined_frame[combined_frame.index < args.max_time]
-    
     clean_gps_frame = None
     if args.clean_dir is not None:
         clean_gps_frame = vs.read_frame(dirname=args.clean_dir, **clean_gps_frame_config)
-        for i in range(len(clean_gps_frame)):
-            combined_frame.ix[clean_gps_frame.irow(i).name,'clean_x'] = clean_gps_frame.irow(i)['clean_x']
-            combined_frame.ix[clean_gps_frame.irow(i).name,'clean_y'] = clean_gps_frame.irow(i)['clean_y']
-            combined_frame.ix[clean_gps_frame.irow(i).name,'clean_heading'] = clean_gps_frame.irow(i)['clean_heading']
+        combined_frame = combined_frame.join(clean_gps_frame)
+
+    if args.max_time is not None:
+        combined_frame = combined_frame.truncate(after=args.max_time)
+        clean_gps_frame = clean_gps_frame.truncate(after=args.max_time)
+
     return combined_frame, clean_gps_frame, dataset_name
 
 # Plot samples along with the ground truth.
