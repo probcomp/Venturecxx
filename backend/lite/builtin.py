@@ -17,6 +17,7 @@ import scope
 import eval_sps
 import value as v
 import env
+from utils import careful_exp
 
 # The types in the value module are generated programmatically, so
 # pylint doesn't find out about them.
@@ -107,13 +108,6 @@ def grad_times(args, direction):
 
 def grad_div(args, direction):
   return [direction * (1 / args[1]), direction * (- args[0] / (args[1] * args[1]))]
-
-def careful_exp(x):
-  try:
-    return math.exp(x)
-  except OverflowError:
-    if x > 0: return float("inf")
-    else: return float("-inf")
 
 def grad_list(args, direction):
   if direction == 0:

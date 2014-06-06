@@ -78,6 +78,13 @@ def logDensityMVNormal(x, mu, sigma):
             -.5*len(sigma)*np.log(np.pi)-.5*np.log(abs(npla.det(sigma)))
   return numpy_force_number(answer)
 
+def careful_exp(x):
+  try:
+    return math.exp(x)
+  except OverflowError:
+    if x > 0: return float("inf")
+    else: return float("-inf")
+
 class FixedRandomness(object):
   """A Python context manager for executing (stochastic) code repeatably
 against fixed randomness.
