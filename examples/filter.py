@@ -199,19 +199,23 @@ def runApproach2():
                 # make model assumptions
                 ripl.assume("x0", "(normal 0 1)", label="lx0")
                 ripl.assume("y0", "(normal 0 1)",label="ly0")
+                ripl.assume("heading0", "(uniform_continuous -3.14 3.14)",
+                            label = "lh0")
                 ripl.assume("noisy_gps_x_std", "(gamma 1 1)")
                 ripl.assume("noisy_gps_y_std", "(gamma 1 1)")
-                ripl.assume("heading0", "(uniform_continuous -3.14 3.14)")
+                
 
             else:
                 # set_trace()
                 # assume x value given previous state
                 ripl.assume("x%i"%T, "(normal x%i 0.1)" % (T-1), "lx%i"%T)
                 ripl.assume("y%i"%T, "(normal y%i 0.1)" % (T-1), "ly%i"%T)
-                ripl.assume("heading%i"%T, "(normal heading%i 0.1)" % (T-1))
+                ripl.assume("heading%i"%T, "(normal heading%i 0.1)" % (T-1),
+                            "lh%i"%T)
                 if T >= (k - 1):
                     ripl.freeze("lx%i"%(T-k+1))
                     ripl.freeze("ly%i"%(T-k+1))
+                    ripl.freeze("lh%i"%(T-k+1))
                     # forget the observations if they exist
                     if not np.isnan(combined_frame.irow(T-k+1)['x']):
                         ripl.forget("x_data%i"%(T-k+1))
@@ -220,6 +224,7 @@ def runApproach2():
                 if T >= k:
                     ripl.forget("lx%i"%(T-k))
                     ripl.forget("ly%i"%(T-k))
+                    ripl.forget("lh%i"%(T-k))
 
                 # print ripl.list_directives()[-5:],'\n'
 
