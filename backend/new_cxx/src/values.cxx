@@ -695,8 +695,28 @@ VentureValuePtr VentureSymmetricMatrix::neg() const {
 
 VentureValuePtr VentureNumber::operator-(const VentureValuePtr & rhs) const {
   const shared_ptr<VentureNumber> rhsVal = dynamic_pointer_cast<VentureNumber>(rhs);
-  assert(rhsVal != NULL);
-  return VentureValuePtr(new VentureNumber(this->x-rhsVal->x));
+  if(rhsVal != NULL)
+    return VentureValuePtr(new VentureNumber(this->x-rhsVal->x));
+  const shared_ptr<VentureVector> rhsValVector = dynamic_pointer_cast<VentureVector>(rhs);
+  if(rhsValVector != NULL) {
+    VectorXd x(rhsValVector->v.size());
+    for(int i = 0; i < rhsValVector->v.size(); ++i) {
+      x(i) = this->x-rhsValVector->v(i);
+    }
+    return VentureVector::makeValue(x);
+  }
+  const shared_ptr<VentureMatrix> rhsValMatrix = dynamic_pointer_cast<VentureMatrix>(rhs);
+  if(rhsValMatrix != NULL) {
+    const MatrixXd& m = rhsValMatrix->m;
+    MatrixXd x(m.rows(), m.cols());
+    for (int i = 0; i < m.rows(); ++i) { 
+      for(int j = 0; j < m.cols(); ++j) {
+        x(i,j) = this->x-m(i,j);
+      }
+    }
+    return VentureMatrix::makeValue(x);
+  }
+  throw "error: VentureNumber cannot add with "+::toString(rhs);
 }
 
 VentureValuePtr VentureArray::operator-(const VentureValuePtr & rhs) const {
@@ -713,15 +733,24 @@ VentureValuePtr VentureArray::operator-(const VentureValuePtr & rhs) const {
 }
 
 VentureValuePtr VentureVector::operator-(const VentureValuePtr & rhs) const {
-  // cout << "rhs = " << ::toString(rhs) << endl;
-  const shared_ptr<VentureVector> rhsVal = dynamic_pointer_cast<VentureVector>(rhs);
-  assert(rhsVal != NULL);
-  assert(this->v.size() == rhsVal->v.size());
-  VectorXd x(v.size());
-  for (int i = 0; i < v.size(); ++i) { 
-    x(i) = v(i)-rhsVal->v(i);
+  const shared_ptr<VentureNumber> rhsValNumber = dynamic_pointer_cast<VentureNumber>(rhs);
+  if(rhsValNumber != NULL) { 
+    VectorXd x(v.size());
+    for(int i = 0; i < v.size(); ++i) {
+      x(i) = v(i)-rhsValNumber->getDouble();
+    }
+    return VentureVector::makeValue(x);
   }
-  return VentureVector::makeValue(x);
+  const shared_ptr<VentureVector> rhsVal = dynamic_pointer_cast<VentureVector>(rhs);
+  if(rhsVal != NULL) {
+    assert(this->v.size() == rhsVal->v.size());
+    VectorXd x(v.size());
+    for (int i = 0; i < v.size(); ++i) { 
+      x(i) = v(i)-rhsVal->v(i);
+    }
+    return VentureVector::makeValue(x);
+  }
+  assert(rhsVal != NULL);
 }
 
 VentureValuePtr VentureMatrix::operator-(const VentureValuePtr & rhs) const {

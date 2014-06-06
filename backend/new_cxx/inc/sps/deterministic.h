@@ -15,6 +15,7 @@ struct SubOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   string toString() const {return "SubOutputPSP"; }
+  vector<VentureValuePtr> gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const;
 };
 
 struct MulOutputPSP : PSP

@@ -64,7 +64,7 @@ vector<VentureValuePtr> AddOutputPSP::gradientOfSimulate(const shared_ptr<Args> 
 VentureValuePtr SubOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("minus", args, 2);
-  return shared_ptr<VentureNumber>(new VentureNumber(args->operandValues[0]->getDouble() - args->operandValues[1]->getDouble()));
+  return args->operandValues[0]- args->operandValues[1];
 }
 
 VentureValuePtr MulOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -75,6 +75,29 @@ VentureValuePtr MulOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
     prod = prod*args->operandValues[i];
   }
   return prod;
+}
+
+vector<VentureValuePtr> SubOutputPSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
+  vector<VentureValuePtr> grad;
+  if(isinstance<VentureNumber>(direction))
+  {
+    shared_ptr<VentureNumber> direction_number = dynamic_pointer_cast<VentureNumber>(direction);
+    assert(direction_number != NULL);
+    grad.push_back(VentureNumber::makeValue(direction_number->getDouble()));
+    grad.push_back(VentureNumber::makeValue(0-direction_number->getDouble()));
+    return grad;
+  } 
+  else if(isinstance<VentureVector>(direction))
+  {
+    VectorXd direction_vector = dynamic_pointer_cast<VentureVector>(direction)->getVector();
+    grad.push_back(VentureVector::makeValue(direction_vector));
+    grad.push_back(VentureVector::makeValue(direction_vector)->neg());
+    return grad;
+  }
+  else
+  {
+    throw "unrecognized arg type for gradientOfSimulate of SubOutputPSP";
+  }
 }
 
 vector<VentureValuePtr> MulOutputPSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const {
@@ -125,10 +148,11 @@ VentureValuePtr DivOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 
 VentureValuePtr LogisticOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  checkArgsLength("logistic", args, 2);
+  checkArgsLength("logistic", args, 3);
   VectorXd w = dynamic_pointer_cast<VentureVector>(args->operandValues[0])->getVector();
   VectorXd x = dynamic_pointer_cast<VentureVector>(args->operandValues[1])->getVector();
-  double z = 1.0/(1+exp(0-w.dot(x)));
+  double bias = dynamic_pointer_cast<VentureNumber>(args->operandValues[2])->getDouble();
+  double z = 1.0/(1+exp(0-w.dot(x)-bias));
   if(z >= 1-1e-8)
     z = z-1e-8;
   else if(z <= 1e-8)
@@ -138,13 +162,17 @@ VentureValuePtr LogisticOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
 
 vector<VentureValuePtr> LogisticOutputPSP::gradientOfSimulate(const shared_ptr<Args> args, const VentureValuePtr value, const VentureValuePtr direction) const
 {
-  checkArgsLength("logistic", args, 2);
+  checkArgsLength("logistic", args, 3);
+  assert(isinstance<VentureNumber>(direction));
+  double d = direction->getDouble();
   VectorXd w = dynamic_pointer_cast<VentureVector>(args->operandValues[0])->getVector();
   VectorXd x = dynamic_pointer_cast<VentureVector>(args->operandValues[1])->getVector();
-  double z = 1.0/(1+exp(0-w.dot(x)));
+  double bias = dynamic_pointer_cast<VentureNumber>(args->operandValues[2])->getDouble();
+  double z = 1.0/(1+exp(0-w.dot(x)-bias));
   vector<VentureValuePtr> grad;
-  grad.push_back(VentureVector::makeValue(x*(z*(1-z))));
-  grad.push_back(VentureVector::makeValue(w*(z*(1-z))));
+  grad.push_back(VentureVector::makeValue(x*(d*z*(1-z))));
+  grad.push_back(VentureVector::makeValue(w*(d*z*(1-z))));
+  grad.push_back(VentureNumber::makeValue(d*z*(1-z)));
   return grad;
 }
 
