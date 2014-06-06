@@ -34,10 +34,6 @@ def set_trace():
 
 # Read and pre-process the data.
 def read_combined_frame():
-    dataset_name = args.dataset_name
-    use_noisy = not args.ground
-    which_data = 'noisy' if use_noisy else 'ground'
-    
     gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(args.input_dir)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
 
@@ -53,7 +49,7 @@ def read_combined_frame():
         combined_frame = combined_frame.truncate(after=args.max_time)
         clean_gps_frame = clean_gps_frame.truncate(after=args.max_time)
 
-    return combined_frame, clean_gps_frame, dataset_name
+    return combined_frame, clean_gps_frame
 
 # Plot samples along with the ground truth.
 def plot_pose(figname, xlim, ylim, xs=None, ys=None, headings=None, clean_gps_pose=None):
@@ -69,7 +65,8 @@ def plot_pose(figname, xlim, ylim, xs=None, ys=None, headings=None, clean_gps_po
 
 print "Loading data"
 # set_trace()
-combined_frame, clean_gps_frame, dataset_name = read_combined_frame()
+dataset_name = args.dataset_name
+combined_frame, clean_gps_frame = read_combined_frame()
 
 xlim = (-10, 10)
 ylim = (-5, 5)
