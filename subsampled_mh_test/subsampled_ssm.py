@@ -90,7 +90,7 @@ def main(data_source_, epsilon_, N_):
   tag_austerity = "submh_%.3f" % epsilon if use_austerity else "mh"
 
   # jointdplr_mnist_mh or jointdplr_mnist_submh
-  tag = "_".join(["ssm", data_source, tag_N, tag_austerity])
+  tag = "_".join(["ssm_init", data_source, tag_N, tag_austerity])
 
   stage_file = 'data/output/ssm/stage_'+tag
   result_file = 'data/output/ssm/result_'+tag
@@ -121,6 +121,17 @@ def main(data_source_, epsilon_, N_):
     if (n + 1) % round(N / 10) == 0:
       print "Processing %d/%d observations." % (n + 1, N)
     v.observe('(x %d)' % n, X[n])
+
+    if (n + 1) % 10 == 0:
+      start = max(1, n - 9)
+      end = n
+      step_h = 1
+      if not use_austerity:
+        infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h})'.format(start = start, end = end, P = P, step_h = step_h)
+      else:
+        infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h} true true)'.format(start = start, end = end, P = P, step_h = step_h)
+      v.infer(infer_str)
+
   t_obs = time.clock() - tic
   print "It takes", t_obs, "seconds to load observations."
 
@@ -142,25 +153,26 @@ def main(data_source_, epsilon_, N_):
 
 
   # Run one sweep
-  print "Running the first sweep"
-  start = 1
-  tic = time.clock()
-  while True:
-    if (start - 1) % round(N / 10) == 0:
-      print "Sampling %d/%d h's." % (start, N)
+  #print "Running the first sweep"
+  #start = 1
+  #tic = time.clock()
+  #while True:
+  #  if (start - 1) % round(N / 10) == 0:
+  #    print "Sampling %d/%d h's." % (start, N)
 
-    end = min(N-1, start + pLen - 1)
-    if not use_austerity:
-      #infer_str = '(pgibbs h ordered {P} 1)'.format(P = P)
-      infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h})'.format(start = start, end = end, P = P, step_h = step_h)
-    else:
-      #infer_str = '(pgibbs h ordered {P} 1 true true)'.format(P = P)
-      infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h} true true)'.format(start = start, end = end, P = P, step_h = step_h)
-    start += pLen
-    if start >= N:
-      break
-  t_firstsweep = time.clock() - tic
-  print "It takes", t_obs, "seconds to run the first sweep."
+  #  end = min(N-1, start + pLen - 1)
+  #  if not use_austerity:
+  #    #infer_str = '(pgibbs h ordered {P} 1)'.format(P = P)
+  #    infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h})'.format(start = start, end = end, P = P, step_h = step_h)
+  #  else:
+  #    #infer_str = '(pgibbs h ordered {P} 1 true true)'.format(P = P)
+  #    infer_str = '(pgibbs h (ordered_range {start} {end}) {P} {step_h} true true)'.format(start = start, end = end, P = P, step_h = step_h)
+  #  v.infer(infer_str)
+  #  start += pLen
+  #  if start >= N:
+  #    break
+  #t_firstsweep = time.clock() - tic
+  #print "It takes", t_obs, "seconds to run the first sweep."
 
   t_start = time.clock()
   t_h_cum = 0
