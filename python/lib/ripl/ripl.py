@@ -351,7 +351,7 @@ Open issues:
         ret_vals = []
         parsed = self._ensure_parsed_expression(proc_expression)
         for i, (args, val) in enumerate(iterable):
-          expr = [parsed] + args
+          expr = [parsed] + [[{"type":"symbol", "value":"quote"}, a] for a in args]
           ret_vals.append(self.observe(expr,val,label+"_"+str(i) if label is not None else None))
         return ret_vals
 
