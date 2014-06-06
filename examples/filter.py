@@ -35,7 +35,7 @@ def set_trace():
     Pdb(color_scheme='LightBG').set_trace(sys._getframe().f_back)
 
 # Read and pre-process the data.
-def read_combined_frame():
+def read_combined_frame(args):
     gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(args.input_dir)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
 
@@ -416,7 +416,7 @@ if __name__ == '__main__':
     print "Loading data"
     # set_trace()
     dataset_name = args.dataset_name
-    combined_frame, clean_gps_frame = read_combined_frame()
+    combined_frame = read_combined_frame(args)
 
     xlim = (-10, 10)
     ylim = (-5, 5)
