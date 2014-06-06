@@ -165,7 +165,7 @@ def runRandomWalk():
     if args.plot:
         make_movie(dataset_name)
 
-    return out_rows
+    return out_rows, ripl
 
 def runApproach2():
     '''
@@ -292,7 +292,7 @@ def runApproach2():
     if args.plot:
         make_movie(dataset_name)
 
-    return out_rows
+    return out_rows, ripl
 
 def runApproach3():
     '''
@@ -406,7 +406,7 @@ def runApproach3():
     if args.plot:
         make_movie(dataset_name)
 
-    return out_rows
+    return out_rows, ripl
 
 
 if __name__ == '__main__':
@@ -430,7 +430,7 @@ if __name__ == '__main__':
                       version_3 = runApproach3)
     approach = approaches[args.version]
 
-    out_rows = approach()
+    out_rows, ripl = approach()
     out_file = '%s/slam_out_path.csv' % args.output_dir
     ensure(out_file)
     writeCSV(out_file, out_cols, out_rows)
