@@ -155,7 +155,9 @@ def runRandomWalk():
             if not np.isnan(combined_frame_row['x']):
                 gps_frame_count += 1
                 if args.plot:
-                    plot_pose(dataset_name + "_raw_%s.png" % gps_frame_count, xlim, ylim, xs=xs, ys=ys, headings=headings, clean_gps_pose=clean_gps)
+                    filename = dataset_name + "_raw_%s.png" % gps_frame_count
+                    plot_pose(filename, xlim, ylim, xs=xs, ys=ys,
+                            headings=headings, clean_gps_pose=clean_gps)
                 out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
       
         times.append(t.elapsed)
@@ -249,7 +251,8 @@ def runApproach2():
             if not np.isnan(combined_frame_row['x']):
                 gps_frame_count += 1
                 if args.plot:
-                    plot_pose(dataset_name + "_raw_%s.png" % gps_frame_count, xlim, ylim, xs=xs, ys=ys,
+                    filename = dataset_name + "_raw_%s.png" % gps_frame_count
+                    plot_pose(filename, xlim, ylim, xs=xs, ys=ys,
                               headings=headings, clean_gps_pose=clean_gps)
                 out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
       
