@@ -260,6 +260,12 @@ def runApproach2():
                 # ripl.infer("(slice default one 50)")
                 ripl.infer(infer_str)
                 ripl.infer('(mh parameters one 1000)')
+            else:
+                infer_on_scope = lambda T: "(%s %i one 50)" % ('mh', T-1)
+                infer_str = infer_on_scope(T)
+                print 'ELSE: infer_str: %s' % infer_str
+                ripl.infer(infer_str)
+
 
             xs.append(float(ripl.sample("x%i"%T)))
             ys.append(float(ripl.sample("y%i"%T)))
