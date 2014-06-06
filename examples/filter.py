@@ -70,19 +70,16 @@ def make_movie(dataset_name):
     os.system('avconv -y -r 15 -i %s %s' % (template_str, mp4_name))
     return
 
+def ensure(path):
+    path = path[:path.rfind('/')]
+    if not os.path.exists(path):
+        os.makedirs(path)
 
-print "Loading data"
-# set_trace()
-dataset_name = args.dataset_name
-combined_frame, clean_gps_frame = read_combined_frame()
-
-xlim = (-10, 10)
-ylim = (-5, 5)
-#xlim, ylim = get_lims(clean_gps_frame)
-
-print "Set plot limits: " + str((xlim, ylim))
-
-out_cols = ['SLAMGPSTime', 'SLAMLat', 'SLAMLon']
+def writeCSV(filename, cols, rows):
+    with open(filename, 'w') as f:
+        f.write(','.join(cols) + '\n')
+        for row in rows:
+            f.write(','.join(map(str, row)) + '\n')
 
 # Run the simple random walk solution.
 def runRandomWalk():
@@ -275,34 +272,36 @@ def runApproach3():
     pass
 
 
-approaches = dict(random_walk = runRandomWalk,
-                  version_2 = runApproach2,
-                  version_3 = runApproach3)
-approach = approaches[args.version]
+if __name__ == '__main__':
+    print "Loading data"
+    # set_trace()
+    dataset_name = args.dataset_name
+    combined_frame, clean_gps_frame = read_combined_frame()
 
-def ensure(path):
-    path = path[:path.rfind('/')]
-    if not os.path.exists(path):
-        os.makedirs(path)
+    xlim = (-10, 10)
+    ylim = (-5, 5)
+    #xlim, ylim = get_lims(clean_gps_frame)
 
-def writeCSV(filename, cols, rows):
-    with open(filename, 'w') as f:
-        f.write(','.join(cols) + '\n')
-        for row in rows:
-            f.write(','.join(map(str, row)) + '\n')
+    print "Set plot limits: " + str((xlim, ylim))
+
+    out_cols = ['SLAMGPSTime', 'SLAMLat', 'SLAMLon']
 
 
-out_rows = approach()
-out_file = '%s/slam_out_path.csv' % args.output_dir
-ensure(out_file)
-writeCSV(out_file, out_cols, out_rows)
+    approaches = dict(random_walk = runRandomWalk,
+                      version_2 = runApproach2,
+                      version_3 = runApproach3)
+    approach = approaches[args.version]
 
-print "Wrote output to " + out_file
+    out_rows = approach()
+    out_file = '%s/slam_out_path.csv' % args.output_dir
+    ensure(out_file)
+    writeCSV(out_file, out_cols, out_rows)
 
-landmarks_cols = ['SLAMBeaconX','SLAMBeaconY']
-landmarks_rows = [(0, 0)]
-landmarks_file = '%s/slam_out_landmarks.csv' % args.output_dir
-writeCSV(landmarks_file, landmarks_cols, landmarks_rows)
+    print "Wrote output to " + out_file
 
-print "Wrote landmarks to " + landmarks_file
+    landmarks_cols = ['SLAMBeaconX','SLAMBeaconY']
+    landmarks_rows = [(0, 0)]
+    landmarks_file = '%s/slam_out_landmarks.csv' % args.output_dir
+    writeCSV(landmarks_file, landmarks_cols, landmarks_rows)
 
+    print "Wrote landmarks to " + landmarks_file
