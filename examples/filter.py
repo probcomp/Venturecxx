@@ -4,8 +4,10 @@ matplotlib.use('Agg')
 import os
 import sys
 import argparse
+#
 import numpy as np
 import numpy.random as npr
+import pandas
 from matplotlib import pyplot as plt
 from IPython.core.debugger import Pdb
 #
@@ -39,22 +41,18 @@ def read_combined_frame(args):
     gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(args.input_dir)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
 
-    clean_gps_frame = None
+    gps_to_clean_gps = dict(GPSLat='clean_y', GPSLon='clean_x', Orientation='clean_heading')
+    clean_gps_frame = pandas.DataFrame(columns=gps_to_clean_gps.values())
     if args.clean_dir is not None:
-        gps_to_clean_gps = dict(GPSLat='clean_y', GPSLon='clean_x', Orientation='clean_heading')
         clean_gps_frame_config = dict(filename='slam_gps.csv', index_col='TimeGPS',
             colname_map=gps_to_clean_gps)
         clean_gps_frame = vs.read_frame(dirname=args.clean_dir, **clean_gps_frame_config)
-        combined_frame = combined_frame.join(clean_gps_frame)
 
-    if args.max_time is not None:
-        combined_frame = combined_frame.truncate(after=args.max_time)
-        clean_gps_frame = clean_gps_frame.truncate(after=args.max_time)
-
+    combined_frame = combined_frame.join(clean_gps_frame)
+    combined_frame = combined_frame.truncate(after=args.max_time)
     combined_frame = combined_frame.head(args.frames)
-    clean_gps_frame = clean_gps_frame.head(args.frames)
 
-    return combined_frame, clean_gps_frame
+    return combined_frame
 
 # Plot samples along with the ground truth.
 def plot_pose(figname, xlim, ylim, xs=None, ys=None, headings=None, clean_gps_pose=None):
