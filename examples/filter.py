@@ -86,6 +86,9 @@ def writeCSV(filename, cols, rows):
         for row in rows:
             f.write(','.join(map(str, row)) + '\n')
 
+def get_clean_gps(row):
+    return (row['clean_x'], row['clean_y'], row['clean_heading'])
+
 # Run the simple random walk solution.
 def runRandomWalk():
 
@@ -94,25 +97,19 @@ def runRandomWalk():
 
     ripl = venture.shortcuts.make_church_prime_ripl()
 
-    row_num = len(combined_frame)
-    print "Using %d row" % row_num
-    row_is = range(row_num)
-
-    gps_frame_count = 0
-
+    print "Using %d row" % len(combined_frame)
     N_samples = args.samples
     print "Generating %d samples per time step" % N_samples
 
     times = []
-
     out_rows = []
+    gps_frame_count = 0
 
   # For each row...
-    for row_i in row_is:
+    for row_i, (_T, combined_frame_row) in enumerate(combined_frame.iterrows()):
         with Timer('row %s' % row_i) as t:
-            combined_frame_row = combined_frame.irow(row_i)
             # set_trace()
-            clean_gps = (combined_frame_row['clean_x'], combined_frame_row['clean_y'], combined_frame_row['clean_heading'])
+            clean_gps = get_clean_gps(combined_frame_row)
                   
             xs = []
             ys = []
@@ -180,24 +177,16 @@ def runApproach2():
   
     ripl = venture.shortcuts.make_church_prime_ripl()
 
-    row_num = len(combined_frame)
-    print "Using %d row" % row_num
-    row_is = range(row_num)
-
-    gps_frame_count = 0
-
+    print "Using %d row" % len(combined_frame)
     N_samples = args.samples
     print "Generating %d samples per time step" % N_samples
 
     times = []
-
     out_rows = []
-    for row_i in row_is:
-        T = row_i
+    gps_frame_count = 0
+    for T, (_T, combined_frame_row) in enumerate(combined_frame.iterrows()):
         with Timer('row %s' % T) as t:
-            combined_frame_row = combined_frame.irow(T)
-
-            clean_gps = (combined_frame_row['clean_x'], combined_frame_row['clean_y'], combined_frame_row['clean_heading'])
+            clean_gps = get_clean_gps(combined_frame_row)
             xs = []
             ys = []
             headings = []
