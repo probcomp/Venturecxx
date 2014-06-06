@@ -2,7 +2,7 @@ import matplotlib
 from matplotlib import pyplot as plt
 import argparse
 import os
-
+import venture.shortcuts
 import scene_plot_utils as spu
 import vehicle_simulator as vs
 
@@ -25,6 +25,7 @@ parser.add_argument('--version', default='random_walk')
 parser.add_argument('--plot', action='store_true')
 parser.add_argument('--frames', type=int, default=100000)
 parser.add_argument('--samples', type=int, default=10)
+parser.add_argument('--window_size', type=int, default=10)
 args = parser.parse_args()
 
 def set_trace():
@@ -66,7 +67,7 @@ def plot_pose(figname, xlim, ylim, xs=None, ys=None, headings=None, clean_gps_po
         spu.plot_scene_scatter(xs, ys, headings, clean_gps_pose)
         plt.xlim(xlim)
         plt.ylim(ylim)
-        plt.savefig(figname, format = 'pdf')
+        plt.savefig(figname, format = 'png')
         plt.close()
         pass
     return
@@ -89,7 +90,6 @@ def runRandomWalk():
   # Parameters for the random walk prior with Gaussian steps.
   noisy_gps_stds = dict(x=0.05, y=0.05, heading=0.01)
 
-  import venture.shortcuts
   ripl = venture.shortcuts.make_church_prime_ripl()
 
   row_num = min(args.frames, len(combined_frame))
@@ -109,7 +109,7 @@ def runRandomWalk():
   for row_i in row_is:
       with Timer('row %s' % row_i) as t:
           combined_frame_row = combined_frame.irow(row_i)
-
+          # set_trace()
           clean_gps = (combined_frame_row['clean_x'], combined_frame_row['clean_y'], combined_frame_row['clean_heading'])
                   
           #print "------"
@@ -169,7 +169,121 @@ def runRandomWalk():
           if not np.isnan(combined_frame_row['x']):
               gps_frame_count += 1
               if args.plot:
-                plot_pose(dataset_name + "_raw_%s.pdf" % gps_frame_count, xlim, ylim, xs=xs, ys=ys, headings=headings, clean_gps_pose=clean_gps)
+                plot_pose(dataset_name + "_raw_%s.png" % gps_frame_count, xlim, ylim, xs=xs, ys=ys, headings=headings, clean_gps_pose=clean_gps)
+              out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
+      
+      times.append(t.elapsed)
+
+  print 'all rows took %d seconds (%s per timestep)' % (sum(times), sum(times) / len(times))
+  
+  if args.plot:
+    # Make the mp4 movie.
+    mp4_name = dataset_name + '.mp4'
+    template_str = dataset_name + '_raw_%1d.png'
+    os.system('avconv -y -r 15 -i %s %s' % (template_str, mp4_name))
+  
+  return out_rows
+
+def runApproach2():
+  '''
+  Run approach 2 as outlined in the document
+  '''
+  # Parameters for the random walk prior with Gaussian steps.
+  noisy_gps_stds = dict(heading=0.01)
+  k = args.window_size
+  
+  ripl = venture.shortcuts.make_church_prime_ripl()
+
+  row_num = min(args.frames, len(combined_frame))
+  print "Using %d row" % row_num
+  row_is = range(row_num)
+
+  gps_frame_count = 0
+
+  N_samples = args.samples
+  print "Generating %d samples per time step" % N_samples
+
+  times = []
+
+  out_rows = []
+  for row_i in row_is:
+      T = row_i
+      with Timer('row %s' % row_i) as t:
+          combined_frame_row = combined_frame.irow(row_i)
+
+          clean_gps = (combined_frame_row['clean_x'], combined_frame_row['clean_y'], combined_frame_row['clean_heading'])
+          xs = []
+          ys = []
+          headings = []
+          x_datas = []
+          y_datas = []
+
+          if row_i is 0:
+            ripl.assume("x0", "(normal 0 1)", label="l_x0")
+            ripl.assume("y0", "(normal 0 1)",label="l_y0")
+            ripl.assume("noisy_gps_x_std", "(gamma 1 1)")
+            ripl.assume("noisy_gps_y_std", "(gamma 1 1)")
+            ripl.assume("heading0", "(uniform_continuous -3.14 3.14)")
+
+          else:
+            ripl.assume("x%i"%T, "(normal %f 0.1)" % prev_x, "lx%i"%T)
+            ripl.assume("y%i"%T, "(normal %f 0.1)" % prev_y, "ly%i"%T)
+            ripl.assume("heading%i"%T, "(normal %f 0.1)" % prev_heading)
+            if row_i == 1:
+                ripl.freeze("lx%i"%(T-1) )
+                ripl.freeze("ly%i"%(T-1) )
+                
+                ripl.forget("x_data%i"%(T-1) )
+                ripl.forget("y_data%i"%(T-1) )
+                #ripl.forget("lx%i"%(T-k) )
+                #ripl.forget("ly%i"%(T-k) )
+
+            if row_i > 1:
+                ripl.freeze("lx%i"%(T-(k+1))) #
+                ripl.freeze("ly%i"%(T-(k+1))) # 
+                ripl.forget("x_data%i"%(T-(k+1)))
+                ripl.forget("y_data%i"%(T-(k+1)))
+                ripl.forget("lx%i"%(T-k) )
+                ripl.forget("ly%i"%(T-k) )
+
+            print ripl.list_directives()[-5:],'\n'
+          # we have noisy gps observations, let's condition on them!
+          if not np.isnan(combined_frame_row['x']):
+              noisy_gps_x = combined_frame_row['x']
+              noisy_gps_y = combined_frame_row['y']
+              noisy_gps_heading = combined_frame_row['heading']
+              print 'time: ',T
+              print "NOISY: " + str((noisy_gps_x, noisy_gps_y, noisy_gps_heading))
+
+              ripl.observe("(normal x%i noisy_gps_x_std)" %T, noisy_gps_x, label="x_data%i"%T )
+              ripl.observe("(normal y%i noisy_gps_y_std)"%T, noisy_gps_y, label="y_data%i"%T)
+              #ripl.observe("(normal heading %f)" % noisy_gps_stds['heading'], noisy_gps_heading)
+
+              ripl.infer("(slice default one 20)")
+
+          xs.append(float(ripl.sample("x%i"%T)))
+          ys.append(float(ripl.sample("y%i"%T)))
+          headings.append(float(ripl.sample("heading%i"%T)))
+          gps_xs.append(float(ripl.sample("noisy_gps_x_std")))
+          gps_ys.append(float(ripl.sample("noisy_gps_y_std")))
+          
+          
+          xs = np.array(xs)
+          ys = np.array(ys)
+          headings = np.array(headings)
+
+          print '\n xs:',xs,'ys',ys,'gps_xs',gps_xs,'gps_ys',gps_ys,'\n'
+
+          prev_x = xs.mean()
+          prev_y = ys.mean()
+          prev_heading = headings.mean()
+
+          # if the frame has gps signal, plot it
+          if not np.isnan(combined_frame_row['x']):
+              gps_frame_count += 1
+              if args.plot:
+                plot_pose(dataset_name + "_raw_%s.pdf" % gps_frame_count, xlim, ylim, xs=xs, ys=ys,
+                          headings=headings, clean_gps_pose=clean_gps)
               out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
       
       times.append(t.elapsed)
@@ -183,12 +297,6 @@ def runRandomWalk():
     os.system('avconv -y -r 15 -b 1800 -i %s %s' % (template_str, mp4_name))
   
   return out_rows
-
-def runApproach2():
-  '''
-  Run approach 2 as outlined in the document
-  '''
-  pass
 
 def runApproach3():
   pass
