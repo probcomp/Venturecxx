@@ -154,6 +154,7 @@ def runRandomWalk():
           xs = np.array(xs)
           ys = np.array(ys)
           headings = np.array(headings)
+          # set_trace()
 
           prev_x = xs.mean()
           prev_y = ys.mean()
@@ -208,8 +209,8 @@ def runApproach2():
   out_rows = []
   for row_i in row_is:
       T = row_i
-      with Timer('row %s' % row_i) as t:
-          combined_frame_row = combined_frame.irow(row_i)
+      with Timer('row %s' % T) as t:
+          combined_frame_row = combined_frame.irow(T)
 
           clean_gps = (combined_frame_row['clean_x'], combined_frame_row['clean_y'], combined_frame_row['clean_heading'])
           xs = []
@@ -218,33 +219,30 @@ def runApproach2():
           x_datas = []
           y_datas = []
 
-          if row_i is 0:
-            ripl.assume("x0", "(normal 0 1)", label="l_x0")
-            ripl.assume("y0", "(normal 0 1)",label="l_y0")
+          if T is 0:
+            # make model assumptions
+            ripl.assume("x0", "(normal 0 1)", label="lx0")
+            ripl.assume("y0", "(normal 0 1)",label="ly0")
             ripl.assume("noisy_gps_x_std", "(gamma 1 1)")
             ripl.assume("noisy_gps_y_std", "(gamma 1 1)")
             ripl.assume("heading0", "(uniform_continuous -3.14 3.14)")
 
           else:
+            set_trace()
+            # assume x value given previous state
             ripl.assume("x%i"%T, "(normal %f 0.1)" % prev_x, "lx%i"%T)
             ripl.assume("y%i"%T, "(normal %f 0.1)" % prev_y, "ly%i"%T)
             ripl.assume("heading%i"%T, "(normal %f 0.1)" % prev_heading)
-            if row_i == 1:
-                ripl.freeze("lx%i"%(T-1) )
-                ripl.freeze("ly%i"%(T-1) )
-                
-                ripl.forget("x_data%i"%(T-1) )
-                ripl.forget("y_data%i"%(T-1) )
-                #ripl.forget("lx%i"%(T-k) )
-                #ripl.forget("ly%i"%(T-k) )
+            if T >= (k - 1):
+              ripl.freeze("lx%i"%(T-k+1))
+              ripl.freeze("ly%i"%(T-k+1))
+              
+              ripl.forget("x_data%i"%(T-k+1))
+              ripl.forget("y_data%i"%(T-k+1))
 
-            if row_i > 1:
-                ripl.freeze("lx%i"%(T-(k+1))) #
-                ripl.freeze("ly%i"%(T-(k+1))) # 
-                ripl.forget("x_data%i"%(T-(k+1)))
-                ripl.forget("y_data%i"%(T-(k+1)))
-                ripl.forget("lx%i"%(T-k) )
-                ripl.forget("ly%i"%(T-k) )
+            if T >= k:
+              ripl.forget("lx%i"%(T-k))
+              ripl.forget("ly%i"%(T-k))
 
             print ripl.list_directives()[-5:],'\n'
           # we have noisy gps observations, let's condition on them!
@@ -264,15 +262,15 @@ def runApproach2():
           xs.append(float(ripl.sample("x%i"%T)))
           ys.append(float(ripl.sample("y%i"%T)))
           headings.append(float(ripl.sample("heading%i"%T)))
-          gps_xs.append(float(ripl.sample("noisy_gps_x_std")))
-          gps_ys.append(float(ripl.sample("noisy_gps_y_std")))
+          x_datas.append(float(ripl.sample("noisy_gps_x_std")))
+          y_datas.append(float(ripl.sample("noisy_gps_y_std")))
           
           
           xs = np.array(xs)
           ys = np.array(ys)
           headings = np.array(headings)
 
-          print '\n xs:',xs,'ys',ys,'gps_xs',gps_xs,'gps_ys',gps_ys,'\n'
+          print '\n xs:',xs,'ys',ys,'x_datas',x_datas,'y_datas',y_datas,'\n'
 
           prev_x = xs.mean()
           prev_y = ys.mean()
