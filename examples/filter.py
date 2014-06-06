@@ -63,6 +63,14 @@ def plot_pose(figname, xlim, ylim, xs=None, ys=None, headings=None, clean_gps_po
         pass
     return
 
+def make_movie(dataset_name):
+    # Make the mp4 movie.
+    mp4_name = dataset_name + '.mp4'
+    template_str = dataset_name + '_raw_%1d.png'
+    os.system('avconv -y -r 15 -i %s %s' % (template_str, mp4_name))
+    return
+
+
 print "Loading data"
 # set_trace()
 dataset_name = args.dataset_name
@@ -156,11 +164,8 @@ def runRandomWalk():
     print 'all rows took %d seconds (%s per timestep)' % (sum(times), sum(times) / len(times))
   
     if args.plot:
-        # Make the mp4 movie.
-        mp4_name = dataset_name + '.mp4'
-        template_str = dataset_name + '_raw_%1d.png'
-        os.system('avconv -y -r 15 -i %s %s' % (template_str, mp4_name))
-  
+        make_movie(dataset_name)
+
     return out_rows
 
 def runApproach2():
@@ -262,11 +267,8 @@ def runApproach2():
     print 'all rows took %d seconds (%s per timestep)' % (sum(times), sum(times) / len(times))
   
     if args.plot:
-        # Make the mp4 movie.
-        mp4_name = dataset_name + '.mp4'
-        template_str = dataset_name + '_raw_%1d.png'
-        os.system('avconv -y -r 15 -i %s %s' % (template_str, mp4_name))
-  
+        make_movie(dataset_name)
+
     return out_rows
 
 def runApproach3():
