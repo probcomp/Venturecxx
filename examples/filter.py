@@ -203,7 +203,8 @@ def runApproach2():
                         "(scope_include (quote parameters) 0 (gamma 1 100))")
                 ripl.assume("noisy_gps_y_std",
                         "(scope_include (quote parameters) 1 (gamma 1 100))")
-                ripl.assume("heading0", "(uniform_continuous -3.14 3.14)")
+                ripl.assume("heading0", "(uniform_continuous -3.14 3.14)",
+                        "lh0")
 
             else:
                 # set_trace()
@@ -214,7 +215,8 @@ def runApproach2():
                 ripl.assume("y%i"%T,
                         "(scope_include %i 1 (normal y%i 0.001))" % (T-1, T-1),
                         "ly%i"%T)
-                ripl.assume("heading%i"%T, "(normal heading%i 0.1)" % (T-1))
+                ripl.assume("heading%i"%T, "(normal heading%i 0.1)" % (T-1),
+                        "lh%i"%T)
                 if T >= (k - 1):
                     ripl.freeze("lx%i"%(T-k+1))
                     ripl.freeze("ly%i"%(T-k+1))
