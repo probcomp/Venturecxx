@@ -197,17 +197,23 @@ def runApproach2():
 
             if T is 0:
                 # make model assumptions
-                ripl.assume("x0", "(normal 0 1)", label="lx0")
-                ripl.assume("y0", "(normal 0 1)",label="ly0")
-                ripl.assume("noisy_gps_x_std", "(gamma 1 1)")
-                ripl.assume("noisy_gps_y_std", "(gamma 1 1)")
+                ripl.assume("x0", "(scope_include 0 0 (normal 0 1))", label="lx0")
+                ripl.assume("y0", "(scope_include 0 1 (normal 0 1))", label="ly0")
+                ripl.assume("noisy_gps_x_std",
+                        "(scope_include (quote parameters) 0 (gamma 1 1))")
+                ripl.assume("noisy_gps_y_std",
+                        "(scope_include (quote parameters) 1 (gamma 1 1))")
                 ripl.assume("heading0", "(uniform_continuous -3.14 3.14)")
 
             else:
                 # set_trace()
                 # assume x value given previous state
-                ripl.assume("x%i"%T, "(normal x%i 0.1)" % (T-1), "lx%i"%T)
-                ripl.assume("y%i"%T, "(normal y%i 0.1)" % (T-1), "ly%i"%T)
+                ripl.assume("x%i"%T,
+                        "(scope_include %i 0 (normal x%i 0.1))" % (T-1, T-1),
+                        "lx%i"%T)
+                ripl.assume("y%i"%T,
+                        "(scope_include %i 1 (normal y%i 0.1))" % (T-1, T-1),
+                        "ly%i"%T)
                 ripl.assume("heading%i"%T, "(normal heading%i 0.1)" % (T-1))
                 if T >= (k - 1):
                     ripl.freeze("lx%i"%(T-k+1))
