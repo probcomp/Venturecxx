@@ -223,10 +223,10 @@ def runApproach2():
                 # set_trace()
                 # assume x value given previous state
                 ripl.assume("x%i"%T,
-                        "(scope_include %i 0 (normal x%i 0.01))" % (T-1, T-1),
+                        "(scope_include %i 0 (normal x%i 0.03))" % (T-1, T-1),
                         "lx%i"%T)
                 ripl.assume("y%i"%T,
-                        "(scope_include %i 1 (normal y%i 0.001))" % (T-1, T-1),
+                        "(scope_include %i 1 (normal y%i 0.003))" % (T-1, T-1),
                         "ly%i"%T)
                 ripl.assume("heading%i"%T, "(normal heading%i 0.1)" % (T-1),
                         "lh%i"%T)
