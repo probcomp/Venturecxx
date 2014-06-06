@@ -218,6 +218,7 @@ def runApproach2():
                 if T >= (k - 1):
                     ripl.freeze("lx%i"%(T-k+1))
                     ripl.freeze("ly%i"%(T-k+1))
+                    ripl.freeze("lh%i"%(T-k+1))
                     # forget the observations if they exist
                     if not np.isnan(combined_frame.irow(T-k+1)['x']):
                         ripl.forget("x_data%i"%(T-k+1))
@@ -226,6 +227,7 @@ def runApproach2():
                 if T >= k:
                     ripl.forget("lx%i"%(T-k))
                     ripl.forget("ly%i"%(T-k))
+                    ripl.forget("lh%i"%(T-k))
 
                 # print ripl.list_directives()[-5:],'\n'
 
