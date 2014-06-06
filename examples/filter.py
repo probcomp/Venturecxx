@@ -37,11 +37,11 @@ def read_combined_frame():
     gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(args.input_dir)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
 
-    gps_to_clean_gps = dict(GPSLat='clean_y', GPSLon='clean_x', Orientation='clean_heading')
-    clean_gps_frame_config = dict(filename='slam_gps.csv', index_col='TimeGPS',
-        colname_map=gps_to_clean_gps)
     clean_gps_frame = None
     if args.clean_dir is not None:
+        gps_to_clean_gps = dict(GPSLat='clean_y', GPSLon='clean_x', Orientation='clean_heading')
+        clean_gps_frame_config = dict(filename='slam_gps.csv', index_col='TimeGPS',
+            colname_map=gps_to_clean_gps)
         clean_gps_frame = vs.read_frame(dirname=args.clean_dir, **clean_gps_frame_config)
         combined_frame = combined_frame.join(clean_gps_frame)
 
