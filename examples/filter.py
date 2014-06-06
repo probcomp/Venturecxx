@@ -1,33 +1,35 @@
 import matplotlib
 matplotlib.use('Agg')
-from matplotlib import pyplot as plt
-import argparse
+#
 import os
+import sys
+import argparse
+import numpy as np
+import numpy.random as npr
+from matplotlib import pyplot as plt
+from IPython.core.debugger import Pdb
+#
 import venture.shortcuts
 import scene_plot_utils as spu
 import vehicle_simulator as vs
-
-import numpy as np
-import numpy.random as npr
-
 from contexts import Timer
 
-from IPython.core.debugger import Pdb
-import sys
 
-parser = argparse.ArgumentParser()
-parser.add_argument('input_dir', type=str)
-parser.add_argument('output_dir', type=str)
-parser.add_argument('--max_time', type=float, default=None)
-parser.add_argument('--clean_dir', type=str, default=None)
-parser.add_argument('--dataset_name', type=str, default='')
-parser.add_argument('--ground', action='store_true')
-parser.add_argument('--version', default='random_walk')
-parser.add_argument('--plot', action='store_true')
-parser.add_argument('--frames', type=int, default=100000)
-parser.add_argument('--samples', type=int, default=10)
-parser.add_argument('--window_size', type=int, default=10)
-args = parser.parse_args()
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input_dir', type=str)
+    parser.add_argument('output_dir', type=str)
+    parser.add_argument('--max_time', type=float, default=None)
+    parser.add_argument('--clean_dir', type=str, default=None)
+    parser.add_argument('--dataset_name', type=str, default='')
+    parser.add_argument('--ground', action='store_true')
+    parser.add_argument('--version', default='random_walk')
+    parser.add_argument('--plot', action='store_true')
+    parser.add_argument('--frames', type=int, default=100000)
+    parser.add_argument('--samples', type=int, default=10)
+    parser.add_argument('--window_size', type=int, default=10)
+    args = parser.parse_args()
+    return args
 
 def set_trace():
     Pdb(color_scheme='LightBG').set_trace(sys._getframe().f_back)
@@ -273,6 +275,7 @@ def runApproach3():
 
 
 if __name__ == '__main__':
+    args = parse_args()
     print "Loading data"
     # set_trace()
     dataset_name = args.dataset_name
