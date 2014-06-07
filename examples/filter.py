@@ -103,7 +103,7 @@ def get_clean_gps(row):
     return (row['clean_x'], row['clean_y'], row['clean_heading'])
 
 # Run the simple random walk solution.
-def runRandomWalk():
+def runRandomWalk(args, combined_frame):
 
     # Parameters for the random walk prior with Gaussian steps.
     noisy_gps_stds = dict(x=0.05, y=0.05, heading=0.01)
@@ -168,7 +168,7 @@ def runRandomWalk():
             if not np.isnan(combined_frame_row['x']):
                 gps_frame_count += 1
                 if args.plot:
-                    filename = dataset_name + "_raw_%s.png" % gps_frame_count
+                    filename = args.dataset_name + "_raw_%s.png" % gps_frame_count
                     plot_pose(filename, xlim, ylim, xs=xs, ys=ys,
                             headings=headings, clean_gps_pose=clean_gps)
                 out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
@@ -178,11 +178,11 @@ def runRandomWalk():
     print 'all rows took %d seconds (%s per timestep)' % (sum(times), sum(times) / len(times))
   
     if args.plot:
-        make_movie(dataset_name)
+        make_movie(args.dataset_name)
 
     return out_rows, ripl
 
-def runApproach2():
+def runApproach2(args, combined_frame):
     '''
     Run approach 2 as outlined in the document
     '''
@@ -310,7 +310,7 @@ def runApproach2():
             if is_gps_row:
                 gps_frame_count += 1
                 if args.plot:
-                    filename = dataset_name + "_raw_%s.png" % gps_frame_count
+                    filename = args.dataset_name + "_raw_%s.png" % gps_frame_count
                     plot_pose(filename, xlim, ylim, xs=xs, ys=ys,
                               headings=headings, clean_gps_pose=clean_gps)
                 out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
@@ -320,11 +320,11 @@ def runApproach2():
     print 'all rows took %d seconds (%s per timestep)' % (sum(times), sum(times) / len(times))
   
     if args.plot:
-        make_movie(dataset_name)
+        make_movie(args.dataset_name)
 
     return out_rows, ripl
 
-def runApproach3():
+def runApproach3(args, combined_frame):
     '''
     run approach 3 as outlined in doc
     '''
@@ -426,7 +426,7 @@ def runApproach3():
             if not np.isnan(combined_frame_row['x']):
                 gps_frame_count += 1
                 if args.plot:
-                    filename = dataset_name + "_raw_%s.png" % gps_frame_count
+                    filename = args.dataset_name + "_raw_%s.png" % gps_frame_count
                     plot_pose(filename, xlim, ylim, xs=xs, ys=ys,
                               headings=headings, clean_gps_pose=clean_gps)
                 out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
@@ -434,16 +434,13 @@ def runApproach3():
         times.append(t.elapsed)
 
     if args.plot:
-        make_movie(dataset_name)
+        make_movie(args.dataset_name)
 
     return out_rows, ripl
 
 
 if __name__ == '__main__':
     args = parse_args()
-    # set_trace()
-    dataset_name = args.dataset_name
-
     print "Loading data"
     combined_frame = read_combined_frame(args)
 
@@ -455,7 +452,7 @@ if __name__ == '__main__':
                       version_2 = runApproach2,
                       version_3 = runApproach3)
     approach = approaches[args.version]
-    out_rows, ripl = approach()
+    out_rows, ripl = approach(args, combined_frame)
 
     write_path_file(args.output_dir, out_rows)
     landmarks_data=((0,0),)
