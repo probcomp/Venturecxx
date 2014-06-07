@@ -57,6 +57,7 @@ def read_combined_frame(args):
 def plot_pose(figname, xlim, ylim, xs=None, ys=None, headings=None,
         clean_gps_pose=None, dirname=''):
     figname = os.path.join(dirname, figname)
+    ensure(figname)
     with Timer(figname) as t:
         # set_trace()
         spu.plot_scene_scatter(xs, ys, headings, clean_gps_pose)
