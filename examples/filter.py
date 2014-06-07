@@ -199,84 +199,105 @@ def runApproach2():
     times = []
     out_rows = []
     gps_frame_count = 0
+    def assume_T_0():
+        # make model assumptions
+        ripl.assume("x0", "(scope_include 0 0 (normal -6.1 1))", label="lx0")
+        ripl.assume("y0", "(scope_include 0 1 (normal -.05 1))", label="ly0")
+        ripl.assume("noisy_gps_x_std",
+                "(scope_include (quote parameters) 0 (gamma 1 100))")
+        ripl.assume("noisy_gps_y_std",
+                "(scope_include (quote parameters) 1 (gamma 1 100))")
+        ripl.assume("heading0", "(uniform_continuous -3.14 3.14)",
+                "lh0")
+        return
+    def assume_T(T):
+        print 'assume_T(%i)' % T
+        # assume x value given previous state
+        ripl.assume("x%i"%T,
+                "(scope_include %i 0 (normal x%i 0.03))" % (T, T-1),
+                "lx%i"%T)
+        ripl.assume("y%i"%T,
+                "(scope_include %i 1 (normal y%i 0.003))" % (T, T-1),
+                "ly%i"%T)
+        ripl.assume("heading%i"%T, "(normal heading%i 0.1)" % (T-1,),
+                "lh%i"%T)
+        return
+    def freeze_assumes(T_minus_k_plus_1):
+        print 'freeze_assumes(%i)' % T_minus_k_plus_1
+        symbols = ['lx%i', 'ly%i', 'lh%i']
+        symbols = [symbol % T_minus_k_plus_1 for symbol in symbols]
+        map(ripl.freeze, symbols)
+        return
+    def forget_assumes(T_minus_k):
+        print 'forget_assumes(%i)' % T_minus_k
+        symbols = ['lx%i', 'ly%i', 'lh%i']
+        symbols = [symbol % T_minus_k for symbol in symbols]
+        map(ripl.forget, symbols)
+        return
+    def forget_data(T_minus_k_plus_1):
+        print 'forget_data(%i)' % T_minus_k_plus_1
+        symbols = ['x_data%i', 'y_data%i']
+        symbols = [symbol % T_minus_k_plus_1 for symbol in symbols]
+        map(ripl.forget, symbols)
+        return
+    def observe_gps(row):
+        print 'observe_gps(row.i=%i)' % row.i
+        noisy_gps_x = row['x']
+        noisy_gps_y = row['y']
+        noisy_gps_heading = row['heading']
+        print 'time: ', row.name
+        print "NOISY: " + str((noisy_gps_x, noisy_gps_y, noisy_gps_heading))
+
+        ripl.observe("(normal x%i noisy_gps_x_std)"%T, noisy_gps_x, label="x_data%i"%T )
+        ripl.observe("(normal y%i noisy_gps_y_std)"%T, noisy_gps_y, label="y_data%i"%T)
+        #ripl.observe("(normal heading %f)" % noisy_gps_stds['heading'], noisy_gps_heading)
+        return
+    infer_on_scope = lambda type, T: "(%s %i one 50)" % (type, T)
+    def get_infer_str(T, k, type='mh'):
+        Ts = range(T+1)[-k+2:]
+        _infer_on_scope = lambda T: infer_on_scope(type, T)
+        infer_on_scopes = map(_infer_on_scope, Ts)
+        forward_infer = ' '.join(infer_on_scopes)
+        backward_infer = ' '.join(infer_on_scopes[::-1])
+        make_cycle = lambda infer_strs, N: "(cycle (%s) %i)" % (' '.join(infer_strs), N)
+        infer_strs = (backward_infer, forward_infer)
+        cycle_on_Ts = make_cycle(infer_strs, 1)
+        return cycle_on_Ts
     for T, (_T, combined_frame_row) in enumerate(combined_frame.iterrows()):
         with Timer('row %s' % T) as t:
             clean_gps = get_clean_gps(combined_frame_row)
             xs = []
             ys = []
             headings = []
-            x_datas = []
-            y_datas = []
 
-            if T is 0:
-                # make model assumptions
-                ripl.assume("x0", "(scope_include 0 0 (normal -6.1 1))", label="lx0")
-                ripl.assume("y0", "(scope_include 0 1 (normal -.05 1))", label="ly0")
-                ripl.assume("noisy_gps_x_std",
-                        "(scope_include (quote parameters) 0 (gamma 1 100))")
-                ripl.assume("noisy_gps_y_std",
-                        "(scope_include (quote parameters) 1 (gamma 1 100))")
-                ripl.assume("heading0", "(uniform_continuous -3.14 3.14)",
-                        "lh0")
-
+            was_gps_row = not np.isnan(combined_frame.irow(T-k+1)['x'])
+            is_gps_row = not np.isnan(combined_frame_row['x'])
+            if T == 0:
+                assume_T_0()
             else:
+                assume_T(T)
                 # set_trace()
-                # assume x value given previous state
-                ripl.assume("x%i"%T,
-                        "(scope_include %i 0 (normal x%i 0.03))" % (T-1, T-1),
-                        "lx%i"%T)
-                ripl.assume("y%i"%T,
-                        "(scope_include %i 1 (normal y%i 0.003))" % (T-1, T-1),
-                        "ly%i"%T)
-                ripl.assume("heading%i"%T, "(normal heading%i 0.1)" % (T-1),
-                        "lh%i"%T)
                 if T >= (k - 1):
-                    ripl.freeze("lx%i"%(T-k+1))
-                    ripl.freeze("ly%i"%(T-k+1))
-                    ripl.freeze("lh%i"%(T-k+1))
+                    freeze_assumes(T - k + 1)
                     # forget the observations if they exist
-                    if not np.isnan(combined_frame.irow(T-k+1)['x']):
-                        ripl.forget("x_data%i"%(T-k+1))
-                        ripl.forget("y_data%i"%(T-k+1))
-
+                    if was_gps_row:
+                        forget_data(T - k + 1)
                 if T >= k:
-                    ripl.forget("lx%i"%(T-k))
-                    ripl.forget("ly%i"%(T-k))
-                    ripl.forget("lh%i"%(T-k))
+                    forget_assumes(T - k)
 
                 # print ripl.list_directives()[-5:],'\n'
 
             # we have noisy gps observations, let's condition on them!
-            if not np.isnan(combined_frame_row['x']):
-                noisy_gps_x = combined_frame_row['x']
-                noisy_gps_y = combined_frame_row['y']
-                noisy_gps_heading = combined_frame_row['heading']
-                print 'time: ',T
-                print "NOISY: " + str((noisy_gps_x, noisy_gps_y, noisy_gps_heading))
-
-                ripl.observe("(normal x%i noisy_gps_x_std)"%T, noisy_gps_x, label="x_data%i"%T )
-                ripl.observe("(normal y%i noisy_gps_y_std)"%T, noisy_gps_y, label="y_data%i"%T)
-                #ripl.observe("(normal heading %f)" % noisy_gps_stds['heading'], noisy_gps_heading)
-
-                def get_infer_str(T, k, type='mh'):
-                    infer_on_scope = lambda T: "(%s %i one 50)" % (type, T)
-                    Ts = range(T)[-k+1:]
-                    infer_on_scopes = map(infer_on_scope, Ts)
-                    forward_infer = ' '.join(infer_on_scopes)
-                    backward_infer = ' '.join(infer_on_scopes[::-1])
-                    make_cycle = lambda infer_strs, N: "(cycle (%s) %i)" % (' '.join(infer_strs), N)
-                    infer_strs = (backward_infer, forward_infer)
-                    cycle_on_Ts = make_cycle(infer_strs, 1)
-                    return cycle_on_Ts
-                infer_str = get_infer_str(T, k)
+            if is_gps_row:
+                observe_gps(combined_frame_row)
+                infer_str = get_infer_str(T, k, 'mh')
                 print 'infer_str: %s' % infer_str
                 # ripl.infer("(slice default one 50)")
                 ripl.infer(infer_str)
                 if T < 100:
                     ripl.infer('(mh parameters one 1000)')
             else:
-                infer_on_scope = lambda T: "(%s %i one 50)" % ('mh', T-1)
-                infer_str = infer_on_scope(T)
+                infer_str = infer_on_scope('mh', T)
                 print 'ELSE: infer_str: %s' % infer_str
                 ripl.infer(infer_str)
 
@@ -292,7 +313,7 @@ def runApproach2():
             print '\n xs:',xs,'ys',ys,'\n'
 
             # if the frame has gps signal, plot it
-            if not np.isnan(combined_frame_row['x']):
+            if is_gps_row:
                 gps_frame_count += 1
                 if args.plot:
                     filename = dataset_name + "_raw_%s.png" % gps_frame_count
