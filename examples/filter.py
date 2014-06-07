@@ -299,11 +299,6 @@ def runApproach2():
                 observe_gps(combined_frame_row)
                 infer(T, k, 'mh')
             else:
-                infer_str = infer_on_scope('mh', T)
-                print 'ELSE: infer_str: %s' % infer_str
-                ripl.infer(infer_str)
-
-
             xs.append(float(ripl.sample("x%i"%T)))
             ys.append(float(ripl.sample("y%i"%T)))
             headings.append(float(ripl.sample("heading%i"%T)))
@@ -312,6 +307,10 @@ def runApproach2():
             ys = np.array(ys)
             headings = np.array(headings)
 
+                # # Don't need to run infernece here
+                # infer_str = infer_on_scope('mh', T)
+                # ripl.infer(infer_str)
+                pass
             print '\n xs:',xs,'ys',ys,'\n'
 
             # if the frame has gps signal, plot it
