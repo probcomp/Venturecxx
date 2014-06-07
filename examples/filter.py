@@ -55,7 +55,9 @@ def read_combined_frame(args):
     return combined_frame
 
 # Plot samples along with the ground truth.
-def plot_pose(figname, xlim, ylim, xs=None, ys=None, headings=None, clean_gps_pose=None):
+def plot_pose(figname, xlim, ylim, xs=None, ys=None, headings=None,
+        clean_gps_pose=None, dirname=''):
+    figname = os.path.join(dirname, figname)
     with Timer(figname) as t:
         # set_trace()
         spu.plot_scene_scatter(xs, ys, headings, clean_gps_pose)
@@ -66,10 +68,10 @@ def plot_pose(figname, xlim, ylim, xs=None, ys=None, headings=None, clean_gps_po
         pass
     return
 
-def make_movie(dataset_name):
+def make_movie(dataset_name, dirname=''):
     # Make the mp4 movie.
-    mp4_name = dataset_name + '.mp4'
-    template_str = dataset_name + '_raw_%1d.png'
+    mp4_name = os.path.join(dirname, dataset_name + '.mp4')
+    template_str = os.path.join(dirname, dataset_name + '_raw_%1d.png')
     os.system('avconv -y -r 15 -i %s %s' % (template_str, mp4_name))
     return
 
@@ -170,7 +172,8 @@ def runRandomWalk(args, combined_frame):
                 if args.plot:
                     filename = args.dataset_name + "_raw_%s.png" % gps_frame_count
                     plot_pose(filename, xlim, ylim, xs=xs, ys=ys,
-                            headings=headings, clean_gps_pose=clean_gps)
+                            headings=headings, clean_gps_pose=clean_gps,
+                            dirname=args.output_dir)
                 out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
       
         times.append(t.elapsed)
@@ -178,7 +181,7 @@ def runRandomWalk(args, combined_frame):
     print 'all rows took %d seconds (%s per timestep)' % (sum(times), sum(times) / len(times))
   
     if args.plot:
-        make_movie(args.dataset_name)
+        make_movie(args.dataset_name, args.output_dir)
 
     return out_rows, ripl
 
@@ -312,7 +315,8 @@ def runApproach2(args, combined_frame):
                 if args.plot:
                     filename = args.dataset_name + "_raw_%s.png" % gps_frame_count
                     plot_pose(filename, xlim, ylim, xs=xs, ys=ys,
-                              headings=headings, clean_gps_pose=clean_gps)
+                              headings=headings, clean_gps_pose=clean_gps,
+                              dirname=args.output_dir)
                 out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
       
         times.append(t.elapsed)
@@ -320,7 +324,7 @@ def runApproach2(args, combined_frame):
     print 'all rows took %d seconds (%s per timestep)' % (sum(times), sum(times) / len(times))
   
     if args.plot:
-        make_movie(args.dataset_name)
+        make_movie(args.dataset_name, args.output_dir)
 
     return out_rows, ripl
 
@@ -428,13 +432,14 @@ def runApproach3(args, combined_frame):
                 if args.plot:
                     filename = args.dataset_name + "_raw_%s.png" % gps_frame_count
                     plot_pose(filename, xlim, ylim, xs=xs, ys=ys,
-                              headings=headings, clean_gps_pose=clean_gps)
+                              headings=headings, clean_gps_pose=clean_gps,
+                              dirname=args.output_dir)
                 out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
       
         times.append(t.elapsed)
 
     if args.plot:
-        make_movie(args.dataset_name)
+        make_movie(args.dataset_name, args.output_dir)
 
     return out_rows, ripl
 
