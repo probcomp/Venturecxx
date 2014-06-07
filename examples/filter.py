@@ -263,6 +263,13 @@ def runApproach2():
         infer_strs = (backward_infer, forward_infer)
         cycle_on_Ts = make_cycle(infer_strs, 1)
         return cycle_on_Ts
+    def infer(T, k, type):
+        infer_str = get_infer_str(T, k, type)
+        print 'infer_str: %s' % infer_str
+        ripl.infer(infer_str)
+        if T < 100:
+            ripl.infer('(mh parameters one 1000)')
+        return
     for T, (_T, combined_frame_row) in enumerate(combined_frame.iterrows()):
         with Timer('row %s' % T) as t:
             clean_gps = get_clean_gps(combined_frame_row)
@@ -290,12 +297,7 @@ def runApproach2():
             # we have noisy gps observations, let's condition on them!
             if is_gps_row:
                 observe_gps(combined_frame_row)
-                infer_str = get_infer_str(T, k, 'mh')
-                print 'infer_str: %s' % infer_str
-                # ripl.infer("(slice default one 50)")
-                ripl.infer(infer_str)
-                if T < 100:
-                    ripl.infer('(mh parameters one 1000)')
+                infer(T, k, 'mh')
             else:
                 infer_str = infer_on_scope('mh', T)
                 print 'ELSE: infer_str: %s' % infer_str
