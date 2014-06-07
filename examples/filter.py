@@ -24,7 +24,6 @@ def parse_args(args_override=None):
     parser.add_argument('--max_time', type=float, default=None)
     parser.add_argument('--clean_dir', type=str, default=None)
     parser.add_argument('--dataset_name', type=str, default='')
-    parser.add_argument('--ground', action='store_true')
     parser.add_argument('--version', default='random_walk')
     parser.add_argument('--plot', action='store_true')
     parser.add_argument('--frames', type=int, default=100000)
