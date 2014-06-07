@@ -273,9 +273,6 @@ def runApproach2():
     for T, (_T, combined_frame_row) in enumerate(combined_frame.iterrows()):
         with Timer('row %s' % T) as t:
             clean_gps = get_clean_gps(combined_frame_row)
-            xs = []
-            ys = []
-            headings = []
 
             was_gps_row = not np.isnan(combined_frame.irow(T-k+1)['x'])
             is_gps_row = not np.isnan(combined_frame_row['x'])
@@ -299,18 +296,14 @@ def runApproach2():
                 observe_gps(combined_frame_row)
                 infer(T, k, 'mh')
             else:
-            xs.append(float(ripl.sample("x%i"%T)))
-            ys.append(float(ripl.sample("y%i"%T)))
-            headings.append(float(ripl.sample("heading%i"%T)))
-
-            xs = np.array(xs)
-            ys = np.array(ys)
-            headings = np.array(headings)
-
                 # # Don't need to run infernece here
                 # infer_str = infer_on_scope('mh', T)
                 # ripl.infer(infer_str)
                 pass
+
+            xs = np.array([float(ripl.sample("x%i"%T))])
+            ys = np.array([float(ripl.sample("y%i"%T))])
+            headings = np.array([float(ripl.sample("heading%i"%T))])
             print '\n xs:',xs,'ys',ys,'\n'
 
             # if the frame has gps signal, plot it
