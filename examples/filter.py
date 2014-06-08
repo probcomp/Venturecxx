@@ -204,8 +204,8 @@ def runApproach2(args, combined_frame):
     gps_frame_count = 0
     def assume_T_0():
         # make model assumptions
-        ripl.assume("x0", "(scope_include 0 0 (normal -6.1 1))", label="lx0")
-        ripl.assume("y0", "(scope_include 0 1 (normal -.05 1))", label="ly0")
+        ripl.assume("x0", "(scope_include 0 0 (normal 0 10))", label="lx0")
+        ripl.assume("y0", "(scope_include 0 1 (normal 0 10))", label="ly0")
         ripl.assume("noisy_gps_x_std",
                 "(scope_include (quote parameters) 0 (gamma 1 100))")
         ripl.assume("noisy_gps_y_std",
@@ -220,7 +220,7 @@ def runApproach2(args, combined_frame):
                 "(scope_include %i 0 (normal x%i 0.03))" % (T, T-1),
                 "lx%i"%T)
         ripl.assume("y%i"%T,
-                "(scope_include %i 1 (normal y%i 0.003))" % (T, T-1),
+                "(scope_include %i 1 (normal y%i 0.03))" % (T, T-1),
                 "ly%i"%T)
         ripl.assume("heading%i"%T, "(normal heading%i 0.1)" % (T-1,),
                 "lh%i"%T)
