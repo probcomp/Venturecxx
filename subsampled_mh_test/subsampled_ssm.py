@@ -203,8 +203,10 @@ def main(data_source_, epsilon_, N_):
 
     # PGibbs for h
     #start = np.random.randint(N - pLen + 1)
+    step_h = int(step_h)
+    step_a = int(step_a)
     t_sample_start = time.clock()
-    for _ in step_h:
+    for _ in range(step_h):
       end = min(N-1, start + pLen - 1)
       if not use_austerity:
         #infer_str = '(pgibbs h ordered {P} 1)'.format(P = P)
