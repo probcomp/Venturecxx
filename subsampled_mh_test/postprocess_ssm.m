@@ -5,22 +5,33 @@
 % X = Xtst_pca; clear Xtst_pca
 
 % Load results.
-% epss = [0, 0.005, 0.01, 0.02, 0.05, 0.1, 0.3];
-% % epss = [0, 0.01, 0.05, 0.1, 0.3];
-% rst_file_prefix = 'data/output/ssm/stage_ssm_ssm4_N10000';
-% Nepss = length(epss);
-% digit = 2;
 
-% epss = [0, 0.01, 0.05, 0.1, 0.2];
-% rst_file_prefix = 'data/output/ssm/stage_ssm_L10Loop_ssm3_N1000';
-% Nepss = length(epss);
-% digit = 2;
+% Used in the submission.
 
-epss = [0, 0.001, 0.005, 0.01, 0.05 0.1, 0.3];
-rst_file_prefix = 'data/output/ssm/stage_ssm_init_ssm4_N10000';
+% % Results with N=1000.
+% epss = [0, 0.001, 0.005, 0.01, 0.05 0.1, 0.3];
+% rst_file_prefix = 'data/output/ssm/stage_ssm_init_ssm3_N1000';
+% Nepss = length(epss);
+% digit = 3;
+
+% Results with N=1000.
+epss = [0, 0.005, 0.01, 0.02, 0.05, 0.1, 0.3];
+% epss = [0, 0.01, 0.05, 0.1, 0.3];
+rst_file_prefix = 'data/output/ssm/stage_ssm_ssm4_N10000';
 Nepss = length(epss);
-digit = 3;
+digit = 2;
 
+% % Not used in the submission.
+% 
+% % epss = [0, 0.01, 0.05, 0.1, 0.2];
+% % rst_file_prefix = 'data/output/ssm/stage_ssm_L10Loop_ssm3_N1000';
+% % Nepss = length(epss);
+% % digit = 2;
+% 
+% % epss = [0, 0.001, 0.005, 0.01, 0.05 0.1, 0.3];
+% % rst_file_prefix = 'data/output/ssm/stage_ssm_init_ssm4_N10000';
+% % Nepss = length(epss);
+% % digit = 3;
 
 fprintf('Loading results...\n')
 for i = 1 : Nepss
@@ -54,16 +65,15 @@ figure
 cm = hsv(Nepss);
 legend_str = cell(Nepss, 1);
 for i = 1 : Nepss
-  plot(rsts(i).ts, cummean(rsts(i).a), 'color', cm(i,:)); hold on
-  legend_str{i} = sprintf('\\epsilon = %.3f, T = %d', epss(i), length(rsts(i).ts));
+  plot(rsts(i).ts/3600, cummean(rsts(i).a), 'color', cm(i,:)); hold on
+  legend_str{i} = sprintf('\\epsilon = %.3f', epss(i));
 end
 hold off
 set(gca, 'fontSize', 14)
 legend(legend_str)
 set(gca, 'fontSize', 20)
-xlabel('Time (second)');
+xlabel('Time (hour)');
 ylabel('Avg a');
-
 
 
 figure
@@ -71,7 +81,7 @@ cm = hsv(Nepss);
 legend_str = cell(Nepss, 1);
 for i = 1 : Nepss
   plot(rsts(i).ts, cummean(rsts(i).sig), 'color', cm(i,:)); hold on
-  legend_str{i} = sprintf('\\epsilon = %.3f, T = %d', epss(i), length(rsts(i).ts));
+  legend_str{i} = sprintf('\\epsilon = %.3f', epss(i));
 end
 hold off
 set(gca, 'fontSize', 14)
