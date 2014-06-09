@@ -385,8 +385,12 @@ class VentureNil(VentureValue):
 @serialize.register
 class VenturePair(VentureValue):
   def __init__(self,(first,rest)):
-    assert isinstance(first, VentureValue)
-    assert isinstance(rest, VentureValue)
+    # TODO Maybe I need to be careful about tangent and cotangent
+    # spaces after all.  A true pair needs to have a venture value
+    # inside; a pair that represents the cotangent of something needs
+    # to have cotangents; but cotangents permit symbolic zeros.
+    if not first == 0: assert isinstance(first, VentureValue)
+    if not rest == 0:  assert isinstance(rest, VentureValue)
     self.first = first
     self.rest = rest
   def __repr__(self):
@@ -436,6 +440,10 @@ class VenturePair(VentureValue):
       return self.first
     else:
       return self.rest.lookup(VentureNumber(ind - 1))
+  def lookup_grad(self, index, direction):
+    if direction == 0: return 0
+    if index == 0: return VenturePair((direction, 0))
+    return VenturePair((0, self.rest.lookup_grad(index - 1, direction)))
   def contains(self, obj): # Treat the list as a set
     if obj.equal(self.first):
       return True
@@ -447,6 +455,31 @@ class VenturePair(VentureValue):
       return self.rest.contains(obj)
   def size(self): # Really, length
     return 1 + self.rest.size()
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VenturePair((self.first + other.first, self.rest + other.rest))
+  def __radd__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VenturePair((other.first + self.first, other.rest + self.rest))
+  def __neg__(self):
+    return VenturePair((-self.first, -self.rest))
+  def __sub__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VenturePair((self.first - other.first, self.rest - other.rest))
+  def __mul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VenturePair((self.first * other, self.rest * other))
+  def __rmul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VenturePair((other * self.first, other * self.rest))
   def expressionFor(self):
     return [{"type":"symbol", "value":"pair"}, self.first.expressionFor(), self.rest.expressionFor()]
 
