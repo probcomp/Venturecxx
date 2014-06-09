@@ -99,10 +99,15 @@ def write_dummy_landmarks_file(output_dir):
     write_landmarks_file(output_dir, landmarks_data)
     return
 
-def write_path_file(output_dir, path_data):
+def write_path_file(output_dir, path_frame):
     filename = '%s/slam_out_path.csv' % output_dir
     column_names = ['SLAMGPSTime', 'SLAMLat', 'SLAMLon']
-    writeCSV(filename, column_names, path_data)
+    frame_names = ['t', 'y', 'x']
+    name_map = dict(zip(frame_names, column_names))
+    path_frame = path_frame.rename(columns=name_map)
+    path_frame = path_frame.reindex(columns=column_names)
+    path_frame.to_csv(filename, index=False)
+    #writeCSV(filename, column_names, path_data)
     print "Wrote path data to " + filename
     return
 
@@ -188,7 +193,8 @@ def runRandomWalk(args, combined_frame):
     if args.plot:
         make_movie(args.dataset_name, args.output_dir)
 
-    return out_rows, ripl
+    out_frame = pandas.DataFrame(out_rows, columns=['t', 'x', 'y'])
+    return out_frame, ripl
 
 def runApproach2(args, combined_frame):
     '''
@@ -331,7 +337,8 @@ def runApproach2(args, combined_frame):
     if args.plot:
         make_movie(args.dataset_name, args.output_dir)
 
-    return out_rows, ripl
+    out_frame = pandas.DataFrame(out_rows, columns=['t', 'x', 'y'])
+    return out_frame, ripl
 
 def runApproach3(args, combined_frame):
     '''
@@ -446,17 +453,18 @@ def runApproach3(args, combined_frame):
     if args.plot:
         make_movie(args.dataset_name, args.output_dir)
 
-    return out_rows, ripl
+    out_frame = pandas.DataFrame(out_rows, columns=['t', 'x', 'y'])
+    return out_frame, ripl
 
 approaches = dict(random_walk = runRandomWalk,
                   version_2 = runApproach2,
                   version_3 = runApproach3)
 
 
-def score_result(out_rows, frame):
-    result = np.array(out_rows)
+def score_result(out_frame, frame):
+    result = out_frame.reindex(columns=['t', 'y', 'x']).values
     frame['t'] = frame.index
-    ground = frame.reindex(columns=['t', 'clean_x', 'clean_y']).dropna().values
+    ground = frame.reindex(columns=['t', 'clean_y', 'clean_x']).dropna().values
     import slam_eval
     return slam_eval.gps_compare(result, ground)
 
@@ -470,9 +478,9 @@ if __name__ == '__main__':
     print "Set plot limits: " + str((xlim, ylim))
 
     approach = approaches[args.version]
-    out_rows, ripl = approach(args, combined_frame)
+    out_frame, ripl = approach(args, combined_frame)
 
-    write_path_file(args.output_dir, out_rows)
+    write_path_file(args.output_dir, out_frame)
     write_dummy_landmarks_file(args.output_dir)
-    print 'score_result(out_rows, combined_frame): %s' % score_result(out_rows,
+    print 'score_result(out_frame, combined_frame): %s' % score_result(out_frame,
             combined_frame)
