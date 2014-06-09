@@ -94,6 +94,11 @@ def write_landmarks_file(output_dir, landmarks_data=((0,0),)):
     print "Wrote landmarks data to " + landmarks_file
     return
 
+def write_dummy_landmarks_file(output_dir):
+    landmarks_data = ((0,0),)
+    write_landmarks_file(output_dir, landmarks_data)
+    return
+
 def write_path_file(output_dir, path_data):
     filename = '%s/slam_out_path.csv' % output_dir
     column_names = ['SLAMGPSTime', 'SLAMLat', 'SLAMLon']
@@ -443,22 +448,31 @@ def runApproach3(args, combined_frame):
 
     return out_rows, ripl
 
+approaches = dict(random_walk = runRandomWalk,
+                  version_2 = runApproach2,
+                  version_3 = runApproach3)
+
+
+def score_result(out_rows, frame):
+    result = np.array(out_rows)
+    frame['t'] = frame.index
+    ground = frame.reindex(columns=['t', 'clean_x', 'clean_y']).dropna().values
+    import slam_eval
+    return slam_eval.gps_compare(result, ground)
+
+xlim = (-10, 10)
+ylim = (-5, 5)
 
 if __name__ == '__main__':
     args = parse_args()
     print "Loading data"
     combined_frame = read_combined_frame(args)
-
-    xlim = (-10, 10)
-    ylim = (-5, 5)
     print "Set plot limits: " + str((xlim, ylim))
 
-    approaches = dict(random_walk = runRandomWalk,
-                      version_2 = runApproach2,
-                      version_3 = runApproach3)
     approach = approaches[args.version]
     out_rows, ripl = approach(args, combined_frame)
 
     write_path_file(args.output_dir, out_rows)
-    landmarks_data=((0,0),)
-    write_landmarks_file(args.output_dir, landmarks_data)
+    write_dummy_landmarks_file(args.output_dir)
+    print 'score_result(out_rows, combined_frame): %s' % score_result(out_rows,
+            combined_frame)
