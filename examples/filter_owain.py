@@ -172,7 +172,11 @@ def runApproach2():
     noisy_gps_stds = dict(heading=0.01)
     k = args.window_size
     r = venture.shortcuts.make_church_prime_ripl()
-    
+    freeze_on = args.freeze_on
+    if args.particle:
+        num_particles = args.num_particles
+        r.infer('(resample %s)'%num_particles)
+
     print "Using %d row" % len(combined_frame)
     N_samples = args.samples
     print "Generating %d samples per time step" % N_samples
@@ -180,6 +184,32 @@ def runApproach2():
     times = []
     out_rows = []; gps = []; all_clean_gps = []
     gps_frame_count = 0
+
+
+    def mh_infer(T):
+        Ts = range(T+1)[-k:]
+        inf_str= lambda s:'(mh %i one %i)'%(s,args.per_block)
+        forwards = [inf_str(t) for t in Ts]
+        backwards = forwards[::-1]
+        for _ in range(2):
+            [r.infer(inf_str) for inf_str in backwards]
+            [r.infer(inf_str) for inf_str in forwards]
+
+        start = time.time()
+        if np.mod(len(out_rows),10) == 0:
+            lim = args.lim_parameters
+            max_steps = 10
+            steps = 1 + max_steps*( T*(-1./lim) +1 )
+            r.infer('(mh parameters one %i)'% max(0,int(steps)) )
+            if args.verbose:
+                print (T,time.time() - start)
+                print ' '.join(backwards)
+
+    def particle_infer():
+        r.infer('(resample %s)' % num_particles)
+
+
+
     for T, (_T, combined_frame_row) in enumerate(combined_frame.iterrows()):
         clean_gps = get_clean_gps(combined_frame_row)
         xs = []
@@ -187,10 +217,8 @@ def runApproach2():
         headings = []
         x_datas = []
         y_datas = []
-        per_block = args.per_block
 
-
-        was_gps_row = not np.isnan(combined_frame.irow(T-k+1)['x'])
+        was_gps_row = not np.isnan(combined_frame.irow((T-k)-1)['x'])
         is_gps_row = not np.isnan(combined_frame_row['x'])
         
         if T is 0:
@@ -208,9 +236,15 @@ def runApproach2():
             r.assume("y%i"%T,
                     "(scope_include %i 1 (normal y%i 0.001))"%(T,T-1),"ly%i"%T)
             r.assume("heading%i"%T, "(normal heading%i 0.1)" % (T-1),"lh%i"%T)
-
-        
             
+        
+        if freeze_on and T > k:
+            r.freeze("lx%i"%((T-k)-1))
+            r.freeze("ly%i"%((T-k)-1))
+            if was_gps_row:
+                r.forget("x_data%i"%((T-k)-1))
+                r.forget("y_data%i"%((T-k)-1))
+        
         if is_gps_row:
             noisy_gps_x = combined_frame_row['x']
             noisy_gps_y = combined_frame_row['y']
@@ -219,29 +253,14 @@ def runApproach2():
                 print "T:%i,obs:%s"%( T,(noisy_gps_x,noisy_gps_y,noisy_gps_heading))
                 map(lambda x:display_directives(r,x),('assume','observe') )
                 
-                
             r.observe("(normal x%i noisy_gps_x_std)"%T, noisy_gps_x, label="x_data%i"%T )
             r.observe("(normal y%i noisy_gps_y_std)"%T, noisy_gps_y, label="y_data%i"%T)
 
-            Ts = range(T+1)[-k:]
-            inf_str= lambda s:'(mh %i one %i)'%(s,per_block)
-            forwards = [inf_str(t) for t in Ts]
-            backwards = forwards[::-1]
-            for _ in range(2):
-                [r.infer(inf_str) for inf_str in backwards]
-                [r.infer(inf_str) for inf_str in forwards]
-            #print ' '.join(backwards)
-
-                
-            start = time.time()
-            if np.mod(len(out_rows),10) == 0:
-                lim = args.lim_parameters
-                max_steps = 10
-                steps = 1 + max_steps*( T*(-1./lim) +1 )
-                r.infer('(mh parameters one %i)'% max(0,int(steps)) )
-            #print 'param time %.2f'%(time.time() - start)
-                print (T,time.time() - start)
-
+            if args.particle:
+                particle_infer()
+            else:
+                mh_infer(T)
+        
             store=lambda s:np.array(float(r.sample(s)))
             xs = store("x%i"%T)
             ys = store("y%i"%T)
@@ -263,15 +282,15 @@ def runApproach2():
                 gps.append( (combined_frame_row.name,gps_xs,gps_ys) )
                 all_clean_gps.append( (combined_frame_row.name,clean_gps) )
 
-
   
     if args.plot:
         make_movie(dataset_name,args.output_dir)
+
     round2 =  lambda t: np.round(t,2)
     all_clean = map( lambda p: (p[0],round2(p[1])), all_clean_gps )
     map2 = lambda l: map( round2, l)
     out_rows_gps = map( map2, ( out_rows, gps) ) + [ all_clean ]
-    return out_rows_gps
+    return out_rows_gps,r
 
 
 
@@ -282,11 +301,12 @@ if __name__ == '__main__':
     input_dir = '/home/owainevans/Venturecxx/examples/CP1-Quad-Rotor/data/automobile/1_straight/data/noisy'
     output_dir = '/home/owainevans/Venturecxx/examples/CP1-Quad-Rotor/data/automobile/1_straight_output'
 
-    args = {'plot':False, 'samples': 2, 'lim_parameters':1000, 
+    args = {'plot':False, 'samples': 1, 'lim_parameters':1000, 'freeze_on': True,
+            'particle': True, 'num_particles':4,
             'input_dir': input_dir, 'output_dir': output_dir,
             'per_block': cl_args.per_block,
             'version': 'v2', 'frames': cl_args.frames,
-            'window_size':2,
+            'window_size':4,
             'verbose':False,
             'clean_dir': '/home/owainevans/Venturecxx/examples/CP1-Quad-Rotor/data/automobile/1_straight/data/ground',
             'dataset_name':'/home/owainevans/Venturecxx/examples/CP1-Quad-Rotor/data/automobile/1_straight_output/5_eight', 
@@ -306,24 +326,19 @@ if __name__ == '__main__':
     
     start = time.time()
 
-    # if args.version != 'v2':
-    #     out_rows = approach()
-    # else:
-    #     all_out_rows = []
-    #     for i in range(args.samples):
-    #out_rows
-    #         all_out_rows.append( approach()[0] )
-                                                               
-    #     mean_out_rows = np.mean(all_out_rows,axis=0)
-    #     out_rows = mean_out_rows
+    all_mses = []
     for i in range(args.samples):
-        out_rows,gps,all_clean_gps = approach()
+        out,r = approach()
+        out_rows,gps,all_clean_gps = out
         all_clean = np.array( [ [t]+list(ar[:-1]) for t,ar in all_clean_gps] )
         mse = np.mean( (np.array(out_rows) - all_clean )**2 )
+        all_mses.append( mse )
         
-        st = (args.frames, args.per_block, mse, time.time() - start)
-        print 'Summary: frames %i, mh/block %i, mse %.4f, time %.2f'%st
-                                                                  
+        st = (args.particle, args.freeze_on, args.frames, args.lim_parameters,
+              args.per_block, args.window_size, mse, time.time() - start)
+        print 'Summary: part %s, freeze %s, frames %i, lim_param %i, mh/block %i, k=%i, mse %.4f, time %.2f'%st
+
+    print 'all mses:, , mean, var',all_mses,' ',np.mean(all_mses),' ',np.std(all_mses)
     if args.plot:
         subprocess.call('gpicview %s/*.png'%output_dir, shell=True)
 
