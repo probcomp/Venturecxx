@@ -26,7 +26,7 @@ def parse_args(args_override=None):
     parser.add_argument('--dataset_name', type=str, default='')
     parser.add_argument('--version', default='random_walk')
     parser.add_argument('--plot', action='store_true')
-    parser.add_argument('--frames', type=int, default=100000)
+    parser.add_argument('--max_rows', type=int, default=None)
     parser.add_argument('--samples', type=int, default=10)
     parser.add_argument('--window_size', type=int, default=10)
     args = parser.parse_args(args_override)
@@ -36,20 +36,21 @@ def set_trace():
     Pdb(color_scheme='LightBG').set_trace(sys._getframe().f_back)
 
 # Read and pre-process the data.
-def read_combined_frame(args):
-    gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(args.input_dir)
+def read_combined_frame(input_dir, clean_dir=None, max_time=None, max_rows=None):
+    gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(input_dir)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
 
     gps_to_clean_gps = dict(GPSLat='clean_y', GPSLon='clean_x', Orientation='clean_heading')
     clean_gps_frame = pandas.DataFrame(columns=gps_to_clean_gps.values())
-    if args.clean_dir is not None:
+    if clean_dir is not None:
         clean_gps_frame_config = dict(filename='slam_gps.csv', index_col='TimeGPS',
             colname_map=gps_to_clean_gps)
-        clean_gps_frame = vs.read_frame(dirname=args.clean_dir, **clean_gps_frame_config)
+        clean_gps_frame = vs.read_frame(dirname=clean_dir, **clean_gps_frame_config)
 
     combined_frame = combined_frame.join(clean_gps_frame)
-    combined_frame = combined_frame.truncate(after=args.max_time)
-    combined_frame = combined_frame.head(args.frames)
+    combined_frame = combined_frame.truncate(after=max_time)
+    if max_rows is not None:
+        combined_frame = combined_frame.head(max_rows)
 
     return combined_frame
 
@@ -491,7 +492,8 @@ ylim = (-5, 5)
 if __name__ == '__main__':
     args = parse_args()
     print "Loading data"
-    combined_frame = read_combined_frame(args)
+    combined_frame = read_combined_frame(args.input_dir, args.clean_dir,
+            args.max_time, args.max_rows)
     print "Set plot limits: " + str((xlim, ylim))
 
     approach = approaches[args.version]
