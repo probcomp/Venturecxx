@@ -461,18 +461,22 @@ approaches = dict(random_walk = runRandomWalk,
                   version_3 = runApproach3)
 
 
-def score_result(out_frame, frame):
+def score_result(out_frame, has_ground_frame):
     result = out_frame.reindex(columns=['t', 'y', 'x']).values
-    frame['t'] = frame.index
-    ground = frame.reindex(columns=['t', 'clean_y', 'clean_x']).dropna().values
+    has_ground_frame['t'] = has_ground_frame.index
+    ground_frame = has_ground_frame.reindex(columns=['t', 'clean_y', 'clean_x'])
+    ground = ground_frame.dropna().values
     import slam_eval
     return slam_eval.gps_compare(result, ground)
 
-def assert_xy_not_reversed(out_frame, frame):
-    normal_score = score_result(out_frame, frame)
-    reversed_frame = out_frame.copy()
-    reversed_frame.y, reversed_frame.x = reversed_frame.x, reversed_frame.y
-    reversed_score = score_result(reversed_frame, frame)
+def assert_xy_not_reversed(out_frame, has_ground_frame):
+    # consider the data 'reversed' if it scores better when you switch x and y
+    def score_result_reversed(out_frame, has_ground_frame):
+        reversed_frame = out_frame.copy()
+        reversed_frame.y, reversed_frame.x = reversed_frame.x, reversed_frame.y
+        return score_result(reversed_frame, has_ground_frame)
+    normal_score = score_result(out_frame, has_ground_frame)
+    reversed_score = score_result_reversed(out_frame, has_ground_frame)
     not_reversed = reversed_score > normal_score
     assert not_reversed
     return not_reversed
@@ -488,6 +492,7 @@ if __name__ == '__main__':
 
     approach = approaches[args.version]
     out_frame, ripl = approach(args, combined_frame)
+    assert_xy_not_reversed(out_frame, combined_frame)
 
     write_path_file(args.output_dir, out_frame)
     write_dummy_landmarks_file(args.output_dir)
