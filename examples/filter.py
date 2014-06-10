@@ -461,10 +461,11 @@ approaches = dict(random_walk = runRandomWalk,
                   version_3 = runApproach3)
 
 
-def score_result(out_frame, frame):
+def score_result(out_frame, has_ground_frame):
     result = out_frame.reindex(columns=['t', 'y', 'x']).values
-    frame['t'] = frame.index
-    ground = frame.reindex(columns=['t', 'clean_y', 'clean_x']).dropna().values
+    has_ground_frame['t'] = has_ground_frame.index
+    ground_frame = has_ground_frame.reindex(columns=['t', 'clean_y', 'clean_x'])
+    ground = ground_frame.dropna().values
     import slam_eval
     return slam_eval.gps_compare(result, ground)
 
