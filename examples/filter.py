@@ -468,6 +468,15 @@ def score_result(out_frame, frame):
     import slam_eval
     return slam_eval.gps_compare(result, ground)
 
+def assert_xy_not_reversed(out_frame, frame):
+    normal_score = score_result(out_frame, frame)
+    reversed_frame = out_frame.copy()
+    reversed_frame.y, reversed_frame.x = reversed_frame.x, reversed_frame.y
+    reversed_score = score_result(reversed_frame, frame)
+    not_reversed = reversed_score > normal_score
+    assert not_reversed
+    return not_reversed
+
 xlim = (-10, 10)
 ylim = (-5, 5)
 
