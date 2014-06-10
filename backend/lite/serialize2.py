@@ -1,29 +1,31 @@
-from venture.lite.engine import Engine
-from venture.lite.trace import Trace
-from venture.lite.request import Request
-from venture.lite.value import SPRef
-from venture.lite.env import VentureEnvironment
 from venture.lite.omegadb import OmegaDB
-from venture.lite.scaffold import Scaffold, constructScaffold
-from venture.lite.detach import detachAndExtract, unevalFamily
-from venture.lite.regen import regenAndAttach, evalFamily, restore
-from venture.lite.consistency import assertTrace, assertTorus
-
-# dummy trace, for the convenience methods
-trace = object.__new__(Trace)
-pspAt = trace.pspAt
-argsAt = trace.argsAt
 
 class OrderedOmegaDB(OmegaDB):
-    def __init__(self):
+    """OmegaDB that additionally maintains a stack, containing all stored
+    values in insertion order. By analogy to OrderedDict.
+    """
+
+    def __init__(self, Trace):
         super(OrderedOmegaDB, self).__init__()
         self.stack = []
+
+        # make a dummy trace to get the convenience methods
+        trace = object.__new__(Trace)
+        self.pspAt = trace.pspAt
+        self.argsAt = trace.argsAt
+
     def hasValueFor(self, node):
         return True
+
     def getValue(self, node):
+        # TODO: move these imports to the top level after fixing circular imports
+        from venture.lite.request import Request
+        from venture.lite.value import SPRef
+        from venture.lite.env import VentureEnvironment
+
         if super(OrderedOmegaDB, self).hasValueFor(node):
             return super(OrderedOmegaDB, self).getValue(node)
-        psp = pspAt(node)
+        psp = self.pspAt(node)
         if psp.isRandom():
             value = self.stack.pop()
             if isinstance(value, (Request, SPRef, VentureEnvironment)):
@@ -32,11 +34,17 @@ class OrderedOmegaDB(OmegaDB):
         else:
             # resimulate deterministic PSPs
             # TODO: is it better to store deterministic values or to resimulate?
-            args = argsAt(node)
+            args = self.argsAt(node)
             return psp.simulate(args)
+
     def extractValue(self, node, value):
+        # TODO: move these imports to the top level after fixing circular imports
+        from venture.lite.request import Request
+        from venture.lite.value import SPRef
+        from venture.lite.env import VentureEnvironment
+
         super(OrderedOmegaDB, self).extractValue(node, value)
-        psp = pspAt(node)
+        psp = self.pspAt(node)
         if psp.isRandom():
             if isinstance(value, (Request, SPRef, VentureEnvironment)):
                 raise Exception("Cannot restore a randomly constructed %s" % type(value))
@@ -61,12 +69,19 @@ def topo_sort(trace, nodes):
     assert len(ret) == len(nodes)
     return ret
 
+## temporary testing/prototype code (TODO: remove this and make actual unit tests)
+
 def ser_deser(engine):
+    from venture.lite.scaffold import constructScaffold
+    from venture.lite.detach import detachAndExtract
+    from venture.lite.regen import regenAndAttach
+    from venture.lite.consistency import assertTrace, assertTorus
+
     trace = engine.getDistinguishedTrace()
     scaffold = constructScaffold(trace, [trace.getAllNodesInScope('default')])
     assertTrace(trace, scaffold)
 
-    _, omegaDB = detachAndExtract(trace, scaffold.border[0], scaffold, omegaDB = OrderedOmegaDB())
+    _, omegaDB = detachAndExtract(trace, scaffold.border[0], scaffold, omegaDB = OrderedOmegaDB(trace.__class__))
     assertTorus(scaffold)
 
     _ = regenAndAttach(trace, scaffold.border[0], scaffold, True, omegaDB, {})
@@ -75,19 +90,23 @@ def ser_deser(engine):
     return engine
 
 def ser_deser(engine):
+    from venture.lite.scaffold import constructScaffold
+    from venture.lite.detach import detachAndExtract
+    from venture.lite.regen import regenAndAttach
+
     old_trace = engine.getDistinguishedTrace()
     directives = engine.directives
     directiveCounter = engine.directiveCounter
+    old_trace.makeConsistent()
 
-    engine = Engine()
-    engine.directives = directives
+    Trace = old_trace.__class__
+    new_trace = Trace()
+    engine.traces = [new_trace]
     for did, directive in sorted(directives.items()):
         engine.directiveCounter = did - 1
         engine.replay(directive)
     engine.directiveCounter = directiveCounter
-    new_trace = engine.getDistinguishedTrace()
     new_trace.makeConsistent()
-    old_trace.makeConsistent()
 
     old_scaffold = constructScaffold(old_trace, [old_trace.getAllNodesInScope('default')])
     new_scaffold = constructScaffold(new_trace, [new_trace.getAllNodesInScope('default')])
@@ -95,7 +114,7 @@ def ser_deser(engine):
     old_border = topo_sort(old_trace, old_scaffold.border[0])
     new_border = topo_sort(new_trace, new_scaffold.border[0])
 
-    _, oldDB = detachAndExtract(old_trace, old_border, old_scaffold, omegaDB = OrderedOmegaDB())
+    _, oldDB = detachAndExtract(old_trace, old_border, old_scaffold, omegaDB = OrderedOmegaDB(Trace))
     _, newDB = detachAndExtract(new_trace, new_border, new_scaffold)
 
     _ = regenAndAttach(old_trace, old_border, old_scaffold, True, oldDB, {})
@@ -105,12 +124,16 @@ def ser_deser(engine):
     return engine
 
 def ser_deser(engine):
+    from venture.lite.scaffold import Scaffold
+    from venture.lite.detach import unevalFamily
+    from venture.lite.regen import evalFamily, restore
+
     old_trace = engine.getDistinguishedTrace()
     directives = engine.directives
-    directiveCounter = engine.directiveCounter
-
     old_trace.makeConsistent()
-    omegaDB = OrderedOmegaDB()
+
+    Trace = old_trace.__class__
+    omegaDB = OrderedOmegaDB(Trace)
     scaffold = Scaffold()
 
     for did, directive in sorted(directives.items(), reverse=True):
@@ -124,10 +147,8 @@ def ser_deser(engine):
         if directive[0] == "observe":
             old_trace.observe(did, directive[2])
 
-    engine = Engine()
-    engine.directives = directives
-    engine.directiveCounter = directiveCounter
-    new_trace = engine.getDistinguishedTrace()
+    new_trace = Trace()
+    engine.traces = [new_trace]
 
     def evalHelper(did, datum):
         exp = new_trace.unboxExpression(engine.desugarLambda(datum))
