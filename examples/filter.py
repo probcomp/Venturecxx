@@ -492,6 +492,7 @@ if __name__ == '__main__':
 
     approach = approaches[args.version]
     out_frame, ripl = approach(args, combined_frame)
+    assert_xy_not_reversed(out_frame, combined_frame)
 
     write_path_file(args.output_dir, out_frame)
     write_dummy_landmarks_file(args.output_dir)
