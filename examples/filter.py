@@ -22,7 +22,7 @@ def parse_args(args_override=None):
     parser.add_argument('input_dir', type=str)
     parser.add_argument('output_dir', type=str)
     parser.add_argument('--max_time', type=float, default=None)
-    parser.add_argument('--clean_dir', type=str, default=None)
+    parser.add_argument('--ground_dir', type=str, default=None)
     parser.add_argument('--dataset_name', type=str, default='')
     parser.add_argument('--version', default='random_walk')
     parser.add_argument('--plot', action='store_true')
@@ -35,19 +35,22 @@ def parse_args(args_override=None):
 def set_trace():
     Pdb(color_scheme='LightBG').set_trace(sys._getframe().f_back)
 
+def read_ground_gps_frame(ground_dir=None):
+    gps_to_ground_gps = dict(GPSLat='ground_y', GPSLon='ground_x', Orientation='ground_heading')
+    ground_gps_frame = pandas.DataFrame(columns=gps_to_ground_gps.values())
+    if ground_dir is not None:
+        ground_gps_frame_config = dict(filename='slam_gps.csv', index_col='TimeGPS',
+            colname_map=gps_to_ground_gps)
+        ground_gps_frame = vs.read_frame(dirname=ground_dir, **ground_gps_frame_config)
+        pass
+    return ground_gps_frame
+
 # Read and pre-process the data.
-def read_combined_frame(input_dir, clean_dir=None, max_time=None, max_rows=None):
+def read_combined_frame(input_dir, ground_dir=None, max_time=None, max_rows=None):
     gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(input_dir)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
-
-    gps_to_clean_gps = dict(GPSLat='clean_y', GPSLon='clean_x', Orientation='clean_heading')
-    clean_gps_frame = pandas.DataFrame(columns=gps_to_clean_gps.values())
-    if clean_dir is not None:
-        clean_gps_frame_config = dict(filename='slam_gps.csv', index_col='TimeGPS',
-            colname_map=gps_to_clean_gps)
-        clean_gps_frame = vs.read_frame(dirname=clean_dir, **clean_gps_frame_config)
-
-    combined_frame = combined_frame.join(clean_gps_frame)
+    ground_gps_frame = read_ground_gps_frame(ground_dir)
+    combined_frame = combined_frame.join(ground_gps_frame)
     combined_frame = combined_frame.truncate(after=max_time)
     if max_rows is not None:
         combined_frame = combined_frame.head(max_rows)
@@ -56,12 +59,12 @@ def read_combined_frame(input_dir, clean_dir=None, max_time=None, max_rows=None)
 
 # Plot samples along with the ground truth.
 def plot_pose(figname, xlim, ylim, xs=None, ys=None, headings=None,
-        clean_gps_pose=None, dirname=''):
+        ground_gps_pose=None, dirname=''):
     figname = os.path.join(dirname, figname)
     ensure(figname)
     with Timer(figname) as t:
         # set_trace()
-        spu.plot_scene_scatter(xs, ys, headings, clean_gps_pose)
+        spu.plot_scene_scatter(xs, ys, headings, ground_gps_pose)
         plt.xlim(xlim)
         plt.ylim(ylim)
         plt.savefig(figname, format = 'png')
@@ -112,8 +115,8 @@ def write_path_file(output_dir, path_frame):
     print "Wrote path data to " + filename
     return
 
-def get_clean_gps(row):
-    return (row['clean_x'], row['clean_y'], row['clean_heading'])
+def get_ground_gps(row):
+    return (row['ground_x'], row['ground_y'], row['ground_heading'])
 
 # Run the simple random walk solution.
 def runRandomWalk(args, combined_frame):
@@ -135,7 +138,7 @@ def runRandomWalk(args, combined_frame):
     for row_i, (_T, combined_frame_row) in enumerate(combined_frame.iterrows()):
         with Timer('row %s' % row_i) as t:
             # set_trace()
-            clean_gps = get_clean_gps(combined_frame_row)
+            ground_gps = get_ground_gps(combined_frame_row)
                   
             xs = []
             ys = []
@@ -183,7 +186,7 @@ def runRandomWalk(args, combined_frame):
                 if args.plot:
                     filename = args.dataset_name + "_raw_%s.png" % gps_frame_count
                     plot_pose(filename, xlim, ylim, xs=xs, ys=ys,
-                            headings=headings, clean_gps_pose=clean_gps,
+                            headings=headings, ground_gps_pose=ground_gps,
                             dirname=args.output_dir)
                 out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
       
@@ -287,7 +290,7 @@ def runApproach2(args, combined_frame):
         return
     for T, (_T, combined_frame_row) in enumerate(combined_frame.iterrows()):
         with Timer('row %s' % T) as t:
-            clean_gps = get_clean_gps(combined_frame_row)
+            ground_gps = get_ground_gps(combined_frame_row)
 
             was_gps_row = not np.isnan(combined_frame.irow(T-k+1)['x'])
             is_gps_row = not np.isnan(combined_frame_row['x'])
@@ -327,7 +330,7 @@ def runApproach2(args, combined_frame):
                 if args.plot:
                     filename = args.dataset_name + "_raw_%s.png" % gps_frame_count
                     plot_pose(filename, xlim, ylim, xs=xs, ys=ys,
-                              headings=headings, clean_gps_pose=clean_gps,
+                              headings=headings, ground_gps_pose=ground_gps,
                               dirname=args.output_dir)
                 out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
       
@@ -357,7 +360,7 @@ def runApproach3(args, combined_frame):
     gps_frame_count = 0
     for T, (_T, combined_frame_row) in enumerate(combined_frame.iterrows()):
         with Timer('row %s' % T) as t:
-            clean_gps = get_clean_gps(combined_frame_row)
+            ground_gps = get_ground_gps(combined_frame_row)
             xs = []
             ys = []
             headings = []
@@ -445,7 +448,7 @@ def runApproach3(args, combined_frame):
                 if args.plot:
                     filename = args.dataset_name + "_raw_%s.png" % gps_frame_count
                     plot_pose(filename, xlim, ylim, xs=xs, ys=ys,
-                              headings=headings, clean_gps_pose=clean_gps,
+                              headings=headings, ground_gps_pose=ground_gps,
                               dirname=args.output_dir)
                 out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
       
@@ -465,7 +468,7 @@ approaches = dict(random_walk = runRandomWalk,
 def score_result(out_frame, has_ground_frame):
     result = out_frame.reindex(columns=['t', 'y', 'x']).values
     has_ground_frame['t'] = has_ground_frame.index
-    ground_frame = has_ground_frame.reindex(columns=['t', 'clean_y', 'clean_x'])
+    ground_frame = has_ground_frame.reindex(columns=['t', 'ground_y', 'ground_x'])
     ground = ground_frame.dropna().values
     import slam_eval
     return slam_eval.gps_compare(result, ground)
@@ -492,7 +495,7 @@ ylim = (-5, 5)
 if __name__ == '__main__':
     args = parse_args()
     print "Loading data"
-    combined_frame = read_combined_frame(args.input_dir, args.clean_dir,
+    combined_frame = read_combined_frame(args.input_dir, args.ground_dir,
             args.max_time, args.max_rows)
     print "Set plot limits: " + str((xlim, ylim))
 
