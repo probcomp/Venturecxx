@@ -180,11 +180,7 @@ effect of renumbering the directives, if some had been forgotten."""
       newTraces = [None for p in range(P)]
       for p in range(P):
         parent = sampleLogCategorical(self.weights) # will need to include or rewrite
-        try:
-          newTrace = self.traces[parent].stop_and_copy()
-        except TypeError:
-          # stop_and_copy requires engine argument in Lite
-          newTrace = self.traces[parent].stop_and_copy(self)
+        newTrace = self.traces[parent].stop_and_copy(self)
         newTraces[p] = newTrace
         if self.name != "lite":
           newTraces[p].set_seed(random.randint(1,2**31-1))
