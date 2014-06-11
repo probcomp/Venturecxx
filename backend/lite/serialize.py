@@ -3,8 +3,15 @@ from venture.lite.serialize_old import * ## backward compatibility
 from venture.lite.omegadb import OmegaDB
 
 class OrderedOmegaDB(OmegaDB):
-    """OmegaDB that additionally maintains a stack, containing all stored
+    """OmegaDB that additionally maintains a stack containing all stored
     values in insertion order. By analogy to OrderedDict.
+
+    This uses the fact that the regen/eval order is deterministic and
+    exactly the reverse of the detach/uneval order. Thus it can be
+    used to detach one scaffold (producing a value stack), then regen
+    into a different scaffold (consuming the value stack), provided
+    they are equivalent.
+
     """
 
     def __init__(self, Trace):
@@ -27,6 +34,7 @@ class OrderedOmegaDB(OmegaDB):
 
         if super(OrderedOmegaDB, self).hasValueFor(node):
             return super(OrderedOmegaDB, self).getValue(node)
+
         psp = self.pspAt(node)
         if psp.isRandom():
             value = self.stack.pop()
@@ -46,6 +54,7 @@ class OrderedOmegaDB(OmegaDB):
         from venture.lite.env import VentureEnvironment
 
         super(OrderedOmegaDB, self).extractValue(node, value)
+
         psp = self.pspAt(node)
         if psp.isRandom():
             if isinstance(value, (Request, SPRef, VentureEnvironment)):
