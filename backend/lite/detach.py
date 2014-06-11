@@ -4,7 +4,7 @@ from value import SPRef
 from scope import isScopeIncludeOutputPSP
 from sp import VentureSP
 
-def detachAndExtract(trace, border, scaffold, omegaDB = None, compute_gradient = False):
+def detachAndExtract(trace, border, scaffold, compute_gradient = False):
   """Returns the weight and an OmegaDB.  The OmegaDB contains
   sufficient information to restore the trace, and, if
   compute_gradient is True, to determine the partial derivative of
@@ -12,8 +12,7 @@ def detachAndExtract(trace, border, scaffold, omegaDB = None, compute_gradient =
   computed by one level of reverse-mode AD, with the underlying trace
   serving as tape."""
   weight = 0
-  if omegaDB is None:
-    omegaDB = OmegaDB()
+  omegaDB = OmegaDB()
   for node in reversed(border):
     if scaffold.isAbsorbing(node):
       weight += detach(trace, node, scaffold, omegaDB, compute_gradient)
