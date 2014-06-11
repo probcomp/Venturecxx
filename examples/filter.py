@@ -162,7 +162,7 @@ def runRandomWalk():
               gps_frame_count += 1
               if args.plot:
                 plot_pose(dataset_name + "_raw_%s.png" % gps_frame_count, xlim, ylim, xs=xs, ys=ys, headings=headings, clean_gps_pose=clean_gps)
-              out_rows.append((combined_frame_row.name, np.average(xs), np.average(ys)))
+              out_rows.append((combined_frame_row.name, np.average(ys), np.average(xs)))
       
       times.append(t.elapsed)
 
