@@ -167,7 +167,6 @@ def runRandomWalk():
 
 
 def runApproach2():
-    print 'runApproach2\n\n'
 
     noisy_gps_stds = dict(heading=0.01)
     k = args.window_size
@@ -208,6 +207,12 @@ def runApproach2():
     def particle_infer():
         r.infer('(resample %s)' % num_particles)
 
+
+    def do_inference(T):
+        if args.particle:
+            particle_infer()
+        else:
+            mh_infer(T)
 
 
     for T, (_T, combined_frame_row) in enumerate(combined_frame.iterrows()):
@@ -256,10 +261,7 @@ def runApproach2():
             r.observe("(normal x%i noisy_gps_x_std)"%T, noisy_gps_x, label="x_data%i"%T )
             r.observe("(normal y%i noisy_gps_y_std)"%T, noisy_gps_y, label="y_data%i"%T)
 
-            if args.particle:
-                particle_infer()
-            else:
-                mh_infer(T)
+            do_inference(T)
         
             store=lambda s:np.array(float(r.sample(s)))
             xs = store("x%i"%T)
@@ -282,7 +284,12 @@ def runApproach2():
                 gps.append( (combined_frame_row.name,gps_xs,gps_ys) )
                 all_clean_gps.append( (combined_frame_row.name,clean_gps) )
 
-  
+        elif args.always_infer:
+            do_inference(T)
+        else:
+            pass
+
+                
     if args.plot:
         make_movie(dataset_name,args.output_dir)
 
@@ -296,36 +303,30 @@ def runApproach2():
 
 if __name__ == '__main__':
     cl_args = parse_args()
-    print "Loading data"
-
     input_dir = '/home/owainevans/Venturecxx/examples/CP1-Quad-Rotor/data/automobile/1_straight/data/noisy'
     output_dir = '/home/owainevans/Venturecxx/examples/CP1-Quad-Rotor/data/automobile/1_straight_output'
 
     args = {'plot':False, 'samples': 1, 'lim_parameters':1000, 'freeze_on': True,
-            'particle': True, 'num_particles':4,
-            'input_dir': input_dir, 'output_dir': output_dir,
-            'per_block': cl_args.per_block,
-            'version': 'v2', 'frames': cl_args.frames,
-            'window_size':4,
-            'verbose':False,
+            'particle': True, 'num_particles':4, 'always_infer':True,
+
+            'window_size':2, 'verbose':False,
+
+            'per_block': cl_args.per_block,  'frames': cl_args.frames,
             'clean_dir': '/home/owainevans/Venturecxx/examples/CP1-Quad-Rotor/data/automobile/1_straight/data/ground',
             'dataset_name':'/home/owainevans/Venturecxx/examples/CP1-Quad-Rotor/data/automobile/1_straight_output/5_eight', 
-            'ground': False, 'max_time': None }
+            'input_dir': input_dir, 'output_dir': output_dir, 'ground': False,
+            'max_time': None, 'version': 'v2', }
 
 
     args = argparse.Namespace(**args)
-    print 'plot',args.plot
     dataset_name = args.dataset_name
     combined_frame, clean_gps_frame = read_combined_frame()
     xlim = (-10, 10);    ylim = (-5, 5)
-
-    print "Set plot limits: " + str((xlim, ylim))
     out_cols = ['SLAMGPSTime', 'SLAMLat', 'SLAMLon']
-    approaches = dict(v1 = runRandomWalk,v2 = runApproach2)
+    approaches = dict(v1 =runRandomWalk,v2 = runApproach2)
     approach = approaches[args.version]
     
     start = time.time()
-
     all_mses = []
     for i in range(args.samples):
         out,r = approach()
@@ -338,17 +339,17 @@ if __name__ == '__main__':
               args.per_block, args.window_size, mse, time.time() - start)
         print 'Summary: part %s, freeze %s, frames %i, lim_param %i, mh/block %i, k=%i, mse %.4f, time %.2f'%st
 
-    print 'all mses:, , mean, var',all_mses,' ',np.mean(all_mses),' ',np.std(all_mses)
+    print 'mses, mean, var',all_mses,' ',np.mean(all_mses),' ',np.std(all_mses)
     if args.plot:
         subprocess.call('gpicview %s/*.png'%output_dir, shell=True)
 
     out_file = '%s/slam_out_path.csv' % args.output_dir
     ensure(out_file);   writeCSV(out_file, out_cols, out_rows)
-    print "Wrote output to " + out_file
+#    print "Wrote output to " + out_file
     landmarks_cols = ['SLAMBeaconX','SLAMBeaconY']; landmarks_rows = [(0, 0)]
     landmarks_file = '%s/slam_out_landmarks.csv' % args.output_dir
     writeCSV(landmarks_file, landmarks_cols, landmarks_rows)
-    print "Wrote landmarks to " + landmarks_file
+#    print "Wrote landmarks to " + landmarks_file
 
 
 
