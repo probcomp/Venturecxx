@@ -170,7 +170,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   # first evaluate exposed simulation requests (ESRs)
   for esr in request.esrs:
     if not trace.containsSPFamilyAt(node,esr.id):
-      if omegaDB.hasESRParent(trace.spAt(node),esr.id):
+      if shouldRestore and omegaDB.hasESRParent(trace.spAt(node),esr.id):
         esrParent = omegaDB.getESRParent(trace.spAt(node),esr.id)
         weight += restore(trace,esrParent,scaffold,omegaDB,gradients)
       else:
