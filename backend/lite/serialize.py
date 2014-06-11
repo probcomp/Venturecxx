@@ -52,25 +52,6 @@ class OrderedOmegaDB(OmegaDB):
                 raise Exception("Cannot restore a randomly constructed %s" % type(value))
             self.stack.append(value)
 
-def topo_sort(trace, nodes):
-    nodes = set(nodes)
-    ret = []
-    stack = []
-    seen = set()
-    for _, root in sorted(trace.families.items()):
-        stack.append(root)
-    while stack:
-        node = stack.pop()
-        if node in seen:
-            continue
-        seen.add(node)
-        for parent in node.parents():
-            stack.append(parent)
-        if node in nodes:
-            ret.append(node)
-    assert len(ret) == len(nodes)
-    return ret
-
 def dump_trace(trace, engine):
     ## TODO: move these imports to the top level
     from venture.lite.trace import Trace
