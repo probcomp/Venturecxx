@@ -53,7 +53,7 @@ struct PyTrace
 
   void freeze(DirectiveID did);
 
-  PyTrace* stop_and_copy() const;
+  PyTrace* stop_and_copy(boost::python::object engine) const;
 private:
   shared_ptr<ConcreteTrace> trace;
   
