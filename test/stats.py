@@ -79,6 +79,7 @@ def fisherMethod(pvals):
 def repeatTest(func, *args):
   globalReportingThreshold = float(config["global_reporting_threshold"])
   result = func(*args)
+  assert isinstance(result, TestResult)
   if ignore_inference_quality():
     return result
   if result.pval > 0.05:
