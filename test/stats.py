@@ -105,6 +105,13 @@ def reportTest(result):
     assert result.pval > globalReportingThreshold, result
 
 def statisticalTest(f):
+  """Annotate a test function as being statistical.
+
+  The function must return a TestResult (for example, using one of the
+  reportKnownFoo functions), and must not object to being executed
+  repeatedly.
+
+  """
   @nose.make_decorator(f)
   def wrapped(*args):
     reportTest(repeatTest(f, *args))
