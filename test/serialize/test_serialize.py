@@ -101,7 +101,7 @@ def _test_serialize_program(v, label):
 @statisticalTest
 def _test_stop_and_copy(v, label):
     if config['get_ripl'] == 'puma':
-        raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
+        raise SkipTest("Fails due to a mystery bug in Puma stop_and_copy. Issue: https://app.asana.com/0/11127829865276/13039650533872")
     engine = v.sivm.core_sivm.engine
 
     trace1 = engine.getDistinguishedTrace()
