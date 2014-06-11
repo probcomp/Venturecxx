@@ -33,7 +33,7 @@ def register(cls):
 class Serializer(object):
     """Serializer and deserializer for Trace objects."""
 
-    def serialize_trace(self, root, extra):
+    def serialize_trace(self, root):
         """Serialize a Trace object."""
 
         ## set up data structures for handling reference cycles
@@ -49,12 +49,9 @@ class Serializer(object):
         serialized_root = self.serialize(root)
         for obj in self.queue:
             self.obj_data.append(self.serialize(obj, should_make_ref=False))
-        serialized_extra = self.serialize(extra)
         return {
             'root': serialized_root,
             'objects': self.obj_data,
-            'extra': serialized_extra,
-            'version': '0.1'
         }
 
     def serialize(self, obj, should_make_ref=True):
@@ -105,8 +102,6 @@ class Serializer(object):
     def deserialize_trace(self, data):
         """Deserialize a serialized trace, producing a Trace object."""
 
-        assert data['version'] == '0.1', "Incompatible version or unrecognized object"
-
         ## create placeholder object references so that we can rebuild cycles
         ## attach to each placeholder object the data dict that goes with it
         self.id_to_obj = {}
@@ -124,8 +119,7 @@ class Serializer(object):
         root = self.deserialize(data['root'])
         for (obj_dict, obj) in self.queue:
             self.deserialize(obj_dict, obj)
-        extra = self.deserialize(data['extra'])
-        return root, extra
+        return root
 
     def deserialize(self, data, obj=None):
         if isinstance(data, (bool, int, long, float, str, type(None))):
@@ -172,13 +166,8 @@ class Serializer(object):
         ## fallback deserialization method: just set the __dict__
         obj.__dict__ = dict((k, self.deserialize(v)) for (k, v) in value.iteritems())
 
-def save_trace(trace, extra, fname):
-    obj = Serializer().serialize_trace(trace, extra)
-    with open(fname, 'w') as fp:
-        json.dump(obj, fp)
+def dump_trace_old(trace):
+    return Serializer().serialize_trace(trace)
 
-def load_trace(fname):
-    with open(fname) as fp:
-        obj = json.load(fp)
-    trace, extra = Serializer().deserialize_trace(obj)
-    return trace, extra
+def restore_trace_old(obj):
+    return Serializer().deserialize_trace(obj)

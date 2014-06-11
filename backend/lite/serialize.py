@@ -70,3 +70,60 @@ def topo_sort(trace, nodes):
             ret.append(node)
     assert len(ret) == len(nodes)
     return ret
+
+def dump_trace(trace, engine):
+    ## TODO: move these imports to the top level
+    from venture.lite.trace import Trace
+    from venture.lite.scaffold import Scaffold
+    from venture.lite.detach import unevalFamily
+    from venture.lite.regen import restore
+
+    directives = engine.directives
+
+    omegaDB = OrderedOmegaDB(Trace)
+    scaffold = Scaffold()
+
+    for did, directive in sorted(directives.items(), reverse=True):
+        if directive[0] == "observe":
+            trace.unobserve(did)
+            trace.families[did].isObservation = False
+        unevalFamily(trace, trace.families[did], scaffold, omegaDB)
+
+    for did, directive in sorted(directives.items()):
+        restore(trace, trace.families[did], scaffold, omegaDB, {})
+        if directive[0] == "observe":
+            trace.observe(did, directive[2])
+
+    return omegaDB.stack
+
+def restore_trace(values, engine):
+    ## TODO: move these imports to the top level
+    from venture.lite.trace import Trace
+    from venture.lite.scaffold import Scaffold
+    from venture.lite.regen import evalFamily
+
+    directives = engine.directives
+
+    omegaDB = OrderedOmegaDB(Trace)
+    omegaDB.stack = values
+    scaffold = Scaffold()
+    trace = Trace()
+
+    def evalHelper(did, datum):
+        exp = trace.unboxExpression(engine.desugarLambda(datum))
+        _, trace.families[did] = evalFamily(trace, exp, trace.globalEnv, scaffold, True, omegaDB, {})
+
+    for did, directive in sorted(directives.items()):
+        if directive[0] == "assume":
+            name, datum = directive[1], directive[2]
+            evalHelper(did, datum)
+            trace.bindInGlobalEnv(name, did)
+        elif directive[0] == "observe":
+            datum, val = directive[1], directive[2]
+            evalHelper(did, datum)
+            trace.observe(did, val)
+        elif directive[0] == "predict":
+            datum = directive[1]
+            evalHelper(did, datum)
+
+    return trace

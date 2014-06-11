@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
+import pickle
 
 from venture.exception import VentureException
 from venture.lite.utils import simulateCategorical, sampleLogCategorical
@@ -179,7 +180,12 @@ effect of renumbering the directives, if some had been forgotten."""
       newTraces = [None for p in range(P)]
       for p in range(P):
         parent = sampleLogCategorical(self.weights) # will need to include or rewrite
-        newTraces[p] = self.traces[parent].stop_and_copy()
+        try:
+          newTrace = self.traces[parent].stop_and_copy()
+        except TypeError:
+          # stop_and_copy requires engine argument in Lite
+          newTrace = self.traces[parent].stop_and_copy(self)
+        newTraces[p] = newTrace
         if self.name != "lite":
           newTraces[p].set_seed(random.randint(1,2**31-1))
       self.traces = newTraces
@@ -253,17 +259,24 @@ effect of renumbering the directives, if some had been forgotten."""
     for trace in self.traces: trace.stop_continuous_inference()
 
   def save(self, fname, extra=None):
-    if extra is None:
-      extra = {}
-    extra['directives'] = self.directives
-    extra['directiveCounter'] = self.directiveCounter
-    return self.getDistinguishedTrace().save(fname, extra)
+    data = {}
+    data['traces'] = [trace.dump(self) for trace in self.traces]
+    data['weights'] = self.weights
+    data['directives'] = self.directives
+    data['directiveCounter'] = self.directiveCounter
+    data['extra'] = extra
+    version = '0.2'
+    with open(fname, 'w') as fp:
+      pickle.dump((data, version), fp)
 
   def load(self, fname):
-    trace, extra = self.Trace.load(fname)
-    self.traces = [trace]
-    self.directives = extra['directives']
-    self.directiveCounter = extra['directiveCounter']
-    return extra
+    with open(fname) as fp:
+      (data, version) = pickle.load(fp)
+    assert version == '0.2', "Incompatible version or unrecognized object"
+    self.directives = data['directives']
+    self.traces = [self.Trace.restore(trace, self) for trace in data['traces']]
+    self.weights = data['weights']
+    self.directiveCounter = data['directiveCounter']
+    return data['extra']
 
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling

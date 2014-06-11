@@ -5,11 +5,11 @@ from testconfig import config
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
 from venture.test.config import get_ripl, collectStateSequence, defaultKernel
 
-from venture.lite.serialize import Serializer
+from venture.lite.serialize import dump_trace, restore_trace
 
 def test_serialize():
     if config['get_ripl'] == 'puma':
-        raise SkipTest("Can't serialize Puma traces. Issue: https://app.asana.com/0/9277419963067/12193842156124")
+        raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
     v = get_ripl()
     v.assume('is_tricky', '(flip 0.2)')
     v.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
@@ -19,19 +19,20 @@ def test_serialize():
     v.infer(1)
     result1 = v.predict('is_tricky')
 
-    trace = v.sivm.core_sivm.engine.getDistinguishedTrace()
-    serialized = Serializer().serialize_trace(trace, None)
-    newtrace, _ = Serializer().deserialize_trace(serialized)
-    v.sivm.core_sivm.engine.traces = [newtrace]
+    engine = v.sivm.core_sivm.engine
+    trace = engine.getDistinguishedTrace()
+    serialized = dump_trace(trace, engine)
+    newtrace = restore_trace(serialized, engine)
+    engine.traces = [newtrace]
     result2 = v.predict('is_tricky')
 
-    assert isinstance(serialized, dict)
+    assert isinstance(serialized, list)
     assert isinstance(newtrace, type(trace))
     assert result1 == result2
 
 def test_serialize_ripl():
     if config['get_ripl'] == 'puma':
-        raise SkipTest("Can't serialize Puma traces. Issue: https://app.asana.com/0/9277419963067/12193842156124")
+        raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
     v1 = get_ripl()
     v1.assume('is_tricky', '(flip 0.2)')
     v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
@@ -56,7 +57,7 @@ def test_serialize_ripl():
 @statisticalTest
 def test_serialize_forget():
     if config['get_ripl'] == 'puma':
-        raise SkipTest("Can't serialize Puma traces. Issue: https://app.asana.com/0/9277419963067/12193842156124")
+        raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
     v1 = get_ripl()
     v1.assume('is_tricky', '(flip 0.2)')
     v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
@@ -82,7 +83,7 @@ def test_serialize_forget():
 @statisticalTest
 def _test_serialize_program(v1, label):
     if config['get_ripl'] == 'puma':
-        raise SkipTest("Can't serialize Puma traces. Issue: https://app.asana.com/0/9277419963067/12193842156124")
+        raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
     v1.infer(0)
     v1.save('/tmp/serialized.ripl')
 
@@ -113,7 +114,7 @@ def test_serialize_closure():
 
 def test_serialize_recursion():
     if config['get_ripl'] == 'puma':
-        raise SkipTest("Can't serialize Puma traces. Issue: https://app.asana.com/0/9277419963067/12193842156124")
+        raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
     v = get_ripl()
     v.assume('f', '''
 (mem (lambda (x)
@@ -133,6 +134,8 @@ def test_serialize_recursion():
 
 def test_serialize_aaa():
     def check_beta_bernoulli(maker):
+        if maker == "make_uc_beta_bernoulli":
+            raise SkipTest("Cannot convert BetaBernoulliSP to a stack dictionary. Issue: https://app.asana.com/0/13001976276959/13001976276981")
         if maker == "make_beta_bernoulli" and defaultKernel() == "rejection":
             raise SkipTest("Cannot rejection sample AAA procedure with unbounded log density of ocounts")
         v = get_ripl()
@@ -146,7 +149,8 @@ def test_serialize_aaa():
         yield check_beta_bernoulli, maker
 
     def check_sym_dir_mult(maker):
-        raise SkipTest("Serialize not yet implemented for Dirichlet")
+        if maker == "make_uc_sym_dir_mult":
+            raise SkipTest("Cannot convert DirMultSP to a stack dictionary. Issue: https://app.asana.com/0/13001976276959/13001976276981")
         v = get_ripl()
         v.assume('a', '(normal 10.0 1.0)')
         v.assume('f', '({0} a 4)'.format(maker))
@@ -159,10 +163,12 @@ def test_serialize_aaa():
         yield check_sym_dir_mult, maker
 
     def check_crp(maker):
-        raise SkipTest("Serialize not yet implemented for CRP")
+        if defaultKernel() == "rejection":
+            raise SkipTest("Cannot rejection sample AAA procedure with unbounded log density of counts")
         v = get_ripl()
         v.assume('a', '(gamma 1.0 1.0)')
         v.assume('f', '({0} a)'.format(maker))
+        v.predict('(f)', label='pid')
         for _ in range(10):
             v.observe('(f)', 'atom<1>')
             v.observe('(f)', 'atom<2>')
@@ -172,18 +178,20 @@ def test_serialize_aaa():
         yield check_crp, maker
 
     def check_cmvn(maker):
-        raise SkipTest("Serialize not yet implemented for CMVN")
+        raise SkipTest("reportSameDiscrete doesn't work with numpy.ndarray")
         v = get_ripl()
         v.assume('m0','(array 5.0 5.0)')
         v.assume('k0','7.0')
         v.assume('v0','11.0')
         v.assume('S0','(matrix (array (array 13.0 0.0) (array 0.0 13.0)))')
         v.assume('f','({0} m0 k0 v0 S0)'.format(maker))
+        v.predict('(f)', label='pid')
         _test_serialize_program(v, 'pid')
     for maker in ["make_cmvn"]:
         yield check_cmvn, maker
 
 def test_serialize_latents():
+    raise SkipTest("Cannot serialize latents")
     v = get_ripl()
     v.assume('f','''\
 (make_lazy_hmm
