@@ -14,14 +14,12 @@ class OrderedOmegaDB(OmegaDB):
 
     """
 
-    def __init__(self, Trace):
+    def __init__(self, trace, values=None):
         super(OrderedOmegaDB, self).__init__()
+        self.trace = trace
         self.stack = []
-
-        # make a dummy trace to get the convenience methods
-        trace = object.__new__(Trace)
-        self.pspAt = trace.pspAt
-        self.argsAt = trace.argsAt
+        if values is not None:
+            self.stack.extend(values)
 
     def hasValueFor(self, node):
         return True
@@ -35,7 +33,7 @@ class OrderedOmegaDB(OmegaDB):
         if super(OrderedOmegaDB, self).hasValueFor(node):
             return super(OrderedOmegaDB, self).getValue(node)
 
-        psp = self.pspAt(node)
+        psp = self.trace.pspAt(node)
         if psp.isRandom():
             value = self.stack.pop()
             if isinstance(value, (Request, SPRef, VentureEnvironment)):
@@ -44,7 +42,7 @@ class OrderedOmegaDB(OmegaDB):
         else:
             # resimulate deterministic PSPs
             # TODO: is it better to store deterministic values or to resimulate?
-            args = self.argsAt(node)
+            args = self.trace.argsAt(node)
             return psp.simulate(args)
 
     def extractValue(self, node, value):
@@ -55,11 +53,14 @@ class OrderedOmegaDB(OmegaDB):
 
         super(OrderedOmegaDB, self).extractValue(node, value)
 
-        psp = self.pspAt(node)
+        psp = self.trace.pspAt(node)
         if psp.isRandom():
             if isinstance(value, (Request, SPRef, VentureEnvironment)):
                 raise Exception("Cannot restore a randomly constructed %s" % type(value))
             self.stack.append(value)
+
+    def listValues(self):
+        return list(self.stack)
 
 def dump_trace(trace, engine):
     ## TODO: move these imports to the top level
@@ -70,7 +71,7 @@ def dump_trace(trace, engine):
 
     directives = engine.directives
 
-    omegaDB = OrderedOmegaDB(Trace)
+    omegaDB = OrderedOmegaDB(trace)
     scaffold = Scaffold()
 
     for did, directive in sorted(directives.items(), reverse=True):
@@ -84,7 +85,7 @@ def dump_trace(trace, engine):
         if directive[0] == "observe":
             trace.observe(did, directive[2])
 
-    return omegaDB.stack
+    return omegaDB.listValues()
 
 def restore_trace(values, engine):
     ## TODO: move these imports to the top level
@@ -94,10 +95,9 @@ def restore_trace(values, engine):
 
     directives = engine.directives
 
-    omegaDB = OrderedOmegaDB(Trace)
-    omegaDB.stack = values
-    scaffold = Scaffold()
     trace = Trace()
+    omegaDB = OrderedOmegaDB(trace, values)
+    scaffold = Scaffold()
 
     def evalHelper(did, datum):
         exp = trace.unboxExpression(engine.desugarLambda(datum))
