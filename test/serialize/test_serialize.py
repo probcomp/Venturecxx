@@ -81,17 +81,38 @@ def test_serialize_forget():
     return reportKnownDiscrete(ans, samples)
 
 @statisticalTest
-def _test_serialize_program(v1, label):
+def _test_serialize_program(v, label):
     if config['get_ripl'] == 'puma':
         raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
-    v1.infer(0)
-    v1.save('/tmp/serialized.ripl')
+    engine = v.sivm.core_sivm.engine
 
-    v2 = get_ripl()
-    v2.load('/tmp/serialized.ripl')
+    trace1 = engine.getDistinguishedTrace()
+    serialized = dump_trace(trace1, engine)
+    trace2 = restore_trace(serialized, engine)
 
-    r1 = collectStateSequence(v1, label)
-    r2 = collectStateSequence(v2, label)
+    engine.traces = [trace1]
+    r1 = collectStateSequence(v, label)
+
+    engine.traces = [trace2]
+    r2 = collectStateSequence(v, label)
+
+    return reportSameDiscrete(r1, r2)
+
+@statisticalTest
+def _test_stop_and_copy(v, label):
+    if config['get_ripl'] == 'puma':
+        raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
+    engine = v.sivm.core_sivm.engine
+
+    trace1 = engine.getDistinguishedTrace()
+    trace2 = trace1.stop_and_copy(engine)
+
+    engine.traces = [trace1]
+    r1 = collectStateSequence(v, label)
+
+    engine.traces = [trace2]
+    r2 = collectStateSequence(v, label)
+
     return reportSameDiscrete(r1, r2)
 
 def test_serialize_mem():
@@ -101,6 +122,7 @@ def test_serialize_mem():
     for _ in range(10):
         v.observe('(flip_coin 0)', 'true')
     v.predict('(flip_coin 0)', label='pid')
+    _test_stop_and_copy(v, 'pid')
     _test_serialize_program(v, 'pid')
 
 def test_serialize_closure():
@@ -110,6 +132,7 @@ def test_serialize_closure():
     for _ in range(10):
         v.observe('(flip_coin)', 'true')
     v.predict('(flip_coin)', label='pid')
+    _test_stop_and_copy(v, 'pid')
     _test_serialize_program(v, 'pid')
 
 def test_serialize_recursion():
@@ -144,6 +167,7 @@ def test_serialize_aaa():
         v.predict('(f)', label='pid')
         for _ in range(20):
             v.observe('(f)', 'true')
+        _test_stop_and_copy(v, 'pid')
         _test_serialize_program(v, 'pid')
     for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
         yield check_beta_bernoulli, maker
@@ -158,6 +182,7 @@ def test_serialize_aaa():
         for _ in range(10):
             v.observe('(f)', 'atom<0>')
             v.observe('(f)', 'atom<1>')
+        _test_stop_and_copy(v, 'pid')
         _test_serialize_program(v, 'pid')
     for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
         yield check_sym_dir_mult, maker
@@ -173,6 +198,7 @@ def test_serialize_aaa():
             v.observe('(f)', 'atom<1>')
             v.observe('(f)', 'atom<2>')
             v.observe('(f)', 'atom<3>')
+        _test_stop_and_copy(v, 'pid')
         _test_serialize_program(v, 'pid')
     for maker in ["make_crp"]:
         yield check_crp, maker
@@ -186,6 +212,7 @@ def test_serialize_aaa():
         v.assume('S0','(matrix (array (array 13.0 0.0) (array 0.0 13.0)))')
         v.assume('f','({0} m0 k0 v0 S0)'.format(maker))
         v.predict('(f)', label='pid')
+        _test_stop_and_copy(v, 'pid')
         _test_serialize_program(v, 'pid')
     for maker in ["make_cmvn"]:
         yield check_cmvn, maker
@@ -207,4 +234,5 @@ def test_serialize_latents():
     v.observe('(f 4)', 'atom<0>')
     v.observe('(f 5)', 'atom<0>')
     v.predict('(f 6)', label='pid')
+    _test_stop_and_copy(v, 'pid')
     _test_serialize_program(v, 'pid')
