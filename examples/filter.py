@@ -208,6 +208,9 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
         self.last_vel = "(normal 0 1)"
         self.last_steer = "(normal 0 1)"
         self.infer_hypers = infer_hypers
+        self.x_std = 0.03
+        self.y_std = 0.03
+        self.heading_std = 0.01
 
     def announce(self):
         print "Particle filtering with motion model, %d particles, and window of size %d" % (self.particles, self.window)
@@ -229,9 +232,9 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
               ripl.assume("y_std", "(scope_include (quote hypers) 3 (gamma 1 1))")
               ripl.assume("heading_std", "(scope_include (quote hypers) 4 (gamma 1 1))")
           else:
-              ripl.assume("x_std", 0.03)
-              ripl.assume("y_std", 0.03)
-              ripl.assume("heading_std", 0.01)
+              ripl.assume("x_std", self.x_std)
+              ripl.assume("y_std", self.y_std)
+              ripl.assume("heading_std", self.heading_std)
           ripl.assume("dt_%d" % row_i, 0, label="dt_%d" % row_i)
           ripl.assume("offset_%d" % row_i, 0, label="offset_%d" % row_i)
           ripl.assume("x_%d" % row_i, self.x_prior, label="x_%d" % row_i)
