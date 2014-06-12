@@ -4,4 +4,4 @@ if (( $# != 4 )); then
     exit 1
 fi
 mkdir -p "$3"
-exec python "$(dirname "$0")"/filter.py "$2" "$3" --max_time 10 
+exec python "$(dirname "$0")"/filter.py "$2" "$3" --max_time 10 --version random_walk
