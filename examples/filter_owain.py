@@ -169,22 +169,25 @@ def runRandomWalk():
 def runApproach2():
 
     noisy_gps_stds = dict(heading=0.01)
-    k = args.window_size
     r = venture.shortcuts.make_church_prime_ripl()
+
+    # setup particle filter
     freeze_on = args.freeze_on
     if args.particle:
         num_particles = args.num_particles
         r.infer('(resample %s)'%num_particles)
 
     print "Using %d row" % len(combined_frame)
-    N_samples = args.samples
-    print "Generating %d samples per time step" % N_samples
-
+    
+    k = args.window_size
     times = []
-    out_rows = []; gps = []; all_clean_gps = []
+    out_rows = []
+    gps = []
+    all_clean_gps = []
     gps_frame_count = 0
 
 
+    # inference programs
     def mh_infer(T):
         Ts = range(T+1)[-k:]
         inf_str= lambda s:'(mh %i one %i)'%(s,args.per_block)
@@ -214,7 +217,8 @@ def runApproach2():
         else:
             mh_infer(T)
 
-
+            
+    # loop over times (no repeated samples)
     for T, (_T, combined_frame_row) in enumerate(combined_frame.iterrows()):
         clean_gps = get_clean_gps(combined_frame_row)
         xs = []
@@ -289,6 +293,7 @@ def runApproach2():
         else:
             pass
 
+
                 
     if args.plot:
         make_movie(dataset_name,args.output_dir)
@@ -306,28 +311,42 @@ if __name__ == '__main__':
     input_dir = '/home/owainevans/Venturecxx/examples/CP1-Quad-Rotor/data/automobile/1_straight/data/noisy'
     output_dir = '/home/owainevans/Venturecxx/examples/CP1-Quad-Rotor/data/automobile/1_straight_output'
 
-    args = {'plot':False, 'samples': 1, 'lim_parameters':1000, 'freeze_on': True,
-            'particle': True, 'num_particles':4, 'always_infer':True,
-
-            'window_size':2, 'verbose':False,
-
-            'per_block': cl_args.per_block,  'frames': cl_args.frames,
+    # extra parameters for approach 2 in addition to command_line args
+    args = {'plot':False,
+            'samples': 1,
+            'lim_parameters':1000, # stop doing inference on params after this frame
+            'freeze_on': True,
+            'particle': True,   # use particle filter for inference
+            'num_particles':4,
+            'always_infer':True, # do inference every time step
+            'window_size':2,
+            'verbose':False,
+            'per_block': cl_args.per_block, #mh samples per block (per timestep)
+            'frames': cl_args.frames,
+            
             'clean_dir': '/home/owainevans/Venturecxx/examples/CP1-Quad-Rotor/data/automobile/1_straight/data/ground',
             'dataset_name':'/home/owainevans/Venturecxx/examples/CP1-Quad-Rotor/data/automobile/1_straight_output/5_eight', 
-            'input_dir': input_dir, 'output_dir': output_dir, 'ground': False,
-            'max_time': None, 'version': 'v2', }
+            'input_dir': input_dir,
+            'output_dir': output_dir,
+            'ground': False,
+            'max_time': None,
+            'version': 'v2', }
 
-
+    # make object equivalent to argparse given command-line args
     args = argparse.Namespace(**args)
     dataset_name = args.dataset_name
     combined_frame, clean_gps_frame = read_combined_frame()
-    xlim = (-10, 10);    ylim = (-5, 5)
+    xlim = (-10, 10)
+    ylim = (-5, 5)
     out_cols = ['SLAMGPSTime', 'SLAMLat', 'SLAMLon']
+    
     approaches = dict(v1 =runRandomWalk,v2 = runApproach2)
     approach = approaches[args.version]
     
+
     start = time.time()
     all_mses = []
+    # loop over *approach* and combine outputs
     for i in range(args.samples):
         out,r = approach()
         out_rows,gps,all_clean_gps = out
@@ -337,11 +356,12 @@ if __name__ == '__main__':
         
         st = (args.particle, args.freeze_on, args.frames, args.lim_parameters,
               args.per_block, args.window_size, mse, time.time() - start)
-        print 'Summary: part %s, freeze %s, frames %i, lim_param %i, mh/block %i, k=%i, mse %.4f, time %.2f'%st
+        print 'Summary: part %s, freeze %s, frames %i, lim_param %i, mh/block %i, k=%i, mse %.4f, elapsed %.2f'%st
 
-    print 'mses, mean, var',all_mses,' ',np.mean(all_mses),' ',np.std(all_mses)
-    if args.plot:
-        subprocess.call('gpicview %s/*.png'%output_dir, shell=True)
+    print '\nMSE for each sample:', all_mses
+    
+    
+
 
     out_file = '%s/slam_out_path.csv' % args.output_dir
     ensure(out_file);   writeCSV(out_file, out_cols, out_rows)
