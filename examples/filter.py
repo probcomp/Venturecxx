@@ -137,8 +137,8 @@ class RandomWalkStepper(object):
         return (xs, ys, headings)
 
 
-# Run the simple random walk solution.
-def runRandomWalk(method):
+# Run the solution
+def runSolution(method):
 
   import venture.shortcuts
   ripl = venture.shortcuts.make_church_prime_ripl()
@@ -200,7 +200,7 @@ def writeCSV(filename, cols, rows):
     for row in rows:
       f.write(','.join(map(str, row)) + '\n')
 
-out_rows = runRandomWalk(approach())
+out_rows = runSolution(approach())
 out_file = '%s/slam_out_path.csv' % args.output_dir
 ensure(out_file)
 writeCSV(out_file, out_cols, out_rows)
