@@ -187,9 +187,39 @@ class RandomWalkParticleFilter(object):
 
 class MotionModelParticleFilter(object):
     def __init__(self):
-        pass
+        self.last_vel = 0
+        self.last_steer = 0
+
     def frame(self, ripl, row_i, combined_frame_row):
-        print type(combined_frame_row), combined_frame_row
+        if not np.isnan(combined_frame_row['Velocity']):
+            # If no control is given, model it as the same as the
+            # last frame where there was one.
+            self.last_vel = combined_frame_row['Velocity']
+        if not np.isnan(combined_frame_row['Steering']):
+            self.last_steer = combined_frame_row['Steering']
+
+        if row_i is 0:
+          ripl.assume("x_%d" % row_i, "(normal 0 1)", label="x_%d" % row_i)
+          ripl.assume("y_%d" % row_i, "(normal 0 1)", label="y_%d" % row_i)
+          ripl.assume("heading_%d" % row_i, "(uniform_continuous -3.14 3.14)", label="heading_%d" % row_i)
+        else:
+          ripl.assume("dt_%d" % row_i, combined_frame_row['dt'], label="dt_%d" % row_i)
+          ripl.assume("offset_%d" % row_i,
+                      "(* dt_%d %f)" % (row_i, self.last_vel),
+                      label="offset_%d" % row_i)
+          ripl.assume("x_%d" % row_i,
+                      "(+ x_%d (* offset_%d (cos heading_%d)))" % (row_i-1, row_i, row_i-1),
+                      label="x_%d" % row_i)
+          ripl.assume("y_%d" % row_i,
+                      "(+ y_%d (* offset_%d (sin heading_%d)))" % (row_i-1, row_i, row_i-1),
+                      label="y_%d" % row_i)
+          ripl.assume("heading_%d" % row_i,
+                      "(+ heading_%d (* dt_%d %f))" % (row_i-1, row_i, self.last_steer),
+                      label="heading_%d" % row_i)
+
+        return (np.array([ripl.sample("x_%d" % row_i)]),
+                np.array([ripl.sample("y_%d" % row_i)]),
+                np.array([ripl.sample("heading_%d" % row_i)]))
 
 
 # Run the solution
