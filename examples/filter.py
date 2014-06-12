@@ -287,6 +287,10 @@ class DeadReckoner(MotionModelParticleFilter):
         self.heading_std = 0
         self.x_gps_std = 1e10
         self.y_gps_std = 1e10
+        # Ground truth initial condition for dataset 5
+        self.x_prior = "(normal -0.0539084 0)"
+        self.y_prior = "(normal 1.60001 0)"
+        self.heading_prior = "(normal -0.000112027 0)"
     def observe(self, _ripl, _row_i, _combined_frame_row): pass
     def infer(self, _ripl, _row_i): pass
 
