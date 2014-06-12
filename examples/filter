@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python filter.py CP1-Quad-Rotor/data/automobile/$1/data/noisy/ slam_out/  --clean_dir CP1-Quad-Rotor/data/automobile/$1/data/ground/ ${*:2}

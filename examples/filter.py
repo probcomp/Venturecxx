@@ -1,4 +1,5 @@
 import matplotlib
+matplotlib.use("Agg")
 import pylab
 import argparse
 import os
@@ -172,7 +173,7 @@ def runRandomWalk():
     # Make the mp4 movie.
     mp4_name = dataset_name + '.mp4'
     template_str = dataset_name + '_raw_%1d.png'
-    os.system('avconv -y -r 15 -b 1800 -i %s %s' % (template_str, mp4_name))
+    os.system('avconv -y -r 5 -b 1800 -i %s %s' % (template_str, mp4_name))
   
   return out_rows
 
