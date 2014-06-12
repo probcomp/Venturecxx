@@ -216,7 +216,6 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
         self.window = 2
         self.last_vel = "(normal 0 1)"
         self.last_steer = "(normal 0 1)"
-        self.noisy_motion_stds = dict(x = 0.03, y = 0.03, heading = 0.01)
 
     def assume(self, ripl, row_i, combined_frame_row):
         if not np.isnan(combined_frame_row['Velocity']):
@@ -228,6 +227,9 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
 
         if row_i is 0:
           ripl.infer("(resample %d)" % self.particles)
+          ripl.assume("x_std", 0.03)
+          ripl.assume("y_std", 0.03)
+          ripl.assume("heading_std", 0.01)
           ripl.assume("dt_%d" % row_i, 0, label="dt_%d" % row_i)
           ripl.assume("offset_%d" % row_i, 0, label="offset_%d" % row_i)
           ripl.assume("x_%d" % row_i, "(normal 0 10)", label="x_%d" % row_i)
@@ -236,16 +238,16 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
         else:
           ripl.assume("dt_%d" % row_i, combined_frame_row['dt'], label="dt_%d" % row_i)
           ripl.assume("heading_%d" % row_i,
-                      "(normal (+ heading_%d (* dt_%d %s)) %f)" % (row_i-1, row_i, self.last_steer, self.noisy_motion_stds['heading']),
+                      "(normal (+ heading_%d (* dt_%d %s)) heading_std)" % (row_i-1, row_i, self.last_steer),
                       label="heading_%d" % row_i)
           ripl.assume("offset_%d" % row_i,
                       "(* dt_%d %s)" % (row_i, self.last_vel),
                       label="offset_%d" % row_i)
           ripl.assume("x_%d" % row_i,
-                      "(normal (+ x_%d (* offset_%d (cos heading_%d))) %f)" % (row_i-1, row_i, row_i, self.noisy_motion_stds['x']),
+                      "(normal (+ x_%d (* offset_%d (cos heading_%d))) x_std)" % (row_i-1, row_i, row_i),
                       label="x_%d" % row_i)
           ripl.assume("y_%d" % row_i,
-                      "(normal (+ y_%d (* offset_%d (sin heading_%d))) %f)" % (row_i-1, row_i, row_i, self.noisy_motion_stds['y']),
+                      "(normal (+ y_%d (* offset_%d (sin heading_%d))) y_std)" % (row_i-1, row_i, row_i),
                       label="y_%d" % row_i)
 
     def forget(self, ripl, row_i, combined_frame_row):
