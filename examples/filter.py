@@ -140,8 +140,9 @@ class RandomWalkParticleFilter(object):
     def __init__(self):
         self.window = 1
         self.particles = 10
-        print "Particle filtering with window of size %d" % self.window
+        print "Particle filtering with %d particles and window of size %d" % (self.particles, self.window)
         self.noisy_gps_stds = dict(x=0.05, y=0.05, heading=0.01)
+        self.obs_at = {}
 
     def frame(self, ripl, row_i, combined_frame_row):
         if row_i is 0:
@@ -156,14 +157,15 @@ class RandomWalkParticleFilter(object):
 
         # we have noisy gps observations, let's condition on them!
         if not np.isnan(combined_frame_row['x']):
+            self.obs_at[row_i] = True
             noisy_gps_x = combined_frame_row['x']
             noisy_gps_y = combined_frame_row['y']
             noisy_gps_heading = combined_frame_row['heading']
 
             #print "NOISY: " + str((noisy_gps_x, noisy_gps_y, noisy_gps_heading))
 
-            ripl.observe("(normal x_%d %f)" % (row_i, self.noisy_gps_stds['x']), noisy_gps_x)
-            ripl.observe("(normal y_%d %f)" % (row_i, self.noisy_gps_stds['y']), noisy_gps_y)
+            ripl.observe("(normal x_%d %f)" % (row_i, self.noisy_gps_stds['x']), noisy_gps_x, label="obs_x_%d" % row_i)
+            ripl.observe("(normal y_%d %f)" % (row_i, self.noisy_gps_stds['y']), noisy_gps_y, label="obs_y_%d" % row_i)
             ripl.infer("(resample %d)" % self.particles)
             ripl.infer("(slice default one 20)")
 
@@ -171,6 +173,13 @@ class RandomWalkParticleFilter(object):
             ripl.freeze("x_%d" % (row_i - self.window))
             ripl.freeze("y_%d" % (row_i - self.window))
             ripl.freeze("heading_%d" % (row_i - self.window))
+            if (row_i - self.window) in self.obs_at:
+                ripl.forget("obs_x_%d" % (row_i - self.window))
+                ripl.forget("obs_y_%d" % (row_i - self.window))
+        if row_i > self.window:
+            ripl.forget("x_%d" % (row_i - self.window - 1))
+            ripl.forget("y_%d" % (row_i - self.window - 1))
+            ripl.forget("heading_%d" % (row_i - self.window - 1))
 
         return (np.array([ripl.sample("x_%d" % row_i)]),
                 np.array([ripl.sample("y_%d" % row_i)]),
