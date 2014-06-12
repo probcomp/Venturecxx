@@ -279,6 +279,16 @@ class HyperInferenceParticleFilter(MotionModelParticleFilter):
         print "Hypers:"
         print ripl.sample("x_gps_std"), ripl.sample("y_gps_std"), ripl.sample("x_std"), ripl.sample("y_std"), ripl.sample("heading_std")
 
+class DeadReckoner(MotionModelParticleFilter):
+    def __init__(self, particles=1):
+        super(DeadReckoner, self).__init__(particles=particles, window=1)
+        self.x_std = 0
+        self.y_std = 0
+        self.heading_std = 0
+        self.x_gps_std = 1e10
+        self.y_gps_std = 1e10
+    def observe(self, _ripl, _row_i, _combined_frame_row): pass
+    def infer(self, _ripl, _row_i): pass
 
 # Run the solution
 def runSolution(method):
@@ -341,6 +351,7 @@ def runSolution(method):
 approaches = dict(random_walk = RandomWalkStepper(),
                   one_particle = RandomWalkParticleFilter(1),
                   particle_filter = RandomWalkParticleFilter(10),
+                  dead_reckoning = DeadReckoner(particles=10),
                   motion_model_base = MotionModelParticleFilter(particles=1, window=1),
                   motion_model_long = HyperInferenceParticleFilter(particles=1, window=20),
                   motion_model_fat  = HyperInferenceParticleFilter(particles=10, window=5))
