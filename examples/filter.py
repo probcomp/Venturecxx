@@ -201,7 +201,7 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
         self.last_vel = 0
         self.last_steer = 0
 
-    def model(self, ripl, row_i, combined_frame_row):
+    def assume(self, ripl, row_i, combined_frame_row):
         if not np.isnan(combined_frame_row['Velocity']):
             # If no control is given, model it as the same as the
             # last frame where there was one.
