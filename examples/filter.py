@@ -212,11 +212,12 @@ class RandomWalkParticleFilter(object):
             ripl.forget("heading_%d" % (row_i - self.window - 1))
 
 class MotionModelParticleFilter(RandomWalkParticleFilter):
-    def __init__(self, particles=1):
+    def __init__(self, particles=1, window=1, infer_hypers=False):
         super(MotionModelParticleFilter, self).__init__(particles)
-        self.window = 20
+        self.window = window
         self.last_vel = "(normal 0 1)"
         self.last_steer = "(normal 0 1)"
+        self.infer_hypers = infer_hypers
 
     def announce(self):
         print "Particle filtering with motion model, %d particles, and window of size %d" % (self.particles, self.window)
@@ -233,9 +234,14 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
           ripl.infer("(resample %d)" % self.particles)
           ripl.assume("x_gps_std", 0.05)
           ripl.assume("y_gps_std", 0.05)
-          ripl.assume("x_std", "(scope_include (quote hypers) 2 (gamma 1 1))")
-          ripl.assume("y_std", "(scope_include (quote hypers) 3 (gamma 1 1))")
-          ripl.assume("heading_std", "(scope_include (quote hypers) 4 (gamma 1 1))")
+          if self.infer_hypers:
+              ripl.assume("x_std", "(scope_include (quote hypers) 2 (gamma 1 1))")
+              ripl.assume("y_std", "(scope_include (quote hypers) 3 (gamma 1 1))")
+              ripl.assume("heading_std", "(scope_include (quote hypers) 4 (gamma 1 1))")
+          else:
+              ripl.assume("x_std", 0.03)
+              ripl.assume("y_std", 0.03)
+              ripl.assume("heading_std", 0.01)
           ripl.assume("dt_%d" % row_i, 0, label="dt_%d" % row_i)
           ripl.assume("offset_%d" % row_i, 0, label="offset_%d" % row_i)
           ripl.assume("x_%d" % row_i, "(normal 0 10)", label="x_%d" % row_i)
@@ -327,7 +333,9 @@ def runSolution(method):
 approaches = dict(random_walk = RandomWalkStepper(),
                   one_particle = RandomWalkParticleFilter(1),
                   particle_filter = RandomWalkParticleFilter(10),
-                  motion_model_base = MotionModelParticleFilter(1))
+                  motion_model_base = MotionModelParticleFilter(particles=1, window=1, infer_hypers=False),
+                  motion_model_long = MotionModelParticleFilter(particles=1, window=20, infer_hypers=True),
+                  motion_model_fat = MotionModelParticleFilter(particles=10, window=5, infer_hypers=True))
 approach = approaches[args.version]
 
 def ensure(path):
