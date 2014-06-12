@@ -152,7 +152,7 @@ def _sample_from_all_particles(ripl, exp):
     return [_sample_rotating_distinguished_particle(ripl, exp) for _ in range(len(ripl.sivm.core_sivm.engine.traces))]
 
 class RandomWalkParticleFilter(object):
-    def __init__(self, particles=3):
+    def __init__(self, particles=1):
         self.window = 1
         self.particles = particles
         print "Particle filtering with %d particles and window of size %d" % (self.particles, self.window)
@@ -310,7 +310,7 @@ def runSolution(method):
 approaches = dict(random_walk = RandomWalkStepper(),
                   one_particle = RandomWalkParticleFilter(1),
                   particle_filter = RandomWalkParticleFilter(10),
-                  motion_model_base = MotionModelParticleFilter())
+                  motion_model_base = MotionModelParticleFilter(3))
 approach = approaches[args.version]
 
 def ensure(path):
