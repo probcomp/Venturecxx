@@ -192,8 +192,9 @@ class RandomWalkParticleFilter(object):
             ripl.forget("y_%d" % (row_i - self.window - 1))
             ripl.forget("heading_%d" % (row_i - self.window - 1))
 
-class MotionModelParticleFilter(object):
-    def __init__(self):
+class MotionModelParticleFilter(RandomWalkParticleFilter):
+    def __init__(self, particles=1):
+        super(MotionModelParticleFilter, self).__init__(particles)
         self.last_vel = 0
         self.last_steer = 0
 
