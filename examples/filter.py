@@ -213,10 +213,10 @@ class RandomWalkParticleFilter(object):
 class MotionModelParticleFilter(RandomWalkParticleFilter):
     def __init__(self, particles=1):
         super(MotionModelParticleFilter, self).__init__(particles)
-        self.window = 20
+        self.window = 2
         self.last_vel = "(normal 0 1)"
         self.last_steer = "(normal 0 1)"
-        self.noisy_motion_stds = dict(x = 0.01, y = 0.01, heading = 0.01)
+        self.noisy_motion_stds = dict(x = 0.03, y = 0.03, heading = 0.01)
 
     def assume(self, ripl, row_i, combined_frame_row):
         if not np.isnan(combined_frame_row['Velocity']):
