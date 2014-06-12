@@ -76,23 +76,78 @@ print "Set plot limits: " + str((xlim, ylim))
 
 out_cols = ['SLAMGPSTime', 'SLAMLat', 'SLAMLon']
 
-# Run the simple random walk solution.
-def runRandomWalk():
+class RandomWalkStepper(object):
+    def __init__(self):
+        # Parameters for the random walk prior with Gaussian steps.
+        self.noisy_gps_stds = dict(x=0.05, y=0.05, heading=0.01)
+        self.N_samples = args.samples
+        print "Generating %d samples per time step" % self.N_samples
 
-  # Parameters for the random walk prior with Gaussian steps.
-  noisy_gps_stds = dict(x=0.05, y=0.05, heading=0.01)
+
+    def frame(self, ripl, row_i, combined_frame_row):
+
+        xs = []
+        ys = []
+        headings = []
+
+        # generate the samples
+        for k in range(self.N_samples):
+            ripl.clear()
+
+            if row_i is 0:
+              ripl.assume("x", "(normal 0 1)")
+              ripl.assume("y", "(normal 0 1)")
+              ripl.assume("heading", "(uniform_continuous -3.14 3.14)")
+            else:
+              ripl.assume("x", "(normal %f 0.1)" % self.prev_x)
+              ripl.assume("y", "(normal %f 0.1)" % self.prev_y)
+              ripl.assume("heading", "(normal %f 0.1)" % self.prev_heading)
+
+            # we have noisy gps observations, let's condition on them!
+            if not np.isnan(combined_frame_row['x']):
+                noisy_gps_x = combined_frame_row['x']
+                noisy_gps_y = combined_frame_row['y']
+                noisy_gps_heading = combined_frame_row['heading']
+
+                #print "NOISY: " + str((noisy_gps_x, noisy_gps_y, noisy_gps_heading))
+
+                ripl.observe("(normal x %f)" % self.noisy_gps_stds['x'], noisy_gps_x)
+                ripl.observe("(normal y %f)" % self.noisy_gps_stds['y'], noisy_gps_y)
+                #ripl.observe("(normal heading %f)" % self.noisy_gps_stds['heading'], noisy_gps_heading)
+
+                ripl.infer("(slice default one 20)")
+
+            xs.append(float(ripl.sample("x")))
+            ys.append(float(ripl.sample("y")))
+            headings.append(float(ripl.sample("heading")))
+
+        xs = np.array(xs)
+        ys = np.array(ys)
+        headings = np.array(headings)
+
+        self.prev_x = xs.mean()
+        self.prev_y = ys.mean()
+        self.prev_heading = headings.mean()
+
+        #print "PREVIOUS HEADING: " + str((self.prev_x, self.prev_y, self.prev_heading))
+
+        #print "xs: " + str(xs)
+        #print "ys: " + str(ys)
+        #print "headings: " + str(headings)
+        return (xs, ys, headings)
+
+
+# Run the simple random walk solution.
+def runRandomWalk(method):
 
   import venture.shortcuts
   ripl = venture.shortcuts.make_church_prime_ripl()
 
   row_num = min(args.frames, len(combined_frame))
-  print "Using %d row" % row_num
+  print "Using %d rows" % row_num
   row_is = range(row_num)
 
   gps_frame_count = 0
-
-  N_samples = args.samples
-  print "Generating %d samples per time step" % N_samples
 
   times = []
 
@@ -104,60 +159,13 @@ def runRandomWalk():
           combined_frame_row = combined_frame.irow(row_i)
 
           clean_gps = (combined_frame_row['clean_x'], combined_frame_row['clean_y'], combined_frame_row['clean_heading'])
-                  
+
           #print "------"
           #print "combined frame %d: \n" % row_i + str(combined_frame_row)
           #print "clean gps: \n" + str(clean_gps)
 
-          xs = []
-          ys = []
-          headings = []
-          
-          # generate the samples
-          for k in range(N_samples):
-              ripl.clear()
-              
-              if row_i is 0:
-                ripl.assume("x", "(normal 0 1)")
-                ripl.assume("y", "(normal 0 1)")
-                ripl.assume("heading", "(uniform_continuous -3.14 3.14)")
-              else:
-                ripl.assume("x", "(normal %f 0.1)" % prev_x)
-                ripl.assume("y", "(normal %f 0.1)" % prev_y)
-                ripl.assume("heading", "(normal %f 0.1)" % prev_heading)
-              
-              # we have noisy gps observations, let's condition on them!
-              if not np.isnan(combined_frame_row['x']):
-                  noisy_gps_x = combined_frame_row['x']
-                  noisy_gps_y = combined_frame_row['y']
-                  noisy_gps_heading = combined_frame_row['heading']
-                
-                  #print "NOISY: " + str((noisy_gps_x, noisy_gps_y, noisy_gps_heading))
-                  
-                  ripl.observe("(normal x %f)" % noisy_gps_stds['x'], noisy_gps_x)
-                  ripl.observe("(normal y %f)" % noisy_gps_stds['y'], noisy_gps_y)
-                  #ripl.observe("(normal heading %f)" % noisy_gps_stds['heading'], noisy_gps_heading)
-                  
-                  ripl.infer("(slice default one 20)")
-              
-              xs.append(float(ripl.sample("x")))
-              ys.append(float(ripl.sample("y")))
-              headings.append(float(ripl.sample("heading")))
-          
-          xs = np.array(xs)
-          ys = np.array(ys)
-          headings = np.array(headings)
+          (xs, ys, headings) = method.frame(ripl, row_i, combined_frame_row)
 
-          prev_x = xs.mean()
-          prev_y = ys.mean()
-          prev_heading = headings.mean()
-
-          #print "PREVIOUS HEADING: " + str((prev_x, prev_y, prev_heading))
-                  
-          #print "xs: " + str(xs)
-          #print "ys: " + str(ys)
-          #print "headings: " + str(headings)
-          
           # if the frame has gps signal, plot it
           if not np.isnan(combined_frame_row['x']):
               gps_frame_count += 1
@@ -178,7 +186,7 @@ def runRandomWalk():
   return out_rows
 
 
-approaches = dict(random_walk = runRandomWalk)
+approaches = dict(random_walk = RandomWalkStepper)
 approach = approaches[args.version]
 
 def ensure(path):
@@ -192,7 +200,7 @@ def writeCSV(filename, cols, rows):
     for row in rows:
       f.write(','.join(map(str, row)) + '\n')
 
-out_rows = approach()
+out_rows = runRandomWalk(approach())
 out_file = '%s/slam_out_path.csv' % args.output_dir
 ensure(out_file)
 writeCSV(out_file, out_cols, out_rows)
