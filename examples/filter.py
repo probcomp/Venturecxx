@@ -262,9 +262,10 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
             # and we don't want to seed the motion model poorly
             # ripl.infer("(mh default one 950)")
             ripl.infer("(slice default one %d)" % (10 * self.window))
-        ripl.infer("(slice hypers one 10)")
-        print "Hypers:"
-        print ripl.sample("x_gps_std"), ripl.sample("y_gps_std"), ripl.sample("x_std"), ripl.sample("y_std"), ripl.sample("heading_std")
+        if self.infer_hypers:
+            ripl.infer("(slice hypers one 10)")
+            print "Hypers:"
+            print ripl.sample("x_gps_std"), ripl.sample("y_gps_std"), ripl.sample("x_std"), ripl.sample("y_std"), ripl.sample("heading_std")
 
 # Run the solution
 def runSolution(method):
