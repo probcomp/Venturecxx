@@ -147,6 +147,7 @@ class RandomWalkParticleFilter(object):
     def frame(self, ripl, row_i, combined_frame_row):
         self.assume(ripl, row_i, combined_frame_row)
         self.observe(ripl, row_i, combined_frame_row)
+        self.infer(ripl)
         self.forget(ripl, row_i, combined_frame_row)
 
         return (np.array([ripl.sample("x_%d" % row_i)]),
@@ -176,8 +177,10 @@ class RandomWalkParticleFilter(object):
 
             ripl.observe("(normal x_%d %f)" % (row_i, self.noisy_gps_stds['x']), noisy_gps_x, label="obs_x_%d" % row_i)
             ripl.observe("(normal y_%d %f)" % (row_i, self.noisy_gps_stds['y']), noisy_gps_y, label="obs_y_%d" % row_i)
-            ripl.infer("(resample %d)" % self.particles)
-            ripl.infer("(slice default one 20)")
+
+    def infer(self, ripl):
+        ripl.infer("(resample %d)" % self.particles)
+        ripl.infer("(slice default one 20)")
 
     def forget(self, ripl, row_i, _combined_frame_row):
         if row_i >= self.window:
@@ -198,7 +201,7 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
         self.last_vel = 0
         self.last_steer = 0
 
-    def frame(self, ripl, row_i, combined_frame_row):
+    def model(self, ripl, row_i, combined_frame_row):
         if not np.isnan(combined_frame_row['Velocity']):
             # If no control is given, model it as the same as the
             # last frame where there was one.
@@ -225,10 +228,8 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
                       "(+ heading_%d (* dt_%d %f))" % (row_i-1, row_i, self.last_steer),
                       label="heading_%d" % row_i)
 
-        return (np.array([ripl.sample("x_%d" % row_i)]),
-                np.array([ripl.sample("y_%d" % row_i)]),
-                np.array([ripl.sample("heading_%d" % row_i)]))
-
+    def infer(self, ripl):
+        ripl.infer("(mh default one 10)")
 
 # Run the solution
 def runSolution(method):
