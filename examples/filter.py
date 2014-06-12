@@ -213,6 +213,7 @@ class RandomWalkParticleFilter(object):
 class MotionModelParticleFilter(RandomWalkParticleFilter):
     def __init__(self, particles=1):
         super(MotionModelParticleFilter, self).__init__(particles)
+        self.window = 20
         self.last_vel = "(normal 0 1)"
         self.last_steer = "(normal 0 1)"
         self.noisy_motion_stds = dict(x = 0.01, y = 0.01, heading = 0.01)
@@ -315,7 +316,7 @@ def runSolution(method):
 approaches = dict(random_walk = RandomWalkStepper(),
                   one_particle = RandomWalkParticleFilter(1),
                   particle_filter = RandomWalkParticleFilter(10),
-                  motion_model_base = MotionModelParticleFilter(3))
+                  motion_model_base = MotionModelParticleFilter(1))
 approach = approaches[args.version]
 
 def ensure(path):
