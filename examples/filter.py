@@ -81,10 +81,9 @@ class RandomWalkStepper(object):
         # Parameters for the random walk prior with Gaussian steps.
         self.noisy_gps_stds = dict(x=0.05, y=0.05, heading=0.01)
         self.N_samples = args.samples
-        print "Generating %d samples per time step" % self.N_samples
-
 
     def frame(self, ripl, row_i, combined_frame_row):
+        if row_i is 0: print "Generating %d samples per time step" % self.N_samples
 
         xs = []
         ys = []
@@ -155,11 +154,14 @@ class RandomWalkParticleFilter(object):
     def __init__(self, particles=1):
         self.window = 1
         self.particles = particles
-        print "Particle filtering with %d particles and window of size %d" % (self.particles, self.window)
         self.noisy_gps_stds = dict(x=0.05, y=0.05, heading=0.01)
         self.obs_at = {}
 
+    def announce(self):
+        print "Particle filtering with %d particles and window of size %d" % (self.particles, self.window)
+
     def frame(self, ripl, row_i, combined_frame_row):
+        if row_i is 0: self.announce()
         self.assume(ripl, row_i, combined_frame_row)
         self.observe(ripl, row_i, combined_frame_row)
         self.infer(ripl, row_i)
@@ -215,6 +217,9 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
         self.window = 2
         self.last_vel = "(normal 0 1)"
         self.last_steer = "(normal 0 1)"
+
+    def announce(self):
+        print "Particle filtering with motion model, %d particles, and window of size %d" % (self.particles, self.window)
 
     def assume(self, ripl, row_i, combined_frame_row):
         if not np.isnan(combined_frame_row['Velocity']):
