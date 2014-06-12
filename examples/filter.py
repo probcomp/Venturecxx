@@ -200,7 +200,7 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
         super(MotionModelParticleFilter, self).__init__(particles)
         self.last_vel = 0
         self.last_steer = 0
-        self.noisy_motion_stds = dict(x = 0.1, y = 0.1, heading = 0.1)
+        self.noisy_motion_stds = dict(x = 0.01, y = 0.01, heading = 0.01)
 
     def assume(self, ripl, row_i, combined_frame_row):
         if not np.isnan(combined_frame_row['Velocity']):
@@ -238,6 +238,10 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
         if row_i > self.window:
             ripl.forget("offset_%d" % (row_i - self.window - 1))
             ripl.forget("dt_%d" % (row_i - self.window - 1))
+
+    def infer(self, ripl):
+        ripl.infer("(resample %d)" % self.particles)
+        ripl.infer("(mh default one 50)")
 
 # Run the solution
 def runSolution(method):
