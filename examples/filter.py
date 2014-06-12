@@ -137,9 +137,9 @@ class RandomWalkStepper(object):
         return (xs, ys, headings)
 
 class RandomWalkParticleFilter(object):
-    def __init__(self):
+    def __init__(self, particles=1):
         self.window = 1
-        self.particles = 10
+        self.particles = particles
         print "Particle filtering with %d particles and window of size %d" % (self.particles, self.window)
         self.noisy_gps_stds = dict(x=0.05, y=0.05, heading=0.01)
         self.obs_at = {}
@@ -234,8 +234,9 @@ def runSolution(method):
   return out_rows
 
 
-approaches = dict(random_walk = RandomWalkStepper,
-                  random_walk_filter = RandomWalkParticleFilter)
+approaches = dict(random_walk = RandomWalkStepper(),
+                  one_particle = RandomWalkParticleFilter(1),
+                  random_walk_filter = RandomWalkParticleFilter(10))
 approach = approaches[args.version]
 
 def ensure(path):
@@ -249,7 +250,7 @@ def writeCSV(filename, cols, rows):
     for row in rows:
       f.write(','.join(map(str, row)) + '\n')
 
-out_rows = runSolution(approach())
+out_rows = runSolution(approach)
 out_file = '%s/slam_out_path.csv' % args.output_dir
 ensure(out_file)
 writeCSV(out_file, out_cols, out_rows)
