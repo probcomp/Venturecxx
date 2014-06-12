@@ -141,6 +141,11 @@ class RandomWalkParticleFilter(object):
         self.particles = particles
         self.noisy_gps_stds = dict(x=0.05, y=0.05, heading=0.01)
         self.obs_at = {}
+        self.x_prior = "(normal 0 10)"
+        self.y_prior = "(normal 0 10)"
+        self.heading_prior = "(uniform_continuous -3.14 3.14)"
+        self.x_gps_std = 0.05
+        self.y_gps_std = 0.05
 
     def announce(self):
         print "Particle filtering with %d particles and window of size %d" % (self.particles, self.window)
@@ -159,11 +164,11 @@ class RandomWalkParticleFilter(object):
     def assume(self, ripl, row_i, _combined_frame_row):
         if row_i is 0:
           ripl.infer("(resample %d)" % self.particles)
-          ripl.assume("x_gps_std", 0.05)
-          ripl.assume("y_gps_std", 0.05)
-          ripl.assume("x_%d" % row_i, "(normal 0 1)", label="x_%d" % row_i)
-          ripl.assume("y_%d" % row_i, "(normal 0 1)", label="y_%d" % row_i)
-          ripl.assume("heading_%d" % row_i, "(uniform_continuous -3.14 3.14)", label="heading_%d" % row_i)
+          ripl.assume("x_gps_std", self.x_gps_std)
+          ripl.assume("y_gps_std", self.y_gps_std)
+          ripl.assume("x_%d" % row_i, self.x_prior, label="x_%d" % row_i)
+          ripl.assume("y_%d" % row_i, self.y_prior, label="y_%d" % row_i)
+          ripl.assume("heading_%d" % row_i, self.heading_prior, label="heading_%d" % row_i)
         else:
           ripl.assume("x_%d" % row_i, "(normal x_%d 0.1)" % (row_i-1), label="x_%d" % row_i)
           ripl.assume("y_%d" % row_i, "(normal y_%d 0.1)" % (row_i-1), label="y_%d" % row_i)
@@ -217,8 +222,8 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
 
         if row_i is 0:
           ripl.infer("(resample %d)" % self.particles)
-          ripl.assume("x_gps_std", 0.05)
-          ripl.assume("y_gps_std", 0.05)
+          ripl.assume("x_gps_std", self.x_gps_std)
+          ripl.assume("y_gps_std", self.y_gps_std)
           if self.infer_hypers:
               ripl.assume("x_std", "(scope_include (quote hypers) 2 (gamma 1 1))")
               ripl.assume("y_std", "(scope_include (quote hypers) 3 (gamma 1 1))")
@@ -229,9 +234,9 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
               ripl.assume("heading_std", 0.01)
           ripl.assume("dt_%d" % row_i, 0, label="dt_%d" % row_i)
           ripl.assume("offset_%d" % row_i, 0, label="offset_%d" % row_i)
-          ripl.assume("x_%d" % row_i, "(normal 0 10)", label="x_%d" % row_i)
-          ripl.assume("y_%d" % row_i, "(normal 0 10)", label="y_%d" % row_i)
-          ripl.assume("heading_%d" % row_i, "(uniform_continuous -3.14 3.14)", label="heading_%d" % row_i)
+          ripl.assume("x_%d" % row_i, self.x_prior, label="x_%d" % row_i)
+          ripl.assume("y_%d" % row_i, self.y_prior, label="y_%d" % row_i)
+          ripl.assume("heading_%d" % row_i, self.heading_prior, label="heading_%d" % row_i)
         else:
           ripl.assume("dt_%d" % row_i, combined_frame_row['dt'], label="dt_%d" % row_i)
           ripl.assume("heading_%d" % row_i,
