@@ -20,6 +20,7 @@ struct DB
   shared_ptr<LatentDB> getLatentDB(Node * makerNode);
   void registerLatentDB(Node * makerNode, shared_ptr<LatentDB> latentDB);
 
+  bool hasESRParent(shared_ptr<SP> sp,FamilyID id);
   RootOfFamily getESRParent(shared_ptr<SP> sp,FamilyID id);
   void registerSPFamily(shared_ptr<SP> sp,FamilyID id,RootOfFamily esrParent);
 

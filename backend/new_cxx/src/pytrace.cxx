@@ -33,6 +33,7 @@ void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
                                     exp,
                                     trace->globalEnvironment,
                                     shared_ptr<Scaffold>(new Scaffold()),
+                                    false,
                                     shared_ptr<DB>(new DB()),
                                     shared_ptr<map<Node*,Gradient> >());
   assert(p.first == 0);
