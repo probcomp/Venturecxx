@@ -230,7 +230,7 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
                       label="y_%d" % row_i)
 
     def infer(self, ripl):
-        ripl.infer("(mh default one 10)")
+        ripl.infer("(mh default one 20)")
 
 # Run the solution
 def runSolution(method):

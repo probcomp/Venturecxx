@@ -24,11 +24,14 @@ pair<Trace*,double> MHGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold
   return make_pair(trace,xiWeight - rhoWeight);
 }
 
-void MHGKernel::accept() { }
+void MHGKernel::accept() {
+  cout << ".";
+}
 
 
 void MHGKernel::reject()
 {
+  cout << "!";
   detachAndExtract(trace,scaffold->border[0],scaffold);
   assertTorus(scaffold);
   regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,shared_ptr<map<Node*,Gradient> >());
