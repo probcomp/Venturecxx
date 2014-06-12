@@ -215,18 +215,18 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
           ripl.assume("heading_%d" % row_i, "(uniform_continuous -3.14 3.14)", label="heading_%d" % row_i)
         else:
           ripl.assume("dt_%d" % row_i, combined_frame_row['dt'], label="dt_%d" % row_i)
+          ripl.assume("heading_%d" % row_i,
+                      "(+ heading_%d (* dt_%d %f))" % (row_i-1, row_i, self.last_steer),
+                      label="heading_%d" % row_i)
           ripl.assume("offset_%d" % row_i,
                       "(* dt_%d %f)" % (row_i, self.last_vel),
                       label="offset_%d" % row_i)
           ripl.assume("x_%d" % row_i,
-                      "(+ x_%d (* offset_%d (cos heading_%d)))" % (row_i-1, row_i, row_i-1),
+                      "(+ x_%d (* offset_%d (cos heading_%d)))" % (row_i-1, row_i, row_i),
                       label="x_%d" % row_i)
           ripl.assume("y_%d" % row_i,
-                      "(+ y_%d (* offset_%d (sin heading_%d)))" % (row_i-1, row_i, row_i-1),
+                      "(+ y_%d (* offset_%d (sin heading_%d)))" % (row_i-1, row_i, row_i),
                       label="y_%d" % row_i)
-          ripl.assume("heading_%d" % row_i,
-                      "(+ heading_%d (* dt_%d %f))" % (row_i-1, row_i, self.last_steer),
-                      label="heading_%d" % row_i)
 
     def infer(self, ripl):
         ripl.infer("(mh default one 10)")
