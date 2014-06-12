@@ -185,6 +185,13 @@ class RandomWalkParticleFilter(object):
                 np.array([ripl.sample("y_%d" % row_i)]),
                 np.array([ripl.sample("heading_%d" % row_i)]))
 
+class MotionModelParticleFilter(object):
+    def __init__(self):
+        pass
+    def frame(self, ripl, row_i, combined_frame_row):
+        print type(combined_frame_row), combined_frame_row
+
+
 # Run the solution
 def runSolution(method):
 
@@ -236,7 +243,8 @@ def runSolution(method):
 
 approaches = dict(random_walk = RandomWalkStepper(),
                   one_particle = RandomWalkParticleFilter(1),
-                  particle_filter = RandomWalkParticleFilter(10))
+                  particle_filter = RandomWalkParticleFilter(10),
+                  motion_model_base = MotionModelParticleFilter())
 approach = approaches[args.version]
 
 def ensure(path):
