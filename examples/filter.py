@@ -162,7 +162,7 @@ class RandomWalkParticleFilter(object):
     def frame(self, ripl, row_i, combined_frame_row):
         self.assume(ripl, row_i, combined_frame_row)
         self.observe(ripl, row_i, combined_frame_row)
-        self.infer(ripl)
+        self.infer(ripl, row_i)
         self.forget(ripl, row_i, combined_frame_row)
 
         return (np.array(_sample_from_all_particles(ripl, "x_%d" % row_i)),
@@ -193,7 +193,7 @@ class RandomWalkParticleFilter(object):
             ripl.observe("(normal x_%d %f)" % (row_i, self.noisy_gps_stds['x']), noisy_gps_x, label="obs_x_%d" % row_i)
             ripl.observe("(normal y_%d %f)" % (row_i, self.noisy_gps_stds['y']), noisy_gps_y, label="obs_y_%d" % row_i)
 
-    def infer(self, ripl):
+    def infer(self, ripl, _row_i):
         ripl.infer("(resample %d)" % self.particles)
         ripl.infer("(slice default one 20)")
 
@@ -254,9 +254,14 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
             ripl.forget("offset_%d" % (row_i - self.window - 1))
             ripl.forget("dt_%d" % (row_i - self.window - 1))
 
-    def infer(self, ripl):
+    def infer(self, ripl, row_i):
         ripl.infer("(resample %d)" % self.particles)
-        ripl.infer("(mh default one 50)")
+        ripl.infer("(mh default one %d)" % (30 * self.window))
+        if row_i < self.window:
+            # Work hard on the beginning, because the prior is likely to be bad
+            # and we don't want to seed the motion model poorly
+            # ripl.infer("(mh default one 950)")
+            ripl.infer("(slice default one %d)" % (10 * self.window))
 
 # Run the solution
 def runSolution(method):
