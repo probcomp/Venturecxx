@@ -213,8 +213,8 @@ class RandomWalkParticleFilter(object):
 class MotionModelParticleFilter(RandomWalkParticleFilter):
     def __init__(self, particles=1):
         super(MotionModelParticleFilter, self).__init__(particles)
-        self.last_vel = 0
-        self.last_steer = 0
+        self.last_vel = "(normal 0 1)"
+        self.last_steer = "(normal 0 1)"
         self.noisy_motion_stds = dict(x = 0.01, y = 0.01, heading = 0.01)
 
     def assume(self, ripl, row_i, combined_frame_row):
@@ -235,10 +235,10 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
         else:
           ripl.assume("dt_%d" % row_i, combined_frame_row['dt'], label="dt_%d" % row_i)
           ripl.assume("heading_%d" % row_i,
-                      "(normal (+ heading_%d (* dt_%d %f)) %f)" % (row_i-1, row_i, self.last_steer, self.noisy_motion_stds['heading']),
+                      "(normal (+ heading_%d (* dt_%d %s)) %f)" % (row_i-1, row_i, self.last_steer, self.noisy_motion_stds['heading']),
                       label="heading_%d" % row_i)
           ripl.assume("offset_%d" % row_i,
-                      "(* dt_%d %f)" % (row_i, self.last_vel),
+                      "(* dt_%d %s)" % (row_i, self.last_vel),
                       label="offset_%d" % row_i)
           ripl.assume("x_%d" % row_i,
                       "(normal (+ x_%d (* offset_%d (cos heading_%d))) %f)" % (row_i-1, row_i, row_i, self.noisy_motion_stds['x']),
