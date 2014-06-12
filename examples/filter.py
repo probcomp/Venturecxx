@@ -291,6 +291,8 @@ class DeadReckoner(MotionModelParticleFilter):
         self.x_prior = "(normal -0.0539084 0)"
         self.y_prior = "(normal 1.60001 0)"
         self.heading_prior = "(normal -0.000112027 0)"
+        self.last_steer = "(normal 0 0)"
+        self.last_vel = "(normal 0 0)"
     def observe(self, _ripl, _row_i, _combined_frame_row): pass
     def infer(self, _ripl, _row_i): pass
 
