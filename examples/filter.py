@@ -8,7 +8,6 @@ import scene_plot_utils as spu
 import vehicle_simulator as vs
 
 import numpy as np
-import numpy.random as npr
 
 from contexts import Timer
 
@@ -35,7 +34,7 @@ def read_combined_frame():
     clean_gps_frame_config = dict(filename='slam_gps.csv', index_col='TimeGPS',
         colname_map=gps_to_clean_gps)
     
-    gps_frame, control_frame, laser_frame, sensor_frame = vs.read_frames(args.input_dir)
+    gps_frame, control_frame, _laser_frame, _sensor_frame = vs.read_frames(args.input_dir)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
     slength = len(combined_frame['i'])
     empty = [np.nan for i in range(slength)]
@@ -56,23 +55,13 @@ def read_combined_frame():
 
 # Plot samples along with the ground truth.
 def plot_pose(figname, xlim, ylim, xs=None, ys=None, headings=None, clean_gps_pose=None):
-    with Timer(figname) as t:
+    with Timer(figname):
         spu.plot_scene_scatter(xs, ys, headings, clean_gps_pose)
         pylab.gca().set_xlim(xlim)
         pylab.gca().set_ylim(ylim)
         pylab.savefig(figname)
         pylab.close()
-        pass
     return
-
-print "Loading data"
-combined_frame, clean_gps_frame, dataset_name = read_combined_frame()
-
-xlim = (-10, 10)
-ylim = (-5, 5)
-#xlim, ylim = get_lims(clean_gps_frame)
-
-print "Set plot limits: " + str((xlim, ylim))
 
 out_cols = ['SLAMGPSTime', 'SLAMLat', 'SLAMLon']
 
@@ -90,7 +79,7 @@ class RandomWalkStepper(object):
         headings = []
 
         # generate the samples
-        for k in range(self.N_samples):
+        for _ in range(self.N_samples):
             ripl.clear()
 
             if row_i is 0:
@@ -106,13 +95,9 @@ class RandomWalkStepper(object):
             if not np.isnan(combined_frame_row['x']):
                 noisy_gps_x = combined_frame_row['x']
                 noisy_gps_y = combined_frame_row['y']
-                noisy_gps_heading = combined_frame_row['heading']
-
-                #print "NOISY: " + str((noisy_gps_x, noisy_gps_y, noisy_gps_heading))
 
                 ripl.observe("(normal x %f)" % self.noisy_gps_stds['x'], noisy_gps_x)
                 ripl.observe("(normal y %f)" % self.noisy_gps_stds['y'], noisy_gps_y)
-                #ripl.observe("(normal heading %f)" % self.noisy_gps_stds['heading'], noisy_gps_heading)
 
                 ripl.infer("(slice default one 20)")
 
@@ -283,6 +268,15 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
 
 # Run the solution
 def runSolution(method):
+
+  print "Loading data"
+  combined_frame, _clean_gps_frame, dataset_name = read_combined_frame()
+
+  xlim = (-10, 10)
+  ylim = (-5, 5)
+  #xlim, ylim = get_lims(clean_gps_frame)
+
+  print "Set plot limits: " + str((xlim, ylim))
 
   import venture.shortcuts
   ripl = venture.shortcuts.make_church_prime_ripl()
