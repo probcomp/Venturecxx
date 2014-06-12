@@ -172,6 +172,8 @@ class RandomWalkParticleFilter(object):
     def assume(self, ripl, row_i, _combined_frame_row):
         if row_i is 0:
           ripl.infer("(resample %d)" % self.particles)
+          ripl.assume("x_gps_std", 0.05)
+          ripl.assume("y_gps_std", 0.05)
           ripl.assume("x_%d" % row_i, "(normal 0 1)", label="x_%d" % row_i)
           ripl.assume("y_%d" % row_i, "(normal 0 1)", label="y_%d" % row_i)
           ripl.assume("heading_%d" % row_i, "(uniform_continuous -3.14 3.14)", label="heading_%d" % row_i)
@@ -186,12 +188,9 @@ class RandomWalkParticleFilter(object):
             self.obs_at[row_i] = True
             noisy_gps_x = combined_frame_row['x']
             noisy_gps_y = combined_frame_row['y']
-            noisy_gps_heading = combined_frame_row['heading']
 
-            #print "NOISY: " + str((noisy_gps_x, noisy_gps_y, noisy_gps_heading))
-
-            ripl.observe("(normal x_%d %f)" % (row_i, self.noisy_gps_stds['x']), noisy_gps_x, label="obs_x_%d" % row_i)
-            ripl.observe("(normal y_%d %f)" % (row_i, self.noisy_gps_stds['y']), noisy_gps_y, label="obs_y_%d" % row_i)
+            ripl.observe("(normal x_%d x_gps_std)" % row_i, noisy_gps_x, label="obs_x_%d" % row_i)
+            ripl.observe("(normal y_%d y_gps_std)" % row_i, noisy_gps_y, label="obs_y_%d" % row_i)
 
     def infer(self, ripl, _row_i):
         ripl.infer("(resample %d)" % self.particles)
@@ -227,6 +226,8 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
 
         if row_i is 0:
           ripl.infer("(resample %d)" % self.particles)
+          ripl.assume("x_gps_std", 0.05)
+          ripl.assume("y_gps_std", 0.05)
           ripl.assume("x_std", 0.03)
           ripl.assume("y_std", 0.03)
           ripl.assume("heading_std", 0.01)
