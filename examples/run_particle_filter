@@ -1,0 +1,7 @@
+#!/bin/bash -eu
+if (( $# != 4 )); then
+    printf "Usage: %s config_file input_dir output_path log_path\n" "$0" >&2
+    exit 1
+fi
+mkdir -p "$3"
+exec python "$(dirname "$0")"/filter.py "$2" "$3" --max_time 10 --version particle_filter

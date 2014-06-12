@@ -236,7 +236,7 @@ def runSolution(method):
 
 approaches = dict(random_walk = RandomWalkStepper(),
                   one_particle = RandomWalkParticleFilter(1),
-                  random_walk_filter = RandomWalkParticleFilter(10))
+                  particle_filter = RandomWalkParticleFilter(10))
 approach = approaches[args.version]
 
 def ensure(path):
