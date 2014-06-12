@@ -145,6 +145,15 @@ class RandomWalkParticleFilter(object):
         self.obs_at = {}
 
     def frame(self, ripl, row_i, combined_frame_row):
+        self.assume(ripl, row_i, combined_frame_row)
+        self.observe(ripl, row_i, combined_frame_row)
+        self.forget(ripl, row_i, combined_frame_row)
+
+        return (np.array([ripl.sample("x_%d" % row_i)]),
+                np.array([ripl.sample("y_%d" % row_i)]),
+                np.array([ripl.sample("heading_%d" % row_i)]))
+
+    def assume(self, ripl, row_i, _combined_frame_row):
         if row_i is 0:
           ripl.infer("(resample %d)" % self.particles)
           ripl.assume("x_%d" % row_i, "(normal 0 1)", label="x_%d" % row_i)
@@ -155,6 +164,7 @@ class RandomWalkParticleFilter(object):
           ripl.assume("y_%d" % row_i, "(normal y_%d 0.1)" % (row_i-1), label="y_%d" % row_i)
           ripl.assume("heading_%d" % row_i, "(normal heading_%d 0.1)" % (row_i-1), label="heading_%d" % row_i)
 
+    def observe(self, ripl, row_i, combined_frame_row):
         # we have noisy gps observations, let's condition on them!
         if not np.isnan(combined_frame_row['x']):
             self.obs_at[row_i] = True
@@ -169,6 +179,7 @@ class RandomWalkParticleFilter(object):
             ripl.infer("(resample %d)" % self.particles)
             ripl.infer("(slice default one 20)")
 
+    def forget(self, ripl, row_i, _combined_frame_row):
         if row_i >= self.window:
             ripl.freeze("x_%d" % (row_i - self.window))
             ripl.freeze("y_%d" % (row_i - self.window))
@@ -180,10 +191,6 @@ class RandomWalkParticleFilter(object):
             ripl.forget("x_%d" % (row_i - self.window - 1))
             ripl.forget("y_%d" % (row_i - self.window - 1))
             ripl.forget("heading_%d" % (row_i - self.window - 1))
-
-        return (np.array([ripl.sample("x_%d" % row_i)]),
-                np.array([ripl.sample("y_%d" % row_i)]),
-                np.array([ripl.sample("heading_%d" % row_i)]))
 
 class MotionModelParticleFilter(object):
     def __init__(self):
