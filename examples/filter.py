@@ -229,8 +229,8 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
           ripl.infer("(resample %d)" % self.particles)
           ripl.assume("dt_%d" % row_i, 0, label="dt_%d" % row_i)
           ripl.assume("offset_%d" % row_i, 0, label="offset_%d" % row_i)
-          ripl.assume("x_%d" % row_i, "(normal 0 1)", label="x_%d" % row_i)
-          ripl.assume("y_%d" % row_i, "(normal 0 1)", label="y_%d" % row_i)
+          ripl.assume("x_%d" % row_i, "(normal 0 10)", label="x_%d" % row_i)
+          ripl.assume("y_%d" % row_i, "(normal 0 10)", label="y_%d" % row_i)
           ripl.assume("heading_%d" % row_i, "(uniform_continuous -3.14 3.14)", label="heading_%d" % row_i)
         else:
           ripl.assume("dt_%d" % row_i, combined_frame_row['dt'], label="dt_%d" % row_i)
