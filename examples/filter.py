@@ -136,6 +136,36 @@ class RandomWalkStepper(object):
         #print "headings: " + str(headings)
         return (xs, ys, headings)
 
+class RandomWalkParticleFilter(object):
+    def __init__(self):
+        print "Particle filtering"
+        self.noisy_gps_stds = dict(x=0.05, y=0.05, heading=0.01)
+
+    def frame(self, ripl, row_i, combined_frame_row):
+        if row_i is 0:
+          ripl.assume("x_%d" % row_i, "(normal 0 1)")
+          ripl.assume("y_%d" % row_i, "(normal 0 1)")
+          ripl.assume("heading_%d" % row_i, "(uniform_continuous -3.14 3.14)")
+        else:
+          ripl.assume("x_%d" % row_i, "(normal x_%d 0.1)" % (row_i-1))
+          ripl.assume("y_%d" % row_i, "(normal y_%d 0.1)" % (row_i-1))
+          ripl.assume("heading_%d" % row_i, "(normal heading_%d 0.1)" % (row_i-1))
+
+        # we have noisy gps observations, let's condition on them!
+        if not np.isnan(combined_frame_row['x']):
+            noisy_gps_x = combined_frame_row['x']
+            noisy_gps_y = combined_frame_row['y']
+            noisy_gps_heading = combined_frame_row['heading']
+
+            #print "NOISY: " + str((noisy_gps_x, noisy_gps_y, noisy_gps_heading))
+
+            ripl.observe("(normal x_%d %f)" % (row_i, self.noisy_gps_stds['x']), noisy_gps_x)
+            ripl.observe("(normal y_%d %f)" % (row_i, self.noisy_gps_stds['y']), noisy_gps_y)
+
+            ripl.infer("(slice default one 20)")
+        return (np.array([ripl.sample("x_%d" % row_i)]),
+                np.array([ripl.sample("y_%d" % row_i)]),
+                np.array([ripl.sample("heading_%d" % row_i)]))
 
 # Run the solution
 def runSolution(method):
@@ -186,7 +216,8 @@ def runSolution(method):
   return out_rows
 
 
-approaches = dict(random_walk = RandomWalkStepper)
+approaches = dict(random_walk = RandomWalkStepper,
+                  random_walk_filter = RandomWalkParticleFilter)
 approach = approaches[args.version]
 
 def ensure(path):
