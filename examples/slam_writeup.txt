@@ -1,0 +1,101 @@
+We explored several models and inference strategies for this problem, starting from the simplest possible solutions.
+
+CODE OVERVIEW:
+
+automobile/filter.py - Driver script, including sensor/control alignment & inference implementation
+automobile/scene_plot_utils.py - Visualization utilities
+automobile/vehicle_simulator.py - Utilities for reading sensor and control data
+
+APPROACH 1: MINIMAL
+- MODEL: fixed GPS Gaussian noise; Brownian motion;
+- INFERENCE: single chain, single timestep slice sampling filter
+
+This approach models the vehicle's pose as undergoing Brownian motion in all coordinates. It models the noisy GPS signal as a Gaussian offset on the true vehicle position. Standard deviations for the noisy GPS model in x and y were set to match the standard deviation of the offsets for the 1_straight example. It is arguably the simplest model that has the elements needed to provide sensible (x,y) estimates for all timepoints.
+
+For simplicity -- and because noisy GPS is such a strong signal that nothing more complex is needed -- we treat each timestep as a separate Bayesian inference problem, with the prior for timestep t anchored on a single (approximate) posterior sample from timestep t - 1. We use 20 transitions of a slice sampler, each acting on a randomly chosen pose variable, to perform each approximate update. Later versions will show how to use Venture's built-in support for particle filtering to provide a more traditional and durable solution.
+
+The feasibility of this approach rests on the fact that (i) the evaluation for his version does not assess accuracy in reconstruction of orientation or landmarks and (ii) the noisy GPS signal is accurate enough, relative to the drift between fixes, that even a little inference suffices to track ground truth.
+
+The model's structure is common to all time steps:
+
+[ASSUME x (normal <prev_x> 0.1)]
+[ASSUME y (normal <prev_y> 0.1)]
+
+For time steps where noisy GPS measurements were available:
+
+[OBSERVE (normal x <noisy_gps_x_std>) <current noisy gps x measurement>]
+[OBSERVE (normal y <noisy_gps_y_std>) <current noisy gps y measurement>]
+[INFER (slice default one 20)]
+(prev_x, prev_y) -> ([SAMPLE x], [SAMPLE y])
+
+The Venture interpreter's state is cleared in between each timestep. The bulk of the code in this solution is for parsing the data, converting between representations convenient for assembly and representations convenient for inference, and visualizing the output.
+
+=====
+
+APPROACH 2: Joint state and parameter estimation using a sliding window of size k
+- MODEL: Brownian motion model; additive Gaussian sensor model with unknown variance
+- INFERENCE: Markov chain updates over a sliding window; also particle filtering
+
+Here we will maintain a sliding window of states, and use the contents of this window to estimate the GPS noise parameters. All inference will still be done using a single chain, with slice sampling for approximately Bayesian updates, but we will see how this representation is compatible with particle filtering. Note that <t>, <t-1>, <t-2>, etc are meta-syntactic variables, representing offsets that maintain the fixed model size of the sliding window.
+
+We begin with defining models for the initial conditions and unknown parameters:
+
+[ASSUME x_0 (normal 0 1)]
+[ASSUME y_0 (normal 0 1)]
+[ASSUME noisy_gps_x_std (gamma 1 1)]
+[ASSUME noisy_gps_y_std (gamma 1 1)]
+
+At each timestep, we simulate the brownian motion:
+
+[ASSUME x_<t> (normal x_<t-1> 0.1)]
+[ASSUME y_<t> (normal y_<t-1> 0.1)]
+
+We also update the sliding window by freezing the values at the previous timestep (and decoupling them from their past history), then instruct Venture to forget the data associated with them and also the state values that are no longer necessary:
+
+[FREEZE x_<t-k+1>]
+[FREEZE y_<t-k+1>]
+[FORGET x_data_<t-k+1>]
+[FORGET y_data_<t-k+1>]
+[FORGET x_<t-k>]
+[FORGET y_<t-k>]
+
+Although this same model could be expressed more clearly as a recursion, because of (temporary) limitations on our implementation of FREEZE -- specifically, that it only applies to top-level ASSUMEs at the moment -- we cannot ensure constant memory cost for the more intuitive representation of the model.
+
+At each timestep, we also incorporate the data, perform inference over the window's contents and the unknown parameters, and finally read out new predictions:
+
+x_data_<t>: [OBSERVE (normal x_<t> noisy_gps_x_std) <current noisy gps x measurement>]
+y_data_<t>: [OBSERVE (normal y_<t> noisy_gps_y_std) <current noisy gps y measurement>]
+[INFER (slice default one 50)]
+(prev_x, prev_y) -> ([SAMPLE x], [SAMPLE y])
+
+If the program began with
+
+[INFER (resample 100)]
+
+and the INFER directive for updates was replaced with
+
+[INFER (resample 100)]
+[INFER (slice default one 50)]
+
+we would now have a particle filter with 100 particles, where slice sampling was used to adjust old values in the particle's history as well as update the unknown parameters in light of the contents of each window. Predictions would be made based on a single randomly chosen particle, though it is straightforward to average over them instead.
+
+=====
+
+APPROACH 3: add an additive Gaussian motion model with mean set via dead reckoning
+- MODEL:  additive Gaussian sensor model with unknown variance; additive Gaussian motion model with mean set via dead reckoning and unknown variance
+- INFERENCE: Particle filtering over a sliding window with rejuvenation kernels for parameter updates
+
+Incorporating a motion model based on noisy dead reckoning is straightforward:
+
+[ASSUME noisy_notion_heading_std (gamma 1 1)]
+[ASSUME noisy_motion_x_std (gamma 1 1)]
+[ASSUME noisy_motion_y_std (gamma 1 1)]
+
+The updates for each timestep now include headings:
+
+[ASSUME heading_<t> (normal (+ (* dt_<t> <control_steer>) heading_<t-1>) noisy_motion_heading_std)]
+[ASSUME linearized_offset (* dt_<t> <control_velocity>)]
+[ASSUME x_<t> (normal (+ (* linearized_offset (cos heading_<t-1>))) noisy_motion_x_std)]
+[ASSUME y_<t> (normal (+ (* linearized_offset (sin heading_<t-1>))) noisy_motion_y_std)]
+
+The FREEZE and FORGET instructions need to be extended to handle headings accordingly. Nothing needs to change in inference, though at this point hybrid schemes that alternate between parameter inference and state inference (and that use different techniques for different components of the pose) all become appealing. For example, it might be effective to evolve parameters via gradient steps or even Hamiltonian Monte Carlo, reserving slice sampling for the (x, y) poses.
