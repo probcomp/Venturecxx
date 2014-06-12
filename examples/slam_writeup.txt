@@ -2,9 +2,9 @@ We explored several models and inference strategies for this problem, starting f
 
 CODE OVERVIEW:
 
-automobile/filter.py - Driver script, including sensor/control alignment & inference implementation
-automobile/scene_plot_utils.py - Visualization utilities
-automobile/vehicle_simulator.py - Utilities for reading sensor and control data
+filter.py - Driver script, including sensor/control alignment & inference implementation
+scene_plot_utils.py - Visualization utilities
+vehicle_simulator.py - Utilities for reading sensor and control data
 
 APPROACH 1: MINIMAL
 - MODEL: fixed GPS Gaussian noise; Brownian motion;
