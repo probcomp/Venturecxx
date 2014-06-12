@@ -211,6 +211,7 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
             self.last_steer = combined_frame_row['Steering']
 
         if row_i is 0:
+          ripl.infer("(resample %d)" % self.particles)
           ripl.assume("x_%d" % row_i, "(normal 0 1)", label="x_%d" % row_i)
           ripl.assume("y_%d" % row_i, "(normal 0 1)", label="y_%d" % row_i)
           ripl.assume("heading_%d" % row_i, "(uniform_continuous -3.14 3.14)", label="heading_%d" % row_i)
@@ -228,9 +229,6 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
           ripl.assume("y_%d" % row_i,
                       "(normal (+ y_%d (* offset_%d (sin heading_%d))) %f)" % (row_i-1, row_i, row_i, self.noisy_motion_stds['y']),
                       label="y_%d" % row_i)
-
-    def infer(self, ripl):
-        ripl.infer("(mh default one 20)")
 
 # Run the solution
 def runSolution(method):
