@@ -231,8 +231,8 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
 
         if row_i is 0:
           ripl.infer("(resample %d)" % self.particles)
-          ripl.assume("x_gps_std", "(scope_include (quote hypers) 0 (gamma 1 1))")
-          ripl.assume("y_gps_std", "(scope_include (quote hypers) 1 (gamma 1 1))")
+          ripl.assume("x_gps_std", 0.05)
+          ripl.assume("y_gps_std", 0.05)
           ripl.assume("x_std", "(scope_include (quote hypers) 2 (gamma 1 1))")
           ripl.assume("y_std", "(scope_include (quote hypers) 3 (gamma 1 1))")
           ripl.assume("heading_std", "(scope_include (quote hypers) 4 (gamma 1 1))")
