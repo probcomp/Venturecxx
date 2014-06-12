@@ -27,12 +27,6 @@ args = parser.parse_args()
 # Read and pre-process the data.
 def read_combined_frame():
     dataset_name = args.dataset_name
-    use_noisy = not args.ground
-    which_data = 'noisy' if use_noisy else 'ground'
-    
-    gps_to_clean_gps = dict(GPSLat='clean_y', GPSLon='clean_x', Orientation='clean_heading')
-    clean_gps_frame_config = dict(filename='slam_gps.csv', index_col='TimeGPS',
-        colname_map=gps_to_clean_gps)
     
     gps_frame, control_frame, _laser_frame, _sensor_frame = vs.read_frames(args.input_dir)
     combined_frame = vs.combine_frames(control_frame, gps_frame)
@@ -45,13 +39,19 @@ def read_combined_frame():
         combined_frame = combined_frame[combined_frame.index < args.max_time]
     
     clean_gps_frame = None
+    clean_control_frame = None
     if args.clean_dir is not None:
+        gps_to_clean_gps = dict(GPSLat='clean_y', GPSLon='clean_x', Orientation='clean_heading')
+        clean_gps_frame_config = dict(filename='slam_gps.csv', index_col='TimeGPS',
+            colname_map=gps_to_clean_gps)
         clean_gps_frame = vs.read_frame(dirname=args.clean_dir, **clean_gps_frame_config)
         for i in range(len(clean_gps_frame)):
             combined_frame.ix[clean_gps_frame.irow(i).name,'clean_x'] = clean_gps_frame.irow(i)['clean_x']
             combined_frame.ix[clean_gps_frame.irow(i).name,'clean_y'] = clean_gps_frame.irow(i)['clean_y']
             combined_frame.ix[clean_gps_frame.irow(i).name,'clean_heading'] = clean_gps_frame.irow(i)['clean_heading']
-    return combined_frame, clean_gps_frame, dataset_name
+        clean_control_config = dict(filename='slam_control.csv', index_col='Time_VS')
+        clean_control_frame = vs.read_frame(dirname=args.clean_dir, **clean_control_config)
+    return combined_frame, clean_gps_frame, dataset_name, clean_control_frame
 
 # Plot samples along with the ground truth.
 def plot_pose(figname, xlim, ylim, xs=None, ys=None, headings=None, clean_gps_pose=None):
@@ -70,6 +70,11 @@ class RandomWalkStepper(object):
         # Parameters for the random walk prior with Gaussian steps.
         self.noisy_gps_stds = dict(x=0.05, y=0.05, heading=0.01)
         self.N_samples = args.samples
+
+    def announce(self):
+        print "Unconstrained random walk"
+
+    def register(self, _clean_control_row): pass
 
     def frame(self, ripl, row_i, combined_frame_row):
         if row_i is 0: print "Generating %d samples per time step" % self.N_samples
@@ -149,6 +154,8 @@ class RandomWalkParticleFilter(object):
 
     def announce(self):
         print "Particle filtering with %d particles and window of size %d" % (self.particles, self.window)
+
+    def register(self, _clean_control_row): pass
 
     def frame(self, ripl, row_i, combined_frame_row):
         if row_i is 0: self.announce()
@@ -273,6 +280,8 @@ class HyperInferenceParticleFilter(MotionModelParticleFilter):
         self.x_std = "(scope_include (quote hypers) 2 (gamma 1 1))"
         self.y_std = "(scope_include (quote hypers) 3 (gamma 1 1))"
         self.heading_std = "(scope_include (quote hypers) 4 (gamma 1 1))"
+    def announce(self):
+        print "Particle filtering, with motion model and hyperparameter inference, with %d particles and window of size %d" % (self.particles, self.window)
     def infer(self, ripl, row_i):
         super(HyperInferenceParticleFilter, self).infer(ripl, row_i)
         ripl.infer("(slice hypers one 10)")
@@ -293,6 +302,8 @@ class DeadReckoner(MotionModelParticleFilter):
         self.heading_prior = "(normal -0.000112027 0)"
         self.last_steer = "(normal 0 0)"
         self.last_vel = "(normal 0 0)"
+    def announce(self): print "Dead reckoning"
+    def register(self, clean_control_row): print clean_control_row
     def observe(self, _ripl, _row_i, _combined_frame_row): pass
     def infer(self, _ripl, _row_i): pass
 
@@ -300,7 +311,7 @@ class DeadReckoner(MotionModelParticleFilter):
 def runSolution(method):
 
   print "Loading data"
-  combined_frame, _clean_gps_frame, dataset_name = read_combined_frame()
+  combined_frame, _clean_gps_frame, dataset_name, clean_control_frame = read_combined_frame()
 
   xlim = (-10, 10)
   ylim = (-5, 5)
@@ -322,6 +333,7 @@ def runSolution(method):
   out_rows = []
 
   # For each row...
+  control_index = 0
   for row_i in row_is:
       with Timer('row %s' % row_i) as t:
           combined_frame_row = combined_frame.irow(row_i)
@@ -331,6 +343,10 @@ def runSolution(method):
           #print "------"
           #print "combined frame %d: \n" % row_i + str(combined_frame_row)
           #print "clean gps: \n" + str(clean_gps)
+
+          if not np.isnan(combined_frame_row['Velocity']):
+              method.register(clean_control_frame.irow(control_index))
+              control_index += 1
 
           (xs, ys, headings) = method.frame(ripl, row_i, combined_frame_row)
 
