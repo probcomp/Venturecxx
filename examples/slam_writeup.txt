@@ -93,9 +93,9 @@ Incorporating a motion model based on noisy dead reckoning is straightforward:
 
 The updates for each timestep now include headings:
 
+[ASSUME linearized_offset_<t> (* dt_<t> <control_velocity>)]
+[ASSUME x_<t> (normal (+ (* linearized_offset_<t> (cos heading_<t-1>))) noisy_motion_x_std)]
+[ASSUME y_<t> (normal (+ (* linearized_offset_<t> (sin heading_<t-1>))) noisy_motion_y_std)]
 [ASSUME heading_<t> (normal (+ (* dt_<t> <control_steer>) heading_<t-1>) noisy_motion_heading_std)]
-[ASSUME linearized_offset (* dt_<t> <control_velocity>)]
-[ASSUME x_<t> (normal (+ (* linearized_offset (cos heading_<t-1>))) noisy_motion_x_std)]
-[ASSUME y_<t> (normal (+ (* linearized_offset (sin heading_<t-1>))) noisy_motion_y_std)]
 
 The FREEZE and FORGET instructions need to be extended to handle headings accordingly. Nothing needs to change in inference, though at this point hybrid schemes that alternate between parameter inference and state inference (and that use different techniques for different components of the pose) all become appealing. For example, it might be effective to evolve parameters via gradient steps or even Hamiltonian Monte Carlo, reserving slice sampling for the (x, y) poses.
