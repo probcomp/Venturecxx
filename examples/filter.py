@@ -165,13 +165,13 @@ class RandomWalkParticleFilter(object):
             ripl.observe("(normal x_%d %f)" % (row_i, self.noisy_gps_stds['x']), noisy_gps_x)
             ripl.observe("(normal y_%d %f)" % (row_i, self.noisy_gps_stds['y']), noisy_gps_y)
             ripl.infer("(resample %d)" % self.particles)
+            ripl.infer("(slice default one 20)")
 
         if row_i >= self.window:
             ripl.freeze("x_%d" % (row_i - self.window))
             ripl.freeze("y_%d" % (row_i - self.window))
             ripl.freeze("heading_%d" % (row_i - self.window))
 
-            ripl.infer("(slice default one 20)")
         return (np.array([ripl.sample("x_%d" % row_i)]),
                 np.array([ripl.sample("y_%d" % row_i)]),
                 np.array([ripl.sample("heading_%d" % row_i)]))
