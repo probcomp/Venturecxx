@@ -212,6 +212,8 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
 
         if row_i is 0:
           ripl.infer("(resample %d)" % self.particles)
+          ripl.assume("dt_%d" % row_i, 0, label="dt_%d" % row_i)
+          ripl.assume("offset_%d" % row_i, 0, label="offset_%d" % row_i)
           ripl.assume("x_%d" % row_i, "(normal 0 1)", label="x_%d" % row_i)
           ripl.assume("y_%d" % row_i, "(normal 0 1)", label="y_%d" % row_i)
           ripl.assume("heading_%d" % row_i, "(uniform_continuous -3.14 3.14)", label="heading_%d" % row_i)
@@ -229,6 +231,13 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
           ripl.assume("y_%d" % row_i,
                       "(normal (+ y_%d (* offset_%d (sin heading_%d))) %f)" % (row_i-1, row_i, row_i, self.noisy_motion_stds['y']),
                       label="y_%d" % row_i)
+
+    def forget(self, ripl, row_i, combined_frame_row):
+        super(MotionModelParticleFilter, self).forget(ripl, row_i, combined_frame_row)
+        # Don't need to (and can't) freeze dt and offset, because they are deterministic
+        if row_i > self.window:
+            ripl.forget("offset_%d" % (row_i - self.window - 1))
+            ripl.forget("dt_%d" % (row_i - self.window - 1))
 
 # Run the solution
 def runSolution(method):
