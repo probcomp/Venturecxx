@@ -136,8 +136,23 @@ class RandomWalkStepper(object):
         #print "headings: " + str(headings)
         return (xs, ys, headings)
 
+def _rotate(lst):
+    item = lst[0]
+    del lst[0]
+    lst.append(item)
+
+def _sample_rotating_distinguished_particle(ripl, exp):
+    # Oh, what a hack...
+    engine = ripl.sivm.core_sivm.engine
+    _rotate(engine.traces)
+    _rotate(engine.weights)
+    return ripl.sample(exp)
+
+def _sample_from_all_particles(ripl, exp):
+    return [_sample_rotating_distinguished_particle(ripl, exp) for _ in range(len(ripl.sivm.core_sivm.engine.traces))]
+
 class RandomWalkParticleFilter(object):
-    def __init__(self, particles=1):
+    def __init__(self, particles=3):
         self.window = 1
         self.particles = particles
         print "Particle filtering with %d particles and window of size %d" % (self.particles, self.window)
@@ -150,9 +165,9 @@ class RandomWalkParticleFilter(object):
         self.infer(ripl)
         self.forget(ripl, row_i, combined_frame_row)
 
-        return (np.array([ripl.sample("x_%d" % row_i)]),
-                np.array([ripl.sample("y_%d" % row_i)]),
-                np.array([ripl.sample("heading_%d" % row_i)]))
+        return (np.array(_sample_from_all_particles(ripl, "x_%d" % row_i)),
+                np.array(_sample_from_all_particles(ripl, "y_%d" % row_i)),
+                np.array(_sample_from_all_particles(ripl, "heading_%d" % row_i)))
 
     def assume(self, ripl, row_i, _combined_frame_row):
         if row_i is 0:
