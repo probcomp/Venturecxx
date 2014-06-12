@@ -214,7 +214,7 @@ class RandomWalkParticleFilter(object):
 class MotionModelParticleFilter(RandomWalkParticleFilter):
     def __init__(self, particles=1):
         super(MotionModelParticleFilter, self).__init__(particles)
-        self.window = 2
+        self.window = 20
         self.last_vel = "(normal 0 1)"
         self.last_steer = "(normal 0 1)"
 
@@ -231,11 +231,11 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
 
         if row_i is 0:
           ripl.infer("(resample %d)" % self.particles)
-          ripl.assume("x_gps_std", 0.05)
-          ripl.assume("y_gps_std", 0.05)
-          ripl.assume("x_std", 0.03)
-          ripl.assume("y_std", 0.03)
-          ripl.assume("heading_std", 0.01)
+          ripl.assume("x_gps_std", "(scope_include (quote hypers) 0 (gamma 1 1))")
+          ripl.assume("y_gps_std", "(scope_include (quote hypers) 1 (gamma 1 1))")
+          ripl.assume("x_std", "(scope_include (quote hypers) 2 (gamma 1 1))")
+          ripl.assume("y_std", "(scope_include (quote hypers) 3 (gamma 1 1))")
+          ripl.assume("heading_std", "(scope_include (quote hypers) 4 (gamma 1 1))")
           ripl.assume("dt_%d" % row_i, 0, label="dt_%d" % row_i)
           ripl.assume("offset_%d" % row_i, 0, label="offset_%d" % row_i)
           ripl.assume("x_%d" % row_i, "(normal 0 10)", label="x_%d" % row_i)
@@ -271,6 +271,9 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
             # and we don't want to seed the motion model poorly
             # ripl.infer("(mh default one 950)")
             ripl.infer("(slice default one %d)" % (10 * self.window))
+        ripl.infer("(slice hypers one 10)")
+        print "Hypers:"
+        print ripl.sample("x_gps_std"), ripl.sample("y_gps_std"), ripl.sample("x_std"), ripl.sample("y_std"), ripl.sample("heading_std")
 
 # Run the solution
 def runSolution(method):
