@@ -138,18 +138,19 @@ class RandomWalkStepper(object):
 
 class RandomWalkParticleFilter(object):
     def __init__(self):
-        print "Particle filtering"
+        self.window = 1
+        print "Particle filtering with window of size %d" % self.window
         self.noisy_gps_stds = dict(x=0.05, y=0.05, heading=0.01)
 
     def frame(self, ripl, row_i, combined_frame_row):
         if row_i is 0:
-          ripl.assume("x_%d" % row_i, "(normal 0 1)")
-          ripl.assume("y_%d" % row_i, "(normal 0 1)")
-          ripl.assume("heading_%d" % row_i, "(uniform_continuous -3.14 3.14)")
+          ripl.assume("x_%d" % row_i, "(normal 0 1)", label="x_%d" % row_i)
+          ripl.assume("y_%d" % row_i, "(normal 0 1)", label="y_%d" % row_i)
+          ripl.assume("heading_%d" % row_i, "(uniform_continuous -3.14 3.14)", label="heading_%d" % row_i)
         else:
-          ripl.assume("x_%d" % row_i, "(normal x_%d 0.1)" % (row_i-1))
-          ripl.assume("y_%d" % row_i, "(normal y_%d 0.1)" % (row_i-1))
-          ripl.assume("heading_%d" % row_i, "(normal heading_%d 0.1)" % (row_i-1))
+          ripl.assume("x_%d" % row_i, "(normal x_%d 0.1)" % (row_i-1), label="x_%d" % row_i)
+          ripl.assume("y_%d" % row_i, "(normal y_%d 0.1)" % (row_i-1), label="y_%d" % row_i)
+          ripl.assume("heading_%d" % row_i, "(normal heading_%d 0.1)" % (row_i-1), label="heading_%d" % row_i)
 
         # we have noisy gps observations, let's condition on them!
         if not np.isnan(combined_frame_row['x']):
@@ -161,6 +162,11 @@ class RandomWalkParticleFilter(object):
 
             ripl.observe("(normal x_%d %f)" % (row_i, self.noisy_gps_stds['x']), noisy_gps_x)
             ripl.observe("(normal y_%d %f)" % (row_i, self.noisy_gps_stds['y']), noisy_gps_y)
+
+        if row_i >= self.window:
+            ripl.freeze("x_%d" % (row_i - self.window))
+            ripl.freeze("y_%d" % (row_i - self.window))
+            ripl.freeze("heading_%d" % (row_i - self.window))
 
             ripl.infer("(slice default one 20)")
         return (np.array([ripl.sample("x_%d" % row_i)]),
