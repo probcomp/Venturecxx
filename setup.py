@@ -116,6 +116,7 @@ puma_src_files = [
     "src/regen.cxx",
     "src/render.cxx",
     "src/scaffold.cxx",
+    "src/serialize.cxx",
     "src/sp.cxx",
     "src/sprecord.cxx",
     "src/stop_and_copy.cxx",
