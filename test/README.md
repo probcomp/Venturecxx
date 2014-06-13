@@ -1,5 +1,8 @@
-Organization of the Venture test suite
-======================================
+The Venture test suite
+======================
+
+Organization
+------------
 
 The test suite lives in the `test/` directory.
 
@@ -30,3 +33,27 @@ The test suite lives in the `test/` directory.
 
 - `unit/` is unit tests of separable pieces (there are quite few of
   these right now).
+
+Configurations
+--------------
+
+Many of Venture's test cases naturally apply to both backends, and/or
+to a variety of generic inference strategies.  Therefore, the test
+runner is configurable, to select which backend to test and which
+inference program to use.
+
+When writing tests, we recommend interacting with Venture through the
+`venture.test.config` module (in `test/config.py`) to be as generic as
+is appropriate for the test.
+
+Statistical Tests
+-----------------
+
+Often, a given test situation is expected to produce some distribution
+on answers, and should be judged incorrect if it does not.  The
+`venture.test.stats` module (in `test/stats.py`) provides some helper
+procedures for testing more effectively in these circumstances.
+
+The general pattern: annotate such a test `@statisticalTest`, and have
+it `return reportKnownSomething(...)` as appropriate from the helpers
+in the `stats` module.

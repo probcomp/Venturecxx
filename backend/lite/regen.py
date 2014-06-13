@@ -93,23 +93,23 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   assert isinstance(weight, numbers.Number)
   return weight
 
-def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
+def evalFamily(trace,exp,env,scaffold,shouldRestore,omegaDB,gradients):
   if e.isVariable(exp): 
     sourceNode = env.findSymbol(exp)
-    weight = regen(trace,sourceNode,scaffold,False,omegaDB,gradients)
+    weight = regen(trace,sourceNode,scaffold,shouldRestore,omegaDB,gradients)
     return (weight,trace.createLookupNode(sourceNode))
   elif e.isSelfEvaluating(exp): return (0,trace.createConstantNode(exp))
   elif e.isQuotation(exp): return (0,trace.createConstantNode(e.textOfQuotation(exp)))
   else:
-    (weight,operatorNode) = evalFamily(trace,e.getOperator(exp),env,scaffold,omegaDB,gradients)
+    (weight,operatorNode) = evalFamily(trace,e.getOperator(exp),env,scaffold,shouldRestore,omegaDB,gradients)
     operandNodes = []
     for operand in e.getOperands(exp):
-      (w,operandNode) = evalFamily(trace,operand,env,scaffold,omegaDB,gradients)
+      (w,operandNode) = evalFamily(trace,operand,env,scaffold,shouldRestore,omegaDB,gradients)
       weight += w
       operandNodes.append(operandNode)
 
     (requestNode,outputNode) = trace.createApplicationNodes(operatorNode,operandNodes,env)
-    weight += apply(trace,requestNode,outputNode,scaffold,False,omegaDB,gradients)
+    weight += apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
     assert isinstance(weight, numbers.Number)
     return weight,outputNode
 
@@ -170,11 +170,11 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   # first evaluate exposed simulation requests (ESRs)
   for esr in request.esrs:
     if not trace.containsSPFamilyAt(node,esr.id):
-      if shouldRestore: 
+      if shouldRestore and omegaDB.hasESRParent(trace.spAt(node),esr.id):
         esrParent = omegaDB.getESRParent(trace.spAt(node),esr.id)
         weight += restore(trace,esrParent,scaffold,omegaDB,gradients)
       else:
-        (w,esrParent) = evalFamily(trace,esr.exp,esr.env,scaffold,omegaDB,gradients)
+        (w,esrParent) = evalFamily(trace,esr.exp,esr.env,scaffold,shouldRestore,omegaDB,gradients)
         weight += w
       trace.registerFamilyAt(node,esr.id,esrParent)
 
