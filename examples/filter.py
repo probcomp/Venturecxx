@@ -221,6 +221,9 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
     def announce(self):
         print "Particle filtering with motion model, %d particles, and window of size %d" % (self.particles, self.window)
 
+    def velocity(self): return self.last_vel
+    def steering(self): return self.last_steer
+
     def assume(self, ripl, row_i, combined_frame_row):
         if not np.isnan(combined_frame_row['Velocity']):
             # If no control is given, model it as the same as the
@@ -244,10 +247,10 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
         else:
           ripl.assume("dt_%d" % row_i, combined_frame_row['dt'], label="dt_%d" % row_i)
           ripl.assume("heading_%d" % row_i,
-                      "(normal (+ heading_%d (* dt_%d %s)) heading_std)" % (row_i-1, row_i, self.last_steer),
+                      "(normal (+ heading_%d (* dt_%d %s)) heading_std)" % (row_i-1, row_i, self.steering()),
                       label="heading_%d" % row_i)
           ripl.assume("offset_%d" % row_i,
-                      "(* dt_%d %s)" % (row_i, self.last_vel),
+                      "(* dt_%d %s)" % (row_i, self.velocity()),
                       label="offset_%d" % row_i)
           ripl.assume("x_%d" % row_i,
                       "(normal (+ x_%d (* offset_%d (cos heading_%d))) x_std)" % (row_i-1, row_i, row_i),
@@ -300,10 +303,14 @@ class DeadReckoner(MotionModelParticleFilter):
         self.x_prior = "(normal -0.0539084 0)"
         self.y_prior = "(normal 1.60001 0)"
         self.heading_prior = "(normal -0.000112027 0)"
-        self.last_steer = "(normal 0 0)"
-        self.last_vel = "(normal 0 0)"
+        self.clean_steer = "(normal 0 0)"
+        self.clean_vel = "(normal 0 0)"
     def announce(self): print "Dead reckoning"
-    def register(self, clean_control_row): print clean_control_row
+    def register(self, clean_control_row):
+        self.clean_vel = clean_control_row['Velocity']
+        self.clean_steer = clean_control_row['Steering']
+    def velocity(self): return self.clean_vel
+    def steering(self): return self.clean_steer
     def observe(self, _ripl, _row_i, _combined_frame_row): pass
     def infer(self, _ripl, _row_i): pass
 
