@@ -242,6 +242,7 @@ setup (
     package_dir={"venture":"python/lib/", "venture.test":"test/",
                  "venture.cxx":"backend/cxx",
         "venture.puma":"backend/new_cxx/", "venture.lite":"backend/lite/"},
+    package_data = {'':['*.vnt']},
     ext_modules = ext_modules,
     scripts = ['script/venture']
 )
