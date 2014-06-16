@@ -240,7 +240,7 @@ class Trace(object):
     if interval is None:
       return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
     else:
-      blocks = [b for b in self.scopes[scope].keys() if b >= interval[0] if b <= interval[1]]
+      blocks = [b for b in self.scopes[scope].keys() if b.compare(interval[0]) >= 0 if b.compare(interval[1]) <= 0]
       return [self.getNodesInBlock(scope,block) for block in sorted(blocks)]
 
   def numNodesInBlock(self,scope,block): return len(self.getNodesInBlock(scope,block))
