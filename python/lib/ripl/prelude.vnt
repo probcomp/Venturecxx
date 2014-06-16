@@ -116,7 +116,7 @@
         (dot (rest x) (rest y)))))]
 
 
-;(assume scalar_mul)
+;[(assume scalar_mul)]
 
 
 
@@ -146,4 +146,9 @@
 ; Concatenates two lists, arrays, or vectors
 ; Parameters
 ;   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Logicals on variable-length lists
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 

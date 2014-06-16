@@ -566,7 +566,6 @@ Open issues:
         '''
         Load the library of Venture helper functions
         '''
-        import pdb; pdb.set_trace()
         prelude_path = path.join(path.dirname(__file__), self.prelude_path)
         with open(prelude_path) as f:
             prog = f.readlines()
