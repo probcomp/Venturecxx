@@ -19,9 +19,6 @@ import pickle
 from venture.exception import VentureException
 from venture.lite.utils import simulateCategorical, sampleLogCategorical
 
-# Thin wrapper around Trace
-# TODO: merge with CoreSivm?
-
 class Engine(object):
 
   def __init__(self, name="phony", Trace=None):
