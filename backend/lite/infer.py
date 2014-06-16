@@ -49,7 +49,7 @@ class BlockScaffoldIndexer(object):
     elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
     elif self.block == "ordered_range": 
       assert self.interval
-      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope),self.interval)
+      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope,self.interval))
     else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])
 
   def logDensityOfIndex(self,trace,_):
