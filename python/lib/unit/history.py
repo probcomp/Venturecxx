@@ -497,7 +497,8 @@ def showParameters(parameters):
 
     text = items[0][0] + ' = ' + str(items[0][1])
     for (name, value) in items[1:]:
-        text += '\n' + name + ' = ' + str(value)
+        # TODO: something more principled to truncate overly long parameter values            
+        text += '\n' + name + ' = ' + str(value)[:20]
 
     plt.text(0, 1, text, transform=plt.axes().transAxes, va='top', size='small', linespacing=1.0)
 

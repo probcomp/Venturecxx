@@ -126,17 +126,15 @@ class VentureUnit(object):
         self.analyticsKwargs = dict(assumes=self.assumes, observes=self.observes,
                            parameters=self.parameters)
 
-    def getAnalytics(self,mripl=None,mutateRipl=False):
+    def getAnalytics(self,ripl_mripl,mutateRipl=False):
         '''Create Analytics object from assumes, observes and parameters.
            Optional arg *mripl* used to send an MRipl to Analytics.'''
         
         kwargs = self.analyticsKwargs.copy()
         kwargs['mutateRipl'] = mutateRipl
         
-        if mripl is None:
-            return Analytics(*self.analyticsArgs, **kwargs)
-        else:
-            return Analytics(mripl,**kwargs)
+        return Analytics(ripl_mripl, **kwargs)
+
 
     def sampleFromJoint(self,*args,**kwargs):
         a = Analytics(*self.analyticsArgs, **self.analyticsKwargs)
