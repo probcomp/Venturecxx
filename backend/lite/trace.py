@@ -2,7 +2,7 @@ from builtin import builtInValues, builtInSPs
 from env import VentureEnvironment
 from node import Node,ConstantNode,LookupNode,RequestNode,OutputNode,Args
 import math
-from regen import constrain,processMadeSP, evalFamily
+from regen import constrain, processMadeSP, evalFamily, restore
 from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
@@ -18,6 +18,7 @@ from scaffold import constructScaffold
 from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
+from serialize import OrderedOmegaDB
 import serialize
 import random
 import numpy.random
@@ -341,7 +342,9 @@ class Trace(object):
   def unobserve(self,id):
     node = self.families[id]
     appNode = self.getConstrainableNode(node)
-    if node.isObservation: unconstrain(self,appNode)
+    if node.isObservation:
+      unconstrain(self,appNode)
+      node.isObservation = False
     else:
       assert node in self.unpropagatedObservations
       del self.unpropagatedObservations[node]
@@ -421,6 +424,27 @@ class Trace(object):
 
   def getGlobalLogScore(self):
     return sum([self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node)) for node in self.rcs.union(self.ccs)])
+
+  #### Serialization interface
+
+  def makeSerializationDB(self, values=None, boxed=False):
+    return OrderedOmegaDB(self, values, boxed)
+
+  def dumpSerializationDB(self, db, boxed=False):
+    return db.listValues(boxed)
+
+  def unevalAndExtract(self,id,db):
+    # leaves trace in an inconsistent state. use restore afterward
+    assert id in self.families
+    unevalFamily(self,self.families[id],Scaffold(),db)
+
+  def restore(self,id,db):
+    assert id in self.families
+    restore(self,self.families[id],Scaffold(),db,{})
+
+  def evalAndRestore(self,id,exp,db):
+    assert id not in self.families
+    (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),True,db,{})
 
   #### Helpers (shouldn't be class methods)
 

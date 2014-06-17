@@ -255,53 +255,36 @@ effect of renumbering the directives, if some had been forgotten."""
     for trace in self.traces: trace.stop_continuous_inference()
 
   def dump_trace(self, trace, boxed=True):
-    # TODO: remove these imports
-    from venture.lite.serialize import OrderedOmegaDB
-    from venture.lite.scaffold import Scaffold
-    from venture.lite.detach import unevalFamily
-    from venture.lite.regen import restore
-
-    db = OrderedOmegaDB(trace) # trace.makeDB()?
+    db = trace.makeSerializationDB()
 
     for did, directive in sorted(self.directives.items(), reverse=True):
       if directive[0] == "observe":
         trace.unobserve(did)
-        trace.families[did].isObservation = False
-      unevalFamily(trace, trace.families[did], Scaffold(), db) # trace.unevalAndExtract(did, db)?
+      trace.unevalAndExtract(did, db)
 
     for did, directive in sorted(self.directives.items()):
-      restore(trace, trace.families[did], Scaffold(), db, {}) # trace.restore(did, db)?
+      trace.restore(did, db)
       if directive[0] == "observe":
         trace.observe(did, directive[2])
 
-    return db.listValues(boxed)
+    return trace.dumpSerializationDB(db, boxed)
 
   def restore_trace(self, values, boxed=True):
-    # TODO: remove these imports
-    from venture.lite.serialize import OrderedOmegaDB
-    from venture.lite.scaffold import Scaffold
-    from venture.lite.regen import evalFamily
-
     trace = self.Trace()
-
-    db = OrderedOmegaDB(trace, values, boxed) # trace.makeDB()?
-
-    def evalHelper(did, datum):
-        exp = trace.unboxExpression(self.desugarLambda(datum))
-        _, trace.families[did] = evalFamily(trace, exp, trace.globalEnv, Scaffold(), True, db, {}) # trace.evalAndRestore(did, exp, db)?
+    db = trace.makeSerializationDB(values, boxed)
 
     for did, directive in sorted(self.directives.items()):
         if directive[0] == "assume":
             name, datum = directive[1], directive[2]
-            evalHelper(did, datum)
+            trace.evalAndRestore(did, self.desugarLambda(datum), db)
             trace.bindInGlobalEnv(name, did)
         elif directive[0] == "observe":
             datum, val = directive[1], directive[2]
-            evalHelper(did, datum)
+            trace.evalAndRestore(did, self.desugarLambda(datum), db)
             trace.observe(did, val)
         elif directive[0] == "predict":
             datum = directive[1]
-            evalHelper(did, datum)
+            trace.evalAndRestore(did, self.desugarLambda(datum), db)
 
     return trace
 
