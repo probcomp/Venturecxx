@@ -180,7 +180,7 @@ effect of renumbering the directives, if some had been forgotten."""
       newTraces = [None for p in range(P)]
       for p in range(P):
         parent = sampleLogCategorical(self.weights) # will need to include or rewrite
-        newTrace = self.traces[parent].stop_and_copy(self)
+        newTrace = self.copy_trace(self.traces[parent])
         newTraces[p] = newTrace
         if self.name != "lite":
           newTraces[p].set_seed(random.randint(1,2**31-1))
@@ -254,9 +254,64 @@ effect of renumbering the directives, if some had been forgotten."""
   def stop_continuous_inference(self):
     for trace in self.traces: trace.stop_continuous_inference()
 
+  def dump_trace(self, trace, boxed=True):
+    # TODO: remove these imports
+    from venture.lite.serialize import OrderedOmegaDB
+    from venture.lite.scaffold import Scaffold
+    from venture.lite.detach import unevalFamily
+    from venture.lite.regen import restore
+
+    db = OrderedOmegaDB(trace) # trace.makeDB()?
+
+    for did, directive in sorted(self.directives.items(), reverse=True):
+      if directive[0] == "observe":
+        trace.unobserve(did)
+        trace.families[did].isObservation = False
+      unevalFamily(trace, trace.families[did], Scaffold(), db) # trace.unevalAndExtract(did, db)?
+
+    for did, directive in sorted(self.directives.items()):
+      restore(trace, trace.families[did], Scaffold(), db, {}) # trace.restore(did, db)?
+      if directive[0] == "observe":
+        trace.observe(did, directive[2])
+
+    return db.listValues(boxed)
+
+  def restore_trace(self, values, boxed=True):
+    # TODO: remove these imports
+    from venture.lite.serialize import OrderedOmegaDB
+    from venture.lite.scaffold import Scaffold
+    from venture.lite.regen import evalFamily
+
+    trace = self.Trace()
+
+    db = OrderedOmegaDB(trace, values, boxed) # trace.makeDB()?
+
+    def evalHelper(did, datum):
+        exp = trace.unboxExpression(self.desugarLambda(datum))
+        _, trace.families[did] = evalFamily(trace, exp, trace.globalEnv, Scaffold(), True, db, {}) # trace.evalAndRestore(did, exp, db)?
+
+    for did, directive in sorted(self.directives.items()):
+        if directive[0] == "assume":
+            name, datum = directive[1], directive[2]
+            evalHelper(did, datum)
+            trace.bindInGlobalEnv(name, did)
+        elif directive[0] == "observe":
+            datum, val = directive[1], directive[2]
+            evalHelper(did, datum)
+            trace.observe(did, val)
+        elif directive[0] == "predict":
+            datum = directive[1]
+            evalHelper(did, datum)
+
+    return trace
+
+  def copy_trace(self, trace):
+    values = self.dump_trace(trace, boxed=False)
+    return self.restore_trace(values, boxed=False)
+
   def save(self, fname, extra=None):
     data = {}
-    data['traces'] = [trace.dump(self) for trace in self.traces]
+    data['traces'] = [self.dump_trace(trace) for trace in self.traces]
     data['weights'] = self.weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
@@ -270,7 +325,7 @@ effect of renumbering the directives, if some had been forgotten."""
       (data, version) = pickle.load(fp)
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directives = data['directives']
-    self.traces = [self.Trace.restore(trace, self) for trace in data['traces']]
+    self.traces = [self.restore_trace(trace) for trace in data['traces']]
     self.weights = data['weights']
     self.directiveCounter = data['directiveCounter']
     return data['extra']

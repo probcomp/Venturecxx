@@ -405,21 +405,6 @@ class Trace(object):
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
-  def stop_and_copy(self, engine):
-    # obj = serialize.dump_trace_old(self)
-    # return serialize.restore_trace_old(obj)
-    values = serialize.dump_trace(self, engine)
-    return serialize.restore_trace(values, engine)
-
-  def dump(self, engine):
-    values = serialize.dump_trace(self, engine)
-    return map(self.boxValue, values)
-
-  @staticmethod
-  def restore(values, engine):
-    values = map(Trace.unboxValue, values)
-    return serialize.restore_trace(values, engine)
-
   def get_seed(self):
     # TODO Trace does not support seed control because it uses
     # Python's native randomness.

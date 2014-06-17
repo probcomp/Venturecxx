@@ -17,14 +17,14 @@ def _test_serialize_program(v, label, action):
 
     if action == 'serialize':
         trace1 = engine.getDistinguishedTrace()
-        serialized = trace1.dump(engine)
-        trace2 = trace1.restore(serialized, engine)
+        serialized = engine.dump_trace(trace1)
+        trace2 = engine.restore_trace(serialized)
         assert isinstance(serialized, list)
         assert all(isinstance(x, dict) for x in serialized)
         assert isinstance(trace2, type(trace1))
     elif action == 'copy':
         trace1 = engine.getDistinguishedTrace()
-        trace2 = trace1.stop_and_copy(engine)
+        trace2 = engine.copy_trace(trace1)
         assert isinstance(trace2, type(trace1))
     else:
         assert False

@@ -14,11 +14,13 @@ class OrderedOmegaDB(OmegaDB):
 
     """
 
-    def __init__(self, trace, values=None):
+    def __init__(self, trace, values=None, boxed=False):
         super(OrderedOmegaDB, self).__init__()
         self.trace = trace
         self.stack = []
         if values is not None:
+            if boxed:
+                values = map(self.trace.unboxValue, values)
             self.stack.extend(values)
 
     def hasValueFor(self, node):
@@ -59,61 +61,8 @@ class OrderedOmegaDB(OmegaDB):
                 raise Exception("Cannot restore a randomly constructed %s" % type(value))
             self.stack.append(value)
 
-    def listValues(self):
-        return list(self.stack)
-
-def dump_trace(trace, engine):
-    ## TODO: move these imports to the top level
-    from venture.lite.trace import Trace
-    from venture.lite.scaffold import Scaffold
-    from venture.lite.detach import unevalFamily
-    from venture.lite.regen import restore
-
-    directives = engine.directives
-
-    omegaDB = OrderedOmegaDB(trace)
-    scaffold = Scaffold()
-
-    for did, directive in sorted(directives.items(), reverse=True):
-        if directive[0] == "observe":
-            trace.unobserve(did)
-            trace.families[did].isObservation = False
-        unevalFamily(trace, trace.families[did], scaffold, omegaDB)
-
-    for did, directive in sorted(directives.items()):
-        restore(trace, trace.families[did], scaffold, omegaDB, {})
-        if directive[0] == "observe":
-            trace.observe(did, directive[2])
-
-    return omegaDB.listValues()
-
-def restore_trace(values, engine):
-    ## TODO: move these imports to the top level
-    from venture.lite.trace import Trace
-    from venture.lite.scaffold import Scaffold
-    from venture.lite.regen import evalFamily
-
-    directives = engine.directives
-
-    trace = Trace()
-    omegaDB = OrderedOmegaDB(trace, values)
-    scaffold = Scaffold()
-
-    def evalHelper(did, datum):
-        exp = trace.unboxExpression(engine.desugarLambda(datum))
-        _, trace.families[did] = evalFamily(trace, exp, trace.globalEnv, scaffold, True, omegaDB, {})
-
-    for did, directive in sorted(directives.items()):
-        if directive[0] == "assume":
-            name, datum = directive[1], directive[2]
-            evalHelper(did, datum)
-            trace.bindInGlobalEnv(name, did)
-        elif directive[0] == "observe":
-            datum, val = directive[1], directive[2]
-            evalHelper(did, datum)
-            trace.observe(did, val)
-        elif directive[0] == "predict":
-            datum = directive[1]
-            evalHelper(did, datum)
-
-    return trace
+    def listValues(self, boxed=False):
+        values = self.stack
+        if boxed:
+            values = map(self.trace.boxValue, values)
+        return list(values)
