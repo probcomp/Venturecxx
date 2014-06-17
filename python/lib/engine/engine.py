@@ -17,7 +17,8 @@ import random
 import pickle
 
 from venture.exception import VentureException
-from venture.lite.utils import simulateCategorical, sampleLogCategorical
+from venture.lite.utils import sampleLogCategorical
+from venture.engine.inference import Infer
 
 class Engine(object):
 
@@ -182,24 +183,10 @@ effect of renumbering the directives, if some had been forgotten."""
       params = {}
     self.set_default_params(params)
 
-    self.incorporate()    
-    if 'command' in params and params['command'] == "resample":
-      self.resample(params['particles'])
+    return Infer(self).infer(params)
 
-    elif 'command' in params and params['command'] == "incorporate": pass
-
-    elif params['kernel'] == "cycle":
-      if 'subkernels' not in params:
-        raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
-      for _ in range(params["transitions"]):
-        for k in params["subkernels"]:
-          self.infer(k)
-    elif params["kernel"] == "mixture":
-      for _ in range(params["transitions"]):
-        self.infer(simulateCategorical(params["weights"], params["subkernels"]))
-    else: # A primitive infer expression
-      #import pdb; pdb.set_trace()
-      for trace in self.traces: trace.infer(params)
+  def primitive_infer(self, params):
+    for trace in self.traces: trace.infer(params)
   
   # TODO put all inference param parsing in one place
   def set_default_params(self,params):
