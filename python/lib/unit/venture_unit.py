@@ -117,6 +117,12 @@ class VentureUnit(object):
         self.analyticsKwargs = dict(assumes=self.assumes, observes=self.observes,
                            parameters=self.parameters)
 
+    def getAnalytics(self,mripl=None):
+        if mripl is None:
+            return Analytics(*self.analyticsArgs, **self.analyticsKwargs)
+        else:
+            return Analytics(mripl,**self.analyticsKwargs)
+
     def sampleFromJoint(self,*args,**kwargs):
         a = Analytics(*self.analyticsArgs, **self.analyticsKwargs)
         return a.sampleFromJoint(*args,**kwargs)
