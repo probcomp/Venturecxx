@@ -1,3 +1,18 @@
 #!/bin/bash
 
+# Usage: filter DATASET_NAME [ARGS]
+#
+# Invokes filter.py with correct arguments to use the given data set,
+# passing any other arguments.
+#
+# Example: time filter 4_circle --version dead_reckoning --plot --frames 3000
+# produces a movie (helpfully named .mp4) that you can then view.
+#
+# Default testing run used by vkm for submission is:
+#
+# filter 1_straight --plot --frames 100
+# 
+# which should take a minute or less on one of the probcomp machines.
+
 python filter.py CP1-Quad-Rotor/data/automobile/$1/data/noisy/ slam_out/  --clean_dir CP1-Quad-Rotor/data/automobile/$1/data/ground/ --dataset_name $1 ${*:2}
+
