@@ -18,6 +18,7 @@
 
 import sys
 import traceback
+import venture.sivm.core_sivm as core_sivm
 
 # This list of functions defines the public REST API
 # of the Ripl server and client
@@ -284,7 +285,7 @@ def expToDict(exp, ripl=None):
     else:
       name = exp[2]
     if ripl is not None:
-      expr = ripl._ensure_parsed_expression(exp[1])
+      expr = core_sivm._modify_expression(ripl._ensure_parsed_expression(exp[1]))
     else:
       raise Exception("Need a ripl around in order to parse model expressions in inference expressions")
     return {"command":"peek", "expression":expr, "name":name}
