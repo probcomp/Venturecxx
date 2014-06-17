@@ -414,13 +414,10 @@ def historyNameToValues(history,seriesInd=0,flatten=False):
         nameToValues[name]=values
     return nameToValues
 
-
-
-
-
 # 
 # TODO Parameters have to agree for now
 # FIXME does nameToType work with histOverlay?
+# TODO have a sensible default naming (for convenience)
 def historyOverlay(name, named_hists):
     ''':: string -> [(string,History)] -> History containing all those
     time series overlaid'''  

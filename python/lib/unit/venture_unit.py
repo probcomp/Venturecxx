@@ -233,6 +233,9 @@ class Analytics(object):
 
 
         # mutate ripl/mripl
+        ## FIXME: we really have a choice here. we could just mutate the
+        # ripl we made. certainly that makes sense if an empty ripl was
+        # entered. leave things flexible for now
         if mutateRipl:
             if self.mripl:
                 self.mripl = ripl_mripl
