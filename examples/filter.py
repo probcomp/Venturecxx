@@ -422,7 +422,8 @@ approaches = dict(random_walk = RandomWalkStepper(),
                   dead_reckoning = DeadReckoner(particles=10),
                   motion_model_base = MotionModelParticleFilter(particles=1, window=1),
                   motion_model_long = HyperInferenceParticleFilter(particles=1, window=20),
-                  motion_model_fat  = HyperInferenceParticleFilter(particles=10, window=5))
+                  motion_model_fat  = HyperInferenceParticleFilter(particles=10, window=5),
+                  known_motion = KnownMotionParticleFilter(particles=1, window=10))
 approach = approaches[args.version]
 
 def ensure(path):
