@@ -320,7 +320,7 @@ boost::python::dict VentureAtom::toPython(Trace * trace) const
 boost::python::dict VentureBool::toPython(Trace * trace) const
 {
   boost::python::dict value;
-  value["type"] = "bool";
+  value["type"] = "boolean";
   value["value"] = boost::python::object(b);
   return value;
 }
