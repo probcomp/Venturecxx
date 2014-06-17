@@ -96,6 +96,17 @@ class Engine(object):
 
     del self.directives[directiveId]
 
+  def sample(self,datum):
+    # TODO Officially this is taken care of by the Venture SIVM level,
+    # but I want it here because it is used in the interpretation of
+    # the "peek" infer command.  Design clarification time?
+    # TODO With this definition of "sample", "peek" will pump the
+    # directive counter of the engine.  That is likely to make us at
+    # least somewhat sad.
+    (did, value) = self.predict(datum)
+    self.forget(did)
+    return value
+
   def freeze(self,directiveId):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",

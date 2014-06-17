@@ -21,22 +21,34 @@ class Infer(object):
     self.engine = engine
     self.out = {}
 
+  def _ensure(self, name):
+    if name in self.out: pass
+    else: self.out[name] = []
+
   def infer(self, program):
     self.engine.incorporate()
+    self.do_infer(program)
+    return self.out
+
+  def do_infer(self, program):
     if 'command' in program and program['command'] == "resample":
       self.engine.resample(program['particles'])
-
-    elif 'command' in program and program['command'] == "incorporate": pass
-
+    elif 'command' in program and program['command'] == "incorporate":
+      pass
+    elif 'command' in program and program['command'] == "peek":
+      value = self.engine.sample(program['expression'])
+      name = program['name']
+      self._ensure(name)
+      self.out[name].append(value)
     elif program['kernel'] == "cycle":
       if 'subkernels' not in program:
         raise Exception("Cycle kernel must have things to cycle over (%r)" % program)
       for _ in range(program["transitions"]):
         for k in program["subkernels"]:
-          self.infer(k)
+          self.do_infer(k)
     elif program["kernel"] == "mixture":
       for _ in range(program["transitions"]):
-        self.infer(simulateCategorical(program["weights"], program["subkernels"]))
+        self.do_infer(simulateCategorical(program["weights"], program["subkernels"]))
     else: # A primitive infer expression
       self.engine.primitive_infer(program)
 
