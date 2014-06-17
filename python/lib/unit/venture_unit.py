@@ -147,7 +147,7 @@ class VentureUnit(object):
 class Analytics(object):
 
     def __init__(self, ripl_mripl, assumes=None,observes=None,queryExps=None,
-                 parameters=None):
+                 parameters=None, mutateRipl=False):
         '''Methods for analyzing and debugging inference on a model.
 
         Arguments
@@ -219,8 +219,15 @@ class Analytics(object):
             if self.mripl.local_mode is False:
                 self.mripl.dview.execute('from venture.unit import Analytics')
             self.updateQueryExps()
-        
 
+        # mutate ripl/mripl
+        if mutateRipl:
+            self.ripl = ripl_mripl
+            self.muRipl = True
+        else:
+            self.muRipl = False
+
+        
 
     def updateObserves(self,newObserves=None,removeAllObserves=False):
         '''Extend list of observes or empty it.
@@ -252,7 +259,11 @@ class Analytics(object):
         # self.ripl.set_seed(seed)
 
     def _clearRipl(self):
-        self.ripl.clear()
+        if self.muRipl:
+            assert False,'Attempt to clear mutable ripl'
+        else:
+            self.ripl.clear()
+
 
     def _loadAssumes(self, prune=True):
         
@@ -270,6 +281,8 @@ class Analytics(object):
 
 
     def _assumesFromRipl(self):
+
+
         assumeToDirective = {}
         for directive in self.ripl.list_directives(type=True):
             if directive["instruction"] == "assume":
@@ -317,6 +330,7 @@ class Analytics(object):
     # Updates recorded values after an iteration of the ripl.
     def updateValues(self, keyedValues, keyToDirective=None):
 
+        
         if keyToDirective is None: # queryExps are sampled and have no dids
             for key,values in keyedValues.items():
                 values.append(self.ripl.sample(key,type=True)) 
@@ -636,9 +650,12 @@ class Analytics(object):
   
 
     def runFromConditionalOnce(self, data=None, force=None, **kwargs):
-        self._clearRipl()
-        assumeToDirective = self._loadAssumes()
-        self._loadObserves(data)
+        if not self.muRipl:
+            self._clearRipl()
+            assumeToDirective = self._loadAssumes()
+            self._loadObserves(data)
+        else:
+            assumeToDirective = None
 
         if force is not None:
             for symbol,value in force.iteritems():
