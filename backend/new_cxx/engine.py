@@ -22,4 +22,4 @@ class Engine(engine.Engine):
     super(Engine, self).__init__(name="puma", Trace=Trace)
 
   def copy_trace(self, trace):
-    return trace.stop_and_copy(self)
+    return trace.stop_and_copy()
