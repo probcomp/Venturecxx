@@ -9,9 +9,6 @@ from venture.test.config import get_ripl, collectStateSequence, defaultKernel
 def _test_serialize_program(v, label, action):
     if defaultKernel() != 'mh':
         raise SkipTest("Doesn't depend on kernel, only run it for mh")
-    if config['get_ripl'] == 'puma':
-        if action == 'serialize':
-            raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
 
     engine = v.sivm.core_sivm.engine
 
@@ -145,8 +142,6 @@ def test_serialize_latents():
 def test_serialize_ripl():
     if defaultKernel() != 'mh':
         raise SkipTest("Doesn't depend on kernel, only run it for mh")
-    if config['get_ripl'] == 'puma':
-        raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
     v1 = get_ripl()
     v1.assume('is_tricky', '(flip 0.2)')
     v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
@@ -173,8 +168,6 @@ def test_serialize_ripl():
 def test_serialize_forget():
     if defaultKernel() != 'mh':
         raise SkipTest("Doesn't depend on kernel, only run it for mh")
-    if config['get_ripl'] == 'puma':
-        raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
     v1 = get_ripl()
     v1.assume('is_tricky', '(flip 0.2)')
     v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
@@ -200,8 +193,6 @@ def test_serialize_forget():
 def test_serialize_recursion():
     if defaultKernel() != 'mh':
         raise SkipTest("Doesn't depend on kernel, only run it for mh")
-    if config['get_ripl'] == 'puma':
-        raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
     v = get_ripl()
     v.assume('f', '''
 (mem (lambda (x)
@@ -222,8 +213,6 @@ def test_serialize_recursion():
 def test_serialize_repeatedly():
     if defaultKernel() != 'mh':
         raise SkipTest("Doesn't depend on kernel, only run it for mh")
-    if config['get_ripl'] == 'puma':
-        raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
     v = get_ripl()
     v.assume('theta', '(beta 1 1)')
     v.observe('(flip theta)', 'true')
