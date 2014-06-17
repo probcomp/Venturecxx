@@ -20,15 +20,28 @@ class Infer(object):
   def __init__(self, engine):
     self.engine = engine
     self.out = {}
+    self.plot = None
 
-  def _ensure(self, name):
+  def _ensure_peek_name(self, name):
+    if self.plot is not None:
+      raise Exception("TODO Cannot plot and peek in the same inference program")
     if name in self.out: pass
     else: self.out[name] = []
+
+  def _ensure_plot(self, spec, names, exprs):
+    if len(self.out) > 0:
+      raise Exception("TODO Cannot peek and plot in the same inference program")
+    if self.plot is None:
+      self.plot = SpecPlot(spec, names, exprs)
+    elif spec == self.plot.spec and names == self.plot.names and exprs == self.plot.exprs:
+      pass
+    else:
+      raise Exception("TODO Cannot plot with different specs in the same inference program")
 
   def infer(self, program):
     self.engine.incorporate()
     self.do_infer(program)
-    return self.out
+    return self.plot if self.plot is not None else self.out
 
   def do_infer(self, program):
     if 'command' in program and program['command'] == "resample":
@@ -36,10 +49,13 @@ class Infer(object):
     elif 'command' in program and program['command'] == "incorporate":
       pass
     elif 'command' in program and program['command'] == "peek":
-      value = self.engine.sample(program['expression'])
       name = program['name']
-      self._ensure(name)
+      self._ensure_peek_name(name)
+      value = self.engine.sample(program['expression'])
       self.out[name].append(value)
+    elif 'command' in program and program['command'] == "plotf":
+      self._ensure_plot(program["specification"], program["names"], program["expressions"])
+      self.plot.add_data(self.engine)
     elif program['kernel'] == "cycle":
       if 'subkernels' not in program:
         raise Exception("Cycle kernel must have things to cycle over (%r)" % program)
@@ -52,3 +68,13 @@ class Infer(object):
     else: # A primitive infer expression
       self.engine.primitive_infer(program)
 
+class SpecPlot(object):
+  def __init__(self, spec, names, exprs):
+    self.spec = spec
+    self.names = names
+    self.exprs = exprs
+    self.data = dict([(name, []) for name in names])
+  def add_data(self, engine):
+    for name, exp in zip(self.names, self.exprs):
+      value = engine.sample(exp)
+      self.data[name].append(value)
