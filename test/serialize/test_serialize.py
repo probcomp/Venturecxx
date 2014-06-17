@@ -218,3 +218,16 @@ def test_serialize_recursion():
     except RuntimeError as e:
         assert 'maximum recursion depth exceeded' not in e.message
         raise
+
+def test_serialize_repeatedly():
+    if defaultKernel() != 'mh':
+        raise SkipTest("Doesn't depend on kernel, only run it for mh")
+    if config['get_ripl'] == 'puma':
+        raise SkipTest("Puma to Lite conversion not yet implemented. Issue: https://app.asana.com/0/13001976276959/12193842156124")
+    v = get_ripl()
+    v.assume('theta', '(beta 1 1)')
+    v.observe('(flip theta)', 'true')
+    v.infer(0)
+    # just make sure this doesn't crash
+    v.save('/tmp/serialized.ripl')
+    v.save('/tmp/serialized.ripl')
