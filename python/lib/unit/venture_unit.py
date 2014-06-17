@@ -52,6 +52,14 @@ parseValue = _strip_types
 # 4.output history and pointer to self.mripl
 
 
+# IMPLENTATION
+# Done a crude implementation that works for runFromConditional. Currently
+# prevent Analytics from ever clearing the ripl, which prevents run from prior. Whole point of this
+# is to allow filtering/incremental inference with Analytics. 
+# So running on synth data from prior won't be doing the same
+# inference procedure as an incremental one. ...
+
+
 def directive_split(d):
     'Splits directive from *list_directives* into components'
     ## FIXME: replace Python values with strings for Venture.
@@ -208,6 +216,9 @@ class Analytics(object):
 
 
         # make fresh mripl with same backend as input mripl
+
+        ## FIXME: should have an attribute for *mripl_mode* and then an
+        ## attribute pointing to actual mripl
         if self.mripl:
             self.mripl = MRipl(ripl_mripl.no_ripls,
                                backend = ripl_mripl.backend,
@@ -220,9 +231,14 @@ class Analytics(object):
                 self.mripl.dview.execute('from venture.unit import Analytics')
             self.updateQueryExps()
 
+
         # mutate ripl/mripl
         if mutateRipl:
-            self.ripl = ripl_mripl
+            if self.mripl:
+                self.mripl = ripl_mripl
+            else:
+                self.ripl = ripl_mripl
+                
             self.muRipl = True
         else:
             self.muRipl = False
@@ -236,7 +252,11 @@ class Analytics(object):
             self.observes = []
         if newObserves is not None:
             self.observes.extend( newObserves )
-    
+
+        if self.muRipl:
+            ripl = self.mripl if self.mripl else self.ripl
+            [ripl.observe( exp, value ) for exp,value in newObserves]
+            print 'Update mutable ripl'
         
     def updateQueryExps(self,newQueryExps=None,removeAllQueryExps=False):
         '''Extend list of query expressions or empty it.
@@ -281,7 +301,6 @@ class Analytics(object):
 
 
     def _assumesFromRipl(self):
-
 
         assumeToDirective = {}
         for directive in self.ripl.list_directives(type=True):
@@ -486,7 +505,7 @@ class Analytics(object):
                        useMRipl=True,**kwargs):
         history = History(tag, self.parameters)
         
-        if self.mripl and useMRipl:
+        if self.mripl and useMRipl and not self.muRipl:
             v = MRipl(runs,backend=self.backend,local_mode=self.mripl.local_mode)
             
             def sendf(ripl,fname,modelTuple,**kwargs):
@@ -503,6 +522,18 @@ class Analytics(object):
             for r in results[:runs]: history.addRun(r)
 
             return history
+
+
+        if self.mripl and useMRipl and self.muRipl:
+            def sendf(ripl,fname,**kwargs):
+                seed = ripl.sample('(uniform_discrete 0 (pow 10 5))') ## FIXME HACK
+                model = Analytics(ripl,mutateRipl=True)
+                return getattr(model,fname)(label='seed:%s'%seed,**kwargs)
+
+            results = self.mripl.map_proc('all',sendf, f.func_name,**kwargs)
+            for r in results[:runs]: history.addRun(r)
+            return history
+
     
         # single ripl
         for run in range(runs):
