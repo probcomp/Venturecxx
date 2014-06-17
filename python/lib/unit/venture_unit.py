@@ -1,3 +1,4 @@
+
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
@@ -125,11 +126,17 @@ class VentureUnit(object):
         self.analyticsKwargs = dict(assumes=self.assumes, observes=self.observes,
                            parameters=self.parameters)
 
-    def getAnalytics(self,mripl=None):
+    def getAnalytics(self,mripl=None,mutateRipl=False):
+        '''Create Analytics object from assumes, observes and parameters.
+           Optional arg *mripl* used to send an MRipl to Analytics.'''
+        
+        kwargs = self.analyticsKwargs.copy()
+        kwargs['mutateRipl'] = mutateRipl
+        
         if mripl is None:
-            return Analytics(*self.analyticsArgs, **self.analyticsKwargs)
+            return Analytics(*self.analyticsArgs, **kwargs)
         else:
-            return Analytics(mripl,**self.analyticsKwargs)
+            return Analytics(mripl,**kwargs)
 
     def sampleFromJoint(self,*args,**kwargs):
         a = Analytics(*self.analyticsArgs, **self.analyticsKwargs)
@@ -237,12 +244,18 @@ class Analytics(object):
         # ripl we made. certainly that makes sense if an empty ripl was
         # entered. leave things flexible for now
         if mutateRipl:
-            if self.mripl:
-                self.mripl = ripl_mripl
-            else:
-                self.ripl = ripl_mripl
-                
             self.muRipl = True
+            
+            if ripl_mripl.list_directives() == []:
+                if not self.mripl:
+                    for sym,exp in self.assumes: self.ripl.assume(sym,exp)
+                    for exp,lit in self.observes: self.ripl.observe(exp,lit)
+                print 'Analytics created new persistent ripl/mrip.'
+
+            else:
+                self.ripl = ripl_mripl 
+                self.mripl = ripl_mripl if self.mripl else False
+                print 'Analytics will mutate the input ripl/mripl.' 
         else:
             self.muRipl = False
 

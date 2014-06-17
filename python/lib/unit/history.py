@@ -440,7 +440,7 @@ def historyStitch(hists,nansAtStitches=False):
     h0 = hists[0]
     h0.label + '--1st of %i stitched hists'%len(hists)
     for h in hists[1:]:
-        for name in h.nameToSeries.iteritems():
+        for name,_ in h.nameToSeries.iteritems():
             h_values = h.nameToSeries[name][0].values
             h0.nameToSeries[name][0].values.extend( h_values )
             if nansAtStitches:
