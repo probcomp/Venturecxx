@@ -193,7 +193,7 @@ class RandomWalkParticleFilter(object):
 
     def infer(self, ripl, _row_i):
         ripl.infer("(resample %d)" % self.particles)
-        ripl.infer("(slice default one 20)")
+        #ripl.infer("(slice default one 20)")
 
     def forget(self, ripl, row_i, _combined_frame_row):
         if row_i >= self.window:
@@ -274,6 +274,45 @@ class MotionModelParticleFilter(RandomWalkParticleFilter):
             # and we don't want to seed the motion model poorly
             # ripl.infer("(mh default one 950)")
             ripl.infer("(slice default one %d)" % (10 * self.window))
+
+class KnownMotionParticleFilter(MotionModelParticleFilter):
+    def __init__(self, particles=1, window=1):
+        super(KnownMotionParticleFilter, self).__init__(particles=particles, window=window)
+
+        if particles > 1:
+            print "WARNING: Wasting computation initially by running a known motion filter with multiple particles: " + str(particles)
+
+    def announce(self):
+        print "Particle filtering under a known motion model, for debugging purposes"
+
+    def infer(self, ripl, row_i):
+        ripl.infer("(resample 1)") # Incorporate data
+
+    def observe(self, ripl, row_i, combined_frame_row):
+        if row_i is 0:
+            # initialize sensibly
+            pass
+        else:
+            # update with known data
+            pass
+
+    # FIXME: Goals:
+    # - get running under alexey's framework (movie showing junk)
+    # - get true data (clean gps) that we're going to use printed
+    # - use fixed, arbitrary motion model noise and observe true pose w/ clean gps values at every step (movie should look good; no inference happening; noise ignored)
+    # - use random motion model noise but still do no inference over motion model noise (movie should still look good)
+    # - at each step, read out & print the inferred motion model noise (should be constant w/o any inference)
+    # - turn on inference over motion model noise (still observing true pose) and see what happens.
+    #   - if ~= eps: our model is great
+    #   - if "small": we are good
+    #   - if "large": could be evidence for a bug
+    #   - debugging option: turning on/off gps observations should have no effect on the movie if pose is observed
+    # - use inferred fixxed noise level. treat clean gps as noisy data instead of direct pose observation. should yield good movies w/ tracking of heading, with control
+    # - if we put in random controls, we should do worse
+    #
+    # STATE: working motion model
+    # 
+    # - now use real noisy gps and try filtering and example results
 
 class HyperInferenceParticleFilter(MotionModelParticleFilter):
     def __init__(self, particles=1, window=1):
