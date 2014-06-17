@@ -92,8 +92,7 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None,infer_merge=None):
   return predictions
 
 def defaultInfer():
-  from venture.ripl.utils import parse, expToDict
-  candidate = expToDict(parse(config["infer"]))
+  candidate = u.expToDict(u.parse(config["infer"]))
   candidate["transitions"] = min(default_num_transitions_per_sample(), int(candidate["transitions"]))
   return candidate
 
