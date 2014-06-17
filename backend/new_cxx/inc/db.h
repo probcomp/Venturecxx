@@ -12,9 +12,9 @@ struct LatentDB { virtual ~LatentDB() {}; };
 
 struct DB
 {
-  bool hasValue(Node * node);
-  VentureValuePtr getValue(Node * node);
-  void registerValue(Node * node, VentureValuePtr value);
+  virtual bool hasValue(Node * node);
+  virtual VentureValuePtr getValue(Node * node);
+  virtual void registerValue(Node * node, VentureValuePtr value);
 
   bool hasLatentDB(Node * makerNode);
   shared_ptr<LatentDB> getLatentDB(Node * makerNode);
