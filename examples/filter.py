@@ -289,6 +289,12 @@ class KnownMotionParticleFilter(MotionModelParticleFilter):
         ripl.infer("(resample 1)") # Incorporate data
 
     def observe(self, ripl, row_i, combined_frame_row):
+        gt_x = combined_frame_row['clean_x']
+        gt_y = combined_frame_row['clean_y']
+        gt_head = combined_frame_row['clean_heading']
+
+        print "row %d --- x,y,pose %d %d %d" % row_i, gt_x, gt_y, gt_head
+
         if row_i is 0:
             # initialize sensibly
             pass
@@ -297,7 +303,7 @@ class KnownMotionParticleFilter(MotionModelParticleFilter):
             pass
 
     # FIXME: Goals:
-    # - get running under alexey's framework (movie showing junk)
+    # x get running under alexey's framework (movie showing junk)
     # - get true data (clean gps) that we're going to use printed
     # - use fixed, arbitrary motion model noise and observe true pose w/ clean gps values at every step (movie should look good; no inference happening; noise ignored)
     # - use random motion model noise but still do no inference over motion model noise (movie should still look good)
