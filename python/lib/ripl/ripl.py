@@ -407,11 +407,15 @@ Open issues:
         if isinstance(params, int):
             return {"transitions": params, "kernel": "mh", "scope":"default", "block":"one"}
         elif isinstance(params, basestring):
-            return u.expToDict(u.parse(params))
+            # TODO Technically, should make sure that inference
+            # programs are validated and desugared by the rest of the
+            # stack, especially since as of peek they can contain
+            # model program fragments.
+            return u.expToDict(u.parse(params), self)
         elif isinstance(params, dict):
             return params
         else:
-          raise TypeError("Unknown params: " + str(params))
+            raise TypeError("Unknown params: " + str(params))
         
     def infer(self, params=None):
         self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})

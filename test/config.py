@@ -78,7 +78,7 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None,infer_merge=None):
     if not infer["kernel"] == "rejection":
       infer["transitions"] = 4 * int(infer["transitions"])
   elif isinstance(infer, str):
-    infer = u.expToDict(u.parse(infer))
+    infer = u.expToDict(u.parse(infer), ripl)
 
   if infer_merge is not None: infer.update(infer_merge)
 

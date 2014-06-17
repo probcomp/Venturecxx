@@ -187,7 +187,7 @@ def unparse(exp):
   return '('+' '.join(map(unparse, exp))+')' if isinstance(exp, list) else str(exp)
 
 ## TODO Define a VentureScript version of this parser
-def expToDict(exp):
+def expToDict(exp, ripl=None):
   if isinstance(exp, int):
     return {"transitions": exp}
   tag = exp[0]
@@ -278,9 +278,14 @@ def expToDict(exp):
   elif tag == "peek":
     assert 2 <= len(exp) and len(exp) <= 3
     if len(exp) == 2:
-      return {"command":"peek", "expression":exp[1], "name":exp[1]}
+      name = exp[1]
     else:
-      return {"command":"peek", "expression":exp[1], "name":exp[2]}
+      name = exp[2]
+    if ripl is not None:
+      expr = ripl._ensure_parsed_expression(exp[1])
+    else:
+      raise Exception("Need a ripl around in order to parse model expressions in inference expressions")
+    return {"command":"peek", "expression":expr, "name":name}
   else:
     raise Exception("Cannot parse infer instruction")
 
