@@ -1,3 +1,4 @@
+
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
@@ -50,6 +51,14 @@ parseValue = _strip_types
 # 2.you can updateObserves/queryexps/assumes as needed
 # 3.runFromCond map_procs analytics runOnceFromCond onto each ripl in self.mripl and runs over combined
 # 4.output history and pointer to self.mripl
+
+
+# IMPLENTATION
+# Done a crude implementation that works for runFromConditional. Currently
+# prevent Analytics from ever clearing the ripl, which prevents run from prior. Whole point of this
+# is to allow filtering/incremental inference with Analytics. 
+# So running on synth data from prior won't be doing the same
+# inference procedure as an incremental one. ...
 
 
 def directive_split(d):
@@ -117,6 +126,18 @@ class VentureUnit(object):
         self.analyticsKwargs = dict(assumes=self.assumes, observes=self.observes,
                            parameters=self.parameters)
 
+    def getAnalytics(self,mripl=None,mutateRipl=False):
+        '''Create Analytics object from assumes, observes and parameters.
+           Optional arg *mripl* used to send an MRipl to Analytics.'''
+        
+        kwargs = self.analyticsKwargs.copy()
+        kwargs['mutateRipl'] = mutateRipl
+        
+        if mripl is None:
+            return Analytics(*self.analyticsArgs, **kwargs)
+        else:
+            return Analytics(mripl,**kwargs)
+
     def sampleFromJoint(self,*args,**kwargs):
         a = Analytics(*self.analyticsArgs, **self.analyticsKwargs)
         return a.sampleFromJoint(*args,**kwargs)
@@ -141,7 +162,7 @@ class VentureUnit(object):
 class Analytics(object):
 
     def __init__(self, ripl_mripl, assumes=None,observes=None,queryExps=None,
-                 parameters=None):
+                 parameters=None, mutateRipl=False):
         '''Methods for analyzing and debugging inference on a model.
 
         Arguments
@@ -202,6 +223,9 @@ class Analytics(object):
 
 
         # make fresh mripl with same backend as input mripl
+
+        ## FIXME: should have an attribute for *mripl_mode* and then an
+        ## attribute pointing to actual mripl
         if self.mripl:
             self.mripl = MRipl(ripl_mripl.no_ripls,
                                backend = ripl_mripl.backend,
@@ -213,8 +237,29 @@ class Analytics(object):
             if self.mripl.local_mode is False:
                 self.mripl.dview.execute('from venture.unit import Analytics')
             self.updateQueryExps()
-        
 
+
+        # mutate ripl/mripl
+        ## FIXME: we really have a choice here. we could just mutate the
+        # ripl we made. certainly that makes sense if an empty ripl was
+        # entered. leave things flexible for now
+        if mutateRipl:
+            self.muRipl = True
+            
+            if ripl_mripl.list_directives() == []:
+                if not self.mripl:
+                    for sym,exp in self.assumes: self.ripl.assume(sym,exp)
+                    for exp,lit in self.observes: self.ripl.observe(exp,lit)
+                print 'Analytics created new persistent ripl/mrip.'
+
+            else:
+                self.ripl = ripl_mripl 
+                self.mripl = ripl_mripl if self.mripl else False
+                print 'Analytics will mutate the input ripl/mripl.' 
+        else:
+            self.muRipl = False
+
+        
 
     def updateObserves(self,newObserves=None,removeAllObserves=False):
         '''Extend list of observes or empty it.
@@ -223,7 +268,11 @@ class Analytics(object):
             self.observes = []
         if newObserves is not None:
             self.observes.extend( newObserves )
-    
+
+        if self.muRipl:
+            ripl = self.mripl if self.mripl else self.ripl
+            [ripl.observe( exp, value ) for exp,value in newObserves]
+            print 'Update mutable ripl'
         
     def updateQueryExps(self,newQueryExps=None,removeAllQueryExps=False):
         '''Extend list of query expressions or empty it.
@@ -246,7 +295,11 @@ class Analytics(object):
         # self.ripl.set_seed(seed)
 
     def _clearRipl(self):
-        self.ripl.clear()
+        if self.muRipl:
+            assert False,'Attempt to clear mutable ripl'
+        else:
+            self.ripl.clear()
+
 
     def _loadAssumes(self, prune=True):
         
@@ -264,6 +317,7 @@ class Analytics(object):
 
 
     def _assumesFromRipl(self):
+
         assumeToDirective = {}
         for directive in self.ripl.list_directives(type=True):
             if directive["instruction"] == "assume":
@@ -311,6 +365,7 @@ class Analytics(object):
     # Updates recorded values after an iteration of the ripl.
     def updateValues(self, keyedValues, keyToDirective=None):
 
+        
         if keyToDirective is None: # queryExps are sampled and have no dids
             for key,values in keyedValues.items():
                 values.append(self.ripl.sample(key,type=True)) 
@@ -466,7 +521,7 @@ class Analytics(object):
                        useMRipl=True,**kwargs):
         history = History(tag, self.parameters)
         
-        if self.mripl and useMRipl:
+        if self.mripl and useMRipl and not self.muRipl:
             v = MRipl(runs,backend=self.backend,local_mode=self.mripl.local_mode)
             
             def sendf(ripl,fname,modelTuple,**kwargs):
@@ -483,6 +538,18 @@ class Analytics(object):
             for r in results[:runs]: history.addRun(r)
 
             return history
+
+
+        if self.mripl and useMRipl and self.muRipl:
+            def sendf(ripl,fname,**kwargs):
+                seed = ripl.sample('(uniform_discrete 0 (pow 10 5))') ## FIXME HACK
+                model = Analytics(ripl,mutateRipl=True)
+                return getattr(model,fname)(label='seed:%s'%seed,**kwargs)
+
+            results = self.mripl.map_proc('all',sendf, f.func_name,**kwargs)
+            for r in results[:runs]: history.addRun(r)
+            return history
+
     
         # single ripl
         for run in range(runs):
@@ -630,9 +697,12 @@ class Analytics(object):
   
 
     def runFromConditionalOnce(self, data=None, force=None, **kwargs):
-        self._clearRipl()
-        assumeToDirective = self._loadAssumes()
-        self._loadObserves(data)
+        if not self.muRipl:
+            self._clearRipl()
+            assumeToDirective = self._loadAssumes()
+            self._loadObserves(data)
+        else:
+            assumeToDirective = None
 
         if force is not None:
             for symbol,value in force.iteritems():
