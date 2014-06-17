@@ -418,7 +418,8 @@ Open issues:
             raise TypeError("Unknown params: " + str(params))
         
     def infer(self, params=None):
-        self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
+        o = self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
+        return o["value"]
 
     def clear(self):
         self.execute_instruction({'instruction':'clear'})
