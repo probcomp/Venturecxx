@@ -166,6 +166,17 @@ effect of renumbering the directives, if some had been forgotten."""
     for i,trace in enumerate(self.traces):
       self.weights[i] += trace.makeConsistent()
 
+  def resample(self, P):
+    newTraces = [None for p in range(P)]
+    for p in range(P):
+      parent = sampleLogCategorical(self.weights) # will need to include or rewrite
+      newTrace = self.traces[parent].stop_and_copy(self)
+      newTraces[p] = newTrace
+      if self.name != "lite":
+        newTraces[p].set_seed(random.randint(1,2**31-1))
+    self.traces = newTraces
+    self.weights = [0 for p in range(P)]
+
   def infer(self,params=None):
     if params is None:
       params = {}
@@ -173,16 +184,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
     self.incorporate()    
     if 'command' in params and params['command'] == "resample":
-      P = params['particles']
-      newTraces = [None for p in range(P)]
-      for p in range(P):
-        parent = sampleLogCategorical(self.weights) # will need to include or rewrite
-        newTrace = self.traces[parent].stop_and_copy(self)
-        newTraces[p] = newTrace
-        if self.name != "lite":
-          newTraces[p].set_seed(random.randint(1,2**31-1))
-      self.traces = newTraces
-      self.weights = [0 for p in range(P)]
+      self.resample(params['particles'])
 
     elif 'command' in params and params['command'] == "incorporate": pass
 
