@@ -135,9 +135,11 @@ def run_venture_console(ripl):
           expression_and_literal_value = content.rsplit(" ", 1)
           ripl.force(expression_and_literal_value[0], expression_and_literal_value[1])
         elif directive_name == "infer":
-          command = expToDict(parse(content)) if content else None
-          ripl.infer(command)
+          command = expToDict(parse(content), ripl) if content else None
+          out = ripl.infer(command)
           print "Inferred according to %s." % ripl.parseInferParams(command)
+          if len(out) > 0:
+            print out
         elif directive_name == "report":
           print ripl.report(int(content))
         else:
@@ -262,12 +264,12 @@ def expToDict(exp, ripl=None):
       j = 2*i
       k = j + 1
       weights.append(exp[1][j])
-      subkernels.append(expToDict(exp[1][k]))
+      subkernels.append(expToDict(exp[1][k]), ripl)
     return {"kernel":"mixture","weights":weights,"subkernels":subkernels,"transitions":exp[2]}
   elif tag == "cycle":
     assert len(exp) == 3
     assert type(exp[1]) is list
-    subkernels = [expToDict(e) for e in exp[1]]
+    subkernels = [expToDict(e, ripl) for e in exp[1]]
     return {"kernel":"cycle","subkernels":subkernels,"transitions":exp[2]}
   elif tag == "resample":
     assert len(exp) == 2
