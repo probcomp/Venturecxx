@@ -417,9 +417,15 @@ Open issues:
         else:
             raise TypeError("Unknown params: " + str(params))
         
-    def infer(self, params=None):
+    def infer(self, params=None, type=False):
         o = self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
-        return o["value"]
+        ans = o["value"]
+        if type:
+            return ans
+        else:
+            # The purpose of {"value": v} here is to fool _strip_types
+            # into mapping over the list.
+            return dict([(k, _strip_types({"value": v})) for (k,v) in ans.iteritems()])
 
     def clear(self):
         self.execute_instruction({'instruction':'clear'})
