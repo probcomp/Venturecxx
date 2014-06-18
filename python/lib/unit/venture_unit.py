@@ -248,12 +248,19 @@ class Analytics(object):
                 if not self.mripl:
                     for sym,exp in self.assumes: self.ripl.assume(sym,exp)
                     for exp,lit in self.observes: self.ripl.observe(exp,lit)
-                print 'Analytics created new persistent ripl/mrip.'
+                    string = 'ripl'
+                else:
+                    string = 'mripl'
+                print 'Analytics created new persistent %s'%string
 
             else:
-                self.ripl = ripl_mripl 
-                self.mripl = ripl_mripl if self.mripl else False
-                print 'Analytics will mutate the input ripl/mripl.' 
+                self.ripl = ripl_mripl
+                if self.mripl:
+                    self.mripl = ripl_mripl
+                    string = 'mripl'
+                else:
+                    string = 'ripl'
+                print 'Analytics will mutate the input %s'%string
         else:
             self.muRipl = False
 
@@ -270,7 +277,8 @@ class Analytics(object):
         if self.muRipl:
             ripl = self.mripl if self.mripl else self.ripl
             [ripl.observe( exp, value ) for exp,value in newObserves]
-            print 'Update mutable ripl'
+            string='mripl' if self.mripl else 'ripl'
+            print 'Observes applied to persistent %s.'%string
         
     def updateQueryExps(self,newQueryExps=None,removeAllQueryExps=False):
         '''Extend list of query expressions or empty it.
@@ -294,7 +302,7 @@ class Analytics(object):
 
     def _clearRipl(self):
         if self.muRipl:
-            assert False,'Attempt to clear mutable ripl'
+            assert False,'Attempt to clear mutable ripl/mripl'
         else:
             self.ripl.clear()
 
