@@ -83,6 +83,7 @@ class VentureUnit(object):
     parameters = {}
     assumes = []
     observes = []
+    queryExps = []
 
     # Register an assume.
     def assume(self, symbol, expression):
@@ -97,6 +98,12 @@ class VentureUnit(object):
 
     # Override to constrain model on data.
     def makeObserves(self): pass
+
+    # Register a queryExp.
+    def queryExp(self, expression):
+        self.queryExps.append(expression)
+
+    def makeQueryExps(self): pass
 
     # Masquerade as a ripl.
     def clear(self):
@@ -121,10 +128,13 @@ class VentureUnit(object):
 
         self.observes = []
         self.makeObserves()
+
+        self.queryExps = []
+        self.makeQueryExps()
         
         self.analyticsArgs = (self.ripl,)
         self.analyticsKwargs = dict(assumes=self.assumes, observes=self.observes,
-                           parameters=self.parameters)
+                           parameters=self.parameters, queryExps=self.queryExps)
 
     def getAnalytics(self,ripl_mripl,mutateRipl=False):
         '''Create Analytics object from assumes, observes and parameters.
@@ -198,7 +208,7 @@ class Analytics(object):
         self.backend = ripl.backend()
         self.ripl = mk_p_ripl() if self.backend=='puma' else mk_l_ripl()
         
-        directives_list = ripl.list_directives()
+        directives_list = ripl.list_directives(type=True)
         
         if assumes is not None:
             self.assumes = assumes
@@ -353,7 +363,6 @@ class Analytics(object):
         'If data not None, replace values in self.observes'
         for (index, (expression, literal)) in enumerate(self.observes):
             datum = literal if data is None else data[index]
-            datum= parseValue(datum)
             self.ripl.observe(expression, datum)
 
     # Loads the assumes and changes the observes to predicts.

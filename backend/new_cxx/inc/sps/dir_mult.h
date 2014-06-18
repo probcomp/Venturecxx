@@ -9,8 +9,9 @@
 // Collapsed SPAux
 struct DirMultSPAux : SPAux
 {
-  DirMultSPAux(int n) : counts(n, 0) {}
+  DirMultSPAux(int n) : counts(n, 0), total(0) {}
   vector<int> counts;
+  int total;
   SPAux* copy_help(ForwardingMap* m) const;
   boost::python::object toPython(Trace * trace) const;
 };
@@ -42,6 +43,9 @@ struct SymDirMultOutputPSP : RandomPSP
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+
   double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
 
 private:
@@ -58,17 +62,21 @@ struct MakeDirMultOutputPSP : PSP
 
 struct DirMultOutputPSP : RandomPSP
 {
-  DirMultOutputPSP(const vector<double>& alpha) : alpha(alpha) {}
+  DirMultOutputPSP(const vector<double>& alpha, double total) : alpha(alpha), total(total) {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+
   double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
 
 private:
   const vector<double> alpha;
+  const double total;
 };
 
 // Uncollapsed SPAux
@@ -103,6 +111,9 @@ struct UCSymDirMultOutputPSP : RandomPSP
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+
 private:
   const size_t n;
 };
@@ -130,6 +141,9 @@ struct UCDirMultOutputPSP : RandomPSP
   double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
 
 private:
   const size_t n;

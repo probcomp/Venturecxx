@@ -18,7 +18,7 @@ from nose.tools import eq_, assert_equal, assert_almost_equal
 ## Functions used by tests
 def betaModel(ripl):
     assumes=[('p','(beta 1.0 1.0)')]
-    observes=[('(flip p)',True) for _ in range(2)]
+    observes=[('(flip p)',{'type': 'boolean', 'value': True}) for _ in range(2)]
     queryExps =  ['(add (bernoulli p) (bernoulli p))'] # exps in python form
     for sym,exp in assumes:
         ripl.assume(sym,exp)
@@ -28,7 +28,7 @@ def betaModel(ripl):
 
 def normalModel(ripl):
     assumes = [ ('x','(normal 0 100)') ]
-    observes = [ ('(normal x 100)','0') ]
+    observes = [ ('(normal x 100)',{'type': 'number', 'value': 0}) ]
     queryExps = ('(* x 2)',)
     for sym,exp in assumes:
         ripl.assume(sym,exp)
@@ -242,6 +242,21 @@ def _testForce(riplThunk):
                                          infer=inferProg,force=fdict)
     return history
 
+def _testAtomType(conditional_prior):
+    # make sure Analytics isn't confusing atoms with numbers
+    v = get_ripl()
+    v.observe('(categorical (simplex 0.5 0.5))', 'atom<1>')
+    model = Analytics(v)
+    samples = 1
+    if conditional_prior == 'conditional':
+        history, _ = model.runFromConditional(samples)
+    else:
+        history, _ = model.runConditionedFromPrior(samples)
+    assert all(-1 < logscore < 0 for logscore in snapshot_t(history, 'logscore', 0))
+
+def testAtomType():
+    for cond_prior in 'conditional', 'prior':
+        yield _testAtomType, cond_prior
 
 ## FIXME resinstate geweks
 def _testGewekeTest():
