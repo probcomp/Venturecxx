@@ -42,3 +42,21 @@ class PlotSpec(object):
     if ge in ["b", "h"]:
       self.two_d_only = False
     return {"p":g.geom_point, "l":g.geom_line, "b":g.geom_bar, "h":g.geom_histogram}[ge]()
+
+  def aes_dict(self, names):
+    next_index = 0
+    ans = {}
+    for (key, stream) in zip(["x", "y", "color"], self.streams):
+      if stream == "c":
+        ans[key] = "sweeps"
+      elif stream == "t":
+        ans[key] = "time (s)"
+      elif stream == "s":
+        ans[key] = "log score"
+      elif stream == "" or stream == "%":
+        ans[key] = names[next_index]
+        next_index += 1
+      else:
+        ans[key] = names[int(stream)]
+        next_index = int(stream) + 1
+    return ans

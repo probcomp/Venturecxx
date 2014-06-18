@@ -1,2 +1,2 @@
 [assume x (normal 0 1)]
-[infer (cycle ((mh default one 1) (plotf p0d0d x)) 1000)]
+[infer (cycle ((mh default one 1) (plotf pcd0d x)) 1000)]

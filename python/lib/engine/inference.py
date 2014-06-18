@@ -139,26 +139,8 @@ class SpecPlot(object):
     from pandas import DataFrame
     from venture.ripl.ripl import _strip_types_from_dict_values
     dataset = DataFrame.from_dict(_strip_types_from_dict_values(self.data))
-    plot = ggplot(dataset, aes(**self.aes_dict()))
+    plot = ggplot(dataset, aes(**self.spec.aes_dict(self.names)))
     for geom in self.spec.geom:
       plot += geom
     print plot
     return "a plot"
-
-  def aes_dict(self):
-    next_index = 0
-    ans = {}
-    for (key, stream) in zip(["x", "y", "color"], self.spec.streams):
-      if stream == "c":
-        ans[key] = "sweeps"
-      elif stream == "t":
-        ans[key] = "time (s)"
-      elif stream == "s":
-        ans[key] = "log score"
-      elif stream == "" or stream == "%":
-        ans[key] = self.names[next_index]
-        next_index += 1
-      else:
-        ans[key] = self.names[int(stream)]
-        next_index = int(stream) + 1
-    return ans
