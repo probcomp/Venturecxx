@@ -70,7 +70,7 @@ class Infer(object):
       self.engine.primitive_infer(program)
 
 class SpecPlot(object):
-  """Generate a plot according to a format specification.
+  """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
 
   The format specifications are inspired loosely by the classic
   printf.  To wit, each individual plot that appears on a page is
@@ -101,6 +101,8 @@ class SpecPlot(object):
   If one stream is indicated for a 2-D plot (points or lines), the x
   axis is filled in with the sweep counter.  If three streams are
   indicated, the third is mapped to color.
+
+  If the given specification is a list, make all those plots at once.
 
   """
   def __init__(self, spec, names, exprs):
