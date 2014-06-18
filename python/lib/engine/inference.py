@@ -74,7 +74,17 @@ class SpecPlot(object):
     self.names = names
     self.exprs = exprs
     self.data = dict([(name, []) for name in names])
+
   def add_data(self, engine):
     for name, exp in zip(self.names, self.exprs):
       value = engine.sample(exp)
       self.data[name].append(value)
+
+  def __str__(self):
+    "Not really a string method, but does get itself displayed when printed."
+    from ggplot import * # pylint: disable=wildcard-import
+    from pandas import DataFrame
+    from venture.ripl.ripl import _strip_types_from_dict_values
+    dataset = DataFrame.from_dict(_strip_types_from_dict_values(self.data))
+    print ggplot(dataset, aes(x=self.names[0], y=self.names[0])) + geom_point()
+    return "a plot"
