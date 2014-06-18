@@ -113,7 +113,7 @@ class SpecPlot(object):
     self.next_index = 0
     self.sweep += 1
     touched = set()
-    for stream in self.spec.streams:
+    for stream in self.spec.streams():
       if stream in touched:
         continue
       else:
@@ -138,5 +138,5 @@ class SpecPlot(object):
     from pandas import DataFrame
     from venture.ripl.ripl import _strip_types_from_dict_values
     dataset = DataFrame.from_dict(_strip_types_from_dict_values(self.data))
-    print self.spec.plot(dataset, self.names)
+    self.spec.plot(dataset, self.names)
     return "a plot"

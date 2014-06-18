@@ -1,5 +1,6 @@
 import re
 import ggplot as g
+from itertools import chain
 
 stream_rx = r"([cts%]|[0-9]+)"
 scale_rx = r"([dl])"
@@ -8,6 +9,25 @@ toplevel_rx = "(" + geom_rx + "*)" + "((" + stream_rx + "?" + scale_rx + "?){1,3
 dimension_rx = stream_rx + "?" + scale_rx + "?"
 
 class PlotSpec(object):
+  def __init__(self, spec):
+    if isinstance(spec, basestring):
+      self.frames = [FrameSpec(spec)]
+    else:
+      self.frames = [FrameSpec(s) for s in spec]
+
+  def plot(self, dataset, names):
+    index = 0
+    for spec in self.frames:
+      (aes, index) = spec.aes_dict_at(index, names)
+      plot = g.ggplot(dataset, g.aes(**aes))
+      for geom in spec.geom:
+        plot += geom
+      print plot
+
+  def streams(self):
+    return chain(*[frame.streams for frame in self.frames])
+
+class FrameSpec(object):
   def __init__(self, spec):
     self.two_d_only = True
     top = re.match(toplevel_rx, spec)
@@ -43,8 +63,8 @@ class PlotSpec(object):
       self.two_d_only = False
     return {"p":g.geom_point, "l":g.geom_line, "b":g.geom_bar, "h":g.geom_histogram}[ge]()
 
-  def aes_dict(self, names):
-    next_index = 0
+  def aes_dict_at(self, next_index, names):
+    next_index = next_index
     ans = {}
     for (key, stream) in zip(["x", "y", "color"], self.streams):
       if stream == "c":
@@ -59,10 +79,4 @@ class PlotSpec(object):
       else:
         ans[key] = names[int(stream)]
         next_index = int(stream) + 1
-    return ans
-
-  def plot(self, dataset, names):
-    plot = g.ggplot(dataset, g.aes(**self.aes_dict(names)))
-    for geom in self.geom:
-      plot += geom
-    return plot
+    return (ans, next_index)
