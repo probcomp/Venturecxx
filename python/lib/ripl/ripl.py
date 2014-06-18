@@ -423,9 +423,7 @@ Open issues:
         if type:
             return ans
         elif isinstance(ans, dict): # Presume this is peek output
-            # The purpose of {"value": v} here is to fool _strip_types
-            # into mapping over the list.
-            return dict([(k, _strip_types({"value": v})) for (k,v) in ans.iteritems()])
+            return _strip_types_from_dict_values(ans)
         else: # Presume this is plotf output
             return ans
 
@@ -589,3 +587,8 @@ def _strip_types(value):
         if isinstance(ans,list): return [_strip_types(v) for v in ans]
         else: return ans
     else: return value
+
+def _strip_types_from_dict_values(value):
+    # The purpose of {"value": v} here is to fool _strip_types
+    # into mapping over the list.
+    return dict([(k, _strip_types({"value": v})) for (k,v) in value.iteritems()])
