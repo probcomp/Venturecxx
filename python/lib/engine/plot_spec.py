@@ -33,12 +33,9 @@ class PlotSpec(object):
 
 def _interp_geoms(gs):
   if len(gs) == 0:
-    return g.geom_point()
+    return [g.geom_point()]
   else:
-    ans = _interp_geom(gs[0])
-    for ge in gs[1:]:
-      ans += _interp_geom(ge)
-    return ans  
+    return [_interp_geom(ge) for ge in gs]
 
 def _interp_geom(ge):
-  return {"p":g.geom_point, "l":g.geom_line, "b":g.geom_bar, "a":g.geom_area, "h":g.geom_histogram}[ge]()
+  return {"p":g.geom_point, "l":g.geom_line, "b":g.geom_bar, "h":g.geom_histogram}[ge]()

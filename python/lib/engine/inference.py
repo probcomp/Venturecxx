@@ -79,7 +79,7 @@ class SpecPlot(object):
 
   [<geom>]*((<stream>)?<scale>?){1,3}
 
-  geoms: _p_oint, _l_ine, _b_ar, _a_rea, _h_istogram
+  geoms: _p_oint, _l_ine, _b_ar, _h_istogram
   scales: _d_irect, _l_og
   streams: sweep _c_ounter, _t_ime (wall clock), <digits> that expression, 1-indexed, % (next), log _s_core (will be plotted double-log if on a log scale)
 
@@ -136,7 +136,10 @@ class SpecPlot(object):
     from pandas import DataFrame
     from venture.ripl.ripl import _strip_types_from_dict_values
     dataset = DataFrame.from_dict(_strip_types_from_dict_values(self.data))
-    print ggplot(dataset, aes(**self.aes_dict())) + self.spec.geom
+    plot = ggplot(dataset, aes(**self.aes_dict()))
+    for geom in self.spec.geom:
+      plot += geom
+    print plot
     return "a plot"
 
   def aes_dict(self):
