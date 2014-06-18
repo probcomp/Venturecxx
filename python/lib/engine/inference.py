@@ -72,6 +72,12 @@ class Infer(object):
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
 
+  Example:
+    [INFER (cycle ((mh default one 1) (plotf c0s x)) 1000)]
+  will do 1000 iterations of MH and then show a plot of the x variable
+  (which should be a scalar) against the sweep number (from 1 to
+  1000), colored according to the global log score.
+
   The format specifications are inspired loosely by the classic
   printf.  To wit, each individual plot that appears on a page is
   specified by some line noise consisting of format characters
@@ -85,12 +91,16 @@ class SpecPlot(object):
     - the data stream to use
     - the scale
 
+  Each requested data stream is sampled once every time the inference
+  program executes the plotf instruction, and the plot shows all of
+  the samples after inference completes.
+
   The possible geometric objects are:
     _p_oint, _l_ine, _b_ar, and _h_istogram
   The possible data streams are:
-    sweep _c_ounter, _t_ime (wall clock), log _s_core,
-    _<an integer>_ that expression, 0-indexed, and
+    _<an integer>_ that expression, 0-indexed,
     _%_ the next expression after the last used one
+    sweep _c_ounter, _t_ime (wall clock), and log _s_core,
   The possible scales are:
     _d_irect, _l_og
 
