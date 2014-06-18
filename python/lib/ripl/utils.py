@@ -139,7 +139,9 @@ def run_venture_console(ripl):
           command = expToDict(parse(content), ripl) if content else None
           out = ripl.infer(command)
           print "Inferred according to %s." % ripl.parseInferParams(command)
-          if len(out) > 0:
+          if isinstance(out, dict):
+            if len(out) > 0: print out
+          else:
             print out
         elif directive_name == "report":
           print ripl.report(int(content))
@@ -191,6 +193,8 @@ def unparse(exp):
 
 ## TODO Define a VentureScript version of this parser
 def expToDict(exp, ripl=None):
+  def _mimic_parser(exp):
+    return core_sivm._modify_expression(ripl._ensure_parsed_expression(exp))
   if isinstance(exp, int):
     return {"transitions": exp}
   tag = exp[0]
@@ -285,10 +289,13 @@ def expToDict(exp, ripl=None):
     else:
       name = exp[2]
     if ripl is not None:
-      expr = core_sivm._modify_expression(ripl._ensure_parsed_expression(exp[1]))
+      expr = _mimic_parser(exp[1])
     else:
       raise Exception("Need a ripl around in order to parse model expressions in inference expressions")
     return {"command":"peek", "expression":expr, "name":name}
+  elif tag == "plotf":
+    assert len(exp) >= 2
+    return {"command":"plotf", "specification":exp[1], "names":exp[2:], "expressions": [_mimic_parser(e) for e in exp[2:]]}
   else:
     raise Exception("Cannot parse infer instruction")
 

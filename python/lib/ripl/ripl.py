@@ -422,10 +422,12 @@ Open issues:
         ans = o["value"]
         if type:
             return ans
-        else:
+        elif isinstance(ans, dict): # Presume this is peek output
             # The purpose of {"value": v} here is to fool _strip_types
             # into mapping over the list.
             return dict([(k, _strip_types({"value": v})) for (k,v) in ans.iteritems()])
+        else: # Presume this is plotf output
+            return ans
 
     def clear(self):
         self.execute_instruction({'instruction':'clear'})
