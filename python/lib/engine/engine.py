@@ -307,10 +307,34 @@ effect of renumbering the directives, if some had been forgotten."""
     with open(fname) as fp:
       (data, version) = pickle.load(fp)
     assert version == '0.2', "Incompatible version or unrecognized object"
+    self.directiveCounter = data['directiveCounter']
     self.directives = data['directives']
     self.traces = [self.restore_trace(trace) for trace in data['traces']]
     self.weights = data['weights']
-    self.directiveCounter = data['directiveCounter']
     return data['extra']
+
+  def to_lite(self):
+    from venture.lite.engine import Engine as LiteEngine
+    engine = LiteEngine()
+    engine.directiveCounter = self.directiveCounter
+    engine.directives = self.directives
+    engine.traces = []
+    for trace in self.traces:
+      values = self.dump_trace(trace)
+      engine.traces.append(engine.restore_trace(values))
+    engine.weights = self.weights
+    return engine
+
+  def to_puma(self):
+    from venture.lite.engine import Engine as PumaEngine
+    engine = PumaEngine()
+    engine.directiveCounter = self.directiveCounter
+    engine.directives = self.directives
+    engine.traces = []
+    for trace in self.traces:
+      values = self.dump_trace(trace)
+      engine.traces.append(engine.restore_trace(values))
+    engine.weights = self.weights
+    return engine
 
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
