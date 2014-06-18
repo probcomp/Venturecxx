@@ -105,7 +105,7 @@
   (lambda (x y)
     (if (is_pair x)
       (_dot_list x y)
-      (to_array (_dot_list (to_list x) (to_list y)))))]
+      (_dot_list (to_list x) (to_list y))))]
 
 [assume _dot_list
   (lambda (x y)
@@ -118,6 +118,38 @@
 
 ;[(assume scalar_mul)]
 
+[assume sum
+  (lambda (x)
+    (reduce + x 0))]
+
+[assume prod
+  (lambda (x)
+    (reduce * x 1))]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Useful math functions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Take the negative of a number.
+; Parameters
+;   x : number
+[assume negative
+  (lambda (x)
+    (* x -1))]
+
+; The logistic (sigmoid) function
+; Parameters
+;   x : number
+[assume logistic
+  (lambda (x)
+    (/ 1 (+ 1 (exp (negative x)))))]
+
+; The logit (inverse logistic) function
+; Parameters
+;   x : number
+[assume logit
+  (lambda (x)
+    (log (/ x (- 1 x))))]
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

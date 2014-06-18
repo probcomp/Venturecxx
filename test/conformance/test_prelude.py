@@ -4,6 +4,7 @@ from venture.shortcuts import (make_lite_church_prime_ripl,
 import numpy as np
 import random
 import string
+import operator
 
 def run_containers(testfun):
   'Decorator to apply a test function to all container types.'
@@ -33,7 +34,7 @@ class PreludeTestBase(TestCase):
     self.v.clear()
     self.v.load_prelude()
 
-  def mk_random_data(self, container, mode):
+  def mk_random_data(self, container, mode, length = None):
     '''
     Generates random arrays / lists / vectors for use in tests.
     
@@ -50,6 +51,10 @@ class PreludeTestBase(TestCase):
         numeric
         boolean
         mixed (mix of numbers and quoted strings)
+
+    length : int
+      If supplied, the length of the container to return. If None, choose
+      the length randomly.
     '''
     # check the arguments
     errstr = 'mode must be one of PreludeTestBase.random_modes.'
@@ -57,7 +62,8 @@ class PreludeTestBase(TestCase):
     errstr = 'container must be one of PreludeTestBase.containers.'
     assert container in self.containers, errstr
     # length of the container
-    l = random.choice(range(*self.container_length))
+    l = (random.choice(range(*self.container_length)) 
+         if length is None else length)
     if mode == 'boolean':
       # if boolean, make a random boolean vector
       res = map(str, np.random.uniform(0,1,l) > 0.5)
@@ -152,12 +158,75 @@ class PreludeTestBase(TestCase):
                 format(f_ven))
       self.assertEqual(mapped_py, mapped_ven, msg = errstr)
 
+  @run_containers
   def test_reduce(self, container):
     '''
     Test that applying "reduce" in Venture does same thing as in Python.
     '''
-    pass
+    # list of functions to apply, identity elements for the functions
+    fncs = [(operator.add, '+', 0),
+            (operator.mul, '*', 1)]
+    for f_py, f_ven, ident in fncs:
+      self.reset_ripl()
+      x = self.v.assume('x', self.mk_random_data(container, 'numeric'))
+      reduced_py = reduce(f_py, x, ident)
+      reduced_ven = self.v.sample('(reduce {0} x {1})'.format(f_ven, ident))
+      errstr = ('Results for Python and Venture calls to reduce on function "{0}" differ.'.
+                 format(f_ven))
+      self.assertAlmostEqual(reduced_py, reduced_ven, msg = errstr)
 
+@run_containers
+def test_dot(self, container):
+  '''
+  Test the dot product.
+  '''
+  self.reset_ripl()
+  x = self.v.assume('x', self.mk_random_data(container, 'numeric'))
+  y = self.v.assume('y', self.mk_random_data(container, 'numeric', length = len(x)))
+  res_py = np.dot(x, y)
+  res_ven = self.v.sample('(dot x y)')
+  errstr = 'Dot product returns different values in Venture and Python.'
+  self.assertAlmostEqual(res_py, res_ven, msg = errstr)
+
+@run_containers
+def test_sum_prod(self, container):
+  '''
+  Test the "sum" and "product" vector aggregators.
+  '''
+  fncs = [(np.sum, 'sum'), (np.prod, 'prod')]
+  for f_py, f_ven in fncs:
+    self.reset_ripl()
+    x = self.v.assume('x', self.mk_random_data(container, 'numeric'))
+    res_py = f_py(x)
+    res_ven = self.v.sample('({0} x)'.format(f_ven))
+    errstr = ('Results of calling "{0}" differ between Venture and Python.'.
+              format(f_ven))
+    self.assertAlmostEqual(res_py, res_ven, msg = errstr)
+
+def test_negative(self):
+  '''
+  Make sure the Venture "negative" gives the negative of a number.
+  '''
+  self.reset_ripl()
+  x = self.v.assume('x', np.random.randn())
+  neg_x = self.v.sample('(negative x)')
+  errstr = 'Calling Venture "negative" does not return negative of number.'
+  self.assertAlmostEqual(-1 * x, neg_x, msg = errstr)
+
+def test_logit_logistic(self):
+  '''
+  Test that the logit and logistic functions do what they say.
+  '''
+  fncs = [(lambda x: 1 / (1 + np.exp(-x)), 'logistic', np.random.randn),
+          (lambda x: np.log(x / (1 - x)), 'logit', np.random.uniform)]
+  for f_py, f_ven, rand_fun in fncs:
+    self.reset_ripl()
+    x = self.v.assume('x', rand_fun())
+    res_py = f_py(x)
+    res_ven = self.v.sample('({0} x)'.format(f_ven))
+    errstr = ('Results of calling "{0}" differ between Venture and Python.'.
+              format(f_ven))
+    self.assertAlmostEqual(res_py, res_ven, msg = errstr)
 
   def check_type(self, in_type, varname):
     '''
