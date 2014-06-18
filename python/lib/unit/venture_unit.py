@@ -210,7 +210,7 @@ class Analytics(object):
         self.backend = ripl.backend()
         self.ripl = mk_p_ripl() if self.backend=='puma' else mk_l_ripl()
         
-        directives_list = ripl.list_directives()
+        directives_list = ripl.list_directives(type=True)
         
         if assumes is not None:
             self.assumes = assumes
@@ -357,7 +357,6 @@ class Analytics(object):
         'If data not None, replace values in self.observes'
         for (index, (expression, literal)) in enumerate(self.observes):
             datum = literal if data is None else data[index]
-            datum= parseValue(datum)
             self.ripl.observe(expression, datum)
 
     # Loads the assumes and changes the observes to predicts.
