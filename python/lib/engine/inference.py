@@ -78,6 +78,12 @@ class SpecPlot(object):
   (which should be a scalar) against the sweep number (from 1 to
   1000), colored according to the global log score.
 
+  Example library use:
+    ripl.infer("(cycle ((mh default one 1) (plotf c0s x)) 1000)")
+  will return an object representing that same plot that will draw it
+  if `print`ed.  The collected dataset can also be extracted from the
+  object for more flexible custom plotting.
+
   The format specifications are inspired loosely by the classic
   printf.  To wit, each individual plot that appears on a page is
   specified by some line noise consisting of format characters
