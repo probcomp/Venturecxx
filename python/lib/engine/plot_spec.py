@@ -60,3 +60,9 @@ class PlotSpec(object):
         ans[key] = names[int(stream)]
         next_index = int(stream) + 1
     return ans
+
+  def plot(self, dataset, names):
+    plot = g.ggplot(dataset, g.aes(**self.aes_dict(names)))
+    for geom in self.geom:
+      plot += geom
+    return plot

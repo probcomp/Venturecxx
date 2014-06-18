@@ -135,12 +135,8 @@ class SpecPlot(object):
       if len(self.data[name]) == 0:
         # Data source was not requested; remove it to avoid confusing pandas
         del self.data[name]
-    from ggplot import ggplot, aes
     from pandas import DataFrame
     from venture.ripl.ripl import _strip_types_from_dict_values
     dataset = DataFrame.from_dict(_strip_types_from_dict_values(self.data))
-    plot = ggplot(dataset, aes(**self.spec.aes_dict(self.names)))
-    for geom in self.spec.geom:
-      plot += geom
-    print plot
+    print self.spec.plot(dataset, self.names)
     return "a plot"
