@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import time
 from venture.lite.utils import simulateCategorical
 
 class Infer(object):
@@ -21,6 +22,7 @@ class Infer(object):
     self.engine = engine
     self.out = {}
     self.plot = None
+    self.start_time = time.time() # For sweep timing, should it be requested
 
   def _ensure_peek_name(self, name):
     if self.plot is not None:
@@ -32,8 +34,8 @@ class Infer(object):
     if len(self.out) > 0:
       raise Exception("TODO Cannot peek and plot in the same inference program")
     if self.plot is None:
-      self.plot = SpecPlot(spec, names, exprs)
-    elif spec == self.plot.spec and names == self.plot.names and exprs == self.plot.exprs:
+      self.plot = SpecPlot(spec, names, exprs, start_time=self.start_time)
+    elif spec == self.plot.spec_string and names == self.plot.names and exprs == self.plot.exprs:
       pass
     else:
       raise Exception("TODO Cannot plot with different specs in the same inference program")
@@ -69,19 +71,67 @@ class Infer(object):
       self.engine.primitive_infer(program)
 
 class SpecPlot(object):
-  def __init__(self, spec, names, exprs):
-    self.spec = spec
+  """Generate a plot according to a format specification.
+
+  The format specifications are inspired loosely by the classic
+  printf.  To wit, each individual plot that appears on a page is
+  specified by some line noise consisting of format characters
+
+  [<geom>]*((<stream>)?<scale>?){1,3}
+
+  geoms: _p_oint, _l_ine, _b_ar, _a_rea, _h_istogram
+  scales: _d_irect, _l_og
+  streams: sweep _c_ounter, _t_ime (wall clock), <digits> that expression, 1-indexed, % (next), log _s_core (will be plotted double-log if on a log scale)
+
+  TODO: Modifiers for how to treat multiple particles: distinguished
+  (current implementation, good default), mean, median, all (what
+  exactly would all mean?  2-D table? Splice and hope?)
+
+  If one stream is indicated, it is taken as the y axis of the
+  picture, and plotted against the sweep counter.  If two or more
+  streams are indicated, the second is plotted on the y axis against
+  the first.  If three streams are indicated, the third is mapped to
+  color.
+
+  """
+  def __init__(self, spec, names, exprs, start_time=None):
+    from plot_spec import PlotSpec
+    self.spec_string = spec
+    self.spec = PlotSpec(spec)
     self.names = names
     self.exprs = exprs
-    self.data = dict([(name, []) for name in names])
+    self.data = dict([(name, []) for name in names + ["sweeps", "time (s)", "log score"]])
+    self.sweep = 0
+    self.time = start_time
+    self.next_index = 0
+
+  def add_data_from(self, engine, index):
+    value = engine.sample(self.exprs[index])
+    self.data[self.names[index]].append(value)
+    self.next_index = index+1
 
   def add_data(self, engine):
-    for name, exp in zip(self.names, self.exprs):
-      value = engine.sample(exp)
-      self.data[name].append(value)
+    self.next_index = 0
+    self.sweep += 1
+    for stream in self.spec.streams:
+      if stream == "c":
+        self.data["sweeps"].append(self.sweep)
+      elif stream == "t":
+        self.data["time (s)"].append(time.time() - self.time)
+      elif stream == "s":
+        self.data["log score"].append(engine.logscore())
+      elif stream == "" or stream == "%":
+        self.add_data_from(engine, self.next_index)
+      else:
+        self.add_data_from(engine, int(stream))
 
   def __str__(self):
     "Not really a string method, but does get itself displayed when printed."
+    for name in ["sweeps", "time (s)", "log score"]:
+      if len(self.data[name]) == 0:
+        # Special data source was not requested; remove it to avoid
+        # confusing pandas
+        del self.data[name]
     from ggplot import * # pylint: disable=wildcard-import
     from pandas import DataFrame
     from venture.ripl.ripl import _strip_types_from_dict_values
