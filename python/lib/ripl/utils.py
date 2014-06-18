@@ -195,7 +195,11 @@ def unparse(exp):
 def expToDict(exp, ripl=None):
   def _mimic_parser(exp):
     return core_sivm._modify_expression(ripl._ensure_parsed_expression(exp))
-  def default_name_for_exp(exp): return str(exp)
+  def default_name_for_exp(exp):
+    if isinstance(exp, basestring):
+      return exp
+    else:
+      return "(" + ' '.join([default_name_for_exp(e) for e in exp]) + ")"
   if isinstance(exp, int):
     return {"transitions": exp}
   tag = exp[0]
