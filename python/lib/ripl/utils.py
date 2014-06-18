@@ -195,6 +195,7 @@ def unparse(exp):
 def expToDict(exp, ripl=None):
   def _mimic_parser(exp):
     return core_sivm._modify_expression(ripl._ensure_parsed_expression(exp))
+  def default_name_for_exp(exp): return str(exp)
   if isinstance(exp, int):
     return {"transitions": exp}
   tag = exp[0]
@@ -285,7 +286,7 @@ def expToDict(exp, ripl=None):
   elif tag == "peek":
     assert 2 <= len(exp) and len(exp) <= 3
     if len(exp) == 2:
-      name = exp[1]
+      name = default_name_for_exp(exp[1])
     else:
       name = exp[2]
     if ripl is not None:
@@ -295,7 +296,7 @@ def expToDict(exp, ripl=None):
     return {"command":"peek", "expression":expr, "name":name}
   elif tag == "plotf":
     assert len(exp) >= 2
-    return {"command":"plotf", "specification":exp[1], "names":exp[2:], "expressions": [_mimic_parser(e) for e in exp[2:]]}
+    return {"command":"plotf", "specification":exp[1], "names":[default_name_for_exp(e) for e in exp[2:]], "expressions": [_mimic_parser(e) for e in exp[2:]]}
   else:
     raise Exception("Cannot parse infer instruction")
 
