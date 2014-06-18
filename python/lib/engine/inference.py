@@ -75,22 +75,32 @@ class SpecPlot(object):
   The format specifications are inspired loosely by the classic
   printf.  To wit, each individual plot that appears on a page is
   specified by some line noise consisting of format characters
+  matching the following regex
 
-  [<geom>]*((<stream>)?<scale>?){1,3}
+  [<geom>]*(<stream>?<scale>?){1,3}
 
-  geoms: _p_oint, _l_ine, _b_ar, _h_istogram
-  scales: _d_irect, _l_og
-  streams: sweep _c_ounter, _t_ime (wall clock), <digits> that expression, 0-indexed, % (next), log _s_core (will be plotted double-log if on a log scale)
+  specifying
+  - the geometric objects to draw the plot with
+  - for each dimension (x, y, and color, respectively)
+    - the data stream to use
+    - the scale
+
+  The possible geometric objects are:
+    _p_oint, _l_ine, _b_ar, and _h_istogram
+  The possible data streams are:
+    sweep _c_ounter, _t_ime (wall clock), log _s_core,
+    _<an integer>_ that expression, 0-indexed, and
+    _%_ the next expression after the last used one
+  The possible scales are:
+    _d_irect, _l_og
 
   TODO: Modifiers for how to treat multiple particles: distinguished
   (current implementation, good default), mean, median, all (what
   exactly would all mean?  2-D table? Splice and hope?)
 
-  If one stream is indicated, it is taken as the y axis of the
-  picture, and plotted against the sweep counter.  If two or more
-  streams are indicated, the second is plotted on the y axis against
-  the first.  If three streams are indicated, the third is mapped to
-  color.
+  If one stream is indicated for a 2-D plot (points or lines), the x
+  axis is filled in with the sweep counter.  If three streams are
+  indicated, the third is mapped to color.
 
   """
   def __init__(self, spec, names, exprs):
