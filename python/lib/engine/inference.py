@@ -22,7 +22,6 @@ class Infer(object):
     self.engine = engine
     self.out = {}
     self.plot = None
-    self.start_time = time.time() # For sweep timing, should it be requested
 
   def _ensure_peek_name(self, name):
     if self.plot is not None:
@@ -34,7 +33,7 @@ class Infer(object):
     if len(self.out) > 0:
       raise Exception("TODO Cannot peek and plot in the same inference program")
     if self.plot is None:
-      self.plot = SpecPlot(spec, names, exprs, start_time=self.start_time)
+      self.plot = SpecPlot(spec, names, exprs)
     elif spec == self.plot.spec_string and names == self.plot.names and exprs == self.plot.exprs:
       pass
     else:
@@ -94,7 +93,7 @@ class SpecPlot(object):
   color.
 
   """
-  def __init__(self, spec, names, exprs, start_time=None):
+  def __init__(self, spec, names, exprs):
     from plot_spec import PlotSpec
     self.spec_string = spec
     self.spec = PlotSpec(spec)
@@ -102,7 +101,7 @@ class SpecPlot(object):
     self.exprs = exprs
     self.data = dict([(name, []) for name in names + ["sweeps", "time (s)", "log score"]])
     self.sweep = 0
-    self.time = start_time
+    self.time = time.time() # For sweep timing, should it be requested
     self.next_index = 0
 
   def add_data_from(self, engine, index):
