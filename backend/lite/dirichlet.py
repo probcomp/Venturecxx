@@ -179,20 +179,23 @@ class UDirMultOutputPSP(RandomPSP):
   def __init__(self,theta,os):
     self.theta = theta
     self.os = os
+    self.index = dict((val, i) for (i, val) in enumerate(os))
 
   def simulate(self,args): return simulateCategorical(self.theta,self.os)
 
-  def logDensity(self, val, _args): return logDensityCategorical(val, self.theta, self.os)
+  def logDensity(self, val, _args):
+    index = self.index[val]
+    return math.log(self.theta[index])
 
   def incorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     assert_greater_equal(min(args.spaux.os),0)
-    index = self.os.index(val)
+    index = self.index[val]
     args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
-    index = self.os.index(val)
+    index = self.index[val]
     args.spaux.os[index] -= 1
     assert_greater_equal(min(args.spaux.os),0)
 
@@ -317,20 +320,23 @@ class USymDirMultOutputPSP(RandomPSP):
   def __init__(self,theta,os):
     self.theta = theta
     self.os = os
+    self.index = dict((val, i) for (i, val) in enumerate(os))
 
   def simulate(self,args): return simulateCategorical(self.theta,self.os)
 
-  def logDensity(self, val, _args): return logDensityCategorical(val, self.theta, self.os)
+  def logDensity(self, val, _args):
+    index = self.index[val]
+    return math.log(self.theta[index])
 
   def incorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     assert_greater_equal(min(args.spaux.os),0)
-    index = self.os.index(val)
+    index = self.index[val]
     args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
-    index = self.os.index(val)
+    index = self.index[val]
     args.spaux.os[index] -= 1
     assert_greater_equal(min(args.spaux.os),0)
 
