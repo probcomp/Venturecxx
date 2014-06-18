@@ -129,8 +129,7 @@ class SpecPlot(object):
     "Not really a string method, but does get itself displayed when printed."
     for name in ["sweeps", "time (s)", "log score"] + self.names:
       if len(self.data[name]) == 0:
-        # Special data source was not requested; remove it to avoid
-        # confusing pandas
+        # Data source was not requested; remove it to avoid confusing pandas
         del self.data[name]
     from ggplot import ggplot, aes
     from pandas import DataFrame
