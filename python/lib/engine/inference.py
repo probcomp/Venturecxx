@@ -112,7 +112,12 @@ class SpecPlot(object):
   def add_data(self, engine):
     self.next_index = 0
     self.sweep += 1
+    touched = set()
     for stream in self.spec.streams:
+      if stream in touched:
+        continue
+      else:
+        touched.add(stream)
       if stream == "c":
         self.data["sweeps"].append(self.sweep)
       elif stream == "t":
