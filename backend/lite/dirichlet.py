@@ -113,8 +113,8 @@ class CDirMultOutputPSP(RandomPSP):
 
   def incorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
-    assert_greater_equal(min(args.spaux.os),0)
     index = self.index[val]
+    assert_greater_equal(args.spaux.os[index], 0)
     args.spaux.os[index] += 1
     args.spaux.total += 1
     
@@ -123,7 +123,7 @@ class CDirMultOutputPSP(RandomPSP):
     index = self.index[val]
     args.spaux.os[index] -= 1
     args.spaux.total -= 1
-    assert_greater_equal(min(args.spaux.os),0)
+    assert_greater_equal(args.spaux.os[index], 0)
         
   def enumerateValues(self,args):
     return self.os
@@ -189,15 +189,15 @@ class UDirMultOutputPSP(RandomPSP):
 
   def incorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
-    assert_greater_equal(min(args.spaux.os),0)
     index = self.index[val]
+    assert_greater_equal(args.spaux.os[index], 0)
     args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     index = self.index[val]
     args.spaux.os[index] -= 1
-    assert_greater_equal(min(args.spaux.os),0)
+    assert_greater_equal(args.spaux.os[index], 0)
 
   def enumerateValues(self,args):
     return self.os
@@ -255,8 +255,8 @@ class CSymDirMultOutputPSP(RandomPSP):
 
   def incorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
-    assert_greater_equal(min(args.spaux.os),0)
     index = self.index[val]
+    assert_greater_equal(args.spaux.os[index], 0)
     args.spaux.os[index] += 1
     args.spaux.total += 1
     
@@ -265,7 +265,7 @@ class CSymDirMultOutputPSP(RandomPSP):
     index = self.index[val]
     args.spaux.os[index] -= 1
     args.spaux.total -= 1
-    assert_greater_equal(min(args.spaux.os),0)
+    assert_greater_equal(args.spaux.os[index], 0)
         
   def enumerateValues(self,args):
     return self.os
@@ -330,15 +330,15 @@ class USymDirMultOutputPSP(RandomPSP):
 
   def incorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
-    assert_greater_equal(min(args.spaux.os),0)
     index = self.index[val]
+    assert_greater_equal(args.spaux.os[index], 0)
     args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     index = self.index[val]
     args.spaux.os[index] -= 1
-    assert_greater_equal(min(args.spaux.os),0)
+    assert_greater_equal(args.spaux.os[index], 0)
 
   def enumerateValues(self,args):
     return self.os
