@@ -79,7 +79,7 @@ class SpecPlot(object):
   [<geom>]*((<stream>)?<scale>?){1,3}
 
   geoms: _p_oint, _l_ine, _b_ar, _h_istogram
-  TODO: scales: _d_irect, _l_og
+  scales: _d_irect, _l_og
   streams: sweep _c_ounter, _t_ime (wall clock), <digits> that expression, 0-indexed, % (next), log _s_core (will be plotted double-log if on a log scale)
 
   TODO: Modifiers for how to treat multiple particles: distinguished

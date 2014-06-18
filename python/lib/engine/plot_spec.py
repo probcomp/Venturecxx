@@ -23,11 +23,31 @@ class PlotSpec(object):
       plot = g.ggplot(dataset, g.aes(**aes))
       for geom in spec.geom:
         plot += geom
+      for (dim, scale) in zip(["x", "y", "color"], spec.scales):
+        obj = self._interp_scale(dim, scale)
+        if obj: plot += obj
       plot.draw()
     plt.show()
 
   def streams(self):
     return chain(*[frame.streams for frame in self.frames])
+
+  def _interp_scale(self, dim, scale):
+    if scale == "d" or scale == "":
+      if dim == "x":
+        return g.scale_x_continuous()
+      elif dim == "y":
+        return g.scale_y_continuous()
+      else:
+        return None # TODO What's the "direct" color scale?
+    else:
+      assert scale == "l"
+      if dim == "x":
+        return g.scale_x_log()
+      elif dim == "y":
+        return g.scale_y_log()
+      else:
+        return None # TODO What's the "log" color scale?
 
 class FrameSpec(object):
   def __init__(self, spec):
