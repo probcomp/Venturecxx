@@ -1,5 +1,6 @@
 import re
 import ggplot as g
+import matplotlib.pylab as plt
 from itertools import chain
 
 stream_rx = r"([cts%]|[0-9]+)"
@@ -22,7 +23,8 @@ class PlotSpec(object):
       plot = g.ggplot(dataset, g.aes(**aes))
       for geom in spec.geom:
         plot += geom
-      print plot
+      plot.draw()
+    plt.show()
 
   def streams(self):
     return chain(*[frame.streams for frame in self.frames])
