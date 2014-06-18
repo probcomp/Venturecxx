@@ -132,7 +132,7 @@ class SpecPlot(object):
         # Special data source was not requested; remove it to avoid
         # confusing pandas
         del self.data[name]
-    from ggplot import * # pylint: disable=wildcard-import
+    from ggplot import ggplot, aes
     from pandas import DataFrame
     from venture.ripl.ripl import _strip_types_from_dict_values
     dataset = DataFrame.from_dict(_strip_types_from_dict_values(self.data))
