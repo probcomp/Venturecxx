@@ -13,12 +13,12 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-from venture.exception import VentureException
-from venture.lite.utils import simulateCategorical, sampleLogCategorical
-from venture.lite.serialize import Serializer
+import random
+import pickle
 
-# Thin wrapper around Trace
-# TODO: merge with CoreSivm?
+from venture.exception import VentureException
+from venture.lite.utils import sampleLogCategorical
+from venture.engine.inference import Infer
 
 class Engine(object):
 
@@ -89,15 +89,33 @@ class Engine(object):
       raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
                              argument="directive_id", directive_id=directiveId)
     directive = self.directives[directiveId]
-    if directive[0] == "assume":
-      raise VentureException("invalid_argument", "Cannot forget an ASSUME directive",
-                             argument="directive_id", directive_id=directiveId)
-
     for trace in self.traces:
       if directive[0] == "observe": trace.unobserve(directiveId)
       trace.uneval(directiveId)
+      if directive[0] == "assume": trace.unbindInGlobalEnv(directive[1])
 
     del self.directives[directiveId]
+
+  def sample(self,datum):
+    # TODO Officially this is taken care of by the Venture SIVM level,
+    # but I want it here because it is used in the interpretation of
+    # the "peek" infer command.  Design clarification time?
+    # TODO With this definition of "sample", "peek" will pump the
+    # directive counter of the engine.  That is likely to make us at
+    # least somewhat sad.
+    (did, value) = self.predict(datum)
+    self.forget(did)
+    return value
+
+  def freeze(self,directiveId):
+    if directiveId not in self.directives:
+      raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",
+                             argument="directive_id", directive_id=directiveId)
+    # TODO Record frozen state for reinit_inference_problem?  What if
+    # the replay is done with a different number of particles than the
+    # original?  Where do the extra values come from?
+    for trace in self.traces:
+      trace.freeze(directiveId)
 
   def report_value(self,directiveId):
     if directiveId not in self.directives:
@@ -105,27 +123,46 @@ class Engine(object):
                              argument=directiveId)
     return self.getDistinguishedTrace().extractValue(directiveId)
 
+  def report_raw(self,directiveId):
+    if directiveId not in self.directives:
+      raise VentureException("invalid_argument",
+                             "Cannot report raw value of a non-existent directive id",
+                             argument=directiveId)
+    return self.getDistinguishedTrace().extractRaw(directiveId)
+
   def clear(self):
     for trace in self.traces: del trace
     self.directiveCounter = 0
     self.directives = {}
     self.traces = [self.Trace()]
     self.weights = [1]
+    self.ensure_rng_seeded_decently()
+
+  def ensure_rng_seeded_decently(self):
     # Frobnicate the trace's random seed because Trace() resets the
     # RNG seed from the current time, which sucks if one calls this
     # method often.
-    import random
     self.set_seed(random.randint(1,2**31-1))
 
-  # Blow away the trace and rebuild one from the directives.  The goal
-  # is to resample from the prior.  May have the unfortunate effect of
-  # renumbering the directives, if some had been forgotten.
-  # Note: This is not the same "reset" as appears in the Venture SIVM
-  # instruction set.
-  def reset(self):
+  # TODO Is bind_foreign_sp a directive or something like that?
+  def bind_foreign_sp(self, name, sp):
+    for trace in self.traces:
+      trace.bindPrimitiveSP(name, sp)
+
+  # TODO There should also be capture_inference_problem and
+  # restore_inference_problem (Analytics seems to use something like
+  # it)
+  def reinit_inference_problem(self, num_particles=None):
+    """Blow away all the traces and rebuild from the stored directives.
+
+The goal is to resample from the prior.  May have the unfortunate
+effect of renumbering the directives, if some had been forgotten."""
     worklist = sorted(self.directives.iteritems())
     self.clear()
-    [self.replay(dir) for (_,dir) in worklist]
+    if num_particles is not None:
+      self.infer("(resample %d)" % num_particles)
+    for (_,dir) in worklist:
+      self.replay(dir)
 
   def replay(self,directive):
     if directive[0] == "assume":
@@ -137,44 +174,30 @@ class Engine(object):
     else:
       assert False, "Unkown directive type found %r" % directive
 
-  def clone(self,trace):
-    serialized = Serializer().serialize_trace(trace, None)
-    newTrace, _ = Serializer().deserialize_trace(serialized)
-    return newTrace
-
   def incorporate(self):
     for i,trace in enumerate(self.traces):
       self.weights[i] += trace.makeConsistent()
+
+  def resample(self, P):
+    newTraces = [None for p in range(P)]
+    for p in range(P):
+      parent = sampleLogCategorical(self.weights) # will need to include or rewrite
+      newTrace = self.traces[parent].stop_and_copy(self)
+      newTraces[p] = newTrace
+      if self.name != "lite":
+        newTraces[p].set_seed(random.randint(1,2**31-1))
+    self.traces = newTraces
+    self.weights = [0 for p in range(P)]
 
   def infer(self,params=None):
     if params is None:
       params = {}
     self.set_default_params(params)
 
-    self.incorporate()    
-    if 'command' in params and params['command'] == "resample":
-      P = params['particles']
-      newTraces = [None for p in range(P)]
-      for p in range(P):
-        parent = sampleLogCategorical(self.weights) # will need to include or rewrite
-        newTraces[p] = self.clone(self.traces[parent])
-      self.traces = newTraces
-      self.weights = [0 for p in range(P)]
+    return Infer(self).infer(params)
 
-    elif 'command' in params and params['command'] == "incorporate": pass
-
-    elif params['kernel'] == "cycle":
-      if 'subkernels' not in params:
-        raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
-      for n in range(params["transitions"]):
-        for k in params["subkernels"]:
-          self.infer(k)
-    elif params["kernel"] == "mixture":
-      for n in range(params["transitions"]):
-        self.infer(simulateCategorical(params["weights"], params["subkernels"]))
-    else: # A primitive infer expression
-      #import pdb; pdb.set_trace()
-      for trace in self.traces: trace.infer(params)
+  def primitive_infer(self, params):
+    for trace in self.traces: trace.infer(params)
   
   # TODO put all inference param parsing in one place
   def set_default_params(self,params):
@@ -198,7 +221,15 @@ class Engine(object):
       params["particles"] = int(params["particles"])
     if "in_parallel" not in params:
       params['in_parallel'] = True
+    if params['kernel'] in ['cycle', 'mixture']:
+      if 'subkernels' not in params:
+        params['subkernels'] = []
+      if params['kernel'] == 'mixture' and 'weights' not in params:
+        params['weights'] = [1 for _ in params['subkernels']]
+      for p in params['subkernels']:
+        self.set_default_params(p)
   
+  def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
 
   def get_entropy_info(self):
@@ -221,17 +252,24 @@ class Engine(object):
     for trace in self.traces: trace.stop_continuous_inference()
 
   def save(self, fname, extra=None):
-    if extra is None:
-      extra = {}
-    extra['directives'] = self.directives
-    extra['directiveCounter'] = self.directiveCounter
-    return self.getDistinguishedTrace().save(fname, extra)
+    data = {}
+    data['traces'] = [trace.dump(self) for trace in self.traces]
+    data['weights'] = self.weights
+    data['directives'] = self.directives
+    data['directiveCounter'] = self.directiveCounter
+    data['extra'] = extra
+    version = '0.2'
+    with open(fname, 'w') as fp:
+      pickle.dump((data, version), fp)
 
   def load(self, fname):
-    trace, extra = self.Trace.load(fname)
-    self.traces = [trace]
-    self.directives = extra['directives']
-    self.directiveCounter = extra['directiveCounter']
-    return extra
+    with open(fname) as fp:
+      (data, version) = pickle.load(fp)
+    assert version == '0.2', "Incompatible version or unrecognized object"
+    self.directives = data['directives']
+    self.traces = [self.Trace.restore(trace, self) for trace in data['traces']]
+    self.weights = data['weights']
+    self.directiveCounter = data['directiveCounter']
+    return data['extra']
 
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling

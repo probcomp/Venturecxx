@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from distutils.core import setup, Extension
 from distutils import sysconfig
@@ -118,6 +118,7 @@ puma_src_files = [
     "src/scaffold.cxx",
     "src/sp.cxx",
     "src/sprecord.cxx",
+    "src/stop_and_copy.cxx",
     "src/trace.cxx",
     "src/utils.cxx",
     "src/value.cxx",
@@ -144,7 +145,7 @@ puma_src_files = [
     "src/sps/matrix.cxx",
     "src/sps/msp.cxx",
     "src/sps/mvn.cxx",
-    "src/sps/silva_mvn.cxx",    
+    "src/sps/silva_mvn.cxx",
     "src/sps/numerical_helpers.cxx",
     "src/sps/scope.cxx",
 ]
@@ -179,17 +180,17 @@ if ON_LINUX:
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
-        libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],        
+        libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],
         extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC"],
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
 if ON_MAC:
-    puma = Extension("venture.puma.libtrace",
+    puma = Extension("venture.puma.libpumatrace",
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
-        libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread-mt'],        
+        libraries = ['gsl', 'gslcblas', 'boost_python-mt', 'boost_system-mt', 'boost_thread-mt'],
         extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC"],
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,

@@ -26,5 +26,19 @@ struct EnumerativeGibbsGKernel : GKernel
   shared_ptr<Particle> finalParticle;
 
   bool inParallel;
+
+  // An overridable hook for enumerative MAP
+  virtual shared_ptr<Particle> selectParticle(const vector<shared_ptr<Particle> >& particles,
+                                              const vector<double>& particleWeights,
+                                              ConcreteTrace* trace) const;
+};
+
+struct EnumerativeMAPGKernel : EnumerativeGibbsGKernel
+{
+  EnumerativeMAPGKernel(bool inParallel): EnumerativeGibbsGKernel(inParallel) {}
+  shared_ptr<Particle> selectParticle(const vector<shared_ptr<Particle> >& particles,
+                                      const vector<double>& particleWeights,
+                                      ConcreteTrace* trace) const;
+
 };
 #endif

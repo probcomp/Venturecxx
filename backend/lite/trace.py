@@ -6,7 +6,7 @@ from regen import constrain,processMadeSP, evalFamily
 from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
-from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator
+from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator, SliceOperator, NesterovAcceleratedGradientAscentOperator
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
@@ -30,10 +30,7 @@ class Trace(object):
     for name,val in builtInValues().iteritems():
       self.globalEnv.addBinding(name,ConstantNode(val))
     for name,sp in builtInSPs().iteritems():
-      spNode = self.createConstantNode(sp)
-      processMadeSP(self,spNode,False)
-      assert isinstance(self.valueAt(spNode), SPRef)
-      self.globalEnv.addBinding(name,spNode)
+      self.bindPrimitiveSP(name, sp)
     self.globalEnv = VentureEnvironment(self.globalEnv) # New frame so users can shadow globals
 
     self.rcs = set()
@@ -42,6 +39,12 @@ class Trace(object):
     self.unpropagatedObservations = {} # {node:val}
     self.families = {}
     self.scopes = {} # :: {scope-name:smap{block-id:set(node)}}
+
+  def bindPrimitiveSP(self, name, sp):
+    spNode = self.createConstantNode(sp)
+    processMadeSP(self,spNode,False)
+    assert isinstance(self.valueAt(spNode), SPRef)
+    self.globalEnv.addBinding(name,spNode)
 
   def registerAEKernel(self,node): self.aes.add(node)
   def unregisterAEKernel(self,node): self.aes.remove(node)
@@ -95,7 +98,7 @@ class Trace(object):
         return (scope.getNumber(), block.getNumber())
 
   def registerConstrainedChoice(self,node):
-    assert node not in self.ccs, "Cannot observe the same choice more than once"
+    assert node not in self.ccs, "Cannot constrain the same random choice twice."
     self.ccs.add(node)
     self.unregisterRandomChoice(node)
 
@@ -237,7 +240,7 @@ class Trace(object):
     if interval is None:
       return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
     else:
-      blocks = [b for b in self.scopes[scope].keys() if b.compare(interval[0]) >= 0 if b.compare(interval[1]) <= 0]
+      blocks = [b for b in self.scopes[scope].keys() if b >= interval[0] if b <= interval[1]]
       return [self.getNodesInBlock(scope,block) for block in sorted(blocks)]
 
   def numNodesInBlock(self,scope,block): return len(self.getNodesInBlock(scope,block))
@@ -283,11 +286,14 @@ class Trace(object):
   #### External interface to engine.py
   def eval(self,id,exp):
     assert not id in self.families
-    (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),OmegaDB(),{})
+    (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),False,OmegaDB(),{})
 
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
+  def unbindInGlobalEnv(self,sym): self.globalEnv.removeBinding(sym)
 
   def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
+
+  def extractRaw(self,id): return self.valueAt(self.families[id])
 
   def observe(self,id,val):
     node = self.families[id]
@@ -296,7 +302,7 @@ class Trace(object):
   def makeConsistent(self):
     weight = 0
     for node,val in self.unpropagatedObservations.iteritems():
-      appNode = self.getOutermostNonReferenceApplication(node)
+      appNode = self.getConstrainableNode(node)
 #      print "PROPAGATE",node,appNode
       scaffold = constructScaffold(self,[set([appNode])])
       rhoWeight,_ = detachAndExtract(self,scaffold.border[0],scaffold)
@@ -311,22 +317,30 @@ class Trace(object):
     self.unpropagatedObservations.clear()
     return weight
 
-  def getOutermostNonReferenceApplication(self,node):
-    if isinstance(node,LookupNode): return self.getOutermostNonReferenceApplication(node.sourceNode)
+  def getConstrainableNode(self, node):
+    candidate = self.getOutermostNonReferenceNode(node)
+    if isinstance(candidate,ConstantNode): raise Exception("Cannot constrain a constant value.")
+    if not self.pspAt(candidate).isRandom():
+      raise Exception("Cannot constrain a deterministic value.")
+    return candidate
+
+  def getOutermostNonReferenceNode(self,node):
+    if isinstance(node,ConstantNode): return node
+    if isinstance(node,LookupNode): return self.getOutermostNonReferenceNode(node.sourceNode)
     assert isinstance(node,OutputNode)
     if isinstance(self.pspAt(node),ESRRefOutputPSP):
       if self.esrParentsAt(node):
-        return self.getOutermostNonReferenceApplication(self.esrParentsAt(node)[0])
+        return self.getOutermostNonReferenceNode(self.esrParentsAt(node)[0])
       else:
         # Could happen if this method is called on a torus, e.g. for rejection sampling
         raise MissingEsrParentError()
     elif isScopeIncludeOutputPSP(self.pspAt(node)):
-      return self.getOutermostNonReferenceApplication(node.operandNodes[2])
+      return self.getOutermostNonReferenceNode(node.operandNodes[2])
     else: return node
 
   def unobserve(self,id):
     node = self.families[id]
-    appNode = self.getOutermostNonReferenceApplication(node)
+    appNode = self.getConstrainableNode(node)
     if node.isObservation: unconstrain(self,appNode)
     else:
       assert node in self.unpropagatedObservations
@@ -361,7 +375,8 @@ class Trace(object):
       elif params["kernel"] == "gibbs":
         #assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
-
+      elif params["kernel"] == "slice":
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),SliceOperator())
       # [FIXME] egregrious style, but expedient. The stack is such a
       # mess anyway, it's hard to do anything with good style that
       # doesn't begin by destroying the stack.
@@ -380,6 +395,9 @@ class Trace(object):
       elif params["kernel"] == "map":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MAPOperator(params["rate"], int(params["steps"])))
+      elif params["kernel"] == "nesterov":
+        assert params["with_mutation"]
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),NesterovAcceleratedGradientAscentOperator(params["rate"], int(params["steps"])))
       elif params["kernel"] == "rejection":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),RejectionOperator())
@@ -387,13 +405,20 @@ class Trace(object):
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
-  def save(self, fname, extra):
-    serialize.save_trace(self, extra, fname)
+  def stop_and_copy(self, engine):
+    # obj = serialize.dump_trace_old(self)
+    # return serialize.restore_trace_old(obj)
+    values = serialize.dump_trace(self, engine)
+    return serialize.restore_trace(values, engine)
+
+  def dump(self, engine):
+    values = serialize.dump_trace(self, engine)
+    return map(self.boxValue, values)
 
   @staticmethod
-  def load(fname):
-    trace, extra = serialize.load_trace(fname)
-    return trace, extra
+  def restore(values, engine):
+    values = map(Trace.unboxValue, values)
+    return serialize.restore_trace(values, engine)
 
   def get_seed(self):
     # TODO Trace does not support seed control because it uses
@@ -404,8 +429,12 @@ class Trace(object):
       random.seed(seed)
       numpy.random.seed(seed)
 
+  def getDirectiveLogScore(self,id):
+    assert id in self.families
+    node = self.getOutermostNonReferenceNode(self.families[id])
+    return self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node))
+
   def getGlobalLogScore(self):
-    # TODO Get the constrained nodes too
     return sum([self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node)) for node in self.rcs.union(self.ccs)])
 
   #### Helpers (shouldn't be class methods)
@@ -413,7 +442,8 @@ class Trace(object):
   # TODO temporary, probably need an extra layer of boxing for VentureValues
   # as in CXX
   def boxValue(self,val): return val.asStackDict(self)
-  def unboxValue(self,val): return VentureValue.fromStackDict(val)
+  @staticmethod
+  def unboxValue(val): return VentureValue.fromStackDict(val)
   def unboxExpression(self,exp):
     return ExpressionType().asPython(VentureValue.fromStackDict(exp))
 

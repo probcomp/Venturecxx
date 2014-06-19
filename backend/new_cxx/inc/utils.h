@@ -30,10 +30,12 @@ size_t samplePartialSums(const vector<double> & sums, gsl_rng * rng);
  * Find the log of the sum of the exponents.
  * Is careful about numerical underflow.
  */
-double logaddexp(const vector<double>& xs);
+double logSumExp(const vector<double>& xs);
 
 double sumVector(const vector<double> & xs);
 Simplex normalizeVector(const vector<double> & xs);
+
+size_t findVVPtr(VentureValuePtr val, const vector<VentureValuePtr>& vec);
 
 VentureValuePtr simulateCategorical(const Simplex & ps, gsl_rng * rng);
 VentureValuePtr simulateCategorical(const Simplex & ps,const vector<VentureValuePtr> & os, gsl_rng * rng);

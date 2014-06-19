@@ -17,6 +17,7 @@ import scope
 import eval_sps
 import value as v
 import env
+from utils import careful_exp
 
 # The types in the value module are generated programmatically, so
 # pylint doesn't find out about them.
@@ -75,14 +76,14 @@ def deterministic(f, descr=None, sim_grad=None):
 def deterministic_typed(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
   return typed_nr(deterministic_psp(f, descr, sim_grad), args_types, return_type, **kwargs)
 
-def binaryNum(f, descr=None):
-  return deterministic_typed(f, [v.NumberType(), v.NumberType()], v.NumberType(), descr=descr)
+def binaryNum(f, sim_grad=None, descr=None):
+  return deterministic_typed(f, [v.NumberType(), v.NumberType()], v.NumberType(), sim_grad=sim_grad, descr=descr)
 
 def binaryNumS(output):
   return typed_nr(output, [v.NumberType(), v.NumberType()], v.NumberType())
 
-def unaryNum(f, descr=None):
-  return deterministic_typed(f, [v.NumberType()], v.NumberType(), descr=descr)
+def unaryNum(f, sim_grad=None, descr=None):
+  return deterministic_typed(f, [v.NumberType()], v.NumberType(), sim_grad=sim_grad, descr=descr)
 
 def unaryNumS(f):
   return typed_nr(f, [v.NumberType()], v.NumberType())
@@ -105,17 +106,31 @@ def grad_times(args, direction):
   assert len(args) == 2, "Gradient only available for binary multiply"
   return [direction*args[1], direction*args[0]]
 
-def builtInSPsList():
-  return [ [ "add",  naryNum(lambda *args: sum(args),
-                              sim_grad=lambda args, direction: [direction for _ in args],
-                              descr="%s returns the sum of all its arguments") ],
+def grad_div(args, direction):
+  return [direction * (1 / args[1]), direction * (- args[0] / (args[1] * args[1]))]
+
+def grad_list(args, direction):
+  if direction == 0:
+    return [0 for _ in args]
+  else:
+    (list_, tail) = direction.asPossiblyImproperList()
+    assert tail is None or tail == 0
+    tails = [0 for _ in range(len(args) - len(list_))]
+    return list_ + tails
+
+builtInSPsList = [
+           [ "add",  naryNum(lambda *args: sum(args),
+                             sim_grad=lambda args, direction: [direction for _ in args],
+                             descr="%s returns the sum of all its arguments") ],
            [ "sub", binaryNum(lambda x,y: x - y,
-                                "%s returns the difference between its first and second arguments") ],
+                              sim_grad=lambda args, direction: [direction, -direction],
+                              descr="%s returns the difference between its first and second arguments") ],
            [ "mul", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1),
                               sim_grad=grad_times,
-                              descr="%s returns the product of all its arguments") ],           
+                              descr="%s returns the product of all its arguments") ],
            [ "div",   binaryNum(lambda x,y: x / y,
-                                "%s returns the quotient of its first argument by its second") ],
+                                sim_grad=grad_div,
+                                descr="%s returns the quotient of its first argument by its second") ],
            [ "eq",    binaryPred(lambda x,y: x.compare(y) == 0,
                                  descr="%s compares its two arguments for equality") ],
            [ "gt",    binaryPred(lambda x,y: x.compare(y) >  0,
@@ -136,7 +151,7 @@ def builtInSPsList():
            [ "cos", unaryNum(math.cos, "Returns the %s of its argument") ],
            [ "tan", unaryNum(math.tan, "Returns the %s of its argument") ],
            [ "hypot", binaryNum(math.hypot, "Returns the %s of its arguments") ],
-           [ "exp", unaryNum(math.exp, "Returns the %s of its argument") ],
+           [ "exp", unaryNum(careful_exp, sim_grad=lambda args, direction: [direction * careful_exp(args[0])], descr="Returns the %s of its argument") ],
            [ "log", unaryNum(math.log, "Returns the %s of its argument") ],
            [ "pow", binaryNum(math.pow, "%s returns its first argument raised to the power of its second argument") ],
            [ "sqrt", unaryNum(math.sqrt, "Returns the %s of its argument") ],
@@ -148,16 +163,19 @@ def builtInSPsList():
            [ "is_atom", type_test(v.AtomType()) ],
 
            [ "list", deterministic_typed(lambda *args: args, [v.AnyType()], v.ListType(), variadic=True,
+                                         sim_grad=grad_list,
                                          descr="%s returns the list of its arguments") ],
            [ "pair", deterministic_typed(lambda a,d: (a,d), [v.AnyType(), v.AnyType()], v.PairType(),
                                          descr="%s returns the pair whose first component is the first argument and whose second component is the second argument") ],
            [ "is_pair", type_test(v.PairType()) ],
            [ "first", deterministic_typed(lambda p: p[0], [v.PairType()], v.AnyType(),
-                                          "%s returns the first component of its argument pair") ],
+                                          sim_grad=lambda args, direction: [v.VenturePair((direction, 0))],
+                                          descr="%s returns the first component of its argument pair") ],
            [ "rest", deterministic_typed(lambda p: p[1], [v.PairType()], v.AnyType(),
-                                         "%s returns the second component of its argument pair") ],
+                                         sim_grad=lambda args, direction: [v.VenturePair((0, direction))],
+                                         descr="%s returns the second component of its argument pair") ],
            [ "second", deterministic_typed(lambda p: p[1].first, [v.PairType(second_type=v.PairType())], v.AnyType(),
-                                           "%s returns the first component of the second component of its argument") ],
+                                           descr="%s returns the first component of the second component of its argument") ],
 
 
            [ "array", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
@@ -232,13 +250,13 @@ def builtInSPsList():
                                       v.AnyType()) ],
 
            [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [v.CountType(), v.ProbabilityType()], v.CountType()) ],
-           [ "flip", typed_nr(discrete.FlipOutputPSP(), [v.ProbabilityType()], v.BoolType(), min_req_args=0) ],
+           [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.BoolType(), min_req_args=0) ],
            [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.NumberType(), min_req_args=0) ],
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
 
            [ "uniform_discrete",binaryNumS(discrete.UniformDiscreteOutputPSP()) ],
            [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [v.PositiveType()], v.CountType()) ],
-                      
+
            [ "normal", typed_nr(continuous.NormalOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ], # TODO Sigma is really non-zero, but negative is OK by scaling
            [ "uniform_continuous",binaryNumS(continuous.UniformOutputPSP()) ],
            [ "beta", typed_nr(continuous.BetaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.ProbabilityType()) ],
@@ -249,7 +267,7 @@ def builtInSPsList():
            [ "multivariate_normal", typed_nr(continuous.MVNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.SymmetricMatrixType()], v.HomogeneousArrayType(v.NumberType())) ],
            [ "inv_wishart", typed_nr(continuous.InverseWishartPSP(), [v.SymmetricMatrixType(), v.PositiveType()], v.SymmetricMatrixType())],
            [ "wishart", typed_nr(continuous.WishartPSP(), [v.SymmetricMatrixType(), v.PositiveType()], v.SymmetricMatrixType())],
-           
+
            [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.PositiveType(), v.PositiveType()], SPType([], v.BoolType())) ],
            [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.PositiveType(), v.PositiveType()], SPType([], v.BoolType())) ],
 
@@ -268,7 +286,7 @@ def builtInSPsList():
                                   SPType([], v.MatrixType())) ],
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.NumberType()], v.NumberType())) ],
-  ]
+]
 
 def builtInSPs():
-  return dict(builtInSPsList())
+  return dict(builtInSPsList)

@@ -34,6 +34,8 @@ Here is what we install on a clean Ubuntu 12.04 (or higher).
 
     # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
     # Also pulls in required external libraries
+    # HOWEVER, version skew problems have been reported if installing
+    # python-numpy and python-scipy via apt-get
     sudo apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython
 
 Dependencies (OSX, Homebrew)
@@ -46,11 +48,34 @@ Here is what we install on a clean Mac OS X 10.9 (or higher).
     # Install g++-4.8 using homebrew.
     # see this thread: http://apple.stackexchange.com/questions/38222/how-do-i-install-gcc-via-homebrew
     brew install gcc48
-    
+
     # Install libraries using homebrew
     brew install python ccache
+
+The tricky step is installing the correct version of the Boost library. The current Homebrew version of Boost is 1.55, but the puma backend breaks if Venture is built under this version. Instead, Boost 1.49 must be installed. These instructions assume that no versions of Boost are currently installed. If 1.55 and 1.49 are already installed on the machine, simply follow the instructions in part 1 of this thread: <http://stackoverflow.com/questions/3987683/homebrew-install-specific-version-of-formula> to switch to version 1.49.
+
+    # First, install the current version
     brew install --without-python boost
-    
+    # Install an old version of gcc; Boost 1.49 breaks with clang on OS X 10.9
+    brew install apple-gcc42
+    # Install the old Boost
+    brew tap homebrew/versions
+    brew install boost149 --cc=gcc-4.2
+    # Symlink boost 1.49 into boost folder, switch versions
+    ln -s /usr/local/Cellar/boost149/1.49.0/ /usr/local/Cellar/boost/1.49.0
+    brew switch boost 1.49.0
+
+With this version of Boost in place, simply call the install script in the Venturecxx directory:
+
+	./install_osx_homebrew.sh
+
+If desired, clean up by removing symlinks and switching back to default Boost:
+
+	brew switch boost 1.55.0_1
+	rm /usr/local/Cellar/boost/1.49.0
+
+Finally, Python dependendencies:
+
     # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
     # Also pulls in required external libraries
 	sudo brew install ipython
@@ -122,7 +147,7 @@ Create a new virtual environment to install the requirements:
 
     virtualenv env.d
 
-If Python dependencies were pre-installed these can be used by typing 
+If Python dependencies were pre-installed these can be used by typing
 
     virtualenv --system-site-packages env.d
 
@@ -167,15 +192,16 @@ Getting Started
 
 -   Venture as a library in Python:
 
-        python -i -c 'from venture import shortcuts; ripl = shortcuts.make_church_prime_ripl()'
+        python -i -c 'from venture import shortcuts; ripl = shortcuts.Puma().make_church_prime_ripl()'
 
     Using Venture as a library allows you to drive it
     programmatically.  You might like to peruse the
     [examples](http://probcomp.csail.mit.edu/venture/library-examples.html)
     for inspiration.
 
--   You can find two advanced examples in the `examples/` directory.
-    These rely on VentureUnit (included), an experimental inference
+-   You can find two advanced examples in the `examples/`
+    directory---`examples/lda.py` and `examples/crosscat.py` These
+    rely on VentureUnit (included), an experimental inference
     visualization wrapper using Venture as a library.
 
 

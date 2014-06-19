@@ -2,8 +2,8 @@
 ;;; $PATH somewhere for flymake to work right.
 ;;; Of course, pylint also needs to be installed.
 
-(setq python-indent 2)
-(add-hook 'python-mode-hook 'python-guess-indent)
+;; (setq python-indent 2)
+;; (add-hook 'python-mode-hook 'python-guess-indent)
 
 ;; Set Flymake as a minor mode for Python
 (add-hook 'python-mode-hook '(lambda () (flymake-mode)))

@@ -1,16 +1,13 @@
 import copy
 import numbers
-from abc import ABCMeta, abstractmethod
 from sp import VentureSP
 from value import VentureValue
 import sys
 import math
 
 class LKernel(object):
-  __metaclass__ = ABCMeta
-
-  @abstractmethod
-  def simulate(self,trace,oldValue,args): pass
+  def simulate(self, _trace, _oldValue, _args):
+    raise Exception("Simulate not implemented!")
   def weight(self, _trace, _newValue, _oldValue, _args): return 0
   def reverseWeight(self,trace,oldValue,args):
     return self.weight(trace,oldValue,None,args)
@@ -23,7 +20,7 @@ class LKernel(object):
 
 class DefaultAAALKernel(LKernel):
   def __init__(self,makerPSP): self.makerPSP = makerPSP
-  def simulate(self,trace,oldValue,args): return self.makerPSP.simulate(args)
+  def simulate(self,_trace,_oldValue,args): return self.makerPSP.simulate(args)
   def weight(self,_trace,newValue,_oldValue,args):
     assert isinstance(newValue,VentureSP)
     return newValue.outputPSP.logDensityOfCounts(args.madeSPAux)
@@ -40,7 +37,7 @@ class DeterministicLKernel(LKernel):
     self.value = value
     assert isinstance(value, VentureValue)
 
-  def simulate(self,trace,oldValue,args): return self.value
+  def simulate(self,_trace,_oldValue,_args): return self.value
   def weight(self, _trace, newValue, _oldValue, args):
     answer = self.psp.logDensity(newValue,args)
     assert isinstance(answer, numbers.Number)
@@ -60,7 +57,7 @@ class DefaultVariationalLKernel(VariationalLKernel):
     self.parameters = args.operandValues
     self.parameterScopes = psp.getParameterScopes()
 
-  def simulate(self,trace,oldValue,args):
+  def simulate(self,_trace,_oldValue,_args):
     return self.psp.simulateNumeric(self.parameters)
 
   def weight(self, _trace, newValue, _oldValue, args):

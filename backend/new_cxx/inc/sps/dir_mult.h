@@ -9,9 +9,10 @@
 // Collapsed SPAux
 struct DirMultSPAux : SPAux
 {
-  DirMultSPAux(int n) : counts(n, 0) {}
+  DirMultSPAux(int n) : counts(n, 0), total(0) {}
   vector<int> counts;
-  shared_ptr<SPAux> clone();
+  int total;
+  SPAux* copy_help(ForwardingMap* m) const;
   boost::python::object toPython(Trace * trace) const;
 };
 
@@ -29,8 +30,8 @@ struct SymDirMultSP : SP
   boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
   
   // for toPython
-  double alpha;
-  size_t n;
+  const double alpha;
+  const size_t n;
 };
 
 struct SymDirMultOutputPSP : RandomPSP
@@ -42,11 +43,14 @@ struct SymDirMultOutputPSP : RandomPSP
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+
   double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
 
 private:
-  double alpha;
-  size_t n;
+  const double alpha;
+  const size_t n;
 };
 
 // Collapsed Asymmetric
@@ -58,24 +62,28 @@ struct MakeDirMultOutputPSP : PSP
 
 struct DirMultOutputPSP : RandomPSP
 {
-  DirMultOutputPSP(const vector<double>& alpha) : alpha(alpha) {}
+  DirMultOutputPSP(const vector<double>& alpha, double total) : alpha(alpha), total(total) {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+
   double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
 
 private:
-  vector<double> alpha;
+  const vector<double> alpha;
+  const double total;
 };
 
 // Uncollapsed SPAux
 struct UCDirMultSPAux : DirMultSPAux
 {
   UCDirMultSPAux(int n): DirMultSPAux(n), theta(n,0) {}
-  shared_ptr<SPAux> clone();
+  SPAux* copy_help(ForwardingMap* m) const;
   vector<double> theta;
 };
 
@@ -103,8 +111,11 @@ struct UCSymDirMultOutputPSP : RandomPSP
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+
 private:
-  size_t n;
+  const size_t n;
 };
 
 // Uncollapsed Asymmetric
@@ -131,8 +142,11 @@ struct UCDirMultOutputPSP : RandomPSP
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+
 private:
-  size_t n;
+  const size_t n;
 };
 
 

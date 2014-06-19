@@ -1,12 +1,10 @@
-import numbers
 import scipy.stats
-import scipy.special
 import math
 import numpy.random as npr
 import numpy.linalg as npla
 import scipy.special as spsp
 import numpy as np
-from utils import logDensityMVNormal
+from utils import logDensityMVNormal, numpy_force_number
 from exception import VentureValueError
 
 # For some reason, pylint can never find numpy members (presumably metaprogramming).
@@ -18,7 +16,7 @@ from lkernel import LKernel
 class NormalDriftKernel(LKernel):
   def __init__(self,epsilon = 0.7): self.epsilon = epsilon
 
-  def simulate(self,trace,oldValue,args):
+  def simulate(self, _trace, oldValue, args):
     mu,sigma = args.operandValues
     nu = scipy.stats.norm.rvs(0,sigma)
     term1 = mu
@@ -27,7 +25,7 @@ class NormalDriftKernel(LKernel):
     return term1 + term2 + term3
 
 
-                                                        
+
 class MVNormalOutputPSP(RandomPSP):
   def simulate(self, args):
     return npr.multivariate_normal(*self.__parse_args__(args))
@@ -44,6 +42,16 @@ class MVNormalOutputPSP(RandomPSP):
     gradMu = np.dot(isigma, np.transpose(x-mu))
     gradSigma = .5*np.dot(np.dot(isigma, xvar),isigma)-.5*isigma
     return np.array(gradX).tolist(), [np.array(gradMu).tolist(), gradSigma]
+
+  def logDensityBound(self, x, args):
+    (mu, sigma) = self.__parse_args__(args)
+    if sigma is not None:
+      # The maximum is obtained when x = mu
+      return numpy_force_number(-.5*len(sigma)*np.log(np.pi)-.5*np.log(abs(npla.det(sigma))))
+    elif x is not None and mu is not None:
+      raise Exception("TODO: Find an analytical form for the maximum of the log density of MVNormal for fixed x, mu, but varying sigma")
+    else:
+      raise Exception("Cannot rejection sample psp with unbounded likelihood")
 
   def description(self,name):
     return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name
@@ -77,13 +85,13 @@ class InverseWishartPSP(RandomPSP):
         +(-.5*(dof+p+1))*np.log(npla.det(x))-.5*np.trace(np.dot(lmbda, npla.inv(x)))
     return log_density
 
-  '''
-  based on the following wikipedia page:
-    http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
-    http://en.wikipedia.org/wiki/Multivariate_gamma_function
-    http://en.wikipedia.org/wiki/Matrix_calculus
-  '''
   def gradientOfLogDensity(self, X, args):
+    '''
+    based on the following wikipedia page:
+      http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+      http://en.wikipedia.org/wiki/Multivariate_gamma_function
+      http://en.wikipedia.org/wiki/Matrix_calculus
+    '''
     (lmbda, dof) = self.__parse_args__(args)
     p = len(lmbda)
     invX = npla.inv(X)
@@ -105,7 +113,7 @@ class InverseWishartPSP(RandomPSP):
 class WishartPSP(RandomPSP):
   '''
     Returns a sample from the Wishart distn, conjugate prior for precision matrices.
-  ''' 
+  '''
   def simulate(self, args):
     (sigma, dof) = self.__parse_args__(args)
     n = sigma.shape[0]
@@ -133,13 +141,13 @@ class WishartPSP(RandomPSP):
           +.5*(dof-p-1)*np.log(npla.det(X))-.5*np.trace(np.dot(invSigma, X))
     return log_density
 
-  '''
-  based on the following wikipedia page:
-    http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
-    http://en.wikipedia.org/wiki/Multivariate_gamma_function
-    http://en.wikipedia.org/wiki/Matrix_calculus
-  '''
   def gradientOfLogDensity(self, X, args):
+    '''
+    based on the following wikipedia page:
+      http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+      http://en.wikipedia.org/wiki/Multivariate_gamma_function
+      http://en.wikipedia.org/wiki/Matrix_calculus
+    '''
     (sigma, dof) = self.__parse_args__(args)
     p = len(sigma)
     invX = npla.inv(X)
@@ -226,7 +234,7 @@ class UniformOutputPSP(RandomPSP):
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
   def gradientOfLogDensity(self, _, args):
     spread = 1.0/(args.operandValues[1]-args.operandValues[0])
-    return (0, [-spread, spread])
+    return (0, [spread, -spread])
   def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 
   def description(self,name):

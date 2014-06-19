@@ -24,32 +24,28 @@ mk_p_ripl = make_puma_church_prime_ripl
 # elif not_debug: return dview.apply(remote_f)
 # else return local_f(),dview.apply(remote_f)
 
-# note: might be able to simply each (esp. local) with decorators.
+# note: might be able to simplify each (esp. local) with decorators.
 
 # constructor:
 # default is for only working with remotes. local_mode is only
 # with local. then debug mode gives default of one local, with
 # more as specified optionally. 
 
-# testing
-# default to local_mode if trying client fails. (if you choose
-# local mode, you don't bother checking). 
-
 
 # TODO:
-
 # optional default inference program for mripl
-# v.plot or quickplot for unit things. 
 # v.plot('x',**plottingkwargs) = v.snapshot(exp_list=['x'],plot=True,**kwargs)
-
-
 # move local_out to debug mode
-# 
-
-
 # move regression stuff to regression utils
-# make private methods private
 
+
+
+## TODO 
+# 1. mr_map can just be v.map_proc (etc.)
+# 2. move all regression stuff into reg_demo_utils, then in notebook
+#    import then across engines using IPy.
+# 3. delete library string
+# 4. sample popz should work in local mode (now map_proc does fine?)
 
 
 
@@ -108,11 +104,11 @@ def mk_picklable(out_lst):
 class MRipl():
     
     def __init__(self, no_ripls, backend='puma',local_mode=False,
-                 seeds=None, debug_mode=False):
+                 seeds=None, debug_mode=False, set_no_engines=None):
 
 # TODO DEBUG MODE should probably run inference 
         '''
-        MRipl(no_ripls,backend='puma',no_local_ripls=1,output='remote',local_mode=False,seeds=None,verbose=False)
+        MRipl(no_ripls,backend='puma',local_mode=False,seeds=None,debug_mode=False)
 
         Create an Mripl. Will fail unless an IPCluster is already running
         or *local_model*=True.
@@ -126,16 +122,14 @@ class MRipl():
            Actual number of ripls will be no_engines*ceil(no_ripls/no_engines)
         backend : 'puma' or 'lite'
            Set backend for both local and remote ripls. Can be switched later using
-           self.switch_backend method at the cost of resetting inference.
+           self.switch_backend method (resets inference).
         local_mode : bool
            If False, all directives are applied to both local and remote ripls.
            If True, directives are only applied locally. Thus no IPCluster needs
            to be running to work with Mripl objects.
         seeds : list
            Set ripl seeds to seeds[:no_ripls]. If None, ripl seeds are range[:no_ripls].
-        verbose : bool
-          If True, prints information on state of Mripl and ripl inference.
-
+        
         Attributes
         ----------
         backend : see above
@@ -212,20 +206,29 @@ class MRipl():
 
 
         ## initialize remote ripls
-        self.dview=self.cli[:]
+        if set_no_engines is not None:
+            assert set_no_engines <= len(self.cli.ids), 'Not enough ipcluster engines'
+            self.no_engines = set_no_engines
+            self.dview = self.cli[:set_no_engines]
+        else:
+            self.no_engines = len(self.cli.ids)
+            self.dview=self.cli[:]
+            
         try:
             self.dview['no_mripls']
         except:
             self.dview.execute('mripls=[]; no_mripls=0')
             print "New list *mripls* created on remote engines."
 
-        self.no_engines = len(self.cli.ids)
         self.no_ripls_per_engine = int(np.ceil(no_ripls/float(self.no_engines)))
-        self.no_ripls = self.no_engines * self.no_ripls_per_engine 
+        self.no_ripls = self.no_engines * self.no_ripls_per_engine
+        s='MRipl has %i ripls and %i ripl(s) per engine'%(self.no_ripls,
+                                                        self.no_ripls_per_engine)
+        print s
+
 
         self.seeds = range(self.no_ripls) if not seeds else seeds[:self.no_ripls]
-        
-        self.dview = self.cli[:]
+
         self.dview.block = True   
         
         # Imports for remote ripls: needed for creating ripls on engines
@@ -642,13 +645,13 @@ class MRipl():
         Maps a procedure *proc*, taking single ripl as first positional
         argument, across subset of ripls in MRipl.
 
-        Additional to arguments to proc are in lists in proc_args_list
+        Additional arguments to proc are in lists in proc_args_list
         and may vary across ripls.
         
         proc_args_list = [ [ arg_i0, arg_i1, ..., arg_ik  ], ...,  ]
         where k is the # positional args for proc and i=0 to # calls to proc.
 
-        # calls to proc == len(proc_args_list) <= self.no_ripls
+        number of calls to proc == len(proc_args_list) <= self.no_ripls
 
         For kwargs: set only_p_args=False and then
         proc_args_list = [ ( p_args_list, kwargs_dict) ].
@@ -724,7 +727,7 @@ class MRipl():
 
 
 
-    def snapshot(self,exp_list=(),did_labels_list=(),
+    def snapshot(self, exp_list=(), did_labels_list=(),
                  plot=False, scatter=False, plot_range=None,
                  plot_past_values=(),
                  sample_populations=None, repeat=None,
@@ -807,6 +810,8 @@ class MRipl():
     def _sample_populations(self,exp_list,out,groups_popsize,flatten=False,plot=False,plot_range=None):
         # TODO: think about non-cts case of sample populations. think about doing
         # sample populations for correlations
+
+        ## TODO why doesn't it work in local mode?
         if self.local_mode: assert False, 'Local mode'
         assert len(exp_list)==1, 'len(exp_list) != 1'
         exp = exp_list[0]
@@ -1182,7 +1187,7 @@ try:
     ip = get_ipython()
     ip.register_magic_function(venture, "cell")
 except:
-    print 'no ipython'
+    pass
 
 
 # library_string='''
@@ -1198,8 +1203,6 @@ except:
 # [assume suml (lambda (xs) (fold + xs 0) )]
 # [assume prodl (lambda (xs) (fold * xs 1) ) ]
 # '''
-
-
 
 
 

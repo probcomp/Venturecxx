@@ -33,7 +33,7 @@ class CoreSivm(object):
         self.profiler_enabled = False
     
     _implemented_instructions = {"assume","observe","predict",
-            "configure","forget","report","infer",
+            "configure","forget","freeze","report","infer",
             "clear","rollback","get_logscore","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
             "continuous_inference_status", "profiler_configure"}
@@ -118,6 +118,13 @@ class CoreSivm(object):
             raise
         return {}
 
+    def _do_freeze(self,instruction):
+        utils.require_state(self.state,'default')
+        did = utils.validate_arg(instruction,'directive_id',
+                utils.validate_nonnegative_integer)
+        self.engine.freeze(did)
+        return {}
+
     def _do_report(self,instruction):
         utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
@@ -135,7 +142,7 @@ class CoreSivm(object):
                 utils.validate_dict)
         # TODO FIXME figure out how to validate the arguments
         val = self.engine.infer(d)
-        return {}
+        return {"value":val}
 
     def _do_clear(self,_):
         utils.require_state(self.state,'default')
@@ -150,16 +157,10 @@ class CoreSivm(object):
         return {}
 
     def _do_get_logscore(self,instruction):
-        #TODO: this implementation is a phony
-        # it has the same args + state requirements as report,
-        # so that code was copy/pasted here just to verify
-        # that the directive exists for testing purposes
         utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_nonnegative_integer)
-        if did not in self.observe_dict:
-            val = self.engine.report_value(did)
-        return {"logscore":0}
+        return {"logscore":self.engine.get_logscore(did)}
 
     def _do_get_global_logscore(self,_):
         utils.require_state(self.state,'default')

@@ -93,6 +93,23 @@ double UniformDiscreteOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Ar
   return log(gsl_ran_flat_pdf(sample,lower,upper));
 }
 
+vector<VentureValuePtr> UniformDiscreteOutputPSP::enumerateValues(shared_ptr<Args> args) const
+{
+  checkArgsLength("uniform_discrete", args, 2);
+
+  long lower = args->operandValues[0]->getInt();
+  long upper = args->operandValues[1]->getInt();
+
+  vector<VentureValuePtr> vs;
+
+  for (long index = lower; index <= upper; index++) // TODO Fencepost error?
+  {
+    vs.push_back(shared_ptr<VentureValue>(new VentureNumber(index)));
+  }
+  return vs;
+}
+
+
 VentureValuePtr BinomialOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   checkArgsLength("binomial", args, 2);
@@ -156,6 +173,47 @@ vector<VentureValuePtr> CategoricalOutputPSP::enumerateValues(shared_ptr<Args> a
   }
   
   return vs;
+}
+
+VentureValuePtr LogCategoricalOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const 
+{
+  checkArgsLength("log_categorical", args, 1, 2);
+  vector<double> ps = mapExpUptoMultConstant(args->operandValues[0]->getSimplex());
+  size_t sample = sampleCategorical(ps,rng);
+  
+  if (args->operandValues.size() == 1) { return VentureValuePtr(new VentureNumber(sample)); }
+  else { return args->operandValues[1]->getArray()[sample]; }
+}
+
+double LogCategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const 
+{ 
+  checkArgsLength("log_categorical", args, 1, 2);
+  
+  const vector<double> ps = args->operandValues[0]->getSimplex();
+  double logscore = 0;
+  
+  if (args->operandValues.size() == 1) { logscore = ps[value->getInt()]; }
+  else { logscore = ps[findVVPtr(value,args->operandValues[1]->getArray())]; }
+  
+  logscore -= logSumExp(ps);
+  return logscore;
+}
+
+vector<VentureValuePtr> LogCategoricalOutputPSP::enumerateValues(shared_ptr<Args> args) const
+{
+  if (args->operandValues.size() == 1)
+  {
+    const Simplex& s = args->operandValues[0]->getSimplex();
+  
+    vector<VentureValuePtr> vs;
+    for (size_t i = 0; i < s.size(); ++i)
+      { vs.push_back(VentureValuePtr(new VentureAtom(i))); }
+    return vs;
+  }
+  else
+  {
+    return args->operandValues[1]->getArray();
+  }
 }
 
 VentureValuePtr SymmetricDirichletOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const 

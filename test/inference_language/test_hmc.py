@@ -70,7 +70,7 @@ def testForceBrush3():
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
   preds_mh = collectSamples(ripl, 2, infer="(mh default one 10)")
-  ripl.sivm.core_sivm.engine.reset()
+  ripl.sivm.core_sivm.engine.reinit_inference_problem()
   preds_hmc = collectSamples(ripl, 2, infer="(hmc default one 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
 
@@ -82,7 +82,7 @@ def testForceBrush4():
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
   ripl.predict("(normal y 1)")
   preds_mh = collectSamples(ripl, 3, infer="(mh default one 10)")
-  ripl.sivm.core_sivm.engine.reset()
+  ripl.sivm.core_sivm.engine.reinit_inference_problem()
   preds_hmc = collectSamples(ripl, 3, infer="(hmc default one 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
 
@@ -94,7 +94,7 @@ def testForceBrush5():
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
   ripl.observe("y", 8)
   preds_mh = collectSamples(ripl, 1, infer="(mh default one 10)")
-  ripl.sivm.core_sivm.engine.reset()
+  ripl.sivm.core_sivm.engine.reinit_inference_problem()
   preds_hmc = collectSamples(ripl, 1, infer="(hmc default one 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
 
@@ -124,7 +124,7 @@ def testMoreElaborate():
   ripl.observe("out", {"type":"list","value":v})
 
   preds_mh = collectSamples(ripl, 1, infer="(mh default one 10)")
-  ripl.sivm.core_sivm.engine.reset()
+  ripl.sivm.core_sivm.engine.reinit_inference_problem()
   preds_hmc = collectSamples(ripl, 1, infer="(hmc param all 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
 
@@ -139,7 +139,7 @@ def testMoveMatrix():
   ripl.observe("out", {"type":"list","value":v})
 
   preds_mh = collectSamples(ripl, 3, infer="(mh default one 30)")
-  ripl.sivm.core_sivm.engine.reset()
+  ripl.sivm.core_sivm.engine.reinit_inference_problem()
   preds_hmc = collectSamples(ripl, 3, infer="(hmc default all 0.1 20 10)")
   # TODO Figure out either how to compare distributions on matrices,
   # or how to extract a real number whose distribution to compare.

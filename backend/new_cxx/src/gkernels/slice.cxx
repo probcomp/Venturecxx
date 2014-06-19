@@ -9,7 +9,7 @@
 #include "concrete_trace.h"
 #include "db.h"
 #include "consistency.h"
-#include <gsl/gsl_rng.h>
+#include "rng.h"
 
 double SliceGKernel::computeLogDensity(double x)
 {
@@ -17,8 +17,8 @@ double SliceGKernel::computeLogDensity(double x)
   trace->registerLKernel(scaffold,node,shared_ptr<LKernel>(new DeterministicLKernel(VentureValuePtr(new VentureNumber(x)),psp)));
   
   /* The density is with respect to fixed entropy */
-  shared_ptr<gsl_rng> rng(gsl_rng_alloc(gsl_rng_mt19937));
-  gsl_rng_set (rng.get(),seed);
+  shared_ptr<RNGbox> rng(new RNGbox(gsl_rng_mt19937));
+  rng->set_seed(seed);
 
   shared_ptr<Particle> p = shared_ptr<Particle>(new Particle(trace,rng));
 
@@ -27,6 +27,7 @@ double SliceGKernel::computeLogDensity(double x)
 
 double SliceGKernel::sliceSample(double x0, double w, int m, double lower, double upper)
 {
+  // cout << "Slicing with x0 " << x0 << " w " << w << " m " << m << " lower " << lower << " upper " << upper << endl;
   double gx0 = computeLogDensity(x0);
   double logy = gx0 + log(gsl_ran_flat(trace->getRNG(),0.0,1.0));
 
@@ -41,7 +42,10 @@ double SliceGKernel::sliceSample(double x0, double w, int m, double lower, doubl
   while (J > 0)
   {
     if (L <= lower) { break; }
-    if (computeLogDensity(L) <= logy) { break; }
+    double logd = computeLogDensity(L);
+    // cout << "Expanding down from L " << L << " logd " << logd << " logy " << logy << endl;
+    if (logd <= logy) { break; }
+    if (logd != logd) { break; } // Poor man's NaN test
     L -= w;
     J -= 1;
   }
@@ -49,7 +53,10 @@ double SliceGKernel::sliceSample(double x0, double w, int m, double lower, doubl
   while (K > 0)
   {
     if (R >= upper) { break; }
-    if (computeLogDensity(R) <= logy) { break; }
+    double logd = computeLogDensity(R);
+    // cout << "Expanding up from R " << R << " logd " << logd << " logy " << logy << endl;
+    if (logd <= logy) { break; }
+    if (logd != logd) { break; } // Poor man's NaN test
     R += w;
     K -= 1;
   }
@@ -63,6 +70,7 @@ double SliceGKernel::sliceSample(double x0, double w, int m, double lower, doubl
   {
     double x1 = gsl_ran_flat(trace->getRNG(),L,R);
     double gx1 = computeLogDensity(x1);
+    // cout << "Slicing at x1 " << x1 << " gx1 " << gx1 << " logy " << logy << " L " << L << " R " << R << endl;
 
     if (gx1 >= logy) { return x1; }
     if (x1 > x0) { R = x1; }

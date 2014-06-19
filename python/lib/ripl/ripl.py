@@ -18,6 +18,7 @@
 
 import numbers
 from venture.exception import VentureException
+from venture.lite.value import VentureValue
 import utils as u
 
 class Ripl():
@@ -74,7 +75,13 @@ class Ripl():
         try: # execute instruction, and handle possible exception
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
-            self._raise_annotated_error(e, stringable_instruction)
+            import sys
+            info = sys.exc_info()
+            try:
+                self._raise_annotated_error(e, stringable_instruction)
+            except Exception as e2:
+                print "Trying to annotate an exception led to %r" % e2
+                raise e, None, info[2]
         # if directive, then save the text string
         if parsed_instruction['instruction'] in ['assume','observe',
                 'predict','labeled_assume','labeled_observe','labeled_predict']:
@@ -198,6 +205,9 @@ class Ripl():
             return expr
         elif isinstance(expr, numbers.Number):
             return {'type':'number', 'value':expr}
+        elif isinstance(expr, VentureValue):
+            # A literal value as a Venture Value
+            return expr.asStackDict(None)
         else:
             raise Exception("Unknown partially parsed expression type %s" % expr)
 
@@ -338,7 +348,7 @@ Open issues:
         ret_vals = []
         parsed = self._ensure_parsed_expression(proc_expression)
         for i, (args, val) in enumerate(iterable):
-          expr = [parsed] + args
+          expr = [parsed] + [[{"type":"symbol", "value":"quote"}, a] for a in args]
           ret_vals.append(self.observe(expr,val,label+"_"+str(i) if label is not None else None))
         return ret_vals
 
@@ -373,6 +383,14 @@ Open issues:
         self.execute_instruction(i)
         return None
 
+    def freeze(self, label_or_did):
+        if isinstance(label_or_did,int):
+            i = {'instruction':'freeze', 'directive_id':label_or_did}
+        else:
+            i = {'instruction':'labeled_freeze', 'label':label_or_did}
+        self.execute_instruction(i)
+        return None
+
     def report(self, label_or_did, type=False):
         if isinstance(label_or_did,int):
             i = {'instruction':'report', 'directive_id':label_or_did}
@@ -389,14 +407,25 @@ Open issues:
         if isinstance(params, int):
             return {"transitions": params, "kernel": "mh", "scope":"default", "block":"one"}
         elif isinstance(params, basestring):
-            return u.expToDict(u.parse(params))
+            # TODO Technically, should make sure that inference
+            # programs are validated and desugared by the rest of the
+            # stack, especially since as of peek they can contain
+            # model program fragments.
+            return u.expToDict(u.parse(params), self)
         elif isinstance(params, dict):
             return params
         else:
-          raise TypeError("Unknown params: " + str(params))
+            raise TypeError("Unknown params: " + str(params))
         
-    def infer(self, params=None):
-        self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
+    def infer(self, params=None, type=False):
+        o = self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
+        ans = o["value"]
+        if type:
+            return ans
+        elif isinstance(ans, dict): # Presume this is peek output
+            return _strip_types_from_dict_values(ans)
+        else: # Presume this is plotf output
+            return ans
 
     def clear(self):
         self.execute_instruction({'instruction':'clear'})
@@ -453,6 +482,12 @@ Open issues:
     def get_state(self):
         return self.execute_instruction({'instruction':'get_state'})['state']
 
+    def reinit_inference_problem(self, num_particles=None):
+        # TODO Adapt to renumbering of directives by the engine (or
+        # change the engine not to do that)
+        # TODO Go through the actual stack?
+        self.sivm.core_sivm.engine.reinit_inference_problem(num_particles)
+
     def get_logscore(self, label_or_did):
         if isinstance(label_or_did,int):
             i = {'instruction':'get_logscore', 'directive_id':label_or_did}
@@ -462,6 +497,11 @@ Open issues:
 
     def get_global_logscore(self):
         return self.execute_instruction({'instruction':'get_global_logscore'})['logscore']
+
+    def bind_foreign_sp(self, name, sp):
+        # TODO Remember this somehow?  Is it storable for copies and
+        # rebuilds of the ripl, etc?
+        self.sivm.core_sivm.engine.bind_foreign_sp(name, sp)
 
     ############################################
     # Serialization
@@ -547,3 +587,8 @@ def _strip_types(value):
         if isinstance(ans,list): return [_strip_types(v) for v in ans]
         else: return ans
     else: return value
+
+def _strip_types_from_dict_values(value):
+    # The purpose of {"value": v} here is to fool _strip_types
+    # into mapping over the list.
+    return dict([(k, _strip_types({"value": v})) for (k,v) in value.iteritems()])

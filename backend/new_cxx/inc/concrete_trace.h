@@ -7,6 +7,7 @@
 #include "value.h"
 #include "pmap.hpp"
 #include "pset.hpp"
+#include "rng.h"
 
 using persistent::PMap;
 using persistent::PSet;
@@ -14,7 +15,7 @@ using persistent::PSet;
 struct ConcreteTrace : Trace
 {
   ConcreteTrace();
-  ~ConcreteTrace();
+  void initialize();
 
   /* Registering metadata */
   void registerAEKernel(Node * node);
@@ -130,7 +131,12 @@ struct ConcreteTrace : Trace
   void registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux);
   shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode);
 
-  gsl_rng * rng;
+  shared_ptr<ConcreteTrace> stop_and_copy() const;
+  shared_ptr<ConcreteTrace> copy_help(ForwardingMap* forward) const;
+
+  void seekInconsistencies();
+
+  shared_ptr<RNGbox> rng;
 
   shared_ptr<VentureEnvironment> globalEnvironment;
 
@@ -144,7 +150,7 @@ struct ConcreteTrace : Trace
 
   map<DirectiveID,RootOfFamily> families;
 
-  VentureValuePtrMap<SamplableMap<set<Node*> > > scopes;
+  ScopesMap scopes;
 
   map<Node*, vector<RootOfFamily> > esrRoots;
   map<RootOfFamily, int> numRequests;
@@ -154,6 +160,9 @@ struct ConcreteTrace : Trace
   map<Node*,VentureValuePtr> observedValues;
 
   set<shared_ptr<Node> > builtInNodes; // hack for simple garbage collection
+
+  private:
+  set<Node*> allNodes();
 };
 
 #endif

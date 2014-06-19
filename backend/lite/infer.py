@@ -9,8 +9,9 @@ from detach import detachAndExtract
 from scaffold import constructScaffold
 from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
-from utils import sampleLogCategorical, cartesianProduct, logaddexp
+from utils import sampleLogCategorical, cartesianProduct, logaddexp, FixedRandomness
 from nose.tools import assert_almost_equal # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
+from value import VentureNumber
 import copy
 
 class MissingEsrParentError(Exception): pass
@@ -47,8 +48,8 @@ class BlockScaffoldIndexer(object):
     elif self.block == "all": return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
     elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
     elif self.block == "ordered_range": 
-      assert(self.interval)
-      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope),self.interval)
+      assert self.interval
+      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope,self.interval))
     else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])
 
   def logDensityOfIndex(self,trace,_):
@@ -103,7 +104,7 @@ def computeRejectionBound(trace, scaffold, border):
       logBound += logBoundAt(node)
     elif node.isObservation:
       try:
-        appNode = trace.getOutermostNonReferenceApplication(node)
+        appNode = trace.getConstrainableNode(node)
         logBound += logBoundAt(appNode)
       except MissingEsrParentError:
         raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
@@ -246,7 +247,7 @@ class EnumerativeGibbsOperator(object):
     return self.finalParticle,0
 
   def accept(self): self.finalParticle.commit()
-  def reject(self): assert(False)
+  def reject(self): assert False
 
 
 #### PGibbs
@@ -444,6 +445,103 @@ class ParticlePGibbsOperator(object):
     self.particles[-1].commit()
     assertTrace(self.trace,self.scaffold)
 
+#### Slice
+    
+# "stepping out" procedure
+# See "Slice Sampling" (Neal 2000) p11 for details
+def findInterval(f,x0,logy,w,m):
+  U = random.random()  
+  L = x0 - w * U
+  R = L + w
+
+  V = random.random()
+  J = math.floor(m * V)
+  K = (m - 1) - J
+
+  maxIters = 10000
+  
+  iterJ = 0
+  while J > 0:
+    iterJ += 1
+    if iterJ == maxIters: raise Exception("Cannot find interval for slice")
+    fl = f(L)
+    # print "Expanding down from L", L, "f(L)", fl, "logy", logy
+    if logy >= fl: break
+    if math.isnan(fl): break
+    L = L - w
+    J = J - 1
+
+  iterK = 0    
+  while K > 0:
+    iterK += 1
+    if iterK == maxIters: raise Exception("Cannot find interval for slice")
+    fr = f(R)
+    # print "Expanding up from R", R, "f(R)", fr, "logy", logy
+    if logy >= fr: break
+    if math.isnan(fr): break
+    R = R + w
+    K = K - 1
+
+  return L,R
+
+def sampleInterval(f,x0,logy,L,R):
+  maxIters = 10000
+  it = 0
+  while True:
+    it += 1
+    if it == maxIters: raise Exception("Cannot sample interval for slice")
+    U = random.random()
+    x1 = L + U * (R - L)
+    fx1 = f(x1)
+    # print "Slicing at x1", x1, "f(x1)", fx1, "logy", logy, "L", L, "R", R
+    if logy <= fx1: return x1
+    if x1 < x0: L = x1
+    else: R = x1
+
+def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
+  from particle import Particle
+  def f(x):
+    with fixed_randomness:
+      scaffold.lkernels[pnode] = DeterministicLKernel(psp,VentureNumber(x))
+      # The particle is a way to regen without clobbering the underlying trace
+      # TODO Do repeated regens along the same scaffold actually work?
+      return regenAndAttach(Particle(trace),scaffold.border[0],scaffold,False,OmegaDB(),{})
+  return f
+  
+class SliceOperator(object):
+
+  def propose(self,trace,scaffold):
+    self.trace = trace
+    self.scaffold = scaffold
+
+    pnode = scaffold.getPNode()
+    psp = trace.pspAt(pnode)
+    currentVValue = trace.valueAt(pnode)
+    currentValue = currentVValue.getNumber()
+    scaffold.lkernels[pnode] = DeterministicLKernel(psp,currentVValue)
+
+    rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
+    assertTorus(scaffold)
+
+    f = makeDensityFunction(trace,scaffold,psp,pnode,FixedRandomness())
+    logy = f(currentValue) + math.log(random.uniform(0,1))
+    w = .5
+    m = 100
+    # print "Slicing with x0", currentValue, "w", w, "m", m
+    L,R = findInterval(f,currentValue,logy,w,m)
+    proposedValue = sampleInterval(f,currentValue,logy,L,R)
+    proposedVValue = VentureNumber(proposedValue)
+    scaffold.lkernels[pnode] = DeterministicLKernel(psp,proposedVValue)
+    
+    xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,self.rhoDB,{})
+    return trace,xiWeight - rhoWeight
+
+  def accept(self): pass
+  def reject(self):
+    detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
+    assertTorus(self.scaffold)
+    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
+
 
 #### Gradient ascent to max a-posteriori
 
@@ -460,7 +558,7 @@ class MAPOperator(InPlaceOperator):
     registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
     _rhoWeight = self.prepare(trace, scaffold, True) # Gradient is in self.rhoDB
 
-    grad = GradientOfRegen(trace, scaffold)
+    grad = GradientOfRegen(trace, scaffold, pnodes)
 
     # Might as well save a gradient computation, since the initial
     # detach does it
@@ -469,8 +567,8 @@ class MAPOperator(InPlaceOperator):
     # Smashes the trace but leaves it a torus
     proposed_values = self.evolve(grad, currentValues, start_grad)
 
-    registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
-    _xiWeight = grad.fixed_regen(proposed_values) # Mutates the trace
+    _xiWeight = grad.regen(proposed_values) # Mutates the trace
+
     return (trace, 1000) # It's MAP -- try to force acceptance
 
   def evolve(self, grad, values, start_grad):
@@ -479,6 +577,25 @@ class MAPOperator(InPlaceOperator):
     for _ in range(self.steps):
       xs = [x + dx*self.epsilon for (x,dx) in zip(xs, dxs)]
       dxs = grad(xs)
+    return xs
+
+class NesterovAcceleratedGradientAscentOperator(MAPOperator):
+  def step_lam(self, lam):
+    return (1 + math.sqrt(1 + 4 * lam * lam))/2
+  def gamma(self, lam):
+    return (1 - lam) / self.step_lam(lam)
+  def evolve(self, grad, values, start_grad):
+    # This formula is from
+    # http://blogs.princeton.edu/imabandit/2013/04/01/acceleratedgradientdescent/
+    xs = values
+    ys = xs
+    dxs = start_grad
+    lam = 1
+    for _ in range(self.steps):
+      gam = self.gamma(lam)
+      new_ys = [x + dx*self.epsilon for (x,dx) in zip(xs, dxs)]
+      new_xs = [old_y * gam + new_y * (1-gam) for (old_y, new_y) in zip(ys, new_ys)]
+      (xs, ys, dxs, lam) = (new_ys, new_ys, grad(new_xs), self.step_lam(lam))
     return xs
 
 #### Hamiltonian Monte Carlo
@@ -500,11 +617,13 @@ class GradientOfRegen(object):
   # gradient.  So if I am going to detach and regen repeatedly, I need
   # to pass the scaffolds from one to the next and rebuild them
   # properly.
-  def __init__(self, trace, scaffold):
+  def __init__(self, trace, scaffold, pnodes):
     self.trace = trace
     self.scaffold = scaffold
-    self.pyr_state = random.getstate()
-    self.numpyr_state = npr.get_state()
+    # Pass and store the pnodes because their order matters, and the
+    # scaffold has them as a set
+    self.pnodes = pnodes
+    self.fixed_randomness = FixedRandomness()
 
   def __call__(self, values):
     """Returns the gradient of the weight of regenerating along
@@ -513,26 +632,21 @@ class GradientOfRegen(object):
     kernels around."""
     # TODO Assert that no delta kernels are requested?
     self.fixed_regen(values)
-    pnodes = self.scaffold.getPrincipalNodes()
-    new_scaffold = constructScaffold(self.trace, [pnodes])
-    registerDeterministicLKernels(self.trace, new_scaffold, pnodes, values)
+    new_scaffold = constructScaffold(self.trace, [set(self.pnodes)])
+    registerDeterministicLKernels(self.trace, new_scaffold, self.pnodes, values)
     (_, rhoDB) = detachAndExtract(self.trace, new_scaffold.border[0], new_scaffold, True)
     self.scaffold = new_scaffold
-    return [rhoDB.getPartial(pnode) for pnode in pnodes]
+    return [rhoDB.getPartial(pnode) for pnode in self.pnodes]
 
   def fixed_regen(self, values):
     # Ensure repeatability of randomness
-    cur_pyr_state = random.getstate()
-    cur_numpyr_state = npr.get_state()
-    try:
-      random.setstate(self.pyr_state)
-      npr.set_state(self.numpyr_state)
-      registerDeterministicLKernels(self.trace, self.scaffold, self.scaffold.getPrincipalNodes(), values)
-      answer = regenAndAttach(self.trace, self.scaffold.border[0], self.scaffold, False, OmegaDB(), {})
-    finally:
-      random.setstate(cur_pyr_state)
-      npr.set_state(cur_numpyr_state)
-    return answer
+    with self.fixed_randomness:
+      return self.regen(values)
+
+  def regen(self, values):
+    registerDeterministicLKernels(self.trace, self.scaffold, self.pnodes, values)
+    return regenAndAttach(self.trace, self.scaffold.border[0], self.scaffold, False, OmegaDB(), {})
+
 
 class HamiltonianMonteCarloOperator(InPlaceOperator):
 
@@ -569,7 +683,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     momenta = self.sampleMomenta(currentValues)
     start_K = self.kinetic(momenta)
 
-    grad = GradientOfRegen(trace, scaffold)
+    grad = GradientOfRegen(trace, scaffold, pnodes)
     def grad_potential(values):
       # The potential function we want is - log density
       return [-dx for dx in grad(values)]
@@ -581,8 +695,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     # Smashes the trace but leaves it a torus
     (proposed_values, end_K) = self.evolve(grad_potential, currentValues, start_grad_pot, momenta)
 
-    registerDeterministicLKernels(trace, scaffold, pnodes, proposed_values)
-    xiWeight = grad.fixed_regen(proposed_values) # Mutates the trace
+    xiWeight = grad.regen(proposed_values) # Mutates the trace
     # The weight arithmetic is given by the Hamiltonian being
     # -weight + kinetic(momenta)
     return (trace, xiWeight - rhoWeight + start_K - end_K)

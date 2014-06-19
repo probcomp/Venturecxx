@@ -18,6 +18,7 @@
 
 import sys
 import traceback
+import venture.sivm.core_sivm as core_sivm
 
 # This list of functions defines the public REST API
 # of the Ripl server and client
@@ -135,14 +136,18 @@ def run_venture_console(ripl):
           expression_and_literal_value = content.rsplit(" ", 1)
           ripl.force(expression_and_literal_value[0], expression_and_literal_value[1])
         elif directive_name == "infer":
-          command = expToDict(parse(content)) if content else None
-          ripl.infer(command)
+          command = expToDict(parse(content), ripl) if content else None
+          out = ripl.infer(command)
           print "Inferred according to %s." % ripl.parseInferParams(command)
+          if isinstance(out, dict):
+            if len(out) > 0: print out
+          else:
+            print out
         elif directive_name == "report":
           print ripl.report(int(content))
         else:
           print "Sorry, unknown directive."
-    except Exception, err:
+    except Exception: # pylint:disable=broad-except
       print "Your query has generated an error:"
       traceback.print_exc()
 
@@ -186,7 +191,15 @@ def unparse(exp):
   "Convert a Python object back into a Lisp-readable string."
   return '('+' '.join(map(unparse, exp))+')' if isinstance(exp, list) else str(exp)
 
-def expToDict(exp):
+## TODO Define a VentureScript version of this parser
+def expToDict(exp, ripl=None):
+  def _mimic_parser(exp):
+    return core_sivm._modify_expression(ripl._ensure_parsed_expression(exp))
+  def default_name_for_exp(exp):
+    if isinstance(exp, basestring):
+      return exp
+    else:
+      return "(" + ' '.join([default_name_for_exp(e) for e in exp]) + ")"
   if isinstance(exp, int):
     return {"transitions": exp}
   tag = exp[0]
@@ -199,7 +212,13 @@ def expToDict(exp):
   elif tag == "gibbs":
     assert 4 <= len(exp) and len(exp) <= 5
     ans = {"kernel":"gibbs","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
-    if len(exp) == 6:
+    if len(exp) == 5:
+      ans["in_parallel"] = exp[4]
+    return ans
+  elif tag == "emap":
+    assert 4 <= len(exp) and len(exp) <= 5
+    ans = {"kernel":"emap","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
+    if len(exp) == 5:
       ans["in_parallel"] = exp[4]
     return ans
   elif tag == "slice":
@@ -209,7 +228,7 @@ def expToDict(exp):
   elif tag == "pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
     if type(exp[2]) is list:
-      assert(exp[2][0] == "ordered_range")
+      assert exp[2][0] == "ordered_range"
       ans = {"kernel":"pgibbs","scope":exp[1],"block":"ordered_range",
             "min_block":exp[2][1],"max_block":exp[2][2],
             "particles":exp[3],"transitions":exp[4],"with_mutation":True}
@@ -233,6 +252,9 @@ def expToDict(exp):
   elif tag == "map":
     assert len(exp) == 6
     return {"kernel":"map","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":exp[4],"transitions":exp[5]}
+  elif tag == "nesterov":
+    assert len(exp) == 6
+    return {"kernel":"nesterov","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":exp[4],"transitions":exp[5]}
   elif tag == "latents":
     assert len(exp) == 4
     return {"kernel":"latents","scope":exp[1],"block":exp[2],"transitions":exp[3]}
@@ -252,12 +274,12 @@ def expToDict(exp):
       j = 2*i
       k = j + 1
       weights.append(exp[1][j])
-      subkernels.append(expToDict(exp[1][k]))
+      subkernels.append(expToDict(exp[1][k]), ripl)
     return {"kernel":"mixture","weights":weights,"subkernels":subkernels,"transitions":exp[2]}
   elif tag == "cycle":
     assert len(exp) == 3
     assert type(exp[1]) is list
-    subkernels = [expToDict(e) for e in exp[1]]
+    subkernels = [expToDict(e, ripl) for e in exp[1]]
     return {"kernel":"cycle","subkernels":subkernels,"transitions":exp[2]}
   elif tag == "resample":
     assert len(exp) == 2
@@ -265,6 +287,20 @@ def expToDict(exp):
   elif tag == "incorporate":
     assert len(exp) == 1
     return {"command":"incorporate"}
+  elif tag == "peek":
+    assert 2 <= len(exp) and len(exp) <= 3
+    if len(exp) == 2:
+      name = default_name_for_exp(exp[1])
+    else:
+      name = exp[2]
+    if ripl is not None:
+      expr = _mimic_parser(exp[1])
+    else:
+      raise Exception("Need a ripl around in order to parse model expressions in inference expressions")
+    return {"command":"peek", "expression":expr, "name":name}
+  elif tag == "plotf":
+    assert len(exp) >= 2
+    return {"command":"plotf", "specification":exp[1], "names":[default_name_for_exp(e) for e in exp[2:]], "expressions": [_mimic_parser(e) for e in exp[2:]]}
   else:
     raise Exception("Cannot parse infer instruction")
 

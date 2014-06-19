@@ -26,7 +26,7 @@ class DefaultRandomVentureValue(object):
     return v.VentureBool(npr.choice([False, True]))
   def symbol(self, length=None, **_kwargs):
     if length is None:
-      length = npr.randint(0, 10)
+      length = npr.randint(1, 10)
     alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     return v.VentureSymbol(''.join(npr.choice(list(alphabet), length)))
   def array(self, length=None, elt_dist=None, **kwargs):

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
 # 
@@ -38,7 +38,7 @@ def flags(psp):
   # Simulation kernels and delta kernels are unused right now
   return ans
 
-for (name,sp) in builtInSPsList():
+for (name,sp) in builtInSPsList:
   print ""
   desc_lines = sp.description(name).split("\n")
   if len(desc_lines) == 1:

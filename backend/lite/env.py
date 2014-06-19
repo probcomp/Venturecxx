@@ -19,6 +19,12 @@ class VentureEnvironment(VentureValue):
     assert not sym in self.frame
     self.frame[sym] = val
 
+  def removeBinding(self,sym):
+    assert isinstance(sym, str)
+    if sym in self.frame: del self.frame[sym]
+    elif not self.outerEnv: raise Exception("Cannot unbind unbound symbol %s" % sym)
+    else: self.outerEnv.removeBinding(sym)
+
   def findSymbol(self,sym):
     if sym in self.frame: return self.frame[sym]
     elif not self.outerEnv: raise Exception("Cannot find symbol %s" % sym)
@@ -38,8 +44,12 @@ class VentureEnvironment(VentureValue):
     # This compares node identities, not their contents.  This is as
     # it should be, because nodes can mutate.
     if self.frame == other.frame:
-      return (self.outerEnv is None and other.outerEnv is None) or \
-        self.outerEnv.equalSameType(other.outerEnv)
+      if self.outerEnv is None:
+        return other.outerEnv is None
+      elif other.outerEnv is None:
+        return False
+      else:
+        return self.outerEnv.equalSameType(other.outerEnv)
     else: return False
 
   def lookup(self, key):

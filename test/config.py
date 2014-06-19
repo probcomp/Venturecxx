@@ -78,7 +78,7 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None,infer_merge=None):
     if not infer["kernel"] == "rejection":
       infer["transitions"] = 4 * int(infer["transitions"])
   elif isinstance(infer, str):
-    infer = u.expToDict(u.parse(infer))
+    infer = u.expToDict(u.parse(infer), ripl)
 
   if infer_merge is not None: infer.update(infer_merge)
 
@@ -88,12 +88,11 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None,infer_merge=None):
     # tests, presumably by avoiding the parser.
     ripl.sivm.core_sivm.engine.infer(infer)
     predictions.append(ripl.report(address))
-    if iid: ripl.sivm.core_sivm.engine.reset()
+    if iid: ripl.sivm.core_sivm.engine.reinit_inference_problem()
   return predictions
 
 def defaultInfer():
-  from venture.ripl.utils import parse, expToDict
-  candidate = expToDict(parse(config["infer"]))
+  candidate = u.expToDict(u.parse(config["infer"]))
   candidate["transitions"] = min(default_num_transitions_per_sample(), int(candidate["transitions"]))
   return candidate
 

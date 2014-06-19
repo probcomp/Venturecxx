@@ -5,8 +5,8 @@ from nose.tools import assert_greater, assert_less
 # Checks that the runtime of the unary function f(n)() is affine in its
 # input (to wit, f(n)() takes An + B time to run, and A is decidedly
 # nonzero).
-def assertLinearTime(f):
-  times = timings(f)
+def assertLinearTime(f, **kwargs):
+  times = timings(f, **kwargs)
   (base_n,base_t) = times[0]
   norm_times = [(n - base_n, t - base_t) for (n,t) in times[1:]]
   # The notion is that the ratios of delta t to delta n should neither
@@ -22,8 +22,8 @@ def assertLinearTime(f):
 
 # Checks that the runtime of the unary function f(n)() does not depend
 # on its input.
-def assertConstantTime(f):
-  times = timings(f)
+def assertConstantTime(f, **kwargs):
+  times = timings(f, **kwargs)
   (base_n,base_t) = times[0]
   norm_times = [(n - base_n, t - base_t) for (n,t) in times[1:]]
   # The notion is that the ratios of delta t to delta n should neither
@@ -46,14 +46,14 @@ def assertConstantTime(f):
 # - the whole process doesn't take too long
 # - the produced values are useful for assessing the thunk's
 #   asymptotic runtime.
-def timings(f):
+def timings(f, verbose=False, acceptable_duration=10, desired_sample_ct=20):
   def try_next(n):
     return int(math.floor(min(2*n,max(1.2*n, n+5))))
   def stop(duration, sample_ct):
-    acceptable_duration = 10 # seconds
-    if duration > acceptable_duration and sample_ct > 10:
+    # acceptable_duration is in seconds
+    if duration > acceptable_duration and sample_ct > 0.5 * desired_sample_ct:
       return True
-    if duration > 0.5 * acceptable_duration and sample_ct > 20:
+    if duration > 0.5 * acceptable_duration and sample_ct > desired_sample_ct:
       return True
     return False
   start_time = time.clock()
@@ -63,11 +63,16 @@ def timings(f):
   while not stop(now - start_time, len(answer)):
     n = try_next(n)
     thunk = f(n)
+    if verbose:
+      print "Trying %s" % n
     start = time.clock()
     thunk()
     end = time.clock()
     answer.append((n,end - start))
     now = end
+  if verbose:
+    for (n, t) in answer:
+      print "%s took %s s" % (n, t)
   return answer
 
 # :: (Integer -> (() -> a)) -> (Integer,Time)
@@ -92,8 +97,10 @@ def min_measurable_input(f):
 
 
 ################# Temporary Hacks
-def assertNLogNTime(f,slack=2):
+def assertNLogNTime(f, slack=2, verbose=False):
   times = timings(f)
+  if verbose:
+    print times
   while times[0][0] <= 1:
     # This case would cause the below to throw a divide by zero
     times = times[1:]

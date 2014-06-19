@@ -1,5 +1,4 @@
-from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType
-from abc import ABCMeta
+from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType, BoolType
 import copy
 import serialize
 
@@ -40,8 +39,6 @@ class SPAux(object):
 
 @serialize.register
 class VentureSP(VentureValue):
-  __metaclass__ = ABCMeta
-
   def __init__(self,requestPSP,outputPSP):
     self.requestPSP = requestPSP
     self.outputPSP = outputPSP
@@ -152,6 +149,9 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def gradient_type(self):
     def to_grad_type(type_):
       if isinstance(type_, ProbabilityType) or isinstance(type_, PositiveType):
+        return NumberType()
+      elif isinstance(type_, BoolType):
+        # TODO Really should be ZeroType
         return NumberType()
       else:
         return type_
