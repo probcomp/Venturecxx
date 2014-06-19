@@ -41,16 +41,23 @@ def unzip_dict(d):
     for vals in zip(*valss):
         yield dict(zip(keys, vals))
 
-def normalize_counts(dir_mult):
-    alpha = dir_mult['alpha']
-    n = dir_mult['n']
-    counts = dir_mult['counts']
+def normalize_counts(dir_mult, n):
+    if dir_mult['type'] == 'sym_dir_mult':
+        alpha = dir_mult['alpha']
+        assert n == dir_mult['n']
+        counts = dir_mult['counts']
+    elif dir_mult['type'] == 'crp':
+        alpha = dir_mult['alpha'] / n
+        counts = [dir_mult['counts'].get(i, {'value': 0})['value'] for i in range(n)]
+    else:
+        raise ValueError
     total = sum(counts)
     return [(c + alpha) / (total + n * alpha) for c in counts]
 
 def predicted_document_word_matrices(history):
     D = history.parameters['documents']
     T = history.parameters['topics']
+    W = history.parameters['vocab']
     document_topic_exps = ["(get_document_topic_sampler %d)" % i for i in range(D)]
     topic_word_exps = ["(get_topic_word_sampler atom<%d>)" % i for i in range(T)]
     series = {}
@@ -60,8 +67,8 @@ def predicted_document_word_matrices(history):
     for run in unzip_dict(series):
         run_ret = []
         for value_dict in unzip_dict(dict((n, s.values) for (n, s) in run.items())):
-            document_topic_matrix = [normalize_counts(value_dict[name]) for name in document_topic_exps]
-            topic_word_matrix = [normalize_counts(value_dict[name]) for name in topic_word_exps]
+            document_topic_matrix = [normalize_counts(value_dict[name], T) for name in document_topic_exps]
+            topic_word_matrix = [normalize_counts(value_dict[name], W) for name in topic_word_exps]
             document_word_matrix = np.dot(document_topic_matrix, topic_word_matrix)
             run_ret.append(document_word_matrix)
         label = next(run.itervalues()).label
