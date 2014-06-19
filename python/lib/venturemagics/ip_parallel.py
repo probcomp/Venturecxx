@@ -24,7 +24,7 @@ mk_p_ripl = make_puma_church_prime_ripl
 # elif not_debug: return dview.apply(remote_f)
 # else return local_f(),dview.apply(remote_f)
 
-# note: might be able to simply each (esp. local) with decorators.
+# note: might be able to simplify each (esp. local) with decorators.
 
 # constructor:
 # default is for only working with remotes. local_mode is only
@@ -39,6 +39,13 @@ mk_p_ripl = make_puma_church_prime_ripl
 # move regression stuff to regression utils
 
 
+
+## TODO 
+# 1. mr_map can just be v.map_proc (etc.)
+# 2. move all regression stuff into reg_demo_utils, then in notebook
+#    import then across engines using IPy.
+# 3. delete library string
+# 4. sample popz should work in local mode (now map_proc does fine?)
 
 
 
@@ -638,13 +645,13 @@ class MRipl():
         Maps a procedure *proc*, taking single ripl as first positional
         argument, across subset of ripls in MRipl.
 
-        Additional to arguments to proc are in lists in proc_args_list
+        Additional arguments to proc are in lists in proc_args_list
         and may vary across ripls.
         
         proc_args_list = [ [ arg_i0, arg_i1, ..., arg_ik  ], ...,  ]
         where k is the # positional args for proc and i=0 to # calls to proc.
 
-        # calls to proc == len(proc_args_list) <= self.no_ripls
+        number of calls to proc == len(proc_args_list) <= self.no_ripls
 
         For kwargs: set only_p_args=False and then
         proc_args_list = [ ( p_args_list, kwargs_dict) ].
@@ -720,7 +727,7 @@ class MRipl():
 
 
 
-    def snapshot(self,exp_list=(),did_labels_list=(),
+    def snapshot(self, exp_list=(), did_labels_list=(),
                  plot=False, scatter=False, plot_range=None,
                  plot_past_values=(),
                  sample_populations=None, repeat=None,
@@ -803,6 +810,8 @@ class MRipl():
     def _sample_populations(self,exp_list,out,groups_popsize,flatten=False,plot=False,plot_range=None):
         # TODO: think about non-cts case of sample populations. think about doing
         # sample populations for correlations
+
+        ## TODO why doesn't it work in local mode?
         if self.local_mode: assert False, 'Local mode'
         assert len(exp_list)==1, 'len(exp_list) != 1'
         exp = exp_list[0]
@@ -1178,7 +1187,7 @@ try:
     ip = get_ipython()
     ip.register_magic_function(venture, "cell")
 except:
-    print 'no ipython'
+    pass
 
 
 # library_string='''
@@ -1194,8 +1203,6 @@ except:
 # [assume suml (lambda (xs) (fold + xs 0) )]
 # [assume prodl (lambda (xs) (fold * xs 1) ) ]
 # '''
-
-
 
 
 
