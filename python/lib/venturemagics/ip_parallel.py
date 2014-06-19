@@ -105,7 +105,7 @@ class MRipl():
     
     def __init__(self, no_ripls, backend='puma',local_mode=False,
                  seeds=None, debug_mode=False, set_no_engines=None):
-
+        
 # TODO DEBUG MODE should probably run inference 
         '''
         MRipl(no_ripls,backend='puma',local_mode=False,seeds=None,debug_mode=False)
@@ -753,8 +753,9 @@ class MRipl():
             pr=plot_range; l=len(pr)
             assert (l==2 and len(pr[0])==len(pr[1])==2) or (l==1 and len(pr[0])==2)
         
-        out = {'values':{}, 'total_transitions':self.total_transitions,
-                    'ripls_info': self.ripls_info() }
+        out = {'values':{},
+               'total_transitions':self.total_transitions,
+               'ripls_info': self.ripls_info() }
 
 
         # special options: (return before basic snapshot)
@@ -782,7 +783,7 @@ class MRipl():
         
         # special options that use basic snapshot
         if plot_past_values:
-            return self.plot_past_values(exp_list, out, plot_past_values,
+            return self._plot_past_values(exp_list, out, plot_past_values,
                                          plot_range=plot_range)
 
         # logscore current must go after plot_past_values to avoid errors
@@ -808,11 +809,7 @@ class MRipl():
                              plot_range=plot_range)
         
     def _sample_populations(self,exp_list,out,groups_popsize,flatten=False,plot=False,plot_range=None):
-        # TODO: think about non-cts case of sample populations. think about doing
-        # sample populations for correlations
-
-        ## TODO why doesn't it work in local mode?
-        if self.local_mode: assert False, 'Local mode'
+        
         assert len(exp_list)==1, 'len(exp_list) != 1'
         exp = exp_list[0]
         no_groups,pop_size = groups_popsize
@@ -875,7 +872,15 @@ class MRipl():
             return out
 
 
-    def plot_past_values(self, exp_list, out, past_values_list,plot_range):
+    def compare_snapshots(self, list_snapshot_outputs ):
+        '''Input: List of outputs from calls to *snapshot* for the same
+                  expression.
+           Output: Plots the snapshots on same axis.'''
+        assert all ( [isinstance(el,dict) for el in list_snapshot_outputs] )
+        return self.snapshot(plot_past_values = list_snapshot_outputs)
+    
+
+    def _plot_past_values(self, exp_list, out, past_values_list,plot_range):
         if exp_list:
             current_vals = out['values'].values()[0] # note conflict with logscore
             exp_name  = exp_list[0]
@@ -1008,6 +1013,7 @@ def ipython_inline():
         ip.run_cell_magic("px",'','pass') # display any figs inline
     except:
         pass
+
 
 def mk_directives_string(ripl):
         di_string_lst = [directive_to_string(di) for di in ripl.list_directives() ]
