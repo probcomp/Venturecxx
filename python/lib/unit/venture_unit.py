@@ -196,7 +196,7 @@ class Analytics(object):
         assert not(assumes is None and observes is not None),'No *observes* without *assumes*.'
         assert queryExps is None or isinstance(queryExps,(list,tuple))
 
-        if isinstance(ripl_mripl,MRipl):
+        if hasattr(ripl_mripl,'no_ripls'):
             ripl=ripl_mripl.local_ripls[0] # only needed because of set_seed
             self.mripl = True
         else:
