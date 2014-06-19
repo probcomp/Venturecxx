@@ -183,4 +183,31 @@
 ; Logicals on variable-length lists
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; Code to construct diagonal matrices
+[assume diag_matrix 
+  (lambda (p fill_value)
+    (matrix (diag_matrix_helper p fill_value 0)))]
+
+[assume diag_matrix_helper
+  (lambda (p fill_value idx)
+    (if (= idx p)
+      (list)
+      (pair
+        (fill_one p fill_value idx) 
+        (diag_matrix_helper p fill_value (+ idx 1)))))]
+
+[assume fill_one
+  (lambda (p fill_value fill_position)
+    (fill_one_helper p fill_value fill_position 0))]
+
+[assume fill_one_helper
+  (lambda (p fill_value fill_position idx)
+    (if (= idx p)
+      (list)
+      (pair
+        (if (= idx fill_position) fill_value 0)
+        (fill_one_helper p fill_value fill_position (+ idx 1)))))]
+
+
+
 
