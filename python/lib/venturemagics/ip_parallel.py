@@ -24,7 +24,7 @@ mk_p_ripl = make_puma_church_prime_ripl
 # elif not_debug: return dview.apply(remote_f)
 # else return local_f(),dview.apply(remote_f)
 
-# note: might be able to simply each (esp. local) with decorators.
+# note: might be able to simplify each (esp. local) with decorators.
 
 # constructor:
 # default is for only working with remotes. local_mode is only
@@ -38,6 +38,13 @@ mk_p_ripl = make_puma_church_prime_ripl
 # move local_out to debug mode
 # move regression stuff to regression utils
 
+
+
+## TODO 
+# 1. mr_map can just be v.map_proc (etc.)
+# 2. move all regression stuff into reg_demo_utils, then in notebook
+#    import then across engines using IPy.
+# 3. delete library string
 
 
 
@@ -1178,7 +1185,7 @@ try:
     ip = get_ipython()
     ip.register_magic_function(venture, "cell")
 except:
-    print 'no ipython'
+    pass
 
 
 # library_string='''
@@ -1194,8 +1201,6 @@ except:
 # [assume suml (lambda (xs) (fold + xs 0) )]
 # [assume prodl (lambda (xs) (fold * xs 1) ) ]
 # '''
-
-
 
 
 
