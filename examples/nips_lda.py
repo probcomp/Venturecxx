@@ -180,13 +180,29 @@ if __name__ == '__main__':
                       'documents': int(sys.argv[4]),
                       'doc_length': int(sys.argv[5])}
         iters = parameters['documents'] * parameters['doc_length']
-    elif corpus.startswith('nips'):
-        n_docs = corpus[4:]
+    elif corpus == 'nips_sample':
+        n_topics = int(sys.argv[2])
+        n_words = int(sys.argv[3]) # ignored for now
+        n_docs = int(sys.argv[4])
+        doc_length = int(sys.argv[5])
         mat = scipy.io.loadmat(os.path.join(os.path.dirname(__file__), 'nips_1-17.mat'))
-        counts = mat['counts']
-        if n_docs:
-            # truncate dataset
-            counts = counts[:, :int(n_docs)]
+        counts = mat['counts'][:, :n_docs]
+        n_words, n_docs = counts.shape
+        doc_words = []
+        for doc in range(n_docs):
+            inds = counts.indices[counts.indptr[doc]:counts.indptr[doc+1]]
+            cts = counts.data[counts.indptr[doc]:counts.indptr[doc+1]]
+            doc_words.append(np.random.choice(np.repeat(inds, cts), doc_length))
+        data = ["atom<%d>" % d for d in np.concatenate(doc_words)]
+        parameters = {'topics': n_topics,
+                      'vocab': n_words, 'documents': n_docs,
+                      'doc_length': doc_length}
+        iters = n_docs * doc_length
+    elif corpus == 'nips':
+        n_topics = int(sys.argv[2])
+        n_docs = int(sys.argv[3])
+        mat = scipy.io.loadmat(os.path.join(os.path.dirname(__file__), 'nips_1-17.mat'))
+        counts = mat['counts'][:, :n_docs]
         n_words, n_docs = counts.shape
         doc_words = []
         doc_lengths = []
@@ -196,7 +212,7 @@ if __name__ == '__main__':
             doc_words.append(np.repeat(inds, cts))
             doc_lengths.append(np.sum(cts))
         data = ["atom<%d>" % d for d in np.concatenate(doc_words)]
-        parameters = {'topics': int(sys.argv[2]),
+        parameters = {'topics': n_topics,
                       'vocab': n_words, 'documents': n_docs,
                       'doc_length': doc_lengths}
         iters = counts.sum()
