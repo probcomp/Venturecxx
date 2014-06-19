@@ -54,6 +54,25 @@ def normalize_counts(dir_mult, n):
     total = sum(counts)
     return [(c + alpha) / (total + n * alpha) for c in counts]
 
+def visualize_topic(dir_mult, words):
+    counts = normalize_counts(dir_mult, len(words))
+    for index, count in sorted(enumerate(counts), key=lambda x: -x[1])[:10]:
+        print words[index], count
+
+def visualize_topics(history, words):
+    T = history.parameters['topics']
+    topic_word_exps = ["(get_topic_word_sampler atom<%d>)" % i for i in range(T)]
+    series = {}
+    for name in topic_word_exps:
+        series[name] = history.nameToSeries[name]
+    ret = []
+    for (i, run) in enumerate(unzip_dict(series)):
+        print 'Run', i
+        results = [run[name].values[-1] for name in topic_word_exps]
+        for (t, dir_mult) in enumerate(results):
+            print 'Topic', t
+            visualize_topic(dir_mult, words)
+
 def predicted_document_word_matrices(history):
     D = history.parameters['documents']
     T = history.parameters['topics']
