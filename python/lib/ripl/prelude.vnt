@@ -1,0 +1,213 @@
+; Venture library functions
+
+; TODO: many of these functions do their work by converting vectors and arrays
+; to lists and back. This is bad for two reasons.
+; 1. Converting to lists and back introduces some overhead we don't want
+; 2. Right now, we can't tell vectors from arrays so I
+; just convert everything back to an array. This could break things, should
+; be fixed when vectors and arrays can be told apart.
+
+; check if a list is empty
+; Parameters
+;   v : list, vector, or array
+[assume is_empty 
+  (lambda (v) 
+    (if (= (size v) 0) 
+      true
+      false))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Convert between arrays, lists, and vectors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Convert an array or vector to a list
+; Parameters
+;   v : vector or array
+[assume to_list 
+  (lambda (v) 
+    (_to_list_helper v 0 (size v)))]
+
+; Helper for the above. Needed because no letrec in Venture.
+[assume _to_list_helper 
+  (lambda (v idx n) 
+    (if (= idx n) 
+      (list) 
+      (pair 
+        (lookup v idx) 
+        (_to_list_helper v (+ 1 idx) n))))]
+
+; Convert a list to an array
+; Parameters
+;   v : list
+[assume to_array 
+  (lambda (v) 
+    (eval 
+      (pair (quote array) v) 
+      (get_current_environment)))]
+
+; Convert a list to a vector
+; Parameters
+;   v : list
+[assume to_vector
+  (lambda (v) 
+    (eval 
+      (pair (quote vector) v) 
+      (get_current_environment)))]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Support for functional programming
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Map function over elements of array
+; TODO: allow to map over arbitrary number of arrays. Not possible currently.
+; Parameters
+;   f : function
+;   v : list, vector, or array
+[assume map
+  (lambda (f v)
+    (if (is_pair v)
+      (_map_list f v)
+      (to_array (_map_list f (to_list v)))))]
+
+; Map for lists (same args as above)
+[assume _map_list
+  (lambda (f v) 
+    (if (is_empty v) 
+      (list) 
+      (pair 
+        (f (first v)) 
+        (_map_list f (rest v)))))]
+
+; Reduce (mirrors functionality here: http://srfi.schemers.org/srfi-1/srfi-1.html)
+; Parameters
+;   f : function
+;   v : list, vector, or array
+;   identity : identity value for the funciont f
+[assume reduce
+  (lambda (f v identity)
+    (if (is_pair v)
+      (_reduce_list f v identity)
+      (to_array (_reduce_list f (to_list v) identity))))]
+
+; Reduce for lists (same args as above)
+[assume _reduce_list
+  (lambda (f v identity)
+    (if (is_empty v)
+      identity
+      (f (first v) (_reduce_list f (rest v) identity))))]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Vector / matrix ops
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[assume dot
+  (lambda (x y)
+    (if (is_pair x)
+      (_dot_list x y)
+      (_dot_list (to_list x) (to_list y))))]
+
+[assume _dot_list
+  (lambda (x y)
+    (if (is_empty x)
+      0
+      (+
+        (* (first x) (first y))
+        (dot (rest x) (rest y)))))]
+
+
+;[(assume scalar_mul)]
+
+[assume sum
+  (lambda (x)
+    (reduce + x 0))]
+
+[assume prod
+  (lambda (x)
+    (reduce * x 1))]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Useful math functions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Take the negative of a number.
+; Parameters
+;   x : number
+[assume negative
+  (lambda (x)
+    (* x -1))]
+
+; The logistic (sigmoid) function
+; Parameters
+;   x : number
+[assume logistic
+  (lambda (x)
+    (/ 1 (+ 1 (exp (negative x)))))]
+
+; The logit (inverse logistic) function
+; Parameters
+;   x : number
+[assume logit
+  (lambda (x)
+    (log (/ x (- 1 x))))]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Assemble arrays, lists, vectors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Appends the second (scalar) argument to the first
+; Parameters
+;   v : list, array, or vector
+;   x : scalar to be appended
+;[assume append
+;  (lambda (v x)
+;    (if (is_pair v)
+;      (_append_list v x)
+;      (to_array (_append_list(to_list v) x))))]
+
+; Helper for the above
+;[assume _append_list
+;  (lambda (v x) 
+;    (if (is_empty v) 
+;      (list x) 
+;      (pair 
+;        (first v) 
+;        (_append_list (rest v) x))))]
+
+; Concatenates two lists, arrays, or vectors
+; Parameters
+;   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Logicals on variable-length lists
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Code to construct diagonal matrices
+[assume diag_matrix 
+  (lambda (p fill_value)
+    (matrix (diag_matrix_helper p fill_value 0)))]
+
+[assume diag_matrix_helper
+  (lambda (p fill_value idx)
+    (if (= idx p)
+      (list)
+      (pair
+        (fill_one p fill_value idx) 
+        (diag_matrix_helper p fill_value (+ idx 1)))))]
+
+[assume fill_one
+  (lambda (p fill_value fill_position)
+    (fill_one_helper p fill_value fill_position 0))]
+
+[assume fill_one_helper
+  (lambda (p fill_value fill_position idx)
+    (if (= idx p)
+      (list)
+      (pair
+        (if (= idx fill_position) fill_value 0)
+        (fill_one_helper p fill_value fill_position (+ idx 1)))))]
+
+
+
+
