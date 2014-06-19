@@ -182,22 +182,38 @@ if __name__ == '__main__':
         iters = parameters['documents'] * parameters['doc_length']
     elif corpus == 'nips_sample':
         n_topics = int(sys.argv[2])
-        n_words = int(sys.argv[3]) # ignored for now
+        n_words = int(sys.argv[3])
         n_docs = int(sys.argv[4])
         doc_length = int(sys.argv[5])
         mat = scipy.io.loadmat(os.path.join(os.path.dirname(__file__), 'nips_1-17.mat'))
-        counts = mat['counts'][:, :n_docs]
+        words = mat['words']
+        counts = mat['counts']
+        if n_docs > 0:
+            # take only first n docs
+            counts = counts[:, :n_docs]
+        if n_words > 0:
+            # take only most common n words
+            word_freqs = np.ravel(counts.astype('uint32').sum(axis=1))
+            most_freq_words = word_freqs.argpartition(-n_words)[-n_words:]
+            words = words[:, most_freq_words]
+            counts = counts[most_freq_words, :]
         n_words, n_docs = counts.shape
         doc_words = []
+        doc_lengths = []
         for doc in range(n_docs):
             inds = counts.indices[counts.indptr[doc]:counts.indptr[doc+1]]
             cts = counts.data[counts.indptr[doc]:counts.indptr[doc+1]]
-            doc_words.append(np.random.choice(np.repeat(inds, cts), doc_length))
+            wds = np.repeat(inds, cts)
+            if doc_length > 0:
+                # randomly sample n words from the document
+                wds = np.random.choice(wds, doc_length)
+            doc_words.append(wds)
+            doc_lengths.append(wds.size)
         data = ["atom<%d>" % d for d in np.concatenate(doc_words)]
         parameters = {'topics': n_topics,
                       'vocab': n_words, 'documents': n_docs,
-                      'doc_length': doc_length}
-        iters = n_docs * doc_length
+                      'doc_length': doc_length if doc_length > 0 else doc_lengths}
+        iters = sum(doc_lengths)
     elif corpus == 'nips':
         n_topics = int(sys.argv[2])
         n_docs = int(sys.argv[3])
