@@ -17,10 +17,8 @@ import random
 import pickle
 
 from venture.exception import VentureException
-from venture.lite.utils import simulateCategorical, sampleLogCategorical
-
-# Thin wrapper around Trace
-# TODO: merge with CoreSivm?
+from venture.lite.utils import sampleLogCategorical
+from venture.engine.inference import Infer
 
 class Engine(object):
 
@@ -98,6 +96,17 @@ class Engine(object):
 
     del self.directives[directiveId]
 
+  def sample(self,datum):
+    # TODO Officially this is taken care of by the Venture SIVM level,
+    # but I want it here because it is used in the interpretation of
+    # the "peek" infer command.  Design clarification time?
+    # TODO With this definition of "sample", "peek" will pump the
+    # directive counter of the engine.  That is likely to make us at
+    # least somewhat sad.
+    (did, value) = self.predict(datum)
+    self.forget(did)
+    return value
+
   def freeze(self,directiveId):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",
@@ -169,38 +178,26 @@ effect of renumbering the directives, if some had been forgotten."""
     for i,trace in enumerate(self.traces):
       self.weights[i] += trace.makeConsistent()
 
+  def resample(self, P):
+    newTraces = [None for p in range(P)]
+    for p in range(P):
+      parent = sampleLogCategorical(self.weights) # will need to include or rewrite
+      newTrace = self.traces[parent].stop_and_copy(self)
+      newTraces[p] = newTrace
+      if self.name != "lite":
+        newTraces[p].set_seed(random.randint(1,2**31-1))
+    self.traces = newTraces
+    self.weights = [0 for p in range(P)]
+
   def infer(self,params=None):
     if params is None:
       params = {}
     self.set_default_params(params)
 
-    self.incorporate()    
-    if 'command' in params and params['command'] == "resample":
-      P = params['particles']
-      newTraces = [None for p in range(P)]
-      for p in range(P):
-        parent = sampleLogCategorical(self.weights) # will need to include or rewrite
-        newTrace = self.traces[parent].stop_and_copy(self)
-        newTraces[p] = newTrace
-        if self.name != "lite":
-          newTraces[p].set_seed(random.randint(1,2**31-1))
-      self.traces = newTraces
-      self.weights = [0 for p in range(P)]
+    return Infer(self).infer(params)
 
-    elif 'command' in params and params['command'] == "incorporate": pass
-
-    elif params['kernel'] == "cycle":
-      if 'subkernels' not in params:
-        raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
-      for _ in range(params["transitions"]):
-        for k in params["subkernels"]:
-          self.infer(k)
-    elif params["kernel"] == "mixture":
-      for _ in range(params["transitions"]):
-        self.infer(simulateCategorical(params["weights"], params["subkernels"]))
-    else: # A primitive infer expression
-      #import pdb; pdb.set_trace()
-      for trace in self.traces: trace.infer(params)
+  def primitive_infer(self, params):
+    for trace in self.traces: trace.infer(params)
   
   # TODO put all inference param parsing in one place
   def set_default_params(self,params):
