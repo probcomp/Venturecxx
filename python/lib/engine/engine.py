@@ -313,9 +313,8 @@ effect of renumbering the directives, if some had been forgotten."""
     self.weights = data['weights']
     return data['extra']
 
-  def to_lite(self):
-    from venture.lite.engine import Engine as LiteEngine
-    engine = LiteEngine()
+  def convert(self, EngineClass):
+    engine = EngineClass()
     engine.directiveCounter = self.directiveCounter
     engine.directives = self.directives
     engine.traces = []
@@ -325,16 +324,12 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.weights = self.weights
     return engine
 
+  def to_lite(self):
+    from venture.lite.engine import Engine as LiteEngine
+    return self.convert(LiteEngine)
+
   def to_puma(self):
-    from venture.lite.engine import Engine as PumaEngine
-    engine = PumaEngine()
-    engine.directiveCounter = self.directiveCounter
-    engine.directives = self.directives
-    engine.traces = []
-    for trace in self.traces:
-      values = self.dump_trace(trace)
-      engine.traces.append(engine.restore_trace(values))
-    engine.weights = self.weights
-    return engine
+    from venture.puma.engine import Engine as PumaEngine
+    return self.convert(PumaEngine)
 
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
