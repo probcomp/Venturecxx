@@ -309,8 +309,10 @@ VentureValuePtr ApproximateBinomialPSP::simulate(shared_ptr<Args> args, gsl_rng 
   double mean = n * p;
   double sigma = sqrt(n * (p - p * p));
   
-  double x = gsl_ran_gaussian(rng, sigma) + mean;
-  if (x < 0) { x = 0; }
+  double x;
+  do {
+    x = gsl_ran_gaussian(rng, sigma) + mean;
+  } while (x < 0);
   
   return VentureValuePtr(new VentureNumber(x));
 }
