@@ -728,15 +728,20 @@ class MRipl():
 
 
     def snapshot(self, exp_list=(), did_labels_list=(),
-                 plot=False, scatter=False, plot_range=None,
+                 plot=False, scatter=False, xlims_ylims=None,
                  plot_past_values=(),
                  sample_populations=None, repeat=None,
-                 predict=True,logscore=False):
+                 predict=True, logscore=False):
                  
-        '''Input: lists of dids_labels and expressions (evaled in order)
-           Output: values from each ripl, (optional) plots.''' 
-        
-        # plot_past_values :: list of snapshot outputs (exp used in first variable)
+        '''Input: Sequence of Venture expressions (or dids/labels).
+           Output: { expression: list of values of expression for each ripl }
+                    (along with *self.ripls_info()*)
+           Optional args:
+             plot: Plot histogram of the snapshot values (for each expression).
+             xlims_ylims: ( (xmin,xmax), (ymin,ymax) ), specify axes limits
+                          to override automatic limits.
+             logscore: Snapshot of logscore.'''
+             
         
         if isinstance(did_labels_list,(int,str)):
             did_labels_list = [did_labels_list]
@@ -749,9 +754,10 @@ class MRipl():
 
         plot_past_values = list(plot_past_values)
 
-        if plot_range: # test plot_range == (xrange[,yrange])
-            pr=plot_range; l=len(pr)
-            assert (l==2 and len(pr[0])==len(pr[1])==2) or (l==1 and len(pr[0])==2)
+        plot_range = xlims_ylims
+
+        if plot_range: 
+            assert isinstance(plot_range[0],(list,tuple)), 'xlims_ylims form: ( (xmin,xmax)[,(ymin,ymax)])'
         
         out = {'values':{},
                'total_transitions':self.total_transitions,
@@ -952,7 +958,7 @@ class MRipl():
             ax.set_title('GKDE: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
             ax.set_xlabel('Exp: %s' % str(label))
             if plot_range:
-                ax.set_xlim(plot_range)                 
+                ax.set_xlim(plot_range[0])                 
                 if len(plot_range)==2: ax.set_ylim(plot_range[1])
         
         # setup variables for plot
