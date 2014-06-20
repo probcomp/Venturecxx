@@ -286,25 +286,38 @@ class KnownMotionParticleFilter(MotionModelParticleFilter):
         print "Particle filtering under a known motion model, for debugging purposes"
 
     def infer(self, ripl, row_i):
-        ripl.infer("(resample 1)") # Incorporate data
+        ripl.infer("(incorporate)") #incorporate data
+        #ripl.infer("(resample 1)") # Incorporate data
 
     def observe(self, ripl, row_i, combined_frame_row):
-        gt_x = combined_frame_row['clean_x']
-        gt_y = combined_frame_row['clean_y']
-        gt_head = combined_frame_row['clean_heading']
+        if 'clean_x' in combined_frame_row:
+            gt_x = combined_frame_row['clean_x']
+            gt_y = combined_frame_row['clean_y']
+            gt_head = combined_frame_row['clean_heading']
 
-        print "row %d --- x,y,pose %d %d %d" % row_i, gt_x, gt_y, gt_head
+            print "row %d --- x,y,pose %f %f %f" % (row_i, gt_x, gt_y, gt_head)
 
-        if row_i is 0:
-            # initialize sensibly
-            pass
+            if row_i is 0:
+                print " === initialized"
+         
+            import pprint
+            pprint.pprint(ripl.list_directives())
+
+            print "===observing x"
+            ripl.observe("x_%d" % row_i, gt_x)
+
+            print "===observing y"
+            ripl.observe("y_%d" % row_i, gt_y)
+
+            print "===observing heading"
+            ripl.observe("heading_%d" % row_i, gt_head)
+
         else:
-            # update with known data
-            pass
+            print "row %d --- no clean gps data" % row_i
 
     # FIXME: Goals:
     # x get running under alexey's framework (movie showing junk)
-    # - get true data (clean gps) that we're going to use printed
+    # x get true data (clean gps) that we're going to use printed
     # - use fixed, arbitrary motion model noise and observe true pose w/ clean gps values at every step (movie should look good; no inference happening; noise ignored)
     # - use random motion model noise but still do no inference over motion model noise (movie should still look good)
     # - at each step, read out & print the inferred motion model noise (should be constant w/o any inference)
