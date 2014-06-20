@@ -10,6 +10,8 @@ import subprocess,time,pickle
 mk_l_ripl = make_lite_church_prime_ripl
 mk_p_ripl = make_puma_church_prime_ripl
 
+
+
 ### IPython Parallel Magics
 
 # REFACTORING TO DEAL WITH SLOWDOWN DUE TO LOCAL RIPL
@@ -42,10 +44,8 @@ mk_p_ripl = make_puma_church_prime_ripl
 
 ## TODO 
 # 1. mr_map can just be v.map_proc (etc.)
-# 2. move all regression stuff into reg_demo_utils, then in notebook
-#    import then across engines using IPy.
-# 3. delete library string
-# 4. sample popz should work in local mode (now map_proc does fine?)
+
+
 
 
 
@@ -898,7 +898,7 @@ class MRipl():
         xr=np.linspace(min(all_vals),max(all_vals),50)
 
         for count,past_vals in enumerate(list_vals):
-            label='Pr [0]' if count==0 else 'Po [%i]'%count
+            label='Prior [0]' if count==0 else 'Post [%i]'%count
             alpha = .9 - .1*(len(list_vals) - count )
             ax[0].hist( past_vals, bins=20,alpha=alpha,
                         normed=True,label=label)
@@ -1196,173 +1196,12 @@ except:
     pass
 
 
-# library_string='''
-# [assume zeros (lambda (n) (if (= n 0) (list) (pair 0 (zeros (minus n 1)))))]
-# [assume ones (lambda (n) (if (= n 0) (list) (pair 1 (ones (minus n 1)))))]         [assume is_nil (lambda (lst) (= lst (list)) ) ]
-# [assume map (lambda (f lst) (if (is_nil lst) (list) (pair (f (first lst)) (map f (rest lst))) ) ) ]  
-# [assume repeat (lambda (th n) (if (= n 0) (list) (pair (th) (repeat th (- n 1) ) ) ) ) ]
-# [assume srange (lambda (b e s) (if (gte b e) (list) (pair b (srange (+ b s) e s) ) ) ) ]
-# [assume range (lambda (n) (srange 0 n 1) ) ]
-# [assume append (lambda (lst x) (if (is_nil lst) (list x) (pair (first lst) (append (rest lst) x) ) ) )]
-# [assume cat (lambda (xs ys) (if (is_nil ys) xs (cat (append xs (first ys)) (rest ys) ) ) )]
-# [assume fold (lambda (f l el) (if (is_nil l) el(f (first l) (fold f (rest l) el) ) ) ) ]
-# [assume suml (lambda (xs) (fold + xs 0) )]
-# [assume prodl (lambda (xs) (fold * xs 1) ) ]
-# '''
-
-
-
 ## MRipl Regression Utilities:
 # these are imported to engines via 'from ip_parallel import *' instruction for ripls
 # note that we don't need plot condition here
 # we can put it in regression utils, and let heatplot etc be defined
 # inside its local scope. 
         
-def if_lst_flatten(l):
-    if type(l[0])==list: return [el for subl in l for el in subl]
-    return l
 
-def heatplot(n2array,nbins=100):
-    """Input is an nx2 array, returns xi,yi,zi for colormesh""" 
-    x, y = n2array.T
-    k = kde.gaussian_kde(n2array.T)
-    xi, yi = np.mgrid[x.min():x.max():nbins*1j, y.min():y.max():nbins*1j]
-    zi = k(np.vstack([xi.flatten(), yi.flatten()]))
-    # plot ax.pcolormesh(xi, yi, zi.reshape(xi.shape))
-    return (xi, yi, zi.reshape(xi.shape))
-
-def get_name(r_mr):
-    'Input: ripl or mripl. Output: name string via "model_name" ripl variable'
-    di_l = r_mr.list_directives()
-    if 'model_name' in str(di_l):
-        for di in di_l:
-            if di['symbol']=='model_name': return di['value']
-    return 'anon model'
-
-
-def plot_conditional(ripl,data=[],x_range=[],number_xs=40,number_reps=30, return_fig=False,figsize=(16,3.5),plot=True):
-    ##FIXME we should predict and forget for pivot and maybe everything
-    
-    name=get_name(ripl)
-
-    if data:
-        d_xs,d_ys = zip(*data)
-        if not x_range: x_range = (min(d_xs)-1,max(d_xs)+1)
-    
-    if not x_range: x_range = (-3,3)
-    xr = np.linspace(x_range[0],x_range[1],number_xs)
-    
-    # sample f on xr and add noise (if noise is a float)
-    f_xr = [ripl.sample('(f %f)' % x) for x in xr]
-    if "'symbol': 'noise'" in str(ripl.list_directives()):
-        noise=ripl.sample('noise')
-        fixed_noise = isinstance(noise,float)
-        if fixed_noise:
-            f_u = [fx+noise for fx in f_xr]; f_l = [fx-noise for fx in f_xr]
-    
-    # sample (y_x x) for x in xr and compute 1sd intervals
-    xys=[]; ymean=[]; ystd=[]
-    for x in xr:
-        x_y = [ripl.sample('(y_x %f)' % x) for r in range(number_reps)]        
-        ymean.append( np.mean(x_y) )
-        ystd.append( np.abs( np.std(x_y) ) )
-        xys.extend( [(x,y) for y in x_y] )
-    
-    xs,ys = zip(*xys)
-    ymean = np.array(ymean); ystd = np.array(ystd)
-    y_u = ymean+ystd; y_l = ymean - ystd
-    if not fixed_noise:
-        f_u = y_u ; f_l = y_l
-
-    # Plotting
-    my_fig = None
-    if plot:
-        fig,ax = plt.subplots(1,3,figsize=figsize,sharex=True,sharey=True)
-
-        # plot data and f with noise
-        if data:
-            ax[0].scatter(d_xs,d_ys,label='Data')
-            ax[0].legend()
-
-        ax[0].plot(xr, f_xr, 'k', color='#CC4F1B')
-        ax[0].fill_between(xr, f_l, f_u, alpha=0.5,
-                           edgecolor='#CC4F1B',facecolor='#FF9848')
-        ax[0].set_title('Ripl: f (+- 1sd noise) w/ data [name: %s]' % name )
-
-        ax[1].scatter(xs,ys,alpha=0.7,s=5,facecolor='0.6', lw = 0)
-        ax[1].plot(xr, ymean, 'k', alpha=.9,color='m',linewidth=1)
-        ax[1].plot(xr, y_l, 'k', alpha=.8, color='m',linewidth=.5)
-        ax[1].plot(xr, y_u, 'k', alpha=.8,color='m',linewidth=.5)
-        ax[1].set_title('Ripl: Samples from P(y/X=x), w/ mean +- 1sd [name: %s]' % name )
-
-        xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
-        ax[2].pcolormesh(xi, yi, zi)
-        ax[2].set_title('Ripl: GKDE P(y/X=x) [name: %s]' % name )
-
-        fig.tight_layout()
-    #plt.show()  #FIXME: uncommenting leads to notebook not inlining images. why?
-        my_fig = fig if return_fig else None
-
-    return {'f':(xr,f_xr),'xs,ys':(xs,ys),'fig':my_fig}
-
-
-
-def predictive(mripl,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=(16,3.5),return_fig=False ):
-    mr = mripl
-    name=get_name(mr)
-    
-    if data:
-        d_xs,d_ys = zip(*data)
-        x_range = (min(d_xs)-1,max(d_xs)+1)
-        if not x_range: x_range = (min(d_xs)-1,max(d_xs)+1)
-    
-    if not x_range: x_range = (-3,3)
-        
-    xr = np.linspace(x_range[0],x_range[1],number_xs)
-    
-                        
-    list_out=mr_map_proc(mr,min(mr.no_ripls,6),plot_conditional,
-                         data=data,x_range=x_range,number_xs=number_xs,
-                         number_reps=1,plot=False)
-    fs = [ ripl_out['f'] for ripl_out in list_out]
-    
-    ## get y_xs from ripls and compute 1sd intervals
-    xys=[]; ymean=[]; ystd=[]
-    for x in xr:
-        # we get number_reps predicts from each ripl in mr
-        x_y=if_lst_flatten([mr.sample('(y_x %f)' % x) for r in range(number_reps)])   
-        ymean.append( np.mean(x_y) )
-        ystd.append( np.abs( np.std(x_y) ) )
-        xys.extend( [(x,y) for y in x_y] )
-    
-    xs,ys = zip(*xys)
-    ymean = np.array(ymean); ystd = np.array(ystd)
-    y_u = ymean+ystd; y_l = ymean-ystd
-    
-     # Plotting
-    fig,ax = plt.subplots(1,3,figsize=figsize,sharex=True,sharey=True)
-
-    if data: [ax[col].scatter(d_xs,d_ys,label='Data') for col in [0,1]]
-    # sampled fs from mripl
-    [ax[0].plot(xr,f_xr,alpha=.8,linewidth=.5) for xr,f_xr in fs]
-    if data: ax[0].legend()
-    ax[0].set_title('MR: Sampled fs w/ data [name: %s] ' % name )
-    
-    ax[1].scatter(xs,ys,alpha=0.5,s=5,facecolor='0.6', lw = 0)
-    ax[1].plot(xr, ymean, 'k', alpha=.9,color='m',linewidth=1)
-    ax[1].plot(xr, y_l, 'k', alpha=.8, color='m',linewidth=.5)
-    ax[1].plot(xr, y_u, 'k', alpha=.8,color='m',linewidth=.5)
-    ax[1].set_title('MR: Samples from P(y/X=x), w/ mean +- 1sd [name: %s] ' % name )
-    if data: ax[1].legend()
-        
-    xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
-    ax[2].pcolormesh(xi, yi, zi)
-    ax[2].set_title('MR: GKDE P(y/X=x) [name: %s] ' % name )
-
-    [ax[i].set_xlim(x_range[0],x_range[1]) for i in range(3)]
-    
-    fig.tight_layout()
-    
-    return xs,ys
 
 
