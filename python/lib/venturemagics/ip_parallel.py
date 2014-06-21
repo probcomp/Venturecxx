@@ -766,7 +766,7 @@ class MRipl():
 
         # special options: (return before basic snapshot)
         if sample_populations:
-            return self._sample_populations(exp_list,out,sample_populations,
+            return self._sample_populations(exp_list,out, sample_populations,
                                             plot=plot, plot_range=plot_range)
         elif repeat: 
             no_groups = self.no_local_ripls if self.output=='local' else self.no_ripls
