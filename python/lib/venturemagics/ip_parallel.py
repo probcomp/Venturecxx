@@ -840,7 +840,7 @@ class MRipl():
 
         if plot and flatten: # Predictive (Repeat)
             fig,ax=plt.subplots(figsize=(6,3))
-            ax.hist(mrmap_values, bins=20,alpha=.8, normed=True, color='m')
+            ax.hist(mrmap_values, bins=20,alpha=.4, normed=True, color='m', histtype='stepfilled')
             xr=np.linspace(min(mrmap_values),max(mrmap_values),50)
             ax.plot(xr,gaussian_kde(mrmap_values)(xr), c='black', lw=2,label='GKDE')
             ax.set_title('Predictive: %s (no_ripls= %i, repeats= %i)' % (exp,no_groups,pop_size))
