@@ -802,7 +802,7 @@ class MRipl():
         return out
 
     
-    def sample_populations(self,exp,no_groups,population_size,plot_range=None):
+    def sample_populations(self,exp,no_groups,population_size,xlims_ylims=None):
         '''Input *exp* will be repeatedly sampled from (*population_size* times)
            for each group in *no_groups*. The expression *exp* should be
            stochastic.
@@ -812,7 +812,7 @@ class MRipl():
            mripl.sample_populations('(normal mean 1)',4,30)'''
         return self.snapshot(exp_list = (exp,), plot=True,
                              sample_populations=(no_groups,population_size),
-                             plot_range=plot_range)
+                             xlims_ylims=xlims_ylims)
         
     def _sample_populations(self,exp_list,out,groups_popsize,flatten=False,plot=False,plot_range=None):
         
@@ -912,7 +912,7 @@ class MRipl():
                        alpha=alpha, label=label)
 
         [ ax[i].legend(loc='upper left',ncol=len(list_vals)) for i in range(2)]
-        ax[0].set_title('Past values hist: %s (ripls= %i)' % (exp_name,self.no_ripls) )
+        ax[0].set_title('Compare snapshots: %s (ripls= %i)' % (exp_name,self.no_ripls) )
         ax[1].set_title('GKDE: %s (ripls= %i)' % (exp_name,self.no_ripls) )
 
         if plot_range:
