@@ -560,7 +560,7 @@ class MRipl():
         
         if '[clear]' in program_string.lower():
             self.total_transitions = 0
-            print 'Total transitions set to 0'
+            print 'Clear. Total MRipl transitions reset to 0'
             self.reset_seeds()
         
         return out_execute
