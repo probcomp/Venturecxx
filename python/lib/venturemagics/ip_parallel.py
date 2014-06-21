@@ -1166,7 +1166,7 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
 
 
 def venture(line, cell):
-    'args: r_mr_name [,no_ripls_output]'
+    'args: ripl_mripl_name [,no_ripl_values_output]'
     ##FIXME: we should recursively extract value when assigning to 'values'
     mripl_name =  str(line).split()[0]
     if len(str(line).split())>1:
@@ -1202,12 +1202,7 @@ except:
     pass
 
 
-## MRipl Regression Utilities:
-# these are imported to engines via 'from ip_parallel import *' instruction for ripls
-# note that we don't need plot condition here
-# we can put it in regression utils, and let heatplot etc be defined
-# inside its local scope. 
-        
+
 
 
 
