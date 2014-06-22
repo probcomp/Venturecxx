@@ -114,6 +114,11 @@ class SpecPlot(object):
   (current implementation, good default), mean, median, all (what
   exactly would all mean?  2-D table? Splice and hope?)
 
+  TODO: Modifiers for how to treat overplotting?  (Exactly identical
+  discrete samples; continuous samples that are close enough for the
+  points to overlap; control or good choice of point size?; 2D kernel
+  density nonsense?)
+
   If one stream is indicated for a 2-D plot (points or lines), the x
   axis is filled in with the sweep counter.  If three streams are
   indicated, the third is mapped to color.
