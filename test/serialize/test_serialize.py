@@ -23,6 +23,16 @@ def _test_serialize_program(v, label, action):
         trace1 = engine.getDistinguishedTrace()
         trace2 = engine.copy_trace(trace1)
         assert isinstance(trace2, type(trace1))
+    elif action == 'convert_puma':
+        trace1 = engine.getDistinguishedTrace()
+        engine = engine.to_puma()
+        trace2 = engine.getDistinguishedTrace()
+        assert 'venture.puma' in trace2.__module__
+    elif action == 'convert_lite':
+        trace1 = engine.getDistinguishedTrace()
+        engine = engine.to_lite()
+        trace2 = engine.getDistinguishedTrace()
+        assert 'venture.lite' in trace2.__module__
     else:
         assert False
 
@@ -43,7 +53,7 @@ def test_serialize_basic():
         v.observe('(flip_coin)', 'true')
         v.predict('is_tricky', label='pid')
         _test_serialize_program(v, 'pid', action)
-    for action in ['copy', 'serialize']:
+    for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
 def test_serialize_mem():
@@ -55,7 +65,7 @@ def test_serialize_mem():
             v.observe('(flip_coin 0)', 'true')
         v.predict('(flip_coin 0)', label='pid')
         _test_serialize_program(v, 'pid', action)
-    for action in ['copy', 'serialize']:
+    for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
 def test_serialize_closure():
@@ -67,12 +77,12 @@ def test_serialize_closure():
             v.observe('(flip_coin)', 'true')
         v.predict('(flip_coin)', label='pid')
         _test_serialize_program(v, 'pid', action)
-    for action in ['copy', 'serialize']:
+    for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
 def test_serialize_aaa():
     def check_beta_bernoulli(maker, action):
-        if maker == "make_uc_beta_bernoulli" and action == 'serialize':
+        if maker == "make_uc_beta_bernoulli" and action in ['serialize', 'convert_lite', 'convert_puma']:
             raise SkipTest("Cannot convert BetaBernoulliSP to a stack dictionary. Issue: https://app.asana.com/0/13001976276959/13001976276981")
         elif action == 'copy' and config['get_ripl'] == 'puma':
             raise SkipTest("Fails due to a mystery bug in Puma stop_and_copy. Issue: https://app.asana.com/0/11127829865276/13039650533872")
@@ -84,7 +94,7 @@ def test_serialize_aaa():
             v.observe('(f)', 'true')
         _test_serialize_program(v, 'pid', action)
     for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
-        for action in ['copy', 'serialize']:
+        for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
             yield check_beta_bernoulli, maker, action
 
     def check_crp(maker, action):
@@ -100,7 +110,7 @@ def test_serialize_aaa():
             v.observe('(f)', 'atom<3>')
         _test_serialize_program(v, 'pid', action)
     for maker in ["make_crp"]:
-        for action in ['copy', 'serialize']:
+        for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
             yield check_crp, maker, action
 
     def check_cmvn(maker, action):
@@ -114,7 +124,7 @@ def test_serialize_aaa():
         v.predict('(f)', label='pid')
         _test_serialize_program(v, 'pid', action)
     for maker in ["make_cmvn"]:
-        for action in ['copy', 'serialize']:
+        for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
             yield check_cmvn, maker, action
 
 def test_serialize_latents():
@@ -136,7 +146,7 @@ def test_serialize_latents():
         v.observe('(f 5)', 'atom<0>')
         v.predict('(f 6)', label='pid')
         _test_serialize_program(v, 'pid', action)
-    for action in ['copy', 'serialize']:
+    for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
 def test_serialize_ripl():
