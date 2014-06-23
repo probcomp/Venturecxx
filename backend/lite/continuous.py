@@ -289,8 +289,8 @@ class StudentTOutputPSP(RandomPSP):
 
 class InvGammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def simulateNumeric(self,a,b): return scipy.stats.invgamma.rvs(a,b)
-  def logDensityNumeric(self,x,a,b): return scipy.stats.invgamma.logpdf(x,a,b)
+  def simulateNumeric(self,a,b): return scipy.stats.invgamma.rvs(a,scale=b)
+  def logDensityNumeric(self,x,a,b): return scipy.stats.invgamma.logpdf(x,a,scale=b)
 
   def simulate(self,args): return self.simulateNumeric(*args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)

@@ -1,14 +1,14 @@
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, collectSamples
-from scipy.stats import gamma
+from scipy.stats import invgamma
 
 @statisticalTest
-def testGamma1():
+def testInvGamma1():
   "Check that Gamma is parameterized correctly"
   ripl = get_ripl()
   # samples
-  ripl.assume("a","(gamma 10.0 10.0)")
+  ripl.assume("a","(inv_gamma 10.0 10.0)")
   observed = collectSamples(ripl,1)
   # true CDF
-  gamma_cdf = lambda x: gamma.cdf(x, a = 10, scale = 1 / 10.)
-  return reportKnownContinuous(gamma_cdf, observed)
+  inv_gamma_cdf = lambda x: invgamma.cdf(x, a = 10, scale = 10)
+  return reportKnownContinuous(inv_gamma_cdf, observed)
