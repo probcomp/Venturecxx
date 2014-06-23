@@ -57,8 +57,8 @@ struct PyTrace
   PyTrace* stop_and_copy() const;
 
   shared_ptr<OrderedDB> makeEmptySerializationDB();
-  shared_ptr<OrderedDB> makeSerializationDB(boost::python::list boxedValues, bool boxed);
-  boost::python::list dumpSerializationDB(shared_ptr<OrderedDB> db, bool boxed);
+  shared_ptr<OrderedDB> makeSerializationDB(boost::python::list stackDicts, bool skipStackDictConversion);
+  boost::python::list dumpSerializationDB(shared_ptr<OrderedDB> db, bool skipStackDictConversion);
   void unevalAndExtract(DirectiveID did, shared_ptr<OrderedDB> db);
   void restoreDirectiveID(DirectiveID did, shared_ptr<OrderedDB> db);
   void evalAndRestore(DirectiveID did, boost::python::object object, shared_ptr<OrderedDB> db);

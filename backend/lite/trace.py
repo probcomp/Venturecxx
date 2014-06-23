@@ -427,11 +427,17 @@ class Trace(object):
 
   #### Serialization interface
 
-  def makeSerializationDB(self, values=None, boxed=False):
-    return OrderedOmegaDB(self, values, boxed)
+  def makeSerializationDB(self, values=None, skipStackDictConversion=False):
+    if values is not None:
+      if not skipStackDictConversion:
+        values = map(self.unboxValue, values)
+    return OrderedOmegaDB(self, values)
 
-  def dumpSerializationDB(self, db, boxed=False):
-    return db.listValues(boxed)
+  def dumpSerializationDB(self, db, skipStackDictConversion=False):
+    values = db.listValues()
+    if not skipStackDictConversion:
+      values = map(self.boxValue, values)
+    return values
 
   def unevalAndExtract(self,id,db):
     # leaves trace in an inconsistent state. use restore afterward

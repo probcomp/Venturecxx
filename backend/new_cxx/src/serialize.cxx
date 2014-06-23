@@ -54,31 +54,31 @@ shared_ptr<OrderedDB> PyTrace::makeEmptySerializationDB()
   return shared_ptr<OrderedDB>(new OrderedDB(trace.get()));
 }
 
-shared_ptr<OrderedDB> PyTrace::makeSerializationDB(boost::python::list boxedValues, bool boxed)
+shared_ptr<OrderedDB> PyTrace::makeSerializationDB(boost::python::list stackDicts, bool skipStackDictConversion)
 {
-  assert(boxed);
+  assert(!skipStackDictConversion);
 
   vector<VentureValuePtr> values;
-  for (boost::python::ssize_t i = 0; i < boost::python::len(boxedValues); ++i)
+  for (boost::python::ssize_t i = 0; i < boost::python::len(stackDicts); ++i)
   {
-    values.push_back(parseValue(boost::python::extract<boost::python::dict>(boxedValues[i])));
+    values.push_back(parseValue(boost::python::extract<boost::python::dict>(stackDicts[i])));
   }
 
   return shared_ptr<OrderedDB>(new OrderedDB(trace.get(), values));
 }
 
-boost::python::list PyTrace::dumpSerializationDB(shared_ptr<OrderedDB> db, bool boxed)
+boost::python::list PyTrace::dumpSerializationDB(shared_ptr<OrderedDB> db, bool skipStackDictConversion)
 {
-  assert(boxed);
+  assert(!skipStackDictConversion);
 
   vector<VentureValuePtr> values = db->listValues();
-  boost::python::list boxedValues;
+  boost::python::list stackDicts;
   for (size_t i = 0; i < values.size(); ++i)
   {
-    boxedValues.append(values[i]->toPython(trace.get()));
+    stackDicts.append(values[i]->toPython(trace.get()));
   }
 
-  return boxedValues;
+  return stackDicts;
 }
 
 void PyTrace::unevalAndExtract(DirectiveID did, shared_ptr<OrderedDB> db)

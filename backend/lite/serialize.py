@@ -14,13 +14,11 @@ class OrderedOmegaDB(OmegaDB):
 
     """
 
-    def __init__(self, trace, values=None, boxed=False):
+    def __init__(self, trace, values=None):
         super(OrderedOmegaDB, self).__init__()
         self.trace = trace
         self.stack = []
         if values is not None:
-            if boxed:
-                values = map(self.trace.unboxValue, values)
             self.stack.extend(values)
 
     def hasValueFor(self, node):
@@ -61,8 +59,6 @@ class OrderedOmegaDB(OmegaDB):
                 raise Exception("Cannot restore a randomly constructed %s" % type(value))
             self.stack.append(value)
 
-    def listValues(self, boxed=False):
+    def listValues(self):
         values = self.stack
-        if boxed:
-            values = map(self.trace.boxValue, values)
         return list(values)

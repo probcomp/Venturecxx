@@ -251,7 +251,7 @@ effect of renumbering the directives, if some had been forgotten."""
   def stop_continuous_inference(self):
     for trace in self.traces: trace.stop_continuous_inference()
 
-  def dump_trace(self, trace, boxed=True):
+  def dump_trace(self, trace, skipStackDictConversion=False):
     db = trace.makeSerializationDB()
 
     for did, directive in sorted(self.directives.items(), reverse=True):
@@ -264,11 +264,11 @@ effect of renumbering the directives, if some had been forgotten."""
       if directive[0] == "observe":
         trace.observe(did, directive[2])
 
-    return trace.dumpSerializationDB(db, boxed)
+    return trace.dumpSerializationDB(db, skipStackDictConversion)
 
-  def restore_trace(self, values, boxed=True):
+  def restore_trace(self, values, skipStackDictConversion=False):
     trace = self.Trace()
-    db = trace.makeSerializationDB(values, boxed)
+    db = trace.makeSerializationDB(values, skipStackDictConversion)
 
     for did, directive in sorted(self.directives.items()):
         if directive[0] == "assume":
@@ -286,8 +286,8 @@ effect of renumbering the directives, if some had been forgotten."""
     return trace
 
   def copy_trace(self, trace):
-    values = self.dump_trace(trace, boxed=False)
-    return self.restore_trace(values, boxed=False)
+    values = self.dump_trace(trace, skipStackDictConversion=True)
+    return self.restore_trace(values, skipStackDictConversion=True)
 
   def save(self, fname, extra=None):
     data = {}
