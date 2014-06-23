@@ -376,9 +376,9 @@ double evalRequests(Trace * trace,
     {
       RootOfFamily esrRoot;
       shared_ptr<SP> sp = trace->getMadeSP(trace->getOperatorSPMakerNode(requestNode));
-      if (shouldRestore && db->hasESRParent(trace->getMadeSP(trace->getOperatorSPMakerNode(requestNode)), esr.id))
+      if (shouldRestore && db->hasESRParent(sp, esr.id))
       {
-        esrRoot = db->getESRParent(trace->getMadeSP(trace->getOperatorSPMakerNode(requestNode)),esr.id);
+        esrRoot = db->getESRParent(sp,esr.id);
         weight += restore(trace,esrRoot.get(),scaffold,db,gradients);
       }
       else
