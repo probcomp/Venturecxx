@@ -142,7 +142,7 @@ class CoreSivm(object):
                 utils.validate_dict)
         # TODO FIXME figure out how to validate the arguments
         val = self.engine.infer(d)
-        return {}
+        return {"value":val}
 
     def _do_clear(self,_):
         utils.require_state(self.state,'default')

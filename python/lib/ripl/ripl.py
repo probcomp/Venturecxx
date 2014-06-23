@@ -407,14 +407,25 @@ Open issues:
         if isinstance(params, int):
             return {"transitions": params, "kernel": "mh", "scope":"default", "block":"one"}
         elif isinstance(params, basestring):
-            return u.expToDict(u.parse(params))
+            # TODO Technically, should make sure that inference
+            # programs are validated and desugared by the rest of the
+            # stack, especially since as of peek they can contain
+            # model program fragments.
+            return u.expToDict(u.parse(params), self)
         elif isinstance(params, dict):
             return params
         else:
-          raise TypeError("Unknown params: " + str(params))
+            raise TypeError("Unknown params: " + str(params))
         
-    def infer(self, params=None):
-        self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
+    def infer(self, params=None, type=False):
+        o = self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
+        ans = o["value"]
+        if type:
+            return ans
+        elif isinstance(ans, dict): # Presume this is peek output
+            return _strip_types_from_dict_values(ans)
+        else: # Presume this is plotf output
+            return ans
 
     def clear(self):
         self.execute_instruction({'instruction':'clear'})
@@ -576,3 +587,8 @@ def _strip_types(value):
         if isinstance(ans,list): return [_strip_types(v) for v in ans]
         else: return ans
     else: return value
+
+def _strip_types_from_dict_values(value):
+    # The purpose of {"value": v} here is to fool _strip_types
+    # into mapping over the list.
+    return dict([(k, _strip_types({"value": v})) for (k,v) in value.iteritems()])
