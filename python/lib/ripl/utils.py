@@ -198,8 +198,10 @@ def expToDict(exp, ripl=None):
   def default_name_for_exp(exp):
     if isinstance(exp, basestring):
       return exp
-    else:
+    elif hasattr(exp, "__iter__"):
       return "(" + ' '.join([default_name_for_exp(e) for e in exp]) + ")"
+    else:
+      return str(exp)
   if isinstance(exp, int):
     return {"transitions": exp}
   tag = exp[0]
