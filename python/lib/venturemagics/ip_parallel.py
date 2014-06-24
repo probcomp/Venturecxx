@@ -10,6 +10,8 @@ import subprocess,time,pickle
 mk_l_ripl = make_lite_church_prime_ripl
 mk_p_ripl = make_puma_church_prime_ripl
 
+
+
 ### IPython Parallel Magics
 
 # REFACTORING TO DEAL WITH SLOWDOWN DUE TO LOCAL RIPL
@@ -24,7 +26,7 @@ mk_p_ripl = make_puma_church_prime_ripl
 # elif not_debug: return dview.apply(remote_f)
 # else return local_f(),dview.apply(remote_f)
 
-# note: might be able to simply each (esp. local) with decorators.
+# note: might be able to simplify each (esp. local) with decorators.
 
 # constructor:
 # default is for only working with remotes. local_mode is only
@@ -37,6 +39,11 @@ mk_p_ripl = make_puma_church_prime_ripl
 # v.plot('x',**plottingkwargs) = v.snapshot(exp_list=['x'],plot=True,**kwargs)
 # move local_out to debug mode
 # move regression stuff to regression utils
+
+
+
+## TODO 
+# 1. mr_map can just be v.map_proc (etc.)
 
 
 
@@ -98,7 +105,7 @@ class MRipl():
     
     def __init__(self, no_ripls, backend='puma',local_mode=False,
                  seeds=None, debug_mode=False, set_no_engines=None):
-
+        
 # TODO DEBUG MODE should probably run inference 
         '''
         MRipl(no_ripls,backend='puma',local_mode=False,seeds=None,debug_mode=False)
@@ -553,7 +560,7 @@ class MRipl():
         
         if '[clear]' in program_string.lower():
             self.total_transitions = 0
-            print 'Total transitions set to 0'
+            print 'Clear. Total MRipl transitions reset to 0'
             self.reset_seeds()
         
         return out_execute
@@ -638,13 +645,13 @@ class MRipl():
         Maps a procedure *proc*, taking single ripl as first positional
         argument, across subset of ripls in MRipl.
 
-        Additional to arguments to proc are in lists in proc_args_list
+        Additional arguments to proc are in lists in proc_args_list
         and may vary across ripls.
         
         proc_args_list = [ [ arg_i0, arg_i1, ..., arg_ik  ], ...,  ]
         where k is the # positional args for proc and i=0 to # calls to proc.
 
-        # calls to proc == len(proc_args_list) <= self.no_ripls
+        number of calls to proc == len(proc_args_list) <= self.no_ripls
 
         For kwargs: set only_p_args=False and then
         proc_args_list = [ ( p_args_list, kwargs_dict) ].
@@ -720,16 +727,21 @@ class MRipl():
 
 
 
-    def snapshot(self,exp_list=(),did_labels_list=(),
-                 plot=False, scatter=False, plot_range=None,
+    def snapshot(self, exp_list=(), did_labels_list=(),
+                 plot=False, scatter=False, xlims_ylims=None,
                  plot_past_values=(),
                  sample_populations=None, repeat=None,
-                 predict=True,logscore=False):
+                 predict=True, logscore=False):
                  
-        '''Input: lists of dids_labels and expressions (evaled in order)
-           Output: values from each ripl, (optional) plots.''' 
-        
-        # plot_past_values :: list of snapshot outputs (exp used in first variable)
+        '''Input: Sequence of Venture expressions (or dids/labels).
+           Output: { expression: list of values of expression for each ripl }
+                    (along with *self.ripls_info()*)
+           Optional args:
+             plot: Plot histogram of the snapshot values (for each expression).
+             xlims_ylims: ( (xmin,xmax), (ymin,ymax) ), specify axes limits
+                          to override automatic limits.
+             logscore: Snapshot of logscore.'''
+             
         
         if isinstance(did_labels_list,(int,str)):
             did_labels_list = [did_labels_list]
@@ -742,17 +754,19 @@ class MRipl():
 
         plot_past_values = list(plot_past_values)
 
-        if plot_range: # test plot_range == (xrange[,yrange])
-            pr=plot_range; l=len(pr)
-            assert (l==2 and len(pr[0])==len(pr[1])==2) or (l==1 and len(pr[0])==2)
+        plot_range = xlims_ylims
+
+        if plot_range: 
+            assert isinstance(plot_range[0],(list,tuple)), 'xlims_ylims form: ( (xmin,xmax)[,(ymin,ymax)])'
         
-        out = {'values':{}, 'total_transitions':self.total_transitions,
-                    'ripls_info': self.ripls_info() }
+        out = {'values':{},
+               'total_transitions':self.total_transitions,
+               'ripls_info': self.ripls_info() }
 
 
         # special options: (return before basic snapshot)
         if sample_populations:
-            return self._sample_populations(exp_list,out,sample_populations,
+            return self._sample_populations(exp_list,out, sample_populations,
                                             plot=plot, plot_range=plot_range)
         elif repeat: 
             no_groups = self.no_local_ripls if self.output=='local' else self.no_ripls
@@ -775,7 +789,7 @@ class MRipl():
         
         # special options that use basic snapshot
         if plot_past_values:
-            return self.plot_past_values(exp_list, out, plot_past_values,
+            return self._plot_past_values(exp_list, out, plot_past_values,
                                          plot_range=plot_range)
 
         # logscore current must go after plot_past_values to avoid errors
@@ -788,7 +802,7 @@ class MRipl():
         return out
 
     
-    def sample_populations(self,exp,no_groups,population_size,plot_range=None):
+    def sample_populations(self,exp,no_groups,population_size,xlims_ylims=None):
         '''Input *exp* will be repeatedly sampled from (*population_size* times)
            for each group in *no_groups*. The expression *exp* should be
            stochastic.
@@ -798,12 +812,10 @@ class MRipl():
            mripl.sample_populations('(normal mean 1)',4,30)'''
         return self.snapshot(exp_list = (exp,), plot=True,
                              sample_populations=(no_groups,population_size),
-                             plot_range=plot_range)
+                             xlims_ylims=xlims_ylims)
         
     def _sample_populations(self,exp_list,out,groups_popsize,flatten=False,plot=False,plot_range=None):
-        # TODO: think about non-cts case of sample populations. think about doing
-        # sample populations for correlations
-        if self.local_mode: assert False, 'Local mode'
+        
         assert len(exp_list)==1, 'len(exp_list) != 1'
         exp = exp_list[0]
         no_groups,pop_size = groups_popsize
@@ -828,7 +840,7 @@ class MRipl():
 
         if plot and flatten: # Predictive (Repeat)
             fig,ax=plt.subplots(figsize=(6,3))
-            ax.hist(mrmap_values, bins=20,alpha=.8, normed=True, color='m')
+            ax.hist(mrmap_values, bins=20,alpha=.4, normed=True, color='m', histtype='stepfilled')
             xr=np.linspace(min(mrmap_values),max(mrmap_values),50)
             ax.plot(xr,gaussian_kde(mrmap_values)(xr), c='black', lw=2,label='GKDE')
             ax.set_title('Predictive: %s (no_ripls= %i, repeats= %i)' % (exp,no_groups,pop_size))
@@ -866,7 +878,15 @@ class MRipl():
             return out
 
 
-    def plot_past_values(self, exp_list, out, past_values_list,plot_range):
+    def compare_snapshots(self, list_snapshot_outputs ):
+        '''Input: List of outputs from calls to *snapshot* for the same
+                  expression.
+           Output: Plots the snapshots on same axis.'''
+        assert all ( [isinstance(el,dict) for el in list_snapshot_outputs] )
+        return self.snapshot(plot_past_values = list_snapshot_outputs)
+    
+
+    def _plot_past_values(self, exp_list, out, past_values_list,plot_range):
         if exp_list:
             current_vals = out['values'].values()[0] # note conflict with logscore
             exp_name  = exp_list[0]
@@ -884,7 +904,7 @@ class MRipl():
         xr=np.linspace(min(all_vals),max(all_vals),50)
 
         for count,past_vals in enumerate(list_vals):
-            label='Pr [0]' if count==0 else 'Po [%i]'%count
+            label='Prior [0]' if count==0 else 'Post [%i]'%count
             alpha = .9 - .1*(len(list_vals) - count )
             ax[0].hist( past_vals, bins=20,alpha=alpha,
                         normed=True,label=label)
@@ -892,7 +912,7 @@ class MRipl():
                        alpha=alpha, label=label)
 
         [ ax[i].legend(loc='upper left',ncol=len(list_vals)) for i in range(2)]
-        ax[0].set_title('Past values hist: %s (ripls= %i)' % (exp_name,self.no_ripls) )
+        ax[0].set_title('Compare snapshots: %s (ripls= %i)' % (exp_name,self.no_ripls) )
         ax[1].set_title('GKDE: %s (ripls= %i)' % (exp_name,self.no_ripls) )
 
         if plot_range:
@@ -938,7 +958,7 @@ class MRipl():
             ax.set_title('GKDE: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
             ax.set_xlabel('Exp: %s' % str(label))
             if plot_range:
-                ax.set_xlim(plot_range)                 
+                ax.set_xlim(plot_range[0])                 
                 if len(plot_range)==2: ax.set_ylim(plot_range[1])
         
         # setup variables for plot
@@ -999,6 +1019,7 @@ def ipython_inline():
         ip.run_cell_magic("px",'','pass') # display any figs inline
     except:
         pass
+
 
 def mk_directives_string(ripl):
         di_string_lst = [directive_to_string(di) for di in ripl.list_directives() ]
@@ -1145,7 +1166,7 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
 
 
 def venture(line, cell):
-    'args: r_mr_name [,no_ripls_output]'
+    'args: ripl_mripl_name [,no_ripl_values_output]'
     ##FIXME: we should recursively extract value when assigning to 'values'
     mripl_name =  str(line).split()[0]
     if len(str(line).split())>1:
@@ -1178,178 +1199,10 @@ try:
     ip = get_ipython()
     ip.register_magic_function(venture, "cell")
 except:
-    print 'no ipython'
-
-
-# library_string='''
-# [assume zeros (lambda (n) (if (= n 0) (list) (pair 0 (zeros (minus n 1)))))]
-# [assume ones (lambda (n) (if (= n 0) (list) (pair 1 (ones (minus n 1)))))]         [assume is_nil (lambda (lst) (= lst (list)) ) ]
-# [assume map (lambda (f lst) (if (is_nil lst) (list) (pair (f (first lst)) (map f (rest lst))) ) ) ]  
-# [assume repeat (lambda (th n) (if (= n 0) (list) (pair (th) (repeat th (- n 1) ) ) ) ) ]
-# [assume srange (lambda (b e s) (if (gte b e) (list) (pair b (srange (+ b s) e s) ) ) ) ]
-# [assume range (lambda (n) (srange 0 n 1) ) ]
-# [assume append (lambda (lst x) (if (is_nil lst) (list x) (pair (first lst) (append (rest lst) x) ) ) )]
-# [assume cat (lambda (xs ys) (if (is_nil ys) xs (cat (append xs (first ys)) (rest ys) ) ) )]
-# [assume fold (lambda (f l el) (if (is_nil l) el(f (first l) (fold f (rest l) el) ) ) ) ]
-# [assume suml (lambda (xs) (fold + xs 0) )]
-# [assume prodl (lambda (xs) (fold * xs 1) ) ]
-# '''
+    pass
 
 
 
 
-
-## MRipl Regression Utilities:
-# these are imported to engines via 'from ip_parallel import *' instruction for ripls
-# note that we don't need plot condition here
-# we can put it in regression utils, and let heatplot etc be defined
-# inside its local scope. 
-        
-def if_lst_flatten(l):
-    if type(l[0])==list: return [el for subl in l for el in subl]
-    return l
-
-def heatplot(n2array,nbins=100):
-    """Input is an nx2 array, returns xi,yi,zi for colormesh""" 
-    x, y = n2array.T
-    k = kde.gaussian_kde(n2array.T)
-    xi, yi = np.mgrid[x.min():x.max():nbins*1j, y.min():y.max():nbins*1j]
-    zi = k(np.vstack([xi.flatten(), yi.flatten()]))
-    # plot ax.pcolormesh(xi, yi, zi.reshape(xi.shape))
-    return (xi, yi, zi.reshape(xi.shape))
-
-def get_name(r_mr):
-    'Input: ripl or mripl. Output: name string via "model_name" ripl variable'
-    di_l = r_mr.list_directives()
-    if 'model_name' in str(di_l):
-        for di in di_l:
-            if di['symbol']=='model_name': return di['value']
-    return 'anon model'
-
-
-def plot_conditional(ripl,data=[],x_range=[],number_xs=40,number_reps=30, return_fig=False,figsize=(16,3.5),plot=True):
-    ##FIXME we should predict and forget for pivot and maybe everything
-    
-    name=get_name(ripl)
-
-    if data:
-        d_xs,d_ys = zip(*data)
-        if not x_range: x_range = (min(d_xs)-1,max(d_xs)+1)
-    
-    if not x_range: x_range = (-3,3)
-    xr = np.linspace(x_range[0],x_range[1],number_xs)
-    
-    # sample f on xr and add noise (if noise is a float)
-    f_xr = [ripl.sample('(f %f)' % x) for x in xr]
-    if "'symbol': 'noise'" in str(ripl.list_directives()):
-        noise=ripl.sample('noise')
-        fixed_noise = isinstance(noise,float)
-        if fixed_noise:
-            f_u = [fx+noise for fx in f_xr]; f_l = [fx-noise for fx in f_xr]
-    
-    # sample (y_x x) for x in xr and compute 1sd intervals
-    xys=[]; ymean=[]; ystd=[]
-    for x in xr:
-        x_y = [ripl.sample('(y_x %f)' % x) for r in range(number_reps)]        
-        ymean.append( np.mean(x_y) )
-        ystd.append( np.abs( np.std(x_y) ) )
-        xys.extend( [(x,y) for y in x_y] )
-    
-    xs,ys = zip(*xys)
-    ymean = np.array(ymean); ystd = np.array(ystd)
-    y_u = ymean+ystd; y_l = ymean - ystd
-    if not fixed_noise:
-        f_u = y_u ; f_l = y_l
-
-    # Plotting
-    my_fig = None
-    if plot:
-        fig,ax = plt.subplots(1,3,figsize=figsize,sharex=True,sharey=True)
-
-        # plot data and f with noise
-        if data:
-            ax[0].scatter(d_xs,d_ys,label='Data')
-            ax[0].legend()
-
-        ax[0].plot(xr, f_xr, 'k', color='#CC4F1B')
-        ax[0].fill_between(xr, f_l, f_u, alpha=0.5,
-                           edgecolor='#CC4F1B',facecolor='#FF9848')
-        ax[0].set_title('Ripl: f (+- 1sd noise) w/ data [name: %s]' % name )
-
-        ax[1].scatter(xs,ys,alpha=0.7,s=5,facecolor='0.6', lw = 0)
-        ax[1].plot(xr, ymean, 'k', alpha=.9,color='m',linewidth=1)
-        ax[1].plot(xr, y_l, 'k', alpha=.8, color='m',linewidth=.5)
-        ax[1].plot(xr, y_u, 'k', alpha=.8,color='m',linewidth=.5)
-        ax[1].set_title('Ripl: Samples from P(y/X=x), w/ mean +- 1sd [name: %s]' % name )
-
-        xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
-        ax[2].pcolormesh(xi, yi, zi)
-        ax[2].set_title('Ripl: GKDE P(y/X=x) [name: %s]' % name )
-
-        fig.tight_layout()
-    #plt.show()  #FIXME: uncommenting leads to notebook not inlining images. why?
-        my_fig = fig if return_fig else None
-
-    return {'f':(xr,f_xr),'xs,ys':(xs,ys),'fig':my_fig}
-
-
-
-def predictive(mripl,data=[],x_range=(-3,3),number_xs=40,number_reps=40,figsize=(16,3.5),return_fig=False ):
-    mr = mripl
-    name=get_name(mr)
-    
-    if data:
-        d_xs,d_ys = zip(*data)
-        x_range = (min(d_xs)-1,max(d_xs)+1)
-        if not x_range: x_range = (min(d_xs)-1,max(d_xs)+1)
-    
-    if not x_range: x_range = (-3,3)
-        
-    xr = np.linspace(x_range[0],x_range[1],number_xs)
-    
-                        
-    list_out=mr_map_proc(mr,min(mr.no_ripls,6),plot_conditional,
-                         data=data,x_range=x_range,number_xs=number_xs,
-                         number_reps=1,plot=False)
-    fs = [ ripl_out['f'] for ripl_out in list_out]
-    
-    ## get y_xs from ripls and compute 1sd intervals
-    xys=[]; ymean=[]; ystd=[]
-    for x in xr:
-        # we get number_reps predicts from each ripl in mr
-        x_y=if_lst_flatten([mr.sample('(y_x %f)' % x) for r in range(number_reps)])   
-        ymean.append( np.mean(x_y) )
-        ystd.append( np.abs( np.std(x_y) ) )
-        xys.extend( [(x,y) for y in x_y] )
-    
-    xs,ys = zip(*xys)
-    ymean = np.array(ymean); ystd = np.array(ystd)
-    y_u = ymean+ystd; y_l = ymean-ystd
-    
-     # Plotting
-    fig,ax = plt.subplots(1,3,figsize=figsize,sharex=True,sharey=True)
-
-    if data: [ax[col].scatter(d_xs,d_ys,label='Data') for col in [0,1]]
-    # sampled fs from mripl
-    [ax[0].plot(xr,f_xr,alpha=.8,linewidth=.5) for xr,f_xr in fs]
-    if data: ax[0].legend()
-    ax[0].set_title('MR: Sampled fs w/ data [name: %s] ' % name )
-    
-    ax[1].scatter(xs,ys,alpha=0.5,s=5,facecolor='0.6', lw = 0)
-    ax[1].plot(xr, ymean, 'k', alpha=.9,color='m',linewidth=1)
-    ax[1].plot(xr, y_l, 'k', alpha=.8, color='m',linewidth=.5)
-    ax[1].plot(xr, y_u, 'k', alpha=.8,color='m',linewidth=.5)
-    ax[1].set_title('MR: Samples from P(y/X=x), w/ mean +- 1sd [name: %s] ' % name )
-    if data: ax[1].legend()
-        
-    xi,yi,zi=heatplot(np.array(zip(xs,ys)),nbins=100)
-    ax[2].pcolormesh(xi, yi, zi)
-    ax[2].set_title('MR: GKDE P(y/X=x) [name: %s] ' % name )
-
-    [ax[i].set_xlim(x_range[0],x_range[1]) for i in range(3)]
-    
-    fig.tight_layout()
-    
-    return xs,ys
 
 

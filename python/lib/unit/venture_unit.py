@@ -83,6 +83,7 @@ class VentureUnit(object):
     parameters = {}
     assumes = []
     observes = []
+    queryExps = []
 
     # Register an assume.
     def assume(self, symbol, expression):
@@ -97,6 +98,12 @@ class VentureUnit(object):
 
     # Override to constrain model on data.
     def makeObserves(self): pass
+
+    # Register a queryExp.
+    def queryExp(self, expression):
+        self.queryExps.append(expression)
+
+    def makeQueryExps(self): pass
 
     # Masquerade as a ripl.
     def clear(self):
@@ -121,22 +128,23 @@ class VentureUnit(object):
 
         self.observes = []
         self.makeObserves()
+
+        self.queryExps = []
+        self.makeQueryExps()
         
         self.analyticsArgs = (self.ripl,)
         self.analyticsKwargs = dict(assumes=self.assumes, observes=self.observes,
-                           parameters=self.parameters)
+                           parameters=self.parameters, queryExps=self.queryExps)
 
-    def getAnalytics(self,mripl=None,mutateRipl=False):
+    def getAnalytics(self,ripl_mripl,mutateRipl=False):
         '''Create Analytics object from assumes, observes and parameters.
            Optional arg *mripl* used to send an MRipl to Analytics.'''
         
         kwargs = self.analyticsKwargs.copy()
         kwargs['mutateRipl'] = mutateRipl
         
-        if mripl is None:
-            return Analytics(*self.analyticsArgs, **kwargs)
-        else:
-            return Analytics(mripl,**kwargs)
+        return Analytics(ripl_mripl, **kwargs)
+
 
     def sampleFromJoint(self,*args,**kwargs):
         a = Analytics(*self.analyticsArgs, **self.analyticsKwargs)
@@ -188,7 +196,7 @@ class Analytics(object):
         assert not(assumes is None and observes is not None),'No *observes* without *assumes*.'
         assert queryExps is None or isinstance(queryExps,(list,tuple))
 
-        if isinstance(ripl_mripl,MRipl):
+        if hasattr(ripl_mripl,'no_ripls'):
             ripl=ripl_mripl.local_ripls[0] # only needed because of set_seed
             self.mripl = True
         else:
@@ -200,7 +208,7 @@ class Analytics(object):
         self.backend = ripl.backend()
         self.ripl = mk_p_ripl() if self.backend=='puma' else mk_l_ripl()
         
-        directives_list = ripl.list_directives()
+        directives_list = ripl.list_directives(type=True)
         
         if assumes is not None:
             self.assumes = assumes
@@ -250,12 +258,19 @@ class Analytics(object):
                 if not self.mripl:
                     for sym,exp in self.assumes: self.ripl.assume(sym,exp)
                     for exp,lit in self.observes: self.ripl.observe(exp,lit)
-                print 'Analytics created new persistent ripl/mrip.'
+                    string = 'ripl'
+                else:
+                    string = 'mripl'
+                print 'Analytics created new persistent %s'%string
 
             else:
-                self.ripl = ripl_mripl 
-                self.mripl = ripl_mripl if self.mripl else False
-                print 'Analytics will mutate the input ripl/mripl.' 
+                self.ripl = ripl_mripl
+                if self.mripl:
+                    self.mripl = ripl_mripl
+                    string = 'mripl'
+                else:
+                    string = 'ripl'
+                print 'Analytics will mutate the input %s'%string
         else:
             self.muRipl = False
 
@@ -272,7 +287,8 @@ class Analytics(object):
         if self.muRipl:
             ripl = self.mripl if self.mripl else self.ripl
             [ripl.observe( exp, value ) for exp,value in newObserves]
-            print 'Update mutable ripl'
+            string='mripl' if self.mripl else 'ripl'
+            print 'Observes applied to persistent %s.'%string
         
     def updateQueryExps(self,newQueryExps=None,removeAllQueryExps=False):
         '''Extend list of query expressions or empty it.
@@ -296,7 +312,7 @@ class Analytics(object):
 
     def _clearRipl(self):
         if self.muRipl:
-            assert False,'Attempt to clear mutable ripl'
+            assert False,'Attempt to clear mutable ripl/mripl'
         else:
             self.ripl.clear()
 
@@ -347,7 +363,6 @@ class Analytics(object):
         'If data not None, replace values in self.observes'
         for (index, (expression, literal)) in enumerate(self.observes):
             datum = literal if data is None else data[index]
-            datum= parseValue(datum)
             self.ripl.observe(expression, datum)
 
     # Loads the assumes and changes the observes to predicts.
