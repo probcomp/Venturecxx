@@ -202,7 +202,8 @@ def get_name(r_mr):
 
 
 def plot_conditional(ripl, data=(), x_range=(), number_xs=40, number_reps=30, return_fig=False, figsize=(16,3.5),plot=True):
-    ##FIXME we should predict and forget for pivot and maybe everything
+    ##FIXME xrange is not working because of sharex in the subplots
+
     data = list(data)
     x_range = list(x_range)
     name=get_name(ripl)
