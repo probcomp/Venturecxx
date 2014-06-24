@@ -22,6 +22,6 @@ def testBasicCDFs():
 @statisticalTest
 def checkCDF(expr, cdf):
   ripl = get_ripl()
-  ripl.predict(expr)
-  predictions = collectSamples(ripl, 1)
+  ripl.predict(expr, label = 'prediction')
+  predictions = collectSamples(ripl, 'prediction')
   return reportKnownContinuous(cdf, predictions, expr)
