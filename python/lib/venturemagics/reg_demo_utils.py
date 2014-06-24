@@ -202,7 +202,7 @@ def get_name(r_mr):
 
 
 def plot_conditional(ripl, data=(), x_range=(), number_xs=40, number_reps=30, return_fig=False, figsize=(16,3.5),plot=True):
-    ##FIXME xrange is not working because of sharex in the subplots
+    ##FIXME xrange is not working because of sharex in the subplots (and possibly heatmap)
 
     data = list(data)
     x_range = list(x_range)
