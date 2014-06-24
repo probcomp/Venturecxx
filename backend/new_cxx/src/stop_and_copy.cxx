@@ -47,7 +47,7 @@ void*& ForwardingMap::operator[] (const void* k)
   return pointers[k];
 }
 
-PyTrace* PyTrace::stop_and_copy(boost::python::object engine) const
+PyTrace* PyTrace::stop_and_copy() const
 {
   assert(!this->continuous_inference_running);
   assert(!this->continuous_inference_thread);
