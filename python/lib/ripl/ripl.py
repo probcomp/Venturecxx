@@ -31,6 +31,7 @@ class Ripl():
         self.directive_id_to_mode = {}
         self.mode = parsers.keys()[0]
         self.prelude_path = 'prelude.vnt'
+        self.load_prelude()
 
 
 
