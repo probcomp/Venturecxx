@@ -1061,6 +1061,8 @@ def build_exp(exp):
     elif type(exp)==dict:
         if exp['type']=='atom':
             return 'atom<%i>'%exp['value']
+        elif exp['type']=='boolean':
+            return str(exp['value']).lower()
         else:
             return str(exp['value'])
     else:
