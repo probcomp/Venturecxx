@@ -20,3 +20,6 @@ class Engine(engine.Engine):
 
   def __init__(self):
     super(Engine, self).__init__(name="puma", Trace=Trace)
+
+  def copy_trace(self, trace):
+    return trace.stop_and_copy()
