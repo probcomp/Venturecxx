@@ -8,18 +8,18 @@ import operator
 def run_containers(testfun):
   'Decorator to apply a test function to all container types.'
   def container_looper(self):
-    for container in self.containers: 
+    for container in self.containers:
       testfun(self, container)
   return container_looper
 
 class TestPrelude(TestCase):
   '''
-  Provides methods for testing all routines provided by Venture "standard 
+  Provides methods for testing all routines provided by Venture "standard
   library" as given in python/lib/ripl/prelude. This class itself is never
-  used to run tests; it is a base class for two subclasses TestPreludePuma 
-  and TestPreludeLite; these provide different setUp methods to test the two 
+  used to run tests; it is a base class for two subclasses TestPreludePuma
+  and TestPreludeLite; these provide different setUp methods to test the two
   backends respectively.
-  ''' 
+  '''
   _multiprocess_can_split_ = True
   containers = ['list', 'vector', 'array']
   array_like_containers = ['array', 'vector']
@@ -36,7 +36,7 @@ class TestPrelude(TestCase):
   def mk_random_data(self, container, mode, length = None):
     '''
     Generates random arrays / lists / vectors for use in tests.
-    
+
     Parameters
     ----------
     container : str
@@ -61,11 +61,11 @@ class TestPrelude(TestCase):
     errstr = 'container must be one of PreludeTestBase.containers.'
     assert container in self.containers, errstr
     # length of the container
-    l = (random.choice(range(*self.container_length)) 
+    l = (random.choice(range(*self.container_length))
          if length is None else length)
     # if it's a vector and the puma backend, numeric only
     # TODO: fix this when it gets fixed in the implementation
-    if self.v.backend() == 'puma' and container == 'vector': 
+    if self.v.backend() == 'puma' and container == 'vector':
       mode = 'numeric'
     if mode == 'boolean':
       # if boolean, make a random boolean vector
