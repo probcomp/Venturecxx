@@ -306,8 +306,7 @@ class Trace(object):
       appNode = self.getConstrainableNode(node)
 #      print "PROPAGATE",node,appNode
       scaffold = constructScaffold(self,[set([appNode])])
-      rhoWeight,_ = detachAndExtract(self,scaffold.border[0],scaffold)
-      assertTorus(scaffold)
+      rhoWeight,_ = detachAndExtract(self,scaffold)
       scaffold.lkernels[appNode] = DeterministicLKernel(self.pspAt(appNode),val)
       xiWeight = regenAndAttach(self,scaffold.border[0],scaffold,False,OmegaDB(),{})
       if xiWeight == float("-inf"): raise Exception("Unable to propagate constraint")

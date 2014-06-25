@@ -5,7 +5,7 @@ import scipy.stats
 from consistency import assertTorus,assertTrace
 from omegadb import OmegaDB
 from regen import regenAndAttach
-from detach import detachAndExtract
+from detach import detachAndExtract, detachAndExtractAtBorder
 from scaffold import constructScaffold
 from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
@@ -65,14 +65,12 @@ class InPlaceOperator(object):
     detach along the scaffold and return the weight thereof."""
     self.trace = trace
     self.scaffold = scaffold
-    rhoWeight,self.rhoDB = detachAndExtract(trace, scaffold.border[0], scaffold, compute_gradient)
-    assertTorus(scaffold)
+    rhoWeight,self.rhoDB = detachAndExtract(trace, scaffold, compute_gradient)
     return rhoWeight
 
   def accept(self): pass
   def reject(self):
-    detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
-    assertTorus(self.scaffold)
+    detachAndExtract(self.trace,self.scaffold)
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
 
 
@@ -127,7 +125,7 @@ class RejectionOperator(InPlaceOperator):
       xiWeight = regenAndAttach(trace, scaffold.border[0], scaffold, False, self.rhoDB, {})
       accept = random.random() < math.exp(xiWeight - logBound)
       if not accept:
-        detachAndExtract(trace, scaffold.border[0], scaffold)
+        detachAndExtract(trace, scaffold)
     return trace, 0
 
 
@@ -165,22 +163,19 @@ class MeanfieldOperator(object):
     if not registerVariationalLKernels(trace,scaffold):
       self.delegate = MHOperator()
       return self.delegate.propose(trace,scaffold)
-    _,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
-    assertTorus(scaffold)
+    _,self.rhoDB = detachAndExtract(trace,scaffold)
 
     for _ in range(self.numIters):
       gradients = {}
       gain = regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),gradients)
-      detachAndExtract(trace,scaffold.border[0],scaffold)
-      assertTorus(scaffold)
+      detachAndExtract(trace,scaffold)
       for node,lkernel in scaffold.lkernels.iteritems():
         if isinstance(lkernel,VariationalLKernel):
           assert node in gradients
           lkernel.updateParameters(gradients[node],gain,self.stepSize)
 
     rhoWeight = regenAndAttach(trace,scaffold.border[0],scaffold,True,self.rhoDB,{})
-    detachAndExtract(trace,scaffold.border[0],scaffold)
-    assertTorus(scaffold)
+    detachAndExtract(trace,scaffold)
 
     xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),{})
     return trace,xiWeight - rhoWeight
@@ -195,8 +190,7 @@ class MeanfieldOperator(object):
     # TODO This is the same as MHOperator reject except for the
     # delegation thing -- abstract
     if self.delegate is None:
-      detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
-      assertTorus(self.scaffold)
+      detachAndExtract(self.trace,self.scaffold)
       regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
     else:
       self.delegate.reject()
@@ -228,8 +222,7 @@ class EnumerativeGibbsOperator(object):
     allSetsOfValues = getCartesianProductOfEnumeratedValues(trace,pnodes)
     registerDeterministicLKernels(trace,scaffold,pnodes,currentValues)
 
-    detachAndExtract(trace,scaffold.border[0],scaffold)
-    assertTorus(scaffold)
+    detachAndExtract(trace,scaffold)
     xiWeights = []
     xiParticles = []
 
@@ -270,7 +263,7 @@ def restoreAncestorPath(trace,border,scaffold,omegaDBs,t,path):
 # detach the rest of the particle
 def detachRest(trace,border,scaffold,t):
   for i in reversed(range(t)):
-    detachAndExtract(trace,border[i],scaffold)
+    detachAndExtractAtBorder(trace,border[i],scaffold)
 
 
 # P particles, not including RHO
@@ -298,7 +291,7 @@ class PGibbsOperator(object):
     self.ancestorIndices = ancestorIndices
 
     for t in reversed(range(T)):
-      (rhoWeights[t],omegaDBs[t][P]) = detachAndExtract(trace,scaffold.border[t],scaffold)
+      (rhoWeights[t],omegaDBs[t][P]) = detachAndExtractAtBorder(trace,scaffold.border[t],scaffold)
 
     assertTorus(scaffold)
     xiWeights = [None for p in range(P)]
@@ -306,7 +299,7 @@ class PGibbsOperator(object):
     # Simulate and calculate initial xiWeights
     for p in range(P):
       regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),{})
-      (xiWeights[p],omegaDBs[0][p]) = detachAndExtract(trace,scaffold.border[0],scaffold)
+      (xiWeights[p],omegaDBs[0][p]) = detachAndExtractAtBorder(trace,scaffold.border[0],scaffold)
 
 #   for every time step,
     for t in range(1,T):
@@ -318,7 +311,7 @@ class PGibbsOperator(object):
         path = constructAncestorPath(ancestorIndices,t,p)
         restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,t,path)
         regenAndAttach(trace,self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
-        (newWeights[p],omegaDBs[t][p]) = detachAndExtract(trace,self.scaffold.border[t],self.scaffold)
+        (newWeights[p],omegaDBs[t][p]) = detachAndExtractAtBorder(trace,self.scaffold.border[t],self.scaffold)
         detachRest(trace,self.scaffold.border,self.scaffold,t)
       xiWeights = newWeights
 
@@ -382,7 +375,7 @@ class ParticlePGibbsOperator(object):
     rhoWeights = [None for t in range(T)]
 
     for t in reversed(range(T)):
-      rhoWeights[t],rhoDBs[t] = detachAndExtract(trace,scaffold.border[t],scaffold)
+      rhoWeights[t],rhoDBs[t] = detachAndExtractAtBorder(trace,scaffold.border[t],scaffold)
 
     assertTorus(scaffold)
 
@@ -520,8 +513,7 @@ class SliceOperator(object):
     currentValue = currentVValue.getNumber()
     scaffold.lkernels[pnode] = DeterministicLKernel(psp,currentVValue)
 
-    rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold.border[0],scaffold)
-    assertTorus(scaffold)
+    rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold)
 
     f = makeDensityFunction(trace,scaffold,psp,pnode,FixedRandomness())
     logy = f(currentValue) + math.log(random.uniform(0,1))
@@ -538,8 +530,7 @@ class SliceOperator(object):
 
   def accept(self): pass
   def reject(self):
-    detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
-    assertTorus(self.scaffold)
+    detachAndExtract(self.trace,self.scaffold)
     regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
 
 
@@ -634,7 +625,7 @@ class GradientOfRegen(object):
     self.fixed_regen(values)
     new_scaffold = constructScaffold(self.trace, [set(self.pnodes)])
     registerDeterministicLKernels(self.trace, new_scaffold, self.pnodes, values)
-    (_, rhoDB) = detachAndExtract(self.trace, new_scaffold.border[0], new_scaffold, True)
+    (_, rhoDB) = detachAndExtract(self.trace, new_scaffold, True)
     self.scaffold = new_scaffold
     return [rhoDB.getPartial(pnode) for pnode in self.pnodes]
 
