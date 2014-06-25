@@ -580,6 +580,8 @@ Open issues:
         prelude_path = path.join(path.dirname(__file__), self.prelude_path)
         with open(prelude_path) as f:
             prog = f.readlines()
+        # TODO Extend the Venture parser to understand ; as "begin
+        # comment until end of line" and get rid of this awful regex.
         prog = ''.join(x for x in prog if not re.match('^;', x))
         _ = self.execute_program(prog)
         
