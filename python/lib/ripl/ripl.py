@@ -23,7 +23,7 @@ import utils as u
 import re
 from os import path
 
-PRELUDE_FILE='prelude.vnt'
+PRELUDE_FILE = 'prelude.vnt'
 
 class Ripl():
     def __init__(self,sivm,parsers):
