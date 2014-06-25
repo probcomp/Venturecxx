@@ -10,9 +10,9 @@
 ; check if a list is empty
 ; Parameters
 ;   v : list, vector, or array
-[assume is_empty 
-  (lambda (v) 
-    (if (= (size v) 0) 
+[assume is_empty
+  (lambda (v)
+    (if (= (size v) 0)
       true
       false))]
 
@@ -23,35 +23,35 @@
 ; Convert an array or vector to a list
 ; Parameters
 ;   v : vector or array
-[assume to_list 
-  (lambda (v) 
+[assume to_list
+  (lambda (v)
     (_to_list_helper v 0 (size v)))]
 
 ; Helper for the above. Needed because no letrec in Venture.
-[assume _to_list_helper 
-  (lambda (v idx n) 
-    (if (= idx n) 
-      (list) 
-      (pair 
-        (lookup v idx) 
+[assume _to_list_helper
+  (lambda (v idx n)
+    (if (= idx n)
+      (list)
+      (pair
+        (lookup v idx)
         (_to_list_helper v (+ 1 idx) n))))]
 
 ; Convert a list to an array
 ; Parameters
 ;   v : list
-[assume to_array 
-  (lambda (v) 
-    (eval 
-      (pair (quote array) v) 
+[assume to_array
+  (lambda (v)
+    (eval
+      (pair (quote array) v)
       (get_current_environment)))]
 
 ; Convert a list to a vector
 ; Parameters
 ;   v : list
 [assume to_vector
-  (lambda (v) 
-    (eval 
-      (pair (quote vector) v) 
+  (lambda (v)
+    (eval
+      (pair (quote vector) v)
       (get_current_environment)))]
 
 
@@ -72,11 +72,11 @@
 
 ; Map for lists (same args as above)
 [assume _map_list
-  (lambda (f v) 
-    (if (is_empty v) 
-      (list) 
-      (pair 
-        (f (first v)) 
+  (lambda (f v)
+    (if (is_empty v)
+      (list)
+      (pair
+        (f (first v))
         (_map_list f (rest v)))))]
 
 ; Reduce (mirrors functionality here: http://srfi.schemers.org/srfi-1/srfi-1.html)
@@ -168,23 +168,23 @@
 
 ; Helper for the above
 ;[assume _append_list
-;  (lambda (v x) 
-;    (if (is_empty v) 
-;      (list x) 
-;      (pair 
-;        (first v) 
+;  (lambda (v x)
+;    (if (is_empty v)
+;      (list x)
+;      (pair
+;        (first v)
 ;        (_append_list (rest v) x))))]
 
 ; Concatenates two lists, arrays, or vectors
 ; Parameters
-;   
+;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Logicals on variable-length lists
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Code to construct diagonal matrices
-[assume diag_matrix 
+[assume diag_matrix
   (lambda (p fill_value)
     (matrix (diag_matrix_helper p fill_value 0)))]
 
@@ -193,7 +193,7 @@
     (if (= idx p)
       (list)
       (pair
-        (fill_one p fill_value idx) 
+        (fill_one p fill_value idx)
         (diag_matrix_helper p fill_value (+ idx 1)))))]
 
 [assume fill_one
