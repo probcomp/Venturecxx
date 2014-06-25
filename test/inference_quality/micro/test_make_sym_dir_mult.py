@@ -129,8 +129,8 @@ def checkMakeDirMult1(maker):
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s (array a a a a))" % maker)
-  ripl.predict("(f)")
-  return checkDirichletMultinomialAAA(ripl, 3)
+  ripl.predict("(f)", label="pid")
+  return checkDirichletMultinomialAAA(ripl, "pid")
 
 def testMakeSymDirMultWeakPrior():
   """This used to fail because nothing ever got unincorporated. Should work now"""
