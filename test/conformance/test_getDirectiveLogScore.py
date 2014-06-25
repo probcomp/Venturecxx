@@ -7,7 +7,7 @@ def testgetDirectiveLogScore():
     ripl.assume('x', '(scope_include (quote dummy) 0 (normal 0 1))',)
     trace = ripl.sivm.core_sivm.engine.getDistinguishedTrace()
     # can't give string directive id for a trace; find number of last directive
-    directive_id = sorted(trace.families.keys())[-1]
+    directive_id = max(trace.families)
     logscore_lite = trace.getDirectiveLogScore(directive_id)
     val = ripl.report(directive_id)
     logscore_true = -0.5*np.log(2*np.pi) - 0.5*val*val
