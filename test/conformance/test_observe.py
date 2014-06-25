@@ -99,7 +99,7 @@ def testObserveOutputOfIf1():
     raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
-  ripl.assume("p","(uniform_continuous 0.0 1.0)")
+  ripl.assume("p","(uniform_continuous 0.0 1.0)",label="pid")
   ripl.assume("x","""
 (if (bernoulli p)
     (normal 10.0 1.0)
@@ -107,6 +107,6 @@ def testObserveOutputOfIf1():
 """)
   ripl.observe("x",11.0)
 
-  predictions = collectSamples(ripl,1)
+  predictions = collectSamples(ripl,"pid")
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
   return reportKnownContinuous(cdf, predictions, "approximately beta(2,1)")

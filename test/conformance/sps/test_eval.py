@@ -43,9 +43,9 @@ def testEval1():
 
   ripl.assume("globalEnv","(get_current_environment)")
   ripl.assume("expr","(quote (bernoulli 0.7))")
-  ripl.predict("(eval expr globalEnv)")
+  ripl.predict("(eval expr globalEnv)",label="pid")
 
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,"pid")
   ans = [(1,.7), (0,.3)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -66,7 +66,7 @@ def testEval2():
     raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
-  ripl.assume("p","(uniform_continuous 0.0 1.0)")
+  ripl.assume("p","(uniform_continuous 0.0 1.0)",label="pid")
   ripl.assume("globalEnv","(get_current_environment)")
   ripl.assume("expr","""
 (quote
@@ -78,7 +78,7 @@ def testEval2():
   ripl.assume("x","(eval expr globalEnv)")
   ripl.observe("x",11.0)
 
-  predictions = collectSamples(ripl,1)
+  predictions = collectSamples(ripl,"pid")
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
   return reportKnownContinuous(cdf, predictions, "approximately beta(2,1)")
 
@@ -89,7 +89,7 @@ def testEval3():
     raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
-  ripl.assume("p","(uniform_continuous 0.0 1.0)")
+  ripl.assume("p","(uniform_continuous 0.0 1.0)",label="pid")
   ripl.assume("globalEnv","(get_current_environment)")
   ripl.assume("expr","""
 (quote
@@ -101,7 +101,7 @@ def testEval3():
   ripl.assume("x","(eval expr globalEnv)")
   ripl.observe("x",11.0)
 
-  predictions = collectSamples(ripl,1)
+  predictions = collectSamples(ripl,"pid")
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
   return reportKnownContinuous(cdf, predictions, "approximately beta(2,1)")
 
@@ -112,9 +112,10 @@ def testApply1():
   ripl = get_ripl()
 
   ripl.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
-  ripl.predict("(apply mul (array (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))")
+  ripl.predict("(apply mul (array (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))",
+               label="pid")
 
-  predictions = collectSamples(ripl,2)
+  predictions = collectSamples(ripl,"pid")
   return reportKnownMeanVariance(1000, 101**3 - 100**3, predictions)
 
 
@@ -130,8 +131,8 @@ def testExtendEnv1():
   ripl.assume("env2","(extend_environment env1 (quote x) (normal 0.0 1.0))")
   ripl.assume("env3","(extend_environment env2 (quote x) (normal 10.0 1.0))")
   ripl.assume("expr","(quote (normal x 1.0))")
-  ripl.predict("(normal (eval expr env3) 1.0)")
+  ripl.predict("(normal (eval expr env3) 1.0)",label="pid")
 
-  predictions = collectSamples(ripl,5)
+  predictions = collectSamples(ripl,"pid")
   cdf = stats.norm(loc=10, scale=math.sqrt(3)).cdf
   return reportKnownContinuous(cdf, predictions, "N(10,sqrt(3))")

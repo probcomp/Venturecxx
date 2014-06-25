@@ -37,9 +37,9 @@ def testDict1():
                            (lookup d (quote x))
                            (lookup d (quote y))
                            (lookup d (quote y)))
-                         1.0)""")
+                         1.0)""", label="pid")
 
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,"pid")
   cdf = stats.norm(loc=20, scale=2).cdf
   return reportKnownContinuous(cdf, predictions, "N(20,2)")
 
