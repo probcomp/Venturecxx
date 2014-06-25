@@ -4,7 +4,7 @@ import math
 import scipy.stats
 from consistency import assertTorus,assertTrace
 from omegadb import OmegaDB
-from regen import regenAndAttach
+from regen import regenAndAttach, regenAndAttachAtBorder
 from detach import detachAndExtract, detachAndExtractAtBorder
 from scaffold import constructScaffold
 from node import ApplicationNode, Args
@@ -71,7 +71,7 @@ class InPlaceOperator(object):
   def accept(self): pass
   def reject(self):
     detachAndExtract(self.trace,self.scaffold)
-    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
+    regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
 
 
 #### Rejection sampling
@@ -122,7 +122,7 @@ class RejectionOperator(InPlaceOperator):
     logBound = computeRejectionBound(trace, scaffold, scaffold.border[0])
     accept = False
     while not accept:
-      xiWeight = regenAndAttach(trace, scaffold.border[0], scaffold, False, self.rhoDB, {})
+      xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
       accept = random.random() < math.exp(xiWeight - logBound)
       if not accept:
         detachAndExtract(trace, scaffold)
@@ -134,7 +134,7 @@ class RejectionOperator(InPlaceOperator):
 class MHOperator(InPlaceOperator):
   def propose(self, trace, scaffold):
     rhoWeight = self.prepare(trace, scaffold)
-    xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,self.rhoDB,{})
+    xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
     return trace, xiWeight - rhoWeight
 
 
@@ -167,17 +167,17 @@ class MeanfieldOperator(object):
 
     for _ in range(self.numIters):
       gradients = {}
-      gain = regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),gradients)
+      gain = regenAndAttach(trace,scaffold,False,OmegaDB(),gradients)
       detachAndExtract(trace,scaffold)
       for node,lkernel in scaffold.lkernels.iteritems():
         if isinstance(lkernel,VariationalLKernel):
           assert node in gradients
           lkernel.updateParameters(gradients[node],gain,self.stepSize)
 
-    rhoWeight = regenAndAttach(trace,scaffold.border[0],scaffold,True,self.rhoDB,{})
+    rhoWeight = regenAndAttach(trace,scaffold,True,self.rhoDB,{})
     detachAndExtract(trace,scaffold)
 
-    xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),{})
+    xiWeight = regenAndAttach(trace,scaffold,False,OmegaDB(),{})
     return trace,xiWeight - rhoWeight
 
   def accept(self):
@@ -191,7 +191,7 @@ class MeanfieldOperator(object):
     # delegation thing -- abstract
     if self.delegate is None:
       detachAndExtract(self.trace,self.scaffold)
-      regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
+      regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
     else:
       self.delegate.reject()
 
@@ -232,7 +232,7 @@ class EnumerativeGibbsOperator(object):
       assertTorus(scaffold)
       registerDeterministicLKernels(trace,scaffold,pnodes,newValues)
       xiParticles.append(xiParticle)
-      xiWeights.append(regenAndAttach(xiParticle,scaffold.border[0],scaffold,False,OmegaDB(),{}))
+      xiWeights.append(regenAndAttach(xiParticle,scaffold,False,OmegaDB(),{}))
 
     # Now sample a NEW particle in proportion to its weight
     finalIndex = sampleLogCategorical(xiWeights)
@@ -258,7 +258,7 @@ def constructAncestorPath(ancestorIndices,t,n):
 def restoreAncestorPath(trace,border,scaffold,omegaDBs,t,path):
   for i in range(t):
     selectedDB = omegaDBs[i][path[i]]
-    regenAndAttach(trace,border[i],scaffold,True,selectedDB,{})
+    regenAndAttachAtBorder(trace,border[i],scaffold,True,selectedDB,{})
 
 # detach the rest of the particle
 def detachRest(trace,border,scaffold,t):
@@ -298,7 +298,7 @@ class PGibbsOperator(object):
 
     # Simulate and calculate initial xiWeights
     for p in range(P):
-      regenAndAttach(trace,scaffold.border[0],scaffold,False,OmegaDB(),{})
+      regenAndAttachAtBorder(trace,scaffold.border[0],scaffold,False,OmegaDB(),{})
       (xiWeights[p],omegaDBs[0][p]) = detachAndExtractAtBorder(trace,scaffold.border[0],scaffold)
 
 #   for every time step,
@@ -310,7 +310,7 @@ class PGibbsOperator(object):
         ancestorIndices[t][p] = sampleLogCategorical(extendedWeights)
         path = constructAncestorPath(ancestorIndices,t,p)
         restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,t,path)
-        regenAndAttach(trace,self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
+        regenAndAttachAtBorder(trace,self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
         (newWeights[p],omegaDBs[t][p]) = detachAndExtractAtBorder(trace,self.scaffold.border[t],self.scaffold)
         detachRest(trace,self.scaffold.border,self.scaffold,t)
       xiWeights = newWeights
@@ -388,9 +388,9 @@ class ParticlePGibbsOperator(object):
     # Simulate and calculate initial xiWeights
 
     for p in range(P):
-      particleWeights[p] = regenAndAttach(particles[p],scaffold.border[0],scaffold,False,OmegaDB(),{})
+      particleWeights[p] = regenAndAttachAtBorder(particles[p],scaffold.border[0],scaffold,False,OmegaDB(),{})
 
-    particleWeights[P] = regenAndAttach(particles[P],scaffold.border[0],scaffold,True,rhoDBs[0],{})
+    particleWeights[P] = regenAndAttachAtBorder(particles[P],scaffold.border[0],scaffold,True,rhoDBs[0],{})
     assert_almost_equal(particleWeights[P],rhoWeights[0])
 
 #   for every time step,
@@ -401,9 +401,9 @@ class ParticlePGibbsOperator(object):
       for p in range(P):
         parent = sampleLogCategorical(particleWeights)
         newParticles[p] = Particle(particles[parent])
-        newParticleWeights[p] = regenAndAttach(newParticles[p],self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
+        newParticleWeights[p] = regenAndAttachAtBorder(newParticles[p],self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
       newParticles[P] = Particle(particles[P])
-      newParticleWeights[P] = regenAndAttach(newParticles[P],self.scaffold.border[t],self.scaffold,True,rhoDBs[t],{})
+      newParticleWeights[P] = regenAndAttachAtBorder(newParticles[P],self.scaffold.border[t],self.scaffold,True,rhoDBs[t],{})
       assert_almost_equal(newParticleWeights[P],rhoWeights[t])
       particles = newParticles
       particleWeights = newParticleWeights
@@ -498,7 +498,7 @@ def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
       scaffold.lkernels[pnode] = DeterministicLKernel(psp,VentureNumber(x))
       # The particle is a way to regen without clobbering the underlying trace
       # TODO Do repeated regens along the same scaffold actually work?
-      return regenAndAttach(Particle(trace),scaffold.border[0],scaffold,False,OmegaDB(),{})
+      return regenAndAttach(Particle(trace),scaffold,False,OmegaDB(),{})
   return f
   
 class SliceOperator(object):
@@ -525,13 +525,13 @@ class SliceOperator(object):
     proposedVValue = VentureNumber(proposedValue)
     scaffold.lkernels[pnode] = DeterministicLKernel(psp,proposedVValue)
     
-    xiWeight = regenAndAttach(trace,scaffold.border[0],scaffold,False,self.rhoDB,{})
+    xiWeight = regenAndAttach(trace,scaffold,False,self.rhoDB,{})
     return trace,xiWeight - rhoWeight
 
   def accept(self): pass
   def reject(self):
     detachAndExtract(self.trace,self.scaffold)
-    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
+    regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
 
 
 #### Gradient ascent to max a-posteriori
@@ -636,7 +636,7 @@ class GradientOfRegen(object):
 
   def regen(self, values):
     registerDeterministicLKernels(self.trace, self.scaffold, self.pnodes, values)
-    return regenAndAttach(self.trace, self.scaffold.border[0], self.scaffold, False, OmegaDB(), {})
+    return regenAndAttach(self.trace, self.scaffold, False, OmegaDB(), {})
 
 
 class HamiltonianMonteCarloOperator(InPlaceOperator):
@@ -649,7 +649,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
   # given by this function:
   #   def potential(values):
   #     registerDeterministicLKernels(trace,scaffold,pnodes,values)
-  #     return -regenAndAttach(trace, scaffold.border[0], scaffold, False, OmegaDB(), {})
+  #     return -regenAndAttach(trace, scaffold, False, OmegaDB(), {})
   #
   # The trouble, of course, is that I need the gradient of this to
   # actually do HMC.

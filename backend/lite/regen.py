@@ -6,8 +6,16 @@ from psp import NullRequestPSP
 from value import SPRef
 from lkernel import VariationalLKernel
 from scope import isScopeIncludeOutputPSP
+from consistency import assertTorus, assertTrace
 
-def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
+def regenAndAttach(trace,scaffold,shouldRestore,omegaDB,gradients):
+  assertTorus(scaffold)
+  assert len(scaffold.border) == 1
+  ans = regenAndAttachAtBorder(trace, scaffold.border[0], scaffold, shouldRestore, omegaDB, gradients)
+  assertTrace(trace, scaffold)
+  return ans
+
+def regenAndAttachAtBorder(trace,border,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
   constraintsToPropagate = {}
   for node in border:
