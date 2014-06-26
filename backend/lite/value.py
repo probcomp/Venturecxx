@@ -276,86 +276,6 @@ class VentureForeignBlob(VentureValue):
   def getForeignBlob(self): return self.datum
 
 @serialize.register
-class VentureArray(VentureValue):
-  """Venture arrays are heterogeneous, with O(1) access and O(n) copy.
-Venture does not yet implement homogeneous packed arrays, but the
-interface here is compatible with one possible path."""
-  def __init__(self, array, elt_type=None):
-    if elt_type is None: # No conversion
-      self.array = array
-    else:
-      self.array = [elt_type.asVentureValue(v) for v in array]
-  def getArray(self, elt_type=None):
-    if elt_type is None: # No conversion
-      return self.array
-    else:
-      return [elt_type.asPython(v) for v in self.array]
-  def asPythonList(self, elt_type=None):
-    return self.getArray(elt_type)
-
-  def compareSameType(self, other):
-    return lexicographicBoxedCompare(self.array, other.array)
-  def __hash__(self): return sequenceHash(self.array)
-
-  def asStackDict(self,trace):
-    # TODO Are venture arrays reflected as lists to the stack?
-    # TODO Are stack lists lists, or are they themselves type tagged?
-    return {"type":"list","value":[v.asStackDict(trace) for v in self.array]}
-  @staticmethod
-  def fromStackDict(thing):
-    return VentureArray([VentureValue.fromStackDict(v) for v in thing["value"]])
-  def lookup(self, index):
-    try:
-      ind = index.getNumber()
-    except VentureTypeError:
-      raise VentureValueError("Looking up non-number %r in an array" % index)
-    if 0 <= int(ind) and int(ind) < len(self.array):
-      return self.array[int(ind)]
-    else:
-      raise VentureValueError("Index out of bounds: %s" % index)
-  def lookup_grad(self, index, direction):
-    return VentureArray([direction if i == index else 0 for (_,i) in enumerate(self.array)])
-  def contains(self, obj):
-    # Not Python's `in` because I need to use custom equality
-    # TODO I am going to have to overload the equality for dicts
-    # anyway, so might as well eventually use `in` here.
-    return any(obj.equal(li) for li in self.array)
-  def size(self): return len(self.array)
-  def __add__(self, other):
-    if other == 0:
-      return self
-    else:
-      return VentureArray([x + y for (x,y) in zip(self.array, other.array)])
-  def __radd__(self, other):
-    if other == 0:
-      return self
-    else:
-      return VentureArray([y + x for (x,y) in zip(self.array, other.array)])
-  def __neg__(self):
-    return VentureArray([-x for x in self.array])
-  def __sub__(self, other):
-    if other == 0:
-      return self
-    else:
-      return VentureArray([x - y for (x,y) in zip(self.array, other.array)])
-  def __mul__(self, other):
-    # Assume other is a scalar
-    assert isinstance(other, Number)
-    return VentureArray([x * other for x in self.array])
-  def __rmul__(self, other):
-    # Assume other is a scalar
-    assert isinstance(other, Number)
-    return VentureArray([other * x  for x in self.array])
-  def dot(self, other):
-    return sum([x.dot(y) for (x,y) in zip(self.array, other.array)])
-  def map_real(self, f):
-    return VentureArray([x.map_real(f) for x in self.array])
-  def __repr__(self):
-    return "VentureArray(%s)" % self.array
-  def expressionFor(self):
-    return [{"type":"symbol", "value":"array"}] + [v.expressionFor() for v in self.array]
-
-@serialize.register
 class VentureNil(VentureValue):
   def __init__(self): pass
   def __repr__(self): return "Nil"
@@ -475,6 +395,86 @@ class VenturePair(VentureValue):
 
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
+
+@serialize.register
+class VentureArray(VentureValue):
+  """Venture arrays are heterogeneous, with O(1) access and O(n) copy.
+Venture does not yet implement homogeneous packed arrays, but the
+interface here is compatible with one possible path."""
+  def __init__(self, array, elt_type=None):
+    if elt_type is None: # No conversion
+      self.array = array
+    else:
+      self.array = [elt_type.asVentureValue(v) for v in array]
+  def getArray(self, elt_type=None):
+    if elt_type is None: # No conversion
+      return self.array
+    else:
+      return [elt_type.asPython(v) for v in self.array]
+  def asPythonList(self, elt_type=None):
+    return self.getArray(elt_type)
+
+  def compareSameType(self, other):
+    return lexicographicBoxedCompare(self.array, other.array)
+  def __hash__(self): return sequenceHash(self.array)
+
+  def asStackDict(self,trace):
+    # TODO Are venture arrays reflected as lists to the stack?
+    # TODO Are stack lists lists, or are they themselves type tagged?
+    return {"type":"list","value":[v.asStackDict(trace) for v in self.array]}
+  @staticmethod
+  def fromStackDict(thing):
+    return VentureArray([VentureValue.fromStackDict(v) for v in thing["value"]])
+  def lookup(self, index):
+    try:
+      ind = index.getNumber()
+    except VentureTypeError:
+      raise VentureValueError("Looking up non-number %r in an array" % index)
+    if 0 <= int(ind) and int(ind) < len(self.array):
+      return self.array[int(ind)]
+    else:
+      raise VentureValueError("Index out of bounds: %s" % index)
+  def lookup_grad(self, index, direction):
+    return VentureArray([direction if i == index else 0 for (_,i) in enumerate(self.array)])
+  def contains(self, obj):
+    # Not Python's `in` because I need to use custom equality
+    # TODO I am going to have to overload the equality for dicts
+    # anyway, so might as well eventually use `in` here.
+    return any(obj.equal(li) for li in self.array)
+  def size(self): return len(self.array)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureArray([x + y for (x,y) in zip(self.array, other.array)])
+  def __radd__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureArray([y + x for (x,y) in zip(self.array, other.array)])
+  def __neg__(self):
+    return VentureArray([-x for x in self.array])
+  def __sub__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureArray([x - y for (x,y) in zip(self.array, other.array)])
+  def __mul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureArray([x * other for x in self.array])
+  def __rmul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureArray([other * x  for x in self.array])
+  def dot(self, other):
+    return sum([x.dot(y) for (x,y) in zip(self.array, other.array)])
+  def map_real(self, f):
+    return VentureArray([x.map_real(f) for x in self.array])
+  def __repr__(self):
+    return "VentureArray(%s)" % self.array
+  def expressionFor(self):
+    return [{"type":"symbol", "value":"array"}] + [v.expressionFor() for v in self.array]
 
 @serialize.register
 class VentureSimplex(VentureValue):
