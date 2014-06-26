@@ -53,7 +53,7 @@ parseValue = _strip_types
 
 # IMPLENTATION
 # Done a crude implementation that works for runFromConditional. Currently
-# prevent Analytics from ever clearing the ripl, which prevents run from prior. Whole point of this
+# prevents Analytics from ever clearing the ripl, which prevents runConditionalFromPrior. Whole point of this
 # is to allow filtering/incremental inference with Analytics. 
 # So running on synth data from prior won't be doing the same
 # inference procedure as an incremental one. ...
