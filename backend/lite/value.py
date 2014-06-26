@@ -16,29 +16,25 @@ import serialize
 # values and all the types.
 
 class VentureValue(object):
+  ### "natural" representation and conversions
   def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getInteger(self): raise VentureTypeError("Cannot convert %s to integer" % type(self))
   def getProbability(self): raise VentureTypeError("Cannot convert %s to probability" % type(self))
   def getAtom(self): raise VentureTypeError("Cannot convert %s to atom" % type(self))
   def getBool(self): raise VentureTypeError("Cannot convert %s to bool" % type(self))
   def getSymbol(self): raise VentureTypeError("Cannot convert %s to symbol" % type(self))
-  def getArray(self, _elt_type=None): raise VentureTypeError("Cannot convert %s to array" % type(self))
+  def getForeignBlob(self): raise VentureTypeError("Cannot convert %s to foreign blob" % type(self))
   def getPair(self): raise VentureTypeError("Cannot convert %s to pair" % type(self))
+  def getArray(self, _elt_type=None): raise VentureTypeError("Cannot convert %s to array" % type(self))
   def getSimplex(self): raise VentureTypeError("Cannot convert %s to simplex" % type(self))
   def getDict(self): raise VentureTypeError("Cannot convert %s to dict" % type(self))
   def getMatrix(self): raise VentureTypeError("Cannot convert %s to matrix" % type(self))
   def getSymmetricMatrix(self): raise VentureTypeError("Cannot convert %s to symmetric matrix" % type(self))
   def getSP(self): raise VentureTypeError("Cannot convert %s to sp" % type(self))
-  def getForeignBlob(self): raise VentureTypeError("Cannot convert %s to foreign blob" % type(self))
   def getEnvironment(self): raise VentureTypeError("Cannot convert %s to environment" % type(self))
 
-  # Some Venture value types form a natural vector space over reals,
-  # so overload addition, subtraction, and multiplication by scalars.
-  # def __add__(self, other), and also __radd__, __neg__, __sub__,
-  # __mul__, __rmul__, and dot
-
+  ### Stack representation
   def asStackDict(self, _trace): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
-
   @staticmethod
   def fromStackDict(thing):
     if isinstance(thing, list):
@@ -47,6 +43,7 @@ class VentureValue(object):
     else:
       return stackable_types[thing["type"]].fromStackDict(thing)
 
+  ### Comparison
   def compare(self, other):
     st = type(self)
     ot = type(other)
@@ -64,6 +61,7 @@ class VentureValue(object):
       return False
   def equalSameType(self, other): return self.compareSameType(other) == 0
 
+  ### Generic container methods
   def lookup(self, _): raise VentureTypeError("Cannot look things up in %s" % type(self))
   def contains(self, _): raise VentureTypeError("Cannot look for things in %s" % type(self))
   def length(self): raise VentureTypeError("Cannot measure length of %s" % type(self))
@@ -73,6 +71,11 @@ class VentureValue(object):
       return self.equal(other)
     else:
       return False
+
+  # Some Venture value types form a natural vector space over reals,
+  # so overload addition, subtraction, and multiplication by scalars.
+  # def __add__(self, other), and also __radd__, __neg__, __sub__,
+  # __mul__, __rmul__, and dot
 
 @serialize.register
 class VentureNumber(VentureValue):
