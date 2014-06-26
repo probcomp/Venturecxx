@@ -15,10 +15,7 @@ def run_containers(testfun):
 class TestPrelude(TestCase):
   '''
   Provides methods for testing all routines provided by Venture "standard
-  library" as given in python/lib/ripl/prelude. This class itself is never
-  used to run tests; it is a base class for two subclasses TestPreludePuma
-  and TestPreludeLite; these provide different setUp methods to test the two
-  backends respectively.
+  library" as given in python/lib/ripl/prelude.
   '''
   _multiprocess_can_split_ = True
   containers = ['list', 'vector', 'array']
