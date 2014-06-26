@@ -18,8 +18,6 @@ import time, random
 import numpy as np
 from venture.ripl.ripl import _strip_types
 from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl,mr_map_proc
-from venture.venturemagics.ip_parallel import * #FIXME
-
 from history import History, Run, Series, historyOverlay,compareSampleDicts,filterDict,historyNameToValues
 
 parseValue = _strip_types
@@ -138,7 +136,10 @@ class VentureUnit(object):
 
     def getAnalytics(self,ripl_mripl,mutateRipl=False):
         '''Create Analytics object from assumes, observes and parameters.
-           Optional arg *mripl* used to send an MRipl to Analytics.'''
+           Use *ripl_mripl* to choose between ripls/mripl and backend.
+           Use *mutateRipl* to have Analytics do inference by mutating
+           the ripl/mripl rather than copying it.
+        '''
 
         kwargs = self.analyticsKwargs.copy()
         kwargs['mutateRipl'] = mutateRipl
@@ -191,12 +192,27 @@ class Analytics(object):
             of inference (in addition to symbols in assumes).
 
         parameters :: {string: a}
+<<<<<<< HEAD
             FIXME explain'''
 
-        assert not(assumes is None and observes is not None),'No *observes* without *assumes*.'
-        assert queryExps is None or isinstance(queryExps,(list,tuple))
+=======
+            The optional *venture_random_seed* parameter can be used to set the
+            seed for Analytics inference. All other parameters are ignored for inference
+            and are simply stored in output History objects.
 
-        if hasattr(ripl_mripl,'no_ripls'):
+        mutateRipl :: bool
+            If False, the input *ripl_mripl* is not mutated by Analytics and is just
+            a source for directives. All inference takes place on freshly created
+            ripls/mripls.
+
+            If True, enables inference via *runFromConditional* on the ripl/mripl given
+            by *ripl_mripl*. Not tested for anything but *runFromConditional*.'''
+
+>>>>>>> master
+        assert not(assumes is None and observes is not None),'No *observes* without *assumes*.'
+        assert queryExps is None or isinstance(queryExps,(list,tuple)), 'QueryExps must be list or tuple'
+
+        if hasattr(ripl_mripl,'no_ripls'): # test for ripl vs. MRipl
             ripl=ripl_mripl.local_ripls[0] # only needed because of set_seed
             self.mripl = True
         else:
@@ -248,9 +264,7 @@ class Analytics(object):
 
 
         # mutate ripl/mripl
-        ## FIXME: we really have a choice here. we could just mutate the
-        # ripl we made. certainly that makes sense if an empty ripl was
-        # entered. leave things flexible for now
+
         if mutateRipl:
             self.muRipl = True
 
@@ -279,6 +293,9 @@ class Analytics(object):
     def updateObserves(self,newObserves=None,removeAllObserves=False):
         '''Extend list of observes or empty it.
            Input: newObserves :: [(exp,literal)], removeAllObserves :: bool.'''
+
+        # add assert here and to query exps (about getting form of input right)
+
         if removeAllObserves:
             self.observes = []
         if newObserves is not None:
