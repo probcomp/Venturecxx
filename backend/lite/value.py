@@ -63,6 +63,8 @@ class VentureValue(object):
 
   ### Generic container methods
   def lookup(self, _): raise VentureTypeError("Cannot look things up in %s" % type(self))
+  def lookup_grad(self, _index, _direction):
+    raise VentureTypeError("Cannot compute gradient of looking things up in %s" % type(self))
   def contains(self, _): raise VentureTypeError("Cannot look for things in %s" % type(self))
   def length(self): raise VentureTypeError("Cannot measure length of %s" % type(self))
 
