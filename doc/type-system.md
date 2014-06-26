@@ -76,6 +76,23 @@ contract, then tag.  Otherwise, push it into the type.
 normalizing representations) if any of them are expensive.  I'm
 looking at you, Simplex.
 
+Coersions
+---------
+
+The following Venture types are implicitly coerced to one another when
+needed.  If a coersion fails, an error is raised.
+
+[TODO] Unboxed X to boxed X by boxing
+[TODO] Boxed X to unboxed X by type checking and unboxing (may fail)
+[TODO] Integers to floating point numbers
+Probabilities to floating point numbers by injection
+[MAYBE] Floating point numbers to direct-space probabilities by range
+  checking (may fail)
+Symmetric matrices to matrices by injection
+Matrices to symmetric matrices by checking symmetry (may fail)
+
+Some Venture SPs also implement explicit coersions.
+
 Representations
 ---------------
 
@@ -145,6 +162,12 @@ representations that Venture uses for its values.
 
   - [TODO] All Puma and Lite SPs have the same types, effect the same
     implicit conversions, etc.
+
+Injection
+---------
+
+[TODO] Putting a stack dict into an expression or the value slot of an
+observation should result in that value
 
 Types
 -----
