@@ -17,7 +17,7 @@
 import time, random
 import numpy as np
 from venture.ripl.ripl import _strip_types
-from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl,mr_map_proc, build_exp
+from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl, build_exp
 from history import History, Run, Series, historyOverlay,compareSampleDicts,filterDict,historyNameToValues
 
 parseValue = _strip_types
@@ -566,7 +566,7 @@ class Analytics(object):
                 return getattr(model,fname)(label='seed:%s'%seed,**kwargs)
 
             modelTuple=(self.assumes,self.observes,self.queryExps)
-            results = mr_map_proc(v,'all',sendf, f.func_name, modelTuple,**kwargs)
+            results = v.map_proc('all',sendf, f.func_name, modelTuple,**kwargs)
 
             for r in results[:runs]: history.addRun(r)
 
@@ -762,8 +762,8 @@ class Analytics(object):
                                                 runs=1,**kwargs)
             return h
 
-        histories = mr_map_proc(self.mripl, noDatasets, fromPrior,
-                                sweeps, self.queryExps,force=None, **kwargs)
+        histories = self.mripl.map_proc(noDatasets, fromPrior,
+                                sweeps, self.queryExps, force=None, **kwargs)
 
         pairs = zip(['Ripl%i'%i for i in range(noDatasets)],histories)
         historyOV = historyOverlay('testFromPrior',pairs)
