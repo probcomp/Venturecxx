@@ -6,10 +6,12 @@ Basic
 
 Venture has the following distinct basic types:
 - Floating point numbers (64-bit precision)
-- Integers
+- [TODO] Integers
 ? Atoms
 - Booleans
 - Symbols
+- Probabilities (represented in direct space, as floating point
+  numbers between 0 and 1)
 
 General Containers
 ------------------
@@ -44,15 +46,35 @@ Unboxed Containers
 
 Venture has the following homogeneous unboxed container types:
 - Vectors of floating point numbers
+- [TODO] Vectors of probabilities (currently called Simplex)
 - Matrices of floating point numbers
+- Symmetric matrices of floating point numbers (which are not
+  actually represented differently from general matrices)
 
 Contracts
 ---------
 
-The contracts could all be shoved into the types, except that I may
-wish to memoize checking them (e.g., for simplexes and symmetric
-matrices).  In a sense, that is what is accomplished by having
-separate VentureValue objects for types with attached contracts.
+Contracts, that is, invariants that are not baked in to the
+representation of a value, arise early and often in Venture.  For
+example, both of the parameters to the gamma distribution must be
+positive reals, as is the result.
+
+[TODO] Generally such invariants are represented only in the type
+annotations of procedures (or implicitly in Puma).  However, a couple
+things that might appear to be such are represented as distinct
+Venture types that happen to have the same representation as a
+"broader" type:
+- Probabilities (in direct space), which look like numbers in [0,1]
+- Symmetric matrices, which look like matrices
+
+The rule of thumb in the design for choosing which invariants to treat
+as implicit contracts and which to turn into explicit types is this:
+If something might want to dispatch on the presence or absence of a
+contract, then tag.  Otherwise, push it into the type.
+
+[TODO] It might be useful to memoize checking contracts (or
+normalizing representations) if any of them are expensive.  I'm
+looking at you, Simplex.
 
 Representations
 ---------------
@@ -173,6 +195,10 @@ Types that Venture may be extended to have in the future:
   - in boxed and unboxed form
 - Strings (which look like unboxed vectors of characters)
 
+How to Extend the Venture Type System
+-------------------------------------
+
+Basic types, boxed/unboxed containers (?), types with contracts
 
 
 TODO: Check with vkm and Vlad whether it is fair to say that the stack
