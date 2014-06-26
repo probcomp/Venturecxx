@@ -18,7 +18,6 @@ import serialize
 class VentureValue(object):
   def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getInteger(self): raise VentureTypeError("Cannot convert %s to integer" % type(self))
-  def getPositive(self): raise VentureTypeError("Cannot convert %s to positive" % type(self))
   def getProbability(self): raise VentureTypeError("Cannot convert %s to probability" % type(self))
   def getAtom(self): raise VentureTypeError("Cannot convert %s to atom" % type(self))
   def getBool(self): raise VentureTypeError("Cannot convert %s to bool" % type(self))
@@ -154,24 +153,6 @@ class VentureInteger(VentureValue):
   def compareSameType(self, other): return stupidCompare(self.number, other.number)
   def __hash__(self): return hash(self.number)
   def expressionFor(self): return self.number
-
-@serialize.register
-class VenturePositive(VentureNumber):
-  def __init__(self, number):
-    assert isinstance(number, Number)
-    assert 0 < number
-    self.number = float(number)
-  def __repr__(self):
-    if hasattr(self, "number"):
-      return "VenturePositive(%s)" % self.number
-    else:
-      return "VenturePositive(uninitialized)"
-  # TODO Think about the relationship to VentureNumber on other operations
-  # TODO Notably, probabilities are not a useful vector space, but
-  # their tangents are (and consequently, the tangents of
-  # probabilities are not probabilities).
-
-# TODO Define VentureNonNegative, from which VentureProbability can inherit
 
 @serialize.register
 class VentureProbability(VentureNumber):
@@ -740,6 +721,21 @@ class CountType(VentureType):
   def __contains__(self, vthing):
     return isinstance(vthing, VentureInteger) and 0 <= vthing.getInteger()
   def name(self): return "<count>"
+
+class PositiveType(VentureType):
+  def asVentureValue(self, thing):
+    assert 0 < thing
+    return VentureNumber(thing)
+  def asPython(self, vthing):
+    ans = vthing.getNumber()
+    if 0 < ans:
+      return ans
+    else:
+      # TODO: Or what?  Can't even clip to 0!
+      raise VentureTypeError("Number is not positive %s" % self.number)
+  def __contains__(self, vthing):
+    return isinstance(vthing, VentureNumber) and 0 < vthing.getNumber()
+  def name(self): return "<positive>"
 
 class NilType(VentureType):
   def asVentureValue(self, _thing):
