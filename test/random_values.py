@@ -14,6 +14,8 @@ class DefaultRandomVentureValue(object):
     return getattr(self, self.method)(**(dict(self.kwargs.items() + kwargs.items())))
   def number(self, **_kwargs):
     return v.VentureNumber(npr.uniform(-10, 10))
+  def integer(self, **_kwargs):
+    return v.VentureInteger(npr.choice(range(-10, 10)))
   def count(self, **_kwargs):
     return v.VentureCount(npr.choice(range(10)))
   def positive(self, **_kwargs):
@@ -89,6 +91,6 @@ class DefaultRandomVentureValue(object):
     if depth is None:
       depth = npr.randint(0, 5)
     if depth == 0:
-      return getattr(self, npr.choice(["number", "atom", "bool", "symbol", "nil"]))(**kwargs)
+      return getattr(self, npr.choice(["number", "atom", "bool", "symbol", "nil", "integer"]))(**kwargs)
     else:
       return getattr(self, npr.choice(["array", "pair", "simplex", "matrix", "list"]))(depth=depth-1, **kwargs)

@@ -12,6 +12,7 @@ Venture has the following distinct basic types:
 - Symbols
 - Probabilities (represented in direct space, as floating point
   numbers between 0 and 1)
+? ForeignBlobs
 
 General Containers
 ------------------
@@ -88,7 +89,7 @@ needed.  If a coersion fails, an error is raised.
 Probabilities to floating point numbers by injection
 [MAYBE] Floating point numbers to direct-space probabilities by range
   checking (may fail)
-Symmetric matrices to matrices by injection
+Symmetric matrices to general matrices by injection
 Matrices to symmetric matrices by checking symmetry (may fail)
 
 Some Venture SPs also implement explicit coersions.
@@ -96,7 +97,7 @@ Some Venture SPs also implement explicit coersions.
 Representations
 ---------------
 
-Implementers and extenders of Venture need to know about 5 different
+Implementers and extenders of Venture need to know about 6 different
 representations that Venture uses for its values.
 
 - The normative representation is instances of (subclasses of) the
@@ -163,6 +164,10 @@ representations that Venture uses for its values.
   - [TODO] All Puma and Lite SPs have the same types, effect the same
     implicit conversions, etc.
 
+- Finally, most Venture values can be produced as results of
+  "constant-foldable" Venture expressions.  This representation is
+  available through the expressionFor method of VentureValue.
+
 Injection
 ---------
 
@@ -201,6 +206,9 @@ unwrapped by the argument type (and back).
 A VentureType also corresponds to a human-readable description of the
 type, for autogenerating SP documentation; and to a default generator
 of values of that type, for randomized testing.
+- Actually, the generator is parameterized by a base distribution
+  object (the only exant one of which is DefaultRandomVentureValue)
+  through the distribution method of the VentureType.
 
 Future
 ------
@@ -210,8 +218,8 @@ Types that Venture may be extended to have in the future:
 - Floating point numbers of varying precision
 - Rational numbers
 - Representations of probabilities in different spaces
-- Unboxed vectors or matrices of integers, booleans, ? atoms, different
-  precision floats, complex numbers, probabilities
+- Unboxed vectors or matrices of integers, booleans, ? atoms,
+  different precision floats, complex numbers, probabilities
 - Unboxed homogeneous dictionaries
 - Efficiently functionally updatable dictionaries (maybe requiring an
   ordering on the keys)
@@ -220,6 +228,44 @@ Types that Venture may be extended to have in the future:
 
 How to Extend the Venture Type System
 -------------------------------------
+
+To add a type to the type system
+- define a subclass of VentureType (conventionally named
+  SomethingType)
+- define asVentureValue and asPython methods for it, that are
+  preferably mutual inverses, implementing the mapping to the
+  "natural" Python representation
+  - If there are coercions involved, adding a method to the two
+    VentureValue hierarchies may be appropriate.
+- define __contains__ for checking whether a VentureValue is of this
+  type
+- define name describing the type
+- if the type corresponds exactly to a subclass of VentureValue,
+  the above are standard.
+- either override the distribution method, or define an appropriately
+  named method in DefaultRandomVentureValue to be able to generate
+  values of this type.
+  - Possibly add the new type to the default distribution for AnyType
+- extend Puma's VentureValue hierarchy with appropriate methods to
+  effect conversion to and from this type, preferably to a C++
+  representation that is analogous to the "natural" Python one.
+
+To add a representation to the type system
+- Add a subclass of VentureValue, overriding all appropriate methods
+  - Conversion to and from stack dicts
+    - Define a distinct "type" keyword for the stack dict representation
+  - If relevant, define the real vector space operations for the representation
+  - Equality
+  - Hashing
+  - expressionFor if appropriate
+  - any appropriate coersion methods
+- Add a subclass of Puma VentureValue, overriding all appropriate methods
+- Presumably define a VentureType corresponding to the new
+  representation (see standard_venture_type in value.py)
+  - Presumably including an appropriate extention of Puma's
+    VentureValue hierarchy
+- If appropriate, add the new representation to any existing types
+  that should cover it, such as ExpressionType
 
 Basic types, boxed/unboxed containers (?), types with contracts
 

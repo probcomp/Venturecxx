@@ -17,6 +17,7 @@ import serialize
 
 class VentureValue(object):
   def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
+  def getInteger(self): raise VentureTypeError("Cannot convert %s to integer" % type(self))
   def getCount(self): raise VentureTypeError("Cannot convert %s to count" % type(self))
   def getPositive(self): raise VentureTypeError("Cannot convert %s to positive" % type(self))
   def getProbability(self): raise VentureTypeError("Cannot convert %s to probability" % type(self))
@@ -138,6 +139,24 @@ class VentureNumber(VentureValue):
     return self.number * other.number
   def map_real(self, f):
     return VentureNumber(f(self.number))
+  def expressionFor(self): return self.number
+
+@serialize.register
+class VentureInteger(VentureValue):
+  def __init__(self,number):
+    assert isinstance(number, Number)
+    self.number = int(number)
+  def __repr__(self):
+    if hasattr(self, "number"):
+      return "VentureInteger(%s)" % self.number
+    else:
+      return "VentureInteger(uninitialized)"
+  def getInteger(self): return self.number
+  def asStackDict(self, _trace=None): return {"type":"integer","value":self.number}
+  @staticmethod
+  def fromStackDict(thing): return VentureInteger(thing["value"])
+  def compareSameType(self, other): return stupidCompare(self.number, other.number)
+  def __hash__(self): return hash(self.number)
   def expressionFor(self): return self.number
 
 @serialize.register
@@ -662,12 +681,13 @@ class SPRef(VentureValue):
 ## Not Requests, because we do not reflect on them
 
 venture_types = [
-  VentureBool, VentureNumber, VentureAtom, VentureSymbol, VentureNil, VenturePair,
+  VentureBool, VentureNumber, VentureInteger, VentureAtom, VentureSymbol, VentureNil, VenturePair,
   VentureArray, VentureSimplex, VentureDict, VentureMatrix, SPRef]
   # Break load order dependency by not adding SPs and Environments yet
 
 stackable_types = {
   "number": VentureNumber,
+  "integer": VentureInteger,
   "real": VentureNumber,
   "atom": VentureAtom,
   "boolean": VentureBool,
@@ -721,7 +741,7 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Count", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix", "ForeignBlob"]:
+for typestring in ["Integer", "Count", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix", "ForeignBlob"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))
@@ -778,7 +798,7 @@ data List = Nil | Pair Any List
 
 class ExpressionType(VentureType):
   """A Venture expression is either a Venture self-evaluating object
-(bool, number, atom), or a Venture symbol, or a Venture array of
+(bool, number, integer, atom), or a Venture symbol, or a Venture array of
 Venture Expressions.  Note: I adopt the convention that, to
 distinguish them from numbers, Venture Atoms will be represented in
 Python as VentureAtom objects for purposes of this type.
@@ -794,11 +814,13 @@ VentureSPs.
 
 In Haskell type notation:
 
-data Expression = Bool | Number | Atom | Symbol | Array Expression
+data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
 """
   def asVentureValue(self, thing):
     if isinstance(thing, bool) or isinstance(thing, np.bool_):
       return VentureBool(thing)
+    if isinstance(thing, int):
+      return VentureInteger(thing)
     if isinstance(thing, Number):
       return VentureNumber(thing)
     if isinstance(thing, VentureAtom):
@@ -813,6 +835,8 @@ data Expression = Bool | Number | Atom | Symbol | Array Expression
   def asPython(self, thing):
     if isinstance(thing, VentureBool):
       return thing.getBool()
+    if isinstance(thing, VentureInteger):
+      return thing.getInteger()
     if isinstance(thing, VentureNumber):
       return thing.getNumber()
     if isinstance(thing, VentureAtom):
