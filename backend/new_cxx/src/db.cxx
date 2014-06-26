@@ -31,6 +31,11 @@ void DB::registerLatentDB(Node * makerNode, shared_ptr<LatentDB> latentDB)
   latentDBs[makerNode] = latentDB;
 }
 
+bool DB::hasESRParent(shared_ptr<SP> sp,FamilyID id)
+{
+  return spFamilyDBs[sp].count(id);
+}
+
 RootOfFamily DB::getESRParent(shared_ptr<SP> sp,FamilyID id)
 {
   assert(spFamilyDBs[sp].count(id));

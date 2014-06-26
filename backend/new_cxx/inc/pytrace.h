@@ -3,6 +3,7 @@
 
 #include "trace.h"
 #include "pyutils.h"
+#include "serialize.h"
 
 #include <boost/python.hpp>
 #include <boost/python/extract.hpp>
@@ -53,7 +54,15 @@ struct PyTrace
 
   void freeze(DirectiveID did);
 
-  PyTrace* stop_and_copy(boost::python::object engine) const;
+  PyTrace* stop_and_copy() const;
+
+  shared_ptr<OrderedDB> makeEmptySerializationDB();
+  shared_ptr<OrderedDB> makeSerializationDB(boost::python::list stackDicts, bool skipStackDictConversion);
+  boost::python::list dumpSerializationDB(shared_ptr<OrderedDB> db, bool skipStackDictConversion);
+  void unevalAndExtract(DirectiveID did, shared_ptr<OrderedDB> db);
+  void restoreDirectiveID(DirectiveID did, shared_ptr<OrderedDB> db);
+  void evalAndRestore(DirectiveID did, boost::python::object object, shared_ptr<OrderedDB> db);
+
 private:
   shared_ptr<ConcreteTrace> trace;
   

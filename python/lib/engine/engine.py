@@ -182,7 +182,7 @@ effect of renumbering the directives, if some had been forgotten."""
     newTraces = [None for p in range(P)]
     for p in range(P):
       parent = sampleLogCategorical(self.weights) # will need to include or rewrite
-      newTrace = self.traces[parent].stop_and_copy(self)
+      newTrace = self.copy_trace(self.traces[parent])
       newTraces[p] = newTrace
       if self.name != "lite":
         newTraces[p].set_seed(random.randint(1,2**31-1))
@@ -251,9 +251,47 @@ effect of renumbering the directives, if some had been forgotten."""
   def stop_continuous_inference(self):
     for trace in self.traces: trace.stop_continuous_inference()
 
+  def dump_trace(self, trace, skipStackDictConversion=False):
+    db = trace.makeSerializationDB()
+
+    for did, directive in sorted(self.directives.items(), reverse=True):
+      if directive[0] == "observe":
+        trace.unobserve(did)
+      trace.unevalAndExtract(did, db)
+
+    for did, directive in sorted(self.directives.items()):
+      trace.restore(did, db)
+      if directive[0] == "observe":
+        trace.observe(did, directive[2])
+
+    return trace.dumpSerializationDB(db, skipStackDictConversion)
+
+  def restore_trace(self, values, skipStackDictConversion=False):
+    trace = self.Trace()
+    db = trace.makeSerializationDB(values, skipStackDictConversion)
+
+    for did, directive in sorted(self.directives.items()):
+        if directive[0] == "assume":
+            name, datum = directive[1], directive[2]
+            trace.evalAndRestore(did, self.desugarLambda(datum), db)
+            trace.bindInGlobalEnv(name, did)
+        elif directive[0] == "observe":
+            datum, val = directive[1], directive[2]
+            trace.evalAndRestore(did, self.desugarLambda(datum), db)
+            trace.observe(did, val)
+        elif directive[0] == "predict":
+            datum = directive[1]
+            trace.evalAndRestore(did, self.desugarLambda(datum), db)
+
+    return trace
+
+  def copy_trace(self, trace):
+    values = self.dump_trace(trace, skipStackDictConversion=True)
+    return self.restore_trace(values, skipStackDictConversion=True)
+
   def save(self, fname, extra=None):
     data = {}
-    data['traces'] = [trace.dump(self) for trace in self.traces]
+    data['traces'] = [self.dump_trace(trace) for trace in self.traces]
     data['weights'] = self.weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
@@ -266,10 +304,29 @@ effect of renumbering the directives, if some had been forgotten."""
     with open(fname) as fp:
       (data, version) = pickle.load(fp)
     assert version == '0.2', "Incompatible version or unrecognized object"
-    self.directives = data['directives']
-    self.traces = [self.Trace.restore(trace, self) for trace in data['traces']]
-    self.weights = data['weights']
     self.directiveCounter = data['directiveCounter']
+    self.directives = data['directives']
+    self.traces = [self.restore_trace(trace) for trace in data['traces']]
+    self.weights = data['weights']
     return data['extra']
+
+  def convert(self, EngineClass):
+    engine = EngineClass()
+    engine.directiveCounter = self.directiveCounter
+    engine.directives = self.directives
+    engine.traces = []
+    for trace in self.traces:
+      values = self.dump_trace(trace)
+      engine.traces.append(engine.restore_trace(values))
+    engine.weights = self.weights
+    return engine
+
+  def to_lite(self):
+    from venture.lite.engine import Engine as LiteEngine
+    return self.convert(LiteEngine)
+
+  def to_puma(self):
+    from venture.puma.engine import Engine as PumaEngine
+    return self.convert(PumaEngine)
 
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling

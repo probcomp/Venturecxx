@@ -33,6 +33,7 @@ void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
                                     exp,
                                     trace->globalEnvironment,
                                     shared_ptr<Scaffold>(new Scaffold()),
+                                    false,
                                     shared_ptr<DB>(new DB()),
                                     shared_ptr<map<Node*,Gradient> >());
   assert(p.first == 0);
@@ -380,6 +381,8 @@ BOOST_PYTHON_MODULE(libpumatrace)
   register_exception_translator<string>(&translateStringException);
   register_exception_translator<const char*>(&translateCStringException);
 
+  class_<OrderedDB, shared_ptr<OrderedDB> >("OrderedDB", no_init);
+
   class_<PyTrace>("Trace",init<>())
     .def("eval", &PyTrace::evalExpression)
     .def("uneval", &PyTrace::unevalDirectiveID)
@@ -403,5 +406,11 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("start_continuous_inference", &PyTrace::start_continuous_inference)
     .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)
     .def("stop_and_copy", &PyTrace::stop_and_copy, return_value_policy<manage_new_object>())
+    .def("makeSerializationDB", &PyTrace::makeEmptySerializationDB)
+    .def("makeSerializationDB", &PyTrace::makeSerializationDB)
+    .def("dumpSerializationDB", &PyTrace::dumpSerializationDB)
+    .def("unevalAndExtract", &PyTrace::unevalAndExtract)
+    .def("restore", &PyTrace::restoreDirectiveID)
+    .def("evalAndRestore", &PyTrace::evalAndRestore)
     ;
 };
