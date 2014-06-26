@@ -91,6 +91,6 @@ class DefaultRandomVentureValue(object):
     if depth is None:
       depth = npr.randint(0, 5)
     if depth == 0:
-      return getattr(self, npr.choice(["number", "atom", "bool", "symbol", "nil", "integer"]))(**kwargs)
+      return getattr(self, npr.choice(["number", "atom", "bool", "symbol", "nil", "integer", "probability"]))(**kwargs)
     else:
       return getattr(self, npr.choice(["array", "pair", "simplex", "matrix", "list"]))(depth=depth-1, **kwargs)
