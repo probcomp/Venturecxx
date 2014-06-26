@@ -146,6 +146,13 @@ builtInSPsList = [
                                           "%s returns the identity of its argument atom as a number") ],
            [ "atom_eq", deterministic_typed(lambda x,y: x == y, [v.AtomType(), v.AtomType()], v.BoolType(),
                                             "%s tests its two arguments, which must be atoms, for equality") ],
+           # If you are wondering about the type signature, this
+           # function bootstraps the implicit coersion from numbers to
+           # probabilities into an explicit one.  That means that the
+           # valid arguments to it are exactly the ones that happen to
+           # fall into the range of probabilities.
+           [ "probability",  deterministic_typed(lambda x:x, [v.ProbabilityType()], v.ProbabilityType(),
+                                                 "%s converts its argument to a probability (in direct space)") ],
 
            [ "sin", unaryNum(math.sin, "Returns the %s of its argument") ],
            [ "cos", unaryNum(math.cos, "Returns the %s of its argument") ],

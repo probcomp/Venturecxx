@@ -86,11 +86,6 @@ class VentureNumber(VentureValue):
       return "VentureNumber(uninitialized)"
   def getNumber(self): return self.number
   def getInteger(self): return int(self.number)
-  def getPositive(self):
-    if 0 < self.number:
-      return self.number
-    else: # TODO Do what?  Can't even clip to 0!
-      raise VentureTypeError("Not positive %s" % self.number)
   def getProbability(self):
     if 0 <= self.number and self.number <= 1:
       return self.number
@@ -98,7 +93,7 @@ class VentureNumber(VentureValue):
       raise VentureTypeError("Probability out of range %s" % self.number)
   def getBool(self): return self.number
     
-  def asStackDict(self, _trace): return {"type":"number","value":self.number}
+  def asStackDict(self, _trace=None): return {"type":"number","value":self.number}
   @staticmethod
   def fromStackDict(thing): return VentureNumber(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.number, other.number)
@@ -155,7 +150,7 @@ class VentureInteger(VentureValue):
   def expressionFor(self): return self.number
 
 @serialize.register
-class VentureProbability(VentureNumber):
+class VentureProbability(VentureValue):
   def __init__(self, number):
     assert isinstance(number, Number)
     assert 0 <= number and number <= 1
@@ -165,10 +160,15 @@ class VentureProbability(VentureNumber):
       return "VentureProbability(%s)" % self.number
     else:
       return "VentureProbability(uninitialized)"
-  # TODO Think about the relationship to VentureNumber on other operations
-  # TODO Notably, probabilities are not a useful vector space, but
-  # their tangents are (and consequently, the tangents of
-  # probabilities are not probabilities).
+  def getNumber(self): return self.number
+  def getProbability(self): return self.number
+  def asStackDict(self, _trace=None): return {"type":"probability","value":self.number}
+  @staticmethod
+  def fromStackDict(thing): return VentureProbability(thing["value"])
+  def compareSameType(self, other): return stupidCompare(self.number, other.number)
+  def __hash__(self): return hash(self.number)
+  def expressionFor(self):
+    return [{"type":"symbol", "value":"probability"}, self.number]
 
 def stupidCompare(thing, other):
   # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
@@ -642,13 +642,15 @@ class SPRef(VentureValue):
 ## Not Requests, because we do not reflect on them
 
 venture_types = [
-  VentureBool, VentureNumber, VentureInteger, VentureAtom, VentureSymbol, VentureNil, VenturePair,
+  VentureBool, VentureNumber, VentureInteger, VentureProbability, VentureAtom,
+  VentureSymbol, VentureNil, VenturePair,
   VentureArray, VentureSimplex, VentureDict, VentureMatrix, SPRef]
   # Break load order dependency by not adding SPs and Environments yet
 
 stackable_types = {
   "number": VentureNumber,
   "integer": VentureInteger,
+  "probability": VentureProbability,
   "real": VentureNumber,
   "atom": VentureAtom,
   "boolean": VentureBool,
@@ -702,7 +704,7 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Integer", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix", "ForeignBlob"]:
+for typestring in ["Integer", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix", "ForeignBlob"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))
