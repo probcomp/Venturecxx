@@ -192,10 +192,6 @@ class Analytics(object):
             of inference (in addition to symbols in assumes).
 
         parameters :: {string: a}
-<<<<<<< HEAD
-            FIXME explain'''
-
-=======
             The optional *venture_random_seed* parameter can be used to set the
             seed for Analytics inference. All other parameters are ignored for inference
             and are simply stored in output History objects.
@@ -208,7 +204,6 @@ class Analytics(object):
             If True, enables inference via *runFromConditional* on the ripl/mripl given
             by *ripl_mripl*. Not tested for anything but *runFromConditional*.'''
 
->>>>>>> master
         assert not(assumes is None and observes is not None),'No *observes* without *assumes*.'
         assert queryExps is None or isinstance(queryExps,(list,tuple)), 'QueryExps must be list or tuple'
 
