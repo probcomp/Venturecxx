@@ -1,5 +1,5 @@
 
-# Copyright (c) 2013, MIT Probabilistic Computing Project.
+# Copyright (c) 2014, MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -17,7 +17,7 @@
 import time, random
 import numpy as np
 from venture.ripl.ripl import _strip_types
-from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl,mr_map_proc
+from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl,mr_map_proc, build_exp
 from history import History, Run, Series, historyOverlay,compareSampleDicts,filterDict,historyNameToValues
 
 parseValue = _strip_types
@@ -55,7 +55,7 @@ parseValue = _strip_types
 # Done a crude implementation that works for runFromConditional. Currently
 # prevents Analytics from ever clearing the ripl, which prevents runConditionalFromPrior. Whole point of this
 # is to allow filtering/incremental inference with Analytics. 
-# So running on synth data from prior won't be doing the same
+# So running on synthetic data from prior wouldn't in any case be doing the same
 # inference procedure as an incremental one. ...
 
 
