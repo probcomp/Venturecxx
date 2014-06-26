@@ -282,18 +282,18 @@ class VentureForeignBlob(VentureValue):
 class VentureNil(VentureValue):
   def __init__(self): pass
   def __repr__(self): return "Nil"
-  def compareSameType(self, _): return 0 # All Nils are equal
-  def __hash__(self): return 0
-  def asPythonList(self, _elt_type=None): return []
   def asStackDict(self, _trace): return {"type":"list", "value":[]}
   @staticmethod
   def fromStackDict(_): return VentureNil()
+  def compareSameType(self, _): return 0 # All Nils are equal
+  def __hash__(self): return 0
   def lookup(self, index):
     raise VentureValueError("Index out of bounds: too long by %s" % index)
   def contains(self, _obj): return False
   def size(self): return 0
   def expressionFor(self):
     return [{"type":"symbol", "value":"list"}]
+  def asPythonList(self, _elt_type=None): return []
 
 @serialize.register
 class VenturePair(VentureValue):
@@ -312,38 +312,29 @@ class VenturePair(VentureValue):
       return "VentureList(%r)" % list_
     else:
       return "VentureList(%r . %r)" % (list_, tail)
+
   def getPair(self): return (self.first,self.rest)
-  def asPythonList(self, elt_type=None):
-    if elt_type is not None:
-      return [elt_type.asPython(self.first)] + self.rest.asPythonList(elt_type)
-    else:
-      return [self.first] + self.rest.asPythonList()
+
   def asStackDict(self, trace):
     (list_, tail) = self.asPossiblyImproperList()
     if tail is None:
       return {"type":"list", "value":[v.asStackDict(trace) for v in list_]}
     else:
       return {"type":"improper_list", "value": self}
-  def asPossiblyImproperList(self):
-    if isinstance(self.rest, VenturePair):
-      (sublist, tail) = self.rest.asPossiblyImproperList()
-      return ([self.first] + sublist, tail)
-    elif isinstance(self.rest, VentureNil):
-      return ([self.first], None)
-    else:
-      return ([self.first], self.rest)
   @staticmethod
   def fromStackDict(thing):
     if thing["type"] == "improper_list":
       return thing["value"]
     else:
       raise Exception("Type clash!")
+
   def compareSameType(self, other):
     fstcmp = self.first.compare(other.first)
     if fstcmp != 0: return fstcmp
     else: return self.rest.compare(other.rest)
   def __hash__(self):
     return hash(self.first) + 37*hash(self.rest)
+
   def lookup(self, index):
     try:
       ind = index.getNumber()
@@ -368,6 +359,7 @@ class VenturePair(VentureValue):
       return self.rest.contains(obj)
   def size(self): # Really, length
     return 1 + self.rest.size()
+
   def __add__(self, other):
     if other == 0:
       return self
@@ -393,8 +385,23 @@ class VenturePair(VentureValue):
     # Assume other is a scalar
     assert isinstance(other, Number)
     return VenturePair((other * self.first, other * self.rest))
+
   def expressionFor(self):
     return [{"type":"symbol", "value":"pair"}, self.first.expressionFor(), self.rest.expressionFor()]
+
+  def asPythonList(self, elt_type=None):
+    if elt_type is not None:
+      return [elt_type.asPython(self.first)] + self.rest.asPythonList(elt_type)
+    else:
+      return [self.first] + self.rest.asPythonList()
+  def asPossiblyImproperList(self):
+    if isinstance(self.rest, VenturePair):
+      (sublist, tail) = self.rest.asPossiblyImproperList()
+      return ([self.first] + sublist, tail)
+    elif isinstance(self.rest, VentureNil):
+      return ([self.first], None)
+    else:
+      return ([self.first], self.rest)
 
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
