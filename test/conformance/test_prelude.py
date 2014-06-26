@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, SkipTest
 from venture.test.config import get_ripl
 import numpy as np
 import random
@@ -127,17 +127,20 @@ class TestPrelude(TestCase):
     Check that to_array and to_vector convert lists properly. Small hitch:
     vectors satisfy is_array in lite backend but not in Puma.
     '''
-    pass
-    # for container in ['vector', 'array']:
-    #   self.reset_ripl()
-    #   # make the data, check it's not an array to start
-    #   x = self.mk_random_data('list', 'mixed')
-    #   x_python = self.v.assume('x', x)
-    #   errstr = 'Input should have been list, but passed is_vector.'
-    #   self.assertFalse(self.v.sample('(is_array x)'), errstr)
-    #   # convert, check
-    #   cmd_str = '(to_{0} x)'.format(container)
-    #   y_python = self.v.assume('y', cmd_str)
+    for container in ['vector', 'array']:
+      if container == 'array':
+        raise SkipTest('Issue: https://app.asana.com/0/11127829865276/13406662044948')
+
+      self.reset_ripl()
+      # vectors can only store numeric data
+      dtype = 'numeric' if container == 'vector' else 'mixed'
+      x = self.mk_random_data('list', dtype)
+      x_python = self.v.assume('x', x)
+      errstr = 'Input should have been list, but passed is_vector.'
+      self.assertFalse(self.v.sample('(is_array x)'), errstr)
+      # convert, check
+      cmd_str = '(to_{0} x)'.format(container)
+      y_python = self.v.assume('y', cmd_str)
 
   @run_containers
   def test_map(self, container):
