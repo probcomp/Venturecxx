@@ -28,7 +28,7 @@ parseValue = _strip_types
 # mode where input ripl is mutated by Analytics
 
 # benefits:
-# 1. can add observes,assumes,infers at any time without 
+# 1. can add observes,assumes,infers at any time without
 # going through analytics and then return to analytics object
 # for more extensive inference/plotting etc.
 
@@ -44,7 +44,7 @@ parseValue = _strip_types
 # to implement this:
 # currently we generate an mripl for runFromConditional. instead we should
 # should just map runFromCond across the ripls (letting the runs be determined
-# by the number of ripls). simplest version would avoid all the load/reload 
+# by the number of ripls). simplest version would avoid all the load/reload
 # of assumes/observes stuff. we need that for runConditionedFromPrior, but one would simplify
 # run from conditional by isolating it from that code (with v little cost).
 # 1. input mripl (assumes/observes are extracted and stored)
@@ -56,7 +56,7 @@ parseValue = _strip_types
 # IMPLENTATION
 # Done a crude implementation that works for runFromConditional. Currently
 # prevent Analytics from ever clearing the ripl, which prevents run from prior. Whole point of this
-# is to allow filtering/incremental inference with Analytics. 
+# is to allow filtering/incremental inference with Analytics.
 # So running on synth data from prior won't be doing the same
 # inference procedure as an incremental one. ...
 
@@ -65,12 +65,12 @@ def directive_split(d):
     'Splits directive from *list_directives* into components'
     ## FIXME: replace Python values with strings for Venture.
     if d['instruction']=='assume':
-        return (d['symbol'], build_exp(d['expression']) ) 
+        return (d['symbol'], build_exp(d['expression']) )
     elif d['instruction']=='observe':
-        return (build_exp(d['expression']), d['value']) 
+        return (build_exp(d['expression']), d['value'])
     elif d['instruction']=='predict':
         return build_exp(d['expression'])
-        
+
 def record(value):
     'Return ripl value if type is in approved set. SPs are not returned.'
     return value['type'] in {'boolean', 'real', 'number', 'atom', 'count', 'array', 'simplex'}
@@ -122,7 +122,7 @@ class VentureUnit(object):
         else:
             self.ripl.set_seed(self.parameters['venture_random_seed'])
 
-        
+
         self.assumes = []
         self.makeAssumes()
 
@@ -131,7 +131,7 @@ class VentureUnit(object):
 
         self.queryExps = []
         self.makeQueryExps()
-        
+
         self.analyticsArgs = (self.ripl,)
         self.analyticsKwargs = dict(assumes=self.assumes, observes=self.observes,
                            parameters=self.parameters, queryExps=self.queryExps)
@@ -139,10 +139,10 @@ class VentureUnit(object):
     def getAnalytics(self,ripl_mripl,mutateRipl=False):
         '''Create Analytics object from assumes, observes and parameters.
            Optional arg *mripl* used to send an MRipl to Analytics.'''
-        
+
         kwargs = self.analyticsKwargs.copy()
         kwargs['mutateRipl'] = mutateRipl
-        
+
         return Analytics(ripl_mripl, **kwargs)
 
 
@@ -153,7 +153,7 @@ class VentureUnit(object):
     def runFromJoint(self,*args,**kwargs):
         a = Analytics(*self.analyticsArgs, **self.analyticsKwargs)
         return a.runFromJoint(*args,**kwargs)
-    
+
     def computeJointKL(self,*args,**kwargs):
         a = Analytics(*self.analyticsArgs, **self.analyticsKwargs)
         return a.computeJointKL(*args,**kwargs)
@@ -178,7 +178,7 @@ class Analytics(object):
         ripl :: ripl (Puma or Lite)
             Inference is done on a fresh ripl with same backend. If no
             *assumes* are specified, assumes are extracted from ripl.
-        
+
         assumes :: [(sym,exp)]
             List of assume pairs. If not None, replace ripl assumes.
 
@@ -192,7 +192,7 @@ class Analytics(object):
 
         parameters :: {string: a}
             FIXME explain'''
- 
+
         assert not(assumes is None and observes is not None),'No *observes* without *assumes*.'
         assert queryExps is None or isinstance(queryExps,(list,tuple))
 
@@ -202,14 +202,14 @@ class Analytics(object):
         else:
             ripl = ripl_mripl
             self.mripl = False
-        
+
 
         # make fresh ripl with same backend as input ripl
         self.backend = ripl.backend()
         self.ripl = mk_p_ripl() if self.backend=='puma' else mk_l_ripl()
-        
+
         directives_list = ripl.list_directives(type=True)
-        
+
         if assumes is not None:
             self.assumes = assumes
             self.observes = observes if observes is not None else []
@@ -253,7 +253,7 @@ class Analytics(object):
         # entered. leave things flexible for now
         if mutateRipl:
             self.muRipl = True
-            
+
             if ripl_mripl.list_directives() == []:
                 if not self.mripl:
                     for sym,exp in self.assumes: self.ripl.assume(sym,exp)
@@ -274,7 +274,7 @@ class Analytics(object):
         else:
             self.muRipl = False
 
-        
+
 
     def updateObserves(self,newObserves=None,removeAllObserves=False):
         '''Extend list of observes or empty it.
@@ -289,7 +289,7 @@ class Analytics(object):
             [ripl.observe( exp, value ) for exp,value in newObserves]
             string='mripl' if self.mripl else 'ripl'
             print 'Observes applied to persistent %s.'%string
-        
+
     def updateQueryExps(self,newQueryExps=None,removeAllQueryExps=False):
         '''Extend list of query expressions or empty it.
            Input: newQueryExps :: [(exp)], removeAllQueryExps :: bool.'''
@@ -305,7 +305,7 @@ class Analytics(object):
     def switchBackend(self,newBackend):
         'Switch backend while maintaining assumes and observes'
         ## FIXME make mripl compatible via mripl.switch_backends
-        
+
         self.backend = newBackend
         self.ripl = mk_p_ripl() if self.backend=='puma' else mk_l_ripl()
         # self.ripl.set_seed(seed)
@@ -318,7 +318,7 @@ class Analytics(object):
 
 
     def _loadAssumes(self, prune=True):
-        
+
         assumeToDirective = {}
 
         for (symbol, expression) in self.assumes:
@@ -348,7 +348,7 @@ class Analytics(object):
             label = 'observe_%d' % index
             value = self.ripl.predict(expression, label=label, type=True)
             predictToDirective[index] = label
-        
+
         # choose a random subset to track; by default all are tracked
         if track < 0:
             return predictToDirective
@@ -380,12 +380,12 @@ class Analytics(object):
     # Updates recorded values after an iteration of the ripl.
     def updateValues(self, keyedValues, keyToDirective=None):
 
-        
+
         if keyToDirective is None: # queryExps are sampled and have no dids
             for key,values in keyedValues.items():
-                values.append(self.ripl.sample(key,type=True)) 
+                values.append(self.ripl.sample(key,type=True))
             return
-            
+
         for (key, values) in keyedValues.items():
             if key not in keyToDirective: # we aren't interested in this series
                 del keyedValues[key]
@@ -400,7 +400,7 @@ class Analytics(object):
                     values.append(value)
                 else: # directive returned different type; discard series
                     del keyedValues[key]
-      
+
 
     # Gives a name to an observe directive.
     def nameObserve(self, index):
@@ -417,23 +417,24 @@ class Analytics(object):
         by default for speed. Set *mriplTrackObserves* to True to record
         observes. If self.mripl is False, loops over a single ripl, tracking
         *track* random observes.'''
-        
+
         def mriplSample():
             assumedValues={}
             predictedValues={}
             queryExpsValues={}
-        
+
             v = MRipl(samples, backend=self.backend, local_mode=mriplLocalMode)
             for sym,exp in self.assumes: v.assume(sym,exp)
 
-            rangeAssumes=range(1,1+len(self.assumes))
+            # this range has to begin with the first directive after the prelude
+            rangeAssumes=range(v._n_prelude+1,v._n_prelude+len(self.assumes)+1)
             observeLabels=[self.nameObserve(i) for i,_ in enumerate(self.observes)]
             if mriplTrackObserves is False:
                 observeLabel = []
 
             for (exp,_),name in zip(self.observes,observeLabels):
                 v.predict(exp,label=name)
-                
+
             for did, (sym,_) in zip( rangeAssumes,self.assumes):
                 assumedValues[sym] = v.report(did,type=True)
             for name in observeLabels:
@@ -444,7 +445,7 @@ class Analytics(object):
             logscores=v.get_global_logscore()
 
             return assumedValues,predictedValues,queryExpsValues,logscores
-            
+
 
         def riplSample():
             assumedValues = {symbol:  [] for (symbol, _) in self.assumes}
@@ -470,7 +471,7 @@ class Analytics(object):
         out = mriplSample() if self.mripl and useMRipl else riplSample()
 
         assumedValues,predictedValues,queryExpsValues,logscores = out
-        
+
         if self.mripl:
             for (name,values) in predictedValues.iteritems():
                 parsedValues = map(parseValue, values)
@@ -480,11 +481,11 @@ class Analytics(object):
                 name = self.nameObserve(index)
                 parsedValues = map(parseValue, values)
                 history.addSeries(name,values[0]['type'],'iid',parsedValues)
-            
-        
+
+
         for (symbol, values) in assumedValues.iteritems():
             history.addSeries(symbol,values[0]['type'], 'i.i.d.', map(parseValue, values))
-        
+
         for (exp, values) in queryExpsValues.iteritems():
             history.addSeries(exp,values[0]['type'], 'i.i.d.', map(parseValue, values))
 
@@ -501,7 +502,7 @@ class Analytics(object):
             self.ripl.infer(infer)
         else:
             infer(self.ripl, stepSize)
-        
+
 
     # iterates until (approximately) all random choices have been resampled
     def sweep(self,infer=None,**kwargs):
@@ -510,18 +511,18 @@ class Analytics(object):
         if simpleInfer:
             self._runInfer(infer,stepSize)
             return stepSize
-        
+
         iterations = 0
         get_entropy_info = self.ripl.sivm.core_sivm.engine.get_entropy_info
 
         # if #unconstrainted_random_choices stays fixed after infer(step)
         # then we do #iterations=#u_r_c. if #u_r_c grows after infer, we do
-        # another step (with larger stepsize) and repeat. 
+        # another step (with larger stepsize) and repeat.
         while iterations < get_entropy_info()['unconstrained_random_choices']:
             step = get_entropy_info()['unconstrained_random_choices']
             if infer is None:
                 self.ripl.infer(step)
-                
+
             elif isinstance(infer, str):
                 self.ripl.infer(infer)
             else:
@@ -529,16 +530,16 @@ class Analytics(object):
             iterations += step
 
         return iterations
-    
 
-  
+
+
     def _runRepeatedly(self, f, tag, runs=3, verbose=False, profile=False,
                        useMRipl=True,**kwargs):
         history = History(tag, self.parameters)
-        
+
         if self.mripl and useMRipl and not self.muRipl:
             v = MRipl(runs,backend=self.backend,local_mode=self.mripl.local_mode)
-            
+
             def sendf(ripl,fname,modelTuple,**kwargs):
                 seed = ripl.sample('(uniform_discrete 0 (pow 10 5))') ## FIXME HACK
                 params=dict(venture_random_seed=seed)
@@ -546,7 +547,7 @@ class Analytics(object):
                 model = Analytics(ripl,assumes=assumes,observes=observes,
                                   queryExps=queries,parameters=params)
                 return getattr(model,fname)(label='seed:%s'%seed,**kwargs)
-                
+
             modelTuple=(self.assumes,self.observes,self.queryExps)
             results = mr_map_proc(v,'all',sendf, f.func_name, modelTuple,**kwargs)
 
@@ -565,7 +566,7 @@ class Analytics(object):
             for r in results[:runs]: history.addRun(r)
             return history
 
-    
+
         # single ripl
         for run in range(runs):
             if verbose:
@@ -573,11 +574,11 @@ class Analytics(object):
 
             res = f(label="run %s" % run, verbose=verbose, **kwargs)
             history.addRun(res)
-        
+
         if profile:
             history.profile = Profile(self.ripl)
         return history
-    
+
 
     # Runs inference on the joint distribution (observes turned into predicts).
     # A random subset of the predicts are tracked along with the assumed variables.
@@ -593,7 +594,7 @@ class Analytics(object):
     # Returns a History reflecting exactly one Run.
     def collectStateSequence(self, name=None, profile=False, **kwargs):
         assumeToDirective = self._assumesFromRipl()
-        
+
         tag = 'run_from_conditional' if name is None else name + '_run_from_conditional'
         history = History(tag, self.parameters)
         history.addRun(self._collectSamples(assumeToDirective, {}, label="interactive", **kwargs))
@@ -628,11 +629,11 @@ class Analytics(object):
             sweepTimes.append(end-start)
             sweepIters.append(iterations)
             logscores.append(self.ripl.get_global_logscore())
-            
+
             self.updateValues(assumedValues,keyToDirective=assumeToDirective)
             self.updateValues(predictedValues,keyToDirective=predictToDirective)
             self.updateValues(queryExpsValues,keyToDirective=None)
-    
+
         answer.addSeries('sweep time (s)', 'count', Series(label, sweepTimes))
         answer.addSeries('sweep_iters', 'count', Series(label, sweepIters))
         answer.addSeries('logscore', 'number', Series(label, logscores))
@@ -656,7 +657,7 @@ class Analytics(object):
            To avoid using the *sweep* method for inference, set
            *simpleInfer* to True. This will record after
            each call to your inference program. (You can thin the number
-           of samples recorded using the *transitions* argument for the 
+           of samples recorded using the *transitions* argument for the
            inference program).
 
            Example:
@@ -673,7 +674,7 @@ class Analytics(object):
            simpleInfer :: bool [optional]
                If True, run inference without attempting to hit all variables
                before recording. Use optional *stepSize* argument to specify
-               numbers of steps between recording. 
+               numbers of steps between recording.
            runs :: int  [optional]
                Number of parallel chains for inference. Default=3.
            infer :: string | function on ripl
@@ -697,7 +698,7 @@ class Analytics(object):
                data) and inference. If runs>1, it's ripl after last run.'''
 
         tag = 'run_from_conditional' if name is None else name + '_run_from_conditional'
-        
+
         history = self._runRepeatedly(self.runFromConditionalOnce,
                                       tag, data=data, sweeps=sweeps, **kwargs)
         ## FIXME ensure observe values are parsed (not typed)
@@ -709,7 +710,7 @@ class Analytics(object):
         history.addData(data)
 
         return (history,self.ripl) if not self.mripl else (history,self.mripl)
-  
+
 
     def runFromConditionalOnce(self, data=None, force=None, **kwargs):
         if not self.muRipl:
@@ -722,9 +723,9 @@ class Analytics(object):
         if force is not None:
             for symbol,value in force.iteritems():
                 self.ripl.force(symbol,value)
-        
+
         # note: we loadObserves, but predictToDirective arg = {}
-        # so we are not collecting sample of the observes here. 
+        # so we are not collecting sample of the observes here.
         return self._collectSamples(assumeToDirective, {}, **kwargs)
 
 
@@ -733,7 +734,7 @@ class Analytics(object):
 
         randRipl = np.random.randint(0,self.mripl.no_ripls)
         force={}
-        
+
         for symbol,_ in self.assumes:
             value = self.mripl.sample(symbol)[randRipl]
             if isinstance(value,(int,float)): force[symbol]=value
@@ -743,21 +744,21 @@ class Analytics(object):
             h,_ = model.runConditionedFromPrior(sweeps, force=force,
                                                 runs=1,**kwargs)
             return h
-            
+
         histories = mr_map_proc(self.mripl, noDatasets, fromPrior,
                                 sweeps, self.queryExps,force=None, **kwargs)
-        
+
         pairs = zip(['Ripl%i'%i for i in range(noDatasets)],histories)
         historyOV = historyOverlay('testFromPrior',pairs)
-        
+
         return historyOV, self.mripl
-            
-                                        
+
+
 
     # Run inference conditioned on data generated from the prior.
     def runConditionedFromPrior(self, sweeps, verbose=False, **kwargs):
         ## FIXME: add docstring describing groundtruth and outputting ripl.
-        
+
         (data, groundTruth) = self.generateDataFromPrior(verbose=verbose)
 
         history,_ = self.runFromConditional(sweeps, data=data, verbose=verbose, **kwargs)
@@ -776,17 +777,17 @@ class Analytics(object):
         data=[]
         for i,_ in enumerate(self.observes):
             data.append(self.ripl.report(predictToDirective[i],type=True))
-        
+
         assumedValues = {}
         for (symbol, directive) in assumeToDirective.iteritems():
             value = self.ripl.report(directive, type=True)
             assumedValues[symbol] = value
-        
+
         queryExpsValues = {}
         for exp in self.queryExps:
             value = self.ripl.sample(exp,type=True)
             queryExpsValues[exp] = value
-                
+
         groundTruth = assumedValues.copy() # store groundTruth as {exp:value}
         groundTruth.update(queryExpsValues.copy())
 
@@ -833,7 +834,7 @@ class Analytics(object):
         else:
             fh = self.sampleFromJoint(samples, track=track, useMRipl=False)
             ih = self.runFromJoint(samples, track=track, infer=infer, runs=1, useMRipl=False)
-            
+
         forwardHistory,inferHistory = fh,ih
         ## FIXME: should be able to take multiple runs and flatten them
         #  inferHistory = flattenRuns(inferHistory)
@@ -851,16 +852,16 @@ class Analytics(object):
 
         if names is not None:
             dicts=[filterDict(d,keep=names) for d in dicts]
-            
+
         compareReport = compareSampleDicts(dicts,labels,plot=plot)
-        
+
         gewekeStr='''
         Geweke-style Test of Inference:
         Compare iid (forward) samples from joint to dependent
         samples from inference (*observes* changed to *predicts*)
         -------------\n\n'''
         compareReport.reportString = gewekeStr + compareReport.reportString
-        
+
         return forwardHistory,inferHistory,compareReport
 
 
