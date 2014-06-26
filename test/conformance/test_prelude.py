@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, SkipTest
 from venture.test.config import get_ripl
 import numpy as np
 import random
@@ -15,9 +15,11 @@ def run_containers(testfun):
 class TestPrelude(TestCase):
   '''
   Provides methods for testing all routines provided by Venture "standard
-  library" as given in python/lib/ripl/prelude.
+  library" as given in python/lib/ripl/prelude. This class itself is never
+  used to run tests; it is a base class for two subclasses TestPreludePuma
+  and TestPreludeLite; these provide different setUp methods to test the two
+  backends respectively.
   '''
-
   _multiprocess_can_split_ = True
   containers = ['list', 'vector', 'array']
   array_like_containers = ['array', 'vector']
@@ -54,26 +56,27 @@ class TestPrelude(TestCase):
       the length randomly.
     '''
     # check the arguments
-    errstr = 'mode must be one of TestPrelude.random_modes.'
+    errstr = 'mode must be one of PreludeTestBase.random_modes.'
     assert mode in self.random_modes, errstr
-    errstr = 'container must be one of TestPrelude.containers.'
+    errstr = 'container must be one of PreludeTestBase.containers.'
     assert container in self.containers, errstr
     # length of the container
-    if length is None: length = random.choice(range(*self.container_length))
+    l = (random.choice(range(*self.container_length))
+         if length is None else length)
     # if it's a vector and the puma backend, numeric only
     # TODO: fix this when it gets fixed in the implementation
     if self.v.backend() == 'puma' and container == 'vector':
       mode = 'numeric'
     if mode == 'boolean':
       # if boolean, make a random boolean vector
-      res = map(str, np.random.uniform(0,1,length) > 0.5)
+      res = map(str, np.random.uniform(0,1,l) > 0.5)
     if mode == 'numeric':
       # if numeric, draw some normal random variables
-      res = map(str, np.random.randn(length))
+      res = map(str, np.random.randn(l))
     if mode == 'mixed':
       # if mixed, draw some numbers and some strings
       res = []
-      for _ in range(length):
+      for _ in range(l):
         if np.random.uniform() > 0.5:
           res.append(str(np.random.randn()))
         else:
@@ -125,9 +128,13 @@ class TestPrelude(TestCase):
     vectors satisfy is_array in lite backend but not in Puma.
     '''
     for container in ['vector', 'array']:
+      if container == 'array':
+        raise SkipTest('Issue: https://app.asana.com/0/11127829865276/13406662044948')
+
       self.reset_ripl()
-      # make the data, check it's not an array to start
-      x = self.mk_random_data('list', 'mixed')
+      # vectors can only store numeric data
+      dtype = 'numeric' if container == 'vector' else 'mixed'
+      x = self.mk_random_data('list', dtype)
       x_python = self.v.assume('x', x)
       errstr = 'Input should have been list, but passed is_vector.'
       self.assertFalse(self.v.sample('(is_array x)'), errstr)
