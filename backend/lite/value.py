@@ -152,6 +152,7 @@ class VentureInteger(VentureValue):
     else:
       return "VentureInteger(uninitialized)"
   def getInteger(self): return self.number
+  def getNumber(self): return float(self.number)
   def asStackDict(self, _trace=None): return {"type":"integer","value":self.number}
   @staticmethod
   def fromStackDict(thing): return VentureInteger(thing["value"])
