@@ -12,7 +12,8 @@ Venture has the following distinct basic types:
 - Symbols
 - Probabilities (represented in direct space, as floating point
   numbers between 0 and 1)
-? ForeignBlobs
+? ForeignBlobs for carrying arbitrary user-supplied data that is
+  opaque to Venture
 
 General Containers
 ------------------
