@@ -18,7 +18,6 @@ import serialize
 class VentureValue(object):
   def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getInteger(self): raise VentureTypeError("Cannot convert %s to integer" % type(self))
-  def getCount(self): raise VentureTypeError("Cannot convert %s to count" % type(self))
   def getPositive(self): raise VentureTypeError("Cannot convert %s to positive" % type(self))
   def getProbability(self): raise VentureTypeError("Cannot convert %s to probability" % type(self))
   def getAtom(self): raise VentureTypeError("Cannot convert %s to atom" % type(self))
@@ -87,11 +86,7 @@ class VentureNumber(VentureValue):
     else:
       return "VentureNumber(uninitialized)"
   def getNumber(self): return self.number
-  def getCount(self):
-    if 0 <= self.number:
-      return int(self.number)
-    else: # TODO Do what?  Clip to 0?  Raise?
-      raise VentureTypeError("Count out of range %s" % self.number)
+  def getInteger(self): return int(self.number)
   def getPositive(self):
     if 0 < self.number:
       return self.number
@@ -159,22 +154,6 @@ class VentureInteger(VentureValue):
   def compareSameType(self, other): return stupidCompare(self.number, other.number)
   def __hash__(self): return hash(self.number)
   def expressionFor(self): return self.number
-
-@serialize.register
-class VentureCount(VentureNumber):
-  def __init__(self, number):
-    assert isinstance(number, Number)
-    assert 0 <= number
-    self.number = int(number)
-  def __repr__(self):
-    if hasattr(self, "number"):
-      return "VentureCount(%s)" % self.number
-    else:
-      return "VentureCount(uninitialized)"
-  # TODO Think about the relationship to VentureNumber on other operations
-  # TODO Notably, probabilities are not a useful vector space, but
-  # their tangents are (and consequently, the tangents of
-  # probabilities are not probabilities).
 
 @serialize.register
 class VenturePositive(VentureNumber):
@@ -742,10 +721,25 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Integer", "Count", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix", "ForeignBlob"]:
+for typestring in ["Integer", "Positive", "Probability", "Atom", "Bool", "Symbol", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix", "ForeignBlob"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))
+
+class CountType(VentureType):
+  def asVentureValue(self, thing):
+    assert 0 <= thing
+    return VentureInteger(thing)
+  def asPython(self, vthing):
+    ans = vthing.getInteger()
+    if 0 <= ans:
+      return ans
+    else:
+      # TODO: Or what?  Clip to 0?
+      raise VentureTypeError("Count is not positive %s" % self.number)
+  def __contains__(self, vthing):
+    return isinstance(vthing, VentureInteger) and 0 <= vthing.getInteger()
+  def name(self): return "<count>"
 
 class NilType(VentureType):
   def asVentureValue(self, _thing):

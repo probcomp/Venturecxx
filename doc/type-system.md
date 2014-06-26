@@ -6,7 +6,7 @@ Basic
 
 Venture has the following distinct basic types:
 - Floating point numbers (64-bit precision)
-- [TODO] Integers
+- Integers
 ? Atoms
 - Booleans
 - Symbols
