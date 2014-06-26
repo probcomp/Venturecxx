@@ -8,18 +8,16 @@ import operator
 def run_containers(testfun):
   'Decorator to apply a test function to all container types.'
   def container_looper(self):
-    for container in self.containers: 
+    for container in self.containers:
       testfun(self, container)
   return container_looper
 
 class TestPrelude(TestCase):
   '''
-  Provides methods for testing all routines provided by Venture "standard 
-  library" as given in python/lib/ripl/prelude. This class itself is never
-  used to run tests; it is a base class for two subclasses TestPreludePuma 
-  and TestPreludeLite; these provide different setUp methods to test the two 
-  backends respectively.
-  ''' 
+  Provides methods for testing all routines provided by Venture "standard
+  library" as given in python/lib/ripl/prelude.
+  '''
+
   _multiprocess_can_split_ = True
   containers = ['list', 'vector', 'array']
   array_like_containers = ['array', 'vector']
@@ -36,7 +34,7 @@ class TestPrelude(TestCase):
   def mk_random_data(self, container, mode, length = None):
     '''
     Generates random arrays / lists / vectors for use in tests.
-    
+
     Parameters
     ----------
     container : str
@@ -56,27 +54,26 @@ class TestPrelude(TestCase):
       the length randomly.
     '''
     # check the arguments
-    errstr = 'mode must be one of PreludeTestBase.random_modes.'
+    errstr = 'mode must be one of TestPrelude.random_modes.'
     assert mode in self.random_modes, errstr
-    errstr = 'container must be one of PreludeTestBase.containers.'
+    errstr = 'container must be one of TestPrelude.containers.'
     assert container in self.containers, errstr
     # length of the container
-    l = (random.choice(range(*self.container_length)) 
-         if length is None else length)
+    if length is None: length = random.choice(range(*self.container_length))
     # if it's a vector and the puma backend, numeric only
     # TODO: fix this when it gets fixed in the implementation
-    if self.v.backend() == 'puma' and container == 'vector': 
+    if self.v.backend() == 'puma' and container == 'vector':
       mode = 'numeric'
     if mode == 'boolean':
       # if boolean, make a random boolean vector
-      res = map(str, np.random.uniform(0,1,l) > 0.5)
+      res = map(str, np.random.uniform(0,1,length) > 0.5)
     if mode == 'numeric':
       # if numeric, draw some normal random variables
-      res = map(str, np.random.randn(l))
+      res = map(str, np.random.randn(length))
     if mode == 'mixed':
       # if mixed, draw some numbers and some strings
       res = []
-      for _ in range(l):
+      for _ in range(length):
         if np.random.uniform() > 0.5:
           res.append(str(np.random.randn()))
         else:
@@ -127,17 +124,16 @@ class TestPrelude(TestCase):
     Check that to_array and to_vector convert lists properly. Small hitch:
     vectors satisfy is_array in lite backend but not in Puma.
     '''
-    pass
-    # for container in ['vector', 'array']:
-    #   self.reset_ripl()
-    #   # make the data, check it's not an array to start
-    #   x = self.mk_random_data('list', 'mixed')
-    #   x_python = self.v.assume('x', x)
-    #   errstr = 'Input should have been list, but passed is_vector.'
-    #   self.assertFalse(self.v.sample('(is_array x)'), errstr)
-    #   # convert, check
-    #   cmd_str = '(to_{0} x)'.format(container)
-    #   y_python = self.v.assume('y', cmd_str)
+    for container in ['vector', 'array']:
+      self.reset_ripl()
+      # make the data, check it's not an array to start
+      x = self.mk_random_data('list', 'mixed')
+      x_python = self.v.assume('x', x)
+      errstr = 'Input should have been list, but passed is_vector.'
+      self.assertFalse(self.v.sample('(is_array x)'), errstr)
+      # convert, check
+      cmd_str = '(to_{0} x)'.format(container)
+      y_python = self.v.assume('y', cmd_str)
 
   @run_containers
   def test_map(self, container):

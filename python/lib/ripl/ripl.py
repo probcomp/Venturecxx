@@ -32,6 +32,7 @@ class Ripl():
         self.directive_id_to_stringable_instruction = {}
         self.directive_id_to_mode = {}
         self.mode = parsers.keys()[0]
+        self.load_prelude()
 
 
 
@@ -382,7 +383,11 @@ Open issues:
     def forget(self, label_or_did):
         if isinstance(label_or_did,int):
             i = {'instruction':'forget', 'directive_id':label_or_did}
+            # if asked to forget prelude instruction, decrement _n_prelude
+            if label_or_did <= self._n_prelude:
+                self._n_prelude -= 1
         else:
+            # assume that prelude instructions don't have labels
             i = {'instruction':'labeled_forget', 'label':label_or_did}
         self.execute_instruction(i)
         return None
@@ -439,7 +444,7 @@ Open issues:
         self.execute_instruction({'instruction':'rollback'})
         return None
 
-    def list_directives(self, type=False):
+    def list_directives(self, type=False, include_prelude = False):
         with self.sivm._pause_continuous_inference():
             directives = self.execute_instruction({'instruction':'list_directives'})['directives']
             # modified to add value to each directive
@@ -450,6 +455,9 @@ Open issues:
                          }
                 value = self.execute_instruction(inst)['value']
                 directive['value'] = value if type else _strip_types(value)
+            # if not requested to include the prelude, exclude those directives
+            if hasattr(self, '_n_prelude') and (not include_prelude):
+                directives = directives[self._n_prelude:]
             return directives
 
     def get_directive(self, label_or_did):
@@ -584,7 +592,8 @@ Open issues:
                 prog = f.readlines()
             prog = ''.join(x for x in prog if not re.match('^;', x))
             _ = self.execute_program(prog)
-
+        # keep track of the number of directives in the prelude
+        self._n_prelude = len(self.list_directives(include_prelude = True))
 
     ############################################
     # Private methods
