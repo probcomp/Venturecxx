@@ -773,6 +773,7 @@ def registerVentureType(t, name = None):
     if name is not None:
       stackable_types[name] = t
 
+### Venture Types
 
 class VentureType(object):
   def asPythonNoneable(self, vthing):
@@ -785,6 +786,25 @@ class VentureType(object):
 
 # TODO Is there any way to make these guys be proper singleton
 # objects?
+
+class AnyType(VentureType):
+  """The type object to use for parametric types -- does no conversion."""
+  def __init__(self, type_name=None):
+    self.type_name = type_name
+  def asVentureValue(self, thing):
+    assert isinstance(thing, VentureValue)
+    return thing
+  def asPython(self, thing):
+    assert isinstance(thing, VentureValue)
+    return thing
+  def __contains__(self, vthing): return isinstance(vthing, VentureValue)
+  def name(self):
+    if self.type_name is None:
+      return "<object>"
+    else:
+      return self.type_name
+  def distribution(self, base, **kwargs):
+    return base("object", **kwargs)
 
 # This is a prototypical example of the classes I am autogenerating
 # below, for legibility.  I could have removed this and added "Number"
@@ -889,6 +909,44 @@ data List = Nil | Pair Any List
     return isinstance(vthing, VentureNil) or (isinstance(vthing, VenturePair) and vthing.rest in self)
   def name(self): return "<list>"
 
+class HomogeneousListType(VentureType):
+  """Type objects for homogeneous lists.  Right now, the homogeneity
+  is not captured in the implementation, in that on the Venture side
+  such data is still stored as heterogenous Venture lists.  This type
+  does, however, encapsulate the necessary wrapping and unwrapping."""
+  def __init__(self, subtype):
+    assert isinstance(subtype, VentureType)
+    self.subtype = subtype
+  def asVentureValue(self, thing):
+    return pythonListToVentureList(*[self.subtype.asVentureValue(t) for t in thing])
+  def asPython(self, vthing):
+    return vthing.asPythonList(self.subtype)
+  def __contains__(self, vthing):
+    return vthing in ListType and all([v in self.subtype for v in vthing.asPythonList()])
+  def name(self): return "<list %s>" % self.subtype.name()
+  def distribution(self, base, **kwargs):
+    # TODO Is this splitting what I want?
+    return base("list", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
+
+class HomogeneousArrayType(VentureType):
+  """Type objects for homogeneous arrays.  Right now, the homogeneity
+  is not captured in the implementation, in that on the Venture side
+  such data is still stored as heterogenous Venture arrays.  This type
+  does, however, encapsulate the necessary wrapping and unwrapping."""
+  def __init__(self, subtype):
+    assert isinstance(subtype, VentureType)
+    self.subtype = subtype
+  def asVentureValue(self, thing):
+    return VentureArray([self.subtype.asVentureValue(v) for v in thing])
+  def asPython(self, vthing):
+    return vthing.getArray(self.subtype)
+  def __contains__(self, vthing):
+    return isinstance(vthing, VentureArray) and all([v in self.subtype for v in vthing.getArray()])
+  def name(self): return "<array %s>" % self.subtype.name()
+  def distribution(self, base, **kwargs):
+    # TODO Is this splitting what I want?
+    return base("array", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
+
 class ExpressionType(VentureType):
   """A Venture expression is either a Venture self-evaluating object
 (bool, number, integer, atom), or a Venture symbol, or a Venture array of
@@ -944,63 +1002,6 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
     return thing
 
   def name(self): return "<exp>"
-
-class AnyType(VentureType):
-  """The type object to use for parametric types -- does no conversion."""
-  def __init__(self, type_name=None):
-    self.type_name = type_name
-  def asVentureValue(self, thing):
-    assert isinstance(thing, VentureValue)
-    return thing
-  def asPython(self, thing):
-    assert isinstance(thing, VentureValue)
-    return thing
-  def __contains__(self, vthing): return isinstance(vthing, VentureValue)
-  def name(self):
-    if self.type_name is None:
-      return "<object>"
-    else:
-      return self.type_name
-  def distribution(self, base, **kwargs):
-    return base("object", **kwargs)
-
-class HomogeneousListType(VentureType):
-  """Type objects for homogeneous lists.  Right now, the homogeneity
-  is not captured in the implementation, in that on the Venture side
-  such data is still stored as heterogenous Venture lists.  This type
-  does, however, encapsulate the necessary wrapping and unwrapping."""
-  def __init__(self, subtype):
-    assert isinstance(subtype, VentureType)
-    self.subtype = subtype
-  def asVentureValue(self, thing):
-    return pythonListToVentureList(*[self.subtype.asVentureValue(t) for t in thing])
-  def asPython(self, vthing):
-    return vthing.asPythonList(self.subtype)
-  def __contains__(self, vthing):
-    return vthing in ListType and all([v in self.subtype for v in vthing.asPythonList()])
-  def name(self): return "<list %s>" % self.subtype.name()
-  def distribution(self, base, **kwargs):
-    # TODO Is this splitting what I want?
-    return base("list", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
-
-class HomogeneousArrayType(VentureType):
-  """Type objects for homogeneous arrays.  Right now, the homogeneity
-  is not captured in the implementation, in that on the Venture side
-  such data is still stored as heterogenous Venture arrays.  This type
-  does, however, encapsulate the necessary wrapping and unwrapping."""
-  def __init__(self, subtype):
-    assert isinstance(subtype, VentureType)
-    self.subtype = subtype
-  def asVentureValue(self, thing):
-    return VentureArray([self.subtype.asVentureValue(v) for v in thing])
-  def asPython(self, vthing):
-    return vthing.getArray(self.subtype)
-  def __contains__(self, vthing):
-    return isinstance(vthing, VentureArray) and all([v in self.subtype for v in vthing.getArray()])
-  def name(self): return "<array %s>" % self.subtype.name()
-  def distribution(self, base, **kwargs):
-    # TODO Is this splitting what I want?
-    return base("array", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
 
 class HomogeneousDictType(VentureType):
   """Type objects for homogeneous dicts.  Right now, the homogeneity
