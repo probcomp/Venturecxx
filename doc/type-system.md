@@ -86,6 +86,7 @@ needed.  If a coersion fails, an error is raised.
 
 [TODO] Unboxed X to boxed X by boxing
 [TODO] Boxed X to unboxed X by type checking and unboxing (may fail)
+? Proper linked lists to arrays
 [TODO] Integers to floating point numbers
 Probabilities to floating point numbers by injection
 [MAYBE] Floating point numbers to direct-space probabilities by range

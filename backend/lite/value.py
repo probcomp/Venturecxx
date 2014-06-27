@@ -584,8 +584,10 @@ class VentureArrayUnboxed(VentureValue):
 
 @serialize.register
 class VentureSimplex(VentureValue):
-  """Simplexes are homogeneous floating point arrays.  They are also
-supposed to sum to 1, but we are not checking that."""
+  """Simplexes are homogeneous unboxed arrays of probabilities.  They
+are also supposed to sum to 1, but we are not checking that.
+
+  """
   def __init__(self,simplex): self.simplex = simplex
   def __repr__(self):
     return "VentureSimplex(%s)" % self.simplex
@@ -614,7 +616,9 @@ supposed to sum to 1, but we are not checking that."""
 @serialize.register
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
+
   def getDict(self): return self.dict
+
   def asStackDict(self, _trace):
     # TODO Difficult to reflect as a Python dict because the keys
     # would presumably need to be converted to stack dicts too, which
@@ -622,13 +626,16 @@ class VentureDict(VentureValue):
     return {"type":"dict", "value":self}
   @staticmethod
   def fromStackDict(thing): return thing["value"]
+
   def equalSameType(self, other):
     return len(set(self.dict.iteritems()) ^ set(other.dict.iteritems())) == 0
+
   def lookup(self, key):
     return self.dict[key]
   def contains(self, key):
     return key in self.dict
   def size(self): return len(self.dict)
+
   def expressionFor(self):
     (keys, vals) = zip(*self.dict.iteritems())
     return [{"type":"symbol", "value":"dict"},
@@ -639,24 +646,28 @@ class VentureDict(VentureValue):
 @serialize.register
 class VentureMatrix(VentureValue):
   def __init__(self,matrix): self.matrix = np.array(matrix)
+  def __repr__(self):
+    return "VentureMatrix(%s)" % self.matrix
+
   def getMatrix(self): return self.matrix
   def getSymmetricMatrix(self):
     if matrixIsSymmetric(self.matrix):
       return self.matrix
     else:
       raise VentureTypeError("Matrix is not symmetric %s" % self.matrix)
+
   def compareSameType(self, other):
     return lexicographicMatrixCompare(self.matrix, other.matrix)
-  def __repr__(self):
-    return "VentureMatrix(%s)" % self.matrix
   def __hash__(self):
     # From http://stackoverflow.com/questions/5386694/fast-way-to-hash-numpy-objects-for-caching
     b = self.matrix.view(np.uint8)
     return hash(hashlib.sha1(b).hexdigest())
+
   def asStackDict(self, _trace):
     return {"type":"matrix", "value":self.matrix}
   @staticmethod
   def fromStackDict(thing): return VentureMatrix(thing["value"])
+
   def __add__(self, other):
     if other == 0:
       return self
@@ -687,6 +698,7 @@ class VentureMatrix(VentureValue):
     return np.sum(np.multiply(self.matrix, other.matrix))
   def map_real(self, f):
     return VentureMatrix(np.vectorize(f)(self.matrix))
+
   def expressionFor(self):
     return [{"type":"symbol", "value":"matrix"},
             [{"type":"symbol", "value":"list"}] + [[{"type":"symbol", "value":"list"}] + [v for v in row] for row in self.matrix]]
