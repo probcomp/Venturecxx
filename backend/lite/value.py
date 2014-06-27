@@ -758,6 +758,7 @@ stackable_types = {
   "blob": VentureForeignBlob,
   "vector": VentureArray,
   "array": VentureArray,
+  "array_unboxed": VentureArrayUnboxed,
   "list": VentureArray, # TODO Or should this be a linked list?  Should there be an array type?
   "improper_list": VenturePair,
   "simplex": VentureSimplex,

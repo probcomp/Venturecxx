@@ -99,4 +99,4 @@ class DefaultRandomVentureValue(object):
     if depth == 0:
       return getattr(self, npr.choice(["number", "atom", "bool", "symbol", "nil", "integer", "probability"]))(**kwargs)
     else:
-      return getattr(self, npr.choice(["array", "pair", "simplex", "matrix", "list"]))(depth=depth-1, **kwargs)
+      return getattr(self, npr.choice(["array", "pair", "simplex", "matrix", "list", "array_unboxed"]))(depth=depth-1, **kwargs)
