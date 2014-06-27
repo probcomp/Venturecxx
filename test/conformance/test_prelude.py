@@ -58,22 +58,21 @@ class TestPrelude(TestCase):
     errstr = 'container must be one of PreludeTestBase.containers.'
     assert container in self.containers, errstr
     # length of the container
-    l = (random.choice(range(*self.container_length))
-         if length is None else length)
+    if length is None: length = random.choice(range(*self.container_length))
     # if it's a vector and the puma backend, numeric only
     # TODO: fix this when it gets fixed in the implementation
     if self.v.backend() == 'puma' and container == 'vector':
       mode = 'numeric'
     if mode == 'boolean':
       # if boolean, make a random boolean vector
-      res = map(str, np.random.uniform(0,1,l) > 0.5)
+      res = map(str, np.random.uniform(0,1,length) > 0.5)
     if mode == 'numeric':
       # if numeric, draw some normal random variables
-      res = map(str, np.random.randn(l))
+      res = map(str, np.random.randn(length))
     if mode == 'mixed':
       # if mixed, draw some numbers and some strings
       res = []
-      for _ in range(l):
+      for _ in range(length):
         if np.random.uniform() > 0.5:
           res.append(str(np.random.randn()))
         else:
