@@ -8,6 +8,7 @@ from numbers import Number
 import numpy as np
 import hashlib
 
+import ensure_numpy as enp
 from request import Request # TODO Pull that file in here?
 from exception import VentureValueError, VentureTypeError
 import serialize
@@ -81,6 +82,9 @@ class VentureValue(object):
   # so overload addition, subtraction, and multiplication by scalars.
   # def __add__(self, other), and also __radd__, __neg__, __sub__,
   # __mul__, __rmul__, and dot
+
+  def expressionFor(self):
+    return [{"type":"symbol", "value":"quote"}, self.asStackDict(None)]
 
 @serialize.register
 class VentureNumber(VentureValue):
@@ -485,6 +489,89 @@ class VentureArray(VentureValue):
 
   def expressionFor(self):
     return [{"type":"symbol", "value":"array"}] + [v.expressionFor() for v in self.array]
+
+  def asPythonList(self, elt_type=None):
+    return self.getArray(elt_type)
+
+@serialize.register
+class VentureArrayUnboxed(VentureValue):
+  """Venture arrays of unboxed objects are homogeneous, with O(1) access and O(n) copy."""
+  def __init__(self, array, elt_type):
+    assert isinstance(elt_type, VentureType)
+    self.elt_type = elt_type
+    self.array = enp.ensure_numpy_if_possible(elt_type, array)
+  def __repr__(self):
+    return "VentureArrayUnboxed(%s)" % self.array
+
+  # This method produces results that are at least Python-boxed
+  def getArray(self, elt_type=None):
+    if elt_type is None: # Convert to VentureValue
+      return [self.elt_type.asVentureValue(v) for v in self.array]
+    else:
+      # TODO What I really need here is the function that converts
+      # from the Python representation of self.elt_type to the Python
+      # representation of elt_type, with an optimization if that
+      # function is the identity.
+      assert elt_type == self.elt_type
+      return self.array
+
+  def compareSameType(self, other):
+    return lexicographicUnboxedCompare(self.array, other.array)
+  def __hash__(self): return sequenceHash(self.array)
+
+  def asStackDict(self,_trace=None):
+    return {"type":"array_unboxed", "subtype":self.elt_type, "value":self.array}
+  @staticmethod
+  def fromStackDict(thing):
+    return VentureArrayUnboxed(thing["value"], thing["subtype"])
+
+  def lookup(self, index):
+    try:
+      ind = index.getNumber()
+    except VentureTypeError:
+      raise VentureValueError("Looking up non-number %r in an array" % index)
+    if 0 <= int(ind) and int(ind) < len(self.array):
+      return self.elt_type.asVentureValue(self.array[int(ind)])
+    else:
+      raise VentureValueError("Index out of bounds: %s" % index)
+  def lookup_grad(self, index, direction):
+    # TODO Really this should be an unboxed array of the gradient
+    # types of the elements, with generic zeroes.
+    return VentureArray([direction if i == index else 0 for (_,i) in enumerate(self.array)])
+  def contains(self, obj):
+    return any(obj.equal(self.elt_type.asVentureValue(li)) for li in self.array)
+  def size(self): return len(self.array)
+
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureArrayUnboxed(*enp.map2(operator.add, self.array, self.elt_type, other.array, other.elt_type))
+  def __radd__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureArrayUnboxed(*enp.map2(operator.add, other.array, other.elt_type, self.array, self.elt_type))
+  def __neg__(self):
+    return VentureArrayUnboxed(enp.map(operator.neg, self.array, self.elt_type), self.elt_type)
+  def __sub__(self, other):
+    if other == 0:
+      return self
+    else:
+      return VentureArrayUnboxed(*enp.map2(operator.sub, self.array, self.elt_type, other.array, other.elt_type))
+  def __mul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureArrayUnboxed(enp.map(lambda x: x * other, self.array, self.elt_type), self.elt_type)
+  def __rmul__(self, other):
+    # Assume other is a scalar
+    assert isinstance(other, Number)
+    return VentureArrayUnboxed(enp.map(lambda x: other * x, self.array, self.elt_type), self.elt_type)
+  def dot(self, other):
+    return enp.dot(self.array, self.elt_type, other.array, other.elt_type)
+  def map_real(self, f):
+    # TODO Ascertain whether self.elt_type represents a real number or not
+    return VentureArrayUnboxed(enp.map(f, self.array, self.elt_type), self.elt_type)
 
   def asPythonList(self, elt_type=None):
     return self.getArray(elt_type)
