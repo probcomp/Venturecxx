@@ -15,9 +15,9 @@ def testInferWithNoEntropy():
 def testOuterMix1():
   "Makes sure that the mix-mh weights are correct"
   ripl = get_ripl()
-  ripl.predict("(if (bernoulli 0.5) (if (bernoulli 0.5) 2 3) 1)")
+  ripl.predict("(if (bernoulli 0.5) (if (bernoulli 0.5) 2 3) 1)", label="pid")
 
-  predictions = collectSamples(ripl,1)
+  predictions = collectSamples(ripl,"pid")
   ans = [(1,.5), (2,.25), (3,.25)]
   return reportKnownDiscrete(ans, predictions)
 

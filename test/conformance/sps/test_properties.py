@@ -123,8 +123,10 @@ def propExpressionWorks(value):
 
 def eval_in_ripl(expr):
   ripl = get_ripl()
+  # hack so that report_raw grabs the first directive after the prefix
+  len_prefix = len(ripl.sivm.core_sivm.engine.getDistinguishedTrace().families)
   ripl.predict(expr)
-  return ripl.sivm.core_sivm.engine.report_raw(1)
+  return ripl.sivm.core_sivm.engine.report_raw(len_prefix + 1)
 
 def testRiplSimulate():
   if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")

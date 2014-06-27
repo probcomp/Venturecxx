@@ -444,7 +444,8 @@ class Analytics(object):
             v = MRipl(samples, backend=self.backend, local_mode=mriplLocalMode)
             for sym,exp in self.assumes: v.assume(sym,exp)
 
-            rangeAssumes=range(1,1+len(self.assumes))
+            # this range has to begin with the first directive after the prelude
+            rangeAssumes=range(v._n_prelude+1,v._n_prelude+len(self.assumes)+1)
             observeLabels=[self.nameObserve(i) for i,_ in enumerate(self.observes)]
             if mriplTrackObserves is False:
                 observeLabel = []

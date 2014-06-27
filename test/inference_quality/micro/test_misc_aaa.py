@@ -15,11 +15,11 @@ def checkMakeBetaBernoulli1(maker, hyper):
 
   ripl.assume("a", hyper)
   ripl.assume("f", "(%s a a)" % maker)
-  ripl.predict("(f)")
+  ripl.predict("(f)", label="pid")
 
   for _ in range(20): ripl.observe("(f)", "true")
 
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,"pid")
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -38,11 +38,11 @@ def checkMakeBetaBernoulli2(maker):
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((lambda () (%s ((lambda () a)) ((lambda () a)))))" % maker)
-  ripl.predict("(f)")
+  ripl.predict("(f)", label="pid")
 
   for _ in range(20): ripl.observe("((lambda () (f)))", "true")
 
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,"pid")
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -58,7 +58,7 @@ def checkMakeBetaBernoulli3(maker):
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a a)" % maker)
-  ripl.predict("(f)")
+  ripl.predict("(f)", label="pid")
 
   for _ in range(10): ripl.observe("(f)", "true")
   for _ in range(10): ripl.observe("""
@@ -66,7 +66,7 @@ def checkMakeBetaBernoulli3(maker):
   (f)
   (f))""", "true")
 
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,"pid")
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -85,11 +85,11 @@ def checkMakeBetaBernoulli4(maker):
 (if (lt a 10.0)
   ({0} a a)
   ({0} a a))""".format(maker))
-  ripl.predict("(f)")
+  ripl.predict("(f)", label="pid")
 
   for _ in range(20): ripl.observe("(f)", "true")
 
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,"pid")
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
 

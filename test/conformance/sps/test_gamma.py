@@ -7,8 +7,8 @@ def testGamma1():
   "Check that Gamma is parameterized correctly"
   ripl = get_ripl()
   # samples
-  ripl.assume("a","(gamma 10.0 10.0)")
-  observed = collectSamples(ripl,1)
+  ripl.assume("a","(gamma 10.0 10.0)",label ="pid")
+  observed = collectSamples(ripl,"pid")
   # true CDF
   gamma_cdf = lambda x: gamma.cdf(x, a = 10, scale = 1 / 10.)
   return reportKnownContinuous(gamma_cdf, observed)

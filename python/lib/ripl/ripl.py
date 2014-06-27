@@ -1,17 +1,17 @@
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
+#
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -20,6 +20,10 @@ import numbers
 from venture.exception import VentureException
 from venture.lite.value import VentureValue
 import utils as u
+import re
+from os import path
+
+PRELUDE_FILE = 'prelude.vnt'
 
 class Ripl():
     def __init__(self,sivm,parsers):
@@ -28,6 +32,9 @@ class Ripl():
         self.directive_id_to_stringable_instruction = {}
         self.directive_id_to_mode = {}
         self.mode = parsers.keys()[0]
+        self._n_prelude = 0
+        # TODO Loading the prelude currently (6/26) slows the test suite to a crawl
+        # self.load_prelude()
 
 
 
@@ -51,10 +58,10 @@ class Ripl():
     ############################################
     # Backend
     ############################################
-    
+
     def backend(self):
         return self.sivm.core_sivm.engine.name
-    
+
     ############################################
     # Execution
     ############################################
@@ -360,25 +367,29 @@ Open issues:
         if options is None: options = {}
         i = {'instruction':'configure', 'options':options}
         return self.execute_instruction(i)['options']
-    
+
     def get_seed(self):
         return self.configure()['seed']
-    
+
     def set_seed(self, seed):
         self.configure({'seed': seed})
         return None
-    
+
     def get_inference_timeout(self):
         return self.configure()['inference_timeout']
-    
+
     def set_inference_timeout(self, inference_timeout):
         self.configure({'inference_timeout': inference_timeout})
         return None
-    
+
     def forget(self, label_or_did):
         if isinstance(label_or_did,int):
             i = {'instruction':'forget', 'directive_id':label_or_did}
+            # if asked to forget prelude instruction, decrement _n_prelude
+            if label_or_did <= self._n_prelude:
+                self._n_prelude -= 1
         else:
+            # assume that prelude instructions don't have labels
             i = {'instruction':'labeled_forget', 'label':label_or_did}
         self.execute_instruction(i)
         return None
@@ -416,7 +427,7 @@ Open issues:
             return params
         else:
             raise TypeError("Unknown params: " + str(params))
-        
+
     def infer(self, params=None, type=False):
         o = self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
         ans = o["value"]
@@ -435,7 +446,7 @@ Open issues:
         self.execute_instruction({'instruction':'rollback'})
         return None
 
-    def list_directives(self, type=False):
+    def list_directives(self, type=False, include_prelude = False):
         with self.sivm._pause_continuous_inference():
             directives = self.execute_instruction({'instruction':'list_directives'})['directives']
             # modified to add value to each directive
@@ -446,6 +457,9 @@ Open issues:
                          }
                 value = self.execute_instruction(inst)['value']
                 directive['value'] = value if type else _strip_types(value)
+            # if not requested to include the prelude, exclude those directives
+            if hasattr(self, '_n_prelude') and (not include_prelude):
+                directives = directives[self._n_prelude:]
             return directives
 
     def get_directive(self, label_or_did):
@@ -464,7 +478,7 @@ Open issues:
         i = {'instruction':'sample', 'expression':expression}
         value = self.execute_instruction(i)['value']
         return value if type else _strip_types(value)
-    
+
     def continuous_inference_status(self):
         return self.execute_instruction({'instruction':'continuous_inference_status'})
 
@@ -521,26 +535,26 @@ Open issues:
     ############################################
     # Profiler methods (stubs)
     ############################################
-    
+
     def profiler_configure(self, options=None):
         if options is None: options = {}
         i = {'instruction': 'profiler_configure', 'options': options}
         return self.execute_instruction(i)['options']
-    
+
     def profiler_enable(self):
         self.profiler_configure({'profiler_enabled': True})
         return None
-    
+
     def profiler_disable(self):
         self.profiler_configure({'profiler_enabled': False})
         return None
-    
+
     def profiler_clear(self):
         self.random_choices = []
         self.address_to_acceptance_rate = {}
         self.address_to_proposal_time = {}
         return None
-    
+
     # insert a random choice into the profiler
     def profiler_make_random_choice(self):
         import random
@@ -548,25 +562,41 @@ Open issues:
         trials = random.randrange(1, 1000)
         successes = random.randint(0, trials)
         proposal_time = trials * random.random()
-        
+
         self.random_choices.append(address)
         self.address_to_acceptance_rate[address] = (trials, successes)
         self.address_to_proposal_time[address] = proposal_time
-        
+
         return address
-    
+
     def profiler_list_random_choices(self):
         return self.random_choices
-    
+
     def profiler_address_to_source_code_location(self,address):
         return address
-    
+
     def profiler_get_acceptance_rate(self,address):
         return self.address_to_acceptance_rate[address]
-    
+
     def profiler_get_proposal_time(self,address):
         return self.address_to_proposal_time[address]
-    
+
+    ############################################
+    # Library
+    ############################################
+    def load_prelude(self):
+        '''
+        Load the library of Venture helper functions
+        '''
+        if self.mode == 'church_prime':
+            prelude_path = path.join(path.dirname(__file__), PRELUDE_FILE)
+            with open(prelude_path) as f:
+                prog = f.readlines()
+            prog = ''.join(x for x in prog if not re.match('^;', x))
+            _ = self.execute_program(prog)
+        # keep track of the number of directives in the prelude
+        self._n_prelude = len(self.list_directives(include_prelude = True))
+
     ############################################
     # Private methods
     ############################################

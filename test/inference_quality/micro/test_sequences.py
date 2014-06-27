@@ -39,9 +39,9 @@ def testVentureNormalHMM1():
   # p((g 4) | (f 4))   = normal mean  (f 4), var     1, prec 1
   ripl.observe("(g 4)",5.0)
   # p((f 4) | history) = normal mean 390/89, var 55/89, prec 89/55
-  ripl.predict("(f 4)")
+  ripl.predict("(f 4)", label="pid")
 
-  predictions = collectSamples(ripl,8,infer="mixes_slowly")
+  predictions = collectSamples(ripl,"pid",infer="mixes_slowly")
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
 

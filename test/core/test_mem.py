@@ -40,9 +40,9 @@ def testMem1():
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   ripl.predict("(f (bernoulli 0.5))")
-  ripl.predict("(f (bernoulli 0.5))")
+  ripl.predict("(f (bernoulli 0.5))",label="pid")
   ripl.infer(20) # Run even in crash testing mode
-  predictions = collectSamples(ripl, 3)
+  predictions = collectSamples(ripl, "pid")
   return reportKnownDiscrete([[True, 0.5], [False, 0.5]], predictions)
 
 @statisticalTest
@@ -76,9 +76,9 @@ def testMem3():
   ripl.assume("w","((lambda () (f 2)))")
   ripl.assume("z","(g 1)")
   ripl.assume("q","(categorical (simplex 0.1 0.9) (array 1 2))")
-  ripl.predict('(add x y w z q)')
+  ripl.predict('(add x y w z q)',label="pid")
 
-  predictions = collectSamples(ripl,8)
+  predictions = collectSamples(ripl,"pid")
   # TODO This test can be strengthened by computing more of the ratios in the answer
   # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
