@@ -323,6 +323,12 @@ class VenturePair(VentureValue):
       return "VentureList(%r . %r)" % (list_, tail)
 
   def getPair(self): return (self.first,self.rest)
+  def getArray(self, elt_type=None):
+    (list_, tail) = self.asPossiblyImproperList()
+    if tail is None:
+      return VentureArray(list_).getArray(elt_type)
+    else:
+      raise Exception("Cannot convert an improper list to array")
 
   def asStackDict(self, trace):
     (list_, tail) = self.asPossiblyImproperList()
@@ -335,7 +341,7 @@ class VenturePair(VentureValue):
     if thing["type"] == "improper_list":
       return thing["value"]
     else:
-      raise Exception("Type clash!")
+      return pythonListToVentureList(*[VentureValue.fromStackDict(v) for v in thing["value"]])
 
   def compareSameType(self, other):
     fstcmp = self.first.compare(other.first)
@@ -756,11 +762,11 @@ stackable_types = {
   "boolean": VentureBool,
   "symbol": VentureSymbol,
   "blob": VentureForeignBlob,
+  "list": VenturePair,
+  "improper_list": VenturePair,
   "vector": VentureArray,
   "array": VentureArray,
   "array_unboxed": VentureArrayUnboxed,
-  "list": VentureArray, # TODO Or should this be a linked list?  Should there be an array type?
-  "improper_list": VenturePair,
   "simplex": VentureSimplex,
   "dict": VentureDict,
   "matrix": VentureMatrix,
