@@ -947,6 +947,22 @@ class HomogeneousArrayType(VentureType):
     # TODO Is this splitting what I want?
     return base("array", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
 
+class ArrayUnboxedType(VentureType):
+  """Type objects for arrays of unboxed values.  Perforce homogeneous."""
+  def __init__(self, subtype):
+    assert isinstance(subtype, VentureType)
+    self.subtype = subtype
+  def asVentureValue(self, thing):
+    return VentureArrayUnboxed(thing, self.subtype)
+  def asPython(self, vthing):
+    return vthing.getArray(self.subtype)
+  def __contains__(self, vthing):
+    # TODO Need a more general element type compatibility check
+    return isinstance(vthing, VentureArrayUnboxed) and vthing.elt_type == self.subtype
+  def name(self): return "<array %s>" % self.subtype.name()
+  def distribution(self, base, **kwargs):
+    return base("array_unboxed", elt_type=self.subtype, **kwargs)
+
 class ExpressionType(VentureType):
   """A Venture expression is either a Venture self-evaluating object
 (bool, number, integer, atom), or a Venture symbol, or a Venture array of

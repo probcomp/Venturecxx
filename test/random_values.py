@@ -37,6 +37,12 @@ class DefaultRandomVentureValue(object):
     if elt_dist is None:
       elt_dist = DefaultRandomVentureValue("object") # TODO reuse class of self
     return v.VentureArray([elt_dist.generate(**kwargs) for _ in range(length)])
+  def array_unboxed(self, length=None, elt_type=None, **kwargs):
+    if length is None:
+      length = npr.randint(0, 10)
+    if elt_type is None:
+      elt_type = v.AnyType()
+    return v.VentureArrayUnboxed([elt_type.distribution(self.__class__, **kwargs).generate() for _ in range(length)], elt_type)
   def nil(self, **_kwargs):
     return v.VentureNil()
   def pair(self, size=None, first_dist=None, second_dist=None, **kwargs):
