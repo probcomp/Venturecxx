@@ -25,6 +25,9 @@ class VentureValue(object):
   def getSymbol(self): raise VentureTypeError("Cannot convert %s to symbol" % type(self))
   def getForeignBlob(self): raise VentureTypeError("Cannot convert %s to foreign blob" % type(self))
   def getPair(self): raise VentureTypeError("Cannot convert %s to pair" % type(self))
+  # Convention for containers: if the elt_type argument is None,
+  # return a Python container of VentureValue objects.  Otherwise,
+  # apply the transformation given by the given type to the elements.
   def getArray(self, _elt_type=None): raise VentureTypeError("Cannot convert %s to array" % type(self))
   def getSimplex(self): raise VentureTypeError("Cannot convert %s to simplex" % type(self))
   def getDict(self): raise VentureTypeError("Cannot convert %s to dict" % type(self))
@@ -410,21 +413,15 @@ def pythonListToVentureList(*l):
 
 @serialize.register
 class VentureArray(VentureValue):
-  """Venture arrays are heterogeneous, with O(1) access and O(n) copy.
-Venture does not yet implement homogeneous packed arrays, but the
-interface here is compatible with one possible path."""
-  def __init__(self, array, elt_type=None):
-    if elt_type is None: # No conversion
-      self.array = array
-    else:
-      self.array = [elt_type.asVentureValue(v) for v in array]
+  """Venture arrays are heterogeneous, with O(1) access and O(n) copy."""
+  def __init__(self, array): self.array = array
+  def __repr__(self):
+    return "VentureArray(%s)" % self.array
   def getArray(self, elt_type=None):
     if elt_type is None: # No conversion
       return self.array
     else:
       return [elt_type.asPython(v) for v in self.array]
-  def asPythonList(self, elt_type=None):
-    return self.getArray(elt_type)
 
   def compareSameType(self, other):
     return lexicographicBoxedCompare(self.array, other.array)
@@ -437,6 +434,7 @@ interface here is compatible with one possible path."""
   @staticmethod
   def fromStackDict(thing):
     return VentureArray([VentureValue.fromStackDict(v) for v in thing["value"]])
+
   def lookup(self, index):
     try:
       ind = index.getNumber()
@@ -454,6 +452,7 @@ interface here is compatible with one possible path."""
     # anyway, so might as well eventually use `in` here.
     return any(obj.equal(li) for li in self.array)
   def size(self): return len(self.array)
+
   def __add__(self, other):
     if other == 0:
       return self
@@ -483,10 +482,12 @@ interface here is compatible with one possible path."""
     return sum([x.dot(y) for (x,y) in zip(self.array, other.array)])
   def map_real(self, f):
     return VentureArray([x.map_real(f) for x in self.array])
-  def __repr__(self):
-    return "VentureArray(%s)" % self.array
+
   def expressionFor(self):
     return [{"type":"symbol", "value":"array"}] + [v.expressionFor() for v in self.array]
+
+  def asPythonList(self, elt_type=None):
+    return self.getArray(elt_type)
 
 @serialize.register
 class VentureSimplex(VentureValue):
@@ -904,7 +905,7 @@ class HomogeneousArrayType(VentureType):
     assert isinstance(subtype, VentureType)
     self.subtype = subtype
   def asVentureValue(self, thing):
-    return VentureArray(thing, self.subtype)
+    return VentureArray([self.subtype.asVentureValue(v) for v in thing])
   def asPython(self, vthing):
     return vthing.getArray(self.subtype)
   def __contains__(self, vthing):
