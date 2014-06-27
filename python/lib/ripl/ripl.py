@@ -32,7 +32,8 @@ class Ripl():
         self.directive_id_to_stringable_instruction = {}
         self.directive_id_to_mode = {}
         self.mode = parsers.keys()[0]
-        self.load_prelude()
+        self._n_prelude = 0
+#        self.load_prelude()
 
 
 
