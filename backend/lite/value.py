@@ -708,6 +708,7 @@ class VentureSymmetricMatrix(VentureMatrix):
   def __init__(self, matrix):
     self.matrix = matrix
     assert matrixIsSymmetric(matrix)
+
   def __add__(self, other):
     if other == 0:
       return self

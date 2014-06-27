@@ -22,7 +22,7 @@ Venture has the following heterogeneous container types:
 - Pairs
 - Nil, which is the empty list
 - Lists  (a list is either Nil or a Pair whose cdr is a List)
-- Improper lists  (anything can be treated as an improper list)
+- Improper lists  (anything can be treated as an improper list?)
 - Arrays
 - Dictionaries
 - 1st class environments
@@ -47,11 +47,15 @@ Unboxed Containers
 ------------------
 
 Venture has the following homogeneous unboxed container types:
-- Vectors of floating point numbers
+- Arrays of arbitrary Venture values stored unboxed
 - [TODO] Vectors of probabilities (currently called Simplex)
 - Matrices of floating point numbers
 - Symmetric matrices of floating point numbers (which are not
   actually represented differently from general matrices)
+
+In Lite, the ArrayUnboxed representation tries to store the underlying
+objects in numpy arrays when possible, to avoid Python's boxes as well
+as Venture's.
 
 Contracts
 ---------
