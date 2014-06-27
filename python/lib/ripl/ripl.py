@@ -440,6 +440,9 @@ Open issues:
 
     def clear(self):
         self.execute_instruction({'instruction':'clear'})
+        # if you clear the ripl, you lose all the prelude commands
+        # TODO: change this behavior
+        self._n_prelude = 0
         return None
 
     def rollback(self):
@@ -595,7 +598,7 @@ Open issues:
             prog = ''.join(x for x in prog if not re.match('^;', x))
             _ = self.execute_program(prog)
         # keep track of the number of directives in the prelude
-        self._n_prelude = len(self.list_directives(include_prelude = True))
+        self._n_prelude += len(self.list_directives(include_prelude = True))
 
     ############################################
     # Private methods
