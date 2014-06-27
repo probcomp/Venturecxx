@@ -300,6 +300,7 @@ class Analytics(object):
         if removeAllObserves:
             self.observes = []
         if newObserves is not None:
+            
             self.observes.extend( newObserves )
 
         if self.muRipl:
