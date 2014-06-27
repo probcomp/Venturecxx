@@ -22,8 +22,23 @@ from history import History, Run, Series, historyOverlay,compareSampleDicts,filt
 
 parseValue = _strip_types
 
-# PLAN:
-# mode where input ripl is mutated by Analytics
+
+# TODO
+# 1. simpleInfer option for runFromConditional avoids using sweeps
+# and so gives fine-grained control of inference transitions. 
+# Currently this is only documented in runFromConditional doc-string.
+# It doesn't have unit tests.
+
+# 2. Proper integration of persistent/mutable mripl with all analytics
+# options. 
+
+# 3. More tests for unit/analytics interaction.
+
+# 4. Way of avoiding long names for analytics plots.
+
+
+
+# PLAN: Persistent Ripls for Analytics
 
 # benefits:
 # 1. can add observes,assumes,infers at any time without
@@ -138,7 +153,7 @@ class VentureUnit(object):
 
         self.analyticsArgs = (self.ripl,)
         self.analyticsKwargs = dict(assumes=self.assumes, observes=self.observes,
-                           parameters=self.parameters, queryExps=self.queryExps)
+                                    parameters=self.parameters, queryExps=self.queryExps)
 
     def getAnalytics(self,ripl_mripl,mutateRipl=False):
         '''Create Analytics object from assumes, observes and parameters.
@@ -300,7 +315,7 @@ class Analytics(object):
         if removeAllObserves:
             self.observes = []
         if newObserves is not None:
-            
+            assert not isinstance(newObserves,str), '*newObserves* is set of strings, not string' 
             self.observes.extend( newObserves )
 
         if self.muRipl:
@@ -315,6 +330,7 @@ class Analytics(object):
         if removeAllQueryExps:
             self.queryExps = []
         if newQueryExps is not None:
+            assert not isinstance(newObserves,str), '*newQueryExps* is set of strings, not string' 
             self.queryExps.extend( newQueryExps )
         # always update mripl engines with whatever is current self.queryExps
         if self.mripl and self.mripl.local_mode is False:
