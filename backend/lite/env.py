@@ -15,8 +15,10 @@ class VentureEnvironment(VentureValue):
     if ids and nodes: self.frame.update(zip(ids,nodes))
 
   def addBinding(self,sym,val):
-    assert isinstance(sym, str)
-    assert not sym in self.frame
+    if not isinstance(sym, str):
+      raise Exception("Symbol %s must be a string, not " % (str(sym), type(sym)))
+    if sym in self.frame:
+      raise Exception("Symbol '%s' already bound" % sym)
     self.frame[sym] = val
 
   def removeBinding(self,sym):
