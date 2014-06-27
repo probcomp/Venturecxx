@@ -37,8 +37,8 @@ def testFlip1():
 @statisticalTest
 def testFlip2():
   ripl = get_ripl()
-  ripl.predict("(bernoulli 0.5)")
-  predictions = collectSamples(ripl, 1)
+  ripl.predict("(bernoulli 0.5)",label="pid")
+  predictions = collectSamples(ripl, "pid")
   return reportKnownDiscrete([[True, 0.5], [False, 0.5]], predictions)
 
 def testAtom():

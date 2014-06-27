@@ -27,7 +27,7 @@ def setup_function():
 
 def teardown_function():
     print "TEARDOWN REACHED"
-    def stop_engines(): 
+    def stop_engines():
         stop=subprocess.Popen(['ipcluster', 'stop'])
         stop.wait()
     stop_engines()
@@ -38,7 +38,7 @@ def teardown_function():
 #def get_mripl(no_ripls=2,**kwargs): return MRipl(no_ripls,local_mode=LOCALMODE)
 
 
-def localRunFunctions():    
+def localRunFunctions():
     tests = []
     for k,v in globals().iteritems():
         if hasattr(v,'__call__') and k.startswith('test'):
@@ -64,47 +64,47 @@ def testDirectivesAssume():
 
     # test assume,report,predict,sample
     outAssume = v.assume("x","(poisson 50)",label="x")
-    outs = [v.report(1), v.report("x"), v.sample("x"), v.predict("x")]
-    typed = v.report(1,type=True)
+    outs = [v.report("x"), v.report("x"), v.sample("x"), v.predict("x")]
+    typed = v.report("x",type=True)
     outs.append( [ type_value["value"] for type_value in typed] )
-    
+
     outAssume= map(int,outAssume)
     [eq_(outAssume,map(int,out)) for out in outs]
 
     # test observe
     v.clear()
-    outAssume = v.assume("x","(normal 1 1)")
+    outAssume = v.assume("x","(normal 1 1)",label="x")
     v.observe("(normal x 1)","2",label="obs")
     [assert_almost_equal(out,2) for out in v.report("obs")]
-    assert_almost_equal(outAssume[0],v.report(1)[0])
+    assert_almost_equal(outAssume[0],v.report("x")[0])
 
 
 def testDirectivesExecute():
     "execute_program, force"
     v = get_mripl(no_ripls=3)
-    
+
     prog = """
-    [ASSUME x (+ 1 (* 0 (poisson 50)) )]
-    [PREDICT x ]
-    [ASSUME y (poisson 50) ]
-    [OBSERVE (normal x 1) 55.]
+    pid1 : [ASSUME x (+ 1 (* 0 (poisson 50)) )]
+    pid2 : [PREDICT x ]
+    pid3 : [ASSUME y (poisson 50) ]
+    pid4 : [OBSERVE (normal x 1) 55.]
     """
     v.execute_program(prog)
-    eq_( v.report(2), v.report(1) )
-    
-    assert v.report(3) >=  0
-    eq_(v.report(4)[0],55)
-    
+    eq_( v.report('pid2'), v.report('pid1') )
+
+    assert v.report('pid3') >=  0
+    eq_(v.report('pid4')[0],55)
+
     v.force('y','10')
-    eq_( v.report(3)[0], 10)
+    eq_( v.report('pid3')[0], 10)
 
 @statisticalTest
 def testDirectivesInfer1():
     'infer'
     v=get_mripl(no_ripls=30)
-    samples = v.assume('x','(normal 1 1)')
+    samples = v.assume('x','(normal 1 1)',label='pid')
     v.infer(5)
-    samples.extend(v.report(1))
+    samples.extend(v.report('pid'))
     cdf = stats.norm(loc=1, scale=1).cdf
     return reportKnownContinuous(cdf,samples,"N(1,1)")
 
@@ -112,9 +112,9 @@ def testDirectivesInfer1():
 def testDirectivesInfer2():
     'inference program'
     v=get_mripl(no_ripls=30)
-    samples = v.assume('x','(normal 1 1)')
+    samples = v.assume('x','(normal 1 1)',label='pid')
     [v.infer(params='(mh default one 1)') for _ in range(5)]
-    samples.extend(v.report(1))
+    samples.extend(v.report('pid'))
     cdf = stats.norm(loc=1, scale=1).cdf
     return reportKnownContinuous(cdf,samples,"N(1,1)")
 
@@ -122,15 +122,15 @@ def testDirectivesInfer2():
 def testDirectivesForget():
     'forget'
     v=get_mripl(no_ripls=30)
-    v.assume('x','(normal 1 10)')
+    v.assume('x','(normal 1 10)',label='pid')
     v.observe('(normal x .1)','1')
     v.infer(20)
     v.forget(2)
     v.infer(20)
-    samples = v.report(1)
+    samples = v.report('pid')
     cdf = stats.norm(loc=1, scale=10).cdf
     return reportKnownContinuous(cdf,samples,"N(1,10)")
-    
+
 
 def testDirectivesListDirectives():
     'list_directives'
@@ -139,14 +139,14 @@ def testDirectivesListDirectives():
     v.assume('x','(* 2 10)')
     out = v.list_directives()
     # either list_directives outputs di_list for each ripl or just one copy
-    if len(out)==no_ripls: 
+    if len(out)==no_ripls:
         di_list = out[0]
     else:
-        di_list = out   
+        di_list = out
     eq_(di_list[0]['symbol'],'x')
     eq_(di_list[0]['value'],20.)
-    
-    
+
+
 @statisticalTest
 def testSeeds():
     # seeds can be set via constructor or self.mr_set_seeds
@@ -154,20 +154,20 @@ def testSeeds():
     ## TODO skip using constructor till code is stable
     #v=get_mripl(no_ripls=8,seeds=dict(local=range(1),remote=range(8)))
     #eq_(v.seeds,range(8))
-    
+
     v=get_mripl(no_ripls=10)
     v.mr_set_seeds(range(10))
     eq_(v.seeds,range(10))
 
     # initial seeds are distinct and stay distinct after self.clear
-    v=get_mripl(no_ripls=20) 
+    v=get_mripl(no_ripls=20)
     v.sample("(normal 1 1)")
     v.clear()
     samples = v.sample("(normal 1 1)")
     cdf = stats.norm(loc=1,scale=1).cdf
     return reportKnownContinuous(cdf,samples,"N(1,1)")
-    
-    
+
+
 def testMultiMRipls():
     'Create multiple mripls that share the same engine namespaces'
     vs=[get_mripl(no_ripls=2) for _ in range(2)]
@@ -181,7 +181,7 @@ def testMultiMRipls():
 
     outs = [v.assume('x','%i'%i) for i,v in zip(range(2),vs)]
     assert outs[0] != outs[1]
-    
+
     vs[0].clear()
     vs = [vs[0],get_mripl(no_ripls=3)] # trigger del for vs[1]
     if vs[0].local_mode is False:
@@ -220,7 +220,7 @@ def testMapProc():
     proc_args_list = [ [[], dict(y=10)]  ]
     values = v.map_proc_list(setf,proc_args_list,only_p_args=False)
     eq_( values, [ {333,10} ] )
-                             
+
     # unbalanced no_ripls
     out = v.map_proc(3,f)
     assert all( 16. == np.array(out) )
@@ -260,12 +260,12 @@ def testBackendSwitch():
 def testTransitionsCount():
     v=get_mripl(no_ripls=2)
     eq_( v.total_transitions, 0)
-    
+
     v.assume('x','(student_t 4)')
     v.observe('(normal x 1)','2.')
     v.infer(10)
     eq_( v.total_transitions, 10)
-    
+
     v.clear()
     eq_( v.total_transitions, 0)
     v.infer(10)
@@ -285,14 +285,14 @@ def testSnapshot():
     # sample_pop == repeated samples TODO
     #eq_(v.snapshot('x',sample_populations=(2,4))['values']['x'],
     #    [v.report(1) for _ in range(4)])
-    
+
 
 def testMRiplUtils():
     'mk_directives_string, build_exp, directive_to_string'
     v=get_ripl()
     v.assume('x','(/ 10. 5.)') # x==2
     v.assume('f','(lambda () (* x 1))') # (f)==2
-    v.observe('(normal x 1)','2')   
+    v.observe('(normal x 1)','2')
     v.predict('(+ x 0)') # ==2
     v.predict('(f)')    # ==2
     di_string = mk_directives_string(v)

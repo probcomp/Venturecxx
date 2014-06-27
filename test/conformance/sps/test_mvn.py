@@ -17,9 +17,9 @@ def testMVGaussPrior():
 
   ripl = get_ripl()
   ripl.assume("vec", "(multivariate_normal (vector 1 2) (matrix (array (array 1 0.5) (array 0.5 1))))")
-  ripl.predict("(lookup vec 0)")
+  ripl.predict("(lookup vec 0)",label="prediction")
 
-  predictions = collectSamples(ripl, 2)
+  predictions = collectSamples(ripl, "prediction")
   cdf = stats.norm(loc=1, scale=1).cdf
   return reportKnownContinuous(cdf, predictions, "N(1,1)")
 
