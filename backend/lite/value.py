@@ -591,13 +591,13 @@ supposed to sum to 1, but we are not checking that."""
     return lexicographicUnboxedCompare(self.simplex, other.simplex)
   def __hash__(self):
     return sequenceHash(self.simplex)
-  def asStackDict(self, _trace):
+  def asStackDict(self, _trace=None):
     # TODO As what type to reflect simplex points to the stack?
     return {"type":"simplex", "value":self.simplex}
   @staticmethod
   def fromStackDict(thing): return VentureSimplex(thing["value"])
   def lookup(self, index):
-    return self.simplex[index.getNumber()]
+    return ProbabilityType().asVentureValue(self.simplex[index.getNumber()])
   def contains(self, obj):
     # Homogeneous; TODO make it return False instead of exploding for non-numeric objects.
     return obj.getNumber() in self.simplex
