@@ -2,6 +2,7 @@ from nose import SkipTest
 from nose.tools import eq_
 from testconfig import config
 import math
+from numpy.testing import assert_allclose
 
 from venture.test.config import get_ripl
 from venture.lite.builtin import builtInSPsList
@@ -9,6 +10,8 @@ from venture.test.randomized import * # Importing many things, which are closely
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSP
 from venture.lite.value import AnyType
+from venture.lite.mlens import real_lenses
+import venture.test.numerical as num
 
 def testEquality():
   checkTypedProperty(propEquality, AnyType())
@@ -183,3 +186,40 @@ def propLogDensityDeterministic(rnd, sp):
     raise ArgumentsNotAppropriate("Log density turned out to be NaN")
   for _ in range(5):
     eq_(answer, carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux())))
+
+def testGradientOfLogDensity():
+  for (name,sp) in relevantSPs():
+    if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical"]: # TODO
+      if sp.outputPSP.isRandom(): # TODO Check the ones that are random when curried
+        yield checkGradientOfLogDensity, name, sp
+
+def checkGradientOfLogDensity(name, sp):
+  checkTypedProperty(propGradientOfLogDensity, (fully_uncurried_sp_type(sp.venture_type()), final_return_type(sp.venture_type())), sp)
+
+def propGradientOfLogDensity(rnd, sp):
+  (args_lists, value) = rnd
+  if not len(args_lists) == 1:
+    raise SkipTest("TODO: Write the code for measuring log density of curried SPs")
+  answer = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
+  if math.isnan(answer):
+    raise ArgumentsNotAppropriate("Log density turned out to be NaN")
+
+  def log_d_displacement_func(lens):
+    def f(h):
+      x = lens.get()
+      lens.set(x + h)
+      ans = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
+      # Leave the value in the lens undisturbed
+      lens.set(x)
+      return ans
+    return f
+  numerical_gradient = [num.richardson(num.derivative(log_d_displacement_func(lens), 0)) for lens in real_lenses([value, args_lists[0]])]
+
+  computed_gradient = sp.outputPSP.gradientOfLogDensity(value, BogusArgs(args_lists[0], sp.constructSPAux()))
+
+  numerical_values_of_computed_gradient = [lens.get() for lens in real_lenses(computed_gradient)]
+
+  print value, args_lists[0]
+  print numerical_gradient
+  print numerical_values_of_computed_gradient
+  assert_allclose(numerical_gradient, numerical_values_of_computed_gradient)

@@ -8,6 +8,7 @@ from numbers import Number
 import numpy as np
 import hashlib
 
+from mlens import MLens
 import ensure_numpy as enp
 from request import Request # TODO Pull that file in here?
 from exception import VentureValueError, VentureTypeError
@@ -140,6 +141,18 @@ class VentureNumber(VentureValue):
     return self.number * other.number
   def map_real(self, f):
     return VentureNumber(f(self.number))
+  def real_lenses(self):
+    class NumberLens(MLens):
+      # Poor man's closure: pass the relevant thing from the lexical
+      # scope directly.
+      def __init__(self, vn):
+        self.vn = vn
+      def get(self):
+        return self.vn.number
+      def set(self, new):
+        assert isinstance(new, Number)
+        self.vn.number = new
+    return [NumberLens(self)]
   def expressionFor(self): return self.number
 
 @serialize.register
