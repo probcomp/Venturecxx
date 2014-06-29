@@ -906,7 +906,7 @@ class PositiveType(VentureType):
       return ans
     else:
       # TODO: Or what?  Can't even clip to 0!
-      raise VentureTypeError("Number is not positive %s" % self.number)
+      raise VentureTypeError("Number is not positive %s" % ans)
   def __contains__(self, vthing):
     return isinstance(vthing, VentureNumber) and 0 < vthing.getNumber()
   def name(self): return "<positive>"
