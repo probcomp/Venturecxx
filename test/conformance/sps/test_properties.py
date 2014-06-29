@@ -201,7 +201,7 @@ def propGradientOfLogDensity(rnd, sp):
   if not len(args_lists) == 1:
     raise SkipTest("TODO: Write the code for measuring log density of curried SPs")
   answer = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
-  if math.isnan(answer):
+  if math.isnan(answer) or math.isinf(answer):
     raise ArgumentsNotAppropriate("Log density turned out to be NaN")
 
   def log_d_displacement_func(lens):
