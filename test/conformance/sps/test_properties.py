@@ -226,7 +226,4 @@ def propGradientOfLogDensity(rnd, name, sp):
 
   numerical_values_of_computed_gradient = [lens.get() for lens in real_lenses(computed_gradient)]
 
-  print value, args_lists[0]
-  print numerical_gradient
-  print numerical_values_of_computed_gradient
   assert_allclose(numerical_gradient, numerical_values_of_computed_gradient)
