@@ -7,7 +7,7 @@ def testTrig1():
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("a","(sq (sin x))")
   ripl.assume("b","(sq (cos x))")
-  ripl.predict("(+ a b)")
+  ripl.predict("(+ a b)",label="pid")
   for _ in range(10):
     ripl.infer(1)
-    assert abs(ripl.report(5) - 1) < .001
+    assert abs(ripl.report("pid") - 1) < .001

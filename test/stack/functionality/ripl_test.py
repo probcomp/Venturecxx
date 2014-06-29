@@ -1,17 +1,17 @@
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
+#
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
 from venture.ripl import Ripl
@@ -162,7 +162,7 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(b,self.ripl.sample('b'))
         self.ripl.infer(0)
         self.assertEqual(self.ripl.sample('b'), 0.5)
-    
+
     ############################################
     # Core
     ############################################
@@ -208,9 +208,10 @@ class TestRipl(unittest.TestCase):
         pass
 
     def test_list_directives(self):
+        n_before = len(self.ripl.list_directives())
         self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
-        output = self.ripl.list_directives()
-        self.assertEqual(len(output),1)
+        n_after = len(self.ripl.list_directives())
+        self.assertEqual(n_after, n_before + 1)
 
     def test_get_directive(self):
         ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
@@ -260,11 +261,11 @@ class TestRipl(unittest.TestCase):
         self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
         output = self.ripl.get_global_logscore()
         self.assertEqual(output,0)
-    
+
     ############################################
     # Profiler
     ############################################
-    
+
     def test_profiler_configure(self):
         output = self.ripl.profiler_configure()
         self.assertEqual(output, {'profiler_enabled': False})
@@ -272,4 +273,4 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output, {'profiler_enabled': True})
         output = self.ripl.profiler_configure({'profiler_enabled': False})
         self.assertEqual(output, {'profiler_enabled': False})
-    
+

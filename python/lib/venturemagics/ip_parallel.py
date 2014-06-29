@@ -15,7 +15,7 @@ mk_p_ripl = make_puma_church_prime_ripl
 ### IPython Parallel Magics
 
 # REFACTORING TO DEAL WITH SLOWDOWN DUE TO LOCAL RIPL
-# 1. If we want to have 0 local ripls as default, we can 
+# 1. If we want to have 0 local ripls as default, we can
 #  have following structure for a method
 
 # def local_f(): return [proc(v) for v in localripls]
@@ -31,7 +31,7 @@ mk_p_ripl = make_puma_church_prime_ripl
 # constructor:
 # default is for only working with remotes. local_mode is only
 # with local. then debug mode gives default of one local, with
-# more as specified optionally. 
+# more as specified optionally.
 
 
 # TODO:
@@ -42,7 +42,7 @@ mk_p_ripl = make_puma_church_prime_ripl
 
 
 
-## TODO 
+## TODO
 # 1. mr_map can just be v.map_proc (etc.)
 
 
@@ -57,7 +57,7 @@ def erase_initialize_mripls(client=None,no_erase=False):
     '''Clear engine namespaces and initialize with mripls list. Optionally specify
     a pre-existing client object. If *no_erase* then will only clear and
     initialize if mripls list and counter are not present in engines.'''
-    
+
     if not client: client=Client(); print "Created new Client"
     if no_erase:
         try: # mripl vars already present: return client object
@@ -70,16 +70,16 @@ def erase_initialize_mripls(client=None,no_erase=False):
         print 'Cleared engine namespaces and created new empty list "mripls"'
         client[:].execute('mripls=[]; no_mripls=0')
         return client
-    
+
 def start_engines(no_engines,sleeptime=10):
     start = subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines,'&'])
     time.sleep(sleeptime)
-   
-def stop_engines(): 
+
+def stop_engines():
     stop=subprocess.Popen(['ipcluster', 'stop'])
     stop.wait()
 
-        
+
 ### Functions needed for the MRipl Class (could be added to scope of the class definition)
 
 # functions used by engines (and imported when constructing an mripl)
@@ -90,7 +90,7 @@ def backend_filter(backend,out):
         return mk_picklable(out)
 
 def mk_picklable(out_lst):
-    'if list is unpicklable, cast elements as strings' 
+    'if list is unpicklable, cast elements as strings'
     try:
         pickle.dumps(out_lst)
         return out_lst
@@ -102,11 +102,11 @@ def mk_picklable(out_lst):
 ## MRIPL CLASS
 
 class MRipl():
-    
+
     def __init__(self, no_ripls, backend='puma',local_mode=False,
                  seeds=None, debug_mode=False, set_no_engines=None):
-        
-# TODO DEBUG MODE should probably run inference 
+
+# TODO DEBUG MODE should probably run inference
         '''
         MRipl(no_ripls,backend='puma',local_mode=False,seeds=None,debug_mode=False)
 
@@ -118,7 +118,7 @@ class MRipl():
         ------------------------
 
         no_ripls : int
-           Lower bound on number of remote ripls. 
+           Lower bound on number of remote ripls.
            Actual number of ripls will be no_engines*ceil(no_ripls/no_engines)
         backend : 'puma' or 'lite'
            Set backend for both local and remote ripls. Can be switched later using
@@ -129,7 +129,7 @@ class MRipl():
            to be running to work with Mripl objects.
         seeds : list
            Set ripl seeds to seeds[:no_ripls]. If None, ripl seeds are range[:no_ripls].
-        
+
         Attributes
         ----------
         backend : see above
@@ -138,7 +138,7 @@ class MRipl():
         no_ripls : see above
         no_local_ripls : see above
         local_ripls : list
-           List of local ripls. 
+           List of local ripls.
         seeds : list
            List of remote seeds. These are divided between the engines such that
            Engine 0 gets seeds[0:k], Engine 1 gets seeds[k:2*k], where k is the
@@ -156,19 +156,19 @@ class MRipl():
         mrid : int
            Mripl id, used as index into the mripls list on the remote engines.
            We need this because the mripls list will store ripls for multiple
-           distinct Mripls. 
+           distinct Mripls.
        no_transitions : int
            Records number of inference transitions. Won't record transitions
-           specified via mr_map_proc and mr_map_array. 
+           specified via mr_map_proc and mr_map_array.
         '''
 
         # initialize attributes
         self.backend = backend
-        self.output = 'remote' if not debug_mode else 'both'   
+        self.output = 'remote' if not debug_mode else 'both'
         self.total_transitions = 0
         self.verbose = True if debug_mode else False
         assert not (local_mode and debug_mode), 'Local_mode must be False for debug_mode.'
-        
+
         # set local vs. remote mode
         if local_mode is False:
             try:
@@ -190,16 +190,19 @@ class MRipl():
             self.no_local_ripls = no_ripls
         else:
             self.no_local_ripls = 1
-    
+
         if not seeds:
             self.local_seeds = range(self.no_local_ripls)
-        else: 
+        else:
             self.local_seeds = seeds[:self.no_local_ripls]
 
         mk_ripl = mk_p_ripl if self.backend=='puma' else mk_l_ripl
         self.local_ripls=[mk_ripl() for i in range(self.no_local_ripls)]
         self.mr_set_seeds(local_seeds=self.local_seeds)
-        
+
+        # set _n_prelude
+        self._n_prelude = self.local_ripls[0]._n_prelude
+
         if self.local_mode:
             self.seeds = self.local_seeds
             return  # can't initialze remote ripl without ipcluster
@@ -213,7 +216,7 @@ class MRipl():
         else:
             self.no_engines = len(self.cli.ids)
             self.dview=self.cli[:]
-            
+
         try:
             self.dview['no_mripls']
         except:
@@ -229,39 +232,38 @@ class MRipl():
 
         self.seeds = range(self.no_ripls) if not seeds else seeds[:self.no_ripls]
 
-        self.dview.block = True   
-        
+        self.dview.block = True
+
         # Imports for remote ripls: needed for creating ripls on engines
         self.dview.execute('from venture.venturemagics.ip_parallel import *')
         self.dview.execute('%pylab inline --no-import-all')
-        
+
         def p_getpids(): import os; return os.getpid()
         self.pids = self.dview.apply(p_getpids)
 
         self.mrid = self.dview.pull('no_mripls')[0] # id is index into mripls list
         self.dview.push({'no_mripls':self.mrid+1})
 
-        
+
         # proc creates ripls, using ripls_per_engine attribute we send to engines
         @interactive
         def make_mripl_proc(no_ripls_per_engine):
             k=no_ripls_per_engine
             mripls.append({'lite':[mk_l_ripl() for i in range(k)],
                            'puma':[mk_p_ripl() for i in range(k)], 'seeds':[]})
-            
+
         self.dview.apply(make_mripl_proc,self.no_ripls_per_engine)
         self.mr_set_seeds(self.seeds)
-      
+
         # test invariant
         def get_seeds(mrid): return mripls[mrid]['seeds']
         assert self.seeds==lst_flatten(self.dview.apply( interactive(get_seeds), self.mrid))
-        
+
         if self.verbose: print self.ripls_info()
 
 
-
 ## MRIPL METHODS FOR CONTROLLING REMOTE ENGINES/BACKEND
- 
+
     def mr_set_seeds(self,seeds=None,remote_seeds=None,local_seeds=None):
         '''Set seeds for remote engines. Input: list of seeds of length
         self.no_mripls. Seeds distributed in order:
@@ -271,7 +273,7 @@ class MRipl():
                 local_seeds = seeds
             else:
                 remote_seeds = seeds
-                
+
         if local_seeds is not None:
             assert len(local_seeds)==self.no_local_ripls
             self.local_seeds = local_seeds
@@ -279,12 +281,12 @@ class MRipl():
         if self.local_mode:
             self.seeds = self.local_seeds
             return
-            
-        if remote_seeds is None: return    
+
+        if remote_seeds is None: return
 
         assert len(remote_seeds)==self.no_ripls
         self.seeds = remote_seeds
-        
+
         @interactive
         def set_engine_seeds(mrid,seeds_for_engine):
             mripl=mripls[mrid]
@@ -300,15 +302,15 @@ class MRipl():
             seeds_for_engine = self.seeds[start:start+self.no_ripls_per_engine]
             engine_view.apply(set_engine_seeds,self.mrid,seeds_for_engine)
 
-        
+
 
     def __del__(self):
         if not self.local_mode:
             if self.verbose:
                 print '__del__ is closing client for mripl with mrid %i' % self.mrid
             self.cli.close()
-    
-    
+
+
     def reset_seeds(self):
         'Set seeds back to seeds specified in constructuor'
         [r.set_seed(seed) for r,seed in zip(self.local_ripls,self.local_seeds)]
@@ -326,7 +328,7 @@ class MRipl():
         if backend==self.backend: return None
         self.backend = backend
         self.total_transitions = 0
-        
+
         di_string = mk_directives_string(self.local_ripls[0])
         if not(di_string):
             print 'No directives.'; return None
@@ -337,7 +339,7 @@ class MRipl():
         [r.execute_program(di_string) for r in self.local_ripls]
         if self.local_mode:
             self.reset_seeds(); return
-            
+
         # Clear ripls: else when switching back to a backend
         # we would redefine some variables
         @interactive
@@ -386,9 +388,9 @@ class MRipl():
         if self.local_mode: return local_out
 
         # all remote apply's have to pick a mrid and backend
-        remote_out = lst_flatten( self.dview.apply(f,self.mrid,self.backend,*args,**kwargs) )        
+        remote_out = lst_flatten( self.dview.apply(f,self.mrid,self.backend,*args,**kwargs) )
         return self._output_mode(local_out,remote_out)
-        
+
 
 
 
@@ -405,15 +407,15 @@ class MRipl():
         @interactive
         def f(mrid,backend):
             return [r.clear() for r in mripls[mrid][backend]]
-        
+
         apply_out=self._mr_apply(local_out,f)
         self.reset_seeds() # otherwise all seeds the same
         return apply_out
 
-            
+
     def assume(self,sym,exp,**kwargs):
         local_out = [r.assume(sym,exp,**kwargs) for r in self.local_ripls]
-        
+
         @interactive
         def f(mrid,backend,sym,exp,**kwargs):
             mripl=mripls[mrid]
@@ -421,11 +423,11 @@ class MRipl():
             return backend_filter(backend,out)
 
         return self._mr_apply(local_out,f,sym,exp,**kwargs)
-        
+
 
     def observe(self,exp,val,label=None):
         local_out = [r.observe(exp,val,label=label) for r in self.local_ripls]
-        
+
         @interactive
         def f(mrid,backend,exp,val,label=None):
             mripl=mripls[mrid]
@@ -437,7 +439,7 @@ class MRipl():
 
     def predict(self,exp,label=None,type=False):
         local_out = [r.predict(exp,label=label,type=type) for r in self.local_ripls]
-        
+
         @interactive
         def f(mrid,backend,exp,label=None,type=False):
             mripl=mripls[mrid]
@@ -449,7 +451,7 @@ class MRipl():
 
     def sample(self,exp,type=False):
         local_out = [r.sample(exp,type=type) for r in self.local_ripls]
-        
+
         @interactive
         def f(mrid,backend,exp,type=False):
             mripl=mripls[mrid]
@@ -457,7 +459,7 @@ class MRipl():
             return backend_filter(backend,out)
 
         return self._mr_apply(local_out,f,exp,type=type)
-    
+
 
     def _update_transitions(self,params):
         if isinstance(params,int):
@@ -481,7 +483,7 @@ class MRipl():
         @interactive
         def f(mrid,backend,params):
             return [r.infer(params) for r in mripls[mrid][backend] ]
-        
+
         if block:
             remote_out= lst_flatten( self.dview.apply_sync(f,self.mrid,self.backend,params) )
         else:
@@ -489,12 +491,12 @@ class MRipl():
 
 
         return self._output_mode(local_out,remote_out)
-        
-        
+
+
 
     def report(self,label_or_did,**kwargs):
         local_out = [r.report(label_or_did,**kwargs) for r in self.local_ripls]
-        
+
         @interactive
         def f(mrid,backend,label_or_did,**kwargs):
             mripl=mripls[mrid]
@@ -506,10 +508,13 @@ class MRipl():
 
     def forget(self,label_or_did):
         local_out = [r.forget(label_or_did) for r in self.local_ripls]
+        # if it's an int and it's forgetting a prelude command, decrement _n_prelude
+        if isinstance(label_or_did,int) and (label_or_did <= self._n_prelude):
+            self._n_prelude -= 1
         @interactive
         def f(mrid,backend,label_or_did):
             return [r.forget(label_or_did) for r in mripls[mrid][backend]]
-            
+
         return self._mr_apply(local_out,f,label_or_did)
 
     def force(self,expression,value):
@@ -521,7 +526,7 @@ class MRipl():
             return None
         return self._mr_apply(local_out,f,expression,value)
 
-        
+
     ## FIXME: need to be rewritten
     def _continuous_inference_status(self):
         self.local_ripl.continuous_inference_status()
@@ -547,7 +552,7 @@ class MRipl():
 
 
     def execute_program(self,program_string,params=None):
-        
+
         local_out=[r.execute_program(program_string, params) for r in self.local_ripls]
 
         @interactive
@@ -555,14 +560,14 @@ class MRipl():
             mripl=mripls[mrid]
             out = [r.execute_program(program_string, params) for r in mripl[backend]]
             return backend_filter(backend,out)
-  
+
         out_execute= self._mr_apply(local_out,f,program_string,params)
-        
+
         if '[clear]' in program_string.lower():
             self.total_transitions = 0
             print 'Clear. Total MRipl transitions reset to 0'
             self.reset_seeds()
-        
+
         return out_execute
 
 
@@ -576,18 +581,19 @@ class MRipl():
         return self._mr_apply(local_out,f)
 
 
-    def list_directives(self,type=False):
-        return self.local_ripls[0].list_directives(type=type)
+    def list_directives(self,type=False, include_prelude=False):
+        return self.local_ripls[0].list_directives(type=type,
+                                                   include_prelude=include_prelude)
     ## FIXME: need to serialize directives list
 
-               
+
 
     ## MRIPL CONVENIENCE FEATURES: INFO AND SNAPSHOT
-    
+
     def ripls_info(self):
         local_out = [(seed,str(r)) for seed,r in zip(self.local_seeds,self.local_ripls) ]
         if self.local_mode: return local_out
-        
+
         @interactive
         def get_info(mrid,backend):
             import os; pid=os.getpid()
@@ -595,24 +601,24 @@ class MRipl():
             seeds = mripl['seeds'] # FIXME add get_seed
             ripl_prints = [str(r) for r in mripl[backend]]
             return [(pid,seed,ripl_print) for seed,ripl_print in zip(seeds,ripl_prints) ]
-                   
+
         remote_out = lst_flatten( self.dview.apply(get_info,self.mrid,self.backend) )
-        
+
         return self._output_mode(local_out,remote_out)
 
 
 # TODO: refactor as special case of map_proc_list
     def map_proc(self,no_ripls,proc,*proc_args,**proc_kwargs):
         '''Map a procedure *proc*, which must take a single ripl as first
-        positional argument, across a subset of ripls in MRipl. 
+        positional argument, across a subset of ripls in MRipl.
         If *no_ripls* is "all" or is > self.no_ripls, then maps across all.
         Maps procedure *proc* across local ripls only if in local_mode.'''
 
         if no_ripls==0 or no_ripls=='all' or no_ripls>self.no_ripls:
             no_ripls = self.no_ripls
-            
+
         # map across local ripls
-        if self.local_mode: 
+        if self.local_mode:
             local_out=[proc(r,*proc_args,**proc_kwargs) for i,r in enumerate(self.local_ripls) if i<no_ripls]
             return local_out
         else:
@@ -632,8 +638,8 @@ class MRipl():
         params = (self.mrid,self.backend,per_eng)
         s1='apply_out='
         s2='[proc(r,*p_args,**p_kwargs) for i,r in enumerate(mripls[%i]["%s"]) if i<%i]'%params
-                                                                                           
-        map_view.execute(s1+s2)  
+
+        map_view.execute(s1+s2)
         ipython_inline()
         remote_out = lst_flatten( map_view['apply_out'] )
 
@@ -647,7 +653,7 @@ class MRipl():
 
         Additional arguments to proc are in lists in proc_args_list
         and may vary across ripls.
-        
+
         proc_args_list = [ [ arg_i0, arg_i1, ..., arg_ik  ], ...,  ]
         where k is the # positional args for proc and i=0 to # calls to proc.
 
@@ -665,14 +671,14 @@ class MRipl():
         def f(ripl,x,y): return ripl.sample('(+ %f %f)'%(x,y))
 
         proc_args_list = [ [10,20], [100,200] ]
-        v.map_proc_list(f,proc_args_list) 
-        Out: [30,300] 
+        v.map_proc_list(f,proc_args_list)
+        Out: [30,300]
 
         def f(ripl,x,y=1): return ripl.sample('(+ %f %f)'%(x,y))
 
         proc_args_list = [  [ [10],{'y':10} ],  [ [30],{} ] ]
         v.map_proc_list(f,proc_args_list,only_p_args=False)
-        Out: [20,31] 
+        Out: [20,31]
         '''
 
         no_args = len(proc_args_list)
@@ -718,10 +724,10 @@ class MRipl():
             #     out = [proc_l(r,*args) for r,args in zip(eng_ripls,eng_args)]
             #     list_out.extend(out)
         ipython_inline()
-        
-        return remote_out if self.output=='remote' else local_out 
-            
-        
+
+        return remote_out if self.output=='remote' else local_out
+
+
 
 
 
@@ -732,7 +738,7 @@ class MRipl():
                  plot_past_values=(),
                  sample_populations=None, repeat=None,
                  predict=True, logscore=False):
-                 
+
         '''Input: Sequence of Venture expressions (or dids/labels).
            Output: { expression: list of values of expression for each ripl }
                     (along with *self.ripls_info()*)
@@ -741,8 +747,8 @@ class MRipl():
              xlims_ylims: ( (xmin,xmax), (ymin,ymax) ), specify axes limits
                           to override automatic limits.
              logscore: Snapshot of logscore.'''
-             
-        
+
+
         if isinstance(did_labels_list,(int,str)):
             did_labels_list = [did_labels_list]
         else:
@@ -756,9 +762,9 @@ class MRipl():
 
         plot_range = xlims_ylims
 
-        if plot_range: 
+        if plot_range:
             assert isinstance(plot_range[0],(list,tuple)), 'xlims_ylims form: ( (xmin,xmax)[,(ymin,ymax)])'
-        
+
         out = {'values':{},
                'total_transitions':self.total_transitions,
                'ripls_info': self.ripls_info() }
@@ -768,13 +774,13 @@ class MRipl():
         if sample_populations:
             return self._sample_populations(exp_list,out, sample_populations,
                                             plot=plot, plot_range=plot_range)
-        elif repeat: 
+        elif repeat:
             no_groups = self.no_local_ripls if self.output=='local' else self.no_ripls
             return self._sample_populations(exp_list, out, (no_groups,repeat),
                                             flatten=True, plot=plot,
                                             plot_range=plot_range)
 
-            
+
         # basic snapshot
         out['values'] = { did_label:self.report(did_label) for did_label in did_labels_list}
 
@@ -786,7 +792,7 @@ class MRipl():
 
         out['values'].update(v)
 
-        
+
         # special options that use basic snapshot
         if plot_past_values:
             return self._plot_past_values(exp_list, out, plot_past_values,
@@ -794,28 +800,28 @@ class MRipl():
 
         # logscore current must go after plot_past_values to avoid errors
         if logscore: out['values']['global_logscore']= self.get_global_logscore()
-        
+
         if plot or scatter:
             out['figs'] = self._plot(out,scatter=scatter,plot_range=plot_range)
 
 
         return out
 
-    
+
     def sample_populations(self,exp,no_groups,population_size,xlims_ylims=None):
         '''Input *exp* will be repeatedly sampled from (*population_size* times)
            for each group in *no_groups*. The expression *exp* should be
            stochastic.
-        
+
            Example:
            mripl.assume('mean','(normal 0 100)')
            mripl.sample_populations('(normal mean 1)',4,30)'''
         return self.snapshot(exp_list = (exp,), plot=True,
                              sample_populations=(no_groups,population_size),
                              xlims_ylims=xlims_ylims)
-        
+
     def _sample_populations(self,exp_list,out,groups_popsize,flatten=False,plot=False,plot_range=None):
-        
+
         assert len(exp_list)==1, 'len(exp_list) != 1'
         exp = exp_list[0]
         no_groups,pop_size = groups_popsize
@@ -835,7 +841,7 @@ class MRipl():
         if flatten: mrmap_values = lst_flatten(mrmap_values)
 
         out['values'][exp]=mrmap_values
-        
+
         if not(plot): return out
 
         if plot and flatten: # Predictive (Repeat)
@@ -866,7 +872,7 @@ class MRipl():
 
             max_hist_count = np.max(hist_counts)
             ax[0].set_ylim( (0, 1.1*max_hist_count) )
-            
+
             ax[0].set_title('Sample populations: %s (population size= %i)' % (exp,pop_size))
             ax[1].set_title('GKDE: %s (population size= %i)' % (exp,pop_size))
 
@@ -884,7 +890,7 @@ class MRipl():
            Output: Plots the snapshots on same axis.'''
         assert all ( [isinstance(el,dict) for el in list_snapshot_outputs] )
         return self.snapshot(plot_past_values = list_snapshot_outputs)
-    
+
 
     def _plot_past_values(self, exp_list, out, past_values_list,plot_range):
         if exp_list:
@@ -897,7 +903,7 @@ class MRipl():
         assert isinstance(past_values_list,(list,tuple))
 
         list_vals = [ past_out['values'].values()[0] for past_out in past_values_list]
-        if current_vals: list_vals.append( current_vals ) 
+        if current_vals: list_vals.append( current_vals )
 
         fig,ax=plt.subplots(1,2,figsize=(14,3.5),sharex=True)
         all_vals=lst_flatten(list_vals)
@@ -921,8 +927,8 @@ class MRipl():
 
         out['figs'] = fig
         return out
-            
-    
+
+
     def type_list(self,lst):
         'find the type of a list of values, if there is a single type'
         if any([type(lst[0])!=type(i) for i in lst]):
@@ -939,11 +945,11 @@ class MRipl():
         else:
             return 'other'
 
-        
+
     def _plot(self,snapshot,scatter=False,plot_range=None):
         '''Takes input from snapshot, checks type of values and plots accordingly.
         Plots are inlined on IPNB and output as figure objects.'''
-        
+
         def draw_hist(vals,label,ax,plot_range=None):
             ax.hist(vals,alpha=.8)
             ax.set_title('Hist: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
@@ -953,20 +959,20 @@ class MRipl():
                 if len(plot_range)==2: ax.set_ylim(plot_range[1])
 
         def draw_kde(vals,label,ax,plot_range=None):
-            xr = np.linspace(min(vals),max(vals),50) 
+            xr = np.linspace(min(vals),max(vals),50)
             ax.plot(xr,gaussian_kde(vals)(xr))
             ax.set_title('GKDE: %s (transitions: %i, ripls: %i)' % (str(label), no_trans, no_ripls) )
             ax.set_xlabel('Exp: %s' % str(label))
             if plot_range:
-                ax.set_xlim(plot_range[0])                 
+                ax.set_xlim(plot_range[0])
                 if len(plot_range)==2: ax.set_ylim(plot_range[1])
-        
+
         # setup variables for plot
         figs = []
         values = snapshot['values']
         no_trans = snapshot['total_transitions']
         no_ripls = self.no_ripls if self.output=='remote' else self.no_local_ripls
-                
+
         # loop over label,val from snapshot and plot subplot of kde and hist
         for label,vals in values.items():
             var_type = self.type_list(vals)
@@ -990,7 +996,7 @@ class MRipl():
                 draw_hist(vals,label,ax,plot_range=plot_range)
                 figs.append(fig)
 
-            
+
         if scatter:
             label0,vals0 = values.items()[0]
             label1,vals1 = values.items()[1]
@@ -1006,7 +1012,7 @@ class MRipl():
 
 
 
-        
+
 
 # Utility functions for mripl and other functions
 def lst_flatten(l): return [el for subl in l for el in subl]
@@ -1014,7 +1020,7 @@ def lst_flatten(l): return [el for subl in l for el in subl]
 def ipython_inline():
     '''Try to run ipython px cell magic on empty cell
     to display previously generated figs inline.'''
-    try: 
+    try:
         ip=get_ipython()
         ip.run_cell_magic("px",'','pass') # display any figs inline
     except:
@@ -1030,7 +1036,7 @@ def display_directives(ripl_mripl,instruction='observe'):
     #v=ripl_mripl
     #mr=1  if isinstance(v,MRipl) else 0
     #di_list = v.local_ripls[0].list_directives() if mr else v.list_directives()
-    
+
     di_list = ripl_mripl.list_directives()
     instruction_list = []
     for di in di_list:
@@ -1042,9 +1048,9 @@ def display_directives(ripl_mripl,instruction='observe'):
 def directive_to_string(d):
     ## FIXME: replace symbols
     if d['instruction']=='assume':
-        return '[assume %s %s]' %( d['symbol'], build_exp(d['expression']) ) 
+        return '[assume %s %s]' %( d['symbol'], build_exp(d['expression']) )
     elif d['instruction']=='observe':
-        return '[observe %s %s]' %( build_exp(d['expression']), d['value']) 
+        return '[observe %s %s]' %( build_exp(d['expression']), d['value'])
     elif d['instruction']=='predict':
         return '[predict %s]' % build_exp(d['expression'])
 
@@ -1062,7 +1068,7 @@ def build_exp(exp):
 
 
 
-### Functions defined on MRipl objects 
+### Functions defined on MRipl objects
 
 def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
     '''Push procedure into engine namespaces. Use execute to map across ripls.
@@ -1075,7 +1081,7 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
         no_local_ripls = mripl.no_local_ripls
 
     # map across local ripls
-    if mripl.local_mode: 
+    if mripl.local_mode:
         local_out=[proc(r,*proc_args,**proc_kwargs) for i,r in enumerate(mripl.local_ripls) if i<no_ripls]
         return local_out
     else:
@@ -1091,17 +1097,17 @@ def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
         mripl.dview.execute('apply_out=None')
     else:
         per_eng = int(np.ceil(no_ripls/float(mripl.no_engines)))
-    
+
     s1='apply_out='
     s2='[map_proc(r,*map_args,**map_kwargs) for i,r in enumerate(mripls[%i]["%s"]) if i<%i]' % (mripl.mrid,
                                                                                                 mripl.backend,per_eng)
-    mripl.dview.execute(s1+s2)  
-    
+    mripl.dview.execute(s1+s2)
+
     ipython_inline()
 
     remote_out = lst_flatten( mripl.dview['apply_out'] )
-    
-    return remote_out[:no_ripls] if mripl.output=='remote' else local_out 
+
+    return remote_out[:no_ripls] if mripl.output=='remote' else local_out
 
 
 
@@ -1110,7 +1116,7 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
 
     no_args = len(proc_args_list)
     assert no_args <= mripl.no_ripls, 'More arguments than ripls'
-    
+
     # map across local ripls
     if mripl.local_mode:
         id_local_out=[]; local_out=[]
@@ -1127,7 +1133,7 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
         return local_out
     else:
         local_out = [None]*no_args
-              
+
     # map across remote ripls
     no_args_per_engine = int(np.ceil(no_args/float(mripl.no_engines)))
     extra_ripls = no_args_per_engine - no_args
@@ -1161,7 +1167,7 @@ def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
     remote_out = [outs for id_args,outs in id_remote_out[1]]
     remote_out = remote_out if not id_info_out else id_remote_out
 
-    return remote_out if mripl.output=='remote' else local_out 
+    return remote_out if mripl.output=='remote' else local_out
 
 
 
@@ -1175,7 +1181,7 @@ def venture(line, cell):
         limit = 5
     mripl = eval(mripl_name,globals(),ip.user_ns)
     out = mripl.execute_program(str(cell))
-    
+
     if isinstance(mripl,MRipl):
         try:
             values = [[d['value']['value'] for d in ripl_out] for ripl_out in out ]
@@ -1192,8 +1198,8 @@ def venture(line, cell):
         except:
             pass
 
-    return None  
-    
+    return None
+
 ## Register the cell magic for IPython use
 try:
     ip = get_ipython()

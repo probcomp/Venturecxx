@@ -10,9 +10,9 @@ def testReferences1():
   ripl.assume("draw_type2", "(make_dir_mult (array 1.0 1.0))")
   ripl.assume("class", "(if (flip) (lambda (name) (draw_type1)) (lambda (name) (draw_type2)))")
   ripl.predict("(class 1)")
-  ripl.predict("(flip)")
+  ripl.predict("(flip)", label="pid")
 
-  predictions = collectSamples(ripl,6)
+  predictions = collectSamples(ripl,"pid")
   ans = [(True,0.5), (False,0.5)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -22,8 +22,8 @@ def testReferences2():
   "Simpler version of the old bug testReferences1() tries to trigger"
   ripl = get_ripl()
   ripl.assume("f", "(if (flip 0.5) (make_dir_mult (array 1.0 1.0)) (lambda () atom<1>))")
-  ripl.predict("(f)")
+  ripl.predict("(f)", label="pid")
 
-  predictions = collectSamples(ripl,2)
+  predictions = collectSamples(ripl,"pid")
   ans = [(True,0.75), (False,0.25)]
   return reportKnownDiscrete(ans, predictions)
