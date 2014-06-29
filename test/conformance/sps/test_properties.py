@@ -1,6 +1,8 @@
 from nose import SkipTest
 from nose.tools import eq_
 from testconfig import config
+import math
+from numpy.testing import assert_allclose
 
 from venture.test.config import get_ripl
 from venture.lite.builtin import builtInSPsList
@@ -8,6 +10,9 @@ from venture.test.randomized import * # Importing many things, which are closely
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSP
 from venture.lite.value import AnyType
+from venture.lite.mlens import real_lenses
+import venture.test.numerical as num
+from venture.lite.exception import VentureBuiltinSPMethodError
 
 def testEquality():
   checkTypedProperty(propEquality, AnyType())
@@ -164,3 +169,61 @@ through a ripl (applied fully uncurried)."""
   else:
     expr = [{"type":"symbol", "value":name}] + [v.expressionFor() for v in args_lists[0]]
     assert answer.equal(carefully(eval_in_ripl, expr))
+
+def testLogDensityDeterministic():
+  for (name,sp) in relevantSPs():
+    if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical"]: # TODO
+      yield checkLogDensityDeterministic, name, sp
+
+def checkLogDensityDeterministic(_name, sp):
+  checkTypedProperty(propLogDensityDeterministic, (fully_uncurried_sp_type(sp.venture_type()), final_return_type(sp.venture_type())), sp)
+
+def propLogDensityDeterministic(rnd, sp):
+  (args_lists, value) = rnd
+  if not len(args_lists) == 1:
+    raise SkipTest("TODO: Write the code for measuring log density of curried SPs")
+  answer = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
+  if math.isnan(answer):
+    raise ArgumentsNotAppropriate("Log density turned out to be NaN")
+  for _ in range(5):
+    eq_(answer, carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux())))
+
+def testGradientOfLogDensity():
+  for (name,sp) in relevantSPs():
+    if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical",  # TODO
+                    "flip", "bernoulli"]: # TODO: Implement ZeroType
+      if sp.outputPSP.isRandom(): # TODO Check the ones that are random when curried
+        yield checkGradientOfLogDensity, name, sp
+
+def checkGradientOfLogDensity(name, sp):
+  checkTypedProperty(propGradientOfLogDensity, (final_return_type(sp.venture_type()), fully_uncurried_sp_type(sp.venture_type())), name, sp)
+
+def propGradientOfLogDensity(rnd, name, sp):
+  (value, args_lists) = rnd
+  if not len(args_lists) == 1:
+    raise SkipTest("TODO: Write the code for measuring log density of curried SPs")
+  answer = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
+  if math.isnan(answer) or math.isinf(answer):
+    raise ArgumentsNotAppropriate("Log density turned out not to be finite")
+
+  try:
+    computed_gradient = sp.outputPSP.gradientOfLogDensity(value, BogusArgs(args_lists[0], sp.constructSPAux()))
+  except VentureBuiltinSPMethodError:
+    raise SkipTest("%s does not support computing gradient of log density :(" % name)
+
+  def log_d_displacement_func(lens):
+    def f(h):
+      x = lens.get()
+      lens.set(x + h)
+      ans = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
+      # Leave the value in the lens undisturbed
+      lens.set(x)
+      return ans
+    return f
+  numerical_gradient = [num.richardson(num.derivative(log_d_displacement_func(lens), 0)) for lens in real_lenses([value, args_lists[0]])]
+  if any([math.isnan(v) or math.isinf(v) for v in numerical_gradient]):
+    raise ArgumentsNotAppropriate("Too close to a singularity; Richardson extrapolation gave non-finite derivatve")
+
+  numerical_values_of_computed_gradient = [lens.get() for lens in real_lenses(computed_gradient)]
+
+  assert_allclose(numerical_gradient, numerical_values_of_computed_gradient)
