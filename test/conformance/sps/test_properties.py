@@ -204,7 +204,7 @@ def propGradientOfLogDensity(rnd, name, sp):
     raise SkipTest("TODO: Write the code for measuring log density of curried SPs")
   answer = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
   if math.isnan(answer) or math.isinf(answer):
-    raise ArgumentsNotAppropriate("Log density turned out to be NaN")
+    raise ArgumentsNotAppropriate("Log density turned out not to be finite")
 
   try:
     computed_gradient = sp.outputPSP.gradientOfLogDensity(value, BogusArgs(args_lists[0], sp.constructSPAux()))
@@ -221,7 +221,8 @@ def propGradientOfLogDensity(rnd, name, sp):
       return ans
     return f
   numerical_gradient = [num.richardson(num.derivative(log_d_displacement_func(lens), 0)) for lens in real_lenses([value, args_lists[0]])]
-
+  if any([math.isnan(v) or math.isinf(v) for v in numerical_gradient]):
+    raise ArgumentsNotAppropriate("Too close to a singularity; Richardson extrapolation gave non-finite derivatve")
 
   numerical_values_of_computed_gradient = [lens.get() for lens in real_lenses(computed_gradient)]
 
