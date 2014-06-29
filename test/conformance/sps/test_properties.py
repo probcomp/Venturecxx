@@ -194,10 +194,10 @@ def testGradientOfLogDensity():
         yield checkGradientOfLogDensity, name, sp
 
 def checkGradientOfLogDensity(name, sp):
-  checkTypedProperty(propGradientOfLogDensity, (fully_uncurried_sp_type(sp.venture_type()), final_return_type(sp.venture_type())), sp)
+  checkTypedProperty(propGradientOfLogDensity, (final_return_type(sp.venture_type()), fully_uncurried_sp_type(sp.venture_type())), sp)
 
 def propGradientOfLogDensity(rnd, sp):
-  (args_lists, value) = rnd
+  (value, args_lists) = rnd
   if not len(args_lists) == 1:
     raise SkipTest("TODO: Write the code for measuring log density of curried SPs")
   answer = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
