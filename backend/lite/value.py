@@ -194,6 +194,18 @@ class VentureProbability(VentureValue):
   def __hash__(self): return hash(self.number)
   def expressionFor(self):
     return [{"type":"symbol", "value":"probability"}, self.number]
+  def real_lenses(self):
+    class NumberLens(MLens):
+      # Poor man's closure: pass the relevant thing from the lexical
+      # scope directly.
+      def __init__(self, vn):
+        self.vn = vn
+      def get(self):
+        return self.vn.number
+      def set(self, new):
+        assert isinstance(new, Number)
+        self.vn.number = new
+    return [NumberLens(self)]
 
 def stupidCompare(thing, other):
   # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
