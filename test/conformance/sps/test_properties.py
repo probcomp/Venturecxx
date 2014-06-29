@@ -12,6 +12,7 @@ from venture.lite.sp import VentureSP
 from venture.lite.value import AnyType
 from venture.lite.mlens import real_lenses
 import venture.test.numerical as num
+from venture.lite.exception import VentureBuiltinSPMethodError
 
 def testEquality():
   checkTypedProperty(propEquality, AnyType())
@@ -189,20 +190,26 @@ def propLogDensityDeterministic(rnd, sp):
 
 def testGradientOfLogDensity():
   for (name,sp) in relevantSPs():
-    if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical"]: # TODO
+    if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical",  # TODO
+                    "flip", "bernoulli"]: # TODO: Implement ZeroType
       if sp.outputPSP.isRandom(): # TODO Check the ones that are random when curried
         yield checkGradientOfLogDensity, name, sp
 
 def checkGradientOfLogDensity(name, sp):
-  checkTypedProperty(propGradientOfLogDensity, (final_return_type(sp.venture_type()), fully_uncurried_sp_type(sp.venture_type())), sp)
+  checkTypedProperty(propGradientOfLogDensity, (final_return_type(sp.venture_type()), fully_uncurried_sp_type(sp.venture_type())), name, sp)
 
-def propGradientOfLogDensity(rnd, sp):
+def propGradientOfLogDensity(rnd, name, sp):
   (value, args_lists) = rnd
   if not len(args_lists) == 1:
     raise SkipTest("TODO: Write the code for measuring log density of curried SPs")
   answer = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
   if math.isnan(answer) or math.isinf(answer):
     raise ArgumentsNotAppropriate("Log density turned out to be NaN")
+
+  try:
+    computed_gradient = sp.outputPSP.gradientOfLogDensity(value, BogusArgs(args_lists[0], sp.constructSPAux()))
+  except VentureBuiltinSPMethodError:
+    raise SkipTest("%s does not support computing gradient of log density :(" % name)
 
   def log_d_displacement_func(lens):
     def f(h):
@@ -215,7 +222,6 @@ def propGradientOfLogDensity(rnd, sp):
     return f
   numerical_gradient = [num.richardson(num.derivative(log_d_displacement_func(lens), 0)) for lens in real_lenses([value, args_lists[0]])]
 
-  computed_gradient = sp.outputPSP.gradientOfLogDensity(value, BogusArgs(args_lists[0], sp.constructSPAux()))
 
   numerical_values_of_computed_gradient = [lens.get() for lens in real_lenses(computed_gradient)]
 
