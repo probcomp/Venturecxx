@@ -281,27 +281,34 @@ class VentureForeignBlob(VentureValue):
   # TODO Think about the interaction of foreign blobs with trace
   # copying and serialization
   def __init__(self, datum): self.datum = datum
+
+  def getForeignBlob(self): return self.datum
+
   def asStackDict(self, _trace=None):
     return {"type":"blob", "value":self.datum}
   @staticmethod
   def fromStackDict(thing): return VentureForeignBlob(thing["value"])
-  def getForeignBlob(self): return self.datum
 
 @serialize.register
 class VentureNil(VentureValue):
   def __init__(self): pass
   def __repr__(self): return "Nil"
+
   def asStackDict(self, _trace): return {"type":"list", "value":[]}
   @staticmethod
   def fromStackDict(_): return VentureNil()
+
   def compareSameType(self, _): return 0 # All Nils are equal
   def __hash__(self): return 0
+
   def lookup(self, index):
     raise VentureValueError("Index out of bounds: too long by %s" % index)
   def contains(self, _obj): return False
   def size(self): return 0
+
   def expressionFor(self):
     return [{"type":"symbol", "value":"list"}]
+
   def asPythonList(self, _elt_type=None): return []
 
 @serialize.register
@@ -761,16 +768,16 @@ class SPRef(VentureValue):
 ## Not Requests, because we do not reflect on them
 
 venture_types = [
-  VentureBool, VentureNumber, VentureInteger, VentureProbability, VentureAtom,
-  VentureSymbol, VentureNil, VenturePair,
-  VentureArray, VentureSimplex, VentureDict, VentureMatrix, SPRef]
+  VentureNumber, VentureInteger, VentureProbability, VentureAtom, VentureBool,
+  VentureSymbol, VentureForeignBlob, VentureNil, VenturePair,
+  VentureArray, VentureArrayUnboxed, VentureSimplex, VentureDict, VentureMatrix, SPRef]
   # Break load order dependency by not adding SPs and Environments yet
 
 stackable_types = {
   "number": VentureNumber,
+  "real": VentureNumber,
   "integer": VentureInteger,
   "probability": VentureProbability,
-  "real": VentureNumber,
   "atom": VentureAtom,
   "boolean": VentureBool,
   "symbol": VentureSymbol,
