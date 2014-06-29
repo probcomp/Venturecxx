@@ -49,6 +49,6 @@ def real_lenses(thing):
   if hasattr(thing, "real_lenses"):
     return thing.real_lenses()
   elif hasattr(thing, "__iter__"):
-    return itertools.chain(*[real_lenses(t) for t in thing])
+    return list(itertools.chain(*[real_lenses(t) for t in thing]))
   else:
     return []
