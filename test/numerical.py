@@ -9,5 +9,5 @@ def richardson(f):
   # stream) to save compute on repeated evaluations at the same h
 
   # Could also implement the "stop when at machine precision" rule,
-  # instead of always taking exactly three steps.
-  return richardson_step(richardson_step(richardson_step(f, 2), 4), 6)(0.1)
+  # instead of always taking exactly four steps.
+  return richardson_step(richardson_step(richardson_step(richardson_step(f, 2), 4), 6), 8)(0.1)
