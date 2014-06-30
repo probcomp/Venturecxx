@@ -210,6 +210,8 @@ class Ripl():
             # A literal value as a stack dict.  These are all assumed
             # fully parsed.
             return expr
+        elif isinstance(expr, int):
+            return {'type':'integer', 'value':expr}
         elif isinstance(expr, numbers.Number):
             return {'type':'number', 'value':expr}
         elif isinstance(expr, VentureValue):
