@@ -120,7 +120,6 @@ VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { assert(false
 bool VentureValue::contains(VentureValuePtr index) const { assert(false); }
 int VentureValue::size() const { assert(false); }
 
-struct VentureSymbol;
 
 const vector<ESR>& VentureValue::getESRs() const
 {
@@ -150,16 +149,20 @@ int getValueTypeRank(const VentureValue * v)
 {
   // Note: differs slightly from 
   if (dynamic_cast<const VentureNumber *>(v)) { return 0; }
+
   else if (dynamic_cast<const VentureAtom *>(v)) { return 1; }
   else if (dynamic_cast<const VentureBool *>(v)) { return 2; }
   else if (dynamic_cast<const VentureSymbol *>(v)) { return 3; }
-  else if (dynamic_cast<const VentureArray *>(v)) { return 4; }
-  else if (dynamic_cast<const VentureNil *>(v)) { return 5; }
-  else if (dynamic_cast<const VenturePair *>(v)) { return 6; }
+
+  else if (dynamic_cast<const VentureNil *>(v)) { return 4; }
+  else if (dynamic_cast<const VenturePair *>(v)) { return 5; }
+  else if (dynamic_cast<const VentureArray *>(v)) { return 6; }
+
   else if (dynamic_cast<const VentureSimplex *>(v)) { return 7; }
   else if (dynamic_cast<const VentureDictionary *>(v)) { return 8; }
   else if (dynamic_cast<const VentureMatrix *>(v)) { return 9; }
   else if (dynamic_cast<const VentureSPRef *>(v)) { return 10; }
+
   else if (dynamic_cast<const VentureEnvironment *>(v)) { return 11; }
   else if (dynamic_cast<const VentureSPRecord *>(v)) { return 12; }
   else if (dynamic_cast<const VentureRequest *>(v)) { return 13; }
