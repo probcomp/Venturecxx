@@ -41,11 +41,6 @@ const string& VentureValue::getSymbol() const
   cannotConvertType(this,"symbol"); assert(false); throw "no return";
 }
 
-vector<VentureValuePtr> VentureValue::getArray() const
-{
-  cannotConvertType(this,"array"); assert(false); throw "no return";
-}
-
 
 const VentureValuePtr& VentureValue::getFirst() const
 {
@@ -58,6 +53,11 @@ const VentureValuePtr& VentureValue::getRest() const
 }
 
   
+vector<VentureValuePtr> VentureValue::getArray() const
+{
+  cannotConvertType(this,"array"); assert(false); throw "no return";
+}
+
 const Simplex& VentureValue::getSimplex() const
 {
   cannotConvertType(this,"simplex"); assert(false); throw "no return";
@@ -79,6 +79,48 @@ MatrixXd VentureValue::getMatrix() const
   cannotConvertType(this,"matrix"); assert(false); throw "no return";
 }
 
+
+boost::python::dict VentureValue::toPython(Trace * trace) const
+{ 
+  boost::python::dict value;
+  value["type"] = "unknown";
+  value["value"] = "opaque";
+  return value;
+}
+
+
+bool VentureValue::operator<(const VentureValuePtr & rhs) const 
+{
+  int t1 = getValueTypeRank(this);
+  int t2 = getValueTypeRank(rhs.get());
+  if (t1 < t2) { return true; }
+  else if (t2 < t1) { return false; }
+  else { return ltSameType(rhs); }
+}
+
+bool VentureValue::ltSameType(const VentureValuePtr & rhs) const { assert(false); }
+
+
+bool VentureValue::equals(const VentureValuePtr & other) const 
+{
+  int t1 = getValueTypeRank(this);
+  int t2 = getValueTypeRank(other.get());
+  if (t1 != t2) { return false; }
+  else { return equalsSameType(other); }
+}
+
+bool VentureValue::equalsSameType(const VentureValuePtr & rhs) const { assert(false); }
+
+size_t VentureValue::hash() const
+{
+  assert(false); assert(false); throw "no return";
+}
+
+VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { assert(false); }
+bool VentureValue::contains(VentureValuePtr index) const { assert(false); }
+int VentureValue::size() const { assert(false); }
+
+struct VentureSymbol;
 
 const vector<ESR>& VentureValue::getESRs() const
 {
@@ -102,52 +144,7 @@ shared_ptr<SPAux> VentureValue::getSPAux() const
   cannotConvertType(this,"sprecord") ; assert(false); throw "no return";
 }
 
-
-VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { assert(false); }
-bool VentureValue::contains(VentureValuePtr index) const { assert(false); }
-int VentureValue::size() const { assert(false); }
-
 string VentureValue::asExpression() const { return toString(); }
-
-boost::python::dict VentureValue::toPython(Trace * trace) const
-{ 
-  boost::python::dict value;
-  value["type"] = "unknown";
-  value["value"] = "opaque";
-  return value;
-}
-
-
-size_t VentureValue::hash() const
-{
-  assert(false); assert(false); throw "no return";
-}
-
-
-
-struct VentureSymbol;
-
-bool VentureValue::equals(const VentureValuePtr & other) const 
-{
-  int t1 = getValueTypeRank(this);
-  int t2 = getValueTypeRank(other.get());
-  if (t1 != t2) { return false; }
-  else { return equalsSameType(other); }
-}
-
-bool VentureValue::equalsSameType(const VentureValuePtr & rhs) const { assert(false); }
-
-bool VentureValue::operator<(const VentureValuePtr & rhs) const 
-{
-  int t1 = getValueTypeRank(this);
-  int t2 = getValueTypeRank(rhs.get());
-  if (t1 < t2) { return true; }
-  else if (t2 < t1) { return false; }
-  else { return ltSameType(rhs); }
-}
-
-bool VentureValue::ltSameType(const VentureValuePtr & rhs) const { assert(false); }
-
 
 int getValueTypeRank(const VentureValue * v)
 {
