@@ -90,23 +90,23 @@ class ChurchPrimeParser(object):
             ['infer','[ <!infer> <params:json> ]'],
             ['clear','[ <!clear> ]'],
             ['rollback','[ <!rollback> ]'],
-            ['list_directives','[ <!list> <!directives> ]'],
-            ['get_directive','[ <!get> <!directive> <directive_id:int> ]'],
-            ['labeled_get_directive','[ <!get> <!directive> <label:sym> ]'],
+            ['list_directives','[ <!list_directives> ]'],
+            ['get_directive','[ <!get_directive> <directive_id:int> ]'],
+            ['labeled_get_directive','[ <!get_directive> <label:sym> ]'],
             ['force','[ <!force> <expression:exp> <value:lit> ]'],
             ['sample','[ <!sample> <expression:exp> ]'],
-            ['continuous_inference_status','[ <!continuous> <!inference> <!status> ]'],
-            ['start_continuous_inference','[ <!start> <!continuous> <!inference> <params:json> ]'],
-            ['stop_continuous_inference','[ <!stop> <!continuous> <!inference> ]'],
-            ['get_current_exception', '[ <!get> <!current> <!exception> ]'],
-            ['get_state', '[ <!get> <!state> ]'],
-            ['get_logscore', '[ <!get> <!logscore> <directive_id:int> ]'],
-            ['labeled_get_logscore', '[ <!get> <!logscore> <label:sym> ]'],
-            ['get_global_logscore', '[ <!get> <!global> <!logscore> ]'],
+            ['continuous_inference_status','[ <!continuous_inference_status> ]'],
+            ['start_continuous_inference','[ <!start_continuous_inference> <params:json> ]'],
+            ['stop_continuous_inference','[ <!stop_continuous_inference> ]'],
+            ['get_current_exception', '[ <!get_current_exception> ]'],
+            ['get_state', '[ <!get_state> ]'],
+            ['get_logscore', '[ <!get_logscore> <directive_id:int> ]'],
+            ['labeled_get_logscore', '[ <!get_logscore> <label:sym> ]'],
+            ['get_global_logscore', '[ <!get_global_logscore> ]'],
             # Profiler
-            ['profiler_configure','[ <!profiler> <!configure> <options:json> ]'],
-            ['profiler_clear','[ <!profiler> <!configure> ]'],
-            ['profiler_list_random_choices', '[ <!profiler> <!list> <!random> <!choices> ]']
+            ['profiler_configure','[ <!profiler_configure> <options:json> ]'],
+            ['profiler_clear','[ <!profiler_configure> ]'],
+            ['profiler_list_random_choices', '[ <!profiler_list_random> <!choices> ]']
         ]
 
         self.instruction = utils.make_instruction_parser(instruction_list,patterns)
