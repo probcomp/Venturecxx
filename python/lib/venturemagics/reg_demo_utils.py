@@ -197,7 +197,8 @@ def get_name(r_mr):
     di_l = r_mr.list_directives()
     if 'model_name' in str(di_l):
         for di in di_l:
-            if di['symbol']=='model_name': return di['value']
+            symbol = di.get('symbol',None)
+            if symbol=='model_name': return di['value']
     return 'anon model'
 
 
