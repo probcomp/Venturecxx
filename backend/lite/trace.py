@@ -19,11 +19,9 @@ from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
 from serialize import OrderedOmegaDB
-import serialize
 import random
 import numpy.random
 
-@serialize.register
 class Trace(object):
   def __init__(self):
 

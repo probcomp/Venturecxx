@@ -68,27 +68,27 @@ class Ripl():
 
     def execute_instruction(self, instruction=None, params=None):
         p = self._cur_parser()
-        # perform parameter substitution if necessary
-        if isinstance(instruction, basestring):
-            if params != None:
-                stringable_instruction = self.substitute_params(instruction,params)
+        try: # execute instruction, and handle possible exception
+            # perform parameter substitution if necessary
+            if isinstance(instruction, basestring):
+                if params != None:
+                    stringable_instruction = self.substitute_params(instruction,params)
+                else:
+                    stringable_instruction = instruction
+                # parse instruction
+                parsed_instruction = p.parse_instruction(stringable_instruction)
             else:
                 stringable_instruction = instruction
-                # parse instruction
-            parsed_instruction = p.parse_instruction(stringable_instruction)
-        else:
-            parsed_instruction = self._ensure_parsed(instruction)
-            stringable_instruction = parsed_instruction # Will be unparsed on use
-        try: # execute instruction, and handle possible exception
+                parsed_instruction = self._ensure_parsed(instruction)
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
             import sys
             info = sys.exc_info()
-            try:
-                self._raise_annotated_error(e, stringable_instruction)
-            except Exception as e2:
-                print "Trying to annotate an exception led to %r" % e2
-                raise e, None, info[2]
+#            try:
+            self._raise_annotated_error(e, instruction)
+#            except Exception as e2:
+#                print "Trying to annotate an exception led to %r" % e2
+#                raise e, None, info[2]
         # if directive, then save the text string
         if parsed_instruction['instruction'] in ['assume','observe',
                 'predict','labeled_assume','labeled_observe','labeled_predict']:
@@ -103,11 +103,13 @@ class Ripl():
         # instruction string instead of the actual data the caller
         # passed.
         instruction_string = self._ensure_unparsed(instruction)
+        print instruction_string
 
         p = self._cur_parser()
         # all exceptions raised by the Sivm get augmented with a
         # text index (which defaults to the entire instruction)
         e.data['text_index'] = [0,len(instruction_string)-1]
+        
         # in the case of a parse exception, the text_index gets narrowed
         # down to the exact expression/atom that caused the error
         if e.exception == 'parse':
@@ -122,20 +124,27 @@ class Ripl():
                 if e2.exception == 'no_text_index': text_index = None
                 else: raise
             e.data['text_index'] = text_index
+        # for "text_parse" exceptions, even trying to split the instruction
+        # results in an exception
+        if e.exception == 'text_parse':
+            try:
+                p.parse_instruction(instruction_string)
+            except VentureException as e2:
+                assert(e2.exception == 'text_parse')
+                e = e2
         # in case of invalid argument exception, the text index
         # refers to the argument's location in the string
         if e.exception == 'invalid_argument':
             # calculate the positions of the arguments
             args, arg_ranges = p.split_instruction(instruction_string)
             arg = e.data['argument']
-            #import pdb; pdb.set_trace()
             text_index = arg_ranges[arg]
             e.data['text_index'] = text_index
         a = e.data['text_index'][0]
         b = e.data['text_index'][1]+1
         e.data['text_snippet'] = instruction_string[a:b]
-        raise
-
+        e.data['instruction_string'] = instruction_string
+        raise e
 
     def execute_program(self, program_string, params=None):
         p = self._cur_parser()
