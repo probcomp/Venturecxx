@@ -41,7 +41,7 @@ def make_function(ripl, instruction):
         underline = ''.join([' '] * offset + ['^'] * length)
         print underline
     except RuntimeError as err:
-      print err
+      print "*** runtime error:", err
   
   return do_instruction
 

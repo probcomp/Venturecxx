@@ -42,6 +42,6 @@ class VentureException(Exception):
         return cls(exception,message,**data)
 
     def __str__(self):
-        return self.exception + " -- " + self.message + " " + str(self.data)
+        return "*** " + self.exception + ": " + self.message + " " + str(self.data)
     __unicode__ = __str__
     __repr__ = __str__
