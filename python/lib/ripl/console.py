@@ -54,6 +54,11 @@ class RiplCmd(Cmd, object):
   
   def emptyline(self):
     pass
+  
+  def do_quit(self, s):
+    return True
+  
+  do_EOF = do_quit
 
 if __name__ == '__main__':
   import venture.shortcuts as s
