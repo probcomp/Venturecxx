@@ -1,5 +1,3 @@
-from venture.lite.serialize_old import * ## backward compatibility
-
 from venture.lite.omegadb import OmegaDB
 
 class OrderedOmegaDB(OmegaDB):
