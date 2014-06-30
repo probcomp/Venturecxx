@@ -16,25 +16,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
+from cmd import Cmd
 from venture.exception import VentureException
 
-def run_venture_console(ripl):
-  while True:
-    sys.stdout.write('>>> ')
-    current_line = sys.stdin.readline()
-    if not current_line:
-      print ''
-      print "End of input reached."
-      print "Moriturus te saluto."
-      break
-    
-    current_line = current_line.strip()
-    if current_line == "":
-      continue
-    
+_RIPL_FUNCTIONS = [
+  'get_global_logscore', 'assume','predict',
+  'observe','configure','forget','report','infer',
+  'clear','rollback','list_directives','get_directive',
+  'force','sample','continuous_inference_status',
+  'start_continuous_inference','stop_continuous_inference',
+  'get_current_exception','get_state','get_logscore',
+]
+
+def make_function(ripl, instruction):
+  def do_instruction(s):
     try:
-      print ripl.execute_instruction('[%s]' % current_line)
+      print ripl.execute_instruction('[%s %s]' % (instruction, s))
     except VentureException as e:
       print e
       if e.exception in ['parse', 'text_parse', 'invalid_argument']:
@@ -45,8 +42,17 @@ def run_venture_console(ripl):
         print underline
     except RuntimeError as err:
       print err
+  
+  return do_instruction
+
+class RiplCmd(Cmd, object):
+  def __init__(self, ripl):
+    super(RiplCmd, self).__init__()
+    self.ripl = ripl
+    for instruction in _RIPL_FUNCTIONS:
+      setattr(self, 'do_' + instruction, make_function(ripl, instruction))
 
 if __name__ == '__main__':
   import venture.shortcuts as s
   ripl = s.make_puma_church_prime_ripl()
-  run_venture_console(ripl)
+  RiplCmd(ripl).cmdloop()
