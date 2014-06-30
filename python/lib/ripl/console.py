@@ -51,6 +51,9 @@ class RiplCmd(Cmd, object):
     self.ripl = ripl
     for instruction in _RIPL_FUNCTIONS:
       setattr(self, 'do_' + instruction, make_function(ripl, instruction))
+  
+  def emptyline(self):
+    pass
 
 if __name__ == '__main__':
   import venture.shortcuts as s
