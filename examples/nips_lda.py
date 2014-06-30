@@ -7,6 +7,8 @@ import venture.shortcuts as shortcuts
 from venture.unit import VentureUnit
 
 class LDA(VentureUnit):
+    """ Latent Dirichlet Allocation model """
+
     def makeAssumes(self):
         self.assume("topics", self.parameters['topics'])
         self.assume("vocab", self.parameters['vocab'])
@@ -37,11 +39,24 @@ class LDA(VentureUnit):
             self.queryExp("(get_topic_word_sampler atom<%d>)" % i)
 
 def unzip_dict(d):
+    """ Utility function.
+
+    Turns
+    {foo: [foo1, foo2, ...],
+     bar: [bar1, bar2, ...]}
+    into
+    [{foo: foo1, bar: bar1},
+     {foo: foo2, bar: bar2},
+     ...]
+
+    """
     keys, valss = zip(*d.items())
     for vals in zip(*valss):
         yield dict(zip(keys, vals))
 
 def normalize_counts(dir_mult, n):
+    """ Given a Dirichlet multinomial, return a probability vector. """
+
     if dir_mult['type'] == 'sym_dir_mult':
         alpha = dir_mult['alpha']
         assert n == dir_mult['n']
@@ -55,11 +70,15 @@ def normalize_counts(dir_mult, n):
     return [(c + alpha) / (total + n * alpha) for c in counts]
 
 def visualize_topic(dir_mult, words):
+    """ Given a Dirichlet multinomial over words, print words and probabilities. """
+
     counts = normalize_counts(dir_mult, len(words))
     for index, count in sorted(enumerate(counts), key=lambda x: -x[1])[:10]:
         print words[index], count
 
 def visualize_topics(history, words):
+    """ Given a history, print words and probabilities for each topic. """
+
     T = history.parameters['topics']
     topic_word_exps = ["(get_topic_word_sampler atom<%d>)" % i for i in range(T)]
     series = {}
@@ -74,6 +93,8 @@ def visualize_topics(history, words):
             visualize_topic(dir_mult, words)
 
 def predicted_document_word_matrices(history):
+    """ Given a history, calculate the inferred marginal document-word probabilities. """
+
     D = history.parameters['documents']
     T = history.parameters['topics']
     W = history.parameters['vocab']
@@ -95,6 +116,8 @@ def predicted_document_word_matrices(history):
     return ret
 
 def actual_document_word_matrix(history):
+    """ Given a history, collect the observed document-word counts in a matrix. """
+
     D = history.parameters['documents']
     N = history.parameters['doc_length']
     W = history.parameters['vocab']
@@ -116,6 +139,8 @@ def actual_document_word_matrix(history):
     return counts
 
 def add_diagnostics(history):
+    """ Given a history, add diagnostics of predictive accuracy. """
+
     N = history.parameters['doc_length']
     if isinstance(N, list):
         N = np.transpose([N])
