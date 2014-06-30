@@ -110,6 +110,13 @@ not an SP.
   else:
     return [sp_args_type(sp_type)] + fully_uncurried_sp_type(sp_type.return_type)
 
+def final_return_type(sp_type):
+  """Returns the type that a given SP returns when applied fully uncurried."""
+  if not isinstance(sp_type, SPType):
+    return sp_type
+  else:
+    return final_return_type(sp_type.return_type)
+
 class BogusArgs(object):
   """Calling an SP requires an Args object, which is supposed to point
   to Nodes in a Trace and all sorts of things.  Mock that for testing

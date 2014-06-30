@@ -8,6 +8,7 @@ from numbers import Number
 import numpy as np
 import hashlib
 
+from mlens import MLens
 import ensure_numpy as enp
 from request import Request # TODO Pull that file in here?
 from exception import VentureValueError, VentureTypeError
@@ -140,6 +141,18 @@ class VentureNumber(VentureValue):
     return self.number * other.number
   def map_real(self, f):
     return VentureNumber(f(self.number))
+  def real_lenses(self):
+    class NumberLens(MLens):
+      # Poor man's closure: pass the relevant thing from the lexical
+      # scope directly.
+      def __init__(self, vn):
+        self.vn = vn
+      def get(self):
+        return self.vn.number
+      def set(self, new):
+        assert isinstance(new, Number)
+        self.vn.number = new
+    return [NumberLens(self)]
   def expressionFor(self): return self.number
 
 @serialize.register
@@ -181,6 +194,18 @@ class VentureProbability(VentureValue):
   def __hash__(self): return hash(self.number)
   def expressionFor(self):
     return [{"type":"symbol", "value":"probability"}, self.number]
+  def real_lenses(self):
+    class NumberLens(MLens):
+      # Poor man's closure: pass the relevant thing from the lexical
+      # scope directly.
+      def __init__(self, vn):
+        self.vn = vn
+      def get(self):
+        return self.vn.number
+      def set(self, new):
+        assert isinstance(new, Number)
+        self.vn.number = new
+    return [NumberLens(self)]
 
 def stupidCompare(thing, other):
   # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
@@ -881,7 +906,7 @@ class PositiveType(VentureType):
       return ans
     else:
       # TODO: Or what?  Can't even clip to 0!
-      raise VentureTypeError("Number is not positive %s" % self.number)
+      raise VentureTypeError("Number is not positive %s" % ans)
   def __contains__(self, vthing):
     return isinstance(vthing, VentureNumber) and 0 < vthing.getNumber()
   def name(self): return "<positive>"
