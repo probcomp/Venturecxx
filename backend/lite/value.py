@@ -1148,3 +1148,10 @@ class RequestType(VentureType):
     assert isinstance(thing, Request)
     return thing
   def name(self): return self._name
+
+class ZeroType(VentureType):
+  """A type object representing elements of the zero-dimensional vector
+space.  This is needed only to serve as the gradient type of discrete
+types like BoolType."""
+  def __init__(self): pass
+  def name(self): return "<zero>"

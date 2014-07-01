@@ -26,6 +26,8 @@ class DefaultRandomVentureValue(object):
     return v.VentureAtom(npr.randint(-10, 11)) # Open at the top
   def bool(self, **_kwargs):
     return v.VentureBool(npr.choice([False, True]))
+  def zero(self, **_kwargs):
+    return 0 # A gradient in an empty vector space
   def symbol(self, length=None, **_kwargs):
     if length is None:
       length = npr.randint(1, 10)

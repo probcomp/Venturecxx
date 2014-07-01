@@ -1,4 +1,4 @@
-from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType, BoolType
+from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType, BoolType, ZeroType
 import copy
 
 class SPFamilies(object):
@@ -122,8 +122,7 @@ used in the implementation of TypedPSP and TypedLKernel."""
       if isinstance(type_, ProbabilityType) or isinstance(type_, PositiveType):
         return NumberType()
       elif isinstance(type_, BoolType):
-        # TODO Really should be ZeroType
-        return NumberType()
+        return ZeroType()
       else:
         return type_
     return SPType([to_grad_type(t) for t in self.args_types], to_grad_type(self.return_type), self.variadic, self.min_req_args)

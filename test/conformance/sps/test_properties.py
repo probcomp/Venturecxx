@@ -284,6 +284,10 @@ def checkGradientOfSimulate(name, sp):
 
 def propGradientOfSimulate(rnd, name, sp):
   (direction, args_lists) = rnd
+  if direction == 0:
+    # Do not test gradients of things that return elements of
+    # 0-dimensional vector spaces
+    return
   if not len(args_lists) == 1:
     raise SkipTest("TODO: Write the code for testing simulation gradients of curried SPs")
   args = BogusArgs(args_lists[0], sp.constructSPAux())
