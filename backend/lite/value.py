@@ -1055,6 +1055,8 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
       return VentureSymbol(thing)
     if hasattr(thing, "__getitem__"): # Already not a string
       return VentureArray([self.asVentureValue(v) for v in thing])
+    if isinstance(thing, VentureValue):
+      return thing
     else:
       raise Exception("Cannot convert Python object %r to a Venture Expression" % thing)
 
