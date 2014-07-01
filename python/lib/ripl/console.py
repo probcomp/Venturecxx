@@ -18,7 +18,7 @@
 
 from cmd import Cmd
 from venture.exception import VentureException
-from utils import _strip_types
+from utils import _strip_types, expToDict, parse
 from functools import wraps
 
 def getValue(directive):
@@ -47,12 +47,16 @@ class RiplCmd(Cmd, object):
   def __init__(self, ripl):
     super(RiplCmd, self).__init__()
     self.ripl = ripl
+    self.prompt = '>>> '
   
   def emptyline(self):
     pass
   
   def do_quit(self, s):
-    'Exit Venture'
+    '''Exit the Venture console.'''
+    print ''
+    print "End of input reached."
+    print "Moriturus te saluto."
     return True
   
   do_EOF = do_quit
@@ -73,7 +77,7 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_predict(self, s):
     '''Register an expression as a model prediction.'''
-    print self._do_instruction('predict', s)
+    print getValue(self._do_instruction('predict', s))
   
   @catchesVentureException
   def do_forget(self, s):
@@ -83,13 +87,13 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_report(self, s):
     '''Report the current value of a given directive.'''
-    print self._do_instruction('report', s)
+    print getValue(self._do_instruction('report', s))
   
   @catchesVentureException
   def do_sample(self, s):
     '''Sample the given expression immediately,
     without registering it as a prediction.'''
-    print self._do_instruction('sample', s)
+    print getValue(self._do_instruction('sample', s))
   
   @catchesVentureException
   def do_force(self, s):
@@ -100,13 +104,13 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_list_directives(self, s):
     '''List active directives and their current values.'''
-    for directive in self._do_instruction('list_directives', s):
-      print getValue(directive)
+    for directive in self.ripl.list_directives():
+      print "%d:\t%s" % (directive['directive_id'], str(directive['value']))
   
   @catchesVentureException
   def do_infer(self, s):
     '''Run inference synchronously.'''
-    self._do_instruction('infer', s)
+    self.ripl.infer(expToDict(parse(s)) if s else None)
   
   @catchesVentureException
   def do_continuous_inference_status(self, s):
@@ -116,7 +120,7 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_start_continuous_inference(self, s):
     '''Start continuous inference.'''
-    self._do_instruction('start_continuous_inference', s)
+    self.ripl.start_continuous_inference(expToDict(parse(s)) if s else None)
 
   @catchesVentureException
   def do_stop_continuous_inference(self, s):
@@ -127,8 +131,11 @@ class RiplCmd(Cmd, object):
   def do_get_global_logscore(self, s):
     '''Report status of continuous inference.'''
     print self._do_instruction('get_global_logscore', s)
-  
+
+def run_venture_console(ripl):
+  RiplCmd(ripl).cmdloop()
+
 if __name__ == '__main__':
   import venture.shortcuts as s
   ripl = s.make_puma_church_prime_ripl()
-  RiplCmd(ripl).cmdloop()
+  run_venture_console(ripl)

@@ -1,0 +1,33 @@
+; This shows the versions where w is sampled from a multivariate Gaussian
+; actually a bit tricky to specify the weights one at a time without
+; writing a loop in Python
+
+; linear regression
+; hyper-parameters governing sigma_2
+[assume a_0 [user-input]]
+[assume b_0 [user-input]]
+; hyper-parameters governing w
+; in fully Bayesian model, would put hyperpriors on this guy, too.
+[assume alpha [user-input]]
+; the model parameters
+[assume sigma_2 (scope_include (quote noise) 0 (inv_gamma a_0 b_0))]
+[assume V_0 (diag_matrix (* alpha sigma_2))]
+[assume w (scope_include (quote weights) 0 (multivariate_normal 0 V_0))]
+; the observation model
+[assume y
+  (lambda (x)
+    (normal (dot x w) (sqrt sigma_2)))]
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; logistic regression
+; hyper-parameter on w
+[assume alpha [user-input]]
+; model parameters
+[assume V_0 (diag_matrix alpha)]
+[assume w (scope_include (quote weights) 0 (multivariate_normal 0 V_0))]
+; observation model
+[assume prob
+  (lambda (x)
+    (logistic (dot x w)))]
+[assume y
+  (lambda (x)
+    (bernoulli (prob x)))]

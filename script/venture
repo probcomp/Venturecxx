@@ -19,7 +19,7 @@
 
 import sys
 import argparse
-from venture.ripl.utils import run_venture_console
+from venture.ripl.console import run_venture_console
 import venture.shortcuts as v
 
 def banner(help=True):
