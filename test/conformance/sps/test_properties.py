@@ -147,10 +147,7 @@ def propRiplRoundTripThroughStack(value):
 def eval_in_ripl(expr):
   ripl = get_ripl()
   ripl.predict(expr, label="thing")
-  # can't give string directive id for a trace; find number of
-  # directive by label
-  directive_id = ripl.sivm.label_dict["thing"]
-  return ripl.sivm.core_sivm.engine.report_raw(directive_id)
+  return VentureValue.fromStackDict(ripl.report("thing", type=True))
 
 def testRiplSimulate():
   if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
