@@ -47,6 +47,7 @@ class RiplCmd(Cmd, object):
   def __init__(self, ripl):
     super(RiplCmd, self).__init__()
     self.ripl = ripl
+    self.prompt = '>>> '
   
   def emptyline(self):
     pass
@@ -130,8 +131,11 @@ class RiplCmd(Cmd, object):
   def do_get_global_logscore(self, s):
     '''Report status of continuous inference.'''
     print self._do_instruction('get_global_logscore', s)
-  
+
+def run_venture_console(ripl):
+  RiplCmd(ripl).cmdloop()
+
 if __name__ == '__main__':
   import venture.shortcuts as s
   ripl = s.make_puma_church_prime_ripl()
-  RiplCmd(ripl).cmdloop()
+  run_venture_console(ripl)
