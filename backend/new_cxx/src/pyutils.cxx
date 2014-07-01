@@ -103,15 +103,14 @@ VentureValuePtr parseDict(boost::python::object value)
 
 VentureValuePtr parseMatrix(boost::python::object value)
 {
-  // TODO This doesn't actually seem to work.  I don't know why.
   boost::python::extract<boost::python::numeric::array> getNumpyArray(value);
   if (!getNumpyArray.check()) { throw "Matrix must be represented as a numpy array."; }
 
   boost::python::numeric::array data = getNumpyArray();
-  boost::python::tuple shape = boost::python::extract<boost::python::tuple>(data.getshape());
+  boost::python::tuple shape = boost::python::extract<boost::python::tuple>(data.attr("shape"));
 
-  int rows = boost::python::extract<int>(shape[0]);
-  int cols = boost::python::extract<int>(shape[1]);
+  size_t rows = boost::python::extract<size_t>(shape[0]);
+  size_t cols = boost::python::extract<size_t>(shape[1]);
 
   MatrixXd M(rows,cols);
 
