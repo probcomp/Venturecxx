@@ -294,7 +294,7 @@ def propGradientOfSimulate(rnd, name, sp):
 
   value = carefully(sp.outputPSP.simulate, args)
   try:
-    computed_gradient = sp.outputPSP.gradientOfSimulate(args, value, direction)
+    computed_gradient = carefully(sp.outputPSP.gradientOfSimulate, args, value, direction)
   except VentureBuiltinSPMethodError:
     raise SkipTest("%s does not support computing gradient of simulate :(" % name)
 
