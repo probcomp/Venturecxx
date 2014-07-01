@@ -116,7 +116,7 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_start_continuous_inference(self, s):
     '''Start continuous inference.'''
-    self._do_instruction('start_continuous_inference', s)
+    self.ripl.start_continuous_inference(expToDict(parse(s)) if s else None)
 
   @catchesVentureException
   def do_stop_continuous_inference(self, s):
