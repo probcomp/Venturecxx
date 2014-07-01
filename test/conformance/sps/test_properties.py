@@ -9,10 +9,11 @@ from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSP
-from venture.lite.value import AnyType, VentureValue, ExpressionType
+from venture.lite.value import AnyType, VentureValue
 from venture.lite.mlens import real_lenses
 import venture.test.numerical as num
 from venture.lite.exception import VentureBuiltinSPMethodError
+from venture.lite.utils import FixedRandomness
 
 def testEquality():
   checkTypedProperty(propEquality, AnyType())
@@ -240,3 +241,36 @@ def propGradientOfLogDensity(rnd, name, sp):
   numerical_values_of_computed_gradient = [lens.get() for lens in real_lenses(computed_gradient)]
 
   assert_allclose(numerical_gradient, numerical_values_of_computed_gradient, rtol=1e-05)
+
+def testFixingRandomness():
+  for (name,sp) in relevantSPs():
+    if sp.outputPSP.isRandom():
+      yield checkFixingRandomness, name, sp
+
+def checkFixingRandomness(name, sp):
+  checkTypedProperty(propDeterministicWhenFixed, fully_uncurried_sp_type(sp.venture_type()), name, sp)
+
+def propDeterministicWhenFixed(args_lists, name, sp):
+  # TODO Abstract out the similarities between this and propDeterministic
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+  randomness = FixedRandomness()
+  with randomness:
+    answer = carefully(sp.outputPSP.simulate, args)
+  if isinstance(answer, VentureSP):
+    if isinstance(answer.requestPSP, NullRequestPSP):
+      args2 = BogusArgs(args_lists[1], answer.constructSPAux())
+      randomness2 = FixedRandomness()
+      with randomness2:
+        ans2 = carefully(answer.outputPSP.simulate, args2)
+      for _ in range(5):
+        with randomness:
+          new_ans = carefully(sp.outputPSP.simulate, args)
+        with randomness2:
+          new_ans2 = carefully(new_ans.outputPSP.simulate, args2)
+        eq_(ans2, new_ans2)
+    else:
+      raise SkipTest("SP %s returned a requesting SP" % name)
+  else:
+    for _ in range(5):
+      with randomness:
+        eq_(answer, carefully(sp.outputPSP.simulate, args))
