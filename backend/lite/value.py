@@ -548,8 +548,10 @@ class VentureArrayUnboxed(VentureValue):
       # from the Python representation of self.elt_type to the Python
       # representation of elt_type, with an optimization if that
       # function is the identity.
-      assert elt_type == self.elt_type
-      return self.array
+      if elt_type == self.elt_type:
+        return self.array
+      else:
+        return [elt_type.asPython(self.elt_type.asVentureValue(v)) for v in self.array]
 
   def compareSameType(self, other):
     return lexicographicUnboxedCompare(self.array, other.array)
