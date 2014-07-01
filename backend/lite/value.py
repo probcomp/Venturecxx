@@ -739,6 +739,11 @@ class VentureSymmetricMatrix(VentureMatrix):
     self.matrix = matrix
     assert matrixIsSymmetric(matrix)
 
+  def asStackDict(self, _trace=None):
+    return {"type":"symmetric_matrix", "value":self.matrix}
+  @staticmethod
+  def fromStackDict(thing): return VentureSymmetricMatrix(thing["value"])
+
   def __add__(self, other):
     if other == 0:
       return self
@@ -774,6 +779,9 @@ class VentureSymmetricMatrix(VentureMatrix):
     candidate = np.vectorize(f)(self.matrix)
     return VentureSymmetricMatrix( (candidate + candidate.T)/2 )
 
+  def expressionFor(self):
+    return [{"type":"symbol", "value":"quote"}, self.asStackDict(None)]
+
 def matrixIsSymmetric(matrix):
   return np.allclose(matrix.transpose(), matrix)
 
@@ -794,7 +802,8 @@ class SPRef(VentureValue):
 venture_types = [
   VentureNumber, VentureInteger, VentureProbability, VentureAtom, VentureBool,
   VentureSymbol, VentureForeignBlob, VentureNil, VenturePair,
-  VentureArray, VentureArrayUnboxed, VentureSimplex, VentureDict, VentureMatrix, SPRef]
+  VentureArray, VentureArrayUnboxed, VentureSimplex, VentureDict, VentureMatrix,
+  VentureSymmetricMatrix, SPRef]
   # Break load order dependency by not adding SPs and Environments yet
 
 stackable_types = {
@@ -814,6 +823,7 @@ stackable_types = {
   "simplex": VentureSimplex,
   "dict": VentureDict,
   "matrix": VentureMatrix,
+  "symmetric_matrix": VentureSymmetricMatrix,
   "SP": SPRef, # As opposed to VentureSP?
   }
 
