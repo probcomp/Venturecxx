@@ -1072,7 +1072,14 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
     if isinstance(thing, VentureSymbol):
       return thing.getSymbol()
     if thing.isProperList():
-      return thing.asPythonList(self)
+      # Leave quoted data as they are, on the grounds that (quote
+      # <thing>) should evaluate to exactly that <thing>, even if
+      # constructed programmatically from a <thing> that does not
+      # normally appear in expressions.
+      if thing.size() == 2 and thing.lookup(VentureNumber(0)) == VentureSymbol("quote"):
+        return ["quote", thing.lookup(VentureNumber(1))]
+      else:
+        return thing.asPythonList(self)
     # Most other things are represented as themselves.
     return thing
 

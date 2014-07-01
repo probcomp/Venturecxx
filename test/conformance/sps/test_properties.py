@@ -139,10 +139,7 @@ def testRiplRoundTripThroughStack():
 def propRiplRoundTripThroughStack(value):
   expr = [{"type":"symbol", "value":"quote"}, value.asStackDict()]
   result = carefully(eval_in_ripl, expr)
-  # Round-tripping through ExpressionType is not the identity because
-  # it normalizes Venture sequences to arrays
-  expected = ExpressionType().asVentureValue(ExpressionType().asPython(value))
-  assert expected.equal(result)
+  assert value.equal(result)
 
 def eval_in_ripl(expr):
   ripl = get_ripl()
