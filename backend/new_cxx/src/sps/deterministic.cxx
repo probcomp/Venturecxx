@@ -155,3 +155,9 @@ VentureValuePtr IsAtomOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   checkArgsLength("is_atom", args, 1);
   return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureAtom>(args->operandValues[0]) != NULL));
 }
+
+VentureValuePtr ProbabilityOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("probability", args, 1);
+  return VentureValuePtr(new VentureProbability(args->operandValues[0]->getDouble())); // FIXME: use getProbability
+}

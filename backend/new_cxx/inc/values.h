@@ -49,6 +49,26 @@ struct VentureInteger : VentureValue
   int n;
 };
 
+struct VentureProbability : VentureValue
+{
+  VentureProbability(double x): x(x) {} // TODO: validate 0 <= x <= 1
+
+  bool hasDouble() const { return true; }
+  double getDouble() const { return x; }
+  // TODO: getProbability
+
+  boost::python::dict toPython(Trace * trace) const;
+
+  bool ltSameType(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  size_t hash() const;
+
+  string toString() const;
+  string asExpression() const;
+
+  double x;
+};
+
 struct VentureAtom : VentureValue
 {
   VentureAtom(int n): n(n) {}

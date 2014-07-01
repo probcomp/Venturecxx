@@ -159,7 +159,7 @@ VentureValuePtr parseValue(boost::python::dict d)
   if (type == "number") { return VentureValuePtr(new VentureNumber(boost::python::extract<double>(value))); }
   else if (type == "real") { return VentureValuePtr(new VentureNumber(boost::python::extract<double>(value))); }
   else if (type == "integer") { return VentureValuePtr(new VentureInteger(boost::python::extract<int>(value))); }
-  else if (type == "probability") { return VentureValuePtr(new VentureNumber(boost::python::extract<double>(value))); }
+  else if (type == "probability") { return VentureValuePtr(new VentureProbability(boost::python::extract<double>(value))); }
   else if (type == "atom") { return VentureValuePtr(new VentureAtom(boost::python::extract<uint32_t>(value))); }
   else if (type == "boolean") { return VentureValuePtr(new VentureBool(boost::python::extract<bool>(value))); }
   else if (type == "symbol") { return VentureValuePtr(new VentureSymbol(boost::python::extract<string>(value))); }
