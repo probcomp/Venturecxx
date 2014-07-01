@@ -143,28 +143,28 @@ builtInSPsList = [
                                  descr="%s returns true if its first argument compares less than or equal to its second") ],
            # Only makes sense with VentureAtom/VentureNumber distinction
            [ "real",  deterministic_typed(lambda x:x, [v.AtomType()], v.NumberType(),
-                                          "%s returns the identity of its argument atom as a number") ],
+                                          descr="%s returns the identity of its argument atom as a number") ],
            [ "atom_eq", deterministic_typed(lambda x,y: x == y, [v.AtomType(), v.AtomType()], v.BoolType(),
-                                            "%s tests its two arguments, which must be atoms, for equality") ],
+                                            descr="%s tests its two arguments, which must be atoms, for equality") ],
            # If you are wondering about the type signature, this
            # function bootstraps the implicit coersion from numbers to
            # probabilities into an explicit one.  That means that the
            # valid arguments to it are exactly the ones that happen to
            # fall into the range of probabilities.
            [ "probability",  deterministic_typed(lambda x:x, [v.ProbabilityType()], v.ProbabilityType(),
-                                                 "%s converts its argument to a probability (in direct space)") ],
+                                                 descr="%s converts its argument to a probability (in direct space)") ],
 
-           [ "sin", unaryNum(math.sin, "Returns the %s of its argument") ],
-           [ "cos", unaryNum(math.cos, "Returns the %s of its argument") ],
-           [ "tan", unaryNum(math.tan, "Returns the %s of its argument") ],
-           [ "hypot", binaryNum(math.hypot, "Returns the %s of its arguments") ],
+           [ "sin", unaryNum(math.sin, descr="Returns the %s of its argument") ],
+           [ "cos", unaryNum(math.cos, descr="Returns the %s of its argument") ],
+           [ "tan", unaryNum(math.tan, descr="Returns the %s of its argument") ],
+           [ "hypot", binaryNum(math.hypot, descr="Returns the %s of its arguments") ],
            [ "exp", unaryNum(careful_exp, sim_grad=lambda args, direction: [direction * careful_exp(args[0])], descr="Returns the %s of its argument") ],
-           [ "log", unaryNum(math.log, "Returns the %s of its argument") ],
-           [ "pow", binaryNum(math.pow, "%s returns its first argument raised to the power of its second argument") ],
-           [ "sqrt", unaryNum(math.sqrt, "Returns the %s of its argument") ],
+           [ "log", unaryNum(math.log, descr="Returns the %s of its argument") ],
+           [ "pow", binaryNum(math.pow, descr="%s returns its first argument raised to the power of its second argument") ],
+           [ "sqrt", unaryNum(math.sqrt, descr="Returns the %s of its argument") ],
 
            [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType(),
-                                        "%s returns the logical negation of its argument") ],
+                                        descr="%s returns the logical negation of its argument") ],
 
            [ "is_symbol", type_test(v.SymbolType()) ],
            [ "is_atom", type_test(v.AtomType()) ],
@@ -202,7 +202,7 @@ builtInSPsList = [
            [ "matrix", deterministic_typed(np.array,
                                            [v.HomogeneousListType(v.HomogeneousListType(v.NumberType()))],
                                            v.MatrixType(),
-                                           "%s returns a matrix formed from the given list of rows.  It is an error if the given list is not rectangular.") ],
+                                           descr="%s returns a matrix formed from the given list of rows.  It is an error if the given list is not rectangular.") ],
            [ "is_matrix", type_test(v.MatrixType()) ],
            [ "simplex", deterministic_typed(lambda *nums: np.array(nums), [v.ProbabilityType()], v.SimplexType(), variadic=True,
                                             descr="%s returns the simplex point given by its argument coordinates.") ],
@@ -220,7 +220,7 @@ builtInSPsList = [
            [ "size", deterministic_typed(lambda xs: xs.size(),
                                          [v.HomogeneousMappingType(v.AnyType("k"), v.AnyType("v"))],
                                          v.NumberType(),
-                                         "%s returns the number of elements in the given collection (lists and arrays work too)") ],
+                                         descr="%s returns the number of elements in the given collection (lists and arrays work too)") ],
 
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),
