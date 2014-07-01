@@ -131,7 +131,7 @@ VentureValuePtr fromPython(boost::python::object o)
   if (s.check()) { return VentureValuePtr(new VentureSymbol(s)); }
 
   boost::python::extract<int> i(o);
-  if (i.check()) { return VentureValuePtr(new VentureNumber(i)); }
+  if (i.check()) { return VentureValuePtr(new VentureInteger(i)); }
 
   boost::python::extract<double> d(o);
   if (d.check()) { return VentureValuePtr(new VentureNumber(d)); }
@@ -158,7 +158,7 @@ VentureValuePtr parseValue(boost::python::dict d)
 
   if (type == "number") { return VentureValuePtr(new VentureNumber(boost::python::extract<double>(value))); }
   else if (type == "real") { return VentureValuePtr(new VentureNumber(boost::python::extract<double>(value))); }
-  else if (type == "integer") { return VentureValuePtr(new VentureNumber(boost::python::extract<double>(value))); }
+  else if (type == "integer") { return VentureValuePtr(new VentureInteger(boost::python::extract<int>(value))); }
   else if (type == "probability") { return VentureValuePtr(new VentureNumber(boost::python::extract<double>(value))); }
   else if (type == "atom") { return VentureValuePtr(new VentureAtom(boost::python::extract<uint32_t>(value))); }
   else if (type == "boolean") { return VentureValuePtr(new VentureBool(boost::python::extract<bool>(value))); }

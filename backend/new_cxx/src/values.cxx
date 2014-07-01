@@ -48,6 +48,14 @@ boost::python::dict VentureNumber::toPython(Trace * trace) const
   return value;
 }
 
+boost::python::dict VentureInteger::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "integer";
+  value["value"] = boost::python::object(n);
+  return value;
+}
+
 boost::python::dict VentureAtom::toPython(Trace * trace) const
 {
   boost::python::dict value;
@@ -55,6 +63,7 @@ boost::python::dict VentureAtom::toPython(Trace * trace) const
   value["value"] = boost::python::object(n);
   return value;
 }
+
 boost::python::dict VentureBool::toPython(Trace * trace) const
 {
   boost::python::dict value;
@@ -159,6 +168,12 @@ bool VentureNumber::ltSameType(const VentureValuePtr & other) const
   assert(other_v); return (x < other_v->x);
 }
 
+bool VentureInteger::ltSameType(const VentureValuePtr & other) const
+{
+  shared_ptr<VentureInteger> other_v = dynamic_pointer_cast<VentureInteger>(other);
+  assert(other_v); return (n < other_v->n);
+}
+
 bool VentureAtom::ltSameType(const VentureValuePtr & other) const
 {
   shared_ptr<VentureAtom> other_v = dynamic_pointer_cast<VentureAtom>(other);
@@ -239,6 +254,12 @@ bool VentureNumber::equalsSameType(const VentureValuePtr & other) const
   assert(other_v); return (other_v->x == x);
 }
 
+bool VentureInteger::equalsSameType(const VentureValuePtr & other) const
+{
+  shared_ptr<VentureInteger> other_v = dynamic_pointer_cast<VentureInteger>(other);
+  assert(other_v); return (other_v->n == n);
+}
+
 bool VentureAtom::equalsSameType(const VentureValuePtr & other) const
 {
   shared_ptr<VentureAtom> other_v = dynamic_pointer_cast<VentureAtom>(other);
@@ -315,6 +336,12 @@ size_t VentureNumber::hash() const
   return double_hash(x);
 }
 
+size_t VentureInteger::hash() const
+{
+  boost::hash<int> int_hash;
+  return int_hash(n);
+}
+
 size_t VentureAtom::hash() const
 {
   boost::hash<int> int_hash;
@@ -375,6 +402,7 @@ size_t VentureID::hash() const
 //// toString methods
 
 string VentureNumber::toString() const { return "VentureNumber " + lexical_cast<string>(x);}
+string VentureInteger::toString() const { return "VentureInteger " + lexical_cast<string>(n);}
 string VentureAtom::toString() const { return "VentureAtom " + lexical_cast<string>(n);}
 string VentureBool::toString() const { return "VentureBool " + lexical_cast<string>(b);}
 string VentureSymbol::toString() const { return "VentureSymbol " + s;}
@@ -416,6 +444,7 @@ string VentureID::toString() const { return "VentureID";}
 //// asExpression methods
 
 string VentureNumber::asExpression() const { return lexical_cast<string>(x);}
+string VentureInteger::asExpression() const { return lexical_cast<string>(n);}
 string VentureAtom::asExpression() const { return lexical_cast<string>(n);}
 string VentureBool::asExpression() const { return lexical_cast<string>(b);}
 string VentureSymbol::asExpression() const { return s;}

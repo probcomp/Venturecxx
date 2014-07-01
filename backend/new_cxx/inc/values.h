@@ -27,6 +27,28 @@ struct VentureNumber : VentureValue
   double x;
 };
 
+struct VentureInteger : VentureValue
+{
+  VentureInteger(int n): n(n) {}
+
+  bool hasDouble() const { return true; }
+  double getDouble() const { return n; }
+  bool hasInt() const { return true; }
+  long getInt() const { return n; }
+  bool getBool() const { return n; }
+
+  boost::python::dict toPython(Trace * trace) const;
+
+  bool ltSameType(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  size_t hash() const;
+
+  string toString() const;
+  string asExpression() const;
+
+  int n;
+};
+
 struct VentureAtom : VentureValue
 {
   VentureAtom(int n): n(n) {}
