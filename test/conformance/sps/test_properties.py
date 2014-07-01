@@ -146,10 +146,11 @@ def propRiplRoundTripThroughStack(value):
 
 def eval_in_ripl(expr):
   ripl = get_ripl()
-  # hack so that report_raw grabs the first directive after the prefix
-  len_prefix = len(ripl.sivm.core_sivm.engine.getDistinguishedTrace().families)
-  ripl.predict(expr)
-  return ripl.sivm.core_sivm.engine.report_raw(len_prefix + 1)
+  ripl.predict(expr, label="thing")
+  # can't give string directive id for a trace; find number of
+  # directive by label
+  directive_id = ripl.sivm.label_dict["thing"]
+  return ripl.sivm.core_sivm.engine.report_raw(directive_id)
 
 def testRiplSimulate():
   if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
