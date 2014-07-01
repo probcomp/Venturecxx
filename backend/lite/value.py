@@ -39,7 +39,7 @@ class VentureValue(object):
   def getEnvironment(self): raise VentureTypeError("Cannot convert %s to environment" % type(self))
 
   ### Stack representation
-  def asStackDict(self, _trace): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
+  def asStackDict(self, _trace=None): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
   @staticmethod
   def fromStackDict(thing):
     if isinstance(thing, list):
@@ -262,7 +262,7 @@ class VentureAtom(VentureValue):
   def getNumber(self): return self.atom
   def getAtom(self): return self.atom
   def getBool(self): return self.atom
-  def asStackDict(self, _trace): return {"type":"atom","value":self.atom}
+  def asStackDict(self, _trace=None): return {"type":"atom","value":self.atom}
   @staticmethod
   def fromStackDict(thing): return VentureAtom(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.atom, other.atom)
@@ -281,7 +281,7 @@ class VentureBool(VentureValue):
     # trials as well as dispatching on them.  Or should flip and
     # bernoulli be different SPs?
     return self.boolean
-  def asStackDict(self, _trace): return {"type":"boolean","value":self.boolean}
+  def asStackDict(self, _trace=None): return {"type":"boolean","value":self.boolean}
   @staticmethod
   def fromStackDict(thing): return VentureBool(thing["value"])
   def compareSameType(self, other):
@@ -295,7 +295,7 @@ class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
   def __repr__(self): return "Symbol(%s)" % self.symbol
   def getSymbol(self): return self.symbol
-  def asStackDict(self, _trace): return {"type":"symbol","value":self.symbol}
+  def asStackDict(self, _trace=None): return {"type":"symbol","value":self.symbol}
   @staticmethod
   def fromStackDict(thing): return VentureSymbol(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
@@ -319,7 +319,7 @@ class VentureNil(VentureValue):
   def __init__(self): pass
   def __repr__(self): return "Nil"
 
-  def asStackDict(self, _trace): return {"type":"list", "value":[]}
+  def asStackDict(self, _trace=None): return {"type":"list", "value":[]}
   @staticmethod
   def fromStackDict(_): return VentureNil()
 
@@ -362,7 +362,7 @@ class VenturePair(VentureValue):
     else:
       raise Exception("Cannot convert an improper list to array")
 
-  def asStackDict(self, trace):
+  def asStackDict(self, trace=None):
     (list_, tail) = self.asPossiblyImproperList()
     if tail is None:
       return {"type":"list", "value":[v.asStackDict(trace) for v in list_]}
@@ -469,7 +469,7 @@ class VentureArray(VentureValue):
     return lexicographicBoxedCompare(self.array, other.array)
   def __hash__(self): return sequenceHash(self.array)
 
-  def asStackDict(self,trace):
+  def asStackDict(self, trace=None):
     # TODO Are venture arrays reflected as lists to the stack?
     # TODO Are stack lists lists, or are they themselves type tagged?
     return {"type":"list","value":[v.asStackDict(trace) for v in self.array]}
@@ -651,7 +651,7 @@ class VentureDict(VentureValue):
 
   def getDict(self): return self.dict
 
-  def asStackDict(self, _trace):
+  def asStackDict(self, _trace=None):
     # TODO Difficult to reflect as a Python dict because the keys
     # would presumably need to be converted to stack dicts too, which
     # is a problem because they need to be hashable.
@@ -695,7 +695,7 @@ class VentureMatrix(VentureValue):
     b = self.matrix.view(np.uint8)
     return hash(hashlib.sha1(b).hexdigest())
 
-  def asStackDict(self, _trace):
+  def asStackDict(self, _trace=None):
     return {"type":"matrix", "value":self.matrix}
   @staticmethod
   def fromStackDict(thing): return VentureMatrix(thing["value"])
@@ -782,7 +782,8 @@ def matrixIsSymmetric(matrix):
 @serialize.register
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
-  def asStackDict(self,trace):
+  def asStackDict(self, trace=None):
+    assert trace is not None
     return {"type":"sp","value":trace.madeSPAt(self.makerNode).show(trace.madeSPAuxAt(self.makerNode))}
   
   @staticmethod
