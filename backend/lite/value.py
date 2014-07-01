@@ -358,11 +358,13 @@ class VenturePair(VentureValue):
     if tail is None:
       return {"type":"list", "value":[v.asStackDict(trace) for v in list_]}
     else:
-      return {"type":"improper_list", "value": self}
+      return {"type":"improper_list", "value": ([v.asStackDict(trace) for v in list_], tail.asStackDict())}
   @staticmethod
   def fromStackDict(thing):
     if thing["type"] == "improper_list":
-      return thing["value"]
+      (list_, tail) = thing["value"]
+      return pythonListToImproperVentureList(VentureValue.fromStackDict(tail),
+                                             *[VentureValue.fromStackDict(v) for v in list_])
     else:
       return pythonListToVentureList(*[VentureValue.fromStackDict(v) for v in thing["value"]])
 
@@ -443,6 +445,9 @@ class VenturePair(VentureValue):
 
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
+
+def pythonListToImproperVentureList(tail, *l):
+  return reduce(lambda t, h: VenturePair((h, t)), reversed(l), tail)
 
 class VentureArray(VentureValue):
   """Venture arrays are heterogeneous, with O(1) access and O(n) copy."""
