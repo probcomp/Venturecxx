@@ -18,7 +18,7 @@
 
 from cmd import Cmd
 from venture.exception import VentureException
-from utils import _strip_types
+from utils import _strip_types, expToDict, parse
 from functools import wraps
 
 def getValue(directive):
@@ -106,7 +106,7 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_infer(self, s):
     '''Run inference synchronously.'''
-    self._do_instruction('infer', s)
+    self.ripl.infer(expToDict(parse(s)) if s else None)
   
   @catchesVentureException
   def do_continuous_inference_status(self, s):
