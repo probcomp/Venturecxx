@@ -244,8 +244,7 @@ def propGradientOfLogDensity(rnd, name, sp):
 
 def testFixingRandomness():
   for (name,sp) in relevantSPs():
-    if sp.outputPSP.isRandom():
-      yield checkFixingRandomness, name, sp
+    yield checkFixingRandomness, name, sp
 
 def checkFixingRandomness(name, sp):
   checkTypedProperty(propDeterministicWhenFixed, fully_uncurried_sp_type(sp.venture_type()), name, sp)
