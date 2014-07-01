@@ -52,7 +52,10 @@ class RiplCmd(Cmd, object):
     pass
   
   def do_quit(self, s):
-    'Exit Venture'
+    '''Exit the Venture console.'''
+    print ''
+    print "End of input reached."
+    print "Moriturus te saluto."
     return True
   
   do_EOF = do_quit
