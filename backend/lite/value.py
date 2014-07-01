@@ -1067,9 +1067,7 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
       return thing # Atoms are valid elements of expressions
     if isinstance(thing, VentureSymbol):
       return thing.getSymbol()
-    if isinstance(thing, VentureArray):
-      return thing.getArray(self)
-    if isinstance(thing, VenturePair) or isinstance(thing, VentureNil) and thing.isProperList():
+    if thing.isProperList():
       return thing.asPythonList(self)
     # Most other things are represented as themselves.
     return thing
