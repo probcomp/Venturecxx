@@ -12,7 +12,7 @@ VentureValuePtr FlipOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) con
 {
   checkArgsLength("flip", args, 0, 1);
   double p = 0.5;
-  if (!args->operandValues.empty()) { p = args->operandValues[0]->getDouble(); }
+  if (!args->operandValues.empty()) { p = args->operandValues[0]->getProbability(); }
   int n = gsl_ran_bernoulli(rng,p);
   assert(n == 0 || n == 1);
   return VentureValuePtr(new VentureBool(n));
@@ -21,7 +21,7 @@ VentureValuePtr FlipOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) con
 double FlipOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
 {
   double p = 0.5;
-  if (!args->operandValues.empty()) { p = args->operandValues[0]->getDouble(); }
+  if (!args->operandValues.empty()) { p = args->operandValues[0]->getProbability(); }
 
   if (value->getBool()) { return log(p); }
   else { return log(1 - p); }
@@ -30,7 +30,7 @@ double FlipOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) c
 vector<VentureValuePtr> FlipOutputPSP::enumerateValues(shared_ptr<Args> args) const
 {
   double p = 0.5;
-  if (!args->operandValues.empty()) { p = args->operandValues[0]->getDouble(); }
+  if (!args->operandValues.empty()) { p = args->operandValues[0]->getProbability(); }
 
   vector<VentureValuePtr> vs;
 
@@ -43,7 +43,7 @@ VentureValuePtr BernoulliOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng
 {
   checkArgsLength("bernoulli", args, 0, 1);
   double p = 0.5;
-  if (!args->operandValues.empty()) { p = args->operandValues[0]->getDouble(); }
+  if (!args->operandValues.empty()) { p = args->operandValues[0]->getProbability(); }
   int n = gsl_ran_bernoulli(rng,p);
   assert(n == 0 || n == 1);
   return VentureValuePtr(new VentureAtom(n));
@@ -52,7 +52,7 @@ VentureValuePtr BernoulliOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng
 double BernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
 {
   double p = 0.5;
-  if (!args->operandValues.empty()) { p = args->operandValues[0]->getDouble(); }
+  if (!args->operandValues.empty()) { p = args->operandValues[0]->getProbability(); }
 
   if (value->getBool()) { return log(p); }
   else { return log(1 - p); }
@@ -61,7 +61,7 @@ double BernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> ar
 vector<VentureValuePtr> BernoulliOutputPSP::enumerateValues(shared_ptr<Args> args) const
 {
   double p = 0.5;
-  if (!args->operandValues.empty()) { p = args->operandValues[0]->getDouble(); }
+  if (!args->operandValues.empty()) { p = args->operandValues[0]->getProbability(); }
 
   vector<VentureValuePtr> vs;
 
@@ -114,7 +114,7 @@ VentureValuePtr BinomialOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng)
 {
   checkArgsLength("binomial", args, 2);
   int n = args->operandValues[0]->getInt();
-  double p = args->operandValues[1]->getDouble();
+  double p = args->operandValues[1]->getProbability();
   int val = gsl_ran_binomial(rng,p,n);
   return VentureValuePtr(new VentureNumber(val));
 }
@@ -123,7 +123,7 @@ double BinomialOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
 {
   checkArgsLength("binomial", args, 2);
   int n = args->operandValues[0]->getInt();
-  double p = args->operandValues[1]->getDouble();
+  double p = args->operandValues[1]->getProbability();
   int val = value->getInt();
   // TODO: compute probability in logspace
   return log(gsl_ran_binomial_pdf(val,p,n));

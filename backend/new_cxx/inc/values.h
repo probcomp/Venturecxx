@@ -51,11 +51,11 @@ struct VentureInteger : VentureValue
 
 struct VentureProbability : VentureValue
 {
-  VentureProbability(double x): x(x) {} // TODO: validate 0 <= x <= 1
+  VentureProbability(double x): x(x) {}
 
   bool hasDouble() const { return true; }
   double getDouble() const { return x; }
-  // TODO: getProbability
+  double getProbability() const { return x; }
 
   boost::python::dict toPython(Trace * trace) const;
 

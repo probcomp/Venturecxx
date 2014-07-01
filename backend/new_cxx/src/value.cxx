@@ -24,6 +24,23 @@ long VentureValue::getInt() const
   cannotConvertType(this,"int"); assert(false); throw "no return";
 }
 
+double VentureValue::getProbability() const
+{
+  double x;
+  try {
+    x = getDouble();
+  }
+  catch (string) {
+    cannotConvertType(this,"probability"); assert(false); throw "no return";
+  }
+  if (0 <= x && x <= 1) {
+    return x;
+  }
+  else {
+    throw "Probability out of range " + toString();
+  }
+}
+
 int VentureValue::getAtom() const
 {
   cannotConvertType(this,"atom"); assert(false); throw "no return";

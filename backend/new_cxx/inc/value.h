@@ -52,8 +52,7 @@ struct VentureValue
 
   virtual bool hasInt() const;
   virtual long getInt() const;
-
-  // TODO: probability
+  virtual double getProbability() const;
 
   virtual int getAtom() const;
   virtual bool isBool() const;
