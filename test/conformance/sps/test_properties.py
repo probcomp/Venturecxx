@@ -9,7 +9,7 @@ from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSP
-from venture.lite.value import AnyType, VentureValue
+from venture.lite.value import AnyType, VentureValue, ExpressionType
 from venture.lite.mlens import real_lenses
 import venture.test.numerical as num
 from venture.lite.exception import VentureBuiltinSPMethodError
@@ -131,6 +131,18 @@ def propExpressionWorks(value):
   expr = value.expressionFor()
   result = carefully(eval_in_ripl, expr)
   assert value.equal(result)
+
+def testRiplRoundTripThroughStack():
+  if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
+  checkTypedProperty(propRiplRoundTripThroughStack, AnyType())
+
+def propRiplRoundTripThroughStack(value):
+  expr = [{"type":"symbol", "value":"quote"}, value.asStackDict()]
+  result = carefully(eval_in_ripl, expr)
+  # Round-tripping through ExpressionType is not the identity because
+  # it normalizes Venture sequences to arrays
+  expected = ExpressionType().asVentureValue(ExpressionType().asPython(value))
+  assert expected.equal(result)
 
 def eval_in_ripl(expr):
   ripl = get_ripl()
