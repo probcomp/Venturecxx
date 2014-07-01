@@ -103,7 +103,6 @@ class Ripl():
         # instruction string instead of the actual data the caller
         # passed.
         instruction_string = self._ensure_unparsed(instruction)
-        print instruction_string
 
         p = self._cur_parser()
         # all exceptions raised by the Sivm get augmented with a
@@ -278,7 +277,7 @@ class Ripl():
             i = {'instruction':'labeled_assume',
                   'symbol':name, 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
-        return value if type else _strip_types(value)
+        return value if type else u._strip_types(value)
 
     def predict(self, expression, label=None, type=False):
         if label==None:
@@ -286,7 +285,7 @@ class Ripl():
         else:
             i = {'instruction':'labeled_predict', 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
-        return value if type else _strip_types(value)
+        return value if type else u._strip_types(value)
 
     def observe(self, expression, value, label=None):
         if label==None:
@@ -419,7 +418,7 @@ Open issues:
         else:
             i = {'instruction':'labeled_report', 'label':label_or_did}
         value = self.execute_instruction(i)['value']
-        return value if type else _strip_types(value)
+        return value if type else u._strip_types(value)
 
     # takes params and turns them into the proper dict
     # TODO Correctly default block choice?
@@ -445,7 +444,7 @@ Open issues:
         if type:
             return ans
         elif isinstance(ans, dict): # Presume this is peek output
-            return _strip_types_from_dict_values(ans)
+            return u._strip_types_from_dict_values(ans)
         else: # Presume this is plotf output
             return ans
 
@@ -470,7 +469,7 @@ Open issues:
                          'directive_id':directive['directive_id'],
                          }
                 value = self.execute_instruction(inst)['value']
-                directive['value'] = value if type else _strip_types(value)
+                directive['value'] = value if type else u._strip_types(value)
             # if not requested to include the prelude, exclude those directives
             if hasattr(self, '_n_prelude') and (not include_prelude):
                 directives = directives[self._n_prelude:]
@@ -491,7 +490,7 @@ Open issues:
     def sample(self, expression, type=False):
         i = {'instruction':'sample', 'expression':expression}
         value = self.execute_instruction(i)['value']
-        return value if type else _strip_types(value)
+        return value if type else u._strip_types(value)
 
     def continuous_inference_status(self):
         return self.execute_instruction({'instruction':'continuous_inference_status'})
@@ -625,14 +624,3 @@ Open issues:
         args, arg_ranges = p.split_instruction(text)
         return args['expression'], arg_ranges['expression'][0]
 
-def _strip_types(value):
-    if isinstance(value, dict):
-        ans = value['value']
-        if isinstance(ans,list): return [_strip_types(v) for v in ans]
-        else: return ans
-    else: return value
-
-def _strip_types_from_dict_values(value):
-    # The purpose of {"value": v} here is to fool _strip_types
-    # into mapping over the list.
-    return dict([(k, _strip_types({"value": v})) for (k,v) in value.iteritems()])
