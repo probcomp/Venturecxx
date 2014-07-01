@@ -98,7 +98,7 @@ bool VentureValue::operator<(const VentureValuePtr & rhs) const
   else { return ltSameType(rhs); }
 }
 
-bool VentureValue::ltSameType(const VentureValuePtr & rhs) const { assert(false); }
+bool VentureValue::ltSameType(const VentureValuePtr & rhs) const { throw "Cannot compare " + toString(); }
 
 
 bool VentureValue::equals(const VentureValuePtr & other) const 
@@ -109,16 +109,16 @@ bool VentureValue::equals(const VentureValuePtr & other) const
   else { return equalsSameType(other); }
 }
 
-bool VentureValue::equalsSameType(const VentureValuePtr & rhs) const { assert(false); }
+bool VentureValue::equalsSameType(const VentureValuePtr & rhs) const { throw "Cannot compare " + toString(); }
 
 size_t VentureValue::hash() const
 {
   assert(false); assert(false); throw "no return";
 }
 
-VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { assert(false); }
-bool VentureValue::contains(VentureValuePtr index) const { assert(false); }
-int VentureValue::size() const { assert(false); }
+VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { throw "Cannot look things up in " + toString(); }
+bool VentureValue::contains(VentureValuePtr index) const { throw "Cannot look for things in " + toString(); }
+int VentureValue::size() const { throw "Cannot measure size of " + toString(); }
 
 
 const vector<ESR>& VentureValue::getESRs() const
@@ -168,5 +168,5 @@ int getValueTypeRank(const VentureValue * v)
   else if (dynamic_cast<const VentureRequest *>(v)) { return 13; }
   else if (dynamic_cast<const VentureNode *>(v)) { return 14; }
   else if (dynamic_cast<const VentureID *>(v)) { return 15; }
-  else { assert(false); return -1; }
+  else { throw "Unknown type '" + v->toString() + "'"; return -1; }
 }
