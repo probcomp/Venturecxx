@@ -12,7 +12,6 @@ from mlens import MLens
 import ensure_numpy as enp
 from request import Request # TODO Pull that file in here?
 from exception import VentureValueError, VentureTypeError
-import serialize
 
 # TODO Define reasonable __str__ and/or __repr__ methods for all the
 # values and all the types.
@@ -87,7 +86,6 @@ class VentureValue(object):
   def expressionFor(self):
     return [{"type":"symbol", "value":"quote"}, self.asStackDict(None)]
 
-@serialize.register
 class VentureNumber(VentureValue):
   def __init__(self,number):
     assert isinstance(number, Number)
@@ -155,7 +153,6 @@ class VentureNumber(VentureValue):
     return [NumberLens(self)]
   def expressionFor(self): return self.number
 
-@serialize.register
 class VentureInteger(VentureValue):
   def __init__(self,number):
     assert isinstance(number, Number)
@@ -174,7 +171,6 @@ class VentureInteger(VentureValue):
   def __hash__(self): return hash(self.number)
   def expressionFor(self): return self.number
 
-@serialize.register
 class VentureProbability(VentureValue):
   def __init__(self, number):
     assert isinstance(number, Number)
@@ -253,7 +249,6 @@ def lexicographicMatrixCompare(thing, other):
 def sequenceHash(seq):
   return reduce(lambda res, item: res * 37 + item, [hash(i) for i in seq], 1)
 
-@serialize.register
 class VentureAtom(VentureValue):
   def __init__(self,atom):
     assert isinstance(atom, Number)
@@ -269,7 +264,6 @@ class VentureAtom(VentureValue):
   def __hash__(self): return hash(self.atom)
   def expressionFor(self): return [{"type":"symbol", "value":"quote"}, self] # TODO Is this right?
 
-@serialize.register
 class VentureBool(VentureValue):
   def __init__(self,boolean):
     assert isinstance(boolean, bool) or isinstance(boolean, np.bool_)
@@ -290,7 +284,6 @@ class VentureBool(VentureValue):
   def expressionFor(self):
     return {"type":"symbol", "value":"true"} if self.boolean else {"type":"symbol", "value":"false"}
 
-@serialize.register
 class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
   def __repr__(self): return "Symbol(%s)" % self.symbol
@@ -314,7 +307,6 @@ class VentureForeignBlob(VentureValue):
   @staticmethod
   def fromStackDict(thing): return VentureForeignBlob(thing["value"])
 
-@serialize.register
 class VentureNil(VentureValue):
   def __init__(self): pass
   def __repr__(self): return "Nil"
@@ -336,7 +328,6 @@ class VentureNil(VentureValue):
 
   def asPythonList(self, _elt_type=None): return []
 
-@serialize.register
 class VenturePair(VentureValue):
   def __init__(self,(first,rest)):
     # TODO Maybe I need to be careful about tangent and cotangent
@@ -453,7 +444,6 @@ class VenturePair(VentureValue):
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
 
-@serialize.register
 class VentureArray(VentureValue):
   """Venture arrays are heterogeneous, with O(1) access and O(n) copy."""
   def __init__(self, array): self.array = array
@@ -529,7 +519,6 @@ class VentureArray(VentureValue):
   def asPythonList(self, elt_type=None):
     return self.getArray(elt_type)
 
-@serialize.register
 class VentureArrayUnboxed(VentureValue):
   """Venture arrays of unboxed objects are homogeneous, with O(1) access and O(n) copy."""
   def __init__(self, array, elt_type):
@@ -612,7 +601,6 @@ class VentureArrayUnboxed(VentureValue):
   def asPythonList(self, elt_type=None):
     return self.getArray(elt_type)
 
-@serialize.register
 class VentureSimplex(VentureValue):
   """Simplexes are homogeneous unboxed arrays of probabilities.  They
 are also supposed to sum to 1, but we are not checking that.
@@ -643,7 +631,6 @@ are also supposed to sum to 1, but we are not checking that.
   def expressionFor(self):
     return [{"type":"symbol", "value":"simplex"}] + self.simplex
 
-@serialize.register
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
 
@@ -673,7 +660,6 @@ class VentureDict(VentureValue):
             [{"type":"symbol", "value":"list"}] + [v.expressionFor() for v in vals]]
 
 # 2D array of numbers backed by a numpy array object
-@serialize.register
 class VentureMatrix(VentureValue):
   def __init__(self,matrix): self.matrix = np.array(matrix)
   def __repr__(self):
@@ -733,7 +719,6 @@ class VentureMatrix(VentureValue):
     return [{"type":"symbol", "value":"matrix"},
             [{"type":"symbol", "value":"list"}] + [[{"type":"symbol", "value":"list"}] + [v for v in row] for row in self.matrix]]
 
-@serialize.register
 class VentureSymmetricMatrix(VentureMatrix):
   def __init__(self, matrix):
     self.matrix = matrix
@@ -785,7 +770,6 @@ class VentureSymmetricMatrix(VentureMatrix):
 def matrixIsSymmetric(matrix):
   return np.allclose(matrix.transpose(), matrix)
 
-@serialize.register
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
   def asStackDict(self, trace=None):

@@ -7,7 +7,6 @@ import math
 from copy import copy
 from value import NumberType, RequestType
 from exception import VentureValueError
-import serialize
 
 def npSampleVector(pVec): return np.mat(npr.multinomial(1,np.array(pVec)[0,:]))
 def npIndexOfOne(pVec): return np.where(pVec[0] == 1)[1][0,0]
@@ -15,7 +14,6 @@ def npMakeDiag(colvec):
   return np.diag(np.array(colvec))
 def npNormalizeVector(vec): return vec / np.sum(vec)
 
-@serialize.register
 class HMMSPAux(SPAux):
   def __init__(self):
     super(HMMSPAux,self).__init__()
@@ -28,12 +26,6 @@ class HMMSPAux(SPAux):
     ans.os = {k:copy(v) for (k,v) in self.os.iteritems()}
     return ans
 
-  def serialize(self, s):
-    return s.serialize_default(self)
-
-  def deserialize(self, s, data):
-    s.deserialize_default(self, data)
-
 class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
   def simulate(self,args):
     (p0,T,O) = args.operandValues
@@ -45,7 +37,6 @@ class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
   def description(self, _name):
     return "  Discrete-state HMM of unbounded length with discrete observations.  The inputs are the probability distribution of the first state, the transition matrix, and the observation matrix.  It is an error if the dimensionalities do not line up.  Returns observations from the HMM encoded as a stochastic procedure that takes the time step and samples a new observation at that time step."
 
-@serialize.register
 class UncollapsedHMMSP(VentureSP):
   def __init__(self,p0,T,O):
     req = TypedPSP(UncollapsedHMMRequestPSP(), SPType([NumberType()], RequestType()))
@@ -106,19 +97,6 @@ class UncollapsedHMMSP(VentureSP):
       T_i = npMakeDiag(self.T[:,index])
       gamma = npNormalizeVector(fs[i] * T_i)
       aux.xs[i] = npSampleVector(gamma)
-
-  def serialize(self, s):
-    ret = {}
-    ret['p0'] = s.serialize(self.p0)
-    ret['T'] = s.serialize(self.T)
-    ret['O'] = s.serialize(self.O)
-    return ret
-
-  def deserialize(self, s, data):
-    p0 = s.deserialize(data['p0'])
-    T = s.deserialize(data['T'])
-    O = s.deserialize(data['O'])
-    self.__init__(p0, T, O)
 
 
 class UncollapsedHMMOutputPSP(RandomPSP):
