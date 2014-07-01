@@ -86,6 +86,8 @@ class VentureValue(object):
   def expressionFor(self):
     return [{"type":"symbol", "value":"quote"}, self.asStackDict(None)]
 
+  def isProperList(self): return False
+
 class VentureNumber(VentureValue):
   def __init__(self,number):
     assert isinstance(number, Number)
@@ -326,6 +328,7 @@ class VentureNil(VentureValue):
   def expressionFor(self):
     return [{"type":"symbol", "value":"list"}]
 
+  def isProperList(self): return True
   def asPythonList(self, _elt_type=None): return []
 
 class VenturePair(VentureValue):
@@ -429,6 +432,8 @@ class VenturePair(VentureValue):
   def expressionFor(self):
     return [{"type":"symbol", "value":"pair"}, self.first.expressionFor(), self.rest.expressionFor()]
 
+  def isProperList(self):
+    return self.rest.isProperList()
   def asPythonList(self, elt_type=None):
     if elt_type is not None:
       return [elt_type.asPython(self.first)] + self.rest.asPythonList(elt_type)
@@ -521,6 +526,7 @@ class VentureArray(VentureValue):
   def expressionFor(self):
     return [{"type":"symbol", "value":"array"}] + [v.expressionFor() for v in self.array]
 
+  def isProperList(self): return True
   def asPythonList(self, elt_type=None):
     return self.getArray(elt_type)
 
@@ -603,6 +609,7 @@ class VentureArrayUnboxed(VentureValue):
     # TODO Ascertain whether self.elt_type represents a real number or not
     return VentureArrayUnboxed(enp.map(f, self.array, self.elt_type), self.elt_type)
 
+  def isProperList(self): return True
   def asPythonList(self, elt_type=None):
     return self.getArray(elt_type)
 
@@ -1062,9 +1069,9 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
       return thing.getSymbol()
     if isinstance(thing, VentureArray):
       return thing.getArray(self)
-    if isinstance(thing, VenturePair) or isinstance(thing, VentureNil):
+    if isinstance(thing, VenturePair) or isinstance(thing, VentureNil) and thing.isProperList():
       return thing.asPythonList(self)
-    # Many other things are represented as themselves now. TODO Restrict this to self-evaluatings?
+    # Most other things are represented as themselves.
     return thing
 
   def name(self): return "<exp>"
