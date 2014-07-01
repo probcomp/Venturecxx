@@ -48,7 +48,7 @@ def func_psp(f, descr=None, sim_grad=None):
       if self.sim_grad:
         return self.sim_grad(args, direction)
       else:
-        raise Exception("Cannot compute simulation gradient of %s", self.descr)
+        raise Exception("Cannot compute simulation gradient of '%s'" % self.description("<unknown name>"))
     def description(self,name):
       if '%s' in self.descr:
         return self.descr % name
