@@ -1,5 +1,7 @@
 #include "values.h"
 #include "utils.h"
+#include "env.h"
+#include "sprecord.h"
 #include "Eigen/Dense"
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
@@ -169,6 +171,29 @@ boost::python::dict VentureMatrix::toPython(Trace * trace) const
 }
 
 //// Comparison methods
+
+int VentureNumber::getValueTypeRank() const { return 0; }
+int VentureInteger::getValueTypeRank() const { return 10; }
+int VentureProbability::getValueTypeRank() const { return 20; }
+
+int VentureAtom::getValueTypeRank() const { return 30; }
+int VentureBool::getValueTypeRank() const { return 40; }
+int VentureSymbol::getValueTypeRank() const { return 50; }
+
+int VentureNil::getValueTypeRank() const { return 60; }
+int VenturePair::getValueTypeRank() const { return 70; }
+int VentureArray::getValueTypeRank() const { return 80; }
+
+int VentureSimplex::getValueTypeRank() const { return 100; }
+int VentureDictionary::getValueTypeRank() const { return 110; }
+int VentureMatrix::getValueTypeRank() const { return 120; }
+int VentureSPRef::getValueTypeRank() const { return 140; }
+
+int VentureEnvironment::getValueTypeRank() const { return 150; }
+int VentureSPRecord::getValueTypeRank() const { return 160; }
+int VentureRequest::getValueTypeRank() const { return 170; }
+int VentureNode::getValueTypeRank() const { return 180; }
+int VentureID::getValueTypeRank() const { return 190; }
 
 bool VentureNumber::ltSameType(const VentureValuePtr & other) const
 {

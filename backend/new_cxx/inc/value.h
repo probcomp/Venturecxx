@@ -83,6 +83,7 @@ struct VentureValue
 
   // Comparison
   virtual bool operator<(const VentureValuePtr & rhs) const;
+  virtual int getValueTypeRank() const;
   virtual bool ltSameType(const VentureValuePtr & rhs) const;
 
   // Equality and hashing

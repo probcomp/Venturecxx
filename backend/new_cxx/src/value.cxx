@@ -108,20 +108,22 @@ boost::python::dict VentureValue::toPython(Trace * trace) const
 
 bool VentureValue::operator<(const VentureValuePtr & rhs) const 
 {
-  int t1 = getValueTypeRank(this);
-  int t2 = getValueTypeRank(rhs.get());
+  int t1 = getValueTypeRank();
+  int t2 = rhs->getValueTypeRank();
   if (t1 < t2) { return true; }
   else if (t2 < t1) { return false; }
   else { return ltSameType(rhs); }
 }
+
+int VentureValue::getValueTypeRank() const { throw "Cannot compare type " + toString(); }
 
 bool VentureValue::ltSameType(const VentureValuePtr & rhs) const { throw "Cannot compare " + toString(); }
 
 
 bool VentureValue::equals(const VentureValuePtr & other) const 
 {
-  int t1 = getValueTypeRank(this);
-  int t2 = getValueTypeRank(other.get());
+  int t1 = getValueTypeRank();
+  int t2 = other->getValueTypeRank();
   if (t1 != t2) { return false; }
   else { return equalsSameType(other); }
 }
@@ -161,29 +163,3 @@ shared_ptr<SPAux> VentureValue::getSPAux() const
 }
 
 string VentureValue::asExpression() const { return toString(); }
-
-int getValueTypeRank(const VentureValue * v)
-{
-  // Note: differs slightly from 
-  if (dynamic_cast<const VentureNumber *>(v)) { return 0; }
-
-  else if (dynamic_cast<const VentureAtom *>(v)) { return 1; }
-  else if (dynamic_cast<const VentureBool *>(v)) { return 2; }
-  else if (dynamic_cast<const VentureSymbol *>(v)) { return 3; }
-
-  else if (dynamic_cast<const VentureNil *>(v)) { return 4; }
-  else if (dynamic_cast<const VenturePair *>(v)) { return 5; }
-  else if (dynamic_cast<const VentureArray *>(v)) { return 6; }
-
-  else if (dynamic_cast<const VentureSimplex *>(v)) { return 7; }
-  else if (dynamic_cast<const VentureDictionary *>(v)) { return 8; }
-  else if (dynamic_cast<const VentureMatrix *>(v)) { return 9; }
-  else if (dynamic_cast<const VentureSPRef *>(v)) { return 10; }
-
-  else if (dynamic_cast<const VentureEnvironment *>(v)) { return 11; }
-  else if (dynamic_cast<const VentureSPRecord *>(v)) { return 12; }
-  else if (dynamic_cast<const VentureRequest *>(v)) { return 13; }
-  else if (dynamic_cast<const VentureNode *>(v)) { return 14; }
-  else if (dynamic_cast<const VentureID *>(v)) { return 15; }
-  else { throw "Unknown type '" + v->toString() + "'"; return -1; }
-}
