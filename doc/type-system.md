@@ -6,14 +6,14 @@ Basic
 
 Venture has the following distinct basic types:
 - Floating point numbers (64-bit precision)
-- Integers
-? Atoms
+- Integers [TODO in Puma]
+- Atoms
 - Booleans
 - Symbols
 - Probabilities (represented in direct space, as floating point
-  numbers between 0 and 1)
-? ForeignBlobs for carrying arbitrary user-supplied data that is
-  opaque to Venture
+  numbers between 0 and 1) [TODO in Puma]
+- ForeignBlobs for carrying arbitrary user-supplied data that is
+  opaque to Venture [MAYBE add to Puma]
 
 General Containers
 ------------------
@@ -22,9 +22,12 @@ Venture has the following heterogeneous container types:
 - Pairs
 - Nil, which is the empty list
 - Lists  (a list is either Nil or a Pair whose cdr is a List)
-- Improper lists  (anything can be treated as an improper list?)
+- Improper lists (an "improper list", in Lisp culture, is a chain of
+    Pairs that one wishes to treat as a list but whose last cdr is not
+    Nil.  One can form these in Venture with no ill effect)
 - Arrays
-- Dictionaries
+- Dictionaries  (any Venture value may be used as a key; some exotic
+    choices may lead to silent mistakes)
 - 1st class environments
 - Procedures
 
@@ -47,15 +50,15 @@ Unboxed Containers
 ------------------
 
 Venture has the following homogeneous unboxed container types:
-- Arrays of arbitrary Venture values stored unboxed
+- Arrays of arbitrary Venture values stored unboxed [TODO in Puma]
 - [TODO] Vectors of probabilities (currently called Simplex)
 - Matrices of floating point numbers
 - Symmetric matrices of floating point numbers (which are not
-  actually represented differently from general matrices)
+  actually represented differently from general matrices) [TODO in Puma]
 
-In Lite, the ArrayUnboxed representation tries to store the underlying
-objects in numpy arrays when possible, to avoid Python's boxes as well
-as Venture's.
+[TODO] In Lite, the ArrayUnboxed representation tries to store the
+underlying objects in numpy arrays when possible, to avoid Python's
+boxes as well as Venture's.
 
 Contracts
 ---------
@@ -65,11 +68,10 @@ representation of a value, arise early and often in Venture.  For
 example, both of the parameters to the gamma distribution must be
 positive reals, as is the result.
 
-[TODO] Generally such invariants are represented only in the type
-annotations of procedures (or implicitly in Puma).  However, a couple
-things that might appear to be such are represented as distinct
-Venture types that happen to have the same representation as a
-"broader" type:
+Generally such invariants are represented only in the type annotations
+of procedures (or implicitly in Puma).  However, a couple things that
+might appear to be such are represented as distinct Venture types that
+happen to have the same representation as a "broader" type:
 - Probabilities (in direct space), which look like numbers in [0,1]
 - Symmetric matrices, which look like matrices
 
@@ -88,15 +90,15 @@ Coersions
 The following Venture types are implicitly coerced to one another when
 needed.  If a coersion fails, an error is raised.
 
-[TODO] Unboxed X to boxed X by boxing
-[TODO] Boxed X to unboxed X by type checking and unboxing (may fail)
-? Proper linked lists to arrays
-[TODO] Integers to floating point numbers
-Probabilities to floating point numbers by injection
-[MAYBE] Floating point numbers to direct-space probabilities by range
-  checking (may fail)
-Symmetric matrices to general matrices by injection
-Matrices to symmetric matrices by checking symmetry (may fail)
+- Unboxed X to boxed X by boxing [TODO in Puma]
+- Boxed X to unboxed X by type checking and unboxing (may fail) [TODO in Puma]
+- Proper linked lists to arrays
+- Integers to floating point numbers [TODO in Puma]
+- Probabilities to floating point numbers by injection
+- Floating point numbers to direct-space probabilities by range
+  checking (may fail) [MAYBE remove]
+- Symmetric matrices to general matrices by injection [TODO in Puma]
+- Matrices to symmetric matrices by checking symmetry (may fail) [TODO in Puma]
 
 Some Venture SPs also implement explicit coersions.
 
@@ -115,8 +117,8 @@ representations that Venture uses for its values.
   meant to be serializable for all types that it is reasonable to
   serialize (to wit, everything that does not contain an environment).
 
-  - [TODO] There is a 1-to-1 mapping between VentureValues and stack
-    dicts, implemented by VentureValue.asStackDict() and
+  - There is a 1-to-1 mapping between VentureValues and stack dicts,
+    implemented by VentureValue.asStackDict() and
     VentureValue.fromStackDict(sd)
 
   - [TODO] To the extent possible, this mapping is O(b), where b is
@@ -128,9 +130,9 @@ representations that Venture uses for its values.
 - SPs written for Lite can choose, through their type annotations, to
   see their inputs and outputs as "natural" Python objects.
 
-  - [TODO] Any given VentureType defines a 1-to-1 mapping between all
-    the VentureValues of that type and a natural representation in
-    Python.  What that representation is is naturally type-dependent.
+  - Any given VentureType defines a 1-to-1 mapping between all the
+    VentureValues of that type and a natural representation in Python.
+    What that representation is is type-dependent.
 
     - [TODO] Ideally, the conversion would be O(b), where b is the
       number of VentureValues boxes involved in the representation.
@@ -172,13 +174,15 @@ representations that Venture uses for its values.
 
 - Finally, most Venture values can be produced as results of
   "constant-foldable" Venture expressions.  This representation is
-  available through the expressionFor method of VentureValue.
+  available through the expressionFor method of VentureValue. [MAYBE
+  remove]
 
 Injection
 ---------
 
-[TODO] Putting a stack dict into an expression or the value slot of an
-observation should result in that value
+Putting a stack dict into an expression (quoted) or the value slot of
+an observation should result in that value.  [TODO confirm in Lite;
+implement in Puma]
 
 Types
 -----
@@ -232,39 +236,50 @@ Types that Venture may be extended to have in the future:
   - in boxed and unboxed form
 - Strings (which look like unboxed vectors of characters)
 
+We may wish to remove the following types Venture currently has:
+- Atom
+- ForeignBlob
+
+We may also wish to remove the expressionFor representation of Venture
+values (or downgrade it to being a debugging tool only).
+
 How to Extend the Venture Type System
 -------------------------------------
 
-To add a type to the type system
+To add a type to the type system in Lite
 - define a subclass of VentureType (conventionally named
   SomethingType)
 - define asVentureValue and asPython methods for it, that are
   preferably mutual inverses, implementing the mapping to the
   "natural" Python representation
-  - If there are coercions involved, adding a method to the two
-    VentureValue hierarchies may be appropriate.
+  - If there are coercions involved, adding a method to the
+    VentureValue hierarchy may be appropriate.
 - define __contains__ for checking whether a VentureValue is of this
   type
 - define name describing the type
 - if the type corresponds exactly to a subclass of VentureValue,
-  the above are standard.
+  the above are standard (see standard_venture_type).
 - either override the distribution method, or define an appropriately
   named method in DefaultRandomVentureValue to be able to generate
   values of this type.
   - Possibly add the new type to the default distribution for AnyType
+
+To then add the type to the type system in Puma
 - extend Puma's VentureValue hierarchy with appropriate methods to
   effect conversion to and from this type, preferably to a C++
   representation that is analogous to the "natural" Python one.
 
 To add a representation to the type system
 - Add a subclass of VentureValue, overriding all appropriate methods
+  - Coersions to "native" Python representations for various types
   - Conversion to and from stack dicts
     - Define a distinct "type" keyword for the stack dict representation
-  - If relevant, define the real vector space operations for the representation
+  - Comparison
   - Equality
-  - Hashing
+  - If the new type should respond to size, lookup, and contains,
+    define corresponding container methods
+  - If relevant, define the real vector space operations for the representation
   - expressionFor if appropriate
-  - any appropriate coersion methods
 - Add a subclass of Puma VentureValue, overriding all appropriate methods
 - Presumably define a VentureType corresponding to the new
   representation (see standard_venture_type in value.py)
@@ -272,11 +287,3 @@ To add a representation to the type system
     VentureValue hierarchy
 - If appropriate, add the new representation to any existing types
   that should cover it, such as ExpressionType
-
-Basic types, boxed/unboxed containers (?), types with contracts
-
-
-TODO: Check with vkm and Vlad whether it is fair to say that the stack
-dicts are intended only for the purpose of full serialization (so the
-only things that can have cheating stack dicts are things that take
-special effort to serialize)
