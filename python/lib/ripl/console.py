@@ -103,8 +103,8 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_list_directives(self, s):
     '''List active directives and their current values.'''
-    for directive in self._do_instruction('list_directives', s):
-      print getValue(directive)
+    for directive in self.ripl.list_directives():
+      print "%d:\t%s" % (directive['directive_id'], str(directive['value']))
   
   @catchesVentureException
   def do_infer(self, s):
