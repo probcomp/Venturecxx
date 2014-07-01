@@ -16,25 +16,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
+from cmd import Cmd
 from venture.exception import VentureException
+from utils import _strip_types
+from functools import wraps
 
-def run_venture_console(ripl):
-  while True:
-    sys.stdout.write('>>> ')
-    current_line = sys.stdin.readline()
-    if not current_line:
-      print ''
-      print "End of input reached."
-      print "Moriturus te saluto."
-      break
-    
-    current_line = current_line.strip()
-    if current_line == "":
-      continue
-    
+def getValue(directive):
+  '''Gets the actual value returned by an assume, predict, report, or sample directive.'''
+  return _strip_types(directive['value'])
+
+def catchesVentureException(f):
+  @wraps(f)
+  def try_f(*args, **kwargs):
     try:
-      print ripl.execute_instruction('[%s]' % current_line)
+      return f(*args, **kwargs)
     except VentureException as e:
       print e
       if e.exception in ['parse', 'text_parse', 'invalid_argument']:
@@ -44,9 +39,96 @@ def run_venture_console(ripl):
         underline = ''.join([' '] * offset + ['^'] * length)
         print underline
     except RuntimeError as err:
-      print err
+      print "*** runtime error:", err
+  
+  return try_f
 
+class RiplCmd(Cmd, object):
+  def __init__(self, ripl):
+    super(RiplCmd, self).__init__()
+    self.ripl = ripl
+  
+  def emptyline(self):
+    pass
+  
+  def do_quit(self, s):
+    'Exit Venture'
+    return True
+  
+  do_EOF = do_quit
+  
+  def _do_instruction(self, instruction, s):
+    return self.ripl.execute_instruction('[%s %s]' % (instruction, s))
+  
+  @catchesVentureException
+  def do_assume(self, s):
+    '''Add a named variable to the model.'''
+    print getValue(self._do_instruction('assume', s))
+  
+  @catchesVentureException
+  def do_observe(self, s):
+    '''Condition on an expression being the value.'''
+    self._do_instruction('observe', s)
+
+  @catchesVentureException
+  def do_predict(self, s):
+    '''Register an expression as a model prediction.'''
+    print self._do_instruction('predict', s)
+  
+  @catchesVentureException
+  def do_forget(self, s):
+    '''Forget a given prediction or observation.'''
+    self._do_instruction('forget', s)
+
+  @catchesVentureException
+  def do_report(self, s):
+    '''Report the current value of a given directive.'''
+    print self._do_instruction('report', s)
+  
+  @catchesVentureException
+  def do_sample(self, s):
+    '''Sample the given expression immediately,
+    without registering it as a prediction.'''
+    print self._do_instruction('sample', s)
+  
+  @catchesVentureException
+  def do_force(self, s):
+    '''Set the given expression to the given value,
+    without conditioning on it.'''
+    self._do_instruction('force', s)
+  
+  @catchesVentureException
+  def do_list_directives(self, s):
+    '''List active directives and their current values.'''
+    for directive in self._do_instruction('list_directives', s):
+      print getValue(directive)
+  
+  @catchesVentureException
+  def do_infer(self, s):
+    '''Run inference synchronously.'''
+    self._do_instruction('infer', s)
+  
+  @catchesVentureException
+  def do_continuous_inference_status(self, s):
+    '''Report status of continuous inference.'''
+    print self._do_instruction('continuous_inference_status', s)
+
+  @catchesVentureException
+  def do_start_continuous_inference(self, s):
+    '''Start continuous inference.'''
+    self._do_instruction('start_continuous_inference', s)
+
+  @catchesVentureException
+  def do_stop_continuous_inference(self, s):
+    '''Stop continuous inference.'''
+    self._do_instruction('stop_continuous_inference', s)
+
+  @catchesVentureException
+  def do_get_global_logscore(self, s):
+    '''Report status of continuous inference.'''
+    print self._do_instruction('get_global_logscore', s)
+  
 if __name__ == '__main__':
   import venture.shortcuts as s
   ripl = s.make_puma_church_prime_ripl()
-  run_venture_console(ripl)
+  RiplCmd(ripl).cmdloop()
