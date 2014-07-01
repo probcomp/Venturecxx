@@ -9,7 +9,7 @@ from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSP
-from venture.lite.value import AnyType
+from venture.lite.value import AnyType, VentureValue, ExpressionType
 from venture.lite.mlens import real_lenses
 import venture.test.numerical as num
 from venture.lite.exception import VentureBuiltinSPMethodError
@@ -19,6 +19,12 @@ def testEquality():
 
 def propEquality(value):
   assert value.equal(value)
+
+def testLiteToStack():
+  checkTypedProperty(propLiteToStack, AnyType())
+
+def propLiteToStack(v):
+  assert v.equal(VentureValue.fromStackDict(v.asStackDict()))
 
 def relevantSPs():
   for (name,sp) in builtInSPsList:
@@ -126,12 +132,19 @@ def propExpressionWorks(value):
   result = carefully(eval_in_ripl, expr)
   assert value.equal(result)
 
+def testRiplRoundTripThroughStack():
+  if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
+  checkTypedProperty(propRiplRoundTripThroughStack, AnyType())
+
+def propRiplRoundTripThroughStack(value):
+  expr = [{"type":"symbol", "value":"quote"}, value.asStackDict()]
+  result = carefully(eval_in_ripl, expr)
+  assert value.equal(result)
+
 def eval_in_ripl(expr):
   ripl = get_ripl()
-  # hack so that report_raw grabs the first directive after the prefix
-  len_prefix = len(ripl.sivm.core_sivm.engine.getDistinguishedTrace().families)
-  ripl.predict(expr)
-  return ripl.sivm.core_sivm.engine.report_raw(len_prefix + 1)
+  ripl.predict(expr, label="thing")
+  return VentureValue.fromStackDict(ripl.report("thing", type=True))
 
 def testRiplSimulate():
   if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")

@@ -38,7 +38,7 @@ class VentureValue(object):
   def getEnvironment(self): raise VentureTypeError("Cannot convert %s to environment" % type(self))
 
   ### Stack representation
-  def asStackDict(self, _trace): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
+  def asStackDict(self, _trace=None): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
   @staticmethod
   def fromStackDict(thing):
     if isinstance(thing, list):
@@ -85,6 +85,8 @@ class VentureValue(object):
 
   def expressionFor(self):
     return [{"type":"symbol", "value":"quote"}, self.asStackDict(None)]
+
+  def isProperList(self): return False
 
 class VentureNumber(VentureValue):
   def __init__(self,number):
@@ -257,7 +259,7 @@ class VentureAtom(VentureValue):
   def getNumber(self): return self.atom
   def getAtom(self): return self.atom
   def getBool(self): return self.atom
-  def asStackDict(self, _trace): return {"type":"atom","value":self.atom}
+  def asStackDict(self, _trace=None): return {"type":"atom","value":self.atom}
   @staticmethod
   def fromStackDict(thing): return VentureAtom(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.atom, other.atom)
@@ -275,7 +277,7 @@ class VentureBool(VentureValue):
     # trials as well as dispatching on them.  Or should flip and
     # bernoulli be different SPs?
     return self.boolean
-  def asStackDict(self, _trace): return {"type":"boolean","value":self.boolean}
+  def asStackDict(self, _trace=None): return {"type":"boolean","value":self.boolean}
   @staticmethod
   def fromStackDict(thing): return VentureBool(thing["value"])
   def compareSameType(self, other):
@@ -288,7 +290,7 @@ class VentureSymbol(VentureValue):
   def __init__(self,symbol): self.symbol = symbol
   def __repr__(self): return "Symbol(%s)" % self.symbol
   def getSymbol(self): return self.symbol
-  def asStackDict(self, _trace): return {"type":"symbol","value":self.symbol}
+  def asStackDict(self, _trace=None): return {"type":"symbol","value":self.symbol}
   @staticmethod
   def fromStackDict(thing): return VentureSymbol(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
@@ -311,7 +313,7 @@ class VentureNil(VentureValue):
   def __init__(self): pass
   def __repr__(self): return "Nil"
 
-  def asStackDict(self, _trace): return {"type":"list", "value":[]}
+  def asStackDict(self, _trace=None): return {"type":"list", "value":[]}
   @staticmethod
   def fromStackDict(_): return VentureNil()
 
@@ -326,6 +328,7 @@ class VentureNil(VentureValue):
   def expressionFor(self):
     return [{"type":"symbol", "value":"list"}]
 
+  def isProperList(self): return True
   def asPythonList(self, _elt_type=None): return []
 
 class VenturePair(VentureValue):
@@ -353,16 +356,18 @@ class VenturePair(VentureValue):
     else:
       raise Exception("Cannot convert an improper list to array")
 
-  def asStackDict(self, trace):
+  def asStackDict(self, trace=None):
     (list_, tail) = self.asPossiblyImproperList()
     if tail is None:
       return {"type":"list", "value":[v.asStackDict(trace) for v in list_]}
     else:
-      return {"type":"improper_list", "value": self}
+      return {"type":"improper_list", "value": ([v.asStackDict(trace) for v in list_], tail.asStackDict())}
   @staticmethod
   def fromStackDict(thing):
     if thing["type"] == "improper_list":
-      return thing["value"]
+      (list_, tail) = thing["value"]
+      return pythonListToImproperVentureList(VentureValue.fromStackDict(tail),
+                                             *[VentureValue.fromStackDict(v) for v in list_])
     else:
       return pythonListToVentureList(*[VentureValue.fromStackDict(v) for v in thing["value"]])
 
@@ -427,6 +432,8 @@ class VenturePair(VentureValue):
   def expressionFor(self):
     return [{"type":"symbol", "value":"pair"}, self.first.expressionFor(), self.rest.expressionFor()]
 
+  def isProperList(self):
+    return self.rest.isProperList()
   def asPythonList(self, elt_type=None):
     if elt_type is not None:
       return [elt_type.asPython(self.first)] + self.rest.asPythonList(elt_type)
@@ -444,6 +451,9 @@ class VenturePair(VentureValue):
 def pythonListToVentureList(*l):
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
 
+def pythonListToImproperVentureList(tail, *l):
+  return reduce(lambda t, h: VenturePair((h, t)), reversed(l), tail)
+
 class VentureArray(VentureValue):
   """Venture arrays are heterogeneous, with O(1) access and O(n) copy."""
   def __init__(self, array): self.array = array
@@ -459,10 +469,8 @@ class VentureArray(VentureValue):
     return lexicographicBoxedCompare(self.array, other.array)
   def __hash__(self): return sequenceHash(self.array)
 
-  def asStackDict(self,trace):
-    # TODO Are venture arrays reflected as lists to the stack?
-    # TODO Are stack lists lists, or are they themselves type tagged?
-    return {"type":"list","value":[v.asStackDict(trace) for v in self.array]}
+  def asStackDict(self, trace=None):
+    return {"type":"array","value":[v.asStackDict(trace) for v in self.array]}
   @staticmethod
   def fromStackDict(thing):
     return VentureArray([VentureValue.fromStackDict(v) for v in thing["value"]])
@@ -518,6 +526,7 @@ class VentureArray(VentureValue):
   def expressionFor(self):
     return [{"type":"symbol", "value":"array"}] + [v.expressionFor() for v in self.array]
 
+  def isProperList(self): return True
   def asPythonList(self, elt_type=None):
     return self.getArray(elt_type)
 
@@ -539,8 +548,10 @@ class VentureArrayUnboxed(VentureValue):
       # from the Python representation of self.elt_type to the Python
       # representation of elt_type, with an optimization if that
       # function is the identity.
-      assert elt_type == self.elt_type
-      return self.array
+      if elt_type == self.elt_type:
+        return self.array
+      else:
+        return [elt_type.asPython(self.elt_type.asVentureValue(v)) for v in self.array]
 
   def compareSameType(self, other):
     return lexicographicUnboxedCompare(self.array, other.array)
@@ -600,6 +611,7 @@ class VentureArrayUnboxed(VentureValue):
     # TODO Ascertain whether self.elt_type represents a real number or not
     return VentureArrayUnboxed(enp.map(f, self.array, self.elt_type), self.elt_type)
 
+  def isProperList(self): return True
   def asPythonList(self, elt_type=None):
     return self.getArray(elt_type)
 
@@ -638,7 +650,7 @@ class VentureDict(VentureValue):
 
   def getDict(self): return self.dict
 
-  def asStackDict(self, _trace):
+  def asStackDict(self, _trace=None):
     # TODO Difficult to reflect as a Python dict because the keys
     # would presumably need to be converted to stack dicts too, which
     # is a problem because they need to be hashable.
@@ -681,7 +693,7 @@ class VentureMatrix(VentureValue):
     b = self.matrix.view(np.uint8)
     return hash(hashlib.sha1(b).hexdigest())
 
-  def asStackDict(self, _trace):
+  def asStackDict(self, _trace=None):
     return {"type":"matrix", "value":self.matrix}
   @staticmethod
   def fromStackDict(thing): return VentureMatrix(thing["value"])
@@ -726,6 +738,11 @@ class VentureSymmetricMatrix(VentureMatrix):
     self.matrix = matrix
     assert matrixIsSymmetric(matrix)
 
+  def asStackDict(self, _trace=None):
+    return {"type":"symmetric_matrix", "value":self.matrix}
+  @staticmethod
+  def fromStackDict(thing): return VentureSymmetricMatrix(thing["value"])
+
   def __add__(self, other):
     if other == 0:
       return self
@@ -761,12 +778,16 @@ class VentureSymmetricMatrix(VentureMatrix):
     candidate = np.vectorize(f)(self.matrix)
     return VentureSymmetricMatrix( (candidate + candidate.T)/2 )
 
+  def expressionFor(self):
+    return [{"type":"symbol", "value":"quote"}, self.asStackDict(None)]
+
 def matrixIsSymmetric(matrix):
   return np.allclose(matrix.transpose(), matrix)
 
 class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
-  def asStackDict(self,trace):
+  def asStackDict(self, trace=None):
+    assert trace is not None
     return {"type":"sp","value":trace.madeSPAt(self.makerNode).show(trace.madeSPAuxAt(self.makerNode))}
   
   @staticmethod
@@ -779,7 +800,8 @@ class SPRef(VentureValue):
 venture_types = [
   VentureNumber, VentureInteger, VentureProbability, VentureAtom, VentureBool,
   VentureSymbol, VentureForeignBlob, VentureNil, VenturePair,
-  VentureArray, VentureArrayUnboxed, VentureSimplex, VentureDict, VentureMatrix, SPRef]
+  VentureArray, VentureArrayUnboxed, VentureSimplex, VentureDict, VentureMatrix,
+  VentureSymmetricMatrix, SPRef]
   # Break load order dependency by not adding SPs and Environments yet
 
 stackable_types = {
@@ -799,6 +821,7 @@ stackable_types = {
   "simplex": VentureSimplex,
   "dict": VentureDict,
   "matrix": VentureMatrix,
+  "symmetric_matrix": VentureSymmetricMatrix,
   "SP": SPRef, # As opposed to VentureSP?
   }
 
@@ -1032,6 +1055,8 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
       return VentureSymbol(thing)
     if hasattr(thing, "__getitem__"): # Already not a string
       return VentureArray([self.asVentureValue(v) for v in thing])
+    if isinstance(thing, VentureValue):
+      return thing
     else:
       raise Exception("Cannot convert Python object %r to a Venture Expression" % thing)
 
@@ -1046,11 +1071,16 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
       return thing # Atoms are valid elements of expressions
     if isinstance(thing, VentureSymbol):
       return thing.getSymbol()
-    if isinstance(thing, VentureArray):
-      return thing.getArray(self)
-    if isinstance(thing, VenturePair) or isinstance(thing, VentureNil):
-      return thing.asPythonList(self)
-    # Many other things are represented as themselves now. TODO Restrict this to self-evaluatings?
+    if thing.isProperList():
+      # Leave quoted data as they are, on the grounds that (quote
+      # <thing>) should evaluate to exactly that <thing>, even if
+      # constructed programmatically from a <thing> that does not
+      # normally appear in expressions.
+      if thing.size() == 2 and thing.lookup(VentureNumber(0)) == VentureSymbol("quote"):
+        return ["quote", thing.lookup(VentureNumber(1))]
+      else:
+        return thing.asPythonList(self)
+    # Most other things are represented as themselves.
     return thing
 
   def name(self): return "<exp>"
