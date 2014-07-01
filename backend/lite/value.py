@@ -329,6 +329,7 @@ class VentureNil(VentureValue):
     return [{"type":"symbol", "value":"list"}]
 
   def isProperList(self): return True
+  def asPossiblyImproperList(self): return ([], None)
   def asPythonList(self, _elt_type=None): return []
 
 class VenturePair(VentureValue):
