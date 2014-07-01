@@ -429,6 +429,8 @@ class VenturePair(VentureValue):
     # Assume other is a scalar
     assert isinstance(other, Number)
     return VenturePair((other * self.first, other * self.rest))
+  def dot(self, other):
+    return self.first.dot(other.first.dot) + self.rest.dot(other.rest.dot)
 
   def expressionFor(self):
     return [{"type":"symbol", "value":"pair"}, self.first.expressionFor(), self.rest.expressionFor()]
