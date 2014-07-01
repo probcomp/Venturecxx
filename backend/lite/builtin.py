@@ -113,20 +113,20 @@ def grad_div(args, direction):
   return [direction * (1 / args[1]), direction * (- args[0] / (args[1] * args[1]))]
 
 def grad_sin(args, direction):
-  return direction * math.cos(args[0])
+  return [direction * math.cos(args[0])]
 
 def grad_cos(args, direction):
-  return -direction * math.sin(args[0])
+  return [-direction * math.sin(args[0])]
 
 def grad_tan(args, direction):
-  return direction * math.pow(math.cos(args[0]), -2)
+  return [direction * math.pow(math.cos(args[0]), -2)]
 
 def grad_pow(args, direction):
   x, y = args
   return [direction * y * math.pow(x, y - 1), direction * math.log(x) * math.pow(x, y)]
 
 def grad_sqrt(args, direction):
-  return direction / math.sqrt(args[0])
+  return [direction * (1 / math.sqrt(args[0]))]
 
 def grad_list(args, direction):
   if direction == 0:
@@ -178,7 +178,7 @@ builtInSPsList = [
            [ "tan", unaryNum(math.tan, sim_grad=grad_tan, descr="Returns the tan of its argument") ],
            [ "hypot", binaryNum(math.hypot, descr="Returns the hypot of its arguments") ],
            [ "exp", unaryNum(careful_exp, sim_grad=lambda args, direction: [direction * careful_exp(args[0])], descr="Returns the exp of its argument") ],
-           [ "log", unaryNum(math.log, sim_grad=lambda args, direction: direction / float(args[0]),
+           [ "log", unaryNum(math.log, sim_grad=lambda args, direction: [direction * (1 / float(args[0]))],
                              descr="Returns the log of its argument") ],
            [ "pow", binaryNum(math.pow, sim_grad=grad_pow, descr="pow returns its first argument raised to the power of its second argument") ],
            [ "sqrt", unaryNum(math.sqrt, sim_grad=grad_sqrt, descr="Returns the sqrt of its argument") ],
