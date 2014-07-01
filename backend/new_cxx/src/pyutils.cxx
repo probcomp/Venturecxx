@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include <boost/python/numeric.hpp>
+
 using std::cout;
 using std::endl;
 
@@ -99,6 +101,30 @@ VentureValuePtr parseDict(boost::python::object value)
   return VentureValuePtr(new VentureDictionary(m));
 }
 
+VentureValuePtr parseMatrix(boost::python::object value)
+{
+  // TODO This doesn't actually seem to work.  I don't know why.
+  boost::python::extract<boost::python::numeric::array> getNumpyArray(value);
+  if (!getNumpyArray.check()) { throw "Matrix must be represented as a numpy array."; }
+
+  boost::python::numeric::array data = getNumpyArray();
+  boost::python::tuple shape = boost::python::extract<boost::python::tuple>(data.getshape());
+
+  int rows = boost::python::extract<int>(shape[0]);
+  int cols = boost::python::extract<int>(shape[1]);
+
+  MatrixXd M(rows,cols);
+
+  for (size_t i = 0; i < rows; ++i)
+  {
+    for (size_t j = 0; j < cols; ++j)
+    {
+      M(i,j) = boost::python::extract<double>(data[boost::python::make_tuple(i, j)]);
+    }
+  }
+  return VentureValuePtr(new VentureMatrix(M));
+}
+
 VentureValuePtr fromPython(boost::python::object o)
 {
   boost::python::extract<string> s(o);
@@ -141,6 +167,7 @@ VentureValuePtr parseValue(boost::python::dict d)
   else if (type == "array") { return parseList(value); }
   else if (type == "simplex") { return parseSimplex(value); }
   else if (type == "dict") { return parseDict(value); }
+  else if (type == "matrix") { return parseMatrix(value); }
   else { throw "Unknown type '" + type + "'"; }
 }
 
