@@ -470,9 +470,7 @@ class VentureArray(VentureValue):
   def __hash__(self): return sequenceHash(self.array)
 
   def asStackDict(self, trace=None):
-    # TODO Are venture arrays reflected as lists to the stack?
-    # TODO Are stack lists lists, or are they themselves type tagged?
-    return {"type":"list","value":[v.asStackDict(trace) for v in self.array]}
+    return {"type":"array","value":[v.asStackDict(trace) for v in self.array]}
   @staticmethod
   def fromStackDict(thing):
     return VentureArray([VentureValue.fromStackDict(v) for v in thing["value"]])

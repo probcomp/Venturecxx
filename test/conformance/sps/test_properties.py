@@ -9,7 +9,7 @@ from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSP
-from venture.lite.value import AnyType
+from venture.lite.value import AnyType, VentureValue
 from venture.lite.mlens import real_lenses
 import venture.test.numerical as num
 from venture.lite.exception import VentureBuiltinSPMethodError
@@ -19,6 +19,12 @@ def testEquality():
 
 def propEquality(value):
   assert value.equal(value)
+
+def testLiteToStack():
+  checkTypedProperty(propLiteToStack, AnyType())
+
+def propLiteToStack(v):
+  assert v.equal(VentureValue.fromStackDict(v.asStackDict()))
 
 def relevantSPs():
   for (name,sp) in builtInSPsList:
