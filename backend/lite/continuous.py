@@ -253,7 +253,7 @@ class BetaOutputPSP(RandomPSP):
   def gradientOfLogDensity(self,x,args):
     alpha = args.operandValues[0]
     beta = args.operandValues[1]
-    gradX = ((alpha - 1) / x) - ((beta - 1) / (1 - x))
+    gradX = ((float(alpha) - 1) / x) - ((float(beta) - 1) / (1 - x))
     gradAlpha = spsp.digamma(alpha + beta) - spsp.digamma(alpha) + math.log(x)
     gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) + math.log(1 - x)
     return (gradX,[gradAlpha,gradBeta])
@@ -274,9 +274,9 @@ class GammaOutputPSP(RandomPSP):
   def gradientOfLogDensity(self,x,args):
     alpha = args.operandValues[0]
     beta = args.operandValues[1]
-    gradX = alpha - beta - 1
-    gradAlpha = math.log(beta) - spsp.digamma(alpha) + x
-    gradBeta = (alpha / beta) - x
+    gradX = ((alpha - 1) / float(x)) - beta
+    gradAlpha = math.log(beta) - spsp.digamma(alpha) + math.log(x)
+    gradBeta = (float(alpha) / beta) - x
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self,name):
@@ -314,9 +314,9 @@ class InvGammaOutputPSP(RandomPSP):
   def gradientOfLogDensity(self,x,args):
     alpha = args.operandValues[0]
     beta = args.operandValues[1]
-    gradX = -alpha - 1 + (beta / math.pow(x, 2))
-    gradAlpha = math.log(beta) - spsp.digamma(alpha) - x
-    gradBeta = (alpha / beta) - (1 / x)
+    gradX = (1.0 / x) * (-alpha - 1 + (beta / x))
+    gradAlpha = math.log(beta) - spsp.digamma(alpha) - math.log(x)
+    gradBeta = (float(alpha) / beta) - (1.0 / x)
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self,name):
