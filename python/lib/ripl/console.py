@@ -76,7 +76,7 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_predict(self, s):
     '''Register an expression as a model prediction.'''
-    print self._do_instruction('predict', s)
+    print getValue(self._do_instruction('predict', s))
   
   @catchesVentureException
   def do_forget(self, s):
@@ -86,13 +86,13 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_report(self, s):
     '''Report the current value of a given directive.'''
-    print self._do_instruction('report', s)
+    print getValue(self._do_instruction('report', s))
   
   @catchesVentureException
   def do_sample(self, s):
     '''Sample the given expression immediately,
     without registering it as a prediction.'''
-    print self._do_instruction('sample', s)
+    print getValue(self._do_instruction('sample', s))
   
   @catchesVentureException
   def do_force(self, s):
