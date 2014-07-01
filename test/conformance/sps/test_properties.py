@@ -273,3 +273,43 @@ def propDeterministicWhenFixed(args_lists, name, sp):
     for _ in range(5):
       with randomness:
         eq_(answer, carefully(sp.outputPSP.simulate, args))
+
+def testGradientOfSimulate():
+  for (name,sp) in relevantSPs():
+    if name not in []:
+      yield checkGradientOfSimulate, name, sp
+
+def checkGradientOfSimulate(name, sp):
+  checkTypedProperty(propGradientOfSimulate, (final_return_type(sp.venture_type().gradient_type()), fully_uncurried_sp_type(sp.venture_type())), name, sp)
+
+def propGradientOfSimulate(rnd, name, sp):
+  (direction, args_lists) = rnd
+  if not len(args_lists) == 1:
+    raise SkipTest("TODO: Write the code for testing simulation gradients of curried SPs")
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+
+  value = carefully(sp.outputPSP.simulate, args)
+  try:
+    computed_gradient = sp.outputPSP.gradientOfSimulate(args, value, direction)
+  except VentureBuiltinSPMethodError:
+    raise SkipTest("%s does not support computing gradient of simulate :(" % name)
+
+  # TODO Abstract similarity with code in propGradientOfLogDensity
+  def sim_displacement_func(lens):
+    # TODO Abstract similarity with log_d_displacement_func
+    def f(h):
+      x = lens.get()
+      lens.set(x + h)
+      ans = carefully(sp.outputPSP.simulate, args)
+      number = direction.dot(ans)
+      # Leave the value in the lens undisturbed
+      lens.set(x)
+      return number
+    return f
+  numerical_gradient = [num.richardson(num.derivative(sim_displacement_func(lens), 0)) for lens in real_lenses(args_lists[0])]
+  if any([math.isnan(v) or math.isinf(v) for v in numerical_gradient]):
+    raise ArgumentsNotAppropriate("Too close to a singularity; Richardson extrapolation gave non-finite derivatve")
+
+  numerical_values_of_computed_gradient = [lens.get() for lens in real_lenses(computed_gradient)]
+
+  assert_allclose(numerical_gradient, numerical_values_of_computed_gradient, rtol=1e-05)
