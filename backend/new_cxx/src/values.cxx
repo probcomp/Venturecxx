@@ -8,15 +8,6 @@ using boost::lexical_cast;
 
 //// Conversions
 
-MatrixXd VentureSimplex::getMatrix() const
-{
-  size_t len = ps.size();
-  VectorXd v(len);
-
-  for (size_t i = 0; i < len; ++i) { v(i) = ps[i]; }
-  return v;
-}
-
 vector<VentureValuePtr> VenturePair::getArray() const
 {
   // TODO Make this not be quadratic
@@ -36,6 +27,15 @@ vector<VentureValuePtr> VentureVector::getArray() const
     xs.push_back(VentureValuePtr(new VentureNumber(v(i))));
   }
   return xs;
+}
+
+MatrixXd VentureSimplex::getMatrix() const
+{
+  size_t len = ps.size();
+  VectorXd v(len);
+
+  for (size_t i = 0; i < len; ++i) { v(i) = ps[i]; }
+  return v;
 }
 
 //// toPython methods
@@ -71,6 +71,33 @@ boost::python::dict VentureSymbol::toPython(Trace * trace) const
   return value;
 }
 
+boost::python::dict VentureNil::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "list";
+  boost::python::list l;
+  value["value"] = l;
+  return value;
+}
+
+
+boost::python::dict VenturePair::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "list";
+
+  boost::python::list l;
+  l.append(getFirst()->toPython(trace));
+  shared_ptr<VenturePair>  p = dynamic_pointer_cast<VenturePair>(getRest());
+  while (p)
+  {
+    l.append(p->getFirst()->toPython(trace));
+    p = dynamic_pointer_cast<VenturePair>(p->getRest());
+  }
+  value["value"] = l;
+  return value;
+}
+
 boost::python::dict VentureArray::toPython(Trace * trace) const
 {
   boost::python::dict value;
@@ -78,6 +105,24 @@ boost::python::dict VentureArray::toPython(Trace * trace) const
   boost::python::list l;
   for (size_t i = 0; i < xs.size(); ++i) { l.append(xs[i]->toPython(trace)); }
   value["value"] = l;
+  return value;
+}
+
+boost::python::dict VentureSimplex::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "simplex";
+  boost::python::list l;
+  for (size_t i = 0; i < ps.size(); ++i) { l.append(ps[i]); }
+  value["value"] = l;
+  return value;
+}
+
+boost::python::dict VentureDictionary::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "dict";
+  value["value"] = "opaque";
   return value;
 }
 
@@ -101,51 +146,6 @@ boost::python::dict VentureMatrix::toPython(Trace * trace) const
     boost::python::list row;
     for (int j = 0; j < m.cols(); ++j) { row.append(m(i, j)); }
     l.append(row);
-  }
-  value["value"] = l;
-  return value;
-}
-
-boost::python::dict VentureSimplex::toPython(Trace * trace) const
-{
-  boost::python::dict value;
-  value["type"] = "simplex";
-  boost::python::list l;
-  for (size_t i = 0; i < ps.size(); ++i) { l.append(ps[i]); }
-  value["value"] = l;
-  return value;
-}
-
-boost::python::dict VentureDictionary::toPython(Trace * trace) const
-{
-  boost::python::dict value;
-  value["type"] = "dict";
-  value["value"] = "opaque";
-  return value;
-}
-
-boost::python::dict VentureNil::toPython(Trace * trace) const
-{
-  boost::python::dict value;
-  value["type"] = "list";
-  boost::python::list l;
-  value["value"] = l;
-  return value;
-}
-
-
-boost::python::dict VenturePair::toPython(Trace * trace) const
-{
-  boost::python::dict value;
-  value["type"] = "list";
-
-  boost::python::list l;
-  l.append(getFirst()->toPython(trace));
-  shared_ptr<VenturePair>  p = dynamic_pointer_cast<VenturePair>(getRest());
-  while (p)
-  {
-    l.append(p->getFirst()->toPython(trace));
-    p = dynamic_pointer_cast<VenturePair>(p->getRest());
   }
   value["value"] = l;
   return value;
@@ -177,19 +177,6 @@ bool VentureSymbol::ltSameType(const VentureValuePtr & other) const
   assert(other_v); return (s < other_v->s);
 }
 
-bool VentureArray::ltSameType(const VentureValuePtr & other) const
-{
-  shared_ptr<VentureArray> other_v = dynamic_pointer_cast<VentureArray>(other);
-  assert(other_v);
-  if (xs.size() != other_v->xs.size()) { return xs.size() < other_v->xs.size(); }
-  for (size_t i = 0; i < xs.size(); ++i)
-  {
-    if (xs[i] < other_v->xs[i]) { return true; }
-    if (other_v->xs[i] < xs[i]) { return false; }
-  }
-  return false;
-}
-
 bool VentureNil::ltSameType(const VentureValuePtr & other) const
 {
   shared_ptr<VentureNil> other_v = dynamic_pointer_cast<VentureNil>(other);
@@ -204,6 +191,19 @@ bool VenturePair::ltSameType(const VentureValuePtr & other) const
   if (car < other_v->car) { return true; }
   else if (other_v->car < car) { return false; }
   else { return (cdr < other_v->cdr); }
+}
+
+bool VentureArray::ltSameType(const VentureValuePtr & other) const
+{
+  shared_ptr<VentureArray> other_v = dynamic_pointer_cast<VentureArray>(other);
+  assert(other_v);
+  if (xs.size() != other_v->xs.size()) { return xs.size() < other_v->xs.size(); }
+  for (size_t i = 0; i < xs.size(); ++i)
+  {
+    if (xs[i] < other_v->xs[i]) { return true; }
+    if (other_v->xs[i] < xs[i]) { return false; }
+  }
+  return false;
 }
 
 bool VentureSimplex::ltSameType(const VentureValuePtr & other) const
@@ -257,6 +257,20 @@ bool VentureSymbol::equalsSameType(const VentureValuePtr & other) const
   assert(other_v); return (other_v->s == s);
 }
 
+bool VentureNil::equalsSameType(const VentureValuePtr & other) const
+{
+  shared_ptr<VentureNil> other_v = dynamic_pointer_cast<VentureNil>(other);
+  assert(other_v);
+  return true;
+}
+
+bool VenturePair::equalsSameType(const VentureValuePtr & other) const
+{
+  shared_ptr<VenturePair> other_v = dynamic_pointer_cast<VenturePair>(other);
+  assert(other_v);
+  return (other_v->car->equals(car) && other_v->cdr->equals(cdr));
+}
+
 bool VentureArray::equalsSameType(const VentureValuePtr & other) const
 {
   shared_ptr<VentureArray> other_v = dynamic_pointer_cast<VentureArray>(other);
@@ -270,20 +284,6 @@ bool VentureArray::equalsSameType(const VentureValuePtr & other) const
     }
   }
   return true;
-}
-
-bool VentureNil::equalsSameType(const VentureValuePtr & other) const
-{
-  shared_ptr<VentureNil> other_v = dynamic_pointer_cast<VentureNil>(other);
-  assert(other_v);
-  return true;
-}
-
-bool VenturePair::equalsSameType(const VentureValuePtr & other) const
-{
-  shared_ptr<VenturePair> other_v = dynamic_pointer_cast<VenturePair>(other);
-  assert(other_v);
-  return (other_v->car->equals(car) && other_v->cdr->equals(cdr));
 }
 
 bool VentureSimplex::equalsSameType(const VentureValuePtr & other) const
@@ -333,17 +333,6 @@ size_t VentureSymbol::hash() const
   return string_hash(s);
 }
 
-size_t VentureArray::hash() const
-{
-  size_t seed = 0;
-
-  BOOST_FOREACH (VentureValuePtr x,xs)
-  {
-    boost::hash_combine(seed, x->hash());
-  }
-  return seed;
-}
-
 size_t VentureNil::hash() const
 {
   return 3491; // TODO arbitrary prime
@@ -354,6 +343,17 @@ size_t VenturePair::hash() const
   size_t seed = 0;
   boost::hash_combine(seed, car->hash());
   boost::hash_combine(seed, cdr->hash());
+  return seed;
+}
+
+size_t VentureArray::hash() const
+{
+  size_t seed = 0;
+
+  BOOST_FOREACH (VentureValuePtr x,xs)
+  {
+    boost::hash_combine(seed, x->hash());
+  }
   return seed;
 }
 
@@ -378,6 +378,9 @@ string VentureNumber::toString() const { return "VentureNumber " + lexical_cast<
 string VentureAtom::toString() const { return "VentureAtom " + lexical_cast<string>(n);}
 string VentureBool::toString() const { return "VentureBool " + lexical_cast<string>(b);}
 string VentureSymbol::toString() const { return "VentureSymbol " + s;}
+string VentureNil::toString() const { return "VentureNil";}
+string VenturePair::toString() const { return "VenturePair (" + car->toString() + ", " + cdr->toString() + ")";}
+
 string VentureArray::toString() const
 {
   string s = "VentureArray [";
@@ -389,10 +392,6 @@ string VentureArray::toString() const
   s += "]";
   return s;
 }
-
-string VentureNil::toString() const { return "VentureNil";}
-string VenturePair::toString() const { return "VenturePair (" + car->toString() + ", " + cdr->toString() + ")";}
-
 
 string VentureSimplex::toString() const { return "VentureSimplex";}
 string VentureDictionary::toString() const { return "VentureDictionary";}
@@ -420,6 +419,9 @@ string VentureNumber::asExpression() const { return lexical_cast<string>(x);}
 string VentureAtom::asExpression() const { return lexical_cast<string>(n);}
 string VentureBool::asExpression() const { return lexical_cast<string>(b);}
 string VentureSymbol::asExpression() const { return s;}
+string VentureNil::asExpression() const { return "nil";}
+string VenturePair::asExpression() const { return "[" + car->asExpression() + " . " + cdr->asExpression() + "]";}
+
 string VentureArray::asExpression() const
 {
   string s = "(";
@@ -432,8 +434,6 @@ string VentureArray::asExpression() const
   return s;
 }
 
-string VentureNil::asExpression() const { return "nil";}
-string VenturePair::asExpression() const { return "[" + car->asExpression() + " . " + cdr->asExpression() + "]";}
 string VentureSimplex::asExpression() const {
   string s = "(";
   for (size_t i = 0; i < ps.size(); ++i)
