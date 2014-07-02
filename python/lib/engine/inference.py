@@ -159,7 +159,7 @@ class SpecPlot(object):
         touched.add(stream)
       if stream == "c":
         self.data["sweeps"].extend([self.sweep] * len(engine.traces))
-      elif stream == "p": # TODO Choose letter for particles
+      elif stream == "r": # TODO Wanted "p" for "particle", but may conflict with "p" for "point"
         self.data["particle"].extend(range(len(engine.traces)))
       elif stream == "t":
         self.data["time (s)"].extend([the_time] * len(engine.traces))
