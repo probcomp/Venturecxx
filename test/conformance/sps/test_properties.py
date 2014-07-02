@@ -235,6 +235,10 @@ def propGradientOfLogDensity(rnd, name, sp):
       return ans
     return f
   numerical_gradient = [num.richardson(num.derivative(log_d_displacement_func(lens), 0)) for lens in real_lenses([value, args_lists[0]])]
+
+  assert_gradients_close(numerical_gradient, computed_gradient)
+
+def assert_gradients_close(numerical_gradient, computed_gradient):
   if any([math.isnan(v) or math.isinf(v) for v in numerical_gradient]):
     raise ArgumentsNotAppropriate("Too close to a singularity; Richardson extrapolation gave non-finite derivatve")
 
@@ -324,9 +328,5 @@ def propGradientOfSimulate(args_lists, name, sp):
       return number
     return f
   numerical_gradient = [num.richardson(num.derivative(sim_displacement_func(lens), 0)) for lens in real_lenses(args_lists[0])]
-  if any([math.isnan(v) or math.isinf(v) for v in numerical_gradient]):
-    raise ArgumentsNotAppropriate("Too close to a singularity; Richardson extrapolation gave non-finite derivatve")
 
-  numerical_values_of_computed_gradient = [lens.get() for lens in real_lenses(computed_gradient)]
-
-  assert_allclose(numerical_gradient, numerical_values_of_computed_gradient, rtol=1e-05)
+  assert_gradients_close(numerical_gradient, computed_gradient)
