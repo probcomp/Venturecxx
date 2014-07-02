@@ -268,6 +268,17 @@ struct VentureMatrix : VentureValue
   MatrixXd m;
 };
 
+struct VentureSymmetricMatrix : VentureMatrix
+{
+  VentureSymmetricMatrix(const Eigen::MatrixXd & m): VentureMatrix(m) {}
+
+  boost::python::dict toPython(Trace * trace) const;
+
+  int getValueTypeRank() const;
+
+  string toString() const;
+};
+
 struct VentureVector : VentureValue
 {
   VentureVector(const Eigen::VectorXd & v): v(v) {}

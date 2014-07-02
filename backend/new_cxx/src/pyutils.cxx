@@ -124,6 +124,11 @@ VentureValuePtr parseMatrix(boost::python::object value)
   return VentureValuePtr(new VentureMatrix(M));
 }
 
+VentureValuePtr parseSymmetricMatrix(boost::python::object value)
+{
+  return VentureValuePtr(new VentureSymmetricMatrix(parseMatrix(value)->getMatrix())); // TODO: use getSymmetricMatrix
+}
+
 VentureValuePtr fromPython(boost::python::object o)
 {
   boost::python::extract<string> s(o);
@@ -167,6 +172,7 @@ VentureValuePtr parseValue(boost::python::dict d)
   else if (type == "simplex") { return parseSimplex(value); }
   else if (type == "dict") { return parseDict(value); }
   else if (type == "matrix") { return parseMatrix(value); }
+  else if (type == "symmetric_matrix") { return parseSymmetricMatrix(value); }
   else { throw "Unknown type '" + type + "'"; }
 }
 

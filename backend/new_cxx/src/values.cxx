@@ -173,6 +173,13 @@ boost::python::dict VentureMatrix::toPython(Trace * trace) const
   return value;
 }
 
+boost::python::dict VentureSymmetricMatrix::toPython(Trace * trace) const
+{
+  boost::python::dict value = VentureMatrix::toPython(trace);
+  value["type"] = "symmetric_matrix";
+  return value;
+}
+
 //// Comparison methods
 
 int VentureNumber::getValueTypeRank() const { return 0; }
@@ -190,6 +197,7 @@ int VentureArray::getValueTypeRank() const { return 80; }
 int VentureSimplex::getValueTypeRank() const { return 100; }
 int VentureDictionary::getValueTypeRank() const { return 110; }
 int VentureMatrix::getValueTypeRank() const { return 120; }
+int VentureSymmetricMatrix::getValueTypeRank() const { return 130; }
 int VentureSPRef::getValueTypeRank() const { return 140; }
 
 int VentureEnvironment::getValueTypeRank() const { return 150; }
@@ -479,6 +487,7 @@ string VentureArray::toString() const
 string VentureSimplex::toString() const { return "VentureSimplex";}
 string VentureDictionary::toString() const { return "VentureDictionary";}
 string VentureMatrix::toString() const { return "VentureMatrix";}
+string VentureSymmetricMatrix::toString() const { return "VentureSymmetricMatrix";}
 
 string VentureVector::toString() const
 {
