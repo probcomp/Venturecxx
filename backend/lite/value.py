@@ -383,15 +383,21 @@ class VenturePair(VentureValue):
     try:
       ind = index.getNumber()
     except VentureTypeError:
-      raise VentureValueError("Looking up non-number %r in an array" % index)
+      raise VentureValueError("Looking up non-number %r in a list" % index)
     if ind < 1: # Equivalent to truncating for positive floats
       return self.first
     else:
       return self.rest.lookup(VentureNumber(ind - 1))
   def lookup_grad(self, index, direction):
     if direction == 0: return 0
-    if index == 0: return VenturePair((direction, 0))
-    return VenturePair((0, self.rest.lookup_grad(index - 1, direction)))
+    try:
+      ind = index.getNumber()
+    except VentureTypeError:
+      raise VentureValueError("Looking up non-number %r in a list" % index)
+    if ind < 1:
+      return VenturePair((direction, 0))
+    else:
+      return VenturePair((0, self.rest.lookup_grad(VentureNumber(ind - 1), direction)))
   def contains(self, obj): # Treat the list as a set
     if obj.equal(self.first):
       return True
