@@ -210,7 +210,9 @@ def testGradientOfLogDensity():
         yield checkGradientOfLogDensity, name, sp
 
 def checkGradientOfLogDensity(name, sp):
-  checkTypedProperty(propGradientOfLogDensity, (final_return_type(sp.venture_type()), fully_uncurried_sp_type(sp.venture_type())), name, sp)
+  ret_type = final_return_type(sp.venture_type())
+  args_type = fully_uncurried_sp_type(sp.venture_type())
+  checkTypedProperty(propGradientOfLogDensity, (ret_type, args_type), name, sp)
 
 def propGradientOfLogDensity(rnd, name, sp):
   (value, args_lists) = rnd
