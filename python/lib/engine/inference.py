@@ -169,7 +169,7 @@ class SpecPlot(object):
         # Data source was not requested; remove it to avoid confusing pandas
         del self.data[name]
     from pandas import DataFrame
-    from venture.ripl.ripl import _strip_types_from_dict_values
+    from venture.ripl.utils import _strip_types_from_dict_values
     dataset = DataFrame.from_dict(_strip_types_from_dict_values(self.data))
     self.spec.plot(dataset, self.names)
     return "a plot"
