@@ -127,7 +127,7 @@ def grad_pow(args, direction):
   return [direction * y * math.pow(x, y - 1), direction * math.log(x) * math.pow(x, y)]
 
 def grad_sqrt(args, direction):
-  return [direction * (1 / math.sqrt(args[0]))]
+  return [direction * (0.5 / math.sqrt(args[0]))]
 
 def grad_list(args, direction):
   if direction == 0:
