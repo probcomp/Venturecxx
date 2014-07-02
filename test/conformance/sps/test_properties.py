@@ -9,7 +9,7 @@ from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSP
-from venture.lite.value import AnyType, VentureValue
+from venture.lite.value import AnyType, VentureValue, vv_dot_product
 from venture.lite.mlens import real_lenses
 import venture.test.numerical as num
 from venture.lite.exception import VentureBuiltinSPMethodError
@@ -282,6 +282,9 @@ def testGradientOfSimulate():
 def checkGradientOfSimulate(name, sp):
   checkTypedProperty(propGradientOfSimulate, (final_return_type(sp.venture_type().gradient_type()), fully_uncurried_sp_type(sp.venture_type())), name, sp)
 
+def asGradient(value):
+  return value.map_real(lambda x: x)
+
 def propGradientOfSimulate(rnd, name, sp):
   (direction, args_lists) = rnd
   if direction == 0:
@@ -293,6 +296,11 @@ def propGradientOfSimulate(rnd, name, sp):
   args = BogusArgs(args_lists[0], sp.constructSPAux())
 
   value = carefully(sp.outputPSP.simulate, args)
+
+  # Use the value itself as the test direction in order to avoid
+  # having to coordinate compound types (like the length of the list
+  # that 'list' returns being the same as the number of arguments)
+  direction = asGradient(value)
   try:
     computed_gradient = carefully(sp.outputPSP.gradientOfSimulate, args, value, direction)
   except VentureBuiltinSPMethodError:
@@ -305,7 +313,7 @@ def propGradientOfSimulate(rnd, name, sp):
       x = lens.get()
       lens.set(x + h)
       ans = carefully(sp.outputPSP.simulate, args)
-      number = direction.dot(ans)
+      number = vv_dot_product(direction, asGradient(ans))
       # Leave the value in the lens undisturbed
       lens.set(x)
       return number
