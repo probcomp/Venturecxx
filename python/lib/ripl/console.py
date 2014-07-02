@@ -63,6 +63,13 @@ class RiplCmd(Cmd, object):
   
   def _do_instruction(self, instruction, s):
     return self.ripl.execute_instruction('[%s %s]' % (instruction, s))
+
+  def precmd(self, line):
+    line = line.strip()
+    if len(line) > 0 and (line[0] == "[" or line[0] == "("):
+      if line[-1] == "]" or line[-1] == ")":
+        return line[1:-1]
+    return line
   
   @catchesVentureException
   def do_assume(self, s):
