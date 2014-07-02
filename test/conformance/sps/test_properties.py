@@ -306,8 +306,9 @@ def propGradientOfSimulate(args_lists, name, sp):
   if name == "mul" and len(args_lists[0]) is not 2:
     raise ArgumentsNotAppropriate("TODO mul only has a gradient in its binary form")
   args = BogusArgs(args_lists[0], sp.constructSPAux())
-
-  value = carefully(sp.outputPSP.simulate, args)
+  randomness = FixedRandomness()
+  with randomness:
+    value = carefully(sp.outputPSP.simulate, args)
 
   # Use the value itself as the test direction in order to avoid
   # having to coordinate compound types (like the length of the list
@@ -319,7 +320,8 @@ def propGradientOfSimulate(args_lists, name, sp):
     raise SkipTest("%s does not support computing gradient of simulate :(" % name)
 
   def sim_displacement_func():
-    ans = carefully(sp.outputPSP.simulate, args)
+    with randomness:
+      ans = carefully(sp.outputPSP.simulate, args)
     return vv_dot_product(direction, asGradient(ans))
   numerical_gradient = num.gradient_from_lenses(sim_displacement_func, real_lenses(args_lists[0]))
   assert_gradients_close(numerical_gradient, computed_gradient)
