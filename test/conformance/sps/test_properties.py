@@ -4,7 +4,7 @@ from testconfig import config
 import math
 from numpy.testing import assert_allclose
 
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, defaultKernel
 from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
@@ -53,6 +53,8 @@ applied fully uncurried) match the expected types."""
     propTypeCorrect(args_lists[1:], answer, type_.return_type)
 
 def testDeterministic():
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if not sp.outputPSP.isRandom():
       yield checkDeterministic, name, sp
@@ -83,6 +85,8 @@ fully uncurried)."""
       eq_(answer, carefully(sp.outputPSP.simulate, args))
 
 def testRandom():
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if sp.outputPSP.isRandom():
       if not name in ["make_uc_dir_mult", "categorical", "make_uc_sym_dir_mult"]:
@@ -126,6 +130,8 @@ def propRandom(args_listss, sp):
 
 def testExpressionFor():
   if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   checkTypedProperty(propExpressionWorks, AnyType())
 
 def propExpressionWorks(value):
@@ -135,6 +141,8 @@ def propExpressionWorks(value):
 
 def testRiplRoundTripThroughStack():
   if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   checkTypedProperty(propRiplRoundTripThroughStack, AnyType())
 
 def propRiplRoundTripThroughStack(value):
@@ -149,6 +157,8 @@ def eval_in_ripl(expr):
 
 def testRiplSimulate():
   if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if name not in ["scope_include", # Because scope_include is
                                      # misannotated as to the true
@@ -185,6 +195,8 @@ through a ripl (applied fully uncurried)."""
     assert answer.equal(carefully(eval_in_ripl, expr))
 
 def testLogDensityDeterministic():
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical"]: # TODO
       yield checkLogDensityDeterministic, name, sp
@@ -203,6 +215,8 @@ def propLogDensityDeterministic(rnd, sp):
     eq_(answer, carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux())))
 
 def testGradientOfLogDensity():
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical",  # TODO
                     "flip", "bernoulli"]: # TODO: Implement ZeroType
@@ -247,6 +261,8 @@ def assert_gradients_close(numerical_gradient, computed_gradient):
   assert_allclose(numerical_gradient, numerical_values_of_computed_gradient, rtol=1e-05)
 
 def testFixingRandomness():
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     yield checkFixingRandomness, name, sp
 
@@ -279,6 +295,8 @@ def propDeterministicWhenFixed(args_lists, name, sp):
         eq_(answer, carefully(sp.outputPSP.simulate, args))
 
 def testGradientOfSimulate():
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if name not in ["dict",  # TODO Synthesize dicts to act as the directions
                     "matrix", # TODO Synthesize non-ragged test lists
