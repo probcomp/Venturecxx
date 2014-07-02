@@ -232,6 +232,11 @@ def propGradientOfLogDensity(rnd, name, sp):
   assert_gradients_close(numerical_gradient, computed_gradient)
 
 def assert_gradients_close(numerical_gradient, computed_gradient):
+  # TODO Make this deal with symbolic zeroes in the computed gradient.
+  # Presumably, one way to do that would be to accept the original
+  # value, translate it to gradient type, write the components of the
+  # numerical gradient into its lenses, and then do a recursive
+  # similarity comparison that takes the symbolic zero into account.
   if any([math.isnan(v) or math.isinf(v) for v in numerical_gradient]):
     raise ArgumentsNotAppropriate("Too close to a singularity; Richardson extrapolation gave non-finite derivatve")
 
@@ -279,6 +284,9 @@ def testGradientOfSimulate():
                     # have weird shapes because scope_include and
                     # scope_exclude are weird.
                     "scope_include", "scope_exclude",
+                    # The gradients of biplex and lookup have sporadic
+                    # symbolic zeroes.
+                    "biplex", "lookup"
                    ]:
       yield checkGradientOfSimulate, name, sp
 
@@ -295,6 +303,8 @@ def propGradientOfSimulate(args_lists, name, sp):
     return
   if not len(args_lists) == 1:
     raise SkipTest("TODO: Write the code for testing simulation gradients of curried SPs")
+  if name == "mul" and len(args_lists[0]) is not 2:
+    raise ArgumentsNotAppropriate("TODO mul only has a gradient in its binary form")
   args = BogusArgs(args_lists[0], sp.constructSPAux())
 
   value = carefully(sp.outputPSP.simulate, args)
