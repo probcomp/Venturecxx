@@ -846,6 +846,10 @@ class VentureType(object):
   def distribution(self, base, **kwargs):
     return base(self.name()[1:-1], **kwargs) # Strip the angle brackets
 
+  def gradient_type(self):
+    "The type of the cotangent space of the space represented by this type."
+    return self
+
 # TODO Is there any way to make these guys be proper singleton
 # objects?
 
@@ -886,10 +890,24 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Integer", "Probability", "Atom", "Bool", "Symbol", "ForeignBlob", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
+for typestring in ["Integer", "Atom", "Bool", "Symbol", "ForeignBlob", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))
+
+class ProbabilityType(VentureType):
+  def asVentureValue(self, thing): return VentureProbability(thing)
+  def asPython(self, vthing): return vthing.getProbability()
+  def __contains__(self, vthing): return isinstance(vthing, VentureProbability)
+  def name(self): return "<probability>"
+  def gradient_type(self): return NumberType()
+
+class BoolType(VentureType):
+  def asVentureValue(self, thing): return VentureBool(thing)
+  def asPython(self, vthing): return vthing.getBool()
+  def __contains__(self, vthing): return isinstance(vthing, VentureBool)
+  def name(self): return "<bool>"
+  def gradient_type(self): return ZeroType()
 
 class CountType(VentureType):
   def asVentureValue(self, thing):
@@ -920,6 +938,7 @@ class PositiveType(VentureType):
   def __contains__(self, vthing):
     return isinstance(vthing, VentureNumber) and 0 < vthing.getNumber()
   def name(self): return "<positive>"
+  def gradient_type(self): return NumberType()
 
 class NilType(VentureType):
   def asVentureValue(self, _thing):
