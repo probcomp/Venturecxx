@@ -21,16 +21,14 @@ import traceback
 import venture.sivm.core_sivm as core_sivm
 
 def _strip_types(value):
-    if isinstance(value, dict):
-        ans = value['value']
-        if isinstance(ans,list): return [_strip_types(v) for v in ans]
-        else: return ans
-    else: return value
+    if isinstance(value, dict) and "type" in value and "value" in value:
+        return _strip_types(value['value'])
+    if isinstance(value,list):
+        return [_strip_types(v) for v in value]
+    return value
 
 def _strip_types_from_dict_values(value):
-    # The purpose of {"value": v} here is to fool _strip_types
-    # into mapping over the list.
-    return dict([(k, _strip_types({"value": v})) for (k,v) in value.iteritems()])
+    return dict([(k, _strip_types(v)) for (k,v) in value.iteritems()])
 
 # This list of functions defines the public REST API
 # of the Ripl server and client
