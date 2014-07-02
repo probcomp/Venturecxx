@@ -26,6 +26,24 @@ VentureValuePtr parseList(boost::python::object value)
   return tail;
 }
 
+VentureValuePtr parseImproperList(boost::python::object value)
+{
+  boost::python::extract<boost::python::list> getList(value[0]);
+  if (!getList.check()) throw "Not a list: " + boost::python::str(value[0]);
+  boost::python::list l = getList();
+
+  boost::python::ssize_t len = boost::python::len(l);
+  VentureValuePtr tail = parseValue(boost::python::extract<boost::python::dict>(value[1]));
+
+  for (boost::python::ssize_t i = len - 1; i >= 0; --i)
+  {
+    VentureValuePtr item = parseValue(boost::python::extract<boost::python::dict>(l[i]));
+    tail = VentureValuePtr(new VenturePair(item, tail));
+  }
+
+  return tail;
+}
+
 VentureValuePtr parseArray(boost::python::object value)
 {
   boost::python::extract<boost::python::list> getList(value);
@@ -186,6 +204,7 @@ VentureValuePtr parseValue(boost::python::dict d)
   else if (type == "boolean") { return VentureValuePtr(new VentureBool(boost::python::extract<bool>(value))); }
   else if (type == "symbol") { return VentureValuePtr(new VentureSymbol(boost::python::extract<string>(value))); }
   else if (type == "list") { return parseList(value); }
+  else if (type == "improper_list") { return parseImproperList(value); }
   else if (type == "vector") { return parseVector(value); }
   else if (type == "array") { return parseArray(value); }
   else if (type == "simplex") { return parseSimplex(value); }
