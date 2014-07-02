@@ -126,7 +126,7 @@ VentureValuePtr parseMatrix(boost::python::object value)
 
 VentureValuePtr parseSymmetricMatrix(boost::python::object value)
 {
-  return VentureValuePtr(new VentureSymmetricMatrix(parseMatrix(value)->getMatrix())); // TODO: use getSymmetricMatrix
+  return VentureValuePtr(new VentureSymmetricMatrix(parseMatrix(value)->getSymmetricMatrix()));
 }
 
 VentureValuePtr fromPython(boost::python::object o)

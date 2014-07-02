@@ -272,6 +272,8 @@ struct VentureSymmetricMatrix : VentureMatrix
 {
   VentureSymmetricMatrix(const Eigen::MatrixXd & m): VentureMatrix(m) {}
 
+  MatrixXd getSymmetricMatrix() const { return m; }
+
   boost::python::dict toPython(Trace * trace) const;
 
   int getValueTypeRank() const;

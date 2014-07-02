@@ -43,7 +43,7 @@ VentureValuePtr MVNormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  con
   shared_ptr<gsl_vector> gsl_mu(gsl_vector_alloc(n)); 
   for (int i = 0; i < n; ++i) { gsl_vector_set(gsl_mu.get(),i,mu(i)); }
 
-  MatrixXd sigma = args->operandValues[1]->getMatrix();
+  MatrixXd sigma = args->operandValues[1]->getSymmetricMatrix();
   shared_ptr<gsl_matrix> gsl_sigma(gsl_matrix_alloc(n,n));
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < n; ++j) { 

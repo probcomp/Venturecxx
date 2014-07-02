@@ -96,6 +96,17 @@ MatrixXd VentureValue::getMatrix() const
   cannotConvertType(this,"matrix"); assert(false); throw "no return";
 }
 
+MatrixXd VentureValue::getSymmetricMatrix() const
+{
+  MatrixXd m = getMatrix();
+  if (m.isApprox(m.transpose())) {
+    return m;
+  }
+  else {
+    throw "Matrix is not symmetric " + toString();
+  }
+}
+
 
 boost::python::dict VentureValue::toPython(Trace * trace) const
 { 

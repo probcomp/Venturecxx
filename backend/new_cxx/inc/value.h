@@ -77,6 +77,7 @@ struct VentureValue
   virtual VectorXd getVector() const;
 
   virtual MatrixXd getMatrix() const;
+  virtual MatrixXd getSymmetricMatrix() const;
 
   // Stack representation
   virtual boost::python::dict toPython(Trace * trace) const;
