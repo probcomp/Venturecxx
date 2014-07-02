@@ -94,6 +94,13 @@ class VentureValue(object):
 
   def isProperList(self): return False
 
+def vv_dot_product(v1, v2):
+  """Dot product of venture values taking into account that either may be
+a symbolic zero.  TODO: Introduce the VentureZero value to uniformize
+this."""
+  if v1 is 0 or v2 is 0: return 0
+  return v1.dot(v2)
+
 class VentureNumber(VentureValue):
   def __init__(self,number):
     assert isinstance(number, Number)
@@ -444,7 +451,7 @@ class VenturePair(VentureValue):
     assert isinstance(other, Number)
     return VenturePair((other * self.first, other * self.rest))
   def dot(self, other):
-    return self.first.dot(other.first.dot) + self.rest.dot(other.rest.dot)
+    return vv_dot_product(self.first, other.first) + vv_dot_product(self.rest, other.rest)
   def map_real(self, f):
     return VenturePair((self.first.map_real(f), self.rest.map_real(f)))
 
@@ -538,7 +545,7 @@ class VentureArray(VentureValue):
     assert isinstance(other, Number)
     return VentureArray([other * x  for x in self.array])
   def dot(self, other):
-    return sum([x.dot(y) for (x,y) in zip(self.array, other.array)])
+    return sum([vv_dot_product(x, y) for (x,y) in zip(self.array, other.array)])
   def map_real(self, f):
     return VentureArray([x.map_real(f) for x in self.array])
 
@@ -889,7 +896,8 @@ class AnyType(VentureType):
     assert isinstance(thing, VentureValue)
     return thing
   def asPython(self, thing):
-    assert isinstance(thing, VentureValue)
+    # TODO Make symbolic zeroes a venture value!
+    assert isinstance(thing, VentureValue) or thing is 0
     return thing
   def __contains__(self, vthing): return isinstance(vthing, VentureValue)
   def name(self):
