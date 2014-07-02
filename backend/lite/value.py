@@ -740,6 +740,7 @@ class VentureMatrix(VentureValue):
     assert isinstance(other, VentureMatrix)
     return np.sum(np.multiply(self.matrix, other.matrix))
   def map_real(self, f):
+    if self.matrix.size == 0: return self # Do I seriously have to special-case this?
     return VentureMatrix(np.vectorize(f)(self.matrix))
 
   def expressionFor(self):
@@ -788,6 +789,7 @@ class VentureSymmetricMatrix(VentureMatrix):
     assert isinstance(other, Number)
     return VentureSymmetricMatrix(other * self.matrix)
   def map_real(self, f):
+    if self.matrix.size == 0: return self # Do I seriously have to special-case this?
     candidate = np.vectorize(f)(self.matrix)
     return VentureSymmetricMatrix( (candidate + candidate.T)/2 )
 
