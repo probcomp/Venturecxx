@@ -226,17 +226,18 @@ def propGradientOfLogDensity(rnd, name, sp):
   (value, args_lists) = rnd
   if not len(args_lists) == 1:
     raise SkipTest("TODO: Write the code for measuring log density of curried SPs")
-  answer = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+  answer = carefully(sp.outputPSP.logDensity, value, args)
   if math.isnan(answer) or math.isinf(answer):
     raise ArgumentsNotAppropriate("Log density turned out not to be finite")
 
   try:
-    computed_gradient = sp.outputPSP.gradientOfLogDensity(value, BogusArgs(args_lists[0], sp.constructSPAux()))
+    computed_gradient = sp.outputPSP.gradientOfLogDensity(value, args)
   except VentureBuiltinSPMethodError:
     raise SkipTest("%s does not support computing gradient of log density :(" % name)
 
   def log_d_displacement_func():
-    return carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
+    return carefully(sp.outputPSP.logDensity, value, args)
   numerical_gradient = [num.richardson(num.derivative(tweaking_lens(lens, log_d_displacement_func), 0)) for lens in real_lenses([value, args_lists[0]])]
 
   assert_gradients_close(numerical_gradient, computed_gradient)
