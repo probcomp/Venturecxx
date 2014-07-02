@@ -60,14 +60,18 @@ class Engine(object):
 
     return (self.directiveCounter,self.getDistinguishedTrace().extractValue(baseAddr))
 
-  def predict(self,datum):
+  def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
     for trace in self.traces:
       trace.eval(baseAddr,self.desugarLambda(datum))
 
     self.directives[self.directiveCounter] = ["predict",datum]
 
-    return (self.directiveCounter,self.getDistinguishedTrace().extractValue(baseAddr))
+    return (self.directiveCounter,[t.extractValue(baseAddr) for t in self.traces])
+
+  def predict(self, datum):
+    (did, answers) = self.predict_all(datum)
+    return (did, answers[0])
 
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
@@ -106,6 +110,11 @@ class Engine(object):
     (did, value) = self.predict(datum)
     self.forget(did)
     return value
+
+  def sample_all(self, datum):
+    (did, values) = self.predict_all(datum)
+    self.forget(did)
+    return values
 
   def freeze(self,directiveId):
     if directiveId not in self.directives:

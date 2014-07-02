@@ -186,7 +186,7 @@ def expToDict(exp, ripl=None):
   elif tag == "incorporate":
     assert len(exp) == 1
     return {"command":"incorporate"}
-  elif tag == "peek":
+  elif tag == "peek" or tag == "peek-all":
     assert 2 <= len(exp) and len(exp) <= 3
     if len(exp) == 2:
       name = default_name_for_exp(exp[1])
@@ -196,7 +196,7 @@ def expToDict(exp, ripl=None):
       expr = _mimic_parser(exp[1])
     else:
       raise Exception("Need a ripl around in order to parse model expressions in inference expressions")
-    return {"command":"peek", "expression":expr, "name":name}
+    return {"command":tag, "expression":expr, "name":name}
   elif tag == "plotf":
     assert len(exp) >= 2
     return {"command":"plotf", "specification":exp[1], "names":[default_name_for_exp(e) for e in exp[2:]], "expressions": [_mimic_parser(e) for e in exp[2:]]}

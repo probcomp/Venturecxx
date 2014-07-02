@@ -54,6 +54,11 @@ class Infer(object):
       self._ensure_peek_name(name)
       value = self.engine.sample(program['expression'])
       self.out[name].append(value)
+    elif 'command' in program and program['command'] == "peek-all":
+      name = program['name']
+      self._ensure_peek_name(name)
+      values = self.engine.sample_all(program['expression'])
+      self.out[name].append(values)
     elif 'command' in program and program['command'] == "plotf":
       self._ensure_plot(program["specification"], program["names"], program["expressions"])
       self.plot.add_data(self.engine)
