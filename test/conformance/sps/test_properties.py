@@ -306,7 +306,10 @@ def testGradientOfSimulate():
                     "scope_include", "scope_exclude",
                     # The gradients of biplex and lookup have sporadic
                     # symbolic zeroes.
-                    "biplex", "lookup"
+                    "biplex", "lookup",
+                    # For some reason, the gradient is too often large
+                    # enough to confuse the numerical approximation
+                    "tan"
                    ]:
       yield checkGradientOfSimulate, name, sp
 
