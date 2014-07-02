@@ -675,7 +675,7 @@ class VentureDict(VentureValue):
 
 # 2D array of numbers backed by a numpy array object
 class VentureMatrix(VentureValue):
-  def __init__(self,matrix): self.matrix = np.array(matrix)
+  def __init__(self,matrix): self.matrix = np.asarray(matrix)
   def __repr__(self):
     return "VentureMatrix(%s)" % self.matrix
 
@@ -735,8 +735,8 @@ class VentureMatrix(VentureValue):
 
 class VentureSymmetricMatrix(VentureMatrix):
   def __init__(self, matrix):
-    self.matrix = matrix
-    assert matrixIsSymmetric(matrix)
+    self.matrix = np.asarray(matrix)
+    assert matrixIsSymmetric(self.matrix)
 
   def asStackDict(self, _trace=None):
     return {"type":"symmetric_matrix", "value":self.matrix}
