@@ -411,8 +411,9 @@ class Trace(object):
     return 0
 
   def set_seed(self, seed):
-      random.seed(seed)
-      numpy.random.seed(seed)
+    # random.seed(seed)
+    # numpy.random.seed(seed)
+    pass
 
   def getDirectiveLogScore(self,id):
     assert id in self.families

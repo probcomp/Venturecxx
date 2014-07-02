@@ -10,4 +10,19 @@ def richardson(f):
 
   # Could also implement the "stop when at machine precision" rule,
   # instead of always taking exactly four steps.
-  return richardson_step(richardson_step(richardson_step(richardson_step(f, 2), 4), 6), 8)(0.1)
+  return richardson_step(richardson_step(richardson_step(richardson_step(f, 2), 4), 6), 8)(0.001)
+
+def tweaking_lens(lens, thunk):
+  def f(h):
+    x = lens.get()
+    try:
+      lens.set(x + h)
+      ans = thunk()
+      return ans
+    finally:
+      # Leave the value in the lens undisturbed
+      lens.set(x)
+  return f
+
+def gradient_from_lenses(thunk, lenses):
+  return [richardson(derivative(tweaking_lens(lens, thunk), 0)) for lens in lenses]

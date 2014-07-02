@@ -18,6 +18,7 @@ import eval_sps
 import value as v
 import env
 from utils import careful_exp
+from exception import VentureBuiltinSPMethodError
 
 # The types in the value module are generated programmatically, so
 # pylint doesn't find out about them.
@@ -48,7 +49,7 @@ def func_psp(f, descr=None, sim_grad=None):
       if self.sim_grad:
         return self.sim_grad(args, direction)
       else:
-        raise Exception("Cannot compute simulation gradient of %s", self.descr)
+        raise VentureBuiltinSPMethodError("Cannot compute simulation gradient of '%s'" % self.description("<unknown name>"))
     def description(self,name):
       if '%s' in self.descr:
         return self.descr % name
@@ -126,7 +127,7 @@ def grad_pow(args, direction):
   return [direction * y * math.pow(x, y - 1), direction * math.log(x) * math.pow(x, y)]
 
 def grad_sqrt(args, direction):
-  return [direction * (1 / math.sqrt(args[0]))]
+  return [direction * (0.5 / math.sqrt(args[0]))]
 
 def grad_list(args, direction):
   if direction == 0:

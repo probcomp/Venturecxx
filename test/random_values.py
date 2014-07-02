@@ -26,6 +26,8 @@ class DefaultRandomVentureValue(object):
     return v.VentureAtom(npr.randint(-10, 11)) # Open at the top
   def bool(self, **_kwargs):
     return v.VentureBool(npr.choice([False, True]))
+  def zero(self, **_kwargs):
+    return 0 # A gradient in an empty vector space
   def symbol(self, length=None, **_kwargs):
     if length is None:
       length = npr.randint(1, 10)
@@ -41,8 +43,8 @@ class DefaultRandomVentureValue(object):
     if length is None:
       length = npr.randint(0, 10)
     if elt_type is None:
-      elt_type = v.AnyType()
-    return v.VentureArrayUnboxed([elt_type.distribution(self.__class__, **kwargs).generate() for _ in range(length)], elt_type)
+      elt_type = v.NumberType() # TODO Do I want to test on a screwy class of unboxed arrays in general?
+    return v.VentureArrayUnboxed([elt_type.asPython(elt_type.distribution(self.__class__, **kwargs).generate()) for _ in range(length)], elt_type)
   def nil(self, **_kwargs):
     return v.VentureNil()
   def pair(self, size=None, first_dist=None, second_dist=None, **kwargs):
