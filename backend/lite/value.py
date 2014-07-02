@@ -617,8 +617,12 @@ class VentureArrayUnboxed(VentureValue):
   def dot(self, other):
     return enp.dot(self.array, self.elt_type, other.array, other.elt_type)
   def map_real(self, f):
-    # TODO Ascertain whether self.elt_type represents a real number or not
-    return VentureArrayUnboxed(enp.map(f, self.array, self.elt_type), self.elt_type)
+    # TODO Ascertain whether self.elt_type represents a real number or not so I can do
+    # return VentureArrayUnboxed(enp.map(f, self.array, self.elt_type), self.elt_type)
+    # but the general case is
+    new_type = self.elt_type.gradient_type()
+    new_data = [new_type.asPython(self.elt_type.asVentureValue(v).map_real(f)) for v in self.array]
+    return VentureArrayUnboxed(new_data, new_type)
 
   def isProperList(self): return True
   def asPythonList(self, elt_type=None):
