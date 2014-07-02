@@ -15,11 +15,13 @@ def richardson(f):
 def tweaking_lens(lens, thunk):
   def f(h):
     x = lens.get()
-    lens.set(x + h)
-    ans = thunk()
-    # Leave the value in the lens undisturbed
-    lens.set(x)
-    return ans
+    try:
+      lens.set(x + h)
+      ans = thunk()
+      return ans
+    finally:
+      # Leave the value in the lens undisturbed
+      lens.set(x)
   return f
 
 def gradient_from_lenses(thunk, lenses):
