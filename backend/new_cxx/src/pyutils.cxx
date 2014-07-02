@@ -15,6 +15,24 @@ VentureValuePtr parseList(boost::python::object value)
   boost::python::list l = getList();
 
   boost::python::ssize_t len = boost::python::len(l);
+  VentureValuePtr tail = VentureValuePtr(new VentureNil());
+
+  for (boost::python::ssize_t i = len - 1; i >= 0; --i)
+  {
+    VentureValuePtr item = parseValue(boost::python::extract<boost::python::dict>(l[i]));
+    tail = VentureValuePtr(new VenturePair(item, tail));
+  }
+
+  return tail;
+}
+
+VentureValuePtr parseArray(boost::python::object value)
+{
+  boost::python::extract<boost::python::list> getList(value);
+  if (!getList.check()) throw "Not a list: " + boost::python::str(value);
+  boost::python::list l = getList();
+
+  boost::python::ssize_t len = boost::python::len(l);
   vector<VentureValuePtr> v;
 
   for (boost::python::ssize_t i = 0; i < len; ++i)
@@ -167,8 +185,9 @@ VentureValuePtr parseValue(boost::python::dict d)
   else if (type == "atom") { return VentureValuePtr(new VentureAtom(boost::python::extract<uint32_t>(value))); }
   else if (type == "boolean") { return VentureValuePtr(new VentureBool(boost::python::extract<bool>(value))); }
   else if (type == "symbol") { return VentureValuePtr(new VentureSymbol(boost::python::extract<string>(value))); }
+  else if (type == "list") { return parseList(value); }
   else if (type == "vector") { return parseVector(value); }
-  else if (type == "array") { return parseList(value); }
+  else if (type == "array") { return parseArray(value); }
   else if (type == "simplex") { return parseSimplex(value); }
   else if (type == "dict") { return parseDict(value); }
   else if (type == "matrix") { return parseMatrix(value); }
