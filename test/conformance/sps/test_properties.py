@@ -276,7 +276,9 @@ def propDeterministicWhenFixed(args_lists, name, sp):
 
 def testGradientOfSimulate():
   for (name,sp) in relevantSPs():
-    if name not in []:
+    if name not in ["dict",  # TODO Synthesize dicts to act as the directions
+                    "matrix", # TODO Synthesize non-ragged test lists
+                   ]:
       yield checkGradientOfSimulate, name, sp
 
 def checkGradientOfSimulate(name, sp):
