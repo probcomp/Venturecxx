@@ -240,6 +240,7 @@ effect of renumbering the directives, if some had been forgotten."""
   
   def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
+  def logscore_all(self): return [t.getGlobalLogScore() for t in self.traces]
 
   def get_entropy_info(self):
     return { 'unconstrained_random_choices' : self.getDistinguishedTrace().numRandomChoices() }
