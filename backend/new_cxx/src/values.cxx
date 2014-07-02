@@ -5,6 +5,7 @@
 #include "Eigen/Dense"
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
+#include <boost/python/numeric.hpp>
 
 using boost::lexical_cast;
 
@@ -159,6 +160,7 @@ boost::python::dict VentureMatrix::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "matrix";
+  // TODO convert directly without going through list
   boost::python::list l;
   for (int i = 0; i < m.rows(); ++i)
   {
@@ -166,7 +168,8 @@ boost::python::dict VentureMatrix::toPython(Trace * trace) const
     for (int j = 0; j < m.cols(); ++j) { row.append(m(i, j)); }
     l.append(row);
   }
-  value["value"] = l;
+  boost::python::numeric::array a(l);
+  value["value"] = a;
   return value;
 }
 
