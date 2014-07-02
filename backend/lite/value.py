@@ -83,6 +83,12 @@ class VentureValue(object):
   # def __add__(self, other), and also __radd__, __neg__, __sub__,
   # __mul__, __rmul__, and dot
 
+  # All Venture values have a (possibly trivial) cotangent space.  The
+  # cotangent space is exposed through map_real, which constructs a
+  # cotangent for a value given a function to which to feed the
+  # value's current value at every dimension.
+  def map_real(self, _f): return 0
+
   def expressionFor(self):
     return [{"type":"symbol", "value":"quote"}, self.asStackDict(None)]
 
@@ -192,6 +198,8 @@ class VentureProbability(VentureValue):
   def __hash__(self): return hash(self.number)
   def expressionFor(self):
     return [{"type":"symbol", "value":"probability"}, self.number]
+  def map_real(self, f):
+    return VentureNumber(f(self.number))
   def real_lenses(self):
     class NumberLens(MLens):
       # Poor man's closure: pass the relevant thing from the lexical
@@ -437,6 +445,8 @@ class VenturePair(VentureValue):
     return VenturePair((other * self.first, other * self.rest))
   def dot(self, other):
     return self.first.dot(other.first.dot) + self.rest.dot(other.rest.dot)
+  def map_real(self, f):
+    return VenturePair((self.first.map_real(f), self.rest.map_real(f)))
 
   def expressionFor(self):
     return [{"type":"symbol", "value":"pair"}, self.first.expressionFor(), self.rest.expressionFor()]
@@ -657,6 +667,9 @@ are also supposed to sum to 1, but we are not checking that.
   def size(self): return len(self.simplex)
   def expressionFor(self):
     return [{"type":"symbol", "value":"simplex"}] + self.simplex
+  def map_real(self, f):
+    # The cotangent space actually has the constraint that the cotangents sum to 0
+    return VentureArrayUnboxed([f(p) for p in self.simplex], NumberType())
 
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
@@ -808,6 +821,9 @@ class SPRef(VentureValue):
   @staticmethod
   def fromStackDict(thing): return thing["value"]
   # SPRefs are intentionally not comparable until we decide otherwise
+
+# Actually, Environments and SPs have cotangent spaces too, in their
+# own funny way, but we're not doing that now.
 
 ## SPs and Environments as well
 ## Not Requests, because we do not reflect on them
