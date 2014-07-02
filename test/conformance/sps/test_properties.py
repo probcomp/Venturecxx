@@ -9,7 +9,7 @@ from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSP
-from venture.lite.value import AnyType, VentureValue, vv_dot_product
+from venture.lite.value import AnyType, VentureValue, vv_dot_product, ZeroType
 from venture.lite.mlens import real_lenses
 import venture.test.numerical as num
 from venture.lite.exception import VentureBuiltinSPMethodError
@@ -286,14 +286,13 @@ def testGradientOfSimulate():
       yield checkGradientOfSimulate, name, sp
 
 def checkGradientOfSimulate(name, sp):
-  checkTypedProperty(propGradientOfSimulate, (final_return_type(sp.venture_type().gradient_type()), fully_uncurried_sp_type(sp.venture_type())), name, sp)
+  checkTypedProperty(propGradientOfSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
 def asGradient(value):
   return value.map_real(lambda x: x)
 
-def propGradientOfSimulate(rnd, name, sp):
-  (direction, args_lists) = rnd
-  if direction == 0:
+def propGradientOfSimulate(args_lists, name, sp):
+  if final_return_type(sp.venture_type().gradient_type()).__class__ == ZeroType:
     # Do not test gradients of things that return elements of
     # 0-dimensional vector spaces
     return
