@@ -278,6 +278,10 @@ def testGradientOfSimulate():
   for (name,sp) in relevantSPs():
     if name not in ["dict",  # TODO Synthesize dicts to act as the directions
                     "matrix", # TODO Synthesize non-ragged test lists
+                    # The gradients of scope_include and scope_exclude
+                    # have weird shapes because scope_include and
+                    # scope_exclude are weird.
+                    "scope_include", "scope_exclude",
                    ]:
       yield checkGradientOfSimulate, name, sp
 
