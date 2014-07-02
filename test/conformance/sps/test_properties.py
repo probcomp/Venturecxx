@@ -202,6 +202,16 @@ def propLogDensityDeterministic(rnd, sp):
   for _ in range(5):
     eq_(answer, carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux())))
 
+def tweaking_lens(lens, thunk):
+  def f(h):
+    x = lens.get()
+    lens.set(x + h)
+    ans = thunk()
+    # Leave the value in the lens undisturbed
+    lens.set(x)
+    return ans
+  return f
+
 def testGradientOfLogDensity():
   for (name,sp) in relevantSPs():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical",  # TODO
@@ -225,16 +235,9 @@ def propGradientOfLogDensity(rnd, name, sp):
   except VentureBuiltinSPMethodError:
     raise SkipTest("%s does not support computing gradient of log density :(" % name)
 
-  def log_d_displacement_func(lens):
-    def f(h):
-      x = lens.get()
-      lens.set(x + h)
-      ans = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
-      # Leave the value in the lens undisturbed
-      lens.set(x)
-      return ans
-    return f
-  numerical_gradient = [num.richardson(num.derivative(log_d_displacement_func(lens), 0)) for lens in real_lenses([value, args_lists[0]])]
+  def log_d_displacement_func():
+    return carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
+  numerical_gradient = [num.richardson(num.derivative(tweaking_lens(lens, log_d_displacement_func), 0)) for lens in real_lenses([value, args_lists[0]])]
 
   assert_gradients_close(numerical_gradient, computed_gradient)
 
@@ -315,18 +318,9 @@ def propGradientOfSimulate(args_lists, name, sp):
   except VentureBuiltinSPMethodError:
     raise SkipTest("%s does not support computing gradient of simulate :(" % name)
 
-  # TODO Abstract similarity with code in propGradientOfLogDensity
-  def sim_displacement_func(lens):
-    # TODO Abstract similarity with log_d_displacement_func
-    def f(h):
-      x = lens.get()
-      lens.set(x + h)
-      ans = carefully(sp.outputPSP.simulate, args)
-      number = vv_dot_product(direction, asGradient(ans))
-      # Leave the value in the lens undisturbed
-      lens.set(x)
-      return number
-    return f
-  numerical_gradient = [num.richardson(num.derivative(sim_displacement_func(lens), 0)) for lens in real_lenses(args_lists[0])]
+  def sim_displacement_func():
+    ans = carefully(sp.outputPSP.simulate, args)
+    return vv_dot_product(direction, asGradient(ans))
+  numerical_gradient = [num.richardson(num.derivative(tweaking_lens(lens, sim_displacement_func), 0)) for lens in real_lenses(args_lists[0])]
 
   assert_gradients_close(numerical_gradient, computed_gradient)
