@@ -110,7 +110,7 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_infer(self, s):
     '''Run inference synchronously.'''
-    self.ripl.infer(expToDict(parse(s)) if s else None)
+    self.ripl.infer(expToDict(parse(s), self.ripl) if s else None)
   
   @catchesVentureException
   def do_continuous_inference_status(self, s):
