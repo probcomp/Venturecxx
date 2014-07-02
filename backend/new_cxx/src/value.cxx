@@ -24,6 +24,23 @@ long VentureValue::getInt() const
   cannotConvertType(this,"int"); assert(false); throw "no return";
 }
 
+double VentureValue::getProbability() const
+{
+  double x;
+  try {
+    x = getDouble();
+  }
+  catch (string) {
+    cannotConvertType(this,"probability"); assert(false); throw "no return";
+  }
+  if (0 <= x && x <= 1) {
+    return x;
+  }
+  else {
+    throw "Probability out of range " + toString();
+  }
+}
+
 int VentureValue::getAtom() const
 {
   cannotConvertType(this,"atom"); assert(false); throw "no return";
@@ -79,6 +96,17 @@ MatrixXd VentureValue::getMatrix() const
   cannotConvertType(this,"matrix"); assert(false); throw "no return";
 }
 
+MatrixXd VentureValue::getSymmetricMatrix() const
+{
+  MatrixXd m = getMatrix();
+  if (m.isApprox(m.transpose())) {
+    return m;
+  }
+  else {
+    throw "Matrix is not symmetric " + toString();
+  }
+}
+
 
 boost::python::dict VentureValue::toPython(Trace * trace) const
 { 
@@ -91,34 +119,36 @@ boost::python::dict VentureValue::toPython(Trace * trace) const
 
 bool VentureValue::operator<(const VentureValuePtr & rhs) const 
 {
-  int t1 = getValueTypeRank(this);
-  int t2 = getValueTypeRank(rhs.get());
+  int t1 = getValueTypeRank();
+  int t2 = rhs->getValueTypeRank();
   if (t1 < t2) { return true; }
   else if (t2 < t1) { return false; }
   else { return ltSameType(rhs); }
 }
 
-bool VentureValue::ltSameType(const VentureValuePtr & rhs) const { assert(false); }
+int VentureValue::getValueTypeRank() const { throw "Cannot compare type " + toString(); }
+
+bool VentureValue::ltSameType(const VentureValuePtr & rhs) const { throw "Cannot compare " + toString(); }
 
 
 bool VentureValue::equals(const VentureValuePtr & other) const 
 {
-  int t1 = getValueTypeRank(this);
-  int t2 = getValueTypeRank(other.get());
+  int t1 = getValueTypeRank();
+  int t2 = other->getValueTypeRank();
   if (t1 != t2) { return false; }
   else { return equalsSameType(other); }
 }
 
-bool VentureValue::equalsSameType(const VentureValuePtr & rhs) const { assert(false); }
+bool VentureValue::equalsSameType(const VentureValuePtr & rhs) const { throw "Cannot compare " + toString(); }
 
 size_t VentureValue::hash() const
 {
   assert(false); assert(false); throw "no return";
 }
 
-VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { assert(false); }
-bool VentureValue::contains(VentureValuePtr index) const { assert(false); }
-int VentureValue::size() const { assert(false); }
+VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { throw "Cannot look things up in " + toString(); }
+bool VentureValue::contains(VentureValuePtr index) const { throw "Cannot look for things in " + toString(); }
+int VentureValue::size() const { throw "Cannot measure size of " + toString(); }
 
 
 const vector<ESR>& VentureValue::getESRs() const
@@ -144,29 +174,3 @@ shared_ptr<SPAux> VentureValue::getSPAux() const
 }
 
 string VentureValue::asExpression() const { return toString(); }
-
-int getValueTypeRank(const VentureValue * v)
-{
-  // Note: differs slightly from 
-  if (dynamic_cast<const VentureNumber *>(v)) { return 0; }
-
-  else if (dynamic_cast<const VentureAtom *>(v)) { return 1; }
-  else if (dynamic_cast<const VentureBool *>(v)) { return 2; }
-  else if (dynamic_cast<const VentureSymbol *>(v)) { return 3; }
-
-  else if (dynamic_cast<const VentureNil *>(v)) { return 4; }
-  else if (dynamic_cast<const VenturePair *>(v)) { return 5; }
-  else if (dynamic_cast<const VentureArray *>(v)) { return 6; }
-
-  else if (dynamic_cast<const VentureSimplex *>(v)) { return 7; }
-  else if (dynamic_cast<const VentureDictionary *>(v)) { return 8; }
-  else if (dynamic_cast<const VentureMatrix *>(v)) { return 9; }
-  else if (dynamic_cast<const VentureSPRef *>(v)) { return 10; }
-
-  else if (dynamic_cast<const VentureEnvironment *>(v)) { return 11; }
-  else if (dynamic_cast<const VentureSPRecord *>(v)) { return 12; }
-  else if (dynamic_cast<const VentureRequest *>(v)) { return 13; }
-  else if (dynamic_cast<const VentureNode *>(v)) { return 14; }
-  else if (dynamic_cast<const VentureID *>(v)) { return 15; }
-  else { assert(false); return -1; }
-}
