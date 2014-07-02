@@ -83,10 +83,23 @@ class VentureValue(object):
   # def __add__(self, other), and also __radd__, __neg__, __sub__,
   # __mul__, __rmul__, and dot
 
+  # All Venture values have a (possibly trivial) cotangent space.  The
+  # cotangent space is exposed through map_real, which constructs a
+  # cotangent for a value given a function to which to feed the
+  # value's current value at every dimension.
+  def map_real(self, _f): return 0
+
   def expressionFor(self):
     return [{"type":"symbol", "value":"quote"}, self.asStackDict(None)]
 
   def isProperList(self): return False
+
+def vv_dot_product(v1, v2):
+  """Dot product of venture values taking into account that either may be
+a symbolic zero.  TODO: Introduce the VentureZero value to uniformize
+this."""
+  if v1 is 0 or v2 is 0: return 0
+  return v1.dot(v2)
 
 class VentureNumber(VentureValue):
   def __init__(self,number):
@@ -192,6 +205,8 @@ class VentureProbability(VentureValue):
   def __hash__(self): return hash(self.number)
   def expressionFor(self):
     return [{"type":"symbol", "value":"probability"}, self.number]
+  def map_real(self, f):
+    return VentureNumber(f(self.number))
   def real_lenses(self):
     class NumberLens(MLens):
       # Poor man's closure: pass the relevant thing from the lexical
@@ -329,6 +344,7 @@ class VentureNil(VentureValue):
     return [{"type":"symbol", "value":"list"}]
 
   def isProperList(self): return True
+  def asPossiblyImproperList(self): return ([], None)
   def asPythonList(self, _elt_type=None): return []
 
 class VenturePair(VentureValue):
@@ -382,15 +398,21 @@ class VenturePair(VentureValue):
     try:
       ind = index.getNumber()
     except VentureTypeError:
-      raise VentureValueError("Looking up non-number %r in an array" % index)
+      raise VentureValueError("Looking up non-number %r in a list" % index)
     if ind < 1: # Equivalent to truncating for positive floats
       return self.first
     else:
       return self.rest.lookup(VentureNumber(ind - 1))
   def lookup_grad(self, index, direction):
     if direction == 0: return 0
-    if index == 0: return VenturePair((direction, 0))
-    return VenturePair((0, self.rest.lookup_grad(index - 1, direction)))
+    try:
+      ind = index.getNumber()
+    except VentureTypeError:
+      raise VentureValueError("Looking up non-number %r in a list" % index)
+    if ind < 1:
+      return VenturePair((direction, 0))
+    else:
+      return VenturePair((0, self.rest.lookup_grad(VentureNumber(ind - 1), direction)))
   def contains(self, obj): # Treat the list as a set
     if obj.equal(self.first):
       return True
@@ -428,6 +450,10 @@ class VenturePair(VentureValue):
     # Assume other is a scalar
     assert isinstance(other, Number)
     return VenturePair((other * self.first, other * self.rest))
+  def dot(self, other):
+    return vv_dot_product(self.first, other.first) + vv_dot_product(self.rest, other.rest)
+  def map_real(self, f):
+    return VenturePair((self.first.map_real(f), self.rest.map_real(f)))
 
   def expressionFor(self):
     return [{"type":"symbol", "value":"pair"}, self.first.expressionFor(), self.rest.expressionFor()]
@@ -519,7 +545,7 @@ class VentureArray(VentureValue):
     assert isinstance(other, Number)
     return VentureArray([other * x  for x in self.array])
   def dot(self, other):
-    return sum([x.dot(y) for (x,y) in zip(self.array, other.array)])
+    return sum([vv_dot_product(x, y) for (x,y) in zip(self.array, other.array)])
   def map_real(self, f):
     return VentureArray([x.map_real(f) for x in self.array])
 
@@ -608,8 +634,12 @@ class VentureArrayUnboxed(VentureValue):
   def dot(self, other):
     return enp.dot(self.array, self.elt_type, other.array, other.elt_type)
   def map_real(self, f):
-    # TODO Ascertain whether self.elt_type represents a real number or not
-    return VentureArrayUnboxed(enp.map(f, self.array, self.elt_type), self.elt_type)
+    # TODO Ascertain whether self.elt_type represents a real number or not so I can do
+    # return VentureArrayUnboxed(enp.map(f, self.array, self.elt_type), self.elt_type)
+    # but the general case is
+    new_type = self.elt_type.gradient_type()
+    new_data = [new_type.asPython(self.elt_type.asVentureValue(v).map_real(f)) for v in self.array]
+    return VentureArrayUnboxed(new_data, new_type)
 
   def isProperList(self): return True
   def asPythonList(self, elt_type=None):
@@ -644,6 +674,9 @@ are also supposed to sum to 1, but we are not checking that.
   def size(self): return len(self.simplex)
   def expressionFor(self):
     return [{"type":"symbol", "value":"simplex"}] + self.simplex
+  def map_real(self, f):
+    # The cotangent space actually has the constraint that the cotangents sum to 0
+    return VentureArrayUnboxed([f(p) for p in self.simplex], NumberType())
 
 class VentureDict(VentureValue):
   def __init__(self,d): self.dict = d
@@ -727,6 +760,7 @@ class VentureMatrix(VentureValue):
     assert isinstance(other, VentureMatrix)
     return np.sum(np.multiply(self.matrix, other.matrix))
   def map_real(self, f):
+    if self.matrix.size == 0: return self # Do I seriously have to special-case this?
     return VentureMatrix(np.vectorize(f)(self.matrix))
 
   def expressionFor(self):
@@ -775,6 +809,7 @@ class VentureSymmetricMatrix(VentureMatrix):
     assert isinstance(other, Number)
     return VentureSymmetricMatrix(other * self.matrix)
   def map_real(self, f):
+    if self.matrix.size == 0: return self # Do I seriously have to special-case this?
     candidate = np.vectorize(f)(self.matrix)
     return VentureSymmetricMatrix( (candidate + candidate.T)/2 )
 
@@ -793,6 +828,9 @@ class SPRef(VentureValue):
   @staticmethod
   def fromStackDict(thing): return thing["value"]
   # SPRefs are intentionally not comparable until we decide otherwise
+
+# Actually, Environments and SPs have cotangent spaces too, in their
+# own funny way, but we're not doing that now.
 
 ## SPs and Environments as well
 ## Not Requests, because we do not reflect on them
@@ -843,6 +881,10 @@ class VentureType(object):
   def distribution(self, base, **kwargs):
     return base(self.name()[1:-1], **kwargs) # Strip the angle brackets
 
+  def gradient_type(self):
+    "The type of the cotangent space of the space represented by this type."
+    return self
+
 # TODO Is there any way to make these guys be proper singleton
 # objects?
 
@@ -854,7 +896,8 @@ class AnyType(VentureType):
     assert isinstance(thing, VentureValue)
     return thing
   def asPython(self, thing):
-    assert isinstance(thing, VentureValue)
+    # TODO Make symbolic zeroes a venture value!
+    assert isinstance(thing, VentureValue) or thing is 0
     return thing
   def __contains__(self, vthing): return isinstance(vthing, VentureValue)
   def name(self):
@@ -883,10 +926,24 @@ class %sType(VentureType):
   def name(self): return "<%s>"
 """ % (typename, typename, typename, typename, typename.lower())
 
-for typestring in ["Integer", "Probability", "Atom", "Bool", "Symbol", "ForeignBlob", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
+for typestring in ["Integer", "Atom", "Bool", "Symbol", "ForeignBlob", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typestring))
+
+class ProbabilityType(VentureType):
+  def asVentureValue(self, thing): return VentureProbability(thing)
+  def asPython(self, vthing): return vthing.getProbability()
+  def __contains__(self, vthing): return isinstance(vthing, VentureProbability)
+  def name(self): return "<probability>"
+  def gradient_type(self): return NumberType()
+
+class BoolType(VentureType):
+  def asVentureValue(self, thing): return VentureBool(thing)
+  def asPython(self, vthing): return vthing.getBool()
+  def __contains__(self, vthing): return isinstance(vthing, VentureBool)
+  def name(self): return "<bool>"
+  def gradient_type(self): return ZeroType()
 
 class CountType(VentureType):
   def asVentureValue(self, thing):
@@ -917,6 +974,7 @@ class PositiveType(VentureType):
   def __contains__(self, vthing):
     return isinstance(vthing, VentureNumber) and 0 < vthing.getNumber()
   def name(self): return "<positive>"
+  def gradient_type(self): return NumberType()
 
 class NilType(VentureType):
   def asVentureValue(self, _thing):
@@ -1145,3 +1203,10 @@ class RequestType(VentureType):
     assert isinstance(thing, Request)
     return thing
   def name(self): return self._name
+
+class ZeroType(VentureType):
+  """A type object representing elements of the zero-dimensional vector
+space.  This is needed only to serve as the gradient type of discrete
+types like BoolType."""
+  def __init__(self): pass
+  def name(self): return "<zero>"

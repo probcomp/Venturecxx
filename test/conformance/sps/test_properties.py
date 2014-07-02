@@ -9,10 +9,11 @@ from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSP
-from venture.lite.value import AnyType, VentureValue, ExpressionType
+from venture.lite.value import AnyType, VentureValue, vv_dot_product, ZeroType
 from venture.lite.mlens import real_lenses
 import venture.test.numerical as num
 from venture.lite.exception import VentureBuiltinSPMethodError
+from venture.lite.utils import FixedRandomness
 
 def testEquality():
   checkTypedProperty(propEquality, AnyType())
@@ -215,28 +216,112 @@ def propGradientOfLogDensity(rnd, name, sp):
   (value, args_lists) = rnd
   if not len(args_lists) == 1:
     raise SkipTest("TODO: Write the code for measuring log density of curried SPs")
-  answer = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+  answer = carefully(sp.outputPSP.logDensity, value, args)
   if math.isnan(answer) or math.isinf(answer):
     raise ArgumentsNotAppropriate("Log density turned out not to be finite")
 
   try:
-    computed_gradient = sp.outputPSP.gradientOfLogDensity(value, BogusArgs(args_lists[0], sp.constructSPAux()))
+    computed_gradient = sp.outputPSP.gradientOfLogDensity(value, args)
   except VentureBuiltinSPMethodError:
     raise SkipTest("%s does not support computing gradient of log density :(" % name)
 
-  def log_d_displacement_func(lens):
-    def f(h):
-      x = lens.get()
-      lens.set(x + h)
-      ans = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
-      # Leave the value in the lens undisturbed
-      lens.set(x)
-      return ans
-    return f
-  numerical_gradient = [num.richardson(num.derivative(log_d_displacement_func(lens), 0)) for lens in real_lenses([value, args_lists[0]])]
+  def log_d_displacement_func():
+    return carefully(sp.outputPSP.logDensity, value, args)
+  numerical_gradient = num.gradient_from_lenses(log_d_displacement_func, real_lenses([value, args_lists[0]]))
+  assert_gradients_close(numerical_gradient, computed_gradient)
+
+def assert_gradients_close(numerical_gradient, computed_gradient):
+  # TODO Make this deal with symbolic zeroes in the computed gradient.
+  # Presumably, one way to do that would be to accept the original
+  # value, translate it to gradient type, write the components of the
+  # numerical gradient into its lenses, and then do a recursive
+  # similarity comparison that takes the symbolic zero into account.
   if any([math.isnan(v) or math.isinf(v) for v in numerical_gradient]):
     raise ArgumentsNotAppropriate("Too close to a singularity; Richardson extrapolation gave non-finite derivatve")
 
   numerical_values_of_computed_gradient = [lens.get() for lens in real_lenses(computed_gradient)]
 
   assert_allclose(numerical_gradient, numerical_values_of_computed_gradient, rtol=1e-05)
+
+def testFixingRandomness():
+  for (name,sp) in relevantSPs():
+    yield checkFixingRandomness, name, sp
+
+def checkFixingRandomness(name, sp):
+  checkTypedProperty(propDeterministicWhenFixed, fully_uncurried_sp_type(sp.venture_type()), name, sp)
+
+def propDeterministicWhenFixed(args_lists, name, sp):
+  # TODO Abstract out the similarities between this and propDeterministic
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+  randomness = FixedRandomness()
+  with randomness:
+    answer = carefully(sp.outputPSP.simulate, args)
+  if isinstance(answer, VentureSP):
+    if isinstance(answer.requestPSP, NullRequestPSP):
+      args2 = BogusArgs(args_lists[1], answer.constructSPAux())
+      randomness2 = FixedRandomness()
+      with randomness2:
+        ans2 = carefully(answer.outputPSP.simulate, args2)
+      for _ in range(5):
+        with randomness:
+          new_ans = carefully(sp.outputPSP.simulate, args)
+        with randomness2:
+          new_ans2 = carefully(new_ans.outputPSP.simulate, args2)
+        eq_(ans2, new_ans2)
+    else:
+      raise SkipTest("SP %s returned a requesting SP" % name)
+  else:
+    for _ in range(5):
+      with randomness:
+        eq_(answer, carefully(sp.outputPSP.simulate, args))
+
+def testGradientOfSimulate():
+  for (name,sp) in relevantSPs():
+    if name not in ["dict",  # TODO Synthesize dicts to act as the directions
+                    "matrix", # TODO Synthesize non-ragged test lists
+                    # The gradients of scope_include and scope_exclude
+                    # have weird shapes because scope_include and
+                    # scope_exclude are weird.
+                    "scope_include", "scope_exclude",
+                    # The gradients of biplex and lookup have sporadic
+                    # symbolic zeroes.
+                    "biplex", "lookup"
+                   ]:
+      yield checkGradientOfSimulate, name, sp
+
+def checkGradientOfSimulate(name, sp):
+  checkTypedProperty(propGradientOfSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
+
+def asGradient(value):
+  return value.map_real(lambda x: x)
+
+def propGradientOfSimulate(args_lists, name, sp):
+  if final_return_type(sp.venture_type().gradient_type()).__class__ == ZeroType:
+    # Do not test gradients of things that return elements of
+    # 0-dimensional vector spaces
+    return
+  if not len(args_lists) == 1:
+    raise SkipTest("TODO: Write the code for testing simulation gradients of curried SPs")
+  if name == "mul" and len(args_lists[0]) is not 2:
+    raise ArgumentsNotAppropriate("TODO mul only has a gradient in its binary form")
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+  randomness = FixedRandomness()
+  with randomness:
+    value = carefully(sp.outputPSP.simulate, args)
+
+  # Use the value itself as the test direction in order to avoid
+  # having to coordinate compound types (like the length of the list
+  # that 'list' returns being the same as the number of arguments)
+  direction = asGradient(value)
+  try:
+    computed_gradient = carefully(sp.outputPSP.gradientOfSimulate, args, value, direction)
+  except VentureBuiltinSPMethodError:
+    raise SkipTest("%s does not support computing gradient of simulate :(" % name)
+
+  def sim_displacement_func():
+    with randomness:
+      ans = carefully(sp.outputPSP.simulate, args)
+    return vv_dot_product(direction, asGradient(ans))
+  numerical_gradient = num.gradient_from_lenses(sim_displacement_func, real_lenses(args_lists[0]))
+  assert_gradients_close(numerical_gradient, computed_gradient)
