@@ -186,6 +186,10 @@ def expToDict(exp, ripl=None):
   elif tag == "incorporate":
     assert len(exp) == 1
     return {"command":"incorporate"}
+  elif tag == "loop":
+    assert len(exp) == 2
+    subkernels = [expToDict(e, ripl) for e in exp[1]]
+    return {"command":"loop", "kernels":subkernels}
   elif tag == "peek" or tag == "peek-all":
     assert 2 <= len(exp) and len(exp) <= 3
     if len(exp) == 2:

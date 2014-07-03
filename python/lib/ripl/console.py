@@ -16,6 +16,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import traceback
 from cmd import Cmd
 from venture.exception import VentureException
 from utils import _strip_types, expToDict, parse
@@ -38,9 +39,10 @@ def catchesVentureException(f):
         length = e.data['text_index'][1] - offset + 1
         underline = ''.join([' '] * offset + ['^'] * length)
         print underline
-    except RuntimeError as err:
-      print "*** runtime error:", err
-  
+    except Exception:
+      print "Your query has generated an error:"
+      traceback.print_exc()
+
   return try_f
 
 class RiplCmd(Cmd, object):
@@ -48,19 +50,19 @@ class RiplCmd(Cmd, object):
     super(RiplCmd, self).__init__()
     self.ripl = ripl
     self.prompt = '>>> '
-  
+
   def emptyline(self):
     pass
-  
+
   def do_quit(self, s):
     '''Exit the Venture console.'''
     print ''
     print "End of input reached."
     print "Moriturus te saluto."
     return True
-  
+
   do_EOF = do_quit
-  
+
   def _do_instruction(self, instruction, s):
     return self.ripl.execute_instruction('[%s %s]' % (instruction, s))
 
@@ -70,12 +72,12 @@ class RiplCmd(Cmd, object):
       if line[-1] == "]" or line[-1] == ")":
         return line[1:-1]
     return line
-  
+
   @catchesVentureException
   def do_assume(self, s):
     '''Add a named variable to the model.'''
     print getValue(self._do_instruction('assume', s))
-  
+
   @catchesVentureException
   def do_observe(self, s):
     '''Condition on an expression being the value.'''
@@ -85,7 +87,7 @@ class RiplCmd(Cmd, object):
   def do_predict(self, s):
     '''Register an expression as a model prediction.'''
     print getValue(self._do_instruction('predict', s))
-  
+
   @catchesVentureException
   def do_forget(self, s):
     '''Forget a given prediction or observation.'''
@@ -95,25 +97,25 @@ class RiplCmd(Cmd, object):
   def do_report(self, s):
     '''Report the current value of a given directive.'''
     print getValue(self._do_instruction('report', s))
-  
+
   @catchesVentureException
   def do_sample(self, s):
     '''Sample the given expression immediately,
     without registering it as a prediction.'''
     print getValue(self._do_instruction('sample', s))
-  
+
   @catchesVentureException
   def do_force(self, s):
     '''Set the given expression to the given value,
     without conditioning on it.'''
     self._do_instruction('force', s)
-  
+
   @catchesVentureException
   def do_list_directives(self, s):
     '''List active directives and their current values.'''
     for directive in self.ripl.list_directives():
       print "%d:\t%s" % (directive['directive_id'], str(directive['value']))
-  
+
   @catchesVentureException
   def do_infer(self, s):
     '''Run inference synchronously.'''
@@ -122,7 +124,7 @@ class RiplCmd(Cmd, object):
       if len(out) > 0: print out
     else:
       print out
-  
+
   @catchesVentureException
   def do_continuous_inference_status(self, s):
     '''Report status of continuous inference.'''

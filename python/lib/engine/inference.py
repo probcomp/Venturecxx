@@ -62,6 +62,10 @@ class Infer(object):
     elif 'command' in program and program['command'] == "plotf":
       self._ensure_plot(program["specification"], program["names"], program["expressions"])
       self.plot.add_data(self.engine)
+    elif 'command' in program and program['command'] == "loop":
+      # TODO Assert that loop is only done at the top level?
+      params = {"kernel":"cycle", "subkernels":program["kernels"], "in_python":True, "transitions":1}
+      self.engine.start_continuous_inference(params)
     elif program['kernel'] == "cycle":
       if 'subkernels' not in program:
         raise Exception("Cycle kernel must have things to cycle over (%r)" % program)
@@ -111,7 +115,7 @@ class SpecPlot(object):
   The possible data streams are:
     _<an integer>_ that expression, 0-indexed,
     _%_ the next expression after the last used one
-    sweep _c_ounter, _t_ime (wall clock), and log _s_core,
+    sweep _c_ounter, _t_ime (wall clock), log _s_core, and pa_r_ticle
   The possible scales are:
     _d_irect, _l_og
 
@@ -170,14 +174,22 @@ class SpecPlot(object):
       else:
         self.add_data_from(engine, int(stream))
 
-  def __str__(self):
-    "Not really a string method, but does get itself displayed when printed."
+  def dataset(self):
     for name in ["sweeps", "time (s)", "log score", "particle"] + self.names:
       if len(self.data[name]) == 0:
         # Data source was not requested; remove it to avoid confusing pandas
         del self.data[name]
     from pandas import DataFrame
     from venture.ripl.utils import _strip_types_from_dict_values
-    dataset = DataFrame.from_dict(_strip_types_from_dict_values(self.data))
-    self.spec.plot(dataset, self.names)
+    return DataFrame.from_dict(_strip_types_from_dict_values(self.data))
+
+  def draw(self):
+    return self.spec.draw(self.dataset(), self.names)
+
+  def plot(self):
+    self.spec.plot(self.dataset(), self.names)
+
+  def __str__(self):
+    "Not really a string method, but does get itself displayed when printed."
+    self.plot()
     return "a plot"
