@@ -122,7 +122,7 @@ for i in range(10):
 print '\n\n'
 for i in range(10):
     print np.round( map( v.sample, ('hyper_mean','mean0','mean1') ) )
-    v.infer('(mh mean_scope 0 10)')
+    #v.infer('(mh mean_scope 1 10)')
 
 
 # illustrate dynamic scope
