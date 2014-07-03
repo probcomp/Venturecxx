@@ -240,6 +240,10 @@ class ESRRefOutputPSP(DeterministicPSP):
     return [0 for _ in args.operandValues] + [direction]
 
   @override(DeterministicPSP)
+  def gradientOfLogDensity(self, _value, args):
+    return (0, [0 for _ in args.operandValues + args.esrNodes])
+
+  @override(DeterministicPSP)
   def canAbsorb(self,trace,appNode,parentNode):
     return parentNode != trace.esrParentsAt(appNode)[0] and parentNode != appNode.requestNode
 

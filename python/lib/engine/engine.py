@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
 import pickle
+import copy
+import time
 
 from venture.exception import VentureException
 from venture.lite.utils import sampleLogCategorical
@@ -29,6 +31,7 @@ class Engine(object):
     self.weights = [0]
     self.directiveCounter = 0
     self.directives = {}
+    self.inferrer = None
 
   def getDistinguishedTrace(self): 
     assert self.traces
@@ -252,14 +255,30 @@ effect of renumbering the directives, if some had been forgotten."""
     self.getDistinguishedTrace().set_seed(seed) # TODO is this what we want?
 
   def continuous_inference_status(self):
-    return self.getDistinguishedTrace().continuous_inference_status() # awkward
+    if self.inferrer is not None:
+      # Running CI in Python
+      return {"running":True, "params":self.inferrer.params}
+    else:
+      # Running CI in the underlying traces
+      return self.getDistinguishedTrace().continuous_inference_status() # awkward
 
   def start_continuous_inference(self, params):
     self.set_default_params(params)
-    for trace in self.traces: trace.start_continuous_inference(params)
+    if "in_python" not in params or params["in_python"] == False:
+      # Run CI in the underlying traces
+      for trace in self.traces: trace.start_continuous_inference(params)
+    else:
+      # Run CI in Python
+      self.inferrer = ContinuousInferrer(self, params)
 
   def stop_continuous_inference(self):
-    for trace in self.traces: trace.stop_continuous_inference()
+    if self.inferrer is not None:
+      # Running CI in Python
+      self.inferrer.stop()
+      self.inferrer = None
+    else:
+      # Running CI in the underlying traces
+      for trace in self.traces: trace.stop_continuous_inference()
 
   def dump_trace(self, trace, skipStackDictConversion=False):
     db = trace.makeSerializationDB()
@@ -340,3 +359,28 @@ effect of renumbering the directives, if some had been forgotten."""
     return self.convert(PumaEngine)
 
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
+
+class ContinuousInferrer(object):
+  def __init__(self, engine, params):
+    self.engine = engine
+    self.params = copy.deepcopy(params)
+    self.params["in_python"] = True
+    self.last_print = time.time()
+    import threading as t
+    self.inferrer = t.Thread(target=self.infer_continuously, args=(params,))
+    self.inferrer.start()
+
+  def infer_continuously(self, params):
+    # Can use the storage of the thread object itself as the semaphore
+    # controlling whether continuous inference proceeds.
+    while self.inferrer is not None:
+      out = Infer(self.engine).infer(params)
+      now = time.time()
+      if now - self.last_print > 0.1: # seconds between prints
+        self.last_print = now
+        print out
+
+  def stop(self):
+    inferrer = self.inferrer
+    self.inferrer = None # Grab the semaphore
+    inferrer.join()

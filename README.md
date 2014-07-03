@@ -57,6 +57,7 @@ The tricky step is installing the correct version of the Boost library. The curr
     # First, install the current version
     brew install --without-python boost
     # Install an old version of gcc; Boost 1.49 breaks with clang on OS X 10.9
+    # (try "brew search gcc" to find gcc42)
     brew install apple-gcc42
     # Install the old Boost
     brew tap homebrew/versions
@@ -78,8 +79,8 @@ Finally, Python dependendencies:
 
     # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
     # Also pulls in required external libraries
-	sudo brew install ipython
-    sudo pip install pyparsing flask numpy matplotlib scipyn
+    brew install ipython
+    sudo pip install pyparsing flask numpy matplotlib scipy
 
 Dependencies (OSX, macports)
 ----------------------------

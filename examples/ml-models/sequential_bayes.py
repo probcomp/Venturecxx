@@ -35,7 +35,9 @@ def build_ripl_scalar():
   r.assume('sigma_2', '(inv_gamma 1 1)')
   r.assume('w1', '(normal 0 1)')
   r.assume('w2', '(normal 0 1)')
-  r.assume('y', '(lambda (x1 x2) (normal (+ (* x1 w1) (* x2 w2)) (sqrt sigma_2)))')
+  r.assume('w', '(vector w1 w2)')
+  r.assume('y', '(lambda (x) (normal (dot x w) (sqrt sigma_2)))')
+  # r.assume('y', '(lambda (x1 x2) (normal (+ (* x1 w1) (* x2 w2)) (sqrt sigma_2)))')
   return r
 
 def initial_belief():
