@@ -139,8 +139,8 @@ def testPGibbsDynamicScopeInterval():
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
 
 def testFunnyHMM():
-  yield checkFunnyHMM, False
-  yield checkFunnyHMM, True
+  yield checkFunnyHMM, "false"
+  yield checkFunnyHMM, "true"
 
 def checkFunnyHMM(in_parallel):
   ripl = get_ripl()
@@ -157,5 +157,5 @@ def checkFunnyHMM(in_parallel):
   for t in range(1, 5):
     ripl.observe("(obs %d)" % t, t)
   
-  ripl.infer({"kernel":"pgibbs","transitions":2,"scope":0,"block":"ordered","particles":3, "with_mutation":False, "in_parallel":in_parallel})
+  ripl.infer("(func-pgibbs 0 ordered 3 2 %s)" % in_parallel)
 
