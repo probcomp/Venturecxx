@@ -50,7 +50,7 @@ Here is what we install on a clean Mac OS X 10.9 (or higher).
     brew install gcc48
 
     # Install libraries using homebrew
-    brew install python ccache
+    brew install python ccache gsl
 
 The tricky step is installing the correct version of the Boost library. The current Homebrew version of Boost is 1.55, but the puma backend breaks if Venture is built under this version. Instead, Boost 1.49 must be installed. These instructions assume that no versions of Boost are currently installed. If 1.55 and 1.49 are already installed on the machine, simply follow the instructions in part 1 of this thread: <http://stackoverflow.com/questions/3987683/homebrew-install-specific-version-of-formula> to switch to version 1.49.
 
@@ -79,8 +79,8 @@ Finally, Python dependendencies:
 
     # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
     # Also pulls in required external libraries
-    brew install ipython
-    sudo pip install pyparsing flask numpy matplotlib scipy
+    pip install ipython
+    pip install pyparsing flask numpy matplotlib scipy
 
 Dependencies (OSX, macports)
 ----------------------------
