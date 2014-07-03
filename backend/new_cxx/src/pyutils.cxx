@@ -61,6 +61,16 @@ VentureValuePtr parseArray(boost::python::object value)
   return VentureValuePtr(new VentureArray(v));
 }
 
+// TODO: Puma doesn't have general unboxed arrays, because this
+// involves complication with types and templates.
+// For now, support only numeric unboxed arrays backed by VectorXd.
+VentureValuePtr parseVector(boost::python::object value);
+VentureValuePtr parseArrayUnboxed(boost::python::object value, boost::python::object subtype)
+{
+
+  return parseVector(value);
+}
+
 VentureValuePtr parseSimplex(boost::python::object value)
 {
   boost::python::extract<boost::python::list> getList(value);
@@ -90,8 +100,7 @@ VentureValuePtr parseVector(boost::python::object value)
 
   for (boost::python::ssize_t i = 0; i < len; ++i)
   {
-    VentureValuePtr val = parseValue(boost::python::extract<boost::python::dict>(l[i]));
-    v[i] = val->getDouble();
+    v[i] = boost::python::extract<double>(l[i]);
   }
 
   return VentureValuePtr(new VentureVector(v));
@@ -207,6 +216,7 @@ VentureValuePtr parseValue(boost::python::dict d)
   else if (type == "improper_list") { return parseImproperList(value); }
   else if (type == "vector") { return parseVector(value); }
   else if (type == "array") { return parseArray(value); }
+  else if (type == "array_unboxed") { return parseArrayUnboxed(value, d["subtype"]); }
   else if (type == "simplex") { return parseSimplex(value); }
   else if (type == "dict") { return parseDict(value); }
   else if (type == "matrix") { return parseMatrix(value); }
