@@ -54,8 +54,7 @@ def testDynamicScope7():
   ripl = get_ripl()
   ripl.assume("x", "(normal 0.0 1.0)")
   ripl.assume("f", "(mem (lambda () (scope_include 1 0 (normal x 1.0))))")  
-  ripl.predict("(scope_include 0 0 (normal (+ (f) (normal (f) 1) (normal 0 1)) 1))")
-  assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0,0),4)
+  ripl.predict("(scope_include 0 0 (normal (+ (f) (normal_sivm.engine.getDistinguishedTrace().numNodesInBlock(0,0),4)
 
 def testDynamicScope8():
   ripl = get_ripl()
