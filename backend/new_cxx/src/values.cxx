@@ -104,17 +104,24 @@ boost::python::dict VentureNil::toPython(Trace * trace) const
 boost::python::dict VenturePair::toPython(Trace * trace) const
 {
   boost::python::dict value;
-  value["type"] = "list";
 
   boost::python::list l;
   l.append(getFirst()->toPython(trace));
-  shared_ptr<VenturePair>  p = dynamic_pointer_cast<VenturePair>(getRest());
-  while (p)
+  VentureValuePtr rest = getRest();
+  shared_ptr<VenturePair> p;
+  while (p = dynamic_pointer_cast<VenturePair>(rest))
   {
     l.append(p->getFirst()->toPython(trace));
-    p = dynamic_pointer_cast<VenturePair>(p->getRest());
+    rest = p->getRest();
   }
-  value["value"] = l;
+  if (rest->isNil()) {
+    value["type"] = "list";
+    value["value"] = l;
+  }
+  else {
+    value["type"] = "improper_list";
+    value["value"] = boost::python::make_tuple(l, rest->toPython(trace));
+  }
   return value;
 }
 
