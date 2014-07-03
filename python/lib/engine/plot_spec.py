@@ -16,7 +16,7 @@ class PlotSpec(object):
     else:
       self.frames = [FrameSpec(s) for s in spec]
 
-  def plot(self, dataset, names):
+  def draw(self, dataset, names):
     index = 0
     for spec in self.frames:
       (aes, index) = spec.aes_dict_at(index, names)
@@ -27,6 +27,9 @@ class PlotSpec(object):
         obj = self._interp_scale(dim, scale)
         if obj: plot += obj
       plot.draw()
+
+  def plot(self, dataset, names):
+    self.draw(dataset, names)
     plt.show()
 
   def streams(self):

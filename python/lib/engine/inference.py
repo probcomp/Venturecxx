@@ -183,7 +183,13 @@ class SpecPlot(object):
     from venture.ripl.utils import _strip_types_from_dict_values
     return DataFrame.from_dict(_strip_types_from_dict_values(self.data))
 
+  def draw(self):
+    self.spec.draw(self.dataset(), self.names)
+
+  def plot(self):
+    self.spec.plot(self.dataset(), self.names)
+
   def __str__(self):
     "Not really a string method, but does get itself displayed when printed."
-    self.spec.plot(self.dataset(), self.names)
+    self.plot()
     return "a plot"
