@@ -92,8 +92,7 @@ def testMVN3():
   ripl.assume("sigma","(matrix (array (array 1.0 0.0) (array 0.0 1.0)))")
   ripl.assume("x","(multivariate_normal mu sigma)")
   ripl.assume("y","(multivariate_normal x sigma)")
-  v = [{"type": "real", "value": 2}, {"type": "real", "value": 2}]
-  ripl.observe("y",{"type":"vector","value":v})
+  ripl.observe("y",{"type":"vector","value":[2, 2]})
   ripl.predict("(lookup x 0)",label="pid")
 
   predictions = collectSamples(ripl,"pid")
