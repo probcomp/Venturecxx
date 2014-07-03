@@ -101,20 +101,14 @@ def make_ripl_rest_client(base_url):
 def val(t,v):
     return {"type":t,"value":v}
 
-def symbol(s):
-    return val("symbol", s)
-
 def number(v):
     return val("number",v)
-
-def boolean(v):
-    return val("boolean",v)
 
 def real(v):
     return val("real",v)
 
-def count(v):
-    return val("count",v)
+def integer(v):
+    return val("integer",v)
 
 def probability(v):
     return val("probability",v)
@@ -122,8 +116,42 @@ def probability(v):
 def atom(v):
     return val("atom",v)
 
-def smoothed_count(v):
-    return val("smoothed_count",v)
+def boolean(v):
+    return val("boolean",v)
 
-def simplex_point(v):
-    return val("simplex_point",v)
+def symbol(s):
+    return val("symbol",s)
+
+def blob(v):
+    return val("blob",s)
+
+def list(vs):
+    return val("list", vs)
+
+def improper_list(vs, tail):
+    return val("improper_list", (vs, tail))
+
+def array(vs):
+    return val("array", vs)
+
+def array_unboxed(vs, subtype):
+    ret = val("array_unboxed", vs)
+    ret["subtype"] = subtype
+    return ret
+
+def vector(vs):
+    return val("vector", vs)
+
+def simplex(vs):
+    return val("simplex", vs)
+
+def matrix(vs):
+    import numpy as np
+    return val("matrix", np.asarray(vs))
+
+def symmetric_matrix(vs):
+    import numpy as np
+    return val("symmetric_matrix", np.asarray(vs))
+
+def quote(v):
+    return [symbol("quote"), v]
