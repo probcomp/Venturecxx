@@ -62,6 +62,10 @@ class Infer(object):
     elif 'command' in program and program['command'] == "plotf":
       self._ensure_plot(program["specification"], program["names"], program["expressions"])
       self.plot.add_data(self.engine)
+    elif 'command' in program and program['command'] == "loop":
+      # TODO Assert that loop is only done at the top level?
+      params = {"kernel":"cycle", "subkernels":program["kernels"], "in_python":True, "transitions":1}
+      self.engine.start_continuous_inference(params)
     elif program['kernel'] == "cycle":
       if 'subkernels' not in program:
         raise Exception("Cycle kernel must have things to cycle over (%r)" % program)
