@@ -6,6 +6,7 @@ import scipy.special as spsp
 import numpy as np
 from utils import logDensityMVNormal, numpy_force_number
 from exception import VentureValueError
+import warnings
 
 # For some reason, pylint can never find numpy members (presumably metaprogramming).
 # pylint: disable=no-member
@@ -273,7 +274,13 @@ class GammaOutputPSP(RandomPSP):
     # These gradients were computed by Sympy; the script to get them is
     # in doc/gradients.py
     alpha, beta = args.operandValues
-    if alpha >= 1:
+    if alpha == 1:
+      warnstr = ('Gradient of simulate is discontinuous at alpha = 1.\n'
+                 'Issue: https://app.asana.com/0/11192551635048/14271708124534.')
+      warnings.warn(warnstr, GradientWarning)
+      gradAlpha = 0
+      gradBeta = -value / math.pow(beta, 2.0)
+    elif alpha > 1:
       x0 = value / (3.0 * alpha - 1)
       gradAlpha = (-3.0 * x0 / 2 + 3 * 3 ** (2.0 / 3) *
                    (beta * x0) ** (2.0 / 3) / (2.0 * beta))
@@ -351,3 +358,8 @@ class InvGammaOutputPSP(RandomPSP):
 
   # TODO InvGamma presumably has a variational kernel too?
 
+class GradientWarning(UserWarning):
+  '''
+  Warnings for AD-related gradient issues.
+  '''
+  pass
