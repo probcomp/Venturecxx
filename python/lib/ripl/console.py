@@ -54,7 +54,7 @@ class RiplCmd(Cmd, object):
   def emptyline(self):
     pass
 
-  def do_quit(self, s):
+  def do_quit(self, _s):
     '''Exit the Venture console.'''
     print ''
     print "End of input reached."
@@ -111,7 +111,7 @@ class RiplCmd(Cmd, object):
     self._do_instruction('force', s)
 
   @catchesVentureException
-  def do_list_directives(self, s):
+  def do_list_directives(self, _s):
     '''List active directives and their current values.'''
     for directive in self.ripl.list_directives():
       print "%d:\t%s" % (directive['directive_id'], str(directive['value']))
@@ -148,7 +148,9 @@ class RiplCmd(Cmd, object):
 def run_venture_console(ripl):
   RiplCmd(ripl).cmdloop()
 
-if __name__ == '__main__':
+def main():
   import venture.shortcuts as s
   ripl = s.make_puma_church_prime_ripl()
   run_venture_console(ripl)
+
+if __name__ == '__main__': main()
