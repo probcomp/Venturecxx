@@ -173,7 +173,7 @@ def expToDict(exp, ripl=None):
       j = 2*i
       k = j + 1
       weights.append(exp[1][j])
-      subkernels.append(expToDict(exp[1][k]), ripl)
+      subkernels.append(expToDict(exp[1][k], ripl))
     return {"kernel":"mixture","weights":weights,"subkernels":subkernels,"transitions":exp[2]}
   elif tag == "cycle":
     assert len(exp) == 3

@@ -2,7 +2,7 @@ import math
 import scipy.stats as stats
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
 from nose import SkipTest
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples
+from venture.test.config import get_ripl, collectSamples, collect_iid_samples, default_num_transitions_per_sample
 from testconfig import config
 
 @statisticalTest
@@ -100,6 +100,7 @@ def testBasicRejection3():
   cdf = stats.beta(2,1).cdf
   return reportKnownContinuous(cdf, predictions, "beta(2,1)")
 
+@statisticalTest
 def testCycleKernel():
   """Same example as testBlockingExample0, but a cycle kernel that covers everything should solve it"""
   ripl = get_ripl()
@@ -108,13 +109,13 @@ def testCycleKernel():
   ripl.assume("b", "(scope_include 1 1 (normal a 1.0))")
   ripl.observe("(normal b 1.0)", 14.0)
 
-  k1 = {"transitions":1,"kernel":"mh","scope":0,"block":0}
-  k2 = {"transitions":1,"kernel":"mh","scope":1,"block":1}
+  infer = "(cycle ((mh 0 0 1) (mh 1 1 1)) %s)" % default_num_transitions_per_sample()
 
-  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"cycle","subkernels":[k1,k2]})
+  predictions = collectSamples(ripl,"pid",infer=infer)
   cdf = stats.norm(loc=34.0/3.0, scale=math.sqrt(2.0/3.0)).cdf
   return reportKnownContinuous(cdf, predictions, "N(34/3,sqrt(2/3))")
 
+@statisticalTest
 def testMixtureKernel():
   """Same example as testCycleKernel, but with a mixture kernel"""
   ripl = get_ripl()
@@ -123,9 +124,8 @@ def testMixtureKernel():
   ripl.assume("b", "(scope_include 1 1 (normal a 1.0))")
   ripl.observe("(normal b 1.0)", 14.0)
 
-  k1 = {"transitions":1,"kernel":"mh","scope":0,"block":0}
-  k2 = {"transitions":1,"kernel":"mh","scope":1,"block":1}
+  infer = "(mixture (0.5 (mh 0 0 1) 0.5 (mh 1 1 1)) %s)" % default_num_transitions_per_sample()
 
-  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"mixture","subkernels":[k1,k2],"weights":[0.5,0.5]})
+  predictions = collectSamples(ripl,"pid",infer=infer)
   cdf = stats.norm(loc=34.0/3.0, scale=math.sqrt(2.0/3.0)).cdf
   return reportKnownContinuous(cdf, predictions, "N(34/3,sqrt(2/3))")
