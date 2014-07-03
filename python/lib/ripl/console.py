@@ -16,6 +16,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import traceback
 from cmd import Cmd
 from venture.exception import VentureException
 from utils import _strip_types, expToDict, parse
@@ -38,8 +39,9 @@ def catchesVentureException(f):
         length = e.data['text_index'][1] - offset + 1
         underline = ''.join([' '] * offset + ['^'] * length)
         print underline
-    except RuntimeError as err:
-      print "*** runtime error:", err
+    except Exception:
+      print "Your query has generated an error:"
+      traceback.print_exc()
   
   return try_f
 
