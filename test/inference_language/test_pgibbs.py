@@ -2,8 +2,6 @@ import math
 import scipy.stats as stats
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, ignore_inference_quality
-from nose import SkipTest
-from testconfig import config
 
 def testPGibbsBasic1():
   yield checkPGibbsBasic1, False

@@ -1,7 +1,5 @@
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples
-from nose import SkipTest
-from testconfig import config
 
 def testEnumerativeGibbsBasic1():
   yield checkEnumerativeGibbsBasic1, False
@@ -31,17 +29,16 @@ def checkEnumerativeGibbsBasic2(in_parallel):
   return reportKnownDiscrete(ans, predictions)
 
 def testEnumerativeGibbsGotcha():
-  yield checkEnumerativeGibbsGotcha, False
-  yield checkEnumerativeGibbsGotcha, True
+  yield checkEnumerativeGibbsGotcha, "false"
+  yield checkEnumerativeGibbsGotcha, "true"
 
 def checkEnumerativeGibbsGotcha(in_parallel):
   """Enumeration should not break on things that look like they're in the support but aren't"""
   ripl = get_ripl()
   ripl.predict("(bernoulli 1)")
   ripl.predict("(bernoulli 0)")
-  ripl.infer({"kernel":"gibbs","in_parallel":in_parallel})
-  ripl.infer({"kernel":"gibbs", "scope":"default", "block":"all","in_parallel":in_parallel})
-
+  ripl.infer("(gibbs default one 1 %s)" % in_parallel)
+  ripl.infer("(gibbs default all 1 %s)" % in_parallel)
 
 @statisticalTest
 def testEnumerativeGibbsBoostThrashExact():
