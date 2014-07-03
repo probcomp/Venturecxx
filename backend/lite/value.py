@@ -588,7 +588,9 @@ class VentureArrayUnboxed(VentureValue):
   @staticmethod
   def fromStackDict(thing):
     if thing["type"] == "vector":
-      # TODO HACK: treat Puma's vectors as unboxed arrays of numbers
+      # TODO HACK: treat Puma's vectors as unboxed arrays of numbers,
+      # because Puma can't make a NumberType to stick in the stack
+      # dict.
       return VentureArrayUnboxed(thing["value"], NumberType())
     return VentureArrayUnboxed(thing["value"], thing["subtype"])
 
