@@ -33,11 +33,11 @@ def checkPGibbsBasic2(in_parallel):
   return reportKnownDiscrete(ans, predictions)
  
 def testPGibbsBlockingMHHMM1():
-  yield checkPGibbsBlockingMHHMM1, True
-  yield checkPGibbsBlockingMHHMM1, False
+  yield checkPGibbsBlockingMHHMM1, "pgibbs"
+  yield checkPGibbsBlockingMHHMM1, "func-pgibbs"
 
 @statisticalTest
-def checkPGibbsBlockingMHHMM1(mutate):
+def checkPGibbsBlockingMHHMM1(operator):
   """The point of this is that it should give reasonable results in very few transitions but with a large number of particles."""
   ripl = get_ripl()
 
@@ -61,9 +61,9 @@ def checkPGibbsBlockingMHHMM1(mutate):
   ripl.predict("x4",label="pid")
 
   if ignore_inference_quality():
-    infer = {"kernel":"pgibbs","transitions":2,"scope":0,"block":"ordered","particles":3, "with_mutation":mutate}
+    infer = "(%s 0 ordered 3 2)" % operator
   else:
-    infer = {"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered","particles":20, "with_mutation":mutate}
+    infer = "(%s 0 ordered 20 10)" % operator
 
   predictions = collectSamples(ripl,"pid",infer=infer)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
@@ -71,11 +71,11 @@ def checkPGibbsBlockingMHHMM1(mutate):
 
 
 def testPGibbsDynamicScope1():
-  yield checkPGibbsDynamicScope1, True
-  yield checkPGibbsDynamicScope1, False
+  yield checkPGibbsDynamicScope1, "pgibbs"
+  yield checkPGibbsDynamicScope1, "func-pgibbs"
 
 @statisticalTest
-def checkPGibbsDynamicScope1(mutate):
+def checkPGibbsDynamicScope1(operator):
   ripl = get_ripl()
   
   ripl.assume("transition_fn", "(lambda (x) (normal x 1.0))")
@@ -98,9 +98,9 @@ def checkPGibbsDynamicScope1(mutate):
   ripl.predict("(f 4)","pid")
 
   if ignore_inference_quality():
-    infer = {"kernel":"pgibbs","transitions":2,"scope":0,"block":"ordered","particles":3, "with_mutation":mutate}
+    infer = "(%s 0 ordered 3 2)" % operator
   else:
-    infer = {"kernel":"pgibbs","transitions":10,"scope":0,"block":"ordered","particles":20, "with_mutation":mutate}
+    infer = "(%s 0 ordered 20 10)" % operator
 
   predictions = collectSamples(ripl,"pid",infer=infer)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
