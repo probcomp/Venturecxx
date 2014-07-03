@@ -184,7 +184,7 @@ class SpecPlot(object):
     return DataFrame.from_dict(_strip_types_from_dict_values(self.data))
 
   def draw(self):
-    self.spec.draw(self.dataset(), self.names)
+    return self.spec.draw(self.dataset(), self.names)
 
   def plot(self):
     self.spec.plot(self.dataset(), self.names)
