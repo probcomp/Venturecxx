@@ -210,9 +210,9 @@ builtInSPsList = [
                                           sim_grad=lambda args, direction: direction.getArray(),
                                           descr="array returns an array initialized with its arguments") ],
 
-           [ "vector", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
+           [ "vector", deterministic_typed(lambda *args: np.array(args), [v.NumberType()], v.ArrayUnboxedType(v.NumberType()), variadic=True,
                                           sim_grad=lambda args, direction: direction.getArray(),
-                                          descr="vector currently a pseudonym for array") ],
+                                          descr="vector returns an unboxed numeric array initialized with its arguments") ],
 
            [ "is_array", type_test(v.ArrayType()) ],
            [ "dict", deterministic_typed(lambda keys, vals: dict(zip(keys, vals)),
