@@ -16,7 +16,7 @@ def testBlockingExample0():
 
   # If inference only frobnicates b, then the distribution on a
   # remains the prior.
-  predictions = collectSamples(ripl,"pid",infer={"transitions":10,"kernel":"mh","scope":1,"block":1})
+  predictions = collectSamples(ripl,"pid",infer="(mh 1 1 10)")
   cdf = stats.norm(loc=10.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, predictions, "N(10.0,1.0)")
 
@@ -73,30 +73,30 @@ def testBlockingExample3():
 
 @statisticalTest
 def testBasicRejection1():
-  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by CXX yet")
+  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by Puma yet")
   ripl = get_ripl()
   ripl.assume("x", "(bernoulli 0.5)",label="pid")
-  predictions = collectSamples(ripl, "pid", infer={"kernel":"rejection", "scope":"default", "block":"all", "transitions":1})
+  predictions = collectSamples(ripl, "pid", infer="(rejection default all 1)")
   ans = [(True, 0.5), (False, 0.5)]
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testBasicRejection2():
-  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by CXX yet")
+  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by Puma yet")
   ripl = get_ripl()
   ripl.assume("p", "(uniform_continuous 0 1)")
   ripl.assume("x", "(bernoulli p)", label="pid")
-  predictions = collectSamples(ripl, "pid", infer={"kernel":"rejection", "scope":"default", "block":"all", "transitions":1})
+  predictions = collectSamples(ripl, "pid", infer="(rejection default all 1)")
   ans = [(True, 0.5), (False, 0.5)]
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testBasicRejection3():
-  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by CXX yet")
+  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by Puma yet")
   ripl = get_ripl()
   ripl.assume("p", "(uniform_continuous 0 1)", label="pid")
   ripl.observe("(bernoulli p)", "true")
-  predictions = collectSamples(ripl, "pid", infer={"kernel":"rejection", "scope":"default", "block":"all", "transitions":1})
+  predictions = collectSamples(ripl, "pid", infer="(rejection default all 1)")
   cdf = stats.beta(2,1).cdf
   return reportKnownContinuous(cdf, predictions, "beta(2,1)")
 
