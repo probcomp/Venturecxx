@@ -25,7 +25,7 @@ vector<VentureValuePtr> VenturePair::getArray() const
   // Permit improper lists whose tails are arrays to count as valid
   // Venture sequences.
   vector<VentureValuePtr> ys = rest->getArray();
-  xs.insert(xs.begin(), ys.begin(), ys.end());
+  xs.insert(xs.end(), ys.begin(), ys.end());
   return xs;
 }
 
