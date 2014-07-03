@@ -129,7 +129,6 @@ def propRandom(args_listss, sp):
   assert False, "SP deterministically returned %s (parallel to arguments)" % answers
 
 def testExpressionFor():
-  if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
   if defaultKernel() != 'mh':
     raise SkipTest("Doesn't depend on kernel, only run it for mh")
   checkTypedProperty(propExpressionWorks, AnyType())
@@ -140,7 +139,6 @@ def propExpressionWorks(value):
   assert value.equal(result)
 
 def testRiplRoundTripThroughStack():
-  if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
   if defaultKernel() != 'mh':
     raise SkipTest("Doesn't depend on kernel, only run it for mh")
   checkTypedProperty(propRiplRoundTripThroughStack, AnyType())
@@ -156,19 +154,36 @@ def eval_in_ripl(expr):
   return VentureValue.fromStackDict(ripl.report("thing", type=True))
 
 def testRiplSimulate():
-  if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
   if defaultKernel() != 'mh':
     raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
-    if name not in ["scope_include", # Because scope_include is
-                                     # misannotated as to the true
-                                     # permissible types of scopes and
-                                     # blocks
-                    "get_current_environment", # Because BogusArgs gives a bogus environment
-                    "extend_environment", # Because BogusArgs gives a bogus environment
-                  ]:
-      if not sp.outputPSP.isRandom():
-        yield checkRiplAgreesWithDeterministicSimulate, name, sp
+    if name in ["scope_include", # Because scope_include is
+                                 # misannotated as to the true
+                                 # permissible types of scopes and
+                                 # blocks
+                "get_current_environment", # Because BogusArgs gives a bogus environment
+                "extend_environment", # Because BogusArgs gives a bogus environment
+              ]:
+      continue
+    if config["get_ripl"] != "lite" and name in [
+        ## Expected failures
+        "dict", # Because keys and values must be the same length
+        "matrix", # Because rows must be the same length
+        "lookup", # Because the key must be an integer for sequence lookups
+        "get_empty_environment", # Environments can't be rendered to stack dicts
+        ## Incompatibilities with Puma
+        "eq", # Not implemented for matrices
+        "gt", # Not implemented for matrices
+        "gte",
+        "lt",
+        "lte",
+        "real", # Not implemented
+        "atom_eq", # Not implemented
+        "contains", # Not implemented for sequences
+    ]:
+      continue
+    if not sp.outputPSP.isRandom():
+      yield checkRiplAgreesWithDeterministicSimulate, name, sp
 
 def checkRiplAgreesWithDeterministicSimulate(name, sp):
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
