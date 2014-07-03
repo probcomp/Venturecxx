@@ -1,32 +1,34 @@
 import math
 import scipy.stats as stats
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, ignore_inference_quality
+from venture.test.config import get_ripl, collectSamples, ignore_inference_quality, default_num_transitions_per_sample
 
 def testPGibbsBasic1():
-  yield checkPGibbsBasic1, False
-  yield checkPGibbsBasic1, True
+  yield checkPGibbsBasic1, "false"
+  yield checkPGibbsBasic1, "true"
 
 @statisticalTest
 def checkPGibbsBasic1(in_parallel):
   """Basic sanity test"""
   ripl = get_ripl()
   ripl.predict("(bernoulli)",label="pid")
+  infer = "(pgibbs default one 2 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
 
-  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"pgibbs","particles":2,"in_parallel":in_parallel})
+  predictions = collectSamples(ripl,"pid",infer=infer)
   ans = [(True,.5),(False,.5)]
   return reportKnownDiscrete(ans, predictions)
 
 def testPGibbsBasic2():
-  yield checkPGibbsBasic2, False
-  yield checkPGibbsBasic2, True
+  yield checkPGibbsBasic2, "false"
+  yield checkPGibbsBasic2, "true"
 
 @statisticalTest
 def checkPGibbsBasic2(in_parallel):
   """Basic sanity test"""
   ripl = get_ripl()
   ripl.assume("x","(flip 0.1)",label="pid")
-  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"pgibbs","particles":2,"in_parallel":in_parallel})
+  infer = "(pgibbs default one 2 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
+  predictions = collectSamples(ripl,"pid",infer=infer)
   ans = [(False,.9),(True,.1)]
   return reportKnownDiscrete(ans, predictions)
  
