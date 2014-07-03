@@ -375,10 +375,16 @@ class ContinuousInferrer(object):
     # controlling whether continuous inference proceeds.
     while self.inferrer is not None:
       out = Infer(self.engine).infer(params)
+      
       now = time.time()
       if now - self.last_print > 0.1: # seconds between prints
         self.last_print = now
-        print out
+        #print out # this could be an option; suppressed as it clobbers the prompt
+    
+      time.sleep(0.0001) # yield so we are a good citizen
+
+      # TODO make continuous inference thread yield time configurable,
+      # with a warning for values that might take control of a machine
 
   def stop(self):
     inferrer = self.inferrer
