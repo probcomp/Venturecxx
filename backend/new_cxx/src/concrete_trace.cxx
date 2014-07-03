@@ -325,7 +325,9 @@ RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
 
 BlockID ConcreteTrace::sampleBlock(ScopeID scope)
 {
-  assert(scopes.count(scope));
+  if (!scopes.count(scope)) {
+    throw "scope " + scope->toString() + " does not contain any blocks";
+  }
   return scopes[scope].sampleKeyUniformly(getRNG());
 }
 
