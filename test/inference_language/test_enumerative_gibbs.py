@@ -1,30 +1,32 @@
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample
 
 def testEnumerativeGibbsBasic1():
-  yield checkEnumerativeGibbsBasic1, False
-  yield checkEnumerativeGibbsBasic1, True
+  yield checkEnumerativeGibbsBasic1, "false"
+  yield checkEnumerativeGibbsBasic1, "true"
 
 @statisticalTest
 def checkEnumerativeGibbsBasic1(in_parallel):
   """Basic sanity test"""
   ripl = get_ripl()
   ripl.predict("(bernoulli)",label="pid")
+  infer = "(gibbs default one %s %s)" % (default_num_transitions_per_sample(), in_parallel)
 
-  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs","with_mutation":True,"in_parallel":in_parallel})
+  predictions = collectSamples(ripl,"pid",infer=infer)
   ans = [(True,.5),(False,.5)]
   return reportKnownDiscrete(ans, predictions)
 
 def testEnumerativeGibbsBasic2():
-  yield checkEnumerativeGibbsBasic2, False
-  yield checkEnumerativeGibbsBasic2, True
+  yield checkEnumerativeGibbsBasic2, "false"
+  yield checkEnumerativeGibbsBasic2, "true"
 
 @statisticalTest
 def checkEnumerativeGibbsBasic2(in_parallel):
   """Basic sanity test"""
   ripl = get_ripl()
   ripl.assume("x","(flip 0.1)",label="pid")
-  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs","in_parallel":in_parallel})
+  infer = "(gibbs default one %s %s)" % (default_num_transitions_per_sample(), in_parallel)
+  predictions = collectSamples(ripl,"pid",infer=infer)
   ans = [(False,.9),(True,.1)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -60,7 +62,8 @@ def checkEnumerativeGibbsBoostThrashClose(in_parallel):
   ripl = get_ripl()
   ripl.assume("x","(flip 0.1)",label="pid")
   ripl.observe("(flip (if x .91 .09))","true")
-  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs","in_parallel":in_parallel})
+  infer = "(gibbs default one %s %s)" % (default_num_transitions_per_sample(), in_parallel)
+  predictions = collectSamples(ripl,"pid",infer=infer)
   ans = [(False,.471),(True,.529)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -90,7 +93,8 @@ def checkEnumerativeGibbsXOR1(in_parallel):
   ripl.assume("y","(scope_include 0 0 (bernoulli 0.001))")
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)","true")
-  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs","scope":0,"block":0,"with_mutation":True,"in_parallel":in_parallel})
+  infer = "(gibbs 0 0 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
+  predictions = collectSamples(ripl,"pid",infer=infer)
   ans = [(True,.5),(False,.5)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -107,7 +111,8 @@ def checkEnumerativeGibbsXOR2(in_parallel):
   ripl.assume("y","(scope_include 0 0 (bernoulli 0.0005))")
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)","true")
-  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs","scope":0,"block":0,"with_mutation":True,"in_parallel":in_parallel})
+  infer = "(gibbs 0 0 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
+  predictions = collectSamples(ripl,"pid",infer=infer)
   ans = [(True,.75),(False,.25)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -129,6 +134,7 @@ def checkEnumerativeGibbsXOR3(in_parallel):
 
   ripl.predict("(noisy_true (= (+ x y) 1) .000001)")
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)","true")
-  predictions = collectSamples(ripl,"pid",infer_merge={"kernel":"gibbs","scope":0,"block":0,"with_mutation":True,"in_parallel":in_parallel})
+  infer = "(gibbs 0 0 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
+  predictions = collectSamples(ripl,"pid",infer=infer)
   ans = [(True,.75),(False,.25)]
   return reportKnownDiscrete(ans, predictions)
