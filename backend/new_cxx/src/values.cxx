@@ -13,13 +13,20 @@ using boost::lexical_cast;
 
 vector<VentureValuePtr> VenturePair::getArray() const
 {
-  // TODO Make this not be quadratic
-  // The reason it's done this way is to permit improper lists whose
-  // tails are arrays to count as valid Venture sequences.
-  VentureValuePtr v(getRest());
-  vector<VentureValuePtr> answer = v->getArray();
-  answer.insert(answer.begin(), getFirst());
-  return answer;
+  vector<VentureValuePtr> xs;
+  xs.push_back(getFirst());
+  VentureValuePtr rest = getRest();
+  shared_ptr<VenturePair> p;
+  while (p = dynamic_pointer_cast<VenturePair>(rest))
+  {
+    xs.push_back(p->getFirst());
+    rest = p->getRest();
+  }
+  // Permit improper lists whose tails are arrays to count as valid
+  // Venture sequences.
+  vector<VentureValuePtr> ys = rest->getArray();
+  xs.insert(xs.begin(), ys.begin(), ys.end());
+  return xs;
 }
 
 vector<VentureValuePtr> VentureVector::getArray() const
