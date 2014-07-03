@@ -365,7 +365,7 @@ class ContinuousInferrer(object):
     self.params = copy.deepcopy(params)
     self.params["in_python"] = True
     import threading as t
-    self.inferrer = t.Thread(target=self.infer_continuously, args=(params))
+    self.inferrer = t.Thread(target=self.infer_continuously, args=(params,))
     self.inferrer.start()
 
   def infer_continuously(self, params):
