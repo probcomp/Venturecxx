@@ -21,16 +21,14 @@ import traceback
 import venture.sivm.core_sivm as core_sivm
 
 def _strip_types(value):
-    if isinstance(value, dict):
-        ans = value['value']
-        if isinstance(ans,list): return [_strip_types(v) for v in ans]
-        else: return ans
-    else: return value
+    if isinstance(value, dict) and "type" in value and "value" in value:
+        return _strip_types(value['value'])
+    if isinstance(value,list):
+        return [_strip_types(v) for v in value]
+    return value
 
 def _strip_types_from_dict_values(value):
-    # The purpose of {"value": v} here is to fool _strip_types
-    # into mapping over the list.
-    return dict([(k, _strip_types({"value": v})) for (k,v) in value.iteritems()])
+    return dict([(k, _strip_types(v)) for (k,v) in value.iteritems()])
 
 # This list of functions defines the public REST API
 # of the Ripl server and client
@@ -188,7 +186,7 @@ def expToDict(exp, ripl=None):
   elif tag == "incorporate":
     assert len(exp) == 1
     return {"command":"incorporate"}
-  elif tag == "peek":
+  elif tag == "peek" or tag == "peek-all":
     assert 2 <= len(exp) and len(exp) <= 3
     if len(exp) == 2:
       name = default_name_for_exp(exp[1])
@@ -198,7 +196,7 @@ def expToDict(exp, ripl=None):
       expr = _mimic_parser(exp[1])
     else:
       raise Exception("Need a ripl around in order to parse model expressions in inference expressions")
-    return {"command":"peek", "expression":expr, "name":name}
+    return {"command":tag, "expression":expr, "name":name}
   elif tag == "plotf":
     assert len(exp) >= 2
     return {"command":"plotf", "specification":exp[1], "names":[default_name_for_exp(e) for e in exp[2:]], "expressions": [_mimic_parser(e) for e in exp[2:]]}

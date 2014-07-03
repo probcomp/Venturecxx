@@ -32,7 +32,7 @@ VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   for (size_t i = 0; i < rows; ++i)
   {
     vector<VentureValuePtr> row_i = allRows[i]->getArray();
-    assert(cols == row_i.size());
+    if (cols != row_i.size()) { throw "Matrix must have equal number of elements per row."; }
     
     for (size_t j = 0; j < cols; ++j)
     {

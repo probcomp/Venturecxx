@@ -52,8 +52,7 @@ struct VentureValue
 
   virtual bool hasInt() const;
   virtual long getInt() const;
-
-  // TODO: probability
+  virtual double getProbability() const;
 
   virtual int getAtom() const;
   virtual bool isBool() const;
@@ -78,12 +77,14 @@ struct VentureValue
   virtual VectorXd getVector() const;
 
   virtual MatrixXd getMatrix() const;
+  virtual MatrixXd getSymmetricMatrix() const;
 
   // Stack representation
   virtual boost::python::dict toPython(Trace * trace) const;
 
   // Comparison
   virtual bool operator<(const VentureValuePtr & rhs) const;
+  virtual int getValueTypeRank() const;
   virtual bool ltSameType(const VentureValuePtr & rhs) const;
 
   // Equality and hashing

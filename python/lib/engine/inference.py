@@ -54,6 +54,11 @@ class Infer(object):
       self._ensure_peek_name(name)
       value = self.engine.sample(program['expression'])
       self.out[name].append(value)
+    elif 'command' in program and program['command'] == "peek-all":
+      name = program['name']
+      self._ensure_peek_name(name)
+      values = self.engine.sample_all(program['expression'])
+      self.out[name].append(values)
     elif 'command' in program and program['command'] == "plotf":
       self._ensure_plot(program["specification"], program["names"], program["expressions"])
       self.plot.add_data(self.engine)
@@ -132,19 +137,20 @@ class SpecPlot(object):
     self.spec = PlotSpec(spec)
     self.names = names
     self.exprs = exprs
-    self.data = dict([(name, []) for name in names + ["sweeps", "time (s)", "log score"]])
+    self.data = dict([(name, []) for name in names + ["sweeps", "time (s)", "log score", "particle"]])
     self.sweep = 0
     self.time = time.time() # For sweep timing, should it be requested
     self.next_index = 0
 
   def add_data_from(self, engine, index):
-    value = engine.sample(self.exprs[index])
-    self.data[self.names[index]].append(value)
+    values = engine.sample_all(self.exprs[index])
+    self.data[self.names[index]].extend(values)
     self.next_index = index+1
 
   def add_data(self, engine):
     self.next_index = 0
     self.sweep += 1
+    the_time = time.time() - self.time
     touched = set()
     for stream in self.spec.streams():
       if stream in touched:
@@ -152,11 +158,13 @@ class SpecPlot(object):
       else:
         touched.add(stream)
       if stream == "c":
-        self.data["sweeps"].append(self.sweep)
+        self.data["sweeps"].extend([self.sweep] * len(engine.traces))
+      elif stream == "r": # TODO Wanted "p" for "particle", but may conflict with "p" for "point"
+        self.data["particle"].extend(range(len(engine.traces)))
       elif stream == "t":
-        self.data["time (s)"].append(time.time() - self.time)
+        self.data["time (s)"].extend([the_time] * len(engine.traces))
       elif stream == "s":
-        self.data["log score"].append(engine.logscore())
+        self.data["log score"].extend(engine.logscore_all())
       elif stream == "" or stream == "%":
         self.add_data_from(engine, self.next_index)
       else:
@@ -164,12 +172,12 @@ class SpecPlot(object):
 
   def __str__(self):
     "Not really a string method, but does get itself displayed when printed."
-    for name in ["sweeps", "time (s)", "log score"] + self.names:
+    for name in ["sweeps", "time (s)", "log score", "particle"] + self.names:
       if len(self.data[name]) == 0:
         # Data source was not requested; remove it to avoid confusing pandas
         del self.data[name]
     from pandas import DataFrame
-    from venture.ripl.ripl import _strip_types_from_dict_values
+    from venture.ripl.utils import _strip_types_from_dict_values
     dataset = DataFrame.from_dict(_strip_types_from_dict_values(self.data))
     self.spec.plot(dataset, self.names)
     return "a plot"

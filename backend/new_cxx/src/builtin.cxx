@@ -54,6 +54,8 @@ map<string,SP*> initBuiltInSPs()
   
   m["to_atom"] = new SP(new NullRequestPSP(), new ToAtomOutputPSP());
   m["is_atom"] = new SP(new NullRequestPSP(), new IsAtomOutputPSP());
+
+  m["probability"] = new SP(new NullRequestPSP(), new ProbabilityOutputPSP());
   
   /* Continuous SPs */
   m["normal"] = new SP(new NullRequestPSP(), new NormalPSP());

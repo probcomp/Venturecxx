@@ -21,6 +21,7 @@ struct VentureSPRef : VentureValue
   VentureSPRef(Node * makerNode): makerNode(makerNode) {}
   Node * makerNode;
 
+  int getValueTypeRank() const;
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;

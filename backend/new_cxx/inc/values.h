@@ -17,6 +17,51 @@ struct VentureNumber : VentureValue
 
   boost::python::dict toPython(Trace * trace) const;
 
+  int getValueTypeRank() const;
+  bool ltSameType(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  size_t hash() const;
+
+  string toString() const;
+  string asExpression() const;
+
+  double x;
+};
+
+struct VentureInteger : VentureValue
+{
+  VentureInteger(int n): n(n) {}
+
+  bool hasDouble() const { return true; }
+  double getDouble() const { return n; }
+  bool hasInt() const { return true; }
+  long getInt() const { return n; }
+  bool getBool() const { return n; }
+
+  boost::python::dict toPython(Trace * trace) const;
+
+  int getValueTypeRank() const;
+  bool ltSameType(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  size_t hash() const;
+
+  string toString() const;
+  string asExpression() const;
+
+  int n;
+};
+
+struct VentureProbability : VentureValue
+{
+  VentureProbability(double x): x(x) {}
+
+  bool hasDouble() const { return true; }
+  double getDouble() const { return x; }
+  double getProbability() const { return x; }
+
+  boost::python::dict toPython(Trace * trace) const;
+
+  int getValueTypeRank() const;
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
@@ -40,6 +85,7 @@ struct VentureAtom : VentureValue
 
   boost::python::dict toPython(Trace * trace) const;
 
+  int getValueTypeRank() const;
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
@@ -59,6 +105,7 @@ struct VentureBool : VentureValue
 
   boost::python::dict toPython(Trace * trace) const;
 
+  int getValueTypeRank() const;
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
@@ -78,6 +125,7 @@ struct VentureSymbol : VentureValue
 
   boost::python::dict toPython(Trace * trace) const;
 
+  int getValueTypeRank() const;
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
@@ -96,6 +144,7 @@ struct VentureNil : VentureValue
 
   boost::python::dict toPython(Trace * trace) const;
 
+  int getValueTypeRank() const;
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
@@ -118,6 +167,7 @@ struct VenturePair : VentureValue
 
   boost::python::dict toPython(Trace * trace) const;
 
+  int getValueTypeRank() const;
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
@@ -146,6 +196,7 @@ struct VentureArray : VentureValue
   VentureValuePtr lookup(VentureValuePtr index) const { return xs[index->getInt()]; }
   int size() const { return xs.size(); }
 
+  int getValueTypeRank() const;
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
@@ -167,6 +218,7 @@ struct VentureSimplex : VentureValue
 
   boost::python::dict toPython(Trace * trace) const;
 
+  int getValueTypeRank() const;
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
@@ -188,6 +240,8 @@ struct VentureDictionary : VentureValue
 
   boost::python::dict toPython(Trace * trace) const;
 
+  int getValueTypeRank() const;
+
   VentureValuePtr lookup(VentureValuePtr index) const;
   bool contains(VentureValuePtr index) const { return dict.count(index); }
   int size() const { return dict.size(); }
@@ -207,9 +261,24 @@ struct VentureMatrix : VentureValue
 
   boost::python::dict toPython(Trace * trace) const;
 
+  int getValueTypeRank() const;
+
   string toString() const;
 
   MatrixXd m;
+};
+
+struct VentureSymmetricMatrix : VentureMatrix
+{
+  VentureSymmetricMatrix(const Eigen::MatrixXd & m): VentureMatrix(m) {}
+
+  MatrixXd getSymmetricMatrix() const { return m; }
+
+  boost::python::dict toPython(Trace * trace) const;
+
+  int getValueTypeRank() const;
+
+  string toString() const;
 };
 
 struct VentureVector : VentureValue
@@ -236,6 +305,8 @@ struct VentureRequest : VentureValue
   VentureRequest(const vector<ESR> & esrs): esrs(esrs) {}
   VentureRequest(const vector<shared_ptr<LSR> > & lsrs): lsrs(lsrs) {}
 
+  int getValueTypeRank() const;
+
   const vector<ESR>& getESRs() const { return esrs; }
   const vector<shared_ptr<LSR> >& getLSRs() const { return lsrs; }
 
@@ -256,6 +327,7 @@ struct VentureNode : VentureValue
   bool hasNode() const { return true; }
   Node * getNode() const { return node; }
 
+  int getValueTypeRank() const;
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
@@ -273,6 +345,7 @@ struct VentureID : VentureValue
   bool hasInt() const { return true; }
   long getInt() const { return reinterpret_cast<long>(this); }
 
+  int getValueTypeRank() const;
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;

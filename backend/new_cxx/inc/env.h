@@ -16,6 +16,8 @@ struct VentureEnvironment : VentureValue
 		     const vector<shared_ptr<VentureSymbol> > & syms,
 		     const vector<Node*> & nodes);
 
+  int getValueTypeRank() const;
+
   void addBinding(const string& sym,Node * node);
   void removeBinding(const string& sym);
   Node * lookupSymbol(shared_ptr<VentureSymbol> sym);

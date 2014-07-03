@@ -1,4 +1,5 @@
+[infer (resample 10)]
 [assume x (normal 0 1)]
 [assume y (normal x 1)]
 [assume abs (lambda (x) (if (< x 0) (- 0 x) x))]
-[infer (cycle ((mh default all 1) (plotf (lts lctl pc0 h0 h1 0s2 0d1ds) x y (abs (- y x)))) 1000)]
+[infer (cycle ((mh default all 1) (plotf (ltsr lctl pc0r h0 h1 0s2 0d1ds) x y (abs (- y x)))) 100)]

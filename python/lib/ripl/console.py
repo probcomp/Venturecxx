@@ -63,6 +63,13 @@ class RiplCmd(Cmd, object):
   
   def _do_instruction(self, instruction, s):
     return self.ripl.execute_instruction('[%s %s]' % (instruction, s))
+
+  def precmd(self, line):
+    line = line.strip()
+    if len(line) > 0 and (line[0] == "[" or line[0] == "("):
+      if line[-1] == "]" or line[-1] == ")":
+        return line[1:-1]
+    return line
   
   @catchesVentureException
   def do_assume(self, s):
@@ -110,7 +117,11 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_infer(self, s):
     '''Run inference synchronously.'''
-    self.ripl.infer(expToDict(parse(s)) if s else None)
+    out = self.ripl.infer(expToDict(parse(s), self.ripl) if s else None)
+    if isinstance(out, dict):
+      if len(out) > 0: print out
+    else:
+      print out
   
   @catchesVentureException
   def do_continuous_inference_status(self, s):

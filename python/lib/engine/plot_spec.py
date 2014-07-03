@@ -3,7 +3,7 @@ import ggplot as g
 import matplotlib.pylab as plt
 from itertools import chain
 
-stream_rx = r"([cts%]|[0-9]+)"
+stream_rx = r"([rcts%]|[0-9]+)"
 scale_rx = r"([dl])"
 geom_rx = r"[plbah]"
 toplevel_rx = "(" + geom_rx + "*)" + "((" + stream_rx + "?" + scale_rx + "?){1,3})$"
@@ -91,6 +91,8 @@ class FrameSpec(object):
     for (key, stream) in zip(["x", "y", "color"], self.streams):
       if stream == "c":
         ans[key] = "sweeps"
+      elif stream == "r":
+        ans[key] = "particle"
       elif stream == "t":
         ans[key] = "time (s)"
       elif stream == "s":
