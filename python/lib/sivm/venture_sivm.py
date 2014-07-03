@@ -178,7 +178,8 @@ class VentureSivm(object):
     # Continuous Inference Pauser
     ###############################
 
-    def _pause_continuous_inference(sivm, pause=True):
+    def _pause_continuous_inference(self, pause=True):
+        sivm = self # Naming conventions...
         class tmp(object):
             def __enter__(self):
                 self.ci_status = sivm._continuous_inference_status()
