@@ -34,7 +34,7 @@ class VentureEnvironment(VentureValue):
 
   def getEnvironment(self): return self
 
-  def asStackDict(self, _trace):
+  def asStackDict(self, _trace=None):
     # Methinks environments can be pretty opaque things for now.
     return {"type":"environment", "value":self}
   @staticmethod

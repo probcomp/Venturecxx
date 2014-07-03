@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import time, random
 import numpy as np
-from venture.ripl.ripl import _strip_types
+from venture.lite.utils import FixedRandomness
+from venture.ripl.utils import _strip_types
 from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl, build_exp
 from history import History, Run, Series, historyOverlay,compareSampleDicts,filterDict,historyNameToValues
 
@@ -388,9 +389,10 @@ class Analytics(object):
         if track < 0:
             return predictToDirective
         track = min(track, len(predictToDirective))
-        # FIXME: need predictable behavior from RNG
-        random.seed(self.parameters['venture_random_seed'])
-        predictToDirective = dict(random.sample(predictToDirective.items(), track))
+        with FixedRandomness():
+            # TODO: Use a sane way to make sure the same predicts are tracked
+            random.seed(self.parameters['venture_random_seed'])
+            predictToDirective = dict(random.sample(predictToDirective.items(), track))
 
         return predictToDirective
 

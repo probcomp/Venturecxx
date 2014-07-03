@@ -250,6 +250,14 @@ class BetaOutputPSP(RandomPSP):
   def simulate(self,args): return self.simulateNumeric(args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues)
 
+  def gradientOfLogDensity(self,x,args):
+    alpha = args.operandValues[0]
+    beta = args.operandValues[1]
+    gradX = ((float(alpha) - 1) / x) - ((float(beta) - 1) / (1 - x))
+    gradAlpha = spsp.digamma(alpha + beta) - spsp.digamma(alpha) + math.log(x)
+    gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) + math.log(1 - x)
+    return (gradX,[gradAlpha,gradBeta])
+
   def description(self,name):
     return "  (%s alpha beta) returns a sample from a beta distribution with shape parameters alpha and beta." % name
 
@@ -262,6 +270,14 @@ class GammaOutputPSP(RandomPSP):
 
   def simulate(self,args): return self.simulateNumeric(*args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+
+  def gradientOfLogDensity(self,x,args):
+    alpha = args.operandValues[0]
+    beta = args.operandValues[1]
+    gradX = ((alpha - 1) / float(x)) - beta
+    gradAlpha = math.log(beta) - spsp.digamma(alpha) + math.log(x)
+    gradBeta = (float(alpha) / beta) - x
+    return (gradX,[gradAlpha,gradBeta])
 
   def description(self,name):
     return "  (%s alpha beta) returns a sample from a gamma distribution with shape parameter alpha and rate parameter beta." % name
@@ -295,8 +311,16 @@ class InvGammaOutputPSP(RandomPSP):
   def simulate(self,args): return self.simulateNumeric(*args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
 
+  def gradientOfLogDensity(self,x,args):
+    alpha = args.operandValues[0]
+    beta = args.operandValues[1]
+    gradX = (1.0 / x) * (-alpha - 1 + (beta / x))
+    gradAlpha = math.log(beta) - spsp.digamma(alpha) - math.log(x)
+    gradBeta = (float(alpha) / beta) - (1.0 / x)
+    return (gradX,[gradAlpha,gradBeta])
+
   def description(self,name):
-    return "(%s nu) -> <number>" % name
+    return "(%s alpha beta) returns a sample from an inverse gamma distribution with shape parameter alpha and scale parameter beta" % name
 
   # TODO InvGamma presumably has a variational kernel too?
 

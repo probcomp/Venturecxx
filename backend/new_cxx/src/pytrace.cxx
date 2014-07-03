@@ -377,6 +377,8 @@ void PyTrace::freeze(DirectiveID did)
 BOOST_PYTHON_MODULE(libpumatrace)
 {
   using namespace boost::python;
+
+  boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
   
   register_exception_translator<string>(&translateStringException);
   register_exception_translator<const char*>(&translateCStringException);

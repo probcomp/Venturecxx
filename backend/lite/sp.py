@@ -1,4 +1,4 @@
-from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType, BoolType
+from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType, BoolType, ZeroType
 import copy
 
 class SPFamilies(object):
@@ -118,12 +118,4 @@ used in the implementation of TypedPSP and TypedLKernel."""
     return self._name_for_fixed_arity(self.args_types)
 
   def gradient_type(self):
-    def to_grad_type(type_):
-      if isinstance(type_, ProbabilityType) or isinstance(type_, PositiveType):
-        return NumberType()
-      elif isinstance(type_, BoolType):
-        # TODO Really should be ZeroType
-        return NumberType()
-      else:
-        return type_
-    return SPType([to_grad_type(t) for t in self.args_types], to_grad_type(self.return_type), self.variadic, self.min_req_args)
+    return SPType([t.gradient_type() for t in self.args_types], self.return_type.gradient_type(), self.variadic, self.min_req_args)

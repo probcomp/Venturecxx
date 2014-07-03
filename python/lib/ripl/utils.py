@@ -21,16 +21,14 @@ import traceback
 import venture.sivm.core_sivm as core_sivm
 
 def _strip_types(value):
-    if isinstance(value, dict):
-        ans = value['value']
-        if isinstance(ans,list): return [_strip_types(v) for v in ans]
-        else: return ans
-    else: return value
+    if isinstance(value, dict) and "type" in value and "value" in value:
+        return _strip_types(value['value'])
+    if isinstance(value,list):
+        return [_strip_types(v) for v in value]
+    return value
 
 def _strip_types_from_dict_values(value):
-    # The purpose of {"value": v} here is to fool _strip_types
-    # into mapping over the list.
-    return dict([(k, _strip_types({"value": v})) for (k,v) in value.iteritems()])
+    return dict([(k, _strip_types(v)) for (k,v) in value.iteritems()])
 
 # This list of functions defines the public REST API
 # of the Ripl server and client
@@ -49,119 +47,6 @@ _RIPL_FUNCTIONS = [
         'get_current_exception','get_state','get_logscore',
         'get_global_logscore'
         ]
-
-help_string = '''
-Commands available from the prompt:
-
- help                         Show this help
- quit                         Exit Venture
-
-Commands for modeling:
-
- assume symbol expression     Add the named variable to the model
- predict expression           Register the expression as a model prediction
- observe expression value     Condition on the expression being the value
- list-directives              List active directives and their current values
- forget number                Forget the given prediction or observation
-
-Commands for inference:
-
- infer ct [kernel] [global?]  Run inference synchronously for ct steps
-   `kernel' must be one of mh (default), pgibbs, gibbs, or meanfield
-   `global?', if present, requests use of global scaffolds
-     (not available for the gibbs kernel)
- start-ci [kernel] [global?]  Start continuous inference
- stop-ci                      Stop continuous inference
- ci-status                    Report status of continuous inference
-
-Commands for interaction:
-
- sample expression            Sample the given expression immediately,
-                                without registering it as a prediction
- force expression value       Set the given expression to the given value,
-                                without conditioning on it
- list-directives              List active directives and their current values
- report number                Report the current value of the given directive
- global-log-score             Report current global log score
- clear                        Clear the entire current state
-'''.strip()
-
-def run_venture_console(ripl):
-  done = False
-  while not done:
-    sys.stdout.write('>>> ')
-    current_line = sys.stdin.readline()
-    if not current_line:
-      print ''
-      print "End of input reached."
-      print "Moriturus te saluto."
-      break
-    current_line = current_line.strip()
-    if current_line == "":
-      continue
-    if current_line[0] == "(":
-      current_line = current_line[1:-1]
-    if current_line[0] == "[":
-      current_line = current_line[1:-1]
-    directive_and_content = current_line.split(" ", 1)
-    directive_name = directive_and_content[0].lower()
-    sys.stdout.write('')
-    try:
-      if directive_name == "quit":
-        print "Moriturus te saluto."
-        done = True
-      elif directive_name == "help":
-        print help_string
-      elif directive_name == "list-directives":
-        for d in ripl.list_directives():
-          print d
-      elif directive_name == "global-log-score":
-        print ripl.get_global_logscore()
-      elif directive_name == "ci-status":
-        print ripl.continuous_inference_status()
-      elif directive_name == "start-ci":
-        args = current_line.split(" ")[1:]
-        ripl.start_continuous_inference()
-        print ripl.continuous_inference_status()
-      elif directive_name == "stop-ci":
-        ripl.stop_continuous_inference()
-        print ripl.continuous_inference_status()
-      elif directive_name == "clear":
-        ripl.clear()
-        print "Cleared trace."
-      else:
-        content = directive_and_content[1] if len(directive_and_content) >= 2 else None
-        if directive_name == "assume":
-          name_and_expression = content.split(" ", 1)
-          print ripl.assume(name_and_expression[0], name_and_expression[1])
-        elif directive_name == "predict":
-          print ripl.predict(content)
-        elif directive_name == "observe":
-          expression_and_literal_value = content.rsplit(" ", 1)
-          ripl.observe(expression_and_literal_value[0], expression_and_literal_value[1])
-        elif directive_name == "forget":
-          ripl.forget(int(content))
-          print "Forgotten directive # {0}.".format(content)
-        elif directive_name == "sample":
-          print ripl.sample(content)
-        elif directive_name == "force":
-          expression_and_literal_value = content.rsplit(" ", 1)
-          ripl.force(expression_and_literal_value[0], expression_and_literal_value[1])
-        elif directive_name == "infer":
-          command = expToDict(parse(content), ripl) if content else None
-          out = ripl.infer(command)
-          print "Inferred according to %s." % ripl.parseInferParams(command)
-          if isinstance(out, dict):
-            if len(out) > 0: print out
-          else:
-            print out
-        elif directive_name == "report":
-          print ripl.report(int(content))
-        else:
-          print "Sorry, unknown directive."
-    except Exception: # pylint:disable=broad-except
-      print "Your query has generated an error:"
-      traceback.print_exc()
 
 def read(s):
   "Read a Scheme expression from a string."
@@ -301,7 +186,7 @@ def expToDict(exp, ripl=None):
   elif tag == "incorporate":
     assert len(exp) == 1
     return {"command":"incorporate"}
-  elif tag == "peek":
+  elif tag == "peek" or tag == "peek-all":
     assert 2 <= len(exp) and len(exp) <= 3
     if len(exp) == 2:
       name = default_name_for_exp(exp[1])
@@ -311,7 +196,7 @@ def expToDict(exp, ripl=None):
       expr = _mimic_parser(exp[1])
     else:
       raise Exception("Need a ripl around in order to parse model expressions in inference expressions")
-    return {"command":"peek", "expression":expr, "name":name}
+    return {"command":tag, "expression":expr, "name":name}
   elif tag == "plotf":
     assert len(exp) >= 2
     return {"command":"plotf", "specification":exp[1], "names":[default_name_for_exp(e) for e in exp[2:]], "expressions": [_mimic_parser(e) for e in exp[2:]]}

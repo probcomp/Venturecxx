@@ -4,21 +4,28 @@ from testconfig import config
 import math
 from numpy.testing import assert_allclose
 
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, defaultKernel
 from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSP
-from venture.lite.value import AnyType
+from venture.lite.value import AnyType, VentureValue, vv_dot_product, ZeroType
 from venture.lite.mlens import real_lenses
 import venture.test.numerical as num
 from venture.lite.exception import VentureBuiltinSPMethodError
+from venture.lite.utils import FixedRandomness
 
 def testEquality():
   checkTypedProperty(propEquality, AnyType())
 
 def propEquality(value):
   assert value.equal(value)
+
+def testLiteToStack():
+  checkTypedProperty(propLiteToStack, AnyType())
+
+def propLiteToStack(v):
+  assert v.equal(VentureValue.fromStackDict(v.asStackDict()))
 
 def relevantSPs():
   for (name,sp) in builtInSPsList:
@@ -46,6 +53,8 @@ applied fully uncurried) match the expected types."""
     propTypeCorrect(args_lists[1:], answer, type_.return_type)
 
 def testDeterministic():
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if not sp.outputPSP.isRandom():
       yield checkDeterministic, name, sp
@@ -76,6 +85,8 @@ fully uncurried)."""
       eq_(answer, carefully(sp.outputPSP.simulate, args))
 
 def testRandom():
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if sp.outputPSP.isRandom():
       if not name in ["make_uc_dir_mult", "categorical", "make_uc_sym_dir_mult"]:
@@ -119,6 +130,8 @@ def propRandom(args_listss, sp):
 
 def testExpressionFor():
   if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   checkTypedProperty(propExpressionWorks, AnyType())
 
 def propExpressionWorks(value):
@@ -126,15 +139,26 @@ def propExpressionWorks(value):
   result = carefully(eval_in_ripl, expr)
   assert value.equal(result)
 
+def testRiplRoundTripThroughStack():
+  if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
+  checkTypedProperty(propRiplRoundTripThroughStack, AnyType())
+
+def propRiplRoundTripThroughStack(value):
+  expr = [{"type":"symbol", "value":"quote"}, value.asStackDict()]
+  result = carefully(eval_in_ripl, expr)
+  assert value.equal(result)
+
 def eval_in_ripl(expr):
   ripl = get_ripl()
-  # hack so that report_raw grabs the first directive after the prefix
-  len_prefix = len(ripl.sivm.core_sivm.engine.getDistinguishedTrace().families)
-  ripl.predict(expr)
-  return ripl.sivm.core_sivm.engine.report_raw(len_prefix + 1)
+  ripl.predict(expr, label="thing")
+  return VentureValue.fromStackDict(ripl.report("thing", type=True))
 
 def testRiplSimulate():
   if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if name not in ["scope_include", # Because scope_include is
                                      # misannotated as to the true
@@ -171,6 +195,8 @@ through a ripl (applied fully uncurried)."""
     assert answer.equal(carefully(eval_in_ripl, expr))
 
 def testLogDensityDeterministic():
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical"]: # TODO
       yield checkLogDensityDeterministic, name, sp
@@ -189,6 +215,8 @@ def propLogDensityDeterministic(rnd, sp):
     eq_(answer, carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux())))
 
 def testGradientOfLogDensity():
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical",  # TODO
                     "flip", "bernoulli"]: # TODO: Implement ZeroType
@@ -196,34 +224,127 @@ def testGradientOfLogDensity():
         yield checkGradientOfLogDensity, name, sp
 
 def checkGradientOfLogDensity(name, sp):
-  checkTypedProperty(propGradientOfLogDensity, (final_return_type(sp.venture_type()), fully_uncurried_sp_type(sp.venture_type())), name, sp)
+  ret_type = final_return_type(sp.venture_type())
+  args_type = fully_uncurried_sp_type(sp.venture_type())
+  checkTypedProperty(propGradientOfLogDensity, (ret_type, args_type), name, sp)
 
 def propGradientOfLogDensity(rnd, name, sp):
   (value, args_lists) = rnd
   if not len(args_lists) == 1:
     raise SkipTest("TODO: Write the code for measuring log density of curried SPs")
-  answer = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+  answer = carefully(sp.outputPSP.logDensity, value, args)
   if math.isnan(answer) or math.isinf(answer):
     raise ArgumentsNotAppropriate("Log density turned out not to be finite")
 
   try:
-    computed_gradient = sp.outputPSP.gradientOfLogDensity(value, BogusArgs(args_lists[0], sp.constructSPAux()))
+    computed_gradient = sp.outputPSP.gradientOfLogDensity(value, args)
   except VentureBuiltinSPMethodError:
     raise SkipTest("%s does not support computing gradient of log density :(" % name)
 
-  def log_d_displacement_func(lens):
-    def f(h):
-      x = lens.get()
-      lens.set(x + h)
-      ans = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
-      # Leave the value in the lens undisturbed
-      lens.set(x)
-      return ans
-    return f
-  numerical_gradient = [num.richardson(num.derivative(log_d_displacement_func(lens), 0)) for lens in real_lenses([value, args_lists[0]])]
+  def log_d_displacement_func():
+    return carefully(sp.outputPSP.logDensity, value, args)
+  numerical_gradient = num.gradient_from_lenses(log_d_displacement_func, real_lenses([value, args_lists[0]]))
+  assert_gradients_close(numerical_gradient, computed_gradient)
+
+def assert_gradients_close(numerical_gradient, computed_gradient):
+  # TODO Make this deal with symbolic zeroes in the computed gradient.
+  # Presumably, one way to do that would be to accept the original
+  # value, translate it to gradient type, write the components of the
+  # numerical gradient into its lenses, and then do a recursive
+  # similarity comparison that takes the symbolic zero into account.
   if any([math.isnan(v) or math.isinf(v) for v in numerical_gradient]):
     raise ArgumentsNotAppropriate("Too close to a singularity; Richardson extrapolation gave non-finite derivatve")
 
   numerical_values_of_computed_gradient = [lens.get() for lens in real_lenses(computed_gradient)]
 
   assert_allclose(numerical_gradient, numerical_values_of_computed_gradient, rtol=1e-05)
+
+def testFixingRandomness():
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
+  for (name,sp) in relevantSPs():
+    yield checkFixingRandomness, name, sp
+
+def checkFixingRandomness(name, sp):
+  checkTypedProperty(propDeterministicWhenFixed, fully_uncurried_sp_type(sp.venture_type()), name, sp)
+
+def propDeterministicWhenFixed(args_lists, name, sp):
+  # TODO Abstract out the similarities between this and propDeterministic
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+  randomness = FixedRandomness()
+  with randomness:
+    answer = carefully(sp.outputPSP.simulate, args)
+  if isinstance(answer, VentureSP):
+    if isinstance(answer.requestPSP, NullRequestPSP):
+      args2 = BogusArgs(args_lists[1], answer.constructSPAux())
+      randomness2 = FixedRandomness()
+      with randomness2:
+        ans2 = carefully(answer.outputPSP.simulate, args2)
+      for _ in range(5):
+        with randomness:
+          new_ans = carefully(sp.outputPSP.simulate, args)
+        with randomness2:
+          new_ans2 = carefully(new_ans.outputPSP.simulate, args2)
+        eq_(ans2, new_ans2)
+    else:
+      raise SkipTest("SP %s returned a requesting SP" % name)
+  else:
+    for _ in range(5):
+      with randomness:
+        eq_(answer, carefully(sp.outputPSP.simulate, args))
+
+def testGradientOfSimulate():
+  if defaultKernel() != 'mh':
+    raise SkipTest("Doesn't depend on kernel, only run it for mh")
+  for (name,sp) in relevantSPs():
+    if name not in ["dict",  # TODO Synthesize dicts to act as the directions
+                    "matrix", # TODO Synthesize non-ragged test lists
+                    # The gradients of scope_include and scope_exclude
+                    # have weird shapes because scope_include and
+                    # scope_exclude are weird.
+                    "scope_include", "scope_exclude",
+                    # The gradients of biplex and lookup have sporadic
+                    # symbolic zeroes.
+                    "biplex", "lookup",
+                    # For some reason, the gradient is too often large
+                    # enough to confuse the numerical approximation
+                    "tan"
+                   ]:
+      yield checkGradientOfSimulate, name, sp
+
+def checkGradientOfSimulate(name, sp):
+  checkTypedProperty(propGradientOfSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
+
+def asGradient(value):
+  return value.map_real(lambda x: x)
+
+def propGradientOfSimulate(args_lists, name, sp):
+  if final_return_type(sp.venture_type().gradient_type()).__class__ == ZeroType:
+    # Do not test gradients of things that return elements of
+    # 0-dimensional vector spaces
+    return
+  if not len(args_lists) == 1:
+    raise SkipTest("TODO: Write the code for testing simulation gradients of curried SPs")
+  if name == "mul" and len(args_lists[0]) is not 2:
+    raise ArgumentsNotAppropriate("TODO mul only has a gradient in its binary form")
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+  randomness = FixedRandomness()
+  with randomness:
+    value = carefully(sp.outputPSP.simulate, args)
+
+  # Use the value itself as the test direction in order to avoid
+  # having to coordinate compound types (like the length of the list
+  # that 'list' returns being the same as the number of arguments)
+  direction = asGradient(value)
+  try:
+    computed_gradient = carefully(sp.outputPSP.gradientOfSimulate, args, value, direction)
+  except VentureBuiltinSPMethodError:
+    raise SkipTest("%s does not support computing gradient of simulate :(" % name)
+
+  def sim_displacement_func():
+    with randomness:
+      ans = carefully(sp.outputPSP.simulate, args)
+    return vv_dot_product(direction, asGradient(ans))
+  numerical_gradient = num.gradient_from_lenses(sim_displacement_func, real_lenses(args_lists[0]))
+  assert_gradients_close(numerical_gradient, computed_gradient)
