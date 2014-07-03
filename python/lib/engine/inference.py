@@ -115,7 +115,7 @@ class SpecPlot(object):
   The possible data streams are:
     _<an integer>_ that expression, 0-indexed,
     _%_ the next expression after the last used one
-    sweep _c_ounter, _t_ime (wall clock), and log _s_core,
+    sweep _c_ounter, _t_ime (wall clock), log _s_core, and pa_r_ticle
   The possible scales are:
     _d_irect, _l_og
 
