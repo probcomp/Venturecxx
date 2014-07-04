@@ -123,9 +123,6 @@
         (* (lookup x idx) (lookup y idx))
         (_dot_vector x y (+ 1 idx) length))))]
 
-
-;[(assume scalar_mul)]
-
 [assume sum
   (lambda (x)
     (reduce + x 0))]
@@ -190,6 +187,29 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Logicals on variable-length lists
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Constructs a vector by repeating the value x, n times.
+[assume repeat_vector
+  (lambda (x n)
+    (to_vector (repeat_list x n)))]
+
+; Constructs a list by repeating a value x, n times.
+[assume repeat_list
+  (lambda (x n)
+    (_repeat_list_helper x n 0))]
+
+[assume _repeat_list_helper
+  (lambda (x n idx)
+    (if (= idx n)
+      (list)
+      (pair x (_repeat_list_helper x n (+ idx 1)))))]
+
+
+; Identity matrix
+[assume identity_matrix
+  (lambda (p)
+    (diag_matrix p 1))]
+
 
 ; Code to construct diagonal matrices
 [assume diag_matrix
