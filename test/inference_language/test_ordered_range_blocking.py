@@ -11,7 +11,7 @@ def testOrderedRangeBlockingExample():
   oldc = ripl.report("c")
   oldd = ripl.report("d")
   # Should change b and c.
-  ripl.sivm.core_sivm.engine.infer({"transitions":3, "kernel":"pgibbs", "scope":0, "block":"ordered_range", "min_block":1, "max_block":2, "particles": 10})
+  ripl.infer("(pgibbs 0 (ordered_range 1 2) 10 3)")
   newa = ripl.report("a")
   newb = ripl.report("b")
   newc = ripl.report("c")
