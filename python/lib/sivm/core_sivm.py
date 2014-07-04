@@ -144,7 +144,7 @@ class CoreSivm(object):
             val = self.engine.infer(d)
             return {"value":val}
         else:
-            e = utils.validate_arg(instruction,'params',
+            e = utils.validate_arg(instruction,'expression',
                     utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
             val = self.engine.infer_exp(e)
             return {"value":val}
