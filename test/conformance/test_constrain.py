@@ -105,7 +105,6 @@ def checkConstrainAVar3a():
   ripl.observe("(if (f) x y)", 3.0)
   ripl.observe("(f)","true")
   ripl.infer("(mh default one 50)")
-  #  ripl.sivm.core_sivm.engine.infer({"kernel":"mh","transitions":50})
   eq_(ripl.report("pid"), 3)
 
 # @raises(Exception)
@@ -121,7 +120,6 @@ def testConstrainAVar3b():
   ripl.predict("x", label="pid")
   ripl.observe("(f)","true")
   ripl.infer("(mh default one 50)")
-  # ripl.sivm.core_sivm.engine.infer({"kernel":"mh","transitions":50})
   eq_(ripl.report("pid"), 3)
 
 def testConstrainAVar4a():
