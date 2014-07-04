@@ -1,0 +1,26 @@
+; prior parameter
+[assume alpha 0.1]
+; dimensionality
+[assume D 2]
+; number of classes
+[assume C 3]
+
+[assume get_w
+  (mem (lambda (i j)
+    (normal 0 (sqrt (/ 1 alpha)))))]
+
+[assume get_class_w
+  (lambda (i)
+    (vector (make_w i 1) ... (make_w i D)))]
+
+[assume get_unnormalized_class_prob
+  (lambda (x i)
+    (dot (make_class_w i) x))]
+
+[assume get_simplex
+  (lambda (x)
+    (simplex (get_unnormalized_class_prob x 1) ... (get_unnormalized_class_prob x C)))]
+
+[assume get_class
+  (mem (lambda (x)
+    (categorical (get_simplex x))))]
