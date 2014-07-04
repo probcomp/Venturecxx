@@ -34,7 +34,7 @@ def checkPGibbsBasic2(in_parallel):
  
 def testPGibbsBlockingMHHMM1():
   yield checkPGibbsBlockingMHHMM1, "pgibbs"
-  yield checkPGibbsBlockingMHHMM1, "func-pgibbs"
+  yield checkPGibbsBlockingMHHMM1, "func_pgibbs"
 
 @statisticalTest
 def checkPGibbsBlockingMHHMM1(operator):
@@ -72,7 +72,7 @@ def checkPGibbsBlockingMHHMM1(operator):
 
 def testPGibbsDynamicScope1():
   yield checkPGibbsDynamicScope1, "pgibbs"
-  yield checkPGibbsDynamicScope1, "func-pgibbs"
+  yield checkPGibbsDynamicScope1, "func_pgibbs"
 
 @statisticalTest
 def checkPGibbsDynamicScope1(operator):
@@ -157,5 +157,5 @@ def checkFunnyHMM(in_parallel):
   for t in range(1, 5):
     ripl.observe("(obs %d)" % t, t)
   
-  ripl.infer("(func-pgibbs 0 ordered 3 2 %s)" % in_parallel)
+  ripl.infer("(func_pgibbs 0 ordered 3 2 %s)" % in_parallel)
 

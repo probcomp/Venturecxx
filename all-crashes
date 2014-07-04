@@ -44,9 +44,9 @@ nosetests -c crashes.cfg --tc=get_ripl:puma
 abort_on_error "(mh default one 3) in Puma"
 
 test_inference_program_in_lite "(rejection default all 1)"
-test_inference_program_in_lite "(func-pgibbs default ordered 3 3)"
+test_inference_program_in_lite "(func_pgibbs default ordered 3 3)"
 test_inference_program_in_lite "(pgibbs default ordered 3 3)"
 test_inference_program_in_lite "(meanfield default one 3 3)"
 
-test_inference_program_in_puma "(func-mh default one 3)"
-test_inference_program_in_puma "(func-pgibbs default ordered 3 3)"
+test_inference_program_in_puma "(func_mh default one 3)"
+test_inference_program_in_puma "(func_pgibbs default ordered 3 3)"

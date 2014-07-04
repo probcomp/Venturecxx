@@ -433,7 +433,7 @@ class Trace(object):
           mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), PGibbsOperator(particles))
         else:
           mixMH(self, BlockScaffoldIndexer(scope, block), PGibbsOperator(particles))
-      elif operator == "func-pgibbs":
+      elif operator == "func_pgibbs":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
           (_, min_block, max_block) = block
