@@ -110,10 +110,10 @@ class Infer(object):
       if operator == "peek":
         # The sample method expects stack dicts, not Python
         # representations of expressions...
-        value = self.engine.sample(ExpressionType.asVentureValue(expression).asStackDict())
+        value = self.engine.sample(ExpressionType().asVentureValue(expression).asStackDict())
         self.out[name].append(value)
       else:
-        values = self.engine.sample_all(ExpressionType.asVentureValue(expression).asStackDict())
+        values = self.engine.sample_all(ExpressionType().asVentureValue(expression).asStackDict())
         self.out[name].append(values)
     elif operator == "plotf":
       assert len(exp) >= 2
