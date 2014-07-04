@@ -83,7 +83,7 @@ class Infer(object):
     self.do_infer_exp(program)
     return self.plot if self.plot is not None else self.out
 
-  def do_infer_expr(self, exp):
+  def do_infer_exp(self, exp):
     def default_name_for_exp(exp):
       if isinstance(exp, basestring):
         return exp
