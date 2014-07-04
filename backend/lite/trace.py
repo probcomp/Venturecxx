@@ -420,7 +420,7 @@ class Trace(object):
         steps = exp[3]
         mixMH(self, BlockScaffoldIndexer(scope, block), MeanfieldOperator(steps, 0.0001))
       elif operator == "hmc":
-        (epsilon,  L) = exp[3:4]
+        (epsilon,  L) = exp[3:5]
         mixMH(self, BlockScaffoldIndexer(scope, block), HamiltonianMonteCarloOperator(epsilon, int(L)))
       elif operator == "gibbs":
         mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeGibbsOperator())
@@ -441,10 +441,10 @@ class Trace(object):
         else:
           mixMH(self, BlockScaffoldIndexer(scope, block), ParticlePGibbsOperator(particles))
       elif operator == "map":
-        (rate, steps) = exp[3:4]
+        (rate, steps) = exp[3:5]
         mixMH(self, BlockScaffoldIndexer(scope, block), MAPOperator(rate, int(steps)))
       elif operator == "nesterov":
-        (rate, steps) = exp[3:4]
+        (rate, steps) = exp[3:5]
         mixMH(self, BlockScaffoldIndexer(scope, block), NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
       elif operator == "rejection":
         mixMH(self, BlockScaffoldIndexer(scope, block), RejectionOperator())
