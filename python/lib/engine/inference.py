@@ -140,7 +140,7 @@ class Infer(object):
       for _ in range(transitions):
         self.do_infer(simulateCategorical(weights, subkernels))
     else: # A primitive infer expression
-      self.engine.primitive_infer_exp(exp)
+      self.engine.primitive_infer(exp)
 
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.

@@ -360,6 +360,8 @@ class Trace(object):
   # "transitions" (the latter should be named "repeats").
 
   def infer(self,params):
+    if isinstance(list, params):
+      return self.infer_exp(params)
     if not self.scopeHasEntropy(params["scope"]):
       return
     for _ in range(params["transitions"]):
