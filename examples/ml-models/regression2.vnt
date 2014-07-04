@@ -12,16 +12,16 @@
 ;   a_0, b_0 : Shape and scale parameters on sigma_2.
 ;   alpha : Precision parameter on the model weights.
 
-[assume D 3]
-[assume a_0 1]
-[assume b_0 1]
-[assume alpha 0.1]
+D:[assume D 2]
+a_0:[assume a_0 1]
+b_0:[assume b_0 1]
+alpha:[assume alpha 0.01]
 
-[assume sigma_2 (scope_include (quote noise) 0 (inv_gamma a_0 b_0))]
-[assume w_1 (scope_include (quote weights) 1 (normal 0 (/ sigma_2 alpha)))]
+sigma_2:[assume sigma_2 (scope_include (quote noise) 0 (inv_gamma a_0 b_0))]
+w_1:[assume w_1 (scope_include (quote weights) 1 (normal 0 (sqrt (/ sigma_2 alpha))))]
 ...
-[assume w_D (scope_include (quote weights) D (normal 0 (/ sigma_2 alpha)))]
-[assume w (vector w_1 ... w_D)]
-[assume y
+w_D:[assume w_D (scope_include (quote weights) D (normal 0 (sqrt (/ sigma_2 alpha))))]
+w:[assume w (vector w_1 ... w_D)]
+y:[assume y
   (lambda (x)
     (normal (dot x w) sigma_2))]
