@@ -84,11 +84,11 @@ class Ripl():
         except VentureException as e:
             import sys
             info = sys.exc_info()
-#            try:
-            self._raise_annotated_error(e, instruction)
-#            except Exception as e2:
-#                print "Trying to annotate an exception led to %r" % e2
-#                raise e, None, info[2]
+            try:
+                self._raise_annotated_error(e, instruction)
+            except Exception as e2:
+                print "Trying to annotate an exception led to %r" % e2
+                raise e, None, info[2]
         # if directive, then save the text string
         if parsed_instruction['instruction'] in ['assume','observe',
                 'predict','labeled_assume','labeled_observe','labeled_predict']:
