@@ -13,13 +13,20 @@ using boost::lexical_cast;
 
 vector<VentureValuePtr> VenturePair::getArray() const
 {
-  // TODO Make this not be quadratic
-  // The reason it's done this way is to permit improper lists whose
-  // tails are arrays to count as valid Venture sequences.
-  VentureValuePtr v(getRest());
-  vector<VentureValuePtr> answer = v->getArray();
-  answer.insert(answer.begin(), getFirst());
-  return answer;
+  vector<VentureValuePtr> xs;
+  xs.push_back(getFirst());
+  VentureValuePtr rest = getRest();
+  shared_ptr<VenturePair> p;
+  while (p = dynamic_pointer_cast<VenturePair>(rest))
+  {
+    xs.push_back(p->getFirst());
+    rest = p->getRest();
+  }
+  // Permit improper lists whose tails are arrays to count as valid
+  // Venture sequences.
+  vector<VentureValuePtr> ys = rest->getArray();
+  xs.insert(xs.end(), ys.begin(), ys.end());
+  return xs;
 }
 
 vector<VentureValuePtr> VentureVector::getArray() const
@@ -104,17 +111,24 @@ boost::python::dict VentureNil::toPython(Trace * trace) const
 boost::python::dict VenturePair::toPython(Trace * trace) const
 {
   boost::python::dict value;
-  value["type"] = "list";
 
   boost::python::list l;
   l.append(getFirst()->toPython(trace));
-  shared_ptr<VenturePair>  p = dynamic_pointer_cast<VenturePair>(getRest());
-  while (p)
+  VentureValuePtr rest = getRest();
+  shared_ptr<VenturePair> p;
+  while (p = dynamic_pointer_cast<VenturePair>(rest))
   {
     l.append(p->getFirst()->toPython(trace));
-    p = dynamic_pointer_cast<VenturePair>(p->getRest());
+    rest = p->getRest();
   }
-  value["value"] = l;
+  if (rest->isNil()) {
+    value["type"] = "list";
+    value["value"] = l;
+  }
+  else {
+    value["type"] = "improper_list";
+    value["value"] = boost::python::make_tuple(l, rest->toPython(trace));
+  }
   return value;
 }
 
