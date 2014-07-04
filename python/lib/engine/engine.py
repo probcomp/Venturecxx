@@ -192,6 +192,7 @@ effect of renumbering the directives, if some had been forgotten."""
       self.weights[i] += trace.makeConsistent()
 
   def resample(self, P):
+    P = int(P)
     newTraces = [None for p in range(P)]
     for p in range(P):
       parent = sampleLogCategorical(self.weights) # will need to include or rewrite
