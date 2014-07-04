@@ -78,6 +78,70 @@ class Infer(object):
     else: # A primitive infer expression
       self.engine.primitive_infer(program)
 
+  def do_infer_expr(self, exp):
+    def default_name_for_exp(exp):
+      if isinstance(exp, basestring):
+        return exp
+      elif hasattr(exp, "__iter__"):
+        return "(" + ' '.join([default_name_for_exp(e) for e in exp]) + ")"
+      else:
+        return str(exp)
+    operator = exp[0]
+    if operator == "resample":
+      assert len(exp) == 2
+      self.engine.resample(exp[1])
+    elif operator == "incorporate":
+      assert len(exp) == 1
+    elif operator in ["peek", "peek-all"]:
+      assert 2 <= len(exp) and len(exp) <= 3
+      if len(exp) == 3:
+        (_, expression, name) = exp
+      else:
+        (_, expression) = exp
+      name = default_name_for_exp(expression)
+      self._ensure_peek_name(name)
+      if operator == "peek":
+        value = self.engine.sample(expression)
+        self.out[name].append(value)
+      else:
+        values = self.engine.sample_all(expression)
+        self.out[name].append(values)
+    elif operator == "plotf":
+      assert len(exp) >= 2
+      spec = exp[1]
+      exprs = exp[2:]
+      names = [default_name_for_exp(e) for e in exprs]
+      self._ensure_plot(spec, names, exprs)
+      self.plot.add_data(self.engine)
+    elif operator == "loop":
+      # TODO Assert that loop is only done at the top level?
+      assert len(exp) == 2
+      (_, subkernels) = exp
+      prog = ["cycle", subkernels, 1]
+      self.engine.start_continuous_inference_in_python(prog)
+    elif operator == "cycle":
+      assert len(exp) == 3
+      (_, subkernels, transitions) = exp
+      assert type(subkernels) is list
+      for _ in range(transitions):
+        for k in subkernels:
+          self.do_infer(k)
+    elif operator == "mixture":
+      assert len(exp) == 3
+      (_, weighted_subkernels, transitions) = exp
+      assert type(weighted_subkernels) is list
+      weights = []
+      subkernels = []
+      for i in range(len(weighted_subkernels)/2):
+        j = 2*i
+        k = j + 1
+        weights.append(weighted_subkernels[j])
+        subkernels.append(weighted_subkernels[k])
+      for _ in range(transitions):
+        self.do_infer(simulateCategorical(weights, subkernels))
+    else: # A primitive infer expression
+      self.engine.primitive_infer_exp(exp)
+
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
 
