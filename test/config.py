@@ -121,10 +121,13 @@ general-purpose inference programs except rejection sampling.
   def wrap(f):
     @nose.make_decorator(f)
     def wrapped(*args):
-      if config["infer"].startswith("(mh default one"):
+      if not rejectionSampling():
         f(*args)
       else:
         raise SkipTest(reason)
     wrapped.skip_when_rejection_sampling = True # TODO Skip by these tags in all-crashes & co
     return wrapped
   return wrap
+
+def rejectionSampling():
+  return config["infer"].startswith("(rejection default all")
