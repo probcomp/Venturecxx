@@ -178,8 +178,8 @@ b = 'bag_prototype', '''(mem (lambda (bag)
 
 ones = ' '.join(['1']*dim)
 
-a= 'hyper_alpha', '(scope_include (quote hyper_alpha) 0
-                    (map (lambda (x) (* 5 x)) (dirichlet %s) ) )'%ones
+a= 'hyper_alpha', '''(scope_include (quote hyper_alpha) 0
+                    (map (lambda (x) (* 5 x)) (dirichlet %s) ) )'''%ones
 b = 'bag_prototype', '''(mem (lambda (bag)
                               (scope_include (quote latents) bag
                                (dirichlet hyper_alpha) ) ) )'''
