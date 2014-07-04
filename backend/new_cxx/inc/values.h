@@ -224,6 +224,7 @@ struct VentureSimplex : VentureValue
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
 
+  VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureProbability(ps[index->getInt()])); }
   int size() const { return ps.size(); }
 
   string toString() const;
