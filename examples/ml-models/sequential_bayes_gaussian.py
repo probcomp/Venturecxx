@@ -43,4 +43,5 @@ def runme(outdir):
       plt.close(fig)
       count += 1
 
-runme('/Users/dwadden/code/Venturecxx/examples/ml-models/gaussian-evolution')
+outdir = path.join(path.dirname(path.realpath(__file__)), 'gaussian-evolution')
+runme(outdir)
