@@ -1,11 +1,14 @@
 from nose.tools import eq_
 from nose import SkipTest
 import scipy.stats as stats
-from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling
+from testconfig import config
 import math
 
+from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling
+
 def testMVGaussSmoke():
+  if config["get_ripl"] == "puma": raise SkipTest("Puma Vectors do not answer to is_array")
   eq_(get_ripl().predict("(is_array (multivariate_normal (vector 1 2) (matrix (array (array 3 4) (array 4 6)))))"), True)
 
 @statisticalTest
