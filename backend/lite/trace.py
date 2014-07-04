@@ -405,6 +405,51 @@ class Trace(object):
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
+  def infer_exp(self,exp):
+    assert len(exp) >= 4
+    (operator, scope, block) = exp[0:2]
+    transitions = exp[-1]
+    if not self.scopeHasEntropy(scope):
+      return
+    for _ in range(transitions):
+      if operator == "mh":
+        mixMH(self, BlockScaffoldIndexer(scope, block), MHOperator())
+      elif operator == "meanfield":
+        steps = exp[3]
+        mixMH(self, BlockScaffoldIndexer(scope, block), MeanfieldOperator(steps, 0.0001))
+      elif operator == "hmc":
+        (epsilon,  L) = exp[3:4]
+        mixMH(self, BlockScaffoldIndexer(scope, block), HamiltonianMonteCarloOperator(epsilon, int(L)))
+      elif operator == "gibbs":
+        mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeGibbsOperator())
+      elif operator == "slice":
+        mixMH(self, BlockScaffoldIndexer(scope, block), SliceOperator())
+      elif operator == "pgibbs":
+        particles = int(exp[3])
+        if isinstance(block, list): # Ordered range
+          (_, min_block, max_block) = block
+          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), PGibbsOperator(particles))
+        else:
+          mixMH(self, BlockScaffoldIndexer(scope, block), PGibbsOperator(particles))
+      elif operator == "func-pgibbs":
+        particles = int(exp[3])
+        if isinstance(block, list): # Ordered range
+          (_, min_block, max_block) = block
+          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), ParticlePGibbsOperator(particles))
+        else:
+          mixMH(self, BlockScaffoldIndexer(scope, block), ParticlePGibbsOperator(particles))
+      elif operator == "map":
+        (rate, steps) = exp[3:4]
+        mixMH(self, BlockScaffoldIndexer(scope, block), MAPOperator(rate, int(steps)))
+      elif operator == "nesterov":
+        (rate, steps) = exp[3:4]
+        mixMH(self, BlockScaffoldIndexer(scope, block), NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
+      elif operator == "rejection":
+        mixMH(self, BlockScaffoldIndexer(scope, block), RejectionOperator())
+      else: raise Exception("INFER %s is not implemented" % operator)
+
+      for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
+
   def get_seed(self):
     # TODO Trace does not support seed control because it uses
     # Python's native randomness.
