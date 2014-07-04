@@ -1,6 +1,6 @@
+from nose import SkipTest
 from testconfig import config
 import venture.shortcuts as s
-import venture.ripl.utils as u
 import venture.venturemagics.ip_parallel as ip_parallel
 
 def yes_like(thing):
@@ -73,27 +73,25 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None):
     num_samples = default_num_samples()
   if infer is None:
     infer = defaultInfer()
-  elif infer == "mixes_slowly": # TODO Replace this awful hack with proper adjustment of tests for difficulty
+  elif infer == "mixes_slowly":
+    # TODO Replace this awful hack with proper adjustment of tests for difficulty
     infer = defaultInfer()
-    if not infer["kernel"] == "rejection":
-      infer["transitions"] = 4 * int(infer["transitions"])
-  elif isinstance(infer, str):
-    infer = u.expToDict(u.parse(infer), ripl)
+    if infer is not "(rejection default all 1)":
+      infer = "(cycle (%s) 4)" % infer
 
   predictions = []
   for _ in range(num_samples):
-    # Going direct here saved 5 of 35 seconds on some unscientific
-    # tests, presumably by avoiding the parser.
-    ripl.sivm.core_sivm.engine.infer(infer)
+    # TODO Consider going direct here to avoid the parser
+    ripl.infer(infer)
     predictions.append(ripl.report(address))
     if iid: ripl.sivm.core_sivm.engine.reinit_inference_problem()
   return predictions
 
 def defaultInfer():
-  candidate = u.expToDict(u.parse(config["infer"]))
-  candidate["transitions"] = min(default_num_transitions_per_sample(), int(candidate["transitions"]))
-  return candidate
+  # TODO adjust the number of transitions to be at most the default_num_transitions_per_sample
+  return config["infer"]
 
 def defaultKernel():
+  raise SkipTest("TODO: Do a better job of selecting when to run some test")
   return defaultInfer()["kernel"]
 
