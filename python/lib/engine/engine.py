@@ -208,6 +208,9 @@ effect of renumbering the directives, if some had been forgotten."""
 
     return Infer(self).infer(params)
 
+  def infer_exp(self, program):
+    return Infer(self).infer_exp(program)
+
   def primitive_infer(self, params):
     for trace in self.traces: trace.infer(params)
   

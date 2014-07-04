@@ -78,6 +78,11 @@ class Infer(object):
     else: # A primitive infer expression
       self.engine.primitive_infer(program)
 
+  def infer_exp(self, program):
+    self.engine.incorporate()
+    self.do_infer_exp(program)
+    return self.plot if self.plot is not None else self.out
+
   def do_infer_expr(self, exp):
     def default_name_for_exp(exp):
       if isinstance(exp, basestring):
@@ -118,7 +123,7 @@ class Infer(object):
       assert len(exp) == 2
       (_, subkernels) = exp
       prog = ["cycle", subkernels, 1]
-      self.engine.start_continuous_inference_in_python(prog)
+      self.engine.start_continuous_inference_exp(prog, in_python=True)
     elif operator == "cycle":
       assert len(exp) == 3
       (_, subkernels, transitions) = exp
