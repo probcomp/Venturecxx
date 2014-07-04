@@ -128,7 +128,7 @@ class Infer(object):
       assert len(exp) == 3
       (_, subkernels, transitions) = exp
       assert type(subkernels) is list
-      for _ in range(transitions):
+      for _ in range(int(transitions)):
         for k in subkernels:
           self.do_infer(k)
     elif operator == "mixture":

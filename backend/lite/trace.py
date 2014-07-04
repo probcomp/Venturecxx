@@ -410,7 +410,7 @@ class Trace(object):
   def infer_exp(self,exp):
     assert len(exp) >= 4
     (operator, scope, block) = exp[0:3]
-    transitions = exp[-1]
+    transitions = int(exp[-1])
     if not self.scopeHasEntropy(scope):
       return
     for _ in range(transitions):
