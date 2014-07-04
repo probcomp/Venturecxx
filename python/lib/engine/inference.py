@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+
+from venture.lite.value import ExpressionType
 from venture.lite.utils import simulateCategorical
 
 class Infer(object):
@@ -106,10 +108,12 @@ class Infer(object):
       name = default_name_for_exp(expression)
       self._ensure_peek_name(name)
       if operator == "peek":
-        value = self.engine.sample(expression)
+        # The sample method expects stack dicts, not Python
+        # representations of expressions...
+        value = self.engine.sample(ExpressionType.asVentureValue(expression).asStackDict())
         self.out[name].append(value)
       else:
-        values = self.engine.sample_all(expression)
+        values = self.engine.sample_all(ExpressionType.asVentureValue(expression).asStackDict())
         self.out[name].append(values)
     elif operator == "plotf":
       assert len(exp) >= 2
