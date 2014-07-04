@@ -270,10 +270,8 @@ def testTransitionsCount():
     eq_( v.total_transitions, 0)
     v.infer(10)
     eq_( v.total_transitions, 10)
-    v.infer(params={'transitions':10})
-    eq_( v.total_transitions, 20)
     v.infer(params='(mh default one 1)')
-    eq_( v.total_transitions, 21)
+    eq_( v.total_transitions, 11)
 
 
 def testSnapshot():
