@@ -27,7 +27,7 @@ def testBlockingExample1():
   olda = ripl.report("a")
   oldb = ripl.report("b")
   # The point of block proposals is that both things change at once.
-  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":"mh", "scope":0, "block":0})
+  ripl.infer("(mh 0 0 1)")
   newa = ripl.report("a")
   newb = ripl.report("b")
   assert not olda == newa
@@ -44,7 +44,7 @@ def testBlockingExample2():
   oldc = ripl.report("c")
   oldd = ripl.report("d")
   # Should change everything in one or the other block
-  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":"mh", "scope":0, "block":"one"})
+  ripl.infer("(mh 0 one 1)")
   newa = ripl.report("a")
   newb = ripl.report("b")
   newc = ripl.report("c")
@@ -65,7 +65,7 @@ def testBlockingExample3():
   olda = ripl.report("a")
   oldb = ripl.report("b")
   # The point of block proposals is that both things change at once.
-  ripl.sivm.core_sivm.engine.infer({"transitions":1, "kernel":"mh", "scope":0, "block":"all"})
+  ripl.infer("(mh 0 all 1)")
   newa = ripl.report("a")
   newb = ripl.report("b")
   assert not olda == newa
