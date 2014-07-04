@@ -1,9 +1,6 @@
-from venture.test.config import get_ripl, default_num_transitions_per_sample
-import itertools
+from venture.test.config import get_ripl
 from nose.plugins.attrib import attr
 from nose.tools import assert_less, assert_greater
-from nose import SkipTest
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples, defaultKernel
 
 def mean(xs): return sum(xs) / float(len(xs))
 

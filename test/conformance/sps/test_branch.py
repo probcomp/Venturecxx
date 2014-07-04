@@ -1,12 +1,10 @@
 import scipy.stats as stats
-from nose import SkipTest
-from venture.test.config import get_ripl, collectSamples, defaultKernel
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling
 from venture.test.stats import statisticalTest, reportKnownContinuous
 
+@skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
 def testBranch1():
-  if defaultKernel() == "rejection":
-    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)",label="pid")

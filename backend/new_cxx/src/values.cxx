@@ -29,6 +29,16 @@ vector<VentureValuePtr> VenturePair::getArray() const
   return xs;
 }
 
+vector<VentureValuePtr> VentureSimplex::getArray() const
+{
+  vector<VentureValuePtr> xs;
+  for(size_t i = 0; i < ps.size(); ++i)
+  {
+    xs.push_back(VentureValuePtr(new VentureProbability(ps[i])));
+  }
+  return xs;
+}
+
 vector<VentureValuePtr> VentureVector::getArray() const
 {
   vector<VentureValuePtr> xs;

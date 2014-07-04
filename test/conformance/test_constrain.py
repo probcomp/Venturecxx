@@ -1,12 +1,10 @@
 from venture.test.stats import statisticalTest, reportKnownMean
 from nose.tools import eq_, raises
-from venture.test.config import get_ripl, collectSamples, defaultKernel, collectStateSequence
+from venture.test.config import get_ripl, collectSamples, ignoresConfiguredInferenceProgram, collectStateSequence, skipWhenRejectionSampling
 from testconfig import config
 from nose import SkipTest
 
 def testConstrainAVar1a():
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
             "(func-pgibbs 0 0 3 50)",
@@ -15,6 +13,7 @@ def testConstrainAVar1a():
             ]:
     yield checkConstrainAVar1a, p
 
+@ignoresConfiguredInferenceProgram
 def checkConstrainAVar1a(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -27,8 +26,6 @@ def checkConstrainAVar1a(program):
   eq_(ripl.report("pid"), 3)
 
 def testConstrainAVar1b():
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
             "(func-pgibbs 0 0 3 50)",
@@ -37,6 +34,7 @@ def testConstrainAVar1b():
             ]:
     yield checkConstrainAVar1b, p
 
+@ignoresConfiguredInferenceProgram
 def checkConstrainAVar1b(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -49,8 +47,6 @@ def checkConstrainAVar1b(program):
   eq_(ripl.report("pid"), 3)
 
 def testConstrainAVar2a():
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
             "(func-pgibbs 0 0 3 50)",
@@ -59,6 +55,7 @@ def testConstrainAVar2a():
             ]:
     yield checkConstrainAVar2a, p
 
+@ignoresConfiguredInferenceProgram
 def checkConstrainAVar2a(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -72,8 +69,6 @@ def checkConstrainAVar2a(program):
   eq_(ripl.report("pid"), 3)
 
 def testConstrainAVar2b():
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
             "(func-pgibbs 0 0 3 50)",
@@ -82,6 +77,7 @@ def testConstrainAVar2b():
             ]:
     yield checkConstrainAVar2b, p
 
+@ignoresConfiguredInferenceProgram
 def checkConstrainAVar2b(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -94,9 +90,8 @@ def checkConstrainAVar2b(program):
   collectStateSequence(ripl,"pid",infer=program)
   eq_(ripl.report("pid"), 3)
 
-def checkConstrainAVar3a():
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
+@ignoresConfiguredInferenceProgram
+def testConstrainAVar3a():
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -108,10 +103,9 @@ def checkConstrainAVar3a():
   eq_(ripl.report("pid"), 3)
 
 # @raises(Exception)
+@ignoresConfiguredInferenceProgram
 def testConstrainAVar3b():
   raise SkipTest("This program is illegal, since propagating from (f) reaches a request")
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -123,8 +117,6 @@ def testConstrainAVar3b():
   eq_(ripl.report("pid"), 3)
 
 def testConstrainAVar4a():
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
             "(func-pgibbs 0 0 3 50)",
@@ -133,6 +125,7 @@ def testConstrainAVar4a():
             ]:
     yield checkConstrainAVar4a, p
 
+@ignoresConfiguredInferenceProgram
 def checkConstrainAVar4a(program):
   """We allow downstream processing with no requests and no randomness."""
   ripl = get_ripl()
@@ -147,8 +140,6 @@ def checkConstrainAVar4a(program):
   eq_(ripl.report("pid"), 15.0)
 
 def testConstrainAVar4b():
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
             "(func-pgibbs 0 0 3 50)",
@@ -157,6 +148,7 @@ def testConstrainAVar4b():
             ]:
     yield checkConstrainAVar4b, p
 
+@ignoresConfiguredInferenceProgram
 def checkConstrainAVar4b(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -170,8 +162,6 @@ def checkConstrainAVar4b(program):
   eq_(ripl.report("pid"), 15.0)
 
 def testConstrainAVar4c():
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
             "(func-pgibbs 0 0 3 50)",
@@ -180,6 +170,7 @@ def testConstrainAVar4c():
             ]:
     yield checkConstrainAVar4c, p
 
+@ignoresConfiguredInferenceProgram
 def checkConstrainAVar4c(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -193,8 +184,6 @@ def checkConstrainAVar4c(program):
   eq_(ripl.report("pid"), 15.0)
 
 def testConstrainAVar5a():
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
   for p in ["(mh 0 0 50)",
             "(rejection 0 0 50)",
             "(func-pgibbs 0 0 3 50 false)",
@@ -204,6 +193,7 @@ def testConstrainAVar5a():
     yield checkConstrainAVar5a, p
 
 @raises(Exception)
+@ignoresConfiguredInferenceProgram
 def checkConstrainAVar5a(program):
   """
     This program is illegal, because when proposing to f, we may end up constraining x,
@@ -220,8 +210,6 @@ def checkConstrainAVar5a(program):
   collectSamples(ripl,"pid",infer=program)
 
 def testConstrainAVar5b():
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
   for p in ["(mh 0 0 50)",
             "(rejection 0 0 50)",
             "(func-pgibbs 0 0 3 50 false)",
@@ -231,6 +219,7 @@ def testConstrainAVar5b():
     yield checkConstrainAVar5b, p
 
 @raises(Exception)
+@ignoresConfiguredInferenceProgram
 def checkConstrainAVar5b(program):
   """
     This program is illegal, because when proposing to f, we may end up constraining x,
@@ -245,8 +234,6 @@ def checkConstrainAVar5b(program):
   collectSamples(ripl,"pid",infer=program)
 
 def testConstrainAVar6a():
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
   for p in ["(mh 0 0 50)",
             "(rejection 0 0 50)",
             "(func-pgibbs 0 0 3 50 false)",
@@ -256,6 +243,7 @@ def testConstrainAVar6a():
     yield checkConstrainAVar6a, p
 
 @raises(Exception)
+@ignoresConfiguredInferenceProgram
 def checkConstrainAVar6a(program):
   """
     This program is illegal, because when proposing to f, we may end up constraining x,
@@ -270,8 +258,6 @@ def checkConstrainAVar6a(program):
   collectSamples(ripl,"pid",infer=program)
 
 def testConstrainAVar6b():
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
   for p in ["(mh 0 0 50)",
             "(rejection 0 0 50)",
             "(func-pgibbs 0 0 3 50 false)",
@@ -281,6 +267,7 @@ def testConstrainAVar6b():
     yield checkConstrainAVar6b, p
 
 @raises(Exception)
+@ignoresConfiguredInferenceProgram
 def checkConstrainAVar6b(program):
   """
     This program is illegal, because when proposing to f, we may end up constraining x,
@@ -296,8 +283,6 @@ def checkConstrainAVar6b(program):
 
 def testConstrainWithAPredict1():
   if config["get_ripl"] != "lite": raise SkipTest("assert(false) crashes NoseTests")
-  if defaultKernel() is not "mh":
-    raise SkipTest("Ignores the inference program, so do not repeat")
   for p in ["(mh default one 50)",
             "(rejection default all 50)",
             "(func-pgibbs default ordered 3 50 false)",
@@ -307,6 +292,7 @@ def testConstrainWithAPredict1():
     yield checkConstrainWithAPredict1, p
 
 @raises(Exception)
+@ignoresConfiguredInferenceProgram
 def checkConstrainWithAPredict1(program):
   """
   We may constrain the (flip) in f, and this has a child that makes requests. Therefore this
@@ -322,14 +308,13 @@ def checkConstrainWithAPredict1(program):
   ripl.observe("(op4)",True)
   collectSamples(ripl,"pid",infer=program)
 
+@skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
 def testConstrainWithAPredict2():
   """This test will fail at first, since we previously considered a program like this to be illegal
      and thus did not handle it correctly (we let the predict go stale). So we do not continually
      bewilder our users, I suggest that we handle this case WHEN WE CAN, which means we propagate
      from a constrain as long as we don't hit an absorbing node or a DRG node with a kernel."""
-  if defaultKernel() == "rejection":
-    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
   ripl.assume("f","(if (flip) (lambda () (normal 0.0 1.0)) (mem (lambda () (normal 0.0 1.0))))")
   ripl.observe("(f)","1.0")
@@ -337,6 +322,7 @@ def testConstrainWithAPredict2():
   predictions = collectSamples(ripl,"pid")
   return reportKnownMean(50, predictions) # will divide by 0 if there is no sample variance
 
+@ignoresConfiguredInferenceProgram
 def testConstrainInAScope1():
   """At some point, constrain did not remove choices from scopes besides the default scope"""
   ripl = get_ripl()
@@ -347,6 +333,7 @@ def testConstrainInAScope1():
 
   ripl.infer("(mh 0 0 10)")
 
+@ignoresConfiguredInferenceProgram
 def testConstrainInAScope2brush():
   """Particles need to override some of the relevant methods as well"""
   ripl = get_ripl()
@@ -357,6 +344,7 @@ def testConstrainInAScope2brush():
 
   ripl.infer("(mh 0 0 20)")
 
+@ignoresConfiguredInferenceProgram
 def testConstrainInAScope2particles():
   """Particles need to override some of the relevant methods as well"""
   ripl = get_ripl()
@@ -366,7 +354,4 @@ def testConstrainInAScope2particles():
   ripl.predict("(+ x 1)")
 
   ripl.infer("(pgibbs 0 0 5 5)")
-  
-
-
 
