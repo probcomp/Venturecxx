@@ -587,6 +587,11 @@ class VentureArrayUnboxed(VentureValue):
     return {"type":"array_unboxed", "subtype":self.elt_type, "value":self.array}
   @staticmethod
   def fromStackDict(thing):
+    if thing["type"] == "vector":
+      # TODO HACK: treat Puma's vectors as unboxed arrays of numbers,
+      # because Puma can't make a NumberType to stick in the stack
+      # dict.
+      return VentureArrayUnboxed(thing["value"], NumberType())
     return VentureArrayUnboxed(thing["value"], thing["subtype"])
 
   def lookup(self, index):
@@ -653,7 +658,17 @@ are also supposed to sum to 1, but we are not checking that.
   def __init__(self,simplex): self.simplex = simplex
   def __repr__(self):
     return "VentureSimplex(%s)" % self.simplex
+  def getArray(self, elt_type=None):
+    # TODO Abstract similarities between this and the getArray method of ArrayUnboxed
+    if elt_type is None: # Convert to VentureValue
+      return [ProbabilityType().asVentureValue(v) for v in self.simplex]
+    else:
+      if elt_type.__class__ == ProbabilityType:
+        return self.simplex
+      else:
+        return [elt_type.asPython(ProbabilityType().asVentureValue(v)) for v in self.simplex]
   def getSimplex(self): return self.simplex
+
   def compareSameType(self, other):
     # The Python ordering is lexicographic first, then by length, but
     # I think we want lower-d simplexes to compare less than higher-d
@@ -661,17 +676,20 @@ are also supposed to sum to 1, but we are not checking that.
     return lexicographicUnboxedCompare(self.simplex, other.simplex)
   def __hash__(self):
     return sequenceHash(self.simplex)
+
   def asStackDict(self, _trace=None):
     # TODO As what type to reflect simplex points to the stack?
     return {"type":"simplex", "value":self.simplex}
   @staticmethod
   def fromStackDict(thing): return VentureSimplex(thing["value"])
+
   def lookup(self, index):
     return ProbabilityType().asVentureValue(self.simplex[index.getNumber()])
   def contains(self, obj):
     # Homogeneous; TODO make it return False instead of exploding for non-numeric objects.
     return obj.getNumber() in self.simplex
   def size(self): return len(self.simplex)
+
   def expressionFor(self):
     return [{"type":"symbol", "value":"simplex"}] + self.simplex
   def map_real(self, f):
@@ -855,7 +873,7 @@ stackable_types = {
   "blob": VentureForeignBlob,
   "list": VenturePair,
   "improper_list": VenturePair,
-  "vector": VentureArray,
+  "vector": VentureArrayUnboxed,
   "array": VentureArray,
   "array_unboxed": VentureArrayUnboxed,
   "simplex": VentureSimplex,

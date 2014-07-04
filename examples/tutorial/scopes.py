@@ -169,8 +169,24 @@ from venture.venturemagics.ip_parallel import *
 dim = 3
 bags = 2
 alpha = ' '.join(['1']*dim)
+
 a= 'alpha', '(scope_include (quote alpha) 0 (array %s) )'%alpha
-b = 'bag_prototype', '(mem (lambda (bag) (dirichlet alpha) ) )'
+b = 'bag_prototype', '''(mem (lambda (bag)
+                              (scope_include (quote latents) bag
+                               (dirichlet alpha) ) ) )'''
+
+
+ones = ' '.join(['1']*dim)
+
+# doesn't work coz of simplex - how to make it work?
+a= 'hyper_alpha', '''(scope_include (quote hyper_alpha) 0
+                        (map (lambda (x) (* 5 x)) (dirichlet (array %s )) ) )'''%ones
+
+a= 'hyper_alpha', '''(scope_include (quote hyper_alpha) 0
+                        (dirichlet  (array %s) ))'''%ones
+b = 'bag_prototype', '''(mem (lambda (bag)
+                              (scope_include (quote latents) bag
+                               (dirichlet hyper_alpha) ) ) )'''
 obs = lambda bag,color: ('(categorical (bag_prototype %i))'%bag,'atom<%i>'%color)
 
 assumes = [a,b]
@@ -181,8 +197,19 @@ for di in assumes+observes:
     print di
 
 v=mk_p_ripl()
+v.load_prelude()
 [v.assume(*el) for el in assumes]
 [v.observe(*el) for el in observes]
+
+
+
+
+
+
+
+
+
+
 
 
 

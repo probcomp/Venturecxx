@@ -570,6 +570,19 @@ class MRipl():
 
         return out_execute
 
+    def load_prelude(self):
+        local_out=[r.load_prelude() for r in self.local_ripls]
+
+        @interactive
+        def f(mrid,backend):
+            mripl=mripls[mrid]
+            out = [r.load_prelude() for r in mripl[backend]]
+            return backend_filter(backend,out)
+
+        out_execute= self._mr_apply(local_out,f)
+
+        return
+
 
     def get_global_logscore(self):
         local_out = [r.get_global_logscore() for r in self.local_ripls]

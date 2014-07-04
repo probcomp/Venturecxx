@@ -1,0 +1,27 @@
+; Notation
+; N represents the normal distribution
+; IG represents the inverse-gamma distribution
+
+; Linear regression.
+; Likelihood:
+; p(y | x, w, sigma_2) = N(y | x*w, sigma_2)
+; Prior:
+; p(w, sigma_2) = prod_i N(w_i | 0, (sigma_2 / alpha)) * IG(sigma_2 | a_0, b_0)
+; Model parameters (to be set by user):
+;   D : Dimensionality.
+;   a_0, b_0 : Shape and scale parameters on sigma_2.
+;   alpha : Precision parameter on the model weights.
+
+D:[assume D 2]
+a_0:[assume a_0 1]
+b_0:[assume b_0 1]
+alpha:[assume alpha 0.01]
+
+sigma_2:[assume sigma_2 (scope_include (quote noise) 0 (inv_gamma a_0 b_0))]
+w_1:[assume w_1 (scope_include (quote weights) 1 (normal 0 (sqrt (/ sigma_2 alpha))))]
+...
+w_D:[assume w_D (scope_include (quote weights) D (normal 0 (sqrt (/ sigma_2 alpha))))]
+w:[assume w (vector w_1 ... w_D)]
+y:[assume y
+  (lambda (x)
+    (normal (dot x w) sigma_2))]

@@ -51,10 +51,11 @@ Unboxed Containers
 
 Venture has the following homogeneous unboxed container types:
 - Arrays of arbitrary Venture values stored unboxed [TODO in Puma]
-- [TODO] Vectors of probabilities (currently called Simplex)
+- Arrays of floating point numbers, called Vector
+- Arrays of probabilities, called Simplex
 - Matrices of floating point numbers
 - Symmetric matrices of floating point numbers (which are not
-  actually represented differently from general matrices) [TODO in Puma]
+  actually represented differently from general matrices)
 
 [TODO] In Lite, the ArrayUnboxed representation tries to store the
 underlying objects in numpy arrays when possible, to avoid Python's

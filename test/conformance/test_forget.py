@@ -1,5 +1,4 @@
-from venture.test.config import get_ripl, collectSamples, defaultKernel
-from nose.tools import eq_
+from venture.test.config import get_ripl
 
 def testForgetContinuousInference1():
   ripl = get_ripl()
@@ -30,7 +29,7 @@ def testForgetContinuousInference3():
     ripl.forget(pid)
     ripl.infer(5)
 
-def testForgetContinuousInference3():
+def testForgetContinuousInference4():
   ripl = get_ripl()
   for i in range(10):
     pid = "pid%d" % i

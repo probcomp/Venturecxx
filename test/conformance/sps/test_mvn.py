@@ -1,13 +1,14 @@
 from nose.tools import eq_
 from nose import SkipTest
 import scipy.stats as stats
-from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples, defaultKernel
-import math
 from testconfig import config
+import math
+
+from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling
 
 def testMVGaussSmoke():
-  raise SkipTest("Array vs Vector? Need to articulate the different uses carefully at some point.")
+  if config["get_ripl"] == "puma": raise SkipTest("Puma Vectors do not answer to is_array")
   eq_(get_ripl().predict("(is_array (multivariate_normal (vector 1 2) (matrix (array (array 3 4) (array 4 6)))))"), True)
 
 @statisticalTest
@@ -81,19 +82,17 @@ def testMVN2b():
   cdf = lambda x: stats.norm.cdf(x,loc=12,scale=math.sqrt(0.5))
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(.5))")
 
+@skipWhenRejectionSampling("MVN has no log density bound")
 @statisticalTest
 def testMVN3():
   "Check that MVN is observable"
-  if defaultKernel() == "rejection":
-    raise SkipTest("MVN has no log density bound")
   ripl = get_ripl()
 
   ripl.assume("mu","(vector 0 0)")
   ripl.assume("sigma","(matrix (array (array 1.0 0.0) (array 0.0 1.0)))")
   ripl.assume("x","(multivariate_normal mu sigma)")
   ripl.assume("y","(multivariate_normal x sigma)")
-  v = [{"type": "real", "value": 2}, {"type": "real", "value": 2}]
-  ripl.observe("y",{"type":"vector","value":v})
+  ripl.observe("y",{"type":"vector","value":[2, 2]})
   ripl.predict("(lookup x 0)",label="pid")
 
   predictions = collectSamples(ripl,"pid")

@@ -4,7 +4,7 @@ from testconfig import config
 import math
 from numpy.testing import assert_allclose
 
-from venture.test.config import get_ripl, defaultKernel
+from venture.test.config import get_ripl, ignoresConfiguredInferenceProgram
 from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
@@ -15,12 +15,14 @@ import venture.test.numerical as num
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.utils import FixedRandomness
 
+@ignoresConfiguredInferenceProgram
 def testEquality():
   checkTypedProperty(propEquality, AnyType())
 
 def propEquality(value):
   assert value.equal(value)
 
+@ignoresConfiguredInferenceProgram
 def testLiteToStack():
   checkTypedProperty(propLiteToStack, AnyType())
 
@@ -37,6 +39,7 @@ def testTypes():
   for (name,sp) in relevantSPs():
     yield checkTypeCorrect, name, sp
 
+@ignoresConfiguredInferenceProgram
 def checkTypeCorrect(_name, sp):
   type_ = sp.venture_type()
   checkTypedProperty(propTypeCorrect, fully_uncurried_sp_type(type_), sp, type_)
@@ -53,12 +56,11 @@ applied fully uncurried) match the expected types."""
     propTypeCorrect(args_lists[1:], answer, type_.return_type)
 
 def testDeterministic():
-  if defaultKernel() != 'mh':
-    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if not sp.outputPSP.isRandom():
       yield checkDeterministic, name, sp
 
+@ignoresConfiguredInferenceProgram
 def checkDeterministic(name, sp):
   checkTypedProperty(propDeterministic, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
@@ -85,13 +87,12 @@ fully uncurried)."""
       eq_(answer, carefully(sp.outputPSP.simulate, args))
 
 def testRandom():
-  if defaultKernel() != 'mh':
-    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if sp.outputPSP.isRandom():
       if not name in ["make_uc_dir_mult", "categorical", "make_uc_sym_dir_mult"]:
         yield checkRandom, name, sp
 
+@ignoresConfiguredInferenceProgram
 def checkRandom(_name, sp):
   # I take the name because I want it to appear in the nose arg list
   args_type = fully_uncurried_sp_type(sp.venture_type())
@@ -128,10 +129,8 @@ def propRandom(args_listss, sp):
         continue
   assert False, "SP deterministically returned %s (parallel to arguments)" % answers
 
+@ignoresConfiguredInferenceProgram
 def testExpressionFor():
-  if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
-  if defaultKernel() != 'mh':
-    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   checkTypedProperty(propExpressionWorks, AnyType())
 
 def propExpressionWorks(value):
@@ -139,10 +138,8 @@ def propExpressionWorks(value):
   result = carefully(eval_in_ripl, expr)
   assert value.equal(result)
 
+@ignoresConfiguredInferenceProgram
 def testRiplRoundTripThroughStack():
-  if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
-  if defaultKernel() != 'mh':
-    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   checkTypedProperty(propRiplRoundTripThroughStack, AnyType())
 
 def propRiplRoundTripThroughStack(value):
@@ -156,20 +153,36 @@ def eval_in_ripl(expr):
   return VentureValue.fromStackDict(ripl.report("thing", type=True))
 
 def testRiplSimulate():
-  if config["get_ripl"] != "lite": raise SkipTest("Round-trip to the ripl only works in Lite")
-  if defaultKernel() != 'mh':
-    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
-    if name not in ["scope_include", # Because scope_include is
-                                     # misannotated as to the true
-                                     # permissible types of scopes and
-                                     # blocks
-                    "get_current_environment", # Because BogusArgs gives a bogus environment
-                    "extend_environment", # Because BogusArgs gives a bogus environment
-                  ]:
-      if not sp.outputPSP.isRandom():
-        yield checkRiplAgreesWithDeterministicSimulate, name, sp
+    if name in ["scope_include", # Because scope_include is
+                                 # misannotated as to the true
+                                 # permissible types of scopes and
+                                 # blocks
+                "get_current_environment", # Because BogusArgs gives a bogus environment
+                "extend_environment", # Because BogusArgs gives a bogus environment
+              ]:
+      continue
+    if config["get_ripl"] != "lite" and name in [
+        ## Expected failures
+        "dict", # Because keys and values must be the same length
+        "matrix", # Because rows must be the same length
+        "lookup", # Because the key must be an integer for sequence lookups
+        "get_empty_environment", # Environments can't be rendered to stack dicts
+        ## Incompatibilities with Puma
+        "eq", # Not implemented for matrices
+        "gt", # Not implemented for matrices
+        "gte",
+        "lt",
+        "lte",
+        "real", # Not implemented
+        "atom_eq", # Not implemented
+        "contains", # Not implemented for sequences
+    ]:
+      continue
+    if not sp.outputPSP.isRandom():
+      yield checkRiplAgreesWithDeterministicSimulate, name, sp
 
+@ignoresConfiguredInferenceProgram
 def checkRiplAgreesWithDeterministicSimulate(name, sp):
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
@@ -195,12 +208,11 @@ through a ripl (applied fully uncurried)."""
     assert answer.equal(carefully(eval_in_ripl, expr))
 
 def testLogDensityDeterministic():
-  if defaultKernel() != 'mh':
-    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical"]: # TODO
       yield checkLogDensityDeterministic, name, sp
 
+@ignoresConfiguredInferenceProgram
 def checkLogDensityDeterministic(_name, sp):
   checkTypedProperty(propLogDensityDeterministic, (fully_uncurried_sp_type(sp.venture_type()), final_return_type(sp.venture_type())), sp)
 
@@ -215,14 +227,13 @@ def propLogDensityDeterministic(rnd, sp):
     eq_(answer, carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux())))
 
 def testGradientOfLogDensity():
-  if defaultKernel() != 'mh':
-    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical",  # TODO
                     "flip", "bernoulli"]: # TODO: Implement ZeroType
       if sp.outputPSP.isRandom(): # TODO Check the ones that are random when curried
         yield checkGradientOfLogDensity, name, sp
 
+@ignoresConfiguredInferenceProgram
 def checkGradientOfLogDensity(name, sp):
   ret_type = final_return_type(sp.venture_type())
   args_type = fully_uncurried_sp_type(sp.venture_type())
@@ -261,11 +272,10 @@ def assert_gradients_close(numerical_gradient, computed_gradient):
   assert_allclose(numerical_gradient, numerical_values_of_computed_gradient, rtol=1e-05)
 
 def testFixingRandomness():
-  if defaultKernel() != 'mh':
-    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     yield checkFixingRandomness, name, sp
 
+@ignoresConfiguredInferenceProgram
 def checkFixingRandomness(name, sp):
   checkTypedProperty(propDeterministicWhenFixed, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
@@ -295,8 +305,6 @@ def propDeterministicWhenFixed(args_lists, name, sp):
         eq_(answer, carefully(sp.outputPSP.simulate, args))
 
 def testGradientOfSimulate():
-  if defaultKernel() != 'mh':
-    raise SkipTest("Doesn't depend on kernel, only run it for mh")
   for (name,sp) in relevantSPs():
     if name not in ["dict",  # TODO Synthesize dicts to act as the directions
                     "matrix", # TODO Synthesize non-ragged test lists
@@ -313,6 +321,7 @@ def testGradientOfSimulate():
                    ]:
       yield checkGradientOfSimulate, name, sp
 
+@ignoresConfiguredInferenceProgram
 def checkGradientOfSimulate(name, sp):
   checkTypedProperty(propGradientOfSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 

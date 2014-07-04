@@ -414,15 +414,13 @@ def testTransitionsCount():
         assert v.total_transitions == 0
         v.infer(10)
         assert v.total_transitions == 10
-        v.infer(params={'transitions':10})
-        assert v.total_transitions == 20
         # FIXME, add inference programming
 
         # switch output
         if o=='remote':
             v.output='local'
             v.infer(10)
-            assert v.total_transitions == 30
+            assert v.total_transitions == 20
 
     print 'Passed %s' %name
 

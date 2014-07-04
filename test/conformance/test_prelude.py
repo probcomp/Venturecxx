@@ -59,9 +59,8 @@ class TestPrelude(TestCase):
     assert container in self.containers, errstr
     # length of the container
     if length is None: length = random.choice(range(*self.container_length))
-    # if it's a vector and the puma backend, numeric only
-    # TODO: fix this when it gets fixed in the implementation
-    if self.v.backend() == 'puma' and container == 'vector':
+    # if it's a vector, numeric only
+    if container == 'vector':
       mode = 'numeric'
     if mode == 'boolean':
       # if boolean, make a random boolean vector
@@ -116,7 +115,7 @@ class TestPrelude(TestCase):
       errstr = 'Output should be list, but failed is_pair'
       self.assertTrue(self.v.sample('(is_pair y)'), errstr)
       errstr = 'Input and output should look identical in Python.'
-      self.assertEqual(x_python, y_python)
+      self.assertEqual(list(x_python), list(y_python))
 
   def test_from_list(self):
     '''
