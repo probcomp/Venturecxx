@@ -92,10 +92,6 @@ def defaultInfer():
   # TODO adjust the number of transitions to be at most the default_num_transitions_per_sample
   return config["infer"]
 
-def defaultKernel():
-  raise SkipTest("TODO: Do a better job of selecting when to run some test")
-  return defaultInfer()["kernel"]
-
 def ignoresConfiguredInferenceProgram(f):
   """Annotate a test function as ignoring the configured inference
 program, lest it be run repeatedly when testing multiple ones.

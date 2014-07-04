@@ -2,12 +2,10 @@ from nose.tools import eq_
 from nose import SkipTest
 import scipy.stats as stats
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples, defaultKernel
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling
 import math
-from testconfig import config
 
 def testMVGaussSmoke():
-  raise SkipTest("Array vs Vector? Need to articulate the different uses carefully at some point.")
   eq_(get_ripl().predict("(is_array (multivariate_normal (vector 1 2) (matrix (array (array 3 4) (array 4 6)))))"), True)
 
 @statisticalTest
@@ -81,11 +79,10 @@ def testMVN2b():
   cdf = lambda x: stats.norm.cdf(x,loc=12,scale=math.sqrt(0.5))
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(.5))")
 
+@skipWhenRejectionSampling("MVN has no log density bound")
 @statisticalTest
 def testMVN3():
   "Check that MVN is observable"
-  if defaultKernel() == "rejection":
-    raise SkipTest("MVN has no log density bound")
   ripl = get_ripl()
 
   ripl.assume("mu","(vector 0 0)")

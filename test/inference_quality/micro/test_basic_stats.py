@@ -3,7 +3,7 @@ import scipy.stats as stats
 from nose import SkipTest
 
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples, defaultKernel
+from venture.test.config import get_ripl, collectSamples, collect_iid_samples, skipWhenRejectionSampling
 
 @statisticalTest
 def testBernoulliIfNormal1():
@@ -131,11 +131,10 @@ def testStudentT2():
   return reportKnownMeanVariance(meana, vara + 1.0, predictions)
 
 
+@skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
 def testSprinkler1():
   "Classic Bayes-net example, with no absorbing when proposing to 'rain'"
-  if defaultKernel() == "rejection":
-    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
   ripl.assume("rain","(bernoulli 0.2)", label="pid")
   ripl.assume("sprinkler","(if rain (bernoulli 0.01) (bernoulli 0.4))")
