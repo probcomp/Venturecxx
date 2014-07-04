@@ -213,6 +213,7 @@ struct VentureSimplex : VentureValue
 {
   VentureSimplex(const Simplex & ps): ps(ps) {}
 
+  vector<VentureValuePtr> getArray() const;
   const Simplex& getSimplex() const { return ps; }
   MatrixXd getMatrix() const;
 
