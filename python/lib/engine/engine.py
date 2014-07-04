@@ -21,6 +21,7 @@ import time
 from venture.exception import VentureException
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
+from venture.lite.value import VentureValue, ExpressionType
 
 class Engine(object):
 
@@ -209,7 +210,7 @@ effect of renumbering the directives, if some had been forgotten."""
     return Infer(self).infer(params)
 
   def infer_exp(self, program):
-    return Infer(self).infer_exp(program)
+    return Infer(self).infer_exp(ExpressionType().asPython(VentureValue.fromStackDict(program)))
 
   def primitive_infer(self, params):
     for trace in self.traces: trace.infer(params)
