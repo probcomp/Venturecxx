@@ -130,7 +130,7 @@ class Infer(object):
       assert type(subkernels) is list
       for _ in range(int(transitions)):
         for k in subkernels:
-          self.do_infer(k)
+          self.do_infer_exp(k)
     elif operator == "mixture":
       assert len(exp) == 3
       (_, weighted_subkernels, transitions) = exp
@@ -143,7 +143,7 @@ class Infer(object):
         weights.append(weighted_subkernels[j])
         subkernels.append(weighted_subkernels[k])
       for _ in range(transitions):
-        self.do_infer(simulateCategorical(weights, subkernels))
+        self.do_infer_exp(simulateCategorical(weights, subkernels))
     else: # A primitive infer expression
       self.engine.primitive_infer(exp)
 
