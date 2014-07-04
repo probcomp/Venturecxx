@@ -1,4 +1,4 @@
-from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl
+from venture.venturemagics.ip_parallel import MRipl
 from venture.unit import *
 
 import numpy as np
@@ -9,10 +9,9 @@ from nose import SkipTest
 from nose.plugins.attrib import attr
 from venture.test.stats import statisticalTest, reportKnownContinuous
 
-from venture.test.config import get_ripl,get_mripl,collectSamples
-from testconfig import config
+from venture.test.config import get_ripl,get_mripl
 
-from nose.tools import eq_, assert_equal, assert_almost_equal
+from nose.tools import eq_, assert_almost_equal
 
 
 ## Functions used by tests
@@ -132,7 +131,6 @@ def _testInfer(riplThunk,conditional_prior,inferProg):
 def testRunFromConditionalInfer():
     riplThunks = get_ripl, lambda: get_mripl(no_ripls=2)
     cond_prior = 'conditional', 'prior'
-    #k1 = {"transitions":1,"kernel":"mh","scope":"default","block":"all"}
     k1 = '(mh default one 1)'
     k2 = '(mh default one 2)'
     infProgs =  None, k1, '(cycle (%s %s) 1)'%(k1,k2)
