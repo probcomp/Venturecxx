@@ -1,8 +1,6 @@
-import math
 from nose import SkipTest
 from testconfig import config
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, defaultKernel
+from venture.test.config import get_ripl
 from nose.tools import assert_equal
 
 def testNumFamilies1():

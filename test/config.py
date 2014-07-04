@@ -1,3 +1,4 @@
+import nose.tools as nose
 from nose import SkipTest
 from testconfig import config
 import venture.shortcuts as s
@@ -91,7 +92,38 @@ def defaultInfer():
   # TODO adjust the number of transitions to be at most the default_num_transitions_per_sample
   return config["infer"]
 
-def defaultKernel():
-  raise SkipTest("TODO: Do a better job of selecting when to run some test")
-  return defaultInfer()["kernel"]
+def ignoresConfiguredInferenceProgram(f):
+  """Annotate a test function as ignoring the configured inference
+program, lest it be run repeatedly when testing multiple ones.
 
+  """
+  @nose.make_decorator(f)
+  def wrapped(*args):
+    # TODO Add a hook to get_ripl or config["infer"] or something to
+    # enforce that the function really does ignore the configured
+    # inference program
+    if config["infer"].startswith("(mh default one"):
+      f(*args)
+    else:
+      raise SkipTest("Avoid repeating a test that ignores the configured inference program.")
+  wrapped.ignores_configured_inference_program = True # TODO Skip by these tags in all-crashes & co
+  return wrapped
+
+def skipWhenRejectionSampling(reason):
+  """Annotate a test function as being suitable for testing all
+general-purpose inference programs except rejection sampling.
+
+  """
+  def wrap(f):
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      if not rejectionSampling():
+        f(*args)
+      else:
+        raise SkipTest(reason)
+    wrapped.skip_when_rejection_sampling = True # TODO Skip by these tags in all-crashes & co
+    return wrapped
+  return wrap
+
+def rejectionSampling():
+  return config["infer"].startswith("(rejection default all")

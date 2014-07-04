@@ -1,15 +1,12 @@
-import unittest
 from nose import SkipTest
 from testconfig import config
 
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
-from venture.test.config import get_ripl, collectStateSequence, defaultKernel
+from venture.test.config import get_ripl, collectStateSequence, ignoresConfiguredInferenceProgram
 
+@ignoresConfiguredInferenceProgram
 @statisticalTest
 def _test_serialize_program(v, label, action):
-    if defaultKernel() != 'mh':
-        raise SkipTest("Doesn't depend on kernel, only run it for mh")
-
     engine = v.sivm.core_sivm.engine
 
     if action == 'serialize':
@@ -45,6 +42,7 @@ def _test_serialize_program(v, label, action):
     return reportSameDiscrete(r1, r2)
 
 def test_serialize_basic():
+    @ignoresConfiguredInferenceProgram
     def check(action):
         v = get_ripl()
         v.assume('is_tricky', '(flip 0.2)')
@@ -57,6 +55,7 @@ def test_serialize_basic():
         yield check, action
 
 def test_serialize_mem():
+    @ignoresConfiguredInferenceProgram
     def check(action):
         v = get_ripl()
         v.assume('coin', '(mem (lambda (x) (beta 1.0 1.0)))')
@@ -69,6 +68,7 @@ def test_serialize_mem():
         yield check, action
 
 def test_serialize_closure():
+    @ignoresConfiguredInferenceProgram
     def check(action):
         v = get_ripl()
         v.assume('make_coin', '(lambda (p) (lambda () (flip p)))')
@@ -149,9 +149,8 @@ def test_serialize_latents():
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
+@ignoresConfiguredInferenceProgram
 def test_serialize_ripl():
-    if defaultKernel() != 'mh':
-        raise SkipTest("Doesn't depend on kernel, only run it for mh")
     v1 = get_ripl()
     v1.assume('is_tricky', '(flip 0.2)')
     v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
@@ -174,10 +173,9 @@ def test_serialize_ripl():
     text2 = v2.get_text(1)
     assert text1 == text2
 
+@ignoresConfiguredInferenceProgram
 @statisticalTest
 def test_serialize_forget():
-    if defaultKernel() != 'mh':
-        raise SkipTest("Doesn't depend on kernel, only run it for mh")
     v1 = get_ripl()
     v1.assume('is_tricky', '(flip 0.2)')
     v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
@@ -200,9 +198,8 @@ def test_serialize_forget():
     ans = [(False, 0.8), (True, 0.2)]
     return reportKnownDiscrete(ans, samples)
 
+@ignoresConfiguredInferenceProgram
 def test_serialize_recursion():
-    if defaultKernel() != 'mh':
-        raise SkipTest("Doesn't depend on kernel, only run it for mh")
     v = get_ripl()
     v.assume('f', '''
 (mem (lambda (x)
@@ -220,9 +217,8 @@ def test_serialize_recursion():
         assert 'maximum recursion depth exceeded' not in e.message
         raise
 
+@ignoresConfiguredInferenceProgram
 def test_serialize_repeatedly():
-    if defaultKernel() != 'mh':
-        raise SkipTest("Doesn't depend on kernel, only run it for mh")
     v = get_ripl()
     v.assume('theta', '(beta 1 1)')
     v.observe('(flip theta)', 'true')

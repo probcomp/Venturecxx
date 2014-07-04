@@ -1,7 +1,7 @@
 import scipy.stats as stats
 import math
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportKnownContinuous, reportKnownMeanVariance
-from venture.test.config import get_ripl, collectSamples, defaultKernel
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling
 from nose import SkipTest
 from nose.tools import eq_
 
@@ -60,10 +60,9 @@ def testEvalIf2():
   ripl.assume("expr", "(array (quote if) true 1 2)")
   eq_(ripl.predict("(eval expr (get_current_environment))"), 1)
 
+@skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
 def testEval2():
-  if defaultKernel() == "rejection":
-    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)",label="pid")
@@ -82,11 +81,10 @@ def testEval2():
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
   return reportKnownContinuous(cdf, predictions, "approximately beta(2,1)")
 
+@skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
 def testEval3():
   "testEval2 with booby traps"
-  if defaultKernel() == "rejection":
-    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)",label="pid")
