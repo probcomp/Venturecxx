@@ -146,7 +146,7 @@ class Infer(object):
         k = j + 1
         weights.append(weighted_subkernels[j])
         subkernels.append(weighted_subkernels[k])
-      for _ in range(transitions):
+      for _ in range(int(transitions)):
         self.do_infer_exp(simulateCategorical(weights, subkernels))
     else: # A primitive infer expression
       self.engine.primitive_infer(exp)
