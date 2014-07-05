@@ -33,6 +33,7 @@ class PlotSpec(object):
   def plot(self, dataset, names):
     self.draw(dataset, names)
     plt.show()
+    # FIXME: add something to track names of frames here
 
   def streams(self):
     return chain(*[frame.streams for frame in self.frames])
