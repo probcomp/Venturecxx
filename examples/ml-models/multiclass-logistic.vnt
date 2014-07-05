@@ -11,15 +11,26 @@
 
 [assume get_class_w
   (lambda (i)
-    (vector (make_w i 1) ... (make_w i D)))]
+    (vector (get_w i 1) (get_w i 2)))]
+    ;(vector (get_w i 1) ... (get_w i D)))]
 
-[assume get_unnormalized_class_prob
+[assume get_unnorm_class_prob
   (lambda (x i)
-    (dot (make_class_w i) x))]
+    (exp (dot (get_class_w i) x)))]
+
+[assume get_normalization
+  (lambda (x)
+    ;(+ (get_unnorm_class_prob x 1) ... (get_unnorm_class_prob x C)))]
+    (+ (get_unnorm_class_prob x 1) (get_unnorm_class_prob x 2) (get_unnorm_class_prob x 3)))]
+
+[assume get_norm_class_prob
+  (lambda (x i)
+    (/ (get_unnorm_class_prob x i) (get_normalization x)))]
 
 [assume get_simplex
   (lambda (x)
-    (simplex (get_unnormalized_class_prob x 1) ... (get_unnormalized_class_prob x C)))]
+    (simplex (get_norm_class_prob x 1) (get_norm_class_prob x 2) (get_norm_class_prob x 3)))]
+    ;(simplex (get_norm_class_prob x 1) ... (get_norm_class_prob x C)))]
 
 [assume get_class
   (mem (lambda (x)
