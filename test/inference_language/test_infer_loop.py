@@ -17,3 +17,6 @@ def testInferLoopSmoke():
     assert not v == ripl.sample("x")
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
+
+def testStopSmoke():
+  get_ripl().stop_continuous_inference()

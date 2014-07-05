@@ -282,8 +282,9 @@ effect of renumbering the directives, if some had been forgotten."""
       self.inferrer.stop()
       self.inferrer = None
     else:
-      # Running CI in the underlying traces
-      for trace in self.traces: trace.stop_continuous_inference()
+      # May be running CI in the underlying traces
+      if self.continuous_inference_status()["running"]:
+        for trace in self.traces: trace.stop_continuous_inference()
 
   def dump_trace(self, trace, skipStackDictConversion=False):
     db = trace.makeSerializationDB()
