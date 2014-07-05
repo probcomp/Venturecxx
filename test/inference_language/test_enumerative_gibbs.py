@@ -53,8 +53,8 @@ def testEnumerativeGibbsBoostThrashExact():
   return reportKnownDiscrete(ans, predictions)
 
 def testEnumerativeGibbsBoostThrashClose():
-  yield checkEnumerativeGibbsBoostThrashClose, False
-  yield checkEnumerativeGibbsBoostThrashClose, True
+  yield checkEnumerativeGibbsBoostThrashClose, "false"
+  yield checkEnumerativeGibbsBoostThrashClose, "true"
 
 @statisticalTest
 def checkEnumerativeGibbsBoostThrashClose(in_parallel):
@@ -79,8 +79,8 @@ def testEnumerativeGibbsCategorical1():
   return reportKnownDiscrete(ans, predictions)
   
 def testEnumerativeGibbsXOR1():
-  yield checkEnumerativeGibbsXOR1, False
-  yield checkEnumerativeGibbsXOR1, True
+  yield checkEnumerativeGibbsXOR1, "false"
+  yield checkEnumerativeGibbsXOR1, "true"
 
 @statisticalTest
 def checkEnumerativeGibbsXOR1(in_parallel):
@@ -99,8 +99,8 @@ def checkEnumerativeGibbsXOR1(in_parallel):
   return reportKnownDiscrete(ans, predictions)
 
 def testEnumerativeGibbsXOR2():
-  yield checkEnumerativeGibbsXOR2, False
-  yield checkEnumerativeGibbsXOR2, True
+  yield checkEnumerativeGibbsXOR2, "false"
+  yield checkEnumerativeGibbsXOR2, "true"
 
 @statisticalTest
 def checkEnumerativeGibbsXOR2(in_parallel):
@@ -117,8 +117,8 @@ def checkEnumerativeGibbsXOR2(in_parallel):
   return reportKnownDiscrete(ans, predictions)
 
 def testEnumerativeGibbsXOR3():
-  yield checkEnumerativeGibbsXOR3, False
-  yield checkEnumerativeGibbsXOR3, True
+  yield checkEnumerativeGibbsXOR3, "false"
+  yield checkEnumerativeGibbsXOR3, "true"
 
 @statisticalTest
 def checkEnumerativeGibbsXOR3(in_parallel):
