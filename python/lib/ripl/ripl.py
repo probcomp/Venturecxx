@@ -439,6 +439,14 @@ Open issues:
         else:
             raise TypeError("Unknown params: " + str(params))
 
+    def defaultInferProgram(self, program):
+        if program is None:
+            return "(rejection default all 1)"
+        elif isinstance(program, int):
+            return "(mh default one %s)" % program
+        else:
+            return program
+
     def infer(self, params=None, type=False):
         o = self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
         ans = o["value"]
