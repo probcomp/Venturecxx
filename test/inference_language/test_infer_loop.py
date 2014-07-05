@@ -1,3 +1,5 @@
+import time
+
 from venture.test.config import get_ripl
 
 def testStopSmoke():
@@ -7,6 +9,7 @@ def assertInferring(ripl):
   # If continuous inference is really running, the value of x should
   # change without me doing anything
   v = ripl.sample("x")
+  time.sleep(0.00001) # Yield to give CI a chance to work
   assert not v == ripl.sample("x")
 
 def assertNotInferring(ripl):
