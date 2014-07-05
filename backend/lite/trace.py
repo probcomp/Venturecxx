@@ -422,7 +422,7 @@ class Trace(object):
       if operator == "mh":
         mixMH(self, BlockScaffoldIndexer(scope, block), MHOperator())
       elif operator == "meanfield":
-        steps = exp[3]
+        steps = int(exp[3])
         mixMH(self, BlockScaffoldIndexer(scope, block), MeanfieldOperator(steps, 0.0001))
       elif operator == "hmc":
         (epsilon,  L) = exp[3:5]
