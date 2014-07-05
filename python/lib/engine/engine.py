@@ -365,7 +365,6 @@ class ContinuousInferrer(object):
     self.engine = engine
     self.params = copy.deepcopy(params)
     self.params["in_python"] = True
-    self.last_print = time.time()
     import threading as t
     self.inferrer = t.Thread(target=self.infer_continuously, args=(params,))
     self.inferrer.start()
@@ -374,11 +373,10 @@ class ContinuousInferrer(object):
     # Can use the storage of the thread object itself as the semaphore
     # controlling whether continuous inference proceeds.
     while self.inferrer is not None:
-      out = Infer(self.engine).infer(params)
-      now = time.time()
-      if now - self.last_print > 0.1: # seconds between prints
-        self.last_print = now
-        print out
+      # TODO React somehow to peeks and plotfs in the inference program
+      # Currently suppressed for fear of clobbering the prompt
+      Infer(self.engine).infer(params)
+      time.sleep(0.0001) # Yield to be a good citizen
 
   def stop(self):
     inferrer = self.inferrer
