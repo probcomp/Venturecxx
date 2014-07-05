@@ -274,7 +274,15 @@ effect of renumbering the directives, if some had been forgotten."""
       for trace in self.traces: trace.start_continuous_inference(params)
     else:
       # Run CI in Python
-      self.inferrer = ContinuousInferrer(self, params)
+      if "exp" in params:
+        self.start_continuous_inference_exp(params["exp"])
+      else:
+        self.inferrer = ContinuousInferrer(self, params)
+
+  def start_continuous_inference_exp(self, program):
+    # Start continuous inference in the model-parsed infer expression
+    # code path.
+    self.inferrer = ContinuousInferrer(self, program, expression_mode=True)
 
   def stop_continuous_inference(self):
     if self.inferrer is not None:
@@ -367,12 +375,15 @@ effect of renumbering the directives, if some had been forgotten."""
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
 
 class ContinuousInferrer(object):
-  def __init__(self, engine, params):
+  def __init__(self, engine, params, expression_mode=False):
     self.engine = engine
-    self.params = copy.deepcopy(params)
-    self.params["in_python"] = True
+    if expression_mode:
+      self.params = {"exp": params, "in_python":True}
+    else:
+      self.params = copy.deepcopy(params)
+      self.params["in_python"] = True
     import threading as t
-    self.inferrer = t.Thread(target=self.infer_continuously, args=(params,))
+    self.inferrer = t.Thread(target=self.infer_continuously, args=(self.params,))
     self.inferrer.start()
 
   def infer_continuously(self, params):
@@ -381,7 +392,10 @@ class ContinuousInferrer(object):
     while self.inferrer is not None:
       # TODO React somehow to peeks and plotfs in the inference program
       # Currently suppressed for fear of clobbering the prompt
-      Infer(self.engine).infer(params)
+      if "exp" in params:
+        Infer(self.engine).infer_exp(params["exp"])
+      else:
+        Infer(self.engine).infer(params)
       time.sleep(0.0001) # Yield to be a good citizen
 
   def stop(self):
