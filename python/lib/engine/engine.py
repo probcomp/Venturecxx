@@ -384,6 +384,7 @@ class ContinuousInferrer(object):
       self.params["in_python"] = True
     import threading as t
     self.inferrer = t.Thread(target=self.infer_continuously, args=(self.params,))
+    self.inferrer.daemon = True
     self.inferrer.start()
 
   def infer_continuously(self, params):
