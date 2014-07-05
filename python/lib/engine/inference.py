@@ -105,7 +105,7 @@ class Infer(object):
         (_, expression, name) = exp
       else:
         (_, expression) = exp
-      name = default_name_for_exp(expression)
+        name = default_name_for_exp(expression)
       self._ensure_peek_name(name)
       if operator == "peek":
         # The sample method expects stack dicts, not Python
