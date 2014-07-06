@@ -5,7 +5,9 @@ from builtin import typed_nr
 
 class MHOutputPSP(psp.DeterministicPSP):
   def simulate(self, args):
-    return sp.VentureSP(psp.NullRequestPSP(), MadeMHOutputPSP(*args.operandValues))
+    return sp.VentureSP(psp.NullRequestPSP(),
+                        psp.TypedPSP(MadeMHOutputPSP(*args.operandValues),
+                                     sp.SPType([v.ForeignBlobType()], v.ForeignBlobType())))
 
 class MadeMHOutputPSP(psp.RandomPSP):
   def __init__(self, scope, block, transitions):
