@@ -85,14 +85,15 @@ class Infer(object):
     self.do_infer_exp(program)
     return self.plot if self.plot is not None else self.out
 
+  def default_name_for_exp(self,exp):
+    if isinstance(exp, basestring):
+      return exp
+    elif hasattr(exp, "__iter__"):
+      return "(" + ' '.join([self.default_name_for_exp(e) for e in exp]) + ")"
+    else:
+      return str(exp)
+
   def do_infer_exp(self, exp):
-    def default_name_for_exp(exp):
-      if isinstance(exp, basestring):
-        return exp
-      elif hasattr(exp, "__iter__"):
-        return "(" + ' '.join([default_name_for_exp(e) for e in exp]) + ")"
-      else:
-        return str(exp)
     operator = exp[0]
     if operator == "resample":
       assert len(exp) == 2
@@ -106,7 +107,7 @@ class Infer(object):
         (_, expression, name) = exp
       else:
         (_, expression) = exp
-        name = default_name_for_exp(expression)
+        name = self.default_name_for_exp(expression)
       self._ensure_peek_name(name)
       if operator == "peek":
         # The sample method expects stack dicts, not Python
@@ -120,7 +121,7 @@ class Infer(object):
       assert len(exp) >= 2
       spec = exp[1]
       exprs = exp[2:]
-      names = [default_name_for_exp(e) for e in exprs]
+      names = [self.default_name_for_exp(e) for e in exprs]
       self._ensure_plot(spec, names, exprs)
       self.plot.add_data(self.engine)
     elif operator == "loop":
