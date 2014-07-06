@@ -57,6 +57,7 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   # (define special methods for peek, peek-all, and plotf; extract the
   # return value from the foreign blob at the end of inference; quote
   # the specs; retrogress on automatic names until there are macros
+  SPsListEntry("peek", [v.AnyType(), v.SymbolType()], klass=MadeEngineMethodInferOutputPSP, min_req_args=1),
 
   # Actually, could define infer expression macros by adding another
   # transformation step in the engine.  Benefits:

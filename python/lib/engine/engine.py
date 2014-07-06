@@ -226,10 +226,12 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def macroexpand_inference(self, program):
     if type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
+      assert len(program) == 3
       subkernels = self.macroexpand_inference(program[1])
       transitions = self.macroexpand_inference(program[2])
       return [program[0], [sym("list")] + subkernels, transitions]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "mixture":
+      assert len(program) == 3
       weights = []
       subkernels = []
       weighted_ks = self.macroexpand_inference(program[1])
@@ -240,6 +242,13 @@ effect of renumbering the directives, if some had been forgotten."""
         weights.append(weighted_ks[j])
         subkernels.append(weighted_ks[k])
       return [program[0], [sym("simplex")] + weights, [sym("array")] + subkernels, transitions]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] in ["peek", "peek-all"]:
+      assert 2 <= len(program) and len(program) <= 3
+      expr = [sym("quote"), program[1]]
+      if len(program) == 2:
+        return [program[0], expr]
+      else:
+        return [program[0], expr, [sym("quote"), program[2]]]
     elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
     else: return program
 
