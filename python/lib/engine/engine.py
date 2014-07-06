@@ -223,6 +223,17 @@ effect of renumbering the directives, if some had been forgotten."""
       subkernels = self.macroexpand_inference(program[1])
       transitions = self.macroexpand_inference(program[2])
       return [program[0], [sym("list")] + subkernels, transitions]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "mixture":
+      weights = []
+      subkernels = []
+      weighted_ks = self.macroexpand_inference(program[1])
+      transitions = self.macroexpand_inference(program[2])
+      for i in range(len(weighted_ks)/2):
+        j = 2*i
+        k = j + 1
+        weights.append(weighted_ks[j])
+        subkernels.append(weighted_ks[k])
+      return [program[0], [sym("simplex")] + weights, [sym("array")] + subkernels, transitions]
     elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
     else: return program
 
