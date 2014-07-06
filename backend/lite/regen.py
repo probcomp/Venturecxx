@@ -2,7 +2,7 @@ import numbers
 import exp as e
 from node import ConstantNode, LookupNode, RequestNode, OutputNode
 from sp import VentureSP
-from psp import NullRequestPSP
+from psp import NullRequestPSP, PSP
 from value import SPRef
 from lkernel import VariationalLKernel
 from scope import isScopeIncludeOutputPSP
@@ -143,6 +143,7 @@ def processMadeSP(trace,node,isAAA):
 def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
   psp,args = trace.pspAt(node),trace.argsAt(node)
+  assert isinstance(psp, PSP)
 
   if omegaDB.hasValueFor(node): oldValue = omegaDB.getValue(node)
   else: oldValue = None
