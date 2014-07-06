@@ -241,15 +241,18 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def install_inference_prelude(self, next_trace):
     for did, (name, form) in enumerate([
-        ["cycle", """(lambda (ks iter) (iterate (sequence ks) iter))"""],
+        ["cycle", """(lambda (ks iter)
+  (iterate (sequence ks) iter))"""],
         ["iterate", """(lambda (f iter)
-      (if (<= iter 1)
-          f
-          (lambda (t) (f ((iterate f (- iter 1)) t)))))"""],
+  (if (<= iter 1)
+      f
+      (lambda (t) (f ((iterate f (- iter 1)) t)))))"""],
         ["sequence", """(lambda (ks)
-      (if (is_pair ks)
-          (lambda (t) ((sequence (rest ks)) ((first ks) t)))
-          (lambda (t) t)))"""]]):
+  (if (is_pair ks)
+      (lambda (t) ((sequence (rest ks)) ((first ks) t)))
+      (lambda (t) t)))"""],
+        ["mixture", """(lambda (weights kernels transitions)
+  (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""]]):
       from venture.parser.church_prime_parser import ChurchPrimeParser
       from venture.sivm.utils import desugar_expression
       from venture.sivm.core_sivm import _modify_expression
