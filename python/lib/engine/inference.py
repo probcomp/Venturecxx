@@ -151,13 +151,17 @@ class Infer(object):
   def primitive_infer(self, exp): self.engine.primitive_infer(exp)
   def resample(self, ct): self.engine.resample(ct)
   def incorporate(self): pass # Since we incorporate at the beginning anyway
-  def peek(self, expression, name):
+  def peek(self, expression, name=None):
+    if name is None:
+      name = self.default_name_for_exp(expression)
     self._ensure_peek_name(name)
     # The sample method expects stack dicts, not Python
     # representations of expressions...
     value = self.engine.sample(ExpressionType().asVentureValue(expression).asStackDict())
     self.out[name].append(value)
-  def peek_all(self, expression, name):
+  def peek_all(self, expression, name=None):
+    if name is None:
+      name = self.default_name_for_exp(expression)
     self._ensure_peek_name(name)
     values = self.engine.sample_all(ExpressionType().asVentureValue(expression).asStackDict())
     self.out[name].append(values)
