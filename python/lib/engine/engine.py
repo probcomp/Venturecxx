@@ -222,7 +222,7 @@ effect of renumbering the directives, if some had been forgotten."""
       self.start_continuous_inference_exp(ExpressionType().asPython(VentureValue.fromStackDict(prog)))
     else:
       exp = self.desugarLambda(self.macroexpand_inference(program))
-      self.infer_v1_pre_t(exp, Infer(self))
+      return self.infer_v1_pre_t(exp, Infer(self))
 
   def macroexpand_inference(self, program):
     if type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
@@ -264,6 +264,11 @@ effect of renumbering the directives, if some had been forgotten."""
       next_trace.bindPrimitiveSP(name, sp)
     self.install_inference_prelude(next_trace)
     next_trace.eval(4, [program, {"type":"blob", "value":target}])
+    ans = next_trace.extractValue(4)
+    assert isinstance(ans, dict)
+    assert ans["type"] is "blob"
+    assert isinstance(ans["value"], Infer)
+    return ans["value"].final_data()
 
   def install_inference_prelude(self, next_trace):
     for did, (name, form) in enumerate([
