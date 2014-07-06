@@ -53,7 +53,7 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
 
   SPsListEntry("resample", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("incorporate", [], klass=MadeEngineMethodInferOutputPSP),
-  # TODO Implement cycle, mixture by writing them in Venture
+  # TODO Implement mixture by writing it in Venture
   # TOOD Implement loop by catching it in the engine
   # TODO Implement peek and plotf by passing the Infer object instead of the Engine
   # (define special methods for peek, peek-all, and plotf; extract the
