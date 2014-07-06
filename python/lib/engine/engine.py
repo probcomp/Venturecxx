@@ -213,6 +213,20 @@ effect of renumbering the directives, if some had been forgotten."""
   def infer_exp(self, program):
     return Infer(self).infer_exp(ExpressionType().asPython(VentureValue.fromStackDict(program)))
 
+  def infer_v1_pre(self, program):
+    exp = self.desugarLambda(program) # ExpressionType().asPython(VentureValue.fromStackDict(program))
+    for trace in self.traces:
+      self.infer_v1_pre_t(exp, trace)
+
+  def infer_v1_pre_t(self, program, target):
+    import venture.lite.trace as lite
+    next_trace = lite.Trace()
+    # TODO Import the enclosing lexical environment into the new trace?
+    import venture.lite.inference_sps as inf
+    for name,sp in inf.inferenceSPsList:
+      next_trace.bindPrimitiveSP(name, sp)
+    next_trace.eval(1, [program, {"type":"blob", "value":target}])
+
   def primitive_infer(self, params):
     for trace in self.traces:
       if isinstance(params, dict):
