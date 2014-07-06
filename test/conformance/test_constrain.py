@@ -7,7 +7,7 @@ from nose import SkipTest
 def testConstrainAVar1a():
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func-pgibbs 0 0 3 50)",
+            "(func_pgibbs 0 0 3 50)",
             "(pgibbs 0 0 3 50)",
             "(gibbs 0 0 50)",
             ]:
@@ -28,7 +28,7 @@ def checkConstrainAVar1a(program):
 def testConstrainAVar1b():
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func-pgibbs 0 0 3 50)",
+            "(func_pgibbs 0 0 3 50)",
             "(pgibbs 0 0 3 50)",
             "(gibbs 0 0 50)",
             ]:
@@ -49,7 +49,7 @@ def checkConstrainAVar1b(program):
 def testConstrainAVar2a():
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func-pgibbs 0 0 3 50)",
+            "(func_pgibbs 0 0 3 50)",
             "(pgibbs 0 0 3 50)",
             "(gibbs 0 0 50)",
             ]:
@@ -71,7 +71,7 @@ def checkConstrainAVar2a(program):
 def testConstrainAVar2b():
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func-pgibbs 0 0 3 50)",
+            "(func_pgibbs 0 0 3 50)",
             "(pgibbs 0 0 3 50)",
             "(gibbs 0 0 50)",
             ]:
@@ -119,7 +119,7 @@ def testConstrainAVar3b():
 def testConstrainAVar4a():
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func-pgibbs 0 0 3 50)",
+            "(func_pgibbs 0 0 3 50)",
             "(pgibbs 0 0 3 50)",
             "(gibbs 0 0 50)",
             ]:
@@ -142,7 +142,7 @@ def checkConstrainAVar4a(program):
 def testConstrainAVar4b():
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func-pgibbs 0 0 3 50)",
+            "(func_pgibbs 0 0 3 50)",
             "(pgibbs 0 0 3 50)",
             "(gibbs 0 0 50)",
             ]:
@@ -164,7 +164,7 @@ def checkConstrainAVar4b(program):
 def testConstrainAVar4c():
   for p in ["(mh 0 0 50)",
             # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func-pgibbs 0 0 3 50)",
+            "(func_pgibbs 0 0 3 50)",
             "(pgibbs 0 0 3 50)",
             "(gibbs 0 0 50)",
             ]:
@@ -186,7 +186,7 @@ def checkConstrainAVar4c(program):
 def testConstrainAVar5a():
   for p in ["(mh 0 0 50)",
             "(rejection 0 0 50)",
-            "(func-pgibbs 0 0 3 50 false)",
+            "(func_pgibbs 0 0 3 50 false)",
             "(pgibbs 0 0 3 50 false)",
             "(gibbs 0 0 50 false)",
             ]:
@@ -212,7 +212,7 @@ def checkConstrainAVar5a(program):
 def testConstrainAVar5b():
   for p in ["(mh 0 0 50)",
             "(rejection 0 0 50)",
-            "(func-pgibbs 0 0 3 50 false)",
+            "(func_pgibbs 0 0 3 50 false)",
             "(pgibbs 0 0 3 50 false)",
             "(gibbs 0 0 50 false)",
             ]:
@@ -236,7 +236,7 @@ def checkConstrainAVar5b(program):
 def testConstrainAVar6a():
   for p in ["(mh 0 0 50)",
             "(rejection 0 0 50)",
-            "(func-pgibbs 0 0 3 50 false)",
+            "(func_pgibbs 0 0 3 50 false)",
             "(pgibbs 0 0 3 50 false)",
             "(gibbs 0 0 50 false)",
             ]:
@@ -260,7 +260,7 @@ def checkConstrainAVar6a(program):
 def testConstrainAVar6b():
   for p in ["(mh 0 0 50)",
             "(rejection 0 0 50)",
-            "(func-pgibbs 0 0 3 50 false)",
+            "(func_pgibbs 0 0 3 50 false)",
             "(pgibbs 0 0 3 50 false)",
             "(gibbs 0 0 50 false)",
             ]:
@@ -285,7 +285,7 @@ def testConstrainWithAPredict1():
   if config["get_ripl"] != "lite": raise SkipTest("assert(false) crashes NoseTests")
   for p in ["(mh default one 50)",
             "(rejection default all 50)",
-            "(func-pgibbs default ordered 3 50 false)",
+            "(func_pgibbs default ordered 3 50 false)",
             "(pgibbs default ordered 3 50 false)",
             "(meanfield default one 50)",
             ]:

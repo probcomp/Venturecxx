@@ -84,11 +84,12 @@ class Ripl():
         except VentureException as e:
             import sys
             info = sys.exc_info()
-#            try:
-            self._raise_annotated_error(e, instruction)
-#            except Exception as e2:
-#                print "Trying to annotate an exception led to %r" % e2
-#                raise e, None, info[2]
+            try:
+                annotated = self._annotated_error(e, instruction)
+            except Exception as e2:
+                print "Trying to annotate an exception led to %r" % e2
+                raise e, None, info[2]
+            raise annotated, None, info[2]
         # if directive, then save the text string
         if parsed_instruction['instruction'] in ['assume','observe',
                 'predict','labeled_assume','labeled_observe','labeled_predict']:
@@ -97,7 +98,7 @@ class Ripl():
             self.directive_id_to_mode[did] = self.mode
         return ret_value
 
-    def _raise_annotated_error(self, e, instruction):
+    def _annotated_error(self, e, instruction):
         # TODO This error reporting is broken for ripl methods,
         # because the computed text chunks refer to the synthetic
         # instruction string instead of the actual data the caller
@@ -143,7 +144,7 @@ class Ripl():
         b = e.data['text_index'][1]+1
         e.data['text_snippet'] = instruction_string[a:b]
         e.data['instruction_string'] = instruction_string
-        raise e
+        return e
 
     def execute_program(self, program_string, params=None):
         p = self._cur_parser()
@@ -438,8 +439,19 @@ Open issues:
         else:
             raise TypeError("Unknown params: " + str(params))
 
+    def defaultInferProgram(self, program):
+        if program is None:
+            return "(rejection default all 1)"
+        elif isinstance(program, int):
+            return "(mh default one %s)" % program
+        else:
+            return program
+
     def infer(self, params=None, type=False):
-        o = self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
+        if hasattr(self, 'backend_name') and self.backend_name == "lite":
+            o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)})
+        else:
+            o = self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
         ans = o["value"]
         if type:
             return ans

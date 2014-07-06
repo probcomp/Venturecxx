@@ -2,7 +2,7 @@ from venture.test.config import get_ripl
 
 def testBrushScope():
   yield checkBrushScope, "pgibbs"
-  yield checkBrushScope, "func-pgibbs"
+  yield checkBrushScope, "func_pgibbs"
 
 def checkBrushScope(operator):
   """Check that putting scope control in the brush doesn't cause

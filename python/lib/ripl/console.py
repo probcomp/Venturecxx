@@ -114,7 +114,26 @@ class RiplCmd(Cmd, object):
   def do_list_directives(self, _s):
     '''List active directives and their current values.'''
     for directive in self.ripl.list_directives():
-      print "%d:\t%s" % (directive['directive_id'], str(directive['value']))
+      dir_id = directive['directive_id']
+      dir_val = str(directive['value'])
+      dir_type = directive['instruction']
+
+      # TODO: display expressions in a sensible way
+
+      #print "DIRECTIVE: " + str(directive)
+
+      if dir_type == "assume":
+        dir_name = directive['symbol']
+        print "%d: assume %s:\t%s" % (dir_id, dir_name, dir_val)
+      elif dir_type == "observe":
+        dir_expr = directive['expression']
+        dir_literal = dir_val
+        print "%d: observe %s = \t%s" % (dir_id, dir_expr, dir_literal)
+      elif dir_type == "predict":
+        dir_expr = directive['expression']
+        print "%d: predict %s:\t %s" % (dir_id, dir_expr, dir_val)
+      else:
+        assert False, "Unknown directive type found: %s" & str(directive)
 
   @catchesVentureException
   def do_infer(self, s):

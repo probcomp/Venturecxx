@@ -23,15 +23,20 @@ class Backend(object):
     def make_venture_sivm(self):
         return sivm.VentureSivm(self.make_core_sivm())
     def make_church_prime_ripl(self):
-        return ripl.Ripl(self.make_venture_sivm(), {"church_prime":parser.ChurchPrimeParser.instance()})
+        r = ripl.Ripl(self.make_venture_sivm(), {"church_prime":parser.ChurchPrimeParser.instance()})
+        r.backend_name = self.name()
+        return r
     def make_venture_script_ripl(self):
-        return ripl.Ripl(self.make_venture_sivm(), {"venture_script":parser.VentureScriptParser.instance()})
+        r = ripl.Ripl(self.make_venture_sivm(), {"venture_script":parser.VentureScriptParser.instance()})
+        r.backend_name = self.name()
+        return r
     def make_combined_ripl(self):
         v = self.make_venture_sivm()
         parser1 = parser.ChurchPrimeParser.instance()
         parser2 = parser.VentureScriptParser.instance()
         r = ripl.Ripl(v,{"church_prime":parser1, "venture_script":parser2})
         r.set_mode("church_prime")
+        r.backend_name = self.name()
         return r
     def make_ripl_rest_server(self):
         return server.RiplRestServer(self.make_combined_ripl())
@@ -40,16 +45,19 @@ class CXX(Backend):
     def make_core_sivm(self):
         from venture.cxx import engine
         return sivm.CoreSivm(engine.Engine())
+    def name(self): return "cxx"
 
 class Lite(Backend):
     def make_core_sivm(self):
         from venture.lite import engine
         return sivm.CoreSivm(engine.Engine())
+    def name(self): return "lite"
 
 class Puma(Backend):
     def make_core_sivm(self):
         from venture.puma import engine
         return sivm.CoreSivm(engine.Engine())
+    def name(self): return "puma"
 
 def backend(name = "puma"):
     if name == "lite":
