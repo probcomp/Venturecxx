@@ -53,7 +53,6 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
 
   SPsListEntry("resample", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("incorporate", [], klass=MadeEngineMethodInferOutputPSP),
-  # TOOD Implement loop by catching it in the engine
   # TODO Implement peek and plotf by passing the Infer object instead of the Engine
   # (define special methods for peek, peek-all, and plotf; extract the
   # return value from the foreign blob at the end of inference; quote
