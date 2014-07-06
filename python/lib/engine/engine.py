@@ -216,8 +216,7 @@ effect of renumbering the directives, if some had been forgotten."""
   def infer_v1_pre(self, program):
     self.incorporate()
     exp = self.desugarLambda(program) # ExpressionType().asPython(VentureValue.fromStackDict(program))
-    for trace in self.traces:
-      self.infer_v1_pre_t(exp, trace)
+    self.infer_v1_pre_t(exp, self)
 
   def infer_v1_pre_t(self, program, target):
     import venture.lite.trace as lite

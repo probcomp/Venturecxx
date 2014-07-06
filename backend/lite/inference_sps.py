@@ -13,13 +13,10 @@ class InferPrimitiveOutputPSP(psp.DeterministicPSP):
 
 class MadeInferPrimitiveOutputPSP(psp.RandomPSP):
   def __init__(self, name, exp):
-    from venture.ripl.utils import expToDict
-    self.params = expToDict([name] + exp)
-    if "in_parallel" not in self.params:
-      self.params['in_parallel'] = True
+    self.exp = [name] + exp
   def canAbsorb(self, _trace, _appNode, _parentNode): return False
   def simulate(self, args):
-    args.operandValues[0].infer(self.params)
+    args.operandValues[0].primitive_infer(self.exp)
     return args.operandValues[0]
 
 def SPsListEntry(name, args_types, **kwargs):
@@ -42,8 +39,7 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   SPsListEntry("map", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
   SPsListEntry("nesterov", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
   SPsListEntry("rejection", [v.ExpressionType(), v.ExpressionType(), v.IntegerType()], min_req_args=2),
-  # TOOD These resample, incorporate and loop operate at the engine level, so make them special forms
-
+  # TOOD Resample, incorporate and loop operate on the engine specially
   # TODO Cycle, mixture
   # TODO What do I do about peek and plotf?
 
