@@ -24,3 +24,5 @@ inferenceSPsList = [
                    [v.ExpressionType(), v.ExpressionType(), v.IntegerType()],
                    sp.SPType([v.ForeignBlobType()], v.ForeignBlobType())) ],
 ]
+
+inferenceKeywords = [ "default", "all", "one", "ordered" ]

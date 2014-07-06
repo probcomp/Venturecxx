@@ -223,6 +223,9 @@ effect of renumbering the directives, if some had been forgotten."""
     next_trace = lite.Trace()
     # TODO Import the enclosing lexical environment into the new trace?
     import venture.lite.inference_sps as inf
+    import venture.lite.value as v
+    for hack in inf.inferenceKeywords:
+      next_trace.bindPrimitiveName(hack, v.VentureSymbol(hack))
     for name,sp in inf.inferenceSPsList:
       next_trace.bindPrimitiveSP(name, sp)
     next_trace.eval(1, [program, {"type":"blob", "value":target}])
