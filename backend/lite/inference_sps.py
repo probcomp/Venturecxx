@@ -15,6 +15,8 @@ class MadeInferPrimitiveOutputPSP(psp.RandomPSP):
   def __init__(self, name, exp):
     from venture.ripl.utils import expToDict
     self.params = expToDict([name] + exp)
+    if "in_parallel" not in self.params:
+      self.params['in_parallel'] = True
   def canAbsorb(self, _trace, _appNode, _parentNode): return False
   def simulate(self, args):
     args.operandValues[0].infer(self.params)
