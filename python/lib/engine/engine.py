@@ -241,7 +241,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def install_inference_prelude(self, next_trace):
     for did, (name, form) in enumerate([
-        ["cycle", """(lambda (ks iter) (iterate (seqeunce ks) iter))"""],
+        ["cycle", """(lambda (ks iter) (iterate (sequence ks) iter))"""],
         ["iterate", """(lambda (f iter)
       (if (<= iter 1)
           f
