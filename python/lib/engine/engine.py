@@ -215,8 +215,14 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def infer_v1_pre(self, program):
     self.incorporate()
-    exp = self.desugarLambda(self.macroexpand_inference(program)) # ExpressionType().asPython(VentureValue.fromStackDict(program))
-    self.infer_v1_pre_t(exp, self)
+    if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
+      assert len(program) == 2
+      prog = [sym("cycle"), program[1], {"type":"number", "value":1}]
+      # TODO Use the modeling language interpreter for infer loop too
+      self.start_continuous_inference_exp(ExpressionType().asPython(VentureValue.fromStackDict(prog)))
+    else:
+      exp = self.desugarLambda(self.macroexpand_inference(program))
+      self.infer_v1_pre_t(exp, self)
 
   def macroexpand_inference(self, program):
     if type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
