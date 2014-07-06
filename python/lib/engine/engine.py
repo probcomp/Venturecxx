@@ -214,6 +214,7 @@ effect of renumbering the directives, if some had been forgotten."""
     return Infer(self).infer_exp(ExpressionType().asPython(VentureValue.fromStackDict(program)))
 
   def infer_v1_pre(self, program):
+    self.incorporate()
     exp = self.desugarLambda(program) # ExpressionType().asPython(VentureValue.fromStackDict(program))
     for trace in self.traces:
       self.infer_v1_pre_t(exp, trace)
