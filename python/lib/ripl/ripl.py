@@ -448,10 +448,7 @@ Open issues:
             return program
 
     def infer(self, params=None, type=False):
-        if hasattr(self, 'backend_name') and self.backend_name == "lite":
-            o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)})
-        else:
-            o = self.execute_instruction({'instruction':'infer', 'params': self.parseInferParams(params)})
+        o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)})
         ans = o["value"]
         if type:
             return ans

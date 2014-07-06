@@ -214,7 +214,21 @@ effect of renumbering the directives, if some had been forgotten."""
     return Infer(self).infer_exp(ExpressionType().asPython(VentureValue.fromStackDict(program)))
 
   def primitive_infer(self, params):
-    for trace in self.traces: trace.infer(params)
+    for trace in self.traces:
+      if isinstance(params, dict):
+        trace.infer(params)
+      elif hasattr(trace, "infer_exp"):
+        # List style infer command and the trace can handle it natively
+        trace.infer_exp(params)
+      else:
+        # List style infer command that the trace cannot handle natively
+        trace.infer(self.list_style_to_dict_style(params))
+
+  def list_style_to_dict_style(self, exp):
+    import venture.ripl.utils as u
+    params = u.expToDict(exp)
+    self.set_default_params(params)
+    return params
   
   # TODO put all inference param parsing in one place
   def set_default_params(self,params):
