@@ -222,7 +222,7 @@ effect of renumbering the directives, if some had been forgotten."""
       self.start_continuous_inference_exp(ExpressionType().asPython(VentureValue.fromStackDict(prog)))
     else:
       exp = self.desugarLambda(self.macroexpand_inference(program))
-      self.infer_v1_pre_t(exp, self)
+      self.infer_v1_pre_t(exp, Infer(self))
 
   def macroexpand_inference(self, program):
     if type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
