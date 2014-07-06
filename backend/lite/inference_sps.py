@@ -42,10 +42,10 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   SPsListEntry("map", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
   SPsListEntry("nesterov", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
   SPsListEntry("rejection", [v.ExpressionType(), v.ExpressionType(), v.IntegerType()], min_req_args=2),
-  SPsListEntry("resample", [v.IntegerType()]),
-  SPsListEntry("incorporate", []),
+  # TOOD These resample, incorporate and loop operate at the engine level, so make them special forms
 
-  # TODO Cycle, mixture, loop, peek, plotf
+  # TODO Cycle, mixture
+  # TODO What do I do about peek and plotf?
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
