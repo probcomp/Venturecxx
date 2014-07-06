@@ -215,8 +215,16 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def infer_v1_pre(self, program):
     self.incorporate()
-    exp = self.desugarLambda(program) # ExpressionType().asPython(VentureValue.fromStackDict(program))
+    exp = self.desugarLambda(self.macroexpand_inference(program)) # ExpressionType().asPython(VentureValue.fromStackDict(program))
     self.infer_v1_pre_t(exp, self)
+
+  def macroexpand_inference(self, program):
+    if type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
+      subkernels = self.macroexpand_inference(program[1])
+      transitions = self.macroexpand_inference(program[2])
+      return [program[0], [sym("list")] + subkernels, transitions]
+    elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
+    else: return program
 
   def infer_v1_pre_t(self, program, target):
     import venture.lite.trace as lite
@@ -454,3 +462,6 @@ class ContinuousInferrer(object):
     inferrer = self.inferrer
     self.inferrer = None # Grab the semaphore
     inferrer.join()
+
+def sym(symbol):
+  return {"type":"symbol", "value":symbol}
