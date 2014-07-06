@@ -59,7 +59,7 @@ class Infer(object):
       self._ensure_peek_name(name)
       value = self.engine.sample(program['expression'])
       self.out[name].append(value)
-    elif 'command' in program and program['command'] == "peek-all":
+    elif 'command' in program and program['command'] == "peek_all":
       name = program['name']
       self._ensure_peek_name(name)
       values = self.engine.sample_all(program['expression'])
@@ -104,7 +104,7 @@ class Infer(object):
     elif operator == "incorporate":
       assert len(exp) == 1
       self.incorporate()
-    elif operator in ["peek", "peek-all"]:
+    elif operator in ["peek", "peek_all"]:
       assert 2 <= len(exp) and len(exp) <= 3
       if len(exp) == 3:
         (_, expression, name) = exp
