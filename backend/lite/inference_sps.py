@@ -53,9 +53,17 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
 
   SPsListEntry("resample", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("incorporate", [], klass=MadeEngineMethodInferOutputPSP),
-  # TOOD loop operates on the engine specially
-  # TODO Cycle, mixture
-  # TODO What do I do about peek and plotf?
+  # TODO Implement cycle, mixture by writing them in Venture
+  # TOOD Implement loop by catching it in the engine
+  # TODO Implement peek and plotf by passing the Infer object instead of the Engine
+  # (define special methods for peek, peek-all, and plotf; extract the
+  # return value from the foreign blob at the end of inference; quote
+  # the specs; retrogress on automatic names until there are macros
+
+  # Actually, could define infer expression macros by adding another
+  # transformation step in the engine.  Benefits:
+  # - Exact interface compatibility for cycle and mixture
+  # - Automatic names for peek and plotf
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
