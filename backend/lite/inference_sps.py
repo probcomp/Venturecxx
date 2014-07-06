@@ -20,12 +20,14 @@ class MadeInferPrimitiveOutputPSP(psp.RandomPSP):
     args.operandValues[0].infer(self.params)
     return args.operandValues[0]
 
-inferenceSPsList = [
+def SPsListEntry(name, args_types):
   # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
   # Represent the underlying trace as a ForeignBlob for now.
-  [ "mh", typed_nr(InferPrimitiveOutputPSP("mh"),
-                   [v.ExpressionType(), v.ExpressionType(), v.IntegerType()],
-                   sp.SPType([v.ForeignBlobType()], v.ForeignBlobType())) ],
+  return [ name, typed_nr(InferPrimitiveOutputPSP(name), args_types,
+                          sp.SPType([v.ForeignBlobType()], v.ForeignBlobType())) ],
+
+inferenceSPsList = [
+  SPsListEntry("mh", [v.ExpressionType(), v.ExpressionType(), v.IntegerType()])
 ]
 
 inferenceKeywords = [ "default", "all", "one", "ordered" ]
