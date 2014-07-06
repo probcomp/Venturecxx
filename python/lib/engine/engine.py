@@ -228,7 +228,27 @@ effect of renumbering the directives, if some had been forgotten."""
       next_trace.bindPrimitiveName(hack, v.VentureSymbol(hack))
     for name,sp in inf.inferenceSPsList:
       next_trace.bindPrimitiveSP(name, sp)
-    next_trace.eval(1, [program, {"type":"blob", "value":target}])
+    self.install_inference_prelude(next_trace)
+    next_trace.eval(4, [program, {"type":"blob", "value":target}])
+
+  def install_inference_prelude(self, next_trace):
+    for did, (name, form) in enumerate([
+        ["cycle", """(lambda (ks iter) (iterate (seqeunce ks) iter))"""],
+        ["iterate", """(lambda (f iter)
+      (if (<= iter 1)
+          f
+          (lambda (t) (f ((iterate f (- iter 1)) t)))))"""],
+        ["sequence", """(lambda (ks)
+      (if (is_pair ks)
+          (lambda (t) ((sequence (rest ks)) ((first ks) t)))
+          (lambda (t) t)))"""]]):
+      from venture.parser.church_prime_parser import ChurchPrimeParser
+      from venture.sivm.utils import desugar_expression
+      from venture.sivm.core_sivm import _modify_expression
+      exp = self.desugarLambda(_modify_expression(desugar_expression(ChurchPrimeParser.instance().parse_expression(form))))
+      print exp
+      next_trace.eval(did, exp)
+      next_trace.bindInGlobalEnv(name, did)
 
   def primitive_infer(self, params):
     for trace in self.traces:
