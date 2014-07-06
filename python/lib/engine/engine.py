@@ -254,7 +254,6 @@ effect of renumbering the directives, if some had been forgotten."""
       from venture.sivm.utils import desugar_expression
       from venture.sivm.core_sivm import _modify_expression
       exp = self.desugarLambda(_modify_expression(desugar_expression(ChurchPrimeParser.instance().parse_expression(form))))
-      print exp
       next_trace.eval(did, exp)
       next_trace.bindInGlobalEnv(name, did)
 
