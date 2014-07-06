@@ -1,5 +1,7 @@
 import sp
 import psp
+import value as v
+from builtin import typed_nr
 
 class MHOutputPSP(psp.DeterministicPSP):
   def simulate(self, args):
@@ -13,3 +15,12 @@ class MadeMHOutputPSP(psp.RandomPSP):
   def canAbsorb(self, _trace, _appNode, _parentNode): return False
   def simulate(self, args):
     args.operandValues[0].infer({"kernel":"mh","scope":self.scope,"block":self.block,"transitions":int(self.transitions),"with_mutation":True})
+    return args.operandValues[0]
+
+inferenceSPsList = [
+  # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
+  # Represent the underlying trace as a ForeignBlob for now.
+  [ "mh", typed_nr(MHOutputPSP(),
+                   [v.ExpressionType(), v.ExpressionType(), v.IntegerType()],
+                   sp.SPType([v.ForeignBlobType()], v.ForeignBlobType())) ],
+]
