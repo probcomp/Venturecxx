@@ -48,7 +48,7 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   # TODO Cycle, mixture, loop, peek, plotf
 
   # Hackety hack hack backward compatibility
-  ["ordered_range", deterministic_typed(lambda *args: [v.VentureSymbol("ordered_range")] + args,
+  ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
                                         [v.AnyType()], v.ListType(), variadic=True)]
 ]
 
