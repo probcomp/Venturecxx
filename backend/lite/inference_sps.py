@@ -53,7 +53,6 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
 
   SPsListEntry("resample", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("incorporate", [], klass=MadeEngineMethodInferOutputPSP),
-  # TODO Implement mixture by writing it in Venture
   # TOOD Implement loop by catching it in the engine
   # TODO Implement peek and plotf by passing the Infer object instead of the Engine
   # (define special methods for peek, peek-all, and plotf; extract the
@@ -62,7 +61,6 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
 
   # Actually, could define infer expression macros by adding another
   # transformation step in the engine.  Benefits:
-  # - Exact interface compatibility for cycle and mixture
   # - Automatic names for peek and plotf
 
   # Hackety hack hack backward compatibility
