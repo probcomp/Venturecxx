@@ -96,9 +96,10 @@ class Infer(object):
     operator = exp[0]
     if operator == "resample":
       assert len(exp) == 2
-      self.engine.resample(exp[1])
+      self.resample(exp[1])
     elif operator == "incorporate":
       assert len(exp) == 1
+      self.incorporate()
     elif operator in ["peek", "peek-all"]:
       assert 2 <= len(exp) and len(exp) <= 3
       if len(exp) == 3:
@@ -149,7 +150,11 @@ class Infer(object):
       for _ in range(int(transitions)):
         self.do_infer_exp(simulateCategorical(weights, subkernels))
     else: # A primitive infer expression
-      self.engine.primitive_infer(exp)
+      self.primitive_infer(exp)
+
+  def primitive_infer(self, exp): self.engine.primitive_infer(exp)
+  def resample(self, ct): self.engine.resample(ct)
+  def incorporate(self): pass # Since we incorporate at the beginning anyway
 
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
