@@ -156,15 +156,19 @@ class Infer(object):
   def incorporate(self): pass # Since we incorporate at the beginning anyway
   def peek(self, expression, name=None):
     if name is None:
-      name = self.default_name_for_exp(expression)
+      # I was called from the "peek" SP, so the expression is a VentureValue
+      name = self.default_name_for_exp(ExpressionType().asPython(expression))
     self._ensure_peek_name(name)
-    # The sample method expects stack dicts, not Python
+    # The sample method expects stack dicts, not Python or Venture
     # representations of expressions...
+    # Also, ExpressionType().asVentureValue does not alter things that
+    # are already VentureValues.
     value = self.engine.sample(ExpressionType().asVentureValue(expression).asStackDict())
     self.out[name].append(value)
   def peek_all(self, expression, name=None):
     if name is None:
-      name = self.default_name_for_exp(expression)
+      # I was called from the "peek" SP, so the expression is a VentureValue
+      name = self.default_name_for_exp(ExpressionType().asPython(expression))
     self._ensure_peek_name(name)
     values = self.engine.sample_all(ExpressionType().asVentureValue(expression).asStackDict())
     self.out[name].append(values)
