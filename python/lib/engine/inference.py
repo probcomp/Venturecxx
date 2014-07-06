@@ -41,10 +41,13 @@ class Infer(object):
     else:
       raise Exception("TODO Cannot plot with different specs in the same inference program")
 
+  def final_data(self):
+    return self.plot if self.plot is not None else self.out
+
   def infer(self, program):
     self.engine.incorporate()
     self.do_infer(program)
-    return self.plot if self.plot is not None else self.out
+    return self.final_data()
 
   def do_infer(self, program):
     if 'command' in program and program['command'] == "resample":
@@ -83,7 +86,7 @@ class Infer(object):
   def infer_exp(self, program):
     self.engine.incorporate()
     self.do_infer_exp(program)
-    return self.plot if self.plot is not None else self.out
+    return self.final_data()
 
   def default_name_for_exp(self,exp):
     if isinstance(exp, basestring):
