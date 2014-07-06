@@ -6,17 +6,16 @@ from builtin import typed_nr
 class MHOutputPSP(psp.DeterministicPSP):
   def simulate(self, args):
     return sp.VentureSP(psp.NullRequestPSP(),
-                        psp.TypedPSP(MadeMHOutputPSP(*args.operandValues),
+                        psp.TypedPSP(MadeMHOutputPSP(args.operandValues),
                                      sp.SPType([v.ForeignBlobType()], v.ForeignBlobType())))
 
 class MadeMHOutputPSP(psp.RandomPSP):
-  def __init__(self, scope, block, transitions):
-    self.scope = scope
-    self.block = block
-    self.transitions = transitions
+  def __init__(self, exp):
+    from venture.ripl.utils import expToDict
+    self.params = expToDict(["mh"] + exp)
   def canAbsorb(self, _trace, _appNode, _parentNode): return False
   def simulate(self, args):
-    args.operandValues[0].infer({"kernel":"mh","scope":self.scope,"block":self.block,"transitions":int(self.transitions),"with_mutation":True})
+    args.operandValues[0].infer(self.params)
     return args.operandValues[0]
 
 inferenceSPsList = [
