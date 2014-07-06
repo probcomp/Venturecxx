@@ -4,11 +4,12 @@ import value as v
 from builtin import typed_nr, deterministic_typed
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
-  def __init__(self, name):
+  def __init__(self, name, klass):
     self.name = name
+    self.klass = klass
   def simulate(self, args):
     return sp.VentureSP(psp.NullRequestPSP(),
-                        psp.TypedPSP(MadeInferPrimitiveOutputPSP(self.name, args.operandValues),
+                        psp.TypedPSP(self.klass(self.name, args.operandValues),
                                      sp.SPType([v.ForeignBlobType()], v.ForeignBlobType())))
 
 class MadeInferPrimitiveOutputPSP(psp.RandomPSP):
@@ -19,10 +20,20 @@ class MadeInferPrimitiveOutputPSP(psp.RandomPSP):
     args.operandValues[0].primitive_infer(self.exp)
     return args.operandValues[0]
 
-def SPsListEntry(name, args_types, **kwargs):
+class MadeEngineMethodInferOutputPSP(psp.RandomPSP):
+  def __init__(self, name, operands):
+    self.name = name
+    self.operands = operands
+  def canAbsorb(self, _trace, _appNode, _parentNode): return False
+  def simulate(self, args):
+    getattr(args.operandValues[0], self.name)(*self.operands)
+    return args.operandValues[0]
+
+
+def SPsListEntry(name, args_types, klass=MadeInferPrimitiveOutputPSP, **kwargs):
   # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
   # Represent the underlying trace as a ForeignBlob for now.
-  return [ name, typed_nr(InferPrimitiveOutputPSP(name), args_types,
+  return [ name, typed_nr(InferPrimitiveOutputPSP(name, klass=klass), args_types,
                           sp.SPType([v.ForeignBlobType()], v.ForeignBlobType()),
                           **kwargs) ]
 
@@ -39,7 +50,10 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   SPsListEntry("map", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
   SPsListEntry("nesterov", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
   SPsListEntry("rejection", [v.ExpressionType(), v.ExpressionType(), v.IntegerType()], min_req_args=2),
-  # TOOD Resample, incorporate and loop operate on the engine specially
+
+  SPsListEntry("resample", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
+  SPsListEntry("incorporate", [], klass=MadeEngineMethodInferOutputPSP),
+  # TOOD loop operates on the engine specially
   # TODO Cycle, mixture
   # TODO What do I do about peek and plotf?
 
