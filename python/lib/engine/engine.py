@@ -21,6 +21,7 @@ import time
 from venture.exception import VentureException
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
+from venture.lite.value import VentureValue, ExpressionType
 
 class Engine(object):
 
@@ -191,6 +192,7 @@ effect of renumbering the directives, if some had been forgotten."""
       self.weights[i] += trace.makeConsistent()
 
   def resample(self, P):
+    P = int(P)
     newTraces = [None for p in range(P)]
     for p in range(P):
       parent = sampleLogCategorical(self.weights) # will need to include or rewrite
@@ -207,6 +209,9 @@ effect of renumbering the directives, if some had been forgotten."""
     self.set_default_params(params)
 
     return Infer(self).infer(params)
+
+  def infer_exp(self, program):
+    return Infer(self).infer_exp(ExpressionType().asPython(VentureValue.fromStackDict(program)))
 
   def primitive_infer(self, params):
     for trace in self.traces: trace.infer(params)
@@ -269,7 +274,15 @@ effect of renumbering the directives, if some had been forgotten."""
       for trace in self.traces: trace.start_continuous_inference(params)
     else:
       # Run CI in Python
-      self.inferrer = ContinuousInferrer(self, params)
+      if "exp" in params:
+        self.start_continuous_inference_exp(params["exp"])
+      else:
+        self.inferrer = ContinuousInferrer(self, params)
+
+  def start_continuous_inference_exp(self, program):
+    # Start continuous inference in the model-parsed infer expression
+    # code path.
+    self.inferrer = ContinuousInferrer(self, program, expression_mode=True)
 
   def stop_continuous_inference(self):
     if self.inferrer is not None:
@@ -277,8 +290,9 @@ effect of renumbering the directives, if some had been forgotten."""
       self.inferrer.stop()
       self.inferrer = None
     else:
-      # Running CI in the underlying traces
-      for trace in self.traces: trace.stop_continuous_inference()
+      # May be running CI in the underlying traces
+      if self.continuous_inference_status()["running"]:
+        for trace in self.traces: trace.stop_continuous_inference()
 
   def dump_trace(self, trace, skipStackDictConversion=False):
     db = trace.makeSerializationDB()
@@ -361,24 +375,29 @@ effect of renumbering the directives, if some had been forgotten."""
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
 
 class ContinuousInferrer(object):
-  def __init__(self, engine, params):
+  def __init__(self, engine, params, expression_mode=False):
     self.engine = engine
-    self.params = copy.deepcopy(params)
-    self.params["in_python"] = True
-    self.last_print = time.time()
+    if expression_mode:
+      self.params = {"exp": params, "in_python":True}
+    else:
+      self.params = copy.deepcopy(params)
+      self.params["in_python"] = True
     import threading as t
-    self.inferrer = t.Thread(target=self.infer_continuously, args=(params,))
+    self.inferrer = t.Thread(target=self.infer_continuously, args=(self.params,))
+    self.inferrer.daemon = True
     self.inferrer.start()
 
   def infer_continuously(self, params):
     # Can use the storage of the thread object itself as the semaphore
     # controlling whether continuous inference proceeds.
     while self.inferrer is not None:
-      out = Infer(self.engine).infer(params)
-      now = time.time()
-      if now - self.last_print > 0.1: # seconds between prints
-        self.last_print = now
-        print out
+      # TODO React somehow to peeks and plotfs in the inference program
+      # Currently suppressed for fear of clobbering the prompt
+      if "exp" in params:
+        Infer(self.engine).infer_exp(params["exp"])
+      else:
+        Infer(self.engine).infer(params)
+      time.sleep(0.0001) # Yield to be a good citizen
 
   def stop(self):
     inferrer = self.inferrer

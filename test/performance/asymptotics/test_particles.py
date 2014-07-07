@@ -33,6 +33,6 @@ def loadHMMParticleAsymptoticProgram1(M):
 def testHMMParticleAsymptotics1():
   def particulate(num_steps):
     ripl = loadHMMParticleAsymptoticProgram1(num_steps)
-    return lambda : ripl.infer("(func-pgibbs states ordered 10 5)")
+    return lambda : ripl.infer("(func_pgibbs states ordered 10 5)")
 
   timing.assertNLogNTime(particulate)

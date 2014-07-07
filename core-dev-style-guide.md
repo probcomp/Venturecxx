@@ -50,7 +50,7 @@ Test Suite Configuration
 
 - You can select the default inference program (used when the
   particular test doesn't specify) like this:
-  `nosetests -c inference-quality.cfg --tc=infer:"(func-pgibbs default ordered 10 3)"`
+  `nosetests -c inference-quality.cfg --tc=infer:"(func_pgibbs default ordered 10 3)"`
   The default is `(mh default one 50)`.
 
 - `all-inference-quality` checks inference quality in several generic

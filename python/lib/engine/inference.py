@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+
+from venture.lite.value import ExpressionType
 from venture.lite.utils import simulateCategorical
 
 class Infer(object):
@@ -54,7 +56,7 @@ class Infer(object):
       self._ensure_peek_name(name)
       value = self.engine.sample(program['expression'])
       self.out[name].append(value)
-    elif 'command' in program and program['command'] == "peek-all":
+    elif 'command' in program and program['command'] == "peek_all":
       name = program['name']
       self._ensure_peek_name(name)
       values = self.engine.sample_all(program['expression'])
@@ -77,6 +79,77 @@ class Infer(object):
         self.do_infer(simulateCategorical(program["weights"], program["subkernels"]))
     else: # A primitive infer expression
       self.engine.primitive_infer(program)
+
+  def infer_exp(self, program):
+    self.engine.incorporate()
+    self.do_infer_exp(program)
+    return self.plot if self.plot is not None else self.out
+
+  def do_infer_exp(self, exp):
+    def default_name_for_exp(exp):
+      if isinstance(exp, basestring):
+        return exp
+      elif hasattr(exp, "__iter__"):
+        return "(" + ' '.join([default_name_for_exp(e) for e in exp]) + ")"
+      else:
+        return str(exp)
+    operator = exp[0]
+    if operator == "resample":
+      assert len(exp) == 2
+      self.engine.resample(exp[1])
+    elif operator == "incorporate":
+      assert len(exp) == 1
+    elif operator in ["peek", "peek_all"]:
+      assert 2 <= len(exp) and len(exp) <= 3
+      if len(exp) == 3:
+        (_, expression, name) = exp
+      else:
+        (_, expression) = exp
+        name = default_name_for_exp(expression)
+      self._ensure_peek_name(name)
+      if operator == "peek":
+        # The sample method expects stack dicts, not Python
+        # representations of expressions...
+        value = self.engine.sample(ExpressionType().asVentureValue(expression).asStackDict())
+        self.out[name].append(value)
+      else:
+        values = self.engine.sample_all(ExpressionType().asVentureValue(expression).asStackDict())
+        self.out[name].append(values)
+    elif operator == "plotf":
+      assert len(exp) >= 2
+      spec = exp[1]
+      exprs = exp[2:]
+      names = [default_name_for_exp(e) for e in exprs]
+      self._ensure_plot(spec, names, exprs)
+      self.plot.add_data(self.engine)
+    elif operator == "loop":
+      # TODO Assert that loop is only done at the top level?
+      assert len(exp) == 2
+      (_, subkernels) = exp
+      prog = ["cycle", subkernels, 1]
+      self.engine.start_continuous_inference_exp(prog)
+    elif operator == "cycle":
+      assert len(exp) == 3
+      (_, subkernels, transitions) = exp
+      assert type(subkernels) is list
+      for _ in range(int(transitions)):
+        for k in subkernels:
+          self.do_infer_exp(k)
+    elif operator == "mixture":
+      assert len(exp) == 3
+      (_, weighted_subkernels, transitions) = exp
+      assert type(weighted_subkernels) is list
+      weights = []
+      subkernels = []
+      for i in range(len(weighted_subkernels)/2):
+        j = 2*i
+        k = j + 1
+        weights.append(weighted_subkernels[j])
+        subkernels.append(weighted_subkernels[k])
+      for _ in range(int(transitions)):
+        self.do_infer_exp(simulateCategorical(weights, subkernels))
+    else: # A primitive infer expression
+      self.engine.primitive_infer(exp)
 
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.

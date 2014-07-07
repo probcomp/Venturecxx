@@ -360,6 +360,8 @@ class Trace(object):
   # "transitions" (the latter should be named "repeats").
 
   def infer(self,params):
+    if isinstance(params, list):
+      return self.infer_exp(params)
     if not self.scopeHasEntropy(params["scope"]):
       return
     for _ in range(params["transitions"]):
@@ -402,6 +404,56 @@ class Trace(object):
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),RejectionOperator())
       else: raise Exception("INFER (%s) MH is not implemented" % params["kernel"])
+
+      for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
+
+  def infer_exp(self,exp):
+    assert len(exp) >= 4
+    (operator, scope, block) = exp[0:3]
+    maybe_transitions = exp[-1]
+    if isinstance(maybe_transitions, bool):
+      # The last item was the parallelism indicator
+      transitions = int(exp[-2])
+    else:
+      transitions = int(exp[-1])
+    if not self.scopeHasEntropy(scope):
+      return
+    for _ in range(transitions):
+      if operator == "mh":
+        mixMH(self, BlockScaffoldIndexer(scope, block), MHOperator())
+      elif operator == "meanfield":
+        steps = int(exp[3])
+        mixMH(self, BlockScaffoldIndexer(scope, block), MeanfieldOperator(steps, 0.0001))
+      elif operator == "hmc":
+        (epsilon,  L) = exp[3:5]
+        mixMH(self, BlockScaffoldIndexer(scope, block), HamiltonianMonteCarloOperator(epsilon, int(L)))
+      elif operator == "gibbs":
+        mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeGibbsOperator())
+      elif operator == "slice":
+        mixMH(self, BlockScaffoldIndexer(scope, block), SliceOperator())
+      elif operator == "pgibbs":
+        particles = int(exp[3])
+        if isinstance(block, list): # Ordered range
+          (_, min_block, max_block) = block
+          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), PGibbsOperator(particles))
+        else:
+          mixMH(self, BlockScaffoldIndexer(scope, block), PGibbsOperator(particles))
+      elif operator == "func_pgibbs":
+        particles = int(exp[3])
+        if isinstance(block, list): # Ordered range
+          (_, min_block, max_block) = block
+          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), ParticlePGibbsOperator(particles))
+        else:
+          mixMH(self, BlockScaffoldIndexer(scope, block), ParticlePGibbsOperator(particles))
+      elif operator == "map":
+        (rate, steps) = exp[3:5]
+        mixMH(self, BlockScaffoldIndexer(scope, block), MAPOperator(rate, int(steps)))
+      elif operator == "nesterov":
+        (rate, steps) = exp[3:5]
+        mixMH(self, BlockScaffoldIndexer(scope, block), NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
+      elif operator == "rejection":
+        mixMH(self, BlockScaffoldIndexer(scope, block), RejectionOperator())
+      else: raise Exception("INFER %s is not implemented" % operator)
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 

@@ -1,4 +1,5 @@
 from value import VentureValue, registerVentureType, standard_venture_type
+from exception import VentureError
 
 # Environments store Python strings for the symbols, not Venture
 # symbol objects.  This is a choice, but whichever way it is made it
@@ -14,20 +15,20 @@ class VentureEnvironment(VentureValue):
 
   def addBinding(self,sym,val):
     if not isinstance(sym, str):
-      raise Exception("Symbol %s must be a string, not " % (str(sym), type(sym)))
+      raise VentureError("Symbol %s must be a string, not " % (str(sym), type(sym)))
     if sym in self.frame:
-      raise Exception("Symbol '%s' already bound" % sym)
+      raise VentureError("Symbol '%s' already bound" % sym)
     self.frame[sym] = val
 
   def removeBinding(self,sym):
     assert isinstance(sym, str)
     if sym in self.frame: del self.frame[sym]
-    elif not self.outerEnv: raise Exception("Cannot unbind unbound symbol %s" % sym)
+    elif not self.outerEnv: raise VentureError("Cannot unbind unbound symbol %s" % sym)
     else: self.outerEnv.removeBinding(sym)
 
   def findSymbol(self,sym):
     if sym in self.frame: return self.frame[sym]
-    elif not self.outerEnv: raise Exception("Cannot find symbol %s" % sym)
+    elif not self.outerEnv: raise VentureError("Cannot find symbol %s" % sym)
     else: return self.outerEnv.findSymbol(sym)
   # VentureEnvironments are intentionally not comparable until we
   # decide otherwise

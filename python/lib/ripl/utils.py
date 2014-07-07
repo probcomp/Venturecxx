@@ -105,7 +105,7 @@ def expToDict(exp, ripl=None):
   if tag == "mh":
     assert len(exp) == 4
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":True}
-  elif tag == "func-mh":
+  elif tag == "func_mh":
     assert len(exp) == 4
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
   elif tag == "gibbs":
@@ -123,7 +123,7 @@ def expToDict(exp, ripl=None):
   elif tag == "slice":
     assert len(exp) == 4
     return {"kernel":"slice","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":True}
-  # [FIXME] expedient hack for now to allow windowing with pgibbs. 
+  # [FIXME] expedient hack for now to allow windowing with pgibbs.
   elif tag == "pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
     if type(exp[2]) is list:
@@ -131,12 +131,12 @@ def expToDict(exp, ripl=None):
       ans = {"kernel":"pgibbs","scope":exp[1],"block":"ordered_range",
             "min_block":exp[2][1],"max_block":exp[2][2],
             "particles":exp[3],"transitions":exp[4],"with_mutation":True}
-    else: 
+    else:
       ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":True}
     if len(exp) == 6:
       ans["in_parallel"] = exp[5]
     return ans
-  elif tag == "func-pgibbs":
+  elif tag == "func_pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
     ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":False}
     if len(exp) == 6:
@@ -190,7 +190,7 @@ def expToDict(exp, ripl=None):
     assert len(exp) == 2
     subkernels = [expToDict(e, ripl) for e in exp[1]]
     return {"command":"loop", "kernels":subkernels}
-  elif tag == "peek" or tag == "peek-all":
+  elif tag == "peek" or tag == "peek_all":
     assert 2 <= len(exp) and len(exp) <= 3
     if len(exp) == 2:
       name = default_name_for_exp(exp[1])

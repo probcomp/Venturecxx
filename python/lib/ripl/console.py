@@ -19,6 +19,7 @@
 import traceback
 from cmd import Cmd
 from venture.exception import VentureException
+from venture.lite.exception import VentureError
 from utils import _strip_types, expToDict, parse
 from functools import wraps
 
@@ -39,6 +40,8 @@ def catchesVentureException(f):
         length = e.data['text_index'][1] - offset + 1
         underline = ''.join([' '] * offset + ['^'] * length)
         print underline
+    except VentureError as err:
+      print err
     except Exception:
       print "Your query has generated an error:"
       traceback.print_exc()
@@ -114,8 +117,31 @@ class RiplCmd(Cmd, object):
   def do_list_directives(self, _s):
     '''List active directives and their current values.'''
     for directive in self.ripl.list_directives():
-      print "%d:\t%s" % (directive['directive_id'], str(directive['value']))
+      dir_id = directive['directive_id']
+      dir_val = str(directive['value'])
+      dir_type = directive['instruction']
 
+      # TODO: display expressions in a sensible way
+
+      #print "DIRECTIVE: " + str(directive)
+
+      if dir_type == "assume":
+        dir_name = directive['symbol']
+        print "%d: assume %s:\t%s" % (dir_id, dir_name, dir_val)
+      elif dir_type == "observe":
+        dir_expr = directive['expression']
+        dir_literal = dir_val
+        print "%d: observe %s = \t%s" % (dir_id, dir_expr, dir_literal)
+      elif dir_type == "predict":
+        dir_expr = directive['expression']
+        print "%d: predict %s:\t %s" % (dir_id, dir_expr, dir_val)
+      else:
+        assert False, "Unknown directive type found: %s" & str(directive)
+  
+  @catchesVentureException
+  def do_clear(self, _):
+    self.ripl.clear()
+  
   @catchesVentureException
   def do_infer(self, s):
     '''Run inference synchronously.'''
