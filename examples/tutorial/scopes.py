@@ -166,6 +166,7 @@
 
 
 from venture.venturemagics.ip_parallel import *
+from venture.unit import Analytics
 dim = 3
 bags = 2
 alpha = ' '.join(['1']*dim)
@@ -268,7 +269,7 @@ def load_ripl(model,observes=None,backend='puma'):
 
 def model_string(bags,colors):
     prior = ' '.join( ['(+ .1 (poisson 2))']*colors )
-    prior = ' '.join( ['(uniform_continuous 0.05 3)']*colors )
+    prior = ' '.join( ['(uniform_continuous 0.05 5)']*colors )
 
     s = utils_string + '''
     [assume bag_t_color (mem (lambda (bag t)
@@ -357,7 +358,7 @@ def uncollapsed_observes(bags,colors,latents,dataset,N,num_latents):
     obs = lambda bag,color: ('(categorical (bag_prototype %i) )'%bag,'atom<%i>'%color)
     even = [(b,c) for b in range(bags) for c in range(colors) ] * N
     conc = [(b, np.mod(b,colors)) for b in range(bags)]*N
-    data = conc if dataset=='conc' else even_data
+    data = conc if dataset=='conc' else even
     observes= [obs(*bag_color) for bag_color in data]
 
     split = int(num_latents * .5)
@@ -404,12 +405,12 @@ def pgibbs_infer( particles_reps=(10,5)):
                         5)''')
                   
 # tests
-bags,colors = 3,3
+bags,colors = 5,5
 backend = 'puma'
 latents = True
-dataset = 'conc'
-N = 8  # num balls per bag
-num_latents = 6
+dataset = 'even'
+N = 10  # num balls per bag
+num_latents = 10
 m = model_string(bags,colors)
 test_funcs(m,backend); print m
 
@@ -424,7 +425,7 @@ cycle_infer()
 check(latents,num_latents)
 
 
-
+## analytics
 def query_exps(bags,colors,num_latents):
     hyp = ['(lookup hyper_alpha %i)'%c for c in range(colors)]
     protos = []
@@ -432,7 +433,44 @@ def query_exps(bags,colors,num_latents):
         for c in range(colors):
             protos.append('(lookup (bag_prototype %i) %i)'%(b,c))
     latents= ['(draw_bag %i)'%i for i in range(num_latents) ]
-    return hyp+protos+latents
+    return hyp+latents # +protos
+
+# cf inf progs
+transitions = 50
+inf_def = '(mh default one 15)'
+inf_sc = '''
+(cycle ( (mh hyper_alpha one 3)
+         (mh prototypes one 10)
+         (mh latents one 1) )   1)'''
+    
+inf_sc_gibbs='''
+(cycle ( (func_pgibbs hyper_alpha one 15 3)
+            (func_pgibbs prototypes one 20 3)
+            (func_pgibbs latents one 20 3) )   1)'''
+
+inf_sc_gibbs='''
+(cycle ( (func_pgibbs hyper_alpha one 20 3)
+            (func_pgibbs prototypes one 30 3) )  1)'''
+
+
+infer_progs = (inf_def,inf_sc,inf_sc_gibbs)
+   
+def ana_infer_prog(infer_prog):
+    start = time.time()
+    h,_ = ana.runFromConditional(transitions, simpleInfer=True,
+                                 runs=2, infer=infer_prog)
+    args = infer_prog, transitions, time.time() - start
+    print '\n\nProg: %s, \nTransitions: %i, Time: %.2f'%args
+    avs = []
+    for c in range(colors):
+        avs.append( h.averageValue('(lookup hyper_alpha %i)'%c ) )
+    print 'avs: ', np.round(avs,2)
+    return h
+
+ana = Analytics(v,queryExps=query_exps(bags,colors,num_latents) )
+                                                   
+hists = [ana_infer_prog(prog) for prog in infer_progs]
+
 
 
 
