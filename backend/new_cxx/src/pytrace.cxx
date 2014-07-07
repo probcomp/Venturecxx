@@ -379,7 +379,7 @@ boost::python::list PyTrace::scope_keys()
   typedef pair<VentureValuePtr, SamplableMap<set<Node*> > > goal;
   BOOST_FOREACH(goal p, trace->scopes)
     {
-      xs.append(p.first->toPython(trace.get()));
+      xs.append(p.first->toPython(trace.get())["value"]);
     }
   return xs;
 }
