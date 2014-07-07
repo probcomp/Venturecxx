@@ -122,6 +122,7 @@ def evalFamily(trace,exp,env,scaffold,shouldRestore,omegaDB,gradients):
         weight += w
         nodes.append(n)
       except VentureError as err:
+        # here we flatten nested expressions
         err.stack_frame.exp = exp
         err.stack_frame.index.append(index)
         raise err
