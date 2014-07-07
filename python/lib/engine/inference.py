@@ -174,9 +174,9 @@ class Infer(object):
     self.out[name].append(values)
   def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
     spec = ExpressionType().asPython(spec)
-    exprs = [ExpressionType().asVentureValue(e).asStackDict() for e in exprs]
-    names = [self.default_name_for_exp(e) for e in exprs]
-    self._ensure_plot(spec, names, exprs)
+    exps = [ExpressionType().asVentureValue(e).asStackDict() for e in exprs]
+    names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
+    self._ensure_plot(spec, names, exps)
     self.plot.add_data(self.engine)
 
 
