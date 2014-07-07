@@ -244,11 +244,13 @@ effect of renumbering the directives, if some had been forgotten."""
       return [program[0], [sym("simplex")] + weights, [sym("array")] + subkernels, transitions]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] in ["peek", "peek_all"]:
       assert 2 <= len(program) and len(program) <= 3
-      expr = [sym("quote"), program[1]]
       if len(program) == 2:
-        return [program[0], expr]
+        return [program[0], enquote(program[1])]
       else:
-        return [program[0], expr, [sym("quote"), program[2]]]
+        return [program[0], enquote(program[1]), enquote(program[2])]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "plotf":
+      assert len(program) >= 2
+      return [program[0]] + [enquote(e) for e in program[1:]]
     elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
     else: return program
 
@@ -498,3 +500,6 @@ class ContinuousInferrer(object):
 
 def sym(symbol):
   return {"type":"symbol", "value":symbol}
+
+def enquote(thing):
+  return [sym("quote"), thing]
