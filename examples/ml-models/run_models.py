@@ -12,6 +12,8 @@ import seaborn as sns
 from os import path
 import os
 import cPickle as pkl
+import sys
+import time
 
 def make_data():
   w = matrix([0.5, -0.25]).T
@@ -90,17 +92,53 @@ def runme(name, method):
   datafile = path.join(outdir, 'data.txt')
   data = pd.read_table(datafile)
   r = build_ripl(infile = 'regression1.vnt')
-  r.infer('(resample 10)')
-  for i, row in data[:2].iterrows():
+  r.infer('(resample 200)')
+  for i, row in data.iterrows():
+    print name + ' : ' + str(i)
     r.observe('(y (vector 1 {0}))'.format(row['x']), row['y'])
-    res.append(r.infer('(cycle ({0} (peek_all w)) 1)'.format(method))['w'][0])
+    this_res = r.infer('(cycle ({0} (peek_all w)) 5)'.format(method))['w']
+    out = []
+    for j, entry in enumerate(this_res):
+      tmp = (pd.DataFrame(entry, columns = ['w1', 'w2']).reset_index().
+             rename_axis(dict(index = 'thread'), axis = 1))
+      tmp['data_point'] = i
+      tmp['iteration'] = j
+      out.append(tmp)
+    res.append(pd.concat(out))
   with open(path.join(outdir, name + '.pkl'), 'wb') as f:
-    pkl.dump(pd.Panel(res), f, protocol = 2)
+    pkl.dump(pd.concat(res).reset_index(drop = True), f, protocol = 2)
 
-runme('mh', '(mh default all 1)')
-runme('hmc', '(hmc default all 0.05 10 1)')
-runme('rejection', '(rejection default all 1)')
-runme('nesterov', '(nesterov default all 0.1 5 1)')
+# runme('mh', '(mh default all 1)')
+# runme('hmc', '(hmc default all 0.05 10 1)')
+# runme('rejection', '(rejection default all 1)')
+# runme('nesterov', '(nesterov default all 0.1 5 1)')
+
+def run_rejection(n_pts):
+  '''
+  Rejection is too slow; run separately for each set of observations to speed
+  things up.
+  '''
+  start = time.time()
+  outdir = path.join(path.dirname(path.realpath(__file__)), 'regression-evolution')
+  datafile = path.join(outdir, 'data.txt')
+  data = pd.read_table(datafile)
+  r = build_ripl(infile = 'regression1.vnt')
+  r.infer('(resample 200)')
+  for i, row in data[:n_pts].iterrows():
+    r.observe('(y (vector 1 {0}))'.format(row['x']), row['y'])
+  res = r.infer('(cycle ((rejection default all 1) (peek_all w)) 1)')['w'][0]
+  tmp = (pd.DataFrame(res, columns = ['w1', 'w2']).reset_index().
+         rename_axis(dict(index = 'thread'), axis = 1))
+  tmp['data_point'] = n_pts
+  tmp['iteration'] = 0
+  with open(path.join(outdir, 'rejection_{0}.pkl'.format(n_pts)), 'wb') as f:
+    pkl.dump(tmp, f, protocol = 2)
+  print 'Elapsed time for {0} points'.format(n_pts)
+  print time.time() - start
+
+if __name__ == '__main__':
+  n_pts = int(sys.argv[1])
+  run_rejection(n_pts)
 
 def plot_results():
   pass
