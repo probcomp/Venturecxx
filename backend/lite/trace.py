@@ -39,6 +39,11 @@ class Trace(object):
     self.families = {}
     self.scopes = {} # :: {scope-name:smap{block-id:set(node)}}
 
+  def scope_keys(self):
+    # A hack for allowing scope names not to be quoted in inference
+    # programs (needs to be a method so Puma can implement it)
+    return self.scopes.keys()
+
   def bindPrimitiveName(self, name, val):
     self.globalEnv.addBinding(name,ConstantNode(val))
 

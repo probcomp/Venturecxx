@@ -260,7 +260,7 @@ effect of renumbering the directives, if some had been forgotten."""
     # TODO Import the enclosing lexical environment into the new trace?
     import venture.lite.inference_sps as inf
     import venture.lite.value as v
-    symbol_scopes = [s for s in target.engine.getDistinguishedTrace().scopes.keys() if isinstance(s, basestring) and s is not "default"]
+    symbol_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys() if isinstance(s, basestring) and s is not "default"]
     for hack in inf.inferenceKeywords + symbol_scopes:
       next_trace.bindPrimitiveName(hack, v.VentureSymbol(hack))
     for name,sp in inf.inferenceSPsList:

@@ -373,6 +373,16 @@ void PyTrace::freeze(DirectiveID did)
   trace->freezeDirectiveID(did);
 }
 
+boost::python::list PyTrace::scope_keys()
+{
+  boost::python::list xs;
+  typedef pair<VentureValuePtr, SamplableMap<set<Node*> > > goal;
+  BOOST_FOREACH(goal p, trace->scopes)
+    {
+      xs.append(p.first->toPython(trace.get()));
+    }
+  return xs;
+}
 
 BOOST_PYTHON_MODULE(libpumatrace)
 {
@@ -414,5 +424,6 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("unevalAndExtract", &PyTrace::unevalAndExtract)
     .def("restore", &PyTrace::restoreDirectiveID)
     .def("evalAndRestore", &PyTrace::evalAndRestore)
+    .def("scope_keys", &PyTrace::scope_keys)
     ;
 };
