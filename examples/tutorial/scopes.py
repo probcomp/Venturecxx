@@ -200,7 +200,7 @@ data_beta = [(0,'false')]*5 + [(1,'true')]*5
 
 
 #########################3
-append_strings='''
+utils_string='''
 [assume append
      (lambda (v x)
        (if (is_pair v)
@@ -213,11 +213,27 @@ append_strings='''
          (list x)
          (pair
            (first v)
-           (_append_list (rest v) x))))]'''
+           (_append_list (rest v) x))))]
+
+[assume simplex_list (lambda (s)
+                       (_simplex_list s (size s)) ) ]
+[assume _simplex_list (lambda (s d)
+                         (if (= d 0) (list)
+                           (_append_list 
+                             (_simplex_list s (- d 1) )
+                               (lookup s (- d 1)) ) ) ) ]
+
+[assume atom_number (lambda (atom) (+ 0 atom) ) ]
+
+[assume range (lambda (n) (if (= n 1) (list 0)
+                            (append (range (- n 1)) (- n 1) ) )) ]
+[assume ones (mem (lambda (n) (map (lambda (x) 1) (range n) ) ) )]
+
+'''
 
 
-def test_funcs(model):
-    v=load_ripl(model)
+def test_funcs(model,backend='puma'):
+    v=load_ripl(model,backend=backend)
     # test count functions
     assert v.sample('(append (list) 1)') == v.sample('(list 1)')
     assert map(int, v.sample('(range 5)')) == range(5)
@@ -247,17 +263,9 @@ def load_ripl(model,observes=None,backend='puma'):
 
 def model_string(bags,colors):
     prior = ' '.join( ['(+ .1 (poisson 2))']*colors )
-    s = append_strings + '''
-    [assume simplex_list (lambda (s d)
-                           (if (< d 0) (pair)
-                             (append (simplex_list s (- d 1) )
-                                     (lookup s d) ) ) ) ]
+    prior = ' '.join( ['(uniform_continuous 0.05 3)']*colors )
 
-    [assume atom_number (lambda (atom) (+ 0 atom) ) ]
-
-    [assume range (lambda (n) (if (= n 1) (list 0)
-                                (append (range (- n 1)) (- n 1) ) )) ]
-
+    s = utils_string + '''
     [assume bag_t_color (mem (lambda (bag t)
                               (categorical (bag_prototype bag) ) ) ) ]
 
@@ -268,23 +276,31 @@ def model_string(bags,colors):
     [assume bag_t_color_counts (lambda (bag t color)
                                  (sum (map (lambda (x)(if (= x color) 1 0))
                                              (bag_t_list bag t) ) ) ) ]
-
+    [assume scale (lambda (lst)
+                   (map (lambda (x) (* 5 x)) lst) ) ] 
+    [assume colors %i]
     [assume bags %i]
+    [assume hyper_alpha2 (scope_include (quote hyper_alpha2) 0
+                            (scale
+                              (simplex_list 
+                                (dirichlet (ones colors) ) ) ) ) ]
+
     [assume hyper_alpha (scope_include (quote hyper_alpha) 0
                             (array %s) )]
     [assume bag_prototype (mem (lambda (bag)
-                                  (scope_include (quote prototypes) bag
+                               (scope_include (quote prototypes) bag
                                    (dirichlet hyper_alpha) ) ) )]
 
-    [assume draw_bag (mem (lambda (t) (uniform_discrete 0 bags) ) ) ]
+    [assume draw_bag (mem (lambda (t)
+                           (scope_include (quote latents) t
+                            (uniform_discrete 0 bags) ) ) )]
 
     [assume t_color (mem (lambda (t) 
-                           (scope_include (quote latents) t
-                             (categorical (bag_prototype (draw_bag t) ) ) ) )) ]
+                           (categorical 
+                             (bag_prototype (draw_bag t) ) ) )) ]
 
-    '''%(bags,prior)
+    '''%(colors,bags,prior)
     return s
-
     
 def infer_loop(v,query_exps, infer_prog=10, limit=10):
   print '\n---\n query_exps: ',query_exps
@@ -293,23 +309,41 @@ def infer_loop(v,query_exps, infer_prog=10, limit=10):
   for i in range(limit):
     print np.round( map( v.sample, query_exps), 2 )
     v.infer( infer_prog )
+    
+def check():
+    print 'dataset: ', dataset
+    print 'hyper_alph: ', v.sample('hyper_alpha')
+    print 'ptypes: ', np.round( map(v.sample,['(bag_prototype %i)'%bag for bag in range(bags)]), 2)
+
+    if latents:
+        latents_guess = map(v.predict, ['(draw_bag %i)'%i for i in range(10) ] )
+        print latents_guess
+        print np.mean( np.abs(np.array(latents_guess) - np.array( [0]*5 + [1]*5 ) ) )
+
+def cycle_infer(repeats=5):
+    v.infer('(cycle ( (mh hyper_alpha one 5) (mh prototypes one 10) ) %i)'%repeats)
+    v.infer('(cycle ( (mh hyper_alpha one 5) (mh prototypes one 5) (mh latents one 5) ) %i)'%repeats)
+
+
+        
 
 # tests
-bags = 4
-colors = 4
+bags = 3
+colors = 3
 m = model_string(bags,colors)
-test_funcs(m)
+backend = 'lite'
+test_funcs(m,backend)
 print m
-
 
 #  no t for bags
 latents = True
 dataset = 'conc'
+N = 5  # num balls per bag
 
 
 obs = lambda bag,color: ('(categorical (bag_prototype %i) )'%bag,'atom<%i>'%color)
-even_data = [ (bag, color) for bag in range(bags) for color in range(colors) ] * 3
-conc_data = [ (bag, np.mod(bag,colors)) for bag in range(bags)] * 6
+even_data = [ (bag, color) for bag in range(bags) for color in range(colors) ] * N
+conc_data = [ (bag, np.mod(bag,colors)) for bag in range(bags)]*N
 data = conc_data if dataset=='conc' else even_data
 observes  = [obs(*bag_color) for bag_color in data]
 
@@ -319,20 +353,12 @@ if latents:
     latent_observes = [obs(*t_color) for t_color in data]
     observes.extend(latent_observes)
 
-v=load_ripl(m,observes)
+v=load_ripl(m,observes,backend=backend)
 
-v.infer('(cycle ( (mh hyper_alpha one 5) (mh prototypes one 5) ) 50)')
-v.infer('(cycle ( (mh hyper_alpha one 5) (mh prototypes one 5) (mh latents one 5) ) 50)')
+print 'before inf: ', check()
 
-def check():
-    print 'dataset: ', dataset
-    print 'ptypes: ', np.round( map(v.sample,['(bag_prototype %i)'%bag for bag in range(bags)]), 2)
 
-    if latents:
-        latents_guess = map(v.predict, ['(draw_bag %i)'%i for i in range(10) ] )
-        print latents_guess
-        print np.mean( np.abs(np.array(latents_guess) - np.array( [0]*5 + [1]*5 ) ) )
-
+cycle_infer()
 check()
 
 
