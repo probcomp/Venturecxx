@@ -490,7 +490,15 @@ def sym(symbol):
 def enquote(thing):
   return [sym("quote"), thing]
 
+the_prelude = None
+
 def _inference_prelude():
+  global the_prelude
+  if the_prelude is None:
+    the_prelude = _compute_inference_prelude()
+  return the_prelude
+
+def _compute_inference_prelude():
   ans = []
   for (name, form) in [
         ["cycle", """(lambda (ks iter)
