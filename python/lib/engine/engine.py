@@ -275,24 +275,8 @@ effect of renumbering the directives, if some had been forgotten."""
     return ans["value"].final_data()
 
   def install_inference_prelude(self, next_trace):
-    for did, (name, form) in enumerate([
-        ["cycle", """(lambda (ks iter)
-  (iterate (sequence ks) iter))"""],
-        ["iterate", """(lambda (f iter)
-  (if (<= iter 1)
-      f
-      (lambda (t) (f ((iterate f (- iter 1)) t)))))"""],
-        ["sequence", """(lambda (ks)
-  (if (is_pair ks)
-      (lambda (t) ((sequence (rest ks)) ((first ks) t)))
-      (lambda (t) t)))"""],
-        ["mixture", """(lambda (weights kernels transitions)
-  (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""]]):
-      from venture.parser.church_prime_parser import ChurchPrimeParser
-      from venture.sivm.utils import desugar_expression
-      from venture.sivm.core_sivm import _modify_expression
-      exp = self.desugarLambda(_modify_expression(desugar_expression(ChurchPrimeParser.instance().parse_expression(form))))
-      next_trace.eval(did, exp)
+    for did, (name, exp) in enumerate(_inference_prelude()):
+      next_trace.eval(did, self.desugarLambda(exp))
       next_trace.bindInGlobalEnv(name, did)
 
   def primitive_infer(self, params):
@@ -505,3 +489,25 @@ def sym(symbol):
 
 def enquote(thing):
   return [sym("quote"), thing]
+
+def _inference_prelude():
+  ans = []
+  for (name, form) in [
+        ["cycle", """(lambda (ks iter)
+  (iterate (sequence ks) iter))"""],
+        ["iterate", """(lambda (f iter)
+  (if (<= iter 1)
+      f
+      (lambda (t) (f ((iterate f (- iter 1)) t)))))"""],
+        ["sequence", """(lambda (ks)
+  (if (is_pair ks)
+      (lambda (t) ((sequence (rest ks)) ((first ks) t)))
+      (lambda (t) t)))"""],
+        ["mixture", """(lambda (weights kernels transitions)
+  (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""]]:
+    from venture.parser.church_prime_parser import ChurchPrimeParser
+    from venture.sivm.utils import desugar_expression
+    from venture.sivm.core_sivm import _modify_expression
+    exp = _modify_expression(desugar_expression(ChurchPrimeParser.instance().parse_expression(form)))
+    ans.append((name, exp))
+  return ans
