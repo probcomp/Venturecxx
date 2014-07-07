@@ -358,7 +358,7 @@ def uncollapsed_observes(bags,colors,latents,dataset,N,num_latents):
     obs = lambda bag,color: ('(categorical (bag_prototype %i) )'%bag,'atom<%i>'%color)
     even = [(b,c) for b in range(bags) for c in range(colors) ] * N
     conc = [(b, np.mod(b,colors)) for b in range(bags)]*N
-    data = conc if dataset=='conc' else even_data
+    data = conc if dataset=='conc' else even
     observes= [obs(*bag_color) for bag_color in data]
 
     split = int(num_latents * .5)
@@ -408,8 +408,8 @@ def pgibbs_infer( particles_reps=(10,5)):
 bags,colors = 5,5
 backend = 'puma'
 latents = True
-dataset = 'conc'
-N = 7  # num balls per bag
+dataset = 'even'
+N = 10  # num balls per bag
 num_latents = 10
 m = model_string(bags,colors)
 test_funcs(m,backend); print m
@@ -436,7 +436,7 @@ def query_exps(bags,colors,num_latents):
     return hyp+latents # +protos
 
 # cf inf progs
-transitions = 300
+transitions = 50
 inf_def = '(mh default one 15)'
 inf_sc = '''
 (cycle ( (mh hyper_alpha one 3)
