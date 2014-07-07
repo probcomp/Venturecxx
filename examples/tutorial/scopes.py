@@ -280,10 +280,11 @@ def model_string(bags,colors):
                    (map (lambda (x) (* 5 x)) lst) ) ] 
     [assume colors %i]
     [assume bags %i]
-    [assume hyper_alpha2 (scope_include (quote hyper_alpha2) 0
-                            (scale
-                              (simplex_list 
-                                (dirichlet (ones colors) ) ) ) ) ]
+    [assume hyper_alpha_d (lambda ()
+                            (scope_include (quote hyper_alpha_d) 0
+                                (scale
+                                  (simplex_list 
+                                    (dirichlet (ones colors) )))))]
 
     [assume hyper_alpha (scope_include (quote hyper_alpha) 0
                             (array %s) )]
@@ -309,6 +310,7 @@ def infer_loop(v,query_exps, infer_prog=10, limit=10):
   for i in range(limit):
     print np.round( map( v.sample, query_exps), 2 )
     v.infer( infer_prog )
+
     
 def check():
     print 'dataset: ', dataset
@@ -320,27 +322,25 @@ def check():
         print latents_guess
         print np.mean( np.abs(np.array(latents_guess) - np.array( [0]*5 + [1]*5 ) ) )
 
-def cycle_infer(repeats=5):
-    v.infer('(cycle ( (mh hyper_alpha one 5) (mh prototypes one 10) ) %i)'%repeats)
-    v.infer('(cycle ( (mh hyper_alpha one 5) (mh prototypes one 5) (mh latents one 5) ) %i)'%repeats)
-
-
         
+def cycle_infer(repeats=5):
+    v.infer('(cycle ( (mh hyper_alpha one 3) (mh prototypes one 10) ) %i)'%repeats)
+    v.infer('(cycle ( (mh hyper_alpha one 3) (mh prototypes one 10) (mh latents one 5) ) %i)'%repeats)
+
 
 # tests
-bags = 3
-colors = 3
+bags,colors = 6,6
 m = model_string(bags,colors)
-backend = 'lite'
+backend = 'puma'
 test_funcs(m,backend)
 print m
 
 #  no t for bags
 latents = True
 dataset = 'conc'
-N = 5  # num balls per bag
+N = 7  # num balls per bag
 
-
+## make observes
 obs = lambda bag,color: ('(categorical (bag_prototype %i) )'%bag,'atom<%i>'%color)
 even_data = [ (bag, color) for bag in range(bags) for color in range(colors) ] * N
 conc_data = [ (bag, np.mod(bag,colors)) for bag in range(bags)]*N
@@ -353,11 +353,9 @@ if latents:
     latent_observes = [obs(*t_color) for t_color in data]
     observes.extend(latent_observes)
 
+## run inference
 v=load_ripl(m,observes,backend=backend)
-
 print 'before inf: ', check()
-
-
 cycle_infer()
 check()
 
