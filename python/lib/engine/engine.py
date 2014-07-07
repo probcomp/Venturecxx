@@ -219,7 +219,7 @@ effect of renumbering the directives, if some had been forgotten."""
       assert len(program) == 2
       prog = [sym("cycle"), program[1], {"type":"number", "value":1}]
       # TODO Use the modeling language interpreter for infer loop too
-      self.start_continuous_inference_exp(ExpressionType().asPython(VentureValue.fromStackDict(prog)))
+      self.start_continuous_inference_exp(prog)
     else:
       exp = self.desugarLambda(self.macroexpand_inference(program))
       return self.infer_v1_pre_t(exp, Infer(self))
@@ -488,7 +488,7 @@ class ContinuousInferrer(object):
       # TODO React somehow to peeks and plotfs in the inference program
       # Currently suppressed for fear of clobbering the prompt
       if "exp" in params:
-        Infer(self.engine).infer_exp(params["exp"])
+        self.engine.infer_exp(params["exp"])
       else:
         Infer(self.engine).infer(params)
       time.sleep(0.0001) # Yield to be a good citizen
