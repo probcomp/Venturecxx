@@ -134,7 +134,11 @@ class RiplCmd(Cmd, object):
         print "%d: predict %s:\t %s" % (dir_id, dir_expr, dir_val)
       else:
         assert False, "Unknown directive type found: %s" & str(directive)
-
+  
+  @catchesVentureException
+  def do_clear(self, _):
+    self.ripl.clear()
+  
   @catchesVentureException
   def do_infer(self, s):
     '''Run inference synchronously.'''
