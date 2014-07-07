@@ -47,14 +47,14 @@ def load_model(infile):
   res = '\n'.join(res)
   return res
 
-def build_ripl(infile = 'multiclass-logistic.vnt'):
+def build_ripl(infile = 'regression2.vnt'):
   model = load_model(infile)
   r = make_lite_church_prime_ripl()
   r.load_prelude()
   _ = r.execute_program(model)
   return r
 
-def simulate(infile = 'regression2.vnt'):
+def simulate_linear(infile = 'regression2.vnt'):
   r = build_ripl(infile)
   _ = r.forget('sigma_2')
   _ = r.assume('sigma_2', 1, label = 'sigma_2')
@@ -70,10 +70,9 @@ def simulate(infile = 'regression2.vnt'):
   return pd.DataFrame(res)
 
 def runme():
-  r = build_ripl()
-  _ = r.sample('sigma_2')
-  data = simulate()
-  for i, row in data[:5].iterrows():
+  r = build_ripl(infile = 'multiclass-logistic.vnt')
+  data = simulate_linear()
+  for i, row in data.iterrows():
     r.observe('(y (vector 1 {0}))'.format(row['x']), row['y'])
-    data = r.infer('(cycle ((rejection default all) (peek w) (peek sigma_2)) 1)')
+  data = r.infer('(cycle ((mh default all 10) (peek w) (peek sigma_2)) 100)')
 

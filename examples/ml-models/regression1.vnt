@@ -19,7 +19,8 @@ a_0:[assume a_0 1]
 b_0:[assume b_0 1]
 alpha:[assume alpha 0.1]
 
-sigma_2:[assume sigma_2 (scope_include (quote noise) 0 (inv_gamma a_0 b_0))]
+;sigma_2:[assume sigma_2 (scope_include (quote noise) 0 (inv_gamma a_0 b_0))]
+sigma_2:[assume sigma_2 1]
 w:[assume w
   (scope_include (quote weights) 0
     (multivariate_normal

@@ -33,5 +33,5 @@
     ;(simplex (get_norm_class_prob x 1) ... (get_norm_class_prob x C)))]
 
 [assume get_class
-  (mem (lambda (x)
-    (categorical (get_simplex x))))]
+  (lambda (x)
+    (categorical (get_simplex x)))]
