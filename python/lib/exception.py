@@ -42,6 +42,14 @@ class VentureException(Exception):
         return cls(exception,message,**data)
 
     def __str__(self):
-        return "*** " + self.exception + ": " + self.message + " " + str(self.data)
+        s = "*** " + self.exception + ": " + self.message
+        if self.exception in ['parse', 'text_parse', 'invalid_argument']:
+          s += '\n' + self.data['instruction_string']
+          offset = self.data['text_index'][0]
+          length = self.data['text_index'][1] - offset + 1
+          s += '\n' + ''.join([' '] * offset + ['^'] * length)
+        return s
+    
     __unicode__ = __str__
     __repr__ = __str__
+
