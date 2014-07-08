@@ -48,6 +48,8 @@ class VentureException(Exception):
           offset = self.data['text_index'][0]
           length = self.data['text_index'][1] - offset + 1
           s += '\n' + ''.join([' '] * offset + ['^'] * length)
+        else:
+          s += '\n' + str(self.data)
         return s
     
     __unicode__ = __str__
