@@ -2,6 +2,8 @@ import random
 import numpy.random as npr
 import math
 import scipy.stats
+import time
+
 from consistency import assertTorus,assertTrace
 from omegadb import OmegaDB
 from regen import regenAndAttach, regenAndAttachAtBorder
@@ -21,6 +23,7 @@ class NoSPRefError(VentureError): pass
 # TODO Defined in a sane place, instead of "earliest place in the import graph where it is referenced"?
 
 def mixMH(trace,indexer,operator):
+  start = time.time()
   index = indexer.sampleIndex(trace)
   rhoMix = indexer.logDensityOfIndex(trace,index)
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
@@ -32,9 +35,12 @@ def mixMH(trace,indexer,operator):
   if math.log(random.random()) < alpha:
 #    sys.stdout.write(".")
     operator.accept() # May mutate trace
+    accepted = True
   else:
 #    sys.stdout.write("!")
     operator.reject() # May mutate trace
+    accepted = False
+  trace.recordProposal([operator.name()] + indexer.name(), time.time() - start, accepted)
 
 class BlockScaffoldIndexer(object):
   def __init__(self,scope,block,interval=None):
@@ -45,9 +51,13 @@ class BlockScaffoldIndexer(object):
     self.interval = interval
 
   def sampleIndex(self,trace):
-    if self.block == "one": return constructScaffold(trace,[trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))])
-    elif self.block == "all": return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
-    elif self.block == "ordered": return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
+    if self.block == "one":
+      self.true_block = trace.sampleBlock(self.scope)
+      return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.true_block)])
+    elif self.block == "all":
+      return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
+    elif self.block == "ordered":
+      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
     elif self.block == "ordered_range": 
       assert self.interval
       return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope,self.interval))
@@ -59,6 +69,9 @@ class BlockScaffoldIndexer(object):
     elif self.block == "ordered": return 0
     elif self.block == "ordered_range": return 0
     else: return 0
+
+  def name(self):
+    return ["scaffold", self.scope, self.block] + ([self.interval] if self.interval is not None else []) + ([self.true_block] if hasattr(self, "true_block") else [])
 
 class InPlaceOperator(object):
   def prepare(self, trace, scaffold, compute_gradient = False):
@@ -129,6 +142,8 @@ class RejectionOperator(InPlaceOperator):
         detachAndExtract(trace, scaffold)
     return trace, 0
 
+  def name(self): return "rejection"
+
 
 #### Resampling from the prior
 
@@ -137,6 +152,8 @@ class MHOperator(InPlaceOperator):
     rhoWeight = self.prepare(trace, scaffold)
     xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
     return trace, xiWeight - rhoWeight
+
+  def name(self): return "resimulation MH"
 
 
 #### Variational
@@ -196,6 +213,8 @@ class MeanfieldOperator(object):
     else:
       self.delegate.reject()
 
+  def name(self): return "meanfield"
+
 
 #### Enumerative Gibbs
 
@@ -242,6 +261,7 @@ class EnumerativeGibbsOperator(object):
 
   def accept(self): self.finalParticle.commit()
   def reject(self): assert False
+  def name(self): return "enumerative gibbs"
 
 
 #### PGibbs
@@ -350,6 +370,7 @@ class PGibbsOperator(object):
     assert len(path) == self.T
     restoreAncestorPath(self.trace,self.scaffold.border,self.scaffold,self.omegaDBs,self.T,path)
     assertTrace(self.trace,self.scaffold)
+  def name(self): return "particle gibbs (mutating)"
 
 
 #### Functional PGibbs
@@ -438,6 +459,8 @@ class ParticlePGibbsOperator(object):
   def reject(self):
     self.particles[-1].commit()
     assertTrace(self.trace,self.scaffold)
+
+  def name(self): return "particle gibbs (functional)"
 
 #### Slice
     
@@ -533,6 +556,7 @@ class SliceOperator(object):
   def reject(self):
     detachAndExtract(self.trace,self.scaffold)
     regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
+  def name(self): return "slice sampling"
 
 
 #### Gradient ascent to max a-posteriori
@@ -571,6 +595,8 @@ class MAPOperator(InPlaceOperator):
       dxs = grad(xs)
     return xs
 
+  def name(self): return "gradient ascent"
+
 class NesterovAcceleratedGradientAscentOperator(MAPOperator):
   def step_lam(self, lam):
     return (1 + math.sqrt(1 + 4 * lam * lam))/2
@@ -589,6 +615,7 @@ class NesterovAcceleratedGradientAscentOperator(MAPOperator):
       new_xs = [old_y * gam + new_y * (1-gam) for (old_y, new_y) in zip(ys, new_ys)]
       (xs, ys, dxs, lam) = (new_ys, new_ys, grad(new_xs), self.step_lam(lam))
     return xs
+  def name(self): return "gradient ascent with Nesterov acceleration"
 
 #### Hamiltonian Monte Carlo
 
@@ -727,3 +754,5 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     p = [-pi for pi in p]
 
     return q, self.kinetic(p)
+
+  def name(self): return "hamiltonian monte carlo"
