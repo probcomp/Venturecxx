@@ -36,3 +36,15 @@ def testLargeStack():
   ripl.assume('f', '(lambda (i) (if (= i 0) a (f (- i 1))))')
   ripl.predict('(f 20)')
 
+@backend('lite')
+@raises(VentureError)
+def testTooFewArgs():
+  ripl = get_ripl()
+  ripl.predict('(-)')
+
+@backend('lite')
+@raises(VentureError)
+def testTooManyArgs():
+  ripl = get_ripl()
+  ripl.predict('(- 1 1 1)')
+
