@@ -104,64 +104,64 @@ def expToDict(exp, ripl=None):
   tag = exp[0]
   if tag == "mh":
     assert len(exp) == 4
-    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":True}
+    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":int(exp[3]),"with_mutation":True}
   elif tag == "func_mh":
     assert len(exp) == 4
-    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
+    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":int(exp[3]),"with_mutation":False}
   elif tag == "gibbs":
     assert 4 <= len(exp) and len(exp) <= 5
-    ans = {"kernel":"gibbs","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
+    ans = {"kernel":"gibbs","scope":exp[1],"block":exp[2],"transitions":int(exp[3]),"with_mutation":False}
     if len(exp) == 5:
       ans["in_parallel"] = exp[4]
     return ans
   elif tag == "emap":
     assert 4 <= len(exp) and len(exp) <= 5
-    ans = {"kernel":"emap","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":False}
+    ans = {"kernel":"emap","scope":exp[1],"block":exp[2],"transitions":int(exp[3]),"with_mutation":False}
     if len(exp) == 5:
       ans["in_parallel"] = exp[4]
     return ans
   elif tag == "slice":
     assert len(exp) == 4
-    return {"kernel":"slice","scope":exp[1],"block":exp[2],"transitions":exp[3],"with_mutation":True}
-  # [FIXME] expedient hack for now to allow windowing with pgibbs.
+    return {"kernel":"slice","scope":exp[1],"block":exp[2],"transitions":int(exp[3]),"with_mutation":True}
+  # [FIXME] expedient hack for now to allow windowing with pgibbs. 
   elif tag == "pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
     if type(exp[2]) is list:
       assert exp[2][0] == "ordered_range"
       ans = {"kernel":"pgibbs","scope":exp[1],"block":"ordered_range",
             "min_block":exp[2][1],"max_block":exp[2][2],
-            "particles":exp[3],"transitions":exp[4],"with_mutation":True}
-    else:
-      ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":True}
+            "particles":int(exp[3]),"transitions":int(exp[4]),"with_mutation":True}
+    else: 
+      ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":int(exp[3]),"transitions":int(exp[4]),"with_mutation":True}
     if len(exp) == 6:
       ans["in_parallel"] = exp[5]
     return ans
   elif tag == "func_pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
-    ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":exp[3],"transitions":exp[4],"with_mutation":False}
+    ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":int(exp[3]),"transitions":int(exp[4]),"with_mutation":False}
     if len(exp) == 6:
       ans["in_parallel"] = exp[5]
     return ans
   elif tag == "meanfield":
     assert len(exp) == 5
-    return {"kernel":"meanfield","scope":exp[1],"block":exp[2],"steps":exp[3],"transitions":exp[4]}
+    return {"kernel":"meanfield","scope":exp[1],"block":exp[2],"steps":int(exp[3]),"transitions":int(exp[4])}
   elif tag == "hmc":
     assert len(exp) == 6
-    return {"kernel":"hmc","scope":exp[1],"block":exp[2],"epsilon":exp[3],"L":exp[4],"transitions":exp[5]}
+    return {"kernel":"hmc","scope":exp[1],"block":exp[2],"epsilon":exp[3],"L":int(exp[4]),"transitions":int(exp[5])}
   elif tag == "map":
     assert len(exp) == 6
-    return {"kernel":"map","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":exp[4],"transitions":exp[5]}
+    return {"kernel":"map","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":int(exp[4]),"transitions":int(exp[5])}
   elif tag == "nesterov":
     assert len(exp) == 6
-    return {"kernel":"nesterov","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":exp[4],"transitions":exp[5]}
+    return {"kernel":"nesterov","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":int(exp[4]),"transitions":int(exp[5])}
   elif tag == "latents":
     assert len(exp) == 4
-    return {"kernel":"latents","scope":exp[1],"block":exp[2],"transitions":exp[3]}
+    return {"kernel":"latents","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
   elif tag == "rejection":
     assert len(exp) >= 3
     assert len(exp) <= 4
     if len(exp) == 4:
-      return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":exp[3]}
+      return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
     else:
       return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":1}
   elif tag == "mixture":
@@ -174,15 +174,15 @@ def expToDict(exp, ripl=None):
       k = j + 1
       weights.append(exp[1][j])
       subkernels.append(expToDict(exp[1][k], ripl))
-    return {"kernel":"mixture","weights":weights,"subkernels":subkernels,"transitions":exp[2]}
+    return {"kernel":"mixture","weights":weights,"subkernels":subkernels,"transitions":int(exp[2])}
   elif tag == "cycle":
     assert len(exp) == 3
     assert type(exp[1]) is list
     subkernels = [expToDict(e, ripl) for e in exp[1]]
-    return {"kernel":"cycle","subkernels":subkernels,"transitions":exp[2]}
+    return {"kernel":"cycle","subkernels":subkernels,"transitions":int(exp[2])}
   elif tag == "resample":
     assert len(exp) == 2
-    return {"command":"resample","particles":exp[1]}
+    return {"command":"resample","particles":int(exp[1])}
   elif tag == "incorporate":
     assert len(exp) == 1
     return {"command":"incorporate"}
