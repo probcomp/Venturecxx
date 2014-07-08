@@ -87,7 +87,7 @@ class ChurchPrimeParser(object):
             ['labeled_forget','[ <!forget> <label:sym> ]'],
             ['report','[ <!report> <directive_id:int> ]'],
             ['labeled_report','[ <!report> <label:sym> ]'],
-            ['infer','[ <!infer> <params:json> ]'],
+            ['infer','[ <!infer> <expression:exp> ]'],
             ['clear','[ <!clear> ]'],
             ['rollback','[ <!rollback> ]'],
             ['list_directives','[ <!list_directives> ]'],
