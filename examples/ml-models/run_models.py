@@ -93,10 +93,20 @@ def runme(name, method):
   data = pd.read_table(datafile)
   r = build_ripl(infile = 'regression1.vnt')
   r.infer('(resample 200)')
-  for i, row in data.iterrows():
+  # do inference with no data to view prior
+  this_res = r.infer('(cycle ({0} (peek_all w)) 5)'.format(method))['w']
+  out = []
+  for j, entry in enumerate(this_res):
+    tmp = (pd.DataFrame(entry, columns = ['w1', 'w2']).reset_index().
+           rename_axis(dict(index = 'thread'), axis = 1))
+    tmp['data_point'] = 0
+    tmp['iteration'] = j
+    out.append(tmp)
+  res.append(pd.concat(out))
+  for i, row in data[:7].iterrows():
     print name + ' : ' + str(i)
     r.observe('(y (vector 1 {0}))'.format(row['x']), row['y'])
-    this_res = r.infer('(cycle ({0} (peek_all w)) 5)'.format(method))['w']
+    this_res = r.infer('(cycle ({0} (peek_all w)) 15)'.format(method))['w']
     out = []
     for j, entry in enumerate(this_res):
       tmp = (pd.DataFrame(entry, columns = ['w1', 'w2']).reset_index().
@@ -111,7 +121,7 @@ def runme(name, method):
 # runme('mh', '(mh default all 1)')
 # runme('hmc', '(hmc default all 0.05 10 1)')
 # runme('rejection', '(rejection default all 1)')
-# runme('nesterov', '(nesterov default all 0.1 5 1)')
+runme('nesterov', '(nesterov default all 0.1 5 1)')
 
 def run_rejection(n_pts):
   '''
@@ -136,9 +146,9 @@ def run_rejection(n_pts):
   print 'Elapsed time for {0} points'.format(n_pts)
   print time.time() - start
 
-if __name__ == '__main__':
-  n_pts = int(sys.argv[1])
-  run_rejection(n_pts)
+# if __name__ == '__main__':
+#   n_pts = int(sys.argv[1])
+#   run_rejection(n_pts)
 
 def plot_results():
   pass
