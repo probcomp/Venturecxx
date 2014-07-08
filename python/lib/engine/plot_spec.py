@@ -1,6 +1,4 @@
 import re
-import ggplot as g
-import matplotlib.pylab as plt
 from itertools import chain
 
 stream_rx = r"([rcts%]|[0-9]+)"
@@ -17,6 +15,7 @@ class PlotSpec(object):
       self.frames = [FrameSpec(s) for s in spec]
 
   def draw(self, dataset, names):
+    import ggplot as g
     index = 0
     figs = []
     for spec in self.frames:
@@ -31,6 +30,7 @@ class PlotSpec(object):
     return figs
 
   def plot(self, dataset, names):
+    import matplotlib.pylab as plt
     self.draw(dataset, names)
     plt.show()
     # FIXME: add something to track names of frames here
@@ -39,6 +39,7 @@ class PlotSpec(object):
     return chain(*[frame.streams for frame in self.frames])
 
   def _interp_scale(self, dim, scale):
+    import ggplot as g
     if scale == "d" or scale == "":
       if dim == "x":
         return g.scale_x_continuous()
@@ -81,12 +82,14 @@ class FrameSpec(object):
       self.scales = ["d"] + self.scales
 
   def _interp_geoms(self, gs):
+    import ggplot as g
     if len(gs) == 0:
       return [g.geom_point()]
     else:
       return [self._interp_geom(ge) for ge in gs]
 
   def _interp_geom(self, ge):
+    import ggplot as g
     if ge in ["b", "h"]:
       self.two_d_only = False
     return {"p":g.geom_point, "l":g.geom_line, "b":g.geom_bar, "h":g.geom_histogram}[ge]()
