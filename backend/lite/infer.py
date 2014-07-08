@@ -13,9 +13,10 @@ from utils import sampleLogCategorical, cartesianProduct, logaddexp, FixedRandom
 from nose.tools import assert_almost_equal # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 from value import VentureNumber
 import copy
+from exception import VentureError
 
-class MissingEsrParentError(Exception): pass
-class NoSPRefError(Exception): pass
+class MissingEsrParentError(VentureError): pass
+class NoSPRefError(VentureError): pass
 # TODO Sane exception hierarchy?
 # TODO Defined in a sane place, instead of "earliest place in the import graph where it is referenced"?
 
