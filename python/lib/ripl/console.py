@@ -162,7 +162,7 @@ class RiplCmd(Cmd, object):
 
   @catchesVentureException
   def do_get_global_logscore(self, s):
-    '''Report status of continuous inference.'''
+    '''Report the global logscore.'''
     print self._do_instruction('get_global_logscore', s)
 
 def run_venture_console(ripl):
