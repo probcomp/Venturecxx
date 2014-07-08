@@ -7,6 +7,7 @@ from value import SPRef
 from lkernel import VariationalLKernel
 from scope import isScopeIncludeOutputPSP
 from consistency import assertTorus, assertTrace
+from exception import VentureError, StackFrame
 
 def regenAndAttach(trace,scaffold,shouldRestore,omegaDB,gradients):
   assertTorus(scaffold)
@@ -102,22 +103,36 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   return weight
 
 def evalFamily(trace,exp,env,scaffold,shouldRestore,omegaDB,gradients):
-  if e.isVariable(exp): 
-    sourceNode = env.findSymbol(exp)
+  if e.isVariable(exp):
+    try:
+      sourceNode = env.findSymbol(exp)
+    except VentureError as err:
+      err.stack_frame = StackFrame(exp, [])
+      raise err
     weight = regen(trace,sourceNode,scaffold,shouldRestore,omegaDB,gradients)
     return (weight,trace.createLookupNode(sourceNode))
   elif e.isSelfEvaluating(exp): return (0,trace.createConstantNode(exp))
   elif e.isQuotation(exp): return (0,trace.createConstantNode(e.textOfQuotation(exp)))
   else:
-    (weight,operatorNode) = evalFamily(trace,e.getOperator(exp),env,scaffold,shouldRestore,omegaDB,gradients)
-    operandNodes = []
-    for operand in e.getOperands(exp):
-      (w,operandNode) = evalFamily(trace,operand,env,scaffold,shouldRestore,omegaDB,gradients)
-      weight += w
-      operandNodes.append(operandNode)
+    weight = 0
+    nodes = []
+    for index, subexp in enumerate(exp):
+      try:
+        w, n = evalFamily(trace,subexp,env,scaffold,shouldRestore,omegaDB,gradients)
+        weight += w
+        nodes.append(n)
+      except VentureError as err:
+        # here we flatten nested expressions
+        err.stack_frame.exp = exp
+        err.stack_frame.index.append(index)
+        raise err
 
-    (requestNode,outputNode) = trace.createApplicationNodes(operatorNode,operandNodes,env)
-    weight += apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
+    (requestNode,outputNode) = trace.createApplicationNodes(nodes[0],nodes[1:],env)
+    try:
+      weight += apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
+    except VentureError as err:
+      err.stack_frame = StackFrame(exp, [], err.stack_frame)
+      raise err
     assert isinstance(weight, numbers.Number)
     return weight,outputNode
 
