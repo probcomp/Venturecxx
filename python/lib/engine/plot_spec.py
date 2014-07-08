@@ -62,15 +62,14 @@ class FrameSpec(object):
     top = re.match(toplevel_rx, spec)
     if not top:
       raise Exception("Invalid plot spec %s; must match %s" % (spec, toplevel_rx))
-    geoms = top.group(1)
+    self.geoms = top.group(1)
     dims = top.group(2)
-    self._geom = self._interp_geoms(geoms)
     if len(dims) == 0:
       raise Exception("Invalid plot spec %s; must supply at least one dimension to plot")
     self._interp_dimensions(dims)
 
   def get_geoms(self):
-    return self._geom
+    return self._interp_geoms(self.geoms)
 
   def _interp_dimensions(self, dims):
     self.streams = []
