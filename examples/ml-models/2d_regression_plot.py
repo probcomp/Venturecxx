@@ -7,13 +7,15 @@ from __future__ import division
 import re
 from venture.shortcuts import (make_puma_church_prime_ripl,
                                make_lite_church_prime_ripl)
-import pandas as pd
+import numpy as np, scipy as sp, pandas as pd
+from matplotlib import pyplot as plt
 import seaborn as sns
 from os import path
 import os
 import cPickle as pkl
 import sys
 import time
+import matplotlib as mpl
 
 def make_data():
   w = matrix([0.5, -0.25]).T
@@ -94,6 +96,7 @@ def runme(name, method):
   r = build_ripl(infile = 'regression1.vnt')
   r.infer('(resample 200)')
   # do inference with no data to view prior
+  r.infer('(rejection default all 1)')
   this_res = r.infer('(cycle ({0} (peek_all w)) 5)'.format(method))['w']
   out = []
   for j, entry in enumerate(this_res):
@@ -121,7 +124,7 @@ def runme(name, method):
 # runme('mh', '(mh default all 1)')
 # runme('hmc', '(hmc default all 0.05 10 1)')
 # runme('rejection', '(rejection default all 1)')
-runme('nesterov', '(nesterov default all 0.1 5 1)')
+# runme('nesterov', '(nesterov default all 0.1 5 1)')
 
 def run_rejection(n_pts):
   '''
@@ -150,8 +153,75 @@ def run_rejection(n_pts):
 #   n_pts = int(sys.argv[1])
 #   run_rejection(n_pts)
 
+def get_results():
+  wkdir = path.join(path.dirname(path.realpath(__file__)), 'regression-evolution')
+  data = pd.read_table(path.join(wkdir, 'data.txt'))
+  results = {}
+  for method in ['hmc', 'mh', 'nesterov']:
+    with open(path.join(wkdir, method + '.pkl'), 'rb') as f:
+      results[method] = pkl.load(f)
+  rejection = []
+  for i in range(7):
+    with open(path.join(wkdir, 'rejection_{0}.pkl'.format(i))) as f:
+      rejection.append(pkl.load(f))
+  return data, results, rejection
+
+def make_plot(i, j, data, results, rejection, wkdir, counter):
+  sns.set_style('white')
+  fig, ax = plt.subplots(4, 2, figsize = [8,16])
+  these_data = data[:i]
+  # plot the different sampling methods
+  for k, method in enumerate(['rejection', 'mh', 'hmc', 'nesterov']):
+    color = sns.color_palette()[k]
+    cmap = convert_to_cmap(color)
+    k = k
+    if method == 'rejection':
+      weights = rejection[i]
+    else:
+      weights = results[method]
+      weights = weights[(weights.data_point == i) & (weights.iteration == j)]
+    bw = 1 if (counter > 10 and method == 'nesterov') else 'scott'
+    sns.kdeplot(weights[['w1', 'w2']], ax = ax[k, 0], bw = bw,
+                cmap = cmap, shade = True)
+    ax[k,1].scatter(these_data.x, these_data.y, color = 'black')
+    # plot some random lines from the posterior
+    plot_weights = weights[0:50:10]
+    for _, weight_row in plot_weights.iterrows():
+      t = np.r_[-1:1:0.05]
+      y = weight_row['w1'] + t * weight_row['w2']
+      ax[k,1].plot(t, y, color = color)
+    set_limits(ax, k, method)
+    # set the title
+  title = 'Data point {0}, iteration {1}'.format(i, j)
+  fig.suptitle(title)
+  fig.savefig(path.join(wkdir, 'posterior_{0}'.format(counter)))
+  plt.close(fig)
+
+def convert_to_cmap(color):
+    color_rgb = mpl.colors.colorConverter.to_rgb(color)
+    colors = [sns.set_hls_values(color_rgb, l=l) for l in np.linspace(1, 0, 12)]
+    cmap = sns.blend_palette(colors, as_cmap=True)
+    return cmap
+
+def set_limits(ax, k, method):
+    ax[k,0].set_title(method)
+    ax[k,1].set_title(method)
+    ax[k,0].set_xlim([-10,10])
+    ax[k,0].set_ylim([-10,10])
+    ax[k,1].set_xlim([-1,1])
+    ax[k,1].set_ylim([-5,5])
+
 def plot_results():
-  pass
+  # get the data
+  wkdir = '/Users/dwadden/code/Venturecxx/examples/ml-models/regression-evolution'
+  data, results, rejection = get_results()
+  counter = 0
+  for i in range(7):
+    for j in range(15):
+      make_plot(i, j, data, results, rejection, wkdir, counter)
+      counter += 1
+
+plot_results()
 
 
 
