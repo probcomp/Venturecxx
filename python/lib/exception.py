@@ -43,7 +43,9 @@ class VentureException(Exception):
 
     def __str__(self):
         s = "*** " + self.exception + ": " + self.message
-        if self.exception in ['parse', 'text_parse', 'invalid_argument']:
+        # TODO exceptions need to be annotated to get an 'instruction_string'
+        # perhaps this should not be done in the ripl but in the parser itself?
+        if self.exception in ['parse', 'text_parse', 'invalid_argument'] and 'instruction_string' in self.data:
           s += '\n' + self.data['instruction_string']
           offset = self.data['text_index'][0]
           length = self.data['text_index'][1] - offset + 1
