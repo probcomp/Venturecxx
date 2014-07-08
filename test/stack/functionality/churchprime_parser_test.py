@@ -115,6 +115,6 @@ class TestChurchPrimeParser(ParserTestCase):
         output = f('observe')
         self.assertEqual(output,'[ observe %(expression)s %(value)v ]')
         output = f('infer')
-        self.assertEqual(output,'[ infer %(params)j ]')
+        self.assertEqual(output,'[ infer %(expression)s ]')
 
 
