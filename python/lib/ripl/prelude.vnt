@@ -131,6 +131,10 @@
   (lambda (x)
     (reduce * x 1))]
 
+[assume mean
+  (lambda (x)
+    (/ (sum x) (size x)))]
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Useful math functions
