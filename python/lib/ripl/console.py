@@ -19,6 +19,7 @@
 import traceback
 from cmd import Cmd
 from venture.exception import VentureException
+from venture.lite.exception import VentureError
 from utils import _strip_types, expToDict, parse
 from functools import wraps
 
@@ -39,6 +40,8 @@ def catchesVentureException(f):
         length = e.data['text_index'][1] - offset + 1
         underline = ''.join([' '] * offset + ['^'] * length)
         print underline
+    except VentureError as err:
+      print err
     except Exception:
       print "Your query has generated an error:"
       traceback.print_exc()
@@ -134,7 +137,11 @@ class RiplCmd(Cmd, object):
         print "%d: predict %s:\t %s" % (dir_id, dir_expr, dir_val)
       else:
         assert False, "Unknown directive type found: %s" & str(directive)
-
+  
+  @catchesVentureException
+  def do_clear(self, _):
+    self.ripl.clear()
+  
   @catchesVentureException
   def do_infer(self, s):
     '''Run inference synchronously.'''
