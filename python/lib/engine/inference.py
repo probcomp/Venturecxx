@@ -41,10 +41,13 @@ class Infer(object):
     else:
       raise Exception("TODO Cannot plot with different specs in the same inference program")
 
+  def final_data(self):
+    return self.plot if self.plot is not None else self.out
+
   def infer(self, program):
     self.engine.incorporate()
     self.do_infer(program)
-    return self.plot if self.plot is not None else self.out
+    return self.final_data()
 
   def do_infer(self, program):
     if 'command' in program and program['command'] == "resample":
@@ -83,43 +86,40 @@ class Infer(object):
   def infer_exp(self, program):
     self.engine.incorporate()
     self.do_infer_exp(program)
-    return self.plot if self.plot is not None else self.out
+    return self.final_data()
+
+  def default_name_for_exp(self,exp):
+    if isinstance(exp, basestring):
+      return exp
+    elif hasattr(exp, "__iter__"):
+      return "(" + ' '.join([self.default_name_for_exp(e) for e in exp]) + ")"
+    else:
+      return str(exp)
 
   def do_infer_exp(self, exp):
-    def default_name_for_exp(exp):
-      if isinstance(exp, basestring):
-        return exp
-      elif hasattr(exp, "__iter__"):
-        return "(" + ' '.join([default_name_for_exp(e) for e in exp]) + ")"
-      else:
-        return str(exp)
     operator = exp[0]
     if operator == "resample":
       assert len(exp) == 2
-      self.engine.resample(exp[1])
+      self.resample(exp[1])
     elif operator == "incorporate":
       assert len(exp) == 1
+      self.incorporate()
     elif operator in ["peek", "peek_all"]:
       assert 2 <= len(exp) and len(exp) <= 3
       if len(exp) == 3:
         (_, expression, name) = exp
       else:
         (_, expression) = exp
-        name = default_name_for_exp(expression)
-      self._ensure_peek_name(name)
+        name = self.default_name_for_exp(expression)
       if operator == "peek":
-        # The sample method expects stack dicts, not Python
-        # representations of expressions...
-        value = self.engine.sample(ExpressionType().asVentureValue(expression).asStackDict())
-        self.out[name].append(value)
+        self.peek(expression, name)
       else:
-        values = self.engine.sample_all(ExpressionType().asVentureValue(expression).asStackDict())
-        self.out[name].append(values)
+        self.peek_all(expression, name)
     elif operator == "plotf":
       assert len(exp) >= 2
       spec = exp[1]
       exprs = exp[2:]
-      names = [default_name_for_exp(e) for e in exprs]
+      names = [self.default_name_for_exp(e) for e in exprs]
       self._ensure_plot(spec, names, exprs)
       self.plot.add_data(self.engine)
     elif operator == "loop":
@@ -149,7 +149,36 @@ class Infer(object):
       for _ in range(int(transitions)):
         self.do_infer_exp(simulateCategorical(weights, subkernels))
     else: # A primitive infer expression
-      self.engine.primitive_infer(exp)
+      self.primitive_infer(exp)
+
+  def primitive_infer(self, exp): self.engine.primitive_infer(exp)
+  def resample(self, ct): self.engine.resample(ct)
+  def incorporate(self): pass # Since we incorporate at the beginning anyway
+  def peek(self, expression, name=None):
+    if name is None:
+      # I was called from the "peek" SP, so the expression is a VentureValue
+      name = self.default_name_for_exp(ExpressionType().asPython(expression))
+    self._ensure_peek_name(name)
+    # The sample method expects stack dicts, not Python or Venture
+    # representations of expressions...
+    # Also, ExpressionType().asVentureValue does not alter things that
+    # are already VentureValues.
+    value = self.engine.sample(ExpressionType().asVentureValue(expression).asStackDict())
+    self.out[name].append(value)
+  def peek_all(self, expression, name=None):
+    if name is None:
+      # I was called from the "peek" SP, so the expression is a VentureValue
+      name = self.default_name_for_exp(ExpressionType().asPython(expression))
+    self._ensure_peek_name(name)
+    values = self.engine.sample_all(ExpressionType().asVentureValue(expression).asStackDict())
+    self.out[name].append(values)
+  def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
+    spec = ExpressionType().asPython(spec)
+    exps = [ExpressionType().asVentureValue(e).asStackDict() for e in exprs]
+    names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
+    self._ensure_plot(spec, names, exps)
+    self.plot.add_data(self.engine)
+
 
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.

@@ -24,8 +24,11 @@ class SPAux(object):
 
 class VentureSP(VentureValue):
   def __init__(self,requestPSP,outputPSP):
+    from psp import PSP
     self.requestPSP = requestPSP
     self.outputPSP = outputPSP
+    assert isinstance(requestPSP, PSP)
+    assert isinstance(outputPSP, PSP)
 
   def constructSPAux(self): return SPAux()
   def constructLatentDB(self): return None

@@ -63,6 +63,8 @@ struct PyTrace
   void restoreDirectiveID(DirectiveID did, shared_ptr<OrderedDB> db);
   void evalAndRestore(DirectiveID did, boost::python::object object, shared_ptr<OrderedDB> db);
 
+  boost::python::list scope_keys();
+
 private:
   shared_ptr<ConcreteTrace> trace;
   
