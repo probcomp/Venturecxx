@@ -134,6 +134,7 @@ class RiplCmd(Cmd, object):
   
   @catchesVentureException
   def do_clear(self, _):
+    '''Clear all directives.'''
     self.ripl.clear()
   
   @catchesVentureException
