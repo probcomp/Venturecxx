@@ -12,7 +12,7 @@
 ;   a_0, b_0 : Shape and scale parameters on sigma_2.
 ;   alpha : Precision parameter on the model weights.
 
-D:[assume D 2]
+D:[assume D 14]
 a_0:[assume a_0 1]
 b_0:[assume b_0 1]
 alpha:[assume alpha 0.01]
