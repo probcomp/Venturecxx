@@ -125,5 +125,17 @@ general-purpose inference programs except rejection sampling.
     return wrapped
   return wrap
 
+def backend(*backends):
+  """Specifies which backends this test targets."""
+  def wrap(f):
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      ripl = config["get_ripl"]
+      if ripl not in backends:
+        raise SkipTest(f.__name__ + " doesn't support " + ripl)
+      return f(*args)
+    return wrapped
+  return wrap
+
 def rejectionSampling():
   return config["infer"].startswith("(rejection default all")
