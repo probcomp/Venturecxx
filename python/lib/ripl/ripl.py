@@ -440,6 +440,9 @@ Open issues:
             raise TypeError("Unknown params: " + str(params))
 
     def defaultInferProgram(self, program):
+        try: # Check for being a string that represents an int
+            program = int(program)
+        except: pass
         if program is None:
             return "(rejection default all 1)"
         elif isinstance(program, int):
