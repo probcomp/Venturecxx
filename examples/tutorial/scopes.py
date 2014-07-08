@@ -62,12 +62,12 @@
     
 
 # # print 'one --- \n\n all'
-# # v = mk_p_ripl()
-# # v.execute_program(model)
+# v = mk_p_ripl()
+# v.execute_program(model)
 
-# # for i in range(10):
-# #     v.infer('(mh means all 10)')
-# #     print 'i: %i'%i, np.round( map(v.sample, ('hyper_mean', 'mean1') ), 2)
+# for i in range(10):
+#     v.infer('(mh means all 10)')
+#     print 'i: %i'%i, np.round( map(v.sample, ('hyper_mean', 'mean1') ), 2)
 
 
 # ## PROBLEM WITH ARRAY BLOCK NAMES
