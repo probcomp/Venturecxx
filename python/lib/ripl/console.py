@@ -33,13 +33,15 @@ def catchesVentureException(f):
     try:
       return f(*args, **kwargs)
     except VentureException as e:
-      print e
-      if e.exception in ['parse', 'text_parse', 'invalid_argument']:
-        print e.data['instruction_string']
-        offset = e.data['text_index'][0]
-        length = e.data['text_index'][1] - offset + 1
-        underline = ''.join([' '] * offset + ['^'] * length)
-        print underline
+      try:
+        print e
+        if e.exception in ['parse', 'text_parse', 'invalid_argument']:
+          print e.data['instruction_string']
+          offset = e.data['text_index'][0]
+          length = e.data['text_index'][1] - offset + 1
+          underline = ''.join([' '] * offset + ['^'] * length)
+          print underline
+      except Exception: pass
     except VentureError as err:
       print err
     except Exception:

@@ -210,11 +210,91 @@ effect of renumbering the directives, if some had been forgotten."""
 
     return Infer(self).infer(params)
 
+#  def infer_exp(self, program):
+#    return Infer(self).infer_exp(ExpressionType().asPython(VentureValue.fromStackDict(program)))
+
   def infer_exp(self, program):
-    return Infer(self).infer_exp(ExpressionType().asPython(VentureValue.fromStackDict(program)))
+    self.incorporate()
+    if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
+      assert len(program) == 2
+      prog = [sym("cycle"), program[1], {"type":"number", "value":1}]
+      # TODO Use the modeling language interpreter for infer loop too
+      self.start_continuous_inference_exp(prog)
+    else:
+      exp = self.desugarLambda(self.macroexpand_inference(program))
+      return self.infer_v1_pre_t(exp, Infer(self))
+
+  def macroexpand_inference(self, program):
+    if type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
+      assert len(program) == 3
+      subkernels = self.macroexpand_inference(program[1])
+      transitions = self.macroexpand_inference(program[2])
+      return [program[0], [sym("list")] + subkernels, transitions]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "mixture":
+      assert len(program) == 3
+      weights = []
+      subkernels = []
+      weighted_ks = self.macroexpand_inference(program[1])
+      transitions = self.macroexpand_inference(program[2])
+      for i in range(len(weighted_ks)/2):
+        j = 2*i
+        k = j + 1
+        weights.append(weighted_ks[j])
+        subkernels.append(weighted_ks[k])
+      return [program[0], [sym("simplex")] + weights, [sym("array")] + subkernels, transitions]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] in ["peek", "peek_all"]:
+      assert 2 <= len(program) and len(program) <= 3
+      if len(program) == 2:
+        return [program[0], enquote(program[1])]
+      else:
+        return [program[0], enquote(program[1]), enquote(program[2])]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "plotf":
+      assert len(program) >= 2
+      return [program[0]] + [enquote(e) for e in program[1:]]
+    elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
+    else: return program
+
+  def infer_v1_pre_t(self, program, target):
+    import venture.lite.trace as lite
+    next_trace = lite.Trace()
+    # TODO Import the enclosing lexical environment into the new trace?
+    import venture.lite.inference_sps as inf
+    import venture.lite.value as v
+    all_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys()]
+    symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
+    for hack in inf.inferenceKeywords + symbol_scopes:
+      next_trace.bindPrimitiveName(hack, v.VentureSymbol(hack))
+    for name,sp in inf.inferenceSPsList:
+      next_trace.bindPrimitiveSP(name, sp)
+    self.install_inference_prelude(next_trace)
+    next_trace.eval(4, [program, {"type":"blob", "value":target}])
+    ans = next_trace.extractValue(4)
+    assert isinstance(ans, dict)
+    assert ans["type"] is "blob"
+    assert isinstance(ans["value"], Infer)
+    return ans["value"].final_data()
+
+  def install_inference_prelude(self, next_trace):
+    for did, (name, exp) in enumerate(_inference_prelude()):
+      next_trace.eval(did, self.desugarLambda(exp))
+      next_trace.bindInGlobalEnv(name, did)
 
   def primitive_infer(self, params):
-    for trace in self.traces: trace.infer(params)
+    for trace in self.traces:
+      if isinstance(params, dict):
+        trace.infer(params)
+      elif hasattr(trace, "infer_exp"):
+        # List style infer command and the trace can handle it natively
+        trace.infer_exp(params)
+      else:
+        # List style infer command that the trace cannot handle natively
+        trace.infer(self.list_style_to_dict_style(params))
+
+  def list_style_to_dict_style(self, exp):
+    import venture.ripl.utils as u
+    params = u.expToDict(exp)
+    self.set_default_params(params)
+    return params
   
   # TODO put all inference param parsing in one place
   def set_default_params(self,params):
@@ -394,7 +474,7 @@ class ContinuousInferrer(object):
       # TODO React somehow to peeks and plotfs in the inference program
       # Currently suppressed for fear of clobbering the prompt
       if "exp" in params:
-        Infer(self.engine).infer_exp(params["exp"])
+        self.engine.infer_exp(params["exp"])
       else:
         Infer(self.engine).infer(params)
       time.sleep(0.0001) # Yield to be a good citizen
@@ -403,3 +483,39 @@ class ContinuousInferrer(object):
     inferrer = self.inferrer
     self.inferrer = None # Grab the semaphore
     inferrer.join()
+
+def sym(symbol):
+  return {"type":"symbol", "value":symbol}
+
+def enquote(thing):
+  return [sym("quote"), thing]
+
+the_prelude = None
+
+def _inference_prelude():
+  global the_prelude
+  if the_prelude is None:
+    the_prelude = _compute_inference_prelude()
+  return the_prelude
+
+def _compute_inference_prelude():
+  ans = []
+  for (name, form) in [
+        ["cycle", """(lambda (ks iter)
+  (iterate (sequence ks) iter))"""],
+        ["iterate", """(lambda (f iter)
+  (if (<= iter 1)
+      f
+      (lambda (t) (f ((iterate f (- iter 1)) t)))))"""],
+        ["sequence", """(lambda (ks)
+  (if (is_pair ks)
+      (lambda (t) ((sequence (rest ks)) ((first ks) t)))
+      (lambda (t) t)))"""],
+        ["mixture", """(lambda (weights kernels transitions)
+  (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""]]:
+    from venture.parser.church_prime_parser import ChurchPrimeParser
+    from venture.sivm.utils import desugar_expression
+    from venture.sivm.core_sivm import _modify_expression
+    exp = _modify_expression(desugar_expression(ChurchPrimeParser.instance().parse_expression(form)))
+    ans.append((name, exp))
+  return ans
