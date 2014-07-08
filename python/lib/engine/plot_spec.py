@@ -21,7 +21,7 @@ class PlotSpec(object):
     for spec in self.frames:
       (aes, index) = spec.aes_dict_at(index, names)
       plot = g.ggplot(dataset, g.aes(**aes))
-      for geom in spec.geom:
+      for geom in spec.get_geoms():
         plot += geom
       for (dim, scale) in zip(["x", "y", "color"], spec.scales):
         obj = self._interp_scale(dim, scale)
@@ -64,10 +64,13 @@ class FrameSpec(object):
       raise Exception("Invalid plot spec %s; must match %s" % (spec, toplevel_rx))
     geoms = top.group(1)
     dims = top.group(2)
-    self.geom = self._interp_geoms(geoms)
+    self._geom = self._interp_geoms(geoms)
     if len(dims) == 0:
       raise Exception("Invalid plot spec %s; must supply at least one dimension to plot")
     self._interp_dimensions(dims)
+
+  def get_geoms(self):
+    return self._geom
 
   def _interp_dimensions(self, dims):
     self.streams = []
