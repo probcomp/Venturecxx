@@ -1,6 +1,9 @@
 # Dockerfile for Venture project:
 # http://probcomp.csail.mit.edu/venture/
 #
+# install Docker:
+# https://docs.docker.com/installation/#installation
+#
 # to generate the docker image (must run script/release-tarball first):
 # sudo docker build -t probcomp/venture .
 #
