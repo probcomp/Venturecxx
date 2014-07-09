@@ -177,6 +177,11 @@ class RiplCmd(Cmd, object):
     '''Escape into Python (evaluate the given string as Python source)'''
     exec(s)
 
+  def do_shell(self, s):
+    '''Escape into the underlying shell.'''
+    import os
+    os.system(s)
+
 def run_venture_console(ripl):
   RiplCmd(ripl).cmdloop()
 
