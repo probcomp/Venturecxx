@@ -7,6 +7,10 @@
 # to generate the docker image (must run script/release-tarball first):
 # sudo docker build -t probcomp/venture .
 #
+# to save/load the image to/from a tarball:
+# sudo docker save -o venture.tar probcomp/venture
+# sudo docker load -o venture.tar
+#
 # to start a container with an interactive shell:
 # sudo docker run -t -i probcomp/venture
 #
