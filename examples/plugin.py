@@ -17,12 +17,25 @@ class DrawFramePSP(psp.RandomPSP):
   def simulate(self, args):
     inferrer = args.operandValues[0]
     import pygame
-    import random
     self.window.fill(pygame.Color(255, 255, 255))
-    for _ in range(10):
-      pygame.draw.circle(self.window, pygame.Color(255, 0, 0), (int(random.uniform(30, 610)), int(random.uniform(30, 370))), 20, 0)
+    brown_y = self.y_to_pixels(inferrer.engine.sample(self.sym("brown_step"))["value"])
+    pygame.draw.rect(self.window, pygame.Color(0, 255, 0), (30, brown_y, 10, 10), 2)
+    obs_y = self.y_to_pixels(inferrer.engine.sample(self.sym("obs_noise"))["value"])
+    pygame.draw.rect(self.window, pygame.Color(0, 0, 255), (15, obs_y, 10, 10), 2)
+    for i in range(10):
+      x = int(60 + 30 * i)
+      y = self.y_to_pixels(inferrer.engine.sample([self.sym("position"), self.num(i)])["value"])
+      pygame.draw.circle(self.window, pygame.Color(255, 0, 0), (x, y), 10, 0)
     pygame.display.update()
     return inferrer
+
+  def y_to_pixels(self, model_y):
+    return int(200 - 30 * model_y)
+
+  def sym(self, s):
+    return {"type":"symbol", "value":s}
+  def num(self, i):
+    return {"type":"number", "value":i}
 
 draw_sp = typed_nr(DrawFramePSP(window), [v.ForeignBlobType()], v.ForeignBlobType())
 
