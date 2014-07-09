@@ -18,14 +18,30 @@ class DrawFramePSP(psp.RandomPSP):
     inferrer = args.operandValues[0]
     import pygame
     self.window.fill(pygame.Color(255, 255, 255))
+
+    # Draw the axis ticks
     for tick in [-2, -1, 0, 1, 2]:
       pygame.draw.line(self.window, pygame.Color(0, 0, 0), (0, self.y_to_pixels(tick)), (50, self.y_to_pixels(tick)), 1)
+
+    alpha_level = 50
+
+    # Draw the motion speed levels
     brown_ys = self.ys_at(inferrer, "brown_step")
     for brown_y in brown_ys:
-      pygame.draw.rect(self.window, pygame.Color(0, 255, 0), (30, brown_y - 5, 10, 10), 2)
+      dot = pygame.Surface((640, 400), pygame.SRCALPHA)
+      dot.fill(pygame.Color(255, 255, 255, 0))
+      pygame.draw.rect(dot, pygame.Color(0, 255, 0, alpha_level), (30, brown_y - 5, 10, 10), 2)
+      self.window.blit(dot, (0,0))
+
+    # Draw the observation noise levels
     obs_ys = self.ys_at(inferrer, "obs_noise")
     for obs_y in obs_ys:
-      pygame.draw.rect(self.window, pygame.Color(0, 0, 255), (15, obs_y - 5, 10, 10), 2)
+      dot = pygame.Surface((640, 400), pygame.SRCALPHA)
+      dot.fill(pygame.Color(255, 255, 255, 0))
+      pygame.draw.rect(dot, pygame.Color(0, 0, 255, alpha_level), (15, obs_y - 5, 10, 10), 2)
+      self.window.blit(dot, (0,0))
+
+    # Plot the observations and decide how far to plot the trajectory
     plot_range = 2
     for (_did, directive) in inferrer.engine.directives.items():
       if directive[0] == "observe":
@@ -39,11 +55,23 @@ class DrawFramePSP(psp.RandomPSP):
         (_, datum) = directive
         pr_i = int(datum[1]["value"])
         plot_range = max(plot_range, pr_i + 1)
-    for i in range(1, plot_range):
-      old_ps = self.points_at(inferrer, i-1)
-      new_ps = self.points_at(inferrer, i)
-      for ((x_p, y_p), (x_n, y_n)) in zip(old_ps, new_ps):
-        pygame.draw.line(self.window, pygame.Color(255, 0, 0), (x_p, y_p), (x_n, y_n), 3)
+
+    point_lists = [self.points_at(inferrer, i) for i in range(plot_range)]
+    from pygame.locals import BLEND_ADD
+    for p in range(len(point_lists[0])):
+      path = pygame.Surface((640, 400), pygame.SRCALPHA)
+      path.fill(pygame.Color(255, 255, 255, 0))
+      for i in range(1, plot_range):
+        (x_p, y_p) = point_lists[i-1][p]
+        (x_n, y_n) = point_lists[i][p]
+        pygame.draw.line(path, pygame.Color(255, 0, 0, alpha_level), (x_p, y_p), (x_n, y_n), 3)
+      self.window.blit(path, (0,0))
+
+    # for i in range(1, plot_range):
+    #   old_ps = self.points_at(inferrer, i-1)
+    #   new_ps = self.points_at(inferrer, i)
+    #   for ((x_p, y_p), (x_n, y_n)) in zip(old_ps, new_ps):
+    #     pygame.draw.line(self.window, pygame.Color(255, 0, 0, 1), (x_p, y_p), (x_n, y_n), 3)
     pygame.display.update()
     return inferrer
 
