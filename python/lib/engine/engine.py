@@ -34,13 +34,13 @@ class Engine(object):
     self.directives = {}
     self.inferrer = None
     import venture.lite.inference_sps as inf
-    self.inference_sps = inf.inferenceSPsList
+    self.inference_sps = dict(inf.inferenceSPsList)
 
   def inferenceSPsList(self):
-    return self.inference_sps
+    return self.inference_sps.iteritems()
 
   def bind_foreign_inference_sp(self, name, sp):
-    self.inference_sps.append([name, sp])
+    self.inference_sps[name] = sp
 
   def getDistinguishedTrace(self): 
     assert self.traces
