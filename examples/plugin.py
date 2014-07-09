@@ -20,17 +20,17 @@ class DrawFramePSP(psp.RandomPSP):
     self.window.fill(pygame.Color(255, 255, 255))
 
     # Draw the axis ticks
-    for tick in [-2, -1, 0, 1, 2]:
+    for tick in [-8, -6, -4, -2, 0, 2, 4, 6, 8]:
       pygame.draw.line(self.window, pygame.Color(0, 0, 0), (0, self.y_to_pixels(tick)), (50, self.y_to_pixels(tick)), 1)
 
-    alpha_level = 50
+    alpha_level = 100
 
     # Draw the motion speed levels
     brown_ys = self.ys_at(inferrer, "brown_step")
     for brown_y in brown_ys:
       dot = pygame.Surface((640, 400), pygame.SRCALPHA)
       dot.fill(pygame.Color(255, 255, 255, 0))
-      pygame.draw.rect(dot, pygame.Color(0, 255, 0, alpha_level), (30, brown_y - 5, 10, 10), 2)
+      pygame.draw.rect(dot, pygame.Color(0, 0, 255, alpha_level), (30, brown_y - 5, 10, 10), 2)
       self.window.blit(dot, (0,0))
 
     # Draw the observation noise levels
@@ -38,7 +38,7 @@ class DrawFramePSP(psp.RandomPSP):
     for obs_y in obs_ys:
       dot = pygame.Surface((640, 400), pygame.SRCALPHA)
       dot.fill(pygame.Color(255, 255, 255, 0))
-      pygame.draw.rect(dot, pygame.Color(0, 0, 255, alpha_level), (15, obs_y - 5, 10, 10), 2)
+      pygame.draw.rect(dot, pygame.Color(255, 0, 0, alpha_level), (15, obs_y - 5, 10, 10), 2)
       self.window.blit(dot, (0,0))
 
     # Plot the observations and decide how far to plot the trajectory
@@ -49,7 +49,7 @@ class DrawFramePSP(psp.RandomPSP):
         obs_i = int(datum[1]["value"])
         x = self.x_to_pixels(obs_i)
         y = self.y_to_pixels(val["value"])
-        pygame.draw.circle(self.window, pygame.Color(155, 155, 0), (x, y), 10, 0)
+        pygame.draw.circle(self.window, pygame.Color(255, 0, 0), (x, y), 4, 0)
         plot_range = max(plot_range, obs_i + 1)
       if directive[0] == "predict":
         (_, datum) = directive
@@ -64,7 +64,7 @@ class DrawFramePSP(psp.RandomPSP):
       for i in range(1, plot_range):
         (x_p, y_p) = point_lists[i-1][p]
         (x_n, y_n) = point_lists[i][p]
-        pygame.draw.line(path, pygame.Color(255, 0, 0, alpha_level), (x_p, y_p), (x_n, y_n), 3)
+        pygame.draw.line(path, pygame.Color(0, 0, 255, alpha_level), (x_p, y_p), (x_n, y_n), 3)
       self.window.blit(path, (0,0))
 
     # for i in range(1, plot_range):
