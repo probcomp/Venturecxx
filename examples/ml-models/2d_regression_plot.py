@@ -71,7 +71,7 @@ def simulate_linear(infile = 'regression1.vnt'):
   _ = r.assume('mem_unif', '(mem (lambda (i) (uniform_continuous -1 1)))')
   _ = r.assume('simulate', '(lambda (i) (list (mem_unif i) (y (vector 1 (mem_unif i)))))')
   res = {'x' : [], 'y' : []}
-  for i in range(15):
+  for i in range(30):
     thisone = r.sample('(simulate {0})'.format(i))
     res['x'].append(thisone[0])
     res['y'].append(thisone[1])
@@ -221,7 +221,7 @@ def plot_results():
       make_plot(i, j, data, results, rejection, wkdir, counter)
       counter += 1
 
-plot_results()
+# plot_results()
 
 
 
