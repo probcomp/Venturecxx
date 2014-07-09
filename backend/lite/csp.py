@@ -3,6 +3,7 @@ from sp import VentureSP
 from env import VentureEnvironment
 from request import Request,ESR
 import value as v
+from exception import VentureError
 
 class CSPRequestPSP(DeterministicPSP):
   def __init__(self,ids,exp,env):
@@ -11,7 +12,8 @@ class CSPRequestPSP(DeterministicPSP):
     self.env = env
 
   def simulate(self,args):
-    assert len(self.ids) == len(args.operandNodes)
+    if len(self.ids) != len(args.operandNodes):
+      raise VentureError("Wrong number of arguments: compound takes exactly %d arguments, got %d." % (len(self.ids), len(args.operandNodes)))
     extendedEnv = VentureEnvironment(self.env,self.ids,args.operandNodes)
     return Request([ESR(args.node,self.exp,extendedEnv)])
 
