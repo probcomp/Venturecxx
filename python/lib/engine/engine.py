@@ -33,6 +33,11 @@ class Engine(object):
     self.directiveCounter = 0
     self.directives = {}
     self.inferrer = None
+    import venture.lite.inference_sps as inf
+    self.inference_sps = inf.inferenceSPsList
+
+  def inferenceSPsList(self):
+    return self.inference_sps
 
   def getDistinguishedTrace(self): 
     assert self.traces
@@ -264,7 +269,7 @@ effect of renumbering the directives, if some had been forgotten."""
     symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
     for hack in inf.inferenceKeywords + symbol_scopes:
       next_trace.bindPrimitiveName(hack, v.VentureSymbol(hack))
-    for name,sp in inf.inferenceSPsList:
+    for name,sp in self.inferenceSPsList():
       next_trace.bindPrimitiveSP(name, sp)
     self.install_inference_prelude(next_trace)
     next_trace.eval(4, [program, {"type":"blob", "value":target}])
