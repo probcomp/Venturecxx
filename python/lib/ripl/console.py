@@ -172,6 +172,11 @@ class RiplCmd(Cmd, object):
     self.ripl.profile_data().to_csv(s)
     print "Profile data saved to %s" % s
 
+  @catchesVentureException
+  def do_eval(self, s):
+    '''Escape into Python (evaluate the given string as Python source)'''
+    exec(s)
+
 def run_venture_console(ripl):
   RiplCmd(ripl).cmdloop()
 
