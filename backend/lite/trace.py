@@ -27,7 +27,7 @@ class Trace(object):
 
     self.globalEnv = VentureEnvironment()
     for name,val in builtInValues().iteritems():
-      self.globalEnv.addBinding(name,ConstantNode(val))
+      self.bindPrimitiveName(name, val)
     for name,sp in builtInSPs().iteritems():
       self.bindPrimitiveSP(name, sp)
     self.globalEnv = VentureEnvironment(self.globalEnv) # New frame so users can shadow globals
@@ -38,6 +38,14 @@ class Trace(object):
     self.unpropagatedObservations = {} # {node:val}
     self.families = {}
     self.scopes = {} # :: {scope-name:smap{block-id:set(node)}}
+
+  def scope_keys(self):
+    # A hack for allowing scope names not to be quoted in inference
+    # programs (needs to be a method so Puma can implement it)
+    return self.scopes.keys()
+
+  def bindPrimitiveName(self, name, val):
+    self.globalEnv.addBinding(name,ConstantNode(val))
 
   def bindPrimitiveSP(self, name, sp):
     spNode = self.createConstantNode(sp)

@@ -34,12 +34,6 @@ def catchesVentureException(f):
       return f(*args, **kwargs)
     except VentureException as e:
       print e
-      if e.exception in ['parse', 'text_parse', 'invalid_argument']:
-        print e.data['instruction_string']
-        offset = e.data['text_index'][0]
-        length = e.data['text_index'][1] - offset + 1
-        underline = ''.join([' '] * offset + ['^'] * length)
-        print underline
     except VentureError as err:
       print err
     except Exception:
@@ -140,6 +134,7 @@ class RiplCmd(Cmd, object):
   
   @catchesVentureException
   def do_clear(self, _):
+    '''Clear all directives.'''
     self.ripl.clear()
   
   @catchesVentureException
@@ -168,7 +163,7 @@ class RiplCmd(Cmd, object):
 
   @catchesVentureException
   def do_get_global_logscore(self, s):
-    '''Report status of continuous inference.'''
+    '''Report the global logscore.'''
     print self._do_instruction('get_global_logscore', s)
 
 def run_venture_console(ripl):

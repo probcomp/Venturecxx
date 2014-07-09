@@ -1,5 +1,6 @@
 from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType, BoolType, ZeroType
 import copy
+from exception import VentureError
 
 class SPFamilies(object):
   def __init__(self, families=None):
@@ -24,8 +25,11 @@ class SPAux(object):
 
 class VentureSP(VentureValue):
   def __init__(self,requestPSP,outputPSP):
+    from psp import PSP
     self.requestPSP = requestPSP
     self.outputPSP = outputPSP
+    assert isinstance(requestPSP, PSP)
+    assert isinstance(outputPSP, PSP)
 
   def constructSPAux(self): return SPAux()
   def constructLatentDB(self): return None
@@ -87,8 +91,10 @@ used in the implementation of TypedPSP and TypedLKernel."""
 
   def unwrap_arg_list(self, lst):
     if not self.variadic:
-      assert len(lst) >= self.min_req_args
-      assert len(lst) <= len(self.args_types)
+      if len(lst) < self.min_req_args:
+        raise VentureError("Too few arguments: SP requires at least %d args, got only %d." % (self.min_req_args, len(lst)))
+      if len(lst) > len(self.args_types):
+        raise VentureError("Too many arguments: SP takes at most %d args, got %d." % (len(self.args_types), len(lst)))
       # v could be None when computing log density bounds for a torus
       return [self.args_types[i].asPythonNoneable(v) for (i,v) in enumerate(lst)]
     else:

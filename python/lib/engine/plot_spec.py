@@ -1,6 +1,4 @@
 import re
-import ggplot as g
-import matplotlib.pylab as plt
 from itertools import chain
 
 stream_rx = r"([rcts%]|[0-9]+)"
@@ -17,12 +15,13 @@ class PlotSpec(object):
       self.frames = [FrameSpec(s) for s in spec]
 
   def draw(self, dataset, names):
+    import ggplot as g
     index = 0
     figs = []
     for spec in self.frames:
       (aes, index) = spec.aes_dict_at(index, names)
       plot = g.ggplot(dataset, g.aes(**aes))
-      for geom in spec.geom:
+      for geom in spec.get_geoms():
         plot += geom
       for (dim, scale) in zip(["x", "y", "color"], spec.scales):
         obj = self._interp_scale(dim, scale)
@@ -31,6 +30,7 @@ class PlotSpec(object):
     return figs
 
   def plot(self, dataset, names):
+    import matplotlib.pylab as plt
     self.draw(dataset, names)
     plt.show()
     # FIXME: add something to track names of frames here
@@ -39,6 +39,7 @@ class PlotSpec(object):
     return chain(*[frame.streams for frame in self.frames])
 
   def _interp_scale(self, dim, scale):
+    import ggplot as g
     if scale == "d" or scale == "":
       if dim == "x":
         return g.scale_x_continuous()
@@ -61,12 +62,14 @@ class FrameSpec(object):
     top = re.match(toplevel_rx, spec)
     if not top:
       raise Exception("Invalid plot spec %s; must match %s" % (spec, toplevel_rx))
-    geoms = top.group(1)
+    self.geoms = top.group(1)
     dims = top.group(2)
-    self.geom = self._interp_geoms(geoms)
     if len(dims) == 0:
       raise Exception("Invalid plot spec %s; must supply at least one dimension to plot")
     self._interp_dimensions(dims)
+
+  def get_geoms(self):
+    return self._interp_geoms(self.geoms)
 
   def _interp_dimensions(self, dims):
     self.streams = []
@@ -81,12 +84,14 @@ class FrameSpec(object):
       self.scales = ["d"] + self.scales
 
   def _interp_geoms(self, gs):
+    import ggplot as g
     if len(gs) == 0:
       return [g.geom_point()]
     else:
       return [self._interp_geom(ge) for ge in gs]
 
   def _interp_geom(self, ge):
+    import ggplot as g
     if ge in ["b", "h"]:
       self.two_d_only = False
     return {"p":g.geom_point, "l":g.geom_line, "b":g.geom_bar, "h":g.geom_histogram}[ge]()
