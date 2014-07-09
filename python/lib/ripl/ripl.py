@@ -542,6 +542,9 @@ Open issues:
         # rebuilds of the ripl, etc?
         self.sivm.core_sivm.engine.bind_foreign_sp(name, sp)
 
+    def bind_foreign_inference_sp(self, name, sp):
+        self.sivm.core_sivm.engine.bind_foreign_inference_sp(name, sp)
+
     ############################################
     # Serialization
     ############################################
